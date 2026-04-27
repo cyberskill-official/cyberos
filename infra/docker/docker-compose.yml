@@ -1,0 +1,57 @@
+version: '3.9'
+
+# Local dev stack — starts Postgres, Redis, NATS.
+# App modules run via `pnpm dev` (Turborepo), not in Docker.
+#
+# Usage:
+#   docker compose up -d
+#   doppler run -- pnpm dev
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: cyberos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cyberos
+      POSTGRES_PASSWORD: cyberos
+      POSTGRES_DB: cyberos_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-extensions.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U cyberos -d cyberos_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: cyberos-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: cyberos-nats
+    restart: unless-stopped
+    command: ['-js', '-m', '8222']
+    ports:
+      - '4222:4222'   # client
+      - '8222:8222'   # monitoring
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:8222/healthz']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:

@@ -1,0 +1,138 @@
+extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key", "@external", "@requires", "@provides", "@shareable", "@inaccessible", "@override", "@authenticated", "@requiresScopes"])
+
+# ─── Types ────────────────────────────────────────────────────────────────────
+
+type Member @key(fields: "id") {
+  id: ID!
+  tenantId: ID!
+  email: String! @requiresScopes(scopes: [["profile:read"]])
+  displayName: String!
+  avatarUrl: String
+  roles: [Role!]!
+  status: MemberStatus!
+  mfaEnabled: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type Tenant @key(fields: "id") {
+  id: ID!
+  slug: String!
+  displayName: String!
+  residency: Residency!
+  plan: TenantPlan!
+  createdAt: DateTime!
+}
+
+type Session {
+  id: ID!
+  memberId: ID!
+  createdAt: DateTime!
+  expiresAt: DateTime!
+  userAgent: String
+  ipAddress: String
+}
+
+type APIKey {
+  id: ID!
+  name: String!
+  prefix: String!
+  scopes: [String!]!
+  expiresAt: DateTime
+  lastUsedAt: DateTime
+  createdAt: DateTime!
+}
+
+type AuthPayload {
+  accessToken: String!
+  expiresIn: Int!
+  member: Member!
+}
+
+# ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum MemberStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+  AI_AGENT
+}
+
+enum Residency {
+  VN
+  SG
+  EU
+  US
+}
+
+enum TenantPlan {
+  INTERNAL
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+# ─── Scalars ──────────────────────────────────────────────────────────────────
+
+scalar DateTime
+scalar EmailAddress
+scalar URL
+
+# ─── Queries ──────────────────────────────────────────────────────────────────
+
+type Query {
+  me: Member! @authenticated
+  member(id: ID!): Member @requiresScopes(scopes: [["members:read"]])
+  members(cursor: String, limit: Int): MemberConnection! @requiresScopes(scopes: [["members:read"]])
+  sessions: [Session!]! @authenticated
+  apiKeys: [APIKey!]! @authenticated
+}
+
+# ─── Mutations ────────────────────────────────────────────────────────────────
+
+type Mutation {
+  login(email: EmailAddress!, password: String!, mfaCode: String): AuthPayload!
+  logout: Boolean! @authenticated
+  refreshToken(token: String!): AuthPayload!
+  inviteMember(email: EmailAddress!, role: Role!): Member! @requiresScopes(scopes: [["members:write"]])
+  updateMemberRole(memberId: ID!, role: Role!): Member! @requiresScopes(scopes: [["members:write"]])
+  suspendMember(memberId: ID!): Member! @requiresScopes(scopes: [["members:write"]])
+  createAPIKey(name: String!, scopes: [String!]!, expiresAt: DateTime): APIKey! @authenticated
+  revokeAPIKey(id: ID!): Boolean! @authenticated
+  revokeSession(id: ID!): Boolean! @authenticated
+  enableMFA: MFASetup! @authenticated
+  confirmMFA(code: String!): Boolean! @authenticated
+}
+
+# ─── Supporting types ─────────────────────────────────────────────────────────
+
+type MemberConnection {
+  edges: [MemberEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type MemberEdge {
+  node: Member!
+  cursor: String!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+type MFASetup {
+  secret: String!
+  qrCodeUrl: URL!
+  backupCodes: [String!]!
+}

@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  ci:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: cyberos
+          POSTGRES_PASSWORD: cyberos
+          POSTGRES_DB: cyberos_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      nats:
+        image: nats:2.10-alpine
+        ports:
+          - 4222:4222
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Turborepo needs git history for affected detection
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma clients
+        run: pnpm db:generate
+        env:
+          DATABASE_URL: postgresql://cyberos:cyberos@localhost:5432/cyberos_test
+
+      - name: Lint
+        run: pnpm turbo run lint --filter='[HEAD^1]'
+
+      - name: Typecheck
+        run: pnpm turbo run typecheck --filter='[HEAD^1]'
+
+      - name: Test
+        run: pnpm turbo run test --filter='[HEAD^1]'
+        env:
+          DATABASE_URL: postgresql://cyberos:cyberos@localhost:5432/cyberos_test
+          REDIS_URL: redis://localhost:6379
+          NATS_URL: nats://localhost:4222
+
+      - name: Build
+        run: pnpm turbo run build --filter='[HEAD^1]'
+
+  rover-check:
+    name: Federation Schema Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install rover
+        run: curl -sSL https://rover.apollo.dev/nix/latest | sh
+      - name: Check subgraph schemas
+        run: |
+          for module in modules/*/; do
+            if [ -f "$module/schema.graphql" ]; then
+              name=$(basename $module)
+              ~/.rover/bin/rover subgraph check $APOLLO_GRAPH_REF \
+                --schema "$module/schema.graphql" \
+                --name "$name"
+            fi
+          done
+        env:
+          APOLLO_KEY: ${{ secrets.APOLLO_KEY }}
+          APOLLO_GRAPH_REF: ${{ secrets.APOLLO_GRAPH_REF }}
