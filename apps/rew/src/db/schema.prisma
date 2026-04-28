@@ -1,0 +1,34 @@
+// Prisma schema for @cyberos/rew.
+//
+// Module-scoped: all models below live in the Postgres schema `rew`.
+// Cross-module reads MUST go through GraphQL federation, not raw Prisma —
+// see SRS §5 and the architecture principle "no cross-module DB reads".
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../../node_modules/.prisma/rew-client"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["rew"]
+}
+
+// TODO: declare module-specific models here. Every model should:
+//   - belong to schema `rew` (`@@schema("rew")`)
+//   - carry a `tenant_id` column with an RLS policy
+//   - use ULID-shaped string ids (`@id @default(...)`) — never auto-increment
+
+// Example placeholder; remove when you add the first real model.
+model RewPlaceholder {
+  id        String   @id
+  tenantId  String   @map("tenant_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@map("rew_placeholder")
+  @@schema("rew")
+}

@@ -1,0 +1,5 @@
+# Business logic for @cyberos/obs lives here.
+#
+# One file per cohesive concern, named after the noun it operates on
+# (e.g., session-service.ts, password-service.ts). Resolvers and MCP
+# handlers stay thin; they delegate to services for the actual logic.

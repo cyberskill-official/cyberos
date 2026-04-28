@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/observability" },
+    { "path": "../../packages/events" },
+    { "path": "../../packages/db" },
+    { "path": "../../packages/mcp-server" },
+    { "path": "../../packages/subgraph-kit" }
+  ]
+}

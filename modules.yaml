@@ -1,0 +1,261 @@
+# CyberOS — module manifest.
+#
+# This file is the single source of truth for the 21 modules. Editing it +
+# running `pnpm gen:module` re-stamps the apps/{code}/ folder so every
+# module has the same canonical shape.
+#
+# Order is the canonical PRD §5 order; do not reorder. Ports are deterministic
+# and MUST NOT be reused — once a module owns a port, it owns it forever.
+#
+# Adding a new module:
+#   1. Append a new entry below (next free port).
+#   2. Run `pnpm gen:module --module {CODE}`.
+#   3. Open the generated apps/{code}/README.md and start filling in.
+
+version: 1
+generated_apps_root: apps
+
+modules:
+  # ─── P0 · Foundation ──────────────────────────────────────────────────────
+
+  - code: AUTH
+    name: Authentication & Tenancy
+    phase: P0
+    package: "@cyberos/auth"
+    port: 4001
+    graphql_namespace: auth
+    prisma_schema: auth
+    mcp_namespace: auth
+    department: engineering
+    depends_on: []
+
+  - code: AI
+    name: AI Gateway
+    phase: P0
+    package: "@cyberos/ai"
+    port: 4002
+    graphql_namespace: ai
+    prisma_schema: ai
+    mcp_namespace: ai
+    department: engineering
+    depends_on: [AUTH]
+
+  - code: MCP
+    name: MCP Server
+    phase: P0
+    package: "@cyberos/mcp"
+    port: 4003
+    graphql_namespace: mcp
+    prisma_schema: mcp
+    mcp_namespace: mcp
+    department: engineering
+    depends_on: [AUTH]
+
+  - code: OBS
+    name: Observability
+    phase: P0
+    package: "@cyberos/obs"
+    port: 4004
+    graphql_namespace: obs
+    prisma_schema: obs
+    mcp_namespace: obs
+    department: engineering
+    depends_on: [AUTH]
+
+  - code: CHAT
+    name: Internal Chat
+    phase: P0
+    package: "@cyberos/chat"
+    port: 4005
+    graphql_namespace: chat
+    prisma_schema: chat
+    mcp_namespace: chat
+    department: product
+    depends_on: [AUTH, BRAIN, GENIE]
+
+  - code: BRAIN
+    name: Universal Knowledge Layer
+    phase: P0
+    package: "@cyberos/brain"
+    port: 4006
+    graphql_namespace: brain
+    prisma_schema: brain
+    mcp_namespace: brain
+    department: engineering
+    depends_on: [AUTH, AI]
+
+  - code: GENIE
+    name: Company Mascot AI Assistant
+    phase: P0
+    package: "@cyberos/genie"
+    port: 4007
+    graphql_namespace: genie
+    prisma_schema: genie
+    mcp_namespace: genie
+    department: product
+    depends_on: [AUTH, AI, BRAIN, MCP]
+
+  # ─── P1 · Run the company ─────────────────────────────────────────────────
+
+  - code: PROJ
+    name: Projects & Tasks
+    phase: P1
+    package: "@cyberos/proj"
+    port: 4008
+    graphql_namespace: proj
+    prisma_schema: proj
+    mcp_namespace: proj
+    department: product
+    depends_on: [AUTH, CHAT]
+
+  - code: TIME
+    name: Time Tracking
+    phase: P1
+    package: "@cyberos/time"
+    port: 4009
+    graphql_namespace: time
+    prisma_schema: time
+    mcp_namespace: time
+    department: operations
+    depends_on: [AUTH, PROJ]
+
+  - code: CRM
+    name: Customer Relationships
+    phase: P1
+    package: "@cyberos/crm"
+    port: 4010
+    graphql_namespace: crm
+    prisma_schema: crm
+    mcp_namespace: crm
+    department: sales
+    depends_on: [AUTH, EMAIL]
+
+  - code: KB
+    name: Knowledge Base
+    phase: P1
+    package: "@cyberos/kb"
+    port: 4011
+    graphql_namespace: kb
+    prisma_schema: kb
+    mcp_namespace: kb
+    department: product
+    depends_on: [AUTH, BRAIN]
+
+  - code: HR
+    name: Human Resources
+    phase: P1
+    package: "@cyberos/hr"
+    port: 4012
+    graphql_namespace: hr
+    prisma_schema: hr
+    mcp_namespace: hr
+    department: hr
+    depends_on: [AUTH]
+
+  - code: EMAIL
+    name: Email Client
+    phase: P1
+    package: "@cyberos/email"
+    port: 4013
+    graphql_namespace: email
+    prisma_schema: email
+    mcp_namespace: email
+    department: product
+    depends_on: [AUTH]
+
+  - code: REW
+    name: Total Rewards
+    phase: P1
+    package: "@cyberos/rew"
+    port: 4014
+    graphql_namespace: rew
+    prisma_schema: rew
+    mcp_namespace: rew
+    department: hr
+    eu_ai_act_risk_class: high
+    depends_on: [AUTH, HR, TIME]
+
+  - code: LEARN
+    name: Career Path & Learning
+    phase: P1
+    package: "@cyberos/learn"
+    port: 4015
+    graphql_namespace: learn
+    prisma_schema: learn
+    mcp_namespace: learn
+    department: hr
+    eu_ai_act_risk_class: high
+    depends_on: [AUTH, HR, REW]
+
+  # ─── P2 · Operationalize ──────────────────────────────────────────────────
+
+  - code: INV
+    name: Invoicing
+    phase: P2
+    package: "@cyberos/inv"
+    port: 4016
+    graphql_namespace: inv
+    prisma_schema: inv
+    mcp_namespace: inv
+    department: operations
+    depends_on: [AUTH, CRM, PROJ]
+
+  - code: ESOP
+    name: Phantom Stock
+    phase: P2
+    package: "@cyberos/esop"
+    port: 4017
+    graphql_namespace: esop
+    prisma_schema: esop
+    mcp_namespace: esop
+    department: hr
+    eu_ai_act_risk_class: high
+    depends_on: [AUTH, HR, REW]
+
+  # ─── P3 · Optimise ────────────────────────────────────────────────────────
+
+  - code: RES
+    name: Resource Allocation
+    phase: P3
+    package: "@cyberos/res"
+    port: 4018
+    graphql_namespace: res
+    prisma_schema: res
+    mcp_namespace: res
+    department: operations
+    depends_on: [AUTH, PROJ, TIME, HR]
+
+  - code: OKR
+    name: Objectives & Key Results
+    phase: P3
+    package: "@cyberos/okr"
+    port: 4019
+    graphql_namespace: okr
+    prisma_schema: okr
+    mcp_namespace: okr
+    department: product
+    depends_on: [AUTH]
+
+  # ─── P4 · Externalise ─────────────────────────────────────────────────────
+
+  - code: DOC
+    name: Document Signing
+    phase: P4
+    package: "@cyberos/doc"
+    port: 4020
+    graphql_namespace: doc
+    prisma_schema: doc
+    mcp_namespace: doc
+    department: operations
+    depends_on: [AUTH, CRM]
+
+  - code: CP
+    name: Client Portal
+    phase: P4
+    package: "@cyberos/cp"
+    port: 4021
+    graphql_namespace: cp
+    prisma_schema: cp
+    mcp_namespace: cp
+    department: client_success
+    depends_on: [AUTH, PROJ, INV, DOC]

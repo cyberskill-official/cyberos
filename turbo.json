@@ -1,9 +1,25 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalDependencies": [
+    "tsconfig.base.json",
+    ".env",
+    ".env.local"
+  ],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "NATS_URL",
+    "REDIS_URL",
+    "OTEL_EXPORTER_OTLP_ENDPOINT",
+    "NEW_RELIC_LICENSE_KEY",
+    "AWS_REGION",
+    "AWS_BEDROCK_REGION"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "dev": {
@@ -12,19 +28,15 @@
     },
     "test": {
       "dependsOn": ["^build"],
+      "inputs": ["src/**", "test/**", "vitest.config.ts"],
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "dependsOn": ["^build"]
+      "inputs": ["src/**", "test/**", "eslint.config.js"]
     },
     "typecheck": {
-      "dependsOn": ["^build"]
-    },
-    "db:generate": {
-      "cache": false
-    },
-    "db:migrate": {
-      "cache": false
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json"]
     },
     "clean": {
       "cache": false

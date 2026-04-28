@@ -1,0 +1,38 @@
+# Node / TS
+node_modules/
+*.tsbuildinfo
+dist/
+.turbo/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local
+.env
+.env.local
+.env.*.local
+
+# Prisma
+prisma/migrations/dev/
+*.db
+*.db-journal
+
+# Generated
+**/.next/
+**/out/
+**/.cache/
+
+# Backups (lefthook + cyberskill init)
+.github/.backup/

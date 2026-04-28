@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberskill.dev/schemas/pull-request.schema.json",
+  "title": "CyberSkill Pull Request Template — pull_request@1",
+  "description": "Schema for the PR template's YAML frontmatter. Required-when rules from audit §1.4 #1 (breaking_change) and #2 (soc2_change_class=emergency) are encoded as if/then conditionals; the H2-presence half is enforced by the validator's body checker.",
+  "type": "object",
+  "propertyNames": {
+    "pattern": "^[a-z][a-z0-9_]*$"
+  },
+  "additionalProperties": false,
+  "allOf": [
+    { "$ref": "common.schema.json#/$defs/common_header" },
+    {
+      "required": ["pr_type", "breaking_change", "soc2_change_class"],
+      "properties": {
+        "title": true,
+        "author": true,
+        "department": true,
+        "status": true,
+        "priority": true,
+        "created_at": true,
+        "ai_authorship": true,
+        "template": {
+          "const": "pull_request@1"
+        },
+        "pr_type": {
+          "type": "string",
+          "enum": [
+            "feat",
+            "fix",
+            "docs",
+            "refactor",
+            "perf",
+            "test",
+            "build",
+            "ci",
+            "chore",
+            "revert"
+          ],
+          "description": "Conventional Commits type."
+        },
+        "breaking_change": {
+          "type": "boolean",
+          "description": "If true, body must contain a non-empty ## Migration H2 (validator body check)."
+        },
+        "linked_issues": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/issue_ref" },
+          "uniqueItems": true
+        },
+        "soc2_change_class": {
+          "type": "string",
+          "enum": ["standard", "expedited", "emergency"],
+          "description": "SOC 2 CC8.1 change-management classification. emergency requires a ## Post-Incident Review Plan H2 in the body."
+        }
+      }
+    }
+  ]
+}
