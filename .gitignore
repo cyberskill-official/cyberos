@@ -36,3 +36,9 @@ prisma/migrations/dev/
 
 # Backups (lefthook + cyberskill init)
 .github/.backup/
+
+# Cowork session scratchpads — never commit
+# MEMORY/ holds Cowork's persistent working context (session notes, decisions log).
+# OUTPUTS/ is Cowork's session scratchpad — finalized work moves to its proper home.
+MEMORY/
+OUTPUTS/

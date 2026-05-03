@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/design-system",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for design-system'",
+    "test": "echo 'TODO: add tests for design-system'",
+    "lint": "echo 'TODO: add lint for design-system'",
+    "typecheck": "echo 'TODO: add typecheck for design-system'"
+  }
+}

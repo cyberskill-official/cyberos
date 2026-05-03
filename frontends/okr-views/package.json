@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/okr-views",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for okr-views'",
+    "test": "echo 'TODO: add tests for okr-views'",
+    "lint": "echo 'TODO: add lint for okr-views'",
+    "typecheck": "echo 'TODO: add typecheck for okr-views'"
+  }
+}

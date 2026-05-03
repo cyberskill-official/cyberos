@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/test-fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for test-fixtures'",
+    "test": "echo 'TODO: add tests for test-fixtures'",
+    "lint": "echo 'TODO: add lint for test-fixtures'",
+    "typecheck": "echo 'TODO: add typecheck for test-fixtures'"
+  }
+}

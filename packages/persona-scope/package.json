@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/persona-scope",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for persona-scope'",
+    "test": "echo 'TODO: add tests for persona-scope'",
+    "lint": "echo 'TODO: add lint for persona-scope'",
+    "typecheck": "echo 'TODO: add typecheck for persona-scope'"
+  }
+}

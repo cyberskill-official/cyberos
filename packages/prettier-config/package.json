@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/prettier-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for prettier-config'",
+    "test": "echo 'TODO: add tests for prettier-config'",
+    "lint": "echo 'TODO: add lint for prettier-config'",
+    "typecheck": "echo 'TODO: add typecheck for prettier-config'"
+  }
+}

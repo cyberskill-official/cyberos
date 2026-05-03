@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/learn-views",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for learn-views'",
+    "test": "echo 'TODO: add tests for learn-views'",
+    "lint": "echo 'TODO: add lint for learn-views'",
+    "typecheck": "echo 'TODO: add typecheck for learn-views'"
+  }
+}

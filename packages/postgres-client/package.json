@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/postgres-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for postgres-client'",
+    "test": "echo 'TODO: add tests for postgres-client'",
+    "lint": "echo 'TODO: add lint for postgres-client'",
+    "typecheck": "echo 'TODO: add typecheck for postgres-client'"
+  }
+}

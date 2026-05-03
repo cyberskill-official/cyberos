@@ -1,0 +1,13 @@
+{
+  "name": "@cyberos/inv-views",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "build": "echo 'TODO: add build for inv-views'",
+    "test": "echo 'TODO: add tests for inv-views'",
+    "lint": "echo 'TODO: add lint for inv-views'",
+    "typecheck": "echo 'TODO: add typecheck for inv-views'"
+  }
+}
