@@ -10,6 +10,7 @@ feature_type: internal_tooling
 eu_ai_act_risk_class: not_ai
 target_release: "P1 / 2026-Q4"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -158,3 +159,9 @@ Every imported message is recorded with `provenance: "gmail-import"` in `email.m
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The migration pipeline is deterministic ETL; no AI inference. CaMeL re-runs on the imported messages as they enter BRAIN ingestion (FR-EMAIL-003), which keeps the AI risk classification at the BRAIN ingestion layer where it already lives.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

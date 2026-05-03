@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: not_ai
 target_release: "P2 / 2027-Q1"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -274,3 +275,9 @@ Persisted-queries discipline applies. The `hrSecureIdentity` queries and `hrUpse
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The HR data substrate is deterministic; AI surfaces (1:1 prep brief, onboarding checklist) ride on top in FR-HR-002 / FR-HR-003. REW AI surfaces (payslip narrator) live in FR-REW-005 with explicit `not_ai` for compute paths and `limited` for the read-only narrative.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

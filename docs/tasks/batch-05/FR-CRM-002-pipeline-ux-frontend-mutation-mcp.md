@@ -10,6 +10,7 @@ feature_type: user_facing
 eu_ai_act_risk_class: not_ai
 target_release: "P1 / 2026-Q4"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -204,3 +205,9 @@ CUO scope contract: read all + propose; commit forbidden. Consistent with PROJ F
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The frontend + mutation surface are deterministic; AI surfaces in FR-CRM-003 inherit GENIE risk classification.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

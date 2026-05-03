@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: not_ai
 target_release: "P3 / 2028-Q1"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -229,6 +230,16 @@ A new `audit.soc2_evidence_log` table accumulates daily:
 - Logical access (per-persona + per-tool MCP grants from FR-MCP-001).
 
 The scaffolding does not produce reports — those come at SOC 2 Type II audit close in P4. But the data is collected from Day 1 of P3.
+
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
 
 ## Out of Scope
 
@@ -459,6 +470,12 @@ Feature: Phase-Exit RFC for P3 → P4 cannot be signed if any criterion is not g
 - **OQ-OBS-004-03.** Should the load-test config include a "regulated-data" tenant (one tenant with synthetic compensation + special-category data) to verify the BRAIN denylist (DEC-036) holds at scale? **Decision: yes, add a single regulated-data tenant to the 100; add invariant tests verifying the denylist suppresses ingestion.** Routed for confirmation in P3 entry planning.
 - **OQ-OBS-004-04.** Should the CUO unaided-report skill have a special "no-PII guard" mode that suppresses any sentence mentioning a specific employee by name (since the report is read-only and intended for board consumption)? **Decision needed by Founder + DPO.** Default proposal: yes; the skill emits aggregate stats (headcount, turnover, total comp) but no individual employee names; founder can override during edit.
 - **OQ-OBS-004-05.** Should the Phase-Exit RFC be made public (Trust Center) at sign-time? **Decision needed by Founder.** Default proposal: a redacted version (no NDA-covered customer names, no specific financial numbers below P&L line totals) is published to the Trust Center; the full version is internal + auditor-only.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

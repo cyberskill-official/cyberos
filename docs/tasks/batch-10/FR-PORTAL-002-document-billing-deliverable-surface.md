@@ -10,6 +10,7 @@ feature_type: full_stack
 eu_ai_act_risk_class: not_ai
 target_release: "P4 / 2028-Q2"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -29,6 +30,16 @@ Three failure modes if not built carefully:
 - **Cross-workspace document leakage.** A counterparty can be invited to multiple workspaces (for tenants who serve them on multiple engagements). Without strict per-workspace publication scoping, the user could see documents from a workspace they're meant to access in a workspace they're not.
 - **Payment instrument leakage.** PORTAL is at the public-Internet edge; if it ever loaded card data into its DOM, the tenant becomes PCI-DSS-in-scope. The architectural contract: PORTAL never loads payment data, only deep-links to the payment processor's hosted checkout.
 - **Deliverable URL replay.** A presigned URL leaked outside the workspace context (forwarded email, log file copy) becomes an unauthenticated access vector. Mitigation: short TTL (24 hours) + per-download audit + watermark binding the file to the user.
+
+## Customer Quotes
+
+<!-- Required when client_visible: true. Verbatim, attributed where possible. Paraphrasing here costs you the signal. -->
+
+<untrusted_content source="other">
+…paste verbatim customer quote here…
+</untrusted_content>
+
+<!-- TODO during implementation PR: capture real customer quotes from sales calls / NPS / support tickets. -->
 
 ## Proposed Solution
 
@@ -85,6 +96,16 @@ If a deliverable file is updated, the tenant employee creates a new publication;
 **Cross-workspace constraint enforced.**
 
 Every operation in this FR includes a `workspace_id` parameter sourced from the URL slug + cross-checked against `portal.workspace_user.workspace_id` for the requesting external user. RLS at the database layer is the floor; application-layer assertions are belt-and-braces. The FR-TEN-001 invariant test harness is extended to cover all three surfaces.
+
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
 
 ## Out of Scope
 
@@ -193,11 +214,23 @@ Feature: PORTAL never carries payment data
 - Presigned URL anomaly rate (downloads from unexpected IPs) ≤ 0.5% of total.
 - Document signing flow median completion time ≤ 7 minutes.
 
+## Sales/CS Summary
+
+<!-- Required when client_visible: true. One paragraph written so a non-engineer can pitch the feature. Plain English. No internal jargon, no module codes, no speculation about future scope. -->
+
+<!-- TODO during implementation PR: write the customer-facing pitch. -->
+
 ## Open Questions
 
 - **OQ-PORTAL-002-01.** Should AR aging context be hidden by default and opt-in per tenant, or shown by default and opt-out? Default proposal: hidden by default; tenant opts in when they want to apply collection pressure.
 - **OQ-PORTAL-002-02.** Should the QES-tier flow support all major eIDAS QTSPs at MVP, or just the 2-3 most likely (e.g. Adobe Sign QTSP, DocuSign EU QTSP, Trustpro)? Default: 2-3 at MVP; expand later based on customer demand.
 - **OQ-PORTAL-002-03.** Should watermark text be customisable per tenant (e.g. logo overlay)? Default: no at MVP; revisit post-launch.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: not_ai
 target_release: "P0 / 2026-Q3"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -172,3 +173,9 @@ There are no mutations on the audit subgraph — writes happen via the platform-
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The audit log is fully deterministic; no AI-derived behaviour is part of the write or verify path. AI-system audits ride on top of this infrastructure (the AI Gateway writes audit rows for every LLM call; FR-AI-001 specifies the payload shape) but the audit log itself does not "use AI".
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

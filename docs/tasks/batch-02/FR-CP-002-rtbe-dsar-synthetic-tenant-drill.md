@@ -10,6 +10,7 @@ feature_type: internal_tooling
 eu_ai_act_risk_class: not_ai
 target_release: "P0 / 2026-Q3"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -186,3 +187,9 @@ The CUO persona's `tools_forbidden_explicit` list includes `cyberos.cp.rtbe_requ
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The RTBE / DSAR machinery is deterministic; no AI inference in the flow. (DSAR enumerator output may flow through CUO for natural-language presentation in P3; that surface is FR-CP-DSAR-NL-001 with appropriate AI risk classification at that point.)
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

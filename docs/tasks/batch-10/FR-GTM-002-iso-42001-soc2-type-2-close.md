@@ -10,6 +10,7 @@ feature_type: compliance
 eu_ai_act_risk_class: not_ai
 target_release: "P4 / 2028-Q4"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -34,6 +35,16 @@ Three failure modes:
 - **Audit timeline slip.** SOC 2 Type II requires 12 months evidence; if collection started late, the audit window slips. Mitigation: FR-CP-005 + FR-OBS-004 already started collection at P3 entry.
 - **ISO 42001 surprise.** ISO 42001 is new; many auditors don't have experience. Mitigation: pre-engage one of the early-adopter audit firms (Schellman, A-LIGN, or local equivalents in SG/EU/VN); 6-month lead time.
 - **EU AI Act gap.** A platform that claims AI-native must be ready for the high-risk article-by-article record. Mitigation: FR-CP-004 already produces this evidence map; this FR validates + publishes it.
+
+## Customer Quotes
+
+<!-- Required when client_visible: true. Verbatim, attributed where possible. Paraphrasing here costs you the signal. -->
+
+<untrusted_content source="other">
+…paste verbatim customer quote here…
+</untrusted_content>
+
+<!-- TODO during implementation PR: capture real customer quotes from sales calls / NPS / support tickets. -->
 
 ## Proposed Solution
 
@@ -133,6 +144,16 @@ Trust Center extends with:
 - PCI-DSS SAQ A (FR-PORTAL-002).
 - eIDAS QTSP usage (FR-DOC-001).
 - VN Decree 130/2018 e-signature (FR-DOC-001).
+
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
 
 ## Out of Scope
 
@@ -245,11 +266,23 @@ Feature: AI use-case inventory auto-stays current
 - Sub-processor change subscriber list grows to ≥ 50 subscribers within 90 days.
 - Pentest attestation: zero critical/high findings unremediated.
 
+## Sales/CS Summary
+
+<!-- Required when client_visible: true. One paragraph written so a non-engineer can pitch the feature. Plain English. No internal jargon, no module codes, no speculation about future scope. -->
+
+<!-- TODO during implementation PR: write the customer-facing pitch. -->
+
 ## Open Questions
 
 - **OQ-GTM-002-01.** Should we offer a paid bug-bounty program at launch or defer? Default: defer 6 months; vulnerability disclosure with public credit only at MVP.
 - **OQ-GTM-002-02.** Should we pursue ISO/IEC 27017 (cloud-specific) + 27018 (cloud personal-data) at P4 + 12 months? Default: yes; budget for it.
 - **OQ-GTM-002-03.** Should the SOC 2 Type II report cover Privacy Trust Service Criteria? Default: yes (signals strong PII posture; aligns with PDPL + GDPR claims).
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

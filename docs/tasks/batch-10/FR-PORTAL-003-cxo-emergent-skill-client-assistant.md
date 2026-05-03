@@ -10,6 +10,7 @@ feature_type: ai_feature
 eu_ai_act_risk_class: limited
 target_release: "P4 / 2028-Q3"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -31,6 +32,16 @@ Three failure modes that the architecture must prevent:
 - **Cross-workspace retrieval leakage.** If CXO's retrieval ever pulls from a workspace other than the user's current workspace, the model could fabricate or quote content from another counterparty's data. Mitigation: hard `workspace_id` filter at every retrieval call (Layer 2 vector + Layer 2 graph + Layer 1 publication content).
 - **Hallucinated authority claims.** "Yes, the project will be delivered on May 10" — when no such commitment exists. Mitigation: every answer must cite source publications; uncited claims are suppressed.
 - **AI used as a decision-maker by the counterparty.** If CXO says "you should approve this invoice", the counterparty might. Mitigation: CXO is constrained to descriptive language only; refuses recommendation phrasing; uses "the workspace shows…" framing.
+
+## Customer Quotes
+
+<!-- Required when client_visible: true. Verbatim, attributed where possible. Paraphrasing here costs you the signal. -->
+
+<untrusted_content source="other">
+…paste verbatim customer quote here…
+</untrusted_content>
+
+<!-- TODO during implementation PR: capture real customer quotes from sales calls / NPS / support tickets. -->
 
 ## Proposed Solution
 
@@ -97,6 +108,16 @@ Per-user-per-workspace; retained 90 days; `cxo.conversation` table; deletable by
 **Cost guardrails.**
 
 CXO calls go through the AI Gateway with a per-tenant, per-workspace, per-counterparty-user budget cap. The 80%/100%/110% Notify ladder (FR-BILL-001) applies; at 110% per-workspace, CXO suspends until the next billing cycle and falls back to "the assistant is unavailable; please use Q&A".
+
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
 
 ## Out of Scope
 
@@ -220,11 +241,23 @@ Feature: First-message Article 50 transparency
 - Median CXO response latency ≤ 4 seconds (streaming start).
 - vi-VN quality eval pass rate ≥ 90%.
 
+## Sales/CS Summary
+
+<!-- Required when client_visible: true. One paragraph written so a non-engineer can pitch the feature. Plain English. No internal jargon, no module codes, no speculation about future scope. -->
+
+<!-- TODO during implementation PR: write the customer-facing pitch. -->
+
 ## Open Questions
 
 - **OQ-PORTAL-003-01.** Should CXO have access to a "FAQ knowledge base" published by the tenant (e.g. "About this firm" pages) in addition to workspace-scoped publications? Default: yes, but as a separate tenant-level publication scope; renders with a different citation badge.
 - **OQ-PORTAL-003-02.** Should the chat widget be enabled by default or opt-in per workspace? Default: opt-in per tenant (tenant decides whether their clients see CXO at all).
 - **OQ-PORTAL-003-03.** Should CXO emit a "your team typically responds in X hours" SLA estimate based on past Q&A response times? Default: no at MVP (could be misread as a commitment); revisit with explicit "estimate" framing later.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

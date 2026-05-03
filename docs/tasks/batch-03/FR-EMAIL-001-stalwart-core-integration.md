@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: not_ai
 target_release: "P1 / 2026-Q4"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -234,3 +235,9 @@ The `send_message` tool requires both the destructive-confirmation gate *and* a 
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The Stalwart core integration is deterministic mail infrastructure. AI-related EMAIL surfaces (CaMeL ingestion, suggested replies, thread summaries) ship in dedicated FRs (FR-EMAIL-003, FR-EMAIL-004) where they are correctly classified.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

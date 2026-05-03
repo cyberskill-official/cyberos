@@ -10,6 +10,7 @@ feature_type: internal_tooling
 eu_ai_act_risk_class: high
 target_release: "P2 / 2027-Q1"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request

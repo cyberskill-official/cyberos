@@ -208,15 +208,40 @@ Total target: **~100 FRs across 10 batches**, sized to one engineer-week of clar
 
 ## 3. Generation rules (binding for every batch)
 
-These rules are pinned so that subsequent batches stay consistent without re-stating them:
+These rules are pinned so that every batch stays consistent without re-stating them:
 
-1. **Section adherence.** Every FR uses the canonical section list (Summary → Problem → Proposed Solution → Out of Scope → Dependencies → Constraints → Compliance / Privacy → Risk Assessment → Vietnamese-locale considerations → Scope → Success Metrics → Open Questions → References). No new sections. Sections may be marked `_(N/A)_` when truly inapplicable, but never omitted.
-2. **Frontmatter.** Each FR has the canonical frontmatter fields (`title`, `author`, `department`, `status`, `priority`, `created_at`, `ai_authorship`, `feature_type`, `eu_ai_act_risk_class`, `target_release`, `client_visible`). FRs are self-contained — no external template dependency.
+1. **Canonical section list.** Every FR uses the canonical section list below. Sections marked **(required)** are always present (may be a stub). Sections marked **(conditional)** are present only when the trigger holds.
+
+   1. `Summary` (required)
+   2. `Problem` (required)
+   3. `Customer Quotes` (conditional — required when `client_visible: true`)
+   4. `Proposed Solution` (required)
+   5. `Alternatives Considered` (required)
+   6. `Out of Scope` (required)
+   7. `Dependencies` (required)
+   8. `Constraints` (required)
+   9. `Compliance / Privacy` (required when the FR touches personal data, financial data, AI surfaces, or any compliance regime)
+   10. `Risk Assessment` (conditional — required when `eu_ai_act_risk_class` is `limited` or `high`; with subsections *Data Sources*, *Human Oversight*, *Failure Modes*)
+   11. `Vietnamese-locale considerations` (required when the FR has a user-visible surface)
+   12. `Scope` (required, with at least one Gherkin acceptance block in ```gherkin``` fence)
+   13. `Success Metrics` (required)
+   14. `Sales/CS Summary` (conditional — required when `client_visible: true`)
+   15. `AI Authorship Disclosure` (conditional — required when `ai_authorship` is not `none`; three bullets: *Tools used*, *Scope*, *Human review*)
+   16. `Open Questions` (required, can be empty)
+   17. `References` (required)
+
+2. **Frontmatter.** Each FR has the canonical frontmatter fields (`title`, `author`, `department`, `status`, `priority`, `created_at`, `ai_authorship`, `feature_type`, `eu_ai_act_risk_class`, `target_release`, `client_visible`, `template: feature_request@1`).
+
 3. **No invented facts.** Every numerical target, every module name, every locked-decision reference (`DEC-XXX`), every NFR ID, every FR cross-reference, and every compliance regime traces back to a citation in the PRD or SRS. Sources are listed in the FR's `Dependencies` section. If the spec is silent, the FR explicitly marks the gap as an *Open Question* (`OQ-XXX`) and routes resolution to the founder.
-4. **Auditable acceptance criteria.** Every FR ends its `Scope` and `Success Metrics` with criteria that a CI job, a phase-gate review, or an external auditor can verify with no human interpretation. Where Gherkin is appropriate (PRD §19.18), the FR uses Gherkin verbatim.
+
+4. **Auditable acceptance criteria.** Every FR ends its `Scope` and `Success Metrics` with criteria that a CI job, a phase-gate review, or an external auditor can verify with no human interpretation. Where Gherkin is appropriate, the FR uses Gherkin verbatim.
+
 5. **AI Risk Assessment.** When the feature emits AI-generated content visible to a natural person, `eu_ai_act_risk_class: limited` is the floor and the three required subsections are filled. When the feature decides on compensation, equity, hiring, or any HR-impacting axis, `eu_ai_act_risk_class: high` and Article 14 human-oversight controls are spelled out at the system-property level.
+
 6. **Vietnamese-first.** Where a feature has a user-visible surface, the FR explicitly addresses Vietnamese-locale behaviour (PGroonga tokenisation, Be Vietnam Pro typography, Anh/Chị salutations, vi-VN as default locale).
-7. **Compliance cross-references.** Every FR that touches personal data names the applicable regime: PDPL Law 91/2025 + Decree 356/2025 (Vietnam), Decree 13/2023 (PDPL implementing decree), GDPR (EU), EU AI Act Articles 5–7 + 14 + 50, SOC 2 trust criteria, ISO/IEC 27001, and where relevant ISO/IEC 42001.
+
+7. **Compliance cross-references.** Every FR that touches personal data names the applicable regime: PDPL Law 91/2025 + Decree 356/2025 (Vietnam), Decree 13/2023, GDPR (EU), EU AI Act Articles 5–7 + 14 + 50, SOC 2 trust criteria, ISO/IEC 27001, and where relevant ISO/IEC 42001.
+
 8. **Locked decisions.** When an FR depends on a locked decision, it cites the `DEC-XXX` ID and the PRD §11.1 or SRS Decisions Log section. FRs never silently override locked decisions; a change request must be filed against the decisions log first.
 
 ---

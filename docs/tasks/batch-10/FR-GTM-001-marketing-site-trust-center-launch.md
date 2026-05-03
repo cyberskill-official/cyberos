@@ -10,6 +10,7 @@ feature_type: full_stack
 eu_ai_act_risk_class: limited
 target_release: "P4 / 2028-Q3"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -29,6 +30,16 @@ Three failure modes if the marketing surface is built poorly:
 - **Honest-but-bland.** A site that's compliance-perfect but reads like a vendor brochure. Mitigation: founder-voice copy + concrete examples + showing real product.
 - **Trust Center that's just lip service.** Posting "we're SOC 2 compliant" without the artefacts is what most SaaS does. CyberOS Trust Center auto-generates the actual content from the compliance plane.
 - **Launch sequence collapses.** Launching to crickets — no warm lead funnel, no PR amplification, no inbound playbook. Mitigation: pre-build the launch playbook before "go live"; rehearse internally.
+
+## Customer Quotes
+
+<!-- Required when client_visible: true. Verbatim, attributed where possible. Paraphrasing here costs you the signal. -->
+
+<untrusted_content source="other">
+…paste verbatim customer quote here…
+</untrusted_content>
+
+<!-- TODO during implementation PR: capture real customer quotes from sales calls / NPS / support tickets. -->
 
 ## Proposed Solution
 
@@ -102,6 +113,16 @@ Stored at `OUTPUTS/launch-playbook/`:
 - **PR plan**: Product Hunt launch playbook, Hacker News launch playbook, press release template, Vietnamese tech press contact list, Singapore startup ecosystem contacts (e83, Tech in Asia, etc.).
 - **Co-marketing templates**: partner blog post template, joint webinar deck template, joint case study template.
 - **Onboarding playbook**: first-3-week customer success playbook (post-trial-signup).
+
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
 
 ## Out of Scope
 
@@ -231,11 +252,23 @@ Feature: SOC 2 Type I requires NDA before download
 - Lighthouse score sustained ≥ 95 over time.
 - Zero accessibility regressions caught in pa11y CI.
 
+## Sales/CS Summary
+
+<!-- Required when client_visible: true. One paragraph written so a non-engineer can pitch the feature. Plain English. No internal jargon, no module codes, no speculation about future scope. -->
+
+<!-- TODO during implementation PR: write the customer-facing pitch. -->
+
 ## Open Questions
 
 - **OQ-GTM-001-01.** Should we offer a public sandbox tenant for prospects to "try before signup"? Default: no at MVP (signup is short, signup-then-cancel is the better flow); revisit if conversion data suggests otherwise.
 - **OQ-GTM-001-02.** Should the Trust Center include the tenants' own SOC 2 / ISO certifications when they have them, on the per-tenant /trust/<slug> page? Default: yes if the tenant opts in; show their certifications + their data residency.
 - **OQ-GTM-001-03.** Should we run a Product Hunt launch on Day 0 or wait until 30+ days post-launch with traction? Default: Day 0 — Product Hunt rewards first-day traction.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

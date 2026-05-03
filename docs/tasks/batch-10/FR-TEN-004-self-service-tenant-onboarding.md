@@ -10,6 +10,7 @@ feature_type: full_stack
 eu_ai_act_risk_class: not_ai
 target_release: "P4 / 2028-Q2"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -31,6 +32,16 @@ Three failure modes:
 - **Long onboarding times.** If steps are blocking (e.g. waiting for a human to verify the org), drop-off is high. Target: 30-min end-to-end.
 - **Abuse / fraudulent signups.** Spammy accounts, content farms, abusive AI-usage attempts. Mitigation: rate limits + Stripe Radar + manual review for "suspicious" first 30 days (held in a sandbox shard).
 - **Wrong residency selection.** A user from VN selects EU shard by mistake → cross-border-transfer compliance issue. Mitigation: auto-suggest based on IP + explicit confirmation step + irreversible-after-provisioning warning.
+
+## Customer Quotes
+
+<!-- Required when client_visible: true. Verbatim, attributed where possible. Paraphrasing here costs you the signal. -->
+
+<untrusted_content source="other">
+…paste verbatim customer quote here…
+</untrusted_content>
+
+<!-- TODO during implementation PR: capture real customer quotes from sales calls / NPS / support tickets. -->
 
 ## Proposed Solution
 
@@ -116,6 +127,16 @@ The wizard uses the design system from FR-DESIGN-001; vi-VN locale by default fo
 - Bounced payment-method validation: tenant auto-suspended via FR-TEN-002's `suspend` flow.
 - Trial-end auto-suspension: at day 14, no payment method = tenant suspended; 30-day grace then archive (FR-TEN-002).
 - Disposable-email-domain blocklist (mailinator, etc.).
+
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
 
 ## Out of Scope
 
@@ -227,11 +248,23 @@ Feature: Sandbox-mode for high-risk signups
 - Sandbox-mode flag rate: ≤ 5% of signups.
 - Trial-to-paid conversion rate: ≥ 25% (P4 + 90 days; will improve with iteration).
 
+## Sales/CS Summary
+
+<!-- Required when client_visible: true. One paragraph written so a non-engineer can pitch the feature. Plain English. No internal jargon, no module codes, no speculation about future scope. -->
+
+<!-- TODO during implementation PR: write the customer-facing pitch. -->
+
 ## Open Questions
 
 - **OQ-TEN-004-01.** Should the trial be 14 days or 30 days for non-VN-shard tenants? Default: 14 across the board, revisit post-launch based on conversion data.
 - **OQ-TEN-004-02.** Should a credit card be required at signup, or can users start without one and add later? Default: payment method optional at signup; auto-suspend at trial end if missing.
 - **OQ-TEN-004-03.** Should we offer founder-led "white-glove" onboarding for tenants with > 50 seats at signup? Default: yes; flag at form-submit time and route to a "schedule onboarding call" step instead of self-service.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

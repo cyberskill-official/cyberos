@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: not_ai
 target_release: "P3 / 2027-Q4"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -245,3 +246,9 @@ CyberOS treats your data as your data. You can suspend the platform if billing b
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. Lifecycle is deterministic operations. The provisioning flow's DPIA-acceptance step pre-supposes the tenant has reviewed AI-related risks (FR-CP-003); the persona-pinning step pre-supposes the tenant accepts the active CUO persona-versions.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

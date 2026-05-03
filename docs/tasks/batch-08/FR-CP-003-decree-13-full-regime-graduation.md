@@ -10,6 +10,7 @@ feature_type: internal_tooling
 eu_ai_act_risk_class: not_ai
 target_release: "P2 / 2027-Q3"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -271,3 +272,9 @@ There are no mutation MCP tools — DPO appointment + DPIA sign + DSAR fulfilmen
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The compliance plane is workflow + evidence storage; no AI in the path.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

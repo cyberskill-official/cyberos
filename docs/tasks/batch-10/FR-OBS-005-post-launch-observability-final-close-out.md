@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: not_ai
 target_release: "P4 / 2028-Q4"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -187,6 +188,16 @@ After GA sign-off:
 - **Public blog post** — "How we built CyberOS in 24 months" — Founder-authored, published to cyberos.world/blog.
 - **Trust Center final state** — all artefacts in place per FR-GTM-001 + FR-GTM-002.
 
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
+
 ## Out of Scope
 
 - New module development (post-GA roadmap; handled in `roadmap-year-3.md`).
@@ -320,6 +331,12 @@ Feature: CUO QBR preserves the 10% founder-edit threshold
 - **OQ-OBS-005-02.** Should `obs.tenant_health` aggregate metrics be exposed via the public API? Default: no (admin-internal); each tenant sees its own from `/admin/overview`.
 - **OQ-OBS-005-03.** When CyberSkill's tenant count exceeds 50, should the founder-personal-touch rule relax automatically or require explicit founder sign-off? Default: automatic relaxation at 50 with a Notify to founder.
 - **OQ-OBS-005-04.** Should we publish an annual transparency report (similar to Slack, Stripe, etc.) covering DSAR statistics, law-enforcement requests, anti-regression-failure incidents? Default: yes — first transparency report at GA + 12 months.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

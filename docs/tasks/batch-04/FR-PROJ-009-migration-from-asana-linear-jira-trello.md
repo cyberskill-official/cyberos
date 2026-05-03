@@ -10,6 +10,7 @@ feature_type: internal_tooling
 eu_ai_act_risk_class: not_ai
 target_release: "P1 / 2026-Q4"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -197,3 +198,9 @@ Within 7 days of import completion, the importer can be rolled back: every recor
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. The migration is deterministic ETL; no AI inference. (CaMeL re-ingests the imported comments + descriptions through BRAIN, where the AI risk classification already lives.)
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

@@ -10,6 +10,7 @@ feature_type: full_stack
 eu_ai_act_risk_class: not_ai
 target_release: "P4 / 2028-Q2"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -29,6 +30,16 @@ Three failure modes if this is not built carefully on the multi-tenant substrate
 - **Cross-tenant client leakage.** Without a hard `portal.workspace` × residency-shard × tenant constraint, a client of TenantA could in principle see content from TenantB. This is the most reputation-destroying class of bug for a SaaS at this stage.
 - **Publication accidents.** An internal employee accidentally drags an internal-only document (e.g. a project retrospective with frank assessments of the client) into the wrong publication scope. Once a counterparty has loaded the page, it's been read; revocation is a partial control.
 - **External AUTH attack surface.** External clients don't use the tenant's identity provider. A separate AUTH realm has to be just as hardened as the internal one — without falling back to "username + password" which is the default failure mode in lazy implementations.
+
+## Customer Quotes
+
+<!-- Required when client_visible: true. Verbatim, attributed where possible. Paraphrasing here costs you the signal. -->
+
+<untrusted_content source="other">
+…paste verbatim customer quote here…
+</untrusted_content>
+
+<!-- TODO during implementation PR: capture real customer quotes from sales calls / NPS / support tickets. -->
 
 ## Proposed Solution
 
@@ -170,6 +181,16 @@ A new persona-scope contract `client` is added to the AI Gateway + MCP Gateway:
 
 The portal home renders a vertical timeline of "what's been published, what's been signed, what's been delivered, what's pending response from you". Each item is sourced from `portal.publication` or `portal.qa_thread` rows. The timeline is the primary surface; it answers the typical client question "what's the latest?".
 
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
+
 ## Out of Scope
 
 - Real-time chat with the client (PORTAL is async-only at MVP; client-tenant chat is deferred — it would need CHAT to expose external rooms, which is not in PRD).
@@ -280,11 +301,23 @@ Feature: Publication revocation removes immediately
 - Publication revocation SLO: ≤ 60 seconds from revoke action to disappearance from UI.
 - vi-VN render correctness: zero typography or honorific bugs in QA pass.
 
+## Sales/CS Summary
+
+<!-- Required when client_visible: true. One paragraph written so a non-engineer can pitch the feature. Plain English. No internal jargon, no module codes, no speculation about future scope. -->
+
+<!-- TODO during implementation PR: write the customer-facing pitch. -->
+
 ## Open Questions
 
 - **OQ-PORTAL-001-01.** Should PORTAL support file uploads from the counterparty (FR-PORTAL-005) at MVP or as a follow-up? Default: follow-up (post-batch-10).
 - **OQ-PORTAL-001-02.** Should the `client_publisher` role be assignable to the CUO via a "draft + ask Founder to confirm" pattern, or kept human-only? Default: human-only at MVP.
 - **OQ-PORTAL-001-03.** Should PORTAL access logs be exposed to the counterparty as a "who from your team has seen what" view? Default: no (security through opacity); revisit in a P4 follow-up.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 

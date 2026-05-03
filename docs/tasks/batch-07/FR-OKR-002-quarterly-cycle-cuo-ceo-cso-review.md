@@ -10,6 +10,7 @@ feature_type: user_facing
 eu_ai_act_risk_class: limited
 target_release: "P2 / 2027-Q2"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request

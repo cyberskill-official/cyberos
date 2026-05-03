@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: limited
 target_release: "P0 / 2026-Q3"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request

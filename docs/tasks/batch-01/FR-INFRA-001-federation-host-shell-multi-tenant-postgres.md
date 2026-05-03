@@ -10,6 +10,7 @@ feature_type: infrastructure
 eu_ai_act_risk_class: not_ai
 target_release: "P0 / 2026-Q3"
 client_visible: false
+template: feature_request@1
 ---
 
 # Feature Request
@@ -91,3 +92,9 @@ The first end-to-end exercise is the trivial `HEALTH` subgraph — a single Grap
 ## AI Risk Assessment
 
 Not applicable. `eu_ai_act_risk_class: not_ai`. This feature ships zero AI-derived behaviour. The first AI surface is FR-AI-001 (S0-2) and is risk-classified there.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.

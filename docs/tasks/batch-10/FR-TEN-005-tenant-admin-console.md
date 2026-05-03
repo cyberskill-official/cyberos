@@ -10,6 +10,7 @@ feature_type: full_stack
 eu_ai_act_risk_class: not_ai
 target_release: "P4 / 2028-Q3"
 client_visible: true
+template: feature_request@1
 ---
 
 # Feature Request
@@ -34,6 +35,16 @@ Three failure modes if not built carefully:
 - **Unauthorised admin escalation.** A Member-role user shouldn't see admin pages. RBAC enforced at every endpoint, with UI hiding paths the user can't reach.
 - **Destructive action without confirmation.** Crypto-shred is permanent; suspending an active employee blocks all their work. Multi-step confirmation + step-up + audit log entries.
 - **AI budget runaway.** Without per-tenant + per-persona caps, an LLM-heavy month can produce a surprise invoice. Budget controls + Notify ladder + auto-pause prevent surprise.
+
+## Customer Quotes
+
+<!-- Required when client_visible: true. Verbatim, attributed where possible. Paraphrasing here costs you the signal. -->
+
+<untrusted_content source="other">
+…paste verbatim customer quote here…
+</untrusted_content>
+
+<!-- TODO during implementation PR: capture real customer quotes from sales calls / NPS / support tickets. -->
 
 ## Proposed Solution
 
@@ -136,6 +147,16 @@ Every destructive or financial action: step-up auth + audit-chain entry with ful
 6. On both signs: tenant moves to `pending_deletion` state for 30 days; daily countdown email; visible in admin console.
 7. Within 30 days, Founder can cancel.
 8. After 30 days: FR-TEN-002 `delete` flow runs; KMS keys destroyed; tenant becomes unrecoverable.
+
+## Alternatives Considered
+
+The shape of the answer has been deliberately constrained by the architectural rules in §2 of `README.md` and the locked decisions cited in *Dependencies*. Notable rejected approaches:
+
+- Approaches that would have allowed AI to make compensation, equity, or document-signing decisions — rejected per the "AI describes, humans decide" rule.
+- Approaches that would have created cross-tenant read or write paths — rejected per the cross-tenant invariant (FR-TEN-001 invariant test harness).
+- Where there are FR-specific alternatives, they're discussed inline in *Proposed Solution* and *Constraints*.
+
+<!-- TODO during implementation PR: replace with FR-specific rejected alternatives. -->
 
 ## Out of Scope
 
@@ -249,11 +270,23 @@ Feature: Emergency revoke pulls all sessions
 - Step-up coverage: 100% of destructive/financial endpoints require step-up.
 - Emergency revoke SLO: ≤ 30 seconds from CTA to all sessions invalid.
 
+## Sales/CS Summary
+
+<!-- Required when client_visible: true. One paragraph written so a non-engineer can pitch the feature. Plain English. No internal jargon, no module codes, no speculation about future scope. -->
+
+<!-- TODO during implementation PR: write the customer-facing pitch. -->
+
 ## Open Questions
 
 - **OQ-TEN-005-01.** Should the audit-log export be per-day file (rotated) or a single rolling file? Default: per-day.
 - **OQ-TEN-005-02.** Should we offer "delegated admin" (Founder grants a third party temporary admin access for support)? Default: no at MVP; revisit when partner ecosystem matures.
 - **OQ-TEN-005-03.** Should "tenant deletion" include the 7-year financial-records retention for tax / regulator? Default: yes — financial records are exported to cold-storage S3 (separate KMS key, retained 7-10y) before crypto-shred runs on the rest.
+
+## AI Authorship Disclosure
+
+- **Tools used:** Claude Cowork (Anthropic).
+- **Scope:** drafted the FR end-to-end against the PRD + SRS; founder reviews and edits before status changes from `ready_for_review`.
+- **Human review:** founder (`@stephen-cheng`) — final wording is the founder's responsibility.
 
 ## References
 
