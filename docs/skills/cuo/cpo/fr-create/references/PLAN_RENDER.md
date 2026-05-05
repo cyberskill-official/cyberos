@@ -2,8 +2,7 @@
 
 > Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §11.
 
-Emitted to chat at the end of PLAN phase. The persistent backlog lives in
-`manifest.json`; this render is the human-facing summary.
+Emitted to chat at the end of PLAN phase. The persistent backlog lives in `manifest.json`; this render is the human-facing summary.
 
 ```
 PROPOSED FR BACKLOG  (from <K> requirements files, sha256:<first-12-hex>...)
@@ -37,5 +36,4 @@ Approval options
 Reply with one of:  APPROVE  |  REVISE: <your edits>  |  ABORT
 ```
 
-This emission appends one `genie.action_log` row with `row_kind: question`
-(per SRS §6.6.2 — plan approval IS a Question primitive).
+This emission appends one `genie.action_log` row with `row_kind: question` (per SRS §6.6.2 — plan approval IS a Question primitive).

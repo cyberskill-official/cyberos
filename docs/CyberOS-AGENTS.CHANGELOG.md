@@ -6,6 +6,31 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-06 — Skill-registry v0.2.0 (informational; no AGENTS.md edits)
+
+### Context
+
+The skill registry at `cyberos/docs/skills/` shipped v0.2.0 with:
+- Skills↔contracts namespace split (DEC-090).
+- Dual-mode invocation + exposability frontmatter (DEC-091).
+- Self-audit + auto-refinement at skill level (DEC-092).
+- Manual fine-tune playbook (DEC-093).
+- Plus the consolidated `README.md` wiki + the onboarding infographic.
+
+### Why this is an AGENTS.md changelog entry but no AGENTS.md edits
+
+- AGENTS.md governs the **BRAIN** (`.cyberos-memory/`) protocol — memory writes, the audit ledger at `audit/<YYYY-MM>.jsonl`, the consolidation cycle, the conflict-resolution graph.
+- The skill registry's `genie.action_log` is a **separate** audit stream (the runtime's, per SRS §6.7) that records skill outputs. It chains independently from the BRAIN's ledger.
+- The new skill-level `op:"self_refinement_proposal"` rows live in `genie.action_log`, not in the BRAIN. AGENTS.md §7.1's `op` enum is unaffected.
+- The skill-level `self_audit` + `INVARIANTS.md` machinery is a **parallel** of AGENTS.md §0.4's standing rule, applied at the skill level rather than the protocol level. Same pattern, different surface.
+
+### Cross-link
+
+- See `cyberos/docs/skills/CHANGELOG.md` v0.2.0 for the registry-side detail.
+- BRAIN entries DEC-090 / DEC-091 / DEC-092 / DEC-093 record the underlying decisions; REF-012 / REF-013 / REF-014 record the §0.4 refinement candidates surfaced during the design conversation.
+
+---
+
 ## 2026-05-04 (evening, follow-up) — Validator discipline: fenced-code-block exemption + datetime-instance acceptance
 
 ### Changed

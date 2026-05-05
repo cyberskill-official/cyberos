@@ -1,12 +1,8 @@
 # Amendment protocol (PLAN_AMENDMENT_REQUEST + batch aggregation)
 
-> Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §10.6, §10.7,
-> §6.7.
+> Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §10.6, §10.7, §6.7.
 
-Amendments are mid-flight changes to the approved backlog (add / split /
-merge / reorder / reclassify FRs). Unlike HITL pauses, amendments do NOT
-halt the batch — they accumulate and emit one consolidated request at
-batch end.
+Amendments are mid-flight changes to the approved backlog (add / split / merge / reorder / reclassify FRs). Unlike HITL pauses, amendments do NOT halt the batch — they accumulate and emit one consolidated request at batch end.
 
 ## Record schema (PLAN_AMENDMENT_REQUEST — never emitted standalone post-v2.0.0)
 
@@ -40,9 +36,7 @@ END_PLAN_AMENDMENT_REQUEST
 
 ## PLAN_AMENDMENT_BATCH_REQUEST
 
-Aggregates all `amendments_pending[]` entries with `resolution = null`.
-Maps to the CyberOS Review primitive (SRS §6.6.3) — the human reviews
-multiple proposed changes and approves/edits/rejects each.
+Aggregates all `amendments_pending[]` entries with `resolution = null`. Maps to the CyberOS Review primitive (SRS §6.6.3) — the human reviews multiple proposed changes and approves/edits/rejects each.
 
 ```
 PLAN_AMENDMENT_BATCH_REQUEST
@@ -75,36 +69,19 @@ When all <int> amendments are answered, re-invoke fr-create.
 END_PLAN_AMENDMENT_BATCH_REQUEST
 ```
 
-Emitted as the LAST thing in the response when amendments are pending. If
-both HITL pauses AND amendments are pending, emit HITL_BATCH_REQUEST first,
-then PLAN_AMENDMENT_BATCH_REQUEST.
+Emitted as the LAST thing in the response when amendments are pending. If both HITL pauses AND amendments are pending, emit HITL_BATCH_REQUEST first, then PLAN_AMENDMENT_BATCH_REQUEST.
 
-Each emission appends one `genie.action_log` row with
-`row_kind: review` (per SRS §6.6.3 + §6.7).
+Each emission appends one `genie.action_log` row with `row_kind: review` (per SRS §6.6.3 + §6.7).
 
 ## Inline-amendment apply (low-risk only — §6.7)
 
 When the human's reply contains `AMD-NNN: A` (APPROVE_AMENDMENT):
 
-- **If `risk_class: low`** (RECLASSIFY only, OR REORDER inside the SAME
-  priority band) → apply the diff inline to `manifest.plan.backlog`,
-  recompute `manifest.plan.approval_hash`, set `amendments_pending[i].resolution
-  = "applied:<timestamp>"`, log to `BATCH_RUN_LOG.md` as
-  `AMENDMENT_APPLIED_INLINE`, and continue WORKER without a fresh PLAN
-  render.
-- **If `risk_class: medium` or `high`** → set
-  `manifest.plan.status = AMENDED_AWAITING_APPROVAL`, write the manifest,
-  HALT. Next invocation re-renders the plan-approval block with the
-  amended backlog and requires fresh `APPROVE`.
+- **If `risk_class: low`** (RECLASSIFY only, OR REORDER inside the SAME priority band) → apply the diff inline to `manifest.plan.backlog`, recompute `manifest.plan.approval_hash`, set `amendments_pending[i].resolution = "applied:<timestamp>"`, log to `BATCH_RUN_LOG.md` as `AMENDMENT_APPLIED_INLINE`, and continue WORKER without a fresh PLAN render.
+- **If `risk_class: medium` or `high`** → set `manifest.plan.status = AMENDED_AWAITING_APPROVAL`, write the manifest, HALT. Next invocation re-renders the plan-approval block with the amended backlog and requires fresh `APPROVE`.
 
-For `AMD-NNN: B` (REJECT): set `resolution = "rejected:<timestamp>:<reason>"`.
-Backlog unchanged.
+For `AMD-NNN: B` (REJECT): set `resolution = "rejected:<timestamp>:<reason>"`. Backlog unchanged.
 
-For `AMD-NNN: C` (PAUSE_FOR_REVIEW): set `resolution = null` and
-`manifest.plan.status = AMENDED_AWAITING_APPROVAL`. HALT.
+For `AMD-NNN: C` (PAUSE_FOR_REVIEW): set `resolution = null` and `manifest.plan.status = AMENDED_AWAITING_APPROVAL`. HALT.
 
-Inline apply MUST NOT touch any FR whose `status = PASS` unless that FR is
-the explicit target of a RECLASSIFY (changing its `tentative_*` fields).
-RECLASSIFY of a PASS FR additionally marks it `status = STALE` and
-surfaces a `stale_fr_disposition` HITL issue per `MANIFEST_SCHEMA.md`
-§3.2 step 2.
+Inline apply MUST NOT touch any FR whose `status = PASS` unless that FR is the explicit target of a RECLASSIFY (changing its `tentative_*` fields). RECLASSIFY of a PASS FR additionally marks it `status = STALE` and surfaces a `stale_fr_disposition` HITL issue per `MANIFEST_SCHEMA.md` §3.2 step 2.

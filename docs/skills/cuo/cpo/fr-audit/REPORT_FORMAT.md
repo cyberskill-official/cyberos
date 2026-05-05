@@ -1,12 +1,8 @@
 # Audit report file format
 
-> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §17.
-> The audit report is the artefact that other CyberOS modules (PROJ, OBS,
-> CP) read to understand FR conformance.
+> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §17. The audit report is the artefact that other CyberOS modules (PROJ, OBS, CP) read to understand FR conformance.
 
-Each audit report is markdown with YAML frontmatter and one issue per H2
-block. Field names are `snake_case`. Issue IDs are stable: once `ISS-007`
-is assigned, it is never reused for a different problem in this file.
+Each audit report is markdown with YAML frontmatter and one issue per H2 block. Field names are `snake_case`. Issue IDs are stable: once `ISS-007` is assigned, it is never reused for a different problem in this file.
 
 ## Frontmatter
 
@@ -64,12 +60,6 @@ genie_action_log_row_id: <evt_… | null>  # the audit-row UUID emitted for this
 
 ## Determinism property
 
-Two runs of `fr-audit` against the same `audited_file_sha256` (= same
-input FR bytes) produce byte-identical reports modulo `last_audit_at`
-(which is the only time-dependent field). This is the determinism
-contract from `SKILL.md` frontmatter (`determinism.reproducible: true`).
+Two runs of `fr-audit` against the same `audited_file_sha256` (= same input FR bytes) produce byte-identical reports modulo `last_audit_at` (which is the only time-dependent field). This is the determinism contract from `SKILL.md` frontmatter (`determinism.reproducible: true`).
 
-The `last_audit_at` field is excluded from the
-`payload_hash_field: audited_file_sha256` audit-row hash precisely so
-that re-runs produce the same chain hash — only the inputs that affect
-verdict participate in the hash.
+The `last_audit_at` field is excluded from the `payload_hash_field: audited_file_sha256` audit-row hash precisely so that re-runs produce the same chain hash — only the inputs that affect verdict participate in the hash.

@@ -29,9 +29,7 @@ What is the user actually trying to do? What is blocking them today? Cite eviden
 
 Required when `client_visible: true`. Verbatim, attributed where possible. Paraphrasing here costs you the signal.
 
-<untrusted_content source="other">
-…paste verbatim customer quote here…
-</untrusted_content>
+<untrusted_content source="other"> …paste verbatim customer quote here… </untrusted_content>
 
 ## Proposed Solution
 

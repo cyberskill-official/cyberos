@@ -1,11 +1,6 @@
 # `audit_rubric@2.0` — machine-checkable audit rubric
 
-> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §15.
-> Rubric version `2.0` is locked; bumping requires a coordinated update of
-> `cuo/_shared/feature-request-template/` (template body) and
-> `cuo/cpo/fr-audit/SKILL.md` CONTRACT_ECHO. Each rule has a stable
-> `rule_id`. Rule IDs MUST appear verbatim in the audit report so reports
-> are diffable across iterations and operators.
+> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §15. Rubric version `2.0` is locked; bumping requires a coordinated update of `cyberos/docs/contracts/feature-request/v1/` (the contract body) and `cuo/cpo/fr-audit/SKILL.md` CONTRACT_ECHO. Each rule has a stable `rule_id`. Rule IDs MUST appear verbatim in the audit report so reports are diffable across iterations and operators.
 
 ## §15.1 Frontmatter — structural
 
@@ -85,8 +80,7 @@
 | --- | --- | --- |
 | `STALE-001` | FR's on-disk `fr_hash` differs from `fr-create`'s manifest `frs[FR].fr_hash` (only when `upstream_context.from_skill == cuo/cpo/fr-create`) | error → needs_human (`stale_fr_disposition`) |
 
-When `fr-audit` runs standalone (no `upstream_context`), STALE-001 is
-skipped — there's no manifest to check against.
+When `fr-audit` runs standalone (no `upstream_context`), STALE-001 is skipped — there's no manifest to check against.
 
 ## §15.8 Severity → exit-code mapping
 
@@ -96,5 +90,4 @@ skipped — there's no manifest to check against.
 
 `needs_human` always implies HITL_PAUSE regardless of count.
 
-The exit code is exposed via the output envelope's `exit_code` field for
-CI pipelines that gate on FR conformance.
+The exit code is exposed via the output envelope's `exit_code` field for CI pipelines that gate on FR conformance.

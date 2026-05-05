@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1000" height="700" fill="#F8FAFC"/>
+  <text x="500" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">Three-layer validation pyramid</text>
+  <text x="500" y="80" font-size="14" fill="#64748B" text-anchor="middle">Stack from cheapest to most thorough. All three run on every production skill.</text>
+
+  <!-- Layer 1 (bottom — widest) -->
+  <polygon points="100,560 900,560 800,460 200,460" fill="#10B981" filter="url(#sh)"/>
+  <text x="500" y="500" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">Layer 1 — Mechanical</text>
+  <text x="500" y="525" font-size="13" fill="#fff" text-anchor="middle">Schema validation against produces.schema_ref</text>
+  <text x="500" y="545" font-size="11" fill="#A7F3D0" text-anchor="middle">fastest · runs on every output · zero LLM cost</text>
+
+  <!-- Layer 2 (middle) -->
+  <polygon points="200,460 800,460 700,360 300,360" fill="#F59E0B" filter="url(#sh)"/>
+  <text x="500" y="400" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">Layer 2 — Functional</text>
+  <text x="500" y="425" font-size="13" fill="#fff" text-anchor="middle">acceptance/ golden-input + golden-output regression tests</text>
+  <text x="500" y="445" font-size="11" fill="#FED7AA" text-anchor="middle">CI gate · runs on every PR · byte-equal for deterministic skills</text>
+
+  <!-- Layer 3 (top — narrowest) -->
+  <polygon points="300,360 700,360 600,260 400,260" fill="#1E2A78" filter="url(#sh)"/>
+  <text x="500" y="300" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">Layer 3 — Operational</text>
+  <text x="500" y="325" font-size="13" fill="#fff" text-anchor="middle">Production telemetry from genie.action_log</text>
+  <text x="500" y="345" font-size="11" fill="#C7D2FE" text-anchor="middle">acceptance rate · HITL frequency · iteration count · drift</text>
+
+  <!-- Apex -->
+  <polygon points="400,260 600,260 500,180" fill="#DC2626" filter="url(#sh)"/>
+  <text x="500" y="220" font-size="14" font-weight="700" fill="#fff" text-anchor="middle">Real users</text>
+  <text x="500" y="240" font-size="11" fill="#FECACA" text-anchor="middle">accept / reject</text>
+
+  <!-- Side annotations -->
+  <text x="60" y="500" font-size="13" font-weight="600" fill="#10B981" text-anchor="end">cost: cents</text>
+  <text x="60" y="520" font-size="11" fill="#64748B" text-anchor="end">latency: &lt;10ms</text>
+
+  <text x="60" y="400" font-size="13" font-weight="600" fill="#F59E0B" text-anchor="end">cost: $</text>
+  <text x="60" y="420" font-size="11" fill="#64748B" text-anchor="end">latency: 10s-min</text>
+
+  <text x="60" y="300" font-size="13" font-weight="600" fill="#1E2A78" text-anchor="end">cost: $$</text>
+  <text x="60" y="320" font-size="11" fill="#64748B" text-anchor="end">latency: hours</text>
+
+  <text x="940" y="500" font-size="11" font-family="JetBrains Mono, monospace" fill="#64748B">ajv validate</text>
+  <text x="940" y="400" font-size="11" font-family="JetBrains Mono, monospace" fill="#64748B">diff/cosine</text>
+  <text x="940" y="300" font-size="11" font-family="JetBrains Mono, monospace" fill="#64748B">SQL on action_log</text>
+
+  <!-- Healthy thresholds -->
+  <rect x="60" y="600" width="880" height="60" rx="10" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="80" y="624" font-size="12" font-weight="700" fill="#B45309">Layer 3 healthy thresholds</text>
+  <text x="80" y="644" font-size="11" fill="#0F172A">Acceptance ≥80%  ·  HITL freq &lt;20%  ·  Auto-refinement ≤1/week  ·  Avg iterations ≤2  ·  Drift signals 0/7d  ·  &lt;40% acceptance auto-pauses 7d (DEC-055)</text>
+
+  <text x="500" y="685" font-size="11" fill="#94A3B8" text-anchor="middle">09-validation-pyramid.svg</text>
+</svg>

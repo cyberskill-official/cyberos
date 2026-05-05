@@ -1,0 +1,614 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 4800" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F8FAFC"/><stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E2A78"/><stop offset="100%" stop-color="#0F1444"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F59E0B"/><stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <linearGradient id="humanGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+    <linearGradient id="successGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#10B981"/><stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0F172A"/>
+    </marker>
+    <marker id="arrAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#B45309"/>
+    </marker>
+    <marker id="arrHuman" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="arrSuccess" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#10B981"/>
+    </marker>
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+    <filter id="glow"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="2400" height="4800" fill="url(#bgGrad)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       HEADER (0–280)
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="0" y="0" width="2400" height="280" fill="url(#primaryGrad)"/>
+  <text x="120" y="105" font-size="60" font-weight="700" fill="#fff" letter-spacing="-1">CyberOS Skills — Anatomy of the Vision</text>
+  <text x="120" y="160" font-size="28" font-weight="500" fill="#F59E0B" letter-spacing="0.3">Registry v0.2.0 · One connected picture · Onboarding poster for CyberSkill employees</text>
+  <text x="120" y="210" font-size="20" font-weight="400" fill="#E2E8F0">From input source · through skill anatomy + 5 contracts · to dual-mode entry · across 4 surfaces · with self-audit + manual fine-tune loops · into multi-host distribution</text>
+  <text x="120" y="248" font-size="18" font-style="italic" fill="#F59E0B" opacity="0.95">"Turn Your Will Into Real."</text>
+
+  <!-- Slogan badge -->
+  <rect x="2070" y="60" width="270" height="160" rx="16" fill="#F59E0B" opacity="0.95"/>
+  <text x="2205" y="115" font-size="22" font-weight="700" fill="#0F1444" text-anchor="middle">CyberSkill</text>
+  <text x="2205" y="148" font-size="14" fill="#0F1444" text-anchor="middle">Software Solutions</text>
+  <text x="2205" y="170" font-size="14" fill="#0F1444" text-anchor="middle">Consultancy &amp;</text>
+  <text x="2205" y="190" font-size="14" fill="#0F1444" text-anchor="middle">Development</text>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 1 — INPUT SOURCES (320–560)
+       ════════════════════════════════════════════════════════════════ -->
+  <text x="1200" y="370" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">① INPUT — what triggers a skill</text>
+  <text x="1200" y="405" font-size="18" fill="#64748B" text-anchor="middle">Three trigger paths feed the same SKILL.md. The runtime detects the path; the body doesn't care.</text>
+
+  <!-- Three trigger paths -->
+  <rect x="120" y="440" width="680" height="100" rx="14" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+  <text x="160" y="478" font-size="22" font-weight="700" fill="#fff">👤 Direct (chat)</text>
+  <text x="160" y="510" font-size="15" fill="#E2E8F0">User typing in CHAT. Supervisor classifies + routes.</text>
+  <text x="160" y="528" font-size="13" fill="#F59E0B">→ standalone mode entry</text>
+
+  <rect x="860" y="440" width="680" height="100" rx="14" fill="url(#primaryGrad)" filter="url(#cardShadow)"/>
+  <text x="900" y="478" font-size="22" font-weight="700" fill="#fff">🎯 Supervisor-routed</text>
+  <text x="900" y="510" font-size="15" fill="#E2E8F0">classify_act node returns {skill_id, confidence}.</text>
+  <text x="900" y="528" font-size="13" fill="#F59E0B">→ standalone mode (chat origin)</text>
+
+  <rect x="1600" y="440" width="680" height="100" rx="14" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+  <text x="1640" y="478" font-size="22" font-weight="700" fill="#fff">🔗 Chained (pipeline)</text>
+  <text x="1640" y="510" font-size="15" fill="#fff">Upstream skill output → next_skill_recommendation.</text>
+  <text x="1640" y="528" font-size="13" fill="#0F1444">→ chained mode entry</text>
+
+  <!-- Arrow down to skill anatomy -->
+  <path d="M 460 540 L 460 600 L 1200 600 L 1200 660" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  <path d="M 1200 540 L 1200 660" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  <path d="M 1940 540 L 1940 600 L 1200 600" stroke="#0F172A" stroke-width="3" fill="none"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 2 — SKILL ANATOMY + 5 CONTRACTS (660–1320)
+       ════════════════════════════════════════════════════════════════ -->
+  <text x="1200" y="710" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">② THE SKILL — folder + 5 inherited contracts</text>
+  <text x="1200" y="745" font-size="18" fill="#64748B" text-anchor="middle">A skill is a folder with a SKILL.md. Five contracts wrap it. Three from v0.1.0; two new in v0.2.0.</text>
+
+  <!-- Central skill folder card -->
+  <rect x="800" y="780" width="800" height="500" rx="20" fill="#fff" stroke="#1E2A78" stroke-width="3" filter="url(#cardShadow)"/>
+  <rect x="800" y="780" width="800" height="60" rx="20" fill="url(#primaryGrad)"/>
+  <rect x="800" y="820" width="800" height="20" fill="url(#primaryGrad)"/>
+  <text x="830" y="822" font-size="22" font-weight="700" fill="#fff" font-family="JetBrains Mono, monospace">📁 cuo/cpo/fr-create/</text>
+  <text x="1570" y="822" font-size="14" fill="#F59E0B" text-anchor="end">a workflow skill</text>
+
+  <g font-family="JetBrains Mono, monospace" font-size="16">
+    <rect x="830" y="870" width="740" height="46" rx="8" fill="#F59E0B" opacity="0.18"/>
+    <text x="850" y="900" fill="#B45309" font-weight="700">📄 SKILL.md</text>
+    <text x="1550" y="900" fill="#64748B" font-size="13" text-anchor="end">mandatory · 33-field frontmatter + body</text>
+
+    <rect x="830" y="924" width="740" height="40" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="850" y="951" fill="#0F172A">📄 INVARIANTS.md</text>
+    <text x="1550" y="951" fill="#64748B" font-size="13" text-anchor="end">v0.2.0 · self-audit truths the runtime checks</text>
+
+    <rect x="830" y="972" width="740" height="40" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="850" y="999" fill="#0F172A">📄 STANDALONE_INTERVIEW.md</text>
+    <text x="1550" y="999" fill="#64748B" font-size="13" text-anchor="end">v0.2.0 · chat-mode entry script</text>
+
+    <rect x="830" y="1020" width="740" height="40" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="850" y="1047" fill="#0F172A">📄 HUMAN_SUMMARY.md</text>
+    <text x="1550" y="1047" fill="#64748B" font-size="13" text-anchor="end">v0.2.0 · chat-mode output template</text>
+
+    <rect x="830" y="1068" width="740" height="40" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="850" y="1095" fill="#0F172A">📄 CHANGELOG.md</text>
+    <text x="1550" y="1095" fill="#64748B" font-size="13" text-anchor="end">SemVer · Keep-a-Changelog 1.1.0</text>
+
+    <rect x="830" y="1116" width="740" height="40" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="850" y="1143" fill="#0F172A">📁 envelopes/</text>
+    <text x="1550" y="1143" fill="#64748B" font-size="13" text-anchor="end">expects/produces JSON Schemas</text>
+
+    <rect x="830" y="1164" width="740" height="40" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="850" y="1191" fill="#0F172A">📁 references/</text>
+    <text x="1550" y="1191" fill="#64748B" font-size="13" text-anchor="end">progressive-disclosure docs</text>
+
+    <rect x="830" y="1212" width="740" height="40" rx="8" fill="#fff" stroke="#E2E8F0"/>
+    <text x="850" y="1239" fill="#0F172A">📁 acceptance/</text>
+    <text x="1550" y="1239" fill="#64748B" font-size="13" text-anchor="end">golden-input + golden-output fixtures</text>
+  </g>
+
+  <!-- Five contract badges around the skill folder (orbiting it) -->
+  <!-- Contract 1: Audit-hook (top-left) -->
+  <rect x="80" y="780" width="320" height="180" rx="14" fill="#1E2A78" filter="url(#cardShadow)"/>
+  <text x="240" y="815" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">1 · Audit-hook</text>
+  <text x="240" y="835" font-size="11" fill="#F59E0B" text-anchor="middle">SRS §6.7</text>
+  <text x="100" y="868" font-size="13" fill="#fff">Every output → 1 row in</text>
+  <text x="100" y="887" font-size="13" font-family="JetBrains Mono, monospace" fill="#F59E0B">genie.action_log</text>
+  <text x="100" y="910" font-size="11" fill="#C7D2FE">persona_id · skill_id · row_kind</text>
+  <text x="100" y="925" font-size="11" fill="#C7D2FE">payload_sha256 · hash_chain</text>
+  <text x="100" y="945" font-size="11" font-style="italic" fill="#FEF3C7">Tampering breaks the chain.</text>
+
+  <!-- Contract 2: Chain (top-right) -->
+  <rect x="2000" y="780" width="320" height="180" rx="14" fill="#1E2A78" filter="url(#cardShadow)"/>
+  <text x="2160" y="815" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">2 · Chain</text>
+  <text x="2160" y="835" font-size="11" fill="#F59E0B" text-anchor="middle">expects ↔ produces</text>
+  <text x="2020" y="868" font-size="13" fill="#fff">Envelopes compose.</text>
+  <text x="2020" y="891" font-size="11" fill="#C7D2FE">A → B legal when</text>
+  <text x="2020" y="906" font-size="11" fill="#C7D2FE">A.produces validates</text>
+  <text x="2020" y="921" font-size="11" fill="#C7D2FE">against B.expects.</text>
+  <text x="2020" y="945" font-size="11" font-style="italic" fill="#FEF3C7">Crash-safe via checkpoints.</text>
+
+  <!-- Contract 3: Plug-in (middle-left) -->
+  <rect x="80" y="980" width="320" height="180" rx="14" fill="#1E2A78" filter="url(#cardShadow)"/>
+  <text x="240" y="1015" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">3 · Plug-in</text>
+  <text x="240" y="1035" font-size="11" fill="#F59E0B" text-anchor="middle">AGENTS.md §11</text>
+  <text x="100" y="1068" font-size="13" fill="#fff">Folder is portable.</text>
+  <text x="100" y="1091" font-size="11" font-family="JetBrains Mono, monospace" fill="#C7D2FE">cp -r &lt;skill&gt;/</text>
+  <text x="100" y="1106" font-size="11" font-family="JetBrains Mono, monospace" fill="#C7D2FE">cp -r &lt;persona&gt;/</text>
+  <text x="100" y="1121" font-size="11" font-family="JetBrains Mono, monospace" fill="#C7D2FE">cp -r cuo/</text>
+  <text x="100" y="1145" font-size="11" font-style="italic" fill="#FEF3C7">Deterministic zip · 1 import row.</text>
+
+  <!-- Contract 4: Self-audit (middle-right, NEW) -->
+  <rect x="2000" y="980" width="320" height="180" rx="14" fill="#F59E0B" stroke="#fff" stroke-width="3" filter="url(#cardShadow)"/>
+  <text x="2160" y="1015" font-size="18" font-weight="700" fill="#0F1444" text-anchor="middle">4 · Self-audit  🆕</text>
+  <text x="2160" y="1035" font-size="11" fill="#0F1444" text-anchor="middle">v0.2.0 · DEC-092</text>
+  <text x="2020" y="1068" font-size="13" fill="#0F1444">Runtime invariants:</text>
+  <text x="2020" y="1091" font-size="11" font-family="JetBrains Mono, monospace" fill="#0F1444">on_node_boundary</text>
+  <text x="2020" y="1106" font-size="11" font-family="JetBrains Mono, monospace" fill="#0F1444">on_audit_row_count</text>
+  <text x="2020" y="1121" font-size="11" font-family="JetBrains Mono, monospace" fill="#0F1444">on_completion</text>
+  <text x="2020" y="1145" font-size="11" font-style="italic" fill="#fff">Breach → refinement_proposal.</text>
+
+  <!-- Contract 5: Host portability (bottom-spanning, NEW) -->
+  <rect x="80" y="1180" width="640" height="100" rx="14" fill="#F59E0B" stroke="#fff" stroke-width="3" filter="url(#cardShadow)"/>
+  <text x="400" y="1215" font-size="18" font-weight="700" fill="#0F1444" text-anchor="middle">5 · Host portability  🆕  (CCSM)</text>
+  <text x="400" y="1238" font-size="13" fill="#0F1444" text-anchor="middle">v0.2.0 · DEC-091 · SKILL.md is the canonical source; per-host artefacts are GENERATED.</text>
+  <text x="400" y="1259" font-size="11" font-family="JetBrains Mono, monospace" fill="#fff" text-anchor="middle">→ anthropic · mcp-tool · claude-plugin · antigravity · codex · cursor · connector</text>
+
+  <!-- Trust + Versioning legend -->
+  <rect x="1680" y="1180" width="640" height="100" rx="14" fill="#fff" stroke="#64748B" filter="url(#cardShadow)"/>
+  <text x="1700" y="1212" font-size="13" font-weight="700" fill="#0F172A">+ Versioning &amp; drift</text>
+  <text x="1700" y="1232" font-size="11" fill="#64748B">SemVer + CHANGELOG · auto-pause @ &lt;40% acceptance / 7d (DEC-055)</text>
+  <text x="1700" y="1255" font-size="13" font-weight="700" fill="#0F172A">+ Trust &amp; safety</text>
+  <text x="1700" y="1275" font-size="11" fill="#64748B">cite, defer, untrusted-wrap (DEC-050), scope contract (SRS §6.4)</text>
+
+  <!-- Connecting lines from skill folder to each contract -->
+  <line x1="800" y1="870" x2="400" y2="870" stroke="#1E2A78" stroke-width="2" opacity="0.4"/>
+  <line x1="1600" y1="870" x2="2000" y2="870" stroke="#1E2A78" stroke-width="2" opacity="0.4"/>
+  <line x1="800" y1="1070" x2="400" y2="1070" stroke="#1E2A78" stroke-width="2" opacity="0.4"/>
+  <line x1="1600" y1="1070" x2="2000" y2="1070" stroke="#F59E0B" stroke-width="2" opacity="0.5"/>
+  <line x1="900" y1="1280" x2="600" y2="1230" stroke="#F59E0B" stroke-width="2" opacity="0.5"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 3 — DUAL-MODE INVOCATION (1340–1820)
+       ════════════════════════════════════════════════════════════════ -->
+  <path d="M 1200 1290 L 1200 1340" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+
+  <text x="1200" y="1390" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">③ DUAL-MODE — one body, two front doors</text>
+  <text x="1200" y="1425" font-size="18" fill="#64748B" text-anchor="middle">Standalone (chat) or chained (envelope) — same function, same audit row, same hash chain.</text>
+
+  <!-- Standalone door + path -->
+  <rect x="120" y="1460" width="540" height="120" rx="14" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+  <text x="150" y="1500" font-size="24" font-weight="700" fill="#fff">👤 Standalone door</text>
+  <text x="150" y="1530" font-size="15" fill="#E2E8F0">User typing in CHAT</text>
+  <text x="150" y="1555" font-size="13" fill="#F59E0B">no upstream envelope · supervisor reads STANDALONE_INTERVIEW.md</text>
+
+  <!-- Chained door + path -->
+  <rect x="1740" y="1460" width="540" height="120" rx="14" fill="url(#primaryGrad)" filter="url(#cardShadow)"/>
+  <text x="1770" y="1500" font-size="24" font-weight="700" fill="#fff">🔗 Chained door</text>
+  <text x="1770" y="1530" font-size="15" fill="#E2E8F0">Upstream output envelope</text>
+  <text x="1770" y="1555" font-size="13" fill="#F59E0B">populates required_fields machine-readably</text>
+
+  <!-- Center function -->
+  <rect x="700" y="1450" width="1000" height="140" rx="16" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+  <text x="1200" y="1500" font-size="28" font-weight="700" fill="#fff" text-anchor="middle">f(envelope, ctx) → envelope_out</text>
+  <text x="1200" y="1535" font-size="16" fill="#fff" text-anchor="middle">ONE function body · SAME logic · SAME audit row · SAME hash chain</text>
+  <text x="1200" y="1565" font-size="13" fill="#0F1444" text-anchor="middle" font-style="italic">Mode detected via pipeline_run_id + caller identity at runtime.</text>
+
+  <path d="M 660 1520 L 700 1520" stroke="#7C3AED" stroke-width="4" fill="none" marker-end="url(#arrHuman)"/>
+  <path d="M 1740 1520 L 1700 1520" stroke="#1E2A78" stroke-width="4" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Outputs (3 rows: HUMAN_SUMMARY / output envelope / action_log) -->
+  <rect x="120" y="1620" width="540" height="80" rx="12" fill="#10B981"/>
+  <text x="390" y="1652" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">HUMAN_SUMMARY.md → chat</text>
+  <text x="390" y="1678" font-size="12" fill="#fff" text-anchor="middle">verdict · counts · hash prefix · trace_id</text>
+
+  <rect x="700" y="1620" width="1000" height="80" rx="12" fill="#DC2626"/>
+  <text x="1200" y="1652" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">+1 row in genie.action_log (always — both modes)</text>
+  <text x="1200" y="1678" font-size="12" fill="#fff" text-anchor="middle">persona_id · skill_id · row_kind · trace_id · payload_sha256 · hash_chain</text>
+
+  <rect x="1740" y="1620" width="540" height="80" rx="12" fill="#10B981"/>
+  <text x="2010" y="1652" font-size="16" font-weight="700" fill="#fff" text-anchor="middle">output envelope → next skill</text>
+  <text x="2010" y="1678" font-size="12" fill="#fff" text-anchor="middle">next_skill_recommendation drives chain</text>
+
+  <path d="M 390 1590 L 390 1620" stroke="#10B981" stroke-width="3" fill="none" marker-end="url(#arrSuccess)"/>
+  <path d="M 1200 1590 L 1200 1620" stroke="#DC2626" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  <path d="M 2010 1590 L 2010 1620" stroke="#10B981" stroke-width="3" fill="none" marker-end="url(#arrSuccess)"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 4 — EXPOSABILITY (1750–2150)
+       ════════════════════════════════════════════════════════════════ -->
+  <path d="M 1200 1700 L 1200 1770" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+
+  <text x="1200" y="1820" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">④ EXPOSABILITY — 4 surfaces, one source</text>
+  <text x="1200" y="1855" font-size="18" fill="#64748B" text-anchor="middle">exposable_as: declares which doors the skill ships through. Build pipeline emits the right artefact per surface.</text>
+
+  <rect x="120" y="1900" width="500" height="160" rx="14" fill="#10B981" filter="url(#cardShadow)"/>
+  <text x="150" y="1940" font-size="22" font-weight="700" fill="#fff">internal: true</text>
+  <text x="150" y="1968" font-size="14" fill="#fff">CUO supervisor routes here</text>
+  <text x="150" y="1990" font-size="13" fill="#A7F3D0">via classify_act</text>
+  <text x="150" y="2030" font-size="14" font-weight="700" fill="#fff">Audience: CyberSkill</text>
+  <text x="150" y="2050" font-size="14" font-weight="700" fill="#fff">employees</text>
+
+  <rect x="660" y="1900" width="500" height="160" rx="14" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+  <text x="690" y="1940" font-size="22" font-weight="700" fill="#fff">agent_plugin: true</text>
+  <text x="690" y="1968" font-size="14" fill="#fff">Claude Code / Antigravity / Codex</text>
+  <text x="690" y="1990" font-size="13" fill="#FED7AA">.plugin/ bundle</text>
+  <text x="690" y="2030" font-size="14" font-weight="700" fill="#fff">Audience: agent IDE</text>
+  <text x="690" y="2050" font-size="14" font-weight="700" fill="#fff">users</text>
+
+  <rect x="1200" y="1900" width="500" height="160" rx="14" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+  <text x="1230" y="1940" font-size="22" font-weight="700" fill="#fff">mcp_tool: true</text>
+  <text x="1230" y="1968" font-size="14" fill="#fff">Auto-emit MCP tool descriptor</text>
+  <text x="1230" y="1990" font-size="13" fill="#FED7AA">tool.json + stdio runner</text>
+  <text x="1230" y="2030" font-size="14" font-weight="700" fill="#fff">Audience: any MCP</text>
+  <text x="1230" y="2050" font-size="14" font-weight="700" fill="#fff">agent</text>
+
+  <rect x="1740" y="1900" width="540" height="160" rx="14" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+  <text x="1770" y="1940" font-size="22" font-weight="700" fill="#fff">partner_connector 🔐</text>
+  <text x="1770" y="1968" font-size="14" fill="#fff">Hosted MCP + OAuth + tenancy</text>
+  <text x="1770" y="1990" font-size="13" fill="#DDD6FE">+ billing + rate limits · GATED</text>
+  <text x="1770" y="2030" font-size="14" font-weight="700" fill="#fff">Audience: external</text>
+  <text x="1770" y="2050" font-size="14" font-weight="700" fill="#fff">partners</text>
+
+  <rect x="120" y="2090" width="2160" height="60" rx="12" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="140" y="2118" font-size="14" font-weight="700" fill="#B45309">Trust ↔ exposability link (validator-enforced):</text>
+  <text x="140" y="2138" font-size="12" fill="#0F172A">partner_connector: true ⇒ MUST also have cite_sources: required + injection_scan: required + ≥3 invariants (incl. scope-discipline + fabrication-boundary) + on_safety_change review</text>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 5 — AUTO-REFINEMENT LOOP (2200–2700)
+       ════════════════════════════════════════════════════════════════ -->
+  <path d="M 1200 2150 L 1200 2210" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+
+  <text x="1200" y="2260" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">⑤ AUTO-REFINEMENT — the self-audit loop</text>
+  <text x="1200" y="2295" font-size="18" fill="#64748B" text-anchor="middle">Skills detect their own drift at runtime, propose fixes, pause for human review, then resume from checkpoint.</text>
+
+  <!-- Step 1 -->
+  <rect x="120" y="2330" width="320" height="120" rx="14" fill="url(#primaryGrad)" filter="url(#cardShadow)"/>
+  <text x="280" y="2370" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">1 · Skill runs</text>
+  <text x="280" y="2398" font-size="13" fill="#E2E8F0" text-anchor="middle">produces output</text>
+  <text x="280" y="2418" font-size="13" fill="#E2E8F0" text-anchor="middle">writes audit row</text>
+
+  <!-- Step 2 -->
+  <rect x="500" y="2330" width="320" height="120" rx="14" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+  <text x="660" y="2370" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">2 · Invariants check</text>
+  <text x="660" y="2398" font-size="13" fill="#fff" text-anchor="middle">INV-001..INV-008</text>
+  <text x="660" y="2418" font-size="12" fill="#0F1444" text-anchor="middle">@ node / 25 rows / completion</text>
+
+  <!-- Step 3 (decision diamond) -->
+  <polygon points="900,2330 1080,2330 1170,2390 1080,2450 900,2450 810,2390" fill="#FACC15" filter="url(#cardShadow)"/>
+  <text x="990" y="2387" font-size="18" font-weight="700" fill="#0F172A" text-anchor="middle">3 · breach?</text>
+  <text x="990" y="2410" font-size="11" fill="#0F172A" text-anchor="middle">invariant or anomaly</text>
+
+  <!-- Step 4 NO -->
+  <rect x="1240" y="2335" width="320" height="50" rx="10" fill="#10B981"/>
+  <text x="1400" y="2367" font-size="16" font-weight="600" fill="#fff" text-anchor="middle">no → continue</text>
+
+  <!-- Step 4 YES -->
+  <rect x="1240" y="2395" width="320" height="55" rx="10" fill="#DC2626"/>
+  <text x="1400" y="2428" font-size="16" font-weight="600" fill="#fff" text-anchor="middle">yes → refinement_proposal</text>
+
+  <!-- Step 5 -->
+  <rect x="1620" y="2330" width="660" height="120" rx="14" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+  <text x="1950" y="2370" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">4 · Human reviews</text>
+  <text x="1950" y="2398" font-size="13" fill="#E2E8F0" text-anchor="middle">supervisor checkpoints LangGraph state · pauses</text>
+  <text x="1950" y="2422" font-size="13" fill="#F59E0B" text-anchor="middle">APPROVE / REVISE / REJECT</text>
+
+  <!-- Connecting arrows -->
+  <path d="M 440 2390 L 500 2390" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  <path d="M 820 2390 L 810 2390" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  <path d="M 1170 2360 L 1240 2360" stroke="#10B981" stroke-width="3" fill="none" marker-end="url(#arrSuccess)"/>
+  <path d="M 1170 2425 L 1240 2425" stroke="#DC2626" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  <path d="M 1560 2425 L 1620 2390" stroke="#7C3AED" stroke-width="3" fill="none" marker-end="url(#arrHuman)"/>
+
+  <!-- Step 5 row: resume -->
+  <rect x="120" y="2480" width="2160" height="80" rx="14" fill="#fff" stroke="#7C3AED" stroke-width="3" filter="url(#cardShadow)"/>
+  <text x="140" y="2510" font-size="16" font-weight="700" fill="#0F172A">5 · Approved diff applied</text>
+  <text x="140" y="2535" font-size="13" fill="#64748B">SKILL.md / RUBRIC.md / INVARIANTS.md edited per the proposed_diff. skill_version PATCH bump. CHANGELOG entry with ### Driver. Pipeline resumes from the LangGraph checkpoint at the breach point.</text>
+
+  <!-- Anomaly signals box -->
+  <rect x="120" y="2580" width="2160" height="100" rx="14" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="140" y="2610" font-size="14" font-weight="700" fill="#B45309">Anomaly signals (early warning, even without invariant breach)</text>
+  <g font-family="JetBrains Mono, monospace" font-size="12" fill="#0F172A">
+    <text x="140" y="2635">confidence_low_streak       N of last K outputs had confidence &lt; defer_below</text>
+    <text x="1200" y="2635">user_correction_streak      N "no, not that" within K turns</text>
+    <text x="140" y="2655">denylist_near_miss_streak   N times the skill almost wrote denylisted content</text>
+    <text x="1200" y="2655">scope_rejection_streak      gateway rejected N writes for scope</text>
+  </g>
+
+  <!-- Loop arrow back to step 1 -->
+  <path d="M 1950 2450 L 1950 2480" stroke="#7C3AED" stroke-width="3" fill="none" marker-end="url(#arrHuman)"/>
+  <path d="M 140 2480 L 80 2480 L 80 2390 L 120 2390" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrHuman)" opacity="0.5"/>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 6 — MANUAL FINE-TUNE (2730–3160)
+       ════════════════════════════════════════════════════════════════ -->
+  <path d="M 1200 2680 L 1200 2740" stroke="#7C3AED" stroke-width="3" fill="none" marker-end="url(#arrHuman)"/>
+  <text x="1240" y="2715" font-size="13" fill="#7C3AED" font-style="italic">≥2 proposals on same theme → escalate</text>
+
+  <text x="1200" y="2790" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">⑥ MANUAL FINE-TUNE — the human loop</text>
+  <text x="1200" y="2825" font-size="18" fill="#64748B" text-anchor="middle">When auto-refinement can't resolve a pattern, a human takes over via the structured 7-step playbook.</text>
+
+  <!-- 7 steps -->
+  <g font-size="13">
+    <rect x="120" y="2860" width="290" height="160" rx="12" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+    <circle cx="160" cy="2900" r="22" fill="#F59E0B"/>
+    <text x="160" y="2908" font-size="18" font-weight="700" fill="#0F1444" text-anchor="middle">1</text>
+    <text x="195" y="2908" font-size="16" font-weight="700" fill="#fff">Pause</text>
+    <text x="140" y="2950" fill="#E2E8F0">Set skill to</text>
+    <text x="140" y="2970" fill="#E2E8F0">maintenance.</text>
+    <text x="140" y="2998" font-family="JetBrains Mono, monospace" font-size="11" fill="#F59E0B">E_SKILL_MAINTENANCE</text>
+
+    <rect x="430" y="2860" width="290" height="160" rx="12" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+    <circle cx="470" cy="2900" r="22" fill="#F59E0B"/>
+    <text x="470" y="2908" font-size="18" font-weight="700" fill="#0F1444" text-anchor="middle">2</text>
+    <text x="505" y="2908" font-size="16" font-weight="700" fill="#fff">Diagnose</text>
+    <text x="450" y="2950" fill="#E2E8F0">Read action_log.</text>
+    <text x="450" y="2970" fill="#E2E8F0">Cluster failures by</text>
+    <text x="450" y="2990" fill="#E2E8F0">distinct mode.</text>
+
+    <rect x="740" y="2860" width="290" height="160" rx="12" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+    <circle cx="780" cy="2900" r="22" fill="#0F1444"/>
+    <text x="780" y="2908" font-size="18" font-weight="700" fill="#F59E0B" text-anchor="middle">3</text>
+    <text x="815" y="2908" font-size="16" font-weight="700" fill="#fff">Add regression</text>
+    <text x="760" y="2950" fill="#fff">golden-input +</text>
+    <text x="760" y="2970" fill="#fff">golden-output per</text>
+    <text x="760" y="2990" fill="#fff">distinct failure mode</text>
+
+    <rect x="1050" y="2860" width="290" height="160" rx="12" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+    <circle cx="1090" cy="2900" r="22" fill="#0F1444"/>
+    <text x="1090" y="2908" font-size="18" font-weight="700" fill="#F59E0B" text-anchor="middle">4</text>
+    <text x="1125" y="2908" font-size="16" font-weight="700" fill="#fff">Edit</text>
+    <text x="1070" y="2950" fill="#fff">SKILL.md /</text>
+    <text x="1070" y="2970" fill="#fff">INVARIANTS.md /</text>
+    <text x="1070" y="2990" fill="#fff">RUBRIC.md</text>
+
+    <rect x="1360" y="2860" width="290" height="160" rx="12" fill="url(#successGrad)" filter="url(#cardShadow)"/>
+    <circle cx="1400" cy="2900" r="22" fill="#fff"/>
+    <text x="1400" y="2908" font-size="18" font-weight="700" fill="#10B981" text-anchor="middle">5</text>
+    <text x="1435" y="2908" font-size="16" font-weight="700" fill="#fff">Re-run suite</text>
+    <text x="1380" y="2950" fill="#fff">old + new golden</text>
+    <text x="1380" y="2970" fill="#fff">cases.</text>
+    <text x="1380" y="2998" font-weight="700" fill="#fff">ALL must pass.</text>
+
+    <rect x="1670" y="2860" width="290" height="160" rx="12" fill="url(#successGrad)" filter="url(#cardShadow)"/>
+    <circle cx="1710" cy="2900" r="22" fill="#fff"/>
+    <text x="1710" y="2908" font-size="18" font-weight="700" fill="#10B981" text-anchor="middle">6</text>
+    <text x="1745" y="2908" font-size="16" font-weight="700" fill="#fff">Bump + log</text>
+    <text x="1690" y="2950" fill="#fff">PATCH/MINOR/MAJOR.</text>
+    <text x="1690" y="2970" fill="#fff">CHANGELOG entry +</text>
+    <text x="1690" y="2990" fill="#fff">### Driver section.</text>
+
+    <rect x="1980" y="2860" width="300" height="160" rx="12" fill="url(#primaryGrad)" filter="url(#cardShadow)"/>
+    <circle cx="2020" cy="2900" r="22" fill="#F59E0B"/>
+    <text x="2020" y="2908" font-size="18" font-weight="700" fill="#0F1444" text-anchor="middle">7</text>
+    <text x="2055" y="2908" font-size="16" font-weight="700" fill="#fff">Resume</text>
+    <text x="2000" y="2950" fill="#E2E8F0">Set skill to active.</text>
+    <text x="2000" y="2970" fill="#E2E8F0">Monitor acceptance</text>
+    <text x="2000" y="2990" fill="#E2E8F0">over 24-48h.</text>
+  </g>
+
+  <!-- Step arrows -->
+  <g stroke="#0F172A" stroke-width="2" fill="none">
+    <path d="M 410 2940 L 430 2940" marker-end="url(#arr)"/>
+    <path d="M 720 2940 L 740 2940" marker-end="url(#arr)"/>
+    <path d="M 1030 2940 L 1050 2940" marker-end="url(#arr)"/>
+    <path d="M 1340 2940 L 1360 2940" marker-end="url(#arr)"/>
+    <path d="M 1650 2940 L 1670 2940" marker-end="url(#arr)"/>
+    <path d="M 1960 2940 L 1980 2940" marker-end="url(#arr)"/>
+  </g>
+
+  <!-- Required artefacts box -->
+  <rect x="120" y="3050" width="2160" height="80" rx="14" fill="#fff" stroke="#7C3AED" stroke-width="2" filter="url(#cardShadow)"/>
+  <text x="140" y="3080" font-size="14" font-weight="700" fill="#0F172A">Required artefacts on every fine-tune (validator-enforced)</text>
+  <g font-size="12" fill="#0F172A">
+    <text x="140" y="3104">📝 changelog_entry — Keep-a-Changelog 1.1.0 + ### Driver</text>
+    <text x="900" y="3104">🧪 acceptance_test_added — ≥1 regression case</text>
+    <text x="1600" y="3104">🧠 memory_refinement_entry — BRAIN memories/refinements/</text>
+  </g>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 7 — HOST-ADAPTER PIPELINE (3200–3700)
+       ════════════════════════════════════════════════════════════════ -->
+  <path d="M 1200 3140 L 1200 3210" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+
+  <text x="1200" y="3260" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">⑦ HOST-ADAPTER PIPELINE — CCSM compiles to many surfaces</text>
+  <text x="1200" y="3295" font-size="18" fill="#64748B" text-anchor="middle">One source compiles to every modern agent host. Phased delivery: A done · B–E target v0.3.0/v0.4.0.</text>
+
+  <!-- Source -->
+  <rect x="120" y="3340" width="320" height="160" rx="16" fill="url(#primaryGrad)" filter="url(#cardShadow)"/>
+  <text x="280" y="3390" font-size="24" font-weight="700" fill="#fff" text-anchor="middle">SKILL.md</text>
+  <text x="280" y="3420" font-size="16" fill="#F59E0B" text-anchor="middle">CCSM</text>
+  <text x="280" y="3450" font-size="13" fill="#E2E8F0" text-anchor="middle">single source of truth</text>
+  <text x="280" y="3475" font-size="11" fill="#94A3B8" text-anchor="middle" font-style="italic">authored once, transpiled to many</text>
+
+  <!-- Transpilers column -->
+  <text x="650" y="3360" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">TRANSPILERS</text>
+  <g font-size="14" font-family="JetBrains Mono, monospace">
+    <rect x="500" y="3380" width="300" height="36" rx="8" fill="url(#accentGrad)"/>
+    <text x="650" y="3404" fill="#fff" text-anchor="middle">ccsm-to-anthropic</text>
+    <rect x="500" y="3424" width="300" height="36" rx="8" fill="url(#accentGrad)"/>
+    <text x="650" y="3448" fill="#fff" text-anchor="middle">ccsm-to-mcp-tool</text>
+    <rect x="500" y="3468" width="300" height="36" rx="8" fill="url(#accentGrad)"/>
+    <text x="650" y="3492" fill="#fff" text-anchor="middle">ccsm-to-claude-plugin</text>
+    <rect x="500" y="3512" width="300" height="36" rx="8" fill="url(#accentGrad)"/>
+    <text x="650" y="3536" fill="#fff" text-anchor="middle">ccsm-to-antigravity</text>
+    <rect x="500" y="3556" width="300" height="36" rx="8" fill="url(#accentGrad)"/>
+    <text x="650" y="3580" fill="#fff" text-anchor="middle">ccsm-to-codex</text>
+    <rect x="500" y="3600" width="300" height="36" rx="8" fill="url(#accentGrad)"/>
+    <text x="650" y="3624" fill="#fff" text-anchor="middle">ccsm-to-cursor</text>
+    <rect x="500" y="3644" width="300" height="36" rx="8" fill="url(#humanGrad)"/>
+    <text x="650" y="3668" fill="#fff" text-anchor="middle">ccsm-to-connector 🔐</text>
+  </g>
+
+  <!-- Outputs column -->
+  <text x="1020" y="3360" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">OUTPUTS</text>
+  <g font-size="14" font-family="JetBrains Mono, monospace">
+    <rect x="860" y="3380" width="320" height="36" rx="8" fill="url(#successGrad)"/>
+    <text x="1020" y="3404" fill="#fff" text-anchor="middle">dist/anthropic/</text>
+    <rect x="860" y="3424" width="320" height="36" rx="8" fill="url(#successGrad)"/>
+    <text x="1020" y="3448" fill="#fff" text-anchor="middle">dist/mcp-tool/</text>
+    <rect x="860" y="3468" width="320" height="36" rx="8" fill="url(#successGrad)"/>
+    <text x="1020" y="3492" fill="#fff" text-anchor="middle">dist/claude-plugin/</text>
+    <rect x="860" y="3512" width="320" height="36" rx="8" fill="url(#successGrad)"/>
+    <text x="1020" y="3536" fill="#fff" text-anchor="middle">dist/antigravity/</text>
+    <rect x="860" y="3556" width="320" height="36" rx="8" fill="url(#successGrad)"/>
+    <text x="1020" y="3580" fill="#fff" text-anchor="middle">dist/codex/</text>
+    <rect x="860" y="3600" width="320" height="36" rx="8" fill="url(#successGrad)"/>
+    <text x="1020" y="3624" fill="#fff" text-anchor="middle">dist/cursor/</text>
+    <rect x="860" y="3644" width="320" height="36" rx="8" fill="url(#successGrad)"/>
+    <text x="1020" y="3668" fill="#fff" text-anchor="middle">dist/connector/</text>
+  </g>
+
+  <!-- Shim library -->
+  <rect x="1240" y="3340" width="500" height="380" rx="16" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+  <text x="1490" y="3390" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">cyberos-skill-runtime</text>
+  <text x="1490" y="3415" font-size="14" fill="#F59E0B" text-anchor="middle">host shim library</text>
+  <text x="1490" y="3438" font-size="12" fill="#E2E8F0" text-anchor="middle">Python + Node packages</text>
+  <g font-family="JetBrains Mono, monospace" font-size="13" fill="#E2E8F0">
+    <text x="1270" y="3490">runtime.brain      → BRAIN access</text>
+    <text x="1270" y="3514">runtime.audit      → action_log</text>
+    <text x="1270" y="3538">runtime.invariants → self-audit</text>
+    <text x="1270" y="3562">runtime.envelope   → expects/produces</text>
+    <text x="1270" y="3586">runtime.untrusted  → §4.2 marker scan</text>
+    <text x="1270" y="3610">runtime.scope      → SRS §6.4</text>
+  </g>
+  <text x="1490" y="3660" font-size="12" fill="#FED7AA" text-anchor="middle" font-style="italic">Inside CyberOS: real MCP servers.</text>
+  <text x="1490" y="3680" font-size="12" fill="#FED7AA" text-anchor="middle" font-style="italic">Outside: filesystem fallback.</text>
+  <text x="1490" y="3700" font-size="12" fill="#FED7AA" text-anchor="middle" font-style="italic">Same skill body either way.</text>
+
+  <!-- Test matrix -->
+  <rect x="1800" y="3340" width="480" height="380" rx="16" fill="#fff" stroke="#10B981" stroke-width="3" filter="url(#cardShadow)"/>
+  <text x="2040" y="3390" font-size="22" font-weight="700" fill="#10B981" text-anchor="middle">Equivalence test</text>
+  <text x="2040" y="3415" font-size="22" font-weight="700" fill="#10B981" text-anchor="middle">matrix</text>
+  <text x="2040" y="3450" font-size="13" fill="#64748B" text-anchor="middle">CI gate · Phase D</text>
+  <g font-size="14" fill="#0F172A">
+    <text x="1820" y="3500">acceptance/</text>
+    <text x="1820" y="3522">  golden-input.json</text>
+    <text x="1820" y="3544">  golden-output.md</text>
+    <text x="1820" y="3580" font-weight="700">×</text>
+    <text x="1820" y="3610">every transpiled target</text>
+  </g>
+  <text x="2040" y="3680" font-size="14" font-weight="700" fill="#DC2626" text-anchor="middle">Failing matrix on a PR</text>
+  <text x="2040" y="3700" font-size="14" font-weight="700" fill="#DC2626" text-anchor="middle">blocks merge.</text>
+
+  <!-- Connecting lines (CCSM → transpilers, transpilers → outputs, outputs → shim) -->
+  <g stroke="#0F172A" stroke-width="1.5" opacity="0.4" fill="none">
+    <path d="M 440 3420 L 500 3398"/>
+    <path d="M 440 3420 L 500 3442"/>
+    <path d="M 440 3420 L 500 3486"/>
+    <path d="M 440 3420 L 500 3530"/>
+    <path d="M 440 3420 L 500 3574"/>
+    <path d="M 440 3420 L 500 3618"/>
+    <path d="M 440 3420 L 500 3662"/>
+  </g>
+  <g stroke="#10B981" stroke-width="1.5" opacity="0.5" fill="none">
+    <path d="M 800 3398 L 860 3398"/>
+    <path d="M 800 3442 L 860 3442"/>
+    <path d="M 800 3486 L 860 3486"/>
+    <path d="M 800 3530 L 860 3530"/>
+    <path d="M 800 3574 L 860 3574"/>
+    <path d="M 800 3618 L 860 3618"/>
+    <path d="M 800 3662 L 860 3662"/>
+  </g>
+  <path d="M 1180 3520 L 1240 3520" stroke="#7C3AED" stroke-width="3" fill="none" marker-end="url(#arrHuman)"/>
+  <path d="M 1740 3520 L 1800 3520" stroke="#10B981" stroke-width="3" fill="none" marker-end="url(#arrSuccess)"/>
+
+  <!-- Phase delivery -->
+  <rect x="120" y="3760" width="2160" height="160" rx="14" fill="#fff" stroke="#E2E8F0" filter="url(#cardShadow)"/>
+  <text x="140" y="3790" font-size="16" font-weight="700" fill="#0F172A">Phased delivery</text>
+  <g font-size="12" fill="#0F172A">
+    <text x="140" y="3818"><tspan font-weight="700" fill="#10B981">Phase A — CCSM lock</tspan>  ✅ DONE in v0.2.0   ·   1 week.   SKILL.md is source of truth; dist/ is generated, never hand-edited.</text>
+    <text x="140" y="3842"><tspan font-weight="700" fill="#F59E0B">Phase B — Transpilers</tspan>  🔵 v0.3.0   ·   2-3 weeks.   One transpiler per output target. Pure functions; embarrassingly parallel.</text>
+    <text x="140" y="3866"><tspan font-weight="700" fill="#F59E0B">Phase C — Host shim</tspan>  🔵 v0.3.0   ·   1-2 weeks.   Library every transpiled skill links against. Uniform runtime semantics.</text>
+    <text x="140" y="3890"><tspan font-weight="700" fill="#F59E0B">Phase D — Equivalence test matrix</tspan>  🔵 v0.3.0   ·   1 week.   Mechanical once shim ships.</text>
+    <text x="140" y="3914"><tspan font-weight="700" fill="#7C3AED">Phase E — Partner connector pipeline</tspan>  🟣 v0.4.0   ·   4+ weeks.   Hosted MCP + tenancy + OAuth + billing. Gated per-skill DEC.</text>
+  </g>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       BAND 8 — DESTINATIONS / ECOSYSTEM (3960–4500)
+       ════════════════════════════════════════════════════════════════ -->
+  <path d="M 1200 3920 L 1200 3970" stroke="#0F172A" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+
+  <text x="1200" y="4020" font-size="38" font-weight="700" fill="#0F172A" text-anchor="middle">⑧ DESTINATIONS — where the skill ends up</text>
+  <text x="1200" y="4055" font-size="18" fill="#64748B" text-anchor="middle">From a single SKILL.md, the same skill reaches CyberOS employees, partners, and any modern agent IDE.</text>
+
+  <!-- Audience cards -->
+  <rect x="120" y="4090" width="540" height="240" rx="14" fill="url(#successGrad)" filter="url(#cardShadow)"/>
+  <text x="390" y="4135" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">CyberOS native</text>
+  <text x="390" y="4165" font-size="13" fill="#A7F3D0" text-anchor="middle">internal + agent_plugin</text>
+  <text x="150" y="4200" font-size="13" fill="#fff">CyberSkill employees · CUO supervisor</text>
+  <text x="150" y="4222" font-size="13" fill="#fff">routes by classify_act</text>
+  <text x="150" y="4250" font-size="13" fill="#fff">Full BRAIN + action_log + scope</text>
+  <text x="150" y="4272" font-size="13" fill="#fff">contract enforcement</text>
+  <text x="150" y="4302" font-size="11" fill="#A7F3D0" font-style="italic">P0 today: cpo + cto · P1: 7 more · P2+: rest</text>
+
+  <rect x="690" y="4090" width="540" height="240" rx="14" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+  <text x="960" y="4135" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">Agent IDEs</text>
+  <text x="960" y="4165" font-size="13" fill="#FED7AA" text-anchor="middle">agent_plugin + mcp_tool</text>
+  <text x="720" y="4200" font-size="13" fill="#fff">Claude Code · Antigravity · Codex</text>
+  <text x="720" y="4222" font-size="13" fill="#fff">Cursor · Windsurf · Cline</text>
+  <text x="720" y="4250" font-size="13" fill="#fff">Plugin bundles for marketplaces</text>
+  <text x="720" y="4272" font-size="13" fill="#fff">Filesystem fallback for BRAIN</text>
+  <text x="720" y="4302" font-size="11" fill="#FED7AA" font-style="italic">Same body · same hash chain · same audit row</text>
+
+  <rect x="1260" y="4090" width="540" height="240" rx="14" fill="url(#accentGrad)" filter="url(#cardShadow)"/>
+  <text x="1530" y="4135" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">MCP-compatible agents</text>
+  <text x="1530" y="4165" font-size="13" fill="#FED7AA" text-anchor="middle">mcp_tool</text>
+  <text x="1290" y="4200" font-size="13" fill="#fff">Any agent that speaks MCP</text>
+  <text x="1290" y="4222" font-size="13" fill="#fff">Auto-emitted tool.json descriptor</text>
+  <text x="1290" y="4250" font-size="13" fill="#fff">inputSchema/outputSchema from</text>
+  <text x="1290" y="4272" font-size="13" fill="#fff">expects/produces</text>
+  <text x="1290" y="4302" font-size="11" fill="#FED7AA" font-style="italic">Cross-vendor · stdio or HTTP</text>
+
+  <rect x="1830" y="4090" width="450" height="240" rx="14" fill="url(#humanGrad)" filter="url(#cardShadow)"/>
+  <text x="2055" y="4135" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">Partners 🔐</text>
+  <text x="2055" y="4165" font-size="13" fill="#DDD6FE" text-anchor="middle">partner_connector</text>
+  <text x="1860" y="4200" font-size="13" fill="#fff">External companies / customers</text>
+  <text x="1860" y="4222" font-size="13" fill="#fff">Hosted MCP + OAuth handshake</text>
+  <text x="1860" y="4250" font-size="13" fill="#fff">Tenancy isolation · billing</text>
+  <text x="1860" y="4272" font-size="13" fill="#fff">Rate limits · SLA</text>
+  <text x="1860" y="4302" font-size="11" fill="#DDD6FE" font-style="italic">GATED · per-skill DEC required</text>
+
+  <!-- BRAIN integration band -->
+  <rect x="120" y="4360" width="2160" height="120" rx="14" fill="#fff" stroke="#1E2A78" stroke-width="2" filter="url(#cardShadow)"/>
+  <text x="140" y="4395" font-size="18" font-weight="700" fill="#0F172A">📚 .cyberos-memory/ — the BRAIN that records what every skill did</text>
+  <text x="140" y="4423" font-size="13" fill="#64748B">The AGENTS.md protocol governs the BRAIN. Every skill output produces an action_log row (the runtime ledger) AND, for memory-relevant outputs, a memory file under memories/ (the BRAIN ledger).</text>
+  <text x="140" y="4445" font-size="13" fill="#64748B">Hash-chained. Append-mostly. Tombstoned soft-delete. Two audit streams that compose: skill activity and BRAIN evolution chain forward together as one trace_id.</text>
+  <text x="140" y="4470" font-size="11" fill="#94A3B8" font-style="italic">Refinement records (memories/refinements/REF-NNN-...) are how skills + BRAIN learn together over time per AGENTS.md §0.4.</text>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       FOOTER (4500–4800)
+       ════════════════════════════════════════════════════════════════ -->
+  <rect x="0" y="4520" width="2400" height="280" fill="url(#primaryGrad)"/>
+
+  <text x="120" y="4575" font-size="22" font-weight="700" fill="#F59E0B">The complete picture, in one sentence</text>
+  <text x="120" y="4615" font-size="16" fill="#fff">A skill is a folder · with a SKILL.md · wrapped by 5 inherited contracts · invokable through 2 doors · shippable to 4 surfaces · self-auditing at runtime · manually fine-tunable by humans · transpiled to N hosts · all writing to one append-only audit chain.</text>
+
+  <text x="120" y="4690" font-size="14" font-weight="600" fill="#F59E0B">Citations:</text>
+  <g font-size="12" fill="#E2E8F0">
+    <text x="120" y="4715">PRD §6 (personas) · SRS §6.1.1 (LangGraph) · SRS §6.4 (scope) · SRS §6.7 (audit) · SRS §6.12 (OBS) · DEC-027 / 029 / 048 / 050 / 052 / 055 / 061 (foundations)</text>
+    <text x="120" y="4738">DEC-090 contracts split · DEC-091 dual-mode + exposability · DEC-092 self-audit · DEC-093 manual fine-tune · CyberOS-AGENTS.md (BRAIN protocol)</text>
+  </g>
+
+  <text x="2280" y="4760" font-size="20" font-style="italic" fill="#F59E0B" text-anchor="end" opacity="0.95">"Turn Your Will Into Real."</text>
+  <text x="2280" y="4783" font-size="11" fill="#94A3B8" text-anchor="end">cyberos/docs/skills/assets/skills-anatomy-infographic.svg · v0.2.1</text>
+</svg>

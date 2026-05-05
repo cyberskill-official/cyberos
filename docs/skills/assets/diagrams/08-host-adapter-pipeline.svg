@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 760" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="prim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E2A78"/><stop offset="100%" stop-color="#0F1444"/>
+    </linearGradient>
+    <linearGradient id="hum" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+    <marker id="arrh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1500" height="760" fill="#F8FAFC"/>
+  <text x="750" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">Host-adapter pipeline — CCSM compiles to many surfaces</text>
+  <text x="750" y="80" font-size="14" fill="#64748B" text-anchor="middle">One source compiles to every modern agent host. Phase A done · Phases B–E target v0.3.0 / v0.4.0.</text>
+
+  <!-- Source -->
+  <rect x="60" y="220" width="240" height="140" rx="14" fill="url(#prim)" filter="url(#sh)"/>
+  <text x="180" y="265" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">SKILL.md</text>
+  <text x="180" y="290" font-size="14" fill="#F59E0B" text-anchor="middle">CCSM</text>
+  <text x="180" y="312" font-size="11" fill="#E2E8F0" text-anchor="middle">Canonical CyberSkill</text>
+  <text x="180" y="328" font-size="11" fill="#E2E8F0" text-anchor="middle">Skill Manifest</text>
+  <text x="180" y="350" font-size="10" fill="#94A3B8" text-anchor="middle" font-style="italic">single source of truth</text>
+
+  <!-- Transpilers (column 2) -->
+  <text x="475" y="170" font-size="14" font-weight="700" fill="#0F172A" text-anchor="middle">TRANSPILERS</text>
+  <text x="475" y="188" font-size="11" fill="#64748B" text-anchor="middle">pure CCSM → host-tree functions</text>
+  <g font-size="12" font-family="JetBrains Mono, monospace">
+    <rect x="360" y="210" width="230" height="36" rx="8" fill="#F59E0B"/>
+    <text x="475" y="234" fill="#fff" text-anchor="middle">ccsm-to-anthropic</text>
+    <rect x="360" y="252" width="230" height="36" rx="8" fill="#F59E0B"/>
+    <text x="475" y="276" fill="#fff" text-anchor="middle">ccsm-to-mcp-tool</text>
+    <rect x="360" y="294" width="230" height="36" rx="8" fill="#F59E0B"/>
+    <text x="475" y="318" fill="#fff" text-anchor="middle">ccsm-to-claude-plugin</text>
+    <rect x="360" y="336" width="230" height="36" rx="8" fill="#F59E0B"/>
+    <text x="475" y="360" fill="#fff" text-anchor="middle">ccsm-to-antigravity</text>
+    <rect x="360" y="378" width="230" height="36" rx="8" fill="#F59E0B"/>
+    <text x="475" y="402" fill="#fff" text-anchor="middle">ccsm-to-codex</text>
+    <rect x="360" y="420" width="230" height="36" rx="8" fill="#F59E0B"/>
+    <text x="475" y="444" fill="#fff" text-anchor="middle">ccsm-to-cursor</text>
+    <rect x="360" y="462" width="230" height="36" rx="8" fill="#7C3AED"/>
+    <text x="475" y="486" fill="#fff" text-anchor="middle">ccsm-to-connector 🔐</text>
+  </g>
+
+  <!-- Outputs (column 3) -->
+  <text x="780" y="170" font-size="14" font-weight="700" fill="#0F172A" text-anchor="middle">OUTPUTS</text>
+  <text x="780" y="188" font-size="11" fill="#64748B" text-anchor="middle">dist/&lt;host&gt;/ artefact trees</text>
+  <g font-size="12" font-family="JetBrains Mono, monospace">
+    <rect x="660" y="210" width="240" height="36" rx="8" fill="#10B981"/>
+    <text x="780" y="234" fill="#fff" text-anchor="middle">dist/anthropic/</text>
+    <rect x="660" y="252" width="240" height="36" rx="8" fill="#10B981"/>
+    <text x="780" y="276" fill="#fff" text-anchor="middle">dist/mcp-tool/</text>
+    <rect x="660" y="294" width="240" height="36" rx="8" fill="#10B981"/>
+    <text x="780" y="318" fill="#fff" text-anchor="middle">dist/claude-plugin/</text>
+    <rect x="660" y="336" width="240" height="36" rx="8" fill="#10B981"/>
+    <text x="780" y="360" fill="#fff" text-anchor="middle">dist/antigravity/</text>
+    <rect x="660" y="378" width="240" height="36" rx="8" fill="#10B981"/>
+    <text x="780" y="402" fill="#fff" text-anchor="middle">dist/codex/</text>
+    <rect x="660" y="420" width="240" height="36" rx="8" fill="#10B981"/>
+    <text x="780" y="444" fill="#fff" text-anchor="middle">dist/cursor/</text>
+    <rect x="660" y="462" width="240" height="36" rx="8" fill="#10B981"/>
+    <text x="780" y="486" fill="#fff" text-anchor="middle">dist/connector/</text>
+  </g>
+
+  <!-- Shim -->
+  <rect x="960" y="220" width="290" height="280" rx="14" fill="url(#hum)" filter="url(#sh)"/>
+  <text x="1105" y="260" font-size="18" font-weight="700" fill="#fff" text-anchor="middle">cyberos-skill-runtime</text>
+  <text x="1105" y="280" font-size="12" fill="#F59E0B" text-anchor="middle">host shim library</text>
+  <text x="1105" y="300" font-size="11" fill="#E2E8F0" text-anchor="middle">Python + Node packages</text>
+  <g font-family="JetBrains Mono, monospace" font-size="11" fill="#E2E8F0">
+    <text x="980" y="335">runtime.brain      → BRAIN access</text>
+    <text x="980" y="355">runtime.audit      → action_log</text>
+    <text x="980" y="375">runtime.invariants → self-audit checks</text>
+    <text x="980" y="395">runtime.envelope   → expects/produces validate</text>
+    <text x="980" y="415">runtime.untrusted  → §4.2 marker scan</text>
+    <text x="980" y="435">runtime.scope      → SRS §6.4 enforcement</text>
+  </g>
+  <text x="1105" y="475" font-size="11" fill="#FED7AA" text-anchor="middle" font-style="italic">Falls back to filesystem + local</text>
+  <text x="1105" y="490" font-size="11" fill="#FED7AA" text-anchor="middle" font-style="italic">JSONL when MCP unreachable.</text>
+
+  <!-- Test matrix -->
+  <rect x="1290" y="220" width="180" height="280" rx="14" fill="#fff" stroke="#10B981" stroke-width="2" filter="url(#sh)"/>
+  <text x="1380" y="260" font-size="14" font-weight="700" fill="#10B981" text-anchor="middle">Equivalence</text>
+  <text x="1380" y="278" font-size="14" font-weight="700" fill="#10B981" text-anchor="middle">test matrix</text>
+  <text x="1380" y="320" font-size="11" fill="#64748B" text-anchor="middle">acceptance/</text>
+  <text x="1380" y="338" font-size="11" fill="#64748B" text-anchor="middle">golden fixtures</text>
+  <text x="1380" y="358" font-size="11" fill="#64748B" text-anchor="middle">×</text>
+  <text x="1380" y="378" font-size="11" fill="#64748B" text-anchor="middle">every transpiled</text>
+  <text x="1380" y="396" font-size="11" fill="#64748B" text-anchor="middle">target</text>
+  <text x="1380" y="436" font-size="12" font-weight="700" fill="#DC2626" text-anchor="middle">CI gate.</text>
+  <text x="1380" y="456" font-size="11" fill="#64748B" text-anchor="middle">Failing matrix</text>
+  <text x="1380" y="474" font-size="11" fill="#64748B" text-anchor="middle">on a PR blocks</text>
+  <text x="1380" y="492" font-size="11" fill="#64748B" text-anchor="middle">merge.</text>
+
+  <!-- Connecting lines -->
+  <g stroke="#0F172A" stroke-width="1.5" opacity="0.4" fill="none">
+    <path d="M 300 290 L 360 230"/>
+    <path d="M 300 290 L 360 270"/>
+    <path d="M 300 290 L 360 312"/>
+    <path d="M 300 290 L 360 354"/>
+    <path d="M 300 290 L 360 396"/>
+    <path d="M 300 290 L 360 438"/>
+    <path d="M 300 290 L 360 480"/>
+  </g>
+
+  <g stroke="#10B981" stroke-width="1.5" opacity="0.5" fill="none">
+    <path d="M 590 230 L 660 230"/>
+    <path d="M 590 270 L 660 270"/>
+    <path d="M 590 312 L 660 312"/>
+    <path d="M 590 354 L 660 354"/>
+    <path d="M 590 396 L 660 396"/>
+    <path d="M 590 438 L 660 438"/>
+    <path d="M 590 480 L 660 480"/>
+  </g>
+
+  <path d="M 900 360 L 960 360" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+  <path d="M 1250 360 L 1290 360" stroke="#10B981" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+
+  <!-- Phases -->
+  <rect x="60" y="540" width="1410" height="160" rx="10" fill="#fff" stroke="#E2E8F0" filter="url(#sh)"/>
+  <text x="80" y="568" font-size="14" font-weight="700" fill="#0F172A">Phased delivery</text>
+
+  <g font-size="11" fill="#0F172A">
+    <text x="80" y="595"><tspan font-weight="700" fill="#10B981">Phase A — CCSM lock</tspan>  ✅ DONE in v0.2.0   ·   1 week.   SKILL.md is source of truth; dist/ is generated, never hand-edited.</text>
+    <text x="80" y="620"><tspan font-weight="700" fill="#F59E0B">Phase B — Transpilers</tspan>  🔵 v0.3.0   ·   2-3 weeks.   One transpiler per output target. Pure functions; embarrassingly parallel.</text>
+    <text x="80" y="645"><tspan font-weight="700" fill="#F59E0B">Phase C — Host shim</tspan>  🔵 v0.3.0   ·   1-2 weeks.   Library every transpiled skill links against. Uniform runtime semantics.</text>
+    <text x="80" y="670"><tspan font-weight="700" fill="#F59E0B">Phase D — Equivalence test matrix</tspan>  🔵 v0.3.0   ·   1 week.   Mechanical once shim ships.</text>
+    <text x="80" y="695"><tspan font-weight="700" fill="#7C3AED">Phase E — Partner connector pipeline</tspan>  🟣 v0.4.0   ·   4+ weeks.   Hosted MCP + tenancy + OAuth + billing. Gated per-skill DEC.</text>
+  </g>
+
+  <text x="750" y="745" font-size="11" fill="#94A3B8" text-anchor="middle">08-host-adapter-pipeline.svg</text>
+</svg>

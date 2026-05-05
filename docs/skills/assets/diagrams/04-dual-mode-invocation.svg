@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="prim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E2A78"/><stop offset="100%" stop-color="#0F1444"/>
+    </linearGradient>
+    <linearGradient id="hum" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+    <linearGradient id="acc" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F59E0B"/><stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0F172A"/>
+    </marker>
+    <marker id="arrh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="arrp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1E2A78"/>
+    </marker>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1200" height="600" fill="#F8FAFC"/>
+  <text x="600" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">Dual-mode invocation — one body, two front doors</text>
+  <text x="600" y="80" font-size="14" fill="#64748B" text-anchor="middle">A v0.2.0 skill works whether a human types in chat OR an upstream skill hands it an envelope.</text>
+
+  <!-- Standalone door -->
+  <rect x="40" y="120" width="280" height="100" rx="12" fill="url(#hum)" filter="url(#sh)"/>
+  <text x="60" y="155" font-size="18" font-weight="700" fill="#fff">👤 Standalone door</text>
+  <text x="60" y="180" font-size="13" fill="#E2E8F0">User typing in CHAT</text>
+  <text x="60" y="200" font-size="11" fill="#F59E0B">no upstream envelope</text>
+
+  <!-- Chained door -->
+  <rect x="880" y="120" width="280" height="100" rx="12" fill="url(#prim)" filter="url(#sh)"/>
+  <text x="900" y="155" font-size="18" font-weight="700" fill="#fff">🔗 Chained door</text>
+  <text x="900" y="180" font-size="13" fill="#E2E8F0">Upstream skill output</text>
+  <text x="900" y="200" font-size="11" fill="#F59E0B">envelope arrives ready</text>
+
+  <!-- Standalone path -->
+  <rect x="40" y="240" width="280" height="80" rx="10" fill="#fff" filter="url(#sh)" stroke="#7C3AED"/>
+  <text x="60" y="268" font-size="14" font-weight="600" fill="#0F172A">STANDALONE_INTERVIEW.md</text>
+  <text x="60" y="290" font-size="12" fill="#64748B">Asks Q&amp;A in chat to fill</text>
+  <text x="60" y="308" font-size="12" fill="#64748B">expects.required_fields one by one</text>
+
+  <!-- Chained path -->
+  <rect x="880" y="240" width="280" height="80" rx="10" fill="#fff" filter="url(#sh)" stroke="#1E2A78"/>
+  <text x="900" y="268" font-size="14" font-weight="600" fill="#0F172A">Upstream output envelope</text>
+  <text x="900" y="290" font-size="12" fill="#64748B">Fills required_fields machine-</text>
+  <text x="900" y="308" font-size="12" fill="#64748B">readably from prior produces</text>
+
+  <!-- Center function -->
+  <rect x="360" y="230" width="480" height="100" rx="12" fill="url(#acc)" filter="url(#sh)"/>
+  <text x="600" y="265" font-size="20" font-weight="700" fill="#fff" text-anchor="middle">f(envelope, ctx) → envelope_out</text>
+  <text x="600" y="290" font-size="13" fill="#fff" text-anchor="middle">ONE function body · SAME logic · SAME audit row · SAME hash chain</text>
+  <text x="600" y="310" font-size="11" fill="#0F1444" text-anchor="middle" font-style="italic">Runtime detects mode via pipeline_run_id presence in call context.</text>
+
+  <!-- Arrows from doors to interview/envelope -->
+  <path d="M 180 220 L 180 240" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+  <path d="M 1020 220 L 1020 240" stroke="#1E2A78" stroke-width="2" fill="none" marker-end="url(#arrp)"/>
+
+  <!-- Arrows from interview/envelope to function -->
+  <path d="M 320 280 L 360 280" stroke="#7C3AED" stroke-width="3" fill="none" marker-end="url(#arrh)"/>
+  <path d="M 880 280 L 840 280" stroke="#1E2A78" stroke-width="3" fill="none" marker-end="url(#arrp)"/>
+
+  <!-- Outputs -->
+  <rect x="40" y="360" width="280" height="60" rx="10" fill="#10B981"/>
+  <text x="180" y="386" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">HUMAN_SUMMARY.md → chat</text>
+  <text x="180" y="406" font-size="11" fill="#fff" text-anchor="middle">verdict, counts, hash prefix, trace_id</text>
+
+  <rect x="880" y="360" width="280" height="60" rx="10" fill="#10B981"/>
+  <text x="1020" y="386" font-size="13" font-weight="600" fill="#fff" text-anchor="middle">output envelope → next skill</text>
+  <text x="1020" y="406" font-size="11" fill="#fff" text-anchor="middle">next_skill_recommendation drives chain</text>
+
+  <path d="M 180 330 L 180 360" stroke="#10B981" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+  <path d="M 1020 330 L 1020 360" stroke="#10B981" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Action_log row -->
+  <rect x="360" y="360" width="480" height="60" rx="10" fill="#fff" stroke="#DC2626" stroke-width="2"/>
+  <text x="600" y="386" font-size="13" font-weight="600" fill="#0F172A" text-anchor="middle">+1 row in genie.action_log (always — both modes)</text>
+  <text x="600" y="406" font-size="11" fill="#64748B" text-anchor="middle">persona_id · skill_id · row_kind · trace_id · hash chain</text>
+  <path d="M 600 330 L 600 360" stroke="#DC2626" stroke-width="3" fill="none" marker-end="url(#arr)"/>
+
+  <!-- Mode detection box -->
+  <rect x="40" y="460" width="1120" height="50" rx="10" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="60" y="485" font-size="12" font-weight="700" fill="#B45309">Mode detection (deterministic):</text>
+  <text x="60" y="503" font-size="11" fill="#0F172A">standalone when ALL of [no pipeline_run_id, caller is CHAT primitive, input envelope is empty]  ·  chained otherwise</text>
+
+  <text x="600" y="555" font-size="12" fill="#64748B" text-anchor="middle" font-style="italic">Adding a new skill: write the function once. Add interview Q&amp;A. Add summary template. Done — works in both modes.</text>
+  <text x="600" y="580" font-size="11" fill="#94A3B8" text-anchor="middle">04-dual-mode-invocation.svg</text>
+</svg>

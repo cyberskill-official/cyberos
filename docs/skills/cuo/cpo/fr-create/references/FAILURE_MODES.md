@@ -24,11 +24,9 @@ remediation: <one sentence, copy-pasteable command>
 | BOOT-005 | `output_dir` does not exist and could not be created. |
 | BOOT-006 | The runtime cannot reach the chained `fr-audit` skill (only matters when chaining is requested in the input envelope). |
 | BOOT-007 | Mode dispatch ambiguous — `fr-create` invoked with `fr_paths` set (those belong to `fr-audit`). |
-| BOOT-008 | (reserved — formerly "template_path missing"; obsolete since the template loads from `cuo/_shared/feature-request-template/template.md`). |
+| BOOT-008 | (reserved — formerly "template_path missing"; obsolete since v0.2.0, the template loads via `depends_on_contracts:` from `cyberos/docs/contracts/feature-request/v1/template.md`). |
 
-Do NOT write a partial manifest on bootstrap failure. Every BOOT failure
-appends one `genie.action_log` row with `row_kind: notify` (the user is
-notified, no action taken).
+Do NOT write a partial manifest on bootstrap failure. Every BOOT failure appends one `genie.action_log` row with `row_kind: notify` (the user is notified, no action taken).
 
 ## 14.2 EXHAUSTED termination block
 
@@ -58,14 +56,14 @@ remediation: Either re-run with a skill version matching the manifest, OR
              migrate the manifest forward by re-invoking under the current
              skill version (the WORKER writes a MIGRATE_FORWARD audit row
              before advancing).
-             The template (loaded from cuo/_shared/feature-request-template/)
-             and the audit rubric (in cuo/cpo/fr-audit/RUBRIC.md) advance
+             The template (loaded from cyberos/docs/contracts/feature-request/v1/
+             via depends_on_contracts:) and the audit rubric (in
+             cuo/cpo/fr-audit/RUBRIC.md) advance
              lockstep with the prompt_revision — there is no cross-file
              matrix to consult.
 ```
 
-The skill body is the single source of truth for `prompt_revision`,
-`template_version`, and chained skill versions.
+The skill body is the single source of truth for `prompt_revision`, `template_version`, and chained skill versions.
 
 ## 14.4 INPUTS_CHANGED
 
@@ -80,5 +78,4 @@ remediation: Either revert the requirements files (manifest will resume) or
 
 ## 14.5 STALE_OVERWRITE
 
-Surfaces as an HITL issue with category `stale_fr_disposition` and rule_id
-`STALE-001`. See `HITL_PROTOCOL.md`.
+Surfaces as an HITL issue with category `stale_fr_disposition` and rule_id `STALE-001`. See `HITL_PROTOCOL.md`.

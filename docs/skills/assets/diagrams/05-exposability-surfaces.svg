@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="prim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E2A78"/><stop offset="100%" stop-color="#0F1444"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1200" height="700" fill="#F8FAFC"/>
+  <text x="600" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">Exposability — 4 surfaces, one source</text>
+  <text x="600" y="80" font-size="14" fill="#64748B" text-anchor="middle">exposable_as: declares which doors the skill ships through. Build pipeline emits the right artefact per surface.</text>
+
+  <!-- Central source -->
+  <rect x="450" y="280" width="300" height="120" rx="12" fill="url(#prim)" filter="url(#sh)"/>
+  <text x="600" y="320" font-size="22" font-weight="700" fill="#fff" text-anchor="middle">SKILL.md</text>
+  <text x="600" y="345" font-size="14" fill="#F59E0B" text-anchor="middle">CCSM</text>
+  <text x="600" y="370" font-size="11" fill="#E2E8F0" text-anchor="middle">Canonical CyberSkill Skill Manifest</text>
+  <text x="600" y="388" font-size="10" fill="#94A3B8" text-anchor="middle" font-style="italic">single source of truth</text>
+
+  <!-- 4 surfaces around the source -->
+  <!-- internal (top-left) -->
+  <rect x="60" y="140" width="300" height="120" rx="12" fill="#10B981" filter="url(#sh)"/>
+  <text x="80" y="174" font-size="18" font-weight="700" fill="#fff">internal: true</text>
+  <text x="80" y="200" font-size="13" fill="#fff">CUO supervisor routes here</text>
+  <text x="80" y="220" font-size="11" fill="#A7F3D0">via classify_act node</text>
+  <text x="80" y="244" font-size="11" fill="#fff" font-weight="600">Audience: CyberSkill employees</text>
+
+  <!-- agent_plugin (top-right) -->
+  <rect x="840" y="140" width="300" height="120" rx="12" fill="#F59E0B" filter="url(#sh)"/>
+  <text x="860" y="174" font-size="18" font-weight="700" fill="#fff">agent_plugin: true</text>
+  <text x="860" y="200" font-size="13" fill="#fff">Claude Code / Antigravity / Codex</text>
+  <text x="860" y="218" font-size="11" fill="#FED7AA">.plugin/ bundle (skills + commands</text>
+  <text x="860" y="232" font-size="11" fill="#FED7AA">+ agents + .mcp.json + manifest)</text>
+  <text x="860" y="252" font-size="11" fill="#fff" font-weight="600">Audience: agent IDE users</text>
+
+  <!-- mcp_tool (bottom-left) -->
+  <rect x="60" y="420" width="300" height="120" rx="12" fill="#F59E0B" filter="url(#sh)"/>
+  <text x="80" y="454" font-size="18" font-weight="700" fill="#fff">mcp_tool: true</text>
+  <text x="80" y="480" font-size="13" fill="#fff">Auto-emit MCP tool descriptor</text>
+  <text x="80" y="498" font-size="11" fill="#FED7AA">tool.json + stdio runner stub</text>
+  <text x="80" y="514" font-size="11" fill="#FED7AA">derived from expects/produces</text>
+  <text x="80" y="534" font-size="11" fill="#fff" font-weight="600">Audience: any MCP-compatible agent</text>
+
+  <!-- partner_connector (bottom-right) -->
+  <rect x="840" y="420" width="300" height="120" rx="12" fill="#7C3AED" filter="url(#sh)"/>
+  <text x="860" y="454" font-size="18" font-weight="700" fill="#fff">partner_connector 🔐</text>
+  <text x="860" y="480" font-size="13" fill="#fff">Hosted MCP + OAuth + tenancy</text>
+  <text x="860" y="498" font-size="11" fill="#DDD6FE">+ billing hooks + rate limits</text>
+  <text x="860" y="514" font-size="11" fill="#DDD6FE">GATED — needs per-skill DEC</text>
+  <text x="860" y="534" font-size="11" fill="#fff" font-weight="600">Audience: external partners</text>
+
+  <!-- Connecting lines from source to each surface -->
+  <line x1="450" y1="290" x2="360" y2="200" stroke="#10B981" stroke-width="2" opacity="0.6"/>
+  <line x1="750" y1="290" x2="840" y2="200" stroke="#F59E0B" stroke-width="2" opacity="0.6"/>
+  <line x1="450" y1="390" x2="360" y2="480" stroke="#F59E0B" stroke-width="2" opacity="0.6"/>
+  <line x1="750" y1="390" x2="840" y2="480" stroke="#7C3AED" stroke-width="2" opacity="0.6"/>
+
+  <!-- Trust↔exposability link footnote -->
+  <rect x="60" y="580" width="1080" height="60" rx="10" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="80" y="605" font-size="12" font-weight="700" fill="#B45309">Trust ↔ exposability link (validator-enforced):</text>
+  <text x="80" y="623" font-size="11" fill="#0F172A">A skill with partner_connector: true MUST carry: confidence_band.cite_sources: required · untrusted_inputs.injection_scan: required</text>
+  <text x="80" y="638" font-size="11" fill="#0F172A">· self_audit.invariants_ref populated with ≥3 invariants (incl. scope-discipline + fabrication-boundary) · human_fine_tune.review_required.on_safety_change: true</text>
+
+  <text x="600" y="675" font-size="11" fill="#94A3B8" text-anchor="middle">05-exposability-surfaces.svg</text>
+</svg>

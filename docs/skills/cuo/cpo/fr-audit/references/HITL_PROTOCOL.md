@@ -1,17 +1,10 @@
 # HITL_BATCH_REQUEST format + RESUME (audit-side)
 
-> Same format as `cuo/cpo/fr-create/references/HITL_PROTOCOL.md`. The
-> audit-side rule_ids (FM-NNN, SEC-NNN, COND-NNN, QA-NNN, SAFE-NNN,
-> STALE-001) originate in `RUBRIC.md` and surface here when the audit
-> halts. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §7.
+> Same format as `cuo/cpo/fr-create/references/HITL_PROTOCOL.md`. The audit-side rule_ids (FM-NNN, SEC-NNN, COND-NNN, QA-NNN, SAFE-NNN, STALE-001) originate in `RUBRIC.md` and surface here when the audit halts. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §7.
 
 ## When fr-audit emits HITL_BATCH_REQUEST
 
-After Step 7 (Termination check) of `AUDIT_LOOP.md` lands in branch (b)
-HITL_PAUSE — i.e. at least one issue has `status = needs_human`. The
-emission happens AFTER the audit report has been written (Step 8) and
-AFTER the AUDIT_BATCH_SUMMARY (so summary stays first, then the
-human-actionable block).
+After Step 7 (Termination check) of `AUDIT_LOOP.md` lands in branch (b) HITL_PAUSE — i.e. at least one issue has `status = needs_human`. The emission happens AFTER the audit report has been written (Step 8) and AFTER the AUDIT_BATCH_SUMMARY (so summary stays first, then the human-actionable block).
 
 ## Format
 
@@ -55,29 +48,19 @@ state. Issue IDs and option letters WILL NOT be re-issued.
 END_HITL_BATCH_REQUEST
 ```
 
-When chained from `fr-create`, the supervisor merges this into
-`fr-create`'s HITL_BATCH_REQUEST — the user sees one consolidated
-human-action block per pipeline pause, not two separate ones per skill.
+When chained from `fr-create`, the supervisor merges this into `fr-create`'s HITL_BATCH_REQUEST — the user sees one consolidated human-action block per pipeline pause, not two separate ones per skill.
 
 ## RESUME contract
 
 When the human answers, the next invocation:
 
 1. Parses each line per `FR-NNN/ISS-NNN: <letter>[; <payload>]`.
-2. Strict matches against issue IDs in the corresponding audit report's
-   `## ISS-NNN` blocks.
+2. Strict matches against issue IDs in the corresponding audit report's `## ISS-NNN` blocks.
 3. Updates `audit.issues[i].resolution` and `audit.issues[i].resolved_at`.
 4. Re-enters `AUDIT_LOOP.md` Step 4 for each affected FR.
 
-The audit MUST NEVER re-ask a HITL question whose `resolution` is
-non-null. Re-asking is a contract violation surfaced as a drift event
-(SRS §6.12).
+The audit MUST NEVER re-ask a HITL question whose `resolution` is non-null. Re-asking is a contract violation surfaced as a drift event (SRS §6.12).
 
 ## Per-issue audit-row emission
 
-Each line in the HITL_BATCH_REQUEST corresponds to one issue. When the
-human's answer arrives, the audit appends one `genie.action_log` row
-per resolved issue with `row_kind: act` (the audit performed an action
-in response to the answer — auto-applied a fix, marked an issue
-wontfix, etc.). The row's payload includes the answer string, the
-applied resolution, and the new audit hash.
+Each line in the HITL_BATCH_REQUEST corresponds to one issue. When the human's answer arrives, the audit appends one `genie.action_log` row per resolved issue with `row_kind: act` (the audit performed an action in response to the answer — auto-applied a fix, marked an issue wontfix, etc.). The row's payload includes the answer string, the applied resolution, and the new audit hash.

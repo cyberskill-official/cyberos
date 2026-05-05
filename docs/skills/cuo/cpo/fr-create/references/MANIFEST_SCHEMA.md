@@ -1,52 +1,26 @@
 # `fr-manifest@2` — single source of truth for fr-create state
 
-> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0
-> §3 (modulo s/`fr_create_and_audit`/`fr_create`/g — see `CHANGELOG.md`).
+> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §3 (modulo s/`fr_create_and_audit`/`fr_create`/g — see `CHANGELOG.md`).
 
 ## §3.1 Hashing — staleness detection
 
 Three SHA-256 hashes anchor re-entrancy:
 
-- **`requirements_hash`** — SHA-256 of the normalised concatenation of every
-  requirements file. Normalisation per file, then concatenated in lexical
-  path order with a `\n---FILE: <path>---\n` delimiter: convert line endings
-  to `\n`; strip BOM; strip trailing whitespace per line; collapse ≥3 blank
-  lines to 2; ensure single trailing `\n`. Reject (issue `bootstrap-encoding`)
-  if any input is not valid UTF-8 (binary inputs like `.pdf` are first
-  text-extracted; the extracted text is what is hashed).
-- **`fr_hash`** — over each generated FR markdown using the same
-  normalisation. Recomputed at every write and at the top of every WORKER
-  invocation.
-- **`audit_hash`** — copied from the chained `fr-audit` skill's report
-  (`audited_file_sha256` field) after each audit run. Optional in `fr-create`
-  standalone mode.
+- **`requirements_hash`** — SHA-256 of the normalised concatenation of every requirements file. Normalisation per file, then concatenated in lexical path order with a `\n---FILE: <path>---\n` delimiter: convert line endings to `\n`; strip BOM; strip trailing whitespace per line; collapse ≥3 blank lines to 2; ensure single trailing `\n`. Reject (issue `bootstrap-encoding`) if any input is not valid UTF-8 (binary inputs like `.pdf` are first text-extracted; the extracted text is what is hashed).
+- **`fr_hash`** — over each generated FR markdown using the same normalisation. Recomputed at every write and at the top of every WORKER invocation.
+- **`audit_hash`** — copied from the chained `fr-audit` skill's report (`audited_file_sha256` field) after each audit run. Optional in `fr-create` standalone mode.
 
 ## §3.2 Re-entrancy invariants
 
-On every invocation, AFTER emitting `CONTRACT_ECHO` and BEFORE any other
-action:
+On every invocation, AFTER emitting `CONTRACT_ECHO` and BEFORE any other action:
 
-1. Recompute `requirements_hash` from current input files. If different from
-   `manifest.inputs.requirements_hash`, emit `INPUTS_CHANGED` (see
-   `FAILURE_MODES.md`), set `manifest.plan.status = INVALIDATED`, write the
-   manifest, HALT.
-2. For every FR with `status = PASS`, recompute `fr_hash` from the on-disk
-   file. If it differs from manifest, raise an HITL issue with category
-   `stale_fr_disposition` (rule_id `STALE-001`) carrying the affected FR ID
-   and the before/after hashes. STALE no longer halts on its own; options
-   `ACCEPT_EXTERNAL_EDIT` / `REVERT_TO_MANIFEST` / `MARK_ERRORED` surface in
-   the next HITL block.
-3. If `manifest.json` exists but is malformed (parse error / schema
-   mismatch), rename to `manifest.json.corrupt-<iso8601>` if the runtime
-   allows, otherwise embed verbatim in a `bootstrap_error` field of a fresh
-   manifest. Record a `bootstrap` issue.
-4. Initialize `manifest.amendment_stats` if absent. Recompute
-   `ratio_last_5_batches` from the trailing 5 `batch_runs` entries. If ratio
-   > `ratio_threshold` (default 0.2), append a soft warning to the next
-   `BATCH_RUN_LOG.md` entry: *"AMENDMENT_FREQUENCY_WARNING: <N>/5 recent
-   batches required mid-flight amendments."* Does NOT halt.
-5. Initialize `manifest.amendments_pending` to `[]` if absent. Carry-over
-   from prior runs is preserved verbatim.
+1. Recompute `requirements_hash` from current input files. If different from `manifest.inputs.requirements_hash`, emit `INPUTS_CHANGED` (see `FAILURE_MODES.md`), set `manifest.plan.status = INVALIDATED`, write the manifest, HALT.
+2. For every FR with `status = PASS`, recompute `fr_hash` from the on-disk file. If it differs from manifest, raise an HITL issue with category `stale_fr_disposition` (rule_id `STALE-001`) carrying the affected FR ID and the before/after hashes. STALE no longer halts on its own; options `ACCEPT_EXTERNAL_EDIT` / `REVERT_TO_MANIFEST` / `MARK_ERRORED` surface in the next HITL block.
+3. If `manifest.json` exists but is malformed (parse error / schema mismatch), rename to `manifest.json.corrupt-<iso8601>` if the runtime allows, otherwise embed verbatim in a `bootstrap_error` field of a fresh manifest. Record a `bootstrap` issue.
+4. Initialize `manifest.amendment_stats` if absent. Recompute `ratio_last_5_batches` from the trailing 5 `batch_runs` entries. If ratio
+> `ratio_threshold` (default 0.2), append a soft warning to the next
+   `BATCH_RUN_LOG.md` entry: *"AMENDMENT_FREQUENCY_WARNING: <N>/5 recent batches required mid-flight amendments."* Does NOT halt.
+5. Initialize `manifest.amendments_pending` to `[]` if absent. Carry-over from prior runs is preserved verbatim.
 
 ## §3.3 Schema (`<output_dir>/manifest.json`)
 
@@ -56,7 +30,7 @@ action:
   "skill_id": "cuo/cpo/fr-create",
   "skill_revisions": {
     "fr_create": "fr_create@2.0.0",
-    "_note": "MUST match the prompt_revision literal in cuo/cpo/fr-create/SKILL.md CONTRACT_ECHO. Mismatch → CONTRACT_DRIFT (FAILURE_MODES.md). The template version (feature_request@1, loaded from cuo/_shared/feature-request-template/template.md) advances lockstep with this skill — they are not separately versioned."
+    "_note": "MUST match the prompt_revision literal in cuo/cpo/fr-create/SKILL.md CONTRACT_ECHO. Mismatch → CONTRACT_DRIFT (FAILURE_MODES.md). The template version (feature_request@1, loaded from cyberos/docs/contracts/feature-request/v1/template.md via depends_on_contracts:) advances lockstep with this skill — they are not separately versioned."
   },
   "inputs": {
     "requirements_files": [
@@ -157,20 +131,13 @@ action:
 
 ## §3.4 Write discipline
 
-Every state-changing step MUST flush the manifest before the next step
-begins. The manifest is the only authoritative state — the skill MUST NOT
-cache state in chat context, since context resets are expected. The
-manifest MUST be written with deterministic key ordering (alphabetical
-inside objects) and 2-space indent.
+Every state-changing step MUST flush the manifest before the next step begins. The manifest is the only authoritative state — the skill MUST NOT cache state in chat context, since context resets are expected. The manifest MUST be written with deterministic key ordering (alphabetical inside objects) and 2-space indent.
 
-The skill MUST NOT delete entries from `plan.backlog` or `frs`. Removal of
-an FR from scope is recorded as `status: ERRORED` with a reason or as a
-`PLAN_AMENDMENT_REQUEST` (see `AMENDMENT_PROTOCOL.md`).
+The skill MUST NOT delete entries from `plan.backlog` or `frs`. Removal of an FR from scope is recorded as `status: ERRORED` with a reason or as a `PLAN_AMENDMENT_REQUEST` (see `AMENDMENT_PROTOCOL.md`).
 
 ## BATCH_COMPLETE format
 
-Emitted at end of WORKER phase when the batch is done (PASS / HITL_PAUSE /
-EXHAUSTED).
+Emitted at end of WORKER phase when the batch is done (PASS / HITL_PAUSE / EXHAUSTED).
 
 ```
 BATCH_COMPLETE

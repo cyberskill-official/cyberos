@@ -1,13 +1,10 @@
 # HITL_BATCH_REQUEST format + RESUME protocol
 
-> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0
-> §7 + §6.
+> Sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §7 + §6.
 
 ## HITL_BATCH_REQUEST format
 
-Emitted as the LAST thing in the response when at least one FR has
-`status = HITL_PAUSE`. Maps to the CyberOS Question primitive
-(SRS §6.6.2).
+Emitted as the LAST thing in the response when at least one FR has `status = HITL_PAUSE`. Maps to the CyberOS Question primitive (SRS §6.6.2).
 
 ```
 HITL_BATCH_REQUEST
@@ -51,46 +48,33 @@ WILL NOT be re-issued.
 END_HITL_BATCH_REQUEST
 ```
 
-Each emission appends one row to `genie.action_log` with `row_kind:
-question` (per SRS §6.6.2 + §6.7). The row's `payload_hash_field` is the
-SHA-256 of the canonical-JSON serialisation of the issue list.
+Each emission appends one row to `genie.action_log` with `row_kind: question` (per SRS §6.6.2 + §6.7). The row's `payload_hash_field` is the SHA-256 of the canonical-JSON serialisation of the issue list.
 
 ## RESUME protocol
 
 ### 6.1 Detect
 
-Phase is `RESUME` when at least one FR has `status = HITL_PAUSE` and all
-of its `blocking_issues[].resolution` are non-null AFTER parsing the
-human's reply.
+Phase is `RESUME` when at least one FR has `status = HITL_PAUSE` and all of its `blocking_issues[].resolution` are non-null AFTER parsing the human's reply.
 
 ### 6.2 Answer parsing
 
-Reply lines are of the form `FR-NNN/ISS-NNN: <letter>` or
-`AMD-NNN: <letter>` with optional indented payload. One line per
-issue/amendment. Strict matching against issue/amendment IDs in the
-manifest.
+Reply lines are of the form `FR-NNN/ISS-NNN: <letter>` or `AMD-NNN: <letter>` with optional indented payload. One line per issue/amendment. Strict matching against issue/amendment IDs in the manifest.
 
 ### 6.3 Application
 
 For each resolved issue:
 
-- `ISS-NNN`: update `frs[FR].blocking_issues[i].resolution` and
-  `resolved_at`. The FR's chained `fr-audit` re-runs with the answer
-  injected.
+- `ISS-NNN`: update `frs[FR].blocking_issues[i].resolution` and `resolved_at`. The FR's chained `fr-audit` re-runs with the answer injected.
 - `AMD-NNN`: branch per `AMENDMENT_PROTOCOL.md` §6.7.
 
 ### 6.4 Aggregation on resume
 
-If multiple FRs were paused, the worker resumes each one's audit before
-claiming new FRs from the backlog.
+If multiple FRs were paused, the worker resumes each one's audit before claiming new FRs from the backlog.
 
 ### 6.5 Malformed answers
 
-If a reply line doesn't match the expected format, halt with a
-clarification request — do NOT guess.
+If a reply line doesn't match the expected format, halt with a clarification request — do NOT guess.
 
 ### 6.6 Never-re-ask invariant
 
-The skill MUST NEVER re-ask a HITL question whose `resolution` is
-non-null. Re-asking is a contract violation surfaced as a drift event in
-OBS (SRS §6.12).
+The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null. Re-asking is a contract violation surfaced as a drift event in OBS (SRS §6.12).

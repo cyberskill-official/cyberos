@@ -1,7 +1,6 @@
 # Failure modes — required handling (audit-side)
 
-> Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §14, scoped
-> to the audit-side codes only.
+> Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §14, scoped to the audit-side codes only.
 
 ## Bootstrap-error format
 
@@ -25,8 +24,7 @@ remediation: <one sentence, copy-pasteable command>
 | BOOT-006 | The runtime cannot execute the rubric (e.g., YAML parser missing, regex engine unavailable). The supervisor receives this and does NOT retry. |
 | BOOT-007 | Mode dispatch ambiguous — `fr-audit` invoked with `requirements_files` set (those belong to `fr-create`). |
 
-Do NOT write a partial audit report on bootstrap failure. Every BOOT
-failure appends one `genie.action_log` row with `row_kind: notify`.
+Do NOT write a partial audit report on bootstrap failure. Every BOOT failure appends one `genie.action_log` row with `row_kind: notify`.
 
 ## CONTRACT_DRIFT
 
@@ -42,19 +40,16 @@ remediation: Either re-run with a skill version matching the report, OR
              migrate the report forward by re-invoking under the current
              skill version (the audit writes a MIGRATE_FORWARD audit row
              before advancing). The template (loaded from
-             cuo/_shared/feature-request-template/) and the rubric
-             (RUBRIC.md) advance lockstep with the prompt_revision.
+             cyberos/docs/contracts/feature-request/v1/ via
+             depends_on_contracts:) and the rubric (RUBRIC.md) advance
+             lockstep with the prompt_revision.
 ```
 
-The skill body is the single source of truth for `prompt_revision` and
-`audit_rubric_version`. Reports from a future skill version cannot be
-loaded by an older skill — the older skill emits CONTRACT_DRIFT and
-refuses.
+The skill body is the single source of truth for `prompt_revision` and `audit_rubric_version`. Reports from a future skill version cannot be loaded by an older skill — the older skill emits CONTRACT_DRIFT and refuses.
 
 ## EXHAUSTED termination block
 
-Same as `fr-create`'s; reproduced here so audit-only invocations don't
-have to cross-reference the create-side.
+Same as `fr-create`'s; reproduced here so audit-only invocations don't have to cross-reference the create-side.
 
 ```
 LOOP_EXHAUSTED
