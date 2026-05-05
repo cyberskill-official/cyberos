@@ -6,6 +6,18 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-04 (evening, follow-up) — §5.10.11/12 validator discipline + DEC-087/DEC-088
+
+### Added
+- **§5.10.11** new sub-section "Fenced-code-block exemption in §4.3 multi-frontmatter check (AGENTS.md §4.3)" — narrative summary of the §4.3 amendment.
+- **§5.10.12** new sub-section "Datetime-instance acceptance in §5.2 timestamp validator (AGENTS.md §5.2)" — narrative summary of the §5.2 amendment.
+- **§5.9 (decision log)** 2 new locked decisions:
+  - **DEC-087** Fenced-code-block exemption in §4.3 multi-frontmatter check (AGENTS.md §4.3).
+  - **DEC-088** Datetime-instance acceptance in §5.2 timestamp validator (AGENTS.md §5.2).
+
+### Real-world trigger
+Surfaced during the workbench/.cyberos-memory bootstrap session (2026-05-04 evening) ingesting the agentskills + skills + claude-cookbooks/skills repos into a 12-file skills-knowledge module digest. Both failures hit on the very first memory file write: §4.3 rejected `spec.md` because the body legitimately contained `---`-delimited example SKILL.md frontmatter inside ```` ``` ```` fences; §5.2 rejected its own valid output because PyYAML auto-coerced ISO-8601 timestamps into `datetime.datetime`, and `str(dt)` rendered with a space separator that failed the validator's regex. Both proposed as TIER-1 refinements per §0.4 in the same response and adopted. The full reference-implementation patches landed in the session's local `.brain_writer.py`; SRS §5.12.8 captures the implementation specification.
+
 ## 2026-05-04 — §5.10 Ingestion-side discipline + DEC-076..DEC-085
 
 ### Added

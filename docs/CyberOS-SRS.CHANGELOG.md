@@ -6,6 +6,18 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-04 (evening, follow-up) — §5.12.8 validator discipline implementation + DEC-087/DEC-088
+
+### Added
+- **§5.12.8** new sub-section "Validator discipline — fenced-code-block exemption + datetime-instance acceptance" with reference Python implementations:
+  - `brain.frontmatter.split(text)` — pre-process body by stripping fenced spans (regex `(?ms)^(```|~~~).*?^\1\s*$`) before scanning for a secondary `\n---\n`. Opening-block check unchanged. Performance: O(n), ~0.5ms per 30 KB memory.
+  - `brain.validators.timestamp(field, value)` — early-branch on `isinstance(value, datetime.datetime)` before any string coercion; reject naive (tzinfo-less) datetimes as `naive-ts:<field>`. Migration note: a naive port that adds the datetime branch without early-returning still hits the original bug because `str(dt)` is computed downstream.
+  - Test fixtures specified for both: ISO string accept, tz-aware datetime accept, naive datetime reject, PyYAML-parsed datetime accept (regression for the original failing case).
+- **Part 13 decisions log:** 2 new entries DEC-087 and DEC-088 with implementation cross-refs (full text in PRD §5.10.11–§5.10.12).
+
+### Real-world trigger
+Same as `CyberOS-AGENTS.CHANGELOG.md` (evening, follow-up) and `CyberOS-PRD.CHANGELOG.md` (evening, follow-up) — workbench/.cyberos-memory bootstrap session, two TIER-1 validator amendments adopted.
+
 ## 2026-05-04 — §5.12 Ingestion-side discipline implementation + DEC-076..DEC-085
 
 ### Added

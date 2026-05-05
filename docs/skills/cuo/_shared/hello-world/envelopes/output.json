@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/_shared/hello-world/envelopes/output.json",
+  "title": "hello-world output",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "output_path", "greeting_sha256"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id":        {"type": "string", "const": "cuo/_shared/hello-world"},
+    "skill_version":   {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "output_path":     {"type": "string"},
+    "greeting_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "next_skill_recommendation": {
+      "type": "string",
+      "default": "",
+      "description": "Empty by default — hello-world is a leaf, not a chain start."
+    },
+    "error":           {"type": "string", "description": "Set when name was empty or invalid; output_path is not written in that case."}
+  }
+}

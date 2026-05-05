@@ -210,7 +210,7 @@ Before writing, reject if any of:
 
 - UTF-8 BOM (`U+FEFF`) at start **or anywhere in the file** (mid-file BOM is a known smuggling trick).
 - Bare `\r` not part of `\r\n`.
-- Frontmatter not exactly one block: must open with `---\n`, close with exactly one `\n---\n` (or `\n---` at EOF), no further `\n---\n` afterward.
+- Frontmatter not exactly one block: must open with `---\n`, close with exactly one `\n---\n` (or `\n---` at EOF), no further `\n---\n` afterward **outside fenced code spans (` ``` ` or `~~~`)**. Strip fenced spans before the secondary-block check — code-fenced examples of YAML frontmatter are legitimate Markdown content (common in docs that show `SKILL.md` examples or other frontmatter formats) and must not trigger `multiple-frontmatter-blocks` rejection. The opening-block check (must start with `---\n`) is unchanged; only the secondary-block scan is fence-aware. (DEC-087)
 - Body or frontmatter contains NUL (`U+0000`).
 - Body/frontmatter contains lone Unicode surrogates (`U+D800`–`U+DFFF`) — invalid UTF-8.
 - Bytes don't strict-decode as UTF-8 (overlong sequences, invalid bytes, all rejected).
@@ -376,7 +376,7 @@ Body in plain Markdown (≤ 10 KB ideal, 30 KB hard). End with `## How to use th
 | Field                                                         | Rule |
 | ------------------------------------------------------------- | ---- |
 | `memory_id`, audit `audit_id`                                  | UUIDv7 `^(mem|evt)_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$` **or** ULID `^(mem|evt)_[0-9A-HJKMNP-TV-Z]{26}$`. UUIDv4/v1 rejected. |
-| Any timestamp                                                 | `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}\|Z)$`. Offset ∈ `[-12:00, +14:00]`; minutes ∈ `{00,15,30,45}`. `Z` only for genuinely-UTC events. |
+| Any timestamp                                                 | Accept either form: (a) an ISO-8601 string matching `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}\|Z)$`, OR (b) a language-native datetime instance with non-null timezone (e.g. Python `datetime.datetime` with `tzinfo` set, JS `Date` deserialised with offset). YAML loaders such as PyYAML auto-coerce ISO-8601 to native datetimes; `str(dt)` then renders with a space separator and fails the regex. Validators MUST handle both. Naive (tz-less) datetimes rejected as `naive-ts:<field>`. Offset ∈ `[-12:00, +14:00]`; minutes ∈ `{00,15,30,45}`. `Z` only for genuinely-UTC events. (DEC-088) |
 | Temporal monotonicity                                         | `created_at ≤ last_updated_at`. `expires_at ≥ created_at` if not null. `deleted_at ≥ last_updated_at` if present. |
 | Clock-skew bound                                              | Any timestamp > 1 hour ahead of agent wall-clock → reject `clock-skew`. |
 | UUIDv7/ULID ↔ ts consistency                                   | Embedded 48-bit ms ts must agree with row's `ts` (or `created_at`) within ±60 s. |

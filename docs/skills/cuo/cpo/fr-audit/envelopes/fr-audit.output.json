@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/cpo/fr-audit/envelopes/fr-audit.output.json",
+  "title": "fr-audit output envelope",
+  "description": "Emitted at AUDIT_BATCH_SUMMARY time. Drives supervisor decisions: pause-for-HITL when needs_human present; trigger fr-create regen when requires_regen set.",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "audit_rubric_version", "total_frs", "overall_status_counts", "exit_code", "per_fr", "hitl_required", "requires_regen"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id":             {"type": "string", "const": "cuo/cpo/fr-audit"},
+    "skill_version":        {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "audit_rubric_version": {"type": "string", "const": "audit_rubric@2.0"},
+    "total_frs":            {"type": "integer", "minimum": 1},
+    "overall_status_counts": {
+      "type": "object",
+      "required": ["pass", "needs_human", "fail"],
+      "additionalProperties": false,
+      "properties": {
+        "pass":        {"type": "integer", "minimum": 0},
+        "needs_human": {"type": "integer", "minimum": 0},
+        "fail":        {"type": "integer", "minimum": 0}
+      }
+    },
+    "exit_code": {
+      "type": "integer",
+      "enum": [0, 1, 2],
+      "description": "0=all pass; 1=errors present; 2=warnings only. Used by CI integrations as the rubric's strictness signal."
+    },
+    "per_fr": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fr_path", "audit_path", "status", "iterations", "audited_file_sha256"],
+        "additionalProperties": false,
+        "properties": {
+          "fr_path":             {"type": "string"},
+          "audit_path":          {"type": "string"},
+          "status":              {"type": "string", "enum": ["pass", "needs_human", "fail"]},
+          "iterations":          {"type": "integer", "minimum": 1},
+          "audited_file_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "hitl_required": {"type": "boolean"},
+    "requires_regen": {
+      "type": "boolean",
+      "description": "True when the audit terminated in a state that requires re-invocation of the upstream skill (e.g., STALE-001 + REVERT_TO_MANIFEST)."
+    },
+    "next_skill_recommendation": {
+      "type": "string",
+      "default": "",
+      "description": "Empty terminates the chain. Future versions may recommend cuo/cto/fr-to-tech-spec when overall_status is pass."
+    },
+    "warnings_emitted": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

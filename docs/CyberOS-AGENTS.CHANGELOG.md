@@ -6,6 +6,19 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-04 (evening, follow-up) — Validator discipline: fenced-code-block exemption + datetime-instance acceptance
+
+### Changed
+- **§4.3 file-content hygiene** — multi-frontmatter check now exempts content inside fenced code blocks (` ``` ` or `~~~`). Strip fenced spans before the secondary-block scan. Code-fenced examples of YAML frontmatter are legitimate Markdown content (common in skill / format / spec docs that show example `SKILL.md` or memory-file frontmatter) and must not trigger `multiple-frontmatter-blocks` rejection. Opening-block check unchanged. (DEC-087)
+- **§5.2 timestamp validator row** — accept either an ISO-8601 string matching the existing regex OR a tz-aware language-native datetime instance. PyYAML and similar loaders auto-coerce ISO-8601 to native datetimes; `str(dt)` then renders with a space separator (`2026-05-04 21:13:29+07:00`) and fails the regex. Validators MUST handle both forms. Naive (tz-less) datetimes rejected as `naive-ts:<field>`. Offset and minute-granularity rules unchanged. (DEC-088)
+
+### Real-world trigger
+Surfaced during the skills-knowledge digest session (workbench/.cyberos-memory bootstrap, 2026-05-04 evening). Both failures hit on the very first memory-file write of a corpus of 12:
+1. `spec.md` body legitimately contained `---`-delimited example SKILL.md frontmatter inside ```` ``` ```` fences. The §4.3 secondary-block scan triggered `multiple-frontmatter-blocks` rejection. Any session ingesting skill-format documentation, agent-protocol docs, or any spec that shows example frontmatter in code fences would have hit the same crash deterministically.
+2. PyYAML's `safe_load` auto-parses ISO-8601 timestamps into `datetime.datetime` objects. The §5.2 validator's regex then ran on `str(dt)` which produces `2026-05-04 21:13:29+07:00` (space separator) instead of `2026-05-04T21:13:29+07:00` (T separator) and rejected its own valid output as `bad-ts:created_at`. Affects every Python implementation using PyYAML — i.e., effectively all of them.
+
+Both refinements were proposed as Tier-1 (directly prevents observed failure) per §0.4 in the same response that surfaced them, and Stephen adopted both. The implementing patches in the session's local `.brain_writer.py` (a §4.4 atomic-write helper) are the reference implementations; both validators worked correctly against the remaining 11 memory files after patching.
+
 ## 2026-05-04 — Ingestion-side discipline + 10 protocol refinements
 
 ### Added

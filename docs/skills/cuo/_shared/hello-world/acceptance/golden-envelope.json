@@ -1,0 +1,7 @@
+{
+  "skill_id": "cuo/_shared/hello-world",
+  "skill_version": "1.0.0",
+  "output_path": "./hello-stephen.md",
+  "greeting_sha256": "ddd394ab7eaa5950ce5ab2ea9f7eb37199fd0d5d42a37be9fdf56ec490d39805",
+  "next_skill_recommendation": ""
+}

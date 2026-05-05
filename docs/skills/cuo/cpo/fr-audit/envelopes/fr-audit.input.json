@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/cpo/fr-audit/envelopes/fr-audit.input.json",
+  "title": "fr-audit input envelope",
+  "description": "Input contract for cuo/cpo/fr-audit. Accepts one or more existing FR markdown paths (any source). Optional upstream_context enables STALE-001 enforcement and manifest write-back when chained from fr-create.",
+  "type": "object",
+  "required": ["fr_paths", "caller_persona", "trace_id"],
+  "additionalProperties": false,
+  "properties": {
+    "fr_paths": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "description": "FR markdown paths to audit. Each gets a sibling .audit.md."
+    },
+    "caller_persona": {
+      "type": "string",
+      "pattern": "^cuo(-[a-z0-9-]+)?$"
+    },
+    "trace_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "upstream_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_skill"],
+      "properties": {
+        "from_skill":    {"type": "string", "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"},
+        "manifest_path": {"type": "string", "description": "Path to the upstream skill's state file. Required when from_skill == cuo/cpo/fr-create for STALE-001 enforcement."}
+      },
+      "description": "Optional. Set by the supervisor when chaining (e.g. from fr-create). Enables STALE-001 enforcement and manifest write-back."
+    },
+    "max_iterations_per_fr": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "default": 10
+    }
+  }
+}
