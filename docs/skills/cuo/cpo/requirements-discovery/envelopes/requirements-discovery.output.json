@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/cpo/requirements-discovery/envelopes/requirements-discovery.output.json",
+  "title": "requirements-discovery output envelope",
+  "description": "Output contract for cuo/cpo/requirements-discovery. Emitted at BRIEF_COMPLETE / HALTED_HITL / TRIAGE_REJECTED.",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "outcome", "brief_path", "triage_verdict", "discovery_iteration"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id": {"type": "string", "const": "cuo/cpo/requirements-discovery"},
+    "skill_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "trace_id": {"type": "string", "format": "uuid"},
+    "outcome": {
+      "type": "string",
+      "enum": ["BRIEF_COMPLETE", "HALTED_HITL", "TRIAGE_REJECTED", "USER_ABORTED"]
+    },
+    "brief_path": {"type": "string", "minLength": 1, "description": "Path to the project_brief@1 markdown."},
+    "brief_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "triage_verdict": {"type": "string", "enum": ["proceed", "revise", "reject"]},
+    "triage_reason": {"type": "string", "description": "Required when triage_verdict ∈ {revise, reject}."},
+    "discovery_iteration": {"type": "integer", "minimum": 1},
+    "questions_answered": {"type": "integer", "minimum": 0, "maximum": 20},
+    "brain_query_count": {"type": "integer", "minimum": 0, "maximum": 10},
+    "brain_memory_count": {"type": "integer", "minimum": 0, "maximum": 50},
+    "open_questions_count": {"type": "integer", "minimum": 0},
+    "authority_distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Count of authority markers in the brief's Goals section.",
+      "properties": {
+        "human_edited": {"type": "integer", "minimum": 0},
+        "human_confirmed": {"type": "integer", "minimum": 0},
+        "llm_explicit": {"type": "integer", "minimum": 0},
+        "llm_implicit": {"type": "integer", "minimum": 0}
+      }
+    },
+    "next_skill_recommendation": {
+      "oneOf": [
+        {"type": "string", "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"},
+        {"type": "null"}
+      ],
+      "description": "Set to 'cuo/cpo/prd-author' iff triage_verdict == proceed AND prd-author runtime is available; otherwise null."
+    },
+    "hitl_request_path": {"type": "string", "description": "Required when outcome == HALTED_HITL."},
+    "audit_row_id": {"type": "string", "pattern": "^evt_[0-9a-f-]{36}$|^evt_[0-9A-HJKMNP-TV-Z]{26}$"}
+  }
+}

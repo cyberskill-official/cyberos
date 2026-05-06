@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cyberos.cyberskill.world/skills/cuo/cpo/fr-audit/envelopes/fr-audit.output.json",
   "title": "fr-audit output envelope",
-  "description": "Emitted at AUDIT_BATCH_SUMMARY time. Drives supervisor decisions: pause-for-HITL when needs_human present; trigger fr-create regen when requires_regen set.",
+  "description": "Emitted at AUDIT_BATCH_SUMMARY time. Drives supervisor decisions: pause-for-HITL when needs_human present; trigger fr-author regen when requires_regen set.",
   "type": "object",
   "required": ["skill_id", "skill_version", "audit_rubric_version", "total_frs", "overall_status_counts", "exit_code", "per_fr", "hitl_required", "requires_regen"],
   "additionalProperties": false,

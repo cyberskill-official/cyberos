@@ -1,10 +1,10 @@
 # `fr-audit` standalone interview script
 
-> Used when `fr-audit` is invoked **standalone** (no upstream pipeline envelope) — to fill `expects.required_fields` from the user via chat. When invoked **chained** (most often after `fr-create`), this file is ignored.
+> Used when `fr-audit` is invoked **standalone** (no upstream pipeline envelope) — to fill `expects.required_fields` from the user via chat. When invoked **chained** (most often after `fr-author`), this file is ignored.
 
 ## Mode detection
 
-Same rules as `fr-create/STANDALONE_INTERVIEW.md` §"Mode detection".
+Same rules as `fr-author/STANDALONE_INTERVIEW.md` §"Mode detection".
 
 ## Interview script (in order)
 
@@ -22,7 +22,7 @@ If a path doesn't carry the `template:` literal, surface:
 | Field | Default | Override trigger |
 | --- | --- | --- |
 | `rubric_version`    | `audit_rubric@2.0` (the version in this folder's `RUBRIC.md`) | User says "use the v1 rubric" → ask: "v1 was retired on 2026-04-22; using it produces an advisory-only report. OK?" |
-| `upstream_context`  | `null`                                          | Auto-populated when chained from `fr-create`. |
+| `upstream_context`  | `null`                                          | Auto-populated when chained from `fr-author`. |
 | `trace_id`          | auto-generated UUIDv7                            | Use the supplied one if user is replaying. |
 
 ## Standalone-mode resume
@@ -35,7 +35,7 @@ Default to skip. Re-audits are fully-deterministic so there's no risk to forcing
 
 ## Exit ramp
 
-If the user replies "actually I haven't written the FRs yet — generate them first", the supervisor MUST NOT proceed with `fr-audit`. Instead it routes to `cuo/cpo/fr-create` with the same `output_dir` for chaining back.
+If the user replies "actually I haven't written the FRs yet — generate them first", the supervisor MUST NOT proceed with `fr-audit`. Instead it routes to `cuo/cpo/fr-author` with the same `output_dir` for chaining back.
 
 ## Audit row
 

@@ -89,7 +89,7 @@
   <rect x="800" y="780" width="800" height="500" rx="20" fill="#fff" stroke="#1E2A78" stroke-width="3" filter="url(#cardShadow)"/>
   <rect x="800" y="780" width="800" height="60" rx="20" fill="url(#primaryGrad)"/>
   <rect x="800" y="820" width="800" height="20" fill="url(#primaryGrad)"/>
-  <text x="830" y="822" font-size="22" font-weight="700" fill="#fff" font-family="JetBrains Mono, monospace">📁 cuo/cpo/fr-create/</text>
+  <text x="830" y="822" font-size="22" font-weight="700" fill="#fff" font-family="JetBrains Mono, monospace">📁 cuo/cpo/fr-author/</text>
   <text x="1570" y="822" font-size="14" fill="#F59E0B" text-anchor="end">a workflow skill</text>
 
   <g font-family="JetBrains Mono, monospace" font-size="16">

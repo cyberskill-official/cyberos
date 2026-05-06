@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/contracts/nats-subjects/schema.json",
+  "title": "nats_subjects@1 — wire-protocol payload shapes",
+  "description": "JSON Schema for every NATS subject payload listed in CONTRACT.md's inventory table. Each property under /payloads is keyed by the subject's <event_name>. Skills MUST validate against the matching schema before publishing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["payloads"],
+  "properties": {
+    "payloads": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fr_written": {
+          "type": "object",
+          "description": "Emitted by cuo/cpo/fr-author on subject cuo.fr_author.fr_written for every FR markdown successfully written.",
+          "required": ["fr_id", "fr_path", "fr_hash", "manifest_path", "trace_id", "ts"],
+          "additionalProperties": false,
+          "properties": {
+            "fr_id":         {"type": "string", "pattern": "^FR-\\d{3}$"},
+            "fr_path":       {"type": "string", "minLength": 1},
+            "fr_hash":       {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "manifest_path": {"type": "string", "minLength": 1},
+            "trace_id":      {"type": "string", "format": "uuid"},
+            "ts":            {"type": "string", "format": "date-time"}
+          }
+        },
+        "batch_complete": {
+          "type": "object",
+          "description": "Emitted by cuo/cpo/fr-author on subject cuo.fr_author.batch_complete after a WORKER batch finishes. Lists every FR written this batch + a manifest pointer.",
+          "required": ["fr_ids", "manifest_path", "trace_id", "ts", "next_skill_recommendation"],
+          "additionalProperties": false,
+          "properties": {
+            "fr_ids":                     {"type": "array", "items": {"type": "string", "pattern": "^FR-\\d{3}$"}, "minItems": 1},
+            "manifest_path":              {"type": "string", "minLength": 1},
+            "trace_id":                   {"type": "string", "format": "uuid"},
+            "ts":                         {"type": "string", "format": "date-time"},
+            "next_skill_recommendation":  {"type": ["string", "null"], "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"}
+          }
+        },
+        "hitl_pause": {
+          "type": "object",
+          "description": "Emitted by either fr-author or fr-audit when the run halts at a HITL gate. Payload references the gate's category from the skill's hitl_categories list.",
+          "required": ["category", "skill_id", "trace_id", "ts", "request_path"],
+          "additionalProperties": false,
+          "properties": {
+            "category":     {"type": "string", "enum": ["plan_approval", "amendment_review", "exhausted_disposition", "stale_fr_disposition", "low_confidence_field", "untrusted_marker_hit"]},
+            "skill_id":     {"type": "string", "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"},
+            "trace_id":     {"type": "string", "format": "uuid"},
+            "ts":           {"type": "string", "format": "date-time"},
+            "request_path": {"type": "string", "minLength": 1, "description": "Path to the HITL_BATCH_REQUEST file."}
+          }
+        },
+        "audit_written": {
+          "type": "object",
+          "description": "Emitted by cuo/cpo/fr-audit on subject cuo.fr_audit.audit_written for every *.audit.md sibling written.",
+          "required": ["fr_id", "audit_path", "audited_file_sha256", "verdict", "trace_id", "ts"],
+          "additionalProperties": false,
+          "properties": {
+            "fr_id":               {"type": "string", "pattern": "^FR-\\d{3}$"},
+            "audit_path":          {"type": "string", "minLength": 1},
+            "audited_file_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            "verdict":             {"type": "string", "enum": ["pass", "fail", "needs_human", "stale", "exhausted"]},
+            "trace_id":            {"type": "string", "format": "uuid"},
+            "ts":                  {"type": "string", "format": "date-time"}
+          }
+        },
+        "audit_batch_complete": {
+          "type": "object",
+          "description": "Emitted by cuo/cpo/fr-audit on subject cuo.fr_audit.audit_batch_complete after every fr_path in the batch has been processed.",
+          "required": ["fr_ids", "summary_path", "verdicts", "trace_id", "ts"],
+          "additionalProperties": false,
+          "properties": {
+            "fr_ids":       {"type": "array", "items": {"type": "string", "pattern": "^FR-\\d{3}$"}, "minItems": 1},
+            "summary_path": {"type": "string", "minLength": 1},
+            "verdicts":     {"type": "object", "additionalProperties": {"type": "string", "enum": ["pass", "fail", "needs_human", "stale", "exhausted"]}},
+            "trace_id":     {"type": "string", "format": "uuid"},
+            "ts":           {"type": "string", "format": "date-time"}
+          }
+        },
+        "refinement_proposed": {
+          "type": "object",
+          "description": "Emitted by ANY skill when a self_audit invariant breach fires (per DEC-092). The supervisor consumes this and surfaces to the skill's fine_tuner_role.",
+          "required": ["skill_id", "skill_version", "invariant_id", "severity", "trace_id", "ts", "proposal_path"],
+          "additionalProperties": false,
+          "properties": {
+            "skill_id":      {"type": "string", "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"},
+            "skill_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+            "invariant_id":  {"type": "string", "pattern": "^INV-\\d{3}$"},
+            "severity":      {"type": "string", "enum": ["info", "warning", "error"]},
+            "trace_id":      {"type": "string", "format": "uuid"},
+            "ts":            {"type": "string", "format": "date-time"},
+            "proposal_path": {"type": "string", "minLength": 1, "description": "Path to the refinement_proposal envelope written under genie.action_log."}
+          }
+        },
+        "session_lifecycle": {
+          "type": "object",
+          "description": "Emitted by the supervisor on cuo.session_start and cuo.session_end. Best-effort signal — at-most-once delivery, no JetStream durability.",
+          "required": ["event", "session_id", "ts"],
+          "additionalProperties": false,
+          "properties": {
+            "event":      {"type": "string", "enum": ["session_start", "session_end"]},
+            "session_id": {"type": "string", "format": "uuid"},
+            "ts":         {"type": "string", "format": "date-time"}
+          }
+        }
+      }
+    }
+  }
+}

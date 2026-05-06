@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/cpo/fr-author/envelopes/fr-author.output.json",
+  "title": "fr-author output envelope",
+  "description": "Output contract emitted at BATCH_COMPLETE. The supervisor reads next_skill_recommendation to decide whether to chain into fr-audit. Every output appends a corresponding genie.action_log row per the audit contract.",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "manifest_path", "batch_run_id", "batch_outcome", "frs_written", "amendments_pending", "hitl_pending"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id":       {"type": "string", "const": "cuo/cpo/fr-author"},
+    "skill_version":  {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "manifest_path":  {"type": "string"},
+    "batch_run_id":   {"type": "string", "format": "uuid"},
+    "batch_outcome":  {
+      "type": "string",
+      "enum": ["BATCH_COMPLETE", "BATCH_COMPLETE_WITH_AMENDMENTS", "HALTED_HITL", "EXHAUSTED", "ERRORED"]
+    },
+    "frs_written": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "path", "fr_hash", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id":      {"type": "string", "pattern": "^FR-\\d{3,}$"},
+          "path":    {"type": "string"},
+          "fr_hash": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "status":  {"type": "string", "enum": ["DRAFTING", "PASS", "HITL_PAUSE", "EXHAUSTED", "ERRORED", "STALE"]}
+        }
+      }
+    },
+    "amendments_pending": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^AMD-\\d{3,}$"}
+    },
+    "hitl_pending":             {"type": "boolean"},
+    "next_skill_recommendation": {
+      "type": "string",
+      "default": "cuo/cpo/fr-audit",
+      "description": "Drives the LangGraph conditional edge. Set to empty string to terminate the chain."
+    },
+    "warnings_emitted": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  }
+}

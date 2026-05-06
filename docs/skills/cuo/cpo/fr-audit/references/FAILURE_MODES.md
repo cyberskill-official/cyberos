@@ -22,7 +22,7 @@ remediation: <one sentence, copy-pasteable command>
 | BOOT-003 | An existing audit report at `audit_path` was malformed; renamed to `<audit_path>.corrupt-<ts>` if runtime allows; ISS-000 record. |
 | BOOT-004 | An existing audit report's `audit_template_version` is not `2.0`; CONTRACT_DRIFT — see below. |
 | BOOT-006 | The runtime cannot execute the rubric (e.g., YAML parser missing, regex engine unavailable). The supervisor receives this and does NOT retry. |
-| BOOT-007 | Mode dispatch ambiguous — `fr-audit` invoked with `requirements_files` set (those belong to `fr-create`). |
+| BOOT-007 | Mode dispatch ambiguous — `fr-audit` invoked with `requirements_files` set (those belong to `fr-author`). |
 
 Do NOT write a partial audit report on bootstrap failure. Every BOOT failure appends one `genie.action_log` row with `row_kind: notify`.
 
@@ -40,7 +40,7 @@ remediation: Either re-run with a skill version matching the report, OR
              migrate the report forward by re-invoking under the current
              skill version (the audit writes a MIGRATE_FORWARD audit row
              before advancing). The template (loaded from
-             cyberos/docs/contracts/feature-request/v1/ via
+             cyberos/docs/contracts/feature-request/ via
              depends_on_contracts:) and the rubric (RUBRIC.md) advance
              lockstep with the prompt_revision.
 ```
@@ -49,7 +49,7 @@ The skill body is the single source of truth for `prompt_revision` and `audit_ru
 
 ## EXHAUSTED termination block
 
-Same as `fr-create`'s; reproduced here so audit-only invocations don't have to cross-reference the create-side.
+Same as `fr-author`'s; reproduced here so audit-only invocations don't have to cross-reference the create-side.
 
 ```
 LOOP_EXHAUSTED

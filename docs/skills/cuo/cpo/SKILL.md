@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: cpo
 description: Chief Product Officer sub-persona of CUO; owns product-management workflows including feature-request backlog generation, audit, and tech-spec handoff.
-skill_version: 0.2.0
+skill_version: 0.3.0
 persona: cuo
 owner_role: cpo
 
@@ -12,9 +12,15 @@ allowed_brain_scopes:
     - project:*
     - module:*
     - company:locked-decisions
+    - company:values                # added v0.3.0 — required by requirements-discovery for strategic-fit triage
     - memories:decisions
     - memories:projects
+    - memories:refinements          # added v0.3.0 — patterns the agent has learned; useful for discovery + PRD authoring
+    - member:*                      # added v0.3.0 — capacity check during discovery + PRD sizing
+    - client:*                      # added v0.3.0 — commissioned-project context (read-only; subject sovereignty per AGENTS.md §9.7)
     - persona:cuo-*
+  read_excluded:
+    - member:*/private/             # added v0.3.0 — subject-sovereign private namespace; never auto-ingested per AGENTS.md §9.7
   write:
     - project:*
     - memories:decisions
@@ -129,10 +135,14 @@ Per the frontmatter above. A workflow may declare a strict subset of these ceili
 
 | Workflow | Status | Pipeline interface |
 | --- | --- | --- |
-| [`fr-create/`](./fr-create/SKILL.md) | v0.2.0 | consumes PRD/spec docs (or chat interview); produces `FR-NNN-<slug>.md` files + a `fr-manifest@2` state file. Both standalone- and chained-mode capable. |
-| [`fr-audit/`](./fr-audit/SKILL.md)   | v0.2.0 | consumes FR markdowns (any source, including `fr-create`'s output); produces sibling `*.audit.md` reports + `AUDIT_BATCH_SUMMARY`. Both standalone- and chained-mode capable. |
+| [`requirements-discovery/`](./requirements-discovery/SKILL.md) | v0.1.0 (scaffold) | the chain entry point for new projects: BRAIN reads + 20-question interview + triage gate → emits `project_brief@1`. Project-kind-agnostic. |
+| [`chain-selector/`](./chain-selector/SKILL.md) | v0.1.0 (scaffold) | reads brief frontmatter → picks `lean` / `standard` / `full` profile → emits chain plan. Auto-invoked by supervisor; user can override. |
+| [`prd-author/`](./prd-author/SKILL.md) | v0.1.0 (scaffold) | consumes a `project_brief@1` + 3-5 follow-up questions + targeted BRAIN reads; emits `prd@1` markdown with per-claim authority markers. Refuses to author from rejected briefs. |
+| [`fr-author/`](./fr-author/SKILL.md) | v0.2.2 | consumes PRD/spec docs (or chat interview; will migrate to `prd@1` at v0.3.0); produces `FR-NNN-<slug>.md` files + a `fr-manifest@2` state file. Both standalone- and chained-mode capable. |
+| [`fr-audit/`](./fr-audit/SKILL.md)   | v0.2.2 | consumes FR markdowns (any source, including `fr-author`'s output); produces sibling `*.audit.md` reports + `AUDIT_BATCH_SUMMARY`. Both standalone- and chained-mode capable. |
+| [`prd-audit/`](./prd-audit/SKILL.md) | v0.1.0 (scaffold) | quality gate on PRDs against `prd_rubric@1.0`; advisory-leaning (most rules warning, structural rules error). |
 
-The two workflows are designed to chain (`fr-create` → `fr-audit`). See [`fr-create/PIPELINE.md`](./fr-create/PIPELINE.md) for the worked example.
+The two workflows are designed to chain (`fr-author` → `fr-audit`). See [`fr-author/PIPELINE.md`](./fr-author/PIPELINE.md) for the worked example.
 
 ## Escalation graph
 

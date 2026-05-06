@@ -4,7 +4,7 @@
 
 ## How invariants work
 
-Same machinery as `fr-create/INVARIANTS.md`. ID + Statement + Check + Severity + Refinement template. Checked at every node boundary, every 25 audit rows, and on completion.
+Same machinery as `fr-author/INVARIANTS.md`. ID + Statement + Check + Severity + Refinement template. Checked at every node boundary, every 25 audit rows, and on completion.
 
 ## Invariants
 
@@ -21,7 +21,7 @@ Same machinery as `fr-create/INVARIANTS.md`. ID + Statement + Check + Severity +
 trigger: INV-001 breach: non-deterministic verdict on FR {fr_id}
 observation: Run 1 → {verdict_1}; Run 2 → {verdict_2}; diff at line {line}.
 proposed_amendment_target: cyberos/docs/skills/cuo/cpo/fr-audit/AUDIT_LOOP.md
-proposed_amendment_section: §"deterministic-input rule"
+proposed_amendment_section: §"Deterministic-input rule"
 proposed_diff: |
   +  Verdict computation MUST consume only: (FR body bytes,
   +  FR frontmatter, RUBRIC.md rules, this skill's body). It MUST NOT
@@ -65,11 +65,11 @@ minimum_viable: "Identify which rule introduced non-determinism; refactor."
 
 ### INV-006 — confidence-band reporting
 
-**Statement.** Every audit-report row carries a non-null `confidence` field within `[0.0, 1.0]`. The mechanical-rule majority report `confidence ≥ 0.95`; the LLM-judgement minority (e.g., QA-009 plain-English check) reports the model's actual band.
+**Statement.** Every audit-report row carries a non-null `confidence` field within `[0.0, 1.0]`. The mechanical-rule majority report `confidence ≥ 0.95`; the LLM-judgement minority (e.g., QA-009 plain-English check) reports the model's actual band. See [`RUBRIC.md` §"Confidence-band reporting"](./RUBRIC.md#confidence-band-reporting) for the per-rule band table.
 
 **Check.** Audit row schema validation.
 
-**Severity.** `error`.
+**Severity.** `info` — schema validation already enforces presence and range at write-time; this invariant exists as documentation of the contract, not as a runtime guard. A breach would mean the schema itself was bypassed (separate sev-0 issue handled by the audit-row writer, not by this invariant). Demoted from `error` in v0.2.2 per audit Tier-2 finding (was redundant with schema enforcement).
 
 ### INV-007 — no rubric drift inside one batch
 
@@ -89,7 +89,7 @@ minimum_viable: "Identify which rule introduced non-determinism; refactor."
 
 ## Adding a new invariant
 
-Same procedure as `fr-create/INVARIANTS.md` §"Adding a new invariant". The auditor's `RUBRIC.md` evolves with FR conventions; this file evolves with the auditor's own behavioural integrity.
+Same procedure as `fr-author/INVARIANTS.md` §"Adding a new invariant". The auditor's `RUBRIC.md` evolves with FR conventions; this file evolves with the auditor's own behavioural integrity.
 
 ## Invariants vs. rubric rules — the cleanest mental split
 

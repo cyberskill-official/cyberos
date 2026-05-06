@@ -1,6 +1,6 @@
 # EU AI Act decision tree (audit-side)
 
-> Same tree as `cuo/cpo/fr-create/references/EU_AI_ACT_DECISION_TREE.md`. Both skills consult the identical tree; `fr-create` uses it to populate `tentative_eu_ai_act_risk_class`, `fr-audit` uses it to check QA-001 / QA-002 / QA-003 violations. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §8.
+> Same tree as `cuo/cpo/fr-author/references/EU_AI_ACT_DECISION_TREE.md`. Both skills consult the identical tree; `fr-author` uses it to populate `tentative_eu_ai_act_risk_class`, `fr-audit` uses it to check QA-001 / QA-002 / QA-003 violations. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §8.
 
 When the FR involves an AI system (broadly: ML inference, LLM generation, automated scoring, generative content), classify per:
 

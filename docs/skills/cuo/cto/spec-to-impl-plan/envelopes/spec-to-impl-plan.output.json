@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/cto/spec-to-impl-plan/envelopes/spec-to-impl-plan.output.json",
+  "title": "spec-to-impl-plan output envelope",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "outcome", "impl_plan_path"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id": {"type": "string", "const": "cuo/cto/spec-to-impl-plan"},
+    "skill_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "trace_id": {"type": "string", "format": "uuid"},
+    "outcome": {
+      "type": "string",
+      "enum": ["IMPL_PLAN_COMPLETE", "TICKETS_CREATED", "HALT_BEFORE_CREATE_TICKETS", "HALTED_HITL", "REFUSED_NON_PASS_INPUT", "MARKDOWN_ONLY", "EXHAUSTED", "USER_ABORTED"]
+    },
+    "impl_plan_path": {"type": "string", "minLength": 1},
+    "impl_plan_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "total_tickets": {"type": "integer", "minimum": 0},
+    "tickets_created": {"type": "integer", "minimum": 0},
+    "ticket_ids": {"type": "array", "items": {"type": "string"}, "description": "PROJ ticket IDs (when outcome == TICKETS_CREATED)."},
+    "total_estimated_engineer_days": {"type": "number", "minimum": 0},
+    "sizing_distribution": {
+      "type": "object",
+      "properties": {
+        "XS": {"type": "integer", "minimum": 0},
+        "S": {"type": "integer", "minimum": 0},
+        "M": {"type": "integer", "minimum": 0},
+        "L": {"type": "integer", "minimum": 0},
+        "XL": {"type": "integer", "minimum": 0}
+      }
+    },
+    "capacity_status": {"type": "string", "enum": ["within_budget", "overage_warned", "overage_confirmed_proceed"]},
+    "next_skill_recommendation": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+    "hitl_request_path": {"type": "string"},
+    "refusal_reason": {"type": "string"},
+    "audit_row_id": {"type": "string"}
+  }
+}

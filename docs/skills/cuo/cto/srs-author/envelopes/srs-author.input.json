@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/cto/srs-author/envelopes/srs-author.input.json",
+  "title": "srs-author input envelope",
+  "type": "object",
+  "required": ["prd_path", "output_dir"],
+  "additionalProperties": false,
+  "properties": {
+    "prd_path": {"type": "string", "minLength": 1},
+    "prd_audit_path": {"type": "string", "minLength": 1, "description": "Optional. If omitted, computed from prd_path. Skill validates audit verdict == pass at PHASE_1."},
+    "output_dir": {"type": "string", "minLength": 1},
+    "manifest_path": {"type": "string", "minLength": 1},
+    "caller_persona": {"type": "string", "pattern": "^cuo(-[a-z0-9-]+)?$"},
+    "trace_id": {"type": "string", "format": "uuid"},
+    "chain_to": {"type": "array", "items": {"type": "string", "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"}}
+  }
+}

@@ -1,6 +1,6 @@
 # HITL_BATCH_REQUEST format + RESUME (audit-side)
 
-> Same format as `cuo/cpo/fr-create/references/HITL_PROTOCOL.md`. The audit-side rule_ids (FM-NNN, SEC-NNN, COND-NNN, QA-NNN, SAFE-NNN, STALE-001) originate in `RUBRIC.md` and surface here when the audit halts. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §7.
+> Same format as `cuo/cpo/fr-author/references/HITL_PROTOCOL.md`. The audit-side rule_ids (FM-NNN, SEC-NNN, COND-NNN, QA-NNN, SAFE-NNN, STALE-001) originate in `RUBRIC.md` and surface here when the audit halts. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §7.
 
 ## When fr-audit emits HITL_BATCH_REQUEST
 
@@ -48,7 +48,7 @@ state. Issue IDs and option letters WILL NOT be re-issued.
 END_HITL_BATCH_REQUEST
 ```
 
-When chained from `fr-create`, the supervisor merges this into `fr-create`'s HITL_BATCH_REQUEST — the user sees one consolidated human-action block per pipeline pause, not two separate ones per skill.
+When chained from `fr-author`, the supervisor merges this into `fr-author`'s HITL_BATCH_REQUEST — the user sees one consolidated human-action block per pipeline pause, not two separate ones per skill.
 
 ## RESUME contract
 

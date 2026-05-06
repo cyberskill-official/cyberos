@@ -24,7 +24,7 @@ audit_rubric_version: audit_rubric@2.0
 
 # v2.0+ optional fields:
 amendment_acknowledgement: <amendment_id | null>
-upstream_skill: cuo/cpo/fr-create | <other> | null
+upstream_skill: cuo/cpo/fr-author | <other> | null
 upstream_manifest: <path | null>
 genie_action_log_row_id: <evt_… | null>  # the audit-row UUID emitted for this report
 ---

@@ -65,7 +65,7 @@ Currently in `_shared/`:
 
 | Skill | Used by | Purpose |
 | --- | --- | --- |
-| _(none yet)_ | — | The former `feature-request-template/` was promoted to a contract in registry v0.2.0 — see `cyberos/docs/contracts/feature-request/v1/` |
+| _(none yet)_ | — | The former `feature-request-template/` was promoted to a contract in registry v0.2.0 — see `cyberos/docs/contracts/feature-request/` |
 
 ## 5. Phase availability gates (P0 → P4)
 
@@ -81,7 +81,7 @@ Adding a workflow under a future-phase persona is allowed *as documentation* but
 
 | Persona | Skill | Status |
 | --- | --- | --- |
-| `cpo`   | `fr-create` | v0.1.0 (port of `feature-request/v2.0.0` create half) |
+| `cpo`   | `fr-author` | v0.1.0 (port of `feature-request/v2.0.0` create half) |
 | `cpo`   | `fr-audit`  | v0.1.0 (port of `feature-request/v2.0.0` audit half) |
 
 Future persona folders are intentionally absent from the tree. Create them on demand — `mkdir cuo/<role>/` — at the moment the first workflow lands.

@@ -1,8 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: fr-audit
-description: Audit one or more existing feature_request@1 markdowns against audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/STALE rule families). Produces a sibling .audit.md per FR plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after fr-create.
-skill_version: 0.2.0
+description: Audit one or more existing feature_request@1 markdowns against audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/STALE rule families). Produces a sibling .audit.md per FR plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after fr-author.
+skill_version: 0.2.2
 persona: cuo
 owner_role: cpo
 
@@ -34,8 +34,10 @@ expects:
     - fr_paths
   optional_fields:
     - rubric_version              # default audit_rubric@2.0
-    - upstream_context            # populated automatically when chained from fr-create
+    - upstream_context            # populated automatically when chained from fr-author
     - trace_id                    # auto-generated if omitted
+    - caller_persona              # default cuo-cpo
+    - max_iterations_per_fr       # default 10 (per envelope schema)
   standalone_interview_ref: ./STANDALONE_INTERVIEW.md
 produces:
   schema_ref: ./envelopes/fr-audit.output.json
@@ -47,7 +49,11 @@ depends_on_contracts:
   - id:        feature-request
     version:   v1
     purpose:   validation_target
-    pin_path:  cyberos/docs/contracts/feature-request/v1/
+    pin_path:  cyberos/docs/contracts/feature-request/
+  - id:        nats-subjects
+    version:   v1
+    purpose:   wire_protocol_emission        # cuo.fr_audit.{audit_written,audit_batch_complete,hitl_pause}
+    pin_path:  cyberos/docs/contracts/nats-subjects/
 
 # ── Exposability (v0.2.0 / DEC-091) ──────────────────────────────────
 exposable_as:
@@ -129,7 +135,7 @@ gated_until_phase: null
 
 # fr-audit — Feature Request auditor
 
-> Standalone trigger that runs `audit_rubric@2.0` against one or more existing `feature_request@1` markdowns and writes a sibling `*.audit.md` per FR. Halts on `needs_human` verdicts via the standard Question primitive; resumable on `audited_file_sha256`. Chains naturally after [`fr-create`](../fr-create/SKILL.md) — both skills inherit the same persona, untrusted-content discipline, and audit row schema.
+> Standalone trigger that runs `audit_rubric@2.0` against one or more existing `feature_request@1` markdowns and writes a sibling `*.audit.md` per FR. Halts on `needs_human` verdicts via the standard Question primitive; resumable on `audited_file_sha256`. Chains naturally after [`fr-author`](../fr-author/SKILL.md) — both skills inherit the same persona, untrusted-content discipline, and audit row schema.
 
 `prompt_revision: fr_audit@2.0.0` (this is the audit-half port of `fr_create_and_audit@2.0.0`; full ancestry in `CHANGELOG.md`).
 
@@ -141,7 +147,7 @@ CUO routes a request here when the user wants to:
 - "Has FR-007 changed since the last audit?"
 - "Tell me which FRs would fail acceptance today."
 
-Also invoked automatically by the supervisor when `fr-create`'s output envelope sets `next_skill_recommendation: cuo/cpo/fr-audit` (the default chain).
+Also invoked automatically by the supervisor when `fr-author`'s output envelope sets `next_skill_recommendation: cuo/cpo/fr-audit` (the default chain).
 
 ## Self-test preamble
 
@@ -150,13 +156,14 @@ Begin every invocation with a single fenced `CONTRACT_ECHO` block. Do NOT procee
 ```
 CONTRACT_ECHO
 skill_id:                        cuo/cpo/fr-audit
-skill_version:                   0.2.0
+skill_version:                   0.2.2
 prompt_revision:                 fr_audit@2.0.0
-template_version:                feature_request@1   (the schema being audited; loaded from cyberos/docs/contracts/feature-request/v1/template.md via depends_on_contracts:)
+template_version:                feature_request@1   (the schema being audited; loaded from cyberos/docs/contracts/feature-request/template.md via depends_on_contracts:)
 audit_rubric_version:            audit_rubric@2.0    (loaded from RUBRIC.md in this folder)
 audit_path_pattern:              <fr_path with extension replaced by ".audit.md">
 hitl_categories:                 [customer_quotes, ai_act_risk_boundary, success_metric_targets,
-                                  cross_team_dependency, legal_compliance, scope_decomposition]
+                                  cross_team_dependency, legal_compliance, scope_decomposition,
+                                  stale_fr_disposition]
 hitl_policy:                     HALT_BATCH_ON_NEEDS_HUMAN
 max_iterations_per_fr:           10
 re_entrancy:                     idempotent_on_audited_file_sha256
@@ -177,20 +184,20 @@ phase:                           AUDIT
   "caller_persona": "cuo-cpo",
   "trace_id": "<uuid for genie.action_log correlation>",
   "upstream_context": {
-    "from_skill": "cuo/cpo/fr-create",
+    "from_skill": "cuo/cpo/fr-author",
     "manifest_path": "./feature-requests/manifest.json"
   }
 }
 ```
 
-`upstream_context` is optional. When present (i.e. when chained from `fr-create`), the audit writes `audit_hash` back into `fr-create`'s manifest at `frs[FR].audit_hash`. When absent, the audit runs fully standalone.
+`upstream_context` is optional. When present (i.e. when chained from `fr-author`), the audit writes `audit_hash` back into `fr-author`'s manifest at `frs[FR].audit_hash`. When absent, the audit runs fully standalone.
 
 **Output envelope** (`envelopes/fr-audit.output.json` — emitted as `AUDIT_BATCH_SUMMARY`):
 
 ```json
 {
   "skill_id": "cuo/cpo/fr-audit",
-  "skill_version": "0.1.0",
+  "skill_version": "0.2.2",
   "audit_rubric_version": "audit_rubric@2.0",
   "total_frs": 2,
   "overall_status_counts": {"pass": 1, "needs_human": 1, "fail": 0},
@@ -205,7 +212,7 @@ phase:                           AUDIT
 }
 ```
 
-`requires_regen: true` signals to the supervisor that a downstream re-invocation of `fr-create` is needed (e.g., when STALE-001 is the only issue and the human chose REVERT_TO_MANIFEST).
+`requires_regen: true` signals to the supervisor that a downstream re-invocation of `fr-author` is needed (e.g., when STALE-001 is the only issue and the human chose REVERT_TO_MANIFEST).
 
 ## Phase computation
 
@@ -248,7 +255,7 @@ After looping over every `fr_path`, emit `AUDIT_BATCH_SUMMARY` (output envelope 
 - Make network calls.
 - Auto-fix any rule marked `→ needs_human` in the rubric.
 - Auto-promote `eu_ai_act_risk_class` or change `ai_authorship`.
-- Invent customer quotes, attributions, dates, numeric targets, or named entities (per `references/ANTI_FABRICATION.md` — shared with `fr-create`).
+- Invent customer quotes, attributions, dates, numeric targets, or named entities (per `references/ANTI_FABRICATION.md` — shared with `fr-author`).
 - Re-ask a HITL question whose `resolution` is non-null.
 - Audit two FRs concurrently (sequential is mandatory).
 
@@ -269,19 +276,19 @@ See [`references/FAILURE_MODES.md`](./references/FAILURE_MODES.md):
 | BOOT-003 | An existing audit report was malformed; renamed to `<audit_path>.corrupt-<ts>` if runtime allows; ISS-000 record. |
 | BOOT-004 | An existing audit report's `audit_template_version` is not 2.0; CONTRACT_DRIFT. |
 | BOOT-006 | The runtime cannot execute the rubric (e.g., YAML parser missing). |
-| BOOT-007 | Mode dispatch ambiguous — `fr-audit` invoked with `requirements_files` set (those belong to `fr-create`). |
+| BOOT-007 | Mode dispatch ambiguous — `fr-audit` invoked with `requirements_files` set (those belong to `fr-author`). |
 
 ## Reference docs (progressive disclosure)
 
 - [`RUBRIC.md`](./RUBRIC.md) — `audit_rubric@2.0` — the full rule catalogue (FM-001..111, SEC-001..009, COND-001..004, QA-001..009 + QA-TODO, SAFE-001..004, STALE-001).
 - [`AUDIT_LOOP.md`](./AUDIT_LOOP.md) — the 8-step audit algorithm (§16).
 - [`REPORT_FORMAT.md`](./REPORT_FORMAT.md) — audit report frontmatter + per-issue block format (§17).
-- [`references/UNTRUSTED_CONTENT.md`](./references/UNTRUSTED_CONTENT.md) — same as `fr-create`'s; lifted to a per-skill copy because both skills must enforce identically.
-- [`references/ANTI_FABRICATION.md`](./references/ANTI_FABRICATION.md) — same contract as `fr-create`.
-- [`references/HITL_PROTOCOL.md`](./references/HITL_PROTOCOL.md) — same format as `fr-create`'s; rule_id values originate here.
+- [`references/UNTRUSTED_CONTENT.md`](./references/UNTRUSTED_CONTENT.md) — same as `fr-author`'s; lifted to a per-skill copy because both skills must enforce identically.
+- [`references/ANTI_FABRICATION.md`](./references/ANTI_FABRICATION.md) — same contract as `fr-author`.
+- [`references/HITL_PROTOCOL.md`](./references/HITL_PROTOCOL.md) — same format as `fr-author`'s; rule_id values originate here.
 - [`references/EU_AI_ACT_DECISION_TREE.md`](./references/EU_AI_ACT_DECISION_TREE.md) — same tree; QA-001/002/003 enforce it.
 - [`references/FAILURE_MODES.md`](./references/FAILURE_MODES.md) — BOOT codes for audit-side failures.
-- [`PIPELINE.md`](./PIPELINE.md) — how this skill chains in (from `fr-create` or directly) and what it emits downstream.
+- [`PIPELINE.md`](./PIPELINE.md) — how this skill chains in (from `fr-author` or directly) and what it emits downstream.
 
 ## How to use this skill — direct invocation example
 
@@ -302,8 +309,8 @@ For each FR: locate → hash → load-or-init audit report → apply rubric → 
 
 - Source artefact → `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 (the audit half: §15, §16, §17, plus shared §7 HITL and §12 untrusted-content).
 - Persona inheritance → `cuo/cpo/SKILL.md`.
-- Template under audit → `cyberos/docs/contracts/feature-request/v1/CONTRACT.md` (declared via `depends_on_contracts:` in this skill's frontmatter).
+- Template under audit → `cyberos/docs/contracts/feature-request/CONTRACT.md` (declared via `depends_on_contracts:` in this skill's frontmatter).
 - Rubric provenance → §15 of the source v2.0.0 prompt; rubric version `audit_rubric@2.0` is locked.
 - BRAIN scope contract → SRS §6.4.
 - Audit row schema → SRS §6.7 + AGENTS.md §7.
-- LangGraph conditional edge from `fr-create` → SRS §6.1.1.
+- LangGraph conditional edge from `fr-author` → SRS §6.1.1.

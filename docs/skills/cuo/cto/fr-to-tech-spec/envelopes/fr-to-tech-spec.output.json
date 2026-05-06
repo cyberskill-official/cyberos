@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.cyberskill.world/skills/cuo/cto/fr-to-tech-spec/envelopes/fr-to-tech-spec.output.json",
+  "title": "fr-to-tech-spec output envelope",
+  "description": "Output contract for cuo/cto/fr-to-tech-spec. Emitted at BATCH_COMPLETE (or earlier on HALTED_HITL or EXHAUSTED).",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "batch_run_id", "batch_outcome", "specs_written", "hitl_pending"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id": {"type": "string", "const": "cuo/cto/fr-to-tech-spec"},
+    "skill_version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+    "batch_run_id": {"type": "string", "format": "uuid"},
+    "batch_outcome": {
+      "type": "string",
+      "enum": ["BATCH_COMPLETE", "HALTED_HITL", "EXHAUSTED", "REFUSED_NON_PASS_INPUTS"]
+    },
+    "specs_written": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "fr_id", "path", "tech_spec_sha256", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^TS-\\d{3}$", "description": "Tech-spec ID, monotonic per batch."},
+          "fr_id": {"type": "string", "pattern": "^FR-\\d{3}$", "description": "Source FR ID."},
+          "path": {"type": "string", "minLength": 1, "description": "Path to the tech-spec markdown."},
+          "tech_spec_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+          "status": {"type": "string", "enum": ["PASS", "HITL_PAUSE", "EXHAUSTED", "REFUSED"]},
+          "coverage_percent": {"type": "number", "minimum": 0, "maximum": 100, "description": "Percentage of FR sections that the spec addresses (heuristic for INV-002)."},
+          "sizing_distribution": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "S": {"type": "integer", "minimum": 0},
+              "M": {"type": "integer", "minimum": 0},
+              "L": {"type": "integer", "minimum": 0},
+              "XL": {"type": "integer", "minimum": 0}
+            }
+          },
+          "open_questions_count": {"type": "integer", "minimum": 0},
+          "hitl_category": {"type": "string", "enum": ["scope_ambiguity", "missing_dependency", "sizing_uncertainty", "cross_team_dependency", "security_review_required", "performance_target_unspecified"], "description": "Required when status == HITL_PAUSE."},
+          "hitl_summary": {"type": "string", "description": "One-line summary of why this spec needs human input. Required when status == HITL_PAUSE."},
+          "exhausted_reason": {"type": "string", "description": "Required when status == EXHAUSTED."},
+          "refused_verdict": {"type": "string", "enum": ["fail", "needs_human", "stale", "exhausted"], "description": "Required when status == REFUSED — the FR's audit verdict that caused refusal."}
+        }
+      }
+    },
+    "hitl_pending": {"type": "boolean", "description": "True if any spec in this batch has status == HITL_PAUSE."},
+    "next_skill_recommendation": {
+      "oneOf": [
+        {"type": "string", "pattern": "^cuo/[a-z0-9-]+/[a-z0-9-]+$"},
+        {"type": "null"}
+      ],
+      "description": "If non-null, the supervisor should chain to this skill after the batch completes. Default null until cuo/cto/spec-to-impl-plan lands."
+    },
+    "hitl_request_path": {"type": "string", "description": "Path to the HITL_BATCH_REQUEST file. Required when hitl_pending == true."},
+    "audit_row_id": {"type": "string", "pattern": "^evt_[0-9a-f-]{36}$|^evt_[0-9A-HJKMNP-TV-Z]{26}$", "description": "The genie.action_log row ID for this batch's artefact_write event."}
+  }
+}

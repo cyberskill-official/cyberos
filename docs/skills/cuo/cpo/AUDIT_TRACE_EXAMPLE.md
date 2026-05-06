@@ -1,16 +1,16 @@
 # Audit-trace example — proving auditability + chainability
 
-> Walks one Feature Request from PRD intake to PASS-audit, showing every `genie.action_log` row that fires. Demonstrates the three properties that drove the layout decision: **auditable** (every output has a row), **chainable** (`fr-create` and `fr-audit` compose via deterministic envelopes), **plug-in-able** (the same chain works whether installed at `~/.cyberos/skills/cuo/cpo/` or extracted to a different machine).
+> Walks one Feature Request from PRD intake to PASS-audit, showing every `genie.action_log` row that fires. Demonstrates the three properties that drove the layout decision: **auditable** (every output has a row), **chainable** (`fr-author` and `fr-audit` compose via deterministic envelopes), **plug-in-able** (the same chain works whether installed at `~/.cyberos/skills/cuo/cpo/` or extracted to a different machine).
 
 ## The scenario
 
-A founder hands the CUO supervisor a single PRD file and asks: "Generate the FR backlog and audit it." The supervisor classifies the intent (`cuo/cpo/fr-create`, then chained via the default `next_skill_recommendation` to `cuo/cpo/fr-audit`).
+A founder hands the CUO supervisor a single PRD file and asks: "Generate the FR backlog and audit it." The supervisor classifies the intent (`cuo/cpo/fr-author`, then chained via the default `next_skill_recommendation` to `cuo/cpo/fr-audit`).
 
 The classifier emits one trace_id (`a1b2c3d4-e5f6-7890-abcd-ef1234567890`) that flows through every row below.
 
-## Step 0 — supervisor routes to fr-create
+## Step 0 — supervisor routes to fr-author
 
-CUO supervisor's `classify_act` node (per SRS §6.1.1) returns `{persona_id: "cuo-cpo", skill_id: "cuo/cpo/fr-create", confidence: 0.92}`.
+CUO supervisor's `classify_act` node (per SRS §6.1.1) returns `{persona_id: "cuo-cpo", skill_id: "cuo/cpo/fr-author", confidence: 0.92}`.
 
 ```sql
 INSERT INTO genie.action_log (audit_id, ts, actor_kind, actor_id, persona,
@@ -29,9 +29,9 @@ VALUES (
 );
 ```
 
-## Step 1 — fr-create PLAN phase
+## Step 1 — fr-author PLAN phase
 
-`fr-create` reads the PRD inside an `<untrusted_content>` block, applies the EU AI Act decision tree, enumerates 3 candidate FRs, writes the manifest with `plan.status = AWAITING_APPROVAL`, and emits the plan-approval render.
+`fr-author` reads the PRD inside an `<untrusted_content>` block, applies the EU AI Act decision tree, enumerates 3 candidate FRs, writes the manifest with `plan.status = AWAITING_APPROVAL`, and emits the plan-approval render.
 
 ```
 PROPOSED FR BACKLOG  (from 1 requirements file, sha256:84897c69fb76...)
@@ -92,14 +92,14 @@ INSERT INTO genie.action_log VALUES (
 
 (The manifest write itself appends a separate row — `op: str_replace` on `manifest.json` — but is omitted here for brevity.)
 
-## Step 2 — human approves; fr-create WORKER phase begins
+## Step 2 — human approves; fr-author WORKER phase begins
 
 Human replies `APPROVE`. The next invocation enters WORKER, claims FR-001:
 
 - W1 CLAIM (`frs[FR-001].status = DRAFTING`; manifest write).
-- W2 GENERATE — body adapted from `cyberos/docs/contracts/feature-request/v1/template.md` (declared via `depends_on_contracts:` in fr-create v0.2.0+).
+- W2 GENERATE — body adapted from `cyberos/docs/contracts/feature-request/template.md` (declared via `depends_on_contracts:` in fr-author v0.2.0+).
 - W3 WRITE — `feature-requests/FR-001-brain-search-latency-budget.md`, hash `e7f1…`.
-- W4 EMIT EVENT — NATS subject `cuo.fr_create.fr_written` published.
+- W4 EMIT EVENT — NATS subject `cuo.fr_author.fr_written` published.
 - W5 ROUTE — supervisor invokes `cuo/cpo/fr-audit` per the chain.
 
 ```sql
@@ -111,7 +111,7 @@ INSERT INTO genie.action_log VALUES (
   './feature-requests/FR-001-brain-search-latency-budget.md',
   null, 'operational', 'llm-explicit',
   null, 'sha256:e7f1…', null,
-  'fr-create wrote FR-001 from ./EXAMPLE-PRD.md; trace_id=a1b2c3d4',
+  'fr-author wrote FR-001 from ./EXAMPLE-PRD.md; trace_id=a1b2c3d4',
   'sha256:def…',
   'sha256:ghi…'
 );
@@ -119,7 +119,7 @@ INSERT INTO genie.action_log VALUES (
 
 ## Step 3 — supervisor chains to fr-audit (FR-001)
 
-Supervisor passes `{fr_paths: [./feature-requests/FR-001-brain-search- latency-budget.md], upstream_context: {from_skill: cuo/cpo/fr-create, manifest_path: ./feature-requests/manifest.json}, trace_id: a1b2c3d4}` to `cuo/cpo/fr-audit`.
+Supervisor passes `{fr_paths: [./feature-requests/FR-001-brain-search- latency-budget.md], upstream_context: {from_skill: cuo/cpo/fr-author, manifest_path: ./feature-requests/manifest.json}, trace_id: a1b2c3d4}` to `cuo/cpo/fr-audit`.
 
 `fr-audit` runs the 8-step loop. Outcome: 2 errors (FM-110 missing `target_release`; QA-007 unsourced numeric target on the 500ms p95). QA-007 promotes to `needs_human` per the rubric. Audit report written with `overall_status: needs_human`.
 
@@ -254,11 +254,11 @@ Audit envelope emitted:
 }
 ```
 
-Supervisor reads `next_skill_recommendation: ""` → terminates the chain for FR-001. Returns control to `fr-create` to claim FR-002.
+Supervisor reads `next_skill_recommendation: ""` → terminates the chain for FR-001. Returns control to `fr-author` to claim FR-002.
 
 ## Step 5 — repeat for FR-002 and FR-003
 
-Same pattern; assume both pass on first audit (no needs_human). Each generates one `artefact_write` row from `fr-create`, one `artefact_write` row from `fr-audit`. Then `fr-create` emits BATCH_COMPLETE.
+Same pattern; assume both pass on first audit (no needs_human). Each generates one `artefact_write` row from `fr-author`, one `artefact_write` row from `fr-audit`. Then `fr-author` emits BATCH_COMPLETE.
 
 ## Audit reconstruction query
 
@@ -277,14 +277,14 @@ Result (truncated):
 evt_01HMQ… 10:00:00  cuo      persona_card_loaded  cuo/cpo/SKILL.md         classify_act routed to cuo-cpo …
 evt_01HMR… 10:00:08  cuo-cpo  question             …/manifest.json          plan-approval Question emitted …
 …           …        …        str_replace          …/manifest.json          plan.status APPROVED
-evt_01HMS… 10:01:13  cuo-cpo  artefact_write       …/FR-001-….md             fr-create wrote FR-001 …
+evt_01HMS… 10:01:13  cuo-cpo  artefact_write       …/FR-001-….md             fr-author wrote FR-001 …
 evt_01HMT… 10:01:38  cuo-cpo  artefact_write       …/FR-001-….audit.md       fr-audit wrote audit report; overall_status=needs_human …
 evt_01HMU… 10:01:39  cuo-cpo  question             …/FR-001-….audit.md       fr-audit emitted HITL_BATCH_REQUEST …
 evt_01HMV… 10:05:00  cuo-cpo  act                  …/FR-001-….audit.md       fr-audit applied human resolution …
 evt_01HMW… 10:05:04  cuo-cpo  artefact_write       …/FR-001-….audit.md       fr-audit re-wrote audit report; overall_status=pass …
-…           …        …        artefact_write       …/FR-002-….md             fr-create wrote FR-002 …
+…           …        …        artefact_write       …/FR-002-….md             fr-author wrote FR-002 …
 …           …        …        artefact_write       …/FR-002-….audit.md       fr-audit pass …
-…           …        …        artefact_write       …/FR-003-….md             fr-create wrote FR-003 …
+…           …        …        artefact_write       …/FR-003-….md             fr-author wrote FR-003 …
 …           …        …        artefact_write       …/FR-003-….audit.md       fr-audit pass …
 …           …        …        notify               …/manifest.json          BATCH_COMPLETE outcome=BATCH_COMPLETE
 ```
@@ -294,14 +294,14 @@ Hash chain integrity check (per AGENTS.md §11.4): every row's `prev_chain` matc
 ## What this proves
 
 1. **Auditability** — every concrete output (artefact write, question, review action) becomes one row. The trace is reconstructible from `genie.action_log` alone, with no other state required.
-2. **Chainability** — `fr-create.produces.next_skill_recommendation` drives the supervisor's conditional edge into `fr-audit`. The two skills compose without shared state besides the input/output envelope.
+2. **Chainability** — `fr-author.produces.next_skill_recommendation` drives the supervisor's conditional edge into `fr-audit`. The two skills compose without shared state besides the input/output envelope.
 3. **Plug-in-ability** — replace any path above with a different absolute path (e.g., a teammate's machine) and the trace is identical modulo file paths. `cp -r cuo/cpo/` to another machine reproduces the chain exactly.
 4. **Determinism (audit-side)** — re-running `fr-audit` against the same `audited_file_sha256` produces a byte-identical report (modulo `last_audit_at`). The chain hash for evt_01HMW is the same on every re-run.
 5. **Human-in-the-loop fidelity** — the never-re-ask invariant (HITL_PROTOCOL.md §6.6) holds across the chain. Once `audit.issues[ISS-001].resolution` is non-null, no future invocation re-asks.
 
 ## Failure-mode trace (orthogonal example)
 
-Same scenario but `fr-create`'s W3 WRITE fails (disk full). The skill:
+Same scenario but `fr-author`'s W3 WRITE fails (disk full). The skill:
 
 - Does NOT write a partial FR (per `SKILL.md` MUST NOT).
 - Does NOT advance `manifest.frs[FR-001].status` from DRAFTING.

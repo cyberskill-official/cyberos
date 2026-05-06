@@ -1,6 +1,6 @@
 # Anti-fabrication rules (audit-side)
 
-> Same contract as `cuo/cpo/fr-create/references/ANTI_FABRICATION.md`. The audit MUST NOT invent the very things `fr-create` is forbidden to invent — otherwise an audit-side hallucination would silently pass an FR that should fail. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §9.
+> Same contract as `cuo/cpo/fr-author/references/ANTI_FABRICATION.md`. The audit MUST NOT invent the very things `fr-author` is forbidden to invent — otherwise an audit-side hallucination would silently pass an FR that should fail. Sourced from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §9.
 
 The audit MUST NEVER:
 
@@ -19,4 +19,4 @@ The Levenshtein-≤2 ambiguous-fix rule in `AUDIT_LOOP.md` §16.5 carries two ca
 
 ## Cross-reference
 
-The same rules are enforced on `fr-create`'s output before the FR reaches the audit. Symmetric enforcement means a bug in either skill is caught by the other on the first chained run — the contracts are defensive complements, not redundant.
+The same rules are enforced on `fr-author`'s output before the FR reaches the audit. Symmetric enforcement means a bug in either skill is caught by the other on the first chained run — the contracts are defensive complements, not redundant.

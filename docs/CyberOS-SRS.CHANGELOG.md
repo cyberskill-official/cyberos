@@ -6,6 +6,38 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-06 — Registry v0.2.4 absorbed (chain entry point; MINOR within scope of §6.13/6.14/6.15/6.16)
+
+### No .docx edits this round
+
+v0.2.4 added 2 skills + 2 artefact_schema contracts upstream of fr-author: `cuo/cpo/requirements-discovery` + `cuo/cpo/prd-author`, consuming/producing `project_brief@1` + `prd@1`. The runtime mechanisms in §6.13–§6.16 are all reusable (skills↔contracts split, dual-mode invocation, self-audit, manual fine-tune, host-adapter pipeline) — no new SRS section needed.
+
+The contracts layout simplified from `<contract-id>/v<n>/` to flat `<contract-id>/`; the SRS's contract-kind taxonomy (artefact_schema | envelope_schema | wire_protocol) is unchanged. Per REF-018 in BRAIN, the simplification was deferred-complexity-recovery, not contract-semantics change.
+
+cpo + cto persona-cards bumped (cpo 0.2.0→0.3.0, cto 0.1.0→0.2.0) for scope-ceiling expansion. SRS §6.4 scope-contract semantics are unchanged; the persona-cards now declare a wider read-ceiling that the new workflows (requirements-discovery, prd-author, future srs-author/srs-audit) consume.
+
+---
+
+## 2026-05-06 — Registry v0.2.2 absorbed (Tier-2/3 follow-up; PATCH within scope of §6.13/6.14/6.15/6.16)
+
+### No .docx edits this round
+
+The registry-level changes recorded under `cyberos/docs/skills/CHANGELOG.md` v0.2.2 — including the new `cyberos/docs/contracts/nats-subjects/` wire-protocol contract, the per-skill divergence note in the two `references/README.md` files, the confidence-band documentation in `RUBRIC.md` §15.9, the deterministic-input rule in `AUDIT_LOOP.md`, and the INV-006 severity demotion — are PATCH-level operationalisation of existing SRS sections §6.13 (skills↔contracts split), §6.14 (dual-mode + exposability), §6.15 (self-audit + auto-refinement), §6.16 (manual fine-tune). They do NOT alter the four locked decisions DEC-090..093 and do NOT introduce new runtime mechanisms.
+
+### Why this is recorded here at all
+
+Same reason as the PRD: traceability. A future reader auditing "what does the SRS currently say about runtime mechanisms?" should see v0.2.2 happened, that it was Tier-2/3 absorption, and that no SRS body content moved.
+
+### What absorbed (mapping to existing SRS sections)
+
+- **B1** (per-skill reference doc divergence) → §6.13 still describes contracts as the unification mechanism for byte-identical schemas; the four reference docs documented as intentionally divergent (per skill's lifecycle phase) under `references/README.md` files.
+- **B2** (NATS subjects undocumented) → §6.13 (skills↔contracts) and §6.14 (`depends_on_contracts:`) acquire a concrete second consumer beyond `feature-request@1` — `nats_subjects@1` (wire_protocol kind). The SRS's contract-kind taxonomy (`artefact_schema | envelope_schema | wire_protocol`) was already complete; v0.2.2 fills the wire_protocol slot for the first time.
+- **B3** (per-rule confidence bands) → §6.7 audit row schema's `confidence` field gains documented per-rule expectations in `RUBRIC.md`. SRS-level confidence-band semantics (LLM ≤ 0.7 cap) unchanged.
+- **B4** (INV-006 redundancy) → §6.15 self-audit invariants still mandated; one specific invariant demoted to `info` because schema validation already covers it. Pattern (demote when schema covers) is implicit in the existing self-audit guidance.
+- **C3** (deterministic-input rule) → §6.15's invariants get sharper definitions in their target documents. `INV-001`'s anchor target (`AUDIT_LOOP.md` §"Deterministic-input rule") now resolves cleanly.
+
+---
+
 ## 2026-05-06 — §6.13/6.14/6.15/6.16 + Part 13 DEC-090..093 (skill registry v0.2.0)
 
 ### Applied to CyberOS-SRS.docx (programmatically via python-docx, 2026-05-06 evening)
@@ -34,13 +66,13 @@ The following sub-sections have landed in the .docx (28 paragraphs inserted befo
 
 ### Reference implementations
 
-- `INVARIANTS.md` worked examples in `cyberos/docs/skills/cuo/cpo/fr-create/INVARIANTS.md` (8 invariants including INV-003 ingestion-coverage that mirrors AGENTS.md §4.10 at the skill level) and `cyberos/docs/skills/cuo/cpo/fr-audit/INVARIANTS.md` (8 invariants including INV-001 verdict-determinism, the auditor's highest-value contract).
-- `STANDALONE_INTERVIEW.md` and `HUMAN_SUMMARY.md` worked examples in both fr-create/ and fr-audit/.
-- The promoted contract at `cyberos/docs/contracts/feature-request/v1/CONTRACT.md` is the canonical example of the smaller, contract-only frontmatter (drops `allowed_mcp_tools`, `expects/produces`, `audit`, `confidence_band`, `untrusted_inputs`, `gated_until_phase`; adds `contract_id`, `contract_version`, `contract_kind`, `template_literal`, `steward_persona`, `escalation_on_breach`, `moved_from`).
+- `INVARIANTS.md` worked examples in `cyberos/docs/skills/cuo/cpo/fr-author/INVARIANTS.md` (8 invariants including INV-003 ingestion-coverage that mirrors AGENTS.md §4.10 at the skill level) and `cyberos/docs/skills/cuo/cpo/fr-audit/INVARIANTS.md` (8 invariants including INV-001 verdict-determinism, the auditor's highest-value contract).
+- `STANDALONE_INTERVIEW.md` and `HUMAN_SUMMARY.md` worked examples in both fr-author/ and fr-audit/.
+- The promoted contract at `cyberos/docs/contracts/feature-request/CONTRACT.md` is the canonical example of the smaller, contract-only frontmatter (drops `allowed_mcp_tools`, `expects/produces`, `audit`, `confidence_band`, `untrusted_inputs`, `gated_until_phase`; adds `contract_id`, `contract_version`, `contract_kind`, `template_literal`, `steward_persona`, `escalation_on_breach`, `moved_from`).
 
 ### Performance impact analysis (estimates pending real measurement)
 
-- Invariants engine: O(N) per checkpoint where N = number of invariants × cost-per-check. For fr-create's 8 invariants, ~30ms per node boundary on a typical batch.
+- Invariants engine: O(N) per checkpoint where N = number of invariants × cost-per-check. For fr-author's 8 invariants, ~30ms per node boundary on a typical batch.
 - Transpiler: one-shot at build time; ~50ms per target per skill; embarrassingly parallel.
 - Shim library overhead: ~1-2ms per `runtime.*` call (FS-fallback mode); negligible (<0.1ms) when MCP servers are reachable.
 

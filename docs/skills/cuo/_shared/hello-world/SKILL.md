@@ -74,7 +74,7 @@ When invoked with input envelope `{"name": "Stephen", "output_path": "./hello.md
 
 ## Why this skill exists
 
-It exists *to be read*. Newcomers studying the registry can compare this 5-rule skill against the 100-page `cuo/cpo/fr-create/` and see that the same SKILL.md format scales from "trivial demo" to "complex multi-phase workflow with HITL gates." The frontmatter contract is identical; only the body grows.
+It exists *to be read*. Newcomers studying the registry can compare this 5-rule skill against the 100-page `cuo/cpo/fr-author/` and see that the same SKILL.md format scales from "trivial demo" to "complex multi-phase workflow with HITL gates." The frontmatter contract is identical; only the body grows.
 
 ## Invocation example
 

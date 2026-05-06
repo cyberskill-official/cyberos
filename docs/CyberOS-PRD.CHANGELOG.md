@@ -6,6 +6,41 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-06 — Registry v0.2.4 absorbed (chain entry point; MINOR within scope of DEC-090..093)
+
+### No .docx edits this round
+
+Registry v0.2.4 added the upstream chain entry point — `cuo/cpo/requirements-discovery` (BRAIN + 20-q interview → `project_brief@1`) and `cuo/cpo/prd-author` (brief + 3-5 follow-ups → `prd@1`) — plus 2 new artefact contracts (`project-brief@1`, `prd@1`). The registry-level changes are operationalisation of existing DEC-090..093 surfaces; no PRD body content moves. The chain entry point fills a gap (PRDs were previously assumed-as-input to fr-author; v0.2.4 makes the upstream "BRAIN + human → PRD" path explicit).
+
+The cpo persona-card MAJOR bump (v0.2.0 → v0.3.0) and cto MAJOR bump (v0.1.0 → v0.2.0) — both for scope-ceiling expansion to support the new skills — are persona-internal SemVer movements; PRD §6.3 (14-persona registry) is unchanged.
+
+### What absorbed
+
+- Chain entry-point design — answers the user's "BRAIN + human inputs => PRD/SRS/other specs" framing without requiring new DEC entries (DEC-090..093 already cover the contract + skill machinery).
+- Contracts layout simplification (flat folders) — REF-018 in BRAIN; PATCH-level structural cleanup, no semantic change.
+
+---
+
+## 2026-05-06 — Registry v0.2.2 absorbed (Tier-2/3 follow-up; PATCH within scope of DEC-090..093)
+
+### No .docx edits this round
+
+The registry-level changes recorded under `cyberos/docs/skills/CHANGELOG.md` v0.2.2 — including the new `cyberos/docs/contracts/nats-subjects/` wire-protocol contract, the per-skill divergence note in `references/README.md`, the confidence-band documentation in `RUBRIC.md` §15.9, the deterministic-input rule in `AUDIT_LOOP.md`, and the INV-006 severity demotion — are PATCH-level operationalisation of the existing DEC-090..093 family. They do NOT alter any of the four locked decisions and do NOT introduce new product-level surfaces. Per the registry's manual-fine-tune playbook (registry README Part 7), PATCH-level absorptions of audit findings are recorded in the registry CHANGELOG and the per-skill CHANGELOGs but do NOT require a new PRD `§5.11` paragraph or a new DEC entry.
+
+### Why this is recorded here at all
+
+For the same reason every PRD changelog entry exists: traceability. A future reader auditing "what does the PRD currently say about the skill registry?" should be able to see at a glance that v0.2.2 happened, that it was Tier-2/3 absorption, and that no PRD body content moved. If they need to dive deeper, the path is `cyberos/docs/skills/CHANGELOG.md` v0.2.2 → the per-skill CHANGELOGs → the actual files.
+
+### What absorbed
+
+- **B1** (per-skill reference doc divergence) — documented as intentional in `references/README.md` files; deferred consolidation to v0.3.0.
+- **B2** (NATS subjects undocumented) — promoted to a wire-protocol contract under `cyberos/docs/contracts/nats-subjects/`. New contract, no PRD-level surface change.
+- **B3** (per-rule confidence bands) — documented in `RUBRIC.md` §15.9. No PRD-level surface change.
+- **B4** (INV-006 redundancy with schema) — severity demoted from `error` to `info`. No PRD-level surface change.
+- **C3** (deterministic-input rule referenced but never defined) — added to `AUDIT_LOOP.md`. No PRD-level surface change.
+
+---
+
 ## 2026-05-06 — §5.11 Skill-registry v0.2.0 (dual-mode + exposability + self-audit + manual fine-tune + skills↔contracts split + host portability) + DEC-090 / DEC-091 / DEC-092 / DEC-093
 
 ### Applied to CyberOS-PRD.docx (programmatically via python-docx, 2026-05-06 evening)
