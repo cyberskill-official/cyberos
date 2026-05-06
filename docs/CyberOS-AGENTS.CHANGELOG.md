@@ -6,6 +6,41 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-07 — Bundle L TIER 2: Legacy `memory_id` carve-out (`meta/legacy-ids.md` registry)
+
+### Changed
+- **§4.2 denylist exemption set** — added `meta/legacy-ids.md` to the rule-definition exemption list (alongside `manifest.json`, `README.md`, `meta/classification-rules.md`, `meta/retention-rules.md`, `meta/conflict-resolutions.md`, `meta/tombstones.md`, `AGENTS.md`). Injection gate still runs on the registry; only the §9.3 denylist regex is skipped.
+- **§5.2 validators table** — appended one new validator row: *"Legacy `memory_id` (predates §5.2 validator)"*. Defines a closed-set carve-out: a small fixed list of memories created before the §5.2 UUIDv7/ULID validator landed MAY retain non-conforming mnemonic IDs provided each is registered in `meta/legacy-ids.md`. New writes to ANY scope still MUST use UUIDv7/ULID. The registry is itself denylist- and frontmatter-exempt under the same convention applied to `meta/tombstones.md`.
+
+### Added
+- **§13.1 step 7a** — bootstrap now creates an empty `meta/legacy-ids.md` registry alongside `meta/tombstones.md`. Format documented inline: `<mem_id> | <originating_path> | <originally_created_at> | <reason>`. Closed-set: new entries land only via a §0.5 protocol upgrade.
+- **`meta/legacy-ids.md`** in this BRAIN — populated with the 4 surviving pre-§5.2 IDs identified by the 2026-05-07 healthcheck:
+  - `mem_01HSXX0TOMBSTONES000000001` → `meta/tombstones.md`
+  - `mem_01HSXX0RETENRULES000000001` → `meta/retention-rules.md`
+  - `mem_01HSXX0CLASSRULES000000001` → `meta/classification-rules.md`
+  - `mem_F005DOCCHANGELOG2026050401V` → `memories/facts/FACT-005-doc-changelog-convention.md`
+
+### Real-world trigger
+2026-05-07 BRAIN healthcheck (this conversation) surfaced 4 invalid memory_ids per §5.2 alongside 13 §4.7 SHA-mismatched files. Closing the SHA-mismatch finding required appending corrective `op:str_replace` audit rows; one of those files (`meta/tombstones.md`) carries a legacy mnemonic `memory_id`, so the corrective row would itself fail §5.2 validation. Two clean options: (a) tombstone the 4 files and recreate with fresh UUIDv7s — cascades into `relationships:` rewrites across adjacent memories; (b) carve out the closed set via a registry — no cascading edits, sets a precedent for future migrations. Stephen chose (b).
+
+### Why TIER 2
+Schema change to §5.2 (one validator row added), surface-area-only changes elsewhere. No new mechanism, no audit-row format change, no §6 manifest field added. The registry file itself is closed-set — no ongoing maintenance burden. Auto-§8.7 post-upgrade scan per Bundle J expected to report 0 critical / 4 info (the 4 legacy IDs, now legitimised).
+
+### Schema impact
+- `meta/legacy-ids.md` is a new canonical filename in §3 layout (implicit; `meta/` is documented as holding registries; the explicit step in §13.1 is sufficient).
+- §4.2 exemption set grew by one entry.
+- §5.2 validators table grew by one row.
+- No new frontmatter fields, no new audit-row keys, no new state in §13.0.
+
+### AGENTS.md canonical SHA
+- Before: `sha256:632343f0c9e7eef251bbef5308b9859b6bd99933f2c3c76dc76a2282b41b7a1c`
+- After:  `sha256:599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d`
+
+### Side-finding (deferred)
+The healthcheck also discovered the BRAIN's 269-row pre-upgrade ledger was written by 3 distinct canonicalisations (Python `json.dumps` with two different exclusion conventions; RFC 8785 strict). LINK invariant holds across all three (each writer reads the previous row's `chain` as opaque bytes), so chain integrity is intact. But §7.2 mandates JCS strict for forward portability. A follow-up TIER 1 amendment to §7.2 — *"writers MUST match `manifest.protocol.last_writer_canonicalization` once set; switching emits `op:warn reason:canonicalization-drift`"* — was proposed and is held for a separate bundle.
+
+---
+
 ## 2026-05-06 (later evening) — Bundle K TIER 1: Deprecate `.protocol-signing-key` file
 
 ### Changed
