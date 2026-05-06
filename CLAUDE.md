@@ -1,0 +1,1 @@
+@~/Projects/CyberSkill/cyberos/docs/CyberOS-AGENTS.md
