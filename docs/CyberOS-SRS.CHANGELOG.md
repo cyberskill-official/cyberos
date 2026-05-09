@@ -6,6 +6,121 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-10 — Bundle M absorbed (functional-zero; no impl changes)
+
+### Not yet applied to CyberOS-SRS.docx
+
+Bundle M is functional-zero — no new ops, no schema changes, no validator code changes. The SRS-side impact is two cross-reference updates: §5.12 references to AGENTS.md §4.11 should update to §4.10.2; §6.7 audit row schema reference is unchanged (no new audit ops landed in Bundle M). At the next docx editing session.
+
+### Real-world trigger
+
+Same as `CyberOS-AGENTS.CHANGELOG.md` (2026-05-10 Bundle M entry).
+
+---
+
+## 2026-05-10 — Stage 5 protocol upgrade — implementation specification (.docx update deferred)
+
+### Not yet applied to CyberOS-SRS.docx
+
+The Stage 5 protocol upgrade requires SRS-level implementation specifications:
+
+- **§5.14.1** "Encryption envelope codec" — `brain.crypto.encrypt(plaintext, master_key, memory_id, last_updated_at) → (ciphertext, nonce, tag, aad)` + inverse `brain.crypto.decrypt`. Backend: PyCryptodome's `ChaCha20_Poly1305` with 24-byte nonces (libsodium's `crypto_aead_xchacha20poly1305_ietf` semantics). AAD construction: `hashlib.sha256(memory_id.encode() + last_updated_at.encode()).hexdigest()`. Test vectors taken from RFC 8439 + libsodium reference suite.
+- **§5.14.2** "Key-derivation pipeline" — `brain.crypto.derive_master_key(source: HardwareKey | Passphrase) → bytes`. macOS path uses `Security/SecKey*` Keychain APIs (Touch ID prompt). Windows path uses `bcrypt.dll` + Windows Hello via `Microsoft.Security.Cryptography`. Linux path uses `tpm2-tools` (`tpm2_create` + `tpm2_unseal`) OR FIDO2 hmac-secret via `libfido2`. Passphrase fallback: `argon2-cffi` with `time_cost=3, memory_cost=65536, parallelism=4`. zxcvbn enforcement via `zxcvbn` package; reject score <3.
+- **§5.14.3** "Shamir 3-of-5 escrow" — `brain.crypto.shamir_split(master_key, threshold=3, total=5) → List[Fragment]`. Backend: `secretsharing` package or `vsss-rs` via Rust subprocess. Each Fragment renders as base32 string + QR code (via `qrcode` package). Verification via `brain.crypto.shamir_recover(fragments) → master_key` with fingerprint check against `meta/key-policy.md` pinned hash.
+- **§5.14.4** "Audit op enum extension" — DB constraint update for `brain.audit_event.op` column (CHECK clause adds the 8 new values). Idempotent migration: rejects duplicate adds; rollback path documented.
+- **§5.14.5** "Encryption-aware §8.7 phase 1" — schema validate must accept `encrypted: true` + the `encryption:` block as a recognised §5.1 frontmatter shape; AAD verification = recompute `sha256(memory_id || last_updated_at)` and compare to stored AAD; mismatch → `CRITICAL encryption-aad-mismatch`.
+- **Part 13 DEC-108** entry — same text as PRD CHANGELOG.
+
+These will land in the SRS .docx at the next .docx editing session.
+
+### Performance impact analysis (estimates pending real measurement)
+
+- XChaCha20-Poly1305 encrypt/decrypt: ~500 MB/s on 2024-era M-series Macs; for a typical 5KB memory body, ~10µs round-trip. Negligible vs file-system I/O.
+- Argon2id derivation (t=3, m=64MiB, p=4): ~1.5–2.5s on 2025-era laptops. One-time per session; cached in memory afterward.
+- Hardware key prompt latency: ~200–500ms on Touch ID / Windows Hello / TPM ops. One-time per session.
+- Shamir 3-of-5 split: <50ms; reconstruction: <100ms.
+- `cyberos-encrypt migrate-batch 50`: ~50 × (5ms encrypt + 1ms FS write + 2ms audit append) ≈ 400ms per batch on a typical store. User-paced cadence keeps audit churn low.
+
+### Real-world trigger
+
+Same as `CyberOS-AGENTS.CHANGELOG.md` and `CyberOS-PRD.CHANGELOG.md` (2026-05-10 Stage 5 entries).
+
+### Reference implementations following landing
+
+- `runtime/tools/cyberos_encrypt.py` (~600 LOC) — six subcommands per Stage 5 implementation roadmap
+- `runtime/tools/cyberos_validate.py` — `encrypted: true` recognition + AAD verification
+- `runtime/tools/cyberos_doctor.py` — `R6-rotate-master-key` repair op
+- `docs/cookbook/encryption-and-recovery.md` — operational guide
+- `docs/proposals/STAGE-5-PROTOCOL-UPGRADE.md` — proposal text, preserved as documentation
+- `docs/proposals/STAGE-5-OPEN-QUESTIONS.md` — decision rationale archive
+
+---
+
+## 2026-05-10 — Stage 6 protocol upgrade — implementation specification (.docx update deferred)
+
+### Not yet applied to CyberOS-SRS.docx
+
+The Stage 6 protocol upgrade requires SRS-level implementation specifications:
+
+- **§5.13.1** "Merkle checkpoint engine" — `brain.merkle.compute_root(rows: List[Row]) → sha256` with deterministic leaf/pair/internal construction per AGENTS.md §7.6. New audit row column `merkle_root` (jsonb-or-text) populated on `op:"consolidation_run"` writes only. Verification path implemented as `brain.merkle.verify_checkpoint(start_chain, end_chain, expected_root) → bool`.
+- **§5.13.2** "Ledger compaction" — `brain.audit.compact(month: str, cutoff: date) → CompactionResult`. Pre-conditions enforced: existing checkpoint, age threshold, no §8.7 phase 4 critical findings. Atomic phase steps via `flock(.lock, LOCK_EX)`. Output: `audit/<YYYY-MM>.compacted.jsonl` + `archive/<YYYY-MM>.jsonl.zst`. Reversible via `brain.audit.decompact(month: str)` under MAINTENANCE mode (§8.8).
+- **§5.13.3** "Shared-read lock" — `brain.lock.shared(timeout_ms: int)` acquires `.lock.shared` via `flock(LOCK_SH | LOCK_NB)` (POSIX) or `LockFileEx(0)` (Windows). Mutation ops upgrade to exclusive via `brain.lock.exclusive(timeout_ms)`. Stale-recovery semantics inherit from §4.9.
+- **§5.13.4** "§8.7 phase 4 Merkle verification" — extends `brain.audit.verify_chain_integrity()` with Merkle-root recomputation + compacted-ledger proof verification. New severity codes: `merkle-checkpoint-divergence`, `merkle-proof-divergence` (both CRITICAL).
+- **Part 13 DEC-107** entry — same text as PRD CHANGELOG.
+
+These will land in the SRS .docx at the next .docx editing session.
+
+### Performance impact analysis (estimates pending real measurement)
+
+- Merkle checkpoint construction: O(N log N) for N rows in the checkpoint period (sort + tree build); typical 25-row checkpoint window = sub-millisecond build per consolidation.
+- Prefix verification: O(log N) given a checkpoint root + inclusion path; expected p95 <10ms on 10,000-row stores once first checkpoint lands.
+- Ledger compaction: one-time O(N) walk per period being compacted; produces ~5 KB per memory in `final_state.jsonl` plus zstd-compressed archive (typical 4–6× compression on JSONL).
+- `.lock.shared` acquisition: <1 ms POSIX, ~2 ms Windows. Concurrency benefit observable when ≥2 agents work the same store.
+
+### Real-world trigger
+
+Same as `CyberOS-AGENTS.CHANGELOG.md` and `CyberOS-PRD.CHANGELOG.md` (2026-05-10 Stage 6 entries).
+
+### Reference implementations following landing
+
+- `runtime/tools/cyberos_validate.py` — `_check_merkle_checkpoints()` + `_check_compacted_ledger()` extensions.
+- `runtime/tools/cyberos_doctor.py` — `R5-rebuild-merkle-checkpoint` repair op + `decompact-ledger --month` CLI.
+- `runtime/tools/cyberos_index.py` — `merkle_checkpoints` table + `query merkle-proof <chain>` subcommand.
+- `docs/proposals/STAGE-6-PROTOCOL-UPGRADE.md` — proposal text, preserved as documentation.
+
+---
+
+## 2026-05-10 — Stage 1 protocol upgrade — implementation specification (.docx update deferred)
+
+### Not yet applied to CyberOS-SRS.docx
+
+The Stage 1 protocol upgrade (AGENTS.md §0.5 transition `599e10…` → `576368…`) requires SRS-level implementation specifications:
+
+- **§5.12.9** new sub-section "Reconciliation checkpoint" — `brain.manifest.reconciliation_checkpoint` field on the `brain.manifest` table (jsonb with `audit_id`, `chain`, `ts` keys); written atomically in the same transaction as `op:"session.end"` and `op:"consolidation_run"` rows; §4.7 walker scopes its query to `audit_id > checkpoint.audit_id` when checkpoint present, full table scan otherwise. Stale-fallback (>30 days OR `chain` mismatch) emits `op:"warn"`.
+- **§5.12.10** new sub-section "Read profile + frontmatter compactness" — `brain.manifest.read_profile` field; `brain.read()` consults the profile to decide eager vs lazy scope loading. Frontmatter compactness implemented via the existing `brain.frontmatter.emit()` codec — adds an `omit_null_optionals: true` mode (default in v0.3.0); read-side `brain.frontmatter.parse()` already accepts both forms.
+- **§5.12.11** new sub-section "§8.7 phase 4 stale-checkpoint check" — extends the existing `brain.audit.verify_chain_integrity()` with a stale-checkpoint check; emits `CRITICAL stale-checkpoint` finding routed through the existing severity-bucket pipeline.
+- **Part 13 DEC-106** entry — same text as PRD CHANGELOG.
+
+These will land in the SRS .docx at the next .docx editing session, programmatically via python-docx in the same pattern as prior entries.
+
+### Performance impact analysis (estimates pending real measurement)
+
+- Reconciliation checkpoint: cuts §4.7 walker query from O(N) full scan to O(rows_since_last_session). Expected p95 cold-start cut from ~3s to <400ms on stores with 5K+ audit rows; verified against the live store (290 rows): 188ms today via `runtime/tools/benchmark.py`. Re-benchmark post-upgrade.
+- Read profile: zero overhead when defaults applied; observable savings begin when long sessions skip lazy-scope loads.
+- Frontmatter compactness: -30 to -40% bytes on typical memories per Stage 1 plan. No read-side cost; write-side adds one omission-pass (~0.05ms per write).
+
+### Real-world trigger
+
+Same as `CyberOS-AGENTS.CHANGELOG.md` (2026-05-10) and `CyberOS-PRD.CHANGELOG.md` (2026-05-10).
+
+### Reference implementations
+
+- `runtime/tools/cyberos_validate.py` — already shipped; Stage 2 successor pass will recognise the new manifest fields automatically (path/value-driven validation).
+- `runtime/tools/canonical_sha.py` — used to compute the upgrade target SHA for the §0.5 approval phrase.
+- `docs/proposals/STAGE-1-PROTOCOL-UPGRADE.md` — full proposal text, preserved as documentation.
+
+---
+
 ## 2026-05-06 — Registry v0.2.4 absorbed (chain entry point; MINOR within scope of §6.13/6.14/6.15/6.16)
 
 ### No .docx edits this round

@@ -1,0 +1,5 @@
+{
+  "expected_critical_codes": [
+    "confidence-out-of-range"
+  ]
+}

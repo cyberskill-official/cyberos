@@ -306,9 +306,11 @@ Default agent write scopes: `project:`, `meta`, `module:<name>`. Writes to `comp
 
 `delete` flips the file's frontmatter: `tombstoned: true`, plus `deleted_at`/`deleted_by`/`tombstone_reason`. **Body kept verbatim.** Append `op:"delete"` to audit and one line to `meta/tombstones.md` (`<memory_id> <audit_id> <reason>`). Hard-erase only via human-driven right-to-erasure flow.
 
+**Encrypted memories.** `delete` on an encrypted memory tombstones the frontmatter as usual; the encrypted body remains base64-ciphertext. Tombstoned encrypted memories are decrypted ONLY during MAINTENANCE-mode hard-erase flows (per §0.6 right-to-erasure documentation). Routine BRAIN reads SKIP tombstoned encrypted bodies — no decryption attempt.
+
 ### 4.7 Reconciliation (session start)
 
-Walk audit rows newer than the last `consolidation_run`. For each row with `op ∈ {create, str_replace, insert, rename}` that is the most-recent op against its `path` (not later reverted):
+Walk audit rows newer than `manifest.reconciliation_checkpoint.audit_id` if set; otherwise walk all rows newer than the last `consolidation_run`. If the checkpoint is older than 30 days OR `manifest.reconciliation_checkpoint.chain` does not match the corresponding row in the ledger, fall back to the full-walk path and emit `op:"warn" reason:"stale-checkpoint"`. For each row with `op ∈ {create, str_replace, insert, rename}` that is the most-recent op against its `path` (not later reverted):
 
 - Verify file exists at `path`. Missing → append `op:"revert" reason:"reconciliation:missing-file:<audit_id>"`; freeze writes against this path.
 - Verify `sha256(file) == row.after_hash`. Mismatch → append `op:"rejected" reason:"reconciliation:hash-mismatch:<audit_id>"`; surface diff to user.
@@ -336,7 +338,25 @@ Clean store ⇒ no-op.
 - **Release:** `LOCK_UN` + truncate body (don't unlink — keeps inode stable).
 - **Held during** consolidation, export, import. **Not held** for individual single-file writes — `rename(2)` provides serialisation there.
 
+### 4.9.1 Shared-read lock (`.lock.shared`)
+
+Concurrent agents may safely run **read-only** operations against the same store while one agent holds `.lock` for consolidation phases that don't mutate (§8.1–§8.4). The shared-read mechanism uses a sibling file `.lock.shared`:
+
+- **POSIX:** `flock(.lock.shared, LOCK_SH | LOCK_NB)`
+- **Windows:** `LockFileEx(.lock.shared, 0)` (shared-mode without exclusive flag)
+
+**Compatibility with `.lock`:**
+- Read-only ops (`view` per §4) acquire `.lock.shared` only.
+- Mutation ops acquire `.lock` (exclusive) and additionally block until all `.lock.shared` holders release.
+- Consolidation phases §8.1–§8.4 acquire `.lock.shared` (allowing other agents to `view` concurrently); upgrade to exclusive `.lock` for §8.5 (manifest update), §8.6 (source-coverage write), §8.7 (health checkpoint write).
+
+**Stale recovery** for `.lock.shared`: same semantics as `.lock` (§4.9 stale block), 5-minute timeout for cross-host recovery.
+
+**Backward compat:** older agents that don't honour `.lock.shared` ignore it and continue to acquire `.lock` exclusive — always safe; just without the concurrency benefit. Stage 6's improvement is opportunistic.
+
 ### 4.10 Ingestion completeness (sev-1) — read-side counterpart to §4.4
+
+#### 4.10.1 Sequential walk + coverage check
 
 When ingesting a multi-message / multi-section external source (chat export, transcript, PDF, doc, email thread, repo scan, large code module), the agent MUST walk the source **sequentially end-to-end** before writing any digest memory. **No sampling**: disjoint-range slicing (`sed -n 'A,Bp;C,Dp'`), head-only / tail-only inspection on >100-line sources, modulus decimation (`awk 'NR%K==0'`), and "read start + end, infer middle" are all forbidden.
 
@@ -364,7 +384,7 @@ ingestion_coverage:
 
 The §14 end-of-response block MUST surface coverage on every ingestion-derived `op:create | op:str_replace` (see §14).
 
-### 4.11 Token-budget transparency for large sources (sev-2)
+#### 4.10.2 Token-budget transparency for large sources (sev-2)
 
 Before processing any source over **500 lines** or **50 KB** of content, the agent MUST declare its budget plan in the response, in the form:
 
@@ -380,7 +400,9 @@ This converts implicit sampling decisions into explicit, user-visible commitment
 
 Each file under `memories/`, `member/`, `client/`, `module/`, `company/`, `persona/`, `project/`, `meta/` is YAML frontmatter + Markdown body.
 
-### 5.1 Frontmatter schema (only these 28 fields are permitted)
+### 5.1 Frontmatter schema (closed set; 28 base fields + Stage 5 encryption block)
+
+The schema below lists 28 base fields. Stage 5 (sha256:d3ce97…) added two encryption-envelope fields (`encrypted: bool`, `encryption: {algorithm, nonce, aad}`) that apply only when `manifest.encryption_policy.enabled = true` per §5.6. The closed-set rule applies to the union of these; new fields beyond this union require §0.5 protocol upgrade.
 
 ```yaml
 ---
@@ -436,6 +458,8 @@ tombstone_reason: <string>
 Body in plain Markdown (≤ 10 KB ideal, 30 KB hard). End with `## How to use this memory` (1–5 sentences for the next agent) and `## History` (dated bullet list).
 ```
 
+**Frontmatter compactness (write-side).** When emitting frontmatter, omit any field whose value is `null` OR an empty array OR an empty object, EXCEPT for fields explicitly required by `classification` (consent block for `personnel`/`client`) or `tombstoned: true` (deleted_at/deleted_by/tombstone_reason). Read-side accepts both compact and verbose forms — omitted optional fields default to `null`/empty. The 28-field closed-set rule applies only to *recognised* fields; absence of optional fields is not a schema violation.
+
 ### 5.2 Validators (every implementation must agree)
 
 | Field                                                         | Rule |
@@ -479,6 +503,80 @@ Body in plain Markdown (≤ 10 KB ideal, 30 KB hard). End with `## How to use th
 | Per-store directory depth          | 12 from `.cyberos-memory/`                                       |
 | Audit row serialised               | 64 KB                                                           |
 | Audit row `diff` field             | 2 KB; longer → store `"<hash-only>"` plus `after_hash`           |
+
+### 5.6 At-rest encryption (opt-in)
+
+When `manifest.encryption_policy.enabled = true`, memories matching the policy's scope filter are stored as XChaCha20-Poly1305 ciphertext in the body of the memory file. Frontmatter stays plaintext (per §5.6.4 — preserves §5.1 schema verifiability and Stage 3 indexing).
+
+#### 5.6.1 Encryption envelope (per-file)
+
+Each encrypted memory file follows the §5.1 frontmatter shape with one new required field set:
+
+```yaml
+encrypted: true
+encryption:
+  algorithm: xchacha20poly1305-ietf
+  nonce: <base64 of 24 random bytes>
+  aad: sha256(<memory_id> || <last_updated_at>)   # binds nonce to identity
+```
+
+Body is `base64(ciphertext || 16-byte tag)`. Plaintext recovered by:
+
+```
+plaintext = chacha20_decrypt(
+    key      = master_key_derived_per_§5.6.2,
+    nonce    = base64_decode(frontmatter.encryption.nonce),
+    aad      = sha256_hex(memory_id || last_updated_at),
+    body     = base64_decode(file.body),
+)
+```
+
+Key reuse across files is permitted iff nonces are distinct (24-byte random nonces collide with probability ~2⁻⁹⁶, far below any practical bound).
+
+#### 5.6.2 Key derivation
+
+Master key derived via HKDF-SHA256 from one of two sources, both accepted when configured:
+
+- **Hardware-bound (preferred path):**
+  - macOS: Apple Secure Enclave key (Touch ID prompt at first decrypt of session)
+  - Windows: TPM 2.0 key (Windows Hello)
+  - Linux: TPM 2.0 via `tpm2-tools` OR FIDO2 hmac-secret
+- **Passphrase fallback (Argon2id):**
+  - parameters: `t=3, m=64MiB, p=4` (per RFC 9106 recommendation)
+  - passphrase MUST satisfy: ≥16 chars AND zxcvbn score ≥3 at enable time
+  - cached in memory for the session; never written to disk
+
+Key cached in process memory only; never persisted in plaintext. Lost key (both HW unavailable AND passphrase forgotten) → recover via §5.6.3.
+
+#### 5.6.3 Shamir 3-of-5 recovery escrow (mandatory)
+
+Encryption-enable refuses to flip `enabled = true` until 5 fragments of the master key have been generated via Shamir Secret Sharing (3-of-5 threshold) AND the user has confirmed distribution to 5 holders.
+
+Fragment fingerprints + holder labels + creation timestamps are recorded in `meta/key-policy.md`. The fragments themselves NEVER enter `.cyberos-memory/`.
+
+Recovery flow (under MAINTENANCE mode §8.8):
+1. User collects ≥3 fragments out-of-band
+2. `cyberos-encrypt recover` accepts fragments via stdin/QR/base32 paste
+3. Master key reconstructed; verified against fingerprint pinned in `meta/key-policy.md`
+4. `op:"key_recovery_initiated"` audit row appended at fragment intake
+5. `op:"key_recovered"` audit row appended on successful reconstruction
+
+Fragment rotation (refresh the 5 fragments without changing the master key):
+- `op:"shamir_rotation"` audit row records the new fingerprint set
+- Old fragments become useless once the new set is distributed
+
+#### 5.6.4 Indexability
+
+Frontmatter remains plaintext so that:
+- `cyberos_validate.py` verifies §5.1 schema + chain integrity without the key
+- `cyberos_index.py` builds tag/relationship/source-SHA indices over encrypted memories
+- `cyberos_doctor.py` repairs encrypted memories' chain consistency without decrypting bodies
+
+The §9.3 denylist remains structural — encryption does NOT soften it. Comp, ESOP, gov-IDs, raw secrets, special-category PII are still forbidden from ANY storage form regardless of `encryption_policy`.
+
+#### 5.6.5 Audit-chain compatibility
+
+Audit rows over encrypted memories store `after_hash` over the **plaintext** body (computed at write time, before encryption). This preserves chain LINK integrity when reading the BRAIN with the key. Without the key, chain verification is degraded: LINK invariant remains verifiable, but plaintext reconstruction for spot-verification requires the key.
 
 ## 6. `manifest.json`
 
@@ -528,9 +626,40 @@ Body in plain Markdown (≤ 10 KB ideal, 30 KB hard). End with `## How to use th
   "source_tiers": [
     {"pattern": "<scope-glob>", "tier": <int ≥ 1>, "rationale": "<why this scope is more authoritative than others>"},
     {"pattern": "*", "tier": 99, "rationale": "Default — lowest priority unless overridden."}
-  ]
+  ],
+  "reconciliation_checkpoint": {
+    "audit_id": "<evt_…|null>",
+    "chain": "<sha256:…|null>",
+    "ts": "<ISO-8601|null>"
+  },
+  "read_profile": {
+    "eager_scopes": ["meta"],
+    "lazy_scopes": ["company", "module", "member", "client", "project", "persona", "memories"]
+  },
+  "encryption_policy": {
+    "enabled": false,
+    "scopes": ["member:<self>/private", "classification:personnel", "classification:client"],
+    "algorithm": "xchacha20poly1305-ietf",
+    "key_derivation": "hkdf-sha256-from-hardware-bound",
+    "fallback_kdf": "argon2id-t3-m64-p4",
+    "passphrase_strength_minimum": {"min_chars": 16, "zxcvbn_score": 3}
+  },
+  "shamir_fragments": {
+    "threshold": 3,
+    "total": 5,
+    "master_key_fingerprint": null,
+    "fragments": []
+  }
 }
 ```
+
+**`reconciliation_checkpoint`** records the most recent successfully-completed `op:"session.end"` or `op:"consolidation_run"` row. §4.7 reconciliation walks only rows after this checkpoint when present; falls back to full walk on missing/stale (>30 days) checkpoints or any chain-mismatch. Updated atomically with `op:"session.end"` and `op:"consolidation_run"` writes; never edited independently.
+
+**`read_profile`** declares which scopes load eagerly vs on-demand at session start. Default profile shown above; projects may override. See §10.
+
+**`encryption_policy`** — opt-in at-rest encryption per §5.6. Default `enabled: false`. Mutating any field requires the wizard flow at `runtime/tools/cyberos_encrypt.py enable` or chat-turn approval per §0.5. The `scopes` list uses the syntax `<scope-pattern>` for paths or `classification:<class>` for classification-keyed selection. Memories matching ANY entry are encrypted.
+
+**`shamir_fragments`** — recovery-escrow registry per §5.6.3. Default empty array. Fragments themselves are NEVER stored here — only their fingerprints. Threshold and total are pinned at enable time and rotated only via `op:"shamir_rotation"`. Each entry in `fragments` is `{label, fingerprint, created_at, distributed_at|null}`.
 
 **`source_tiers`** is per-project: each project configures its own scope-pattern globs and tier integers based on which sources are most authoritative for that project's domain. The example above shows only the schema and the default tier — projects fill in their actual scope patterns at bootstrap time. Patterns are matched greedy/most-specific-wins; ties resolve by array order. A scope with no matching pattern receives tier 99 (lowest priority).
 
@@ -551,7 +680,7 @@ All `manifest.json` mutations go through `str_replace` (so they hit the audit lo
   "actor_kind": "agent|human|system|subject",
   "actor_id": "<actor>",
   "persona": "<persona|null>",
-  "op": "session.start|session.end|create|str_replace|insert|delete|rename|view|rejected|revert|corrects|consolidation_run|export|import|skipped-by-user|lock_recovered|protocol_upgrade|protocol_rollback|health_check|warn|drift_candidate|shallow_candidate|maintenance.start|maintenance.end",
+  "op": "session.start|session.end|create|str_replace|insert|delete|rename|view|rejected|revert|corrects|consolidation_run|export|import|skipped-by-user|lock_recovered|protocol_upgrade|protocol_rollback|health_check|warn|drift_candidate|shallow_candidate|maintenance.start|maintenance.end|ledger_compact|ledger_decompact|encryption_policy_change|key_rotation|key_recovery_initiated|key_recovered|shamir_rotation|shamir_distribution_confirmed",
   "scope": "<scope>",
   "path": ".cyberos-memory/<rel>",
   "memory_id": "<mem_…|null>",
@@ -614,7 +743,49 @@ These are two distinct mechanisms with different semantics; do not conflate.
 
 Rule: every `op:"corrects"` row MUST have `correction_to` set; conversely, a non-`corrects` op MAY set `correction_to` to mark its own self-correction. The two together let a reader distinguish "the world changed" (op:corrects) from "the agent fixed its own mistake" (any op with correction_to).
 
-## 8. Consolidation (7 phases — only on session-end, ≥25 rows since last, or user command)
+### 7.6 Merkle checkpoints
+
+Every successful `op:"consolidation_run"` writes an additional `merkle_root` field into the audit row, recording the SHA-256 root of a Merkle tree built over the prior N audit rows since the previous checkpoint (or genesis, on first run).
+
+**Merkle tree construction (deterministic):**
+- Leaves: each row's `chain` value (raw bytes, prefix `sha256:` stripped, hex-decoded to 32 bytes).
+- Pairing: pad odd levels by duplicating the last leaf.
+- Internal: `sha256(left || right)` (raw bytes).
+- Root: prefix `sha256:` + hex.
+
+**Field schema extension** (§7.1 row): `merkle_root: <sha256:…>` — set ONLY on `op:"consolidation_run"` rows; null/absent on all other ops. Validators that don't recognise the field treat it as an opaque extension per §13.0 forward-compat rules.
+
+**Verification path:**
+- Walk audit rows in file order.
+- At each `op:"consolidation_run"` row, recompute the Merkle root over the rows since the previous checkpoint (or genesis). Verify equality with the stored `merkle_root`. Mismatch → CRITICAL `merkle-checkpoint-divergence`.
+- Spot-verification of a prefix is O(log N): walk the row of interest's inclusion path against the next checkpoint's stored root.
+
+**Why:** chain prefix verification becomes O(log N) instead of O(N) full-walk. The linear `chain` LINK invariant remains canonical (the Merkle root is a *derived* index, not a replacement). §7.7 ledger compaction depends on this primitive.
+
+### 7.7 Audit ledger compaction (sev-1)
+
+Once a ledger month has been Merkle-checkpointed (§7.6) AND is older than the retention horizon (default 12 months; configurable via `manifest.compaction_policy.minimum_age_months`), the per-row JSONL MAY be collapsed into a per-memory `final_state.jsonl` plus a Merkle proof — preserving spot-verifiability without retaining every intermediate row.
+
+**Compaction is opt-in.** Triggered ONLY by the explicit user phrase *"compact ledger older than `<YYYY-MM-DD>`"* in the current chat turn. The phrase MUST include the cutoff date so silent expansions are impossible (per §0.5 chat-turn-approval-only mutation pattern).
+
+**Compaction outputs:**
+- `audit/<YYYY-MM>.compacted.jsonl` — one row per memory_id, carrying:
+  - `memory_id`
+  - `final_op` — `tombstoned | active`
+  - `final_chain` — the chain of the last op against this memory_id in the compacted period
+  - `final_audit_id`, `final_ts`
+  - `merkle_proof` — inclusion path against the period's Merkle root
+- `archive/<YYYY-MM>.jsonl.zst` — zstd-compressed verbatim copy of the original JSONL ledger. Source of truth for re-expansion.
+
+**Compaction is reversible.** Re-expansion via the inverse flow restores the original `<YYYY-MM>.jsonl` from `archive/`. The reverse op is audited as `op:"ledger_decompact"`.
+
+**Compaction itself is audited.** On invocation, `op:"ledger_compact"` is appended at the live ledger tail with `before_hash` over the original JSONL, `after_hash` over the compacted output, and `reason` carrying the cutoff date and the user phrase verbatim.
+
+**Forbidden by §0.2.** Mutating `compaction_policy` outside the chat-turn approval phrase is forbidden.
+
+**Why:** typical disk savings ~80% on year-old ledgers. Spot-verification of any row in the compacted period via Merkle proof + the period's checkpoint root.
+
+## 8. Consolidation (7 routine phases + §8.9 user-triggered ledger compaction; only on session-end, ≥25 rows since last, or user command)
 
 Acquire `.lock`. Then run phases 1–7 in order. Phases 1–5 are described inline below; phases 6 and 7 have their own subsections (§8.6, §8.7). §8.8 (MAINTENANCE mode) is not a consolidation phase — it's an operator-confirmed repair mode that runs outside §8.
 
@@ -653,7 +824,7 @@ The self-audit is the sixth phase of consolidation. It runs while `.lock` is sti
 1. **Schema validate** — walk every memory file under `memories/`, `member/`, `client/`, `module/`, `company/`, `persona/`, `project/`, `meta/`. For each, parse frontmatter and validate against the currently-pinned §5.1 schema (per `manifest.protocol.sha256`). Schema drift is the single most common silent-bug source.
 2. **Supersedes-graph integrity** — walk every `supersedes` and `superseded_by` pointer. Detect cycles (DAG invariant per §9.5), dangling targets (`mem_…` IDs that don't resolve), and orphan `superseded_by` entries (memory says it was superseded by X but X doesn't reference it).
 3. **Relationships-graph integrity** — walk every `relationships[].relates_to`. Detect dangling refs.
-4. **Audit chain integrity** — verify LINK integrity end-to-end (not just incremental like §4.7): for each row N, confirm `row[N].prev_chain == row[N-1].chain`. LINK integrity is the authoritative invariant per §7.2's cross-writer-version compatibility clause. Hash recomputation (`chain == sha256_hex(canonical_json(row_without_chain_or_prev_chain) || prev_chain)` per §7.2) MAY be performed and reported at INFO severity; recomputation differences across writer versions are NOT chain breaks. Confirm `manifest.audit_chain_head` is reachable in the ledger.
+4. **Audit chain integrity** — verify LINK integrity end-to-end (not just incremental like §4.7): for each row N, confirm `row[N].prev_chain == row[N-1].chain`. LINK integrity is the authoritative invariant per §7.2's cross-writer-version compatibility clause. Hash recomputation (`chain == sha256_hex(canonical_json(row_without_chain_or_prev_chain) || prev_chain)` per §7.2) MAY be performed and reported at INFO severity; recomputation differences across writer versions are NOT chain breaks. Confirm `manifest.audit_chain_head` is reachable in the ledger. **Additionally, if `manifest.reconciliation_checkpoint` is set, confirm `checkpoint.audit_id` resolves to a row in the ledger AND `checkpoint.chain` matches that row's `chain`. Mismatch → `CRITICAL stale-checkpoint`; freezes writes until reconciled per §4.7 fallback.** **Stage 6 extension:** for every `op:"consolidation_run"` row carrying a `merkle_root` field, recompute the Merkle root over the rows since the previous checkpoint and verify equality. Mismatch → `CRITICAL merkle-checkpoint-divergence`. For every compacted ledger (`audit/<YYYY-MM>.compacted.jsonl`), verify each row's `merkle_proof` against the period's checkpoint root. Mismatch → `CRITICAL merkle-proof-divergence`.
 5. **Orphan files** — for each file under `.cyberos-memory/` (excluding `index/`, `exports/`, `.lock`, `.tmp.*.part`), check that the most recent `op ∈ {create, str_replace, insert, rename}` against its path is not later reverted. Detect orphan audit rows referencing missing paths.
 6. **Resource caps** — compare against §5.5 limits. Warn at 80% of any hard cap.
 
@@ -706,6 +877,27 @@ A time-limited mode that allows specific repair operations normally forbidden. A
 
 **Why this naming.** "DEBUG" is read-side (surface more); "MAINTENANCE" is write-side (allow more). Calling the second "ROOT" risks blurring the two — and the second is the dangerous one. Keeping them named distinctly enforces the mental model.
 
+### 8.9 Ledger compaction (opt-in, user-triggered)
+
+Phase 8.9 is NOT part of the routine consolidation cycle (§8.1–§8.7). It runs **only** on the explicit user phrase *"compact ledger older than `<YYYY-MM-DD>`"* per §7.7.
+
+**Pre-conditions** (refuse to compact if violated):
+1. The cutoff month must have a `op:"consolidation_run"` row carrying a `merkle_root` per §7.6 (otherwise no checkpoint to anchor proofs against).
+2. The cutoff month must be older than `manifest.compaction_policy.minimum_age_months` (default 12).
+3. No CRITICAL findings from §8.7 phase 4 (audit chain integrity) for the period being compacted.
+
+**Phase steps:**
+1. Acquire `.lock` (exclusive).
+2. Verify pre-conditions; abort with `op:"rejected" reason:"compaction-precondition:<which>"` on failure.
+3. Build the per-memory `final_state.jsonl` from a single forward walk of the period's rows.
+4. Compute Merkle inclusion proofs for each memory's `final_audit_id`.
+5. zstd-compress the original JSONL into `archive/<YYYY-MM>.jsonl.zst`.
+6. Atomic rename `audit/<YYYY-MM>.jsonl` → `audit/<YYYY-MM>.compacted.jsonl` (keeping the same parent directory so older agents trip INCOMPATIBLE if they encounter a compacted form they don't recognise).
+7. Append `op:"ledger_compact"` to the live ledger.
+8. Release `.lock`.
+
+**Re-expansion** (reverse of compaction) follows the inverse steps under MAINTENANCE mode (§8.8); see §7.7. Audited as `op:"ledger_decompact"`.
+
 ## 9. Authority, denylist & conflict resolution
 
 ### 9.1 Conflict decision (apply in order; halt on first match)
@@ -745,6 +937,8 @@ UI in chat always presents 4 options: **Keep A / Keep B / Keep both as disputed 
 
 If a memory must reference a denylisted item, store a **pointer** instead (`"see <vault-name> → <folder> → <entry>; held by <person>"`). If user insists on storing the value, push back once and refuse.
 
+**Encryption is NOT a denylist softener.** When `manifest.encryption_policy.enabled = true` (§5.6), the encryption envelope protects classification-eligible content from disk-level snooping. It does NOT change what content is allowed to be written. The denylist categories above (compensation, ESOP, gov IDs, bank/card, home addresses, health PII, secrets, external-party PII without consent) remain forbidden from ANY storage form — encrypted or plaintext. The §4.2 content gate runs BEFORE the encryption envelope; denylist hits are rejected before any cryptographic operation.
+
 ### 9.4 Conditional / opt-in (default OFF)
 
 Specific opt-in topics are project-specific. Each project declares its own list in `meta/opt-ins.md` with the format: `<topic>: opt-in | opt-out | per-request | per-mailbox | per-member` plus a one-line rationale. Common opt-in topics include channel-message bodies, DM contents, and leave-reason text — but the canonical list lives in the project, not in this universal protocol. The protocol's role here is to define the framework; the project fills in the values.
@@ -777,6 +971,7 @@ Subjects are sovereign over `member/<their-own-id>/` — agents do not contest t
 ## 10. Read protocol (load only what's needed)
 
 1. Always read `manifest.json`.
+1a. **Honour `manifest.read_profile`.** Eager scopes load on every session start. Lazy scopes load on first reference to a path within them per the request-implied logic in step 3. Default profile: `eager_scopes: ["meta"]`, all other scopes lazy. Projects may override.
 2. Read `meta/classification-rules.md`, `meta/retention-rules.md` if you may write.
 3. Read scope files implied by the request:
    - User asks about themselves → `member/<their-id>/`.
@@ -1002,16 +1197,16 @@ A per-file frontmatter `sync_class:` value overrides the scope default. Subjects
 
 This **absorb-then-discard** pattern is the canonical offboarding semantic. Any `shared` memory authored by the leaver and accepted by the org BRAIN remains org property regardless of subsequent local tombstones; locally-tombstoning a `shared` memory generates an `op:"delete"` on the local mirror but does not propagate up — the org BRAIN's copy is independently authoritative.
 
-### 17.5 Publish flow (forward reference)
+### 17.5 Multi-machine sync (forward reference)
 
-A `publishable` memory becomes `shared` by being published to the org BRAIN. The BRAIN module's `brain.publish` MCP tool will define the per-memory publish envelope (signed by `subject:<id>`'s Ed25519 key, verified by the org BRAIN against an `actor_keys` registry maintained by the BRAIN module itself — NOT yet a field in §6's manifest schema; introduction is scheduled for BRAIN module P1). Until P1, `sync_class` is metadata-only: the field exists, defaults are honoured, but no outbound sync happens. After P1, sync becomes continuous, the `sync_class` field starts to load-bear, and the manifest schema gains the `actor_keys` extension via a §0.5 protocol upgrade at that time.
+`sync_class` is metadata-only until the BRAIN service P1 ships. Until then, `publishable` and `shared` memories stay local; the field is recorded for future use. Multi-machine semantics, conflict resolution between subjects, and the publish/pull wire protocol (`brain.publish` MCP tool, signed by `subject:<id>`'s Ed25519 key, verified by the org BRAIN against an `actor_keys` registry) are deferred to the BRAIN module's domain. After P1, sync becomes continuous and the manifest schema gains the `actor_keys` extension via a §0.5 protocol upgrade. Tracking: `docs/CyberOS-AGENTS.EVOLUTION.md` Stage 4.
 
 ### 17.6 What this protocol does NOT define
 
 - The wire protocol of `brain.publish` / `brain.pull` (BRAIN module's domain).
 - ACL enforcement on the org BRAIN's `client/<id>/portal-visible/` surface (PORTAL module's domain).
 - Conflict resolution between two subjects' concurrent edits to the same `shared` memory (uses §9.1 with the org BRAIN as the eventual-consistency arbiter; specifics are BRAIN-module decisions).
-- Cryptographic key rotation for `subject:<id>` Ed25519 keys (key-management policy belongs in `meta/key-policy.md`, not here).
+- Cryptographic key rotation for `subject:<id>` Ed25519 signing keys AND for `manifest.encryption_policy` master keys (per §5.6.2) belongs in `meta/key-policy.md`. Rotation events are audited via `op:"key_rotation"` + `op:"shamir_rotation"` per §7.1.
 
 The boundary §17 declares is the **classification boundary**, not the **mechanism boundary**. The mechanism lives in the BRAIN module.
 

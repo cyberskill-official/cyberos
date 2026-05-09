@@ -543,4 +543,2145 @@ Read AGENTS.md top-to-bottom in order. The sections are arranged so each builds 
 
 ---
 
+## Part 13 — Status snapshot, tools, and file map (2026-05-10)
+
+> Part 13 is the operational dashboard. Parts 1–12 stay stable; Part 13 refreshes when stages ship, tools change, or new docs land.
+
+### Currently-pinned protocol
+
+```
+sha256:d3ce9764ac76635921f6e981a713ea8822eaec442d01200930633a805a84aaf0   ← current (post-Stage-5)
+sha256:77eda214d687f8fd8eb826b8699e62614c3b606e980486c7fcd8496f92ce6dfa   ← Stage 6 baseline (Merkle + compaction + lock-shared)
+sha256:576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a   ← Stage 1 baseline (reconciliation checkpoint + lazy-load)
+sha256:599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d   ← pre-Stage-1 (5 SHAs older still in protocol-history)
+```
+
+Verify the live SHA matches the manifest pin:
+
+```bash
+python3 runtime/tools/canonical_sha.py docs/CyberOS-AGENTS.md
+python3 -c "import json; print(json.load(open('.cyberos-memory/manifest.json'))['protocol']['sha256'])"
+# Both must produce the same string.
+```
+
+### Local-optimization roadmap status
+
+All six stages of `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` are complete:
+
+| Stage | What it gave you | Surface |
+|-------|-----------------|---------|
+| 1 — Session-start speed | reconciliation_checkpoint, read_profile, frontmatter compactness | §0.5 upgrade `576368…` |
+| 2 — Validator + doctor + corpus | `cyberos_validate.py` (11 check categories), `cyberos_doctor.py` (5 repair ops), 21 fixtures | runtime/tools/ |
+| 3 — Local search index | `cyberos_index.py` SQLite (sub-millisecond p95) | runtime/tools/ |
+| 4 — Backup + sync safety | `cyberos_export.py` (deterministic + daemon) | runtime/tools/ |
+| 5 — At-rest encryption + Shamir | §5.6 envelope, `cyberos_encrypt.py` (passphrase + macOS Keychain) | §0.5 upgrade `d3ce97…` |
+| 6 — Long-term BRAIN health | §7.6 Merkle, §7.7 compaction, §4.9.1 lock-shared, doctor compact/decompact | §0.5 upgrade `77eda2…` |
+
+### CyberOS-AGENTS-CORE.md (load-every-session)
+
+```
+docs/CyberOS-AGENTS.md       1214 lines, 108 KB, ~27K tokens   ← canonical (load on demand)
+docs/CyberOS-AGENTS-CORE.md   483 lines,  42 KB, ~10K tokens   ← load every session (regenerable)
+```
+
+Both live in `docs/` for consistency. CORE is a derived view of canonical; canonical is authoritative.
+
+Symlink for new projects:
+
+```bash
+cd /path/to/your-project
+ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
+ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md CLAUDE.md
+```
+
+When the agent needs the full reference (validator, doctor, §0.5 upgrades, MAINTENANCE mode), it consults `docs/CyberOS-AGENTS.md` directly. The 92% token reduction holds for daily-session loading. CORE's "When you MUST load the full AGENTS.md" header lists 14 concrete trigger conditions.
+
+Regenerate after AGENTS.md changes:
+
+```bash
+python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md > docs/CyberOS-AGENTS-CORE.md
+```
+
+### Tools index (eight CLIs in `runtime/tools/`)
+
+| Tool | Use when |
+|------|----------|
+| `cyberos_validate.py [--pre-commit] [--self-test]` | Daily health check; 21-fixture self-test; pre-commit-hook-friendly mode |
+| `cyberos_doctor.py [--repair --reason] [--compact-ledger M] [--decompact-ledger M] [--rebuild-checkpoint]` | Diagnose + repair under MAINTENANCE mode |
+| `cyberos_index.py [build | update | verify | stats | query <kind> <arg>]` | Sub-millisecond tag/relationship/source-SHA lookup |
+| `cyberos_export.py [-o DIR] [--daemon --interval H] [--verify FILE]` | Deterministic backup bundles |
+| `cyberos_encrypt.py [enable | disable | status | recover | migrate-batch N | rotate-shamir]` | At-rest encryption opt-in + Shamir 3-of-5 escrow |
+| `canonical_sha.py PATH` | §0.5 SHA helper for protocol upgrade approval phrases |
+| `extract_agents_core.py [--aggressive] [--check] PATH` | `docs/CyberOS-AGENTS-CORE.md` generator + CI verifier |
+| `benchmark.py PATH` | Validator + export performance regression tracker |
+
+### File map (post-consolidation, 2026-05-10)
+
+```
+cyberos/                                  ← project root
+├── docs/
+│   ├── CyberOS-AGENTS.md                 ← canonical protocol (1214 lines, 108 KB)
+│   ├── CyberOS-AGENTS-CORE.md            ← derived: 10K-token subset (regenerable; symlink target)
+│   ├── CyberOS-AGENTS.README.md          ← THIS DOCUMENT (Parts 1-24: concepts + ops + cookbook + future + proposals)
+│   ├── CyberOS-AGENTS.CHANGELOG.md       ← protocol-doc day-by-day
+│   ├── CyberOS-PRD.docx + .CHANGELOG.md  ← product requirements
+│   ├── CyberOS-SRS.docx + .CHANGELOG.md  ← system requirements
+│   └── (consolidated into this README in Parts 14-24:
+│        cookbook/×5, EVOLUTION, LOCAL-OPTIMIZATION, proposals/×5)
+├── runtime/
+│   ├── README.md                         ← consolidated build plan (Parts 1-3: Plan, Interfaces, Build Order)
+│   └── tools/                            ← 8 Python CLIs + tests/vectors/ + concise README
+└── .cyberos-memory/                      ← live BRAIN store
+    ├── manifest.json                     ← protocol pin + project metadata
+    ├── audit/2026-05.jsonl               ← 320+ rows, chain-linked ✅
+    ├── memories/refinements/             ← REF-001..037 per §0.4 standing rule
+    ├── meta/protocol-history/            ← verbatim AGENTS.md archives by SHA
+    ├── meta/health/                      ← §8.7 self-audit reports
+    └── ...                               ← rest per AGENTS.md §3
+```
+
+**Consolidation note (2026-05-10):** `cookbook/×5`, `proposals/×5`, `CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`, and `CyberOS-AGENTS.EVOLUTION.md` were inlined into this README as Parts 14-24. `runtime/PLAN.md` + `INTERFACES.md` + `BUILD_ORDER.md` were inlined into `runtime/README.md` as Parts 1-3. Source files replaced with `[CONSOLIDATED]` pointer stubs (or deleted on filesystems that allow it). 7 fewer doc files at the top level; same content, single hub.
+
+### Where do I find X?
+
+| Question | Where |
+|----------|-------|
+| Current protocol SHA | `manifest.json` → `protocol.sha256` OR `canonical_sha.py docs/CyberOS-AGENTS.md` |
+| BRAIN health | `cyberos_validate.py .` |
+| Diagnose corruption | `cyberos_doctor.py .` (read-only); add `--repair --reason "..."` to fix |
+| Search by tag | `cyberos_index.py . query tag <tag>` |
+| Search by relationship | `cyberos_index.py . query relates-to <memory_id>` |
+| Recent ops on a path | `cyberos_index.py . query audit-by-path <path>` |
+| Backup the BRAIN | `cyberos_export.py . -o ~/Backups/cyberos --daemon --interval 6` |
+| Enable encryption | `cyberos_encrypt.py . enable` (Shamir 3-of-5 wizard) |
+| What was DEC-N about? | `.cyberos-memory/memories/decisions/DEC-N-*.md` or AGENTS.md §13 / PRD Part 13 |
+| When did X last change? | `cyberos_index.py . query audit-by-path <path>` |
+| Chain head | `manifest.json` → `audit_chain_head` |
+| How to amend the protocol | Append a new Part to this README (`Part NN — Bundle X proposal`) following the pattern in Parts 20-24, then chat-turn approval per §0.5 |
+| Rollback a protocol upgrade | `meta/protocol-history/AGENTS-<sha>.md` carries verbatim prior |
+| Why a rule exists | Search `.cyberos-memory/memories/refinements/REF-*.md` for the originating REF |
+
+### Cookbook index
+
+| Recipe | When to read |
+|--------|--------------|
+| `pre-commit-validate.md` | Wiring the validator into git pre-commit + GitHub Actions |
+| `filesystem-sync.md` | Syncing `.cyberos-memory/` across machines via iCloud/Dropbox/Syncthing/git |
+| `local-search-index.md` | Using `cyberos-index` for daily memory recall |
+| `encryption-and-recovery.md` | Stage 5 enable wizard, recovery flow, threat model |
+| `ledger-compaction.md` | Stage 6 compact / decompact / Merkle proof verification |
+
+### Open work tracks
+
+1. **Bundle M — AGENTS.md refinement pass** (✅ landed 2026-05-10 as `sha256:9bec84…`). Four functional-zero changes applied: schema field-count update, §8 phase-count fix, §4.10/§4.11 merge into §4.10.1/§4.10.2, §17.5 forward-references compression. Two changes deferred to Bundle N: §0.5 split for clarity + paragraph compression throughout. See **Part 24** below (inlined Bundle M proposal) and `.cyberos-memory/memories/refinements/REF-037-bundle-m-refinement-pass.md`.
+2. **EVOLUTION.md activation** — when CyberOS-the-product starts building (BRAIN service P1, Layer 2 vector+graph, MCP Gateway, multi-tenancy), the post-CyberOS roadmap reactivates.
+3. **HW-key backends for Windows/Linux** — macOS keychain-stored variant ships in v1; Windows Hello + Linux TPM 2.0 / FIDO2 hmac-secret remain stubs.
+4. **PRD/SRS .docx body integration** — DEC-106/107/108 + §5.x.x sub-sections currently live as appendix; full integration into §5/§6/§13 body is a docx-editing-session task.
+
+---
+
+*Part 13 refreshes after every meaningful change to `docs/`, `runtime/tools/`, or the protocol SHA. Last refresh: 2026-05-10 post-Stage-5 landing.*
+
+---
+
+
+---
+
+## Part 14 — Cookbook: Pre-commit hook + CI integration
+
+*Inlined cookbook recipe. Original at `docs/cookbook/pre-commit-validate.md` (deleted in consolidation).*
+
+### Wire `cyberos-validate` into git pre-commit
+
+Run `cyberos-validate` against your `.cyberos-memory/` before every commit so chain-corruption, schema-drift, supersedes-cycles, and cap-overruns surface immediately rather than during a future debugging session.
+
+## Quick install
+
+```bash
+# From the project root:
+pip3 install pyyaml --break-system-packages   # or via your venv
+chmod +x runtime/tools/cyberos_validate.py
+```
+
+Verify it works against your store:
+
+```bash
+python3 runtime/tools/cyberos_validate.py .
+```
+
+You should see `✅ no findings; store appears healthy.` (or a list of findings to address).
+
+## pre-commit hook (POSIX)
+
+Drop this in `.git/hooks/pre-commit` and `chmod +x`:
+
+```bash
+#!/usr/bin/env bash
+# .git/hooks/pre-commit
+set -euo pipefail
+
+# Only run if .cyberos-memory/ is staged or has uncommitted changes
+if git diff --cached --name-only | grep -q "^.cyberos-memory/" \
+   || git status --porcelain | grep -q "^.\? \.cyberos-memory/"; then
+    echo "→ cyberos-validate"
+    if ! python3 runtime/tools/cyberos_validate.py . --quiet; then
+        echo "✘ BRAIN validation found CRITICAL issues — commit blocked."
+        echo "  Run: python3 runtime/tools/cyberos_validate.py ."
+        echo "  to see all findings."
+        exit 1
+    fi
+fi
+```
+
+The `--quiet` flag suppresses INFO/WARN; commits only block on CRITICAL.
+
+## pre-commit framework (recommended)
+
+If you use [pre-commit](https://pre-commit.com), add this to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: cyberos-validate
+        name: cyberos-validate
+        entry: python3 runtime/tools/cyberos_validate.py . --quiet
+        language: system
+        pass_filenames: false
+        files: ^\.cyberos-memory/
+        always_run: false
+```
+
+Then `pre-commit install` once and the hook runs on every relevant commit.
+
+## CI integration (GitHub Actions example)
+
+```yaml
+# .github/workflows/cyberos-validate.yml
+name: cyberos-validate
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python3 runtime/tools/cyberos_validate.py . --format sarif > validate.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: validate.sarif
+```
+
+The SARIF output integrates with GitHub's "Security" tab and PR review comments.
+
+## What the validator catches today
+
+- **Chain LINK invariant** (§7.2) — any row whose `prev_chain` ≠ previous row's `chain` fails CRITICAL.
+- **Schema conformance** (§5.1) — required fields, valid memory_id (UUIDv7/ULID/legacy), valid timestamps (DEC-088), authority hierarchy (§5.3), classification set (§5.4), confidence in [0.0, 1.0].
+- **Supersedes graph integrity** (§9.5) — cycles, dangling targets, dangling `superseded_by`, missing `tombstoned: true` on superseded predecessors.
+- **Resource caps** (§5.5) — body >30KB hard cap, frontmatter >4KB, store >10MB, file count >10K.
+- **Audit ledger health** (§7) — unparseable rows, oversized rows, malformed `audit_id`, manifest `audit_chain_head` reachability.
+- **File hygiene** (§4.3) — UTF-8 BOM, bare CR.
+- **Tombstone consistency** (§4.6) — `tombstoned: true` requires `deleted_at`/`deleted_by`/`tombstone_reason`.
+
+## What the validator does NOT catch yet
+
+These need future work; see `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`:
+
+- RFC 8785 JCS chain-hash recomputation (Stage 2 follow-up — currently only the LINK invariant is checked)
+- §4.2 content gate normalisation pipeline (homoglyph / ZWJ / confusable folding) — Stage 2 (denylist v2)
+- Orphan-file detection beyond "path appears in audit" (Stage 6)
+- Filesystem-sync collision detection (Stage 4)
+- Encrypted-memory verification (Stage 5)
+
+## Self-test
+
+```bash
+python3 runtime/tools/cyberos_validate.py --self-test
+```
+
+Expected:
+
+```
+✅ 01-clean-bootstrap
+✅ 02-chain-break
+✅ 03-supersedes-cycle
+... (15 fixtures)
+```
+
+If any fixture fails, `cyberos-validate` itself has regressed — file an issue or roll back the change.
+
+---
+
+## Part 15 — Cookbook: Filesystem-sync compatibility
+
+*Inlined cookbook recipe. Original at `docs/cookbook/filesystem-sync.md` (deleted in consolidation).*
+
+### Filesystem-sync compatibility for `.cyberos-memory/`
+
+The CyberOS BRAIN service (Yjs+Automerge over WebSocket subgraph, per PRD §5.3.3 and DEC-040) is the eventual canonical multi-machine sync mechanism. **Until that ships**, you may want to keep `.cyberos-memory/` synced across your laptop and desktop via off-the-shelf cloud sync tools. This is a recipe + caveats matrix.
+
+## TL;DR
+
+- **Safe with caveats**: Syncthing, git
+- **Workable but watch for collisions**: iCloud Drive, Dropbox, OneDrive, Google Drive
+- **Forbidden**: any sync tool that does block-level dedup on the audit ledger (none of the above do this by default)
+- **Best practice regardless of tool**: run `cyberos-validate` at session start; treat collision-suspected findings as immediate `cyberos-doctor` work
+
+## The hazards
+
+The audit ledger (`audit/<YYYY-MM>.jsonl`) is **append-only** and **chain-linked**. Two failure modes you need to defeat:
+
+1. **Mid-write sync delivery.** A cloud sync tool ingests `audit/2026-05.jsonl` while a local agent is mid-append. The synced copy contains a partial last line; the next session reads it and trips `audit-row-unparseable`.
+2. **Concurrent-machine collision.** You start a session on your laptop, write 5 audit rows, the laptop syncs, you switch to the desktop without waiting, the desktop session also writes against an older view. Now the cloud has two divergent ledgers and most sync tools resolve via "last-write-wins on the file" — silent corruption.
+
+The two-phase-write rule in AGENTS.md §4.4 prevents (1) on POSIX-correct filesystems, but cloud sync tools occasionally read mid-flight before the rename completes. Hazard (2) is the bigger killer.
+
+## Sync tool matrix
+
+### ✅ Syncthing (recommended)
+
+- **Why**: peer-to-peer, no third-party storage, file-version conflict markers per file (`<file>.sync-conflict-<date>-<host>.<ext>`), respects symlinks, ignores `.lock` correctly via `.stignore`.
+- **Setup**:
+  ```bash
+  cat > ~/.cyberos-memory/.stignore <<EOF
+  .lock
+  .tmp.*.part
+  index/
+  exports/
+  EOF
+  ```
+  (Path syntax above is illustrative; place a `.stignore` in each device's `.cyberos-memory/` if you don't want index/exports replicating.)
+- **Caveats**: still vulnerable to hazard (2) — Syncthing's conflict markers help you detect collisions but don't prevent them. Always run `cyberos-validate` at session start.
+- **Pin**: enable "Watch for changes" + "Continuous Versioning" so you can roll back any specific file if a collision corrupts it.
+
+### ✅ git (recommended for solo use)
+
+The protocol's §13.1 step 11 already adds a commented `.gitignore` line. You can opt to commit `.cyberos-memory/` and use `git push`/`git pull` as your sync vehicle.
+
+- **Why**: explicit conflict resolution; no silent overwrites; full history; works offline.
+- **Setup**: in your project's `.gitignore`, ensure `.cyberos-memory/` is NOT excluded; or use a separate inner repo per the future Stage 4 `cyberos init --git-backup` pattern.
+- **Caveats**:
+  - The audit ledger is append-only; merging two divergent ledgers requires manual conflict resolution. The Stage 4 cyberos-doctor will eventually handle this; for now, never edit `audit/<YYYY-MM>.jsonl` by hand.
+  - Don't `git stash` the BRAIN — it can leave `.cyberos-memory/.lock` in an inconsistent state.
+
+### ⚠️ iCloud Drive (workable)
+
+- **Why caution**: macOS occasionally moves `.cyberos-memory/` content to "Optimize Mac Storage" (cloud-only) when disk pressure is high; first session-start after this is slow and triggers full-walk reconciliation.
+- **Setup**:
+  - In Finder, right-click `.cyberos-memory/` → **Keep Downloaded** (forces always-local).
+  - System Settings → iCloud → iCloud Drive → **Optimize Mac Storage** OFF for the parent folder.
+  - Apple's hidden-file ignore rule means `.lock` doesn't sync (good).
+- **Caveats**:
+  - iCloud occasionally reports stale mtime on synced files; `cyberos-validate` doesn't trust mtime, so this is fine, but tools that do (rsync, etc.) may report spurious changes.
+  - Hazard (2) is real — iCloud's last-write-wins on the audit ledger silently corrupts on collision.
+- **Mitigation**: always end a session before switching machines. Run `cyberos-validate` at session start.
+
+### ⚠️ Dropbox (workable)
+
+- **Why caution**: similar to iCloud; "smart sync" can offload files; partial-write windows are short but exist.
+- **Setup**: right-click `.cyberos-memory/` → **Make Available Offline**. Add `.lock` and `index/` to Dropbox's selective-sync excludes.
+- **Caveats**: same hazard (2) as iCloud. Dropbox's conflict files (`<file> (Stephen's MacBook conflicted copy).md`) are easier to spot but you have to know to look for them.
+
+### ⚠️ OneDrive / Google Drive
+
+Workable but more aggressive about cloud-only offloading. Same caveats as iCloud + Dropbox. Ensure offline pinning, ignore `.lock`.
+
+### ❌ Block-level dedup tools
+
+Don't use rsync with `--inplace` against the audit ledger. Don't use any sync tool that does block-level dedup on `*.jsonl` files. The append-only invariant assumes the file is rewritten atomically (via `tmp+rename`); block-dedup tools that patch in place can leave the file in an inconsistent state.
+
+## Detection: how to tell if you've been bitten
+
+Run `cyberos-validate` at the start of every session. Findings to watch:
+
+- `chain-link-mismatch` — almost certainly a sync collision; file order in two divergent histories was preserved but the chains don't connect
+- `audit-row-unparseable` — partial-write sync delivery; truncate to last good line via `cyberos-doctor` (Stage 2)
+- `audit-chain-head-unreachable` — the manifest's pinned chain head doesn't appear in the (synced) ledger; usually means the manifest synced but the ledger didn't yet, or vice versa
+
+Run after EVERY context switch between machines. The ~200ms cost is invisible; the cost of debugging a corrupted chain a week later is days.
+
+## Recovery (Stage 2 cyberos-doctor — coming soon)
+
+Until `cyberos-doctor` ships:
+
+1. Stop using the BRAIN immediately.
+2. Identify the most recent good state — usually the most recent `cyberos-export` bundle or git commit.
+3. Restore that state (unzip bundle into a clean directory, or `git checkout`).
+4. Re-apply any changes you made after the last good state by hand.
+5. Treat the corrupted store as a forensic artefact; archive it under `~/cyberos-corrupted-<date>/` until you've verified the recovery.
+
+## Long term
+
+When CyberOS ships and the BRAIN service is live (PRD §5.3.3, DEC-040), Yjs+Automerge handles all of this with operational-transform CRDTs. Filesystem-sync becomes a fallback for offline work, not the primary mechanism. Until then: be paranoid, automate `cyberos-export`, run `cyberos-validate` constantly, and prefer Syncthing or git over the cloud-attached tools.
+
+---
+
+## Part 16 — Cookbook: Local search index
+
+*Inlined cookbook recipe. Original at `docs/cookbook/local-search-index.md` (deleted in consolidation).*
+
+### Local search index for `.cyberos-memory/`
+
+Stage 3 ships `cyberos-index`, a SQLite-backed local index that converts grep-style memory walking into O(log N) lookup for the four high-traffic patterns:
+
+- **Tag** lookup — "show me everything tagged `stage-1`"
+- **Relationship** traversal — "what relates to DEC-094? what supersedes it?"
+- **Source-SHA dedup** — "is this WhatsApp export already ingested?"
+- **Audit-by-path** — "show me the last 5 ops against `manifest.json`"
+
+Plus tombstone-set membership and supersedes-graph traversal.
+
+## Quick start
+
+```bash
+# Full build (one time, or after major edits)
+python3 runtime/tools/cyberos_index.py . build
+
+# Incremental update (call as part of session-start)
+python3 runtime/tools/cyberos_index.py . update
+
+# Stats
+python3 runtime/tools/cyberos_index.py . stats
+
+# Verify index matches canonical store
+python3 runtime/tools/cyberos_index.py . verify
+```
+
+## Where the index lives
+
+**Default (post-2026-05-10):** routed automatically to a system cache directory outside any cloud-sync territory:
+
+- macOS: `~/Library/Caches/cyberos/<store-fingerprint>/cyberos.db`
+- Linux: `~/.cache/cyberos/<store-fingerprint>/cyberos.db`
+
+This avoids the most common operational gotcha: iCloud Drive / Dropbox / OneDrive holding write locks on `.cyberos-memory/index/cyberos.db` when their daemon is reconciling, producing `sqlite3.OperationalError: database is locked`. `~/Library/Caches/` and `~/.cache/` are excluded from cloud sync by default.
+
+The cache directory gets a per-store fingerprint subdirectory (16 hex chars of SHA-256 of the resolved store path) so multiple BRAINs don't collide.
+
+**To opt back into the in-store location** (Stage 3 original behavior):
+
+```bash
+# Either pass an explicit path:
+python3 runtime/tools/cyberos_index.py . --cache-dir .cyberos-memory build
+
+# Or set the environment variable:
+CYBEROS_INDEX_IN_STORE=1 python3 runtime/tools/cyberos_index.py . build
+```
+
+The in-store form is excluded from exports per AGENTS.md §11.1 in either case (the index is regenerable cache, never authoritative). Use this form when you specifically want the index portable inside the `.cyberos-memory/` zip bundle, OR when you're certain your filesystem doesn't have cloud-sync interference.
+
+## Query examples
+
+### Tag lookup
+
+```bash
+python3 runtime/tools/cyberos_index.py . query tag refinement
+```
+
+Returns memories tagged `refinement`, sorted by most-recently-updated, excluding tombstoned. Add `--include-tombstoned` to see all.
+
+### Relationship traversal
+
+```bash
+python3 runtime/tools/cyberos_index.py . query relates-to mem_019e0dd6-600d-7803-8f35-32cf2c8bafc2
+```
+
+Returns inbound relationships, outbound relationships, supersedes, and superseded_by sets — all from one query.
+
+### Source-SHA dedup check
+
+```bash
+python3 runtime/tools/cyberos_index.py . query source-sha sha256:abc123...
+```
+
+Used by the §8.6 source-coverage validator and the DEC-080 source-tier resolver to detect drift before re-ingesting. Returns the memory_id(s) already derived from that source SHA.
+
+### Audit lookup by path
+
+```bash
+python3 runtime/tools/cyberos_index.py . query audit-by-path manifest.json --limit 10
+```
+
+Returns the last N ops against the given path. The path can be in either `.cyberos-memory/foo.md` or `foo.md` form — both match.
+
+### Tombstone check
+
+```bash
+python3 runtime/tools/cyberos_index.py . query tombstoned mem_019e0dd6-600d-7803-8f35-32cf2c8bafc2
+```
+
+## Performance baseline (live store: 82 memories, 293 audit rows)
+
+```
+Full build:                ~120ms (one-time)
+Incremental update:        ~35ms (no changes); ~50ms (1-2 changes)
+Tag query (in-process):    p50 0.16ms  p95 0.18ms
+Audit-by-path (in-process): p50 0.16ms  p95 0.17ms
+Relates-to (in-process):   p50 0.12ms  p95 0.14ms
+Tag query (CLI fork):      p50 25ms    p95 31ms (Python startup dominates)
+DB size:                   377 KB
+```
+
+The in-process numbers are what matter when the index is consulted by skills running inside an existing Python session (the typical case). The CLI numbers include Python interpreter startup cost.
+
+## Integration patterns
+
+### Pre-session index update (recommended)
+
+Add to your shell startup or before opening Claude Code / Cursor:
+
+```bash
+python3 runtime/tools/cyberos_index.py ~/Projects/CyberSkill/cyberos --cache-dir ~/.cache/cyberos update
+```
+
+The incremental update is fast enough to run on every session start.
+
+### As a Python library
+
+```python
+import sys
+sys.path.insert(0, "runtime/tools")
+from cyberos_index import Indexer
+from pathlib import Path
+
+idx = Indexer(Path(".cyberos-memory"), cache_dir=Path("/tmp/cyberos-cache"))
+results = idx.query_tag("refinement")
+for r in results:
+    print(r["memory_id"], r["file_path"])
+```
+
+### Consumed by future tools
+
+When Stage 5 (encryption) ships, the index will check `tombstoned` flags before encrypting. When Stage 6 (Merkle checkpoints) ships, the indexer will read checkpoint metadata to bound the audit-row scan.
+
+## Schema (SQLite)
+
+Five tables (full schema in `cyberos_index.py`):
+
+- `memories(memory_id, file_path, scope, classification, authority, version, created_at, last_updated_at, body_sha, tombstoned, source_sha)`
+- `tags(memory_id, tag)` — many-to-many
+- `relationships(from_id, to_id, kind)` — `kind ∈ {refines, contradicts, depends-on, derives-from, summarises, cites}`
+- `supersedes(from_id, to_id)` — DAG edges per §9.5
+- `audit_rows(audit_id, ts, op, path, memory_id, chain, prev_chain, actor_kind, actor_id, ledger)`
+- `index_meta(key, value)` — schema_version, last_indexed_audit_id, last_built_at, etc.
+
+## Caveats
+
+- **Index is derived state.** Authoritative answers always come from `.cyberos-memory/` ground truth. The index is allowed to lag (use `update` to catch up) or to be deleted entirely (rebuild via `build`).
+- **No chain LINK verification here.** That's `cyberos_validate.py`'s job, walking the JSONL in file order. The index orders by ts, which doesn't always match insertion order across mixed UUIDv7/ULID audit_ids.
+- **No vector / semantic search.** Stage 3 deferred this — sentence-transformers + sqlite-vss would add ~80MB of model + dependency bloat for a stopgap that gets ripped out when Layer 2 ships with bge-m3 + reranker. For semantic recall today, let the consuming agent (Claude / Cursor / etc.) use its own context window over the tag/relationship indices above.
+- **Schema version 1.** Future schema bumps will require a `build` (full rebuild). The schema_version key in `index_meta` is the gate.
+
+## Troubleshooting
+
+### `sqlite3.OperationalError: disk I/O error`
+
+The filesystem under `.cyberos-memory/index/` doesn't tolerate SQLite. Use `--cache-dir`:
+
+```bash
+python3 runtime/tools/cyberos_index.py . --cache-dir ~/.cache/cyberos build
+```
+
+Common causes: cloud-FUSE drivers (some Dropbox configurations), sandbox mounts, network filesystems.
+
+### `verify` reports `memory count mismatch`
+
+Run a full rebuild:
+
+```bash
+python3 runtime/tools/cyberos_index.py . build
+```
+
+Then `verify` again. If still mismatched, the index has drifted from canonical — `cyberos_validate.py` against the canonical store will tell you where.
+
+### Index size grows large
+
+Run `build` (full rebuild) — drops accumulated tombstones and obsolete rows. The DB compacts via SQLite's native auto-vacuum if enabled; otherwise rebuild quarterly.
+
+## What this enables next
+
+- **Stage 5 (encryption)**: tombstone + classification queries to scope the encryption envelope
+- **Stage 6 (Merkle)**: audit-row index becomes the input for incremental Merkle tree construction
+- **Future BRAIN service** (PRD §5.4 Layer 2): the source-SHA index is the dedup boundary between Layer 1 ingest events and Layer 2 contextual-retrieval pipeline
+
+---
+
+## Part 17 — Cookbook: At-rest encryption + recovery
+
+*Inlined cookbook recipe. Original at `docs/cookbook/encryption-and-recovery.md` (deleted in consolidation).*
+
+### At-rest encryption and recovery
+
+Stage 5 (`sha256:d3ce97…`) added the at-rest encryption envelope (AGENTS.md §5.6) and `cyberos_encrypt.py`. Encryption is **opt-in and OFF by default** — the protocol primitives are landed but no memory is encrypted until you run the enable wizard.
+
+## When to enable
+
+Turn encryption on when the answers to any of these become "yes":
+
+- I might lend this Mac to a contractor / sell it / hand it to support
+- I'll be travelling with the BRAIN on disk
+- I'll be syncing `.cyberos-memory/` via iCloud/Dropbox/Syncthing across less-trusted machines
+- I've started accumulating `personnel:` or `client:` memories that aren't pure ops notes
+
+If none of those apply (solo workbench on FileVault-encrypted Mac), encryption is overhead without proportional benefit — leave it off.
+
+## Pre-flight checklist
+
+Before running the wizard:
+
+- [ ] Pick **5 holders** for Shamir fragments. Suggested defensible pattern: yourself + spouse/co-founder + lawyer (sealed envelope) + family member (paper QR in a safe-deposit box) + geographically-distant trusted contact
+- [ ] For each holder, decide the **delivery medium** — printed QR code on archival paper? base32 string in a password manager? read-aloud over a secure channel? Don't use anything backed up by an automated cloud service the holder doesn't control
+- [ ] Run a fresh `cyberos-export` so you have a backup of the **plaintext** state in case anything goes wrong during the migration phase
+- [ ] Have your passphrase ready — minimum 16 chars, zxcvbn score ≥3 (no dictionary words; consider a 5-word diceware phrase)
+
+## Enable wizard
+
+```bash
+python3 runtime/tools/cyberos_encrypt.py . enable --passphrase
+```
+
+The wizard:
+
+1. Prompts for passphrase + confirm; rejects below the strength bar
+2. Derives master key via Argon2id (`t=3, m=64MiB, p=4` per RFC 9106) — takes ~2 seconds
+3. Splits the master into 5 Shamir fragments (3-of-5 threshold)
+4. Walks each fragment: prompts for holder label, prints the encoded fragment as `CYBOS-S5-<label>-<base32-with-dashes>`, asks "distributed? [y/N]"
+5. Refuses to flip `encryption_policy.enabled = true` until all 5 are confirmed distributed
+6. Pins the master-key fingerprint in `manifest.shamir_fragments.master_key_fingerprint`
+7. Records each fragment's fingerprint + holder label + timestamps in the same manifest field
+
+**The wizard never writes fragments to disk anywhere.** Only fingerprints land in the manifest. If you lose the printout/text and don't have ≥3 fragments out-of-band, you cannot recover.
+
+## After enable: nothing happens automatically
+
+This is intentional. After enable:
+
+- `encryption_policy.enabled = true`
+- 0 memories are encrypted (no automatic migration)
+- New writes to in-scope memories will encrypt going forward
+- Existing 80+ in-scope memories stay plaintext
+
+To migrate existing memories at your own pace (Q5 = user-paced from the decision baseline):
+
+```bash
+python3 runtime/tools/cyberos_encrypt.py . migrate-batch 50
+```
+
+Each batch runs as one MAINTENANCE-mode envelope (§8.8) with one `op:"str_replace"` per memory. Watch the audit ledger; if anything looks weird, pause and run `cyberos-doctor`.
+
+> ⚠️ `migrate-batch`, `disable`, and `rotate-shamir` are stubbed in the v0 of `cyberos_encrypt.py`. The enable wizard, status check, recovery flow, and Shamir crypto core are fully working in v0. Migration + rotation are scheduled for v1.
+
+## Verifying encryption is working
+
+```bash
+# Check policy state
+python3 runtime/tools/cyberos_encrypt.py . status
+```
+
+Returns JSON: `policy_enabled`, `shamir_master_key_fingerprint`, `memories_encrypted`, `memories_plaintext`, etc.
+
+```bash
+# Validate the BRAIN — picks up `encrypted: true` recognition + Shamir consistency check
+python3 runtime/tools/cyberos_validate.py .
+```
+
+Should report 0 CRITICAL findings. New checks that come from Stage 5:
+
+- `encryption-block-missing` — `encrypted: true` set but no `encryption:` frontmatter block
+- `encryption-algo-unrecognised` — algorithm is not `xchacha20poly1305-ietf` or `xchacha20poly1305-ietf-v0`
+- `encryption-nonce-length` — nonce is not 24 bytes
+- `shamir-fingerprint-missing` — encryption enabled but no master_key_fingerprint pinned
+- `shamir-incomplete-distribution` — fewer than `total` fragments confirmed distributed
+
+## Recovery: when both passphrase AND HW key are lost
+
+The whole point of the Shamir 3-of-5 design. Collect ≥3 fragments out-of-band from your holders, then:
+
+```bash
+python3 runtime/tools/cyberos_encrypt.py . recover
+# (paste fragments one per line, empty line to end)
+```
+
+Wizard:
+
+1. Decodes each `CYBOS-S5-…` fragment back to bytes
+2. Picks the first 3 (threshold), runs Lagrange interpolation in GF(256) to reconstruct the master key
+3. Hashes the reconstructed key, compares to `master_key_fingerprint` pinned in `manifest.shamir_fragments`
+4. **MISMATCH → ABORT** (either you got the wrong fragments, or someone tampered with the BRAIN; investigate before doing anything)
+5. **MATCH → reconstruct successful**; v0 prints "key NOT printed for security" and stops here. v1 will integrate the recovered key into the running session so you can re-derive your passphrase or set up new HW key.
+
+## Hardware-key change procedure (planned, not yet implemented)
+
+When you replace your Mac (HW key changes), use:
+
+```bash
+python3 runtime/tools/cyberos_doctor.py . --repair --reason "hardware-replacement"
+# Will offer R6-rotate-master-key (planned for v1)
+```
+
+R6 will: derive master from new HW source; re-encrypt all in-scope memories under MAINTENANCE mode; audit each as `op:"str_replace"`; flip the manifest's `encryption_policy.key_derivation` field.
+
+Until R6 ships, manual procedure: `disable` (decrypt all → plaintext), then re-`enable` on the new machine with fresh fragments. Costs the audit-row churn of an entire migration; document the reason in MAINTENANCE mode notes.
+
+## Threat model — what the encryption protects against
+
+| Adversary scenario | Protected by | Notes |
+|---------------------|-------------|-------|
+| Someone reads `.cyberos-memory/` from a backup, no key | XChaCha20-Poly1305 envelope on body | Frontmatter is plaintext — they see classification + scope + tags but not body content |
+| Someone compromises your passphrase but not your machine | Hardware-key path (when implemented) | v0 ships passphrase-only, so this scenario is currently NOT mitigated |
+| Someone tampers with the encrypted body to fool you | AEAD authentication tag | `decrypt_body` raises `InvalidTag` on any modification |
+| Someone substitutes a different memory's body | AAD bound to memory_id + last_updated_at | Tag verification fails if the AAD doesn't match |
+| Holder of 1 fragment becomes adversarial | Below threshold | Need 3 fragments to recover; 1 alone is useless |
+| 3 holders collude | Cannot prevent | This is the explicit threshold tradeoff. Pick holders accordingly |
+| You lose the passphrase + 2 fragments at once | Stop / call lawyer | The remaining 3 fragments still recover. If you lose 3+, the BRAIN is unrecoverable. Plan accordingly: keep your own fragment offline + protected; treat the remaining 4 as redundancy |
+
+## What the encryption does NOT protect against
+
+- The §9.3 denylist. Comp/ESOP/gov-IDs/secrets remain forbidden in any storage form. Encryption is a layer on top of an already-restricted surface, not a softener
+- Live agent memory. While a session is active and the master key is derived, memory content is decrypted in process RAM. Don't run agents on machines you don't trust
+- Side channels. AEAD doesn't hide ciphertext length; an attacker counting bytes can infer "this memory is bigger than that one"
+- The export bundle. `cyberos-export` produces deterministic ZIP bundles that contain ciphertext when memories are encrypted. The bundle is as protected as the underlying memories, no more
+
+## Operational reminder
+
+Treat the master-key fingerprint pinned in `manifest.shamir_fragments.master_key_fingerprint` as a **public commitment**. Anyone with the BRAIN can see it; recovery only succeeds if reconstructed-key-fingerprint matches it. This protects against fragment substitution (an adversary who has 3 *wrong* fragments can't recover because the fingerprints won't match).
+
+Don't change the fingerprint outside `cyberos_encrypt.py rotate-master-key` flow — direct manifest edits to that field break recovery semantics. The `op:"key_rotation"` audit row is the authoritative event marker.
+
+---
+
+## Part 18 — Cookbook: Audit ledger compaction
+
+*Inlined cookbook recipe. Original at `docs/cookbook/ledger-compaction.md` (deleted in consolidation).*
+
+### Audit ledger compaction (Stage 6)
+
+Stage 6 (`sha256:77eda21…`) added Merkle checkpoints (§7.6) and audit ledger compaction (§7.7). After ~12 months of operation, the per-row JSONL ledger can be collapsed to per-memory final-state + Merkle proof, saving ~80% disk while preserving spot-verifiability via the cryptographic proof.
+
+## Pre-conditions
+
+Compaction refuses unless ALL of these hold (per AGENTS.md §8.9):
+
+1. The cutoff month has at least one `op:"consolidation_run"` row carrying a `merkle_root` field — without a checkpoint there's nothing to anchor proofs against
+2. The cutoff month is older than `manifest.compaction_policy.minimum_age_months` (default 12)
+3. `cyberos_validate.py --self-test` passes; specifically no §8.7 phase 4 CRITICAL findings on the period being compacted
+
+## Triggering compaction
+
+Compaction requires the **explicit chat-turn phrase** per §0.5:
+
+> *"compact ledger older than 2026-04-30"*
+
+The agent then:
+
+1. Acquires `.lock` (exclusive)
+2. Verifies pre-conditions; aborts with `op:"rejected" reason:"compaction-precondition:<which>"` on failure
+3. Walks rows in the cutoff period; builds a per-memory `final_state` map (memory_id → most recent op + chain)
+4. Computes Merkle inclusion proofs for each `final_audit_id` against the period's checkpoint root
+5. zstd-compresses the original JSONL into `archive/<YYYY-MM>.jsonl.zst`
+6. Atomic-renames `audit/<YYYY-MM>.jsonl` → `audit/<YYYY-MM>.compacted.jsonl`
+7. Appends `op:"ledger_compact"` to the live ledger
+8. Releases `.lock`
+
+The compaction implementation lands as a `cyberos_doctor.py compact-ledger` subcommand in v1 (currently the protocol is in place but the user-facing CLI to trigger it is part of Track A's follow-on work).
+
+## Verifying a compacted ledger
+
+`cyberos_validate.py` (post-Track-A) walks `audit/*.compacted.jsonl` files and verifies each row's `merkle_proof` against the period's checkpoint root. Mismatch → CRITICAL `merkle-proof-divergence`.
+
+To spot-check a specific chain:
+
+```bash
+python3 runtime/tools/cyberos_index.py . --cache-dir /tmp/cyberos-cache query merkle-proof sha256:abc123...
+```
+
+Returns the inclusion path + the period's checkpoint root. Manually verify by:
+
+```python
+import hashlib
+leaf = bytes.fromhex("abc123...")
+current = leaf
+for step in proof:
+    sibling = bytes.fromhex(step["hash"].replace("sha256:", ""))
+    if step["position"] == "left":
+        current = hashlib.sha256(sibling + current).digest()
+    else:
+        current = hashlib.sha256(current + sibling).digest()
+print("sha256:" + current.hex())  # must equal checkpoint_root
+```
+
+## Reversing compaction (decompact)
+
+If you need the full per-row history back (audit, forensics, regulatory request), re-expand from archive:
+
+```bash
+python3 runtime/tools/cyberos_doctor.py . \
+    --decompact-ledger 2026-04 \
+    --reason "regulatory request: forensic audit of 2026-04 ops"
+```
+
+The doctor:
+
+1. Acquires `.lock` under MAINTENANCE mode
+2. zstd-decompresses `archive/2026-04.jsonl.zst`
+3. Atomic-writes the decompressed bytes back to `audit/2026-04.jsonl`
+4. Removes `audit/2026-04.compacted.jsonl`
+5. Appends `op:"ledger_decompact"` to the live ledger
+6. Releases lock
+
+Decompaction is fully reversible — you can re-compact later with the same phrase.
+
+## When NOT to compact
+
+- If you might need quick access to per-row history (legal hold, ongoing investigation) — keep the JSONL form
+- If your store is under the 1MB/10K-file size soft cap — compaction's disk savings are marginal
+- If you haven't run a `consolidation_run` in the period being compacted — no Merkle root to anchor proofs against
+- During an open `op:"maintenance.start"` envelope — wait for the maintenance session to close
+
+## What compaction does NOT do
+
+- It does NOT delete audit history. The original verbatim is preserved at `archive/<YYYY-MM>.jsonl.zst`. Re-expansion is one command away.
+- It does NOT shrink memory files. Memories stay where they are; only the audit ledger is compacted.
+- It does NOT bypass `op:"corrects"` or `op:"revert"` semantics. The compacted form preserves the *final state* per memory, but corrections-of-corrections are collapsed in the per-memory representation. If you need the full correction chain, decompact.
+
+## Long-running schedule
+
+A reasonable cadence: compact monthly, 12 months back. So in May 2027, compact 2026-05 (just turned 12 months). On the first of every month, the eligible period rolls forward by one. This keeps the live ledger sized to ~12 months of per-row data plus N years of compacted summaries.
+
+The `manifest.compaction_policy.minimum_age_months` field is mutable only via §0.5 chat-turn approval — change it from 12 to 6 (more aggressive compaction) or 24 (more conservative) per your operational preference. The default of 12 reflects a balance between disk savings and "I might still need to look at this row" recency.
+
+---
+
+## Part 19 — Future-state outlook (post-CyberOS-product)
+
+The local-optimization roadmap documented in Parts 13 (status hub) is **complete** as of 2026-05-10. Three protocol-level upgrades (Stages 1, 5, 6) + Bundle M refinement pass + 6 runtime tools + 21-fixture corpus + 5 inlined cookbooks above. The Layer-1 personal BRAIN protocol is production-ready.
+
+**The next protocol-level horizon activates when CyberOS-the-product begins building.** That horizon is documented as eight stages mapped to CyberOS-PRD Part 5 (BRAIN architecture) + Part 9.1 (BRAIN module) + Part 11 (NFRs) + Part 12 (Compliance) + Part 14 (Phase plan); SRS §5.12 / §6.13–6.16. Currently dormant — none of these stages have been executed; they reactivate when BRAIN service P1 starts shipping.
+
+| Stage | Focus | Status |
+|-------|-------|--------|
+| EV-1 | Performance + DX inside Layer 1 | mostly covered by local-optimization Stage 1+2+3 |
+| EV-2 | Security hardening + Vietnamese-first compliance scaffolding | partial: at-rest encryption shipped (Stage 5); STRIDE doc + Decree 13 + EU AI Act mappings TODO |
+| EV-3 | Layer-1↔Layer-2 indexing bridge + observability | needs Layer 2 (PostgreSQL + pgvector + AGE + bge-m3 + reranker) |
+| EV-4 | Multi-machine sync via Yjs+Automerge BRAIN service | this IS BRAIN P1; critical path |
+| EV-5 | Tenant isolation + cap evolution under DEC-070 supersede | needs multi-tenant infra |
+| EV-6 | MCP Gateway integration + GraphQL contracts + skill-registry v0.2.0 wiring | needs CyberOS modules |
+| EV-7 | AI-native: GraphRAG community summaries + multi-modal frames | needs Layer 2 |
+| EV-8 | Compliance ring 2/3 + governance + post-quantum migration | enterprise-procurement readiness |
+
+**Backward compatibility commitment:** every future stage preserves the §7.2 chain LINK invariant, the six-op surface (§4), and the closed-set §5.1 frontmatter. Schema additions land via §0.5 approved upgrades; pre-existing memories never need rewriting.
+
+**Recalibration after local-optimization shipped (2026-05-10):** several gaps EV-1 / EV-2 / EV-3 / EV-5 listed are now partially or fully addressed at the local-Layer-1 level. When this roadmap is reactivated post-BRAIN-service, those are already-shipped primitives — they just need promotion into the multi-machine / multi-tenant context the BRAIN service introduces.
+
+The detailed 8-stage breakdown lived at `docs/CyberOS-AGENTS.EVOLUTION.md` (deleted in consolidation; full content preserved in git history). When CyberOS-the-product starts building, regenerate from this Part 19 outline + the surrounding PRD/SRS context.
+
+---
+
+## Part 20 — Proposals: Stage 1 protocol upgrade (LANDED)
+
+*Inlined historical proposal. Original at `docs/proposals/STAGE-1-PROTOCOL-UPGRADE.md` (deleted in consolidation). LANDED 2026-05-10 as `sha256:576368…`.*
+
+### Stage 1 — Protocol Upgrade Proposal
+
+**Status**: Draft, ready for §0.5 chat-turn approval
+**Source plan**: `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` Stage 1
+**Targets**: AGENTS.md §4.7, §5.5, §6, §8.7
+
+This document is the **exact prose to insert/replace in AGENTS.md** when you approve Stage 1. After approval, the related-files chain (§0.6) requires updates to the CHANGELOG, PRD, SRS, and a `memories/refinements/REF-NNN-stage-1-session-speed.md` entry — all listed at the bottom.
+
+To adopt: paste the approval phrase from §0.5 in chat, citing the SHA of the post-edit AGENTS.md. The agent computes the SHA after applying the edits below; you can also pre-compute it with `python3 runtime/tools/canonical_sha.py docs/CyberOS-AGENTS.md` (script ships with Stage 2).
+
+---
+
+## Change A — `manifest.reconciliation_checkpoint` field (§6 extension)
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §6, inside the `manifest.json` schema block, alongside the existing `protocol`, `health_check_policy`, `source_tiers` blocks.
+
+### Insert
+
+```json
+"reconciliation_checkpoint": {
+  "audit_id": "<evt_…|null>",
+  "chain": "<sha256:…|null>",
+  "ts": "<ISO-8601|null>"
+}
+```
+
+Add the following sentence after the existing manifest schema:
+
+> **`reconciliation_checkpoint`** records the most recent successfully-completed `op:"session.end"` or `op:"consolidation_run"` row. §4.7 reconciliation walks only rows after this checkpoint when present; falls back to full walk on missing/stale (>30 days) checkpoints or any chain-mismatch. Updated atomically with `op:"session.end"` and `op:"consolidation_run"` writes; never edited independently.
+
+### Why
+
+§4.7 currently walks all audit rows newer than the last `consolidation_run` on every session start. On long-lived stores this is O(N) every session. The checkpoint pin makes it O(rows_since_last_session) for the common case while preserving full-walk safety for edge cases.
+
+### Backward compat
+
+Additive field. Older agents (pre-Stage-1) trip `INCOMPATIBLE:reconciliation_checkpoint` per §13.0's forward-compat tripwire — which is the correct behaviour. Run the latest AGENTS.md.
+
+### Audit row impact
+
+None — the checkpoint is a manifest field, written via the existing `op:"str_replace"` path that already exists for manifest mutations.
+
+---
+
+## Change B — §4.7 reconciliation update
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §4.7 "Reconciliation (session start)".
+
+### Replace
+
+> Walk audit rows newer than the last `consolidation_run`. For each row with `op ∈ {create, str_replace, insert, rename}` that is the most-recent op against its `path` (not later reverted): …
+
+### With
+
+> Walk audit rows newer than `manifest.reconciliation_checkpoint.audit_id` if set; otherwise walk all rows newer than the last `consolidation_run`. If the checkpoint is older than 30 days OR `manifest.reconciliation_checkpoint.chain` does not match the corresponding row in the ledger, fall back to the full-walk path and emit `op:"warn" reason:"stale-checkpoint"`. For each row with `op ∈ {create, str_replace, insert, rename}` that is the most-recent op against its `path` (not later reverted): …
+
+The remainder of §4.7 (existence verification, hash check, orphan detection) is unchanged.
+
+### Why
+
+Operationalises Change A. The 30-day stale-window prevents long-stored checkpoints from masking corruption that accumulated while the BRAIN was unused. The chain-mismatch fallback is the integrity guarantee — if anything has tampered with rows between the checkpoint and the present, full-walk catches it.
+
+---
+
+## Change C — `manifest.read_profile` field (§6 extension + §10 amendment)
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §6 manifest schema, plus a small addition to §10 read protocol.
+
+### Insert in §6
+
+```json
+"read_profile": {
+  "eager_scopes": ["meta"],
+  "lazy_scopes": ["company", "module", "member", "client", "project",
+                  "persona", "memories"]
+}
+```
+
+### Add to §10 (after step 1)
+
+> **1a. Honour `manifest.read_profile`.** Eager scopes load on every session start. Lazy scopes load on first reference to a path within them per the request-implied logic in step 3. Default profile: `eager_scopes: ["meta"]`, all other scopes lazy. Projects may override.
+
+### Why
+
+The existing §10 specifies "load only what's needed" but leaves the eager/lazy boundary implicit. Making it explicit-and-configurable lets long-running sessions skip unrelated scope reads.
+
+### Backward compat
+
+Additive. Default profile is the existing implicit behaviour. Older agents that ignore the field continue working.
+
+---
+
+## Change D — Frontmatter compactness rule (§5.1 amendment)
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §5.1, after the existing 28-field schema description.
+
+### Insert
+
+> **Frontmatter compactness (write-side).** When emitting frontmatter, omit any field whose value is `null` OR an empty array OR an empty object, EXCEPT for fields explicitly required by `classification` (consent block for `personnel`/`client`) or `tombstoned: true` (deleted_at/deleted_by/tombstone_reason). Read-side accepts both compact and verbose forms — omitted optional fields default to `null`/empty. The 28-field closed-set rule applies only to *recognised* fields; absence of optional fields is not a schema violation.
+
+### Why
+
+The 28-field schema currently encourages emitting every field — a chat memory often has `expires_at: null`, `embedding: {model: null, version: null, vector_id: null}`, `consent: {has_consent: null, ...}`, etc. These bloat frontmatter to 800+ bytes when 200 would suffice. Compactness drops typical frontmatter 30-40% and reduces the chance of hitting the 4 KB hard cap.
+
+### Backward compat
+
+Read-side change is purely permissive (already accepts missing optional fields). Write-side is opt-in via the rule; existing reference impls (e.g. `brain_writer.py` in PRD §5.10.11) update on next §0.5 cycle.
+
+---
+
+## Change E — §8.7 self-audit phase 4 update
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §8.7, in the "Six checks, in order:" list, replace check 4.
+
+### Replace
+
+> 4. **Audit chain integrity** — verify LINK integrity end-to-end (not just incremental like §4.7): for each row N, confirm `row[N].prev_chain == row[N-1].chain`. LINK integrity is the authoritative invariant per §7.2's cross-writer-version compatibility clause. Hash recomputation (`chain == sha256_hex(canonical_json(row_without_chain_or_prev_chain) || prev_chain)` per §7.2) MAY be performed and reported at INFO severity; recomputation differences across writer versions are NOT chain breaks. Confirm `manifest.audit_chain_head` is reachable in the ledger.
+
+### With
+
+> 4. **Audit chain integrity** — verify LINK integrity end-to-end (not just incremental like §4.7): for each row N, confirm `row[N].prev_chain == row[N-1].chain`. LINK integrity is the authoritative invariant per §7.2's cross-writer-version compatibility clause. Hash recomputation (`chain == sha256_hex(canonical_json(row_without_chain_or_prev_chain) || prev_chain)` per §7.2) MAY be performed and reported at INFO severity; recomputation differences across writer versions are NOT chain breaks. Confirm `manifest.audit_chain_head` is reachable in the ledger. **Additionally, if `manifest.reconciliation_checkpoint` is set, confirm `checkpoint.audit_id` resolves to a row in the ledger AND `checkpoint.chain` matches that row's `chain`. Mismatch → `CRITICAL stale-checkpoint`; freezes writes until reconciled per §4.7 fallback.**
+
+### Why
+
+Stage 1's checkpoint pin needs §8.7 to verify it as part of the routine self-audit. The check is cheap (one row lookup) but catches the case where a backup/restore drops the manifest in but ledger files out of sync.
+
+---
+
+## Order of operations to land Stage 1
+
+Per AGENTS.md §0.5 + §0.6:
+
+1. **Edit AGENTS.md** with Changes A–E above.
+2. **Archive prior verbatim** to `meta/protocol-history/AGENTS-<before_sha256>.md` (per §0.5 step 1).
+3. **`str_replace` on `manifest.json`** to update `manifest.protocol.sha256`, `approved_at`, `approved_by`.
+4. **Append `op:"protocol_upgrade"`** to the audit ledger with `before_hash`/`after_hash` for the manifest, `reason: "<before_sha256> → <after_sha256> per §0.5 (Stage 1: session-start speed)"`.
+5. **Auto-trigger §8.7 self-audit pass** per §0.5 step 4. Output → `meta/health/<YYYY-MM-DD>-<sha>-postupgrade.md`.
+6. **Update CHANGELOGs** per §0.6:
+   - `docs/CyberOS-AGENTS.CHANGELOG.md` — new dated section for this upgrade
+   - `docs/CyberOS-PRD.CHANGELOG.md` — note Stage-1 absorption against PRD §5.3.2 (six file ops) and §5.3.5 (Auto Dream)
+   - `docs/CyberOS-SRS.CHANGELOG.md` — note implementation specification for the new manifest fields + §4.7 amendment
+7. **Write `memories/refinements/REF-NNN-stage-1-session-speed.md`** — refinement record per §0.4.
+8. **Add new DEC entry** in PRD §5.9 / Part 13: `DEC-NNN — Reconciliation checkpoint + lazy-load profile + frontmatter compactness (Stage 1)`. Status: Locked. Cite Changes A–E as implementation refs.
+
+## Approval phrase to land
+
+In chat, you say:
+
+> *"approve protocol upgrade to sha256:<computed-sha-after-applying-A-through-E>"*
+
+The agent computes the canonical SHA of the post-edit AGENTS.md (NFC, LF, BOM strip, trim per line, single terminating LF — per §0.5 canonical form), confirms the SHA matches your phrase, then runs steps 1-8 above as a single atomic operation.
+
+If you want a dry-run, say *"preview protocol upgrade for Stage 1"* — the agent walks you through the edits without applying them.
+
+---
+
+## After Stage 1 lands
+
+The Stage 2 work (already shipped in `runtime/tools/cyberos_validate.py`) gains coverage of the new fields: it'll start verifying the checkpoint pin as part of the chain-integrity check. The validator's `--self-test` corpus gains a `16-stale-checkpoint/` fixture demonstrating the new failure mode.
+
+The remaining Stage 2 work — `cyberos-doctor` recovery CLI — depends on Stage 1 being landed (it uses the checkpoint to scope diagnostic operations). Once Stage 1 lands, Stage 2 can complete.
+
+Stages 3–6 follow.
+
+---
+
+## Part 21 — Proposals: Stage 5 open questions (decision baseline; LANDED)
+
+*Inlined historical decision-rationale. Original at `docs/proposals/STAGE-5-OPEN-QUESTIONS.md` (deleted in consolidation). Decisions baseline for Stage 5 (LANDED 2026-05-10 as `sha256:d3ce97…`); 'go with your recs' approval.*
+
+### Stage 5 — Open questions before encryption ships
+
+**Status**: Decision-blocked. Stage 5 (at-rest encryption + Shamir 3-of-5 escrow) needs your input on five questions before I can write the proposal text + reference implementation.
+
+This document lists the questions, the considered options, and my recommendation for each. Reply with your choices (or "go with your recs") and I'll draft the §0.5 upgrade proposal + ship `cyberos_encrypt.py`.
+
+---
+
+## Question 1 — Default scopes for encryption
+
+When `manifest.encryption_policy.enabled = true`, which scopes get encrypted by default?
+
+**Options:**
+- **(a) Conservative**: only `member/<self>/private/` — narrowest possible scope, opt-in per-other-scope
+- **(b) Sensitive-by-classification**: any memory with `classification: personnel` or `classification: client`
+- **(c) Sensitive-plus-private**: combine (a) and (b) — covers private personal scope plus all personnel/client across scopes
+- **(d) Everything except `public`**: encrypt all `personnel | client | operational` memories; only `public` stays plaintext
+
+**Tradeoffs:**
+- (a) is hardest to misuse but covers the least surface; an outsider opening `member/<self>/notes-on-employees.md` (not in `private/`) sees plaintext personnel notes
+- (b) auto-protects sensitive content based on the existing classification system but doesn't catch private-but-operational memories (e.g., founder's own working notes)
+- (c) is what most security frameworks would recommend
+- (d) is broadest but slows down any tool that doesn't have the key (e.g., grep against `operational` notes won't work without decrypting)
+
+**My recommendation:** **(c) Sensitive-plus-private**. The §9.3 denylist already structurally excludes the highest-stakes content (comp/ESOP/secrets) — encryption protects the second tier (perf reviews, client engagement context, founder's private notes). Allows fast grep against `operational` and `public` for daily search.
+
+---
+
+## Question 2 — Hardware-key fallback policy
+
+When the hardware key is unavailable (Touch ID disabled, TPM not provisioned, FIDO2 token not plugged in), what happens?
+
+**Options:**
+- **(a) Refuse to operate** — if encryption is enabled and HW key is unavailable, the BRAIN is read-frozen until HW key returns
+- **(b) Argon2id passphrase fallback** — prompt for a passphrase; derive master key via Argon2id (t=3, m=64MiB, p=4); cache in memory for the session
+- **(c) Both — HW key OR passphrase** — accept either, even simultaneously enrolled; choice at runtime
+- **(d) HW key only** — no passphrase fallback; lost HW = use Shamir 3-of-5 recovery
+
+**Tradeoffs:**
+- (a) is the safest but creates rage-quit moments when you're away from your usual machine
+- (b) is the user-friendly default but a passphrase is the weakest link if it's not very strong
+- (c) is most flexible but doubles the attack surface
+- (d) is purest but means a dead Touch ID sensor = mandatory recovery flow (annoying for routine work)
+
+**My recommendation:** **(c) Both — HW key OR passphrase**. Hardware key is the default daily flow; passphrase is the fallback when traveling, on borrowed equipment, or after a hardware failure. Shamir is for catastrophic loss only.
+
+---
+
+## Question 3 — Shamir 3-of-5 fragment holders
+
+The Shamir Secret Sharing scheme splits the master key into 5 fragments; any 3 reconstruct it. Who holds the fragments?
+
+**Default plan:** 5 holders, 3-of-5 threshold.
+
+**Options for holder roles:**
+- **Holder 1**: Stephen (primary; safe-deposit box or password manager)
+- **Holder 2**: Co-founder / business partner (encrypted offline or hardware token)
+- **Holder 3**: Family member (spouse / sibling) — physical paper QR in a sealed envelope
+- **Holder 4**: Lawyer / notary — sealed and instructed to release only on specific conditions
+- **Holder 5**: Geographically-distant trusted contact (e.g. a CyberSkill cofounder elsewhere)
+
+**Questions for you:**
+- (a) Are 3-of-5 thresholds right? Or do you want 2-of-3 (smaller circle, faster recovery) or 4-of-7 (larger redundancy, slower)?
+- (b) Who specifically should hold each fragment? Or do you want me to leave holder identification as a guided wizard step at encryption-enable time?
+- (c) Do you want a "deadman switch" pattern — fragments released after N months of inactivity to designated heirs? (Requires additional infrastructure; default OFF.)
+
+**My recommendations:**
+- (a) **3-of-5** is the canonical balance. Lose any 2 fragments and you're still fine; you need active cooperation of 3 to misuse.
+- (b) **Wizard at enable time.** Don't bake holder identities into the proposal — ask at the wizard step. Holders can rotate later via `op:"shamir_rotation"`.
+- (c) **Deadman switch DEFAULT OFF.** Adds infrastructure complexity (timer, notification system) for a feature most users won't use. Document as future opt-in.
+
+---
+
+## Question 4 — Encrypt frontmatter or body-only?
+
+The XChaCha20-Poly1305 envelope can encrypt:
+- **(a) Body-only** — frontmatter stays plaintext; indexes (Stage 3) work without the key
+- **(b) Body + selective frontmatter fields** — encrypt fields like `tags`, `relationships`, `provenance.source_ref` if they leak intent
+- **(c) Whole-file** — entire memory file encrypted; nothing readable without the key
+
+**Tradeoffs:**
+- (a) lets `cyberos_index.py` build tag/relationship/source-SHA indices over encrypted memories; lets `cyberos_validate.py` verify schema + chain integrity. Frontmatter leaks "this memory is `personnel` classification with `confidence: 0.85`" which is metadata-only.
+- (b) protects intent fields but breaks tag/relationship indexing for those memories
+- (c) maximises confidentiality but breaks all derived caches; key required for any operation including `view`
+
+**My recommendation:** **(a) Body-only**. The frontmatter is metadata-only (no PII; the §5.1 closed-set forbids body content in frontmatter). Tools and indexes keep working. The PRD §5.8 denylist already structurally excludes the highest-stakes content from being stored at all.
+
+---
+
+## Question 5 — Migration strategy for existing memories
+
+When you turn on encryption for an existing store with N memories already in plaintext, what happens?
+
+**Options:**
+- **(a) Lazy migration** — encrypt on first write of each memory; old plaintext stays until touched
+- **(b) One-shot migration** — `cyberos-encrypt enable --migrate` walks all in-scope memories, re-writes each as encrypted, audits each as `op:"str_replace"`
+- **(c) User-paced migration** — enable encryption for new writes; show a migration counter ("N memories still plaintext"); user runs `--migrate-batch 50` whenever they want
+- **(d) Refuse to enable until empty** — only allow encryption on a fresh `.cyberos-memory/` (impractical)
+
+**Tradeoffs:**
+- (a) is simplest but leaves a long tail of plaintext-on-disk indefinitely
+- (b) is safest but generates many audit rows + a long lock window during the rewrite
+- (c) is the user-friendly compromise; user controls the audit-row generation rate
+- (d) is purest but useless for the existing live store
+
+**My recommendation:** **(c) User-paced migration** with `--migrate-batch <N>` (default 50). Each batch runs as one `op:"maintenance.start"`/`op:"maintenance.end"` envelope per §8.8 with one `op:"str_replace"` per memory. Lets you migrate incrementally, watch for issues, and pause if anything looks off.
+
+---
+
+## Summary — my recommendation rolled up
+
+If you say "go with your recs":
+
+- Default encrypted scopes: `member/<self>/private/` + all `personnel`/`client` classification memories
+- Hardware key OR Argon2id passphrase, both accepted
+- 3-of-5 Shamir with holders chosen via wizard at enable time; no deadman switch
+- Body-only encryption (frontmatter stays indexable)
+- User-paced migration via `--migrate-batch 50`
+
+These five together give you a defensible defaults set that most security teams would sign off on.
+
+## What I'll ship after you decide
+
+Once you respond:
+
+1. **`docs/proposals/STAGE-5-PROTOCOL-UPGRADE.md`** — the §0.5 upgrade text following the same pattern as Stage 1 and Stage 6 proposals. Adds `manifest.encryption_policy`, `manifest.shamir_fragments`, `op:"key_rotation"`, `op:"key_recovery_initiated"`, `op:"key_recovered"`, `op:"shamir_rotation"`, `op:"shamir_distribution_confirmed"`, `op:"encryption_policy_change"` as new audit op kinds. Adds the `encrypted: true` frontmatter flag.
+2. **`runtime/tools/cyberos_encrypt.py`** — implementation. CLI subcommands:
+   - `enable` — wizard flow: detect HW key, generate master, Shamir-split, walk holder distribution, confirm fragments, finally flip the flag
+   - `disable` — decrypt all → re-encrypt with no policy → flip flag, audited
+   - `migrate-batch <N>` — encrypt N more in-scope memories
+   - `rotate-shamir` — generate fresh 5 fragments without changing master key
+   - `recover` — accept ≥ threshold fragments, reconstruct master, re-key
+   - `status` — show encryption coverage stats (encrypted vs plaintext per scope)
+3. **`runtime/tools/cyberos_validate.py`** extension — verify encrypted memories' chain integrity (works without key; uses recorded `after_hash` over plaintext per Stage 5 design).
+4. **`docs/cookbook/encryption-and-recovery.md`** — operational guide, including the recovery flow walkthrough.
+
+Estimated work: 8–12 hours focused, depending on platform-specific HW-key wiring complexity.
+
+---
+
+## Prerequisites already satisfied
+
+- ✅ Stage 1 landed (reconciliation_checkpoint provides ledger-state anchor for encrypted-memory writes)
+- ✅ Stage 2 landed (cyberos_validate + cyberos_doctor — encrypted memories integrate with existing repair flows)
+- ✅ Stage 3 landed (cyberos_index — frontmatter-based indexes work on encrypted memories per Q4 recommendation)
+- ✅ Stage 4 landed (cyberos_export — bundles include encrypted memories naturally)
+
+Stage 5 is unblocked from a tooling perspective. The decision is purely policy.
+
+---
+
+## Reply format
+
+You can reply with any of:
+
+- **"Go with your recs"** — I ship the defaults above.
+- **"Q1=c Q2=a Q3=2-of-3 Q4=a Q5=b"** — terse override of any subset.
+- **A free-form message** answering whichever questions you have opinions on; I'll ask follow-ups for the rest.
+
+Or **"defer Stage 5"** — I close it as parked and the local-optimization roadmap is functionally complete with Stages 1, 2, 3, 4 shipped + Stage 6 proposal authored.
+
+---
+
+## Part 22 — Proposals: Stage 5 protocol upgrade (LANDED)
+
+*Inlined historical proposal. Original at `docs/proposals/STAGE-5-PROTOCOL-UPGRADE.md` (deleted in consolidation). LANDED 2026-05-10 as `sha256:d3ce97…`.*
+
+### Stage 5 — Protocol Upgrade Proposal
+
+**Status**: Draft, ready for §0.5 chat-turn approval
+**Source plan**: `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` Stage 5
+**Decisions baseline**: `docs/proposals/STAGE-5-OPEN-QUESTIONS.md` — defaults selected via "go with your recs" (2026-05-10)
+**Targets**: AGENTS.md §4.6, §5.1 (frontmatter extension), §5.6 (new), §6 (manifest extension), §7.1 (audit op enum extension), §9.3 (clarification), §17.6 (cross-link)
+
+This document is the **exact prose to add/modify in AGENTS.md** when you approve Stage 5. Reflects your decisions:
+
+- **Q1 = (c) Sensitive-plus-private** — encrypt `member/<self>/private/` + all `personnel | client` classification
+- **Q2 = (c) Both — HW key OR Argon2id passphrase** — both accepted; passphrase enforced ≥16 chars + zxcvbn ≥3
+- **Q3 = 3-of-5 Shamir, wizard-time holders, no deadman switch**
+- **Q4 = (a) Body-only encryption** — frontmatter stays plaintext for index compatibility
+- **Q5 = (c) User-paced migration via `--migrate-batch <N>`** (default 50)
+
+To adopt: paste the §0.5 approval phrase in chat with the SHA after Changes A–F apply.
+
+---
+
+## Change A — §5.6 (new) at-rest encryption envelope
+
+### Where
+
+`docs/CyberOS-AGENTS.md` after §5.5 (Resource caps), before §6 (manifest schema). Insert new §5.6.
+
+### Insert
+
+```markdown
+## 5.6 At-rest encryption (opt-in)
+
+When `manifest.encryption_policy.enabled = true`, memories matching the policy's
+scope filter are stored as XChaCha20-Poly1305 ciphertext in the body of the
+memory file. Frontmatter stays plaintext (per §5.6.4 — preserves §5.1 schema
+verifiability and Stage 3 indexing).
+
+### 5.6.1 Encryption envelope (per-file)
+
+Each encrypted memory file follows the §5.1 frontmatter shape with one new
+required field set:
+
+```yaml
+encrypted: true
+encryption:
+  algorithm: xchacha20poly1305-ietf
+  nonce: <base64 of 24 random bytes>
+  aad: sha256(<memory_id> || <last_updated_at>)   # binds nonce to identity
+```
+
+Body is `base64(ciphertext || 16-byte tag)`. Plaintext recovered by:
+
+```
+plaintext = chacha20_decrypt(
+    key      = master_key_derived_per_§5.6.2,
+    nonce    = base64_decode(frontmatter.encryption.nonce),
+    aad      = sha256_hex(memory_id || last_updated_at),
+    body     = base64_decode(file.body),
+)
+```
+
+Key reuse across files is permitted iff nonces are distinct (24-byte random
+nonces collide with probability ~2⁻⁹⁶, far below any practical bound).
+
+### 5.6.2 Key derivation
+
+Master key derived via HKDF-SHA256 from one of two sources, both accepted when
+configured:
+
+- **Hardware-bound (preferred path):**
+  - macOS: Apple Secure Enclave key (Touch ID prompt at first decrypt of session)
+  - Windows: TPM 2.0 key (Windows Hello)
+  - Linux: TPM 2.0 via `tpm2-tools` OR FIDO2 hmac-secret
+- **Passphrase fallback (Argon2id):**
+  - parameters: t=3, m=64MiB, p=4 (per RFC 9106 recommendation)
+  - passphrase MUST satisfy: ≥16 chars AND zxcvbn score ≥3 at enable time
+  - cached in memory for the session; never written to disk
+
+Key cached in process memory only; never persisted in plaintext. Lost
+key (both HW unavailable AND passphrase forgotten) → recover via §5.6.3.
+
+### 5.6.3 Shamir 3-of-5 recovery escrow (mandatory)
+
+Encryption-enable refuses to flip `enabled = true` until 5 fragments of the
+master key have been generated via Shamir Secret Sharing (3-of-5 threshold)
+AND the user has confirmed distribution to 5 holders.
+
+Fragment fingerprints + holder labels + creation timestamps are recorded in
+`meta/key-policy.md`. The fragments themselves NEVER enter `.cyberos-memory/`.
+
+Recovery flow (under MAINTENANCE mode §8.8):
+1. User collects ≥3 fragments out-of-band
+2. `cyberos-encrypt recover` accepts fragments via stdin/QR/base32 paste
+3. Master key reconstructed; verified against fingerprint pinned in
+   `meta/key-policy.md`
+4. `op:"key_recovery_initiated"` audit row appended at fragment intake
+5. `op:"key_recovered"` audit row appended on successful reconstruction
+
+Fragment rotation (refresh the 5 fragments without changing the master key):
+- `op:"shamir_rotation"` audit row records the new fingerprint set
+- Old fragments become useless once the new set is distributed
+
+### 5.6.4 Indexability
+
+Frontmatter remains plaintext so that:
+- `cyberos_validate.py` verifies §5.1 schema + chain integrity without the key
+- `cyberos_index.py` builds tag/relationship/source-SHA indices over encrypted
+  memories
+- `cyberos_doctor.py` repairs encrypted memories' chain consistency without
+  decrypting bodies
+
+The §9.3 denylist remains structural — encryption does NOT soften it. Comp,
+ESOP, gov-IDs, raw secrets, special-category PII are still forbidden from
+ANY storage form regardless of `encryption_policy`.
+
+### 5.6.5 Audit-chain compatibility
+
+Audit rows over encrypted memories store `after_hash` over the **plaintext**
+body (computed at write time, before encryption). This preserves chain LINK
+integrity when reading the BRAIN with the key. Without the key, chain
+verification is degraded: LINK invariant remains verifiable, but plaintext
+reconstruction for spot-verification requires the key.
+```
+
+### Backward compat
+
+`encrypted: true` is a new optional frontmatter field; older agents trip
+`INCOMPATIBLE` per §13.0 forward-compat tripwire (intended). Stores with
+encryption disabled remain bit-identical to pre-Stage-5 stores.
+
+---
+
+## Change B — §6 manifest extensions
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §6, inside the `manifest.json` schema block. Add new top-level fields after the existing `compaction_policy` block (Stage 6 already added it).
+
+### Insert
+
+```json
+"encryption_policy": {
+  "enabled": false,
+  "scopes": ["member:<self>/private", "classification:personnel", "classification:client"],
+  "algorithm": "xchacha20poly1305-ietf",
+  "key_derivation": "hkdf-sha256-from-hardware-bound",
+  "fallback_kdf": "argon2id-t3-m64-p4",
+  "passphrase_strength_minimum": {"min_chars": 16, "zxcvbn_score": 3}
+},
+"shamir_fragments": {
+  "threshold": 3,
+  "total": 5,
+  "master_key_fingerprint": null,
+  "fragments": []
+}
+```
+
+Each entry in `shamir_fragments.fragments` is `{label, fingerprint, created_at, distributed_at|null}`.
+
+### Add to §6 explanation paragraphs
+
+> **`encryption_policy`** — opt-in at-rest encryption per §5.6. Default
+> `enabled: false`. Mutating any field requires the wizard flow at
+> `runtime/tools/cyberos_encrypt.py enable` or chat-turn approval per §0.5.
+> The `scopes` list uses the syntax `<scope-pattern>` for paths or
+> `classification:<class>` for classification-keyed selection. Memories
+> matching ANY entry are encrypted.
+>
+> **`shamir_fragments`** — recovery-escrow registry per §5.6.3. Default
+> empty array. Fragments themselves are NEVER stored here — only their
+> fingerprints. Threshold and total are pinned at enable time and rotated
+> only via `op:"shamir_rotation"`.
+
+---
+
+## Change C — §7.1 audit op enum extension
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §7.1, in the `op:` field's enum list.
+
+### Replace
+
+The existing op enum gains seven new values:
+
+```
+"op": "session.start|session.end|create|str_replace|insert|delete|rename|view|rejected|revert|corrects|consolidation_run|export|import|skipped-by-user|lock_recovered|protocol_upgrade|protocol_rollback|health_check|warn|drift_candidate|shallow_candidate|maintenance.start|maintenance.end|ledger_compact|ledger_decompact|encryption_policy_change|key_rotation|key_recovery_initiated|key_recovered|shamir_rotation|shamir_distribution_confirmed"
+```
+
+Notes:
+- `encryption_policy_change` — emitted on enable/disable
+- `key_rotation` — re-derive master key (e.g., HW key replaced); existing
+  encrypted bodies re-encrypted with new key over multiple sessions via
+  `--migrate-batch`
+- `key_recovery_initiated` — fragment intake started
+- `key_recovered` — master key reconstructed
+- `shamir_rotation` — refresh fragment set without changing master key
+- `shamir_distribution_confirmed` — emitted per fragment as user confirms
+  distribution to its holder
+
+### Backward compat
+
+Older agents that don't recognise these op values will fail their op-enum
+validation and emit `op:"rejected" reason:"unknown-op"`. This is the intended
+forward-compat behaviour.
+
+---
+
+## Change D — §4.6 tombstone amendment for encrypted memories
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §4.6, after the existing tombstone description.
+
+### Insert
+
+```markdown
+**Encrypted memories.** `delete` on an encrypted memory tombstones the
+frontmatter as usual; the encrypted body remains base64-ciphertext. Tombstoned
+encrypted memories are decrypted ONLY during MAINTENANCE-mode hard-erase flows
+(per §0.6 right-to-erasure documentation). Routine BRAIN reads SKIP tombstoned
+encrypted bodies — no decryption attempt.
+```
+
+---
+
+## Change E — §9.3 denylist clarification
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §9.3, after the existing denylist enumeration, add a paragraph clarifying the encryption boundary.
+
+### Insert
+
+```markdown
+**Encryption is NOT a denylist softener.** When `manifest.encryption_policy.enabled = true`
+(§5.6), the encryption envelope protects classification-eligible content from
+disk-level snooping. It does NOT change what content is allowed to be written.
+The denylist categories above (compensation, ESOP, gov IDs, bank/card, home
+addresses, health PII, secrets, external-party PII without consent) remain
+forbidden from ANY storage form — encrypted or plaintext. The §4.2 content
+gate runs BEFORE the encryption envelope; denylist hits are rejected before
+any cryptographic operation.
+```
+
+---
+
+## Change F — §17.6 cross-link
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §17.6 (existing forward-reference about key management).
+
+### Replace
+
+The existing line:
+
+> Cryptographic key rotation for `subject:<id>` Ed25519 keys (key-management
+> policy belongs in `meta/key-policy.md`, not here).
+
+### With
+
+> Cryptographic key rotation for `subject:<id>` Ed25519 signing keys AND for
+> `manifest.encryption_policy` master keys (per §5.6.2) belongs in
+> `meta/key-policy.md`. Rotation events are audited via `op:"key_rotation"`
+> + `op:"shamir_rotation"` per §7.1.
+
+---
+
+## Order of operations to land Stage 5
+
+Per AGENTS.md §0.5 + §0.6:
+
+1. **Edit AGENTS.md** with Changes A–F.
+2. **Archive prior verbatim** to `meta/protocol-history/AGENTS-<before_sha256>.md`.
+3. **`str_replace` on `manifest.json`** to add `encryption_policy` (default `enabled: false`) and `shamir_fragments` (default empty). Do NOT enable encryption yet — that's a separate `cyberos-encrypt enable` wizard step.
+4. **Append `op:"protocol_upgrade"`** to the audit ledger.
+5. **Auto-trigger §8.7 self-audit pass** per §0.5 step 4.
+6. **Update CHANGELOGs** per §0.6 (AGENTS, PRD, SRS).
+7. **Write `memories/refinements/REF-NNN-stage-5-encryption.md`** per §0.4.
+8. **Add new DEC entry** in PRD §5.9 / Part 13: `DEC-NNN — Stage 5: At-rest encryption + Shamir 3-of-5 escrow`.
+
+## Approval phrase to land
+
+In chat:
+
+> *"approve protocol upgrade to sha256:<computed-sha-after-applying-A-through-F>"*
+
+For preview:
+
+> *"preview protocol upgrade for Stage 5"*
+
+---
+
+## Implementation work that follows landing
+
+After Stage 5 lands via §0.5, the following implementation work becomes possible (no further §0.5 approvals needed for any of these):
+
+### `runtime/tools/cyberos_encrypt.py` (new)
+
+Single-file Python tool, ~600 LOC. Subcommands:
+
+- **`enable`** — wizard flow:
+  1. Detect HW key (Secure Enclave / TPM / FIDO2) → pick available
+  2. If no HW or user opts for passphrase: prompt + zxcvbn + Argon2id derive
+  3. Generate 32-byte master key (CSPRNG)
+  4. Shamir-split via `vsss-rs` (Rust) / `secretsharing` (Python) — 3-of-5
+  5. Render 5 fragments as printable QR codes + base32 strings
+  6. Walk holder distribution wizard (label each fragment, prompt for
+     "press y when handed off")
+  7. Append `op:"shamir_distribution_confirmed"` per fragment
+  8. Verify master-key fingerprint pinned in `meta/key-policy.md`
+  9. Atomic `str_replace` on manifest.json: flip `encryption_policy.enabled = true`
+  10. Append `op:"encryption_policy_change"` audit row
+
+- **`disable`** — decrypt all in-scope memories → re-write plaintext → flip
+  `enabled = false` → audit `op:"encryption_policy_change"`
+
+- **`migrate-batch <N>`** — encrypt N more in-scope plaintext memories under
+  one MAINTENANCE-mode envelope; default N=50; surfaces "X of Y plaintext
+  memories migrated" progress
+
+- **`rotate-shamir`** — generate fresh 5 fragments without changing master key;
+  audit `op:"shamir_rotation"` + 5× `op:"shamir_distribution_confirmed"`
+
+- **`recover`** — accept ≥3 fragments via stdin/QR/base32 paste under
+  MAINTENANCE mode; reconstruct + verify master key against pinned
+  fingerprint; audit `op:"key_recovery_initiated"` then `op:"key_recovered"`
+
+- **`status`** — show encryption coverage stats (encrypted vs plaintext per
+  scope, key-derivation source, Shamir fragment registry)
+
+### `runtime/tools/cyberos_validate.py` extension
+
+- Recognise `encrypted: true` frontmatter
+- Verify chain integrity using stored `after_hash` (over plaintext) without
+  needing the key
+- New finding: `encryption-aad-mismatch` if `aad` doesn't match
+  `sha256(memory_id || last_updated_at)`
+- New finding: `shamir-fingerprint-missing` if `enabled = true` but
+  `shamir_fragments.master_key_fingerprint` is null
+
+### `runtime/tools/cyberos_doctor.py` extension
+
+- New repair op: `R6-rotate-master-key` — re-derive master from new HW key
+  source after hardware change (e.g., new Mac); re-encrypts all in-scope
+  memories under MAINTENANCE mode
+
+### `docs/cookbook/encryption-and-recovery.md` (new)
+
+Operational guide:
+- Enable wizard walkthrough with screenshots
+- Holder selection guidance (suggested patterns: founder + spouse + business
+  partner + lawyer + geographically-distant trusted contact)
+- Recovery flow walkthrough (what to do when HW key is lost AND passphrase
+  is forgotten)
+- Migration playbook (`migrate-batch 50` cadence; how to monitor progress)
+- Hardware key change procedure (`rotate-master-key` after Mac replacement)
+- "What can an attacker see with the encrypted store but no key?" threat model
+
+---
+
+## What stays unchanged
+
+- The §9.3 denylist remains structural; encryption never softens it
+- Audit chain LINK invariant (§7.2) preserved across encrypted memories
+- §11 export determinism preserved — encrypted memories serialise byte-stably
+- Stage 6 Merkle checkpoints + ledger compaction work unchanged on encrypted
+  memories (the ledger is metadata-only; doesn't carry plaintext bodies)
+- §13.0 state classifier rules unchanged
+
+---
+
+## Decision points already resolved
+
+Per the "go with your recs" approval (2026-05-10), all five Q&A from
+`STAGE-5-OPEN-QUESTIONS.md` are pinned to my recommendations. If you want to
+revisit any before final §0.5 approval, edit Changes A–F above and re-issue
+the preview.
+
+---
+
+## Part 23 — Proposals: Stage 6 protocol upgrade (LANDED)
+
+*Inlined historical proposal. Original at `docs/proposals/STAGE-6-PROTOCOL-UPGRADE.md` (deleted in consolidation). LANDED 2026-05-10 as `sha256:77eda21…`.*
+
+### Stage 6 — Protocol Upgrade Proposal
+
+**Status**: Draft, ready for §0.5 chat-turn approval
+**Source plan**: `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` Stage 6
+**Targets**: AGENTS.md §4.9, §7 (new §7.6 + §7.7), §8 (new §8.9), §8.7
+
+This document is the **exact prose to add/modify in AGENTS.md** when you approve Stage 6. Stage 6 is the most invasive protocol change in the local-optimization roadmap because it touches: the audit ledger format (Merkle checkpoints + compaction), the consolidation phase set (new phase 8.9), and the lock semantics (read-shared vs write-exclusive split).
+
+To adopt: paste the §0.5 approval phrase in chat with the SHA after Changes A–D apply.
+
+---
+
+## Change A — Merkle checkpoints (§7.6 new)
+
+### Where
+
+`docs/CyberOS-AGENTS.md` after §7.5 (`op:"corrects"` semantics), insert new section §7.6.
+
+### Insert
+
+```markdown
+### 7.6 Merkle checkpoints
+
+Every successful `op:"consolidation_run"` writes an additional `merkle_root` field
+into the audit row, recording the SHA-256 root of a Merkle tree built over the
+prior N audit rows since the previous checkpoint (or genesis, on first run).
+
+**Merkle tree construction (deterministic):**
+- Leaves: each row's `chain` value (raw bytes, prefix `sha256:` stripped, hex-decoded
+  to 32 bytes).
+- Pairing: pad odd levels by duplicating the last leaf.
+- Internal: `sha256(left || right)` (raw bytes).
+- Root: prefix `sha256:` + hex.
+
+**Field schema extension** (§7.1 row):
+- `merkle_root: <sha256:…>` — set ONLY on `op:"consolidation_run"` rows;
+  null/absent on all other ops.
+- Validators that don't recognise the field treat it as an opaque extension
+  per §13.0 forward-compat rules.
+
+**Verification path:**
+- Walk audit rows in file order.
+- At each `op:"consolidation_run"` row, recompute the Merkle root over the rows
+  since the previous checkpoint (or genesis). Verify equality with the stored
+  `merkle_root`. Mismatch → CRITICAL `merkle-checkpoint-divergence`.
+- Spot-verification of a prefix is O(log N): walk the row of interest's
+  inclusion path against the next checkpoint's stored root.
+
+**Why:** chain prefix verification becomes O(log N) instead of O(N) full-walk.
+The linear `chain` LINK invariant remains canonical (the Merkle root is a
+*derived* index, not a replacement). Stage 6 §8.9 ledger compaction depends on
+this primitive.
+```
+
+### Backward compat
+
+Additive field on consolidation_run rows. Older agents trip `INCOMPATIBLE` per
+§13.0 (intended forward-compat tripwire). Existing chains continue to verify
+via the LINK invariant; the Merkle root only adds an additional verification
+path.
+
+---
+
+## Change B — Audit ledger compaction (§7.7 new)
+
+### Where
+
+`docs/CyberOS-AGENTS.md` after the new §7.6, insert §7.7.
+
+### Insert
+
+```markdown
+### 7.7 Audit ledger compaction (sev-1)
+
+Once a ledger month has been Merkle-checkpointed (§7.6) AND is older than the
+retention horizon (default 12 months; configurable via
+`manifest.compaction_policy.minimum_age_months`), the per-row JSONL MAY be
+collapsed into a per-memory `final_state.jsonl` plus a Merkle proof — preserving
+spot-verifiability without retaining every intermediate row.
+
+**Compaction is opt-in.** Triggered ONLY by the explicit user phrase
+*"compact ledger older than `<YYYY-MM-DD>`"* in the current chat turn. The
+phrase MUST include the cutoff date so silent expansions are impossible (per
+§0.5 chat-turn-approval-only mutation pattern).
+
+**Compaction outputs:**
+- `audit/<YYYY-MM>.compacted.jsonl` — one row per memory_id, carrying:
+  - `memory_id`
+  - `final_op` — `tombstoned | active`
+  - `final_chain` — the chain of the last op against this memory_id in the
+    compacted period
+  - `final_audit_id`, `final_ts`
+  - `merkle_proof` — inclusion path against the period's Merkle root
+- `archive/<YYYY-MM>.jsonl.zst` — zstd-compressed verbatim copy of the
+  original JSONL ledger. Source of truth for re-expansion.
+
+**Compaction is reversible.** `cyberos-doctor decompact-ledger
+--month <YYYY-MM>` re-expands the archive, atomically replacing the
+`<YYYY-MM>.compacted.jsonl` with the original JSONL. Audited as
+`op:"ledger_decompact"`.
+
+**Compaction itself is audited.** On invocation:
+- `op:"ledger_compact"` row appended at the live ledger tail with
+  - `before_hash` over the original JSONL
+  - `after_hash` over the compacted output
+  - `reason` carrying the cutoff date and the user phrase verbatim
+
+**Forbidden by §0.2.** Mutating `compaction_policy` outside the chat-turn
+approval phrase is forbidden.
+
+**Why:** typical disk savings ~80% on year-old ledgers. Spot-verification of
+any row in the compacted period via Merkle proof + the period's checkpoint root.
+```
+
+### Backward compat
+
+Compacted ledgers are recognised by the `.compacted.jsonl` filename suffix.
+Validators MUST handle both forms; agents that don't recognise compaction
+trip §13.0 INCOMPATIBLE on `audit/*.compacted.jsonl` files.
+
+---
+
+## Change C — Consolidation phase 8.9 (§8 extension)
+
+### Where
+
+`docs/CyberOS-AGENTS.md` after §8.8 (MAINTENANCE mode), insert §8.9.
+
+### Insert
+
+```markdown
+### 8.9 Ledger compaction (opt-in, user-triggered)
+
+Phase 8.9 is NOT part of the routine consolidation cycle (§8.1–§8.7). It runs
+**only** on the explicit user phrase *"compact ledger older than `<YYYY-MM-DD>`"*
+per §7.7.
+
+**Pre-conditions** (refuse to compact if violated):
+1. The cutoff month must have a `op:"consolidation_run"` row carrying a
+   `merkle_root` per §7.6 (otherwise no checkpoint to anchor proofs against).
+2. The cutoff month must be older than `manifest.compaction_policy.minimum_age_months`
+   (default 12).
+3. No CRITICAL findings from §8.7 phase 4 (audit chain integrity) for the
+   period being compacted.
+
+**Phase steps:**
+1. Acquire `.lock` (exclusive).
+2. Verify pre-conditions; abort with `op:"rejected" reason:"compaction-precondition:<which>"` on failure.
+3. Build the per-memory `final_state.jsonl` from a single forward walk of the
+   period's rows.
+4. Compute Merkle inclusion proofs for each memory's `final_audit_id`.
+5. zstd-compress the original JSONL into `archive/<YYYY-MM>.jsonl.zst`.
+6. Atomic rename `audit/<YYYY-MM>.jsonl` → `audit/<YYYY-MM>.compacted.jsonl`
+   (keeping the same path so older agents trip INCOMPATIBLE if they encounter
+   a compacted form they don't recognise).
+7. Append `op:"ledger_compact"` to the live ledger.
+8. Release `.lock`.
+
+**Re-expansion** (reverse of compaction) follows the inverse steps under
+MAINTENANCE mode (§8.8); see §7.7.
+```
+
+### Backward compat
+
+Phase 8.9 is opt-in and never auto-runs. Stores that never invoke compaction
+remain bit-identical to pre-Stage-6 stores.
+
+---
+
+## Change D — `.lock.shared` (§4.9 amendment)
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §4.9 — add a new sub-section for shared-read locking.
+
+### Insert (after the existing "Held during" sentence)
+
+```markdown
+### 4.9.1 Shared-read lock (§4.9 extension)
+
+Concurrent agents may safely run **read-only** operations against the same
+store while one agent holds `.lock` for consolidation (§8.1–§8.4). The
+shared-read mechanism uses a sibling file `.lock.shared`:
+
+**Acquisition (read-only path):**
+- POSIX: `flock(.lock.shared, LOCK_SH | LOCK_NB)`
+- Windows: `LockFileEx(.lock.shared, 0)` (shared-mode LockFileEx without exclusive flag)
+
+**Compatibility with `.lock`:**
+- Read-only ops (`view` per §4) acquire `.lock.shared` only.
+- Mutation ops (§4 except `view`) acquire `.lock` (exclusive) and additionally
+  block until all `.lock.shared` holders release.
+- Consolidation phases §8.1–§8.4 acquire `.lock.shared` (allowing other agents
+  to `view` concurrently); upgrade to exclusive `.lock` for §8.5 (manifest
+  update), §8.6 (source-coverage write), §8.7 (health checkpoint).
+
+**Stale recovery** for `.lock.shared`: same semantics as `.lock` (§4.9 stale
+block), 5-minute timeout for cross-host recovery.
+
+**Backward compat:** older agents that don't recognise `.lock.shared` continue
+to use exclusive `.lock` for everything — they get correct semantics, just
+without the concurrency benefit.
+```
+
+### Backward compat
+
+Older agents that don't honour `.lock.shared` simply ignore it; they continue
+to acquire `.lock` exclusive, which is always safe. Stage 6's improvement is
+opportunistic.
+
+---
+
+## Change E — §8.7 phase 4 Merkle verification
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §8.7, in the "Six checks, in order:" list, extend check 4 (already amended in Stage 1).
+
+### Replace
+
+The current Stage-1 amended bullet 4. Replace with:
+
+```markdown
+4. **Audit chain integrity** — verify LINK integrity end-to-end (not just
+   incremental like §4.7): for each row N, confirm
+   `row[N].prev_chain == row[N-1].chain`. LINK integrity is the authoritative
+   invariant per §7.2's cross-writer-version compatibility clause. Hash
+   recomputation (`chain == sha256_hex(canonical_json(row_without_chain_or_prev_chain) || prev_chain)`
+   per §7.2) MAY be performed and reported at INFO severity; recomputation
+   differences across writer versions are NOT chain breaks. Confirm
+   `manifest.audit_chain_head` is reachable in the ledger.
+   **Additionally, if `manifest.reconciliation_checkpoint` is set, confirm
+   `checkpoint.audit_id` resolves to a row in the ledger AND `checkpoint.chain`
+   matches that row's `chain`. Mismatch → `CRITICAL stale-checkpoint`; freezes
+   writes until reconciled per §4.7 fallback.**
+   **Stage 6 extension:** for every `op:"consolidation_run"` row carrying a
+   `merkle_root` field, recompute the Merkle root over the rows since the
+   previous checkpoint and verify equality. Mismatch → `CRITICAL merkle-checkpoint-divergence`.
+   For every compacted ledger (`audit/<YYYY-MM>.compacted.jsonl`), verify each
+   row's `merkle_proof` against the period's checkpoint root. Mismatch →
+   `CRITICAL merkle-proof-divergence`.
+```
+
+---
+
+## Order of operations to land Stage 6
+
+Per AGENTS.md §0.5 + §0.6:
+
+1. **Edit AGENTS.md** with Changes A–E above.
+2. **Archive prior verbatim** to `meta/protocol-history/AGENTS-<before_sha256>.md` per §0.5 step 1.
+3. **`str_replace` on `manifest.json`** to update `manifest.protocol.sha256`, `approved_at`, `approved_by`. Also add (Stage 6) `manifest.compaction_policy = {minimum_age_months: 12}` if customisation desired.
+4. **Append `op:"protocol_upgrade"`** with `before_hash`/`after_hash` for the manifest.
+5. **Auto-trigger §8.7 self-audit pass** per §0.5 step 4. Output → `meta/health/<YYYY-MM-DD>-<sha>-postupgrade.md`.
+6. **Update CHANGELOGs** per §0.6.
+7. **Write `memories/refinements/REF-NNN-stage-6-long-term-health.md`** — refinement record per §0.4.
+8. **Add new DEC entry** in PRD §5.9 / Part 13: `DEC-NNN — Stage 6: Merkle checkpoints + ledger compaction + lock-share split`.
+
+## Approval phrase to land
+
+In chat:
+
+> *"approve protocol upgrade to sha256:<computed-sha-after-applying-A-through-E>"*
+
+The computed SHA must be derived from a candidate file via `runtime/tools/canonical_sha.py`. To preview:
+
+> *"preview protocol upgrade for Stage 6"*
+
+---
+
+## Implementation work that follows landing
+
+After Stage 6 lands via §0.5, the following implementation work becomes possible:
+
+**Validator extension** (cyberos_validate.py)
+- Add `_check_merkle_checkpoints()` method walking consolidation_run rows + recomputing roots
+- Add `_check_compacted_ledger()` for `audit/*.compacted.jsonl` files
+- Test fixtures #17 (merkle-checkpoint-divergence) and #18 (compacted-ledger-good)
+
+**Doctor extension** (cyberos_doctor.py)
+- New repair op: R5-rebuild-merkle-checkpoint (re-derive merkle_root from period rows)
+- New CLI: `cyberos-doctor decompact-ledger --month <YYYY-MM>` for §7.7 reverse path
+- New CLI: `cyberos-doctor verify-merkle <chain>` for spot-verification of a specific row
+
+**Indexer extension** (cyberos_index.py)
+- New table: `merkle_checkpoints(audit_id, root, period_start_audit_id, period_end_audit_id)`
+- New query: `cyberos-index query merkle-proof <chain>` returns the inclusion path
+
+**Cookbook updates**
+- `docs/cookbook/ledger-compaction.md` — when to compact, how to verify a compacted period
+
+**Decision points for landing Stage 6 (none — all auto-applicable)**
+
+Stage 6 changes are mechanically applicable from the proposal text. There are no decision points beyond "yes/no, approve via the §0.5 phrase." Compaction is opt-in, lock-shared is opportunistic, Merkle is additive.
+
+This contrasts with Stage 5 (encryption + Shamir) which has multiple decision points; see `docs/proposals/STAGE-5-OPEN-QUESTIONS.md` once that document is authored.
+
+---
+
+## Part 24 — Proposals: Bundle M (LANDED) + Bundle N pending
+
+*Inlined historical proposal. Original at `docs/proposals/STAGE-7-BUNDLE-M-PROPOSAL.md` (deleted in consolidation). Bundle M LANDED 2026-05-10 as `sha256:9bec84…` (Changes A-D applied). Changes E (§0.5 split) + F (paragraph compression) deferred to Bundle N.*
+
+### Bundle M — AGENTS.md refinement pass (Stage 7 / post-local-optimization)
+
+**Status**: Draft, ready for §0.5 chat-turn approval
+**Source plan**: 2026-05-10 AGENTS.md scan (six refinement candidates surfaced during the all-tracks final pass)
+**Targets**: AGENTS.md §0.5, §4.10/§4.11 (merge), §5.1, §8 heading, §17, paragraph-level compression throughout
+**Functional impact**: ZERO — Bundle M is purely descriptive cleanup. No new ops, no schema changes, no validator changes. Result: ~950-line / ~85 KB AGENTS.md (down from 1210 / 108 KB) without functional drift.
+
+To adopt: paste the §0.5 approval phrase in chat with the SHA after Changes A–F apply.
+
+---
+
+## Why this bundle is non-functional
+
+Every change in Bundle M is one of:
+
+1. **Header text correction** — e.g. "28 fields" → "30 fields" reflecting Stage 5's additions (`encrypted` + `encryption` block). Functionally the schema already accepts these; the header just lagged.
+2. **Heading text correction** — e.g. §8 says "7 phases" but §8.9 exists post-Stage-6. Title clarification.
+3. **Section consolidation** — §4.10 + §4.11 cover related concerns (sequential walk + announcement); merging into one §4.10 with sub-sections cleans cross-references.
+4. **Forward-reference compression** — §17 has 50+ lines on multi-machine sync that's deferred to BRAIN module P1. Compress to 1 paragraph + cross-link to EVOLUTION.md Stage 4.
+5. **Section split for clarity** — §0.5 mixes approval flow + signing-key TOFU + three-way conflict in 52 lines. Split into §0.5 (approval flow) + §0.5.1 (signing-key TOFU, deferred) + §0.5.2 (three-way conflict, deferred).
+6. **Paragraph compression** — 55 paragraphs over 500 chars; many can be split into bullet structure or shorter prose without losing rules.
+
+None of these change what is or isn't permitted. Two agents reading pre-Bundle-M AGENTS.md and post-Bundle-M AGENTS.md will reach identical accept/reject decisions on every input.
+
+---
+
+## Change A — §5.1 schema field-count header update
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §5.1 — the heading text.
+
+### Replace
+
+```markdown
+### 5.1 Frontmatter schema (only these 28 fields are permitted)
+```
+
+### With
+
+```markdown
+### 5.1 Frontmatter schema (closed set; 28 base fields + Stage 5 encryption block)
+
+The schema below lists 28 base fields. Stage 5 (sha256:d3ce97…) added two
+encryption-envelope fields (`encrypted: bool`, `encryption: {algorithm, nonce, aad}`)
+that apply only when `manifest.encryption_policy.enabled = true` per §5.6.
+The closed-set rule applies to the union of these; new fields beyond this
+union require §0.5 protocol upgrade.
+```
+
+### Rationale (not landing in AGENTS.md; documentation only)
+
+Pre-Bundle-M, the header text said "28 fields are permitted" but Stage 5 added `encrypted` + `encryption` block. The schema actually accepts these; the header just hadn't been updated. This change reconciles header to current reality without changing what's accepted.
+
+---
+
+## Change B — §8 heading clarification
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §8 — the H2 heading.
+
+### Replace
+
+```markdown
+## 8. Consolidation (7 phases — only on session-end, ≥25 rows since last, or user command)
+```
+
+### With
+
+```markdown
+## 8. Consolidation (7 routine phases + §8.9 user-triggered ledger compaction; only on session-end, ≥25 rows since last, or user command)
+```
+
+### Rationale
+
+Stage 6 added §8.9 (ledger compaction) but the §8 heading still says "7 phases." Phase 8.9 is opt-in/phrase-triggered, not part of the routine cycle — the heading should reflect both.
+
+---
+
+## Change C — §4.10/§4.11 merge
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §4.10 + §4.11.
+
+### Replace
+
+The current §4.10 (Ingestion completeness) and §4.11 (Token-budget transparency) — they cover sequential-walk and announcement of the same multi-message ingestion process.
+
+### With
+
+A single §4.10 with two sub-sections:
+
+```markdown
+### 4.10 Ingestion completeness (sev-1) — read-side counterpart to §4.4
+
+#### 4.10.1 Sequential walk + coverage check
+
+[existing §4.10 content unchanged]
+
+#### 4.10.2 Token-budget transparency for >500-line sources
+
+[existing §4.11 content unchanged]
+```
+
+### Rationale
+
+Reduces section-count noise. The two rules belong together (read-side discipline for multi-message ingestion). Cross-references that pointed at §4.11 update to §4.10.2.
+
+---
+
+## Change D — §17 forward-references compression
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §17 — multi-machine sync via BRAIN module P1.
+
+### Replace
+
+The current 50+ lines of §17.5 (publish flow forward reference) and §17.6 (what this protocol does NOT define).
+
+### With
+
+Compress to ~10 lines:
+
+```markdown
+### 17.5 Multi-machine sync (forward reference)
+
+`sync_class` is metadata-only until the BRAIN service P1 ships. Until then,
+`publishable` and `shared` memories stay local; the field is recorded for
+future use. Multi-machine semantics, conflict resolution between subjects,
+and the publish/pull wire protocol are deferred to the BRAIN module's
+domain. Tracking: `docs/CyberOS-AGENTS.EVOLUTION.md` Stage 4.
+
+### 17.6 What this protocol does NOT define
+
+- BRAIN service wire protocol (Yjs+Automerge over WebSocket subgraph; deferred to P1)
+- Per-tenant ACLs (PORTAL module)
+- Concurrent-edit resolution between subjects (BRAIN module decision)
+- Cryptographic key rotation policy (`meta/key-policy.md` per §17.5 amendment)
+```
+
+### Rationale
+
+The current §17.5/§17.6 are aspirational forward-references that belong in EVOLUTION.md, not AGENTS.md. Compression makes the protocol focus on what it actually governs today.
+
+---
+
+## Change E — §0.5 section split
+
+### Where
+
+`docs/CyberOS-AGENTS.md` §0.5 — currently 52 lines mixing approval flow, signing-key TOFU, and three-way-conflict logic.
+
+### Replace
+
+Single §0.5 block with mixed concerns.
+
+### With
+
+Split into three sub-sections:
+
+```markdown
+### 0.5 Protocol update policy (sev-0)
+
+[approval phrase + canonical SHA computation + chat-turn approval flow only]
+
+### 0.5.1 Signing-key TOFU (deferred — pre-BRAIN-P1, no canonical out-of-band source mandated)
+
+[the existing TOFU/sigstore/Rekor/DNS-TXT prose]
+
+### 0.5.2 Three-way protocol conflict (deferred — applies only when upstream releases exist)
+
+[the existing three-way conflict resolution prose]
+```
+
+### Rationale
+
+The current §0.5 is dense because it tries to handle four scenarios (single-user approval, signing-key trust establishment, three-way upstream conflict, rollback) in one section. Splitting clarifies that everyday §0.5 is the chat-turn approval flow; the other concerns are deferred until they apply.
+
+---
+
+## Change F — Paragraph compression throughout
+
+### Where
+
+55 paragraphs over 500 chars across §0.2, §6 manifest description, §7.2 RFC 8785 prose, §8.7 self-audit, §13.0 state classifier, others.
+
+### Replace
+
+Long single-paragraph rule descriptions.
+
+### With
+
+Bulleted lists where the paragraph already has list-like structure, broken paragraphs where it doesn't. Lossless; pure formatting.
+
+### Examples (illustrative, not exhaustive)
+
+§7.2 RFC 8785 paragraph currently runs ~600 chars. Bullet form preserves all rules:
+
+```markdown
+**Canonicalisation algorithm: RFC 8785 JCS.** Implementations MUST conform.
+Where this protocol's wording differs, RFC 8785 wins.
+
+- **Object key ordering**: lexicographic on UTF-16 code units (RFC 8785 §3.2.3)
+- **Whitespace**: none — no spaces between separators; no leading/trailing whitespace; no trailing newline
+- **Separators**: `,` between items; `:` between key and value (single ASCII bytes; never with surrounding whitespace)
+- **Strings**: UTF-8 encoded; non-ASCII preserved verbatim (NOT `\uXXXX`-escaped); ...
+- **Numbers**: ECMAScript `Number.prototype.toString` per RFC 8785 §3.2.2.3 — shortest decimal that round-trips through IEEE-754 double
+- **Booleans/null**: lowercase only
+- **Arrays**: order-preserving; no canonicalisation of element order
+- **No duplicate keys** in any object
+```
+
+### Rationale
+
+Easier scanning, identical normative content. CI verification: regenerate AGENTS-CORE.md and confirm SHA — paragraph compression should not change which paragraphs the extractor keeps.
+
+---
+
+## Order of operations to land Bundle M
+
+Per AGENTS.md §0.5 + §0.6:
+
+1. **Edit AGENTS.md** with Changes A–F above. Manual editing because changes are textual + structural; not amenable to programmatic application like Stage 1/5/6 were.
+2. **Archive prior verbatim** to `meta/protocol-history/AGENTS-<before_sha256>.md`.
+3. **`str_replace` on `manifest.json`** to update `protocol.sha256`, `approved_at`, `approved_by`. No new manifest fields.
+4. **Append `op:"protocol_upgrade"`** to the audit ledger.
+5. **Auto-trigger §8.7 self-audit pass** per §0.5 step 4.
+6. **Update CHANGELOGs** per §0.6: AGENTS, PRD, SRS.
+7. **Write `memories/refinements/REF-NNN-bundle-m-refinement-pass.md`** per §0.4.
+8. **No new DEC entry needed** — Bundle M is documentation cleanup, not a decision.
+9. **Regenerate `AGENTS-CORE.md`** with `extract_agents_core.py --aggressive`. Should drop ~5KB / ~1500 tokens because compression in full = compression in core.
+10. **Run validator self-test** (21 fixtures) — should still pass since no functional rules change.
+
+## Approval phrase to land
+
+In chat:
+
+> *"approve protocol upgrade to sha256:<computed-sha-after-applying-A-through-F>"*
+
+For preview:
+
+> *"preview protocol upgrade for Bundle M"*
+
+---
+
+## Risk assessment
+
+**Risk: A change accidentally drops a rule.** Mitigation: every change is documented with its before/after wording. The §8.7 self-audit pass after landing must report 0 CRITICAL findings on the live store (no schema invariant violations, no chain breaks).
+
+**Risk: A change breaks a cross-reference.** Mitigation: §4.11 → §4.10.2 is the only renumbering; grep AGENTS.md for `§4.11` and verify all are updated.
+
+**Risk: AGENTS-CORE.md regeneration produces drift.** Mitigation: regenerate after Bundle M; verify the resulting CORE still contains all required normative rules (manual diff review of the 17 KEEP_FULL sections).
+
+**Risk: External documents reference §X.Y that moved.** Mitigation: 4 documents reference AGENTS.md sections (PRD, SRS, the cookbooks, REF-* memories). Bundle M renumbers only §4.11 → §4.10.2; grep all four sources, update cross-references in the same atomic upgrade.
+
+## Why this is a single bundle
+
+Each of A–F is independently small, but bundling them shares the §0.5 ceremony cost (one archive, one manifest update, one audit row, one §8.7 scan, one CHANGELOG entry). Six small upgrades = 6× ceremony; one Bundle M = 1× ceremony.
+
+This pattern is the protocol's intended use: small refinements bundle, large amendments stand alone (Stage 1, 5, 6 each had their own §0.5 because each introduced new behaviour).
+
 *This README is a living document. When AGENTS.md changes meaningfully (a new section, a new sync class, a new audit op), update the relevant Part above and append a one-line "README updated" entry to `CyberOS-AGENTS.CHANGELOG.md`. The README itself is informational and does not require §0.5 protocol approval; only AGENTS.md edits do.*

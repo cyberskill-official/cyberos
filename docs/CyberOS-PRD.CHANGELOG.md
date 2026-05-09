@@ -6,6 +6,78 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-10 — Bundle M absorbed (functional-zero refinement pass; no DEC entry)
+
+### Not yet applied to CyberOS-PRD.docx
+
+Bundle M is a functional-zero refinement of AGENTS.md (Changes A–D applied; E + F deferred to Bundle N). No new ops, no schema changes, no PRD-level surface change. The PRD-side work is one cross-reference update: §5.10 references to §4.11 should change to §4.10.2 at the next .docx editing session.
+
+No new DEC entry — Bundle M is documentation cleanup, not a decision.
+
+### Real-world trigger
+
+Same as `CyberOS-AGENTS.CHANGELOG.md` (2026-05-10 Bundle M entry).
+
+---
+
+## 2026-05-10 — Stage 5 protocol upgrade absorbed (DEC-108 pending; .docx update deferred)
+
+### Not yet applied to CyberOS-PRD.docx
+
+The Stage 5 protocol upgrade landed six additive amendments to AGENTS.md (§5.6 at-rest encryption envelope, §6 encryption_policy + shamir_fragments fields, §7.1 +8 new ops, §4.6 encrypted-tombstone semantics, §9.3 denylist clarification, §17.6 cross-link refresh). Full text in `docs/CyberOS-AGENTS.CHANGELOG.md` (2026-05-10 Stage 5 entry) and `docs/proposals/STAGE-5-PROTOCOL-UPGRADE.md`.
+
+The PRD-level surface is **§5.8 BRAIN data classification** + **§9.6 Security NFR (SEC)** in Part 11 NFRs. A new sub-section §5.8.1 (`At-rest encryption envelope`) documenting the XChaCha20-Poly1305-IETF + Shamir 3-of-5 escrow design will land in the PRD .docx at the next .docx editing session, alongside Part 13 entry **DEC-108**.
+
+### Pending DEC entry
+
+- **DEC-108** Stage 5: At-rest encryption + Shamir 3-of-5 escrow. Status: Adopted (AGENTS.md §0.5 upgraded to `sha256:d3ce9764ac76635921f6e981a713ea8822eaec442d01200930633a805a84aaf0`); .docx record pending. Deciders: Founder. Reference: AGENTS.md §5.6, §6, §7.1, §4.6, §9.3, §17.6 + `docs/proposals/STAGE-5-PROTOCOL-UPGRADE.md` + `docs/proposals/STAGE-5-OPEN-QUESTIONS.md` (decisions baseline: Q1=c, Q2=c, Q3=3-of-5 wizard, Q4=a body-only, Q5=c user-paced).
+
+### Real-world trigger
+
+Same as `CyberOS-AGENTS.CHANGELOG.md` (2026-05-10 Stage 5 entry).
+
+---
+
+## 2026-05-10 — Stage 6 protocol upgrade absorbed (DEC-107 pending; .docx update deferred)
+
+### Not yet applied to CyberOS-PRD.docx
+
+The Stage 6 protocol upgrade landed five additive amendments to AGENTS.md (§4.9.1 `.lock.shared`, §7.6 Merkle checkpoints, §7.7 ledger compaction, §8.7 phase 4 Merkle verification, §8.9 ledger compaction phase). Full text in `docs/CyberOS-AGENTS.CHANGELOG.md` (2026-05-10 Stage 6 entry) and `docs/proposals/STAGE-6-PROTOCOL-UPGRADE.md`.
+
+The PRD-level surface is **§5.3.5 Auto Dream consolidation** + **§5.10 Ingestion-side discipline**. A new sub-section §5.3.6 (`Merkle checkpoints + ledger compaction`) and Part 13 entry **DEC-107** will land in the PRD .docx at the next .docx editing session.
+
+### Pending DEC entry
+
+- **DEC-107** Stage 6: Merkle checkpoints + ledger compaction + .lock.shared. Status: Adopted (AGENTS.md §0.5 upgraded to `sha256:77eda214d687f8fd8eb826b8699e62614c3b606e980486c7fcd8496f92ce6dfa`); .docx record pending. Deciders: Founder. Reference: AGENTS.md §4.9.1, §7.6, §7.7, §8.7, §8.9 + `docs/proposals/STAGE-6-PROTOCOL-UPGRADE.md`.
+
+### Real-world trigger
+
+Same as `CyberOS-AGENTS.CHANGELOG.md` (2026-05-10 Stage 6 entry).
+
+---
+
+## 2026-05-10 — Stage 1 protocol upgrade absorbed (DEC-106 pending; .docx update deferred)
+
+### Not yet applied to CyberOS-PRD.docx
+
+The Stage 1 protocol upgrade landed five additive amendments to AGENTS.md (§5.1 frontmatter compactness, §6 reconciliation_checkpoint + read_profile, §4.7 incremental reconciliation, §8.7 phase 4 stale-checkpoint check). Full text in `docs/CyberOS-AGENTS.CHANGELOG.md` (2026-05-10 entry) and `docs/proposals/STAGE-1-PROTOCOL-UPGRADE.md`.
+
+The PRD-level surface for this upgrade is **§5.10 Ingestion-side discipline** — adjacent territory to DEC-076..088. A new sub-section §5.10.13 (`Reconciliation checkpoint + lazy-load profile + frontmatter compactness`) and Part 13 entry **DEC-106** will land in the PRD .docx at the next .docx editing session, programmatically via python-docx in the same pattern as prior entries (DEC-087/DEC-088 evening of 2026-05-04).
+
+### Why this is recorded here at all
+
+Same reason as every PRD CHANGELOG entry: traceability. A future reader auditing "what did the PRD say about session-start performance?" should see at a glance that the protocol upgrade landed 2026-05-10, that DEC-106 is pending, and that the canonical contract record is in `CyberOS-AGENTS.CHANGELOG.md`.
+
+### Real-world trigger
+
+User-driven local-optimization design (2026-05-09 evening) — Stephen explicitly scoped the work to "perform optimal with local files (.cyberos-memory folder)" given CyberOS-the-product is still pre-build. The local-optimization plan (`docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`) Stage 1 was approved via §0.5 chat-turn phrase. PRD §5.3 (BRAIN Layer 1) gains a footnote at next .docx update referencing the new §6 manifest fields and §4.7 incremental reconciliation.
+
+### Pending DEC entry
+
+- **DEC-106** Stage 1: Reconciliation checkpoint + lazy-load profile + frontmatter compactness. Status: Adopted (AGENTS.md §0.5 upgraded to `sha256:576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a`); .docx record pending. Deciders: Founder. Reference: AGENTS.md §4.7, §5.1, §6, §8.7 + `docs/proposals/STAGE-1-PROTOCOL-UPGRADE.md`.
+
+---
+
 ## 2026-05-06 — Registry v0.2.4 absorbed (chain entry point; MINOR within scope of DEC-090..093)
 
 ### No .docx edits this round

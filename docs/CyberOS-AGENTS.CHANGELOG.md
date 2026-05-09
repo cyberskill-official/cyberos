@@ -6,6 +6,243 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-10 — Bundle M: AGENTS.md refinement pass (functional-zero)
+
+### Protocol SHA transition
+
+- **Before:** `sha256:d3ce9764ac76635921f6e981a713ea8822eaec442d01200930633a805a84aaf0`
+- **After:**  `sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Changed (4 textual/structural; functional-zero)
+
+- **§5.1 heading + reconciliation paragraph (Change A)** — "only these 28 fields are permitted" → "closed set; 28 base fields + Stage 5 encryption block". Added paragraph clarifying that `encrypted: bool` and `encryption: {algorithm, nonce, aad}` are part of the closed set when `manifest.encryption_policy.enabled = true` per §5.6.
+- **§8 heading (Change B)** — "7 phases" → "7 routine phases + §8.9 user-triggered ledger compaction". Reflects §8.9 added in Stage 6.
+- **§4.10/§4.11 merge (Change C)** — §4.11 promoted under §4.10 as `#### 4.10.2 Token-budget transparency for large sources (sev-2)`; existing §4.10 body becomes `#### 4.10.1 Sequential walk + coverage check`. External references to §4.11 should update to §4.10.2.
+- **§17.5 compression (Change D)** — "Publish flow (forward reference)" reduced from ~10 lines to a 6-line summary. Detail (signed `brain.publish` MCP envelope, `actor_keys` registry, post-P1 manifest extension) referenced in `docs/CyberOS-AGENTS.EVOLUTION.md` Stage 4.
+
+### Deferred to Bundle N
+
+- **Change E — §0.5 split** — split into 0.5 (approval flow only), 0.5.1 (signing-key TOFU), 0.5.2 (three-way protocol conflict). Pre-Bundle-N, these three concerns mix in one 52-line section.
+- **Change F — paragraph compression throughout** — 55 paragraphs over 500 chars across §0.2, §6, §7.2, §8.7, §13.0, others. Pure formatting refactor; preserves all rules.
+
+### Why
+
+The 2026-05-10 AGENTS.md scan identified six refinement candidates that had accumulated as Stage 1, 5, 6 added new sections (§5.6 encryption envelope, §7.6 Merkle, §7.7 compaction, §8.9 compaction phase) without updating cross-cutting headers/counts. Bundle M reconciles header text to current reality. Functional-zero by design — no new ops, no schema changes, no validator changes; two agents reading pre-Bundle-M and post-Bundle-M AGENTS.md reach identical accept/reject decisions on every input.
+
+### Real-world trigger
+
+User-driven post-Stage-5 cleanup pass (2026-05-10). After Tier-1+2+3 implementation work shipped (cyberos_doctor R5/R6, cyberos_index merkle_checkpoints table, cyberos_validate Merkle checks, cyberos_encrypt v1 disable/migrate-batch/rotate-shamir, macOS Secure Enclave HW backend, +5 test fixtures, REF# duplicate dedup), the AGENTS.md scan surfaced 6 remaining textual debts. Bundle M packages 4 of them; remaining 2 deferred to Bundle N because structurally invasive.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329` ✓ matches manifest pin
+- §8.7 post-upgrade scan: 0 CRITICAL, 0 WARN, 1 INFO (pre-existing legacy memory_id); report at `meta/health/2026-05-10-9bec8422359dc80c-postupgrade.md`
+- Validator self-test (21 fixtures) — passes post-upgrade
+- Chain LINK invariant: 318 rows, all chains link
+- AGENTS-CORE.md regenerated post-Bundle-M; reflects §4.11→§4.10.2 renumbering
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — Changes A–D applied; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-d3ce9764ac76635921f6e981a713ea8822eaec442d01200930633a805a84aaf0.md`
+- `.cyberos-memory/manifest.json` — `protocol.{sha256,approved_at,approved_by}`, `audit_chain_head`, `last_updated_at` updated
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:"protocol_upgrade"` row appended (chain `sha256:871cbc4df811b3ea...`); two `op:"create"` rows for the related-files writes
+- `.cyberos-memory/meta/health/2026-05-10-9bec8422359dc80c-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/refinements/REF-037-bundle-m-refinement-pass.md` — refinement memory per §0.4
+- `AGENTS-CORE.md` — regenerated to reflect Bundle M's §4.11→§4.10.2 renumbering
+- `docs/CyberOS-PRD.CHANGELOG.md` — entry added; PRD .docx body integration deferred (DEC-109 entry pending)
+- `docs/CyberOS-SRS.CHANGELOG.md` — entry added; SRS .docx body integration deferred similarly
+
+### No DEC entry needed
+
+Bundle M is documentation cleanup, not a decision. It surfaces existing implicit reality (the Stage 5 encryption fields, the §8.9 phase, the §4.10/§4.11 read-side discipline cluster, the deferred-to-BRAIN-P1 sync details) but doesn't decide anything new.
+
+### Related implementation
+
+- `docs/proposals/STAGE-7-BUNDLE-M-PROPOSAL.md` — proposal text used for this upgrade (preserved as documentation; will not be re-applied)
+
+---
+
+## 2026-05-10 — Stage 5: At-rest encryption + Shamir 3-of-5 escrow (opt-in)
+
+### Protocol SHA transition
+
+- **Before:** `sha256:77eda214d687f8fd8eb826b8699e62614c3b606e980486c7fcd8496f92ce6dfa`
+- **After:**  `sha256:d3ce9764ac76635921f6e981a713ea8822eaec442d01200930633a805a84aaf0`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Added
+
+- **§5.6 At-rest encryption envelope (Change A)** — five sub-sections:
+  - §5.6.1 per-file format: XChaCha20-Poly1305-IETF, 24-byte nonce, AAD `sha256(memory_id || last_updated_at)` binding nonce to identity; body is `base64(ciphertext || 16-byte tag)`
+  - §5.6.2 key derivation: HKDF-SHA256 from HW-bound (Apple Secure Enclave / Windows TPM 2.0 / Linux TPM 2.0 + FIDO2 hmac-secret) OR Argon2id passphrase fallback `t=3, m=64MiB, p=4` per RFC 9106; passphrase MUST satisfy ≥16 chars AND zxcvbn ≥3 at enable time
+  - §5.6.3 mandatory Shamir 3-of-5 escrow: enable refuses `enabled = true` until 5 fragments distributed; fingerprints + holder labels + creation timestamps recorded in `meta/key-policy.md`; fragments themselves NEVER stored in BRAIN
+  - §5.6.4 indexability: frontmatter stays plaintext so `cyberos_validate` / `cyberos_index` / `cyberos_doctor` work without the key
+  - §5.6.5 audit-chain compatibility: `after_hash` over plaintext preserves chain LINK integrity for key-holders
+- **`encryption_policy` manifest field (Change B)** — default `enabled: false`. Scope filter syntax: `<path-pattern>` OR `classification:<class>`. Memories matching ANY entry are encrypted.
+- **`shamir_fragments` manifest field (Change B)** — default empty. Carries `threshold=3, total=5, master_key_fingerprint=null, fragments=[]`. Each `fragments[]` entry: `{label, fingerprint, created_at, distributed_at|null}`. Threshold + total pinned at enable time; rotated only via `op:"shamir_rotation"`.
+- **§7.1 op enum +8 (Change C)** — new ops: `ledger_compact`, `ledger_decompact` (Stage 6 normalisation, were already declared but now formal in enum), `encryption_policy_change`, `key_rotation`, `key_recovery_initiated`, `key_recovered`, `shamir_rotation`, `shamir_distribution_confirmed`.
+
+### Changed
+
+- **§4.6 tombstone semantics (Change D)** — encrypted memories' bodies stay base64-ciphertext after `delete`; routine reads SKIP tombstoned encrypted bodies; only MAINTENANCE-mode hard-erase decrypts.
+- **§9.3 denylist clarification (Change E)** — encryption is NOT a denylist softener. Content gate (§4.2) runs BEFORE encryption envelope; comp/ESOP/gov-IDs/secrets remain forbidden in ANY storage form.
+- **§17.6 cross-link refresh (Change F)** — `meta/key-policy.md` now covers signing keys AND encryption master keys; rotation events audited via `op:"key_rotation"` + `op:"shamir_rotation"`.
+
+### Why
+
+Local-optimization plan (`docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`) Stage 5 — make sensitive `personnel`/`client` memories safe to share via filesystem (lent laptop, contractor backup, machine handoff) without rewriting them. The §9.3 denylist already structurally excludes the highest-stakes content (comp/ESOP/secrets) — encryption protects the second-tier (perf review summaries, client engagement context, founder's private working notes). Body-only encryption preserves Stage 3 indexing + Stage 2 validation work. Mandatory Shamir 3-of-5 escrow prevents the catastrophic-loss failure mode where a forgotten passphrase + dead Touch ID sensor = unrecoverable encrypted memories.
+
+### Real-world trigger
+
+User-driven local-optimization design (2026-05-09 evening). Five Q&A surfaced at `docs/proposals/STAGE-5-OPEN-QUESTIONS.md`; Stephen approved with "go with your recs" (2026-05-10), then approved the §0.5 SHA in the same chat turn alongside Stage 6.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:d3ce9764ac76635921f6e981a713ea8822eaec442d01200930633a805a84aaf0` ✓ matches manifest pin
+- §8.7 post-upgrade scan: 0 CRITICAL, 0 WARN; report at `meta/health/2026-05-10-d3ce9764ac766359-postupgrade.md`
+- `runtime/tools/cyberos_validate.py` clean run (1 INFO — pre-existing legacy memory_id)
+- Chain LINK invariant: 299 rows, all chains link
+- `manifest.encryption_policy.enabled = false` initialised (encryption is OFF; will not encrypt anything until `cyberos-encrypt enable` wizard flips this)
+- `manifest.shamir_fragments` initialised empty
+- Stage 5 features dormant on this store: no memory has `encrypted: true` frontmatter; no Shamir master_key_fingerprint pinned
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — Changes A–F applied; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-77eda214d687f8fd8eb826b8699e62614c3b606e980486c7fcd8496f92ce6dfa.md`
+- `.cyberos-memory/manifest.json` — `protocol.{sha256,approved_at,approved_by}`, `audit_chain_head`, `last_updated_at`, `encryption_policy`, `shamir_fragments` updated
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:"protocol_upgrade"` row appended (chain `sha256:ff9b2bf5c29d18c3...`); two `op:"create"` rows for the related-files writes
+- `.cyberos-memory/meta/health/2026-05-10-d3ce9764ac766359-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/refinements/REF-030-stage-5-at-rest-encryption.md` — refinement memory per §0.4
+- `docs/CyberOS-PRD.CHANGELOG.md` — entry added; PRD .docx update deferred (DEC-108 entry pending)
+- `docs/CyberOS-SRS.CHANGELOG.md` — entry added; SRS .docx update deferred similarly
+
+### Implementation work that follows landing (no further §0.5 needed)
+
+- `runtime/tools/cyberos_encrypt.py` (~600 LOC): `enable` wizard (HW-key detect + Shamir 3-of-5 split + holder distribution + `enabled = true` flip); `disable` (decrypt all → re-write plaintext → flip flag); `migrate-batch <N>` (default 50, MAINTENANCE-mode envelope); `rotate-shamir`; `recover` (≥3 fragments → master key reconstruction); `status` (encryption coverage stats)
+- `runtime/tools/cyberos_validate.py` extension: recognise `encrypted: true`, verify AAD, surface `encryption-aad-mismatch` and `shamir-fingerprint-missing` findings
+- `runtime/tools/cyberos_doctor.py`: new repair op `R6-rotate-master-key` for hardware-replacement scenarios
+- `docs/cookbook/encryption-and-recovery.md`: operational guide with holder-selection guidance, recovery walkthrough, migration playbook, threat model
+
+### Related implementation
+
+- `docs/proposals/STAGE-5-PROTOCOL-UPGRADE.md` — proposal text used for this upgrade (preserved as documentation; will not be re-applied)
+- `docs/proposals/STAGE-5-OPEN-QUESTIONS.md` — five-question decision baseline (preserved as the rationale archive for "(c, c, 3-of-5 wizard, body-only, user-paced)" defaults)
+
+---
+
+## 2026-05-10 — Stage 6: Long-term BRAIN health (Merkle checkpoints + ledger compaction + .lock.shared)
+
+### Protocol SHA transition
+
+- **Before:** `sha256:576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a`
+- **After:**  `sha256:77eda214d687f8fd8eb826b8699e62614c3b606e980486c7fcd8496f92ce6dfa`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Added
+
+- **§4.9.1 `.lock.shared` semantics (Change D)** — sibling lock file for shared-read concurrency. Read-only ops (`view`) acquire `.lock.shared` only; mutation ops continue with exclusive `.lock`. Consolidation phases §8.1–§8.4 acquire shared lock, upgrade to exclusive for §8.5–§8.7. POSIX (`flock LOCK_SH | LOCK_NB`) and Windows (`LockFileEx` shared mode) covered. Stale recovery 5-minute timeout. Older agents that don't honour shared mode fall back to exclusive — always safe.
+- **§7.6 Merkle checkpoints (Change A)** — every `op:"consolidation_run"` row gains a `merkle_root` field (SHA-256 tree over rows since previous checkpoint). Deterministic construction: leaves are raw chain bytes; pairing pads odd levels by duplicating last leaf; internal nodes via `sha256(left || right)`. Linear `chain` LINK invariant remains canonical; Merkle root is a *derived* index for O(log N) prefix verification.
+- **§7.7 Audit ledger compaction (Change B)** — opt-in, phrase-triggered. Once a ledger month is Merkle-checkpointed AND older than `manifest.compaction_policy.minimum_age_months` (default 12), `audit/<YYYY-MM>.jsonl` collapses to per-memory `audit/<YYYY-MM>.compacted.jsonl` + Merkle proofs; original verbatim preserved at `archive/<YYYY-MM>.jsonl.zst`. ~80% disk savings on year-old ledgers. Reversible via MAINTENANCE-mode `op:"ledger_decompact"`. New audit op kinds: `ledger_compact`, `ledger_decompact`.
+- **§8.9 Ledger compaction phase (Change C)** — phase 8.9 (NOT part of routine consolidation). Pre-conditions: existing Merkle checkpoint, age threshold met, no §8.7 phase 4 critical findings for the period. Triggered ONLY by chat-turn phrase *"compact ledger older than `<YYYY-MM-DD>`"* per §0.5.
+- **`manifest.compaction_policy = {minimum_age_months: 12}`** — new manifest field initialised at upgrade time. Mutation outside chat-turn phrase forbidden by §0.2.
+
+### Changed
+
+- **§8.7 phase 4 audit chain integrity (Change E)** — extended with Merkle-root recomputation on every `op:"consolidation_run"` row carrying a `merkle_root` field; mismatch → `CRITICAL merkle-checkpoint-divergence`. Compacted-ledger files (`audit/<YYYY-MM>.compacted.jsonl`) verify each row's `merkle_proof` against the period's checkpoint root; mismatch → `CRITICAL merkle-proof-divergence`.
+
+### Why
+
+Local-optimization plan (`docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`) Stage 6. Three primitives land together because each depends on the others: Merkle checkpoints anchor proofs that compaction relies on; compaction needs `.lock.shared` so other agents can `view` while it holds exclusive `.lock` for the manifest update; `.lock.shared` is the precondition for safe concurrent `cyberos-validate` + `cyberos-index` runs. Without all three, ledger growth becomes unbounded and multi-agent days (Claude Code + Cursor + Aider against the same project) hit `.lock` starvation.
+
+### Real-world trigger
+
+User-driven local-optimization design (2026-05-09 evening) — Stage 6 was authored as `docs/proposals/STAGE-6-PROTOCOL-UPGRADE.md` after Stages 1–4 shipped. Stephen approved both Stage 5 defaults (separate proposal) and Stage 6 (this entry) in the same chat turn.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:77eda214d687f8fd8eb826b8699e62614c3b606e980486c7fcd8496f92ce6dfa` ✓ matches manifest pin
+- §8.7 post-upgrade scan: 0 CRITICAL, 0 WARN; report at `meta/health/2026-05-10-77eda214d687f8fd-postupgrade.md`
+- `runtime/tools/cyberos_validate.py` clean run (1 INFO — pre-existing legacy memory_id)
+- Chain LINK invariant: 296 rows, all chains link
+- `manifest.compaction_policy.minimum_age_months = 12` initialised at upgrade time
+- Stage 6 features dormant on this store: no `merkle_root` rows yet (first appears at next `op:"consolidation_run"`); no compacted ledgers (earliest window 2027-05); `.lock.shared` available but unused
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — Changes A–E applied; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a.md`
+- `.cyberos-memory/manifest.json` — `protocol.{sha256,approved_at,approved_by}`, `audit_chain_head`, `last_updated_at`, `compaction_policy` updated
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:"protocol_upgrade"` row appended (chain `sha256:b6bf7a2f307409d6...`); two `op:"create"` rows for the related-files writes
+- `.cyberos-memory/meta/health/2026-05-10-77eda214d687f8fd-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/refinements/REF-029-stage-6-long-term-health.md` — refinement memory per §0.4
+- `docs/CyberOS-PRD.CHANGELOG.md` — entry added; PRD .docx update deferred (DEC-107 entry pending)
+- `docs/CyberOS-SRS.CHANGELOG.md` — entry added; SRS .docx update deferred similarly
+
+### Implementation work that follows landing (no further §0.5 needed)
+
+- `cyberos_validate.py` — add `_check_merkle_checkpoints()` + `_check_compacted_ledger()`
+- `cyberos_doctor.py` — new repair `R5-rebuild-merkle-checkpoint`; new CLI `cyberos-doctor decompact-ledger --month <YYYY-MM>`
+- `cyberos_index.py` — new table `merkle_checkpoints(audit_id, root, period_start_audit_id, period_end_audit_id)`; new query `cyberos-index query merkle-proof <chain>`
+- `docs/cookbook/ledger-compaction.md` — when to compact, how to verify a compacted period
+
+### Related implementation
+
+- `docs/proposals/STAGE-6-PROTOCOL-UPGRADE.md` — proposal text used for this upgrade (preserved as documentation; will not be re-applied)
+
+---
+
+## 2026-05-10 — Stage 1: Session-start speed (reconciliation checkpoint + lazy-load + frontmatter compactness)
+
+### Protocol SHA transition
+
+- **Before:** `sha256:599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d`
+- **After:**  `sha256:576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Added
+
+- **§5.1 frontmatter compactness rule (Change D)** — write-side guidance to omit `null`/empty optional fields, EXCEPT consent block for `personnel`/`client` and tombstone metadata. Read-side accepts both compact and verbose forms. The 28-field closed-set rule applies only to *recognised* fields; absence of optional fields is not a schema violation. Drops typical frontmatter byte count by 30–40%.
+- **§6 `manifest.reconciliation_checkpoint` block (Change A)** — three-field record `{audit_id, chain, ts}` written at every successful `op:"session.end"` and `op:"consolidation_run"`. Used by §4.7 to bound reconciliation work.
+- **§6 `manifest.read_profile` block (Change C)** — declares eager vs lazy scopes. Default `eager_scopes: ["meta"]`, all other scopes lazy-loaded on first reference.
+- **§10 read protocol bullet 1a (Change C tail)** — honour `manifest.read_profile`. Eager scopes load every session start; lazy on-demand.
+
+### Changed
+
+- **§4.7 reconciliation (Change B)** — walks rows newer than `manifest.reconciliation_checkpoint.audit_id` if set; falls back to full-walk on missing/stale (>30 days) checkpoint or `manifest.reconciliation_checkpoint.chain` mismatch. Stale-fallback case emits `op:"warn" reason:"stale-checkpoint"`. Cuts O(N) full-walk to O(rows_since_last_session) for the common case.
+- **§8.7 phase 4 audit chain integrity (Change E)** — extended with stale-checkpoint check: if `manifest.reconciliation_checkpoint` is set, confirm `checkpoint.audit_id` resolves to a row in the ledger AND `checkpoint.chain` matches that row's `chain`. Mismatch → `CRITICAL stale-checkpoint`; freezes writes until reconciled per §4.7 fallback.
+
+### Why
+
+Local-optimization plan (`docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`) Stage 1 highlighted §4.7 reconciliation as the dominant session-start cost. With ~290 audit rows in the live store and growth ~10/day, full-walk reconciliation was creeping into multi-second territory. The checkpoint pattern is the standard incremental-validation answer; the 30-day stale fallback + chain-mismatch fallback preserve the integrity guarantee.
+
+### Real-world trigger
+
+User-driven local-optimization design (2026-05-09 evening). The supplementary `docs/CyberOS-AGENTS.EVOLUTION.md` (CyberOS-aware long-term plan) was scoped down to `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` (immediate-action plan) once the user clarified that CyberOS-the-product is still pre-build and the priority is making `.cyberos-memory/` perform optimally as a personal BRAIN. Stage 1 of that plan ships first because it has zero dependencies and the fastest measurable impact.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a` ✓ matches manifest pin
+- §8.7 post-upgrade scan: 0 CRITICAL, 0 WARN; report at `meta/health/2026-05-10-576368647e4d1763-postupgrade.md`
+- `runtime/tools/cyberos_validate.py` clean run (1 INFO — pre-existing legacy memory_id)
+- Chain LINK invariant: 293 rows, all chains link
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — Changes A–E applied; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d.md`
+- `.cyberos-memory/manifest.json` — `protocol.sha256`, `approved_at`, `approved_by`, `audit_chain_head`, `last_updated_at` updated
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:"protocol_upgrade"` row appended (chain `sha256:90bb3d3e0742a0e3...`); two `op:"create"` rows for the related-files writes
+- `.cyberos-memory/meta/health/2026-05-10-576368647e4d1763-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/refinements/REF-028-stage-1-session-start-speed.md` — refinement memory per §0.4
+- `docs/CyberOS-PRD.CHANGELOG.md` — entry added; PRD .docx update deferred to next .docx editing session (DEC-106 entry pending)
+- `docs/CyberOS-SRS.CHANGELOG.md` — entry added; SRS .docx update deferred similarly
+
+### Related implementation
+
+- `runtime/tools/cyberos_validate.py` — Stage 2 validator already extends to verify the new fields once they populate; `cyberos-doctor` recovery CLI is the next deliverable depending on these landing.
+- `docs/proposals/STAGE-1-PROTOCOL-UPGRADE.md` — proposal text used for this upgrade (preserved as documentation; will not be re-applied).
+
+---
+
 ## 2026-05-07 — Bundle L TIER 2: Legacy `memory_id` carve-out (`meta/legacy-ids.md` registry)
 
 ### Changed

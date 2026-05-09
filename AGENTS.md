@@ -1,1 +1,1 @@
-/Users/stephencheng/Projects/CyberSkill/cyberos/docs/CyberOS-AGENTS.md
+/Users/stephencheng/Projects/CyberSkill/cyberos/docs/CyberOS-AGENTS-CORE.md
