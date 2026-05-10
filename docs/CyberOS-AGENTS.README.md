@@ -861,7 +861,7 @@ The two-phase-write rule in AGENTS.md §4.4 prevents (1) on POSIX-correct filesy
 
 ### ✅ git (recommended for solo use)
 
-The protocol's §13.1 step 11 already adds a commented `.gitignore` line. You can opt to commit `.cyberos-memory/` and use `git push`/`git pull` as your sync vehicle.
+The protocol's §13.1 step 11 (Bundle Q, 2026-05-11) handles `.gitignore` two ways: by default, adds a commented `# .cyberos-memory/` line so you can opt out later. If `.cyberos-memory/` is already UNCOMMENTED at bootstrap or any §4.7 reconciliation walk, the agent treats it as a deliberate opt-out, appends a one-time `op:"warn" reason:"brain-not-versioned"` audit row (deduplicated by `(reason, path)`), and adds a comment block above the line documenting the opt-out is intentional. To commit `.cyberos-memory/` and use `git push`/`git pull` as your sync vehicle, ensure the line is commented (or absent) — the next session start will detect the opt-in and treat the BRAIN as versioned.
 
 - **Why**: explicit conflict resolution; no silent overwrites; full history; works offline.
 - **Setup**: in your project's `.gitignore`, ensure `.cyberos-memory/` is NOT excluded; or use a separate inner repo per the future Stage 4 `cyberos init --git-backup` pattern.
@@ -1500,7 +1500,7 @@ The 28-field schema currently encourages emitting every field — a chat memory 
 
 ### Backward compat
 
-Read-side change is purely permissive (already accepts missing optional fields). Write-side is opt-in via the rule; existing reference impls (e.g. `brain_writer.py` in PRD §5.10.11) update on next §0.5 cycle.
+Read-side change is purely permissive (already accepts missing optional fields). Write-side is opt-in via the rule; the canonical reference impl at `outputs/brain_writer.py` (per AGENTS.md §0.6 line 175) updates on next §0.5 cycle.
 
 ---
 

@@ -36,15 +36,15 @@ A **recommended** host runs the chain end-to-end without the user leaving the ch
 1. **Connect the new project's folder.** When you start a Cowork session, ask Claude to `request_cowork_directory` for `/path/to/your/new/project`. Approve the prompt.
 2. **Connect cyberos folder** (so the agent can read AGENTS.md + cyberos/docs/skills/*): same `request_cowork_directory` for `/path/to/cyberos`.
 3. **Load AGENTS.md into context.** Cowork doesn't auto-load AGENTS.md the way Claude Code does. Ask the agent at the start of each session: *"Read `cyberos/docs/CyberOS-AGENTS-CORE.md` and follow it for this conversation."* The CORE.md is short (~10K tokens); it loads fast.
-4. **Bootstrap BRAIN.** Cowork's bash sandbox can run `python3 .cyberos-memory/.brain_writer.py session-start <actor>` against the connected workbench folder. The agent will auto-bootstrap on first write per AGENTS.md §13.1.
+4. **Bootstrap BRAIN.** Cowork's bash sandbox can run `python3 outputs/brain_writer.py session-start <actor>` against the connected workbench folder. The agent will auto-bootstrap on first write per AGENTS.md §13.1.
 
 ### Per-step shape
 
 - **Load a SKILL.md**: `Read cyberos/docs/skills/cuo/cpo/<skill>/SKILL.md` — agent reads via the file tool.
 - **Run the interview**: agent conducts in chat; Cowork's chat surface handles the back-and-forth fine.
 - **Save an artefact**: agent uses Write tool to create `<project-root>/planning/<date>-<slug>/<artefact>.md`.
-- **Append audit row**: agent runs `python3 .cyberos-memory/.brain_writer.py write <actor> <relpath> <content_file>` via bash.
-- **Session end**: agent runs `python3 .cyberos-memory/.brain_writer.py session-end <actor>` via bash.
+- **Append audit row**: agent runs `python3 outputs/brain_writer.py write <actor> <relpath> <content_file>` via bash (cwd = project repo root).
+- **Session end**: agent runs `python3 outputs/brain_writer.py session-end <actor>` via bash.
 
 ### Quirks / gotchas
 
@@ -199,12 +199,12 @@ For when you can't run a CLI — e.g., you're on a borrowed machine, on mobile, 
 3. After all skills run, **on a machine with a terminal**, re-create the audit ledger:
 
    ```bash
-   cd /path/to/project/.cyberos-memory
-   python3 .brain_writer.py session-start human:stephen-cheng
+   cd /path/to/project
+   python3 outputs/brain_writer.py session-start human:stephen-cheng
    for f in <list of artefact files>; do
-     python3 .brain_writer.py write human:stephen-cheng <relpath> <abspath>
+     python3 outputs/brain_writer.py write human:stephen-cheng <relpath> <abspath>
    done
-   python3 .brain_writer.py session-end human:stephen-cheng
+   python3 outputs/brain_writer.py session-end human:stephen-cheng
    ```
 
    This restores chain integrity. The `actor_kind: "human"` makes it explicit these were human-driven (vs. agent-driven) writes.

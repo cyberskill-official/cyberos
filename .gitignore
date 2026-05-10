@@ -1,2 +1,10 @@
+# BRAIN — local operational state (manifest, memories, audit ledger, lock file).
+# Deliberately gitignored: the BRAIN holds tenant-specific data that doesn't
+# belong in version control (per AGENTS.md §0.1 and the user's explicit
+# decision on 2026-05-11). The reference writer that mutates the BRAIN lives
+# at outputs/brain_writer.py and IS tracked in git, so the protocol's
+# implementation surface ships with the repo even though the BRAIN itself
+# does not. Backup the BRAIN out-of-band (memory-export-<DATE>-<scope>.zip).
 .cyberos-memory
+
 .DS_Store

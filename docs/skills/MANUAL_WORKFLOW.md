@@ -86,7 +86,7 @@ The exact commands depend on your host — see [HOST_ADAPTERS.md](./HOST_ADAPTER
 
    CORE.md is sufficient for the manual chain (full AGENTS.md is only needed for §0.5 protocol-upgrade flows, which won't fire here).
 
-2. **Bootstrap the project's BRAIN.** First agent session detects `PRISTINE` state per §13.0 and silently auto-bootstraps `.cyberos-memory/` IF the host can write to disk. If it doesn't, paste *"bootstrap and continue"*. Hosts without filesystem access: run `python3 <path>/.brain_writer.py session-start <actor>` in your terminal manually and let the agent know the BRAIN is initialised.
+2. **Bootstrap the project's BRAIN.** First agent session detects `PRISTINE` state per §13.0 and silently auto-bootstraps `.cyberos-memory/` IF the host can write to disk. If it doesn't, paste *"bootstrap and continue"*. Hosts without filesystem access: run `python3 outputs/brain_writer.py session-start <actor>` from the project repo root in your terminal and let the agent know the BRAIN is initialised.
 
 3. **Initialise CONTEXT.md** (per Plan v1.1 / M2). Create at the new project's repo root:
 
@@ -189,7 +189,7 @@ If the skill resolved any new domain terms during its run, append to the project
 
 ### Step ⑦ — Append the §14 memory-update block
 
-The agent will end its response with a §14.1 compact block. The audit row goes to `.cyberos-memory/audit/<YYYY-MM>.jsonl`. **Do not edit the audit ledger by hand.** If the agent didn't append, run `python3 .cyberos-memory/.brain_writer.py session-end <actor>` before closing the tab.
+The agent will end its response with a §14.1 compact block. The audit row goes to `.cyberos-memory/audit/<YYYY-MM>.jsonl`. **Do not edit the audit ledger by hand.** If the agent didn't append, run `python3 outputs/brain_writer.py session-end <actor>` from the project repo root before closing the tab.
 
 ---
 
@@ -535,7 +535,7 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 | Audit keeps cycling on the same issue | NO_PROGRESS termination | Edit the artefact manually OR file a refinement proposal against the rule |
 | `chat.review_request` MCP not available | Runtime not built | Manual mode: just answer the HITL question in chat directly |
 | `proj.create_issue` MCP not available | Runtime not built | Manual mode: copy issues from `impl_plan@1` into Linear/Jira/GitHub by hand |
-| §14 block doesn't appear | Agent forgot | Run `python3 .cyberos-memory/.brain_writer.py session-end <actor>` before closing |
+| §14 block doesn't appear | Agent forgot | Run `python3 outputs/brain_writer.py session-end <actor>` from project repo root before closing |
 | BRAIN classified `INCOMPATIBLE:protocol-sha256-mismatch` | AGENTS.md changed since last pin | Run §0.5 protocol upgrade flow OR revert AGENTS.md to the pinned SHA |
 
 ---

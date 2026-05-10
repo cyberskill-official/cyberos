@@ -6,6 +6,64 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-11 — Bundle Q: implementation files in source tree, §4.7 close-pattern alignment, BRAIN-not-versioned warn, relative symlinks
+
+### Protocol SHA transition
+
+- **Before:** `sha256:617f5aef1a49c394f6d17be072c8b29dbeb84c3265b80f3de3cb00a0f1c07759`
+- **After:**  `sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Changed
+
+- **§0.6 implementation-files clause (REF-1)** — added the explicit invariant that implementation files (`outputs/brain_writer.py`, `cyberos/.protocol-signing-key`, etc.) MUST live in the project source tree, NOT inside `.cyberos-memory/`. The BRAIN is local operational state and is gitignored on most projects (including this one); a writer placed inside the BRAIN ships only as long as the BRAIN persists, and historically led to writers vanishing when the BRAIN was reinitialised or migrated. The clause names `outputs/brain_writer.py` as the canonical location and registers `runtime/tools/cyberos_brain_writer.py` as an acceptable alternative provided §0.6 is updated in the same protocol-upgrade.
+- **§4.7 post-terminator close exemption (REF-2)** — amended the "orphan manifest update" rule to add an explicit exemption for the canonical close pattern: `session.end → str_replace manifest.json` where the manifest update's `prev_chain` matches the immediately-preceding terminator's `chain` AND its new `audit_chain_head` value equals that same terminator's `chain`. Pre-Q wording flagged this legitimate close-of-session pattern as `crash-mid-manifest-update`, which would freeze writes on every clean session boundary. The exemption is the only case where a manifest-update row is the LAST row in the ledger and is not a crash.
+- **§13.1 step 11 BRAIN-not-versioned warn (REF-3)** — replaced the single-line `.gitignore` instruction with a two-branch decision tree. Default branch (versioning opt-in available) appends a commented `# .cyberos-memory/` line as before. Opt-out branch (UNCOMMENTED entry already present at bootstrap or any subsequent §4.7 reconciliation) appends exactly one `op:"warn" reason:"brain-not-versioned"` audit row, deduplicated by `(reason, path)` over the BRAIN lifetime, AND updates `.gitignore` with a comment block explaining the opt-out is deliberate. Closes the silent-opt-out gap that allowed the previous `brain_writer.py` to vanish unnoticed.
+- **§15 relative-symlink rule (REF-4)** — symlinks created at project root (`AGENTS.md`, `CLAUDE.md`, `.windsurfrules`, `.clinerules`, `.cursor/rules/cyberos-memory.mdc`, `.windsurf/rules/cyberos-memory.md`, `.github/copilot-instructions.md`) MUST use relative paths. Absolute-path symlinks break under any container/CI/sandbox mount where the host prefix differs.
+
+### Why
+
+`brain_writer.py` was prescribed by 8 separate documents (CHAIN_ORCHESTRATOR, HOST_ADAPTERS, MANUAL_WORKFLOW, skills/CHANGELOG, AGENTS.CHANGELOG, AGENTS.README, AGENTS.md §0.6, PRD.CHANGELOG) as a tool the agent runs for every audit-row append. None of those docs caused the file to actually exist. It was never tracked in git. The orchestrator runs `python3 <path>/brain_writer.py` — file not found. Discovered when an audit row needed appending in cowork-session 2026-05-11.
+
+Root cause was three-fold:
+1. **Path drift** — three different prescribed locations (`outputs/`, `<cyberos-memory>/`, `PRD §5.10.11`); only one resolved on disk; `.cyberos-memory/` was the most-cited but worst location because…
+2. **Visibility gap** — `.gitignore` was at full opt-out (`.cyberos-memory` uncommented), erasing the BRAIN tree and any tools placed in it from version control. Step 11 prescribed a *commented* line by default; the actual file went past that without an audit trail.
+3. **Close-pattern ambiguity** — when the writer was rebuilt and verified against the existing 357-row chain, the §4.7 strict reading classified the chain's actual close pattern (`session.end → str_replace manifest.json`) as crash-mid-write. The protocol's wording lagged the writer's behaviour.
+
+REF-1 + REF-3 close the path-drift / visibility issues. REF-2 aligns §4.7 with reality. REF-4 hardens portability after the AGENTS.md symlink was found to be absolute (broke under cowork's bind-mount).
+
+### Real-world trigger
+
+Direct §0.4 standing-rule trigger surfaced during a Phase-1 BRAIN repair (`outputs/brain_writer.py` rebuild from spec) and a Phase-2 repo audit (missing-refs + drift report). User adopted all four refinements as Bundle Q in the same chat turn that surfaced them.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688` ✓ matches manifest pin
+- Pre-edit AGENTS.md (recoverable from `git show HEAD~1:docs/CyberOS-AGENTS.md` after the bundle's archive commit) hashes to `sha256:617f5aef…07759` — matches old pin
+- New `outputs/brain_writer.py` produces bit-perfect chain hashes for the last 5 rows of the existing 357-row chain (post-Bundle-D writer compatibility)
+- Chain LINK invariant: 0 breaks across all 357 rows
+- Post-upgrade §8.7 self-audit report at `meta/health/2026-05-11-71a276c7-postupgrade.md`
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — §0.6 / §4.7 / §13.1 step 11 / §15 amended; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-617f5aef1a49c394f6d17be072c8b29dbeb84c3265b80f3de3cb00a0f1c07759.md`
+- `docs/CyberOS-AGENTS.CHANGELOG.md` — this entry
+- `docs/CyberOS-AGENTS.README.md` — line 1503 retired the orphan "PRD §5.10.11" reference; no Part-level refresh needed (Bundle Q does not change any §14/§8 areas the README maps to)
+- `docs/skills/CHAIN_ORCHESTRATOR.md`, `docs/skills/HOST_ADAPTERS.md`, `docs/skills/MANUAL_WORKFLOW.md` — all `python3 .cyberos-memory/.brain_writer.py …` prescriptions updated to `python3 outputs/brain_writer.py …`
+- `outputs/brain_writer.py` — NEW canonical writer; reference impl per §0.6 line 175. Replaces a non-existent file previously expected at the same path. Implements §4 / §5.2 / §7 / §13. Verified bit-perfect against the post-Bundle-D writer's tail.
+- `.cyberos-memory/.brain_writer.py` — replaced with deprecation stub pointing at the new location (BRAIN copy retained for transition; can be deleted from macOS at user's convenience).
+- `.gitignore` — added explicit-intent comment block above the `.cyberos-memory` entry documenting the deliberate opt-out (per the new §13.1 step 11).
+- `<root>/AGENTS.md` symlink — converted from absolute to relative (`docs/CyberOS-AGENTS-CORE.md`).
+- `.cyberos-memory/manifest.json` — protocol pin + audit_chain_head + reconciliation_checkpoint + last_updated_at updated by apply script
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:protocol_upgrade` row appended; `op:create` rows for archive, health report, DEC-109, REF-041
+- `.cyberos-memory/meta/health/2026-05-11-71a276c7-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/decisions/DEC-109-implementation-files-in-source-tree.md` — locked decision behind REF-1
+- `.cyberos-memory/memories/refinements/REF-041-bundle-q-impl-files-and-close-pattern.md` — bundle refinement memory per §0.4 step 4
+
+No FACT memory required v+1 refresh for this bundle (none reference §0.6 / §4.7 / §13.1 / §15 by the §0.6 step 3 cross-link rule).
+
+---
+
 ## 2026-05-10 — Bundle P: §14 `📁 Files changed:` = non-BRAIN paths only (correction to Bundle O)
 
 ### Protocol SHA transition

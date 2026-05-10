@@ -83,7 +83,7 @@ Run these in order; the user shouldn't see most of this unless something fails.
 4. **Create output dir.** `mkdir -p <output_dir>`.
 5. **Initialise CONTEXT.md** at `<project repo>/CONTEXT.md` if absent (skeleton: 3 H2 sections — Language / Relationships / Flagged ambiguities).
 6. **Initialise `docs/adr/` and `.out-of-scope/`** as empty directories.
-7. **Append `op:"session.start"`** via `python3 <cyberos-memory>/.brain_writer.py session-start agent:claude-opus-4-7`.
+7. **Append `op:"session.start"`** via `python3 outputs/brain_writer.py session-start agent:claude-opus-4-7` (run from project repo root).
 8. **Resolve the chain.** Default chain (will be refined by Phase B):
 
    ```
@@ -125,7 +125,7 @@ Run these in order; the user shouldn't see most of this unless something fails.
    - *"You said 'X' — should this be a canonical term in your project's vocabulary? If so, how should I define it?"*
    - Append to `<project>/CONTEXT.md` `## Language` section using the format in MANUAL_WORKFLOW.md.
 8. **Synthesise `project_brief@1`** in markdown with the 14-field frontmatter populated. Save to `<output_dir>/project-brief.md`.
-9. **Append audit row** via `python3 <cyberos-memory>/.brain_writer.py write agent:claude-opus-4-7 project/<slug>/project-brief.md <abs path to artefact>`.
+9. **Append audit row** via `python3 outputs/brain_writer.py write agent:claude-opus-4-7 project/<slug>/project-brief.md <abs path to artefact>`.
 10. **Announce**: *"Phase A complete. Brief saved to <path>. Moving to Phase B (chain selection)."*
 
 ### HITL templates
@@ -405,7 +405,7 @@ Do not re-run completed phases. Do not re-ask the user questions you already hav
 | Symptom | Reflex |
 |---|---|
 | Skill SKILL.md not found at expected path | Ask user for the cyberos repo path; cache in this session's context |
-| `python3 brain_writer.py` returns non-zero | Read stderr; if `frontmatter-validation` → fix the artefact; if `audit-corrupt` → halt and surface to user |
+| `python3 outputs/brain_writer.py` returns non-zero | Read stderr; if `frontmatter-validation` → fix the artefact; if `audit-corrupt` → halt and surface to user |
 | User pastes an answer that doesn't fit the question's options | Reframe the question; don't punish the user for free-text — extract the option |
 | Audit-fix loop doesn't terminate after 5 iterations | Treat as EXHAUSTED; surface to user per Phase D template |
 | User says `pause` or `abort` | Honour immediately; write `<output_dir>/PAUSED.md` or `ABORTED.md` with current state |
