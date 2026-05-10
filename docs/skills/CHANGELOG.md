@@ -4,6 +4,137 @@
 
 ---
 
+## v0.2.12 — 2026-05-11 (CHAIN_ORCHESTRATOR — fully automated mode; MINOR — doc-only)
+
+### Added
+
+- **NEW**: [`CHAIN_ORCHESTRATOR.md`](./CHAIN_ORCHESTRATOR.md) — agent-side runbook for fully automated chain execution. The user provides a pitch + answers HITL questions; the agent reads every SKILL.md, drives every interview, writes every artefact, runs every audit-fix loop, executes brain_writer.py, and routes between skills. **The user never copy-pastes a SKILL.md or runs a command by hand.**
+
+### Changed
+
+- **`MANUAL_WORKFLOW.md`** — Quickstart restructured into "Two modes" (Automated ★ recommended; Manual). Automated mode points to CHAIN_ORCHESTRATOR.md with the canonical trigger phrase. Manual mode keeps the previous 6-line procedure. Body of the doc unchanged — it's the manual-mode reference.
+- **`README.md`** — header banner updated to reflect the two modes; CHAIN_ORCHESTRATOR.md added to the pinned-docs list.
+
+### Why this is MINOR not PATCH
+
+CHAIN_ORCHESTRATOR.md is a new doc. v0.2.10 (MANUAL_WORKFLOW) was MINOR; this follows the same convention.
+
+### Driver
+
+User asked: *"run manually i mean i just need to give first inputs and do HITL during workflow (if any), not mean i have to copy paste skills content and run all command by myself, can you solve that?"* Yes — the orchestrator is the answer. Trigger phrase + agent runbook give the user a single-message kickoff for the entire chain.
+
+### Trigger phrase (copy this; pin it for the next project)
+
+```
+Drive the CyberOS chain on this project. Read cyberos/docs/skills/CHAIN_ORCHESTRATOR.md and follow it.
+
+Pitch: <one paragraph describing the project>
+Project repo: <absolute path to the new project's directory>
+Output dir: <default: ./planning/<YYYY-MM-DD>-<slug>/>
+Caller: human:<your-id>
+Profile preference: <auto | lean | standard | full>   (default: auto)
+```
+
+Total user effort per chain run: trigger phrase + ~10-30 HITL answers. Total agent effort: read ~12 SKILL.md files + drive ~9 phases + ~9 audit loops + ~30 audit-row appends + 1 final summary.
+
+### Backwards compatibility
+
+Pure addition + clarification. v0.2.11's MANUAL_WORKFLOW.md remains valid as the manual-mode reference; the new orchestrator is purely additive.
+
+### Verification
+
+- ✅ CHAIN_ORCHESTRATOR.md created (length: ~480 lines / ~30 KB)
+- ✅ MANUAL_WORKFLOW.md Quickstart restructured into two modes
+- ✅ README.md banner updated
+- ✅ Trigger phrase consistent across all three docs
+
+---
+
+## v0.2.11 — 2026-05-11 (HOST_ADAPTERS + host-neutral MANUAL_WORKFLOW; PATCH — doc-only)
+
+### Added
+
+- **NEW**: [`HOST_ADAPTERS.md`](./HOST_ADAPTERS.md) — per-host setup recipes. Capability matrix covering 12+ hosts (Claude Cowork, Claude Code, Cursor, Codex CLI, Windsurf, Copilot CLI, Gemini CLI, OpenCode, Aider, Continue, Trae, Kiro, plus degraded-mode Claude.ai web / ChatGPT / Claude in Chrome). Adapter sections for each recommended host with setup commands, per-step shape, and quirks. Decision tree for picking a host. Notes on switching hosts mid-project (BRAIN ledger + on-disk artefacts are host-agnostic; just don't run two hosts concurrently against the same `.cyberos-memory/`).
+
+### Changed
+
+- **`MANUAL_WORKFLOW.md`** — host-neutral throughout. "Open Claude Code" → "Open your agent host"; "first Claude Code session" → "first agent session"; etc. Added a **Host Compatibility** section (between Quickstart and Prerequisites) listing capability requirements + recommended/degraded host classes. Prerequisites updated to abstract away from CLI-specific symlink commands; concrete commands moved to HOST_ADAPTERS.md.
+
+### Why this is PATCH not MINOR
+
+No SKILL.md changed. No contract changed. No new behaviour. Pure clarification: the manual workflow was always host-neutral; the doc just had Claude-Code-flavoured framing. Stephen flagged it ("I don't want fixed Claude Code solution").
+
+### Driver
+
+User asked: *"is it possible to run manual workflow using Claude Cowork or other agents? I don't want fixed Claude Code solution"*. Answer: **yes, fully host-agnostic** — the chain's core (load SKILL.md → follow it → write artefacts → run audit-fix loop → append to BRAIN ledger) needs only file-read + file-write + (ideally) shell access. Claude Code has no special privileges here.
+
+### Recommendation for solo / small-team manual mode today
+
+**Claude Cowork** is the smoothest fit because it has connected folders + sandboxed bash + MCP + file tools all in one chat surface. The BRAIN at `~/Projects/CyberSkill/workbench/.cyberos-memory/` is already wired up; running the chain in Cowork against `~/Projects/CyberSkill/cyberos/docs/skills/` requires no additional setup beyond approving the folder-connection prompts.
+
+### Backwards compatibility
+
+Pure addition + clarification. v0.2.10's MANUAL_WORKFLOW.md content is preserved; only Claude-Code-specific phrasing was generalised.
+
+### Verification
+
+- ✅ HOST_ADAPTERS.md created at registry root
+- ✅ MANUAL_WORKFLOW.md `grep -c "Claude Code session" → 0`
+- ✅ MANUAL_WORKFLOW.md remaining "Claude Code" mentions are now in lists of supported hosts (legitimate uses)
+- ✅ README.md banner to be updated with HOST_ADAPTERS.md pointer (next commit)
+
+---
+
+## v0.2.10 — 2026-05-11 (MANUAL_WORKFLOW + 6 planned improvements; MINOR — doc-only)
+
+> **Naming note**: `v0.3.0` is reserved per the v0.3.0-design entry below — it ships when the runtime's Phase J acceptance harness goes green. This release is `v0.2.10` because it's a doc-only registry update that doesn't change any SKILL.md or contract.
+
+### Added
+
+- **NEW**: [`MANUAL_WORKFLOW.md`](./MANUAL_WORKFLOW.md) — step-by-step procedure for running the chain by hand, today, before the runtime ships. Phase A (Requirements Discovery) → Phase I (Implementation Plan), with per-skill prompts, audit-fix loop walkthroughs, HITL handling, refinement-proposal handling, time budgets per chain_profile (~85 min lean / ~3 h standard / ~5-6 h full). Pin this doc when running on a new project.
+
+### Planned (TIER 1 — fold into Phase 1 of the multi-phase plan)
+
+The companion plan at `<workbench>/.cyberos-memory/project/skills-evolution/cyberos-skills-evolution-plan.md` (v2) — synthesised across mattpocock-skills + everything-claude-code + superpowers + Anthropic patterns/agents + Anthropic Agent SDK + AGENTS.md protocol — calls out three TIER-1 modifications to the existing skill set:
+
+- **M1. `.out-of-scope/<topic>.md` rejection registry** in the refine-suggest mechanism. When a `REF-NNN` proposal is rejected, runtime writes a 3-section markdown file (what / why / prior-requests) under each skill's folder. Anomaly-watcher checks it before re-emitting; matches within Levenshtein-3 → `op:"warn"` instead of `op:"refinement_proposed"`. **Anti-re-litigation by construction.** Pattern lifted verbatim from mattpocock-skills.
+- **M2. `domain-context@1` contract** under `cyberos/docs/contracts/domain-context/v1`. Adds a per-project `CONTEXT.md` artefact emitted by `cuo/cpo/requirements-discovery` and consumed by every downstream workflow skill. Format: `## Language` (canonical-term + definition + avoid-list) / `## Relationships` / `## Flagged ambiguities`. New invariant `INV-CONTEXT-CONSISTENCY-001` (sev-1) on every consumer skill: non-canonical term used where a canonical exists → `op:"warn"`. Closes the gap between scope contract (access control) and language contract (vocabulary). Pattern lifted from mattpocock-skills (`grill-with-docs` discipline).
+- **M3. `INV-VERTICAL-SLICE-001`** (sev-1) on `cuo/cto/spec-to-impl-plan`. Every issue in `impl_plan@1` MUST be independently completable AND independently testable. Audit explicitly rejects horizontal-slicing patterns ("build all schemas first → build all handlers"). Anti-rationalization framing — name the failure mode. Pattern lifted from mattpocock-skills `tdd/SKILL.md`.
+
+### Planned (TIER 2 — fold into Phase 2 of the multi-phase plan)
+
+Three additions deferred to runtime-bring-up:
+
+- **A1. `lifecycle_state` 29th frontmatter field** (`draft | proposed | active | deprecated`) — requires §0.5 protocol upgrade per the closed-set rule. Marketplace publishes only `active` skills. New audit ops: `skill_promoted`, `skill_deprecated`. Adds bucket-promotion lifecycle from mattpocock-skills.
+- **A2. `cuo/_shared/zoom-out` meta-skill** — agent reads CONTEXT.md + ADRs + module BRAIN scope before working in unfamiliar territory. Maps mattpocock's `/zoom-out` skill onto the AGENTS.md §10 read protocol but applied to user-project artefacts.
+- **A3. `operational_mode: caveman`** — extend manifest's `operational_mode` enum to include `caveman` for ~75% token reduction on routine runs in established projects. Lifted from mattpocock-skills `caveman/SKILL.md`. §14 block compresses to a one-line status when active.
+
+### Tension noted (not a change, a stance)
+
+mattpocock-skills is **deliberately opposed** to "process-owning frameworks" (their words) — the chain (`requirements-discovery → chain-selector → prd-author → ...`) IS process-owning by design. Resolution: **`chain_profile: lean`** is the mattpocock-stance on-ramp for solo-engineer / small-team users. CyberOS doesn't pick a side; it gives users the dial. Standard/full profiles serve regulated / multi-tenant / agency-style work where process-owning is the value proposition.
+
+### Real-world trigger
+
+User asked for a manual-runnable workflow guide ("focus on refine workflow, includes Requirement discovery then Planning, guide me step by step how to do it manually") and modifications to related docs to capture the plan for future reading. Plan synthesis was triggered earlier by the broader question of "build a comprehensive plan for improvements/refinements/enhancements" against the digested external reference repos.
+
+### Backwards compatibility
+
+Pure addition. v0.3.0 is MINOR per the registry SemVer policy:
+- MANUAL_WORKFLOW.md is a new doc (no existing skill changed).
+- M1/M2/M3 are PLANNED changes; they don't ship in this version's SKILL.md files. The CHANGELOG entry exists so future readers know what's pending.
+- A1/A2/A3 require §0.5 protocol upgrade or runtime support before they can ship.
+
+The 13 existing SKILL.md files remain valid v0.2.9 contracts. v0.3.0 changes the registry-level documentation, not the per-skill contracts.
+
+### Verification
+
+- ✅ MANUAL_WORKFLOW.md created at registry root
+- ✅ CHANGELOG.md (this file) updated with v0.3.0 entry
+- ✅ README.md to be updated with pointer to MANUAL_WORKFLOW.md (next commit)
+- ✅ No SKILL.md frontmatter changes — contract unchanged
+
+---
+
 ## v0.2.9 — 2026-05-06 (Stage closing: spec-to-impl-plan + impl_plan@1 contract; MINOR)
 
 ### Added

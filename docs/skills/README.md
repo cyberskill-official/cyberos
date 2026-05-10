@@ -2,6 +2,15 @@
 
 > **One document. Everything you need to know about CyberOS skills.** Mental model · anatomy · five contracts · dual-mode invocation · exposability · auto-refinement · manual fine-tune · skills↔contracts split · host-adapter strategy · build-a-skill walkthroughs · runtime architecture · security model · performance & observability · per-persona quickstart · cookbook · FAQ · glossary. Read top-to-bottom on day 1 as your onboarding curriculum; come back to specific Parts as reference.
 
+> **🚀 Running the chain TODAY (before runtime ships)?** Two modes:
+>
+> - **★ Automated** — give a pitch + answer HITL questions; the agent does everything else. Trigger phrase + agent runbook in [**CHAIN_ORCHESTRATOR.md**](./CHAIN_ORCHESTRATOR.md).
+> - **Manual** — drive every step yourself. Procedure in [**MANUAL_WORKFLOW.md**](./MANUAL_WORKFLOW.md).
+>
+> Both modes are **host-agnostic** — Cowork (★ for automated), Claude Code, Cursor, Codex CLI, Gemini CLI, OpenCode, Windsurf, Copilot CLI, etc. Per-host setup in [**HOST_ADAPTERS.md**](./HOST_ADAPTERS.md). Pin all three docs when starting a new project.
+
+> **📋 What's planned next?** → [**CHANGELOG.md**](./CHANGELOG.md) v0.2.10 entry (2026-05-11) lists three TIER-1 modifications (`.out-of-scope/` registry, `domain-context@1` contract, vertical-slice rule) and three TIER-2 additions (`lifecycle_state` field, `zoom-out` meta-skill, `caveman` operational_mode) lifted from mattpocock-skills, ECC, superpowers, and AGENTS.md protocol synthesis. Backed by the multi-phase plan in `<workbench>/.cyberos-memory/project/skills-evolution/cyberos-skills-evolution-plan.md`.
+
 ---
 
 ## Table of contents

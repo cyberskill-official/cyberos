@@ -6,6 +6,154 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-10 — Bundle P: §14 `📁 Files changed:` = non-BRAIN paths only (correction to Bundle O)
+
+### Protocol SHA transition
+
+- **Before:** `sha256:b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6`
+- **After:**  `sha256:617f5aef1a49c394f6d17be072c8b29dbeb84c3265b80f3de3cb00a0f1c07759`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Changed
+
+- **`📁 Files changed:` semantics narrowed**: lists **non-BRAIN paths ONLY** in both §14.1 compact and §14.2 verbose. BRAIN paths (inside `.cyberos-memory/`) NEVER appear under `📁`. Bundle O's "merged list" interpretation was an agent misread of user feedback — corrected here.
+- **§14.0 omission condition (c)** updated: now reads "no non-BRAIN file was modified this turn" instead of "no memory mutations". A turn that ONLY writes BRAIN memories (DEC + REF + preference + audit rows + manifest updates) and touches no non-BRAIN file produces NO §14 output.
+- **§14.1 compact**: explicit "Non-BRAIN paths ONLY" rule with rationale; BRAIN files are agent housekeeping never listed here.
+- **§14.2 verbose**: `Δ Changes (BRAIN detail):` is now the sole place BRAIN paths surface in chat. Always present in §14.2; `📁` block in §14.2 omits entirely if no non-BRAIN files changed.
+- **§14.3 (coverage stat)** updated cross-reference to clarify which sections emit ingestion coverage suffixes.
+
+### Why
+
+User correction during cowork-session 2026-05-10, immediately after Bundle O landed:
+
+> "no need to implied outside BRAIN" i mean only show changes outside the brain, no need to show inside BRAIN changes
+
+Bundle O interpreted the original "no need to imply outside BRAIN" as "merge BRAIN and non-BRAIN paths with no qualifier"; Stephen meant "show only outside-BRAIN paths — drop BRAIN housekeeping entirely from compact mode". The semantic difference matters: pre-Bundle-P, every BRAIN write generated a §14.1 line; post-Bundle-P, BRAIN writes alone are silent.
+
+The user's mental model: `📁 Files changed:` should show files in THEIR project. BRAIN paths are agent infrastructure — equivalent to log files or build artefacts — not user-relevant signal on every turn. The audit ledger preserves full forensic detail for when it matters.
+
+### Real-world trigger
+
+Direct §0.4 standing-rule trigger ("user having to repeat instructions or correct the agent's behaviour"). Bundle O landed; user reviewed; clarified; agent applied as Bundle P within two turns.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:617f5aef1a49c394f6d17be072c8b29dbeb84c3265b80f3de3cb00a0f1c07759` ✓ matches manifest pin
+- §8.7 post-upgrade scan: 0 CRITICAL, 0 WARN, 1 INFO (pre-existing legacy memory_id); report at `meta/health/2026-05-10-617f5aef1a49c394-postupgrade.md`
+- Chain LINK invariant: clean across new ledger tail
+- Validator self-test: passes post-upgrade
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — §14 narrowed; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6.md`
+- `.cyberos-memory/manifest.json` — protocol pin + audit_chain_head + reconciliation_checkpoint + last_updated_at updated
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:protocol_upgrade` row appended; `op:create` rows for archive, health report, DEC-108, REF-040; `op:str_replace` row for preference v3
+- `.cyberos-memory/meta/health/2026-05-10-617f5aef1a49c394-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/decisions/DEC-108-section-14-non-brain-files-only.md` — locked decision per §0.6
+- `.cyberos-memory/memories/refinements/REF-040-bundle-p-section-14-non-brain-only.md` — refinement memory per §0.4 step 4
+- `.cyberos-memory/memories/preferences/feedback-section-14-compression.md` — preference v3 (str_replace from v2)
+- `docs/CyberOS-AGENTS.README.md` — Part 8 anti-pattern note refreshed for non-BRAIN-only semantic
+
+---
+
+## 2026-05-10 — Bundle O: §14 three-state triage (silent / files-only-compact / issues-verbose)
+
+### Protocol SHA transition
+
+- **Before:** `sha256:8060fe2e188e1793e9dbc758b34a8198617ff8bf8a3320a2012595faf3012dab`
+- **After:**  `sha256:b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Changed
+
+- **§14 heading**: `(conditional in normal mode)` → `(silent by default; verbose when issues)`
+- **3-state triage table** added at top of §14 — explicit decision matrix (omit / compact / verbose).
+- **§14.1 compact rewritten**: contains ONLY a `📁 Files changed:` block + optional `Tokens:` line. Removed: `Δ Changes:` heading, `Status:` block (with all 4 sub-lines), `unchanged:` line, `audit/<YYYY-MM>.jsonl: <N rows; head=…>` line.
+- **§14.2 verbose trigger broadened**: fires on ANY of `op:rejected|revert|warn|health_check` this turn, latest §8.7 reports CRITICAL/WARN, or `operational_mode != normal`. Pre-Bundle-O was mode-only.
+- **§14.2 arrangement**: `⚠️ Findings:` first, then `📁 Files changed:`, then `Δ Changes (BRAIN detail):`, then `Status:`, then optional `Tokens:`.
+- **`unchanged:` line removed** entirely (absence-from-list is implicit).
+- **`Tokens:` slot reserved** in both §14.1 and §14.2 — emitted only when a runtime token counter is wired up via MCP. Approximation via `tiktoken`/character-count is forbidden.
+
+### Why
+
+User feedback during cowork-session 2026-05-10, immediately after Bundle N landed:
+1. *"Status: unchanged section seem not necessary since there is 'Δ Changes' section"* — Status + unchanged are redundant signal.
+2. *"In normal mode no need to should Δ Changes if no issues arise too"* — Δ Changes redundant given 📁 Files changed:.
+3. *"only show Files changed (no need to implied outside BRAIN), only turn on maintenance mode and show full memory verbose (arrange them smartly too) status when issues arise"* — single merged list, auto-trigger on issues.
+4. *"Is it possible to know/track tokens consumed? if can show it after 📁 Files changed section, if not then skip it"* — token tracking desired but not faked.
+
+The §14 noise-reduction trajectory (Bundle I → N → O) now has each routine mutation turn producing ~3 lines of §14 output instead of ~10 — while issues automatically promote to full visibility.
+
+### Real-world trigger
+
+User-driven post-Bundle-N feedback (2026-05-10). Bundle N landed; Stephen reviewed the resulting §14 output and surfaced three more axes to compress + one open question. Resolution proposed within the same chat turn per §0.4 standing rule; approved within two turns; applied in the third.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6` ✓ matches manifest pin
+- §8.7 post-upgrade scan: 0 CRITICAL, 0 WARN, 1 INFO (pre-existing legacy memory_id); report at `meta/health/2026-05-10-b0d9ad3adc35ec1b-postupgrade.md`
+- Chain LINK invariant: clean across new ledger tail
+- Validator self-test: passes post-upgrade
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — §14 three-state triage applied; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-8060fe2e188e1793e9dbc758b34a8198617ff8bf8a3320a2012595faf3012dab.md`
+- `.cyberos-memory/manifest.json` — protocol pin + audit_chain_head + reconciliation_checkpoint + last_updated_at updated
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:protocol_upgrade` row appended; `op:create` rows for archive, health report, DEC-107, REF-039; `op:str_replace` row for preference v2
+- `.cyberos-memory/meta/health/2026-05-10-b0d9ad3adc35ec1b-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/decisions/DEC-107-section-14-three-state-triage.md` — locked decision per §0.6
+- `.cyberos-memory/memories/refinements/REF-039-bundle-o-section-14-three-state-triage.md` — refinement memory per §0.4 step 4
+- `.cyberos-memory/memories/preferences/feedback-section-14-compression.md` — preference v2 (str_replace; supersedes v1's compact-only guidance with three-state triage)
+- `docs/CyberOS-AGENTS.README.md` — Part 8 anti-pattern note refreshed to reflect §14.2 auto-trigger semantics
+
+---
+
+## 2026-05-10 — Bundle N TIER 1+2: §14 omission + audit-trail suppression
+
+### Protocol SHA transition
+
+- **Before:** `sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329`
+- **After:**  `sha256:8060fe2e188e1793e9dbc758b34a8198617ff8bf8a3320a2012595faf3012dab`
+- **Approved by:** subject:stephen-cheng (chat-turn phrase per §0.5)
+
+### Changed (2 added; 0 deferred)
+
+- **TIER 1 — §14.0 omission rule (sev-2)**. New sub-section above §14.1. The §14 block MUST be omitted entirely when ALL of: (a) `manifest.operational_mode == normal`, (b) no `op:rejected|revert|warn|health_check` row this turn, (c) no memory mutations (audit-row count ≤ 2 and only `session.start`/`session.end` bookends), (d) most-recent §8.7 self-audit reports 0 CRITICAL and 0 WARN. Verbose/debug/maintenance modes still always emit §14.2.
+- **TIER 2 — §14.1.1 audit-trail suppression (sev-2)**. New sub-section under §14.1. When §14.1 compact IS emitted in normal mode, omit the `audit/<YYYY-MM>.jsonl: <N rows appended; head=sha256:…>` line unless a finding occurred this turn or the most-recent §8.7 reports issues.
+- §14 heading: `(mandatory)` → `(conditional in normal mode)` to reflect new conditionality.
+
+### Deferred
+
+- **TIER 3 — `📁 Files changed:` block for non-BRAIN paths**. Not included in this approval. Future amendment if user requests; Stephen approved TIER 1+2 minimum-viable.
+
+### Why
+
+User feedback during cowork-session 2026-05-10: *"show Audit trail after each messages make the conversation flooded, just show in maintenance mode or when issues arise"* and *"can we compress 📝 .cyberos-memory updated section more? show full verbose in maintenance mode, but only show changes summary on normal (default), if no issues arise don't need to show memory changes, just show other files' changes"*. Both directly address signal-to-noise — the §14 block was generating chat noise on every healthy turn. Bundle I (2026-05-06) introduced the compact format; Bundle N completes the noise-reduction journey by allowing full block omission.
+
+### Real-world trigger
+
+User-driven post-healthcheck feedback (2026-05-10). Immediately after running the on-demand §8.7 healthcheck (which produced a §14 block with audit head SHA), Stephen flagged the noise. Resolution proposed within the same chat turn per §0.4 standing rule; approved within two turns; applied in the third.
+
+### Verification
+
+- Live AGENTS.md canonical SHA: `sha256:8060fe2e188e1793e9dbc758b34a8198617ff8bf8a3320a2012595faf3012dab` ✓ matches manifest pin
+- §8.7 post-upgrade scan: 0 CRITICAL, 0 WARN, 1 INFO (pre-existing legacy memory_id); report at `meta/health/2026-05-10-8060fe2e188e1793-postupgrade.md`
+- Chain LINK invariant: clean across new ledger tail
+- Validator self-test: passes post-upgrade
+
+### Related files updated (per §0.6)
+
+- `docs/CyberOS-AGENTS.md` — §14 amendments applied; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329.md`
+- `.cyberos-memory/manifest.json` — `protocol.{sha256,approved_at,approved_by,last_checked_at}`, `audit_chain_head`, `last_updated_at`, `reconciliation_checkpoint` updated
+- `.cyberos-memory/audit/2026-05.jsonl` — `op:protocol_upgrade` row appended; `op:create` rows for archive, health report, DEC-106, REF-038, preference memory
+- `.cyberos-memory/meta/health/2026-05-10-8060fe2e188e1793-postupgrade.md` — auto-triggered §8.7 scan
+- `.cyberos-memory/memories/decisions/DEC-106-section-14-omission-rule.md` — locked decision per §0.6
+- `.cyberos-memory/memories/refinements/REF-038-bundle-n-section-14-omission.md` — refinement memory per §0.4 step 4
+- `.cyberos-memory/memories/preferences/feedback-section-14-compression.md` — subject preference (sync_class=publishable)
+- `docs/CyberOS-AGENTS.README.md` — Part 8 anti-pattern note ("Skipping the §14 end-of-response block") amended to reflect §14.0 carve-out
+
+---
+
 ## 2026-05-10 — Bundle M: AGENTS.md refinement pass (functional-zero)
 
 ### Protocol SHA transition

@@ -451,29 +451,23 @@ If a memory must reference a denylisted item, store a **pointer** instead (`"see
 | `INCOMPATIBLE:protocol-sha256-mismatch` | Canonical SHA of `<root>/<manifest.protocol.loaded_path>` ≠ `manifest.protocol.sha256` (per §0.5) | Refuse to operate; surface the diff; require user to either revert the AGENTS.md edit OR approve the new SHA via the §0.5 chat-turn approval phrase |
 | `INCOMPATIBLE:three-way-protocol-conflict` | An upstream release SHA `Z` is available AND loaded SHA `Y` ≠ pinned SHA `X` ≠ `Z` (per §0.5 three-way-conflict subsection) | Refuse to operate; surface the three-way diff; require user to choose: revert local, approve local as upgrade, or manual merge — never auto-apply upstream |
 
-### 14.1 Compact format (default — `operational_mode: normal`)
+### 14.1 Compact format (sev-2; normal mode, non-BRAIN file change, no issues)
 
-Only paths with actual changes appear in `Δ Changes:`. Scopes with no changes are rolled up in a single `unchanged:` line. Status lines are unconditional.
+Emit when a non-BRAIN file changed this turn AND no issues are present AND mode is normal. Format:
 
 ```
 ---
-📝 .cyberos-memory updated
-
-Δ Changes:
+📁 Files changed:
 - <path>: <one-line description of change>
-- <path>: <one-line description>
-- audit/<YYYY-MM>.jsonl: <N rows appended; head=sha256:…>
-
-Status:
-- conflicts: <id | none> | drift: <N | none> | shallow: <N | none>
-- sync: <N local-only / M publishable / K shared / J client-visible>
-- health (last audit): <Nc / Mw / Ki>; mode: <normal>
-- unchanged: <comma-separated scope names with no changes this turn>
+- <path>: <one-line description of change>
+[- Tokens: <N input / M output>     # only when a token counter is wired up; omitted otherwise]
 ```
 
-**Analysis-only turns** (no mutations): replace the entire `Δ Changes:` block with a single line `(no mutations this turn — <one-sentence justification>)`. The Status block stays.
-
-**Scope name shortcuts allowed in `unchanged:` line**: `company`, `module`, `member`, `client`, `project`, `persona`, `memories/<bucket>`, `meta/<sub>`. Trailing slashes are optional in the rolled-up form.
+Rules:
+- **Non-BRAIN paths ONLY.** Files inside `.cyberos-memory/` are NEVER listed in §14.1 — they are agent housekeeping. The user trusts the audit ledger for that detail.
+- **One bullet per file.** One-line description style. No `outside BRAIN` qualifier (the path itself signals it's outside BRAIN — there are no BRAIN paths in §14.1).
+- **No `Δ Changes:` heading, no `Status:` block, no `unchanged:` line, no `audit/<YYYY-MM>.jsonl: …` line.** Stripped — `📁 Files changed:` is the only section.
+- **Tokens line is optional and conditional.** Emit only when the runtime exposes a token counter via tool (e.g., a future MCP exposing `usage.input_tokens`/`usage.output_tokens`). Pre-availability, omit the line — never estimate via `tiktoken` or character count, since approximations mislead.
 
 
 ---
