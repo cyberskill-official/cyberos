@@ -51,6 +51,33 @@ A **recommended** host runs the chain end-to-end without the user leaving the ch
 - The bash sandbox's view of paths differs from the file tool's view. The agent already knows this — but if you run bash commands by hand, paths look like `/sessions/<id>/mnt/<folder>/...` not `/Users/<you>/...`.
 - Cowork sessions don't persist across closing the app — but the BRAIN's audit ledger DOES persist (it's on your real filesystem). Resume any time.
 - Skills installed at the Cowork level (the ones loaded via `Skill` tool) DO NOT include the CyberOS skills system — those live in your `cyberos/` repo and are loaded on-demand by the agent reading the SKILL.md files.
+- **§0.1 sandbox guard (Bundle Q, 2026-05-11) — `outputs/brain_writer.py` refuses to run from inside Cowork's bash sandbox**, because the sandbox's view of the project lives at `/sessions/<id>/mnt/<folder>/...` which matches the AGENTS.md §0.1 forbidden-paths list (paths containing `/sessions/`, `local-agent-mode-sessions`, etc.). The bind-mount IS backed by your real filesystem, but §0.1 cannot tell that from inside; refusing is defense-in-depth against the case where it ISN'T. **Net effect:** the agent can edit non-BRAIN files (docs, source code) directly via the Write/Edit tools, but BRAIN-touching ops (audit-row appends, manifest mutations, `meta/protocol-history/` archives) require the user to run the apply script from a macOS terminal where the path resolves to `/Users/<you>/Projects/...` (no §0.1 forbidden substring). See "The cowork → macOS handoff" below.
+
+### The cowork → macOS handoff (apply-script pattern)
+
+Established 2026-05-11 during Bundle Q. The pattern:
+
+1. **Agent in cowork edits non-BRAIN files** (AGENTS.md, CHANGELOG, README, skills runbooks, source code). These are ordinary file mutations — no audit row needed. Cowork's Write/Edit tools work fine.
+2. **Agent stages BRAIN-touching ops** as a deterministic apply script + memory templates under `outputs/<bundle-name>/`. The script:
+   - performs preflight sanity (paths, SHAs, deps);
+   - calls `python3 outputs/brain_writer.py` for each op (session-start, write, str-replace, protocol-upgrade, self-audit, session-end);
+   - exits non-zero on any failure so the chain stays consistent.
+3. **User runs the script from macOS terminal**:
+   ```bash
+   cd /Users/<you>/Projects/<repo>
+   bash outputs/<bundle-name>/apply.sh
+   ```
+   The §0.1 guard passes (path is real-filesystem), the writer runs, the chain advances.
+4. **Agent reviews the resulting chain** in the next cowork session via `verify --bit-perfect` output the user pastes back.
+
+**When this pattern fits:** any cluster of BRAIN mutations the agent wants to land as one atomic-ish unit — protocol upgrades (§0.5 + §0.6), bulk content refreshes, doctor-style cleanup passes, multi-memory ingestion of an external corpus.
+
+**When it doesn't:** single-memory writes during exploratory work — the cowork → macOS round-trip is overkill. For those, the user can drop into the macOS terminal directly and run the writer themselves (the `python3 outputs/brain_writer.py write <actor> <path> <content>` form is short).
+
+**Reference apply scripts** in `outputs/`:
+
+- `outputs/apply-bundle-Q.sh` — protocol-upgrade flow (§0.5 + §0.6 follow-on; canonical pattern for future protocol upgrades)
+- `outputs/doctor/<date>-cleanup.py` — bulk-cleanup pattern (str_replace many memories in one session, with rollback-on-failure)
 
 ### Recommendation
 

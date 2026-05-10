@@ -1096,6 +1096,31 @@ def _read_legacy_ids(brain_root: Path) -> set[str]:
     return out
 
 
+def _read_legacy_files(brain_root: Path) -> set[str]:
+    """Files exempt from §8.7 phase 5 orphan-WARN/INFO surfacing.
+
+    Format mirrors meta/legacy-ids.md: one entry per line as
+    `<rel-path-under-.cyberos-memory> | <reason> | <approximate-creation>`.
+    Lines starting with `#` or empty are ignored. Used for files created
+    by older writers that didn't audit (e.g., pre-§0.6 protocol-history
+    archives) and for known chain-history backward-orphans we've
+    decided not to chase.
+    """
+    path = brain_root / "meta" / "legacy-files.md"
+    if not path.is_file():
+        return set()
+    out: set[str] = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            entry = line.split("|", 1)[0].strip()
+            if entry and not entry.startswith("<"):
+                out.add(entry)
+    return out
+
+
 def _walk_memory_files(brain_root: Path) -> list[Path]:
     """All memory files under §3 layout dirs (excl. audit/, .lock, etc.)."""
     out: list[Path] = []
@@ -1130,7 +1155,8 @@ def _phase1_schema(brain_root: Path, legacy: set[str]) -> list[dict]:
             # rules.md, retention-rules.md, README.md) are §4.2-exempt per
             # the protocol — skip schema validation.
             if rel in (
-                "meta/legacy-ids.md", "meta/tombstones.md",
+                "meta/legacy-ids.md", "meta/legacy-files.md",
+                "meta/tombstones.md",
                 "meta/classification-rules.md", "meta/retention-rules.md",
                 "README.md",
             ) or rel.startswith("meta/health/") \
@@ -1396,6 +1422,7 @@ def _phase5_orphans(brain_root: Path) -> list[dict]:
     """
     findings: list[dict] = []
     paths = all_audit_paths(brain_root)
+    legacy_files = _read_legacy_files(brain_root)
 
     # Build last-op-per-path index from chain
     last_op_per_path: dict[str, str] = {}
@@ -1435,10 +1462,21 @@ def _phase5_orphans(brain_root: Path) -> list[dict]:
                                  "code": f"tombstoned-file-missing:{rel}"})
         else:
             if not abs_path.is_file():
-                findings.append({"sev": "INFO", "phase": 5,
-                                 "code": f"orphan-audit-row (chain-history "
-                                         f"artefact):{rel} (last op:{op}, "
-                                         f"file missing)"})
+                if rel in legacy_files:
+                    # Registered in meta/legacy-files.md — silenced as INFO
+                    # with a clearer marker so future audits can see it
+                    # was deliberately registered, not just background
+                    # chain-history.
+                    findings.append({"sev": "INFO", "phase": 5,
+                                     "code": f"legacy-file-registered:{rel} "
+                                             f"(last op:{op}, file missing — "
+                                             f"per meta/legacy-files.md)"})
+                else:
+                    findings.append({"sev": "INFO", "phase": 5,
+                                     "code": f"orphan-audit-row "
+                                             f"(chain-history artefact):"
+                                             f"{rel} (last op:{op}, "
+                                             f"file missing)"})
 
     # Forward direction (file → audit row)
     audited_paths = {
@@ -1454,8 +1492,14 @@ def _phase5_orphans(brain_root: Path) -> list[dict]:
         if f_path.name == ".keep":
             continue
         if rel not in audited_paths:
-            findings.append({"sev": "WARN", "phase": 5,
-                             "code": f"orphan-file (no audit row):{rel}"})
+            if rel in legacy_files:
+                findings.append({"sev": "INFO", "phase": 5,
+                                 "code": f"legacy-file-registered:{rel} "
+                                         f"(no audit row — per "
+                                         f"meta/legacy-files.md)"})
+            else:
+                findings.append({"sev": "WARN", "phase": 5,
+                                 "code": f"orphan-file (no audit row):{rel}"})
     return findings
 
 
