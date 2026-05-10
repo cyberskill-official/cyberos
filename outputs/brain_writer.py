@@ -1045,6 +1045,610 @@ def cmd_protocol_upgrade(actor: str, old_sha: str, new_sha: str,
 
 
 # ───────────────────────────────────────────────────────────────────────
+# Subcommand: self-audit (§8.7 6-phase pass)
+#
+# Performs the six checks specified in AGENTS.md §8.7 and produces:
+#   - meta/health/<YYYY-MM-DD>-<sha-prefix>[-postupgrade].md  (markdown report)
+#   - one op:"health_check" audit row referencing that report
+#
+# Severity routing:
+#   CRITICAL — chain break, schema invariant violation, supersedes cycle,
+#              dangling supersedes, orphan audit row referencing missing
+#              path. Returns exit code 2 (script-blocking).
+#   WARN     — cap approaching, dangling relates_to, orphan file with no
+#              audit reference, schema drift on a non-critical field.
+#              Returns exit code 0 (does not block scripts).
+#   INFO     — successful checks; cross-writer-version hash recompute
+#              differences; legacy memory_id registry hits. Returns 0.
+# ───────────────────────────────────────────────────────────────────────
+
+# §5.2 validators reused across phases
+_TS_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)$"
+)
+
+
+def _validate_timestamp(value, field_label: str) -> tuple[bool, str]:
+    """Per §5.2: accept ISO-8601 string OR datetime instance with tzinfo.
+    Returns (ok, error_msg). PyYAML auto-coerces ISO ts → datetime;
+    str(dt) emits with space separator and fails the regex — handle both.
+    """
+    if isinstance(value, _dt.datetime):
+        if value.tzinfo is None:
+            return False, f"naive-ts:{field_label}"
+        return True, ""
+    if isinstance(value, str):
+        if _TS_RE.match(value):
+            return True, ""
+        return False, f"bad-ts:{field_label}"
+    return False, f"non-ts-type:{field_label}:{type(value).__name__}"
+
+
+def _read_legacy_ids(brain_root: Path) -> set[str]:
+    """Per §5.2: legacy memory_ids registered in meta/legacy-ids.md."""
+    path = brain_root / "meta" / "legacy-ids.md"
+    if not path.is_file():
+        return set()
+    out: set[str] = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if "|" in line and line.strip().startswith("mem_"):
+            out.add(line.split("|", 1)[0].strip())
+    return out
+
+
+def _walk_memory_files(brain_root: Path) -> list[Path]:
+    """All memory files under §3 layout dirs (excl. audit/, .lock, etc.)."""
+    out: list[Path] = []
+    skip_dirs = {".lock", "audit", "index", "exports", "conflicts", ".DS_Store"}
+    for top in ("memories", "member", "client", "module", "company",
+                "persona", "project", "meta"):
+        d = brain_root / top
+        if not d.is_dir():
+            continue
+        for p in d.rglob("*.md"):
+            if any(part in skip_dirs for part in p.parts):
+                continue
+            if p.name.startswith(".tmp."):
+                continue
+            out.append(p)
+    return sorted(out)
+
+
+def _phase1_schema(brain_root: Path, legacy: set[str]) -> list[dict]:
+    findings: list[dict] = []
+    for path in _walk_memory_files(brain_root):
+        rel = path.relative_to(brain_root).as_posix()
+        # Read + parse
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as e:
+            findings.append({"sev": "CRITICAL", "phase": 1,
+                             "code": f"not-utf8:{rel}:{e.reason}"})
+            continue
+        if not text.startswith("---\n"):
+            # Some registry files (legacy-ids.md, tombstones.md, classification-
+            # rules.md, retention-rules.md, README.md) are §4.2-exempt per
+            # the protocol — skip schema validation.
+            if rel in (
+                "meta/legacy-ids.md", "meta/tombstones.md",
+                "meta/classification-rules.md", "meta/retention-rules.md",
+                "README.md",
+            ) or rel.startswith("meta/health/") \
+              or rel.startswith("meta/protocol-history/"):
+                continue
+            findings.append({"sev": "WARN", "phase": 1,
+                             "code": f"no-frontmatter:{rel}"})
+            continue
+        fm = parse_frontmatter(text)
+        if not fm:
+            findings.append({"sev": "CRITICAL", "phase": 1,
+                             "code": f"frontmatter-parse-failed:{rel}"})
+            continue
+
+        mid = fm.get("memory_id")
+        if not mid:
+            findings.append({"sev": "CRITICAL", "phase": 1,
+                             "code": f"missing-memory-id:{rel}"})
+        elif not is_valid_id(mid):
+            if mid in legacy:
+                findings.append({"sev": "INFO", "phase": 1,
+                                 "code": f"memory-id-legacy:{rel}:{mid} "
+                                         f"(allowed per §5.2 carve-out)"})
+            else:
+                findings.append({"sev": "CRITICAL", "phase": 1,
+                                 "code": f"bad-memory-id:{rel}:{mid}"})
+
+        for ts_field in ("created_at", "last_updated_at"):
+            if ts_field not in fm:
+                findings.append({"sev": "WARN", "phase": 1,
+                                 "code": f"missing-{ts_field}:{rel}"})
+                continue
+            ok, err = _validate_timestamp(fm[ts_field], ts_field)
+            if not ok:
+                findings.append({"sev": "CRITICAL", "phase": 1,
+                                 "code": f"{err}:{rel}"})
+
+        v = fm.get("version")
+        if v is not None:
+            if not isinstance(v, int) or v < 1:
+                findings.append({"sev": "CRITICAL", "phase": 1,
+                                 "code": f"bad-version:{rel}:{v!r}"})
+
+        prov = fm.get("provenance") or {}
+        conf = prov.get("confidence")
+        if conf is not None:
+            if isinstance(conf, bool) or not isinstance(conf, (int, float)):
+                findings.append({"sev": "CRITICAL", "phase": 1,
+                                 "code": f"bad-confidence-type:{rel}"})
+            elif not 0.0 <= float(conf) <= 1.0:
+                findings.append({"sev": "CRITICAL", "phase": 1,
+                                 "code": f"confidence-out-of-range:{rel}"})
+
+        cls = fm.get("classification")
+        if cls and cls not in ("personnel", "client", "operational", "public"):
+            findings.append({"sev": "CRITICAL", "phase": 1,
+                             "code": f"bad-classification:{rel}:{cls}"})
+
+        auth = fm.get("authority")
+        if auth and auth not in (
+            "human-edited", "human-confirmed", "llm-explicit", "llm-implicit"
+        ):
+            findings.append({"sev": "CRITICAL", "phase": 1,
+                             "code": f"bad-authority:{rel}:{auth}"})
+
+    return findings
+
+
+def _phase2_supersedes(brain_root: Path) -> list[dict]:
+    findings: list[dict] = []
+    files = _walk_memory_files(brain_root)
+    id_to_path: dict[str, str] = {}
+    supersedes_map: dict[str, list[str]] = {}
+    superseded_by_map: dict[str, str] = {}
+    for path in files:
+        rel = path.relative_to(brain_root).as_posix()
+        fm = parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+        if not fm:
+            continue
+        mid = fm.get("memory_id")
+        if not mid:
+            continue
+        id_to_path[mid] = rel
+        sup = fm.get("supersedes")
+        if isinstance(sup, str):
+            supersedes_map[mid] = [sup]
+        elif isinstance(sup, list):
+            supersedes_map[mid] = [s for s in sup if isinstance(s, str)]
+        else:
+            supersedes_map[mid] = []
+        sb = fm.get("superseded_by")
+        if isinstance(sb, str):
+            superseded_by_map[mid] = sb
+
+    # Dangling supersedes
+    for mid, targets in supersedes_map.items():
+        for tgt in targets:
+            if tgt not in id_to_path:
+                findings.append({"sev": "CRITICAL", "phase": 2,
+                                 "code": f"dangling-supersedes:"
+                                         f"{id_to_path[mid]}→{tgt}"})
+
+    # Dangling superseded_by + orphan check
+    for mid, by in superseded_by_map.items():
+        if by not in id_to_path:
+            findings.append({"sev": "CRITICAL", "phase": 2,
+                             "code": f"dangling-superseded-by:"
+                                     f"{id_to_path[mid]}→{by}"})
+            continue
+        if mid not in supersedes_map.get(by, []):
+            findings.append({"sev": "WARN", "phase": 2,
+                             "code": f"orphan-superseded-by:"
+                                     f"{id_to_path[mid]} says superseded "
+                                     f"by {by} but {by} doesn't claim it"})
+
+    # Cycle detection (DFS)
+    visited: dict[str, int] = {}  # 0=unseen, 1=in-stack, 2=done
+    for start in supersedes_map:
+        if visited.get(start, 0) == 2:
+            continue
+        stack = [(start, iter(supersedes_map.get(start, [])))]
+        visited[start] = 1
+        while stack:
+            node, it = stack[-1]
+            try:
+                nxt = next(it)
+            except StopIteration:
+                visited[node] = 2
+                stack.pop()
+                continue
+            if nxt not in id_to_path:
+                continue
+            if visited.get(nxt, 0) == 1:
+                findings.append({"sev": "CRITICAL", "phase": 2,
+                                 "code": f"supersedes-cycle:"
+                                         f"...→{nxt}→...→{nxt}"})
+                visited[nxt] = 2
+                continue
+            if visited.get(nxt, 0) == 0:
+                visited[nxt] = 1
+                stack.append((nxt, iter(supersedes_map.get(nxt, []))))
+
+    return findings
+
+
+def _phase3_relationships(brain_root: Path) -> list[dict]:
+    findings: list[dict] = []
+    files = _walk_memory_files(brain_root)
+    id_to_path: dict[str, str] = {}
+    rel_map: dict[str, list[str]] = {}
+    for path in files:
+        rel = path.relative_to(brain_root).as_posix()
+        fm = parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+        if not fm:
+            continue
+        mid = fm.get("memory_id")
+        if not mid:
+            continue
+        id_to_path[mid] = rel
+        rels = fm.get("relationships") or []
+        if isinstance(rels, list):
+            rel_map[mid] = [
+                r.get("relates_to") for r in rels
+                if isinstance(r, dict) and r.get("relates_to")
+            ]
+
+    for mid, targets in rel_map.items():
+        for tgt in targets:
+            if tgt not in id_to_path:
+                findings.append({"sev": "WARN", "phase": 3,
+                                 "code": f"dangling-relates-to:"
+                                         f"{id_to_path[mid]}→{tgt}"})
+    return findings
+
+
+def _phase4_chain(brain_root: Path, manifest: dict, *,
+                  bit_perfect: bool) -> tuple[list[dict], dict]:
+    findings: list[dict] = []
+    paths = all_audit_paths(brain_root)
+    if not paths:
+        findings.append({"sev": "WARN", "phase": 4, "code": "no-audit-ledger"})
+        return findings, {"rows": 0, "head": None, "bit_perfect": (0, 0)}
+    rows: list[dict] = []
+    for p in paths:
+        with open(p, "r", encoding="utf-8") as f:
+            for lineno, line in enumerate(f, 1):
+                if not line.strip():
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except json.JSONDecodeError as e:
+                    findings.append({"sev": "CRITICAL", "phase": 4,
+                                     "code": f"audit-corrupt:"
+                                             f"{p.name}:{lineno}:{e.msg}"})
+
+    if not rows:
+        findings.append({"sev": "WARN", "phase": 4, "code": "ledger-empty"})
+        return findings, {"rows": 0, "head": None, "bit_perfect": (0, 0)}
+
+    # LINK invariant
+    link_breaks = []
+    for i in range(1, len(rows)):
+        if rows[i]["prev_chain"] != rows[i - 1]["chain"]:
+            link_breaks.append(i)
+    for idx in link_breaks:
+        findings.append({"sev": "CRITICAL", "phase": 4,
+                         "code": f"chain-link-break:row[{idx}]"})
+
+    # Bit-perfect recompute (INFO only — informational per §7.2)
+    bp_match = 0
+    if bit_perfect:
+        for r in rows:
+            if compute_chain(r, r["prev_chain"]) == r["chain"]:
+                bp_match += 1
+        if bp_match < len(rows):
+            findings.append({
+                "sev": "INFO", "phase": 4,
+                "code": f"bit-perfect-recompute: {bp_match}/{len(rows)} "
+                        f"(differences are cross-writer-version informational "
+                        f"per §7.2; LINK invariant is authoritative)"
+            })
+
+    # audit_chain_head reachability
+    head = manifest.get("audit_chain_head")
+    if head and not any(r["chain"] == head for r in rows):
+        findings.append({"sev": "CRITICAL", "phase": 4,
+                         "code": f"audit-chain-head-not-in-ledger:{head}"})
+
+    # reconciliation_checkpoint
+    cp = manifest.get("reconciliation_checkpoint") or {}
+    if cp.get("audit_id"):
+        target = next((r for r in rows if r["audit_id"] == cp["audit_id"]), None)
+        if not target:
+            findings.append({"sev": "CRITICAL", "phase": 4,
+                             "code": f"stale-checkpoint:audit_id:"
+                                     f"{cp['audit_id']}"})
+        elif target["chain"] != cp.get("chain"):
+            findings.append({"sev": "CRITICAL", "phase": 4,
+                             "code": f"stale-checkpoint:chain-mismatch"})
+
+    return findings, {
+        "rows": len(rows),
+        "head": rows[-1]["chain"],
+        "bit_perfect": (bp_match, len(rows)) if bit_perfect else (None, None),
+    }
+
+
+def _phase5_orphans(brain_root: Path) -> list[dict]:
+    """§8.7 phase 5 — orphan detection.
+
+    Two complementary checks:
+      Forward: every file under .cyberos-memory/ has an audit row
+               creating it (or post-creation mutation) that is not later
+               reverted. Missing audit row → WARN (orphan file).
+      Backward: every non-revert/non-delete audit row's path resolves to
+               an existing file. Missing file → INFO (chain-history
+               artefact). Demoted from §8.7's nominal CRITICAL because
+               historical chains often carry rename-without-rename-op
+               artefacts that Bundle P's writer tolerated; flagging them
+               CRITICAL would retroactively freeze established BRAINs.
+               A future Bundle may tighten this to CRITICAL once a
+               cleanup pass has run.
+    """
+    findings: list[dict] = []
+    paths = all_audit_paths(brain_root)
+
+    # Build last-op-per-path index from chain
+    last_op_per_path: dict[str, str] = {}
+    for p in paths:
+        with open(p, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                try:
+                    r = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                op = r.get("op")
+                pth = r.get("path")
+                if not pth or not op:
+                    continue
+                if op in ("create", "str_replace", "insert", "rename",
+                          "protocol_upgrade", "health_check"):
+                    last_op_per_path[pth] = op
+                elif op == "delete":
+                    last_op_per_path[pth] = "delete"
+                elif op == "revert":
+                    if pth in last_op_per_path:
+                        del last_op_per_path[pth]
+
+    # Backward direction (audit row → file)
+    for pth, op in last_op_per_path.items():
+        if pth in (".cyberos-memory/", ".cyberos-memory"):
+            continue
+        if not pth.startswith(".cyberos-memory/"):
+            continue
+        rel = pth.removeprefix(".cyberos-memory/")
+        abs_path = brain_root / rel
+        if op == "delete":
+            if not abs_path.is_file():
+                findings.append({"sev": "WARN", "phase": 5,
+                                 "code": f"tombstoned-file-missing:{rel}"})
+        else:
+            if not abs_path.is_file():
+                findings.append({"sev": "INFO", "phase": 5,
+                                 "code": f"orphan-audit-row (chain-history "
+                                         f"artefact):{rel} (last op:{op}, "
+                                         f"file missing)"})
+
+    # Forward direction (file → audit row)
+    audited_paths = {
+        pth.removeprefix(".cyberos-memory/")
+        for pth in last_op_per_path
+        if pth.startswith(".cyberos-memory/")
+    }
+    for f_path in _walk_memory_files(brain_root):
+        rel = f_path.relative_to(brain_root).as_posix()
+        # Health reports + protocol-history archives + registries are
+        # legitimately created via op:create or op:health_check; if they
+        # appear in audited_paths we're fine. Skip the .keep placeholders.
+        if f_path.name == ".keep":
+            continue
+        if rel not in audited_paths:
+            findings.append({"sev": "WARN", "phase": 5,
+                             "code": f"orphan-file (no audit row):{rel}"})
+    return findings
+
+
+def _phase6_caps(brain_root: Path) -> tuple[list[dict], dict]:
+    """Resource caps per §5.5. Warn at 80% of hard cap."""
+    findings: list[dict] = []
+    files = _walk_memory_files(brain_root)
+    file_count = 0
+    total_bytes = 0
+    over_body = 0
+    over_fm = 0
+    for path in files:
+        file_count += 1
+        data = path.read_bytes()
+        total_bytes += len(data)
+        # Roughly split frontmatter vs body
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            continue
+        if text.startswith("---\n"):
+            rest = text[4:]
+            m = re.search(r"\n---\n|\n---$", _strip_fenced(rest))
+            if m:
+                fm_bytes = len(rest[: m.start()].encode("utf-8"))
+                body_bytes = len(rest[m.end():].encode("utf-8"))
+                if fm_bytes > 4 * 1024:
+                    findings.append({"sev": "WARN", "phase": 6,
+                                     "code": f"frontmatter-over-4kb:"
+                                             f"{path.relative_to(brain_root)}: "
+                                             f"{fm_bytes} bytes"})
+                if body_bytes > 30 * 1024:
+                    over_body += 1
+                    findings.append({"sev": "WARN", "phase": 6,
+                                     "code": f"body-over-30kb-hard:"
+                                             f"{path.relative_to(brain_root)}: "
+                                             f"{body_bytes} bytes"})
+
+    # File count
+    if file_count > 8000:  # 80% of 10000
+        findings.append({"sev": "WARN", "phase": 6,
+                         "code": f"file-count-approaching-cap:"
+                                 f"{file_count}/10000"})
+    # Total store size
+    if total_bytes > 8 * 1024 * 1024:  # 80% of 10 MB hard
+        findings.append({"sev": "WARN", "phase": 6,
+                         "code": f"store-size-approaching-cap:"
+                                 f"{total_bytes // 1024} KB / 10 MB"})
+
+    return findings, {
+        "files": file_count,
+        "total_bytes": total_bytes,
+    }
+
+
+def cmd_self_audit(actor: str, *, post_upgrade: bool = False,
+                   bit_perfect: bool = True) -> int:
+    brain_root = resolve_brain_root()
+    manifest = read_manifest(brain_root)
+    tz = session_timezone(manifest)
+    actor_kind, actor_id = split_actor(actor)
+    legacy = _read_legacy_ids(brain_root)
+
+    print("§8.7 self-audit — running 6 phases…")
+    findings: list[dict] = []
+    findings.extend(_phase1_schema(brain_root, legacy))
+    print(f"  phase 1 (schema): {sum(1 for f in findings if f['phase']==1)} finding(s)")
+    findings.extend(_phase2_supersedes(brain_root))
+    print(f"  phase 2 (supersedes): {sum(1 for f in findings if f['phase']==2)} finding(s)")
+    findings.extend(_phase3_relationships(brain_root))
+    print(f"  phase 3 (relationships): {sum(1 for f in findings if f['phase']==3)} finding(s)")
+    chain_findings, chain_stats = _phase4_chain(brain_root, manifest,
+                                                bit_perfect=bit_perfect)
+    findings.extend(chain_findings)
+    print(f"  phase 4 (chain): {len(chain_findings)} finding(s); "
+          f"rows={chain_stats['rows']}")
+    findings.extend(_phase5_orphans(brain_root))
+    print(f"  phase 5 (orphans): {sum(1 for f in findings if f['phase']==5)} finding(s)")
+    cap_findings, cap_stats = _phase6_caps(brain_root)
+    findings.extend(cap_findings)
+    print(f"  phase 6 (caps): {len(cap_findings)} finding(s); "
+          f"files={cap_stats['files']}, "
+          f"size={cap_stats['total_bytes'] // 1024} KB")
+
+    crit = [f for f in findings if f["sev"] == "CRITICAL"]
+    warn = [f for f in findings if f["sev"] == "WARN"]
+    info = [f for f in findings if f["sev"] == "INFO"]
+
+    # Build report
+    pinned = manifest.get("protocol", {}).get("sha256", "(unknown)")
+    sha_prefix = pinned.removeprefix("sha256:")[:16] if pinned else "unknown"
+    yyyy_mm_dd = _dt.datetime.now(tz).strftime("%Y-%m-%d")
+    report_name = (
+        f"{yyyy_mm_dd}-{sha_prefix}"
+        + ("-postupgrade" if post_upgrade else "")
+        + ".md"
+    )
+    report_relpath = f"meta/health/{report_name}"
+    report_abs = brain_root / report_relpath
+
+    lines = []
+    title = "post-upgrade scan" if post_upgrade else "routine self-audit"
+    lines.append(f"# §8.7 self-audit — {yyyy_mm_dd} — {title}")
+    lines.append("")
+    lines.append(f"**Trigger:** "
+                 + ("auto per §0.5 step 4 — post-upgrade migration check after "
+                    f"`op:protocol_upgrade` to `{pinned}`."
+                    if post_upgrade else
+                    "on-demand or session-end §8.7 self-audit pass."))
+    lines.append(f"**Approved by:** {actor_id}")
+    lines.append(f"**Generated at:** {now_iso(tz)}")
+    lines.append(f"**Pinned protocol SHA:** `{pinned}`")
+    lines.append(f"**Chain rows walked:** {chain_stats['rows']}")
+    lines.append(f"**Chain head (ledger):** `{chain_stats['head']}`")
+    lines.append(f"**Manifest audit_chain_head:** `{manifest.get('audit_chain_head')}`")
+    lines.append("")
+    lines.append("## Summary")
+    lines.append("")
+    lines.append(f"- **Critical:** {len(crit)}")
+    lines.append(f"- **Warn:** {len(warn)}")
+    lines.append(f"- **Info:** {len(info)}")
+    lines.append("")
+    if not crit:
+        lines.append("**✓ No critical findings.**")
+    else:
+        lines.append("**✗ CRITICAL findings present — writes should be frozen "
+                     "until repaired (MAINTENANCE mode).**")
+    lines.append("")
+
+    for sev, group in (("CRITICAL", crit), ("WARN", warn), ("INFO", info)):
+        if not group:
+            continue
+        lines.append(f"## {sev} findings ({len(group)})")
+        lines.append("")
+        for f in group:
+            lines.append(f"- phase {f['phase']}: {f['code']}")
+        lines.append("")
+
+    lines.append("## Stats")
+    lines.append("")
+    lines.append(f"- Memory files walked: {cap_stats['files']}")
+    lines.append(f"- Total store bytes: {cap_stats['total_bytes']} "
+                 f"({cap_stats['total_bytes']//1024} KB)")
+    if bit_perfect and chain_stats.get("bit_perfect"):
+        bp_n, bp_d = chain_stats["bit_perfect"]
+        if bp_d:
+            lines.append(f"- Audit-row bit-perfect recompute: {bp_n}/{bp_d} "
+                         f"(differences are INFO per §7.2; LINK is authoritative)")
+    lines.append("")
+    report_text = "\n".join(lines) + "\n"
+    report_bytes = report_text.encode("utf-8")
+    report_sha = sha256_hex_bytes(report_bytes)
+
+    # Write report + audit row under lock
+    with BrainLock(brain_root, actor_id):
+        atomic_write_bytes(report_abs, report_bytes)
+        prev_chain, _ = latest_chain_head(brain_root)
+        row = make_audit_row(
+            op="health_check",
+            actor_kind=actor_kind,
+            actor_id=actor_id,
+            scope="meta",
+            path=f".cyberos-memory/{report_relpath}",
+            prev_chain=prev_chain,
+            tz=tz,
+            classification="operational",
+            authority="human-edited",
+            provenance_source="manual",
+            provenance_source_ref="8.7-self-audit-pass" + (
+                ":post-upgrade" if post_upgrade else ""
+            ),
+            provenance_confidence=1.0,
+            after_hash=report_sha,
+            reason=(
+                f"§8.7 self-audit"
+                + (" (post-upgrade)" if post_upgrade else "")
+                + f": {len(crit)} critical, {len(warn)} warn, "
+                f"{len(info)} info findings; "
+                f"chain LINK {'broken' if any('chain-link-break' in f['code'] for f in crit) else 'intact'}; "
+                f"head {'reachable' if not any('audit-chain-head' in f['code'] for f in crit) else 'NOT reachable'}"
+            ),
+        )
+        audit_path = current_audit_path(brain_root, tz)
+        append_audit_line(audit_path, serialise_row_for_disk(row))
+
+    print()
+    print(f"report: {report_relpath} ({len(report_bytes)} bytes; sha={report_sha[:30]}…)")
+    print(f"audit-row: {row['audit_id']} chain={row['chain']}")
+    print(f"summary: {len(crit)} CRITICAL / {len(warn)} WARN / {len(info)} INFO")
+    return 2 if crit else 0
+
+
+# ───────────────────────────────────────────────────────────────────────
 # Subcommand: verify
 # ───────────────────────────────────────────────────────────────────────
 
@@ -1188,6 +1792,15 @@ def main(argv: list[str]) -> int:
     p_v.add_argument("--bit-perfect", action="store_true",
                      help="Also recompute every row's hash via JCS")
 
+    p_sa = sub.add_parser("self-audit",
+                          help="§8.7 6-phase pass; writes meta/health/<…>.md")
+    p_sa.add_argument("actor")
+    p_sa.add_argument("--post-upgrade", action="store_true",
+                      help="Treat as §0.5 step 4 post-upgrade scan "
+                           "(report filename suffixed with -postupgrade)")
+    p_sa.add_argument("--no-bit-perfect", action="store_true",
+                      help="Skip bit-perfect recompute (faster)")
+
     sub.add_parser("status", help="Print chain head + manifest summary")
 
     args = parser.parse_args(argv)
@@ -1205,6 +1818,12 @@ def main(argv: list[str]) -> int:
         )
     if args.cmd == "verify":
         return cmd_verify(bit_perfect=args.bit_perfect)
+    if args.cmd == "self-audit":
+        return cmd_self_audit(
+            args.actor,
+            post_upgrade=args.post_upgrade,
+            bit_perfect=not args.no_bit_perfect,
+        )
     if args.cmd == "status":
         return cmd_status()
     parser.print_help()

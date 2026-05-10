@@ -11,11 +11,18 @@
 #   3. write DEC-109                                                        (op:create)
 #   4. write REF-041                                                        (op:create)
 #   5. protocol-upgrade — manifest.protocol pin update                      (op:protocol_upgrade)
-#   6. session.end + final manifest str_replace (audit_chain_head update)    (op:session.end + op:str_replace)
+#   6. §8.7 post-upgrade self-audit (auto per §0.5 step 4)                  (op:health_check)
+#   7. session.end + final manifest str_replace (audit_chain_head update)   (op:session.end + op:str_replace)
 #
 # Each step is idempotent within a single run via the BrainLock and the
 # writer's own validators. If the script fails midway, the chain remains
 # consistent (no partial mutations); you can fix the cause and rerun.
+#
+# The §8.7 self-audit at step 6 is the §0.5-mandated post-upgrade
+# migration check. CRITICAL findings cause the script to bail before
+# session.end (the upgrade is recorded but writes stay frozen until
+# repaired in MAINTENANCE mode). WARN/INFO findings are reported but
+# don't block.
 #
 # Verify after with:
 #   python3 outputs/brain_writer.py status
@@ -51,6 +58,18 @@ if [ ! -d ".cyberos-memory" ]; then
     exit 2
 fi
 
+# Preflight Python dependencies — fail before any chain mutations
+if ! python3 -c "import rfc8785, yaml" 2>/dev/null; then
+    echo "FATAL: missing Python dependencies for the writer." >&2
+    echo "  Required: rfc8785 (RFC 8785 JCS), PyYAML." >&2
+    echo "  Install with:" >&2
+    echo "    python3 -m pip install rfc8785 PyYAML --break-system-packages" >&2
+    echo "  (macOS Python 3.11+ enforces PEP 668; the --break-system-packages" >&2
+    echo "   flag is required when installing into the system Python.)" >&2
+    exit 2
+fi
+echo "✓ Python deps present (rfc8785, PyYAML)"
+
 # Verify new AGENTS.md canonical SHA matches the approved target
 COMPUTED_NEW=$(python3 - <<'PY'
 import hashlib, unicodedata
@@ -75,10 +94,17 @@ if [ "$COMPUTED_NEW" != "$NEW_SHA" ]; then
 fi
 echo "✓ AGENTS.md canonical SHA matches approved target ($NEW_SHA)"
 
-# Recover prior AGENTS.md from git HEAD (verify SHA matches old pin)
+# Recover prior AGENTS.md by walking git history backwards until the canonical
+# SHA matches the OLD pin. This handles three cases robustly:
+#   - edits not yet committed (HEAD has prior content)
+#   - bundle committed in one commit (HEAD~1 has prior content)
+#   - bundle split across multiple commits (HEAD~N has prior content)
 PRIOR_TMP="$(mktemp -t agents-prior.XXXXXX).md"
-git show HEAD:docs/CyberOS-AGENTS.md > "$PRIOR_TMP"
-COMPUTED_OLD=$(python3 - <<PY
+
+canonical_sha_of_blob() {
+    local rev="$1"
+    git show "$rev:docs/CyberOS-AGENTS.md" 2>/dev/null > "$PRIOR_TMP" || return 1
+    python3 - <<PY
 import hashlib, unicodedata
 with open('$PRIOR_TMP','rb') as f: data = f.read()
 BOM = b'\xef\xbb\xbf'
@@ -90,16 +116,38 @@ lines = [l.rstrip() for l in text.split('\n')]
 while lines and lines[-1] == '': lines.pop()
 print('sha256:' + hashlib.sha256(('\n'.join(lines)+'\n').encode('utf-8')).hexdigest())
 PY
-)
-if [ "$COMPUTED_OLD" != "$OLD_SHA" ]; then
-    echo "FATAL: git HEAD AGENTS.md SHA mismatch." >&2
+}
+
+FOUND_REV=""
+for n in 0 1 2 3 4 5 6 7 8 9 10; do
+    REV="HEAD~$n"
+    [ "$n" -eq 0 ] && REV="HEAD"
+    if ! git rev-parse "$REV" >/dev/null 2>&1; then
+        break
+    fi
+    SHA=$(canonical_sha_of_blob "$REV" 2>/dev/null) || continue
+    if [ "$SHA" = "$OLD_SHA" ]; then
+        FOUND_REV="$REV"
+        break
+    fi
+done
+
+if [ -z "$FOUND_REV" ]; then
+    echo "FATAL: could not locate the pre-Q AGENTS.md in git history." >&2
     echo "  expected (manifest pin): $OLD_SHA" >&2
-    echo "  computed (git HEAD):     $COMPUTED_OLD" >&2
-    echo "This usually means you committed the AGENTS.md edits already; the apply"  >&2
-    echo "script needs the PRE-edit version. Run: git show HEAD~1:docs/CyberOS-AGENTS.md" >&2
+    echo "  walked HEAD..HEAD~10 — no canonical SHA match" >&2
+    echo "Possible causes:" >&2
+    echo "  - the BRAIN's manifest pin doesn't reflect what was actually" >&2
+    echo "    committed before Bundle Q (rare; chain corruption);" >&2
+    echo "  - Bundle Q's commits are deeper than HEAD~10 (unlikely)." >&2
+    echo "Manual recovery: find the commit pre-edit, run" >&2
+    echo "  git show <commit>:docs/CyberOS-AGENTS.md > /tmp/prior.md" >&2
+    echo "  python3 outputs/brain_writer.py write $ACTOR \\" >&2
+    echo "    meta/protocol-history/AGENTS-${OLD_SHA/:/-}.md /tmp/prior.md" >&2
     rm -f "$PRIOR_TMP"
     exit 2
 fi
+echo "✓ Prior AGENTS.md (from git $FOUND_REV) matches old pin ($OLD_SHA)"
 echo "✓ Prior AGENTS.md (from git HEAD) matches old pin ($OLD_SHA)"
 
 # ─── Helper: render a memory template with fresh memory_id + ts ──────────
@@ -166,9 +214,28 @@ echo "── 5. protocol-upgrade — manifest.protocol pin ──"
 python3 "$WRITER" protocol-upgrade "$ACTOR" "$OLD_SHA" "$NEW_SHA" \
     --reason "Approve protocol upgrade $OLD_SHA → $NEW_SHA per §0.5; approved by $ACTOR in chat (Bundle Q: §0.6 implementation-files clause, §4.7 post-terminator close exemption, §13.1 BRAIN-not-versioned warn, §15 relative-symlink rule)."
 
-# ─── 6. session.end + final manifest str_replace ─────────────────────────
+# ─── 6. §8.7 post-upgrade self-audit (§0.5 step 4 auto-trigger) ──────────
 echo
-echo "── 6. session.end + final manifest str_replace ──"
+echo "── 6. §8.7 post-upgrade self-audit ──"
+set +e
+python3 "$WRITER" self-audit "$ACTOR" --post-upgrade
+SA_STATUS=$?
+set -e
+if [ "$SA_STATUS" -eq 2 ]; then
+    echo
+    echo "✗ §8.7 self-audit reported CRITICAL findings — halting before session.end."  >&2
+    echo "  The protocol-upgrade row landed; writes will remain frozen until"  >&2
+    echo "  repaired in MAINTENANCE mode (§8.8). Review the latest report at"  >&2
+    echo "  .cyberos-memory/meta/health/, address findings, then run:"  >&2
+    echo "    python3 $WRITER session-end $ACTOR"  >&2
+    rm -f "$PRIOR_TMP" "$DEC_RENDERED" "$REF_RENDERED"
+    exit 2
+fi
+echo "✓ Self-audit clean (no CRITICAL). Proceeding to session.end."
+
+# ─── 7. session.end + final manifest str_replace ─────────────────────────
+echo
+echo "── 7. session.end + final manifest str_replace ──"
 python3 "$WRITER" session-end "$ACTOR"
 
 # ─── Cleanup ─────────────────────────────────────────────────────────────
@@ -176,10 +243,10 @@ rm -f "$PRIOR_TMP" "$DEC_RENDERED" "$REF_RENDERED"
 
 echo
 echo "── done ──"
-echo "Bundle Q applied. Next step: verify the chain is healthy."
-echo "  python3 outputs/brain_writer.py status"
-echo "  python3 outputs/brain_writer.py verify --bit-perfect"
+echo "Bundle Q applied. Verifying the chain is healthy:"
+python3 "$WRITER" verify --bit-perfect
 echo
-echo "If verify reports 'LINK invariant breaks: 0' and the chain head matches"
-echo "the manifest, you're done. The post-upgrade §8.7 self-audit is a "
-echo "follow-up: run it manually when you're ready for a deeper sweep."
+echo "If 'LINK invariant breaks: 0' above and the manifest pin matches"
+echo "$NEW_SHA, you're done. Commit the bundle as one logical unit:"
+echo "  git add .gitignore AGENTS.md docs/ outputs/"
+echo "  git commit -m 'Bundle Q: §0.6 + §4.7 + §13.1 + §15 amendments'"
