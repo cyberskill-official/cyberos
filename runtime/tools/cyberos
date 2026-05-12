@@ -1423,6 +1423,14 @@ def main(argv=None):
     p.add_argument("rest", nargs=argparse.REMAINDER)
     p.set_defaults(func=lambda a: _delegate_to("cyberos_fr.py", [a.subcmd, *(a.rest or [])]))
 
+    p = sub.add_parser("fr-migrate", help="migrate legacy FR (tasks in frontmatter) → new body-H2 shape (Batch A, 2026-05-12)")
+    p.add_argument("rest", nargs=argparse.REMAINDER, help="<file.md> [--in-place|--check]")
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_fr_migrate.py", list(a.rest or [])))
+
+    p = sub.add_parser("project-index", help="auto-generate project-index.md for a planning project folder (Batch D)")
+    p.add_argument("rest", nargs=argparse.REMAINDER, help="<project_dir>")
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_project_index.py", list(a.rest or [])))
+
     # ---- Batches 17-20 (skills Stages 3-8) ----
     p = sub.add_parser("authoring", help="Stage 3 authoring helpers (Batch 17)")
     p.add_argument("subcmd", choices=["llm", "voice", "attribute", "diff", "interview"])

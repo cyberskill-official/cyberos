@@ -9,9 +9,18 @@ Everything about the CyberOS **memory layer** (the `.cyberos-memory/` BRAIN, its
 | **[README.md](README.md)** | On-ramp + 32-part operator manual + skills cross-reference | First read; recurring reference |
 | **[AGENTS.md](AGENTS.md)** | The protocol itself (1,241 lines, ~108 KB) | Authoritative reference when implementing a rule |
 | **[AGENTS-CORE.md](AGENTS-CORE.md)** | 42 KB compact version of AGENTS.md (regenerable) | Per-session load via symlink |
-| **[CHANGELOG.md](CHANGELOG.md)** | Daily landing log; every batch (1–23) recorded line-by-line | Audit trail; "what changed today" |
-| **[PRD.CHANGELOG.md](PRD.CHANGELOG.md)** | Notes on PRD-side impact per batch | When you next edit PRD.docx |
-| **[SRS.CHANGELOG.md](SRS.CHANGELOG.md)** | Notes on SRS-side impact per batch | When you next edit SRS.docx |
+| **[CHANGELOG.md](CHANGELOG.md)** | Daily landing log; every batch (1–25) recorded line-by-line | Audit trail; "what changed today" |
+
+## Sister folders under `docs/`
+
+The PRD and SRS each got their own folder in the 2026-05-12 cleanup — they are design docs, not memory-protocol docs, so they sit alongside this folder rather than inside it:
+
+| Folder | What's there |
+| --- | --- |
+| [`../prd/`](../prd/) | `PRD.docx` + `CHANGELOG.md` + a small `README.md`. CyberOS Product Requirements. |
+| [`../srs/`](../srs/) | `SRS.docx` + `CHANGELOG.md` + a small `README.md`. CyberOS System Requirements. |
+| [`../skills/`](../skills/) | Single-doc operator manual for the skills layer (Parts 1–30). |
+| [`../contracts/`](../contracts/) | Versioned artefact schemas: `feature_request@1`, `task@1`, `project_brief@1`, `prd@1`, `srs@1`. |
 
 ## How to use this folder
 
@@ -36,8 +45,9 @@ Symlink to `AGENTS-CORE.md` (compact) for per-session load. Agents that need the
 
 ## Folder history
 
-- **2026-05-12**: docs reorganisation. Memory-related docs moved from `docs/CyberOS-*.md` into this folder. Originals at `docs/CyberOS-*.md` are now redirect stubs (sandbox can't unlink; remove with `rm docs/CyberOS-*.md` on the host filesystem when convenient).
-- Skills-layer docs deliberately separate, under `docs/skills/`.
+- **2026-05-12 (Batch 24)** — memory-protocol docs moved from `docs/CyberOS-*.md` into this folder.
+- **2026-05-12 (Batch 25)** — PRD + SRS docs (and their CHANGELOGs) moved out of `docs/` top-level into dedicated `docs/prd/` and `docs/srs/` folders so each design doc travels with its own changelog. Skills-layer docs were also consolidated into a single anchor — see `../skills/README.md`.
+- Legacy redirect stubs at `docs/CyberOS-AGENTS*.md` remain (sandbox couldn't unlink); remove with `rm docs/CyberOS-*.md` on the host filesystem when convenient.
 
 ## Cross-references
 

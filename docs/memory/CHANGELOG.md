@@ -1493,3 +1493,44 @@ Stephen flagged that the previously-checked-in §6 example carried Styx project 
 
 ### Real-world trigger
 Stephen: *"too many docs inside skills folder that made me confuse, can we combine all inside single README.md / move memory related files into new folder 'memory'"*. End-of-session cleanup before closing the sprint that landed Batches 4–23.
+
+---
+
+## Batch 25 — Skills-layer Batches A-D + folder cleanup (2026-05-12, late-evening)
+
+### Added
+- **`feature_request@1` reshape (Batch A).** Frontmatter slimmed from ~270 lines (with all tasks inlined as YAML) to ~25 lines (registry + AC + `task_index`). Each task now lives as a body H2 section (`## FR-NNN-T-MM — Title`) with prose description, `**Preconditions/Deliverables/Acceptance test:**` labels, and a fenced `task-meta` YAML block for structured fields. Parser at `runtime/tools/cyberos_fr_parser.py` supports both shapes (prefers new). Migrator `cyberos fr-migrate <file> --in-place` converts legacy FRs.
+- **Optional `subtasks` in `task@1` (Batch B).** ID format `FR-NNN-T-MM-ST-XX`. Rendered as sub-nodes (rounded, dotted edge from parent) in `cyberos fr task-graph`. Backwards compatible — most tasks won't have subtasks. Subtask carries optional fenced `subtask-meta` YAML block for sizing / estimated_hours-or-tokens / status.
+- **`cyberos chain run --prd <p.md> --srs <s.md>` (Batch C).** Both fed as labelled context (`=== PRD ===`, `=== SRS ===`, `=== SPEC ===`) into fr-with-tasks. `--spec-file` remains as backwards-compatible single-input alternative; the three flags are independent and can be combined. `cyberos chain estimate` accepts the same flags. Manifest persists `prd_file` + `srs_file` for resume.
+- **Auto-generated `project-index.md` (Batch D).** Chain runs end by emitting a one-page dashboard inside `planning/<slug>/` listing pitch, spec inputs, the FR index table (id / title / task count / sizing breakdown / status), and quick commands. A `<!-- BEGIN human-edited -->` block is preserved verbatim across regenerations, so milestones / vendor notes / risks the operator adds survive subsequent chain runs. Tool: `cyberos project-index <project_dir>`.
+
+### Changed
+- **`docs/` top-level cleanup.**
+  - PRD assets moved: `docs/CyberOS-PRD.docx` → `docs/prd/PRD.docx`; `docs/CyberOS-PRD.CHANGELOG.md` → `docs/prd/CHANGELOG.md`. New `docs/prd/README.md` cross-links to SRS + memory + contracts.
+  - SRS assets moved: `docs/CyberOS-SRS.docx` → `docs/srs/SRS.docx`; `docs/CyberOS-SRS.CHANGELOG.md` → `docs/srs/CHANGELOG.md`. New `docs/srs/README.md`.
+  - `docs/` top-level now contains five clean subfolders (`memory/`, `skills/`, `contracts/`, `prd/`, `srs/`) instead of mixed files + folders.
+- **Top-level repo README.** New `README.md` at repo root with layout diagram, three-layer model, chain diagram, command cheat-sheet, identifier conventions, and recent-shape-change summary.
+- **`outputs/README.md`.** Documents the 14 subfolders (audit-site, council, doctor, refinements, etc.) so the directory isn't confusing.
+- **`tours/README.md`.** Documents the 10 `.tour` files and how to read them.
+- **`CLAUDE.md`** at repo root re-pointed to `docs/memory/AGENTS.md` (was the moved legacy path).
+- **`docs/memory/INDEX.md`** dropped the PRD/SRS CHANGELOG rows (they live with the design docs now) and added a "Sister folders under `docs/`" section pointing at `../prd/`, `../srs/`, `../skills/`, `../contracts/`.
+
+### Verify
+- `cyberos verify` → CRITICAL: 0 (12 pre-existing WARN, 1 INFO).
+- `cyberos fr list` → both FRs registered, `shape: body-h2` for both.
+- `cyberos fr task-graph FR-001-cyberskill` → renders 8 tasks + 4 subtasks (one task got example subtasks during testing).
+- `cyberos chain estimate --pitch "..." --prd /tmp/prd.md --srs /tmp/srs.md` → estimate runs; manifest persists separate input paths.
+- Project-index regeneration is idempotent; human-edited block preserved.
+
+### Real-world trigger
+Stephen reviewing the just-migrated FR: *"the source attribution was not necessary, the fr is the source to begin implementation"* + *"what is the purpose of the frontmatter at top? i read through the fr and it's quite hard to read"*. He also flagged folder confusion via screenshot and said: *"do all, just stop me when need decisions, remember to update readme to reflect new mechanism"*.
+
+### Operator runbook
+- **To convert a legacy FR** still using inlined frontmatter tasks: `cyberos fr-migrate path/to/FR.md --in-place`. Creates `.legacy.bak` alongside.
+- **To check whether an FR is on new shape**: `cyberos fr-migrate path/to/FR.md --check` (exit 0 = new, exit 1 = legacy).
+- **To refresh a project's index page**: `cyberos project-index planning/<slug>/`.
+- **To clean up the legacy redirect stubs the sandbox couldn't unlink**, run on host:
+  ```bash
+  rm docs/CyberOS-AGENTS*.md
+  ln -sf docs/memory/AGENTS-CORE.md AGENTS.md   # re-point the broken symlink
+  ```

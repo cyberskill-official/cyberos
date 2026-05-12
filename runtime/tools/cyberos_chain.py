@@ -132,9 +132,25 @@ def cmd_run(args):
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Triage skip-PRD?
+    # Batch C — assemble spec_text from --prd + --srs (separate inputs) OR --spec-file (legacy single input)
     spec_text = pitch
+    spec_inputs = {}  # tracks which source provided what
+    if args.prd:
+        spec_inputs["prd"] = Path(args.prd).read_text(encoding="utf-8")
+    if args.srs:
+        spec_inputs["srs"] = Path(args.srs).read_text(encoding="utf-8")
     if args.spec_file:
-        spec_text = Path(args.spec_file).read_text(encoding="utf-8")
+        spec_inputs["spec_file"] = Path(args.spec_file).read_text(encoding="utf-8")
+    if spec_inputs:
+        # Merge into single context block with section markers (auditor reads sections separately)
+        parts = []
+        if "prd" in spec_inputs:
+            parts.append(f"=== PRD ({Path(args.prd).name}) ===\n\n{spec_inputs['prd']}")
+        if "srs" in spec_inputs:
+            parts.append(f"=== SRS ({Path(args.srs).name}) ===\n\n{spec_inputs['srs']}")
+        if "spec_file" in spec_inputs:
+            parts.append(f"=== SPEC ({Path(args.spec_file).name}) ===\n\n{spec_inputs['spec_file']}")
+        spec_text = "\n\n".join(parts)
     skip_prd, triage_reasons = (False, ["forced off"])
     if args.skip_prd == "auto":
         skip_prd, triage_reasons = triage_skip_prd(spec_text)
@@ -154,6 +170,8 @@ def cmd_run(args):
         "output_dir": str(out_dir),
         "pitch_first_120": pitch[:120],
         "spec_file": args.spec_file,
+        "prd_file": args.prd,
+        "srs_file": args.srs,
         "with_llm": args.with_llm,
         "plan": plan,
         "status": "PLANNED",
@@ -210,8 +228,11 @@ def cmd_run(args):
             runner.step_max_tokens = args.step_max_tokens
             try:
                 result = runner.run(
-                    inputs={"pitch": pitch, "spec_text": spec_text if args.spec_file else "",
-                            "spec_file": args.spec_file},
+                    inputs={"pitch": pitch,
+                            "spec_text": spec_text if spec_inputs else "",
+                            "spec_file": args.spec_file,
+                            "prd_file": args.prd,
+                            "srs_file": args.srs},
                     output_dir=out_dir,
                     max_iterations=args.max_iterations,
                     cache=_runner_cache,
@@ -277,7 +298,7 @@ def cmd_run(args):
 # Input pitch
 {pitch}
 
-{f"# Spec file content{chr(10)}{spec_text[:6000]}" if args.spec_file else ""}
+{f"# Spec context (PRD + SRS + spec-file as provided){chr(10)}{spec_text[:8000]}" if spec_inputs else ""}
 
 {prev_artefacts if prev_artefacts else ""}
 
@@ -331,7 +352,12 @@ Output ONLY the artefact body. No commentary, no markdown code fences around the
             artefact.write_text(
                 f"# {skill_name} placeholder\n\n"
                 f"Rerun `cyberos chain run --with-llm` to have Claude draft this artefact.\n\n"
-                f"## Inputs\n\n- profile: {args.profile}\n- pitch: {pitch[:200]}…\n- spec_file: {args.spec_file}\n",
+                f"## Inputs\n\n"
+                f"- profile: {args.profile}\n"
+                f"- pitch: {pitch[:200]}…\n"
+                f"- spec_file: {args.spec_file}\n"
+                f"- prd: {args.prd}\n"
+                f"- srs: {args.srs}\n",
                 encoding="utf-8",
             )
             step["status"] = "placeholder"
@@ -356,6 +382,25 @@ Output ONLY the artefact body. No commentary, no markdown code fences around the
     print(f"\n  ✓ chain complete. Manifest: {manifest_rel}")
     if manifest["budget"]["tokens_used_total"] > 0:
         print(f"  total: {manifest['budget']['tokens_used_total']} tokens, ${manifest['budget']['cost_usd_total']:.4f}")
+
+    # Batch D — auto-generate project-index.md
+    try:
+        import importlib.util
+        idx_spec = importlib.util.spec_from_file_location(
+            "cyberos_project_index",
+            Path(__file__).parent / "cyberos_project_index.py"
+        )
+        idx_mod = importlib.util.module_from_spec(idx_spec)
+        idx_spec.loader.exec_module(idx_mod)
+        result = idx_mod.generate(out_dir)
+        if result["status"] == "ok":
+            try:
+                idx_rel = Path(result["path"]).relative_to(brain_root)
+            except ValueError:
+                idx_rel = result["path"]
+            print(f"  ✓ project-index: {idx_rel}  ({result['fr_count']} FR(s))")
+    except Exception as e:
+        print(f"  (project-index auto-gen skipped: {e})")
     return 0
 
 
@@ -491,8 +536,16 @@ def cmd_status(args):
 
 def cmd_estimate(args):
     spec_text = args.pitch
+    # Batch C — accumulate PRD + SRS + spec-file as combined estimation context
+    parts = []
+    if getattr(args, "prd", None):
+        parts.append(Path(args.prd).read_text(encoding="utf-8"))
+    if getattr(args, "srs", None):
+        parts.append(Path(args.srs).read_text(encoding="utf-8"))
     if args.spec_file:
-        spec_text = Path(args.spec_file).read_text(encoding="utf-8")
+        parts.append(Path(args.spec_file).read_text(encoding="utf-8"))
+    if parts:
+        spec_text = "\n\n".join(parts)
     skip_prd, reasons = triage_skip_prd(spec_text) if args.profile == "solo" else (False, ["not solo"])
     est = PROFILE_TOKEN_ESTIMATES[args.profile]
     saved = 12000 if skip_prd else 0
@@ -534,7 +587,9 @@ def main():
     sub = p.add_subparsers(dest="cmd", required=True)
     pr = sub.add_parser("run")
     pr.add_argument("--pitch", required=True)
-    pr.add_argument("--spec-file")
+    pr.add_argument("--spec-file", help="single combined spec markdown (legacy single-input mode)")
+    pr.add_argument("--prd", help="PRD markdown — fed as context alongside --srs (Batch C)")
+    pr.add_argument("--srs", help="SRS markdown — fed as context alongside --prd (Batch C)")
     pr.add_argument("--profile", choices=["solo", "lean", "standard", "full"], default="solo")
     pr.add_argument("--output", default=None)
     pr.add_argument("--skip-prd", choices=["auto", "force", "never"], default="auto")
@@ -552,7 +607,13 @@ def main():
     pr.set_defaults(func=cmd_run)
     prs = sub.add_parser("resume"); prs.add_argument("output_dir"); prs.set_defaults(func=cmd_resume)
     ps = sub.add_parser("status"); ps.add_argument("output_dir", nargs="?"); ps.set_defaults(func=cmd_status)
-    pe = sub.add_parser("estimate"); pe.add_argument("--pitch", required=True); pe.add_argument("--spec-file"); pe.add_argument("--profile", default="solo"); pe.set_defaults(func=cmd_estimate)
+    pe = sub.add_parser("estimate")
+    pe.add_argument("--pitch", required=True)
+    pe.add_argument("--spec-file")
+    pe.add_argument("--prd", help="PRD markdown (Batch C)")
+    pe.add_argument("--srs", help="SRS markdown (Batch C)")
+    pe.add_argument("--profile", default="solo")
+    pe.set_defaults(func=cmd_estimate)
     pg = sub.add_parser("graph"); pg.add_argument("output_dir", nargs="?"); pg.set_defaults(func=cmd_graph)
     args = p.parse_args()
     return args.func(args)

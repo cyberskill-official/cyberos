@@ -1,1 +1,1 @@
-@~/Projects/CyberSkill/cyberos/docs/CyberOS-AGENTS.md
+@~/Projects/CyberSkill/cyberos/docs/memory/AGENTS.md

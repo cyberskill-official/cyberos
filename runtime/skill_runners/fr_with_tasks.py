@@ -72,41 +72,83 @@ class FrWithTasksRunner(BaseSkillRunner):
 
 # Your job
 
-Emit ONE `feature_request@1` markdown file. Body must include:
+Emit ONE `feature_request@1` markdown file using the NEW shape (Batch A, 2026-05-12).
 
-1. Frontmatter with: fr_id (FR-001), title, profile: solo, project, status: draft, eu_ai_act_risk_class, client_visible, acceptance_criteria, task_count, tasks (a list of task@1 objects).
-2. After frontmatter, the FR body: Problem statement, Users, Success metrics, Scope, Risks, EU AI Act classification, Total estimated effort, Tasks (reference back to frontmatter list).
+## Frontmatter (slim — registry fields ONLY)
 
-Each task in the `tasks:` frontmatter list MUST have ALL of:
-- id (FR-001-T-MM), title, description (>= 200 chars), preconditions, deliverables,
-  acceptance_test (with `shell:` or `assertion:` key, never both, NEVER "TBD"),
-  sizing (S/M/L/XL), dependencies, parallelisable (bool), assignable_to (list),
-  status: draft. Plus agent_profile + estimated_tokens when "ai-agent" in assignable_to.
-  Plus estimated_hours when "human" in assignable_to.
+```yaml
+---
+fr_id: FR-001
+title: <one-sentence title>
+profile: solo
+project: <project-slug>
+status: draft
+eu_ai_act_risk_class: not_ai | minimal | limited | high
+client_visible: true | false
+authority: human-confirmed
+acceptance_criteria:
+  - "<measurable criterion 1>"
+  - "<measurable criterion 2>"
+task_index:
+  - {id: FR-001-T-01, title: <task title>}
+  - {id: FR-001-T-02, title: <task title>}
+---
+```
 
-Voice rules: no em dashes. No AI vocabulary (leverage, robust, ensure, comprehensive,
-seamless, delve, navigate, tapestry, facilitate, utilize).
+Do NOT put a `tasks:` list inside the frontmatter. Do NOT put `provenance`,
+`source_ref`, `confidence`, or any "Source attribution" section anywhere.
+Frontmatter is for tools; tasks live as body H2 sections below.
 
-Source-attribution rules: paragraphs that paraphrase the operator's pitch carry
-`authority: human-confirmed` inline as a marker; paragraphs the skill synthesised
-carry `authority: llm-explicit`.
+## Body
 
-Output ONLY the artefact body. No commentary, no fences."""
+The body has these H2 sections in order:
+1. `# FR-NNN — <Title>` (one H1 right after the closing `---`)
+2. `## Problem statement` — 1-3 paragraphs of prose
+3. `## Users` — primary / secondary / tertiary as a paragraph or short list
+4. `## Success metrics` — bullet list of measurable targets
+5. `## Scope` — with `### In` and `### Out` subsections
+6. `## Risks` — bullet list (R1 / R2 / R3 prefix optional)
+7. `## EU AI Act classification` — single short paragraph naming the risk class
+8. `## Total estimated effort` — short paragraph: N hours human + M tokens AI
+
+Then ONE H2 per task: `## FR-NNN-T-MM — <Task title>`. Inside each task section:
+
+- Description prose (>= 200 chars, multiple paragraphs OK).
+- `**Preconditions:**` followed by `- bullet` list (or `- none`).
+- `**Deliverables:**` followed by `- bullet` list of concrete outputs.
+- `**Acceptance test:**` followed by a fenced code block with info-string `shell` or `assertion`. NEVER "TBD".
+- A fenced `task-meta` block (info-string literally `task-meta`) carrying YAML:
+  ```task-meta
+  sizing: S | M | L | XL
+  dependencies: [FR-NNN-T-MM, ...]
+  parallelisable: true | false
+  assignable_to: [human] | [ai-agent] | [human, ai-agent]
+  agent_profile: <profile-id>    # required when ai-agent in assignable_to
+  estimated_tokens: <int>        # required when ai-agent in assignable_to
+  estimated_hours: <float>       # required when human in assignable_to
+  status: draft
+  runbook_hint: <skill-name> | null
+  ```
+
+Voice rules: no em dashes (use parentheses or commas). No AI vocabulary
+(leverage, robust, ensure, comprehensive, seamless, delve, navigate, tapestry,
+facilitate, utilize).
+
+No Source-attribution prose. No Provenance section. Frontmatter `authority`
+field is enough.
+
+Output ONLY the artefact body starting with `---`. No commentary, no surrounding fences."""
 
     def validate_emit(self, body: str, inputs: dict) -> list[dict]:
-        """Run fr-with-tasks-specific INVARIANTS on the emitted body."""
+        """Run fr-with-tasks-specific INVARIANTS on the emitted body.
+
+        Reads tasks via cyberos_fr_parser (Batch A): prefers body-H2 task
+        sections; falls back to legacy `tasks:` frontmatter list.
+        """
         findings = list(super().validate_emit(body, inputs))
 
-        # INV-001 — frontmatter must include tasks: list
-        if "tasks:" not in body:
-            findings.append({"invariant": "INV-001",
-                             "severity": "CRITICAL",
-                             "fix_hint": "frontmatter must declare a `tasks:` list"})
-            return findings
-
-        # Parse tasks via yaml
+        # Parse frontmatter
         try:
-            import yaml
             if not body.startswith("---"):
                 findings.append({"invariant": "frontmatter-missing",
                                  "severity": "CRITICAL",
@@ -118,18 +160,38 @@ Output ONLY the artefact body. No commentary, no fences."""
                                  "severity": "CRITICAL",
                                  "fix_hint": "frontmatter must close with `---`"})
                 return findings
+            import yaml
             fm = yaml.safe_load(body[4:end]) or {}
+            body_after_fm = body[end + 5:]
         except Exception as e:
             findings.append({"invariant": "frontmatter-yaml-invalid",
                              "severity": "CRITICAL",
                              "fix_hint": f"yaml parse failed: {e}"})
             return findings
 
-        tasks = fm.get("tasks") or []
+        # Try body-H2 parser first (new shape), fall back to legacy frontmatter
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "tools"))
+        from cyberos_fr_parser import parse_body_tasks
+        tasks = parse_body_tasks(body_after_fm)
+        if not tasks:
+            tasks = fm.get("tasks") or []
+            if tasks:
+                findings.append({"invariant": "shape-legacy",
+                                 "severity": "WARN",
+                                 "fix_hint": "FR uses legacy frontmatter-tasks shape; "
+                                             "regenerate with body H2 sections per Batch A"})
+        if not tasks:
+            findings.append({"invariant": "INV-001",
+                             "severity": "CRITICAL",
+                             "fix_hint": "FR must declare tasks as body `## FR-NNN-T-MM —` "
+                                         "H2 sections OR a frontmatter `tasks:` list"})
+            return findings
         if not isinstance(tasks, list):
             findings.append({"invariant": "INV-002",
                              "severity": "CRITICAL",
-                             "fix_hint": "`tasks:` must be a list"})
+                             "fix_hint": "tasks must be a list"})
             return findings
 
         # Per-task invariants

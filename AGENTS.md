@@ -1,1 +1,1 @@
-docs/CyberOS-AGENTS-CORE.md
+docs/memory/AGENTS-CORE.md
