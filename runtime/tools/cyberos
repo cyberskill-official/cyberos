@@ -1412,6 +1412,78 @@ def main(argv=None):
     p.add_argument("rest", nargs=argparse.REMAINDER)
     p.set_defaults(func=lambda a: _delegate_to("cyberos_crdt.py", [a.subcmd, *(a.rest or [])]))
 
+    # ---- Batch 16 (skills-Stage-1) ----
+    p = sub.add_parser("chain", help="operator umbrella for the requirements → tasks chain (Batch 16)")
+    p.add_argument("subcmd", choices=["run", "status", "resume", "estimate", "graph"])
+    p.add_argument("rest", nargs=argparse.REMAINDER)
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_chain.py", [a.subcmd, *(a.rest or [])]))
+
+    p = sub.add_parser("fr", help="feature-request browser (Batch 16)")
+    p.add_argument("subcmd", choices=["list", "show", "graph", "task-graph"])
+    p.add_argument("rest", nargs=argparse.REMAINDER)
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_fr.py", [a.subcmd, *(a.rest or [])]))
+
+    # ---- Batches 17-20 (skills Stages 3-8) ----
+    p = sub.add_parser("authoring", help="Stage 3 authoring helpers (Batch 17)")
+    p.add_argument("subcmd", choices=["llm", "voice", "attribute", "diff", "interview"])
+    p.add_argument("rest", nargs=argparse.REMAINDER)
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_authoring.py", [a.subcmd, *(a.rest or [])]))
+
+    p = sub.add_parser("proj", help="proj-tracker sync (Stage 5; Batch 19)")
+    p.add_argument("subcmd", choices=["backends", "sync", "pull"])
+    p.add_argument("rest", nargs=argparse.REMAINDER)
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_proj.py", [a.subcmd, *(a.rest or [])]))
+
+    p = sub.add_parser("skill-quality", help="Stage 6 quality + trust checks (Batch 19)")
+    p.add_argument("subcmd", choices=["run", "calibration"])
+    p.add_argument("rest", nargs=argparse.REMAINDER)
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_skill_quality.py", [a.subcmd, *(a.rest or [])]))
+
+    p = sub.add_parser("advanced", help="Stage 8 future-state scaffolds (Batch 20)")
+    p.add_argument("subcmd", choices=["fr-council", "auto-decompose", "client-chain", "replan", "marketplace"])
+    p.add_argument("rest", nargs=argparse.REMAINDER)
+    p.set_defaults(func=lambda a: _delegate_to("cyberos_advanced.py", [a.subcmd, *(a.rest or [])]))
+
+    # ---- Batches 21-23 (Tier α) ----
+    p = sub.add_parser("skill-test", help="run a skill's test corpus (Tier α.5)")
+    p.add_argument("skill_id")
+    p.add_argument("--no-llm", action="store_true")
+    p.add_argument("--max-iterations", type=int, default=2)
+    p.add_argument("--json", action="store_true")
+    def _st_func(a):
+        extra = [a.skill_id, "--max-iterations", str(a.max_iterations)]
+        if a.no_llm: extra.append("--no-llm")
+        if a.json: extra.append("--json")
+        root = find_brain_root()
+        tool = root / "runtime" / "tests" / "skills" / "run_corpus.py"
+        sys.exit(subprocess.run(["python3", str(tool), *extra]).returncode)
+    p.set_defaults(func=_st_func)
+
+    p = sub.add_parser("skill-bench", help="skill cost + accuracy benchmarks (Tier α.6)")
+    p.add_argument("skill_id")
+    p.add_argument("--runs", type=int, default=1)
+    p.add_argument("--max-iterations", type=int, default=2)
+    p.add_argument("--model", default="claude-sonnet-4-6")
+    p.add_argument("--record", action="store_true")
+    p.add_argument("--no-llm", action="store_true")
+    p.add_argument("--json", action="store_true")
+    def _sb_func(a):
+        extra = [a.skill_id, "--runs", str(a.runs), "--max-iterations", str(a.max_iterations), "--model", a.model]
+        if a.record: extra.append("--record")
+        if a.no_llm: extra.append("--no-llm")
+        if a.json: extra.append("--json")
+        _delegate_to("cyberos_skill_bench.py", extra)
+    p.set_defaults(func=_sb_func)
+
+    p = sub.add_parser("cross-skill", help="cross-skill consistency validator (Tier α.7)")
+    p.add_argument("chain_dir")
+    p.add_argument("--json", action="store_true")
+    def _cs_func(a):
+        extra = [a.chain_dir]
+        if a.json: extra.append("--json")
+        _delegate_to("cyberos_cross_skill.py", extra)
+    p.set_defaults(func=_cs_func)
+
     # ---- Batch 15 (Tier E) ----
     p = sub.add_parser("migrate", help="schema migration runner (Tier E.1)")
     p.add_argument("subcmd", choices=["list", "plan", "apply"])

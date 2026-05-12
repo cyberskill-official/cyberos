@@ -3457,6 +3457,47 @@ are validated by `meta/validators/check-source-tiers.py`.
 - **13.9 — `__pycache__/` exclusion** → in `.gitignore` + export skip list
 - **13.10 — Emergency stop** → `cyberos panic` with `--reason` requirement
 
+### Post-catalog Tier A — high-leverage Layer 1 amplifiers (Batch 11)
+
+- **`.lock.shared` integration** in `cyberos_validate.py` — best-effort POSIX flock around the validate pass; `CYBEROS_NO_LOCK=1` to disable
+- **Semantic search** — `runtime/tools/cyberos_semantic_search.py` + `cyberos semantic-search "<q>"`. TF-IDF default (zero-dep) + opt-in sbert
+- **TUI dashboard** — `runtime/tools/cyberos_tui.py` + `cyberos tui --interval N`. Curses-based, single-screen live view
+- **Diff + time-travel** — `runtime/tools/cyberos_history.py` + `cyberos history {diff|as-of}`. Reconstructs BRAIN state at any audit-chain point
+- **Council `--run-now`** — `cyberos council REF-NNN --run-now` calls Claude per voice via anthropic SDK (degrades cleanly without it)
+
+### Post-catalog Tier B — Batch 12
+
+- **Branched BRAINs** — `runtime/tools/cyberos_branch.py` + `cyberos branch {list|create|switch|diff|merge|delete}`. Snapshots at `.cyberos-memory/.branches/<name>/`
+- **LLM-assisted REF authoring** — `cyberos ref-from-drift <drift>.md [--with-llm]`. Reads a drift candidate, stages a structured REF draft
+- **Auto-repair** — `cyberos autorepair [--apply] [--recipe X]`. 3 recipes (tag-budget, duplicate-tags, tombstone-missing-metadata); safety envelope prohibits touching authority/classification/memory_id
+- **Web dashboard** — `cyberos serve --port N`. Stdlib `http.server`; routes: /, /memories, /memory/<id>, /audit, /stats.json
+- **Auto-suggested supersedes** — `cyberos add` scans the same bucket for similar-stem files and hints
+
+### Post-catalog Tier C — Batch 13
+
+- **Replicated audit chain** — `cyberos replicate {status|push|verify}`. Best-effort sync to operator-supplied target dir
+- **Multi-tenant scaffold** — `cyberos tenant {list|create|audit}` + `member/<slug>/` scope isolation
+- **CRDT merge** — `cyberos crdt merge <conflict>`. Field-level merge: tags union, version max, sync_class tightens, classification refuses to auto-merge
+- **Hypothesis property tests** — `runtime/tests/property/test_frontmatter_properties.py`. Round-trip yaml + uuid7 monotonicity
+
+### Post-catalog Tier D — Batch 14
+
+- **Ed25519 signed snapshots** — `cyberos sign {keygen|sign|verify|verify-all}`. Private key at `~/.cyberos/keys/`, public at `.cyberos-memory/meta/protocol-signing-pubkey.ed25519`
+- **Parallel validator** — `cyberos parallel-validate --workers N`. Splits validator across N processes
+- **Mobile static site** — `cyberos static --out <dir>`. Renders BRAIN as HTML with dark-mode CSS for phone reads
+
+### Post-catalog Tier E — genuine Layer 1 wins (Batch 15)
+
+- **Schema migration framework** — `cyberos migrate {list|plan|apply}`. Migrations under `migrations/<NNN>-<slug>.py`. State at `meta/migrations-applied.json`
+- **Inline editor** — `cyberos edit <memory>`. $EDITOR + validate-on-save + brain_writer str-replace commit
+- **Bulk edit** — `cyberos bulk-set <expr> --filter ...`. Refused-field guardrails for memory_id, authority, classification
+- **Hybrid search (RRF)** — `cyberos hybrid-search "<q>"`. Reciprocal Rank Fusion over FTS + TF-IDF (+ optional sbert)
+- **Audit streaming + alerts** — `cyberos audit-stream` + `cyberos alert {add|list|remove|run}`. Rules like `CRITICAL > 0` + slack-webhook actions
+- **REPL history** — `~/.cyberos/repl-history` + readline integration + tab completion
+- **Chaos tests** — `cyberos chaos-test`. 3 scenarios: tmp+rename atomicity, ENOSPC, concurrent writers — all 3 PASS
+- **Per-memory ACLs** — `meta/validators/check-acl.py`. Personnel-class memories without acl block surface as WARN
+- **Cleanup tool** — `cyberos cleanup --out-script <path>`. Emits host-side rm script for leftovers
+
 ---
 
 ## Part 27 — Per-tool CLI reference
@@ -3541,6 +3582,85 @@ cyberos repl
 cyberos mcp {serve|info}
 cyberos help [SUBCOMMAND]
 cyberos --version
+```
+
+### Post-catalog operator commands (Batches 11-15)
+
+```
+# Search + retrieval
+cyberos semantic-search "<query>" [--scope ...] [--limit N] [--backend tfidf|sbert]
+cyberos hybrid-search "<query>" [--scope ...] [--limit N]
+cyberos history diff <memory-id-or-path> [--against HEAD~N]
+cyberos history as-of <ISO-ts|HEAD~N>
+
+# Operator UX
+cyberos tui [--interval N]
+cyberos serve [--port N] [--host H]
+cyberos static [--out DIR]
+cyberos repl                          # readline + tab completion
+
+# State + branches
+cyberos branch {list|create|switch|diff|merge|delete} NAME
+cyberos lock {status|acquire-shared|acquire-exclusive}
+
+# Authoring
+cyberos add <type> [--auto-tags] [--persona NAME]
+cyberos edit <memory>
+cyberos bulk-set <expr> [--filter ...] [--apply] [--allow-protected]
+cyberos autorepair [--apply] [--recipe X]
+cyberos ref-from-drift <drift-path> [--tier N] [--with-llm]
+cyberos migrate {list|plan|apply} NAME
+
+# Sync + ops
+cyberos sync conflicts [--resolve]
+cyberos cold-storage {archive|list|verify} ...
+cyberos replicate {status|push|verify}
+cyberos tenant {list|create|audit}
+cyberos crdt merge <conflict-marker>
+cyberos sign {keygen|sign|verify|verify-all}
+
+# Council + advanced
+cyberos council REF-NNN [--run-now] [--voices ...]
+cyberos advanced {fr-council|auto-decompose|client-chain|replan|marketplace}
+
+# Audit ops + streaming
+cyberos audit-stream [--from-start]
+cyberos alert {add|list|remove|run}
+cyberos analytics {log|report|purge|cost-log|cost-report}
+
+# Quality + testing
+cyberos chaos-test
+cyberos parallel-validate [--workers N] [--format json]
+cyberos mutation-test [--fixture name]
+cyberos compact-stats [--row-cap N] [--byte-cap N] [--age-days N]
+cyberos skill-quality run|calibration <skill-id>
+cyberos cleanup [--apply] [--out-script <path>]
+```
+
+### Skills-layer operator commands (Batches 16-23)
+
+```
+# Chain orchestration
+cyberos chain estimate --pitch "<text>" --profile solo|lean|standard|full
+cyberos chain run --pitch "<text>" [--profile P] [--with-llm] [--model M]
+                  [--max-iterations N] [--no-cache] [--max-tokens N] [--max-cost USD]
+cyberos chain status [<output-dir>]
+cyberos chain resume <output-dir> [--with-llm]
+cyberos chain graph [<output-dir>]
+
+# Feature-request browser
+cyberos fr {list|show|graph|task-graph} <FR-id>
+
+# Authoring helpers (shared library used by skill runners)
+cyberos authoring {llm|voice|attribute|diff|interview} <args>
+
+# Project-tracker sync
+cyberos proj {backends|sync|pull} [FR-id] [--backend linear|jira|github]
+
+# Skill testing + benchmarking
+cyberos skill-test <skill-id> [--no-llm] [--max-iterations N]
+cyberos skill-bench <skill-id> [--runs N] [--record] [--model M]
+cyberos cross-skill <chain-output-dir>
 ```
 
 ---
@@ -3737,12 +3857,154 @@ cyberos/
 
 ---
 
+## Part 32 — Skills layer (CPO/CTO chain)
+
+> The **skills layer** sits on top of Layer 1. Where Layer 1 is the BRAIN
+> filesystem + operator tools, the skills layer is the **product-planning
+> pipeline** — natural language → PRD → FRs → tasks → tickets — modelled
+> as a chain of cyberos skills under `docs/skills/cuo/`.
+
+### The 11 chain skills
+
+```
+docs/skills/cuo/
+├── cpo/                                       # Chief Product Officer skills
+│   ├── requirements-discovery/                # NL pitch → project_brief@1
+│   ├── chain-selector/                        # Picks chain_profile (solo/lean/standard/full)
+│   ├── prd-author/                            # project_brief → prd@1
+│   ├── prd-audit/                             # Audits the PRD
+│   ├── fr-author/                             # PRD → feature_request@1 list
+│   ├── fr-with-tasks/                         # NEW: collapsed FR+spec for solo profile
+│   └── fr-audit/                              # Audits FR list
+└── cto/                                       # Chief Technical Officer skills
+    ├── srs-author/                            # PRD → srs@1
+    ├── srs-audit/                             # Audits the SRS
+    ├── fr-to-tech-spec/                       # FR → tech_spec@1
+    └── spec-to-impl-plan/                     # tech_spec → impl_plan@1 (tickets)
+```
+
+### Chain profiles
+
+| Profile | Chain | When to use |
+| --- | --- | --- |
+| **`solo`** (default for internal work) | `[prd-author?]` → `fr-with-tasks` → `fr-audit` | 1-10 person team, internal product, client_visible: false |
+| `lean` | `prd-author` → `fr-author` → `fr-audit` → `spec-to-impl-plan` | Small client work, eu_ai_act ≤ limited |
+| `standard` | `prd-author` → `prd-audit` → `fr-author` → `fr-audit` → `fr-to-tech-spec` → `spec-to-impl-plan` | Standard client engagement, persona separation needed |
+| `full` | Adds `srs-author` + `srs-audit` to standard | Regulated client (bank, government), eu_ai_act: high |
+
+### task@1 — the assignable unit
+
+Every FR carries an embedded `tasks:` list per the `task@1` contract at
+`docs/contracts/task/CONTRACT.md`. Each task has:
+
+- **`id`** matching `^FR-NNN-T-MM$` — addressable, greppable, PR-referenceable
+- **`description`** — ≥200 chars, no upper cap; an engineer or AI agent can pick it up without re-reading the parent FR
+- **`acceptance_test`** — concrete; exactly one of `shell` (command returning 0 on success) or `assertion` (structured assertion)
+- **`assignable_to`** — `[human]`, `[ai-agent]`, or both; with `agent_profile` + `estimated_tokens` for AI tasks, `estimated_hours` for human tasks
+- **`dependencies`** + **`parallelisable`** — explicit DAG; the chain enforces acyclicity
+
+### Deterministic skill runners
+
+Each skill has (or can have) a runner at `runtime/skill_runners/<name>.py`
+subclassing `BaseSkillRunner`. The runner:
+
+1. Conducts the interview (subclass overrides `interview(inputs)`)
+2. Composes the LLM prompt (`build_prompt(inputs, prior_artefacts)`)
+3. Calls Claude (the only non-deterministic step)
+4. Runs INVARIANT checks (`validate_emit(body, inputs)`)
+5. Iterates: if WARN, re-prompt with fix hints; if CRITICAL, HITL-pause; up to `--max-iterations`
+
+This flips the ratio from "trust Claude to follow SKILL.md" (Batch 16) to
+"runner enforces, Claude judges" (Batch 21). `runtime/skill_runners/fr_with_tasks.py`
+is the reference implementation with 14 INVARIANT checks.
+
+### Common skill workflows
+
+**Drive a new project end-to-end:**
+
+```bash
+cyberos chain estimate --pitch "<paragraph>" --profile solo
+# → tokens + cost estimate
+
+cyberos chain run --pitch "<paragraph>" --profile solo --with-llm
+# → writes feature_request@1 + tasks to planning/<date>-<slug>/
+
+cyberos fr list                              # surveys all FRs
+cyberos fr task-graph FR-001                 # mermaid DAG
+cyberos skill-test fr-with-tasks --no-llm    # regression against test corpus
+```
+
+**Sync tasks to Linear / Jira / GitHub:**
+
+```bash
+cyberos proj sync FR-001 --backend github --dry-run
+# Generates 6 envelopes; pipe to `gh issue create`
+```
+
+**Resume a paused chain:**
+
+```bash
+cyberos chain status                          # what's pending?
+cyberos chain resume <output-dir> --with-llm  # picks up where it stopped
+```
+
+**Skill quality check:**
+
+```bash
+cyberos skill-quality run fr-with-tasks       # 5 checks per skill
+cyberos skill-bench fr-with-tasks --runs 3    # token + cost regression vs baseline
+cyberos cross-skill <output-dir>              # consistency across artefacts
+```
+
+### Contracts the skills depend on
+
+```
+docs/contracts/
+├── feature-request/    # feature_request@1 — every FR conforms
+├── task/               # NEW: task@1 — embedded in feature_request@1.tasks[]
+├── chain-manifest/     # NEW: chain_manifest@1 — persistent state for cyberos chain run
+├── prd/                # prd@1
+├── srs/                # srs@1
+├── impl-plan/          # impl_plan@1
+├── project-brief/      # project_brief@1
+└── nats-subjects/      # wire protocol for chain events
+```
+
+### Anti-fabrication discipline
+
+All 11 chain skills declare `untrusted_content_wrapping: required` and ship
+`references/ANTI_FABRICATION.md` with 7 rules covering source-grounded
+claims, authority markers, HITL on ambiguity, untrusted_content wrapping,
+no fabricated cross-references, no fabricated metrics, calibration tracking.
+
+Each skill passes `cyberos skill-quality run <skill>` at 5/5 — antifab,
+untrusted, grounding, calibration, deprecation checks.
+
+### When NOT to use the skills layer
+
+The skills layer is designed for **product-planning** workflows. It's
+overkill for:
+
+- Single-file edits (use `cyberos edit` directly)
+- Drift-candidate triage (use `cyberos prune` + `cyberos refinements`)
+- One-off facts (use `cyberos add FACT`)
+- Memory queries (use `cyberos hybrid-search` or `cyberos fr show`)
+
+Reach for `cyberos chain run` when you have a new project / feature
+that needs to go from a sentence to assignable tasks.
+
+---
+
 ## Cross-references
 
 - **AGENTS.md sections cited above:** §0.1, §0.4, §0.5, §3, §4.2, §4.4, §4.6, §4.7, §5.1, §5.2, §5.6, §7, §7.6, §7.7, §8.6, §8.7, §9, §9.3, §9.6, §11.2, §11.3, §13, §13.10, §17.
-- **Improvement catalog:** `workbench/cyberos-layer1-deep-improvements.md` — the source of every Aspect number.
-- **Daily landing log:** `docs/CyberOS-AGENTS.CHANGELOG.md` — Batches 4–10 entries map landed code to Aspect numbers.
+- **Improvement catalog:** `workbench/cyberos-layer1-deep-improvements.md` — the source of every Aspect number for Batches 1–10.
+- **Daily landing log:** `docs/CyberOS-AGENTS.CHANGELOG.md` — Batches 4–23 entries map landed code to Aspect numbers + post-catalog tiers + skills layer batches.
+- **Contracts:** `docs/contracts/{feature-request,task,chain-manifest,prd,srs,impl-plan,project-brief,nats-subjects}/CONTRACT.md` — schemas every skill artefact conforms to.
+- **Skills:** `docs/skills/cuo/{cpo,cto}/<skill>/SKILL.md` — 11 chain skills, all at 5/5 quality.
+- **Skill runners:** `runtime/skill_runners/{base.py, fr_with_tasks.py, ...}` — deterministic runtime pattern.
+- **Test corpus:** `runtime/tests/skills/<skill>/fixtures/*.yaml` — regression test fixtures per skill.
 
-Parts 25–31 update in lockstep with each CHANGELOG batch entry. When new
-aspects ship, add a subsection to Part 26 and update the Part 27 CLI
-reference.
+Parts 25–32 update in lockstep with each CHANGELOG batch entry. When new
+aspects ship, add a subsection to Part 26 (Layer 1) or Part 32 (skills);
+update the Part 27 CLI reference; bump the relevant CHANGELOG.

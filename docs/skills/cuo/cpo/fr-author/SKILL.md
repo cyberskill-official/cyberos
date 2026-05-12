@@ -133,6 +133,7 @@ determinism:
 # ── Source-tier emitted ──────────────────────────────────────────────
 emitted_source_freshness_tier: 30   # mid-high; FR is a synthesised artefact backed by source citations
 gated_until_phase: null
+untrusted_content_wrapping: required
 ---
 
 # fr-author — Feature Request generator
@@ -362,3 +363,26 @@ Subsequent invocations are re-entrant on `manifest.json` state. The skill comput
 - BRAIN scope contract → SRS §6.4.
 - Audit row schema → SRS §6.7 + AGENTS.md §7.
 - LangGraph node + checkpointing → SRS §6.1.1.
+
+## Anti-fabrication discipline (mandatory)
+
+This skill operates under strict anti-fabrication rules per `references/ANTI_FABRICATION.md`:
+
+- **Source-grounded claims only.** Every claim traces back to a line in the source spec, a BRAIN memory_id, or a documented inference. No floating claims.
+- **Authority markers required.** Every paragraph carries an `authority` field — `human-edited`, `human-confirmed`, `llm-explicit`, or `llm-implicit` per AGENTS.md §5.1. Use `cyberos authoring attribute <body> <source>` to assign automatically. Every emitted memory carries a `source_ref:` pointing back at the source line that justified it.
+- **HITL on ambiguity.** The skill pauses with `needs_human: true` rather than guessing.
+- **Untrusted-content wrapping.** Quotes of operator-supplied text are wrapped in `<untrusted_content source="...">...</untrusted_content>` blocks per AGENTS.md §4.2. This skill's frontmatter declares `untrusted_content_wrapping: required`.
+- **No fabricated cross-references or metrics.** Identifiers must resolve; estimates must cite a source.
+
+See `references/ANTI_FABRICATION.md` for the full ruleset.
+
+## Source attribution
+
+Every emitted artefact carries:
+
+- A `source_ref` field pointing at the line(s) in the source spec that justified its existence
+- Authority marker per claim (`authority: human-confirmed | llm-explicit | llm-implicit`)
+- A `provenance:` block on the FR-level frontmatter declaring the source path + content SHA256 at read time
+
+This satisfies AGENTS.md §5.1 (authority hierarchy) and §9.1 (source-tier ordering) requirements.
+

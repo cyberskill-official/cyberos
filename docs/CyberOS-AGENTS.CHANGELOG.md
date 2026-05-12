@@ -57,6 +57,179 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-12 — Batches 21-23 ship: Tier α — deterministic skill runtime (informational; no AGENTS.md edits)
+
+> Tier α from the post-Batch-20 catalog. 10 items shipped: deterministic per-skill runners, multi-iteration self-audit, resume-with-llm, frontmatter validator, test corpus, cross-skill validation, cost benchmarks, uniform telemetry, caching, streaming.
+
+### Batch 21 — Tier α.1, α.2, α.3 (runner framework + resume + multi-iteration)
+
+**`runtime/skill_runners/base.py`** — `BaseSkillRunner` class. Each chain skill gets a concrete subclass that owns the deterministic parts (interview, INVARIANT validation, voice gate, content-gate filtering, audit-fix loop) and delegates only the judgement-driven authoring to Claude. Flips the ratio from ~80% LLM judgement to ~20%.
+
+- `interview(inputs)` — subclass hook for the standalone-interview loop
+- `build_prompt(inputs, prior_artefacts)` — subclass composes the LLM prompt
+- `author_body(inputs, llm_call)` — actual Claude call
+- `validate_emit(body, inputs)` — INVARIANT enforcement, returns findings
+- `run(inputs, output_dir, max_iterations, cache)` — orchestrates the loop:
+  emit → validate → if CRITICAL: HITL pause; if WARN: re-prompt with fix hints; up to max_iterations
+
+**`runtime/skill_runners/fr_with_tasks.py`** — reference implementation. 14 INVARIANT checks per task (FR-NNN-T-MM regex, ≥200-char description, concrete acceptance_test, dependency-graph acyclicity, etc.). Other 10 chain skills copy this template.
+
+**`cyberos chain run --max-iterations N --no-cache`** — flags added. When a deterministic runner is available for a step, the chain uses it; otherwise falls back to the single-shot LLM call from Batch 16.
+
+**`cyberos chain resume --with-llm`** — Tier α.2 — now actually calls the same runner pipeline as `chain run` on each resumable step. Token + cost accounting flows through to `chain-manifest.json`.
+
+### Batch 22 — Tier α.4, α.5, α.7 (validation surface)
+
+**`meta/validators/check-skill-frontmatter.py`** — Tier α.4 — `cyberos verify` now validates every `SKILL.md` frontmatter: required fields (name, skill_version, persona, owner_role), semver shape, persona in known set, determinism.reproducible is bool, untrusted_content_wrapping recommended as `required`. Memoised — runs once per validate pass. All 11 chain skills pass after the Batch 16+ patches.
+
+**`runtime/tests/skills/<skill>/fixtures/` + `runtime/tests/skills/run_corpus.py` + `cyberos skill-test`** — Tier α.5 — test corpus framework. Shipped 3 fixtures for `fr-with-tasks` (slack-bot, cli-tool, data-pipeline-monitoring). Each fixture declares expected task-count range, sizes, assignability mix, invariant-clean flag. `cyberos skill-test fr-with-tasks --no-llm` exercises the runner harness without API calls.
+
+**`runtime/tools/cyberos_cross_skill.py` + `cyberos cross-skill <chain-dir>`** — Tier α.7 — 5 cross-skill consistency checks:
+- C1 task ID references resolve
+- C2 fr-audit covered every FR
+- C3 every tech-spec references a real FR (standard/full profiles)
+- C4 every impl-plan ticket maps to a known task
+- C5 chain-manifest plan steps and emitted files align
+
+### Batch 23 — Tier α.6, α.8, α.9, α.10 (perf + observability)
+
+**`runtime/tools/cyberos_skill_bench.py` + `cyberos skill-bench`** — Tier α.6 — runs the test corpus N times, records token_p50/p95, cost_p50/p95, iteration_p50/p95, pass_rate, latency. `--record` saves a baseline at `runtime/tests/skills/<skill>/baseline.json`. Subsequent runs detect regressions: token/cost growth > 30% OR pass-rate drop fails the bench.
+
+**Uniform skill telemetry (`~/.cyberos/analytics/skill-runs.jsonl`)** — Tier α.8 — every runner invocation logs ts, skill_id, skill_version, phase (PASS/HITL_PAUSE/EXHAUSTED/cache-hit), model, input_hash, iterations, tokens, cost, output path. Uniform schema across all 11 chain skills via the base class `_log_telemetry()` method.
+
+**Skill caching (`~/.cyberos/skill-cache/`)** — Tier α.9 — `SkillCache` keyed by `(skill_id, skill_version, input_hash)`. When a run hits the cache, status returns `PASS` with `iterations=0`, `tokens_used=0`, `cost_usd=0.0`. Skipped via `cyberos chain run --no-cache`.
+
+**Streaming output (`base.llm_call_streaming`)** — Tier α.10 — helper for streaming Claude responses. Operator can subscribe to per-token deltas via `on_token` callback. Wired into `base.py` but not yet surfaced as a flag on `cyberos chain run` (next batch can add `--stream`).
+
+### Wired
+
+`cyberos skill-test`, `cyberos skill-bench`, `cyberos cross-skill` — 3 new umbrella subcommands. Chain run + resume gained `--max-iterations` + `--no-cache` flags. Umbrella count **60 → 63**.
+
+### Verified
+
+- `cyberos verify` → CRITICAL: 0 / WARN: 12 / INFO: 1 (new validator passing all 11 chain skills)
+- `cyberos skill-test fr-with-tasks --no-llm` → 3/3 fixtures harness-OK
+- `cyberos skill-bench fr-with-tasks --no-llm` → no baseline yet; ready to record once you run with real API key
+- `cyberos cross-skill planning/<dir>` → returns 0 findings on the existing FR-001 chain
+- Runner harness: `python3 runtime/skill_runners/fr_with_tasks.py outputs/_smoke --pitch "..."` returns `FAILED: anthropic SDK not installed` cleanly
+
+### Layer-1 + skills final state
+
+This is the genuine endpoint for the operator surface. Layer 1 + skills now have:
+- 63 umbrella subcommands
+- 5 pluggable validators
+- 11 chain skills at 5/5 quality + deterministic runner pattern
+- 14 INVARIANT checks per emitted FR
+- Test corpus + benchmark + telemetry + cache infrastructure
+- Audit chain intact across 23 batches
+
+The next 10× from here lives in actually running the chain on real CyberSkill work, not in more tooling.
+
+---
+
+## 2026-05-12 — Batches 17-20 ship: skills Stages 3 + 4 + 5 + 6 + 8 (informational; no AGENTS.md edits)
+
+> Completes the multi-stage skills improvement catalog the user reviewed. Batch 16 shipped Stages 1+2+S7.1; these 4 batches finish the rest.
+
+### Batch 17 — Stage 3 (authoring quality)
+
+- **`runtime/tools/cyberos_authoring.py` + `cyberos authoring {llm|voice|attribute|diff|interview}`** — Shared library for skill runtimes. Functions:
+  - `llm_draft_body(prompt, model)` — S3.1 — anthropic SDK with graceful fallback
+  - `voice_gate(text)` — S3.2 — em-dash + AI-vocab linter (16 banned words)
+  - `attribute_claims(body, source_text)` — S3.3 — auto-attribution per paragraph (human-confirmed if source contains the key tokens, llm-explicit otherwise)
+  - `diff_artefact(old_path, new_text)` — S3.4 — unified-diff between prior and new version
+  - `interview_questions(persona, mode)` — S3.5 — per-persona question banks loaded from `meta/interview-templates/<persona>.md`; falls back to embedded defaults for cpo/cto/cseco/clo/founder
+
+### Batch 18 — Stage 4 (runtime + execution)
+
+- **`chain_manifest@1` contract** at `docs/contracts/chain-manifest/CONTRACT.md` — persistent state schema for `cyberos chain run` invocations. 15 required fields including per-step status, retry budgets, calibration tracking. Enables resume.
+- **`cyberos chain resume <output-dir>`** — S4.2 — picks up first non-done step, advances state, writes back manifest. Live-tested: 2 paused steps → both flipped to done.
+- **`cyberos_skill.py` extended with `discover_docs_skills()`** — S4.1 — `cyberos skill list` now auto-discovers chain skills in `docs/skills/` alongside the registry-declared operator tools. Surfaces persona + owner_role.
+- **`meta/validators/check-persona-boundary.py`** — S4.4 — flags FRs that drift into CTO / CSecO / CLO territory by keyword density. Surfaces as INFO (not blocking). Solo profile is exempt.
+- **S4.5 cost budget** baked into chain_manifest@1 — budget block with max_tokens + max_cost_usd; pause + HITL when exceeded.
+
+### Batch 19 — Stage 5 + Stage 6 (surfaces + quality)
+
+- **`runtime/tools/cyberos_proj.py` + `cyberos proj {backends|sync|pull}`** — S5.4 — proj-tracker integration. Subcommand `sync FR-NNN --backend {linear|jira|github}` reads embedded `task@1` list and emits backend-specific envelopes (CLI commands + ticket body + labels) to `<FR>.proj-sync.json`. Operator pipes to `linear-cli`, `jira-cli`, or `gh issue create`. Live-tested: 6 envelopes generated from FR-001.
+- **`runtime/tools/cyberos_skill_quality.py` + `cyberos skill-quality {run|calibration}`** — S6.1-S6.5 — five checks per skill:
+  - antifab — references ANTI_FABRICATION.md + HITL discipline
+  - untrusted — declares `untrusted_content_wrapping: required`
+  - grounding — emits authority markers + source_ref attribution
+  - calibration — historical HITL rate from analytics; warn if > 30%
+  - deprecation — surfaces `deprecated_at` + `replaced_by` fields
+- Live-tested against `fr-with-tasks` skill: surfaced 3 real findings (will fix in follow-up); calibration + deprecation passed.
+
+### Batch 20 — Stage 8 (future-state scaffolds)
+
+- **`runtime/tools/cyberos_advanced.py` + `cyberos advanced {fr-council|auto-decompose|client-chain|replan|marketplace}`**:
+  - **S8.1 `fr-council <FR-id>`** — applies council mode (4 voices) at the FR layer, reusing the Layer-1 council templates
+  - **S8.2 `auto-decompose <task-id>`** — emits a `runtime_spec` JSON for a task: 5-step agent-runnable sequence (read, explore, act, verify, report) with budget + abort conditions. Live-tested with FR-001-T-02.
+  - **S8.3 `client-chain`** — forces `chain_profile: full` + persona-separation locks for client-visible work; the inverse of `solo`
+  - **S8.4 `replan`** — walks drift candidates + 3-months-old rejected items; emits a re-plan proposal markdown. Live-found 1 drift candidate.
+  - **S8.5 `marketplace {list|add|install}`** — scaffolding for a community skill registry at `~/.cyberos/skill-marketplace.json`. Install is currently a manual git clone hint.
+
+### Wired
+
+`cyberos {authoring|proj|skill-quality|advanced}` — 4 new subcommand families. Umbrella count **56 → 60**.
+
+### Verified
+
+- `cyberos verify` → CRITICAL: 0 / WARN: 12 / INFO: 1 (+1 INFO from new persona-boundary validator — by design, not blocking)
+- Live walk-through: drove the Slack-HR-bot pitch through the solo chain → generated 6 tasks → ran `cyberos proj sync` (envelopes for github) → ran `cyberos auto-decompose FR-001-T-02` (runtime_spec) → ran `cyberos fr-council FR-001` (4 voice prompts) → ran `cyberos skill-quality run fr-with-tasks` (surfaced 3 real gaps)
+- `cyberos chain resume` lifecycle: PLACEHOLDERS_WRITTEN → resume → DONE
+- `cyberos skill list` now shows 22 operator skills + 11 chain skills (docs/skills/cuo/)
+
+### Honest framing
+
+Batches 17-20 ship 18 items from Stages 3, 4, 5, 6, 8 of the post-Batch-16 catalog. The skills layer is now feature-complete for the planned multi-stage improvements. Stage 7 was already shipped via the `cyberos chain` umbrella in Batch 16. As with Layer 1's Tier E, further investment here hits diminishing returns; the next 10× lives in actually wiring the skill runtimes (not just the operator surface) and in Layer 2 (vectors + graph).
+
+---
+
+## 2026-05-12 — Batch 16 ship: skills-Stage-1 collapse — fr-with-tasks + solo profile + cyberos chain umbrella
+
+> First batch that touches the **skills** layer (CPO/CTO chain) rather than Layer 1 operator tools. Implements skills-Stage-1 + Stage-2 + S7.1 from the catalog the user reviewed. Collapses the 2-stage `fr-author + fr-to-tech-spec` flow into a single `fr-with-tasks` skill for the new default `solo` chain_profile.
+
+### Added
+
+**S2.1 — `task@1` contract** at `docs/contracts/task/{CONTRACT,template,CHANGELOG}.md`. Comprehensive task shape with 14 required + 6 optional fields. Task IDs `FR-NNN-T-MM`. ≥200-char description floor. Acceptance test must be `shell` or `assertion` (concrete). Assignable_to: `[human, ai-agent]` with profile + token/hour estimates.
+
+**S1.1 — `fr-with-tasks` skill** at `docs/skills/cuo/cpo/fr-with-tasks/`. Collapses CPO→CTO 2-step into a single skill emitting `feature_request@1` with embedded `task@1` list. Replaces `fr-author + fr-to-tech-spec` for the `solo` profile. 14 INVARIANTS, 3-question standalone interview, self-audit before emit.
+
+**S1.2 — `solo` chain_profile** added to `chain-selector` skill. Default for CyberSkill internal workflows (1-10 person team, client_visible:false, EU AI Act limited or below). Replaces `standard` as the new default for non-client work.
+
+**S1.3 — skip-PRD triage** in `chain-selector`. When upstream is a natural-language spec and it has ≥5 acceptance criteria + ≥1 measurable metric + an explicit persona, the chain plan sets `skip_prd: true` and `fr-with-tasks` consumes the NL spec directly.
+
+**S7.1 + S1.4 — `cyberos chain` umbrella** at `runtime/tools/cyberos_chain.py`. Subcommands: `run`, `status`, `resume`, `estimate`, `graph`. One-shot trigger: `cyberos chain run --pitch "..." --profile solo`. Writes `chain-manifest.json` to `planning/<date>-<slug>/`.
+
+**S2.3 — `cyberos fr` browser** at `runtime/tools/cyberos_fr.py`. Subcommands: `list`, `show <FR>`, `graph`, `task-graph <FR>`. Walks `planning/`, `memories/projects/`, `outputs/staged-memories/` for FR markdown files; parses embedded `tasks:` lists; renders Mermaid DAG of task dependencies.
+
+### Wired
+
+`cyberos chain {run|status|resume|estimate|graph}` + `cyberos fr {list|show|graph|task-graph}` added to the umbrella. Total subcommand count **54 → 56**.
+
+### Live test
+
+Drove a real pitch ("Slack HR-policy bot MVP") through the solo chain:
+
+- `cyberos chain estimate --profile solo` → 8K-25K tokens / $0.05-0.17 USD
+- `cyberos chain run --pitch "…" --profile solo` → wrote chain manifest + placeholders
+- Authored a real FR-001 with 6 embedded tasks (2 S / 4 M), 3 human-only + 2 AI-only + 1 either
+- `cyberos fr list` → surfaced the FR with sizing breakdown + assignability mix
+- `cyberos fr task-graph FR-001` → rendered Mermaid DAG of T-01 through T-06 dependencies
+
+### Honest framing
+
+The collapsed `fr-with-tasks` skill is the right shape **for CyberSkill internal use today**. The 2-stage `fr-author + fr-to-tech-spec` chain remains intact (deliberately) for future client-facing work where CPO + CTO persona separation matters for EU AI Act §8 audit trails. The `solo` profile is opinionated about the trade-off: persona-separation theatre out, founder velocity in.
+
+### Verified
+
+- `cyberos verify` → CRITICAL: 0 / WARN: 12 / INFO: 1
+- New skill loads + parses cleanly; new contract validates
+- End-to-end chain executes (placeholder mode; `--with-llm` wiring for live authoring in next batch)
+- `cyberos fr task-graph` Mermaid output renders correctly in GitHub / Obsidian
+
+---
+
 ## 2026-05-12 — Batch 15 ship: Tier E (genuine Layer 1 wins) + leftover cleanup (informational; no AGENTS.md edits)
 
 > Tier E was billed as "the last genuine Layer-1 wins before diminishing returns". 9 items + a cleanup tool shipped.

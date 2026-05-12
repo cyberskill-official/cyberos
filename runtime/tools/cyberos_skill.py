@@ -38,17 +38,59 @@ def load_registry(brain_root: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+def discover_docs_skills(brain_root: Path) -> list[dict]:
+    """S4.1 — auto-discover skills under docs/skills/cuo/ by reading their SKILL.md frontmatter."""
+    out = []
+    skills_dir = brain_root / "docs" / "skills"
+    if not skills_dir.exists():
+        return out
+    for skill_md in skills_dir.rglob("SKILL.md"):
+        try:
+            text = skill_md.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        if not text.startswith("---\n"):
+            continue
+        end = text.find("\n---\n", 4)
+        if end < 0:
+            continue
+        try:
+            import yaml
+            fm = yaml.safe_load(text[4:end]) or {}
+        except Exception:
+            continue
+        name = fm.get("name")
+        if not name:
+            continue
+        rel = skill_md.parent.relative_to(brain_root).as_posix()
+        out.append({
+            "name": name,
+            "tool": rel + "/SKILL.md",
+            "umbrella_alias": None,
+            "verb": "author" if "author" in name else ("audit" if "audit" in name else "process"),
+            "mutates_brain": False,  # skills declare scope; runtime decides
+            "persona": fm.get("persona", "?"),
+            "owner_role": fm.get("owner_role", "?"),
+            "version": fm.get("skill_version", "?"),
+            "source": "docs/skills",
+        })
+    return out
+
+
 def cmd_list(args):
     brain_root = find_brain()
     reg = load_registry(brain_root)
     skills = reg.get("skills", [])
-    print(f"\n  {len(skills)} skill(s) in registry (schema v{reg.get('schema_version')}):\n")
-    print(f"  {'name':18s}  {'verb':18s}  {'mutates':10s}  umbrella")
+    # S4.1 — augment with discovered chain skills
+    chain_skills = discover_docs_skills(brain_root)
+    print(f"\n  {len(skills)} operator-tool skill(s) + {len(chain_skills)} chain skill(s):\n")
+    print(f"  {'name':22s}  {'verb':14s}  {'mutates':10s}  origin")
     for s in sorted(skills, key=lambda x: x["name"]):
         m = s.get("mutates_brain", False)
         m_label = ("yes" if m is True else ("partial" if isinstance(m, str) else "no"))
-        umb = s.get("umbrella_alias") or "—"
-        print(f"  {s['name']:18s}  {s.get('verb', '?'):18s}  {m_label:10s}  {umb}")
+        print(f"  {s['name']:22s}  {s.get('verb', '?'):14s}  {m_label:10s}  registry")
+    for s in sorted(chain_skills, key=lambda x: x["name"]):
+        print(f"  {s['name']:22s}  {s.get('verb', '?'):14s}  {'no':10s}  docs/skills ({s['persona']}/{s['owner_role']})")
     return 0
 
 

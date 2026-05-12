@@ -1,0 +1,12 @@
+name: data-pipeline-monitoring
+pitch: |
+  Build a data-pipeline monitoring system. Primary user: data engineers.
+  Success: catches every failed job within 5 minutes, supports Airflow
+  + Dagster + custom HTTP pipelines, dashboard with last 7d view.
+  Acceptance: alerts fire within 5min of failure, dashboard loads <1s,
+  integrates with our PagerDuty. Deployed in 6 weeks.
+expected_task_count_min: 5
+expected_task_count_max: 10
+expected_sizes: [S, M, L]
+expected_assignability_mix: any
+expected_invariants_clean: true

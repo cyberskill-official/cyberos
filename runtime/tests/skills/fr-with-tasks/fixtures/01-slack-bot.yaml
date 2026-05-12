@@ -1,0 +1,11 @@
+name: slack-hr-bot-mvp
+pitch: |
+  Build a Slack bot that answers HR-policy questions. Primary user:
+  new employees. Success: 80% accuracy on a 30-question test set,
+  p95 latency < 2s, deployed in 4 weeks. Acceptance: passes the test
+  suite, citations in every answer, audit log to private channel.
+expected_task_count_min: 4
+expected_task_count_max: 8
+expected_sizes: [S, M]  # no L/XL expected — small MVP
+expected_assignability_mix: any  # any combination of human/ai-agent/either ok
+expected_invariants_clean: true  # 5/5 INVARIANTS should pass

@@ -6,6 +6,41 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-12 — Skills layer + deterministic runtime + Tier α (no PRD §-level changes)
+
+### Summary
+
+Five additional batches landed today after the Layer 1 100 % catalog close. Together they implement: (a) the `task@1` contract + `chain_manifest@1` contract; (b) collapsed `fr-with-tasks` skill that emits FRs with embedded assignable tasks for the new `solo` chain_profile; (c) `cyberos chain` umbrella that drives the chain end-to-end; (d) per-stage quality amplifiers (Stages 3-8 of the skills improvement catalog); (e) Tier α deterministic skill-runner pattern with multi-iteration self-audit, frontmatter validator, test corpus, cross-skill consistency, cost benchmarks, uniform telemetry, caching, streaming. Total subcommand count: **63**. All 11 chain skills at 5/5 skill-quality. Audit chain intact across 23 batches.
+
+### PRD-side impact (Batches 16-23)
+
+**Zero PRD §-level changes**, but several PRD sections now have concrete implementations:
+
+- **PRD §3 product surface** — `cyberos chain run --profile solo` is the operator's end-to-end entry point: natural-language pitch → assignable tasks. Validates the PRD's "founder-grade UX" thesis.
+- **PRD §5.3.5 Auto Dream nightly consolidation** — `cyberos advanced replan` surfaces drift candidates + 3-month-old rejected items as nightly proposals. Pairs with the Stop-hook from earlier batches.
+- **PRD §6.3 CUO routing logic** — `cyberos skill chain` (registry) + the `BaseSkillRunner` pattern in `runtime/skill_runners/` are the local-edge precursors to the eventual P0+ CUO router. The skill registry's `depends_on` graph + `mutates_brain` flag are the metadata CUO will consume.
+- **PRD §8 MCP Gateway** — read-only MCP server shipped earlier (Batch 4); chain skill runtimes still call Claude directly via the SDK rather than through the gateway. When the gateway lands, runners route through it.
+- **PRD §10 PORTAL slice (post-P3)** — `chain_profile: full` + persona separation locks (`cyberos advanced client-chain`) are the precursors to client-facing chain delivery.
+
+### Cross-reference updates pending in PRD.docx
+
+- §3 — point at README Parts 25–32 (operator + skills manual)
+- §5.3.5 — link `cyberos refinements` + `cyberos prune` + `cyberos advanced replan` as Auto-Dream operator-side companions
+- §6.3 — link `runtime/skill_runners/base.py` as the CUO routing precursor pattern
+- §6.4 — note the 5-check skill-quality discipline (antifab, untrusted, grounding, calibration, deprecation)
+- §8 — MCP Gateway: read-only server live; write-enabled gateway still P0+
+- New §13.x entry — list the 11 chain skills + the `solo` profile as the CyberSkill-internal default
+
+### Verification (post-Batch 23)
+
+- `cyberos verify` → CRITICAL: 0 / WARN: 12 / INFO: 1
+- `cyberos mutation-test` → 24 × 0 SURVIVED
+- `cyberos chaos-test` → 3 / 3 PASS
+- All 11 chain skills pass `cyberos skill-quality run <skill>` at 5/5
+- Audit chain head intact; manifest pin matches loaded protocol
+
+---
+
 ## 2026-05-12 — Layer-1 catalog 100 % shipped + doc consolidation (no PRD §-level changes)
 
 ### Summary

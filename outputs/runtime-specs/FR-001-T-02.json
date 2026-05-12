@@ -1,0 +1,49 @@
+{
+  "task_id": "FR-001-T-02",
+  "agent_profile": "claude-sonnet-4-6, mcp_allowlist: [bash, edit, read, brain.read]",
+  "steps": [
+    {
+      "step": 1,
+      "kind": "read",
+      "target": "the task description + preconditions",
+      "purpose": "context"
+    },
+    {
+      "step": 2,
+      "kind": "explore",
+      "target": "planning/2026-05-12-build-a-slack-bot-that-answers-hr-policy/FR-001-slack-hr-bot-mvp.md",
+      "purpose": "load the surrounding FR for cross-references"
+    },
+    {
+      "step": 3,
+      "kind": "act",
+      "target": "produce each deliverable",
+      "purpose": "perform the work \u2014 one tool call per deliverable",
+      "deliverables": [
+        "data/hr-policies.chromadb/ populated",
+        "scripts/reindex.py \u2014 idempotent re-index script",
+        "Test: 5 sample queries return relevant chunks"
+      ]
+    },
+    {
+      "step": 4,
+      "kind": "verify",
+      "target": "python3 scripts/reindex.py && python3 -c 'import chromadb; c=chromadb.PersistentClient(path=\"data/hr-policies.chromadb\"); print(c.list_collections())' | grep hr-policies",
+      "purpose": "run the acceptance test and report rc"
+    },
+    {
+      "step": 5,
+      "kind": "report",
+      "target": "task status (done / blocked / needs-human)",
+      "purpose": "emit a structured report"
+    }
+  ],
+  "budget": {
+    "max_tokens": 6000
+  },
+  "abort_conditions": [
+    "ENOSPC during write",
+    "acceptance test rc > 0 after 3 attempts",
+    "any tool call requires escalated perms"
+  ]
+}

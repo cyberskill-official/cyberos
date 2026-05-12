@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-05-12T13:16:27+07:00",
+  "profile": "solo",
+  "skip_prd": false,
+  "triage_reasons": [
+    "acceptance-headers: 0/5",
+    "measurable-metrics: 2/1",
+    "primary-persona-mentioned: True"
+  ],
+  "slug": "build-a-slack-bot-that-answers-hr-policy",
+  "output_dir": "/sessions/trusting-zen-mccarthy/mnt/cyberos/planning/2026-05-12-build-a-slack-bot-that-answers-hr-policy",
+  "pitch_first_120": "Build a Slack bot that answers HR policy questions; primary user: new employees; success criteria: 80% answer accuracy o",
+  "spec_file": null,
+  "with_llm": false,
+  "plan": [
+    {
+      "step": 1,
+      "skill_id": "cuo/cpo/fr-with-tasks",
+      "status": "done",
+      "skipped_reason": null,
+      "started_at": "2026-05-12T17:09:06+07:00",
+      "completed_at": "2026-05-12T17:09:06+07:00",
+      "iterations": 1
+    },
+    {
+      "step": 2,
+      "skill_id": "cuo/cpo/fr-audit",
+      "status": "done",
+      "skipped_reason": null,
+      "started_at": "2026-05-12T17:09:06+07:00",
+      "completed_at": "2026-05-12T17:09:06+07:00",
+      "iterations": 1
+    }
+  ],
+  "status": "DONE"
+}

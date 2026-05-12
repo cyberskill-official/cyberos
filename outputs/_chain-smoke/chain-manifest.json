@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-05-12T17:13:21+07:00",
+  "profile": "solo",
+  "skip_prd": false,
+  "triage_reasons": [
+    "acceptance-headers: 0/5",
+    "measurable-metrics: 2/1",
+    "primary-persona-mentioned: True"
+  ],
+  "slug": "quick-smoke-test-build-a-todo-app-primar",
+  "output_dir": "outputs/_chain-smoke",
+  "pitch_first_120": "Quick smoke test: build a TODO app; primary user: developers; success: <100ms response; acceptance: passes test suite; s",
+  "spec_file": null,
+  "with_llm": true,
+  "plan": [
+    {
+      "step": 1,
+      "skill_id": "cuo/cpo/fr-with-tasks",
+      "status": "failed",
+      "skipped_reason": null,
+      "started_at": "2026-05-12T17:13:21+07:00",
+      "error": "No module named 'anthropic'"
+    },
+    {
+      "step": 2,
+      "skill_id": "cuo/cpo/fr-audit",
+      "status": "pending",
+      "skipped_reason": null
+    }
+  ],
+  "status": "PLANNED",
+  "budget": {
+    "max_tokens": 100000,
+    "max_cost_usd": 2.0,
+    "tokens_used_total": 0,
+    "cost_usd_total": 0.0
+  }
+}

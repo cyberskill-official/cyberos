@@ -1,0 +1,82 @@
+{
+  "fr_id": "FR-001",
+  "fr_path": "planning/2026-05-12-build-a-slack-bot-that-answers-hr-policy/FR-001-slack-hr-bot-mvp.md",
+  "backend": "github",
+  "generated_at": "2026-05-12T17:06:58+07:00",
+  "task_count": 6,
+  "envelopes": [
+    {
+      "backend": "github",
+      "command": "gh issue create --title \"[FR-001-T-01] Set up Slack app + OAuth scopes\" --label \"sizing:S,assignable:human,FR-001,cyberos-chain\" --body-file -",
+      "title": "[FR-001-T-01] Set up Slack app + OAuth scopes",
+      "body": "Create a new Slack app in the CyberSkill workspace via api.slack.com.\nGrant the following bot-token scopes: app_mentions:read, chat:write,\nchat:write.public, commands, im:history, im:read, im:write.\nGenerate the signing secret and bot token. Store them in 1Password\nunder \"CyberSkill HR Bot\" and inject into the runtime via env vars\nSLACK_BOT_TOKEN and SLACK_SIGNING_SECRET. Test the install in a\nprivate dev channel by running /healthcheck on the bot.\n\n\n## Preconditions\n_(none)_\n\n## Deliverables\n- Slack app exists in workspace, marked as 'internal-only'\n- Bot token + signing secret stored in 1Password\n- Manifest committed to repo at slack-app/manifest.yaml\n\n## Acceptance test\n```\ncurl -s -X POST https://slack.com/api/auth.test -H 'Authorization: Bearer $SLACK_BOT_TOKEN' | jq -e '.ok == true'\n```",
+      "labels": [
+        "sizing:S",
+        "assignable:human",
+        "FR-001",
+        "cyberos-chain"
+      ]
+    },
+    {
+      "backend": "github",
+      "command": "gh issue create --title \"[FR-001-T-02] Vector-index HR policy docs\" --label \"sizing:M,assignable:ai-agent,FR-001,cyberos-chain\" --body-file -",
+      "title": "[FR-001-T-02] Vector-index HR policy docs",
+      "body": "Read every HR policy document under company/hr-policies/ (currently\n14 markdown files). Chunk each at 800-token boundaries with 100-token\noverlap. Embed via OpenAI text-embedding-3-small (or local\nsentence-transformers if running offline). Index to ChromaDB at\n./data/hr-policies.chromadb. Each chunk's metadata includes:\nsource_path, section_header, last_modified. Re-indexing happens on\nevery policy doc change via a file-watcher hook.\n\n\n## Preconditions\n- ChromaDB installed (pip install chromadb)\n- Embedding API key (OpenAI or local model)\n\n## Deliverables\n- data/hr-policies.chromadb/ populated\n- scripts/reindex.py \u2014 idempotent re-index script\n- Test: 5 sample queries return relevant chunks\n\n## Acceptance test\n```\npython3 scripts/reindex.py && python3 -c 'import chromadb; c=chromadb.PersistentClient(path=\"data/hr-policies.chromadb\"); print(c.list_collections())' | grep hr-policies\n```",
+      "labels": [
+        "sizing:M",
+        "assignable:ai-agent",
+        "FR-001",
+        "cyberos-chain"
+      ]
+    },
+    {
+      "backend": "github",
+      "command": "gh issue create --title \"[FR-001-T-03] Implement Q&A handler\" --label \"sizing:M,assignable:ai-agent,human,FR-001,cyberos-chain\" --body-file -",
+      "title": "[FR-001-T-03] Implement Q&A handler",
+      "body": "Build the Bolt-for-Python event listener that responds to bot mentions\n(@hr-bot) and direct messages. Pipeline: receive event \u2192 retrieve top-5\nchunks from ChromaDB by cosine similarity \u2192 construct prompt with\nretrieved context + chat history \u2192 call Claude Sonnet 4.6 \u2192 return\nanswer. The answer must include source-document citations. Reject\nquestions outside HR scope with \"I can only answer HR policy\nquestions\" canned response. Use the `untrusted_content` wrapping\npattern when passing user input to the model (per AGENTS.md \u00a74.2).\n\n\n## Preconditions\n- FR-001-T-02 done (index exists)\n- Anthropic API key stored in env\n\n## Deliverables\n- src/handler.py \u2014 event handler module\n- src/prompt_builder.py \u2014 prompt construction\n- Tests: 5 in-scope questions return answers + citations; 3 out-of-scope return canned reject\n\n## Acceptance test\n```\npytest tests/test_handler.py -v\n```",
+      "labels": [
+        "sizing:M",
+        "assignable:ai-agent,human",
+        "FR-001",
+        "cyberos-chain"
+      ]
+    },
+    {
+      "backend": "github",
+      "command": "gh issue create --title \"[FR-001-T-04] Add audit logger + rate limiter\" --label \"sizing:M,assignable:ai-agent,FR-001,cyberos-chain\" --body-file -",
+      "title": "[FR-001-T-04] Add audit logger + rate limiter",
+      "body": "Every Q&A handled by the bot must be logged to the private\n#hr-bot-audit Slack channel (created during T-01). Log shape: user\nID + truncated question + answer-source-docs (titles only, no body)\n+ response latency + timestamp. Rate-limit at 100 requests/hour\nper user using a Redis-backed sliding window (or in-memory if Redis\nunavailable; flag for review). When a user exceeds limit, respond\nwith \"Rate limit hit; try again in <Nmin>\" and don't call the LLM.\n\n\n## Preconditions\n- FR-001-T-03 done\n- #hr-bot-audit Slack channel exists (auto-created by T-01)\n\n## Deliverables\n- src/audit.py \u2014 Slack channel logger\n- src/ratelimit.py \u2014 sliding-window limiter\n- Tests: limiter blocks 101st request inside an hour; audit channel receives one message per Q&A\n\n## Acceptance test\n```\npytest tests/test_audit.py tests/test_ratelimit.py -v\n```",
+      "labels": [
+        "sizing:M",
+        "assignable:ai-agent",
+        "FR-001",
+        "cyberos-chain"
+      ]
+    },
+    {
+      "backend": "github",
+      "command": "gh issue create --title \"[FR-001-T-05] Build test corpus + run accuracy eval\" --label \"sizing:M,assignable:human,FR-001,cyberos-chain\" --body-file -",
+      "title": "[FR-001-T-05] Build test corpus + run accuracy eval",
+      "body": "Curate 30 representative HR policy questions covering: parental leave,\nstock options, sick leave, expense policy, remote work, conflict of\ninterest, IP assignment, public-statement policy, harassment reporting,\nannual review. For each, write the expected answer (\u2264 100 words) + the\nsource policy doc. Run the bot against all 30; score correctness as\n\"correct\" if answer matches expected on the key facts AND cites the\nright source doc. Acceptance: \u2265 24/30 correct (80%).\n\n\n## Preconditions\n- FR-001-T-03 done\n\n## Deliverables\n- tests/corpus/30-questions.yaml \u2014 questions + expected answers + source docs\n- scripts/eval_accuracy.py \u2014 runs corpus, scores, prints report\n- Eval report: \u2265 24/30 correct\n\n## Acceptance test\n```\npython3 scripts/eval_accuracy.py | grep -E 'PASS|24/30|25/30|26/30|27/30|28/30|29/30|30/30'\n```",
+      "labels": [
+        "sizing:M",
+        "assignable:human",
+        "FR-001",
+        "cyberos-chain"
+      ]
+    },
+    {
+      "backend": "github",
+      "command": "gh issue create --title \"[FR-001-T-06] Deploy + production smoke test\" --label \"sizing:S,assignable:human,FR-001,cyberos-chain\" --body-file -",
+      "title": "[FR-001-T-06] Deploy + production smoke test",
+      "body": "Deploy the bot to fly.io (or Render; pick during sprint planning).\nSet env vars via the host's secret manager. Run the production\nsmoke test: bot responds to a known question within 2s and the\nanswer matches the dev environment. Document deployment in\ndocs/deployment.md.\n\n\n## Preconditions\n- FR-001-T-05 done (passing eval)\n- Cloud account exists with billing\n\n## Deliverables\n- Bot deployed; URL shareable to CyberSkill team\n- docs/deployment.md \u2014 runbook\n- Smoke test passes: known-question \u2192 correct answer in < 2s\n\n## Acceptance test\n```\nbash scripts/prod-smoke-test.sh\n```",
+      "labels": [
+        "sizing:S",
+        "assignable:human",
+        "FR-001",
+        "cyberos-chain"
+      ]
+    }
+  ],
+  "applied": false
+}

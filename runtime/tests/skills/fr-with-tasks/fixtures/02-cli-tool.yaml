@@ -1,0 +1,12 @@
+name: cli-todo-tool
+pitch: |
+  Build a CLI tool for personal TODO management. Primary user: developers
+  working on multiple projects. Success: response < 50ms for any command,
+  syncs across machines via git, supports tags + due dates + priority.
+  Acceptance: passes pytest, installable via pipx, README documents
+  all commands. Deployed in 2 weeks.
+expected_task_count_min: 3
+expected_task_count_max: 6
+expected_sizes: [S, M]
+expected_assignability_mix: any
+expected_invariants_clean: true

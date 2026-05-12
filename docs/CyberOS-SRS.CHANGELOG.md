@@ -6,6 +6,61 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-12 — Skills layer + deterministic runtime + Tier α (no SRS §-level changes)
+
+### Summary
+
+Batches 16-23 land the skills-layer work + Tier α deterministic runtime. **No SRS §-level architecture changes** — additions implement existing SRS commitments. Eleven chain skills, all at 5/5 quality, with a `BaseSkillRunner` framework that flips authoring from 80% LLM judgement to 20% LLM judgement + 80% deterministic invariants.
+
+### Added (Batches 16-23)
+
+- **`task@1` contract** at `docs/contracts/task/CONTRACT.md`. 14 required fields including id (`FR-NNN-T-MM` format), description (≥200 chars), acceptance_test (shell|assertion), sizing (S/M/L/XL), dependencies, parallelisable, assignable_to (human|ai-agent|either), agent_profile + estimated_tokens for AI tasks, estimated_hours for human tasks.
+- **`chain_manifest@1` contract** at `docs/contracts/chain-manifest/CONTRACT.md`. 15 required fields including per-step status (pending|placeholder|in_progress|done|skipped|hitl_paused|exhausted|failed), retry budgets, calibration tracking. Enables `cyberos chain resume`.
+- **`fr-with-tasks` skill** at `docs/skills/cuo/cpo/fr-with-tasks/`. Collapses CPO→CTO 2-step for the new default `solo` chain_profile. 14 INVARIANTS per emitted FR. Self-audit + multi-iteration retry up to max_iterations.
+- **`solo` chain_profile** added to `chain-selector`. Default for CyberSkill internal work (client_visible: false, eu_ai_act ≤ limited, internal/public confidentiality). Optional skip-PRD triage when NL spec is concrete enough (≥5 acceptance criteria, ≥1 measurable metric, primary persona declared).
+- **`BaseSkillRunner` framework** at `runtime/skill_runners/base.py`. Subclass owns: interview, prompt builder, invariant validator. Base owns: orchestration loop, telemetry, caching, streaming, anthropic SDK call.
+- **5th + 6th pluggable validators** at `meta/validators/`:
+  - `check-acl.py` — per-memory ACL discipline for personnel-class memories
+  - `check-skill-frontmatter.py` — validates every `docs/skills/**/SKILL.md` frontmatter (semver, persona in known set, required fields)
+- **Test corpus infrastructure** at `runtime/tests/skills/<skill>/fixtures/*.yaml` + `runtime/tests/skills/run_corpus.py` + `cyberos skill-test <skill>`. 3 fixtures shipped for fr-with-tasks.
+- **Cost benchmark** at `runtime/tools/cyberos_skill_bench.py` + `cyberos skill-bench`. Records per-fixture token_p50/p95, cost_p50/p95, iteration_p50/p95, pass_rate, latency. `--record` saves baseline at `runtime/tests/skills/<skill>/baseline.json`. Subsequent runs detect +30% regressions.
+- **Cross-skill validator** at `runtime/tools/cyberos_cross_skill.py` + `cyberos cross-skill <chain-dir>`. 5 checks (C1-C5) for consistency across emitted artefacts.
+
+### SRS-side mapping (Batches 16-23 cross-ref updates)
+
+- **SRS §5 BRAIN — Layer 1 ops** — point at README Parts 25-32 for the now-63-subcommand operator surface
+- **SRS §5.3.2 Six file operations** — `runtime/tools/cyberos_lock.py` (Aspect 5.7) provides POSIX-flock advisory locks integrated into `cyberos_validate.py`
+- **SRS §5.3.3 Sync classes** — `cyberos_sync.py` + `cyberos sync conflicts --resolve` ship the interactive conflict resolver UX
+- **SRS §5.3.5 Auto Dream consolidation** — `cyberos refinements` + `cyberos prune` + `cyberos advanced replan` together cover the operator-side of the Auto-Dream pipeline
+- **SRS §6 CUO** — `runtime/skill_runners/base.py` + `cyberos skill chain` are local-edge precursors to the CUO P0+ router. The deterministic-runner pattern (interview + author + validate + iterate) is the runtime model CUO will scale across personas.
+- **SRS §8 MCP Gateway** — read-only `runtime/mcp/cyberos_brain_server.py` (Aspect 12.7) live. Skill-runners-as-MCP-tools deferred to P0+.
+- **SRS §11 Storage + retention** — `cyberos_compact_stats.py` + `cyberos_cold_storage.py` + `cyberos_replicate.py` implement the full audit-ledger lifecycle: compact recommendations + S3-ready archives + push-to-peer replication.
+
+### Test coverage delta (post-Batch 23)
+
+- **Added (Batches 11-23):**
+  - `runtime/tests/skills/<skill>/fixtures/` — test corpus YAML fixtures (3 for fr-with-tasks; template for others)
+  - `runtime/tests/chaos/test_chaos.py` — 3 fault-injection scenarios (tmp+rename atomicity, ENOSPC, concurrent writers)
+  - `runtime/tests/property/test_frontmatter_properties.py` — Hypothesis property tests for round-trip parse + UUIDv7 monotonicity
+  - `runtime/tests/mutation/run_mutations.py` — 24 mutation × 3 fixtures = 72 total mutation tests
+- **Pluggable validators:** 6 total (tag-budget, scope-rules, source-tiers, acl, skill-frontmatter, persona-boundary)
+- **Verification numbers (today):**
+  - `cyberos verify` → CRITICAL: 0 / WARN: 12 / INFO: 1
+  - `cyberos mutation-test` → 24 × 0 SURVIVED
+  - `cyberos chaos-test` → 3 / 3 PASS
+  - `cyberos sync` determinism → identical SHA256 across consecutive exports
+  - `cyberos lazy benchmark` → 74.9× speedup
+  - Audit chain intact across all 23 batches
+
+### Operational mode additions (post-Batch 23)
+
+- **`solo` chain_profile** — new default for internal CyberSkill work; bypasses CPO/CTO persona separation; uses `fr-with-tasks` instead of the 2-stage chain
+- **Skill cache** — `~/.cyberos/skill-cache/` keyed by (skill_id, version, input_hash); `--no-cache` to bypass
+- **Uniform skill telemetry** — `~/.cyberos/analytics/skill-runs.jsonl` written by every runner invocation
+- **Multi-iteration self-audit** — runners retry up to `--max-iterations` (default 3) on WARN-level invariant breaches; CRITICAL = immediate HITL pause
+
+---
+
 ## 2026-05-12 — Layer-1 catalog 100 % shipped + doc consolidation (no SRS §-level changes)
 
 ### Summary

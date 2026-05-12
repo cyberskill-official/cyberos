@@ -133,6 +133,7 @@ determinism:
 # ── Source-tier emitted ──────────────────────────────────────────────
 emitted_source_freshness_tier: 25   # mid-high; brief is a synthesised artefact backed by chat + BRAIN citations
 gated_until_phase: runtime_v0_3_0   # full implementation requires runtime/harness; scaffold ships now
+untrusted_content_wrapping: required
 ---
 
 # `requirements-discovery` — the chain entry point for new projects
@@ -281,3 +282,26 @@ Will mirror fr-author's BOOT-001..008 patterns:
 - Pipeline downstream — `cuo/cpo/prd-author` v0.1.0 (sibling skill, this same registry release).
 - Runtime gate (when full implementation lands) → registry README Part 26 (v0.3.0 milestone).
 - Lifecycle state → currently `Scaffold` (per registry README Part 14).
+
+## Anti-fabrication discipline (mandatory)
+
+This skill operates under strict anti-fabrication rules per `references/ANTI_FABRICATION.md`:
+
+- **Source-grounded claims only.** Every claim traces back to a line in the source spec, a BRAIN memory_id, or a documented inference. No floating claims.
+- **Authority markers required.** Every paragraph carries an `authority` field — `human-edited`, `human-confirmed`, `llm-explicit`, or `llm-implicit` per AGENTS.md §5.1. Use `cyberos authoring attribute <body> <source>` to assign automatically. Every emitted memory carries a `source_ref:` pointing back at the source line that justified it.
+- **HITL on ambiguity.** The skill pauses with `needs_human: true` rather than guessing.
+- **Untrusted-content wrapping.** Quotes of operator-supplied text are wrapped in `<untrusted_content source="...">...</untrusted_content>` blocks per AGENTS.md §4.2. This skill's frontmatter declares `untrusted_content_wrapping: required`.
+- **No fabricated cross-references or metrics.** Identifiers must resolve; estimates must cite a source.
+
+See `references/ANTI_FABRICATION.md` for the full ruleset.
+
+## Source attribution
+
+Every emitted artefact carries:
+
+- A `source_ref` field pointing at the line(s) in the source spec that justified its existence
+- Authority marker per claim (`authority: human-confirmed | llm-explicit | llm-implicit`)
+- A `provenance:` block on the FR-level frontmatter declaring the source path + content SHA256 at read time
+
+This satisfies AGENTS.md §5.1 (authority hierarchy) and §9.1 (source-tier ordering) requirements.
+
