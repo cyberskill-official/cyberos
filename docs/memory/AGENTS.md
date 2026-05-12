@@ -35,7 +35,7 @@ Resolution rule: `<root>` is the deepest ancestor of the user's working file tha
 
 - `/sessions/`, `/private/var/folders/`, `/var/folders/`, `/tmp/`, `/private/tmp/`, `/dev/shm/`, any `tmpfs`-mounted dir
 - any path containing `local-agent-mode-sessions`, `claude-hostloop-plugins`, `cowork-session`, `cowork-mode-sessions`, `agent-sandbox`, `mcp-sandbox`, `claude-code-sandbox`
-- any host-provided ephemeral working dir: `outputs/`, `uploads/`, `scratchpad/`, `workspace-tmp/`, `agent-workspace/`
+- any host-provided ephemeral working dir: `var/`, `uploads/`, `scratchpad/`, `workspace-tmp/`, `agent-workspace/`
 - any FUSE / overlay / bind-mount that does not survive a host reboot, including `<root>/mnt/`, `<root>/.sandbox/`, `<root>/.cowork/`
 - network mounts (`smb://`, `afp://`, `nfs:`) unless the user has explicitly opted in for that exact path in the current chat turn
 
@@ -172,7 +172,7 @@ Every successful `op:"protocol_upgrade"` MUST be followed, in the same chat turn
 1. **`docs/CyberOS-AGENTS.CHANGELOG.md`** — append a dated entry describing what changed, why, and any real-world trigger. This is the canonical day-by-day record (per FACT-005 and the no-inline-version philosophy).
 2. **`docs/CyberOS-AGENTS.README.md`** — update any Part that references the changed sections. The README's Part-to-section mapping is informal today; declare it via the README's frontmatter `tracks_sections: [<section>, …]` once Bundle G ships (forward reference).
 3. **Cross-linked BRAIN memories** — `memories/facts/FACT-NNN-*.md` entries that reference the changed sections must be updated to v+1 with a History bullet documenting the cross-link refresh.
-4. **Implementation files** — any file in the project that implements the protocol (e.g., `outputs/brain_writer.py` for §7.2; `cyberos/.protocol-signing-key` for §0.5) must be reviewed for compliance and updated if the change affects its behaviour. **Implementation files MUST live in the project source tree (versioned in git), NOT inside `.cyberos-memory/`.** The BRAIN is local operational state; placing a writer there means the writer ships only as long as the BRAIN persists, which historically led to writers vanishing when the BRAIN was reinitialised or migrated. The canonical location for the reference writer is `outputs/brain_writer.py`; alternative paths like `runtime/tools/cyberos_brain_writer.py` are acceptable provided this §0.6 implementation-files registry is updated in the same protocol-upgrade.
+4. **Implementation files** — any file in the project that implements the protocol (e.g., `runtime/lib/brain_writer.py` for §7.2; `cyberos/.protocol-signing-key` for §0.5) must be reviewed for compliance and updated if the change affects its behaviour. **Implementation files MUST live in the project source tree (versioned in git), NOT inside `.cyberos-memory/`.** The BRAIN is local operational state; placing a writer there means the writer ships only as long as the BRAIN persists, which historically led to writers vanishing when the BRAIN was reinitialised or migrated. The canonical location for the reference writer is `runtime/lib/brain_writer.py`; alternative paths like `runtime/tools/cyberos_brain_writer.py` are acceptable provided this §0.6 implementation-files registry is updated in the same protocol-upgrade.
 
 **Order of operations**: AGENTS.md edit → archive prior verbatim (per §0.5) → CHANGELOG entry → README updates → BRAIN memory updates → implementation-file updates → manifest re-pin → `op:"protocol_upgrade"` audit row → `op:"session.end"` (if closing session).
 

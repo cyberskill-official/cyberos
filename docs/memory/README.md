@@ -1,4 +1,42 @@
-# CyberOS BRAIN — Reader's Guide & Evolution Manual
+# `docs/memory/` — CyberOS BRAIN protocol + Reader's Guide
+
+## What's in this folder
+
+| File | Purpose | When to read |
+| --- | --- | --- |
+| [`README.md`](README.md) | **You are here.** On-ramp + 32-part operator manual + sister-folder index. | First read; recurring reference. |
+| [`AGENTS.md`](AGENTS.md) | The protocol itself — single source of truth (114 KB, ~1,241 lines). | Authoritative reference when implementing a rule. |
+| [`CHANGELOG.md`](CHANGELOG.md) | Daily landing log; every batch (1–27) recorded line-by-line. | Audit trail; "what changed today". |
+
+## Sister folders under `docs/`
+
+| Folder | What's there |
+| --- | --- |
+| [`../prd/`](../prd/) | Product Requirements Doc (`PRD.docx` + `CHANGELOG.md`). |
+| [`../srs/`](../srs/) | System Requirements Spec (`SRS.docx` + `CHANGELOG.md`). |
+| [`../skills/`](../skills/) | Skills-layer operator manual (single doc, Parts 1–30). |
+| [`../contracts/`](../contracts/) | Versioned artefact schemas: `feature_request@1`, `task@1`, `project_brief@1`, `prd@1`, `srs@1`. |
+| [`../tours/`](../tours/) | 10 guided walkthroughs (`.tour` files) for common workflows. |
+
+## Symlink recipe (for new projects)
+
+```bash
+cd /path/to/your-project
+ln -s /path/to/cyberos/docs/memory/AGENTS.md AGENTS.md
+ln -s /path/to/cyberos/docs/memory/AGENTS.md CLAUDE.md
+```
+
+Both point at the SAME `AGENTS.md` — there's no compact variant since Batch 27 (single source of truth).
+
+## Folder history
+
+- **2026-05-12 (Batch 24)** — memory-protocol docs moved from `docs/CyberOS-*.md` into this folder.
+- **2026-05-12 (Batch 25)** — sister folders `docs/prd/` and `docs/srs/` introduced.
+- **2026-05-12 (Batch 27)** — `AGENTS-CORE.md` removed (single source of truth); `INDEX.md` merged into this README.
+
+---
+
+# Reader's Guide & Evolution Manual
 
 The BRAIN (`.cyberos-memory/`) is your project's persistent memory — where agents go to recall facts, decisions, and context across sessions, machines, and people. This guide explains what the BRAIN is, how to use it day-to-day, and — critically — how to evolve the protocol that governs it without breaking memories already written.
 
@@ -42,7 +80,7 @@ Three concrete problems:
 
 `<project-root>/.cyberos-memory/` on the **real local filesystem path** — the same folder you see in Finder. The protocol explicitly forbids operating against sandbox paths, virtualised mounts, or temporary directories (AGENTS.md §0.1). This is the single most common source of "lost memory" surprise: the agent appeared to write to the BRAIN, but it actually wrote to a sandbox copy that vanishes when the session ends.
 
-If your agent says it wrote a memory but you can't find the file: check the path it claims to have written to. If it starts with `/sessions/`, `/var/folders/`, `outputs/`, or anything in §0.1's forbidden list, the write went to the void.
+If your agent says it wrote a memory but you can't find the file: check the path it claims to have written to. If it starts with `/sessions/`, `/.cyberos-memory/cache/folders/`, `.cyberos-memory/cache/`, or anything in §0.1's forbidden list, the write went to the void.
 
 ---
 
@@ -597,11 +635,11 @@ Run from anywhere in the repo. Locates `.cyberos-memory/` by walking up per §0.
 
 ### Council mode, auto-tagging, sync, MCP (Aspect 3.3 + 5.2 + 6.x + 12.7)
 
-**Council mode.** `cyberos council REF-NNN` produces a working artefact at `outputs/council/REF-NNN-council.md` containing 4 voice prompts (Architect / Skeptic / Pragmatist / Critic) plus deterministic heuristic context — GLOSSARY term overlap, possible LOCK conflicts, related REFs (shared tags), and recent `rejected/` entries. Each voice prompt is intended to be pasted into a fresh Claude conversation; you collect the 4 findings then write the Synthesis section. Opt-in only — ambiguous REFs pay the 4× API cost. Not a replacement for capability + regression evals; runs alongside them.
+**Council mode.** `cyberos council REF-NNN` produces a working artefact at `.cyberos-memory/cache/council/REF-NNN-council.md` containing 4 voice prompts (Architect / Skeptic / Pragmatist / Critic) plus deterministic heuristic context — GLOSSARY term overlap, possible LOCK conflicts, related REFs (shared tags), and recent `rejected/` entries. Each voice prompt is intended to be pasted into a fresh Claude conversation; you collect the 4 findings then write the Synthesis section. Opt-in only — ambiguous REFs pay the 4× API cost. Not a replacement for capability + regression evals; runs alongside them.
 
 **GLOSSARY auto-tagging.** `cyberos add <TYPE> --auto-tags` reads `FACT-014-glossary.md`, scans the slug + title + provenance reference for canonical terms, suggests kebab-case tags, and prompts you to accept / decline / edit before writing. Default off — auto-tagging never modifies tags without confirmation.
 
-**Multi-machine sync.** `cyberos sync export --to <bundle.zip>` produces a deterministic zip filtered by `sync_class` (publishable + shared by default; `--include client-visible` adds the client-visible class with consent gating). Two consecutive exports of the same state produce identical SHA256. `cyberos sync import <bundle> --from <subject> [--dry-run]` runs a three-way merge by `memory_id × content_sha`: matching → no-op, differing → conflict marker written under `memories/conflicts/`, remote-only → staged under `outputs/sync-staging/`. Transport (rsync / syncthing / S3) is left to the operator.
+**Multi-machine sync.** `cyberos sync export --to <bundle.zip>` produces a deterministic zip filtered by `sync_class` (publishable + shared by default; `--include client-visible` adds the client-visible class with consent gating). Two consecutive exports of the same state produce identical SHA256. `cyberos sync import <bundle> --from <subject> [--dry-run]` runs a three-way merge by `memory_id × content_sha`: matching → no-op, differing → conflict marker written under `memories/conflicts/`, remote-only → staged under `.cyberos-memory/cache/test-fixtures/sync-staging/`. Transport (rsync / syncthing / S3) is left to the operator.
 
 **Read-only MCP server.** `cyberos mcp serve` runs a line-delimited JSON-RPC 2.0 server on stdio exposing 4 tools: `brain_search`, `brain_show`, `brain_get`, `brain_stats`. Default filters hide tombstoned + `sync_class=local-only` entries (both have explicit opt-in flags). No write tools by design — callers must use `brain_writer.py`. Wire into Claude Code via `cyberos mcp info` (prints the `.claude/mcp-config.json` snippet with absolute paths).
 
@@ -629,7 +667,7 @@ Install in `~/.claude/settings.json` per file header.
 └── REJECTED.md    # rejected refinement candidate (Aspect 3.4)
 ```
 
-`cyberos add <type>` (Aspect 1.2 — shipped 2026-05-12) uses these as the wizard scaffold. Templates live at `outputs/templates/` (moved out of `.cyberos-memory/meta/templates/` so validator does not scan placeholder vars).
+`cyberos add <type>` (Aspect 1.2 — shipped 2026-05-12) uses these as the wizard scaffold. Templates live at `runtime/starter/templates/` (moved out of `.cyberos-memory/meta/templates/` so validator does not scan placeholder vars).
 
 ### Tour files (Aspect 7.4)
 
@@ -678,11 +716,11 @@ All six stages of `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` are complete:
 | 5 — At-rest encryption + Shamir | §5.6 envelope, `cyberos_encrypt.py` (passphrase + macOS Keychain) | §0.5 upgrade `d3ce97…` |
 | 6 — Long-term BRAIN health | §7.6 Merkle, §7.7 compaction, §4.9.1 lock-shared, doctor compact/decompact | §0.5 upgrade `77eda2…` |
 
-### CyberOS-AGENTS-CORE.md (load-every-session)
+### CyberOS-AGENTS.md (load-every-session)
 
 ```
 docs/CyberOS-AGENTS.md       1214 lines, 108 KB, ~27K tokens   ← canonical (load on demand)
-docs/CyberOS-AGENTS-CORE.md   483 lines,  42 KB, ~10K tokens   ← load every session (regenerable)
+docs/CyberOS-AGENTS.md   483 lines,  42 KB, ~10K tokens   ← load every session (regenerable)
 ```
 
 Both live in `docs/` for consistency. CORE is a derived view of canonical; canonical is authoritative.
@@ -691,8 +729,8 @@ Symlink for new projects:
 
 ```bash
 cd /path/to/your-project
-ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
-ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md CLAUDE.md
+ln -s /path/to/cyberos/docs/CyberOS-AGENTS.md AGENTS.md
+ln -s /path/to/cyberos/docs/CyberOS-AGENTS.md CLAUDE.md
 ```
 
 When the agent needs the full reference (validator, doctor, §0.5 upgrades, MAINTENANCE mode), it consults `docs/CyberOS-AGENTS.md` directly. The 92% token reduction holds for daily-session loading. CORE's "When you MUST load the full AGENTS.md" header lists 14 concrete trigger conditions.
@@ -700,7 +738,7 @@ When the agent needs the full reference (validator, doctor, §0.5 upgrades, MAIN
 Regenerate after AGENTS.md changes:
 
 ```bash
-python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md > docs/CyberOS-AGENTS-CORE.md
+python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md > docs/CyberOS-AGENTS.md
 ```
 
 ### Tools index (CLIs in `runtime/tools/` + MCP server in `runtime/mcp/`)
@@ -728,7 +766,7 @@ python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md
 | `cyberos_onboard.py [--shared] [--persona]` | Interactive new-contributor bootstrap (Aspect 8.1) |
 | `cyberos_analytics.py {log\|report\|purge}` | Local-only usage analytics (Aspect 11.2) |
 | `canonical_sha.py PATH` | §0.5 SHA helper for protocol upgrade approval phrases |
-| `extract_agents_core.py [--aggressive] [--check] PATH` | `docs/CyberOS-AGENTS-CORE.md` generator + CI verifier |
+| `extract_agents_core.py [--aggressive] [--check] PATH` | `docs/CyberOS-AGENTS.md` generator + CI verifier |
 | `voice_check.py [--strict] PATHS` | gstack `/codex` voice linter (em dashes + AI vocab) |
 | `benchmark.py PATH` | Validator + export performance regression tracker |
 | `runtime/mcp/cyberos_brain_server.py` | Read-only MCP server (4 tools: brain_search/show/get/stats) — Aspect 12.7 |
@@ -739,7 +777,7 @@ python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md
 cyberos/                                  ← project root
 ├── docs/
 │   ├── CyberOS-AGENTS.md                 ← canonical protocol (1214 lines, 108 KB)
-│   ├── CyberOS-AGENTS-CORE.md            ← derived: 10K-token subset (regenerable; symlink target)
+│   ├── CyberOS-AGENTS.md            ← derived: 10K-token subset (regenerable; symlink target)
 │   ├── CyberOS-AGENTS.README.md          ← THIS DOCUMENT (Parts 1-24: concepts + ops + cookbook + future + proposals)
 │   ├── CyberOS-AGENTS.CHANGELOG.md       ← protocol-doc day-by-day
 │   ├── CyberOS-PRD.docx + .CHANGELOG.md  ← product requirements
@@ -1618,7 +1656,7 @@ The 28-field schema currently encourages emitting every field — a chat memory 
 
 ### Backward compat
 
-Read-side change is purely permissive (already accepts missing optional fields). Write-side is opt-in via the rule; the canonical reference impl at `outputs/brain_writer.py` (per AGENTS.md §0.6 line 175) updates on next §0.5 cycle.
+Read-side change is purely permissive (already accepts missing optional fields). Write-side is opt-in via the rule; the canonical reference impl at `runtime/lib/brain_writer.py` (per AGENTS.md §0.6 line 175) updates on next §0.5 cycle.
 
 ---
 
@@ -2755,7 +2793,7 @@ Where this protocol's wording differs, RFC 8785 wins.
 
 ### Rationale
 
-Easier scanning, identical normative content. CI verification: regenerate AGENTS-CORE.md and confirm SHA — paragraph compression should not change which paragraphs the extractor keeps.
+Easier scanning, identical normative content. CI verification: regenerate AGENTS.md and confirm SHA — paragraph compression should not change which paragraphs the extractor keeps.
 
 ---
 
@@ -2771,7 +2809,7 @@ Per AGENTS.md §0.5 + §0.6:
 6. **Update CHANGELOGs** per §0.6: AGENTS, PRD, SRS.
 7. **Write `memories/refinements/REF-NNN-bundle-m-refinement-pass.md`** per §0.4.
 8. **No new DEC entry needed** — Bundle M is documentation cleanup, not a decision.
-9. **Regenerate `AGENTS-CORE.md`** with `extract_agents_core.py --aggressive`. Should drop ~5KB / ~1500 tokens because compression in full = compression in core.
+9. **Regenerate `AGENTS.md`** with `extract_agents_core.py --aggressive`. Should drop ~5KB / ~1500 tokens because compression in full = compression in core.
 10. **Run validator self-test** (21 fixtures) — should still pass since no functional rules change.
 
 ## Approval phrase to land
@@ -2792,7 +2830,7 @@ For preview:
 
 **Risk: A change breaks a cross-reference.** Mitigation: §4.11 → §4.10.2 is the only renumbering; grep AGENTS.md for `§4.11` and verify all are updated.
 
-**Risk: AGENTS-CORE.md regeneration produces drift.** Mitigation: regenerate after Bundle M; verify the resulting CORE still contains all required normative rules (manual diff review of the 17 KEEP_FULL sections).
+**Risk: AGENTS.md regeneration produces drift.** Mitigation: regenerate after Bundle M; verify the resulting CORE still contains all required normative rules (manual diff review of the 17 KEEP_FULL sections).
 
 **Risk: External documents reference §X.Y that moved.** Mitigation: 4 documents reference AGENTS.md sections (PRD, SRS, the cookbooks, REF-* memories). Bundle M renumbers only §4.11 → §4.10.2; grep all four sources, update cross-references in the same atomic upgrade.
 
@@ -2883,14 +2921,14 @@ are validated by `meta/validators/check-source-tiers.py`.
 #### 1.2 Interactive `add` wizard
 
 - **Tool:** `runtime/tools/cyberos_add.py`
-- **Templates read from:** `outputs/templates/<TYPE>.md` (DEC, REF, FACT,
+- **Templates read from:** `runtime/starter/templates/<TYPE>.md` (DEC, REF, FACT,
   PERSON, PROJECT, PREFERENCE, DRIFT)
 - **Prompts:** slug, classification, authority, tags, sync_class, prov_source,
   prov_source_ref, freshness_tier
 - **Auto-fills:** UUIDv7 memory_id, ts_now in ICT, subject id from env or
   git config, next NNN per bucket
 - **Flags:** `--dry-run`, `--non-interactive`, `--auto-tags`, `--persona`
-- **Atomic write:** stages to `outputs/staged-memories/`, then invokes
+- **Atomic write:** stages to `.cyberos-memory/staging/`, then invokes
   `brain_writer.py write` with audit-row append + tmp+rename + fsync
 
 #### 1.3 `--dry-run` on every mutating op
@@ -2956,7 +2994,7 @@ are validated by `meta/validators/check-source-tiers.py`.
 - **Function:** `_cmd_status_weekly()`
 - **Framing per gstack `/landing-report`:**
   - LANDED — audit ops in last 7d
-  - IN-FLIGHT — files staged at `outputs/staged-memories/`
+  - IN-FLIGHT — files staged at `.cyberos-memory/staging/`
   - QUEUED — drift candidates + pending council sessions
 
 #### 2.4 `cyberos status --watch [--interval N]`
@@ -2992,7 +3030,7 @@ are validated by `meta/validators/check-source-tiers.py`.
 
 - **Tool:** `runtime/tools/cyberos_council.py` → `cyberos council REF-NNN`
 - **4 voices:** Architect, Skeptic, Pragmatist, Critic
-- **Output:** `outputs/council/REF-NNN-council.md` with prompt blocks + Synthesis template
+- **Output:** `.cyberos-memory/cache/council/REF-NNN-council.md` with prompt blocks + Synthesis template
 - **Heuristic context:** GLOSSARY term overlap, LOCK conflicts, related
   REFs, recent rejected/ entries
 - **Opt-in only:** the 4× API cost is worth it for ambiguous REFs; not
@@ -3001,20 +3039,20 @@ are validated by `meta/validators/check-source-tiers.py`.
 #### 3.4 Rejected refinement tracking
 
 - **Path:** `.cyberos-memory/rejected/REJECTED-NNN-<slug>.md`
-- **Template:** `outputs/templates/REJECTED.md`
+- **Template:** `runtime/starter/templates/REJECTED.md`
 - **Surfaced by:** `cyberos refinements` (last 30d window)
 
 #### 3.5 Postmortem template for missed refinements
 
 - **Path:** `.cyberos-memory/memories/refinements/POSTMORTEM-NNN-<slug>.md`
   (or under `postmortems/`)
-- **Template:** `outputs/templates/POSTMORTEM.md`
+- **Template:** `runtime/starter/templates/POSTMORTEM.md`
 - **Trigger:** a rejected refinement that later turned out to be real;
   document blamelessly
 
 #### 3.6 Nygard ADR format for DECs
 
-- **Template:** `outputs/templates/DEC.md`
+- **Template:** `runtime/starter/templates/DEC.md`
 - **Sections:** Context / Decision / Status / Consequences / Alternatives
 - **Used by:** every DEC the wizard scaffolds
 
@@ -3028,13 +3066,13 @@ are validated by `meta/validators/check-source-tiers.py`.
 
 #### 4.1 Memory templates per type
 
-- **Path:** `outputs/templates/{DEC,REF,FACT,PERSON,PROJECT,PREFERENCE,DRIFT,POSTMORTEM,REJECTED}.md`
+- **Path:** `runtime/starter/templates/{DEC,REF,FACT,PERSON,PROJECT,PREFERENCE,DRIFT,POSTMORTEM,REJECTED}.md`
 - **Variables:** `${UUID7}`, `${TS_NOW}`, `${SUBJECT_ID}`, `${NEXT_NNN}`,
   `${SLUG_TITLE}`, `${CLASSIFICATION}`, `${AUTHORITY}`, `${TAGS}`,
   `${PROV_SOURCE}`, `${PROV_SOURCE_REF}`, `${SYNC_CLASS}`, `${FRESHNESS_TIER}`
 - **Why outside `meta/templates/`:** validator scans `meta/` so
   templates with `${VAR}` placeholders would fail YAML validation.
-  Living under `outputs/templates/` keeps them out of validator scope.
+  Living under `runtime/starter/templates/` keeps them out of validator scope.
 
 #### 4.2 Memory-bucket usage dashboard
 
@@ -3105,7 +3143,7 @@ are validated by `meta/validators/check-source-tiers.py`.
 - **Surfaces:**
   - §5.6 encryption enabled/disabled + algorithm + KDF + Shamir threshold
   - §9.3 denylist test pass/fail (24/24 fixtures)
-  - Filesystem perms on `manifest.json`, `audit/`, `outputs/staged-memories/`
+  - Filesystem perms on `manifest.json`, `audit/`, `.cyberos-memory/staging/`
   - §13.10 PANIC marker status (treats `(resolved)` titles as inactive)
   - §8.6 drift candidate count
 
@@ -3223,18 +3261,18 @@ are validated by `meta/validators/check-source-tiers.py`.
 
 #### 8.2 Starter-template repo
 
-- **Path:** `outputs/cyberos-starter/`
+- **Path:** `runtime/starter/cyberos-starter/`
 - **Contents:** README, pre-built `.cyberos-memory/manifest.json` with
   placeholders, `meta/retention-rules.md`, `meta/validators/README.md`,
-  `tours/onboarding.tour`
-- **Use:** `cp -r outputs/cyberos-starter ~/Projects/my-new-thing`
+  `docs/tours/onboarding.tour`
+- **Use:** `cp -r runtime/starter/cyberos-starter ~/Projects/my-new-thing`
 
 #### 8.3 Two-mode CLAUDE.md symlink
 
 - **Recipe:**
   ```bash
-  ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
-  ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md CLAUDE.md
+  ln -s /path/to/cyberos/docs/CyberOS-AGENTS.md AGENTS.md
+  ln -s /path/to/cyberos/docs/CyberOS-AGENTS.md CLAUDE.md
   ```
 
 #### 8.4 Onboarding checklist memory
@@ -3450,9 +3488,9 @@ are validated by `meta/validators/check-source-tiers.py`.
 - **13.3 — `cyberos doctor` repair op docs** → expanded via tour files
   (`tours/repair-*.tour`)
 - **13.4 — Protocol-history INDEX** → `.cyberos-memory/meta/protocol-history/INDEX.md`
-- **13.5 — `outputs/` transient artefacts** → `.gitignore` updated
+- **13.5 — `.cyberos-memory/cache/` transient artefacts** → `.gitignore` updated
 - **13.6 — CONTRIBUTING.md** → at root level
-- **13.7 — `outputs/refinements/` workflow** → documented in this README
+- **13.7 — `.cyberos-memory/refinements/` workflow** → documented in this README
 - **13.8 — Repo split** → architectural decision; not done yet
 - **13.9 — `__pycache__/` exclusion** → in `.gitignore` + export skip list
 - **13.10 — Emergency stop** → `cyberos panic` with `--reason` requirement
@@ -3488,7 +3526,7 @@ are validated by `meta/validators/check-source-tiers.py`.
 
 ### Post-catalog Tier E — genuine Layer 1 wins (Batch 15)
 
-- **Schema migration framework** — `cyberos migrate {list|plan|apply}`. Migrations under `migrations/<NNN>-<slug>.py`. State at `meta/migrations-applied.json`
+- **Schema migration framework** — `cyberos migrate {list|plan|apply}`. Migrations under `runtime/migrations/<NNN>-<slug>.py`. State at `meta/migrations-applied.json`
 - **Inline editor** — `cyberos edit <memory>`. $EDITOR + validate-on-save + brain_writer str-replace commit
 - **Bulk edit** — `cyberos bulk-set <expr> --filter ...`. Refused-field guardrails for memory_id, authority, classification
 - **Hybrid search (RRF)** — `cyberos hybrid-search "<q>"`. Reciprocal Rank Fusion over FTS + TF-IDF (+ optional sbert)
@@ -3710,7 +3748,7 @@ cyberos sync export --to ~/cyberos-bundle.zip
 
 # Machine B
 cyberos sync import ~/cyberos-bundle.zip --from subject:other-machine --dry-run
-# Review the report at outputs/sync/<run-id>.md
+# Review the report at .cyberos-memory/cache/test-fixtures/sync/<run-id>.md
 cyberos sync import ~/cyberos-bundle.zip --from subject:other-machine
 # Resolve any conflicts:
 cyberos sync conflicts --resolve
@@ -3790,7 +3828,7 @@ notes.
 cyberos/
 ├── docs/
 │   ├── CyberOS-AGENTS.md              ← protocol (authoritative)
-│   ├── CyberOS-AGENTS-CORE.md         ← per-session load (regenerable)
+│   ├── CyberOS-AGENTS.md         ← per-session load (regenerable)
 │   ├── CyberOS-AGENTS.README.md       ← this file (on-ramp + operator manual)
 │   └── CyberOS-AGENTS.CHANGELOG.md    ← daily log
 ├── runtime/
@@ -3843,7 +3881,7 @@ cyberos/
 │               ├── fixture-valid-fact.md
 │               ├── fixture-valid-decision.md
 │               └── fixture-valid-person.md
-├── outputs/
+├── .cyberos-memory/cache/
 │   ├── brain_writer.py                ← reference writer (mutates BRAIN)
 │   ├── templates/                     ← memory templates (Aspect 4.1)
 │   ├── staged-memories/               ← pre-commit staging

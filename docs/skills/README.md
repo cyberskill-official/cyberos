@@ -1223,12 +1223,12 @@ If shorter form is used, ask for missing fields via AskUserQuestion (or chat que
 Run these in order; the user shouldn't see most of this unless something fails.
 
 1. **Verify project root.** Resolve `<project repo>` to an absolute path. Confirm it's a real folder (not a sandbox path forbidden by AGENTS.md §0.1). If forbidden → halt; ask user to grant access.
-2. **Verify AGENTS.md is loaded.** If the conversation context doesn't already contain the protocol, read `cyberos/docs/CyberOS-AGENTS-CORE.md` now. Acknowledge `Loaded agent memory protocol`.
+2. **Verify AGENTS.md is loaded.** If the conversation context doesn't already contain the protocol, read `cyberos/docs/CyberOS-AGENTS.md` now. Acknowledge `Loaded agent memory protocol`.
 3. **Bootstrap BRAIN if needed.** Check for `<project repo>/.cyberos-memory/manifest.json`. If absent → run `python3 <cyberos>/docs/skills/scripts/bootstrap-brain.sh <project-repo>` (if exists) OR perform §13.1 manually using the Write tool. If present → check `READY` state per §13.0.
 4. **Create output dir.** `mkdir -p <output_dir>`.
 5. **Initialise CONTEXT.md** at `<project repo>/CONTEXT.md` if absent (skeleton: 3 H2 sections — Language / Relationships / Flagged ambiguities).
 6. **Initialise `docs/adr/` and `.out-of-scope/`** as empty directories.
-7. **Append `op:"session.start"`** via `python3 outputs/brain_writer.py session-start agent:claude-opus-4-7` (run from project repo root).
+7. **Append `op:"session.start"`** via `python3 runtime/lib/brain_writer.py session-start agent:claude-opus-4-7` (run from project repo root).
 8. **Resolve the chain.** Default chain (will be refined by Phase B):
 
    ```
@@ -1270,7 +1270,7 @@ Run these in order; the user shouldn't see most of this unless something fails.
    - *"You said 'X' — should this be a canonical term in your project's vocabulary? If so, how should I define it?"*
    - Append to `<project>/CONTEXT.md` `## Language` section using the format in MANUAL_WORKFLOW.md.
 8. **Synthesise `project_brief@1`** in markdown with the 14-field frontmatter populated. Save to `<output_dir>/project-brief.md`.
-9. **Append audit row** via `python3 outputs/brain_writer.py write agent:claude-opus-4-7 project/<slug>/project-brief.md <abs path to artefact>`.
+9. **Append audit row** via `python3 runtime/lib/brain_writer.py write agent:claude-opus-4-7 project/<slug>/project-brief.md <abs path to artefact>`.
 10. **Announce**: *"Phase A complete. Brief saved to <path>. Moving to Phase B (chain selection)."*
 
 #### HITL templates
@@ -1550,7 +1550,7 @@ Do not re-run completed phases. Do not re-ask the user questions you already hav
 | Symptom | Reflex |
 |---|---|
 | Skill SKILL.md not found at expected path | Ask user for the cyberos repo path; cache in this session's context |
-| `python3 outputs/brain_writer.py` returns non-zero | Read stderr; if `frontmatter-validation` → fix the artefact; if `audit-corrupt` → halt and surface to user |
+| `python3 runtime/lib/brain_writer.py` returns non-zero | Read stderr; if `frontmatter-validation` → fix the artefact; if `audit-corrupt` → halt and surface to user |
 | User pastes an answer that doesn't fit the question's options | Reframe the question; don't punish the user for free-text — extract the option |
 | Audit-fix loop doesn't terminate after 5 iterations | Treat as EXHAUSTED; surface to user per Phase D template |
 | User says `pause` or `abort` | Honour immediately; write `<output_dir>/PAUSED.md` or `ABORTED.md` with current state |
@@ -1636,7 +1636,7 @@ For manual mode, the 6-line version is:
 
 ```
 1. Open your agent host on the new project's repo (Cowork / Claude Code / Cursor / Codex / Gemini CLI / OpenCode — see HOST_ADAPTERS.md).
-2. Ensure AGENTS.md (or AGENTS-CORE.md) is loaded into the agent's context.
+2. Ensure AGENTS.md (or AGENTS.md) is loaded into the agent's context.
 3. Paste cuo/cpo/requirements-discovery/STANDALONE_INTERVIEW.md → run the 20-question interview → save project_brief@1.md.
 4. Paste cuo/cpo/chain-selector/SKILL.md → confirm the chain_profile (lean / standard / full).
 5. For each skill the chain selected: paste its SKILL.md → run → review → save artefact → run the paired audit skill → fix HITL issues → next.
@@ -1681,14 +1681,14 @@ For per-host setup recipes (symlinks, plugin install, AGENTS.md loading, brain_w
 
 The exact commands depend on your host — see [Part 30 — Host Adapters](#part-30--host-adapters-per-agent-host-tweaks) for per-host setup. The *abstract* steps are:
 
-1. **Make AGENTS.md available to the agent.** The agent must load `cyberos/docs/CyberOS-AGENTS-CORE.md` at session start. Three options:
-   - **Symlink** (Claude Code, Codex CLI auto-load): `ln -s <abs>/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md` at the new project's root.
+1. **Make AGENTS.md available to the agent.** The agent must load `cyberos/docs/CyberOS-AGENTS.md` at session start. Three options:
+   - **Symlink** (Claude Code, Codex CLI auto-load): `ln -s <abs>/cyberos/docs/CyberOS-AGENTS.md AGENTS.md` at the new project's root.
    - **Plugin / rule file** (Cursor: `.cursor/rules/cyberos-memory.mdc`; Windsurf: `.windsurfrules`; Copilot: `.github/copilot-instructions.md`).
    - **Manual paste** (Claude.ai / ChatGPT): paste the contents at the start of each session.
 
    CORE.md is sufficient for the manual chain (full AGENTS.md is only needed for §0.5 protocol-upgrade flows, which won't fire here).
 
-2. **Bootstrap the project's BRAIN.** First agent session detects `PRISTINE` state per §13.0 and silently auto-bootstraps `.cyberos-memory/` IF the host can write to disk. If it doesn't, paste *"bootstrap and continue"*. Hosts without filesystem access: run `python3 outputs/brain_writer.py session-start <actor>` from the project repo root in your terminal and let the agent know the BRAIN is initialised.
+2. **Bootstrap the project's BRAIN.** First agent session detects `PRISTINE` state per §13.0 and silently auto-bootstraps `.cyberos-memory/` IF the host can write to disk. If it doesn't, paste *"bootstrap and continue"*. Hosts without filesystem access: run `python3 runtime/lib/brain_writer.py session-start <actor>` from the project repo root in your terminal and let the agent know the BRAIN is initialised.
 
 3. **Initialise CONTEXT.md** (per Plan v1.1 / M2). Create at the new project's repo root:
 
@@ -1791,7 +1791,7 @@ If the skill resolved any new domain terms during its run, append to the project
 
 #### Step ⑦ — Append the §14 memory-update block
 
-The agent will end its response with a §14.1 compact block. The audit row goes to `.cyberos-memory/audit/<YYYY-MM>.jsonl`. **Do not edit the audit ledger by hand.** If the agent didn't append, run `python3 outputs/brain_writer.py session-end <actor>` from the project repo root before closing the tab.
+The agent will end its response with a §14.1 compact block. The audit row goes to `.cyberos-memory/audit/<YYYY-MM>.jsonl`. **Do not edit the audit ledger by hand.** If the agent didn't append, run `python3 runtime/lib/brain_writer.py session-end <actor>` from the project repo root before closing the tab.
 
 ---
 
@@ -2137,7 +2137,7 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 | Audit keeps cycling on the same issue | NO_PROGRESS termination | Edit the artefact manually OR file a refinement proposal against the rule |
 | `chat.review_request` MCP not available | Runtime not built | Manual mode: just answer the HITL question in chat directly |
 | `proj.create_issue` MCP not available | Runtime not built | Manual mode: copy issues from `impl_plan@1` into Linear/Jira/GitHub by hand |
-| §14 block doesn't appear | Agent forgot | Run `python3 outputs/brain_writer.py session-end <actor>` from project repo root before closing |
+| §14 block doesn't appear | Agent forgot | Run `python3 runtime/lib/brain_writer.py session-end <actor>` from project repo root before closing |
 | BRAIN classified `INCOMPATIBLE:protocol-sha256-mismatch` | AGENTS.md changed since last pin | Run §0.5 protocol upgrade flow OR revert AGENTS.md to the pinned SHA |
 
 ---
@@ -2259,49 +2259,49 @@ A **recommended** host runs the chain end-to-end without the user leaving the ch
 
 1. **Connect the new project's folder.** When you start a Cowork session, ask Claude to `request_cowork_directory` for `/path/to/your/new/project`. Approve the prompt.
 2. **Connect cyberos folder** (so the agent can read AGENTS.md + cyberos/docs/skills/*): same `request_cowork_directory` for `/path/to/cyberos`.
-3. **Load AGENTS.md into context.** Cowork doesn't auto-load AGENTS.md the way Claude Code does. Ask the agent at the start of each session: *"Read `cyberos/docs/CyberOS-AGENTS-CORE.md` and follow it for this conversation."* The CORE.md is short (~10K tokens); it loads fast.
-4. **Bootstrap BRAIN.** Cowork's bash sandbox can run `python3 outputs/brain_writer.py session-start <actor>` against the connected workbench folder. The agent will auto-bootstrap on first write per AGENTS.md §13.1.
+3. **Load AGENTS.md into context.** Cowork doesn't auto-load AGENTS.md the way Claude Code does. Ask the agent at the start of each session: *"Read `cyberos/docs/CyberOS-AGENTS.md` and follow it for this conversation."* The CORE.md is short (~10K tokens); it loads fast.
+4. **Bootstrap BRAIN.** Cowork's bash sandbox can run `python3 runtime/lib/brain_writer.py session-start <actor>` against the connected workbench folder. The agent will auto-bootstrap on first write per AGENTS.md §13.1.
 
 #### Per-step shape
 
 - **Load a SKILL.md**: `Read cyberos/docs/skills/cuo/cpo/<skill>/SKILL.md` — agent reads via the file tool.
 - **Run the interview**: agent conducts in chat; Cowork's chat surface handles the back-and-forth fine.
 - **Save an artefact**: agent uses Write tool to create `<project-root>/planning/<date>-<slug>/<artefact>.md`.
-- **Append audit row**: agent runs `python3 outputs/brain_writer.py write <actor> <relpath> <content_file>` via bash (cwd = project repo root).
-- **Session end**: agent runs `python3 outputs/brain_writer.py session-end <actor>` via bash.
+- **Append audit row**: agent runs `python3 runtime/lib/brain_writer.py write <actor> <relpath> <content_file>` via bash (cwd = project repo root).
+- **Session end**: agent runs `python3 runtime/lib/brain_writer.py session-end <actor>` via bash.
 
 #### Quirks / gotchas
 
 - The bash sandbox's view of paths differs from the file tool's view. The agent already knows this — but if you run bash commands by hand, paths look like `/sessions/<id>/mnt/<folder>/...` not `/Users/<you>/...`.
 - Cowork sessions don't persist across closing the app — but the BRAIN's audit ledger DOES persist (it's on your real filesystem). Resume any time.
 - Skills installed at the Cowork level (the ones loaded via `Skill` tool) DO NOT include the CyberOS skills system — those live in your `cyberos/` repo and are loaded on-demand by the agent reading the SKILL.md files.
-- **§0.1 sandbox guard (Bundle Q, 2026-05-11) — `outputs/brain_writer.py` refuses to run from inside Cowork's bash sandbox**, because the sandbox's view of the project lives at `/sessions/<id>/mnt/<folder>/...` which matches the AGENTS.md §0.1 forbidden-paths list (paths containing `/sessions/`, `local-agent-mode-sessions`, etc.). The bind-mount IS backed by your real filesystem, but §0.1 cannot tell that from inside; refusing is defense-in-depth against the case where it ISN'T. **Net effect:** the agent can edit non-BRAIN files (docs, source code) directly via the Write/Edit tools, but BRAIN-touching ops (audit-row appends, manifest mutations, `meta/protocol-history/` archives) require the user to run the apply script from a macOS terminal where the path resolves to `/Users/<you>/Projects/...` (no §0.1 forbidden substring). See "The cowork → macOS handoff" below.
+- **§0.1 sandbox guard (Bundle Q, 2026-05-11) — `runtime/lib/brain_writer.py` refuses to run from inside Cowork's bash sandbox**, because the sandbox's view of the project lives at `/sessions/<id>/mnt/<folder>/...` which matches the AGENTS.md §0.1 forbidden-paths list (paths containing `/sessions/`, `local-agent-mode-sessions`, etc.). The bind-mount IS backed by your real filesystem, but §0.1 cannot tell that from inside; refusing is defense-in-depth against the case where it ISN'T. **Net effect:** the agent can edit non-BRAIN files (docs, source code) directly via the Write/Edit tools, but BRAIN-touching ops (audit-row appends, manifest mutations, `meta/protocol-history/` archives) require the user to run the apply script from a macOS terminal where the path resolves to `/Users/<you>/Projects/...` (no §0.1 forbidden substring). See "The cowork → macOS handoff" below.
 
 #### The cowork → macOS handoff (apply-script pattern)
 
 Established 2026-05-11 during Bundle Q. The pattern:
 
 1. **Agent in cowork edits non-BRAIN files** (AGENTS.md, CHANGELOG, README, skills runbooks, source code). These are ordinary file mutations — no audit row needed. Cowork's Write/Edit tools work fine.
-2. **Agent stages BRAIN-touching ops** as a deterministic apply script + memory templates under `outputs/<bundle-name>/`. The script:
+2. **Agent stages BRAIN-touching ops** as a deterministic apply script + memory templates under `.cyberos-memory/cache/<bundle-name>/`. The script:
    - performs preflight sanity (paths, SHAs, deps);
-   - calls `python3 outputs/brain_writer.py` for each op (session-start, write, str-replace, protocol-upgrade, self-audit, session-end);
+   - calls `python3 runtime/lib/brain_writer.py` for each op (session-start, write, str-replace, protocol-upgrade, self-audit, session-end);
    - exits non-zero on any failure so the chain stays consistent.
 3. **User runs the script from macOS terminal**:
    ```bash
    cd /Users/<you>/Projects/<repo>
-   bash outputs/<bundle-name>/apply.sh
+   bash .cyberos-memory/cache/<bundle-name>/apply.sh
    ```
    The §0.1 guard passes (path is real-filesystem), the writer runs, the chain advances.
 4. **Agent reviews the resulting chain** in the next cowork session via `verify --bit-perfect` output the user pastes back.
 
 **When this pattern fits:** any cluster of BRAIN mutations the agent wants to land as one atomic-ish unit — protocol upgrades (§0.5 + §0.6), bulk content refreshes, doctor-style cleanup passes, multi-memory ingestion of an external corpus.
 
-**When it doesn't:** single-memory writes during exploratory work — the cowork → macOS round-trip is overkill. For those, the user can drop into the macOS terminal directly and run the writer themselves (the `python3 outputs/brain_writer.py write <actor> <path> <content>` form is short).
+**When it doesn't:** single-memory writes during exploratory work — the cowork → macOS round-trip is overkill. For those, the user can drop into the macOS terminal directly and run the writer themselves (the `python3 runtime/lib/brain_writer.py write <actor> <path> <content>` form is short).
 
-**Reference apply scripts** in `outputs/`:
+**Reference apply scripts** in `.cyberos-memory/cache/`:
 
-- `outputs/apply-bundle-Q.sh` — protocol-upgrade flow (§0.5 + §0.6 follow-on; canonical pattern for future protocol upgrades)
-- `outputs/doctor/<date>-cleanup.py` — bulk-cleanup pattern (str_replace many memories in one session, with rollback-on-failure)
+- `runtime/lib/apply-bundle-Q.sh` — protocol-upgrade flow (§0.5 + §0.6 follow-on; canonical pattern for future protocol upgrades)
+- `.cyberos-memory/cache/doctor/<date>-cleanup.py` — bulk-cleanup pattern (str_replace many memories in one session, with rollback-on-failure)
 
 #### Recommendation
 
@@ -2321,7 +2321,7 @@ The native Claude Code experience. Best fit if you live in a terminal.
 
    ```bash
    cd /path/to/new/project
-   ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
+   ln -s /path/to/cyberos/docs/CyberOS-AGENTS.md AGENTS.md
    ```
 
    Claude Code auto-loads `AGENTS.md` and `CLAUDE.md` at session start. If you only want Claude Code to see it (not Codex / Cursor), use `CLAUDE.md` instead.
@@ -2354,12 +2354,12 @@ Same capability footprint as Claude Code but inside an IDE.
 
    ```markdown
    ---
-   description: CyberOS Universal Agent Memory Protocol (AGENTS-CORE.md)
+   description: CyberOS Universal Agent Memory Protocol (AGENTS.md)
    globs: ["**/*"]
    alwaysApply: true
    ---
 
-   <paste contents of cyberos/docs/CyberOS-AGENTS-CORE.md here>
+   <paste contents of cyberos/docs/CyberOS-AGENTS.md here>
    ```
 
    Cursor's `.cursor/rules/` folder is the equivalent of Claude Code's auto-loaded `AGENTS.md`.
@@ -2385,7 +2385,7 @@ OpenAI's terminal agent. Auto-loads `AGENTS.md` natively (this is the file conve
 1. **Symlink AGENTS.md** — same as Claude Code:
 
    ```bash
-   ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
+   ln -s /path/to/cyberos/docs/CyberOS-AGENTS.md AGENTS.md
    ```
 
 2. **Run `codex` in the project root.** It'll pick up AGENTS.md automatically.
@@ -2407,7 +2407,7 @@ Generic recipe for any agent CLI that supports file tools + shell:
 #### Setup
 
 1. **Find the host's auto-load convention** (see ECC's `manifests/` for examples — every host has its own `.foo/<file>` shape).
-2. **Either symlink or copy** `cyberos/docs/CyberOS-AGENTS-CORE.md` into the auto-load location.
+2. **Either symlink or copy** `cyberos/docs/CyberOS-AGENTS.md` into the auto-load location.
 3. **Bootstrap BRAIN** by asking the agent to follow §13.1.
 
 #### Per-step shape
@@ -2439,7 +2439,7 @@ For when you can't run a CLI — e.g., you're on a borrowed machine, on mobile, 
 
 #### Setup
 
-1. **Paste AGENTS-CORE.md as the first message** of every new session (or use a Custom GPT / Custom Project to bake it in).
+1. **Paste AGENTS.md as the first message** of every new session (or use a Custom GPT / Custom Project to bake it in).
 2. **Paste the SKILL.md** of the current step as the second message.
 3. **Provide the inputs** (project brief / prior artefacts) as subsequent messages.
 
@@ -2451,11 +2451,11 @@ For when you can't run a CLI — e.g., you're on a borrowed machine, on mobile, 
 
    ```bash
    cd /path/to/project
-   python3 outputs/brain_writer.py session-start human:stephen-cheng
+   python3 runtime/lib/brain_writer.py session-start human:stephen-cheng
    for f in <list of artefact files>; do
-     python3 outputs/brain_writer.py write human:stephen-cheng <relpath> <abspath>
+     python3 runtime/lib/brain_writer.py write human:stephen-cheng <relpath> <abspath>
    done
-   python3 outputs/brain_writer.py session-end human:stephen-cheng
+   python3 runtime/lib/brain_writer.py session-end human:stephen-cheng
    ```
 
    This restores chain integrity. The `actor_kind: "human"` makes it explicit these were human-driven (vs. agent-driven) writes.

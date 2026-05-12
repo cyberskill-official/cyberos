@@ -358,7 +358,7 @@ def main():
     print(f"\nNext: review staged files, then run brain_writer to commit each:")
     print(f"  cd {args.root}")
     print(f"  for f in {staged[0].parent}/*.md; do")
-    print(f"    python3 outputs/brain_writer.py write <relpath> <body-file>")
+    print(f"    python3 runtime/lib/brain_writer.py write <relpath> <body-file>")
     print(f"  done")
     print(f"\nThen run:")
     print(f"  python3 runtime/tools/cyberos status")

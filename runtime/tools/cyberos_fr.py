@@ -47,7 +47,7 @@ def collect_frs(brain_root: Path) -> list[dict]:
     search_dirs = [
         brain_root / "planning",
         brain_root / ".cyberos-memory" / "memories" / "projects",
-        brain_root / "outputs" / "staged-memories",
+        brain_root / ".cyberos-memory" / "staging",
     ]
     for d in search_dirs:
         if not d.exists():
@@ -99,7 +99,7 @@ def cmd_list(_args):
     brain_root = find_brain()
     frs = collect_frs(brain_root)
     if not frs:
-        print("  no FRs found (looked in planning/, memories/projects/, outputs/staged-memories/)")
+        print("  no FRs found (looked in planning/, memories/projects/, .cyberos-memory/staging/)")
         return 0
     print(f"\n  {len(frs)} feature request(s):\n")
     print(f"  {'fr_id':12s}  {'profile':8s}  tasks  S/M/L/XL  hum/ai/either  {'shape':14s}  path")

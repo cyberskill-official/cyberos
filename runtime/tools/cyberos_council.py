@@ -17,7 +17,7 @@ heuristic checks:
   - Related REFs (same tag / same § anchor)
   - Recent rejected.md entries (prior art against this idea)
 
-Output is staged at outputs/council/REF-NNN-council.md and is NOT
+Output is staged at .cyberos-memory/cache/council/REF-NNN-council.md and is NOT
 written to the BRAIN — it is a working artefact for the human author
 to use when finalising the REF.
 
@@ -325,7 +325,7 @@ body in diff form)_
 
 ---
 
-_This file is a working artefact at outputs/council/REF-{nnn}-council.md.
+_This file is a working artefact at .cyberos-memory/cache/council/REF-{nnn}-council.md.
 It is NOT a memory in the BRAIN. Once synthesis is complete and the
 REF body is updated, this file can be archived or deleted._
 """

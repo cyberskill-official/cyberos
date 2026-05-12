@@ -406,7 +406,7 @@ def main():
             print(f"  {line}")
         print(f"  {'-'*60}")
         print(f"  Confirm by re-running without --dry-run, OR:")
-        print(f"  python3 outputs/brain_writer.py write {subject} {target_rel} {staged}")
+        print(f"  python3 runtime/lib/brain_writer.py write {subject} {target_rel} {staged}")
         return 0
 
     # Confirm before write

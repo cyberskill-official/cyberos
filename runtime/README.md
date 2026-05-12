@@ -2,7 +2,7 @@
 
 This folder has two roles:
 
-1. **`runtime/tools/`** — eight Python CLIs you run today against any `.cyberos-memory/` (validator, doctor, search index, export, encryption, canonical SHA helper, AGENTS-CORE.md generator, benchmark). These are the operational layer of the local-optimization roadmap. See `runtime/tools/README.md` for the per-tool reference.
+1. **`runtime/tools/`** — eight Python CLIs you run today against any `.cyberos-memory/` (validator, doctor, search index, export, encryption, canonical SHA helper, AGENTS.md generator, benchmark). These are the operational layer of the local-optimization roadmap. See `runtime/tools/README.md` for the per-tool reference.
 
 2. **The future BRAIN-service runtime** — engineering hand-off plan for when CyberOS's runtime modules ship (transpilers, host shims, LangGraph supervisor, NATS event bus, GraphQL Federation gateway, et al). The four sections below — Plan, Interfaces, Build Order, originally separate files — describe that future state. They were consolidated into this README on 2026-05-10 to reduce file sprawl.
 

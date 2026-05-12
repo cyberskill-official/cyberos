@@ -35,7 +35,7 @@ Exit 0 = allow. Exit 2 + stderr message = deny with feedback.
 
 Detects cyberos memory-write attempts by inspecting command for:
   - 'brain_writer.py' substring
-  - 'outputs/brain_writer.py' substring
+  - 'runtime/lib/brain_writer.py' substring
   - 'cyberos add' substring
 
 Maintains state via /tmp/cyberos-gateguard-state-${SESSION_ID}.json so

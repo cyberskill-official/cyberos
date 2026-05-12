@@ -10,7 +10,7 @@ Surfaces three kinds of items related to the refinement loop:
      `.cyberos-memory/memories/drift/<date>-refinement-candidate-*.md`
 
   2. Council sessions awaiting synthesis (Aspect 3.3) —
-     `outputs/council/REF-NNN-council.md` where no Synthesis verdict yet
+     `.cyberos-memory/cache/council/REF-NNN-council.md` where no Synthesis verdict yet
 
   3. Rejected candidates with prior-art warning (Aspect 3.4) — files in
      `.cyberos-memory/rejected/` whose mtime is < 30 days

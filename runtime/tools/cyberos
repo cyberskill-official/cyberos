@@ -99,7 +99,7 @@ def cmd_explain(args):
             ("pluggable validators",        "§12.1",     "Auto-discover meta/validators/check-*.py plugins"),
         ],
         "add": [
-            ("load template",               "§4.1",      "outputs/templates/<TYPE>.md scaffolds the body"),
+            ("load template",               "§4.1",      "runtime/starter/templates/<TYPE>.md scaffolds the body"),
             ("apply persona defaults",      "§12.6",     "persona/<name>.md persona_defaults override CLI default"),
             ("auto-tag from GLOSSARY",      "§5.2 (Aspect)", "Opt-in; suggests kebab-case tags from FACT-014 terms"),
             ("denylist filter",             "§9.3",      "Block compensation, gov-ID, bank, secrets, health PII"),
@@ -172,7 +172,7 @@ def cmd_help(args):
             "voice": "(not yet implemented — Aspect 7.2) Lint docs/CyberOS-*.md for em dashes + AI-vocab.",
             "hooks": "(not yet implemented — Aspect 5.1) Toggle gateguard-style PreToolUse hook.",
             "panic": "(not yet implemented — Aspect 13.10) Emergency stop — freeze all writes pending review.",
-            "council": "Opt-in council-mode synthesis for ambiguous REFs (Aspect 3.3).\nUsage: cyberos council REF-NNN [--voices=architect,skeptic,pragmatist,critic] [--print].\nProduces outputs/council/REF-NNN-council.md with 4 voice prompts + heuristic context.",
+            "council": "Opt-in council-mode synthesis for ambiguous REFs (Aspect 3.3).\nUsage: cyberos council REF-NNN [--voices=architect,skeptic,pragmatist,critic] [--print].\nProduces .cyberos-memory/cache/council/REF-NNN-council.md with 4 voice prompts + heuristic context.",
             "sync": "Multi-machine sync scaffolding (Aspect 6.x).\nSubcommands: export --to <bundle.zip> [--include client-visible]; import <bundle> --from <subject> [--dry-run]; conflicts.",
             "mcp": "Read-only MCP server for the BRAIN (Aspect 12.7).\nUsage: cyberos mcp serve  (line-delimited JSON-RPC over stdio).\nWire via .claude/mcp-config.json with command=python3 runtime/mcp/cyberos_brain_server.py.",
         }
@@ -1062,7 +1062,7 @@ def cmd_doc_consistency(args):
     agents = (docs / "CyberOS-AGENTS.md")
     readme = (docs / "CyberOS-AGENTS.README.md")
     changelog = (docs / "CyberOS-AGENTS.CHANGELOG.md")
-    core = (docs / "CyberOS-AGENTS-CORE.md")
+    core = (docs / "CyberOS-AGENTS.md")
 
     if agents.exists() and readme.exists():
         agents_text = agents.read_text()

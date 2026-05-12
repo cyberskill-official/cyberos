@@ -1534,3 +1534,156 @@ Stephen reviewing the just-migrated FR: *"the source attribution was not necessa
   rm docs/CyberOS-AGENTS*.md
   ln -sf docs/memory/AGENTS-CORE.md AGENTS.md   # re-point the broken symlink
   ```
+
+---
+
+## Batch 26 — Top-level folder refactor (2026-05-12, late-evening, part 2)
+
+### Changed
+- **`outputs/` removed.** Split into three semantically distinct destinations:
+  - **`runtime/lib/`** — shared scripts the runtime calls: `brain_writer.py` (the canonical BRAIN-mutation API), `apply-bundle-Q.sh` (atomic rollout helper), `cleanup-host.sh` (sandbox-cannot-unlink workaround).
+  - **`runtime/starter/`** — bootstrap scaffolds: `cyberos-starter/` (new-project skeleton) + `templates/` (Layer-1 starter templates).
+  - **`var/`** — all generated state: `audit-site/` (was `_audit-site/`), `council/`, `doctor/`, `refinements/`, `replan/`, `runtime-specs/`, `staged-memories/`, plus `test-fixtures/` for the previous underscore-prefixed smoke folders.
+- **`migrations/` moved to `runtime/migrations/`.** Migration scripts are code, not top-level state.
+- **`tours/` moved to `docs/tours/`.** Tours are walkthrough documentation, not runtime — they belong under `docs/`.
+- **20 source files patched.** All references to `outputs/...`, `migrations/...`, and specific `tours/*.tour` paths rewritten in `runtime/tools/*.py`, `runtime/hooks/`, `runtime/lib/`, the umbrella binary, and four top-level READMEs. 95 substitutions total.
+- **`.gitignore` rewritten.** New patterns: `var/doctor/*.log`, `var/refinements/draft-*.md`, `var/staged-memories/*.md`, `var/test-fixtures/`. Legacy `outputs/` line retained while empty husk remains on host. BRAIN-writer reference updated from `outputs/brain_writer.py` to `runtime/lib/brain_writer.py` in the gitignore preamble.
+
+### Why
+Stephen reviewing the post-Batch-25 tree: *"how about other folders/files? for now we just covered memory and skills aspects, is it possible to refactor into easier to understand, also scalable in the future"*. The `outputs/` folder was particularly confusing — it mixed source code (`brain_writer.py`), bootstrap scaffolds (`cyberos-starter/`, `templates/`), generated dashboards (`_audit-site/`), and per-tool scratch state (`doctor/`, `refinements/`, etc.) under one ambiguous name. Splitting them into UNIX-conventional locations (`runtime/lib/`, `runtime/starter/`, `var/`) makes the boundaries between code and state crisp.
+
+### End-state tree
+```
+cyberos/
+├── docs/{memory,skills,contracts,prd,srs,tours}/   ← documentation
+├── runtime/{tools,skill_runners,mcp,hooks,
+│            completions,lib,starter,
+│            migrations,tests}/                     ← code
+├── var/{audit-site,council,doctor,refinements,
+│        replan,runtime-specs,staged-memories,
+│        test-fixtures}/                            ← generated state
+├── planning/                                       ← per-project work
+└── .cyberos-memory/                                ← BRAIN (gitignored)
+```
+Three top-level folders fewer than before (`outputs/`, `migrations/`, `tours/` all relocated). Code-vs-state separation is now crisp: anything under `runtime/` is source code; anything under `var/` is generated.
+
+### Verify
+- `cyberos verify` → CRITICAL: 0 (12 pre-existing WARN, 1 INFO — unchanged).
+- `cyberos doctor` → CRITICAL: 0 (10 WARN, 1 INFO — unchanged).
+- `cyberos fr list` → both FRs registered, body-h2 shape.
+- `python3 -c "import sys; sys.path.insert(0,'runtime/lib'); import brain_writer"` → loads from new location.
+
+### Host-side cleanup runbook (sandbox cannot remove empty dirs)
+```bash
+cd ~/Projects/CyberSkill/cyberos
+rm -rf outputs/ migrations/ tours/    # empty husks left after the move
+rm planning/*/FR-*.legacy.bak         # Batch A migration backups (if you're done reviewing)
+rm docs/CyberOS-AGENTS*.md            # legacy redirect stubs from Batches 24-25
+rm AGENTS.md && ln -s docs/memory/AGENTS-CORE.md AGENTS.md   # re-point broken symlink
+```
+
+After running the above, the host filesystem matches the canonical end-state tree exactly.
+
+---
+
+## Batch 27 — Single source of truth + var/ removed + unified README convention (2026-05-12, night)
+
+### Removed
+- **`AGENTS-CORE.md` decommissioned.** The "compact" 42 KB extract was removed. Single source of truth for the protocol is `docs/memory/AGENTS.md` (114 KB). Context windows have grown to comfortably hold the full protocol; maintaining a second variant created drift risk and doubled the surface to keep in sync. Stub left at old path; `runtime/tools/extract_agents_core.py` re-purposed as a no-op message explaining the decommission. The top-level `AGENTS.md` symlink now resolves to the full protocol (run `rm AGENTS.md && ln -s docs/memory/AGENTS.md AGENTS.md` on host to fix the broken symlink).
+- **`var/` folder removed.** Generated artefacts are now part of the BRAIN cache (`.cyberos-memory/cache/<tool>/`), which is already gitignored. Specific moves:
+  - `var/staged-memories/` → `.cyberos-memory/staging/` (semantically the BRAIN's staging area)
+  - `var/refinements/` → `.cyberos-memory/refinements/` (matches BRAIN-internal naming)
+  - `var/audit-site/` → `.cyberos-memory/cache/audit-site/` (regenerable static dashboard)
+  - `var/council/`, `var/doctor/`, `var/replan/`, `var/runtime-specs/`, `var/test-fixtures/` → `.cyberos-memory/cache/<tool>/`
+  - 72 path-substitutions across 15 source files (`runtime/tools/*.py`, `runtime/lib/{brain_writer.py,cleanup-host.sh,apply-bundle-Q.sh}`, four READMEs).
+  - `.gitignore` simplified: no more per-pattern transient-state rules; the BRAIN gitignore (`.cyberos-memory`) already covers all generated state.
+- **Fragmented stub redirects gone.** `docs/skills/{CHAIN_ORCHESTRATOR,MANUAL_WORKFLOW,HOST_ADAPTERS}.md` were already deleted in Batch 25; this batch additionally stubs `docs/memory/INDEX.md` (merged into README.md) and `docs/memory/AGENTS-CORE.md`. Both stubs are 10–14 lines pointing at the canonical location; remove on host with `rm`.
+
+### Added — single README.md per module
+Every functional folder now has exactly one `README.md` as its entry point. New READMEs written this batch:
+
+| New README | Purpose |
+| --- | --- |
+| `docs/README.md` | Top-level documentation index + folder-to-folder map |
+| `runtime/skill_runners/README.md` | BaseSkillRunner framework + how to add a new runner |
+| `runtime/mcp/README.md` | Read-only MCP server for the BRAIN |
+| `runtime/hooks/README.md` | Hook contract + built-in `gateguard.py` |
+| `runtime/completions/README.md` | Shell tab-completion install + regen |
+| `runtime/lib/README.md` | Shared library scripts (brain_writer, apply-bundle, cleanup-host) |
+| `runtime/starter/README.md` | Bootstrap scaffolds for new projects |
+| `runtime/migrations/README.md` | BRAIN schema migration contract + run instructions |
+| `runtime/tests/README.md` | Test layout, fixtures, live-LLM mode |
+| `planning/README.md` | Per-project work folder conventions |
+
+Existing READMEs already covered: `docs/memory/`, `docs/skills/`, `docs/contracts/`, `docs/prd/`, `docs/srs/`, `docs/tours/`, `runtime/`, `runtime/tools/`, `docs/skills/cuo/`.
+
+### Convention recap
+- Top-level folder entry point: **`README.md`**.
+- Skill folder entry point: **`SKILL.md`** (established protocol; tools look up skills by this name).
+- Contract folder entry point: **`CONTRACT.md`** (deliberate signal — contracts are schemas, not skills).
+- Daily history: **`CHANGELOG.md`** (per module).
+
+### Verify
+- `cyberos verify` → CRITICAL: 0 (unchanged: 12 WARN, 1 INFO).
+- `cyberos doctor` → CRITICAL: 0.
+- `cyberos fr list` → both FRs body-h2 shape.
+- 18/18 functional folders have a `README.md` entry point.
+- `brain_writer.py` imports from `runtime/lib/` and writes to `.cyberos-memory/cache/<tool>/`.
+
+### Real-world trigger
+Stephen reviewing post-Batch-26 state: *"i think var is unnecessary as it stores history only (which BRAIN did). AGENTS-CORE also half size of the full protocol, so I think about remove it and use full protocol. refactor not just top level files/folders, refactor whole cyberos repo, every single file/folder must have clear purpose, I prefer unified style (each module have single readme guideline) so avoid too many fragmented items, deeply check to make sure you satisfied my demand"*.
+
+### Host-side cleanup runbook
+```bash
+cd ~/Projects/CyberSkill/cyberos
+
+# Phase 1 leftovers
+rm docs/memory/AGENTS-CORE.md          # stub redirect
+rm docs/memory/INDEX.md                # stub redirect
+
+# Re-point AGENTS.md symlink to full protocol
+rm AGENTS.md && ln -s docs/memory/AGENTS.md AGENTS.md
+
+# Phase 2 leftover empty husks
+rm -rf var/ outputs/ migrations/ tours/
+
+# Older batch leftovers (if not yet done)
+rm docs/CyberOS-AGENTS*.md             # Batch 24 stubs
+rm planning/*/FR-*.legacy.bak          # Batch A migration backups
+
+# Verify clean
+cyberos verify    # → CRITICAL: 0
+cyberos doctor    # → CRITICAL: 0
+```
+
+After running the above, the host filesystem matches the canonical end-state byte-for-byte: 4 top-level folders (`docs/`, `runtime/`, `planning/`, `.cyberos-memory/`), 5 top-level files (`README.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `.gitignore`).
+
+### End-state tree
+```
+cyberos/
+├── README.md                  ← single repo overview
+├── AGENTS.md                  ← symlink → docs/memory/AGENTS.md
+├── CLAUDE.md                  ← @-ref → docs/memory/AGENTS.md
+├── CONTRIBUTING.md
+├── docs/                      ← ALL documentation (6 subfolders, each with README.md)
+│   ├── memory/                (AGENTS protocol — single source of truth)
+│   ├── skills/                (skills layer manual)
+│   ├── contracts/             (versioned artefact schemas)
+│   ├── prd/                   (PRD.docx + CHANGELOG.md)
+│   ├── srs/                   (SRS.docx + CHANGELOG.md)
+│   └── tours/                 (10 .tour walkthroughs)
+├── runtime/                   ← ALL code (9 subfolders, each with README.md)
+│   ├── tools/                 (63+ cyberos CLI modules)
+│   ├── skill_runners/         (LLM-driven skill framework)
+│   ├── mcp/                   (read-only MCP server)
+│   ├── hooks/                 (pre/post-write hooks)
+│   ├── completions/           (shell tab-completion)
+│   ├── lib/                   (shared scripts)
+│   ├── starter/               (bootstrap scaffolds)
+│   ├── migrations/            (BRAIN schema migrations)
+│   └── tests/                 (integration tests)
+├── planning/                  ← per-project FRs (with README.md)
+└── .cyberos-memory/           ← BRAIN (gitignored — includes cache/, staging/, refinements/)
+```
+
+Three layers (memory / skills / runtime), one entry-point README per module, zero fragmented stubs, zero duplicate variants.

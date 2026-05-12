@@ -1,0 +1,11 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "10 — Doctor: rebuild audit chain",
+  "description": "Recovery procedure when audit chain shows LINK breaks. Sev-0 — requires MAINTENANCE mode.",
+  "steps": [
+    {"file": "runtime/lib/brain_writer.py", "line": 1, "description": "Verify chain first: `python3 runtime/lib/brain_writer.py verify`. Look for `LINK invariant breaks: N` where N > 0."},
+    {"file": "runtime/tools/cyberos_doctor.py", "line": 1, "description": "doctor's rebuild-chain operation re-derives chain hashes from canonical-JSON of each row + verifies sequential integrity."},
+    {"file": "docs/CyberOS-AGENTS.md", "line": 1, "description": "Sev-0 ops require MAINTENANCE mode. Enter via chat-turn phrase per §8.8."},
+    {"file": ".cyberos-memory/audit/", "line": 1, "description": "audit/ ledger is append-only. Doctor's rebuild RE-DERIVES from existing rows; never deletes."}
+  ]
+}

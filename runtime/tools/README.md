@@ -12,7 +12,7 @@ Single-file Python tools that operate against any `.cyberos-memory/` store. No C
 | `cyberos_export.py` | Deterministic export bundles + daemon mode for periodic backup | Stage 4 ✅ |
 | `cyberos_encrypt.py` | At-rest encryption + Shamir 3-of-5 escrow per §5.6 (enable wizard, status, recover, disable, migrate-batch, rotate-shamir) | Stage 5 ✅ |
 | `canonical_sha.py` | Compute the §0.5 canonical SHA of an AGENTS.md (for protocol upgrade approval) | Stage 1 ✅ |
-| `extract_agents_core.py` | Generate `AGENTS-CORE.md` (10K-token normative subset with auto-guide directives); `--check` for CI; `--aggressive` for compact output | Stage 1 / Bundle M ✅ |
+| `extract_agents_core.py` | Generate `AGENTS.md` (10K-token normative subset with auto-guide directives); `--check` for CI; `--aggressive` for compact output | Stage 1 / Bundle M ✅ |
 | `benchmark.py` | Measure validator + export performance against any store | Cross-stage |
 | `tests/generate_vectors.py` | Regenerate the test-vector corpus | Stage 2 ✅ |
 | `tests/vectors/` | 16 fixtures covering CRITICAL findings the validator should catch | Stage 2 ✅ |

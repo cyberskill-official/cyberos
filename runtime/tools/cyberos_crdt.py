@@ -18,7 +18,7 @@ This adds structured field-level merges:
 
 `cyberos crdt merge <conflict-marker>` reads a sync conflict file and
 produces a merged frontmatter + body proposal at
-`outputs/staged-memories/crdt-merge-<id>.md`. Operator reviews + commits.
+`.cyberos-memory/staging/crdt-merge-<id>.md`. Operator reviews + commits.
 """
 from __future__ import annotations
 import argparse
@@ -139,7 +139,7 @@ def cmd_merge(args):
     remote_path = brain / remote_m.group(1)
     if not local_path.exists():
         print(f"  local missing: {local_path}", file=sys.stderr); return 2
-    # remote may live in outputs/sync-staging/ if it was a real sync; for testing we assume local
+    # remote may live in .cyberos-memory/cache/test-fixtures/sync-staging/ if it was a real sync; for testing we assume local
     if not remote_path.exists():
         # Search staging
         for c in (brain_root / "outputs" / "sync-staging").rglob("*.md") if (brain_root / "outputs" / "sync-staging").exists() else []:

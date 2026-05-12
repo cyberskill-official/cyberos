@@ -7,7 +7,7 @@ Tier E.1 of post-catalog improvements (Batch 15).
 When a new required frontmatter field is added (or an existing field
 must be reshaped), this runner replays every memory through a transform
 function and re-validates. Each migration is a versioned Python file
-under `migrations/<NNN>-<slug>.py` that exports:
+under `runtime/migrations/<NNN>-<slug>.py` that exports:
 
     APPLIES_TO = "memories/**"            # path glob
     DESCRIPTION = "what this migration does"
@@ -31,7 +31,7 @@ Usage:
     cyberos migrate apply <name> --force    # re-run an already-applied migration
 
 Example migration:
-    cat > migrations/001-add-source-tier.py <<'PY'
+    cat > runtime/migrations/001-add-source-tier.py <<'PY'
     APPLIES_TO = "memories/facts/**"
     DESCRIPTION = "Add source_freshness_tier=10 to FACTs that lack it"
     def transform(fm, body, rel):
@@ -97,7 +97,7 @@ def save_applied(brain_root: Path, state: dict):
 
 
 def load_migration(brain_root: Path, name: str):
-    """Load `migrations/<name>.py` (with or without .py suffix)."""
+    """Load `runtime/migrations/<name>.py` (with or without .py suffix)."""
     base = brain_root / "migrations"
     cands = [base / f"{name}.py", base / name]
     for c in cands:

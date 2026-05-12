@@ -10,23 +10,23 @@ report and a `cleanup.sh` script the operator runs by hand. With
 `--apply` it deletes (subject to sandbox permissions).
 
 Categories scanned:
-  - outputs/test-*           — anything I prefixed `test-` during dev
-  - outputs/cold-test/       — test cold-storage archives
-  - outputs/audit-bundle.zip — audit-script leftover
-  - outputs/staged-memories/ — anything older than 24h still staged
+  - .cyberos-memory/cache/test-*           — anything I prefixed `test-` during dev
+  - .cyberos-memory/cache/cold-test/       — test cold-storage archives
+  - .cyberos-memory/cache/audit-bundle.zip — audit-script leftover
+  - .cyberos-memory/staging/ — anything older than 24h still staged
   - .cyberos-memory/.branches/experiment-*  — experimental branches
   - .cyberos-memory/.branches/_pre-switch-* — stash branches
   - .cyberos-memory/.lock.shared / .lock.exclusive — lock files (kept)
-  - outputs/sync/*  + outputs/sync-staging/* — sync test artefacts
-  - outputs/site/   — static-site test render (regenerable)
-  - outputs/council/REF-042-council.md — council test
+  - .cyberos-memory/cache/test-fixtures/sync/*  + .cyberos-memory/cache/test-fixtures/sync-staging/* — sync test artefacts
+  - .cyberos-memory/cache/site/   — static-site test render (regenerable)
+  - .cyberos-memory/cache/council/REF-042-council.md — council test
   - /tmp/test-claude-settings.json (if present in cwd)
   - /tmp/cyberos-* tempdirs (chaos-test residue)
 
 Doesn't touch:
   - any memory file under .cyberos-memory/memories/, persona/, company/
   - manifest.json, audit/*, meta/* (except .branches/.* listed above)
-  - outputs/brain_writer.py, outputs/templates/, outputs/cyberos-starter/
+  - runtime/lib/brain_writer.py, runtime/starter/templates/, runtime/starter/cyberos-starter/
 """
 from __future__ import annotations
 import argparse
@@ -54,7 +54,7 @@ def collect_candidates(brain_root: Path) -> list[dict]:
     if o.exists():
         # test-* anything
         for p in o.glob("test-*"):
-            cands.append({"path": p, "reason": "outputs/test-* dev scratch", "kind": "file" if p.is_file() else "dir"})
+            cands.append({"path": p, "reason": ".cyberos-memory/cache/test-* dev scratch", "kind": "file" if p.is_file() else "dir"})
         for p in o.glob("audit-bundle*.zip"):
             cands.append({"path": p, "reason": "audit-script leftover bundle", "kind": "file"})
         # cold-test/

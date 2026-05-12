@@ -6,7 +6,7 @@ Batch 12 (Tier B) of post-catalog improvements.
 
 Reads a `memories/drift/*.md` file (typically auto-written by the
 Aspect 3.1 Stop-hook), extracts the trigger pattern + suggested AGENTS
-section, and stages a REF draft at `outputs/staged-memories/REF-NNN-...md`
+section, and stages a REF draft at `.cyberos-memory/staging/REF-NNN-...md`
 with: Trigger / Tier / AGENTS section / capability+regression eval
 skeletons / Implementation steps placeholder.
 
@@ -144,7 +144,7 @@ def main():
     p.add_argument("--tier", type=int, default=2)
     p.add_argument("--slug", help="kebab-case slug; auto-derived from drift if absent")
     p.add_argument("--with-llm", action="store_true", help="use anthropic SDK to draft the body")
-    p.add_argument("--out", help="custom output path; default outputs/staged-memories/")
+    p.add_argument("--out", help="custom output path; default .cyberos-memory/staging/")
     args = p.parse_args()
 
     brain_root = find_brain()

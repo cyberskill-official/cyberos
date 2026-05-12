@@ -5,7 +5,7 @@ cyberos_static.py — render BRAIN as a static HTML site.
 Batch 14 (Tier D) of post-catalog improvements.
 
 Walks `.cyberos-memory/` and emits a static HTML tree under
-`outputs/site/`. Mobile-friendly. Read your BRAIN from a phone via a
+`.cyberos-memory/cache/site/`. Mobile-friendly. Read your BRAIN from a phone via a
 local file server or by syncing the folder to a phone-accessible drive.
 
 Each memory becomes a page; the index lists all memories grouped by
@@ -70,7 +70,7 @@ def md_to_html(text: str) -> str:
 
 def main():
     p = argparse.ArgumentParser(description="render BRAIN as static HTML (Batch 14 / Tier D)")
-    p.add_argument("--out", default=None, help="output directory (default: outputs/site/)")
+    p.add_argument("--out", default=None, help="output directory (default: .cyberos-memory/cache/site/)")
     args = p.parse_args()
 
     brain_root = find_brain()

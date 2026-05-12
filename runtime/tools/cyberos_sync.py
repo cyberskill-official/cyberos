@@ -22,7 +22,7 @@ Three-way merge semantics:
     - Same memory_id, differing content_sha     → CONFLICT (record as
                                                   memories/conflicts/<id>.md)
     - Remote-only memory_id                     → IMPORT (stage in
-                                                  outputs/sync-staging/)
+                                                  .cyberos-memory/cache/test-fixtures/sync-staging/)
     - Local-only memory_id                      → no-op on import side
 
 Usage
@@ -37,8 +37,8 @@ Usage
 
     cyberos sync import <bundle.zip> --from subject:teammate [--dry-run]
         Detect conflicts; stage non-conflicting imports under
-        outputs/sync-staging/. Writes a sync report at
-        outputs/sync/<run-id>.md.
+        .cyberos-memory/cache/test-fixtures/sync-staging/. Writes a sync report at
+        .cyberos-memory/cache/test-fixtures/sync/<run-id>.md.
 
     cyberos sync conflicts
         List pending conflicts (memories/conflicts/*.md) created by prior
@@ -116,7 +116,7 @@ def collect_exportable(brain_root: Path, include_extra: set[str]) -> list[tuple[
             continue
         # Skip non-memory directories
         rel = md.relative_to(brain).as_posix()
-        if rel.startswith(("audit/", "index/", "exports/", "outputs/", "meta/templates/")):
+        if rel.startswith(("audit/", "index/", "exports/", ".cyberos-memory/cache/", "meta/templates/")):
             continue
         try:
             text = md.read_text(encoding="utf-8")
@@ -315,7 +315,7 @@ def cmd_import(args):
                 report.append(f"- {entry['memory_id']}  {entry['path']}")
             report.append("")
             if not args.dry_run:
-                report.append(f"_(Review staged files at `outputs/sync-staging/{run_id}/`, then move into `.cyberos-memory/` via `brain_writer.py write`.)_")
+                report.append(f"_(Review staged files at `.cyberos-memory/cache/test-fixtures/sync-staging/{run_id}/`, then move into `.cyberos-memory/` via `brain_writer.py write`.)_")
                 report.append("")
 
         if conflicts:

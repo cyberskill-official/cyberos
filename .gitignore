@@ -2,7 +2,7 @@
 # Deliberately gitignored: the BRAIN holds tenant-specific data that doesn't
 # belong in version control (per AGENTS.md §0.1 and the user's explicit
 # decision on 2026-05-11). The reference writer that mutates the BRAIN lives
-# at outputs/brain_writer.py and IS tracked in git, so the protocol's
+# at runtime/lib/brain_writer.py and IS tracked in git, so the protocol's
 # implementation surface ships with the repo even though the BRAIN itself
 # does not. Backup the BRAIN out-of-band (memory-export-<DATE>-<scope>.zip).
 .cyberos-memory
@@ -21,11 +21,16 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
-# Transient outputs (staged but never committed)
-outputs/doctor/*.log
-outputs/refinements/draft-*.md
-outputs/staged-memories/*.md
-outputs/__pycache__/
+# Generated state now lives inside the BRAIN (Batch 27 reorg, 2026-05-12).
+# The BRAIN itself (.cyberos-memory) is already gitignored above, which covers
+# .cyberos-memory/cache/*, .cyberos-memory/staging/*, and .cyberos-memory/refinements/*.
+# No separate var/ folder anymore — generated artefacts are regenerable to
+# .cyberos-memory/cache/<tool>/ on demand. Single source of state truth = BRAIN.
+
+# Legacy empty husks left behind by sandbox-can't-rmdir (Batches 26 + 27).
+# Remove on host with: rm -rf outputs/ migrations/ tours/ var/
+outputs/
+var/
 
 # Local analytics (Aspect 11.1 — local-only, never sent)
 .cyberos/analytics/
