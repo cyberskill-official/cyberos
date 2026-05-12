@@ -40,7 +40,7 @@ Sections elided entirely:
   - All historical-context / decision-trail mentions
 
 Usage:
-    python3 extract_agents_core.py docs/CyberOS-AGENTS.md > AGENTS-CORE.md
+    python3 extract_agents_core.py docs/memory/AGENTS.md > AGENTS-CORE.md
     python3 extract_agents_core.py --check  # CI: ensure committed AGENTS-CORE.md matches regeneration
 """
 
@@ -83,7 +83,7 @@ def extract(text: str) -> str:
     out.append("# AGENTS-CORE.md — Normative-only subset of CyberOS-AGENTS.md")
     out.append("")
     out.append("> **GENERATED FILE.** Do not hand-edit. Regenerate via:")
-    out.append("> `python3 runtime/tools/extract_agents_core.py docs/CyberOS-AGENTS.md > docs/CyberOS-AGENTS-CORE.md`")
+    out.append("> `python3 runtime/tools/extract_agents_core.py docs/memory/AGENTS.md > docs/memory/AGENTS-CORE.md`")
     out.append(">")
     out.append("> This is the ~12KB normative subset of the full ~108KB `CyberOS-AGENTS.md`.")
     out.append("> Agents loading this file MUST treat it as **AGENTS.md §0–§14** for purposes")
@@ -158,16 +158,16 @@ def extract_aggressive(text: str) -> str:
     out.append("# AGENTS-CORE.md — Tight normative subset (aggressive mode)")
     out.append("")
     out.append("> **GENERATED FILE.** Regenerate via:")
-    out.append("> `python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md > docs/CyberOS-AGENTS-CORE.md`")
+    out.append("> `python3 runtime/tools/extract_agents_core.py --aggressive docs/memory/AGENTS.md > docs/memory/AGENTS-CORE.md`")
     out.append(">")
     out.append("> ~10K-token normative subset; load every session. The full")
-    out.append("> `docs/CyberOS-AGENTS.md` is canonical; this file is a derived view.")
+    out.append("> `docs/memory/AGENTS.md` is canonical; this file is a derived view.")
     out.append("")
     out.append("---")
     out.append("")
     out.append("## ⚠️ When you MUST load the full AGENTS.md")
     out.append("")
-    out.append("The agent MUST load `docs/CyberOS-AGENTS.md` (the full canonical doc) BEFORE doing any of the following. CORE is insufficient for these operations:")
+    out.append("The agent MUST load `docs/memory/AGENTS.md` (the full canonical doc) BEFORE doing any of the following. CORE is insufficient for these operations:")
     out.append("")
     out.append("- **Any §0.5 protocol upgrade** — full §0.5 carries the canonical-form spec, signing-key TOFU rules, three-way conflict resolution, and the post-upgrade scan trigger")
     out.append("- **Entering MAINTENANCE mode** — full §8.8 lists the permitted/forbidden ops + auto-expiry semantics + the `maintenance_session_id` provenance contract")
@@ -273,13 +273,13 @@ def extract_aggressive(text: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("source", nargs="?", default="docs/CyberOS-AGENTS.md")
+    parser.add_argument("source", nargs="?", default="docs/memory/AGENTS.md")
     parser.add_argument("--check", action="store_true",
                         help="Verify committed AGENTS-CORE.md matches regeneration")
     parser.add_argument("--aggressive", action="store_true",
                         help="Aggressive mode — drop pointers + verbose prose; "
                              "target ~6-8KB output")
-    parser.add_argument("--output", default="docs/CyberOS-AGENTS-CORE.md")
+    parser.add_argument("--output", default="docs/memory/AGENTS-CORE.md")
     args = parser.parse_args()
 
     src = Path(args.source).read_text(encoding="utf-8")

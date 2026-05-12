@@ -13,8 +13,8 @@ Usage:
     python3 runtime/tools/voice_check.py --fix [path]      # interactive
     python3 runtime/tools/voice_check.py --strict          # exit 1 on any finding (CI mode)
 
-Default: lints docs/CyberOS-AGENTS.md, docs/CyberOS-AGENTS-CORE.md,
-docs/CyberOS-AGENTS.README.md (CHANGELOG is descriptive — exempt).
+Default: lints docs/memory/AGENTS.md, docs/memory/AGENTS-CORE.md,
+docs/memory/README.md (CHANGELOG is descriptive — exempt).
 
 Exit codes:
   0   no findings (or all auto-fixable in --fix mode)
@@ -113,7 +113,7 @@ BOLD = lambda s: _c(s, "1")
 
 def main():
     p = argparse.ArgumentParser(description="Voice linter for CyberOS protocol docs")
-    p.add_argument("paths", nargs="*", help="paths or globs (default: docs/CyberOS-AGENTS.md, AGENTS-CORE.md, AGENTS.README.md)")
+    p.add_argument("paths", nargs="*", help="paths or globs (default: docs/memory/AGENTS.md, AGENTS-CORE.md, AGENTS.README.md)")
     p.add_argument("--strict", action="store_true", help="exit 1 on any finding (CI mode)")
     p.add_argument("--summary", action="store_true", help="summary only, no per-line output")
     args = p.parse_args()

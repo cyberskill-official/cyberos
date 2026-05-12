@@ -1468,3 +1468,28 @@ Stephen asked "is `compatible_runtimes` and `schema_version` necessary?" — nei
 
 ### Real-world trigger
 Stephen flagged that the previously-checked-in §6 example carried Styx project context (whatsapp + notion patterns), which is a correctness bug for any project that adopts AGENTS.md as its protocol — the patterns would be meaningless in cyberos or any other project. Stripping fixes the protocol's universality and aligns with the no-project-specific-examples-in-universal-docs principle (now also captured as a feedback memory).
+
+---
+
+## Batch 24 — Doc reorganisation (2026-05-12)
+
+### Changed
+- **`docs/skills/` consolidation** — `CHAIN_ORCHESTRATOR.md`, `MANUAL_WORKFLOW.md`, `HOST_ADAPTERS.md` collapsed into single anchor `docs/skills/README.md` (Parts 28–30 appended; headings demoted; cross-refs rewritten). Originals replaced with one-line redirect stubs.
+- **`docs/memory/` introduced** — 6 protocol docs moved from `docs/CyberOS-AGENTS*.md` / `docs/CyberOS-{AGENTS,PRD,SRS}.CHANGELOG.md` into new `docs/memory/` folder:
+  - `AGENTS.md` (full protocol, 114 KB)
+  - `AGENTS-CORE.md` (compact 42 KB, regenerable via §0.5)
+  - `README.md` (32-part operator manual + skills cross-reference)
+  - `CHANGELOG.md` (batches 1–24)
+  - `PRD.CHANGELOG.md`
+  - `SRS.CHANGELOG.md`
+  - New `INDEX.md` landing page with reading order + symlink recipe + folder history.
+- **Manifest pin updated** — `.cyberos-memory/manifest.json` → `protocol.loaded_path` rewrote from `docs/CyberOS-AGENTS.md` to `docs/memory/AGENTS.md`. SHA pin (`sha256:71a276c7…`) preserved (canonical SHA matched after copy).
+- **Tool source patched** — `canonical_sha.py`, `extract_agents_core.py`, `voice_check.py`, `runtime/tools/cyberos`, `runtime/{tools,README}.md` updated to reference new `docs/memory/` paths.
+- **Legacy stubs** — `docs/CyberOS-*.md` left as redirect stubs (sandbox cannot unlink; host removes with `rm` when convenient).
+
+### Verify
+- `cyberos verify` → CRITICAL: 0 (12 pre-existing WARN, 1 INFO unchanged).
+- `cyberos fr list` → 2 FRs registered (Slack HR bot + Landing-page MVP).
+
+### Real-world trigger
+Stephen: *"too many docs inside skills folder that made me confuse, can we combine all inside single README.md / move memory related files into new folder 'memory'"*. End-of-session cleanup before closing the sprint that landed Batches 4–23.

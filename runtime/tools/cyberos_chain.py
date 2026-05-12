@@ -335,7 +335,10 @@ Output ONLY the artefact body. No commentary, no markdown code fences around the
                 encoding="utf-8",
             )
             step["status"] = "placeholder"
-            step["output_paths"] = [str(artefact.relative_to(brain_root))]
+            try:
+                step["output_paths"] = [str(artefact.relative_to(brain_root))]
+            except ValueError:
+                step["output_paths"] = [str(artefact)]
             print(f"  [{step['step']}] {step['skill_id']}  placeholder written")
 
         manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
@@ -346,7 +349,11 @@ Output ONLY the artefact body. No commentary, no markdown code fences around the
     elif any(s["status"] == "placeholder" for s in plan):
         manifest["status"] = "PLACEHOLDERS_WRITTEN"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"\n  ✓ chain complete. Manifest: {manifest_path.relative_to(brain_root)}")
+    try:
+        manifest_rel = manifest_path.relative_to(brain_root)
+    except ValueError:
+        manifest_rel = manifest_path
+    print(f"\n  ✓ chain complete. Manifest: {manifest_rel}")
     if manifest["budget"]["tokens_used_total"] > 0:
         print(f"  total: {manifest['budget']['tokens_used_total']} tokens, ${manifest['budget']['cost_usd_total']:.4f}")
     return 0

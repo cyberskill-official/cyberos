@@ -11,8 +11,8 @@ Canonical form (per AGENTS.md §0.5):
   - single terminating \\n appended
 
 Usage:
-    python3 canonical_sha.py docs/CyberOS-AGENTS.md
-    python3 canonical_sha.py docs/CyberOS-AGENTS.md --dump-canonical /tmp/canon.md
+    python3 canonical_sha.py docs/memory/AGENTS.md
+    python3 canonical_sha.py docs/memory/AGENTS.md --dump-canonical /tmp/canon.md
 """
 
 from __future__ import annotations

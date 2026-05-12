@@ -1137,3 +1137,1366 @@ The registry is the **source-of-truth that all of those will read**. None of the
 This document deliberately cites rather than duplicates. Authoritative sources: persona model + 14-persona registry → CyberOS-PRD.docx Part 6 + Part 3.2; SRS Part 6.3 + DEC-052. Anthropic Skills format mandate → SRS §6.2 + DEC-061. Audit ledger schema → SRS §6.7 + §10.4 + AGENTS.md §7. Scope contract enforcement → SRS §6.4. Notify/Question/Review primitives → SRS §6.6 + PRD §6.5. Trust calibration + defer triggers → PRD §6.4 + §6.4.1. Anti-prompt-injection (CaMeL) → DEC-050 + AGENTS.md §4.2. LangGraph runtime → DEC-027 + SRS §6.1. NATS event bus → DEC-029. Drift / acceptance auto-pause → DEC-055 + SRS §6.12. v0.2.0 contracts split (skills vs. contracts) → DEC-090. v0.2.0 dual-mode + exposability → DEC-091. v0.2.0 self-audit + auto-refinement → DEC-092. v0.2.0 manual fine-tune playbook → DEC-093. Memory protocol (the BRAIN this all writes to) → CyberOS-AGENTS.md (entire document).
 
 If any rule above conflicts with one of those source documents, the source document wins; raise a §0.4 protocol-refinement candidate against this README.
+
+
+---
+
+> **Parts 28–30 (consolidated 2026-05-12).** These three were previously separate files (`CHAIN_ORCHESTRATOR.md`, `MANUAL_WORKFLOW.md`, `HOST_ADAPTERS.md`). Merged into this README so the skills folder has a single canonical doc. The original files are kept as redirect stubs.
+
+## Part 28 — Chain Orchestrator (agent-side, fully automated)
+
+> **Audience: the AGENT** (Claude Sonnet 4.6 / Opus 4.7 / equivalent reasoning model). When the human user invokes this orchestrator, you become the supervisor for the full Requirements → Planning chain. The user's job shrinks to: (1) provide an initial pitch, (2) answer HITL questions you raise. Everything else — reading SKILL.md files, conducting interviews, writing artefacts, running audit-fix loops, executing brain_writer.py, routing between skills — is YOUR job.
+
+> **Audience: the HUMAN.** Pin the trigger phrase below. Once invoked, you only need to answer questions the agent asks you. The agent drives every other step.
+
+---
+
+### Trigger phrases (the human pins one of these)
+
+The user invokes you with one of:
+
+```
+Drive the CyberOS chain on this project. Read cyberos/docs/skills/CHAIN_ORCHESTRATOR.md and follow it.
+
+Pitch: <one paragraph describing the project>
+Project repo: <absolute path to the new project's directory>
+Output dir: <where to save artefacts; default ./planning/<YYYY-MM-DD>-<slug>/>
+Caller: human:<their-id>
+Profile preference: <auto | lean | standard | full> (default: auto — let chain-selector decide)
+```
+
+Or shorter:
+
+```
+/cyberos-chain
+Pitch: <paragraph>
+```
+
+If shorter form is used, ask for missing fields via AskUserQuestion (or chat questions if AskUserQuestion isn't available).
+
+---
+
+### Operating contract (read these once, then internalise)
+
+#### What you do
+
+1. **Read every SKILL.md the chain requires** — yourself, via the Read tool. Don't ask the user to paste them.
+2. **Conduct interviews in chat** — ask questions one at a time when the SKILL.md / STANDALONE_INTERVIEW.md prescribes them. Use the AskUserQuestion tool when the question has a clear set of options (≤4 choices); use plain chat questions for free-text answers.
+3. **Generate artefacts** — write to disk via the Write tool. Save to `<output_dir>/<artefact-name>.md`.
+4. **Run the audit-fix loop autonomously** — execute the 8-step algorithm from each `<skill>-audit/AUDIT_LOOP.md`. The loop runs in your head + via tool calls; the user only sees HITL pauses.
+5. **Execute brain_writer.py via bash** — append audit rows. The user shouldn't see this; just do it after every artefact write.
+6. **Update `CONTEXT.md`** when domain terms are resolved during interviews.
+7. **Write `.out-of-scope/<topic>.md`** when the user rejects a refinement proposal.
+8. **End every substantive reply with a §14 compact memory-update block** (per AGENTS.md §14.1).
+
+#### What you ask the user for
+
+- The initial pitch (if not provided in the trigger).
+- Triage gating answers (Q1-Q5 of requirements-discovery): strategic fit / capacity / runway / customer signal / reversibility.
+- Discovery answers (Q6-Q20): objectives / users / metrics / constraints / risks / scope / etc.
+- Profile override at brief-completion (if auto-selection feels wrong).
+- Section-by-section approval during PRD/SRS/FR generation (one bulk approval per section is fine).
+- HITL answers when an audit pauses with `needs_human` issues.
+- Decisions on refinement proposals (Accept / Accept-with-edits / Defer / Reject).
+- Any explicit `override` calls if you suggested one.
+
+#### What you DO NOT ask the user
+
+- "Should I read this SKILL.md?" → just read it.
+- "Should I save this artefact?" → just save it.
+- "Should I run brain_writer?" → just run it.
+- "Should I move to the next skill?" → just move; report transitions in the §14 block.
+- "What's the path to AGENTS.md?" → resolve it yourself from the standard layout.
+
+#### Pacing rule
+
+- **Default**: announce phase transitions in chat; ask HITL questions; keep moving.
+- **If the user types `pause`**: stop, summarise current state, wait.
+- **If the user types `resume`**: continue from last state.
+- **If the user types `abort`**: write a `<output_dir>/ABORTED.md` with current state; exit.
+- **If the user types `status`**: emit a §14 compact block + the chain-position summary.
+
+---
+
+### Phase ⓪ — Pre-flight (silent unless something's broken)
+
+Run these in order; the user shouldn't see most of this unless something fails.
+
+1. **Verify project root.** Resolve `<project repo>` to an absolute path. Confirm it's a real folder (not a sandbox path forbidden by AGENTS.md §0.1). If forbidden → halt; ask user to grant access.
+2. **Verify AGENTS.md is loaded.** If the conversation context doesn't already contain the protocol, read `cyberos/docs/CyberOS-AGENTS-CORE.md` now. Acknowledge `Loaded agent memory protocol`.
+3. **Bootstrap BRAIN if needed.** Check for `<project repo>/.cyberos-memory/manifest.json`. If absent → run `python3 <cyberos>/docs/skills/scripts/bootstrap-brain.sh <project-repo>` (if exists) OR perform §13.1 manually using the Write tool. If present → check `READY` state per §13.0.
+4. **Create output dir.** `mkdir -p <output_dir>`.
+5. **Initialise CONTEXT.md** at `<project repo>/CONTEXT.md` if absent (skeleton: 3 H2 sections — Language / Relationships / Flagged ambiguities).
+6. **Initialise `docs/adr/` and `.out-of-scope/`** as empty directories.
+7. **Append `op:"session.start"`** via `python3 outputs/brain_writer.py session-start agent:claude-opus-4-7` (run from project repo root).
+8. **Resolve the chain.** Default chain (will be refined by Phase B):
+
+   ```
+   A. requirements-discovery   →  project_brief@1
+   B. chain-selector           →  chain_plan
+   C. prd-author               →  prd@1
+   D. prd-audit                →  audited prd@1            (skipped on lean)
+   E. srs-author + srs-audit   →  audited srs@1            (full only)
+   F. fr-author                →  feature_request@1 ×N
+   G. fr-audit                 →  audited fr@1 ×N
+   H. fr-to-tech-spec          →  tech_spec@1              (skipped on lean)
+   I. spec-to-impl-plan        →  impl_plan@1
+   ```
+
+9. **Announce readiness in chat**: *"Pre-flight complete. Starting Phase A: Requirements Discovery."* Move to Phase A.
+
+---
+
+### Phase A — Requirements Discovery (the longest phase; ~30-45 min)
+
+#### Your steps
+
+1. **Read** `cyberos/docs/skills/cuo/cpo/requirements-discovery/SKILL.md` (283 lines) and `STANDALONE_INTERVIEW.md` (156 lines). Internalise the 5 triage gating questions + 15 discovery questions.
+2. **Read BRAIN scopes** the SKILL.md declares (`company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `memories:refinements`, `member:*` excluding `private/`, `client:*` if commissioned). Use this context to ask questions intelligently — e.g., for Q1 (strategic fit), surface the 3 most-relevant locked decisions before asking the question.
+3. **Q0 (initial pitch)**: skip if pitch was provided in the trigger; else ask: *"What's the project? One paragraph is fine — what would you build, ship, or commission, and what would success feel like?"*
+4. **Classify project_kind** silently: software_product / software_consulting_engagement / internal_tooling / marketing_campaign / hiring_plan / partnership / research_spike / other. If ambiguous, ask: *"This sounds like both X and Y. Which is the dominant frame?"* (use AskUserQuestion).
+5. **Q1-Q5 triage gating** (one at a time, each via AskUserQuestion when options are clear):
+
+   - Q1 strategic fit (use AskUserQuestion: aligns / partial / requires-revisit)
+   - Q2 capacity (use AskUserQuestion: realistic / hire-needed / scope-down / reject)
+   - Q3 runway (use AskUserQuestion for budget band: under_5k / 5k_to_25k / 25k_to_100k / over_100k / undisclosed; chat for ship-by date)
+   - Q4 customer signal (chat — context-dependent)
+   - Q5 reversibility (use AskUserQuestion: trivial / modest / meaningful / severe)
+
+6. **Compute triage_verdict** silently from Q1-Q5 per the rubric in SKILL.md. If `revise` or `reject`:
+   - Tell user: *"Triage verdict is `<v>` because <reasons>. Options: (1) override and proceed, (2) escalate to <persona>, (3) abort."*
+   - Use AskUserQuestion. Honour the choice.
+7. **Q6-Q20 discovery** — ask one at a time. For each answer, watch for **new domain terms**; when one appears, pause briefly and resolve into `CONTEXT.md`:
+   - *"You said 'X' — should this be a canonical term in your project's vocabulary? If so, how should I define it?"*
+   - Append to `<project>/CONTEXT.md` `## Language` section using the format in MANUAL_WORKFLOW.md.
+8. **Synthesise `project_brief@1`** in markdown with the 14-field frontmatter populated. Save to `<output_dir>/project-brief.md`.
+9. **Append audit row** via `python3 outputs/brain_writer.py write agent:claude-opus-4-7 project/<slug>/project-brief.md <abs path to artefact>`.
+10. **Announce**: *"Phase A complete. Brief saved to <path>. Moving to Phase B (chain selection)."*
+
+#### HITL templates
+
+When asking the user to approve a triage verdict:
+
+```
+The triage rubric flagged this project for `revise` because:
+  - Q1: This conflicts with locked decision DEC-NNN (<title>).
+  - Q4: Only 1 customer signal in BRAIN (rubric requires ≥3).
+
+Options:
+  1. Override and proceed (the brief will record `provenance.confidence: 0.5` to mark the override).
+  2. Escalate to cuo-clo for locked-decision review.
+  3. Abort and rethink.
+
+Which would you like?
+```
+
+Use AskUserQuestion with these 3 options.
+
+When resolving a domain term:
+
+```
+You used "account". In <other context> this could mean Customer or User.
+  - Customer = a paying entity (organisation or individual).
+  - User = a person with login credentials.
+
+Which one do you mean here? Or is "account" the right canonical term for both, and I should add it to CONTEXT.md as a parent concept?
+```
+
+---
+
+### Phase B — Chain Selection (~5 min)
+
+#### Your steps
+
+1. **Read** `cyberos/docs/skills/cuo/cpo/chain-selector/SKILL.md`.
+2. **Compute recommended profile** (`lean` / `standard` / `full`) from brief's `project_kind` + `eu_ai_act_risk_class` + `confidentiality` + `budget_band` + `target_release` per the SKILL.md rubric.
+3. **Honour the user's profile preference** if set in the trigger (`auto` = use computed; otherwise override).
+4. **Confirm with user** if `profile_preference == auto`:
+
+   ```
+   Recommended chain_profile: <profile>
+   Reasoning: <one paragraph>
+   Skill list this profile will run: <list>
+   Override? (y/n, or specify another profile)
+   ```
+
+   Use AskUserQuestion: lean / standard / full / accept-recommended.
+
+5. **Save `chain_plan`** to `<output_dir>/chain-plan.md`.
+6. **Append audit row.**
+7. **Announce**: *"Phase B complete. Profile: `<profile>`. Moving to Phase C (PRD authoring)."*
+
+---
+
+### Phase C — PRD Authoring (~30-45 min)
+
+#### Your steps
+
+1. **Read** `cuo/cpo/prd-author/SKILL.md` + the project-brief @ `<output_dir>/project-brief.md` + `<project repo>/CONTEXT.md` + relevant `memories/decisions/` + `memories/refinements/`.
+2. **Generate PRD body section by section** (8 required H2 sections: Goals / Non-goals / User stories / Success metrics / Constraints / Risks / Open questions / Acceptance criteria). After each section:
+   - Show it to the user.
+   - Ask: *"Section '<name>' looks like this. Approve / amend / skip?"* (AskUserQuestion).
+   - On amend → take user's feedback, regenerate, re-confirm.
+3. **Use only canonical CONTEXT.md terms.** If you find yourself wanting a new term, pause and resolve to CONTEXT.md first.
+4. **Save `prd-<feature-slug>.md`** to `<output_dir>/`.
+5. **Append audit row.**
+6. **Announce**: *"Phase C complete. PRD: <path>. Running PRD-audit."*
+
+#### Pacing tip
+
+- For lean profile, you can offer "approve all sections in one shot — I trust you" as a third option in the per-section question.
+- For standard/full profile, per-section confirmation is recommended (cheap insurance against the audit pass kicking back issues).
+
+---
+
+### Phase D — PRD Audit (skipped on lean; ~15-20 min)
+
+#### Your steps
+
+1. **Read** `cuo/cpo/prd-audit/SKILL.md` + `AUDIT_LOOP.md` + `RUBRIC.md`.
+2. **Execute the 8-step audit loop** autonomously:
+   - Step 1 — Locate `prd_path`; init `audit_path`.
+   - Step 2 — Hash (UTF-8 / LF / BOM strip / trailing-WS / ≥3-blank-line collapse / terminating LF / sha256).
+   - Step 3 — Load existing audit report or initialise.
+   - Step 4 — Run every rule in RUBRIC.md §15.1-§15.8.
+   - Step 5 — Attempt fixes (auto-fixable / inferable-skeleton / HITL-only / ambiguous).
+   - Step 6 — Re-audit.
+   - Step 7 — Termination check (PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS).
+   - Step 8 — Write audit report.
+3. **Auto-fix what you can.** Don't ask the user about formatting fixes, missing-but-inferrable fields, etc.
+4. **HITL_PAUSE handling**: collect ALL `needs_human` issues; ask them as a batch via AskUserQuestion or numbered chat questions. Resume the loop with answers.
+5. **EXHAUSTED / NO_PROGRESS handling**: report to user:
+
+   ```
+   PRD audit hit <termination_reason> after <N> iterations.
+   Open issues:
+     - ISS-NNN: <summary>
+     - ISS-MMM: <summary>
+
+   Options:
+     1. Edit the PRD manually and re-run audit.
+     2. File a refinement proposal against rule <rule_id> ("rule may be too strict for this project type").
+     3. Demote to lean profile and skip PRD-audit for this project.
+
+   Which?
+   ```
+
+   Use AskUserQuestion.
+6. **On PASS**: save the audit report; **append audit row** with op `consolidation_run`-shaped reasoning; announce: *"Phase D complete. PRD audit pass. Moving to Phase F (FR authoring)."* (Skip Phase E unless full profile.)
+
+#### HITL_PAUSE template
+
+When the audit accumulates `needs_human` issues:
+
+```
+PRD audit paused — I need decisions on <N> issues:
+
+1. ISS-003 — `eu_ai_act_risk_class` may be wrong.
+   The PRD declares `minimal` but mentions automated decision-making.
+   Options: minimal / limited / high.
+
+2. ISS-007 — Open question Q4 ("how do we measure stickiness?") has no proposed answer.
+   Suggested options: weekly active users / session length / feature breadth.
+
+3. ISS-011 — `acceptance criteria` for "user can checkout" lacks a measurable threshold.
+   Suggested: ≥98% of valid carts result in successful checkout in <3 seconds.
+
+Please answer 1-2-3 in any format. I'll reconcile and re-audit.
+```
+
+---
+
+### Phase E — SRS Author + Audit (full only; ~60 min)
+
+Same shape as Phase C + D but driven by `cuo/cto/srs-author/SKILL.md` and `cuo/cto/srs-audit/SKILL.md`. Skip entirely on lean and standard.
+
+The SRS audit's rubric leans advisory — most rules emit warnings, not blocking issues. Most runs PASS on first try; HITL is rare.
+
+---
+
+### Phase F — FR Authoring (~20-45 min)
+
+#### Your steps
+
+1. **Read** `cuo/cpo/fr-author/SKILL.md` (364 lines — the largest skill).
+2. **Decompose the audited PRD (+ SRS if full) into feature requests.** Each FR ≤2 weeks of work, single dominant risk, single dominant invariant, independently completable.
+3. **Generate one FR markdown per feature** under `<output_dir>/fr/FR-001-<slug>.md`, FR-002-..., etc.
+4. **Show the user the FR list** with one-line summaries:
+
+   ```
+   Decomposed into <N> feature requests:
+     FR-001 <slug>: <one-line>
+     FR-002 <slug>: <one-line>
+     ...
+
+   Approve / amend / decompose differently?
+   ```
+
+   Use AskUserQuestion: approve / amend / re-decompose.
+5. **On approve**: save all FRs; append audit rows.
+6. **On amend**: take user's feedback (which FR to merge / split / rename); regenerate; re-confirm.
+7. **Announce Phase G start.**
+
+---
+
+### Phase G — FR Audit (~15-30 min)
+
+#### Your steps
+
+1. **Read** `cuo/cpo/fr-audit/SKILL.md` + its RUBRIC + AUDIT_LOOP.
+2. **Run the 8-step loop per-FR sequentially.** Don't parallelise — concurrent writes to the BRAIN ledger contend on `.lock`.
+3. **Aggregate HITL questions across all FRs** before pausing. Better UX than asking once per FR.
+4. **Emit `AUDIT_BATCH_SUMMARY.md`** at `<output_dir>/fr/`.
+5. **On all-PASS**: announce; move to Phase H or I.
+6. **On any FR not PASS**: list the FRs that need attention; ask user how to proceed (edit FR / drop the FR / file refinement / accept-with-warnings).
+
+---
+
+### Phase H — Tech Spec (skipped on lean; ~30-60 min)
+
+#### Your steps
+
+1. **Read** `cuo/cto/fr-to-tech-spec/SKILL.md`.
+2. **Generate `tech_spec@1` markdown** consuming all audited FRs. The tech-spec adds: data shapes / component decomposition / sequence diagrams / library + framework + language choices (with ADR refs in `<project>/docs/adr/` if architectural).
+3. **Offer ADRs sparingly** — only when ALL THREE: hard-to-reverse + surprising-without-context + result-of-real-trade-off (per mattpocock's grill-with-docs rule).
+4. **Confirm tech-spec with user** in chunks (Architecture / Data shapes / Components / Cross-system integrations / Failure modes).
+5. **Save `tech-spec-<slug>.md`** to `<output_dir>/`.
+6. **Announce Phase I start.**
+
+---
+
+### Phase I — Implementation Plan (~15-30 min — the chain's final step)
+
+#### Your steps
+
+1. **Read** `cuo/cto/spec-to-impl-plan/SKILL.md`.
+2. **Generate `impl_plan@1`** with vertical-slice issues (per Plan v1.1 / M3 / `INV-VERTICAL-SLICE-001`):
+   - Each issue independently completable AND independently testable.
+   - Each issue's acceptance includes one failing test that the issue makes pass.
+   - 2-15 minutes of focused work per issue (the Superpowers heuristic).
+   - Reject horizontal-slicing patterns explicitly.
+3. **Show issue list** with summaries; confirm with user.
+4. **HALT_BEFORE_CREATE** (per existing INV-002): even if `create_tickets: true` is set, force a final approval prompt before creating tickets in PROJ MCP. Default mode is markdown-only.
+5. **Save `impl-plan.md`** to `<output_dir>/`.
+6. **Append final audit rows.** Run `op:"consolidation_run"` then `op:"session.end"`.
+
+---
+
+### End-of-chain summary (template)
+
+After Phase I, emit a final summary in chat:
+
+```
+✅ CyberOS chain complete — <project name>
+
+Profile: <profile>
+Total skills run: <N>
+Total artefacts: <N>
+Total audit rows appended: <N>
+Total HITL pauses: <N> (you answered <M> questions)
+
+Artefacts saved to <output_dir>:
+- project-brief.md           (Phase A)
+- chain-plan.md              (Phase B)
+- prd-<slug>.md              (Phase C)
+- prd-<slug>.audit.md        (Phase D)        ← if standard/full
+- srs-<slug>.md              (Phase E)        ← if full
+- srs-<slug>.audit.md        (Phase E)        ← if full
+- fr/FR-001-<slug>.md, ...   (Phase F)
+- fr/FR-NNN-<slug>.audit.md  (Phase G)
+- tech-spec-<slug>.md        (Phase H)        ← if standard/full
+- impl-plan.md               (Phase I)        ← hand to engineering
+
+Project artefacts:
+- <project repo>/CONTEXT.md   (<N> domain terms resolved)
+- <project repo>/docs/adr/    (<M> ADRs created)
+- <project repo>/.out-of-scope/ (<K> rejection records, if any)
+
+BRAIN ledger:
+- audit_chain_head: sha256:<hash>
+- memory_count: <N>
+- mode: normal
+
+Time elapsed: <real time>
+Next steps:
+  - Review impl-plan.md before handing to engineering.
+  - Create tickets in PROJ MCP if you didn't already (run /cyberos-tickets).
+  - Schedule the next chain run for the next feature batch.
+
+📝 .cyberos-memory updated
+[§14 compact block]
+```
+
+---
+
+### Resume contract (if a session ends mid-chain)
+
+If your session ends (token limit, network drop, user quit) mid-chain:
+
+1. The artefacts already on disk + the audit ledger + CONTEXT.md are durable.
+2. Next session: the user runs the trigger phrase again. You:
+   - Re-read `<project repo>/.cyberos-memory/manifest.json`.
+   - Walk audit ledger to find the last `op:"create"` or `op:"str_replace"` against an artefact path.
+   - Determine the chain position from that.
+   - Announce: *"Resuming from Phase <X>. Last artefact: <path>. Continuing with skill <name>."*
+   - Continue from that step.
+
+Do not re-run completed phases. Do not re-ask the user questions you already have answers for.
+
+---
+
+### Failure modes you'll hit + the right reflex
+
+| Symptom | Reflex |
+|---|---|
+| Skill SKILL.md not found at expected path | Ask user for the cyberos repo path; cache in this session's context |
+| `python3 outputs/brain_writer.py` returns non-zero | Read stderr; if `frontmatter-validation` → fix the artefact; if `audit-corrupt` → halt and surface to user |
+| User pastes an answer that doesn't fit the question's options | Reframe the question; don't punish the user for free-text — extract the option |
+| Audit-fix loop doesn't terminate after 5 iterations | Treat as EXHAUSTED; surface to user per Phase D template |
+| User says `pause` or `abort` | Honour immediately; write `<output_dir>/PAUSED.md` or `ABORTED.md` with current state |
+| BRAIN classification returns `INCOMPATIBLE:protocol-sha256-mismatch` | Halt the chain; tell the user; offer §0.5 protocol-upgrade flow |
+| Disk write fails (permission / quota) | Retry once; if it fails again, halt + surface the error |
+| User says they want to switch to a different host mid-chain | Confirm + write `<output_dir>/HOST_SWITCH.md` recording current state; let them resume in the new host (the BRAIN + artefacts are host-agnostic) |
+
+---
+
+### What this orchestrator is NOT
+
+- Not a skill in the v0.2.0 33-field SKILL.md sense — it's a **runbook for the agent**, not an envelope-driven workflow node.
+- Not the runtime — the runtime is gated until `runtime_v0_3_0` per AGENTS.md. This is the manual bridge.
+- Not a substitute for reading the underlying SKILL.md files — you must read each one before invoking it. The orchestrator just tells you in what order and how to glue them.
+- Not Cowork-specific — it works in any host that has file tools + bash. But Cowork is the smoothest fit.
+
+---
+
+### Capability self-check (run silently before starting Phase A)
+
+Before announcing Phase A, verify:
+
+- [ ] Read tool available
+- [ ] Write tool available
+- [ ] Bash / shell tool available (for brain_writer.py)
+- [ ] AskUserQuestion tool available (or willingness to use plain chat questions as fallback)
+- [ ] Connected access to both `<cyberos>` (read-only OK) and `<project repo>` (read+write)
+
+If any are missing, surface to the user before starting:
+
+```
+I'm missing <capability>. Options:
+  1. Continue in degraded mode (you'll do <X> manually).
+  2. Switch to a host that has <capability> (see cyberos/docs/skills/HOST_ADAPTERS.md).
+  3. Abort.
+```
+
+---
+
+### History
+
+- 2026-05-11 — Initial creation. Author: Claude Opus 4-7 in Cowork session 8. Solves the "user wants to give first inputs + answer HITL only" requirement. Companion to MANUAL_WORKFLOW.md (which is the human-readable reference); this doc is the agent-readable runbook.
+
+
+
+---
+
+
+
+## Part 29 — Manual Workflow (no runtime, by hand today)
+
+> **Audience.** Stephen, on his next project, before the runtime exists. **Scope.** Phase A (Requirements Discovery) → Phase G (Implementation Plan) — the Requirements + Planning halves of the daily workflow. Execute + QA come later. **Trigger model.** Stephen is the supervisor: he loads SKILL.md content into a fresh chat session, follows it, reviews output, and runs the next skill. **Time budget.** A full chain on a small project: ~2-4 hours. Lean profile: ~45 min.
+
+> **Why this doc exists.** `cyberos/docs/skills/` is design-complete but the runtime is gated until `runtime_v0_3_0`. This RUNBOOK is the bridge — it tells you exactly which file to paste, what to expect, what to do when the audit fails, and how to handle a refinement proposal. Pin this doc to your workspace.
+
+---
+
+### Two modes — pick one
+
+**Automated mode (★ recommended)** — you give a pitch + answer HITL questions. The agent reads every SKILL.md, drives every interview, writes every artefact, runs every audit-fix loop, executes brain_writer.py, and routes between skills. **You never copy-paste a SKILL.md or run a command yourself.**
+
+→ See **[Part 28 — Chain Orchestrator](#part-28--chain-orchestrator-agent-side-fully-automated)**. Pin the trigger phrase below.
+
+```
+Drive the CyberOS chain on this project. Read cyberos/docs/skills/CHAIN_ORCHESTRATOR.md and follow it.
+
+Pitch: <one paragraph describing the project>
+Project repo: <absolute path to the new project's directory>
+Output dir: <where to save artefacts; default ./planning/<YYYY-MM-DD>-<slug>/>
+Caller: human:<your-id>
+Profile preference: <auto | lean | standard | full>   (default: auto)
+```
+
+The agent then announces phase transitions in chat, asks you HITL questions when needed (triage gating, section approvals, audit decisions, refinement proposals), and produces the full artefact tree at the output dir. Total user effort: the trigger + ~10-30 HITL answers. Total user effort *saved*: copy-pasting ~12 SKILL.md files + running ~30 brain_writer.py commands by hand.
+
+**Manual mode** — you drive every step yourself. Useful when:
+- The agent host doesn't auto-load AGENTS.md and you want full visibility.
+- You're learning the chain and want to see each SKILL.md as you go.
+- An audit fails in a way the orchestrator can't auto-recover from and you want to take over.
+- You're on a degraded host (Claude.ai web / ChatGPT) where auto-orchestration isn't viable.
+
+For manual mode, the 6-line version is:
+
+```
+1. Open your agent host on the new project's repo (Cowork / Claude Code / Cursor / Codex / Gemini CLI / OpenCode — see HOST_ADAPTERS.md).
+2. Ensure AGENTS.md (or AGENTS-CORE.md) is loaded into the agent's context.
+3. Paste cuo/cpo/requirements-discovery/STANDALONE_INTERVIEW.md → run the 20-question interview → save project_brief@1.md.
+4. Paste cuo/cpo/chain-selector/SKILL.md → confirm the chain_profile (lean / standard / full).
+5. For each skill the chain selected: paste its SKILL.md → run → review → save artefact → run the paired audit skill → fix HITL issues → next.
+6. Stop after spec-to-impl-plan. You now have impl_plan@1 with vertical-slice issues.
+```
+
+Everything below in this doc is for **manual mode**. For automated mode, the orchestrator is the only doc you need to point the agent at.
+
+---
+
+### Host compatibility — what runs where
+
+The workflow is **fully host-agnostic**. Any agent that can read text files, write markdown to disk, and (ideally) run a Python script can drive it. Capability requirements:
+
+| Capability | Required for | Fallback if missing |
+|---|---|---|
+| **Read user-project files** | Loading SKILL.md / CONTEXT.md / artefacts | Manual paste of file contents |
+| **Write markdown to disk** | Saving artefacts (`project-brief.md`, `prd-*.md`, etc.) | Agent emits markdown in chat; you copy-paste into local files |
+| **Run shell / Python** | `brain_writer.py` audit-chain commands | Run brain_writer.py yourself in a separate terminal after each skill |
+| **MCP tool calls** | `proj.create_issue`, `chat.review_request` (optional) | Manual ticket creation in Linear/Jira/GitHub; HITL questions answered in chat |
+| **Subagent dispatch** | Running multiple skills in parallel (optional) | Sequential single-agent runs |
+
+**Recommended hosts** (full-capability — workflow runs end-to-end without leaving the chat):
+
+- **Claude Cowork (this app)** — file tools + bash + connected folders + MCP. Best fit for solo / small-team manual mode today.
+- **Claude Code (CLI)** — file tools + bash + auto-loads AGENTS.md from project root + native hooks.
+- **Cursor** — file tools + terminal + `.cursor/rules/` auto-load + MCP.
+- **Codex CLI (OpenAI)** — file tools + shell + AGENTS.md auto-load.
+- **Gemini CLI / OpenCode** — file tools + shell.
+
+**Degraded hosts** (workflow runs but parts go manual):
+
+- **Claude.ai web app** — sandboxed; agent emits markdown; you save files manually; you run brain_writer.py in terminal.
+- **ChatGPT (with Code Interpreter)** — same shape as Claude.ai web; the Python sandbox can't reach your local filesystem.
+- **Claude in Chrome / browser-only agents** — interview + artefact generation work; persistence is manual.
+
+For per-host setup recipes (symlinks, plugin install, AGENTS.md loading, brain_writer access, MCP wiring), see **[Part 30 — Host Adapters](#part-30--host-adapters-per-agent-host-tweaks)**.
+
+---
+
+### Prerequisites (one-time per project, ~10 minutes)
+
+The exact commands depend on your host — see [Part 30 — Host Adapters](#part-30--host-adapters-per-agent-host-tweaks) for per-host setup. The *abstract* steps are:
+
+1. **Make AGENTS.md available to the agent.** The agent must load `cyberos/docs/CyberOS-AGENTS-CORE.md` at session start. Three options:
+   - **Symlink** (Claude Code, Codex CLI auto-load): `ln -s <abs>/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md` at the new project's root.
+   - **Plugin / rule file** (Cursor: `.cursor/rules/cyberos-memory.mdc`; Windsurf: `.windsurfrules`; Copilot: `.github/copilot-instructions.md`).
+   - **Manual paste** (Claude.ai / ChatGPT): paste the contents at the start of each session.
+
+   CORE.md is sufficient for the manual chain (full AGENTS.md is only needed for §0.5 protocol-upgrade flows, which won't fire here).
+
+2. **Bootstrap the project's BRAIN.** First agent session detects `PRISTINE` state per §13.0 and silently auto-bootstraps `.cyberos-memory/` IF the host can write to disk. If it doesn't, paste *"bootstrap and continue"*. Hosts without filesystem access: run `python3 outputs/brain_writer.py session-start <actor>` from the project repo root in your terminal and let the agent know the BRAIN is initialised.
+
+3. **Initialise CONTEXT.md** (per Plan v1.1 / M2). Create at the new project's repo root:
+
+   ```markdown
+   # <Project name>
+
+   ## Language
+
+   <will fill in during Requirements Discovery>
+
+   ## Relationships
+
+   <will fill in during Requirements Discovery>
+
+   ## Flagged ambiguities
+
+   <will fill in during Requirements Discovery>
+   ```
+
+   This file is the project's shared vocabulary. Every chain skill will read and update it.
+
+4. **Initialise `docs/adr/`** (per mattpocock's `grill-with-docs` pattern). Empty directory; ADRs land here only when the three conditions are met (hard-to-reverse + surprising-without-context + result-of-real-trade-off).
+
+5. **(Optional) Initialise `.out-of-scope/`** (per Plan v1.1 / M1). Empty directory at the new project's repo root. When you Reject a refinement proposal, you'll write a file here. Anti-re-litigation.
+
+---
+
+### The chain end-to-end at a glance
+
+```
+human chat + BRAIN
+  → A. requirements-discovery → project_brief@1
+  → B. chain-selector → chain_plan (lean / standard / full)
+  → C. prd-author → prd@1
+  → D. [if standard|full] prd-audit → audited prd@1
+  → E. [if full] srs-author → srs@1 → srs-audit → audited srs@1
+  → F. fr-author → FR markdowns
+  → G. fr-audit → audited FRs
+  → H. [if standard|full] fr-to-tech-spec → tech_spec@1
+  → I. spec-to-impl-plan → impl_plan@1 + (optionally) tickets in PROJ MCP
+```
+
+For lean profile, you skip D, E, H. For standard, you skip E. For full, you do everything.
+
+---
+
+### How to run a single skill manually (the meta-procedure)
+
+Every skill follows the same shape. Memorise this; the per-step sections below just tell you which file to load and what to expect.
+
+#### Step ⓪ — Open a fresh agent session
+
+A fresh session avoids context-pollution from prior skills. The §14 memory-update block at the previous skill's end is what carries state between sessions, plus the artefact you saved to disk.
+
+#### Step ① — Paste the skill's SKILL.md content
+
+The skill's frontmatter declares `expects.standalone_interview_ref` (the question script for the human-driven flow) and `produces.human_summary_ref` (what to expect at the end). Read both files before starting; paste the SKILL.md body as the agent's instructions.
+
+#### Step ② — Provide the input envelope (manual form)
+
+Skills expect an envelope per `expects.schema_ref`. In manual mode, you skip the envelope wire format and just answer the questions. Required fields you'll typically need:
+
+- `output_dir` — where to save the artefact (e.g., `./planning/2026-05-12-<project-slug>/`)
+- `caller_persona` — set to `human:stephen-cheng` for manual-mode runs
+- `trace_id` — any unique ID; a UUID or `<date>-<slug>-<n>`
+
+Optional fields the skill might ask for:
+
+- `initial_prompt` (requirements-discovery only) — paste your draft requirements / pitch / scoping doc
+- `client_id` (if commissioned work) — sets `client_visible: true`
+- `target_release` — when does this need to ship
+- `chain_to` — the next skill in the chain (auto-set per chain-selector output)
+
+#### Step ③ — Run the interview / generation
+
+The skill will either ask you questions one at a time (interview mode) or generate an artefact directly (generation mode). Watch for:
+
+- **HITL pauses.** The skill will say something like *"I need a human decision on X — option (a), (b), or (c)?"* Answer in chat. Do NOT skip with "use your best guess" — the audit-fix loop relies on `needs_human` being a real human answer.
+- **Refinement proposals.** If the skill detects an anomaly (e.g., "you've now amended this brief 5 times — the discovery skill may be misaligned"), it will propose a refinement. Read it; either Accept, Accept-with-edits, Defer, or Reject. If Reject, write a `.out-of-scope/<topic>.md` entry per Plan v1.1 / M1.
+
+#### Step ④ — Review the output artefact
+
+The skill writes a markdown file under your `output_dir`. Open it. Check:
+
+- Frontmatter populated (the contract fields are non-empty).
+- Body sections complete (no `TODO:` markers unless explicitly flagged).
+- Cross-references resolve (any path mentioned actually exists).
+
+#### Step ⑤ — Run the paired audit skill (sev-0)
+
+Every workflow skill `<name>-author` has a paired `<name>-audit`. The audit skill reads the artefact and runs the 8-step `AUDIT_LOOP.md` algorithm. Outcomes:
+
+- **PASS** — no open issues. Save the audit report. Move to next chain step.
+- **HITL_PAUSE** — at least one issue requires human judgement. Answer the questions in chat; the audit re-runs.
+- **EXHAUSTED** / **NO_PROGRESS** — the audit can't reach pass even with retries. Read the audit report; either fix the artefact manually OR demote to lean profile and skip the audit OR file a `.out-of-scope/<rule>.md` if the rule itself is wrong.
+
+#### Step ⑥ — Update CONTEXT.md (per M2)
+
+If the skill resolved any new domain terms during its run, append to the project's `CONTEXT.md`. The `cuo/cpo/requirements-discovery` skill will do this automatically; later skills should add terms only when the artefact introduces a new canonical name.
+
+#### Step ⑦ — Append the §14 memory-update block
+
+The agent will end its response with a §14.1 compact block. The audit row goes to `.cyberos-memory/audit/<YYYY-MM>.jsonl`. **Do not edit the audit ledger by hand.** If the agent didn't append, run `python3 outputs/brain_writer.py session-end <actor>` from the project repo root before closing the tab.
+
+---
+
+### Phase A — Requirements Discovery (start here)
+
+**Skill**: `cuo/cpo/requirements-discovery`
+**Files to load**: `SKILL.md` (283 lines / 17 KB) + `STANDALONE_INTERVIEW.md` (156 lines / 7.5 KB)
+**Input**: free-text pitch / draft requirements / commissioning email
+**Output**: `project_brief@1` markdown — the structured intake artefact every downstream skill consumes
+
+#### Procedure
+
+1. Open a fresh agent session in the new project's repo.
+2. Paste:
+
+   ```
+   I want to run cuo/cpo/requirements-discovery on a new project.
+
+   Initial pitch: <paste your draft requirements here>
+
+   Output dir: ./planning/<YYYY-MM-DD>-<project-slug>/
+   Caller: human:stephen-cheng
+   Trace ID: <YYYY-MM-DD>-<project-slug>-discovery
+
+   Load the skill at /Users/stephencheng/Projects/CyberSkill/cyberos/docs/skills/cuo/cpo/requirements-discovery/SKILL.md
+   And the interview at .../requirements-discovery/STANDALONE_INTERVIEW.md
+   Then start at Q0 (or skip Q0 if I provided an initial_prompt above).
+   ```
+
+3. Answer 20 questions: **Q0 (initial pitch)** + **Q1-Q5 (triage gating: strategic fit / capacity / runway / customer signal / reversibility)** + **Q6-Q20 (discovery: objectives / users / metrics / constraints / risks / scope / etc.)**. The interview is project-kind-agnostic — works for software, marketing, hiring, partnerships, research.
+4. **Triage verdicts**: after Q1-Q5, the skill computes one of `proceed | revise | reject`. If `revise`, the skill routes to a different persona (e.g., `cuo-clo` for locked-decision conflicts) — pause the chain until that's resolved.
+5. **CONTEXT.md is built inline.** When you use a term that needs a canonical definition, the skill asks "what should we call this?" and appends to your project's `CONTEXT.md`. Don't fight this — it's the language scaffolding for every later skill.
+6. **Output**: `./planning/<date>-<slug>/project-brief.md` (~3-8 KB) with the 14-field `project_brief@1` frontmatter populated.
+7. **Audit**: `requirements-discovery` doesn't have a paired audit skill (the interview script + invariants are the audit). The triage-verdict computation IS the gate.
+
+#### Common HITL pauses you'll hit
+
+- **Q1 (strategic fit)** — "this conflicts with locked decision DEC-NNN; revisit it?" → only you can answer.
+- **Q2 (capacity)** — "current team has 3 engineer-weeks; project needs 12 — hire / scope-down / reject?" → only you can answer.
+- **Q4 (customer signal)** — "I see <2 prior signals in `memories/projects/`; do you have additional ones not in BRAIN?" → answer based on memory.
+- **Triage verdict `revise`** — if you'd rather override and proceed anyway, say *"override triage; proceed despite revise"* and the skill records the override with `provenance.confidence: 0.5` (downgraded authority).
+
+#### Validation before moving on
+
+- ✅ `project-brief.md` exists with all 14 frontmatter fields populated
+- ✅ `CONTEXT.md` has at least the 3-5 core domain terms defined
+- ✅ Triage verdict is `proceed` (or you've explicitly overridden)
+- ✅ §14 block confirms the audit row was appended
+
+---
+
+### Phase B — Chain Selection
+
+**Skill**: `cuo/cpo/chain-selector`
+**Files to load**: `SKILL.md` (185 lines / 7 KB)
+**Input**: `project-brief.md` from Phase A
+**Output**: `chain_plan` — a list of skill IDs the supervisor (you) will route through
+
+#### Procedure
+
+1. New session.
+2. Paste:
+
+   ```
+   Run cuo/cpo/chain-selector on the brief at ./planning/<date>-<slug>/project-brief.md.
+
+   Caller: human:stephen-cheng
+   Trace ID: <date>-<slug>-chain
+
+   Load: /Users/stephencheng/Projects/CyberSkill/cyberos/docs/skills/cuo/cpo/chain-selector/SKILL.md
+   Output dir: ./planning/<date>-<slug>/
+   ```
+
+3. The skill reads the brief's `project_kind`, `eu_ai_act_risk_class`, `confidentiality`, `budget_band`, `target_release` → recommends a `chain_profile`:
+
+   - **lean** — small / experimental / non-customer-facing. Skips PRD-audit, SRS-author/audit, fr-to-tech-spec. Just: brief → fr-author → fr-audit → spec-to-impl-plan. Use for prototypes, internal tools.
+   - **standard** — typical customer-facing feature. Skips SRS-author/audit. Use for most projects.
+   - **full** — regulated / high-risk / multi-team. Everything including SRS. Use for EU AI Act high-risk, healthcare/finance verticals, anything with compliance review.
+
+4. **Override at brief-completion time** if the auto-selection feels wrong. Just say *"override to <profile>"*.
+
+5. **Output**: `./planning/<date>-<slug>/chain-plan.md` listing the skill IDs you'll run.
+
+#### Validation
+
+- ✅ Profile feels right for the project's risk + scale
+- ✅ Skill list matches the chain end-to-end overview above for that profile
+
+---
+
+### Phase C — PRD Authoring
+
+**Skill**: `cuo/cpo/prd-author`
+**Files to load**: `SKILL.md` (247 lines / 13 KB)
+**Input**: `project-brief.md` + `CONTEXT.md`
+**Output**: `prd@1` markdown — the PRD that engineering will eventually consume
+
+#### Procedure
+
+1. New session.
+2. Paste the standard envelope-as-chat format:
+
+   ```
+   Run cuo/cpo/prd-author on:
+   - Brief: ./planning/<date>-<slug>/project-brief.md
+   - Context: ./CONTEXT.md
+   - Output: ./planning/<date>-<slug>/prd-<feature-slug>.md
+   - Caller: human:stephen-cheng
+   - Trace ID: <date>-<slug>-prd-<feature-slug>
+
+   Load: /Users/stephencheng/Projects/CyberSkill/cyberos/docs/skills/cuo/cpo/prd-author/SKILL.md
+   ```
+
+3. The skill reads the brief, the context, and any prior `memories/decisions/` + `memories/refinements/`. It generates the PRD body section-by-section, asking you to confirm each section before proceeding. **Don't rush** — the PRD's quality determines how clean the audit will be.
+4. **Use only canonical terms from CONTEXT.md** (per Plan v1.1 / M2 / `INV-CONTEXT-CONSISTENCY-001`). If you find yourself wanting a new term, pause and update CONTEXT.md first.
+5. **Output**: `./planning/<date>-<slug>/prd-<feature-slug>.md` with the 24-field `prd@1` frontmatter + 8 required H2 sections (Goals / Non-goals / User stories / Success metrics / Constraints / Risks / Open questions / Acceptance criteria).
+
+#### Validation
+
+- ✅ All 24 frontmatter fields populated
+- ✅ All 8 required H2 sections present
+- ✅ Every term used has a CONTEXT.md entry
+- ✅ Open questions section is honest (don't paper over uncertainty)
+
+---
+
+### Phase D — PRD Audit (standard / full only)
+
+**Skill**: `cuo/cpo/prd-audit`
+**Files to load**: `SKILL.md` (194 lines / 7.6 KB) + `AUDIT_LOOP.md` (87 lines / 4 KB) + `RUBRIC.md` (112 lines / 7.6 KB)
+**Input**: `prd@1` markdown from Phase C
+**Output**: `prd-<feature>.audit.md` audit report + (optionally) edits to the PRD
+
+#### Procedure
+
+1. New session.
+2. Paste:
+
+   ```
+   Run cuo/cpo/prd-audit on ./planning/<date>-<slug>/prd-<feature-slug>.md.
+
+   Caller: human:stephen-cheng
+   Trace ID: <date>-<slug>-prd-audit-<feature-slug>
+
+   Load: /Users/stephencheng/Projects/CyberSkill/cyberos/docs/skills/cuo/cpo/prd-audit/SKILL.md
+   Plus AUDIT_LOOP.md and RUBRIC.md from the same folder.
+   ```
+
+3. The skill executes the **8-step audit-fix loop**:
+
+   ```
+   1. Locate prd_path; init audit_path = prd_path with .audit.md extension
+   2. Hash (UTF-8, LF, BOM strip, trailing-WS trim, ≥3-blank-line collapse, terminating LF, sha256)
+   3. Load or initialise audit report
+   4. Run rubric (every rule in RUBRIC.md §15.1-§15.8)
+   5. Attempt fixes (auto-fix / inferable-skeleton / HITL-only / ambiguous)
+   6. Re-audit
+   7. Termination check (PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS)
+   8. Write audit report
+   ```
+
+4. **HITL_PAUSE handling**: the audit will list questions like:
+
+   ```
+   ## ISS-003 — `eu_ai_act_risk_class` may be wrong [needs_human]
+   The PRD declares `minimal` but mentions "automated decision-making affecting users" in section 4.
+   This may push to `limited` or `high`. Which is it?
+   ```
+
+   Answer in chat: *"It's `limited` — the system suggests but does not auto-execute."* The audit re-enters Step 4 and reconciles.
+
+5. **EXHAUSTED handling**: rare; means the audit hit max_iterations without converging. Read the audit report's open issues. Either:
+   - Edit the PRD manually to address them.
+   - File a refinement proposal: *"the rubric rule SEC-008 fires on every PRD I write — propose relaxing it."* This becomes a `REF-NNN` entry.
+   - Demote to lean profile and skip future PRD-audits for this project.
+
+6. **NO_PROGRESS handling**: same `(rule_id, location)` set on consecutive iterations means the audit is stuck. Same options as EXHAUSTED.
+
+7. **Output**: `./planning/<date>-<slug>/prd-<feature-slug>.audit.md` with `overall_status: pass | needs_human | fail`. Only proceed when `pass`.
+
+#### Validation
+
+- ✅ `overall_status: pass`
+- ✅ Audit iteration count ≤ max (typically <5)
+- ✅ All `needs_human` issues have non-null `resolution`
+
+---
+
+### Phase E — SRS Authoring + Audit (full only)
+
+Same shape as Phase C + D but with `cuo/cto/srs-author` (175 lines / 5 KB) and `cuo/cto/srs-audit` (157 lines / 4.6 KB). The SRS adds the technical-spec layer above the PRD's product-spec layer. **Skip this phase entirely** for lean and standard profiles.
+
+The SRS-audit's RUBRIC focuses on:
+
+- Architectural-decision references (every architectural choice → ADR in `docs/adr/`)
+- NFR completeness (performance / security / accessibility / observability / etc.)
+- Cross-system integrations explicit
+- Failure modes documented
+
+---
+
+### Phase F — Feature-Request Authoring
+
+**Skill**: `cuo/cpo/fr-author`
+**Files to load**: `SKILL.md` (364 lines / 20 KB) — largest in the chain; budget read-time accordingly
+**Input**: audited `prd@1` (+ audited `srs@1` if full profile)
+**Output**: a folder of `feature_request@1` markdown files — one per feature, each ≤2 weeks of work
+
+#### Procedure
+
+1. New session.
+2. Paste the standard run prompt with paths to the audited PRD (and SRS if full).
+3. The skill **decomposes the PRD into feature requests**. Each FR is a unit of work that:
+   - Has a single dominant risk
+   - Has a single dominant invariant
+   - Is independently completable
+   - Has clear acceptance criteria
+
+4. **Output**: `./planning/<date>-<slug>/fr/FR-001-<slug>.md`, `FR-002-<slug>.md`, … One file per feature.
+
+#### Validation
+
+- ✅ Each FR has all 18 frontmatter fields populated
+- ✅ Each FR's acceptance criteria are testable (could be expressed as a `test should X` statement)
+- ✅ FR scopes don't overlap (each piece of work belongs to exactly one FR)
+
+---
+
+### Phase G — Feature-Request Audit
+
+**Skill**: `cuo/cpo/fr-audit`
+**Files to load**: `SKILL.md` (316 lines / 16 KB) + `RUBRIC.md` + `AUDIT_LOOP.md`
+**Input**: folder of FR markdowns
+**Output**: `<FR>.audit.md` per FR + `AUDIT_BATCH_SUMMARY.md` aggregate
+
+#### Procedure
+
+Same shape as PRD-audit but **runs per-FR sequentially**. The skill emits an `AUDIT_BATCH_SUMMARY` after all FRs, plus a single `HITL_BATCH_REQUEST` if any FR has `needs_human`. Answer all HITL questions in one batch; the skill resumes per-FR.
+
+#### Validation
+
+- ✅ Every FR has `overall_status: pass`
+- ✅ Batch summary shows zero open / zero needs_human
+- ✅ FR cross-refs (`depends_on: [FR-NNN]`) all resolve
+
+---
+
+### Phase H — Tech Spec (standard / full only)
+
+**Skill**: `cuo/cto/fr-to-tech-spec`
+**Files to load**: `SKILL.md` (270 lines / 14 KB)
+**Input**: audited FR markdowns
+**Output**: `tech_spec@1` markdown — implementation-shaped spec engineering will execute against
+
+For lean profile, **skip this phase**; spec-to-impl-plan consumes audited FRs directly.
+
+The tech-spec adds:
+
+- Concrete data shapes (tables / API schemas / message formats)
+- Component decomposition (which files, which classes, which modules)
+- Sequence diagrams for cross-component interactions
+- Specific library / framework / language choices (with ADR refs)
+
+This is where mattpocock's `/grill-with-docs` discipline matters most: **every term in the tech-spec must already be in CONTEXT.md** (or be added to it during this phase). Don't introduce new vocabulary at the implementation layer.
+
+---
+
+### Phase I — Implementation Plan (the chain's final step)
+
+**Skill**: `cuo/cto/spec-to-impl-plan`
+**Files to load**: `SKILL.md` (217 lines / 9 KB)
+**Input**: audited `tech_spec@1` (standard / full) OR audited FR (lean)
+**Output**: `impl_plan@1` markdown + (optionally) tickets in PROJ MCP
+
+#### Procedure
+
+1. New session.
+2. Paste the standard run prompt.
+3. **Vertical-slice rule (per Plan v1.1 / M3 / INV-VERTICAL-SLICE-001)**: every issue in `impl_plan@1` MUST be:
+   - Independently completable
+   - Independently testable (each issue's acceptance includes one failing test that the issue makes pass)
+   - 2-15 minutes of focused work for an enthusiastic-but-clueless junior engineer (the Superpowers heuristic)
+
+   The skill rejects horizontal-slicing patterns ("build all schemas first → build all handlers"). If you see one, push back: *"this looks horizontal — restructure as per-feature vertical slices."*
+
+4. **HALT_BEFORE_CREATE** (per existing INV-002): even with `create_tickets: true`, the runtime forces a final HALT prompt before creating tickets in PROJ MCP. Manually mode: just don't run the create-tickets step until you've reviewed the plan in markdown form.
+
+5. **Output**: `./planning/<date>-<slug>/impl-plan.md` with a list of issues, each with: title / acceptance test / file paths / dependencies / estimate.
+
+#### Validation before handing to Execute
+
+- ✅ Every issue passes the vertical-slice test
+- ✅ Total estimate sums to a believable number for your team
+- ✅ Critical-path dependencies don't form a cycle
+- ✅ No issue has more than 2 unresolved open questions
+
+---
+
+### Handling refinement proposals (the human loop)
+
+When a skill detects an anomaly during a run, it emits a `refinement_proposal` envelope. You'll see something like:
+
+```
+### REFINEMENT PROPOSAL — REF-NNN-<slug>
+
+**Signal**: triage_reject_streak (3 consecutive rejects in window=10)
+
+**Observation**: The discovery skill's triage rubric rejected the last 3 projects.
+This may indicate the rubric is too strict for the current project mix
+(e.g., requiring "≥3 independent customer signals" when most projects this quarter
+are exploratory internal tools that won't have external signals).
+
+**Proposed change**: Soften Q4 (customer signal strength) to allow `internal_tooling`
+project_kind to bypass the signal-count gate when capacity check (Q2) passes.
+
+**Scope of change**: cuo/cpo/requirements-discovery/STANDALONE_INTERVIEW.md §Q4
+**Decision**: ✅ Accept / ✏ Accept-with-edits / ⏸ Defer / ❌ Reject
+```
+
+#### Your four options
+
+- **Accept** — the skill version bumps; a `memories/refinements/REF-NNN-<slug>.md` entry lands.
+- **Accept-with-edits** — you tweak the proposed change; reply with the edited version; same outcome.
+- **Defer** — the proposal stays open; the rolling window resets; revisit next time.
+- **Reject** — write a `.out-of-scope/<slug>.md` entry per Plan v1.1 / M1. Three sections: what's out of scope, why (the criteria for what WOULD be in scope), prior requests (REF-NNN audit_id).
+
+#### When to favour each
+
+| Signal type | Default lean |
+|---|---|
+| `triage_reject_streak` 3+ | Investigate — usually rubric is too strict OR your project pipeline shifted |
+| `interview_truncation_rate` >30% | Accept — questions are too long or in wrong order |
+| `brain_read_zero_results_rate` >50% | Accept — wrong scopes |
+| `same_artefact_rewritten_more_than_5x` | Defer or Reject — usually the artefact's owner needs more clarity, not the skill |
+
+---
+
+### When something breaks
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| Skill asks for a field you don't have | Envelope schema mismatch | Open the skill's `expects.schema_ref` JSON; add a default value to your prompt |
+| Audit keeps cycling on the same issue | NO_PROGRESS termination | Edit the artefact manually OR file a refinement proposal against the rule |
+| `chat.review_request` MCP not available | Runtime not built | Manual mode: just answer the HITL question in chat directly |
+| `proj.create_issue` MCP not available | Runtime not built | Manual mode: copy issues from `impl_plan@1` into Linear/Jira/GitHub by hand |
+| §14 block doesn't appear | Agent forgot | Run `python3 outputs/brain_writer.py session-end <actor>` from project repo root before closing |
+| BRAIN classified `INCOMPATIBLE:protocol-sha256-mismatch` | AGENTS.md changed since last pin | Run §0.5 protocol upgrade flow OR revert AGENTS.md to the pinned SHA |
+
+---
+
+### What to save at the end of a chain run
+
+Per project, the deliverables you keep:
+
+```
+./planning/<YYYY-MM-DD>-<project-slug>/
+├── project-brief.md            # Phase A
+├── chain-plan.md               # Phase B
+├── prd-<feature>.md            # Phase C (one per feature)
+├── prd-<feature>.audit.md      # Phase D (standard/full)
+├── srs-<feature>.md            # Phase E (full only)
+├── srs-<feature>.audit.md      # Phase E
+├── fr/
+│   ├── FR-001-<slug>.md        # Phase F
+│   ├── FR-001-<slug>.audit.md  # Phase G
+│   └── ...
+├── tech-spec-<feature>.md      # Phase H (standard/full)
+└── impl-plan.md                # Phase I — hand to engineering
+```
+
+Plus:
+
+```
+./CONTEXT.md                    # the project's shared vocabulary
+./docs/adr/                     # ADRs land here as the chain runs (sparingly)
+./.out-of-scope/                # rejected refinement proposals (only if any)
+./.cyberos-memory/              # the BRAIN — keep, this is your replay-able audit ledger
+```
+
+---
+
+### How long does this take, realistically
+
+| Phase | Lean | Standard | Full |
+|---|---|---|---|
+| A — Requirements Discovery | 30 min | 30 min | 45 min |
+| B — Chain Selection | 5 min | 5 min | 5 min |
+| C — PRD Author | — | 30 min | 45 min |
+| D — PRD Audit | — | 15 min | 20 min |
+| E — SRS Author + Audit | — | — | 60 min |
+| F — FR Author | 20 min | 30 min | 45 min |
+| G — FR Audit | 15 min | 20 min | 30 min |
+| H — Tech Spec | — | 30 min | 60 min |
+| I — Impl Plan | 15 min | 20 min | 30 min |
+| **Total** | **~85 min** | **~3 hours** | **~5-6 hours** |
+
+These are the happy-path numbers. Add 30-50% for HITL pauses, refinement proposals, and re-runs after audit fails. For your first run on the next project, expect **~6-8 hours** (you'll be learning the loop too).
+
+---
+
+### Anti-patterns (don't do these)
+
+- **Skipping the audit-fix loop on standard / full profile** — the rubric exists for a reason; bypassing it is how subtle bugs land in the impl_plan.
+- **Editing audit/<YYYY-MM>.jsonl by hand** — sev-0 forbidden per AGENTS.md §7.4. Use `op:"corrects"` referencing the prior `audit_id` instead.
+- **Skipping CONTEXT.md updates** — the cost compounds; later skills will use inconsistent terms; the eventual codebase will be hard to navigate.
+- **Accepting a refinement proposal without reading the proposed change carefully** — once accepted, the skill version bumps and the change applies to every future run.
+- **Mixing chain runs across projects in the same `./planning/` folder** — one folder per project per date, always.
+- **Running multiple skills in the same agent session** — context-pollution risk. Fresh session per skill is cheap regardless of host.
+- **Falling for "this is too simple to need a PRD"** — superpowers' anti-rationalization rule applies here. Even tiny features benefit from the brief → chain-selector → at-least-FR pipeline.
+
+---
+
+### Where to go next
+
+After you've run this on one project end-to-end:
+
+1. **File observations** as `memories/refinements/REF-NNN-<slug>.md` candidates. The runtime will use these as training data for Phase 2.
+2. **Update `cyberos/docs/skills/CHANGELOG.md`** with anything you learned that the skill set didn't cover (gaps for `cuo/cto/code-author`, `qa-runner`, `qa-triage` — the Execute + QA halves of the workflow not yet designed).
+3. **Read the plan** at `.cyberos-memory/project/skills-evolution/cyberos-skills-evolution-plan.md` to see where this fits in the multi-phase roadmap.
+
+### History
+
+- 2026-05-11 — Initial creation. Author: Claude Opus 4-7 in CyberSkill workbench session 6. The bridge from "design-complete chain" to "manually-runnable today" pending Phase 1 runtime.
+
+
+
+---
+
+
+
+## Part 30 — Host Adapters (per-agent-host tweaks)
+
+> **Purpose.** [Part 28 — Chain Orchestrator](#part-28--chain-orchestrator-agent-side-fully-automated) describes fully automated mode (the agent drives everything; you give a pitch + answer HITL); [Part 29 — Manual Workflow](#part-29--manual-workflow-no-runtime-by-hand-today) describes manual mode (you drive every step). Both are host-neutral. This doc translates each abstract step into the specific commands / setup / fallbacks per agent host.
+
+> **Audience.** Stephen, picking a host for the next project. Or a teammate / future contributor wanting to drive the chain on whatever they happen to use.
+
+---
+
+### Capability matrix
+
+| Host | File tools | Shell / Bash | AGENTS.md auto-load | MCP | Skills auto-trigger | Filesystem write to user project | Recommended? |
+|---|---|---|---|---|---|---|---|
+| **Claude Cowork** (desktop app) | ✅ Read/Write/Edit on connected folders | ✅ sandboxed Linux env | ❌ (must be loaded explicitly) | ✅ | ✅ skills system | ✅ via connected folders | **★ Best for solo / small-team manual mode** |
+| **Claude Code** (CLI) | ✅ native | ✅ native | ✅ on `AGENTS.md` / `CLAUDE.md` at root | ✅ | ✅ | ✅ native | **★ Best for terminal-driven engineers** |
+| **Cursor** | ✅ native | ✅ terminal | via `.cursor/rules/<n>.mdc` | ✅ | partial | ✅ native | ★ Best for IDE-heavy workflows |
+| **Codex CLI** (OpenAI) | ✅ native | ✅ shell | ✅ on `AGENTS.md` | ✅ | partial | ✅ native | ★ alternative to Claude Code |
+| **Windsurf** | ✅ native | ✅ terminal | via `.windsurfrules` | ✅ | partial | ✅ native | OK |
+| **GitHub Copilot CLI** | ✅ | ✅ | via `.github/copilot-instructions.md` | partial | partial | ✅ | OK |
+| **Gemini CLI** | ✅ | ✅ | manual paste / `gemini-extension.json` | partial | partial | ✅ | OK |
+| **OpenCode** | ✅ | ✅ | via `.opencode/INSTALL.md` plugin | ✅ | ✅ | ✅ | OK |
+| **Aider / Continue.dev / Trae / Kiro** | ✅ | ✅ | manual or per-host config | varies | varies | ✅ | OK |
+| **Claude.ai web** | ❌ no host filesystem | ❌ no shell | ❌ paste only | ❌ tool-list only | partial | ❌ | Degraded — chat + manual file management |
+| **ChatGPT (Code Interpreter)** | partial (sandbox) | partial (Python only) | ❌ paste only | ❌ | ❌ | ❌ | Degraded — same shape as Claude.ai web |
+| **Claude in Chrome** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | Browser-only; not recommended |
+
+A **recommended** host runs the chain end-to-end without the user leaving the chat. A **degraded** host can still drive the conversational parts (interview, draft generation) but the user has to copy artefacts in/out of the agent and run `brain_writer.py` from a separate terminal.
+
+---
+
+### Adapter A — Claude Cowork (★ recommended for solo / small-team)
+
+**This is what we're using right now.** Cowork is purpose-built for this kind of manual orchestration: connected folders + sandboxed bash + MCP + skills. Setup overhead: minimal.
+
+#### Setup (one-time per project)
+
+1. **Connect the new project's folder.** When you start a Cowork session, ask Claude to `request_cowork_directory` for `/path/to/your/new/project`. Approve the prompt.
+2. **Connect cyberos folder** (so the agent can read AGENTS.md + cyberos/docs/skills/*): same `request_cowork_directory` for `/path/to/cyberos`.
+3. **Load AGENTS.md into context.** Cowork doesn't auto-load AGENTS.md the way Claude Code does. Ask the agent at the start of each session: *"Read `cyberos/docs/CyberOS-AGENTS-CORE.md` and follow it for this conversation."* The CORE.md is short (~10K tokens); it loads fast.
+4. **Bootstrap BRAIN.** Cowork's bash sandbox can run `python3 outputs/brain_writer.py session-start <actor>` against the connected workbench folder. The agent will auto-bootstrap on first write per AGENTS.md §13.1.
+
+#### Per-step shape
+
+- **Load a SKILL.md**: `Read cyberos/docs/skills/cuo/cpo/<skill>/SKILL.md` — agent reads via the file tool.
+- **Run the interview**: agent conducts in chat; Cowork's chat surface handles the back-and-forth fine.
+- **Save an artefact**: agent uses Write tool to create `<project-root>/planning/<date>-<slug>/<artefact>.md`.
+- **Append audit row**: agent runs `python3 outputs/brain_writer.py write <actor> <relpath> <content_file>` via bash (cwd = project repo root).
+- **Session end**: agent runs `python3 outputs/brain_writer.py session-end <actor>` via bash.
+
+#### Quirks / gotchas
+
+- The bash sandbox's view of paths differs from the file tool's view. The agent already knows this — but if you run bash commands by hand, paths look like `/sessions/<id>/mnt/<folder>/...` not `/Users/<you>/...`.
+- Cowork sessions don't persist across closing the app — but the BRAIN's audit ledger DOES persist (it's on your real filesystem). Resume any time.
+- Skills installed at the Cowork level (the ones loaded via `Skill` tool) DO NOT include the CyberOS skills system — those live in your `cyberos/` repo and are loaded on-demand by the agent reading the SKILL.md files.
+- **§0.1 sandbox guard (Bundle Q, 2026-05-11) — `outputs/brain_writer.py` refuses to run from inside Cowork's bash sandbox**, because the sandbox's view of the project lives at `/sessions/<id>/mnt/<folder>/...` which matches the AGENTS.md §0.1 forbidden-paths list (paths containing `/sessions/`, `local-agent-mode-sessions`, etc.). The bind-mount IS backed by your real filesystem, but §0.1 cannot tell that from inside; refusing is defense-in-depth against the case where it ISN'T. **Net effect:** the agent can edit non-BRAIN files (docs, source code) directly via the Write/Edit tools, but BRAIN-touching ops (audit-row appends, manifest mutations, `meta/protocol-history/` archives) require the user to run the apply script from a macOS terminal where the path resolves to `/Users/<you>/Projects/...` (no §0.1 forbidden substring). See "The cowork → macOS handoff" below.
+
+#### The cowork → macOS handoff (apply-script pattern)
+
+Established 2026-05-11 during Bundle Q. The pattern:
+
+1. **Agent in cowork edits non-BRAIN files** (AGENTS.md, CHANGELOG, README, skills runbooks, source code). These are ordinary file mutations — no audit row needed. Cowork's Write/Edit tools work fine.
+2. **Agent stages BRAIN-touching ops** as a deterministic apply script + memory templates under `outputs/<bundle-name>/`. The script:
+   - performs preflight sanity (paths, SHAs, deps);
+   - calls `python3 outputs/brain_writer.py` for each op (session-start, write, str-replace, protocol-upgrade, self-audit, session-end);
+   - exits non-zero on any failure so the chain stays consistent.
+3. **User runs the script from macOS terminal**:
+   ```bash
+   cd /Users/<you>/Projects/<repo>
+   bash outputs/<bundle-name>/apply.sh
+   ```
+   The §0.1 guard passes (path is real-filesystem), the writer runs, the chain advances.
+4. **Agent reviews the resulting chain** in the next cowork session via `verify --bit-perfect` output the user pastes back.
+
+**When this pattern fits:** any cluster of BRAIN mutations the agent wants to land as one atomic-ish unit — protocol upgrades (§0.5 + §0.6), bulk content refreshes, doctor-style cleanup passes, multi-memory ingestion of an external corpus.
+
+**When it doesn't:** single-memory writes during exploratory work — the cowork → macOS round-trip is overkill. For those, the user can drop into the macOS terminal directly and run the writer themselves (the `python3 outputs/brain_writer.py write <actor> <path> <content>` form is short).
+
+**Reference apply scripts** in `outputs/`:
+
+- `outputs/apply-bundle-Q.sh` — protocol-upgrade flow (§0.5 + §0.6 follow-on; canonical pattern for future protocol upgrades)
+- `outputs/doctor/<date>-cleanup.py` — bulk-cleanup pattern (str_replace many memories in one session, with rollback-on-failure)
+
+#### Recommendation
+
+Cowork is the smoothest fit for **automated mode** RIGHT NOW. The trigger phrase from [Part 28 — Chain Orchestrator](#part-28--chain-orchestrator-agent-side-fully-automated) + the orchestrator runbook give you a single-message kickoff. The agent drives the rest — file reads, interviews, artefact writes, audit loops, brain_writer.py, all of it. You answer ~10-30 HITL questions over ~3 hours of standard-profile work; that's the entire user-facing UX.
+
+Everything in [Part 29 — Manual Workflow](#part-29--manual-workflow-no-runtime-by-hand-today) (manual mode) also works in Cowork if you want the step-by-step driver experience.
+
+---
+
+### Adapter B — Claude Code (CLI)
+
+The native Claude Code experience. Best fit if you live in a terminal.
+
+#### Setup (one-time per project)
+
+1. **Symlink AGENTS.md** at the new project's root:
+
+   ```bash
+   cd /path/to/new/project
+   ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
+   ```
+
+   Claude Code auto-loads `AGENTS.md` and `CLAUDE.md` at session start. If you only want Claude Code to see it (not Codex / Cursor), use `CLAUDE.md` instead.
+
+2. **Optional: also symlink CLAUDE.md** (some Claude Code installs check both):
+
+   ```bash
+   ln -s AGENTS.md CLAUDE.md
+   ```
+
+3. **Bootstrap BRAIN.** The first session detects `PRISTINE` and runs §13.1 silently.
+
+#### Per-step shape
+
+Identical to Cowork — the only difference is that Claude Code drops you straight into a terminal-style chat without needing the connected-folder dance. Everything else (file tools, bash, MCP) maps 1:1.
+
+#### Recommendation
+
+Use Claude Code if you'd rather work in `tmux` than a desktop chat app. Hooks (`PreToolUse`, etc., per the SRE notebook pattern from `module/agent-patterns/cookbook-deep-dives.md`) are first-class here — you can wire safety checks per Plan v1.1 / M3 directly into the Claude Code config.
+
+---
+
+### Adapter C — Cursor
+
+Same capability footprint as Claude Code but inside an IDE.
+
+#### Setup (one-time per project)
+
+1. **Create `.cursor/rules/cyberos-memory.mdc`** at the new project's root:
+
+   ```markdown
+   ---
+   description: CyberOS Universal Agent Memory Protocol (AGENTS-CORE.md)
+   globs: ["**/*"]
+   alwaysApply: true
+   ---
+
+   <paste contents of cyberos/docs/CyberOS-AGENTS-CORE.md here>
+   ```
+
+   Cursor's `.cursor/rules/` folder is the equivalent of Claude Code's auto-loaded `AGENTS.md`.
+
+2. **Run the chain** in Cursor's Agent chat (Cmd+L → ask).
+
+#### Per-step shape
+
+Identical to Claude Code; Cursor's file tools and terminal both work. One quirk: Cursor's chat history is per-file by default, not per-session — you may want to use the chat sidebar's "New Session" button between skills to stay clean.
+
+#### Recommendation
+
+Use Cursor if you're already pair-coding in it. The MANUAL_WORKFLOW chain runs unchanged.
+
+---
+
+### Adapter D — Codex CLI (OpenAI)
+
+OpenAI's terminal agent. Auto-loads `AGENTS.md` natively (this is the file convention Codex actually defined first).
+
+#### Setup (one-time per project)
+
+1. **Symlink AGENTS.md** — same as Claude Code:
+
+   ```bash
+   ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
+   ```
+
+2. **Run `codex` in the project root.** It'll pick up AGENTS.md automatically.
+
+#### Per-step shape
+
+Same as Claude Code. The chain is host-neutral; Codex's tool-call shape differs internally but the user-facing flow is identical: paste SKILL.md, follow the questions, save artefact.
+
+#### Recommendation
+
+Use Codex if you'd rather pay OpenAI than Anthropic, or if your team's standard model is GPT-5 / o-series. Behaviour quality of the chain depends on the model; Sonnet 4.6 / Opus 4.7 perform measurably better on the rubric-driven audit-fix loop than smaller models.
+
+---
+
+### Adapter E — Other CLIs (Gemini, OpenCode, Windsurf, Copilot, Aider, Continue, Trae, Kiro)
+
+Generic recipe for any agent CLI that supports file tools + shell:
+
+#### Setup
+
+1. **Find the host's auto-load convention** (see ECC's `manifests/` for examples — every host has its own `.foo/<file>` shape).
+2. **Either symlink or copy** `cyberos/docs/CyberOS-AGENTS-CORE.md` into the auto-load location.
+3. **Bootstrap BRAIN** by asking the agent to follow §13.1.
+
+#### Per-step shape
+
+If the host has file tools + shell, the chain runs identically to the recommended hosts above. Hosts without `Skill`-style auto-trigger (most of them) just need the user to paste the SKILL.md content explicitly at the start of each step — that's not a worse experience, just a slightly more verbose one.
+
+#### Recommendation
+
+Use whatever CLI your team standardises on. The chain doesn't care.
+
+---
+
+### Adapter F — Claude.ai web / ChatGPT (degraded mode)
+
+For when you can't run a CLI — e.g., you're on a borrowed machine, on mobile, or your project is on a system without a terminal.
+
+#### Capabilities lost
+
+- ❌ Can't read your project's filesystem (the agent only sees what you paste / upload).
+- ❌ Can't write artefacts to your filesystem (agent emits markdown in chat; you copy-paste into local files).
+- ❌ Can't run `brain_writer.py` against your real BRAIN (the audit ledger gap is filled manually after the session).
+- ❌ Can't run MCP tools that touch your local environment (e.g., `proj.create_issue` against your Linear instance).
+
+#### What still works
+
+- ✅ The interview shape — questions in chat, answers in chat.
+- ✅ Markdown generation — the agent produces `project-brief.md` / `prd-*.md` / `fr-*.md` / `impl-plan.md` content as chat output.
+- ✅ Audit-loop reasoning — the rubric runs in the agent's head; you read the verdict.
+
+#### Setup
+
+1. **Paste AGENTS-CORE.md as the first message** of every new session (or use a Custom GPT / Custom Project to bake it in).
+2. **Paste the SKILL.md** of the current step as the second message.
+3. **Provide the inputs** (project brief / prior artefacts) as subsequent messages.
+
+#### Per-step shape
+
+1. Run the interview / generation in chat.
+2. Copy the agent's generated markdown into a local file in your project (`./planning/<date>-<slug>/<artefact>.md`).
+3. After all skills run, **on a machine with a terminal**, re-create the audit ledger:
+
+   ```bash
+   cd /path/to/project
+   python3 outputs/brain_writer.py session-start human:stephen-cheng
+   for f in <list of artefact files>; do
+     python3 outputs/brain_writer.py write human:stephen-cheng <relpath> <abspath>
+   done
+   python3 outputs/brain_writer.py session-end human:stephen-cheng
+   ```
+
+   This restores chain integrity. The `actor_kind: "human"` makes it explicit these were human-driven (vs. agent-driven) writes.
+
+#### Recommendation
+
+Avoid degraded mode for serious work — the manual file shuffling kills the time savings the chain otherwise gives you. Keep this option for exploratory drafts only.
+
+---
+
+### When to switch hosts mid-project
+
+It's fine. The BRAIN audit ledger + the artefacts on disk + CONTEXT.md + .out-of-scope/ are all host-agnostic. You can:
+
+- Start in Cowork for the interview (fast back-and-forth).
+- Switch to Claude Code or Cursor for FR-author / spec-to-impl-plan (denser tool-use).
+- Drop into Claude.ai web on your phone if you want to draft a quick PRD amendment.
+
+The only constraint: don't run **two hosts simultaneously** against the same `.cyberos-memory/` directory. The `.lock` file in the BRAIN root coordinates write access; concurrent writes from two agents will trigger `op:"rejected" reason:"lock-contention"` at best, and chain corruption at worst.
+
+---
+
+### Picking a host: a quick decision tree
+
+```
+Are you working solo or small-team?
+├── Yes → Claude Cowork (★ recommended)
+│         OR Claude Code (★ if you live in tmux)
+│         OR Cursor (★ if you're already in it)
+│
+└── No, agency / multi-tenant work
+    ├── Need audit trail → Claude Code with hooks
+    ├── Need OpenAI compliance → Codex CLI
+    └── Need IDE → Cursor or Windsurf
+
+Are you on a borrowed machine / mobile?
+└── Claude.ai web / ChatGPT (degraded; expect manual file shuffling)
+```
+
+For Stephen's next project: **Cowork is the move**. It's what we used to build this whole evolution, it has the best file-tool + bash story for solo work, and the BRAIN sits at `~/Projects/CyberSkill/workbench/.cyberos-memory/` already wired up.
+
+### History
+
+- 2026-05-11 — Initial creation. Author: Claude Opus 4-7 in Cowork session 7. Companion to MANUAL_WORKFLOW.md; resolves the "must I use Claude Code?" question (no — fully host-agnostic).

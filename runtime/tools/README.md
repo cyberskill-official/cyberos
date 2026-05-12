@@ -33,7 +33,7 @@ python3 runtime/tools/cyberos_export.py . -o ~/Backups/cyberos
 python3 runtime/tools/benchmark.py . --runs 5
 
 # Verify the AGENTS.md SHA matches the manifest pin
-python3 runtime/tools/canonical_sha.py docs/CyberOS-AGENTS.md
+python3 runtime/tools/canonical_sha.py docs/memory/AGENTS.md
 python3 -c "import json; print(json.load(open('.cyberos-memory/manifest.json'))['protocol']['sha256'])"
 # These two outputs MUST match — if not, §13.0 trips INCOMPATIBLE:protocol-sha256-mismatch.
 ```
