@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-011-manifest-cleanup.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-011-manifest-cleanup.md</p>
+
+<h1>REF-011 — Manifest cleanup: schema_version + compatible_runtimes removed (AGENTS.md §6, §4.3, §13.0)</h1>
+
+<h2>What changed</h2>
+<p>Removed two manifest fields and replaced the version-comparison forward-compat with field-presence detection. See DEC-086 for the full decision.</p>
+
+<h2>What triggered the refinement</h2>
+<p>Stephen asked &quot;is `compatible_runtimes` and `schema_version` in manifest.json (section 6) necessary?&quot; Analysis showed:</p>
+<li>`compatible_runtimes`: 1 reference (the example), 0 logic uses → vestigial.</li>
+<li>`schema_version`: 3 references (§4.3 forward-compat, §13.0 state classifier, the example) but discrete-version-number model is incompatible with day-by-day protocol evolution.</li>
+
+<p>Both were removed; field-presence detection achieves the same forward-compat protection without inline version markers. Aligns with the no-inline-versioning rule established earlier the same day.</p>
+
+<h2>Decision record</h2>
+<p>DEC-086 in `memories/decisions/DEC-086-remove-schema-version-and-compatible-runtimes.md`.</p>
+
+<h2>How to use this memory</h2>
+<p>Load on session-start. When future protocol changes are proposed, prefer field-presence detection over discrete version numbers; prefer permissive-with-surfacing over strict-rejection where the user-visible failure mode is &quot;agent too old.&quot;</p>
+
+<h2>History</h2>
+<li>2026-05-04 — Adopted in the same session DEC-086 was proposed.</li>
+</body></html>

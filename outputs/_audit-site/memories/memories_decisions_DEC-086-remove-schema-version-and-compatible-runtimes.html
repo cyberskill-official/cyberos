@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-086-remove-schema-version-and-compatible-runtimes.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-086-remove-schema-version-and-compatible-runtimes.md</p>
+
+<h1>DEC-086 — Remove schema_version + compatible_runtimes from manifest; field-presence forward-compat (AGENTS.md §6, §4.3, §13.0)</h1>
+
+<p>**Status: Locked. Deciders: Founder.**</p>
+
+<p>**Decision.** Two manifest fields are removed:</p>
+<li>`compatible_runtimes` — vestigial; never referenced anywhere in protocol logic.</li>
+<li>`schema_version` — conceptually misaligned with day-by-day protocol evolution. Discrete-version-number model would either bump daily (constantly tripping cross-machine `INCOMPATIBLE`) or never bump (lie about state). Both options worse than removal.</li>
+
+<p>**Replacement forward-compat mechanism.** Field-presence detection at the validator level:</p>
+<li>§4.3 hygiene: unknown frontmatter fields → `op:rejected reason:unknown-frontmatter-field:&lt;name&gt;` + surface to user.</li>
+<li>§13.0 state classifier: `INCOMPATIBLE:&lt;field&gt;` triggered when `manifest.json` carries any field not in the agent&#x27;s loaded §6 schema.</li>
+
+<p>Same forward-compat protection (agent too old → refuse), no inline version markers, aligned with day-by-day evolution.</p>
+
+<p>**How to apply.** Manifest str_replace on cyberos + styx BRAINs to drop both fields. Future manifests carry only the fields in the current §6 schema. Agents reading a manifest with unknown fields surface &quot;agent likely too old; run the latest AGENTS.md.&quot;</p>
+
+<p>**Cross-ref:** AGENTS.md §6 + §4.3 + §13.0; tombstones DEC-082 + REF-007 same session; PRD/SRS DEC-072 reference also updated.</p>
+
+<h2>How to use this memory</h2>
+<p>Frozen decision. Cite when explaining why the manifest does not carry version markers or compatibility ranges.</p>
+
+<h2>History</h2>
+<li>2026-05-04 — Locked during afternoon revision pass after Stephen questioned both fields.</li>
+</body></html>

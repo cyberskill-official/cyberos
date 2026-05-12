@@ -1,0 +1,78 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/health/2026-05-10-b0d9ad3adc35ec1b-postupgrade.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/health/2026-05-10-b0d9ad3adc35ec1b-postupgrade.md</p>
+<h1>§8.7 self-audit — 2026-05-10 — post-upgrade scan (Bundle O)</h1>
+
+<p>**Trigger:** auto per §0.5 step 4 — post-upgrade migration check after `op:protocol_upgrade` to `sha256:b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6`.</p>
+<p>**Approved by:** subject:stephen-cheng (chat-turn approval phrase)</p>
+<p>**Generated at:** 2026-05-10T12:03:06+07:00</p>
+<p>**BRAIN state:** READY</p>
+<p>**Tools:** `runtime/tools/cyberos_validate.py` + `runtime/tools/cyberos_doctor.py`</p>
+
+<h2>Summary</h2>
+
+<li>**Critical:** 0</li>
+<li>**Warn:** 0</li>
+<li>**Info:** 1</li>
+
+<p>**✓ No critical findings — Bundle O lands clean.**</p>
+
+<h2>Bundle O verification</h2>
+
+<li>✅ §0.5 canonical SHA: `sha256:b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6` (live AGENTS.md matches manifest pin)</li>
+<li>✅ §7.2 LINK invariant: clean across new ledger tail</li>
+<li>✅ Bundle O three-state triage landed in §14:</li>
+<p>  - **§14 heading**: `(conditional in normal mode)` → `(silent by default; verbose when issues)`</p>
+<p>  - **3-state model** explicit at top of §14: omit / compact / verbose</p>
+<p>  - **§14.1 compact**: now `📁 Files changed:` block ONLY (BRAIN + non-BRAIN merged) — no `Δ Changes:` heading, no `Status:` block, no `unchanged:` line, no audit-trail line</p>
+<p>  - **§14.2 verbose** auto-triggers on `op:rejected|revert|warn|health_check` this turn OR latest §8.7 CRITICAL/WARN OR `operational_mode != normal` — NOT just on mode</p>
+<p>  - **§14.2 arrangement**: `⚠️ Findings:` first, then `📁 Files changed:`, then `Δ Changes (BRAIN detail):`, then `Status:`, then optional `Tokens:`</p>
+<p>  - **`unchanged:` line removed** entirely (absence-from-list is the implicit signal)</p>
+<p>  - **`Tokens:` slot reserved** in both §14.1 and §14.2 — emitted only when a token counter is wired up; never estimated via tiktoken or character count</p>
+
+<h2>Phase 1 — schema validation</h2>
+
+<p>All 78 memory files (76 + DEC-106 + REF-038 + preference v1 from Bundle N + this Bundle O&#x27;s writes) parse against §5.1 closed-set frontmatter schema. Single legacy memory_id (`mem_F005DOCCHANGELOG2026050401V`) registered in `meta/legacy-ids.md` per §5.2 carve-out.</p>
+
+<h2>Phase 4 — §0.5 protocol pin</h2>
+
+<li>INFO: §0.5 protocol pin: sha256:b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6 ✓ matches just-approved upgrade</li>
+
+<h2>All findings</h2>
+
+<li>INFO: §5.2 memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md — memory_id `mem_F005DOCCHANGELOG2026050401V` is non-conforming but registered in meta/legacy-ids.md (allowed per §5.2)</li>
+
+<h2>Tool transcripts</h2>
+
+<h3>cyberos_validate.py</h3>
+<pre>
+cyberos-validate /sessions/zen-quirky-mayer/mnt/cyberos/.cyberos-memory
+  CRITICAL: 0
+  WARN:     0
+  INFO:     1
+
+=== INFO (1) ===
+  [§5.2] memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md
+    memory_id `mem_F005DOCCHANGELOG2026050401V` is non-conforming but registered in meta/legacy-ids.md (allowed per §5.2)
+
+✅ no findings; store appears healthy.
+</pre>
+
+<h3>cyberos_doctor.py</h3>
+<pre>
+cyberos-doctor /sessions/zen-quirky-mayer/mnt/cyberos/.cyberos-memory
+  Findings: 0 CRITICAL, 0 WARN, 1 INFO
+  Repair candidates: 0
+
+  ℹ [INFO] §5.2 memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md
+      memory_id `mem_F005DOCCHANGELOG2026050401V` is non-conforming but registered in meta/legacy-ids.md (allowed per §5.2)
+      → no automated repair; surface to user
+</pre>
+</body></html>

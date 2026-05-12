@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-026-deprecate-protocol-signing-key-file.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-026-deprecate-protocol-signing-key-file.md</p>
+
+<h1>REF-026 — Deprecate `.protocol-signing-key` file (Bundle K)</h1>
+
+<h2>Real-world trigger</h2>
+
+<p>Stephen, post-Bundle-J: *&quot;is there any way that no need one more separate file .protocol-signing-key?&quot;* Honest re-evaluation: yes — the file was placeholder weight pre-BRAIN-module-P1. Stephen picked Option A (delete now, defer real mechanism to P1) over alternatives.</p>
+
+<h2>Refinement adopted</h2>
+
+<p>TIER 1: §0.5 TOFU paragraph rewrite + file deprecation marker + DEC-094 v=2 + README update. Single coordinated bundle.</p>
+
+<h2>Why this is the right fit</h2>
+
+<p>The file&#x27;s value was zero today (placeholder; signed nothing). Removing it doesn&#x27;t weaken security — first-time TOFU is always MITM-vulnerable regardless of source. Deferring the canonical mechanism to P1 lets the design happen with real constraints rather than speculation.</p>
+
+<p>This is the **first Bundle that REMOVES protocol surface area** rather than adding. Bundles B/A/C/D/E/F/G/H/I/J all added; Bundle K subtracts. Sets a useful precedent: the §0.4 propose-then-adopt loop can shrink the protocol when something proves to be aspirational rather than load-bearing.</p>
+
+<h2>What changed in AGENTS.md</h2>
+
+<li>§0.5 TOFU paragraph: removed the `.protocol-signing-key` e.g. clause; new wording invites any trusted channel; explicit pre-P1-no-canonical-source note.</li>
+
+<h2>What changed elsewhere</h2>
+
+<li>`cyberos/.protocol-signing-key`: overwritten with deprecation marker (cowork sandbox can&#x27;t `rm`; user can `rm` manually).</li>
+<li>`cyberos/.cyberos-memory/memories/decisions/DEC-094-protocol-update-policy.md`: v=1 → v=2; signing_keys bullet + bootstrap-auto-pin paragraph updated; History entry appended.</li>
+<li>`cyberos/docs/CyberOS-AGENTS.README.md`: Part 6 paragraph updated to match new §0.5 wording; Part 8 gains Bundle K as twelfth real-world trigger.</li>
+<li>`cyberos/docs/CyberOS-AGENTS.CHANGELOG.md`: Bundle K entry appended.</li>
+
+<h2>Trade-offs</h2>
+
+<li>First-clone TOFU friction at P1+ when a real key exists: the &quot;somewhere&quot; to paste from isn&#x27;t defined. Acceptable; designing it now would be premature.</li>
+<li>Deprecation-marker rather than full deletion: practical compromise given the cowork sandbox&#x27;s permissions.</li>
+
+<h2>How to use this memory</h2>
+
+<p>When evaluating whether a piece of protocol surface area is load-bearing or speculative, the Bundle K test is useful: *&quot;What concrete failure would this prevent right now? If the answer is &#x27;none, but it might at P1,&#x27; defer.&quot;* Adding speculative machinery accumulates carrying cost; removing it is cheap until you&#x27;re sure you need it.</p>
+
+<p>When working on BRAIN module P1, design the canonical TOFU-source mechanism then — with real signing-key constraints in hand. AGENTS.md frontmatter, separate file, MCP endpoint, manifest-seed pattern all remain options.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (later evening) — Created during Bundle K execution.</li>
+</body></html>

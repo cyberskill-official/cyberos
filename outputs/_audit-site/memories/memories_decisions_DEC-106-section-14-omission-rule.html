@@ -1,0 +1,57 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-106-section-14-omission-rule.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-106-section-14-omission-rule.md</p>
+
+<h1>DEC-106 — §14 omission rule + audit-trail suppression in normal mode (Bundle N TIER 1+2)</h1>
+
+<h2>Decision</h2>
+
+<p>The §14 end-of-response block is now **conditional in normal mode** rather than mandatory. Two new sub-sections govern the conditionality:</p>
+
+<li>**§14.0 (sev-2)** — omit the entire §14 block when ALL of: (a) `manifest.operational_mode == normal`, (b) no `op:rejected|revert|warn|health_check` row this turn, (c) no memory mutations this turn (audit-row count ≤ 2 and only `session.start`/`session.end` bookends), (d) most-recent §8.7 self-audit reports 0 CRITICAL and 0 WARN.</li>
+<li>**§14.1.1 (sev-2)** — when §14.1 compact IS emitted in normal mode, omit the `audit/&lt;YYYY-MM&gt;.jsonl: &lt;N rows appended; head=sha256:…&gt;` line unless a finding (rejection/revert/warn) occurred this turn or the most-recent §8.7 reports issues.</li>
+
+<p>`verbose`/`debug`/`maintenance` modes always emit the §14.2 full block including the audit-trail line — visibility outranks compactness in development sessions.</p>
+
+<h2>Why</h2>
+
+<p>User feedback (cowork-session 2026-05-10): the §14 block plus the audit-trail one-liner was flooding chat on every turn, even when the chain was healthy and nothing meaningful changed. Direct quote: *&quot;show Audit trail after each messages make the conversation flooded, just show in maintenance mode or when issues arise&quot;* and *&quot;can we compress 📝 .cyberos-memory updated section more? show full verbose in maintenance mode, but only show changes summary on normal (default), if no issues arise don&#x27;t need to show memory changes, just show other files&#x27; changes&quot;*.</p>
+
+<p>The audit ledger remains the authoritative record (§7); chat-side silence does not affect chain integrity. Users can run `runtime/tools/cyberos_validate.py` or the configured `health_check_policy.on_demand_phrase` (default *&quot;run BRAIN healthcheck&quot;*) on demand.</p>
+
+<h2>Authority</h2>
+
+<p>Adopted via §0.5 chat-turn approval phrase on 2026-05-10:</p>
+
+<p>&gt; approve protocol upgrade to sha256:8060fe2e188e1793e9dbc758b34a8198617ff8bf8a3320a2012595faf3012dab</p>
+
+<h2>Trade-offs</h2>
+
+<li>**Pro**: signal-to-noise improves dramatically — most turns produce no §14 block at all, so when the block DOES appear, it carries information the user actually needs.</li>
+<li>**Pro**: the audit-trail one-liner returns automatically when something goes wrong; no manual mode-switching needed for diagnosis.</li>
+<li>**Con**: agents that don&#x27;t track per-turn rejection/revert/warn counts may incorrectly omit when they shouldn&#x27;t. Mitigation: the four §14.0 conditions are narrow and cheap to check; the §8.7 self-audit catches schema drift if any agent omits incorrectly.</li>
+<li>**Con**: the prose for the new rules is +1922 chars in AGENTS.md, slightly larger than what&#x27;s saved per turn — but the savings compound across hundreds of future responses.</li>
+
+<h2>Cross-references</h2>
+
+<li>AGENTS.md §14 (the rule itself)</li>
+<li>DEC-103 (the prior compact-§14 amendment that this builds on)</li>
+<li>REF-038 (the matching refinement memory)</li>
+<li>`meta/protocol-history/AGENTS-sha256-9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329.md` (pre-Bundle-N archive)</li>
+<li>`meta/health/2026-05-10-8060fe2e188e1793-postupgrade.md` (post-upgrade scan)</li>
+
+<h2>How to use this memory</h2>
+
+<p>The next agent reading this BRAIN MUST be running an AGENTS.md whose canonical SHA matches `manifest.protocol.sha256` (currently `sha256:8060fe2e188e1793…`). Before emitting any §14 block, evaluate the four §14.0 conditions; before adding the audit-trail line, evaluate the three §14.1.1 conditions. When in doubt about whether to include the block, default to OMIT — the user&#x27;s stated preference is &quot;less is more.&quot;</p>
+
+<h2>History</h2>
+
+<li>2026-05-10T11:43:56+07:00: Created at Bundle N TIER 1+2 protocol upgrade time per §0.4 standing rule. The first §14 amendment driven entirely by chat noise feedback — Bundle I (2026-05-06) introduced the compact format; Bundle N completes the journey by allowing full omission.</li>
+</body></html>

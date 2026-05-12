@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/preferences/PREF-001-voice-standard.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/preferences/PREF-001-voice-standard.md</p>
+
+<h1>PREF-001 CyberSkill voice standard</h1>
+
+<h2>Preference</h2>
+<p>All CyberOS protocol docs (AGENTS.md, AGENTS-CORE.md, AGENTS.README.md) and all new CyberSkill external materials use the gstack /codex voice standard:</p>
+<li>**No em dashes (—) or en dashes (–)** — use commas, parens, or sentence rewrite</li>
+<li>**No AI vocabulary:** delve, crucial, robust, comprehensive, nuanced, multifaceted, furthermore, moreover, additionally, pivotal, landscape, tapestry, underscore, foster, showcase, intricate, vibrant, fundamental, significant</li>
+<li>**Lead with the point.** Name files, line numbers, commands, outputs.</li>
+<li>**Builder-to-builder tone**, not consultant-to-client.</li>
+
+<h2>Scope</h2>
+<li>**Applies to:** all CyberOS protocol docs going forward (additive — old text not retroactively rewritten per §0.5)</li>
+<li>**Applies to:** all new memories Stephen writes (DECs, REFs, FACTs)</li>
+<li>**CHANGELOG and protocol-history are exempt** (descriptive, may quote LLM outputs verbatim)</li>
+<li>**Override-rule:** if a technical term unambiguously requires &quot;robust&quot; or similar, use it but flag with comment</li>
+
+<h2>Rationale</h2>
+<p>Voice imprecision is correctness imprecision in protocol docs. AGENTS.md MUST reach identical accept/reject decisions on two agents on two machines — that requires precise unambiguous prose. AI vocabulary and em dashes are correctness hazards.</p>
+
+<h2>Examples</h2>
+<li>✓ &quot;validator rejects writes that fail §4.2&quot;</li>
+<li>✗ &quot;the robust validator comprehensively rejects writes which—through nuanced analysis—fail the multifaceted §4.2 framework&quot;</li>
+
+<h2>Enforcement</h2>
+<li>runtime/tools/voice_check.py (lints em dashes + AI vocab)</li>
+<li>runtime/tools/cyberos voice (CLI wrapper)</li>
+<li>.github/workflows/voice-check.yml (CI gate)</li>
+
+<h2>Related</h2>
+<li>See also: REF-NNN-voice-discipline (when adopted as §0.5 amendment)</li>
+</body></html>

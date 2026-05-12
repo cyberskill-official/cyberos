@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/legacy-ids.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/legacy-ids.md</p>
+<h1>Legacy memory_ids (predates §5.2 validator)</h1>
+
+<p>This is a **closed-set registry** of memories that were created before the §5.2 UUIDv7/ULID `memory_id` validator landed in CyberOS-AGENTS.md. Each line below documents one memory whose `memory_id` does not match the §5.2 regex but which is permitted to retain its mnemonic ID in lieu of tombstone-and-recreate.</p>
+
+<p>**Format:** `&lt;mem_id&gt; | &lt;originating_path&gt; | &lt;originally_created_at&gt; | &lt;reason&gt;`</p>
+
+<p>**Closed-set rule:** new entries to this registry land **only** via a §0.5 protocol upgrade. Routine BRAIN writes that produce a non-conforming `memory_id` MUST still be rejected per §5.2.</p>
+
+<p>**Validator behaviour:** when reading a memory whose `memory_id` does not match the §5.2 regex, the validator looks up the ID in this registry. Found → accept and continue. Not found → reject as `op:rejected reason:invalid-memory-id`.</p>
+
+<p>**Frontmatter exemption:** this file is itself a registry, not a memory. It carries no §5.1 frontmatter, by the same convention applied to `meta/tombstones.md`. §4.2 denylist regex is also skipped on this file (§4.2 rule-definition exemption set). The §4.2 injection gate still runs.</p>
+
+<p>**Authority:** entries here represent a `human-edited` decision (the §0.5 chat-turn approval that introduced this registry). The four entries below were registered in the 2026-05-07 protocol upgrade that introduced this carve-out; see the `Bundle L TIER 2` entry in `docs/CyberOS-AGENTS.CHANGELOG.md` for context.</p>
+
+<p>---</p>
+
+<p>mem_01HSXX0TOMBSTONES000000001 | meta/tombstones.md | 2026-05-06T09:16:00+07:00 | Bootstrap mnemonic ID for the tombstone registry; predates §5.2 UUIDv7/ULID validator.</p>
+<p>mem_01HSXX0RETENRULES000000001 | meta/retention-rules.md | 2026-05-06T09:16:00+07:00 | Bootstrap mnemonic ID for retention rules; predates §5.2.</p>
+<p>mem_01HSXX0CLASSRULES000000001 | meta/classification-rules.md | 2026-05-06T09:16:00+07:00 | Bootstrap mnemonic ID for classification rules; predates §5.2.</p>
+<p>mem_F005DOCCHANGELOG2026050401V | memories/facts/FACT-005-doc-changelog-convention.md | 2026-05-04T01:00:00+07:00 | Pre-protocol mnemonic ID for the docs-changelog convention fact; predates §5.2. The FACT-NNN-V mnemonic format was the convention before audit-row UUIDv7 alignment.</p>
+</body></html>

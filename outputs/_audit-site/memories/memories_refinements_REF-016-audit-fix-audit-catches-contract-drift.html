@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-016-audit-fix-audit-catches-contract-drift.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-016-audit-fix-audit-catches-contract-drift.md</p>
+
+<h1>REF-016 — Always run audit-fix-audit after creating a new contract; the first draft will drift from reality</h1>
+
+<p>When a new contract is registered to capture a previously-undocumented convention (e.g. NATS subject names that skills already emit), the contract author has only the pre-existing reality as the source of truth. It is very easy to over-specify the contract — adding structure that sounds right in isolation but doesn&#x27;t match what the code actually does. v0.2.2 caught exactly this: the first draft of `nats_subjects@1` named subjects as `&lt;sub-persona&gt;.&lt;skill&gt;.&lt;event&gt;` (e.g. `cuo_cpo.fr_create.fr_written`), which is a defensible naming rule. But the existing skill bodies have always emitted `&lt;top-level-persona&gt;.&lt;skill&gt;.&lt;event&gt;` (e.g. `cuo.fr_create.fr_written`), and the supervisor routes at that level. The contract over-specified.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When you register a new contract that documents a pre-existing convention, after writing the first draft, run a focused audit pass that grep-searches the consuming skill bodies for the convention as the contract describes it. If the grep returns nothing (or returns the wrong form), the contract has drifted from reality. Fix the contract, not the skills. Reality wins for any contract whose purpose is &quot;document what already exists.&quot; The only exception is when the convention itself is being intentionally tightened — in which case the contract bump must be MAJOR and accompanied by a coordinated update to every consuming skill.</p>
+
+<p>The audit-fix-audit loop pattern (audit → fix → re-audit until clean) is the right discipline for any contract registration. v0.2.2 took 4 rounds: Round 1 surfaced the naming + anchor + schema-description drift; Round 2 caught residual `cuo_cpo` in schema.json descriptions and protocol.md prose; Round 3 caught one stale CHANGELOG line; Round 4 confirmed clean. Each round took ~1 minute. The cost of running the loop is much smaller than the cost of shipping a contract that drifts from reality.</p>
+
+<h2>History</h2>
+
+<li>**2026-05-06** — Created during registry v0.2.2 audit-fix-audit loop. The over-specified naming was caught and corrected before merge. Pattern recorded for future contract registrations.</li>
+</body></html>

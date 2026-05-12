@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/validators/README.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/validators/README.md</p>
+<h1>Pluggable Validators</h1>
+
+<p>Aspect 12.1 of the Layer-1 improvement catalog.</p>
+
+<p>Drop additional validator checks here. Each file is a Python module exporting:</p>
+
+<pre>
+def check(memory: dict, manifest: dict) -&gt; list[Finding]:
+    &quot;&quot;&quot;Return list of {severity, code, message}.&quot;&quot;&quot;
+</pre>
+
+<p>`cyberos_validate.py` auto-discovers every `*.py` in this directory at run-time</p>
+<p>and invokes `check()` on every memory. Project-specific rules without §0.5</p>
+<p>protocol amendment.</p>
+
+<p>Example fixtures live in `runtime/tools/tests/validators/` if you want to</p>
+<p>include test data.</p>
+
+<h2>Severity</h2>
+
+<li>`CRITICAL` — freezes writes; surfaces in §14 verbose</li>
+<li>`WARN` — surfaces in §14 verbose</li>
+<li>`INFO` — logged only</li>
+
+<h2>Example check</h2>
+
+<pre>
+# meta/validators/check-org-tag-limit.py
+def check(memory, manifest):
+    tags = memory.get(&quot;tags&quot;, [])
+    if len(tags) &gt; 10:
+        return [{&quot;severity&quot;: &quot;WARN&quot;, &quot;code&quot;: &quot;org-tag-limit&quot;,
+                 &quot;message&quot;: &quot;CyberSkill convention: max 10 tags per memory&quot;}]
+    return []
+</pre>
+
+<h2>Conventions</h2>
+
+<li>File name: lowercase-kebab, `check-&lt;rule&gt;.py`</li>
+<li>One check function per file (single responsibility)</li>
+<li>Determinism required (same inputs → same outputs)</li>
+<li>No I/O outside reading the memory dict + manifest dict</li>
+</body></html>

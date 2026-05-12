@@ -7,4 +7,47 @@
 # does not. Backup the BRAIN out-of-band (memory-export-<DATE>-<scope>.zip).
 .cyberos-memory
 
+# Aspect 13.5 audit (2026-05-12) — transient build/cache, editor junk, local analytics
 .DS_Store
+
+# Python build / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Transient outputs (staged but never committed)
+outputs/doctor/*.log
+outputs/refinements/draft-*.md
+outputs/staged-memories/*.md
+outputs/__pycache__/
+
+# Local analytics (Aspect 11.1 — local-only, never sent)
+.cyberos/analytics/
+
+# Editor / OS junk
+*.swp
+*.swo
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Secrets — defense-in-depth (denylist §9.3 also catches them)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.protocol-signing-key
+
+# Test artifacts
+.coverage
+htmlcov/
+*.cover

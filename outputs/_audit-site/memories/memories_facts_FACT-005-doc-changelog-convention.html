@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/facts/FACT-005-doc-changelog-convention.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/facts/FACT-005-doc-changelog-convention.md</p>
+
+<h1>FACT-005 — Doc-CHANGELOG convention (no inline versioning)</h1>
+
+<p>Each maintained design document in `docs/` carries a sibling `&lt;DocName&gt;.CHANGELOG.md` that holds the day-by-day record of changes. The doc itself does NOT carry an inline version marker (no &quot;v1.0&quot;, no &quot;## 2.3.1&quot;). Improvements land continuously; the changelog is the canonical record of evolution; git history is the canonical record of the diff.</p>
+
+<p>The convention applies to: `CyberOS-AGENTS.md`, `CyberOS-PRD.docx`, `CyberOS-SRS.docx`. Each has its own `*.CHANGELOG.md` next to it. The format is inspired by Keep a Changelog 1.1.0 but date-stamped rather than version-stamped: top-level headings are `## YYYY-MM-DD — &lt;one-line summary&gt;`, with optional same-day rounds noted as `## YYYY-MM-DD (afternoon revisions)` etc. Sections are `### Added`, `### Changed`, `### Removed`, `### Real-world trigger`.</p>
+
+<h2>Why</h2>
+
+<p>Inline version markers in living protocol documents create three failure modes: (a) cross-machine `INCOMPATIBLE` noise when versions tick on every minor amendment; (b) &quot;false stability&quot; when the version number doesn&#x27;t bump despite real changes; (c) cognitive overhead reading vs. writing the document — the version becomes the headline rather than the actual content. The CHANGELOG approach moves the audit trail to its own file where it can grow without polluting the doc.</p>
+
+<h2>Origin</h2>
+
+<p>Codified on 2026-05-04 alongside DEC-086 (which removed `schema_version` and `compatible_runtimes` from the manifest for the same reason). The trigger was Stephen asking &quot;is `compatible_runtimes` and `schema_version` necessary?&quot; — the analysis revealed both were vestigial and inconsistent with the day-by-day protocol-evolution model. Captured as the feedback memory `memories/preferences/feedback-no-inline-versioning.md`.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When opening or maintaining a doc in `docs/`, look for the sibling `&lt;DocName&gt;.CHANGELOG.md` to find the latest amendment landed. When making a change to a doc, add a new dated section to the changelog in the same commit; never add an inline version marker. When ingesting a doc into BRAIN, both the doc and its changelog are valid sources — record the changelog&#x27;s most-recent date in the digest&#x27;s `provenance.source_ref` so future drift detection can compare against it.</p>
+
+<h2>History</h2>
+
+<li>2026-05-04 — Created during re-digest of cyberos folder; codifies the convention adopted in `CyberOS-AGENTS.CHANGELOG.md` (afternoon revisions) and DEC-086.</li>
+</body></html>

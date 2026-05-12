@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-012-frontmatter-audience-split.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-012-frontmatter-audience-split.md</p>
+
+<h1>REF-012 — Split SKILL.md frontmatter contract by audience (registry README Part 2.2)</h1>
+
+<h2>What changed</h2>
+
+<p>Registry README v0.2.0 Part 2.2 now organises the 33 frontmatter fields into three named groups by audience:</p>
+
+<li>**§3.1 Portable Anthropic-skill fields** — `name`, `description`, `skill_version`. Load anywhere a SKILL.md is read (Claude Code, Antigravity, vanilla Anthropic skill loaders).</li>
+<li>**§3.2 CyberOS runtime extensions** — `persona`, `owner_role`, `allowed_brain_scopes`, `allowed_mcp_tools`, `escalation`, `expects/produces`, `audit`, `confidence_band`, `untrusted_inputs`, `determinism`, `emitted_source_freshness_tier`, `gated_until_phase`. Require the CyberOS runtime to enforce.</li>
+<li>**§3.3 v0.2.0 portability + governance** — `invocation_modes`, `depends_on_contracts`, `exposable_as`, `self_audit`, `human_fine_tune`, the new `expects.standalone_interview_ref`, the new `produces.human_summary_ref`.</li>
+
+<h2>Why</h2>
+
+<p>Without the split, a future reader (or the user, six months from now) hits the question &quot;which of these fields will Antigravity honor?&quot; and has to manually classify. The split makes it machine-readable and human-obvious: only §3.1 fields are guaranteed to load on a non-CyberOS host; §3.2 are silently ignored; §3.3 are the new v0.2.0 governance/portability surface.</p>
+
+<h2>Trigger</h2>
+
+<p>User asked in conversation: *&quot;if i copy both skills folder into .gemini/antigravity/skills, will they work? or they only work with Claude structure&quot;*. The honest answer required exactly this audience distinction. The README §1 had previously claimed &quot;skills are standalone&quot; without making the runtime-vs-format distinction explicit. That ambiguity caused the question; the refinement prevents future readers from hitting the same confusion.</p>
+
+<h2>Tier</h2>
+
+<p>**Tier 1** — directly prevents the observed failure (next reader would ask the same question). Adopted in the same response, as part of registry v0.2.0.</p>
+
+<h2>How to apply</h2>
+
+<p>When authoring or reviewing skills documentation:</p>
+
+<li>Any reference to &quot;the frontmatter contract&quot; should specify which group (§3.1 / §3.2 / §3.3) is meant.</li>
+<li>New fields go into one of the three groups explicitly. If a proposed field doesn&#x27;t fit any of them, that&#x27;s a smell — most likely it belongs in `_contracts/` or in a side-channel like `INVARIANTS.md`, not in the SKILL.md frontmatter.</li>
+<li>The CCSM-to-anthropic transpiler reads ONLY §3.1 fields. The CCSM-to-mcp-tool transpiler reads §3.1 + relevant §3.3 fields (mostly `expects/produces`). The CyberOS-native runtime reads all three.</li>
+
+<h2>History</h2>
+
+<li>2026-05-06 — REF-012 surfaced + adopted in same response per AGENTS.md §0.4. Implementation: registry README Part 2.2.</li>
+</body></html>

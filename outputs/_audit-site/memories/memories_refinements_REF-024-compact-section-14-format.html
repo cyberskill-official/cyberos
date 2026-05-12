@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-024-compact-section-14-format.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-024-compact-section-14-format.md</p>
+
+<h1>REF-024 — Compact §14 format gated by operational_mode</h1>
+
+<h2>Real-world trigger</h2>
+
+<p>Stephen, post-Bundle-H: *&quot;sometime this section so long and hard to read, is there any way to present it more verbose &amp; human easier read?&quot;* (Yes, the user said &quot;more verbose&quot; — but in context they meant &quot;more readable / scannable&quot;, not literally more lines.) Survey of prior turn outputs confirmed: every §14 block was ~14 lines, ~9 reading &quot;no change&quot; verbatim. Signal-to-noise poor for daily use.</p>
+
+<h2>Refinement adopted</h2>
+
+<p>TIER 1 only: split §14 into two formats keyed by `manifest.operational_mode`. No new mechanism; reuses existing field.</p>
+
+<h2>What changed in AGENTS.md</h2>
+
+<li>§14 opening paragraph rewritten to declare the two-format split.</li>
+<li>§14.1 (new): compact format — `Δ Changes` / `Status` / `unchanged` three-block layout.</li>
+<li>§14.2 (new): full format — pre-I per-scope-explicit format with `maintenance` banner addition.</li>
+<li>§14.3 (renumbered from prose paragraph): coverage stat for ingestion ops; mandatory in both formats.</li>
+<li>§14.4 (new): authority clarifier — audit ledger is authoritative; §14 is human-summary only.</li>
+
+<h2>Why this is the right fit</h2>
+
+<p>The user&#x27;s friction is real and observable. The fix reuses an existing field (`operational_mode`) instead of inventing new machinery. Compact format defaults match the &quot;daily use&quot; context; full format defaults match the &quot;protocol developer&quot; context. Both formats preserve the §14.3 coverage stat that&#x27;s load-bearing for ingestion-op honesty.</p>
+
+<p>The audit ledger remains the chain-recovery surface; the §14 block is courtesy summary. So changing the rendering can&#x27;t break audit integrity — only changes what humans see in chat.</p>
+
+<h2>Trade-offs</h2>
+
+<li>Compact format&#x27;s `unchanged:` roll-up loses per-file granularity. Acceptable: protocol developers can flip to `verbose` mode any time.</li>
+<li>Two formats means future agents support both. Acceptable: the §14 block is human-facing; future agents primarily read the audit ledger.</li>
+
+<h2>How to use this memory</h2>
+
+<p>When the user surfaces UX friction with the §14 block, check whether they&#x27;re running `operational_mode: normal` (default → should already be compact) or `verbose`. If `verbose`, ask whether they want to switch to `normal`. If `normal` and they still find it long, that&#x27;s a Bundle-J-or-later candidate.</p>
+
+<p>When designing future protocol changes, update both §14.1 and §14.2 examples to keep them in sync.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (later evening) — Created during Bundle I execution.</li>
+</body></html>

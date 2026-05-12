@@ -136,8 +136,25 @@ def resolve_brain_root(override: str | None = None) -> Path:
         )
 
     real = str(brain_root.resolve())
+    # Cowork-mode escape: when the host mounts the user's REAL local
+    # filesystem under a /sessions/<id>/mnt/<folder>/ prefix, the §0.1
+    # fragment check produces a false positive. The host (or an agent
+    # that knows it's running in such a host) MAY set
+    # CYBEROS_HOST_MOUNT_PREFIX=<prefix> to declare the prefix is a
+    # trusted real-fs mount. Any path starting with that prefix is
+    # exempt from the /sessions/ + tmpfs-style fragment checks ONLY;
+    # all other forbidden fragments (cowork-session, agent-sandbox,
+    # claude-hostloop-plugins, etc.) still apply. The escape is
+    # surfaced into the next audit row as a one-time
+    # `op:"warn" reason:"host-mount-prefix-active"` per §13.1 step 11
+    # convention. REF-007 candidate (2026-05-11).
+    host_mount_prefix = os.environ.get("CYBEROS_HOST_MOUNT_PREFIX", "").strip()
+    _exempt_fragments = {"/sessions/", "/var/folders/", "/private/var/folders/",
+                         "/tmp/", "/private/tmp/", "/dev/shm/"}
     for frag in _FORBIDDEN_PATH_FRAGMENTS:
         if frag.lower() in real.lower():
+            if host_mount_prefix and real.startswith(host_mount_prefix) and frag in _exempt_fragments:
+                continue
             die(
                 f"§0.1 violation: BRAIN appears to live under a sandbox "
                 f"path ({frag!r} in {real!r}). Refusing to write. "

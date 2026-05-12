@@ -1,0 +1,51 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-019-runtime-build-plan-separates-from-registry.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-019-runtime-build-plan-separates-from-registry.md</p>
+
+<h1>REF-019 — The runtime build plan is separate from the registry; lifecycles differ; mixing them is wrong</h1>
+
+<p>When CyberOS reached the point where 7 skills + 5 contracts were scaffolded but no runtime existed, the natural temptation was to either (a) start writing runtime code under `cyberos/docs/skills/` because that&#x27;s where the design lives, or (b) inflate `cyberos/docs/skills/README.md` Part 12 (runtime architecture) into a build plan with task breakdowns, sequencing, definitions-of-done. Both are wrong.</p>
+
+<h2>What the right separation looks like</h2>
+
+<p>**`cyberos/docs/skills/` + `cyberos/docs/contracts/`** = the SPEC. Stable. Versioned. Each skill carries `gated_until_phase: runtime_v0_3_0` until the runtime ships. Updates are CHANGELOG events with discrete impact.</p>
+
+<p>**`cyberos/runtime/`** = the BUILD PLAN + eventually the implementation. Different lifecycle: phases land over weeks; engineering picks pieces in parallel; refactoring is normal. PLAN.md, INTERFACES.md, BUILD_ORDER.md sit in this folder as the engineering hand-off. When phase J (acceptance harness) turns green and skills run end-to-end, the folder gets archived and replaced with a thin operations README pointing at the actual code.</p>
+
+<p>**The key principle:** the registry is what the runtime MUST satisfy. The runtime folder is HOW it gets satisfied. If they ever conflict, the registry wins; the runtime updates first, the registry updates afterward only if the contract genuinely needs to change.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When designing a system that has both a contract layer and an implementation layer:</p>
+
+<p>1. **Put the contract layer in its own namespace.** Make it small, stable, versioned with care. Every change is a CHANGELOG entry.</p>
+<p>2. **Put the implementation layer in its own namespace.** Allow chaos here — multiple iterations per phase, refactoring without ceremony, lessons-learned notes.</p>
+<p>3. **Forbid the implementation from updating the contract.** Contract changes go through the contract&#x27;s own CHANGELOG first; implementation follows.</p>
+<p>4. **Forbid the contract from describing the implementation.** The contract says &quot;what the runtime MUST satisfy&quot;; details of HOW are out-of-scope.</p>
+<p>5. **Mark every contract item with a &quot;ready-for-implementation&quot; gate** (e.g. `gated_until_phase: runtime_v0_3_0`). The gate&#x27;s removal is the moment the contract crosses into &quot;the runtime is there to back this up.&quot;</p>
+
+<p>This separation scales. CyberOS will eventually have dozens of skills, multiple contract namespaces, hundreds of acceptance fixtures, and an active runtime folder. Mixing them collapses into a mess where every change touches everything.</p>
+
+<h2>When to revisit</h2>
+
+<p>If the runtime build runs into a wall because the contract is wrong (e.g., a skill&#x27;s interface is impractical to implement), the right response is:</p>
+
+<p>1. Pause the runtime build for that skill.</p>
+<p>2. File a registry CHANGELOG entry proposing the contract change.</p>
+<p>3. Get the change approved (per `human_fine_tune.review_required` gates in the relevant SKILL.md).</p>
+<p>4. Update the contract.</p>
+<p>5. Resume the runtime build.</p>
+
+<p>NOT: silently change the contract while implementing. NOT: implement the wrong thing because the contract said so. Bilateral updates with explicit ceremony.</p>
+
+<h2>History</h2>
+
+<li>**2026-05-06** — Created during registry v0.3.0-design Stage D. The user said &quot;do all stages&quot;; Stage D produced `cyberos/runtime/{PLAN.md, INTERFACES.md, BUILD_ORDER.md, README.md}` rather than runtime code. The folder is the engineering hand-off — explicit about what ships when, what&#x27;s blocking, what&#x27;s parallel, who can do what. Pattern recorded for future tier-2 systems where a similar contract-vs-implementation split applies.</li>
+</body></html>

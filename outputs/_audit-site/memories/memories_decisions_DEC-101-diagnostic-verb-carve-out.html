@@ -1,0 +1,51 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-101-diagnostic-verb-carve-out.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-101-diagnostic-verb-carve-out.md</p>
+
+<h1>DEC-101 — Diagnostic-verb carve-out for PRISTINE auto-bootstrap</h1>
+
+<h2>Decision</h2>
+
+<p>§1 step 2&#x27;s `Auto-bootstrap silently if PRISTINE` directive carves out an exception when the user&#x27;s current-turn message contains a recognised diagnostic verb. Default list: `healthcheck`, `status`, `inspect`, `audit`, `check brain`, `show brain`, `view brain`, plus the configured `manifest.health_check_policy.on_demand_phrase`. Project may override via `manifest.health_check_policy.diagnostic_verbs[]`.</p>
+
+<p>When the carve-out applies, §13.0 returns `PRISTINE-DIAGNOSTIC-HOLD` (sub-state of `PRISTINE`); the agent surfaces what §13.1 would create and waits for explicit user consent before bootstrapping.</p>
+
+<h2>Why</h2>
+
+<p>A fresh Cowork session at `/Users/stephencheng/Projects/CyberSkill/sale-noti/` (the first downstream consumer of the post-Bundle-F protocol) ran `healthcheck` against a `PRISTINE` BRAIN. The agent there reasoned correctly: bootstrapping silently would have changed the state being diagnosed (after bootstrap, the BRAIN would no longer be PRISTINE — the diagnostic answer becomes obsolete the moment it&#x27;s run). The agent held off and surfaced the friction as an §0.4 refinement candidate. Stephen approved upstreaming so future downstream projects don&#x27;t re-encounter it.</p>
+
+<p>The pre-G protocol&#x27;s silent auto-bootstrap directive was correct for *task-oriented* first-use (&quot;create a memory&quot;, &quot;remember that X&quot;) — bootstrap is a prerequisite, no point prompting. But for *diagnostic* first-use (&quot;healthcheck&quot;, &quot;status&quot;, &quot;inspect&quot;), the silent bootstrap masks the very answer the user asked for. Carving out an exception preserves the diagnostic discipline.</p>
+
+<h2>How</h2>
+
+<p>§1 step 2 amended with the carve-out clause naming the default verb list. §13.0 gains `PRISTINE-DIAGNOSTIC-HOLD` as an explicit sub-state with action: surface verdict + list bootstrap effects + await consent + do not write. §6 manifest gains `health_check_policy.diagnostic_verbs[]` for project-level override.</p>
+
+<p>Consent phrases that resume bootstrap: `bootstrap and continue`, `just bootstrap`, or any task-oriented instruction (the diagnostic intent has yielded to a work intent; bootstrap proceeds normally).</p>
+
+<h2>Trade-offs accepted</h2>
+
+<li>**Diagnostic verb list is fuzzy at edges** — what about &quot;is the BRAIN ready?&quot; or &quot;show me what you have&quot;? The rule is conservative: only literal verb matches trigger the carve-out. Ambiguous phrasings still trigger silent bootstrap. The `manifest.health_check_policy.diagnostic_verbs[]` override lets each project tune.</li>
+<li>**Friction for first-time-task users who happen to mention &quot;status&quot;** — e.g., &quot;what&#x27;s the status of this project?&quot; might trigger PRISTINE-DIAGNOSTIC-HOLD even though they want a task. Acceptance: one-line consent (&quot;bootstrap and continue&quot;) resumes; small friction. Better than silent overwrite of diagnostic answer.</li>
+<li>**Default verb list ships in §1 prose AND in manifest.health_check_policy.diagnostic_verbs[]** — duplication. The §1 list is the bootstrap-default (used before manifest exists); the manifest list is the configured-default (used afterwards). They CAN diverge if a project edits one without the other; this is a minor drift concern.</li>
+
+<h2>What this does NOT do</h2>
+
+<li>Does NOT change behaviour for `READY` or `CORRUPT` states — those still operate per their existing §13.0 actions.</li>
+<li>Does NOT extend the carve-out to non-PRISTINE states. Mid-session diagnostic invocations against a READY BRAIN proceed normally.</li>
+<li>Does NOT prevent the user from explicitly asking for both at once (&quot;bootstrap then run healthcheck&quot;); the agent treats that as a sequenced task.</li>
+
+<h2>How to use this memory</h2>
+
+<p>When a fresh Cowork session opens at a `PRISTINE` project root and the user&#x27;s first message contains a diagnostic verb, surface the absent-state verdict per §13.0&#x27;s `PRISTINE-DIAGNOSTIC-HOLD` action. Wait for consent. When other downstream projects encounter similar fresh-session friction, propose §0.4 refinements; this DEC is the canonical example of the propose-then-upstream loop firing on real downstream feedback.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (later evening) — Created during Bundle G execution. The first refinement triggered by an actual downstream project (sale-noti) running the protocol on a real codebase rather than during meta-protocol design at cyberos.</li>
+</body></html>

@@ -1,0 +1,33 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/retention-rules.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/retention-rules.md</p>
+
+<h1>Retention rules</h1>
+
+<p>Each memory file&#x27;s `retention.rule` field references one of the rules below. `retention.earliest_delete` may be set to an ISO date past which the memory is eligible for tombstoning during consolidation. Tombstones are soft deletes and never erasures (§4.6).</p>
+
+<p>`personnel-default-3y` — personnel-classified memories. Earliest delete = `created_at + 3 years`.</p>
+
+<p>`client-default-7y` — client-classified memories. Earliest delete = `created_at + 7 years` or end-of-engagement + 7 years, whichever is later.</p>
+
+<p>`operational-default-1y` — operational-classified memories. Earliest delete = `created_at + 1 year`.</p>
+
+<p>`public-no-expiry` — public-classified memories. Indefinite retention.</p>
+
+<p>`legal-hold-indefinite` — overrides the default rule when the memory is subject to litigation or regulatory hold; lifts only via explicit human action.</p>
+
+<h2>How to use this memory</h2>
+
+<p>Pick the rule that matches the memory&#x27;s classification at create time. If the memory transitions classification later, update both `classification` and `retention.rule` together. CyberOS-specific compensation retention (10 years per DEC-020) lives in the REW module — do not duplicate that policy here.</p>
+
+<h2>History</h2>
+
+<li>2026-05-04 — Created during BRAIN bootstrap.</li>
+</body></html>

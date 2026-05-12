@@ -1,0 +1,13 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "04 — Protocol upgrade (§0.5 walkthrough)",
+  "description": "Step-by-step §0.5 protocol-doc SHA-pin update flow with rollback path.",
+  "steps": [
+    {"file": "docs/CyberOS-AGENTS.md", "line": 58, "description": "§0.5 — content-addressable identification via canonical SHA. Pin lives in manifest.protocol.sha256."},
+    {"file": "runtime/tools/canonical_sha.py", "line": 1, "description": "Compute the canonical SHA of an AGENTS.md (LF, NFC, BOM-stripped, trailing-whitespace-trimmed, single terminating LF)."},
+    {"file": ".cyberos-memory/manifest.json", "line": 1, "description": "Pin lives here. Mutate ONLY via brain_writer.write triggered by the chat-turn approval phrase: 'approve protocol upgrade to sha256:<…>'. Direct hand-edit is sev-0 violation per §0.2."},
+    {"file": ".cyberos-memory/meta/protocol-history/INDEX.md", "line": 1, "description": "After upgrade, prior AGENTS.md is archived to meta/protocol-history/ and the INDEX gets a new row."},
+    {"file": "docs/CyberOS-AGENTS.CHANGELOG.md", "line": 1, "description": "And a CHANGELOG entry is appended per §0.6 related-files update rule."},
+    {"file": "docs/CyberOS-AGENTS.README.md", "line": 207, "description": "Part 6 covers protocol distribution: SHA pinning, signed releases, update flow, rollback. Read this before approving any upgrade."}
+  ]
+}

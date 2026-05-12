@@ -6,6 +6,83 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-12 — Layer-1 catalog 100 % shipped + doc consolidation (no SRS §-level changes)
+
+### Summary
+
+Batches 4–10 land. Every named aspect in `workbench/cyberos-layer1-deep-improvements.md` is either shipped, audited-as-covered, or blocked-with-rationale (only 10.3 differential testing and 13.8 repo split remain blocked). Operator surface: 33 subcommands. Validator: 3 pluggable plugins live. Tests: mutation suite (24×0 SURVIVED) + 200-input fuzz + 24 denylist fixtures + replay + roundtrip determinism. Documentation consolidated into `CyberOS-AGENTS.README.md` Parts 25–31; the standalone `CyberOS-LAYER-1-MANUAL.md` is now a single-line redirect (pending host-side `rm`).
+
+### SRS-side mapping (cross-reference updates pending in SRS.docx)
+
+- **SRS §5 BRAIN — Layer 1 ops** — point at README Parts 25–27 (architecture + per-aspect detail + 33-subcommand CLI reference)
+- **SRS §5.3.2 Six file operations** — `runtime/hooks/gateguard.py` is the PreToolUse enforcement; `runtime/tools/cyberos_lock.py` is the §4.4 advisory-lock helper (Aspect 5.7)
+- **SRS §5.3.3 Sync classes** — `runtime/tools/cyberos_sync.py` is the deterministic export + 3-way merge import (Aspect 6.x); `cyberos sync conflicts --resolve` is the interactive resolver UX (Aspect 6.5)
+- **SRS §5.3.5 Auto Dream consolidation** — `runtime/hooks/refinement_candidates.py` (Aspect 3.1) is the candidate-detection Stop-hook; `cyberos refinements` (Aspect 11.4) is the operator-side dashboard; `cyberos prune` (Aspects 1.1 + 9.7) surfaces stale memories without auto-deleting
+- **SRS §5.6 Conflict resolution** — `cyberos sync conflicts --resolve` shipped (was previously deferred); per-conflict prompt for `[l]ocal | [r]emote | [d]isputed | [o]pen | [s]kip | [q]uit`
+- **SRS §6 CUO** — `cyberos skill` registry (Aspect 12.5) is the metadata layer the CUO P0+ router will consume; gateguard 3-stage gate is the local-edge precursor
+- **SRS §8 MCP Gateway** — Aspect 12.7 ships `runtime/mcp/cyberos_brain_server.py` (read-only, 4 tools: `brain_search`, `brain_show`, `brain_get`, `brain_stats`). Pre-P0 unlocker; write-enabled gateway remains P0+
+- **SRS §11 Storage + retention** — `cyberos_compact_stats.py` (Aspect 9.4) + `cyberos_cold_storage.py` (Aspect 9.5) implement audit-ledger lifecycle: compact recommendations + S3-ready cold archives
+
+### Test coverage delta (vs prior batch entry)
+
+- **Added Batches 4–10:**
+  - `runtime/tests/mutation/run_mutations.py` — 8 mutation patterns × 3 fixtures = 24 mutant tests
+  - `runtime/tests/mutation/fixtures/fixture-valid-fact.md`, `fixture-valid-decision.md`, `fixture-valid-person.md`
+  - `meta/validators/check-tag-budget.py`, `check-scope-rules.py`, `check-source-tiers.py` (3 pluggable validators via Aspect 12.1)
+- **Tightened in `cyberos_validate.py`:**
+  - `_check_frontmatter_strictness()` — rejects negative version, missing provenance, invalid sync_class enum
+  - `_check_content_gate_body()` — §4.2 injection-marker body scan with whitelist for legitimate doc paths
+- **Verification numbers (today):**
+  - `cyberos verify` → CRITICAL: 0 / WARN: 11 / INFO: 1
+  - `cyberos mutation-test` → 24 × 0 SURVIVED
+  - `cyberos sync` determinism → two consecutive exports produce identical SHA256
+  - `cyberos lazy benchmark` → 74.9× speedup vs full eager load
+  - Audit chain intact across all 10 batches
+
+### Operational mode additions (post-Batch 10)
+
+- **PANIC marker semantics** — `cyberos status --security` now treats a `(resolved)` title in `meta/PANIC.md` as inactive, so a stale self-test marker doesn't permanently flag the dashboard
+- **Skill registry** — `runtime/tools/skills/registry.json` declares each operator tool's verb, invocation_modes, depends_on graph, sections, mutates_brain flag. `cyberos skill chain` warns when two mutators run without an intermediate verify
+
+---
+
+## 2026-05-12 — Layer-1 operator surface + hooks land (no SRS §-level changes) [earlier batches]
+
+### Summary
+
+Aspects 1.1, 2.1, 3.1, 3.4, 3.5, 4.1, 5.1, 5.5, 7.2, 7.3, 7.4, 8.1, 11.1, 11.2, 13.4, 13.10 land in `runtime/` + `tours/` + `.cyberos-memory/meta/templates/`. No SRS §-level architecture changes — these are implementation artifacts that fulfill existing SRS specs.
+
+### SRS-side mapping (cross-reference updates for next .docx editing session)
+
+- **SRS §5 BRAIN — Layer 1 ops** — name `runtime/tools/cyberos` as the operator surface
+- **SRS §5.3.2 Six file operations** — `runtime/hooks/gateguard.py` is the PreToolUse enforcement layer
+- **SRS §5.3.5 Auto Dream consolidation** — `runtime/hooks/refinement_candidates.py` is the §0.4 candidate-detection Stop-hook
+- **SRS §5.6 Conflict resolution** — `cyberos conflicts` CLI is stubbed (Aspect 6.5 deferred until multi-machine real)
+- **SRS §6 CUO** — gateguard 3-stage gate is the local-edge precursor pattern; CUO routing logic (P0+) builds on this
+- **SRS §8 MCP Gateway** — Aspect 12.7 MCP-server-for-BRAIN deferred; read-only MCP server is a pre-P0 unlocker worth considering
+
+### Test coverage delta
+
+- **Added:** `runtime/tests/denylist/test_denylist.py` — 22 fixtures (16 reject + 5 allow + 3 evasion)
+- **Existing:** `runtime/tools/cyberos_validate.py --self-test` — 16 fixtures
+- **CI:** `.github/workflows/voice-and-consistency.yml` runs voice + doc-consistency + validator on every PR
+
+### Operational mode additions
+
+- `cyberos status` operator dashboard — 4-question framing
+- `cyberos voice` linter — em dash + AI vocab
+- `cyberos doc-consistency` — cross-doc §-ref + DEC-ref check
+- `cyberos panic` — emergency stop (writes `meta/PANIC.md` to freeze writes)
+- `cyberos analytics report` — local-only usage summary
+
+All are READ-ONLY by contract (only `panic` mutates state, and that's a marker file, not memory).
+
+### No SRS decision-log additions
+
+No new DEC entries. This bundle is tooling + scaffolding below the §0.4-refinement threshold.
+
+---
+
 ## 2026-05-10 — Bundle M absorbed (functional-zero; no impl changes)
 
 ### Not yet applied to CyberOS-SRS.docx

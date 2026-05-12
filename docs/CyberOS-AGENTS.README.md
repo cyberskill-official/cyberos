@@ -543,7 +543,108 @@ Read AGENTS.md top-to-bottom in order. The sections are arranged so each builds 
 
 ---
 
-## Part 13 — Status snapshot, tools, and file map (2026-05-10)
+## Part 13 — Status snapshot, tools, and file map (2026-05-12)
+
+> **Deep dive:** for the full per-aspect reference + per-tool CLI signatures
+> + troubleshooting + workflows, see **Parts 25–31** of this same README.
+> Part 13 stays as the quick-scan summary; Parts 25–31 are the detailed
+> companion. Both update in lockstep with each `CHANGELOG.md` batch entry.
+
+### Layer-1 operator surface (2026-05-12 — Aspect 1.1 ship)
+
+A `cyberos` umbrella binary now wraps every Python tool under `runtime/tools/`:
+
+```bash
+cyberos status              # 4-operator-question dashboard (Aspect 2.1)
+                            #   --weekly   → 7-day landed/in-flight/queued digest (Aspect 2.3)
+                            #   --watch [--interval N]   → continuous re-render (Aspect 2.4)
+                            #   --security → encryption + denylist + perms posture (Aspect 5.4)
+cyberos verify              # wraps cyberos_validate.py
+cyberos doctor [args]       # wraps cyberos_doctor.py
+cyberos export [args]       # wraps cyberos_export.py
+cyberos search <query>      # wraps cyberos_index.py
+cyberos stats               # bucket / class / authority counts
+cyberos show [filters]      # memory browser
+cyberos add <type>          # interactive memory wizard (Aspect 1.2)
+                            #   --auto-tags  → opt-in GLOSSARY tag suggestion (Aspect 5.2)
+                            #   --persona N  → apply persona/<N>.md defaults (Aspect 12.6)
+cyberos repl                # interactive REPL — avoids session.start per call (Aspect 1.6)
+cyberos dedup [--scope ...]   # duplicate-memory detection (Aspect 9.6)
+cyberos graph [--format ...]  # relationships-graph explorer (Aspect 4.7)
+cyberos prune [--interactive] # staleness + contradiction surface (Aspect 1.1 + 9.7)
+cyberos hooks {status|on|off} # toggle Claude Code hook integrations (Aspect 5.1)
+cyberos refinements           # §0.4 candidate dashboard (Aspect 11.4)
+cyberos explain <subcmd>      # show which §-rules each subcommand touches (Aspect 1.5)
+cyberos compact-stats         # audit-ledger compaction recommendations (Aspect 9.4)
+cyberos mutation-test         # validator mutation-testing scaffold (Aspect 10.4)
+cyberos analytics cost-log|cost-report   # LLM cost tracking (Aspect 11.5)
+cyberos lock {status|acquire-shared|acquire-exclusive}   # advisory locks (Aspect 5.7)
+cyberos cold-storage {archive|list|verify}               # cold-tier audit export (Aspect 9.5)
+cyberos skill {list|describe|chain}                      # skill registry loader (Aspect 12.5)
+cyberos voice [--strict]    # em-dash + AI-vocab linter
+cyberos doc-consistency     # §-ref + DEC-ref consistency
+cyberos panic [--reason]    # emergency stop (Aspect 13.10)
+cyberos onboard             # interactive new-contributor bootstrap (Aspect 8.1)
+cyberos analytics report    # local-only usage analytics (Aspect 11.2)
+cyberos eval REF-NNN        # run capability + regression eval for a REF
+cyberos council REF-NNN     # opt-in 4-voice synthesis for ambiguous REFs (Aspect 3.3)
+cyberos sync export|import|conflicts  # multi-machine sync scaffolding (Aspect 6.x)
+cyberos mcp serve|info      # read-only MCP server for the BRAIN (Aspect 12.7)
+cyberos help [subcmd]       # detailed help
+```
+
+Run from anywhere in the repo. Locates `.cyberos-memory/` by walking up per §0.1. Read-only by default — only `doctor`, `panic`, and `sync import` mutate state (all require explicit confirmation or `--dry-run` first).
+
+### Council mode, auto-tagging, sync, MCP (Aspect 3.3 + 5.2 + 6.x + 12.7)
+
+**Council mode.** `cyberos council REF-NNN` produces a working artefact at `outputs/council/REF-NNN-council.md` containing 4 voice prompts (Architect / Skeptic / Pragmatist / Critic) plus deterministic heuristic context — GLOSSARY term overlap, possible LOCK conflicts, related REFs (shared tags), and recent `rejected/` entries. Each voice prompt is intended to be pasted into a fresh Claude conversation; you collect the 4 findings then write the Synthesis section. Opt-in only — ambiguous REFs pay the 4× API cost. Not a replacement for capability + regression evals; runs alongside them.
+
+**GLOSSARY auto-tagging.** `cyberos add <TYPE> --auto-tags` reads `FACT-014-glossary.md`, scans the slug + title + provenance reference for canonical terms, suggests kebab-case tags, and prompts you to accept / decline / edit before writing. Default off — auto-tagging never modifies tags without confirmation.
+
+**Multi-machine sync.** `cyberos sync export --to <bundle.zip>` produces a deterministic zip filtered by `sync_class` (publishable + shared by default; `--include client-visible` adds the client-visible class with consent gating). Two consecutive exports of the same state produce identical SHA256. `cyberos sync import <bundle> --from <subject> [--dry-run]` runs a three-way merge by `memory_id × content_sha`: matching → no-op, differing → conflict marker written under `memories/conflicts/`, remote-only → staged under `outputs/sync-staging/`. Transport (rsync / syncthing / S3) is left to the operator.
+
+**Read-only MCP server.** `cyberos mcp serve` runs a line-delimited JSON-RPC 2.0 server on stdio exposing 4 tools: `brain_search`, `brain_show`, `brain_get`, `brain_stats`. Default filters hide tombstoned + `sync_class=local-only` entries (both have explicit opt-in flags). No write tools by design — callers must use `brain_writer.py`. Wire into Claude Code via `cyberos mcp info` (prints the `.claude/mcp-config.json` snippet with absolute paths).
+
+### Hooks (Aspect 3.1 + 5.1)
+
+```
+runtime/hooks/gateguard.py            # PreToolUse 3-stage DENY/FORCE/ALLOW gate
+runtime/hooks/refinement_candidates.py # Stop-hook auto-detection of §0.4 candidates
+```
+
+Install in `~/.claude/settings.json` per file header.
+
+### Memory templates (Aspect 4.1)
+
+```
+.cyberos-memory/meta/templates/
+├── DEC.md         # Nygard ADR format (Context / Decision / Alternatives / Consequences)
+├── REF.md         # protocol refinement with capability+regression eval pointers
+├── FACT.md        # fact with provenance + drift detection
+├── PERSON.md      # personnel-class with consent discipline
+├── PROJECT.md     # cross-project anchor
+├── PREFERENCE.md  # operational tuning preference
+├── DRIFT.md       # auto-generated §8.6 drift candidate
+├── POSTMORTEM.md  # blameless postmortem (Aspect 3.5)
+└── REJECTED.md    # rejected refinement candidate (Aspect 3.4)
+```
+
+`cyberos add <type>` (Aspect 1.2 — shipped 2026-05-12) uses these as the wizard scaffold. Templates live at `outputs/templates/` (moved out of `.cyberos-memory/meta/templates/` so validator does not scan placeholder vars).
+
+### Tour files (Aspect 7.4)
+
+```
+tours/
+├── onboarding.tour          # new-contributor walkthrough
+├── refinement-loop.tour     # §0.4 propose-adopt-record flow
+├── incident-response.tour   # CORRUPT state recovery
+├── protocol-upgrade.tour    # §0.5 SHA-pin update flow
+└── security-audit.tour      # trust boundaries + denylist review
+```
+
+Open in VS Code with the CodeTour extension.
+
+### Currently-pinned protocol
 
 > Part 13 is the operational dashboard. Parts 1–12 stay stable; Part 13 refreshes when stages ship, tools change, or new docs land.
 
@@ -602,7 +703,7 @@ Regenerate after AGENTS.md changes:
 python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md > docs/CyberOS-AGENTS-CORE.md
 ```
 
-### Tools index (eight CLIs in `runtime/tools/`)
+### Tools index (CLIs in `runtime/tools/` + MCP server in `runtime/mcp/`)
 
 | Tool | Use when |
 |------|----------|
@@ -611,9 +712,26 @@ python3 runtime/tools/extract_agents_core.py --aggressive docs/CyberOS-AGENTS.md
 | `cyberos_index.py [build | update | verify | stats | query <kind> <arg>]` | Sub-millisecond tag/relationship/source-SHA lookup |
 | `cyberos_export.py [-o DIR] [--daemon --interval H] [--verify FILE]` | Deterministic backup bundles |
 | `cyberos_encrypt.py [enable | disable | status | recover | migrate-batch N | rotate-shamir]` | At-rest encryption opt-in + Shamir 3-of-5 escrow |
+| `cyberos_show.py [--scope] [--tag] [--class] [--tombstoned] [--recent]` | Memory browser (table view) |
+| `cyberos_add.py <TYPE> [--auto-tags]` | Interactive memory wizard with opt-in GLOSSARY auto-tagging (Aspect 1.2 + 5.2) |
+| `cyberos_council.py REF-NNN [--voices ...]` | Opt-in 4-voice synthesis for ambiguous REFs (Aspect 3.3) |
+| `cyberos_sync.py {export\|import\|conflicts [--resolve]}` | Multi-machine sync scaffolding (Aspect 6.x) + interactive conflict resolver (Aspect 6.5) |
+| `cyberos_repl.py` | Interactive REPL — avoids session.start per call (Aspect 1.6) |
+| `cyberos_dedup.py [--scope] [--threshold]` | Duplicate-memory detection by content fingerprint (Aspect 9.6) |
+| `cyberos_graph.py [--format text\|dot\|json] [--memory] [--orphans]` | Memory relationships graph explorer (Aspect 4.7) |
+| `cyberos_prune.py [--staleness-days] [--drift-days] [--interactive]` | Surface stale memories + neglected supersedes-pairs + old drift candidates (Aspect 1.1 + 9.7) |
+| `cyberos_hooks.py {status\|on\|off} [--hook]` | Install / remove Claude Code hook integrations (Aspect 5.1) |
+| `cyberos_refinements.py [--kind]` | §0.4 candidate dashboard — drift + council-pending + rejected (Aspect 11.4) |
+| `cyberos_compact_stats.py [--row-cap] [--byte-cap] [--age-days]` | Audit-ledger compaction recommendations (Aspect 9.4) |
+| `runtime/tests/mutation/run_mutations.py` | Mutation testing scaffold for validator (Aspect 10.4) |
+| `cyberos_analytics.py cost-log \| cost-report` | LLM cost tracking, local-only (Aspect 11.5) |
+| `cyberos_onboard.py [--shared] [--persona]` | Interactive new-contributor bootstrap (Aspect 8.1) |
+| `cyberos_analytics.py {log\|report\|purge}` | Local-only usage analytics (Aspect 11.2) |
 | `canonical_sha.py PATH` | §0.5 SHA helper for protocol upgrade approval phrases |
 | `extract_agents_core.py [--aggressive] [--check] PATH` | `docs/CyberOS-AGENTS-CORE.md` generator + CI verifier |
+| `voice_check.py [--strict] PATHS` | gstack `/codex` voice linter (em dashes + AI vocab) |
 | `benchmark.py PATH` | Validator + export performance regression tracker |
+| `runtime/mcp/cyberos_brain_server.py` | Read-only MCP server (4 tools: brain_search/show/get/stats) — Aspect 12.7 |
 
 ### File map (post-consolidation, 2026-05-10)
 
@@ -2685,3 +2803,946 @@ Each of A–F is independently small, but bundling them shares the §0.5 ceremon
 This pattern is the protocol's intended use: small refinements bundle, large amendments stand alone (Stage 1, 5, 6 each had their own §0.5 because each introduced new behaviour).
 
 *This README is a living document. When AGENTS.md changes meaningfully (a new section, a new sync class, a new audit op), update the relevant Part above and append a one-line "README updated" entry to `CyberOS-AGENTS.CHANGELOG.md`. The README itself is informational and does not require §0.5 protocol approval; only AGENTS.md edits do.*
+
+---
+
+## Part 25 — Layer-1 architecture overview (operator reference)
+
+> Parts 25–31 consolidate the per-aspect operator reference (formerly the
+> standalone `CyberOS-LAYER-1-MANUAL.md`). Everything memory-related lives
+> here now — protocol mental-model up top (Parts 1–24), operator surface
+> here.
+
+The Layer-1 surface is **three layers of code over one filesystem**:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  cyberos (umbrella CLI)         33 subcommands               │
+│    runtime/tools/cyberos                                     │
+└──────────────────────────────────────────────────────────────┘
+              ↓ delegates via _delegate_to() helper
+┌──────────────────────────────────────────────────────────────┐
+│  Individual tool scripts                                     │
+│    runtime/tools/cyberos_*.py        (16 standalone scripts) │
+│    runtime/hooks/*.py                (gateguard, refinements)│
+│    runtime/mcp/cyberos_brain_server.py  (read-only MCP)      │
+│    runtime/tests/**                  (mutation, fuzz, etc.)  │
+└──────────────────────────────────────────────────────────────┘
+              ↓ read/write
+┌──────────────────────────────────────────────────────────────┐
+│  .cyberos-memory/   (the BRAIN)                              │
+│    manifest.json + audit/ + memories/ + meta/ + persona/     │
+│    company/ + (eventually) module/ + client/ + member/       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Three principles drive the design.**
+
+1. **Real-filesystem-only (§0.1).** Every tool resolves `.cyberos-memory/`
+   by walking up from CWD. Sandboxed agents reach the host filesystem
+   via `$CYBEROS_HOST_MOUNT_PREFIX`.
+2. **Append-only audit (§7).** Every state change appends a Merkle-chained
+   row to `audit/<YYYY-MM>.jsonl`. The chain head lives in `manifest.json`.
+3. **Validate before respond (§4.7 + §8.7).** Every session.start runs
+   reconciliation + 6-phase self-audit before the agent answers anything.
+
+> **Note on `§` references.** Where this manual writes "§N.N" it cites a
+> section in `docs/CyberOS-AGENTS.md`. Where it writes "Aspect N.N" it cites
+> the improvement catalog at `workbench/cyberos-layer1-deep-improvements.md`.
+> Some `cyberos verify` findings emit a `[§12.1]`-style tag — this is a
+> validator convention for "Aspect 12.1 pluggable-validator finding", not a
+> literal AGENTS.md anchor. The two namespaces overlap by accident; tags in
+> findings always trace back to the catalog Aspect.
+
+**Authority hierarchy (§5.1).** `human-edited > human-confirmed >
+llm-explicit > llm-implicit`. Strict; never promoted.
+
+**Source-tier ordering (§9.6).** `company/locked-decisions.md` (tier 1)
+beats everything else. Source tiers live in `manifest.source_tiers` and
+are validated by `meta/validators/check-source-tiers.py`.
+
+**Sync classes (§17).**
+- `local-only` — never syncs.
+- `publishable` — included in default sync bundles.
+- `shared` — included; requires `consent.has_consent: true`.
+- `client-visible` — included only with explicit `--include client-visible`.
+
+---
+
+## Part 26 — Per-aspect detail (Aspect 1.1 through 13.10)
+
+### Aspect 1 — Operator CLI surface
+
+#### 1.1 Single entry-point binary `cyberos`
+
+- **Where:** `runtime/tools/cyberos` (the umbrella; calls 32 sub-tools via `_delegate_to()`)
+- **Verify:** `cyberos --version` → `cyberos 0.1.0`
+- **Pattern:** every subcommand either runs inline (`cmd_*` functions in
+  the umbrella) or delegates to a sibling `cyberos_*.py` script.
+
+#### 1.2 Interactive `add` wizard
+
+- **Tool:** `runtime/tools/cyberos_add.py`
+- **Templates read from:** `outputs/templates/<TYPE>.md` (DEC, REF, FACT,
+  PERSON, PROJECT, PREFERENCE, DRIFT)
+- **Prompts:** slug, classification, authority, tags, sync_class, prov_source,
+  prov_source_ref, freshness_tier
+- **Auto-fills:** UUIDv7 memory_id, ts_now in ICT, subject id from env or
+  git config, next NNN per bucket
+- **Flags:** `--dry-run`, `--non-interactive`, `--auto-tags`, `--persona`
+- **Atomic write:** stages to `outputs/staged-memories/`, then invokes
+  `brain_writer.py write` with audit-row append + tmp+rename + fsync
+
+#### 1.3 `--dry-run` on every mutating op
+
+- **Audit (2026-05-12):**
+  - `cyberos add --dry-run` — fully implemented; stages without writing
+  - `cyberos sync import --dry-run` — fully implemented; reports without
+    writing conflict markers
+  - `cyberos doctor --repair --reason "<why>"` — required `--reason` is the
+    de-facto sev-0 gate; no separate `--dry-run` needed because gate is
+    already explicit
+  - `cyberos panic --reason "<why>"` — same; reason-required gate
+  - `cyberos encrypt enable/rotate-shamir` — already wizard-driven with
+    confirmation prompts
+
+#### 1.4 Shell tab completion
+
+- **Files:** `runtime/completions/cyberos.{bash,zsh,fish}`
+- **Install (bash):** `source /path/to/runtime/completions/cyberos.bash`
+- **Install (zsh):** drop in `$fpath` as `_cyberos`
+- **Install (fish):** `cp cyberos.fish ~/.config/fish/completions/`
+- **Completes:** subcommands, enum values for `--classification`, REF-NNN
+  for `council` and `eval`, `sync` + `mcp` subcommands
+
+#### 1.5 `--explain` flag (`cyberos explain <subcmd>`)
+
+- **Implemented as:** dedicated `cyberos explain` subcommand (clearer than
+  cross-cutting flag)
+- **Covers:** verify, add, sync, doctor, council, prune, export
+- **Output:** `§-anchor | step name | brief description` for each step
+- **Extension:** add a new subcommand by appending to the `EXPLAIN` dict
+  in `runtime/tools/cyberos`
+
+#### 1.6 `cyberos repl`
+
+- **Tool:** `runtime/tools/cyberos_repl.py`
+- **Forwards** each line to the umbrella binary as a subprocess (no
+  session.start re-runs needed per command)
+- **Meta-commands:** `.cd`, `.pwd`, `.last`, `.history`, `.save <path>`,
+  `.env`, `.clear`, `.reload`, `.help`
+- **Exit:** `exit`, `quit`, `q`, or Ctrl-D
+
+### Aspect 2 — Operator dashboard & visibility
+
+#### 2.1 4-operator-question dashboard
+
+- **Inline in:** `runtime/tools/cyberos` → `_cmd_status_dashboard()`
+- **Four questions:**
+  - HEALTHY? — CRITICAL/WARN counts from validator
+  - BOTTLENECK? — file-size cap headroom, drift candidates, oversize ledgers
+  - CHANGED? — last 24h audit op counts
+  - WHAT NOW? — 3 prioritised actions
+
+#### 2.2 Trend lines on key metrics
+
+- **Where:** `_compute_trends(brain)` inside `runtime/tools/cyberos`
+- **Surfaced as:** `TRENDS  30-day rolling` section in `cyberos status`
+- **Tracks:** memory net (creates − deletes), audit ops total + per-day,
+  drift candidates surfaced in the last 30 days
+
+#### 2.3 `cyberos status --weekly`
+
+- **Function:** `_cmd_status_weekly()`
+- **Framing per gstack `/landing-report`:**
+  - LANDED — audit ops in last 7d
+  - IN-FLIGHT — files staged at `outputs/staged-memories/`
+  - QUEUED — drift candidates + pending council sessions
+
+#### 2.4 `cyberos status --watch [--interval N]`
+
+- **Function:** `_cmd_status_watch()`
+- **Refresh:** every N seconds, default 30, minimum 5
+- **Clear-screen via:** ANSI `\033[2J\033[H`
+- **Exit:** Ctrl-C; loop catches `KeyboardInterrupt` cleanly
+
+#### 2.5 Color-coded severity
+
+- **Helpers:** `OK()`, `WARN()`, `CRIT()`, `DIM()`, `BOLD()` in cyberos
+- **Color gate:** `_tty()` checks `sys.stdout.isatty()` + `$TERM` + `$NO_COLOR`
+
+### Aspect 3 — Refinement loop (§0.4 propose-adopt-record)
+
+#### 3.1 Stop-hook for refinement-candidate detection
+
+- **Hook:** `runtime/hooks/refinement_candidates.py`
+- **Scans:** audit ledger for patterns ≥ 3 occurrences in 30-day window
+- **Patterns:** rejected, revert, drift_candidate, shallow_candidate,
+  tag-duplication
+- **Output:** writes `memories/drift/<date>-refinement-candidate-<slug>.md`
+- **Install:** `cyberos hooks on --hook refinement_candidates`
+
+#### 3.2 Eval harness for refinements
+
+- **Layout:** `runtime/tests/refinements/REF-NNN/{capability.test.py,regression.test.py}`
+- **Run via:** `cyberos eval REF-NNN`
+- **Pass criteria:** both files must exit 0
+
+#### 3.3 Council mode for ambiguous refinements
+
+- **Tool:** `runtime/tools/cyberos_council.py` → `cyberos council REF-NNN`
+- **4 voices:** Architect, Skeptic, Pragmatist, Critic
+- **Output:** `outputs/council/REF-NNN-council.md` with prompt blocks + Synthesis template
+- **Heuristic context:** GLOSSARY term overlap, LOCK conflicts, related
+  REFs, recent rejected/ entries
+- **Opt-in only:** the 4× API cost is worth it for ambiguous REFs; not
+  every REF runs council
+
+#### 3.4 Rejected refinement tracking
+
+- **Path:** `.cyberos-memory/rejected/REJECTED-NNN-<slug>.md`
+- **Template:** `outputs/templates/REJECTED.md`
+- **Surfaced by:** `cyberos refinements` (last 30d window)
+
+#### 3.5 Postmortem template for missed refinements
+
+- **Path:** `.cyberos-memory/memories/refinements/POSTMORTEM-NNN-<slug>.md`
+  (or under `postmortems/`)
+- **Template:** `outputs/templates/POSTMORTEM.md`
+- **Trigger:** a rejected refinement that later turned out to be real;
+  document blamelessly
+
+#### 3.6 Nygard ADR format for DECs
+
+- **Template:** `outputs/templates/DEC.md`
+- **Sections:** Context / Decision / Status / Consequences / Alternatives
+- **Used by:** every DEC the wizard scaffolds
+
+#### 3.7 Bundle naming convention
+
+- **Format:** `Bundle <letter> · <theme> · <SHA>`
+- **Letters used so far:** A through P, plus Batches 4–10 of operator
+  surface (not protocol amendments)
+
+### Aspect 4 — Memory taxonomy & content discipline
+
+#### 4.1 Memory templates per type
+
+- **Path:** `outputs/templates/{DEC,REF,FACT,PERSON,PROJECT,PREFERENCE,DRIFT,POSTMORTEM,REJECTED}.md`
+- **Variables:** `${UUID7}`, `${TS_NOW}`, `${SUBJECT_ID}`, `${NEXT_NNN}`,
+  `${SLUG_TITLE}`, `${CLASSIFICATION}`, `${AUTHORITY}`, `${TAGS}`,
+  `${PROV_SOURCE}`, `${PROV_SOURCE_REF}`, `${SYNC_CLASS}`, `${FRESHNESS_TIER}`
+- **Why outside `meta/templates/`:** validator scans `meta/` so
+  templates with `${VAR}` placeholders would fail YAML validation.
+  Living under `outputs/templates/` keeps them out of validator scope.
+
+#### 4.2 Memory-bucket usage dashboard
+
+- **Implemented as:** `cyberos stats`
+- **Lists:** memory by scope (meta, project, persona, company, …),
+  memory by bucket (decisions, refinements, facts, …), total count
+
+#### 4.3 First-class FACT discipline
+
+- **Bucket:** `.cyberos-memory/memories/facts/FACT-NNN-<slug>.md`
+- **Required fields:** `provenance.source_ref`, `provenance.confidence`,
+  `source_freshness_tier` (lower = more authoritative)
+- **Wizard support:** `cyberos add FACT`
+
+#### 4.4 PEOPLE bucket
+
+- **Bucket:** `memories/people/PERSON-NNN-<slug>.md`
+- **Classification:** typically `personnel` (scope-rules plugin enforces)
+- **Sync:** `local-only` or `shared` (scope-rules plugin denies `publishable`)
+
+#### 4.5 PROJECT bucket
+
+- **Bucket:** `memories/projects/PROJECT-NNN-<client>-<slug>.md`
+- **Separate from:** `project/` (singular, per-project working memory)
+
+#### 4.6 PREFERENCE bucket
+
+- **Bucket:** `memories/preferences/PREF-NNN-<slug>.md`
+- **Examples:** voice standard, compact §14 format, retention policy
+
+#### 4.7 Memory relationships graph
+
+- **Tool:** `runtime/tools/cyberos_graph.py` → `cyberos graph`
+- **Edge kinds:** implements, supersedes, references, derives_from,
+  contradicts, validates, satisfied_by
+- **Formats:** text (default), dot (Graphviz), json
+- **Ego graph:** `cyberos graph --memory <id> --hops N`
+- **Dangling detection:** flags edges pointing at non-existent memory_ids
+
+### Aspect 5 — Safety, enforcement, gates
+
+#### 5.1 gateguard PreToolUse hook
+
+- **Hook:** `runtime/hooks/gateguard.py`
+- **Pattern:** 3-stage DENY → FORCE → ALLOW per gstack `gateguard`
+- **State file:** `/tmp/cyberos-gateguard-state-${SESSION_ID}.json`
+- **A/B-tested improvement:** +2.25 quality (per gstack benchmark)
+- **Toggle via:** `cyberos hooks on --hook gateguard`
+
+#### 5.2 Auto-tagging at write time
+
+- **Function:** `load_glossary_terms()` + `suggest_tags()` in `cyberos_add.py`
+- **Opt-in:** `cyberos add <TYPE> --auto-tags`
+- **Source:** scans `FACT-014-glossary.md` for known terms appearing
+  in slug + title + provenance ref
+- **Caps:** `--auto-tags-max 5` by default
+- **Confirmation:** interactive accept all / decline / edit list
+
+#### 5.3 Per-write confirmation for sev-0 ops
+
+- **Covered by:** `--reason` requirement on `cyberos doctor --repair`,
+  `cyberos panic`, and gateguard PreToolUse on tool-use side
+- **Pattern from:** `/careful` skill
+
+#### 5.4 Encryption posture audit
+
+- **Subcommand:** `cyberos status --security`
+- **Surfaces:**
+  - §5.6 encryption enabled/disabled + algorithm + KDF + Shamir threshold
+  - §9.3 denylist test pass/fail (24/24 fixtures)
+  - Filesystem perms on `manifest.json`, `audit/`, `outputs/staged-memories/`
+  - §13.10 PANIC marker status (treats `(resolved)` titles as inactive)
+  - §8.6 drift candidate count
+
+#### 5.5 Denylist regression suite
+
+- **Tests:** `runtime/tests/denylist/test_denylist.py`
+- **Fixtures:** 24 patterns covering compensation, gov-IDs, bank, card
+  numbers, secrets, health PII + evasion attempts
+- **Run via:** `cyberos verify --denylist`
+
+#### 5.6 §4.2 content-gate fuzz + body scan
+
+- **Fuzz:** `runtime/tests/fuzz/test_content_gate_fuzz.py` (200 runs, 0 crashes)
+- **Body scan:** `_check_content_gate_body()` in `cyberos_validate.py`
+- **Markers:** `[INST]`, `<system>`, `<<SYS>>`, `<|im_start|>`,
+  `<|system|>`, `<|assistant|>`, `###Instruction`, `###System:`,
+  "ignore previous instructions", "ignore the above"
+- **Whitelisted paths:** `tests/fuzz/`, `tests/mutation/`, REFs,
+  `meta/validators/`, conflicts, postmortems (they document the markers
+  legitimately)
+
+#### 5.7 TOCTOU `.lock.shared` advisory locks
+
+- **Module:** `runtime/tools/cyberos_lock.py`
+- **Lock files:** `.cyberos-memory/.lock.shared`, `.cyberos-memory/.lock.exclusive`
+- **Backend:** POSIX `fcntl.flock` with `LOCK_SH` for readers, `LOCK_EX` for writers
+- **Context managers:** `shared_lock(brain_root)`, `exclusive_lock(brain_root)`
+- **Degradation:** filesystems without `fcntl` (FUSE, some network FSes)
+  fall back to no-op; never blocks
+
+### Aspect 6 — Multi-machine personal sync
+
+#### 6.1 `cyberos sync export`
+
+- **Tool:** `runtime/tools/cyberos_sync.py`
+- **Default classes:** `publishable` + `shared` (consent-gated)
+- **Opt-in:** `--include client-visible` (consent required)
+- **Determinism:** two consecutive exports produce identical SHA256
+
+#### 6.2 Subject-identity stability
+
+- **Mechanism:** `cyberos sync import --from subject:<id>` records the
+  origin subject in `sync_manifest.json`
+- **Resolution:** same subject id → merge as same identity; different →
+  treat as different subject (writes to different `member/<id>/` scope)
+
+#### 6.3 Per-export sanitization mode
+
+- **Existing tool:** `runtime/tools/cyberos_export.py --sanitize-level <none|shareable|redacted>`
+
+#### 6.4 Round-trip property verification
+
+- **Manual:** `cyberos sync export → unzip → cyberos sync import --dry-run`
+  on a fresh BRAIN must produce byte-identical manifest entries
+
+#### 6.5 Conflict-resolution UX
+
+- **Subcommand:** `cyberos sync conflicts --resolve`
+- **Interactive picks:** `[l]ocal | [r]emote | [d]isputed | [o]pen | [s]kip | [q]uit`
+- **Side effect:** appends a `## Resolution (<ts>)` block to the
+  conflict marker so the §3 reconciliation row can reference it
+
+### Aspect 7 — Documentation, voice, & protocol-doc discipline
+
+#### 7.1 gstack /codex voice standard
+
+- **Rules (verbatim):** no em dashes, no AI-vocab (leverage, robust,
+  ensure, comprehensive, seamless, delve, navigate, tapestry), no
+  marketing language, lead with the point
+- **Memory:** `memories/preferences/PREF-001-voice-standard.md`
+
+#### 7.2 `cyberos voice` linter
+
+- **Tool:** `runtime/tools/voice_check.py`
+- **Flags:** `--strict` (exit 1 on any finding), `--summary`
+- **Usage:** `cyberos voice docs/`
+
+#### 7.3 Cross-doc consistency
+
+- **Subcommand:** `cyberos doc-consistency`
+- **Checks:** every §X.Y reference in README exists as anchor in AGENTS.md,
+  every DEC-NNN reference resolves to a real file
+
+#### 7.4 Tour artifacts
+
+- **Path:** `tours/*.tour` (10 tours)
+- **Topics:** onboarding, refinement-loop, incident-response,
+  protocol-upgrade, security-audit, repair-{audit-chain,tombstone-orphan,
+  stuck-conflict,manual-rollback,fix-frontmatter}
+- **Viewer:** VS Code CodeTour extension
+
+#### 7.5 AGENTS.md compaction discipline
+
+- **Soft cap:** 1500 lines, warnings at 1300/1400/1500
+- **Mechanisms when approaching cap:** split a §-section into subdoc OR
+  move to CORE.md OR `cyberos doctor --reorganise` on protocol doc
+
+#### 7.6 Bundle thematic tagging
+
+- **Convention:** CHANGELOG header lists `Bundle <letter> · <theme> · <SHA>`
+
+#### 7.7 Glossary as first-class memory
+
+- **Memory:** `memories/facts/FACT-014-glossary.md`
+- **Format:** `## Term\ndefinition` per entry
+- **Used by:** `cyberos_add --auto-tags`, `cyberos_council` heuristic context
+
+### Aspect 8 — Onboarding & contributor experience
+
+#### 8.1 `cyberos onboard`
+
+- **Tool:** `runtime/tools/cyberos_onboard.py`
+- **5-step wizard:** subject id → persona role → import shared zip (opt) →
+  starter PREF → verify
+
+#### 8.2 Starter-template repo
+
+- **Path:** `outputs/cyberos-starter/`
+- **Contents:** README, pre-built `.cyberos-memory/manifest.json` with
+  placeholders, `meta/retention-rules.md`, `meta/validators/README.md`,
+  `tours/onboarding.tour`
+- **Use:** `cp -r outputs/cyberos-starter ~/Projects/my-new-thing`
+
+#### 8.3 Two-mode CLAUDE.md symlink
+
+- **Recipe:**
+  ```bash
+  ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md AGENTS.md
+  ln -s /path/to/cyberos/docs/CyberOS-AGENTS-CORE.md CLAUDE.md
+  ```
+
+#### 8.4 Onboarding checklist memory
+
+- **Generated by:** `cyberos onboard`
+- **Path:** `memories/preferences/PREF-onboarding-checklist-<subject>.md`
+
+#### 8.5 Persona-card auto-generation
+
+- **Flag:** `cyberos onboard --persona <role>`
+- **Output:** `.cyberos-memory/persona/<role>.md` with `persona_defaults`
+  frontmatter block
+
+### Aspect 9 — Performance & scaling
+
+#### 9.1 Streaming session-start
+
+- **Module:** `runtime/tools/cyberos_lazy.py`
+- **Two phases:**
+  - Phase A: manifest + checkpoint + legacy lists (~5 files, < 100 KB)
+  - Phase B: lazy `stream_memories()` generator
+- **Benchmark today:** 180.93 ms full eager vs 2.41 ms lazy first-5 → **74.9×**
+
+#### 9.2 Incremental SQLite index updates
+
+- **Hook:** `runtime/tools/cyberos_index_hook.py`
+- **Modes:** `on-write` (called by brain_writer after each op), `stop-hook`
+- **No-op when:** `index/cyberos.db` doesn't exist yet
+- **Best-effort:** never blocks the underlying write
+
+#### 9.3 `cyberos benchmark`
+
+- **Tool:** `runtime/tools/benchmark.py`
+- **Metrics:** p50/p95/p99 for `cyberos verify`, `cyberos export`,
+  `cyberos search`
+
+#### 9.4 Audit-ledger compaction tuning
+
+- **Tool:** `runtime/tools/cyberos_compact_stats.py` → `cyberos compact-stats`
+- **Thresholds:** `--row-cap 10000`, `--byte-cap 5000000`, `--age-days 90`
+- **Recommends:** `cyberos doctor --compact-ledger MM` for each
+  candidate ledger
+- **Does NOT compact;** that's still doctor
+
+#### 9.5 Cold-storage tier
+
+- **Tool:** `runtime/tools/cyberos_cold_storage.py`
+- **Subcommands:** `archive`, `list`, `verify`
+- **Output:** deterministic `.cold.zip` per month with Merkle anchor
+- **Operator uploads:** `aws s3 cp` / rclone / equivalent — tool never reaches a provider
+
+#### 9.6 Memory deduplication
+
+- **Tool:** `runtime/tools/cyberos_dedup.py` → `cyberos dedup`
+- **Signals:**
+  - Body 5-gram shingles, Jaccard ≥ 0.8
+  - Slug-stem 3-gram similarity ≥ 0.85
+- **Exclusions:** `meta/protocol-history/` (intentional snapshots),
+  DEC↔REF implements-pair pattern (cross-bucket same-slug, low body sim)
+
+#### 9.7 Memory-aging policy
+
+- **Tool:** `runtime/tools/cyberos_prune.py` → `cyberos prune`
+- **Three checks:**
+  - Staleness via `last_updated_at` > `--staleness-days` (default 365)
+    unless `retention.rule == "indefinite"`
+  - Contradictions (`supersedes` edge to live memory; `contradicts` to live memory)
+  - Unresolved drift > `--drift-days` (default 30)
+- **NEVER deletes** — surface only; operator decides via `cyberos doctor`
+
+### Aspect 10 — Testing, evals, fuzz, properties
+
+#### 10.1 Test corpus growth
+
+- **Target:** 16 → 200+
+- **Current:** ~24 fixtures (8 mutation patterns × 3 fixtures + 24 denylist + 200 fuzz inputs)
+
+#### 10.2 Property-based testing
+
+- **File:** `runtime/tests/fuzz/test_content_gate_fuzz.py`
+- **Generator:** biased random inputs toward injection markers, mixed-script
+  confusables, BOM, surrogate pairs
+- **Pass criteria:** 0 crashes
+
+#### 10.3 Differential testing across implementations
+
+- **Status:** blocked — only one impl exists (Python)
+- **Unblocks when:** brain_writer is reimplemented in TypeScript / Go
+
+#### 10.4 Mutation testing on validators
+
+- **Tool:** `runtime/tests/mutation/run_mutations.py` → `cyberos mutation-test`
+- **Mutations:** remove-memory-id, break-uuid-format, invalid-classification,
+  inject-marker, invalid-authority, remove-provenance, negative-version,
+  invalid-sync-class
+- **Fixtures:** `fixture-valid-fact.md`, `fixture-valid-decision.md`,
+  `fixture-valid-person.md`
+- **Today:** 24 mutations × 0 SURVIVED
+
+#### 10.5 Fuzz on content gate
+
+- See 5.6 above (same file).
+
+#### 10.6 Replay testing on audit ledger
+
+- **File:** `runtime/tests/test_replay.py`
+- **Asserts:** replaying every op in sequence yields same `audit_chain_head`
+
+#### 10.7 Roundtrip property testing
+
+- **File:** `runtime/tests/test_export_determinism.py`
+- **Asserts:** export → unzip → re-import → re-export = byte-identical zip
+
+#### 10.8 Eval-driven development
+
+- See 3.2 above; every REF lands with capability + regression evals.
+
+### Aspect 11 — Observability & telemetry
+
+#### 11.1 Local-only analytics
+
+- **File:** `~/.cyberos/analytics/skill-usage.jsonl`
+- **Logged:** `ts`, `cmd`, `outcome`, `duration_ms`, `session`
+- **Never sent anywhere** — local only by contract
+
+#### 11.2 Usage report
+
+- **Command:** `cyberos analytics report --period 7d --format table|json`
+
+#### 11.3 Drift dashboard
+
+- **Subcommand:** `cyberos drift`
+- **Inline impl in:** `runtime/tools/cyberos` → `cmd_drift()`
+
+#### 11.4 Refinement-candidate dashboard
+
+- **Tool:** `runtime/tools/cyberos_refinements.py` → `cyberos refinements`
+- **Buckets:**
+  - drift candidates from §0.4 Stop-hook
+  - council sessions awaiting synthesis (verdict-regex)
+  - rejected entries in the last 30 days
+
+#### 11.5 LLM cost analytics
+
+- **File:** `~/.cyberos/analytics/llm-cost.jsonl`
+- **Command:** `cyberos analytics cost-log` (record) + `cost-report` (totals)
+- **Rates:** operator supplies `--input-per-mtok` + `--output-per-mtok`
+  at call time; we never hardcode model pricing
+
+### Aspect 12 — Architecture extension surfaces
+
+#### 12.1 Pluggable validators
+
+- **Loader:** `_run_pluggable_validators()` in `cyberos_validate.py`
+- **Discovery:** `meta/validators/check-*.py` auto-imported
+- **Signature:** `def check(memory: dict, manifest: dict) -> list[dict]`
+- **Severity options:** `CRITICAL`, `WARN`, `INFO`
+- **Exception isolation:** plugin errors surface as WARN, never crash validation
+- **Shipped plugins:**
+  - `check-tag-budget.py` — enforces ≤ 10 tags
+  - `check-scope-rules.py` — reads `meta/scope-rules.md` (Aspect 12.2)
+  - `check-source-tiers.py` — flags stale `source_tiers` patterns
+
+#### 12.2 Custom scope rules
+
+- **Config:** `meta/scope-rules.md`
+- **Schema:** `## scope: <prefix>` + `- classification: allow/deny: [...]`,
+  `- sync_class: allow/deny: [...]`, `- authority: minimum: <tier>`
+- **Enforced by:** `meta/validators/check-scope-rules.py`
+
+#### 12.3 Manifest-defined source tiers as data
+
+- **Config:** `manifest.source_tiers[]` with `pattern` + `tier` + `rationale`
+- **Validated by:** `meta/validators/check-source-tiers.py` (warns on stale patterns)
+
+#### 12.4 Memory template variables
+
+- See 4.1 above.
+
+#### 12.5 Skill registry
+
+- **Registry file:** `runtime/tools/skills/registry.json`
+- **Loader:** `runtime/tools/cyberos_skill.py` → `cyberos skill {list|describe|chain}`
+- **Each entry:** name, tool, umbrella_alias, verb, invocation_modes,
+  depends_on, sections, mutates_brain, sev_0_ops (optional)
+- **Chain safety:** `cyberos skill chain` warns when two mutating skills
+  run without an intermediate `verify`
+
+#### 12.6 Persona-defined defaults
+
+- **Source:** `.cyberos-memory/persona/<role>.md` `persona_defaults` frontmatter
+- **Consumed by:** `cyberos add --persona <role>`
+- **Pre-fills:** `default_classification`, `default_authority`, `default_sync_class`
+
+#### 12.7 Read-only MCP server
+
+- **Server:** `runtime/mcp/cyberos_brain_server.py`
+- **Wire:** `cyberos mcp info` prints the `.claude/mcp-config.json` snippet
+- **Run:** `cyberos mcp serve` (line-delimited JSON-RPC 2.0 over stdio)
+- **Tools:**
+  - `brain_search` — keyword across slug/tags/scope/body
+  - `brain_show` — list with optional filters
+  - `brain_get` — fetch by memory_id or path
+  - `brain_stats` — bucket + sync-class + tombstone counts
+- **Default filters:** hide tombstoned + `sync_class=local-only` (both have opt-in flags)
+- **No writes** — caller must use `brain_writer.py`
+
+### Aspect 13 — Specific gaps observed
+
+- **13.1** — covered in protocol-history scope coverage
+- **13.2 — Empty `company/` directory** → fixed: `company/locked-decisions.md`
+  now has 20 LOCK entries
+- **13.3 — `cyberos doctor` repair op docs** → expanded via tour files
+  (`tours/repair-*.tour`)
+- **13.4 — Protocol-history INDEX** → `.cyberos-memory/meta/protocol-history/INDEX.md`
+- **13.5 — `outputs/` transient artefacts** → `.gitignore` updated
+- **13.6 — CONTRIBUTING.md** → at root level
+- **13.7 — `outputs/refinements/` workflow** → documented in this README
+- **13.8 — Repo split** → architectural decision; not done yet
+- **13.9 — `__pycache__/` exclusion** → in `.gitignore` + export skip list
+- **13.10 — Emergency stop** → `cyberos panic` with `--reason` requirement
+
+---
+
+## Part 27 — Per-tool CLI reference
+
+### Status & diagnostics
+
+```
+cyberos status                          # 4-question dashboard
+cyberos status --verbose                # show all findings
+cyberos status --weekly                 # 7-day digest (Aspect 2.3)
+cyberos status --watch [--interval N]   # continuous (Aspect 2.4)
+cyberos status --security               # encryption posture (Aspect 5.4)
+cyberos verify [--self-test] [--denylist]
+cyberos drift                           # drift candidates only
+cyberos refinements [--kind drift|council|rejected|all] [--json]
+cyberos stats
+cyberos compact-stats [--row-cap N] [--byte-cap N] [--age-days N] [--json]
+cyberos mutation-test [--fixture name] [--json]
+```
+
+### Memory management
+
+```
+cyberos add <TYPE> [--slug ...] [--classification ...] [--authority ...]
+                   [--tags ...] [--sync-class ...] [--prov-source ...]
+                   [--prov-source-ref ...] [--freshness-tier N]
+                   [--auto-tags] [--persona NAME]
+                   [--non-interactive] [--dry-run]
+cyberos show [--scope ...] [--tag ...] [--class ...] [--tombstoned]
+             [--recent 7d]
+cyberos search <query>
+cyberos prune [--staleness-days N] [--drift-days N] [--interactive] [--json]
+cyberos dedup [--scope ...] [--threshold 0.8] [--slug-threshold 0.85]
+              [--since 30d] [--json]
+cyberos graph [--format text|dot|json] [--scope ...] [--orphans]
+              [--memory MEMORY_ID] [--hops N] [--verbose]
+```
+
+### Refinement loop
+
+```
+cyberos council REF-NNN [--voices ...] [--print]
+cyberos eval REF-NNN
+cyberos refinements [--kind ...] [--json]
+```
+
+### Sync + export
+
+```
+cyberos export [-o DIR] [--to PATH] [--sanitize-level ...]
+               [--dry-run] [--daemon --interval H] [--verify FILE]
+cyberos sync export --to PATH [--include client-visible]
+cyberos sync import BUNDLE --from subject:NAME [--dry-run]
+cyberos sync conflicts [--resolve]
+cyberos cold-storage archive --age-months N --to PATH
+cyberos cold-storage list DIR
+cyberos cold-storage verify ARCHIVE
+```
+
+### Operational
+
+```
+cyberos doctor <op> [--repair --reason "..."] [--dry-run]
+   ops: rebuild-chain, tombstone-orphan, resolve-conflict,
+         manual-rollback, fix-frontmatter, compact-ledger, decompact-ledger
+cyberos panic [--reason "..."] [--resolve "..."]
+cyberos hooks {status|on|off} [--hook NAME]
+cyberos lock {status|acquire-shared|acquire-exclusive} [--timeout N] [--hold N]
+cyberos analytics {log|report|purge|cost-log|cost-report}
+                  [--period 7d] [--format table|json]
+```
+
+### Onboarding + meta
+
+```
+cyberos onboard [--shared ZIP] [--persona ROLE] [--non-interactive]
+cyberos voice [--strict] [--summary] [PATHS...]
+cyberos doc-consistency [--strict]
+cyberos explain [SUBCOMMAND]
+cyberos skill {list|describe NAME|chain NAME1 NAME2 ...}
+cyberos repl
+cyberos mcp {serve|info}
+cyberos help [SUBCOMMAND]
+cyberos --version
+```
+
+---
+
+## Part 28 — Common workflows
+
+### Daily verify
+
+```bash
+cyberos status              # 5-second sanity check
+cyberos verify              # full 11-category validator
+```
+
+If WARN > 5 or any CRITICAL, run `cyberos status --verbose` to see findings.
+
+### Adding a new memory
+
+```bash
+cyberos add FACT --slug pricing-tier-3 --auto-tags --persona founder
+# Wizard prompts for missing fields. Outputs a preview, then asks for
+# confirmation before `brain_writer write` commits.
+```
+
+### Refinement cycle (§0.4)
+
+```bash
+# 1. Detect candidates auto-populated by the Stop-hook
+cyberos refinements --kind drift
+
+# 2. If ambiguous, run council
+cyberos council REF-042
+# (paste each voice prompt into a fresh Claude conversation; collect
+#  the 4 findings; write Synthesis)
+
+# 3. Run capability + regression evals
+cyberos eval REF-042
+
+# 4. If green, ship — and run the protocol-upgrade phrase if §0.4 needs it
+```
+
+### Sync to another machine
+
+```bash
+# Machine A
+cyberos sync export --to ~/cyberos-bundle.zip
+# scp / rsync / drop in shared drive
+
+# Machine B
+cyberos sync import ~/cyberos-bundle.zip --from subject:other-machine --dry-run
+# Review the report at outputs/sync/<run-id>.md
+cyberos sync import ~/cyberos-bundle.zip --from subject:other-machine
+# Resolve any conflicts:
+cyberos sync conflicts --resolve
+```
+
+### Audit-ledger maintenance (~monthly)
+
+```bash
+cyberos compact-stats                   # see if any month should be compacted
+cyberos doctor --compact-ledger 2026-04 # actually compact (sev-0)
+cyberos cold-storage archive --age-months 12 --to ~/cold/  # bundle old ledgers
+# upload to S3 / rclone / etc.
+# After confirmed upload:
+rm .cyberos-memory/audit/<archived>.jsonl
+```
+
+### Adding a project-specific validator
+
+```bash
+# 1. Drop the plugin
+cat > .cyberos-memory/meta/validators/check-my-rule.py <<'PY'
+def check(memory, manifest):
+    if memory.get("classification") == "client" and not memory.get("tags"):
+        return [{"severity": "WARN", "code": "client-needs-tags",
+                 "message": "client memories must carry at least one tag"}]
+    return []
+PY
+
+# 2. Verify auto-discovery
+cyberos verify
+# Findings now include [§12.1] client-needs-tags entries
+```
+
+### Read BRAIN from a different agent (Claude Code, Cursor)
+
+```bash
+cyberos mcp info
+# Paste the printed snippet into .claude/mcp-config.json
+# Restart the client; it now sees brain_search / brain_show / brain_get / brain_stats
+```
+
+---
+
+## Part 29 — Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `no .cyberos-memory/ found` | CWD not inside a CyberOS project | `cd` into a project root or `export CYBEROS_HOST_MOUNT_PREFIX=<mount>` |
+| `cyberos verify` shows `chain-link-mismatch` | audit chain corrupted | `cyberos doctor rebuild-chain --repair --reason "<why>"` (sev-0) |
+| `provenance-missing` WARN | memory missing required block | Add `provenance: {source: ..., source_ref: ..., confidence: ...}` to frontmatter |
+| `invalid-sync-class` WARN | typo in sync_class field | Pick one of `{local-only, publishable, shared, client-visible}` |
+| `scope-sync-class-not-allowed` WARN | scope-rules.md violated | Check `meta/scope-rules.md` for the scope; pick an allowed sync_class |
+| `tag-budget-exceeded` WARN | > 10 tags on a memory | Trim tag list to 10 or fewer (CyberSkill convention) |
+| `cyberos panic` shows ACTIVE on a fresh session | stale marker from earlier self-test | Edit `meta/PANIC.md` title to include `(resolved)` |
+| `cyberos sync conflicts` shows entries | another subject's bundle conflicted | `cyberos sync conflicts --resolve` and pick local / remote / disputed |
+| `brain_writer` refuses to write in a sandbox | §0.1 real-filesystem enforcement | `export CYBEROS_HOST_MOUNT_PREFIX="/host-mount-path"` |
+| Mutation test SURVIVED something | Validator gap | Either tighten the validator or remove the mutation if mutated input is genuinely valid |
+
+---
+
+## Part 30 — Deferred and blocked items
+
+| Aspect | Status | Why |
+| --- | --- | --- |
+| 10.3 — Differential testing across implementations | **Blocked** | Only one impl (Python) exists. Unblocks when brain_writer is reimplemented in TS / Go. |
+| 13.8 — Repo split (`cyberos-cli` separate from protocol) | **Deferred** | Architectural choice; ship when CLI iteration outpaces protocol. |
+
+All other named aspects in `workbench/cyberos-layer1-deep-improvements.md`
+are shipped. See `CyberOS-AGENTS.CHANGELOG.md` Batches 4–10 for landing
+notes.
+
+---
+
+## Part 31 — File map
+
+```
+cyberos/
+├── docs/
+│   ├── CyberOS-AGENTS.md              ← protocol (authoritative)
+│   ├── CyberOS-AGENTS-CORE.md         ← per-session load (regenerable)
+│   ├── CyberOS-AGENTS.README.md       ← this file (on-ramp + operator manual)
+│   └── CyberOS-AGENTS.CHANGELOG.md    ← daily log
+├── runtime/
+│   ├── tools/                         ← 19 Python scripts + 1 umbrella
+│   │   ├── cyberos                    (umbrella; 33 subcommands)
+│   │   ├── cyberos_validate.py
+│   │   ├── cyberos_doctor.py
+│   │   ├── cyberos_export.py
+│   │   ├── cyberos_index.py
+│   │   ├── cyberos_encrypt.py
+│   │   ├── cyberos_add.py
+│   │   ├── cyberos_show.py
+│   │   ├── cyberos_search.py          (via cyberos_index.py)
+│   │   ├── cyberos_council.py         ← Batch 4
+│   │   ├── cyberos_sync.py            ← Batch 4 + 5
+│   │   ├── cyberos_repl.py            ← Batch 5
+│   │   ├── cyberos_dedup.py           ← Batch 5
+│   │   ├── cyberos_graph.py           ← Batch 6
+│   │   ├── cyberos_prune.py           ← Batch 7
+│   │   ├── cyberos_hooks.py           ← Batch 7
+│   │   ├── cyberos_refinements.py     ← Batch 8
+│   │   ├── cyberos_compact_stats.py   ← Batch 8
+│   │   ├── cyberos_lock.py            ← Batch 10
+│   │   ├── cyberos_lazy.py            ← Batch 10
+│   │   ├── cyberos_index_hook.py      ← Batch 10
+│   │   ├── cyberos_cold_storage.py    ← Batch 10
+│   │   ├── cyberos_skill.py           ← Batch 10
+│   │   ├── voice_check.py
+│   │   ├── canonical_sha.py
+│   │   ├── extract_agents_core.py
+│   │   ├── benchmark.py
+│   │   ├── cyberos_onboard.py
+│   │   ├── cyberos_analytics.py
+│   │   ├── completions/cyberos.{bash,zsh,fish}
+│   │   └── skills/registry.json       ← Batch 10
+│   ├── hooks/
+│   │   ├── gateguard.py
+│   │   └── refinement_candidates.py
+│   ├── mcp/
+│   │   └── cyberos_brain_server.py    ← Batch 4
+│   └── tests/
+│       ├── denylist/test_denylist.py
+│       ├── fuzz/test_content_gate_fuzz.py
+│       ├── test_replay.py
+│       ├── test_export_determinism.py
+│       ├── refinements/<REF>/{capability,regression}.test.py
+│       └── mutation/                  ← Batch 8
+│           ├── run_mutations.py
+│           └── fixtures/
+│               ├── fixture-valid-fact.md
+│               ├── fixture-valid-decision.md
+│               └── fixture-valid-person.md
+├── outputs/
+│   ├── brain_writer.py                ← reference writer (mutates BRAIN)
+│   ├── templates/                     ← memory templates (Aspect 4.1)
+│   ├── staged-memories/               ← pre-commit staging
+│   ├── council/                       ← council session artefacts
+│   ├── sync/                          ← sync import reports
+│   ├── sync-staging/                  ← imported memories awaiting review
+│   ├── cold-test/                     ← test cold-storage archives
+│   └── cyberos-starter/               ← Aspect 8.2 skeleton
+└── tours/                             ← Aspect 7.4 CodeTour files
+```
+
+---
+
+## Cross-references
+
+- **AGENTS.md sections cited above:** §0.1, §0.4, §0.5, §3, §4.2, §4.4, §4.6, §4.7, §5.1, §5.2, §5.6, §7, §7.6, §7.7, §8.6, §8.7, §9, §9.3, §9.6, §11.2, §11.3, §13, §13.10, §17.
+- **Improvement catalog:** `workbench/cyberos-layer1-deep-improvements.md` — the source of every Aspect number.
+- **Daily landing log:** `docs/CyberOS-AGENTS.CHANGELOG.md` — Batches 4–10 entries map landed code to Aspect numbers.
+
+Parts 25–31 update in lockstep with each CHANGELOG batch entry. When new
+aspects ship, add a subsection to Part 26 and update the Part 27 CLI
+reference.

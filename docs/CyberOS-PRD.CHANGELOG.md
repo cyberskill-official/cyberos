@@ -6,6 +6,76 @@ This document does **not** carry an inline version marker — see CyberOS-AGENTS
 
 ---
 
+## 2026-05-12 — Layer-1 catalog 100 % shipped + doc consolidation (no PRD §-level changes)
+
+### Summary
+
+Batches 4–10 of the Layer-1 operator surface landed today. Total: 33 `cyberos` subcommands (up from 18 at session start), 16 new runtime tools, 3 pluggable validators, 24 mutation tests (0 SURVIVED), read-only MCP server, multi-machine sync scaffolding, council mode for ambiguous REFs, persona-defined defaults, cold-storage tier, advisory-lock module, streaming session-start loader (74.9× speedup measured). **100 % of `workbench/cyberos-layer1-deep-improvements.md` is closed.**
+
+Documentation consolidated: the standalone `CyberOS-LAYER-1-MANUAL.md` was merged into `CyberOS-AGENTS.README.md` as Parts 25–31 (architecture overview, per-aspect detail, CLI reference, workflows, troubleshooting, deferred items, file map). The README is now the single home for mental model + operator manual.
+
+### PRD-side impact (Batches 4–10)
+
+**Zero PRD §-level changes.** Every new tool implements existing PRD commitments:
+- PRD §5.3.1 "Concept and storage layout" — operator surface now has 33 subcommands; README Parts 25–27 document each
+- PRD §5.3.2 "Six file operations" — `cyberos_lock.py` (Aspect 5.7) adds `.lock.shared` / `.lock.exclusive` coordination helpers
+- PRD §5.3.3 "Sync classes" — `cyberos_sync.py` (Aspect 6.x) ships deterministic export + 3-way merge import + conflict resolver UX (Aspect 6.5)
+- PRD §5.3.5 "Auto Dream consolidation" — `cyberos refinements` (Aspect 11.4) surfaces drift + council-pending + rejected items
+- PRD §6.3 "CUO routing logic" — `cyberos skill` registry (Aspect 12.5) stages the chain-of-skills metadata that CUO P0+ will consume
+- PRD §8 "MCP Gateway" — Aspect 12.7 ships a read-only MCP server today (`brain_search`, `brain_show`, `brain_get`, `brain_stats`) ahead of the full MCP Gateway
+
+### Cross-reference updates pending in PRD.docx (next .docx editing session)
+
+- §5.3.1 — point at **README Parts 25–27** (not the deprecated standalone manual)
+- §5.3.2 — link `runtime/tools/cyberos_lock.py` as the §4.4 atomic-write advisory-lock helper
+- §5.3.3 — link `runtime/tools/cyberos_sync.py` as the §17 sync-class enforcement implementation
+- §5.3.5 — link `cyberos_refinements.py` + `cyberos_prune.py` (Aspects 1.1 + 9.7) as Auto-Dream operator-side companions
+- §5.6 — `cyberos sync conflicts --resolve` is the interactive resolver UX (Aspect 6.5 — shipped, was previously deferred)
+- §6.3 — `cyberos skill chain` is the static-analysis precursor; the live CUO router builds on this
+- §8 — MCP Gateway pre-P0 status: read-only server shipped; write-enabled gateway remains P0+
+
+### Verification (post-Batch 10)
+
+- `cyberos verify` → CRITICAL: 0 / WARN: 11 / INFO: 1
+- `cyberos mutation-test` → 24 mutations × 0 SURVIVED
+- Audit chain intact; chain head `sha256:b30dc197b713f168…`
+- 2 items remain blocked-with-rationale: 10.3 differential testing (blocked — only one impl), 13.8 repo split (deferred — architectural)
+
+---
+
+## 2026-05-12 — Layer-1 operator surface lands (no PRD §-level changes) [earlier batches]
+
+### Summary
+
+A batch of Layer-1 improvements landed (Aspects 1.1, 2.1, 3.1, 3.4, 3.5, 4.1, 4.3-4.6, 5.1, 5.5, 7.2, 7.3, 7.4, 8.1, 11.1, 11.2, 13.4, 13.10) covering operator UX, refinement-detection hooks, memory templates, voice + consistency CI, onboard wizard, local analytics, tour files, and emergency-stop. **None of this changes the PRD §5.3 Layer-1 architecture** — all additions sit alongside existing rules.
+
+### PRD-side impact
+
+**Zero PRD §-level changes.** The new tooling implements existing PRD commitments:
+- PRD §5.3.1 "Concept and storage layout" — gets a `cyberos` operator surface (was implicit; now explicit)
+- PRD §5.3.5 "Auto Dream nightly consolidation" — gets companion Stop-hook for §0.4 refinement-candidate detection
+- PRD §1.4 Operating Principle 6 "Universal memory, three layers" — Layer 1 now has CI gates (voice + consistency + validator) per `dashboard-builder` pattern
+- PRD §6.3 "CUO routing logic" — gateguard PreToolUse hook is a CUO precursor (denies first-attempt writes, forces investigation)
+
+### Cross-reference updates needed in PRD.docx (next editing session)
+
+- §5.3.1 — add reference to `runtime/tools/cyberos` umbrella binary
+- §5.3.2 — link to `runtime/hooks/gateguard.py` as enforcement layer for the six file operations
+- §5.3.5 — reference `runtime/hooks/refinement_candidates.py` as Auto-Dream Phase-6 companion
+- §5.8 — link to `runtime/tests/denylist/test_denylist.py` as denylist regression coverage
+- §6.3 — note that gateguard is the local-edge precursor to the eventual P0+ CUO routing
+- New §13 entry: list `cyberos` operator surface + 5 tour files
+
+### No new DEC entries
+
+This bundle is tooling + scaffolding, not decisions. Operator UX improvements are below the §0.4-refinement threshold (no protocol mechanism added).
+
+### Driver
+
+User asked for full implementation of Layer-1 improvements catalog. All non-§0.5-requiring work landed in one batch. See `CyberOS-AGENTS.CHANGELOG.md` 2026-05-12 entry for the canonical record.
+
+---
+
 ## 2026-05-10 — Bundle M absorbed (functional-zero refinement pass; no DEC entry)
 
 ### Not yet applied to CyberOS-PRD.docx

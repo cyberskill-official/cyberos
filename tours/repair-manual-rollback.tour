@@ -1,0 +1,10 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "13 — Doctor: manual rollback past protocol-history",
+  "description": "Emergency rollback when current AGENTS.md SHA isn't in protocol-history. MAINTENANCE mode + Ed25519 signature check.",
+  "steps": [
+    {"file": ".cyberos-memory/meta/protocol-history/INDEX.md", "line": 1, "description": "All approved SHAs live here. Verify target SHA is present BEFORE rolling back."},
+    {"file": "outputs/brain_writer.py", "line": 1, "description": "brain_writer protocol-upgrade <new-sha> handles standard rollback. Manual rollback (no archive) uses doctor."},
+    {"file": "runtime/tools/cyberos_doctor.py", "line": 1, "description": "doctor manual-rollback --target <sha> --confirm 'I understand this bypasses normal §0.5 flow' — last-resort."}
+  ]
+}

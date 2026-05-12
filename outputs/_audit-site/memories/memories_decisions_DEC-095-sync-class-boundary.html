@@ -1,0 +1,67 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-095-sync-class-boundary.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-095-sync-class-boundary.md</p>
+
+<h1>DEC-095 — Sync-class boundary: four classes, scope defaults, identity model</h1>
+
+<h2>Decision</h2>
+
+<p>Every memory carries a `sync_class` (frontmatter §5.1, 28th field) declaring whether it leaves the local machine and where it goes. Four classes: `local-only`, `publishable`, `shared`, `client-visible`. Defaults are scope-driven (§17.2 table); per-file overrides allowed. Subject sovereignty: subjects may always downgrade their own writes to `local-only`; agents may not upgrade above the scope default without explicit chat instruction.</p>
+
+<p>Identity is **per-subject**, not per-machine. A subject (e.g., `subject:stephen-cheng`) may operate from multiple machines; each has its own `.cyberos-memory/` and its own linear audit chain. The org BRAIN re-chains incoming memories per §11.6 (preserving `original_chain` for traceability).</p>
+
+<p>Offboarding follows the **absorb-then-discard** pattern: published `shared` memories stay (org property by virtue of having been published); personal `member/&lt;id&gt;/` and `local-only` content is garbage-collected from the org BRAIN&#x27;s mirror; the leaving employee retains their personal BRAIN as a portable export.</p>
+
+<h2>Why</h2>
+
+<p>The pre-A protocol had:</p>
+
+<li>An obvious org-vs-personal scope structure (`company/`, `member/&lt;id&gt;/`, `client/&lt;id&gt;/`, `module/&lt;name&gt;/`) but no rule classifying which scopes flow to a shared store.</li>
+<li>A direct contradiction between §11.8 (&quot;Concurrent multi-machine editing of the same project is unsupported; pick one authoritative machine&quot;) and FACT-004 (&quot;CRDT sync across machines&quot;). Both lived in the system; an agent reading both got contradictory signals.</li>
+<li>No identity model for cross-actor flow. `signed_by: ed25519` was reserved in §5.1 but never used. The moment a second laptop received a memory claiming &quot;Stephen authored this,&quot; there was no way to verify cryptographically.</li>
+<li>No explicit publish/subscribe boundary. Every memory written between the start of multi-person work and now would have been classified retroactively at significant migration cost.</li>
+
+<h2>How</h2>
+
+<p>§17 declares four sync classes and per-scope defaults. §11.8 rewritten to clarify &quot;this protocol governs the personal layer; continuous multi-machine sync of shared scopes happens through the runtime BRAIN module.&quot; §5.1 frontmatter extended with `sync_class`. §14 end-of-response block extended with sync-class-summary line.</p>
+
+<p>§17.6 explicitly bounds what this protocol does NOT define: the wire protocol of `brain.publish`/`brain.pull` (BRAIN module&#x27;s domain), ACL enforcement on PORTAL surfaces (PORTAL module&#x27;s domain), conflict resolution between two subjects&#x27; concurrent edits (uses §9.1 with org BRAIN as eventual-consistency arbiter), cryptographic key rotation (separate `meta/key-policy.md`).</p>
+
+<h2>Scope defaults</h2>
+
+<p>`local-only`: `meta/`, `audit/`, `index/`, `exports/`, `conflicts/`, `.lock`, `member/&lt;self&gt;/private/`, `memories/drift/`.</p>
+
+<p>`publishable`: `member/&lt;self&gt;/` (non-private), `memories/preferences/`, `memories/refinements/`, `memories/decisions/`, `memories/facts/`, `memories/people/`, `memories/projects/`.</p>
+
+<p>`shared`: `project/`, `company/`, `module/&lt;name&gt;/`, `client/&lt;id&gt;/` (internal), `persona/&lt;role&gt;/`.</p>
+
+<p>`client-visible`: `client/&lt;id&gt;/portal-visible/`.</p>
+
+<p>`project/` defaulting to `shared` reflects the answer to &quot;does CyberOS architecture flow to every employee?&quot; — yes, this project IS the company&#x27;s product. Different projects may override.</p>
+
+<h2>Trade-offs accepted</h2>
+
+<li>**Per-subject identity** (rather than per-machine): one logical BRAIN per person across all their devices. Cleaner mental model; requires the BRAIN module to handle the mirror-per-subject sync. Audit chains stay per-store-linear; org BRAIN re-chains.</li>
+<li>**Subject sovereignty over personal scope**: agents do not contest a subject&#x27;s edits to `member/&lt;their-own-id&gt;/`. Risk: subject can hide a memory from the org. Mitigation: anything `publishable` is what a subject *chose* to share; if they didn&#x27;t share, that&#x27;s their right.</li>
+<li>**Absorb-then-discard offboarding**: keeps the org&#x27;s institutional knowledge while respecting the leaver&#x27;s personal sovereignty. Risk: a leaver who feels wronged could pre-emptively tombstone their `publishable` memories before publishing. Acceptance: published copies on the org BRAIN are independently authoritative; locally-tombstoning a `shared` memory does not propagate up.</li>
+<li>**Mechanism deferred to BRAIN module P1**: until then, `sync_class` is metadata-only. Risk: misuse during the metadata-only window. Mitigation: defaults are conservative (most personal scopes default to `publishable`/`local-only`, not `shared`).</li>
+
+<h2>Closes</h2>
+
+<li>§11.8 ↔ FACT-004 contradiction (FACT-004 updated separately to cross-link §17).</li>
+
+<h2>How to use this memory</h2>
+
+<p>When designing a new memory bucket, declare its scope and let §17.2 pick the default sync_class. When in doubt about whether a fact is personal or org, ask: would a teammate joining tomorrow benefit from seeing this? If yes, `publishable` or `shared`. If no, `local-only`. When the BRAIN module ships at P1, the `sync_class` field starts to load-bear; before then, get the defaults right so migration is automatic.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (evening) — Created during Bundle A execution after user adopted the TIER 1 sync-class proposal in chat (with answers Q1: CyberSkill is publisher, flexible; Q2: project/ flows to all employees → shared; Q3: client-visible needed → 4th class; Q4: absorb-then-discard offboarding; Q5: per-person identity).</li>
+</body></html>

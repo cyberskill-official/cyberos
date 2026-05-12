@@ -1,0 +1,65 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/facts/FACT-002-tech-stack.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/facts/FACT-002-tech-stack.md</p>
+
+<h1>FACT-002 — CyberOS technology stack at a glance</h1>
+
+<p>Frontend host shell. Module Federation (DEC-001).</p>
+
+<p>Backend gateway. Apollo Federation v2.5+ supergraph (DEC-002), per-module subgraph.</p>
+
+<p>Database. PostgreSQL 17 with pgvector (HNSW), Apache AGE (graph), PGroonga (multilingual full-text), pg_jsonschema (DEC-003).</p>
+
+<p>Eventing. NATS JetStream (DEC-004) on canonical subjects `{module}.{entity}.{verb}`.</p>
+
+<p>Object store. S3-compatible — Hetzner S3 primary, MinIO for dev (DEC-005).</p>
+
+<p>Auth. OAuth 2.1 + PKCE + JWT (DEC-006); MFA TOTP minimum, WebAuthn for elevated roles (DEC-007).</p>
+
+<p>Multi-tenancy. Schema-per-tenant + Postgres RLS (DEC-008); per-tenant region pinning for residency (DEC-009).</p>
+
+<p>LLM providers. AWS Bedrock primary (DEC-012); Anthropic + OpenAI Zero-Data-Retention failover (DEC-013).</p>
+
+<p>Embeddings. BAAI/bge-m3 (DEC-014/041) — multilingual, native Vietnamese.</p>
+
+<p>Reranker. bge-reranker-v2-m3 (DEC-017/042).</p>
+
+<p>Chunking. Anthropic Contextual Retrieval (DEC-018).</p>
+
+<p>Agent runtime. LangGraph topology (DEC-027 in CUO context); Anthropic Skills directory format for persona/skill files; persona registry under `~/.cyberos/skills/cuo/&lt;role&gt;/SKILL.md`.</p>
+
+<p>MCP. Model Context Protocol 2025-11-25 spec; OAuth 2.1 + PKCE + PRM discovery; per-module MCP servers federated through one gateway.</p>
+
+<p>Audit. Merkle-chained audit log (DEC-019); BRAIN filesystem layer is the local-edge expression of this same pattern.</p>
+
+<p>Observability. LGTM stack — Loki, Grafana, Tempo, Mimir/Prometheus (DEC-021).</p>
+
+<p>Orchestration &amp; GitOps. Kubernetes + ArgoCD (DEC-022/023).</p>
+
+<p>KMS. HashiCorp Vault; per-tenant KMS hierarchy (DEC-024).</p>
+
+<p>Edge. Cloudflare for CDN, TLS, DDoS, WAF (DEC-025); tenant-subdomain DNS (DEC-026).</p>
+
+<p>Desktop / Mobile. Tauri desktop (DEC-030); React Native mobile (DEC-031, evaluation only through P3).</p>
+
+<p>PDF. Puppeteer (DEC-032).</p>
+
+<p>Locale. vi-VN default with en-US parity (DEC-034). Be Vietnam Pro typography for diacritic-aware rendering.</p>
+
+<p>Hosting. Hetzner primary; Vultr Singapore region; OVH for the eu-shard at P3+.</p>
+
+<h2>How to use this memory</h2>
+
+<p>Use this when answering &quot;what does CyberOS use for X&quot; or when proposing a new dependency. New tech choices need a DEC entry — they don&#x27;t slot in informally. Reference the relevant DEC ID in any addition to this card.</p>
+
+<h2>History</h2>
+
+<li>2026-05-04 — Created during initial digest of `docs/` folder.</li>
+</body></html>

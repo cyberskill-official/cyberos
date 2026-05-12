@@ -1,0 +1,70 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/health/2026-05-07-599e1097199618e0-postupgrade.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/health/2026-05-07-599e1097199618e0-postupgrade.md</p>
+<h1>§8.7 self-audit — 2026-05-07 — post-upgrade scan</h1>
+
+<p>**Trigger:** auto per §0.5 step 4 — post-upgrade migration check after `op:protocol_upgrade` to `sha256:599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d`.</p>
+<p>**Approved by:** subject:stephen-cheng (chat-turn approval phrase)</p>
+<p>**Generated at:** 2026-05-07T00:49:58+07:00</p>
+<p>**BRAIN state:** READY</p>
+
+<h2>Summary</h2>
+
+<li>**Critical:** 0</li>
+<li>**Warn:** 0</li>
+<li>**Info:** 12</li>
+
+<p>**✓ No critical findings — safe to continue normal operation**</p>
+
+<h2>Phase 1 — schema validation (§5.1 + §5.2)</h2>
+
+<li>INFO: §5.2 legacy memory_id (legitimised): meta/retention-rules.md → mem_01HSXX0RETENRULES000000001</li>
+<li>INFO: §5.2 legacy memory_id (legitimised): meta/tombstones.md → mem_01HSXX0TOMBSTONES000000001</li>
+<li>INFO: §5.2 legacy memory_id (legitimised): meta/classification-rules.md → mem_01HSXX0CLASSRULES000000001</li>
+<li>INFO: §5.2 legacy memory_id (legitimised): memories/facts/FACT-005-doc-changelog-convention.md → mem_F005DOCCHANGELOG2026050401V</li>
+
+<h2>Phase 2 — supersedes-graph integrity (§9.5)</h2>
+
+<li>INFO: §9.5 supersedes graph: 0 refs, all valid</li>
+
+<h2>Phase 3 — audit-row schema + chain integrity (§7.1, §7.2)</h2>
+
+<li>INFO: §7.1 audit-row paths: 18 historical non-BRAIN rows all reverted, no live violations</li>
+<li>INFO: §7.2 LINK invariant: 0 breaks across 286 rows</li>
+<li>INFO: §7.2 hash recompute under JCS strict: 96 match / 190 mismatch (cross-writer-version expected per §7.2)</li>
+
+<h2>Phase 4 — §0.5 protocol pin</h2>
+
+<li>INFO: §0.5 protocol pin: sha256:599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d ✓ matches just-approved upgrade</li>
+
+<h2>Phase 5 — §4.7 reconciliation (file presence + SHA)</h2>
+
+<li>INFO: §4.7 reconciliation: 109 paths SHA-clean, 0 drift, 0 missing</li>
+
+<h2>Phase 6 — §5.5 resource caps</h2>
+
+<li>INFO: §5.5 body caps: 0 violations (excluding protocol-history)</li>
+<li>INFO: §5.5 store size (non-archive): 587.1 KB / 1024 KB soft / 10240 KB hard</li>
+
+<h2>All findings</h2>
+
+<li>INFO: §5.2 legacy memory_id (legitimised): meta/retention-rules.md → mem_01HSXX0RETENRULES000000001</li>
+<li>INFO: §5.2 legacy memory_id (legitimised): meta/tombstones.md → mem_01HSXX0TOMBSTONES000000001</li>
+<li>INFO: §5.2 legacy memory_id (legitimised): meta/classification-rules.md → mem_01HSXX0CLASSRULES000000001</li>
+<li>INFO: §5.2 legacy memory_id (legitimised): memories/facts/FACT-005-doc-changelog-convention.md → mem_F005DOCCHANGELOG2026050401V</li>
+<li>INFO: §9.5 supersedes graph: 0 refs, all valid</li>
+<li>INFO: §7.1 audit-row paths: 18 historical non-BRAIN rows all reverted, no live violations</li>
+<li>INFO: §7.2 LINK invariant: 0 breaks across 286 rows</li>
+<li>INFO: §7.2 hash recompute under JCS strict: 96 match / 190 mismatch (cross-writer-version expected per §7.2)</li>
+<li>INFO: §0.5 protocol pin: sha256:599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d ✓ matches just-approved upgrade</li>
+<li>INFO: §4.7 reconciliation: 109 paths SHA-clean, 0 drift, 0 missing</li>
+<li>INFO: §5.5 body caps: 0 violations (excluding protocol-history)</li>
+<li>INFO: §5.5 store size (non-archive): 587.1 KB / 1024 KB soft / 10240 KB hard</li>
+</body></html>

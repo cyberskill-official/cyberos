@@ -1,0 +1,73 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-091-dual-mode-and-exposability.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-091-dual-mode-and-exposability.md</p>
+
+<h1>DEC-091 — Dual-mode invocation + exposability (registry v0.2.0)</h1>
+
+<p>Every workflow skill is **one function body with two front doors**: standalone (chat-mode entry) and chained (envelope from upstream skill). Plus every skill declares which surfaces it ships through via `exposable_as:` (internal / agent_plugin / mcp_tool / partner_connector).</p>
+
+<h2>What landed in frontmatter</h2>
+
+<pre>
+invocation_modes: [standalone, chained]   # workflow skills
+invocation_modes: [persona_routing_only]  # persona cards (no envelope)
+
+expects:
+  optional_fields: [...]                  # NEW: distinct from required
+  standalone_interview_ref: ./STANDALONE_INTERVIEW.md  # NEW: chat-mode entry script
+
+produces:
+  human_summary_ref: ./HUMAN_SUMMARY.md   # NEW: chat-mode output template
+
+exposable_as:
+  internal:           true     # CUO supervisor route (default true)
+  agent_plugin:       true     # ships in plugin bundles
+  mcp_tool:           true     # auto-emit MCP tool descriptor
+  partner_connector:  false    # GATED — needs separate per-skill DEC
+</pre>
+
+<h2>The dual-mode mechanic</h2>
+
+<p>Mode detection (deterministic at runtime):</p>
+
+<li>Standalone when ALL of: no `pipeline_run_id` in call context, caller is the CHAT primitive, input envelope is empty.</li>
+<li>Chained otherwise.</li>
+
+<p>Standalone path: supervisor reads `STANDALONE_INTERVIEW.md`, asks 3-5 questions, fills `expects.required_fields` from chat answers, then invokes the function body. After completion, renders `HUMAN_SUMMARY.md` to chat. Chained path: supervisor consumes the upstream envelope, invokes the function body, emits the output envelope to the next skill. **Same function body in both paths** — this is the key property.</p>
+
+<h2>The exposability mechanic</h2>
+
+<p>The build pipeline reads `exposable_as:` and emits per-surface artefacts:</p>
+
+<p>| Surface | What it produces | Audience |</p>
+<p>| --- | --- | --- |</p>
+<p>| `internal` | SKILL.md the CUO supervisor routes to | CyberSkill employees |</p>
+<p>| `agent_plugin` | `.plugin/` bundle (skills + commands + .mcp.json) | Claude Code / Antigravity / Codex / Cursor users |</p>
+<p>| `mcp_tool` | `tool.json` + stdio runner stub | Any MCP-compatible agent |</p>
+<p>| `partner_connector` | Hosted MCP + OAuth + tenancy + billing | External partners on a marketplace |</p>
+
+<p>`partner_connector: true` requires a separate per-skill DEC before the flag flips — partner exposure has trust, billing, and SLA implications that need explicit governance.</p>
+
+<h2>Trust↔exposability link</h2>
+
+<p>A skill with `partner_connector: true` MUST also have `confidence_band.cite_sources: required`, `untrusted_inputs.injection_scan: required`, `self_audit.invariants_ref` populated with ≥3 invariants including INV-`scope-discipline` and INV-`fabrication-boundary`, and `human_fine_tune.review_required.on_safety_change: true`. Validator enforces these as a precondition.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When designing or reviewing a CyberOS skill:</p>
+
+<li>A skill that&#x27;s &quot;chained-only&quot; (no chat surface) declares `invocation_modes: [chained]` and omits the interview/summary refs. Rare — most skills should be invokable both ways.</li>
+<li>Don&#x27;t conflate `agent_plugin` and `mcp_tool`. Plugins are bundles that include skills + agents + commands + MCP servers; MCP tools are a single tool descriptor surfaced to a host&#x27;s tool registry. A skill can be both, neither, or one.</li>
+<li>The build pipeline&#x27;s transpilers (`ccsm-to-anthropic`, `ccsm-to-mcp-tool`, `ccsm-to-claude-plugin`, etc.) read `exposable_as:` to decide which targets to emit. See DEC-091&#x27;s carrier specification in registry README Part 9.</li>
+
+<h2>History</h2>
+
+<li>2026-05-06 — DEC-091 created. fr-create + fr-audit updated to v0.2.0 with `invocation_modes: [standalone, chained]`, full `exposable_as:` block, `STANDALONE_INTERVIEW.md` + `HUMAN_SUMMARY.md` files. cpo persona-card updated with `invocation_modes: [persona_routing_only]`.</li>
+</body></html>

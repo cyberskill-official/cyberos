@@ -1,0 +1,29 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-015-document-divergence-over-forced-unification.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-015-document-divergence-over-forced-unification.md</p>
+
+<h1>REF-015 — Document divergence rather than force unification when consolidation isn&#x27;t free</h1>
+
+<p>When two skill folders carry &quot;shared&quot; reference documents that have diverged over time, the default reflex is to consolidate them into a single source of truth. The v0.2.2 audit of `cuo/cpo/fr-create` and `cuo/cpo/fr-audit` proved that reflex is wrong by default. The four reference documents present in both skills (`HITL_PROTOCOL.md`, `UNTRUSTED_CONTENT.md`, `ANTI_FABRICATION.md`, `EU_AI_ACT_DECISION_TREE.md`) are NOT byte-identical between the two skills, and the divergence is intentional: each is tuned to its consumer&#x27;s lifecycle phase (write-side vs. read-side, generate-time vs. validate-time).</p>
+
+<p>Forcing consolidation in v0.2.2 would have required either (a) a single super-doc with conditional sections — risk twice as long, half as readable, OR (b) splitting into shared + per-skill local files — risk fragmentation that complicates updates. Neither clearly improves on the divergent state.</p>
+
+<p>**The chosen path:** document the divergence proactively in `references/README.md` index files in both skills. The next reader doesn&#x27;t waste cycles on &quot;which copy is canonical?&quot; and doesn&#x27;t get tempted to force unify by accident. The decision to revisit consolidation is gated on a future signal: if the divergence grows or maintenance pain becomes evident.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When you encounter &quot;shared&quot; docs that have diverged across consumers, ask: (1) is the divergence intentional? (2) is consolidation cheap? (3) what&#x27;s the cost of leaving them divergent? If the answers are yes/no/low, document the divergence and move on. Don&#x27;t burn time forcing unification that the codebase doesn&#x27;t reward.</p>
+
+<p>This is a counter to the more common &quot;DRY&quot; reflex. DRY applies cleanly when consolidation is cheap (single-line constants, single-purpose functions). It does NOT apply cleanly when documents are written for different audiences, lifecycle phases, or invocation contexts.</p>
+
+<h2>History</h2>
+
+<li>**2026-05-06** — Created during registry v0.2.2 audit. SHA-256 diff confirmed all four candidate reference docs differ between fr-create and fr-audit. Decision: document the divergence in two new `references/README.md` files; defer consolidation to a future v0.3.0 if the cost equation shifts.</li>
+</body></html>

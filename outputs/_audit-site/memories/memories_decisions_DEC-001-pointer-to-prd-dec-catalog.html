@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-001-pointer-to-prd-dec-catalog.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-001-pointer-to-prd-dec-catalog.md</p>
+
+<h1>DEC-001 — Pointer to the canonical DEC catalogue</h1>
+
+<p>The CyberOS architectural decision record (DEC-001 .. DEC-066+) is canonically maintained in two places:</p>
+
+<p>PRD §11.1 — summary list with one-line rationales for DEC-001 through DEC-066.</p>
+
+<p>SRS Part 13 — full text, alternatives considered, trade-offs, and supersession history for every DEC.</p>
+
+<p>Highlights the agent should know without opening the docs:</p>
+
+<p>DEC-001 Module Federation host shell. DEC-002 Apollo Federation v2.5+. DEC-003 PostgreSQL 17 with pgvector + Apache AGE + PGroonga. DEC-004 NATS JetStream events. DEC-005 S3-compatible object store. DEC-006 OAuth 2.1 + PKCE + JWT. DEC-007 MFA TOTP minimum + WebAuthn for elevated roles. DEC-008 schema-per-tenant + RLS multi-tenancy. DEC-009 per-tenant region pinning for residency. DEC-010 Vietnam PDPL home regime. DEC-011 SOC 2 → ISO 27001 → ISO 42001 compliance ladder. DEC-012 AWS Bedrock primary AI provider. DEC-013 Anthropic + OpenAI failover (Zero-Data-Retention). DEC-014/041 bge-m3 embedding model. DEC-015 pgvector HNSW index. DEC-016 PGroonga lexical search. DEC-017/042 bge-reranker-v2-m3. DEC-018 Anthropic Contextual Retrieval chunking. DEC-019 Merkle-chained audit log. DEC-020 10-year compensation retention. DEC-021 LGTM observability stack. DEC-022/023 Kubernetes + ArgoCD GitOps. DEC-024 tenant KMS. DEC-025 Cloudflare edge. DEC-026 tenant-subdomain DNS. DEC-027 Trust Center incident response. DEC-028 4-tier data classification. DEC-029 C2PA provenance. DEC-030/031 Tauri desktop / RN mobile. DEC-032 Puppeteer PDF. DEC-033 federated cmd-K search. DEC-034 vi-VN default i18n. DEC-035 CyberSkill-logo Genie persona. DEC-036 BRAIN denylist. DEC-037 persona drift detection. DEC-038..046 BRAIN three-layer architecture. DEC-047..052 CUO and agent runtime (LangGraph, Anthropic Skills, persona registry). DEC-053..066 engineering invariants — idempotency keys, RBAC+SCG over ABAC, Postgres RLS as primary isolation, tenant-as-degenerate-tenant from P0, Vietnamese-first locale, Singapore HoldCo flip at P3, Vietnam Decree 20/2026 SME exemption, EU AI Act high-risk for HR/REW.</p>
+
+<h2>2026-05-04 protocol amendments (DEC-076..DEC-086)</h2>
+
+<p>Ten new locked decisions landed in a single day after a corrective re-ingestion of a 944-line WhatsApp DM exposed read-side asymmetries in the AGENTS.md protocol. Each has a paired `memories/refinements/REF-NNN-&lt;slug&gt;.md` entry that captures the implementation specifics:</p>
+
+<p>DEC-076 Standing rule — every memory issue MUST trigger a refinement proposal in the same response (AGENTS.md §0.4). DEC-077 Verify-before-respond on user completeness challenge — stop, re-grep source verbatim, only respond AFTER verifying (AGENTS.md §1.10). DEC-078 Ingestion completeness for multi-section sources — forbid sample-skipping, mandate sequential walk + high-water mark + ≥0.99 coverage OR `intentional_summary:true` with `summary_reason` (AGENTS.md §4.10). DEC-079 Token-budget transparency — declare chunking plan + confirm coverage in response for any source &gt;500 lines or &gt;50 KB (AGENTS.md §4.10.2 (was §4.11 pre-Bundle-M)). DEC-080 Source freshness tier as conflict-resolution Step 0 — lower-tier (more authoritative) wins automatically; resolves Notion-vs-chat round-trips (AGENTS.md §5.1, §6, §9.1). DEC-081 Source-coverage validator as Auto-Dream Phase 6 — re-hash sources, emit drift_candidate / shallow_candidate at consolidation (AGENTS.md §8.6). DEC-082 Credential denylist sharpened (TOMBSTONED same-day — rule subsumed by host-platform safety + original §9.3 storage rule). DEC-083 Audit row `correction_to` field — set when an op corrects the agent&#x27;s own prior action (AGENTS.md §7.1). DEC-084 Drift and refinement first-class memory bucket types — `memories/drift/` (auto-generated) and `memories/refinements/` (REF-NNN-&lt;slug&gt;.md per adopted amendment) (AGENTS.md §3, §10). DEC-085 End-of-response coverage stat mandatory on ingestion ops (AGENTS.md §14). DEC-086 Manifest cleanup — remove `schema_version` and `compatible_runtimes` (incompatible with day-by-day protocol evolution); replace version comparison with field-presence tripwire in §13.0 INCOMPATIBLE state.</p>
+
+<p>The day also added new doc-CHANGELOG conventions (one CHANGELOG.md per maintained design doc; no inline version markers in the docs themselves) — see `memories/facts/FACT-005-doc-changelog-convention.md`.</p>
+
+<h2>Extending the catalogue</h2>
+
+<p>A new decision lives at DEC-067+ (next free integer). A change to an existing decision is recorded as a superseding decision (DEC-NEW supersedes DEC-OLD) — the old row remains visible with status `Superseded`. Same pattern REW uses for parameter versions.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When a feature request requires citing or revising a decision, look it up in the PRD/SRS by ID. Add a memory file at `memories/decisions/DEC-{N}-{slug}.md` only when there is a project-internal addendum or local interpretation worth recording — do not duplicate the canonical SRS Part 13 entry here.</p>
+
+<h2>History</h2>
+
+<li>2026-05-04 — Created during initial digest of `docs/` folder.</li>
+</body></html>

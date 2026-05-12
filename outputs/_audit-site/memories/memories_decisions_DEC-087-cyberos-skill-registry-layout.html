@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-087-cyberos-skill-registry-layout.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-087-cyberos-skill-registry-layout.md</p>
+
+<h1>CyberOS skill-registry layout — Option B + fr-create/fr-audit split</h1>
+
+<p>The CyberOS skill registry lives at `cyberos/docs/skills/`, organised as `cuo/&lt;role&gt;/&lt;workflow-skill&gt;/SKILL.md` (Option B from the 2026-05-05 trade-off diagram). The PRD §3.2 mandate `~/.cyberos/skills/cuo/&lt;role&gt;/` is interpreted as a runtime install path; the source-of-truth is the docs registry. Cross-persona reusable skills live in `cuo/_shared/` (per DEC-061&#x27;s `draft-payslip-explanation` worked example).</p>
+
+<p>The Feature Request workflow ports out of `feature-request/v2.0.0` as two atomic skills, NOT one:</p>
+
+<li>`cuo/cpo/fr-create/` — owns sections §0–§14 + §18 of v2.0.0.</li>
+<li>`cuo/cpo/fr-audit/`  — owns sections §15–§17.</li>
+
+<p>The split is intentional: each skill is a standalone trigger AND chainable via the LangGraph supervisor&#x27;s `next_skill_recommendation` field. The chain `fr-create → fr-audit` reproduces v2.0.0&#x27;s `create_and_audit` mode; standalone `fr-audit` reproduces v2.0.0&#x27;s `audit_only` mode. The shared `feature_request@1` template lives at `cuo/_shared/feature-request-template/template.md` so both skills (and any future `cuo/cto/fr-to-tech-spec`) load the same authoritative schema.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When making layout / split / interface decisions for new CUO skills:</p>
+
+<li>New workflow under an existing role → `cuo/&lt;role&gt;/&lt;workflow&gt;/SKILL.md`.</li>
+<li>New cross-persona reusable workflow → `cuo/_shared/&lt;workflow&gt;/SKILL.md`.</li>
+<li>Each skill carries its own `CHANGELOG.md` (Keep-a-Changelog 1.1.0).</li>
+<li>Each skill declares `expects:` + `produces:` envelopes so the supervisor can chain it safely.</li>
+<li>Audit row schema (`genie.action_log`) maps 1:1 to the workflow leaf via `(persona_id, skill_id, skill_version)`.</li>
+
+<p>When asked &quot;should this be one skill or two?&quot;: apply the standalone-trigger test. If the user could plausibly want to invoke just one half, split. The fr-create/fr-audit split is the canonical example.</p>
+
+<h2>History</h2>
+
+<li>2026-05-05 — DEC-087 created. Layout chosen (Option B), FR workflow split, foundation README + cuo/README + cpo persona-card + _shared/feature-request-template + fr-create + fr-audit all written in one session. Source coverage of FR_CREATE_AND_AUDIT.md v2.0.0: 1157/1157 lines.</li>
+</body></html>

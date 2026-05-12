@@ -1,0 +1,90 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-092-self-audit-and-auto-refinement.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-092-self-audit-and-auto-refinement.md</p>
+
+<h1>DEC-092 — Self-audit + auto-refinement at skill level (registry v0.2.0)</h1>
+
+<p>Every Tier-2 CyberOS skill carries `INVARIANTS.md` declaring runtime truths it enforces about its own behaviour. Breaches emit a `refinement_proposal` envelope (new `output_kind`), pause the LangGraph pipeline at a checkpoint, surface as a Question primitive for human review, and resume from the checkpoint after APPROVE / REVISE / REJECT.</p>
+
+<h2>What landed in frontmatter</h2>
+
+<pre>
+self_audit:
+  invariants_ref: ./INVARIANTS.md
+  check_at:
+    - on_node_boundary          # every LangGraph step
+    - on_audit_row_count: 25    # mirrors AGENTS.md §8 consolidation cadence
+    - on_completion
+  anomaly_signals:
+    confidence_low_streak:     {threshold: 3, window: 10}
+    user_correction_streak:    {threshold: 2, window: 5}
+    denylist_near_miss_streak: {threshold: 2, window: 20}
+    scope_rejection_streak:    {threshold: 1, window: 1}
+    # plus skill-specific signals (e.g., fr-audit&#x27;s deterministic_drift)
+  on_breach:
+    emit: refinement_proposal
+    pause_pipeline: true
+    resume_token_field: refinement_run_id
+</pre>
+
+<p>Plus new audit row kind `op:&quot;self_refinement_proposal&quot;` and new `produces.output_kind` value `refinement_proposal`. Both extend existing enums additively — no breaking change.</p>
+
+<h2>Anatomy of a refinement_proposal</h2>
+
+<pre>
+kind: refinement_proposal
+skill_id: cuo/cpo/fr-create
+skill_version: 0.2.0
+trigger: &quot;INV-003 breach: PRD digest has coverage 0.81 (&lt;0.99) without intentional_summary flag&quot;
+observation: |
+  Read 4 chunks; processed 81% of source lines.
+proposed_amendments:
+  - tier: 1
+    target_doc: cuo/cpo/fr-create/SKILL.md
+    section: §&quot;PLAN phase&quot; step 1
+    diff: |
+      +  Paginate PRD reads sequentially. Track high-water mark.
+      +  Verify coverage ≥0.99 OR set intentional_summary: true.
+minimum_viable: &quot;Add coverage check at end of PLAN phase.&quot;
+pipeline_paused: true
+resume_token: refinement_run_id_abc123
+</pre>
+
+<h2>Relationship to AGENTS.md §0.4</h2>
+
+<p>This DEC promotes the §0.4 standing rule (protocol-level: every memory issue triggers a refinement proposal in the same response) to **skill-level**. Each skill now does §0.4-equivalent self-checking at runtime:</p>
+
+<p>| AGENTS.md §0.4 | Skill-level (this DEC) |</p>
+<p>| --- | --- |</p>
+<p>| Surfaces during **memory operations** | Surfaces during **skill execution** |</p>
+<p>| Refines **AGENTS.md** itself | Refines **the skill&#x27;s SKILL.md / RUBRIC.md / INVARIANTS.md** |</p>
+<p>| Recorded in `memories/refinements/REF-NNN-...` | Recorded in `genie.action_log` as `self_refinement_proposal` rows + a follow-up `memories/refinements/` BRAIN entry on adoption |</p>
+<p>| Tier 1/2/3 priority + minimum-viable amendment | Same triage; `proposed_amendments[].tier` carries it |</p>
+
+<p>The two layers compose. Same pattern, different surface. AGENTS.md itself doesn&#x27;t change; this DEC just ports the pattern outward.</p>
+
+<h2>Auto-refinement → manual fine-tune escalation</h2>
+
+<p>Auto-refinement is for mechanical drift the skill can self-detect and self-propose a fix for. When a skill emits ≥2 refinement_proposals on the same theme within one batch (`self_audit_refinement_proposal_count_above` threshold), the runtime escalates to the manual fine-tune flow (DEC-093). Reason: the auto-refinement loop has flagged a pattern that needs human investigation, not a one-line patch.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When designing a new CyberOS skill:</p>
+
+<p>1. Author 3-8 invariants in `INVARIANTS.md` covering the skill&#x27;s highest-value contracts (e.g., fr-audit&#x27;s INV-001 verdict determinism — the auditor&#x27;s reproducibility is its core promise).</p>
+<p>2. Each invariant has ID + Statement + Check + Severity + Refinement template. The Refinement template is what the runtime emits on breach — keep it actionable (cite the section, propose the diff).</p>
+<p>3. `confidence_low_streak` is the most universally-useful anomaly signal — start there if unsure.</p>
+<p>4. `pause_pipeline: true` is the default for sev-0 invariants. For advisory invariants (warning-severity), use `pause_pipeline: false` so the skill keeps flowing while logging the concern.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 — DEC-092 created. fr-create + fr-audit each got `INVARIANTS.md` with 8 invariants. `self_audit:` block added to both workflow SKILL.mds + the cpo persona-card (with persona-strict routing-miss-rate as the sole anomaly signal). New audit row kind</li>
+<p>  + new output_kind reserved in registry README v0.2.0 Part 2.1 + Part 6.</p>
+</body></html>

@@ -1,0 +1,68 @@
+name: voice + doc-consistency
+
+on:
+  push:
+    paths:
+      - "docs/CyberOS-AGENTS*.md"
+      - "runtime/tools/voice_check.py"
+      - "runtime/tools/cyberos"
+  pull_request:
+    paths:
+      - "docs/CyberOS-AGENTS*.md"
+      - "runtime/tools/voice_check.py"
+      - "runtime/tools/cyberos"
+  workflow_dispatch:
+
+jobs:
+  voice-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: install deps
+        run: pip install pyyaml rfc8785
+      - name: voice linter (advisory)
+        run: |
+          # Voice standard adoption is additive per §0.5 — non-strict on existing docs.
+          # When a new DEC/REF/FACT lands, the lint should pass on that file.
+          python3 runtime/tools/voice_check.py --summary
+        continue-on-error: true  # advisory only; remove once voice debt cleared
+      - name: voice linter strict on new DEC/REF/FACT
+        run: |
+          # Check only files changed in this PR
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
+              | grep -E "memories/(decisions|refinements|facts)/" || true)
+            if [ -n "$CHANGED" ]; then
+              python3 runtime/tools/voice_check.py --strict $CHANGED
+            fi
+          fi
+
+  doc-consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: install deps
+        run: pip install pyyaml rfc8785
+      - name: cross-doc consistency check
+        run: |
+          python3 runtime/tools/cyberos doc-consistency
+        continue-on-error: true  # advisory; surfaces stale §-refs + missing DECs
+
+  validate-brain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: install deps
+        run: pip install pyyaml rfc8785
+      - name: cyberos verify
+        run: |
+          python3 runtime/tools/cyberos_validate.py .
+      - name: cyberos verify --self-test
+        run: |
+          python3 runtime/tools/cyberos_validate.py --self-test

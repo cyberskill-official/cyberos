@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-102-strict-uppercase-brain-alias.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-102-strict-uppercase-brain-alias.md</p>
+
+<h1>DEC-102 — Strict uppercase BRAIN alias (§0.3 case-sensitivity)</h1>
+
+<h2>Decision</h2>
+
+<p>§0.3&#x27;s BRAIN-alias activation requires literal uppercase B-R-A-I-N. Lowercase &#x27;brain&#x27; (in any of &quot;the brain&quot;, &quot;human brain&quot;, &quot;brain freeze&quot;, &quot;what does the brain do&quot;, etc.) does NOT trigger memory-store interpretation; it&#x27;s plain language about anatomy, metaphor, or general topic. When context strongly implies memory-store but casing is lowercase, the agent surfaces the ambiguity and asks a clarifying question rather than silently assuming.</p>
+
+<h2>Why</h2>
+
+<p>The pre-H §0.3 wording — *&quot;the BRAIN&quot; or &quot;your BRAIN&quot;* — used implied capitals but didn&#x27;t enforce them. A literal reader (or a too-eager agent) could have matched lowercase &quot;brain&quot; too. Examples of false-positive risk:</p>
+
+<li>*&quot;What does the brain do during sleep?&quot;* — anatomy question; should not trigger `view`-walk of `.cyberos-memory/`.</li>
+<li>*&quot;I had a brain freeze&quot;* — metaphor; not a memory-store reference.</li>
+<li>*&quot;Brain training apps&quot;* — product topic; not a memory-store reference.</li>
+<li>*&quot;Right side of the brain&quot;* — anatomy; not a memory-store reference.</li>
+
+<p>Stephen noticed this gap during a casual review post-Bundle-G and asked for the strict version. The fix is a single-paragraph amendment with no other knock-on effects.</p>
+
+<h2>How</h2>
+
+<p>§0.3 first paragraph amended with explicit case-sensitivity clause. New &quot;Lowercase &#x27;brain&#x27; is normal language&quot; clarifier paragraph added before the existing examples list. Includes an ambiguity-disambiguation rule: lowercase + memory-context → clarifying question; never silent assumption.</p>
+
+<h2>Trade-offs accepted</h2>
+
+<li>**Users won&#x27;t naturally type ALL CAPS in casual conversation.** Acceptance: the BRAIN alias is a deliberate-action signal (like &quot;@channel&quot; or &quot;/command&quot;); the casing is the signal.</li>
+<li>**Marginally more friction for power users.** Acceptance: the existing §0.3 examples (&quot;save to the BRAIN&quot;, &quot;what&#x27;s in the BRAIN?&quot;) are short and easy to capitalise; the clarifying question for ambiguous lowercase is one-line friction worth the false-positive prevention.</li>
+
+<h2>What this does NOT change</h2>
+
+<li>**§1 step 2 diagnostic-verb list** (Bundle G) — keeps lowercase &quot;check brain&quot;, &quot;show brain&quot;, &quot;view brain&quot;. Those trigger `PRISTINE-DIAGNOSTIC-HOLD` based on verb intent, NOT BRAIN-alias activation. Independent mechanisms.</li>
+<li>**Prose readability** — written documentation elsewhere in the protocol can use either case for natural reading. The case-sensitivity rule applies only at the alias-activation boundary.</li>
+
+<h2>How to use this memory</h2>
+
+<p>When the user types &quot;the BRAIN&quot;, &quot;your BRAIN&quot;, or any uppercase form, treat as memory-store reference per §0.3 examples. When the user types lowercase &quot;brain&quot;, treat as plain language; if context is ambiguous (memory-discussion in surrounding turns), ask &quot;Did you mean &#x27;BRAIN&#x27; (the memory store)?&quot; before acting. Never silently assume the alias from lowercase.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (later evening) — Created during Bundle H execution. Second refinement from real-world use; closes the case-sensitivity gap noticed by Stephen post-Bundle-G.</li>
+</body></html>

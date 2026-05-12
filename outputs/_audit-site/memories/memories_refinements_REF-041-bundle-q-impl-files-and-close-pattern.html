@@ -1,0 +1,55 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-041-bundle-q-impl-files-and-close-pattern.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-041-bundle-q-impl-files-and-close-pattern.md</p>
+
+<h1>REF-041 — Bundle Q: implementation files in source tree, §4.7 close-pattern alignment, BRAIN-not-versioned warn, relative symlinks</h1>
+
+<h2>Trigger</h2>
+
+<p>Real-world trigger 2026-05-11 during a cowork session that started with the user asking *&quot;did you load protocol?&quot;* and immediately surfaced the missing `brain_writer.py` — prescribed by 8 docs but never tracked in git, never on disk.</p>
+
+<p>A Phase-1 BRAIN repair (rebuilt the writer from AGENTS.md §4 / §5.2 / §7 / §13 directly) and a Phase-2 repo audit produced four refinements in one bundle:</p>
+
+<li>**REF-1 / §0.6 line 175** — implementation files MUST live in project source tree, not in `.cyberos-memory/`. Three different prescribed locations existed (`outputs/`, `&lt;cyberos-memory&gt;/`, &quot;PRD §5.10.11&quot;); only one would have resolved on disk if the file existed; only one is git-trackable when the BRAIN is gitignored.</li>
+<li>**REF-2 / §4.7** — post-terminator close exemption added. The existing 357-row chain ended `session.end → str_replace manifest.json` (the canonical close pattern), which the pre-Q wording flagged as `crash-mid-manifest-update`. Without the exemption, every clean session triggers a freeze on the next reconciliation.</li>
+<li>**REF-3 / §13.1 step 11** — BRAIN-not-versioned warn. Pre-Q step 11 only handled the *opt-in* default (commented `.gitignore` line); the *opt-out* state (uncommented entry, full ignore) had no audit trail. This is exactly how the previous `brain_writer.py` vanished without anyone noticing. Bundle Q records the opt-out as a deduplicated `op:&quot;warn&quot; reason:&quot;brain-not-versioned&quot;` audit row and adds a `.gitignore` comment block documenting the deliberate intent.</li>
+<li>**REF-4 / §15** — relative-symlink rule. `&lt;root&gt;/AGENTS.md` was found to be an absolute-path symlink (`/Users/stephencheng/...`), broken under cowork&#x27;s bind-mount and any other container/CI mount. Bundle Q mandates relative paths for all project-root convenience symlinks.</li>
+
+<p>Direct §0.4 standing-rule trigger (&quot;missing artefact OR missing audit trail surfaced from real-world failure&quot;). All four refinements adopted in the same chat turn that surfaced them.</p>
+
+<h2>Adoption</h2>
+
+<p>Adopted via §0.5 chat-turn approval (2026-05-11):</p>
+
+<p>&gt; approve protocol upgrade to sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688</p>
+
+<h2>Changes (textual diff against §617f5aef → §71a276c7)</h2>
+
+<li>**§0.6 line 175** — appended a clause: *&quot;Implementation files MUST live in the project source tree (versioned in git), NOT inside `.cyberos-memory/`.&quot;* Names `outputs/brain_writer.py` as canonical; allows alternates if §0.6 registry is updated.</li>
+<li>**§4.7 orphan-manifest-update bullet** — added &quot;Post-terminator close exemption&quot; defining the legitimate `session.end → str_replace manifest.json` close pattern (manifest update&#x27;s `prev_chain` matches preceding terminator&#x27;s `chain` AND new `audit_chain_head` value equals that terminator&#x27;s `chain`).</li>
+<li>**§13.1 step 11** — replaced single-line `.gitignore` instruction with a two-branch decision tree (default versioning-opt-in available vs explicit opt-out). Opt-out branch appends one-time `op:&quot;warn&quot; reason:&quot;brain-not-versioned&quot;` deduplicated by `(reason, path)` and updates `.gitignore` with a comment block documenting deliberate intent.</li>
+<li>**§15 first paragraph** — added: *&quot;All such symlinks MUST use relative paths&quot;* with example showing relative vs absolute, plus rationale (&quot;absolute-path symlinks break under container/CI/sandbox mounts where the host prefix differs and silently degrade portability&quot;).</li>
+
+<h2>Verification</h2>
+
+<li>Live AGENTS.md canonical SHA: `sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688` (matches manifest pin)</li>
+<li>Pre-edit AGENTS.md (recoverable via `git show HEAD~1:docs/CyberOS-AGENTS.md` after this bundle&#x27;s archive commit) hashes to `sha256:617f5aef1a49c394f6d17be072c8b29dbeb84c3265b80f3de3cb00a0f1c07759` (matches old pin)</li>
+<li>New `outputs/brain_writer.py` produces bit-perfect chain hashes for the last 5 rows of the 357-row pre-Q chain (post-Bundle-D writer compatibility)</li>
+<li>Chain LINK invariant: 0 breaks across full chain</li>
+<li>§4.7 reconciliation against the existing chain&#x27;s `session.end → str_replace manifest.json` close pattern now passes (no false-positive crash flag)</li>
+
+<h2>How to use this memory</h2>
+
+<p>When future protocol changes touch §0.6 (implementation files), §4.7 (reconciliation), §13.1 (bootstrap step 11), or §15 (multi-agent interop / symlinks), cross-link those changes back to REF-041 if the new change interacts with any of the four amendments here. Use the §4.7 post-terminator close exemption mentally when reading the audit ledger: a manifest update as the very last row is usually fine if the row before it is `session.end | consolidation_run | protocol_upgrade | protocol_rollback` and the chain values match.</p>
+
+<h2>History</h2>
+
+<li>2026-05-11 — REF-041 created as part of Bundle Q (sha transition `617f5aef…07759` → `71a276c7…3688`). Real-world trigger: missing `brain_writer.py` discovered during cowork session.</li>
+</body></html>

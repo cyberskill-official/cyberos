@@ -1,0 +1,52 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-099-three-way-protocol-conflict.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-099-three-way-protocol-conflict.md</p>
+
+<h1>DEC-099 — Three-way protocol-conflict handling</h1>
+
+<h2>Decision</h2>
+
+<p>§0.5 gains a Three-way conflict subsection covering the case where loaded SHA `Y`, pinned SHA `X`, and upstream-available SHA `Z` all differ. The agent refuses to apply upstream, surfaces a structured prompt offering three explicit user options (revert local; approve local as upgrade; manual three-way merge), and waits for an explicit chat-turn choice. No automated merge.</p>
+
+<p>§13.0 gains a corresponding state-classifier row: `INCOMPATIBLE:three-way-protocol-conflict`. Same handling as 2-way `protocol-sha256-mismatch` (freeze writes; surface diff).</p>
+
+<h2>Why</h2>
+
+<p>Pre-E §0.5 handled only the 2-way case (loaded vs pinned). The post-cascade analysis surfaced a real risk: a user with hand-edited AGENTS.md who runs &quot;check for protocol updates&quot; could have those edits silently overwritten by an upstream pull. This is exactly the failure mode the protocol&#x27;s existing §13.0 tripwire was designed to prevent for the 2-way case — extending the same conservative discipline to the 3-way case is the natural follow-on.</p>
+
+<h2>How</h2>
+
+<p>The Three-way conflict subsection of §0.5 specifies:</p>
+
+<li>Detection: an upstream release SHA `Z` AND `manifest.protocol.sha256 == X` AND `canonical_sha(loaded) == Y` AND `X ≠ Y ≠ Z`.</li>
+<li>Behaviour: state classifier returns `INCOMPATIBLE:three-way-protocol-conflict`; writes frozen.</li>
+<li>Resolution: user picks one of three options in chat — option 1 reverts local to pinned; option 2 approves local as upgrade (bringing pinned to `Y`); option 3 lets the user merge manually offline and approve the merged SHA via the standard §0.5 phrase.</li>
+<li>No automated merge: explicit user choice is required.</li>
+
+<h2>Trade-offs accepted</h2>
+
+<li>**Friction during 3-way conflicts**: the user must explicitly choose. Acceptance: silent overwrite is worse than friction.</li>
+<li>**No auto-merge**: simpler protocol; matches the existing 2-way conservative discipline. Auto-merge would require defining merge semantics for arbitrary text diffs, which is infeasible at the protocol layer.</li>
+<li>**TIER 2 (cross-actor protocol-version skew) and TIER 3 (key rotation operational flow) deferred**: TIER 2 becomes relevant once `brain.publish` ships at BRAIN module P1; TIER 3 becomes relevant once a real signing key is in use (placeholder today). Adopting them speculatively today would add bulk without proportional value.</li>
+
+<h2>What this does NOT do</h2>
+
+<li>Does NOT address scenario E (upstream rollback): mechanically works via standard §0.5 flow; no special semantic added.</li>
+<li>Does NOT address scenario F (upstream tightens validators): Bundle D&#x27;s additive-only rule is the protection; if CyberSkill violates it, the answer is &quot;fix CyberSkill,&quot; not &quot;make the protocol forgiving.&quot;</li>
+<li>Does NOT address scenarios D and G: those are explicitly deferred (TIER 2 and TIER 3 of the proposal).</li>
+
+<h2>How to use this memory</h2>
+
+<p>When designing the BRAIN module&#x27;s `protocol.releases.list` MCP endpoint at P1, ensure it returns the SHA + signature + changelog so the agent can run the §0.5 three-way check before presenting upgrade options. When the user reports that &quot;the agent overwrote my hand-edits,&quot; verify the §13.0 `INCOMPATIBLE:three-way-protocol-conflict` tripwire fires correctly and the freeze-write behaviour is operational.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (evening) — Created during Bundle E execution after user explicitly adopted TIER 1 of the three-way-conflict refinement proposal.</li>
+</body></html>

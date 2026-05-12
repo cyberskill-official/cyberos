@@ -1,0 +1,10 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "11 — Doctor: tombstone orphan file",
+  "description": "When a memory file exists on disk but has no audit row (manually placed). Soft-tombstone per §4.6.",
+  "steps": [
+    {"file": "runtime/tools/cyberos_validate.py", "line": 1, "description": "Validator's orphan-files check (§8.7 phase 5) flags these."},
+    {"file": "runtime/tools/cyberos_doctor.py", "line": 1, "description": "doctor tombstone-orphan adds frontmatter: tombstoned: true, deleted_at, deleted_by:agent:doctor, tombstone_reason:'orphan-no-audit-row'."},
+    {"file": ".cyberos-memory/meta/templates/DRIFT.md", "line": 1, "description": "DRIFT template is the format. Orphans may originate from drift; this is the cleanup path."}
+  ]
+}

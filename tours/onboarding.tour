@@ -1,0 +1,14 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "01 — Onboarding (new contributor walkthrough)",
+  "description": "How to bootstrap a fresh contributor into the CyberOS BRAIN. Targets: new engineer joining CyberSkill, or first-time agent reading the protocol.",
+  "steps": [
+    {"file": "docs/CyberOS-AGENTS.README.md", "line": 1, "description": "Start here. The README is the friendly on-ramp. The protocol document itself (AGENTS.md) is dense; this README explains it for humans."},
+    {"file": "docs/CyberOS-AGENTS.README.md", "line": 49, "description": "Part 2 — the five pillars. Internalise these and the rest of the protocol becomes predictable."},
+    {"file": "docs/CyberOS-AGENTS.md", "line": 1, "description": "When you need the exact wording (writing a validator, designing a feature, proposing an amendment), come here. Otherwise the README is enough."},
+    {"file": "runtime/tools/cyberos", "line": 1, "description": "Operator entry point. `cyberos --help` lists all subcommands. `cyberos status` is the daily dashboard."},
+    {"file": "runtime/tools/cyberos_onboard.py", "line": 1, "description": "Run `python3 runtime/tools/cyberos_onboard.py` for the interactive 5-step bootstrap. It generates your member/profile.md + PERSON-NNN + onboarding-checklist PREF."},
+    {"file": ".cyberos-memory/meta/templates/DEC.md", "line": 1, "description": "Templates per memory type. When you write your first DEC/REF/FACT, use the matching template."},
+    {"file": ".cyberos-memory/manifest.json", "line": 1, "description": "Root pointer. Pinned protocol SHA, source_tiers, encryption policy. NEVER hand-edit `audit_chain_head` or `protocol.sha256` — those mutate via brain_writer only."}
+  ]
+}

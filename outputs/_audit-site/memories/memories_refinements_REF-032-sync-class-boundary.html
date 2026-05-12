@@ -1,0 +1,51 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-032-sync-class-boundary.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-032-sync-class-boundary.md</p>
+
+<h1>REF-032 — Sync-class boundary (§17)</h1>
+
+<h2>Real-world trigger</h2>
+
+<p>User question (Stephen, 2026-05-06): *&quot;Currently it works as personal memory for local machine for one person. But in the future each person will contribute to CyberSkill activities (via CyberOS), so it needs to serve both personal-based memory as well as CyberOS&#x27;s memory. Should we think about that now and how to implement that?&quot;*</p>
+
+<p>Diagnosis surfaced two pre-existing gaps:</p>
+
+<p>1. §11.8 ↔ FACT-004 contradiction (concurrent multi-machine: unsupported vs CRDT sync). An agent reading both got contradictory signals; firing as soon as a second laptop joins.</p>
+<p>2. Personal-vs-org boundary was implicit. Every memory written today was being classified by accident; retroactive classification at scale would have been very expensive.</p>
+
+<p>A quieter Gap 3 (no identity layer for cross-actor flow) was scoped out to a future REF — the field `signed_by: ed25519` already exists in §5.1; making it mandatory is a separate refinement that earns its keep when the BRAIN module is being built.</p>
+
+<h2>Refinement adopted</h2>
+
+<p>TIER 1 (lock the boundary; resolve the contradiction). TIER 2 (signing mandate) deferred. TIER 3 (operational on-ramp) shipped via the README on-ramp doc.</p>
+
+<h2>What changed in AGENTS.md</h2>
+
+<li>New §17 (Personal vs shared memory boundary) with four sync classes and the per-scope defaults table.</li>
+<li>§5.1 frontmatter gained 28th field: `sync_class:`.</li>
+<li>§11.8 rewritten: &quot;This protocol governs the personal layer of the BRAIN. Continuous multi-machine sync of shared scopes happens through the runtime BRAIN module (FACT-004 Layer 2).&quot; Resolves the CRDT-sync contradiction.</li>
+<li>§14 end-of-response block gained a sync-class-summary line.</li>
+
+<h2>User answers driving the design</h2>
+
+<li>Q1 *&quot;Is CyberSkill one tenant?&quot;* → CyberSkill is publisher, but the design stays flexible (multi-tenant SaaS at P3+ supported via per-tenant region pinning per FACT-004).</li>
+<li>Q2 *&quot;Does project/ flow to org?&quot;* → Yes. project/ defaults to `shared`. CyberOS architecture is the company&#x27;s product.</li>
+<li>Q3 *&quot;Do clients consume a slice?&quot;* → Yes. Fourth class `client-visible` defined; default scope `client/&lt;id&gt;/portal-visible/`.</li>
+<li>Q4 *&quot;Offboarding semantics?&quot;* → Absorb knowledge; discard personal fragments. Codified as the absorb-then-discard pattern.</li>
+<li>Q5 *&quot;Per-machine or per-person?&quot;* → Per-person. Subject is the trust anchor; multiple machines mirror through the org BRAIN per-subject.</li>
+
+<h2>How to use this memory</h2>
+
+<p>When proposing or evaluating future multi-person refinements, read this REF + DEC-095 together. The TIER 2 (signing mandate) follow-on refinement should land when the BRAIN module&#x27;s `brain.publish` flow is being designed.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (evening) — Created during Bundle A execution.</li>
+</body></html>

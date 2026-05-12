@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>README.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>README.md</p>
+<h1>.cyberos-memory</h1>
+
+<p>This directory is the universal memory store for the CyberOS project, governed by the protocol in `docs/CyberOS-AGENTS.md`. It is the lossless, append-mostly, deterministic source of truth that any AI agent working in this project reads on session start and updates on every meaningful change. Everything outside `audit/` may be edited or augmented by an authorised agent or human; tombstoning is a soft delete (frontmatter flag plus `meta/tombstones.md` registry), never an erase.</p>
+
+<p>Do not hand-edit `audit/*.jsonl`. The audit ledger is append-only and Merkle-chained; in-place edits break the chain and freeze writes. To correct a prior row, append a new `op:&quot;corrects&quot;` row that references the bad `audit_id` and `chain`. Manifest updates are made via the `str_replace` operation so they get audited like everything else.</p>
+
+<p>Portable export filename pattern: `memory-export-&lt;YYYY-MM-DD&gt;-&lt;scope&gt;.zip`. Bundles include `manifest.json`, `README.md`, all scope folders, the full `audit/` chain, and active `conflicts/`. Excluded from bundles: `index/`, `.lock`, `exports/`. Verify chain via `audit/`.</p>
+</body></html>

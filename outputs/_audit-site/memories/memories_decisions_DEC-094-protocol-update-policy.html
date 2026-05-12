@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-094-protocol-update-policy.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-094-protocol-update-policy.md</p>
+
+<h1>DEC-094 — Protocol update policy: SHA-pinning, signed releases, consent-gated upgrades</h1>
+
+<h2>Decision</h2>
+
+<p>`AGENTS.md` is content-addressable: identified by the canonical SHA-256 of its normalised text, not by an inline version marker. The manifest pins the currently-approved SHA; every session start verifies the pin; protocol changes happen only via the explicit chat-turn approval phrase *&quot;approve protocol upgrade to `&lt;sha256:…&gt;`&quot;*.</p>
+
+<h2>Why</h2>
+
+<p>The pre-B protocol was silent on its own distribution. There was no tripwire for: hand-edits to AGENTS.md outside the consent flow, host-platform silent updates, malicious replacements, or accidental drift between machines. The consent gate (§0.2) protected against runtime injection but did not protect the protocol document itself.</p>
+
+<p>Forced auto-update would defeat §0.2 — anyone who controls the publish pipeline silently rewrites every BRAIN&#x27;s rules. Pure manual updates work but offer no upstream-authenticity guarantee. The chosen design layers three properties: **authenticity** (Ed25519 signatures over canonical SHA, verified against pinned fingerprints), **authorization** (explicit chat-turn approval phrase per §0.2), **auditability** (every upgrade is an `op:&quot;protocol_upgrade&quot;` audit row; prior version archived under `meta/protocol-history/`).</p>
+
+<h2>How</h2>
+
+<p>Manifest carries a `protocol` block:</p>
+
+<li>`sha256` — currently-approved canonical SHA.</li>
+<li>`approved_at` / `approved_by` — when and who.</li>
+<li>`loaded_path` — where AGENTS.md lives (default `docs/CyberOS-AGENTS.md`).</li>
+<li>`signing_keys` — array of pinned Ed25519 fingerprints (TOFU; first add via explicit user paste; cyberos repo bakes CyberSkill upstream key into `cyberos/.protocol-signing-key`).</li>
+<li>`last_checked_at` — last upstream-release-check time.</li>
+
+<p>§13.0 state classifier gains `INCOMPATIBLE:protocol-sha256-mismatch`. §7.1 op enum gains `protocol_upgrade` and `protocol_rollback`. §13.1 bootstrap gains step 12 (auto-pin at first run) and step 13 (seed `meta/protocol-history/`).</p>
+
+<h2>Trade-offs accepted</h2>
+
+<li>**TOFU trust establishment** rather than CA-signed cert chain: simpler, sufficient for the threat model (compromise of signing key is detectable via fingerprint comparison).</li>
+<li>**Silent-check, manual-apply** rather than fully-automated: friction at adopt time, but absolute protection against silent protocol rewrites.</li>
+<li>**Content-addressable rather than version-numbered**: aligns with the no-inline-version philosophy (FACT-005); avoids version-bump fatigue or version-lying; SHA is a name, not a comparison.</li>
+<li>**Bootstrap auto-pin without prompt**: friendly for solo use today; first-clone gets a baseline pin (just the SHA of whatever AGENTS.md is loaded); user adds upstream signing key later when one exists. Pre-Bundle-K the cyberos repo carried `.protocol-signing-key` as a placeholder; Bundle K deferred this to BRAIN module P1.</li>
+
+<h2>Bootstrap behaviour</h2>
+
+<p>First-run bootstrap silently auto-pins the canonical SHA of whatever `AGENTS.md` is loaded. `signing_keys: []` initially. User pastes CyberSkill upstream fingerprint when ready (or first-clones a cyberos repo that bakes it in).</p>
+
+<h2>What this does NOT do</h2>
+
+<li>Does not auto-fetch upstream releases on a schedule (silent-fetch is fine; silent-apply is forbidden).</li>
+<li>Does not bypass §9.3 denylist or §4.2 content gate (those stay sev-0 inviolable).</li>
+<li>Does not re-validate previously-written memories under new rules (handled by additive-only protocol-evolution discipline; see Bundle C / DEC-096 once landed).</li>
+
+<h2>How to use this memory</h2>
+
+<p>When the user proposes an AGENTS.md edit, follow §0.5: archive prior version, edit, compute new canonical SHA, ask for the chat-turn approval phrase with the exact target SHA, str_replace manifest, append `op:&quot;protocol_upgrade&quot;`. When session-start computes a SHA mismatch, freeze writes and surface the diff — never auto-resolve. When the user pastes a fingerprint, validate format (`ed25519:&lt;base64&gt;`), append to `signing_keys` with provenance.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (evening) — Created during Bundle B execution after user adopted the TIER 1 + TIER 3 protocol-distribution proposal in chat.</li>
+<li>2026-05-06 (later evening) — v=2 per Bundle K: signing_keys bullet updated to remove the `.protocol-signing-key` file reference; bootstrap-auto-pin paragraph updated to note the file is deferred. Original v=1 prose retained in this History; v=2 reflects current state. The file itself is overwritten with a deprecation marker (cowork sandbox cannot `rm` files outside `.cyberos-memory/`); user can manually `rm` from local clone.</li>
+</body></html>

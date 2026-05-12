@@ -1,0 +1,51 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>project/compliance.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>project/compliance.md</p>
+
+<h1>Compliance strategy — three rings</h1>
+
+<h2>Ring 1 — Vietnamese law (home regime)</h2>
+
+<p>Decree 13/2023 (Personal Data Protection) and Cybersecurity Law Decree 53/2022 are the cornerstone. PDPL Law 91/2025 and Decree 356 are the formal home regime; A05 filings, mandatory DPO, Trust Center, and AI-derived-data-as-PD treatment are P0 deliverables. Decree 20/2026 introduces SME exemptions that CyberSkill qualifies for at current scale; full-regime graduation happens at P2. Vietnamese-language legal copy ships with vi-VN as the default locale.</p>
+
+<h2>Ring 2 — Cross-border</h2>
+
+<p>GDPR (EU) — turned on for the eu-shard at P3 entry; DSAR workflow surfaced via the client portal at P4. EU AI Act — in force August 2025, obligations phased to August 2026; CyberOS treats HR / REW / LEARN as Annex III §4 high-risk and ships an EU AI Act conformity pack at P2 exit (T2 EU enterprise readiness). Singapore PDPA — engaged as part of the HoldCo flip at P3.</p>
+
+<h2>Ring 3 — Standards &amp; certification</h2>
+
+<p>ISO/IEC 27001:2022 (Stage 1 at P3, Stage 2 certificate issued before P3 exit). SOC 2 Type I at P3, Type II at P2 (T2 EU enterprise). ISO 42001 (AIMS) at P3 exit (T3 large-enterprise / regulated). ISO 27701 if EU/UK consultancies push at P3+. PCI DSS via Stripe SAQ-A at P0; HIPAA / SOX not in scope through P4.</p>
+
+<h2>Tier model per phase</h2>
+
+<p>T1 Floor (P0 exit) — A05 DPIA filed, DPO designated, Trust Center live, Stripe SAQ-A AOC, VPAT 2.5 INT.</p>
+
+<p>T2 (P1 exit) — SOC 2 Type I issued, CSA STAR L1, AI-CAIQ &quot;Valid-AI-ted&quot;, DSAR APIs end-to-end.</p>
+
+<p>T2 EU enterprise (P2 exit) — SOC 2 Type II, ISO 27001:2022, CSA STAR L2, EU AI Act Annex III §4 conformity pack for REW + LEARN.</p>
+
+<p>T3 Large enterprise / regulated (P3 exit) — ISO 42001 (AIMS) certified, ISO 27701 if applicable, Singapore HoldCo flip if ARR ≥ $1.5M.</p>
+
+<p>T3+ regulated commercial / state-local (P4) — TX-RAMP, StateRAMP Cat 2, FedRAMP 20x Moderate via no-sponsor route if US subsidiary exists.</p>
+
+<h2>Cross-cutting</h2>
+
+<p>DPIA process — a populated DPIA template per high-risk module (HR, REW, CRM, CHAT, EMAIL) by P2; reviewed annually or on material change. Right-to-explanation — every CUO output carries an explanation pane (citations + reasoning trace) wired through the AI Gateway; required by EU AI Act for Annex III high-risk decisions.</p>
+
+<p>Compliance Cockpit — a real-time RAG (red/amber/green) panel in OBS that reflects the current state of every regime. Green on Decree 20 SME at P0 exit is a hard gate; green on all P1 regimes at P1 exit; etc.</p>
+
+<h2>How to use this memory</h2>
+
+<p>Reference this when scoping a feature that touches personal data, planning a new regime entry, or responding to a compliance questionnaire. The compliance backlog and ownership matrix are in PRD §12.7 — keep that authoritative; do not duplicate it here.</p>
+
+<h2>History</h2>
+
+<li>2026-05-04 — Created during initial digest of `docs/` folder.</li>
+</body></html>

@@ -1,0 +1,77 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-107-section-14-three-state-triage.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-107-section-14-three-state-triage.md</p>
+
+<h1>DEC-107 — §14 three-state triage: silent / files-only-compact / issues-verbose (Bundle O)</h1>
+
+<h2>Decision</h2>
+
+<p>The §14 end-of-response block now operates as a **three-state triage** (silent → compact → verbose) where the trigger for the verbose state is broadened beyond `operational_mode` to include any issue/finding signal:</p>
+
+<p>| State | Trigger | Output |</p>
+<p>|---|---|---|</p>
+<p>| **§14.0 omitted** | normal mode + no findings + no mutations + clean self-audit | (nothing) |</p>
+<p>| **§14.1 compact** | normal mode + memory mutation OR non-BRAIN file change, AND no issues | `📁 Files changed:` block ONLY (BRAIN + non-BRAIN merged) + optional `Tokens:` line |</p>
+<p>| **§14.2 verbose** | ANY of: `op:rejected\|revert\|warn\|health_check` this turn; latest §8.7 reports CRITICAL/WARN; `operational_mode != normal` | full block — `⚠️ Findings:` first, then `📁 Files changed:`, then `Δ Changes (BRAIN detail):`, then `Status:`, then optional `Tokens:` |</p>
+
+<p>Three structural changes vs Bundle N&#x27;s §14:</p>
+<p>1. **§14.1 compact reduced to `📁 Files changed:` only.** No `Δ Changes:` heading, no `Status:` block, no `unchanged:` line, no audit-trail line. BRAIN paths and non-BRAIN paths appear in one merged list — path itself disambiguates.</p>
+<p>2. **§14.2 auto-triggers on issues** even when `operational_mode == normal`. Pre-Bundle-O the user had to flip the mode field to see verbose output; post-Bundle-O the agent escalates output format automatically when something needs attention.</p>
+<p>3. **`Tokens:` slot reserved** in both §14.1 and §14.2 but emitted only when a real token counter is wired up via runtime tool. Pre-availability the line is omitted — never estimated via `tiktoken` or character count, since approximations would mislead.</p>
+
+<h2>Why</h2>
+
+<p>User feedback during cowork-session 2026-05-10 (immediately after Bundle N landed):</p>
+
+<p>1. *&quot;Status: unchanged section seem not necessary since there is &#x27;Δ Changes&#x27; section, no need to show status if no issues arise too because 📁 Files changed i already know that the BRAIN performing well&quot;* — Status block + `unchanged:` line are redundant when the user can see the file list directly.</p>
+<p>2. *&quot;In normal mode no need to should Δ Changes if no issues arise too&quot;* — `Δ Changes:` itself is redundant given `📁 Files changed:`; merge them.</p>
+<p>3. *&quot;only show Files changed (no need to implied outside BRAIN), only turn on maintenance mode and show full memory verbose (arrange them smartly too) status when issues arise&quot;* — file paths self-disambiguate; verbose should auto-trigger on issues, not require manual mode flip.</p>
+<p>4. *&quot;Is it possible to know/track tokens consumed? if can show it after 📁 Files changed section, if not then skip it&quot;* — token tracking is desired but should not be faked.</p>
+
+<p>The §14 block has been on a noise-reduction journey since Bundle I (compact format), through Bundle N (omission rule + audit-trail suppression), and Bundle O completes it by reducing the routine-mutation case to a single `📁 Files changed:` block.</p>
+
+<h2>Authority</h2>
+
+<p>Adopted via §0.5 chat-turn approval phrase on 2026-05-10:</p>
+
+<p>&gt; approve protocol upgrade to sha256:b0d9ad3adc35ec1b74bad1407532873db828adc5161d7f05e23914e76096c1d6</p>
+
+<h2>Trade-offs</h2>
+
+<li>**Pro**: routine mutation turns now produce ~3 lines of §14 output (header + 1-2 file bullets) instead of ~10 lines (`📝` header + `Δ Changes:` heading + bullets + `📁 Files changed:` heading + bullets + `Status:` heading + 4 status lines + `unchanged:` line).</li>
+<li>**Pro**: issues automatically promote output to verbose without operator intervention — the user always sees findings in full context.</li>
+<li>**Pro**: token-tracking slot reserved without committing to a specific implementation.</li>
+<li>**Con**: `Δ Changes (BRAIN detail):` is now only visible in §14.2 (issues / verbose modes). For routine mutations, the user trusts the audit ledger as the auditable record (which it always was per §7).</li>
+<li>**Con**: agents that don&#x27;t track per-turn finding counts may incorrectly emit §14.1 when they should emit §14.2. Mitigation: per-turn finding count is cheap (just count `rejected`/`revert`/`warn`/`health_check` rows appended this turn); §8.7 self-audit catches schema-level drift if any agent gets it wrong.</li>
+
+<h2>Cross-references</h2>
+
+<li>AGENTS.md §14 (the rule)</li>
+<li>DEC-103 (Bundle I — original compact format)</li>
+<li>DEC-106 (Bundle N — omission rule + audit-trail suppression; this Bundle O builds on)</li>
+<li>REF-039 (matching refinement memory)</li>
+<li>`meta/protocol-history/AGENTS-sha256-8060fe2e188e1793e9dbc758b34a8198617ff8bf8a3320a2012595faf3012dab.md` (pre-Bundle-O archive)</li>
+<li>`meta/health/2026-05-10-b0d9ad3adc35ec1b-postupgrade.md` (post-upgrade scan)</li>
+
+<h2>How to use this memory</h2>
+
+<p>The next agent reading this BRAIN MUST be running an AGENTS.md whose canonical SHA matches `manifest.protocol.sha256` (currently `sha256:b0d9ad3adc35ec1b…`). Before emitting any §14 output, evaluate the three-state triage:</p>
+
+<p>1. Count this turn&#x27;s rows by op: `rejected_count + revert_count + warn_count + health_check_count`. If &gt; 0 → §14.2.</p>
+<p>2. Read `meta/health/&lt;latest&gt;.md` summary line. If CRITICAL &gt; 0 OR WARN &gt; 0 → §14.2.</p>
+<p>3. Read `manifest.operational_mode`. If != `normal` → §14.2.</p>
+<p>4. Check whether any memory file was created/modified/renamed/deleted OR any non-BRAIN file was modified. If yes → §14.1; if no → §14.0 omit.</p>
+
+<p>When in doubt, escalate one tier (compact when omit might fit; verbose when compact might fit). The user&#x27;s stated preference is &quot;less is more&quot; — but ALSO &quot;show full when something needs attention&quot;.</p>
+
+<h2>History</h2>
+
+<li>2026-05-10T12:03:06+07:00: Created at Bundle O protocol upgrade time per §0.4 standing rule. The third §14 amendment (after Bundle I introduced compact, Bundle N introduced omission). Continues the protocol-document/ chat-noise reduction trajectory while preserving full visibility under issues.</li>
+</body></html>

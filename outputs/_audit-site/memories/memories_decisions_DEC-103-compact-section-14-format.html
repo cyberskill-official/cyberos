@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/decisions/DEC-103-compact-section-14-format.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/decisions/DEC-103-compact-section-14-format.md</p>
+
+<h1>DEC-103 — Compact §14 format gated by operational_mode</h1>
+
+<h2>Decision</h2>
+
+<p>§14 splits into two formats: **§14.1 compact** (default when `manifest.operational_mode: normal`) shows only changed paths in a `Δ Changes:` block plus a single `unchanged:` roll-up line plus a Status block; **§14.2 full** (used when mode is `verbose | debug | maintenance`) retains the pre-Bundle-I per-scope-explicit format. The audit ledger stays authoritative; format changes don&#x27;t affect chain integrity. Coverage stat for ingestion ops (§14.3) is mandatory in both formats.</p>
+
+<h2>Why</h2>
+
+<p>The pre-I §14 block was 14+ lines verbatim, of which ~9 typically read &quot;no change&quot;. The user surfaced real readability friction during a routine review. Signal-to-noise was poor for daily use; full format only makes sense during protocol-development sessions where every gap matters.</p>
+
+<p>The `operational_mode` field already exists (Bundle C). Reusing it as the format discriminator avoids inventing new mechanism. Default `normal` gets compact rendering; protocol developers and debuggers use `verbose`/`debug` to get the full format.</p>
+
+<h2>How</h2>
+
+<p>§14 rewritten with two-format spec:</p>
+<li>§14 opening paragraph declares the split and points at `operational_mode`.</li>
+<li>§14.1 specifies compact format (3-block layout: `Δ Changes` / `Status` / `unchanged`).</li>
+<li>§14.2 specifies full format (pre-I per-scope-explicit; with `maintenance` banner addition).</li>
+<li>§14.3 coverage stat (renumbered from prose paragraph; unchanged content).</li>
+<li>§14.4 authority clarifier (audit ledger is authoritative; format is human-summary only).</li>
+
+<h2>Trade-offs accepted</h2>
+
+<li>**Two formats means future agents must support both at parse time.** Acceptance: the §14 block is for HUMAN consumption, not chain-recovery; future agents primarily read the audit ledger. The block is a courtesy summary.</li>
+<li>**Compact `unchanged:` roll-up loses per-file granularity.** Acceptance: full format is one toggle away (`operational_mode: verbose`); analysis-only turns where details matter are infrequent.</li>
+<li>**Bullet/marker variation across modes.** Acceptance: clarity over consistency; readability gain outweighs.</li>
+
+<h2>What this does NOT change</h2>
+
+<li>Audit ledger format and chain semantics — unchanged.</li>
+<li>§14 mandatory status (still required after every substantive reply).</li>
+<li>Coverage stat for ingestion ops (still mandatory; just renumbered §14.3).</li>
+<li>Per-mode behaviour outside §14 (DEBUG banners, MAINTENANCE permissions unchanged).</li>
+
+<h2>How to use this memory</h2>
+
+<p>When rendering §14, check `manifest.operational_mode`. Choose §14.1 (compact) for `normal`; §14.2 (full) for the other three modes. Always include the §14.3 coverage suffix on ingestion ops. When designing future protocol changes that affect §14 content, update both §14.1 and §14.2 examples to keep them in sync.</p>
+
+<h2>History</h2>
+
+<li>2026-05-06 (later evening) — Created during Bundle I execution. Third refinement from real-world use (Bundle G first, H second); first that targets human-UX rather than protocol semantics.</li>
+</body></html>

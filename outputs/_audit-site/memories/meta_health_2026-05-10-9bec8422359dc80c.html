@@ -1,0 +1,96 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/health/2026-05-10-9bec8422359dc80c.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/health/2026-05-10-9bec8422359dc80c.md</p>
+<h1>§8.7 self-audit — 2026-05-10 — on-demand healthcheck</h1>
+
+<p>**Trigger:** on-demand per `manifest.health_check_policy.on_demand_phrase` — user phrase: &quot;do BRAIN healthcheck, scan all files in cyberos to make sure you got newest context&quot;</p>
+<p>**Approved by:** subject:stephen-cheng (chat-turn directive)</p>
+<p>**Generated at:** 2026-05-10T04:54:49+07:00</p>
+<p>**BRAIN state:** READY</p>
+<p>**Tools:** `runtime/tools/cyberos_validate.py` + `runtime/tools/cyberos_doctor.py`</p>
+<p>**Pinned protocol SHA:** sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329</p>
+
+<h2>Summary</h2>
+
+<li>**Critical:** 0</li>
+<li>**Warn:** 0</li>
+<li>**Info:** 1</li>
+
+<p>**✓ No critical findings — store healthy.**</p>
+
+<h2>Phase 1 — schema validation</h2>
+
+<p>All 76 memory files parse against the §5.1 closed-set frontmatter schema. The single legacy memory_id (`mem_F005DOCCHANGELOG2026050401V` on `memories/facts/FACT-005-doc-changelog-convention.md`) is registered in `meta/legacy-ids.md` per §5.2 carve-out.</p>
+
+<h2>Phase 2 — supersedes-graph integrity</h2>
+
+<p>No cycles, no dangling targets, no orphan `superseded_by` entries.</p>
+
+<h2>Phase 3 — relationships-graph integrity</h2>
+
+<p>No dangling `relates_to` references.</p>
+
+<h2>Phase 4 — audit chain integrity</h2>
+
+<li>LINK invariant verified end-to-end across 322+ rows (incremented by this session&#x27;s writes); 0 breaks.</li>
+<li>`manifest.audit_chain_head` resolves in ledger (lag normal per §6).</li>
+<li>`manifest.reconciliation_checkpoint` was absent at session start; this session populates it on close per §6.</li>
+<li>§0.5 protocol pin: `sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329` matches manifest pin AND matches loaded `docs/CyberOS-AGENTS.md`.</li>
+<li>Merkle-root verification on `op:consolidation_run` rows: deferred (no rows since 2026-05-06T15:00 carry `merkle_root` per §7.6 — pre-Stage-6 consolidation runs).</li>
+
+<h2>Phase 5 — orphan files</h2>
+
+<p>No orphan files detected. All memory files trace to a most-recent non-reverted op in the ledger.</p>
+
+<h2>Phase 6 — resource caps</h2>
+
+<li>Total store size: well under 1 MB soft / 10 MB hard.</li>
+<li>File count: 98 (cap 10 000).</li>
+<li>Largest memory body: well under 30 KB hard cap.</li>
+<li>Audit row size: well under 64 KB cap.</li>
+<li>Directory depth: 4 (cap 12).</li>
+
+<h2>All findings</h2>
+
+<li>INFO: §5.2 memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md — memory_id `mem_F005DOCCHANGELOG2026050401V` is non-conforming but registered in meta/legacy-ids.md (allowed per §5.2)</li>
+
+<h2>Tool transcripts (verbatim summary)</h2>
+
+<h3>cyberos_validate.py</h3>
+<pre>
+cyberos-validate /sessions/zen-quirky-mayer/mnt/cyberos/.cyberos-memory
+  CRITICAL: 0
+  WARN:     0
+  INFO:     1
+
+=== INFO (1) ===
+  [§5.2] memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md
+    memory_id `mem_F005DOCCHANGELOG2026050401V` is non-conforming but registered in meta/legacy-ids.md (allowed per §5.2)
+
+✅ no findings; store appears healthy.
+</pre>
+
+<h3>cyberos_doctor.py</h3>
+<pre>
+cyberos-doctor /sessions/zen-quirky-mayer/mnt/cyberos/.cyberos-memory
+  Findings: 0 CRITICAL, 0 WARN, 1 INFO
+  Repair candidates: 0
+
+  ℹ [INFO] §5.2 memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md
+      memory_id `mem_F005DOCCHANGELOG2026050401V` is non-conforming but registered in meta/legacy-ids.md (allowed per §5.2)
+      → no automated repair; surface to user
+</pre>
+
+<h2>Observations for follow-up (not findings)</h2>
+
+<p>1. **Recent sessions skip §1 step 4 bookends.** Last `op:session.end` was 2026-05-06T23:21; 54 subsequent rows (mostly `protocol_upgrade` + `maintenance.start`/`maintenance.end` envelopes) lacked paired `session.start` rows. This session&#x27;s `session.start`/`session.end` pair restores the convention; deciding whether the protocol should formally carve out maintenance-driven activity is a §0.4 candidate but not a healthcheck finding.</p>
+<p>2. **`AGENTS.md` symlink target inconsistency.** Project root `AGENTS.md` symlinks to `docs/CyberOS-AGENTS-CORE.md` (abridged 483-line variant) but `manifest.protocol.loaded_path = docs/CyberOS-AGENTS.md` (full 1213-line canonical). Per §15 multi-agent interop, tools that follow the symlink read CORE; tools that follow the manifest read FULL. If intentional, document the split in `meta/`; if unintentional, repoint the symlink. Not a healthcheck finding (both files are valid; manifest pin is the canonical authority).</p>
+<p>3. **`manifest.reconciliation_checkpoint` populated by this session** — Stage 1 speed-up engaged for next session.</p>
+</body></html>

@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/health/2026-05-06-998694c112a0c6d8-postupgrade.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/health/2026-05-06-998694c112a0c6d8-postupgrade.md</p>
+<h1>Post-upgrade health-check report — 2026-05-06</h1>
+
+<p>Auto-triggered by §0.5 step 4 immediately after Bundle J&#x27;s `protocol_upgrade` row (chain=sha256:6a6e48088a966ed2d61d38ea19052e8a33bb0b6d1aaf0f69dde2745e60da7b52).</p>
+
+<h2>Summary</h2>
+
+<li>**Trigger**: post-upgrade auto-scan (Bundle J §0.5 step 4 — first invocation in protocol history).</li>
+<li>**Pre-upgrade SHA**: sha256:7e229a257ea47ddb08ef749107b36ec59d9bc43150f5ae603d8be5a84322545d</li>
+<li>**Post-upgrade SHA**: sha256:1a55e8b0f1ba5012585bffdc1590f61757c6954b36db734ffa6d511164672edb</li>
+<li>**Schema-drift checks performed**: §8.7 phase 1 (schema validate) walked all memory files; phase 2 (supersedes-graph integrity) walked the DAG; phase 4 (audit chain integrity) verified LINK end-to-end.</li>
+<li>**Findings**: 0 CRITICAL, 0 WARN attributable to Bundle J schema changes (Bundle J added one new optional manifest field `post_upgrade_phrase` and changed default values for three existing fields — none of these break existing memory frontmatter; the changes are at the manifest level only).</li>
+<li>**Pre-existing 32 WARN findings** from the 2026-05-06 baseline health-check are CARRIED FORWARD; they&#x27;re orthogonal to Bundle J and remain awaiting MAINTENANCE-mode session for repair.</li>
+
+<h2>Schema impact analysis</h2>
+
+<p>Bundle J&#x27;s protocol-level changes:</p>
+
+<p>1. **§0.5 step 4 added** — runtime behaviour change; no schema impact.</p>
+<p>2. **§6 manifest extension** — `health_check_policy.post_upgrade_phrase` is a NEW field but does NOT break old manifests because §13.0&#x27;s `INCOMPATIBLE:&lt;field&gt;` only fires for *unknown* fields in the manifest, not for *missing* fields the agent expects. Old manifests work correctly with the agent treating the field as unset.</p>
+<p>3. **§6 manifest default value changes** — `on_demand_phrase`, `diagnostic_verbs[]` defaults updated. Existing project-level overrides are PRESERVED (Bundle J does not migrate them).</p>
+<p>4. **§1 step 2 verb-list note** — documentation-level; no schema impact.</p>
+<p>5. **§8.7 &quot;Post-upgrade scan&quot; subsection** — documentation-level; mechanism reuses existing §8.7 phases.</p>
+
+<h2>Memories affected by Bundle J</h2>
+
+<p>None — Bundle J&#x27;s changes are all at the protocol/manifest level, not the §5.1 frontmatter schema. No existing memory file requires migration.</p>
+
+<h2>Action items</h2>
+
+<p>None required. The post-upgrade scan completed cleanly.</p>
+
+<h2>How this report was generated</h2>
+
+<p>Auto-triggered per §0.5 step 4 (Bundle J). The scan exercised §8.7 phases 1, 2, and 4 against the post-J state and confirmed no Bundle-J-attributable findings.</p>
+</body></html>

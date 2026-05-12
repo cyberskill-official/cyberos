@@ -1,0 +1,87 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/facts/FACT-014-glossary.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/facts/FACT-014-glossary.md</p>
+
+<h1>CyberOS Glossary</h1>
+
+<p>Canonical terminology for the CyberOS protocol + BRAIN.</p>
+
+<h2>Audit ledger</h2>
+<p>`.cyberos-memory/audit/&lt;YYYY-MM&gt;.jsonl`. Append-only, Merkle-chained record of every state change.</p>
+
+<h2>Authority hierarchy</h2>
+<p>`human-edited &gt; human-confirmed &gt; llm-explicit &gt; llm-implicit`. Strict order. Agents may downgrade on uncertainty; never promote.</p>
+
+<h2>BRAIN</h2>
+<p>Whole system: Layer 1 + Layer 2 + Layer 3. Case-sensitive uppercase only per Section 0.3.</p>
+
+<h2>Bundle</h2>
+<p>Named cohort of related protocol amendments shipped together. Single letter (A-Q so far).</p>
+
+<h2>Classification</h2>
+<p>One of personnel / client / operational / public. personnel + client never auto-resolve in conflicts.</p>
+
+<h2>Conflict</h2>
+<p>Two memories in same scope holding contradictory facts. Disputed pairs valid permanent state.</p>
+
+<h2>Consolidation</h2>
+<p>Five-phase pass at session-end. Surfaces candidates, detects conflicts, conservative merge, reorganise, update manifest.</p>
+
+<h2>Content gate</h2>
+<p>Section 4.2 validator. Rejects prompt-injection markers, mixed-script confusables, base64 blobs, control chars, denylisted content.</p>
+
+<h2>CUO</h2>
+<p>Chief Universal Officer. CyberOS&#x27;s named-brand persona (10 C-suite skills in one).</p>
+
+<h2>Denylist</h2>
+<p>Section 9.3 categorical exclusions: compensation, gov-IDs, bank/card numbers, home addresses, health PII, secrets.</p>
+
+<h2>Drift candidate</h2>
+<p>Section 8.6 signal that a source file&#x27;s SHA changed since digest was written. Three responses: re-ingest, accept drift, update source.</p>
+
+<h2>Gateguard</h2>
+<p>PreToolUse 3-stage DENY-FORCE-ALLOW hook (Aspect 5.1). A/B tested +2.25 quality improvement.</p>
+
+<h2>Manifest</h2>
+<p>`.cyberos-memory/manifest.json`. Per-project root pointer.</p>
+
+<h2>Memory file</h2>
+<p>YAML frontmatter + Markdown body. 27+1 permitted frontmatter fields per Section 5.1.</p>
+
+<h2>Provenance</h2>
+<p>`provenance.{source, source_ref, confidence}` on every memory.</p>
+
+<h2>Refinement</h2>
+<p>Protocol amendment proposed per Section 0.4. Recorded in `memories/refinements/REF-NNN-&lt;slug&gt;.md`.</p>
+
+<h2>Scope</h2>
+<p>company / meta / module / member / client / project / persona / dm. Determines default sync_class.</p>
+
+<h2>Shallow candidate</h2>
+<p>Section 8.6 signal that a digest&#x27;s processed_lines/source_lines &lt; 0.80.</p>
+
+<h2>Source freshness tier</h2>
+<p>Integer &gt;= 1; lower = more authoritative. Used in Section 9.1 step-0 conflict resolution.</p>
+
+<h2>Subject</h2>
+<p>Person a memory is about (or owned by). Subjects are sovereign over their own member/.</p>
+
+<h2>Supersedes graph</h2>
+<p>DAG of supersedes/superseded_by pointers. Walks before write to detect cycles.</p>
+
+<h2>Sync class</h2>
+<p>local-only / publishable / shared / client-visible. Section 17.</p>
+
+<h2>Tombstone</h2>
+<p>Soft delete. File body kept verbatim; frontmatter flipped `tombstoned: true`.</p>
+
+<h2>Two-phase atomic write</h2>
+<p>Section 4.4: validate, append audit row, tmp+rename, fsync. Crash-safe.</p>
+</body></html>

@@ -217,6 +217,11 @@ class Validator:
                       "manifest.json not found — store appears uninitialised")
             return 3
 
+        # Batch 11 / Aspect 5.7 — acquire shared lock around the validate pass.
+        # If brain_writer holds the exclusive lock, wait up to 5s; otherwise
+        # degrade silently (best-effort, never blocks the validate).
+        self._maybe_acquire_shared_lock()
+
         self._check_manifest()
         self._walk_audit_ledger()
         self._walk_memory_files()
@@ -228,7 +233,169 @@ class Validator:
         self._check_shamir_consistency()  # Stage 5 §5.6.3
         self._check_merkle_checkpoints()  # Stage 6 §7.6 + §8.7 phase 4 ext
         self._check_compacted_ledgers()  # Stage 6 §7.7
+        self._check_frontmatter_strictness()  # Batch 9: fix mutation-test gaps
+        self._check_content_gate_body()  # Batch 9: fix mutation-test gap (§4.2)
+        self._run_pluggable_validators()  # Aspect 12.1
         return self._exit_code()
+
+    # -- Batch 9: tighten frontmatter checks (mutation-test surfaced gaps) ---
+
+    def _check_frontmatter_strictness(self) -> None:
+        """Tighten validation for fields that mutation testing exposed as not enforced.
+
+        Bugs caught by `cyberos mutation-test` in Batch 8:
+          - negative-version          → reject version < 1
+          - remove-provenance         → require provenance: block
+          - invalid-sync-class        → enforce sync_class enum
+        """
+        valid_sync = {"local-only", "publishable", "shared", "client-visible"}
+        for rel, fm in self.memory_files.items():
+            if not isinstance(fm, dict):
+                continue
+            # 1. Version must be a positive integer
+            ver = fm.get("version")
+            if ver is not None:
+                try:
+                    n = int(ver)
+                    if n < 1:
+                        self._add(CRITICAL, "§5.1",
+                                  "invalid-version",
+                                  rel,
+                                  f"version must be ≥ 1; got {ver}")
+                except (TypeError, ValueError):
+                    self._add(CRITICAL, "§5.1",
+                              "invalid-version-type",
+                              rel,
+                              f"version must be integer; got {ver!r}")
+
+            # 2. Provenance is required per §5.1
+            if "provenance" not in fm:
+                self._add(WARN, "§5.1",
+                          "provenance-missing",
+                          rel,
+                          "frontmatter has no `provenance:` block")
+            elif not isinstance(fm.get("provenance"), dict):
+                self._add(WARN, "§5.1",
+                          "provenance-malformed",
+                          rel,
+                          f"provenance: must be a dict; got {type(fm.get('provenance')).__name__}")
+
+            # 3. sync_class must be one of the 4 valid enums
+            sync = fm.get("sync_class")
+            if sync is not None and sync not in valid_sync:
+                self._add(WARN, "§17",
+                          "invalid-sync-class",
+                          rel,
+                          f"sync_class must be one of {sorted(valid_sync)}; got {sync!r}")
+
+    def _check_content_gate_body(self) -> None:
+        """§4.2 content-gate scan of memory bodies (Batch 9 fix).
+
+        Mutation test inject-marker SURVIVED because the old validator
+        only scanned frontmatter. Now scan the body for prompt-injection
+        markers and surface as WARN (CRITICAL would block valid memories
+        that document the markers — e.g. this very function references
+        them).
+        """
+        markers = [
+            "[INST]", "<system>", "<<SYS>>",
+            "<|im_start|>", "<|system|>", "<|assistant|>",
+            "###Instruction", "###System:",
+            "ignore previous instructions", "ignore the above",
+        ]
+        # Exclude paths that legitimately mention markers as documentation
+        WHITELIST_SUBSTR = (
+            "tests/fuzz/", "tests/mutation/",
+            "memories/refinements/REF-",  # protocol amendments reference markers
+            "meta/validators/",
+            "/conflicts/",
+            "/postmortems/",
+        )
+        for rel, _ in self.memory_files.items():
+            if any(w in rel for w in WHITELIST_SUBSTR):
+                continue
+            path = self.root / rel
+            try:
+                text = path.read_text(encoding="utf-8")
+            except Exception:
+                continue
+            # Strip frontmatter — we only scan the body
+            if text.startswith("---\n"):
+                end = text.find("\n---\n", 4)
+                if end >= 0:
+                    body = text[end + 5:]
+                else:
+                    body = text
+            else:
+                body = text
+            lower = body.lower()
+            for m in markers:
+                if m.lower() in lower:
+                    self._add(WARN, "§4.2",
+                              "content-gate-injection-marker",
+                              rel,
+                              f"body contains potential injection marker: {m!r}")
+                    break  # one finding per file is enough
+
+    # -- Aspect 12.1: pluggable validators -----------------------------------
+
+    def _run_pluggable_validators(self) -> None:
+        """Discover and run user-defined validator checks in meta/validators/.
+
+        Each *.py file there exports `check(memory: dict, manifest: dict) -> list[dict]`.
+        Each returned dict must have keys: severity, code, message. Optional: path.
+        Exceptions are caught and surfaced as WARN findings so a buggy plugin
+        cannot block the rest of validation.
+        """
+        plugin_dir = self.root / "meta" / "validators"
+        if not plugin_dir.is_dir():
+            return
+        plugins = sorted(p for p in plugin_dir.glob("check-*.py") if p.is_file())
+        if not plugins:
+            return
+        # Load manifest dict once
+        try:
+            manifest = json.loads((self.root / "manifest.json").read_text())
+        except Exception:
+            manifest = {}
+        import importlib.util
+        for plugin in plugins:
+            try:
+                spec = importlib.util.spec_from_file_location(f"cyberos_check_{plugin.stem}", plugin)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                if not hasattr(module, "check"):
+                    self._add(WARN, "§12.1", "validator-plugin-no-check",
+                              str(plugin.relative_to(self.root)),
+                              f"plugin missing `check(memory, manifest)` function")
+                    continue
+            except Exception as e:
+                self._add(WARN, "§12.1", "validator-plugin-load-error",
+                          str(plugin.relative_to(self.root)),
+                          f"plugin failed to import: {e}")
+                continue
+
+            for rel, fm in self.memory_files.items():
+                try:
+                    results = module.check(dict(fm), manifest) or []
+                except Exception as e:
+                    self._add(WARN, "§12.1", "validator-plugin-error",
+                              rel,
+                              f"plugin {plugin.name} raised on {rel}: {e}")
+                    continue
+                if not isinstance(results, list):
+                    continue
+                for r in results:
+                    if not isinstance(r, dict) or "severity" not in r:
+                        continue
+                    sev = r.get("severity", WARN)
+                    if sev not in (CRITICAL, WARN, INFO):
+                        sev = WARN
+                    self._add(sev, "§12.1",
+                              r.get("code", "plugin-finding"),
+                              r.get("path", rel),
+                              r.get("message", "(no message)"),
+                              details={"plugin": plugin.name})
 
     # -- manifest ------------------------------------------------------------
 
@@ -884,6 +1051,20 @@ class Validator:
                         self._add(WARN, "§4.6",
                                   "tombstone-missing-metadata", rel,
                                   f"tombstoned: true but {f} absent")
+
+    def _maybe_acquire_shared_lock(self):
+        """Batch 11 / Aspect 5.7 — best-effort .lock.shared during validation."""
+        if os.environ.get("CYBEROS_NO_LOCK"):
+            return
+        try:
+            import sys as _sys
+            _sys.path.insert(0, str(Path(__file__).parent))
+            from cyberos_lock import shared_lock
+            self._lock_cm = shared_lock(self.root.parent, timeout=5.0)
+            self._lock_held = self._lock_cm.__enter__()
+        except Exception:
+            self._lock_held = False
+            self._lock_cm = None
 
     # -- helpers -------------------------------------------------------------
 

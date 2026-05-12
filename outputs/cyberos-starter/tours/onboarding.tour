@@ -1,0 +1,33 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "cyberos-starter onboarding",
+  "description": "Walk through what each starter file does. Open in VS Code with the CodeTour extension.",
+  "steps": [
+    {
+      "title": "1. The BRAIN folder",
+      "file": ".cyberos-memory/manifest.json",
+      "description": "This is the per-project pointer — project_id + subject + protocol pin + source_tiers. Replace REPLACE_ME placeholders before your first session.start."
+    },
+    {
+      "title": "2. Empty audit",
+      "file": ".cyberos-memory/manifest.json",
+      "selection": { "start": { "line": 9, "character": 1 }, "end": { "line": 9, "character": 99 } },
+      "description": "audit_chain_head is all zeros — it advances on the first session.start. Run `cyberos onboard` to bootstrap."
+    },
+    {
+      "title": "3. Retention rules",
+      "file": ".cyberos-memory/meta/retention-rules.md",
+      "description": "Default retention per-scope. Adjust before you start writing real memories."
+    },
+    {
+      "title": "4. Validator plugins",
+      "file": ".cyberos-memory/meta/validators/README.md",
+      "description": "Drop check-*.py plugins here. They run on every `cyberos verify`."
+    },
+    {
+      "title": "5. Run onboard",
+      "file": "README.md",
+      "description": "Open a shell and run `cyberos onboard`. The wizard will fill in subject id + persona card + first PREF memory."
+    }
+  ]
+}

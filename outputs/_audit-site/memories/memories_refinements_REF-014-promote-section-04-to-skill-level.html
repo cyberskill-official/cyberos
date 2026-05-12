@@ -1,0 +1,58 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-014-promote-section-04-to-skill-level.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-014-promote-section-04-to-skill-level.md</p>
+
+<h1>REF-014 — Promote AGENTS.md §0.4 from protocol-level to skill-level</h1>
+
+<h2>What changed</h2>
+
+<p>AGENTS.md §0.4 &quot;Standing rule — always propose protocol refinements when memory issues surface&quot; is itself **unchanged**. But the same *pattern* is now ported to the skill level via DEC-092:</p>
+
+<p>| Layer | What it self-audits | Where refinements land |</p>
+<p>| --- | --- | --- |</p>
+<p>| AGENTS.md §0.4 (protocol) | Memory operations: shallow ingestion, retrieval miss, conflicts §9.1 can&#x27;t resolve | `memories/refinements/REF-NNN-...` (this is one such record) |</p>
+<p>| Skill `INVARIANTS.md` (DEC-092) | Skill operations: invariant breaches, anomaly streaks, drift signals | `genie.action_log` `op:self_refinement_proposal` rows + a follow-up `memories/refinements/` entry on adoption |</p>
+
+<p>Same shape: declarative truths → runtime check → human-reviewed diff proposal → tier-prioritised amendment. Different surface.</p>
+
+<h2>Why</h2>
+
+<p>The §0.4 pattern proved its value over many sessions in the BRAIN&#x27;s own evolution (REF-001 through REF-011 are all §0.4-driven). Skills were the obvious next surface: a skill in production accumulates real-world behaviour data the same way the BRAIN does. Without a self-audit mechanism, a skill that drifts has to wait for a human to notice. With one, the skill flags its own drift in real time and proposes the fix.</p>
+
+<h2>Trigger</h2>
+
+<p>User stated as a top-line v0.2.0 requirement: *&quot;audit itself to detect issues/abnormal behavior at runtime and proactive suggest self refinements, so controllers (human users) can do HITL to apply necessary changes, then resume the workflow&quot;*.</p>
+
+<p>The intuition was the user&#x27;s; the recognition that this IS §0.4 at a different layer was the design move.</p>
+
+<h2>Tier</h2>
+
+<p>**Tier 1** — without this, skill-level autonomy is aspirational rather than enforceable. Adopted as DEC-092 (the carrier decision).</p>
+
+<h2>How to apply</h2>
+
+<p>When designing or reviewing a skill:</p>
+
+<li>Author 3-8 invariants in `INVARIANTS.md` covering the skill&#x27;s highest-value contracts. Start with the contract that the skill&#x27;s CHANGELOG `### Driver` sections cite most often.</li>
+<li>Each invariant has a Refinement template — what `proposed_diff` the runtime should emit on breach. Make it specific (cite the section, propose the exact prose change). Vague templates produce vague proposals that humans reject.</li>
+<li>Anomaly signals are the early-warning system. Set thresholds conservatively at first; tighten as the skill stabilises.</li>
+<li>The auto-refinement loop hands off to manual fine-tune (DEC-093) after 2 proposals on the same theme. That escalation threshold is the line between &quot;the skill can patch itself&quot; and &quot;we need human investigation.&quot;</li>
+
+<h2>Cross-link</h2>
+
+<li>AGENTS.md §0.4 (protocol-level standing rule) — unchanged.</li>
+<li>DEC-092 (skill-level carrier decision) — implementation of this pattern.</li>
+<li>DEC-093 (manual fine-tune playbook) — what happens when auto-refinement can&#x27;t resolve a pattern.</li>
+<li>`cuo/cpo/fr-create/INVARIANTS.md` and `cuo/cpo/fr-audit/INVARIANTS.md` — the first two concrete carriers, with 8 invariants each.</li>
+
+<h2>History</h2>
+
+<li>2026-05-06 — REF-014 surfaced + adopted in same response per AGENTS.md §0.4. Implementation: DEC-092 + INVARIANTS.md files in fr-create and fr-audit + `self_audit:` frontmatter block + new `op:self_refinement_proposal` audit row kind + new `produces.output_kind: refinement_proposal`.</li>
+</body></html>

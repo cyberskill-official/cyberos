@@ -1,0 +1,52 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-013-depends-on-contracts-frontmatter.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-013-depends-on-contracts-frontmatter.md</p>
+
+<h1>REF-013 — Declare cross-skill dependencies in frontmatter (`depends_on_contracts:`)</h1>
+
+<h2>What changed</h2>
+
+<p>New frontmatter field `depends_on_contracts:` — a list pinning the contract folders + major versions a skill consumes. Validators reject skill bodies that reference contract paths not declared in this list.</p>
+
+<pre>
+depends_on_contracts:
+  - id:        feature-request
+    version:   v1
+    purpose:   generation_skeleton
+    pin_path:  cyberos/docs/contracts/feature-request/v1/
+</pre>
+
+<h2>Why</h2>
+
+<p>Before this, fr-create and fr-audit hard-coded the path `cuo/_shared/feature-request-template/template.md` in their bodies. A naive `cp -r cuo/cpo/fr-create/` to another instance broke silently — the template wasn&#x27;t co-located. Bumping the template to `feature_request@2` had no machine-readable way to force consumers to acknowledge the bump.</p>
+
+<p>`depends_on_contracts:` makes the dependency explicit, machine- readable, version-pinned, and bundleable. The build pipeline can ship skill + declared contracts as one zip. The validator can warn on undeclared body references.</p>
+
+<h2>Trigger</h2>
+
+<p>User asked: *&quot;both skills have outside reference to cuo/_shared/feature-request-template. Is there any solution for this?&quot;* The previous architecture conflated two questions: (1) where should shared schemas live? (2) how should consumers declare they need them? The answer to (1) is DEC-090 (move to `_contracts/`); the answer to (2) is this REF (declare via frontmatter). Both landed together in registry v0.2.0.</p>
+
+<h2>Tier</h2>
+
+<p>**Tier 1** — directly prevents broken extractions and silent schema-drift between consumer and contract. Adopted in same response as DEC-090.</p>
+
+<h2>How to apply</h2>
+
+<p>When a skill needs to read a versioned schema:</p>
+
+<li>The schema goes in `cyberos/docs/contracts/&lt;id&gt;/v&lt;n&gt;/`, NOT in `cuo/_shared/`. (DEC-090)</li>
+<li>The skill declares the dependency in its frontmatter: `depends_on_contracts: [{id, version, purpose, pin_path}]`.</li>
+<li>The skill body references the path declared in `pin_path`. The validator rejects body references to a contract not declared.</li>
+<li>On a contract MAJOR bump, every declared consumer is updated (or explicitly opts in to staying on the older version with a CHANGELOG entry).</li>
+
+<h2>History</h2>
+
+<li>2026-05-06 — REF-013 surfaced + adopted in same response per AGENTS.md §0.4. Implementation: new frontmatter field across all v0.2.0 SKILL.mds; populated for fr-create + fr-audit; documented in registry README Part 2.1 + Part 8.2.</li>
+</body></html>

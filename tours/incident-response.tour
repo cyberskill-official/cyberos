@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "03 — Incident response (CORRUPT state)",
+  "description": "What to do when `cyberos verify` returns CORRUPT. Severity assessment, isolate, restore, postmortem.",
+  "steps": [
+    {"file": "docs/CyberOS-AGENTS.README.md", "line": 422, "description": "Part 10 — Troubleshooting: 'The agent says CORRUPT'. Don't auto-repair."},
+    {"file": "runtime/tools/cyberos_doctor.py", "line": 1, "description": "Recovery CLI. Sev-0 repairs require MAINTENANCE mode (§8.8 — explicit chat-turn entry, per-op confirmation)."},
+    {"file": "runtime/tools/cyberos", "line": 1, "description": "`cyberos panic` to freeze ALL writes while you investigate. `cyberos panic --resolve <reason>` to clear."},
+    {"file": ".cyberos-memory/meta/templates/POSTMORTEM.md", "line": 1, "description": "After resolution: blameless postmortem. Trace original signal, missed call, rule that would have caught it."},
+    {"file": "runtime/tools/cyberos", "line": 1, "description": "`cyberos status` to confirm system is healthy after recovery. Verify all 4 questions answer cleanly."}
+  ]
+}

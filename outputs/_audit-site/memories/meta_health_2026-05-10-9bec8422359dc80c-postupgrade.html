@@ -1,0 +1,57 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>meta/health/2026-05-10-9bec8422359dc80c-postupgrade.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>meta/health/2026-05-10-9bec8422359dc80c-postupgrade.md</p>
+<h1>§8.7 self-audit — 2026-05-10 — post-upgrade scan</h1>
+
+<p>**Trigger:** auto per §0.5 step 4 — post-upgrade migration check after `op:protocol_upgrade` to `sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329`.</p>
+<p>**Approved by:** subject:stephen-cheng (chat-turn approval phrase)</p>
+<p>**Generated at:** 2026-05-10T03:39:53+07:00</p>
+<p>**BRAIN state:** READY</p>
+<p>**Tool:** `runtime/tools/cyberos_validate.py` v0.1.0</p>
+
+<h2>Summary</h2>
+
+<li>**Critical:** 0</li>
+<li>**Warn:** 0</li>
+<li>**Info:** 1</li>
+
+<p>**✓ No critical findings — Bundle M&#x27;s functional-zero claim holds**</p>
+
+<h2>Bundle M verification</h2>
+
+<li>✅ §0.5 canonical SHA: `sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329` (live AGENTS.md matches manifest pin)</li>
+<li>✅ §7.2 LINK invariant: clean across new ledger tail</li>
+<li>✅ Bundle M changes landed:</li>
+<p>  - Change A: §5.1 heading reconciled (28 base + Stage 5 encryption block)</p>
+<p>  - Change B: §8 heading clarified (7 routine phases + §8.9)</p>
+<p>  - Change C: §4.11 → §4.10.2 (merged into §4.10 with 4.10.1 + 4.10.2 sub-sections)</p>
+<p>  - Change D: §17.5 compressed (multi-machine sync forward reference)</p>
+<li>✅ Changes E (§0.5 split) and F (paragraph compression throughout) deferred to Bundle N</li>
+<li>✅ Bundle M is functional-zero — no new ops, no schema changes, no validator changes</li>
+
+<h2>Phase 1 — schema validation</h2>
+
+<li>INFO: §5.2 memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md</li>
+
+<h2>Phase 4 — §0.5 protocol pin</h2>
+
+<li>INFO: §0.5 protocol pin: sha256:9bec8422359dc80c4d1f20271cf4bdeacb0ac88b7db6261a34085f70b894f329 ✓ matches just-approved upgrade</li>
+<li>INFO: validator self-test (21 fixtures) — to be confirmed post-upgrade</li>
+
+<h2>All findings</h2>
+
+<li>INFO: §5.2 memory-id-legacy: memories/facts/FACT-005-doc-changelog-convention.md — memory_id `mem_F005DOCCHANGELOG2026050401V` is non-conforming but registered in meta/legacy-ids.md (allowed per §5.2)</li>
+
+<h2>Notes for next session</h2>
+
+<li>Bundle M&#x27;s §4.11 → §4.10.2 renumbering means any external references to §4.11 should update to §4.10.2. CHANGELOGs and proposal docs reference §4.11 historically; those don&#x27;t need updating (they describe the pre-Bundle-M state).</li>
+<li>AGENTS-CORE.md regeneration after Bundle M reflects the renumbering automatically.</li>
+<li>Bundle N (deferred): §0.5 split into 0.5/0.5.1/0.5.2 + paragraph compression throughout. Same pattern as Bundle M when the user is ready.</li>
+</body></html>

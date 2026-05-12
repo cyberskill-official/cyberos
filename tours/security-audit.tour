@@ -1,0 +1,12 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "05 — Security audit (trust boundaries + denylist)",
+  "description": "Inspect cyberos through a security-reviewer lens: where data flows, what's denylisted, what controls exist.",
+  "steps": [
+    {"file": "docs/CyberOS-AGENTS.md", "line": 34, "description": "§0.1 — Real-filesystem-only memory location. Sev-0. Refuse to operate against sandbox / virtual / tmpfs paths."},
+    {"file": "docs/CyberOS-AGENTS.md", "line": 58, "description": "§0.5 — Protocol-doc SHA pinning. Silent or scheduled APPLY is forbidden — apply always requires the chat-turn approval phrase."},
+    {"file": "runtime/hooks/gateguard.py", "line": 1, "description": "PreToolUse hook — 3-stage DENY/FORCE/ALLOW gate per gateguard skill. A/B tested +2.25 quality improvement."},
+    {"file": "runtime/tools/cyberos_encrypt.py", "line": 1, "description": "Stage 5 at-rest encryption + Shamir 3-of-5 escrow. Opt-in per manifest.encryption_policy.enabled."},
+    {"file": "runtime/tools/cyberos_validate.py", "line": 1, "description": "Validator runs §4.1 path-traversal + §4.2 content-gate (injection markers, mixed-script, base64) on every write."}
+  ]
+}

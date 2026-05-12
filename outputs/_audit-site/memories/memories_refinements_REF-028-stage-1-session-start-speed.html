@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-028-stage-1-session-start-speed.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-028-stage-1-session-start-speed.md</p>
+
+<h1>REF-028 — Stage 1: Session-start speed</h1>
+
+<h2>Trigger</h2>
+
+<p>Local-optimization plan (`docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`) Stage 1 surfaced as the highest-ROI improvement for daily BRAIN use: §4.7 reconciliation walks all audit rows newer than the last `consolidation_run` on every session start, which is O(N) over chain length. With ~290 audit rows already in the live store and growth ~10/day, session-start latency was creeping into multi-second territory.</p>
+
+<h2>Adoption</h2>
+
+<p>Adopted via §0.5 chat-turn approval (2026-05-09):</p>
+
+<p>&gt; approve protocol upgrade to sha256:576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a</p>
+
+<h2>Changes (5 additive amendments)</h2>
+
+<li>**Change A — `manifest.reconciliation_checkpoint`** (§6 extension). Records the `audit_id` + `chain` + `ts` of the most recent successful `op:&quot;session.end&quot;` or `op:&quot;consolidation_run&quot;`. Updated atomically with those writes; never edited independently.</li>
+<li>**Change B — §4.7 reconciliation amendment**. Walks rows newer than `manifest.reconciliation_checkpoint.audit_id` if set; falls back to full-walk on missing/stale (&gt;30 days) checkpoint or chain-mismatch. Stale fallback emits `op:&quot;warn&quot; reason:&quot;stale-checkpoint&quot;`.</li>
+<li>**Change C — `manifest.read_profile`** (§6 + §10). Declares eager vs lazy scopes. Default `eager_scopes: [&quot;meta&quot;]`; everything else lazy-loaded on first reference.</li>
+<li>**Change D — §5.1 frontmatter compactness rule**. Write-side: omit `null`/empty optional fields except those required by classification/tombstoning. Read-side: accept both compact and verbose forms.</li>
+<li>**Change E — §8.7 phase 4 stale-checkpoint check**. If checkpoint set, confirm `audit_id` resolves in ledger AND `chain` matches that row&#x27;s `chain`. Mismatch → CRITICAL.</li>
+
+<h2>How to use this memory</h2>
+
+<p>When the next-session-start latency regresses or the §4.7 fallback fires unexpectedly, reference this REF and the proposal at `docs/proposals/STAGE-1-PROTOCOL-UPGRADE.md`. The Stage 1 changes are additive — older agents trip `INCOMPATIBLE` per §13.0 (intended forward-compat tripwire), so any agent reading this BRAIN must be running an AGENTS.md whose canonical SHA is `sha256:576368647e4d17635804580ca4dded28721b1c7247f0a19666ce43f5f0eb911a` or later.</p>
+
+<h2>History</h2>
+
+<li>2026-05-10: REF-028 created at protocol upgrade time per §0.6 standing-rule. Upgrade landed five additive changes documented above; full text in `docs/proposals/STAGE-1-PROTOCOL-UPGRADE.md`.</li>
+</body></html>

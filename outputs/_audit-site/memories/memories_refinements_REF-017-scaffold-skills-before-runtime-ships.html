@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>memories/refinements/REF-017-scaffold-skills-before-runtime-ships.md</title><style>body{font:15px/1.5 -apple-system,BlinkMacSystemFont,sans-serif;max-width:42rem;margin:0 auto;padding:1rem;color:#222;background:#fff}
+@media (prefers-color-scheme:dark){body{background:#111;color:#eee}a{color:#6bf}pre{background:#222!important}}
+h1,h2,h3{line-height:1.2}h1{font-size:1.5rem}h2{font-size:1.2rem}
+pre{background:#f5f5f5;padding:.6rem;border-radius:6px;overflow-x:auto;font-size:13px;white-space:pre-wrap}
+nav{margin-bottom:1rem}nav a{margin-right:.8rem}
+.scope{font-size:.85rem;color:#888}
+</style></head><body>
+<nav><a href="../index.html">← all memories</a></nav>
+<p class=scope>memories/refinements/REF-017-scaffold-skills-before-runtime-ships.md</p>
+
+<h1>REF-017 — Scaffold the next skill in a chain before the runtime ships; gate it with `gated_until_phase`</h1>
+
+<p>When designing a multi-skill pipeline (e.g. `cuo/cpo/fr-create` → `cuo/cpo/fr-audit` → `cuo/cto/fr-to-tech-spec`), there is real value in scaffolding the downstream skills BEFORE the runtime that would execute them ships. The scaffold IS a contract — it documents what the future runtime must satisfy, what envelopes the future supervisor will route, what invariants must hold, and what acceptance fixtures the harness will need. The cost of writing the scaffold is low (~30 minutes per skill) and the benefit is high: the chain shape becomes legible immediately, contract dependencies become explicit, and the team can review + iterate on the skill&#x27;s design without the runtime as a forcing function.</p>
+
+<h2>How to use this memory</h2>
+
+<p>When proposing a new skill that&#x27;s part of a chain whose runtime isn&#x27;t ready yet, default to scaffolding it now. Use these rules:</p>
+
+<p>1. **Set `gated_until_phase: &lt;runtime_milestone&gt;` in frontmatter.** The supervisor + validator will refuse to route to this skill until the gate clears. The skill exists as documentation, not as routable code.</p>
+<p>2. **Author the full v0.2.0 frontmatter contract.** All 33 fields. INVARIANTS.md, envelopes, STANDALONE_INTERVIEW.md, HUMAN_SUMMARY.md, acceptance/README.md. Don&#x27;t half-scaffold — the contract loses value if it&#x27;s incomplete.</p>
+<p>3. **Name the things the scaffold deliberately omits in CHANGELOG.md.** Reference docs (HITL_PROTOCOL.md, etc.), the artefact&#x27;s contract (e.g. `tech_spec@1`), the worked PIPELINE.md example. These land at v0.2.0 with the runtime; the scaffold&#x27;s CHANGELOG should call them out as intentional omissions so a future reader doesn&#x27;t think they were forgotten.</p>
+<p>4. **Declare contract dependencies via `depends_on_contracts:` even if no consumer code exists yet.** This makes the dependency graph machine-readable from day one and exercises the validator&#x27;s pin-path check.</p>
+<p>5. **Add the new skill to the registry README&#x27;s Part 23.1 index with explicit `(scaffold)` annotation.** The lifecycle state diagram in Part 14 implicitly accepts a &quot;scaffold&quot; state below v0.1.0 / Adolescent.</p>
+
+<h2>Why it matters</h2>
+
+<p>The pre-existing pattern was &quot;skills appear when they can run.&quot; The cost of that pattern: when the runtime ships, skill design happens under deadline pressure, and the team often discovers contract gaps mid-implementation. Scaffolding-first reverses the pressure — by the time the runtime lands, the skill&#x27;s contract is already battle-tested through readings and reviews.</p>
+
+<p>This is the same logic that already applies to contracts (per DEC-090): they exist before all consumers do. Scaffolds extend the principle from contracts to skills.</p>
+
+<h2>History</h2>
+
+<li>**2026-05-06** — Created during registry v0.2.3 work. Scaffolded `cuo/cto/fr-to-tech-spec` v0.1.0 with full v0.2.0 frontmatter contract + INVARIANTS.md (6 invariants) + envelopes + interview/summary scripts + acceptance README. Pattern recorded for the next downstream skills (`spec-to-impl-plan`, `tech-spec-audit`, `runtime-health-report`, etc.).</li>
+</body></html>
