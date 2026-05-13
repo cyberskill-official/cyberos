@@ -1,0 +1,19 @@
+# Runtime dependencies for the cyberos Layer-1 package.
+#
+# Install:
+#   pip install -r cyberos/requirements.txt --break-system-packages
+#
+# Required:
+msgspec>=0.18.0
+# Optional but strongly recommended for production — SSE 4.2 / ARM CRC32
+# hardware-accelerated CRC-32C. Without it the writer falls back to
+# zlib.crc32 which is plain CRC-32 (different polynomial) — still
+# detects truncation but doesn't match the on-disk format documented
+# in cyberos/core/writer.py.
+crc32c>=2.4
+# Optional — only needed by the migration preflight's RFC 8785 ↔ msgspec
+# equivalence fuzz, and by anyone re-verifying legacy chains.
+rfc8785>=0.1.4
+# Optional — only needed during the migration window when legacy YAML
+# frontmatter must still be read. Loaded lazily.
+PyYAML>=6.0

@@ -1,0 +1,187 @@
+# memory.invariants.yaml — declarative invariants for the CyberOS BRAIN self-audit walker
+#
+# This file replaces the prose §8.7 "7-phase self-audit" in AGENTS.md with a
+# code-walkable list. The Deep Optimization Audit §4.2 row 35 calls for this:
+# "Replace 7 prose phases with a single declarative invariant set
+# (Postgres CHECK-constraint style), walked by one function."
+#
+# Each invariant has:
+#   id          stable identifier (used for skip/include lists, CI gates)
+#   level       error | warning | info — severity if violated
+#   scope       what the invariant covers (filesystem | ledger | manifest | export | crypto)
+#   description plain-English statement of the invariant
+#   check       reference to the Python function in cyberos.core.invariants
+#               that returns (passed: bool, details: str)
+#   citation    optional reference to the protocol section it pins
+#
+# Future work (Phase B of Deep Audit W0): write
+# cyberos/core/invariants.py exporting the check functions, plus a single
+# walker that iterates this list and surfaces a single self-audit report.
+
+version: 1
+generated_by: hand-written; CI verifies coverage of every check function
+
+invariants:
+  # ===== Filesystem layout =====
+
+  - id: layout-root-canonical
+    level: error
+    scope: filesystem
+    description: |
+      The .cyberos-memory/ root MUST contain exactly the canonical
+      top-level directories listed in §3 of AGENTS.md and the canonical
+      files (manifest.json, optional .lock, optional HEAD).
+    check: cyberos.core.invariants.check_layout_root_canonical
+    citation: AGENTS.md §3
+
+  - id: layout-no-sandbox-path
+    level: error
+    scope: filesystem
+    description: |
+      The resolved .cyberos-memory/ path MUST NOT match any forbidden
+      sandbox-fragment listed in §0.1 (e.g. /sessions/, /tmp/, etc.)
+      unless CYBEROS_HOST_MOUNT_PREFIX exempts it.
+    check: cyberos.core.invariants.check_layout_no_sandbox_path
+    citation: AGENTS.md §0.1
+
+  - id: layout-shard-uniformity
+    level: warning
+    scope: filesystem
+    description: |
+      Within each memories/<kind>/ directory, shards SHOULD use the
+      two-level hex bucket pattern <kind>/<sha[0:2]>/<sha[2:4]>/.
+      Direct children that are .md files indicate an un-resharded leftover
+      from migration.
+    check: cyberos.core.invariants.check_layout_shard_uniformity
+    citation: cyberos_migrate_v2.phase_3_reshard_memories
+
+  # ===== Audit ledger =====
+
+  - id: ledger-link-invariant
+    level: error
+    scope: ledger
+    description: |
+      In every binlog segment, row[N].prev_chain MUST equal
+      row[N-1].chain. Across segment boundaries, the last chain of
+      segment K is the start_prev of segment K+1.
+    check: cyberos.core.invariants.check_ledger_link
+    citation: AGENTS.md §7 LINK invariant
+
+  - id: ledger-hash-invariant
+    level: error
+    scope: ledger
+    description: |
+      In every binlog segment, row.chain MUST equal SHA-256 of
+      canonical_json(row_minus_chain) || prev_chain. Failure means
+      either tampering or canonicalisation drift.
+    check: cyberos.core.invariants.check_ledger_hash
+    citation: AGENTS.md §7.2 / cyberos.core.writer._chain_hash
+
+  - id: ledger-crc-tail
+    level: warning
+    scope: ledger
+    description: |
+      The last frame's CRC-32C MUST match its payload. A mismatch is
+      treated as truncation (Bitcask convention) and recovery truncates
+      the tail; this invariant exists to surface the event for review.
+    check: cyberos.core.invariants.check_ledger_crc_tail
+    citation: cyberos.core.walker.MmapWalker.iter_records
+
+  - id: ledger-bridge-continuity
+    level: error
+    scope: ledger
+    description: |
+      When manifest.migration.legacy_last_chain is set, the first
+      record in the new binlog MUST have prev_chain equal to that
+      value (with sha256: prefix stripped). Otherwise the cumulative
+      chain across the legacy → v2 boundary is broken.
+    check: cyberos.core.invariants.check_ledger_bridge_continuity
+    citation: cyberos_migrate_v2 chain-bridge model
+
+  - id: ledger-mmr-cross-check
+    level: error
+    scope: ledger
+    description: |
+      PROPOSAL.md P2 Stage 1 cross-check. The MMR root recomputed by
+      replaying the binlog MUST equal the root persisted in
+      audit/mmr/peaks.bin. Divergence means the additive MMR is out
+      of sync with the chain; the chain is authoritative, so this
+      surfaces an MMR bug before the primitive swap (Stage 3).
+    check: cyberos.core.invariants.check_ledger_mmr_cross_check
+    citation: cyberos/core/mmr.py + PROPOSAL.md P2
+
+  - id: ledger-op-enum-conformance
+    level: error
+    scope: ledger
+    description: |
+      Every audit row's `op` field MUST appear in
+      memory.schema.json#/definitions/AuditRecord/properties/op/enum.
+      Defends against future writer typos or rogue tools that append
+      with unrecognised op strings.
+    check: cyberos.core.invariants.check_ledger_op_enum_conformance
+    citation: memory.schema.json
+
+  - id: ledger-append-only
+    level: error
+    scope: ledger
+    description: |
+      No record in a sealed binlog segment may be modified or deleted
+      after the next record is written. Enforcement via the single-writer
+      lock and the LINK invariant — this invariant fails on tampering.
+    check: cyberos.core.invariants.check_ledger_append_only
+    citation: AGENTS.md §7.4 forbidden ops
+
+  # ===== Manifest =====
+
+  - id: manifest-schema-version
+    level: error
+    scope: manifest
+    description: |
+      manifest.json MUST exist and contain a valid integer schema_version.
+      Schema-v2 stores additionally MUST carry a migration.legacy_last_chain.
+    check: cyberos.core.invariants.check_manifest_schema_version
+    citation: AGENTS.md §6
+
+  - id: manifest-validates-against-schema
+    level: error
+    scope: manifest
+    description: |
+      manifest.json MUST validate against
+      docs/memory/memory.schema.json#/definitions/Manifest.
+    check: cyberos.core.invariants.check_manifest_validates
+
+  # ===== Export determinism =====
+
+  - id: export-determinism
+    level: error
+    scope: export
+    description: |
+      Two consecutive exports of the same store MUST produce
+      byte-identical zip outputs. Determinism is the
+      portability-invariant of the protocol (§11 / AGENTS.md §3.C.5).
+    check: cyberos.core.invariants.check_export_determinism
+    citation: AGENTS.md §11
+
+  # ===== Crypto / durability =====
+
+  - id: crypto-crc-implementation
+    level: warning
+    scope: crypto
+    description: |
+      The writer SHOULD use the hardware-accelerated CRC-32C
+      implementation (crc32c PyPI wheel). zlib-fallback uses CRC-32
+      with a different polynomial; existing frames will appear
+      corrupt to the hardware reader and vice versa.
+    check: cyberos.core.invariants.check_crc_implementation
+    citation: cyberos.core.writer.crc_implementation
+
+  - id: durability-platform-correct
+    level: error
+    scope: crypto
+    description: |
+      On macOS, durable_sync MUST resolve to F_BARRIERFSYNC (per-batch)
+      or F_FULLFSYNC (checkpoint), never plain fsync() — which does NOT
+      flush the device write cache on Darwin. Documented in
+      cyberos/core/fsync.py module docstring.
+    check: cyberos.core.invariants.check_durability_platform_correct
+    citation: cyberos/core/fsync.py

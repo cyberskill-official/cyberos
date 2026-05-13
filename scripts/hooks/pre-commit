@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# .git/hooks/pre-commit — refuse commits that would break the BRAIN.
+#
+# Installed by scripts/install-pre-commit.sh. Runs in the project root
+# of every `git commit`. Fast on no-op commits (early-exits when no
+# memory files are staged); thorough when memory IS staged.
+#
+# Checks:
+#   1. cyberos doctor              — every invariant passes
+#   2. cyberos validate <staged>   — each staged memory file is schema-valid
+#   3. schema drift                — memory.schema.json matches msgspec
+#
+# Bypass with --no-verify if you intentionally want to commit through a
+# warning. (Errors should NOT be bypassed.)
+
+set -euo pipefail
+
+# Fail fast if the python implementation isn't available.
+if ! python -c "import cyberos" 2>/dev/null; then
+    echo "pre-commit: cyberos package not importable; run scripts/install.sh" >&2
+    exit 1
+fi
+
+# Only run if the commit touches anything relevant to the BRAIN.
+STAGED_BRAIN_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "^(\.cyberos-memory|docs/memory|cyberos/)" || true)
+if [[ -z "$STAGED_BRAIN_FILES" ]]; then
+    exit 0
+fi
+
+echo "pre-commit: BRAIN-touching files staged — running checks"
+
+# ---------------------------------------------------------------------- 1. doctor
+
+echo "  → cyberos doctor"
+if ! python -m cyberos --store .cyberos-memory doctor > /tmp/cyberos-precommit-doctor.log 2>&1; then
+    echo "pre-commit: cyberos doctor reported errors" >&2
+    tail -20 /tmp/cyberos-precommit-doctor.log >&2
+    echo "    — bypass with 'git commit --no-verify' if intentional" >&2
+    exit 1
+fi
+echo "    ✓ all invariants pass"
+
+# ---------------------------------------------------------------------- 2. validate staged memory files
+
+STAGED_MEMORIES=$(echo "$STAGED_BRAIN_FILES" | grep -E "^\.cyberos-memory/memories/" || true)
+if [[ -n "$STAGED_MEMORIES" ]]; then
+    echo "  → cyberos validate (staged memory files)"
+    # strip the .cyberos-memory/ prefix; validate expects store-relative paths
+    REL_PATHS=$(echo "$STAGED_MEMORIES" | sed 's|^\.cyberos-memory/||')
+    if ! python -m cyberos --store .cyberos-memory validate $REL_PATHS > /tmp/cyberos-precommit-validate.log 2>&1; then
+        echo "pre-commit: validate failed on staged memory file(s)" >&2
+        cat /tmp/cyberos-precommit-validate.log >&2
+        exit 1
+    fi
+    n=$(echo "$REL_PATHS" | wc -l | tr -d ' ')
+    echo "    ✓ $n file(s) schema-valid"
+fi
+
+# ---------------------------------------------------------------------- 3. schema drift
+
+if echo "$STAGED_BRAIN_FILES" | grep -q "^cyberos/" ; then
+    if [[ -f runtime/tools/cyberos_generate_schema.py ]]; then
+        echo "  → schema drift check"
+        if ! python -m runtime.tools.cyberos_generate_schema \
+                --check --out docs/memory/memory.schema.json > /tmp/cyberos-precommit-schema.log 2>&1; then
+            echo "pre-commit: memory.schema.json is stale (cyberos.core types changed)" >&2
+            echo "    regenerate with:" >&2
+            echo "      python -m runtime.tools.cyberos_generate_schema --out docs/memory/memory.schema.json" >&2
+            echo "      git add docs/memory/memory.schema.json" >&2
+            exit 1
+        fi
+        echo "    ✓ schema in sync"
+    fi
+fi
+
+echo "pre-commit: BRAIN checks OK"
