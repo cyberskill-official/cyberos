@@ -313,16 +313,15 @@ Cold `cyberos --help` is ~14 ms (lazy imports). 22 subcommands total.
 | `memory.schema.json` | machine | JSON Schema for frontmatter / manifest / audit row. |
 | `memory.invariants.yaml` | walker input | 15 invariants the doctor / state machine check. |
 | `INTEROP.md` | normative subset | ≤6 KB. Minimum profile for non-ledger agents. |
-| `EVOLUTION.md` | informative | Stage / Bundle history; **do not load per session**. |
-| `PROPOSAL.md` | informative | Outstanding proposals. |
-| `P2_RESOLUTION.md` | informative | Resolved P2 design questions. |
-| `LEGACY_SCRIPTS.md` | informative | Status of the 59 legacy `runtime/tools/cyberos_*.py` scripts. |
+| `EVOLUTION.md` | informative | Stages, audit reports, legacy-script cleanup record. |
+| `PROPOSAL.md` | informative | Outstanding proposals + their resolved design Qs. |
 | `CHANGELOG.md` | append-mostly | Dated history. |
 | `README.md` | this file | Step-by-step newcomer guide. |
 
-The **four normative + two machine** files are the protocol — those
-are what you copy into other projects. Everything else is informative
-or historical.
+The **three normative + two machine** files (`AGENTS.md`, `INTEROP.md`,
+`memory.schema.json`, `memory.invariants.yaml`, plus optionally
+`README.md`) are what you copy into other projects. Everything else is
+informative or historical and stays in the master `cyberos` repo.
 
 ---
 

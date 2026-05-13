@@ -10,7 +10,7 @@ Measures:
   model).
 * On-disk ``peaks.bin`` size at each size.
 
-The Stage-3 promotion gate from ``P2_RESOLUTION.md`` mentions a 2-week
+The Stage-3 promotion gate from ``PROPOSAL.md`` Appendix mentions a 2-week
 soak; this benchmark gives the absolute numbers that gate is implicitly
 comparing against. If append rate at 100k leaves is materially worse
 than the existing chain throughput, Stage-3 is premature.

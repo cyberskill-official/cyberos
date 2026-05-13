@@ -55,10 +55,15 @@ fi
 echo
 
 # ----------------------------------------------------------------------
-# 1. Frozen v1 documents
+# 1. Frozen v1 documents + governance docs folded into others
 # ----------------------------------------------------------------------
-echo "v1 frozen documents:"
-for f in docs/memory/AGENTS.v1.md docs/memory/README.v1.md; do
+echo "v1 frozen documents + folded governance docs:"
+for f in \
+    docs/memory/AGENTS.v1.md \
+    docs/memory/README.v1.md \
+    docs/memory/P2_RESOLUTION.md \
+    docs/memory/LEGACY_SCRIPTS.md \
+; do
     if [[ -f "$f" ]]; then
         git_or_rm "$f"
     fi
@@ -121,6 +126,19 @@ echo "deprecation stubs:"
 for f in \
     runtime/tools/cyberos_lazy.py \
     runtime/tools/cyberos_index_hook.py \
+; do
+    if [[ -f "$f" ]]; then
+        git_or_rm "$f"
+    fi
+done
+echo
+
+# ----------------------------------------------------------------------
+# 5b. Tests for retired v1 code paths
+# ----------------------------------------------------------------------
+echo "tests for retired v1 code paths:"
+for f in \
+    tests/test_shim.py \
 ; do
     if [[ -f "$f" ]]; then
         git_or_rm "$f"

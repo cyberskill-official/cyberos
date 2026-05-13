@@ -10,12 +10,12 @@ Rekor, Google CT, and DataTrails all converge on. Each STH commits to:
 * the signer key id,
 * an Ed25519 signature over the canonical serialisation of the above.
 
-Per AGENTS.md v2 §6.4 and P2_RESOLUTION.md, Stage 1 is **additive**:
+Per AGENTS.md v2 §6.4 and PROPOSAL.md Appendix, Stage 1 is **additive**:
 STHs are produced alongside the per-row chain at every consolidation,
 but the chain remains the source of truth. The chain primitive switch
 (§6 P2 Stage 3) requires a separate chat-turn approval.
 
-Key management (P2_RESOLUTION.md Q2):
+Key management (PROPOSAL.md Appendix Q2):
 
 * Key file at ``~/.config/cyberos/sth_signing_key`` (raw 32-byte
   Ed25519 seed) — Stage 1 simplification. Passphrase-wrapping via

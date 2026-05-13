@@ -1,33 +1,15 @@
 """
-Canonical-JSON encoding properties for the new AuditRecord schema.
+Canonical-JSON encoding properties for the AuditRecord schema.
 
-Background
-----------
-The audit report's "msgspec ≡ RFC 8785 JCS byte-identical" claim was scoped
-to a *closed* schema with no large integers. The legacy writer stored
-timestamps as ISO-8601 strings ("ts"), so rfc8785's safe-integer domain
-(±2^53) never came into play. The new schema in :mod:`cyberos.core.writer`
-uses ``ts_ns`` as a u64 in nanoseconds — current time in ns is ≈1.7×10^18,
-well beyond JSON's safe-integer domain, which rfc8785 strictly enforces.
+Verifies the property the writer depends on:
 
-That is a *schema* change, not an encoding regression. The migration is
-still safe because:
+* ``msgspec`` produces deterministic, round-trip-stable canonical JSON
+  for AuditRecords — required so the chain hash is reproducible across
+  readers and writers running on different machines.
 
-* **Legacy records** — their stored ``chain`` field is copied verbatim by
-  :mod:`runtime.tools.cyberos_migrate_v2`; we never recompute their hash.
-  The legacy chain was computed over the legacy schema (with "ts" as ISO
-  string) using rfc8785; that history stays valid as-is.
-* **New records** — chained via msgspec canonical JSON; rfc8785 is not in
-  the new code path at all.
-
-What we actually need to verify is therefore two narrower properties:
-
-1. ``msgspec`` produces deterministic, round-trip-stable canonical JSON
-   for AuditRecords — required so the chain hash is reproducible across
-   readers and writers running on different machines.
-2. Within JSON's safe-integer domain (the legacy domain), msgspec matches
-   rfc8785 byte-for-byte — required so legacy chains can be re-verified
-   against the new code if needed during incident response.
+The rfc8785-equivalence test that used to live here was scoped to legacy
+chain forensics (the v1→v2 migration era); that migration is retired so
+the check is no longer load-bearing.
 """
 
 from __future__ import annotations
@@ -91,22 +73,3 @@ def test_chain_hash_deterministic(n: int) -> None:
         assert a == b
 
 
-@pytest.mark.parametrize("n", [1_000])
-def test_msgspec_equivalent_to_rfc8785_within_safe_domain(n: int) -> None:
-    """Property 2: within JSON safe-int domain, msgspec matches rfc8785 bytewise.
-
-    This is the targeted version of the audit report's equivalence claim:
-    valid only for inputs that legacy rfc8785 itself accepts. Used as a
-    cross-reference for incident response on legacy-chain rows.
-    """
-    rfc8785 = pytest.importorskip("rfc8785")
-    rng = random.Random(0xCAFEBABE)
-    mismatches = 0
-    for _ in range(n):
-        rec = _random_record(rng, safe_int=True)
-        msgspec_bytes = _canonical(rec)
-        decoded = json.loads(msgspec_bytes.decode("utf-8"))
-        rfc_bytes = rfc8785.dumps(decoded)
-        if msgspec_bytes != rfc_bytes:
-            mismatches += 1
-    assert mismatches == 0, f"{mismatches}/{n} samples diverged from RFC 8785 JCS"
