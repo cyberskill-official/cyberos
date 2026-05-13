@@ -31,5 +31,4 @@ source_freshness_tier: 18
 
 # PERSON-001 mutation-test fixture
 
-Personnel-class record. Properly carries `sync_class: local-only` per
-the scope-rules plugin for `memories/people`.
+Personnel-class record. Properly carries `sync_class: local-only` per the scope-rules plugin for `memories/people`.

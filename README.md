@@ -9,55 +9,45 @@ AI-native internal operations platform for CyberSkill (Vietnam-based software co
 ```text
 cyberos/
 ├── README.md              ← you are here
-├── AGENTS.md              ← symlink → docs/memory/AGENTS.md (single source of truth)
-├── CLAUDE.md              ← @-reference → docs/memory/AGENTS.md
+├── AGENTS.md              ← symlink → memory/docs/AGENTS.md (single source of truth)
+├── CLAUDE.md              ← symlink → memory/docs/AGENTS.md
 ├── CONTRIBUTING.md        ← how to land changes
-├── docs/                  ← ALL documentation (each subfolder has its own README.md)
-│   ├── memory/            ← AGENTS protocol — single source of truth
-│   ├── skills/            ← skills layer manual (CPO/CTO chain)
-│   ├── contracts/         ← versioned artefact schemas (feature_request@1, task@1, …)
-│   ├── prd/               ← Product Requirements Doc (PRD.docx + CHANGELOG.md)
-│   ├── srs/               ← System Requirements Spec (SRS.docx + CHANGELOG.md)
-│   └── tours/             ← 10 guided walkthroughs (.tour files)
-├── runtime/               ← ALL code (each subfolder has its own README.md)
-│   ├── tools/             ← cyberos CLI + per-subcommand modules (63+ subcommands)
-│   ├── skill_runners/     ← LLM-driven skill runners (BaseSkillRunner framework)
-│   ├── mcp/               ← read-only MCP server for the BRAIN
-│   ├── hooks/             ← pre/post-write hooks
-│   ├── completions/       ← shell tab-completion
-│   ├── lib/               ← shared scripts (brain_writer.py, apply-bundle-Q.sh, cleanup-host.sh)
-│   ├── starter/           ← bootstrap scaffolds for new projects
-│   ├── migrations/        ← BRAIN schema migration scripts
-│   └── tests/             ← integration tests + skill fixtures
-├── planning/              ← per-project FRs (auto-generated project-index.md per project)
+├── memory/                ← MEMORY MODULE — append-only audit ledger + writer
+│   ├── README.md          ← module quick start
+│   ├── pyproject.toml     ← registers the `cyberos` console script
+│   ├── cyberos/           ← Python package (core/, __main__.py, requirements.txt)
+│   ├── docs/              ← AGENTS protocol, schema, invariants, CHANGELOG
+│   ├── tools/             ← schema generator, voice linter, encrypt, benchmark
+│   ├── tests/             ← pytest suite
+│   ├── bench/             ← throughput / cold-CLI / determinism benchmarks
+│   └── scripts/           ← install.sh, automation, pre-commit hook
+├── docs/                  ← project-level docs (PRD + SRS only)
+│   ├── prd/               ← Product Requirements Doc (PRD.md + .docx + CHANGELOG.md)
+│   └── srs/               ← System Requirements Spec (SRS.md + .docx + CHANGELOG.md)
+├── runtime/               ← non-memory runtime (skill_runners, hooks, mcp, …)
 └── .cyberos-memory/       ← THE BRAIN (gitignored — local tenant state)
-                              includes cache/, staging/, refinements/ — generated state lives here
-                              so a single ignore rule covers everything
 ```
-
-**Four top-level folders + four files.** No `outputs/`, no `var/`, no `migrations/`, no `tours/`, no `AGENTS-CORE.md` — all consolidated. Every functional folder has exactly one `README.md` entry point.
 
 ## Where to start
 
-- **Reading the protocol** — start with [`docs/memory/README.md`](docs/memory/README.md) Parts 1–12 (32-part operator manual).
-- **Running the chain** — `cyberos chain run --pitch "your idea here" --profile solo` (writes `planning/<slug>/FR-001-*.md`).
-- **Authoring a new memory** — `cyberos add <TYPE>` (delegates to `runtime/lib/brain_writer.py`).
-- **Daily health check** — `cyberos verify` + `cyberos doctor`.
-- **Browsing what's in the BRAIN** — `cyberos status --weekly`, or open the audit dashboard at `.cyberos-memory/cache/audit-site/index.html` (regenerate with `cyberos audit publish`).
+- **Reading the memory protocol** — start with [`memory/docs/AGENTS.md`](memory/docs/AGENTS.md) (the RFC) and [`memory/README.md`](memory/README.md) (module quick start).
+- **Daily health check** — `cd memory && python -m cyberos --store ../.cyberos-memory doctor`.
+- **Authoring a new memory** — `python -m cyberos --store ../.cyberos-memory --actor <name> put <path> -` (writes via the v2 audit-chained writer).
+- **Browsing what's in the BRAIN** — `python -m cyberos --store ../.cyberos-memory state`.
 
 ## The three layers
 
 ```mermaid
 flowchart TD
-    A[Memory layer<br/>docs/memory/AGENTS.md] -.-> B[Skills layer<br/>docs/skills/README.md]
-    B -.-> C[Runtime<br/>runtime/tools/cyberos]
+    A[Memory module<br/>memory/docs/AGENTS.md] -.-> B[Skills layer<br/>runtime/skill_runners/]
+    B -.-> C[CLI<br/>memory/cyberos/__main__.py]
     C --> D[Artefacts<br/>planning/<project>/FR-*.md]
     A -.-> D
 ```
 
-1. **Memory layer (`docs/memory/`)** — the AGENTS protocol. Defines what a memory is, how the BRAIN is structured, the §x.y rules every tool must respect, source-tier system, audit ledger, sync-class model.
-2. **Skills layer (`docs/skills/`)** — single-doc operator manual covering the 11 chain skills (CPO/CTO personas), the `cyberos chain` umbrella, host adapters, and the chain orchestrator.
-3. **Runtime (`runtime/`)** — Python tools that implement the protocols. The umbrella binary is [`runtime/tools/cyberos`](runtime/tools/cyberos) with 63+ subcommands.
+1. **Memory module (`memory/`)** — the AGENTS protocol RFC + the `cyberos` writer. Defines what a memory is, how the audit chain is built, the six file ops, source tiers, sync classes, and exposes the `cyberos` CLI.
+2. **Skills layer (`runtime/skill_runners/`)** — LLM-driven skills (CPO/CTO chain) — will move into its own module folder next.
+3. **Runtime (`runtime/`)** — the non-memory remainder: skill runners, hooks, MCP server, completions, starter scaffolds.
 
 ## The chain in one diagram
 
@@ -106,7 +96,7 @@ Each task has `id` = `FR-NNN-T-MM`, optional subtasks `FR-NNN-T-MM-ST-XX`, sizin
 - **Batch 26** — folder cleanup, part 2: `outputs/` split into `runtime/lib/` + `runtime/starter/` + `var/`. `migrations/` → `runtime/migrations/`. `tours/` → `docs/tours/`.
 - **Batch 27** — single-source-of-truth pass: `AGENTS-CORE.md` removed (one canonical `AGENTS.md`). `var/` removed (generated state moves into the BRAIN cache, gitignored). Every functional folder now has exactly one `README.md` entry point.
 
-See [`docs/memory/CHANGELOG.md`](docs/memory/CHANGELOG.md) for the full batch history (27 batches, 2026-05-04 onward).
+See [`memory/docs/CHANGELOG.md`](memory/docs/CHANGELOG.md) for the full memory-module history (27+ batches, 2026-05-04 onward).
 
 ## Identifier conventions
 
@@ -122,11 +112,10 @@ See [`docs/memory/CHANGELOG.md`](docs/memory/CHANGELOG.md) for the full batch hi
 
 ## Cross-reference cheat sheet
 
-- **Protocol authority:** `docs/memory/AGENTS.md` (full) or `AGENTS.md` symlink (compact, per-session).
-- **Skill catalog:** `docs/skills/README.md` — Parts 1–30 cover authoring, runtime, host adapters, chain orchestrator, manual workflow.
-- **Contracts:** `docs/contracts/<id>/CONTRACT.md` + `template.md` per contract.
-- **CLI reference:** `docs/memory/README.md` Part 27.
-- **Per-aspect manual:** `docs/memory/README.md` Part 26 (88 aspects + tier amplifiers).
+- **Protocol authority:** `memory/docs/AGENTS.md` (full RFC). Top-level `AGENTS.md` is a symlink to it.
+- **Memory module README:** `memory/README.md` — quick start.
+- **Schema + invariants:** `memory/docs/memory.schema.json`, `memory/docs/memory.invariants.yaml`.
+- **PRD / SRS:** `docs/prd/PRD.md`, `docs/srs/SRS.md`.
 
 ## License + ownership
 

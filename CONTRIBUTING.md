@@ -6,7 +6,7 @@
 
 CyberOS is CyberSkill's AI-native internal operations platform, multi-tenant from day 1, with three architectural bets: agent parity (every human task is MCP-callable under same RBAC), CUO as named brand (10 C-suite skills in one persona), BRAIN as universal memory (three layers: filesystem `.cyberos-memory/` at the edge, vector+graph in the centre, S3 archival cold). CyberSkill is the only tenant through Phase 3; external launch is Phase 4. Layer 1 (`.cyberos-memory/`) ships today; Layers 2 & 3 land with the BRAIN module at P0+.
 
-Read [`docs/CyberOS-AGENTS.README.md`](docs/CyberOS-AGENTS.README.md) first (the friendly on-ramp). Read [`docs/CyberOS-AGENTS.md`](docs/CyberOS-AGENTS.md) when you need the exact wording.
+Read [`memory/README.md`](memory/README.md) for the module quick start, then [`memory/docs/AGENTS.md`](memory/docs/AGENTS.md) for the protocol RFC.
 
 ## Setup (5 minutes)
 
@@ -14,19 +14,16 @@ Read [`docs/CyberOS-AGENTS.README.md`](docs/CyberOS-AGENTS.README.md) first (the
 git clone <repo-url> cyberos
 cd cyberos
 
-# Install Python deps
-pip install pyyaml rfc8785 --break-system-packages
+# Install Python deps + register the `cyberos` console script
+cd memory
+pip install -e .
 
-# Smoke-test the operator CLI
-python3 runtime/tools/cyberos --version
-python3 runtime/tools/cyberos status
-python3 runtime/tools/cyberos help
-
-# Verify the BRAIN is healthy
-python3 runtime/tools/cyberos verify
+# Smoke-test the CLI
+cyberos --store ../.cyberos-memory state
+cyberos --store ../.cyberos-memory doctor
 ```
 
-If `cyberos status` reports `0 CRITICAL / 0 WARN` you're set. Otherwise, run `cyberos doctor` and follow the surfaced findings.
+If `cyberos doctor` reports zero errors you're set.
 
 ## Adding your first memory
 
@@ -69,41 +66,31 @@ Auto-detected candidates land in `.cyberos-memory/memories/drift/<date>-refineme
 
 ## Voice standard (gstack /codex)
 
-For all new prose in `docs/CyberOS-AGENTS*.md`, `memories/decisions/`, `memories/refinements/`, `memories/facts/`:
+For all new prose in `memory/docs/*.md`, `memories/decisions/`, `memories/refinements/`, `memories/facts/`:
 
 - **No em dashes (—) or en dashes (–)** — use commas, parens, or sentence rewrite
 - **No AI vocabulary:** delve, crucial, robust, comprehensive, nuanced, multifaceted, furthermore, moreover, additionally, pivotal, landscape, tapestry, underscore, foster, showcase, intricate, vibrant, fundamental, significant
 - **Lead with the point.** Name files, line numbers, commands, outputs.
 - **Builder-to-builder tone**, not consultant-to-client.
 
-Lint: `python3 runtime/tools/cyberos voice --summary` (or via CI: `.github/workflows/voice-and-consistency.yml`).
+Lint: `python3 memory/tools/voice_check.py --summary` (or via CI: `.github/workflows/voice-and-consistency.yml`).
 
 CHANGELOG is exempt (descriptive — may quote LLM outputs verbatim).
 
 ## Running tests
 
 ```bash
-# Validator self-test (16 fixtures)
-python3 runtime/tools/cyberos_validate.py --self-test
+# Full memory-module pytest suite
+cd memory && python -m pytest tests/ -q
 
-# Denylist regression suite (24 fixtures)
-python3 runtime/tests/denylist/test_denylist.py
+# Schema-drift check (regenerate if it fails)
+cd memory && python tools/cyberos_generate_schema.py --check --out docs/memory.schema.json
 
-# Cross-doc consistency (§-refs + DEC-refs)
-python3 runtime/tools/cyberos doc-consistency
-
-# Chain integrity (Merkle LINK check)
-python3 outputs/brain_writer.py verify
+# Doctor (every invariant must pass on the BRAIN store)
+cd memory && python -m cyberos --store ../.cyberos-memory doctor
 ```
 
-CI runs `voice + doc-consistency + validator` on every PR touching `docs/CyberOS-AGENTS*.md` or `runtime/tools/`.
-
-## Adding a new validator
-
-1. Add the check function to `runtime/tools/cyberos_validate.py`
-2. Add a fixture under `runtime/tools/tests/vectors/` that exercises it (positive + negative case)
-3. Run `cyberos verify --self-test` — your fixture must pass
-4. If the new check rejects previously-valid input → must go through §0.5 protocol upgrade + 3-release deprecation cycle per README Part 8 "additive only" rule
+CI runs voice + schema-drift + the full pytest suite on every PR touching `memory/**`.
 
 ## Reporting issues
 
@@ -115,74 +102,38 @@ CI runs `voice + doc-consistency + validator` on every PR touching `docs/CyberOS
 ## Project layout
 
 ```
-.cyberos-memory/                # the BRAIN (Layer 1)
+.cyberos-memory/                # the BRAIN (gitignored — local tenant state)
 ├── manifest.json               # root pointer (§6)
-├── company/                    # locked-decisions, values, glossary
-├── module/<name>/              # per-capability/module memories
-├── member/<id>/                # per-person; <id>/private/ is subject-only
-├── client/<id>/
-├── project/                    # this project's working memory
-├── persona/<role>.md
+├── audit/<NNN>.binlog          # append-only audit ledger (v2)
+├── company/, module/, member/, client/, project/, persona/
 ├── memories/{decisions,refinements,facts,people,projects,preferences,drift}/
-├── meta/
-│   ├── templates/              # Aspect 4.1 — DEC.md, REF.md, FACT.md, ...
-│   ├── protocol-history/       # verbatim AGENTS.md archives (§0.5)
-│   │   └── INDEX.md            # Aspect 13.4 — bundle → SHA mapping
-│   └── health/                 # §8.7 self-audit reports
-├── audit/<YYYY-MM>.jsonl       # append-only Merkle ledger
-├── conflicts/
-├── exports/
-└── index/                      # regenerable search index
+├── meta/{templates,protocol-history,health}/
+├── conflicts/, exports/, index/
 
-docs/
-├── CyberOS-AGENTS.md           # canonical protocol (load on demand)
-├── CyberOS-AGENTS-CORE.md      # 10K-token normative subset (load every session)
-├── CyberOS-AGENTS.README.md    # this guide's full version
-├── CyberOS-AGENTS.CHANGELOG.md # day-by-day record of protocol changes
-├── CyberOS-PRD.docx            # product requirements doc (binary)
-├── CyberOS-PRD.CHANGELOG.md
-├── CyberOS-SRS.docx            # system requirements spec (binary)
-└── CyberOS-SRS.CHANGELOG.md
+memory/                         # the memory module
+├── README.md                   # quick start
+├── pyproject.toml              # registers `cyberos` console script
+├── cyberos/                    # Python package
+│   ├── core/                   # writer, walker, reader, lock, ops, ...
+│   └── __main__.py             # single CLI entrypoint
+├── docs/
+│   ├── AGENTS.md               # protocol RFC (canonical source of truth)
+│   ├── memory.schema.json      # generated schema (don't hand-edit)
+│   ├── memory.invariants.yaml  # invariants enforced by cyberos doctor
+│   ├── PROPOSAL.md, EVOLUTION.md, INTEROP.md, CHANGELOG.md, README.md
+├── tools/                      # schema generator, voice linter, encrypt, benchmark
+├── tests/                      # pytest suite
+├── bench/                      # throughput / cold-CLI / determinism benchmarks
+└── scripts/                    # install.sh, automation, pre-commit hook
 
-runtime/
-├── tools/
-│   ├── cyberos                 # operator umbrella binary (Aspect 1.1)
-│   ├── cyberos_validate.py     # validator + self-test
-│   ├── cyberos_doctor.py       # recovery + MAINTENANCE-mode repair
-│   ├── cyberos_index.py        # SQLite search index (Stage 3)
-│   ├── cyberos_export.py       # deterministic export (Stage 4)
-│   ├── cyberos_encrypt.py      # at-rest encryption + Shamir (Stage 5)
-│   ├── canonical_sha.py        # §0.5 canonical SHA computation
-│   ├── voice_check.py          # em-dash + AI-vocab linter (Aspect 7.2)
-│   ├── cyberos_show.py         # memory browser
-│   ├── cyberos_onboard.py      # new-contributor wizard (Aspect 8.1)
-│   ├── cyberos_analytics.py    # local-only usage analytics (Aspect 11.1)
-│   ├── cyberos_add.py          # interactive memory wizard (Aspect 1.2)
-│   ├── extract_agents_core.py  # AGENTS-CORE.md regen
-│   └── tests/                  # 16 validator fixtures
-├── hooks/
-│   ├── gateguard.py            # PreToolUse 3-stage DENY/FORCE/ALLOW (Aspect 5.1)
-│   └── refinement_candidates.py # Stop-hook §0.4 auto-detection (Aspect 3.1)
-└── tests/
-    ├── denylist/               # §9.3 regression suite (Aspect 5.5)
-    ├── fuzz/                   # content-gate fuzz tests (Aspect 5.6 — placeholder)
-    └── refinements/            # per-REF capability+regression evals (Aspect 3.2)
+docs/                           # project-level docs only
+├── prd/                        # PRD.md + PRD.docx + CHANGELOG.md
+└── srs/                        # SRS.md + SRS.docx + CHANGELOG.md
 
-tours/                          # CodeTour walkthroughs (Aspect 7.4)
-├── onboarding.tour
-├── refinement-loop.tour
-├── incident-response.tour
-├── protocol-upgrade.tour
-└── security-audit.tour
-
-outputs/
-├── brain_writer.py             # canonical writer — append audit + atomic-write per §4.4
-├── staged-memories/            # cyberos add stages here before commit
-├── doctor/                     # repair op logs
-└── refinements/                # in-progress REF drafts before promotion
+runtime/                        # non-memory runtime (skill_runners, hooks, mcp, ...)
 
 .github/workflows/
-└── voice-and-consistency.yml   # CI gate: voice + doc-consistency + validator
+└── voice-and-consistency.yml   # CI gate: voice + schema-drift + pytest + doctor
 ```
 
 ## Code style
@@ -207,9 +158,7 @@ Bundle naming (post-Bundle-Q): `bundle <letter>: <theme>`. See CHANGELOG for exa
 
 ## Questions
 
-For protocol questions: read `docs/CyberOS-AGENTS.README.md` Part 1-4 first.
-For implementation questions: check `tours/onboarding.tour` then ask in chat.
-For refinement proposals: follow `tours/refinement-loop.tour`.
+For protocol questions: read `docs/CyberOS-AGENTS.README.md` Part 1-4 first. For implementation questions: check `tours/onboarding.tour` then ask in chat. For refinement proposals: follow `tours/refinement-loop.tour`.
 
 ## License
 

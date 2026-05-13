@@ -1,0 +1,231 @@
+{
+  "audit_chain_head": "sha256:7efb188e22c84d0daf44f12844bb2204b794fae8427b383c03f1515aa149fc5c",
+  "compaction_policy": {
+    "minimum_age_months": 12
+  },
+  "created_at": "2026-05-04T12:00:00+07:00",
+  "encryption_policy": {
+    "algorithm": "xchacha20poly1305-ietf",
+    "enabled": false,
+    "fallback_kdf": "argon2id-t3-m64-p4",
+    "key_derivation": "hkdf-sha256-from-hardware-bound",
+    "passphrase_strength_minimum": {
+      "min_chars": 16,
+      "zxcvbn_score": 3
+    },
+    "scopes": [
+      "member:<self>/private",
+      "classification:personnel",
+      "classification:client"
+    ]
+  },
+  "exclusion_rules": [
+    {
+      "kind": "regex",
+      "pattern": "(?i)\\b(salary|payslip|bonus|equity|grant)\\b",
+      "reason": "compensation"
+    },
+    {
+      "kind": "regex",
+      "pattern": "\\b(?:passport|national_id|ssn|tax_id)\\b",
+      "reason": "gov-id"
+    },
+    {
+      "kind": "regex",
+      "pattern": "\\b(?:iban|swift|account_number)\\b",
+      "reason": "bank"
+    },
+    {
+      "kind": "topic",
+      "reason": "special-category PII",
+      "value": "personal_life:health"
+    },
+    {
+      "kind": "topic",
+      "reason": "secrets",
+      "value": "secrets:api_keys"
+    }
+  ],
+  "health_check_policy": {
+    "diagnostic_verbs": [
+      "healthcheck",
+      "status",
+      "inspect",
+      "audit",
+      "check BRAIN",
+      "show BRAIN",
+      "view BRAIN"
+    ],
+    "on_demand_phrase": "run BRAIN healthcheck",
+    "on_session_end": true,
+    "post_upgrade_phrase": "rescan BRAIN"
+  },
+  "language_routing_default": "en",
+  "languages": [
+    "en",
+    "vi"
+  ],
+  "last_updated_at": "2026-05-12T07:32:11+07:00",
+  "memory_count": 158,
+  "memory_layer": 1,
+  "migration": {
+    "completed_at": 1778663268041236000,
+    "from_schema": 1,
+    "legacy_last_chain": "5c49411c59266d862c300bd5c0ec2ba5f83078aaa1329b30ccc0ca0e96340ac7",
+    "legacy_last_chain_with_prefix": "sha256:5c49411c59266d862c300bd5c0ec2ba5f83078aaa1329b30ccc0ca0e96340ac7",
+    "legacy_row_count": 445,
+    "model": "chain-bridge",
+    "notes": "Legacy audit/*.jsonl files remain on disk untouched. New rows land in audit/current.binlog and start with prev_chain = legacy_last_chain, so the cumulative Merkle chain is continuous across the legacy\u2192v2 boundary. Cross-schema chain verification (post-migration) runs in two passes: (1) rfc8785+legacy schema for JSONL, (2) msgspec+v2 schema for binlog; assert binlog[0].prev_chain == legacy_last_chain.",
+    "pre_hash": "ccc4b881814f255e3adba0b53626022534176bbb36c37e4101c7cf6e105b203e",
+    "to_schema": 2
+  },
+  "operational_mode": "normal",
+  "owner": {
+    "display_name": "Stephen Cheng",
+    "id": "stephen-cheng",
+    "kind": "human"
+  },
+  "project": {
+    "id": "prj_cyberos",
+    "language": "en",
+    "name": "CyberOS",
+    "root_path": "/Users/stephencheng/Projects/CyberSkill/cyberos",
+    "stack": [
+      "docs",
+      "markdown",
+      "docx"
+    ]
+  },
+  "protocol": {
+    "approved_at": "2026-05-11T01:29:32+07:00",
+    "approved_by": "subject:stephen-cheng",
+    "last_checked_at": "2026-05-11T01:29:32+07:00",
+    "loaded_path": "docs/memory/AGENTS.md",
+    "sha256": "sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688",
+    "signing_keys": []
+  },
+  "reconciliation_checkpoint": {
+    "audit_id": "evt_019e1999-3592-7d85-bfb0-ce6146a20b07",
+    "chain": "sha256:7efb188e22c84d0daf44f12844bb2204b794fae8427b383c03f1515aa149fc5c",
+    "ts": "2026-05-12T07:32:11+07:00"
+  },
+  "schema_version": 2,
+  "scope_contract": {
+    "agent_default_read_scopes": [
+      "company",
+      "module",
+      "member",
+      "client",
+      "project",
+      "persona",
+      "meta"
+    ],
+    "agent_default_write_scopes": [
+      "project",
+      "meta",
+      "module"
+    ],
+    "elevated_scopes_require_human_confirmation": [
+      "company",
+      "member",
+      "client",
+      "persona"
+    ]
+  },
+  "scope_root": "project:prj_cyberos",
+  "shamir_fragments": {
+    "fragments": [],
+    "master_key_fingerprint": null,
+    "threshold": 3,
+    "total": 5
+  },
+  "signing_key_fingerprint": null,
+  "size_limits": {
+    "per_file_body_kb": 10,
+    "per_file_hard_kb": 30,
+    "per_tenant_total_mb": 10
+  },
+  "source_tiers": [
+    {
+      "pattern": "company/locked-decisions.md",
+      "rationale": "Founder-level locked decisions are append-only and immutable per \u00a79.6; never auto-overridden by anything else.",
+      "tier": 1
+    },
+    {
+      "pattern": "company/**",
+      "rationale": "Company-level scope (values, glossary, compliance, history) carries org-wide authority; outranks any per-module or per-project memory.",
+      "tier": 3
+    },
+    {
+      "pattern": "memories/decisions/**",
+      "rationale": "Founder/CEO decisions recorded as DEC-NNN are second-most-authoritative; outrank facts/projects/preferences but can be superseded by company/locked-decisions on conflict.",
+      "tier": 5
+    },
+    {
+      "pattern": "memories/refinements/**",
+      "rationale": "Protocol refinements (REF-NNN) carry the same authority as the decisions they implement; tied with memories/decisions/.",
+      "tier": 5
+    },
+    {
+      "pattern": "module/**",
+      "rationale": "Module-level memories (per-capability) are authoritative within their module's domain; outrank facts/projects/preferences.",
+      "tier": 8
+    },
+    {
+      "pattern": "memories/facts/**",
+      "rationale": "Facts derived from authoritative sources (PRD/SRS/architecture) are authoritative for descriptive content but yield to decisions on policy questions.",
+      "tier": 10
+    },
+    {
+      "pattern": "client/**",
+      "rationale": "Per-client memories carry client-engagement authority but yield to company-level policy on cross-client questions.",
+      "tier": 12
+    },
+    {
+      "pattern": "memories/projects/**",
+      "rationale": "Per-project working memory; authoritative within its project but yields to company/module on cross-cutting questions.",
+      "tier": 15
+    },
+    {
+      "pattern": "project/**",
+      "rationale": "This-project working memory (the cyberos repo's own project/ scope); same tier as memories/projects/.",
+      "tier": 15
+    },
+    {
+      "pattern": "persona/**",
+      "rationale": "Agent persona/role-card memories; yield to company/module/decisions on factual questions.",
+      "tier": 18
+    },
+    {
+      "pattern": "memories/people/**",
+      "rationale": "Person-graph memories; descriptive.",
+      "tier": 20
+    },
+    {
+      "pattern": "memories/preferences/**",
+      "rationale": "Personal preferences and feedback memories; subject-specific; yield to org-level decisions.",
+      "tier": 25
+    },
+    {
+      "pattern": "member/**",
+      "rationale": "Per-subject personal memories; authoritative for that subject only; yield to company/module on org-level questions.",
+      "tier": 30
+    },
+    {
+      "pattern": "memories/drift/**",
+      "rationale": "Drift candidates flagged by \u00a78.6 \u2014 informational; never authoritative.",
+      "tier": 80
+    },
+    {
+      "pattern": "*",
+      "rationale": "Default \u2014 lowest priority unless overridden by a more-specific pattern above.",
+      "tier": 99
+    }
+  ],
+  "tenant": {
+    "id": "cyberskill",
+    "name": "CyberSkill JSC",
+    "residency": "vn"
+  },
+  "timezone": "Asia/Ho_Chi_Minh"
+}

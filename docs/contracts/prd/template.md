@@ -62,14 +62,11 @@ Source brief: [<brief-title>](<project_brief_ref>) (`project_brief@1`, iteration
 1. <!-- needs: cuo-clo --> <Question.>
 2. <!-- needs: human --> <Question.>
 
-<!-- Or, if no open questions: -->
-<!-- "No open questions — all decisions captured in this PRD." -->
+<!-- Or, if no open questions: --> <!-- "No open questions — all decisions captured in this PRD." -->
 
 ## EU AI Act Considerations
 
-<!-- Required if eu_ai_act_risk_class ∈ {limited, high}. -->
-<!-- For not_ai / minimal: state explicitly: -->
-<!-- "Not in scope of EU AI Act — feature involves no AI/ML inference / biometric data / Annex III activity. Reviewed: <ISO date> by <persona|human>." -->
+<!-- Required if eu_ai_act_risk_class ∈ {limited, high}. --> <!-- For not_ai / minimal: state explicitly: --> <!-- "Not in scope of EU AI Act — feature involves no AI/ML inference / biometric data / Annex III activity. Reviewed: <ISO date> by <persona|human>." -->
 
 ## Compliance and Privacy
 

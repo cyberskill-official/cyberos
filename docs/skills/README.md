@@ -1797,10 +1797,7 @@ The agent will end its response with a §14.1 compact block. The audit row goes 
 
 ### Phase A — Requirements Discovery (start here)
 
-**Skill**: `cuo/cpo/requirements-discovery`
-**Files to load**: `SKILL.md` (283 lines / 17 KB) + `STANDALONE_INTERVIEW.md` (156 lines / 7.5 KB)
-**Input**: free-text pitch / draft requirements / commissioning email
-**Output**: `project_brief@1` markdown — the structured intake artefact every downstream skill consumes
+**Skill**: `cuo/cpo/requirements-discovery` **Files to load**: `SKILL.md` (283 lines / 17 KB) + `STANDALONE_INTERVIEW.md` (156 lines / 7.5 KB) **Input**: free-text pitch / draft requirements / commissioning email **Output**: `project_brief@1` markdown — the structured intake artefact every downstream skill consumes
 
 #### Procedure
 
@@ -1845,10 +1842,7 @@ The agent will end its response with a §14.1 compact block. The audit row goes 
 
 ### Phase B — Chain Selection
 
-**Skill**: `cuo/cpo/chain-selector`
-**Files to load**: `SKILL.md` (185 lines / 7 KB)
-**Input**: `project-brief.md` from Phase A
-**Output**: `chain_plan` — a list of skill IDs the supervisor (you) will route through
+**Skill**: `cuo/cpo/chain-selector` **Files to load**: `SKILL.md` (185 lines / 7 KB) **Input**: `project-brief.md` from Phase A **Output**: `chain_plan` — a list of skill IDs the supervisor (you) will route through
 
 #### Procedure
 
@@ -1884,10 +1878,7 @@ The agent will end its response with a §14.1 compact block. The audit row goes 
 
 ### Phase C — PRD Authoring
 
-**Skill**: `cuo/cpo/prd-author`
-**Files to load**: `SKILL.md` (247 lines / 13 KB)
-**Input**: `project-brief.md` + `CONTEXT.md`
-**Output**: `prd@1` markdown — the PRD that engineering will eventually consume
+**Skill**: `cuo/cpo/prd-author` **Files to load**: `SKILL.md` (247 lines / 13 KB) **Input**: `project-brief.md` + `CONTEXT.md` **Output**: `prd@1` markdown — the PRD that engineering will eventually consume
 
 #### Procedure
 
@@ -1920,10 +1911,7 @@ The agent will end its response with a §14.1 compact block. The audit row goes 
 
 ### Phase D — PRD Audit (standard / full only)
 
-**Skill**: `cuo/cpo/prd-audit`
-**Files to load**: `SKILL.md` (194 lines / 7.6 KB) + `AUDIT_LOOP.md` (87 lines / 4 KB) + `RUBRIC.md` (112 lines / 7.6 KB)
-**Input**: `prd@1` markdown from Phase C
-**Output**: `prd-<feature>.audit.md` audit report + (optionally) edits to the PRD
+**Skill**: `cuo/cpo/prd-audit` **Files to load**: `SKILL.md` (194 lines / 7.6 KB) + `AUDIT_LOOP.md` (87 lines / 4 KB) + `RUBRIC.md` (112 lines / 7.6 KB) **Input**: `prd@1` markdown from Phase C **Output**: `prd-<feature>.audit.md` audit report + (optionally) edits to the PRD
 
 #### Procedure
 
@@ -1995,10 +1983,7 @@ The SRS-audit's RUBRIC focuses on:
 
 ### Phase F — Feature-Request Authoring
 
-**Skill**: `cuo/cpo/fr-author`
-**Files to load**: `SKILL.md` (364 lines / 20 KB) — largest in the chain; budget read-time accordingly
-**Input**: audited `prd@1` (+ audited `srs@1` if full profile)
-**Output**: a folder of `feature_request@1` markdown files — one per feature, each ≤2 weeks of work
+**Skill**: `cuo/cpo/fr-author` **Files to load**: `SKILL.md` (364 lines / 20 KB) — largest in the chain; budget read-time accordingly **Input**: audited `prd@1` (+ audited `srs@1` if full profile) **Output**: a folder of `feature_request@1` markdown files — one per feature, each ≤2 weeks of work
 
 #### Procedure
 
@@ -2022,10 +2007,7 @@ The SRS-audit's RUBRIC focuses on:
 
 ### Phase G — Feature-Request Audit
 
-**Skill**: `cuo/cpo/fr-audit`
-**Files to load**: `SKILL.md` (316 lines / 16 KB) + `RUBRIC.md` + `AUDIT_LOOP.md`
-**Input**: folder of FR markdowns
-**Output**: `<FR>.audit.md` per FR + `AUDIT_BATCH_SUMMARY.md` aggregate
+**Skill**: `cuo/cpo/fr-audit` **Files to load**: `SKILL.md` (316 lines / 16 KB) + `RUBRIC.md` + `AUDIT_LOOP.md` **Input**: folder of FR markdowns **Output**: `<FR>.audit.md` per FR + `AUDIT_BATCH_SUMMARY.md` aggregate
 
 #### Procedure
 
@@ -2041,10 +2023,7 @@ Same shape as PRD-audit but **runs per-FR sequentially**. The skill emits an `AU
 
 ### Phase H — Tech Spec (standard / full only)
 
-**Skill**: `cuo/cto/fr-to-tech-spec`
-**Files to load**: `SKILL.md` (270 lines / 14 KB)
-**Input**: audited FR markdowns
-**Output**: `tech_spec@1` markdown — implementation-shaped spec engineering will execute against
+**Skill**: `cuo/cto/fr-to-tech-spec` **Files to load**: `SKILL.md` (270 lines / 14 KB) **Input**: audited FR markdowns **Output**: `tech_spec@1` markdown — implementation-shaped spec engineering will execute against
 
 For lean profile, **skip this phase**; spec-to-impl-plan consumes audited FRs directly.
 
@@ -2061,10 +2040,7 @@ This is where mattpocock's `/grill-with-docs` discipline matters most: **every t
 
 ### Phase I — Implementation Plan (the chain's final step)
 
-**Skill**: `cuo/cto/spec-to-impl-plan`
-**Files to load**: `SKILL.md` (217 lines / 9 KB)
-**Input**: audited `tech_spec@1` (standard / full) OR audited FR (lean)
-**Output**: `impl_plan@1` markdown + (optionally) tickets in PROJ MCP
+**Skill**: `cuo/cto/spec-to-impl-plan` **Files to load**: `SKILL.md` (217 lines / 9 KB) **Input**: audited `tech_spec@1` (standard / full) OR audited FR (lean) **Output**: `impl_plan@1` markdown + (optionally) tickets in PROJ MCP
 
 #### Procedure
 

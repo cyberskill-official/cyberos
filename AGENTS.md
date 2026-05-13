@@ -1,1 +1,1 @@
-docs/memory/AGENTS.md
+memory/docs/AGENTS.md

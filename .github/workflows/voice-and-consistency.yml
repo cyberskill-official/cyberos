@@ -3,30 +3,40 @@ name: voice + doc-consistency
 on:
   push:
     paths:
-      - "docs/CyberOS-AGENTS*.md"
-      - "runtime/tools/voice_check.py"
-      - "runtime/tools/cyberos"
+      - "memory/docs/AGENTS.md"
+      - "memory/docs/memory.schema.json"
+      - "memory/cyberos/**"
+      - "memory/tools/voice_check.py"
+      - "memory/tools/cyberos_generate_schema.py"
+      - "memory/tests/**"
   pull_request:
     paths:
-      - "docs/CyberOS-AGENTS*.md"
-      - "runtime/tools/voice_check.py"
-      - "runtime/tools/cyberos"
+      - "memory/docs/AGENTS.md"
+      - "memory/docs/memory.schema.json"
+      - "memory/cyberos/**"
+      - "memory/tools/voice_check.py"
+      - "memory/tools/cyberos_generate_schema.py"
+      - "memory/tests/**"
   workflow_dispatch:
+
+# Pinned to Node 24-compatible action versions (Node.js 20 is deprecated
+# per GitHub's 2026-06-02 default-flip; see
+# https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/).
 
 jobs:
   voice-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.11" }
       - name: install deps
         run: pip install pyyaml rfc8785
       - name: voice linter (advisory)
         run: |
-          # Voice standard adoption is additive per §0.5 — non-strict on existing docs.
+          # Voice standard adoption is additive per AGENTS.md §0.5 — non-strict on existing docs.
           # When a new DEC/REF/FACT lands, the lint should pass on that file.
-          python3 runtime/tools/voice_check.py --summary
+          python3 memory/tools/voice_check.py --summary
         continue-on-error: true  # advisory only; remove once voice debt cleared
       - name: voice linter strict on new DEC/REF/FACT
         run: |
@@ -35,34 +45,56 @@ jobs:
             CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD \
               | grep -E "memories/(decisions|refinements|facts)/" || true)
             if [ -n "$CHANGED" ]; then
-              python3 runtime/tools/voice_check.py --strict $CHANGED
+              python3 memory/tools/voice_check.py --strict $CHANGED
             fi
           fi
 
-  doc-consistency:
+  schema-drift:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.11" }
       - name: install deps
-        run: pip install pyyaml rfc8785
-      - name: cross-doc consistency check
+        run: pip install -r memory/cyberos/requirements.txt || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
+      - name: schema regeneration is reproducible
+        working-directory: memory
         run: |
-          python3 runtime/tools/cyberos doc-consistency
-        continue-on-error: true  # advisory; surfaces stale §-refs + missing DECs
+          # Confirms memory/docs/memory.schema.json matches what
+          # cyberos_generate_schema would emit today. Fails if cyberos.core
+          # msgspec Structs changed without a schema regeneration.
+          python tools/cyberos_generate_schema.py \
+              --check \
+              --out docs/memory.schema.json
 
   validate-brain:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.11" }
       - name: install deps
-        run: pip install pyyaml rfc8785
-      - name: cyberos verify
+        run: pip install -r memory/cyberos/requirements.txt || pip install msgspec cryptography crc32c rfc8785 'pyyaml>=6' jsonschema zstandard
+      - name: cyberos test suite
+        working-directory: memory
         run: |
-          python3 runtime/tools/cyberos_validate.py .
-      - name: cyberos verify --self-test
+          # Replaces the legacy single-file cyberos_validate.py with the
+          # full pytest suite. Covers writer, walker, lock, MMR, STH, ops,
+          # conflicts, sessions, serve, etc.
+          pip install pytest
+          python -m pytest tests/ -q
+      - name: cyberos doctor on a fresh greenfield store
+        working-directory: memory
         run: |
-          python3 runtime/tools/cyberos_validate.py --self-test
+          # Smoke-test that the doctor walker runs end-to-end on a fresh
+          # store. The host CI runner provides a clean tmp path (avoiding
+          # the layout-no-sandbox-path guard that fires on /tmp/).
+          STORE="${RUNNER_TEMP:-/tmp}/cyberos-ci-smoke"
+          rm -rf "$STORE"
+          mkdir -p "$STORE/audit"
+          echo '{}' > "$STORE/manifest.json"
+          # The doctor's layout-no-sandbox-path guard rejects paths
+          # containing common sandbox fragments; CYBEROS_HOST_MOUNT_PREFIX
+          # exempts the runner's actual working tree.
+          export CYBEROS_HOST_MOUNT_PREFIX="$(dirname "$STORE")"
+          python -m cyberos --store "$STORE" doctor

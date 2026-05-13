@@ -67,8 +67,7 @@ chain_profile: standard          # lean | standard | full — see CONTRACT.md §
 1. <!-- needs: cuo-clo --> <Question for legal review.>
 2. <!-- needs: human --> <Question that requires user decision.>
 
-<!-- Or, if no open questions: -->
-<!-- "No open questions — all required intake answered as of <ISO date>." -->
+<!-- Or, if no open questions: --> <!-- "No open questions — all required intake answered as of <ISO date>." -->
 
 <!-- ── Conditionally-required sections (uncomment + fill as needed) ── -->
 

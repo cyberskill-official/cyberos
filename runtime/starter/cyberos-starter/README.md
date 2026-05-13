@@ -1,7 +1,6 @@
 # cyberos-starter
 
-Skeleton for bootstrapping a new project with a fresh `.cyberos-memory/`
-BRAIN. Drop-in template; replace placeholders, run `cyberos onboard`.
+Skeleton for bootstrapping a new project with a fresh `.cyberos-memory/` BRAIN. Drop-in template; replace placeholders, run `cyberos onboard`.
 
 ## Layout
 
@@ -56,19 +55,16 @@ ln -s /path/to/cyberos/docs/memory/AGENTS.md CLAUDE.md
 1. Prompts for your subject id (`subject:<slug>`)
 2. Optionally creates `.cyberos-memory/persona/<role>.md`
 3. Optionally seeds `memories/people/PERSON-001-<subject>.md`
-4. Drops a starter checklist memory at
-   `memories/preferences/PREF-onboarding-checklist-<subject>.md`
+4. Drops a starter checklist memory at `memories/preferences/PREF-onboarding-checklist-<subject>.md`
 5. Runs `cyberos verify` and reports
 
 ## Convention reminders
 
 - Memory IDs must be UUIDv7 (`mem_<uuid7>`) — `cyberos add` handles this
 - Frontmatter is required on every memory — see `meta/templates/`
-- Sync-class defaults: `publishable` for `decisions/refinements`,
-  `local-only` for `people`
+- Sync-class defaults: `publishable` for `decisions/refinements`, `local-only` for `people`
 - `cyberos verify` is your safety net — run it after every batch of writes
 
 ## Tour
 
-Open `tours/onboarding.tour` in VS Code with the CodeTour extension to
-walk through what each starter file does.
+Open `tours/onboarding.tour` in VS Code with the CodeTour extension to walk through what each starter file does.

@@ -1,15 +1,14 @@
-# `docs/` — All documentation
-
-CyberOS keeps every kind of documentation under this single tree. One README per folder, one folder per concern.
+# `docs/` — Project-level documentation
 
 | Folder | Purpose | Entry point |
 | --- | --- | --- |
-| [`memory/`](memory/) | AGENTS protocol — the memory layer rules, schema, source-tier system, audit ledger | [`memory/README.md`](memory/README.md) |
-| [`skills/`](skills/) | Skills layer — CPO/CTO chain skills + chain orchestrator + host adapters | [`skills/README.md`](skills/README.md) |
-| [`contracts/`](contracts/) | Versioned artefact schemas (`feature_request@1`, `task@1`, `prd@1`, `srs@1`, …) | [`contracts/README.md`](contracts/README.md) |
 | [`prd/`](prd/) | Product Requirements Document for CyberOS itself (markdown is source of truth; `make docx` regenerates `PRD.docx`) | [`prd/README.md`](prd/README.md) |
 | [`srs/`](srs/) | System Requirements Specification (markdown is source of truth; `make docx` regenerates `SRS.docx`) | [`srs/README.md`](srs/README.md) |
-| [`tours/`](tours/) | 10 guided walkthroughs (`.tour` files) for common workflows | [`tours/README.md`](tours/README.md) |
+| [`skills/`](skills/) | Skills layer — CPO/CTO chain skills + chain orchestrator + host adapters (will move into a `skills/` module folder next pass) | [`skills/README.md`](skills/README.md) |
+| [`contracts/`](contracts/) | Versioned artefact schemas (`feature_request@1`, `task@1`, `prd@1`, `srs@1`, …) — pending skill module move | [`contracts/README.md`](contracts/README.md) |
+| [`tours/`](tours/) | Guided walkthroughs (`.tour` files) for common workflows — pending skill module move | [`tours/README.md`](tours/README.md) |
+
+The memory protocol now lives in [`../memory/docs/`](../memory/docs/) (relocated 2026-05-13 during the memory-module restructure). The schema, invariants, AGENTS.md, EVOLUTION.md, INTEROP.md, PROPOSAL.md, and CHANGELOG.md are all there.
 
 ## How the layers relate
 
@@ -42,9 +41,9 @@ PRD  ─authority──►  SRS  ─authority──►  AGENTS protocol
 
 ## Cross-references
 
-- The single source of truth for the AGENTS protocol is [`memory/AGENTS.md`](memory/AGENTS.md) (v2.0.0). The compact "AGENTS-CORE" variant was removed in Batch 27 (2026-05-12); the v1 document is frozen at [`memory/AGENTS.v1.md`](memory/AGENTS.v1.md) as the rollback target.
-- The v2 CLI is `python -m cyberos`; legacy umbrella at `../runtime/tools/cyberos` still works via the schema-version shim ([`../runtime/lib/brain_writer_shim.py`](../runtime/lib/brain_writer_shim.py)).
-- Per-batch history (1–27 and the 2026-05 rebuild) lives in [`memory/CHANGELOG.md`](memory/CHANGELOG.md).
+- The single source of truth for the memory protocol is [`../memory/docs/AGENTS.md`](../memory/docs/AGENTS.md) (RFC, v2).
+- The CLI is `python -m cyberos` (or `cyberos` after `cd memory && pip install -e .`).
+- Per-batch history lives in [`../memory/docs/CHANGELOG.md`](../memory/docs/CHANGELOG.md).
 
 ## Docx ↔ markdown round-trip
 

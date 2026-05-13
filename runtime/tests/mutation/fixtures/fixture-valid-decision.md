@@ -31,5 +31,4 @@ source_freshness_tier: 5
 
 # DEC-001 mutation-test fixture (decision)
 
-A valid DEC for mutation testing. Body intentionally minimal but contains
-no prompt-injection markers and no denylisted content.
+A valid DEC for mutation testing. Body intentionally minimal but contains no prompt-injection markers and no denylisted content.
