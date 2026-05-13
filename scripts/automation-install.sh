@@ -15,11 +15,26 @@
 
 set -euo pipefail
 
-if [[ "$(uname)" != "Darwin" ]]; then
-    echo "automation-install.sh: macOS only (uses launchd)" >&2
-    echo "  for Linux, install a cron entry pointing at scripts/automation/cyberos-nightly.sh" >&2
-    exit 2
-fi
+# OS dispatch — this script handles macOS (launchd) directly; on other
+# platforms it delegates to the per-OS installer.
+case "$(uname -s)" in
+    Darwin)
+        : # macOS launchd path follows
+        ;;
+    Linux)
+        exec "$(dirname "$0")/automation-install-linux.sh" "$@"
+        ;;
+    MINGW*|MSYS*|CYGWIN*)
+        echo "automation-install.sh: detected Windows; please run instead:" >&2
+        echo "  powershell -ExecutionPolicy Bypass -File scripts\\automation-install.ps1 -Target <project>" >&2
+        exit 2
+        ;;
+    *)
+        echo "automation-install.sh: unsupported OS '$(uname -s)'" >&2
+        echo "  supported: macOS (launchd), Linux (systemd-user or cron), Windows (Task Scheduler)" >&2
+        exit 2
+        ;;
+esac
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TARGET=""

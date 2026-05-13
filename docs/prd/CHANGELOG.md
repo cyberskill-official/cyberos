@@ -1,8 +1,78 @@
-# Changelog — CyberOS-PRD.docx
+# Changelog — CyberOS-PRD
 
-All notable changes to **CyberOS-PRD.docx** are documented here, day by day.
+All notable changes to **CyberOS-PRD** are documented here, day by day.
 
 This document does **not** carry an inline version marker — see CyberOS-AGENTS.md §0.2 (no-inline-version rule for design docs). Improvements land continuously; this changelog is the canonical record. Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but date-stamped rather than version-stamped.
+
+The canonical source is now `docs/prd/PRD.md` (Markdown). The original `PRD.docx` was converted on 2026-05-12 (task #64); the `.md` is the working copy from that date forward.
+
+---
+
+## 2026-05-14 — Layer 1 close-out: full P1–P12 + P2 Stage 3 (no PRD §-level changes)
+
+### Summary
+
+The v1→v2 protocol rebuild plus the entire Deep Optimization Audit roadmap (P1–P12, P2 Stages 1–3) shipped over the 13–14 May sessions. The CyberOS BRAIN Layer 1 (PRD §5.3) is now feature-complete and operating on a clean v2 store. An early Layer 2 component (PRD §5.4 semantic-search slice) shipped ahead of schedule as P7. The rest of Layer 2 (vector+graph), Layer 3 (archival corpus), and the CUO / modules tier (PRD §6–§9) are not yet started — that is the next big arc per the PRD plan.
+
+### PRD §-by-§ coverage today
+
+- **§5.3 Layer 1 — Filesystem `.cyberos-memory`** — **feature-complete**.
+  - §5.3.1 storage layout: shipped (manifest, audit/, memories/<kind>/<hex>/<hex>/ shards, conflicts/, exports/, index/, meta/sessions/)
+  - §5.3.2 six file operations: shipped, then collapsed to the three canonical ops `put` / `move` / `delete(mode)` (P1) with v1 aliases preserved
+  - §5.3.3 CRDT sync across machines: partial — file-level sync via iCloud/Dropbox/OneDrive/Syncthing/etc. works with conflict-marker awareness (P9 `cyberos resolve-conflict`). True CRDT 3-way merge across simultaneously-diverged BRAINs remains future work.
+  - §5.3.4 portable export `.zip`: shipped (`cyberos export`, byte-deterministic SHA-256)
+  - §5.3.5 Auto Dream nightly consolidation: shipped (`cyberos consolidate` — Walk → Compact → Sign → Publish; launchd / systemd-user / Task Scheduler scripts in `scripts/automation*/`)
+  - §5.3.6 Merkle checkpoints + ledger compaction + `.lock.shared`: shipped (P2 Stage 1–3). MMR + Ed25519 STH cross-checked nightly; passphrase-wrapped signing keys; feature-flagged `crypto_mode = sth_only`.
+- **§5.4 Layer 2 — Vector + Graph fact memory** — **early slice shipped (lexical + semantic; no graph yet)**.
+  - §5.4.1 storage + 4 ops: lexical via SQLite FTS5; semantic via int8-quantised `sentence-transformers` embeddings (P7).
+  - §5.4.3 hybrid retrieval: `cyberos search` (FTS5) + `cyberos search --semantic` cover lexical and semantic; graph and GraphRAG community summaries (§5.4.4) are not yet built.
+- **§5.5 Layer 3 — Archival corpus** — not started. `cyberos prune` archives sealed binlog segments to zstd (Layer-1 internal), but the cross-tier S3-style archival described in §5.5 is future work.
+- **§5.6 Memory conflict resolution** — shipped (P9). Detects iCloud / Dropbox / OneDrive / Google Drive / Box / Syncthing / Resilio markers; `cyberos resolve-conflict` provides the conflict-resolution UI per §5.6.2.
+- **§5.7 Natural-language memory CRUD** — CLI surface complete; NL routing is delegated to the agent layer (Claude / Cursor / Cowork). The CUO router that automates routing (§6.3) is still the next major arc.
+- **§5.8 BRAIN data classification** — enforced via `memory.schema.json` frontmatter `kind` enum.
+- **§5.9 BRAIN-related locked decisions** — all honoured by the current build.
+
+### What landed in the 13–14 May sessions
+
+- **P1** — six ops → three canonical ops (`put` / `move` / `delete(mode)`)
+- **P2 Stage 1** — additive MMR + Ed25519 STH, runs alongside the chain
+- **P2 Stage 2** — passphrase-wrapped signing key (scrypt + ChaCha20-Poly1305)
+- **P2 Stage 3** — feature-flagged STH-only mode (`cyberos crypto-mode {show,upgrade,downgrade}`)
+- **P3** — sidecar `*.meta.json` migration tool
+- **P4** — GDPR Article 17 `delete(path, "purge")` mode
+- **P5** — AGENTS.md RFC-style rewrite (~75% shorter)
+- **P6** — `cyberos import` cross-BRAIN team merge
+- **P7** — local semantic search (optional `sentence-transformers`, int8 quantisation)
+- **P8** — `cyberos digest` deterministic daily summary
+- **P9** — sync-FS conflict awareness + `cyberos resolve-conflict`
+- **P10** — `cyberos serve` local read-only HTTP REST
+- **P11** — multi-agent coordination sessions
+- **P12** — `cyberos publish` mobile-friendly static site
+
+### Test posture
+
+- 255 tests passing in `tests/`. New modules covered: conflicts (30), digest (31), publish (13), semantic (16), serve (22), session (16), crypto-mode (15).
+- Doctor invariants: 16 total. New: `layout-no-sync-conflict-siblings`, `ledger-mmr-cross-check`, `ledger-op-enum-conformance`.
+
+### Runtime surface (post-rebuild)
+
+The legacy script catalog of 33+ standalone `runtime/tools/*.py` tools collapsed into a single CLI: `python -m cyberos <subcommand>`. **30 subcommands** now cover the full Layer-1 + early Layer-2 surface. See `cyberos --help` for the live list. `runtime/tools/` is now mostly history — the only live tools are `cyberos_generate_schema.py` (build-time) and `cyberos_migrate_sidecar.py` (one-shot migration).
+
+### PRD-side cross-reference updates pending
+
+- §5.3.5 link `cyberos consolidate` (replaces older `cyberos refinements` reference)
+- §5.4 add the P7 semantic-search slice as a delivered Layer-2 component
+- §6.3 keep the existing precursor note; CUO router itself is still P0+
+- §8 MCP Gateway: still P0+; the local `cyberos serve` REST endpoint covers the same use cases for solo-developer mode
+
+### Forward look (per PRD §1.3 12-month milestone arc)
+
+Layer 1 + the lexical/semantic Layer 2 slice puts us roughly at the "BRAIN substrate complete" milestone. The next PRD-aligned big arcs:
+
+1. **Layer 2 graph** (§5.4 AGE / Cypher + GraphRAG community summaries) — turn the BRAIN from a list into a queryable knowledge graph
+2. **Layer 3 archival** (§5.5) — cold-tier S3-style persistence with retention windows
+3. **CUO router** (§6.3) — the agentic layer that consumes the BRAIN substrate
+4. **Module catalogue** (§7) — CHAT, EMAIL, PROJ, AUTH, AI Gateway, MCP Gateway — the product surface
 
 ---
 

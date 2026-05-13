@@ -1,34 +1,39 @@
 # CyberOS BRAIN — Memory Protocol
 
-A portable, local-first, append-only memory layer for AI-assisted work.
-Drop `AGENTS.md` into any project; your agent (Claude / Cursor / Codex /
-Copilot / Cowork) loads it and starts building a project-local **BRAIN**
-you can copy, audit, and merge with teammates.
+A portable, local-first, append-only memory layer for AI-assisted work. Drop `AGENTS.md` into any project; your agent (Claude / Cursor / Codex / Copilot / Cowork) loads it and starts building a project-local **BRAIN** you can copy, audit, and merge with teammates.
 
-This README is a **step-by-step guide for newcomers**. The protocol
-itself is in [`AGENTS.md`](AGENTS.md) (~373 lines, ~3.6k tokens).
+This README is a **step-by-step guide for newcomers**. The protocol itself is in [`AGENTS.md`](AGENTS.md) (~373 lines, ~3.6k tokens).
 
 ---
 
 ## TL;DR — installing in a brand-new project
 
-```bash
-# From inside your new project (one-liner; runs the installer)
-bash <(curl -fsSL https://raw.githubusercontent.com/CyberSkill/cyberos/main/scripts/install.sh) \
-    --with-automation --with-pre-commit
-
-# That's it. The agent now reads AGENTS.md and writes to .cyberos-memory/.
-```
-
-If you cloned the cyberos repo locally:
+### macOS / Linux
 
 ```bash
-~/Projects/CyberSkill/cyberos/scripts/install.sh ~/Projects/my-new-project \
+# From inside the new project:
+~/Projects/CyberSkill/cyberos/scripts/install.sh . \
     --with-automation --with-pre-commit
 ```
 
-The full eight steps below document what `install.sh` does, so you can
-verify each piece and customise where needed.
+That installs the protocol files, initialises `.cyberos-memory/`, wires `AGENTS.md` for your agent, registers a nightly + weekly automation job (launchd on macOS, systemd-user or cron on Linux), and adds the git pre-commit hook.
+
+### Windows (PowerShell)
+
+```powershell
+# From inside the new project:
+powershell -ExecutionPolicy Bypass -File `
+    "$env:USERPROFILE\Projects\CyberSkill\cyberos\scripts\install.ps1" `
+    -Target . -WithAutomation -WithPreCommit
+```
+
+Same six-phase install. Symlinks become copies (Windows symlinks require dev mode or admin); automation uses Task Scheduler instead of launchd / systemd.
+
+### The protocol is identical across platforms
+
+Only the *scaffolding* differs (filesystem semantics, scheduler). The protocol document (`AGENTS.md`), the schema, and the on-disk format are byte-identical. A `.cyberos-memory/` directory made on macOS opens correctly on Linux or Windows; `cyberos export` is byte-deterministic across OSes; `cyberos doctor` reports the same READY state.
+
+The full eight steps below document what each installer does, so you can verify each piece and customise where needed.
 
 ---
 
@@ -45,26 +50,27 @@ verify each piece and customise where needed.
 
 ## Step-by-step: starting from zero
 
-These eight steps take a fresh project from nothing to *"my agent
-remembers everything I'm doing, automatically"*.
+These eight steps take a fresh project from nothing to *"my agent remembers everything I'm doing, automatically"*.
 
 ### Step 1 — Install the dependencies (one-time, per machine)
 
-```bash
-# Python runtime deps (required)
-pip install msgspec cryptography crc32c rfc8785 pyyaml jsonschema zstandard \
-    --break-system-packages
+**Python runtime deps (required, all platforms):**
 
-# pandoc (optional, only if you'll convert PRD/SRS docx ↔ md)
-brew install pandoc        # macOS
-# apt-get install pandoc   # Linux
+```
+pip install msgspec cryptography crc32c rfc8785 pyyaml jsonschema zstandard
 ```
 
-Verify Python is ≥ 3.11:
+On Python ≥ 3.11 you may need `--break-system-packages` on Linux / macOS to bypass PEP 668 protection.
 
-```bash
-python --version
-```
+**pandoc (optional, only if you'll convert PRD/SRS docx ↔ md):**
+
+| OS | Install |
+|---|---|
+| macOS | `brew install pandoc` |
+| Linux | `apt-get install pandoc` (Debian/Ubuntu) or `dnf install pandoc` (Fedora) |
+| Windows | `winget install JohnMacFarlane.Pandoc` |
+
+Verify Python is ≥ 3.11: `python --version`
 
 ### Step 2 — Copy the protocol files into your project
 
@@ -78,12 +84,9 @@ cp ~/Projects/CyberSkill/cyberos/docs/memory/memory.schema.json    docs/memory/
 cp ~/Projects/CyberSkill/cyberos/docs/memory/memory.invariants.yaml docs/memory/
 ```
 
-That's all four normative files. Total ~30 KB. The rest of `docs/memory/`
-in the cyberos repo (this README, EVOLUTION.md, CHANGELOG.md, etc.) is
-*informative* — do not copy unless you want them.
+That's all four normative files. Total ~30 KB. The rest of `docs/memory/` in the cyberos repo (this README, EVOLUTION.md, CHANGELOG.md, etc.) is *informative* — do not copy unless you want them.
 
-You also need the `cyberos` Python package so `python -m cyberos`
-works:
+You also need the `cyberos` Python package so `python -m cyberos` works:
 
 ```bash
 cp -r ~/Projects/CyberSkill/cyberos/cyberos ./cyberos
@@ -106,20 +109,30 @@ EOF
 
 ### Step 4 — Wire `AGENTS.md` so your agent loads it
 
-The agent needs to see `AGENTS.md` as its system prompt. The convention
-differs by tool — symlink so any tool finds it:
+The agent needs to see `AGENTS.md` as its system prompt. The convention differs by tool.
+
+**macOS / Linux (symlinks):**
 
 ```bash
-# At the project root:
 ln -s docs/memory/AGENTS.md AGENTS.md   # Codex CLI, agents.md ecosystem
 ln -s docs/memory/AGENTS.md CLAUDE.md   # Claude Code
 
-# For Cursor:
 mkdir -p .cursor/rules
 ln -s ../../docs/memory/AGENTS.md .cursor/rules/cyberos-memory.mdc
-
-# For Cowork: set docs/memory/AGENTS.md as a system prompt in the UI.
 ```
+
+**Windows (copies — symlinks require dev mode or admin):**
+
+```powershell
+Copy-Item docs\memory\AGENTS.md AGENTS.md
+Copy-Item docs\memory\AGENTS.md CLAUDE.md
+New-Item -ItemType Directory -Force .cursor\rules | Out-Null
+Copy-Item docs\memory\AGENTS.md .cursor\rules\cyberos-memory.mdc
+```
+
+If you want true symlinks on Windows, enable Developer Mode (Settings → Privacy & Security → For developers), then `New-Item -ItemType SymbolicLink ...` works without admin.
+
+**For Cowork:** set `docs/memory/AGENTS.md` as a system prompt in the UI (no symlink needed).
 
 ### Step 5 — Verify
 
@@ -128,35 +141,40 @@ python -m cyberos --store .cyberos-memory state    # should print: READY
 python -m cyberos --store .cyberos-memory doctor   # should print: 15 pass, 0 error
 ```
 
-If `doctor` reports any error, fix it before continuing. The most common
-issue is a non-canonical directory at the BRAIN root — `doctor --repair`
-auto-resharrds them.
+If `doctor` reports any error, fix it before continuing. The most common issue is a non-canonical directory at the BRAIN root — `doctor --repair` auto-resharrds them.
 
-### Step 6 — Install host-side automation (macOS)
+### Step 6 — Install host-side automation
+
+The automation runs nightly (`cyberos doctor` + consolidate dry-run) and weekly (`cyberos backup` + real `consolidate` + determinism guard). Backups land in `~/cyberos-backups/<project>/` on Unix or `%USERPROFILE%\cyberos-backups\<project>\` on Windows. Notifies on failure.
+
+| OS | Install | Backend | Logs |
+|---|---|---|---|
+| macOS | `./scripts/automation-install.sh --target $(pwd)` | launchd LaunchAgent | `~/Library/Logs/cyberos/` |
+| Linux | `./scripts/automation-install.sh --target $(pwd)` | systemd `--user` timer (cron fallback) | `~/.local/state/cyberos/` |
+| Windows | `powershell -ExecutionPolicy Bypass -File scripts\automation-install.ps1 -Target .` | Task Scheduler | `%LOCALAPPDATA%\cyberos\logs\` |
+
+**Test the nightly immediately:**
 
 ```bash
-~/Projects/CyberSkill/cyberos/scripts/automation-install.sh \
-    --target ~/Projects/my-new-project
+# macOS
+launchctl start world.cyberskill.cyberos.nightly && tail ~/Library/Logs/cyberos/nightly.log
+
+# Linux (systemd)
+systemctl --user start cyberos-nightly.service && journalctl --user -u cyberos-nightly.service -n 50
+
+# Windows (PowerShell)
+Start-ScheduledTask -TaskName CyberosNightly
+Get-Content "$env:LOCALAPPDATA\cyberos\logs\nightly.log" -Tail 30
 ```
 
-That installs two LaunchAgents:
-
-* **Nightly** (01:09 local) — `cyberos doctor` + consolidate dry-run.
-  Logs to `~/Library/Logs/cyberos/nightly.log`. Notifies on failure.
-* **Weekly** (02:07 Sunday) — `cyberos backup` + `cyberos consolidate`
-  + determinism guard. Backups land in `~/cyberos-backups/<project>/`.
-
-To test the nightly immediately:
+**Uninstall:**
 
 ```bash
-launchctl start world.cyberskill.cyberos.nightly
-tail ~/Library/Logs/cyberos/nightly.log
-```
+# macOS / Linux
+./scripts/automation-install.sh --uninstall
 
-To uninstall:
-
-```bash
-~/Projects/CyberSkill/cyberos/scripts/automation-install.sh --uninstall
+# Windows
+powershell -ExecutionPolicy Bypass -File scripts\automation-install.ps1 -Uninstall
 ```
 
 ### Step 7 — Install the git pre-commit hook
@@ -166,15 +184,11 @@ To uninstall:
     ~/Projects/my-new-project
 ```
 
-Now `git commit` refuses to commit changes that would corrupt the
-BRAIN (doctor failure, schema-invalid memory, schema-drift).
+Now `git commit` refuses to commit changes that would corrupt the BRAIN (doctor failure, schema-invalid memory, schema-drift).
 
 ### Step 8 — Use it
 
-There is nothing else to set up. Open your project in the agent of your
-choice. Work normally. The agent reads `AGENTS.md`, understands the
-protocol, and uses `python -m cyberos put / move / delete / view` to
-write to `.cyberos-memory/` as your work progresses.
+There is nothing else to set up. Open your project in the agent of your choice. Work normally. The agent reads `AGENTS.md`, understands the protocol, and uses `python -m cyberos put / move / delete / view` to write to `.cyberos-memory/` as your work progresses.
 
 You can verify the BRAIN's state at any time:
 
@@ -188,8 +202,7 @@ python -m cyberos --store .cyberos-memory search "design decision"
 
 ## Daily operation
 
-Once installed, you have nothing to do. The agent writes; the
-automation guards. Day-to-day commands you might run manually:
+Once installed, you have nothing to do. The agent writes; the automation guards. Day-to-day commands you might run manually:
 
 ```bash
 # How many audit rows? What's the chain head?
@@ -226,18 +239,13 @@ unzip ~/Drive/cyberos-A.zip -d ~/Projects/<same-project>/.cyberos-memory
 python -m cyberos --store .cyberos-memory doctor
 ```
 
-Or, point both machines at a synced folder (iCloud, Dropbox, Syncthing)
-and you don't even need the export step — the BRAIN itself is
-sync-safe. **Just keep the index out of the synced area**: the SQLite
-cache lives at `~/Library/Caches/cyberos/` and stays per-host
-automatically.
+Or, point both machines at a synced folder (iCloud, Dropbox, Syncthing) and you don't even need the export step — the BRAIN itself is sync-safe. **Just keep the index out of the synced area**: the SQLite cache lives at `~/Library/Caches/cyberos/` and stays per-host automatically.
 
 ---
 
 ## Workflow 4 — Merging your teammate's BRAIN into yours
 
-Alice exports her shareable memories; Bob imports them with full
-control over filters and conflict resolution:
+Alice exports her shareable memories; Bob imports them with full control over filters and conflict resolution:
 
 ```bash
 # Alice
@@ -255,17 +263,11 @@ python -m cyberos --store .cyberos-memory import alice-shared.zip \
     --on-conflict branch
 ```
 
-Filters available: `kind=`, `sync_class=`, `actor=`, `classification=`.
-Conflict policies: `skip` (default), `overwrite`, `branch`
-(creates `<path>.from-<short-fp>.md`).
+Filters available: `kind=`, `sync_class=`, `actor=`, `classification=`. Conflict policies: `skip` (default), `overwrite`, `branch` (creates `<path>.from-<short-fp>.md`).
 
-**Idempotent**: Bob can re-run the same `cyberos import` next week and
-only Alice's NEW memories will pull (tracked via
-`manifest.imports.<fingerprint>.last_imported_seq`).
+**Idempotent**: Bob can re-run the same `cyberos import` next week and only Alice's NEW memories will pull (tracked via `manifest.imports.<fingerprint>.last_imported_seq`).
 
-**Audit-bracketed**: the import is recorded on Bob's chain as
-`session.start` → N × `op="put"` (carrying `extra.imported_from` and
-`extra.foreign_chain`) → `session.end`.
+**Audit-bracketed**: the import is recorded on Bob's chain as `session.start` → N × `op="put"` (carrying `extra.imported_from` and `extra.foreign_chain`) → `session.end`.
 
 ---
 
@@ -318,10 +320,7 @@ Cold `cyberos --help` is ~14 ms (lazy imports). 22 subcommands total.
 | `CHANGELOG.md` | append-mostly | Dated history. |
 | `README.md` | this file | Step-by-step newcomer guide. |
 
-The **three normative + two machine** files (`AGENTS.md`, `INTEROP.md`,
-`memory.schema.json`, `memory.invariants.yaml`, plus optionally
-`README.md`) are what you copy into other projects. Everything else is
-informative or historical and stays in the master `cyberos` repo.
+The **three normative + two machine** files (`AGENTS.md`, `INTEROP.md`, `memory.schema.json`, `memory.invariants.yaml`, plus optionally `README.md`) are what you copy into other projects. Everything else is informative or historical and stays in the master `cyberos` repo.
 
 ---
 
@@ -332,8 +331,7 @@ informative or historical and stays in the master `cyberos` repo.
 * **Local-first.** Everything on your filesystem. Nothing leaves your
   machine unless you export it.
 * **Auditable.** Every mutation is a Merkle-chained audit row. Signed
-  Tree Heads (Ed25519) anchor each consolidation; passphrase-wrapped
-  signing key on disk.
+  Tree Heads (Ed25519) anchor each consolidation; passphrase-wrapped signing key on disk.
 * **Portable.** `cyberos export` produces byte-identical zips across
   runs. Drop the protocol in any project; remove cleanly any time.
 * **Agent-agnostic.** Same `AGENTS.md` works for Claude / Cursor /
@@ -368,5 +366,4 @@ informative or historical and stays in the master `cyberos` repo.
 
 ---
 
-*This file is an explainer; the contract itself is `AGENTS.md`. If
-anything here contradicts `AGENTS.md`, the protocol wins.*
+*This file is an explainer; the contract itself is `AGENTS.md`. If anything here contradicts `AGENTS.md`, the protocol wins.*

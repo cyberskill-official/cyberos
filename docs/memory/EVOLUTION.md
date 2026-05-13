@@ -1,12 +1,8 @@
 # EVOLUTION.md — CyberOS Memory Protocol: History, Bundles, Audit Reports
 
-**Status:** Informative. Not loaded by agents per session. Lives alongside the
-normative `AGENTS.md` and the machine-validatable `memory.schema.json`.
+**Status:** Informative. Not loaded by agents per session. Lives alongside the normative `AGENTS.md` and the machine-validatable `memory.schema.json`.
 
-This file is the **history file** the Deep Optimization Audit §4.1 calls for:
-"AGENTS.md MUST NOT contain history". Stages 1–6 narrative, Bundles A–Q
-refinement bundles, prior audit reports, and the rationale-trail for every
-decision belong here, not in the per-session-loaded normative document.
+This file is the **history file** the Deep Optimization Audit §4.1 calls for: "AGENTS.md MUST NOT contain history". Stages 1–6 narrative, Bundles A–Q refinement bundles, prior audit reports, and the rationale-trail for every decision belong here, not in the per-session-loaded normative document.
 
 > Editorial rule: this file's content may grow; AGENTS.md's content shrinks
 > in inverse proportion. Anything that ends "we learned…" or "the reason
@@ -31,16 +27,13 @@ The protocol lives in `docs/memory/`:
 
 `AGENTS.md` SHOULD remain ≤ 6 000 tokens; `EVOLUTION.md` is unbounded.
 
-§5 below records the cleanup of legacy script tooling that
-previously lived in `LEGACY_SCRIPTS.md` (folded in 2026-05-14).
+§5 below records the cleanup of legacy script tooling that previously lived in `LEGACY_SCRIPTS.md` (folded in 2026-05-14).
 
 ---
 
 ## 1. Stage history (placeholder — to be populated)
 
-The protocol has accreted through six numbered stages plus a series of
-refinement bundles. Each stage represents a coherent set of changes shipped
-together; bundles are tactical refinements between stages.
+The protocol has accreted through six numbered stages plus a series of refinement bundles. Each stage represents a coherent set of changes shipped together; bundles are tactical refinements between stages.
 
 Stages — fill in from your existing notes when next consolidating:
 
@@ -53,11 +46,7 @@ Stages — fill in from your existing notes when next consolidating:
   REF-030). _Move full prose here._
 - **Stage 6** — Long-term health (REF-029). _Move full prose here._
 
-To migrate prose from `AGENTS.md` and `docs/memory/README.md` Parts 25–31
-into this file: copy the section, replace its location in the source with
-a one-line reference (`See EVOLUTION.md §<n>.<m>`), and commit. Per the
-Deep Audit, README Parts 25–31 absorbed Layer-1 manual content that
-belongs here, not in the protocol document or the pedagogical readme.
+To migrate prose from `AGENTS.md` and `docs/memory/README.md` Parts 25–31 into this file: copy the section, replace its location in the source with a one-line reference (`See EVOLUTION.md §<n>.<m>`), and commit. Per the Deep Audit, README Parts 25–31 absorbed Layer-1 manual content that belongs here, not in the protocol document or the pedagogical readme.
 
 ---
 
@@ -67,9 +56,7 @@ Refinement bundles flagged in `.cyberos-memory/memories/refinements/`:
 
 - REF-001 through REF-037 — _placeholder, populate from refinements/_.
 
-When `cyberos consolidate` (or equivalent) is implemented, it should auto-
-populate this index from the refinements directory; for now this is a
-hand-curated list.
+When `cyberos consolidate` (or equivalent) is implemented, it should auto- populate this index from the refinements directory; for now this is a hand-curated list.
 
 ---
 
@@ -79,8 +66,7 @@ Major external audits the protocol has absorbed:
 
 ### 3.1 Layer-1 Optimization Audit — May 2026
 
-**Scope:** Filesystem store, audit ledger, writer/reader. Reference impl
-under `cyberos/core/`.
+**Scope:** Filesystem store, audit ledger, writer/reader. Reference impl under `cyberos/core/`.
 
 **Headline findings:**
 
@@ -93,20 +79,13 @@ under `cyberos/core/`.
 5. **macOS `fsync()` data-loss bug** — fixed by routing per-batch syncs
    through `F_BARRIERFSYNC`, checkpoint syncs through `F_FULLFSYNC`.
 
-**Outcome:** Schema v2 with chain-bridge migration. `legacy_last_chain`
-in `manifest.json:migration` pins the v1 chain tip into v2 so the
-cumulative Merkle chain is continuous across the boundary. Implementation
-in `cyberos/core/` (12 modules); migration in `runtime/tools/cyberos_migrate_v2.py`;
-38 regression tests under `tests/core/`.
+**Outcome:** Schema v2 with chain-bridge migration. `legacy_last_chain` in `manifest.json:migration` pins the v1 chain tip into v2 so the cumulative Merkle chain is continuous across the boundary. Implementation in `cyberos/core/` (12 modules); migration in `runtime/tools/cyberos_migrate_v2.py`; 38 regression tests under `tests/core/`.
 
-**Status:** Shipped. Cutover complete on user's BRAIN; legacy
-`brain_writer.py` now delegates to v2 via `runtime/lib/brain_writer_shim.py`
-when `schema_version >= 2`.
+**Status:** Shipped. Cutover complete on user's BRAIN; legacy `brain_writer.py` now delegates to v2 via `runtime/lib/brain_writer_shim.py` when `schema_version >= 2`.
 
 ### 3.2 Deep Optimization Audit — May 2026 (Protocol Document)
 
-**Scope:** `docs/memory/AGENTS.md` itself — the protocol document, not the
-implementation.
+**Scope:** `docs/memory/AGENTS.md` itself — the protocol document, not the implementation.
 
 **Headline findings:**
 
@@ -118,16 +97,14 @@ implementation.
    + Signed Tree Heads (STH) per consolidation — the modern transparency-log
    primitive (Sigstore Rekor v2, Trillian-Tessera, IACR 2025/234).
 4. YAML frontmatter inside Markdown bodies should move to `<file>.meta.json`
-   sidecars validated against `memory.schema.json` — Norway Problem,
-   octal ambiguity, YAML 1.1↔1.2 split.
+   sidecars validated against `memory.schema.json` — Norway Problem, octal ambiguity, YAML 1.1↔1.2 split.
 5. `§0.4` TIER 1/2/3 self-amendment priority is scaffolding from the
    growth phase — collapse to binary `propose-now`/`log-deferred`.
 6. Add `delete(path, "purge")` for GDPR Article 17 compliance.
 
 **Status of recommendations (final, 2026-05-14):**
 
-The user waived `§0.2` for the rebuild session ("i approve all since this
-is the rebuild"). Every recommendation except P2 Stage 3 has shipped.
+The user waived `§0.2` for the rebuild session ("i approve all since this is the rebuild"). Every recommendation except P2 Stage 3 has shipped.
 
 | Recommendation | Status | Date |
 |---|---|---|
@@ -143,8 +120,7 @@ is the rebuild"). Every recommendation except P2 Stage 3 has shipped.
 | Passphrase-wrapped signing key (scrypt + ChaCha20-Poly1305) | **shipped (P2 Stage 2)** | 2026-05-14 |
 | Chain primitive swap (MMR + STH become *the* integrity primitive) | **DEFERRED (P2 Stage 3)** | gated on 2-week soak + fresh approval |
 
-The single outstanding item — P2 Stage 3 — is documented in
-`docs/memory/PROPOSAL.md` with the gate criteria and the approval phrase.
+The single outstanding item — P2 Stage 3 — is documented in `docs/memory/PROPOSAL.md` with the gate criteria and the approval phrase.
 
 ---
 
@@ -153,36 +129,23 @@ The single outstanding item — P2 Stage 3 — is documented in
 Status after 2026-05-14:
 
 - **Q1 (Deep Audit §7 R3) — RESOLVED:** Pure-Python MMR shipped at
-  `cyberos/core/mmr.py` (peak-stack representation, ~340 lines, zero
-  external deps). See `PROPOSAL.md` Appendix for the analysis behind
-  picking this over the Rust crate.
+  `cyberos/core/mmr.py` (peak-stack representation, ~340 lines, zero external deps). See `PROPOSAL.md` Appendix for the analysis behind picking this over the Rust crate.
 - **Q2 (Deep Audit §7 R2) — RESOLVED:** Passphrase-wrapped storage via
-  scrypt + ChaCha20-Poly1305 shipped at `cyberos/core/sth.py`. Key file
-  is backward-compatible: stage-1 raw seeds still load. CLI subcommand
-  `cyberos sth-wrap` migrates in place; public key preserved so existing
-  STHs remain verifiable.
+  scrypt + ChaCha20-Poly1305 shipped at `cyberos/core/sth.py`. Key file is backward-compatible: stage-1 raw seeds still load. CLI subcommand `cyberos sth-wrap` migrates in place; public key preserved so existing STHs remain verifiable.
 - **Q3 (Layer-1 audit §B11) — DEFAULTED:** Local-only STH publication
-  (`PROPOSAL.md` Appendix Mode 1) is the default; Mode 2 (paired-host
-  cross-anchor) and Mode 3 (public Rekor/Trillian) are documented but
-  not active. Toggle via future config; not blocking.
+  (`PROPOSAL.md` Appendix Mode 1) is the default; Mode 2 (paired-host cross-anchor) and Mode 3 (public Rekor/Trillian) are documented but not active. Toggle via future config; not blocking.
 - **Q4 (Bundle M flagging) — RESOLVED:** §4.10/§4.11 merge, §17
-  sync_class forward-references, §8 heading simplification all adopted
-  in `AGENTS.md` v2.
+  sync_class forward-references, §8 heading simplification all adopted in `AGENTS.md` v2.
 
-There are no outstanding open questions from the Layer-1 or Deep audits
-at the time of writing. The single remaining proposal (P2 Stage 3 chain
-primitive swap) is gated on a 2-week soak, not on an open question.
+There are no outstanding open questions from the Layer-1 or Deep audits at the time of writing. The single remaining proposal (P2 Stage 3 chain primitive swap) is gated on a 2-week soak, not on an open question.
 
 ---
 
 ## 5. Editorial procedure (moved from AGENTS.md §0.6)
 
-When implementation files in `cyberos/core/` change behaviour that the
-protocol promises, update `AGENTS.md` in the same commit. When the
-*reasoning* behind a protocol decision changes, update `EVOLUTION.md`.
+When implementation files in `cyberos/core/` change behaviour that the protocol promises, update `AGENTS.md` in the same commit. When the *reasoning* behind a protocol decision changes, update `EVOLUTION.md`.
 
-This file is append-mostly: add a dated section under "## N. <topic>"
-when something substantive happens; don't rewrite history.
+This file is append-mostly: add a dated section under "## N. <topic>" when something substantive happens; don't rewrite history.
 
 ---
 
@@ -190,10 +153,7 @@ when something substantive happens; don't rewrite history.
 
 *Previously docs/memory/LEGACY_SCRIPTS.md (folded in 2026-05-14).*
 
-**Scope:** 59 scripts under `runtime/tools/` (the Deep Audit's "63+" was a
-nearby estimate; today's count is 59).
-**Companion:** `cyberos/README.md` lists v2 subcommands; `EVOLUTION.md`
-records Stage history.
+**Scope:** 59 scripts under `runtime/tools/` (the Deep Audit's "63+" was a nearby estimate; today's count is 59). **Companion:** `cyberos/README.md` lists v2 subcommands; `EVOLUTION.md` records Stage history.
 
 Each script is graded one of:
 
@@ -206,17 +166,13 @@ Each script is graded one of:
 * **D. Keep (proposal scope)** — folds into an active `PROPOSAL.md` item
   (P1–P5). Resolve at proposal-approval time, not now.
 
-Hard rule the §0.2 immutability clause imposes: **no deletions in this
-session.** This file is a deletion *plan*, not a deletion log.
+Hard rule the §0.2 immutability clause imposes: **no deletions in this session.** This file is a deletion *plan*, not a deletion log.
 
 ---
 
 ## A. Delete (after 7-day soak, ~11 scripts)
 
-**Status (2026-05-14):** Survey complete. The legacy `runtime/tools/cyberos`
-bash wrapper still routes 9 of the 11 commands to their underlying scripts.
-Until that wrapper is itself retired (separate, focused project), only the
-2 scripts with zero callers are retired.
+**Status (2026-05-14):** Survey complete. The legacy `runtime/tools/cyberos` bash wrapper still routes 9 of the 11 commands to their underlying scripts. Until that wrapper is itself retired (separate, focused project), only the 2 scripts with zero callers are retired.
 
 * ✅ `cyberos_lazy.py` — replaced with deprecation stub; exits 2 on run.
   Zero importers, zero bash refs. Safe to `git rm` whenever convenient.
@@ -224,8 +180,7 @@ Until that wrapper is itself retired (separate, focused project), only the
 * ⏸️ The other 9 stay alive until the bash wrapper migrates to
   `python -m cyberos` itself.
 
-These are directly replaced by v2 functionality. Keep until the nightly
-soak has run cleanly for a week post-cutover; then drop.
+These are directly replaced by v2 functionality. Keep until the nightly soak has run cleanly for a week post-cutover; then drop.
 
 | Script | Replacement | Status |
 |---|---|---|
@@ -252,8 +207,7 @@ soak has run cleanly for a week post-cutover; then drop.
 
 ## B. Merge into a v2 subcommand (~12 scripts)
 
-Substantive logic; the right shape is a new `cyberos <verb>` subcommand
-that lazy-imports the legacy implementation. No data-mutation rewrites.
+Substantive logic; the right shape is a new `cyberos <verb>` subcommand that lazy-imports the legacy implementation. No data-mutation rewrites.
 
 | Script | Proposed v2 subcommand | Effort |
 |---|---|---|
@@ -270,9 +224,7 @@ that lazy-imports the legacy implementation. No data-mutation rewrites.
 | `cyberos_semantic_search.py` | `cyberos search --semantic` | Same; pluggable backend |
 | `cyberos_repl.py` | `cyberos repl` | Wrap; uses the v2 op functions in-process |
 
-**Merge order suggested:** doctor extensions first (autorepair, cleanup),
-then search modes (semantic, hybrid), then write-path wrappers (add, edit,
-bulk). Each merge is a 1-day task in isolation.
+**Merge order suggested:** doctor extensions first (autorepair, cleanup), then search modes (semantic, hybrid), then write-path wrappers (add, edit, bulk). Each merge is a 1-day task in isolation.
 
 ---
 
@@ -312,19 +264,13 @@ Not duplicated by v2; serve UX, monitoring, or integration roles.
 | `cyberos_advanced.py` | Stage 8 future-state scaffolds |
 | `cyberos_stream.py` | Audit-row streaming + webhooks |
 
-Most of these don't touch the audit ledger and are safe alongside v2. The
-ones that do (e.g. `cyberos_encrypt`, `cyberos_cold_storage`) write
-schema-v1-shaped audit rows via the legacy `brain_writer`; the shim
-intercepts and refuses with a deferral message under v2. Each of those
-needs a v2-specific update before they can run again — but that's
-implementation work, not deletion work.
+Most of these don't touch the audit ledger and are safe alongside v2. The ones that do (e.g. `cyberos_encrypt`, `cyberos_cold_storage`) write schema-v1-shaped audit rows via the legacy `brain_writer`; the shim intercepts and refuses with a deferral message under v2. Each of those needs a v2-specific update before they can run again — but that's implementation work, not deletion work.
 
 ---
 
 ## D. Keep (proposal scope — defer to P1–P5 approval, ~5 scripts)
 
-These map directly onto staged `PROPOSAL.md` items. Decide their fate
-when the corresponding proposal is approved or rejected.
+These map directly onto staged `PROPOSAL.md` items. Decide their fate when the corresponding proposal is approved or rejected.
 
 | Script | Linked proposal | What happens on approval |
 |---|---|---|
@@ -345,13 +291,6 @@ when the corresponding proposal is approved or rejected.
 * **C. Keep — operational:** 29 scripts (≈ 49%).
 * **D. Keep — proposal scope:** 7 scripts (≈ 12%).
 
-The Layer-1 audit's "delete ~40, merge ~20" target was optimistic; the
-real surface is mostly C — orthogonal UX / integration tools that never
-needed to be part of the writer. The right number of *writer-overlapping*
-scripts to retire is ~11, not ~40.
+The Layer-1 audit's "delete ~40, merge ~20" target was optimistic; the real surface is mostly C — orthogonal UX / integration tools that never needed to be part of the writer. The right number of *writer-overlapping* scripts to retire is ~11, not ~40.
 
-When you're ready to enact group A, the smallest reversible commit
-sequence is one script per commit, each with: grep callers → replace with
-v2 equivalent → run tests → `git rm`. Trying to delete the whole group
-in one commit will produce a noisy diff and a long bisect window if
-something regresses.
+When you're ready to enact group A, the smallest reversible commit sequence is one script per commit, each with: grep callers → replace with v2 equivalent → run tests → `git rm`. Trying to delete the whole group in one commit will produce a noisy diff and a long bisect window if something regresses.

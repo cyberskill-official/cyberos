@@ -129,9 +129,20 @@ echo
 if [[ "$NO_AGENT_SYMLINK" == "0" ]]; then
     echo "→ step 5/6: wire AGENTS.md for your agent"
     cd "$TARGET"
+    # Symlinks work on macOS/Linux; on Git Bash / MSYS / Cygwin under
+    # Windows the symlink may degrade to a copy unless dev mode is on.
+    # Detect Windows and copy instead so the end-state is the same.
+    case "$(uname -s 2>/dev/null || echo unknown)" in
+        MINGW*|MSYS*|CYGWIN*) USE_COPY=1 ;;
+        *)                    USE_COPY=0 ;;
+    esac
     for link_name in AGENTS.md CLAUDE.md; do
         if [[ -e "$link_name" && "$FORCE" != "1" ]]; then
             echo "  – $link_name already exists; skipping"
+        elif [[ "$USE_COPY" == "1" ]]; then
+            rm -f "$link_name"
+            cp docs/memory/AGENTS.md "$link_name"
+            echo "  ✓ $link_name (copy; on Windows symlinks require dev mode)"
         else
             rm -f "$link_name"
             ln -s docs/memory/AGENTS.md "$link_name"

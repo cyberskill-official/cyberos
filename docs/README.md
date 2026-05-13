@@ -48,8 +48,7 @@ PRD  ─authority──►  SRS  ─authority──►  AGENTS protocol
 
 ## Docx ↔ markdown round-trip
 
-`PRD.md` and `SRS.md` are the source of truth; `.docx` outputs are
-regenerated via pandoc:
+`PRD.md` and `SRS.md` are the source of truth; `.docx` outputs are regenerated via pandoc:
 
 ```bash
 cd docs
@@ -57,5 +56,4 @@ make docx     # md → docx (after editing the markdown)
 make md       # docx → md (after a Word user applied changes)
 ```
 
-Requires `pandoc` (`brew install pandoc` / `apt-get install pandoc`).
-See [`Makefile`](Makefile) for the exact commands.
+Requires `pandoc` (`brew install pandoc` / `apt-get install pandoc`). See [`Makefile`](Makefile) for the exact commands.

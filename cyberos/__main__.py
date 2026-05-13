@@ -230,13 +230,51 @@ def _cmd_audit(args: argparse.Namespace) -> int:
 
 def _cmd_search(args: argparse.Namespace) -> int:
     import hashlib  # noqa: WPS433
-    from cyberos.core.index import open_index, search_memories  # noqa: WPS433
 
     store = _store(args)
+
+    if args.semantic:
+        from cyberos.core.semantic import available, search as semantic_search  # noqa: WPS433
+        if not available():
+            sys.stderr.write(
+                "semantic search dependencies missing; install with:\n"
+                "  pip install sentence-transformers --break-system-packages\n"
+                "Falling back to FTS5.\n"
+            )
+        else:
+            hits = semantic_search(store, args.query, limit=args.limit)
+            if not hits:
+                sys.stderr.write(
+                    "no embedded memories yet; run "
+                    "`cyberos semantic-sync` first.\n"
+                )
+                return 0
+            for h in hits:
+                print(f"{h.score:.3f}\t{h.rel_path}\t{h.snippet}")
+            return 0
+
+    from cyberos.core.index import open_index, search_memories  # noqa: WPS433
     fingerprint = hashlib.sha256(str(store).encode("utf-8")).hexdigest()[:16]
     conn = open_index(fingerprint)
     for rel_path, snippet in search_memories(conn, args.query, limit=args.limit):
         print(f"{rel_path}\t{snippet}")
+    return 0
+
+
+def _cmd_semantic_sync(args: argparse.Namespace) -> int:
+    """Re-embed memories whose body_sha256 changed since the last sync."""
+    from cyberos.core.semantic import available, sync  # noqa: WPS433
+    if not available():
+        sys.stderr.write(
+            "semantic search dependencies missing; install with:\n"
+            "  pip install sentence-transformers --break-system-packages\n"
+        )
+        return 2
+    report = sync(_store(args), batch_size=args.batch_size)
+    print(f"  indexed   : {report.indexed}")
+    print(f"  unchanged : {report.skipped_unchanged}")
+    print(f"  removed   : {report.removed}")
+    print(f"  total     : {report.total_in_index}")
     return 0
 
 
@@ -698,6 +736,307 @@ def _cmd_consolidate(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def _cmd_crypto_mode(args: argparse.Namespace) -> int:
+    """Inspect or migrate the store's crypto_mode (P2 Stage 3)."""
+    from cyberos.core.crypto_mode import (  # noqa: WPS433
+        APPROVAL_PHRASE, CryptoModeError, current_mode,
+        downgrade_to_chained, upgrade_to_sth_only,
+    )
+    import json as _json
+
+    store = _store(args)
+    action = args.action
+
+    if action == "show":
+        mode = current_mode(store)
+        if args.json:
+            print(_json.dumps({"crypto_mode": mode}))
+        else:
+            print(f"crypto_mode: {mode}")
+            if mode == "chained":
+                print("  (default — per-row chain is the canonical integrity primitive)")
+            else:
+                print("  (P2 Stage 3 — MMR + STH are canonical; chain is advisory)")
+        return 0
+
+    if action == "upgrade":
+        if not args.approval_phrase:
+            sys.stderr.write(
+                "upgrade requires --approval-phrase\n"
+                f"Cite verbatim: {APPROVAL_PHRASE}\n"
+            )
+            return 2
+        try:
+            summary = upgrade_to_sth_only(
+                store,
+                approval_phrase=args.approval_phrase,
+                skip_safety_checks=args.skip_safety_checks,
+            )
+        except CryptoModeError as exc:
+            sys.stderr.write(f"error: {exc}\n")
+            return 2
+        if args.json:
+            print(_json.dumps(summary, indent=2, sort_keys=True))
+        else:
+            print(f"crypto_mode: {summary['previous_mode']} → {summary['current_mode']}")
+        return 0
+
+    if action == "downgrade":
+        if not args.approval_phrase:
+            sys.stderr.write(
+                "downgrade requires --approval-phrase (same phrase as upgrade)\n"
+                f"Cite verbatim: {APPROVAL_PHRASE}\n"
+            )
+            return 2
+        try:
+            summary = downgrade_to_chained(
+                store, approval_phrase=args.approval_phrase,
+            )
+        except CryptoModeError as exc:
+            sys.stderr.write(f"error: {exc}\n")
+            return 2
+        if args.json:
+            print(_json.dumps(summary, indent=2, sort_keys=True))
+        else:
+            print(f"crypto_mode: {summary['previous_mode']} → {summary['current_mode']}")
+        return 0
+
+    sys.stderr.write(f"unknown crypto-mode action: {action!r}\n")
+    return 2
+
+
+def _cmd_session(args: argparse.Namespace) -> int:
+    """Manage multi-agent coordination sessions (PROPOSAL.md P11)."""
+    from cyberos.core.session import (  # noqa: WPS433
+        end_session, find_scope_conflicts, format_sessions,
+        list_sessions, start_session,
+    )
+    import json as _json
+
+    store = _store(args)
+    action = args.action
+
+    if action == "start":
+        scope = (
+            [s.strip() for s in args.scope.split(",") if s.strip()]
+            if args.scope else []
+        )
+        conflicts = find_scope_conflicts(store, scope)
+        if conflicts and not args.force:
+            sys.stderr.write(
+                "scope overlap with existing active session(s):\n"
+            )
+            for sess, overlaps in conflicts:
+                sys.stderr.write(
+                    f"  - {sess.id}  actor={sess.actor}  "
+                    f"overlapping={overlaps}\n"
+                )
+            sys.stderr.write(
+                "Pass --force to claim anyway, or pick a narrower --scope.\n"
+            )
+            return 2
+        sess = start_session(
+            store,
+            actor=_actor(args) if not args.session_actor else args.session_actor,
+            scope=scope,
+            ttl_ns=args.ttl_hours * 3600 * 1_000_000_000,
+            note=args.note or "",
+        )
+        if args.json:
+            from dataclasses import asdict
+            print(_json.dumps(asdict(sess), indent=2, sort_keys=True))
+        else:
+            print(f"session started: {sess.id}")
+            print(f"  actor : {sess.actor}")
+            print(f"  scope : {sess.scope}")
+            print(f"  host  : {sess.host}")
+            print(f"  expires at ns: {sess.expires_at_ns}")
+        return 0
+
+    if action == "end":
+        if not args.id:
+            sys.stderr.write("session end requires --id\n")
+            return 2
+        try:
+            summary = end_session(store, args.id, actor=_actor(args))
+        except FileNotFoundError as exc:
+            sys.stderr.write(f"{exc}\n")
+            return 2
+        if args.json:
+            print(_json.dumps(summary, indent=2, sort_keys=True))
+        else:
+            print(f"session ended: {summary['id']}  "
+                  f"duration={summary['duration_ns'] / 1e9:.1f}s")
+        return 0
+
+    if action == "list":
+        sessions = list_sessions(store)
+        if args.json:
+            from dataclasses import asdict
+            print(_json.dumps(
+                [asdict(s) for s in sessions],
+                indent=2, sort_keys=True,
+            ))
+        else:
+            print(format_sessions(sessions))
+        return 0 if sessions or not args.exit_code else 1
+
+    sys.stderr.write(f"unknown session action: {action!r}\n")
+    return 2
+
+
+def _cmd_serve(args: argparse.Namespace) -> int:
+    """Run the local read-only HTTP API (PROPOSAL.md P10)."""
+    from cyberos.core.serve import (  # noqa: WPS433
+        ServeConfig, get_or_create_token, reset_token, serve_forever,
+    )
+
+    store = _store(args)
+    if args.reset_token:
+        new = reset_token(store)
+        print(f"new bearer token: {new}")
+        return 0
+    if args.print_token:
+        print(get_or_create_token(store))
+        return 0
+
+    cfg = ServeConfig(store=store, host=args.host, port=args.port)
+    token = get_or_create_token(store)
+    print(f"cyberos serve — http://{cfg.host}:{cfg.port}")
+    print(f"  Authorization: Bearer {token}")
+    print()
+    print("  curl -H 'Authorization: Bearer <token>' http://localhost:%d/state" % cfg.port)
+    print()
+    serve_forever(cfg)
+    return 0
+
+
+def _cmd_publish(args: argparse.Namespace) -> int:
+    """Produce a single-file mobile-friendly static site (PROPOSAL.md P12)."""
+    from cyberos.core.publish import publish_to_file  # noqa: WPS433
+    import json as _json
+
+    kinds = (
+        [k.strip() for k in args.kinds.split(",") if k.strip()]
+        if args.kinds else None
+    )
+    exclude_kinds = (
+        [k.strip() for k in args.exclude_kinds.split(",") if k.strip()]
+        if args.exclude_kinds else None
+    )
+
+    summary = publish_to_file(
+        _store(args),
+        Path(args.out).expanduser().resolve(),
+        kinds=kinds,
+        exclude_kinds=exclude_kinds,
+        max_body_chars=args.max_body_chars,
+        deterministic=args.deterministic,
+    )
+    if args.json:
+        print(_json.dumps(summary, indent=2, sort_keys=True))
+    else:
+        print(f"  wrote   : {summary['out_path']}")
+        print(f"  bytes   : {summary['bytes']:,}")
+        print(f"  memories: {summary['n_memories']}")
+        print(f"  sha256  : {summary['sha256'][:16]}…")
+    return 0
+
+
+def _cmd_digest(args: argparse.Namespace) -> int:
+    """Daily summary of audit activity (PROPOSAL.md P8)."""
+    from cyberos.core.digest import (  # noqa: WPS433
+        build, claude_prose, format_markdown, format_text, parse_human_duration,
+    )
+    import time as _time
+
+    until_ns = _time.time_ns() if not args.until else int(args.until)
+    if args.since:
+        # Two interpretations: an int (epoch ns) or a human duration like "24h".
+        try:
+            since_ns = until_ns - parse_human_duration(args.since)
+        except ValueError:
+            try:
+                since_ns = int(args.since)
+            except ValueError as exc:
+                sys.stderr.write(f"error: --since {args.since!r}: {exc}\n")
+                return 2
+    else:
+        since_ns = until_ns - parse_human_duration(args.window)
+
+    digest = build(
+        _store(args),
+        since_ns=since_ns,
+        until_ns=until_ns,
+        highlight_cap=args.highlight_cap,
+    )
+
+    if args.format == "json":
+        print(digest.to_json())
+    elif args.format == "markdown":
+        print(format_markdown(digest))
+    else:
+        print(format_text(digest))
+
+    if args.via_claude:
+        prose = claude_prose(digest, model=args.claude_model)
+        print()
+        print("── prose summary ──")
+        print(prose)
+
+    return 0
+
+
+def _cmd_resolve_conflict(args: argparse.Namespace) -> int:
+    """List, diff, or resolve sync-FS conflict siblings (PROPOSAL.md P9)."""
+    from cyberos.core.conflicts import (  # noqa: WPS433
+        diff, format_scan, resolve_conflict, scan,
+    )
+
+    store = _store(args)
+
+    if args.list or not args.path:
+        pairs = scan(store)
+        print(format_scan(pairs))
+        return 0 if not pairs else 1
+
+    target = (store / args.path).resolve()
+    pairs = [p for p in scan(store) if p.canonical == target]
+    if not pairs:
+        print(f"no sync-FS conflicts found for {args.path}")
+        return 0
+    pair = pairs[0]
+
+    if args.diff or not args.keep:
+        # Default action with a target path: print diffs.
+        for i, (sibling, source) in enumerate(sorted(pair.siblings, key=lambda s: s[0].name), 1):
+            print(f"# sibling {i}: [{source}] {sibling.name}")
+            d = diff(pair.canonical, sibling)
+            if not d:
+                print("  (byte-identical to canonical — safe to discard)\n")
+            else:
+                print(d)
+        return 0
+
+    # Active resolution requested.
+    result = resolve_conflict(
+        store, pair.canonical,
+        keep=args.keep,
+        actor=_actor(args),
+        dry_run=args.dry_run,
+    )
+    import json as _json
+    print(_json.dumps(result, indent=2, sort_keys=True))
+    if (
+        not args.dry_run
+        and args.keep.startswith("sibling:")
+        and "next_step" in result
+    ):
+        print()
+        print(f"NEXT: {result['next_step']}")
+    return 0
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     """Run the self-audit walker.
 
@@ -801,10 +1140,19 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--month", default=None)
     sp.set_defaults(fn=_cmd_audit)
 
-    sp = sub.add_parser("search", help="FTS5 search over memory bodies")
+    sp = sub.add_parser("search", help="FTS5 or semantic search over memory bodies")
     sp.add_argument("query")
     sp.add_argument("--limit", type=int, default=50)
+    sp.add_argument("--semantic", action="store_true",
+                    help="use local embeddings + cosine similarity "
+                         "(requires `pip install sentence-transformers`)")
     sp.set_defaults(fn=_cmd_search)
+
+    sp = sub.add_parser("semantic-sync",
+                        help="(re-)embed memory bodies for `cyberos search --semantic`")
+    sp.add_argument("--batch-size", type=int, default=32,
+                    help="embedder batch size (default 32)")
+    sp.set_defaults(fn=_cmd_semantic_sync)
 
     sp = sub.add_parser("checkpoint", help="force a power-loss-safe checkpoint flush")
     sp.set_defaults(fn=_cmd_checkpoint)
@@ -896,6 +1244,98 @@ def build_parser() -> argparse.ArgumentParser:
                     help="attempt safe auto-repair for recoverable failures "
                          "(NEVER for chain corruption / unparseable manifest)")
     sp.set_defaults(fn=_cmd_doctor)
+
+    sp = sub.add_parser("crypto-mode",
+                        help="inspect/migrate crypto_mode (P2 Stage 3 chained ↔ sth_only)")
+    sp.add_argument("action", choices=["show", "upgrade", "downgrade"])
+    sp.add_argument("--approval-phrase", default=None,
+                    help="required for upgrade/downgrade — see crypto_mode.APPROVAL_PHRASE")
+    sp.add_argument("--skip-safety-checks", action="store_true",
+                    help="(for upgrade) bypass STH-presence and MMR-cross-check gates")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON output")
+    sp.set_defaults(fn=_cmd_crypto_mode)
+
+    sp = sub.add_parser("session",
+                        help="manage multi-agent coordination sessions (PROPOSAL.md P11)")
+    sp.add_argument("action", choices=["start", "end", "list"])
+    sp.add_argument("--id", default=None,
+                    help="(for end) session id to close")
+    sp.add_argument("--scope", default=None,
+                    help="(for start) comma-separated POSIX path prefixes")
+    sp.add_argument("--ttl-hours", type=int, default=4,
+                    help="(for start) lease TTL in hours (default 4)")
+    sp.add_argument("--note", default=None,
+                    help="(for start) human-readable description")
+    sp.add_argument("--session-actor", default=None,
+                    help="(for start) override the actor recorded for this session")
+    sp.add_argument("--force", action="store_true",
+                    help="(for start) ignore scope-overlap warnings")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON instead of human-readable output")
+    sp.add_argument("--exit-code", action="store_true",
+                    help="(for list) exit 1 if no active sessions")
+    sp.set_defaults(fn=_cmd_session)
+
+    sp = sub.add_parser("serve",
+                        help="run the local read-only HTTP REST API (PROPOSAL.md P10)")
+    sp.add_argument("--host", default="127.0.0.1",
+                    help="bind address (default 127.0.0.1; only loopback recommended)")
+    sp.add_argument("--port", type=int, default=8765,
+                    help="bind port (default 8765)")
+    sp.add_argument("--print-token", action="store_true",
+                    help="print the current bearer token and exit")
+    sp.add_argument("--reset-token", action="store_true",
+                    help="rotate the bearer token and exit")
+    sp.set_defaults(fn=_cmd_serve)
+
+    sp = sub.add_parser("publish",
+                        help="produce a single-file mobile-friendly static site (PROPOSAL.md P12)")
+    sp.add_argument("--out", required=True,
+                    help="output path for the .html file")
+    sp.add_argument("--kinds", default=None,
+                    help="comma-separated allowlist of memory kinds")
+    sp.add_argument("--exclude-kinds", default=None,
+                    help="comma-separated blocklist of memory kinds")
+    sp.add_argument("--max-body-chars", type=int, default=200_000,
+                    help="cap per-body size (default 200000)")
+    sp.add_argument("--deterministic", action="store_true",
+                    help="zero out generated_at_ns so output is byte-stable across runs")
+    sp.add_argument("--json", action="store_true",
+                    help="emit summary as JSON")
+    sp.set_defaults(fn=_cmd_publish)
+
+    sp = sub.add_parser("digest",
+                        help="daily summary of audit activity (PROPOSAL.md P8)")
+    sp.add_argument("--window", default="24h",
+                    help="lookback window: e.g. 24h, 7d, 2w (default 24h)")
+    sp.add_argument("--since", default=None,
+                    help="explicit start: human duration like '6h' OR epoch-ns int")
+    sp.add_argument("--until", default=None, type=int,
+                    help="explicit end (epoch-ns); default: now")
+    sp.add_argument("--format", choices=["text", "markdown", "json"], default="text",
+                    help="output format (default text)")
+    sp.add_argument("--highlight-cap", type=int, default=50,
+                    help="max highlights to surface (default 50)")
+    sp.add_argument("--via-claude", action="store_true",
+                    help="also pipe the JSON digest to local Claude CLI for prose summary")
+    sp.add_argument("--claude-model", default=None,
+                    help="(with --via-claude) override the Claude model")
+    sp.set_defaults(fn=_cmd_digest)
+
+    sp = sub.add_parser("resolve-conflict",
+                        help="list, diff, or merge sync-FS conflict siblings (PROPOSAL.md P9)")
+    sp.add_argument("path", nargs="?", default=None,
+                    help="path of the canonical memory; omit to list all conflicts")
+    sp.add_argument("--list", action="store_true",
+                    help="list all conflict pairs and exit")
+    sp.add_argument("--diff", action="store_true",
+                    help="show unified diffs vs. each sibling (default if no --keep given)")
+    sp.add_argument("--keep", default=None,
+                    help="canonical (archive siblings) or sibling:<index> (replace canonical)")
+    sp.add_argument("--dry-run", action="store_true",
+                    help="report actions without moving any files")
+    sp.set_defaults(fn=_cmd_resolve_conflict)
 
     sp = sub.add_parser("validate", help="validate memory files against the frontmatter schema")
     sp.add_argument("paths", nargs="+",

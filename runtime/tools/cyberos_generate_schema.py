@@ -224,6 +224,32 @@ def _manifest_schema() -> dict:
                 "type": "object",
                 "additionalProperties": True,
             },
+            "crypto_mode": {
+                "type": "string",
+                "enum": ["chained", "sth_only"],
+                "description": (
+                    "P2 Stage 3 feature flag. 'chained' (default): per-row "
+                    "chain is canonical. 'sth_only': MMR + Signed Tree Heads "
+                    "are canonical; the chain remains computed but advisory. "
+                    "See cyberos.core.crypto_mode."
+                ),
+            },
+            "crypto_mode_history": {
+                "type": "array",
+                "description": (
+                    "Append-only audit trail of crypto_mode transitions."
+                ),
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "from": {"type": "string"},
+                        "to": {"type": "string"},
+                        "at_ns": {"type": "integer"},
+                        "approval_phrase": {"type": "string"},
+                    },
+                    "additionalProperties": True,
+                },
+            },
         },
         "required": ["schema_version"],
         "additionalProperties": True,

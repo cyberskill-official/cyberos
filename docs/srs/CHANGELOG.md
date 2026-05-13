@@ -1,8 +1,79 @@
-# Changelog — CyberOS-SRS.docx
+# Changelog — CyberOS-SRS
 
-All notable changes to **CyberOS-SRS.docx** are documented here, day by day.
+All notable changes to **CyberOS-SRS** are documented here, day by day.
 
 This document does **not** carry an inline version marker — see CyberOS-AGENTS.md §0.2 (no-inline-version rule for design docs). Improvements land continuously; this changelog is the canonical record. Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but date-stamped rather than version-stamped.
+
+The canonical source is now `docs/srs/SRS.md` (Markdown). The original `SRS.docx` was converted on 2026-05-12 (task #65); the `.md` is the working copy from that date forward.
+
+---
+
+## 2026-05-14 — Layer 1 close-out: full P1–P12 + P2 Stage 3 (no SRS §-level changes)
+
+### Summary
+
+The v2 protocol rebuild (2026-05-13) plus the seven outstanding Deep Audit proposals (P6–P12 + P2 Stage 3) all shipped. The cyberos repo is now the working implementation of SRS §5.3 (Layer 1) end-to-end, plus an early Layer-2 component (P7 semantic search) ahead of the SRS §5.4 schedule.
+
+### Added — implementation, not §-level architecture
+
+- **Single-binary CLI**: `python -m cyberos <subcommand>`. Replaces the 33+ standalone `runtime/tools/*.py` scripts of the v1 surface. 30 subcommands covering view/put/move/str-replace/insert/delete/rename/verify/export/audit/search/checkpoint/import/backup/prune/prove/verify-proof/sth-wrap/state/consolidate/doctor/validate/digest/publish/serve/session/resolve-conflict/semantic-sync/crypto-mode.
+- **Group-commit writer** (`cyberos/core/writer.py`) — coalesced batch flush with leased single-writer lock, F_BARRIERFSYNC on Darwin, fdatasync elsewhere. Optional Linux io_uring fast path.
+- **MMR + Ed25519 STH** (`cyberos/core/mmr.py`, `cyberos/core/sth.py`) — additive over the per-row chain in default `chained` mode; promoted to canonical when `crypto_mode = sth_only`. Passphrase-wrapped signing key (scrypt + ChaCha20-Poly1305).
+- **MmapWalker + verify_segments** (`cyberos/core/walker.py`) — page-cache-friendly chain verification with CRC-tail-as-truncation recovery (Bitcask).
+- **Lock-free Reader** (`cyberos/core/reader.py`) — seqlock pattern over HEAD; no flock for views.
+- **Self-audit walker** (`cyberos/core/invariants.py` + `docs/memory/memory.invariants.yaml`) — 16 invariants. `cyberos doctor [--repair]` for routine checks; `cyberos state` returns READY / FROZEN_RECOVERABLE / FROZEN_HUMAN.
+- **Auto-Dream consolidation** (`cyberos/core/consolidate.py`) — Walk → Compact → Sign → Publish in one `cyberos consolidate` call. Cross-platform host automation: macOS `launchd`, Linux `systemd-user` / cron, Windows Task Scheduler. Install via `scripts/install.sh --with-automation` (or `.ps1`).
+- **Cross-BRAIN import** (`cyberos/core/import_.py`) — `cyberos import <other-store-or-zip>` with idempotent manifest tracking, audit-bracketed via `session.start` / `session.end`.
+- **Conflict awareness** (`cyberos/core/conflicts.py`) — detects iCloud / Dropbox / OneDrive / Google Drive / Box / Syncthing / Resilio markers. New invariant `layout-no-sync-conflict-siblings`. `cyberos resolve-conflict` for diff + merge.
+- **Daily digest** (`cyberos/core/digest.py`) — deterministic activity summary over a configurable window. Text / markdown / JSON output. Optional `--via-claude` prose layer.
+- **Local semantic search** (`cyberos/core/semantic.py`) — optional `sentence-transformers` dep; int8-quantised embeddings in `~/Library/Caches/cyberos/embeddings-<fingerprint>.sqlite`. Falls back to FTS5 when deps missing.
+- **Local HTTP REST** (`cyberos/core/serve.py`) — stdlib `http.server`, bearer-token auth, loopback-only by default. Routes: `/healthz`, `/state`, `/memories[/<path>]`, `/audit/head`, `/digest`, `POST /search`.
+- **Sessions** (`cyberos/core/session.py`) — lease files under `meta/sessions/`, bracketed by `session.start` / `session.end` audit rows. TTL + scope-overlap detection across multi-agent work.
+- **Mobile-friendly static site** (`cyberos/core/publish.py`) — single self-contained HTML; vanilla-JS search + filter; light/dark theme. `--deterministic` produces byte-stable output.
+- **GDPR Article 17 purge** — `cyberos delete --mode purge --reason ... --approval-phrase "..."`. Body bytes redacted in place, audit row records the purge.
+- **Incremental backups** — `cyberos backup --target <dir>`. Hard-linked snapshot, label support, `--verify`, `--list`.
+
+### SRS §-by-§ coverage today
+
+- **§5.3 Layer 1 ops** — complete. The six ops collapsed to three canonical (`put`, `move`, `delete(mode)`) with v1 aliases preserved.
+- **§5.3.3 Sync classes** — file-level sync via consumer cloud drives + conflict detection. CRDT/3-way merge for true concurrent divergence is future work.
+- **§5.3.5 Auto-Dream** — `cyberos consolidate` end-to-end; cross-platform host automation.
+- **§5.3.6 Merkle + checkpoint + lock** — covered by MMR + STH + leased single-writer lock.
+- **§5.4 Layer 2** — partial: lexical (FTS5) + semantic (P7); graph (AGE/Cypher) and GraphRAG community summaries (§5.4.4) deferred.
+- **§5.5 Layer 3 archival** — not started.
+- **§6 CUO router** — not started. The `cyberos serve` local REST surface and the per-skill runners under `runtime/skill_runners/` remain CUO precursors.
+- **§8 MCP Gateway** — `cyberos serve` covers the read-only surface for solo developer mode; the full multi-tenant write gateway is P0+.
+- **§11 Storage + retention** — `cyberos prune` + `cyberos backup` cover compaction and incremental archive. S3-tier off-host archival is future work.
+
+### Removed (deprecated by the rebuild)
+
+The following individual `runtime/tools/*.py` scripts were retired; their behaviour is now reachable via `python -m cyberos <subcommand>`:
+
+- `cyberos_doctor.py` → `cyberos doctor`
+- `cyberos_validate.py` → `cyberos validate`
+- `cyberos_export.py` → `cyberos export`
+- `cyberos_index.py` → `cyberos search` (FTS5 index is now lazy)
+- `cyberos_lock.py` → leased advisory lock is built into `cyberos/core/lock.py`
+- `cyberos_compact_stats.py` → `cyberos prune --dry-run`
+- `cyberos_cold_storage.py` → `cyberos backup` + `cyberos prune`
+- `cyberos_replicate.py` → `cyberos import` covers the merge half; rsync covers the push half
+- `cyberos_show.py` → `cyberos view`
+- `canonical_sha.py` → internal helper inlined in `cyberos/core/writer.py`
+- `brain_writer.py` / `brain_writer_shim.py` → fully retired; `Writer`/`ops.put` replace them
+
+### Test posture
+
+- 255 tests passing under `tests/core/`. Suite covers writer recovery, walker truncation, lock leases, MMR scale (1k/10k/100k leaves), STH signing + wrap, deterministic export, semantic round-trip, serve HTTP routes, session lifecycle, conflict detection, crypto-mode transitions.
+
+### Cross-references pending in SRS body
+
+- §5.3 — link `cyberos/core/writer.py` (group-commit) + `cyberos/core/walker.py` (mmap recovery) as the concrete Layer-1 mechanism
+- §5.3.5 — link `cyberos consolidate` + `scripts/automation*/` cross-platform automation
+- §5.3.6 — point at `cyberos/core/mmr.py` + `cyberos/core/sth.py` + `cyberos/core/crypto_mode.py` for the MMR/STH/Stage-3 swap
+- §5.4 — add the semantic search slice (`cyberos/core/semantic.py`) as a delivered Layer-2 component
+- §5.6 — link `cyberos/core/conflicts.py` + `cyberos resolve-conflict`
+- §8 — note `cyberos/core/serve.py` as the local read-only REST surface; full MCP Gateway still P0+
+- §11 — link `cyberos backup` / `cyberos prune` as the Layer-1 compaction + archive operators
 
 ---
 

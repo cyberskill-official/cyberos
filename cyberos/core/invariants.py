@@ -177,7 +177,16 @@ def check_layout_shard_uniformity(store: Path) -> tuple[bool, str]:
 
 
 def check_ledger_link(store: Path) -> tuple[bool, str]:
-    """Verify the LINK invariant across all binlog segments."""
+    """Verify the LINK invariant across all binlog segments.
+
+    In ``crypto_mode=sth_only`` (P2 Stage 3 opt-in), the per-row chain
+    is still computed but is no longer the canonical integrity primitive.
+    A chain mismatch in that mode would be surprising but not fatal — we
+    return PASS with a note so the operator notices the mode is active
+    without the doctor going red. The authoritative check in sth_only
+    mode is ``ledger-mmr-cross-check``.
+    """
+    from cyberos.core.crypto_mode import is_sth_only
     audit = store / "audit"
     segs = sorted(p for p in audit.glob("*.binlog") if p.name != "current.binlog")
     current = audit / "current.binlog"
@@ -189,7 +198,17 @@ def check_ledger_link(store: Path) -> tuple[bool, str]:
         start_prev = resolve_initial_chain_from_manifest(store)
     except ValueError as exc:
         return False, f"malformed legacy bridge: {exc}"
-    n = verify_segments(segs, start_prev=start_prev)
+    try:
+        n = verify_segments(segs, start_prev=start_prev)
+    except Exception as exc:  # noqa: BLE001
+        if is_sth_only(store):
+            return True, (
+                f"sth_only mode — link mismatch surfaced but not enforced "
+                f"(MMR + STH are canonical): {exc}"
+            )
+        raise
+    if is_sth_only(store):
+        return True, f"{n} records, chain still intact (sth_only mode — advisory)"
     return True, f"{n} records, chain intact"
 
 
@@ -451,6 +470,28 @@ def check_crc_implementation(_store: Path) -> tuple[bool, str]:
     )
 
 
+def check_layout_no_sync_conflict_siblings(store: Path) -> tuple[bool, str]:
+    """Detect iCloud/Dropbox/OneDrive/Syncthing conflict-marker files.
+
+    See ``cyberos.core.conflicts`` for the full pattern list. This invariant
+    is level=warning: a sync conflict isn't a chain violation, but it does
+    mean another machine has bytes the audit ledger never saw — the operator
+    should resolve via ``cyberos resolve-conflict`` and ``cyberos put``.
+    """
+    from cyberos.core.conflicts import scan
+    pairs = scan(store)
+    if not pairs:
+        return True, "no sync-FS conflict siblings"
+    sample = [p.canonical.name for p in pairs[:3]]
+    more = "" if len(pairs) <= 3 else f" (+{len(pairs) - 3} more)"
+    n_siblings = sum(len(p.siblings) for p in pairs)
+    return False, (
+        f"{n_siblings} conflict sibling(s) across {len(pairs)} canonical "
+        f"file(s); first: {sample}{more}. "
+        "Run `cyberos resolve-conflict <path>` to inspect and merge."
+    )
+
+
 def check_durability_platform_correct(_store: Path) -> tuple[bool, str]:
     """On Darwin, verify F_BARRIERFSYNC is the per-batch strategy.
 
@@ -474,6 +515,7 @@ _REGISTRY: dict[str, Callable[[Path], tuple[bool, str]]] = {
     "layout-root-canonical": check_layout_root_canonical,
     "layout-no-sandbox-path": check_layout_no_sandbox_path,
     "layout-shard-uniformity": check_layout_shard_uniformity,
+    "layout-no-sync-conflict-siblings": check_layout_no_sync_conflict_siblings,
     "ledger-link-invariant": check_ledger_link,
     "ledger-hash-invariant": check_ledger_hash,
     "ledger-crc-tail": check_ledger_crc_tail,
@@ -778,6 +820,7 @@ __all__ = [
     "check_layout_root_canonical",
     "check_layout_no_sandbox_path",
     "check_layout_shard_uniformity",
+    "check_layout_no_sync_conflict_siblings",
     "check_ledger_link",
     "check_ledger_hash",
     "check_ledger_crc_tail",

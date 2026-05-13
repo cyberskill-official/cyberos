@@ -55,6 +55,20 @@ invariants:
     check: cyberos.core.invariants.check_layout_shard_uniformity
     citation: cyberos_migrate_v2.phase_3_reshard_memories
 
+  - id: layout-no-sync-conflict-siblings
+    level: warning
+    scope: filesystem
+    description: |
+      iCloud / Dropbox / OneDrive / Google Drive / Box / Syncthing / Resilio
+      may leave conflict-marker files beside canonical memories when two
+      machines edit concurrently. Those files are NOT in the audit chain
+      and represent bytes the ledger has never seen. The operator should
+      run `cyberos resolve-conflict <path>` to inspect the diff and decide
+      which side to keep, then `cyberos put` to introduce the winner
+      properly into the chain. PROPOSAL.md P9.
+    check: cyberos.core.invariants.check_layout_no_sync_conflict_siblings
+    citation: cyberos.core.conflicts + PROPOSAL.md P9
+
   # ===== Audit ledger =====
 
   - id: ledger-link-invariant
