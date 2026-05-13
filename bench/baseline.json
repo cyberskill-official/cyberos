@@ -1,0 +1,20 @@
+{
+  "host": {
+    "cpu_count": 12,
+    "machine": "arm64",
+    "node": "Stephens-MacBook-Pro.local",
+    "platform": "darwin",
+    "processor": "arm",
+    "python": "3.12.13"
+  },
+  "metrics": {
+    "append_1producer_per_s": 958.0963903208147,
+    "append_4producer_per_s": 4240.90776834345,
+    "cold_cli_help_p50_ms": 19.4174165,
+    "frontmatter_msgspec_p50_us": 0.916,
+    "frontmatter_msgspec_p99_us": 1.04101
+  },
+  "recorded_at_ns": 1778689576318298000,
+  "regression_threshold_pct": 30.0,
+  "version": 1
+}
