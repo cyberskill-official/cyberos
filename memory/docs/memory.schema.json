@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberos.world/schemas/memory.json",
+  "title": "CyberOS Layer-1 Memory Protocol",
+  "description": "Machine-validatable schema for the CyberOS BRAIN. Generated from cyberos.core msgspec Structs by memory/tools/cyberos_generate_schema.py. Do not hand-edit. The protocol document (memory/docs/AGENTS.md) is the prose companion; this file is the contract. The protocol is unversioned: there is no schema_version field.",
+  "definitions": {
+    "MemoryPath": {
+      "type": "string",
+      "pattern": "^(meta|memories|company|module|member|client|project|persona|audit|conflicts|exports|index|drift|refinements)(/[A-Za-z0-9_][A-Za-z0-9_.\\-]*)+\\.(md|json)$",
+      "description": "POSIX-relative path from <memory-root>/. MUST NOT contain '..' segments or absolute prefixes. Pattern is enforced by cyberos.core.ops._check_rel_path."
+    },
+    "Sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "Lowercase 64-hex SHA-256 digest. No `sha256:` prefix."
+    },
+    "Sha256Prefixed": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Legacy chain hash format used by earlier writers. Current writer emits the bare 64-hex form."
+    },
+    "AuditRecord": {
+      "title": "AuditRecord",
+      "description": "One row in the append-only Merkle-chained audit ledger.\n\n    Schema is frozen for the lifetime of the store version. Forward-compat\n    additions land in ``extra`` (untyped dict) so older readers can still\n    parse newer rows.\n\n    The ``chain`` field is computed by the writer and MUST NOT be supplied\n    by callers \u2014 :meth:`Writer.submit` overwrites it.",
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Audit row op. Free-form text; historical binlog rows from earlier protocol generations may carry op names not in the current canonical set. Current writer emits: view, put, move, delete, session.start, session.end."
+        },
+        "path": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "ts_ns": {
+          "type": "integer",
+          "default": 0
+        },
+        "content_sha256": {
+          "type": "string",
+          "default": ""
+        },
+        "prev_chain": {
+          "type": "string",
+          "default": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "chain": {
+          "type": "string",
+          "default": ""
+        },
+        "extra": {
+          "type": "object",
+          "default": {}
+        }
+      },
+      "required": [
+        "op",
+        "path",
+        "actor"
+      ],
+      "additionalProperties": false
+    },
+    "Frontmatter": {
+      "title": "Frontmatter",
+      "description": "Schema-validated frontmatter for a memory file.\n\n    Closed schema. Any unknown top-level keys land in ``extra``. The\n    encoding contract is \"sorted keys + msgspec canonical JSON\" \u2014 same\n    byte sequence as RFC 8785 JCS for this struct (no floats, no NaN/Inf,\n    no duplicate keys).\n\n    Attributes\n    ----------\n    id:\n        Stable memory identifier, e.g. ``DEC-104`` or ``REF-027``.\n    kind:\n        One of: ``decision``, ``fact``, ``person``, ``project``,\n        ``preference``, ``drift``, ``refinement``. Enforced by callers,\n        not by the struct (schema must accept legacy values during\n        migration).\n    ts_ns:\n        Creation timestamp in nanoseconds since epoch.\n    actor:\n        Principal identifier \u2014 ``stephen``, ``coding-agent``, etc.\n    tags:\n        Free-form tag list. Ordering preserved as written.\n    extra:\n        Forward-compat slot for additional fields. Encoded last so reads\n        of files written by future versions don't fail.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "decision",
+            "fact",
+            "person",
+            "project",
+            "preference",
+            "drift",
+            "refinement",
+            "unknown"
+          ]
+        },
+        "ts_ns": {
+          "type": "integer"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "extra": {
+          "type": "object",
+          "default": {}
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "ts_ns",
+        "actor"
+      ],
+      "additionalProperties": false
+    },
+    "Manifest": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional, descriptive only. The protocol is now unversioned; this property is preserved for back-compat so historical manifests still validate."
+        },
+        "audit_chain_head": {
+          "$ref": "#/definitions/Sha256Prefixed"
+        },
+        "last_updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "project": {
+          "type": "object",
+          "properties": {
+            "root_path": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "scope_contract": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "crypto_mode": {
+          "type": "string",
+          "enum": [
+            "chained",
+            "sth_only"
+          ],
+          "description": "P2 Stage 3 feature flag. 'chained' (default): per-row chain is canonical. 'sth_only': MMR + Signed Tree Heads are canonical; the chain remains computed but advisory. See cyberos.core.crypto_mode."
+        },
+        "crypto_mode_history": {
+          "type": "array",
+          "description": "Append-only audit trail of crypto_mode transitions.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "at_ns": {
+                "type": "integer"
+              },
+              "approval_phrase": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "Envelope": {
+      "type": "object",
+      "description": "Encryption envelope per AGENTS.md \u00a75.6. Specifies algorithm and key wrap; the body file then contains ciphertext.",
+      "properties": {
+        "cipher": {
+          "type": "string",
+          "enum": [
+            "age-x25519",
+            "aes-256-gcm",
+            "chacha20-poly1305"
+          ]
+        },
+        "key_id": {
+          "type": "string"
+        },
+        "nonce": {
+          "type": "string"
+        },
+        "ciphertext_hash": {
+          "$ref": "#/definitions/Sha256Hex"
+        }
+      },
+      "required": [
+        "cipher",
+        "key_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {},
+  "additionalProperties": true
+}
