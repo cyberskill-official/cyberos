@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>KB — CyberOS</title>
- <meta name="description" content="KB — Knowledge Base. Living markdown docs that ingest into BRAIN for AI-grounded retrieval. Categories, versioning, FTS5 + semantic + reranker search, AI Q&A with citations, VN + EN dual-language docs.">
+ <title>KB — RAG corpus · BRAIN companion · Auto-runbook source · CyberOS</title>
+ <meta name="description" content="KB — the RAG corpus the AI grounds answers in, the BRAIN companion that adds long-form versioned documents to the audit-chained memory store, and the runbook catalogue source for OBS auto-runbook router. Three-layer search: FTS5 + BGE-M3 semantic + BGE-rerank-v2-m3. Span-level citations. ACL-aware retrieval. Dual-language vi + en.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -52,7 +52,7 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CDO seat (interim CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Living documents — markdown source of truth, rendered HTML, automatically re-ingested into BRAIN Layer 2 (vector + graph) so AI Q&amp;A can ground every answer in citable KB sources.
+ <strong>The grounded-retrieval anchor.</strong> Every AI answer carries span-level citations to a specific paragraph of a specific KB doc. Vibes-shaped hallucination is a refuse-able state.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  KB is CyberOS's internal documentation surface and the canonical anchor for AI-grounded retrieval. Docs are markdown with YAML frontmatter; every save creates an immutable version. The renderer produces HTML for human reading and a sanitised plaintext stream for BRAIN ingestion. Search combines FTS5 (PGroonga for Vietnamese), semantic embeddings (BGE-M3), and a cross-encoder reranker (BGE-rerank-v2-m3) — the same triple-layer that powers BRAIN Layer 2. The flagship AI feature is "Ask this page", grounded only in the current doc + linked docs, with every claim citing a source span. Categories cover how-to, reference, decision-log, policy, runbook. Permissions tier from public → org-only → role-restricted. Vietnamese + English dual-language docs share a <code>translation_of</code> linkage..
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why KB exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -128,6 +129,86 @@
  <div class="fact-card"><div class="label">BRAIN ingest</div><div class="value">≤ 5 s p95</div><div class="note">(FR pending)</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~6,500</div><div class="note">Rust + TS editor</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The naive read of KB: "it's our wiki." The real read: KB is what makes Genie a useful agent and OBS a useful operations console. Strip KB out and CUO has nothing to cite, OBS's auto-runbook router has nothing to consult, and "ask the docs" becomes "make stuff up." KB is the structured-knowledge half of the BRAIN protocol — long-form versioned, ACL-aware, server-rendered docs — that the audit-chained memory store doesn't replace but complements.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--kb)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--kb-dark)">Role 1 · RAG corpus</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Three-layer retrieval · span-level citations</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Markdown source + immutable versions. Triple-layer retrieval: FTS5 (PGroonga for VN) + BGE-M3 semantic embeddings + BGE-rerank-v2-m3 cross-encoder. "Ask this page" answers ground in current + linked docs with span citations. AI Q&amp;A across all of KB respects ACL at retrieval time, not after. Span-level citations make hallucination detectable.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--kb)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--kb-dark)">Role 2 · BRAIN companion</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Versioned long-form alongside chain-anchored memories</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ BRAIN is the audit-chained personal/tenant memory store; KB is the curated long-form companion. PROJ Issues, CRM Deals, OBS alerts can cite KB docs as authority (high-trust source) AND BRAIN memories (chain-anchored decision). Semantic search spans both. "Promote to canonical" elevates a doc to high-authority BRAIN source used by Lumi cross-tenant synthesis (if sync_class permits).
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--kb)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--kb-dark)">Role 3 · Runbook catalogue for OBS</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Auto-runbook router consults KB for alert remediation</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ OBS's auto-runbook router (§2.6 in obs.html) calls KB to find runbooks matching an alert's signature. Runbooks have an applicability tag (provider, region, severity), a step-by-step body, and a confidence-correlation field that grows as triage results feed back. KB is the catalogue; OBS is the consumer; CUO is the ranker. The growth loop is built-in: novel incidents become new runbooks; old runbooks gain confidence.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">KB in the platform — who reads, who consults</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart TB
+ KB["📚 KB<br>markdown · versioned · ACL'd"]
+ MEMBER["👤 Member<br>reader + author"]
+ GENIE["✨ Genie / CUO<br>span-cited Q&amp;A"]
+ OBS["👁 OBS auto-runbook router<br>consult catalogue"]
+ PROJ["📋 PROJ<br>Issues cite KB docs"]
+ CRM["🤝 CRM<br>account context cites KB"]
+ BRAIN["🧠 BRAIN<br>citation graph"]
+ LUMI["☁ Lumi's BRAIN (P3+)<br>canonical-source cross-tenant"]
+ PORTAL["🚪 PORTAL<br>public-readable docs"]
+ MEMBER -- "read · write" --> KB
+ KB --> GENIE
+ KB --> OBS
+ PROJ -- "cite" --> KB
+ CRM -- "cite" --> KB
+ KB --> BRAIN
+ KB -. "promote to canonical (sync_class permits)" .-> LUMI
+ KB --> PORTAL
+ classDef hub fill:#fef3c7,stroke:#92400e,stroke-width:3px,color:#451a03
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class KB hub
+ class MEMBER,GENIE,OBS,PROJ,CRM,PORTAL mod
+ class BRAIN,LUMI brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Doc save</td><td><strong>Manual</strong> Member action</td><td>Each save = new immutable version; never edit-in-place.</td></tr>
+ <tr><td>Re-ingest to BRAIN Layer 2</td><td><strong>Auto</strong> on every save</td><td>Embedding + chunk-tracking; downstream RAG never stale.</td></tr>
+ <tr><td>Translation linkage</td><td><strong>Manual</strong> + auto-suggest</td><td>Author confirms <code>translation_of</code> after first VN/EN translation.</td></tr>
+ <tr><td>"Ask this page" Q&amp;A</td><td><strong>Auto</strong> ground in current + linked docs</td><td>Bounded surface; ACL-aware; span citations always attached.</td></tr>
+ <tr><td>Cross-KB Q&amp;A</td><td><strong>Auto</strong> + ACL filter pre-retrieval</td><td>Filter at retrieval time, never after; "no result" is OK.</td></tr>
+ <tr><td>Promote to canonical</td><td><strong>Manual</strong> CDO action</td><td>Elevation grants high authority weight in BRAIN/Lumi synthesis; intentional.</td></tr>
+ <tr><td>Runbook publish (for OBS)</td><td><strong>Manual</strong> after post-incident review</td><td>Runbook is a deliberate authoring act; on-call authors after resolving.</td></tr>
+ <tr><td>ACL change</td><td><strong>Manual</strong> with audit row</td><td>Permission changes are high-impact; every change chains in BRAIN.</td></tr>
+ <tr><td>Share-link generation (time-bound)</td><td><strong>Manual</strong>, <strong>auto-expire</strong></td><td>External access requires explicit token; auto-expires per policy.</td></tr>
+ <tr><td>Stale-doc flag</td><td><strong>Auto</strong> nightly scan</td><td>Docs &gt; 6 months without view OR with dropped citation count flagged for review; CDO triages.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -912,6 +993,11 @@ graph LR
  <tr><td><code>R-KB-008</code></td><td>Promoted-to-canonical doc later modified, BRAIN canonical out of sync</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Demotion required before edit on promoted doc; or auto re-promotion with audit row.</td></tr>
  <tr><td><code>R-KB-009</code></td><td>Translation drift between vi and en versions</td><td>Medium</td><td>Low</td><td>CCO</td><td>Drift detection (word-count + key-phrase diff); flagged in editor UI.</td></tr>
  <tr><td><code>R-KB-010</code></td><td>Public Trust Center page reveals private policy by misconfiguration</td><td>Low</td><td>High</td><td>CCO</td><td>Trust-center publish requires double-confirm + audit row; CI test asserts no role-restricted docs published.</td></tr>
+ <tr><td><code>R-KB-011</code></td><td><strong>Runbook catalogue drift — runbook claims "increase Bedrock quota" but tenant uses Vertex</strong></td><td>Medium</td><td>Medium</td><td>CDO</td><td>Runbooks tagged with applicability (provider, region, severity); CUO triage filters before suggestion; staleness scan flags &gt; 6mo unverified.</td></tr>
+ <tr><td><code>R-KB-012</code></td><td>OBS-runbook coupling tightens — KB outage breaks auto-runbook router</td><td>Low</td><td>High</td><td>CTO</td><td>OBS caches last-known-good runbook catalogue (1h TTL); on KB outage CUO triage falls back to static severity routing; alarm on KB unreachable.</td></tr>
+ <tr><td><code>R-KB-013</code></td><td>Span-citation drift — doc edited, citation now points to wrong paragraph</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Citations are version-pinned (doc_id × version × span_id); editing creates new version; old citations resolve to old version; nightly sweep flags broken cites.</td></tr>
+ <tr><td><code>R-KB-014</code></td><td>Vertical-pack vendor uploads malicious markdown that escapes sanitiser</td><td>Low</td><td>High</td><td>CSO</td><td>Pack-uploaded docs run through extended sanitisation (ammonia + CSP); CSO review required before promote-to-canonical for vendor-authored docs.</td></tr>
+ <tr><td><code>R-KB-015</code></td><td>Q&amp;A "I don't know" rate too high → Members stop using Genie</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Out-of-corpus questions trigger doc-gap-detector → suggests "no doc exists, write one?"; tracking shows topic-area gaps.</td></tr>
  </tbody>
  </table>
  </div>
@@ -936,6 +1022,11 @@ graph LR
  <tr><td><strong>Docs per Member</strong></td><td>active_docs / members</td><td>BRAIN audit</td><td>tracked; baseline 8</td></tr>
  <tr><td><strong>Stale-doc rate</strong></td><td>&gt; 180 d untouched / total</td><td>BRAIN</td><td>≤ 25%</td></tr>
  <tr><td><strong>ACL-leak incidents</strong></td><td>count</td><td>BRAIN audit</td><td>= 0</td></tr>
+ <tr><td><strong>Runbook applicability accuracy</strong></td><td>OBS routings correctly matched / total runbook suggestions</td><td>OBS triage telemetry</td><td>≥ 0.80</td></tr>
+ <tr><td><strong>Span-citation integrity</strong></td><td>citations resolving to valid (doc_id × version × span_id) / total citations</td><td>nightly sweep</td><td>= 1.0</td></tr>
+ <tr><td><strong>Doc-gap-detector signal rate</strong></td><td>topic gaps suggested / "I don't know" responses</td><td>Q&amp;A telemetry</td><td>≥ 0.30 (catch enough gaps)</td></tr>
+ <tr><td><strong>Cross-tenant retrieval reject rate</strong></td><td>ACL-filtered retrievals / total retrievals</td><td>retrieval logs</td><td>tracked; spike = active probing</td></tr>
+ <tr><td><strong>Vendor-pack doc CSO-review rate</strong></td><td>pack-authored canonical-promoted docs with CSO sign-off / total such promotions</td><td>BRAIN audit</td><td>= 1.0</td></tr>
  </tbody>
  </table>
  </div>
@@ -1091,7 +1182,18 @@ citations:
  <li> — KB product FRs.</li>
  <li> — KB SRS-tier FRs.</li>
  <li> — NFRs.</li>
- <li> — Formal (FR pending) through (FR pending).</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + KB-in-platform Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
+ <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
+ <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="portal.html" class="text-blue-700 underline">portal.html</a></li>
+ <li><strong>OBS auto-runbook contract:</strong> <a href="obs.html#auto-runbook" class="text-blue-700 underline">OBS §2.6</a> — KB is the runbook catalogue source for the triage router.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §6</a> — KB docs promoted to canonical become high-authority source for Lumi cross-tenant synthesis (sync_class permitting).</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — KB at M+5 (P1, alongside PROJ).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>BAAI BGE-M3</strong> — multilingual embedding model (used for semantic layer).</li>
  <li><strong>BAAI BGE-rerank-v2-m3</strong> — cross-encoder reranker.</li>
  <li><strong>PGroonga</strong> — Postgres full-text search with Vietnamese bigram tokenisation.</li>

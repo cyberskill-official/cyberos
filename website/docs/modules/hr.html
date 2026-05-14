@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>HR — CyberOS</title>
- <meta name="description" content="HR — Human Resources. Member directory, onboarding workflow, leave management (annual, sick, maternity, sabbatical), contract management (Vietnamese labor law compliant), performance review hooks, termination workflow, BHXH/BHYT/BHTN integration.">
+ <title>HR — Member lifecycle · Onboarding orchestrator · Performance signal aggregator · CyberOS</title>
+ <meta name="description" content="HR — three strategic roles: (1) member lifecycle owner (hire/transfer/exit with AUTH subject provisioning; the canonical answer to 'who is currently employed here'), (2) onboarding orchestrator (LEARN + KB + PROJ ramp plans wired automatically), (3) performance signal aggregator (PROJ calibration + REW comp recommendations; never owns the comp number — REW does). Vietnamese labour-law-first: Decree 145/2020, 152/2020, BHXH/BHYT/BHTN, sabbatical accrual.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -52,7 +52,7 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: HR/Ops Lead (interim CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- The Member directory and lifecycle hub — every join, every leave request, every contract, every offboarding flows through HR, and every PII field is gated by Vietnamese labour law and an audit row.
+ <strong>The Member lifecycle hub.</strong> Single source of truth for "is this person employed here, in what capacity, since when, with what entitlements?" — and the answer is one row, not a query across five systems.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  HR holds the canonical Member record (name, role, level, start date, sabbatical accrual, leave balance), the onboarding checklist that bootstraps a new Member's accounts across every other module, and the offboarding workflow that touches REW (final pay), ESOP (Good Leaver / Bad Leaver branch), AUTH (revoke), and DOC (asset return). The cardinal rule: <strong>compensation never lives in HR</strong> — that is REW's encrypted keyspace. HR holds identity, contracts, leave, and government IDs (CCCD), each gated by a separate KMS-wrapped key and Vietnamese sensitive-data law (PDPL Art. 14, Decree 13/2023). Vietnamese labour-law specifics — Decree 145/2020 (working hours, overtime caps), Decree 152/2020 (social-insurance contribution rates), BHXH / BHYT / BHTN numbers, sabbatical eligibility per the Total Rewards Appendix — are first-class fields, not free-text afterthoughts. locks the FRs; binds them to verification methods. This page documents the planned implementation at <code>cyberos/services/hr/</code>.
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why HR exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -128,6 +129,90 @@
  <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">+ DOC for e-sign</div></div>
  <div class="fact-card"><div class="label">Used by</div><div class="value">REW · LEARN · ESOP · TIME · CHAT</div><div class="note">Member-id is the cross-module spine</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ HR is not a payroll bolt-on. It is the Member-id authority for the whole platform. Strip it out and every downstream module gets a slightly different roster, drift accumulates, compliance breaks. The Vietnamese labour-law discipline matters too — Decree 145 / 152 / 13 / PDPL are not "compliance things"; they're the operating constraints under which the entire team works.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--hr)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--hr-dark)">Role 1 · Member lifecycle</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">One state machine: hire → transfer → exit</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Pre-hire → active → on-leave → suspended → terminating → terminated. Each transition fires events that AUTH (subject provisioning), TIME (timesheet enrolment), REW (pay band lookup), ESOP (grant vesting state), KB (access scope), and 4 other modules consume. Contract type and Vietnamese statutory entitlements are first-class fields. CCCD photo lives in a separate KMS keyspace.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--hr)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--hr-dark)">Role 2 · Onboarding orchestrator</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">New Member day 1 → ramped at day 30</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ HR fires a multi-module onboarding playbook: AUTH creates the subject + provisions roles; LEARN enrols the new Member in role-specific training; KB grants access to the docs they need; PROJ creates the ramp-plan Issues (read these memories, shadow these engagements, complete this onboarding rubric); CHAT adds them to default workspaces. Day-by-day checklist visible to manager + new hire + CHRO.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--hr)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--hr-dark)">Role 3 · Performance signal aggregator</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Read-only consumer of cross-module signals</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ HR reads (never writes) performance signals from PROJ (calibration drift, blocker authoring rate), TIME (hour discipline), LEARN (course completion). Aggregates into Manager 1:1 prep + quarterly review prep + REW comp-recommendation inputs. HR never holds the comp number — REW does. HR holds the signals; REW holds the dollars; the two stay separated.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">HR as Member-id spine across modules</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ HR["👥 HR<br>Member directory · contracts · leave · lifecycle"]
+ AUTH["🔐 AUTH<br>Subject provisioning"]
+ TIME["⏱ TIME<br>timesheet enrolment"]
+ REW["💰 REW<br>pay band + comp number"]
+ ESOP["📈 ESOP<br>vesting state"]
+ LEARN["🎓 LEARN<br>role-specific training"]
+ KB["📚 KB<br>access scope"]
+ PROJ["📋 PROJ<br>calibration signals"]
+ CHAT["💬 CHAT<br>workspace add"]
+ BRAIN["🧠 BRAIN<br>lifecycle audit"]
+ HR --> AUTH
+ HR --> TIME
+ HR -- "pay band → ref only" --> REW
+ HR --> ESOP
+ HR --> LEARN
+ HR --> KB
+ HR --> CHAT
+ PROJ -- "calibration · blocker rate" --> HR
+ TIME -- "hour discipline" --> HR
+ LEARN -- "completion" --> HR
+ HR --> BRAIN
+ classDef hub fill:#fce7f3,stroke:#9d174d,stroke-width:3px,color:#500724
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class HR hub
+ class AUTH,TIME,REW,ESOP,LEARN,KB,PROJ,CHAT mod
+ class BRAIN brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Hire — pre-hire to active</td><td><strong>Manual</strong> HR action; <strong>auto-orchestrate</strong> downstream</td><td>Hiring is a relationship decision; orchestration is mechanical.</td></tr>
+ <tr><td>Annual-leave accrual</td><td><strong>Auto</strong> nightly</td><td>Decree 145 specifies accrual rules; deterministic.</td></tr>
+ <tr><td>Sick-leave deduction</td><td><strong>Manual</strong> Member entry; <strong>auto-validate</strong> caps</td><td>Member self-reports; cap validation runs at write time.</td></tr>
+ <tr><td>Maternity / paternity leave</td><td><strong>Manual</strong> with statutory basis tag</td><td>Decree 13/2023 + Labour Code 2019 mandate; HR confirms eligibility.</td></tr>
+ <tr><td>Contract renewal reminder</td><td><strong>Auto</strong> 90 days pre-expiry</td><td>Statutory; missing renewal triggers labour-law issues.</td></tr>
+ <tr><td>Onboarding playbook fire</td><td><strong>Auto</strong> on active transition</td><td>Multi-module fan-out; saga pattern.</td></tr>
+ <tr><td>Performance signal aggregation</td><td><strong>Auto</strong> nightly</td><td>Read-only; raw signals never used as sole basis for decision.</td></tr>
+ <tr><td>Comp recommendation</td><td><strong>Auto</strong> draft; <strong>manual</strong> REW review</td><td>HR proposes; REW disposes; comp number lives in REW.</td></tr>
+ <tr><td>Termination — terminate</td><td><strong>Manual</strong> CHRO + CEO sign-off; <strong>auto-orchestrate</strong> downstream</td><td>Termination is gravely consequential; auto-fan-out only after dual sign-off.</td></tr>
+ <tr><td>CCCD photo access</td><td><strong>Manual</strong> request + audit row per view</td><td>VN sensitive PII; every access is sev-1 audited; never bulk-export.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -942,6 +1027,11 @@ graph LR
  <tr><td><code>R-HR-008</code></td><td>Per-judge review scores leak to HR via summary field</td><td>Low</td><td>Medium</td><td>HR/Ops Lead</td><td>(FR pending) enforced at LEARN export gate; HR review_outcome schema rejects fields beyond {summary, recommendation}.</td></tr>
  <tr><td><code>R-HR-009</code></td><td>Sabbatical eligibility tick miscounted across leave gaps</td><td>Medium</td><td>Low</td><td>HR/Ops Lead</td><td>Continuous-service definition: gap &lt; 30 days counted; longer breaks reset the tick chain. Property test on the accrual.</td></tr>
  <tr><td><code>R-HR-010</code></td><td>10-year retention violated by S3 lifecycle policy bug</td><td>Low</td><td>High</td><td>CTO</td><td>S3 object-lock governance mode; lifecycle rule rejected by IAM if reduces retention; quarterly inventory audit.</td></tr>
+ <tr><td><code>R-HR-011</code></td><td>HR aggregated performance signal used as sole basis for comp decision</td><td>Medium</td><td>High</td><td>CHRO</td><td>HR signals are <em>inputs</em>; REW comp recommendation requires Member manager review + CHRO + CFO sign-off; never auto-applied.</td></tr>
+ <tr><td><code>R-HR-012</code></td><td>Cross-tenant Member-id collision (rare but catastrophic)</td><td>Low</td><td>Critical</td><td>CSO</td><td>Member-id is UUIDv7 + tenant prefix; CI property-test asserts no collision across 1M-tenant simulation; collision = release blocked.</td></tr>
+ <tr><td><code>R-HR-013</code></td><td>Onboarding playbook fires before AUTH provisioning ready</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Playbook saga waits for AUTH ready event; idempotent retry; alert if AUTH provisioning &gt; 60s.</td></tr>
+ <tr><td><code>R-HR-014</code></td><td>Vietnamese labour-law amendment (Decree 145 sub-decree) changes leave accrual mid-year</td><td>Low</td><td>High</td><td>CLO</td><td>Legal monitor on labour-law amendments; accrual rules version-pinned; mid-year change creates pro-rated transition period.</td></tr>
+ <tr><td><code>R-HR-015</code></td><td>Sabbatical eligibility tick miscounts due to maternity-leave gap classification</td><td>Medium</td><td>Low</td><td>CHRO</td><td>Property test asserts statutory leaves (maternity/paternity/medical) count toward tick; vacation gaps do not; quarterly accrual audit.</td></tr>
  </tbody>
  </table>
  </div>
@@ -966,6 +1056,11 @@ graph LR
  <tr><td><strong>DSAR fulfilment p95</strong></td><td>p95(<code>exported_at - requested_at</code>)</td><td>HR DB</td><td>≤ 14 days (well under 30d PDPL cap)</td></tr>
  <tr><td><strong>Onboarding orchestrator partial-failure rate</strong></td><td>(orchestrations with retry) / total</td><td>OBS</td><td>≤ 1%</td></tr>
  <tr><td><strong>Comp-field-in-HR incidents</strong></td><td>CI gate failures</td><td>CI</td><td>= 0</td></tr>
+ <tr><td><strong>Signal-only comp decision rate</strong></td><td>comp recs where REW/CHRO/CFO sign-off recorded / total recs</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Onboarding playbook saga p95</strong></td><td>histogram (member.start_date → all tasks fired)</td><td>OBS</td><td>≤ 5 min</td></tr>
+ <tr><td><strong>Labour-law version stamp coverage</strong></td><td>contracts/leave records with cap_version stamped / total</td><td>HR DB</td><td>= 1.0</td></tr>
+ <tr><td><strong>HR-to-REW handoff p95</strong></td><td>histogram (member.active → REW comp record created)</td><td>OBS</td><td>≤ 1 min</td></tr>
+ <tr><td><strong>Statutory-leave classification accuracy</strong></td><td>maternity/paternity/medical correctly counted toward sabbatical / total</td><td>quarterly accrual audit</td><td>≥ 0.99</td></tr>
  </tbody>
  </table>
  </div>
@@ -1157,6 +1252,18 @@ graph TD
  <li><strong>Decree 145/2020/NĐ-CP</strong> — Implementing the Labour Code; Art. 60 overtime cap.</li>
  <li><strong>Decree 152/2020/NĐ-CP</strong> — Social-insurance contribution rates and sick-leave allowances.</li>
  <li><strong>Decree 13/2023/NĐ-CP</strong> — Personal data protection regulations; Art. 17 processing log.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + Member-id spine Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
+ <a href="rew.html" class="text-blue-700 underline">rew.html</a> ·
+ <a href="esop.html" class="text-blue-700 underline">esop.html</a> ·
+ <a href="learn.html" class="text-blue-700 underline">learn.html</a> ·
+ <a href="time.html" class="text-blue-700 underline">time.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a></li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — HR lifecycle events become BRAIN audit rows; CCCD photo never enters BRAIN.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — HR at M+5 (P1, alongside PROJ).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>Decree 53/2022/NĐ-CP</strong> — Cybersecurity Law implementation; data localisation.</li>
  <li><strong>Law 91/2025/QH15 (PDPL)</strong> — Personal Data Protection Law; Art. 7 sensitive data, Art. 14 DSAR.</li>
  <li><strong>Decree 38/2020/NĐ-CP</strong> — Foreign labour management.</li>

@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>CRM — CyberOS</title>
- <meta name="description" content="CRM — Client management. Account / Contact / Deal pipeline with Vietnamese-market specifics: MST validation, VietQR collection, hóa đơn generation. AI lead scoring, next-best-action, pipeline forecasting.">
+ <title>CRM — Sales-pipeline spine · Deal-to-engagement bridge · Vietnamese-market-first · CyberOS</title>
+ <meta name="description" content="CRM — the sales-pipeline spine upstream of PROJ in the orchestration spine. Three strategic roles: (1) sales pipeline (Account · Contact · Deal CRUD with VN specifics: MST validation, hóa đơn, VietQR), (2) deal-to-engagement bridge (when deal.stage=won, automatically creates a PROJ Engagement via the join contract), (3) next-action engine (CUO suggests next moves; AI lead scoring; win/loss analysis). Vietnamese-aware salutation, VND-first.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -52,10 +52,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CRO seat (interim CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Vietnamese-market-first client management — Account / Contact / Deal with MST validation, VietQR collection, hóa đơn generation, and Vietnamese-aware salutation logic baked into every contact field.
+ <strong>The sales-pipeline spine.</strong> Upstream of PROJ. When deal.stage = won, CRM fires the join contract (PROJ §2.5) and an Engagement is born with rate card + billable rules pre-wired.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CRM is the customer-facing memory and pipeline. Three primitives — <code>Account</code>, <code>Contact</code>, <code>Deal</code> — with customisable pipelines, configurable stages, and per-deal probability + expected close date for forecasting. Activities (calls, emails, meetings, notes) feed from CHAT, EMAIL, and Calendar automatically. The Vietnamese-specific bits matter: account types map to legal entity kinds (Sole proprietor / LLC / JSC / FDI), <code>MST</code> tax codes are validated through the <code>vn-mst-validate</code> skill against the GDT registry, the <code>vn-bank-transfer</code> skill generates VietQR codes for invoice collection, and <code>vn-vat-invoice</code> issues the hóa đơn on deal close. AI features: lead scoring, next-best-action suggestions, win/loss analysis after a deal closes..
+ CRM plays three strategic roles. <strong>Role 1 — sales pipeline</strong>: Account / Contact / Deal with customisable stages, probability × expected-close forecasting, activity feed from CHAT/EMAIL/Calendar. Vietnamese-aware throughout: account-type mapping to legal entity (Sole proprietor / LLC / JSC / FDI), MST validation via <code>vn-mst-validate</code> skill against GDT registry, VietQR for invoice collection, hóa đơn (VAT invoice) generation. <strong>Role 2 — deal-to-engagement bridge</strong>: when deal.stage transitions to "won", CRM emits the canonical join event that PROJ §2.5 consumes — AM clicks "Convert to Engagement", a PROJ Engagement is created with rate card pre-populated from the deal's pricing, and the TIME → INV chain is wired automatically. <strong>Role 3 — next-action engine</strong>: CUO's <code>crm.next-action@1</code> skill consults BRAIN context (prior calls, similar deals) and ranks the next moves; AI lead scoring at signup; win/loss analysis after close.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why CRM exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -119,21 +120,98 @@
  CRM is CyberOS's <strong>customer pipeline, account intelligence, and Vietnamese-market commercial layer</strong>. The data model is Salesforce-flavoured (Account → Contact → Deal) but the integrations bake in Vietnamese specifics: <code>vn-mst-validate</code> verifies a tax code against the General Department of Taxation registry; <code>vn-bank-transfer</code> generates a Napas247 / VietQR code so a deal can request collection with one tap; <code>vn-vat-invoice</code> emits the hóa đơn directly on deal close. Pipelines are workspace-configurable (sales / partner / inbound / outbound shapes) with custom transition rules. Activities — calls, emails, meetings, notes — appear automatically: EMAIL auto-logs inbound/outbound for tracked domains, CHAT logs meeting notes, Calendar logs meeting attendance. CUO/CRO-skill produces lead scoring, next-best-action, and confidence-banded forecasts..
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">Sales-pipeline spine</div><div class="note">upstream of PROJ Engagement</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase · M+4</div></div>
  <div class="fact-card"><div class="label">Primitives</div><div class="value">3</div><div class="note">Account · Contact · Deal</div></div>
- <div class="fact-card"><div class="label">Pipeline</div><div class="value">Custom</div><div class="note">stages + transition rules</div></div>
+ <div class="fact-card"><div class="label">Pipeline shapes</div><div class="value">4 default</div><div class="note">sales · partner · inbound · outbound</div></div>
+ <div class="fact-card"><div class="label">Deal → Engagement bridge</div><div class="value">One-click</div><div class="note">PROJ §2.5 join contract</div></div>
  <div class="fact-card"><div class="label">VN skills</div><div class="value">3 native</div><div class="note">MST · VietQR · hóa đơn</div></div>
- <div class="fact-card"><div class="label">Activity feeds</div><div class="value">CHAT · EMAIL · Cal</div><div class="note">auto-logged</div></div>
- <div class="fact-card"><div class="label">AI features</div><div class="value">3</div><div class="note">score · NBA · forecast</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · EMAIL</div><div class="note">+ AI · MCP · INV · Skills</div></div>
+ <div class="fact-card"><div class="label">Activity feeds</div><div class="value">CHAT · EMAIL · Cal</div><div class="note">auto-logged via OBS trace_id</div></div>
+ <div class="fact-card"><div class="label">AI features</div><div class="value">4</div><div class="note">score · NBA · forecast · win-loss</div></div>
+ <div class="fact-card"><div class="label">Vertical-pack ready</div><div class="value">vn → sg → id</div><div class="note">per-jurisdiction skill bundles</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · CUO</div><div class="note">+ AI · MCP · EMAIL · Skills</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~8,500</div><div class="note">Rust + TS pipeline UI</div></div>
  </div>
  </div>
 </section>
 
 <!-- ============================================================ -->
-<!-- WHY -->
+<!-- §0 — THE BIGGER PICTURE -->
 <!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ CRM is where revenue starts. It is also where the orchestration spine begins: a Deal moves through stages, lands on "won", and the join contract fires — a PROJ Engagement is created with the rate card pre-wired. The naive read is "another Salesforce clone". The real read: CyberOS-native CRM is the upstream half of the same spine PROJ is the downstream half of, and the Vietnamese-specific skills (MST, VietQR, hóa đơn) are first-class — not plugin afterthoughts.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--crm)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--crm-dark)">Role 1 · Sales pipeline (VN-first)</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Account · Contact · Deal with VN integrations native</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Three primitives + customisable pipelines. Vietnamese specifics are protocol features, not plugins: account type maps to VN legal entities (sole proprietor / LLC / JSC / FDI), MST validated through <code>cyberos.vn-mst-validate</code> skill, VietQR for collection, hóa đơn on deal close. Salutation logic (Anh/Chị/Em) baked into contact fields.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--crm)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--crm-dark)">Role 2 · Deal → Engagement bridge</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">The orchestration spine starts here</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ When AM clicks "Convert to Engagement" on a won deal, the PROJ §2.5 join contract fires: rate card pre-populated from deal pricing, billable rules wired, the Engagement gets the deal's contract URL + client account_id. TIME entries flow back. INV invoices from Engagement. The full PROJ-TIME-INV-REW chain begins at this click.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--crm)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--crm-dark)">Role 3 · Next-action engine</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">CUO ranks moves on every open deal</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ The CUO <code>crm.next-action@1</code> skill consults BRAIN context (prior calls with this account, similar deal trajectories, win-loss memories) and ranks next moves — call, send proposal, schedule demo, request reference. AI lead scoring at signup; win/loss analysis after close becomes a BRAIN memory for future deals to cite. The deal isn't just a record; it's a node in the decision graph.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">CRM in the orchestration spine</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ LEADS["Inbound leads<br>EMAIL · web form · referral"]
+ CRM["🤝 CRM<br>Account · Contact · Deal · Activity"]
+ CUO["🎯 CUO<br>crm.next-action@1<br>crm.score-lead@1"]
+ PROJ["📋 PROJ Engagement"]
+ INV["🧾 INV invoice"]
+ BRAIN["🧠 BRAIN<br>deal history · win/loss memories"]
+ EMAIL["✉ EMAIL"]
+ LEADS --> CRM
+ EMAIL --> CRM
+ CRM --> CUO
+ CUO --> CRM
+ CRM -- "deal.won → engagement.create" --> PROJ
+ PROJ --> INV
+ CRM --> BRAIN
+ BRAIN --> CUO
+ classDef hub fill:#ffe4e6,stroke:#9f1239,stroke-width:3px,color:#881337
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class CRM hub
+ class CUO,PROJ,INV,EMAIL,LEADS mod
+ class BRAIN brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Activity auto-logging</td><td><strong>Auto</strong> from EMAIL/CHAT/Cal by domain/contact match</td><td>Stops the "log it in the CRM" tax that AMs hate; auto-log = no manual entry.</td></tr>
+ <tr><td>Lead scoring</td><td><strong>Auto</strong> on Contact create; refreshed nightly</td><td>Score is a hint, not an action — AM decides outreach priority.</td></tr>
+ <tr><td>Stage transition</td><td><strong>Manual</strong> with workflow validator</td><td>Sales is a relationship, not an automaton; AM owns when a deal progresses.</td></tr>
+ <tr><td>MST validation</td><td><strong>Auto</strong> on every account write that includes an MST</td><td>VN tax-code authority is the GDT registry; we just call them.</td></tr>
+ <tr><td>VietQR generation</td><td><strong>Auto-available</strong>, <strong>manual-trigger</strong> per deal</td><td>One click on the deal page; cached for 24 h.</td></tr>
+ <tr><td>Hóa đơn (VAT invoice) emission</td><td><strong>Auto</strong> on deal.stage=won via INV; <strong>manual confirm</strong> required</td><td>Tax document — AM must confirm amount + recipient before emission.</td></tr>
+ <tr><td>Deal → Engagement conversion</td><td><strong>Manual</strong> AM click</td><td>Not every won deal becomes a PROJ Engagement (some are pure resale); AM intent required.</td></tr>
+ <tr><td>Win/loss analysis</td><td><strong>Auto</strong> draft via CUO; <strong>AM accept</strong></td><td>Generates a BRAIN memory citable by future deals; AM owns the narrative.</td></tr>
+ <tr><td>Inbound web-form deal create</td><td><strong>Auto</strong> with lead-scoring pre-applied</td><td>Reduces friction; AM triages from a pre-scored queue.</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why CRM exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
@@ -946,6 +1024,11 @@ graph LR
  <tr><td><code>R-CRM-008</code></td><td>Merge proposes false-positive (same email shared family)</td><td>Medium</td><td>Low</td><td>CRO</td><td>Merge requires explicit Member confirm; confidence threshold ≥ 0.85.</td></tr>
  <tr><td><code>R-CRM-009</code></td><td>BRAIN ingest of closed deals leaks competitive data</td><td>Low</td><td>Medium</td><td>CDO</td><td>Closed deals respect deal ACL on BRAIN side; private deals never ingested.</td></tr>
  <tr><td><code>R-CRM-010</code></td><td>Open-pipeline data ingested into BRAIN by accident ((FR pending) violation)</td><td>Low</td><td>High</td><td>CDO</td><td>BRAIN ingest path gated by deal.status &amp; ('won','lost'); CI test asserts.</td></tr>
+ <tr><td><code>R-CRM-011</code></td><td>Deal-to-Engagement bridge fails partially — Engagement created without rate card</td><td>Medium</td><td>High</td><td>CTO</td><td>Bridge is transactional; either full Engagement + rate card OR rollback; failed bridge surfaces as actionable error to AM.</td></tr>
+ <tr><td><code>R-CRM-012</code></td><td>Won deal converted to wrong Engagement billing mode (T&amp;M vs fixed-fee)</td><td>Medium</td><td>Medium</td><td>COO</td><td>AM must explicitly choose billing mode in conversion dialog; default is deal's pricing-page choice; locked once Engagement created.</td></tr>
+ <tr><td><code>R-CRM-013</code></td><td>CUO next-action skill suggests inappropriate move (e.g. propose to lost-cause deal)</td><td>Medium</td><td>Low</td><td>CRO</td><td>Confidence threshold ≥ 0.60; AM sees suggestion ranked, never auto-actioned; quarterly review of suggestion acceptance correlation with deal outcomes.</td></tr>
+ <tr><td><code>R-CRM-014</code></td><td>Vertical-pack drift (cyberskill-vn pack updates → MST validation regression)</td><td>Medium</td><td>High</td><td>CTO</td><td>Pack version pinning per tenant; integration tests against GDT staging endpoint; quarterly drill on real MST samples.</td></tr>
+ <tr><td><code>R-CRM-015</code></td><td>Account-merge causes loss of historical activity for one of the merged accounts</td><td>Low</td><td>Medium</td><td>CRO</td><td>Merge preserves both audit trails (no deletion); merged account points to "survivor" via redirect record; unmerge is supported up to 90 days post-merge.</td></tr>
  </tbody>
  </table>
  </div>
@@ -971,6 +1054,12 @@ graph LR
  <tr><td><strong>Hóa đơn emission success</strong></td><td>issued / close_won</td><td>BRAIN audit</td><td>100%</td></tr>
  <tr><td><strong>MST validation rate</strong></td><td>validated / vn_accounts</td><td>BRAIN audit</td><td>≥ 95%</td></tr>
  <tr><td><strong>Cross-workspace ACL violations</strong></td><td>count</td><td>BRAIN audit</td><td>= 0</td></tr>
+ <tr><td><strong>Deal-to-Engagement conversion rate</strong></td><td>engagements_created / deals_won</td><td>PROJ-CRM cross-check</td><td>tracked; expect 0.70–0.95 (some won deals are pure resale)</td></tr>
+ <tr><td><strong>Conversion bridge p95</strong></td><td>histogram (click → Engagement created)</td><td>OBS</td><td>≤ 3 s</td></tr>
+ <tr><td><strong>Win/loss memory citation rate</strong></td><td>new deals citing past win/loss memories / total open deals</td><td>BRAIN_LINK table</td><td>tracked; expect ≥ 0.30 of high-priority deals</td></tr>
+ <tr><td><strong>Next-action acceptance per deal</strong></td><td>actioned suggestions / shown suggestions</td><td>SPA telemetry</td><td>≥ 0.35</td></tr>
+ <tr><td><strong>Stage-stuck deal alert</strong></td><td>deals in same stage &gt; 30 days</td><td>nightly batch</td><td>flagged on AM dashboard; SLA-style nudge</td></tr>
+ <tr><td><strong>Forecast accuracy</strong></td><td>|actual_close − forecast_close| / forecast_close</td><td>retrospective</td><td>≤ 0.20 quarterly</td></tr>
  </tbody>
  </table>
  </div>
@@ -1130,18 +1219,26 @@ top 5 deals by probability×value:
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — CRM product FRs.</li>
- <li> — CRM SRS-tier FRs.</li>
- <li> — NFRs.</li>
- <li> — Formal (FR pending) through (FR pending).</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + orchestration spine Mermaid + 9-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
+ <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
+ <a href="email.html" class="text-blue-700 underline">email.html</a> ·
+ <a href="inv.html" class="text-blue-700 underline">inv.html</a> ·
+ <a href="ten.html" class="text-blue-700 underline">ten.html</a></li>
+ <li><strong>Deal-to-Engagement join contract:</strong> <a href="proj.html#orchestration-spine" class="text-blue-700 underline">PROJ §2.5</a> — 9-row canonical contract table.</li>
+ <li><strong>Vertical-pack pattern:</strong> <a href="skill.html" class="text-blue-700 underline">SKILL §3.6</a> — cyberskill-vn ships first; sg/id/th/eu/us follow.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — CRM closed deals become BRAIN win/loss memories.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — CRM at M+4 (P1, after PROJ).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>Vietnam Decree 123/2020/NĐ-CP</strong> — Electronic invoice issuance and storage.</li>
  <li><strong>Vietnam Circular 78/2021/TT-BTC</strong> — Hóa đơn format.</li>
- <li><strong>Vietnam PDPL (Law 91/2025/QH15)</strong>.</li>
- <li><strong>Vietnam Decree 13/2023</strong> — Personal data.</li>
+ <li><strong>Vietnam PDPL (Law 91/2025/QH15)</strong> — Art. 7 erasure, Art. 14 DSAR, Art. 20 security.</li>
+ <li><strong>Vietnam Decree 13/2023</strong> — Personal data processing.</li>
  <li><strong>Napas247 / VietQR specification</strong> — bank transfer QR.</li>
- <li><strong>vn-mst-validate skill</strong> — CyberOS skill for MST validation.</li>
- <li><strong>vn-bank-transfer skill</strong> — VietQR generator.</li>
- <li><strong>vn-vat-invoice skill</strong> — hóa đơn generator.</li>
+ <li><strong>vn-mst-validate / vn-bank-transfer / vn-vat-invoice skills</strong> — CyberOS skill bundle (cyberskill-vn pack).</li>
  <li><strong>libphonenumber</strong> — E.164 normalisation.</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#crm" class="text-blue-700 underline">infrastructure.html#crm</a>.</li>
  </ul>

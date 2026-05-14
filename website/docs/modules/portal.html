@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>PORTAL — CyberOS</title>
- <meta name="description" content="PORTAL — Client portal. Branded customer-facing surface with white-label theming, custom domain, SSO from client IdP, scoped read-only views of PROJ + INV + DOC + CHAT. Multi-tenant within multi-tenant.">
+ <title>PORTAL — Client-facing surface · Scoped read-only views · External IdP · CyberOS</title>
+ <meta name="description" content="PORTAL — three strategic roles: (1) scoped read-only client surface (PROJ + INV + DOC + CHAT views filtered by sync_class=client-visible + Engagement membership), (2) per-tenant brand pack (white-label theme + custom CNAME), (3) external IdP integration (client logs in via their own SAML/OIDC; never needs CyberOS password). Multi-tenant within multi-tenant; branded CUO with project history.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why PORTAL exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -128,6 +129,91 @@
  <div class="fact-card"><div class="label">PWA</div><div class="value">install supported</div><div class="note">mobile-first</div></div>
  <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · 4 modules</div><div class="note">+ CDN · TLS · S3</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ PORTAL is the second front-door. The agency uses CyberOS; their clients use PORTAL. The architectural challenge is multi-tenant-within-multi-tenant: PORTAL must isolate each client's view from sibling clients, share data with the agency's CyberOS surface where appropriate, and never accidentally leak. Sync_class=client-visible is the per-row filter that gates every read.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--portal)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--portal-dark)">Role 1 · Scoped read-only views</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">PROJ + INV + DOC + CHAT filtered per Engagement membership</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Client sees: PROJ Projects where their Engagement(s) is the parent + sync_class=client-visible; INV invoices for their Engagement; DOC contracts they're party to; CHAT threads they're a member of. RLS at Postgres + sync_class filter at retrieval enforces isolation. The branded CUO grounds answers in only the scope above (KB ACL-aware retrieval pattern).
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--portal)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--portal-dark)">Role 2 · Per-tenant brand pack</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">White-label theme + custom CNAME</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Each agency tenant ships a brand pack: logo, primary/accent colours, font family, custom CNAME, email template overrides. The PORTAL frontend reads the brand pack at session init and themes the entire UI. Clients see the agency's brand, not "Powered by CyberOS" (unless agency opts in). Brand pack versioned per tenant; CDN cache busts on update.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--portal)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--portal-dark)">Role 3 · External IdP integration</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Client logs in via own SAML/OIDC; JIT provisioning</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Clients use their own IdP (Okta, Azure AD, Google Workspace, Auth0). PORTAL accepts SAML 2.0 + OIDC; JIT-provisions ClientMember on first login with attribute-mapped role; never stores password. Per-agency tenant config maps IdP claims to PORTAL roles. Removing a user at the client's IdP transitively removes their PORTAL access (no orphan accounts).
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">PORTAL multi-tenant-within-multi-tenant data flow</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ CLIENT["👤 ClientMember<br>(at customer's IdP)"]
+ IDP["🔐 Customer SAML/OIDC IdP"]
+ PORTAL["🌐 PORTAL<br>scoped view · brand pack · CUO"]
+ AGENCY["🏢 Agency CyberOS tenant"]
+ PROJ["📋 PROJ (filtered)"]
+ INV["🧾 INV (filtered)"]
+ DOC["✍ DOC (filtered)"]
+ CHAT["💬 CHAT (filtered)"]
+ BRAIN["🧠 BRAIN<br>sync_class=client-visible only"]
+ CLIENT --> IDP
+ IDP --> PORTAL
+ PORTAL --> PROJ
+ PORTAL --> INV
+ PORTAL --> DOC
+ PORTAL --> CHAT
+ PROJ --> AGENCY
+ INV --> AGENCY
+ DOC --> AGENCY
+ CHAT --> AGENCY
+ PORTAL -. "client-visible only" .-> BRAIN
+ classDef hub fill:#ffe4e6,stroke:#9f1239,stroke-width:3px,color:#500724
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef ext fill:#fee2e2,stroke:#b91c1c
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class PORTAL hub
+ class AGENCY,PROJ,INV,DOC,CHAT mod
+ class CLIENT,IDP ext
+ class BRAIN brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Client login (SSO)</td><td><strong>Auto</strong> via external IdP</td><td>Customer manages own identity lifecycle.</td></tr>
+ <tr><td>JIT user provisioning</td><td><strong>Auto</strong> at first login</td><td>Attribute-mapped role; new ClientMember created.</td></tr>
+ <tr><td>Scoped view query</td><td><strong>Auto</strong> with RLS + sync_class filter</td><td>Protocol-level guarantee of isolation.</td></tr>
+ <tr><td>Brand-pack apply</td><td><strong>Auto</strong> at session init</td><td>Cached CDN; pack version stamped.</td></tr>
+ <tr><td>Client AI assistant query</td><td><strong>Auto</strong> CUO grounded in scoped data</td><td>Same KB/CUO infrastructure; ACL-aware retrieval.</td></tr>
+ <tr><td>Pay invoice (PSP redirect)</td><td><strong>Manual</strong> client click → external PSP</td><td>Payment flow exits PORTAL to Stripe/VietQR.</td></tr>
+ <tr><td>File new project request</td><td><strong>Manual</strong> client form → creates CHAT thread on agency side</td><td>Request becomes work for the agency.</td></tr>
+ <tr><td>DSAR export request</td><td><strong>Auto</strong> bundle on client request</td><td>Per-client subject; chained audit; PDPL/GDPR compliant.</td></tr>
+ <tr><td>Brand-pack update</td><td><strong>Manual</strong> agency admin action</td><td>Brand changes intentional; CDN cache bust auto-triggered.</td></tr>
+ <tr><td>Client user removal</td><td><strong>Auto</strong> on IdP removal (deprovision flow)</td><td>SCIM 2.0 sync if customer supports; otherwise next-login deny.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -916,6 +1002,11 @@ graph LR
  <tr><td><code>R-PORTAL-008</code></td><td>DSAR / erasure abuse — automated bot triggers mass-erasure</td><td>Low</td><td>Medium</td><td>DPO</td><td>Email-confirmation step; 30-day grace; tenant CCO can pause if abuse detected.</td></tr>
  <tr><td><code>R-PORTAL-009</code></td><td>ACM cert expiry / renewal failure</td><td>Low</td><td>Medium</td><td>CTO</td><td>Auto-renewal monitored; OBS alert 14d before expiry; manual override path.</td></tr>
  <tr><td><code>R-PORTAL-010</code></td><td>Customer-MCP external-agent over-scope</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Per-tool consent gate; scope explicit per tool; revocable; audit trail.</td></tr>
+ <tr><td><code>R-PORTAL-011</code></td><td><strong>Sync_class filter misconfiguration → sibling-client data leaks</strong></td><td>Low</td><td>Critical</td><td>CSO</td><td>Sync_class=client-visible enforced at retrieval pre-LLM; CI property test verifies cross-Engagement isolation; quarterly red-team.</td></tr>
+ <tr><td><code>R-PORTAL-012</code></td><td>JIT-provisioned ClientMember inherits wrong role from IdP claim mapping</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Claim-mapping config audited by CSO per tenant; default role = lowest-privilege if mapping ambiguous; quarterly review.</td></tr>
+ <tr><td><code>R-PORTAL-013</code></td><td>Brand-pack accept user-uploaded SVG → XSS</td><td>Medium</td><td>High</td><td>CSO</td><td>SVG sanitiser strips scripts + event handlers; logo upload to dedicated S3 bucket with CDN no-exec policy.</td></tr>
+ <tr><td><code>R-PORTAL-014</code></td><td>Client AI assistant cites memory from a different client's project</td><td>Low</td><td>Critical</td><td>CSO</td><td>CUO scope-narrowed at AI Gateway by JWT scope_grants; cross-Engagement retrieval = 403; integration test asserts.</td></tr>
+ <tr><td><code>R-PORTAL-015</code></td><td>SCIM deprovision delay leaves removed-customer-user logged-in</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Session invalidation on SCIM removal; max session lifetime 8h regardless; OBS alert if mismatch detected.</td></tr>
  </tbody>
  </table>
  </div>
@@ -941,6 +1032,11 @@ graph LR
  <tr><td><strong>Isolation probes failed</strong></td><td>cross-tenant CI gate</td><td>CI</td><td>= 0</td></tr>
  <tr><td><strong>DSAR fulfilment p95</strong></td><td>request → bundle delivery</td><td>OBS</td><td>≤ 30 d (PDPL/GDPR)</td></tr>
  <tr><td><strong>Custom-CNAME adoption</strong></td><td><code>client_account.custom_cname IS NOT NULL count</code></td><td>client_account</td><td>tracked / tenant</td></tr>
+ <tr><td><strong>Sync_class filter pass rate</strong></td><td>queries with sync_class filter applied / total queries</td><td>retrieval audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>JIT-provisioned ClientMember role accuracy</strong></td><td>JIT-mapped roles correctly matching intent / total provisioned</td><td>quarterly CSO audit</td><td>≥ 0.99</td></tr>
+ <tr><td><strong>SVG-upload XSS attempts blocked</strong></td><td>sanitiser rejections / total uploads</td><td>OBS</td><td>tracked; spike = active probing</td></tr>
+ <tr><td><strong>Cross-Engagement retrieval rejection rate</strong></td><td>403 cross-Engagement responses / total CUO queries</td><td>AI Gateway audit</td><td>tracked; sustained &gt; 0 = misconfig</td></tr>
+ <tr><td><strong>SCIM deprovision session-invalidation p95</strong></td><td>histogram (SCIM remove → session killed)</td><td>OBS</td><td>≤ 30 s</td></tr>
  </tbody>
  </table>
  </div>
@@ -1114,6 +1210,10 @@ SR-009447 2026-05-13 billing_inquiry "Q1 invoice variance" open</code></pre>
  <li><strong>DOC module</strong> — <a href="doc.html" class="text-blue-700 underline">doc.html</a> · scoped signing surface.</li>
  <li><strong>CHAT module</strong> — <a href="chat.html" class="text-blue-700 underline">chat.html</a> · request routing target.</li>
  <li><strong>TEN module</strong> — <a href="ten.html" class="text-blue-700 underline">ten.html</a> · the SaaS-tenant layer above PORTAL.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + multi-tenant-within-multi-tenant Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — PORTAL retrievals strictly filtered to sync_class=client-visible.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — PORTAL at M+10 (P2+).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  </ul>
  </div>
 </section>

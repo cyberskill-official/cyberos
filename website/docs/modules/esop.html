@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>ESOP — CyberOS</title>
- <meta name="description" content="ESOP — Phantom Stock plan. Synthetic equity (avoids VN securities regulation). Annual SP valuation with CFO + Board sign-off. Put options from Year 3. Good Leaver / Bad Leaver branches. M&A acceleration. Singapore HoldCo flip path.">
+ <title>ESOP — Phantom Stock vesting · Good/Bad Leaver branch · Singapore HoldCo flip · CyberOS</title>
+ <meta name="description" content="ESOP — three strategic roles: (1) Phantom Stock grant lifecycle (issue/vest/cliff/cancel; 4-year vest with 12-month cliff), (2) Good Leaver vs Bad Leaver branch on HR offboarding (vested SP retained at full or appendix discount), (3) liquidity-event simulator (annual Board-signed valuation; put options from Year 3; Singapore HoldCo flip at ARR ≥ $1.5M). Append-only valuation versioning."
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why ESOP exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -139,6 +140,85 @@
  <div class="fact-card"><div class="label">BRAIN ingestion</div><div class="value">= 0</div><div class="note">DEC-036 · ESOP value-private</div></div>
  <div class="fact-card"><div class="label">HoldCo flip</div><div class="value">@ ARR $1.5M</div><div class="note">VN phantom → SG real share</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ ESOP is the retention moat. The "Phantom Stock" design routes around Vietnamese securities regulation while preserving the economic outcome of real ESOP. ESOP is heavily entangled with REW (BP fund + comp), HR (Good vs Bad Leaver branch), and AUTH (cap-table-as-subject). Like REW, ESOP value is structurally excluded from BRAIN per DEC-036.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--esop)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--esop-dark)">Role 1 · Grant lifecycle</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Issue · vest · cliff · cancel · put</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ SP (Stock Phantom) grant types: founder · early · standard · ad-hoc. Default vesting: 4 years with 12-month cliff + monthly thereafter. Put options open from Year 3, capped per Member per year. M&amp;A acceleration clauses standard. Cancellation only by Board sign-off; never automatic.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--esop)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--esop-dark)">Role 2 · Good Leaver vs Bad Leaver</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Branch chosen at HR offboarding</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ HR offboarding initiates the branch: Good Leaver (resign with notice, mutual exit, retirement) → vested SP retained at full valuation, put rights preserved. Bad Leaver (fraud, gross misconduct, breach of post-employment covenant) → vested SP retained at appendix discount (default 50%), put rights frozen. CFO + CEO co-sign required; never auto-classified.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--esop)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--esop-dark)">Role 3 · Liquidity event simulator</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Annual valuation · put exec · HoldCo flip</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Annual SP unit value: CFO computes base valuation + Board signs Industry Multiplier → versioned valuation row. Put option exec: Member sells N% of vested SP back to company at most recent valuation. HoldCo flip trigger: when ARR ≥ $1.5M, CEO can designate Singapore HoldCo flip — phantom shares convert to real SG shares; pre-tax conversion documented at appendix.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">ESOP in the cap-table spine</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart TB
+ HR["👥 HR<br>Member lifecycle"]
+ ESOP["📊 ESOP<br>SP grants · vesting · valuation"]
+ REW["💰 REW<br>BP fund context"]
+ BOARD["🏛 Board<br>annual valuation sign-off"]
+ CFO["📈 CFO<br>base valuation input"]
+ LEAVER["🚪 Good/Bad Leaver branch<br>CFO + CEO co-sign"]
+ HOLDCO["🇸🇬 Singapore HoldCo<br>flip at ARR ≥ $1.5M"]
+ BRAIN["🚫 BRAIN<br>structurally excluded · DEC-036"]
+ HR -- "active → vest accrual" --> ESOP
+ HR -- "terminating" --> LEAVER
+ LEAVER --> ESOP
+ CFO --> ESOP
+ BOARD --> ESOP
+ REW <-- "BP fund retention context" --> ESOP
+ ESOP --> HOLDCO
+ ESOP -. "structural exclusion" .x BRAIN
+ classDef hub fill:#bfdbfe,stroke:#1e3a8a,stroke-width:3px,color:#172554
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef forbidden fill:#fee2e2,stroke:#b91c1c,stroke-width:3px,color:#7f1d1d
+ class ESOP hub
+ class HR,REW,BOARD,CFO,LEAVER,HOLDCO mod
+ class BRAIN forbidden
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>SP grant issuance</td><td><strong>Manual</strong> CEO + CFO + Board sign-off</td><td>Cap-table change; tri-sign required.</td></tr>
+ <tr><td>Monthly vesting accrual</td><td><strong>Auto</strong> deterministic from vesting schedule</td><td>Cliff + monthly formula; CI replay.</td></tr>
+ <tr><td>Annual valuation</td><td><strong>Manual</strong> CFO base + Board multiplier sign-off</td><td>Major financial event; versioned; immutable after publish.</td></tr>
+ <tr><td>Put option exercise</td><td><strong>Manual</strong> Member request → CFO approve → wire</td><td>Money movement; CFO verifies eligibility (Year 3+, cap not exceeded).</td></tr>
+ <tr><td>Good vs Bad Leaver classification</td><td><strong>Manual</strong> CFO + CEO co-sign</td><td>Consequential; never algorithmic.</td></tr>
+ <tr><td>Cancellation (forfeiture)</td><td><strong>Manual</strong> Board sign-off</td><td>Cancelling unvested portion happens on Bad Leaver or termination.</td></tr>
+ <tr><td>M&amp;A acceleration trigger</td><td><strong>Manual</strong> Board declaration</td><td>Acceleration clauses fire on Board-declared change of control.</td></tr>
+ <tr><td>HoldCo flip designation</td><td><strong>Manual</strong> CEO + Board sign-off</td><td>Singapore conversion is a one-way operation; deliberate.</td></tr>
+ <tr><td>BRAIN ingestion of ESOP value</td><td><strong>BLOCKED</strong></td><td>DEC-036; CI gate verifies absence.</td></tr>
+ <tr><td>Member ESOP dashboard view</td><td><strong>Auto</strong> personal view only</td><td>Member sees own grants; cross-Member view requires CFO sign-off audit row.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -938,6 +1018,11 @@ graph LR
  <tr><td><code>R-ESOP-008</code></td><td>HoldCo flip fails — Singapore filing rejected</td><td>Medium</td><td>High</td><td>CEO + CLO</td><td>DOC integration with ACRA tested in P4 sandbox; flip executed Member-by-Member with rollback path.</td></tr>
  <tr><td><code>R-ESOP-009</code></td><td>Pool over-allocation (issued_sp &gt; total_pool_sp)</td><td>Low</td><td>High</td><td>CFO</td><td>DB CHECK constraint on pool_balance; INSERT grant validates pool.available_sp ≥ requested.</td></tr>
  <tr><td><code>R-ESOP-010</code></td><td>Vietnamese securities-law re-classification (phantom deemed real)</td><td>Low</td><td>High</td><td>CLO</td><td>Annual legal review; CLO sign-off on Phantom Stock structure; ready-to-flip path if regulatory landscape changes.</td></tr>
+ <tr><td><code>R-ESOP-011</code></td><td>Good/Bad Leaver branch chosen by AI without sign-off</td><td>Low</td><td>Critical</td><td>CSO</td><td>Branch classification has zero auto-route; CFO + CEO co-sign always required; CI gate verifies no algorithmic path to branch decision.</td></tr>
+ <tr><td><code>R-ESOP-012</code></td><td>Put-option request blocked due to ARR-trigger config drift</td><td>Medium</td><td>Medium</td><td>CFO</td><td>ARR threshold versioned in tenant config; mismatch with valuation parameters flagged at quarterly review; manual override with audit row.</td></tr>
+ <tr><td><code>R-ESOP-013</code></td><td>Vesting accrual stops on maternity/paternity leave (HR statutory leave drift)</td><td>Medium</td><td>Medium</td><td>CLO</td><td>Statutory leaves (per HR §0) accrue vesting; sabbatical / unpaid leave pauses; classification version-pinned with HR; quarterly accrual audit.</td></tr>
+ <tr><td><code>R-ESOP-014</code></td><td>M&amp;A acceleration trigger fires on Board declaration without Member notification</td><td>Low</td><td>High</td><td>CEO</td><td>Board declaration of change-of-control triggers acceleration + per-Member notice within 5 business days; CI test asserts notification fan-out.</td></tr>
+ <tr><td><code>R-ESOP-015</code></td><td>HoldCo flip leaves some Members un-flipped (partial migration state)</td><td>Low</td><td>High</td><td>CEO + CLO</td><td>Flip is Member-by-Member with rollback path per R-ESOP-008; ACRA filing batch designed to fully succeed or fully roll back per cohort; partial-state alarm on monitoring.</td></tr>
  </tbody>
  </table>
  </div>
@@ -963,6 +1048,11 @@ graph LR
  <tr><td><strong>Bad-Leaver appeal rate</strong></td><td>appeals / BL classifications</td><td>ESOP DB</td><td>tracked</td></tr>
  <tr><td><strong>Pool over-allocation incidents</strong></td><td>CHECK constraint failures</td><td>DB</td><td>= 0</td></tr>
  <tr><td><strong>Annual valuation on-time</strong></td><td>year_end + Q1 completion</td><td>ESOP DB</td><td>≤ Mar 31 each year</td></tr>
+ <tr><td><strong>Good/Bad Leaver co-sign integrity</strong></td><td>branch decisions with CFO + CEO tokens / total</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Vesting accrual statutory-leave correctness</strong></td><td>maternity/paternity periods correctly accrue / total such periods</td><td>quarterly audit</td><td>= 1.0</td></tr>
+ <tr><td><strong>M&amp;A acceleration notification SLA</strong></td><td>p95 (Board declare → Member notice)</td><td>OBS</td><td>≤ 5 business days</td></tr>
+ <tr><td><strong>HoldCo flip cohort success rate</strong></td><td>cohorts fully migrated / total flip cohorts</td><td>ACRA logs + ESOP DB</td><td>= 1.0 (rollback on partial)</td></tr>
+ <tr><td><strong>Put-option exec query latency</strong></td><td>request → eligibility check p95</td><td>OBS</td><td>≤ 30 s (Member sees status quickly)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1175,6 +1265,16 @@ pool total: 100,000 100%
  <li><strong>Circular 111/2013/TT-BTC</strong> — PIT on deferred comp at exercise.</li>
  <li><strong>Decree 119/2018/NĐ-CP</strong> — 10-year statutory retention.</li>
  <li><strong>Vietnam PDPL (Law 91/2025)</strong> — DSAR self-scope.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + cap-table spine Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="hr.html" class="text-blue-700 underline">hr.html</a> ·
+ <a href="rew.html" class="text-blue-700 underline">rew.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
+ <a href="doc.html" class="text-blue-700 underline">doc.html</a></li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — ESOP value structurally excluded from BRAIN.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — ESOP at M+9 (P2).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>Singapore Companies Act (Cap. 50)</strong> — S 67 share issuance, applicable post-HoldCo-flip.</li>
  <li><strong>Singapore ACRA filings</strong> — Form 24 (share allotment), Form 45 (allotment return).</li>
  <li><strong>VAS 17 — Income Taxes</strong> — deferred-comp liability accrual.</li>

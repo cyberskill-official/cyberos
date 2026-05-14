@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>LEARN — CyberOS</title>
- <meta name="description" content="LEARN — Learning & Promotion. VP (Voting Power) roll-up from PROJ/TIME/KB; Hội đồng Chuyên môn (Specialist Council) peer-review workflow; promotion gating; career-path visualisation; EU AI Act Annex III §4 high-risk.">
+ <title>LEARN — Skills catalogue · VP roll-up · Hội đồng Chuyên môn workflow · CyberOS</title>
+ <meta name="description" content="LEARN — three strategic roles: (1) skills catalogue (per-Member skill tree with 1-5 mastery levels), (2) VP (Voting Power) roll-up engine (PROJ contributions + TIME + KB authorship → VP score feeding REW BP fund distribution), (3) Hội đồng Chuyên môn (Specialist Council) promotion workflow with multi-judge peer review (per-judge scores never exported; aggregate-only). EU AI Act Annex III §4 high-risk.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why LEARN exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -128,6 +129,82 @@
  <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · HR · PROJ · TIME · KB</div><div class="note">VP roll-up inputs</div></div>
  <div class="fact-card"><div class="label">EU AI Act</div><div class="value">Annex III §4</div><div class="note">promotion = employment decision</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ LEARN runs the people-development side of the spine. Reading it as "an LMS" misses the point: LEARN is the source of VP (Voting Power), the input feeding REW's BP fund distribution. It also runs the Specialist Council — the Vietnamese-academic-style "hội đồng" peer-review process that gates promotion. Per-judge scores stay inside LEARN; only aggregate summaries cross the boundary.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--learn)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--learn-dark)">Role 1 · Skills catalogue</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Skill tree · mastery 1-5 · bằng cấp + chứng chỉ</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Per-Member skill tree across disciplines (engineering, design, ops, biz). Each skill carries a 1-5 mastery level with evidence requirements at each tier. Vietnamese context: bằng cấp (degrees) and chứng chỉ (certifications) are first-class evidence types. Skill levels feed both HR (role-band fit) and REW (P2 allowance tier).
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--learn)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--learn-dark)">Role 2 · VP roll-up engine</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">PROJ + TIME + KB → VP score → REW BP distribution</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ VP (Voting Power) is computed quarterly from PROJ contributions (issues closed × complexity × peer rating), TIME presence (billable + non-billable mix), and KB authorship (docs created + cited). The VP score feeds REW's BP fund distribution at quarter close. Deterministic formula; parameter-versioned; replay-stable.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--learn)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--learn-dark)">Role 3 · Hội đồng Chuyên môn (Specialist Council)</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">3-5 judges · multi-judge aggregation · per-judge scores never exit</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Promotion case → 3-5 peer-judge panel → multi-judge scoring along 5 dimensions → aggregate to outcome (recommend / hold / decline) + summary narrative. Per-judge individual scores are NEVER exported beyond LEARN — psychological-safety contract. HR receives only {summary, recommendation}. EU AI Act Art. 14 oversight: human council, not algorithm, makes promotion call.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">LEARN signal flow</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart TB
+ PROJ["📋 PROJ<br>issues closed · complexity"]
+ TIME["⏱ TIME<br>presence · mix"]
+ KB["📚 KB<br>docs authored · cited"]
+ LEARN["📈 LEARN<br>skills · VP · Council"]
+ BOUNDARY["🔒 LEARN boundary<br>per-judge scores stay inside"]
+ HR["👥 HR<br>aggregate summary only"]
+ REW["💰 REW<br>VP → BP fund distribution"]
+ PROJ --> LEARN
+ TIME --> LEARN
+ KB --> LEARN
+ LEARN --> BOUNDARY
+ BOUNDARY -- "aggregate + recommendation" --> HR
+ BOUNDARY -- "VP score" --> REW
+ classDef hub fill:#e9d5ff,stroke:#5b21b6,stroke-width:3px,color:#3b0764
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef boundary fill:#fee2e2,stroke:#b91c1c,stroke-width:2px,color:#7f1d1d
+ class LEARN hub
+ class PROJ,TIME,KB,HR,REW mod
+ class BOUNDARY boundary
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Skill level proposal</td><td><strong>Auto</strong> from evidence; <strong>Manager confirm</strong></td><td>Evidence (KB doc count, PROJ contributions) proposes; manager decides.</td></tr>
+ <tr><td>VP roll-up nightly</td><td><strong>Auto</strong> deterministic</td><td>Formula + parameter version; CI replay.</td></tr>
+ <tr><td>BP distribution (REW handoff)</td><td><strong>Auto</strong> at quarter close</td><td>VP × BP-fund proportion; REW does final write.</td></tr>
+ <tr><td>Promotion case open</td><td><strong>Manual</strong> manager nomination</td><td>Promotion is intent; never auto-triggered.</td></tr>
+ <tr><td>Council judge assignment</td><td><strong>Auto</strong> with conflict-check; <strong>CHRO confirm</strong></td><td>Conflicts (direct report, recent collab) filtered; CHRO confirms final panel.</td></tr>
+ <tr><td>Per-judge scoring</td><td><strong>Manual</strong> in private LEARN UI</td><td>Individual judgment; private workspace.</td></tr>
+ <tr><td>Per-judge → aggregate</td><td><strong>Auto</strong> in LEARN; <strong>never exported</strong></td><td>Aggregation deterministic; individual rows isolated to LEARN.</td></tr>
+ <tr><td>Recommendation → HR</td><td><strong>Auto</strong> after council close</td><td>Summary + recommendation only; per-judge scores excluded.</td></tr>
+ <tr><td>Career-path visualisation</td><td><strong>Auto</strong> per Member view</td><td>Read-only; helps Member plan; never used as evaluation.</td></tr>
+ <tr><td>Certification expiry alert</td><td><strong>Auto</strong> 90 days pre-expiry</td><td>Vietnamese context: many chứng chỉ have validity periods.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -915,6 +992,11 @@ graph LR
  <tr><td><code>R-LEARN-008</code></td><td>EU AI Act conformity gap discovered at audit</td><td>Medium</td><td>High</td><td>DPO + CLO</td><td>P2 conformity pack drafted at design; legal review annually.</td></tr>
  <tr><td><code>R-LEARN-009</code></td><td>Promotion approval bypasses council (CEO unilateral)</td><td>Low</td><td>Medium</td><td>CEO</td><td>EU AI Act Art. 14 permits override but requires logged rationale; audit row distinguishes "council-approved" vs "override".</td></tr>
  <tr><td><code>R-LEARN-010</code></td><td>VP weights tuned to favour incumbent leadership</td><td>Low</td><td>High</td><td>CEO + CHRO</td><td>Weight changes require 3-way co-sign (CEO + CFO + CHRO); anti-retroactive replay; annual fairness audit.</td></tr>
+ <tr><td><code>R-LEARN-011</code></td><td>Per-judge score leaks to HR via misconfigured export</td><td>Low</td><td>Critical</td><td>CSO</td><td>Hard schema boundary at LEARN-HR export; CI gate on schema-diff bot; export fixture-test asserts per-judge fields absent.</td></tr>
+ <tr><td><code>R-LEARN-012</code></td><td>VP signal weaponised — REW BP distribution skews to PROJ-dominant Members</td><td>Medium</td><td>Medium</td><td>CHRO</td><td>VP weights span 3 dimensions (PROJ + TIME + KB); cross-Member variance audited quarterly; annual fairness review across role/team/tenure.</td></tr>
+ <tr><td><code>R-LEARN-013</code></td><td>Lumi-promoted skill catalogue update conflicts with tenant-specific role bands</td><td>Medium</td><td>Low</td><td>CHRO</td><td>Skill catalogue version pinned per tenant; Lumi pushes are candidate version; tenant opts in explicitly.</td></tr>
+ <tr><td><code>R-LEARN-014</code></td><td>BRAIN ingestion of Council deliberation transcripts violates psychological safety</td><td>Low</td><td>High</td><td>DPO</td><td>Council deliberations have sync_class=private (DEC-036 extension); never ingested to BRAIN; transcripts retained 30 days post-decision then purged.</td></tr>
+ <tr><td><code>R-LEARN-015</code></td><td>Skill self-claim spam (Member claims every skill to inflate VP)</td><td>Medium</td><td>Low</td><td>HR/Ops</td><td>Claim requires evidence ref (PROJ issue, KB doc, cert); unclaimed-evidence claims dropped from VP; manager endorsement required for level &gt; 3.</td></tr>
  </tbody>
  </table>
  </div>
@@ -939,6 +1021,11 @@ graph LR
  <tr><td><strong>Mastery claim → endorsement (median)</strong></td><td>median(<code>first_endorsed_at - claimed_at</code>)</td><td>LEARN DB</td><td>≤ 14 days</td></tr>
  <tr><td><strong>Endorsement coverage</strong></td><td>endorsed claims / total claims</td><td>LEARN DB</td><td>≥ 80%</td></tr>
  <tr><td><strong>EU AI Act conformity score</strong></td><td>items passed / total</td><td>P2 audit</td><td>= 100%</td></tr>
+ <tr><td><strong>Per-judge score export attempts blocked</strong></td><td>schema-boundary CI rejections</td><td>CI</td><td>tracked; spike = active misconfig</td></tr>
+ <tr><td><strong>VP fairness variance (cross-role)</strong></td><td>stddev(VP_role_X) / mean(VP_role_X)</td><td>quarterly audit</td><td>≤ 0.40 per role-cohort</td></tr>
+ <tr><td><strong>Skill claim evidence rate</strong></td><td>claims with evidence ref / total claims</td><td>LEARN DB</td><td>≥ 0.95</td></tr>
+ <tr><td><strong>Council deliberation transcript purge p95</strong></td><td>retention compliance — deliberations purged ≤ 30 d</td><td>nightly batch</td><td>≤ 30 d hard floor</td></tr>
+ <tr><td><strong>HR-to-LEARN-to-REW signal latency p95</strong></td><td>histogram (Member active → VP rolled → REW BP credit)</td><td>OBS</td><td>≤ 24 h</td></tr>
  </tbody>
  </table>
  </div>
@@ -1112,6 +1199,17 @@ graph LR
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + LEARN-signal-flow Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="hr.html" class="text-blue-700 underline">hr.html</a> ·
+ <a href="rew.html" class="text-blue-700 underline">rew.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="time.html" class="text-blue-700 underline">time.html</a> ·
+ <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a></li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — LEARN deliberations sync_class=private; never ingested.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — LEARN at M+7 (P1).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li> — LEARN module FRs ((FR pending) through (FR pending)).</li>
  <li> — LEARN architecture posture, council workflow design.</li>
  <li> — Usability NFRs (explainability of automated decisions).</li>

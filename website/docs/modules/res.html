@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>RES — CyberOS</title>
- <meta name="description" content="RES — Resource planning. Per-Member capacity vs forecast, allocation Gantt, hiring forecast, skills-gap analysis. Pulls from HR / PROJ / TIME / LEARN; emits CUO/COO-skill reallocation recommendations. Vietnamese labour-law overtime caps enforced.">
+ <title>RES — Capacity-vs-forecast · Hiring forecast · Allocation engine · CyberOS</title>
+ <meta name="description" content="RES — three strategic roles: (1) capacity-vs-forecast integrator (HR contractual capacity × PROJ effort × TIME actuals × LEARN mastery), (2) hiring forecast (skill-gap-to-hire trigger before deliverables drop), (3) allocation engine (CUO/COO drafts rebalance recommendations; VN Labour Code Art. 107 OT caps hard-enforced)."
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why RES exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -132,9 +133,89 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- WHY -->
+<!-- §0 — THE BIGGER PICTURE -->
 <!-- ============================================================ -->
-<section id="why" class="module-section">
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ RES is the join module. It owns no primary data — every column on its Gantt comes from HR / PROJ / TIME / LEARN. What RES owns is the forecasting model, the rebalance recommendation engine, and the VN-labour-law cap enforcement. The COO checks RES at 09:00 ICT every Monday; the answer to "where are we over-booked, where are we under-utilised, what do we need to hire?" should be visible without clicking.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--res)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--res-dark)">Role 1 · Capacity-vs-forecast integrator</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Joins 4 modules on Member-id × week</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ HR contractual capacity (40h × Member × week, sabbatical-aware) joined to PROJ per-issue effort × Cycle (forecast demand), TIME actual hours (calibration), LEARN mastery (skill staffability). The Gantt shows the join; allocation bars compress when forecast exceeds capacity. RES is the integrator, not the source of truth — every cell traces back to its source module.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--res)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--res-dark)">Role 2 · Hiring forecast</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Skill-gap → hire trigger before deliverables drop</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ LEARN mastery × PROJ pipeline demand × CRM deal probability → forecasts senior-X gap N weeks out. Hiring memo draft (CUO/CHRO skill) triggers when gap window &lt; recruiting cycle time. HR receives the memo; CEO approves headcount. Senior shortage is the leading indicator that auditors of resource planning use; RES surfaces it before the deliverables miss.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--res)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--res-dark)">Role 3 · Allocation engine</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Rebalance recommendations · VN OT-cap hard-floor</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ CUO/COO drafts "move Linh from Project A to Project B for 2 weeks"; AM/COO confirms. Solver respects: VN Labour Code Art. 107 OT caps (200/300 h/year), skill mastery (cannot staff a senior task with junior), Engagement priority, and Member preference flags. Recommendations are proposals, never auto-executed; the audit row records why a plan was chosen.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">RES integration model</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ HR["👥 HR<br>capacity · contract"]
+ PROJ["📋 PROJ<br>effort × cycles"]
+ TIME["⏱ TIME<br>actuals (calibration)"]
+ LEARN["📈 LEARN<br>mastery (staffability)"]
+ CRM["🤝 CRM<br>pipeline (deal × probability)"]
+ RES["📅 RES<br>Gantt · forecast · solver"]
+ CUO["🎯 CUO<br>cso/coo skill"]
+ HRPLAN["📝 Hiring memo<br>(when gap detected)"]
+ ALLOC["📋 Rebalance proposal<br>(AM/COO confirms)"]
+ BRAIN["🧠 BRAIN audit"]
+ HR --> RES
+ PROJ --> RES
+ TIME --> RES
+ LEARN --> RES
+ CRM --> RES
+ RES --> CUO
+ CUO --> HRPLAN
+ CUO --> ALLOC
+ RES --> BRAIN
+ classDef hub fill:#cffafe,stroke:#155e75,stroke-width:3px,color:#083344
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class RES hub
+ class HR,PROJ,TIME,LEARN,CRM,CUO,HRPLAN,ALLOC mod
+ class BRAIN brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Capacity / demand join</td><td><strong>Auto</strong> nightly</td><td>Deterministic; OBS shows freshness.</td></tr>
+ <tr><td>Over/under-allocation flag</td><td><strong>Auto</strong> at 110% / 60% thresholds</td><td>Surface; never auto-acts.</td></tr>
+ <tr><td>VN Labour Code OT cap check</td><td><strong>Auto-block</strong> at allocation propose</td><td>Hard floor; cannot propose plan that violates.</td></tr>
+ <tr><td>Rebalance proposal</td><td><strong>Auto</strong> CUO draft; <strong>manual</strong> AM/COO confirm</td><td>Member workload changes; never algorithmic alone.</td></tr>
+ <tr><td>Hiring memo draft</td><td><strong>Auto</strong> on gap-window detection</td><td>Draft is signal; CEO + CHRO decide headcount.</td></tr>
+ <tr><td>Member preference update</td><td><strong>Manual</strong> Member sets</td><td>Member owns workload preferences (e.g. opt-out of OT, deep-work hours).</td></tr>
+ <tr><td>Forecast model retune</td><td><strong>Auto</strong> on TIME calibration drift</td><td>Effort × actuals updates weighted moving average.</td></tr>
+ <tr><td>Skill-mastery filter</td><td><strong>Auto</strong> from LEARN read</td><td>Cannot staff senior task with junior; deterministic.</td></tr>
+ <tr><td>Cross-Engagement reallocation</td><td><strong>Manual</strong> AM × AM coordination</td><td>Each Engagement has its own AM; reallocation = inter-AM negotiation.</td></tr>
+ <tr><td>Monday COO summary</td><td><strong>Auto</strong> generated; <strong>read</strong> by COO 09:00</td><td>The morning ritual; auto-prep so COO time goes to decisions.</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
  <header class="section-head"><span class="section-num">1</span><h2>Why RES exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
  Consultancies live and die on staffing decisions. Over-allocate Linh by 20% and she ships late on two projects; under-allocate Minh by 50% and you are paying for capacity that is not generating revenue. The traditional toolchain is a spreadsheet that goes stale within a week, a Gantt tool that does not know about timesheets, and a hiring plan that exists only in the CEO's head. RES collapses the three into one — an allocation matrix that is always sourced from current data, a Gantt that respects timesheets and skill mastery, and a hiring forecast that is generated, not narrated.
@@ -955,6 +1036,11 @@ graph LR
  <tr><td><code>R-RES-007</code></td><td>LP solver returns infeasible plan when demand &gt; supply over horizon</td><td>Medium</td><td>Low</td><td>CTO</td><td>Infeasibility detected and surfaced as Notify card "demand unbookable through 2026-Q4"; never silent.</td></tr>
  <tr><td><code>R-RES-008</code></td><td>Member privacy: peer allocation visibility leak</td><td>Low</td><td>Medium</td><td>CSO</td><td>(FR pending) enforced — Member can only read own row; cross-Member read requires res.read_all scope.</td></tr>
  <tr><td><code>R-RES-009</code></td><td>Sabbatical / parental leave miscount inflates capacity</td><td>Medium</td><td>Medium</td><td>CHRO</td><td>HR sabbatical event drives capacity event; integration test on each HR schema change.</td></tr>
+ <tr><td><code>R-RES-010</code></td><td><strong>RES forecast becomes single point of CEO-decision dependency</strong> — bad forecast drives bad hiring or layoffs</td><td>Medium</td><td>High</td><td>CEO</td><td>RES forecasts are inputs, not decisions; CEO + COO + CFO triangulate against pipeline + cash runway; monthly backtest published.</td></tr>
+ <tr><td><code>R-RES-011</code></td><td>Member-preference flags ignored when high-priority Engagement demands</td><td>Medium</td><td>Low</td><td>CHRO</td><td>Member preferences are soft constraints; override requires AM + Member acknowledgment; preference violations audited quarterly.</td></tr>
+ <tr><td><code>R-RES-012</code></td><td>VN OT-cap version drift — Labour Code 2026 amendment changes cap</td><td>Low</td><td>High</td><td>CLO</td><td>Cap rules version-pinned per HR §0; legal monitor on labour-law amendments; pro-rated transition handled at HR layer.</td></tr>
+ <tr><td><code>R-RES-013</code></td><td>Allocation solver suggests reallocation across Engagements without rate-card alignment</td><td>Medium</td><td>Medium</td><td>CFO</td><td>Solver considers PROJ rate-card per Engagement; reallocation flagged if Member rate differs &gt; 20% from target Engagement's matching role; AM confirms.</td></tr>
+ <tr><td><code>R-RES-014</code></td><td>Lumi cross-tenant RES synthesis shares Engagement headcount intel</td><td>Low</td><td>Medium</td><td>DPO</td><td>RES data sync_class=team-public by default; cross-tenant share never auto; sensitive Engagement names redacted before Lumi synthesis.</td></tr>
  </tbody>
  </table>
  </div>
@@ -980,6 +1066,11 @@ graph LR
  <tr><td><strong>Matrix freshness p99</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 s</td></tr>
  <tr><td><strong>Gantt drag-drop p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 200 ms</td></tr>
  <tr><td><strong>Member self-service usage rate</strong></td><td><code>members reading own timeline / total</code></td><td>OBS</td><td>≥ 70% / month</td></tr>
+ <tr><td><strong>Hiring memo CEO acceptance rate</strong></td><td>memos approved within 14d / total drafted</td><td>HR + RES audit</td><td>tracked; ≥ 0.60 indicates good signal-to-noise</td></tr>
+ <tr><td><strong>Member-preference override rate</strong></td><td>overrides with Member acknowledgment / total overrides</td><td>RES audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Cross-Engagement rate-card alignment</strong></td><td>reallocations flagged for rate variance &gt; 20%</td><td>RES + PROJ</td><td>tracked; flag = AM confirms</td></tr>
+ <tr><td><strong>Cap version stamp coverage</strong></td><td>allocations stamped with cap_version / total</td><td>RES audit</td><td>= 1.0</td></tr>
+ <tr><td><strong>Lumi cross-tenant RES sync requests</strong></td><td>requests with explicit DPO sign-off / total</td><td>BRAIN audit</td><td>= 1.0 (cross-tenant share always explicit)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1147,6 +1238,10 @@ WEEK PLANNED ACTUAL PROJECTS STATUS
  <li><strong>TIME module</strong> — <a href="time.html" class="text-blue-700 underline">time.html</a> · supplies actual hours for calibration.</li>
  <li><strong>LEARN module</strong> — <a href="learn.html" class="text-blue-700 underline">learn.html</a> · supplies skill mastery levels.</li>
  <li><strong>OKR module</strong> — <a href="okr.html" class="text-blue-700 underline">okr.html</a> · consumes hiring-plan progress for the hiring objective.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + integration-model Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — RES allocation decisions become BRAIN audit rows; capacity-vs-forecast is integrator, not source.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — RES at M+11 (P3, after the upstream modules ship).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  </ul>
  </div>
 </section>

@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>AI Gateway — CyberOS</title>
- <meta name="description" content="AI Gateway — single LLM access point. LiteLLM router, provider failover, persona-version stamping, PII redaction, response cache, per-tenant cost tracking, streaming SSE.">
+ <title>AI Gateway — Cost-of-everything gate · Provider-agnostic router · Compliance plane · CyberOS</title>
+ <meta name="description" content="AI Gateway — the M+1 cost-of-everything gate that ships BEFORE AUTH per research review §2.4. Three strategic roles: (1) cost gate (per-tenant token caps + budget alerts + invoice line-item attribution), (2) provider-agnostic router (LiteLLM-compatible — swap Anthropic/OpenAI/Bedrock/Vertex without rewriting consumers), (3) compliance plane (Presidio + VN-PII scrubber + persona-version stamp + audit chain). Zero retention, tenant-keyed cache, 30 s failover SLA.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -42,10 +42,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO (vacant) → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- One LLM door for the whole platform — router, redactor, cacher, accountant. Every model call goes through here.
+ <strong>The cost-of-everything gate.</strong> Per research review §2.4, AI Gateway ships at M+1 — <strong>before AUTH</strong> — because if you can't account for and cap LLM spend, every other module bleeds money invisibly. One door for every model call, persona-stamped, PII-scrubbed, tenant-capped, audit-chained.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- AI Gateway is the single integration point for every Large Language Model call CyberOS makes. Built on LiteLLM at its router core, it speaks OpenAI, Anthropic, AWS Bedrock, and Vertex AI behind one interface; fails over within 30 seconds when a primary provider degrades; redacts PII before bytes leave the cluster; stamps every call with a persona-version so the audit trail captures which agent identity made the request; caches deterministic responses for replay-stable testing; and tracks per-tenant token cost down to the invoice line item. Two flags matter: <em>no client SDK is allowed</em> in any other module (they all call AI Gateway over gRPC), and <em>no cache may cross tenant boundaries</em> (N(FR pending), hard rule). specifies the latency budget per route class; §9.7 specifies the FRs. This page documents the planned implementation at <code>cyberos/services/ai-gateway/</code>.
+ AI Gateway plays three strategic roles simultaneously. <strong>Role 1 — cost-of-everything gate</strong>: every LLM call is metered, attributed to a tenant, capped against a monthly budget, and surfaced as invoice line items; a single overrun tenant cannot starve the rest. <strong>Role 2 — provider-agnostic router</strong>: LiteLLM-derived adapter speaks Bedrock / Anthropic / OpenAI / Vertex behind one gRPC interface; failover SLA ≤ 30 s; swapping providers is a config change, never a code change in consumers (CUO, CHAT, KB, every module that calls an LLM). <strong>Role 3 — compliance plane</strong>: Presidio + custom VN-PII scrubber runs before bytes leave the cluster; persona-version is stamped on every call so the audit row records which agent identity sent the request; zero retention from providers (ZDR contracts required at P0); EU AI Act Art. 12 logging satisfied by the <code>ai.invocation</code> audit chain. Two hard flags: <em>no LLM SDK is allowed</em> in any other module — they all call AI Gateway over gRPC — and <em>no cache row crosses tenant boundaries</em>. The planned implementation lives at <code>cyberos/services/ai-gateway/</code>; the M+1 build sequence is locked in <code>AUDIT_AND_PLAN_2026_05_14.md §3.3</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -66,8 +66,12 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why AI Gateway exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#cost-gate">Cost-of-everything gate</a></li>
+ <li><a class="toc-link" href="#provider-abstraction">Provider abstraction + failover</a></li>
+ <li><a class="toc-link" href="#compliance-plane">Compliance plane</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
@@ -103,15 +107,132 @@
  AI Gateway is the <strong>policy-enforcement and routing layer</strong> for every model call inside CyberOS. From the outside it is one gRPC service speaking <code>chat.complete</code>, <code>embed</code>, <code>rerank</code>, and <code>image.generate</code>. Inside, a LiteLLM-derived router consults per-tenant policy, applies persona-version system prompts, runs Presidio + custom-VN PII redaction, looks up the prompt-cache, picks a primary provider, retries twice with backoff, fails over to the secondary, accounts for tokens against the tenant's monthly cap, streams the response back over SSE, and emits one <code>ai.invocation</code> audit row per call. Zero retention — no provider sees cross-tenant prompts; no cache row crosses a tenant boundary; the only thing that leaves the cluster is the prompt and the response, and even those are PII-scrubbed.
  </p>
  <div class="fact-grid">
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">Cost-of-everything gate</div><div class="note">Ships M+1 · before AUTH</div></div>
  <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
- <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~6,500</div><div class="note">Python 3.13 (LiteLLM-derived) + Rust edge proxy</div></div>
- <div class="fact-card"><div class="label">Providers (P0)</div><div class="value">Bedrock · Anthropic · OpenAI</div><div class="note">+ self-hosted BGE embedder</div></div>
- <div class="fact-card"><div class="label">Failover SLA</div><div class="value">≤ 30 s</div><div class="note">(FR pending) · primary down → secondary live</div></div>
- <div class="fact-card"><div class="label">PII redaction recall</div><div class="value">≥ 99%</div><div class="note">(FR pending) · VN + EN test set</div></div>
- <div class="fact-card"><div class="label">Cache hit rate</div><div class="value">≥ 30% (P0)</div><div class="note">≥ 60% (P2+); (FR pending)</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">tenant resolution + audit + traces</div></div>
- <div class="fact-card"><div class="label">Used by</div><div class="value">CUO · Skill · KB · CHAT · …</div><div class="note">every module that calls an LLM</div></div>
+ <div class="fact-card"><div class="label">Build placement</div><div class="value">M+1 (P0 #1)</div><div class="note">Reordered per research review §2.4</div></div>
+ <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~6,500</div><div class="note">Python 3.13 + Rust edge proxy</div></div>
+ <div class="fact-card"><div class="label">Providers (P0)</div><div class="value">Bedrock · Anthropic · OpenAI</div><div class="note">+ self-hosted BGE</div></div>
+ <div class="fact-card"><div class="label">Failover SLA</div><div class="value">≤ 30 s</div><div class="note">primary down → secondary live</div></div>
+ <div class="fact-card"><div class="label">PII redaction recall</div><div class="value">≥ 99%</div><div class="note">VN + EN test set · CI gate</div></div>
+ <div class="fact-card"><div class="label">Cache hit rate</div><div class="value">≥ 30% (P0)</div><div class="note">≥ 60% (P2+) · tenant-keyed</div></div>
+ <div class="fact-card"><div class="label">Cost-cap enforcement</div><div class="value">Hard-stop</div><div class="note">tenant cannot exceed monthly cap</div></div>
+ <div class="fact-card"><div class="label">ZDR (zero retention)</div><div class="value">Required</div><div class="note">P0 provider contracts</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS</div><div class="note">+ AUTH (M+2) · TEN (P2+)</div></div>
+ <div class="fact-card"><div class="label">Used by</div><div class="value">CUO · Skill · KB · CHAT · …</div><div class="note">every LLM-calling module</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+
+ <p class="text-slate-700 leading-relaxed mb-4">
+ AI Gateway is the most under-rated module in CyberOS. The naive read is "it's a thin proxy in front of LiteLLM." The real read is: <strong>this is the single most leveraged P0 module</strong>, because every other module that touches an LLM (CUO, CHAT, KB, PROJ, every Genie surface) inherits its cost behaviour, compliance posture, and provider resilience. Research review §2.4 explicitly reordered the build sequence to land AI Gateway at M+1 — <em>before AUTH</em> — for this reason.
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--infra)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--infra-dark)">Role 1 · Cost-of-everything gate</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Every LLM call attributed, metered, capped</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Token accounting is the difference between a $50/month SaaS and a $50,000/month surprise bill. AI Gateway is the only point where every call is counted, attributed to a tenant + persona + module, capped against a monthly budget, and surfaced as invoice line items. A pre-call check refuses the request if the projected cost exceeds remaining budget; a post-call check reconciles the actual usage to the provider's bill. Tenant cost overrun events = 0 is a hard target, not a soft KPI.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--infra)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--infra-dark)">Role 2 · Provider-agnostic router</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Swap providers without touching consumers</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ LiteLLM-derived router speaks Bedrock + Anthropic + OpenAI + Vertex behind a single gRPC interface. Every consumer (CUO, KB, CHAT) calls <code>ai.chat.complete</code> with a model alias; the router resolves the alias to the active provider + falls over to a secondary on 30 s SLA. Vendor lock-in becomes vendor optionality — switching from Anthropic to Vertex is a config change. Geographic residency (SG-1 vs EU-1) is enforced at the router, not by the consumer.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--infra)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--infra-dark)">Role 3 · Compliance plane</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Single PII chokepoint + persona stamp + audit row</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Presidio + a VN-specific PII recogniser run on every prompt before bytes leave the cluster. Persona-version is stamped on every call so the audit row records which agent identity (cuo-cpo@0.4.1, genie@1.0.2) was talking. EU AI Act Art. 12 logging satisfied via the <code>ai.invocation</code> chained BRAIN audit row. ZDR contracts with providers required at P0 — if a provider cannot offer zero retention, AI Gateway refuses to route to them.
+ </p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">AI Gateway in the runtime — every LLM call flows through here</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart TB
+ subgraph callers["Callers (every LLM-touching module)"]
+ CUO["🎯 CUO router"]
+ KB["📚 KB RAG"]
+ CHAT["💬 CHAT @lumi"]
+ PROJ["📋 PROJ inline genie"]
+ SKILL["🛠 Skill LLM-aided skills"]
+ OBS["👁 OBS auto-triage"]
+ end
+
+ AIGW["⚡ AI Gateway<br>PII scrubber · cost gate · persona stamp · cache · failover"]
+
+ subgraph providers["Providers"]
+ BEDROCK["AWS Bedrock"]
+ ANTHROPIC["Anthropic API"]
+ OPENAI["OpenAI API"]
+ VERTEX["GCP Vertex (P1+)"]
+ LOCAL["Self-hosted BGE-M3 / rerank"]
+ end
+
+ subgraph platform["Platform deps"]
+ BRAIN["🧠 BRAIN audit chain"]
+ OBS2["👁 OBS metrics + traces"]
+ AUTH["🔐 AUTH (M+2 onward)"]
+ TEN["🏢 TEN tenant config (P2+)"]
+ end
+
+ CUO --> AIGW
+ KB --> AIGW
+ CHAT --> AIGW
+ PROJ --> AIGW
+ SKILL --> AIGW
+ OBS --> AIGW
+
+ AIGW -->|"primary"| BEDROCK
+ AIGW -.->|"failover"| ANTHROPIC
+ AIGW -->|"per-tenant cap"| OPENAI
+ AIGW -.->|"P1+"| VERTEX
+ AIGW -->|"embed / rerank"| LOCAL
+
+ AIGW --> BRAIN
+ AIGW --> OBS2
+ AIGW -. "JWT verify (M+2+)".-> AUTH
+ AIGW -. "tenant policy".-> TEN
+
+ classDef hub fill:#dbeafe,stroke:#1e40af,stroke-width:3px,color:#1e3a8a
+ classDef caller fill:#e0e7ff,stroke:#3730a3
+ classDef prov fill:#fef6e0,stroke:#9c750a
+ classDef dep fill:#f5ede6,stroke:#45210e
+ class AIGW hub
+ class CUO,KB,CHAT,PROJ,SKILL,OBS caller
+ class BEDROCK,ANTHROPIC,OPENAI,VERTEX,LOCAL prov
+ class BRAIN,OBS2,AUTH,TEN dep
+ </div>
+ <p class="text-xs text-slate-500 mt-3">AI Gateway is the protocol-level chokepoint. Removing it from the architecture means every consumer reimplements cost accounting, PII scrubbing, and provider failover — and the implementations disagree.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:32%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Provider failover (primary → secondary)</td><td><strong>Auto</strong> within 30 s on consecutive 5xx / timeout</td><td>Latency-critical; humans can't react in 30 s. Audit row records the failover event for retro analysis.</td></tr>
+ <tr><td>Persona prompt injection</td><td><strong>Auto</strong> based on caller's <code>agent_persona</code> JWT claim</td><td>Single source of truth in BRAIN; consumers never inject system prompts; eliminates persona drift.</td></tr>
+ <tr><td>PII scrubbing</td><td><strong>Auto</strong> on every prompt (Presidio + VN-PII recogniser)</td><td>Recall ≥ 99% is the CI gate; nothing leaves the cluster without scrubbing.</td></tr>
+ <tr><td>Tenant cost-cap enforcement</td><td><strong>Auto</strong> hard-stop at 100% of monthly cap; warn at 80%</td><td>Soft cap = surprise bill. Hard-stop must be configurable per tenant for emergency overrides — gated by CFO approval.</td></tr>
+ <tr><td>Cost-cap override (emergency)</td><td><strong>Human approval</strong> — CFO sign-off recorded in BRAIN</td><td>Override exists for legit production incidents; defaults to denied; every override is an audit row.</td></tr>
+ <tr><td>ZDR-non-compliant provider routing</td><td><strong>Refused</strong> — no auto, no override</td><td>A non-ZDR provider is a compliance breach in flight; the only correct behaviour is refuse.</td></tr>
+ <tr><td>Cache hit serving</td><td><strong>Auto</strong> when idempotency-key + tenant_id matches</td><td>Cache key strictly tenant-scoped; cross-tenant hit is a property-test failure (hard zero).</td></tr>
+ <tr><td>Model alias resolution</td><td><strong>Auto</strong> per tenant policy</td><td>Tenant pins primary + fallback in their policy; gateway resolves alias at call time; no consumer-side choice.</td></tr>
+ <tr><td>Image-generation route (P2+)</td><td><strong>Auto</strong> but always cached + watermarked</td><td>Generation cost is real; cache + dedupe by prompt hash; watermark for EU AI Act Art. 50.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -164,6 +285,218 @@
  <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (AI request p95 ≤ 2 s), (FR pending) cache hit rate, (FR pending) PII recall, per-tenant cost dashboard, provider error-rate burndown.</td></tr>
  </tbody>
  </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.5 — COST-OF-EVERYTHING GATE -->
+<!-- ============================================================ -->
+<section id="cost-gate" class="module-section">
+ <header class="section-head"><span class="section-num">2.5</span><h2>Cost-of-everything gate — token economics, budgets, attribution</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The naive AI-Gateway design treats cost as a side-effect: count tokens, send a bill. The CyberOS design treats cost as the <em>primary purpose</em>: every call is a fiscal event, attributed to a tenant + persona + module, capped against a budget, and surfaced as an invoice line item the moment it lands. Token accounting is not a reporting feature; it is a runtime gate that refuses a call if it cannot afford to make it.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">Per-tenant policy (the cost contract)</h3>
+ <div class="bbg-card p-5 mb-5">
+<pre><code class="language-yaml">tenant: acme-corp
+ai_policy:
+  monthly_cap_usd: 500
+  warn_threshold: 0.80         # ping CFO + tenant admin at 80%
+  hard_stop: true              # at 100%, refuse new calls
+  emergency_override:
+    enabled: true
+    requires: ["cfo_signoff", "audit_row"]
+  primary_provider: bedrock
+  fallback_providers: [anthropic, openai]
+  require_zdr: true
+  residency: sg-1
+  per_model_caps:
+    bedrock:anthropic.claude-3.5-sonnet:
+      max_tokens_per_call: 8000
+      daily_call_cap: 5000
+    bedrock:anthropic.claude-3-haiku:
+      max_tokens_per_call: 4000
+      daily_call_cap: 20000
+  per_persona_attribution:
+    cuo-cpo@0.4.1: { module: cuo, cost_centre: ops }
+    cuo-cdo@0.3.0: { module: kb, cost_centre: ops }
+    genie-public@1.2.0: { module: portal, cost_centre: cogs }</code></pre>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Pre + post-call accounting (the 7-step sequence)</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant C as Caller (CUO/KB/CHAT)
+ participant G as AI Gateway
+ participant L as Cost ledger (Postgres)
+ participant P as LLM provider
+ participant B as 🧠 BRAIN audit
+ participant I as 🧾 INV (P2+)
+
+ C->>G: chat.complete (model, messages, tenant, persona)
+ G->>L: pre-check: estimate cost from token count
+ alt over-budget
+   L-->>G: refuse · 402_PAYMENT_REQUIRED
+   G->>B: ai.invocation_refused (reason=budget_cap)
+   G-->>C: 402 error · suggest model downshift
+ else within budget
+   L-->>G: allow · debit hold
+   G->>P: forward request
+   P-->>G: response · usage{ prompt_tokens, completion_tokens }
+   G->>L: post-check: reconcile hold → actual; release excess
+   G->>B: ai.invocation (chained · persona · cost · cache_state)
+   G->>I: roll up to monthly cost-centre invoice (P2+)
+   G-->>C: response
+ end
+ </div>
+ <p class="text-xs text-slate-500 mt-3">The two checks (pre-estimate + post-reconcile) together prevent both under-budgeting (call goes through, surprise bill) and over-debiting (call refused, hold never released). Holds expire after 60 s if no post-check arrives — defensive.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Attribution dimensions — who owes for this call?</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Dimension</th><th>Source</th><th>What it answers</th></tr></thead>
+ <tbody>
+ <tr><td><code>tenant_id</code></td><td>JWT claim (M+2+) or X-Tenant header (M+1)</td><td>Which tenant's budget does this debit?</td></tr>
+ <tr><td><code>agent_persona</code></td><td>JWT claim per AUTH §2.7</td><td>Which agent identity made this call? (cuo-cpo@0.4.1 vs genie@1.0.2)</td></tr>
+ <tr><td><code>module</code></td><td>X-CyberOS-Module header (set by caller)</td><td>Which module is the cost centre? (kb / chat / proj / …)</td></tr>
+ <tr><td><code>cost_centre</code></td><td>Policy mapping per persona</td><td>P&amp;L line: ops · cogs · r&amp;d · g&amp;a · marketing</td></tr>
+ <tr><td><code>route_class</code></td><td>chat · embed · rerank · image</td><td>Which provider price book applies?</td></tr>
+ <tr><td><code>cache_state</code></td><td>Cache lookup result</td><td>hit (free) vs miss (paid); aggregate cache savings.</td></tr>
+ <tr><td><code>failover_path</code></td><td>primary / fallback / refused</td><td>Was the call served by the cheap primary or the secondary at premium?</td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm text-slate-600 mt-3">Every <code>ai.invocation</code> audit row carries all seven dimensions. Monthly cost reports slice across any combination — "how much did genie-public cost us in May vs april?", "what's our cache savings rate by tenant?", "which module is closest to its budget cap right now?".</p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.6 — PROVIDER ABSTRACTION + FAILOVER -->
+<!-- ============================================================ -->
+<section id="provider-abstraction" class="module-section">
+ <header class="section-head"><span class="section-num">2.6</span><h2>Provider abstraction — swap providers without touching consumers</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The naive approach to multi-provider is "wrapper SDK per provider." That works until your tenant in EU-1 needs Vertex (residency) and your tenant in SG-1 needs Bedrock (latency). AI Gateway is built on the LiteLLM router because it solves this once: provider auth, retries, streaming semantics, and pricing are model-aliased; consumers never know which provider answered.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">Model-alias resolution table</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Caller-side alias</th><th>Resolves to (default)</th><th>Fallback</th><th>Used by</th></tr></thead>
+ <tbody>
+ <tr><td><code>chat.smart</code></td><td><code>bedrock:claude-3.5-sonnet</code></td><td><code>anthropic:claude-sonnet-4.5</code></td><td>CUO ambiguous tail, KB Q&amp;A, CHAT @lumi</td></tr>
+ <tr><td><code>chat.fast</code></td><td><code>bedrock:claude-3-haiku</code></td><td><code>anthropic:claude-haiku-4.5</code></td><td>PROJ inline genie, CRM next-action, OBS triage</td></tr>
+ <tr><td><code>chat.reason</code></td><td><code>openai:o1-mini</code></td><td><code>anthropic:claude-opus-4.6</code></td><td>CUO CPO skill (spec auditing), CLO contract review</td></tr>
+ <tr><td><code>embed.standard</code></td><td><code>self-hosted:bge-m3</code></td><td><code>openai:text-embedding-3-large</code></td><td>KB ingest, BRAIN semantic search, CHAT context window</td></tr>
+ <tr><td><code>rerank.standard</code></td><td><code>self-hosted:bge-rerank-v2-m3</code></td><td><code>cohere:rerank-multilingual-v3</code></td><td>KB Q&amp;A, BRAIN retrieval</td></tr>
+ <tr><td><code>image.standard</code></td><td><code>openai:gpt-image-1</code> (P2+)</td><td><code>local:stable-diffusion-xl</code></td><td>Marketing skill, design suggestions (P2+)</td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm text-slate-600 mt-3">Per-tenant policy can override any default. Consumers always call by alias; the resolution is opaque.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Failover semantics — what happens when a provider degrades</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Failure mode</th><th>Detection window</th><th>Action</th><th>Audit row emitted</th></tr></thead>
+ <tbody>
+ <tr><td>Single 5xx / timeout</td><td>per call</td><td>Retry once with backoff (250 ms · 750 ms)</td><td><code>ai.retry</code> sub-row</td></tr>
+ <tr><td>Consecutive 5xx (≥ 3 in 10 s)</td><td>per-tenant per-provider</td><td>Mark primary as degraded; route next calls to fallback</td><td><code>ai.failover_triggered</code></td></tr>
+ <tr><td>Rate-limit (429)</td><td>per provider</td><td>Backoff per retry-after header; if fallback available, switch immediately</td><td><code>ai.rate_limited</code></td></tr>
+ <tr><td>Provider down &gt; 60 s</td><td>circuit breaker open</td><td>All routes degrade to fallback; primary probed every 30 s</td><td><code>ai.circuit_open</code></td></tr>
+ <tr><td>Provider recovery (3 consecutive 2xx)</td><td>circuit half-open → closed</td><td>Resume primary routing; emit recovery row</td><td><code>ai.circuit_closed</code></td></tr>
+ <tr><td>Both primary + fallback down</td><td>multi-failover</td><td>Refuse new calls; serve cache only for read routes; alert CTO + page on-call</td><td><code>ai.degraded_mode</code></td></tr>
+ <tr><td>Per-tenant SLA breach (failover &gt; 30 s)</td><td>tenant-aware</td><td>Tenant credit policy applies (P3+); audit row generates SLA credit suggestion</td><td><code>ai.sla_breach</code></td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Geographic residency — provider × region matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Tenant residency</th><th>Allowed primary providers</th><th>Allowed fallback</th><th>Why</th></tr></thead>
+ <tbody>
+ <tr><td><code>sg-1</code> (Singapore)</td><td>Bedrock AP-SE-1 · Anthropic · OpenAI</td><td>any of the above</td><td>PDPL Art. 38 cross-border requires explicit consent; AP-SE-1 keeps APAC data in-region.</td></tr>
+ <tr><td><code>eu-1</code> (Frankfurt)</td><td>Bedrock EU-CENTRAL · Vertex EU · Anthropic EU</td><td>EU-only providers</td><td>GDPR + EU AI Act + EU Data Boundary requires no US transit.</td></tr>
+ <tr><td><code>us-1</code></td><td>Bedrock US-EAST · Anthropic · OpenAI · Vertex US</td><td>any</td><td>Default — no residency pinning required.</td></tr>
+ <tr><td><code>vn-1</code> (Vietnam)</td><td>Bedrock AP-SE-1 + PDPL DPA · Anthropic with VN DPA</td><td>AP-SE-1 only</td><td>PDPL Art. 38: cross-border requires bilateral DPA; SG-1 is the closest compliant route.</td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm text-slate-600 mt-3">Residency is pinned in the tenant policy (and in the AUTH JWT at M+2+); the router rejects any model alias that resolves to a non-compliant provider for the calling tenant.</p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.7 — COMPLIANCE PLANE -->
+<!-- ============================================================ -->
+<section id="compliance-plane" class="module-section">
+ <header class="section-head"><span class="section-num">2.7</span><h2>Compliance plane — PII, persona stamp, ZDR, audit chain</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The compliance posture of every AI-using module is determined by what AI Gateway does before bytes leave the cluster. Four protections are stacked in order: <strong>PII redaction → persona-version stamp → ZDR check → audit row emission</strong>. Any link in the chain that fails refuses the call entirely; there is no degraded-compliance mode.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">The four-link compliance chain</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Link</th><th>Responsibility</th><th>Recall / strictness target</th><th>Failure behaviour</th></tr></thead>
+ <tbody>
+ <tr><td><strong>1. PII redaction</strong></td><td>Presidio (EN-base) + custom VN-PII recogniser (CCCD, MST, phone, NĐD, địa chỉ)</td><td>Recall ≥ 99% · precision ≥ 95% on CI test set</td><td>Below recall threshold → CI gate fails; release blocked. Runtime PII detection failure → call refused with <code>403_PII_REDACTION_FAILED</code>.</td></tr>
+ <tr><td><strong>2. Persona-version stamp</strong></td><td>System-prompt injection from BRAIN <code>memories/personas/&lt;version&gt;.md</code></td><td>100% of calls carry a persona stamp; no consumer can override</td><td>Missing stamp → call refused; the consumer used the LLM SDK directly (forbidden).</td></tr>
+ <tr><td><strong>3. ZDR check</strong></td><td>Provider DPA + ZDR contract validation against tenant policy <code>require_zdr: true</code></td><td>100% of calls routed only to ZDR-compliant providers when tenant requires it</td><td>Non-ZDR provider attempted → call refused; CTO + DPO alerted; no fallback to non-ZDR.</td></tr>
+ <tr><td><strong>4. Audit row emission</strong></td><td>BRAIN <code>ai.invocation</code> chained row · 14 fields (see schema below)</td><td>100% emission; chain hash verifiable</td><td>BRAIN write fails → call NOT made; better to refuse than make a call we cannot audit.</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">The <code>ai.invocation</code> audit row schema</h3>
+ <div class="bbg-card p-5 mb-5">
+<pre><code class="language-json">{
+  "seq": 18420,
+  "ts_ns": 1763112131_000_000_000,
+  "op": "put",
+  "path": "meta/ai-invocations/2026-05-15_acme_chat-smart_a3c7.md",
+  "extra": {
+    "tenant_id": "org:acme-corp",
+    "agent_persona": "cuo-cpo@0.4.1",
+    "module": "cuo",
+    "route_class": "chat",
+    "model_alias": "chat.smart",
+    "resolved_provider": "bedrock:claude-3.5-sonnet",
+    "region": "ap-se-1",
+    "failover_path": "primary",
+    "cache_state": "miss",
+    "prompt_hash": "sha256:a3c7…2b9f",
+    "response_hash": "sha256:9f8e…1d2c",
+    "usage": { "prompt_tokens": 1240, "completion_tokens": 612, "usd_cost": 0.012 },
+    "redaction_applied": true,
+    "redaction_count": 3,
+    "zdr_confirmed": true,
+    "duration_ms": 1843,
+    "idempotency_key": "01HZK…"
+  },
+  "prev_chain": "69e6…488a",
+  "chain": "8d2c…5a91"
+}</code></pre>
+ <p class="text-sm text-slate-600 mt-3">The row does not contain the prompt or response text — only hashes — to keep BRAIN size bounded. The hashes prove integrity; the actual content is in the (encrypted, short-lived) cache row that the hash addresses.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Vietnamese PII recogniser — what extends Presidio</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>VN-PII type</th><th>Pattern</th><th>Examples (redacted to type)</th></tr></thead>
+ <tbody>
+ <tr><td><strong>CCCD</strong> (citizen ID)</td><td>12-digit number, optional formatting</td><td><code>0790…1234</code> → <code>&lt;CCCD&gt;</code></td></tr>
+ <tr><td><strong>MST</strong> (tax code)</td><td>10-digit company + optional 3-digit branch</td><td><code>0123456789-001</code> → <code>&lt;MST&gt;</code></td></tr>
+ <tr><td><strong>VN phone</strong></td><td>+84/0 + 9/10 digits; mobile prefixes</td><td><code>0906878091</code> → <code>&lt;VN_PHONE&gt;</code></td></tr>
+ <tr><td><strong>NĐD</strong> (legal representative)</td><td>Full Vietnamese name + tonal marks heuristic</td><td><code>Trịnh Thái Anh</code> → <code>&lt;VN_PERSON&gt;</code></td></tr>
+ <tr><td><strong>VN address</strong></td><td>quận / phường / đường + number patterns</td><td><code>207A Nguyễn Văn Thủ, Tân Định, Q1</code> → <code>&lt;VN_ADDRESS&gt;</code></td></tr>
+ <tr><td><strong>Bank account (VN)</strong></td><td>VN banks' BIN patterns (Vietcombank/Techcombank/MB/…)</td><td><code>9704… (Vietcombank)</code> → <code>&lt;VN_BANK_ACCT&gt;</code></td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm text-slate-600 mt-3">The recogniser ships as a Presidio plugin (Python) with a 200-sample CI test set (50 positive per type, 100 negatives). Recall ≥ 99% gate blocks release; precision ≥ 95% prevents false-positive over-redaction (e.g. don't redact common Vietnamese surnames out of normal prose).</p>
  </div>
 </section>
 
@@ -888,6 +1221,16 @@ graph LR
  <tr><td><code>R-AI-008</code></td><td>Cache poisoning via adversarial canonical prompt</td><td>Low</td><td>High</td><td>CSO</td><td>Cache key includes tenant_id + idempotency-key; provider response hash compared to in-flight verification on critical routes.</td></tr>
  <tr><td><code>R-AI-009</code></td><td>BGE-M3 GPU pod single point of failure</td><td>Medium</td><td>Medium</td><td>CTO</td><td>2-replica deployment at P1+; CPU fallback (slow) on hot-path embed.</td></tr>
  <tr><td><code>R-AI-010</code></td><td>Vendor SDK CVE blocks release</td><td>Medium</td><td>Low</td><td>CTO</td><td>LiteLLM is vendored — patch in-tree; Renovate watches upstream weekly.</td></tr>
+ <tr><td><code>R-AI-011</code></td><td><strong>M+1 build sequence slips → AUTH lands first → tenant cost overruns invisible until invoice arrives</strong></td><td>Medium</td><td>Critical</td><td>CEO</td><td>Hard P0 ship order locked in AUDIT_AND_PLAN_2026_05_14 §3.3; the M+1 milestone is the cost-gate go-live, not "AI Gateway feature-complete"; pre-AUTH AI Gateway uses X-Tenant header signed with a static HMAC.</td></tr>
+ <tr><td><code>R-AI-012</code></td><td>Persona prompt cache poisoning (Lumi push corrupts a persona used by all tenants)</td><td>Low</td><td>Critical</td><td>CSO</td><td>Persona-version pinning per tenant; tenant must opt-in to a new version; Lumi-pushed updates land as a candidate version, not active.</td></tr>
+ <tr><td><code>R-AI-013</code></td><td>Provider DPA cancellation (Anthropic / OpenAI changes ZDR terms mid-quarter)</td><td>Low</td><td>High</td><td>CLO</td><td>Legal monitor on provider DPAs; tenant policy <code>require_zdr</code> rejects non-compliant providers; emergency model-alias re-resolution within 1 hour.</td></tr>
+ <tr><td><code>R-AI-014</code></td><td>Cost ledger hold leak (60 s expiry never fires → false debits accumulate)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Hold rows have hard TTL via Postgres scheduled job; nightly reconciliation against provider bill; spot-test alarms on cumulative drift &gt; 5%.</td></tr>
+ <tr><td><code>R-AI-015</code></td><td>Streaming SSE buffer leak (long-running stream pins memory)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-stream max duration (5 min) + max bytes (16 MB); hard-close on exceed; backpressure surfaced to caller via SSE event.</td></tr>
+ <tr><td><code>R-AI-016</code></td><td>Embedding model upgrade (BGE-M3 → next-gen) breaks BRAIN semantic search retrieval</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Embedding model version is part of the BRAIN_LINK record; recall regression CI test on every model swap; allow per-tenant pinning.</td></tr>
+ <tr><td><code>R-AI-017</code></td><td>Image-generation route at P2+ floods budget (image calls are 100× chat cost)</td><td>Medium</td><td>High</td><td>CFO</td><td>Image route default-off; per-tenant explicit opt-in; per-image cap; watermark for EU AI Act Art. 50; cache by prompt hash with extended TTL.</td></tr>
+ <tr><td><code>R-AI-018</code></td><td>Geographic residency violation (EU tenant routed via US provider during failover)</td><td>Low</td><td>Critical</td><td>DPO</td><td>Residency pinning at router level; failover providers filtered by tenant residency; refuse + alert if no compliant fallback available.</td></tr>
+ <tr><td><code>R-AI-019</code></td><td>VN-PII recogniser regression on production (new VN spelling/format misses CCCD)</td><td>Medium</td><td>High</td><td>CDO</td><td>200-sample CI test set; quarterly red-team adds adversarial VN samples; release blocked on recall &lt; 99% for VN-PII subset.</td></tr>
+ <tr><td><code>R-AI-020</code></td><td>Self-hosted BGE GPU pod OOM under sustained load → embed becomes the bottleneck</td><td>Medium</td><td>Medium</td><td>CTO</td><td>2-replica L4 deployment at P1+; CPU fallback for hot-path embed (slow but available); load test 5× expected QPS quarterly.</td></tr>
  </tbody>
  </table>
  </div>
@@ -909,6 +1252,15 @@ graph LR
  <tr><td><strong>Tenant cost overrun events</strong></td><td>count / 28 d</td><td>accountant</td><td>= 0 (hard-stop ensures)</td></tr>
  <tr><td><strong>Cross-tenant cache leakage</strong></td><td>property-test count</td><td>CI</td><td>= 0</td></tr>
  <tr><td><strong>USD spent vs. budget (MTD)</strong></td><td><code>spent / cap</code> per tenant</td><td>dashboard</td><td>&lt; 100% (warn at 80%)</td></tr>
+ <tr><td><strong>Per-persona cost share</strong></td><td>cost grouped by <code>agent_persona</code></td><td>BRAIN audit replay</td><td>tracked per persona; alert on &gt; 50% concentration to single persona</td></tr>
+ <tr><td><strong>Cache savings rate</strong></td><td>(cache_hits × estimated_cost) / total_billed_cost</td><td>cost ledger</td><td>≥ 0.15 (15% savings) by P1 exit</td></tr>
+ <tr><td><strong>Hold-to-actual drift</strong></td><td>SUM(held - actual) / SUM(actual)</td><td>cost ledger nightly reconcile</td><td>≤ 0.05 (≤ 5% drift); alarm on &gt; 0.05</td></tr>
+ <tr><td><strong>Residency-violation refusal rate</strong></td><td>refusals_due_to_residency / total_attempts</td><td><code>ai.invocation_refused</code> audit rows</td><td>tracked; spike = misconfigured tenant policy</td></tr>
+ <tr><td><strong>Persona stamp coverage</strong></td><td>calls_with_stamp / total_calls</td><td>audit rows</td><td>= 1.0 (hard floor — anything below means a consumer bypassed gateway)</td></tr>
+ <tr><td><strong>ZDR-compliant routing rate</strong></td><td>(calls_to_ZDR_provider for ZDR-required-tenant) / total such calls</td><td>audit rows</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>VN-PII recall (production sample)</strong></td><td>TP / (TP+FN) on weekly random sample</td><td>red-team review</td><td>≥ 0.99</td></tr>
+ <tr><td><strong>Provider-failover MTTR p95</strong></td><td>histogram on failover events</td><td>OBS</td><td>≤ 30 s</td></tr>
+ <tr><td><strong>Dogfooding LLM cost / Member (internal)</strong></td><td>internal-tenant cost / DAU</td><td>cost ledger filtered to <code>tenant_id=org:cyberskill</code></td><td>≤ $10 / DAU / month at P0; ≤ $5 by P1</td></tr>
  </tbody>
  </table>
  </div>
@@ -1052,16 +1404,30 @@ self-hosted:bge-rerank-v2-m3 rerank — free</code></pre>
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — AI Gateway architecture, latency budgets, ZDR enforcement.</li>
- <li> — (FR pending) through (FR pending) (PRD-tier).</li>
- <li><strong> + §11.2.2</strong> — Performance + reliability NFRs.</li>
- <li> — Formal (FR pending) through (FR pending) with verification methods.</li>
- <li><strong>EU AI Act</strong> (Reg. 2024/1689) — articles 12, 13, 14, 15, 26.</li>
- <li><strong>OWASP Gen AI Top-10 (2025)</strong> — LLM01, LLM06, LLM08, LLM10 mitigations.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + cross-module dependency Mermaid + auto-vs-human matrix.</li>
+ <li><strong>Cost-of-everything gate (§2.5 above):</strong> per-tenant policy YAML + 7-step pre/post accounting sequence + 7-dimension attribution table.</li>
+ <li><strong>Provider abstraction (§2.6 above):</strong> 6-row model-alias resolution + 7-row failover semantics + residency × provider matrix.</li>
+ <li><strong>Compliance plane (§2.7 above):</strong> 4-link chain (PII → persona → ZDR → audit) + <code>ai.invocation</code> 14-field schema + VN-PII recogniser table.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
+ <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
+ <a href="chat.html" class="text-blue-700 underline">chat.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
+ <a href="ten.html" class="text-blue-700 underline">ten.html</a></li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — AI Gateway placed at M+1 (P0 #1), the cost-of-everything gate before AUTH.</li>
+ <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §2.4</a> — explicit "Reorder AI Gateway before AUTH" recommendation; AI Gateway flagged as the highest-leverage cost-control module.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §7</a> — every <code>ai.invocation</code> audit row is a BRAIN capture event; Lumi cross-tenant synthesis depends on aggregate cost + persona signals at P3+.</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — AI Gateway FRs land via the <code>fr-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
+ <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 (logging via audit chain), Art. 13 (transparency — persona stamp), Art. 14 (human oversight — CFO cost-override), Art. 15 (accuracy + robustness — failover SLA), Art. 26 (operator obligations), Art. 50 (transparency — watermark for image gen at P2+).</li>
+ <li><strong>OWASP Gen AI Top-10 (2025):</strong> LLM01 prompt injection · LLM06 sensitive disclosure · LLM08 supply-chain · LLM10 model theft — gateway-level mitigations.</li>
  <li><strong>ISO/IEC 42001 (AIMS)</strong> — § 8.3 lifecycle and persona-version stamping.</li>
+ <li><strong>Vietnam PDPL (Law 91/2025):</strong> Art. 14 DSAR, Art. 20 security obligations, Art. 38 cross-border transfer rules (residency × provider matrix).</li>
  <li><strong>LiteLLM upstream</strong> — base router we vendor and extend.</li>
- <li><strong>Microsoft Presidio</strong> — PII detection library.</li>
- <li><strong>BGE-M3 / BGE-rerank-v2-m3</strong> — self-hosted embedding + rerank models.</li>
+ <li><strong>Microsoft Presidio</strong> — PII detection library; VN-PII recogniser ships as a Presidio plugin.</li>
+ <li><strong>BGE-M3 / BGE-rerank-v2-m3</strong> — self-hosted embedding + rerank models; BAAI release.</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#ai" class="text-blue-700 underline">infrastructure.html#ai</a>.</li>
  </ul>
  </div>

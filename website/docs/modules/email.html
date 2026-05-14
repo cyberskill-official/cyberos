@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>EMAIL — CyberOS</title>
- <meta name="description" content="EMAIL — Internal email and shared inbox. Stalwart core + Missive-style UX + CaMeL dual-LLM anti-injection. JMAP-native threading, Vietnamese-aware AI drafts, SPF/DKIM/DMARC.">
+ <title>EMAIL — Capture surface · Genie draft · Thread-to-issue bridge · CyberOS</title>
+ <meta name="description" content="EMAIL — three strategic roles: (1) inbound capture (tracked-domain auto-log to CRM activity + PROJ thread-to-issue), (2) Genie draft (Ask Genie composes replies, AM approves), (3) outbound send (DKIM-signed, ARC-stamped, CaMeL quarantine defends against EchoLeak-class indirect prompt injection). Stalwart core + Missive-style shared inbox UX + Vietnamese-aware AI drafts.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -52,7 +52,7 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CCO seat (interim CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Internal email plus a shared-inbox UX, built on the Stalwart open-source mail server with CaMeL dual-LLM defences against indirect prompt injection.
+ <strong>The capture surface.</strong> Inbound mail logs to CRM, threads become PROJ Issues, Genie drafts replies; CaMeL quarantine prevents the EchoLeak attack class from ever seeing the privileged agent.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  EMAIL is the second-highest-volume communication channel after CHAT and the single most dangerous source of indirect prompt-injection attacks. The strategy is to compose, not build: Stalwart (Rust, AGPL-3.0, single-binary all-protocol — JMAP, IMAP, POP3, SMTP, ManageSieve, MTA-STS, DANE, DKIM, ARC, BIMI) provides the protocol stack; a Missive-style shared-inbox UX layers on top (assignment, internal comments on threads, snooze, tagging); and Google DeepMind's CaMeL dual-LLM pattern (May 2025) sits between every untrusted body and the privileged CUO agent. The quarantined LLM has no tools and no memory; it produces sanitised structured extractions only. EchoLeak (CVE-2025-32711) showed what happens without that boundary — automatic exfiltration from Microsoft 365 Copilot with zero user interaction. locks the FR set; this page documents the planned implementation at <code>cyberos/services/email/</code>.
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why EMAIL exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -128,6 +129,90 @@
  <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · AI</div><div class="note">+ OBS · MCP</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~9,000</div><div class="note">Rust + TS (Stalwart adapter + UI)</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ EMAIL is structurally hostile territory. It is simultaneously: the second-highest-volume communication channel for any consultancy, the single most dangerous source of indirect prompt-injection attacks (EchoLeak / CVE-2025-32711 in May 2025 set the precedent), and the easiest way to log customer conversations to CRM + PROJ. The three strategic roles below are not nice-to-have features — they're the only architecture that handles those three realities at once.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--email)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--email-dark)">Role 1 · Capture surface</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Inbound auto-log to CRM + PROJ thread-to-issue</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Tracked domains auto-log every inbound + outbound message as a CRM activity. Thread-to-issue: AM clicks "Convert to issue" on a thread, the thread becomes a PROJ Issue with the email body as the issue description + reply chain as comments. Captures the consultancy memory layer that otherwise lives in nobody's inbox — and is gone the moment they leave.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--email)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--email-dark)">Role 2 · Genie draft</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Ask Genie composes; AM approves before send</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ "Genie:" subject prefix OR sidebar action → CUO drafts a reply grounded in: the thread history (sanitised by CaMeL), the linked CRM account, BRAIN memories about prior interactions with this account, and the relevant KB docs. Draft never auto-sent. AM reviews + edits + sends. The whole flow takes 30 seconds versus 5 minutes of writing.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--email)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--email-dark)">Role 3 · Outbound send + defence</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">DKIM + ARC + BIMI · CaMeL anti-injection</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Outbound: per-tenant DKIM keys, ARC on forward, BIMI for inbox-list branding. Inbound: every body passes through the CaMeL quarantine LLM (no tools, no memory, produces structured extraction only) before the privileged CUO sees anything. EchoLeak-class attacks fail because the privileged agent never reads raw HTML or untrusted text. AM/CFO approval tokens required on bulk send.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">EMAIL in the orchestration spine</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ EXT["External sender"]
+ EMAIL["✉ EMAIL<br>Stalwart · Missive UX · CaMeL quarantine"]
+ CRM["🤝 CRM<br>activity auto-log"]
+ PROJ["📋 PROJ<br>thread-to-issue"]
+ CUO["🎯 CUO<br>Genie draft skill"]
+ AM["👤 AM<br>review + send"]
+ BRAIN["🧠 BRAIN<br>thread history · CaMeL audit"]
+ OBS["👁 OBS<br>send latency · injection blocked"]
+ EXT --> EMAIL
+ EMAIL -- "CaMeL quarantine"-->|"sanitised extract"| BRAIN
+ EMAIL -- "tracked domain" --> CRM
+ EMAIL -- "thread-to-issue" --> PROJ
+ CRM --> EMAIL
+ PROJ --> EMAIL
+ EMAIL --> CUO
+ CUO -- "draft" --> EMAIL
+ EMAIL --> AM
+ AM -- "send" --> EXT
+ EMAIL --> OBS
+ classDef hub fill:#e2e8f0,stroke:#334155,stroke-width:3px,color:#0f172a
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef ext fill:#fee2e2,stroke:#b91c1c
+ class EMAIL hub
+ class CRM,PROJ,CUO,AM,OBS mod
+ class BRAIN brain
+ class EXT ext
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Inbound CaMeL quarantine</td><td><strong>Auto</strong> on every inbound message</td><td>Protocol invariant; privileged context never sees raw body.</td></tr>
+ <tr><td>Tracked-domain CRM auto-log</td><td><strong>Auto</strong> by domain match</td><td>Stops the "log it in the CRM" tax; auto = no manual entry.</td></tr>
+ <tr><td>Thread-to-issue conversion</td><td><strong>Manual</strong> AM click</td><td>Not every thread becomes an Issue; AM intent required.</td></tr>
+ <tr><td>Genie draft</td><td><strong>Auto</strong>; never auto-sent</td><td>Draft is suggestion; AM is accountable for prose + tone.</td></tr>
+ <tr><td>Outbound send (1:1)</td><td><strong>Manual</strong> AM action</td><td>Customer comms = relationship; human sends.</td></tr>
+ <tr><td>Bulk send (≥ 10 recipients)</td><td><strong>Manual</strong> AM + CFO/marketing approval</td><td>Anti-spam + brand-tone gate; never one-click bulk.</td></tr>
+ <tr><td>DKIM / ARC / BIMI signing</td><td><strong>Auto</strong> on outbound</td><td>Standards-driven; deterministic.</td></tr>
+ <tr><td>Spam classification</td><td><strong>Auto</strong> via Stalwart + ML</td><td>Trash routing; quarantine for borderline.</td></tr>
+ <tr><td>Bounce + reputation handling</td><td><strong>Auto</strong> + alarms</td><td>Email reputation is fragile; OBS surfaces dips.</td></tr>
+ <tr><td>DSAR export</td><td><strong>Auto</strong> bundle on request</td><td>Per-subject; chained audit; matches BRAIN export pattern.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -965,6 +1050,11 @@ graph LR
  <tr><td><code>R-EMAIL-008</code></td><td>JMAP / IMAP credential leak via SPA bug</td><td>Low</td><td>High</td><td>CTO</td><td>OAuth 2.1 access tokens only; no IMAP password reuse; refresh-token rotation.</td></tr>
  <tr><td><code>R-EMAIL-009</code></td><td>Migration import overflows quarantine review queue</td><td>Medium</td><td>Low</td><td>CTO</td><td>Rate-limited import (1k msg / min); injection-flagged messages tagged but not blocking the import.</td></tr>
  <tr><td><code>R-EMAIL-010</code></td><td>AGPL-3.0 obligations on Stalwart redistribution</td><td>Medium</td><td>Medium</td><td>CLO</td><td>Service-only distribution; source-code-offer URL on Trust Center; legal review of every Stalwart fork.</td></tr>
+ <tr><td><code>R-EMAIL-011</code></td><td><strong>Thread-to-issue creates wrong Engagement on conversion</strong></td><td>Medium</td><td>Medium</td><td>COO</td><td>Conversion shows AM the auto-suggested Engagement (matched by domain); AM must confirm or override; per-tenant default for unmatched.</td></tr>
+ <tr><td><code>R-EMAIL-012</code></td><td>Genie draft includes confidential data from BRAIN that customer shouldn't see</td><td>Medium</td><td>High</td><td>DPO</td><td>Genie draft skill operates in "outbound" mode — sync_class filter applied at retrieval; can only ground in shareable/client-visible memories; AM final review.</td></tr>
+ <tr><td><code>R-EMAIL-013</code></td><td>Bulk-send approval bypassed via API call</td><td>Low</td><td>High</td><td>CSO</td><td>Approval token required at SMTP submission gate; CI test verifies bulk-send rejection without token; OBS alarm on direct-API bulk attempts.</td></tr>
+ <tr><td><code>R-EMAIL-014</code></td><td>Tracked-domain misconfig — personal email auto-logged to CRM</td><td>Low</td><td>High</td><td>CSO</td><td>Tracked-domain config audited monthly; CI asserts common personal domains (gmail/yahoo/icloud) excluded from default tracking; per-Member opt-out.</td></tr>
+ <tr><td><code>R-EMAIL-015</code></td><td>CaMeL quarantine LLM cost spike from spam wave</td><td>Medium</td><td>Low</td><td>CTO</td><td>Pre-filter blocks obvious spam before quarantine; AI Gateway cost cap enforced; alarm on EMAIL cost &gt; 30% above 7-day baseline.</td></tr>
  </tbody>
  </table>
  </div>
@@ -990,6 +1080,11 @@ graph LR
  <tr><td><strong>Spam false-positive rate</strong></td><td><code>fp / total_classified_spam</code></td><td>user "not spam" actions</td><td>≤ 0.5%</td></tr>
  <tr><td><strong>Outbound CaMeL block rate</strong></td><td>blocked / sent attempts</td><td>BRAIN</td><td>tracked; alert on &gt; 1% / day</td></tr>
  <tr><td><strong>Attachment AV-quarantine rate</strong></td><td>quarantined / total</td><td>BRAIN</td><td>tracked; alert spike</td></tr>
+ <tr><td><strong>Thread-to-issue conversion accuracy</strong></td><td>conversions retained / total conversions (90d)</td><td>PROJ events</td><td>≥ 0.90 (low rollback = good auto-match)</td></tr>
+ <tr><td><strong>Genie draft confidential-leak rate</strong></td><td>drafts containing private/personal memories / total drafts</td><td>CaMeL post-write audit</td><td>= 0 (hard floor)</td></tr>
+ <tr><td><strong>Bulk-send token compliance</strong></td><td>bulk sends with approval token / total bulk sends</td><td>SMTP submission audit</td><td>= 1.0 (hard floor; CI gate)</td></tr>
+ <tr><td><strong>Tracked-domain audit pass rate</strong></td><td>tenants passing monthly tracked-domain audit / total</td><td>monthly CSO review</td><td>= 1.0</td></tr>
+ <tr><td><strong>CaMeL cost per inbound msg</strong></td><td>AI Gateway cost for CaMeL / total inbound</td><td>cost ledger</td><td>tracked; alarm on baseline-drift &gt; 30%</td></tr>
  </tbody>
  </table>
  </div>
@@ -1167,6 +1262,20 @@ if address:is "from" "noreply@github.com" {
  <li><strong>RFC 8617</strong> — Authenticated Received Chain (ARC).</li>
  <li><strong>RFC 8620</strong> — JSON Meta Application Protocol (JMAP).</li>
  <li><strong>Decree 53/2022/NĐ-CP (Vietnam)</strong> — Cybersecurity Law; data residency.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + spine Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="crm.html" class="text-blue-700 underline">crm.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
+ <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
+ <a href="obs.html" class="text-blue-700 underline">obs.html</a></li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — sanitised CaMeL extractions feed BRAIN; raw bodies never.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — EMAIL at M+5 (P1).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
+ <li><strong>CaMeL paper (Google DeepMind, May 2025)</strong> — dual-LLM pattern for defeating indirect prompt injection.</li>
+ <li><strong>EchoLeak (CVE-2025-32711, May 2025)</strong> — the canonical exfiltration case that motivates CaMeL.</li>
  <li><strong>Decree 13/2023/NĐ-CP (Vietnam)</strong> — Personal data processing protection.</li>
  <li><strong>Law 91/2025/QH15 (Vietnam PDPL)</strong> — Personal Data Protection Law.</li>
  <li><strong>BIMI v1</strong> — Brand Indicators for Message Identification.</li>

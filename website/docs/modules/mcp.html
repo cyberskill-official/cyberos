@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>MCP Gateway — CyberOS</title>
- <meta name="description" content="MCP Gateway — Model Context Protocol federation router. 2025-11-25 spec compliance, OAuth 2.1 PRM, Streamable HTTP, Tasks, Elicitation, tool registry across all modules.">
+ <title>MCP Gateway — External-client federation · Capability broker · Tool-discovery surface · CyberOS</title>
+ <meta name="description" content="MCP Gateway — the federation router that turns CyberOS's 22 modules into one MCP server for external agents (Claude / Cursor / Codex / Cline). Three strategic roles: (1) external-client federation, (2) capability broker (RBAC + persona stamp + destructive-op confirm), (3) tool-discovery surface (the registry external agents introspect). MCP 2025-11-25 spec, OAuth 2.1 PKCE, Streamable HTTP, Tasks, Elicitation.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -42,10 +42,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO (vacant) → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- A single MCP face for the whole platform — every module's tools, one well-known endpoint, OAuth-protected, persona-stamped, audit-chained.
+ <strong>The external-agent door.</strong> Claude / Cursor / Codex / Cline / any MCP-2025-11-25 client sees one server. Inside, 22 modules' tool catalogues are federated, capability-gated, persona-stamped, and audit-chained — without the external agent ever knowing about the federation.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- MCP Gateway is the federation router that composes a single Model Context Protocol surface from every module's per-server tool catalogue. From the outside, Claude / Codex / Cursor / any MCP 2025-11-25 client discovers one server at <code>https://mcp.cyberos.com</code>; inside, the gateway forwards tool calls to <code>cyberos.{module}.{verb}_{noun}</code> servers, enforces OAuth 2.1 + PKCE (audience-bound), evaluates tool annotations (destructive / readOnly / idempotent / openWorld), runs the RBAC predicate via AUTH, gates destructive calls behind human-confirm or elicitation, tracks long-running work via the Tasks primitive, and lands one audit row per invocation. Persona-version stamping ((FR pending)) means every tool call records which agent identity authored it — so "the AI did it" is replayable down to the system-prompt revision. + §9.8 lock the FRs; the implementation lives at <code>cyberos/services/mcp-gateway/</code>.
+ MCP Gateway plays three strategic roles simultaneously. <strong>Role 1 — external-client federation</strong>: 22 module-level MCP servers (<code>cyberos.brain</code>, <code>cyberos.skill</code>, <code>cyberos.proj</code>, …) collapse to a single discovery endpoint at <code>https://mcp.cyberos.com</code>; external agents see one server with one OAuth flow. <strong>Role 2 — capability broker</strong>: OAuth 2.1 + PKCE audience-bound tokens + AUTH scope_grants + tool annotations (destructive / readOnly / idempotent / openWorld) gate every invocation; destructive ops require human-confirm or Elicitation flow; persona-version is stamped on every call so "the AI did it" is replayable. <strong>Role 3 — tool-discovery surface</strong>: the registry external agents introspect — <code>tools/list</code> returns the SEP-986-named verbs, prompt templates land in <code>prompts/list</code>, long-running work is tracked via the Tasks primitive. Built on MCP spec 2025-11-25 (Streamable HTTP transport, OAuth 2.1 with PRM, Elicitation, Tasks). The planned implementation lives at <code>cyberos/services/mcp-gateway/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -66,8 +66,12 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why MCP exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#client-federation">External-client federation</a></li>
+ <li><a class="toc-link" href="#capability-broker">Capability broker</a></li>
+ <li><a class="toc-link" href="#tool-discovery">Tool-discovery surface</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
@@ -103,15 +107,132 @@
  MCP Gateway is the <strong>tool federation layer</strong> that turns CyberOS's 22 modules into a single, coherent MCP server. Each module publishes a per-server (named <code>cyberos.brain</code>, <code>cyberos.skill</code>, <code>cyberos.crm</code>, …) that exposes its verbs as tools (<code>brain.put_memory</code>, <code>skill.invoke_skill</code>, <code>crm.update_account</code>, …); the gateway aggregates these into a federated surface that Claude / Codex / Cursor / Cline / any 2025-11-25-spec client sees as one server. OAuth 2.1 + PKCE (RFC 7636) gates every tool call; the audience claim pins the call to a specific module; the RBAC predicate from AUTH enforces who can do what; the persona-version stamp captures which agent authored the call. Tool annotations (destructive · readOnly · idempotent · openWorld) drive human-confirm gating. Tasks primitive handles long-running work; Elicitation reverses control mid-execution to ask the user a question.
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+2</div></div>
- <div class="fact-card"><div class="label">Spec compliance</div><div class="value">MCP 2025-11-25</div><div class="note">latest spec, full coverage</div></div>
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">External-agent door</div><div class="note">22 modules → one MCP server</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+2.5</div></div>
+ <div class="fact-card"><div class="label">Spec compliance</div><div class="value">MCP 2025-11-25</div><div class="note">Streamable HTTP · Tasks · Elicitation</div></div>
+ <div class="fact-card"><div class="label">External clients (target)</div><div class="value">Claude · Cursor · Codex · Cline</div><div class="note">all 2025-11-25 compliant clients</div></div>
  <div class="fact-card"><div class="label">Transports</div><div class="value">Streamable HTTP · SSE</div><div class="note">RFC 9112 chunked + EventSource</div></div>
- <div class="fact-card"><div class="label">Auth</div><div class="value">OAuth 2.1 PKCE</div><div class="note">RFC 7636 · audience-bound</div></div>
- <div class="fact-card"><div class="label">Tools at P0 (est.)</div><div class="value">~80</div><div class="note">across BRAIN, Skill, AUTH, AI</div></div>
+ <div class="fact-card"><div class="label">Auth</div><div class="value">OAuth 2.1 PKCE</div><div class="note">RFC 7636 · audience-bound · PRM</div></div>
+ <div class="fact-card"><div class="label">Tools at P0 (est.)</div><div class="value">~80</div><div class="note">BRAIN · Skill · AUTH · AI</div></div>
  <div class="fact-card"><div class="label">Tools at P3 (est.)</div><div class="value">~300+</div><div class="note">22 modules × ~15 verbs each</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">authz + audit + traces</div></div>
- <div class="fact-card"><div class="label">Naming convention</div><div class="value">SEP-986</div><div class="note">verbNoun.dotted</div></div>
+ <div class="fact-card"><div class="label">Destructive-op gating</div><div class="value">Human-confirm</div><div class="note">via Elicitation or explicit token</div></div>
+ <div class="fact-card"><div class="label">Persona stamp coverage</div><div class="value">100%</div><div class="note">on every audit row</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">+ AI Gateway (M+1)</div></div>
+ <div class="fact-card"><div class="label">Naming convention</div><div class="value">SEP-986</div><div class="note">cyberos.{module}.{verb}_{noun}</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+
+ <p class="text-slate-700 leading-relaxed mb-4">
+ MCP Gateway is "the external-agent door." That sentence does a lot of work. Without this module, every external agent (Claude Code on a Member's laptop, Cursor on an engineer's IDE, Codex in CI) would need 22 separate OAuth flows + 22 separate discovery loops + 22 separate audit emissions. The naive design — "one MCP server per module, agents figure it out" — is intractable past 3 modules. MCP Gateway collapses 22 to 1 at the edge while keeping per-module ownership intact behind the federation.
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid #06b6d4">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#0e7490">Role 1 · External-client federation</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">22 modules → one MCP server</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Claude Code, Cursor, Codex, Cline, and any 2025-11-25 spec client hit a single discovery endpoint at <code>https://mcp.cyberos.com/.well-known/mcp</code>. The gateway aggregates per-module tool catalogues via SEP-986 naming (<code>cyberos.brain.put_memory</code>, <code>cyberos.proj.create_issue</code>, etc.) so external agents see one server. Per-module servers stay separate behind the edge; federation only happens at the surface. This means Members can use the AI tools they already trust without learning a new orchestrator.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid #06b6d4">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#0e7490">Role 2 · Capability broker</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Every external invocation gated</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Audience-bound OAuth 2.1 + PKCE tokens carry tenant_id + agent_persona + scope_grants per AUTH §2.7. Tool annotations (<code>destructive</code> / <code>readOnly</code> / <code>idempotent</code> / <code>openWorld</code>) drive gating: destructive ops require either an explicit confirmation token in the request or an Elicitation flow that asks the user. The persona stamp on every audit row makes "external agent X did Y" replayable down to which Claude/Cursor session authored it.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid #06b6d4">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#0e7490">Role 3 · Tool-discovery surface</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">The registry external agents introspect</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ <code>tools/list</code> returns ~80 tools at P0 (~300+ at P3); <code>prompts/list</code> exposes module-specific prompt templates; <code>resources/list</code> exposes BRAIN paths the agent can read. Long-running work (KB ingestion, big migrations, bulk imports) is tracked via the Tasks primitive — the agent can start a task, poll status, get a streaming progress update, and resume on reconnect. Elicitation reverses control mid-execution to ask "should I proceed with the destructive step?".
+ </p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">MCP Gateway in the runtime — federation map</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart TB
+ subgraph clients["External MCP clients (2025-11-25)"]
+ CC["Claude Code"]
+ CURSOR["Cursor"]
+ CODEX["Codex / GPT-5 agent"]
+ CLINE["Cline"]
+ OTHER["any compliant agent"]
+ end
+
+ MCPGW["🔌 MCP Gateway<br>OAuth 2.1 · Streamable HTTP · Tasks · Elicitation"]
+
+ subgraph perm["Per-module MCP servers (internal)"]
+ BRSV["cyberos.brain"]
+ SKSV["cyberos.skill"]
+ PRSV["cyberos.proj"]
+ CRMSV["cyberos.crm"]
+ KBSV["cyberos.kb"]
+ N["… 17 more"]
+ end
+
+ subgraph dep["Platform deps"]
+ AUTH["🔐 AUTH<br>scope_grants check"]
+ AIGW["⚡ AI Gateway<br>persona stamp resolution"]
+ BRAIN["🧠 BRAIN<br>audit chain"]
+ OBS["👁 OBS<br>traces"]
+ end
+
+ CC --> MCPGW
+ CURSOR --> MCPGW
+ CODEX --> MCPGW
+ CLINE --> MCPGW
+ OTHER --> MCPGW
+
+ MCPGW -. "JWT audience verify".-> AUTH
+ MCPGW -. "fetch persona-version".-> AIGW
+ MCPGW --> BRSV
+ MCPGW --> SKSV
+ MCPGW --> PRSV
+ MCPGW --> CRMSV
+ MCPGW --> KBSV
+ MCPGW --> N
+
+ MCPGW --> BRAIN
+ MCPGW --> OBS
+
+ classDef hub fill:#cffafe,stroke:#0e7490,stroke-width:3px,color:#164e63
+ classDef client fill:#e0e7ff,stroke:#3730a3
+ classDef internal fill:#f5ede6,stroke:#45210e
+ classDef dep fill:#fef6e0,stroke:#9c750a
+ class MCPGW hub
+ class CC,CURSOR,CODEX,CLINE,OTHER client
+ class BRSV,SKSV,PRSV,CRMSV,KBSV,N internal
+ class AUTH,AIGW,BRAIN,OBS dep
+ </div>
+ <p class="text-xs text-slate-500 mt-3">External clients never reach per-module servers directly. The gateway is the only external surface; this is the protocol-level guarantee that auth + audit + persona-stamp are uniformly applied.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:32%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Tool discovery (<code>tools/list</code>)</td><td><strong>Auto</strong> — filtered by client's scope_grants</td><td>Agent only sees tools it could invoke; reduces surface area shown.</td></tr>
+ <tr><td>Read-only tool call (<code>annotation: readOnly</code>)</td><td><strong>Auto</strong> when scope_grants permit</td><td>Read is low-risk; latency-sensitive; agent flow shouldn't break.</td></tr>
+ <tr><td>Idempotent write (<code>annotation: idempotent</code>)</td><td><strong>Auto</strong> with idempotency-key</td><td>Retry-safe; idempotency-key prevents double-write on transport retry.</td></tr>
+ <tr><td>Non-idempotent write (default)</td><td><strong>Auto</strong> with scope check + audit emit</td><td>Standard write path; broker checks scope + writes pre/post audit rows.</td></tr>
+ <tr><td>Destructive op (<code>annotation: destructive</code>)</td><td><strong>Human-confirm always</strong> — explicit token or Elicitation</td><td>EU AI Act Art. 14 + safety policy; cannot be auto-invoked regardless of confidence.</td></tr>
+ <tr><td>Long-running work (Tasks primitive)</td><td><strong>Auto-start</strong>, <strong>polled</strong> by agent, <strong>resumable</strong> on reconnect</td><td>Big ingests, migrations, bulk imports — must survive network blips.</td></tr>
+ <tr><td>Mid-execution question (Elicitation)</td><td><strong>Server-initiated</strong>; agent forwards to user</td><td>Reverses control: server asks "should I proceed?" mid-call.</td></tr>
+ <tr><td>Tool catalogue update (<code>list_changed</code> notification)</td><td><strong>Auto</strong>; pushed to subscribed clients</td><td>New tools appear without client re-poll; old tools removed live.</td></tr>
+ <tr><td>OAuth token refresh</td><td><strong>Auto</strong> via standard refresh-token flow</td><td>Session continuity for long-lived agent sessions.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -164,6 +285,198 @@
  <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (read tool p95 ≤ 500 ms) + N(FR pending) (write tool p95 ≤ 1 s). Spec compliance via the MCP conformance test suite. Audit completeness at 100%.</td></tr>
  </tbody>
  </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.5 — EXTERNAL-CLIENT FEDERATION -->
+<!-- ============================================================ -->
+<section id="client-federation" class="module-section">
+ <header class="section-head"><span class="section-num">2.5</span><h2>External-client federation — 22 modules behind one surface</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ An external agent never knows it's talking to 22 modules. From the agent's perspective, <code>https://mcp.cyberos.com</code> is one MCP server with ~80 tools at P0 (~300+ at P3). The federation is at the edge — per-module servers (<code>cyberos.brain</code>, <code>cyberos.skill</code>, etc.) stay separate inside the cluster, but the gateway is the only thing external clients reach. This section locks the federation contract.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">SEP-986 naming convention (per-module ownership preserved)</h3>
+ <div class="bbg-card p-5 mb-5">
+ <p class="text-sm text-slate-600 mb-3">Tool names follow <code>cyberos.{module}.{verb}_{noun}</code> SEP-986 convention. The module prefix preserves ownership for audit + revocation; the verb_noun form aligns with MCP convention.</p>
+ <table class="kt">
+ <thead><tr><th>Pattern</th><th>Example</th><th>What it does</th><th>Owning module</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos.{module}.put_*</code></td><td><code>cyberos.brain.put_memory</code></td><td>Create or replace a resource</td><td>BRAIN</td></tr>
+ <tr><td><code>cyberos.{module}.get_*</code></td><td><code>cyberos.brain.get_memory</code></td><td>Read a resource</td><td>BRAIN</td></tr>
+ <tr><td><code>cyberos.{module}.list_*</code></td><td><code>cyberos.proj.list_issues</code></td><td>List resources (paginated)</td><td>PROJ</td></tr>
+ <tr><td><code>cyberos.{module}.create_*</code></td><td><code>cyberos.proj.create_issue</code></td><td>Create a new entity</td><td>PROJ</td></tr>
+ <tr><td><code>cyberos.{module}.update_*</code></td><td><code>cyberos.crm.update_account</code></td><td>Mutate an existing entity</td><td>CRM</td></tr>
+ <tr><td><code>cyberos.{module}.invoke_*</code></td><td><code>cyberos.skill.invoke_skill</code></td><td>Trigger a skill / action</td><td>Skill</td></tr>
+ <tr><td><code>cyberos.{module}.delete_*</code></td><td><code>cyberos.proj.delete_issue</code></td><td>Tombstone an entity (destructive)</td><td>PROJ</td></tr>
+ <tr><td><code>cyberos.{module}.export_*</code></td><td><code>cyberos.brain.export_dsar</code></td><td>Export bulk data (destructive sensitivity)</td><td>BRAIN</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Per-module server registration flow</h3>
+ <div class="bbg-card p-5 mb-5">
+ <p class="text-sm text-slate-600 mb-3">Each module's MCP server registers itself with the gateway at startup. Registration carries its tool catalogue (with annotations), prompt templates, and resource paths. The gateway maintains a versioned catalogue and pushes <code>list_changed</code> notifications to subscribed clients when modules deploy.</p>
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant M as cyberos.brain (per-module server)
+ participant G as MCP Gateway
+ participant DB as Catalogue DB
+ participant CL as Subscribed clients (Claude, Cursor)
+ participant BR as 🧠 BRAIN audit
+
+ M->>G: register_module(name, tools[], prompts[], resources[], version)
+ G->>DB: upsert module record + tool catalogue
+ G->>BR: emit mcp.module_registered audit row
+ G->>CL: notification: tools/list_changed
+ Note over G,CL: subscribed agents re-fetch tools/list
+ G-->>M: registered (catalogue_version, registration_token)
+ M->>G: heartbeat every 30s (keep-alive)
+ Note over G: missed 3 heartbeats → module marked unhealthy → tools removed from federation
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">External client compatibility matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Client</th><th>MCP spec version</th><th>OAuth 2.1</th><th>Streamable HTTP</th><th>Tasks</th><th>Elicitation</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Claude Code</strong></td><td>2025-11-25</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+ <tr><td><strong>Claude Desktop</strong></td><td>2025-11-25</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+ <tr><td><strong>Cursor</strong></td><td>2025-11-25</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+ <tr><td><strong>Codex / GPT-5 agent</strong></td><td>2025-11-25</td><td>✓</td><td>✓</td><td>partial</td><td>✓</td></tr>
+ <tr><td><strong>Cline</strong></td><td>2025-11-25</td><td>✓</td><td>✓</td><td>✓</td><td>partial</td></tr>
+ <tr><td><strong>Older 2024-11-05 clients</strong></td><td>2024-11-05</td><td>partial</td><td>SSE-only</td><td>—</td><td>—</td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm text-slate-600 mt-3">Gateway negotiates the highest mutual version at session init. Older clients fall back to SSE transport + bearer-token auth (no PKCE). Older-client tool surface excludes Tasks and Elicitation features.</p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.6 — CAPABILITY BROKER -->
+<!-- ============================================================ -->
+<section id="capability-broker" class="module-section">
+ <header class="section-head"><span class="section-num">2.6</span><h2>Capability broker — every external invocation gated</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The threat model is precise: an external agent (running in Claude Code on a Member's laptop) carries an OAuth token; the agent is fundamentally untrusted (the user might have approved a malicious tool, the agent process might be compromised, the prompt might be injected). The capability broker is the protocol-level guarantee that even a fully-compromised agent cannot escape the bounds of the user's authorised scope.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">Tool annotations — what drives gating</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Annotation</th><th>Meaning</th><th>Gating behaviour</th><th>Example tools</th></tr></thead>
+ <tbody>
+ <tr><td><code>readOnly: true</code></td><td>No state mutation. Idempotent always.</td><td>Auto-invoke if scope permits; no confirm needed</td><td><code>cyberos.brain.get_memory</code>, <code>cyberos.proj.list_issues</code>, <code>cyberos.kb.search</code></td></tr>
+ <tr><td><code>idempotent: true</code></td><td>Write that can be safely retried with same args + idempotency-key</td><td>Auto-invoke if scope permits; idempotency-key required</td><td><code>cyberos.proj.update_issue</code>, <code>cyberos.crm.upsert_account</code></td></tr>
+ <tr><td><code>destructive: true</code></td><td>Irreversible: purge / delete / send-money / public-post</td><td><strong>Human confirmation required</strong> — explicit confirmation_token in args OR Elicitation flow</td><td><code>cyberos.brain.delete_memory{mode: purge}</code>, <code>cyberos.proj.delete_engagement</code>, <code>cyberos.email.send</code></td></tr>
+ <tr><td><code>openWorld: true</code></td><td>Reaches external systems (third-party APIs, web fetch)</td><td>Auto-invoke with additional rate limit + content filter</td><td><code>cyberos.web.fetch_url</code>, <code>cyberos.zoominfo.enrich_contact</code></td></tr>
+ <tr><td><code>longRunning: true</code></td><td>Returns a task_id; agent polls for completion</td><td>Auto-start as Task; agent polls; timeout default 1 h</td><td><code>cyberos.kb.ingest_corpus</code>, <code>cyberos.brain.export_dsar</code></td></tr>
+ <tr><td><code>elicits: true</code></td><td>Server may ask agent for additional input mid-call</td><td>Agent must support Elicitation; falls back to user prompt</td><td><code>cyberos.cuo.route_with_clarification</code>, <code>cyberos.crm.create_deal_interactive</code></td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Audience-bound OAuth — the broker's auth contract</h3>
+ <div class="bbg-card p-5 mb-5">
+<pre><code class="language-json">{
+  "iss": "https://auth.cyberos.io/&lt;tenant&gt;",
+  "sub": "user:stephen@cyberskill.world",
+  "aud": "mcp.cyberos.com",          // ← audience-bound: this token is ONLY valid at MCP Gateway
+  "iat": 1763112131,
+  "exp": 1763115731,
+  "tenant_id": "org:cyberskill",
+  "agent_persona": "claude-code@user-stephen",  // ← which external agent is calling
+  "scope_grants": [
+    {"resource": "brain", "actions": ["read", "write"], "sync_class_max": "shareable"},
+    {"resource": "proj",  "actions": ["read", "write"], "engagements": ["acme-q3"]},
+    {"resource": "kb",    "actions": ["read"]}
+  ],
+  "client_id": "claude-code-vsce-extension",   // ← which MCP client requested the token
+  "code_challenge": "sha256:…",                // ← PKCE binding
+  "jti": "01HZK…"
+}</code></pre>
+ <p class="text-sm text-slate-600 mt-3">The <code>aud</code> claim is the protocol-level guarantee: a token issued for <code>mcp.cyberos.com</code> cannot be replayed against <code>api.cyberos.com</code>. PKCE binding prevents code interception during the auth flow. The <code>scope_grants</code> are checked per-tool-call against the tool's required resource + action.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Destructive-op confirmation flow (Elicitation example)</h3>
+ <div class="bbg-card p-5">
+<pre><code class="language-json">// Agent calls a destructive tool
+→ {"method": "tools/call", "params": {"name": "cyberos.brain.delete_memory", "arguments": {"path": "…/draft.md", "mode": "purge"}}}
+
+// Gateway intercepts: annotation destructive=true, no confirmation_token in args
+← {"method": "elicitation/create", "params": {
+    "message": "Are you sure you want to PURGE this memory? This is irreversible.",
+    "schema": {"type": "object", "properties": {"confirm": {"type": "boolean"}, "reason": {"type": "string"}}, "required": ["confirm", "reason"]}
+  }}
+
+// Agent forwards to user; user responds in client UI
+→ {"method": "elicitation/response", "params": {"confirm": true, "reason": "Outdated draft superseded by v2"}}
+
+// Gateway forwards original call with confirmation context
+// Audit row records BOTH the elicitation prompt AND the user's response
+{"op": "put", "path": "meta/mcp-invocations/…", "extra": {"tool": "cyberos.brain.delete_memory", "elicitation": {"prompt": "…", "user_confirmed": true, "reason": "Outdated draft superseded by v2"}}}</code></pre>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.7 — TOOL-DISCOVERY SURFACE -->
+<!-- ============================================================ -->
+<section id="tool-discovery" class="module-section">
+ <header class="section-head"><span class="section-num">2.7</span><h2>Tool-discovery surface — the registry agents introspect</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ An agent's effectiveness is bounded by what it can discover. MCP Gateway is the registry external agents use to introspect what CyberOS can do: <code>tools/list</code> (verbs), <code>prompts/list</code> (templated workflows), <code>resources/list</code> (readable data paths), and <code>capabilities</code> (which MCP features are supported). This section locks the discovery surface contracts.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">Discovery endpoints</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Endpoint</th><th>What it returns</th><th>Filter / scoping</th><th>Cadence</th></tr></thead>
+ <tbody>
+ <tr><td><code>/.well-known/mcp</code></td><td>Discovery doc · OAuth Protected Resource Metadata (PRM) · transport endpoints</td><td>public</td><td>static (cached 1 h)</td></tr>
+ <tr><td><code>capabilities</code></td><td>Supported MCP features (Tasks, Elicitation, sampling, etc.)</td><td>none</td><td>per-session init</td></tr>
+ <tr><td><code>tools/list</code></td><td>Tools available to the calling token's scope_grants</td><td>filtered by JWT scope_grants</td><td>per-call + <code>list_changed</code> push</td></tr>
+ <tr><td><code>prompts/list</code></td><td>Prompt templates for common workflows ("Find the right CUO persona", "Draft a cycle review")</td><td>filtered by scope</td><td>per-call</td></tr>
+ <tr><td><code>resources/list</code></td><td>BRAIN paths / KB documents the calling token can read</td><td>filtered by sync_class + scope</td><td>per-call</td></tr>
+ <tr><td><code>resources/templates/list</code></td><td>URI templates for resource lookup (e.g. <code>brain://memories/decisions/{slug}</code>)</td><td>filtered by scope</td><td>per-call</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Tasks primitive — long-running work</h3>
+ <div class="bbg-card p-5 mb-5">
+ <p class="text-sm text-slate-600 mb-3">For operations that take &gt; 30 s (KB corpus ingestion, BRAIN export, bulk migrations), MCP Gateway returns a Task immediately and lets the agent poll for status. The agent can disconnect and reconnect; the Task persists in Postgres.</p>
+ <table class="kt">
+ <thead><tr><th>Task field</th><th>Type</th><th>Purpose</th></tr></thead>
+ <tbody>
+ <tr><td><code>task_id</code></td><td>UUID</td><td>Stable handle; agent polls <code>tasks/get?id=…</code></td></tr>
+ <tr><td><code>status</code></td><td>pending · running · waiting_for_input · completed · failed · cancelled</td><td>Drives agent's polling cadence + UI</td></tr>
+ <tr><td><code>progress</code></td><td>0.0 - 1.0 OR null</td><td>If determinate, agent can render a progress bar</td></tr>
+ <tr><td><code>message</code></td><td>string (streamed)</td><td>Latest human-readable status; SSE-streamed if agent subscribes</td></tr>
+ <tr><td><code>result</code></td><td>JSON · null until completed</td><td>Final response; matches the tool's result schema</td></tr>
+ <tr><td><code>error</code></td><td>{code, message, retriable}</td><td>If failed; agent decides retry behaviour</td></tr>
+ <tr><td><code>created_at / updated_at / expires_at</code></td><td>timestamps</td><td>Tasks expire after 24 h default; per-tool override</td></tr>
+ <tr><td><code>brain_chain</code></td><td>hash</td><td>References the audit row that recorded task start</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Prompt templates — pre-canned workflows</h3>
+ <div class="bbg-card p-5">
+ <p class="text-sm text-slate-600 mb-3">Prompts are MCP-defined templated workflows the agent can use. They reduce hallucination by giving the agent a known-good way to invoke a multi-step CyberOS operation.</p>
+ <table class="kt">
+ <thead><tr><th>Prompt name</th><th>Purpose</th><th>Bound tools</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos.weekly_brief</code></td><td>Generate the user's weekly brief from BRAIN + PROJ + CAL</td><td>brain.list_recent · proj.list_my_issues · cal.list_events</td></tr>
+ <tr><td><code>cyberos.decision_to_issues</code></td><td>Convert a BRAIN decision memory into parent + child issues</td><td>brain.get_memory · cuo.invoke_skill (cuo.cpo.decision-to-issues@1) · proj.create_issue</td></tr>
+ <tr><td><code>cyberos.draft_cycle_review</code></td><td>Generate cycle review from issues + comments + history</td><td>proj.get_cycle · proj.list_cycle_issues · ai.chat_complete (with CUO/COO persona)</td></tr>
+ <tr><td><code>cyberos.deal_to_engagement</code></td><td>Convert a won CRM deal to a PROJ Engagement with rate card</td><td>crm.get_deal · proj.create_engagement · brain.put_memory (audit decision)</td></tr>
+ <tr><td><code>cyberos.find_brain_citations</code></td><td>Given an Issue, suggest BRAIN memories to cite</td><td>proj.get_issue · brain.semantic_search · proj.create_brain_link</td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm text-slate-600 mt-3">Each prompt is a versioned, audit-anchored workflow; the agent receives the prompt and the bound tool names; the gateway audits prompt invocations separately from individual tool calls.</p>
  </div>
 </section>
 
@@ -783,6 +1096,16 @@ graph LR
  <tr><td><code>R-MCP-008</code></td><td>OAuth registration scaling — every agent client must register</td><td>Low</td><td>Low</td><td>CTO</td><td>Dynamic Client Registration (DCR) per RFC 7591; tenant admin approves before activation.</td></tr>
  <tr><td><code>R-MCP-009</code></td><td>Tool catalogue cache staleness after backend deploy</td><td>Medium</td><td>Low</td><td>CTO</td><td>60 s TTL + register-time invalidation; deploys trigger cache reset.</td></tr>
  <tr><td><code>R-MCP-010</code></td><td>Sampling-with-Tools amplification (LLM-driven loop)</td><td>Medium</td><td>Medium</td><td>CSO</td><td>(FR pending): per-session sampling rate limit; circuit-breaker on recursion depth.</td></tr>
+ <tr><td><code>R-MCP-011</code></td><td><strong>External agent token theft (Member's laptop compromised → Claude Code token grants full CyberOS access)</strong></td><td>Medium</td><td>Critical</td><td>CSO</td><td>Short-lived tokens (1 h default); refresh-token rotation; device-binding via DPoP (P2+); destructive-op confirmation gating even with valid token; emergency revoke endpoint pages CSO instantly.</td></tr>
+ <tr><td><code>R-MCP-012</code></td><td>Prompt injection in tool description (agent reads description, follows attacker instruction)</td><td>Medium</td><td>High</td><td>CSO</td><td>Tool descriptions are protocol-trusted by gateway, untrusted by agents; CyberOS modules go through CSO review before publishing tool descriptions; agent-side system prompts treat tool descriptions as data, not instructions.</td></tr>
+ <tr><td><code>R-MCP-013</code></td><td>Elicitation fatigue — too many destructive confirms → user starts rubber-stamping</td><td>High</td><td>Medium</td><td>CPO</td><td>Bundle destructive ops where safe (batch delete with one confirm); show explicit consequence in elicitation prompt; rate-limit elicitations per session; never auto-decay to "approve all".</td></tr>
+ <tr><td><code>R-MCP-014</code></td><td>Federation lag — module deploys new tool, agent calls old name, gets cryptic error</td><td>Medium</td><td>Low</td><td>CTO</td><td>60 s cache TTL + list_changed push to subscribed clients; deprecation aliases (old name → new name) supported for 1 minor release; per-tool version field in tool catalogue.</td></tr>
+ <tr><td><code>R-MCP-015</code></td><td>Task storm — agent starts 1000s of long-running tasks, exhausts capacity</td><td>Low</td><td>High</td><td>CTO</td><td>Per-tenant per-agent task limit (default 50 concurrent); rate limit on tasks/create; auto-cancel tasks older than 24 h; alarm on task backlog &gt; 100.</td></tr>
+ <tr><td><code>R-MCP-016</code></td><td>Resource leak via subscribed list_changed notifications (agent disconnects, gateway keeps emitting)</td><td>Medium</td><td>Low</td><td>CTO</td><td>Subscription tied to session lifetime; ping/pong heartbeat 30 s; auto-unsubscribe on missed heartbeats.</td></tr>
+ <tr><td><code>R-MCP-017</code></td><td>Per-module heartbeat false-positive — gateway marks healthy module as down</td><td>Low</td><td>Medium</td><td>CTO</td><td>3 consecutive heartbeat misses required (not 1); module health endpoint independent of MCP server itself; manual override via <code>cyberos-mcp servers reactivate</code>.</td></tr>
+ <tr><td><code>R-MCP-018</code></td><td>OAuth Dynamic Client Registration (DCR) abuse — attacker registers many clients</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Tenant admin approval gate before activation; rate limit on DCR endpoint (10/hour per tenant); flag suspicious registrations (unusual redirect URIs).</td></tr>
+ <tr><td><code>R-MCP-019</code></td><td>Older 2024-11-05 client connects, falls back to SSE + bearer token, less secure</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Older clients explicitly opted in per tenant (deny by default); audit row flags "older protocol session"; sunset older protocol by M+12 (push all tenants to 2025-11-25).</td></tr>
+ <tr><td><code>R-MCP-020</code></td><td>SEP-986 naming collision (two modules define <code>delete_thing</code>)</td><td>Low</td><td>Medium</td><td>CTO</td><td>The <code>cyberos.&lt;module&gt;</code> prefix is namespace; cross-module same-noun is allowed; registration validator rejects exact duplicates within the same prefix.</td></tr>
  </tbody>
  </table>
  </div>
@@ -803,6 +1126,15 @@ graph LR
  <tr><td><strong>Tool-name violations</strong></td><td>count</td><td>registry validator</td><td>= 0</td></tr>
  <tr><td><strong>Active tasks</strong></td><td>count of <code>status=running</code></td><td>tasks DB</td><td>tracked; alert on backlog &gt; 100</td></tr>
  <tr><td><strong>Backend health</strong></td><td>healthy / registered</td><td><code>/admin/servers</code></td><td>≥ 95% always</td></tr>
+ <tr><td><strong>Persona-stamp coverage</strong></td><td>audit rows with persona stamp / total</td><td>BRAIN audit replay</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Elicitation acceptance rate</strong></td><td>user-confirmed elicitations / total elicitations</td><td>mcp.invocation rows</td><td>tracked; sudden drop = UI confusion alarm</td></tr>
+ <tr><td><strong>Tasks completion rate</strong></td><td>completed / created</td><td>tasks DB</td><td>≥ 95% (excluding user-cancelled)</td></tr>
+ <tr><td><strong>Cross-tenant token-replay attempts</strong></td><td>count / 28 d</td><td>OAuth + audit cross-check</td><td>tracked; spike = active attack</td></tr>
+ <tr><td><strong>Older-protocol session rate</strong></td><td>2024-11-05 sessions / total</td><td>session init logs</td><td>declining trend; = 0 by M+12</td></tr>
+ <tr><td><strong>List_changed push latency p95</strong></td><td>histogram, module deploy → subscriber notified</td><td>OBS</td><td>≤ 30 s</td></tr>
+ <tr><td><strong>Destructive-op confirm fatigue</strong></td><td>median elicitations per Member per day</td><td>mcp.invocation rows</td><td>≤ 5; alarm on &gt; 15 (rubber-stamping signal)</td></tr>
+ <tr><td><strong>External-client tools coverage</strong></td><td>distinct external clients that successfully invoked ≥ 1 tool / total registered</td><td>session logs</td><td>≥ 0.90 (clients should not register and never call)</td></tr>
+ <tr><td><strong>SEP-986 compliance</strong></td><td>tools matching naming pattern / total</td><td>registry validator</td><td>= 1.0 (CI gate at registration)</td></tr>
  </tbody>
  </table>
  </div>
@@ -945,9 +1277,23 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — MCP Gateway architecture, PRM flow, tasks primitive.</li>
- <li> — (FR pending) through (FR pending) (PRD-tier).</li>
- <li> — Formal (FR pending) catalogue with verification methods.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + federation Mermaid + auto-vs-human matrix.</li>
+ <li><strong>External-client federation (§2.5 above):</strong> SEP-986 naming + module registration sequence + 6-row client compatibility matrix.</li>
+ <li><strong>Capability broker (§2.6 above):</strong> 6-row tool-annotation gating + audience-bound OAuth JWT + destructive-op confirmation flow with Elicitation.</li>
+ <li><strong>Tool-discovery surface (§2.7 above):</strong> 6 discovery endpoints + Tasks primitive 8-field schema + 5 pre-canned prompt templates.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
+ <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
+ <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
+ <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="chat.html" class="text-blue-700 underline">chat.html</a></li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — MCP Gateway placed at M+2.5 in the P0 sequence (after AI Gateway + AUTH stub).</li>
+ <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §5</a> — MCP Gateway rated "Strong" (9/10); reviewer flagged the elicitation-fatigue risk (R-MCP-013) and the older-protocol sunset as the two operational concerns.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — MCP tool invocations are one of four canonical capture surfaces for the local BRAIN (every tool call → audit row); §6 — Lumi exposes cross-tenant MCP federation at P3+ for org-tenant agents.</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — MCP Gateway FRs land via the <code>fr-author</code> Agent Skill.</li>
  <li><strong>MCP Specification 2025-11-25</strong> — <code>modelcontextprotocol.io/specification/2025-11-25</code>.</li>
  <li><strong>SEP-986</strong> — verbNoun.dotted tool naming convention.</li>
  <li><strong>RFC 6749 / draft-ietf-oauth-v2-1</strong> — OAuth 2.1.</li>
@@ -955,6 +1301,9 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
  <li><strong>RFC 7636</strong> — Proof Key for Code Exchange (PKCE).</li>
  <li><strong>RFC 9112</strong> — HTTP/1.1 (chunked transfer).</li>
  <li><strong>RFC 9728</strong> — OAuth 2.0 Protected Resource Metadata.</li>
+ <li><strong>DPoP (RFC 9449)</strong> — device-binding tokens at P2+.</li>
+ <li><strong>EU AI Act</strong> — Art. 12 logging, Art. 13 transparency, Art. 14 human oversight, Art. 26 deployer obligations.</li>
+ <li><strong>Vietnam PDPL (Law 91/2025):</strong> Art. 14 (DSAR via mcp.invocation export), Art. 20 (security obligations).</li>
  <li><strong>OWASP Gen AI Top-10 (2025)</strong> — LLM02, LLM07, LLM08 mitigations.</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#mcp" class="text-blue-700 underline">infrastructure.html#mcp</a>.</li>
  </ul>

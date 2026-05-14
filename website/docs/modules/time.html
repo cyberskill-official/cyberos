@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>TIME — CyberOS</title>
- <meta name="description" content="TIME — Time tracking, leave, and expense capture. Start/stop and retroactive entries, billable distinction, photo-receipt OCR, weekly approval workflow, immutable audit, multi-currency, feeds INV.">
+ <title>TIME — Billable-hours engine · PROJ→INV bridge · Labour-law guardrails · CyberOS</title>
+ <meta name="description" content="TIME — the billable-hours engine in the PROJ → TIME → INV orchestration spine. Three strategic roles: (1) hours entry (timer + manual + auto-detect from PROJ activity), (2) billable rules engine (per-engagement rate card × task class × member override; the 4-step cascade), (3) PROJ-INV bridge (per-cycle billable rollup feeds INV invoice generation). VN Labour Code Art. 105 caps enforced as hard rules; append-only audit; multi-currency.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -52,7 +52,7 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CFO seat</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Time tracking, leave, and expense capture — the spine that converts Member effort into billable hours, reimbursable expense, and audit-grade records of who did what when.
+ <strong>The billable-hours engine.</strong> PROJ produces issues; TIME logs hours against them; INV invoices from the rollup. The integrity model is invoice-grade: append-only, chained, hard labour-law caps.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  TIME is the only module where a single missed entry can break a Client invoice; consequently it is the module with the most paranoid integrity model. Entries are append-only at the audit layer; mutations write new rows that supersede prior rows via <code>correction_to</code> links. Approval is a three-tier flow (Member → Account Manager → CFO/CEO). Expense capture is camera-first: snap a receipt, the OCR pipeline pulls amount + vendor + VAT (Vietnamese hóa đơn-aware), the categoriser picks a code from a per-tenant chart of accounts, and the entry queues for Member confirm. Multi-currency at every layer (VND primary, USD secondary). Vietnamese labour-law caps (overtime, max hours per week) enforced by hard rules. INV pulls billable hours weekly. + §19.5.
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why TIME exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -119,15 +120,98 @@
  TIME is CyberOS's <strong>time-entry, leave-management, and expense-capture spine</strong>. The basic primitives are simple: a <code>TimeEntry</code> records minutes worked against an Engagement / Project / Issue with a billable flag; an <code>Expense</code> records VND or USD spent with vendor, VAT, and receipt image; a <code>LeaveRequest</code> records absence with a kind and approver flow. What is hard is the integrity model: entries are append-only at the audit layer, every mutation writes a fresh row with a <code>correction_to</code> link, the weekly approval flow goes Member → Account Manager → CFO/CEO visibility, and Vietnamese labour-law caps (40 h regular / week, 300 h overtime / year) are enforced as hard rules. Expense receipts run through a Vietnamese-hóa-đơn-aware OCR pipeline (MST extraction, line-item parsing, VAT split). Multi-currency at every layer. Feeds INV (weekly billable summary), feeds REW (members' total hours fold into compensation context), feeds OBS (audit replay).
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">Billable-hours engine</div><div class="note">PROJ → TIME → INV spine</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase · M+6</div></div>
  <div class="fact-card"><div class="label">Primitives</div><div class="value">3</div><div class="note">TimeEntry · Expense · LeaveRequest</div></div>
  <div class="fact-card"><div class="label">Audit</div><div class="value">Append-only</div><div class="note"><code>correction_to</code> for mutation</div></div>
+ <div class="fact-card"><div class="label">Billable cascade</div><div class="value">4 steps</div><div class="note">override → class → role → fallback</div></div>
+ <div class="fact-card"><div class="label">Labour caps</div><div class="value">VN Code Art. 107</div><div class="note">40h regular · 300h OT/yr hard</div></div>
  <div class="fact-card"><div class="label">Currency</div><div class="value">VND + USD</div><div class="note">multi-currency at every layer</div></div>
  <div class="fact-card"><div class="label">Approval</div><div class="value">3 tiers</div><div class="note">Member → AM → CFO</div></div>
  <div class="fact-card"><div class="label">Receipt OCR</div><div class="value">VN hóa đơn</div><div class="note">MST + VAT split</div></div>
  <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · PROJ</div><div class="note">+ AI · OBS · INV</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~7,500</div><div class="note">Rust + TS + OCR pipeline</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ TIME is invoice-grade infrastructure. One missed entry breaks a client bill; one wrong billable flag breaks an Engagement's margin; one weekly hours misreport breaches the Labour Code. The data model is paranoid by design: append-only, chained audit, mandatory approval chain. TIME is not a feature of PROJ — it's the integrity-grade ledger that converts PROJ activity into INV invoices.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--time)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--time-dark)">Role 1 · Hours entry (3 modes)</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Timer · manual · auto-detect from PROJ</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Timer for in-flight work; manual entry for retroactive logging; auto-detect proposes entries from PROJ activity (issue status changes, comment patterns). Auto-detect is always a proposal, never a save — Member confirms. Approval flow: Member submits weekly → AM reviews → CFO has visibility. Each step is a BRAIN audit row.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--time)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--time-dark)">Role 2 · Billable rules engine</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">4-step cascade per PROJ §2.6</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ The billable flag is computed at entry time via the 4-step cascade locked in PROJ §2.6: Member override (if set) → task class (non_billable_categories on Engagement) → role default (rate card billable_default for the Member's role) → fallback = billable. The decision is snapshotted on the TimeEntry row — retroactive rate-card changes never shift past entries.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--time)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--time-dark)">Role 3 · PROJ-INV bridge</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Per-cycle billable rollup → invoice line</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ At cycle close (or monthly for retainers), TIME rolls billable hours per Member per role per Engagement and emits the rollup event INV consumes. The rollup includes rate-card snapshots, member overrides, and any approval-flow flags. INV draws the invoice; AM reviews; client gets the bill. The full chain is auditable — every invoice line traces back to a chained TimeEntry row.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">TIME in the orchestration spine</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ PROJ["📋 PROJ Issue"]
+ MEMBER["👤 Member<br>(timer / manual / accept auto-proposal)"]
+ TIME["⏱ TIME<br>TimeEntry · Expense · LeaveRequest"]
+ BR["💰 Billable cascade<br>Member override → class → role → fallback"]
+ AM["👤 AM<br>weekly approval"]
+ CFO["📊 CFO<br>visibility + audit"]
+ INV["🧾 INV<br>invoice line"]
+ REW["💰 REW<br>compensation context"]
+ BRAIN["🧠 BRAIN<br>chained audit · correction_to"]
+ PROJ --> MEMBER
+ MEMBER --> TIME
+ TIME --> BR
+ BR --> TIME
+ TIME --> AM
+ AM --> CFO
+ TIME -- "per-cycle rollup" --> INV
+ TIME --> REW
+ TIME --> BRAIN
+ classDef hub fill:#ccfbf1,stroke:#115e59,stroke-width:3px,color:#134e4a
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class TIME hub
+ class PROJ,MEMBER,BR,AM,CFO,INV,REW mod
+ class BRAIN brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Timer start/stop</td><td><strong>Manual</strong> Member action</td><td>Trust the Member; over-tracking ≠ better data.</td></tr>
+ <tr><td>Auto-detect proposal</td><td><strong>Auto</strong> proposal, <strong>manual confirm</strong></td><td>Read-only suggestion from PROJ activity; Member always confirms before save.</td></tr>
+ <tr><td>Billable flag computation</td><td><strong>Auto</strong> via 4-step cascade</td><td>Cascade is deterministic; outcome is snapshotted on the row.</td></tr>
+ <tr><td>Labour-law cap enforcement</td><td><strong>Auto-block</strong> at entry write</td><td>VN Labour Code Art. 107 — non-negotiable; CHRO paged on attempt.</td></tr>
+ <tr><td>Receipt OCR + categorise</td><td><strong>Auto</strong>, <strong>Member confirm</strong></td><td>OCR is high-recall but fallible; Member is the source of truth.</td></tr>
+ <tr><td>Weekly approval flow</td><td><strong>Manual</strong> Member → AM</td><td>Approval is accountability; auto-approval defeats the purpose.</td></tr>
+ <tr><td>CFO visibility</td><td><strong>Auto</strong> aggregation; <strong>manual</strong> override on exceptions</td><td>CFO sees rolled-up data; only intervenes on flagged anomalies.</td></tr>
+ <tr><td>Per-cycle rollup to INV</td><td><strong>Auto</strong> at cycle close</td><td>Trigger is calendar-driven; AM reviews resulting draft invoice.</td></tr>
+ <tr><td>Correction (mutation)</td><td><strong>Manual</strong> with new row + correction_to</td><td>Append-only; never edit-in-place; full audit trail preserved.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -952,6 +1036,11 @@ graph LR
  <tr><td><code>R-TIME-008</code></td><td>Calendar sync clobbers user-created events</td><td>Low</td><td>Medium</td><td>CTO</td><td>Sync only events created by TIME; mark with <code>X-CYBEROS-SOURCE</code> property.</td></tr>
  <tr><td><code>R-TIME-009</code></td><td>OCR cost spike from receipt spam</td><td>Low</td><td>Low</td><td>CTO</td><td>Per-Member rate limit (50 captures / day); CFO dashboard alert at 80%.</td></tr>
  <tr><td><code>R-TIME-010</code></td><td>Member time-log private annotations leaked in DSAR</td><td>Low</td><td>Medium</td><td>DPO</td><td>DSAR for the Member themselves includes private namespace; cross-Member DSAR excludes.</td></tr>
+ <tr><td><code>R-TIME-011</code></td><td><strong>Billable cascade snapshot diverges from PROJ rate-card history</strong></td><td>Medium</td><td>High</td><td>CFO</td><td>Snapshot is stored on TimeEntry row (immutable); PROJ Engagement rate-card changes never retroactively apply; CI test asserts snapshot-vs-Engagement consistency at write time.</td></tr>
+ <tr><td><code>R-TIME-012</code></td><td>Auto-detect proposes hours for the wrong PROJ Issue → wrong invoice line</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Auto-detect is proposal-only; Member confirms issue_id; confidence threshold ≥ 0.80 to even show; quarterly review of acceptance/rejection rates.</td></tr>
+ <tr><td><code>R-TIME-013</code></td><td>VN Labour Code 2026 amendment changes weekly cap → enforcement misfires</td><td>Low</td><td>High</td><td>CLO</td><td>Cap rules in versioned config; legal monitor on Labour Code amendments; cap version stamped on every TimeEntry for retroactive interpretation.</td></tr>
+ <tr><td><code>R-TIME-014</code></td><td>Cycle-close rollup runs before all Members submitted hours → invoice short</td><td>Medium</td><td>Medium</td><td>COO</td><td>Rollup waits for all expected submissions OR after 24 h grace; missing-Member flag on resulting INV draft; AM reviews before send.</td></tr>
+ <tr><td><code>R-TIME-015</code></td><td>Multi-currency drift — FX rate snapshot from billing date applied to entry from previous month</td><td>Low</td><td>Medium</td><td>CFO</td><td>FX snapshot per entry (not per invoice); INV uses entry-time snapshot; cross-check at invoice generation.</td></tr>
  </tbody>
  </table>
  </div>
@@ -976,6 +1065,11 @@ graph LR
  <tr><td><strong>Overtime cap violations</strong></td><td>count / month</td><td>law_caps</td><td>= 0</td></tr>
  <tr><td><strong>INV summary delivery</strong></td><td>delivered / weeks</td><td>BRAIN</td><td>100%</td></tr>
  <tr><td><strong>Correction-rate per Member</strong></td><td>corrections / entries</td><td>BRAIN</td><td>tracked; alert &gt; 10%</td></tr>
+ <tr><td><strong>Billable cascade snapshot integrity</strong></td><td>cascade decisions on TimeEntry matching computed result at audit time</td><td>BRAIN audit replay</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Auto-detect proposal acceptance</strong></td><td>accepted / proposed</td><td>SPA telemetry</td><td>tracked; expect 0.50–0.80</td></tr>
+ <tr><td><strong>PROJ-TIME issue match rate</strong></td><td>entries with valid issue_id / total entries</td><td>cross-check PROJ</td><td>≥ 0.95 (unallocated should be rare)</td></tr>
+ <tr><td><strong>Cycle-rollup completeness</strong></td><td>rollups with all expected Members submitted / total rollups</td><td>cycle-close events</td><td>≥ 0.95</td></tr>
+ <tr><td><strong>VN Labour Code version coverage</strong></td><td>all TimeEntries with cap_version stamp / total entries</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1124,10 +1218,18 @@ hai@cyberskill.world 287 300 95.7% ▼ critical → CHRO sign-off required</code
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — TIME product FRs.</li>
- <li> — Schedule, Leave, Attendance SRS-tier FRs.</li>
- <li> — NFRs that TIME must satisfy.</li>
- <li> — Formal (FR pending) through (FR pending) with verification methods.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + spine Mermaid + 9-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="inv.html" class="text-blue-700 underline">inv.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="rew.html" class="text-blue-700 underline">rew.html</a> ·
+ <a href="hr.html" class="text-blue-700 underline">hr.html</a> ·
+ <a href="obs.html" class="text-blue-700 underline">obs.html</a></li>
+ <li><strong>Billable cascade rules:</strong> <a href="proj.html#engagement-economics" class="text-blue-700 underline">PROJ §2.6</a> — 4-step cascade definition.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — TimeEntry rows are BRAIN audit events.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — TIME at M+6 (P1, after PROJ + CRM).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>Vietnam Labour Code (Law 45/2019/QH14)</strong> — Art. 105 (working hours), Art. 107 (overtime), Art. 113 (annual leave).</li>
  <li><strong>Vietnam Decree 13/2023/NĐ-CP</strong> — Personal data processing.</li>
  <li><strong>Vietnam Decree 53/2022/NĐ-CP</strong> — Data residency.</li>

@@ -2,6 +2,240 @@
 
 All notable changes to the umbrella CyberOS repository, newest-first.
 
+## 2026-05-15 — RES module page rewritten to Gold (capacity-vs-forecast integrator + hiring forecast + allocation engine)
+
+Rewrote `website/docs/modules/res.html` to Gold. Three strategic roles: (1) capacity-vs-forecast integrator (joins HR + PROJ + TIME + LEARN on Member-id × week; integrator not source-of-truth), (2) hiring forecast (skill-gap × CRM pipeline × LEARN mastery → hire trigger before deliverables drop), (3) allocation engine (CUO/COO drafts rebalance recommendations; VN Labour Code Art. 107 OT caps hard-floor).
+
+Key changes:
+- NEW §0 — 3-card layout + integration-model Mermaid (HR/PROJ/TIME/LEARN/CRM → RES → CUO → hiring memo/rebalance proposal) + 10-row auto-vs-human matrix
+- Risks +5 (R-RES-010..014): RES forecast becomes CEO-decision dependency · Member-preference flags ignored under high-priority · VN OT-cap version drift · cross-Engagement reallocation rate-card mismatch · Lumi RES synthesis leaks Engagement intel
+- KPIs +6: hiring memo CEO acceptance rate · Member-preference override rate (= 1.0) · cross-Engagement rate-card alignment · cap version stamp coverage (= 1.0) · Lumi cross-tenant sign-off (= 1.0)
+- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — PORTAL module page rewritten to Gold (client-facing surface + scoped read-only views + external IdP)
+
+Rewrote `website/docs/modules/portal.html` to Gold. Three strategic roles: (1) scoped read-only client surface (PROJ/INV/DOC/CHAT views filtered by Engagement membership + sync_class=client-visible), (2) per-tenant brand pack (white-label theme + custom CNAME), (3) external IdP integration (client logs in via own SAML/OIDC; JIT provisioning; never stores password).
+
+Key changes:
+- NEW §0 — 3-card layout + multi-tenant-within-multi-tenant Mermaid + 10-row auto-vs-human matrix
+- Risks +5 (R-PORTAL-011..015): sync_class misconfig leak (Critical) · JIT role-mapping wrong · SVG XSS · Client AI cross-Engagement cite (Critical) · SCIM deprovision delay
+- KPIs +6: sync_class filter pass (= 1.0) · JIT role accuracy (≥ 0.99) · SVG XSS blocks · cross-Engagement rejection rate · SCIM session-invalidation p95
+- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — DOC module page rewritten to Gold (document repository + e-sign workflow + contract lifecycle)
+
+Rewrote `website/docs/modules/doc.html` to Gold. Three strategic roles: (1) document repository (versioned + ACL'd + 10-year retention), (2) e-sign workflow (partner-routed cryptography to eIDAS QTSP / AATL CA / VN CA; CyberOS-owned workflow + identity verification), (3) contract lifecycle (HR/CRM/ESOP integration + expiry alerts + renewal automation).
+
+Key changes:
+- NEW §0 — 3-card layout + partner-routed signing Mermaid + 10-row auto-vs-human matrix
+- Risks +5 (R-DOC-011..015): cross-module trigger source mismatch · CUO renewal stale terms · expiry cascade miss · multi-jurisdiction cert chain · migrated DocuSign LTV failure
+- KPIs +5: cross-module trigger validation (= 1.0) · renewal terms-stamp coverage (= 1.0) · expiry cascade completeness (= 1.0) · multi-jurisdiction cert-chain declaration (= 1.0) · LTV re-validation (≥ 0.95)
+- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — OKR module page rewritten to Gold (cascade orchestrator + KR auto-progress + face-saving retros)
+
+Rewrote `website/docs/modules/okr.html` to Gold. Three strategic roles: (1) cascade orchestrator (Company → Team → Member quarterly), (2) KR auto-progress engine (each KR's progress_source query reads PROJ/INV/HR/LEARN; nightly batch), (3) face-saving retro engine (Vietnamese cultural framing: "what did we learn?").
+
+Key changes:
+- NEW §0 — 3-card layout + auto-progress data-flow Mermaid + 8-row auto-vs-human matrix
+- Risks +5 (R-OKR-010..014): progress source schema drift · face-saving framing weaponised · CUO digest hallucination · OKR-weight skews REW · retro cross-tenant leak
+- KPIs +5: progress source schema drift · face-saving pattern detection · digest hallucination rate (≤ 0.01) · OKR-share-of-VP correctness (= 1.0) · retro sync_class default compliance (= 1.0)
+- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — ESOP module page rewritten to Gold (Phantom Stock vesting + Good/Bad Leaver branch + HoldCo flip)
+
+Rewrote `website/docs/modules/esop.html` to Gold. Three strategic roles: (1) grant lifecycle (issue/vest/cliff/cancel/put), (2) Good Leaver vs Bad Leaver branch on HR offboarding (CFO+CEO co-sign required), (3) liquidity-event simulator (annual valuation + put option exec + Singapore HoldCo flip trigger at ARR ≥ $1.5M).
+
+Key changes:
+- NEW §0 — 3-card layout + cap-table spine Mermaid showing BRAIN exclusion + 10-row auto-vs-human matrix
+- Risks +5 (R-ESOP-011..015): Leaver branch AI auto-route (Critical) · put-option ARR-trigger drift · vesting accrual on statutory leave · M&A acceleration without Member notice · HoldCo partial-flip rollback
+- KPIs +5: Good/Bad Leaver co-sign integrity (= 1.0) · vesting accrual statutory-leave correctness · M&A notification SLA (≤ 5 days) · HoldCo flip cohort success (= 1.0 rollback on partial) · put-option exec query latency
+- References expanded: §0 + 5 cross-module links + BRAIN_AUTOSYNC_DESIGN.md + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — LEARN module page rewritten to Gold (skills catalogue + VP roll-up + Hội đồng Chuyên môn workflow)
+
+Rewrote `website/docs/modules/learn.html` to Gold. Three strategic roles: (1) skills catalogue (skill tree × 1-5 mastery × bằng cấp/chứng chỉ evidence), (2) VP (Voting Power) roll-up engine (PROJ + TIME + KB → VP score → REW BP distribution), (3) Hội đồng Chuyên môn (Specialist Council) promotion workflow (3-5 peer judges; per-judge scores never exit the LEARN boundary; aggregate-only to HR).
+
+Key changes:
+- NEW §0 — 3-card layout + signal-flow Mermaid showing per-judge boundary explicitly + 10-row auto-vs-human matrix
+- Risks +5 (R-LEARN-011..015): per-judge score export misconfig (Critical) · VP signal skews toward PROJ-dominant Members · Lumi skill catalogue pushes conflict · Council deliberation BRAIN ingestion (psychological safety) · skill self-claim spam
+- KPIs +5: per-judge export attempts blocked · VP fairness variance (≤ 0.40) · skill claim evidence rate (≥ 0.95) · deliberation transcript purge (≤ 30 d) · HR-to-LEARN-to-REW signal latency
+- References expanded: §0 + 6 cross-module links + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — REW module page rewritten to Gold (compensation engine + payroll bridge + bonus orchestrator)
+
+Rewrote `website/docs/modules/rew.html` to Gold. Three strategic roles: (1) compensation record owner (encrypted, HR-isolated, structurally excluded from BRAIN per DEC-036), (2) payroll bridge (monthly VND cycle with BHXH/BHYT/BHTN, immutable parameter versioning, byte-identical PDF replay), (3) bonus orchestrator (BP fund + calibration → P3 distribution + CEO/CFO sign-off; P1-protection invariant DB-CHECK enforced).
+
+Key changes:
+- Title/meta + hero reframed; "Bet 5 moat" + EU AI Act Annex III §4 high-risk framing preserved
+- NEW §0 — 3-card layout + REW-isolated-by-design Mermaid (HR/TIME/PROJ → REW → CFO+CHRO co-sign → payslips → banks/BHXH; BRAIN explicitly disconnected with structural-exclusion line) + 10-row auto-vs-human matrix
+- Risks +5 (R-REW-011..015): HR signals weaponised for P3 cut · BHXH mid-month rate change · Lumi attempts read REW (Catastrophic) · cross-Member cache leak · CFO+CHRO collusion (P1 protection at DB CHECK, not app layer alone)
+- KPIs +5: P3 distribution sign-off completeness (= 1.0) · parameter mid-month transition correctness · Lumi-attempted reads (= 0) · cross-Member cache leak attempts (= 0) · P1 DB-CHECK constraint violations (any > 0 = sev-0)
+- References expanded: §0 + 6 cross-module links + BRAIN_AUTOSYNC_DESIGN.md §5 + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — HR module page rewritten to Gold (member lifecycle + onboarding orchestrator + performance signal aggregator)
+
+Rewrote `website/docs/modules/hr.html` to Gold. Three strategic roles: (1) member lifecycle owner with AUTH-provisioned subject + multi-module event fan-out, (2) onboarding orchestrator (LEARN + KB + PROJ ramp plans saga-fired automatically), (3) performance signal aggregator (read-only consumer of PROJ + TIME + LEARN signals; comp number lives in REW, never HR).
+
+Key changes:
+- Title/meta + hero reframed
+- NEW §0 — 3-card layout + Member-id spine Mermaid + 10-row auto-vs-human matrix
+- Risks +5 (R-HR-011..015): HR signals used as sole comp basis · cross-tenant Member-id collision (Critical) · onboarding fires before AUTH ready · VN labour-law mid-year amendment · sabbatical tick misclassification
+- KPIs +5: signal-only comp decision rate (= 1.0) · onboarding playbook saga p95 · labour-law version stamp coverage (= 1.0) · HR-to-REW handoff p95 · statutory-leave classification accuracy
+- References expanded: §0 + 7 cross-module links + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — EMAIL module page rewritten to Gold (capture surface + Genie draft + outbound defence)
+
+Rewrote `website/docs/modules/email.html` to Gold. Three strategic roles: (1) capture surface (tracked-domain auto-log to CRM activity + PROJ thread-to-issue), (2) Genie draft (Ask Genie composes outbound replies grounded in sanitised thread + CRM + BRAIN + KB), (3) outbound send + defence (DKIM/ARC/BIMI; CaMeL quarantine defeats EchoLeak class).
+
+Key changes:
+- Title/meta + hero reframed
+- NEW §0 "The bigger picture" — 3-card layout + EMAIL-in-orchestration-spine Mermaid + 10-row auto-vs-human matrix
+- Risks +5 (R-EMAIL-011..015): thread-to-issue wrong Engagement · Genie draft confidential leak (High) · bulk-send approval bypass · tracked-domain misconfig (auto-log personal) · CaMeL cost spike
+- KPIs +5: thread-to-issue conversion accuracy · Genie draft confidential-leak rate (= 0) · bulk-send token compliance (= 1.0) · tracked-domain audit pass · CaMeL cost per inbound
+- References expanded: §0 + 7 cross-module links + CaMeL paper + EchoLeak CVE + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — KB module page rewritten to Gold (RAG corpus + BRAIN companion + auto-runbook catalogue source)
+
+Rewrote `website/docs/modules/kb.html` to Gold. Three strategic roles: (1) RAG corpus with three-layer retrieval (FTS5/PGroonga + BGE-M3 + cross-encoder) + span-level citations, (2) BRAIN companion (long-form versioned counterpart to chain-anchored memories; "promote to canonical" elevates to high-authority source consumable by Lumi cross-tenant synthesis), (3) runbook catalogue source for OBS auto-runbook router (KB outage breaks OBS triage = critical coupling).
+
+Key changes:
+- Title/meta + hero reframed
+- NEW §0 "The bigger picture" — 3-card layout + KB-in-platform Mermaid + 10-row auto-vs-human matrix
+- Risks +5 (R-KB-011..015): runbook catalogue drift · OBS-KB tight coupling (KB outage breaks triage, High impact) · span-citation drift · vendor-pack malicious markdown · doc-gap-detector underperforms
+- KPIs +5: runbook applicability accuracy · span-citation integrity (= 1.0) · doc-gap-detector signal rate · cross-tenant retrieval reject rate · vendor-pack CSO-review rate (= 1.0)
+- References expanded: §0 + 6 cross-module links + OBS §2.6 auto-runbook contract link + BRAIN_AUTOSYNC_DESIGN.md §6 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — INV module page rewritten to Gold (billable rollup invoicing + hóa đơn emission + dunning automation)
+
+Rewrote `website/docs/modules/inv.html` to Gold by encoding three strategic roles: (1) billable rollup → invoice line items (consumes TIME per-cycle rollup; rate-card snapshot preserved), (2) hóa đơn emission (Decree 123 + Circular 78 GDT XML via vn-vat-invoice skill; Mẫu 01/GTGT; MST validation gate), (3) revenue recognition + dunning (CUO drafts overdue chase; human sends; aging report; cash application via 4 rails).
+
+Key changes:
+- Title/meta + hero reframed
+- NEW §0 "The bigger picture" — 3-card layout + INV-in-orchestration-spine Mermaid + 10-row auto-vs-human matrix
+- Risks +5 (R-INV-011..015): incomplete TIME rollup → missing hours · rate-card snapshot divergence · hóa đơn cancellation without dual approval (Critical) · dunning auto-send bug · Decree 123 amendment drift
+- KPIs +5: TIME→INV bridge p95 · missing-Member draft rate · rate-card snapshot integrity (= 1.0) · dunning auto-send false-positive (= 0) · hóa đơn dual-approval rate (= 1.0)
+- References expanded: §0 + 6 cross-module links + PROJ §2.6 billing modes + TIME §0 rollup contract + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — TIME module page rewritten to Gold (billable-hours engine + PROJ-INV bridge + Labour-law guardrails)
+
+Rewrote `website/docs/modules/time.html` to Gold by encoding three strategic roles: (1) hours entry (timer + manual + auto-detect from PROJ activity), (2) billable rules engine (4-step cascade per PROJ §2.6: Member override → task class → role default → fallback; decision snapshotted on row), (3) PROJ-INV bridge (per-cycle billable rollup feeds INV).
+
+Key changes:
+- Title/meta + hero reframed; fact-grid extended (8→11 cards: + Strategic role, Billable cascade, Labour caps VN Code Art. 107)
+- NEW §0 "The bigger picture" — 3-card layout + spine Mermaid (PROJ → Member → TIME → Billable cascade → AM → CFO + INV/REW/BRAIN) + 9-row auto-vs-human matrix
+- Risks +5 (R-TIME-011..015): billable cascade snapshot divergence (High) · auto-detect wrong Issue · VN Labour Code 2026 amendment · cycle-rollup runs before all submissions · multi-currency drift
+- KPIs +6: cascade snapshot integrity (= 1.0 hard floor) · auto-detect acceptance · PROJ-TIME issue match rate · cycle-rollup completeness · VN Labour Code version coverage (= 1.0)
+- References expanded: §0 + 6 cross-module links + PROJ §2.6 billable cascade link + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+
+## 2026-05-15 — CRM module page rewritten to Gold (sales-pipeline spine + Deal-to-Engagement bridge + next-action engine)
+
+Rewrote `website/docs/modules/crm.html` to Gold by encoding three strategic roles: (1) sales pipeline VN-first (Account · Contact · Deal with VN integrations: MST validation, VietQR, hóa đơn, salutation logic), (2) Deal-to-Engagement bridge to PROJ §2.5 join contract (deal.won → engagement.create with rate card pre-wired), (3) next-action engine (CUO ranks moves on every open deal; AI lead scoring; win/loss memories citable by future deals).
+
+Key changes:
+- Title/meta + hero reframed to 3 strategic roles
+- Fact-grid extended (8→11 cards: + Strategic role, Deal → Engagement bridge One-click, Vertical-pack ready)
+- NEW §0 "The bigger picture" — 3-card layout + CRM-in-orchestration-spine Mermaid + 9-row auto-vs-human matrix
+- Risks +5 (R-CRM-011..015): bridge fails partially · wrong billing mode · CUO next-action inappropriate · vertical-pack drift · merge data loss
+- KPIs +6: deal-to-Engagement conversion rate · conversion bridge p95 · win/loss memory citation rate · next-action acceptance · stage-stuck deal alert · forecast accuracy
+- References expanded: §0 + 7 cross-module links + PROJ §2.5 join contract link + SKILL §3.6 vertical-pack pattern + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW + expanded PDPL articles
+
+## 2026-05-15 — TEN module page rewritten to Gold (P2 billing slice + residency enforcement + 90-day offboarding contract)
+
+Rewrote `website/docs/modules/ten.html` to Gold. Encodes the research review §7.3 mandate (TEN-billing thin slice at P2/M+9, not P4) — three strategic roles: (1) tenant lifecycle owner with state machine + audit propagation, (2) billing slice P2 thin (Stripe + 3 plans + cost cap) vs P4 full (+ VN-PSP + self-serve + in-app UI), (3) residency enforcement (data lives where law says; cross-leak CI gate = 0).
+
+Key changes:
+- Phase chip changed: "P4 long-term" → "P2 thin slice · P4 full"
+- Title/meta + hero reframed; phase 0 strategic frame
+- Fact-grid extended (8→13 cards: + Strategic role, P2 slice scope, P4 full scope, Residency options, Cross-leak target = 0)
+- NEW §0 "The bigger picture" — 3-card layout + tenant lifecycle Mermaid (10 nodes: external customer → TEN → 3 billing rails + 5 modules + audit/CFO) + 9-row auto-vs-human matrix
+- NEW §2.5 "P2 thin slice scope" — 12-row capability contrast (P2 thin vs P4 full) + plan-tier × usage budget table (Starter $49/seat · Team $39/seat · Enterprise custom; vertical pack add-on $99/$79/negotiated)
+- NEW §2.6 "Residency × jurisdiction matrix" — 4-row infra mapping (sg-1 / eu-1 / us-1 / vn-1 each with Postgres shard, S3 region, AI providers, OBS retention, compliance regime) + cross-leak CI gate spec (200+ property-based test attempts per PR)
+- NEW §2.7 "90-day offboarding contract" — 4-phase timeline (Active → Terminating-A 30d → Terminating-B 60d → Terminated day 91+) + signed bundle 6-component export + permanent-delete attestation JSON with Ed25519 signature
+- Risks +8 (R-TEN-013..020): P2 slice slip → margin moat delayed (High) · residency change mid-engagement · hostile termination override · Stripe DPA EU residency · plan-downgrade overage surprise · cross-leak CI gap (Critical) · vertical-pack revenue attribution leak · Lumi-pushed pack pricing change
+- KPIs +9: P2 slice ship date adherence (= M+9) · vertical-pack revenue share (≥ 30% of ARR by M+18 — the moat) · cross-leak rate (= 0 hard floor) · residency drill MTTR (≤ 72h) · plan-downgrade overage handling (= 1.0) · hostile-termination cycle time · VN-PSP coverage (≥ 0.95 at P4) · PCI-SAQ-A scope (= 0; Stripe handles all) · tenant attestation completeness (= 1.0)
+- References expanded: 4 in-page sections + 6 cross-module links + AUDIT_AND_PLAN §3.3 + RESEARCH_REVIEW §7.3 (explicit cite of the M+9 mandate) + BRAIN_AUTOSYNC_DESIGN.md §6 + FR_AUTHORING_WORKFLOW + EU AI Act Art. 26 + expanded PDPL article citations
+
+## 2026-05-15 — OBS module page rewritten to Gold (observability spine + auto-runbook router + compliance evidence surface)
+
+Rewrote `website/docs/modules/obs.html` to Gold by encoding three strategic roles: (1) three-pillars unified pane (logs/metrics/traces/AI-traces correlated by trace_id × tenant_id; pillar × signal table; cross-pillar correlation example; tenant query proxy isolation), (2) auto-runbook router (alerts → CUO triage skill → CHAT self-service OR PagerDuty escalation; severity × routing matrix; runbook-catalogue growth loop), (3) compliance evidence surface (per-regulator scoped read-only views over BRAIN audit chain; YAML view definitions; chain-of-custody manifest with Ed25519 signature).
+
+Key changes:
+- Title/meta + hero reframed to 3 strategic roles
+- Fact-grid extended (8→12 cards: + Correlation key, Auto-runbook coverage, Compliance surfaces, etc.)
+- NEW §0 "The bigger picture" — 3-card layout + emitter/consumer Mermaid + 9-row auto-vs-human matrix
+- NEW §2.5 "Three-pillars unified pane" — pillar × signal-type mapping table + concrete 5-step cross-pillar investigation walkthrough + tenant query proxy isolation guarantee
+- NEW §2.6 "Auto-runbook router" — 6-step routing sequence Mermaid + severity × routing matrix (P0/P1/P2/P3/P4) + runbook-catalogue self-growth loop
+- NEW §2.7 "Compliance evidence surface" — regulator × audit scope matrix (EU AI Act, PDPL, SOC 2, ISO 27001, GDPR, Vietnam Decree 13/2023) + per-view scoping YAML + chain-of-custody manifest with chain anchors
+- Risks +10 (R-OBS-011..020): auto-runbook miscategorising P0 (Critical) · compliance export tampering (Critical) · triage skill down → page storm · LangSmith EU residency · trace sampling drops wrong tail · persona-drift false positive · OTel context propagation breaks · query proxy DOS · runbook catalogue drift · maintenance-window noise
+- KPIs +10: auto-runbook coverage (≥ 60% by P1) · P0/P1 false-suppression (= 0 hard floor) · compliance export verification rate (= 1.0) · cross-pillar correlation completeness (≥ 0.95) · tail-sampling error coverage (= 1.0) · persona-drift detector precision · query proxy violations · self-service ticket MTTR · dogfooding alert ACK (we live by this) · compliance surfaces × regulator
+- References expanded to universal-protocol scope: 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (M+1 placement) + RESEARCH_REVIEW §6 (9/10) + BRAIN_AUTOSYNC_DESIGN.md §8 + FR_AUTHORING_WORKFLOW + EU AI Act + ISO 27001 + ISO 42001 + SOC 2 + PDPL + Decree 13 + GDPR Art. 30
+
+## 2026-05-15 — MCP Gateway module page rewritten to Gold (external-client federation + capability broker + tool-discovery surface)
+
+Rewrote `website/docs/modules/mcp.html` to Gold by encoding three strategic roles: (1) external-client federation (22 modules → one MCP server for Claude/Cursor/Codex/Cline; SEP-986 naming + module registration sequence + 6-row client compatibility matrix), (2) capability broker (6-row tool-annotation gating + audience-bound OAuth JWT example + destructive-op Elicitation flow), (3) tool-discovery surface (6 discovery endpoints + Tasks primitive 8-field schema + 5 pre-canned prompt templates).
+
+Changes by section:
+- **`<title>` + `<meta>`** — reframed: "MCP Gateway — External-client federation · Capability broker · Tool-discovery surface".
+- **Hero tagline + lede** — "the external-agent door" framing: 22 modules behind one MCP surface; Claude/Cursor/Codex see one server; federation invisible to external clients.
+- **Hero fact-grid** — extended from 8 to 12 cards: added Strategic role + External clients (Claude · Cursor · Codex · Cline) + Destructive-op gating (Human-confirm) + Persona stamp coverage (100%). Renamed naming convention card with concrete pattern.
+- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout; federation Mermaid (5 external clients × MCP Gateway × 6 per-module servers × 4 platform deps); 9-row auto-vs-human matrix.
+- **TOC** — added bigger-picture · client-federation · capability-broker · tool-discovery entries.
+- **NEW §2.5 "External-client federation"** — SEP-986 naming convention with 8 tool-name patterns + per-module registration sequence Mermaid (heartbeat-based lifecycle) + 6-row external-client compatibility matrix (Claude Code, Claude Desktop, Cursor, Codex, Cline, older 2024-11-05 clients).
+- **NEW §2.6 "Capability broker"** — 6-row tool-annotation gating table (readOnly / idempotent / destructive / openWorld / longRunning / elicits); audience-bound OAuth JWT shape with aud=mcp.cyberos.com + scope_grants array; destructive-op confirmation flow with full Elicitation JSON request/response example.
+- **NEW §2.7 "Tool-discovery surface"** — 6 discovery endpoints (well-known/mcp, capabilities, tools/list, prompts/list, resources/list, resources/templates/list); 8-field Tasks primitive schema with brain_chain anchor; 5 pre-canned prompt templates (weekly_brief, decision_to_issues, draft_cycle_review, deal_to_engagement, find_brain_citations).
+- **§12 Risks** — added 10 new (R-MCP-011..020): external agent token theft (Critical) · prompt injection in tool description · elicitation fatigue (High likelihood) · federation lag · task storm · resource leak via list_changed · heartbeat false-positive · DCR abuse · older-protocol-version security gap · SEP-986 naming collision.
+- **§13 KPIs** — added 10 new: persona-stamp coverage (hard floor = 1.0) · elicitation acceptance rate · tasks completion rate · cross-tenant token-replay attempts · older-protocol session rate (→ 0 by M+12) · list_changed push latency · destructive-op confirm fatigue · external-client tools coverage · SEP-986 compliance.
+- **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (M+2.5 placement) + RESEARCH_REVIEW §5 (9/10) + BRAIN_AUTOSYNC_DESIGN.md §5+§6 + FR_AUTHORING_WORKFLOW + DPoP RFC 9449 + EU AI Act + PDPL citations.
+
+The MCP Gateway page now reads as the complete answer to: (1) why 22 modules need one external door (federation Mermaid + N²→N+1 math), (2) how the broker prevents a compromised external agent from escaping scope (audience-bound JWT + tool-annotation gating + destructive-op Elicitation), (3) how external agents discover what CyberOS can do (6 discovery endpoints + 5 pre-canned prompts + Tasks primitive for long-running work), (4) what fails if MCP Gateway is missing (every external agent re-implements its own auth + tool catalogue + audit).
+
+## 2026-05-15 — AI Gateway module page rewritten to Gold (M+1 cost-of-everything gate + provider abstraction + compliance plane)
+
+Rewrote `website/docs/modules/ai.html` to Gold by encoding three strategic roles: (1) cost-of-everything gate (per-tenant policy YAML + 7-step pre/post accounting + 7-dimension attribution), (2) provider-agnostic router (6-row model-alias table + 7-row failover semantics + residency × provider matrix), (3) compliance plane (4-link chain PII → persona → ZDR → audit + 14-field invocation row schema + VN-PII recogniser).
+
+Changes by section:
+- **`<title>` + `<meta>`** — reframed: "AI Gateway — Cost-of-everything gate · Provider-agnostic router · Compliance plane".
+- **Hero tagline + lede** — explicit research review §2.4 citation: "ships at M+1 BEFORE AUTH because if you can't account for and cap LLM spend, every other module bleeds money invisibly". Lists all 3 strategic roles.
+- **Hero fact-grid** — extended from 8 to 12 cards: added Strategic role + Build placement (M+1 P0 #1) + Cost-cap enforcement (hard-stop) + ZDR (required). Renamed dependency card to reflect M+1 reality (BRAIN + OBS at start; AUTH at M+2).
+- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout with cross-module dependency Mermaid (6 callers × AI Gateway × 5 providers × 4 platform deps); 9-row auto-vs-human matrix covering failover, cost-cap override, ZDR refusal, cache hit, model alias resolution, image-gen.
+- **TOC** — added bigger-picture · cost-gate · provider-abstraction · compliance-plane entries (4 new).
+- **NEW §2.5 "Cost-of-everything gate"** — per-tenant policy YAML (caps, hard-stop, emergency override, per-model caps, per-persona attribution); 8-actor pre/post-call accounting sequence (Caller → Gateway → ledger → Provider → BRAIN → INV); 7-dimension attribution table (tenant_id, agent_persona, module, cost_centre, route_class, cache_state, failover_path).
+- **NEW §2.6 "Provider abstraction + failover"** — 6-row model-alias resolution (chat.smart / chat.fast / chat.reason / embed.standard / rerank.standard / image.standard); 7-row failover semantics (5xx retry / consecutive 5xx → mark degraded / 429 backoff / circuit breaker / recovery / both-down degraded mode / per-tenant SLA breach); residency × provider matrix (sg-1 / eu-1 / us-1 / vn-1).
+- **NEW §2.7 "Compliance plane"** — 4-link chain table (PII → persona → ZDR → audit) with recall target + failure behaviour per link; full <code>ai.invocation</code> audit row schema (14 extra fields); VN-PII recogniser table (CCCD / MST / VN phone / NĐD / VN address / VN bank account) with patterns + redaction examples.
+- **§12 Risks** — added 10 new (R-AI-011..020): M+1 sequence slip → cost-overrun invisible (Critical) · persona prompt cache poisoning · provider DPA cancellation mid-quarter · cost-ledger hold leak · streaming SSE buffer leak · embedding model upgrade breaks BRAIN search · image-gen budget flood at P2+ · geographic residency violation during failover (Critical) · VN-PII recogniser regression · BGE GPU pod OOM under load.
+- **§13 KPIs** — added 9 new: per-persona cost share (alert on &gt; 50% concentration) · cache savings rate (≥ 15% by P1) · hold-to-actual drift (≤ 5%) · residency-violation refusal rate · persona stamp coverage (hard floor = 1.0) · ZDR-compliant routing rate (hard floor = 1.0) · VN-PII recall on production sample (≥ 0.99) · provider-failover MTTR p95 (≤ 30s) · dogfooding LLM cost / Member (≤ $10/$5 trajectory).
+- **§17 References** — replaced stale PRD/SRS refs with the 4 new in-page sections + BRAIN_AUTOSYNC_DESIGN.md §7 + FR_AUTHORING_WORKFLOW.md + AUDIT_AND_PLAN §3.3 (M+1 placement) + RESEARCH_REVIEW §2.4 (reorder citation) + 8 cross-module links + expanded EU AI Act citations (Art. 12/13/14/15/26/50) + OWASP Gen AI Top-10 + ISO/IEC 42001 + PDPL Art. 14/20/38.
+
+The AI Gateway page now reads as the complete answer to: (1) why this module ships first in P0 (cost-control before everything), (2) how the cost ledger gates calls in real-time (pre-check + post-reconcile + 60s hold expiry), (3) how the same Python service abstracts across Bedrock/Anthropic/OpenAI/Vertex (model alias + residency × provider matrix), (4) how the 4-link compliance chain ensures no bytes leak unscrubbed/unstamped/un-ZDR'd/un-audited. A new engineer reading this page cold can pick up the M+1 build sequence and ship the cost-gate slice.
+
+## 2026-05-15 — CUO module page rewritten to Gold (agent orchestrator + Lumi identity wrapper + skill broker contract + cross-module surfaces)
+
+Rewrote `website/docs/modules/cuo.html` from 1035 → 1362 lines (+327 lines, +32%). Encodes three strategic roles the CUO module plays simultaneously — skill-routing brain, persona catalogue (agent-equal C-level members), Lumi tenant-identity wrapper — with explicit handling of the agent_persona JWT shape from AUTH §2.7 and the capability-broker contract from SKILL §3.5. Targeted Edit operations preserved every gold-quality detail of the shipped Phase 1 (rule-based router, 6 core modules, 10 personas, 15 fixtures) while adding 4 strategic deep-dive sections + risk/KPI extensions + universal-protocol references.
+
+Changes by section:
+- **`<title>` + `<meta>`** — reframed: "CUO — AI orchestrator · Skill-routing brain · Lumi tenant persona · CyberOS". Description names the three strategic roles + the Phase 1 ship state + the M+3/M+6/M+9 roadmap to Phases 2-4.
+- **Hero tagline + lede** — explicit "agent orchestrator" framing; introduces Genie (face) / CUO (engineer view) / Lumi (org-tenant identity) naming distinction in one paragraph; lists all 3 strategic roles with Phase milestones.
+- **Hero fact-grid** — extended from 8 to 12 cards: added Strategic role + Lumi readiness (P3 unlock) + Routing latency p95 + Audit-chain coverage (100%); changed "Tests" formatting to 15+15 (pytest+fixtures).
+- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (Role 1 skill-routing brain / Role 2 persona catalogue agent-equal / Role 3 Lumi tenant identity). Cross-module dependency Mermaid with CUO as hub touching 7 user surfaces upstream + 5 downstream systems including Lumi's BRAIN at P3+. Auto-vs-human-in-loop operations matrix (8 rows) — explicit normative split.
+- **TOC** — added bigger-picture · lumi-identity · skill-broker · cross-module-surfaces entries (4 new strategic anchors).
+- **NEW §3.5 "Lumi identity wrapper — local CUO ↔ org-tenant persona"** — 3-row Lumi vs Genie vs local-CUO naming table; full AUTH JWT shape with agent_persona + tenant_id + scope_grants per AUTH §2.7; 4-row cross-tenant synthesis output table (updated persona prompts / keyword banks / cross-tenant lessons / vertical-pack updates) with cadence + privacy floor for each.
+- **NEW §3.6 "Skill broker contract — capability-gate at every invocation"** — 11-step Mermaid sequence (User → CUO → catalog → broker → AUTH → pre-audit → skill exec → post-audit); 7-row CUO↔broker contract table (catalog stability + scope_grants + allowed_tools + destructive-op gate + pre+post audit + tenant isolation + version pinning); 10-row defer-to-human matrix (CEO/COO/CFO/CMO/CTO/CHRO/CSO/CLO/CDO/CPO) with auto-OK vs defers split.
+- **NEW §3.7 "Cross-module CUO surfaces — where Genie appears"** — 9-row canonical surface table (CHAT @lumi / EMAIL Genie / PROJ inline / CRM next-action / KB ask-the-docs / TIME assist / INV pre-send check / PORTAL client / OBS triage) with trigger + context shipped + UI affordance for each. Per-surface latency budget table (6 rows) with route-only p95 + total response p95 + design note per surface.
+- **§13 Risks** — added 10 new (R-CUO-008..017): Lumi tenant-id spoofing (Critical impact, CSO-owned) · destructive auto-invoke despite matrix (Critical, hard zero) · catalog drift route-vs-invoke · cross-surface latency miss · cross-tenant synthesis privacy leak · persona prompt drift via Lumi pushes · EU AI Act Art. 12 logging gap (Phase 2 migration required) · @lumi rate-limit abuse · Phase 2 LLM cascade outage degradation · Genie answers from training cutoff on company-specific topics.
+- **§14 KPIs** — added 10 new universal-protocol-aware: per-surface response p95 (PROJ inline ≤ 800 ms / CHAT @lumi ≤ 4 s) · destructive-op auto-invoke rate (= 0 hard zero) · Lumi sync push success rate (≥ 0.99 at P3+) · cross-tenant sync_class violation rate (= 0 hard zero) · persona-version stability (≤ 2 changes per quarter) · @lumi cost per active Member (≤ $5/DAU/month) · must-cite-source compliance (≥ 0.95) · dogfooding rate (100% of team by M+3).
+- **§18 References** — replaced stale PRD/SRS section refs with the 4 new in-page sections + BRAIN_AUTOSYNC_DESIGN.md §5+§6 + FR_AUTHORING_WORKFLOW.md (CUO + BRAIN + Skill = first 50 FRs) + AUDIT_AND_PLAN_2026_05_14.md §3.3 (M+3/M+6/M+9/M+12+) + RESEARCH_REVIEW_2026_05_14.md §2 (8.5/10) + 8 cross-module page links + EU AI Act Art. 12/14/26 + PDPL Art. 14.
+
+Verified:
+- 1362 lines parses cleanly
+- 23 top-level sections (was 19) including 4 strategic new ones (§0, §3.5–§3.7)
+- 2 new Mermaid diagrams (cross-module dependency flowchart + 11-step broker sequence)
+- 17 risk rows (was 7), with 10 new framed around Lumi cross-tenant privacy + destructive-op gating + EU AI Act Art. 12 + Genie training-cutoff hallucination
+- 17 KPI rows (was 7), with hard-zero KPIs (destructive auto-invoke = 0, cross-tenant sync_class violation = 0) as the compliance floor
+- Lumi naming clarified in 5+ places — Genie (user face) / CUO (engineer view) / Lumi (org-tenant identity) → consistent through hero, §0, §3.5, audit table, references
+
+The CUO page now reads as the complete answer to: (1) why CUO is the orchestrator and not "yet another chatbot framework" (the 3-role frame + cross-module surface table), (2) how the agent_persona JWT cryptographically anchors every Lumi action back to AUTH (concrete JWT example), (3) why the capability broker is the protocol-level guarantee that auto-invocation cannot escape scope (7-step sequence + 7-row contract + defer-to-human matrix), (4) where Genie actually shows up in the platform (9-row cross-module surface table with per-surface latency budgets). A new engineer reading this page cold can pick up the Phase 1 source + AGENTS.md and ship Phase 2 LangGraph integration.
+
 ## 2026-05-15 — PROJECT module page rewritten to Gold (orchestration spine + Engagement economics + BRAIN-anchored decisions + Liquid-Glass UI exemplar)
 
 Rewrote `website/docs/modules/proj.html` from 1126 → 1514 lines (+388 lines, +34%). Encodes three strategic roles the PROJ module plays simultaneously — orchestration spine for cross-module joins, BRAIN-anchored decision substrate, consultancy-native Engagement billing surface — with no role under-served. Targeted Edit operations preserved the existing strong content (4 primitives, sync-engine architecture, 5 key-flow sequences, status enum + workflow overlay, 7 surface CLI commands) while adding 4 strategic deep-dive sections + risk/KPI extensions + universal-protocol references.

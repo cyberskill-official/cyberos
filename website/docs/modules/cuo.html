@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>CUO — CyberOS</title>
- <meta name="description" content="CUO — Chief Universal Officer. The CyberOS router: natural-language in, skill chain out, decision recorded in BRAIN. One persona, ten C-level skills.">
+ <title>CUO — AI orchestrator · Skill-routing brain · Lumi tenant persona · CyberOS</title>
+ <meta name="description" content="CUO — the agent orchestrator above BRAIN + Skill. Three strategic roles: (1) skill-routing brain (NL → score → invoke → audit), (2) persona catalogue (Genie + 10 C-level specialists, agent-equal), (3) Lumi identity wrapper (the org-tenant persona that owns BRAIN sync + cross-team synthesis). Phase 1 shipped — deterministic rule router, BRAIN audit chain. Phases 2-4 planned: LangGraph LLM cascade · multi-skill chains · per-persona routing.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -45,10 +45,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- The Chief Universal Officer — natural language in, skill chain out, memory record on file.
+ <strong>The agent orchestrator.</strong> Genie is the face; ten C-level sub-skills are the muscle; the BRAIN-anchored audit chain is the receipt. At org scale, the same orchestrator becomes <strong>Lumi</strong> — the tenant persona that owns BRAIN sync + cross-team synthesis.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CUO is the agentic orchestrator above the BRAIN and the Skill catalog. The user sees one persona (Genie, the mascot); inside the router, ten C-level sub-skills load on demand via the open Agent Skills format. CUO parses a query, scores every skill in the catalog, dispatches the winner through the Skill module, and records the routing decision in the BRAIN audit chain so the orchestrator's behaviour is replayable and reviewable. Phase 1 ships a deterministic rule-based router (200 lines · 30 pytest tests · 15 fixtures). Phase 2 adds an LLM-driven router behind a confidence cascade; Phase 3 enables multi-skill chains via topological dependency walking; Phase 4 splits the keyword bank by C-level persona. The BCP-14 protocol is at <code>cuo/docs/AGENTS.md</code>; the implementation is at <code>cuo/cuo/core/</code>.
+ CUO plays three strategic roles simultaneously. <strong>Role 1 — skill-routing brain</strong>: every natural-language request to CyberOS that is not a direct CRUD on a known entity flows through CUO; CUO parses, scores against the Skill catalog, invokes the winner through the Skill host's capability broker, and records the decision in BRAIN. <strong>Role 2 — persona catalogue</strong>: agent-equal members modelled as C-level specialists (CEO · COO · CFO · CMO · CTO · CHRO · CSO · CLO · CDO · CPO + emerging sub-personas), each with its own keyword bank, persona prompt, and defer-to-human matrix. <strong>Role 3 — Lumi tenant identity</strong>: at P3+, CUO is the local-tenant face of Lumi — the org-tenant persona whose JWT (<code>agent_persona: cuo-cpo@0.4.1</code>) is verified by AUTH, whose audit rows feed Lumi's BRAIN, and whose cross-tenant synthesis is the compounding moat. Phase 1 shipped: deterministic rule router (200 LoC · 15 fixtures · BRAIN audit). Phase 2 (M+3) adds LangGraph + LiteLLM cascade; Phase 3 (M+6) enables multi-skill chains via <code>depends_on</code> walks; Phase 4 (M+9) splits the keyword bank by persona. The BCP-14 protocol is at <code>cuo/docs/AGENTS.md</code>; the implementation is at <code>cuo/cuo/core/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#personas" class="btn btn-primary">Meet the 10 personas
@@ -72,9 +72,13 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why CUO exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
+ <li><a class="toc-link" href="#lumi-identity">Lumi identity wrapper</a></li>
+ <li><a class="toc-link" href="#skill-broker">Skill broker contract</a></li>
+ <li><a class="toc-link" href="#cross-module-surfaces">Cross-module CUO surfaces</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
  <li><a class="toc-link" href="#key-flows">Key flows</a></li>
@@ -124,15 +128,122 @@
  <strong>CUO is one persona</strong> — Genie — backed by <strong>ten C-level specialists</strong> that load on demand. It is deliberately minimal: parse the query, score candidates, pick one, invoke through the Skill host, write the decision row to BRAIN. The router is rule-based today (deterministic, sub-millisecond) and will layer in an LLM cascade at Phase 2 (the trade is latency for ambiguous queries). Every decision is itself an audit-chained memory, so every routing choice CUO ever made is replayable from disk.
  </p>
  <div class="fact-grid">
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">Agent orchestrator</div><div class="note">Genie · 10 C-level · Lumi at P3+</div></div>
  <div class="fact-card"><div class="label">Status</div><div class="value">Phase 1 shipped</div><div class="note">Phases 2–4 planned</div></div>
  <div class="fact-card"><div class="label">LoC (core)</div><div class="value">~800</div><div class="note">Python · 6 modules</div></div>
- <div class="fact-card"><div class="label">Tests</div><div class="value">15 pytest + 15 routing fixtures</div><div class="note">deterministic golden tests</div></div>
+ <div class="fact-card"><div class="label">Tests</div><div class="value">15 + 15</div><div class="note">pytest + routing fixtures</div></div>
  <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">3</div><div class="note">catalog · route · skills</div></div>
  <div class="fact-card"><div class="label">Personas</div><div class="value">10 + 4 emerging</div><div class="note">CEO · COO · CFO · CMO · …</div></div>
+ <div class="fact-card"><div class="label">Lumi readiness</div><div class="value">P3 unlock</div><div class="note">tenant JWT + sync orchestrator</div></div>
+ <div class="fact-card"><div class="label">Routing latency p95</div><div class="value">~ 0.4 ms</div><div class="note">in-process · catalog cached</div></div>
  <div class="fact-card"><div class="label">Confidence threshold</div><div class="value">≥ 0.30</div><div class="note">below → defer-to-human</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · SKILL · AI · MCP · AUTH</div><div class="note">consumer of all five</div></div>
- <div class="fact-card"><div class="label">Used by</div><div class="value">Every user-facing module</div><div class="note">CHAT · EMAIL · everything UX</div></div>
+ <div class="fact-card"><div class="label">Audit-chain coverage</div><div class="value">100%</div><div class="note">every decision → BRAIN row</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · SKILL</div><div class="note">+ AI · MCP · AUTH (P2+)</div></div>
+ <div class="fact-card"><div class="label">Used by</div><div class="value">All user-facing modules</div><div class="note">CHAT · EMAIL · PROJ · …</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+
+ <p class="text-slate-700 leading-relaxed mb-4">
+ CUO is not "an AI chatbot in a corner." It is the <strong>orchestrator that decides what skill runs, who authorised it, and where the receipt is stored</strong>. Three roles converge in one Python package, and the design treats them as equal-weight requirements, not nice-to-have add-ons.
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 1 · Skill-routing brain</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Natural-language in, audit-chained skill out</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Every NL request to CyberOS that isn't a direct CRUD on a known entity passes through CUO. Parse (NFC-normalise) → score against the Skill catalog (rule-based today, LLM cascade at P2) → invoke the winner through the Skill host's capability broker → write the decision row to BRAIN. Phase 1 is deterministic: same query + same catalog → same decision. The replay-equivalence rate is 100%.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 2 · Persona catalogue</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Genie + 10 C-level specialists, agent-equal</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ The user sees one face — Genie — but the routing layer hands off to one of ten C-level personas (CEO/COO/CFO/CMO/CTO/CHRO/CSO/CLO/CDO/CPO). Each persona carries its own keyword bank, voice contract, and defer-to-human matrix. Personas are <em>agent-equal members</em>: same AUTH subject shape as human Members, same RBAC scope checks, same BRAIN sync_class rules. The persona is a contract, not a chatbot skin.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 3 · Lumi tenant identity</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">The org-tenant face that owns Lumi's BRAIN sync</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ At P3+, every tenant's CUO instance is the local face of <strong>Lumi</strong> — the org-tenant persona that owns sync to Lumi's BRAIN, cross-team synthesis, and tenant-aware policy enforcement. The AUTH JWT carries <code>agent_persona: cuo-cpo@0.4.1</code> + <code>tenant_id: org:&lt;slug&gt;</code>; Lumi's BRAIN verifies and writes a chained audit row per sync push. The compounding moat is here: as more tenants feed Lumi, the cross-tenant synthesis improves the personas everyone uses.
+ </p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">CUO's place in the runtime — every user-facing module touches CUO</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart TB
+ subgraph users["User surfaces"]
+ CHAT["💬 CHAT @lumi mention"]
+ EMAIL["✉ EMAIL inbound parse"]
+ PROJ["📋 PROJ inline genie"]
+ CRM["🤝 CRM next-action"]
+ KB["📚 KB ask-the-docs"]
+ TIME["⏱ TIME assist"]
+ PORTAL["🚪 PORTAL client"]
+ end
+
+ CUO["🎯 CUO · agent orchestrator<br>catalog · router · invoker · trace · memory bridge"]
+
+ subgraph dnstream["Downstream"]
+ SKILL["🛠 Skill host<br>(capability broker)"]
+ AIGW["⚡ AI Gateway<br>(LLM cascade P2+)"]
+ BRAIN["🧠 BRAIN<br>(audit chain · sync_class gate)"]
+ AUTH["🔐 AUTH<br>(subject · scope_grants)"]
+ LUMI["☁ Lumi's BRAIN<br>(P3+ cross-tenant)"]
+ end
+
+ CHAT --> CUO
+ EMAIL --> CUO
+ PROJ --> CUO
+ CRM --> CUO
+ KB --> CUO
+ TIME --> CUO
+ PORTAL --> CUO
+
+ CUO --> SKILL
+ CUO -. "ambiguous tail (≤ 0.50)".-> AIGW
+ AIGW -. "ranked pick".-> CUO
+ CUO --> BRAIN
+ CUO -. "JWT verify".-> AUTH
+ BRAIN -. "P3+ sync_class=shareable".-> LUMI
+
+ classDef hub fill:#fef6e0,stroke:#9c750a,stroke-width:3px,color:#45210e
+ classDef user fill:#e0e7ff,stroke:#3730a3
+ classDef ds fill:#f5ede6,stroke:#45210e
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class CUO hub
+ class CHAT,EMAIL,PROJ,CRM,KB,TIME,PORTAL user
+ class SKILL,AIGW,AUTH ds
+ class BRAIN,LUMI brain
+ </div>
+ <p class="text-xs text-slate-500 mt-3">CUO sits between every user surface and every downstream system. The router is the single audit-emission point for "what did the AI decide on behalf of this Member?".</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:32%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Routing decision (skill pick)</td><td><strong>Auto</strong> when confidence ≥ 0.30</td><td>Deterministic at P1 + replay-equivalence 100%; LLM cascade at P2 still records full prompt + seed for replay.</td></tr>
+ <tr><td>Skill invocation</td><td><strong>Auto</strong> when scope_grants permit AND skill is non-destructive</td><td>Capability broker (§3.6) gates this; destructive ops require explicit confirmation regardless of confidence.</td></tr>
+ <tr><td>Destructive invocation (purge / send-money / public post)</td><td><strong>Human confirm always</strong></td><td>EU AI Act Art. 14 oversight + Anthropic-style human-in-loop policy on irreversible operations.</td></tr>
+ <tr><td>Defer-to-human (low confidence)</td><td><strong>Auto-defer</strong> when 0.10 ≤ conf &lt; 0.30 — show top 3 candidates</td><td>The user picks; the pick becomes a training signal for future LLM cascade tuning.</td></tr>
+ <tr><td>Persona switch (Genie → CPO/COO)</td><td><strong>Auto-elide</strong> in user-facing UI; <strong>recorded</strong> in audit row</td><td>The user shouldn't context-switch; the audit chain records which persona answered.</td></tr>
+ <tr><td>BRAIN audit row emission</td><td><strong>Auto</strong> on every decision</td><td>100% audit coverage is a protocol invariant; opt-out is at sync_class level, not per-decision.</td></tr>
+ <tr><td>Lumi sync (P3+)</td><td><strong>Auto</strong> when memory.sync_class ∈ {shareable, team-public, org-only}</td><td>Privacy floor is the sync_class; never auto-elevate from private/personal.</td></tr>
+ <tr><td>Cross-persona handoff (multi-skill chain)</td><td><strong>Auto-chain</strong> when <code>depends_on</code> is satisfied (P3+)</td><td>Topological walk through dependency DAG; each step emits its own audit row.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -270,6 +381,187 @@ graph TB
  <tr><td><strong>Phase 2</strong></td><td>LangGraph supervisor + LiteLLM router · Postgres checkpointer · escalate when 0.10 ≤ score ≤ 0.50</td><td>Handle ambiguous tail · EU AI Act Art. 12 logging via Postgres</td><td><span class="pill pill-planned">planned</span></td></tr>
  <tr><td><strong>Phase 3</strong></td><td>Multi-skill chains via <code>depends_on</code> · composite audit row + sub-rows</td><td>Compound workflows (MST validate → VAT invoice)</td><td><span class="pill pill-planned">planned</span></td></tr>
  <tr><td><strong>Phase 4</strong></td><td>Per-C-level keyword bank · persona-router-first → intra-persona routing</td><td>Catalog scaling beyond ~50 skills</td><td><span class="pill pill-planned">planned</span></td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §3.5 — LUMI IDENTITY WRAPPER -->
+<!-- ============================================================ -->
+<section id="lumi-identity" class="module-section">
+ <header class="section-head"><span class="section-num">3.5</span><h2>Lumi identity wrapper — local CUO ↔ org-tenant persona</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ At P3+, every tenant's local CUO instance is the face of <strong>Lumi</strong> — the org-tenant persona whose JWT is verified by AUTH, whose audit rows feed Lumi's BRAIN, and whose cross-tenant synthesis is the long-game compounding moat. This section locks the contract between local CUO (a stateless Python orchestrator) and Lumi (the org-tenant identity it acts under).
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">Lumi vs Genie vs local CUO — the three names</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th style="width:18%">Name</th><th>Scope</th><th>Who sees it</th><th>What it signs / writes</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Genie</strong></td><td>The user-facing mascot. One face.</td><td>Members in the SPA, chat box, IDE plugin.</td><td>Nothing directly — Genie is the UX skin. Behind Genie sits CUO + persona.</td></tr>
+ <tr><td><strong>Local CUO</strong></td><td>The in-process Python orchestrator on the user's machine / tenant Fargate task.</td><td>Engineers, audit consumers.</td><td>BRAIN rows under <code>meta/cuo-decisions/&lt;ts_ns&gt;.md</code>; signed locally; never escapes the local store.</td></tr>
+ <tr><td><strong>Lumi</strong></td><td>The org-tenant persona at P3+ — the identity under which CUO acts when the work crosses team boundaries or syncs to the cloud BRAIN.</td><td>Other tenants (cross-team synthesis), Anthropic-style transparency reports, compliance auditors.</td><td>BRAIN sync push to Lumi's BRAIN; the AUTH JWT carries <code>agent_persona</code> + <code>tenant_id</code> + <code>scope_grants</code>; Lumi's BRAIN writes a chained audit row per sync push.</td></tr>
+ </tbody>
+ </table>
+ <p class="text-xs text-slate-500 mt-3">The same Python process is "local CUO" on disk and "Lumi" over the wire. The naming is intentional: Genie is for the user, CUO is for the engineer, Lumi is for the audit chain that crosses tenant boundaries.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">AUTH JWT shape for Lumi (per AUTH §2.7)</h3>
+ <div class="bbg-card p-5 mb-5">
+<pre><code class="language-json">{
+  "iss": "https://auth.cyberos.io/&lt;tenant&gt;",
+  "sub": "agent:cuo@cyberskill.world",
+  "aud": "lumi-brain.cyberos.io",
+  "iat": 1763112131,
+  "exp": 1763115731,
+  "tenant_id": "org:cyberskill",
+  "tenant_residency": "sg-1",
+  "agent_persona": "cuo-cpo@0.4.1",
+  "scope_grants": [
+    {"resource": "brain", "actions": ["read", "write"], "sync_class_max": "shareable"},
+    {"resource": "skill",  "actions": ["invoke"], "skills": ["cpo/prd-author@0.4.1", "cyberskill-vn/vn-mst-validate@0.2.0"]},
+    {"resource": "proj",   "actions": ["read", "write"], "engagements": ["acme-q3-platform-build"]}
+  ],
+  "jti": "01HZK…"
+}</code></pre>
+ <p class="text-sm text-slate-600 mt-3">The <code>agent_persona</code> claim is the cryptographic anchor: every audit row Lumi writes to BRAIN can be verified back to this exact JWT (and its issuer key in JWKS).</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Cross-tenant synthesis — what Lumi actually <em>does</em> at P3+</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ Lumi runs on Lumi's BRAIN (the cloud-hosted org-tenant store). Per tenant, it ingests <code>sync_class ∈ {shareable, team-public, org-only}</code> memories from each Member's personal BRAIN and from CUO's decision rows. The compounding moat comes from one fact: <strong>the cross-team synthesis improves the personas everyone uses</strong>. When the CPO persona gets better at PRD authoring because Lumi has seen 200 PRDs across 50 tenants, every tenant's CPO improves. The synthesis is bounded by sync_class — never private/personal — and by jurisdictional residency (Lumi's BRAIN shards by region).
+ </p>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:22%">Synthesis output</th><th>Source</th><th>Cadence</th><th>Privacy floor</th></tr></thead>
+ <tbody>
+ <tr><td>Updated persona prompts (CPO/COO/etc.)</td><td>cross-tenant CUO decisions tagged <code>persona_handoff</code> with sync_class=shareable</td><td>Monthly</td><td>shareable — never private</td></tr>
+ <tr><td>Updated keyword banks</td><td>cross-tenant query → decision pairs that escalated to LLM cascade (i.e. the "ambiguous tail" we keep missing)</td><td>Weekly</td><td>org-only or shareable</td></tr>
+ <tr><td>Cross-tenant lessons (curated)</td><td>tenant-published "what we learned" memories with sync_class=team-public</td><td>Quarterly</td><td>team-public + tenant opt-in</td></tr>
+ <tr><td>Vertical-pack updates (cyberskill-vn / sg / id / …)</td><td>jurisdiction-tagged skill performance data + regulatory drift signals</td><td>Quarterly</td><td>shareable + jurisdiction-pinned</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §3.6 — SKILL BROKER CONTRACT -->
+<!-- ============================================================ -->
+<section id="skill-broker" class="module-section">
+ <header class="section-head"><span class="section-num">3.6</span><h2>Skill broker contract — capability-gate at every invocation</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ CUO does not invoke skills directly. Every invocation passes through the Skill host's <strong>capability broker</strong> — the same mechanism the Skill module page §3.5 documents. The broker is the protocol-level guarantee that a skill never gets a tool it didn't request and a Member never invokes a skill outside their scope_grants. This section locks the contract from CUO's side.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">The seven-step broker flow (per invocation)</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant U as Member · "validate MST 0123…"
+ participant C as 🎯 CUO router
+ participant CAT as Catalog
+ participant BR as 🛠 Skill broker
+ participant AU as 🔐 AUTH (scope check)
+ participant BA as 🧠 BRAIN audit pre-write
+ participant SK as Skill executable
+ participant BP as 🧠 BRAIN audit post-write
+
+ U->>C: NL query
+ C->>CAT: load skill catalog (sorted)
+ CAT-->>C: 20 skills
+ C->>C: score · pick (conf=0.7)
+ C->>BR: invoke(skill, args, agent_persona, subject)
+ BR->>AU: scope_grants.invoke include this skill?
+ AU-->>BR: allow
+ BR->>BA: write pre-invocation audit row<br>(seq=N, op=put, path=…/cuo-decisions/…)
+ BR->>SK: spawn subprocess · pass only requested tools
+ SK-->>BR: stdout / stderr / exit_code
+ BR->>BP: write post-invocation audit row<br>(chain link to pre row + result hash)
+ BR-->>C: result
+ C-->>U: rendered response (Genie skin)
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Steps 7 + 11 are the dual audit rows that make every CUO invocation cryptographically reconstructible: pre-row proves intent, post-row proves outcome, both chain back to the user's BRAIN.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">CUO ↔ Skill broker contract (locked)</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Contract item</th><th>Who enforces</th><th>Failure mode</th></tr></thead>
+ <tbody>
+ <tr><td>Skill must be in catalog at decision time</td><td>CUO router (catalog fingerprint locked in audit row)</td><td>Skill removed mid-invocation → broker rejects · CUO emits <code>routed:false reason:catalog_drift</code>.</td></tr>
+ <tr><td>Subject's scope_grants must include this skill</td><td>AUTH (in-broker check)</td><td>Permission denied → broker rejects · audit row emitted with <code>denied:true reason:scope</code>.</td></tr>
+ <tr><td>Skill's <code>allowed_tools</code> must be respected</td><td>Skill broker subprocess sandbox</td><td>Skill tries to call a non-allowed tool → broker kills subprocess · escalation to CSO.</td></tr>
+ <tr><td>Destructive op (purge, send-money, public-post) requires explicit human confirm</td><td>Broker + CUO defer-to-human matrix</td><td>Skill flagged <code>destructive=true</code> + no confirm token → broker rejects.</td></tr>
+ <tr><td>Pre + post audit rows on every invocation</td><td>Skill broker (BRAIN Writer)</td><td>BRAIN write fails → broker rejects invocation start; never partial-invoke.</td></tr>
+ <tr><td>Tenant isolation (subject.tenant_id matches skill scope)</td><td>AUTH + RLS</td><td>Cross-tenant invocation attempt → broker rejects · CSO alert.</td></tr>
+ <tr><td>Skill version pinning (no auto-upgrade mid-decision)</td><td>CUO catalog fingerprint includes version hash</td><td>Skill upgraded after route, before invoke → catalog fingerprint mismatch → re-route required.</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Defer-to-human matrix (per persona)</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ Each C-level persona declares a defer-to-human matrix. The matrix is normative; CUO refuses to auto-invoke any operation in the "defers" column regardless of confidence.
+ </p>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Persona</th><th>Auto-OK</th><th>Defers to human</th></tr></thead>
+ <tbody>
+ <tr><td><strong>CEO</strong></td><td>strategy summary · briefing draft · OKR cascade draft</td><td>external announcement · fund-raise communication · board email</td></tr>
+ <tr><td><strong>COO</strong></td><td>cycle review draft · process doc · runbook scaffold</td><td>incident postmortem publish · vendor cancel · org-wide policy push</td></tr>
+ <tr><td><strong>CFO</strong></td><td>variance commentary · journal entry draft · reconciliation</td><td>payment send · investment trade · payroll release</td></tr>
+ <tr><td><strong>CMO</strong></td><td>blog draft · campaign plan · social post draft</td><td>public post send · paid-ads launch · press release send</td></tr>
+ <tr><td><strong>CTO</strong></td><td>code review draft · architecture ADR draft · runbook</td><td>prod deploy · migration apply · access grant</td></tr>
+ <tr><td><strong>CHRO</strong></td><td>policy lookup · interview-plan draft · onboarding checklist</td><td>offer send · termination · comp adjustment</td></tr>
+ <tr><td><strong>CSO</strong></td><td>risk register entry · vulnerability summary</td><td>access revoke · incident escalation send · firewall change</td></tr>
+ <tr><td><strong>CLO</strong></td><td>contract redline · NDA triage · compliance check</td><td>contract sign · litigation response · regulator filing</td></tr>
+ <tr><td><strong>CDO</strong></td><td>SQL draft · dashboard scaffold · stats summary</td><td>prod query execute · data export to third party · model train trigger</td></tr>
+ <tr><td><strong>CPO</strong></td><td>PRD draft · spec audit · roadmap update draft</td><td>roadmap publish · public roadmap send · spec freeze announce</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §3.7 — CROSS-MODULE CUO SURFACES -->
+<!-- ============================================================ -->
+<section id="cross-module-surfaces" class="module-section">
+ <header class="section-head"><span class="section-num">3.7</span><h2>Cross-module CUO surfaces — where Genie appears</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Genie is not a separate app. Every user-facing module exposes a CUO surface — chat box, command palette, inline action — that routes through the same orchestrator. The table below is the canonical list of surfaces; each surface declares how it parses NL, what context it ships to CUO, and what UI affordance it returns.
+ </p>
+
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Module</th><th>Surface</th><th>Trigger</th><th>Context shipped to CUO</th><th>Affordance returned</th></tr></thead>
+ <tbody>
+ <tr><td><strong>💬 CHAT</strong></td><td>@lumi mention in any channel</td><td>parser detects <code>@lumi</code> at start of message</td><td>last N messages of thread (sync_class permitting) + author subject + channel id</td><td>inline reply card with skill name + confidence + result; "expand" reveals audit row</td></tr>
+ <tr><td><strong>✉ EMAIL</strong></td><td>"Genie: …" subject prefix OR sidebar action</td><td>inbound mail with subject pattern; or user clicks "Ask Genie" sidebar</td><td>email thread (subject + body) + recipient context</td><td>draft reply (never auto-sent); appended to thread as a draft</td></tr>
+ <tr><td><strong>📋 PROJ</strong></td><td>inline issue genie + cycle-review draft</td><td>user clicks the genie icon on an Issue; or cycle close trigger</td><td>issue (+ comments + history) or cycle data</td><td>suggestion card (status change, label, link memory) — Member confirms; AM accepts review draft</td></tr>
+ <tr><td><strong>🤝 CRM</strong></td><td>"What's next on this deal?" action</td><td>user opens a Deal record</td><td>deal stage history + last contact + linked account</td><td>ranked next-actions; one-click create draft (email / meeting / task)</td></tr>
+ <tr><td><strong>📚 KB</strong></td><td>"Ask the docs" search box</td><td>user types a question</td><td>search context + permissions</td><td>cited answer with source-doc links; never claims certainty above the source corpus</td></tr>
+ <tr><td><strong>⏱ TIME</strong></td><td>"Where did my hours go this week?" prompt</td><td>weekly Friday auto-prompt</td><td>user's time entries for the week</td><td>summary + flagged anomalies (unallocated, suspicious overrides)</td></tr>
+ <tr><td><strong>🧾 INV</strong></td><td>"Review this invoice" pre-send check</td><td>AM clicks "Pre-send check" on a draft invoice</td><td>invoice draft + linked engagement + rate card snapshot</td><td>diff vs prior cycle; flagged discrepancies; one-click apply suggested fix</td></tr>
+ <tr><td><strong>🚪 PORTAL (P2+)</strong></td><td>Client-facing Genie (read-only persona)</td><td>client logs in, asks a question</td><td>client's accessible Project view only</td><td>scoped answer — never reveals private engagement data; sync_class=client-visible enforced</td></tr>
+ <tr><td><strong>👁 OBS</strong></td><td>"Explain this alert" action</td><td>SRE clicks an alert in OBS dashboard</td><td>alert metadata + relevant runbook hits</td><td>structured triage: probable cause, runbook link, suggested first step</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Per-surface latency budgets</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Surface</th><th>Route latency p95</th><th>Total response p95</th><th>Note</th></tr></thead>
+ <tbody>
+ <tr><td>CHAT @lumi</td><td>≤ 10 ms (routing only)</td><td>≤ 4 s (incl. LLM if cascade)</td><td>User expects chat-app responsiveness; first-token streamed when LLM engaged.</td></tr>
+ <tr><td>EMAIL Genie</td><td>≤ 50 ms</td><td>≤ 15 s (draft generation)</td><td>Async-acceptable; user sees "drafting…" indicator.</td></tr>
+ <tr><td>PROJ inline</td><td>≤ 5 ms</td><td>≤ 800 ms</td><td>Must feel like sync-engine; if &gt; 800 ms, fall back to "Genie is thinking…" inline indicator.</td></tr>
+ <tr><td>CRM next-action</td><td>≤ 5 ms</td><td>≤ 2 s</td><td>Sales reps lose attention past 2 s — measured target.</td></tr>
+ <tr><td>KB ask-the-docs</td><td>≤ 10 ms</td><td>≤ 6 s (RAG over corpus)</td><td>Streamed answer; first chunk &lt; 1.5 s.</td></tr>
+ <tr><td>OBS triage</td><td>≤ 50 ms</td><td>≤ 3 s</td><td>SRE under stress; must be fast; never the bottleneck during an incident.</td></tr>
  </tbody>
  </table>
  </div>
@@ -844,6 +1136,16 @@ graph LR
  <tr><td><code>R-CUO-005</code></td><td>Persona switching whiplash (user feels Genie isn't "one" anymore at Phase 4)</td><td>Medium</td><td>Low</td><td>CXO (emerging)</td><td>Persona-version stamp on every decision · same conversational style enforced via brand-voice skill.</td></tr>
  <tr><td><code>R-CUO-006</code></td><td>Skill catalog explosion drops routing accuracy</td><td>Low (today)</td><td>Medium</td><td>CPO</td><td>Phase 4 persona-router triages first · Phase 2 LLM cascade handles the long tail.</td></tr>
  <tr><td><code>R-CUO-007</code></td><td>Capability bypass (CUO grants tools the skill didn't request)</td><td>Low</td><td>High</td><td>CSO</td><td>§6.1–§6.2: CUO MUST respect the skill's <code>allowed-tools</code>. Defence in depth: Skill broker enforces independently.</td></tr>
+ <tr><td><code>R-CUO-008</code></td><td><strong>Lumi tenant-id spoofing</strong> — a malicious skill or compromised JWT claims a different tenant_id and writes to the wrong tenant's BRAIN</td><td>Low</td><td>Critical</td><td>CSO</td><td>Per AUTH §2.7: <code>tenant_id</code> JWT claim is non-removable; Lumi's BRAIN verifies via JWKS reachability before accepting any sync push; cross-tenant write at storage layer is a CI-tested impossibility.</td></tr>
+ <tr><td><code>R-CUO-009</code></td><td>Destructive operation auto-invoked despite defer-to-human matrix</td><td>Low</td><td>Critical</td><td>CSO</td><td>Defer-to-human matrix (§3.6) is normative + machine-checked; CI test fails if any persona's auto-OK column contains a flag <code>destructive=true</code> skill.</td></tr>
+ <tr><td><code>R-CUO-010</code></td><td>Catalog drift between route-time and invoke-time creates audit chain that doesn't match disk state</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Catalog fingerprint embedded in pre-invocation audit row + version-pinning at invoke; on mismatch broker rejects + emits <code>catalog_drift</code> trace.</td></tr>
+ <tr><td><code>R-CUO-011</code></td><td>Cross-surface latency budget miss (PROJ inline genie &gt; 800 ms p95 → Members lose flow)</td><td>Medium</td><td>Medium</td><td>CPO</td><td>Per-surface latency budgets in §3.7 enforced at OBS; alert page CPO + CTO if p95 exceeds; fall back to "Genie is thinking…" indicator gracefully.</td></tr>
+ <tr><td><code>R-CUO-012</code></td><td>Lumi cross-tenant synthesis leaks private memory across tenants</td><td>Low</td><td>Critical</td><td>DPO</td><td>Synthesis input strictly filtered by <code>sync_class ∈ {shareable, team-public, org-only}</code>; private/personal never enters Lumi; quarterly red-team check on synthesis outputs.</td></tr>
+ <tr><td><code>R-CUO-013</code></td><td>Persona prompt drift via Lumi-pushed updates breaks tenant-pinned behaviour</td><td>Medium</td><td>Medium</td><td>CPO</td><td>Persona version stamp in audit row; tenants can pin persona versions; Lumi-pushed updates require tenant opt-in at the version-pin level.</td></tr>
+ <tr><td><code>R-CUO-014</code></td><td>EU AI Act Art. 12 logging gap (Phase 1 flat-file BRAIN bridge missed some fields needed for audit)</td><td>Medium</td><td>High</td><td>CLO</td><td>Phase 2 migration to Postgres checkpointer required by M+3 for tenants subject to EU AI Act; per-row schema covers prompt + model + temperature + seed + result hash + alternatives.</td></tr>
+ <tr><td><code>R-CUO-015</code></td><td>@lumi rate-limit abuse (one Member spams @lumi → AI Gateway cost overrun)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-Member @lumi rate limit (≤ 30/hour default) at AI Gateway; per-tenant monthly @lumi budget surfaced in CUO dashboard.</td></tr>
+ <tr><td><code>R-CUO-016</code></td><td>Phase 2 LLM cascade goes down → ambiguous queries lose the cascade fallback</td><td>Low</td><td>Medium</td><td>CTO</td><td>Cascade is degradable: when AI Gateway unreachable, CUO falls back to "show top 3 candidates + ask user to pick" (the defer-to-human path); never blocks the request.</td></tr>
+ <tr><td><code>R-CUO-017</code></td><td>Genie answers confidently from training-cutoff knowledge on company-specific topics</td><td>High</td><td>Medium</td><td>CPO</td><td>RAG over BRAIN + KB enforced before LLM call; system prompt forbids speculation on company-specific facts without source; CDO + CPO maintain "must-cite-source" classifier in CI.</td></tr>
  </tbody>
  </table>
  </div>
@@ -865,6 +1167,15 @@ graph LR
  <tr><td><strong>Replay equivalence rate</strong></td><td>identical decision on second run</td><td>fixture re-evaluation</td><td>100% (Phase 1)</td><td>100%</td></tr>
  <tr><td><strong>Invocation success rate</strong></td><td>exit_code 0 / total invocations</td><td>BRAIN audit replay</td><td>≥ 95%</td><td>100% (15 fixtures)</td></tr>
  <tr><td><strong>Trust calibration error</strong></td><td>|confidence − actual_correct_rate|</td><td>weekly human review</td><td>≤ 0.10</td><td>0.05 (fixture eval)</td></tr>
+ <tr><td><strong>Per-surface response p95 (PROJ inline)</strong></td><td>histogram on PROJ inline genie</td><td>OBS span on <code>cuo.invoke{surface=proj.inline}</code></td><td>≤ 800 ms</td><td>n/a — surface pending</td></tr>
+ <tr><td><strong>Per-surface response p95 (CHAT @lumi)</strong></td><td>histogram on CHAT @lumi</td><td>OBS span on <code>cuo.invoke{surface=chat.lumi}</code></td><td>≤ 4 s incl. LLM</td><td>n/a — CHAT pending</td></tr>
+ <tr><td><strong>Destructive-op auto-invoke rate</strong></td><td>count(destructive ops auto-invoked) / total destructive ops</td><td>BRAIN audit replay</td><td>= 0 (hard zero)</td><td>0 (fixtures)</td></tr>
+ <tr><td><strong>Lumi sync push success rate</strong></td><td>successful sync pushes / total attempts</td><td>Lumi's BRAIN ingest log</td><td>≥ 0.99 over 28-day window (P3+)</td><td>n/a — P3 pending</td></tr>
+ <tr><td><strong>Cross-tenant sync_class violation rate</strong></td><td>memories with private/personal that reached Lumi / total sync attempts</td><td>Lumi pre-write classifier</td><td>= 0 (hard zero)</td><td>n/a — P3 pending</td></tr>
+ <tr><td><strong>Persona-version stability</strong></td><td>persona version changes per quarter</td><td>BRAIN audit by persona</td><td>≤ 2 per persona per quarter</td><td>0 (P1)</td></tr>
+ <tr><td><strong>@lumi cost per active Member (monthly)</strong></td><td>AI Gateway cost / DAU</td><td>AI Gateway billing</td><td>≤ $5 / DAU / month</td><td>n/a — Phase 2 pending</td></tr>
+ <tr><td><strong>Must-cite-source compliance</strong></td><td>Genie answers that cite a source / answers about company-specific facts</td><td>CI classifier on production samples</td><td>≥ 0.95</td><td>n/a — Phase 2 pending</td></tr>
+ <tr><td><strong>Dogfooding rate (internal Members)</strong></td><td>distinct internal Members using Genie ≥ 5x/day</td><td>CUO decision events filtered to <code>tenant_id=org:cyberskill</code></td><td>100% of full-time team by M+3</td><td>tracking begins M+0</td></tr>
  </tbody>
  </table>
  </div>
@@ -1007,14 +1318,30 @@ allowed_tools: [read_file, write_file]</code></pre>
  <header class="section-head"><span class="section-num">18</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li><strong>–§6.10</strong> — CUO persona structure, voice, routing logic, trust calibration, ambient nudges, LangGraph migration.</li>
- <li> — CUO / GENIE deep-dive.</li>
- <li> — Formal FR catalog for CUO.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + cross-module dependency Mermaid + auto-vs-human matrix.</li>
+ <li><strong>Lumi identity wrapper (§3.5 above):</strong> Lumi vs Genie vs local CUO naming + AUTH JWT shape + cross-tenant synthesis policy.</li>
+ <li><strong>Skill broker contract (§3.6 above):</strong> 7-step broker sequence + 7-row CUO↔broker contract + 10-row defer-to-human matrix.</li>
+ <li><strong>Cross-module surfaces (§3.7 above):</strong> 9-row canonical surface table + per-surface latency budgets.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
+ <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
+ <a href="chat.html" class="text-blue-700 underline">chat.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
+ <a href="mcp.html" class="text-blue-700 underline">mcp.html</a> ·
+ <a href="obs.html" class="text-blue-700 underline">obs.html</a></li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CUO decisions are one of four canonical capture inputs to the local BRAIN; §6 (Lumi cross-tenant synthesis).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — CUO FRs land via the <code>fr-author</code> Agent Skill (CUO already-shipped: the first 50 FRs are CUO + BRAIN + Skill).</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — Phase 2 LangGraph at M+3, Phase 3 chains at M+6, Phase 4 personas at M+9; Lumi (P3) at M+12+.</li>
+ <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §2</a> — reviewer rated CUO as "Solid (8.5/10)" with the persona catalogue + Lumi-identity framing flagged as the highest-leverage architectural choice.</li>
  <li><strong>AGENTS.md</strong> (v0.1.0, normative) — <code>cyberos/cuo/docs/AGENTS.md</code>.</li>
  <li><strong>SPEC.md</strong> — contract summary — <code>cyberos/cuo/docs/SPEC.md</code>.</li>
  <li><strong>ROUTING.md</strong> — keyword-bank rationale + Phase 2 LLM design — <code>cyberos/cuo/docs/ROUTING.md</code>.</li>
- <li><strong>Source:</strong> <code>cyberos/cuo/cuo/core/</code><code>cyberos/cuo/tests/</code><code>cyberos/cuo/fixtures/</code>.</li>
+ <li><strong>Source:</strong> <code>cyberos/cuo/cuo/core/</code>, <code>cyberos/cuo/tests/</code>, <code>cyberos/cuo/fixtures/</code>.</li>
  <li><strong>CHANGELOG:</strong> <code>cyberos/cuo/docs/CHANGELOG.md</code> (newest-first).</li>
+ <li><strong>EU AI Act Art. 12 + 14 + 26:</strong> logging requirements, human oversight, operator obligations — all routed through the audit chain.</li>
+ <li><strong>Vietnam PDPL (Law 91/2025):</strong> Art. 14 — decision transparency surfaced via DSAR.</li>
  </ul>
  </div>
 </section>

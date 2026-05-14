@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>REW — CyberOS</title>
- <meta name="description" content="REW — Total Rewards (Compensation). 3P income model (P1 Base + P2 Allowance + P3 Performance), BP fund, anti-retroactive parameter versioning, P1-protection invariant, structural exclusion from BRAIN. EU AI Act Annex III §4 high-risk.">
+ <title>REW — Compensation engine · Payroll bridge · Bonus orchestrator · CyberOS</title>
+ <meta name="description" content="REW — three strategic roles: (1) compensation record owner (encrypted; HR-isolated by DEC-036; never enters BRAIN), (2) payroll bridge (monthly VND payroll cycle; BHXH/BHYT/BHTN integration; immutable parameter versioning), (3) bonus orchestrator (BP fund; PROJ calibration → P3 recommendation → CEO/CFO sign-off; P1-protection invariant hard-enforced). EU AI Act Annex III §4 high-risk classification.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why REW exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -139,6 +140,88 @@
  <div class="fact-card"><div class="label">Co-sign</div><div class="value">CFO + CHRO</div><div class="note">commit gate</div></div>
  <div class="fact-card"><div class="label">EU AI Act</div><div class="value">Annex III §4</div><div class="note">high-risk · conformity pack at P2</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ REW is "Bet 5" in the PRD — the moat. The point is that compensation is not a HR feature: it's a sovereign, legally-sensitive computation plane that must be architecturally separated from everything else. HR holds identity; REW holds the numbers. The P1-protection invariant + anti-retroactive parameter versioning + structural BRAIN exclusion (DEC-036) are non-negotiable hard rules.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--rew)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--rew-dark)">Role 1 · Compensation record owner</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Encrypted · HR-isolated · structurally excluded from BRAIN</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Per-Member compensation lives in REW's separate encrypted keyspace. HR never sees the number; REW never sees CCCD photos. CI gate (DEC-036) rejects any schema PR that lets compensation fields exist in HR tables or BRAIN files. EU AI Act Annex III §4 high-risk because payroll = employment decision.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--rew)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--rew-dark)">Role 2 · Payroll bridge</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Monthly cycle with BHXH/BHYT/BHTN + immutable parameters</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Monthly close: pull TIME approved hours, apply 3P decomposition (P1 base + P2 allowance + P3 performance), compute statutory deductions (BHXH 10.5%, BHYT 1.5%, BHTN 1%, PIT), generate payslip PDF, write to ledger. Every parameter version is immutable; replay any old payslip produces byte-identical output. CFO + CHRO co-sign commits the cycle.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--rew)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--rew-dark)">Role 3 · Bonus orchestrator</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">BP fund · calibration-driven · CEO+CFO sign-off</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ BP (Bonus Points) ledger accrues monthly with ACB-rate inflation interest. Quarterly bonus orchestrator: HR forwards aggregated PROJ calibration signals; REW proposes P3 distribution from BP fund; CEO + CFO sign-off committed before payout. P3 can be withheld (bad performance review) but P1 protection invariant means P1 cash cannot be cut.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">REW in the platform — isolated by design</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart TB
+ HR["👥 HR<br>Member-id · contract type · pay band ref"]
+ TIME["⏱ TIME<br>approved hours · overtime"]
+ PROJ["📋 PROJ<br>calibration signals"]
+ REW["💎 REW<br>3P engine · BP ledger · payroll"]
+ SIGNATURE["✍ CFO + CHRO co-sign gate"]
+ PAYSLIPS["📄 Payslips · immutable PDFs"]
+ LEDGER["📒 BP ledger · append-only"]
+ BHXH["🏛 BHXH/BHYT/BHTN<br>VN social insurance"]
+ BANKS["🏦 VN banks<br>VietQR payroll batch"]
+ BRAIN["🚫 BRAIN<br>NEVER INGESTED · DEC-036"]
+ HR --> REW
+ TIME --> REW
+ PROJ -- "aggregate signals via HR" --> REW
+ REW --> SIGNATURE
+ SIGNATURE --> PAYSLIPS
+ REW --> LEDGER
+ PAYSLIPS --> BANKS
+ PAYSLIPS --> BHXH
+ REW -. "structural exclusion" .x BRAIN
+ classDef hub fill:#fef3c7,stroke:#92400e,stroke-width:3px,color:#451a03
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef forbidden fill:#fee2e2,stroke:#b91c1c,stroke-width:3px,color:#7f1d1d
+ class REW hub
+ class HR,TIME,PROJ,SIGNATURE,PAYSLIPS,LEDGER,BHXH,BANKS mod
+ class BRAIN forbidden
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Monthly payroll compute</td><td><strong>Auto</strong> at close; <strong>CFO+CHRO co-sign</strong> to commit</td><td>Determinism + dual approval; never one-person commit.</td></tr>
+ <tr><td>Parameter version publish</td><td><strong>Manual</strong> CFO + CHRO + CEO sign-off</td><td>Effective-period parameters are gravely consequential; tri-sign.</td></tr>
+ <tr><td>P1 floor enforcement</td><td><strong>Auto</strong> reject at constraint check</td><td>Hard invariant; sev-0 if bypassed.</td></tr>
+ <tr><td>P2 tier change</td><td><strong>Manual</strong> AM proposal → CHRO approve</td><td>Role-tier change is policy decision.</td></tr>
+ <tr><td>P3 quarterly distribution</td><td><strong>Auto</strong> draft from BP + calibration; <strong>CEO+CFO sign-off</strong></td><td>Variable comp; needs dual approval.</td></tr>
+ <tr><td>BP accrual + interest</td><td><strong>Auto</strong> nightly</td><td>Deterministic formula; ACB rate snapshot.</td></tr>
+ <tr><td>Statutory deduction (BHXH etc.)</td><td><strong>Auto</strong> per Decree 152/2020 rates</td><td>VN law specifies rates; version-pinned.</td></tr>
+ <tr><td>Payroll bank batch send</td><td><strong>Manual</strong> CFO confirm + VietQR batch</td><td>Money movement; human final.</td></tr>
+ <tr><td>Old payslip replay (audit)</td><td><strong>Auto</strong> deterministic</td><td>Byte-identical reproduction required; CI test.</td></tr>
+ <tr><td>BRAIN ingestion of comp data</td><td><strong>BLOCKED</strong> by schema</td><td>DEC-036 structural exclusion; CI rejects comp fields in any BRAIN-ingested path.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -885,6 +968,11 @@ graph LR
  <tr><td><code>R-REW-008</code></td><td>EU AI Act conformity gap discovered at audit</td><td>Medium</td><td>High</td><td>CLO + DPO</td><td>P2 conformity pack drafted at design time; gap analysis annually; legal-counsel sign-off.</td></tr>
  <tr><td><code>R-REW-009</code></td><td>Agent attempts compute via narrator surface (excessive agency)</td><td>Low</td><td>Medium</td><td>CSO</td><td>MCP catalogue has ZERO write tools; narrator is read-only; CI gate verifies tool catalogue surface.</td></tr>
  <tr><td><code>R-REW-010</code></td><td>10-year retention violated by S3 lifecycle bug</td><td>Low</td><td>High</td><td>CTO</td><td>Object-lock governance mode; lifecycle policy review at every deploy; quarterly inventory audit.</td></tr>
+ <tr><td><code>R-REW-011</code></td><td>HR-aggregated calibration signal weaponised as sole basis for P3 cut</td><td>Medium</td><td>High</td><td>CHRO</td><td>P3 distribution requires CEO + CFO sign-off + per-Member manager narrative; calibration is one input, never the only input.</td></tr>
+ <tr><td><code>R-REW-012</code></td><td>BHXH/BHYT rate change mid-month (Decree amendment) creates partial-month inconsistency</td><td>Medium</td><td>Medium</td><td>CLO</td><td>Parameter version effective-from supports mid-month boundary; pro-rated computation per partial period; CI replay verifies.</td></tr>
+ <tr><td><code>R-REW-013</code></td><td>Lumi cross-tenant synthesis attempts to read REW data (impossible by design, but CI must verify)</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>REW has zero MCP tools exposed; CI gate verifies absence of comp data path to BRAIN/Lumi; quarterly red-team.</td></tr>
+ <tr><td><code>R-REW-014</code></td><td>Member self-service payslip view leaks Member-Y data via cache</td><td>Low</td><td>High</td><td>CSO</td><td>Per-Member subject-bound cache keys; CI test asserts cross-Member cache miss; pen-test quarterly.</td></tr>
+ <tr><td><code>R-REW-015</code></td><td>Co-signers (CFO + CHRO) collude → P1 cut slips through</td><td>Low</td><td>Critical</td><td>CEO</td><td>P1 protection is enforced at DB CHECK constraint, NOT at app layer alone; even both co-signers cannot commit a P1-cutting row. Hard structural floor.</td></tr>
  </tbody>
  </table>
  </div>
@@ -910,6 +998,11 @@ graph LR
  <tr><td><strong>Anomaly false-positive rate</strong></td><td>flagged but unchanged / flagged</td><td>REW DB</td><td>≤ 30%</td></tr>
  <tr><td><strong>BP interest precision (drift)</strong></td><td>computed - expected (basis points)</td><td>property test</td><td>= 0 bps</td></tr>
  <tr><td><strong>EU AI Act conformity score</strong></td><td>conformity items passed / total</td><td>P2 audit</td><td>= 100% at P2 release</td></tr>
+ <tr><td><strong>P3 distribution sign-off completeness</strong></td><td>quarterly P3 distributions with CEO + CFO + manager narrative / total</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Parameter version mid-month transition correctness</strong></td><td>pro-rated periods passing replay / total</td><td>CI replay</td><td>= 100%</td></tr>
+ <tr><td><strong>Lumi-attempted REW reads</strong></td><td>count</td><td>OBS</td><td>= 0 (hard floor; CI verifies)</td></tr>
+ <tr><td><strong>Cross-Member cache leak attempts</strong></td><td>count</td><td>OBS + CI</td><td>= 0</td></tr>
+ <tr><td><strong>P1 DB-CHECK constraint violations attempted</strong></td><td>count of CHECK rejections</td><td>Postgres logs</td><td>tracked; any &gt; 0 in prod = sev-0 incident</td></tr>
  </tbody>
  </table>
  </div>
@@ -1076,6 +1169,17 @@ graph LR
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + REW-isolated-by-design Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="hr.html" class="text-blue-700 underline">hr.html</a> ·
+ <a href="time.html" class="text-blue-700 underline">time.html</a> ·
+ <a href="esop.html" class="text-blue-700 underline">esop.html</a> ·
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="auth.html" class="text-blue-700 underline">auth.html</a></li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — comp data structurally excluded from BRAIN; Lumi cross-tenant synthesis cannot read REW.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — REW at M+6 (P1, after HR).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li> — REW module FRs ((FR pending) through (FR pending)).</li>
  <li> — REW architecture posture, Bet 5 framing.</li>
  <li><strong>PRD Bet 5</strong> — "The Total Rewards Appendix is a moat too" (DEC-036 BRAIN exclusion).</li>

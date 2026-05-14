@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>INV — CyberOS</title>
- <meta name="description" content="INV — Invoicing. Multi-currency (VND/USD/SGD/EUR), Stripe + Wise + VietQR integration, Vietnamese e-invoice (Decree 123/Circular 78), AR aging, dunning automation, drafted from TIME entries.">
+ <title>INV — Billable rollup invoicing · Hóa đơn emission · Dunning automation · CyberOS</title>
+ <meta name="description" content="INV — closes the PROJ → TIME → INV billable chain. Three strategic roles: (1) billable rollup → invoice line items (consumes TIME per-cycle rollup; rate-card snapshot preservation; multi-currency), (2) hóa đơn emission (Decree 123 + Circular 78 GDT XML via vn-vat-invoice skill), (3) revenue recognition + dunning (CUO drafts overdue chase emails; human sends; aging report; cash application via 4 payment rails).">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -52,7 +52,7 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CFO / Finance</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Multi-currency invoicing drafted from TIME entries — Stripe (USD/EUR) + Wise (multi) + VietQR (VND) + Vietnamese e-invoice (Decree 123) + AR aging + dunning automation.
+ <strong>The AR plane.</strong> Where PROJ Engagements + TIME rollups become sent invoices, tracked payments, and reconciled revenue. The Vietnamese hóa đơn flow is first-class — not an afterthought.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  INV is the AR (Accounts Receivable) side of finance — the place where billable work becomes a sent invoice, a tracked payment, an aged balance, or a reconciled receipt. The architecture is composition-first: invoices draft automatically from TIME entries per engagement (per (FR pending)), multi-currency (VND, USD, SGD, EUR) with daily SBV rate snapshots, payment collection through Stripe (USD/EUR), Wise (multi-currency), and the Vietnamese domestic stack (VietQR / Napas247 / MoMo / ZaloPay / VNPay) for VND. For Vietnamese tenants, the <code>vn-vat-invoice</code> skill generates Decree-123-compliant e-invoices in the GDT XML format (Circular 78); the schema embeds Mẫu 01/GTGT line items with MST validation via <code>vn-mst-validate</code>. The CUO/CFO-skill drafts dunning emails on overdue but never sends them without human approval. locks the FRs; binds them to verification methods.
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why INV exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -128,6 +129,91 @@
  <div class="fact-card"><div class="label">Depends on</div><div class="value">TIME · CRM · AUTH</div><div class="note">+ skills · S3 · NATS</div></div>
  <div class="fact-card"><div class="label">Feeds</div><div class="value">CRM · GL · BRAIN audit</div><div class="note">payment status events</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ INV closes the PROJ-TIME-INV chain. The Engagement carries the rate card; TIME logs hours against it; INV invoices the rollup. For Vietnamese tenants, INV is also the regulator-facing surface — hóa đơn emission is not optional, and the GDT format is unforgiving about Mẫu / line items / MST validation. The naive read is "send invoices in Stripe." The real read: INV is the audit-grade pivot between billable activity and recognised revenue, with VN regulatory compliance baked in.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--inv)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--inv-dark)">Role 1 · Billable rollup → invoice</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Consume TIME per-cycle rollup; preserve rate-card snapshots</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ At cycle close (or monthly for retainers), TIME emits the per-Member per-role per-Engagement billable rollup. INV consumes it, builds invoice line items using the rate-card snapshot stored on each TimeEntry (never retroactive), totals per currency, calculates VAT for VN line items, and creates a draft invoice. AM reviews the draft; client gets the bill.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--inv)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--inv-dark)">Role 2 · Hóa đơn emission (VN regulator)</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Decree 123 + Circular 78 GDT format</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ For Vietnamese tenants, the <code>vn-vat-invoice</code> skill generates the GDT-compliant XML with Mẫu 01/GTGT line items; <code>vn-mst-validate</code> verifies both customer and tenant MSTs against GDT registry before emission; emission writes to the GDT API and stores the signed receipt. Status flows back: pending → emitted → cancelled (if needed via Decree 123 Art. 19). Non-VN tenants skip this entirely; their invoices are Stripe/Wise PDFs.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--inv)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--inv-dark)">Role 3 · Dunning + cash application</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">CUO drafts overdue chase; human sends</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ AR aging report rolls up nightly. CUO's <code>inv.dunning-draft@1</code> skill drafts polite-but-firm chase emails for invoices &gt; 30 days overdue; never sent automatically. Cash application matches incoming Stripe/Wise/VietQR/bank-transfer receipts to outstanding invoices by amount + reference + tolerance window. Unmatched receipts queue for AM triage. CFO dashboard shows DSO + collection effectiveness.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">INV in the orchestration spine</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ PROJ["📋 PROJ Engagement<br>rate card"]
+ TIME["⏱ TIME<br>per-cycle billable rollup"]
+ INV["🧾 INV<br>draft → AM review → sent"]
+ GDT["🇻🇳 GDT API<br>e-invoice receipt"]
+ PSP["💳 Payment rails<br>Stripe · Wise · VietQR · bank"]
+ CUO["🎯 CUO<br>inv.dunning-draft@1"]
+ BRAIN["🧠 BRAIN audit"]
+ CRM["🤝 CRM<br>account context"]
+ GL["📊 GL<br>revenue recognition"]
+ PROJ --> TIME
+ TIME -- "billable rollup" --> INV
+ CRM --> INV
+ INV -- "VN tenants" --> GDT
+ GDT --> INV
+ INV --> PSP
+ PSP -- "cash app webhook" --> INV
+ INV -- "overdue ≥ 30d" --> CUO
+ CUO -- "draft email" --> INV
+ INV --> GL
+ INV --> BRAIN
+ classDef hub fill:#a7f3d0,stroke:#064e3b,stroke-width:3px,color:#022c22
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef ext fill:#fef2f2,stroke:#b91c1c
+ class INV hub
+ class PROJ,TIME,CUO,CRM,GL mod
+ class GDT,PSP ext
+ class BRAIN brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Invoice draft from TIME rollup</td><td><strong>Auto</strong> at cycle close</td><td>Deterministic from rollup + rate-card snapshot; AM reviews.</td></tr>
+ <tr><td>AM review + edit before send</td><td><strong>Manual</strong> AM action</td><td>Client invoice = revenue + relationship; AM is accountable.</td></tr>
+ <tr><td>Hóa đơn (VN e-invoice) emission</td><td><strong>Auto</strong> after AM sends; <strong>blocked</strong> if MST invalid</td><td>MST validity is GDT requirement; cannot emit invalid invoice.</td></tr>
+ <tr><td>Cash application (receipt matching)</td><td><strong>Auto</strong> by amount + reference</td><td>High-precision matching; unmatched fall to AM.</td></tr>
+ <tr><td>Unmatched receipt triage</td><td><strong>Manual</strong> AM action</td><td>Ambiguous cases (partial pay, wrong reference) need human judgment.</td></tr>
+ <tr><td>Dunning chase email draft</td><td><strong>Auto</strong> at 30/60/90 day thresholds</td><td>CUO drafts; tone calibrated per overdue band.</td></tr>
+ <tr><td>Dunning chase send</td><td><strong>Manual</strong> AM/CFO action</td><td>Customer relationship + tone require human confirm; auto-send burns relationships.</td></tr>
+ <tr><td>Hóa đơn cancellation (Decree 123 Art. 19)</td><td><strong>Manual</strong> + dual approval (AM + CFO)</td><td>Cancelling an emitted invoice triggers regulator notification; never auto.</td></tr>
+ <tr><td>FX rate snapshot (daily SBV)</td><td><strong>Auto</strong></td><td>Daily SBV publication; cached; per-invoice snapshot stored.</td></tr>
+ <tr><td>Revenue recognition to GL</td><td><strong>Auto</strong> on invoice sent (accrual) or paid (cash basis)</td><td>Per-tenant policy chooses basis; both supported.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -952,6 +1038,11 @@ graph LR
  <tr><td><code>R-INV-008</code></td><td>Stripe webhook secret leaked</td><td>Low</td><td>High</td><td>CSO</td><td>Secret in AWS Secrets Manager; rotation every 90 days; access audited.</td></tr>
  <tr><td><code>R-INV-009</code></td><td>Invoice number gap (regulatory issue in VN)</td><td>Medium</td><td>Medium</td><td>CFO</td><td>Per-tenant sequence with gap-detection job; void invoices retain number; audit shows void/issued chain.</td></tr>
  <tr><td><code>R-INV-010</code></td><td>10-year retention violated by S3 lifecycle bug</td><td>Low</td><td>High</td><td>CTO</td><td>Immutable bucket; lifecycle policy review at deploy; quarterly inventory.</td></tr>
+ <tr><td><code>R-INV-011</code></td><td><strong>TIME rollup arrives incomplete → invoice missing billable hours</strong></td><td>Medium</td><td>High</td><td>COO</td><td>Rollup waits for all submissions or 24h grace; INV flags missing-Member draft; AM reviews + can re-trigger after submissions land.</td></tr>
+ <tr><td><code>R-INV-012</code></td><td>Rate-card snapshot on TimeEntry diverges from invoiced rate</td><td>Low</td><td>High</td><td>CFO</td><td>Snapshot is immutable on TimeEntry; INV reads from snapshot; CI test asserts invoice line-amount = snapshot × hours.</td></tr>
+ <tr><td><code>R-INV-013</code></td><td>Hóa đơn cancellation (Decree 123 Art. 19) without dual approval</td><td>Low</td><td>Critical</td><td>CFO</td><td>Cancellation requires AM + CFO approval tokens both; CI verifies API rejects single-approval cancel; GDT API call audit-chained.</td></tr>
+ <tr><td><code>R-INV-014</code></td><td>Dunning email auto-send bug</td><td>Low</td><td>High</td><td>CSO</td><td>MCP tool annotation destructive=true on dunning send; AM/CFO approval token required; CI gate verifies; OBS alarm on send rate &gt; 0 without approval ID.</td></tr>
+ <tr><td><code>R-INV-015</code></td><td>Vietnamese hóa đơn template drift after Decree 123 amendment</td><td>Medium</td><td>High</td><td>CLO</td><td>vn-vat-invoice skill version-pinned; legal monitor watches GDT bulletins; quarterly drill emit against staging GDT sandbox.</td></tr>
  </tbody>
  </table>
  </div>
@@ -976,6 +1067,11 @@ graph LR
  <tr><td><strong>Manual cash-application queue depth</strong></td><td>unmatched payments &gt; 24h</td><td>OBS</td><td>≤ 2 at any time</td></tr>
  <tr><td><strong>Webhook spoofing attempts blocked</strong></td><td>signature-failed count</td><td>OBS</td><td>tracked; alert on bursts</td></tr>
  <tr><td><strong>Invoice number gap incidents</strong></td><td>detected gaps / period</td><td>cron gap-check</td><td>= 0 unexplained</td></tr>
+ <tr><td><strong>TIME rollup → INV bridge p95</strong></td><td>histogram (cycle close → draft ready)</td><td>OBS</td><td>≤ 60 s</td></tr>
+ <tr><td><strong>Missing-Member draft rate</strong></td><td>drafts flagged missing-Member / total drafts</td><td>INV events</td><td>≤ 5% (after 24h grace)</td></tr>
+ <tr><td><strong>Rate-card snapshot integrity</strong></td><td>line items where amount = snapshot × hours / total line items</td><td>BRAIN audit replay</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Dunning auto-send false-positive</strong></td><td>sends without approval token</td><td>OBS</td><td>= 0 (hard floor; CI gate)</td></tr>
+ <tr><td><strong>Hóa đơn dual-approval rate</strong></td><td>cancellations with both AM + CFO tokens / total cancellations</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1159,11 +1255,19 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — INV module FRs ((FR pending) through (FR pending)).</li>
- <li> — INV architecture posture, multi-rail composition.</li>
- <li> — Performance NFRs (invoice generation p95).</li>
- <li> — Reliability NFRs (webhook idempotency, cash application).</li>
- <li> — Formal (FR pending) through (FR pending) with verification methods.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + INV-in-orchestration-spine Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
+ <a href="time.html" class="text-blue-700 underline">time.html</a> ·
+ <a href="crm.html" class="text-blue-700 underline">crm.html</a> ·
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
+ <a href="ten.html" class="text-blue-700 underline">ten.html</a></li>
+ <li><strong>Billable cascade rules:</strong> <a href="proj.html#engagement-economics" class="text-blue-700 underline">PROJ §2.6</a> — Engagement billing modes (T&amp;M / fixed-fee / retainer) + rate-card YAML.</li>
+ <li><strong>TIME rollup contract:</strong> <a href="time.html#bigger-picture" class="text-blue-700 underline">TIME §0</a> — per-cycle billable rollup that INV consumes.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — invoice sent + paid events become BRAIN audit rows; revenue recognition traceable to chain hash.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — INV at M+7 (P2, after TIME).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>Decree 123/2020/NĐ-CP</strong> — Vietnamese e-invoice mandate.</li>
  <li><strong>Circular 78/2021/TT-BTC</strong> — GDT XML schema for e-invoices.</li>
  <li><strong>Decree 119/2018/NĐ-CP</strong> — E-invoice retention (10 years).</li>

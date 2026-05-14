@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>DOC — CyberOS</title>
- <meta name="description" content="DOC — Document signing. eIDAS QTSP-conformant qualified e-signatures, AATL chain for non-EU, multi-party workflows, VN Decree 130/2018 + VNeID integration, S3-immutable archival with 10-year retention.">
+ <title>DOC — Document repository · E-sign workflow · Contract lifecycle · CyberOS</title>
+ <meta name="description" content="DOC — three strategic roles: (1) document repository (versioned + ACL'd + 10-year retention), (2) e-sign workflow (eIDAS QTSP for EU; AATL for non-EU; VNeID for VN; partner-routed for the cryptographic act), (3) contract lifecycle (with HR/CRM/ESOP integration; expiry alerts; renewal reminders; signature audit chain)."
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -79,6 +79,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why DOC exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -128,6 +129,89 @@
  <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">+ regional certs</div></div>
  <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · QTSP partner</div><div class="note">+ CRM · HR · INV consumers</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ DOC ships P4 because legally-binding e-signatures require regulated trust-service providers — and CyberOS will not pretend to be one. The architecture is partner-routed: DOC owns the workflow (upload, template, multi-party order, archival, lifecycle); QTSP partners (eIDAS/AATL/VN CA) provide the cryptographic signing. This separation makes DOC compliance-clean and provider-portable.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--doc)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--doc-dark)">Role 1 · Document repository</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Versioned · ACL'd · 10-year retention</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Documents stored in S3 Object-Lock-Compliance bucket with residency pinning per tenant. Versioned at every modification; immutable post-archive. ACL aligns with module ownership (HR contracts → HR scope; CRM contracts → CRM scope; ESOP grants → cap-table scope). 10-year retention satisfies eIDAS + ESIGN minimum.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--doc)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--doc-dark)">Role 2 · E-sign workflow</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Partner-routed cryptography · CyberOS-owned workflow</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ DOC owns the workflow: upload, template assembly, multi-party signing order, identity verification (WebAuthn / VNeID / SMS-OTP / email-link), audit chain. The cryptographic act delegates to eIDAS QTSP (EU), AATL CA (US), or Vietnamese CA (VN). DocuSign / Adobe Sign / HelloSign migration brings legacy signed docs in without re-signing.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--doc)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--doc-dark)">Role 3 · Contract lifecycle</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">HR + CRM + ESOP integration · expiry + renewal</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Every contract carries lifecycle metadata: type (employment / NDA / MSA / SOW / ESOP grant), parties, effective dates, renewal date, expiry, parent contract. Expiry alerts fire 90 days before; renewal proposals draft via CUO. Cross-module: HR contracts auto-link to Member onboarding; CRM contracts link to Engagement creation in PROJ; ESOP grants archive with cap-table audit trail.
+ </p>
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">DOC partner-routed signing flow</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ SOURCE["Source<br>HR · CRM · ESOP · LEGAL"]
+ DOC["✍ DOC<br>workflow · template · identity"]
+ SIGN_EU["🇪🇺 eIDAS QTSP<br>(EU residency)"]
+ SIGN_US["🇺🇸 AATL CA<br>(US residency)"]
+ SIGN_VN["🇻🇳 VNeID + VN CA<br>(VN residency)"]
+ ARCHIVE["📦 S3 Object-Lock<br>Compliance · 10yr"]
+ BRAIN["🧠 BRAIN<br>contract event audit"]
+ LIFECYCLE["⏰ Lifecycle<br>expiry · renewal · alerts"]
+ SOURCE --> DOC
+ DOC -- "EU tenant" --> SIGN_EU
+ DOC -- "US tenant" --> SIGN_US
+ DOC -- "VN tenant" --> SIGN_VN
+ SIGN_EU --> ARCHIVE
+ SIGN_US --> ARCHIVE
+ SIGN_VN --> ARCHIVE
+ ARCHIVE --> LIFECYCLE
+ LIFECYCLE --> SOURCE
+ DOC --> BRAIN
+ classDef hub fill:#fde68a,stroke:#451a03,stroke-width:3px,color:#451a03
+ classDef mod fill:#e0e7ff,stroke:#3730a3
+ classDef partner fill:#fef2f2,stroke:#b91c1c
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class DOC hub
+ class SOURCE,ARCHIVE,LIFECYCLE mod
+ class SIGN_EU,SIGN_US,SIGN_VN partner
+ class BRAIN brain
+ </div>
+ </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Document upload</td><td><strong>Manual</strong> Member action</td><td>Intent; auto-upload from other modules also requires authoring trigger.</td></tr>
+ <tr><td>Template assembly</td><td><strong>Auto</strong> from template engine</td><td>Templates parameterised; CUO drafts variable fields.</td></tr>
+ <tr><td>Identity verification</td><td><strong>Auto</strong> via WebAuthn / VNeID / SMS-OTP / email-link</td><td>Multi-factor enforced per signer; never bypassed.</td></tr>
+ <tr><td>Cryptographic signing</td><td><strong>Auto</strong> via QTSP partner API</td><td>The QTSP/CA is the trust anchor; CyberOS never holds the signing key.</td></tr>
+ <tr><td>High-value signing (≥ tenant threshold)</td><td><strong>Manual</strong> 2nd-factor + dual approval</td><td>Anti-fraud per Decree 130/2018; signer + counter-signer if applicable.</td></tr>
+ <tr><td>Expiry alert</td><td><strong>Auto</strong> 90 / 30 / 7 days before</td><td>Renewal lead time; CUO drafts renewal proposal.</td></tr>
+ <tr><td>Renewal proposal</td><td><strong>Auto</strong> draft; <strong>Manual</strong> review + send</td><td>CUO drafts terms; legal/AM reviews.</td></tr>
+ <tr><td>Archival</td><td><strong>Auto</strong> at signing complete</td><td>Object-Lock + audit chain row.</td></tr>
+ <tr><td>DSAR export</td><td><strong>Auto</strong> bundle per request</td><td>Per-subject signature events; chain-preserved.</td></tr>
+ <tr><td>Document deletion (purge)</td><td><strong>Blocked</strong> until retention expires</td><td>10-year retention is statutory; deletion not allowed prior.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -964,6 +1048,11 @@ graph LR
  <tr><td><code>R-DOC-008</code></td><td>Cross-tenant document leak via shared S3 bucket</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Per-tenant bucket prefix; IAM scoped per tenant; pre-signed-URL audience-bound.</td></tr>
  <tr><td><code>R-DOC-009</code></td><td>Migration import accepts forged DocuSign trail</td><td>Low</td><td>High</td><td>CLO</td><td>Imports flagged trust=external; cert chain validated against AATL root; CLO approves import batches.</td></tr>
  <tr><td><code>R-DOC-010</code></td><td>GDPR Art. 17 purge collides with retention obligation</td><td>Medium</td><td>Medium</td><td>DPO</td><td>Purge requires CLO sign-off + retention-exempt classification; rejection logged with reason.</td></tr>
+ <tr><td><code>R-DOC-011</code></td><td>CRM/HR/ESOP-triggered document creation fires without underlying lifecycle context</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Each cross-module trigger validates source record state at submission; reject document creation if source record incomplete.</td></tr>
+ <tr><td><code>R-DOC-012</code></td><td>Renewal proposal CUO-drafted with stale terms (e.g. expired discount)</td><td>Medium</td><td>Low</td><td>CPO</td><td>Renewal proposal carries terms-version stamp; CUO reads from active rate-card / contract templates only; AM final review.</td></tr>
+ <tr><td><code>R-DOC-013</code></td><td>Expiry alert latency — 90-day notice misses a contract</td><td>Low</td><td>High</td><td>CTO</td><td>Nightly batch double-checks all active contracts; 90/30/7 day cascade; OBS alarm on any missed cascade step.</td></tr>
+ <tr><td><code>R-DOC-014</code></td><td>Multi-jurisdiction contract (VN tenant signs with EU customer) — which cert chain governs?</td><td>Medium</td><td>Medium</td><td>CLO</td><td>Per-contract cert-chain declaration; co-signer cert chains both attached; legal precedence rules per type documented in KB runbook.</td></tr>
+ <tr><td><code>R-DOC-015</code></td><td>Migrated DocuSign trail fails LTV after import — provenance breaks at archive</td><td>Medium</td><td>High</td><td>CLO</td><td>Imports flagged trust=external + cert-chain captured at import; LTV re-validation at year 9; failures escalate to CLO.</td></tr>
  </tbody>
  </table>
  </div>
@@ -988,6 +1077,11 @@ graph LR
  <tr><td><strong>Cosign chain validation success</strong></td><td>nightly walker</td><td>OBS</td><td>= 100%</td></tr>
  <tr><td><strong>Fraud-detection alerts / month</strong></td><td>count</td><td>fraud.rs</td><td>tracked</td></tr>
  <tr><td><strong>Migration trust-external flag rate</strong></td><td><code>external / total</code></td><td>doc.document</td><td>declining trend</td></tr>
+ <tr><td><strong>Cross-module trigger validation rate</strong></td><td>cross-module-triggered docs with source record validated / total</td><td>OBS</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Renewal proposal terms-stamp coverage</strong></td><td>proposals with active terms-version stamped / total</td><td>BRAIN audit</td><td>= 1.0</td></tr>
+ <tr><td><strong>Expiry cascade completeness</strong></td><td>contracts hit by all 3 cascade steps (90/30/7) / total expiring</td><td>nightly batch</td><td>= 1.0</td></tr>
+ <tr><td><strong>Multi-jurisdiction cert-chain declaration rate</strong></td><td>multi-juris contracts with explicit cert-chain declared / total</td><td>contract metadata</td><td>= 1.0</td></tr>
+ <tr><td><strong>LTV re-validation pass rate (year 9)</strong></td><td>migrated trails passing LTV at year 9 / total imports</td><td>quarterly audit</td><td>≥ 0.95 (escalate failures)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1166,6 +1260,10 @@ graph LR
  <li><strong>CRM module</strong> — <a href="crm.html" class="text-blue-700 underline">crm.html</a> · upstream for deal contract auto-fill.</li>
  <li><strong>HR module</strong> — <a href="hr.html" class="text-blue-700 underline">hr.html</a> · upstream for employment-contract auto-fill.</li>
  <li><strong>AUTH module</strong> — <a href="auth.html" class="text-blue-700 underline">auth.html</a> · WebAuthn for elevated-signer IDV.</li>
+ <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + partner-routed signing Mermaid + 10-row auto-vs-human matrix.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — every contract event (sign, expire, renew) becomes a BRAIN audit row.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — DOC at M+15 (P4) due to QTSP partner integration timeline.</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  </ul>
  </div>
 </section>
