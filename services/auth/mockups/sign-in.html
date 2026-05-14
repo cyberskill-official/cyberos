@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CyberOS — Đăng nhập / Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CyberOS AUTH — sign-in mockup
+   Anchors (immutable per design-system DESIGN.md):
+     - Umber  #45210E
+     - Ochre  #F4BA17
+   Surface: Liquid Glass default (Part 21)
+   Font: Be Vietnam Pro first, Inter fallback
+   Targets: WCAG 2.2 AA + APCA Lc ≥ 75 body
+   ============================================================ */
+:root {
+  /* Anchors */
+  --umber-50:#f5ede6; --umber-100:#e8d4c2; --umber-300:#a87e5a; --umber-500:#45210e;
+  --umber-700:#2a1208; --umber-900:#110703;
+  --ochre-50:#fef6e0; --ochre-300:#f9c64f; --ochre-500:#f4ba17; --ochre-700:#9c750a;
+
+  /* Warm neutrals */
+  --neutral-50:#faf8f6; --neutral-100:#f0eee9; --neutral-200:#e2ddd4;
+  --neutral-300:#c5bdb0; --neutral-500:#6f665d; --neutral-700:#322d29; --neutral-900:#0e0c0a;
+
+  /* Semantic */
+  --success:#4a7a3a; --danger:#a3392a; --info:#3b6178;
+
+  /* Surfaces (solid baseline) */
+  --bg-page: var(--neutral-50);
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+
+  /* Text — chosen for APCA Lc ≥ 75 on bg-page */
+  --text-primary: var(--umber-900);
+  --text-secondary: var(--umber-700);
+  --text-muted: var(--neutral-500);
+
+  /* Borders */
+  --border-subtle: var(--neutral-200);
+  --border-default: var(--neutral-300);
+
+  /* Liquid Glass tokens (Part 21) */
+  --glass-light-bg:    color-mix(in oklab, var(--bg-card) 70%, transparent);
+  --glass-standard-bg: color-mix(in oklab, var(--bg-card) 80%, transparent);
+  --glass-heavy-bg:    color-mix(in oklab, var(--bg-elevated) 90%, transparent);
+  --glass-light-blur: 12px;   --glass-light-saturate: 130%;
+  --glass-standard-blur: 16px;--glass-standard-saturate: 150%;
+  --glass-heavy-blur: 24px;   --glass-heavy-saturate: 180%;
+  --glass-border: color-mix(in oklab, var(--border-default) 60%, transparent);
+
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+  --shadow-soft: 0 1px 2px rgb(17 7 3 / 0.04), 0 8px 24px rgb(17 7 3 / 0.06);
+  --shadow-lift: 0 4px 12px rgb(17 7 3 / 0.10), 0 18px 48px rgb(17 7 3 / 0.10);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  font-family: "Be Vietnam Pro", Inter, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background:
+    radial-gradient(60% 60% at 12% 0%,  color-mix(in oklab, var(--ochre-500) 16%, transparent) 0%, transparent 60%),
+    radial-gradient(80% 70% at 100% 100%, color-mix(in oklab, var(--umber-500) 22%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, var(--neutral-50) 0%, var(--umber-50) 100%);
+  background-attachment: fixed;
+}
+
+/* Top header — Light Glass (sticky nav surface tier) */
+.app-header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px;
+  background: var(--glass-light-bg);
+  backdrop-filter: blur(var(--glass-light-blur)) saturate(var(--glass-light-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-light-blur)) saturate(var(--glass-light-saturate));
+  border-bottom: 1px solid var(--glass-border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.brand-mark {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--umber-500), var(--umber-700));
+  color: var(--ochre-300);
+  display: grid; place-items: center;
+  font-weight: 700; font-size: 18px;
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.2);
+}
+.brand-text { line-height: 1.1; }
+.brand-text .title { font-size: 14px; }
+.brand-text .subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+
+.lang-toggle {
+  display: flex; gap: 0; border: 1px solid var(--border-default);
+  border-radius: 999px; overflow: hidden; font-size: 13px;
+  background: var(--glass-light-bg);
+}
+.lang-toggle button {
+  background: transparent; border: 0; padding: 6px 12px; cursor: pointer;
+  color: var(--text-secondary); font-family: inherit; font-weight: 500;
+}
+.lang-toggle button[aria-pressed="true"] {
+  background: var(--umber-500); color: var(--ochre-300);
+}
+
+/* Centered sign-in canvas */
+main {
+  min-height: calc(100vh - 64px);
+  display: grid; place-items: center;
+  padding: 48px 24px;
+}
+
+/* The sign-in card — Heavy Glass (modal-tier surface) */
+.signin {
+  width: 100%; max-width: 460px;
+  background: var(--glass-heavy-bg);
+  backdrop-filter: blur(var(--glass-heavy-blur)) saturate(var(--glass-heavy-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-heavy-blur)) saturate(var(--glass-heavy-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lift);
+  padding: 32px;
+}
+.signin h1 {
+  margin: 0 0 6px 0;
+  font-size: 24px; font-weight: 700; letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.signin .lede {
+  margin: 0 0 22px 0; font-size: 15px; color: var(--text-secondary);
+}
+
+/* Tenant selector */
+.tenant {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: color-mix(in oklab, var(--umber-50) 80%, transparent);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+.tenant .dot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--success) 22%, transparent);
+}
+.tenant .label { color: var(--text-muted); }
+.tenant .name { font-weight: 600; color: var(--text-primary); }
+.tenant a { margin-left: auto; color: var(--brand-link, var(--umber-500)); font-size: 13px; }
+
+/* Form */
+.field { display: block; margin-bottom: 14px; }
+.field label {
+  display: block; margin-bottom: 6px;
+  font-size: 13px; font-weight: 600; color: var(--text-secondary);
+}
+.field input[type="email"],
+.field input[type="password"],
+.field input[type="text"] {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  font: inherit; color: var(--text-primary);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--umber-500);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--ochre-500) 35%, transparent);
+}
+.field .help { margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 12px 16px;
+  border-radius: var(--radius-md); border: 1px solid transparent;
+  font: inherit; font-weight: 600; font-size: 15px;
+  cursor: pointer; transition: transform 80ms ease, box-shadow 120ms ease;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--umber-500) 0%, var(--umber-700) 100%);
+  color: var(--ochre-300);
+  box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.25), 0 6px 16px rgb(69 33 14 / 0.25);
+}
+.btn-primary:hover { box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.25), 0 8px 22px rgb(69 33 14 / 0.32); }
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+.btn-secondary:hover { background: var(--neutral-100); }
+
+.passkey-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--ochre-50) 80%, transparent);
+  border: 1px solid color-mix(in oklab, var(--ochre-500) 30%, transparent);
+  margin-bottom: 14px;
+}
+.passkey-row svg { flex: 0 0 auto; color: var(--umber-700); }
+.passkey-row .copy {
+  font-size: 13px; line-height: 1.4;
+}
+.passkey-row .copy strong { color: var(--text-primary); }
+.passkey-row .copy span { color: var(--text-muted); }
+
+/* Divider */
+.divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 18px 0; color: var(--text-muted); font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.divider::before, .divider::after {
+  content: ""; flex: 1 1 auto; height: 1px; background: var(--border-subtle);
+}
+
+/* MFA chips */
+.mfa-row { display: flex; gap: 8px; margin-top: 14px; }
+.mfa-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border-radius: 999px;
+  background: var(--glass-light-bg);
+  border: 1px solid var(--glass-border);
+  font-size: 12px; color: var(--text-secondary);
+}
+.mfa-chip.required { background: var(--ochre-50); border-color: var(--ochre-300); color: var(--umber-700); font-weight: 600; }
+
+/* Trust footnote — the brand voice moment */
+.trust {
+  margin-top: 22px; padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px; color: var(--text-muted); line-height: 1.55;
+}
+.trust strong { color: var(--text-secondary); }
+.trust code {
+  background: var(--neutral-100); padding: 1px 6px; border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; color: var(--text-primary);
+}
+
+/* Footer */
+footer {
+  text-align: center; padding: 20px;
+  font-size: 12px; color: var(--text-muted);
+}
+footer a { color: var(--text-secondary); text-decoration: none; }
+footer a:hover { color: var(--umber-500); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+/* No-glass fallback — Firefox without backdrop-filter etc. */
+@supports not (backdrop-filter: blur(1px)) {
+  .app-header, .signin, .lang-toggle { background: var(--bg-card); }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">C</div>
+    <div class="brand-text">
+      <div class="title">CyberOS</div>
+      <div class="subtitle">AUTH · v0.1 mockup</div>
+    </div>
+  </div>
+  <div class="lang-toggle" role="group" aria-label="Ngôn ngữ / Language">
+    <button type="button" aria-pressed="true">VI</button>
+    <button type="button" aria-pressed="false">EN</button>
+  </div>
+</header>
+
+<main>
+  <section class="signin" aria-labelledby="signin-title">
+    <h1 id="signin-title">Chào mừng quay lại</h1>
+    <p class="lede">Đăng nhập vào CyberOS để tiếp tục công việc của bạn.</p>
+
+    <div class="tenant" role="status">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="label">Tenant</span>
+      <span class="name">cyberskill</span>
+      <a href="#" aria-label="Đổi tenant">Đổi</a>
+    </div>
+
+    <!-- Passkey-first path -->
+    <button class="btn btn-primary" type="button" aria-describedby="passkey-help" style="margin-bottom: 12px;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10 11v-1a3 3 0 1 1 6 0v1"/>
+        <rect x="6" y="11" width="14" height="9" rx="2"/>
+        <circle cx="13" cy="15.5" r="1.2"/>
+        <path d="M13 16.7v1.3"/>
+      </svg>
+      Đăng nhập bằng passkey
+    </button>
+    <p id="passkey-help" class="help" style="margin: -4px 0 16px 0; font-size: 12px; color: var(--text-muted);">
+      Yêu cầu Touch ID, Face ID hoặc khóa bảo mật.
+    </p>
+
+    <div class="divider"><span>hoặc</span></div>
+
+    <!-- Email + password fallback -->
+    <form method="post" action="#" novalidate>
+      <div class="field">
+        <label for="email">Email công ty</label>
+        <input id="email" name="email" type="email" autocomplete="username" inputmode="email"
+               placeholder="ten@cyberskill.world" required>
+      </div>
+      <div class="field">
+        <label for="pw">Mật khẩu</label>
+        <input id="pw" name="password" type="password" autocomplete="current-password" required>
+        <div class="help">
+          <a href="#" style="color: var(--umber-500);">Quên mật khẩu?</a>
+          · Mã hóa Argon2id · kiểm tra HIBP để ngăn mật khẩu đã rò rỉ.
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" type="submit" style="margin-top: 6px;">
+        Tiếp tục với mật khẩu
+      </button>
+
+      <div class="mfa-row" aria-label="Xác thực hai yếu tố">
+        <span class="mfa-chip required">MFA bắt buộc · Tier 2+</span>
+        <span class="mfa-chip">TOTP</span>
+        <span class="mfa-chip">WebAuthn</span>
+      </div>
+    </form>
+
+    <div class="trust">
+      <strong>Minh bạch:</strong> mỗi quyết định đăng nhập được ghi vào BRAIN audit chain
+      (<code>cyberos --store $BRAIN verify</code> để xác minh) và tự động hết hạn theo
+      chính sách Tenant. Không có shadow logging. Không có dữ liệu bù trừ.
+      <br>
+      <strong>Tuân thủ:</strong> NDP 2025 (VN) · OWASP Gen AI Top-10 ·
+      EU AI Act Art. 12/13 transparency · WCAG 2.2 AA · APCA Lc ≥ 75.
+    </div>
+  </section>
+</main>
+
+<footer>
+  <a href="../../../website/docs/modules/auth.html">Tài liệu AUTH</a>
+  ·
+  <a href="../RFC.md">RFC v0.1</a>
+  ·
+  © CyberSkill 2026 · Hồ Chí Minh, Việt Nam
+</footer>
+
+</body>
+</html>
