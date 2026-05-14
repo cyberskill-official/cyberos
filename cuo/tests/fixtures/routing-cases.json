@@ -1,0 +1,84 @@
+[
+  {
+    "name": "mst_english",
+    "query": "Validate MST 0312345678",
+    "expect_skill": "vn-mst-validate",
+    "expect_args": {"input": "0312345678"}
+  },
+  {
+    "name": "mst_vietnamese",
+    "query": "Kiểm tra mã số thuế 0312345678",
+    "expect_skill": "vn-mst-validate",
+    "expect_args": {"input": "0312345678"}
+  },
+  {
+    "name": "mst_branch",
+    "query": "Is this branch MST valid: 0312345678-001",
+    "expect_skill": "vn-mst-validate",
+    "expect_args": {"input": "0312345678-001"}
+  },
+  {
+    "name": "bank_qr_english",
+    "query": "Generate VietQR for 250000 VND to BIDV 12345678",
+    "expect_skill": "vn-bank-transfer",
+    "expect_args": {"bank": "BIDV", "account": "12345678"}
+  },
+  {
+    "name": "bank_qr_vietnamese",
+    "query": "Tạo VietQR 250000 VND cho BIDV 0123456789",
+    "expect_skill": "vn-bank-transfer",
+    "expect_args": {"bank": "BIDV", "account": "0123456789"}
+  },
+  {
+    "name": "invoice_vietnamese",
+    "query": "Xuất hoá đơn GTGT cho công ty XYZ",
+    "expect_skill": "vn-vat-invoice"
+  },
+  {
+    "name": "invoice_english",
+    "query": "Generate a VAT e-invoice for company ABC",
+    "expect_skill": "vn-vat-invoice"
+  },
+  {
+    "name": "tax_filing_when_due",
+    "query": "When is my Q2 VAT return due?",
+    "expect_skill": "vn-tax-filing"
+  },
+  {
+    "name": "tax_filing_monthly",
+    "query": "I need to file a monthly VAT return",
+    "expect_skill": "vn-tax-filing"
+  },
+  {
+    "name": "cccd_validate",
+    "query": "Is this 12-digit CCCD valid: 079185000001",
+    "expect_skill": "vneid-integration",
+    "expect_args": {"input": "079185000001"}
+  },
+  {
+    "name": "vneid_vietnamese",
+    "query": "Kiểm tra căn cước công dân 079185000001",
+    "expect_skill": "vneid-integration",
+    "expect_args": {"input": "079185000001"}
+  },
+  {
+    "name": "legal_decree",
+    "query": "What's Decree 13/2023 about?",
+    "expect_skill": "vn-legal-compliance"
+  },
+  {
+    "name": "legal_pdpd",
+    "query": "Tell me about Vietnamese PDPD compliance requirements",
+    "expect_skill": "vn-legal-compliance"
+  },
+  {
+    "name": "no_match_weather",
+    "query": "How's the weather?",
+    "expect_skill": null
+  },
+  {
+    "name": "no_match_unrelated",
+    "query": "Write me a haiku about autumn leaves",
+    "expect_skill": null
+  }
+]

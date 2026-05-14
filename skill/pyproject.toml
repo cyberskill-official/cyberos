@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cyberos-skill-runners"
+version = "0.1.0"
+description = "CyberOS skill module — legacy Python runners (parity-test path during Rust/WASM migration)"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40",
+    "msgspec>=0.18",
+    "pyyaml>=6",
+]
+
+[tool.setuptools.packages.find]
+include = ["runners*"]

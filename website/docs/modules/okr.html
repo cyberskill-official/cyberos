@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OKR — CyberOS</title>
+  <meta name="description" content="OKR — Objectives &amp; Key Results. Quarterly cycle with Company → Team → Member cascade, confidence-band weekly check-ins, auto-pulled progress from PROJ / TIME / INV / HR / LEARN. Vietnamese face-saving language; EU AI Act Art. 14 human-in-the-loop.">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="../assets/scripts.js"></script>
+  <style>
+    /* OKR module palette — indigo-bright */
+    :root {
+      --okr:       #6366f1;
+      --okr-bg:    #eef2ff;
+      --okr-tint:  #e0e7ff;
+      --okr-dark:  #4338ca;
+    }
+    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .fact-card { background: var(--okr-bg); border:1px solid var(--okr-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--okr-dark); }
+    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+    .toc-link:hover { background: var(--okr-bg); color: var(--okr-dark); }
+    .toc-link.active { background: var(--okr-tint); color: var(--okr-dark); font-weight: 600; }
+    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--okr-dark); color:white; font-weight:800; font-size:0.875rem; }
+    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
+    .pill-must     { background:#fee2e2; color:#b91c1c; }
+    .pill-should   { background:#fef3c7; color:#b45309; }
+    .pill-could    { background:#e0f2fe; color:#075985; }
+    .pill-shipped  { background:#d1fae5; color:#065f46; }
+    .pill-planned  { background:#e0e7ff; color:#3730a3; }
+    .pill-partial  { background:#fef3c7; color:#b45309; }
+    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    table.kt tbody tr:nth-child(even) td { background: var(--okr-bg); }
+    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
+    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
+    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
+    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
+    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--okr-bg); border-radius: 0.75rem; border: 1px solid var(--okr-tint); }
+    .bbg-card.tint-okr { border-top: 4px solid var(--okr); }
+    .invariant-box { background: #eef2ff; border: 2px solid #4338ca; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; }
+    .invariant-box .label { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; color: #3730a3; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P3"></span>
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#catalog">Modules</a>
+      <span class="sep">›</span>
+      <span class="current">OKR</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <span class="text-5xl">🎯</span>
+      <h1 class="h-display">OKR</h1>
+      <span class="phase-chip phase-p3">P3 · Strategy / OKR</span>
+      <span class="pill pill-planned">Planned · P3 design phase</span>
+      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CEO + CSO seat</span>
+    </div>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+      The quarterly strategy loop — Company → Team → Member cascade, 3–5 Key Results per Objective, confidence-band weekly check-ins, and auto-pulled progress from PROJ, TIME, INV, HR, and LEARN. Retrospectives are framed in face-saving Vietnamese language; nothing is "missed", only "learned".
+    </p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      OKR encodes the canonical Doerr / Grove model with two CyberOS-specific bindings: <strong>auto-progress</strong> and <strong>face-saving retros</strong>. The cascade is the standard Company → Team → Individual; the cycle is quarterly (configurable for shorter pilot cycles); each Objective carries 3 to 5 Key Results that are one of three types — <em>hit-target</em> (achieve X by date), <em>baseline+improvement</em> (move from X to Y), or <em>milestone</em> (deliver Z). What is unconventional is that every KR can declare a <em>progress source</em> — a query that reads from another module and writes the current value on a schedule. A "ship feature X" KR auto-progresses from PROJ issue completion; a "land $400k Q3 revenue" KR auto-progresses from INV invoice.paid; a "hire 2 senior engineers" KR auto-progresses from HR new-hire events; a "everyone reaches Rust mastery level 3" KR auto-progresses from LEARN. Weekly confidence check-ins are 1–10 scores per KR with a one-paragraph rationale. The CUO digests these into a Founder-readable summary every Monday morning. Retrospectives at quarter close use face-saving Vietnamese framing: failed KRs become "what did we learn?" rather than "what did you miss?" — a deliberate cultural adaptation documented in PRD §3 (Vietnamese-cultural fit). The module is EU AI Act Annex III §4 high-risk-adjacent because OKR-driven employment decisions (promotion, performance review) require human-in-the-loop (Art. 14). PRD §9.19 locks the FRs; this page documents the planned implementation at <code>cyberos/services/okr/</code>.
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#architecture" class="btn btn-primary">Architecture
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#key-flows" class="btn btn-secondary">Quarterly cycle</a>
+      <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
+      <a href="../reference/fr-catalog.html#okr" class="btn btn-secondary">FR catalog</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-0.5 text-sm">
+        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+        <li><a class="toc-link" href="#why">Why OKR exists</a></li>
+        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+        <li><a class="toc-link" href="#architecture">Architecture</a></li>
+        <li><a class="toc-link" href="#data-model">Data model</a></li>
+        <li><a class="toc-link" href="#api-surface">API surface</a></li>
+        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+        <li><a class="toc-link" href="#lifecycle">Cycle lifecycle</a></li>
+        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+        <li><a class="toc-link" href="#kpis">KPIs</a></li>
+        <li><a class="toc-link" href="#raci">RACI</a></li>
+        <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
+        <li><a class="toc-link" href="#status">Phase status</a></li>
+        <li><a class="toc-link" href="#references">References</a></li>
+      </ul>
+      <hr class="my-4 border-slate-200">
+      <div class="h-eyebrow mb-2">Source</div>
+      <div class="text-xs text-slate-500 leading-relaxed">
+        <code>cyberos/services/okr/</code><br>
+        PRD §9.19<br>
+        SRS §7.15
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="hero" class="module-section">
+  <div class="bbg-card tint-okr p-6 mb-6">
+    <p class="text-lg text-slate-700 leading-relaxed mb-5">
+      OKR is the <strong>quarterly strategy operating loop</strong>. Cycles, Objectives, Key Results, and Confidence Check-ins are first-class data primitives; alignments tie Member OKRs up through Team OKRs to a Company OKR; progress sources are queries that auto-update KRs from elsewhere in CyberOS, so the dashboard is read-canonical rather than self-reported. The CUO digest on Monday morning summarises confidence drops and surfaces blockers in CHAT. End-of-quarter retros are framed as "what would change our minds next quarter?" prompts; every retro entry is itself a BRAIN memory under <code>module/okr/</code> for future cycle reference. Vietnamese cultural adaptation: failed KRs are described as "learning achieved" / "đã học được"; the term "miss" does not appear in any UI string. EU AI Act Art. 14 — OKR-driven employment decisions (promotion, performance review) always have an explicit human approval gate.
+    </p>
+    <div class="fact-grid">
+      <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P3 · design phase</div></div>
+      <div class="fact-card"><div class="label">Cycle length</div><div class="value">Quarterly</div><div class="note">configurable (4-12 weeks)</div></div>
+      <div class="fact-card"><div class="label">KRs / Objective</div><div class="value">3–5</div><div class="note">Doerr canonical band</div></div>
+      <div class="fact-card"><div class="label">KR types</div><div class="value">3</div><div class="note">hit-target · improvement · milestone</div></div>
+      <div class="fact-card"><div class="label">Confidence scale</div><div class="value">1–10</div><div class="note">weekly check-in</div></div>
+      <div class="fact-card"><div class="label">Progress sources</div><div class="value">5 modules</div><div class="note">PROJ · TIME · INV · HR · LEARN</div></div>
+      <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">face-saving language</div></div>
+      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · 5 sources</div><div class="note">+ CUO · AI · OBS</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
+<!-- ============================================================ -->
+<section id="why" class="module-section">
+  <header class="section-head"><span class="section-num">1</span><h2>Why OKR exists</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Strategy operating-systems fail at three points: (1) the cascade is built once and goes stale; (2) progress is self-reported and therefore self-inflated; (3) the retrospective is performative because the team is graded on whether they hit, not on what they learned. OKR addresses all three. The cascade is a graph stored in the database; it is read every check-in and rebuilt every cycle. Progress is computed, not typed — every KR declares a progress source (a query against another module) and the value moves on its own. Retrospectives are framed in face-saving Vietnamese language and stored as BRAIN memories, so the lesson outlives the quarter that produced it. The Founder gets a Monday-morning CUO digest of confidence-band drops; if four KRs in a row drop two points this week, that is a signal that surfaces automatically.
+  </p>
+  <div class="grid md:grid-cols-3 gap-4 my-5">
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🔗</div>
+      <div class="font-bold text-slate-900 mb-1">Cascade is a graph</div>
+      <p class="text-sm text-slate-600">Company → Team → Member alignments are first-class edges. A Member OKR with no upward alignment is flagged in the dashboard — orphan OKRs are tracked, not hidden.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">📥</div>
+      <div class="font-bold text-slate-900 mb-1">Progress is computed</div>
+      <p class="text-sm text-slate-600">Auto-pull from PROJ (issue completion), TIME (hours), INV (revenue), HR (hires), LEARN (mastery). The dashboard reflects reality, not self-report.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">📚</div>
+      <div class="font-bold text-slate-900 mb-1">Retros are memories</div>
+      <p class="text-sm text-slate-600">Every retro entry lands in BRAIN under <code>module/okr/retros/</code>. Next quarter's planning prompts read these aloud. The lesson persists.</p>
+    </div>
+  </div>
+  <p class="text-slate-700 leading-relaxed">
+    The bet is that an OKR system that <em>cannot</em> be gamed (because progress is computed) and that <em>actively learns</em> from each quarter (because retros are persisted, citable memories) compounds over years. A 12-quarter-old company has 12 BRAIN-archived retros; planning quarter 13 starts by reading them. That is a fundamentally different artefact than 12 forgotten Notion pages.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT — 5W1H2C5M -->
+<!-- ============================================================ -->
+<section id="what" class="module-section">
+  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-5">Structured decomposition of OKR's scope. Cells trace to PRD §9.19 + SRS §7.15.</p>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>5W · What</strong></td><td>What is OKR?</td><td>A strategy operating-loop service. Primitives: Cycle, Objective, KeyResult, CheckIn, Alignment, ProgressSource, Retrospective. Rust service with TS SPA dashboard. PostgreSQL store + materialised rollups.</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Founder / CEO:</strong> owns Company-level Objectives; reads Monday-morning CUO digest. <strong>Team leads:</strong> author Team OKRs aligning up. <strong>Members:</strong> author their own OKRs aligned to a Team. <strong>Agents:</strong> CUO digest; CSO-skill for retro drafting; CEO-skill for cascade-coherence checks.</td></tr>
+        <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Quarterly cycle (default Q1 / Q2 / Q3 / Q4 anchored to Jan-1). Weekly confidence-band check-ins (every Friday 17:00 ICT). Mid-quarter pulse (week 6). Quarter-close retrospective. Continuous auto-progress refresh (hourly per progress source).</td></tr>
+        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P3: SG-1 region with VN-residency partition. Read-heavy workload behind PgBouncer; OKR graph queried via federated GraphQL into PROJ/HR/INV.</td></tr>
+        <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because the cascade graph is referenced by REW (P3 performance pool depends on team-objective achievement), by HR (promotion review reads Member-OKR history), by CRM (revenue KRs feed pipeline forecast), and by the Founder daily flow. Owning it once means every consumer reads the same source-of-truth.</td></tr>
+        <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>OKR primitives stored in <code>okr.*</code> tables. Alignments are FK edges in <code>okr.alignment</code> with type ∈ {contributes_to, supports, depends_on}. Confidence check-ins append to <code>okr.check_in</code>. Auto-progress: each KR declares <code>progress_source</code> (a small DSL) and a refresh job materialises the current value. Retros land in BRAIN under <code>module/okr/cycle-YYYY-Qn/</code>.</td></tr>
+        <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P3: ~$25 / month (PG read replica + small Fargate + nightly refresh job). Low data volume — Cycle × Objective × KR cardinality is bounded.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) EU AI Act Art. 14 — OKR-driven employment decisions require human approval. (b) GDPR Art. 22 — same. (c) Vietnamese cultural fit: face-saving language; no "missed" / "failed" without "learned". (d) Append-only history — modifications post-cycle-end create supersession entries, never overwrites (FR-OKR-006).</td></tr>
+        <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · React + visx for cascade tree · DSL parser (nom) for progress-source expressions · OpenTelemetry.</td></tr>
+        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Cycle is a calendar with explicit phases (planning · execution · check-ins · retro · close). KR is typed (hit-target / improvement / milestone) with type-specific computation. Confidence band is a 1-10 scalar plus rationale text; trend is computed over 4 weeks. Retros are CSV-prompt-driven (5 questions) and CUO-summarised.</td></tr>
+        <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P3). Standard PG read replica. Scheduled jobs for weekly check-in reminders and nightly auto-progress refresh.</td></tr>
+        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.2 FTE at P3; CSO seat owns product direction; CEO-skill drives Founder digests.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-OKR-USAB-001 (drag-drop cascade p95 ≤ 200 ms), NFR-OKR-REL-001 (auto-progress refresh success ≥ 99.5%). KPIs: cascade-coverage %, weekly check-in participation %, end-of-quarter retro completion %, average final score.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================================ -->
+<section id="architecture" class="module-section">
+  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    OKR is a Rust service with a TS cascade-tree SPA. It owns the OKR graph + check-in history; reads auto-progress from five upstream modules through GraphQL federation; writes summaries to BRAIN; emits Notify cards to CUO. The progress-source DSL is parsed at KR creation time and stored as an AST; refresh is a scheduled job that walks each KR's AST and executes the query against the appropriate module's federated subgraph.
+  </p>
+
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+graph TB
+  subgraph UI ["UI surfaces"]
+    SPA["Cascade SPA<br/>(React + visx tree)"]
+    CHECKIN["Weekly check-in modal"]
+    RETRO["Retro composer"]
+  end
+
+  subgraph OKR ["OKR service (Rust · axum)"]
+    AUTHOR["author.rs<br/>Objective + KR CRUD"]
+    CASCADE["cascade.rs<br/>Alignment graph"]
+    PROGRESS["progress.rs<br/>auto-pull engine"]
+    DSL["dsl.rs<br/>progress-source parser (nom)"]
+    CHECKIN_S["checkin.rs<br/>confidence rollup"]
+    RETRO_S["retro.rs<br/>retrospective composer"]
+    DIGEST["digest.rs<br/>Monday CUO digest"]
+    GQL["gql_subgraph.rs<br/>federated read API"]
+  end
+
+  subgraph SOURCES ["Auto-progress sources"]
+    PROJ["📋 PROJ<br/>issue.completed"]
+    TIME["⏱ TIME<br/>hours.logged"]
+    INV["💰 INV<br/>invoice.paid"]
+    HR["👥 HR<br/>hire.created"]
+    LEARN["📚 LEARN<br/>mastery.attained"]
+  end
+
+  subgraph STORES ["Stores"]
+    PG[("PostgreSQL 16<br/>okr.cycle · objective<br/>key_result · check_in<br/>alignment · progress_source")]
+  end
+
+  subgraph SINKS ["Audit + AI"]
+    BRAIN["🧠 BRAIN<br/>okr.* rows<br/>retros under module/okr/"]
+    CUO["🧠 CUO<br/>Monday digest"]
+    OBS["👁 OBS<br/>traces + metrics"]
+  end
+
+  SPA --> AUTHOR
+  CHECKIN --> CHECKIN_S
+  RETRO --> RETRO_S
+  AUTHOR --> CASCADE
+  AUTHOR --> PG
+  CASCADE --> PG
+  AUTHOR --> DSL
+  DSL --> PG
+  PROGRESS --> PG
+  PROGRESS --> PROJ
+  PROGRESS --> TIME
+  PROGRESS --> INV
+  PROGRESS --> HR
+  PROGRESS --> LEARN
+  CHECKIN_S --> PG
+  CHECKIN_S --> BRAIN
+  RETRO_S --> BRAIN
+  DIGEST --> CHECKIN_S
+  DIGEST --> CUO
+  GQL --> PG
+  AUTHOR --> BRAIN
+  CASCADE --> BRAIN
+  OKR --> OBS
+
+  classDef planned fill:#e0e7ff,stroke:#4338ca
+  classDef store fill:#f5f3ff,stroke:#7c3aed
+  classDef sink fill:#d1fae5,stroke:#047857
+  class SPA,CHECKIN,RETRO,AUTHOR,CASCADE,PROGRESS,DSL,CHECKIN_S,RETRO_S,DIGEST,GQL,PROJ,TIME,INV,HR,LEARN planned
+  class PG store
+  class BRAIN,CUO,OBS sink
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>author.rs</code></td><td>services/okr/src/author.rs</td><td>Create / update Objective and KeyResult. KR-phrasing assistant via AI gateway (suggests measurable phrasing).</td></tr>
+        <tr><td><code>cascade.rs</code></td><td>services/okr/src/cascade.rs</td><td>Manage Alignment edges: contributes_to · supports · depends_on. Detect orphan OKRs (no upward alignment). Cycle detection (no circular alignments).</td></tr>
+        <tr><td><code>dsl.rs</code></td><td>services/okr/src/dsl.rs</td><td>Nom-based parser for progress-source expressions. Grammar: <code>source(query) [filter expr] [aggregate fn]</code>.</td></tr>
+        <tr><td><code>progress.rs</code></td><td>services/okr/src/progress.rs</td><td>Scheduled auto-progress refresh. Walks each KR's AST, federates to source module, updates current_value with audit trail.</td></tr>
+        <tr><td><code>checkin.rs</code></td><td>services/okr/src/checkin.rs</td><td>Weekly check-in collector. Confidence 1-10 + rationale per KR. Computes 4-week trend; flags 2+ point drops as risk.</td></tr>
+        <tr><td><code>retro.rs</code></td><td>services/okr/src/retro.rs</td><td>End-of-cycle retrospective. CSV-prompt-driven. CUO drafts summary; human edits; final lands as BRAIN memory under <code>module/okr/cycle-YYYY-Qn/retro.md</code>.</td></tr>
+        <tr><td><code>digest.rs</code></td><td>services/okr/src/digest.rs</td><td>Monday-morning CUO digest. Confidence drops, KRs off-track, suggested founder questions.</td></tr>
+        <tr><td><code>blocker.rs</code></td><td>services/okr/src/blocker.rs</td><td>Blocker detection: monitors CHAT for KR-related "blocked by" mentions and surfaces to digest.</td></tr>
+        <tr><td><code>cascade_check.rs</code></td><td>services/okr/src/cascade_check.rs</td><td>Cascade-coherence check: every Member OKR must align to a Team OKR; every Team OKR must align to a Company OKR (configurable strict / soft mode).</td></tr>
+        <tr><td><code>supersession.rs</code></td><td>services/okr/src/supersession.rs</td><td>Append-only history. Mid-cycle KR target changes create supersession rows; originals remain visible (FR-OKR-006).</td></tr>
+        <tr><td><code>i18n.rs</code></td><td>services/okr/src/i18n.rs</td><td>Vietnamese face-saving language pack. Maps internal status codes to UI strings: "miss"→"đã học được"/"learning achieved"; never "fail".</td></tr>
+        <tr><td><code>audit_bridge.rs</code></td><td>services/okr/src/audit_bridge.rs</td><td>Writes every OKR + check-in event to BRAIN canonical writer.</td></tr>
+        <tr><td><code>migrations/</code></td><td>services/okr/migrations/</td><td>sqlx migrations. RLS by <code>tenant_id</code>. Indices on (cycle_id, objective_id) and (subject_id, cycle_id).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="invariant-box mt-5">
+    <div class="label">OKR-INV-001 · Post-cycle history is append-only</div>
+    <p class="text-sm text-slate-700 mt-2 mb-0">After a Cycle reaches <code>execution</code> phase, KR target modifications are <strong>supersession entries</strong>, not overwrites. The original target value remains visible in the timeline; the new target carries <code>superseded_by</code> linkage. Verification: SRS §4 FR-OKR-006 — attempt to modify in-place is rejected with <code>code: "OKR-IMMUTABLE-POST-CYCLE"</code>; the supersession path produces a chained BRAIN audit row.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DATA MODEL -->
+<!-- ============================================================ -->
+<section id="data-model" class="module-section">
+  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    The OKR graph is six tables: Cycle (calendar), Objective (qualitative goal), KeyResult (quantitative outcome), Alignment (cascade edges), CheckIn (weekly confidence), ProgressSource (DSL-typed auto-pull config). Retrospective is a BRAIN memory, not a Postgres row.
+  </p>
+
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+erDiagram
+  TENANT ||--o{ CYCLE : "owns"
+  CYCLE ||--o{ OBJECTIVE : "contains"
+  OBJECTIVE ||--o{ KEY_RESULT : "measured by"
+  OBJECTIVE ||--o{ ALIGNMENT : "child of"
+  OBJECTIVE ||--o{ ALIGNMENT : "parent of"
+  KEY_RESULT ||--o| PROGRESS_SOURCE : "auto-pulled from"
+  KEY_RESULT ||--o{ CHECK_IN : "graded by"
+  KEY_RESULT ||--o{ KR_HISTORY : "supersession"
+  SUBJECT ||--o{ OBJECTIVE : "owns"
+  SUBJECT ||--o{ CHECK_IN : "submitted by"
+  CYCLE ||--o| RETROSPECTIVE : "closed by"
+
+  TENANT {
+    uuid id PK
+    string slug
+  }
+  CYCLE {
+    uuid id PK
+    uuid tenant_id FK
+    string code "2026-Q2"
+    date  starts_on
+    date  ends_on
+    string phase "planning | execution | check_ins | retro | closed"
+    string scope "company | team | member"
+  }
+  OBJECTIVE {
+    uuid id PK
+    uuid tenant_id FK
+    uuid cycle_id FK
+    uuid owner_subject_id FK
+    string scope_level "company | team | member"
+    string title_en
+    string title_vi
+    string narrative
+    int  display_order
+    timestamp created_at
+  }
+  KEY_RESULT {
+    uuid id PK
+    uuid objective_id FK
+    string title_en
+    string title_vi
+    string kr_type "hit_target | improvement | milestone"
+    decimal baseline_value
+    decimal target_value
+    decimal current_value
+    string unit "USD | %% | issues | hires | level"
+    date  due_date
+    string state "active | superseded | achieved | learning"
+    timestamp created_at
+  }
+  PROGRESS_SOURCE {
+    uuid id PK
+    uuid key_result_id FK
+    string source_module "PROJ | TIME | INV | HR | LEARN"
+    string dsl_expr "source(...).filter(...).aggregate(...)"
+    bytea  ast_blob "parsed AST"
+    string refresh_cadence "hourly | daily | manual"
+    timestamp last_refreshed_at
+  }
+  ALIGNMENT {
+    uuid id PK
+    uuid parent_objective_id FK
+    uuid child_objective_id FK
+    string kind "contributes_to | supports | depends_on"
+    timestamp created_at
+  }
+  CHECK_IN {
+    uuid id PK
+    uuid key_result_id FK
+    uuid subject_id FK
+    date  iso_week
+    int  confidence "1..10"
+    string rationale
+    decimal value_at_checkin
+    timestamp ts
+    string brain_chain
+  }
+  KR_HISTORY {
+    uuid id PK
+    uuid key_result_id FK
+    string field "target_value | baseline_value | due_date | title"
+    string old_value
+    string new_value
+    uuid changed_by FK
+    timestamp ts
+    string brain_chain
+  }
+  RETROSPECTIVE {
+    uuid id PK
+    uuid cycle_id FK
+    string brain_path "memories/module/okr/cycle-2026-Q2/retro.md"
+    string brain_chain
+    timestamp completed_at
+  }
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Progress-source DSL grammar (planned)</h3>
+  <div class="bbg-card p-5">
+<pre><code class="language-ebnf">progress_expr  = source_call , { '.' , method_call } ;
+source_call    = source_name , '(' , [ args ] , ')' ;
+source_name    = 'proj' | 'time' | 'inv' | 'hr' | 'learn' ;
+method_call    = method_name , '(' , [ args ] , ')' ;
+method_name    = 'filter' | 'group_by' | 'count' | 'sum' | 'avg' | 'max' | 'min' ;
+args           = arg , { ',' , arg } ;
+arg            = literal | identifier | range ;
+
+// Examples:
+//   inv.invoices.filter(state="paid", paid_at >= cycle_start).sum(amount_usd)
+//   proj.issues.filter(project_id="proj-atlas", state="done").count()
+//   hr.members.filter(hired_at >= cycle_start, role_tier="T3").count()
+//   learn.mastery.filter(skill="rust", level >= 3).count_distinct(member_id)
+//   time.entries.filter(billable=true, period=cycle).sum(hours)</code></pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- API SURFACE -->
+<!-- ============================================================ -->
+<section id="api-surface" class="module-section">
+  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Federated GraphQL subgraph for cascade reads and check-in writes, plus an MCP tool catalogue for natural-language OKR authorship through Genie.
+  </p>
+
+  <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (federated)</h3>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-graphql">extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable", "@requiresScopes"])
+
+type Cycle @key(fields: "id") {
+  id: ID!
+  code: String!
+  startsOn: Date!
+  endsOn: Date!
+  phase: CyclePhase!
+  scope: ScopeLevel!
+  objectives: [Objective!]!
+}
+
+type Objective @key(fields: "id") {
+  id: ID!
+  cycle: Cycle!
+  owner: Subject!
+  scopeLevel: ScopeLevel!
+  titleEn: String!
+  titleVi: String!
+  narrative: String
+  keyResults: [KeyResult!]!
+  alignmentsUp: [Alignment!]!
+  alignmentsDown: [Alignment!]!
+}
+
+type KeyResult @key(fields: "id") {
+  id: ID!
+  objective: Objective!
+  titleEn: String!
+  titleVi: String!
+  krType: KrType!
+  baselineValue: Float!
+  targetValue: Float!
+  currentValue: Float!
+  unit: String!
+  dueDate: Date!
+  state: KrState!
+  progressSource: ProgressSource
+  checkIns(last: Int): [CheckIn!]!
+  confidenceTrend: [ConfidencePoint!]!
+}
+
+type ProgressSource {
+  sourceModule: String!
+  dslExpr: String!
+  refreshCadence: RefreshCadence!
+  lastRefreshedAt: DateTime
+}
+
+type Alignment @key(fields: "id") {
+  id: ID!
+  parent: Objective!
+  child: Objective!
+  kind: AlignmentKind!
+}
+
+type CheckIn @key(fields: "id") {
+  id: ID!
+  keyResult: KeyResult!
+  subject: Subject!
+  isoWeek: Date!
+  confidence: Int!
+  rationale: String!
+  valueAtCheckin: Float!
+  ts: DateTime!
+}
+
+type ConfidencePoint {
+  isoWeek: Date!
+  confidence: Int!
+}
+
+enum CyclePhase { PLANNING EXECUTION CHECK_INS RETRO CLOSED }
+enum ScopeLevel { COMPANY TEAM MEMBER }
+enum KrType { HIT_TARGET IMPROVEMENT MILESTONE }
+enum KrState { ACTIVE SUPERSEDED ACHIEVED LEARNING }
+enum AlignmentKind { CONTRIBUTES_TO SUPPORTS DEPENDS_ON }
+enum RefreshCadence { HOURLY DAILY MANUAL }
+
+type Query {
+  cycle(code: String!): Cycle
+  myObjectives(cycleCode: String!): [Objective!]!
+    @requiresScopes(scopes: [["okr.read"]])
+  cascade(cycleCode: String!, rootObjectiveId: ID): [Objective!]!
+    @requiresScopes(scopes: [["okr.read"]])
+  orphans(cycleCode: String!): [Objective!]!
+    @requiresScopes(scopes: [["okr.read"]])
+}
+
+type Mutation {
+  createObjective(input: ObjectiveInput!): Objective!
+    @requiresScopes(scopes: [["okr.write"]])
+  upsertKeyResult(input: KeyResultInput!): KeyResult!
+    @requiresScopes(scopes: [["okr.write"]])
+  alignObjectives(parentId: ID!, childId: ID!, kind: AlignmentKind!): Alignment!
+    @requiresScopes(scopes: [["okr.write"]])
+  submitCheckIn(input: CheckInInput!): CheckIn!
+    @requiresScopes(scopes: [["okr.checkin"]])
+  closeRetrospective(cycleCode: String!, brainPath: String!): Cycle!
+    @requiresScopes(scopes: [["okr.close_cycle"]])
+}</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">REST + scheduled endpoints</h3>
+  <div class="bbg-card p-5 mb-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/okr/cascade.svg?cycle=2026-Q2</code></td><td>SVG export of cascade tree for board pack.</td></tr>
+        <tr><td>POST</td><td><code>/okr/refresh-progress?kr_id=…</code></td><td>Force auto-progress refresh for a specific KR.</td></tr>
+        <tr><td>POST</td><td><code>/okr/cycles/{code}/advance</code></td><td>Advance cycle phase. Admin scope.</td></tr>
+        <tr><td>GET</td><td><code>/okr/digest/weekly.md</code></td><td>Monday digest in markdown.</td></tr>
+        <tr><td>GET</td><td><code>/okr/orphans?cycle=2026-Q2</code></td><td>List orphan Member OKRs (no upward alignment).</td></tr>
+        <tr><td>GET</td><td><code>/okr/check-in-status?cycle=2026-Q2&amp;iso_week=2026-W19</code></td><td>Who has and has not submitted this week's check-in.</td></tr>
+        <tr><td>POST</td><td><code>/okr/retros/{cycle_code}/draft</code></td><td>CUO drafts a retrospective summary from the cycle's data.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+      <tbody>
+        <tr><td><code>cyberos.okr.list_cycle</code></td><td>cycle_code</td><td>Cycle + Objectives + KRs</td><td>readonly · scope=okr.read</td></tr>
+        <tr><td><code>cyberos.okr.create_objective</code></td><td>title, narrative, scope</td><td>Objective</td><td>scope=okr.write</td></tr>
+        <tr><td><code>cyberos.okr.suggest_kr_phrasing</code></td><td>objective_text, candidate_kr</td><td>3 suggestions + measurability score</td><td>readonly · AI-call</td></tr>
+        <tr><td><code>cyberos.okr.submit_check_in</code></td><td>kr_id, confidence, rationale</td><td>CheckIn</td><td>scope=okr.checkin</td></tr>
+        <tr><td><code>cyberos.okr.cascade_view</code></td><td>cycle_code, root_id?</td><td>tree</td><td>readonly</td></tr>
+        <tr><td><code>cyberos.okr.find_orphans</code></td><td>cycle_code</td><td>Objective[]</td><td>readonly</td></tr>
+        <tr><td><code>cyberos.okr.weekly_digest</code></td><td>cycle_code</td><td>Markdown digest</td><td>readonly</td></tr>
+        <tr><td><code>cyberos.okr.draft_retro</code></td><td>cycle_code</td><td>Retro draft</td><td>readonly · CSO-confirm before persist</td></tr>
+        <tr><td><code>cyberos.okr.close_cycle</code></td><td>cycle_code, retro_brain_path</td><td>{cycle}</td><td>destructive · scope=okr.close_cycle · founder-confirm</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KEY FLOWS -->
+<!-- ============================================================ -->
+<section id="key-flows" class="module-section">
+  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Quarterly cycle (define → execute → review)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CEO as CEO
+  participant TL as Team Leads
+  participant M as Members
+  participant O as OKR service
+  participant AI as 🧠 AI gateway
+  participant B as 🧠 BRAIN
+  participant CUO as 🧠 CUO
+
+  Note over CEO: Phase 1 · Planning (week -2 to 0)
+  CEO->>O: createObjective(scope=COMPANY, "Land $1.2M ARR Q3")
+  O->>AI: suggest_kr_phrasing("Land $1.2M ARR")
+  AI-->>O: 3 candidates with measurability scores
+  CEO->>O: upsertKeyResult(target=1_200_000, unit=USD, source=inv.invoice.paid)
+  O->>B: append okr.objective.created + key_result.created
+  Note over TL: TL author Team OKRs aligning up
+  TL->>O: createObjective(scope=TEAM) + align(parent=company-obj)
+  Note over M: Members author Member OKRs aligning up
+  M->>O: createObjective(scope=MEMBER) + align(parent=team-obj)
+  O->>O: cascade_check — every member-obj has team alignment
+  O->>B: append cascade.coherent row
+  Note over O: Phase 2 · Execution (weeks 1-12)
+  loop weekly
+    O->>M: ping check-in modal Friday 17:00 ICT
+    M->>O: submitCheckIn(confidence=7, rationale="...")
+    O->>B: append check_in.submitted row
+  end
+  Note over O: Phase 3 · Retrospective (week 13)
+  O->>CUO: draft_retro(cycle_code)
+  CUO->>AI: summarise cycle data + face-saving framing
+  AI-->>CUO: draft
+  CUO->>CEO: present draft for review
+  CEO->>O: closeRetrospective with edited content
+  O->>B: write retro to memories/module/okr/cycle-2026-Q2/retro.md
+  O->>B: append cycle.closed row
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 2 — Weekly confidence check-in</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CR as cron (Fri 17:00 ICT)
+  participant O as OKR digest
+  participant M as Member
+  participant SPA as Check-in modal
+  participant C as checkin.rs
+  participant PG as PostgreSQL
+  participant B as 🧠 BRAIN
+  participant CUO as 🧠 CUO
+
+  CR->>O: notify all Members with active KRs
+  O->>M: push notification (CHAT + email)
+  M->>SPA: open modal
+  SPA-->>M: render KR cards with last 4-week confidence trend
+  loop per KR
+    M->>SPA: confidence 1-10 + rationale
+  end
+  SPA->>C: submit batch
+  C->>PG: INSERT check_in rows
+  C->>C: compute 4-week trend per KR
+  alt 2+ point drop
+    C->>CUO: flag risk(kr_id)
+    CUO->>CUO: queue for Monday digest
+  end
+  C->>B: append check_in.submitted (per KR)
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 3 — Cascade alignment (Company → Team → Member)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant TL as Team Lead
+  participant SPA as Cascade SPA (tree)
+  participant AR as Apollo Router
+  participant C as cascade.rs
+  participant CK as cascade_check.rs
+  participant PG as PostgreSQL
+  participant B as 🧠 BRAIN
+
+  TL->>SPA: drag Team OKR onto Company OKR
+  SPA->>AR: mutation alignObjectives(parent=co-obj, child=team-obj, kind=CONTRIBUTES_TO)
+  AR->>C: forward with JWT
+  C->>PG: INSERT alignment row
+  C->>CK: validate (no cycles, scope-level rule honoured)
+  alt valid alignment
+    CK-->>C: ok
+    C->>B: append alignment.created row
+    C-->>SPA: success; tree re-render
+  else cycle detected
+    CK-->>C: deny ALIGNMENT-CYCLE
+    C->>PG: ROLLBACK
+    C-->>SPA: 422 error
+  end
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Cascade rules: COMPANY can only be parent of TEAM; TEAM can only be parent of MEMBER. Cross-scope-level alignments (e.g., Member→Company directly) are rejected with <code>code: "OKR-SCOPE-MISMATCH"</code>.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 4 — Auto-progress sync (PROJ / TIME / INV / HR / LEARN)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CR as cron (hourly)
+  participant P as progress.rs
+  participant D as dsl.rs (parsed AST)
+  participant INV as 💰 INV federated subgraph
+  participant PROJ as 📋 PROJ federated subgraph
+  participant LRN as 📚 LEARN federated subgraph
+  participant PG as PostgreSQL
+  participant B as 🧠 BRAIN
+
+  CR->>P: enumerate KRs with refresh_cadence in (hourly, daily-due)
+  loop per KR
+    P->>D: load AST from progress_source
+    alt source = inv
+      P->>INV: federated query (e.g., paid invoices Σ amount)
+      INV-->>P: scalar value
+    else source = proj
+      P->>PROJ: federated query (e.g., done-issues count)
+      PROJ-->>P: scalar value
+    else source = learn
+      P->>LRN: federated query (e.g., mastery_level>=3 count)
+      LRN-->>P: scalar value
+    end
+    P->>PG: UPDATE key_result SET current_value=…, last_refreshed_at=now()
+    alt value changed
+      P->>B: append progress.refreshed row {kr_id, from, to}
+    end
+  end
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 5 — Monday CUO digest to Founder</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CR as cron (Mon 07:00 ICT)
+  participant D as digest.rs
+  participant CH as checkin.rs (trend reader)
+  participant BL as blocker.rs
+  participant AI as 🧠 AI gateway
+  participant CUO as 🧠 CUO
+  participant CEO as CEO (CHAT)
+  participant B as 🧠 BRAIN
+
+  CR->>D: assemble weekly digest
+  D->>CH: pull confidence drops (≥ 2 pts over 2 wks)
+  D->>BL: pull "blocked by" mentions in CHAT
+  D->>D: rank by impact × risk
+  D->>AI: summarise to ~250 words; face-saving framing
+  AI-->>D: draft
+  D->>CUO: route to founder
+  CUO->>CEO: post in Founder DM with citations
+  CEO-->>CUO: optional reply ("dig into KR-042")
+  CUO->>B: append digest.delivered + digest.engaged rows
+    </div>
+    <p class="text-xs text-slate-500 mt-3">The digest never says "X failed"; it says "X is below confidence band — what would help?" The Vietnamese version uses "đang gặp khó khăn" (encountering difficulty) rather than "hỏng" (broken).</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LIFECYCLE -->
+<!-- ============================================================ -->
+<section id="lifecycle" class="module-section">
+  <header class="section-head"><span class="section-num">7</span><h2>Cycle lifecycle</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    A Cycle traverses five phases. Each transition is gated; modifying KRs in <code>execution</code> phase requires supersession.
+  </p>
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Planning: cycle opened (week -2)
+  Planning --> Execution: phase advance @ start_date
+  Execution --> CheckIns: ongoing — every Friday
+  CheckIns --> Execution: weekly loop
+  Execution --> MidQuarter: week 6 pulse review
+  MidQuarter --> Execution: continue
+  Execution --> Retro: end_date - 1 week
+  Retro --> Closed: founder approves retro
+  Closed --> [*]
+  Execution --> Cancelled: rare — Founder decision (Annual reset)
+  Cancelled --> [*]
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Per-phase rules</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Phase</th><th>Duration</th><th>Rules</th></tr></thead>
+      <tbody>
+        <tr><td>Planning</td><td>2 weeks</td><td>Objectives + KRs editable freely. Alignments built. Cascade coherence must pass before transition.</td></tr>
+        <tr><td>Execution</td><td>10 weeks (quarter)</td><td>KR target modifications require supersession (FR-OKR-006). Auto-progress refresh hourly. Weekly check-ins enforced.</td></tr>
+        <tr><td>CheckIns (sub-state)</td><td>weekly Fri 17:00</td><td>All Members with active KRs receive prompts; missing check-ins flagged in next-week digest.</td></tr>
+        <tr><td>MidQuarter (sub-state)</td><td>week 6</td><td>Mandatory CEO + Team Lead review. Confidence-band review; off-track KRs get rationale entry.</td></tr>
+        <tr><td>Retro</td><td>1 week</td><td>CUO drafts retro summary; team reviews; final lands in BRAIN under <code>module/okr/cycle-YYYY-Qn/retro.md</code>.</td></tr>
+        <tr><td>Closed</td><td>terminal</td><td>All KRs reach final state (achieved | learning). Read-only. Audit chain preserved.</td></tr>
+        <tr><td>Cancelled</td><td>terminal</td><td>Cycle invalidated. Audit chain preserved with reason.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FRs -->
+<!-- ============================================================ -->
+<section id="functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">OKR FRs from PRD §9.19 and SRS §4 (FR-OKR-001 through FR-OKR-006), plus implementation-tier additions for auto-progress, cascade, and digest surfaces.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody>
+        <tr><td><code>FR-OKR-001</code></td><td>Quarterly cycle with company → team → Member cascade</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-001" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-002</code></td><td>Confidence-band updates; CUO digest weekly to Founder</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-002" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-003</code></td><td>OKR retro at quarter close; "what would change my mind" prompts</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-003" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-004</code></td><td>Public OKR view per workspace (Members see all team OKRs by default)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-004" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-005</code></td><td>Integrate with PROJ to auto-link key results to project milestones</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-005" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-006</code></td><td>Post-cycle KR modifications are supersession entries; originals remain visible</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-006" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-007</code></td><td>Auto-progress sources: PROJ / TIME / INV / HR / LEARN via DSL</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-007" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-008</code></td><td>KR type enum: hit-target · improvement · milestone</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-008" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-009</code></td><td>Orphan-OKR detection: every Member OKR must align upward to Team OKR</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-009" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-010</code></td><td>Cascade cycle-detection: alignments must not form circular references</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-010" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-011</code></td><td>KR phrasing assistant via AI gateway (measurability score)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-011" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-012</code></td><td>Vietnamese face-saving language pack (no "miss" / "fail" UI strings)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-012" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-013</code></td><td>EU AI Act Art. 14 — OKR-driven employment decisions require human approval</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-013" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-014</code></td><td>Audit-chain: every Objective / KR / CheckIn lands in BRAIN</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-014" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-OKR-015</code></td><td>Cycle export: full cascade + check-ins + retro as deterministic zip</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-015" class="text-blue-700">details →</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- NFRs -->
+<!-- ============================================================ -->
+<section id="non-functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">OKR NFRs cover cascade-tree UX latency, auto-progress reliability, and append-only data-integrity.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+      <tbody>
+        <tr><td><code>NFR-OKR-USAB-001</code></td><td>Cascade-tree drag-drop p95</td><td>≤ 200 ms</td><td>RUM + Lighthouse</td></tr>
+        <tr><td><code>NFR-OKR-USAB-002</code></td><td>Check-in modal open-to-submit p95</td><td>≤ 60 s end-to-end</td><td>RUM</td></tr>
+        <tr><td><code>NFR-OKR-LAT-001</code></td><td>cascade(cycleCode) query p95</td><td>≤ 350 ms (100-objective cascade)</td><td>k6</td></tr>
+        <tr><td><code>NFR-OKR-LAT-002</code></td><td>submitCheckIn server-canonical p95</td><td>≤ 250 ms</td><td>k6 + Apollo Router metrics</td></tr>
+        <tr><td><code>NFR-OKR-REL-001</code></td><td>Auto-progress refresh success rate</td><td>≥ 99.5% / day</td><td>OBS daily report</td></tr>
+        <tr><td><code>NFR-OKR-REL-002</code></td><td>Federated query timeout fallback</td><td>≤ 2 s; on timeout, retain last value + flag</td><td>chaos test</td></tr>
+        <tr><td><code>NFR-OKR-INT-001</code></td><td>Append-only history under modification attempt</td><td>= 0 in-place updates after Execution phase</td><td>property test + DB audit</td></tr>
+        <tr><td><code>NFR-OKR-INT-002</code></td><td>Cascade cycle-detection accuracy</td><td>= 100% (zero false negatives)</td><td>property-based test</td></tr>
+        <tr><td><code>NFR-OKR-AVL-001</code></td><td>OKR availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor</td></tr>
+        <tr><td><code>NFR-OKR-SEC-001</code></td><td>Cross-tenant cascade leak</td><td>= 0</td><td>RLS verification harness</td></tr>
+        <tr><td><code>NFR-OKR-A11Y-001</code></td><td>Cascade tree keyboard-navigable (WCAG 2.1 AA)</td><td>full coverage</td><td>axe-core audit</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCIES -->
+<!-- ============================================================ -->
+<section id="dependencies" class="module-section">
+  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    OKR depends on AUTH for RBAC, BRAIN for retros + audit, AI for phrasing + summarisation, and federated subgraphs from five progress-source modules. It is consumed by REW (performance pool reads team-objective achievement), HR (promotion review reads Member OKR history), and the CUO daily flow.
+  </p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+graph LR
+  subgraph upstream ["OKR depends on"]
+    AUTH["🔐 AUTH<br/>RBAC + scope"]
+    BRAIN["🧠 BRAIN<br/>audit + retros"]
+    AI["🧠 AI Gateway<br/>phrasing + summarisation"]
+    OBS["👁 OBS"]
+    PROJ["📋 PROJ<br/>auto-progress"]
+    TIME["⏱ TIME<br/>auto-progress"]
+    INV["💰 INV<br/>auto-progress"]
+    HR["👥 HR<br/>auto-progress"]
+    LEARN["📚 LEARN<br/>auto-progress"]
+    CRM["🏢 CRM<br/>pipeline KRs"]
+  end
+  OKR["🎯 OKR"]
+  subgraph downstream ["Used by"]
+    REW["💎 REW<br/>P3 perf pool"]
+    HR_D["👥 HR<br/>promotion review"]
+    CUO["🧠 CUO<br/>daily digest"]
+    RES["📅 RES<br/>hiring objective"]
+    DASH["📊 OBS dashboards"]
+  end
+  AUTH --> OKR
+  BRAIN --> OKR
+  AI --> OKR
+  OBS --> OKR
+  PROJ --> OKR
+  TIME --> OKR
+  INV --> OKR
+  HR --> OKR
+  LEARN --> OKR
+  CRM --> OKR
+  OKR --> REW
+  OKR --> HR_D
+  OKR --> CUO
+  OKR --> RES
+  OKR --> DASH
+
+  classDef planned fill:#e0e7ff,stroke:#4338ca
+  classDef shipped fill:#d1fae5,stroke:#047857
+  class AUTH,BRAIN,AI,OBS,PROJ,TIME,INV,HR,LEARN,CRM,OKR,REW,HR_D,CUO,RES,DASH planned
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE -->
+<!-- ============================================================ -->
+<section id="compliance" class="module-section">
+  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">OKR touches employment-context data (performance, promotion inputs). EU AI Act Art. 14 and GDPR Art. 22 apply because OKRs feed REW (compensation) and HR (promotion).</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>OKR feature that satisfies it</th></tr></thead>
+      <tbody>
+        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Employment</td><td>OKR outputs that feed REW or HR are gated by human approval (FR-OKR-013).</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>CUO digest is advisory; no automated promotion / compensation action.</td></tr>
+        <tr><td>GDPR (EU 2016/679)</td><td>Art. 22 — Automated decision-making</td><td>Same as Art. 14; explicit human approval predicate.</td></tr>
+        <tr><td>GDPR</td><td>Art. 15 — Right of access</td><td><code>cyberos-okr dsar-export</code> returns full Objective + KR + CheckIn history for a Subject.</td></tr>
+        <tr><td>GDPR</td><td>Art. 17 — Right to erasure</td><td>Tombstone supported on CheckIn; aggregate retro memory retains tenant-level summary.</td></tr>
+        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Same as GDPR Art. 15 surface.</td></tr>
+        <tr><td>Vietnam cultural fit</td><td>PRD §3 — Face-saving</td><td>i18n.rs maps internal "miss" → "đã học được" UI string; retro framing is "what would change our minds?"</td></tr>
+        <tr><td>ISO/IEC 27001:2022</td><td>A.5.34 — Privacy in development</td><td>Per-Member OKR visible only to Member + Team Lead + CEO by default; broader visibility opt-in.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC7.2 — System monitoring</td><td>Auto-progress refresh metrics; confidence-trend monitoring; KPI dashboard.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RISK -->
+<!-- ============================================================ -->
+<section id="risk-entries" class="module-section">
+  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">OKR-specific risks in the <a href="../reference/risk-register.html#okr" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><code>R-OKR-001</code></td><td>Tampering — KR target lowered post-cycle to inflate achievement</td><td>Low</td><td>High</td><td>CSO</td><td>Append-only history (FR-OKR-006); supersession-only modification; CI test verifies in-place blocked.</td></tr>
+        <tr><td><code>R-OKR-002</code></td><td>Auto-progress source returns stale value silently</td><td>Medium</td><td>Medium</td><td>CTO</td><td>last_refreshed_at exposed in UI; freshness alert at &gt; 24 h; manual force-refresh endpoint.</td></tr>
+        <tr><td><code>R-OKR-003</code></td><td>OKR-driven employment decision automated without human gate</td><td>Low</td><td>High</td><td>CLO</td><td>FR-OKR-013 enforced; REW boundary requires human approval; audit alarm on any direct write.</td></tr>
+        <tr><td><code>R-OKR-004</code></td><td>Cascade cycle causes infinite-loop in tree render</td><td>Low</td><td>Medium</td><td>CTO</td><td>Cycle-detection at alignment-write boundary; rejects with OKR-CYCLE error; integration test.</td></tr>
+        <tr><td><code>R-OKR-005</code></td><td>Cross-tenant cascade leak via federated query</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>RLS at Postgres + @requiresScopes on every GraphQL field; cross-tenant test gate.</td></tr>
+        <tr><td><code>R-OKR-006</code></td><td>Face-saving language pack drift (English "miss" leaks through)</td><td>Medium</td><td>Low</td><td>CPO</td><td>i18n.rs central mapping; lint rule on all UI strings; manual QA per release.</td></tr>
+        <tr><td><code>R-OKR-007</code></td><td>Check-in burnout (Members ignore Friday prompts)</td><td>High</td><td>Medium</td><td>CHRO</td><td>Friction-minimal modal (≤ 60s typical); skip-this-week available; participation tracked as KPI.</td></tr>
+        <tr><td><code>R-OKR-008</code></td><td>DSL injection via progress_source field</td><td>Low</td><td>High</td><td>CSO</td><td>DSL parser is nom-based with whitelisted source names; no eval / no SQL passthrough.</td></tr>
+        <tr><td><code>R-OKR-009</code></td><td>Retro memory tampering post-close</td><td>Low</td><td>High</td><td>CSO</td><td>BRAIN canonical write; tombstone-only modification; chain integrity verified on read.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KPIs -->
+<!-- ============================================================ -->
+<section id="kpis" class="module-section">
+  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">OKR health rolls up into 9 KPIs covering cascade coverage, check-in participation, end-cycle scoring, and digest engagement.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Cascade coverage %</strong></td><td><code>aligned_member_okrs / total_member_okrs</code></td><td>okr.alignment</td><td>≥ 95%</td></tr>
+        <tr><td><strong>Weekly check-in participation</strong></td><td><code>checkins_submitted / expected</code></td><td>okr.check_in</td><td>≥ 80%</td></tr>
+        <tr><td><strong>Cycle close-rate</strong></td><td><code>cycles_closed_with_retro / cycles_ended</code></td><td>okr.cycle</td><td>= 100%</td></tr>
+        <tr><td><strong>Average final score</strong></td><td><code>AVG(achieved + 0.5×learning) / total_krs</code></td><td>okr.key_result</td><td>0.70 (Doerr-band)</td></tr>
+        <tr><td><strong>Confidence-drop alerts / cycle</strong></td><td>count</td><td>OBS</td><td>tracked</td></tr>
+        <tr><td><strong>Auto-progress refresh success rate</strong></td><td><code>successful / attempted</code></td><td>OBS</td><td>≥ 99.5%</td></tr>
+        <tr><td><strong>Orphan-OKR count</strong></td><td><code>count(no upward alignment)</code></td><td>okr.objective</td><td>≤ 5% of total</td></tr>
+        <tr><td><strong>Founder digest engagement rate</strong></td><td><code>digests_with_reply / total</code></td><td>OBS</td><td>≥ 50%</td></tr>
+        <tr><td><strong>Retro-memory citation rate next cycle</strong></td><td><code>citations / total_retros</code></td><td>BRAIN</td><td>≥ 1 / retro / next-cycle planning</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RACI -->
+<!-- ============================================================ -->
+<section id="raci" class="module-section">
+  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">OKR is owned by CEO (strategy) with CSO seat for cycle operations and CLO for AI-Act compliance.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Activity</th><th>CEO</th><th>CSO</th><th>CTO</th><th>CHRO</th><th>CLO</th><th>CPO</th></tr></thead>
+      <tbody>
+        <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Company-OKR authorship</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Cycle phase advance (Planning→Execution etc.)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Retrospective draft + close</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Face-saving language QA</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td></tr>
+        <tr><td>EU AI Act / GDPR Art. 22 conformity</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Founder digest review (Mon)</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+      </tbody>
+    </table>
+    <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI USAGE -->
+<!-- ============================================================ -->
+<section id="cli-usage" class="module-section">
+  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-okr</code>. Every destructive action writes a chained BRAIN audit row before exit.</p>
+
+  <h3 class="text-lg font-bold mb-2">1. Open a new quarterly cycle</h3>
+<pre><code>$ cyberos-okr cycle open --code 2026-Q3 --starts 2026-07-01 --ends 2026-09-30
+
+[cycle opened]
+  code:    2026-Q3
+  phase:   planning
+  ends:    2026-09-30
+  audit:   brain seq=11204 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">2. Create an Objective with progress source</h3>
+<pre><code>$ cyberos-okr objective create \
+    --cycle 2026-Q3 \
+    --scope company \
+    --title-en "Land $1.2M ARR Q3" \
+    --title-vi "Đạt 1.2M USD ARR Q3"
+
+[objective created]   id=O-009211
+
+$ cyberos-okr kr add \
+    --objective O-009211 \
+    --title-en "Closed-won invoices >= $1.2M" \
+    --type hit_target \
+    --target 1200000 --unit USD --due 2026-09-30 \
+    --source 'inv.invoices.filter(state="paid", paid_at >= cycle_start).sum(amount_usd)'
+
+[kr created]   id=KR-018432  baseline=0 target=$1,200,000
+[progress]     auto-pull configured · cadence=hourly</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">3. Submit weekly check-in</h3>
+<pre><code>$ cyberos-okr checkin submit \
+    --kr KR-018432 --confidence 7 \
+    --rationale "MRR run-rate $89k; need 3 deals to close in Aug"
+
+[check-in submitted]  iso_week=2026-W30 confidence=7 (trend ↓1 from W29)
+[audit]               brain seq=11283 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">4. View cascade</h3>
+<pre><code>$ cyberos-okr cascade --cycle 2026-Q3
+
+[COMPANY]
+  O-009211  Land $1.2M ARR Q3                            score 0.74
+  ├─ KR-018432  Closed-won invoices >= $1.2M  cur=$890k  conf=7
+  ├─ KR-018433  Logo count: 22 → 32           cur=24      conf=8
+  └─ KR-018434  Pipeline >= $4.8M             cur=$5.1M   conf=9
+
+  [TEAM · Sales]
+    O-009220  Source 60 SQLs                            score 0.62
+    ├─ KR-018440  SQLs: 60                  cur=37       conf=5
+    └─ KR-018441  Outbound emails / wk: 600 cur=420      conf=6
+      [MEMBER · Linh]
+        O-009245  Convert 10 SQLs to closed-won         score —
+        ├─ KR-018470  Closed-won: 10        cur=4         conf=7
+
+[orphans]  0
+[avg confidence]  7.1</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">5. Run Monday digest</h3>
+<pre><code>$ cyberos-okr digest --cycle 2026-Q3
+
+[Founder digest · 2026-W30]
+  3 KRs dropped 2+ confidence points this week:
+    · KR-018432 Closed-won ARR — conf 9→7 — "August deals stalled"
+    · KR-018440 SQLs — conf 7→5  — "Outbound capacity short"
+    · KR-018470 Linh closed-won — conf 8→7 — "lost 2 deals in proposal"
+
+  Suggested founder questions:
+    1. "What would help unblock the 3 stalled August deals?"
+    2. "Should we move someone temporarily to outbound?"
+
+  [audit]  brain seq=11401 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">6. Close cycle with retrospective</h3>
+<pre><code>$ cyberos-okr cycle close --code 2026-Q3 --retro-from retro-draft.md
+
+[retro accepted]
+  cycle:         2026-Q3
+  brain path:    memories/module/okr/cycle-2026-Q3/retro.md
+  final scores:  achieved=14  learning=8  superseded=2
+  duration:      90d
+  audit:         brain seq=11502 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">7. DSAR export for a Member</h3>
+<pre><code>$ cyberos-okr dsar-export --subject linh@cyberskill.com --output dsar.zip
+
+[dsar] objectives:  12 rows (4 cycles)
+[dsar] key_results: 38 rows
+[dsar] check_ins:   148 rows
+[dsar] retros:      4 brain memories
+[dsar] written:     dsar.zip (88 KB)</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATUS -->
+<!-- ============================================================ -->
+<section id="status" class="module-section">
+  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P3 design phase</div></div>
+    <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~4,200</div><div class="note">services/okr + sqlx migrations</div></div>
+    <div class="fact-card"><div class="label">Est. LoC (TS)</div><div class="value">~2,200</div><div class="note">cascade SPA + check-in modal</div></div>
+    <div class="fact-card"><div class="label">Planned tests</div><div class="value">75+</div><div class="note">incl. DSL + cycle-detect + i18n</div></div>
+    <div class="fact-card"><div class="label">External libs</div><div class="value">~10</div><div class="note">nom · visx · rrule · OpenTelemetry</div></div>
+    <div class="fact-card"><div class="label">P3 budget</div><div class="value">~$25/mo</div><div class="note">PG replica + Fargate + scheduler</div></div>
+  </div>
+
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Cycle / Objective / KeyResult primitives</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Company → Team → Member cascade</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Confidence-band weekly check-ins</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Auto-progress DSL + scheduled refresh</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>KR phrasing assistant (AI gateway)</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Monday CUO digest</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Retrospective composer + BRAIN persistence</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Append-only supersession (FR-OKR-006)</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Vietnamese face-saving language pack</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Cascade cycle-detection</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>OKR-driven REW pool integration</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Public OKR view per workspace</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references" class="module-section">
+  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+  <div class="bbg-card p-5">
+    <ul class="space-y-2 text-sm">
+      <li><strong>PRD §9.19</strong> — OKR — OKR / Strategy. FRs 001..004.</li>
+      <li><strong>PRD §3</strong> — Vietnamese cultural fit (face-saving framing).</li>
+      <li><strong>PRD §11.2.x</strong> — Performance / usability NFRs.</li>
+      <li><strong>SRS §7.15</strong> — OKR — Objectives and Key Results subjects + cascade.</li>
+      <li><strong>SRS §4 FR-OKR-001..006</strong> — Formal requirements with verification methods.</li>
+      <li><strong>John Doerr, "Measure What Matters" (2018)</strong> — Canonical OKR methodology reference.</li>
+      <li><strong>EU AI Act (Reg. 2024/1689)</strong> — Annex III §4 (employment), Art. 14 (human oversight).</li>
+      <li><strong>GDPR (EU 2016/679)</strong> — Art. 15 (DSAR), Art. 22 (automated decision-making).</li>
+      <li><strong>Vietnam PDPL (Law 91/2025)</strong> — Art. 14 (DSAR).</li>
+      <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#okr" class="text-blue-700 underline">infrastructure.html#okr</a>.</li>
+      <li><strong>PROJ module</strong> — <a href="proj.html" class="text-blue-700 underline">proj.html</a> · auto-progress source for milestone KRs.</li>
+      <li><strong>INV module</strong> — <a href="inv.html" class="text-blue-700 underline">inv.html</a> · auto-progress source for revenue KRs.</li>
+      <li><strong>HR module</strong> — <a href="hr.html" class="text-blue-700 underline">hr.html</a> · auto-progress source for hiring KRs.</li>
+      <li><strong>LEARN module</strong> — <a href="learn.html" class="text-blue-700 underline">learn.html</a> · auto-progress source for skill-mastery KRs.</li>
+      <li><strong>REW module</strong> — <a href="rew.html" class="text-blue-700 underline">rew.html</a> · downstream consumer for P3 performance pool computation.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PREV / NEXT NAV -->
+<!-- ============================================================ -->
+<nav class="module-nav-footer mt-12">
+  <a href="res.html" class="text-blue-700 font-semibold no-underline hover:underline">← RES</a>
+  <a href="doc.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: DOC →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

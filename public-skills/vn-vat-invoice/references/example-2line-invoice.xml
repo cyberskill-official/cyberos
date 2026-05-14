@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Invoice xmlns:inv="http://kekhaithue.gdt.gov.vn/TIN/2014/04/01/HoaDonDienTu" xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+  <Header>
+    <InvoiceNo>INV-2026-001</InvoiceNo>
+    <InvoiceDate>2026-05-14</InvoiceDate>
+    <Currency>VND</Currency>
+    <PaymentMethod>TM/CK</PaymentMethod>
+  </Header>
+  <Seller>
+    <Name>Công ty TNHH ABC</Name>
+    <MST>0312345678</MST>
+    <Address>123 Lê Lợi, P. Bến Nghé, Q.1, TP.HCM</Address>
+  </Seller>
+  <Buyer>
+    <Name>Công ty XYZ</Name>
+    <MST>0107654321</MST>
+    <Address>45 Trần Hưng Đạo, Q. Hoàn Kiếm, Hà Nội</Address>
+  </Buyer>
+  <Lines>
+    <Line index="1">
+      <Name>Tư vấn phần mềm</Name>
+      <Unit>giờ</Unit>
+      <Qty>80</Qty>
+      <UnitPrice>500000</UnitPrice>
+      <Amount>40000000</Amount>
+      <VatRate>10%</VatRate>
+      <VatAmount>4000000</VatAmount>
+    </Line>
+    <Line index="2">
+      <Name>Triển khai hệ thống</Name>
+      <Unit>lần</Unit>
+      <Qty>1</Qty>
+      <UnitPrice>50000000</UnitPrice>
+      <Amount>50000000</Amount>
+      <VatRate>10%</VatRate>
+      <VatAmount>5000000</VatAmount>
+    </Line>
+  </Lines>
+  <Totals>
+    <TotalAmount>90000000</TotalAmount>
+    <TotalVat>9000000</TotalVat>
+    <GrandTotal>99000000</GrandTotal>
+  </Totals>
+</Invoice>

@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Gateway — CyberOS</title>
+  <meta name="description" content="AI Gateway — single LLM access point. LiteLLM router, provider failover, persona-version stamping, PII redaction, response cache, per-tenant cost tracking, streaming SSE.">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="../assets/scripts.js"></script>
+  <style>
+    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .fact-card { background: var(--infra-bg); border:1px solid var(--infra-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--infra-dark); }
+    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+    .toc-link:hover { background: var(--infra-bg); color: var(--infra-dark); }
+    .toc-link.active { background: var(--infra-tint); color: var(--infra-dark); font-weight: 600; }
+    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--infra); color:white; font-weight:800; font-size:0.875rem; }
+    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
+    .pill-must     { background:#fee2e2; color:#b91c1c; }
+    .pill-should   { background:#fef3c7; color:#b45309; }
+    .pill-shipped  { background:#d1fae5; color:#065f46; }
+    .pill-planned  { background:#e0e7ff; color:#3730a3; }
+    .pill-partial  { background:#fef3c7; color:#b45309; }
+    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
+    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
+    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
+    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
+    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
+    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--infra-bg); border-radius: 0.75rem; border: 1px solid var(--infra-tint); }
+  </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#catalog">Modules</a>
+      <span class="sep">›</span>
+      <span class="current">AI Gateway</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <span class="text-5xl">🧠</span>
+      <h1 class="h-display">AI</h1>
+      <span class="phase-chip phase-p0">P0 · Foundation</span>
+      <span class="pill pill-planned">Planned · P0 design phase</span>
+      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO (vacant) → interim CEO</span>
+    </div>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+      One LLM door for the whole platform — router, redactor, cacher, accountant. Every model call goes through here.
+    </p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      AI Gateway is the single integration point for every Large Language Model call CyberOS makes. Built on LiteLLM at its router core, it speaks OpenAI, Anthropic, AWS Bedrock, and Vertex AI behind one interface; fails over within 30 seconds when a primary provider degrades; redacts PII before bytes leave the cluster; stamps every call with a persona-version so the audit trail captures which agent identity made the request; caches deterministic responses for replay-stable testing; and tracks per-tenant token cost down to the invoice line item. Two flags matter: <em>no client SDK is allowed</em> in any other module (they all call AI Gateway over gRPC), and <em>no cache may cross tenant boundaries</em> (NFR-AI-002, hard rule). PRD §8.5 specifies the latency budget per route class; §9.7 specifies the FRs. This page documents the planned implementation at <code>cyberos/services/ai-gateway/</code>.
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#architecture" class="btn btn-primary">Architecture
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
+      <a href="#api-surface" class="btn btn-secondary">API surface</a>
+      <a href="../reference/fr-catalog.html#ai" class="btn btn-secondary">FR catalog</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-0.5 text-sm">
+        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+        <li><a class="toc-link" href="#why">Why AI Gateway exists</a></li>
+        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+        <li><a class="toc-link" href="#architecture">Architecture</a></li>
+        <li><a class="toc-link" href="#data-model">Data model</a></li>
+        <li><a class="toc-link" href="#api-surface">API surface</a></li>
+        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+        <li><a class="toc-link" href="#lifecycle">Request lifecycle</a></li>
+        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+        <li><a class="toc-link" href="#kpis">KPIs</a></li>
+        <li><a class="toc-link" href="#raci">RACI</a></li>
+        <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
+        <li><a class="toc-link" href="#status">Phase status</a></li>
+        <li><a class="toc-link" href="#references">References</a></li>
+      </ul>
+      <hr class="my-4 border-slate-200">
+      <div class="h-eyebrow mb-2">Source</div>
+      <div class="text-xs text-slate-500 leading-relaxed">
+        <code>cyberos/services/ai-gateway/</code><br>
+        PRD §8.5 · §9.7 · §11.2.1<br>
+        SRS §4.7
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<section id="hero" class="module-section">
+  <div class="bbg-card tint-infra p-6 mb-6">
+    <p class="text-lg text-slate-700 leading-relaxed mb-5">
+      AI Gateway is the <strong>policy-enforcement and routing layer</strong> for every model call inside CyberOS. From the outside it is one gRPC service speaking <code>chat.complete</code>, <code>embed</code>, <code>rerank</code>, and <code>image.generate</code>. Inside, a LiteLLM-derived router consults per-tenant policy, applies persona-version system prompts, runs Presidio + custom-VN PII redaction, looks up the prompt-cache, picks a primary provider, retries twice with backoff, fails over to the secondary, accounts for tokens against the tenant's monthly cap, streams the response back over SSE, and emits one <code>ai.invocation</code> audit row per call. Zero retention — no provider sees cross-tenant prompts; no cache row crosses a tenant boundary; the only thing that leaves the cluster is the prompt and the response, and even those are PII-scrubbed.
+    </p>
+    <div class="fact-grid">
+      <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
+      <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~6,500</div><div class="note">Python 3.13 (LiteLLM-derived) + Rust edge proxy</div></div>
+      <div class="fact-card"><div class="label">Providers (P0)</div><div class="value">Bedrock · Anthropic · OpenAI</div><div class="note">+ self-hosted BGE embedder</div></div>
+      <div class="fact-card"><div class="label">Failover SLA</div><div class="value">≤ 30 s</div><div class="note">FR-AI-006 · primary down → secondary live</div></div>
+      <div class="fact-card"><div class="label">PII redaction recall</div><div class="value">≥ 99%</div><div class="note">FR-AI-007 · VN + EN test set</div></div>
+      <div class="fact-card"><div class="label">Cache hit rate</div><div class="value">≥ 30% (P0)</div><div class="note">≥ 60% (P2+); FR-AI-004</div></div>
+      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">tenant resolution + audit + traces</div></div>
+      <div class="fact-card"><div class="label">Used by</div><div class="value">CUO · Skill · KB · CHAT · …</div><div class="note">every module that calls an LLM</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="why" class="module-section">
+  <header class="section-head"><span class="section-num">1</span><h2>Why AI Gateway exists</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Letting every module embed its own LLM SDK creates three problems at once. (a) Cost-tracking turns into per-module spreadsheets that never agree. (b) PII redaction becomes a decentralized policy that drifts. (c) Provider failover requires per-module change windows whenever Anthropic / OpenAI degrades. The AI Gateway pattern is the standard answer: pay the cost of one integration once, let every other module call a single typed RPC, and centralise the policy.
+  </p>
+  <div class="grid md:grid-cols-3 gap-4 my-5">
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🎯</div>
+      <div class="font-bold text-slate-900 mb-1">One door, many providers</div>
+      <p class="text-sm text-slate-600">LiteLLM router speaks OpenAI / Anthropic / Bedrock / Vertex behind a single API. Switching providers is a config change, not a code change.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🛡</div>
+      <div class="font-bold text-slate-900 mb-1">PII never leaves un-scrubbed</div>
+      <p class="text-sm text-slate-600">Presidio + custom Vietnamese rules redact CCCD, MST, bank accounts, addresses before the request hits a provider — recall ≥ 99% measured.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">💸</div>
+      <div class="font-bold text-slate-900 mb-1">Cost is a property of the platform</div>
+      <p class="text-sm text-slate-600">Every call lands one <code>ai.invocation</code> row: actor · model · tokens · USD · cache-state. Per-tenant cap, 80% warning, 100% hard stop.</p>
+    </div>
+  </div>
+  <p class="text-slate-700 leading-relaxed">
+    The bet is the same bet AUTH and BRAIN make: pay the cost once at the substrate. Without AI Gateway, each module re-implements PII redaction (and at least one of them gets it wrong), each module embeds its own SDK (and the OpenAI Python client and the Anthropic Python client disagree on streaming chunks), and the regulator's "show me every prompt that touched personal data" question becomes a forensic project. With AI Gateway, that question is a SQL query.
+  </p>
+</section>
+
+<section id="what" class="module-section">
+  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-5">PRD §8.5 + §9.7 + §11.2.1 give the full picture; this table is the working summary.</p>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>5W · What</strong></td><td>What is AI Gateway?</td><td>A gRPC service that wraps a LiteLLM-derived router. It selects providers, redacts PII, caches deterministic responses, accounts for tokens, and emits audit rows. Single binary today; horizontally scalable behind an L7 load balancer.</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who calls it?</td><td>CUO router (for routing decisions), Skill host (for skill-invoked LLM steps), KB (semantic ingest + retrieval), CHAT (summarisation, smart-reply), Genie (interactive Q&amp;A), Email composer, Project planner. <strong>Owner:</strong> CTO seat.</td></tr>
+        <tr><td><strong>5W · When</strong></td><td>When does call happen?</td><td>Synchronously per user request (chat completion); asynchronously for batch jobs (KB ingest, daily digest). Cache lookup happens first; only cache-miss requests hit a provider.</td></tr>
+        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Fargate task in SG-1 (P0); read-only embedder/reranker GPU node (shared with KB). Multi-region active-active at P3+.</td></tr>
+        <tr><td><strong>5W · Why</strong></td><td>Why a separate layer?</td><td>Because per-module SDK adoption creates cost untraceability, PII drift, and failover ratchets. One gateway eliminates all three.</td></tr>
+        <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Receive gRPC call → resolve tenant policy from BRAIN (cached) → look up cache → on miss, redact PII → inject persona-version system prompt → call primary provider with 2 retries → on continued failure within 30 s, fail over to secondary → stream response back via SSE → store redacted prompt + response in cache → emit <code>ai.invocation</code> audit row → return.</td></tr>
+        <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>P0 budget: ≤ $150 / month LLM (PRD NFR-PERF-010). 50-tenant budget: ≤ $4 / active user / month LLM. Cache hit rate is the dominant lever.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Zero cross-tenant cache. (b) PII recall ≥ 99% measured against a public VN+EN test set. (c) Provider must be on ZDR (Zero-Data-Retention) attested endpoint for sensitive routes. (d) Per-tenant monthly USD cap hard-enforced.</td></tr>
+        <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Python 3.13 · LiteLLM (vendored) · grpc-py · Presidio · regex-based VN PII rules · Redis (cache) · DuckDB (usage roll-up) · OpenTelemetry · self-hosted BGE-M3 embedder + BGE-rerank on a shared L4 GPU.</td></tr>
+        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Streaming-first (SSE end-to-end). Circuit breaker per provider × model. Hash-keyed cache (SHA-256 of canonical prompt + model + parameters). Idempotency-Key header for replay safety. Per-route latency budgets (read ≤ 800 ms, write ≤ 2 s, ingest ≤ 5 s).</td></tr>
+        <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate (CPU). One GPU pod for BGE-M3 + reranker (L4 24GB, shared with KB ingest).</td></tr>
+        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE shared CTO + CDO at P0. CDO assumes primary at P1+.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-PERF-001 (AI request p95 ≤ 2 s), FR-AI-004 cache hit rate, FR-AI-007 PII recall, per-tenant cost dashboard, provider error-rate burndown.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="architecture" class="module-section">
+  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Six internal pipelines between the gRPC ingress and the provider egress: tenant policy resolution, persona stamping, PII redaction, cache lookup, router selection, and accounting. The diagram below shows the full request path for a <code>chat.complete</code> call.
+  </p>
+
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+graph TB
+  subgraph CLIENTS ["Callers"]
+    CUO["🎯 CUO router"]
+    SKILL["🛠 Skill host"]
+    CHAT["💬 CHAT summarise"]
+    KB["📚 KB ingest"]
+    GENIE["✨ Genie Q&amp;A"]
+  end
+
+  subgraph AI ["AI Gateway (gRPC + Rust edge proxy)"]
+    ING["edge_proxy.rs<br/>mTLS + auth"]
+    TPR["tenant_policy.py<br/>provider-pref · cap · ZDR-attestation"]
+    PER["persona.py<br/>inject system-prompt by persona_version"]
+    RED["redactor.py<br/>Presidio + VN rules · ≥ 99% recall"]
+    CACHE["cache.py<br/>Redis · key=SHA-256(canonical_prompt + model + params + tenant)"]
+    ROUT["router.py (LiteLLM)<br/>provider-pref · circuit-breaker · 2 retries"]
+    STR["stream.py<br/>SSE multiplexer"]
+    ACC["accountant.py<br/>tokens · USD · per-tenant cap"]
+    EMB["embedder<br/>BGE-M3 (self-hosted)"]
+    RER["reranker<br/>BGE-rerank-v2-m3 (self-hosted)"]
+  end
+
+  subgraph PROVIDERS ["External providers (ZDR-attested)"]
+    BED["AWS Bedrock<br/>Anthropic Sonnet · Haiku"]
+    ANTH["Anthropic API<br/>Sonnet · Opus"]
+    OAI["OpenAI API<br/>gpt-4o · o1"]
+    VTX["Vertex AI (P1+)<br/>Gemini · PaLM"]
+  end
+
+  subgraph STORES
+    REDIS[("Redis 7<br/>cache · TTL configurable")]
+    DUCK[("DuckDB<br/>usage roll-up · hourly")]
+  end
+
+  subgraph SINKS
+    BRAIN["🧠 BRAIN<br/>ai.invocation rows"]
+    OBS["👁 OBS<br/>traces + cost dashboard"]
+  end
+
+  CUO --> ING
+  SKILL --> ING
+  CHAT --> ING
+  KB --> ING
+  GENIE --> ING
+
+  ING --> TPR
+  TPR --> PER
+  PER --> RED
+  RED --> CACHE
+  CACHE -->|miss| ROUT
+  CACHE -->|hit| STR
+  ROUT --> BED
+  ROUT --> ANTH
+  ROUT --> OAI
+  ROUT -.P1+.-> VTX
+  ROUT --> STR
+  STR --> ACC
+  ACC --> DUCK
+  CACHE --> REDIS
+  ROUT --> EMB
+  ROUT --> RER
+  ING --> BRAIN
+  ING --> OBS
+  ACC --> BRAIN
+
+  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef provider fill:#e0e7ff,stroke:#4338ca
+  classDef store fill:#f5f3ff,stroke:#7c3aed
+  classDef sink fill:#d1fae5,stroke:#047857
+  class ING,TPR,PER,RED,CACHE,ROUT,STR,ACC,EMB,RER planned
+  class BED,ANTH,OAI,VTX provider
+  class REDIS,DUCK store
+  class BRAIN,OBS sink
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>edge_proxy.rs</code></td><td>services/ai-gateway/edge/</td><td>Rust mTLS proxy. Verifies caller JWT (AUTH), unwraps tenant_id, forwards to Python core over Unix socket.</td></tr>
+        <tr><td><code>tenant_policy.py</code></td><td>services/ai-gateway/core/policy.py</td><td>Resolves per-tenant provider preference, cost cap, ZDR-attestation requirement. Caches from BRAIN reads.</td></tr>
+        <tr><td><code>persona.py</code></td><td>services/ai-gateway/core/persona.py</td><td>Injects persona-version system prompt at the gateway (FR-AI-004). Reads <code>meta/persona/<id>/<version>/prompt.md</code> from BRAIN.</td></tr>
+        <tr><td><code>redactor.py</code></td><td>services/ai-gateway/core/redactor.py</td><td>Presidio + custom VN rule pack. Detects CCCD, MST, bank acct, address, phone, email, name. Replaces with token sentinels; un-redact on response for trusted classes.</td></tr>
+        <tr><td><code>cache.py</code></td><td>services/ai-gateway/core/cache.py</td><td>Hash-keyed response cache. Key = SHA-256(canonical(prompt) || model || params || tenant_id). NEVER cross-tenant — tenant_id in key is the load-bearing fact.</td></tr>
+        <tr><td><code>router.py</code></td><td>services/ai-gateway/core/router.py</td><td>LiteLLM-derived. Selects provider by tenant policy + route class. 2 retries with exponential backoff. Circuit-breaker on per-provider error rate. Fails over to secondary within 30 s.</td></tr>
+        <tr><td><code>stream.py</code></td><td>services/ai-gateway/core/stream.py</td><td>SSE multiplexer. Forwards provider stream chunks as <code>data: …</code> events. Backpressure-aware. Handles cancellation mid-stream.</td></tr>
+        <tr><td><code>accountant.py</code></td><td>services/ai-gateway/core/accountant.py</td><td>Token + USD accounting per tenant. Emits hourly roll-up to DuckDB; per-tenant cap enforcement (80% warning, 100% hard stop). FR-AI-003.</td></tr>
+        <tr><td><code>circuit_breaker.py</code></td><td>services/ai-gateway/core/circuit_breaker.py</td><td>Per-provider × per-model breaker. Opens on error rate &gt; 10% / 60 s window; half-opens after 30 s; closes on first success.</td></tr>
+        <tr><td><code>idempotency.py</code></td><td>services/ai-gateway/core/idempotency.py</td><td>Replay-safe via <code>Idempotency-Key</code> header. Same key → same response (returned from short-TTL Redis cache).</td></tr>
+        <tr><td><code>vn_pii_rules.py</code></td><td>services/ai-gateway/core/vn_pii_rules.py</td><td>Custom VN PII detectors: CCCD (Decree 13 — 12 digits), MST (10/13 digits, validator), VietQR account, Vietnamese full names (rule-based).</td></tr>
+        <tr><td><code>embedder_client.py</code></td><td>services/ai-gateway/core/embedder_client.py</td><td>Calls the BGE-M3 GPU pod over gRPC. Batches up to 32 requests per call.</td></tr>
+        <tr><td><code>reranker_client.py</code></td><td>services/ai-gateway/core/reranker_client.py</td><td>Calls the BGE-rerank-v2-m3 GPU pod. Returns ordered score list.</td></tr>
+        <tr><td><code>audit_bridge.py</code></td><td>services/ai-gateway/core/audit_bridge.py</td><td>Emits one <code>ai.invocation</code> row per call: actor · route · model · tokens-in · tokens-out · USD · cache_state · persona_version · redaction_applied. FR-AI-005.</td></tr>
+        <tr><td><code>cost_export.py</code></td><td>services/ai-gateway/tools/cost_export.py</td><td>Generates per-tenant monthly invoice line items from DuckDB roll-up.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="data-model" class="module-section">
+  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    AI Gateway is mostly stateless — its source of truth is BRAIN (provider config, tenant policy, persona prompts) and Redis (cache, idempotency keys). DuckDB holds the cost-roll-up for fast dashboard queries. The entities below show the read + write surfaces.
+  </p>
+
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+erDiagram
+  TENANT ||--o{ TENANT_POLICY : "has policy"
+  TENANT ||--o{ AI_INVOCATION : "incurs"
+  TENANT ||--o{ TENANT_BUDGET : "has cap"
+  PROVIDER ||--o{ PROVIDER_MODEL : "offers"
+  PROVIDER_MODEL ||--o{ AI_INVOCATION : "fulfils"
+  PERSONA ||--o{ PERSONA_VERSION : "has versions"
+  PERSONA_VERSION ||--o{ AI_INVOCATION : "stamps"
+  CACHED_RESPONSE ||--o| AI_INVOCATION : "may serve"
+  REDACTION_RULE ||--o{ REDACTION_HIT : "matches"
+  AI_INVOCATION ||--o{ REDACTION_HIT : "produces"
+
+  TENANT {
+    uuid id PK
+    string slug
+    string country
+  }
+  TENANT_POLICY {
+    uuid tenant_id FK
+    string primary_provider "bedrock or anthropic or openai"
+    string fallback_provider
+    bool   require_zdr_attestation
+    obj    per_route_overrides "route_class to provider"
+  }
+  TENANT_BUDGET {
+    uuid tenant_id FK
+    int   monthly_usd_cents
+    int   spent_usd_cents_mtd
+    timestamp window_start
+    bool   warning_sent_80pct
+  }
+  PROVIDER {
+    string id PK "bedrock or anthropic or openai or vertex"
+    string region
+    bool   zdr_attested
+    string status "active or degraded or disabled"
+  }
+  PROVIDER_MODEL {
+    string id PK "bedrock-anthropic-claude-3-5-sonnet"
+    string provider FK
+    string model_name
+    int    context_window
+    decimal price_input_per_1k
+    decimal price_output_per_1k
+    bool   streaming_supported
+  }
+  PERSONA {
+    string id PK "cuo or genie or hr-assistant or other"
+    string display_name
+  }
+  PERSONA_VERSION {
+    string persona_id FK
+    string version "v2.3.1"
+    string system_prompt
+    timestamp valid_from
+    timestamp valid_to
+  }
+  CACHED_RESPONSE {
+    string key PK "SHA-256 of prompt model params tenant"
+    bytes response_body
+    int    tokens_in
+    int    tokens_out
+    timestamp created_at
+    timestamp expires_at
+    string tenant_id "load-bearing - no cross-tenant"
+  }
+  AI_INVOCATION {
+    uuid id PK
+    uuid tenant_id FK
+    string actor "subject_id"
+    string route_class "chat or embed or rerank or image"
+    string model_id FK
+    string persona_version
+    int    tokens_in
+    int    tokens_out
+    decimal usd_cost
+    int    latency_ms
+    string cache_state "miss or hit or bypass"
+    bool   redaction_applied
+    string fallover_path "primary or secondary or primary-to-secondary"
+    string brain_chain
+    timestamp ts
+  }
+  REDACTION_RULE {
+    string code PK "vn-cccd or vn-mst or en-email or other"
+    string regex
+    string sentinel "CCCD-sentinel"
+    string locale
+  }
+  REDACTION_HIT {
+    uuid id PK
+    uuid invocation_id FK
+    string rule_code FK
+    int    offset
+    int    length
+  }
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Provider + model matrix (P0)</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Provider</th><th>Model</th><th>Route class</th><th>ZDR</th><th>Pricing /1k tokens</th></tr></thead>
+      <tbody>
+        <tr><td>AWS Bedrock</td><td>anthropic.claude-3.5-sonnet</td><td>chat (default)</td><td>✓</td><td>$0.003 in / $0.015 out</td></tr>
+        <tr><td>AWS Bedrock</td><td>anthropic.claude-3-haiku</td><td>chat (cheap)</td><td>✓</td><td>$0.00025 in / $0.00125 out</td></tr>
+        <tr><td>Anthropic API</td><td>claude-sonnet-4.5</td><td>chat (high-quality)</td><td>✓ (zero-retention)</td><td>$0.003 in / $0.015 out</td></tr>
+        <tr><td>OpenAI</td><td>gpt-4o</td><td>chat (alt)</td><td>✓ (zero-data-retention)</td><td>$0.0025 in / $0.01 out</td></tr>
+        <tr><td>OpenAI</td><td>o1-mini</td><td>reasoning (alt)</td><td>✓</td><td>$0.003 in / $0.012 out</td></tr>
+        <tr><td>Self-hosted</td><td>BGE-M3</td><td>embed</td><td>n/a (in-cluster)</td><td>free (amortised GPU)</td></tr>
+        <tr><td>Self-hosted</td><td>BGE-rerank-v2-m3</td><td>rerank</td><td>n/a (in-cluster)</td><td>free (amortised GPU)</td></tr>
+        <tr><td>Vertex AI (P1+)</td><td>gemini-2.5-pro</td><td>chat (alt)</td><td>✓</td><td>$0.00125 in / $0.005 out</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="api-surface" class="module-section">
+  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    AI Gateway speaks gRPC internally and exposes a thin REST surface for non-internal callers. A federated GraphQL subgraph publishes the read-side (usage, model catalogue). No public MCP tools — the gateway is infrastructure, not directly agent-callable.
+  </p>
+
+  <h3 class="text-lg font-bold mb-3 mt-6">gRPC API (canonical)</h3>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-proto">syntax = "proto3";
+package cyberos.ai.v1;
+
+service AIGateway {
+  // Streaming chat completion (SSE end-to-end).
+  rpc ChatComplete(ChatRequest) returns (stream ChatChunk);
+  // Non-streaming variant for batch jobs.
+  rpc ChatCompleteSync(ChatRequest) returns (ChatResponse);
+  // Embedding (single or batch).
+  rpc Embed(EmbedRequest) returns (EmbedResponse);
+  // Reranking.
+  rpc Rerank(RerankRequest) returns (RerankResponse);
+  // Cost lookup for the calling tenant.
+  rpc UsageMTD(TenantRef) returns (UsageReport);
+  // Model catalogue.
+  rpc ListModels(Empty) returns (ModelList);
+}
+
+message ChatRequest {
+  repeated Message messages = 1;
+  string persona = 2;                 // "cuo" | "genie" | "hr-assistant"
+  string route_class = 3;             // "chat" | "reasoning"
+  string idempotency_key = 4;
+  ModelHint hint = 5;                 // optional; tenant policy may override
+  bool stream = 6;
+  map&lt;string, string&gt; metadata = 7;   // free-form, recorded in audit
+}
+
+message Message {
+  string role = 1;        // "user" | "assistant" | "system" (system reserved)
+  string content = 2;
+  repeated Tool tool_calls = 3;
+}
+
+message ChatChunk {
+  string content_delta = 1;
+  bool   done = 2;
+  Usage  usage = 3;       // emitted on final chunk
+}
+
+message Usage {
+  int32 tokens_in = 1;
+  int32 tokens_out = 2;
+  string model_id = 3;
+  string cache_state = 4;
+  double usd_cost = 5;
+  bool   redaction_applied = 6;
+  string persona_version = 7;
+  string brain_chain = 8;
+}
+
+message EmbedRequest {
+  repeated string inputs = 1;
+  string model = 2;        // default: "bge-m3"
+}
+
+message EmbedResponse {
+  repeated Embedding embeddings = 1;
+  Usage usage = 2;
+}
+
+message Embedding { repeated float vector = 1; }</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">REST + SSE surface (planned, edge-only)</h3>
+  <div class="bbg-card p-5 mb-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>POST</td><td><code>/v1/chat/completions</code></td><td>OpenAI-compatible chat endpoint (SSE supported with <code>stream: true</code>).</td></tr>
+        <tr><td>POST</td><td><code>/v1/embeddings</code></td><td>OpenAI-compatible embeddings endpoint.</td></tr>
+        <tr><td>POST</td><td><code>/v1/rerank</code></td><td>Cohere-style rerank endpoint.</td></tr>
+        <tr><td>GET</td><td><code>/v1/models</code></td><td>List models available to caller's tenant.</td></tr>
+        <tr><td>GET</td><td><code>/v1/usage</code></td><td>MTD usage report for the caller's tenant.</td></tr>
+        <tr><td>GET</td><td><code>/health</code></td><td>Liveness + per-provider circuit-breaker state.</td></tr>
+        <tr><td>GET</td><td><code>/metrics</code></td><td>Prometheus scrape endpoint.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">GraphQL subgraph (read-only)</h3>
+  <div class="bbg-card p-5">
+<pre><code class="language-graphql">extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@requiresScopes"])
+
+type AIInvocation @key(fields: "id") @requiresScopes(scopes: [["ai.usage_read"]]) {
+  id: ID!
+  tenantId: ID!
+  actor: String!
+  routeClass: RouteClass!
+  modelId: String!
+  personaVersion: String!
+  tokensIn: Int!
+  tokensOut: Int!
+  usdCost: Float!
+  latencyMs: Int!
+  cacheState: CacheState!
+  redactionApplied: Boolean!
+  failoverPath: String!
+  ts: DateTime!
+}
+
+type UsageReport @key(fields: "tenantId month") {
+  tenantId: ID!
+  month: String!                    # "2026-05"
+  totalCalls: Int!
+  totalTokens: Int!
+  totalUsdCost: Float!
+  capUsdCost: Float!
+  percentUsed: Float!
+  byModel: [ModelUsage!]!
+}
+
+type ModelUsage {
+  modelId: String!
+  calls: Int!
+  tokensIn: Int!
+  tokensOut: Int!
+  usdCost: Float!
+}
+
+enum RouteClass { CHAT REASONING EMBED RERANK IMAGE }
+enum CacheState { MISS HIT BYPASS }
+
+type Query {
+  aiUsageMTD(tenantId: ID): UsageReport!
+  aiInvocations(since: DateTime, limit: Int = 50): [AIInvocation!]!
+    @requiresScopes(scopes: [["ai.usage_read"]])
+  aiModels: [Model!]!
+}</code></pre>
+  </div>
+</section>
+
+<section id="key-flows" class="module-section">
+  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Streaming chat completion (cache miss)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CUO as CUO router
+  participant AI as AI Gateway
+  participant TP as tenant_policy
+  participant PER as persona injector
+  participant RED as redactor
+  participant CACHE as Redis cache
+  participant ROUT as router
+  participant BED as AWS Bedrock
+  participant STR as SSE stream
+  participant ACC as accountant
+  participant B as 🧠 BRAIN
+
+  CUO->>AI: ChatComplete(messages, persona="cuo", stream=true)
+  AI->>TP: get_policy(tenant_id)
+  TP-->>AI: {primary:"bedrock", fallback:"anthropic", cap_usd_mtd:150}
+  AI->>PER: inject system-prompt(persona="cuo", version="v2.3.1")
+  PER-->>AI: messages + system
+  AI->>RED: redact(messages)
+  RED-->>AI: messages' + redaction_hits
+  AI->>CACHE: GET sha256(canonical(messages')||model||params||tenant)
+  CACHE-->>AI: miss
+  AI->>ROUT: route(messages', model="claude-3.5-sonnet")
+  ROUT->>BED: invoke streaming completion
+  loop SSE chunks
+    BED-->>ROUT: data: {delta:"..."}
+    ROUT-->>STR: forward
+    STR-->>CUO: data: {delta:"..."}
+  end
+  BED-->>ROUT: done {tokens_in:120, tokens_out:450}
+  ROUT->>ACC: account(tokens, usd=0.0075)
+  ACC->>ACC: check tenant cap (97/150 → OK)
+  AI->>CACHE: SET key TTL=24h
+  AI->>B: ai.invocation row {…}
+  STR-->>CUO: done event with Usage
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Cache-miss latency budget: ≤ 2 s p95 (NFR-PERF-001). Provider latency dominates; gateway overhead is &lt; 50 ms typical.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 2 — Cache hit (deterministic replay)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CHAT as CHAT summarise
+  participant AI as AI Gateway
+  participant TP as tenant_policy
+  participant RED as redactor
+  participant CACHE as Redis cache
+  participant STR as SSE stream
+  participant ACC as accountant
+  participant B as 🧠 BRAIN
+
+  CHAT->>AI: ChatCompleteSync(messages, persona="genie")
+  AI->>TP: policy(tenant)
+  AI->>RED: redact(messages)
+  AI->>CACHE: GET key
+  CACHE-->>AI: HIT {response, tokens, cached_at}
+  AI->>ACC: account(cache=hit, tokens=0)
+  ACC->>ACC: usage incremented; no USD charged
+  AI->>B: ai.invocation row {cache_state:"hit"}
+  AI-->>CHAT: response (≤ 50 ms p95)
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Cache-hit budget: ≤ 50 ms p95. The audit row still records the call — cache hits are tracked separately for invoicing transparency.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 3 — Provider failover (primary degraded)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant K as KB ingest
+  participant AI as AI Gateway
+  participant ROUT as router
+  participant CB as circuit_breaker
+  participant BED as AWS Bedrock (primary)
+  participant ANTH as Anthropic API (fallback)
+  participant B as 🧠 BRAIN
+
+  K->>AI: Embed(inputs, model="bge-m3")
+  Note over AI,BED: bge-m3 is self-hosted; example uses chat
+  AI->>ROUT: chat call, primary=bedrock
+  ROUT->>BED: invoke
+  BED-->>ROUT: 503 Service Unavailable
+  ROUT->>ROUT: retry #1 (backoff 250 ms)
+  ROUT->>BED: invoke
+  BED-->>ROUT: 503
+  ROUT->>ROUT: retry #2 (backoff 1 s)
+  ROUT->>BED: invoke
+  BED-->>ROUT: 503
+  ROUT->>CB: record failure → trip breaker for bedrock:claude-3.5
+  Note over CB: error_rate &gt; 10%/60s → OPEN
+  ROUT->>ANTH: failover invoke
+  ANTH-->>ROUT: response
+  ROUT-->>AI: response with failover_path="primary→secondary"
+  AI->>B: ai.invocation row {failover_path:"primary→secondary"}
+  AI-->>K: response
+  Note over CB: 30 s later HALF_OPEN; first success closes breaker
+    </div>
+    <p class="text-xs text-slate-500 mt-3">FR-AI-006: failover within 30 s of primary failure. The circuit breaker prevents pile-up against a degraded provider.</p>
+  </div>
+
+  <h3 class="text-lg function-bold mb-3">Flow 4 — Per-tenant cost cap enforcement</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Module
+  participant AI as AI Gateway
+  participant ACC as accountant
+  participant TPR as tenant_policy
+  participant ALERT as CHAT alert bot
+  participant B as 🧠 BRAIN
+
+  U->>AI: ChatComplete(…)
+  AI->>ACC: pre-check cap
+  alt spent_mtd < 80% cap
+    ACC-->>AI: allow
+    AI->>AI: …normal flow…
+  else 80% ≤ spent_mtd < 100%
+    ACC-->>AI: allow + warning flag
+    AI->>ALERT: post "tenant X at 84% AI cap"
+    ALERT->>B: budget_warning row
+    AI->>AI: …normal flow…
+  else spent_mtd ≥ 100%
+    ACC-->>AI: hard-stop
+    AI->>B: ai.invocation row {decision:"blocked_cap"}
+    AI-->>U: 429 Quota Exceeded
+  end
+    </div>
+    <p class="text-xs text-slate-500 mt-3">FR-AI-003: 80% warning, 100% hard stop. Warnings post to the tenant's <code>#cyberos-alerts</code> CHAT channel; hard-stop returns 429 with a structured <code>Retry-After</code> header pointing at the next billing cycle.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 5 — PII redaction (Vietnamese CCCD)</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as HR module
+  participant AI as AI Gateway
+  participant RED as redactor
+  participant VPI as vn_pii_rules
+  participant ROUT as router
+  participant BED as Bedrock
+  participant B as 🧠 BRAIN
+
+  U->>AI: ChatComplete("Verify CCCD 037201234567 for Le Van A")
+  AI->>RED: redact(messages)
+  RED->>VPI: scan for VN PII
+  VPI-->>RED: hits [{rule:"vn.cccd", offset:13, len:12}, {rule:"vn.name", offset:30, len:8}]
+  RED->>RED: replace with sentinels - Verify CCCD CCCD_0 for NAME_0
+  RED-->>AI: redacted messages
+  AI->>ROUT: send to provider (no real CCCD leaves cluster)
+  ROUT->>BED: invoke
+  BED-->>ROUT: response (refers to {{CCCD_0}}, {{NAME_0}})
+  ROUT-->>AI: response
+  AI->>RED: un-redact in response (caller's tenant scope only)
+  AI->>B: ai.invocation {redaction_applied:true, hits:2}
+  AI-->>U: response with un-redacted CCCD/name
+    </div>
+    <p class="text-xs text-slate-500 mt-3">FR-AI-007: PII recall ≥ 99% on the VN + EN test set. Sentinels are caller-scoped — the same prompt from a different tenant produces different sentinels, so a cached row from tenant A never round-trips through tenant B.</p>
+  </div>
+</section>
+
+<section id="lifecycle" class="module-section">
+  <header class="section-head"><span class="section-num">7</span><h2>Request lifecycle</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    A single AI invocation traverses ten states between caller and audit row. Most of the time is in <code>Routing</code> (provider RTT); cache-hit paths skip from <code>CacheCheck</code> straight to <code>Streaming</code>.
+  </p>
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Received: gRPC ingress
+  Received --> AuthValidated: AUTH verifies JWT, resolves tenant
+  AuthValidated --> PolicyResolved: tenant_policy + budget check
+  PolicyResolved --> Blocked: cap exceeded (100%)
+  PolicyResolved --> PersonaInjected: system prompt prepended
+  PersonaInjected --> Redacted: PII scrubbed
+  Redacted --> CacheCheck: hash key built
+  CacheCheck --> Streaming: HIT (cached response)
+  CacheCheck --> Routing: MISS
+  Routing --> Streaming: provider produced chunk
+  Routing --> Failover: primary errored 2× + 30s elapsed
+  Failover --> Streaming: secondary producing chunks
+  Streaming --> Accounted: tokens + USD totalled
+  Accounted --> Audited: ai.invocation row to BRAIN
+  Audited --> [*]
+  Blocked --> [*]: 429 returned, audit row written
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Latency budget per route class</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Route class</th><th>p95 target</th><th>p99 target</th><th>Source NFR</th></tr></thead>
+      <tbody>
+        <tr><td><strong>chat (default)</strong></td><td>≤ 2 s</td><td>≤ 5 s</td><td>NFR-PERF-003</td></tr>
+        <tr><td>chat (cache hit)</td><td>≤ 50 ms</td><td>≤ 200 ms</td><td>internal</td></tr>
+        <tr><td>chat streaming TTFB</td><td>≤ 500 ms</td><td>≤ 1.2 s</td><td>internal · PERF-002</td></tr>
+        <tr><td>reasoning (o1, claude-opus)</td><td>≤ 10 s</td><td>≤ 30 s</td><td>internal</td></tr>
+        <tr><td>embed (BGE-M3)</td><td>≤ 120 ms / item</td><td>≤ 250 ms</td><td>internal</td></tr>
+        <tr><td>rerank (BGE-rerank)</td><td>≤ 80 ms / pair</td><td>≤ 150 ms</td><td>internal</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">AI Gateway FRs from PRD §9.7 + SRS §4.7. Full normative descriptions at <a href="../reference/fr-catalog.html#ai" class="text-blue-700 font-semibold underline">fr-catalog.html#ai</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><code>FR-AI-001</code></td><td>Route by tenant policy: primary Bedrock + Anthropic + OpenAI failover</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-002</code></td><td>Never cache prompt content across tenants</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-003</code></td><td>Per-tenant monthly USD budget cap: hard-stop at 100%, warning at 80%</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-004</code></td><td>Cache hit-rate ≥ 30% (P0); ≥ 60% (P2+)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-005</code></td><td>Log every AI invocation (tokens, cost, latency, cache state) to <code>ai.invocation</code></td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-006</code></td><td>Fail over to fallback provider within 30 seconds of primary failure</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-007</code></td><td>Redact PII (VN + EN) before sending to providers, recall ≥ 99%</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-008</code></td><td>Per-call OpenTelemetry traces correlating to BRAIN, MCP, audit log</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-009</code></td><td>Persona-version system-prompt injection at gateway level</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-010</code></td><td>ZDR enforcement: only ZDR-attested endpoints for sensitive routes</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-011</code></td><td>Self-hosted embedder (BGE-M3) and reranker (BGE-rerank-v2-m3)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td><code>FR-AI-012</code></td><td>Latency budget per route class enforced via circuit breaker</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-013</code></td><td>Streaming SSE end-to-end with TTFB ≤ 500 ms</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-014</code></td><td>Provider failover policy: 2 retries with backoff before failover</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>FR-AI-015</code></td><td>Idempotency-Key replay safety</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td><code>FR-AI-016</code></td><td>Per-tenant cost accounting and budget alerting</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="non-functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">Performance NFRs from PRD §11.2.1 + reliability from §11.2.2. Cross-referenced at <a href="../reference/nfr-catalog.html#ai" class="text-blue-700 font-semibold underline">nfr-catalog.html#ai</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+      <tbody>
+        <tr><td><code>NFR-PERF-001</code></td><td>AI request p95 latency (chat, miss)</td><td>≤ 2 s</td><td>k6 load test against gateway</td></tr>
+        <tr><td><code>NFR-PERF-002</code></td><td>Streaming TTFB p95</td><td>≤ 500 ms</td><td>k6 streaming test</td></tr>
+        <tr><td><code>NFR-AI-LAT-003</code></td><td>Cache-hit response p95</td><td>≤ 50 ms</td><td>internal bench</td></tr>
+        <tr><td><code>NFR-AI-LAT-004</code></td><td>Embed call p95 (per item)</td><td>≤ 120 ms</td><td>BGE-M3 GPU bench</td></tr>
+        <tr><td><code>NFR-AI-LAT-005</code></td><td>Rerank call p95 (per pair)</td><td>≤ 80 ms</td><td>BGE-rerank bench</td></tr>
+        <tr><td><code>NFR-AI-CACHE-001</code></td><td>Cache hit rate at P0</td><td>≥ 30%</td><td>weekly roll-up</td></tr>
+        <tr><td><code>NFR-AI-CACHE-002</code></td><td>Cache hit rate at P2+</td><td>≥ 60%</td><td>weekly roll-up</td></tr>
+        <tr><td><code>NFR-AI-COST-001</code></td><td>Cost ceiling (internal P0)</td><td>≤ $150/month LLM</td><td>DuckDB invoice export</td></tr>
+        <tr><td><code>NFR-AI-COST-002</code></td><td>Cost ceiling (50-tenant)</td><td>≤ $4/active user/month LLM</td><td>per-tenant dashboard</td></tr>
+        <tr><td><code>NFR-PII-001</code></td><td>PII redaction recall (VN+EN)</td><td>≥ 99%</td><td>FR-AI-007 test set</td></tr>
+        <tr><td><code>NFR-PII-002</code></td><td>PII redaction precision</td><td>≥ 95%</td><td>false-positive rate measured</td></tr>
+        <tr><td><code>NFR-REL-004</code></td><td>AI gateway provider failover</td><td>continuous on primary outage</td><td>chaos test</td></tr>
+        <tr><td><code>NFR-AI-AVL-001</code></td><td>Gateway availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor</td></tr>
+        <tr><td><code>NFR-AI-CRO-001</code></td><td>Cross-tenant cache leakage</td><td>= 0</td><td>property-based test in CI</td></tr>
+        <tr><td><code>NFR-AI-FOV-001</code></td><td>Failover detection latency</td><td>≤ 30 s</td><td>chaos test (kill primary)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="dependencies" class="module-section">
+  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    AI Gateway depends on three internal services and four external providers (P0). It is depended on by every CyberOS module that calls an LLM.
+  </p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+graph LR
+  subgraph upstream ["AI Gateway depends on"]
+    AUTH["🔐 AUTH<br/>tenant resolution"]
+    BRAIN["🧠 BRAIN<br/>tenant_policy + persona prompts<br/>+ ai.invocation rows"]
+    OBS["👁 OBS<br/>traces + metrics"]
+    REDIS["⚡ Redis<br/>cache + idempotency"]
+    BED["AWS Bedrock"]
+    ANTH["Anthropic API"]
+    OAI["OpenAI API"]
+    GPU["BGE-M3 GPU pod"]
+  end
+  AI["🧠 AI Gateway"]
+  subgraph downstream ["Used by"]
+    CUO["🎯 CUO"]
+    SKILL["🛠 Skill host"]
+    CHAT["💬 CHAT"]
+    KB["📚 KB"]
+    GENIE["✨ Genie"]
+    PROJ["📋 PROJ"]
+    EMAIL["✉️ EMAIL"]
+    OTH["…all LLM-using modules"]
+  end
+  AUTH --> AI
+  BRAIN --> AI
+  OBS --> AI
+  REDIS --> AI
+  BED --> AI
+  ANTH --> AI
+  OAI --> AI
+  GPU --> AI
+  AI --> CUO
+  AI --> SKILL
+  AI --> CHAT
+  AI --> KB
+  AI --> GENIE
+  AI --> PROJ
+  AI --> EMAIL
+  AI --> OTH
+
+  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef ext fill:#e0e7ff,stroke:#4338ca
+  class AI,AUTH,OBS,CUO,SKILL,CHAT,KB,GENIE,PROJ,EMAIL,OTH planned
+  class BRAIN,REDIS shipped
+  class BED,ANTH,OAI,GPU ext
+    </div>
+  </div>
+</section>
+
+<section id="compliance" class="module-section">
+  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">AI Gateway is the chokepoint for "what did the AI see, and at what cost?" — making it the regulator's first call for AI Act + PDPL questions.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>AI Gateway feature</th></tr></thead>
+      <tbody>
+        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging</td><td>One <code>ai.invocation</code> row per call; full input + redaction + output hash.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 13 — Transparency</td><td>Per-call model id + persona version surfaced to caller's audit trail.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>Destructive tool calls require human-confirm — gateway annotation routed via MCP.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 15 — Accuracy, robustness, cybersecurity</td><td>Circuit breaker + failover + PII redaction.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 26 — Deployer obligations</td><td>Persona-version stamping pins the deployed agent version per call.</td></tr>
+        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 4 — Lawful processing</td><td>PII redaction before extra-tenant transfer; per-tenant data-residency in policy.</td></tr>
+        <tr><td>Vietnam Decree 13/2023</td><td>Art. 16 — Cross-border transfer</td><td>ZDR-attested providers; per-tenant policy can pin EU-only / VN-only.</td></tr>
+        <tr><td>GDPR</td><td>Art. 25 — Data protection by design</td><td>Redaction is on-by-default; bypass requires explicit per-route tenant policy.</td></tr>
+        <tr><td>GDPR</td><td>Art. 28 — Processor obligations</td><td>ZDR contracts on file with Anthropic, OpenAI, AWS Bedrock.</td></tr>
+        <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 8.3 — AI system lifecycle</td><td>Persona-version stamping + provider catalogue + cost tracking close the loop.</td></tr>
+        <tr><td>OWASP Gen AI Top-10</td><td>LLM01: Prompt injection</td><td>System prompt injected at gateway, not in caller-controlled message text.</td></tr>
+        <tr><td>OWASP Gen AI Top-10</td><td>LLM06: Sensitive info disclosure</td><td>PII redaction recall ≥ 99% — measured per release.</td></tr>
+        <tr><td>OWASP Gen AI Top-10</td><td>LLM10: Model theft</td><td>Self-hosted BGE models behind mTLS; no external embedding API used.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC7.2 — Monitoring</td><td>Per-tenant cost + latency + cache-hit dashboards.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="risk-entries" class="module-section">
+  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">AI Gateway-specific risks tracked in the <a href="../reference/risk-register.html#ai" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><code>R-AI-001</code></td><td>Cross-tenant cache leakage</td><td>Low</td><td>Catastrophic</td><td>CTO</td><td>Tenant_id baked into cache key; property-based CI test verifies no cross-tenant hits.</td></tr>
+        <tr><td><code>R-AI-002</code></td><td>PII recall regression below 99%</td><td>Medium</td><td>High</td><td>CDO</td><td>Test-set CI gate; release blocked if recall &lt; 99%; quarterly red-team adds adversarial samples.</td></tr>
+        <tr><td><code>R-AI-003</code></td><td>Tenant cost overrun (cap-bypass bug)</td><td>Low</td><td>High</td><td>CFO</td><td>Pre-call check; post-call check; daily cost-reconciliation against provider bill.</td></tr>
+        <tr><td><code>R-AI-004</code></td><td>Primary provider extended outage (&gt; 4 h)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>30s failover + per-tenant fallback override; multi-provider posture documented in DR runbook.</td></tr>
+        <tr><td><code>R-AI-005</code></td><td>Persona prompt drift between gateway + module</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Single source of truth in BRAIN; gateway-only injection (FR-AI-009); CI test on each persona-version change.</td></tr>
+        <tr><td><code>R-AI-006</code></td><td>Prompt-injection bypasses gateway redaction</td><td>Medium</td><td>High</td><td>CSO</td><td>CaMeL-style enforcement; sentinel scheme cannot be guessed by upstream caller; red-team quarterly.</td></tr>
+        <tr><td><code>R-AI-007</code></td><td>Provider rate-limit cascade (one tenant starves the rest)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-tenant token-bucket on gateway; global circuit-breaker prevents pile-up.</td></tr>
+        <tr><td><code>R-AI-008</code></td><td>Cache poisoning via adversarial canonical prompt</td><td>Low</td><td>High</td><td>CSO</td><td>Cache key includes tenant_id + idempotency-key; provider response hash compared to in-flight verification on critical routes.</td></tr>
+        <tr><td><code>R-AI-009</code></td><td>BGE-M3 GPU pod single point of failure</td><td>Medium</td><td>Medium</td><td>CTO</td><td>2-replica deployment at P1+; CPU fallback (slow) on hot-path embed.</td></tr>
+        <tr><td><code>R-AI-010</code></td><td>Vendor SDK CVE blocks release</td><td>Medium</td><td>Low</td><td>CTO</td><td>LiteLLM is vendored — patch in-tree; Renovate watches upstream weekly.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="kpis" class="module-section">
+  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">9 KPIs covering latency, cost, redaction quality, and reliability.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Chat p95 latency (miss)</strong></td><td>histogram</td><td>OBS · Prometheus</td><td>≤ 2 s (NFR-PERF-001)</td></tr>
+        <tr><td><strong>Streaming TTFB p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 500 ms</td></tr>
+        <tr><td><strong>Cache hit rate</strong></td><td><code>cache_hits / total_calls</code></td><td>DuckDB roll-up</td><td>≥ 30% (P0)</td></tr>
+        <tr><td><strong>PII redaction recall</strong></td><td><code>TP / (TP + FN)</code> on test set</td><td>CI gate</td><td>≥ 99%</td></tr>
+        <tr><td><strong>PII redaction precision</strong></td><td><code>TP / (TP + FP)</code></td><td>CI gate</td><td>≥ 95%</td></tr>
+        <tr><td><strong>Provider failover events</strong></td><td>count / 28 d</td><td><code>ai.invocation</code></td><td>tracked; alert on &gt; 100/day</td></tr>
+        <tr><td><strong>Tenant cost overrun events</strong></td><td>count / 28 d</td><td>accountant</td><td>= 0 (hard-stop ensures)</td></tr>
+        <tr><td><strong>Cross-tenant cache leakage</strong></td><td>property-test count</td><td>CI</td><td>= 0</td></tr>
+        <tr><td><strong>USD spent vs. budget (MTD)</strong></td><td><code>spent / cap</code> per tenant</td><td>dashboard</td><td>&lt; 100% (warn at 80%)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="raci" class="module-section">
+  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>CDO</th><th>CFO</th><th>CSO</th><th>DPO</th></tr></thead>
+      <tbody>
+        <tr><td>Service design</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Provider contracts (ZDR, DPA)</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Cost tracking + invoicing</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>PII rule maintenance (VN+EN)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Persona-prompt curation</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Provider failover drill</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Compliance review (AI Act, PDPL)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="cli-usage" class="module-section">
+  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">Two CLIs: <code>cyberos-ai</code> for operators (tenant policy, cost reports, model catalogue) and the standard OpenAI-compatible curl path for ad-hoc testing.</p>
+
+  <h3 class="text-lg font-bold mb-2">1. Quick chat call</h3>
+<pre><code>$ curl https://ai.cyberos.com/v1/chat/completions \
+    -H "Authorization: Bearer $CYBEROS_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"model":"claude-3.5-sonnet","messages":[{"role":"user","content":"summarise Q1 OKRs"}],"stream":false}'
+
+{
+  "id": "ai_01HZJ8…XK",
+  "model": "bedrock:anthropic.claude-3.5-sonnet",
+  "persona_version": "genie-v1.0.2",
+  "choices": [{"message":{"role":"assistant","content":"Q1 OKRs are …"}}],
+  "usage": {"prompt_tokens":120,"completion_tokens":450,"usd_cost":0.0075,
+            "cache_state":"miss","redaction_applied":false,"failover_path":"primary"}
+}</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">2. Operator — view MTD usage</h3>
+<pre><code>$ cyberos-ai usage mtd --tenant stephen-personal
+
+Tenant:       stephen-personal
+Month:        2026-05
+─────────────────────────────
+Total calls:  14,823
+Tokens-in:    8.2 M
+Tokens-out:   3.1 M
+USD spent:    $97.42 / $150.00 (64.9%)
+
+By model:
+  bedrock:claude-3.5-sonnet    11,420 calls   $74.20  (76%)
+  bedrock:claude-3-haiku        3,210 calls    $4.80   (5%)
+  bge-m3 (embed)                  193 batches  free
+
+By cache state:
+  hit   4,612   (31.1%)  ← above target
+  miss 10,211   (68.9%)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">3. Operator — update tenant policy</h3>
+<pre><code>$ cyberos-ai policy set --tenant acme-corp \
+    --primary bedrock --fallback anthropic \
+    --require-zdr true --cap-usd-monthly 500
+
+[policy updated]
+  tenant:    acme-corp
+  primary:   bedrock
+  fallback:  anthropic
+  zdr:       required
+  cap:       $500/month
+[audit]    brain seq=14841</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">4. Operator — list models</h3>
+<pre><code>$ cyberos-ai models list
+
+ID                                                  ROUTE     ZDR   PRICE (in/out per 1k)
+bedrock:anthropic.claude-3.5-sonnet                 chat      ✓     $0.003 / $0.015
+bedrock:anthropic.claude-3-haiku                    chat      ✓     $0.00025 / $0.00125
+anthropic:claude-sonnet-4.5                         chat      ✓     $0.003 / $0.015
+openai:gpt-4o                                       chat      ✓     $0.0025 / $0.01
+openai:o1-mini                                      reason    ✓     $0.003 / $0.012
+self-hosted:bge-m3                                  embed     —     free
+self-hosted:bge-rerank-v2-m3                        rerank    —     free</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">5. Operator — failover drill</h3>
+<pre><code>$ cyberos-ai chaos failover --provider bedrock --duration 60s
+
+[chaos]   injected 100% error rate on bedrock for 60 s
+[detect]  primary failure recognised @ +6.2 s
+[failover] secondary (anthropic) active @ +6.4 s
+[recovery] bedrock errors cleared @ +60 s
+[breaker] half-open @ +90 s ; closed @ +91 s
+[result]   FR-AI-006 PASSED (failover ≤ 30 s)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">6. Operator — export monthly invoice</h3>
+<pre><code>$ cyberos-ai invoice export --tenant acme-corp --month 2026-05 --output invoice.csv
+
+[invoice] tenant=acme-corp  month=2026-05  rows=14,823  written invoice.csv (1.2 MB)
+[lines]   by_model · by_route · by_persona · by_date</code></pre>
+</section>
+
+<section id="status" class="module-section">
+  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
+    <div class="fact-card"><div class="label">Est. LoC (Python + Rust)</div><div class="value">~6,500</div><div class="note">Python core + Rust edge proxy</div></div>
+    <div class="fact-card"><div class="label">Planned tests</div><div class="value">90+</div><div class="note">unit + integration + chaos</div></div>
+    <div class="fact-card"><div class="label">P0 monthly LLM budget</div><div class="value">$150</div><div class="note">NFR-PERF-010</div></div>
+    <div class="fact-card"><div class="label">Cache TTL (default)</div><div class="value">24 h</div><div class="note">per-tenant override</div></div>
+    <div class="fact-card"><div class="label">CLI commands</div><div class="value">~15 planned</div><div class="note"><code>cyberos-ai</code></div></div>
+  </div>
+
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>LiteLLM-derived router (Bedrock + Anthropic + OpenAI)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td>Streaming SSE end-to-end</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td>PII redaction (Presidio + VN rules)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td>Persona-version system-prompt injection</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td>Response cache (Redis, tenant-keyed)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td>Per-tenant cost cap + warning</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td>Circuit breaker + 30 s failover</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td><code>ai.invocation</code> audit row per call</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+        <tr><td>Self-hosted BGE-M3 embedder</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Self-hosted BGE-rerank-v2-m3</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Vertex AI (Gemini) provider</td><td><span class="pill pill-planned">planned · P1+</span></td></tr>
+        <tr><td>Image generation route (DALL-E / Stable Diffusion)</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
+        <tr><td>Multi-region active-active</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="references" class="module-section">
+  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+  <div class="bbg-card p-5">
+    <ul class="space-y-2 text-sm">
+      <li><strong>PRD §8.5</strong> — AI Gateway architecture, latency budgets, ZDR enforcement.</li>
+      <li><strong>PRD §9.7</strong> — FR-AI-001 through FR-AI-010 (PRD-tier).</li>
+      <li><strong>PRD §11.2.1 + §11.2.2</strong> — Performance + reliability NFRs.</li>
+      <li><strong>SRS §4.7</strong> — Formal FR-AI-001 through FR-AI-008 with verification methods.</li>
+      <li><strong>EU AI Act</strong> (Reg. 2024/1689) — articles 12, 13, 14, 15, 26.</li>
+      <li><strong>OWASP Gen AI Top-10 (2025)</strong> — LLM01, LLM06, LLM08, LLM10 mitigations.</li>
+      <li><strong>ISO/IEC 42001 (AIMS)</strong> — § 8.3 lifecycle and persona-version stamping.</li>
+      <li><strong>LiteLLM upstream</strong> — base router we vendor and extend.</li>
+      <li><strong>Microsoft Presidio</strong> — PII detection library.</li>
+      <li><strong>BGE-M3 / BGE-rerank-v2-m3</strong> — self-hosted embedding + rerank models.</li>
+      <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#ai" class="text-blue-700 underline">infrastructure.html#ai</a>.</li>
+    </ul>
+  </div>
+</section>
+
+<nav class="module-nav-footer mt-12">
+  <a href="auth.html" class="text-blue-700 font-semibold no-underline hover:underline">← Previous: AUTH</a>
+  <a href="mcp.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: MCP Gateway →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

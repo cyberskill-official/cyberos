@@ -1,122 +1,68 @@
 # CyberOS
 
-AI-native internal operations platform for CyberSkill (Vietnam-based software consultancy). Memory layer + skills layer + an opinionated chain that turns natural-language pitches into addressable, assignable tasks.
+CyberSkill's AI-native internal operations platform. Three modules shipped; nineteen designed.
 
-> "Turn Your Will Into Real" — the CyberSkill slogan and the design principle for this codebase.
+## Quick start
 
-## Top-level layout
+```bash
+# Memory module
+cd memory && pip install -e . && cyberos doctor
 
-```text
-cyberos/
-├── README.md              ← you are here
-├── AGENTS.md              ← symlink → memory/docs/AGENTS.md (single source of truth)
-├── CLAUDE.md              ← symlink → memory/docs/AGENTS.md
-├── CONTRIBUTING.md        ← how to land changes
-├── memory/                ← MEMORY MODULE — append-only audit ledger + writer
-│   ├── README.md          ← module quick start
-│   ├── pyproject.toml     ← registers the `cyberos` console script
-│   ├── cyberos/           ← Python package (core/, __main__.py, requirements.txt)
-│   ├── docs/              ← AGENTS protocol, schema, invariants, CHANGELOG
-│   ├── tools/             ← schema generator, voice linter, encrypt, benchmark
-│   ├── tests/             ← pytest suite
-│   ├── bench/             ← throughput / cold-CLI / determinism benchmarks
-│   └── scripts/           ← install.sh, automation, pre-commit hook
-├── docs/                  ← project-level docs (PRD + SRS only)
-│   ├── prd/               ← Product Requirements Doc (PRD.md + .docx + CHANGELOG.md)
-│   └── srs/               ← System Requirements Spec (SRS.md + .docx + CHANGELOG.md)
-├── runtime/               ← non-memory runtime (skill_runners, hooks, mcp, …)
-└── .cyberos-memory/       ← THE BRAIN (gitignored — local tenant state)
+# Skill module
+cd skill && cargo run -p cyberos-skill-cli -- list
+
+# CUO router
+cd cuo && PYTHONPATH=. python3 -m cuo catalog
 ```
 
-## Where to start
+## Layout
 
-- **Reading the memory protocol** — start with [`memory/docs/AGENTS.md`](memory/docs/AGENTS.md) (the RFC) and [`memory/README.md`](memory/README.md) (module quick start).
-- **Daily health check** — `cd memory && python -m cyberos --store ../.cyberos-memory doctor`.
-- **Authoring a new memory** — `python -m cyberos --store ../.cyberos-memory --actor <name> put <path> -` (writes via the v2 audit-chained writer).
-- **Browsing what's in the BRAIN** — `python -m cyberos --store ../.cyberos-memory state`.
+| Folder | Role |
+|---|---|
+| `memory/` | The BRAIN — append-only audit-chained personal memory store |
+| `skill/` | Agent Skills catalog + Rust host + Bun toolchain |
+| `cuo/` | The router — natural-language to skill chain to memory record |
+| `website/docs/` | Multi-page documentation site (32 pages, Liquid Glass, Pagefind) |
+| `strategy/` | Strategic positioning + ecosystem-as-a-service playbook |
+| `public-skills/` | Public-repo scaffold for the cyberskill-vn skill collection |
+| `docs/prd/` | Product Requirements Document (Markdown source) |
+| `docs/srs/` | System Requirements Specification (Markdown source) |
+| `.cyberos-memory/` | The user's BRAIN store — gitignored |
 
-## The three layers
+### Sibling projects (separate git repos, not under cyberos/)
 
-```mermaid
-flowchart TD
-    A[Memory module<br/>memory/docs/AGENTS.md] -.-> B[Skills layer<br/>runtime/skill_runners/]
-    B -.-> C[CLI<br/>memory/cyberos/__main__.py]
-    C --> D[Artefacts<br/>planning/<project>/FR-*.md]
-    A -.-> D
-```
+| Sibling | Where | Role |
+|---|---|---|
+| **design-system** | `../design-system/` | CyberSkill brand + design doctrine. Liquid Glass v1.1.0. Pull into the docs site as a submodule when needed. |
+| **landing-page** | `../landing-page/` | `cyberskill.world` landing page source. Marketing surface. |
 
-1. **Memory module (`memory/`)** — the AGENTS protocol RFC + the `cyberos` writer. Defines what a memory is, how the audit chain is built, the six file ops, source tiers, sync classes, and exposes the `cyberos` CLI.
-2. **Skills layer (`runtime/skill_runners/`)** — LLM-driven skills (CPO/CTO chain) — will move into its own module folder next.
-3. **Runtime (`runtime/`)** — the non-memory remainder: skill runners, hooks, MCP server, completions, starter scaffolds.
+Sibling projects intentionally stay separate because they have their own git history, their own release cadence, and their own audit cycles. The docs site cross-references them via relative paths or external URLs once published.
 
-## The chain in one diagram
+## Status
 
-```text
-spec (pitch / --spec-file / --prd + --srs)
-   ↓
-cyberos chain run --profile solo --with-llm
-   ↓
-fr-with-tasks (collapsed FR + impl-plan)
-   ↓
-fr-audit (14 INVARIANT checks)
-   ↓
-planning/<slug>/
-  ├── FR-001-*.md       (one user-story = one FR file)
-  │   ├── frontmatter   (registry + task index — slim, 25 lines)
-  │   └── body          (Problem / Users / Success metrics / Scope / Risks
-  │                      / per-task H2 sections with task-meta YAML fences)
-  ├── project-index.md  (auto-generated dashboard)
-  └── chain-manifest.json  (state for resume / status)
-```
+| Module | Status |
+|---|---|
+| memory | shipped (245 tests, 30 CLI commands, P2 Stage 3 done) |
+| skill | shipped (20 SKILL.md bundles, all 7 audit phases, 6 VN skills) |
+| cuo | shipped (Phase 1 rule-based, 15/15 routing fixtures) |
+| docs site | shipped (32 pages, 226 diagrams, 341 FRs, 100 NFRs, Pagefind search) |
+| design-system (sibling) | doctrine v1.1.0 — Liquid Glass default, L3 enterprise tier |
 
-Each task has `id` = `FR-NNN-T-MM`, optional subtasks `FR-NNN-T-MM-ST-XX`, sizing (S/M/L/XL), `assignable_to` (human / ai-agent / either), and a concrete `acceptance_test` (shell command OR assertion).
+19 remaining modules (AUTH, AI, MCP, OBS, CHAT, EMAIL, PROJ, TIME, CRM, KB, HR, REW, LEARN, INV, ESOP, RES, OKR, DOC, PORTAL, TEN) — scaffolded in docs, not built.
 
-## Key commands
+## Documentation
 
-| Goal | Command |
-| --- | --- |
-| Start a new project from pitch | `cyberos chain run --pitch "..." --profile solo` |
-| Start with separate PRD + SRS | `cyberos chain run --pitch "..." --prd p.md --srs s.md` |
-| List all FRs | `cyberos fr list` |
-| Render task DAG | `cyberos fr task-graph FR-001` |
-| Migrate legacy FR to new shape | `cyberos fr-migrate path/to/FR.md --in-place` |
-| Regenerate project dashboard | `cyberos project-index planning/<slug>/` |
-| BRAIN health | `cyberos verify && cyberos doctor` |
-| Find conflicts | `cyberos conflicts` |
-| See recent activity | `cyberos status --weekly` |
+- **Multi-page interactive docs site**: open `website/docs/index.html`
+- **Markdown PRD**: `docs/prd/PRD.md`
+- **Markdown SRS**: `docs/srs/SRS.md`
+- **Strategic playbook**: `strategy/CYBEROS_STRATEGY.md`
+- **Design system** (sibling repo): `../design-system/DESIGN.md`
+- **Landing page** (sibling repo): `../landing-page/`
 
-## Recent shape changes (2026-05-12 sprint)
+## License
 
-- **Batch A** — `feature_request@1` reshaped: slim frontmatter + body H2 task sections + fenced `task-meta` YAML. Much more readable than the legacy single-YAML form.
-- **Batch B** — optional `subtasks` for `task@1`: `FR-NNN-T-MM-ST-XX` IDs, rendered as sub-nodes in `cyberos fr task-graph`.
-- **Batch C** — `cyberos chain run` accepts `--prd` and `--srs` as separate inputs (alongside `--spec-file`).
-- **Batch D** — chain auto-generates `project-index.md` (project dashboard) in each `planning/<slug>/` folder; preserves a `<!-- BEGIN human-edited -->` block across regenerations.
+Apache 2.0 throughout.
 
-- **Batch 25** — folder cleanup, part 1: PRD/SRS docs into dedicated `docs/prd/` + `docs/srs/`; memory protocol consolidated under `docs/memory/`.
-- **Batch 26** — folder cleanup, part 2: `outputs/` split into `runtime/lib/` + `runtime/starter/` + `var/`. `migrations/` → `runtime/migrations/`. `tours/` → `docs/tours/`.
-- **Batch 27** — single-source-of-truth pass: `AGENTS-CORE.md` removed (one canonical `AGENTS.md`). `var/` removed (generated state moves into the BRAIN cache, gitignored). Every functional folder now has exactly one `README.md` entry point.
+## Maintainer
 
-See [`memory/docs/CHANGELOG.md`](memory/docs/CHANGELOG.md) for the full memory-module history (27+ batches, 2026-05-04 onward).
-
-## Identifier conventions
-
-| Pattern | Meaning |
-| --- | --- |
-| `FR-NNN` | Feature Request (user story) |
-| `FR-NNN-T-MM` | Task within an FR (ticket) |
-| `FR-NNN-T-MM-ST-XX` | Subtask within a task |
-| `DEC-NNN` | Decision recorded in `memories/decisions/` |
-| `FACT-NNN` | Locked fact recorded in `memories/facts/` |
-| `PREF-NNN` | Operator preference in `memories/preferences/` |
-| `PERSON-NNN` | Person profile in `memories/people/` |
-
-## Cross-reference cheat sheet
-
-- **Protocol authority:** `memory/docs/AGENTS.md` (full RFC). Top-level `AGENTS.md` is a symlink to it.
-- **Memory module README:** `memory/README.md` — quick start.
-- **Schema + invariants:** `memory/docs/memory.schema.json`, `memory/docs/memory.invariants.yaml`.
-- **PRD / SRS:** `docs/prd/PRD.md`, `docs/srs/SRS.md`.
-
-## License + ownership
-
-Internal to CyberSkill (CYBERSKILL SOFTWARE SOLUTIONS CONSULTANCY AND DEVELOPMENT JOINT STOCK COMPANY). Founder: Stephen Cheng (Trịnh Thái Anh, zintaen@gmail.com).
+CyberSkill Software Solutions Consultancy and Development JSC, Ho Chi Minh City, Vietnam.

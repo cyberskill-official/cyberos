@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CUO — CyberOS</title>
+  <meta name="description" content="CUO — Chief Universal Officer. The CyberOS router: natural-language in, skill chain out, decision recorded in BRAIN. One persona, ten C-level skills.">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="../assets/scripts.js"></script>
+  <style>
+    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .fact-card { background: var(--cuo-bg); border:1px solid var(--cuo-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cuo-dark); }
+    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+    .toc-link:hover { background: var(--cuo-bg); color: var(--cuo-dark); }
+    .toc-link.active { background: var(--cuo-tint); color: var(--cuo-dark); font-weight: 600; }
+    .toc-link.indent { padding-left: 1.25rem; font-size: 0.75rem; }
+    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--cuo); color:white; font-weight:800; font-size:0.875rem; }
+    .persona-card { scroll-margin-top: 80px; padding: 1.25rem; border-left: 4px solid var(--cuo); background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.625rem; margin-bottom: 1rem; }
+    .persona-card h3 { display:flex; align-items:center; gap:0.5rem; font-size: 1.125rem; font-weight: 800; margin: 0 0 0.5rem 0; }
+    .persona-card .emoji { font-size: 1.5rem; }
+    .persona-card .role-tag { font-size: 0.6875rem; font-weight:700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cuo-dark); background: var(--cuo-tint); padding: 0.125rem 0.5rem; border-radius: 0.375rem; }
+    .persona-card .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-mute); margin-top: 0.75rem; margin-bottom: 0.25rem; }
+    .persona-card .auto-ok  { background: #d1fae5; color: #065f46; padding: 0.125rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; display: inline-block; margin: 0.125rem; }
+    .persona-card .defers   { background: #fee2e2; color: #991b1b; padding: 0.125rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; display: inline-block; margin: 0.125rem; }
+    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
+    .pill-must     { background:#fee2e2; color:#b91c1c; }
+    .pill-should   { background:#fef3c7; color:#b45309; }
+    .pill-shipped  { background:#d1fae5; color:#065f46; }
+    .pill-planned  { background:#e0e7ff; color:#3730a3; }
+    .pill-partial  { background:#fef3c7; color:#b45309; }
+    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
+    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
+    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
+    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
+    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
+    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--cuo-bg); border-radius: 0.75rem; border: 1px solid var(--cuo-tint); }
+  </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#catalog">Modules</a>
+      <span class="sep">›</span>
+      <span class="current">CUO</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <span class="text-5xl">🎯</span>
+      <h1 class="h-display">CUO</h1>
+      <span class="phase-chip phase-p0">P0 · Phase 1 shipped</span>
+      <span class="pill pill-partial">Phase 1 shipped · Phases 2–4 planned</span>
+      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
+    </div>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+      The Chief Universal Officer — natural language in, skill chain out, memory record on file.
+    </p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      CUO is the agentic orchestrator above the BRAIN and the Skill catalog. The user sees one persona (Genie, the mascot); inside the router, ten C-level sub-skills load on demand via the open Agent Skills format. CUO parses a query, scores every skill in the catalog, dispatches the winner through the Skill module, and records the routing decision in the BRAIN audit chain so the orchestrator's behaviour is replayable and reviewable. Phase 1 ships a deterministic rule-based router (200 lines · 30 pytest tests · 15 fixtures). Phase 2 adds an LLM-driven router behind a confidence cascade; Phase 3 enables multi-skill chains via topological dependency walking; Phase 4 splits the keyword bank by C-level persona. The BCP-14 protocol is at <code>cuo/docs/AGENTS.md</code>; the implementation is at <code>cuo/cuo/core/</code>.
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#personas" class="btn btn-primary">Meet the 10 personas
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#architecture" class="btn btn-secondary">Architecture</a>
+      <a href="#cli-usage" class="btn btn-secondary">CLI usage</a>
+      <a href="../reference/fr-catalog.html#cuo" class="btn btn-secondary">FR catalog</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-0.5 text-sm">
+        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+        <li><a class="toc-link" href="#why">Why CUO exists</a></li>
+        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+        <li><a class="toc-link" href="#architecture">Architecture</a></li>
+        <li><a class="toc-link" href="#data-model">Data model</a></li>
+        <li><a class="toc-link" href="#api-surface">API surface</a></li>
+        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+        <li><a class="toc-link" href="#lifecycle">Decision lifecycle</a></li>
+        <li><a class="toc-link" href="#personas">10 C-level personas</a></li>
+        <li><a class="toc-link indent" href="#persona-ceo">CEO</a></li>
+        <li><a class="toc-link indent" href="#persona-coo">COO</a></li>
+        <li><a class="toc-link indent" href="#persona-cfo">CFO</a></li>
+        <li><a class="toc-link indent" href="#persona-cmo">CMO</a></li>
+        <li><a class="toc-link indent" href="#persona-cto">CTO / CIO</a></li>
+        <li><a class="toc-link indent" href="#persona-chro">CHRO</a></li>
+        <li><a class="toc-link indent" href="#persona-cso">CSO</a></li>
+        <li><a class="toc-link indent" href="#persona-clo">CLO / CCO</a></li>
+        <li><a class="toc-link indent" href="#persona-cdo">CDO</a></li>
+        <li><a class="toc-link indent" href="#persona-cpo">CPO</a></li>
+        <li><a class="toc-link" href="#emerging">Emerging sub-personas (2026)</a></li>
+        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+        <li><a class="toc-link" href="#kpis">KPIs</a></li>
+        <li><a class="toc-link" href="#raci">RACI</a></li>
+        <li><a class="toc-link" href="#cli-usage">CLI usage</a></li>
+        <li><a class="toc-link" href="#status">Phase status</a></li>
+        <li><a class="toc-link" href="#references">References</a></li>
+      </ul>
+      <hr class="my-4 border-slate-200">
+      <div class="h-eyebrow mb-2">Source</div>
+      <div class="text-xs text-slate-500 leading-relaxed">
+        <code>cyberos/cuo/</code><br>
+        PRD §6.1–§6.10 · §9.2<br>
+        AGENTS.md v0.1.0
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="hero" class="module-section">
+  <div class="bbg-card tint-cuo p-6 mb-6">
+    <p class="text-lg text-slate-700 leading-relaxed mb-5">
+      <strong>CUO is one persona</strong> — Genie — backed by <strong>ten C-level specialists</strong> that load on demand. It is deliberately minimal: parse the query, score candidates, pick one, invoke through the Skill host, write the decision row to BRAIN. The router is rule-based today (deterministic, sub-millisecond) and will layer in an LLM cascade at Phase 2 (the trade is latency for ambiguous queries). Every decision is itself an audit-chained memory, so every routing choice CUO ever made is replayable from disk.
+    </p>
+    <div class="fact-grid">
+      <div class="fact-card"><div class="label">Status</div><div class="value">Phase 1 shipped</div><div class="note">Phases 2–4 planned</div></div>
+      <div class="fact-card"><div class="label">LoC (core)</div><div class="value">~800</div><div class="note">Python · 6 modules</div></div>
+      <div class="fact-card"><div class="label">Tests</div><div class="value">15 pytest + 15 routing fixtures</div><div class="note">deterministic golden tests</div></div>
+      <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">3</div><div class="note">catalog · route · skills</div></div>
+      <div class="fact-card"><div class="label">Personas</div><div class="value">10 + 4 emerging</div><div class="note">CEO · COO · CFO · CMO · …</div></div>
+      <div class="fact-card"><div class="label">Confidence threshold</div><div class="value">≥ 0.30</div><div class="note">below → defer-to-human</div></div>
+      <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · SKILL · AI · MCP · AUTH</div><div class="note">consumer of all five</div></div>
+      <div class="fact-card"><div class="label">Used by</div><div class="value">Every user-facing module</div><div class="note">CHAT · EMAIL · everything UX</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
+<!-- ============================================================ -->
+<section id="why" class="module-section">
+  <header class="section-head"><span class="section-num">1</span><h2>Why CUO exists</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Internal operations is full of <em>obvious</em> requests that should resolve in one round trip: "validate this MST", "generate a VAT invoice for ACME", "draft a 1:1 prep doc for Thursday with Hanh". Without an orchestrator, every such request goes through a 200ms LLM call, every catalog lookup costs another 200ms, and every audit fact has to be re-implemented in the calling skill. CUO is the single layer that absorbs that pattern: <strong>rule-based fast path for unambiguous queries, LLM cascade for the ambiguous tail, BRAIN-anchored audit for every decision</strong>.
+  </p>
+  <div class="grid md:grid-cols-3 gap-4 my-5">
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">⚡</div>
+      <div class="font-bold text-slate-900 mb-1">Latency budget</div>
+      <p class="text-sm text-slate-600">90% of queries are obvious. Rule-based decisions resolve in &lt; 1 ms. Only the ambiguous 10% need a Phase-2 LLM call.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">📜</div>
+      <div class="font-bold text-slate-900 mb-1">Replay &amp; audit</div>
+      <p class="text-sm text-slate-600">Same query + same catalog → same decision (Phase 1). LLM Phase 2 logs full prompt + model + temperature so the audit row is still replay-sufficient.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🧭</div>
+      <div class="font-bold text-slate-900 mb-1">Defer-to-human</div>
+      <p class="text-sm text-slate-600">Below the confidence threshold, CUO refuses to invoke. It surfaces the top three candidates and asks the user to choose — a hard EU AI Act Art. 26 oversight guarantee.</p>
+    </div>
+  </div>
+  <p class="text-slate-700 leading-relaxed">
+    CUO is also the entry-point that lets the company hire <strong>one</strong> persona — Genie — and gradually grow ten specialist skills behind it without changing the user-facing interface. The same Slack thread / chat box that asked Genie to "validate MST 0123456789" yesterday can ask it to "draft the Q3 OKR cascade" tomorrow, and the right C-level skill will load.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT — 5W1H2C5M -->
+<!-- ============================================================ -->
+<section id="what" class="module-section">
+  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>5W · What</strong></td><td>What is CUO?</td><td>An agentic orchestrator. Parses NL → scores catalog skills → invokes top match → records decision. The orchestrator state is <em>per-request</em>; CUO itself is stateless between requests.</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who interacts?</td><td><strong>Users:</strong> every CyberSkill member via the Genie chat box. <strong>Agents:</strong> external Claude / Codex / Cursor sessions that hand off to CUO when they hit a CyberOS surface. <strong>Owner:</strong> CEO seat today; CXO seat at P3+.</td></tr>
+        <tr><td><strong>5W · When</strong></td><td>When is it invoked?</td><td>On every NL request to the platform that is not a direct CRUD on a known entity. Phase 1 is request-scoped; Phase 3 introduces multi-step chains that re-enter routing for each step.</td></tr>
+        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Co-located with the user (Tauri / CLI / IDE). LLM cascade calls the AI Gateway (LiteLLM). All decisions land in the same BRAIN as the user's other memories.</td></tr>
+        <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>Because the alternative is asking the user to know which skill to call, or shipping an enormous monolithic prompt that re-derives the catalog every turn. CUO is the cheapest layer that gives Genie a real, replayable decision policy.</td></tr>
+        <tr><td><strong>1H · How</strong></td><td>How does it route?</td><td>Score per candidate = <code>5.0 if skill_name in query else 0 + 3.0 × keyword_hits + 2.0 if VN-diacritic AND skill.region=VN else 0</code>. Top scorer wins if score &gt; 3.0 (confidence ≥ 0.30); otherwise emit <code>routed:false</code>.</td></tr>
+        <tr><td><strong>2C · Cost</strong></td><td>Cost per decision?</td><td>Phase 1 ≈ 0.4 ms per route (in-process). Phase 2 LLM cascade: only when ≤ 0.50 confidence AND ≥ 0.10 candidate exists; typical 150 ms. Memory: 1 row per decision in BRAIN, ~700 bytes.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Phase 1 MUST be deterministic — same query + same catalog → same decision. (b) Below threshold MUST defer-to-human; no auto-invoke. (c) Skill capabilities MUST be respected via Skill host's broker; CUO cannot bypass.</td></tr>
+        <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>The Skill catalog (read from disk in sorted-path order), a per-skill keyword bank in <code>cuo/core/router.py</code>, optional BRAIN context for Phase 2 LLM cascade, and the AI Gateway for inference.</td></tr>
+        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Rule-based scoring (Phase 1), LLM cascade (Phase 2 LangGraph + LiteLLM), topological chain walking (Phase 3), per-persona keyword bank (Phase 4). Each layered on top of the previous, none replacing it.</td></tr>
+        <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>Locally with the user (Tauri host) for the rule-based path; AI Gateway for LLM calls. Postgres checkpointer for LangGraph state (Phase 2+) — required for EU AI Act Art. 12 logging.</td></tr>
+        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>1 IC owner today. By P1 exit the CPO and CTO co-own the keyword bank + persona definitions. At P3 the dedicated CXO seat appears.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Routing confidence distribution, escalation rate, decision latency, defer-to-human rate. KPIs in §13.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================================ -->
+<section id="architecture" class="module-section">
+  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Six modules in <code>cuo/cuo/core/</code> form the entire surface. Catalog discovers skills off disk. Router scores. Invoker delegates to the Skill module. Memory-bridge writes the decision. Trace renders the structured row.
+  </p>
+
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+graph TB
+  subgraph CLIENTS ["Clients"]
+    USER["User · Tauri / CLI"]
+    AGENT["External agent<br/>(Claude / Codex / Cursor)"]
+  end
+
+  subgraph CUO ["CUO router (cuo/core/)"]
+    PARSE["parse<br/>NFC-normalise query"]
+    CATALOG["catalog.py<br/>read Skill manifests"]
+    ROUTER["router.py<br/>score &amp; pick"]
+    EXTRACT["arg extractors<br/>(per-skill, pure)"]
+    INVOKER["invoker.py<br/>shell out to Skill"]
+    TRACE["trace.py<br/>structured row"]
+    BRIDGE["memory_bridge.py<br/>write to BRAIN"]
+  end
+
+  subgraph DOWNSTREAM ["Downstream"]
+    SKILL["🛠 Skill host<br/>(Rust cyberos-skill-cli)"]
+    AI["⚡ AI Gateway<br/>(Phase 2 LLM cascade)"]
+    BRAIN["🧠 BRAIN<br/>(audit chain)"]
+  end
+
+  USER --> PARSE
+  AGENT --> PARSE
+  PARSE --> CATALOG
+  CATALOG --> ROUTER
+  ROUTER --> EXTRACT
+  ROUTER -. "ambiguous (≤ 0.50)" .-> AI
+  AI -. "ranked pick" .-> ROUTER
+  ROUTER --> INVOKER
+  INVOKER --> SKILL
+  SKILL -. "stdout / stderr / exit" .-> INVOKER
+  INVOKER --> TRACE
+  TRACE --> BRIDGE
+  BRIDGE --> BRAIN
+
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fef3c7,stroke:#b45309
+  class PARSE,CATALOG,ROUTER,EXTRACT,INVOKER,TRACE,BRIDGE,SKILL,BRAIN shipped
+  class AI planned
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Internal components</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Component</th><th>File</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>catalog.py</code></td><td>core/catalog.py</td><td>Discover Skill manifests off disk in sorted-path order. Cached per-request.</td></tr>
+        <tr><td><code>router.py</code></td><td>core/router.py</td><td>Phase 1 rule-based scorer. Per-skill <code>_KEYWORD_BANK</code> + <code>ARG_EXTRACTORS</code>. Returns <code>(decision, alternatives)</code>.</td></tr>
+        <tr><td><code>invoker.py</code></td><td>core/invoker.py</td><td>Shell out to <code>cyberos-skill-cli run &lt;skill&gt;</code>. Capture stdout / stderr / exit-code. No in-process skill execution.</td></tr>
+        <tr><td><code>trace.py</code></td><td>core/trace.py</td><td>Render structured trace row: query, decision, alternatives, result, timestamps.</td></tr>
+        <tr><td><code>memory_bridge.py</code></td><td>core/memory_bridge.py</td><td>Write trace row to BRAIN. Phase 1: flat file under <code>meta/cuo-decisions/&lt;ts_ns&gt;.md</code>. Phase 2: through canonical Writer.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3 mt-6">Phase roadmap</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Phase</th><th>What changes</th><th>Why</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Phase 1</strong></td><td>Rule-based scorer · pure-function extractors · flat-file BRAIN bridge</td><td>Determinism, sub-ms latency, no external LLM dep</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td><strong>Phase 2</strong></td><td>LangGraph supervisor + LiteLLM router · Postgres checkpointer · escalate when 0.10 ≤ score ≤ 0.50</td><td>Handle ambiguous tail · EU AI Act Art. 12 logging via Postgres</td><td><span class="pill pill-planned">planned</span></td></tr>
+        <tr><td><strong>Phase 3</strong></td><td>Multi-skill chains via <code>depends_on</code> · composite audit row + sub-rows</td><td>Compound workflows (MST validate → VAT invoice)</td><td><span class="pill pill-planned">planned</span></td></tr>
+        <tr><td><strong>Phase 4</strong></td><td>Per-C-level keyword bank · persona-router-first → intra-persona routing</td><td>Catalog scaling beyond ~50 skills</td><td><span class="pill pill-planned">planned</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DATA MODEL -->
+<!-- ============================================================ -->
+<section id="data-model" class="module-section">
+  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    CUO owns three entities. A <code>SkillEntry</code> is the projection of a Skill manifest into the router's catalog. A <code>RoutingDecision</code> is the result of scoring. An <code>InvocationResult</code> captures what the Skill host actually did.
+  </p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+erDiagram
+  CATALOG ||--o{ SKILL_ENTRY : "contains"
+  REQUEST ||--|| ROUTING_DECISION : "produces"
+  ROUTING_DECISION ||--o{ ALTERNATIVE_CANDIDATE : "ranks"
+  ROUTING_DECISION ||--o| INVOCATION_RESULT : "invokes (optional)"
+  INVOCATION_RESULT ||--|| TRACE_ROW : "emits"
+  TRACE_ROW ||--|| BRAIN_AUDIT_ROW : "persisted as"
+  ROUTING_DECISION ||--o{ CHAIN_STEP : "Phase 3: chained calls"
+
+  CATALOG {
+    string fingerprint PK "sha256 of catalog snapshot"
+    int64  scanned_at_ns
+    int    skill_count
+  }
+  SKILL_ENTRY {
+    string name PK
+    string version
+    string description
+    string region "VN | global"
+    string[] keywords
+    string[] depends_on "Phase 3"
+    string[] allowed_tools
+  }
+  REQUEST {
+    string request_id PK
+    string query
+    string actor
+    int64  ts_ns
+    string persona "CEO|COO|...|null"
+  }
+  ROUTING_DECISION {
+    string request_id FK
+    string skill_name "null if routed=false"
+    obj    arguments
+    float  confidence "0.0–1.0"
+    string rationale
+    bool   routed
+    string router_phase "phase1 | phase2"
+  }
+  ALTERNATIVE_CANDIDATE {
+    string request_id FK
+    string skill_name
+    float  score
+    int    rank
+  }
+  INVOCATION_RESULT {
+    string request_id FK
+    int    exit_code
+    string stdout
+    string stderr
+    int64  started_at_ns
+    int64  ended_at_ns
+  }
+  CHAIN_STEP {
+    string request_id FK
+    int    step_index
+    string skill_name
+    obj    arguments
+    string status "ok | failed | skipped"
+  }
+  TRACE_ROW {
+    string trace_id PK
+    obj    decision
+    obj    result
+    obj    chain "Phase 3: list of CHAIN_STEP"
+  }
+  BRAIN_AUDIT_ROW {
+    int64  seq PK
+    string path "meta/cuo-decisions/<ts_ns>.md"
+    string body_hash
+    string chain
+  }
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- API SURFACE -->
+<!-- ============================================================ -->
+<section id="api-surface" class="module-section">
+  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-2">GraphQL subgraph (planned · P0+)</h3>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-graphql">extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key"])
+
+type RoutingDecision @key(fields: "requestId") {
+  requestId: ID!
+  query: String!
+  actor: String!
+  skillName: String                # null when routed=false
+  arguments: JSON
+  confidence: Float!
+  rationale: String!
+  alternatives: [Candidate!]!
+  routed: Boolean!
+  routerPhase: RouterPhase!
+  invokedAt: DateTime
+  result: InvocationResult         # null if --invoke not requested
+}
+
+type Candidate {
+  skillName: String!
+  score: Float!
+  rank: Int!
+}
+
+type InvocationResult {
+  exitCode: Int!
+  stdout: String!
+  stderr: String!
+  startedAt: DateTime!
+  endedAt: DateTime!
+}
+
+enum RouterPhase { phase1_rule  phase2_llm  phase3_chain  phase4_persona }
+
+type Query {
+  route(query: String!, persona: Persona): RoutingPreview!
+  decision(requestId: ID!): RoutingDecision
+  decisions(actor: String, since: DateTime, limit: Int = 50): [RoutingDecision!]!
+}
+
+type Mutation {
+  routeAndInvoke(query: String!, record: Boolean = true): RoutingDecision!
+  invokeSkill(skillName: String!, arguments: JSON!): InvocationResult!
+}
+
+type RoutingPreview {
+  decision: RoutingDecision!
+  catalogFingerprint: String!      # for replay
+}</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+  <div class="bbg-card p-5 mb-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+      <tbody>
+        <tr><td><code>cuo.route</code></td><td>query, persona?</td><td><code>RoutingDecision</code></td><td>readonly · pure · scope=route</td></tr>
+        <tr><td><code>cuo.route_and_invoke</code></td><td>query, record=true</td><td><code>RoutingDecision + result</code></td><td>destructive=true · scope=invoke</td></tr>
+        <tr><td><code>cuo.catalog</code></td><td>—</td><td><code>SkillEntry[]</code></td><td>readonly · cached · scope=read</td></tr>
+        <tr><td><code>cuo.explain</code></td><td>requestId</td><td><code>rationale + alternatives</code></td><td>readonly · scope=audit</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">CLI — <code>cyberos-cuo</code></h3>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Subcommand</th><th>Purpose</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>cyberos-cuo catalog</code></td><td>List skills CUO can route to</td><td><code>cyberos-cuo catalog --format json</code></td></tr>
+        <tr><td><code>cyberos-cuo route</code></td><td>Score a query, optionally invoke + record</td><td><code>cyberos-cuo route "validate MST 0123456789" --invoke --record</code></td></tr>
+        <tr><td><code>cyberos-cuo skills</code></td><td>Show keyword bank + extractors per skill</td><td><code>cyberos-cuo skills vn-mst-validate</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KEY FLOWS -->
+<!-- ============================================================ -->
+<section id="key-flows" class="module-section">
+  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-2">Flow 1 — Single-skill route decision (Phase 1)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as User
+  participant C as cuo.route()
+  participant CAT as catalog.scan()
+  participant R as router.score()
+  participant E as extractor
+  participant B as memory_bridge
+
+  U->>C: "tạo hoá đơn cho ACME, MST 0123456789, số tiền 10 triệu"
+  C->>C: NFC normalise · preserve diacritics
+  C->>CAT: load catalog (sorted-path)
+  CAT-->>C: [vn-mst-validate, vn-vat-invoice, …]
+  C->>R: score each candidate
+  R->>R: vn-vat-invoice: 3 keyword hits ×3.0 + VN region ×2.0 = 11.0 → saturate 10.0 → conf 1.0
+  R->>R: vn-mst-validate: 1 keyword hit ×3.0 + VN region ×2.0 = 5.0 → conf 0.5
+  R-->>C: decision={skill:vn-vat-invoice, conf:1.0, alts:[vn-mst-validate@0.5]}
+  C->>E: extract args (vn-vat-invoice extractor)
+  E-->>C: {mst:"0123456789", amount_vnd:10_000_000}
+  alt --invoke
+    C->>SkillHost: cyberos-skill-cli run vn-vat-invoice --args ...
+    SkillHost-->>C: {exit:0, stdout:"&lt;Invoice xmlns=...&gt;"}
+  end
+  alt --record
+    C->>B: write trace to BRAIN
+    B-->>C: {seq:14935, chain:"e3f7..."}
+  end
+  C-->>U: {routed:true, decision, result?, recorded_at?}
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 2 — Multi-step chain (Phase 3 preview)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as User
+  participant C as cuo.route()
+  participant R as router
+  participant TOPO as chain_planner
+  participant H as Skill host
+
+  U->>C: "issue VAT invoice for ACME"
+  C->>R: route(query)
+  R-->>C: pick vn-vat-invoice (chain_root)
+  C->>TOPO: walk depends_on
+  TOPO-->>C: [vn-mst-validate (buyer), vn-mst-validate (seller), vn-vat-invoice]
+  loop for each step
+    C->>H: invoke step
+    H-->>C: result
+    alt step failed
+      C-->>U: chain aborted at step N · reason · partial trace
+    end
+  end
+  C->>BRAIN: composite audit row (root) + N sub-rows
+  C-->>U: {chain_status:ok, steps:[...], total_elapsed_ms:N}
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 3 — Confidence cascade (Phase 1 → Phase 2)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+flowchart TB
+  Q[User query] --&gt; P1[Phase 1 rule-based scorer]
+  P1 --&gt; SCORE{Top score?}
+  SCORE -- "&ge; 0.70 (auto)" --&gt; INV[Auto-invoke top skill]
+  SCORE -- "0.50–0.70 (ask)" --&gt; CLAR[Ask clarification · surface top 3]
+  SCORE -- "0.10–0.50 (escalate)" --&gt; P2[Phase 2 LLM cascade]
+  SCORE -- "&lt; 0.10 (defer)" --&gt; DEFER[Defer to human · no candidate]
+  P2 --&gt; P2SCORE{LLM confidence?}
+  P2SCORE -- "&ge; 0.70" --&gt; INV
+  P2SCORE -- "&lt; 0.70" --&gt; CLAR
+  INV --&gt; REC[Record decision + result in BRAIN]
+  CLAR --&gt; REC
+  DEFER --&gt; REC
+
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fef3c7,stroke:#b45309
+  class P1,SCORE,INV,CLAR,DEFER,REC shipped
+  class P2,P2SCORE planned
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Phase 1 ships the ≥ 0.30 threshold; the four-tier cascade above lands at Phase 2 once the LLM router is online.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 4 — Persona switch (Phase 4 preview)</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as User
+  participant C as cuo (Phase 4)
+  participant PR as persona_router
+  participant CEO as CEO sub-router
+  participant CTO as CTO sub-router
+
+  U->>C: "draft Q4 OKRs for the eng team"
+  C->>PR: classify_persona(query)
+  PR-->>C: persona=CEO (strategic intent)
+  C->>CEO: route within CEO skill subset
+  CEO-->>C: pick okr-cascade-draft (conf 0.83)
+  C->>BRAIN: audit row with persona-version stamp
+  alt followup: "what's the test coverage on the auth module?"
+  U->>C: new query, same session
+  C->>PR: classify_persona
+  PR-->>C: persona=CTO (technical intent)
+  C->>CTO: route within CTO skill subset
+  CTO-->>C: pick test-coverage-report (conf 0.91)
+  end
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LIFECYCLE -->
+<!-- ============================================================ -->
+<section id="lifecycle" class="module-section">
+  <header class="section-head"><span class="section-num">7</span><h2>Decision lifecycle</h2></header>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Received: NL query arrives
+  Received --> Routing: catalog loaded · scoring in progress
+  Routing --> Picked: top candidate ≥ threshold
+  Routing --> Deferred: no candidate ≥ threshold
+  Routing --> Escalated: 0.10 ≤ score ≤ 0.50 (Phase 2)
+  Escalated --> Picked: LLM picks
+  Escalated --> Deferred: LLM also abstains
+  Picked --> Invoking: --invoke true
+  Picked --> Recorded: --invoke false · decision-only
+  Invoking --> Succeeded: exit_code == 0
+  Invoking --> Failed: exit_code != 0
+  Succeeded --> Recorded: trace + result → BRAIN
+  Failed --> Recorded: trace + error → BRAIN
+  Deferred --> Recorded: routed:false row → BRAIN
+  Recorded --> [*]
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PERSONAS -->
+<!-- ============================================================ -->
+<section id="personas" class="module-section">
+  <header class="section-head"><span class="section-num">8</span><h2>The 10 C-level personas</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Each persona is a curated subset of the Skill catalog. Today the catalog lives under <code>skill/skills/cuo/&lt;persona&gt;/</code> and is loaded uniformly; Phase 4 splits the keyword bank per-persona so the router classifies intent first, then routes intra-persona. The <em>Auto OK</em> column lists actions that may complete without explicit operator approval; the <em>Defers</em> column lists actions that always escape to the human.
+  </p>
+
+  <!-- CEO -->
+  <article id="persona-ceo" class="persona-card">
+    <h3><span class="emoji">🎯</span>CEO · Vision &amp; Strategy <span class="role-tag">Stephen Cheng (Founder seat)</span></h3>
+    <p class="text-sm text-slate-600">Strategy memos, OKR cascade reviews, board narrative, weekly state-of-business, runway / fundraising posture. Owner of vision and capital allocation.</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">draft strategy memo</span><span class="auto-ok">summarise OKR progress</span><span class="auto-ok">generate weekly state-of-business</span><span class="auto-ok">prep board update</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">send memo to investors</span><span class="defers">flip Singapore HoldCo</span><span class="defers">change cap-table</span><span class="defers">terminate executive</span></div>
+  </article>
+
+  <!-- COO -->
+  <article id="persona-coo" class="persona-card">
+    <h3><span class="emoji">⚙️</span>COO · Operations <span class="role-tag">to be filled · P1+</span></h3>
+    <p class="text-sm text-slate-600">Cycle status digests, blocker triage, cross-team coordination, weekly ops review, vendor performance. Owner of "did we ship".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">status digest from PROJ</span><span class="auto-ok">flag overdue tasks</span><span class="auto-ok">summarise cycle end</span><span class="auto-ok">draft 1:1 prep</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">cancel a project</span><span class="defers">reassign owner</span><span class="defers">change vendor</span><span class="defers">override SLA</span></div>
+  </article>
+
+  <!-- CFO -->
+  <article id="persona-cfo" class="persona-card">
+    <h3><span class="emoji">💰</span>CFO · Finance &amp; Runway <span class="role-tag">to be filled · P2+</span></h3>
+    <p class="text-sm text-slate-600">Cashflow position, AR/AP digests, burn alerts, payroll cycles, VAT/CIT compliance posture. Owner of "do we have runway".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">cashflow snapshot</span><span class="auto-ok">AR aging report</span><span class="auto-ok">draft invoice (via INV)</span><span class="auto-ok">flag overdue receivable</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">send invoice to client</span><span class="defers">execute wire</span><span class="defers">approve refund</span><span class="defers">change banking signatory</span></div>
+  </article>
+
+  <!-- CMO -->
+  <article id="persona-cmo" class="persona-card">
+    <h3><span class="emoji">📣</span>CMO · Marketing &amp; Demand <span class="role-tag">to be filled · P2+</span></h3>
+    <p class="text-sm text-slate-600">Campaign briefs, content calendar, channel reports, brand voice consistency. Owner of "do prospects know us".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">draft campaign brief</span><span class="auto-ok">summarise channel performance</span><span class="auto-ok">propose A/B test</span><span class="auto-ok">enforce brand voice</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">publish public-facing content</span><span class="defers">spend marketing budget</span><span class="defers">make public statement</span></div>
+  </article>
+
+  <!-- CTO -->
+  <article id="persona-cto" class="persona-card">
+    <h3><span class="emoji">💻</span>CTO / CIO · Technology &amp; Information Systems <span class="role-tag">co-owned: CEO + CTO seat</span></h3>
+    <p class="text-sm text-slate-600">Tech-debt triage, security advisories digest, OBS metric review, dependency upgrades, architecture decision records. Owner of "is the platform safe and fast".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">propose ADR</span><span class="auto-ok">draft SRS</span><span class="auto-ok">test-coverage report</span><span class="auto-ok">summarise OBS digest</span><span class="auto-ok">flag CVE</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">deploy to production</span><span class="defers">rotate KMS key</span><span class="defers">grant new capability</span><span class="defers">disable security control</span></div>
+  </article>
+
+  <!-- CHRO -->
+  <article id="persona-chro" class="persona-card">
+    <h3><span class="emoji">👥</span>CHRO · People &amp; Talent <span class="role-tag">to be filled · P1+</span></h3>
+    <p class="text-sm text-slate-600">1:1 prep, performance summaries, onboarding paths, role descriptions, retention signals, growth ladders. Owner of "do we have the right people".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">draft 1:1 agenda</span><span class="auto-ok">summarise perf reviews</span><span class="auto-ok">draft job description</span><span class="auto-ok">onboarding checklist</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">make offer</span><span class="defers">terminate</span><span class="defers">adjust comp band</span><span class="defers">conduct performance conversation</span></div>
+  </article>
+
+  <!-- CSO -->
+  <article id="persona-cso" class="persona-card">
+    <h3><span class="emoji">🧭</span>CSO · Strategy <span class="role-tag">P3+ emerging</span></h3>
+    <p class="text-sm text-slate-600">Competitive intel, scenario modelling, M&amp;A scanning, partnership feasibility, strategic option papers. Owner of "what are we doing next".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">competitive scan</span><span class="auto-ok">scenario model</span><span class="auto-ok">partnership feasibility memo</span><span class="auto-ok">option paper draft</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">approach partner</span><span class="defers">commit to strategic shift</span><span class="defers">execute M&amp;A LOI</span></div>
+  </article>
+
+  <!-- CLO -->
+  <article id="persona-clo" class="persona-card">
+    <h3><span class="emoji">⚖️</span>CLO / CCO · Legal &amp; Compliance <span class="role-tag">co-owned: CSO + CLO seat at P2+</span></h3>
+    <p class="text-sm text-slate-600">Contract redline, NDA triage, GDPR/PDPL audits, DSAR triage, vendor terms review, policy authoring. Owner of "are we compliant".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">contract redline draft</span><span class="auto-ok">triage NDA</span><span class="auto-ok">DSAR intake</span><span class="auto-ok">PDPL gap analysis</span><span class="auto-ok">policy draft</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">sign contract</span><span class="defers">execute DPA</span><span class="defers">file regulator submission</span><span class="defers">approve cross-border transfer</span></div>
+  </article>
+
+  <!-- CDO -->
+  <article id="persona-cdo" class="persona-card">
+    <h3><span class="emoji">📊</span>CDO · Data <span class="role-tag">P2+ emerging</span></h3>
+    <p class="text-sm text-slate-600">Data quality, lineage, residency reviews, schema governance, retention policy, BRAIN integrity oversight. Owner of "is our data trustworthy".</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">audit BRAIN doctor</span><span class="auto-ok">data quality report</span><span class="auto-ok">retention policy review</span><span class="auto-ok">lineage diagram</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">purge data</span><span class="defers">change retention period</span><span class="defers">approve cross-border export</span><span class="defers">disable encryption</span></div>
+  </article>
+
+  <!-- CPO -->
+  <article id="persona-cpo" class="persona-card">
+    <h3><span class="emoji">🚀</span>CPO · Product <span class="role-tag">P0 co-owned with CEO seat</span></h3>
+    <p class="text-sm text-slate-600">PRD drafts, roadmap analysis, requirements discovery, user-research synthesis, FR catalogue maintenance. Owner of "are we building the right thing". Today's most-exercised persona — the FR-author / SRS-author / requirements-discovery skills all live here.</p>
+    <div class="label">Auto OK</div>
+    <div><span class="auto-ok">draft PRD</span><span class="auto-ok">FR catalog refresh</span><span class="auto-ok">requirements discovery interview</span><span class="auto-ok">user-research synthesis</span><span class="auto-ok">roadmap update</span></div>
+    <div class="label">Defers to human</div>
+    <div><span class="defers">ship feature</span><span class="defers">make customer-facing promise</span><span class="defers">change pricing</span><span class="defers">commit to roadmap publicly</span></div>
+  </article>
+
+  <section id="emerging" class="mt-8">
+    <h3 class="text-xl font-bold mb-3">Emerging sub-personas (2026 trajectory)</h3>
+    <p class="text-slate-600 mb-4">Four additional C-level seats are watched but not provisioned at P0. The router treats their skills as belonging to the closest existing persona until the seat is split out.</p>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="bbg-card p-4">
+        <div class="font-bold">🤖 CAIO · AI Officer</div>
+        <p class="text-sm text-slate-600">Owns the AI Gateway, model selection, prompt governance, AI risk register. Currently rolled into CTO. Split-out at P2 when GA AI Act compliance becomes operational load.</p>
+      </div>
+      <div class="bbg-card p-4">
+        <div class="font-bold">🎨 CXO · Experience Officer</div>
+        <p class="text-sm text-slate-600">Owns CUO persona consistency, end-to-end member experience, ambient nudges. Today is a CEO concern; split-out at P3 when external tenants arrive.</p>
+      </div>
+      <div class="bbg-card p-4">
+        <div class="font-bold">💼 CRO · Revenue Officer</div>
+        <p class="text-sm text-slate-600">Owns pipeline, win rates, churn signals, expansion. Today rolled into CEO + CFO. Split-out at P4 when external SaaS begins selling.</p>
+      </div>
+      <div class="bbg-card p-4">
+        <div class="font-bold">🌱 CSO-Sustainability</div>
+        <p class="text-sm text-slate-600">Owns ESG metrics, climate reporting, vendor sustainability scoring. Watched for 2026 EU reporting evolution.</p>
+      </div>
+    </div>
+  </section>
+</section>
+
+<!-- ============================================================ -->
+<!-- FRs -->
+<!-- ============================================================ -->
+<section id="functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">9</span><h2>Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">CUO-specific FRs as catalogued in PRD §9.2. Full descriptions at <a href="../reference/fr-catalog.html#cuo" class="text-blue-700 font-semibold underline">fr-catalog.html#cuo</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody>
+        <tr><td><code>FR-CUO-001</code></td><td>Deterministic Phase-1 rule-based router</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-001" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-002</code></td><td>Per-skill keyword bank + region scoring</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-002" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-003</code></td><td>Pure-function per-skill argument extractors</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-003" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-004</code></td><td>Confidence threshold gate &amp; defer-to-human</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-004" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-005</code></td><td>Audit-chained recording of every decision (BRAIN bridge)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-005" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-006</code></td><td>Skill catalog read in sorted-path order</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-006" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-007</code></td><td>Delegation of execution to Skill module (no in-process exec)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-007" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-008</code></td><td>Capability gating via Skill broker (no bypass)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-008" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-009</code></td><td>Phase 2 LLM cascade with full prompt logging</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-009" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-010</code></td><td>LangGraph supervisor + Postgres checkpointer (EU AI Act Art. 12)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0+</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-010" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-011</code></td><td>Phase 3 multi-skill chains via <code>depends_on</code></td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-011" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-012</code></td><td>Phase 4 persona-classification first router</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-012" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-013</code></td><td>Ambient nudges (Notify · Question · Review modes)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-013" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-014</code></td><td>Persona-version stamp on every decision row</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-014" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-CUO-015</code></td><td>Trust calibration (uncertainty surfaced to user)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-015" class="text-blue-700">details →</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- NFRs -->
+<!-- ============================================================ -->
+<section id="non-functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">10</span><h2>Non-Functional Requirements</h2></header>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+      <tbody>
+        <tr><td><code>NFR-CUO-LAT-001</code></td><td>Phase-1 routing p95</td><td>≤ 5 ms (catalog cached)</td><td>fixtures/golden_routing.json benchmark</td></tr>
+        <tr><td><code>NFR-CUO-LAT-002</code></td><td>Phase-2 LLM cascade p95</td><td>≤ 800 ms incl. network</td><td>AI Gateway latency budget</td></tr>
+        <tr><td><code>NFR-CUO-LAT-003</code></td><td>Catalog refresh p95</td><td>≤ 50 ms over 100 skills</td><td>catalog.scan() benchmark</td></tr>
+        <tr><td><code>NFR-CUO-DET-001</code></td><td>Phase-1 determinism</td><td>100% (same query+catalog → same decision)</td><td>15 routing fixtures, golden tests</td></tr>
+        <tr><td><code>NFR-CUO-ESC-001</code></td><td>Escalation rate to LLM</td><td>≤ 10% of queries (after warm-up)</td><td>BRAIN audit replay · weekly KPI</td></tr>
+        <tr><td><code>NFR-CUO-DEF-001</code></td><td>Defer-to-human rate</td><td>≤ 5% of queries</td><td>BRAIN audit replay</td></tr>
+        <tr><td><code>NFR-CUO-COV-001</code></td><td>Test coverage of router.py</td><td>≥ 90% line · 100% branch</td><td>coverage.py</td></tr>
+        <tr><td><code>NFR-CUO-AVL-001</code></td><td>Availability (in-process)</td><td>same as caller</td><td>n/a — co-located</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCIES -->
+<!-- ============================================================ -->
+<section id="dependencies" class="module-section">
+  <header class="section-head"><span class="section-num">11</span><h2>Dependencies</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">CUO is the most-connected module. It consumes BRAIN (records), Skill (invokes), AI Gateway (Phase 2), MCP Gateway (tool surface), AUTH (actor identity). It is consumed by every user-facing module.</p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+graph LR
+  subgraph upstream ["CUO depends on"]
+    AUTH["🔐 AUTH"]
+    AI["⚡ AI Gateway"]
+    MCP["🔌 MCP Gateway"]
+    BRAIN["🧠 BRAIN"]
+    SKILL["🛠 SKILL"]
+  end
+  CUO_M["🎯 CUO"]
+  subgraph downstream ["Used by user-facing modules"]
+    CHAT["💬 CHAT"]
+    EMAIL["✉️ EMAIL"]
+    PROJ["📋 PROJ"]
+    CRM["🤝 CRM"]
+    HR["👥 HR"]
+    KB["📚 KB"]
+    OTHERS["…14 more"]
+  end
+  AUTH --> CUO_M
+  AI --> CUO_M
+  MCP --> CUO_M
+  BRAIN --> CUO_M
+  SKILL --> CUO_M
+  CUO_M --> CHAT
+  CUO_M --> EMAIL
+  CUO_M --> PROJ
+  CUO_M --> CRM
+  CUO_M --> HR
+  CUO_M --> KB
+  CUO_M --> OTHERS
+
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fef3c7,stroke:#b45309
+  class CUO_M,BRAIN,SKILL shipped
+  class AUTH,AI,MCP,CHAT,EMAIL,PROJ,CRM,HR,KB,OTHERS planned
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE -->
+<!-- ============================================================ -->
+<section id="compliance" class="module-section">
+  <header class="section-head"><span class="section-num">12</span><h2>Compliance scope</h2></header>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>CUO feature that satisfies it</th></tr></thead>
+      <tbody>
+        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging</td><td>Every decision recorded in BRAIN via memory_bridge · Postgres checkpointer at P2 retains LLM prompts.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 13 — Transparency</td><td>End-of-response transparency: skill chosen + confidence + alternatives are surfaced to the user.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>Below-threshold queries defer to human; CUO never auto-invokes irreversible operations.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 26 — Operator obligations</td><td>Defer-to-human matrix per persona (auto-OK vs defers) is normative.</td></tr>
+        <tr><td>EU AI Act Annex III</td><td>§ 4 — High-risk classification</td><td>CUO does not perform employment / credit / law-enforcement scoring; classification remains limited-risk.</td></tr>
+        <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 8.4 — AI system operations</td><td>Audit-chained decisions provide post-hoc accountability evidence.</td></tr>
+        <tr><td>Vietnam PDPL</td><td>Art. 14 — Decision transparency</td><td>Per-decision rationale is part of the trace row; subject can request via DSAR.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RISK -->
+<!-- ============================================================ -->
+<section id="risk-entries" class="module-section">
+  <header class="section-head"><span class="section-num">13</span><h2>Risk entries</h2></header>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><code>R-CUO-001</code></td><td>Routing mis-classification (wrong skill picked at high confidence)</td><td>Medium</td><td>Medium</td><td>CPO</td><td>15 golden fixtures · Phase 4 persona pre-classifier · trust-calibration KPI alarmed at p99.</td></tr>
+        <tr><td><code>R-CUO-002</code></td><td>Confidence threshold drift (real-world distribution diverges from fixtures)</td><td>High</td><td>Low</td><td>CPO</td><td>Weekly KPI review: confidence histogram · escalation rate · defer rate. Threshold tunable per deployment at Phase 2.</td></tr>
+        <tr><td><code>R-CUO-003</code></td><td>Persona prompt-injection (skill description tries to expand its own scope)</td><td>Medium</td><td>High</td><td>CSO</td><td>Trust model (§7): skill descriptions are UNTRUSTED. Keyword bank + catalog are protocol-defined and version-controlled.</td></tr>
+        <tr><td><code>R-CUO-004</code></td><td>LLM non-determinism breaks audit replay (Phase 2+)</td><td>High</td><td>Medium</td><td>CTO</td><td>Phase 2 trace rows MUST include full prompt + model + temperature + seed; replay tools accept "best-effort" replay note.</td></tr>
+        <tr><td><code>R-CUO-005</code></td><td>Persona switching whiplash (user feels Genie isn't "one" anymore at Phase 4)</td><td>Medium</td><td>Low</td><td>CXO (emerging)</td><td>Persona-version stamp on every decision · same conversational style enforced via brand-voice skill.</td></tr>
+        <tr><td><code>R-CUO-006</code></td><td>Skill catalog explosion drops routing accuracy</td><td>Low (today)</td><td>Medium</td><td>CPO</td><td>Phase 4 persona-router triages first · Phase 2 LLM cascade handles the long tail.</td></tr>
+        <tr><td><code>R-CUO-007</code></td><td>Capability bypass (CUO grants tools the skill didn't request)</td><td>Low</td><td>High</td><td>CSO</td><td>§6.1–§6.2: CUO MUST respect the skill's <code>allowed-tools</code>. Defence in depth: Skill broker enforces independently.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KPIs -->
+<!-- ============================================================ -->
+<section id="kpis" class="module-section">
+  <header class="section-head"><span class="section-num">14</span><h2>KPIs</h2></header>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th><th>Current</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Routing confidence distribution</strong></td><td>histogram of <code>conf</code></td><td>BRAIN audit replay</td><td>mean ≥ 0.6 · p10 ≥ 0.3</td><td>0.7 / 0.4 (15-fixture eval)</td></tr>
+        <tr><td><strong>Escalation rate</strong></td><td>queries with 0.10 ≤ conf ≤ 0.50</td><td>BRAIN audit replay</td><td>≤ 10%</td><td>n/a — Phase 2 pending</td></tr>
+        <tr><td><strong>Defer rate</strong></td><td>queries with conf &lt; 0.10</td><td>BRAIN audit replay</td><td>≤ 5%</td><td>0% (fixtures)</td></tr>
+        <tr><td><strong>Decision latency p95</strong></td><td>route() wall clock</td><td>per-request timing</td><td>≤ 5 ms (Phase 1)</td><td>~ 0.4 ms</td></tr>
+        <tr><td><strong>Replay equivalence rate</strong></td><td>identical decision on second run</td><td>fixture re-evaluation</td><td>100% (Phase 1)</td><td>100%</td></tr>
+        <tr><td><strong>Invocation success rate</strong></td><td>exit_code 0 / total invocations</td><td>BRAIN audit replay</td><td>≥ 95%</td><td>100% (15 fixtures)</td></tr>
+        <tr><td><strong>Trust calibration error</strong></td><td>|confidence − actual_correct_rate|</td><td>weekly human review</td><td>≤ 0.10</td><td>0.05 (fixture eval)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RACI -->
+<!-- ============================================================ -->
+<section id="raci" class="module-section">
+  <header class="section-head"><span class="section-num">15</span><h2>RACI matrix</h2></header>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Activity</th><th>CEO</th><th>CPO</th><th>CTO</th><th>CXO*</th><th>CSO</th><th>CLO</th></tr></thead>
+      <tbody>
+        <tr><td>Persona definition (10 C-level)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Keyword bank maintenance</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Phase 2 LLM cascade design</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Trust calibration KPI review</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Defer-to-human matrix</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td></tr>
+        <tr><td>EU AI Act Art. 12 compliance</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td></tr>
+        <tr><td>Prompt-injection defence</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td></tr>
+      </tbody>
+    </table>
+    <p class="text-xs text-slate-500 mt-3">*CXO seat is emerging at P3+; the CPO carries this work today.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI USAGE -->
+<!-- ============================================================ -->
+<section id="cli-usage" class="module-section">
+  <header class="section-head"><span class="section-num">16</span><h2>CLI usage — real examples</h2></header>
+
+  <h3 class="text-lg font-bold mb-2">1. List the skills CUO can route to</h3>
+<pre><code>$ cyberos-cuo catalog --format json | head -30
+{
+  "fingerprint": "9c8e2a...4b7d",
+  "scanned_at": "2026-05-14T07:30:11Z",
+  "skill_count": 20,
+  "skills": [
+    {"name": "cpo/prd-author", "version": "0.4.1", "region": null, "keywords": ["prd", "author", "draft prd", "product requirements"]},
+    {"name": "cyberskill-vn/vn-mst-validate", "version": "0.2.0", "region": "VN", "keywords": ["mst", "tax code", "ma so thue"]},
+    {"name": "cyberskill-vn/vn-vat-invoice",   "version": "0.3.0", "region": "VN", "keywords": ["invoice", "hoa don", "vat", "gtgt"]},
+    ...
+  ]
+}</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">2. Route a query without invoking</h3>
+<pre><code>$ cyberos-cuo route "kiểm tra MST 0123456789-001"
+
+decision:
+  skill_name: cyberskill-vn/vn-mst-validate
+  arguments:  {mst: "0123456789-001"}
+  confidence: 1.0
+  rationale:  "VN-diacritic query + region=VN bonus + 2 keyword hits + name-substring match"
+  routed:     true
+
+alternatives:
+  - cyberskill-vn/vn-tax-filing  score=0.3
+  - cyberskill-vn/vn-vat-invoice score=0.2
+
+(not invoked — pass --invoke to dispatch through the Skill host)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">3. Route, invoke, and record in BRAIN</h3>
+<pre><code>$ cyberos-cuo route "validate MST 0123456789" --invoke --record
+
+decision:    cyberskill-vn/vn-mst-validate (conf=0.7)
+invocation:  exit=0  elapsed_ms=24
+stdout:      {"ok": true, "format": "10-digit"}
+recorded:    brain://meta/cuo-decisions/1747200611_8c4e.md
+             seq=14941  chain=a3c7...2b9f</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">4. Inspect a past decision (audit replay)</h3>
+<pre><code>$ cyberos view meta/cuo-decisions/1747200611_8c4e.md
+---
+kind: decisions
+sync_class: private
+classification: internal
+schema: cuo-decision-v1
+---
+# CUO routing decision
+
+**Query:** validate MST 0123456789
+**Catalog fingerprint:** 9c8e2a4b7d...
+**Decision:** cyberskill-vn/vn-mst-validate
+**Confidence:** 0.7
+**Rationale:** 1 name-substring hit + 1 keyword + region tiebreaker
+**Alternatives:** [...]
+**Invoked at:** 2026-05-14T07:30:11Z
+**Result:** exit=0, stdout={"ok": true}</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">5. Show keyword bank + extractors for a skill</h3>
+<pre><code>$ cyberos-cuo skills vn-vat-invoice
+
+skill:        cyberskill-vn/vn-vat-invoice
+region:       VN
+keywords:     [invoice, hoa don, vat, gtgt, e-invoice, xuat hoa don]
+extractor:    detect-amount
+                pattern: r"(\d[\d.,]*)\s*(triệu|trieu|million|k|VND|đồng)"
+                ※ structured extraction deferred to Phase 2
+depends_on:   [vn-mst-validate]  ← Phase 3 will walk this
+allowed_tools: [read_file, write_file]</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATUS -->
+<!-- ============================================================ -->
+<section id="status" class="module-section">
+  <header class="section-head"><span class="section-num">17</span><h2>Phase status &amp; code stats</h2></header>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="fact-card"><div class="label">Total LoC (Python)</div><div class="value">~800</div><div class="note">core/ + cli/ + tests/</div></div>
+    <div class="fact-card"><div class="label">Test count</div><div class="value">15 pytest + 15 fixtures</div><div class="note">golden-test routing</div></div>
+    <div class="fact-card"><div class="label">Core modules</div><div class="value">6</div><div class="note">catalog · router · invoker · trace · memory_bridge · __init__</div></div>
+    <div class="fact-card"><div class="label">Personas defined</div><div class="value">10</div><div class="note">+ 4 emerging</div></div>
+    <div class="fact-card"><div class="label">Confidence threshold</div><div class="value">0.30</div><div class="note">protocol-fixed in Phase 1</div></div>
+    <div class="fact-card"><div class="label">Routing latency p95</div><div class="value">~ 0.4 ms</div><div class="note">in-process, catalog cached</div></div>
+  </div>
+
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Phase / capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Phase 1 — rule-based router · catalog · invoker · BRAIN bridge</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>15 golden routing fixtures + pytest</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>Phase 2 — LangGraph + LiteLLM cascade</td><td><span class="pill pill-planned">planned · M+3</span></td></tr>
+        <tr><td>Postgres checkpointer (EU AI Act Art. 12)</td><td><span class="pill pill-planned">planned · M+3</span></td></tr>
+        <tr><td>Phase 3 — multi-skill chains via <code>depends_on</code></td><td><span class="pill pill-planned">planned · M+6</span></td></tr>
+        <tr><td>Phase 4 — per-persona keyword bank split</td><td><span class="pill pill-planned">planned · M+9</span></td></tr>
+        <tr><td>Ambient nudge modes (Notify · Question · Review)</td><td><span class="pill pill-planned">planned</span></td></tr>
+        <tr><td>GraphQL subgraph</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references" class="module-section">
+  <header class="section-head"><span class="section-num">18</span><h2>References</h2></header>
+  <div class="bbg-card p-5">
+    <ul class="space-y-2 text-sm">
+      <li><strong>PRD §6.1–§6.10</strong> — CUO persona structure, voice, routing logic, trust calibration, ambient nudges, LangGraph migration.</li>
+      <li><strong>PRD §9.2</strong> — CUO / GENIE deep-dive.</li>
+      <li><strong>SRS §4.2</strong> — Formal FR catalog for CUO.</li>
+      <li><strong>AGENTS.md</strong> (v0.1.0, normative) — <code>cyberos/cuo/docs/AGENTS.md</code>.</li>
+      <li><strong>SPEC.md</strong> — contract summary — <code>cyberos/cuo/docs/SPEC.md</code>.</li>
+      <li><strong>ROUTING.md</strong> — keyword-bank rationale + Phase 2 LLM design — <code>cyberos/cuo/docs/ROUTING.md</code>.</li>
+      <li><strong>Source:</strong> <code>cyberos/cuo/cuo/core/</code> · <code>cyberos/cuo/tests/</code> · <code>cyberos/cuo/fixtures/</code>.</li>
+      <li><strong>CHANGELOG:</strong> <code>cyberos/cuo/docs/CHANGELOG.md</code> (newest-first).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PREV / NEXT NAV -->
+<!-- ============================================================ -->
+<nav class="module-nav-footer mt-12">
+  <a href="brain.html" class="text-purple-700 font-semibold no-underline hover:underline">← Previous: BRAIN</a>
+  <a href="skill.html" class="text-purple-700 font-semibold no-underline hover:underline">Next module: SKILL →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

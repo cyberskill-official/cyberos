@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TIME — CyberOS</title>
+  <meta name="description" content="TIME — Time tracking, leave, and expense capture. Start/stop and retroactive entries, billable distinction, photo-receipt OCR, weekly approval workflow, immutable audit, multi-currency, feeds INV.">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="../assets/scripts.js"></script>
+  <style>
+    /* TIME module palette — teal */
+    :root {
+      --time:       #0d9488;
+      --time-bg:    #f0fdfa;
+      --time-tint:  #ccfbf1;
+      --time-dark:  #115e59;
+    }
+    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .fact-card { background: var(--time-bg); border:1px solid var(--time-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--time-dark); }
+    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+    .toc-link:hover { background: var(--time-bg); color: var(--time-dark); }
+    .toc-link.active { background: var(--time-tint); color: var(--time-dark); font-weight: 600; }
+    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--time-dark); color:white; font-weight:800; font-size:0.875rem; }
+    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
+    .pill-must     { background:#fee2e2; color:#b91c1c; }
+    .pill-should   { background:#fef3c7; color:#b45309; }
+    .pill-could    { background:#e0f2fe; color:#075985; }
+    .pill-shipped  { background:#d1fae5; color:#065f46; }
+    .pill-planned  { background:#e0e7ff; color:#3730a3; }
+    .pill-partial  { background:#fef3c7; color:#b45309; }
+    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    table.kt tbody tr:nth-child(even) td { background: var(--time-bg); }
+    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
+    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
+    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
+    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
+    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--time-bg); border-radius: 0.75rem; border: 1px solid var(--time-tint); }
+    .bbg-card.tint-time { border-top: 4px solid var(--time); }
+  </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P1"></span>
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#catalog">Modules</a>
+      <span class="sep">›</span>
+      <span class="current">TIME</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <span class="text-5xl">⏱</span>
+      <h1 class="h-display">TIME</h1>
+      <span class="phase-chip phase-p1">P1 · Internal productivity</span>
+      <span class="pill pill-planned">Planned · P1 design phase</span>
+      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CFO seat</span>
+    </div>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+      Time tracking, leave, and expense capture — the spine that converts Member effort into billable hours, reimbursable expense, and audit-grade records of who did what when.
+    </p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      TIME is the only module where a single missed entry can break a Client invoice; consequently it is the module with the most paranoid integrity model. Entries are append-only at the audit layer; mutations write new rows that supersede prior rows via <code>correction_to</code> links. Approval is a three-tier flow (Member → Account Manager → CFO/CEO). Expense capture is camera-first: snap a receipt, the OCR pipeline pulls amount + vendor + VAT (Vietnamese hóa đơn-aware), the categoriser picks a code from a per-tenant chart of accounts, and the entry queues for Member confirm. Multi-currency at every layer (VND primary, USD secondary). Vietnamese labour-law caps (overtime, max hours per week) enforced by hard rules. INV pulls billable hours weekly. PRD §9.10 + §19.5.
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#architecture" class="btn btn-primary">Architecture
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#key-flows" class="btn btn-secondary">Approval flow</a>
+      <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
+      <a href="../reference/fr-catalog.html#time" class="btn btn-secondary">FR catalog</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-0.5 text-sm">
+        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+        <li><a class="toc-link" href="#why">Why TIME exists</a></li>
+        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+        <li><a class="toc-link" href="#architecture">Architecture</a></li>
+        <li><a class="toc-link" href="#data-model">Data model</a></li>
+        <li><a class="toc-link" href="#api-surface">API surface</a></li>
+        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+        <li><a class="toc-link" href="#lifecycle">Entry lifecycle</a></li>
+        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+        <li><a class="toc-link" href="#kpis">KPIs</a></li>
+        <li><a class="toc-link" href="#raci">RACI</a></li>
+        <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
+        <li><a class="toc-link" href="#status">Phase status</a></li>
+        <li><a class="toc-link" href="#references">References</a></li>
+      </ul>
+      <hr class="my-4 border-slate-200">
+      <div class="h-eyebrow mb-2">Source</div>
+      <div class="text-xs text-slate-500 leading-relaxed">
+        <code>cyberos/services/time/</code><br>
+        PRD §9.10 · §19.5<br>
+        SRS §4.10
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="hero" class="module-section">
+  <div class="bbg-card tint-time p-6 mb-6">
+    <p class="text-lg text-slate-700 leading-relaxed mb-5">
+      TIME is CyberOS's <strong>time-entry, leave-management, and expense-capture spine</strong>. The basic primitives are simple: a <code>TimeEntry</code> records minutes worked against an Engagement / Project / Issue with a billable flag; an <code>Expense</code> records VND or USD spent with vendor, VAT, and receipt image; a <code>LeaveRequest</code> records absence with a kind and approver flow. What is hard is the integrity model: entries are append-only at the audit layer, every mutation writes a fresh row with a <code>correction_to</code> link, the weekly approval flow goes Member → Account Manager → CFO/CEO visibility, and Vietnamese labour-law caps (40 h regular / week, 300 h overtime / year) are enforced as hard rules. Expense receipts run through a Vietnamese-hóa-đơn-aware OCR pipeline (MST extraction, line-item parsing, VAT split). Multi-currency at every layer. Feeds INV (weekly billable summary), feeds REW (members' total hours fold into compensation context), feeds OBS (audit replay).
+    </p>
+    <div class="fact-grid">
+      <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+      <div class="fact-card"><div class="label">Primitives</div><div class="value">3</div><div class="note">TimeEntry · Expense · LeaveRequest</div></div>
+      <div class="fact-card"><div class="label">Audit</div><div class="value">Append-only</div><div class="note"><code>correction_to</code> for mutation</div></div>
+      <div class="fact-card"><div class="label">Currency</div><div class="value">VND + USD</div><div class="note">multi-currency at every layer</div></div>
+      <div class="fact-card"><div class="label">Approval</div><div class="value">3 tiers</div><div class="note">Member → AM → CFO</div></div>
+      <div class="fact-card"><div class="label">Receipt OCR</div><div class="value">VN hóa đơn</div><div class="note">MST + VAT split</div></div>
+      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · PROJ</div><div class="note">+ AI · OBS · INV</div></div>
+      <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~7,500</div><div class="note">Rust + TS + OCR pipeline</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
+<!-- ============================================================ -->
+<section id="why" class="module-section">
+  <header class="section-head"><span class="section-num">1</span><h2>Why TIME exists</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Three reasons TIME is its own module rather than a feature in PROJ: (1) <strong>audit integrity</strong> — time entries drive Client invoices and Member compensation, so the storage model has to be append-only with chained audit rows, not the optimistic-mutation pattern PROJ uses for issues; (2) <strong>regulator obligations</strong> — Vietnamese Labour Code Art. 105 caps weekly hours and overtime, requires written approval flows, and demands a per-Member time record auditable on inspection; (3) <strong>expense capture</strong> is a different UX (camera + OCR) than time entry (timer + form) and warrants a separate workflow. Folding all of this into PROJ would corrupt PROJ's data model and bury the regulator-visible flows.
+  </p>
+  <div class="grid md:grid-cols-3 gap-4 my-5">
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">📜</div>
+      <div class="font-bold text-slate-900 mb-1">Append-only audit</div>
+      <p class="text-sm text-slate-600">Every entry write produces a chained BRAIN row. Corrections write a new row with <code>correction_to</code>; the original is never edited. Invoice-grade integrity.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">📷</div>
+      <div class="font-bold text-slate-900 mb-1">Receipt-first expense</div>
+      <p class="text-sm text-slate-600">Snap a hóa đơn; the OCR pipeline pulls MST, line items, VAT split, and queues for Member confirm. No form-filling for the 80% case.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">⚖️</div>
+      <div class="font-bold text-slate-900 mb-1">VN labour-law caps</div>
+      <p class="text-sm text-slate-600">Hard rules enforce 40 h regular / week and 300 h overtime / year (Labour Code 2019 Art. 107). Violations block save and page CHRO.</p>
+    </div>
+  </div>
+  <p class="text-slate-700 leading-relaxed">
+    The bet is that the integrity properties travel best when they live next to the timer; the labour-law caps travel best when they sit between the timer and the database; and the expense flow travels best when it shares the integrity model. Putting all three in one module keeps the audit chain coherent and lets INV pull from a single source of truth.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT — 5W1H2C5M -->
+<!-- ============================================================ -->
+<section id="what" class="module-section">
+  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of TIME's scope. Every cell traces back to PRD §9.10 and §19.5.</p>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>5W · What</strong></td><td>What is TIME?</td><td>Three sub-modules: time tracking (start/stop, retroactive, billable flag), leave management (annual, sick, sabbatical, unpaid, other), and expense capture (camera + OCR + categorise). All three share a Postgres canonical store, an append-only audit chain into BRAIN, and a weekly approval workflow.</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Members:</strong> log time + expense + leave daily; submit weekly. <strong>Account Managers:</strong> approve weekly per Engagement. <strong>CFO:</strong> view consolidated dashboards, approve overtime exceptions, sign off on reimbursement batches. <strong>CHRO:</strong> own leave policy + labour-law cap enforcement. <strong>Agents:</strong> CUO/COO-skill nudges Members who haven't logged time in 2 days (FR-TIME-005).</td></tr>
+        <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: SPA timer, mobile capture. Weekly: batch approval cycle (Sunday 23:59 → Monday 09:00 AM review). Nightly: leave accrual recompute, overtime cap check, expense reimbursement batch. Monthly: hours summary to REW.</td></tr>
+        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (SG-1) with VN-residency S3 for receipt images. P3+: multi-region. The OCR pipeline runs as a Fargate task per OCR job; bursty workloads scale to 50 parallel tasks via SQS.</td></tr>
+        <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Audit integrity, labour-law caps, and receipt OCR are three concerns that do not belong in PROJ. Splitting them out keeps PROJ's sync-engine simple and gives the regulator a single place to look.</td></tr>
+        <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Timer: SPA writes start_time; on stop, end_time + duration computed server-side as a generated column. Retroactive: Member enters duration + date; same path. Expense: camera capture → S3 → OCR Lambda → categoriser → Member confirm → entry. Leave: form submit → approver Notify → decision → calendar sync.</td></tr>
+        <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$70 / month for SG-1 single-tenant pilot. OCR cost averages $0.002 per receipt (AWS Textract); ~$50 / month for 25k receipts at 50 Members. 50-tenant: ~$280 / month.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Audit append-only — non-negotiable. (b) Labour-law caps enforced as hard rules. (c) Multi-currency at every layer. (d) Member time-log annotations are private namespace (FR-TIME-008) — not visible to AM. (e) Receipt OCR must handle hóa đơn (Vietnamese VAT invoice) format.</td></tr>
+        <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · Redis 7 · S3 + KMS · AWS Textract (or PaddleOCR self-hosted at P2+) · vn-mst-validate skill · OpenTelemetry SDK · React + Zustand SPA · React Native (P3+).</td></tr>
+        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with <code>correction_to</code> (not in-place edit). Generated column for <code>duration_minutes</code>. Per-Engagement billable_default + per-entry override. Weekly batch approval (not per-entry). Camera-first expense capture. Multi-currency stored as canonical-VND + spot-FX-rate snapshot.</td></tr>
+        <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. S3 + KMS for receipt images. SQS-driven OCR pool. Calendar sync via OAuth (Google / Outlook).</td></tr>
+        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE (CFO seat) at P1 launch + 0.25 FTE (CHRO for leave policy). CTO owns the engine.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Mobile capture p95 ≤ 250 ms (start/stop button). OCR turn-around p95 ≤ 8 s. Weekly approval completion ≥ 95% by Friday EOB. Labour-law cap violations = 0. INV billable-hours feed durability = 100%.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================================ -->
+<section id="architecture" class="module-section">
+  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    TIME is a single axum service exposing four surfaces (GraphQL subgraph, REST admin, mobile-friendly REST, MCP). It writes to PostgreSQL canonical, drives an OCR pipeline via SQS + Fargate workers, and writes chained audit rows to BRAIN. Outputs flow downstream to INV (billable summary), REW (hours context), and Calendar (leave events).
+  </p>
+
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+graph TB
+  subgraph CLIENT ["Clients"]
+    SPA["SPA<br/>timer + form"]
+    MOB["Mobile capture (P3)"]
+    AGENT["🎯 CUO<br/>via MCP"]
+  end
+
+  subgraph EDGE ["Edge"]
+    GQL["GraphQL subgraph"]
+    REST["REST admin"]
+    MCP["MCP tools"]
+  end
+
+  subgraph CORE ["TIME service (Rust)"]
+    TE["TimeEntry handler"]
+    EX["Expense handler"]
+    LR["Leave handler"]
+    LAW["VN labour-law<br/>cap enforcer"]
+    APPR["Approval workflow"]
+    FX["FX rate snapshotter"]
+    CAL_SYNC["Calendar sync<br/>(Google / Outlook)"]
+    AUDIT["BRAIN audit bridge"]
+  end
+
+  subgraph OCR ["OCR pipeline"]
+    SQS["SQS queue"]
+    OW["Fargate OCR worker"]
+    TX["AWS Textract<br/>(or PaddleOCR)"]
+    VN["vn-mst-validate<br/>skill"]
+    CAT["Categoriser"]
+  end
+
+  subgraph STORES ["Stores"]
+    PG[("PostgreSQL<br/>time_entry · expense<br/>leave_request<br/>append-only audit-side")]
+    RED[("Redis 7<br/>active timers · FX cache")]
+    S3[("S3 + KMS<br/>receipt images")]
+  end
+
+  subgraph SINKS ["Sinks"]
+    BRAIN["🧠 BRAIN<br/>audit + summary"]
+    INV["🧾 INV<br/>billable summary"]
+    REW["💎 REW<br/>hours context"]
+    OBS["👁 OBS"]
+  end
+
+  SPA --> GQL
+  MOB --> REST
+  AGENT --> MCP
+  GQL --> TE
+  GQL --> EX
+  GQL --> LR
+  REST --> TE
+  REST --> EX
+  REST --> LR
+  MCP --> TE
+  TE --> LAW
+  EX --> SQS
+  SQS --> OW
+  OW --> TX
+  TX --> VN
+  VN --> CAT
+  CAT --> EX
+  TE --> FX
+  EX --> FX
+  LR --> APPR
+  LR --> CAL_SYNC
+  TE --> APPR
+  EX --> APPR
+  APPR --> AUDIT
+  TE --> PG
+  EX --> PG
+  LR --> PG
+  TE --> RED
+  EX --> S3
+  AUDIT --> BRAIN
+  TE --> INV
+  TE --> REW
+  TE --> OBS
+
+  classDef planned fill:#ccfbf1,stroke:#115e59
+  classDef store fill:#f5f3ff,stroke:#7c3aed
+  classDef sink fill:#d1fae5,stroke:#047857
+  class SPA,MOB,AGENT,GQL,REST,MCP,TE,EX,LR,LAW,APPR,FX,CAL_SYNC,AUDIT,SQS,OW,TX,VN,CAT planned
+  class PG,RED,S3 store
+  class BRAIN,INV,REW,OBS sink
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>time_entry.rs</code></td><td>services/time/src/time_entry.rs</td><td>TimeEntry CRUD. Generated column for <code>duration_minutes</code>. Per-entry billable override defaults from Engagement.</td></tr>
+        <tr><td><code>expense.rs</code></td><td>services/time/src/expense.rs</td><td>Expense CRUD. Camera-capture → S3 → OCR queue. Categorisation via per-tenant chart of accounts.</td></tr>
+        <tr><td><code>leave_request.rs</code></td><td>services/time/src/leave_request.rs</td><td>LeaveRequest CRUD. Kinds: <code>annual · sick · sabbatical · unpaid · other</code>. Approver flow via Notify.</td></tr>
+        <tr><td><code>law_caps.rs</code></td><td>services/time/src/law_caps.rs</td><td>Vietnamese Labour Code Art. 105 / 107 enforcement. 40 h regular / week, 300 h overtime / year. Hard-blocks save on violation; pages CHRO.</td></tr>
+        <tr><td><code>approval.rs</code></td><td>services/time/src/approval.rs</td><td>Weekly approval workflow. Member submit → AM approve → CFO visibility. Self-approval rejected (FR-TIME-004).</td></tr>
+        <tr><td><code>fx.rs</code></td><td>services/time/src/fx.rs</td><td>FX rate snapshotter. Pulls Vietcombank rate daily; stores snapshot per entry for invoice-time fidelity.</td></tr>
+        <tr><td><code>ocr_pipeline.rs</code></td><td>services/time/src/ocr_pipeline.rs</td><td>SQS-driven OCR worker. Calls AWS Textract (P1) or PaddleOCR self-hosted (P2+). Parses Vietnamese hóa đơn format.</td></tr>
+        <tr><td><code>categoriser.rs</code></td><td>services/time/src/categoriser.rs</td><td>Expense categoriser via AI Gateway. Picks from per-tenant chart of accounts; confidence threshold for auto-apply.</td></tr>
+        <tr><td><code>calendar_sync.rs</code></td><td>services/time/src/calendar_sync.rs</td><td>Two-way Google / Outlook sync for leave events (FR-TIME-007).</td></tr>
+        <tr><td><code>nudge.rs</code></td><td>services/time/src/nudge.rs</td><td>CUO/COO-skill nudge for Members who haven't logged time in 2 days (FR-TIME-005).</td></tr>
+        <tr><td><code>inconsistency.rs</code></td><td>services/time/src/inconsistency.rs</td><td>Detect overlapping entries, &gt; 12 h continuous, and other anomalies (FR-TIME-006 SRS).</td></tr>
+        <tr><td><code>inv_export.rs</code></td><td>services/time/src/inv_export.rs</td><td>Weekly batched billable summary export to INV.</td></tr>
+        <tr><td><code>dsar_export.rs</code></td><td>services/time/src/dsar_export.rs</td><td>DSAR bundle for a Member.</td></tr>
+        <tr><td><code>migrations/</code></td><td>services/time/migrations/</td><td>sqlx migrations. All tables RLS by <code>tenant_id</code>; <code>time_entry.member_id</code> additionally enforced.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DATA MODEL -->
+<!-- ============================================================ -->
+<section id="data-model" class="module-section">
+  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Three primitives (TimeEntry, Expense, LeaveRequest) plus supporting tables for approvals, FX snapshots, and OCR results. Mutations are encoded as a fresh row with <code>correction_to</code> pointing at the superseded row.
+  </p>
+
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+erDiagram
+  TENANT ||--o{ MEMBER : "employs"
+  TENANT ||--o{ ENGAGEMENT : "delivers"
+  ENGAGEMENT ||--o{ BILLABLE_RULE : "carries"
+  MEMBER ||--o{ TIME_ENTRY : "logs"
+  MEMBER ||--o{ EXPENSE : "incurs"
+  MEMBER ||--o{ LEAVE_REQUEST : "files"
+  TIME_ENTRY ||--o| TIME_ENTRY : "correction_to"
+  TIME_ENTRY ||--o{ APPROVAL : "approved by"
+  EXPENSE ||--o| OCR_RESULT : "produced"
+  EXPENSE ||--o{ APPROVAL : "approved by"
+  EXPENSE ||--o| CHART_OF_ACCOUNTS : "categorised"
+  LEAVE_REQUEST ||--o{ APPROVAL : "approved by"
+  LEAVE_REQUEST ||--o| CALENDAR_EVENT : "synced to"
+  TIME_ENTRY ||--o| FX_SNAPSHOT : "valued at"
+  EXPENSE ||--o| FX_SNAPSHOT : "valued at"
+
+  TENANT {
+    uuid id PK
+    string slug
+    string base_currency "VND"
+  }
+  MEMBER {
+    uuid id PK
+    uuid tenant_id FK
+    string email
+    string display_name
+    int weekly_capacity_hours
+    int annual_leave_quota_days
+    int sabbatical_accrued_days
+  }
+  ENGAGEMENT {
+    uuid id PK
+    uuid tenant_id FK
+    string name
+    string client_account_id FK "→ CRM"
+  }
+  BILLABLE_RULE {
+    uuid id PK
+    uuid engagement_id FK
+    string role
+    bool billable_default
+    int  rate_vnd_per_hour
+    int  rate_usd_per_hour
+  }
+  TIME_ENTRY {
+    uuid id PK
+    uuid tenant_id FK
+    uuid member_id FK
+    uuid engagement_id FK
+    uuid project_id FK "nullable"
+    uuid issue_id FK "nullable"
+    date entry_date
+    timestamp start_time "nullable for retroactive"
+    timestamp end_time "nullable for retroactive"
+    int  duration_minutes "generated column"
+    bool billable
+    string description_short
+    string description_private "Member's private namespace"
+    string status "draft | submitted | approved | rejected | corrected"
+    uuid correction_to FK "nullable; chain to superseded row"
+    timestamp created_at
+    timestamp submitted_at
+    string brain_chain
+  }
+  EXPENSE {
+    uuid id PK
+    uuid tenant_id FK
+    uuid member_id FK
+    uuid engagement_id FK "nullable; non-billable expenses"
+    date expense_date
+    string vendor
+    string vn_mst "nullable; vendor tax code"
+    int amount_minor_unit
+    string currency "VND | USD | other"
+    int vat_amount_minor_unit "nullable"
+    string category_code "from chart_of_accounts"
+    string receipt_s3_key
+    string status "draft | submitted | approved | reimbursed | rejected"
+    uuid correction_to FK "nullable"
+    timestamp created_at
+    string brain_chain
+  }
+  LEAVE_REQUEST {
+    uuid id PK
+    uuid tenant_id FK
+    uuid member_id FK
+    string kind "annual | sick | sabbatical | unpaid | other"
+    date start_date
+    date end_date
+    int  duration_days
+    string reason
+    string status "submitted | approved | rejected | cancelled"
+    uuid approver_id FK
+    timestamp decided_at
+    string brain_chain
+  }
+  APPROVAL {
+    uuid id PK
+    uuid tenant_id FK
+    string target_kind "time_entry | expense | leave_request"
+    uuid target_id
+    uuid approver_id FK
+    string tier "AM | CFO | CEO"
+    string decision "approved | rejected | revise"
+    string note
+    timestamp decided_at
+  }
+  OCR_RESULT {
+    uuid expense_id PK
+    string raw_text
+    string parsed_vendor
+    string parsed_vn_mst
+    int parsed_amount_minor_unit
+    string parsed_currency
+    int parsed_vat_minor_unit
+    float confidence
+    string engine "textract | paddleocr"
+    timestamp processed_at
+  }
+  CHART_OF_ACCOUNTS {
+    string code PK "T&E.travel.taxi | T&E.meals | …"
+    uuid tenant_id FK
+    string display_name_vi
+    string display_name_en
+    bool   reimbursable_default
+  }
+  FX_SNAPSHOT {
+    uuid id PK
+    date snap_date
+    string from_currency
+    string to_currency
+    int rate_minor_unit "x10000 precision"
+    string source "vcb-buy | vcb-sell | fixed"
+  }
+  CALENDAR_EVENT {
+    uuid id PK
+    uuid leave_request_id FK
+    string provider "google | outlook"
+    string provider_event_id
+    timestamp synced_at
+  }
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Append-only audit pattern</h3>
+  <div class="bbg-card p-5">
+    <p class="text-sm text-slate-600 mb-3">A mutation never edits an existing row. The mutator inserts a new row with the new values and sets <code>correction_to</code> to the prior row's id. The prior row's <code>status</code> transitions to <code>corrected</code>. INV and downstream consumers read the latest row in a correction chain via <code>WHERE correction_to IS NULL</code> or by walking the chain forward from the original.</p>
+    <table class="kt">
+      <thead><tr><th>Step</th><th>Action</th><th>DB effect</th><th>BRAIN row</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Original entry</td><td>INSERT row A (status=submitted)</td><td><code>time.entry_create</code></td></tr>
+        <tr><td>2</td><td>Member discovers error, corrects duration</td><td>INSERT row B (correction_to=A); UPDATE A status=corrected</td><td><code>time.entry_correct</code></td></tr>
+        <tr><td>3</td><td>AM approves</td><td>UPDATE B status=approved + APPROVAL row</td><td><code>time.entry_approved</code></td></tr>
+        <tr><td>4</td><td>INV reads</td><td>SELECT * FROM time_entry WHERE correction_to IS NULL AND status='approved'</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- API SURFACE -->
+<!-- ============================================================ -->
+<section id="api-surface" class="module-section">
+  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Four surfaces: a federated GraphQL subgraph, a mobile-friendly REST surface for the timer / receipt-capture, an admin REST for OCR pipeline introspection, and an MCP tool catalogue for CUO.
+  </p>
+
+  <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (federated)</h3>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-graphql">extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@requiresScopes"])
+
+type TimeEntry @key(fields: "id") {
+  id: ID!
+  member: Subject!
+  engagement: Engagement!
+  project: Project
+  issue: Issue
+  entryDate: Date!
+  durationMinutes: Int!
+  billable: Boolean!
+  description: String!
+  status: TimeEntryStatus!
+  correctionTo: ID
+  approvals: [Approval!]!
+}
+
+type Expense @key(fields: "id") {
+  id: ID!
+  member: Subject!
+  engagement: Engagement
+  expenseDate: Date!
+  vendor: String!
+  vnMst: String
+  amountMinor: Int!
+  currency: String!
+  vatAmountMinor: Int
+  categoryCode: String!
+  receiptUrl: String!     # presigned 5-min
+  status: ExpenseStatus!
+  ocr: OcrResult
+}
+
+type LeaveRequest @key(fields: "id") {
+  id: ID!
+  member: Subject!
+  kind: LeaveKind!
+  startDate: Date!
+  endDate: Date!
+  durationDays: Int!
+  status: LeaveStatus!
+  approver: Subject
+}
+
+enum TimeEntryStatus { DRAFT SUBMITTED APPROVED REJECTED CORRECTED }
+enum ExpenseStatus  { DRAFT SUBMITTED APPROVED REIMBURSED REJECTED CORRECTED }
+enum LeaveStatus    { SUBMITTED APPROVED REJECTED CANCELLED }
+enum LeaveKind      { ANNUAL SICK SABBATICAL UNPAID OTHER }
+
+type Mutation {
+  startTimer(engagementId: ID!, projectId: ID, issueId: ID, billable: Boolean): TimeEntry!
+  stopTimer(entryId: ID!, description: String!): TimeEntry!
+  logRetroactive(input: LogRetroactiveInput!): TimeEntry!
+  correctTimeEntry(id: ID!, patch: TimeEntryPatch!): TimeEntry!
+  submitWeek(weekOf: Date!): SubmitWeekResult!
+    @requiresScopes(scopes: [["time.submit"]])
+  approveTimeEntry(id: ID!): TimeEntry!
+    @requiresScopes(scopes: [["time.approve"]])
+  captureExpense(receiptBase64: String!, hint: ExpenseHint): Expense!
+  fileLeave(input: LeaveInput!): LeaveRequest!
+  approveLeave(id: ID!): LeaveRequest!
+    @requiresScopes(scopes: [["time.leave.approve"]])
+}</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Mobile-friendly REST</h3>
+  <div class="bbg-card p-5 mb-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>POST</td><td><code>/time/timer/start</code></td><td>Start timer with engagement / project / issue context.</td></tr>
+        <tr><td>POST</td><td><code>/time/timer/stop</code></td><td>Stop active timer.</td></tr>
+        <tr><td>GET</td><td><code>/time/timer/active</code></td><td>Return active timer for the caller, if any.</td></tr>
+        <tr><td>POST</td><td><code>/time/expense/capture</code></td><td>Multipart upload of receipt; returns expense id + OCR job handle.</td></tr>
+        <tr><td>GET</td><td><code>/time/expense/{id}/ocr</code></td><td>Poll OCR result.</td></tr>
+        <tr><td>POST</td><td><code>/time/leave</code></td><td>File leave request.</td></tr>
+        <tr><td>GET</td><td><code>/time/week/{week_of}</code></td><td>Get weekly summary for caller.</td></tr>
+        <tr><td>POST</td><td><code>/time/week/submit</code></td><td>Submit week.</td></tr>
+        <tr><td>GET</td><td><code>/admin/approvals/pending</code></td><td>List pending approvals for AM / CFO.</td></tr>
+        <tr><td>POST</td><td><code>/admin/approvals/{id}/decide</code></td><td>Approve or reject.</td></tr>
+        <tr><td>GET</td><td><code>/admin/inv/billable-summary?week_of=…</code></td><td>Billable summary export for INV.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+      <tbody>
+        <tr><td><code>cyberos.time.start_timer</code></td><td>engagement_id, project_id?, issue_id?</td><td>TimeEntry</td><td>scope=time.write</td></tr>
+        <tr><td><code>cyberos.time.stop_timer</code></td><td>description</td><td>TimeEntry</td><td>scope=time.write</td></tr>
+        <tr><td><code>cyberos.time.log_retroactive</code></td><td>date, minutes, description</td><td>TimeEntry</td><td>scope=time.write</td></tr>
+        <tr><td><code>cyberos.time.weekly_summary</code></td><td>member_id?, week_of</td><td>WeeklySummary</td><td>readonly · scope=time.read</td></tr>
+        <tr><td><code>cyberos.time.capture_expense</code></td><td>receipt_image_url</td><td>Expense + OcrResult</td><td>scope=time.write</td></tr>
+        <tr><td><code>cyberos.time.file_leave</code></td><td>kind, start, end, reason</td><td>LeaveRequest</td><td>scope=time.leave.file</td></tr>
+        <tr><td><code>cyberos.time.approve</code></td><td>target_id, tier</td><td>Approval</td><td>destructive · human-confirm · scope=time.approve</td></tr>
+        <tr><td><code>cyberos.time.nudge_member</code></td><td>member_id</td><td>{ok}</td><td>scope=time.nudge</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KEY FLOWS -->
+<!-- ============================================================ -->
+<section id="key-flows" class="module-section">
+  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Log a time entry (timer)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Member SPA
+  participant API as TIME REST / GraphQL
+  participant LAW as VN labour-law cap enforcer
+  participant FX as FX snapshotter
+  participant PG as PostgreSQL
+  participant R as Redis (active timers)
+  participant B as BRAIN audit
+
+  U->>API: POST /time/timer/start {engagement, project, issue}
+  API->>LAW: check weekly cap (current + projected)
+  alt within cap
+    LAW-->>API: ok
+  else over 40h regular
+    LAW-->>API: overtime warning (still saves)
+  else over 300h annual overtime
+    LAW-->>API: 422 hard-block · pages CHRO
+  end
+  API->>R: SET active_timer:<member> = {entry_id, start_time}
+  API->>FX: snapshot rate for date
+  FX-->>API: rate
+  API->>PG: INSERT time_entry (status=draft, start_time, …)
+  API->>B: time.entry_start (chain audit row)
+  API-->>U: 200 {entry_id, started_at}
+
+  Note over U: ... work happens ...
+
+  U->>API: POST /time/timer/stop {description}
+  API->>R: GET active_timer:<member>
+  R-->>API: {entry_id, start_time}
+  API->>PG: UPDATE time_entry SET end_time=now(), status=draft, description=…
+  API->>B: time.entry_stop {duration_minutes}
+  API-->>U: 200 {entry, duration_minutes}
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 2 — Weekly approval workflow</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant M as Member
+  participant API as TIME
+  participant AM as Account Manager
+  participant CFO as CFO dashboard
+  participant N as Notify
+  participant B as BRAIN audit
+
+  M->>API: submit week (Sunday 23:59 or earlier)
+  API->>API: validate no overlapping entries · no &gt; 12h continuous
+  API->>API: lock entries · status=submitted
+  API->>N: ping AM "Member X submitted week N"
+  API->>B: time.week_submitted
+
+  AM->>API: review entries · approve / revise / reject per entry
+  alt approved
+    API->>API: status=approved
+    API->>B: time.entry_approved
+  else revise
+    API->>N: ping Member "AM requested revision"
+    API->>B: time.entry_revise_requested
+  else rejected
+    API->>API: status=rejected
+    API->>B: time.entry_rejected
+  end
+  API->>CFO: visibility on dashboard (no decision needed at AM-approved tier)
+
+  Note over CFO: CFO may flag for personal review<br/>overtime exceptions require explicit CFO sign-off
+    </div>
+    <p class="text-xs text-slate-500 mt-3">FR-TIME-004 — a Member MUST NOT be able to approve their own entries; self-approval attempts rejected at the API.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 3 — Expense capture with OCR</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Member (camera)
+  participant API as TIME REST
+  participant S3 as S3 + KMS
+  participant SQS as SQS
+  participant OW as OCR worker
+  participant TX as AWS Textract
+  participant VN as vn-mst-validate skill
+  participant CAT as Categoriser (AI Gateway)
+  participant PG as PostgreSQL
+  participant B as BRAIN audit
+
+  U->>API: POST /time/expense/capture (image)
+  API->>S3: PUT receipt.jpg (KMS-encrypted)
+  API->>PG: INSERT expense (status=draft, receipt_s3_key)
+  API->>SQS: enqueue OCR job {expense_id, s3_key}
+  API-->>U: 202 {expense_id, ocr_status:"pending"}
+
+  SQS->>OW: deliver job
+  OW->>TX: detect_document_text(s3_key)
+  TX-->>OW: lines + words
+  OW->>OW: parse hóa đơn structure (header, MST, line items, VAT)
+  OW->>VN: validate MST (vn-mst-validate skill)
+  VN-->>OW: {valid:true, vendor_name_canonical:…}
+  OW->>CAT: classify category (chart_of_accounts)
+  CAT-->>OW: {category_code, confidence}
+  OW->>PG: UPDATE expense + INSERT ocr_result
+  OW->>B: time.expense_ocr_complete
+  Note over OW,U: SPA polls /time/expense/{id}/ocr<br/>or receives push via WebSocket
+
+  U->>API: confirm / correct + submit
+  API->>PG: status=submitted
+  API->>B: time.expense_submit
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 4 — Sync to INV (weekly billable summary)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CR as Weekly cron (Mon 10:00)
+  participant API as TIME
+  participant PG as PostgreSQL
+  participant FX as FX rate
+  participant INV as 🧾 INV
+  participant B as BRAIN audit
+
+  CR->>API: build billable summary for week N
+  API->>PG: SELECT time_entry WHERE billable AND status='approved' AND correction_to IS NULL
+  PG-->>API: rows
+  API->>FX: pull snapshot rates per row
+  FX-->>API: rates
+  API->>API: aggregate per Engagement: hours × rate
+  API->>INV: POST /inv/billable-summary {week_of, items:[…]}
+  INV-->>API: 200 {batch_id}
+  API->>B: time.inv_summary_pushed {batch_id, rows:N, vnd_total:…}
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 5 — Leave request with calendar sync</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant M as Member
+  participant API as TIME
+  participant CHRO as CHRO leave-policy check
+  participant APPR as Approver (manager)
+  participant CAL as Google / Outlook
+  participant N as Notify
+  participant B as BRAIN audit
+
+  M->>API: POST /time/leave {kind:annual, start, end, reason}
+  API->>CHRO: check quota + blackout dates
+  alt within quota + valid
+    CHRO-->>API: ok
+  else quota exceeded
+    CHRO-->>API: 422 + remaining quota
+  end
+  API->>N: ping manager "Member X requested leave"
+  API->>B: time.leave_requested
+  APPR->>API: approve
+  API->>API: status=approved · decided_at=now()
+  API->>CAL: create event (two-way sync, FR-TIME-007)
+  CAL-->>API: provider_event_id
+  API->>B: time.leave_approved
+  API->>N: ping Member "approved"
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LIFECYCLE -->
+<!-- ============================================================ -->
+<section id="lifecycle" class="module-section">
+  <header class="section-head"><span class="section-num">7</span><h2>Entry lifecycle</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    A time entry traverses six states. Correction is encoded as a new row with <code>correction_to</code> pointing at the superseded row; the original is never edited in place.
+  </p>
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Draft: timer start / retroactive create
+  Draft --> Submitted: Member submits week
+  Submitted --> Approved: AM approves
+  Submitted --> Rejected: AM rejects (with note)
+  Submitted --> ReviseRequested: AM asks Member to revise
+  ReviseRequested --> Draft: Member edits
+  Approved --> Corrected: Member or AM files correction
+  Rejected --> Corrected: Member files correction
+  Corrected --> Submitted: chained correction row submitted
+  Approved --> [*]: feeds INV / REW
+  Rejected --> [*]
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Expense lifecycle (variant)</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Status</th><th>Trigger</th><th>BRAIN row</th></tr></thead>
+      <tbody>
+        <tr><td><code>draft</code></td><td>capture (image uploaded)</td><td><code>time.expense_capture</code></td></tr>
+        <tr><td><code>ocr_pending</code></td><td>queued to OCR worker</td><td>—</td></tr>
+        <tr><td><code>ocr_complete</code></td><td>OCR done; Member to confirm</td><td><code>time.expense_ocr_complete</code></td></tr>
+        <tr><td><code>submitted</code></td><td>Member confirms + submits</td><td><code>time.expense_submit</code></td></tr>
+        <tr><td><code>approved</code></td><td>AM approves</td><td><code>time.expense_approved</code></td></tr>
+        <tr><td><code>reimbursed</code></td><td>CFO marks batch paid</td><td><code>time.expense_reimbursed</code></td></tr>
+        <tr><td><code>rejected</code></td><td>AM rejects</td><td><code>time.expense_rejected</code></td></tr>
+        <tr><td><code>corrected</code></td><td>superseded by correction row</td><td><code>time.expense_correct</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FRs -->
+<!-- ============================================================ -->
+<section id="functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">TIME FRs from PRD §9.10 (product) and §19.5 (SRS-tier). Full normative descriptions at <a href="../reference/fr-catalog.html#time" class="text-blue-700 font-semibold underline">fr-catalog.html#time</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody>
+        <tr><td><code>FR-TIME-001</code></td><td>Daily time entry with start/end or duration; per-task assignment</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-001" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-002</code></td><td>Billable / non-billable rule by Engagement default + per-entry override</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-002" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-003</code></td><td>Receipt capture (camera, file upload, email forward)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-003" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-004</code></td><td>Weekly approval flow: Member submit → AM approve → CFO visibility; self-approval rejected</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-004" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-005</code></td><td>CUO/COO-skill nudges Members who haven't logged time in 2 days</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-005" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-006</code></td><td>Export to INV: weekly batched per-Engagement billable summary</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-006" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-007</code></td><td>Time entries ingested into BRAIN Layer 3; aggregates by CRO-skill</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-007" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-008</code></td><td>Per-Member personal time-log annotations are private namespace</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-008" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-009</code></td><td>Leave requests with kinds + approver workflow; self-approval rejected</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-009" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-010</code></td><td>Calendar two-way sync (Google / Outlook) for approved leave</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-010" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-011</code></td><td>VN Labour Code Art. 105 / 107 caps enforced as hard rules</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-011" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-012</code></td><td>Inconsistency detection (overlapping entries, &gt; 12h continuous)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-012" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-013</code></td><td>Append-only audit; corrections via <code>correction_to</code></td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-013" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-014</code></td><td>Multi-currency entries with FX snapshot at entry time</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-014" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-TIME-015</code></td><td>Vietnamese hóa đơn OCR with MST validation</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-015" class="text-blue-700">details →</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- NFRs -->
+<!-- ============================================================ -->
+<section id="non-functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">NFRs from PRD §11.2 that TIME must satisfy.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+      <tbody>
+        <tr><td><code>NFR-TIME-PERF-001</code></td><td>Timer start / stop API</td><td>p95 ≤ 250 ms</td><td>k6 + RUM</td></tr>
+        <tr><td><code>NFR-TIME-PERF-002</code></td><td>Weekly summary view (5 weeks)</td><td>p95 ≤ 400 ms</td><td>SPA RUM</td></tr>
+        <tr><td><code>NFR-TIME-PERF-003</code></td><td>OCR turn-around (receipt → result)</td><td>p95 ≤ 8 s</td><td>SQS + worker histogram</td></tr>
+        <tr><td><code>NFR-TIME-USE-001</code></td><td>Mobile capture viable on 3G</td><td>≤ 3 s upload at 150 KB receipt</td><td>simulated network test</td></tr>
+        <tr><td><code>NFR-TIME-USE-002</code></td><td>OCR accuracy on hóa đơn corpus</td><td>≥ 90% field-level</td><td>quarterly eval on 200-receipt corpus</td></tr>
+        <tr><td><code>NFR-TIME-SEC-001</code></td><td>Append-only audit integrity</td><td>0 in-place edits</td><td>schema constraint + CI gate</td></tr>
+        <tr><td><code>NFR-TIME-SEC-002</code></td><td>Receipt image at rest</td><td>KMS-encrypted, RLS by tenant</td><td>policy audit</td></tr>
+        <tr><td><code>NFR-TIME-AVL-001</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
+        <tr><td><code>NFR-TIME-COMP-001</code></td><td>VN Labour Code cap violations</td><td>= 0 (hard rule)</td><td>law_caps.rs runtime + CI test</td></tr>
+        <tr><td><code>NFR-TIME-INT-001</code></td><td>INV billable summary durability</td><td>100% delivered</td><td>retry + dead-letter monitor</td></tr>
+        <tr><td><code>NFR-TIME-DUR-001</code></td><td>Approval decisions persisted</td><td>0 lost under crash</td><td>chaos test</td></tr>
+        <tr><td><code>NFR-TIME-AUD-001</code></td><td>Correction-chain integrity</td><td>cycles forbidden; max depth 50</td><td>migration constraint + CI</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCIES -->
+<!-- ============================================================ -->
+<section id="dependencies" class="module-section">
+  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    TIME depends on AUTH, BRAIN, PROJ (for Engagement / Project / Issue references), AI (categoriser + OCR pipeline), MCP (CUO tools), and OBS. It is depended on by INV (billable summary), REW (hours context), HR (leave accruals), and PORTAL (Client-visible billable view at P2+).
+  </p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+graph LR
+  subgraph upstream ["TIME depends on"]
+    AUTH["🔐 AUTH"]
+    BRAIN["🧠 BRAIN"]
+    PROJ["📋 PROJ"]
+    AI["⚡ AI Gateway"]
+    OCR["AWS Textract<br/>(or PaddleOCR)"]
+    MCP["🔌 MCP"]
+    OBS["👁 OBS"]
+    VN["vn-mst-validate skill"]
+  end
+  TIME["⏱ TIME"]
+  subgraph downstream ["TIME is depended on by"]
+    INV["🧾 INV"]
+    REW["💎 REW"]
+    HR["👥 HR"]
+    PORTAL["Portal · P2"]
+  end
+  AUTH --> TIME
+  BRAIN --> TIME
+  PROJ --> TIME
+  AI --> TIME
+  OCR --> TIME
+  MCP --> TIME
+  OBS --> TIME
+  VN --> TIME
+  TIME --> INV
+  TIME --> REW
+  TIME --> HR
+  TIME --> PORTAL
+
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fef3c7,stroke:#b45309
+  class BRAIN,VN shipped
+  class TIME,AUTH,PROJ,AI,OCR,MCP,OBS,INV,REW,HR,PORTAL planned
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE -->
+<!-- ============================================================ -->
+<section id="compliance" class="module-section">
+  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">Time records drive payroll and tax exposures; TIME must satisfy Vietnamese labour law, tax obligations, and the standard PDPL / GDPR set.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>TIME feature that satisfies it</th></tr></thead>
+      <tbody>
+        <tr><td>Vietnam Labour Code 2019 (Law 45/2019)</td><td>Art. 105 — Normal working hours (≤ 48 h/week, ≤ 10 h/day)</td><td><code>law_caps.rs</code> enforces 40 h regular / 48 h with OT cap.</td></tr>
+        <tr><td>Vietnam Labour Code 2019</td><td>Art. 107 — Overtime caps (≤ 200 h / 300 h annually with consent)</td><td>Hard-block at 300 h annual; CHRO override required.</td></tr>
+        <tr><td>Vietnam Labour Code 2019</td><td>Art. 113 — Annual leave entitlement</td><td>LEAVE_REQUEST + quota tracking + auto-accrual.</td></tr>
+        <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Personal data processing log</td><td>Every time entry → audit row.</td></tr>
+        <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Data residency</td><td>VN-tenant receipt images on hanoi-1 S3.</td></tr>
+        <tr><td>Vietnam Circular 88/2020 (Ministry of Finance)</td><td>Hóa đơn electronic invoice format</td><td>OCR pipeline parses canonical hóa đơn fields (MST, line items, VAT).</td></tr>
+        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>DSAR export includes time entries, expenses, leave.</td></tr>
+        <tr><td>GDPR (EU 2016/679)</td><td>Art. 32 — Security of processing</td><td>KMS-encrypted receipt images, RLS, audit chain.</td></tr>
+        <tr><td>ISO/IEC 27001:2022</td><td>A.5.36 — Compliance with policies</td><td>Approval workflow enforces policy on every entry.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RBAC + per-Member private namespace (FR-TIME-008).</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC7.1 — Detection / monitoring</td><td>Inconsistency detection (overlap / &gt; 12 h).</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RISK -->
+<!-- ============================================================ -->
+<section id="risk-entries" class="module-section">
+  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">TIME-specific risks tracked in the <a href="../reference/risk-register.html#time" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><code>R-TIME-001</code></td><td>Audit chain breakage via direct DB edit</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>schema constraint forbids UPDATE on canonical columns; in-place change rejected at trigger.</td></tr>
+        <tr><td><code>R-TIME-002</code></td><td>Overtime cap bypass via timer-then-retroactive trick</td><td>Medium</td><td>High</td><td>CHRO</td><td>Cap enforcer evaluates total per ISO-week regardless of entry mode.</td></tr>
+        <tr><td><code>R-TIME-003</code></td><td>OCR mis-parse of MST → wrong vendor on invoice</td><td>Medium</td><td>Medium</td><td>CFO</td><td>vn-mst-validate skill checks; Member confirm step required before submit.</td></tr>
+        <tr><td><code>R-TIME-004</code></td><td>Self-approval via direct API call</td><td>Low</td><td>High</td><td>CFO</td><td>API rejects approver_id == member_id; CI test on every PR.</td></tr>
+        <tr><td><code>R-TIME-005</code></td><td>INV pulls double after correction</td><td>Low</td><td>High</td><td>CFO</td><td>INV reads <code>WHERE correction_to IS NULL</code>; chain walk asserted in test.</td></tr>
+        <tr><td><code>R-TIME-006</code></td><td>Receipt image leaks via presigned URL replay</td><td>Low</td><td>Medium</td><td>CSO</td><td>5-min presign TTL; one-time use; audit row on every presign.</td></tr>
+        <tr><td><code>R-TIME-007</code></td><td>FX rate snapshot stale → wrong invoice value</td><td>Medium</td><td>Medium</td><td>CFO</td><td>Snapshot per entry; weekly Vietcombank fetch; INV uses entry-time snapshot.</td></tr>
+        <tr><td><code>R-TIME-008</code></td><td>Calendar sync clobbers user-created events</td><td>Low</td><td>Medium</td><td>CTO</td><td>Sync only events created by TIME; mark with <code>X-CYBEROS-SOURCE</code> property.</td></tr>
+        <tr><td><code>R-TIME-009</code></td><td>OCR cost spike from receipt spam</td><td>Low</td><td>Low</td><td>CTO</td><td>Per-Member rate limit (50 captures / day); CFO dashboard alert at 80%.</td></tr>
+        <tr><td><code>R-TIME-010</code></td><td>Member time-log private annotations leaked in DSAR</td><td>Low</td><td>Medium</td><td>DPO</td><td>DSAR for the Member themselves includes private namespace; cross-Member DSAR excludes.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KPIs -->
+<!-- ============================================================ -->
+<section id="kpis" class="module-section">
+  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">TIME health rolls up into 9 KPIs covering usage, integrity, and OCR quality.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Weekly submission rate</strong></td><td>submitted / expected</td><td>BRAIN</td><td>≥ 95% by Friday EOB</td></tr>
+        <tr><td><strong>Days-since-last-entry distribution</strong></td><td>histogram</td><td>BRAIN</td><td>median ≤ 1 day</td></tr>
+        <tr><td><strong>OCR field-level accuracy</strong></td><td>fields_correct / fields_total</td><td>quarterly eval</td><td>≥ 90%</td></tr>
+        <tr><td><strong>OCR turn-around p95</strong></td><td>histogram</td><td>SQS + worker</td><td>≤ 8 s</td></tr>
+        <tr><td><strong>Approval cycle time p50</strong></td><td>submit → approve, business hours</td><td>BRAIN</td><td>≤ 24 h</td></tr>
+        <tr><td><strong>Self-approval attempts blocked</strong></td><td>count / month</td><td>BRAIN</td><td>tracked; expect 0</td></tr>
+        <tr><td><strong>Overtime cap violations</strong></td><td>count / month</td><td>law_caps</td><td>= 0</td></tr>
+        <tr><td><strong>INV summary delivery</strong></td><td>delivered / weeks</td><td>BRAIN</td><td>100%</td></tr>
+        <tr><td><strong>Correction-rate per Member</strong></td><td>corrections / entries</td><td>BRAIN</td><td>tracked; alert &gt; 10%</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RACI -->
+<!-- ============================================================ -->
+<section id="raci" class="module-section">
+  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">TIME is owned by CFO seat with CHRO co-ownership on the leave / labour-law facets.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Activity</th><th>CEO</th><th>CFO</th><th>CHRO</th><th>CTO</th><th>CSO</th><th>AM</th></tr></thead>
+      <tbody>
+        <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Approval-flow policy</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td></tr>
+        <tr><td>VN labour-law cap policy</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>OCR engine procurement</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>INV billable summary review</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Audit-chain integrity review</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>DSAR fulfilment</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Incident response</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td></tr>
+      </tbody>
+    </table>
+    <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI USAGE -->
+<!-- ============================================================ -->
+<section id="cli-usage" class="module-section">
+  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">A single admin CLI <code>cyberos-time</code>. Member-facing actions live in the SPA and mobile clients; the CLI is for tenant operators and CFO reporting.</p>
+
+  <h3 class="text-lg font-bold mb-2">1. Bulk-import historical entries (CSV)</h3>
+<pre><code>$ cyberos-time import --csv historical-2026-q1.csv --tenant cyberskill
+
+[import]   parsed 4,217 rows · 6 errors
+[import]   creating entries (status=approved, source=migration)
+[import]   ✓ 4,211 created · ✗ 6 in errors.csv
+[audit]    brain seq=15203 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">2. Weekly billable summary preview</h3>
+<pre><code>$ cyberos-time billable-summary --week-of 2026-08-04 --tenant cyberskill
+
+week of 2026-08-04 (5 working days)
+engagement                     hours   billable_vnd   rate_card
+ACME Q3 platform               142.5   285,000,000    senior-mix
+BetaCo retainer                 40.0    72,000,000    retainer-flat
+GamaCorp T&M                    12.0    24,000,000    senior
+─────────────────────────────────────────────────────────────
+total                          194.5   381,000,000
+
+→ push to INV?  [y/N]</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">3. Push to INV</h3>
+<pre><code>$ cyberos-time inv push --week-of 2026-08-04
+
+[push]   194.5 hours · 381 mil VND · 3 engagements
+[inv]    batch_id: 01HZK5… created (status=draft on INV)
+[audit]  brain seq=15211 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">4. Overtime cap report</h3>
+<pre><code>$ cyberos-time overtime-report --year 2026
+
+member                  ot_hours  cap   pct_used  risk
+linh@cyberskill.world   142       300   47.3%     ▬ ok
+tu@cyberskill.world     203       300   67.7%     ▲ approaching
+hai@cyberskill.world    287       300   95.7%     ▼ critical → CHRO sign-off required</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">5. Replay OCR for a receipt</h3>
+<pre><code>$ cyberos-time ocr replay --expense 01HZK6…
+
+[replay]   re-running OCR pipeline (engine=textract)
+[replay]   parsed: vendor=Highlands Coffee, MST=0304556677, amount=178,000 VND, VAT=16,182 VND
+[replay]   vn-mst-validate: ✓ matches GDT registry
+[replay]   categoriser: T&E.meals (confidence=0.93)
+[audit]    brain seq=15218 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">6. DSAR export for a Member</h3>
+<pre><code>$ cyberos-time dsar-export --subject linh@cyberskill.world --output linh-time.zip
+
+[dsar]   subject:   linh@cyberskill.world
+[dsar]   time_entries:   1,247 (including 18 corrected chains)
+[dsar]   expenses:        287 (with receipts)
+[dsar]   leave_requests:   12
+[dsar]   approvals:        842
+[dsar]   written:   linh-time.zip (62 MB)
+[audit]  brain seq=15221 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">7. Calendar reconcile (re-sync drift)</h3>
+<pre><code>$ cyberos-time calendar reconcile --provider google --member linh@cyberskill.world
+
+[reconcile]  fetching Google calendar events created by CyberOS …
+[reconcile]  3 leave requests · 3 calendar events found · 0 drift
+[reconcile]  done</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATUS -->
+<!-- ============================================================ -->
+<section id="status" class="module-section">
+  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+    <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~7,500</div><div class="note">Rust + TS + OCR worker</div></div>
+    <div class="fact-card"><div class="label">Planned tests</div><div class="value">90+</div><div class="note">incl. OCR golden corpus</div></div>
+    <div class="fact-card"><div class="label">External libs</div><div class="value">~10</div><div class="note">axum · sqlx · Textract SDK</div></div>
+    <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">~18 planned</div><div class="note"><code>cyberos-time</code></div></div>
+    <div class="fact-card"><div class="label">P1 budget</div><div class="value">~$70/mo</div><div class="note">Fargate + RDS + S3 + OCR</div></div>
+  </div>
+
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Timer start/stop + retroactive entry</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Per-Engagement billable rules</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Append-only audit + <code>correction_to</code></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Weekly approval workflow</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>VN Labour Code cap enforcement</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Multi-currency + FX snapshot</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Camera receipt capture</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Vietnamese hóa đơn OCR + MST validate</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Expense categoriser (chart of accounts)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Leave request + approver flow</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Calendar two-way sync</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>INV weekly billable summary push</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>CUO nudge for missing entries</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Inconsistency detection</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Self-hosted PaddleOCR (cost optimisation)</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
+        <tr><td>Native mobile (offline-first capture)</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references" class="module-section">
+  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+  <div class="bbg-card p-5">
+    <ul class="space-y-2 text-sm">
+      <li><strong>PRD §9.10</strong> — TIME product FRs.</li>
+      <li><strong>PRD §19.5</strong> — Schedule, Leave, Attendance SRS-tier FRs.</li>
+      <li><strong>PRD §11.2</strong> — NFRs that TIME must satisfy.</li>
+      <li><strong>SRS §4.10</strong> — Formal FR-TIME-001 through FR-TIME-015 with verification methods.</li>
+      <li><strong>Vietnam Labour Code (Law 45/2019/QH14)</strong> — Art. 105 (working hours), Art. 107 (overtime), Art. 113 (annual leave).</li>
+      <li><strong>Vietnam Decree 13/2023/NĐ-CP</strong> — Personal data processing.</li>
+      <li><strong>Vietnam Decree 53/2022/NĐ-CP</strong> — Data residency.</li>
+      <li><strong>Vietnam Law 91/2025/QH15 (PDPL)</strong> — Personal Data Protection Law.</li>
+      <li><strong>Circular 88/2020/TT-BTC</strong> — Hóa đơn (Vietnamese VAT e-invoice) format.</li>
+      <li><strong>AWS Textract</strong> — OCR engine (P1).</li>
+      <li><strong>PaddleOCR</strong> — open-source alternative for P2+ self-hosting.</li>
+      <li><strong>vn-mst-validate</strong> — CyberOS skill for MST validation against GDT.</li>
+      <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#time" class="text-blue-700 underline">infrastructure.html#time</a>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PREV / NEXT NAV -->
+<!-- ============================================================ -->
+<nav class="module-nav-footer mt-12">
+  <a href="proj.html" class="text-blue-700 font-semibold no-underline hover:underline">← Previous module: PROJ</a>
+  <a href="crm.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: CRM →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

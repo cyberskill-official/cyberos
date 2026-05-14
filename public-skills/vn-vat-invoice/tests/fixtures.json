@@ -1,0 +1,65 @@
+{
+  "valid": [
+    {
+      "seller": {"name": "Công ty TNHH ABC", "mst": "0312345678", "address": "123 Lê Lợi, P. Bến Nghé, Q.1, TP.HCM"},
+      "buyer":  {"name": "Công ty XYZ",      "mst": "0107654321", "address": "45 Trần Hưng Đạo, Q. Hoàn Kiếm, Hà Nội"},
+      "invoice_no": "INV-2026-001",
+      "invoice_date": "2026-05-14",
+      "payment_method": "TM/CK",
+      "currency": "VND",
+      "lines": [
+        {"name": "Tư vấn phần mềm",      "unit": "giờ", "qty": 80, "unit_price": 500000,   "vat_rate": 0.10},
+        {"name": "Triển khai hệ thống", "unit": "lần", "qty": 1,  "unit_price": 50000000, "vat_rate": 0.10}
+      ],
+      "_expected_totals": {"amount": 90000000, "vat": 9000000, "grand": 99000000},
+      "_label": "two-line standard 10% invoice"
+    },
+    {
+      "seller": {"name": "Hiệu thuốc Số 1", "mst": "0312345678", "address": "10 Hai Bà Trưng, TP.HCM"},
+      "buyer":  {"name": "Bệnh viện Hữu Nghị", "mst": "0107654321", "address": "Trần Khánh Dư, Hà Nội"},
+      "invoice_no": "INV-2026-002",
+      "invoice_date": "2026-05-14",
+      "payment_method": "CK",
+      "currency": "VND",
+      "lines": [
+        {"name": "Thiết bị y tế (máy đo huyết áp)", "unit": "cái",     "qty": 5, "unit_price": 1200000,  "vat_rate": 0.05},
+        {"name": "Phần mềm quản lý bệnh viện",       "unit": "license", "qty": 1, "unit_price": 25000000, "vat_rate": 0.10}
+      ],
+      "_expected_totals": {"amount": 31000000, "vat": 2800000, "grand": 33800000},
+      "_label": "mixed VAT rates 5% + 10%"
+    },
+    {
+      "seller": {"name": "Công ty TNHH ABC", "mst": "0312345678", "address": "..."},
+      "buyer":  {"name": "Chi nhánh Đà Nẵng — Công ty XYZ", "mst": "0107654321-001", "address": "..."},
+      "invoice_no": "INV-2026-003",
+      "invoice_date": "2026-05-14",
+      "lines": [
+        {"name": "Dịch vụ tư vấn", "unit": "giờ", "qty": 10, "unit_price": 1000000, "vat_rate": 0.08}
+      ],
+      "_expected_totals": {"amount": 10000000, "vat": 800000, "grand": 10800000},
+      "_label": "branch MST on buyer"
+    }
+  ],
+  "invalid": [
+    {
+      "seller": {"name": "X", "address": "..."},
+      "buyer":  {"name": "Y", "mst": "0107654321", "address": "..."},
+      "invoice_no": "INV-2026-004",
+      "invoice_date": "2026-05-14",
+      "lines": [
+        {"name": "Service", "unit": "giờ", "qty": 1, "unit_price": 100000, "vat_rate": 0.10}
+      ],
+      "_label": "missing seller MST",
+      "_expected_error_contains": "mst"
+    },
+    {
+      "seller": {"name": "X", "mst": "0312345678", "address": "..."},
+      "buyer":  {"name": "Y", "mst": "0107654321", "address": "..."},
+      "invoice_no": "INV-2026-005",
+      "invoice_date": "2026-05-14",
+      "lines": [],
+      "_label": "empty lines array",
+      "_expected_error_contains": "line item"
+    }
+  ]
+}

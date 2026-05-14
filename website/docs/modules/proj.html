@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PROJ — CyberOS</title>
+  <meta name="description" content="PROJ — Project management. Linear-style three-primitive model (Issue, Cycle, Project) plus Engagement for consultancy contracts. Sync-engine with optimistic local mutations + Yjs CRDT offline-edit + server-canonical resolution.">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="../assets/scripts.js"></script>
+  <style>
+    /* PROJ module palette — indigo */
+    :root {
+      --proj:       #4f46e5;
+      --proj-bg:    #eef2ff;
+      --proj-tint:  #e0e7ff;
+      --proj-dark:  #3730a3;
+    }
+    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .fact-card { background: var(--proj-bg); border:1px solid var(--proj-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--proj-dark); }
+    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+    .toc-link:hover { background: var(--proj-bg); color: var(--proj-dark); }
+    .toc-link.active { background: var(--proj-tint); color: var(--proj-dark); font-weight: 600; }
+    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--proj-dark); color:white; font-weight:800; font-size:0.875rem; }
+    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
+    .pill-must     { background:#fee2e2; color:#b91c1c; }
+    .pill-should   { background:#fef3c7; color:#b45309; }
+    .pill-could    { background:#e0f2fe; color:#075985; }
+    .pill-shipped  { background:#d1fae5; color:#065f46; }
+    .pill-planned  { background:#e0e7ff; color:#3730a3; }
+    .pill-partial  { background:#fef3c7; color:#b45309; }
+    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    table.kt tbody tr:nth-child(even) td { background: var(--proj-bg); }
+    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
+    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
+    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
+    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
+    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--proj-bg); border-radius: 0.75rem; border: 1px solid var(--proj-tint); }
+    .bbg-card.tint-proj { border-top: 4px solid var(--proj); }
+    .primitive-card { padding: 1rem 1.25rem; border-radius: 0.625rem; background: var(--bg-card); border: 1px solid var(--border); border-left: 4px solid var(--proj); }
+    .primitive-card .pname { font-weight: 800; color: var(--proj-dark); }
+  </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P1"></span>
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#catalog">Modules</a>
+      <span class="sep">›</span>
+      <span class="current">PROJ</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <span class="text-5xl">📋</span>
+      <h1 class="h-display">PROJ</h1>
+      <span class="phase-chip phase-p1">P1 · Internal productivity</span>
+      <span class="pill pill-planned">Planned · P1 design phase</span>
+      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: COO seat (interim CEO)</span>
+    </div>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+      Project management for consultancies — Linear's three-primitive model (Issue · Cycle · Project), plus an Engagement primitive for the contract under which delivery happens, with a sync-engine that feels instant.
+    </p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      PROJ adopts the Linear / Height / Cycle / Plane model that has been validated by every modern consultancy-friendly issue tracker: Issues are the unit of work, Cycles are the 1-2 week iterations issues are scheduled into, and Projects are durable containers that aggregate issues across cycles. CyberOS adds the <strong>Engagement</strong> primitive — the contract with a Client under which a Project is delivered — because consultancies need the rate-card, billable / non-billable split, and TIME→INV flow that pure product-shop tools assume away. Mutation UX is sync-engine: every change applies optimistically to local state, propagates via WebSocket, and the server-canonical state wins on conflict. Yjs CRDTs handle the offline-edit case. Vietnamese localisation covers status names, salutations, and UI strings. PRD §9.5 locks the FRs; this page documents the planned implementation at <code>cyberos/services/proj/</code>.
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#architecture" class="btn btn-primary">Architecture
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#key-flows" class="btn btn-secondary">Sync engine</a>
+      <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
+      <a href="../reference/fr-catalog.html#proj" class="btn btn-secondary">FR catalog</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-0.5 text-sm">
+        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+        <li><a class="toc-link" href="#why">Why PROJ exists</a></li>
+        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+        <li><a class="toc-link" href="#architecture">Architecture</a></li>
+        <li><a class="toc-link" href="#data-model">Data model</a></li>
+        <li><a class="toc-link" href="#api-surface">API surface</a></li>
+        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+        <li><a class="toc-link" href="#lifecycle">Issue lifecycle</a></li>
+        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+        <li><a class="toc-link" href="#kpis">KPIs</a></li>
+        <li><a class="toc-link" href="#raci">RACI</a></li>
+        <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
+        <li><a class="toc-link" href="#status">Phase status</a></li>
+        <li><a class="toc-link" href="#references">References</a></li>
+      </ul>
+      <hr class="my-4 border-slate-200">
+      <div class="h-eyebrow mb-2">Source</div>
+      <div class="text-xs text-slate-500 leading-relaxed">
+        <code>cyberos/services/proj/</code><br>
+        PRD §9.5<br>
+        SRS §4.5
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="hero" class="module-section">
+  <div class="bbg-card tint-proj p-6 mb-6">
+    <p class="text-lg text-slate-700 leading-relaxed mb-5">
+      PROJ is CyberOS's <strong>project tracker, sprint engine, and Engagement billing surface</strong> in one. The data model is Issue → Cycle → Project plus Engagement (the contract). Status is a closed enum (<code>backlog · todo · in-progress · in-review · done · cancelled</code>) with a configurable per-project workflow on top. Priority is the standard <code>urgent · high · medium · low · none</code>. Mutations are optimistic locally, server-canonical eventually; Yjs CRDTs let two Members edit the same description offline and merge without conflict. Every issue can link to BRAIN entries — a memory becomes a citation, a decision-log row becomes a sub-task. AI features are first-class: CUO drafts the cycle review at end-of-cycle; the blocker-detector watches comments for "blocked by"; estimate calibration tracks estimated vs actual hours per Member per task class. PRD §9.5.
+    </p>
+    <div class="fact-grid">
+      <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+      <div class="fact-card"><div class="label">Primitives</div><div class="value">4</div><div class="note">Issue · Cycle · Project · Engagement</div></div>
+      <div class="fact-card"><div class="label">Sync</div><div class="value">Optimistic</div><div class="note">WebSocket + server-canonical</div></div>
+      <div class="fact-card"><div class="label">Offline</div><div class="value">Yjs CRDT</div><div class="note">offline-edit + merge</div></div>
+      <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">status / UI strings</div></div>
+      <div class="fact-card"><div class="label">AI features</div><div class="value">4</div><div class="note">triage · blocker · review · calibration</div></div>
+      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · TIME</div><div class="note">+ AI · MCP · OBS</div></div>
+      <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~11,000</div><div class="note">Rust + TS SPA + Yjs</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
+<!-- ============================================================ -->
+<section id="why" class="module-section">
+  <header class="section-head"><span class="section-num">1</span><h2>Why PROJ exists</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Linear's data-model insight was that three primitives — Issue, Cycle, Project — cover almost every workflow that product and services teams actually do, and that a fourth primitive ("Engagement") covers the consultancy case once you add a rate card and a billable / non-billable distinction. The UX insight was sync-engine: the user never waits for a server round-trip; the server is the eventual authority, but the local copy is the one being typed into. PROJ replicates both insights and adds the CyberOS-specific bindings: every issue links to BRAIN memories (so a decision-log row can spawn a sub-task), every comment is a candidate for a blocker-detection nudge, every cycle ends with a CUO-drafted review the Account Manager can edit before sending to the Client.
+  </p>
+  <div class="grid md:grid-cols-3 gap-4 my-5">
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">⚡</div>
+      <div class="font-bold text-slate-900 mb-1">Sync-engine feel</div>
+      <p class="text-sm text-slate-600">Optimistic local updates, WebSocket fan-out, server-canonical rebase on conflict. No spinners on the hot path; offline edits merge via Yjs CRDT.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">📑</div>
+      <div class="font-bold text-slate-900 mb-1">Engagement primitive</div>
+      <p class="text-sm text-slate-600">Where Linear has "Project", we have "Project under Engagement". Rate cards, billable rules, and TIME → INV flow ride on the Engagement.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🧠</div>
+      <div class="font-bold text-slate-900 mb-1">BRAIN-linked work</div>
+      <p class="text-sm text-slate-600">Every issue can cite a BRAIN memory; tasks are ingested into Layer 3; cross-project pattern queries answer "what's the pattern in late tasks?".</p>
+    </div>
+  </div>
+  <p class="text-slate-700 leading-relaxed">
+    The bet is that consultancies do not need a different tracker per client — they need one tracker that understands the consulting shape natively. Linear validated the three-primitive model; CyberOS extends it with the contract layer and the AI-native loop. The sync-engine is the rest of the way to "feels instant" — Linear documented the pattern; we re-implement it because the consulting cycle is two-weeks-anchored to a Client review, and that review needs to be CUO-draftable from the comment stream.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT — 5W1H2C5M -->
+<!-- ============================================================ -->
+<section id="what" class="module-section">
+  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of PROJ's scope. Every cell traces back to PRD §9.5.</p>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>5W · What</strong></td><td>What is PROJ?</td><td>An issue tracker with four primitives (Issue, Cycle, Project, Engagement). Sync-engine for the SPA; Yjs CRDT for offline-edit merges; PGroonga for Vietnamese full-text; BRAIN integration both ways (issues link to memories, completed issues ingested as Layer 3 nodes).</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Members:</strong> create / assign / progress issues; review their own cycle queue daily. <strong>Account Managers:</strong> own the Engagement; edit + send CUO-drafted cycle reviews. <strong>Clients:</strong> read-only Project view via PORTAL (P2). <strong>Agents:</strong> CUO Notify on blocker detection; CUO/COO-skill triage suggestions.</td></tr>
+        <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: WebSocket fan-out on every mutation; nightly batch for estimate-calibration metric refresh; end-of-cycle batch for review draft generation. Auto-roll of incomplete tasks at cycle close (configurable per team).</td></tr>
+        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (SG-1) with VN-residency S3 for tenant uploads. P3+: multi-region active-active. The sync server is a per-tenant axum binary; the SPA is hosted as static assets.</td></tr>
+        <tr><td><strong>5W · Why</strong></td><td>Why a separate tracker?</td><td>Existing trackers do not natively model the Engagement / rate-card / billable-time loop; sync-engine UX is rare outside Linear; and BRAIN-linked work is a CyberOS-specific need that no off-the-shelf tracker provides.</td></tr>
+        <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Mutations: client-side optimistic apply → JMAP-like RPC over WebSocket → server validates → server-canonical state broadcast to all connected SPAs → conflicts resolved server-side and rebased into the client. CRDT: long-form fields (description, comment body) are Yjs documents; the rest is last-write-wins with a vector clock.</td></tr>
+        <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$80 / month for SG-1 single-tenant pilot. 50-tenant: ~$340 / month (RDS + Redis + Fargate + S3). Per-issue write cost ~$0.0000004.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Issues ingested into BRAIN Layer 3 — but body content gates as per FR-PROJ-009. (b) Per-task ACL — private engagements MUST NOT be visible to non-engaged Members. (c) Vietnamese localisation of status / UI strings — non-negotiable for P1 launch.</td></tr>
+        <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 + PGroonga · Redis 7 · S3 + KMS · Yjs (server-side ywasm + client TS) · TypeScript SPA (React + Zustand) · WebSocket fan-out via NATS JetStream · OpenTelemetry SDK.</td></tr>
+        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Three-primitive model (Linear). Sync-engine UX (Linear). Yjs for CRDT long-form (because OT is too brittle at scale). Closed status enum + workflow overlay (not free-form labels). PGroonga for VN search. NATS JetStream for fan-out (not a Postgres LISTEN/NOTIFY — won't scale past 1k WS connections).</td></tr>
+        <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Per-tenant Fargate axum binary handling WebSocket + REST. Postgres RDS Multi-AZ. Redis for hot-cache and WS rooms. NATS JetStream cluster (3 nodes P2+). S3 for attachments.</td></tr>
+        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.75 FTE (CTO seat) at P1 launch. By P2+: COO seat owns product + Account Manager workflow; CTO owns engine + sync layer.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Issue write p95 ≤ 120 ms; SPA list-view load p95 ≤ 250 ms; offline-merge correctness ≥ 99.9% (property tests); BRAIN ingestion p95 ≤ 5 s; cycle-review draft acceptance rate ≥ 60% by Account Manager.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================================ -->
+<section id="architecture" class="module-section">
+  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    PROJ is one axum binary with four surfaces (sync-engine WebSocket, REST admin, GraphQL federated subgraph, MCP tool catalogue) and three stores (Postgres for canonical state + Yjs document snapshots, Redis for WS rooms and search cache, S3 for attachments). NATS JetStream fans mutations out to every connected SPA.
+  </p>
+
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+graph TB
+  subgraph CLIENT ["Clients"]
+    SPA["SPA<br/>React + Zustand"]
+    MOBILE["Mobile (P3)"]
+    AGENT["🎯 CUO agent<br/>via MCP"]
+  end
+
+  subgraph EDGE ["Edge"]
+    WSGW["WebSocket gateway<br/>JWT-authed"]
+    GQL["GraphQL subgraph<br/>(federated)"]
+    REST["Admin REST"]
+    MCP["MCP tool surface"]
+  end
+
+  subgraph CORE ["PROJ service (Rust)"]
+    SYNC["Sync engine<br/>optimistic + rebase"]
+    CRDT["Yjs document server<br/>(ywasm)"]
+    WF["Workflow engine<br/>status transitions"]
+    AI["AI hooks<br/>blocker · review · calibration"]
+    BRAIN_ING["BRAIN ingestor<br/>Layer 3"]
+    AUTH_CHK["RBAC + per-task ACL"]
+  end
+
+  subgraph STORES ["Stores"]
+    PG[("PostgreSQL + PGroonga<br/>issues · cycles · projects<br/>RLS by tenant_id")]
+    RED[("Redis 7<br/>WS rooms · search cache")]
+    S3[("S3 + KMS<br/>attachments")]
+    NATS[("NATS JetStream<br/>mutation fan-out")]
+  end
+
+  subgraph SINKS ["Sinks"]
+    BRAIN["🧠 BRAIN<br/>Layer 3 ingest · audit"]
+    TIME["⏱ TIME<br/>billable / non-billable"]
+    INV["🧾 INV<br/>billable hours → invoice"]
+    OBS["👁 OBS<br/>traces + SLO"]
+    CUO["🎯 CUO<br/>Notify · review draft"]
+  end
+
+  SPA --> WSGW
+  MOBILE --> WSGW
+  AGENT --> MCP
+  WSGW --> SYNC
+  GQL --> SYNC
+  REST --> SYNC
+  MCP --> SYNC
+  SYNC --> CRDT
+  SYNC --> WF
+  SYNC --> AI
+  SYNC --> BRAIN_ING
+  SYNC --> AUTH_CHK
+  SYNC --> PG
+  SYNC --> RED
+  SYNC --> NATS
+  NATS --> WSGW
+  CRDT --> PG
+  AI --> CUO
+  BRAIN_ING --> BRAIN
+  WF --> TIME
+  TIME --> INV
+  SYNC --> S3
+  SYNC --> OBS
+
+  classDef planned fill:#e0e7ff,stroke:#3730a3
+  classDef store fill:#f5f3ff,stroke:#7c3aed
+  classDef sink fill:#d1fae5,stroke:#047857
+  class SPA,MOBILE,AGENT,WSGW,GQL,REST,MCP,SYNC,CRDT,WF,AI,BRAIN_ING,AUTH_CHK planned
+  class PG,RED,S3,NATS store
+  class BRAIN,TIME,INV,OBS,CUO sink
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mt-6 mb-3">The four primitives</h3>
+  <div class="grid md:grid-cols-2 gap-4 mb-5">
+    <div class="primitive-card"><div class="pname">Issue (the atomic unit)</div><p class="text-sm text-slate-600 mt-1">A discrete piece of work. Has title, description (Yjs), status, priority, assignee, estimate, labels, dependencies, parent issue, cycle binding. Comments are sub-resources.</p></div>
+    <div class="primitive-card"><div class="pname">Cycle (1-2 week sprint)</div><p class="text-sm text-slate-600 mt-1">A time-boxed bucket of Issues. Has start / end dates, target velocity, retro link. Incomplete Issues auto-roll to the next cycle if the team configures it (FR-PROJ-005).</p></div>
+    <div class="primitive-card"><div class="pname">Project (durable container)</div><p class="text-sm text-slate-600 mt-1">A multi-cycle initiative. Has roadmap view, status (planned / active / paused / completed), client visibility flag (visible via PORTAL when the Engagement permits).</p></div>
+    <div class="primitive-card"><div class="pname">Engagement (the contract)</div><p class="text-sm text-slate-600 mt-1">The contract under which a Project is delivered for a Client. Carries rate card, billable / non-billable rules, ACL. TIME → INV pulls from here. Vietnamese-consultancy-specific.</p></div>
+  </div>
+
+  <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>sync.rs</code></td><td>services/proj/src/sync.rs</td><td>Sync-engine — optimistic apply, conflict detection, server-canonical broadcast.</td></tr>
+        <tr><td><code>crdt.rs</code></td><td>services/proj/src/crdt.rs</td><td>Yjs document server via ywasm. Long-form fields (description, comment body) are Yjs; the rest is LWW with vector clock.</td></tr>
+        <tr><td><code>workflow.rs</code></td><td>services/proj/src/workflow.rs</td><td>Per-project workflow overlay on the closed status enum.</td></tr>
+        <tr><td><code>ai_blocker.rs</code></td><td>services/proj/src/ai_blocker.rs</td><td>Blocker detection from comment stream. "blocked by", "waiting on", and dwell-time heuristics → CUO Notify.</td></tr>
+        <tr><td><code>ai_review.rs</code></td><td>services/proj/src/ai_review.rs</td><td>End-of-cycle review draft generator. Pulls from issue changelog + comments; CUO-stamped persona; AM edits before sending.</td></tr>
+        <tr><td><code>ai_calibration.rs</code></td><td>services/proj/src/ai_calibration.rs</td><td>Estimate vs actual hours per Member per task class. Surfaces calibration drift to Member's dashboard.</td></tr>
+        <tr><td><code>brain_ingest.rs</code></td><td>services/proj/src/brain_ingest.rs</td><td>Layer 3 ingestion of issues + comments (FR-PROJ-009). Body content gates per ACL.</td></tr>
+        <tr><td><code>acl.rs</code></td><td>services/proj/src/acl.rs</td><td>Per-task / per-engagement ACL. Private engagements not visible to non-engaged Members (FR-PROJ-010).</td></tr>
+        <tr><td><code>autoroll.rs</code></td><td>services/proj/src/autoroll.rs</td><td>End-of-cycle auto-roll. Incomplete issues move to next cycle if team config permits (FR-PROJ-005).</td></tr>
+        <tr><td><code>nats_fanout.rs</code></td><td>services/proj/src/nats_fanout.rs</td><td>NATS JetStream publisher / subscriber for mutation fan-out.</td></tr>
+        <tr><td><code>search.rs</code></td><td>services/proj/src/search.rs</td><td>PGroonga query builder; VN bigram tokenisation.</td></tr>
+        <tr><td><code>graphql.rs</code></td><td>services/proj/src/graphql.rs</td><td>Federated subgraph; <code>@key(fields:"id")</code> on every primitive.</td></tr>
+        <tr><td><code>mcp.rs</code></td><td>services/proj/src/mcp.rs</td><td>MCP tool catalogue exported to CUO.</td></tr>
+        <tr><td><code>i18n.rs</code></td><td>services/proj/src/i18n.rs</td><td>vi + en string tables; locale resolved from JWT claim; status names localised.</td></tr>
+        <tr><td><code>migrations/</code></td><td>services/proj/migrations/</td><td>sqlx migrations with RLS on every table.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DATA MODEL -->
+<!-- ============================================================ -->
+<section id="data-model" class="module-section">
+  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    The canonical state is PostgreSQL with row-level security by <code>tenant_id</code> and, for private engagements, additional ACL enforcement by <code>engagement_id</code> membership. Long-form fields are Yjs document snapshots stored as <code>bytea</code> blobs; the active CRDT state lives in Redis for the duration of a session.
+  </p>
+
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+erDiagram
+  TENANT ||--o{ ENGAGEMENT : "has"
+  ENGAGEMENT ||--o{ PROJECT : "delivered as"
+  ENGAGEMENT ||--o{ RATE_CARD : "carries"
+  PROJECT ||--o{ ISSUE : "contains"
+  PROJECT ||--o{ CYCLE : "has"
+  CYCLE ||--o{ ISSUE : "schedules"
+  ISSUE ||--o{ COMMENT : "has"
+  ISSUE ||--o{ DEPENDENCY : "depends on"
+  ISSUE ||--o{ LABEL_ASSIGNMENT : "tagged"
+  ISSUE ||--o| ASSIGNEE : "assigned to"
+  ISSUE ||--o{ ATTACHMENT : "has"
+  ISSUE ||--o{ TIME_ENTRY : "logged against"
+  PROJECT ||--o{ WORKFLOW : "uses"
+  WORKFLOW ||--o{ WORKFLOW_STATE : "defines"
+  ISSUE ||--o{ HISTORY_EVENT : "audited"
+  ISSUE ||--o{ BRAIN_LINK : "cites"
+  CYCLE ||--o| CYCLE_REVIEW : "summarised"
+
+  TENANT {
+    uuid id PK
+    string slug
+  }
+  ENGAGEMENT {
+    uuid id PK
+    uuid tenant_id FK
+    uuid client_account_id FK "→ CRM"
+    string name
+    date   start_date
+    date   end_date
+    string acl_mode "open | restricted"
+    string billing_mode "T&M | fixed-fee | retainer"
+  }
+  RATE_CARD {
+    uuid id PK
+    uuid engagement_id FK
+    string role "senior | mid | junior | architect"
+    int rate_vnd_per_hour
+    int rate_usd_per_hour
+    bool billable_default
+  }
+  PROJECT {
+    uuid id PK
+    uuid engagement_id FK
+    string name
+    string status "planned | active | paused | completed"
+    bool   client_visible
+    timestamp created_at
+  }
+  CYCLE {
+    uuid id PK
+    uuid project_id FK
+    int  number
+    date start_date
+    date end_date
+    int  velocity_target
+    bool autoroll_enabled
+  }
+  ISSUE {
+    uuid id PK
+    uuid project_id FK
+    uuid cycle_id FK "nullable (backlog)"
+    string code "PROJ-1234"
+    string title
+    bytea description_yjs "Yjs doc snapshot"
+    string status "backlog|todo|in-progress|in-review|done|cancelled"
+    string priority "urgent|high|medium|low|none"
+    uuid assignee_id FK
+    int  estimate_hours
+    int  actual_hours
+    uuid parent_issue_id FK "nullable"
+    timestamp created_at
+    timestamp updated_at
+    uuid created_by FK
+  }
+  COMMENT {
+    uuid id PK
+    uuid issue_id FK
+    uuid author_id FK
+    bytea body_yjs "Yjs doc"
+    timestamp created_at
+  }
+  DEPENDENCY {
+    uuid from_issue_id FK
+    uuid to_issue_id FK
+    string kind "blocks | relates_to | duplicates"
+  }
+  LABEL_ASSIGNMENT {
+    uuid issue_id FK
+    string label
+  }
+  ATTACHMENT {
+    uuid id PK
+    uuid issue_id FK
+    string filename
+    string s3_key
+    bigint size_bytes
+  }
+  TIME_ENTRY {
+    uuid id PK
+    uuid issue_id FK
+    uuid member_id FK
+    int  minutes
+    date entry_date
+    bool billable
+    string source "TIME"
+  }
+  WORKFLOW {
+    uuid id PK
+    uuid project_id FK
+    string name
+  }
+  WORKFLOW_STATE {
+    uuid id PK
+    uuid workflow_id FK
+    string code
+    string display_name_vi
+    string display_name_en
+    int order_idx
+    string category "todo | in-progress | done | cancelled"
+  }
+  HISTORY_EVENT {
+    uuid id PK
+    uuid issue_id FK
+    uuid actor_id FK
+    string kind "create | status | assign | comment | …"
+    string from_value
+    string to_value
+    timestamp ts
+    string brain_chain
+  }
+  BRAIN_LINK {
+    uuid issue_id FK
+    string brain_path "memories/decisions/…"
+    string relation "cites | implements | supersedes"
+  }
+  CYCLE_REVIEW {
+    uuid cycle_id PK
+    string draft_markdown
+    string sent_markdown
+    timestamp generated_at
+    timestamp sent_at
+  }
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Status enum + workflow overlay</h3>
+  <div class="bbg-card p-5">
+    <p class="text-sm text-slate-600 mb-3">The status enum is closed (<code>backlog · todo · in-progress · in-review · done · cancelled</code>). Per-project workflows can rename and re-order the visible states but always map back to a category in the closed set. The category is what drives velocity calculation, auto-roll, and BRAIN ingestion.</p>
+    <table class="kt">
+      <thead><tr><th>Status</th><th>vi name</th><th>en name</th><th>Category</th><th>Velocity counts?</th></tr></thead>
+      <tbody>
+        <tr><td><code>backlog</code></td><td>Tồn đọng</td><td>Backlog</td><td>todo</td><td>no</td></tr>
+        <tr><td><code>todo</code></td><td>Cần làm</td><td>Todo</td><td>todo</td><td>no</td></tr>
+        <tr><td><code>in-progress</code></td><td>Đang làm</td><td>In progress</td><td>in-progress</td><td>yes</td></tr>
+        <tr><td><code>in-review</code></td><td>Đang review</td><td>In review</td><td>in-progress</td><td>yes</td></tr>
+        <tr><td><code>done</code></td><td>Hoàn thành</td><td>Done</td><td>done</td><td>yes</td></tr>
+        <tr><td><code>cancelled</code></td><td>Huỷ bỏ</td><td>Cancelled</td><td>cancelled</td><td>no</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- API SURFACE -->
+<!-- ============================================================ -->
+<section id="api-surface" class="module-section">
+  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Four surfaces: a WebSocket sync-engine for the SPA, a GraphQL federated subgraph for cross-module queries, an admin REST for migration and bulk import, and an MCP tool catalogue for CUO. All four share the same RBAC predicate.
+  </p>
+
+  <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (federated)</h3>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-graphql">extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@requiresScopes"])
+
+type Engagement @key(fields: "id") {
+  id: ID!
+  name: String!
+  clientAccountId: ID!
+  startDate: Date!
+  endDate: Date
+  billingMode: BillingMode!
+  projects: [Project!]!
+  rateCards: [RateCard!]!
+}
+
+type Project @key(fields: "id") {
+  id: ID!
+  engagementId: ID!
+  name: String!
+  status: ProjectStatus!
+  clientVisible: Boolean!
+  cycles(active: Boolean): [Cycle!]!
+  issues(filter: IssueFilter, limit: Int = 50, cursor: String): IssueConnection!
+}
+
+type Cycle @key(fields: "id") {
+  id: ID!
+  projectId: ID!
+  number: Int!
+  startDate: Date!
+  endDate: Date!
+  velocityTarget: Int
+  issues: [Issue!]!
+  review: CycleReview
+}
+
+type Issue @key(fields: "id") {
+  id: ID!
+  code: String!
+  title: String!
+  description: String!    # rendered from Yjs doc
+  status: IssueStatus!
+  priority: IssuePriority!
+  assignee: Subject
+  estimateHours: Int
+  actualHours: Int
+  cycleId: ID
+  parent: Issue
+  children: [Issue!]!
+  dependencies: [Dependency!]!
+  comments: [Comment!]!
+  labels: [String!]!
+  attachments: [Attachment!]!
+  brainLinks: [BrainLink!]!
+  history: [HistoryEvent!]!
+}
+
+enum IssueStatus { BACKLOG TODO IN_PROGRESS IN_REVIEW DONE CANCELLED }
+enum IssuePriority { URGENT HIGH MEDIUM LOW NONE }
+enum ProjectStatus { PLANNED ACTIVE PAUSED COMPLETED }
+enum BillingMode { T_AND_M FIXED_FEE RETAINER }
+
+type Mutation {
+  createIssue(input: CreateIssueInput!): Issue!
+    @requiresScopes(scopes: [["proj.write"]])
+  updateIssue(id: ID!, patch: IssuePatch!): Issue!
+  assignIssue(id: ID!, assigneeId: ID!): Issue!
+  moveIssueToCycle(id: ID!, cycleId: ID): Issue!
+  addComment(issueId: ID!, body: String!): Comment!
+  closeCycle(cycleId: ID!): CycleReview!
+    @requiresScopes(scopes: [["proj.cycle.close"]])
+}</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Sync-engine WebSocket protocol</h3>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-json">// Client → server: optimistic mutation
+{
+  "op": "issue.update",
+  "client_seq": 12834,
+  "tenant_id": "01HZ…",
+  "issue_id": "01HZ…",
+  "patch": { "status": "in-progress", "assignee_id": "01HZ…" },
+  "vector_clock": { "spa-stephen-laptop": 47 }
+}
+
+// Server → all room subscribers: canonical state
+{
+  "op": "issue.state",
+  "server_seq": 982341,
+  "issue_id": "01HZ…",
+  "state": { "status": "in-progress", "assignee_id": "01HZ…", "updated_at": "…" },
+  "vector_clock": { "spa-stephen-laptop": 47, "server": 982341 }
+}
+
+// Server → client (conflict, rebase needed)
+{
+  "op": "rebase",
+  "client_seq": 12834,
+  "server_state": { … },
+  "reason": "concurrent_modification"
+}</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+      <tbody>
+        <tr><td><code>cyberos.proj.list_issues</code></td><td>project_id?, cycle_id?, assignee_id?, status?</td><td>Issue[]</td><td>readonly · scope=proj.read</td></tr>
+        <tr><td><code>cyberos.proj.create_issue</code></td><td>CreateIssueInput</td><td>Issue</td><td>scope=proj.write</td></tr>
+        <tr><td><code>cyberos.proj.update_issue</code></td><td>id, patch</td><td>Issue</td><td>scope=proj.write</td></tr>
+        <tr><td><code>cyberos.proj.assign_issue</code></td><td>id, assignee_id</td><td>Issue</td><td>scope=proj.write</td></tr>
+        <tr><td><code>cyberos.proj.add_comment</code></td><td>issue_id, body</td><td>Comment</td><td>scope=proj.write</td></tr>
+        <tr><td><code>cyberos.proj.move_to_cycle</code></td><td>id, cycle_id</td><td>Issue</td><td>scope=proj.write</td></tr>
+        <tr><td><code>cyberos.proj.close_cycle</code></td><td>cycle_id</td><td>CycleReview (draft)</td><td>destructive · human-confirm · scope=proj.cycle.close</td></tr>
+        <tr><td><code>cyberos.proj.detect_blockers</code></td><td>project_id?</td><td>Issue[] + reasons</td><td>readonly</td></tr>
+        <tr><td><code>cyberos.proj.estimate_calibration</code></td><td>member_id, range</td><td>Calibration stats</td><td>readonly</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KEY FLOWS -->
+<!-- ============================================================ -->
+<section id="key-flows" class="module-section">
+  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Create an issue (sync-engine)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Member SPA
+  participant WS as WebSocket gateway
+  participant S as Sync engine
+  participant W as Workflow validator
+  participant ACL as ACL check
+  participant PG as PostgreSQL
+  participant N as NATS JetStream
+  participant B as BRAIN audit
+  participant OTHER as Other connected SPAs
+
+  U->>U: optimistic local insert · status=todo
+  U->>WS: op:issue.create · client_seq:N
+  WS->>S: dispatch
+  S->>ACL: check (subject, action:create, project_id)
+  ACL-->>S: allow
+  S->>W: validate status transition
+  W-->>S: ok
+  S->>PG: INSERT issue + history_event
+  S->>B: proj.issue_create (chained audit row)
+  S->>N: publish proj.issue.{project_id}
+  N->>WS: fan-out
+  WS->>OTHER: op:issue.state · server_seq:M
+  WS-->>U: op:issue.state (canonical)
+  Note over U: local optimistic state reconciled with server-canonical
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 2 — Concurrent edit + conflict-free merge via Yjs</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as Member A (offline)
+  participant B as Member B (online)
+  participant Y as Yjs document server
+  participant PG as PostgreSQL
+  participant N as NATS
+
+  A->>A: edit description offline (vector clock advances)
+  B->>Y: op:issue.description.update (online)
+  Y->>PG: snapshot description_yjs
+  Y->>N: publish issue.description.{id}
+  Note over A: A comes back online
+  A->>Y: sync (vector clock diff)
+  Y->>Y: merge A's edits + B's edits (CRDT)
+  Y->>PG: snapshot merged Yjs doc
+  Y->>N: publish merged state
+  Y-->>A: rebased state
+  Y-->>B: rebased state
+  Note over Y: no conflict resolution prompt — CRDT semantics handle it
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Yjs handles the description / comment-body fields. Scalar fields (status, priority, assignee) use last-write-wins with the server's vector clock as the tiebreaker.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 3 — AI cycle-review draft at cycle close</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CL as Cron / Cycle close trigger
+  participant S as Sync engine
+  participant A as AI review generator
+  participant AG as ⚡ AI Gateway
+  participant CU as 🎯 CUO persona
+  participant PG as PostgreSQL
+  participant N as Notify (CHAT) to AM
+  participant AM as Account Manager
+  participant B as BRAIN audit
+
+  CL->>S: cycle.end_date reached
+  S->>A: assemble inputs (issues, comments, time entries, velocity)
+  A->>AG: chat.completions (persona=CUO/COO-skill, cycle review template)
+  AG-->>A: draft markdown
+  A->>PG: cycle_review.draft_markdown = draft
+  A->>N: ping AM "draft ready"
+  A->>B: proj.cycle_review_draft
+  AM->>S: edit draft
+  AM->>S: send to client (via EMAIL)
+  S->>B: proj.cycle_review_sent
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 4 — Blocker detection from comments</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Commenter
+  participant S as Sync engine
+  participant BD as Blocker detector
+  participant CU as 🎯 CUO
+  participant N as Notify
+  participant B as BRAIN audit
+
+  U->>S: add_comment "blocked by waiting on client decision"
+  S->>BD: classify comment
+  BD->>BD: pattern match: "blocked by", "waiting on", dwell time > 48h
+  BD-->>S: flag {kind:"external_blocker", confidence:0.91}
+  S->>CU: enqueue notify to assigner
+  CU->>N: ping assigner with issue link
+  S->>B: proj.blocker_detected
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 5 — Estimate calibration nightly batch</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CR as Nightly cron
+  participant CAL as Calibration engine
+  participant PG as PostgreSQL
+  participant BR as 🧠 BRAIN write
+  participant DASH as Member dashboard
+
+  CR->>CAL: run for tenant
+  CAL->>PG: SELECT estimate, actual hours per member per task_class
+  PG-->>CAL: rows
+  CAL->>CAL: compute ratio, drift, 7-day moving avg
+  CAL->>BR: write calibration summary (BRAIN Layer 3)
+  CAL->>PG: write calibration_snapshot rows
+  DASH->>PG: query → render Member's calibration chart
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LIFECYCLE -->
+<!-- ============================================================ -->
+<section id="lifecycle" class="module-section">
+  <header class="section-head"><span class="section-num">7</span><h2>Issue lifecycle</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    An issue traverses six canonical states (the closed enum). The per-project workflow overlay may rename or re-order the visible states but the underlying category drives velocity, auto-roll, and BRAIN ingestion.
+  </p>
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Backlog: created (no cycle)
+  Backlog --> Todo: scheduled into cycle
+  Todo --> InProgress: assignee starts
+  InProgress --> InReview: PR opened / requesting review
+  InReview --> InProgress: reviewer requested changes
+  InReview --> Done: approved + merged
+  Todo --> Cancelled: discarded
+  InProgress --> Cancelled: discarded
+  Done --> [*]
+  Cancelled --> [*]
+  Backlog --> Cancelled: discarded from backlog
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Auto-roll behaviour at cycle close</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Issue status at cycle close</th><th>Auto-roll behaviour</th><th>Configurable?</th></tr></thead>
+      <tbody>
+        <tr><td><code>todo</code></td><td>Roll to next cycle</td><td>yes (FR-PROJ-005)</td></tr>
+        <tr><td><code>in-progress</code></td><td>Roll to next cycle</td><td>yes</td></tr>
+        <tr><td><code>in-review</code></td><td>Roll to next cycle</td><td>yes</td></tr>
+        <tr><td><code>done</code></td><td>Stay in original cycle (velocity counts)</td><td>no</td></tr>
+        <tr><td><code>cancelled</code></td><td>Stay in original cycle</td><td>no</td></tr>
+        <tr><td><code>backlog</code> (unscheduled)</td><td>Stay in backlog</td><td>n/a</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FRs -->
+<!-- ============================================================ -->
+<section id="functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PROJ FRs from PRD §9.5. Full normative descriptions at <a href="../reference/fr-catalog.html#proj" class="text-blue-700 font-semibold underline">fr-catalog.html#proj</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody>
+        <tr><td><code>FR-PROJ-001</code></td><td>Three primitives Issue / Cycle / Project, plus Engagement</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-001" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-002</code></td><td>Sync-engine: optimistic local mutations + WebSocket + server-canonical</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-002" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-003</code></td><td>Per-engagement rate cards, billable/non-billable distinction</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-003" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-004</code></td><td>Time entries integrate from TIME module 1:1; INV pulls from TIME</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-004" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-005</code></td><td>Auto-roll incomplete tasks to next cycle; configurable per team</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-005" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-006</code></td><td>Blocker detection from comments → CUO Notify</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-006" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-007</code></td><td>Cycle-review draft generation; editable before send</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-007" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-008</code></td><td>Estimate calibration report per Member per task class</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-008" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-009</code></td><td>Tasks ingested into BRAIN Layer 3; comments included</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-009" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-010</code></td><td>Per-task ACL; private engagements not visible to non-engaged Members</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-010" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-011</code></td><td>Vietnamese localisation of status enums and UI strings</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-011" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-012</code></td><td>Offline edit via Yjs CRDT; merges without prompts</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-012" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-013</code></td><td>Dependency graph (blocks / relates_to / duplicates) with cycle detection</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-013" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-014</code></td><td>BRAIN-link from issue (cites · implements · supersedes)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-014" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PROJ-015</code></td><td>Custom workflow per project (rename / reorder states; categories fixed)</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-015" class="text-blue-700">details →</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- NFRs -->
+<!-- ============================================================ -->
+<section id="non-functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">NFRs from PRD §11.2 that PROJ must satisfy. Cross-referenced at <a href="../reference/nfr-catalog.html#proj" class="text-blue-700 font-semibold underline">nfr-catalog.html#proj</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+      <tbody>
+        <tr><td><code>NFR-PROJ-PERF-001</code></td><td>Issue update mutation</td><td>p95 ≤ 120 ms server-side</td><td>histogram via OBS</td></tr>
+        <tr><td><code>NFR-PROJ-PERF-002</code></td><td>Issue list view (50 issues)</td><td>p95 ≤ 250 ms (network + render)</td><td>SPA RUM</td></tr>
+        <tr><td><code>NFR-PROJ-PERF-003</code></td><td>WebSocket fan-out latency (mutation → other clients)</td><td>p95 ≤ 200 ms within region</td><td>NATS lag metric</td></tr>
+        <tr><td><code>NFR-PROJ-PERF-004</code></td><td>BRAIN ingestion (issue create → indexed)</td><td>p95 ≤ 5 s</td><td>BRAIN ingest histogram</td></tr>
+        <tr><td><code>NFR-PROJ-USE-001</code></td><td>Offline-edit merge correctness</td><td>≥ 99.9%</td><td>property-based test (10k random workloads)</td></tr>
+        <tr><td><code>NFR-PROJ-USE-002</code></td><td>Vietnamese search recall (50-query corpus)</td><td>≥ 90%</td><td>quarterly eval</td></tr>
+        <tr><td><code>NFR-PROJ-USE-003</code></td><td>Cycle-review draft acceptance rate</td><td>≥ 60% by AM</td><td>SPA telemetry</td></tr>
+        <tr><td><code>NFR-PROJ-AVL-001</code></td><td>Service availability (28-day)</td><td>≥ 99.9%</td><td>OBS SLO monitor</td></tr>
+        <tr><td><code>NFR-PROJ-SEC-001</code></td><td>Private-engagement isolation</td><td>= 0 cross-leak</td><td>CI test on every PR</td></tr>
+        <tr><td><code>NFR-PROJ-SEC-002</code></td><td>RLS coverage</td><td>100% of tables</td><td>migration-CI gate</td></tr>
+        <tr><td><code>NFR-PROJ-DUR-001</code></td><td>Mutation durability after WS ack</td><td>= 0 dropped under crash</td><td>chaos test + BRAIN walk</td></tr>
+        <tr><td><code>NFR-PROJ-SCAL-001</code></td><td>WS connections per tenant per axum task</td><td>≥ 5k sustained</td><td>k6 load test</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCIES -->
+<!-- ============================================================ -->
+<section id="dependencies" class="module-section">
+  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    PROJ depends on AUTH for every call, BRAIN for ingestion + audit, TIME for time entries, AI for CUO features, MCP for tool surfacing, and NATS for fan-out. It is depended on by INV (billable hours roll-up), CRM (deal → engagement link), KB (project docs), and PORTAL (client-visible Project view at P2+).
+  </p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+graph LR
+  subgraph upstream ["PROJ depends on"]
+    AUTH["🔐 AUTH"]
+    BRAIN["🧠 BRAIN"]
+    TIME["⏱ TIME"]
+    AI["⚡ AI Gateway"]
+    MCP["🔌 MCP"]
+    NATS["📡 NATS JetStream"]
+    OBS["👁 OBS"]
+  end
+  PROJ["📋 PROJ"]
+  subgraph downstream ["PROJ is depended on by"]
+    INV["🧾 INV<br/>billable roll-up"]
+    CRM["🤝 CRM<br/>deal→engagement"]
+    KB["📚 KB<br/>project docs"]
+    EMAIL["✉️ EMAIL<br/>thread→issue"]
+    PORTAL["Portal · P2"]
+  end
+  AUTH --> PROJ
+  BRAIN --> PROJ
+  TIME --> PROJ
+  AI --> PROJ
+  MCP --> PROJ
+  NATS --> PROJ
+  OBS --> PROJ
+  PROJ --> INV
+  PROJ --> CRM
+  PROJ --> KB
+  EMAIL --> PROJ
+  PROJ --> PORTAL
+
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fef3c7,stroke:#b45309
+  class BRAIN shipped
+  class PROJ,AUTH,TIME,AI,MCP,NATS,OBS,INV,CRM,KB,EMAIL,PORTAL planned
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE -->
+<!-- ============================================================ -->
+<section id="compliance" class="module-section">
+  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PROJ is not a regulator's first stop, but it sits inside the audit trail for delivery work and must satisfy ACL, audit, and DSAR obligations.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>PROJ feature that satisfies it</th></tr></thead>
+      <tbody>
+        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>DSAR export includes every issue / comment a subject authored.</td></tr>
+        <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Processing log</td><td>HISTORY_EVENT table is the processing log; every mutation writes one row.</td></tr>
+        <tr><td>GDPR (EU 2016/679)</td><td>Art. 17 — Right to erasure</td><td>Soft-tombstone on assignee, then DSAR-driven hard purge via BRAIN.</td></tr>
+        <tr><td>GDPR</td><td>Art. 25 — Privacy by design</td><td>Private-engagement ACL means non-engaged Members cannot see issue titles.</td></tr>
+        <tr><td>ISO/IEC 27001:2022</td><td>A.8.2 — Privileged access</td><td>RBAC + per-engagement ACL gate write operations.</td></tr>
+        <tr><td>ISO/IEC 27001:2022</td><td>A.8.16 — Monitoring</td><td>BRAIN audit chain covers create / status / assign / comment events.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RLS + ACL enforcement at every mutation.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC7.2 — System monitoring</td><td>OBS traces + BRAIN audit cross-correlate.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RISK -->
+<!-- ============================================================ -->
+<section id="risk-entries" class="module-section">
+  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PROJ-specific risks tracked in the <a href="../reference/risk-register.html#proj" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><code>R-PROJ-001</code></td><td>Sync-engine state divergence between SPA and server</td><td>Medium</td><td>High</td><td>CTO</td><td>Property-based tests (10k random workloads); server is canonical; client always rebases on conflict.</td></tr>
+        <tr><td><code>R-PROJ-002</code></td><td>Yjs CRDT memory leak on long-running document sessions</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Snapshot to Postgres every 60 s; evict in-memory doc after 5 min idle; reload on demand.</td></tr>
+        <tr><td><code>R-PROJ-003</code></td><td>Private-engagement leak via cross-tenant graph query</td><td>Low</td><td>High</td><td>CSO</td><td>RLS + ACL CI gates; quarterly red-team review of GraphQL surface.</td></tr>
+        <tr><td><code>R-PROJ-004</code></td><td>NATS JetStream backlog → WS clients see stale state</td><td>Medium</td><td>Medium</td><td>CTO</td><td>NATS depth alerted at &gt; 1k msgs; SPA reconnect triggers full state refetch.</td></tr>
+        <tr><td><code>R-PROJ-005</code></td><td>Auto-roll inflates next cycle and burns out team</td><td>Medium</td><td>Medium</td><td>COO</td><td>Auto-roll opt-in per project; AM sees roll-over count in cycle review draft.</td></tr>
+        <tr><td><code>R-PROJ-006</code></td><td>Cycle-review draft hallucinates events that did not occur</td><td>Medium</td><td>Medium</td><td>COO</td><td>Draft is an editable suggestion, never auto-sent; AM is accountable for content.</td></tr>
+        <tr><td><code>R-PROJ-007</code></td><td>Blocker detector false-positive spam</td><td>Medium</td><td>Low</td><td>COO</td><td>Confidence threshold ≥ 0.85; user "not a blocker" feedback trains down.</td></tr>
+        <tr><td><code>R-PROJ-008</code></td><td>BRAIN ingestion lag breaks cross-module search</td><td>Low</td><td>Medium</td><td>CDO</td><td>p95 ≤ 5 s SLO; backlog alarm pages CDO + CTO.</td></tr>
+        <tr><td><code>R-PROJ-009</code></td><td>Calibration data weaponised in performance review</td><td>Medium</td><td>Low</td><td>CHRO</td><td>Calibration visible only to Member + manager + CHRO; never client-visible; never used as sole performance signal (HR policy).</td></tr>
+        <tr><td><code>R-PROJ-010</code></td><td>Vietnamese tokenisation regressions on PGroonga upgrade</td><td>Low</td><td>Low</td><td>CTO</td><td>50-query VN test corpus run on every PGroonga upgrade.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KPIs -->
+<!-- ============================================================ -->
+<section id="kpis" class="module-section">
+  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PROJ rolls up 9 KPIs covering delivery cadence, sync-engine performance, AI feature efficacy, and Member experience.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Cycle velocity stability</strong></td><td>stddev(completed_points) / mean</td><td>cycle_review</td><td>≤ 0.25 (steady)</td></tr>
+        <tr><td><strong>Issue update mutation p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 120 ms</td></tr>
+        <tr><td><strong>WS fan-out lag p95</strong></td><td>histogram</td><td>NATS</td><td>≤ 200 ms</td></tr>
+        <tr><td><strong>Auto-rolled issues per cycle</strong></td><td>count</td><td>cycle_review</td><td>tracked; alert if &gt; 30%</td></tr>
+        <tr><td><strong>AI cycle-review acceptance</strong></td><td>sent / drafted</td><td>SPA telemetry</td><td>≥ 60%</td></tr>
+        <tr><td><strong>Blocker-detection precision</strong></td><td>true_positive / flagged</td><td>user feedback</td><td>≥ 80%</td></tr>
+        <tr><td><strong>BRAIN ingestion lag p95</strong></td><td>histogram</td><td>BRAIN</td><td>≤ 5 s</td></tr>
+        <tr><td><strong>Estimate calibration drift</strong></td><td>actual / estimate − 1</td><td>calibration_snapshot</td><td>tracked per Member</td></tr>
+        <tr><td><strong>Offline-merge incidents</strong></td><td>conflicts / month</td><td>BRAIN audit</td><td>tracked; expect &lt; 5 / mo</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RACI -->
+<!-- ============================================================ -->
+<section id="raci" class="module-section">
+  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PROJ is owned by the COO seat. Today (COO vacant), CEO is interim accountable; CTO owns engineering; Account Managers own per-engagement workflow configuration.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>COO</th><th>CHRO</th><th>CDO</th><th>AM</th></tr></thead>
+      <tbody>
+        <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Sync-engine implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Engagement / workflow config</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td></tr>
+        <tr><td>Cycle review send</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td></tr>
+        <tr><td>Calibration policy (HR)</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>BRAIN ingestion review</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Private-engagement ACL audit</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>VN localisation review</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Incident response</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+      </tbody>
+    </table>
+    <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI USAGE -->
+<!-- ============================================================ -->
+<section id="cli-usage" class="module-section">
+  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">A single admin CLI <code>cyberos-proj</code> for tenant operators and an SDK for scripted bulk edits.</p>
+
+  <h3 class="text-lg font-bold mb-2">1. Create an Engagement</h3>
+<pre><code>$ cyberos-proj engagement create \
+    --tenant cyberskill \
+    --client-account acme-vn \
+    --name "ACME Q3 platform build" \
+    --billing-mode T_AND_M \
+    --start 2026-07-01
+
+[engagement created]
+  id:        01HZK2…
+  client:    acme-vn
+  billing:   T_AND_M
+  audit:     brain seq=15014 chain=1f2e…3d4c</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">2. Create a Cycle and bulk-create Issues</h3>
+<pre><code>$ cyberos-proj cycle create --project pj-acme-platform --number 7 --start 2026-08-04 --weeks 2
+[cycle created] id=01HZK3… number=7 dates=2026-08-04 / 2026-08-17
+
+$ cyberos-proj issue bulk-create --cycle 01HZK3… --file backlog.yaml
+[bulk-create] parsed 12 issues
+[bulk-create] PROJ-1247 "Auth integration" → assignee=linh@…
+[bulk-create] PROJ-1248 "Migration runbook" → assignee=tu@…
+[bulk-create] … 10 more
+[bulk-create] 12 created · 0 errors
+[audit]       brain seq=15018 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">3. Close a Cycle (auto-generate review draft)</h3>
+<pre><code>$ cyberos-proj cycle close --id 01HZK3…
+
+[cycle close]   12 issues · 8 done · 3 rolled · 1 cancelled
+[review draft]  generated via CUO/COO-skill
+[review draft]  saved to ./cycle-7-review.md (124 lines)
+[notify]        Account Manager pinged in CHAT
+[audit]         brain seq=15042 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">4. Move all in-progress issues to next cycle</h3>
+<pre><code>$ cyberos-proj cycle rollover --from 01HZK3… --to 01HZK4… --status in-progress
+
+[rollover] 3 issues moved
+[rollover] PROJ-1249 · PROJ-1251 · PROJ-1255
+[audit]    brain seq=15045 chain=…</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">5. Estimate calibration report</h3>
+<pre><code>$ cyberos-proj calibration --member linh@cyberskill.world --range 90d
+
+member: linh@cyberskill.world
+task_class       estimates  actual_avg  ratio   trend
+backend.feature  18         1.18×        +18%   ▲ improving
+infra.config     9          0.96×         -4%   ▬ stable
+qa.test_plan     12         1.42×        +42%   ▼ widening
+overall          39         1.18×        +18%   ▲ improving</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">6. Export DSAR bundle</h3>
+<pre><code>$ cyberos-proj dsar-export --subject linh@cyberskill.world --output linh-proj.zip
+
+[dsar]   subject:   linh@cyberskill.world
+[dsar]   issues:    218 (authored) · 612 (assigned)
+[dsar]   comments:  1,894
+[dsar]   history:   4,217
+[dsar]   written:   linh-proj.zip (38 MB)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">7. Replay sync-engine conflict for debug</h3>
+<pre><code>$ cyberos-proj sync replay --tenant cyberskill --since 1h --filter "issue.update"
+
+[replay]  47 mutations · 2 rebases · 0 lost
+[rebase]  PROJ-1247 · client_seq=18 server_seq=98234 reason=concurrent_modification
+[rebase]  PROJ-1255 · client_seq=22 server_seq=98241 reason=concurrent_modification</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATUS -->
+<!-- ============================================================ -->
+<section id="status" class="module-section">
+  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+    <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~11,000</div><div class="note">Rust + TS + Yjs</div></div>
+    <div class="fact-card"><div class="label">Planned tests</div><div class="value">140+</div><div class="note">incl. CRDT property-tests</div></div>
+    <div class="fact-card"><div class="label">External libs</div><div class="value">~14</div><div class="note">axum · sqlx · ywasm · NATS</div></div>
+    <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">~22 planned</div><div class="note"><code>cyberos-proj</code></div></div>
+    <div class="fact-card"><div class="label">P1 budget</div><div class="value">~$80/mo</div><div class="note">Fargate + RDS + Redis + NATS</div></div>
+  </div>
+
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Four primitives (Issue / Cycle / Project / Engagement)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Sync-engine WS + optimistic apply</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Yjs CRDT for description / comments</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Per-engagement rate cards</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>TIME ↔ PROJ ↔ INV chain</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Auto-roll at cycle close</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>AI blocker detection</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>AI cycle-review draft</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Estimate calibration report</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>BRAIN Layer 3 ingestion</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Per-task / per-engagement ACL</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Vietnamese localisation</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Dependency graph + cycle detection</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>Custom workflow per project</td><td><span class="pill pill-planned">planned · P1+</span></td></tr>
+        <tr><td>Mobile (offline-first)</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+        <tr><td>Client-visible PORTAL view</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references" class="module-section">
+  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+  <div class="bbg-card p-5">
+    <ul class="space-y-2 text-sm">
+      <li><strong>PRD §9.5</strong> — PROJ module: three primitives, sync-engine, AI features, FRs.</li>
+      <li><strong>PRD §9.10</strong> — TIME module (upstream dependency).</li>
+      <li><strong>PRD §11.2</strong> — NFRs that PROJ must satisfy.</li>
+      <li><strong>SRS §4.5</strong> — Formal FR-PROJ-001 through FR-PROJ-015 with verification methods.</li>
+      <li><strong>Linear sync-engine</strong> — Tuomas Artman, "Scaling the Linear Sync Engine" (2023 talk).</li>
+      <li><strong>Yjs CRDT framework</strong> — <code>github.com/yjs/yjs</code>; ywasm Rust binding.</li>
+      <li><strong>PGroonga</strong> — Postgres full-text search with CJK tokenisation.</li>
+      <li><strong>NATS JetStream</strong> — message-streaming layer for WebSocket fan-out.</li>
+      <li><strong>Apollo Federation v2.5</strong> — subgraph composition spec.</li>
+      <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#proj" class="text-blue-700 underline">infrastructure.html#proj</a>.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PREV / NEXT NAV -->
+<!-- ============================================================ -->
+<nav class="module-nav-footer mt-12">
+  <a href="email.html" class="text-blue-700 font-semibold no-underline hover:underline">← Previous module: EMAIL</a>
+  <a href="time.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: TIME →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

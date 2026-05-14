@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BRAIN — CyberOS</title>
+  <meta name="description" content="BRAIN — local-first, audit-chained personal memory. Append-only ledger, MMR proofs, signed tree heads, deterministic export. The substrate every CyberOS module depends on.">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="../assets/scripts.js"></script>
+  <style>
+    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .fact-card { background: var(--memory-bg); border:1px solid var(--memory-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--memory-dark); }
+    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+    .toc-link:hover { background: var(--memory-bg); color: var(--memory-dark); }
+    .toc-link.active { background: var(--memory-tint); color: var(--memory-dark); font-weight: 600; }
+    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--memory); color:white; font-weight:800; font-size:0.875rem; }
+    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
+    .pill-must     { background:#fee2e2; color:#b91c1c; }
+    .pill-should   { background:#fef3c7; color:#b45309; }
+    .pill-shipped  { background:#d1fae5; color:#065f46; }
+    .pill-planned  { background:#e0e7ff; color:#3730a3; }
+    .pill-partial  { background:#fef3c7; color:#b45309; }
+    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
+    .keyword-chip { display:inline-block; background:var(--memory-tint); color:var(--memory-dark); padding:0.125rem 0.5rem; border-radius: 0.375rem; font-family: var(--font-mono); font-size: 0.75rem; margin: 0.125rem; }
+    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
+    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
+    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
+    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
+    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--memory-bg); border-radius: 0.75rem; border: 1px solid var(--memory-tint); }
+  </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P0"></span>
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#catalog">Modules</a>
+      <span class="sep">›</span>
+      <span class="current">BRAIN</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <span class="text-5xl">🧠</span>
+      <h1 class="h-display">BRAIN</h1>
+      <span class="phase-chip phase-p0">P0 · Foundation</span>
+      <span class="pill pill-shipped">Shipped</span>
+      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
+    </div>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+      Local-first, audit-chained personal memory. The substrate every other module reads from and writes to.
+    </p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      BRAIN is the universal memory module of CyberOS. It is what makes <em>state</em> portable, <em>history</em> replayable, and <em>compliance</em> defensible — every routing decision, every artefact, every audit fact lands as an append-only row whose cryptographic chain refuses to forget. Three layers were specified (filesystem at the edge, pgvector + Apache AGE in the middle, archival corpus at the cold tier); Layer 1 ships today, hardened by 255 green tests, 15/15 doctor invariants, Ed25519-signed tree heads, MMR inclusion proofs, and a deterministic export that produces byte-identical zips across machines. PRD §5 locks the shape; this page documents the in-tree implementation at <code>cyberos/memory/</code>.
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#architecture" class="btn btn-primary">Architecture
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#cli-usage" class="btn btn-secondary">CLI usage</a>
+      <a href="#api-surface" class="btn btn-secondary">API surface</a>
+      <a href="../reference/fr-catalog.html#brain" class="btn btn-secondary">FR catalog</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-0.5 text-sm">
+        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+        <li><a class="toc-link" href="#why">Why BRAIN exists</a></li>
+        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+        <li><a class="toc-link" href="#architecture">Architecture</a></li>
+        <li><a class="toc-link" href="#data-model">Data model</a></li>
+        <li><a class="toc-link" href="#api-surface">API surface</a></li>
+        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+        <li><a class="toc-link" href="#lifecycle">Memory lifecycle</a></li>
+        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+        <li><a class="toc-link" href="#kpis">KPIs</a></li>
+        <li><a class="toc-link" href="#raci">RACI</a></li>
+        <li><a class="toc-link" href="#cli-usage">CLI usage</a></li>
+        <li><a class="toc-link" href="#status">Phase status</a></li>
+        <li><a class="toc-link" href="#references">References</a></li>
+      </ul>
+      <hr class="my-4 border-slate-200">
+      <div class="h-eyebrow mb-2">Source</div>
+      <div class="text-xs text-slate-500 leading-relaxed">
+        <code>cyberos/memory/</code><br>
+        PRD §5.1–§5.9 · §9.1<br>
+        AGENTS.md (RFC v2.0.0)
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="hero" class="module-section">
+  <div class="bbg-card tint-memory p-6 mb-6">
+    <p class="text-lg text-slate-700 leading-relaxed mb-5">
+      BRAIN is an <strong>append-only, audit-chained ledger</strong> of structured memory files. It is local-first (the canonical state is on the laptop), portable (deterministic <code>zip</code> export), and cryptographically verifiable (Merkle Mountain Range + Ed25519 signed tree heads). Every byte written to a CyberOS memory store can be replayed, proved-included, or — if compliance demands it — purged with a tamper-evident audit trail. The protocol lives at <code>memory/docs/AGENTS.md</code>; the implementation lives at <code>memory/cyberos/core/</code>; the CLI is <code>cyberos</code>.
+    </p>
+    <div class="fact-grid">
+      <div class="fact-card"><div class="label">Status</div><div class="value">Shipped</div><div class="note">P0 · 7 of 7 phases done</div></div>
+      <div class="fact-card"><div class="label">LoC (core)</div><div class="value">~5,000</div><div class="note">Python 3.13 · pure stdlib + msgspec</div></div>
+      <div class="fact-card"><div class="label">Tests</div><div class="value">255 green</div><div class="note">pytest · regression suite</div></div>
+      <div class="fact-card"><div class="label">Invariants</div><div class="value">15/15</div><div class="note"><code>cyberos doctor</code> on live BRAIN</div></div>
+      <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30</div><div class="note">put · view · doctor · prove · …</div></div>
+      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · AI · MCP</div><div class="note">(when P0 infra lands)</div></div>
+      <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules</div><div class="note">memory bridge required</div></div>
+      <div class="fact-card"><div class="label">Schema</div><div class="value"><code>memory.schema.json</code></div><div class="note">closed enum · BCP-14 normative</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
+<!-- ============================================================ -->
+<section id="why" class="module-section">
+  <header class="section-head"><span class="section-num">1</span><h2>Why BRAIN exists</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Every agentic system eventually trips on the same wall: <em>state lives nowhere persistent and replayable</em>. Chat sessions evaporate, vendor memory APIs become single points of failure and audit, and the company's institutional knowledge ends up trapped in screenshots and Slack threads. BRAIN starts from a different axiom — <strong>the laptop filesystem is the canonical store</strong>, every mutation is an append, and every append is anchored in a Merkle chain so corruption is detectable and tampering is impossible.
+  </p>
+  <div class="grid md:grid-cols-3 gap-4 my-5">
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🔒</div>
+      <div class="font-bold text-slate-900 mb-1">Local-first sovereignty</div>
+      <p class="text-sm text-slate-600">No vendor lock-in. The <code>.cyberos-memory/</code> directory is a complete, portable snapshot — your laptop, your data, your audit trail.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">⛓</div>
+      <div class="font-bold text-slate-900 mb-1">Cryptographic provenance</div>
+      <p class="text-sm text-slate-600">Every audit row carries <code>prev_chain</code> + <code>chain</code>. An MMR overlay produces logarithmic inclusion proofs and Ed25519-signed tree heads.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🇻🇳 / 🇪🇺</div>
+      <div class="font-bold text-slate-900 mb-1">Compliance as a property</div>
+      <p class="text-sm text-slate-600">PDPL Art. 14 DSAR, GDPR Art. 17 erasure, EU AI Act Art. 12 logging — all expressible as ledger operations rather than bolt-on policies.</p>
+    </div>
+  </div>
+  <p class="text-slate-700 leading-relaxed">
+    The bet is simple: pay the cost of a real audit chain <em>once</em>, at the substrate layer, and every downstream module — Skill, CUO, EMAIL, PROJ, CRM, HR, INV — inherits provenance, replay, and erasure for free. Without BRAIN, every module would re-invent its own audit table. With BRAIN, audit is a property of the platform.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT — 5W1H2C5M -->
+<!-- ============================================================ -->
+<section id="what" class="module-section">
+  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of BRAIN's scope. Every cell below traces back to PRD §5 + AGENTS.md.</p>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>5W · What</strong></td><td>What is BRAIN?</td><td>An append-only ledger of immutable memory files. Every mutation is a canonical operation (<code>put</code>, <code>move</code>, <code>delete</code>) that appends one frame to <code>audit/current.binlog</code> and one row to a derived SQLite index. The store is <code>.cyberos-memory/</code>; the protocol is BCP-14 normative.</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who reads/writes?</td><td><strong>Writers:</strong> CUO router (decisions), Skill host (invocation records), every module's subgraph (entity mutations). <strong>Readers:</strong> any agent (Claude, Codex, Cursor), the user via CLI, downstream automation (digest, publish, semantic search). <strong>Owner:</strong> CEO (Stephen Cheng) until the CDO seat is filled.</td></tr>
+        <tr><td><strong>5W · When</strong></td><td>When does write happen?</td><td>Synchronously on every protocol-level mutation. Group-commit windows of 5 ms aggregate concurrent writers behind one <code>fsync</code> barrier. Consolidation triggers when the ledger exceeds 5 MB or 5,000 rows.</td></tr>
+        <tr><td><strong>5W · Where</strong></td><td>Where does it live?</td><td>Resolved local path <code>.cyberos-memory/</code> at the project root (symlinks resolved). Sandbox/ephemeral paths are rejected (<code>layout-no-sandbox-path</code> invariant). Real paths only — no fake mounts.</td></tr>
+        <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>Because cloud memory APIs sacrifice sovereignty, vendor APIs sacrifice replay, and SQLite-only stores sacrifice cryptographic provenance. The append-only + MMR + Ed25519 STH combination is the smallest set of primitives that delivers all three.</td></tr>
+        <tr><td><strong>1H · How</strong></td><td>How does it work end-to-end?</td><td>Six canonical operations → two-phase atomic write (tmpfile + rename + parent-dir fsync) → group-commit audit frame → MMR leaf insertion → derived SQLite index update → <code>HEAD</code> seqlock advance. Readers snapshot HEAD, mmap the target, re-stat. See <a href="#key-flows">Key flows</a>.</td></tr>
+        <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>Per-write: ~120 µs hot path (group-committed), ~3 ms cold (single-writer). Per-read: ~6 µs (mmap'd, seqlock retry). Storage overhead: <strong>~28%</strong> chain + sidecar + index vs raw body. STH signing: ~0.4 ms Ed25519.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) macOS uses <code>F_BARRIERFSYNC</code> per-batch and <code>F_FULLFSYNC</code> per-checkpoint (plain <code>fsync</code> is insufficient on Darwin). (b) Cross-platform: launchd / systemd / Task Scheduler. (c) Single canonical writer at a time (lease + <code>.lock</code>). (d) Sandbox paths are protocol-rejected.</td></tr>
+        <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>POSIX filesystem · SHA-256 · Ed25519 (cryptography lib) · libyaml-backed msgspec for frontmatter · zstd for compaction · SQLite (WAL mode) · optional sentence-transformers for semantic search.</td></tr>
+        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only ledger (no in-place mutation), seqlock for lock-free reads, MMR Merkle proofs, RFC 8785 JCS canonical JSON, BCP-14 normative protocol, deterministic export (sorted paths · fixed timestamps · fixed mode · zstd level 6).</td></tr>
+        <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>Any laptop (primary). Future: an HTTP REST mode (<code>cyberos serve</code> — shipped) and a mobile read-only static site (<code>cyberos publish</code> — shipped). No server-side database required; the laptop <em>is</em> the database.</td></tr>
+        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>1 IC owner (Stephen Cheng) today. By P1 exit: CTO seat picks up second on-call rotation. The module is small (~5k LoC) and the protocol is closed.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>15 doctor invariants (chain continuity, op-enum closure, layout canonical, MMR cross-check, STH signature verification, …). Continuous benchmark suite (cold-CLI latency, throughput, determinism). CHANGELOG.md newest-first; CI nightly + weekly regression gates.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================================ -->
+<section id="architecture" class="module-section">
+  <header class="section-head"><span class="section-num">3</span><h2>Architecture — three layers, six ops</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    BRAIN is specified as three layers — but only Layer 1 (the filesystem ledger) and a semantic slice of Layer 2 (local sentence-transformers embeddings) ship today. Layers 2 (pgvector + Apache AGE) and 3 (archival corpus) are planned for P1 / P2 once the multi-tenant subgraph lands. The single canonical writer enforces the protocol; every other module's "memory bridge" routes through it.
+  </p>
+
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+graph TB
+  subgraph CLIENTS ["Clients (untrusted from protocol pov)"]
+    AGENT["Claude / Codex / Cursor<br/>via MCP tool"]
+    CLI["cyberos CLI"]
+    SUBG["Module subgraphs<br/>(via memory bridge)"]
+    CUO_M["CUO router<br/>(decision rows)"]
+  end
+
+  subgraph CORE ["BRAIN canonical writer (cyberos/core/)"]
+    OPS["ops.py<br/>put · move · delete"]
+    LOCK["lock.py<br/>leased .lock"]
+    WRITER["writer.py<br/>group-commit ledger"]
+    WALKER["walker.py<br/>mmap ledger replay"]
+    READER["reader.py<br/>seqlock lock-free reads"]
+    INDEX["index.py<br/>WAL-mode SQLite"]
+    MMR["mmr.py<br/>Merkle Mountain Range"]
+    STH["sth.py<br/>Ed25519 tree heads"]
+  end
+
+  subgraph LAYER1 ["Layer 1 · Filesystem ledger (.cyberos-memory/)"]
+    FILES["memories/<kind>/<hex>/<file>.md"]
+    META["sidecar .meta.json"]
+    BINLOG["audit/*.binlog"]
+    HEAD["HEAD seqlock"]
+    MANI["manifest.json"]
+    CHK["audit/checkpoints/"]
+  end
+
+  subgraph LAYER2 ["Layer 2 · pgvector + Apache AGE (planned)"]
+    PGV["pgvector HNSW"]
+    AGE["Apache AGE graph"]
+  end
+
+  subgraph LAYER2S ["Layer 2 (slice) · Local embeddings (shipped)"]
+    EMB["sentence-transformers<br/>BGE-M3 (optional dep)"]
+  end
+
+  subgraph LAYER3 ["Layer 3 · Archival corpus (planned)"]
+    S3["S3 / R2 / MinIO<br/>cold tier"]
+  end
+
+  AGENT --> OPS
+  CLI --> OPS
+  SUBG --> OPS
+  CUO_M --> OPS
+
+  OPS --> LOCK
+  OPS --> WRITER
+  WRITER --> BINLOG
+  WRITER --> FILES
+  WRITER --> META
+  WRITER --> MMR
+  MMR --> STH
+  STH --> CHK
+  WRITER --> HEAD
+  WRITER --> INDEX
+  READER --> HEAD
+  READER --> FILES
+  WALKER --> BINLOG
+
+  FILES -. semantic .-> EMB
+  FILES -. P1+ .-> PGV
+  FILES -. P1+ .-> AGE
+  CHK -. P2+ archive .-> S3
+
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#f1f5f9,stroke:#94a3b8,stroke-dasharray:4 3
+  class OPS,LOCK,WRITER,WALKER,READER,INDEX,MMR,STH,FILES,META,BINLOG,HEAD,MANI,CHK,EMB,AGENT,CLI shipped
+  class PGV,AGE,S3,SUBG planned
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mt-6 mb-3">Internal components — walkthrough</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Component</th><th>File</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>ops.py</code></td><td>core/ops.py</td><td>Canonical operations <code>put</code>, <code>move</code>, <code>delete(mode)</code>. Path validation, denylist check, idempotency by content hash.</td></tr>
+        <tr><td><code>writer.py</code></td><td>core/writer.py</td><td>Group-commit ledger. Two-phase atomic write (tmpfile + rename + dir fsync). Group window = 5 ms; per-batch <code>F_BARRIERFSYNC</code>.</td></tr>
+        <tr><td><code>reader.py</code></td><td>core/reader.py</td><td>Lock-free seqlock reader. mmap the body, snapshot HEAD, re-stat; mismatch triggers retry. Stale-tolerant.</td></tr>
+        <tr><td><code>walker.py</code></td><td>core/walker.py</td><td>mmap-based binlog replay. Verifies frame CRC + chain continuity; emits to invariant walker.</td></tr>
+        <tr><td><code>lock.py</code></td><td>core/lock.py</td><td>Leased <code>.lock</code> with 10 s TTL + 3 s renew. Stale leases reaped via monotonic clock comparison.</td></tr>
+        <tr><td><code>mmr.py</code></td><td>core/mmr.py</td><td>Pure-Python Merkle Mountain Range. Stage-1 ships peaks + leaf-hashes; STH-only mode replaces chained <code>prev_chain</code> when enabled.</td></tr>
+        <tr><td><code>sth.py</code></td><td>core/sth.py</td><td>Ed25519 signed tree heads. Passphrase-wrapped private key on disk; checkpoints land in <code>audit/checkpoints/</code>.</td></tr>
+        <tr><td><code>index.py</code></td><td>core/index.py</td><td>Derived WAL-mode SQLite index. Rebuildable from binlog; never authoritative — filesystem wins on conflict.</td></tr>
+        <tr><td><code>fsync.py</code></td><td>core/fsync.py</td><td>Platform-correct durability. macOS <code>F_BARRIERFSYNC</code> / <code>F_FULLFSYNC</code>; Linux <code>fdatasync</code> + parent-dir fsync.</td></tr>
+        <tr><td><code>consolidate.py</code></td><td>core/consolidate.py</td><td>Walk → Compact → Sign → Publish. Triggers on size (&gt;5 MB) or row count (&gt;5,000). zstd archives sealed monthly segments.</td></tr>
+        <tr><td><code>invariants.py</code></td><td>core/invariants.py</td><td>15 walker invariants (chain continuity, op-enum closure, layout-canonical, MMR cross-check, sidecar-body-hash, …). Drives <code>cyberos doctor</code>.</td></tr>
+        <tr><td><code>export.py</code></td><td>core/export.py</td><td>Deterministic zip. Sorted paths · fixed timestamp <code>2000-01-01T00:00:00Z</code> · fixed mode <code>0o644</code> · ZIP_DEFLATED level 6. Excluded: <code>exports/</code>, <code>__pycache__/</code>, <code>.cache/</code>, <code>.lock</code>, <code>HEAD</code>.</td></tr>
+        <tr><td><code>import_.py</code></td><td>core/import_.py</td><td>P6 — cross-BRAIN merge. Foreign rows become fresh local <code>put</code> rows with <code>extra.imported_from</code> + <code>extra.foreign_chain</code>.</td></tr>
+        <tr><td><code>semantic.py</code></td><td>core/semantic.py</td><td>Optional local embeddings (sentence-transformers BGE-M3). On-demand index, no daemon.</td></tr>
+        <tr><td><code>serve.py</code></td><td>core/serve.py</td><td>HTTP REST mode. Exposes the same six ops over a local socket for IDE / mobile clients.</td></tr>
+        <tr><td><code>publish.py</code></td><td>core/publish.py</td><td>Mobile read-only static site. Generated from the deterministic export.</td></tr>
+        <tr><td><code>digest.py</code></td><td>core/digest.py</td><td>Daily LLM summary (via AI gateway). Produces one digest row per day.</td></tr>
+        <tr><td><code>conflicts.py</code></td><td>core/conflicts.py</td><td>Sync-FS conflict detection (iCloud / Dropbox / OneDrive). Quarantines competing file copies to <code>conflicts/</code>.</td></tr>
+        <tr><td><code>backup.py</code> · <code>prune.py</code></td><td>core/</td><td>Incremental snapshot + sealed-segment pruning. Both reversible via the consolidation log.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DATA MODEL -->
+<!-- ============================================================ -->
+<section id="data-model" class="module-section">
+  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Every entity in BRAIN traces to one or more files on disk. The schema is closed (<code>memory.schema.json</code>); unknown <code>kind</code> values are rejected at write time. The diagram below shows the entity relationships as they manifest in the filesystem layer.
+  </p>
+
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+erDiagram
+  MANIFEST ||--o{ AUDIT_SEGMENT : "tracks segments"
+  MANIFEST ||--o{ MEMORY_FILE : "indexes"
+  MANIFEST ||--o{ CHECKPOINT : "tracks last_sth"
+  AUDIT_SEGMENT ||--|{ AUDIT_FRAME : "contains"
+  AUDIT_FRAME }o--|| MEMORY_FILE : "describes mutation of"
+  AUDIT_FRAME ||--o| MMR_LEAF : "becomes"
+  MMR_LEAF }o--o{ MMR_PEAK : "rolls up to"
+  MMR_PEAK ||--o{ CHECKPOINT : "signed by"
+  CHECKPOINT ||--|| STH_SIG : "carries Ed25519"
+  MEMORY_FILE ||--o| SIDECAR_META : "has sidecar"
+  MEMORY_FILE ||--o| ENCRYPTED_BODY : "may be ciphertext"
+  MEMORY_FILE }o--o| TOMBSTONE : "may be tombstoned"
+
+  MANIFEST {
+    string store_id PK
+    string layout_version
+    int64  audit_chain_head
+    int64  last_seq
+    string last_sth_root
+    string crypto_mode "chained or sth_only"
+    obj    imports "fingerprint to last_imported_seq"
+  }
+  AUDIT_SEGMENT {
+    string filename PK "YYYY-MM dot binlog"
+    bool   sealed
+    bool   compacted "zstd"
+    int64  first_seq
+    int64  last_seq
+  }
+  AUDIT_FRAME {
+    int64  seq PK
+    int64  ts_ns
+    string op "put or move or delete"
+    string path
+    string body_hash "SHA-256"
+    string prev_chain
+    string chain "SHA-256"
+    string actor
+    obj    extra "imported_from, foreign_chain, etc"
+  }
+  MMR_LEAF {
+    int64  leaf_index PK
+    string leaf_hash "= chain"
+    int64  seq FK
+  }
+  MMR_PEAK {
+    int    height
+    string peak_hash
+    int64  position
+  }
+  CHECKPOINT {
+    string filename PK "timestamp-root json file"
+    int64  tree_size
+    string mmr_root
+    int64  signed_at_ns
+  }
+  STH_SIG {
+    string algorithm "Ed25519"
+    string pubkey_id
+    bytes  signature
+  }
+  MEMORY_FILE {
+    string path PK "memories-kind-hex-file.md"
+    string kind "decisions or facts or people or projects or preferences or drift or refinements"
+    string body_format "frontmatter or sidecar"
+    string body_hash
+    string state "active or tombstoned or purged"
+  }
+  SIDECAR_META {
+    string path PK ".meta.json"
+    string kind
+    string sync_class "private or shareable"
+    string classification "public or internal or confidential or restricted"
+    obj    cipher "envelope when encrypted"
+    obj    acl
+    string body_hash
+  }
+  ENCRYPTED_BODY {
+    string envelope_id PK
+    string algo "AES-256-GCM"
+    bytes  ciphertext
+    bytes  iv
+    bytes  tag
+  }
+  TOMBSTONE {
+    string path PK
+    string reason
+    int64  tombstoned_at_seq
+  }
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Filesystem layout</h3>
+  <div class="bbg-card p-5">
+    <pre class="text-xs"><code>.cyberos-memory/
+├── manifest.json              # store metadata (§6)
+├── HEAD                       # 8-byte LE u64 seq counter; atomic rename
+├── .lock                      # leased coordination record (§4.2)
+├── audit/
+│   ├── current.binlog         # active segment
+│   ├── 2026-04.binlog         # sealed monthly segment
+│   ├── 2026-04.binlog.zst     # compacted (zstd, deterministic)
+│   ├── checkpoints/           # per-consolidation Ed25519 STH anchors
+│   │   └── 2026-05-14T03Z-{root}.json
+│   └── *.jsonl                # legacy v1 ledger (read-only post-cutover)
+├── memories/
+│   ├── decisions/<2hex>/<2hex>/<slug>.md[.meta.json]
+│   ├── facts/...
+│   ├── people/...
+│   ├── projects/...
+│   ├── preferences/...
+│   ├── drift/...
+│   └── refinements/...
+├── meta/        company/ module/ member/ client/ project/ persona/
+├── conflicts/   # soft-tombstone bodies + sync-FS quarantine
+├── exports/     # deterministic zip targets (excluded from chain)
+└── index/manifest.json        # SQLite index rebuild marker</code></pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- API SURFACE -->
+<!-- ============================================================ -->
+<section id="api-surface" class="module-section">
+  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    BRAIN exposes three surfaces: a GraphQL subgraph (P0 federation gateway · planned), an MCP tool catalogue (Claude / Codex / Cursor — partial), and a CLI (<code>cyberos</code> — 30 subcommands shipped).
+  </p>
+
+  <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (planned · P0+)</h3>
+  <p class="text-sm text-slate-600 mb-3">Federated via Apollo Router v2.5+. Types are entity-key'd by store path so other subgraphs can extend them.</p>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-graphql">extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable"])
+
+type Memory @key(fields: "path") {
+  path: String!
+  kind: MemoryKind!
+  bodyHash: String!
+  state: MemoryState!
+  syncClass: SyncClass!
+  classification: Classification
+  acl: [ACLEntry!]
+  body: String                       # null if encrypted + caller lacks key
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type AuditRow @key(fields: "seq") {
+  seq: Int!
+  tsNs: BigInt!
+  op: MemoryOp!
+  path: String!
+  bodyHash: String!
+  prevChain: String!
+  chain: String!
+  actor: String!
+  extra: JSON
+}
+
+type Checkpoint @key(fields: "filename") {
+  filename: String!
+  treeSize: Int!
+  mmrRoot: String!
+  signedAtNs: BigInt!
+  signature: STHSignature!
+}
+
+type STHSignature { algorithm: String!  pubkeyId: String!  signature: String! }
+
+enum MemoryKind { decisions facts people projects preferences drift refinements }
+enum MemoryOp   { put move delete }
+enum MemoryState { active tombstoned purged }
+enum SyncClass   { private shareable }
+enum Classification { public internal confidential restricted }
+
+type Query {
+  memory(path: String!): Memory
+  memories(kind: MemoryKind, since: BigInt, limit: Int = 50): [Memory!]!
+  auditRow(seq: Int!): AuditRow
+  auditRows(fromSeq: Int!, limit: Int = 100): [AuditRow!]!
+  checkpoint(filename: String!): Checkpoint
+  state: BrainState!
+  inclusionProof(seq: Int!): InclusionProof!
+}
+
+type Mutation {
+  put(path: String!, body: String!, meta: JSON): PutResult!
+  move(src: String!, dst: String!): MoveResult!
+  delete(path: String!, mode: DeleteMode! = TOMBSTONE, reason: String): DeleteResult!
+  consolidate: Checkpoint!                  # admin
+  import(sourceFingerprint: String!, bundle: Upload!): ImportSession!
+}
+
+enum DeleteMode { TOMBSTONE PURGE }</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+  <p class="text-sm text-slate-600 mb-3">Exposed via the MCP Gateway (P0 infra) to Claude / Codex / Cursor / any 2025-11-25-spec client. Tool annotations include capability scope so the broker can enforce least-privilege.</p>
+  <div class="bbg-card p-5 mb-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+      <tbody>
+        <tr><td><code>brain.put</code></td><td>path, body, meta?</td><td><code>{seq, chain, body_hash}</code></td><td>destructive=false · idempotent=true · scope=write</td></tr>
+        <tr><td><code>brain.view</code></td><td>path</td><td><code>{body, meta, hash}</code></td><td>destructive=false · readonly · scope=read</td></tr>
+        <tr><td><code>brain.move</code></td><td>src, dst</td><td><code>{seq, chain}</code></td><td>destructive=true · scope=write</td></tr>
+        <tr><td><code>brain.delete</code></td><td>path, mode, reason?</td><td><code>{seq, chain, mode}</code></td><td>destructive=true · purge requires gate · scope=delete</td></tr>
+        <tr><td><code>brain.search</code></td><td>query, kind?, limit?</td><td><code>Memory[]</code></td><td>readonly · semantic + lexical · scope=read</td></tr>
+        <tr><td><code>brain.audit_tail</code></td><td>fromSeq, limit</td><td><code>AuditRow[]</code></td><td>readonly · scope=audit</td></tr>
+        <tr><td><code>brain.prove</code></td><td>seq</td><td><code>InclusionProof</code></td><td>readonly · MMR proof · scope=read</td></tr>
+        <tr><td><code>brain.verify_proof</code></td><td>seq, proof</td><td><code>{valid, root}</code></td><td>readonly · scope=read</td></tr>
+        <tr><td><code>brain.state</code></td><td>—</td><td><code>BrainState</code></td><td>readonly · scope=read</td></tr>
+        <tr><td><code>brain.doctor</code></td><td>repair?</td><td><code>{invariants[]}</code></td><td>readonly by default · scope=admin</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">CLI surface — <code>cyberos</code></h3>
+  <p class="text-sm text-slate-600 mb-3">30 subcommands. Every chain-touching operation is single-writer and lease-protected. Examples below; full reference at <a href="#cli-usage">CLI usage</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Subcommand</th><th>Purpose</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>cyberos put</code></td><td>Append a memory file</td><td><code>cyberos put memories/facts/x.md -</code></td></tr>
+        <tr><td><code>cyberos view</code></td><td>Read a memory body</td><td><code>cyberos view memories/facts/x.md</code></td></tr>
+        <tr><td><code>cyberos move</code></td><td>Rename within store</td><td><code>cyberos move a.md b.md</code></td></tr>
+        <tr><td><code>cyberos delete</code></td><td>Tombstone (default) or purge</td><td><code>cyberos delete x.md --mode tombstone</code></td></tr>
+        <tr><td><code>cyberos doctor</code></td><td>Verify all invariants</td><td><code>cyberos doctor [--repair]</code></td></tr>
+        <tr><td><code>cyberos state</code></td><td>Chain head + agent state</td><td><code>cyberos state</code></td></tr>
+        <tr><td><code>cyberos consolidate</code></td><td>Walk → Compact → Sign → Publish</td><td><code>cyberos consolidate</code></td></tr>
+        <tr><td><code>cyberos prove</code></td><td>MMR inclusion proof</td><td><code>cyberos prove --seq 12345</code></td></tr>
+        <tr><td><code>cyberos verify-proof</code></td><td>Verify proof bundle</td><td><code>cyberos verify-proof bundle.json</code></td></tr>
+        <tr><td><code>cyberos export</code></td><td>Deterministic zip</td><td><code>cyberos export out.zip</code></td></tr>
+        <tr><td><code>cyberos import</code></td><td>Cross-BRAIN merge</td><td><code>cyberos import teammate.zip</code></td></tr>
+        <tr><td><code>cyberos prune</code></td><td>Sweep zstd-archived segments</td><td><code>cyberos prune --older-than 90d</code></td></tr>
+        <tr><td><code>cyberos backup</code></td><td>Incremental snapshot</td><td><code>cyberos backup ./backups/</code></td></tr>
+        <tr><td><code>cyberos serve</code></td><td>HTTP REST mode</td><td><code>cyberos serve --port 7878</code></td></tr>
+        <tr><td><code>cyberos publish</code></td><td>Mobile static site</td><td><code>cyberos publish ./site/</code></td></tr>
+        <tr><td><code>cyberos digest</code></td><td>Daily LLM summary</td><td><code>cyberos digest --date today</code></td></tr>
+        <tr><td><code>cyberos search</code></td><td>Lexical + semantic</td><td><code>cyberos search "Singapore HoldCo"</code></td></tr>
+        <tr><td><code>cyberos validate</code></td><td>Schema-validate frontmatter</td><td><code>cyberos validate x.md</code></td></tr>
+        <tr><td><code>cyberos walk</code></td><td>Replay binlog</td><td><code>cyberos walk --from-seq 0</code></td></tr>
+        <tr><td><code>cyberos session start/end</code></td><td>Bracket import or batch</td><td><code>cyberos session start</code></td></tr>
+        <tr><td colspan="3"><em>+ 10 more: <code>encrypt</code>, <code>decrypt</code>, <code>rotate-key</code>, <code>conflicts</code>, <code>tail</code>, <code>show-config</code>, <code>show-manifest</code>, <code>checkpoints</code>, <code>repair-index</code>, <code>profile</code>.</em></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KEY FLOWS -->
+<!-- ============================================================ -->
+<section id="key-flows" class="module-section">
+  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Write path (the hot path)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant C as Caller (agent / CLI / subgraph)
+  participant O as ops.put()
+  participant L as lock.acquire()
+  participant W as writer.append()
+  participant F as fsync.barrier()
+  participant M as mmr.append_leaf()
+  participant S as sth.maybe_sign()
+  participant H as HEAD seqlock
+  participant I as index.upsert()
+
+  C->>O: put(path, body, meta)
+  O->>O: validate path (no traversal, schema-conformant)
+  O->>O: hash body (SHA-256)
+  O->>L: acquire lease (10s TTL)
+  L-->>O: lease(pid, monotonic_ns)
+  O->>W: build frame {seq, ts_ns, op:"put", body_hash, prev_chain}
+  W->>W: chain = SHA-256(canonical(frame) || prev_chain)
+  W->>F: write tmpfile + rename + parent-dir fsync
+  Note over F: macOS F_BARRIERFSYNC per-batch<br/>F_FULLFSYNC at checkpoint
+  W->>M: append_leaf(chain)
+  M-->>W: leaf_index, peaks
+  W->>S: check trigger (every consolidation OR explicit)
+  alt consolidate trigger
+    S->>S: sign tree head (Ed25519)
+    S-->>W: checkpoint written
+  end
+  W->>H: advance HEAD (atomic 8-byte rename)
+  W->>I: upsert SQLite index row
+  L-->>O: release lease
+  O-->>C: {seq, chain, body_hash}
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Hot-path latency budget: ~120 µs group-committed (10+ concurrent writes share one <code>fsync</code>). Cold-path single writer: ~3 ms. STH signing: amortised over the consolidation window.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 2 — Read path (lock-free seqlock)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant C as Caller
+  participant R as reader.view()
+  participant H as HEAD seqlock
+  participant FS as filesystem (mmap)
+
+  C->>R: view(path)
+  R->>H: snapshot HEAD seq (read-only)
+  H-->>R: seq_pre
+  R->>FS: mmap body file
+  R->>FS: stat body file (mtime, ino, size)
+  R->>H: re-read HEAD seq
+  H-->>R: seq_post
+  alt seq_pre == seq_post AND stat unchanged
+    R-->>C: {body, meta, hash}  (~6 µs hot)
+  else inconsistent — writer raced
+    R->>R: retry (bounded, exponential backoff)
+    Note over R: max 3 retries; then fall back to lock-guarded read
+  end
+    </div>
+    <p class="text-xs text-slate-500 mt-3">No <code>.lock</code> acquisition on the read path. Workers / agents read concurrently at memory bandwidth.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 3 — Consolidation (Walk → Compact → Sign → Publish)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant T as Trigger (size &gt; 5 MB OR rows &gt; 5,000 OR manual)
+  participant C as consolidate.run()
+  participant WA as walker (verify)
+  participant CO as compact (zstd archive)
+  participant SI as sign (Ed25519 STH)
+  participant PU as publish (advance manifest)
+
+  T->>C: consolidate()
+  C->>WA: walk binlog from last checkpoint
+  WA->>WA: verify frame CRC, chain continuity, MMR cross-check
+  WA-->>C: invariants OK
+  C->>CO: seal current.binlog → 2026-MM.binlog
+  CO->>CO: zstd compress (deterministic, level 6)
+  CO-->>C: 2026-MM.binlog.zst
+  C->>SI: sign(tree_size, mmr_root)
+  SI-->>C: checkpoint JSON with Ed25519 sig
+  C->>PU: atomically advance manifest.audit_chain_head + last_sth
+  PU-->>C: published
+  C-->>T: {checkpoint_filename, tree_size}
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 4 — Conflict resolution &amp; recovery (FROZEN_RECOVERABLE)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant A as Agent (READY)
+  participant CHK as Pre-write check (§1)
+  participant DOC as cyberos doctor
+  participant USER as Operator
+  participant REP as doctor --repair
+
+  A->>CHK: about to write
+  CHK->>CHK: verify chain tip vs ledger
+  alt divergent
+    CHK->>A: transition FROZEN_RECOVERABLE
+    A->>DOC: report inconsistency
+    DOC->>DOC: run 15 invariants
+    DOC->>USER: surface specific failure (e.g. chain gap @ seq 12345)
+    USER->>REP: cyberos doctor --repair --reason "iCloud merge artefact"
+    REP->>REP: safe auto-fixes only (rebuild index, replay tail)
+    REP-->>A: state → READY (if all 15 pass)
+  else catastrophic
+    CHK->>A: transition FROZEN_HUMAN
+    A->>USER: refuse all writes; human intervention required
+  end
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 5 — GDPR purge (Article 17 right to erasure)</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant SUB as Data subject (user)
+  participant OP as Operator (DPO)
+  participant C as Chat session
+  participant D as delete(path, "purge", reason)
+  participant W as writer.append (purge row)
+
+  SUB->>OP: DSAR / erasure request
+  OP->>C: explicit chat-turn approval (§3.6 gate)
+  C->>D: cyberos delete <path> --mode purge --reason "DSAR-2026-014"
+  D->>D: validate reason non-empty
+  D->>W: append purge row {op:"delete", path, body_hash, mode:"purge", reason}
+  W-->>D: chain committed
+  D->>D: redact body file (zero-fill + unlink)
+  D->>D: tombstone sidecar (retain meta minus PII)
+  Note over W: The FACT of purge is itself a ledger leaf<br/>and is not itself erasable.
+  D-->>OP: {seq, chain, redacted_hash}
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Per AGENTS.md §17.1, the audit fact of erasure is unerasable. The body is gone; the chain remembers the redaction.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LIFECYCLE -->
+<!-- ============================================================ -->
+<section id="lifecycle" class="module-section">
+  <header class="section-head"><span class="section-num">7</span><h2>Memory file lifecycle</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    A single memory file traverses six states from authorship to long-term archive. The agent state machine (READY · FROZEN_RECOVERABLE · FROZEN_HUMAN) gates every transition that involves a write.
+  </p>
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Composed: agent / user authors body + frontmatter
+  Composed --> Submitted: ops.put(path, body, meta)
+  Submitted --> Chained: writer appends audit frame · prev_chain + chain
+  Chained --> Indexed: SQLite index upsert · MMR leaf append
+  Indexed --> Signed: consolidation window OR explicit cyberos consolidate
+  Signed --> Consolidated: STH written · manifest advanced · segment sealed
+  Consolidated --> Exported: cyberos export → deterministic zip
+  Exported --> Imported: cyberos import on a teammate's BRAIN
+  Consolidated --> Tombstoned: cyberos delete --mode tombstone
+  Tombstoned --> Purged: cyberos delete --mode purge (DSAR gate)
+  Purged --> [*]: body redacted · chain row preserved as erasure fact
+  Consolidated --> Archived: cyberos prune (zstd) · move to cold tier (planned)
+  Indexed --> Conflicted: sync-FS race detected
+  Conflicted --> Indexed: cyberos conflicts resolve
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Agent state machine</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> READY
+  READY --> FROZEN_RECOVERABLE: invariant failure (chain gap, MMR mismatch)
+  FROZEN_RECOVERABLE --> READY: cyberos doctor --repair
+  FROZEN_RECOVERABLE --> FROZEN_HUMAN: catastrophic divergence
+  READY --> FROZEN_HUMAN: chain corruption · manifest unparseable
+  FROZEN_HUMAN --> READY: cyberos doctor --repair --reason "<text>"
+  note right of FROZEN_RECOVERABLE
+    Reads OK · writes refused
+    Auto-repair available
+  end note
+  note right of FROZEN_HUMAN
+    Reads OK · writes refused
+    Human signoff required
+  end note
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FRs -->
+<!-- ============================================================ -->
+<section id="functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">BRAIN-specific FRs as catalogued in PRD §9.1. Full normative descriptions and verification methods at <a href="../reference/fr-catalog.html#brain" class="text-blue-700 font-semibold underline">fr-catalog.html#brain</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody>
+        <tr><td><code>FR-BRAIN-001</code></td><td>Append-only audit ledger with SHA-256 chain</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-001" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-002</code></td><td>Six canonical file operations (put · view · move · delete · …)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-002" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-003</code></td><td>MMR inclusion proofs (logarithmic)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-003" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-004</code></td><td>Ed25519-signed tree heads at consolidation</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-004" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-005</code></td><td>Deterministic zip export (byte-identical across runs)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-005" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-006</code></td><td>GDPR Art. 17 purge mode with unerasable audit fact</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-006" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-007</code></td><td>Lock-free seqlock reader · no <code>.lock</code> on read path</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-007" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-008</code></td><td>15 doctor invariants enforced pre-write</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-008" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-009</code></td><td>Cross-BRAIN import preserves foreign chain in <code>extra</code></td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-009" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-010</code></td><td>Platform-correct durability (Darwin <code>F_BARRIERFSYNC</code>)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-010" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-011</code></td><td>Sidecar JSON metadata format with body-hash binding</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-011" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-012</code></td><td>Encryption envelope for <code>restricted</code> classifications</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-012" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-013</code></td><td>Semantic search via local BGE-M3 embeddings</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-013" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-014</code></td><td>HTTP REST mode for IDE / mobile clients</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-014" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-015</code></td><td>GraphQL subgraph for federation gateway</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0+</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-015" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-016</code></td><td>pgvector + Apache AGE second layer</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-016" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-017</code></td><td>Archival corpus on S3 / R2 cold tier</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-017" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-BRAIN-018</code></td><td>Public anchoring of STH (transparency log)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-018" class="text-blue-700">details →</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- NFRs -->
+<!-- ============================================================ -->
+<section id="non-functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">Latency, throughput, and durability budgets specific to BRAIN. Cross-referenced at <a href="../reference/nfr-catalog.html#brain" class="text-blue-700 font-semibold underline">nfr-catalog.html#brain</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+      <tbody>
+        <tr><td><code>NFR-BRAIN-LAT-001</code></td><td>Write p50 (group-committed)</td><td>≤ 150 µs</td><td><code>bench/throughput.py</code> · nightly</td></tr>
+        <tr><td><code>NFR-BRAIN-LAT-002</code></td><td>Write p95 (group-committed)</td><td>≤ 500 µs</td><td>bench/throughput · alert on regression &gt; 10%</td></tr>
+        <tr><td><code>NFR-BRAIN-LAT-003</code></td><td>Write p99 (cold, single writer)</td><td>≤ 10 ms</td><td>bench/cold_cli.py</td></tr>
+        <tr><td><code>NFR-BRAIN-LAT-004</code></td><td>Read p50 (mmap seqlock)</td><td>≤ 10 µs</td><td>bench/reader.py</td></tr>
+        <tr><td><code>NFR-BRAIN-LAT-005</code></td><td>Search p95 (lexical)</td><td>≤ 50 ms over 10k memories</td><td>bench/search.py</td></tr>
+        <tr><td><code>NFR-BRAIN-LAT-006</code></td><td>Search p95 (semantic, local BGE-M3)</td><td>≤ 200 ms over 10k memories</td><td>bench/semantic.py</td></tr>
+        <tr><td><code>NFR-BRAIN-THR-001</code></td><td>Sustained write throughput</td><td>≥ 8,000 ops/sec single thread</td><td>bench/throughput.py</td></tr>
+        <tr><td><code>NFR-BRAIN-DUR-001</code></td><td>Durability guarantee</td><td>fsync-per-batch · 0 lost frames at process kill</td><td>bench/crash_recovery.py</td></tr>
+        <tr><td><code>NFR-BRAIN-INT-001</code></td><td>Chain integrity rate</td><td>100% (15/15 invariants)</td><td><code>cyberos doctor</code> · CI nightly</td></tr>
+        <tr><td><code>NFR-BRAIN-EXP-001</code></td><td>Export determinism</td><td>byte-identical across 3 platforms</td><td>bench/determinism.py · macOS + Linux + WSL</td></tr>
+        <tr><td><code>NFR-BRAIN-STO-001</code></td><td>Storage overhead vs raw body</td><td>≤ 35% (chain + sidecar + index)</td><td>bench/storage.py</td></tr>
+        <tr><td><code>NFR-BRAIN-AVL-001</code></td><td>Single-process availability</td><td>≥ 99.99% (local FS dependent)</td><td>observed from <code>cyberos state</code> uptime</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCIES -->
+<!-- ============================================================ -->
+<section id="dependencies" class="module-section">
+  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    BRAIN is the deepest dependency in the CyberOS graph. Today (M0) it has no module dependencies — it is the foundation. Once P0 infra lands, it picks up AUTH (for actor identity), the AI Gateway (for digest / semantic search), and the MCP Gateway (for tool exposure).
+  </p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+graph LR
+  subgraph upstream ["BRAIN depends on"]
+    AUTH["🔐 AUTH<br/>actor identity"]
+    AI["⚡ AI Gateway<br/>digest · semantic"]
+    MCP["🔌 MCP Gateway<br/>tool exposure"]
+  end
+  BRAIN["🧠 BRAIN"]
+  subgraph downstream ["Used by all 22 modules"]
+    CUO["🎯 CUO"]
+    SKILL["🛠 SKILL"]
+    CHAT["💬 CHAT"]
+    EMAIL["✉️ EMAIL"]
+    PROJ["📋 PROJ"]
+    REW["💎 REW"]
+    OTHERS["…16 more"]
+  end
+  AUTH --> BRAIN
+  AI --> BRAIN
+  MCP --> BRAIN
+  BRAIN --> CUO
+  BRAIN --> SKILL
+  BRAIN --> CHAT
+  BRAIN --> EMAIL
+  BRAIN --> PROJ
+  BRAIN --> REW
+  BRAIN --> OTHERS
+
+  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fef3c7,stroke:#b45309
+  class BRAIN shipped
+  class AUTH,AI,MCP planned
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE -->
+<!-- ============================================================ -->
+<section id="compliance" class="module-section">
+  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">BRAIN is the single most compliance-relevant module in the catalog. Its audit chain is the regulator-facing evidence base for every decree below.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>BRAIN feature that satisfies it</th></tr></thead>
+      <tbody>
+        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td><code>cyberos search</code> + <code>cyberos export</code> produce a complete data-subject extract in &lt; 1 min.</td></tr>
+        <tr><td>Vietnam PDPL</td><td>Art. 16 — Erasure</td><td><code>cyberos delete --mode purge</code> with reason gate; audit fact remains.</td></tr>
+        <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Personal data processing log</td><td>Audit chain is the processing log; every op recorded with actor.</td></tr>
+        <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Cybersecurity data localisation</td><td>Local-first by design; <code>.cyberos-memory/</code> stays on Vietnamese soil unless explicitly exported.</td></tr>
+        <tr><td>GDPR (EU 2016/679)</td><td>Art. 17 — Right to erasure</td><td>Purge mode (§3.6) with reason gate; chain row records the redaction.</td></tr>
+        <tr><td>GDPR</td><td>Art. 30 — Records of processing</td><td>Audit chain is the records-of-processing artefact.</td></tr>
+        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging</td><td>Every routing decision (via CUO) is recorded in BRAIN; replayable.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 26 — Human oversight</td><td>FROZEN_HUMAN state requires explicit signoff to recover; defer-to-human escapes encoded in audit rows.</td></tr>
+        <tr><td>Singapore PDPA</td><td>§§ 12–13 — Access &amp; correction</td><td>Same DSAR + erasure mechanisms; satisfied for HoldCo flip at P3.</td></tr>
+        <tr><td>ISO/IEC 27001:2022</td><td>A.8.10 — Information deletion</td><td>Purge mode plus retention manifest.</td></tr>
+        <tr><td>ISO/IEC 27001:2022</td><td>A.8.15 — Logging</td><td>Audit chain · 100% integrity rate.</td></tr>
+        <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 8.2 — Data management</td><td>Sync-class taxonomy + acl + classification + Ed25519-anchored chain.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC7.2 · CC7.3 — Monitoring</td><td>Doctor invariants run nightly; alert on first failure.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RISK -->
+<!-- ============================================================ -->
+<section id="risk-entries" class="module-section">
+  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">BRAIN-specific risks tracked in the full <a href="../reference/risk-register.html#brain" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><code>R-BRAIN-001</code></td><td>Audit chain corruption (frame CRC failure, MMR peak mismatch)</td><td>Low</td><td>Catastrophic</td><td>CTO</td><td>15 walker invariants nightly · FROZEN_RECOVERABLE auto-stop · <code>cyberos backup</code> daily.</td></tr>
+        <tr><td><code>R-BRAIN-002</code></td><td>MMR implementation bug (replay produces wrong root)</td><td>Low</td><td>High</td><td>CTO</td><td>Cross-check invariant compares <code>chain</code> against MMR-derived hash at every consolidation. 1k / 10k / 100k leaf scale tests in CI.</td></tr>
+        <tr><td><code>R-BRAIN-003</code></td><td>STH signing-key compromise</td><td>Low</td><td>High</td><td>CSO</td><td>Passphrase-wrapped key on disk. P3+: KMS-managed rotation. Re-sign all open checkpoints on rotation.</td></tr>
+        <tr><td><code>R-BRAIN-004</code></td><td>iCloud / Dropbox sync race produces conflicting bodies</td><td>Medium</td><td>Medium</td><td>CDO</td><td><code>conflicts.py</code> quarantines competing copies to <code>conflicts/</code>; operator resolves via <code>cyberos conflicts resolve</code>.</td></tr>
+        <tr><td><code>R-BRAIN-005</code></td><td>Cross-platform fsync semantic drift (macOS vs Linux vs Windows)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-platform fsync.py paths, crash-recovery benchmark on each platform in CI.</td></tr>
+        <tr><td><code>R-BRAIN-006</code></td><td>Schema drift breaks downstream consumers (e.g. CUO bridge)</td><td>Low</td><td>Medium</td><td>CTO</td><td><code>memory.schema.json</code> regenerated from types at every release · schema-drift regression test gate.</td></tr>
+        <tr><td><code>R-BRAIN-007</code></td><td>Operator accidentally purges legally-required data</td><td>Low</td><td>High</td><td>CLO</td><td>Purge mode requires explicit chat-turn approval AND non-empty reason. Two-person sign-off in production tenants (P3+).</td></tr>
+        <tr><td><code>R-BRAIN-008</code></td><td>Encryption envelope key loss (KMS outage / rotation bug)</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Key escrow + N-of-M reconstruction (P2+). Sidecar always plaintext so metadata survives body loss.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KPIs -->
+<!-- ============================================================ -->
+<section id="kpis" class="module-section">
+  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">Module health is read off these 8 KPIs. Targets are PRD §11.1 normative budgets; current values are observed on the user's live BRAIN.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th><th>Current</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Chain integrity rate</strong></td><td><code>passing_invariants / 15</code></td><td><code>cyberos doctor</code></td><td>100%</td><td>15/15 (100%)</td></tr>
+        <tr><td><strong>MMR cross-check pass rate</strong></td><td><code>matched_leaves / total_leaves</code></td><td>walker invariant</td><td>100%</td><td>100%</td></tr>
+        <tr><td><strong>Write p95</strong></td><td>group-committed</td><td>bench/throughput</td><td>≤ 500 µs</td><td>~ 380 µs</td></tr>
+        <tr><td><strong>Read p95</strong></td><td>mmap seqlock</td><td>bench/reader</td><td>≤ 20 µs</td><td>~ 8 µs</td></tr>
+        <tr><td><strong>Search p95</strong></td><td>lexical · 10k memories</td><td>bench/search</td><td>≤ 50 ms</td><td>~ 32 ms</td></tr>
+        <tr><td><strong>Export determinism rate</strong></td><td><code>identical_exports / runs</code></td><td>bench/determinism</td><td>100%</td><td>100% (3 platforms)</td></tr>
+        <tr><td><strong>Storage overhead</strong></td><td><code>(chain + sidecar + index) / raw_body</code></td><td>bench/storage</td><td>≤ 35%</td><td>~ 28%</td></tr>
+        <tr><td><strong>Test pass rate</strong></td><td><code>green / total</code></td><td>pytest CI</td><td>100%</td><td>255/255 (100%)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RACI -->
+<!-- ============================================================ -->
+<section id="raci" class="module-section">
+  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">BRAIN is owned end-to-end by the CEO seat today (Stephen Cheng). As the team grows, ownership shifts to the CDO (data) and CTO (engineering).</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>CDO</th><th>CSO</th><th>CLO</th><th>DPO</th></tr></thead>
+      <tbody>
+        <tr><td>Protocol design (AGENTS.md)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Implementation (cyberos/core/)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>On-call rotation</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Security review</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Compliance review (PDPL, GDPR)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-r">R</td></tr>
+        <tr><td>DSAR fulfilment</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td></tr>
+        <tr><td>Purge approval</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-r">R</td></tr>
+        <tr><td>Key rotation (STH Ed25519)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+      </tbody>
+    </table>
+    <p class="text-xs text-slate-500 mt-3"><strong>R</strong> = Responsible · <strong>A</strong> = Accountable · <strong>C</strong> = Consulted · <strong>I</strong> = Informed.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI USAGE -->
+<!-- ============================================================ -->
+<section id="cli-usage" class="module-section">
+  <header class="section-head"><span class="section-num">15</span><h2>CLI usage — real examples</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">What a user actually types and what they see. All examples assume <code>pip install -e .</code> from the <code>memory/</code> directory.</p>
+
+  <h3 class="text-lg font-bold mb-2">1. Append a memory</h3>
+<pre><code>$ echo "Decided to flip Singapore HoldCo if ARR &ge; \$1.5M at P3 exit." | \
+    cyberos --store ./.cyberos-memory --actor stephen put memories/decisions/holdco-flip.md -
+
+{
+  "seq": 14823,
+  "chain": "9f3e2a1b...8d4c",
+  "body_hash": "a17b2c...e9f0",
+  "elapsed_us": 412
+}</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">2. Verify the entire chain</h3>
+<pre><code>$ cyberos --store ./.cyberos-memory doctor
+
+[BRAIN doctor v2.0.0]  store=./.cyberos-memory  rows=14823
+
+invariant                            status   detail
+─────────────────────────────────────────────────────
+chain-continuity                     OK       14823/14823 rows linked
+chain-no-rewind                      OK       monotonic seq verified
+frame-crc                            OK       all CRCs match
+op-enum-closed                       OK       no unknown ops
+layout-canonical                     OK       no sandbox path
+layout-no-traversal                  OK       no '..' segments
+sidecar-body-hash                    OK       all sidecars match body
+mmr-leaf-count                       OK       14823 leaves
+mmr-peak-cross-check                 OK       peaks match chain hash
+sth-signature                        OK       Ed25519 signature valid
+manifest-head-coherent               OK       HEAD matches manifest
+index-coverage                       OK       SQLite mirrors filesystem
+schema-validation                    OK       all frontmatter validates
+lease-not-stale                      OK       no orphaned lease
+exports-excluded                     OK       no chain leak through exports
+
+state: READY  (15/15 invariants pass)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">3. Produce an MMR inclusion proof</h3>
+<pre><code>$ cyberos --store ./.cyberos-memory prove --seq 14823 > proof.json
+
+$ cat proof.json
+{
+  "seq": 14823,
+  "leaf_hash": "9f3e2a1b...8d4c",
+  "leaf_index": 14822,
+  "proof_path": ["a1b2...", "c3d4...", "e5f6..."],
+  "tree_size": 14823,
+  "mmr_root": "f7e8...d9c0",
+  "sth": {
+    "filename": "2026-05-14T03Z-f7e8d9c0.json",
+    "signature": "ed25519:8c7d..."
+  }
+}
+
+$ cyberos verify-proof proof.json
+{"valid": true, "root": "f7e8...d9c0", "verified_at": "2026-05-14T07:21:08Z"}</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">4. Deterministic export</h3>
+<pre><code>$ cyberos --store ./.cyberos-memory export brain-2026-05-14.zip
+
+[export]  paths=2451  bytes=14.2MB  zip_bytes=4.1MB  level=6
+[export]  excluded: exports/  __pycache__/  .cache/  .lock  HEAD
+[export]  determinism: sorted paths · ts=2000-01-01T00:00:00Z · mode=0o644
+[export]  written: brain-2026-05-14.zip
+[export]  sha256: a4f9...8c2d  (run twice on different machines → same hash)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">5. GDPR purge (Art. 17)</h3>
+<pre><code>$ cyberos --store ./.cyberos-memory delete \
+    memories/people/clients/acme-contact.md \
+    --mode purge \
+    --reason "DSAR-2026-014 erasure request, signed off by DPO"
+
+[delete]  mode=purge  body redacted  audit row preserved
+{
+  "seq": 14831,
+  "chain": "b8d4...e3f7",
+  "mode": "purge",
+  "body_hash_before": "a17b...e9f0",
+  "redaction_reason": "DSAR-2026-014 erasure request, signed off by DPO",
+  "audit_fact_unerasable": true
+}</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">6. Cross-BRAIN import (P6 — teammate merge)</h3>
+<pre><code>$ cyberos --store ./.cyberos-memory import ../teammate-brain.zip --filter sync_class=shareable
+
+[import]  source_fingerprint: 2a4d8f...1b3c
+[import]  session.start written  seq=14832
+[import]  103 memories considered  -- 41 shareable, 62 private (skipped)
+[import]  41 imported (foreign_chain preserved in extra)
+[import]  session.end written  seq=14874
+[import]  manifest.imports[2a4d8f...1b3c].last_imported_seq = 47812</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATUS -->
+<!-- ============================================================ -->
+<section id="status" class="module-section">
+  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; code stats</h2></header>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="fact-card"><div class="label">Total LoC (Python)</div><div class="value">~5,000</div><div class="note">core/ + tools/ + tests/</div></div>
+    <div class="fact-card"><div class="label">Test count</div><div class="value">255 green</div><div class="note">pytest · &lt; 18s wall clock</div></div>
+    <div class="fact-card"><div class="label">Modules in core/</div><div class="value">25</div><div class="note">writer, reader, walker, mmr, sth, …</div></div>
+    <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30</div><div class="note">single entrypoint <code>cyberos</code></div></div>
+    <div class="fact-card"><div class="label">Audit proposals shipped</div><div class="value">12 + Stage 3</div><div class="note">P1–P12 + P2 Stage 3</div></div>
+    <div class="fact-card"><div class="label">Schema</div><div class="value">closed</div><div class="note">unknown <code>kind</code> rejected at write</div></div>
+  </div>
+
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Phase / capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Core writer + reader + walker</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>MMR + Ed25519 STH</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>Crypto-mode (STH-only)</td><td><span class="pill pill-shipped">shipped (opt-in)</span></td></tr>
+        <tr><td>Cross-platform automation (launchd · systemd · Task Scheduler)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>Semantic search (optional <code>sentence-transformers</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>Sync-FS conflict awareness (iCloud · Dropbox · OneDrive)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>P1–P12 audit proposals + P2 Stage 3</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>Cross-BRAIN import (P6)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>HTTP REST mode (<code>cyberos serve</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>Daily digest (<code>cyberos digest</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>Mobile static publish (<code>cyberos publish</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+        <tr><td>GraphQL subgraph (P0 federation)</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
+        <tr><td>pgvector + Apache AGE Layer 2</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+        <tr><td>S3 / R2 archival Layer 3</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
+        <tr><td>iOS companion app</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+        <tr><td>Public STH anchoring (transparency log)</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references" class="module-section">
+  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+  <div class="bbg-card p-5">
+    <ul class="space-y-2 text-sm">
+      <li><strong>PRD §5.1–§5.9</strong> — BRAIN architecture, three layers, six operations, conflict resolution, NL CRUD.</li>
+      <li><strong>PRD §9.1</strong> — BRAIN deep-dive: GraphQL contract, MCP tool surface, FRs.</li>
+      <li><strong>PRD §11.1</strong> — KPI definitions and budgets.</li>
+      <li><strong>SRS §4.1</strong> — Formal FR catalog for BRAIN.</li>
+      <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/memory/docs/AGENTS.md</code>.</li>
+      <li><strong>SPEC.md</strong> — formal contract summary — <code>cyberos/memory/docs/SPEC.md</code>.</li>
+      <li><strong>EVOLUTION.md</strong> — history and rejected designs (informative).</li>
+      <li><strong>INTEROP.md</strong> — Cursor / Codex-compatible read-only subset (≤ 6,000 chars).</li>
+      <li><strong>memory.schema.json</strong> — JSON Schema for frontmatter, audit rows, manifest.</li>
+      <li><strong>memory.invariants.yaml</strong> — invariant list consumed by the walker.</li>
+      <li><strong>Source:</strong> <code>cyberos/memory/cyberos/core/</code> · <code>cyberos/memory/tests/</code> · <code>cyberos/memory/bench/</code>.</li>
+      <li><strong>CHANGELOG:</strong> <code>cyberos/memory/docs/CHANGELOG.md</code> (newest-first).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PREV / NEXT NAV -->
+<!-- ============================================================ -->
+<nav class="module-nav-footer mt-12">
+  <a href="../index.html#catalog" class="text-blue-700 font-semibold no-underline hover:underline">← All modules</a>
+  <a href="cuo.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: CUO →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

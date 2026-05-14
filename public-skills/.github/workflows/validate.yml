@@ -1,0 +1,31 @@
+name: validate
+on: [push, pull_request]
+
+jobs:
+  frontmatter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyyaml
+      - name: Validate SKILL.md frontmatter
+        run: |
+          python - <<'PY'
+          import pathlib, sys, yaml
+          errors = []
+          for skill_md in pathlib.Path(".").glob("*/SKILL.md"):
+              text = skill_md.read_text(encoding="utf-8")
+              if not text.startswith("---\n"):
+                  errors.append(f"{skill_md}: missing frontmatter")
+                  continue
+              fm = text.split("---\n", 2)[1]
+              data = yaml.safe_load(fm) or {}
+              for field in ("name", "description"):
+                  if not data.get(field):
+                      errors.append(f"{skill_md}: missing '{field}'")
+          if errors:
+              print("\n".join(errors)); sys.exit(1)
+          print("ok")
+          PY

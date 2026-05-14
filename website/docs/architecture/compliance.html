@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compliance — CyberOS</title>
+  <meta name="description" content="Three concentric compliance rings: Vietnam home regime, cross-border (GDPR / EU AI Act / Singapore PDPA), international standards (ISO 27001, SOC 2, ISO 42001, CSA STAR).">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <script type="module" src="../assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Architecture">
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#navigate">Architecture</a>
+      <span class="sep">›</span>
+      <span class="current">Compliance</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4">
+      <span class="section-badge" style="background:var(--compliance-tint);color:var(--compliance-dark)">Compliance scope</span>
+      <span class="phase-chip phase-p0">Compliance by construction</span>
+    </div>
+    <h1 class="h-display mb-4">Three concentric rings</h1>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Vietnam · Cross-border · International standards. Built in on day one, certified gate-by-gate.</p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      <strong>Compliance is a shipping feature, not a paperwork feature.</strong> Every locked decision in PRD §8 — RLS-by-default, OAuth on MCP, read-only AI in payroll, persona-version stamps on every CUO output — exists because a regulator, an auditor, or a client procurement team will eventually ask. Ship it on day one and the cost is zero. Bolt it on at year three and the cost is rebuilding everything. This page traces the three concentric rings CyberOS plans for: Vietnam's home regime (the cornerstone), cross-border obligations when customers cross jurisdictions (GDPR, EU AI Act, Singapore PDPA), and the international standards procurement teams require before signing (ISO 27001:2022, SOC 2, ISO 42001 AIMS, CSA STAR, AI-CAIQ).
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#ring-1" class="btn btn-primary">Ring 1 · Vietnam
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#phase-gates" class="btn btn-secondary">Compliance gates by phase</a>
+      <a href="#breach-matrix" class="btn btn-secondary">Breach notification matrix</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- ASIDE TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-1 text-sm">
+        <li><a href="#overview" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Three rings overview</a></li>
+        <li><a href="#ring-1" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Ring 1 · Vietnam (home)</a></li>
+        <li class="pl-4"><a href="#vn-decree-13" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">Decree 13/2023 PDPL</a></li>
+        <li class="pl-4"><a href="#vn-decree-53" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">Decree 53/2022 Cyber</a></li>
+        <li class="pl-4"><a href="#vn-decree-20" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">Decree 20/2026 SME</a></li>
+        <li class="pl-4"><a href="#vn-pdpl-91" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">Law 91/2025 + Decree 356</a></li>
+        <li class="pl-4"><a href="#vn-tax" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">NQ 142/2024 + TT 80/2021</a></li>
+        <li><a href="#ring-2" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Ring 2 · Cross-border</a></li>
+        <li class="pl-4"><a href="#gdpr" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">GDPR (EU)</a></li>
+        <li class="pl-4"><a href="#ai-act" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">EU AI Act Annex III §4</a></li>
+        <li class="pl-4"><a href="#pdpa-sg" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">Singapore PDPA + HoldCo flip</a></li>
+        <li><a href="#ring-3" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Ring 3 · Standards</a></li>
+        <li class="pl-4"><a href="#iso-27001" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">ISO/IEC 27001:2022</a></li>
+        <li class="pl-4"><a href="#soc-2" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">SOC 2 Type I → II</a></li>
+        <li class="pl-4"><a href="#iso-42001" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">ISO 42001 (AIMS)</a></li>
+        <li class="pl-4"><a href="#iso-27701" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">ISO 27701 (PIMS)</a></li>
+        <li class="pl-4"><a href="#csa-star" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">CSA STAR L1 → L2</a></li>
+        <li class="pl-4"><a href="#ai-caiq" class="block py-1 px-2 rounded text-slate-600 hover:text-slate-900 text-xs">AI-CAIQ</a></li>
+        <li><a href="#phase-gates" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Compliance gates per phase</a></li>
+        <li><a href="#trust-center" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Trust Center pattern</a></li>
+        <li><a href="#breach-matrix" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Breach notification matrix</a></li>
+        <li><a href="#references" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">References</a></li>
+      </ul>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2 space-y-14">
+
+<!-- ============================================================ -->
+<!-- OVERVIEW -->
+<!-- ============================================================ -->
+<section id="overview">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-5">0</span>
+    <h2 class="h-1">Three rings · one platform</h2>
+  </div>
+  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+    CyberOS is built in Vietnam, sold globally, and processes both employee and (eventually) client data. The compliance posture therefore satisfies three concentric rings: (1) Vietnamese law for the entity that owns the platform, (2) cross-border requirements for clients in Singapore, EU, US, (3) sectoral standards (ISO/SOC/CSA/AI-CAIQ) that procurement teams at mid-market clients require before signing. Each ring lights up gate-by-gate as the platform crosses phase boundaries (PRD §12.4).
+  </p>
+
+  <!-- Three-ring SVG -->
+  <div class="bbg-card p-6 mb-6">
+    <svg viewBox="0 0 780 660" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-3xl mx-auto h-auto" role="img" aria-label="CyberOS three concentric compliance rings">
+      <defs>
+        <radialGradient id="r1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#dbeafe"/>
+          <stop offset="100%" stop-color="#93c5fd"/>
+        </radialGradient>
+        <radialGradient id="r2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#d1fae5"/>
+          <stop offset="100%" stop-color="#6ee7b7"/>
+        </radialGradient>
+        <radialGradient id="r3" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fef3c7"/>
+          <stop offset="100%" stop-color="#fcd34d"/>
+        </radialGradient>
+        <filter id="rs" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.1"/>
+        </filter>
+      </defs>
+
+      <!-- outer ring (standards) -->
+      <circle cx="390" cy="330" r="310" fill="url(#r3)" stroke="#b45309" stroke-width="2" opacity="0.55" filter="url(#rs)"/>
+      <text x="390" y="40" text-anchor="middle" font-size="16" font-weight="800" fill="#78350f">Ring 3 · International standards</text>
+      <text x="390" y="60" text-anchor="middle" font-size="11" fill="#92400e">ISO/IEC 27001:2022 · SOC 2 (Type I → II) · ISO 42001 AIMS · ISO 27701 PIMS · CSA STAR L1 → L2 · AI-CAIQ</text>
+
+      <!-- middle ring (cross-border) -->
+      <circle cx="390" cy="330" r="220" fill="url(#r2)" stroke="#047857" stroke-width="2" opacity="0.65" filter="url(#rs)"/>
+      <text x="390" y="130" text-anchor="middle" font-size="15" font-weight="800" fill="#064e3b">Ring 2 · Cross-border</text>
+      <text x="390" y="148" text-anchor="middle" font-size="11" fill="#065f46">GDPR · EU AI Act (Annex III §4) · Singapore PDPA · HoldCo flip</text>
+
+      <!-- inner ring (Vietnam — home regime) -->
+      <circle cx="390" cy="330" r="140" fill="url(#r1)" stroke="#1e40af" stroke-width="2.5" opacity="0.92" filter="url(#rs)"/>
+      <text x="390" y="265" text-anchor="middle" font-size="16" font-weight="800" fill="#1e3a8a">Ring 1 · Vietnam — Home Regime</text>
+      <text x="390" y="288" text-anchor="middle" font-size="11" fill="#1e40af">PDPL Law 91/2025 · Decree 356</text>
+      <text x="390" y="304" text-anchor="middle" font-size="11" fill="#1e40af">Decree 13/2023 (Personal Data)</text>
+      <text x="390" y="320" text-anchor="middle" font-size="11" fill="#1e40af">Decree 53/2022 (Cybersecurity)</text>
+      <text x="390" y="336" text-anchor="middle" font-size="11" fill="#1e40af">Decree 20/2026 (SME)</text>
+      <text x="390" y="352" text-anchor="middle" font-size="11" fill="#1e40af">NQ 142/2024 + TT 80/2021 (Tax)</text>
+
+      <!-- core dot -->
+      <circle cx="390" cy="380" r="6" fill="#1e3a8a"/>
+      <text x="390" y="402" text-anchor="middle" font-size="9" font-style="italic" fill="#1e3a8a">cornerstone · every deployment</text>
+
+      <!-- gate annotations -->
+      <g font-size="10">
+        <text x="40" y="585" fill="#78350f">⌖ P3 exit · ISO 42001 (AIMS) certified</text>
+        <text x="40" y="600" fill="#78350f">⌖ P3 exit · ISO 27701 (PIMS) — if EU/UK push</text>
+        <text x="40" y="615" fill="#78350f">⌖ P2 exit · ISO 27001:2022 Stage 1</text>
+        <text x="40" y="630" fill="#78350f">⌖ P1 exit · SOC 2 Type I + CSA STAR L1 + AI-CAIQ</text>
+        <text x="40" y="645" fill="#78350f">⌖ P2 exit · SOC 2 Type II + CSA STAR L2</text>
+
+        <text x="450" y="585" fill="#065f46">⌖ P2 exit · EU AI Act Annex III §4 conformity pack (REW + LEARN)</text>
+        <text x="450" y="600" fill="#065f46">⌖ P3+ · Singapore HoldCo flip (if ARR ≥ $1.5M)</text>
+        <text x="450" y="615" fill="#065f46">⌖ P3+ · GDPR posture (EU-shard residency)</text>
+        <text x="450" y="630" fill="#065f46">⌖ P4 · External Authorised Reps (EU/UK)</text>
+        <text x="450" y="645" fill="#065f46">⌖ Ongoing · DSAR APIs + 30-day SLA</text>
+
+        <text x="240" y="582" fill="#1e3a8a" font-weight="600">⌖ P0 exit (M+3)</text>
+        <text x="240" y="595" fill="#1e3a8a">A05 DPIA filed · DPO designated · Trust Center live</text>
+        <text x="240" y="608" fill="#1e3a8a">Stripe SAQ-A AOC · VPAT 2.5 INT</text>
+      </g>
+    </svg>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="bbg-card p-5 tint-memory">
+      <div class="text-xs uppercase text-blue-700 font-bold mb-1">Ring 1 · cornerstone</div>
+      <div class="text-lg font-bold mb-1">Vietnam home regime</div>
+      <p class="text-sm text-slate-600 leading-relaxed">Every CyberOS deployment respects PDPL Law 91/2025 + Decree 356, Decree 13/2023, Decree 53/2022, Decree 20/2026 SME, and the tax framework. Non-negotiable.</p>
+    </div>
+    <div class="bbg-card p-5 tint-skill">
+      <div class="text-xs uppercase text-emerald-700 font-bold mb-1">Ring 2 · cross-border</div>
+      <div class="text-lg font-bold mb-1">Where customers are</div>
+      <p class="text-sm text-slate-600 leading-relaxed">GDPR for EU-resident clients, EU AI Act Annex III §4 because REW + LEARN are high-risk-adjacent, Singapore PDPA because of the HoldCo flip at P3.</p>
+    </div>
+    <div class="bbg-card p-5 tint-infra">
+      <div class="text-xs uppercase text-amber-700 font-bold mb-1">Ring 3 · standards</div>
+      <div class="text-lg font-bold mb-1">What buyers ask for</div>
+      <p class="text-sm text-slate-600 leading-relaxed">ISO 27001:2022, SOC 2 Type II, ISO 42001 (AIMS), ISO 27701 (PIMS), CSA STAR L1→L2, AI-CAIQ. The procurement checklist gets shorter with each cert.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RING 1 -->
+<!-- ============================================================ -->
+<section id="ring-1">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-1">1</span>
+    <h2 class="h-1">Ring 1 — Vietnam home regime</h2>
+  </div>
+  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+    Vietnamese law is the cornerstone. CyberSkill JSC is a Vietnam-incorporated entity processing Vietnamese-citizen personal data. Every architectural decision in PRD §8 — RLS-by-default, per-tenant region pinning, Merkle-chained audit, A05 filings, mandatory DPO — exists to satisfy Vietnam first. PRD §12.1 documents the obligations; this section traces each regulation to a CyberOS module and FR.
+  </p>
+
+  <!-- Decree 13 -->
+  <article id="vn-decree-13" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🇻🇳</span>
+      <h3 class="h-2">Decree 13/2023/NĐ-CP — Personal Data Protection</h3>
+      <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold">in force 2023-07-01</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Vietnam's first comprehensive personal data protection regime. Introduces "sensitive personal data" (health, biometric, financial, criminal-record, ethnic, religious, sexual-orientation), requires a Data Protection Impact Assessment (DPIA) for any processing of sensitive data, mandates data subject consent for cross-border transfer, and establishes a notification regime to the Ministry of Public Security (MoPS / A05) for breaches and cross-border transfer of Vietnamese-citizen data.</p>
+
+    <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <h4 class="font-bold text-sm mb-1">Key obligations</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Lawful basis required for every processing activity</li>
+          <li>Sensitive-data DPIA before processing (Article 24)</li>
+          <li>Cross-border transfer A05 notification (15-day form, "ngày-15")</li>
+          <li>Breach notification to MoPS within 72 h</li>
+          <li>Data Subject Access Request (DSAR) within 30 days</li>
+          <li>DPO designation (waived for SMEs under Decree 20/2026)</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold text-sm mb-1">Penalties</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Administrative fines up to VND 100 M (~$4,000) per violation</li>
+          <li>Compounded by Law 91/2025 fine schedule</li>
+          <li>Service suspension orders for repeat violations</li>
+          <li>Criminal liability under Penal Code §288 for major incidents</li>
+        </ul>
+      </div>
+    </div>
+
+    <h4 class="font-bold text-sm mb-1">CyberOS response (locked in §8)</h4>
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li><strong>vn-shard Postgres</strong> with RLS for all Vietnamese-origin PD; Singapore region default, Vietnam-resident shard available from P2.</li>
+      <li><strong>DPIA template</strong> as KB artifact; DPO (Founder until P3) signs before any new data category is ingested.</li>
+      <li><strong>A05 cross-border-transfer audit trail</strong> in the Compliance subgraph; 15-day form auto-generated.</li>
+      <li><strong>Sensitive-tagged facts</strong> in BRAIN Layer 2 are encrypted-at-rest with per-tenant KMS; never written to Layer 3 without explicit consent.</li>
+      <li><strong>BRAIN ingestion denylist (DEC-036)</strong> structurally excludes compensation, equity, government IDs, bank accounts, and health data.</li>
+    </ul>
+  </article>
+
+  <!-- Decree 53 -->
+  <article id="vn-decree-53" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🛡</span>
+      <h3 class="h-2">Decree 53/2022/NĐ-CP — Cybersecurity Law implementing decree</h3>
+      <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold">in force 2022-10-01</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Obliges in-scope services — those that store user data of Vietnamese citizens for at least 24 months — to maintain data on Vietnamese soil and maintain an in-country office. CyberOS, while sold to a Vietnamese entity, is unlikely to qualify as in-scope until the platform processes data for Vietnamese client end-users (P4 PORTAL).</p>
+
+    <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <h4 class="font-bold text-sm mb-1">Trigger criteria (in-scope test)</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Collects Vietnamese-citizen personal info</li>
+          <li>Stores said data for ≥ 24 months</li>
+          <li>Offers services to ≥ 100k Vietnamese users <em>or</em> revenue ≥ VND 100 B</li>
+          <li>Receives data-localisation order from MoPS</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold text-sm mb-1">CyberOS response</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Employee data on Vietnamese soil from P2 onward (DEC-027)</li>
+          <li>PORTAL designed so VN-client-facing tenant defaults to vn-shard residency</li>
+          <li>Vietnam office maintained — CyberSkill JSC HCMC HQ</li>
+          <li>Annual review with VN counsel at every phase gate</li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <!-- Decree 20/2026 -->
+  <article id="vn-decree-20" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🧮</span>
+      <h3 class="h-2">Decree 20/2026/NĐ-CP — SME exemptions <span class="text-base text-emerald-600">(NEW)</span></h3>
+      <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold">in force 2026-01-01</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Gazetted Q4 2025; introduces a tiered compliance regime that exempts micro-enterprises (≤ 10 employees, ≤ VND 10 B revenue) from several Decree 13 obligations including the formal DPO appointment and the dedicated DPIA team requirement. CyberSkill JSC currently qualifies.</p>
+
+    <div class="bbg-card p-4 bg-blue-50 mb-4 border-l-4 border-blue-500">
+      <p class="text-sm"><strong class="text-blue-900">DEC-053 locked decision:</strong> CyberSkill JSC operates under Decree 20/2026 simplified SME regime in P0–P1, and pre-emptively graduates to the full Decree 13/2023 regime at P2 entry (month 7), independent of the headcount/revenue threshold being crossed.</p>
+    </div>
+
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li><strong>P0–P1 (M0–M+6):</strong> simplified regime; Founder serves as DPO; DPIA informal but maintained.</li>
+      <li><strong>P2 (M+7):</strong> graduate preemptively; appoint formal DPO; run formal DPIA; register processing activities.</li>
+      <li><strong>Compliance module (CP):</strong> tracks SME-status flag per tenant; one-click graduation UX for tenants who buy CyberOS.</li>
+    </ul>
+  </article>
+
+  <!-- PDPL Law 91/2025 -->
+  <article id="vn-pdpl-91" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">⚖️</span>
+      <h3 class="h-2">Law 91/2025/QH15 + Decree 356/2025 — PDPL elevation</h3>
+      <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold">in force 2026-01-01</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Vietnam's Personal Data Protection Law (PDPL) — Law 91/2025 elevates Decree 13's decree-level obligations into national law with significantly higher penalties. Decree 356/2025 is the implementing decree, locking the DPO requirement, mandatory A05 filings, and the breach-notification 72-hour clock.</p>
+
+    <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <h4 class="font-bold text-sm mb-1">What's new vs Decree 13</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Fine ceiling raised to 5% of preceding-year revenue</li>
+          <li>DPO becomes a national-law requirement (not just decree-level)</li>
+          <li>Cross-border-transfer impact assessment formalised</li>
+          <li>Civil right of action by data subjects</li>
+          <li>"Right to explanation" for automated decisions (parallels EU AI Act)</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold text-sm mb-1">CyberOS response</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>DEC-055: every CUO output that touches a person ships with "Why this?" affordance (persona version + memory citations) — implements right-to-explanation by design</li>
+          <li>CP module's Compliance Cockpit shows live PDPL conformance per tenant</li>
+          <li>Per-tenant DPIA template auto-pre-fills with subgraph-declared data categories</li>
+          <li>Breach notification timer wired to OBS module (PRD §8.7)</li>
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  <!-- Tax -->
+  <article id="vn-tax" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">💰</span>
+      <h3 class="h-2">NQ 142/2024 + TT 80/2021 — VAT &amp; e-invoice framework</h3>
+      <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold">in force 2022 / 2024 amend.</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Mandatory e-invoice issuance, monthly VAT declaration, MST (tax code) validation on every invoice line. CyberOS handles this via the INV module (P2) and the <code>vn-mst-validate</code> + <code>vn-vat-invoice</code> + <code>vn-tax-filing</code> skills (shipped in the Skill module).</p>
+
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li><strong>e-invoice format:</strong> XML (Decree 123/2020), uploaded to GDT (General Department of Taxation) via T-VAN provider.</li>
+      <li><strong>MST validation:</strong> 10-digit (entity) or 13-digit (branch); checksum via Modulus-11 algorithm; live GDT API lookup.</li>
+      <li><strong>VAT rates:</strong> 0% (export), 5% (essentials), 8% (NQ 142/2024 stimulus, expires periodically), 10% (default).</li>
+      <li><strong>Monthly filing:</strong> by 20th of following month via the <code>vn-tax-filing</code> skill.</li>
+      <li><strong>Retention:</strong> 10 years (Law on Accounting Article 41).</li>
+    </ul>
+  </article>
+
+  <!-- VN traceability table -->
+  <div class="bbg-card p-6">
+    <h3 class="h-2 mb-3">Vietnam traceability — regulations → CyberOS modules + FRs</h3>
+    <div class="overflow-x-auto">
+      <table class="bbg-table">
+        <thead><tr>
+          <th>Regulation</th><th>Obligation</th><th>CyberOS module</th><th>FR / DEC</th><th>Phase</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Decree 13/2023 Art. 24</td><td>DPIA before sensitive-data processing</td><td>CP (Compliance)</td><td>FR-CP-001 · DEC-053</td><td>P0</td></tr>
+          <tr><td>Decree 13/2023 Art. 14</td><td>DSAR within 30 days</td><td>CP + AUTH</td><td>FR-CP-010</td><td>P1</td></tr>
+          <tr><td>Decree 13/2023 Art. 28</td><td>Cross-border-transfer A05 notification</td><td>CP</td><td>FR-CP-020</td><td>P0</td></tr>
+          <tr><td>Decree 13/2023 Art. 23</td><td>72-hour breach notification</td><td>OBS + CP</td><td>FR-OBS-040</td><td>P0</td></tr>
+          <tr><td>Decree 53/2022 Art. 26</td><td>Data localisation for in-scope services</td><td>(Infra) · per-tenant region pinning</td><td>DEC-009 · DEC-027</td><td>P2</td></tr>
+          <tr><td>Decree 20/2026</td><td>SME-status tracking + graduation</td><td>CP</td><td>DEC-053</td><td>P0</td></tr>
+          <tr><td>Law 91/2025 + Decree 356</td><td>National-law DPO, fines 5% revenue</td><td>CP · HR (DPO role)</td><td>FR-CP-030</td><td>P2</td></tr>
+          <tr><td>Law 91/2025 right-to-explanation</td><td>CUO output explainability</td><td>AI + CUO</td><td>DEC-055</td><td>P0</td></tr>
+          <tr><td>Penal Code §288</td><td>Criminal liability prevention</td><td>(Infra) · audit chain</td><td>NFR-SEC-001</td><td>P0</td></tr>
+          <tr><td>Law on Accounting Art. 41</td><td>10-year retention</td><td>INV + BRAIN archival</td><td>DEC-020</td><td>P2</td></tr>
+          <tr><td>NQ 142/2024 + TT 80/2021</td><td>e-invoice, MST, monthly VAT filing</td><td>INV + Skill (3 VN skills)</td><td>FR-INV-001..050</td><td>P2</td></tr>
+          <tr><td>Labour Code 2019</td><td>SI/PIT remittance, payslip retention</td><td>REW</td><td>FR-REW-001..080</td><td>P1</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RING 2 -->
+<!-- ============================================================ -->
+<section id="ring-2">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-2">2</span>
+    <h2 class="h-1">Ring 2 — Cross-border</h2>
+  </div>
+  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+    Cross-border obligations are triggered by where the data subject is, not where CyberSkill is incorporated. CyberOS does not actively process EU data subjects in P0–P2 (all employees are Vietnamese, most clients are SEA), but P3 multi-tenant readiness opens the door. Three regimes matter: GDPR for EU residents, the EU AI Act for HR/REW/LEARN flows that touch employment-decision territory, and Singapore PDPA for the HoldCo flip strategy.
+  </p>
+
+  <!-- GDPR -->
+  <article id="gdpr" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🇪🇺</span>
+      <h3 class="h-2">GDPR (Regulation EU 2016/679)</h3>
+      <span class="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold">in force 2018-05-25</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Triggered when CyberOS processes EU-resident personal data — P3 onward via the eu-shard. The multi-tenant architecture (PRD §8.8) already supports per-tenant region pinning to eu-central-1 with Bedrock EU endpoints.</p>
+
+    <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <h4 class="font-bold text-sm mb-1">Obligations</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Lawful basis tracking (Art. 6 + 9)</li>
+          <li>DSAR within 1 month (Art. 12 + 15)</li>
+          <li>Right to erasure with downstream propagation (Art. 17)</li>
+          <li>72-hour breach notification to DPA (Art. 33)</li>
+          <li>DPIA for high-risk processing (Art. 35)</li>
+          <li>DPA contract template for every customer</li>
+          <li>EU/UK Authorised Reps when no EU establishment (Art. 27)</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold text-sm mb-1">CyberOS posture</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>eu-shard via AWS Frankfurt at P3</li>
+          <li>DSAR surface via CP module</li>
+          <li>Right-to-erasure propagates: BRAIN UPDATE → DELETE through Layer 2, timestamped tombstone in Layer 3</li>
+          <li>72-h breach timer wired to OBS</li>
+          <li>DPA template auto-attached to every tenant contract</li>
+        </ul>
+      </div>
+    </div>
+    <div class="text-sm"><strong>Penalty:</strong> up to €20 M or 4% of global turnover, whichever is higher.</div>
+  </article>
+
+  <!-- EU AI Act -->
+  <article id="ai-act" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🧭</span>
+      <h3 class="h-2">EU AI Act (Regulation EU 2024/1689) — Annex III §4 focus</h3>
+      <span class="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold">in force 2025-08-01 · obligations 2026-08-02</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Tiers AI systems into four risk categories: prohibited, high-risk, limited-risk, minimal-risk. CUO's default classification across CyberOS modules is <strong>limited-risk</strong> (Article 50 transparency only — disclose AI interaction). Two specific module integrations are <strong>high-risk-adjacent</strong> and need explicit boundary work.</p>
+
+    <div class="bbg-card p-4 bg-emerald-50 mb-4 border-l-4 border-emerald-500">
+      <p class="text-sm"><strong class="text-emerald-900">DEC-054 locked decision:</strong> No CyberOS AI feature, in any module, in any phase, produces a number or grade that ranks, scores, or classifies a person without a human-in-the-loop review on the same surface. Drafts and summaries are permitted; rankings and scores about people are forbidden.</p>
+    </div>
+
+    <h4 class="font-bold text-sm mb-1">Annex III §4 — employment-decision high-risk</h4>
+    <p class="text-sm text-slate-600 leading-relaxed mb-3">Annex III §4 covers "AI systems intended to be used for the recruitment or selection of natural persons, in particular for placing targeted job advertisements, screening or filtering applications, evaluating candidates" — and "evaluating performance, work behaviour or personal traits."</p>
+
+    <div class="overflow-x-auto mb-4">
+      <table class="bbg-table">
+        <thead><tr><th>Module</th><th>High-risk-adjacent flow</th><th>CyberOS mitigation</th></tr></thead>
+        <tbody>
+          <tr><td><strong>HR</strong></td><td>Offer-letter drafting, 1:1 prep, onboarding checklists</td><td>Drafts only · human writes the decision · CUO never assigns a score</td></tr>
+          <tr><td><strong>REW</strong></td><td>Payslip narrative explainer, anomaly surfacing</td><td>Read-only narrative · "payslip_explain" tool annotated read-only · compute path is deterministic SQL, not LLM</td></tr>
+          <tr><td><strong>LEARN</strong></td><td>Career-path next-step suggestion, Hội đồng peer-review summariser</td><td>Outcomes-only summaries · no individual scoring · Hội đồng (human council) issues the decision</td></tr>
+          <tr><td><strong>PROJ</strong></td><td>Cycle-review draft generation, blocker detection</td><td>Drafts/anomalies only · the human owner produces the final evaluation</td></tr>
+          <tr><td><strong>RES</strong></td><td>Capacity-vs-forecast rebalancing suggestion</td><td>Suggestion only · Question mode · Engineering Lead accepts/rejects</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-sm text-slate-600 leading-relaxed">Article 50 transparency: every AI-touched UI surface carries a small persistent badge (model, persona version, intervention mode) — Notify = ochre, Question = umber, Review = bronze (PRD §8.9 Design System). Satisfies the transparency obligation by visible design, not buried disclosure.</p>
+    <div class="text-sm mt-3"><strong>Penalty:</strong> €35 M or 7% of global turnover (prohibited practices); €15 M or 3% (high-risk non-compliance).</div>
+  </article>
+
+  <!-- Singapore PDPA + HoldCo -->
+  <article id="pdpa-sg" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🇸🇬</span>
+      <h3 class="h-2">Singapore PDPA + the HoldCo flip</h3>
+      <span class="text-xs px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full font-bold">PDPA in force 2014 · 2020/2021 amend.</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Singapore's PDPA is similar in structure to GDPR but more permissive on cross-border transfer (no "adequacy-equivalent" regime required). The strategic value of Singapore is the <strong>HoldCo flip</strong>: at P3 (month 10–12), if ARR ≥ $1.5 M, CyberSkill incorporates a Singapore parent (a private limited "Pte Ltd") and the Vietnamese entity becomes a wholly-owned subsidiary.</p>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <h4 class="font-bold text-sm mb-1">Why flip</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Easier fundraising (USD-denominated, well-known to global VCs)</li>
+          <li>IP holding company → cleaner exits</li>
+          <li>Dividend flexibility</li>
+          <li>Talent equity (ESOP without Vietnamese SP-tax friction)</li>
+          <li>SOX/PCAOB pathway if US-listed later</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-bold text-sm mb-1">Technical posture supporting the flip</h4>
+        <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+          <li>Singapore-region default for shared infrastructure (ap-southeast-1)</li>
+          <li>Every data-model entity tagged with <code>legal_entity_owner</code> field</li>
+          <li>Post-flip migration is a tag flip + CRDT-style audit record, not data movement</li>
+          <li>IP licences maintained inside the company; JSC → Pte Ltd assignment is a one-page doc</li>
+        </ul>
+      </div>
+    </div>
+  </article>
+</section>
+
+<!-- ============================================================ -->
+<!-- RING 3 -->
+<!-- ============================================================ -->
+<section id="ring-3">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-4">3</span>
+    <h2 class="h-1">Ring 3 — International standards</h2>
+  </div>
+  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+    Procurement teams at mid-market clients require these certs before signing. The compliance ladder is locked in DEC-011: <strong>SOC 2 → ISO 27001 → ISO 42001</strong>, with CSA STAR and AI-CAIQ layered alongside. Each standard adds a phase-gated effort; the architectural choices in PRD §8 mean the controls themselves are already satisfied — the work is documentation + audit.
+  </p>
+
+  <!-- ISO 27001 -->
+  <article id="iso-27001" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🛡</span>
+      <h3 class="h-2">ISO/IEC 27001:2022 — Information Security Management</h3>
+      <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">target · P3 Stage 1 · P4 full</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">The 93 Annex A controls in the 2022 revision are largely satisfied by PRD §8: encryption at rest (A.10.1), key management (A.10.2), access control by least privilege (A.9.1–A.9.4), change management (A.12.1), logging and monitoring (A.12.4), incident management (A.16.1), supplier relationships (A.15.1). The gap-list to certification readiness is documented in OBS module.</p>
+
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li><strong>Timeline:</strong> Stage 1 audit at P3 (M+12), full certification at P4 (M+18)</li>
+      <li><strong>Scope:</strong> CyberOS platform + CyberSkill JSC organisation</li>
+      <li><strong>Auditor:</strong> shortlist Schellman, A-LIGN, KPMG VN</li>
+      <li><strong>Key controls already satisfied:</strong> RLS (A.9), mTLS in cluster + HTTPS external (A.13), Merkle-chained audit (A.12.4), tenant KMS (A.10.2)</li>
+    </ul>
+  </article>
+
+  <!-- SOC 2 -->
+  <article id="soc-2" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">📋</span>
+      <h3 class="h-2">SOC 2 Type I → Type II</h3>
+      <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">target · P1 Type I · P2 Type II</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Trust Service Criteria (TSC) covered: <strong>Security</strong> (mandatory), <strong>Availability</strong>, <strong>Confidentiality</strong>. Privacy and Processing Integrity added when client demand justifies them.</p>
+
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li><strong>Type I (point-in-time):</strong> at P1 exit (M+6) — "controls are designed effectively"</li>
+      <li><strong>Type II (operating window):</strong> at P2 exit (M+9) — six-month minimum observation window starting at month 4</li>
+      <li><strong>Reusable for sub-processor disclosure:</strong> CyberOS publishes a SOC 3 (Type II public summary) at Trust Center</li>
+    </ul>
+  </article>
+
+  <!-- ISO 42001 -->
+  <article id="iso-42001" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🤖</span>
+      <h3 class="h-2">ISO/IEC 42001:2023 — AI Management System (AIMS)</h3>
+      <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">target · P3 exit (M+12)</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">The world's first AI management system standard. Covers AI risk assessment, lifecycle governance, transparency obligations, third-party AI integration controls. Pairs neatly with EU AI Act Annex III §4 work — the conformity pack done at P2 for REW + LEARN feeds directly into ISO 42001 evidence.</p>
+
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li>AI Impact Assessment (AIIA) for every CUO skill</li>
+      <li>Model registry with persona-version stamps (already in CUO module)</li>
+      <li>Continuous monitoring of AI behaviour drift (OBS + LangSmith)</li>
+      <li>Third-party AI clauses in Bedrock + Anthropic + OpenAI contracts</li>
+    </ul>
+  </article>
+
+  <!-- ISO 27701 -->
+  <article id="iso-27701" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🔐</span>
+      <h3 class="h-2">ISO/IEC 27701:2019 — Privacy Information Management (PIMS)</h3>
+      <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">target · P3 (if EU/UK push)</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">Extension to ISO 27001 specifically for privacy. Useful for EU/UK consultancies pushing for one-stop GDPR + PDPA evidence. Optional at P3 — pursued only if customer demand justifies.</p>
+  </article>
+
+  <!-- CSA STAR -->
+  <article id="csa-star" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">⭐</span>
+      <h3 class="h-2">CSA STAR L1 → L2 (Cloud Security Alliance)</h3>
+      <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">target · P1 L1 · P2 L2</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">CSA's Security, Trust, Assurance, Risk (STAR) program. Level 1 = self-assessment (CAIQ questionnaire) — cheap, fast, opens many doors. Level 2 = third-party audit — required by enterprise buyers.</p>
+
+    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+      <li><strong>L1 self-assessment (CAIQ v4.0.3):</strong> ~290 questions across 17 control families. Done at P1 exit (M+6) via Trust Center.</li>
+      <li><strong>L2 third-party attestation:</strong> auditor-validated CAIQ. Done at P2 exit (M+9) when SOC 2 Type II auditor is engaged.</li>
+    </ul>
+  </article>
+
+  <!-- AI-CAIQ -->
+  <article id="ai-caiq" class="bbg-card p-6 mb-5">
+    <div class="flex items-center gap-3 mb-3 flex-wrap">
+      <span class="text-3xl">🧪</span>
+      <h3 class="h-2">AI-CAIQ — "Valid-AI-ted" extension</h3>
+      <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">target · P1 exit (M+6)</span>
+    </div>
+    <p class="text-slate-600 leading-relaxed mb-3">CSA's AI-extended CAIQ — adds AI-specific control questions (training data provenance, model bias monitoring, prompt safety, persona versioning). Completed alongside L1. The persona-version stamp (DEC-035), model registry, and BRAIN ingestion denylist (DEC-036) cover most of the AI-CAIQ surface by construction.</p>
+  </article>
+</section>
+
+<!-- ============================================================ -->
+<!-- PHASE GATES -->
+<!-- ============================================================ -->
+<section id="phase-gates">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-3">4</span>
+    <h2 class="h-1">Compliance gates per phase</h2>
+  </div>
+  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+    Each phase exit ships a discrete bundle of compliance deliverables (PRD §12.4 + §11.1). Without these, the phase is not "exited" — even if every module ships on time.
+  </p>
+
+  <!-- Phase-tier matrix flowchart -->
+  <div class="bbg-card p-4 mb-6">
+    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">How each compliance tier unlocks customer cohorts</div>
+    <div class="mermaid">
+flowchart LR
+  P0E[("P0 exit · T1 Floor")] --> COHORT_A["SME Vietnam tenants<br/>(internal CyberSkill only)"]
+  P1E[("P1 exit · T2 base")] --> COHORT_B["VN mid-market<br/>+ first design partners"]
+  P2E[("P2 exit · T2 EU")] --> COHORT_C["EU/UK B2B SaaS<br/>+ enterprise procurement"]
+  P3E[("P3 exit · T3 large")] --> COHORT_D["Regulated EU + US enterprise<br/>+ Singapore HoldCo entities"]
+  P4E[("P4 entry · T3+ regulated")] --> COHORT_E["State/local gov sub-paths<br/>TX-RAMP · StateRAMP · FedRAMP 20x"]
+
+  P0E -.adds.-> A0["A05 DPIA · DPO · Trust Center · VPAT"]
+  P1E -.adds.-> B0["SOC 2 Type I · CSA STAR L1 · AI-CAIQ"]
+  P2E -.adds.-> C0["SOC 2 Type II · ISO 27001:2022 · CSA STAR L2 · EU AI Act §4"]
+  P3E -.adds.-> D0["ISO 42001 · ISO 27701 · HoldCo flip option"]
+  P4E -.adds.-> E0["eIDAS QTSP · TX-RAMP · FedRAMP 20x"]
+
+  classDef gate fill:#dbeafe,stroke:#1e40af,stroke-width:2px
+  classDef cohort fill:#d1fae5,stroke:#047857
+  classDef cert fill:#fef3c7,stroke:#b45309
+  class P0E,P1E,P2E,P3E,P4E gate
+  class COHORT_A,COHORT_B,COHORT_C,COHORT_D,COHORT_E cohort
+  class A0,B0,C0,D0,E0 cert
+    </div>
+  </div>
+
+  <!-- Mermaid timeline -->
+  <div class="bbg-card p-4 mb-6">
+    <div class="mermaid">
+timeline
+  title CyberOS compliance gate timeline
+  section P0 · M0 → M+3 · T1 Floor
+    M+3 : A05 DPIA filed
+        : DPO designated (Founder)
+        : Trust Center live
+        : Stripe SAQ-A AOC
+        : VPAT 2.5 INT
+  section P1 · M+4 → M+6 · T2
+    M+6 : SOC 2 Type I issued
+        : CSA STAR L1 self-assessment
+        : AI-CAIQ "Valid-AI-ted"
+        : DSAR APIs end-to-end
+        : First payroll through REW
+  section P2 · M+7 → M+9 · T2 EU enterprise
+    M+9 : SOC 2 Type II issued
+        : ISO/IEC 27001:2022 certified
+        : CSA STAR L2 attestation
+        : EU AI Act Annex III §4 conformity pack (REW+LEARN)
+        : Decree 13 full regime (graduate from SME)
+  section P3 · M+10 → M+12 · T3 Large enterprise
+    M+12 : ISO/IEC 42001 (AIMS) certified
+         : ISO/IEC 27701 (PIMS) — if EU/UK pushes
+         : Singapore HoldCo flip — if ARR ≥ $1.5M
+         : First quarterly OKR cycle closed
+  section P4 · M+13 → M+24 · T3+ regulated
+    M+18 : TX-RAMP (Texas state)
+         : StateRAMP Cat 2
+         : FedRAMP 20x Moderate (no-sponsor route)
+         : eIDAS QTSP for DOC module
+         : First external paying tenant
+    </div>
+  </div>
+
+  <!-- Tier table -->
+  <div class="bbg-card p-6">
+    <h3 class="h-2 mb-3">PRD §12.4 — Compliance tier per phase</h3>
+    <div class="overflow-x-auto">
+      <table class="bbg-table">
+        <thead><tr>
+          <th>Phase</th><th>Months</th><th>Vietnam regime</th><th>EU AI Act tier</th><th>GDPR posture</th><th>ISO 27001</th><th>SOC 2</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><strong>P0</strong></td><td>1–3</td><td>Decree 20 SME</td><td>Limited-risk</td><td>Off</td><td>Gap list</td><td>—</td></tr>
+          <tr><td><strong>P1</strong></td><td>4–6</td><td>Decree 20 SME</td><td>Limited-risk</td><td>Off</td><td>Gap list</td><td>Type I prep</td></tr>
+          <tr><td><strong>P2</strong></td><td>7–9</td><td>Decree 13 full</td><td>Limited-risk · §4 boundary</td><td>Off</td><td>Pre-readiness</td><td>Type I issued · Type II prep</td></tr>
+          <tr><td><strong>P3</strong></td><td>10–12</td><td>Decree 13 full</td><td>Limited-risk + Art. 50 badges</td><td>On (eu-shard)</td><td>Stage 1 audit</td><td>Type II issued</td></tr>
+          <tr><td><strong>P4</strong></td><td>13–24</td><td>Decree 13 full</td><td>Limited-risk; HR boundary tested</td><td>On (eu-shard)</td><td>Certified</td><td>Type II</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TRUST CENTER -->
+<!-- ============================================================ -->
+<section id="trust-center">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-6">5</span>
+    <h2 class="h-1">Trust Center pattern</h2>
+  </div>
+  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+    Trust Center is CyberOS's public-facing compliance surface. One URL — <code>trust.cyberos.world/{tenant}</code> — serves the entire procurement Q&amp;A in one place. Live at P0 exit; deepens at every phase gate.
+  </p>
+
+  <div class="grid md:grid-cols-2 gap-5 mb-6">
+    <div class="bbg-card p-5">
+      <h4 class="font-bold mb-2">What ships at P0 (M+3)</h4>
+      <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+        <li>VPAT 2.5 INT (Voluntary Product Accessibility Template)</li>
+        <li>Stripe SAQ-A AOC (subprocessor disclosure)</li>
+        <li>Sub-processor list (public — NFR-SEC-011)</li>
+        <li>Accessibility statement (WCAG 2.2 AA target)</li>
+        <li>Data residency disclosure (region per tenant)</li>
+        <li>Incident response runbook (DEC-027)</li>
+        <li>DPO contact + DPIA template download</li>
+      </ul>
+    </div>
+    <div class="bbg-card p-5">
+      <h4 class="font-bold mb-2">What deepens by phase</h4>
+      <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+        <li>P1: SOC 2 Type I report PDF, CAIQ v4.0.3 self-assessment</li>
+        <li>P2: SOC 2 Type II, ISO 27001:2022 cert, CSA STAR L2</li>
+        <li>P3: ISO 42001 AIMS, AI Impact Assessments per skill</li>
+        <li>P4: eIDAS QTSP cert, TX-RAMP, FedRAMP 20x SSP</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="bbg-card p-4">
+    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Flow · Procurement asks "are you SOC 2?"</div>
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  actor B as Buyer procurement
+  participant TC as Trust Center
+  participant AU as AUTH (DSAR + access)
+  participant CP as CP subgraph
+  participant FILES as R2 / signed PDF store
+
+  B->>TC: visit trust.cyberos.world/cyberskill
+  TC->>CP: GET /certifications
+  CP-->>TC: { soc2_type_2: { issued: "2026-09-15", scope, link }, iso27001: {...}, ... }
+  TC-->>B: render list with badges
+  B->>TC: request SOC 2 Type II report
+  TC->>AU: NDA gate (e-sign click-through)
+  AU->>B: NDA pre-filled with buyer org
+  B-->>AU: signed
+  AU->>FILES: time-limited signed URL
+  FILES-->>B: download PDF (24h TTL)
+  TC->>CP: log access (NFR-SEC-011)
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- BREACH NOTIFICATION MATRIX -->
+<!-- ============================================================ -->
+<section id="breach-matrix">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-7">6</span>
+    <h2 class="h-1">Breach notification matrix</h2>
+  </div>
+  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+    Every regime has its own clock and its own recipient. CyberOS's OBS module (PRD §8.7) wires a 72-hour breach timer triggered by audit-log anomaly or manual classification by the DPO. The CP module routes notifications to the correct authority per affected jurisdiction.
+  </p>
+
+  <!-- Matrix table -->
+  <div class="bbg-card p-6 mb-6">
+    <div class="overflow-x-auto">
+      <table class="bbg-table">
+        <thead><tr>
+          <th>Jurisdiction</th><th>Trigger</th><th>Authority</th><th>Window</th><th>Form</th><th>Data subject notice</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>🇻🇳 Vietnam</strong></td>
+            <td>Personal data breach (Decree 13 Art. 23)</td>
+            <td>MoPS / A05</td>
+            <td>72 h</td>
+            <td>A05 incident form (mẫu sự cố)</td>
+            <td>"Without delay" when high risk</td>
+          </tr>
+          <tr>
+            <td><strong>🇪🇺 EU</strong></td>
+            <td>GDPR Art. 33 personal data breach</td>
+            <td>Lead DPA (one-stop-shop) — for CyberOS Pte Ltd via Authorised Rep</td>
+            <td>72 h</td>
+            <td>DPA web form</td>
+            <td>"Without undue delay" when high risk</td>
+          </tr>
+          <tr>
+            <td><strong>🇪🇺 EU (AI Act)</strong></td>
+            <td>Serious incident from high-risk AI (Art. 73)</td>
+            <td>Market surveillance authority</td>
+            <td>15 d (15 days; 10 d for death/widespread harm)</td>
+            <td>Member-State-specific</td>
+            <td>Affected subjects via deployer</td>
+          </tr>
+          <tr>
+            <td><strong>🇸🇬 Singapore</strong></td>
+            <td>PDPA notifiable data breach</td>
+            <td>PDPC (Personal Data Protection Commission)</td>
+            <td>72 h (significant harm or ≥ 500 individuals)</td>
+            <td>PDPC online form</td>
+            <td>"As soon as practicable"</td>
+          </tr>
+          <tr>
+            <td><strong>🇺🇸 US (state)</strong></td>
+            <td>State breach laws (varies by state, e.g. CCPA)</td>
+            <td>State AG (CA: AG office)</td>
+            <td>varies · CA: 60 d typical</td>
+            <td>State-specific</td>
+            <td>Affected residents directly</td>
+          </tr>
+          <tr>
+            <td><strong>SOC 2</strong></td>
+            <td>Material change in TSC scope</td>
+            <td>Auditor</td>
+            <td>30 d</td>
+            <td>Auditor portal</td>
+            <td>Internal only</td>
+          </tr>
+          <tr>
+            <td><strong>ISO 27001</strong></td>
+            <td>Security event requiring corrective action (A.16.1)</td>
+            <td>Certification body</td>
+            <td>Annual surveillance</td>
+            <td>Audit-cycle log</td>
+            <td>Internal only</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sequence -->
+  <div class="bbg-card p-4 mb-6">
+    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Flow · Vietnam breach → 72-h notification → 30-d DSAR clock</div>
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant OB as OBS · anomaly detector
+  participant DPO as DPO (Founder until P3)
+  participant CP as CP subgraph
+  participant A05 as MoPS / A05
+  participant SUBJ as Affected data subjects
+  participant TC as Trust Center
+
+  OB->>DPO: alert · anomaly score &gt; 0.9
+  DPO->>CP: classify(severity=high, scope=acme-tenant, dataCount=312)
+  CP->>CP: T0 timestamp · 72-h clock starts
+  CP->>OB: span "breach.classified"
+
+  par MoPS notification (72h)
+    CP->>A05: A05 incident form · within 48h target
+    A05-->>CP: ack
+  and Trust Center disclosure
+    CP->>TC: publish status (post-72h, redacted)
+  and Affected subjects (without delay if high risk)
+    CP->>SUBJ: email + in-app banner + payslip stub flag
+  end
+
+  Note over CP: DSAR clock begins for affected subjects
+  SUBJ->>CP: DSAR request "what data of mine was affected?"
+  CP-->>SUBJ: 30-day response · structured export
+
+  CP->>OB: span "breach.notification.complete"
+    </div>
+  </div>
+
+  <!-- DPIA workflow -->
+  <div class="bbg-card p-4 mb-6">
+    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Flow · DPIA workflow (PDPL Art. 24 + GDPR Art. 35)</div>
+    <div class="mermaid">
+flowchart TB
+  TRIGGER[("New module / new data category<br/>going into BRAIN")] --> CHECK{"Sensitive PD?<br/>Health · biometric · financial · employment-decision"}
+  CHECK -- "no" --> SKIP[/"No DPIA · log assessment"/]
+  CHECK -- "yes" --> TEMPLATE["Open DPIA template<br/>(KB module · auto-prefilled)"]
+  TEMPLATE --> FILL["DPO drafts<br/>1. processing description<br/>2. lawful basis<br/>3. minimisation<br/>4. retention<br/>5. sharing chain<br/>6. risk × severity<br/>7. mitigations<br/>8. residual risk"]
+  FILL --> COUNCIL{"DPO + Founder sign-off"}
+  COUNCIL -- "reject" --> TEMPLATE
+  COUNCIL -- "approve" --> A05["Cross-border? File A05 form"]
+  A05 --> BR_GATE["Update BRAIN ingest denylist<br/>per DPIA categorisation"]
+  BR_GATE --> AUDIT["Append to compliance audit chain"]
+  AUDIT --> LIVE[("Processing may begin")]
+
+  classDef trig fill:#fef3c7,stroke:#b45309
+  classDef gate fill:#dbeafe,stroke:#1e40af,stroke-width:2px
+  classDef done fill:#d1fae5,stroke:#047857
+  class TRIGGER trig
+  class CHECK,COUNCIL gate
+  class SKIP,LIVE done
+    </div>
+  </div>
+
+  <!-- DSAR sequence -->
+  <div class="bbg-card p-4">
+    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Flow · Data Subject Access Request (PDPL Art. 14 + GDPR Art. 15)</div>
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  actor S as Data subject
+  participant TC as Trust Center · DSAR form
+  participant AU as AUTH · identity proof
+  participant CP as CP subgraph
+  participant BR as BRAIN
+  participant DB as Per-module Postgres
+  participant FILES as R2 signed exports
+
+  S->>TC: submit DSAR with identity proof
+  TC->>AU: verify (passkey + government ID match)
+  AU-->>TC: verified · subject_id resolved
+  TC->>CP: open DSAR ticket · 30-day clock starts
+
+  par data discovery
+    CP->>DB: SELECT all rows with subject_id (RLS-aware)
+  and
+    CP->>BR: brainSearch + brainFacts(subject_id)
+  end
+
+  DB-->>CP: rows · JSON export
+  BR-->>CP: facts · with Layer 2 + Layer 3 hits
+  CP->>FILES: bundle as signed Ed25519 zip
+  CP->>S: secure link (24h TTL)
+
+  alt erasure request
+    S->>CP: also request erasure (Art. 17)
+    CP->>BR: brainForget(scope=subject_id)
+    CP->>DB: redact / nullify retained-fields
+    CP->>S: erasure confirmation with retention rationale
+  end
+
+  CP->>CP: log to Merkle audit chain (cannot be erased)
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references">
+  <div class="flex items-center gap-3 mb-3">
+    <span class="callout callout-lg callout-6">∞</span>
+    <h2 class="h-1">References</h2>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-5">
+    <div class="bbg-card p-5">
+      <h4 class="font-bold mb-3">Vietnamese regulations (Ring 1)</h4>
+      <ul class="text-sm text-slate-600 space-y-1.5">
+        <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Decree 13/2023/NĐ-CP</a> — Personal Data Protection</li>
+        <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Decree 53/2022/NĐ-CP</a> — Cybersecurity</li>
+        <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Decree 20/2026/NĐ-CP</a> — SME exemptions</li>
+        <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Law 91/2025/QH15</a> — PDPL national law</li>
+        <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Decree 356/2025</a> — PDPL implementing decree</li>
+        <li>NQ 142/2024/QH15 — National Assembly tax stimulus</li>
+        <li>TT 80/2021/TT-BTC — Tax administration</li>
+        <li>Decree 123/2020/NĐ-CP — e-invoice rules</li>
+        <li>Law on Accounting 2015 — 10-year retention</li>
+        <li>Labour Code 2019 — SI/PIT framework</li>
+      </ul>
+    </div>
+    <div class="bbg-card p-5">
+      <h4 class="font-bold mb-3">Cross-border + standards (Ring 2/3)</h4>
+      <ul class="text-sm text-slate-600 space-y-1.5">
+        <li><a href="https://gdpr.eu/" class="text-amber-700 font-semibold">GDPR (Regulation EU 2016/679)</a></li>
+        <li><a href="https://artificialintelligenceact.eu/" class="text-amber-700 font-semibold">EU AI Act (Regulation EU 2024/1689)</a></li>
+        <li><a href="https://www.pdpc.gov.sg/" class="text-amber-700 font-semibold">Singapore PDPA</a></li>
+        <li><a href="https://www.iso.org/standard/27001" class="text-amber-700 font-semibold">ISO/IEC 27001:2022</a></li>
+        <li><a href="https://www.iso.org/standard/81230.html" class="text-amber-700 font-semibold">ISO/IEC 42001:2023 (AIMS)</a></li>
+        <li><a href="https://www.iso.org/standard/71670.html" class="text-amber-700 font-semibold">ISO/IEC 27701:2019 (PIMS)</a></li>
+        <li><a href="https://www.aicpa.org/" class="text-amber-700 font-semibold">AICPA SOC 2 TSC 2017</a></li>
+        <li><a href="https://cloudsecurityalliance.org/star" class="text-amber-700 font-semibold">CSA STAR Program</a></li>
+        <li><a href="https://cloudsecurityalliance.org/research/working-groups/ai-controls" class="text-amber-700 font-semibold">AI-CAIQ / AICM</a></li>
+        <li>PRD §12 — Compliance Strategy (full text)</li>
+        <li>PRD §11.1 — Locked decisions DEC-053 / DEC-054 / DEC-055</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PAGE NAV -->
+<!-- ============================================================ -->
+<section>
+  <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-slate-200">
+    <a href="../index.html" class="btn btn-secondary">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Back to home
+    </a>
+    <a href="tech-stack.html" class="btn btn-primary">
+      Next · Tech stack
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+    </a>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer class="border-t border-slate-200 bg-slate-50">
+  <div class="container py-8 text-sm text-slate-500">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>CyberOS Documentation · v2026.05 · Architecture / Compliance</div>
+      <div class="text-xs text-slate-400">Generated from PRD §12 · Last updated 2026-05-14</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

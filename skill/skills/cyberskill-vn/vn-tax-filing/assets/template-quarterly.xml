@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  vn-tax-filing — Mẫu 01/GTGT quarterly template (HUMAN REFERENCE ONLY).
+
+  The generator at ../scripts/generate_return.py builds the tree
+  programmatically. This template exists so a human can eyeball the
+  shape without running the script.
+
+  Quarterly form differs from monthly only in:
+    - root attribute kyKKhai="quy"
+    - TTinChung/kyKKhai value uses YYYY-QN form
+
+  Placeholders: {{Field}}
+-->
+<TKhaiThue xmlns:ret="http://kekhaithue.gdt.gov.vn/TIN/2021/Mau01GTGT" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" mauTKhai="01/GTGT" kyKKhai="quy">
+  <TTinChung>
+    <kyKKhai>{{period_YYYY-QN}}</kyKKhai>
+    <ngayLap>{{filing_date_YYYY-MM-DD}}</ngayLap>
+    <NNT>
+      <tenNNT>{{taxpayer.name}}</tenNNT>
+      <mst>{{taxpayer.mst}}</mst>
+      <diaChi>{{taxpayer.address}}</diaChi>
+    </NNT>
+  </TTinChung>
+  <ThueDauRa>
+    <!-- One or more of A1_chiu_thue_0 / A2_chiu_thue_5 / A3_chiu_thue_8 / A4_chiu_thue_10. -->
+    <A3_chiu_thue_8>
+      <giaTri>{{taxable_value_8}}</giaTri>
+      <thue>{{vat_8}}</thue>
+    </A3_chiu_thue_8>
+    <A4_chiu_thue_10>
+      <giaTri>{{taxable_value_10}}</giaTri>
+      <thue>{{vat_10}}</thue>
+    </A4_chiu_thue_10>
+    <tongGiaTri>{{sum_taxable}}</tongGiaTri>
+    <tongThue>{{sum_vat}}</tongThue>
+  </ThueDauRa>
+  <ThueDauVao>
+    <B1_tongGiaTriMua>{{total_purchases}}</B1_tongGiaTriMua>
+    <B2_tongThueDauVao>{{total_input_vat}}</B2_tongThueDauVao>
+    <B3_tongThueDuocKhauTru>{{allowable_deduction}}</B3_tongThueDuocKhauTru>
+  </ThueDauVao>
+  <ThuePhaiNop>
+    <C1_thuePhatSinh>{{C1}}</C1_thuePhatSinh>
+    <C2_thueKyTruocChuyenSang>{{C2}}</C2_thueKyTruocChuyenSang>
+    <C3_thueDaNopTrongKy>{{C3}}</C3_thueDaNopTrongKy>
+    <C4_thueConPhaiNop>{{C4_payable}}</C4_thueConPhaiNop>
+    <C5_thueDeNghiHoan>{{C5_refund}}</C5_thueDeNghiHoan>
+  </ThuePhaiNop>
+</TKhaiThue>

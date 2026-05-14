@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberOS — Documentation Home</title>
+  <meta name="description" content="CyberOS — AI-native internal operations platform. 22 federated modules across 5 phased rollouts. Built by CyberSkill.">
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="assets/scripts.js"></script>
+</head>
+<body data-pagefind-filter="category:Overview">
+
+<!-- ============================================================ -->
+<!-- SHARED NAV (loaded via assets/scripts.js from assets/nav.html) -->
+<!-- ============================================================ -->
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="overview" class="hero-gradient">
+  <div class="container py-16 lg:py-24">
+    <div class="grid lg:grid-cols-12 gap-10 items-center">
+      <div class="lg:col-span-7">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-5">
+          <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+          v2026.05 · Architecture &amp; Product Specification
+        </div>
+        <h1 class="h-display mb-6">
+          Cyber<span class="bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-500 bg-clip-text text-transparent">OS</span>
+        </h1>
+        <p class="text-xl lg:text-2xl text-slate-700 font-medium leading-snug mb-6 max-w-2xl">
+          AI-native internal operations platform — turning <em class="text-slate-900 font-bold">will</em> into <em class="text-slate-900 font-bold">real</em>.
+        </p>
+        <p class="text-base text-slate-600 max-w-2xl mb-8 leading-relaxed">
+          Built by <strong>CyberSkill</strong> — a 10-person Vietnam-based software consultancy. CyberOS is the AI-native operating system for the company: <strong>22 federated modules</strong> across <strong>five phased rollouts</strong> (P0&nbsp;→&nbsp;P4), unified by a <strong>three-layer BRAIN</strong>, a single-persona <strong>Genie / CUO</strong> backed by <strong>10 C-level skills</strong>, six cross-cutting infrastructure pillars (AUTH · AI Gateway · MCP Gateway · OBS · GraphQL Federation · NATS), and a Vietnamese-market wedge of localised skills. Three modules shipped today (memory · skill · cuo); the rest land between M+3 and M+24.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href="#what-is-cyberos" class="btn btn-primary">
+            What is CyberOS
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+          <a href="#catalog" class="btn btn-secondary">All 22 modules</a>
+          <a href="architecture/milestones.html" class="btn btn-secondary">12-month roadmap</a>
+        </div>
+      </div>
+      <div class="lg:col-span-5">
+        <!-- Architecture SVG (lifted from CyberOS.html Layer 0) -->
+        <svg viewBox="0 0 500 620" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto" role="img" aria-label="CyberOS layered architecture overview">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="#64748b"/>
+            </marker>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.08"/>
+            </filter>
+          </defs>
+          <g filter="url(#shadow)">
+            <rect x="60" y="20" width="170" height="60" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+            <text x="145" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#78350f">USER</text>
+            <text x="145" y="65" text-anchor="middle" font-size="11" fill="#92400e">natural language request</text>
+          </g>
+          <g filter="url(#shadow)">
+            <rect x="270" y="20" width="170" height="60" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+            <text x="355" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#78350f">AI AGENT</text>
+            <text x="355" y="65" text-anchor="middle" font-size="11" fill="#92400e">Claude / Codex / Cursor</text>
+          </g>
+          <path d="M145 80 L 200 130" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <path d="M355 80 L 300 130" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <a href="modules/cuo.html">
+            <g filter="url(#shadow)">
+              <rect x="170" y="135" width="160" height="70" rx="14" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2.5"/>
+              <text x="250" y="160" text-anchor="middle" font-size="20" font-weight="800" fill="#581c87">CUO</text>
+              <text x="250" y="180" text-anchor="middle" font-size="11" font-weight="600" fill="#6b21a8">Chief Universal Officer</text>
+              <text x="250" y="195" text-anchor="middle" font-size="10" fill="#7e22ce">router · orchestrator</text>
+            </g>
+          </a>
+          <path d="M205 205 L 130 260" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <text x="148" y="240" font-size="10" font-style="italic" fill="#475569">routes</text>
+          <path d="M295 205 L 370 260" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <text x="345" y="240" font-size="10" font-style="italic" fill="#475569">records</text>
+          <a href="modules/skill.html">
+            <g filter="url(#shadow)">
+              <rect x="40" y="265" width="180" height="80" rx="14" fill="#d1fae5" stroke="#047857" stroke-width="2.5"/>
+              <text x="130" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#064e3b">SKILL</text>
+              <text x="130" y="313" text-anchor="middle" font-size="11" font-weight="600" fill="#065f46">portable agentic skills</text>
+              <text x="130" y="328" text-anchor="middle" font-size="10" fill="#047857">Rust host · Bun toolchain</text>
+            </g>
+          </a>
+          <a href="modules/brain.html">
+            <g filter="url(#shadow)">
+              <rect x="280" y="265" width="180" height="80" rx="14" fill="#dbeafe" stroke="#1e40af" stroke-width="2.5"/>
+              <text x="370" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#1e3a8a">MEMORY</text>
+              <text x="370" y="313" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">audit-chained ledger</text>
+              <text x="370" y="328" text-anchor="middle" font-size="10" fill="#1e40af">.cyberos-memory/ · MMR · STH</text>
+            </g>
+          </a>
+          <path d="M220 305 L 280 305" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+          <text x="250" y="298" text-anchor="middle" font-size="9" font-style="italic" fill="#64748b">caps broker</text>
+
+          <a href="architecture/infrastructure.html">
+            <g>
+              <rect x="20" y="360" width="460" height="50" rx="10" fill="#fef9c3" stroke="#a16207" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.7"/>
+              <text x="250" y="378" text-anchor="middle" font-size="10" font-weight="700" fill="#78350f">CROSS-CUTTING INFRASTRUCTURE (P0)</text>
+              <text x="50"  y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">AUTH</text>
+              <text x="115" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">AI GW</text>
+              <text x="175" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">MCP GW</text>
+              <text x="240" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">OBS</text>
+              <text x="305" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">GraphQL</text>
+              <text x="380" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">NATS</text>
+              <text x="450" y="397" text-anchor="middle" font-size="9" fill="#a16207">↑ all modules use</text>
+            </g>
+          </a>
+
+          <g opacity="0.95">
+            <rect x="20" y="425" width="460" height="38" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1.2"/>
+            <text x="50"  y="442" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">P0</text>
+            <text x="50"  y="455" text-anchor="middle" font-size="8" font-weight="600" fill="#1e40af">Foundation</text>
+            <text x="105" y="442" text-anchor="middle" font-size="10" fill="#1e40af">CHAT</text>
+            <text x="160" y="442" text-anchor="middle" font-size="10" fill="#1e40af">BRAIN</text>
+            <text x="215" y="442" text-anchor="middle" font-size="10" fill="#1e40af">SKILL</text>
+            <text x="270" y="442" text-anchor="middle" font-size="10" fill="#1e40af">GENIE/CUO</text>
+            <text x="345" y="442" text-anchor="middle" font-size="9" fill="#1e40af">(+ 6 infra)</text>
+            <text x="430" y="442" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">7/22</text>
+
+            <rect x="20" y="468" width="460" height="38" rx="8" fill="#d1fae5" stroke="#047857" stroke-width="1.2"/>
+            <text x="50"  y="485" text-anchor="middle" font-size="9" font-weight="700" fill="#064e3b">P1</text>
+            <text x="50"  y="498" text-anchor="middle" font-size="8" font-weight="600" fill="#047857">Productivity</text>
+            <text x="105" y="485" text-anchor="middle" font-size="10" fill="#047857">EMAIL</text>
+            <text x="160" y="485" text-anchor="middle" font-size="10" fill="#047857">PROJ</text>
+            <text x="215" y="485" text-anchor="middle" font-size="10" fill="#047857">TIME</text>
+            <text x="270" y="485" text-anchor="middle" font-size="10" fill="#047857">CRM · KB</text>
+            <text x="350" y="485" text-anchor="middle" font-size="10" fill="#047857">HR · REW · LEARN</text>
+            <text x="450" y="485" text-anchor="middle" font-size="9" font-weight="700" fill="#064e3b">15/22</text>
+
+            <rect x="20" y="511" width="460" height="38" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.2"/>
+            <text x="50"  y="528" text-anchor="middle" font-size="9" font-weight="700" fill="#78350f">P2</text>
+            <text x="50"  y="541" text-anchor="middle" font-size="8" font-weight="600" fill="#b45309">Operations</text>
+            <text x="150" y="528" text-anchor="middle" font-size="10" fill="#92400e">INV</text>
+            <text x="240" y="528" text-anchor="middle" font-size="10" fill="#92400e">ESOP</text>
+            <text x="430" y="528" text-anchor="middle" font-size="9" font-weight="700" fill="#78350f">17/22</text>
+
+            <rect x="20" y="554" width="460" height="38" rx="8" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.2"/>
+            <text x="50"  y="571" text-anchor="middle" font-size="9" font-weight="700" fill="#581c87">P3</text>
+            <text x="50"  y="584" text-anchor="middle" font-size="8" font-weight="600" fill="#7e22ce">SaaS-ready</text>
+            <text x="150" y="571" text-anchor="middle" font-size="10" fill="#6b21a8">RES</text>
+            <text x="240" y="571" text-anchor="middle" font-size="10" fill="#6b21a8">OKR</text>
+            <text x="430" y="571" text-anchor="middle" font-size="9" font-weight="700" fill="#581c87">19/22</text>
+
+            <rect x="20" y="597" width="460" height="20" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
+            <text x="50"  y="611" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">P4</text>
+            <text x="180" y="611" text-anchor="middle" font-size="9" fill="#475569">DOC · PORTAL · TEN (external GA)</text>
+            <text x="430" y="611" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">22/22</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- BENTO STATS -->
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-12">
+      <div class="bbg-card p-5"><div class="stat-num text-blue-600">22</div><div class="text-sm text-slate-500 font-medium mt-1">modules total</div><div class="text-xs text-slate-400 mt-0.5">7 at P0 → 22 at P4</div></div>
+      <div class="bbg-card p-5"><div class="stat-num text-purple-600">10</div><div class="text-sm text-slate-500 font-medium mt-1">C-level personas</div><div class="text-xs text-slate-400 mt-0.5">CEO · COO · CFO · CMO · …</div></div>
+      <div class="bbg-card p-5"><div class="stat-num text-emerald-600">3</div><div class="text-sm text-slate-500 font-medium mt-1">BRAIN memory layers</div><div class="text-xs text-slate-400 mt-0.5">FS · Vector+Graph · Archival</div></div>
+      <div class="bbg-card p-5"><div class="stat-num text-amber-600">26+</div><div class="text-sm text-slate-500 font-medium mt-1">AI clients</div><div class="text-xs text-slate-400 mt-0.5">via Agent Skills standard</div></div>
+      <div class="bbg-card p-5"><div class="stat-num text-rose-600">6</div><div class="text-sm text-slate-500 font-medium mt-1">VN-market skills</div><div class="text-xs text-slate-400 mt-0.5">MST · CCCD · GDT · VietQR</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT IS CYBEROS — three cards (BRAIN / Skill / CUO) -->
+<!-- ============================================================ -->
+<section id="what-is-cyberos" class="bg-white border-t border-slate-200">
+  <div class="container py-16">
+    <div class="flex items-center gap-4 mb-2">
+      <span class="section-badge">What is CyberOS</span>
+    </div>
+    <h2 class="h-1 mb-3">The substrate · the catalog · the orchestrator</h2>
+    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CyberOS is built on three shipped modules that compose to form an AI-native operating system. Every other module in the catalog plugs into this triangle.</p>
+
+    <div class="grid md:grid-cols-3 gap-5">
+      <!-- BRAIN -->
+      <a href="modules/brain.html" class="bbg-card lift-strong tint-memory p-6 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-4xl">🧠</div>
+          <span class="phase-chip phase-p0">P0 · Shipped</span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1.5">BRAIN — the substrate</h3>
+        <p class="text-xs uppercase tracking-wider text-blue-700 font-semibold mb-3">Append-only audit ledger</p>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">Local-first, audit-chained memory. Three layers: FS at the edge (<code>.cyberos-memory/</code>), pgvector + Apache AGE in the middle, archival corpus at the cold tier. MMR inclusion proofs, Ed25519-signed tree heads, deterministic export, GDPR purge.</p>
+        <div class="text-sm font-bold text-blue-700">Read full BRAIN spec →</div>
+      </a>
+
+      <!-- Skill -->
+      <a href="modules/skill.html" class="bbg-card lift-strong tint-skill p-6 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-4xl">🛠</div>
+          <span class="phase-chip phase-p1">P0 · Shipped</span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Skill — the catalog</h3>
+        <p class="text-xs uppercase tracking-wider text-emerald-700 font-semibold mb-3">Portable agentic skills</p>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">Open Agent Skills standard (Anthropic · VS Code · Cursor · Codex). Rust host + Bun toolchain. 6 Vietnamese-market skills published (MST · VAT · VietQR · CCCD · legal · tax). Three-level progressive disclosure; 12/12 Python ↔ Rust parity tests green.</p>
+        <div class="text-sm font-bold text-emerald-700">Read full Skill spec →</div>
+      </a>
+
+      <!-- CUO -->
+      <a href="modules/cuo.html" class="bbg-card lift-strong tint-cuo p-6 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-4xl">🎯</div>
+          <span class="phase-chip phase-p3">P0 · Phase 1</span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1.5">CUO — the orchestrator</h3>
+        <p class="text-xs uppercase tracking-wider text-purple-700 font-semibold mb-3">Chief Universal Officer</p>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">The router. Natural language in, skill chain out, memory record on file. Genie is the mascot; CUO is the inner decision frame. 10 C-level skills hot-reload on demand. Notify / Question / Review ambient modes — never auto-acts on irreversible operations.</p>
+        <div class="text-sm font-bold text-purple-700">Read full CUO spec →</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- THE 22-MODULE CATALOG AT A GLANCE -->
+<!-- ============================================================ -->
+<section id="catalog" class="bg-slate-50 border-t border-slate-200">
+  <div class="container py-16">
+    <div class="flex items-center gap-4 mb-2">
+      <span class="section-badge" style="background:var(--cuo-tint);color:var(--cuo-dark)">The catalog</span>
+    </div>
+    <h2 class="h-1 mb-3">All 22 modules · all 5 phases</h2>
+    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-2">Per PRD §7.1, CyberOS ships as 22 modules — each owned end-to-end by one role, each independently deployable as an Apollo Federation v2 subgraph and a Module-Federation frontend remote. Click any cell to open its dedicated module page.</p>
+    <p class="text-sm text-slate-500 max-w-3xl leading-relaxed mb-8">Phase ordering reflects the bet that <strong>internal productivity (P1) is the moat</strong>; external SaaS is P4 only.</p>
+
+    <!-- P0 row -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="phase-chip phase-p0">P0 · Foundation</span>
+        <span class="text-sm text-slate-500">M0 → M+3 · 7 modules · gateway + 3 shipped</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <a href="modules/brain.html"  class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">🧠</div><div class="code">BRAIN</div><div class="title">Universal Memory</div></a>
+        <a href="modules/cuo.html"    class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">🎯</div><div class="code">CUO</div><div class="title">Genie / Router</div></a>
+        <a href="modules/skill.html"  class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">🛠</div><div class="code">SKILL</div><div class="title">Agent skills</div></a>
+        <a href="modules/auth.html"   class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🔐</div><div class="code">AUTH</div><div class="title">Authn/Authz</div></a>
+        <a href="modules/ai.html"     class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">⚡</div><div class="code">AI</div><div class="title">AI Gateway</div></a>
+        <a href="modules/mcp.html"    class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🔌</div><div class="code">MCP</div><div class="title">MCP Gateway</div></a>
+        <a href="modules/obs.html"    class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">👁</div><div class="code">OBS</div><div class="title">Observability</div></a>
+        <a href="modules/chat.html"   class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">💬</div><div class="code">CHAT</div><div class="title">Internal Chat</div></a>
+      </div>
+    </div>
+
+    <!-- P1 row -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="phase-chip phase-p1">P1 · Productivity</span>
+        <span class="text-sm text-slate-500">M+4 → M+6 · 8 modules · the moat</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <a href="modules/email.html"  class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">✉️</div><div class="code">EMAIL</div><div class="title">Mail + Inbox</div></a>
+        <a href="modules/proj.html"   class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📋</div><div class="code">PROJ</div><div class="title">Projects</div></a>
+        <a href="modules/time.html"   class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">⏱</div><div class="code">TIME</div><div class="title">Time / Expense</div></a>
+        <a href="modules/crm.html"    class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">🤝</div><div class="code">CRM</div><div class="title">Clients</div></a>
+        <a href="modules/kb.html"     class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📚</div><div class="code">KB</div><div class="title">Knowledge</div></a>
+        <a href="modules/hr.html"     class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">👥</div><div class="code">HR</div><div class="title">Human Resources</div></a>
+        <a href="modules/rew.html"    class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">💎</div><div class="code">REW</div><div class="title">Total Rewards</div></a>
+        <a href="modules/learn.html"  class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📈</div><div class="code">LEARN</div><div class="title">Learning · Promotion</div></a>
+      </div>
+    </div>
+
+    <!-- P2 row -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="phase-chip phase-p2">P2 · Operations</span>
+        <span class="text-sm text-slate-500">M+7 → M+9 · 2 modules · bill-to-cash + ESOP</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <a href="modules/inv.html"   class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🧾</div><div class="code">INV</div><div class="title">Invoicing</div></a>
+        <a href="modules/esop.html"  class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">📊</div><div class="code">ESOP</div><div class="title">Phantom Stock</div></a>
+      </div>
+    </div>
+
+    <!-- P3 row -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="phase-chip phase-p3">P3 · SaaS-ready</span>
+        <span class="text-sm text-slate-500">M+10 → M+12 · 2 modules · Singapore HoldCo flip</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <a href="modules/res.html"  class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">📅</div><div class="code">RES</div><div class="title">Resource Plan</div></a>
+        <a href="modules/okr.html"  class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">🎯</div><div class="code">OKR</div><div class="title">OKR · Strategy</div></a>
+      </div>
+    </div>
+
+    <!-- P4 row -->
+    <div>
+      <div class="flex items-center gap-3 mb-3">
+        <span class="phase-chip phase-p4">P4 · External GA</span>
+        <span class="text-sm text-slate-500">M+13 → M+24 · 3 modules · first paying tenant</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <a href="modules/doc.html"    class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">✍️</div><div class="code">DOC</div><div class="title">Document Signing</div></a>
+        <a href="modules/portal.html" class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">🌐</div><div class="code">PORTAL</div><div class="title">Client Portal</div></a>
+        <a href="modules/ten.html"    class="module-cell" style="border-top:3px solid var(--future)"><div class="icon">🏢</div><div class="code">TEN</div><div class="title">Tenancy · Billing</div></a>
+      </div>
+    </div>
+
+    <!-- Phase summary -->
+    <div class="bbg-card p-6 mt-10 bg-gradient-to-br from-blue-50 via-purple-50 to-emerald-50">
+      <h3 class="font-bold text-slate-900 mb-3">Module count by phase</h3>
+      <div class="grid grid-cols-5 gap-4 text-center">
+        <div><div class="text-2xl font-black text-blue-600">7</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P0 · M0–M3</div></div>
+        <div><div class="text-2xl font-black text-emerald-600">15</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P1 · M4–M6</div></div>
+        <div><div class="text-2xl font-black text-amber-600">17</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P2 · M7–M9</div></div>
+        <div><div class="text-2xl font-black text-purple-600">19</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P3 · M10–M12</div></div>
+        <div><div class="text-2xl font-black text-slate-600">22</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P4 · M13–M24</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- THE 12-MONTH MILESTONE ARC -->
+<!-- ============================================================ -->
+<section id="milestones" class="bg-gradient-to-b from-amber-50/30 to-white border-t border-slate-200">
+  <div class="container py-16">
+    <div class="flex items-center gap-4 mb-2">
+      <span class="section-badge" style="background:var(--infra-tint);color:var(--infra-dark)">Roadmap</span>
+    </div>
+    <h2 class="h-1 mb-3">The 12-month arc</h2>
+    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Five gated phases (P0 → P4) over 24 months, anchored on dogfooding signal and compliance gates that flip every quarter. The headcount column tracks the founder's commitment: scale only when CyberOS itself absorbs the new operational load.</p>
+
+    <div class="bbg-card p-6 mb-10 overflow-x-auto">
+      <div class="min-w-[900px]">
+        <div class="grid grid-cols-5 gap-2 mb-2">
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-blue-700">P0 · Foundations</div><div class="text-[10px] text-slate-500">M0 – M+3</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">P1 · Productivity</div><div class="text-[10px] text-slate-500">M+4 – M+6</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-amber-700">P2 · Operations</div><div class="text-[10px] text-slate-500">M+7 – M+9</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-purple-700">P3 · SaaS-ready</div><div class="text-[10px] text-slate-500">M+10 – M+12</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-slate-600">P4 · External</div><div class="text-[10px] text-slate-500">M+13 – M+24</div></div>
+        </div>
+        <div class="relative h-3 bg-slate-100 rounded-full mb-1">
+          <div class="absolute inset-y-0 left-0 w-1/5 bg-blue-500 rounded-l-full"></div>
+          <div class="absolute inset-y-0 left-[20%] w-1/5 bg-emerald-500"></div>
+          <div class="absolute inset-y-0 left-[40%] w-1/5 bg-amber-500"></div>
+          <div class="absolute inset-y-0 left-[60%] w-1/5 bg-purple-500"></div>
+          <div class="absolute inset-y-0 left-[80%] w-1/5 bg-slate-400 rounded-r-full"></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-0"><div class="w-4 h-4 rounded-full bg-white border-2 border-blue-500"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[20%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-emerald-500"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[40%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-amber-500"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[60%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-purple-500"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[80%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-slate-400"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-full"><div class="w-4 h-4 rounded-full bg-white border-2 border-slate-400"></div></div>
+        </div>
+        <div class="grid grid-cols-6 text-center mb-6 mt-3">
+          <div class="text-[10px] font-mono font-bold text-slate-500">M0</div>
+          <div class="text-[10px] font-mono font-bold text-slate-500">M+3</div>
+          <div class="text-[10px] font-mono font-bold text-slate-500">M+6</div>
+          <div class="text-[10px] font-mono font-bold text-slate-500">M+9</div>
+          <div class="text-[10px] font-mono font-bold text-slate-500">M+12</div>
+          <div class="text-[10px] font-mono font-bold text-slate-500">M+18/24</div>
+        </div>
+
+        <div class="grid grid-cols-5 gap-3 text-xs">
+          <div class="p-3 bg-blue-50 rounded-lg">
+            <div class="font-bold text-blue-900 mb-1">P0 exit · M+3</div>
+            <div class="text-slate-600 mb-2"><strong>Modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
+            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 10 Members</div>
+            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> Slack + Zalo decommissioned</div>
+            <div class="text-blue-700 font-bold">7 of 22 modules ready</div>
+          </div>
+          <div class="p-3 bg-emerald-50 rounded-lg">
+            <div class="font-bold text-emerald-900 mb-1">P1 exit · M+6</div>
+            <div class="text-slate-600 mb-2"><strong>Modules:</strong> PROJ · TIME · CRM · KB · HR · EMAIL · REW (core) · LEARN</div>
+            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 12 Members</div>
+            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First payroll cycle through REW</div>
+            <div class="text-emerald-700 font-bold">15 of 22 ready</div>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-lg">
+            <div class="font-bold text-amber-900 mb-1">P2 exit · M+9</div>
+            <div class="text-slate-600 mb-2"><strong>Modules:</strong> INV · full REW pool calc · ESOP</div>
+            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 14 Members</div>
+            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First SP grant issued</div>
+            <div class="text-amber-700 font-bold">17 of 22 ready</div>
+          </div>
+          <div class="p-3 bg-purple-50 rounded-lg">
+            <div class="font-bold text-purple-900 mb-1">P3 exit · M+12</div>
+            <div class="text-slate-600 mb-2"><strong>Modules:</strong> RES · OKR live; mobile evaluated</div>
+            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 16 Members</div>
+            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First quarterly OKR cycle · <strong>Singapore HoldCo flip if ARR ≥ $1.5M</strong></div>
+            <div class="text-purple-700 font-bold">19 of 22 ready</div>
+          </div>
+          <div class="p-3 bg-slate-100 rounded-lg">
+            <div class="font-bold text-slate-900 mb-1">P4 entry · M+18</div>
+            <div class="text-slate-600 mb-2"><strong>Modules:</strong> DOC (eIDAS QTSP) · PORTAL · TEN</div>
+            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 20 Members</div>
+            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First external paying tenant</div>
+            <div class="text-slate-700 font-bold">22 of 22 ready</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <a href="architecture/milestones.html" class="btn btn-secondary">Full milestone details
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 10 C-LEVEL PERSONAS -->
+<!-- ============================================================ -->
+<section id="personas" class="bg-white border-t border-slate-200">
+  <div class="container py-16">
+    <div class="flex items-center gap-4 mb-2">
+      <span class="section-badge" style="background:var(--cuo-tint);color:var(--cuo-dark)">The C-suite</span>
+    </div>
+    <h2 class="h-1 mb-3">CUO is one persona — <span class="text-purple-600">ten specialists</span> behind it</h2>
+    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CUO presents as one Genie. Internally, ten C-level skills load on demand via the open <strong>Anthropic Agent Skills</strong> format. The user sees Genie; Genie routes to whichever skill best fits the request. Same BRAIN, same persona-version stamp, same audit chain. Click any role to jump to its detail on the CUO page.</p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <a href="modules/cuo.html#persona-ceo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">🎯</div><div class="font-bold text-slate-900">CEO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Vision · Strategy</p>
+        <p class="text-xs text-slate-600">Strategy memos · OKR cascade reviews · weekly state-of-business.</p>
+      </a>
+      <a href="modules/cuo.html#persona-coo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">⚙️</div><div class="font-bold text-slate-900">COO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Operations</p>
+        <p class="text-xs text-slate-600">Status digests · blocker triage · cycle-end summaries.</p>
+      </a>
+      <a href="modules/cuo.html#persona-cfo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">💰</div><div class="font-bold text-slate-900">CFO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Finance · Runway</p>
+        <p class="text-xs text-slate-600">Cashflow · AR/AP digests · burn alerts.</p>
+      </a>
+      <a href="modules/cuo.html#persona-cmo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">📣</div><div class="font-bold text-slate-900">CMO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Marketing · Demand</p>
+        <p class="text-xs text-slate-600">Campaign briefs · content calendars · channel reports.</p>
+      </a>
+      <a href="modules/cuo.html#persona-cto" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">💻</div><div class="font-bold text-slate-900">CTO / CIO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Technology · Info Systems</p>
+        <p class="text-xs text-slate-600">Tech debt · security advisories · OBS digests.</p>
+      </a>
+      <a href="modules/cuo.html#persona-chro" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">👥</div><div class="font-bold text-slate-900">CHRO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">People · Talent</p>
+        <p class="text-xs text-slate-600">1:1 prep · performance summaries · onboarding.</p>
+      </a>
+      <a href="modules/cuo.html#persona-cso" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">🧭</div><div class="font-bold text-slate-900">CSO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Strategy</p>
+        <p class="text-xs text-slate-600">Competitive intel · scenario modelling · partnerships.</p>
+      </a>
+      <a href="modules/cuo.html#persona-clo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">⚖️</div><div class="font-bold text-slate-900">CLO / CCO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Legal · Compliance</p>
+        <p class="text-xs text-slate-600">Contract redline · GDPR/PDPL audits · DSAR triage.</p>
+      </a>
+      <a href="modules/cuo.html#persona-cdo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">📊</div><div class="font-bold text-slate-900">CDO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Data</p>
+        <p class="text-xs text-slate-600">Data quality · lineage · residency reviews.</p>
+      </a>
+      <a href="modules/cuo.html#persona-cpo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
+        <div class="text-2xl mb-1">🚀</div><div class="font-bold text-slate-900">CPO</div>
+        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Product</p>
+        <p class="text-xs text-slate-600">PRD drafts · roadmap analysis · user-research synthesis.</p>
+      </a>
+    </div>
+
+    <p class="text-sm text-slate-500 mt-6">+ 4 emerging 2026 sub-personas: CAIO, CXO, CRO, CSO-Sustainability. See <a href="modules/cuo.html#emerging" class="text-purple-700 font-semibold">CUO page →</a></p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE SCOPE — three concentric rings -->
+<!-- ============================================================ -->
+<section id="compliance" class="bg-slate-50 border-t border-slate-200">
+  <div class="container py-16">
+    <div class="flex items-center gap-4 mb-2">
+      <span class="section-badge" style="background:var(--compliance-tint);color:var(--compliance-dark)">Compliance scope</span>
+    </div>
+    <h2 class="h-1 mb-3">Three concentric compliance rings</h2>
+    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CyberOS plans for three jurisdictional concentric rings simultaneously. The inner ring (Vietnam) is the cornerstone — every CyberOS deployment respects it. The middle ring (cross-border) adds GDPR + Singapore PDPA when Singapore HoldCo flips at P3. The outer ring (international standards) lights up gate-by-gate.</p>
+
+    <div class="bbg-card p-6">
+      <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-2xl mx-auto h-auto" role="img" aria-label="CyberOS three-ring compliance scope">
+        <defs>
+          <radialGradient id="ringGrad1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#93c5fd"/></radialGradient>
+          <radialGradient id="ringGrad2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#d1fae5"/><stop offset="100%" stop-color="#6ee7b7"/></radialGradient>
+          <radialGradient id="ringGrad3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#fcd34d"/></radialGradient>
+        </defs>
+        <circle cx="300" cy="300" r="270" fill="url(#ringGrad3)" stroke="#b45309" stroke-width="2" opacity="0.45"/>
+        <text x="300" y="50" text-anchor="middle" font-size="14" font-weight="800" fill="#78350f">Standards · ISO + SOC + CSA</text>
+        <text x="300" y="68" text-anchor="middle" font-size="10" fill="#92400e">ISO 27001:2022 · ISO 42001 · ISO 27701 · SOC 2 · CSA STAR L1→L2</text>
+        <circle cx="300" cy="300" r="200" fill="url(#ringGrad2)" stroke="#047857" stroke-width="2" opacity="0.65"/>
+        <text x="300" y="125" text-anchor="middle" font-size="13" font-weight="800" fill="#064e3b">Cross-border</text>
+        <text x="300" y="142" text-anchor="middle" font-size="10" fill="#065f46">GDPR · EU AI Act Annex III §4 · Singapore PDPA</text>
+        <circle cx="300" cy="300" r="130" fill="url(#ringGrad1)" stroke="#1e40af" stroke-width="2.5" opacity="0.85"/>
+        <text x="300" y="270" text-anchor="middle" font-size="14" font-weight="800" fill="#1e3a8a">Vietnam — Home Regime</text>
+        <text x="300" y="290" text-anchor="middle" font-size="10" fill="#1e40af">PDPL Law 91/2025 · Decree 356</text>
+        <text x="300" y="306" text-anchor="middle" font-size="10" fill="#1e40af">Decree 13/2023 (Personal Data)</text>
+        <text x="300" y="322" text-anchor="middle" font-size="10" fill="#1e40af">Decree 53/2022 (Cyber Security)</text>
+        <text x="300" y="338" text-anchor="middle" font-size="10" fill="#1e40af">Decree 20/2026 (SME)</text>
+        <text x="60" y="555" font-size="9" fill="#78350f">⌖ P3 exit: ISO 42001 AIMS</text>
+        <text x="60" y="568" font-size="9" fill="#78350f">⌖ P2 exit: ISO 27001:2022</text>
+        <text x="60" y="581" font-size="9" fill="#78350f">⌖ P1 exit: SOC 2 Type I + CSA STAR L1</text>
+        <text x="430" y="555" font-size="9" fill="#065f46">⌖ P2 exit: EU AI Act Annex III §4</text>
+        <text x="430" y="568" font-size="9" fill="#065f46">⌖ P3+: Singapore PDPA (HoldCo flip)</text>
+        <text x="430" y="581" font-size="9" fill="#065f46">⌖ P3+: GDPR (EU tenant residency)</text>
+        <text x="240" y="568" font-size="9" fill="#1e3a8a">⌖ P0 exit: A05 DPIA + DPO + Trust Center</text>
+      </svg>
+    </div>
+
+    <div class="mt-6">
+      <a href="architecture/compliance.html" class="btn btn-secondary">Full compliance plan
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- TECH STACK -->
+<!-- ============================================================ -->
+<section id="stack" class="bg-white border-t border-slate-200">
+  <div class="container py-16">
+    <div class="flex items-center gap-4 mb-2">
+      <span class="section-badge" style="background:#e0e7ff;color:#3730a3">Tech stack</span>
+    </div>
+    <h2 class="h-1 mb-3">The stack, top to bottom</h2>
+    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Every layer locked in PRD §8 + Part 14. The bias is toward open-source, self-hostable, audit-able primitives — never lock CyberOS to a vendor that could later compromise the company's Vietnamese data sovereignty.</p>
+
+    <div class="bbg-card p-4 mb-8">
+      <div class="mermaid">
+flowchart TB
+  subgraph T1 ["Persona / Agent layer"]
+    PERSONA["LangGraph supervisor<br/>+ LiteLLM router<br/>+ Anthropic Skills format (10 C-level skills)"]
+  end
+  subgraph T2 ["Frontend layer"]
+    HOST["Host shell · Vite + React 19 + Tauri"]
+    REMOTES["Module remotes · Webpack 5 + Module Federation"]
+  end
+  subgraph T3 ["API / agent surface layer"]
+    APOLLO["Apollo Router · GraphQL Federation v2.5+"]
+    MCPGW["MCP Gateway · 2025-11-25 spec"]
+    AIGW["AI Gateway · LiteLLM"]
+  end
+  subgraph T4 ["Backend services layer"]
+    SUBGRAPHS["Per-module subgraphs · TypeScript or Rust"]
+  end
+  subgraph T5 ["Data layer"]
+    PG["PostgreSQL 17 + pgvector HNSW + Apache AGE 1.5"]
+    EMBED["BGE-M3 embedder + BGE-rerank-v2-m3"]
+  end
+  subgraph T6 ["Infrastructure layer"]
+    NATS_T["NATS JetStream"]
+    S3["S3 / R2 / MinIO"]
+  end
+  T1 --> T2 --> T3 --> T4 --> T5
+  T4 --> T6
+  classDef agent fill:#f3e8ff,stroke:#7e22ce,stroke-width:2px
+  classDef fe fill:#dbeafe,stroke:#1e40af
+  classDef gw fill:#fef3c7,stroke:#b45309,stroke-width:2px
+  classDef be fill:#d1fae5,stroke:#047857
+  classDef data fill:#e0e7ff,stroke:#3730a3
+  classDef infra fill:#fce7f3,stroke:#9d174d
+  class PERSONA agent
+  class HOST,REMOTES fe
+  class APOLLO,MCPGW,AIGW gw
+  class SUBGRAPHS be
+  class PG,EMBED data
+  class NATS_T,S3 infra
+      </div>
+    </div>
+
+    <a href="architecture/tech-stack.html" class="btn btn-secondary">Why each choice — full table
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DOC NAVIGATION CARDS (bottom) -->
+<!-- ============================================================ -->
+<section id="navigate" class="bg-slate-50 border-t border-slate-200">
+  <div class="container py-16">
+    <div class="flex items-center gap-4 mb-2">
+      <span class="section-badge">Navigate the docs</span>
+    </div>
+    <h2 class="h-1 mb-3">Where to next</h2>
+    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Four entry points into the rest of the documentation site. Each module page mirrors the same 5W1H structure used on the BRAIN / Skill / CUO pages — the architecture pages cross-cut by concern; the reference pages flatten everything into one searchable list.</p>
+
+    <div class="grid md:grid-cols-2 gap-5">
+      <!-- Module pages -->
+      <div class="bbg-card tint-memory p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-3xl">📦</div>
+          <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-bold">22 pages</span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Module pages</h3>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">One dedicated page per module with full 5W1H, dependencies, tech stack, status, FR/NFR mapping, sequence diagrams. Three shipped (BRAIN, Skill, CUO) have the deepest treatment.</p>
+        <div class="grid grid-cols-3 gap-1.5 mt-4 text-[11px]">
+          <a href="modules/brain.html"  class="px-2 py-1 bg-blue-50 text-blue-700 rounded font-mono font-bold hover:bg-blue-100">BRAIN</a>
+          <a href="modules/cuo.html"    class="px-2 py-1 bg-purple-50 text-purple-700 rounded font-mono font-bold hover:bg-purple-100">CUO</a>
+          <a href="modules/skill.html"  class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">SKILL</a>
+          <a href="modules/auth.html"   class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">AUTH</a>
+          <a href="modules/ai.html"     class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">AI</a>
+          <a href="modules/mcp.html"    class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">MCP</a>
+          <a href="modules/obs.html"    class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">OBS</a>
+          <a href="modules/chat.html"   class="px-2 py-1 bg-blue-50 text-blue-700 rounded font-mono font-bold hover:bg-blue-100">CHAT</a>
+          <a href="modules/email.html"  class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">EMAIL</a>
+          <a href="modules/proj.html"   class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">PROJ</a>
+          <a href="modules/time.html"   class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">TIME</a>
+          <a href="modules/crm.html"    class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">CRM</a>
+          <a href="modules/kb.html"     class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">KB</a>
+          <a href="modules/hr.html"     class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">HR</a>
+          <a href="modules/rew.html"    class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">REW</a>
+          <a href="modules/learn.html"  class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">LEARN</a>
+          <a href="modules/inv.html"    class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">INV</a>
+          <a href="modules/esop.html"   class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">ESOP</a>
+          <a href="modules/res.html"    class="px-2 py-1 bg-purple-50 text-purple-700 rounded font-mono font-bold hover:bg-purple-100">RES</a>
+          <a href="modules/okr.html"    class="px-2 py-1 bg-purple-50 text-purple-700 rounded font-mono font-bold hover:bg-purple-100">OKR</a>
+          <a href="modules/doc.html"    class="px-2 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold hover:bg-slate-200">DOC</a>
+          <a href="modules/portal.html" class="px-2 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold hover:bg-slate-200">PORTAL</a>
+          <a href="modules/ten.html"    class="px-2 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold hover:bg-slate-200">TEN</a>
+        </div>
+      </div>
+
+      <!-- Architecture -->
+      <div class="bbg-card tint-infra p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-3xl">🏗</div>
+          <span class="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-bold">4 pages</span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Architecture</h3>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">Cross-cutting concerns. Infrastructure plane (6 P0 pillars). Compliance plan (3 rings · phase gates). Tech stack (layer-by-layer rationale). Milestones (24-month timeline with exit gates).</p>
+        <ul class="text-sm space-y-1.5">
+          <li><a href="architecture/infrastructure.html" class="text-amber-700 font-semibold hover:underline">Infrastructure → AUTH · AI · MCP · OBS · GraphQL · NATS</a></li>
+          <li><a href="architecture/compliance.html"     class="text-amber-700 font-semibold hover:underline">Compliance → Vietnam · cross-border · standards</a></li>
+          <li><a href="architecture/tech-stack.html"     class="text-amber-700 font-semibold hover:underline">Tech stack → 8 layers · 16 choices</a></li>
+          <li><a href="architecture/milestones.html"     class="text-amber-700 font-semibold hover:underline">Milestones → 12-month arc · phase gates</a></li>
+        </ul>
+      </div>
+
+      <!-- Reference -->
+      <div class="bbg-card tint-cuo p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-3xl">📖</div>
+          <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-bold">4 pages</span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Reference</h3>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">Flattened catalogs for search and traceability. FR Catalog (every functional requirement). NFR Catalog (latency · throughput · availability budgets). Glossary (every term · acronym · invariant). Risk Register (every risk · likelihood · owner).</p>
+        <ul class="text-sm space-y-1.5">
+          <li><a href="reference/fr-catalog.html"    class="text-purple-700 font-semibold hover:underline">FR Catalog → functional requirements (FR-NNN)</a></li>
+          <li><a href="reference/nfr-catalog.html"   class="text-purple-700 font-semibold hover:underline">NFR Catalog → non-functional budgets</a></li>
+          <li><a href="reference/glossary.html"      class="text-purple-700 font-semibold hover:underline">Glossary → BCP-14 terms · acronyms</a></li>
+          <li><a href="reference/risk-register.html" class="text-purple-700 font-semibold hover:underline">Risk Register → likelihood · impact · owner</a></li>
+        </ul>
+      </div>
+
+      <!-- Source -->
+      <div class="bbg-card tint-skill p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-3xl">⚙️</div>
+          <span class="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">GitHub</span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Source &amp; tooling</h3>
+        <p class="text-sm text-slate-600 leading-relaxed mb-4">CyberOS is built in the open. Memory module (Python · BCP-14 normative spec), Skill module (Rust host · Bun toolchain · MCP-compliant), CUO module (LangGraph + LiteLLM). Schema-validated; CHANGELOG newest-first.</p>
+        <ul class="text-sm space-y-1.5">
+          <li><a href="https://github.com/cyberskill/cyberos" class="text-emerald-700 font-semibold hover:underline">github.com/cyberskill/cyberos</a> <span class="text-slate-400">(placeholder)</span></li>
+          <li><a href="https://cyberskill.io" class="text-emerald-700 font-semibold hover:underline">cyberskill.io</a> <span class="text-slate-400">(public landing)</span></li>
+          <li><a href="modules/brain.html#interop" class="text-emerald-700 font-semibold hover:underline">BRAIN interop subset (INTEROP.md)</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
+      <p>CyberOS Documentation · v2026.05 · Built by CyberSkill</p>
+      <p class="text-xs text-slate-400 mt-1">Generated from PRD + SRS source. Every page is statically served and printable.</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+[package]
+name = "cyberos-skill-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+cyberos-skill-manifest = { path = "../manifest" }
+dashmap.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+walkdir.workspace = true
+# Wasmtime + WASI — Phase 5. Optional behind the `wasm` feature so the
+# workspace continues to build cleanly without `wasm32-wasi` installed.
+wasmtime = { version = "27", default-features = false, features = ["runtime", "component-model", "cranelift", "cache"], optional = true }
+wasmtime-wasi = { version = "27", optional = true }
+
+[features]
+default = []
+wasm = ["dep:wasmtime", "dep:wasmtime-wasi"]
+
+[dev-dependencies]
+criterion = { workspace = true }
+parking_lot = { workspace = true }
+tempfile = "3"
+
+[[bench]]
+name = "registry"
+harness = false

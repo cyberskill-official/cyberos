@@ -356,7 +356,7 @@ The **three normative + two machine** files (`AGENTS.md`, `INTEROP.md`, `memory.
 * **For protocol details:** [`AGENTS.md`](AGENTS.md) — v2 normative spec.
 * **For history + audit reports:** [`EVOLUTION.md`](EVOLUTION.md).
 * **For implementation reference:** [`../../cyberos/README.md`](../../cyberos/README.md).
-* **For pending proposals:** [`PROPOSAL.md`](PROPOSAL.md) — P2 Stage 3 is the only one.
+* **For design proposals:** [`PROPOSAL.md`](PROPOSAL.md) — historical record; P1–P12 + P2 Stage 3 are all shipped.
 
 ---
 

@@ -6,6 +6,35 @@ Entries follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) conventi
 
 ---
 
+## 2026-05-14 (state-of-the-module) — comprehensive shipped state
+
+> Docs-only consolidation pass. Snapshot of what the memory module actually ships as of today, after the full P1→P12 + P2 Stage 3 implementation campaign.
+
+### Shipped
+
+- **Protocol** — v2 RFC at `docs/AGENTS.md`; no version field, no bridge, no v1 alias scaffolding.
+- **Core** — writer, reader, walker, lock, fsync, ops, export, index, frontmatter, iouring (Linux fast path), invariants, mmr, sth, crypto_mode, consolidate, conflicts, digest, publish, semantic, serve, session, import_, prune, backup. All under `memory/cyberos/core/`.
+- **CLI** — 30 subcommands via `python -m cyberos`; cold `--help` < 30 ms (lazy imports).
+- **Cryptography** — MMR (Merkle Mountain Range) of canonical-JSON leaves, Ed25519 Signed Tree Heads, passphrase-wrapped signing key. `crypto_mode={chained|sth_only}` toggle behind §0.2 approval phrase.
+- **Cross-platform automation** — `scripts/automation-install.sh` covers macOS launchd + Linux systemd-user (cron fallback); `scripts/automation-install.ps1` covers Windows Task Scheduler. Nightly doctor + dry-run consolidate; weekly backup + consolidate + determinism guard.
+- **Cross-BRAIN merge** — `cyberos import` with filter / dry-run / conflict policies, idempotent via `manifest.imports.<fingerprint>.last_imported_seq`, audit-bracketed.
+- **Semantic search** — optional `sentence-transformers` dep with int8-quantized embeddings, graceful FTS5 fallback.
+- **Sync-FS awareness** — invariant + `cyberos resolve-conflict` for iCloud / Dropbox / OneDrive / Google Drive / Box / Syncthing / Resilio.
+- **Mobile publish** — `cyberos publish` produces a self-contained, deterministic HTML view of the BRAIN.
+- **HTTP REST** — `cyberos serve` with bearer-token auth, loopback-only by default.
+- **Sessions** — multi-agent coordination via leased session files + scope-overlap conflict detection.
+
+### Tests
+
+- 255 pytest tests green (was 144 before the P7→P12 + P2 Stage 3 batch).
+
+### Pending — future work
+
+- iOS companion app — not on the immediate roadmap.
+- Public anchoring of STH (transparency log / Sigsum / etc.) — not on the immediate roadmap; STHs are produced locally today.
+
+---
+
 ## 2026-05-14 (late) — P7 → P12 + P2 Stage 3 (whole back-half of the roadmap)
 
 > One-shot implementation of the seven outstanding proposals plus the

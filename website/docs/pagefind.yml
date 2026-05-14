@@ -1,0 +1,23 @@
+# Pagefind configuration for CyberOS docs
+# Re-run with:  npx pagefind --site .
+#
+# We use `body` as the root selector (a few pages don't have <main>) and
+# explicitly exclude the shared nav, sticky chrome, and footer via
+# exclude_selectors so navigation copy doesn't pollute search hits.
+
+site: "."
+output_subdir: "pagefind"
+root_selector: "body"
+exclude_selectors:
+  - "nav#shared-nav"
+  - "#shared-nav"
+  - ".sticky-nav"
+  - ".nav-dropdown-menu"
+  - ".nav-mobile"
+  - "footer"
+  - ".no-search"
+  - ".no-print"
+  - "script"
+  - "style"
+verbose: true
+keep_index_url: false

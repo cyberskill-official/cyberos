@@ -1,6 +1,26 @@
 # memory — CyberOS memory module
 
-Local-first, audit-chained personal memory store. Append-only ledger, six file ops, MMR inclusion proofs, deterministic export. Every read and write that touches the BRAIN goes through this module.
+Local-first, audit-chained personal memory store. Append-only ledger, six file ops, MMR inclusion proofs, signed tree heads, deterministic export. Every read and write that touches the BRAIN goes through this module.
+
+## Status
+
+| Phase | Status |
+|---|---|
+| Core writer + reader + walker | shipped |
+| MMR + STH | shipped |
+| Crypto-mode (STH-only) | shipped (opt-in) |
+| Cross-platform automation (launchd / systemd / Task Scheduler) | shipped |
+| Semantic search | shipped (optional `sentence-transformers` dep) |
+| Sync conflict awareness (iCloud / Dropbox / OneDrive / etc.) | shipped |
+| All 12 audit proposals (P1-P12 + P2 Stage 3) | shipped |
+| Cross-BRAIN import (P6) | shipped |
+| HTTP REST (`cyberos serve`) | shipped |
+| Daily digest (`cyberos digest`) | shipped |
+| Mobile publish (`cyberos publish`) | shipped |
+| iOS companion app | pending — future |
+| Public anchoring of STH (transparency log) | pending — future |
+
+Test suite: 255 green. `cyberos doctor` passes 15/15 invariants on the live BRAIN.
 
 ## Quick start
 
@@ -38,6 +58,22 @@ memory/
 └── scripts/               ← install.sh, automation (launchd / systemd / Task Scheduler),
                               pre-commit hook, unwrap-md helper
 ```
+
+## Place in the CyberOS architecture
+
+CyberOS has three modules today:
+
+| Module | Role | Lives at |
+|---|---|---|
+| `memory/` | The BRAIN — append-only audit-chained personal memory store | `~/.cyberos-memory/` per project |
+| `skill/` | Catalog of agentic Skills + Rust host + Bun toolchain | `skill/skills/` + Rust crates |
+| `cuo/` | Router — natural-language → skill chain → memory record | Python package |
+
+This module is **memory**. It interacts with:
+- `skill/` — skill bundles can declare `allowed_brain_scopes` (read/write) against the BRAIN; the host enforces them via the capability broker.
+- `cuo/` — every routing decision the router makes is appended to the BRAIN's audit chain as a memory record (today via flat-file bridge; Phase-2 will go through the canonical `Writer`).
+
+For the full picture see `../website/docs/index.html` (interactive multi-layer architecture doc, 31 pages).
 
 ## Where to read next
 

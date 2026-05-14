@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PORTAL — CyberOS</title>
+  <meta name="description" content="PORTAL — Client portal. Branded customer-facing surface with white-label theming, custom domain, SSO from client IdP, scoped read-only views of PROJ + INV + DOC + CHAT. Multi-tenant within multi-tenant.">
+  <link rel="stylesheet" href="../assets/tokens.css">
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script type="module" src="../assets/scripts.js"></script>
+  <style>
+    /* PORTAL module palette — rose-bright */
+    :root {
+      --portal:       #e11d48;
+      --portal-bg:    #fff1f2;
+      --portal-tint:  #ffe4e6;
+      --portal-dark:  #9f1239;
+    }
+    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .fact-card { background: var(--portal-bg); border:1px solid var(--portal-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
+    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--portal-dark); }
+    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
+    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
+    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
+    .toc-link:hover { background: var(--portal-bg); color: var(--portal-dark); }
+    .toc-link.active { background: var(--portal-tint); color: var(--portal-dark); font-weight: 600; }
+    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
+    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
+    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
+    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--portal-dark); color:white; font-weight:800; font-size:0.875rem; }
+    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
+    .pill-must     { background:#fee2e2; color:#b91c1c; }
+    .pill-should   { background:#fef3c7; color:#b45309; }
+    .pill-could    { background:#e0f2fe; color:#075985; }
+    .pill-shipped  { background:#d1fae5; color:#065f46; }
+    .pill-planned  { background:#e0e7ff; color:#3730a3; }
+    .pill-partial  { background:#fef3c7; color:#b45309; }
+    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+    table.kt tbody tr:nth-child(even) td { background: var(--portal-bg); }
+    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
+    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
+    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
+    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
+    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--portal-bg); border-radius: 0.75rem; border: 1px solid var(--portal-tint); }
+    .bbg-card.tint-portal { border-top: 4px solid var(--portal); }
+    .invariant-box { background: #fff1f2; border: 2px solid #e11d48; border-radius: 0.5rem; padding: 1rem; margin: 1rem 0; }
+    .invariant-box .label { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; color: #9f1239; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body data-pagefind-filter="category:Module">
+<span hidden data-pagefind-filter="phase:P4"></span>
+
+<div id="shared-nav"></div>
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<header class="hero-gradient border-b border-slate-200">
+  <div class="container py-10 lg:py-14">
+    <nav class="breadcrumbs">
+      <a href="../index.html">Home</a>
+      <span class="sep">›</span>
+      <a href="../index.html#catalog">Modules</a>
+      <span class="sep">›</span>
+      <span class="current">PORTAL</span>
+    </nav>
+    <div class="flex items-center gap-3 mb-4 flex-wrap">
+      <span class="text-5xl">🌐</span>
+      <h1 class="h-display">PORTAL</h1>
+      <span class="phase-chip phase-p4">P4 · Long-term</span>
+      <span class="pill pill-planned">Planned · P4 long-term</span>
+      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CCO seat + CPO</span>
+    </div>
+    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+      The branded customer-facing surface. The agency logs into CyberOS; the client logs into a white-labelled, custom-domain portal that surfaces only their data — projects, invoices, signed documents, support threads — and a branded AI assistant with project history context.
+    </p>
+    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+      PORTAL is the second front-door — the one the agency's clients see. It is multi-tenant within multi-tenant: a CyberOS tenant (the agency) operates one or more Client Accounts, each of which has its own ClientMembers (the client's people), its own white-label theme (logo + colours + custom CNAME), and a scoped view of the agency's data: only the projects this client is involved in, only this client's invoices, only this client's signed documents, only this client's CHAT threads. The signing flow uses DOC (same QTSP chain); the project view is a read-narrowed lens on PROJ; the invoice view shows status + pay link from INV. The client AI assistant is a branded CUO with the project history pre-loaded — "what's the status of milestone 3?" gets a grounded answer with citations to PROJ issues. Client-initiated workflows let the customer file a new project request, raise a billing inquiry, or open a support ticket — each of which creates a CHAT thread on the agency side. SSO with the client's IdP (SAML, OIDC) means the client signs in once at their own identity provider; ClientMembers never need a CyberOS password. PDPL Art. 14 DSAR support: the client can export their account data; GDPR Art. 17: they can delete it with a 30-day grace period. Localization: Vietnamese + English; multi-currency display. PRD §9.21 and SRS §7.21 lock the FRs.
+    </p>
+    <div class="flex flex-wrap gap-3 mt-6">
+      <a href="#architecture" class="btn btn-primary">Architecture
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+      <a href="#key-flows" class="btn btn-secondary">Client SSO flow</a>
+      <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
+      <a href="../reference/fr-catalog.html#portal" class="btn btn-secondary">FR catalog</a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
+
+<!-- ============================================================ -->
+<!-- STICKY TOC -->
+<!-- ============================================================ -->
+<aside class="lg:col-span-3 order-2 lg:order-1">
+  <div class="lg:sticky lg:top-20">
+    <div class="bbg-card p-5">
+      <div class="h-eyebrow mb-3">On this page</div>
+      <ul class="space-y-0.5 text-sm">
+        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+        <li><a class="toc-link" href="#why">Why PORTAL exists</a></li>
+        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+        <li><a class="toc-link" href="#architecture">Architecture</a></li>
+        <li><a class="toc-link" href="#data-model">Data model</a></li>
+        <li><a class="toc-link" href="#api-surface">API surface</a></li>
+        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+        <li><a class="toc-link" href="#lifecycle">Client-account lifecycle</a></li>
+        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+        <li><a class="toc-link" href="#kpis">KPIs</a></li>
+        <li><a class="toc-link" href="#raci">RACI</a></li>
+        <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
+        <li><a class="toc-link" href="#status">Phase status</a></li>
+        <li><a class="toc-link" href="#references">References</a></li>
+      </ul>
+      <hr class="my-4 border-slate-200">
+      <div class="h-eyebrow mb-2">Source</div>
+      <div class="text-xs text-slate-500 leading-relaxed">
+        <code>cyberos/services/portal/</code><br>
+        PRD §9.21<br>
+        SRS §7.21
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="lg:col-span-9 order-1 lg:order-2">
+
+<!-- ============================================================ -->
+<!-- HERO -->
+<!-- ============================================================ -->
+<section id="hero" class="module-section">
+  <div class="bbg-card tint-portal p-6 mb-6">
+    <p class="text-lg text-slate-700 leading-relaxed mb-5">
+      PORTAL is CyberOS's <strong>white-labelled client-facing surface</strong>. A tenant's customers log in at <code>clients.&lt;tenant&gt;.cyberos.world</code> or at their own CNAME (e.g. <code>portal.acmecorp.com</code>) and see a portal that looks like the agency's brand: logo, colours, typography, sub-brand accents per FR-PORTAL-001. The data plane is a permission-narrowed lens on the underlying agency data: PROJ projects scoped to <code>this client</code>, INV invoices scoped to <code>this client</code>, DOC signed-docs scoped to <code>this client</code>, CHAT threads scoped to <code>this client</code>. Cross-tenant isolation in the shared infrastructure is enforced at three layers: Postgres RLS, Apollo Router scope checks, and per-bucket S3 prefix ACLs. Authentication is via SSO from the client's IdP (SAML 2.0 or OIDC); ClientMembers are mapped to internal Subject rows via JIT provisioning at first login. A branded client AI assistant — a CUO variant — has the client's project history pre-loaded and answers grounded questions with citations. Client-initiated workflows (new project request, billing inquiry, support ticket) materialise as CHAT threads on the agency side, automatically routed to the right AM. Vietnamese + English UI; multi-currency rendering for international clients.
+    </p>
+    <div class="fact-grid">
+      <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P4 long-term</div></div>
+      <div class="fact-card"><div class="label">Subdomain</div><div class="value">clients.{t}.cyberos.world</div><div class="note">+ CNAME white-label</div></div>
+      <div class="fact-card"><div class="label">SSO</div><div class="value">SAML 2.0 + OIDC</div><div class="note">JIT provisioning</div></div>
+      <div class="fact-card"><div class="label">Data lens</div><div class="value">PROJ · INV · DOC · CHAT</div><div class="note">scoped read-only</div></div>
+      <div class="fact-card"><div class="label">AI assistant</div><div class="value">branded CUO</div><div class="note">project history context</div></div>
+      <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">multi-currency display</div></div>
+      <div class="fact-card"><div class="label">PWA</div><div class="value">install supported</div><div class="note">mobile-first</div></div>
+      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · 4 modules</div><div class="note">+ CDN · TLS · S3</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHY -->
+<!-- ============================================================ -->
+<section id="why" class="module-section">
+  <header class="section-head"><span class="section-num">1</span><h2>Why PORTAL exists</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Consultancies maintain an awkward parallel reality: project status lives in Linear (which the client can't see), invoices live in Xero / QuickBooks (also closed), signed contracts live in DocuSign (separate login per agreement), and the client gets emailed PDFs and Loom links. The client wants one place to log in and see "what is going on with our account?" — and the agency wants that place to feel like the agency's brand, not a generic SaaS dashboard. PORTAL is that place. It is the same data the agency operates from, viewed through a permission-narrowed and brand-tinted lens.
+  </p>
+  <div class="grid md:grid-cols-3 gap-4 my-5">
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🎨</div>
+      <div class="font-bold text-slate-900 mb-1">White-label by default</div>
+      <p class="text-sm text-slate-600">Logo, colour accents, custom CNAME, branded email templates. The portal looks like an extension of the agency, not a third-party tool.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🔐</div>
+      <div class="font-bold text-slate-900 mb-1">Tenant isolation by construction</div>
+      <p class="text-sm text-slate-600">Postgres RLS by tenant_id × client_account_id; Apollo Router scope-required directive on every field; S3 bucket prefix scoped per client. Three layers of fail-safe.</p>
+    </div>
+    <div class="bbg-card p-5">
+      <div class="text-2xl mb-2">🤖</div>
+      <div class="font-bold text-slate-900 mb-1">Branded AI assistant</div>
+      <p class="text-sm text-slate-600">A client variant of CUO with the project history loaded. "What's our SOW spend so far?" returns a grounded answer with INV citations.</p>
+    </div>
+  </div>
+  <p class="text-slate-700 leading-relaxed">
+    The bet is that a portal that surfaces the same data the agency operates from — rather than a Notion page someone has to remember to keep updated — increases client retention because trust is built in transparency, and reduces inbound "what's the status of X" emails because the answer is one click and one branded AI prompt away.
+  </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- WHAT — 5W1H2C5M -->
+<!-- ============================================================ -->
+<section id="what" class="module-section">
+  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-5">Structured decomposition. Cells trace to PRD §9.21 + SRS §7.21.</p>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td><strong>5W · What</strong></td><td>What is PORTAL?</td><td>A second front-door for clients. Branded read-narrowed views of PROJ + INV + DOC + CHAT; client-initiated workflow channels; branded CUO AI assistant; SSO from client IdP; custom-domain CNAME.</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>ClientMembers:</strong> the customer's people (CEO, project sponsor, billing contact). <strong>Agency CCO:</strong> owns portal configuration per client. <strong>Agents:</strong> branded CUO answers grounded questions with citations; CCO-skill summarises client signals across portals.</td></tr>
+        <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous. Real-time WebSocket for project status updates and signing-notification deeplinks. Branded email digests on a per-client schedule.</td></tr>
+        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P4: multi-region edge (CloudFront / Vercel) for the static SPA; SG-1 + VN-hanoi-1 for the API. Custom CNAMEs terminate at edge with per-tenant ACM certs.</td></tr>
+        <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because the auth surface, the brand-theme system, the data-lens narrowing, and the client AI assistant differ enough from internal CyberOS that compositing them into the main app would muddy both. PORTAL is a focused product for a focused audience.</td></tr>
+        <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>SSO at edge resolves ClientMember → Subject row → scope contract grants narrowed to <code>client_account_id</code>. Federated GraphQL queries are predicate-narrowed by Apollo Router at request time. Branded SPA reads a tenant.branding config; custom CNAME terminates at edge.</td></tr>
+        <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P4: edge-served static SPA ($5/mo CloudFront); per-tenant ACM cert ($0). API: ~$20 / month per active client account at low traffic. Branded email templates pass through SES.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) zero cross-tenant data leakage — three-layer enforcement. (b) ClientMember access is read-only on tenant data; write only on their own consents / requests (FR-PORTAL-004). (c) Every portal action audited to BRAIN (FR-PORTAL-003). (d) PDPL Art. 14 + GDPR Art. 15 DSAR for ClientMembers. (e) Vietnamese-localised UI.</td></tr>
+        <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum (API) · Next.js + React + Tailwind (SPA) · CloudFront / Vercel edge · ACM for per-tenant TLS · S3 for theme assets · SAML / OIDC libraries · OpenTelemetry.</td></tr>
+        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Predicate-narrowing at Apollo Router (every field has @requiresScopes + tenant + client_account predicate). JIT user provisioning at SSO callback. Branded CUO is a thin wrapper on the main CUO with persona-stamped scope.</td></tr>
+        <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Edge SPA + multi-region API. Per-tenant ACM cert auto-issued and renewed on CNAME claim. PWA service worker for offline-tolerant read views.</td></tr>
+        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE at P4. CCO seat owns product surface; CTO owns brand-theming engine; CSO owns isolation invariants.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-PORTAL-SEC-001 (zero tenant data leakage), NFR-PORTAL-LAT-001 (TTFB p95 ≤ 500 ms at edge), KPI client-login MAU per tenant.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- ARCHITECTURE -->
+<!-- ============================================================ -->
+<section id="architecture" class="module-section">
+  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    PORTAL is two surfaces: an edge-served Next.js SPA per tenant brand, and a Rust API that materialises the data-lens at request time. SSO callback creates / refreshes a ClientMember → Subject mapping and issues a scoped JWT. Federated GraphQL queries are scope-narrowed by Apollo Router.
+  </p>
+
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+graph TB
+  subgraph CLIENT ["Client environment"]
+    BROWSER["Client browser<br/>portal.acmecorp.com"]
+    PWA["PWA install"]
+    IDP["Client IdP<br/>(Okta / Azure AD / GSuite)"]
+  end
+
+  subgraph EDGE ["Edge"]
+    CDN["CloudFront / Vercel<br/>edge SPA delivery"]
+    ACM["Per-tenant ACM cert"]
+    ROUTER["Apollo Router<br/>scope predicate"]
+  end
+
+  subgraph PORTAL ["PORTAL service (Rust · axum)"]
+    SSO_S["sso.rs<br/>SAML + OIDC callback"]
+    PROVISION["provision.rs<br/>JIT ClientMember"]
+    LENS["lens.rs<br/>data-narrowing layer"]
+    BRAND["brand.rs<br/>theme config + CNAME issuance"]
+    AI_PROXY["ai_proxy.rs<br/>branded CUO wrapper"]
+    WF["workflow.rs<br/>client-initiated requests"]
+    AUDIT["audit_bridge.rs"]
+  end
+
+  subgraph SCOPED_VIEWS ["Scoped read-only lenses"]
+    PROJ_L["📋 PROJ lens<br/>client_account_id filter"]
+    INV_L["💰 INV lens"]
+    DOC_L["✍️ DOC lens"]
+    CHAT_L["💬 CHAT lens"]
+  end
+
+  subgraph STORES ["Stores"]
+    PG[("PostgreSQL 16<br/>client_account · client_member<br/>branding · session<br/>scoped_request")]
+    S3[("S3<br/>theme assets (logo / favicon)")]
+    KMS[("KMS")]
+  end
+
+  subgraph AGENCY ["Agency side"]
+    CHAT_A["💬 CHAT<br/>incoming thread"]
+    CUO_A["🧠 CUO<br/>route to AM"]
+    BRAIN["🧠 BRAIN<br/>portal.* rows"]
+    OBS["👁 OBS"]
+  end
+
+  BROWSER --> CDN
+  PWA --> CDN
+  CDN --> ACM
+  CDN --> ROUTER
+  BROWSER --> IDP
+  IDP --> SSO_S
+  SSO_S --> PROVISION
+  PROVISION --> PG
+  ROUTER --> LENS
+  LENS --> PROJ_L
+  LENS --> INV_L
+  LENS --> DOC_L
+  LENS --> CHAT_L
+  BRAND --> S3
+  BRAND --> ACM
+  BROWSER --> AI_PROXY
+  AI_PROXY --> CUO_A
+  WF --> CHAT_A
+  CHAT_A --> CUO_A
+  CUO_A --> BRAIN
+  PORTAL --> AUDIT
+  AUDIT --> BRAIN
+  PORTAL --> OBS
+
+  classDef planned fill:#ffe4e6,stroke:#9f1239
+  classDef store fill:#f5f3ff,stroke:#7c3aed
+  classDef sink fill:#d1fae5,stroke:#047857
+  class CDN,ACM,ROUTER,SSO_S,PROVISION,LENS,BRAND,AI_PROXY,WF,AUDIT,PROJ_L,INV_L,DOC_L,CHAT_L,CHAT_A,CUO_A planned
+  class PG,S3,KMS store
+  class BRAIN,OBS sink
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><code>sso.rs</code></td><td>services/portal/src/sso.rs</td><td>SAML 2.0 + OIDC callback endpoints. Parses assertion, validates issuer, extracts attributes.</td></tr>
+        <tr><td><code>provision.rs</code></td><td>services/portal/src/provision.rs</td><td>Just-in-Time ClientMember provisioning. Creates Subject + ClientMember + ScopeContractGrant on first login.</td></tr>
+        <tr><td><code>lens.rs</code></td><td>services/portal/src/lens.rs</td><td>Data-lens narrowing layer. Wraps every federated query with a (tenant_id, client_account_id) predicate; rejects queries that try to escape.</td></tr>
+        <tr><td><code>brand.rs</code></td><td>services/portal/src/brand.rs</td><td>Branding config CRUD: logo URL, favicon, colour anchors, custom email-template overrides, CNAME claim + ACM cert issuance.</td></tr>
+        <tr><td><code>cname.rs</code></td><td>services/portal/src/cname.rs</td><td>CNAME validation. DNS TXT challenge for ownership verification; ACM cert request via AWS API; automatic renewal.</td></tr>
+        <tr><td><code>theme.rs</code></td><td>services/portal/src/theme.rs</td><td>Theme runtime: resolves brand config per request hostname; emits CSS variable bundle in HTML head.</td></tr>
+        <tr><td><code>ai_proxy.rs</code></td><td>services/portal/src/ai_proxy.rs</td><td>Branded CUO wrapper. Sets persona to <code>client-cuo</code> with scope narrowed to ClientMember context.</td></tr>
+        <tr><td><code>workflow.rs</code></td><td>services/portal/src/workflow.rs</td><td>Client-initiated workflow handlers. New-project request, billing inquiry, support ticket. Materialises CHAT thread on agency side.</td></tr>
+        <tr><td><code>i18n.rs</code></td><td>services/portal/src/i18n.rs</td><td>UI-string resolution. Default tenant locale + per-ClientMember override; currency localisation.</td></tr>
+        <tr><td><code>email.rs</code></td><td>services/portal/src/email.rs</td><td>Branded transactional email. Per-tenant template overrides; SES via tenant FROM with SPF/DKIM.</td></tr>
+        <tr><td><code>consent.rs</code></td><td>services/portal/src/consent.rs</td><td>Client consents (data-processing, marketing, AI usage). Write-allowed for the ClientMember on their own row only.</td></tr>
+        <tr><td><code>dsar.rs</code></td><td>services/portal/src/dsar.rs</td><td>DSAR / right-to-erasure surface for the ClientMember's own data; 30-day grace before destructive delete.</td></tr>
+        <tr><td><code>audit_bridge.rs</code></td><td>services/portal/src/audit_bridge.rs</td><td>BRAIN canonical writer. Every portal action: login, view, request, consent, dsar.</td></tr>
+        <tr><td><code>migrations/</code></td><td>services/portal/migrations/</td><td>sqlx migrations. RLS by (tenant_id, client_account_id). Per-tenant brand config schema.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="invariant-box mt-5">
+    <div class="label">PORTAL-INV-001 · Cross-tenant data leakage MUST be zero</div>
+    <p class="text-sm text-slate-700 mt-2 mb-0">Three-layer fail-safe: (1) PostgreSQL RLS keyed by (tenant_id, client_account_id) on every relevant table; (2) Apollo Router @requiresScopes + predicate-narrowing on every GraphQL field; (3) S3 prefix-scoped IAM for asset access. CI gate: cross-tenant + cross-client-account read attempts via property-based fuzz. Production gate: SOC 2 CC6.1 + annual pen-test cover this explicitly. Verification: <code>services/portal/tests/isolation_invariant.rs</code>.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DATA MODEL -->
+<!-- ============================================================ -->
+<section id="data-model" class="module-section">
+  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    PORTAL owns six primitives: ClientAccount (the customer organisation), ClientMember (the customer's people), BrandingTheme (per-client visual config), ClientSession (active session), ScopedData (cached lens output), ConsentRecord (data-processing consents), ScopedRequest (client-initiated workflow).
+  </p>
+
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+erDiagram
+  TENANT ||--o{ CLIENT_ACCOUNT : "operates"
+  CLIENT_ACCOUNT ||--o{ CLIENT_MEMBER : "has"
+  CLIENT_ACCOUNT ||--o| BRANDING_THEME : "themed by"
+  CLIENT_ACCOUNT ||--o{ SCOPED_REQUEST : "submitted"
+  CLIENT_MEMBER ||--o{ CLIENT_SESSION : "creates"
+  CLIENT_MEMBER ||--o{ CONSENT_RECORD : "grants"
+  CLIENT_MEMBER ||--o{ SCOPED_REQUEST : "submits"
+  CLIENT_ACCOUNT ||--o{ PROJ_SCOPE : "sees only these"
+  CLIENT_ACCOUNT ||--o{ INV_SCOPE : "sees only these"
+  CLIENT_ACCOUNT ||--o{ DOC_SCOPE : "sees only these"
+
+  TENANT {
+    uuid id PK
+    string slug
+  }
+  CLIENT_ACCOUNT {
+    uuid id PK
+    uuid tenant_id FK
+    string display_name
+    string slug "for default subdomain"
+    string custom_cname "optional"
+    string acm_cert_arn "if custom CNAME"
+    string status "active | suspended | offboarding"
+    timestamp created_at
+  }
+  CLIENT_MEMBER {
+    uuid id PK
+    uuid client_account_id FK
+    uuid subject_id FK "AUTH Subject row"
+    string email
+    string display_name
+    string role "owner | member | viewer"
+    string idp_subject_claim "stable IdP identifier"
+    timestamp first_login_at
+    timestamp last_login_at
+    bool   active
+  }
+  BRANDING_THEME {
+    uuid id PK
+    uuid client_account_id FK
+    string logo_url "s3:// asset"
+    string favicon_url
+    string accent_color
+    string typography_pack
+    bytea  email_template_overrides
+    timestamp updated_at
+  }
+  CLIENT_SESSION {
+    uuid id PK
+    uuid client_member_id FK
+    string jti "JWT id"
+    timestamp expires_at
+    string ip_address
+    string user_agent
+    string locale "vi | en"
+    string status "active | revoked | expired"
+  }
+  CONSENT_RECORD {
+    uuid id PK
+    uuid client_member_id FK
+    string consent_type "data_processing | marketing | ai_usage"
+    bool   granted
+    string version "consent doc version hash"
+    timestamp granted_at
+    string brain_chain
+  }
+  SCOPED_REQUEST {
+    uuid id PK
+    uuid client_account_id FK
+    uuid client_member_id FK
+    string kind "new_project | billing_inquiry | support_ticket | dsar_request | erasure_request"
+    string title
+    string body
+    string status "open | routed | resolved | declined"
+    string chat_thread_id "agency-side CHAT thread"
+    timestamp created_at
+  }
+  PROJ_SCOPE {
+    uuid client_account_id FK
+    uuid project_id FK
+    string lens_role "owner | observer"
+  }
+  INV_SCOPE {
+    uuid client_account_id FK
+    uuid invoice_id FK
+  }
+  DOC_SCOPE {
+    uuid client_account_id FK
+    uuid document_id FK
+  }
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Predicate-narrowing in Apollo Router</h3>
+  <div class="bbg-card p-5">
+<pre><code class="language-yaml"># router-portal.yaml
+authorization:
+  require_authentication: true
+  preview_directives:
+    enabled: true
+
+# Every read of an upstream resource is rewritten:
+#   query Project(id: ID!)
+# becomes (via plugin):
+#   query Project(id: ID!) {
+#     project(id: $id, _portal_scope: { tenant_id: $jwt.tenant, client_account_id: $jwt.client_account })
+#   }
+# The subgraph SDL declares _portal_scope as a required argument when invoked with `aud: portal`.
+
+# Three-layer fail-safe:
+#  1. Predicate-narrowing here at the Router
+#  2. RLS at Postgres (tenant_id × client_account_id)
+#  3. Field-level @requiresScopes(scopes: [["portal.read"]])</code></pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- API SURFACE -->
+<!-- ============================================================ -->
+<section id="api-surface" class="module-section">
+  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    Federated GraphQL subgraph for the SPA, REST endpoints for SSO + CNAME ops, MCP tools for branded AI assistant.
+  </p>
+
+  <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (federated, audience=portal)</h3>
+  <div class="bbg-card p-5 mb-5">
+<pre><code class="language-graphql">extend schema
+  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable", "@requiresScopes"])
+
+type ClientAccount @key(fields: "id") {
+  id: ID!
+  displayName: String!
+  customCname: String
+  branding: BrandingTheme
+  members: [ClientMember!]! @requiresScopes(scopes: [["portal.admin"]])
+}
+
+type ClientMember @key(fields: "id") {
+  id: ID!
+  email: String!
+  displayName: String!
+  role: ClientMemberRole!
+  lastLoginAt: DateTime
+}
+
+type BrandingTheme {
+  logoUrl: String
+  faviconUrl: String
+  accentColor: String!
+  typographyPack: String!
+}
+
+type ScopedRequest @key(fields: "id") {
+  id: ID!
+  kind: RequestKind!
+  title: String!
+  body: String!
+  status: RequestStatus!
+  createdAt: DateTime!
+  chatThreadId: ID
+}
+
+type ConsentRecord {
+  consentType: ConsentType!
+  granted: Boolean!
+  version: String!
+  grantedAt: DateTime!
+}
+
+enum ClientMemberRole { OWNER MEMBER VIEWER }
+enum RequestKind { NEW_PROJECT BILLING_INQUIRY SUPPORT_TICKET DSAR_REQUEST ERASURE_REQUEST }
+enum RequestStatus { OPEN ROUTED RESOLVED DECLINED }
+enum ConsentType { DATA_PROCESSING MARKETING AI_USAGE }
+
+# Federated lenses (read-only, scope-narrowed automatically):
+extend type Project @key(fields: "id") {
+  id: ID! @external
+  # only fields visible from portal:
+  name: String! @external
+  status: String! @external
+  milestones: [Milestone!]! @external
+  # comments restricted: client can read AM-posted comments, post their own
+}
+
+extend type Invoice @key(fields: "id") {
+  id: ID! @external
+  amount: Float! @external
+  currency: String! @external
+  status: String! @external
+  payLink: String @external
+}
+
+extend type Document @key(fields: "id") {
+  id: ID! @external
+  name: String! @external
+  status: String! @external
+  signerLink: String  # personalised for the ClientMember
+}
+
+type Query {
+  me: ClientMember! @requiresScopes(scopes: [["portal.read"]])
+  myAccount: ClientAccount! @requiresScopes(scopes: [["portal.read"]])
+  myProjects: [Project!]! @requiresScopes(scopes: [["portal.read"]])
+  myInvoices: [Invoice!]! @requiresScopes(scopes: [["portal.read"]])
+  myDocuments: [Document!]! @requiresScopes(scopes: [["portal.read"]])
+  myRequests: [ScopedRequest!]! @requiresScopes(scopes: [["portal.read"]])
+}
+
+type Mutation {
+  submitRequest(input: ScopedRequestInput!): ScopedRequest!
+    @requiresScopes(scopes: [["portal.write_request"]])
+  grantConsent(consentType: ConsentType!, version: String!): ConsentRecord!
+    @requiresScopes(scopes: [["portal.write_consent"]])
+  revokeConsent(consentType: ConsentType!): ConsentRecord!
+    @requiresScopes(scopes: [["portal.write_consent"]])
+  requestDsarExport: ScopedRequest! @requiresScopes(scopes: [["portal.dsar"]])
+  requestErasure: ScopedRequest! @requiresScopes(scopes: [["portal.erasure"]])
+  updateLocale(locale: String!): ClientMember! @requiresScopes(scopes: [["portal.read"]])
+}</code></pre>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">REST endpoints</h3>
+  <div class="bbg-card p-5 mb-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/portal/.well-known/saml-metadata</code></td><td>SAML 2.0 metadata for the client's IdP.</td></tr>
+        <tr><td>POST</td><td><code>/portal/sso/saml/acs</code></td><td>SAML assertion consumer URL.</td></tr>
+        <tr><td>GET</td><td><code>/portal/sso/oidc/callback</code></td><td>OIDC callback.</td></tr>
+        <tr><td>POST</td><td><code>/portal/branding</code></td><td>Update branding theme. CCO scope.</td></tr>
+        <tr><td>POST</td><td><code>/portal/branding/cname</code></td><td>Claim custom CNAME (TXT challenge issued).</td></tr>
+        <tr><td>GET</td><td><code>/portal/branding/cname/{id}/verify</code></td><td>Verify CNAME TXT + request ACM cert.</td></tr>
+        <tr><td>GET</td><td><code>/portal/assets/{theme_id}/logo</code></td><td>Serve logo (CDN-cached).</td></tr>
+        <tr><td>POST</td><td><code>/portal/dsar/export</code></td><td>Generate DSAR bundle.</td></tr>
+        <tr><td>POST</td><td><code>/portal/erasure/confirm</code></td><td>Confirm erasure after 30-day grace.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">MCP tool catalogue (branded CUO)</h3>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+      <tbody>
+        <tr><td><code>cyberos.portal.my_projects</code></td><td>—</td><td>Project[]</td><td>readonly · scope=portal.read</td></tr>
+        <tr><td><code>cyberos.portal.project_status</code></td><td>project_id</td><td>{milestones, comments}</td><td>readonly</td></tr>
+        <tr><td><code>cyberos.portal.invoice_summary</code></td><td>year?</td><td>{outstanding, paid, …}</td><td>readonly</td></tr>
+        <tr><td><code>cyberos.portal.submit_request</code></td><td>kind, title, body</td><td>{ok, request_id}</td><td>scope=portal.write_request · human-confirm</td></tr>
+        <tr><td><code>cyberos.portal.grant_consent</code></td><td>consent_type, version</td><td>{ok}</td><td>scope=portal.write_consent</td></tr>
+        <tr><td><code>cyberos.portal.dsar_request</code></td><td>—</td><td>{request_id}</td><td>scope=portal.dsar · email-confirm</td></tr>
+        <tr><td><code>cyberos.portal.find_doc</code></td><td>name_match</td><td>Document[]</td><td>readonly</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KEY FLOWS -->
+<!-- ============================================================ -->
+<section id="key-flows" class="module-section">
+  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+
+  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Client SSO login (Okta SAML)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Acme PM (browser)
+  participant CDN as edge CDN (portal.acmecorp.com)
+  participant IDP as Acme Okta IdP
+  participant S as sso.rs
+  participant P as provision.rs
+  participant AUTH as 🔐 AUTH
+  participant PG as PostgreSQL
+  participant B as 🧠 BRAIN
+
+  U->>CDN: GET portal.acmecorp.com
+  CDN-->>U: branded SPA (theme: acme)
+  U->>S: GET /portal/login → redirect to Acme Okta
+  S-->>IDP: SAML AuthnRequest
+  IDP-->>U: Acme SSO form
+  U->>IDP: authenticate
+  IDP-->>S: SAML assertion (POST /portal/sso/saml/acs)
+  S->>S: validate issuer, signature, audience
+  S->>P: provision_if_needed(idp_subject_claim, attributes)
+  P->>PG: SELECT client_member WHERE idp_subject_claim
+  alt new ClientMember
+    P->>AUTH: createSubject(kind=human, tenant=acme)
+    P->>PG: INSERT client_member, scope_contract_grant
+    P->>B: append client_member.provisioned row
+  else returning ClientMember
+    P->>PG: UPDATE last_login_at
+  end
+  S->>AUTH: token_exchange → portal-scoped JWT
+  AUTH-->>S: access_token (aud=portal, scope=portal.read..., tenant, client_account)
+  S->>B: append portal.login row {ip, ua, method:saml}
+  S-->>U: 302 to / with JWT in cookie
+  U->>CDN: GraphQL queries with predicate-narrowing
+    </div>
+  </div>
+
+  <h3 class="text-lg function-bold mb-3"></h3>
+  <h3 class="text-lg font-bold mb-3">Flow 2 — View project (permission-scoped)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Acme PM
+  participant SPA as portal SPA
+  participant AR as Apollo Router (audience=portal)
+  participant L as lens.rs (predicate-narrow)
+  participant PROJ as 📋 PROJ subgraph
+  participant PG as PostgreSQL (RLS)
+
+  U->>SPA: open /projects
+  SPA->>AR: query myProjects
+  AR->>AR: verify JWT aud=portal, scope=portal.read
+  AR->>L: inject (tenant_id, client_account_id) predicate
+  L->>PROJ: query projects(_portal_scope: {…})
+  PROJ->>PG: SELECT … FROM project<br/>WHERE tenant_id=$t AND client_account_id=$c (RLS additionally enforces this)
+  PG-->>PROJ: rows (scoped)
+  PROJ-->>L: results
+  L-->>AR: scoped result
+  AR-->>SPA: data
+  SPA-->>U: rendered "My projects" — only Acme work
+    </div>
+    <p class="text-xs text-slate-500 mt-3">Three-layer fail-safe: Apollo Router scope check, Router predicate-narrowing, Postgres RLS. A single misconfigured layer is caught by the other two.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 3 — Client submits a support ticket</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Acme PM
+  participant SPA as portal SPA
+  participant W as workflow.rs
+  participant CHAT as 💬 CHAT (agency)
+  participant CUO as 🧠 CUO router
+  participant AM as Account Manager
+  participant B as 🧠 BRAIN
+
+  U->>SPA: "New support ticket → My SOW is missing milestone 3"
+  SPA->>W: submitRequest(kind=support_ticket, title, body)
+  W->>CHAT: create thread in agency CHAT, channel = #acme-portal
+  CHAT-->>W: thread_id
+  W->>PG: INSERT scoped_request {kind, chat_thread_id, status=routed}
+  W->>CUO: route the new thread
+  CUO->>CUO: identify owning AM (CRM.account.am_owner)
+  CUO->>AM: notify "New portal request from Acme PM (Jane Doe)"
+  W->>B: append portal.request_submitted row
+  W-->>SPA: "Ticket #SR-001234 opened"
+  SPA-->>U: confirmation + ETA
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 4 — Branded client AI assistant (CUO with context)</h3>
+  <div class="bbg-card p-5 mb-6">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant U as Acme PM
+  participant SPA as portal SPA "Ask"
+  participant A as ai_proxy.rs
+  participant CUO as 🧠 CUO (persona=client-cuo)
+  participant AI as 🧠 AI gateway
+  participant LENS as lens.rs (read context only Acme data)
+  participant PROJ as 📋 PROJ
+  participant INV as 💰 INV
+  participant B as 🧠 BRAIN
+
+  U->>SPA: "What's our SOW spend so far this quarter?"
+  SPA->>A: prompt + ClientMember context
+  A->>CUO: invoke with persona=client-cuo, scope=portal.read
+  CUO->>LENS: pull context (scoped to Acme client_account)
+  LENS->>PROJ: scoped query: active projects, milestones
+  LENS->>INV: scoped query: paid + outstanding YTD
+  PROJ-->>LENS: rows
+  INV-->>LENS: rows
+  CUO->>AI: generate answer with citations to INV-2026-0421, INV-2026-0488
+  AI-->>CUO: grounded paragraph + citations
+  CUO->>B: append portal.ai_answer row {answer, citations}
+  CUO-->>SPA: answer rendered with branded UI
+  SPA-->>U: "You've spent $84,200 of the $120k SOW this quarter…"
+    </div>
+    <p class="text-xs text-slate-500 mt-3">The branded CUO is the same CUO process with persona=client-cuo and scope narrowed. It can only see this client's data; queries that try to escape the lens return zero results without surfacing the existence of other tenants.</p>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Flow 5 — White-label CNAME claim + ACM cert</h3>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+sequenceDiagram
+  autonumber
+  participant CCO as Agency CCO
+  participant SPA as agency admin
+  participant B_S as brand.rs
+  participant C as cname.rs
+  participant DNS as customer DNS
+  participant ACM as AWS ACM
+  participant CDN as CloudFront / Vercel
+  participant BR as 🧠 BRAIN
+
+  CCO->>SPA: enter desired CNAME "portal.acmecorp.com"
+  SPA->>B_S: claim CNAME for client_account=acme
+  B_S->>C: issue TXT challenge nonce
+  C-->>SPA: "Add TXT _cyberos-challenge.portal.acmecorp.com = $nonce"
+  CCO->>DNS: configure TXT record at Acme DNS
+  CCO->>SPA: click "Verify"
+  SPA->>C: verify TXT
+  C->>DNS: DNS-over-HTTPS lookup
+  DNS-->>C: nonce found ✓
+  C->>ACM: request cert for portal.acmecorp.com (DNS-validated)
+  ACM-->>DNS: ACM challenge TXT
+  CCO->>DNS: add ACM challenge TXT
+  ACM-->>C: cert issued (cert_arn)
+  C->>CDN: attach cert to distribution
+  C->>BR: append branding.cname_activated row
+  C-->>SPA: "portal.acmecorp.com is live"
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- LIFECYCLE -->
+<!-- ============================================================ -->
+<section id="lifecycle" class="module-section">
+  <header class="section-head"><span class="section-num">7</span><h2>Client-account lifecycle</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    A ClientAccount traverses four states from provisioning to closed. ClientMember provisioning is JIT on first SSO callback.
+  </p>
+  <div class="bbg-card p-5 mb-5">
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Provisioned: agency CCO creates client_account
+  Provisioned --> Configuring: branding + CNAME + SSO setup in progress
+  Configuring --> Active: SSO callback verified + first ClientMember logged in
+  Active --> Suspended: CCO suspends (billing freeze, dispute)
+  Suspended --> Active: CCO un-suspends
+  Active --> Offboarding: tenant requests close OR CCO closes
+  Offboarding --> GracePeriod: 30-day data export window
+  GracePeriod --> Closed: data wiped per retention policy
+  Closed --> [*]
+    </div>
+  </div>
+
+  <h3 class="text-lg font-bold mb-3">Per-state actions</h3>
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>State</th><th>Trigger</th><th>Side-effects</th></tr></thead>
+      <tbody>
+        <tr><td>Provisioned</td><td>CCO creates ClientAccount</td><td>Default subdomain assigned; default branding applied; audit row.</td></tr>
+        <tr><td>Configuring</td><td>SSO setup + branding upload</td><td>SAML metadata exposed; ACM cert requested (if CNAME).</td></tr>
+        <tr><td>Active</td><td>First successful ClientMember SSO callback</td><td>Portal usable; data-lens active; AI assistant enabled.</td></tr>
+        <tr><td>Suspended</td><td>CCO action</td><td>ClientMember login refused; existing JWTs revoked; SSO returns soft "account paused" UI.</td></tr>
+        <tr><td>Offboarding</td><td>Tenant or CCO close</td><td>ClientMember can still log in for 30 days; banner "account closing on YYYY-MM-DD"; DSAR export tooling surfaced.</td></tr>
+        <tr><td>GracePeriod</td><td>Day 1 of 30-day window</td><td>Read-only; export bundle pre-generated; emails sent to all ClientMembers.</td></tr>
+        <tr><td>Closed</td><td>Day 30 of grace</td><td>Data wiped per retention policy; audit row retained; CNAME / ACM cert released.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FRs -->
+<!-- ============================================================ -->
+<section id="functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PORTAL FRs from PRD §9.21 and SRS §4 (FR-PORTAL-001..005), plus implementation-tier additions for SSO and white-label CNAME.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
+      <tbody>
+        <tr><td><code>FR-PORTAL-001</code></td><td>Per-tenant brandable: logo, colour anchors override; sub-brand accent</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-001" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-002</code></td><td>Customer can view shared projects, comment, sign documents, view/pay invoices</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-002" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-003</code></td><td>Per-customer ACL; cross-tenant isolation in shared infra</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-003" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-004</code></td><td>Customer agent (P4): customer's GPT/Claude/Gemini connects via MCP with explicit consent</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-004" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-005</code></td><td>Mobile-first responsive; PWA install supported</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-005" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-006</code></td><td>Custom CNAME with DNS-TXT validation and ACM cert auto-issuance</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-006" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-007</code></td><td>SSO via SAML 2.0 + OIDC; JIT ClientMember provisioning</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-007" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-008</code></td><td>Branded CUO AI assistant with project-history context</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-008" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-009</code></td><td>Client-initiated workflows materialise as agency CHAT threads</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-009" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-010</code></td><td>PDPL / GDPR DSAR export available from client UI</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-010" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-011</code></td><td>Right-to-erasure with 30-day grace period before wipe</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-011" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-012</code></td><td>Audit-chain: every portal action lands in BRAIN</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-012" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-013</code></td><td>Localization: Vietnamese + English; multi-currency display</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-013" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-014</code></td><td>Consent records (data-processing, marketing, AI usage) per ClientMember</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-014" class="text-blue-700">details →</a></td></tr>
+        <tr><td><code>FR-PORTAL-015</code></td><td>Customer-MCP integration: external agents can connect with explicit consent</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P4+</span></td><td><a href="../reference/fr-catalog.html#FR-PORTAL-015" class="text-blue-700">details →</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- NFRs -->
+<!-- ============================================================ -->
+<section id="non-functional-requirements" class="module-section">
+  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PORTAL NFRs focus on tenant isolation and edge-served performance.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+      <tbody>
+        <tr><td><code>NFR-PORTAL-SEC-001</code></td><td>Cross-tenant data leakage incidents</td><td>= 0</td><td>property fuzz + annual pen-test</td></tr>
+        <tr><td><code>NFR-PORTAL-SEC-002</code></td><td>Cross-client-account leakage (within same tenant)</td><td>= 0</td><td>RLS verification harness + CI gate</td></tr>
+        <tr><td><code>NFR-PORTAL-SEC-003</code></td><td>SAML assertion replay</td><td>= 0</td><td>NotOnOrAfter + InResponseTo enforced</td></tr>
+        <tr><td><code>NFR-PORTAL-LAT-001</code></td><td>TTFB p95 (edge) for branded SPA</td><td>≤ 500 ms (global)</td><td>RUM + Lighthouse</td></tr>
+        <tr><td><code>NFR-PORTAL-LAT-002</code></td><td>myProjects GraphQL p95</td><td>≤ 350 ms</td><td>k6 + Apollo Router</td></tr>
+        <tr><td><code>NFR-PORTAL-LAT-003</code></td><td>CNAME claim → first served request (cold)</td><td>≤ 5 min (ACM cert issuance)</td><td>end-to-end test</td></tr>
+        <tr><td><code>NFR-PORTAL-AVL-001</code></td><td>Portal availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor</td></tr>
+        <tr><td><code>NFR-PORTAL-USAB-001</code></td><td>Mobile Lighthouse score</td><td>≥ 90 (perf)</td><td>nightly Lighthouse run</td></tr>
+        <tr><td><code>NFR-PORTAL-USAB-002</code></td><td>PWA install rate</td><td>tracked KPI</td><td>OBS</td></tr>
+        <tr><td><code>NFR-PORTAL-A11Y-001</code></td><td>WCAG 2.1 AA compliance</td><td>full coverage</td><td>axe-core audit</td></tr>
+        <tr><td><code>NFR-PORTAL-COST-001</code></td><td>Per-client infra cost</td><td>≤ $20 / mo at typical load</td><td>monthly billing</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- DEPENDENCIES -->
+<!-- ============================================================ -->
+<section id="dependencies" class="module-section">
+  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">
+    PORTAL depends on AUTH, BRAIN, and federated subgraphs from PROJ, INV, DOC, CHAT, CRM. AWS ACM + CloudFront for edge TLS + CNAME.
+  </p>
+  <div class="bbg-card p-5">
+    <div class="mermaid">
+graph LR
+  subgraph upstream ["PORTAL depends on"]
+    AUTH["🔐 AUTH<br/>SSO + scope"]
+    BRAIN["🧠 BRAIN<br/>audit chain"]
+    OBS["👁 OBS"]
+    PROJ["📋 PROJ subgraph"]
+    INV["💰 INV subgraph"]
+    DOC["✍️ DOC subgraph"]
+    CHAT["💬 CHAT subgraph"]
+    CRM["🏢 CRM<br/>account ownership"]
+    AI["🧠 AI Gateway<br/>branded CUO"]
+    ACM["AWS ACM"]
+    CDN["CloudFront / Vercel"]
+    S3_T["S3 (theme assets)"]
+  end
+  PORTAL["🌐 PORTAL"]
+  subgraph downstream ["Used by"]
+    CM["Client Members<br/>(end users)"]
+    AM["Agency AMs<br/>(receive requests)"]
+    DASH["📊 OBS dashboards"]
+  end
+  AUTH --> PORTAL
+  BRAIN --> PORTAL
+  OBS --> PORTAL
+  PROJ --> PORTAL
+  INV --> PORTAL
+  DOC --> PORTAL
+  CHAT --> PORTAL
+  CRM --> PORTAL
+  AI --> PORTAL
+  ACM --> PORTAL
+  CDN --> PORTAL
+  S3_T --> PORTAL
+  PORTAL --> CM
+  PORTAL --> AM
+  PORTAL --> DASH
+
+  classDef planned fill:#ffe4e6,stroke:#9f1239
+  class AUTH,BRAIN,OBS,PROJ,INV,DOC,CHAT,CRM,AI,PORTAL,CM,AM,DASH,ACM,CDN,S3_T planned
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- COMPLIANCE -->
+<!-- ============================================================ -->
+<section id="compliance" class="module-section">
+  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PORTAL is in the SOC 2 / ISO 27001 isolation hotspot and inherits client-data DSAR obligations.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>PORTAL feature that satisfies it</th></tr></thead>
+      <tbody>
+        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Client-side DSAR export (FR-PORTAL-010).</td></tr>
+        <tr><td>Vietnam PDPL</td><td>Art. 13 — Consent</td><td>ConsentRecord per ClientMember per consent_type.</td></tr>
+        <tr><td>GDPR (EU 2016/679)</td><td>Art. 15 — Right of access</td><td>Same surface as PDPL.</td></tr>
+        <tr><td>GDPR</td><td>Art. 17 — Right to erasure</td><td>Self-service erasure with 30-day grace (FR-PORTAL-011).</td></tr>
+        <tr><td>GDPR</td><td>Art. 7 — Conditions for consent</td><td>Versioned consent doc hash; ConsentRecord captures version.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>SAML / OIDC SSO; RBAC; ClientMember role tiers.</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC6.6 — Restricted access</td><td>Three-layer predicate-narrowing + RLS + scope check.</td></tr>
+        <tr><td>ISO/IEC 27001:2022</td><td>A.5.30 — ICT readiness for business continuity</td><td>Edge CDN failover; multi-region API.</td></tr>
+        <tr><td>ISO/IEC 27018</td><td>Privacy for PII in public cloud</td><td>Tenant isolation invariants + per-tenant ACM cert.</td></tr>
+        <tr><td>WCAG 2.1 AA</td><td>Accessibility standard</td><td>Branded SPA meets AA per axe-core audit.</td></tr>
+        <tr><td>OWASP ASVS L2</td><td>Application Security Verification Standard</td><td>SAML/OIDC verification checklist; XSS protection in branded content.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RISK -->
+<!-- ============================================================ -->
+<section id="risk-entries" class="module-section">
+  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PORTAL-specific risks in the <a href="../reference/risk-register.html#portal" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+      <tbody>
+        <tr><td><code>R-PORTAL-001</code></td><td>Information disclosure — tenant client sees another tenant's data</td><td>Medium</td><td>Catastrophic</td><td>CSO</td><td>Three-layer fail-safe: predicate-narrowing + RLS + scope; CI cross-tenant gate; pen-test pre-launch + annual.</td></tr>
+        <tr><td><code>R-PORTAL-002</code></td><td>Cross-client-account leak within same tenant</td><td>Low</td><td>High</td><td>CSO</td><td>RLS by (tenant_id, client_account_id); GraphQL predicate enforced.</td></tr>
+        <tr><td><code>R-PORTAL-003</code></td><td>SAML assertion forgery / replay</td><td>Low</td><td>High</td><td>CSO</td><td>InResponseTo + NotOnOrAfter; assertion signature validated; relay-state CSRF token.</td></tr>
+        <tr><td><code>R-PORTAL-004</code></td><td>XSS via branded content (logo URL, accent color)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Strict CSP; logo URL allow-list (s3:// only); colour values validated as hex.</td></tr>
+        <tr><td><code>R-PORTAL-005</code></td><td>Custom CNAME hijack (subdomain takeover after CNAME drop)</td><td>Medium</td><td>High</td><td>CSO</td><td>Active CNAME verification every 24h; alert on TXT drop; auto-suspend on hijack signal.</td></tr>
+        <tr><td><code>R-PORTAL-006</code></td><td>ClientMember provisioning explosion via SSO attribute spam</td><td>Low</td><td>Medium</td><td>CSO</td><td>Rate-limit per (tenant, idp_subject); auto-suspend tenant on abuse threshold; CCO notification.</td></tr>
+        <tr><td><code>R-PORTAL-007</code></td><td>Branded CUO leaks cross-tenant context via prompt injection</td><td>Medium</td><td>High</td><td>CSO</td><td>CaMeL enforcement; persona-stamped JWT cannot escalate; scope-narrowing at AI gateway.</td></tr>
+        <tr><td><code>R-PORTAL-008</code></td><td>DSAR / erasure abuse — automated bot triggers mass-erasure</td><td>Low</td><td>Medium</td><td>DPO</td><td>Email-confirmation step; 30-day grace; tenant CCO can pause if abuse detected.</td></tr>
+        <tr><td><code>R-PORTAL-009</code></td><td>ACM cert expiry / renewal failure</td><td>Low</td><td>Medium</td><td>CTO</td><td>Auto-renewal monitored; OBS alert 14d before expiry; manual override path.</td></tr>
+        <tr><td><code>R-PORTAL-010</code></td><td>Customer-MCP external-agent over-scope</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Per-tool consent gate; scope explicit per tool; revocable; audit trail.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- KPIs -->
+<!-- ============================================================ -->
+<section id="kpis" class="module-section">
+  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PORTAL health rolls up into 10 KPIs covering activation, isolation, AI usage, and DSAR fulfilment.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Client-account activation rate</strong></td><td><code>active / provisioned (within 14d)</code></td><td>client_account</td><td>≥ 80%</td></tr>
+        <tr><td><strong>Per-account MAU</strong></td><td>monthly active ClientMembers</td><td>OBS</td><td>tracked / tenant</td></tr>
+        <tr><td><strong>PWA install rate</strong></td><td><code>installs / first-time visitors</code></td><td>RUM</td><td>≥ 15%</td></tr>
+        <tr><td><strong>Branded CUO answer rate</strong></td><td><code>queries / MAU</code></td><td>OBS</td><td>≥ 3 / MAU / mo</td></tr>
+        <tr><td><strong>Branded CUO citation rate</strong></td><td><code>cited_answers / total</code></td><td>OBS</td><td>= 100%</td></tr>
+        <tr><td><strong>Scoped requests opened / mo</strong></td><td>count</td><td>scoped_request</td><td>tracked</td></tr>
+        <tr><td><strong>Scoped request resolution time p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 48 h</td></tr>
+        <tr><td><strong>Isolation probes failed</strong></td><td>cross-tenant CI gate</td><td>CI</td><td>= 0</td></tr>
+        <tr><td><strong>DSAR fulfilment p95</strong></td><td>request → bundle delivery</td><td>OBS</td><td>≤ 30 d (PDPL/GDPR)</td></tr>
+        <tr><td><strong>Custom-CNAME adoption</strong></td><td><code>client_account.custom_cname IS NOT NULL count</code></td><td>client_account</td><td>tracked / tenant</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RACI -->
+<!-- ============================================================ -->
+<section id="raci" class="module-section">
+  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">PORTAL is owned by the CCO seat (customer-facing surface) with CPO for product, CTO for engineering, CSO for isolation.</p>
+  <div class="bbg-card p-5 overflow-x-auto">
+    <table class="kt">
+      <thead><tr><th>Activity</th><th>CEO</th><th>CCO</th><th>CPO</th><th>CTO</th><th>CSO</th><th>DPO</th></tr></thead>
+      <tbody>
+        <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Branding policy per client</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>CNAME + ACM cert ops</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>SSO setup per client</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td></tr>
+        <tr><td>Isolation invariant validation</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td></tr>
+        <tr><td>DSAR / erasure fulfilment (portal)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td></tr>
+        <tr><td>Client-MCP consent policy</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td></tr>
+      </tbody>
+    </table>
+    <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- CLI USAGE -->
+<!-- ============================================================ -->
+<section id="cli-usage" class="module-section">
+  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
+  <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-portal</code> for tenant CCO operators.</p>
+
+  <h3 class="text-lg font-bold mb-2">1. Provision a Client Account</h3>
+<pre><code>$ cyberos-portal account create \
+    --name "Acme Corp" --slug acme \
+    --owner-email pm@acmecorp.com
+
+[account created]   client_account_id=CA-002104
+[default subdomain] clients.cyberskill.cyberos.world/acme
+[next steps]        configure SSO + (optional) custom CNAME</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">2. Apply branding</h3>
+<pre><code>$ cyberos-portal brand set \
+    --account CA-002104 \
+    --logo s3://cyberos-tenant-assets/cyberskill/acme-logo.svg \
+    --accent "#00A37C" \
+    --typography "Inter"
+
+[branding applied]   theme_id=BT-009488
+[preview]            clients.cyberskill.cyberos.world/acme (refresh hard-reload)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">3. Claim a custom CNAME</h3>
+<pre><code>$ cyberos-portal cname claim --account CA-002104 --domain portal.acmecorp.com
+
+[challenge issued]
+  Add TXT record:
+    name:  _cyberos-challenge.portal.acmecorp.com
+    value: 9f3a-7b2e-cc14-…
+  Wait 5 min then verify:
+    cyberos-portal cname verify --account CA-002104
+
+$ cyberos-portal cname verify --account CA-002104
+[txt found]    ok
+[acm request]  cert_arn=arn:aws:acm:…:cert/…
+[live in]      ~ 3 min</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">4. Configure SSO (SAML)</h3>
+<pre><code>$ cyberos-portal sso configure-saml \
+    --account CA-002104 \
+    --idp-metadata-url https://acme.okta.com/.well-known/saml-metadata
+
+[saml configured]
+  acs URL:     https://portal.acmecorp.com/portal/sso/saml/acs
+  audience:    cyberos-portal-CA-002104
+  attribute mapping: email, displayName, role</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">5. Invite ClientMember (no-SSO fallback)</h3>
+<pre><code>$ cyberos-portal member invite \
+    --account CA-002104 \
+    --email cfo@acmecorp.com --role member
+
+[invite sent]   magic link → cfo@acmecorp.com (expires 14d)</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">6. List scoped requests</h3>
+<pre><code>$ cyberos-portal requests list --account CA-002104 --status open
+
+SR-009431   2026-05-12   support_ticket   "SOW missing milestone 3"   routed → AM=linh
+SR-009447   2026-05-13   billing_inquiry  "Q1 invoice variance"        open</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">7. Offboard a Client Account</h3>
+<pre><code>$ cyberos-portal account offboard --account CA-002104 --reason "engagement ended"
+
+[grace period started]   30 days
+[exports pre-generated]  dsar bundle queued
+[members notified]       5 emails sent
+[scheduled wipe]         2026-06-14</code></pre>
+
+  <h3 class="text-lg font-bold mb-2 mt-5">8. Verify isolation invariant (CI)</h3>
+<pre><code>$ cyberos-portal verify-isolation --tenant cyberskill --probes 1000
+
+[probes]     1,000 cross-tenant + 1,000 cross-client-account
+[leaks]      0
+[passed]     all three layers (router predicate + RLS + scope)</code></pre>
+</section>
+
+<!-- ============================================================ -->
+<!-- STATUS -->
+<!-- ============================================================ -->
+<section id="status" class="module-section">
+  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P4 long-term</div></div>
+    <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~6,500</div><div class="note">services/portal</div></div>
+    <div class="fact-card"><div class="label">Est. LoC (TS)</div><div class="value">~5,500</div><div class="note">branded Next.js SPA + PWA</div></div>
+    <div class="fact-card"><div class="label">Planned tests</div><div class="value">110+</div><div class="note">incl. isolation property fuzz</div></div>
+    <div class="fact-card"><div class="label">External libs</div><div class="value">~15</div><div class="note">saml-rs · openidconnect · acm sdk</div></div>
+    <div class="fact-card"><div class="label">P4 budget</div><div class="value">~$120/mo</div><div class="note">CDN + edge + multi-region API</div></div>
+  </div>
+
+  <div class="bbg-card p-5">
+    <table class="kt">
+      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Subdomain-based branded portal</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Custom CNAME + ACM cert auto-issuance</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>SAML 2.0 SSO</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>OIDC SSO</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>JIT ClientMember provisioning</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Scoped read-only lenses (PROJ / INV / DOC / CHAT)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Branded CUO AI assistant</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Client-initiated workflows → CHAT thread</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>PWA + mobile-first responsive</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Vietnamese + English i18n</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Multi-currency display</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Self-service DSAR export</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Self-service right-to-erasure (30d grace)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>External-customer MCP integration</td><td><span class="pill pill-planned">planned · P4+</span></td></tr>
+        <tr><td>Isolation property fuzz in CI</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<section id="references" class="module-section">
+  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+  <div class="bbg-card p-5">
+    <ul class="space-y-2 text-sm">
+      <li><strong>PRD §9.21</strong> — PORTAL — Client portal. FRs 001..005.</li>
+      <li><strong>SRS §7.21</strong> — Client portal subjects + isolation invariants.</li>
+      <li><strong>SRS §4 FR-PORTAL-001..005</strong> — Formal requirements with verification methods.</li>
+      <li><strong>Vietnam PDPL (Law 91/2025)</strong> — Art. 13 (consent), 14 (DSAR).</li>
+      <li><strong>GDPR (EU 2016/679)</strong> — Art. 7 (consent), 15 (access), 17 (erasure).</li>
+      <li><strong>SAML 2.0 Core (OASIS)</strong> — assertion + protocol bindings.</li>
+      <li><strong>OpenID Connect Core 1.0</strong> — OIDC SSO surface.</li>
+      <li><strong>OWASP ASVS L2</strong> — Application Security Verification Standard.</li>
+      <li><strong>WCAG 2.1 AA</strong> — Web Content Accessibility Guidelines.</li>
+      <li><strong>ISO/IEC 27018</strong> — privacy for PII in public cloud.</li>
+      <li><strong>SOC 2 Type II CC6.x</strong> — Logical access &amp; restriction controls.</li>
+      <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#portal" class="text-blue-700 underline">infrastructure.html#portal</a>.</li>
+      <li><strong>AUTH module</strong> — <a href="auth.html" class="text-blue-700 underline">auth.html</a> · SSO + scope foundation.</li>
+      <li><strong>PROJ module</strong> — <a href="proj.html" class="text-blue-700 underline">proj.html</a> · scoped project view.</li>
+      <li><strong>INV module</strong> — <a href="inv.html" class="text-blue-700 underline">inv.html</a> · scoped invoice view.</li>
+      <li><strong>DOC module</strong> — <a href="doc.html" class="text-blue-700 underline">doc.html</a> · scoped signing surface.</li>
+      <li><strong>CHAT module</strong> — <a href="chat.html" class="text-blue-700 underline">chat.html</a> · request routing target.</li>
+      <li><strong>TEN module</strong> — <a href="ten.html" class="text-blue-700 underline">ten.html</a> · the SaaS-tenant layer above PORTAL.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PREV / NEXT NAV -->
+<!-- ============================================================ -->
+<nav class="module-nav-footer mt-12">
+  <a href="doc.html" class="text-blue-700 font-semibold no-underline hover:underline">← DOC</a>
+  <a href="ten.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: TEN →</a>
+</nav>
+
+</main>
+</div>
+
+</body>
+</html>

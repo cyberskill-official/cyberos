@@ -1,0 +1,23 @@
+{
+  "name": "cyberos-skill-toolchain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Developer toolchain for authoring CyberOS Skills in TypeScript — Bun + esbuild + wasm32-wasi component output",
+  "type": "module",
+  "scripts": {
+    "build": "bun run build.ts",
+    "test": "bun test",
+    "new": "bun run scripts/new.ts"
+  },
+  "engines": {
+    "bun": ">=1.3.0"
+  },
+  "dependencies": {
+    "@bytecodealliance/jco": "^1.7.0",
+    "@bytecodealliance/preview2-shim": "^0.17.0",
+    "esbuild": "^0.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22"
+  }
+}

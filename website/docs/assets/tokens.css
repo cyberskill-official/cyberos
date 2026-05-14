@@ -1,0 +1,257 @@
+/* ============================================================
+   CyberSkill Design System — anchor tokens
+   Derived from /design-system/DESIGN.md Part 2
+   Anchors (immutable):
+     - Umber  #45210E  (deep brown — brand)
+     - Ochre  #F4BA17  (gold/yellow — accent)
+   Voice: warm · direct · honest · respectful
+   Locale: Vietnamese-first
+   ============================================================ */
+
+:root {
+  /* === ANCHOR (IMMUTABLE) === */
+  --umber-50:  #f5ede6;
+  --umber-100: #e8d4c2;
+  --umber-200: #cba88a;
+  --umber-300: #a87e5a;
+  --umber-400: #7a5538;
+  --umber-500: #45210e;  /* ANCHOR */
+  --umber-600: #38190a;
+  --umber-700: #2a1208;
+  --umber-800: #1d0c05;
+  --umber-900: #110703;
+
+  --ochre-50:  #fef6e0;
+  --ochre-100: #fde7b3;
+  --ochre-200: #fbd682;
+  --ochre-300: #f9c64f;
+  --ochre-400: #f6bb2a;
+  --ochre-500: #f4ba17;  /* ANCHOR */
+  --ochre-600: #c89710;
+  --ochre-700: #9c750a;
+  --ochre-800: #6e5306;
+  --ochre-900: #3e2f03;
+
+  /* === NEUTRALS (warm-grey, derived from Umber chroma=0.01) === */
+  --neutral-50:  #faf8f6;
+  --neutral-100: #f0eee9;
+  --neutral-200: #e2ddd4;
+  --neutral-300: #c5bdb0;
+  --neutral-400: #9c9286;
+  --neutral-500: #6f665d;
+  --neutral-600: #4d4641;
+  --neutral-700: #322d29;
+  --neutral-800: #1f1c19;
+  --neutral-900: #0e0c0a;
+
+  /* === SEMANTIC === */
+  --success: #4a7a3a;   /* compatible with Umber/Ochre — leafy green */
+  --warning: var(--ochre-500);
+  --danger:  #a3392a;   /* compatible — terracotta red */
+  --info:    #3b6178;   /* compatible — slate blue */
+
+  /* === SURFACES === */
+  --bg-page: var(--neutral-50);
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-code: var(--neutral-100);
+
+  /* === TEXT === */
+  --text-primary:   var(--umber-900);
+  --text-secondary: var(--umber-700);
+  --text-muted:     var(--neutral-500);
+  --text-inverse:   var(--neutral-50);
+
+  /* === BORDERS === */
+  --border-subtle: var(--neutral-200);
+  --border-default: var(--neutral-300);
+  --border-strong: var(--neutral-400);
+
+  /* === BRAND ACCENT (use sparingly — never below APCA Lc 75 vs surface) === */
+  --brand-primary: var(--umber-500);
+  --brand-accent:  var(--ochre-500);
+  --brand-link:    var(--umber-500);
+  --brand-link-hover: var(--ochre-700);
+
+  /* === MODULE COLORS (Umber/Ochre-compatible re-skin of old palette) === */
+  --memory:      var(--umber-500);
+  --memory-bg:   var(--umber-50);
+  --memory-tint: var(--umber-100);
+  --memory-dark: var(--umber-700);
+
+  --skill:       #5a7a3a;
+  --skill-bg:    #eef3e7;
+  --skill-tint:  #d8e4c8;
+  --skill-dark:  #3d5827;
+
+  --cuo:         #7a4838;
+  --cuo-bg:      #f3eae5;
+  --cuo-tint:    #e3cfc4;
+  --cuo-dark:    #57301f;
+
+  --infra:       var(--ochre-600);
+  --infra-bg:    var(--ochre-50);
+  --infra-tint:  var(--ochre-100);
+  --infra-dark:  var(--ochre-800);
+
+  --compliance:      var(--danger);
+  --compliance-bg:   #f7e6e3;
+  --compliance-tint: #ecc7c0;
+  --compliance-dark: #6e2419;
+
+  --future:      var(--neutral-500);
+  --future-bg:   var(--neutral-50);
+  --future-tint: var(--neutral-100);
+  --future-dark: var(--neutral-700);
+
+  /* === PHASES === */
+  --phase-p0:      var(--umber-500);
+  --phase-p0-bg:   var(--umber-100);
+  --phase-p1:      #6b8a47;
+  --phase-p1-bg:   #dde8ce;
+  --phase-p2:      var(--ochre-500);
+  --phase-p2-bg:   var(--ochre-100);
+  --phase-p3:      #856b2a;
+  --phase-p3-bg:   #ece2c4;
+  --phase-p4:      var(--neutral-500);
+  --phase-p4-bg:   var(--neutral-100);
+
+  /* === TYPOGRAPHY === */
+  --font-display: 'Inter', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-body:    'Inter', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-sans:    'Inter', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-vietnamese: 'Be Vietnam Pro', 'Inter', system-ui, sans-serif;
+
+  /* === SPACING === */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* === RADIUS === */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* === SHADOW === */
+  --shadow-sm: 0 1px 2px rgba(69, 33, 14, 0.05);
+  --shadow-md: 0 4px 12px rgba(69, 33, 14, 0.08), 0 1px 3px rgba(69, 33, 14, 0.04);
+  --shadow-lg: 0 12px 32px rgba(69, 33, 14, 0.12), 0 4px 8px rgba(69, 33, 14, 0.06);
+
+  /* === MOTION === */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --easing:      cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* === LEGACY ALIASES — older styles.css selectors still read these === */
+  --bg:        var(--bg-page);
+  --border:    var(--border-subtle);
+  --text:      var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --text-mute: var(--text-muted);
+
+  /* === LIQUID GLASS (Part 21) === */
+
+  /* Material opacities */
+  --glass-whisper-alpha: 0.6;
+  --glass-light-alpha: 0.7;
+  --glass-standard-alpha: 0.8;
+  --glass-heavy-alpha: 0.9;
+
+  /* Material blur strengths */
+  --glass-whisper-blur: 8px;
+  --glass-light-blur: 12px;
+  --glass-standard-blur: 16px;
+  --glass-heavy-blur: 24px;
+
+  /* Material saturation boost (post-blur) */
+  --glass-whisper-sat: 110%;
+  --glass-light-sat: 130%;
+  --glass-standard-sat: 150%;
+  --glass-heavy-sat: 180%;
+
+  /* Glass surface tints (light mode) */
+  --glass-whisper-bg: color-mix(in oklab, var(--neutral-50) 60%, transparent);
+  --glass-light-bg:   color-mix(in oklab, white 70%, transparent);
+  --glass-standard-bg: color-mix(in oklab, white 80%, transparent);
+  --glass-heavy-bg:   color-mix(in oklab, white 90%, transparent);
+
+  /* Glass borders (subtle for light, stronger for heavy) */
+  --glass-light-border:   color-mix(in oklab, var(--border-default) 50%, transparent);
+  --glass-standard-border: color-mix(in oklab, var(--border-default) 60%, transparent);
+  --glass-heavy-border:   color-mix(in oklab, var(--border-default) 80%, transparent);
+
+  /* Lens-edge highlight + shadow gradient */
+  --glass-lens-highlight: color-mix(in oklab, white 30%, transparent);
+  --glass-lens-shadow:    color-mix(in oklab, var(--umber-500) 15%, transparent);
+
+  /* Layered depth tokens */
+  --depth-bg: 0;
+  --depth-section: 5;
+  --depth-card: 10;
+  --depth-nav: 50;
+  --depth-modal: 100;
+  --depth-toast: 200;
+}
+
+[data-theme="dark"] {
+  --bg-page: var(--neutral-900);
+  --bg-card: var(--neutral-800);
+  --bg-elevated: var(--neutral-700);
+  --bg-code: var(--neutral-700);
+
+  --text-primary: var(--neutral-50);
+  --text-secondary: var(--neutral-200);
+  --text-muted: var(--neutral-400);
+  --text-inverse: var(--umber-900);
+
+  --border-subtle: var(--neutral-700);
+  --border-default: var(--neutral-600);
+  --border-strong: var(--neutral-500);
+
+  --brand-link: var(--ochre-400);
+  --brand-link-hover: var(--ochre-300);
+
+  /* Module mid-tone backgrounds for dark mode */
+  --memory-bg:   var(--neutral-700);
+  --memory-tint: var(--umber-700);
+  --skill-bg:    var(--neutral-700);
+  --skill-tint:  #3d5827;
+  --cuo-bg:      var(--neutral-700);
+  --cuo-tint:    #57301f;
+  --infra-bg:    var(--neutral-700);
+  --infra-tint:  var(--ochre-800);
+  --compliance-bg:   var(--neutral-700);
+  --compliance-tint: #6e2419;
+  --future-bg:   var(--neutral-700);
+  --future-tint: var(--neutral-600);
+
+  /* Legacy aliases */
+  --bg:        var(--bg-page);
+  --border:    var(--border-subtle);
+  --text:      var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --text-mute: var(--text-muted);
+
+  /* === LIQUID GLASS — dark mode tints (toward Umber, not white) === */
+  --glass-whisper-bg: color-mix(in oklab, var(--umber-900) 60%, transparent);
+  --glass-light-bg:   color-mix(in oklab, var(--umber-800) 70%, transparent);
+  --glass-standard-bg: color-mix(in oklab, var(--umber-800) 80%, transparent);
+  --glass-heavy-bg:   color-mix(in oklab, var(--umber-700) 90%, transparent);
+
+  --glass-light-border:   color-mix(in oklab, var(--umber-600) 50%, transparent);
+  --glass-standard-border: color-mix(in oklab, var(--umber-600) 60%, transparent);
+  --glass-heavy-border:   color-mix(in oklab, var(--umber-500) 80%, transparent);
+
+  --glass-lens-highlight: color-mix(in oklab, var(--umber-300) 30%, transparent);
+  --glass-lens-shadow:    color-mix(in oklab, black 30%, transparent);
+}

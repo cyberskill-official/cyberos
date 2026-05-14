@@ -1,0 +1,30 @@
+// CyberOS Skill — Component Model interface stub.
+//
+// Phase 1: the interface declaration only. Implementation lives in
+// crates/host/src/wasm.rs once WASM execution lands (audit Phase 5).
+
+package cyberos:skill@0.1.0;
+
+interface logging {
+    log: func(level: string, message: string);
+}
+
+interface invocation {
+    /// JSON-encoded request and response.
+    record request {
+        input: string,
+        capabilities: list<string>,
+    }
+
+    record response {
+        output: string,
+        error: option<string>,
+    }
+
+    run: func(req: request) -> response;
+}
+
+world skill {
+    import logging;
+    export invocation;
+}
