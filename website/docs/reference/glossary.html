@@ -7,7 +7,7 @@
   <meta name="description" content="Comprehensive glossary of every CyberOS term, acronym, tech-stack component, regulatory reference, and Vietnamese-market concept.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -155,7 +155,7 @@ function glossary() {
 const TERMS = [
   // ─────────── A ───────────
   { title:'AAR', acronym:'AAR', vi:null, cat:'business', def:'After-Action Review. A short retrospective triggered when a risk is realised; the lesson-learned is ingested into BRAIN Layer 2 with the lesson-learned tag.', context:'CP module / Risk register operational rules', xrefs:['BRAIN','Risk Register'], ext:'PRD §15.5'},
-  { title:'AATL', acronym:'AATL', vi:null, cat:'tech', def:'Adobe Approved Trust List. Adobe-published list of CAs whose certificates yield a trusted signature appearance in Acrobat Reader. CyberOS uses AATL adv-certs for non-EU signature jurisdictions.', context:'DOC module', xrefs:['eIDAS','QTSP'], ext:'PRD §9.20 / FR-DOC-002'},
+  { title:'AATL', acronym:'AATL', vi:null, cat:'tech', def:'Adobe Approved Trust List. Adobe-published list of CAs whose certificates yield a trusted signature appearance in Acrobat Reader. CyberOS uses AATL adv-certs for non-EU signature jurisdictions.', context:'DOC module', xrefs:['eIDAS','QTSP'], ext:'PRD §9.20 / (FR pending)'},
   { title:'ACL', acronym:'ACL', cat:'tech', def:'Access Control List. Per-resource permission entry (member, scope, action). CyberOS uses per-tenant, per-channel, per-page, per-deal ACLs across CHAT, KB, CRM, PROJ.'},
   { title:'AGENTS.md', acronym:'AGENTS', cat:'cy-spec', def:'The normative spec for the BRAIN protocol — Layer-1 memory invariants, file operations, audit ledger, consolidation, conflict resolution. Drafted in BCP-14 normative language with RFC 2119 keywords (MUST / SHOULD / MAY). Frozen prior version is AGENTS.v1.md.', context:'Every BRAIN consumer; project root', xrefs:['BRAIN','BCP-14','MMR','STH'], ext:'cyberos/AGENTS.md v2.0.0'},
   { title:'Agent Skills', acronym:'open standard', cat:'tech', def:'The Anthropic-led open standard for portable agentic skills. Each skill is a directory with SKILL.md (frontmatter + body), allowed-tools, and runtime body. CyberOS\'s 10 C-level skills ship in this format and run unchanged in Claude Desktop, Cursor, Codex, Cline.', context:'SKILL module', xrefs:['MCP','SKILL.md','CUO','LangGraph'], ext:'anthropic.com/agent-skills'},
@@ -163,7 +163,7 @@ const TERMS = [
   { title:'AI Gateway', acronym:'AI GW', cat:'cy-spec', def:'CyberOS module providing tenant-aware LLM routing via LiteLLM. Primary Bedrock; fallback Anthropic + OpenAI. Enforces budget caps, persona-version system-prompt injection, PII redaction, ZDR-only routes, OTel traces, never cross-tenant cache.', context:'P0 infrastructure', xrefs:['LiteLLM','Bedrock','ZDR','LLM','CUO'], ext:'PRD §9.4'},
   { title:'Anthropic Agent Skills', acronym:'open standard', cat:'tech', def:'See "Agent Skills". An Anthropic-curated format for portable, host-agnostic skills.', xrefs:['Agent Skills','SKILL.md','MCP']},
   { title:'Apache AGE', acronym:'AGE', cat:'tech', def:'Apache Incubator graph database extension for PostgreSQL adding OpenCypher support. BRAIN Layer 2 uses AGE 1.5 for graph-hop expansion in hybrid retrieval and for GraphRAG community summaries.', context:'BRAIN data plane', xrefs:['pgvector','GraphRAG','PGroonga'], ext:'age.apache.org'},
-  { title:'Apollo Federation', acronym:'v2.5+', cat:'tech', def:'Federated GraphQL composition model from Apollo. Each CyberOS module ships as a v2.5+ subgraph; the Apollo Router composes them and serves the host shell. Schema check is a CI gate (NFR-FUNC-002).', context:'GraphQL plane', xrefs:['GraphQL','Apollo Router'], ext:'apollographql.com/federation'},
+  { title:'Apollo Federation', acronym:'v2.5+', cat:'tech', def:'Federated GraphQL composition model from Apollo. Each CyberOS module ships as a v2.5+ subgraph; the Apollo Router composes them and serves the host shell. Schema check is a CI gate (N(FR pending)).', context:'GraphQL plane', xrefs:['GraphQL','Apollo Router'], ext:'apollographql.com/federation'},
   { title:'AOC', acronym:'AOC', cat:'cy-spec', def:'Audit-Originating Context. The persona+role+timestamp envelope every BRAIN write carries. AOC drift (silent persona-version skew between client and gateway) is risk-tracked.', xrefs:['Persona version','BRAIN']},
   { title:'AOT', acronym:'AOT', cat:'tech', def:'Ahead-Of-Time compilation. CyberOS compiles wasmtime components AOT, keyed by content hash, so cold-start of a Vietnamese-market skill stays under 80 ms.', context:'SKILL module / Phase 5', xrefs:['wasmtime','SKILL']},
   { title:'AR aging', acronym:'AR', cat:'business', def:'Accounts Receivable aging — outstanding invoices bucketed by days overdue. INV module surfaces AR aging; CUO/CFO-skill drafts dunning emails.', context:'INV / CFO', xrefs:['INV']},
@@ -172,7 +172,7 @@ const TERMS = [
 
   // ─────────── B ───────────
   { title:'BCP-14', acronym:'BCP 14', cat:'regul', def:'IETF Best Current Practice 14, combining RFC 2119 and RFC 8174. Defines the all-caps keywords MUST / SHOULD / MAY etc. Used as the normative grammar of AGENTS.md.', xrefs:['AGENTS.md','RFC 2119']},
-  { title:'Bedrock', acronym:null, cat:'tech', def:'AWS Bedrock — managed multi-model LLM platform. CyberOS uses Bedrock as primary LLM provider for tenant-region pinning. Per-tenant residency means Bedrock endpoint matches tenant region (FR-GENIE-012).', context:'AI Gateway', xrefs:['AI Gateway','LiteLLM','ZDR']},
+  { title:'Bedrock', acronym:null, cat:'tech', def:'AWS Bedrock — managed multi-model LLM platform. CyberOS uses Bedrock as primary LLM provider for tenant-region pinning. Per-tenant residency means Bedrock endpoint matches tenant region ((FR pending)).', context:'AI Gateway', xrefs:['AI Gateway','LiteLLM','ZDR']},
   { title:'BGE-M3', acronym:null, cat:'tech', def:'BAAI General Embedding Multi-lingual + Multi-functional + Multi-granularity — open multilingual embedding model that handles Vietnamese well. Self-hosted on a shared GPU node.', context:'AI Gateway / BRAIN', xrefs:['BRAIN','BAAI'], ext:'huggingface.co/BAAI/bge-m3'},
   { title:'BGE-rerank-v2-m3', acronym:null, cat:'tech', def:'Multilingual cross-encoder reranker from BAAI. Applied at the tail of BRAIN hybrid retrieval to re-score the top-N candidates.', context:'BRAIN', xrefs:['BGE-M3','Reranker']},
   { title:'BHXH', acronym:'BHXH', vi:'Bảo Hiểm Xã Hội', cat:'lang', def:'Vietnamese Social Insurance. Mandatory contribution by employer and employee; REW computes SI line-items per local law.', xrefs:['REW','PIT']},
@@ -192,7 +192,7 @@ const TERMS = [
   { title:'CLO', acronym:'CLO', cat:'business', def:'Chief Legal Officer. CUO persona for contract redline, GDPR/PDPL audits, DSAR triage.', xrefs:['CUO','DSAR']},
   { title:'CMO', acronym:'CMO', cat:'business', def:'Chief Marketing Officer. CUO persona for campaign briefs, content calendars, channel reports.', xrefs:['CUO']},
   { title:'COA', acronym:'COA', cat:'business', def:'Chart of Accounts. INV uses a tenant-configurable COA with Vietnam-default mapping.', xrefs:['INV']},
-  { title:'CODEOWNERS', acronym:null, cat:'tech', def:'GitHub-native file mapping paths to owner-reviewers. NFR-MAINT-003 requires one per module.', xrefs:['CI']},
+  { title:'CODEOWNERS', acronym:null, cat:'tech', def:'GitHub-native file mapping paths to owner-reviewers. N(FR pending) requires one per module.', xrefs:['CI']},
   { title:'Compliance Plane', acronym:'CP', cat:'cy-spec', def:'CyberOS module aggregating compliance posture: tenant data inventory, RTBE/DSAR execution, breach-notification artefacts, hash-chain tamper detection. P2 deliverable. Split from the prior single CP designation when PORTAL became its own module.', xrefs:['DSAR','RTBE','PORTAL'], ext:'SRS §4.18'},
   { title:'Component Model', acronym:'CM', cat:'tech', def:'The WebAssembly Component Model — typed interfaces (WIT) for cross-language reuse. SKILL Phase 5 onwards uses Component Model under wasmtime.', xrefs:['wasmtime','WIT','WASI']},
   { title:'CSA STAR', acronym:'STAR', cat:'regul', def:'Cloud Security Alliance — Security, Trust, Assurance, and Risk registry. CyberOS targets STAR Level 1 (self-assessment) at P1 exit, Level 2 (third-party audit) at P2/P3.', xrefs:['ISO 27001','SOC 2','AI-CAIQ']},
@@ -256,7 +256,7 @@ const TERMS = [
   { title:'KMS', acronym:'KMS', cat:'tech', def:'Key Management Service. CyberOS uses separate KMS keys per sensitivity scope: general PII, compensation (REW), government ID (CCCD/passport). Rotation at least annually.', xrefs:['CMEK','REW','HR']},
 
   // ─────────── L ───────────
-  { title:'LangGraph', acronym:null, cat:'tech', def:'LangChain\'s state-machine supervisor for agents. CyberOS CUO uses LangGraph with checkpointed state and interrupt() on destructive tools. Production paths must be LangGraph (FR-GENIE-013).', xrefs:['CUO','CrewAI']},
+  { title:'LangGraph', acronym:null, cat:'tech', def:'LangChain\'s state-machine supervisor for agents. CyberOS CUO uses LangGraph with checkpointed state and interrupt() on destructive tools. Production paths must be LangGraph ((FR pending)).', xrefs:['CUO','CrewAI']},
   { title:'LEARN', acronym:'LEARN', cat:'cy-spec', def:'CyberOS Learning & Promotion module (P1). VP roll-up from PROJ + TIME + KB; Hội đồng Chuyên môn workflow; promotion gate criteria. EU AI Act high-risk if used for performance assessment.', xrefs:['Hội đồng Chuyên môn','VP','Promotion','EU AI Act']},
   { title:'Leiden', acronym:null, cat:'tech', def:'Community detection algorithm — improvement over Louvain. CyberOS BRAIN runs Leiden-default for GraphRAG community summaries.', xrefs:['GraphRAG','Apache AGE']},
   { title:'LiteLLM', acronym:null, cat:'tech', def:'Vendor-agnostic LLM router supporting Bedrock, Anthropic API, OpenAI, etc. AI Gateway uses LiteLLM as the routing primitive.', xrefs:['AI Gateway','Bedrock']},

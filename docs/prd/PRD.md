@@ -216,7 +216,7 @@ Ho Chi Minh City, Vietnam · cyberskill.world
 > 
 > [9.1.2 MCP tool surface](#h_9_1_2_mcp_tool_surface)
 > 
-> [9.1.3 Functional requirements (FR-BRAIN)](#h_9_1_3_functional_requirements_fr_brain)
+> [9.1.3 Functional requirements ((FR pending))](#h_9_1_3_functional_requirements_fr_brain)
 > 
 > [9.2 GENIE / CUO](#h_9_2_genie_cuo)
 > 
@@ -224,7 +224,7 @@ Ho Chi Minh City, Vietnam · cyberskill.world
 > 
 > [9.2.2 MCP tool surface](#h_9_2_2_mcp_tool_surface)
 > 
-> [9.2.3 Functional requirements (FR-GENIE)](#h_9_2_3_functional_requirements_fr_genie)
+> [9.2.3 Functional requirements ((FR pending))](#h_9_2_3_functional_requirements_fr_genie)
 > 
 > [9.3 CHAT — Internal real-time chat](#h_9_3_chat_internal_real_time_chat)
 > 
@@ -236,7 +236,7 @@ Ho Chi Minh City, Vietnam · cyberskill.world
 > 
 > [9.3.4 Slack/Zalo migration](#h_9_3_4_slack_zalo_migration)
 > 
-> [9.3.5 FR-CHAT](#h_9_3_5_fr_chat)
+> [9.3.5 (FR pending)](#h_9_3_5_fr_chat)
 > 
 > [9.4 EMAIL — Internal email and shared inbox](#h_9_4_email_internal_email_and_shared_inbox)
 > 
@@ -246,7 +246,7 @@ Ho Chi Minh City, Vietnam · cyberskill.world
 > 
 > [9.4.3 AI-native features](#h_9_4_3_ai_native_features)
 > 
-> [9.4.4 FR-EMAIL](#h_9_4_4_fr_email)
+> [9.4.4 (FR pending)](#h_9_4_4_fr_email)
 > 
 > [9.5 PROJ — Project management](#h_9_5_proj_project_management)
 > 
@@ -256,7 +256,7 @@ Ho Chi Minh City, Vietnam · cyberskill.world
 > 
 > [9.5.3 AI-native features](#h_9_5_3_ai_native_features)
 > 
-> [9.5.4 FR-PROJ](#h_9_5_4_fr_proj)
+> [9.5.4 (FR pending)](#h_9_5_4_fr_proj)
 > 
 > [9.6 AUTH — Authentication & Authorization](#h_9_6_auth_authentication_authorization)
 > 
@@ -663,7 +663,7 @@ The MoSCoW priority taxonomy maps engineering effort and phase commitment:
 
 <span id="h_0_5_id_conventions" class="anchor"></span>**0.5 ID conventions**
 
-  - **Functional requirements:** FR-{MOD}-{NNN} — e.g., FR-PROJ-001. Module codes: AUTH, AI, MCP, OBS, CHAT, BRAIN, GENIE, PROJ, TIME, CRM, KB, HR, EMAIL, REW, LEARN, INV, ESOP, RES, OKR, DOC, PORTAL, CP, TEN. (CP = Compliance Plane; PORTAL = Client Portal — the prior single CP designation has been split.)
+  - **Functional requirements:** FR-{MOD}-{NNN} — e.g., (FR pending). Module codes: AUTH, AI, MCP, OBS, CHAT, BRAIN, GENIE, PROJ, TIME, CRM, KB, HR, EMAIL, REW, LEARN, INV, ESOP, RES, OKR, DOC, PORTAL, CP, TEN. (CP = Compliance Plane; PORTAL = Client Portal — the prior single CP designation has been split.)
 
   - **Non-functional requirements:** NFR-{CAT}-{NNN} using ISO/IEC 25010:2023 categories (PERF, SEC, REL, USAB, MAINT, COMPAT, TRAN, FUNC).
 
@@ -2075,45 +2075,45 @@ The architectural specification for BRAIN is in Part 5 (three-layer memory archi
 | cyberos.brain.import            | idempotent=false                 | Replay a signed .zip bundle (dry-run by default)        |
 | cyberos.brain.resolve\_conflict | idempotent=false                 | Resolve a memory conflict (Keep A / B / both / replace) |
 
-<span id="h_9_1_3_functional_requirements_fr_brain" class="anchor"></span>**9.1.3 Functional requirements (FR-BRAIN)**
+<span id="h_9_1_3_functional_requirements_fr_brain" class="anchor"></span>**9.1.3 Functional requirements ((FR pending))**
 
 |              |                                                                                       |              |              |
 | ------------ | ------------------------------------------------------------------------------------- | ------------ | ------------ |
 | **ID**       | **Requirement**                                                                       | **Priority** | **Verify**   |
-| FR-BRAIN-001 | Hybrid retrieval (vector + BM25 + graph + reranker) on tenant-scoped corpus           | Must         | T            |
-| FR-BRAIN-002 | p95 search latency ≤ 250 ms on a 1M-chunk corpus                                      | Must         | T            |
-| FR-BRAIN-003 | Filesystem layer with .cyberos-memory/ format and six operations (Claude-aligned)     | Must         | T            |
-| FR-BRAIN-004 | CRDT sync (Yjs + Automerge) across at least two devices per Member                    | Should       | T            |
-| FR-BRAIN-005 | Auto Dream nightly consolidation cycle per tenant                                     | Must         | T+I          |
-| FR-BRAIN-006 | Decision-LLM ADD/UPDATE/DELETE/NOOP with audit trace                                  | Must         | T            |
-| FR-BRAIN-007 | Conflict detection at four points; chooser UI; "keep both as disputed pair" supported | Must         | T+D          |
-| FR-BRAIN-008 | Natural-language CRUD: remember / recall / update / forget / exclude                  | Must         | T+D          |
-| FR-BRAIN-009 | Signed Ed25519 .zip export with Merkle proof; dry-run import                          | Must         | T+I          |
-| FR-BRAIN-010 | Ingestion-side denylist enforced for compensation/equity/special-category             | Must         | T+A          |
-| FR-BRAIN-011 | GraphRAG community summaries built nightly (Leiden default, k-core fallback)          | Should       | T            |
-| FR-BRAIN-012 | Per-tenant residency isolation; cross-tenant retrieval impossible                     | Must         | T+A          |
-| FR-BRAIN-013 | Source-citation rate ≥ 98% for CUO/Genie answers when relevant chunks exist           | Must         | T (eval set) |
-| FR-BRAIN-014 | Path-traversal rejected; system-prompt-marker writes rejected sev-0                   | Must         | T+A          |
+| (FR pending) | Hybrid retrieval (vector + BM25 + graph + reranker) on tenant-scoped corpus           | Must         | T            |
+| (FR pending) | p95 search latency ≤ 250 ms on a 1M-chunk corpus                                      | Must         | T            |
+| (FR pending) | Filesystem layer with .cyberos-memory/ format and six operations (Claude-aligned)     | Must         | T            |
+| (FR pending) | CRDT sync (Yjs + Automerge) across at least two devices per Member                    | Should       | T            |
+| (FR pending) | Auto Dream nightly consolidation cycle per tenant                                     | Must         | T+I          |
+| (FR pending) | Decision-LLM ADD/UPDATE/DELETE/NOOP with audit trace                                  | Must         | T            |
+| (FR pending) | Conflict detection at four points; chooser UI; "keep both as disputed pair" supported | Must         | T+D          |
+| (FR pending) | Natural-language CRUD: remember / recall / update / forget / exclude                  | Must         | T+D          |
+| (FR pending) | Signed Ed25519 .zip export with Merkle proof; dry-run import                          | Must         | T+I          |
+| (FR pending) | Ingestion-side denylist enforced for compensation/equity/special-category             | Must         | T+A          |
+| (FR pending) | GraphRAG community summaries built nightly (Leiden default, k-core fallback)          | Should       | T            |
+| (FR pending) | Per-tenant residency isolation; cross-tenant retrieval impossible                     | Must         | T+A          |
+| (FR pending) | Source-citation rate ≥ 98% for CUO/Genie answers when relevant chunks exist           | Must         | T (eval set) |
+| (FR pending) | Path-traversal rejected; system-prompt-marker writes rejected sev-0                   | Must         | T+A          |
 
 The MCP tool surface is extended with: cyberos.brain.fs\_view (readOnly=true; view file or list dir, paginated at 10KB), cyberos.brain.reconcile (idempotent=true; runs §4.7 reconciliation and reports orphans), cyberos.brain.state\_check (readOnly=true; returns current state classifier output: PRISTINE/COMPLETE\_BOOTSTRAP/READY/CORRUPT/INCOMPATIBLE), cyberos.brain.lock\_acquire / cyberos.brain.lock\_release (both idempotent=false; honour stale-lock recovery rules from CyberOS-AGENTS.md §4.9), cyberos.brain.audit\_corrects (idempotent=false; appends op:corrects row referencing prior audit\_id and chain — the only legitimate way to correct a prior audit row, since in-place edits are forbidden).
 
-FR-BRAIN-015 — Path-traversal guard rejects every adversarial encoding case from CyberOS-AGENTS.md §4.1, including NFKC-vs-NFC divergence, fullwidth lookalikes, Windows-reserved names, trailing-stem whitespace, bidi-override codepoints, lone surrogates, depth\>12. Verify: T+A. Priority: Must.
+(FR pending) — Path-traversal guard rejects every adversarial encoding case from CyberOS-AGENTS.md §4.1, including NFKC-vs-NFC divergence, fullwidth lookalikes, Windows-reserved names, trailing-stem whitespace, bidi-override codepoints, lone surrogates, depth\>12. Verify: T+A. Priority: Must.
 
-FR-BRAIN-016 — Content gate dual-pass (whitespaced + letters-only-collapsed) rejects every injection variant in CyberOS-AGENTS.md §4.2 across 16+ override patterns and zero-width/homoglyph/fullwidth/mixed-script attack vectors. Verify: T+A (78 attacks). Priority: Must.
+(FR pending) — Content gate dual-pass (whitespaced + letters-only-collapsed) rejects every injection variant in CyberOS-AGENTS.md §4.2 across 16+ override patterns and zero-width/homoglyph/fullwidth/mixed-script attack vectors. Verify: T+A (78 attacks). Priority: Must.
 
-FR-BRAIN-017 — Resource caps strictly enforced per CyberOS-AGENTS.md §5.5; no off-by-one tolerance at any boundary. Verify: T (boundary fuzz N-1, N, N+1). Priority: Must.
+(FR pending) — Resource caps strictly enforced per CyberOS-AGENTS.md §5.5; no off-by-one tolerance at any boundary. Verify: T (boundary fuzz N-1, N, N+1). Priority: Must.
 
-FR-BRAIN-018 — Concurrent agents on same project serialise via .lock with stale recovery (5-min timeout, host-match required). Verify: T (8 OS processes × 25 writes = 200-row chain valid). Priority: Must.
+(FR pending) — Concurrent agents on same project serialise via .lock with stale recovery (5-min timeout, host-match required). Verify: T (8 OS processes × 25 writes = 200-row chain valid). Priority: Must.
 
-FR-BRAIN-019 — Bootstrap is idempotent: re-running on a READY store is a no-op (manifest unchanged). Verify: T. Priority: Must.
+(FR pending) — Bootstrap is idempotent: re-running on a READY store is a no-op (manifest unchanged). Verify: T. Priority: Must.
 
-FR-BRAIN-020 — Consolidation is idempotent: running twice with no new audit rows produces the same manifest. Verify: T. Priority: Must.
+(FR pending) — Consolidation is idempotent: running twice with no new audit rows produces the same manifest. Verify: T. Priority: Must.
 
-FR-BRAIN-021 — Round-trip integrity: zip → unzip → re-import preserves every memory and the audit chain verifies end-to-end. Verify: T. Priority: Must.
+(FR pending) — Round-trip integrity: zip → unzip → re-import preserves every memory and the audit chain verifies end-to-end. Verify: T. Priority: Must.
 
-FR-BRAIN-022 — Cross-scope rename forbidden; intra-scope rename (incl. to \<scope\>/private/) allowed. Verify: T. Priority: Must.
+(FR pending) — Cross-scope rename forbidden; intra-scope rename (incl. to \<scope\>/private/) allowed. Verify: T. Priority: Must.
 
-FR-BRAIN-023 — Tombstoning a memory in an open conflict auto-closes the conflict with status resolved:keep\_\<other\>\_discard\_\<this\>. Verify: T. Priority: Should.
+(FR pending) — Tombstoning a memory in an open conflict auto-closes the conflict with status resolved:keep\_\<other\>\_discard\_\<this\>. Verify: T. Priority: Should.
 
 <span id="h_9_2_genie_cuo" class="anchor"></span>**9.2 GENIE / CUO**
 
@@ -2166,24 +2166,24 @@ The persona, voice, decision style, ten-skill structure, ambient mode, and trust
 | cyberos.genie.pause\_trigger | idempotent=true                  | Pause an ambient trigger class for a Member |
 | cyberos.genie.skill\_invoke  | readOnly=false (per-skill)       | Direct invocation of a named skill          |
 
-<span id="h_9_2_3_functional_requirements_fr_genie" class="anchor"></span>**9.2.3 Functional requirements (FR-GENIE)**
+<span id="h_9_2_3_functional_requirements_fr_genie" class="anchor"></span>**9.2.3 Functional requirements ((FR pending))**
 
 |              |                                                                                                                    |              |             |
 | ------------ | ------------------------------------------------------------------------------------------------------------------ | ------------ | ----------- |
 | **ID**       | **Requirement**                                                                                                    | **Priority** | **Verify**  |
-| FR-GENIE-001 | 10 base C-level skills (CEO, COO, CFO, CMO, CTO, CHRO, CSO, CLO, CDO, CPO) shipped as Anthropic Skills directories | Must         | D+I         |
-| FR-GENIE-002 | 4 emerging skills (CAIO, CXO, CRO, CSO-Sus) loadable via directory drop                                            | Should       | I           |
-| FR-GENIE-003 | Skill router classifies query → skill with confidence score                                                        | Must         | T           |
-| FR-GENIE-004 | LangGraph supervisor with checkpointed state; interrupt() on destructive tools                                     | Must         | T+I         |
-| FR-GENIE-005 | Ambient Notify / Question / Review surfaces; per-Member acceptance auto-pause                                      | Must         | T+D         |
-| FR-GENIE-006 | Persona dual-sign (Founder/CEO + Eng Lead) before publish                                                          | Must         | I           |
-| FR-GENIE-007 | Every answer carries skill-tag, confidence, citations, persona-version, optional "what would change my mind"       | Must         | T           |
-| FR-GENIE-008 | CUO never auto-acts on irreversible operation; defer triggers enforced at runtime                                  | Must         | T+A         |
-| FR-GENIE-009 | CaMeL dual-LLM separation for ingested email/document content                                                      | Must         | T+A         |
-| FR-GENIE-010 | Persona-version drift detection: scope contract violations refused and audited                                     | Must         | T           |
-| FR-GENIE-011 | p95 text answer latency ≤ 2 s; voice (P3) ≤ 800 ms turn-completion                                                 | Must         | T           |
-| FR-GENIE-012 | Per-tenant residency: Bedrock endpoint matched to tenant region                                                    | Must         | A+I         |
-| FR-GENIE-013 | CrewAI permitted only for prototyping; production paths must be on LangGraph                                       | Must         | I (CI lint) |
+| (FR pending) | 10 base C-level skills (CEO, COO, CFO, CMO, CTO, CHRO, CSO, CLO, CDO, CPO) shipped as Anthropic Skills directories | Must         | D+I         |
+| (FR pending) | 4 emerging skills (CAIO, CXO, CRO, CSO-Sus) loadable via directory drop                                            | Should       | I           |
+| (FR pending) | Skill router classifies query → skill with confidence score                                                        | Must         | T           |
+| (FR pending) | LangGraph supervisor with checkpointed state; interrupt() on destructive tools                                     | Must         | T+I         |
+| (FR pending) | Ambient Notify / Question / Review surfaces; per-Member acceptance auto-pause                                      | Must         | T+D         |
+| (FR pending) | Persona dual-sign (Founder/CEO + Eng Lead) before publish                                                          | Must         | I           |
+| (FR pending) | Every answer carries skill-tag, confidence, citations, persona-version, optional "what would change my mind"       | Must         | T           |
+| (FR pending) | CUO never auto-acts on irreversible operation; defer triggers enforced at runtime                                  | Must         | T+A         |
+| (FR pending) | CaMeL dual-LLM separation for ingested email/document content                                                      | Must         | T+A         |
+| (FR pending) | Persona-version drift detection: scope contract violations refused and audited                                     | Must         | T           |
+| (FR pending) | p95 text answer latency ≤ 2 s; voice (P3) ≤ 800 ms turn-completion                                                 | Must         | T           |
+| (FR pending) | Per-tenant residency: Bedrock endpoint matched to tenant region                                                    | Must         | A+I         |
+| (FR pending) | CrewAI permitted only for prototyping; production paths must be on LangGraph                                       | Must         | I (CI lint) |
 
 <span id="h_9_3_chat_internal_real_time_chat" class="anchor"></span>**9.3 CHAT — Internal real-time chat**
 
@@ -2228,23 +2228,23 @@ Mattermost's WebSocket-based delivery is sufficient for online-first internal us
 
 Slack export importer: CyberOS reads Slack's standard export ZIP (channels.json, users.json, message JSON per channel per day) and produces Mattermost imports. Zalo export is parsed via the Zalo Cloud API (where available) or scraped via a desktop helper for users on the consumer-tier Zalo. The migration toolset is part of the CHAT module's P0 release.
 
-<span id="h_9_3_5_fr_chat" class="anchor"></span>**9.3.5 FR-CHAT**
+<span id="h_9_3_5_fr_chat" class="anchor"></span>**9.3.5 (FR pending)**
 
 |             |                                                                                     |              |            |
 | ----------- | ----------------------------------------------------------------------------------- | ------------ | ---------- |
 | **ID**      | **Requirement**                                                                     | **Priority** | **Verify** |
-| FR-CHAT-001 | Mattermost server fork with CyberOS-specific plugins                                | Must         | D          |
-| FR-CHAT-002 | @genie inline mention surfaces a Genie answer with citations                        | Must         | T          |
-| FR-CHAT-003 | Thread summarisation (/summarise) within p95 ≤ 3 s                                  | Should       | T          |
-| FR-CHAT-004 | Smart-reply suggestions latency ≤ 1.4 s p95                                         | Should       | T          |
-| FR-CHAT-005 | Daily channel digest in Notify mode for each Member, ranked                         | Should       | T          |
-| FR-CHAT-006 | Vietnamese tokenisation via PGroonga; search recall ≥ 80% on VN test set            | Must         | T          |
-| FR-CHAT-007 | Slack import; Zalo import where API allows                                          | Must         | T          |
-| FR-CHAT-008 | CHAT messages ingested into BRAIN Layer 3 within p95 ≤ 5 s                          | Must         | T          |
-| FR-CHAT-009 | Per-channel ACL; private DM messages namespace-isolated in BRAIN                    | Must         | T+A        |
-| FR-CHAT-010 | Compliance export reuses Mattermost’s format augmented with CyberOS audit chain     | Must         | I          |
-| FR-CHAT-011 | Voice messages with Vietnamese + English ASR (Whisper-large-v3 self-hosted)         | Should       | T          |
-| FR-CHAT-012 | Mobile (P3) sync-engine: offline-first with conflict resolution deferring to server | Should       | T          |
+| (FR pending) | Mattermost server fork with CyberOS-specific plugins                                | Must         | D          |
+| (FR pending) | @genie inline mention surfaces a Genie answer with citations                        | Must         | T          |
+| (FR pending) | Thread summarisation (/summarise) within p95 ≤ 3 s                                  | Should       | T          |
+| (FR pending) | Smart-reply suggestions latency ≤ 1.4 s p95                                         | Should       | T          |
+| (FR pending) | Daily channel digest in Notify mode for each Member, ranked                         | Should       | T          |
+| (FR pending) | Vietnamese tokenisation via PGroonga; search recall ≥ 80% on VN test set            | Must         | T          |
+| (FR pending) | Slack import; Zalo import where API allows                                          | Must         | T          |
+| (FR pending) | CHAT messages ingested into BRAIN Layer 3 within p95 ≤ 5 s                          | Must         | T          |
+| (FR pending) | Per-channel ACL; private DM messages namespace-isolated in BRAIN                    | Must         | T+A        |
+| (FR pending) | Compliance export reuses Mattermost’s format augmented with CyberOS audit chain     | Must         | I          |
+| (FR pending) | Voice messages with Vietnamese + English ASR (Whisper-large-v3 self-hosted)         | Should       | T          |
+| (FR pending) | Mobile (P3) sync-engine: offline-first with conflict resolution deferring to server | Should       | T          |
 
 <span id="h_9_4_email_internal_email_and_shared_inbox" class="anchor"></span>**9.4 EMAIL — Internal email and shared inbox**
 
@@ -2281,21 +2281,21 @@ Email content is the most dangerous source for indirect prompt injection. EchoLe
 
 7.  Thread "promote to project task" — turns an email into a PROJ task with the thread linked.
 
-<span id="h_9_4_4_fr_email" class="anchor"></span>**9.4.4 FR-EMAIL**
+<span id="h_9_4_4_fr_email" class="anchor"></span>**9.4.4 (FR pending)**
 
 |              |                                                                         |              |            |
 | ------------ | ----------------------------------------------------------------------- | ------------ | ---------- |
 | **ID**       | **Requirement**                                                         | **Priority** | **Verify** |
-| FR-EMAIL-001 | Stalwart-based mail server: JMAP, IMAP, SMTP, DKIM, MTA-STS, DANE, BIMI | Must         | D          |
-| FR-EMAIL-002 | Shared inbox UX: assignment, internal comments, snooze, tagging         | Must         | T+D        |
-| FR-EMAIL-003 | CaMeL dual-LLM separation on every ingest path                          | Must         | T+A        |
-| FR-EMAIL-004 | Body content NOT ingested into BRAIN by default; opt-in per Member      | Must         | I+T        |
-| FR-EMAIL-005 | Thread summary ingested into BRAIN Layer 3 with citations to messages   | Should       | T          |
-| FR-EMAIL-006 | AI-suggested reply in CyberSkill voice; Vietnamese-aware salutations    | Should       | T          |
-| FR-EMAIL-007 | CRM activity auto-log for tracked-domain mailboxes                      | Should       | T          |
-| FR-EMAIL-008 | "Promote to PROJ task" creates linked task with thread reference        | Could        | T          |
-| FR-EMAIL-009 | Per-tenant DKIM key; ARC stamping on forward; SPF/DMARC reports         | Must         | I          |
-| FR-EMAIL-010 | Trust Center publishes mail-server status, BIMI cert, last DMARC report | Should       | I          |
+| (FR pending) | Stalwart-based mail server: JMAP, IMAP, SMTP, DKIM, MTA-STS, DANE, BIMI | Must         | D          |
+| (FR pending) | Shared inbox UX: assignment, internal comments, snooze, tagging         | Must         | T+D        |
+| (FR pending) | CaMeL dual-LLM separation on every ingest path                          | Must         | T+A        |
+| (FR pending) | Body content NOT ingested into BRAIN by default; opt-in per Member      | Must         | I+T        |
+| (FR pending) | Thread summary ingested into BRAIN Layer 3 with citations to messages   | Should       | T          |
+| (FR pending) | AI-suggested reply in CyberSkill voice; Vietnamese-aware salutations    | Should       | T          |
+| (FR pending) | CRM activity auto-log for tracked-domain mailboxes                      | Should       | T          |
+| (FR pending) | "Promote to PROJ task" creates linked task with thread reference        | Could        | T          |
+| (FR pending) | Per-tenant DKIM key; ARC stamping on forward; SPF/DMARC reports         | Must         | I          |
+| (FR pending) | Trust Center publishes mail-server status, BIMI cert, last DMARC report | Should       | I          |
 
 <span id="h_9_5_proj_project_management" class="anchor"></span>**9.5 PROJ — Project management**
 
@@ -2327,21 +2327,21 @@ PROJ uses the Linear sync-engine pattern: optimistic local mutations, real-time 
 
 5.  Cross-project insight. "What's the pattern in late tasks?" runs a graph query across the AGE memory layer.
 
-<span id="h_9_5_4_fr_proj" class="anchor"></span>**9.5.4 FR-PROJ**
+<span id="h_9_5_4_fr_proj" class="anchor"></span>**9.5.4 (FR pending)**
 
 |             |                                                                        |              |            |
 | ----------- | ---------------------------------------------------------------------- | ------------ | ---------- |
 | **ID**      | **Requirement**                                                        | **Priority** | **Verify** |
-| FR-PROJ-001 | Three primitives Issue / Cycle / Project, plus Engagement              | Must         | T+D        |
-| FR-PROJ-002 | Sync-engine: optimistic local mutations + WebSocket + server-canonical | Must         | T          |
-| FR-PROJ-003 | Per-engagement rate cards, billable/non-billable distinction           | Must         | T          |
-| FR-PROJ-004 | Time entries integrate from TIME module 1:1; INV pulls from TIME       | Must         | T+I        |
-| FR-PROJ-005 | Auto-roll incomplete tasks to next cycle; configurable per team        | Should       | T          |
-| FR-PROJ-006 | Blocker detection from comments → CUO Notify                           | Should       | T          |
-| FR-PROJ-007 | Cycle-review draft generation; editable before send                    | Should       | T          |
-| FR-PROJ-008 | Estimate calibration report per Member per task class                  | Could        | T          |
-| FR-PROJ-009 | Tasks ingested into BRAIN Layer 3; comments included                   | Must         | T          |
-| FR-PROJ-010 | Per-task ACL; private engagements not visible to non-engaged Members   | Must         | T+A        |
+| (FR pending) | Three primitives Issue / Cycle / Project, plus Engagement              | Must         | T+D        |
+| (FR pending) | Sync-engine: optimistic local mutations + WebSocket + server-canonical | Must         | T          |
+| (FR pending) | Per-engagement rate cards, billable/non-billable distinction           | Must         | T          |
+| (FR pending) | Time entries integrate from TIME module 1:1; INV pulls from TIME       | Must         | T+I        |
+| (FR pending) | Auto-roll incomplete tasks to next cycle; configurable per team        | Should       | T          |
+| (FR pending) | Blocker detection from comments → CUO Notify                           | Should       | T          |
+| (FR pending) | Cycle-review draft generation; editable before send                    | Should       | T          |
+| (FR pending) | Estimate calibration report per Member per task class                  | Could        | T          |
+| (FR pending) | Tasks ingested into BRAIN Layer 3; comments included                   | Must         | T          |
+| (FR pending) | Per-task ACL; private engagements not visible to non-engaged Members   | Must         | T+A        |
 
 <span id="h_9_6_auth_authentication_authorization" class="anchor"></span>**9.6 AUTH — Authentication & Authorization**
 
@@ -2350,14 +2350,14 @@ Identity, RBAC, sessions, MFA, SSO, agent-equal auth. Architecture covered in §
 |             |                                                                     |
 | ----------- | ------------------------------------------------------------------- |
 | **ID**      | **Requirement**                                                     |
-| FR-AUTH-001 | Email + password with TOTP MFA mandatory for elevated roles         |
-| FR-AUTH-002 | WebAuthn / passkey for Founder/CEO and any role with sign authority |
-| FR-AUTH-003 | Magic-link email login for new-Member onboarding only               |
-| FR-AUTH-004 | OIDC SSO support (Google Workspace, Microsoft 365, Okta) at T2+     |
-| FR-AUTH-005 | Session JWT RS256 with rotating signing keys; 30-day refresh        |
-| FR-AUTH-006 | Device tracking; new-device email; force-logout from any device     |
-| FR-AUTH-007 | Per-tenant authorisation server for OAuth 2.1 (MCP)                 |
-| FR-AUTH-008 | Audit log: login, logout, MFA event, role-change, scope-grant       |
+| (FR pending) | Email + password with TOTP MFA mandatory for elevated roles         |
+| (FR pending) | WebAuthn / passkey for Founder/CEO and any role with sign authority |
+| (FR pending) | Magic-link email login for new-Member onboarding only               |
+| (FR pending) | OIDC SSO support (Google Workspace, Microsoft 365, Okta) at T2+     |
+| (FR pending) | Session JWT RS256 with rotating signing keys; 30-day refresh        |
+| (FR pending) | Device tracking; new-device email; force-logout from any device     |
+| (FR pending) | Per-tenant authorisation server for OAuth 2.1 (MCP)                 |
+| (FR pending) | Audit log: login, logout, MFA event, role-change, scope-grant       |
 
 <span id="h_9_7_ai_ai_gateway" class="anchor"></span>**9.7 AI — AI Gateway**
 
@@ -2366,16 +2366,16 @@ Centralised LLM routing, caching, redaction, audit, persona-version stamping. Ar
 |           |                                                                                     |
 | --------- | ----------------------------------------------------------------------------------- |
 | **ID**    | **Requirement**                                                                     |
-| FR-AI-001 | LiteLLM-based router with primary Bedrock + Anthropic + OpenAI failover             |
-| FR-AI-002 | Prompt-cache hit-rate ≥ 60% for system-prompt-stable calls                          |
-| FR-AI-003 | PII redaction (Presidio + custom) on default routes; bypass on PII-safe routes      |
-| FR-AI-004 | Persona-version system prompt injection at gateway level (not client)               |
-| FR-AI-005 | Per-tenant cost accounting and budget alerting                                      |
-| FR-AI-006 | ZDR enforcement: only ZDR-attested endpoints used for sensitive routes              |
-| FR-AI-007 | Self-hosted embedder (BGE-M3) and reranker (BGE-rerank-v2-m3) on shared GPU node    |
-| FR-AI-008 | Latency budgets per route class enforced via circuit breaker                        |
-| FR-AI-009 | Audit log per call: actor, route, model, tokens, persona-version, redaction-applied |
-| FR-AI-010 | Provider failover policy: 2 retries with backoff before failover                    |
+| (FR pending) | LiteLLM-based router with primary Bedrock + Anthropic + OpenAI failover             |
+| (FR pending) | Prompt-cache hit-rate ≥ 60% for system-prompt-stable calls                          |
+| (FR pending) | PII redaction (Presidio + custom) on default routes; bypass on PII-safe routes      |
+| (FR pending) | Persona-version system prompt injection at gateway level (not client)               |
+| (FR pending) | Per-tenant cost accounting and budget alerting                                      |
+| (FR pending) | ZDR enforcement: only ZDR-attested endpoints used for sensitive routes              |
+| (FR pending) | Self-hosted embedder (BGE-M3) and reranker (BGE-rerank-v2-m3) on shared GPU node    |
+| (FR pending) | Latency budgets per route class enforced via circuit breaker                        |
+| (FR pending) | Audit log per call: actor, route, model, tokens, persona-version, redaction-applied |
+| (FR pending) | Provider failover policy: 2 retries with backoff before failover                    |
 
 <span id="h_9_8_mcp_model_context_protocol_gateway" class="anchor"></span>**9.8 MCP — Model Context Protocol Gateway**
 
@@ -2384,16 +2384,16 @@ Federation router for per-module MCP servers. Architecture covered in §8.4. Mod
 |            |                                                                               |
 | ---------- | ----------------------------------------------------------------------------- |
 | **ID**     | **Requirement**                                                               |
-| FR-MCP-001 | Streamable HTTP transport on the 2025-11-25 spec                              |
-| FR-MCP-002 | Tasks primitive supports long-running CUO operations                          |
-| FR-MCP-003 | Sampling-with-Tools rate-limited per session                                  |
-| FR-MCP-004 | .well-known/mcp discovery + .well-known/oauth-protected-resource              |
-| FR-MCP-005 | Tool annotations enforced (destructive → human-confirm; readOnly → fast path) |
-| FR-MCP-006 | Per-tenant authorisation server with PKCE and audience binding                |
-| FR-MCP-007 | Tool-name registry; collisions rejected at registration time                  |
-| FR-MCP-008 | Audit log per tool call: agent, tool, args, RBAC-decision, latency, outcome   |
-| FR-MCP-009 | Per-tool rate limits and circuit breakers                                     |
-| FR-MCP-010 | Elicitation back-channel proxied with content-safety filters                  |
+| (FR pending) | Streamable HTTP transport on the 2025-11-25 spec                              |
+| (FR pending) | Tasks primitive supports long-running CUO operations                          |
+| (FR pending) | Sampling-with-Tools rate-limited per session                                  |
+| (FR pending) | .well-known/mcp discovery + .well-known/oauth-protected-resource              |
+| (FR pending) | Tool annotations enforced (destructive → human-confirm; readOnly → fast path) |
+| (FR pending) | Per-tenant authorisation server with PKCE and audience binding                |
+| (FR pending) | Tool-name registry; collisions rejected at registration time                  |
+| (FR pending) | Audit log per tool call: agent, tool, args, RBAC-decision, latency, outcome   |
+| (FR pending) | Per-tool rate limits and circuit breakers                                     |
+| (FR pending) | Elicitation back-channel proxied with content-safety filters                  |
 
 <span id="h_9_9_obs_observability" class="anchor"></span>**9.9 OBS — Observability**
 
@@ -2402,14 +2402,14 @@ Logs (Loki), metrics (Prometheus + Grafana), traces (OpenTelemetry → Tempo), A
 |            |                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------- |
 | **ID**     | **Requirement**                                                                       |
-| FR-OBS-001 | Centralised logs (structured JSON) with tenant + member tagging                       |
-| FR-OBS-002 | OpenTelemetry tracing across Apollo Router → subgraphs → DB                           |
-| FR-OBS-003 | Per-tenant cost dashboards (infra, AI, storage)                                       |
-| FR-OBS-004 | Per-module SLO dashboards (latency, error-rate, success-rate)                         |
-| FR-OBS-005 | Alert routing: PagerDuty-equivalent for critical; CHAT for low; CUO digest for trends |
-| FR-OBS-006 | AI Gateway exposes a Grafana datasource for token / cost / latency                    |
-| FR-OBS-007 | Audit-log surface (read-only) for compliance reviewers                                |
-| FR-OBS-008 | Error-budget burn-down chart per SLO; auto-pause feature flags on burn                |
+| (FR pending) | Centralised logs (structured JSON) with tenant + member tagging                       |
+| (FR pending) | OpenTelemetry tracing across Apollo Router → subgraphs → DB                           |
+| (FR pending) | Per-tenant cost dashboards (infra, AI, storage)                                       |
+| (FR pending) | Per-module SLO dashboards (latency, error-rate, success-rate)                         |
+| (FR pending) | Alert routing: PagerDuty-equivalent for critical; CHAT for low; CUO digest for trends |
+| (FR pending) | AI Gateway exposes a Grafana datasource for token / cost / latency                    |
+| (FR pending) | Audit-log surface (read-only) for compliance reviewers                                |
+| (FR pending) | Error-budget burn-down chart per SLO; auto-pause feature flags on burn                |
 
 <span id="h_9_10_time_time_expense" class="anchor"></span>**9.10 TIME — Time & Expense**
 
@@ -2418,14 +2418,14 @@ Time entries by Member by Engagement / Task; expense capture; weekly approval fl
 |             |                                                                                    |
 | ----------- | ---------------------------------------------------------------------------------- |
 | **ID**      | **Requirement**                                                                    |
-| FR-TIME-001 | Daily time entry with start/end or duration; per-task assignment                   |
-| FR-TIME-002 | Billable / non-billable rule by Engagement default + per-entry override            |
-| FR-TIME-003 | Receipt capture (camera, file upload, email forward)                               |
-| FR-TIME-004 | Weekly approval flow: Member submit → Account Manager approve → Founder visibility |
-| FR-TIME-005 | CUO/COO-skill nudges Members who haven’t logged time in 2 days                     |
-| FR-TIME-006 | Export to INV: weekly batched; per-engagement billable summary                     |
-| FR-TIME-007 | Time entries ingested into BRAIN Layer 3 (only own; CRO-skill aggregates)          |
-| FR-TIME-008 | Per-Member personal time-log (annotations, notes) is private namespace             |
+| (FR pending) | Daily time entry with start/end or duration; per-task assignment                   |
+| (FR pending) | Billable / non-billable rule by Engagement default + per-entry override            |
+| (FR pending) | Receipt capture (camera, file upload, email forward)                               |
+| (FR pending) | Weekly approval flow: Member submit → Account Manager approve → Founder visibility |
+| (FR pending) | CUO/COO-skill nudges Members who haven’t logged time in 2 days                     |
+| (FR pending) | Export to INV: weekly batched; per-engagement billable summary                     |
+| (FR pending) | Time entries ingested into BRAIN Layer 3 (only own; CRO-skill aggregates)          |
+| (FR pending) | Per-Member personal time-log (annotations, notes) is private namespace             |
 
 <span id="h_9_11_crm_client_management" class="anchor"></span>**9.11 CRM — Client management**
 
@@ -2434,14 +2434,14 @@ Pipeline, accounts, contacts, deals; agent-loggable activity; integration with E
 |            |                                                                         |
 | ---------- | ----------------------------------------------------------------------- |
 | **ID**     | **Requirement**                                                         |
-| FR-CRM-001 | Account / Contact / Deal entities with custom fields per workspace      |
-| FR-CRM-002 | Configurable pipeline stages with transition rules                      |
-| FR-CRM-003 | Activity log: emails, calls, meetings, notes; agent-loggable via MCP    |
-| FR-CRM-004 | Email-to-CRM auto-log for tracked-domain mailboxes (EMAIL integration)  |
-| FR-CRM-005 | Deal forecasting via CUO/CRO-skill: confidence-banded                   |
-| FR-CRM-006 | Activities ingested into BRAIN; deals only after closed/lost            |
-| FR-CRM-007 | Per-deal ACL; private deals not visible cross-workspace                 |
-| FR-CRM-008 | Vietnamese-formatting helpers (Anh/Chị/Bạn salutation, address parsing) |
+| (FR pending) | Account / Contact / Deal entities with custom fields per workspace      |
+| (FR pending) | Configurable pipeline stages with transition rules                      |
+| (FR pending) | Activity log: emails, calls, meetings, notes; agent-loggable via MCP    |
+| (FR pending) | Email-to-CRM auto-log for tracked-domain mailboxes (EMAIL integration)  |
+| (FR pending) | Deal forecasting via CUO/CRO-skill: confidence-banded                   |
+| (FR pending) | Activities ingested into BRAIN; deals only after closed/lost            |
+| (FR pending) | Per-deal ACL; private deals not visible cross-workspace                 |
+| (FR pending) | Vietnamese-formatting helpers (Anh/Chị/Bạn salutation, address parsing) |
 
 <span id="h_9_12_kb_knowledge_base" class="anchor"></span>**9.12 KB — Knowledge Base**
 
@@ -2450,14 +2450,14 @@ Living documents ingested into BRAIN; AI Q\&A grounded in cited KB pages; Notion
 |           |                                                                              |
 | --------- | ---------------------------------------------------------------------------- |
 | **ID**    | **Requirement**                                                              |
-| FR-KB-001 | Block-based editor (paragraphs, headings, lists, code, embeds, tables)       |
-| FR-KB-002 | Per-page ACL with workspace defaults; share-link with token expiry           |
-| FR-KB-003 | Versioning: every save creates a version; diff view; revert                  |
-| FR-KB-004 | Pages ingested into BRAIN within p95 ≤ 5 s of save                           |
-| FR-KB-005 | "Ask this page" — Q\&A grounded in the page + linked pages only              |
-| FR-KB-006 | "Promote to canonical" — surface a page as a high-authority BRAIN source     |
-| FR-KB-007 | Markdown export per-page or per-tree; Notion import (Notion-export ZIP)      |
-| FR-KB-008 | Trust Center pages live in KB and are public-readable for tenants who opt in |
+| (FR pending) | Block-based editor (paragraphs, headings, lists, code, embeds, tables)       |
+| (FR pending) | Per-page ACL with workspace defaults; share-link with token expiry           |
+| (FR pending) | Versioning: every save creates a version; diff view; revert                  |
+| (FR pending) | Pages ingested into BRAIN within p95 ≤ 5 s of save                           |
+| (FR pending) | "Ask this page" — Q\&A grounded in the page + linked pages only              |
+| (FR pending) | "Promote to canonical" — surface a page as a high-authority BRAIN source     |
+| (FR pending) | Markdown export per-page or per-tree; Notion import (Notion-export ZIP)      |
+| (FR pending) | Trust Center pages live in KB and are public-readable for tenants who opt in |
 
 <span id="h_9_13_hr_human_resources" class="anchor"></span>**9.13 HR — Human Resources**
 
@@ -2466,14 +2466,14 @@ Profiles, leave, contracts, sabbatical accrual; non-comp fields ingested into BR
 |           |                                                                                        |
 | --------- | -------------------------------------------------------------------------------------- |
 | **ID**    | **Requirement**                                                                        |
-| FR-HR-001 | Member profile: name, role, level, start date, sabbatical accrual, leave balance       |
-| FR-HR-002 | Leave request flow: submit → Account Manager approve → HR confirm; calendar visibility |
-| FR-HR-003 | Sabbatical eligibility tracker (every 5 continuous years, per Total Rewards Appendix)  |
-| FR-HR-004 | Contract storage; e-sign through DOC (P4) or external link in P1                       |
-| FR-HR-005 | Onboarding checklist with module-specific items                                        |
-| FR-HR-006 | Government ID encrypted with separate KMS key; never ingested                          |
-| FR-HR-007 | CCCD photos handled per Vietnamese sensitive-data law; access logged sev-1             |
-| FR-HR-008 | Termination workflow: settlement, asset return, REW final, ESOP Good/Bad Leaver branch |
+| (FR pending) | Member profile: name, role, level, start date, sabbatical accrual, leave balance       |
+| (FR pending) | Leave request flow: submit → Account Manager approve → HR confirm; calendar visibility |
+| (FR pending) | Sabbatical eligibility tracker (every 5 continuous years, per Total Rewards Appendix)  |
+| (FR pending) | Contract storage; e-sign through DOC (P4) or external link in P1                       |
+| (FR pending) | Onboarding checklist with module-specific items                                        |
+| (FR pending) | Government ID encrypted with separate KMS key; never ingested                          |
+| (FR pending) | CCCD photos handled per Vietnamese sensitive-data law; access logged sev-1             |
+| (FR pending) | Termination workflow: settlement, asset return, REW final, ESOP Good/Bad Leaver branch |
 
 <span id="h_9_14_rew_total_rewards_compensation" class="anchor"></span>**9.14 REW — Total Rewards (Compensation)**
 
@@ -2482,16 +2482,16 @@ The legal heart of the company's social contract; encodes the Total Rewards & Ca
 |            |                                                                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **ID**     | **Requirement**                                                                                                                       |
-| FR-REW-001 | 3P income structure: P1 Base (cash) + P2 Allowance (cash) + P3 Performance (cash overflow)                                            |
-| FR-REW-002 | BP (Bonus Points) ledger with anti-inflation interest at the ACB savings rate                                                         |
-| FR-REW-003 | P1-protection invariant: evaluation never reduces P1 base salary in cash. Hard system property; sev-0 if violated                     |
-| FR-REW-004 | Anti-retroactive parameter versioning: published versions are immutable; recompute against an old payslip MUST yield identical result |
-| FR-REW-005 | Monthly close cycle: HR initiates → CUO/CFO-skill narrates anomalies → Founder approves → payslip published                           |
-| FR-REW-006 | Payslip narrative via cyberos.rew.payslip\_explain (read-only narrative, never compute)                                               |
-| FR-REW-007 | Compensation values structurally excluded from BRAIN ingestion (DEC-036)                                                              |
-| FR-REW-008 | EU AI Act high-risk conformity pack at P2 (Annex III §4)                                                                              |
-| FR-REW-009 | Singapore HoldCo support: SGD payroll branch when entity selected                                                                     |
-| FR-REW-010 | Vietnamese SI/PIT line-items per local law; remittance integration P3 stretch                                                         |
+| (FR pending) | 3P income structure: P1 Base (cash) + P2 Allowance (cash) + P3 Performance (cash overflow)                                            |
+| (FR pending) | BP (Bonus Points) ledger with anti-inflation interest at the ACB savings rate                                                         |
+| (FR pending) | P1-protection invariant: evaluation never reduces P1 base salary in cash. Hard system property; sev-0 if violated                     |
+| (FR pending) | Anti-retroactive parameter versioning: published versions are immutable; recompute against an old payslip MUST yield identical result |
+| (FR pending) | Monthly close cycle: HR initiates → CUO/CFO-skill narrates anomalies → Founder approves → payslip published                           |
+| (FR pending) | Payslip narrative via cyberos.rew.payslip\_explain (read-only narrative, never compute)                                               |
+| (FR pending) | Compensation values structurally excluded from BRAIN ingestion (DEC-036)                                                              |
+| (FR pending) | EU AI Act high-risk conformity pack at P2 (Annex III §4)                                                                              |
+| (FR pending) | Singapore HoldCo support: SGD payroll branch when entity selected                                                                     |
+| (FR pending) | Vietnamese SI/PIT line-items per local law; remittance integration P3 stretch                                                         |
 
 <span id="h_9_15_learn_learning_promotion" class="anchor"></span>**9.15 LEARN — Learning & Promotion**
 
@@ -2500,14 +2500,14 @@ Variable Performance (VP) roll-up; Hội đồng Chuyên môn (Professional Coun
 |              |                                                                             |
 | ------------ | --------------------------------------------------------------------------- |
 | **ID**       | **Requirement**                                                             |
-| FR-LEARN-001 | VP roll-up from PROJ + TIME + KB contributions                              |
-| FR-LEARN-002 | Hội đồng Chuyên môn workflow: peer-review with multi-judge scoring          |
-| FR-LEARN-003 | Promotion levels per Total Rewards Appendix; gate criteria per level        |
-| FR-LEARN-004 | Individual peer-review scores never ingested; outcome summaries only        |
-| FR-LEARN-005 | Training records: courses, certifications, sabbatical knowledge-share posts |
-| FR-LEARN-006 | Career-path visualisation per Member; next-level requirements transparent   |
-| FR-LEARN-007 | EU AI Act high-risk conformity pack at P2 (promotion = Annex III §4)        |
-| FR-LEARN-008 | Anti-retroactive parameter versioning identical to REW pattern              |
+| (FR pending) | VP roll-up from PROJ + TIME + KB contributions                              |
+| (FR pending) | Hội đồng Chuyên môn workflow: peer-review with multi-judge scoring          |
+| (FR pending) | Promotion levels per Total Rewards Appendix; gate criteria per level        |
+| (FR pending) | Individual peer-review scores never ingested; outcome summaries only        |
+| (FR pending) | Training records: courses, certifications, sabbatical knowledge-share posts |
+| (FR pending) | Career-path visualisation per Member; next-level requirements transparent   |
+| (FR pending) | EU AI Act high-risk conformity pack at P2 (promotion = Annex III §4)        |
+| (FR pending) | Anti-retroactive parameter versioning identical to REW pattern              |
 
 <span id="h_9_16_inv_invoicing" class="anchor"></span>**9.16 INV — Invoicing**
 
@@ -2516,14 +2516,14 @@ Invoice lifecycle; AR aging; Stripe / Wise / VND-PSP integration; tax compliance
 |            |                                                                                      |
 | ---------- | ------------------------------------------------------------------------------------ |
 | **ID**     | **Requirement**                                                                      |
-| FR-INV-001 | Invoice draft from TIME entries per engagement; editable before send                 |
-| FR-INV-002 | Multi-currency: VND, USD, SGD, EUR; daily SBV (State Bank of Vietnam) rate snapshot  |
-| FR-INV-003 | Stripe (USD/EUR), Wise (multi-currency), VietQR / domestic banking integration (VND) |
-| FR-INV-004 | Vietnam e-invoice format (Decree 123 / Circular 78)                                  |
-| FR-INV-005 | AR aging report; CUO/CFO-skill drafts dunning emails on overdue                      |
-| FR-INV-006 | Per-engagement billable rules drive automatic line items                             |
-| FR-INV-007 | PDF generation with tenant brand; archival to S3 immutable bucket                    |
-| FR-INV-008 | Invoice events emitted to NATS; CRM reflects payment status                          |
+| (FR pending) | Invoice draft from TIME entries per engagement; editable before send                 |
+| (FR pending) | Multi-currency: VND, USD, SGD, EUR; daily SBV (State Bank of Vietnam) rate snapshot  |
+| (FR pending) | Stripe (USD/EUR), Wise (multi-currency), VietQR / domestic banking integration (VND) |
+| (FR pending) | Vietnam e-invoice format (Decree 123 / Circular 78)                                  |
+| (FR pending) | AR aging report; CUO/CFO-skill drafts dunning emails on overdue                      |
+| (FR pending) | Per-engagement billable rules drive automatic line items                             |
+| (FR pending) | PDF generation with tenant brand; archival to S3 immutable bucket                    |
+| (FR pending) | Invoice events emitted to NATS; CRM reflects payment status                          |
 
 <span id="h_9_17_esop_phantom_stock" class="anchor"></span>**9.17 ESOP — Phantom Stock**
 
@@ -2532,15 +2532,15 @@ Grants, vesting, valuation, put options, Good Leaver / Bad Leaver branches. Oper
 |             |                                                                                   |
 | ----------- | --------------------------------------------------------------------------------- |
 | **ID**      | **Requirement**                                                                   |
-| FR-ESOP-001 | 4-year vesting schedule per grant (Appendix-default; configurable per grant)      |
-| FR-ESOP-002 | Annual SP valuation cycle: Board signs Industry Multiplier; CFO inputs base value |
-| FR-ESOP-003 | Put options exercisable from Year 3; cap per-Member per-year                      |
-| FR-ESOP-004 | Good Leaver: vested SP retained; future vesting forfeited; put rights preserved   |
-| FR-ESOP-005 | Bad Leaver: vested SP retained at discount per Appendix; put rights frozen        |
-| FR-ESOP-006 | M\&A acceleration clause: Board signs; bulk vesting event; tax-implication note   |
-| FR-ESOP-007 | ESOP values structurally excluded from BRAIN ingestion                            |
-| FR-ESOP-008 | Per-tenant CFO + Board dual sign on annual valuation                              |
-| FR-ESOP-009 | Anti-retroactive: valuation versions are immutable; historic statements stable    |
+| (FR pending) | 4-year vesting schedule per grant (Appendix-default; configurable per grant)      |
+| (FR pending) | Annual SP valuation cycle: Board signs Industry Multiplier; CFO inputs base value |
+| (FR pending) | Put options exercisable from Year 3; cap per-Member per-year                      |
+| (FR pending) | Good Leaver: vested SP retained; future vesting forfeited; put rights preserved   |
+| (FR pending) | Bad Leaver: vested SP retained at discount per Appendix; put rights frozen        |
+| (FR pending) | M\&A acceleration clause: Board signs; bulk vesting event; tax-implication note   |
+| (FR pending) | ESOP values structurally excluded from BRAIN ingestion                            |
+| (FR pending) | Per-tenant CFO + Board dual sign on annual valuation                              |
+| (FR pending) | Anti-retroactive: valuation versions are immutable; historic statements stable    |
 
 <span id="h_9_18_res_resource_planning" class="anchor"></span>**9.18 RES — Resource planning**
 
@@ -2549,11 +2549,11 @@ Capacity vs forecast; allocation Gantt; CUO/COO-skill rebalancing suggestions.
 |            |                                                                          |
 | ---------- | ------------------------------------------------------------------------ |
 | **ID**     | **Requirement**                                                          |
-| FR-RES-001 | Per-Member weekly capacity (default 40h, configurable, sabbatical-aware) |
-| FR-RES-002 | Per-engagement forecast: weeks × hours; per-skill breakdown              |
-| FR-RES-003 | Allocation view: capacity vs forecast vs actual                          |
-| FR-RES-004 | CUO/COO-skill flags over-allocation \> 110%, under-allocation \< 60%     |
-| FR-RES-005 | Mobile-friendly capacity view (P3+)                                      |
+| (FR pending) | Per-Member weekly capacity (default 40h, configurable, sabbatical-aware) |
+| (FR pending) | Per-engagement forecast: weeks × hours; per-skill breakdown              |
+| (FR pending) | Allocation view: capacity vs forecast vs actual                          |
+| (FR pending) | CUO/COO-skill flags over-allocation \> 110%, under-allocation \< 60%     |
+| (FR pending) | Mobile-friendly capacity view (P3+)                                      |
 
 <span id="h_9_19_okr_okr_strategy" class="anchor"></span>**9.19 OKR — OKR / Strategy**
 
@@ -2562,10 +2562,10 @@ Quarterly OKR cycle; cascade through teams; CUO/CEO + CSO-skill review.
 |            |                                                                      |
 | ---------- | -------------------------------------------------------------------- |
 | **ID**     | **Requirement**                                                      |
-| FR-OKR-001 | Quarterly cycle with company → team → Member cascade                 |
-| FR-OKR-002 | Confidence-band updates; CUO digest weekly to Founder                |
-| FR-OKR-003 | OKR retro at quarter close; "what would change my mind" prompts      |
-| FR-OKR-004 | Public OKR view per workspace (Members see all team OKRs by default) |
+| (FR pending) | Quarterly cycle with company → team → Member cascade                 |
+| (FR pending) | Confidence-band updates; CUO digest weekly to Founder                |
+| (FR pending) | OKR retro at quarter close; "what would change my mind" prompts      |
+| (FR pending) | Public OKR view per workspace (Members see all team OKRs by default) |
 
 <span id="h_9_20_doc_document_signing_p4" class="anchor"></span>**9.20 DOC — Document signing (P4)**
 
@@ -2574,11 +2574,11 @@ eIDAS QTSP integration; AATL adv-cert; archival.
 |            |                                                                     |
 | ---------- | ------------------------------------------------------------------- |
 | **ID**     | **Requirement**                                                     |
-| FR-DOC-001 | eIDAS QTSP integration via partner (e.g., GlobalSign, Cryptomathic) |
-| FR-DOC-002 | AATL adv-cert for non-EU jurisdictions                              |
-| FR-DOC-003 | Audit-log chain: certificate hash + signature + timestamp authority |
-| FR-DOC-004 | Vietnamese e-sign per Decree 130/2018 + amendments                  |
-| FR-DOC-005 | Archival to S3 immutable bucket with 10-year retention              |
+| (FR pending) | eIDAS QTSP integration via partner (e.g., GlobalSign, Cryptomathic) |
+| (FR pending) | AATL adv-cert for non-EU jurisdictions                              |
+| (FR pending) | Audit-log chain: certificate hash + signature + timestamp authority |
+| (FR pending) | Vietnamese e-sign per Decree 130/2018 + amendments                  |
+| (FR pending) | Archival to S3 immutable bucket with 10-year retention              |
 
 <span id="h_9_21_portal_client_portal_p4" class="anchor"></span>**9.21 PORTAL — Client portal (P4)**
 
@@ -2587,11 +2587,11 @@ Branded customer-facing surface; PROJ + INV + DOC visible to invited clients.
 |               |                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------- |
 | **ID**        | **Requirement**                                                                          |
-| FR-PORTAL-001 | Per-tenant brandable: logo, colour anchors override Umber/Ochre with sub-brand accent    |
-| FR-PORTAL-002 | Customer can view shared projects, comment, sign documents, view/pay invoices            |
-| FR-PORTAL-003 | Per-customer ACL; cross-tenant isolation in shared infra                                 |
-| FR-PORTAL-004 | Customer agent (P4): customer’s GPT/Claude/Gemini connects via MCP with explicit consent |
-| FR-PORTAL-005 | Mobile-first responsive; PWA install supported                                           |
+| (FR pending) | Per-tenant brandable: logo, colour anchors override Umber/Ochre with sub-brand accent    |
+| (FR pending) | Customer can view shared projects, comment, sign documents, view/pay invoices            |
+| (FR pending) | Per-customer ACL; cross-tenant isolation in shared infra                                 |
+| (FR pending) | Customer agent (P4): customer’s GPT/Claude/Gemini connects via MCP with explicit consent |
+| (FR pending) | Mobile-first responsive; PWA install supported                                           |
 
 <span id="h_9_22_ten_tenancy_billing_p4" class="anchor"></span>**9.22 TEN — Tenancy & Billing (P4)**
 
@@ -2600,13 +2600,13 @@ Tenant signup, billing, plan management, brandability for external paying tenant
 |            |                                                                             |
 | ---------- | --------------------------------------------------------------------------- |
 | **ID**     | **Requirement**                                                             |
-| FR-TEN-001 | Self-serve tenant signup with org name, residency choice, plan selection    |
-| FR-TEN-002 | Billing via Stripe (international) and VND-PSP (domestic)                   |
-| FR-TEN-003 | Plan tiers: Starter (≤ 10 seats), Team (≤ 50), Enterprise (custom)          |
-| FR-TEN-004 | Per-tenant brand pack; @cyberskill/tokens override layer                    |
-| FR-TEN-005 | Tenant-admin UX: billing, seats, audit, residency, retention overrides      |
-| FR-TEN-006 | Tenant data export: full export as signed bundle (BRAIN + module data)      |
-| FR-TEN-007 | Tenant offboarding: 90-day grace, then irreversible delete with attestation |
+| (FR pending) | Self-serve tenant signup with org name, residency choice, plan selection    |
+| (FR pending) | Billing via Stripe (international) and VND-PSP (domestic)                   |
+| (FR pending) | Plan tiers: Starter (≤ 10 seats), Team (≤ 50), Enterprise (custom)          |
+| (FR pending) | Per-tenant brand pack; @cyberskill/tokens override layer                    |
+| (FR pending) | Tenant-admin UX: billing, seats, audit, residency, retention overrides      |
+| (FR pending) | Tenant data export: full export as signed bundle (BRAIN + module data)      |
+| (FR pending) | Tenant offboarding: 90-day grace, then irreversible delete with attestation |
 
 <span id="h_part_10_user_flows" class="anchor"></span>**Part 10 · User Flows**
 
@@ -2702,106 +2702,106 @@ NFRs are organised by ISO/IEC 25010:2023 quality category. Each carries a verifi
 |              |                                |                                                  |             |
 | ------------ | ------------------------------ | ------------------------------------------------ | ----------- |
 | **ID**       | **Requirement**                | **Target**                                       | **Verify**  |
-| NFR-PERF-001 | GraphQL p95 latency            | ≤ 400 ms                                         | T           |
-| NFR-PERF-002 | CHAT message-deliver p95       | ≤ 200 ms                                         | T           |
-| NFR-PERF-003 | CUO text-answer p95            | ≤ 2 s                                            | T           |
-| NFR-PERF-004 | BRAIN search p95               | ≤ 250 ms on 1M-chunk corpus                      | T           |
-| NFR-PERF-005 | BRAIN ingest-to-searchable p95 | ≤ 5 s                                            | T           |
-| NFR-PERF-006 | MCP read tool p95              | ≤ 500 ms                                         | T           |
-| NFR-PERF-007 | MCP write tool p95             | ≤ 1 s                                            | T           |
-| NFR-PERF-008 | Module first-paint             | ≤ 1.5 s on cold load                             | T           |
-| NFR-PERF-009 | Module bundle size (initial)   | ≤ 50 KB JS gzipped                               | I           |
-| NFR-PERF-010 | Cost ceiling (internal)        | ≤ $380/month infra; ≤ $150/month LLM             | I           |
-| NFR-PERF-011 | Cost ceiling (50-tenant)       | ≤ $2,200/month infra; ≤ $4/active user/month LLM | I           |
-| NFR-PERF-012 | p99 latency degradation        | \< 20% release-over-release                      | T (CI gate) |
+| N(FR pending) | GraphQL p95 latency            | ≤ 400 ms                                         | T           |
+| N(FR pending) | CHAT message-deliver p95       | ≤ 200 ms                                         | T           |
+| N(FR pending) | CUO text-answer p95            | ≤ 2 s                                            | T           |
+| N(FR pending) | BRAIN search p95               | ≤ 250 ms on 1M-chunk corpus                      | T           |
+| N(FR pending) | BRAIN ingest-to-searchable p95 | ≤ 5 s                                            | T           |
+| N(FR pending) | MCP read tool p95              | ≤ 500 ms                                         | T           |
+| N(FR pending) | MCP write tool p95             | ≤ 1 s                                            | T           |
+| N(FR pending) | Module first-paint             | ≤ 1.5 s on cold load                             | T           |
+| N(FR pending) | Module bundle size (initial)   | ≤ 50 KB JS gzipped                               | I           |
+| N(FR pending) | Cost ceiling (internal)        | ≤ $380/month infra; ≤ $150/month LLM             | I           |
+| N(FR pending) | Cost ceiling (50-tenant)       | ≤ $2,200/month infra; ≤ $4/active user/month LLM | I           |
+| N(FR pending) | p99 latency degradation        | \< 20% release-over-release                      | T (CI gate) |
 
 <span id="h_11_2_2_reliability_rel" class="anchor"></span>**11.2.2 Reliability (REL)**
 
 |             |                                        |                              |            |
 | ----------- | -------------------------------------- | ---------------------------- | ---------- |
 | **ID**      | **Requirement**                        | **Target**                   | **Verify** |
-| NFR-REL-001 | Platform availability (28-day rolling) | ≥ 99.5%                      | T          |
-| NFR-REL-002 | CHAT availability                      | ≥ 99.9%                      | T          |
-| NFR-REL-003 | BRAIN search availability              | ≥ 99.5%                      | T          |
-| NFR-REL-004 | AI Gateway with provider failover      | Continuous on primary outage | T+I        |
-| NFR-REL-005 | Backup RPO                             | ≤ 1 h                        | I          |
-| NFR-REL-006 | Backup RTO                             | ≤ 4 h                        | D          |
-| NFR-REL-007 | Cross-region failover (P3)             | ≤ 24 h                       | D          |
-| NFR-REL-008 | Persisted-query cache hit rate         | ≥ 70%                        | T          |
+| N(FR pending) | Platform availability (28-day rolling) | ≥ 99.5%                      | T          |
+| N(FR pending) | CHAT availability                      | ≥ 99.9%                      | T          |
+| N(FR pending) | BRAIN search availability              | ≥ 99.5%                      | T          |
+| N(FR pending) | AI Gateway with provider failover      | Continuous on primary outage | T+I        |
+| N(FR pending) | Backup RPO                             | ≤ 1 h                        | I          |
+| N(FR pending) | Backup RTO                             | ≤ 4 h                        | D          |
+| N(FR pending) | Cross-region failover (P3)             | ≤ 24 h                       | D          |
+| N(FR pending) | Persisted-query cache hit rate         | ≥ 70%                        | T          |
 
 <span id="h_11_2_3_security_sec" class="anchor"></span>**11.2.3 Security (SEC)**
 
 |             |                                                  |                                    |            |
 | ----------- | ------------------------------------------------ | ---------------------------------- | ---------- |
 | **ID**      | **Requirement**                                  | **Target**                         | **Verify** |
-| NFR-SEC-001 | Tenant data leakage incidents                    | \= 0; sev-0                        | T+A        |
-| NFR-SEC-002 | P1 base salary system-reduction                  | \= 0; legal commitment             | T+A        |
-| NFR-SEC-003 | Parameter version retroactive mutation           | \= 0; immutable by construction    | A          |
-| NFR-SEC-004 | Compensation in BRAIN                            | \= 0; ingestion denylist           | T+A        |
-| NFR-SEC-005 | CUO answer without citation when source exists   | \= 0; CI regression test           | T          |
-| NFR-SEC-006 | CUO auto-act on irreversible op without confirm  | \= 0; runtime check                | T+A        |
-| NFR-SEC-007 | Prompt-injection exfiltration via email/document | \= 0; CaMeL enforced               | T+A        |
-| NFR-SEC-008 | TLS for all inter-service traffic                | mTLS in cluster; HTTPS external    | I          |
-| NFR-SEC-009 | Penetration test cadence                         | Annual (P2+); after major releases | D          |
-| NFR-SEC-010 | Vulnerability remediation SLO                    | Critical ≤ 24 h; High ≤ 7 d        | I          |
-| NFR-SEC-011 | Sub-processor list public on Trust Center        | Always                             | I          |
-| NFR-SEC-012 | OWASP Gen AI Top-10 mitigations                  | All present-day items addressed    | A          |
+| N(FR pending) | Tenant data leakage incidents                    | \= 0; sev-0                        | T+A        |
+| N(FR pending) | P1 base salary system-reduction                  | \= 0; legal commitment             | T+A        |
+| N(FR pending) | Parameter version retroactive mutation           | \= 0; immutable by construction    | A          |
+| N(FR pending) | Compensation in BRAIN                            | \= 0; ingestion denylist           | T+A        |
+| N(FR pending) | CUO answer without citation when source exists   | \= 0; CI regression test           | T          |
+| N(FR pending) | CUO auto-act on irreversible op without confirm  | \= 0; runtime check                | T+A        |
+| N(FR pending) | Prompt-injection exfiltration via email/document | \= 0; CaMeL enforced               | T+A        |
+| N(FR pending) | TLS for all inter-service traffic                | mTLS in cluster; HTTPS external    | I          |
+| N(FR pending) | Penetration test cadence                         | Annual (P2+); after major releases | D          |
+| N(FR pending) | Vulnerability remediation SLO                    | Critical ≤ 24 h; High ≤ 7 d        | I          |
+| N(FR pending) | Sub-processor list public on Trust Center        | Always                             | I          |
+| N(FR pending) | OWASP Gen AI Top-10 mitigations                  | All present-day items addressed    | A          |
 
 <span id="h_11_2_4_usability_usab" class="anchor"></span>**11.2.4 Usability (USAB)**
 
 |              |                           |                                                   |            |
 | ------------ | ------------------------- | ------------------------------------------------- | ---------- |
 | **ID**       | **Requirement**           | **Target**                                        | **Verify** |
-| NFR-USAB-001 | WCAG 2.2 conformance      | Level AA across host shell + modules              | T+I        |
-| NFR-USAB-002 | VPAT 2.5 INT              | P0 exit                                           | I          |
-| NFR-USAB-003 | Keyboard-only operability | Every interaction reachable; visible focus        | T          |
-| NFR-USAB-004 | Vietnamese type quality   | Diacritic stack-fidelity per Design System Part 5 | I          |
-| NFR-USAB-005 | CUO citation rate         | ≥ 98% when relevant chunks exist                  | T          |
-| NFR-USAB-006 | Mobile P3 viewport        | Responsive 360 px+; 80% feature parity            | T          |
+| N(FR pending) | WCAG 2.2 conformance      | Level AA across host shell + modules              | T+I        |
+| N(FR pending) | VPAT 2.5 INT              | P0 exit                                           | I          |
+| N(FR pending) | Keyboard-only operability | Every interaction reachable; visible focus        | T          |
+| N(FR pending) | Vietnamese type quality   | Diacritic stack-fidelity per Design System Part 5 | I          |
+| N(FR pending) | CUO citation rate         | ≥ 98% when relevant chunks exist                  | T          |
+| N(FR pending) | Mobile P3 viewport        | Responsive 360 px+; 80% feature parity            | T          |
 
 <span id="h_11_2_5_maintainability_maint" class="anchor"></span>**11.2.5 Maintainability (MAINT)**
 
 |               |                                     |                                     |             |
 | ------------- | ----------------------------------- | ----------------------------------- | ----------- |
 | **ID**        | **Requirement**                     | **Target**                          | **Verify**  |
-| NFR-MAINT-001 | Module CI duration                  | ≤ 10 minutes                        | T (CI gate) |
-| NFR-MAINT-002 | Test coverage per module            | ≥ 70% statement / ≥ 60% branch      | T           |
-| NFR-MAINT-003 | Code-OWNERS file per module         | Present                             | I           |
-| NFR-MAINT-004 | Schema deprecation discipline       | No removal without ≥ 1 phase notice | I           |
-| NFR-MAINT-005 | Module-rebuild time on token change | ≤ 30 minutes including tests        | T           |
-| NFR-MAINT-006 | Skill hot-reload time               | ≤ 60 s for SKILL.md updates         | D           |
+| N(FR pending) | Module CI duration                  | ≤ 10 minutes                        | T (CI gate) |
+| N(FR pending) | Test coverage per module            | ≥ 70% statement / ≥ 60% branch      | T           |
+| N(FR pending) | Code-OWNERS file per module         | Present                             | I           |
+| N(FR pending) | Schema deprecation discipline       | No removal without ≥ 1 phase notice | I           |
+| N(FR pending) | Module-rebuild time on token change | ≤ 30 minutes including tests        | T           |
+| N(FR pending) | Skill hot-reload time               | ≤ 60 s for SKILL.md updates         | D           |
 
 <span id="h_11_2_6_compatibility_compat" class="anchor"></span>**11.2.6 Compatibility (COMPAT)**
 
 |                |                          |                                                           |            |
 | -------------- | ------------------------ | --------------------------------------------------------- | ---------- |
 | **ID**         | **Requirement**          | **Target**                                                | **Verify** |
-| NFR-COMPAT-001 | Browsers                 | Chromium / Firefox / Safari last 2 versions               | T          |
-| NFR-COMPAT-002 | Desktop                  | Tauri-bundle on Windows 10+, macOS 12+, Ubuntu 22+        | D          |
-| NFR-COMPAT-003 | MCP client compatibility | Claude Desktop, Claude Code, Cursor, Cline at GA versions | T          |
-| NFR-COMPAT-004 | Email RFC compliance     | RFC 5322 + i18n RFC 6532; UTF-8 throughout                | T          |
-| NFR-COMPAT-005 | iCalendar                | RFC 5545 export per HR + PROJ                             | T          |
-| NFR-COMPAT-006 | PDF/A-2                  | INV + DOC archival format                                 | T          |
+| N(FR pending) | Browsers                 | Chromium / Firefox / Safari last 2 versions               | T          |
+| N(FR pending) | Desktop                  | Tauri-bundle on Windows 10+, macOS 12+, Ubuntu 22+        | D          |
+| N(FR pending) | MCP client compatibility | Claude Desktop, Claude Code, Cursor, Cline at GA versions | T          |
+| N(FR pending) | Email RFC compliance     | RFC 5322 + i18n RFC 6532; UTF-8 throughout                | T          |
+| N(FR pending) | iCalendar                | RFC 5545 export per HR + PROJ                             | T          |
+| N(FR pending) | PDF/A-2                  | INV + DOC archival format                                 | T          |
 
 <span id="h_11_2_7_transferability_tran" class="anchor"></span>**11.2.7 Transferability (TRAN)**
 
 |              |                                 |                                                     |            |
 | ------------ | ------------------------------- | --------------------------------------------------- | ---------- |
 | **ID**       | **Requirement**                 | **Target**                                          | **Verify** |
-| NFR-TRAN-001 | Tenant data export              | Full export within 24 h of request as signed bundle | T+D        |
-| NFR-TRAN-002 | Tenant data import (P4)         | Standard import for prior CyberOS / Notion / Slack  | T          |
-| NFR-TRAN-003 | BRAIN signed-zip portability    | Verifiable Ed25519 signature; Merkle proof          | T          |
-| NFR-TRAN-004 | No vendor lock at storage layer | S3-compatible object store; SQL portable schema     | I          |
+| N(FR pending) | Tenant data export              | Full export within 24 h of request as signed bundle | T+D        |
+| N(FR pending) | Tenant data import (P4)         | Standard import for prior CyberOS / Notion / Slack  | T          |
+| N(FR pending) | BRAIN signed-zip portability    | Verifiable Ed25519 signature; Merkle proof          | T          |
+| N(FR pending) | No vendor lock at storage layer | S3-compatible object store; SQL portable schema     | I          |
 
 <span id="h_11_2_8_functional_suitability_func" class="anchor"></span>**11.2.8 Functional Suitability (FUNC)**
 
 |              |                                                                  |                                 |            |
 | ------------ | ---------------------------------------------------------------- | ------------------------------- | ---------- |
 | **ID**       | **Requirement**                                                  | **Target**                      | **Verify** |
-| NFR-FUNC-001 | Module Ready criterion (§7.2) met for every module at phase exit | All 10 items                    | I+D        |
-| NFR-FUNC-002 | GraphQL composition passes for every release                     | Schema check pass               | T          |
-| NFR-FUNC-003 | Anti-retroactive recompute passes on every published payslip     | Identical recompute             | T          |
-| NFR-FUNC-004 | CUO defer-trigger coverage                                       | ≥ 99% of irreversible ops gated | T+A        |
+| N(FR pending) | Module Ready criterion (§7.2) met for every module at phase exit | All 10 items                    | I+D        |
+| N(FR pending) | GraphQL composition passes for every release                     | Schema check pass               | T          |
+| N(FR pending) | Anti-retroactive recompute passes on every published payslip     | Identical recompute             | T          |
+| N(FR pending) | CUO defer-trigger coverage                                       | ≥ 99% of irreversible ops gated | T+A        |
 
 <span id="h_part_13_ai_driven_productivity_matrix" class="anchor"></span>**Part 13 · AI-Driven Productivity Matrix**
 
@@ -3561,7 +3561,7 @@ P0 is "minimum viable internal CyberOS for CyberSkill JSC" — twelve weeks from
 
   - **Demo deliverables.** (1) Founder opens host shell at 09:00. (2) Daily digest appears within 5 seconds, citing 4–6 BRAIN sources. (3) Two pending Notify items are addressable in one click each. (4) Sprint review opens with auto-prepared agenda from PROJ + BRAIN. (5) Total time from login to first action ≤ 90 seconds.
 
-  - **Risk gates.** Time-on-task NFR-USAB-004 (founder daily review \< 10 min) measured by trace span. \> 10 min in two consecutive demos is sprint-blocking.
+  - **Risk gates.** Time-on-task N(FR pending) (founder daily review \< 10 min) measured by trace span. \> 10 min in two consecutive demos is sprint-blocking.
 
 <span id="h_17_6_sprint_s0_6_stabilisation_compliance_phase_exit_weeks_1" class="anchor"></span>**17.6 Sprint S0-6 — Stabilisation, Compliance, Phase Exit (weeks 11–12)**
 
@@ -3599,7 +3599,7 @@ CyberOS's capabilities are described elsewhere as a catalog. This Part shows the
 
 07:40. Cards from CUO-COO and CUO-CTO follow the same pattern. By 07:50, twelve items have been triaged in twenty minutes — ten dispositions, two deferred for deeper thought. The host shell now shows "deep work mode" — a single CHAT thread Trịnh wants to engage with, BRAIN search ready, no other notifications until 11:00 unless they are tagged P0 incident severity.
 
-NFR-USAB-004 instrumentation records the daily-review duration: 22 minutes. Below the \< 10-min target only because of the development-path conversation, which counts as task-doing not task-triaging. The trace tags the segment correctly. Time-on-task budget: green.
+N(FR pending) instrumentation records the daily-review duration: 22 minutes. Below the \< 10-min target only because of the development-path conversation, which counts as task-doing not task-triaging. The trace tags the segment correctly. Time-on-task budget: green.
 
 <span id="h_18_2_account_manager_mid_day_closing_a_deal" class="anchor"></span>**18.2 Account Manager, mid-day (closing a deal)**
 
@@ -3661,221 +3661,221 @@ This Part collects the Functional Requirement catalogs for the modules whose dee
 |             |                                                                                                             |                                                                    |            |
 | ----------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------- |
 | **ID**      | **Statement**                                                                                               | **Acceptance criterion**                                           | **Method** |
-| FR-AUTH-001 | The system MUST support OAuth 2.1 with PKCE for all browser-based logins.                                   | Synthetic OAuth flow completes; non-PKCE flow rejected.            | \[T\]      |
-| FR-AUTH-002 | The system MUST require a second factor (TOTP minimum, WebAuthn for elevated roles) for all human logins.   | Login without 2nd factor rejected; WebAuthn binds to credential.   | \[T\]      |
-| FR-AUTH-003 | The system MUST issue JWT RS256 access tokens with ≤ 15-minute lifetime.                                    | Token claims inspected; lifetime ≤ 900 seconds.                    | \[T\]      |
-| FR-AUTH-004 | The system MUST rotate refresh tokens on every use; reuse triggers session invalidation.                    | Replay test invalidates session; legitimate rotation succeeds.     | \[T\]      |
-| FR-AUTH-005 | The system MUST enforce RBAC + Scope Contract Grants on every cross-module API call.                        | Out-of-scope call returns 403 with audit row; in-scope succeeds.   | \[T\]      |
-| FR-AUTH-006 | The system SHOULD detect and challenge impossible-travel sessions (geographic distance \> velocity allows). | Synthetic travel test triggers challenge.                          | \[T\]      |
-| FR-AUTH-007 | The system MUST log every authentication event (success, failure, MFA use) to the audit chain.              | Each event yields exactly one chained audit row.                   | \[T\]      |
-| FR-AUTH-008 | The system MUST support magic-link login only for onboarding flows; never for production access.            | Magic-link rejected for already-onboarded identity.                | \[T\]      |
-| FR-AUTH-009 | The system MUST allow administrators to revoke a session within 5 seconds end-to-end.                       | Revocation API → next API call from revoked session 401 within 5s. | \[T\]      |
-| FR-AUTH-010 | The system MUST enforce that compensation-related routes require both CFO + CHRO co-sign at request time.   | Single-signer attempt blocked; dual-signer succeeds.               | \[T\]      |
+| (FR pending) | The system MUST support OAuth 2.1 with PKCE for all browser-based logins.                                   | Synthetic OAuth flow completes; non-PKCE flow rejected.            | \[T\]      |
+| (FR pending) | The system MUST require a second factor (TOTP minimum, WebAuthn for elevated roles) for all human logins.   | Login without 2nd factor rejected; WebAuthn binds to credential.   | \[T\]      |
+| (FR pending) | The system MUST issue JWT RS256 access tokens with ≤ 15-minute lifetime.                                    | Token claims inspected; lifetime ≤ 900 seconds.                    | \[T\]      |
+| (FR pending) | The system MUST rotate refresh tokens on every use; reuse triggers session invalidation.                    | Replay test invalidates session; legitimate rotation succeeds.     | \[T\]      |
+| (FR pending) | The system MUST enforce RBAC + Scope Contract Grants on every cross-module API call.                        | Out-of-scope call returns 403 with audit row; in-scope succeeds.   | \[T\]      |
+| (FR pending) | The system SHOULD detect and challenge impossible-travel sessions (geographic distance \> velocity allows). | Synthetic travel test triggers challenge.                          | \[T\]      |
+| (FR pending) | The system MUST log every authentication event (success, failure, MFA use) to the audit chain.              | Each event yields exactly one chained audit row.                   | \[T\]      |
+| (FR pending) | The system MUST support magic-link login only for onboarding flows; never for production access.            | Magic-link rejected for already-onboarded identity.                | \[T\]      |
+| (FR pending) | The system MUST allow administrators to revoke a session within 5 seconds end-to-end.                       | Revocation API → next API call from revoked session 401 within 5s. | \[T\]      |
+| (FR pending) | The system MUST enforce that compensation-related routes require both CFO + CHRO co-sign at request time.   | Single-signer attempt blocked; dual-signer succeeds.               | \[T\]      |
 
 <span id="h_19_2_ai_ai_gateway_provider_routing_budget" class="anchor"></span>**19.2 AI — AI Gateway, Provider Routing, Budget**
 
 |           |                                                                                                                       |                                                                |            |
 | --------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ---------- |
 | **ID**    | **Statement**                                                                                                         | **Acceptance criterion**                                       | **Method** |
-| FR-AI-001 | The system MUST route AI requests by tenant policy (primary: Bedrock; fallback: Anthropic API; per-tenant override).  | Tenant policy lookup → correct provider; override observed.    | \[T\]      |
-| FR-AI-002 | The system MUST never cache prompt content across tenants.                                                            | Cross-tenant cache poisoning test returns no leakage.          | \[T\]      |
-| FR-AI-003 | The system MUST enforce a per-tenant monthly USD budget cap with hard-stop at 100% and warning at 80%.                | Synthetic over-budget request blocked; warning emitted at 80%. | \[T\]      |
-| FR-AI-004 | The system MUST achieve cache hit rate ≥ 30% on synthetic load (P0); ≥ 60% (P2+).                                     | Cache hit metric measured; targets met.                        | \[T\]      |
-| FR-AI-005 | The system MUST log every AI invocation (tokens, cost, latency, cache state) to ai.invocation.                        | Synthetic call → exactly one ai.invocation row.                | \[T\]      |
-| FR-AI-006 | The system MUST fail over to fallback provider within 30 seconds of primary failure detection.                        | Primary failure injected; fallback active within 30s.          | \[T\]      |
-| FR-AI-007 | The system MUST redact PII (Vietnamese + English) from request bodies before sending to providers, with ≥ 99% recall. | PII test set → ≥ 99% recall in redaction.                      | \[T\]      |
-| FR-AI-008 | The system MUST publish per-call OpenTelemetry traces correlating to BRAIN, MCP, and audit log.                       | Trace ID consistent across systems for same call.              | \[T\]      |
+| (FR pending) | The system MUST route AI requests by tenant policy (primary: Bedrock; fallback: Anthropic API; per-tenant override).  | Tenant policy lookup → correct provider; override observed.    | \[T\]      |
+| (FR pending) | The system MUST never cache prompt content across tenants.                                                            | Cross-tenant cache poisoning test returns no leakage.          | \[T\]      |
+| (FR pending) | The system MUST enforce a per-tenant monthly USD budget cap with hard-stop at 100% and warning at 80%.                | Synthetic over-budget request blocked; warning emitted at 80%. | \[T\]      |
+| (FR pending) | The system MUST achieve cache hit rate ≥ 30% on synthetic load (P0); ≥ 60% (P2+).                                     | Cache hit metric measured; targets met.                        | \[T\]      |
+| (FR pending) | The system MUST log every AI invocation (tokens, cost, latency, cache state) to ai.invocation.                        | Synthetic call → exactly one ai.invocation row.                | \[T\]      |
+| (FR pending) | The system MUST fail over to fallback provider within 30 seconds of primary failure detection.                        | Primary failure injected; fallback active within 30s.          | \[T\]      |
+| (FR pending) | The system MUST redact PII (Vietnamese + English) from request bodies before sending to providers, with ≥ 99% recall. | PII test set → ≥ 99% recall in redaction.                      | \[T\]      |
+| (FR pending) | The system MUST publish per-call OpenTelemetry traces correlating to BRAIN, MCP, and audit log.                       | Trace ID consistent across systems for same call.              | \[T\]      |
 
 <span id="h_19_3_mcp_gateway_tool_registry_persona_binding" class="anchor"></span>**19.3 MCP — Gateway, Tool Registry, Persona Binding**
 
 |            |                                                                                              |                                                               |            |
 | ---------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------- |
 | **ID**     | **Statement**                                                                                | **Acceptance criterion**                                      | **Method** |
-| FR-MCP-001 | The system MUST implement MCP 2025-11-25 specification including OAuth 2.1 + PKCE.           | Compliance test suite passes.                                 | \[T\]      |
-| FR-MCP-002 | The system MUST publish .well-known/oauth-protected-resource (PRM) at the gateway.           | PRM endpoint returns valid JSON per spec.                     | \[T\]      |
-| FR-MCP-003 | The system MUST support the Tasks primitive for long-running tool invocations.               | Synthetic long task → task created → polled → completed.      | \[T\]      |
-| FR-MCP-004 | The system MUST enforce idempotency keys on all destructive tool calls.                      | Replay with same key → same result, no duplicate side effect. | \[T\]      |
-| FR-MCP-005 | The system MUST classify destructive tools and require human-confirmation gating.            | Destructive tool call without confirmation rejected.          | \[T\]      |
-| FR-MCP-006 | The system MUST bind every tool call to a persona-version stamp recorded in the audit chain. | Audit row contains persona-version field.                     | \[T\]      |
-| FR-MCP-007 | The system MUST enforce persona scope contracts at the gateway, not via prompt.              | Out-of-scope tool call rejected by gateway.                   | \[T\]      |
-| FR-MCP-008 | The system MUST adopt SEP-986 verbNoun.dotted naming convention for tool registry.           | Tool registry inspection: all names match convention.         | \[I\]      |
+| (FR pending) | The system MUST implement MCP 2025-11-25 specification including OAuth 2.1 + PKCE.           | Compliance test suite passes.                                 | \[T\]      |
+| (FR pending) | The system MUST publish .well-known/oauth-protected-resource (PRM) at the gateway.           | PRM endpoint returns valid JSON per spec.                     | \[T\]      |
+| (FR pending) | The system MUST support the Tasks primitive for long-running tool invocations.               | Synthetic long task → task created → polled → completed.      | \[T\]      |
+| (FR pending) | The system MUST enforce idempotency keys on all destructive tool calls.                      | Replay with same key → same result, no duplicate side effect. | \[T\]      |
+| (FR pending) | The system MUST classify destructive tools and require human-confirmation gating.            | Destructive tool call without confirmation rejected.          | \[T\]      |
+| (FR pending) | The system MUST bind every tool call to a persona-version stamp recorded in the audit chain. | Audit row contains persona-version field.                     | \[T\]      |
+| (FR pending) | The system MUST enforce persona scope contracts at the gateway, not via prompt.              | Out-of-scope tool call rejected by gateway.                   | \[T\]      |
+| (FR pending) | The system MUST adopt SEP-986 verbNoun.dotted naming convention for tool registry.           | Tool registry inspection: all names match convention.         | \[I\]      |
 
 <span id="h_19_4_obs_observability_dashboards_slos" class="anchor"></span>**19.4 OBS — Observability, Dashboards, SLOs**
 
 |            |                                                                                                      |                                                       |            |
 | ---------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ---------- |
 | **ID**     | **Statement**                                                                                        | **Acceptance criterion**                              | **Method** |
-| FR-OBS-001 | The system MUST publish structured JSON-line logs from every service.                                | Log shipper inspection: all logs structured.          | \[I\]      |
-| FR-OBS-002 | The system MUST emit OpenTelemetry traces with trace\_id propagation across all internal calls.      | End-to-end trace continuity verified.                 | \[T\]      |
-| FR-OBS-003 | The system MUST redact PII from logs before shipping with ≥ 99.5% recall.                            | PII test set: redaction recall measured.              | \[T\]      |
-| FR-OBS-004 | The system MUST surface SLO compliance dashboards updated within 60 seconds of measurement.          | Synthetic SLO breach → dashboard reflects within 60s. | \[T\]      |
-| FR-OBS-005 | The system MUST alert on SLO error-budget burn at configurable thresholds (default: 50%, 75%, 100%). | Synthetic burn → alert fired at threshold.            | \[T\]      |
-| FR-OBS-006 | The system MUST retain logs for 30 days hot, 1 year cold; metrics 90 days, traces 30 days.           | Retention policy inspection.                          | \[I\]      |
-| FR-OBS-007 | The system MUST detect chain-break in audit log within 24 hours and emit a sev-1 alert.              | Synthetic chain break detected within window.         | \[T\]      |
-| FR-OBS-008 | The system MUST provide a Trust Center status page at status.cyberos.world from P1.                  | Status page reachable; reflects current incidents.    | \[D\]      |
+| (FR pending) | The system MUST publish structured JSON-line logs from every service.                                | Log shipper inspection: all logs structured.          | \[I\]      |
+| (FR pending) | The system MUST emit OpenTelemetry traces with trace\_id propagation across all internal calls.      | End-to-end trace continuity verified.                 | \[T\]      |
+| (FR pending) | The system MUST redact PII from logs before shipping with ≥ 99.5% recall.                            | PII test set: redaction recall measured.              | \[T\]      |
+| (FR pending) | The system MUST surface SLO compliance dashboards updated within 60 seconds of measurement.          | Synthetic SLO breach → dashboard reflects within 60s. | \[T\]      |
+| (FR pending) | The system MUST alert on SLO error-budget burn at configurable thresholds (default: 50%, 75%, 100%). | Synthetic burn → alert fired at threshold.            | \[T\]      |
+| (FR pending) | The system MUST retain logs for 30 days hot, 1 year cold; metrics 90 days, traces 30 days.           | Retention policy inspection.                          | \[I\]      |
+| (FR pending) | The system MUST detect chain-break in audit log within 24 hours and emit a sev-1 alert.              | Synthetic chain break detected within window.         | \[T\]      |
+| (FR pending) | The system MUST provide a Trust Center status page at status.cyberos.world from P1.                  | Status page reachable; reflects current incidents.    | \[D\]      |
 
 <span id="h_19_5_time_schedule_leave_attendance" class="anchor"></span>**19.5 TIME — Schedule, Leave, Attendance**
 
 |             |                                                                                                                    |                                                      |            |
 | ----------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- | ---------- |
 | **ID**      | **Statement**                                                                                                      | **Acceptance criterion**                             | **Method** |
-| FR-TIME-001 | The system MUST allow a Member to create, edit, and delete a time entry referencing optional project.              | CRUD operations succeed; audit row recorded.         | \[T\]      |
-| FR-TIME-002 | The system MUST compute duration\_minutes automatically from start/end timestamps.                                 | Generated column verified; manual edit prohibited.   | \[T\]      |
-| FR-TIME-003 | The system MUST support leave requests with kinds (annual, sick, sabbatical, unpaid, other) and approver workflow. | Request → approver Notify → decision flow completes. | \[T\]      |
-| FR-TIME-004 | The system MUST enforce that a Member cannot approve their own leave request.                                      | Self-approval attempt rejected with 403.             | \[T\]      |
-| FR-TIME-005 | The system MUST publish weekly timesheet summaries to BRAIN for CUO observation.                                   | NATS event observed; BRAIN entry created.            | \[T\]      |
-| FR-TIME-006 | The system SHOULD detect timesheet inconsistencies (overlapping entries, \> 12h continuous) and flag for review.   | Synthetic inconsistency → flag emitted.              | \[T\]      |
-| FR-TIME-007 | The system MUST integrate with the user's calendar (Google, Outlook) for two-way leave sync.                       | Leave approved → calendar event appears.             | \[D\]      |
+| (FR pending) | The system MUST allow a Member to create, edit, and delete a time entry referencing optional project.              | CRUD operations succeed; audit row recorded.         | \[T\]      |
+| (FR pending) | The system MUST compute duration\_minutes automatically from start/end timestamps.                                 | Generated column verified; manual edit prohibited.   | \[T\]      |
+| (FR pending) | The system MUST support leave requests with kinds (annual, sick, sabbatical, unpaid, other) and approver workflow. | Request → approver Notify → decision flow completes. | \[T\]      |
+| (FR pending) | The system MUST enforce that a Member cannot approve their own leave request.                                      | Self-approval attempt rejected with 403.             | \[T\]      |
+| (FR pending) | The system MUST publish weekly timesheet summaries to BRAIN for CUO observation.                                   | NATS event observed; BRAIN entry created.            | \[T\]      |
+| (FR pending) | The system SHOULD detect timesheet inconsistencies (overlapping entries, \> 12h continuous) and flag for review.   | Synthetic inconsistency → flag emitted.              | \[T\]      |
+| (FR pending) | The system MUST integrate with the user's calendar (Google, Outlook) for two-way leave sync.                       | Leave approved → calendar event appears.             | \[D\]      |
 
 <span id="h_19_6_crm_accounts_contacts_deals" class="anchor"></span>**19.6 CRM — Accounts, Contacts, Deals**
 
 |            |                                                                                                      |                                                             |            |
 | ---------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------- |
 | **ID**     | **Statement**                                                                                        | **Acceptance criterion**                                    | **Method** |
-| FR-CRM-001 | The system MUST support hierarchical account → contact → deal entities with referential integrity.   | Cascade test: deleting account requires deal cleanup first. | \[T\]      |
-| FR-CRM-002 | The system MUST track deal stage transitions with timestamp and actor.                               | Stage advancement → audit row with from/to.                 | \[T\]      |
-| FR-CRM-003 | The system MUST log every activity (call, email, meeting) tied to account/contact/deal.              | Activity log queryable by entity.                           | \[T\]      |
-| FR-CRM-004 | The system MUST surface pipeline summary by stage with VND amounts.                                  | Pipeline query returns aggregated values.                   | \[T\]      |
-| FR-CRM-005 | The system MUST detect and propose contact merges when ≥ 2 contacts share email or normalized phone. | Synthetic duplicates → merge suggestion in CUO Notify.      | \[T\]      |
-| FR-CRM-006 | The system MUST enforce per-account ACLs: only assigned AM + manager can read by default.            | Cross-AM access attempt rejected.                           | \[T\]      |
-| FR-CRM-007 | The system MUST integrate with EMAIL to auto-log inbound/outbound emails to matching contacts.       | Email exchange → CRM activity row created.                  | \[T\]      |
+| (FR pending) | The system MUST support hierarchical account → contact → deal entities with referential integrity.   | Cascade test: deleting account requires deal cleanup first. | \[T\]      |
+| (FR pending) | The system MUST track deal stage transitions with timestamp and actor.                               | Stage advancement → audit row with from/to.                 | \[T\]      |
+| (FR pending) | The system MUST log every activity (call, email, meeting) tied to account/contact/deal.              | Activity log queryable by entity.                           | \[T\]      |
+| (FR pending) | The system MUST surface pipeline summary by stage with VND amounts.                                  | Pipeline query returns aggregated values.                   | \[T\]      |
+| (FR pending) | The system MUST detect and propose contact merges when ≥ 2 contacts share email or normalized phone. | Synthetic duplicates → merge suggestion in CUO Notify.      | \[T\]      |
+| (FR pending) | The system MUST enforce per-account ACLs: only assigned AM + manager can read by default.            | Cross-AM access attempt rejected.                           | \[T\]      |
+| (FR pending) | The system MUST integrate with EMAIL to auto-log inbound/outbound emails to matching contacts.       | Email exchange → CRM activity row created.                  | \[T\]      |
 
 <span id="h_19_7_kb_knowledge_base" class="anchor"></span>**19.7 KB — Knowledge Base**
 
 |           |                                                                                                        |                                                                        |            |
 | --------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------- |
 | **ID**    | **Statement**                                                                                          | **Acceptance criterion**                                               | **Method** |
-| FR-KB-001 | The system MUST store articles as Markdown with YAML frontmatter and version history.                  | Article create → version 1; edit → version 2; both retrievable.        | \[T\]      |
-| FR-KB-002 | The system MUST index articles in PGroonga for Vietnamese-aware full-text search.                      | Vietnamese query returns relevant articles.                            | \[T\]      |
-| FR-KB-003 | The system MUST track inter-article links as a directed graph with backlink ("what links here") query. | Backlink query returns expected sources.                               | \[T\]      |
-| FR-KB-004 | The system MUST support categories as a tree with breadcrumb navigation.                               | Category traversal works in UI; API returns ancestors.                 | \[D\]      |
-| FR-KB-005 | The system MUST enforce per-article ACLs (default: company-wide; restricted optional).                 | Restricted article: non-grantee receives 403.                          | \[T\]      |
-| FR-KB-006 | The system MUST publish KB events to NATS for BRAIN ingestion (subject to denylist).                   | Article create → NATS event observed; BRAIN entry created if eligible. | \[T\]      |
-| FR-KB-007 | The system SHOULD propose related articles in BRAIN search results when a KB article matches.          | BRAIN search returns KB article in top-K with link.                    | \[T\]      |
+| (FR pending) | The system MUST store articles as Markdown with YAML frontmatter and version history.                  | Article create → version 1; edit → version 2; both retrievable.        | \[T\]      |
+| (FR pending) | The system MUST index articles in PGroonga for Vietnamese-aware full-text search.                      | Vietnamese query returns relevant articles.                            | \[T\]      |
+| (FR pending) | The system MUST track inter-article links as a directed graph with backlink ("what links here") query. | Backlink query returns expected sources.                               | \[T\]      |
+| (FR pending) | The system MUST support categories as a tree with breadcrumb navigation.                               | Category traversal works in UI; API returns ancestors.                 | \[D\]      |
+| (FR pending) | The system MUST enforce per-article ACLs (default: company-wide; restricted optional).                 | Restricted article: non-grantee receives 403.                          | \[T\]      |
+| (FR pending) | The system MUST publish KB events to NATS for BRAIN ingestion (subject to denylist).                   | Article create → NATS event observed; BRAIN entry created if eligible. | \[T\]      |
+| (FR pending) | The system SHOULD propose related articles in BRAIN search results when a KB article matches.          | BRAIN search returns KB article in top-K with link.                    | \[T\]      |
 
 <span id="h_19_8_hr_employee_lifecycle" class="anchor"></span>**19.8 HR — Employee Lifecycle**
 
 |           |                                                                                                                |                                                                                |            |
 | --------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ---------- |
 | **ID**    | **Statement**                                                                                                  | **Acceptance criterion**                                                       | **Method** |
-| FR-HR-001 | The system MUST manage employee records with hire/termination dates and manager hierarchy.                     | CRUD + reporting tree query.                                                   | \[T\]      |
-| FR-HR-002 | The system MUST enforce that compensation data is segregated from general employee data with separate KMS key. | Inspection: separate keyspace; cross-key access blocked.                       | \[I\]      |
-| FR-HR-003 | The system MUST track contracts with type, dates, and signed PDF location.                                     | Contract create → record; sign event → audit row.                              | \[T\]      |
-| FR-HR-004 | The system MUST surface team org-chart from manager\_id self-references.                                       | Org-chart query returns expected hierarchy.                                    | \[T\]      |
-| FR-HR-005 | The system MUST support onboarding checklists per employee with completion tracking.                           | Checklist progresses; CUO observes incomplete items.                           | \[T\]      |
-| FR-HR-006 | The system MUST log every read access to employee personal data to the audit chain.                            | Read → audit row with reader identity and field accessed.                      | \[T\]      |
-| FR-HR-007 | The system MUST integrate with DOC for contract signature flows with WebAuthn binding.                         | Contract sent for signature → signed → archived; WebAuthn challenge succeeded. | \[T\]      |
+| (FR pending) | The system MUST manage employee records with hire/termination dates and manager hierarchy.                     | CRUD + reporting tree query.                                                   | \[T\]      |
+| (FR pending) | The system MUST enforce that compensation data is segregated from general employee data with separate KMS key. | Inspection: separate keyspace; cross-key access blocked.                       | \[I\]      |
+| (FR pending) | The system MUST track contracts with type, dates, and signed PDF location.                                     | Contract create → record; sign event → audit row.                              | \[T\]      |
+| (FR pending) | The system MUST surface team org-chart from manager\_id self-references.                                       | Org-chart query returns expected hierarchy.                                    | \[T\]      |
+| (FR pending) | The system MUST support onboarding checklists per employee with completion tracking.                           | Checklist progresses; CUO observes incomplete items.                           | \[T\]      |
+| (FR pending) | The system MUST log every read access to employee personal data to the audit chain.                            | Read → audit row with reader identity and field accessed.                      | \[T\]      |
+| (FR pending) | The system MUST integrate with DOC for contract signature flows with WebAuthn binding.                         | Contract sent for signature → signed → archived; WebAuthn challenge succeeded. | \[T\]      |
 
 <span id="h_19_9_rew_compensation_payroll_payslips" class="anchor"></span>**19.9 REW — Compensation, Payroll, Payslips**
 
 |            |                                                                                                                |                                                             |            |
 | ---------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------- |
 | **ID**     | **Statement**                                                                                                  | **Acceptance criterion**                                    | **Method** |
-| FR-REW-001 | The system MUST treat compensation parameters as append-only; supersession via effective\_to + superseded\_by. | Modification attempt blocked; supersession allowed.         | \[I\]      |
-| FR-REW-002 | The system MUST require CFO + CHRO co-sign for payroll commit.                                                 | Single-signer commit blocked; co-sign succeeds.             | \[T\]      |
-| FR-REW-003 | The system MUST encrypt payslip PDFs with REW-specific KMS key, separate from general PII key.                 | Cross-key access blocked; correct-key access succeeds.      | \[I\]      |
-| FR-REW-004 | The system MUST compute payslips deterministically from parameters effective on payroll period\_end.           | Recompute under historical params returns identical result. | \[T\]      |
-| FR-REW-005 | The system MUST publish each payslip with cryptographic SHA-256 hash for integrity verification.               | Hash recorded; tamper test detected.                        | \[T\]      |
-| FR-REW-006 | The system MUST retain compensation records for 10 years per Vietnamese SI/PIT statutory minimum.              | Retention policy inspection.                                | \[I\]      |
-| FR-REW-007 | The system MUST surface bonus award workflow with founder approval gate.                                       | Bonus → approval → audit row.                               | \[T\]      |
-| FR-REW-008 | The system MUST never expose compensation data in logs, traces, or BRAIN ingestion.                            | Synthetic compensation event → no leakage in logs/BRAIN.    | \[T\]      |
+| (FR pending) | The system MUST treat compensation parameters as append-only; supersession via effective\_to + superseded\_by. | Modification attempt blocked; supersession allowed.         | \[I\]      |
+| (FR pending) | The system MUST require CFO + CHRO co-sign for payroll commit.                                                 | Single-signer commit blocked; co-sign succeeds.             | \[T\]      |
+| (FR pending) | The system MUST encrypt payslip PDFs with REW-specific KMS key, separate from general PII key.                 | Cross-key access blocked; correct-key access succeeds.      | \[I\]      |
+| (FR pending) | The system MUST compute payslips deterministically from parameters effective on payroll period\_end.           | Recompute under historical params returns identical result. | \[T\]      |
+| (FR pending) | The system MUST publish each payslip with cryptographic SHA-256 hash for integrity verification.               | Hash recorded; tamper test detected.                        | \[T\]      |
+| (FR pending) | The system MUST retain compensation records for 10 years per Vietnamese SI/PIT statutory minimum.              | Retention policy inspection.                                | \[I\]      |
+| (FR pending) | The system MUST surface bonus award workflow with founder approval gate.                                       | Bonus → approval → audit row.                               | \[T\]      |
+| (FR pending) | The system MUST never expose compensation data in logs, traces, or BRAIN ingestion.                            | Synthetic compensation event → no leakage in logs/BRAIN.    | \[T\]      |
 
 <span id="h_19_10_learn_training_certifications" class="anchor"></span>**19.10 LEARN — Training, Certifications**
 
 |              |                                                                                                     |                                                 |            |
 | ------------ | --------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------- |
 | **ID**       | **Statement**                                                                                       | **Acceptance criterion**                        | **Method** |
-| FR-LEARN-001 | The system MUST manage course catalog with title, level, duration, modules.                         | CRUD operations succeed.                        | \[T\]      |
-| FR-LEARN-002 | The system MUST track per-Member enrollment, progress, and completion with score.                   | Enrollment lifecycle exercised.                 | \[T\]      |
-| FR-LEARN-003 | The system MUST issue cryptographically-signed certifications with QR-code provenance.              | Cert PDF inspected; QR resolves to provenance.  | \[T\]      |
-| FR-LEARN-004 | The system SHOULD recommend learning paths per role with skill-gap analysis.                        | Member role → recommended path with rationale.  | \[D\]      |
-| FR-LEARN-005 | The system MUST surface upcoming certification expirations to CUO-CHRO at 90/30/7 days.             | Synthetic expiry → Notify at correct intervals. | \[T\]      |
-| FR-LEARN-006 | The system MUST treat LEARN as in-scope for EU AI Act high-risk if used for performance assessment. | P2 conformity assessment includes LEARN.        | \[I\]      |
+| (FR pending) | The system MUST manage course catalog with title, level, duration, modules.                         | CRUD operations succeed.                        | \[T\]      |
+| (FR pending) | The system MUST track per-Member enrollment, progress, and completion with score.                   | Enrollment lifecycle exercised.                 | \[T\]      |
+| (FR pending) | The system MUST issue cryptographically-signed certifications with QR-code provenance.              | Cert PDF inspected; QR resolves to provenance.  | \[T\]      |
+| (FR pending) | The system SHOULD recommend learning paths per role with skill-gap analysis.                        | Member role → recommended path with rationale.  | \[D\]      |
+| (FR pending) | The system MUST surface upcoming certification expirations to CUO-CHRO at 90/30/7 days.             | Synthetic expiry → Notify at correct intervals. | \[T\]      |
+| (FR pending) | The system MUST treat LEARN as in-scope for EU AI Act high-risk if used for performance assessment. | P2 conformity assessment includes LEARN.        | \[I\]      |
 
 <span id="h_19_11_inv_vendors_pos_invoices_expenses_assets" class="anchor"></span>**19.11 INV — Vendors, POs, Invoices, Expenses, Assets**
 
 |            |                                                                                                                   |                                                            |            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------- |
 | **ID**     | **Statement**                                                                                                     | **Acceptance criterion**                                   | **Method** |
-| FR-INV-001 | The system MUST manage vendor records with tax ID, payment terms.                                                 | CRUD operations succeed.                                   | \[T\]      |
-| FR-INV-002 | The system MUST track purchase orders through draft → approved → received → closed lifecycle.                     | Lifecycle exercised; audit rows for each transition.       | \[T\]      |
-| FR-INV-003 | The system MUST require approval for invoices over USD 500 per DEC-051 (CFO scope).                               | Synthetic over-threshold invoice blocked without approval. | \[T\]      |
-| FR-INV-004 | The system MUST track expense claims through submit → approve → reimburse with receipt attachment.                | Lifecycle exercised; receipt stored.                       | \[T\]      |
-| FR-INV-005 | The system MUST register fixed assets with depreciation method and dispose date.                                  | Asset register, depreciation schedule, disposal exercised. | \[T\]      |
-| FR-INV-006 | The system MUST enforce that approved invoices and POs are append-only; corrections require new entry + reversal. | Modification attempt blocked.                              | \[I\]      |
+| (FR pending) | The system MUST manage vendor records with tax ID, payment terms.                                                 | CRUD operations succeed.                                   | \[T\]      |
+| (FR pending) | The system MUST track purchase orders through draft → approved → received → closed lifecycle.                     | Lifecycle exercised; audit rows for each transition.       | \[T\]      |
+| (FR pending) | The system MUST require approval for invoices over USD 500 per DEC-051 (CFO scope).                               | Synthetic over-threshold invoice blocked without approval. | \[T\]      |
+| (FR pending) | The system MUST track expense claims through submit → approve → reimburse with receipt attachment.                | Lifecycle exercised; receipt stored.                       | \[T\]      |
+| (FR pending) | The system MUST register fixed assets with depreciation method and dispose date.                                  | Asset register, depreciation schedule, disposal exercised. | \[T\]      |
+| (FR pending) | The system MUST enforce that approved invoices and POs are append-only; corrections require new entry + reversal. | Modification attempt blocked.                              | \[I\]      |
 
 <span id="h_19_12_esop_equity_plans_grants" class="anchor"></span>**19.12 ESOP — Equity Plans, Grants**
 
 |             |                                                                                               |                                                              |            |
 | ----------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ---------- |
 | **ID**      | **Statement**                                                                                 | **Acceptance criterion**                                     | **Method** |
-| FR-ESOP-001 | The system MUST manage the equity pool with total/issued/reserved share counts.               | Pool inspection; CHECK constraint enforced.                  | \[I\]      |
-| FR-ESOP-002 | The system MUST issue grants with cliff (default 12mo) and vesting (default 48mo).            | Grant created; vesting schedule generated.                   | \[T\]      |
-| FR-ESOP-003 | The system MUST require founder + CFO + legal counsel co-sign for new grants.                 | Three-signer requirement enforced.                           | \[T\]      |
-| FR-ESOP-004 | The system MUST track vesting events as append-only; no retroactive modification.             | Modification attempt blocked.                                | \[I\]      |
-| FR-ESOP-005 | The system MUST compute current vested shares per grant deterministically.                    | Recompute under historical events returns identical result.  | \[T\]      |
-| FR-ESOP-006 | The system MUST snapshot the cap table at quarter-end and store immutably.                    | Quarterly snapshot job runs; snapshot integrity verified.    | \[T\]      |
-| FR-ESOP-007 | The system MUST simulate dilution scenarios (pre-money / post-money) without modifying state. | Simulation API returns projected cap table; no state change. | \[T\]      |
-| FR-ESOP-008 | The system MUST never expose ESOP data in BRAIN or logs (DEC-036 denylist).                   | Synthetic grant → no leakage.                                | \[T\]      |
+| (FR pending) | The system MUST manage the equity pool with total/issued/reserved share counts.               | Pool inspection; CHECK constraint enforced.                  | \[I\]      |
+| (FR pending) | The system MUST issue grants with cliff (default 12mo) and vesting (default 48mo).            | Grant created; vesting schedule generated.                   | \[T\]      |
+| (FR pending) | The system MUST require founder + CFO + legal counsel co-sign for new grants.                 | Three-signer requirement enforced.                           | \[T\]      |
+| (FR pending) | The system MUST track vesting events as append-only; no retroactive modification.             | Modification attempt blocked.                                | \[I\]      |
+| (FR pending) | The system MUST compute current vested shares per grant deterministically.                    | Recompute under historical events returns identical result.  | \[T\]      |
+| (FR pending) | The system MUST snapshot the cap table at quarter-end and store immutably.                    | Quarterly snapshot job runs; snapshot integrity verified.    | \[T\]      |
+| (FR pending) | The system MUST simulate dilution scenarios (pre-money / post-money) without modifying state. | Simulation API returns projected cap table; no state change. | \[T\]      |
+| (FR pending) | The system MUST never expose ESOP data in BRAIN or logs (DEC-036 denylist).                   | Synthetic grant → no leakage.                                | \[T\]      |
 
 <span id="h_19_13_res_revenue_sharing" class="anchor"></span>**19.13 RES — Revenue Sharing**
 
 |            |                                                                                           |                                                            |            |
 | ---------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ---------- |
 | **ID**     | **Statement**                                                                             | **Acceptance criterion**                                   | **Method** |
-| FR-RES-001 | The system MUST manage sharing rules as append-only with effective\_from / effective\_to. | Rule modification blocked; supersession works.             | \[I\]      |
-| FR-RES-002 | The system MUST compute shares deterministically per active rules at period end.          | Recompute under historical rules returns identical result. | \[T\]      |
-| FR-RES-003 | The system MUST require founder approval before share distribution.                       | Distribution without approval blocked.                     | \[T\]      |
-| FR-RES-004 | The system MUST surface per-Member share reports with rule citations.                     | Member report shows shares + rule used.                    | \[T\]      |
-| FR-RES-005 | The system MUST audit-log every rule change and share computation.                        | Audit chain has events.                                    | \[T\]      |
+| (FR pending) | The system MUST manage sharing rules as append-only with effective\_from / effective\_to. | Rule modification blocked; supersession works.             | \[I\]      |
+| (FR pending) | The system MUST compute shares deterministically per active rules at period end.          | Recompute under historical rules returns identical result. | \[T\]      |
+| (FR pending) | The system MUST require founder approval before share distribution.                       | Distribution without approval blocked.                     | \[T\]      |
+| (FR pending) | The system MUST surface per-Member share reports with rule citations.                     | Member report shows shares + rule used.                    | \[T\]      |
+| (FR pending) | The system MUST audit-log every rule change and share computation.                        | Audit chain has events.                                    | \[T\]      |
 
 <span id="h_19_14_okr_objectives_key_results" class="anchor"></span>**19.14 OKR — Objectives & Key Results**
 
 |            |                                                                                                                    |                                                              |            |
 | ---------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | ---------- |
 | **ID**     | **Statement**                                                                                                      | **Acceptance criterion**                                     | **Method** |
-| FR-OKR-001 | The system MUST manage cycles (quarterly default) with status and dates.                                           | Cycle CRUD operations succeed.                               | \[T\]      |
-| FR-OKR-002 | The system MUST support objectives with optional parent (cascading hierarchy).                                     | Tree query returns expected hierarchy.                       | \[T\]      |
-| FR-OKR-003 | The system MUST track key results with metric, target, current value, unit.                                        | KR progress update reflected; history retained.              | \[T\]      |
-| FR-OKR-004 | The system MUST surface cycle scoring at quarter-end with retrospective notes.                                     | Scoring workflow exercised.                                  | \[D\]      |
-| FR-OKR-005 | The system MUST integrate with PROJ to auto-link key results to project milestones.                                | KR linked to project milestone; progress reflects milestone. | \[T\]      |
-| FR-OKR-006 | The system MUST treat post-cycle target modifications as superseding entries; the original target remains visible. | Modification attempt → supersession recorded.                | \[I\]      |
+| (FR pending) | The system MUST manage cycles (quarterly default) with status and dates.                                           | Cycle CRUD operations succeed.                               | \[T\]      |
+| (FR pending) | The system MUST support objectives with optional parent (cascading hierarchy).                                     | Tree query returns expected hierarchy.                       | \[T\]      |
+| (FR pending) | The system MUST track key results with metric, target, current value, unit.                                        | KR progress update reflected; history retained.              | \[T\]      |
+| (FR pending) | The system MUST surface cycle scoring at quarter-end with retrospective notes.                                     | Scoring workflow exercised.                                  | \[D\]      |
+| (FR pending) | The system MUST integrate with PROJ to auto-link key results to project milestones.                                | KR linked to project milestone; progress reflects milestone. | \[T\]      |
+| (FR pending) | The system MUST treat post-cycle target modifications as superseding entries; the original target remains visible. | Modification attempt → supersession recorded.                | \[I\]      |
 
 <span id="h_19_15_doc_document_management_e_signatures" class="anchor"></span>**19.15 DOC — Document Management & E-Signatures**
 
 |            |                                                                                                    |                                                                  |            |
 | ---------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------- |
 | **ID**     | **Statement**                                                                                      | **Acceptance criterion**                                         | **Method** |
-| FR-DOC-001 | The system MUST store documents with SHA-256 integrity hash.                                       | Tamper test detected.                                            | \[T\]      |
-| FR-DOC-002 | The system MUST support multi-signer workflows with WebAuthn binding.                              | Multi-signer flow exercised; each WebAuthn challenge logged.     | \[T\]      |
-| FR-DOC-003 | The system MUST integrate with eIDAS QTSP for QES (qualified electronic signatures) at P4.         | QES flow exercised at P4 with QTSP partner.                      | \[D\]      |
-| FR-DOC-004 | The system MUST maintain a hash-chained audit log per document.                                    | Per-document chain integrity verified.                           | \[T\]      |
-| FR-DOC-005 | The system MUST archive fully-executed documents to long-term S3 storage with residency-pinning.   | Executed document archived; residency verified.                  | \[T\]      |
-| FR-DOC-006 | The system MUST support document bundle export (PDF + cert chain + audit log) for legal discovery. | Bundle export exercised; bundle complete and integrity-verified. | \[T\]      |
+| (FR pending) | The system MUST store documents with SHA-256 integrity hash.                                       | Tamper test detected.                                            | \[T\]      |
+| (FR pending) | The system MUST support multi-signer workflows with WebAuthn binding.                              | Multi-signer flow exercised; each WebAuthn challenge logged.     | \[T\]      |
+| (FR pending) | The system MUST integrate with eIDAS QTSP for QES (qualified electronic signatures) at P4.         | QES flow exercised at P4 with QTSP partner.                      | \[D\]      |
+| (FR pending) | The system MUST maintain a hash-chained audit log per document.                                    | Per-document chain integrity verified.                           | \[T\]      |
+| (FR pending) | The system MUST archive fully-executed documents to long-term S3 storage with residency-pinning.   | Executed document archived; residency verified.                  | \[T\]      |
+| (FR pending) | The system MUST support document bundle export (PDF + cert chain + audit log) for legal discovery. | Bundle export exercised; bundle complete and integrity-verified. | \[T\]      |
 
 <span id="h_19_16_portal_client_portal_p4" class="anchor"></span>**19.16 PORTAL — Client Portal (P4)**
 
 |               |                                                                                                                |                                                   |            |
 | ------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ---------- |
 | **ID**        | **Statement**                                                                                                  | **Acceptance criterion**                          | **Method** |
-| FR-PORTAL-001 | The system MUST expose a tenant's clients to a per-tenant subdomain (clients.tenantname.cyberos.world).        | Subdomain isolation; cross-tenant access blocked. | \[T\]      |
-| FR-PORTAL-002 | The system MUST support client viewing of: project status, invoices, signed documents.                         | Client login → role-restricted views.             | \[T\]      |
-| FR-PORTAL-003 | The system MUST log every client portal action to the audit chain.                                             | Action → audit row.                               | \[T\]      |
-| FR-PORTAL-004 | The system MUST enforce that PORTAL access is read-only on tenant data; clients write only their own consents. | Write attempt outside consent scope blocked.      | \[T\]      |
-| FR-PORTAL-005 | The system MAY allow clients to comment on projects via a CUO-mediated channel.                                | Comment → CUO observes → routes to tenant CHAT.   | \[D\]      |
+| (FR pending) | The system MUST expose a tenant's clients to a per-tenant subdomain (clients.tenantname.cyberos.world).        | Subdomain isolation; cross-tenant access blocked. | \[T\]      |
+| (FR pending) | The system MUST support client viewing of: project status, invoices, signed documents.                         | Client login → role-restricted views.             | \[T\]      |
+| (FR pending) | The system MUST log every client portal action to the audit chain.                                             | Action → audit row.                               | \[T\]      |
+| (FR pending) | The system MUST enforce that PORTAL access is read-only on tenant data; clients write only their own consents. | Write attempt outside consent scope blocked.      | \[T\]      |
+| (FR pending) | The system MAY allow clients to comment on projects via a CUO-mediated channel.                                | Comment → CUO observes → routes to tenant CHAT.   | \[D\]      |
 
 <span id="h_19_17_cp_compliance_plane" class="anchor"></span>**19.17 CP — Compliance Plane**
 
 |           |                                                                                                                       |                                                                         |            |
 | --------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------- |
 | **ID**    | **Statement**                                                                                                         | **Acceptance criterion**                                                | **Method** |
-| FR-CP-001 | The system MUST maintain a tenant data inventory with classification (Public / Internal / Confidential / Restricted). | Inventory queryable; classification applied.                            | \[T\]      |
-| FR-CP-002 | The system MUST execute right-to-erasure (RTBE) requests within statutory deadlines.                                  | RTBE on synthetic tenant → data removed within 30d (GDPR) / 60d (PDPL). | \[T\]      |
-| FR-CP-003 | The system MUST cryptoshred tenant KMS keys 30 days after offboarding.                                                | Key disposal verified after retention.                                  | \[T\]      |
-| FR-CP-004 | The system MUST support DSAR (data subject access request) export with all known PII.                                 | DSAR exercised; export matches subject's data.                          | \[T\]      |
-| FR-CP-005 | The system MUST manage legal-hold flags that suspend retention/deletion for in-scope data.                            | Legal hold applied → deletion blocked; release → deletion enabled.      | \[T\]      |
-| FR-CP-006 | The system MUST generate breach-notification artifacts (regulator + subject notices) within configured deadline.      | Synthetic breach → artifacts generated within window.                   | \[T\]      |
-| FR-CP-007 | The system MUST maintain hash-chained audit log with tamper detection job running ≥ daily.                            | Synthetic chain break → detected within 24h; sev-1 alert.               | \[T\]      |
+| (FR pending) | The system MUST maintain a tenant data inventory with classification (Public / Internal / Confidential / Restricted). | Inventory queryable; classification applied.                            | \[T\]      |
+| (FR pending) | The system MUST execute right-to-erasure (RTBE) requests within statutory deadlines.                                  | RTBE on synthetic tenant → data removed within 30d (GDPR) / 60d (PDPL). | \[T\]      |
+| (FR pending) | The system MUST cryptoshred tenant KMS keys 30 days after offboarding.                                                | Key disposal verified after retention.                                  | \[T\]      |
+| (FR pending) | The system MUST support DSAR (data subject access request) export with all known PII.                                 | DSAR exercised; export matches subject's data.                          | \[T\]      |
+| (FR pending) | The system MUST manage legal-hold flags that suspend retention/deletion for in-scope data.                            | Legal hold applied → deletion blocked; release → deletion enabled.      | \[T\]      |
+| (FR pending) | The system MUST generate breach-notification artifacts (regulator + subject notices) within configured deadline.      | Synthetic breach → artifacts generated within window.                   | \[T\]      |
+| (FR pending) | The system MUST maintain hash-chained audit log with tamper detection job running ≥ daily.                            | Synthetic chain break → detected within 24h; sev-1 alert.               | \[T\]      |
 
 <span id="h_19_18_gherkin_acceptance_criteria_priority_five_flows" class="anchor"></span>**19.18 Gherkin acceptance criteria — priority-five flows**
 
@@ -4040,7 +4040,7 @@ Every term that has a non-obvious meaning in this document is defined here. Wher
 | CRDT                                      | Conflict-free Replicated Data Type. Used in BRAIN Layer 1 (.cyberos-memory) sync via Yjs / Automerge to make multi-machine editing safe without a central lock.                                                                   |
 | Defer-to-human trigger                    | A categorical rule under which CUO will not produce an action and will instead escalate. Examples: any hire/fire/promote/terminate, any payment ≥ threshold, any contract signing, any cross-tenant data move.                    |
 | Locked decision (DEC-XXX)                 | A binding architectural or product decision recorded with rationale, alternatives, and trade-offs. Changing one is a Critical-class PRD/SRS change.                                                                               |
-| Module-Ready state                        | A module reaches Module-Ready when: GraphQL subgraph passes federation contract tests, MCP tools registered with audit trail, FR-XXX requirements green, NFR targets green, DPIA template populated.                              |
+| Module-Ready state                        | A module reaches Module-Ready when: GraphQL subgraph passes federation contract tests, MCP tools registered with audit trail, (FR pending) requirements green, NFR targets green, DPIA template populated.                              |
 | Phase gate                                | A binary set of criteria evaluated at phase boundary. Slipping a phase is permitted; skipping a gate is not. Founder is the gate-keeper for P0–P3.                                                                                |
 | Total Rewards Appendix                    | CyberSkill's differentiated comp philosophy: explicit ledger of monetary, equity, learning, time-off, growth-runway elements per employee. The REW module is built around this concept.                                           |
 | Hội đồng peer-review                      | Vietnamese practice (literally "council") of structured peer review. CyberOS captures outcomes (recognised contribution, growth-runway, recalibration) but never individual scores; satisfies the "no AI scoring of people" rule. |
@@ -4200,7 +4200,7 @@ External documents, standards, and prior art referenced in the PRD. The companio
 | DSAR        | Data Subject Access Request                                                                                                                                           |
 | DTCG        | Design Tokens Community Group                                                                                                                                         |
 | ESOP        | Employee Stock Ownership Plan                                                                                                                                         |
-| FR          | Functional Requirement (e.g., FR-BRAIN-001)                                                                                                                           |
+| FR          | Functional Requirement (e.g., (FR pending))                                                                                                                           |
 | GDPR        | General Data Protection Regulation (EU)                                                                                                                               |
 | HR          | Human Resources                                                                                                                                                       |
 | INV         | Invoicing module                                                                                                                                                      |

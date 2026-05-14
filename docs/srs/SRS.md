@@ -640,23 +640,23 @@ Ho Chi Minh City, Vietnam · cyberskill.world
 
 [**Part 14 · Non-Functional Requirements**](#h_part_14_non_functional_requirements)
 
-> [14.1 Performance (NFR-PERF-NNN)](#h_14_1_performance_nfr_perf_nnn)
+> [14.1 Performance (N(FR pending))](#h_14_1_performance_nfr_perf_nnn)
 > 
 > [14.1.1 Capacity NFRs](#h_14_1_1_capacity_nfrs)
 > 
-> [14.2 Reliability (NFR-REL-NNN)](#h_14_2_reliability_nfr_rel_nnn)
+> [14.2 Reliability (N(FR pending))](#h_14_2_reliability_nfr_rel_nnn)
 > 
-> [14.3 Security (NFR-SEC-NNN)](#h_14_3_security_nfr_sec_nnn)
+> [14.3 Security (N(FR pending))](#h_14_3_security_nfr_sec_nnn)
 > 
-> [14.4 Usability (NFR-USAB-NNN)](#h_14_4_usability_nfr_usab_nnn)
+> [14.4 Usability (N(FR pending))](#h_14_4_usability_nfr_usab_nnn)
 > 
-> [14.5 Maintainability (NFR-MAINT-NNN)](#h_14_5_maintainability_nfr_maint_nnn)
+> [14.5 Maintainability (N(FR pending))](#h_14_5_maintainability_nfr_maint_nnn)
 > 
-> [14.6 Compatibility (NFR-COMPAT-NNN)](#h_14_6_compatibility_nfr_compat_nnn)
+> [14.6 Compatibility (N(FR pending))](#h_14_6_compatibility_nfr_compat_nnn)
 > 
-> [14.7 Transparency & Explainability (NFR-TRAN-NNN)](#h_14_7_transparency_explainability_nfr_tran_nnn)
+> [14.7 Transparency & Explainability (N(FR pending))](#h_14_7_transparency_explainability_nfr_tran_nnn)
 > 
-> [14.8 Functional Discipline (NFR-FUNC-NNN)](#h_14_8_functional_discipline_nfr_func_nnn)
+> [14.8 Functional Discipline (N(FR pending))](#h_14_8_functional_discipline_nfr_func_nnn)
 > 
 > [14.9 NFR acceptance and CI gates](#h_14_9_nfr_acceptance_and_ci_gates)
 > 
@@ -955,8 +955,8 @@ IDs throughout this SRS follow these conventions. They are stable across PRD/SRS
 | ----------- | -------------------------------------- | ------------- | ------------------------------------------ |
 | **Prefix**  | **Class**                              | **Example**   | **Source of truth**                        |
 | DEC-XXX     | Locked architectural decision          | DEC-038       | SRS Part 13                                |
-| FR-MOD-NNN  | Functional requirement (per module)    | FR-BRAIN-014  | PRD Part 9; cross-referenced in SRS Part 7 |
-| NFR-CCC-NNN | Non-functional requirement (per class) | NFR-PERF-003  | SRS Part 14                                |
+| (FR pending)  | Functional requirement (per module)    | (FR pending)  | PRD Part 9; cross-referenced in SRS Part 7 |
+| N(FR pending) | Non-functional requirement (per class) | N(FR pending)  | SRS Part 14                                |
 | SCH-MOD-NNN | Schema artifact (Postgres/GraphQL)     | SCH-BRAIN-005 | SRS Part 4 + SRS Part 7                    |
 | EVT-MOD-NNN | NATS event subject                     | EVT-BRAIN-001 | SRS Part 4.5; appendix index               |
 | ERR-MOD-NNN | Error code                             | ERR-MCP-007   | SRS Appendix B                             |
@@ -971,7 +971,7 @@ The SRS is large; readers do not need to read it linearly. Recommended entry poi
 
   - Engineer joining a specific module: Part 1 (overview) → Part 3 (architecture) → Part 7 (their module subgraph) → Part 14 (NFRs) → Part 16 (testing).
 
-  - Auditor reviewing security: Part 9 (auth) → Part 10 (security) → Part 13 (decisions tagged compliance) → Part 14 (NFR-SEC).
+  - Auditor reviewing security: Part 9 (auth) → Part 10 (security) → Part 13 (decisions tagged compliance) → Part 14 (N(FR pending)).
 
   - Reviewer of a specific decision: Part 13, search by DEC-XXX, follow citations to other parts.
 
@@ -1021,7 +1021,7 @@ CyberOS is a multi-tenant, federated, agent-native operations platform. Technica
 
 <span id="h_1_3_references_to_prd" class="anchor"></span>**1.3 References to PRD**
 
-This SRS implements the PRD. Every functional requirement (FR-MOD-NNN) in the PRD has a corresponding implementation specification in this SRS, indexed in Part 7 (per-module). Every locked decision (DEC-XXX) referenced by the PRD has its full rationale, alternatives, and trade-offs in this SRS's Part 13. Every NFR class (PERF, REL, SEC, USAB, MAINT, COMPAT, TRAN, FUNC) referenced in the PRD has measurable targets and acceptance tests in this SRS's Part 14.
+This SRS implements the PRD. Every functional requirement ((FR pending)) in the PRD has a corresponding implementation specification in this SRS, indexed in Part 7 (per-module). Every locked decision (DEC-XXX) referenced by the PRD has its full rationale, alternatives, and trade-offs in this SRS's Part 13. Every NFR class (PERF, REL, SEC, USAB, MAINT, COMPAT, TRAN, FUNC) referenced in the PRD has measurable targets and acceptance tests in this SRS's Part 14.
 
 <span id="h_1_4_document_conventions" class="anchor"></span>**1.4 Document conventions**
 
@@ -1259,7 +1259,7 @@ Engineering decisions are sized for P0 capacity with explicit growth headroom fo
 
 <span id="h_3_4_the_host_shell_frontend_composition" class="anchor"></span>**3.4 The host shell — frontend composition**
 
-The frontend is a Module Federation host shell. The host owns: routing, auth handshake, design tokens, error boundary, the Genie dock. Each module is a remote that exports React components named by convention. The host loads remotes lazily (route-based code splitting); a P0 cold-start budget applies (NFR-PERF-005).
+The frontend is a Module Federation host shell. The host owns: routing, auth handshake, design tokens, error boundary, the Genie dock. Each module is a remote that exports React components named by convention. The host loads remotes lazily (route-based code splitting); a P0 cold-start budget applies (N(FR pending)).
 
 <table>
 <tbody>
@@ -2271,7 +2271,7 @@ Three rules in this interface:
 
 <span id="h_5_10_1_brain_search_latency_budget_breakdown" class="anchor"></span>**5.10.1 BRAIN search latency budget breakdown**
 
-The 600ms p95 target for BRAIN memory search (NFR-PERF-007) is allocated across the four pipeline stages. Each stage has a budget; CI tracks per-stage p95 separately so a regression in any one stage is identifiable without speculation.
+The 600ms p95 target for BRAIN memory search (N(FR pending)) is allocated across the four pipeline stages. Each stage has a budget; CI tracks per-stage p95 separately so a regression in any one stage is identifiable without speculation.
 
 |                                   |                  |                                                                                             |                                                                         |
 | --------------------------------- | ---------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -2294,7 +2294,7 @@ The 600ms p95 target for BRAIN memory search (NFR-PERF-007) is allocated across 
 
 <span id="h_5_10_2_brain_write_latency_budget_breakdown" class="anchor"></span>**5.10.2 BRAIN write latency budget breakdown**
 
-The 400ms p95 target for BRAIN memory write (NFR-PERF-008) follows a similar decomposition:
+The 400ms p95 target for BRAIN memory write (N(FR pending)) follows a similar decomposition:
 
 |                          |                  |                                                             |
 | ------------------------ | ---------------- | ----------------------------------------------------------- |
@@ -5160,7 +5160,7 @@ Every LLM call emits a cost\_usd value computed from the provider's billed token
 
 <span id="h_8_4_1_module_loading_and_lazy_hydration" class="anchor"></span>**8.4.1 Module loading and lazy hydration**
 
-The host shell is a Vite + React 18 application. Modules are loaded as Module Federation remotes, lazy-imported on first route match. Cold-start budget (NFR-PERF-005): TTFB \< 1s, LCP \< 2.5s, TTI \< 4s on 4G connection. Achieved by: shell-only initial bundle (≈80KB gzipped), aggressive code-splitting, edge-cached static assets via Cloudflare, server-side rendering of the landing route only.
+The host shell is a Vite + React 18 application. Modules are loaded as Module Federation remotes, lazy-imported on first route match. Cold-start budget (N(FR pending)): TTFB \< 1s, LCP \< 2.5s, TTI \< 4s on 4G connection. Achieved by: shell-only initial bundle (≈80KB gzipped), aggressive code-splitting, edge-cached static assets via Cloudflare, server-side rendering of the landing route only.
 
 <span id="h_8_4_2_design_token_contract" class="anchor"></span>**8.4.2 Design token contract**
 
@@ -6722,155 +6722,155 @@ NFRs are organised in eight classes per ISO/IEC 25010 (PERF, REL, SEC, USAB, MAI
 </tbody>
 </table>
 
-<span id="h_14_1_performance_nfr_perf_nnn" class="anchor"></span>**14.1 Performance (NFR-PERF-NNN)**
+<span id="h_14_1_performance_nfr_perf_nnn" class="anchor"></span>**14.1 Performance (N(FR pending))**
 
 |              |                                             |                           |                                           |                     |
 | ------------ | ------------------------------------------- | ------------------------- | ----------------------------------------- | ------------------- |
 | **ID**       | **Indicator**                               | **Target (P0 → P2 → P4)** | **Measurement**                           | **SLO link**        |
-| NFR-PERF-001 | GraphQL query p50 latency                   | 120ms → 100ms → 80ms      | Apollo gateway timing histogram           | SLO-AUTH-001 family |
-| NFR-PERF-002 | GraphQL query p95 latency                   | 500ms → 400ms → 300ms     | Apollo gateway timing histogram           | Module-specific     |
-| NFR-PERF-003 | GraphQL mutation p95 latency (excl. AI)     | 600ms → 500ms → 400ms     | Apollo gateway timing histogram           | Module-specific     |
-| NFR-PERF-004 | MCP tool call p95 latency (excl. AI)        | 300ms → 250ms → 200ms     | MCP gateway timing histogram              | SLO-MCP-002         |
-| NFR-PERF-005 | Host shell cold-start TTI on 4G             | 4s → 3s → 2.5s            | Real-User-Monitoring via web-vitals       | —                   |
-| NFR-PERF-006 | Host shell route-change LCP                 | 1.5s → 1.2s → 1s          | web-vitals LCP measurement                | —                   |
-| NFR-PERF-007 | BRAIN memory search p95                     | 600ms → 450ms → 350ms     | BRAIN MCP server histogram                | SLO-BRAIN-001       |
-| NFR-PERF-008 | BRAIN memory write p95                      | 400ms → 300ms → 250ms     | BRAIN MCP server histogram                | —                   |
-| NFR-PERF-009 | CHAT message delivery p95                   | 200ms → 150ms → 120ms     | CHAT delivery latency histogram           | SLO-CHAT-001        |
-| NFR-PERF-010 | EMAIL inbound to inbox p95                  | 60s → 45s → 30s           | Stalwart receive timestamp → inbox row ts | SLO-EMAIL-001       |
-| NFR-PERF-011 | CUO turn end-to-end p95 (simple intent)     | 6s → 4s → 3s              | Trace span: receive intent → final draft  | —                   |
-| NFR-PERF-012 | CUO turn end-to-end p95 (deep reasoning)    | 30s → 20s → 15s           | Trace span: receive → drafted Review      | —                   |
-| NFR-PERF-013 | Auto Dream consolidation per tenant nightly | 4h max → 2h → 1h          | Job duration metric                       | SLO-BRAIN-003       |
-| NFR-PERF-014 | Audit log INSERT lag                        | 50ms p95 → 30ms → 20ms    | Postgres timing                           | SLO-CP-001          |
+| N(FR pending) | GraphQL query p50 latency                   | 120ms → 100ms → 80ms      | Apollo gateway timing histogram           | SLO-AUTH-001 family |
+| N(FR pending) | GraphQL query p95 latency                   | 500ms → 400ms → 300ms     | Apollo gateway timing histogram           | Module-specific     |
+| N(FR pending) | GraphQL mutation p95 latency (excl. AI)     | 600ms → 500ms → 400ms     | Apollo gateway timing histogram           | Module-specific     |
+| N(FR pending) | MCP tool call p95 latency (excl. AI)        | 300ms → 250ms → 200ms     | MCP gateway timing histogram              | SLO-MCP-002         |
+| N(FR pending) | Host shell cold-start TTI on 4G             | 4s → 3s → 2.5s            | Real-User-Monitoring via web-vitals       | —                   |
+| N(FR pending) | Host shell route-change LCP                 | 1.5s → 1.2s → 1s          | web-vitals LCP measurement                | —                   |
+| N(FR pending) | BRAIN memory search p95                     | 600ms → 450ms → 350ms     | BRAIN MCP server histogram                | SLO-BRAIN-001       |
+| N(FR pending) | BRAIN memory write p95                      | 400ms → 300ms → 250ms     | BRAIN MCP server histogram                | —                   |
+| N(FR pending) | CHAT message delivery p95                   | 200ms → 150ms → 120ms     | CHAT delivery latency histogram           | SLO-CHAT-001        |
+| N(FR pending) | EMAIL inbound to inbox p95                  | 60s → 45s → 30s           | Stalwart receive timestamp → inbox row ts | SLO-EMAIL-001       |
+| N(FR pending) | CUO turn end-to-end p95 (simple intent)     | 6s → 4s → 3s              | Trace span: receive intent → final draft  | —                   |
+| N(FR pending) | CUO turn end-to-end p95 (deep reasoning)    | 30s → 20s → 15s           | Trace span: receive → drafted Review      | —                   |
+| N(FR pending) | Auto Dream consolidation per tenant nightly | 4h max → 2h → 1h          | Job duration metric                       | SLO-BRAIN-003       |
+| N(FR pending) | Audit log INSERT lag                        | 50ms p95 → 30ms → 20ms    | Postgres timing                           | SLO-CP-001          |
 
 <span id="h_14_1_1_capacity_nfrs" class="anchor"></span>**14.1.1 Capacity NFRs**
 
 |             |                                    |                 |               |               |
 | ----------- | ---------------------------------- | --------------- | ------------- | ------------- |
 | **ID**      | **Indicator**                      | **P0 baseline** | **P2 target** | **P4 target** |
-| NFR-CAP-001 | Concurrent active users per tenant | 20              | 200           | 5,000         |
-| NFR-CAP-002 | GraphQL ops/s per region           | 50              | 500           | 10,000        |
-| NFR-CAP-003 | MCP tool calls/s per region        | 20              | 200           | 5,000         |
-| NFR-CAP-004 | BRAIN facts (Layer 2) per tenant   | 10K             | 100K          | 5M            |
-| NFR-CAP-005 | BRAIN archive (Layer 3) per tenant | 100K chunks     | 1M            | 50M           |
-| NFR-CAP-006 | NATS msg/s per region              | 100             | 1,000         | 20,000        |
-| NFR-CAP-007 | Postgres TPS (mixed workload)      | 500             | 5,000         | 50,000        |
-| NFR-CAP-008 | Hot storage per tenant             | 10GB            | 50GB          | 500GB         |
+| N(FR pending) | Concurrent active users per tenant | 20              | 200           | 5,000         |
+| N(FR pending) | GraphQL ops/s per region           | 50              | 500           | 10,000        |
+| N(FR pending) | MCP tool calls/s per region        | 20              | 200           | 5,000         |
+| N(FR pending) | BRAIN facts (Layer 2) per tenant   | 10K             | 100K          | 5M            |
+| N(FR pending) | BRAIN archive (Layer 3) per tenant | 100K chunks     | 1M            | 50M           |
+| N(FR pending) | NATS msg/s per region              | 100             | 1,000         | 20,000        |
+| N(FR pending) | Postgres TPS (mixed workload)      | 500             | 5,000         | 50,000        |
+| N(FR pending) | Hot storage per tenant             | 10GB            | 50GB          | 500GB         |
 
-<span id="h_14_2_reliability_nfr_rel_nnn" class="anchor"></span>**14.2 Reliability (NFR-REL-NNN)**
+<span id="h_14_2_reliability_nfr_rel_nnn" class="anchor"></span>**14.2 Reliability (N(FR pending))**
 
 |             |                                               |                                             |                                          |
 | ----------- | --------------------------------------------- | ------------------------------------------- | ---------------------------------------- |
 | **ID**      | **Indicator**                                 | **Target**                                  | **Measurement**                          |
-| NFR-REL-001 | Platform availability (gateway uptime)        | 99.5% (P0); 99.9% (P2+); 99.95% (P4)        | Cloudflare uptime + synthetic probe      |
-| NFR-REL-002 | Per-module availability (subgraph uptime)     | 99.5% (P0); 99.9% (P2+)                     | Module health probe; gateway-side timing |
-| NFR-REL-003 | RTO (recovery time objective)                 | \< 4h (P0); \< 1h (P2); \< 15min (P4)       | Quarterly DR drill                       |
-| NFR-REL-004 | RPO (recovery point objective)                | \< 1h (P0); \< 5min (P2); \< 30s (P4)       | PITR backup interval; replication lag    |
-| NFR-REL-005 | Backup integrity verification cadence         | Weekly automated restore + hash check       | Backup runbook execution log             |
-| NFR-REL-006 | Database PITR retention                       | 14 days (P0); 30 days (P2); 90 days (P4)    | Postgres WAL archive retention           |
-| NFR-REL-007 | Audit log retention                           | Forever (until tenant offboarded)           | cp.audit\_log retention policy           |
-| NFR-REL-008 | Cross-region failover                         | Manual at P0; automated within 15min at P3+ | DR drill measured per region             |
-| NFR-REL-009 | Idempotency window                            | 24h on all MCP tool calls                   | Idempotency-key TTL in Redis             |
-| NFR-REL-010 | NATS message at-least-once delivery           | 100% (durable streams; persistent ack)      | Consumer ack rate; replay verification   |
-| NFR-REL-011 | Saga compensation success rate                | \> 99% on transient failures                | Saga library metrics                     |
-| NFR-REL-012 | Mean time between failures (MTBF) per service | \> 30 days at P2; \> 90 days at P4          | Incident timeline aggregation            |
-| NFR-REL-013 | Mean time to recovery (MTTR)                  | \< 30 min P0; \< 15 min P2; \< 5 min P4     | Incident report aggregation              |
+| N(FR pending) | Platform availability (gateway uptime)        | 99.5% (P0); 99.9% (P2+); 99.95% (P4)        | Cloudflare uptime + synthetic probe      |
+| N(FR pending) | Per-module availability (subgraph uptime)     | 99.5% (P0); 99.9% (P2+)                     | Module health probe; gateway-side timing |
+| N(FR pending) | RTO (recovery time objective)                 | \< 4h (P0); \< 1h (P2); \< 15min (P4)       | Quarterly DR drill                       |
+| N(FR pending) | RPO (recovery point objective)                | \< 1h (P0); \< 5min (P2); \< 30s (P4)       | PITR backup interval; replication lag    |
+| N(FR pending) | Backup integrity verification cadence         | Weekly automated restore + hash check       | Backup runbook execution log             |
+| N(FR pending) | Database PITR retention                       | 14 days (P0); 30 days (P2); 90 days (P4)    | Postgres WAL archive retention           |
+| N(FR pending) | Audit log retention                           | Forever (until tenant offboarded)           | cp.audit\_log retention policy           |
+| N(FR pending) | Cross-region failover                         | Manual at P0; automated within 15min at P3+ | DR drill measured per region             |
+| N(FR pending) | Idempotency window                            | 24h on all MCP tool calls                   | Idempotency-key TTL in Redis             |
+| N(FR pending) | NATS message at-least-once delivery           | 100% (durable streams; persistent ack)      | Consumer ack rate; replay verification   |
+| N(FR pending) | Saga compensation success rate                | \> 99% on transient failures                | Saga library metrics                     |
+| N(FR pending) | Mean time between failures (MTBF) per service | \> 30 days at P2; \> 90 days at P4          | Incident timeline aggregation            |
+| N(FR pending) | Mean time to recovery (MTTR)                  | \< 30 min P0; \< 15 min P2; \< 5 min P4     | Incident report aggregation              |
 
-<span id="h_14_3_security_nfr_sec_nnn" class="anchor"></span>**14.3 Security (NFR-SEC-NNN)**
+<span id="h_14_3_security_nfr_sec_nnn" class="anchor"></span>**14.3 Security (N(FR pending))**
 
 |             |                                            |                                                         |                                                       |
 | ----------- | ------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------- |
 | **ID**      | **Indicator**                              | **Target**                                              | **Measurement / Acceptance**                          |
-| NFR-SEC-001 | TLS posture                                | TLS 1.3 only on external; mTLS on internal              | Quarterly Qualys SSL Labs scan; A+ grade              |
-| NFR-SEC-002 | Auth strength                              | OAuth 2.1 + WebAuthn second factor mandatory            | 100% of identities have ≥1 WebAuthn factor by P0 exit |
-| NFR-SEC-003 | Session token lifetime                     | 15-min access; 30-day refresh; rotation on use          | AUTH module config; reviewed quarterly                |
-| NFR-SEC-004 | Audit log immutability                     | 100% — no UPDATE/DELETE permission                      | Postgres role/perms verified at deploy gate           |
-| NFR-SEC-005 | Audit hash chain integrity                 | 100% — verifiable end-to-end                            | Daily integrity job; alert on chain break             |
-| NFR-SEC-006 | Cross-tenant leakage rate                  | 0 (zero)                                                | Synthetic two-tenant leakage test in CI               |
-| NFR-SEC-007 | Per-tenant encryption at rest              | Per-tenant KMS key for sensitive PII columns            | Encryption verification at restore drill              |
-| NFR-SEC-008 | Vulnerability remediation SLA              | Critical: 24h; High: 7d; Medium: 30d; Low: 90d          | Trivy/Grype tracking + ticketing system               |
-| NFR-SEC-009 | Pentest cadence                            | Quarterly external pentest from P2; annual red-team P3+ | Pentest report archive                                |
-| NFR-SEC-010 | Bug bounty programme                       | Active at P3+                                           | HackerOne / Intigriti programme metrics               |
-| NFR-SEC-011 | Supply chain provenance                    | SBOM (CycloneDX) at every release; Sigstore at P3+      | Release artefact verification                         |
-| NFR-SEC-012 | Secret rotation cadence                    | Per Part 10.1.3 schedule                                | Vault audit log + cron verification                   |
-| NFR-SEC-013 | Persona scope contract enforcement         | 100% — gateway-enforced, not prompt                     | Synthetic out-of-scope tool-call test in CI           |
-| NFR-SEC-014 | CaMeL coverage on indirect-injection paths | 100% of EMAIL, KB-ingest, DOC-ingest paths              | Code path coverage check; test fixtures               |
-| NFR-SEC-015 | PII redaction recall on AI Gateway egress  | \> 99% recall on Vietnamese + English PII test set      | Quarterly redaction quality review                    |
-| NFR-SEC-016 | Right-to-erasure SLA                       | Within 30d (GDPR); within 60d (PDPL)                    | CP module SLA dashboard                               |
+| N(FR pending) | TLS posture                                | TLS 1.3 only on external; mTLS on internal              | Quarterly Qualys SSL Labs scan; A+ grade              |
+| N(FR pending) | Auth strength                              | OAuth 2.1 + WebAuthn second factor mandatory            | 100% of identities have ≥1 WebAuthn factor by P0 exit |
+| N(FR pending) | Session token lifetime                     | 15-min access; 30-day refresh; rotation on use          | AUTH module config; reviewed quarterly                |
+| N(FR pending) | Audit log immutability                     | 100% — no UPDATE/DELETE permission                      | Postgres role/perms verified at deploy gate           |
+| N(FR pending) | Audit hash chain integrity                 | 100% — verifiable end-to-end                            | Daily integrity job; alert on chain break             |
+| N(FR pending) | Cross-tenant leakage rate                  | 0 (zero)                                                | Synthetic two-tenant leakage test in CI               |
+| N(FR pending) | Per-tenant encryption at rest              | Per-tenant KMS key for sensitive PII columns            | Encryption verification at restore drill              |
+| N(FR pending) | Vulnerability remediation SLA              | Critical: 24h; High: 7d; Medium: 30d; Low: 90d          | Trivy/Grype tracking + ticketing system               |
+| N(FR pending) | Pentest cadence                            | Quarterly external pentest from P2; annual red-team P3+ | Pentest report archive                                |
+| N(FR pending) | Bug bounty programme                       | Active at P3+                                           | HackerOne / Intigriti programme metrics               |
+| N(FR pending) | Supply chain provenance                    | SBOM (CycloneDX) at every release; Sigstore at P3+      | Release artefact verification                         |
+| N(FR pending) | Secret rotation cadence                    | Per Part 10.1.3 schedule                                | Vault audit log + cron verification                   |
+| N(FR pending) | Persona scope contract enforcement         | 100% — gateway-enforced, not prompt                     | Synthetic out-of-scope tool-call test in CI           |
+| N(FR pending) | CaMeL coverage on indirect-injection paths | 100% of EMAIL, KB-ingest, DOC-ingest paths              | Code path coverage check; test fixtures               |
+| N(FR pending) | PII redaction recall on AI Gateway egress  | \> 99% recall on Vietnamese + English PII test set      | Quarterly redaction quality review                    |
+| N(FR pending) | Right-to-erasure SLA                       | Within 30d (GDPR); within 60d (PDPL)                    | CP module SLA dashboard                               |
 
-<span id="h_14_4_usability_nfr_usab_nnn" class="anchor"></span>**14.4 Usability (NFR-USAB-NNN)**
+<span id="h_14_4_usability_nfr_usab_nnn" class="anchor"></span>**14.4 Usability (N(FR pending))**
 
 |              |                                          |                                                            |                                                      |
 | ------------ | ---------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
 | **ID**       | **Indicator**                            | **Target**                                                 | **Measurement**                                      |
-| NFR-USAB-001 | Vietnamese-canonical surfaces            | 100% on employee surfaces; bilingual on cross-jurisdiction | i18n coverage report; UX review                      |
-| NFR-USAB-002 | WCAG 2.2 AA compliance                   | 100% on production routes                                  | axe-core CI scan; manual audit per release           |
-| NFR-USAB-003 | Task success rate (key flows)            | \> 90% in usability testing                                | Quarterly usability test (5–8 participants per role) |
-| NFR-USAB-004 | Time-on-task (founder daily review)      | \< 10 min                                                  | Trace duration of canonical task                     |
-| NFR-USAB-005 | Genie response perceived helpfulness     | \> 4.0/5 mean rating                                       | In-product thumbs survey; rolling 28d                |
-| NFR-USAB-006 | CUO Question/Review acceptance rate      | \> 60% per persona-version                                 | Acceptance ledger; auto-pause at \< 40% (DEC-055)    |
-| NFR-USAB-007 | Onboarding time for new tenant member    | \< 30 min from first sign-in to first productive task      | Onboarding completion telemetry                      |
-| NFR-USAB-008 | Genie dock visual states discoverability | \> 95% of users recognise idle/active/error                | Quarterly usability test                             |
+| N(FR pending) | Vietnamese-canonical surfaces            | 100% on employee surfaces; bilingual on cross-jurisdiction | i18n coverage report; UX review                      |
+| N(FR pending) | WCAG 2.2 AA compliance                   | 100% on production routes                                  | axe-core CI scan; manual audit per release           |
+| N(FR pending) | Task success rate (key flows)            | \> 90% in usability testing                                | Quarterly usability test (5–8 participants per role) |
+| N(FR pending) | Time-on-task (founder daily review)      | \< 10 min                                                  | Trace duration of canonical task                     |
+| N(FR pending) | Genie response perceived helpfulness     | \> 4.0/5 mean rating                                       | In-product thumbs survey; rolling 28d                |
+| N(FR pending) | CUO Question/Review acceptance rate      | \> 60% per persona-version                                 | Acceptance ledger; auto-pause at \< 40% (DEC-055)    |
+| N(FR pending) | Onboarding time for new tenant member    | \< 30 min from first sign-in to first productive task      | Onboarding completion telemetry                      |
+| N(FR pending) | Genie dock visual states discoverability | \> 95% of users recognise idle/active/error                | Quarterly usability test                             |
 
-<span id="h_14_5_maintainability_nfr_maint_nnn" class="anchor"></span>**14.5 Maintainability (NFR-MAINT-NNN)**
+<span id="h_14_5_maintainability_nfr_maint_nnn" class="anchor"></span>**14.5 Maintainability (N(FR pending))**
 
 |               |                                                   |                                                     |                                                |
 | ------------- | ------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
 | **ID**        | **Indicator**                                     | **Target**                                          | **Measurement**                                |
-| NFR-MAINT-001 | Test coverage per module (line)                   | \> 70% (P0); \> 80% (P2); \> 85% (P4)               | Jest/Vitest coverage report                    |
-| NFR-MAINT-002 | Test coverage per module (branch)                 | \> 60% (P0); \> 70% (P2); \> 80% (P4)               | Jest/Vitest coverage report                    |
-| NFR-MAINT-003 | Critical-path E2E coverage                        | 100% of P0 user journeys                            | Playwright suite execution                     |
-| NFR-MAINT-004 | Schema migration rollback success rate            | 100% on test environment; 100% on prod for last 30d | Migration rollback drill log                   |
-| NFR-MAINT-005 | Mean time to deploy a fix (MTTD-fix)              | \< 4h (P0); \< 1h (P2)                              | Deploy timeline aggregation                    |
-| NFR-MAINT-006 | Documentation freshness                           | \< 30d lag from code change                         | Doc-as-code CI check (last-modified timestamp) |
-| NFR-MAINT-007 | Code review SLA (median)                          | \< 24h for non-blocking; \< 4h for SEV-2+ fixes     | PR review duration metric                      |
-| NFR-MAINT-008 | Module decoupling (per-module independent deploy) | 100% of modules independently deployable            | Deploy matrix verification                     |
-| NFR-MAINT-009 | Federation composition gate latency               | \< 60s in CI                                        | Apollo Rover compose duration                  |
-| NFR-MAINT-010 | Linter clean rate                                 | 0 errors; warnings reviewed at PR                   | CI lint output                                 |
-| NFR-MAINT-011 | Type safety (TypeScript strict)                   | 100% strict mode; 0 any without annotation          | tsc --strict CI                                |
+| N(FR pending) | Test coverage per module (line)                   | \> 70% (P0); \> 80% (P2); \> 85% (P4)               | Jest/Vitest coverage report                    |
+| N(FR pending) | Test coverage per module (branch)                 | \> 60% (P0); \> 70% (P2); \> 80% (P4)               | Jest/Vitest coverage report                    |
+| N(FR pending) | Critical-path E2E coverage                        | 100% of P0 user journeys                            | Playwright suite execution                     |
+| N(FR pending) | Schema migration rollback success rate            | 100% on test environment; 100% on prod for last 30d | Migration rollback drill log                   |
+| N(FR pending) | Mean time to deploy a fix (MTTD-fix)              | \< 4h (P0); \< 1h (P2)                              | Deploy timeline aggregation                    |
+| N(FR pending) | Documentation freshness                           | \< 30d lag from code change                         | Doc-as-code CI check (last-modified timestamp) |
+| N(FR pending) | Code review SLA (median)                          | \< 24h for non-blocking; \< 4h for SEV-2+ fixes     | PR review duration metric                      |
+| N(FR pending) | Module decoupling (per-module independent deploy) | 100% of modules independently deployable            | Deploy matrix verification                     |
+| N(FR pending) | Federation composition gate latency               | \< 60s in CI                                        | Apollo Rover compose duration                  |
+| N(FR pending) | Linter clean rate                                 | 0 errors; warnings reviewed at PR                   | CI lint output                                 |
+| N(FR pending) | Type safety (TypeScript strict)                   | 100% strict mode; 0 any without annotation          | tsc --strict CI                                |
 
-<span id="h_14_6_compatibility_nfr_compat_nnn" class="anchor"></span>**14.6 Compatibility (NFR-COMPAT-NNN)**
+<span id="h_14_6_compatibility_nfr_compat_nnn" class="anchor"></span>**14.6 Compatibility (N(FR pending))**
 
 |                |                                         |                                                      |                                         |
 | -------------- | --------------------------------------- | ---------------------------------------------------- | --------------------------------------- |
 | **ID**         | **Indicator**                           | **Target**                                           | **Measurement**                         |
-| NFR-COMPAT-001 | Browser support                         | Last 2 versions of Chrome/Edge/Safari/Firefox        | Browserstack matrix; release acceptance |
-| NFR-COMPAT-002 | Mobile responsive                       | iOS Safari + Android Chrome current; tablet + phone  | Visual regression + manual smoke        |
-| NFR-COMPAT-003 | OIDC IDP support                        | Google Workspace, Microsoft Entra, Okta (P2+)        | IDP integration test suite              |
-| NFR-COMPAT-004 | MCP client compatibility                | 2025-11-25 spec; 2025-06-18 90-day overlap during P1 | MCP conformance test suite              |
-| NFR-COMPAT-005 | Schema backward-compat across one minor | Forward+backward compat across 1 minor version       | Schema diff CI gate                     |
-| NFR-COMPAT-006 | API deprecation window                  | 90 days minimum before removal                       | Deprecation timeline doc                |
-| NFR-COMPAT-007 | Anthropic API version compat            | Track current + previous API version                 | Per-deployment provider version log     |
+| N(FR pending) | Browser support                         | Last 2 versions of Chrome/Edge/Safari/Firefox        | Browserstack matrix; release acceptance |
+| N(FR pending) | Mobile responsive                       | iOS Safari + Android Chrome current; tablet + phone  | Visual regression + manual smoke        |
+| N(FR pending) | OIDC IDP support                        | Google Workspace, Microsoft Entra, Okta (P2+)        | IDP integration test suite              |
+| N(FR pending) | MCP client compatibility                | 2025-11-25 spec; 2025-06-18 90-day overlap during P1 | MCP conformance test suite              |
+| N(FR pending) | Schema backward-compat across one minor | Forward+backward compat across 1 minor version       | Schema diff CI gate                     |
+| N(FR pending) | API deprecation window                  | 90 days minimum before removal                       | Deprecation timeline doc                |
+| N(FR pending) | Anthropic API version compat            | Track current + previous API version                 | Per-deployment provider version log     |
 
-<span id="h_14_7_transparency_explainability_nfr_tran_nnn" class="anchor"></span>**14.7 Transparency & Explainability (NFR-TRAN-NNN)**
+<span id="h_14_7_transparency_explainability_nfr_tran_nnn" class="anchor"></span>**14.7 Transparency & Explainability (N(FR pending))**
 
 |              |                                        |                                                                        |                                          |
 | ------------ | -------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------- |
 | **ID**       | **Indicator**                          | **Target**                                                             | **Measurement**                          |
-| NFR-TRAN-001 | AI output citations                    | 100% of AI outputs that influence a decision ship with BRAIN citations | Schema-required field; CI test           |
-| NFR-TRAN-002 | Persona-version stamping               | 100% of AI outputs carry persona\_version                              | Schema-required column; CI test          |
-| NFR-TRAN-003 | Defer-to-human trigger documentation   | 100% of triggers logged with reason                                    | cp.audit\_log row class for defer events |
-| NFR-TRAN-004 | Persona scope contract availability    | Public per-tenant; queryable via /persona-scope                        | Endpoint test                            |
-| NFR-TRAN-005 | Memory provenance traceability         | Every memory\_event traceable to its source (event/file/etc)           | memory\_event.source field non-null      |
-| NFR-TRAN-006 | Conflict resolution decision audit     | 100% of human conflict resolutions audited                             | Conflict resolution audit class          |
-| NFR-TRAN-007 | Acceptance rate dashboard transparency | Per-persona-version acceptance rates on OBS dashboard                  | Dashboard config                         |
-| NFR-TRAN-008 | AI cost transparency per tenant        | Per-tenant per-day cost ledger queryable                               | cp.ai\_spend\_ledger                     |
+| N(FR pending) | AI output citations                    | 100% of AI outputs that influence a decision ship with BRAIN citations | Schema-required field; CI test           |
+| N(FR pending) | Persona-version stamping               | 100% of AI outputs carry persona\_version                              | Schema-required column; CI test          |
+| N(FR pending) | Defer-to-human trigger documentation   | 100% of triggers logged with reason                                    | cp.audit\_log row class for defer events |
+| N(FR pending) | Persona scope contract availability    | Public per-tenant; queryable via /persona-scope                        | Endpoint test                            |
+| N(FR pending) | Memory provenance traceability         | Every memory\_event traceable to its source (event/file/etc)           | memory\_event.source field non-null      |
+| N(FR pending) | Conflict resolution decision audit     | 100% of human conflict resolutions audited                             | Conflict resolution audit class          |
+| N(FR pending) | Acceptance rate dashboard transparency | Per-persona-version acceptance rates on OBS dashboard                  | Dashboard config                         |
+| N(FR pending) | AI cost transparency per tenant        | Per-tenant per-day cost ledger queryable                               | cp.ai\_spend\_ledger                     |
 
-<span id="h_14_8_functional_discipline_nfr_func_nnn" class="anchor"></span>**14.8 Functional Discipline (NFR-FUNC-NNN)**
+<span id="h_14_8_functional_discipline_nfr_func_nnn" class="anchor"></span>**14.8 Functional Discipline (N(FR pending))**
 
-NFR-FUNC class records cross-cutting functional invariants that are not module-specific but must hold platform-wide.
+N(FR pending) class records cross-cutting functional invariants that are not module-specific but must hold platform-wide.
 
 |              |                                                 |                                               |                                          |
 | ------------ | ----------------------------------------------- | --------------------------------------------- | ---------------------------------------- |
 | **ID**       | **Invariant**                                   | **Target**                                    | **Measurement**                          |
-| NFR-FUNC-001 | tenant\_id non-null on every row                | 100% of tables                                | CI schema check (DB introspection)       |
-| NFR-FUNC-002 | RLS enabled on every tenant-isolated table      | 100% of tables; alert on disable              | CI schema check + nightly audit          |
-| NFR-FUNC-003 | No direct LLM provider calls outside AI Gateway | 0 direct calls; CI lint                       | AST scanner; deny-list pattern           |
-| NFR-FUNC-004 | No K8s Secret resources in production           | 0 resources; CI lint of manifests             | Manifest scanner                         |
-| NFR-FUNC-005 | No raw SQL outside audited migration files      | 0 raw SQL in app code; CI lint                | Pattern scanner; allow-list of files     |
-| NFR-FUNC-006 | Every state-changing op writes audit row        | 100% — CI test verifies                       | Synthetic audit-coverage test            |
-| NFR-FUNC-007 | Persona MCP calls subset of delegating user     | 100% — gateway-enforced                       | Out-of-scope synthetic test in CI        |
-| NFR-FUNC-008 | Cross-subgraph mutations forbidden              | 0 multi-subgraph mutations; saga used instead | Federation composition rule check        |
-| NFR-FUNC-009 | Every alert has a runbook                       | 100% of deployed alerts                       | CI alert-rule lint (label rrunbook\_url) |
+| N(FR pending) | tenant\_id non-null on every row                | 100% of tables                                | CI schema check (DB introspection)       |
+| N(FR pending) | RLS enabled on every tenant-isolated table      | 100% of tables; alert on disable              | CI schema check + nightly audit          |
+| N(FR pending) | No direct LLM provider calls outside AI Gateway | 0 direct calls; CI lint                       | AST scanner; deny-list pattern           |
+| N(FR pending) | No K8s Secret resources in production           | 0 resources; CI lint of manifests             | Manifest scanner                         |
+| N(FR pending) | No raw SQL outside audited migration files      | 0 raw SQL in app code; CI lint                | Pattern scanner; allow-list of files     |
+| N(FR pending) | Every state-changing op writes audit row        | 100% — CI test verifies                       | Synthetic audit-coverage test            |
+| N(FR pending) | Persona MCP calls subset of delegating user     | 100% — gateway-enforced                       | Out-of-scope synthetic test in CI        |
+| N(FR pending) | Cross-subgraph mutations forbidden              | 0 multi-subgraph mutations; saga used instead | Federation composition rule check        |
+| N(FR pending) | Every alert has a runbook                       | 100% of deployed alerts                       | CI alert-rule lint (label rrunbook\_url) |
 
 <span id="h_14_9_nfr_acceptance_and_ci_gates" class="anchor"></span>**14.9 NFR acceptance and CI gates**
 
@@ -7121,19 +7121,19 @@ A restore drill runs weekly automated and quarterly manual:
 
   - Weekly automated: spin up an isolated test cluster from last night's backup; run integrity checks (hash chain, RLS policies, schema diff vs. expected); tear down. Failures alert immediately.
 
-  - Quarterly manual: full DR exercise on a clean region; restore Postgres from S3 backup; reconfigure DNS to the DR region; run synthetic tests; measure RTO and RPO actuals against NFR-REL-003 / NFR-REL-004.
+  - Quarterly manual: full DR exercise on a clean region; restore Postgres from S3 backup; reconfigure DNS to the DR region; run synthetic tests; measure RTO and RPO actuals against N(FR pending) / N(FR pending).
 
 <span id="h_15_7_capacity_planning" class="anchor"></span>**15.7 Capacity planning**
 
-Capacity is reviewed monthly against the projections in NFR-CAP-NNN. The capacity model is straightforward:
+Capacity is reviewed monthly against the projections in N(FR pending). The capacity model is straightforward:
 
-  - Postgres TPS: monitor pg\_stat\_statements; trigger scale-up when sustained \> 70% of NFR-CAP-007.
+  - Postgres TPS: monitor pg\_stat\_statements; trigger scale-up when sustained \> 70% of N(FR pending).
 
-  - NATS msg/s: monitor JetStream stream rate; trigger when sustained \> 70% of NFR-CAP-006.
+  - NATS msg/s: monitor JetStream stream rate; trigger when sustained \> 70% of N(FR pending).
 
   - GPU inference: monitor queue depth on bge-m3 inference; trigger scale-up when p95 queue wait \> 200ms.
 
-  - Object storage: monitor per-tenant bucket size; trigger lifecycle review at 80% of NFR-CAP-008.
+  - Object storage: monitor per-tenant bucket size; trigger lifecycle review at 80% of N(FR pending).
 
 <span id="h_part_16_testing" class="anchor"></span>**Part 16 · Testing**
 
@@ -7201,7 +7201,7 @@ The CI pipeline (per module) runs every commit on every branch:
 
 2.  Typecheck (tsc --strict, mypy) — fail-fast.
 
-3.  Unit tests (Vitest, pytest) — parallel, target coverage per NFR-MAINT-001.
+3.  Unit tests (Vitest, pytest) — parallel, target coverage per N(FR pending).
 
 4.  Integration tests (Vitest + Testcontainers) — parallel, with shared Postgres/Redis/NATS containers.
 
@@ -8052,7 +8052,7 @@ This appendix flattens every NFR from Part 14 into a structured test plan. Each 
 <tbody>
 <tr class="odd">
 <td><p><strong>HOW TO USE THIS APPENDIX</strong></p>
-<p>Each NFR-ID below maps to one or more automated tests, demonstrations, or inspections. The Owner column names the role accountable for the target being met (typically a CUO persona at P0–P1). The Phase column states by which phase entry gate the target must be reached. A failing NFR blocks the phase exit gate per Part 18.5.</p></td>
+<p>Each N(FR pending) below maps to one or more automated tests, demonstrations, or inspections. The Owner column names the role accountable for the target being met (typically a CUO persona at P0–P1). The Phase column states by which phase entry gate the target must be reached. A failing NFR blocks the phase exit gate per Part 18.5.</p></td>
 </tr>
 </tbody>
 </table>
@@ -8061,106 +8061,106 @@ This appendix flattens every NFR from Part 14 into a structured test plan. Each 
 
 |              |                                                  |            |           |           |
 | ------------ | ------------------------------------------------ | ---------- | --------- | --------- |
-| **NFR-ID**   | **Target (current phase)**                       | **Method** | **Owner** | **Phase** |
-| NFR-PERF-001 | GraphQL query p50 ≤ 120ms                        | T          | CUO-CTO   | P0        |
-| NFR-PERF-002 | GraphQL query p95 ≤ 500ms                        | T          | CUO-CTO   | P0        |
-| NFR-PERF-003 | GraphQL mutation p95 ≤ 600ms (excl. AI)          | T          | CUO-CTO   | P0        |
-| NFR-PERF-004 | MCP tool call p95 ≤ 300ms (excl. AI)             | T          | CUO-CAIO  | P0        |
-| NFR-PERF-005 | Host shell cold-start TTI ≤ 4s on 4G             | T          | CUO-CXO   | P0        |
-| NFR-PERF-006 | Host shell route-change LCP ≤ 1.5s               | T          | CUO-CXO   | P0        |
-| NFR-PERF-007 | BRAIN memory search p95 ≤ 600ms                  | T          | CUO-CDO   | P0        |
-| NFR-PERF-008 | BRAIN memory write p95 ≤ 400ms                   | T          | CUO-CDO   | P0        |
-| NFR-PERF-009 | CHAT message delivery p95 ≤ 200ms                | T          | CUO-CTO   | P0        |
-| NFR-PERF-010 | EMAIL inbound to inbox p95 ≤ 60s                 | T          | CUO-CTO   | P0        |
-| NFR-PERF-011 | CUO turn p95 ≤ 6s (simple intent)                | T          | CUO-CAIO  | P0        |
-| NFR-PERF-012 | CUO turn p95 ≤ 30s (deep reasoning)              | T          | CUO-CAIO  | P0        |
-| NFR-PERF-013 | Auto Dream consolidation ≤ 4h per tenant nightly | T          | CUO-CDO   | P0        |
-| NFR-PERF-014 | Audit log INSERT lag ≤ 50ms p95                  | T          | CUO-CLO   | P0        |
-| NFR-CAP-001  | Concurrent users per tenant ≥ 20                 | T          | CUO-CTO   | P0        |
-| NFR-CAP-002  | GraphQL ops/s per region ≥ 50                    | T          | CUO-CTO   | P0        |
-| NFR-CAP-003  | MCP tool calls/s per region ≥ 20                 | T          | CUO-CAIO  | P0        |
-| NFR-CAP-004  | BRAIN facts (Layer 2) per tenant ≥ 10K           | T          | CUO-CDO   | P0        |
-| NFR-CAP-005  | BRAIN archive per tenant ≥ 100K chunks           | T          | CUO-CDO   | P0        |
-| NFR-CAP-006  | NATS msg/s per region ≥ 100                      | T          | CUO-CTO   | P0        |
-| NFR-CAP-007  | Postgres TPS (mixed) ≥ 500                       | T          | CUO-CTO   | P0        |
-| NFR-CAP-008  | Hot storage per tenant ≥ 10GB                    | D          | CUO-CTO   | P0        |
+| **N(FR pending)**   | **Target (current phase)**                       | **Method** | **Owner** | **Phase** |
+| N(FR pending) | GraphQL query p50 ≤ 120ms                        | T          | CUO-CTO   | P0        |
+| N(FR pending) | GraphQL query p95 ≤ 500ms                        | T          | CUO-CTO   | P0        |
+| N(FR pending) | GraphQL mutation p95 ≤ 600ms (excl. AI)          | T          | CUO-CTO   | P0        |
+| N(FR pending) | MCP tool call p95 ≤ 300ms (excl. AI)             | T          | CUO-CAIO  | P0        |
+| N(FR pending) | Host shell cold-start TTI ≤ 4s on 4G             | T          | CUO-CXO   | P0        |
+| N(FR pending) | Host shell route-change LCP ≤ 1.5s               | T          | CUO-CXO   | P0        |
+| N(FR pending) | BRAIN memory search p95 ≤ 600ms                  | T          | CUO-CDO   | P0        |
+| N(FR pending) | BRAIN memory write p95 ≤ 400ms                   | T          | CUO-CDO   | P0        |
+| N(FR pending) | CHAT message delivery p95 ≤ 200ms                | T          | CUO-CTO   | P0        |
+| N(FR pending) | EMAIL inbound to inbox p95 ≤ 60s                 | T          | CUO-CTO   | P0        |
+| N(FR pending) | CUO turn p95 ≤ 6s (simple intent)                | T          | CUO-CAIO  | P0        |
+| N(FR pending) | CUO turn p95 ≤ 30s (deep reasoning)              | T          | CUO-CAIO  | P0        |
+| N(FR pending) | Auto Dream consolidation ≤ 4h per tenant nightly | T          | CUO-CDO   | P0        |
+| N(FR pending) | Audit log INSERT lag ≤ 50ms p95                  | T          | CUO-CLO   | P0        |
+| N(FR pending)  | Concurrent users per tenant ≥ 20                 | T          | CUO-CTO   | P0        |
+| N(FR pending)  | GraphQL ops/s per region ≥ 50                    | T          | CUO-CTO   | P0        |
+| N(FR pending)  | MCP tool calls/s per region ≥ 20                 | T          | CUO-CAIO  | P0        |
+| N(FR pending)  | BRAIN facts (Layer 2) per tenant ≥ 10K           | T          | CUO-CDO   | P0        |
+| N(FR pending)  | BRAIN archive per tenant ≥ 100K chunks           | T          | CUO-CDO   | P0        |
+| N(FR pending)  | NATS msg/s per region ≥ 100                      | T          | CUO-CTO   | P0        |
+| N(FR pending)  | Postgres TPS (mixed) ≥ 500                       | T          | CUO-CTO   | P0        |
+| N(FR pending)  | Hot storage per tenant ≥ 10GB                    | D          | CUO-CTO   | P0        |
 
 <span id="h_f_2_reliability_nfrs" class="anchor"></span>**F.2 Reliability NFRs**
 
 |             |                                       |            |           |           |
 | ----------- | ------------------------------------- | ---------- | --------- | --------- |
-| **NFR-ID**  | **Target (current phase)**            | **Method** | **Owner** | **Phase** |
-| NFR-REL-001 | Platform uptime ≥ 99.5%               | T          | CUO-CTO   | P0        |
-| NFR-REL-002 | Per-module uptime ≥ 99.5%             | T          | CUO-CTO   | P0        |
-| NFR-REL-003 | RTO ≤ 4h                              | D          | CUO-CTO   | P0        |
-| NFR-REL-004 | RPO ≤ 1h                              | D          | CUO-CTO   | P0        |
-| NFR-REL-005 | Weekly backup integrity verification  | D          | CUO-CTO   | P0        |
-| NFR-REL-006 | PITR retention ≥ 14 days              | I          | CUO-CTO   | P0        |
-| NFR-REL-007 | Audit log retention forever           | I          | CUO-CLO   | P0        |
-| NFR-REL-008 | Cross-region failover (manual)        | D          | CUO-CTO   | P0        |
-| NFR-REL-009 | Idempotency window ≥ 24h on MCP       | T          | CUO-CAIO  | P0        |
-| NFR-REL-010 | NATS at-least-once 100%               | T          | CUO-CTO   | P0        |
-| NFR-REL-011 | Saga compensation \> 99% on transient | T          | CUO-CTO   | P0        |
-| NFR-REL-012 | MTBF \> 30 days at P2                 | A          | CUO-CTO   | P2        |
-| NFR-REL-013 | MTTR \< 30 min at P0                  | A          | CUO-CTO   | P0        |
+| **N(FR pending)**  | **Target (current phase)**            | **Method** | **Owner** | **Phase** |
+| N(FR pending) | Platform uptime ≥ 99.5%               | T          | CUO-CTO   | P0        |
+| N(FR pending) | Per-module uptime ≥ 99.5%             | T          | CUO-CTO   | P0        |
+| N(FR pending) | RTO ≤ 4h                              | D          | CUO-CTO   | P0        |
+| N(FR pending) | RPO ≤ 1h                              | D          | CUO-CTO   | P0        |
+| N(FR pending) | Weekly backup integrity verification  | D          | CUO-CTO   | P0        |
+| N(FR pending) | PITR retention ≥ 14 days              | I          | CUO-CTO   | P0        |
+| N(FR pending) | Audit log retention forever           | I          | CUO-CLO   | P0        |
+| N(FR pending) | Cross-region failover (manual)        | D          | CUO-CTO   | P0        |
+| N(FR pending) | Idempotency window ≥ 24h on MCP       | T          | CUO-CAIO  | P0        |
+| N(FR pending) | NATS at-least-once 100%               | T          | CUO-CTO   | P0        |
+| N(FR pending) | Saga compensation \> 99% on transient | T          | CUO-CTO   | P0        |
+| N(FR pending) | MTBF \> 30 days at P2                 | A          | CUO-CTO   | P2        |
+| N(FR pending) | MTTR \< 30 min at P0                  | A          | CUO-CTO   | P0        |
 
 <span id="h_f_3_security_nfrs" class="anchor"></span>**F.3 Security NFRs**
 
 |             |                                              |            |           |           |
 | ----------- | -------------------------------------------- | ---------- | --------- | --------- |
-| **NFR-ID**  | **Target (current phase)**                   | **Method** | **Owner** | **Phase** |
-| NFR-SEC-001 | TLS 1.3 external; mTLS internal              | I          | CUO-CTO   | P0        |
-| NFR-SEC-002 | OAuth 2.1 + WebAuthn mandatory               | I          | CUO-CTO   | P0        |
-| NFR-SEC-003 | Session: 15-min access; 30-day refresh       | I          | CUO-CTO   | P0        |
-| NFR-SEC-004 | Audit log immutability 100%                  | I          | CUO-CLO   | P0        |
-| NFR-SEC-005 | Audit hash chain integrity 100%              | T          | CUO-CLO   | P0        |
-| NFR-SEC-006 | Cross-tenant leakage = 0                     | T          | CUO-CTO   | P0        |
-| NFR-SEC-007 | Per-tenant KMS key for PII                   | I          | CUO-CTO   | P0        |
-| NFR-SEC-008 | Vuln remediation: Critical 24h, High 7d      | A          | CUO-CLO   | P0        |
-| NFR-SEC-009 | Quarterly external pentest from P2           | D          | CUO-CLO   | P2        |
-| NFR-SEC-010 | Bug bounty programme active                  | D          | CUO-CLO   | P3        |
-| NFR-SEC-011 | SBOM at every release                        | I          | CUO-CTO   | P0        |
-| NFR-SEC-012 | Secret rotation per schedule                 | I          | CUO-CTO   | P0        |
-| NFR-SEC-013 | Persona scope contract 100% gateway-enforced | T          | CUO-CAIO  | P0        |
-| NFR-SEC-014 | CaMeL coverage 100% on injection paths       | T          | CUO-CAIO  | P0        |
-| NFR-SEC-015 | PII redaction recall \> 99%                  | T          | CUO-CLO   | P0        |
-| NFR-SEC-016 | RTBE SLA: 30d GDPR; 60d PDPL                 | A          | CUO-CLO   | P1        |
+| **N(FR pending)**  | **Target (current phase)**                   | **Method** | **Owner** | **Phase** |
+| N(FR pending) | TLS 1.3 external; mTLS internal              | I          | CUO-CTO   | P0        |
+| N(FR pending) | OAuth 2.1 + WebAuthn mandatory               | I          | CUO-CTO   | P0        |
+| N(FR pending) | Session: 15-min access; 30-day refresh       | I          | CUO-CTO   | P0        |
+| N(FR pending) | Audit log immutability 100%                  | I          | CUO-CLO   | P0        |
+| N(FR pending) | Audit hash chain integrity 100%              | T          | CUO-CLO   | P0        |
+| N(FR pending) | Cross-tenant leakage = 0                     | T          | CUO-CTO   | P0        |
+| N(FR pending) | Per-tenant KMS key for PII                   | I          | CUO-CTO   | P0        |
+| N(FR pending) | Vuln remediation: Critical 24h, High 7d      | A          | CUO-CLO   | P0        |
+| N(FR pending) | Quarterly external pentest from P2           | D          | CUO-CLO   | P2        |
+| N(FR pending) | Bug bounty programme active                  | D          | CUO-CLO   | P3        |
+| N(FR pending) | SBOM at every release                        | I          | CUO-CTO   | P0        |
+| N(FR pending) | Secret rotation per schedule                 | I          | CUO-CTO   | P0        |
+| N(FR pending) | Persona scope contract 100% gateway-enforced | T          | CUO-CAIO  | P0        |
+| N(FR pending) | CaMeL coverage 100% on injection paths       | T          | CUO-CAIO  | P0        |
+| N(FR pending) | PII redaction recall \> 99%                  | T          | CUO-CLO   | P0        |
+| N(FR pending) | RTBE SLA: 30d GDPR; 60d PDPL                 | A          | CUO-CLO   | P1        |
 
 <span id="h_f_4_usability_maintainability_compatibility_nfrs" class="anchor"></span>**F.4 Usability, Maintainability, Compatibility NFRs**
 
 |                |                                                  |            |           |           |
 | -------------- | ------------------------------------------------ | ---------- | --------- | --------- |
-| **NFR-ID**     | **Target**                                       | **Method** | **Owner** | **Phase** |
-| NFR-USAB-001   | Vietnamese-canonical 100% on employee surfaces   | I          | CUO-CXO   | P0        |
-| NFR-USAB-002   | WCAG 2.2 AA on production routes                 | T          | CUO-CXO   | P1        |
-| NFR-USAB-003   | Task success rate \> 90% in usability testing    | D          | CUO-CXO   | P1        |
-| NFR-USAB-004   | Time-on-task (founder daily review) \< 10 min    | D          | CUO-CEO   | P0        |
-| NFR-MAINT-001  | Code coverage ≥ 70% on changed lines             | T          | CUO-CTO   | P0        |
-| NFR-MAINT-002  | Module CI ≤ 10 min                               | T          | CUO-CTO   | P0        |
-| NFR-MAINT-003  | Renovate weekly review                           | D          | CUO-CTO   | P0        |
-| NFR-MAINT-004  | OpenTelemetry trace coverage \> 80%              | A          | CUO-CTO   | P0        |
-| NFR-MAINT-005  | API deprecation window ≥ one phase               | I          | CUO-CTO   | P0        |
-| NFR-COMPAT-001 | Browsers: latest 2 of Chrome/Edge/Safari/Firefox | I          | CUO-CXO   | P0        |
-| NFR-COMPAT-002 | Mobile web responsive ≥ 360px                    | D          | CUO-CXO   | P0        |
-| NFR-COMPAT-003 | OAuth integration with Google/Microsoft/Apple    | D          | CUO-CTO   | P1        |
-| NFR-COMPAT-004 | Apollo Federation v2.5+ subgraph compatibility   | I          | CUO-CTO   | P0        |
+| **N(FR pending)**     | **Target**                                       | **Method** | **Owner** | **Phase** |
+| N(FR pending)   | Vietnamese-canonical 100% on employee surfaces   | I          | CUO-CXO   | P0        |
+| N(FR pending)   | WCAG 2.2 AA on production routes                 | T          | CUO-CXO   | P1        |
+| N(FR pending)   | Task success rate \> 90% in usability testing    | D          | CUO-CXO   | P1        |
+| N(FR pending)   | Time-on-task (founder daily review) \< 10 min    | D          | CUO-CEO   | P0        |
+| N(FR pending)  | Code coverage ≥ 70% on changed lines             | T          | CUO-CTO   | P0        |
+| N(FR pending)  | Module CI ≤ 10 min                               | T          | CUO-CTO   | P0        |
+| N(FR pending)  | Renovate weekly review                           | D          | CUO-CTO   | P0        |
+| N(FR pending)  | OpenTelemetry trace coverage \> 80%              | A          | CUO-CTO   | P0        |
+| N(FR pending)  | API deprecation window ≥ one phase               | I          | CUO-CTO   | P0        |
+| N(FR pending) | Browsers: latest 2 of Chrome/Edge/Safari/Firefox | I          | CUO-CXO   | P0        |
+| N(FR pending) | Mobile web responsive ≥ 360px                    | D          | CUO-CXO   | P0        |
+| N(FR pending) | OAuth integration with Google/Microsoft/Apple    | D          | CUO-CTO   | P1        |
+| N(FR pending) | Apollo Federation v2.5+ subgraph compatibility   | I          | CUO-CTO   | P0        |
 
 <span id="h_f_5_transparency_functional_discipline_nfrs" class="anchor"></span>**F.5 Transparency, Functional discipline NFRs**
 
 |              |                                                 |            |           |           |
 | ------------ | ----------------------------------------------- | ---------- | --------- | --------- |
-| **NFR-ID**   | **Target**                                      | **Method** | **Owner** | **Phase** |
-| NFR-TRAN-001 | 100% of CUO outputs cite BRAIN sources          | T          | CUO-CAIO  | P0        |
-| NFR-TRAN-002 | Persona-version stamp in every audit row        | I          | CUO-CLO   | P0        |
-| NFR-TRAN-003 | "Why this?" explanation pane on every CUO panel | D          | CUO-CXO   | P0        |
-| NFR-TRAN-004 | Acceptance-rate dashboard public to founder     | D          | CUO-CEO   | P0        |
-| NFR-TRAN-005 | Trust Center status page mandatory              | I          | CUO-CLO   | P1        |
-| NFR-FUNC-001 | Append-only invariants on REW/ESOP/RES tables   | I          | CUO-CFO   | P0        |
-| NFR-FUNC-002 | 4-eyes review on prod schema migrations         | I          | CUO-CTO   | P0        |
-| NFR-FUNC-003 | Compensation KMS key separated                  | I          | CUO-CFO   | P0        |
-| NFR-FUNC-004 | Persona dual-sign before publish                | I          | CUO-CEO   | P0        |
-| NFR-FUNC-005 | BRAIN denylist enforced at ingestion            | T          | CUO-CDO   | P0        |
-| NFR-FUNC-006 | No persistent state in Genie/CUO between turns  | T          | CUO-CAIO  | P0        |
+| **N(FR pending)**   | **Target**                                      | **Method** | **Owner** | **Phase** |
+| N(FR pending) | 100% of CUO outputs cite BRAIN sources          | T          | CUO-CAIO  | P0        |
+| N(FR pending) | Persona-version stamp in every audit row        | I          | CUO-CLO   | P0        |
+| N(FR pending) | "Why this?" explanation pane on every CUO panel | D          | CUO-CXO   | P0        |
+| N(FR pending) | Acceptance-rate dashboard public to founder     | D          | CUO-CEO   | P0        |
+| N(FR pending) | Trust Center status page mandatory              | I          | CUO-CLO   | P1        |
+| N(FR pending) | Append-only invariants on REW/ESOP/RES tables   | I          | CUO-CFO   | P0        |
+| N(FR pending) | 4-eyes review on prod schema migrations         | I          | CUO-CTO   | P0        |
+| N(FR pending) | Compensation KMS key separated                  | I          | CUO-CFO   | P0        |
+| N(FR pending) | Persona dual-sign before publish                | I          | CUO-CEO   | P0        |
+| N(FR pending) | BRAIN denylist enforced at ingestion            | T          | CUO-CDO   | P0        |
+| N(FR pending) | No persistent state in Genie/CUO between turns  | T          | CUO-CAIO  | P0        |
 
 <table>
 <tbody>
