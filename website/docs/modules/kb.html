@@ -8,7 +8,7 @@
   <meta name="description" content="KB — Knowledge Base. Living markdown docs that ingest into BRAIN for AI-grounded retrieval. Categories, versioning, FTS5 + semantic + reranker search, AI Q&A with citations, VN + EN dual-language docs.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,7 +152,7 @@
       <div class="fact-card"><div class="label">Search stack</div><div class="value">3 layers</div><div class="note">FTS5 + semantic + reranker</div></div>
       <div class="fact-card"><div class="label">AI Q&amp;A</div><div class="value">Grounded</div><div class="note">span-level citations</div></div>
       <div class="fact-card"><div class="label">Languages</div><div class="value">vi + en</div><div class="note">translation_of linkage</div></div>
-      <div class="fact-card"><div class="label">BRAIN ingest</div><div class="value">≤ 5 s p95</div><div class="note">FR-KB-004</div></div>
+      <div class="fact-card"><div class="label">BRAIN ingest</div><div class="value">≤ 5 s p95</div><div class="note">(FR pending)</div></div>
       <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~6,500</div><div class="note">Rust + TS editor</div></div>
     </div>
   </div>
@@ -205,7 +205,7 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Off-the-shelf wikis do not treat AI-grounded retrieval as a first-class concern; folding KB into BRAIN corrupts the BRAIN ingestion ledger; folding it into PROJ ties it to engagement-scoped lifetimes. Standalone module with tight BRAIN integration is the right shape.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Editor writes markdown + frontmatter; on save, server validates, renders HTML (sanitised), computes diff vs prior version, creates a Version row, queues BRAIN ingest. Search: FTS5 / PGroonga produces top-100 lexical, BGE-M3 reranks, BGE-rerank-v2-m3 picks top-10. Q&amp;A: pull top spans, format prompt, call AI Gateway with citation-required system instruction.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$55 / month single-tenant pilot (Fargate + RDS + Redis + S3). Embedding cost ~$0.0001 / doc-version; reranker ~$0.0005 / query. 50-tenant: ~$220 / month.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) BRAIN ingest p95 ≤ 5 s (FR-KB-004). (b) Q&amp;A must cite (FR-KB-005). (c) Permissions enforced at retrieval time — ACL leak via Q&amp;A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in (FR-KB-008). (e) Vietnamese-quality search ≥ 90% recall on a fixed evaluation corpus.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) BRAIN ingest p95 ≤ 5 s ((FR pending)). (b) Q&amp;A must cite ((FR pending)). (c) Permissions enforced at retrieval time — ACL leak via Q&amp;A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in ((FR pending)). (e) Vietnamese-quality search ≥ 90% recall on a fixed evaluation corpus.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 + PGroonga · pulldown-cmark for markdown · ammonia for HTML sanitisation · Redis 7 · S3 + KMS · BGE-M3 embedder + BGE-rerank-v2-m3 reranker (BRAIN-shared) · TipTap or CodeMirror for the editor · OpenTelemetry SDK.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Markdown source of truth (not block-based proprietary). Immutable versioning (no in-place edit). Server-side render (no client-side trust). FTS5 / PGroonga + semantic + reranker triple-layer (not just one). ACL at retrieval time (not at display time).</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. PGroonga compiled into the RDS image. Redis hot cache. Embedding + reranker GPU node shared with BRAIN.</td></tr>
@@ -244,11 +244,11 @@ graph TB
   subgraph CORE ["KB service (Rust)"]
     DOC["Document CRUD"]
     VER["Version archiver"]
-    RENDER["Server-side renderer<br/>pulldown-cmark + ammonia"]
+    RENDER["Server-side renderer<br>pulldown-cmark + ammonia"]
     DIFF["Diff engine"]
-    ACL["ACL gate<br/>public · org · role"]
-    BRAIN_ING["BRAIN ingester<br/>chunk + sanitise"]
-    SEARCH["Search engine<br/>FTS5 + semantic + rerank"]
+    ACL["ACL gate<br>public · org · role"]
+    BRAIN_ING["BRAIN ingester<br>chunk + sanitise"]
+    SEARCH["Search engine<br>FTS5 + semantic + rerank"]
     QA["Q&A grounded composer"]
     XLATE["Translation linker"]
     BACKLINK["Backlink computer"]
@@ -260,13 +260,13 @@ graph TB
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL + PGroonga<br/>document · version · category<br/>RLS by tenant_id")]
-    RED[("Redis 7<br/>rendered HTML cache · search cache")]
-    S3[("S3 + KMS<br/>attachments")]
+    PG[("PostgreSQL + PGroonga<br>document · version · category<br>RLS by tenant_id")]
+    RED[("Redis 7<br>rendered HTML cache · search cache")]
+    S3[("S3 + KMS<br>attachments")]
   end
 
   subgraph SINKS ["Sinks"]
-    BRAIN["🧠 BRAIN<br/>Layer 2 ingestion · audit"]
+    BRAIN["🧠 BRAIN<br>Layer 2 ingestion · audit"]
     AI["⚡ AI Gateway"]
     OBS["👁 OBS"]
   end
@@ -301,9 +301,9 @@ graph TB
   DOC --> S3
   DOC --> OBS
 
-  classDef planned fill:#fef3c7,stroke:#92400e
+  classDef planned fill:#fef6e0,stroke:#92400e
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class SPA,PUB,AGENT,GQL,REST,HTMLPUB,MCP,DOC,VER,RENDER,DIFF,ACL,BRAIN_ING,SEARCH,QA,XLATE,BACKLINK,EMB,RANK planned
   class PG,RED,S3 store
   class BRAIN,AI,OBS sink
@@ -329,17 +329,17 @@ graph TB
         <tr><td><code>version.rs</code></td><td>services/kb/src/version.rs</td><td>Version archiver. Every save → new immutable row. Retains markdown + rendered HTML hash.</td></tr>
         <tr><td><code>renderer.rs</code></td><td>services/kb/src/renderer.rs</td><td>Server-side markdown → HTML. Uses pulldown-cmark + ammonia (sanitise). No client-side JS execution.</td></tr>
         <tr><td><code>diff.rs</code></td><td>services/kb/src/diff.rs</td><td>Unified diff between versions. Powers the version-history UI.</td></tr>
-        <tr><td><code>brain_ingest.rs</code></td><td>services/kb/src/brain_ingest.rs</td><td>On every version save: strip markdown, chunk at semantic boundaries, write BRAIN Layer 2 rows + embeddings. p95 ≤ 5 s (FR-KB-004).</td></tr>
+        <tr><td><code>brain_ingest.rs</code></td><td>services/kb/src/brain_ingest.rs</td><td>On every version save: strip markdown, chunk at semantic boundaries, write BRAIN Layer 2 rows + embeddings. p95 ≤ 5 s ((FR pending)).</td></tr>
         <tr><td><code>search.rs</code></td><td>services/kb/src/search.rs</td><td>Triple-layer search. FTS5 / PGroonga → top-100; BGE-M3 cosine top-30; BGE-rerank-v2-m3 → top-10.</td></tr>
         <tr><td><code>qa.rs</code></td><td>services/kb/src/qa.rs</td><td>Q&amp;A composer. Pull top spans → format prompt with citation-required system instruction → call AI Gateway → parse cited answer.</td></tr>
         <tr><td><code>acl.rs</code></td><td>services/kb/src/acl.rs</td><td>ACL gate at retrieval time. Filters spans before they reach the QA composer.</td></tr>
-        <tr><td><code>share_link.rs</code></td><td>services/kb/src/share_link.rs</td><td>Time-bound share-link tokens for external readers (FR-KB-002).</td></tr>
+        <tr><td><code>share_link.rs</code></td><td>services/kb/src/share_link.rs</td><td>Time-bound share-link tokens for external readers ((FR pending)).</td></tr>
         <tr><td><code>translation.rs</code></td><td>services/kb/src/translation.rs</td><td>Translation-of linkage. Reader sees doc in JWT-locale; AI grounds across language pairs.</td></tr>
         <tr><td><code>backlink.rs</code></td><td>services/kb/src/backlink.rs</td><td>Backlink graph: "what links here" query.</td></tr>
-        <tr><td><code>promote.rs</code></td><td>services/kb/src/promote.rs</td><td>"Promote to canonical" — elevates a doc to a high-authority BRAIN source (FR-KB-006). Requires CDO approval.</td></tr>
-        <tr><td><code>notion_import.rs</code></td><td>services/kb/src/notion_import.rs</td><td>Notion-export ZIP import (FR-KB-007). Preserves links + categories.</td></tr>
+        <tr><td><code>promote.rs</code></td><td>services/kb/src/promote.rs</td><td>"Promote to canonical" — elevates a doc to a high-authority BRAIN source ((FR pending)). Requires CDO approval.</td></tr>
+        <tr><td><code>notion_import.rs</code></td><td>services/kb/src/notion_import.rs</td><td>Notion-export ZIP import ((FR pending)). Preserves links + categories.</td></tr>
         <tr><td><code>export.rs</code></td><td>services/kb/src/export.rs</td><td>Per-page or per-tree markdown export.</td></tr>
-        <tr><td><code>trust_center.rs</code></td><td>services/kb/src/trust_center.rs</td><td>Public-readable Trust Center pages. Opt-in per tenant (FR-KB-008).</td></tr>
+        <tr><td><code>trust_center.rs</code></td><td>services/kb/src/trust_center.rs</td><td>Public-readable Trust Center pages. Opt-in per tenant ((FR pending)).</td></tr>
         <tr><td><code>migrations/</code></td><td>services/kb/migrations/</td><td>sqlx migrations + PGroonga index DDL. RLS on every table.</td></tr>
       </tbody>
     </table>
@@ -648,7 +648,7 @@ sequenceDiagram
   EMB-->>BI: vectors
   BI->>BR: upsert chunks + vectors
   BI->>B: kb.brain_ingested {chunks, ms}
-  Note over BI,B: total p95 ≤ 5 s (FR-KB-004)
+  Note over BI,B: total p95 ≤ 5 s ((FR pending))
     </div>
   </div>
 
@@ -738,7 +738,7 @@ sequenceDiagram
   BR-->>API: brain_chain
   API->>B: kb.promoted {document, brain_path, approver}
   API-->>M: 200 Promotion
-  Note over BR: doc is now a high-authority BRAIN source<br/>(Layer-1 canonical, not just Layer-2 chunk)
+  Note over BR: doc is now a high-authority BRAIN source<br>(Layer-1 canonical, not just Layer-2 chunk)
     </div>
   </div>
 
@@ -812,32 +812,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">KB FRs from PRD §9.12 (product) and §19.7 (SRS-tier). Full normative descriptions at <a href="../reference/fr-catalog.html#kb" class="text-blue-700 font-semibold underline">fr-catalog.html#kb</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-KB-001</code></td><td>Block-based / markdown editor (paragraphs, headings, lists, code, embeds, tables)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-002</code></td><td>Per-page ACL with workspace defaults; share-link with token expiry</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-003</code></td><td>Versioning: every save creates a version; diff view; revert</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-004</code></td><td>Pages ingested into BRAIN within p95 ≤ 5 s of save</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-005</code></td><td>"Ask this page" — Q&amp;A grounded in the page + linked pages only</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-006</code></td><td>"Promote to canonical" — surface a page as a high-authority BRAIN source</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-007</code></td><td>Markdown export per-page or per-tree; Notion import (Notion-export ZIP)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-008</code></td><td>Trust Center pages live in KB and are public-readable for opt-in tenants</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-009</code></td><td>PGroonga Vietnamese-aware full-text search</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-010</code></td><td>Triple-layer search (lexical + semantic + reranker)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-011</code></td><td>Backlink graph; "what links here" query</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-012</code></td><td>Categories as a tree with breadcrumb navigation</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-013</code></td><td>Dual-language docs with translation_of linkage</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-014</code></td><td>Citation accuracy ≥ 95% (every claim links back to source span)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-KB-015</code></td><td>Attachment antivirus scan (ClamAV)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-KB-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -851,18 +832,18 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-KB-PERF-001</code></td><td>Search p95</td><td>≤ 350 ms</td><td>OBS histogram</td></tr>
-        <tr><td><code>NFR-KB-PERF-002</code></td><td>Q&amp;A p95 (end-to-end)</td><td>≤ 4 s</td><td>OBS + AI Gateway</td></tr>
-        <tr><td><code>NFR-KB-PERF-003</code></td><td>BRAIN ingest p95</td><td>≤ 5 s (FR-KB-004)</td><td>BI histogram</td></tr>
-        <tr><td><code>NFR-KB-PERF-004</code></td><td>Document render p95 (cache-cold)</td><td>≤ 250 ms</td><td>OBS histogram</td></tr>
-        <tr><td><code>NFR-KB-USE-001</code></td><td>Vietnamese-query recall (eval corpus)</td><td>≥ 90%</td><td>quarterly review</td></tr>
-        <tr><td><code>NFR-KB-USE-002</code></td><td>Citation accuracy</td><td>≥ 95%</td><td>monthly human review of 50 Q&amp;A pairs</td></tr>
-        <tr><td><code>NFR-KB-USE-003</code></td><td>Q&amp;A "I don't know" rate on out-of-corpus queries</td><td>≥ 90%</td><td>red-team eval</td></tr>
-        <tr><td><code>NFR-KB-SEC-001</code></td><td>ACL leak via search / Q&amp;A</td><td>= 0</td><td>CI test on every PR</td></tr>
-        <tr><td><code>NFR-KB-SEC-002</code></td><td>HTML rendering XSS</td><td>= 0</td><td>ammonia sanitisation + CSP</td></tr>
-        <tr><td><code>NFR-KB-AVL-001</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
-        <tr><td><code>NFR-KB-DUR-001</code></td><td>Version durability</td><td>0 lost saves under crash</td><td>chaos test</td></tr>
-        <tr><td><code>NFR-KB-COMP-001</code></td><td>Policy / runbook retention (10 / 5 years)</td><td>100%</td><td>retention policy enforcement</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Search p95</td><td>≤ 350 ms</td><td>OBS histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Q&amp;A p95 (end-to-end)</td><td>≤ 4 s</td><td>OBS + AI Gateway</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>BRAIN ingest p95</td><td>≤ 5 s ((FR pending))</td><td>BI histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Document render p95 (cache-cold)</td><td>≤ 250 ms</td><td>OBS histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Vietnamese-query recall (eval corpus)</td><td>≥ 90%</td><td>quarterly review</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Citation accuracy</td><td>≥ 95%</td><td>monthly human review of 50 Q&amp;A pairs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Q&amp;A "I don't know" rate on out-of-corpus queries</td><td>≥ 90%</td><td>red-team eval</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>ACL leak via search / Q&amp;A</td><td>= 0</td><td>CI test on every PR</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>HTML rendering XSS</td><td>= 0</td><td>ammonia sanitisation + CSP</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Version durability</td><td>0 lost saves under crash</td><td>chaos test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Policy / runbook retention (10 / 5 years)</td><td>100%</td><td>retention policy enforcement</td></tr>
       </tbody>
     </table>
   </div>
@@ -880,19 +861,19 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["KB depends on"]
-    AUTH["🔐 AUTH<br/>RBAC + ACL"]
-    BRAIN["🧠 BRAIN<br/>Layer 2 + audit"]
-    AI["⚡ AI Gateway<br/>Q&A composer"]
-    EMB["BGE-M3 + reranker<br/>(BRAIN-shared)"]
+    AUTH["🔐 AUTH<br>RBAC + ACL"]
+    BRAIN["🧠 BRAIN<br>Layer 2 + audit"]
+    AI["⚡ AI Gateway<br>Q&A composer"]
+    EMB["BGE-M3 + reranker<br>(BRAIN-shared)"]
     MCP["🔌 MCP"]
     OBS["👁 OBS"]
   end
   KB["📚 KB"]
   subgraph downstream ["KB is depended on by"]
-    CUO["🎯 CUO<br/>grounded retrieval"]
-    PORTAL["Portal · P2<br/>(client KB views)"]
-    EMAIL["✉️ EMAIL<br/>digests"]
-    CHAT["💬 CHAT<br/>link previews"]
+    CUO["🎯 CUO<br>grounded retrieval"]
+    PORTAL["Portal · P2<br>(client KB views)"]
+    EMAIL["✉️ EMAIL<br>digests"]
+    CHAT["💬 CHAT<br>link previews"]
   end
   AUTH --> KB
   BRAIN --> KB
@@ -905,8 +886,8 @@ graph LR
   KB --> EMAIL
   KB --> CHAT
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN,EMB shipped
   class KB,AUTH,AI,MCP,OBS,CUO,PORTAL,EMAIL,CHAT planned
     </div>
@@ -1137,7 +1118,7 @@ citations:
       <li><strong>PRD §9.12</strong> — KB product FRs.</li>
       <li><strong>PRD §19.7</strong> — KB SRS-tier FRs.</li>
       <li><strong>PRD §11.2</strong> — NFRs.</li>
-      <li><strong>SRS §4.12</strong> — Formal FR-KB-001 through FR-KB-015.</li>
+      <li><strong>SRS §4.12</strong> — Formal (FR pending) through (FR pending).</li>
       <li><strong>BAAI BGE-M3</strong> — multilingual embedding model (used for semantic layer).</li>
       <li><strong>BAAI BGE-rerank-v2-m3</strong> — cross-encoder reranker.</li>
       <li><strong>PGroonga</strong> — Postgres full-text search with Vietnamese bigram tokenisation.</li>

@@ -8,7 +8,7 @@
   <meta name="description" content="LEARN — Learning & Promotion. VP (Voting Power) roll-up from PROJ/TIME/KB; Hội đồng Chuyên môn (Specialist Council) peer-review workflow; promotion gating; career-path visualisation; EU AI Act Annex III §4 high-risk.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -149,7 +149,7 @@
       <div class="fact-card"><div class="label">Planned tests</div><div class="value">90+</div><div class="note">incl. VP determinism + multi-judge aggregation</div></div>
       <div class="fact-card"><div class="label">Mastery levels</div><div class="value">1–5</div><div class="note">per skill, per Member</div></div>
       <div class="fact-card"><div class="label">Council size</div><div class="value">3–5 judges</div><div class="note">per promotion case</div></div>
-      <div class="fact-card"><div class="label">Per-judge export</div><div class="value">never</div><div class="note">FR-LEARN-004 enforced at boundary</div></div>
+      <div class="fact-card"><div class="label">Per-judge export</div><div class="value">never</div><div class="note">(FR pending) enforced at boundary</div></div>
       <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · HR · PROJ · TIME · KB</div><div class="note">VP roll-up inputs</div></div>
       <div class="fact-card"><div class="label">EU AI Act</div><div class="value">Annex III §4</div><div class="note">promotion = employment decision</div></div>
     </div>
@@ -203,7 +203,7 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because promotion + skills is the most subjective decision in any company, and the only defence against bias is evidence and process. LEARN is the evidence layer.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Skill catalogue as Rust + sqlx-backed closed enum per discipline. Mastery claim = row with evidence FK (PROJ contribution id / KB post id / certificate id / endorsement id). VP = pure function of inputs; deterministic. Council workflow is a state-machine per case; per-judge rows stored in LEARN-private table with RLS that excludes HR's read role.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$20/month. 50-tenant: ~$70/month.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Per-judge scores never exported (FR-LEARN-004). (b) Promotion gate criteria immutable per parameter version (FR-LEARN-008 anti-retroactive). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Per-judge scores never exported ((FR pending)). (b) Promotion gate criteria immutable per parameter version ((FR pending) anti-retroactive). (c) EU AI Act Annex III §4 high-risk; P2 conformity pack. (d) Vietnamese bằng cấp / chứng chỉ fields supported.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · async-graphql · NATS for VP-recompute triggers · S3 for certificate PDFs with QR-provenance.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Closed-enum skill catalogue (no free-text skills). Multi-judge aggregation = median of N scores (resilient to one extreme). Anti-retroactive parameter versioning identical to REW pattern.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1. Multi-AZ Postgres RDS. S3 for cert PDFs.</td></tr>
@@ -228,44 +228,44 @@
 graph TB
   subgraph CLIENTS ["Clients"]
     SPA["CyberOS SPA"]
-    MEM["Member portal<br/>(own profile + plan)"]
-    JUDGE["Council judge UX<br/>(per-case)"]
-    CUO["🤖 CUO/CHRO-skill<br/>narrator + recommender"]
+    MEM["Member portal<br>(own profile + plan)"]
+    JUDGE["Council judge UX<br>(per-case)"]
+    CUO["🤖 CUO/CHRO-skill<br>narrator + recommender"]
   end
 
   subgraph EDGE ["Edge"]
-    AR["Apollo Router<br/>JWT + RBAC"]
+    AR["Apollo Router<br>JWT + RBAC"]
   end
 
   subgraph LEARN ["LEARN service (Rust · axum)"]
-    GQL["GraphQL subgraph<br/>Skill · Mastery · VP"]
-    REST["REST admin<br/>council · params · review"]
-    MCP["MCP narrator<br/>read-mostly"]
-    SK["skill_catalogue.rs<br/>closed enum"]
-    MAST["mastery.rs<br/>claim · evidence · review"]
-    VP["vp.rs<br/>deterministic roll-up"]
-    COUNCIL["council.rs<br/>Hội đồng workflow"]
-    PROMO["promotion.rs<br/>case state machine"]
-    CERT["cert.rs<br/>QR-signed PDF gen"]
-    EXPIRY["expiry.rs<br/>90/30/7 day tick"]
+    GQL["GraphQL subgraph<br>Skill · Mastery · VP"]
+    REST["REST admin<br>council · params · review"]
+    MCP["MCP narrator<br>read-mostly"]
+    SK["skill_catalogue.rs<br>closed enum"]
+    MAST["mastery.rs<br>claim · evidence · review"]
+    VP["vp.rs<br>deterministic roll-up"]
+    COUNCIL["council.rs<br>Hội đồng workflow"]
+    PROMO["promotion.rs<br>case state machine"]
+    CERT["cert.rs<br>QR-signed PDF gen"]
+    EXPIRY["expiry.rs<br>90/30/7 day tick"]
   end
 
   subgraph STORES ["Stores"]
-    PG_PUB[("PostgreSQL<br/>skill · mastery · vp_snapshot<br/>RLS by tenant_id")]
-    PG_VAULT[("PostgreSQL<br/>council_vote rows<br/>stricter RLS — HR blocked")]
-    S3[("AWS S3<br/>certificate PDFs<br/>QR-signed provenance")]
+    PG_PUB[("PostgreSQL<br>skill · mastery · vp_snapshot<br>RLS by tenant_id")]
+    PG_VAULT[("PostgreSQL<br>council_vote rows<br>stricter RLS — HR blocked")]
+    S3[("AWS S3<br>certificate PDFs<br>QR-signed provenance")]
   end
 
   subgraph SINKS ["Audit & event"]
-    BRAIN["🧠 BRAIN<br/>learn.lifecycle rows"]
+    BRAIN["🧠 BRAIN<br>learn.lifecycle rows"]
     OBS["👁 OBS"]
-    NATS["📡 NATS<br/>learn.vp.changed · learn.cert.expiring"]
+    NATS["📡 NATS<br>learn.vp.changed · learn.cert.expiring"]
   end
 
   subgraph DOWNSTREAM ["Consumers"]
-    REW["💎 REW<br/>reads VP for P3 weighting"]
-    HRMOD["👥 HR<br/>review_outcome summary"]
-    KB["📚 KB<br/>course materials"]
+    REW["💎 REW<br>reads VP for P3 weighting"]
+    HRMOD["👥 HR<br>review_outcome summary"]
+    KB["📚 KB<br>course materials"]
   end
 
   SPA --> AR
@@ -298,8 +298,8 @@ graph TB
   classDef planned fill:#e9d5ff,stroke:#5b21b6
   classDef store fill:#f5f3ff,stroke:#7c3aed
   classDef vault fill:#fee2e2,stroke:#dc2626
-  classDef sink fill:#d1fae5,stroke:#047857
-  classDef down fill:#fef3c7,stroke:#b45309
+  classDef sink fill:#f5ede6,stroke:#45210e
+  classDef down fill:#fef6e0,stroke:#9c750a
   class GQL,REST,MCP,SK,MAST,VP,COUNCIL,PROMO,CERT,EXPIRY planned
   class PG_PUB,S3 store
   class PG_VAULT vault
@@ -647,7 +647,7 @@ sequenceDiagram
   MAST->>PG: INSERT evidence (kind=proj_contribution)
   L->>B: audit "learn.mastery.claimed"
   L-->>M: claim created · awaiting endorsement
-  Note over M,B: At least 1 peer endorsement OR a council review<br/>required before status moves to "endorsed".
+  Note over M,B: At least 1 peer endorsement OR a council review<br>required before status moves to "endorsed".
     </div>
   </div>
 
@@ -674,7 +674,7 @@ sequenceDiagram
     MAST->>MAST: status stays "claimed"
     L->>B: audit "learn.endorsement.recorded"
   end
-  Note over M,P: For level-4 → level-5 jumps, council review is mandatory<br/>(parameter-driven threshold).
+  Note over M,P: For level-4 → level-5 jumps, council review is mandatory<br>(parameter-driven threshold).
     </div>
   </div>
 
@@ -694,12 +694,12 @@ sequenceDiagram
   participant B as 🧠 BRAIN
 
   M->>L: submitPromotionCase(target="L3")
-  L->>L: status="submitted"<br/>parameter_version snapshot taken
+  L->>L: status="submitted"<br>parameter_version snapshot taken
   L->>HR: notify for panel assignment
-  HR->>L: POST /admin/council/panel<br/>{judges: [j1, j2, j3, j4, j5], chair: ch1}
+  HR->>L: POST /admin/council/panel<br>{judges: [j1, j2, j3, j4, j5], chair: ch1}
   L->>L: status="council_assigned"
   loop each judge
-    J->>L: POST /admin/council/{panel}/vote<br/>{score, private_feedback}
+    J->>L: POST /admin/council/{panel}/vote<br>{score, private_feedback}
     L->>V: INSERT council_vote (vault schema)
   end
   CH->>L: POST /admin/council/{panel}/close
@@ -712,7 +712,7 @@ sequenceDiagram
   L->>L: status="approved"
   L->>REW: trigger compensation_change (L2 → L3); REW co-sign separately
   L->>B: audit "learn.promotion.approved" (outcome only)
-  Note over L,B: vault schema rows NEVER cross the LEARN boundary.<br/>HR's DB role lacks SELECT on council_vote.<br/>per-judge data is structurally inaccessible.
+  Note over L,B: vault schema rows NEVER cross the LEARN boundary.<br>HR's DB role lacks SELECT on council_vote.<br>per-judge data is structurally inaccessible.
     </div>
   </div>
 
@@ -744,7 +744,7 @@ sequenceDiagram
   end
   L->>NATS: publish learn.vp.changed (batch)
   REW-->>NATS: subscriber updates BP fund weighting
-  Note over L,REW: same inputs → same vp_total.<br/>Replay test asserts byte-identical 12-month output.
+  Note over L,REW: same inputs → same vp_total.<br>Replay test asserts byte-identical 12-month output.
     </div>
   </div>
 
@@ -817,33 +817,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">LEARN FRs as catalogued in PRD §9.15 and SRS §4.15. Full normative descriptions at <a href="../reference/fr-catalog.html#learn" class="text-blue-700 font-semibold underline">fr-catalog.html#learn</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-LEARN-001</code></td><td>VP roll-up from PROJ + TIME + KB contributions</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-002</code></td><td>Hội đồng Chuyên môn workflow: 3-5 judge peer review with multi-judge scoring</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-003</code></td><td>Promotion levels per Total Rewards Appendix; gate criteria per level</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-004</code></td><td>Per-judge scores never ingested; outcome-only summaries</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-005</code></td><td>Training records: courses, certifications, sabbatical knowledge-share</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-006</code></td><td>Career-path visualisation per Member; transparent next-level requirements</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-007</code></td><td>EU AI Act high-risk conformity pack at P2 (promotion = Annex III §4)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-008</code></td><td>Anti-retroactive parameter versioning identical to REW pattern</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-009</code></td><td>Closed-enum skill catalogue (no free-text skills)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-010</code></td><td>Mastery claim requires evidence FK (PROJ / KB / cert / endorsement)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-011</code></td><td>Certification expiry surface at 90/30/7 days</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-012</code></td><td>Internal certification PDF with QR-signed provenance</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-013</code></td><td>VP deterministic (replay-identical to historical snapshot)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-014</code></td><td>EU AI Act Art. 14 human override — CEO can override council recommendation</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-015</code></td><td>Vietnamese bằng cấp + chứng chỉ fields supported on certification entity</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-015" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-LEARN-016</code></td><td>Council judge anonymous to other judges; chair visible</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-LEARN-016" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -857,17 +837,17 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-LEARN-SEC-001</code></td><td>Per-judge data exposed beyond Council Vault</td><td>= 0 occurrences</td><td>integration test asserts GraphQL + REST never returns council_vote rows; HR DB role inspection</td></tr>
-        <tr><td><code>NFR-LEARN-SEC-002</code></td><td>Council Vault schema isolation</td><td>HR + Member roles lack SELECT</td><td>DB role test in CI</td></tr>
-        <tr><td><code>NFR-LEARN-INT-001</code></td><td>VP deterministic replay (12-month history)</td><td>100% byte-identical</td><td>replay job runs nightly, asserts vp_total stable for last 12 snapshots</td></tr>
-        <tr><td><code>NFR-LEARN-INT-002</code></td><td>Parameter version supersession (no UPDATE on published rows)</td><td>enforced at DB layer</td><td>migration grep + DB role inspection</td></tr>
-        <tr><td><code>NFR-LEARN-USAB-001</code></td><td>Career-path next-level checklist completeness</td><td>covers 100% of gate criteria</td><td>spec test; usability review</td></tr>
-        <tr><td><code>NFR-LEARN-USAB-002</code></td><td>Promotion-case explanation (EU AI Act Art. 13)</td><td>narrator covers outcome + recommendation + summary</td><td>narrator output review at P2 conformity</td></tr>
-        <tr><td><code>NFR-LEARN-LAT-001</code></td><td>VP single-Member compute p95</td><td>≤ 150 ms</td><td>bench/vp.rs</td></tr>
-        <tr><td><code>NFR-LEARN-LAT-002</code></td><td>VP batch compute (50 Members)</td><td>≤ 4 s</td><td>bench/vp_batch.rs</td></tr>
-        <tr><td><code>NFR-LEARN-AVL-001</code></td><td>LEARN availability</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-LEARN-RTO-001</code></td><td>Cert expiry alert delivery (post NATS)</td><td>≤ 60s end-to-end</td><td>chaos test</td></tr>
-        <tr><td><code>NFR-LEARN-COMP-001</code></td><td>EU AI Act Annex III §4 conformity at P2</td><td>full conformity pack</td><td>P2 release gate · DPO + CLO sign-off</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Per-judge data exposed beyond Council Vault</td><td>= 0 occurrences</td><td>integration test asserts GraphQL + REST never returns council_vote rows; HR DB role inspection</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Council Vault schema isolation</td><td>HR + Member roles lack SELECT</td><td>DB role test in CI</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VP deterministic replay (12-month history)</td><td>100% byte-identical</td><td>replay job runs nightly, asserts vp_total stable for last 12 snapshots</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Parameter version supersession (no UPDATE on published rows)</td><td>enforced at DB layer</td><td>migration grep + DB role inspection</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Career-path next-level checklist completeness</td><td>covers 100% of gate criteria</td><td>spec test; usability review</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Promotion-case explanation (EU AI Act Art. 13)</td><td>narrator covers outcome + recommendation + summary</td><td>narrator output review at P2 conformity</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VP single-Member compute p95</td><td>≤ 150 ms</td><td>bench/vp.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VP batch compute (50 Members)</td><td>≤ 4 s</td><td>bench/vp_batch.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>LEARN availability</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cert expiry alert delivery (post NATS)</td><td>≤ 60s end-to-end</td><td>chaos test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>EU AI Act Annex III §4 conformity at P2</td><td>full conformity pack</td><td>P2 release gate · DPO + CLO sign-off</td></tr>
       </tbody>
     </table>
   </div>
@@ -886,18 +866,18 @@ stateDiagram-v2
 graph LR
   subgraph upstream ["LEARN depends on"]
     AUTH["🔐 AUTH"]
-    HRMOD["👥 HR<br/>Member directory"]
-    PROJ["🗂 PROJ<br/>contributions (VP input)"]
-    TIME["⏱ TIME<br/>presence (VP input)"]
-    KB["📚 KB<br/>authorship (VP input)"]
-    BRAIN["🧠 BRAIN<br/>audit"]
+    HRMOD["👥 HR<br>Member directory"]
+    PROJ["🗂 PROJ<br>contributions (VP input)"]
+    TIME["⏱ TIME<br>presence (VP input)"]
+    KB["📚 KB<br>authorship (VP input)"]
+    BRAIN["🧠 BRAIN<br>audit"]
     OBS["👁 OBS"]
   end
   LEARN["📈 LEARN"]
   subgraph downstream ["LEARN feeds"]
-    REW["💎 REW<br/>VP for P3 weighting"]
-    HRMOD2["👥 HR<br/>review outcome summary"]
-    ESOP["📊 ESOP<br/>milestone grants (optional)"]
+    REW["💎 REW<br>VP for P3 weighting"]
+    HRMOD2["👥 HR<br>review outcome summary"]
+    ESOP["📊 ESOP<br>milestone grants (optional)"]
     CUO["🤖 CUO/CHRO-skill"]
   end
   AUTH --> LEARN
@@ -913,7 +893,7 @@ graph LR
   LEARN --> CUO
 
   classDef planned fill:#e9d5ff,stroke:#5b21b6
-  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef shipped fill:#f5ede6,stroke:#45210e
   class LEARN planned
   class AUTH,HRMOD,HRMOD2,PROJ,TIME,KB,REW,ESOP,CUO,OBS planned
   class BRAIN shipped
@@ -933,7 +913,7 @@ graph LR
       <tbody>
         <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Worker management</td><td>LEARN is in scope. P2 conformity pack covers risk mgmt, data governance, transparency, human oversight.</td></tr>
         <tr><td>EU AI Act</td><td>Art. 13 — Transparency</td><td>Career-path visualiser; narrator explains promotion criteria; outcome summary disclosed to candidate.</td></tr>
-        <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>FR-LEARN-014: CEO can override council recommendation; council is advisory + Member can dispute.</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>(FR pending): CEO can override council recommendation; council is advisory + Member can dispute.</td></tr>
         <tr><td>EU AI Act</td><td>Art. 9 — Risk management</td><td>Per-judge data segregation; anti-retroactive parameter versioning; multi-judge aggregation (no single-judge decision).</td></tr>
         <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Member DSAR returns own claims/endorsements/cases; per-judge data excluded.</td></tr>
         <tr><td>Vietnam Labour Code</td><td>Art. 6 — Equal treatment</td><td>Council judges anonymised to each other; gate criteria identical per level; bias-audit annual.</td></tr>
@@ -1164,10 +1144,10 @@ graph LR
   <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
-      <li><strong>PRD §9.15</strong> — LEARN module FRs (FR-LEARN-001 through FR-LEARN-008).</li>
+      <li><strong>PRD §9.15</strong> — LEARN module FRs ((FR pending) through (FR pending)).</li>
       <li><strong>PRD §19.15</strong> — LEARN architecture posture, council workflow design.</li>
       <li><strong>PRD §11.2.5</strong> — Usability NFRs (explainability of automated decisions).</li>
-      <li><strong>SRS §4.15</strong> — Formal FR-LEARN-001 through FR-LEARN-006 with verification methods.</li>
+      <li><strong>SRS §4.15</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Total Rewards &amp; Career Path Appendix</strong> — Promotion gate criteria per level.</li>
       <li><strong>EU AI Act (Reg. 2024/1689)</strong> — Annex III §4 high-risk; Art. 13 transparency; Art. 14 human oversight; Art. 9 risk management.</li>
       <li><strong>GDPR (EU 2016/679)</strong> — Art. 22 automated decision-making safeguards.</li>

@@ -7,7 +7,7 @@
   <meta name="description" content="Three concentric compliance rings: Vietnam home regime, cross-border (GDPR / EU AI Act / Singapore PDPA), international standards (ISO 27001, SOC 2, ISO 42001, CSA STAR).">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <script type="module" src="../assets/scripts.js"></script>
 </head>
@@ -345,18 +345,18 @@
           <th>Regulation</th><th>Obligation</th><th>CyberOS module</th><th>FR / DEC</th><th>Phase</th>
         </tr></thead>
         <tbody>
-          <tr><td>Decree 13/2023 Art. 24</td><td>DPIA before sensitive-data processing</td><td>CP (Compliance)</td><td>FR-CP-001 · DEC-053</td><td>P0</td></tr>
-          <tr><td>Decree 13/2023 Art. 14</td><td>DSAR within 30 days</td><td>CP + AUTH</td><td>FR-CP-010</td><td>P1</td></tr>
-          <tr><td>Decree 13/2023 Art. 28</td><td>Cross-border-transfer A05 notification</td><td>CP</td><td>FR-CP-020</td><td>P0</td></tr>
-          <tr><td>Decree 13/2023 Art. 23</td><td>72-hour breach notification</td><td>OBS + CP</td><td>FR-OBS-040</td><td>P0</td></tr>
+          <tr><td>Decree 13/2023 Art. 24</td><td>DPIA before sensitive-data processing</td><td>CP (Compliance)</td><td>(FR pending) · DEC-053</td><td>P0</td></tr>
+          <tr><td>Decree 13/2023 Art. 14</td><td>DSAR within 30 days</td><td>CP + AUTH</td><td>(FR pending)</td><td>P1</td></tr>
+          <tr><td>Decree 13/2023 Art. 28</td><td>Cross-border-transfer A05 notification</td><td>CP</td><td>(FR pending)</td><td>P0</td></tr>
+          <tr><td>Decree 13/2023 Art. 23</td><td>72-hour breach notification</td><td>OBS + CP</td><td>(FR pending)</td><td>P0</td></tr>
           <tr><td>Decree 53/2022 Art. 26</td><td>Data localisation for in-scope services</td><td>(Infra) · per-tenant region pinning</td><td>DEC-009 · DEC-027</td><td>P2</td></tr>
           <tr><td>Decree 20/2026</td><td>SME-status tracking + graduation</td><td>CP</td><td>DEC-053</td><td>P0</td></tr>
-          <tr><td>Law 91/2025 + Decree 356</td><td>National-law DPO, fines 5% revenue</td><td>CP · HR (DPO role)</td><td>FR-CP-030</td><td>P2</td></tr>
+          <tr><td>Law 91/2025 + Decree 356</td><td>National-law DPO, fines 5% revenue</td><td>CP · HR (DPO role)</td><td>(FR pending)</td><td>P2</td></tr>
           <tr><td>Law 91/2025 right-to-explanation</td><td>CUO output explainability</td><td>AI + CUO</td><td>DEC-055</td><td>P0</td></tr>
-          <tr><td>Penal Code §288</td><td>Criminal liability prevention</td><td>(Infra) · audit chain</td><td>NFR-SEC-001</td><td>P0</td></tr>
+          <tr><td>Penal Code §288</td><td>Criminal liability prevention</td><td>(Infra) · audit chain</td><td>N(FR pending)</td><td>P0</td></tr>
           <tr><td>Law on Accounting Art. 41</td><td>10-year retention</td><td>INV + BRAIN archival</td><td>DEC-020</td><td>P2</td></tr>
-          <tr><td>NQ 142/2024 + TT 80/2021</td><td>e-invoice, MST, monthly VAT filing</td><td>INV + Skill (3 VN skills)</td><td>FR-INV-001..050</td><td>P2</td></tr>
-          <tr><td>Labour Code 2019</td><td>SI/PIT remittance, payslip retention</td><td>REW</td><td>FR-REW-001..080</td><td>P1</td></tr>
+          <tr><td>NQ 142/2024 + TT 80/2021</td><td>e-invoice, MST, monthly VAT filing</td><td>INV + Skill (3 VN skills)</td><td>(FR pending)..050</td><td>P2</td></tr>
+          <tr><td>Labour Code 2019</td><td>SI/PIT remittance, payslip retention</td><td>REW</td><td>(FR pending)..080</td><td>P1</td></tr>
         </tbody>
       </table>
     </div>
@@ -592,11 +592,11 @@
     <div class="text-sm font-semibold text-slate-700 mb-2 text-center">How each compliance tier unlocks customer cohorts</div>
     <div class="mermaid">
 flowchart LR
-  P0E[("P0 exit · T1 Floor")] --> COHORT_A["SME Vietnam tenants<br/>(internal CyberSkill only)"]
-  P1E[("P1 exit · T2 base")] --> COHORT_B["VN mid-market<br/>+ first design partners"]
-  P2E[("P2 exit · T2 EU")] --> COHORT_C["EU/UK B2B SaaS<br/>+ enterprise procurement"]
-  P3E[("P3 exit · T3 large")] --> COHORT_D["Regulated EU + US enterprise<br/>+ Singapore HoldCo entities"]
-  P4E[("P4 entry · T3+ regulated")] --> COHORT_E["State/local gov sub-paths<br/>TX-RAMP · StateRAMP · FedRAMP 20x"]
+  P0E[("P0 exit · T1 Floor")] --> COHORT_A["SME Vietnam tenants<br>(internal CyberSkill only)"]
+  P1E[("P1 exit · T2 base")] --> COHORT_B["VN mid-market<br>+ first design partners"]
+  P2E[("P2 exit · T2 EU")] --> COHORT_C["EU/UK B2B SaaS<br>+ enterprise procurement"]
+  P3E[("P3 exit · T3 large")] --> COHORT_D["Regulated EU + US enterprise<br>+ Singapore HoldCo entities"]
+  P4E[("P4 entry · T3+ regulated")] --> COHORT_E["State/local gov sub-paths<br>TX-RAMP · StateRAMP · FedRAMP 20x"]
 
   P0E -.adds.-> A0["A05 DPIA · DPO · Trust Center · VPAT"]
   P1E -.adds.-> B0["SOC 2 Type I · CSA STAR L1 · AI-CAIQ"]
@@ -604,9 +604,9 @@ flowchart LR
   P3E -.adds.-> D0["ISO 42001 · ISO 27701 · HoldCo flip option"]
   P4E -.adds.-> E0["eIDAS QTSP · TX-RAMP · FedRAMP 20x"]
 
-  classDef gate fill:#dbeafe,stroke:#1e40af,stroke-width:2px
-  classDef cohort fill:#d1fae5,stroke:#047857
-  classDef cert fill:#fef3c7,stroke:#b45309
+  classDef gate fill:#e8d4c2,stroke:#45210e,stroke-width:2px
+  classDef cohort fill:#f5ede6,stroke:#45210e
+  classDef cert fill:#fef6e0,stroke:#9c750a
   class P0E,P1E,P2E,P3E,P4E gate
   class COHORT_A,COHORT_B,COHORT_C,COHORT_D,COHORT_E cohort
   class A0,B0,C0,D0,E0 cert
@@ -688,7 +688,7 @@ timeline
       <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
         <li>VPAT 2.5 INT (Voluntary Product Accessibility Template)</li>
         <li>Stripe SAQ-A AOC (subprocessor disclosure)</li>
-        <li>Sub-processor list (public — NFR-SEC-011)</li>
+        <li>Sub-processor list (public — N(FR pending))</li>
         <li>Accessibility statement (WCAG 2.2 AA target)</li>
         <li>Data residency disclosure (region per tenant)</li>
         <li>Incident response runbook (DEC-027)</li>
@@ -727,7 +727,7 @@ sequenceDiagram
   B-->>AU: signed
   AU->>FILES: time-limited signed URL
   FILES-->>B: download PDF (24h TTL)
-  TC->>CP: log access (NFR-SEC-011)
+  TC->>CP: log access (N(FR pending))
     </div>
   </div>
 </section>
@@ -853,20 +853,20 @@ sequenceDiagram
     <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Flow · DPIA workflow (PDPL Art. 24 + GDPR Art. 35)</div>
     <div class="mermaid">
 flowchart TB
-  TRIGGER[("New module / new data category<br/>going into BRAIN")] --> CHECK{"Sensitive PD?<br/>Health · biometric · financial · employment-decision"}
+  TRIGGER[("New module / new data category<br>going into BRAIN")] --> CHECK{"Sensitive PD?<br>Health · biometric · financial · employment-decision"}
   CHECK -- "no" --> SKIP[/"No DPIA · log assessment"/]
-  CHECK -- "yes" --> TEMPLATE["Open DPIA template<br/>(KB module · auto-prefilled)"]
-  TEMPLATE --> FILL["DPO drafts<br/>1. processing description<br/>2. lawful basis<br/>3. minimisation<br/>4. retention<br/>5. sharing chain<br/>6. risk × severity<br/>7. mitigations<br/>8. residual risk"]
+  CHECK -- "yes" --> TEMPLATE["Open DPIA template<br>(KB module · auto-prefilled)"]
+  TEMPLATE --> FILL["DPO drafts<br>1. processing description<br>2. lawful basis<br>3. minimisation<br>4. retention<br>5. sharing chain<br>6. risk × severity<br>7. mitigations<br>8. residual risk"]
   FILL --> COUNCIL{"DPO + Founder sign-off"}
   COUNCIL -- "reject" --> TEMPLATE
   COUNCIL -- "approve" --> A05["Cross-border? File A05 form"]
-  A05 --> BR_GATE["Update BRAIN ingest denylist<br/>per DPIA categorisation"]
+  A05 --> BR_GATE["Update BRAIN ingest denylist<br>per DPIA categorisation"]
   BR_GATE --> AUDIT["Append to compliance audit chain"]
   AUDIT --> LIVE[("Processing may begin")]
 
-  classDef trig fill:#fef3c7,stroke:#b45309
-  classDef gate fill:#dbeafe,stroke:#1e40af,stroke-width:2px
-  classDef done fill:#d1fae5,stroke:#047857
+  classDef trig fill:#fef6e0,stroke:#9c750a
+  classDef gate fill:#e8d4c2,stroke:#45210e,stroke-width:2px
+  classDef done fill:#f5ede6,stroke:#45210e
   class TRIGGER trig
   class CHECK,COUNCIL gate
   class SKIP,LIVE done

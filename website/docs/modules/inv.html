@@ -8,7 +8,7 @@
   <meta name="description" content="INV — Invoicing. Multi-currency (VND/USD/SGD/EUR), Stripe + Wise + VietQR integration, Vietnamese e-invoice (Decree 123/Circular 78), AR aging, dunning automation, drafted from TIME entries.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -80,7 +80,7 @@
       Multi-currency invoicing drafted from TIME entries — Stripe (USD/EUR) + Wise (multi) + VietQR (VND) + Vietnamese e-invoice (Decree 123) + AR aging + dunning automation.
     </p>
     <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      INV is the AR (Accounts Receivable) side of finance — the place where billable work becomes a sent invoice, a tracked payment, an aged balance, or a reconciled receipt. The architecture is composition-first: invoices draft automatically from TIME entries per engagement (per FR-INV-001), multi-currency (VND, USD, SGD, EUR) with daily SBV rate snapshots, payment collection through Stripe (USD/EUR), Wise (multi-currency), and the Vietnamese domestic stack (VietQR / Napas247 / MoMo / ZaloPay / VNPay) for VND. For Vietnamese tenants, the <code>vn-vat-invoice</code> skill generates Decree-123-compliant e-invoices in the GDT XML format (Circular 78); the schema embeds Mẫu 01/GTGT line items with MST validation via <code>vn-mst-validate</code>. The CUO/CFO-skill drafts dunning emails on overdue but never sends them without human approval. PRD §9.16 locks the FRs; SRS §4.16 binds them to verification methods.
+      INV is the AR (Accounts Receivable) side of finance — the place where billable work becomes a sent invoice, a tracked payment, an aged balance, or a reconciled receipt. The architecture is composition-first: invoices draft automatically from TIME entries per engagement (per (FR pending)), multi-currency (VND, USD, SGD, EUR) with daily SBV rate snapshots, payment collection through Stripe (USD/EUR), Wise (multi-currency), and the Vietnamese domestic stack (VietQR / Napas247 / MoMo / ZaloPay / VNPay) for VND. For Vietnamese tenants, the <code>vn-vat-invoice</code> skill generates Decree-123-compliant e-invoices in the GDT XML format (Circular 78); the schema embeds Mẫu 01/GTGT line items with MST validation via <code>vn-mst-validate</code>. The CUO/CFO-skill drafts dunning emails on overdue but never sends them without human approval. PRD §9.16 locks the FRs; SRS §4.16 binds them to verification methods.
     </p>
     <div class="flex flex-wrap gap-3 mt-6">
       <a href="#architecture" class="btn btn-primary">Architecture
@@ -203,7 +203,7 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because AR-ledger drift and tax-compliance surprise are existential to small companies. INV is the one source of truth for "what did we bill, what did they pay, who owes what".</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Postgres for invoice + payment + reminder rows. Stripe / Wise webhooks → cash_application engine matches receipts to invoices by metadata + amount. VietQR generated via <code>vn-bank-transfer</code> skill; bank confirms via screen-scrape OR open-banking API (Napas247 P3). Vietnamese e-invoice via <code>vn-vat-invoice</code> skill → POST to GDT.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P2: ~$40/month (RDS + Fargate + Stripe/Wise pass-through fees). 50-tenant: ~$150/month. Per-invoice cost: ~$0.02 + payment processor fee.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Vietnam Decree 123 + Circular 78 — e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items (FR-INV-006). (d) Approved invoices are append-only (FR-INV-006 SRS); corrections via credit note.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Vietnam Decree 123 + Circular 78 — e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items ((FR pending)). (d) Approved invoices are append-only ((FR pending) SRS); corrections via credit note.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · stripe-rust · wise sdk · typst / tectonic for PDF · async-graphql · cyberskill-vn skills · AWS S3 (immutable archive).</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Idempotent webhooks (Stripe idempotency-key + DB UNIQUE on external_event_id). VND rate snapshot daily from SBV REST endpoint. Multi-rail collection abstracted behind <code>PaymentRail</code> trait. Append-only invoice rows; credit-note for corrections.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate in SG-1. Multi-AZ Postgres RDS. S3 immutable bucket for PDFs.</td></tr>
@@ -229,51 +229,51 @@ graph TB
   subgraph CLIENTS ["Clients"]
     PM["Project Lead / AM (SPA)"]
     CFO["CFO (close + dunning)"]
-    CUST["Customer<br/>(invoice + payment portal)"]
-    CUO["🤖 CUO/CFO-skill<br/>drafts + narrates"]
+    CUST["Customer<br>(invoice + payment portal)"]
+    CUO["🤖 CUO/CFO-skill<br>drafts + narrates"]
   end
 
   subgraph EDGE ["Edge"]
-    AR["Apollo Router<br/>JWT + RBAC"]
+    AR["Apollo Router<br>JWT + RBAC"]
   end
 
   subgraph INV ["INV service (Rust · axum)"]
-    GQL["GraphQL subgraph<br/>Invoice · Payment"]
-    REST["REST admin<br/>send · void · credit"]
+    GQL["GraphQL subgraph<br>Invoice · Payment"]
+    REST["REST admin<br>send · void · credit"]
     MCP["MCP tool catalogue"]
-    DRAFT["draft.rs<br/>from TIME entries"]
-    PDF["pdf_renderer.rs<br/>tectonic deterministic"]
-    SEND["send.rs<br/>email + portal link"]
-    WEBHOOK["webhook.rs<br/>Stripe · Wise · bank"]
-    CASH["cash_application.rs<br/>match receipt → invoice"]
-    AGING["aging.rs<br/>0-30 · 31-60 · 61-90 · 90+"]
-    DUN["dunning.rs<br/>drafts only · human send"]
-    FX["fx.rs<br/>SBV daily snapshot"]
+    DRAFT["draft.rs<br>from TIME entries"]
+    PDF["pdf_renderer.rs<br>tectonic deterministic"]
+    SEND["send.rs<br>email + portal link"]
+    WEBHOOK["webhook.rs<br>Stripe · Wise · bank"]
+    CASH["cash_application.rs<br>match receipt → invoice"]
+    AGING["aging.rs<br>0-30 · 31-60 · 61-90 · 90+"]
+    DUN["dunning.rs<br>drafts only · human send"]
+    FX["fx.rs<br>SBV daily snapshot"]
   end
 
   subgraph SKILLS ["cyberskill-vn (skill bridges)"]
-    VAT["vn-vat-invoice<br/>Mẫu 01/GTGT · GDT XML"]
-    MST["vn-mst-validate<br/>customer + tenant MST"]
-    BANK["vn-bank-transfer<br/>VietQR generator"]
+    VAT["vn-vat-invoice<br>Mẫu 01/GTGT · GDT XML"]
+    MST["vn-mst-validate<br>customer + tenant MST"]
+    BANK["vn-bank-transfer<br>VietQR generator"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br/>invoice · line_item<br/>payment · credit_note<br/>reminder · rate_snapshot")]
-    S3[("AWS S3<br/>invoice PDFs · receipts<br/>immutable bucket")]
+    PG[("PostgreSQL<br>invoice · line_item<br>payment · credit_note<br>reminder · rate_snapshot")]
+    S3[("AWS S3<br>invoice PDFs · receipts<br>immutable bucket")]
   end
 
   subgraph EXT ["External rails"]
     STR["Stripe (USD/EUR)"]
     WISE["Wise (multi-currency)"]
     VQR["VietQR / Napas247 (VND)"]
-    GDT["🇻🇳 GDT e-invoice<br/>Tổng cục Thuế"]
+    GDT["🇻🇳 GDT e-invoice<br>Tổng cục Thuế"]
     SBV["SBV daily rate API"]
   end
 
   subgraph SINKS ["Audit + events"]
-    BRAIN["🧠 BRAIN<br/>inv.* lifecycle"]
-    NATS["📡 NATS<br/>inv.invoice.sent · inv.payment.received"]
-    CRM["🏢 CRM<br/>payment-status sync"]
+    BRAIN["🧠 BRAIN<br>inv.* lifecycle"]
+    NATS["📡 NATS<br>inv.invoice.sent · inv.payment.received"]
+    CRM["🏢 CRM<br>payment-status sync"]
     OBS["👁 OBS"]
   end
 
@@ -309,8 +309,8 @@ graph TB
 
   classDef planned fill:#a7f3d0,stroke:#064e3b
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef ext fill:#fef3c7,stroke:#b45309
-  classDef sink fill:#dbeafe,stroke:#1e40af
+  classDef ext fill:#fef6e0,stroke:#9c750a
+  classDef sink fill:#e8d4c2,stroke:#45210e
   class GQL,REST,MCP,DRAFT,PDF,SEND,WEBHOOK,CASH,AGING,DUN,FX,VAT,MST,BANK planned
   class PG,S3 store
   class STR,WISE,VQR,GDT,SBV ext
@@ -644,10 +644,10 @@ sequenceDiagram
   T-->>I: 47 entries · 168 hrs
   I->>FX: read today's snapshot if cross-currency
   I->>I: aggregate into line items (per role / per project phase)
-  I->>PG: INSERT invoice status="draft"<br/>+ line_item rows
+  I->>PG: INSERT invoice status="draft"<br>+ line_item rows
   PG-->>I: invoice_id
   I-->>PM: draft invoice ready for review
-  Note over PM: PM previews PDF, may edit lines<br/>before "send".
+  Note over PM: PM previews PDF, may edit lines<br>before "send".
     </div>
   </div>
 
@@ -702,13 +702,13 @@ sequenceDiagram
   participant N as 📡 NATS
   participant CRM as 🏢 CRM (subscriber)
 
-  STR->>W: POST webhook payment_intent.succeeded<br/>(HMAC signed)
+  STR->>W: POST webhook payment_intent.succeeded<br>(HMAC signed)
   W->>W: verify signature
   W->>PG: INSERT payment (UNIQUE external_event_id)
   alt new event
-    W->>CASH: match payment to invoice<br/>(by metadata.invoice_id OR amount + customer)
+    W->>CASH: match payment to invoice<br>(by metadata.invoice_id OR amount + customer)
     alt single match
-      CASH->>PG: invoice.outstanding -= amount<br/>set status="paid" if outstanding=0
+      CASH->>PG: invoice.outstanding -= amount<br>set status="paid" if outstanding=0
       CASH->>N: publish inv.payment.received
       CRM-->>N: subscriber → updates account record
     else ambiguous
@@ -735,7 +735,7 @@ sequenceDiagram
   participant CASH as cash_application.rs
 
   PM->>I: sendInvoice {id} (currency=VND)
-  I->>BANK: generate VietQR<br/>{account, amount, addInfo: "INV-2026-04-001"}
+  I->>BANK: generate VietQR<br>{account, amount, addInfo: "INV-2026-04-001"}
   BANK-->>I: QR string + image
   I->>C: email with VietQR image + amount + addInfo
   C->>B247: scan QR · approve transfer
@@ -744,7 +744,7 @@ sequenceDiagram
   W->>CASH: match by addInfo (invoice number) + amount
   CASH->>CASH: idempotent match · update invoice
   CASH->>I: status="paid"
-  Note over CASH: matching strictness: <br/>(invoice_number in addInfo) AND (amount within ±1,000 VND tolerance)
+  Note over CASH: matching strictness: <br>(invoice_number in addInfo) AND (amount within ±1,000 VND tolerance)
     </div>
   </div>
 
@@ -774,7 +774,7 @@ sequenceDiagram
   DUN->>EM: send email
   DUN->>DUN: reminder status="sent"
   EM-->>C: email delivered
-  Note over CUO,CFO: CUO NEVER sends without human approval.<br/>OWASP LLM08 "excessive agency" mitigated.
+  Note over CUO,CFO: CUO NEVER sends without human approval.<br>OWASP LLM08 "excessive agency" mitigated.
     </div>
   </div>
 </section>
@@ -823,35 +823,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">INV FRs as catalogued in PRD §9.16 and SRS §4.16. Full normative descriptions at <a href="../reference/fr-catalog.html#inv" class="text-blue-700 font-semibold underline">fr-catalog.html#inv</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-INV-001</code></td><td>Invoice draft from TIME entries per engagement; editable before send</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-002</code></td><td>Multi-currency: VND, USD, SGD, EUR; daily SBV rate snapshot</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-003</code></td><td>Stripe (USD/EUR), Wise (multi), VietQR + domestic banking (VND)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-004</code></td><td>Vietnam e-invoice format (Decree 123 / Circular 78)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-005</code></td><td>AR aging report; CUO/CFO-skill drafts dunning on overdue</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-006</code></td><td>Per-engagement billable rules drive line items</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-007</code></td><td>PDF generation with tenant brand; archival to S3 immutable bucket</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-008</code></td><td>Invoice events emitted to NATS; CRM reflects payment status</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-009</code></td><td>Webhook idempotency by external_event_id (UNIQUE)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-010</code></td><td>Approved invoices append-only; corrections via credit_note</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-011</code></td><td>MST validation (tenant + customer) before VN e-invoice submission</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-012</code></td><td>Cash application: auto-match by metadata + amount; manual override UI</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-013</code></td><td>Dunning drafted by CUO; never sent without human approval</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-014</code></td><td>VND currency rounding (no decimals; nearest 1,000 for display)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-015</code></td><td>Per-tenant invoice template (brand · footer · payment options)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-015" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-016</code></td><td>10-year invoice retention (VN statutory minimum)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-INV-016" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-017</code></td><td>Recurring invoice schedule (monthly / quarterly subscription)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-INV-017" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-INV-018</code></td><td>MoMo / ZaloPay / VNPay payment rails</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-INV-018" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -865,17 +843,17 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-INV-PERF-001</code></td><td>Invoice generation p95</td><td>≤ 2 s</td><td>bench/draft.rs · k6 load</td></tr>
-        <tr><td><code>NFR-INV-PERF-002</code></td><td>PDF render p95 (deterministic)</td><td>≤ 600 ms</td><td>bench/pdf.rs</td></tr>
-        <tr><td><code>NFR-INV-PERF-003</code></td><td>VN e-invoice GDT submission p95</td><td>≤ 5 s (network bound)</td><td>k6 against staging GDT</td></tr>
-        <tr><td><code>NFR-INV-REL-001</code></td><td>Payment-webhook idempotency</td><td>100% (zero duplicate side-effects)</td><td>chaos test: replay webhook 100×</td></tr>
-        <tr><td><code>NFR-INV-REL-002</code></td><td>Cash-application auto-match rate</td><td>≥ 90% (the rest manual)</td><td>OBS dashboard · monthly review</td></tr>
-        <tr><td><code>NFR-INV-REL-003</code></td><td>Webhook signature verification</td><td>100% (zero unsigned acceptance)</td><td>integration test injects unsigned webhook</td></tr>
-        <tr><td><code>NFR-INV-INT-001</code></td><td>VND rounding correctness</td><td>0 sub-1,000 drift / 1k invoices</td><td>property test</td></tr>
-        <tr><td><code>NFR-INV-AVL-001</code></td><td>INV availability</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-INV-DUR-001</code></td><td>Invoice PDF durability (10-year)</td><td>0 lost objects</td><td>S3 immutable + quarterly inventory</td></tr>
-        <tr><td><code>NFR-INV-SEC-001</code></td><td>Customer payment method tokens encrypted</td><td>KMS-wrapped</td><td>schema inspection · CI gate</td></tr>
-        <tr><td><code>NFR-INV-SEC-002</code></td><td>PCI scope minimisation (no card data stored)</td><td>= 0 raw PAN columns</td><td>schema audit · Stripe handles PCI</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Invoice generation p95</td><td>≤ 2 s</td><td>bench/draft.rs · k6 load</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>PDF render p95 (deterministic)</td><td>≤ 600 ms</td><td>bench/pdf.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VN e-invoice GDT submission p95</td><td>≤ 5 s (network bound)</td><td>k6 against staging GDT</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Payment-webhook idempotency</td><td>100% (zero duplicate side-effects)</td><td>chaos test: replay webhook 100×</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cash-application auto-match rate</td><td>≥ 90% (the rest manual)</td><td>OBS dashboard · monthly review</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Webhook signature verification</td><td>100% (zero unsigned acceptance)</td><td>integration test injects unsigned webhook</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VND rounding correctness</td><td>0 sub-1,000 drift / 1k invoices</td><td>property test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>INV availability</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Invoice PDF durability (10-year)</td><td>0 lost objects</td><td>S3 immutable + quarterly inventory</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Customer payment method tokens encrypted</td><td>KMS-wrapped</td><td>schema inspection · CI gate</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>PCI scope minimisation (no card data stored)</td><td>= 0 raw PAN columns</td><td>schema audit · Stripe handles PCI</td></tr>
       </tbody>
     </table>
   </div>
@@ -894,8 +872,8 @@ stateDiagram-v2
 graph LR
   subgraph upstream ["INV depends on"]
     AUTH["🔐 AUTH"]
-    TIME["⏱ TIME<br/>entries · billable"]
-    CRM["🏢 CRM<br/>customer records"]
+    TIME["⏱ TIME<br>entries · billable"]
+    CRM["🏢 CRM<br>customer records"]
     BRAIN["🧠 BRAIN"]
     OBS["👁 OBS"]
     NATS["📡 NATS"]
@@ -915,9 +893,9 @@ graph LR
   end
   INV["🧾 INV"]
   subgraph downstream ["INV feeds"]
-    CRM2["🏢 CRM<br/>payment status"]
-    GL["📊 GL<br/>revenue recognition"]
-    BRAIN2["🧠 BRAIN<br/>audit"]
+    CRM2["🏢 CRM<br>payment status"]
+    GL["📊 GL<br>revenue recognition"]
+    BRAIN2["🧠 BRAIN<br>audit"]
     CUO["🤖 CUO/CFO-skill"]
   end
   AUTH --> INV
@@ -941,8 +919,8 @@ graph LR
   INV --> CUO
 
   classDef planned fill:#a7f3d0,stroke:#064e3b
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef ext fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef ext fill:#fef6e0,stroke:#9c750a
   class INV planned
   class AUTH,TIME,CRM,CRM2,GL,CUO,OBS,NATS planned
   class BRAIN,BRAIN2,S3,VAT,MST,BANK shipped
@@ -1206,11 +1184,11 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
   <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
-      <li><strong>PRD §9.16</strong> — INV module FRs (FR-INV-001 through FR-INV-008).</li>
+      <li><strong>PRD §9.16</strong> — INV module FRs ((FR pending) through (FR pending)).</li>
       <li><strong>PRD §19.16</strong> — INV architecture posture, multi-rail composition.</li>
       <li><strong>PRD §11.2.1</strong> — Performance NFRs (invoice generation p95).</li>
       <li><strong>PRD §11.2.4</strong> — Reliability NFRs (webhook idempotency, cash application).</li>
-      <li><strong>SRS §4.16</strong> — Formal FR-INV-001 through FR-INV-006 with verification methods.</li>
+      <li><strong>SRS §4.16</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Decree 123/2020/NĐ-CP</strong> — Vietnamese e-invoice mandate.</li>
       <li><strong>Circular 78/2021/TT-BTC</strong> — GDT XML schema for e-invoices.</li>
       <li><strong>Decree 119/2018/NĐ-CP</strong> — E-invoice retention (10 years).</li>

@@ -8,7 +8,7 @@
   <meta name="description" content="OBS — Observability. LGTM stack (Loki + Grafana + Tempo + Prometheus) + LangSmith for AI traces. Tenant-scoped queries, SLO dashboards, alert routing, EU AI Act decision logging.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -131,7 +131,7 @@
       <div class="fact-card"><div class="label">Trace exporter</div><div class="value">OTel SDK</div><div class="note">in every service binary</div></div>
       <div class="fact-card"><div class="label">Retention</div><div class="value">7d hot · 90d warm · 1y cold</div><div class="note">configurable per tier</div></div>
       <div class="fact-card"><div class="label">Tenant isolation</div><div class="value">Proxy-enforced</div><div class="note">no cross-tenant log reads</div></div>
-      <div class="fact-card"><div class="label">SLO targets</div><div class="value">≥ 99.5% platform</div><div class="note">NFR-REL-001</div></div>
+      <div class="fact-card"><div class="label">SLO targets</div><div class="value">≥ 99.5% platform</div><div class="note">N(FR pending)</div></div>
       <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN</div><div class="note">tenant scope + audit surface</div></div>
       <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules</div><div class="note">every service emits OTel</div></div>
     </div>
@@ -183,7 +183,7 @@
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>OTel for everything except AI traces (LangSmith). Trace-id propagation via W3C TraceContext. PII redaction at the collector. Tenant_id injected as a label by the collector based on JWT inspection.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Loki + Tempo on S3-backed object storage; Prometheus on a single Fargate task (P0); Grafana on Fargate; query proxy on Fargate.</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.3 FTE CTO at P0. P1+: dedicated SRE/on-call rotation.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-REL-001 (platform availability ≥ 99.5%), NFR-OBS-LAT-001 (SLO dashboard ≤ 60 s freshness), NFR-OBS-PII-001 (log PII recall ≥ 99.5%).</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (platform availability ≥ 99.5%), N(FR pending) (SLO dashboard ≤ 60 s freshness), N(FR pending) (log PII recall ≥ 99.5%).</td></tr>
       </tbody>
     </table>
   </div>
@@ -207,38 +207,38 @@ graph TB
   end
 
   subgraph COLLECTOR ["OTel Collector (Fargate · per-region)"]
-    REC["receivers<br/>OTLP grpc/http"]
-    RED["redactor processor<br/>PII scrub · ≥ 99.5%"]
-    TAG["tenant_tag processor<br/>JWT → tenant_id label"]
-    SAMP["sampler<br/>tail-based for traces"]
+    REC["receivers<br>OTLP grpc/http"]
+    RED["redactor processor<br>PII scrub · ≥ 99.5%"]
+    TAG["tenant_tag processor<br>JWT → tenant_id label"]
+    SAMP["sampler<br>tail-based for traces"]
     EXP["exporters"]
   end
 
   subgraph LGTM ["LGTM backends (S3-backed)"]
-    LOKI[("Loki<br/>logs · 7d hot · 90d warm")]
-    TEMPO[("Tempo<br/>traces · 7d hot · 30d warm")]
-    PROM[("Prometheus<br/>metrics · 15d local · 1y in Mimir P1+")]
+    LOKI[("Loki<br>logs · 7d hot · 90d warm")]
+    TEMPO[("Tempo<br>traces · 7d hot · 30d warm")]
+    PROM[("Prometheus<br>metrics · 15d local · 1y in Mimir P1+")]
   end
 
   subgraph DASH ["Grafana + Query Proxy"]
-    QP["tenant_query_proxy.rs<br/>Rust · enforces tenant scope on every query"]
-    GRAF["Grafana 11.x<br/>dashboards"]
+    QP["tenant_query_proxy.rs<br>Rust · enforces tenant scope on every query"]
+    GRAF["Grafana 11.x<br>dashboards"]
   end
 
   subgraph ALERT ["Alert Manager"]
-    AM["alertmanager.yml<br/>routes by severity"]
-    PD["PagerDuty<br/>critical"]
-    CHAT["CHAT bot<br/>mid"]
-    DIG["CUO digest<br/>low"]
+    AM["alertmanager.yml<br>routes by severity"]
+    PD["PagerDuty<br>critical"]
+    CHAT["CHAT bot<br>mid"]
+    DIG["CUO digest<br>low"]
   end
 
   subgraph AI ["AI trace plane"]
-    LANG["LangSmith SaaS<br/>(zero-retention)"]
+    LANG["LangSmith SaaS<br>(zero-retention)"]
   end
 
   subgraph AUDIT ["Audit surface"]
-    BR["🧠 BRAIN<br/>binlog"]
-    AS["audit_view.rs<br/>read-only · auditor-scoped"]
+    BR["🧠 BRAIN<br>binlog"]
+    AS["audit_view.rs<br>read-only · auditor-scoped"]
   end
 
   SVC1 --> REC
@@ -265,8 +265,8 @@ graph TB
   BR --> AS
   AS --> GRAF
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#ede9fe,stroke:#7c3aed
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#7c3aed
   classDef store fill:#f5f3ff,stroke:#7c3aed
   class BR shipped
   class REC,RED,TAG,SAMP,EXP,QP,GRAF,AM,AS planned
@@ -555,7 +555,7 @@ sequenceDiagram
   COL->>LOKI: push (label_set, ts, message)
   LOKI-->>COL: 204 No Content
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-OBS-003: PII recall ≥ 99.5%. Redaction at the collector is the last point at which PII can be stopped before it lands on S3.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): PII recall ≥ 99.5%. Redaction at the collector is the last point at which PII can be stopped before it lands on S3.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 2 — Metric scrape + alert evaluation</h3>
@@ -570,7 +570,7 @@ sequenceDiagram
   participant CHAT as #cyberos-alerts
 
   PROM->>SVC: GET /metrics (every 15 s)
-  SVC-->>PROM: ai_request_latency_p95_seconds 2.3<br/>ai_provider_error_total 47
+  SVC-->>PROM: ai_request_latency_p95_seconds 2.3<br>ai_provider_error_total 47
   loop alert eval every 30 s
     PROM->>PROM: evaluate rule: ai_request_latency_p95_seconds &gt; 2 for 5m
     alt firing
@@ -608,14 +608,14 @@ sequenceDiagram
   CHAT->>BR: append message row
   CHAT-->>AR: ok
   AR-->>U: ok
-  Note over AR,TEMPO: each service emits its own span<br/>all share trace_id=t1
+  Note over AR,TEMPO: each service emits its own span<br>all share trace_id=t1
   AR->>TEMPO: span (root)
   AUTH->>TEMPO: span
   CHAT->>TEMPO: span
   AI->>TEMPO: span
   BR->>TEMPO: span (x2)
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-OBS-002: end-to-end trace continuity verified. W3C TraceContext propagation through every internal call. One <code>trace_id</code> stitches the whole transaction.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): end-to-end trace continuity verified. W3C TraceContext propagation through every internal call. One <code>trace_id</code> stitches the whole transaction.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 4 — Alert escalation (severity-based routing)</h3>
@@ -645,7 +645,7 @@ sequenceDiagram
     Note over CUO: surfaced in CEO morning brief
   end
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-OBS-005: PagerDuty for critical, CHAT for low, CUO digest for trends.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): PagerDuty for critical, CHAT for low, CUO digest for trends.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 5 — Audit-log query (compliance review)</h3>
@@ -719,30 +719,14 @@ stateDiagram-v2
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">OBS FRs from PRD §9.9 + SRS §4.9. Full normative descriptions at <a href="../reference/fr-catalog.html#obs" class="text-blue-700 font-semibold underline">fr-catalog.html#obs</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-OBS-001</code></td><td>Centralised structured JSON logs with tenant + member tagging</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-002</code></td><td>OpenTelemetry tracing across Apollo Router → subgraphs → DB</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-003</code></td><td>PII redaction in logs before shipping; recall ≥ 99.5%</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-004</code></td><td>SLO compliance dashboards updated within 60 s of measurement</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-005</code></td><td>Alert routing: PagerDuty critical · CHAT mid · CUO digest low</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-006</code></td><td>AI Gateway exposes Grafana datasource for token/cost/latency</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-007</code></td><td>Audit-log surface (read-only) for compliance reviewers</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-008</code></td><td>Error-budget burn-down chart per SLO; auto-pause feature flags on burn</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td><code>FR-OBS-009</code></td><td>Per-tenant cost dashboards (infra, AI, storage)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-010</code></td><td>Per-module SLO dashboards (latency, error-rate, success-rate)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-011</code></td><td>Tenant-scoped queries — proxy rejects cross-tenant</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-012</code></td><td>LangSmith integration for AI-trace observability</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-013</code></td><td>EU AI Act Art. 12 decision-log retention ≥ 6 months</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-014</code></td><td>Trace-id propagation via W3C TraceContext on every call</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-OBS-015</code></td><td>SLO-as-code: targets in YAML, generated alert rules</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -752,21 +736,21 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-REL-001</code></td><td>Platform availability (28-day rolling)</td><td>≥ 99.5%</td><td>SLO target · burn-rate alerts</td></tr>
-        <tr><td><code>NFR-REL-002</code></td><td>CHAT availability</td><td>≥ 99.9%</td><td>SLO</td></tr>
-        <tr><td><code>NFR-REL-003</code></td><td>BRAIN search availability</td><td>≥ 99.5%</td><td>SLO</td></tr>
-        <tr><td><code>NFR-REL-005</code></td><td>Backup RPO</td><td>≤ 1 h</td><td>scheduled backup audit</td></tr>
-        <tr><td><code>NFR-REL-006</code></td><td>Backup RTO</td><td>≤ 4 h</td><td>quarterly restore drill</td></tr>
-        <tr><td><code>NFR-REL-007</code></td><td>Cross-region failover (P3)</td><td>≤ 24 h</td><td>annual DR drill</td></tr>
-        <tr><td><code>NFR-OBS-LAT-001</code></td><td>SLO dashboard refresh latency</td><td>≤ 60 s</td><td>monitor synthetic SLO breach</td></tr>
-        <tr><td><code>NFR-OBS-LAT-002</code></td><td>Log ingest end-to-end latency</td><td>≤ 30 s p95</td><td>synthetic log → query</td></tr>
-        <tr><td><code>NFR-OBS-LAT-003</code></td><td>Trace ingest end-to-end</td><td>≤ 60 s p95</td><td>synthetic trace</td></tr>
-        <tr><td><code>NFR-OBS-PII-001</code></td><td>Log PII redaction recall</td><td>≥ 99.5%</td><td>test set</td></tr>
-        <tr><td><code>NFR-OBS-PII-002</code></td><td>Log PII redaction precision</td><td>≥ 95%</td><td>test set</td></tr>
-        <tr><td><code>NFR-OBS-AVL-001</code></td><td>OBS plane availability</td><td>≥ 99.5%</td><td>SLO (recursive)</td></tr>
-        <tr><td><code>NFR-OBS-RET-001</code></td><td>Decision-log retention</td><td>≥ 180 d</td><td>config audit · S3 lifecycle</td></tr>
-        <tr><td><code>NFR-OBS-ISO-001</code></td><td>Cross-tenant query leakage</td><td>= 0</td><td>property-based test</td></tr>
-        <tr><td><code>NFR-OBS-COST-001</code></td><td>OBS plane infra cost (P0)</td><td>≤ $130/month</td><td>cost dashboard</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Platform availability (28-day rolling)</td><td>≥ 99.5%</td><td>SLO target · burn-rate alerts</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>CHAT availability</td><td>≥ 99.9%</td><td>SLO</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>BRAIN search availability</td><td>≥ 99.5%</td><td>SLO</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Backup RPO</td><td>≤ 1 h</td><td>scheduled backup audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Backup RTO</td><td>≤ 4 h</td><td>quarterly restore drill</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cross-region failover (P3)</td><td>≤ 24 h</td><td>annual DR drill</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>SLO dashboard refresh latency</td><td>≤ 60 s</td><td>monitor synthetic SLO breach</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Log ingest end-to-end latency</td><td>≤ 30 s p95</td><td>synthetic log → query</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Trace ingest end-to-end</td><td>≤ 60 s p95</td><td>synthetic trace</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Log PII redaction recall</td><td>≥ 99.5%</td><td>test set</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Log PII redaction precision</td><td>≥ 95%</td><td>test set</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OBS plane availability</td><td>≥ 99.5%</td><td>SLO (recursive)</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Decision-log retention</td><td>≥ 180 d</td><td>config audit · S3 lifecycle</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cross-tenant query leakage</td><td>= 0</td><td>property-based test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OBS plane infra cost (P0)</td><td>≤ $130/month</td><td>cost dashboard</td></tr>
       </tbody>
     </table>
   </div>
@@ -778,10 +762,10 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["OBS depends on"]
-    AUTH["🔐 AUTH<br/>tenant + scope verification"]
-    BRAIN["🧠 BRAIN<br/>audit-log surface"]
-    S3["☁️ S3<br/>Loki/Tempo storage"]
-    LANGSMITH["LangSmith SaaS<br/>AI traces"]
+    AUTH["🔐 AUTH<br>tenant + scope verification"]
+    BRAIN["🧠 BRAIN<br>audit-log surface"]
+    S3["☁️ S3<br>Loki/Tempo storage"]
+    LANGSMITH["LangSmith SaaS<br>AI traces"]
   end
   OBS["👁 OBS"]
   subgraph emitters ["Every CyberOS service emits OTel"]
@@ -815,8 +799,8 @@ graph LR
   OBS --> AUDIT
   OBS --> CEO
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#ede9fe,stroke:#7c3aed
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#7c3aed
   class BRAIN,SK shipped
   class OBS,AUTH,AI,MCP,CHAT,AUTH2,BR2,OTH planned
   class S3,LANGSMITH planned
@@ -1008,7 +992,7 @@ slo:
     <div class="fact-card"><div class="label">SLOs at P0</div><div class="value">~11</div><div class="note">platform + per-module</div></div>
     <div class="fact-card"><div class="label">P0 budget</div><div class="value">~$130/mo</div><div class="note">LGTM hosting + LangSmith starter</div></div>
     <div class="fact-card"><div class="label">Decision-log retention</div><div class="value">≥ 180 d</div><div class="note">EU AI Act Art. 12</div></div>
-    <div class="fact-card"><div class="label">PII recall target</div><div class="value">≥ 99.5%</div><div class="note">FR-OBS-003</div></div>
+    <div class="fact-card"><div class="label">PII recall target</div><div class="value">≥ 99.5%</div><div class="note">(FR pending)</div></div>
   </div>
 
   <div class="bbg-card p-5">
@@ -1038,9 +1022,9 @@ slo:
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
       <li><strong>PRD §8.7</strong> — Observability plane architecture.</li>
-      <li><strong>PRD §9.9</strong> — FR-OBS-001 through FR-OBS-008 (PRD-tier).</li>
+      <li><strong>PRD §9.9</strong> — (FR pending) through (FR pending) (PRD-tier).</li>
       <li><strong>PRD §11.2.2</strong> — Reliability NFRs (REL-001 through REL-008).</li>
-      <li><strong>SRS §4.9</strong> — Formal FR-OBS catalogue with verification methods.</li>
+      <li><strong>SRS §4.9</strong> — Formal (FR pending) catalogue with verification methods.</li>
       <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 logging, Art. 13 transparency, Art. 14 human oversight.</li>
       <li><strong>ISO/IEC 27001:2022</strong> — A.8.15 logging, A.8.16 monitoring activities.</li>
       <li><strong>ISO/IEC 42001 (AIMS)</strong> — § 9.1 performance evaluation.</li>

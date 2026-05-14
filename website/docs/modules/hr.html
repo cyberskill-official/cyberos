@@ -8,7 +8,7 @@
   <meta name="description" content="HR — Human Resources. Member directory, onboarding workflow, leave management (annual, sick, maternity, sabbatical), contract management (Vietnamese labor law compliant), performance review hooks, termination workflow, BHXH/BHYT/BHTN integration.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -208,7 +208,7 @@
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only contract table with <code>effective_to</code> + <code>superseded_by</code> for amendments (anti-retroactive). Leave-balance state machine: <code>requested → approved → consumed</code> or <code>requested → rejected</code>. Accrual computed lazily at quarter boundaries (not real-time) to keep audit deterministic.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 for contract PDFs with retention lock = 10 years (matches VN SI/PIT statutory minimum).</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.25 FTE today (covered by HR/Ops Lead). By P3: full HR/Ops Lead + 1 engineer.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>FR-HR-001..008 (PRD §9.13). KPIs: onboarding-checklist completion time, leave-request approval p95, CCCD-access audit-row coverage = 100%, contract-renewal lead time.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>(FR pending)..008 (PRD §9.13). KPIs: onboarding-checklist completion time, leave-request approval p95, CCCD-access audit-row coverage = 100%, contract-renewal lead time.</td></tr>
       </tbody>
     </table>
   </div>
@@ -227,47 +227,47 @@
     <div class="mermaid">
 graph TB
   subgraph CLIENTS ["Clients"]
-    SPA["CyberOS SPA<br/>(HR admin UX)"]
-    CUO["🤖 CUO router<br/>(narrative only)"]
-    MEMBER["Member self-service<br/>(leave + profile)"]
+    SPA["CyberOS SPA<br>(HR admin UX)"]
+    CUO["🤖 CUO router<br>(narrative only)"]
+    MEMBER["Member self-service<br>(leave + profile)"]
   end
 
   subgraph EDGE ["Edge"]
-    AR["Apollo Router<br/>JWT + RBAC"]
+    AR["Apollo Router<br>JWT + RBAC"]
   end
 
   subgraph HR ["HR service (Rust · axum)"]
-    GQL["GraphQL subgraph<br/>Member · Profile · Leave"]
-    REST["REST admin<br/>onboarding · termination"]
-    MCP["MCP tool catalogue<br/>(read-mostly)"]
-    OB["onboarding.rs<br/>multi-module orchestrator"]
-    OFF["offboarding.rs<br/>revoke + settle"]
-    LV["leave.rs<br/>request · approve · accrual"]
-    CON["contract.rs<br/>versioned · KMS-wrapped"]
-    SAB["sabbatical.rs<br/>5-year eligibility tick"]
-    DOC["doc_bridge.rs<br/>e-sign integration"]
+    GQL["GraphQL subgraph<br>Member · Profile · Leave"]
+    REST["REST admin<br>onboarding · termination"]
+    MCP["MCP tool catalogue<br>(read-mostly)"]
+    OB["onboarding.rs<br>multi-module orchestrator"]
+    OFF["offboarding.rs<br>revoke + settle"]
+    LV["leave.rs<br>request · approve · accrual"]
+    CON["contract.rs<br>versioned · KMS-wrapped"]
+    SAB["sabbatical.rs<br>5-year eligibility tick"]
+    DOC["doc_bridge.rs<br>e-sign integration"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br/>member · contract · leave<br/>RLS by tenant_id")]
-    S3[("AWS S3<br/>contract PDFs · CCCD images<br/>10-year object-lock")]
-    KMS[("AWS KMS<br/>per-column key<br/>CCCD distinct from contracts")]
+    PG[("PostgreSQL<br>member · contract · leave<br>RLS by tenant_id")]
+    S3[("AWS S3<br>contract PDFs · CCCD images<br>10-year object-lock")]
+    KMS[("AWS KMS<br>per-column key<br>CCCD distinct from contracts")]
   end
 
   subgraph DOWNSTREAM ["Lifecycle downstreams"]
-    AUTH["🔐 AUTH<br/>account create / revoke"]
-    REW["💎 REW<br/>roster sync · final pay"]
-    ESOP["📊 ESOP<br/>Good/Bad Leaver branch"]
-    LEARN["📈 LEARN<br/>training records"]
-    TIME["⏱ TIME<br/>timesheet enrolment"]
-    CHAT["💬 CHAT<br/>workspace provision"]
-    DOCM["📄 DOC<br/>e-sign"]
+    AUTH["🔐 AUTH<br>account create / revoke"]
+    REW["💎 REW<br>roster sync · final pay"]
+    ESOP["📊 ESOP<br>Good/Bad Leaver branch"]
+    LEARN["📈 LEARN<br>training records"]
+    TIME["⏱ TIME<br>timesheet enrolment"]
+    CHAT["💬 CHAT<br>workspace provision"]
+    DOCM["📄 DOC<br>e-sign"]
   end
 
   subgraph SINKS ["Audit & telemetry"]
-    BRAIN["🧠 BRAIN<br/>hr.lifecycle rows"]
-    OBS["👁 OBS<br/>traces + metrics"]
-    NATS["📡 NATS JetStream<br/>hr.* events"]
+    BRAIN["🧠 BRAIN<br>hr.lifecycle rows"]
+    OBS["👁 OBS<br>traces + metrics"]
+    NATS["📡 NATS JetStream<br>hr.* events"]
   end
 
   SPA --> AR
@@ -302,10 +302,10 @@ graph TB
   LV --> NATS
   HR --> OBS
 
-  classDef planned fill:#fce7f3,stroke:#9d174d
+  classDef planned fill:#fde7b3,stroke:#9c750a
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
-  classDef down fill:#fef3c7,stroke:#b45309
+  classDef sink fill:#f5ede6,stroke:#45210e
+  classDef down fill:#fef6e0,stroke:#9c750a
   class GQL,REST,MCP,OB,OFF,LV,CON,SAB,DOC planned
   class PG,S3,KMS store
   class BRAIN,OBS,NATS sink
@@ -331,7 +331,7 @@ graph TB
         <tr><td><code>cccd.rs</code></td><td>services/hr/src/cccd.rs</td><td>CCCD (Vietnamese citizen ID) photo handler — separate KMS keyspace, sev-1 access audit, never embedded in API responses.</td></tr>
         <tr><td><code>org_chart.rs</code></td><td>services/hr/src/org_chart.rs</td><td>Auto-rendered org chart from <code>manager_id</code> self-references. Returns adjacency list + Mermaid string for SPA.</td></tr>
         <tr><td><code>review_hook.rs</code></td><td>services/hr/src/review_hook.rs</td><td>Performance-review hook to LEARN. HR initiates a review cycle; LEARN owns the peer-review workflow; outcome summary lands back as a non-comp HR field.</td></tr>
-        <tr><td><code>audit_bridge.rs</code></td><td>services/hr/src/audit_bridge.rs</td><td>Writes every lifecycle transition to BRAIN. CCCD reads are sev-1 (FR-HR-007).</td></tr>
+        <tr><td><code>audit_bridge.rs</code></td><td>services/hr/src/audit_bridge.rs</td><td>Writes every lifecycle transition to BRAIN. CCCD reads are sev-1 ((FR pending)).</td></tr>
         <tr><td><code>migrations/</code></td><td>services/hr/migrations/</td><td>sqlx migrations. RLS by <code>tenant_id</code>. Separate column-level KMS for CCCD vs contracts vs comp-shadow fields.</td></tr>
       </tbody>
     </table>
@@ -640,7 +640,7 @@ sequenceDiagram
   participant N as 📡 NATS
   participant B as 🧠 BRAIN
 
-  HR->>H: POST /admin/members<br/>{name, role, level, start_date, manager_id}
+  HR->>H: POST /admin/members<br>{name, role, level, start_date, manager_id}
   H->>H: create member row
   H->>H: initialise onboarding_task rows (8 default tasks)
   H->>B: audit "hr.member.joined"
@@ -659,7 +659,7 @@ sequenceDiagram
     L-->>H: ack
   end
   H-->>HR: 201 Created · onboarding_id
-  Note over H,B: each downstream ack writes its own audit row;<br/>partial failure is retried with idempotency key.
+  Note over H,B: each downstream ack writes its own audit row;<br>partial failure is retried with idempotency key.
     </div>
     <p class="text-xs text-slate-500 mt-3">Onboarding is the multi-module fan-out. Each downstream call carries an idempotency key so retries are safe; if AUTH succeeds but CHAT times out, the orchestrator retries CHAT without re-provisioning AUTH.</p>
   </div>
@@ -709,7 +709,7 @@ sequenceDiagram
   participant M as Member
   participant B as 🧠 BRAIN
 
-  HR->>H: POST /admin/contracts<br/>{member_id, kind, effective_from, terms}
+  HR->>H: POST /admin/contracts<br>{member_id, kind, effective_from, terms}
   H->>TPL: render PDF (Vietnamese + English)
   TPL-->>H: PDF bytes
   H->>K: wrap with contract KMS key
@@ -723,7 +723,7 @@ sequenceDiagram
   H->>S3: archive signed version
   H->>H: contract.status = "active"
   H->>B: audit "hr.contract.signed" with PDF SHA-256
-  Note over H,B: previous contract row is superseded;<br/>old row retained for 10-year statutory minimum.
+  Note over H,B: previous contract row is superseded;<br>old row retained for 10-year statutory minimum.
     </div>
   </div>
 
@@ -750,7 +750,7 @@ sequenceDiagram
   L-->>H: review_outcome {summary, recommendation}
   H->>H: store review_outcome row (no per-judge data)
   H->>B: audit "hr.review.closed" reason=<recommendation>
-  Note over L,H: individual peer scores NEVER cross the HR boundary;<br/>FR-LEARN-004 enforced at LEARN export gate.
+  Note over L,H: individual peer scores NEVER cross the HR boundary;<br>(FR pending) enforced at LEARN export gate.
     </div>
   </div>
 
@@ -772,16 +772,16 @@ sequenceDiagram
   OFF->>CEO: request co-sign (mandatory for Bad Leaver)
   CEO-->>OFF: approve
   par revocations
-    OFF->>A: revoke all sessions + API keys (FR-AUTH-009 5s SLO)
+    OFF->>A: revoke all sessions + API keys ((FR pending) 5s SLO)
     OFF->>R: compute final pay (BHXH + PIT + accrued leave cash-out)
     OFF->>E: branch GL vs BL; vest pause; put-rights freeze if BL
     OFF->>ASSET: open asset-return tasks (laptop, badge, …)
   end
   OFF->>OFF: member.status = "terminated", end_date = today
   OFF->>B: audit "hr.member.terminated" reason=<kind>
-  Note over OFF,B: contract NOT deleted — superseded with effective_to=today;<br/>10-year statutory retention applies.
+  Note over OFF,B: contract NOT deleted — superseded with effective_to=today;<br>10-year statutory retention applies.
     </div>
-    <p class="text-xs text-slate-500 mt-3">Bad Leaver is a CFO + CEO co-sign decision (FR-ESOP-005). The offboarding orchestrator never decides GL vs BL unilaterally; it surfaces a recommendation and waits for the human gate.</p>
+    <p class="text-xs text-slate-500 mt-3">Bad Leaver is a CFO + CEO co-sign decision ((FR pending)). The offboarding orchestrator never decides GL vs BL unilaterally; it surfaces a recommendation and waits for the human gate.</p>
   </div>
 </section>
 
@@ -828,37 +828,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">HR FRs as catalogued in PRD §9.13 and SRS §4.13. Full normative descriptions and verification methods at <a href="../reference/fr-catalog.html#hr" class="text-blue-700 font-semibold underline">fr-catalog.html#hr</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-HR-001</code></td><td>Member profile (name, role, level, start_date, sabbatical accrual, leave balance)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-002</code></td><td>Leave request flow with manager + HR confirm; calendar visibility</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-003</code></td><td>Sabbatical eligibility tracker (5-yr continuous tick)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-004</code></td><td>Contract storage with e-sign through DOC (P4) or external link (P1)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-005</code></td><td>Onboarding checklist with module-specific items</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-006</code></td><td>Government ID encrypted with separate KMS key; never ingested into BRAIN</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-007</code></td><td>CCCD photos under Vietnamese sensitive-data law; access logged sev-1</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-008</code></td><td>Termination workflow: settlement + asset return + REW final + ESOP GL/BL</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-009</code></td><td>Org-chart auto-render from manager_id self-references</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-010</code></td><td>Every read of Member personal data writes an audit row</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-011</code></td><td>BHXH / BHYT / BHTN numbers stored encrypted; visible to payroll only</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-012</code></td><td>Leave accrual deterministic from contract effective dates</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-013</code></td><td>Decree 145/2020 overtime cap (≤ 200h/year) enforced at TIME boundary</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-HR-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-014</code></td><td>Contracts append-only; amendments via supersession with effective_to</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-015</code></td><td>10-year statutory retention on contracts (VN SI/PIT minimum)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-015" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-016</code></td><td>Performance-review summary lands as HR field; per-judge scores never ingested</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-HR-016" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-017</code></td><td>DSAR export (PDPL Art. 14) within 30 days, signed bundle</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-017" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-018</code></td><td>Onboarding orchestrator idempotent; partial failure retriable</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-018" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-019</code></td><td>Compensation data structurally absent from HR schema (DEC-036)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-HR-019" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-HR-020</code></td><td>Singapore HoldCo branch: SG residency option per Member</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-HR-020" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -872,17 +848,17 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-HR-SEC-001</code></td><td>CCCD access without sev-1 audit row</td><td>= 0 occurrences</td><td>chaos test: read CCCD; assert audit row present + classification=restricted</td></tr>
-        <tr><td><code>NFR-HR-SEC-002</code></td><td>Comp data appearing in HR table</td><td>= 0 — CI gate</td><td>schema diff bot; sqlx migration grep for blocklist columns</td></tr>
-        <tr><td><code>NFR-HR-SEC-003</code></td><td>KMS-key separation (CCCD vs contracts vs Profile)</td><td>3 distinct keys</td><td>KMS policy inspection; cross-key access blocked</td></tr>
-        <tr><td><code>NFR-HR-USAB-001</code></td><td>Leave-request submission (mobile)</td><td>≤ 3 taps from home</td><td>mobile UX walkthrough · usability test</td></tr>
-        <tr><td><code>NFR-HR-USAB-002</code></td><td>Onboarding checklist completion time (median Member)</td><td>≤ 5 working days</td><td>onboarding_task timestamps</td></tr>
-        <tr><td><code>NFR-HR-LAT-001</code></td><td>Member directory query p95</td><td>≤ 80 ms</td><td>k6 load test</td></tr>
-        <tr><td><code>NFR-HR-LAT-002</code></td><td>Org-chart render p95 (≤ 100 Members)</td><td>≤ 150 ms</td><td>bench/org_chart.rs</td></tr>
-        <tr><td><code>NFR-HR-AVL-001</code></td><td>HR availability (28-day)</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-HR-DUR-001</code></td><td>Contract durability (10-year retention)</td><td>0 lost objects</td><td>S3 object-lock + quarterly inventory audit</td></tr>
-        <tr><td><code>NFR-HR-INT-001</code></td><td>Onboarding orchestrator idempotency</td><td>100% (property test)</td><td>proptest: duplicate-fire + retry → same final state</td></tr>
-        <tr><td><code>NFR-HR-PRIV-001</code></td><td>DSAR fulfilment time</td><td>≤ 30 days (PDPL)</td><td>DSAR queue dashboard</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>CCCD access without sev-1 audit row</td><td>= 0 occurrences</td><td>chaos test: read CCCD; assert audit row present + classification=restricted</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Comp data appearing in HR table</td><td>= 0 — CI gate</td><td>schema diff bot; sqlx migration grep for blocklist columns</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>KMS-key separation (CCCD vs contracts vs Profile)</td><td>3 distinct keys</td><td>KMS policy inspection; cross-key access blocked</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Leave-request submission (mobile)</td><td>≤ 3 taps from home</td><td>mobile UX walkthrough · usability test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Onboarding checklist completion time (median Member)</td><td>≤ 5 working days</td><td>onboarding_task timestamps</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Member directory query p95</td><td>≤ 80 ms</td><td>k6 load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Org-chart render p95 (≤ 100 Members)</td><td>≤ 150 ms</td><td>bench/org_chart.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>HR availability (28-day)</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Contract durability (10-year retention)</td><td>0 lost objects</td><td>S3 object-lock + quarterly inventory audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Onboarding orchestrator idempotency</td><td>100% (property test)</td><td>proptest: duplicate-fire + retry → same final state</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>DSAR fulfilment time</td><td>≤ 30 days (PDPL)</td><td>DSAR queue dashboard</td></tr>
       </tbody>
     </table>
   </div>
@@ -900,23 +876,23 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["HR depends on"]
-    AUTH["🔐 AUTH<br/>identity · RBAC"]
-    BRAIN["🧠 BRAIN<br/>audit chain"]
-    OBS["👁 OBS<br/>traces + metrics"]
-    KMS["🔑 AWS KMS<br/>per-column key"]
-    S3["🗂 AWS S3<br/>contract PDFs · CCCD"]
-    DOC["📄 DOC<br/>WebAuthn e-sign · P4"]
+    AUTH["🔐 AUTH<br>identity · RBAC"]
+    BRAIN["🧠 BRAIN<br>audit chain"]
+    OBS["👁 OBS<br>traces + metrics"]
+    KMS["🔑 AWS KMS<br>per-column key"]
+    S3["🗂 AWS S3<br>contract PDFs · CCCD"]
+    DOC["📄 DOC<br>WebAuthn e-sign · P4"]
   end
   HR["👥 HR"]
   subgraph downstream ["HR is consumed by"]
-    REW["💎 REW<br/>roster + final pay"]
-    LEARN["📈 LEARN<br/>review cycles + skill tree"]
-    ESOP["📊 ESOP<br/>grants + GL/BL"]
-    TIME["⏱ TIME<br/>timesheet enrolment"]
-    CHAT["💬 CHAT<br/>workspaces"]
-    INV["🧾 INV<br/>contractor lookup"]
-    OKR["🎯 OKR<br/>per-Member objectives"]
-    CRM["🏢 CRM<br/>contact owner mapping"]
+    REW["💎 REW<br>roster + final pay"]
+    LEARN["📈 LEARN<br>review cycles + skill tree"]
+    ESOP["📊 ESOP<br>grants + GL/BL"]
+    TIME["⏱ TIME<br>timesheet enrolment"]
+    CHAT["💬 CHAT<br>workspaces"]
+    INV["🧾 INV<br>contractor lookup"]
+    OKR["🎯 OKR<br>per-Member objectives"]
+    CRM["🏢 CRM<br>contact owner mapping"]
   end
   AUTH --> HR
   BRAIN --> HR
@@ -933,8 +909,8 @@ graph LR
   HR --> OKR
   HR --> CRM
 
-  classDef planned fill:#fce7f3,stroke:#9d174d
-  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fde7b3,stroke:#9c750a
+  classDef shipped fill:#f5ede6,stroke:#45210e
   class HR planned
   class AUTH,REW,LEARN,ESOP,TIME,CHAT,INV,OKR,CRM,DOC,OBS planned
   class BRAIN,KMS,S3 shipped
@@ -954,12 +930,12 @@ graph LR
       <tbody>
         <tr><td>Vietnam Labour Code (2019)</td><td>Art. 113 — Annual leave</td><td>Leave accrual schedule keyed to service years; quarterly accrual job.</td></tr>
         <tr><td>Vietnam Labour Code</td><td>Art. 139 — Maternity leave</td><td>Leave kind <code>maternity</code> with default 6 months + twins +30/child.</td></tr>
-        <tr><td>Decree 145/2020/NĐ-CP</td><td>Art. 60 — Overtime cap</td><td>FR-HR-013 enforces ≤ 200h/year overtime per Member; check at TIME submission.</td></tr>
+        <tr><td>Decree 145/2020/NĐ-CP</td><td>Art. 60 — Overtime cap</td><td>(FR pending) enforces ≤ 200h/year overtime per Member; check at TIME submission.</td></tr>
         <tr><td>Decree 152/2020/NĐ-CP</td><td>Art. 26 — Sick leave allowance</td><td>BHXH sick allowance days tiered by service period.</td></tr>
         <tr><td>Decree 152/2020/NĐ-CP</td><td>Art. 5 — SI contribution rates</td><td>BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% as versioned parameters; comp owned by REW.</td></tr>
         <tr><td>Decree 13/2023/NĐ-CP</td><td>Art. 17 — Personal data processing log</td><td>Every Member read / write writes an HR audit row to BRAIN.</td></tr>
         <tr><td>Decree 53/2022/NĐ-CP</td><td>Art. 26 — Data localisation</td><td>P3: VN tenants pin <code>data_residency = "vn-hanoi-1"</code>; HR Postgres replica in-country.</td></tr>
-        <tr><td>Law 91/2025/QH15 (PDPL)</td><td>Art. 14 — DSAR</td><td>FR-HR-017 — <code>cyberos-hr dsar-export</code> bundles Member-scoped data within 30 days.</td></tr>
+        <tr><td>Law 91/2025/QH15 (PDPL)</td><td>Art. 14 — DSAR</td><td>(FR pending) — <code>cyberos-hr dsar-export</code> bundles Member-scoped data within 30 days.</td></tr>
         <tr><td>Law 91/2025/QH15 (PDPL)</td><td>Art. 7 — Sensitive personal data</td><td>CCCD photo classified <code>restricted</code>; separate KMS key; sev-1 audit on read.</td></tr>
         <tr><td>GDPR (EU 2016/679)</td><td>Art. 32 — Security of processing</td><td>Column-level KMS · S3 object-lock · row-level security · DPO-scoped access.</td></tr>
         <tr><td>ISO/IEC 27001:2022</td><td>A.5.13 — Labelling of information</td><td>Every Member field carries a classification tag.</td></tr>
@@ -986,9 +962,9 @@ graph LR
         <tr><td><code>R-HR-003</code></td><td>Onboarding orchestrator partial failure leaves Member half-provisioned</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Idempotency keys; retry-until-success queue; alert if a task pending &gt; 24h.</td></tr>
         <tr><td><code>R-HR-004</code></td><td>Leave-balance race condition (two simultaneous approvals)</td><td>Medium</td><td>Low</td><td>CTO</td><td>Optimistic locking on <code>leave_balance.version</code>; conflict triggers re-read + retry.</td></tr>
         <tr><td><code>R-HR-005</code></td><td>Contract deleted instead of superseded</td><td>Low</td><td>High</td><td>HR/Ops Lead</td><td>DB role lacks DELETE on contract table; admin REST only exposes amend + supersede.</td></tr>
-        <tr><td><code>R-HR-006</code></td><td>Decree 145/2020 overtime cap bypassed</td><td>Low</td><td>High</td><td>HR/Ops Lead</td><td>FR-HR-013 cap enforced at TIME submission; HR exposes cap-status MCP read for CUO.</td></tr>
+        <tr><td><code>R-HR-006</code></td><td>Decree 145/2020 overtime cap bypassed</td><td>Low</td><td>High</td><td>HR/Ops Lead</td><td>(FR pending) cap enforced at TIME submission; HR exposes cap-status MCP read for CUO.</td></tr>
         <tr><td><code>R-HR-007</code></td><td>Bad-Leaver branch chosen without human gate</td><td>Low</td><td>Catastrophic</td><td>CEO</td><td>Offboarding orchestrator requires CFO + CEO co-sign; cannot proceed without both signatures recorded.</td></tr>
-        <tr><td><code>R-HR-008</code></td><td>Per-judge review scores leak to HR via summary field</td><td>Low</td><td>Medium</td><td>HR/Ops Lead</td><td>FR-LEARN-004 enforced at LEARN export gate; HR review_outcome schema rejects fields beyond {summary, recommendation}.</td></tr>
+        <tr><td><code>R-HR-008</code></td><td>Per-judge review scores leak to HR via summary field</td><td>Low</td><td>Medium</td><td>HR/Ops Lead</td><td>(FR pending) enforced at LEARN export gate; HR review_outcome schema rejects fields beyond {summary, recommendation}.</td></tr>
         <tr><td><code>R-HR-009</code></td><td>Sabbatical eligibility tick miscounted across leave gaps</td><td>Medium</td><td>Low</td><td>HR/Ops Lead</td><td>Continuous-service definition: gap &lt; 30 days counted; longer breaks reset the tick chain. Property test on the accrual.</td></tr>
         <tr><td><code>R-HR-010</code></td><td>10-year retention violated by S3 lifecycle policy bug</td><td>Low</td><td>High</td><td>CTO</td><td>S3 object-lock governance mode; lifecycle rule rejected by IAM if reduces retention; quarterly inventory audit.</td></tr>
       </tbody>
@@ -1197,10 +1173,10 @@ graph TD
   <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
-      <li><strong>PRD §9.13</strong> — HR module FRs (FR-HR-001 through FR-HR-008).</li>
+      <li><strong>PRD §9.13</strong> — HR module FRs ((FR pending) through (FR pending)).</li>
       <li><strong>PRD §19.13</strong> — HR architecture posture + lifecycle orchestrators.</li>
       <li><strong>PRD §11.2.3</strong> — Security NFRs binding on HR (CCCD classification, KMS separation).</li>
-      <li><strong>SRS §4.13</strong> — Formal FR-HR-001 through FR-HR-007 with verification methods.</li>
+      <li><strong>SRS §4.13</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Total Rewards & Career Path Appendix</strong> — Sabbatical eligibility (every 5 continuous years).</li>
       <li><strong>Vietnam Labour Code (2019)</strong> — Art. 112 (public holidays), 113 (annual leave), 115 (other leave), 139 (maternity).</li>
       <li><strong>Decree 145/2020/NĐ-CP</strong> — Implementing the Labour Code; Art. 60 overtime cap.</li>

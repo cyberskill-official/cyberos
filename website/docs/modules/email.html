@@ -8,7 +8,7 @@
   <meta name="description" content="EMAIL — Internal email and shared inbox. Stalwart core + Missive-style UX + CaMeL dual-LLM anti-injection. JMAP-native threading, Vietnamese-aware AI drafts, SPF/DKIM/DMARC.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -203,7 +203,7 @@
         <tr><td><strong>5W · Why</strong></td><td>Why own the plane?</td><td>Three reasons: (a) prompt-injection defence requires the CaMeL boundary, which a SaaS does not allow; (b) shared-inbox UX needs internal-comments and assignment primitives that Gmail does not provide natively; (c) Vietnamese data-residency obligations under Decree 53.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Inbound: SMTP → DKIM / SPF / DMARC verify → spam triage → CaMeL quarantined extraction → thread merge by JMAP <code>threadId</code> → notification fan-out. Outbound: composer → CaMeL out-bound scan (block PII leaks) → DKIM sign → MTA-STS / DANE next-hop → SMTP send. AI: composer pulls draft from AI Gateway with persona-stamped JWT.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$110 / month for SG-1 single-tenant pilot (Stalwart Fargate + RDS Postgres + S3 + Redis cache). 50-tenant: ~$420 / month. Per-message inbound CaMeL cost ~$0.0004 (gpt-4o-mini-equivalent extraction).</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) AGPL-3.0 — Stalwart's licence means our distribution model is service-only. (b) DMARC alignment mandatory — strict policy from M+3. (c) No body content into BRAIN by default (FR-EMAIL-004); opt-in per Member. (d) CaMeL on every ingest path — non-negotiable.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) AGPL-3.0 — Stalwart's licence means our distribution model is service-only. (b) DMARC alignment mandatory — strict policy from M+3. (c) No body content into BRAIN by default ((FR pending)); opt-in per Member. (d) CaMeL on every ingest path — non-negotiable.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Stalwart Mail Server (Rust) · axum HTTP API · sqlx · PostgreSQL 16 · PGroonga search · Redis 7 cache · S3 + KMS for bodies · CaMeL adapter on top of AI Gateway · OpenTelemetry SDK · React / TypeScript SPA · htmx + Alpine for the inbox shell.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>JMAP-native threading (no Reply-To header heuristics). PGroonga over tsvector (Vietnamese bigram quality wins). CaMeL dual-LLM (quarantined no-tools + privileged). Per-tenant DKIM keypair stored in KMS. ARC stamping on forward. Single-binary Stalwart deployment (no separate MTA / MDA / MUA processes).</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task per region for SMTP + JMAP + IMAP listeners. RDS Postgres for metadata. S3 + KMS for bodies and attachments. Redis for hot-thread cache. Per-tenant DKIM keypair in KMS.</td></tr>
@@ -227,45 +227,45 @@
     <div class="mermaid">
 graph TB
   subgraph WORLD ["Internet"]
-    SENDER["External sender<br/>(any SMTP source)"]
+    SENDER["External sender<br>(any SMTP source)"]
     RECIPIENT["External recipient"]
   end
 
   subgraph EDGE ["Edge / protocol plane"]
-    SMTP["📨 Stalwart SMTP<br/>25 · 465 · 587"]
-    JMAP["📡 Stalwart JMAP<br/>/jmap/"]
-    IMAP["📬 Stalwart IMAP<br/>143 · 993"]
-    MTA_STS["MTA-STS · DANE<br/>next-hop policy"]
+    SMTP["📨 Stalwart SMTP<br>25 · 465 · 587"]
+    JMAP["📡 Stalwart JMAP<br>/jmap/"]
+    IMAP["📬 Stalwart IMAP<br>143 · 993"]
+    MTA_STS["MTA-STS · DANE<br>next-hop policy"]
   end
 
   subgraph POLICY ["Policy plane"]
-    DKIM_VERIFY["DKIM / SPF / DMARC<br/>verify"]
+    DKIM_VERIFY["DKIM / SPF / DMARC<br>verify"]
     SPAM["Spam triage"]
-    CAMEL["🛡 CaMeL quarantine<br/>no-tools LLM"]
-    EXTRACT["Sanitised extraction:<br/>{from, to, subj, gist,<br/> actions, entities}"]
-    DKIM_SIGN["DKIM sign<br/>per-tenant key (KMS)"]
-    ARC["ARC stamp<br/>on forward"]
+    CAMEL["🛡 CaMeL quarantine<br>no-tools LLM"]
+    EXTRACT["Sanitised extraction:<br>{from, to, subj, gist,<br> actions, entities}"]
+    DKIM_SIGN["DKIM sign<br>per-tenant key (KMS)"]
+    ARC["ARC stamp<br>on forward"]
   end
 
   subgraph CORE ["EMAIL service (Rust)"]
-    THREAD["Thread merger<br/>JMAP threadId"]
-    INBOX["Shared-inbox<br/>assignment · comments"]
-    SEARCH["PGroonga search<br/>(VN bigram)"]
+    THREAD["Thread merger<br>JMAP threadId"]
+    INBOX["Shared-inbox<br>assignment · comments"]
+    SEARCH["PGroonga search<br>(VN bigram)"]
     CAL["iCal · calendar"]
-    SIEVE["ManageSieve<br/>rules engine"]
+    SIEVE["ManageSieve<br>rules engine"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br/>threads · assignments<br/>RLS by tenant_id")]
-    S3[("S3 + KMS<br/>bodies + attachments")]
-    RED[("Redis 7<br/>hot threads · search cache")]
-    KMS_K[("AWS KMS<br/>per-tenant DKIM keys")]
+    PG[("PostgreSQL<br>threads · assignments<br>RLS by tenant_id")]
+    S3[("S3 + KMS<br>bodies + attachments")]
+    RED[("Redis 7<br>hot threads · search cache")]
+    KMS_K[("AWS KMS<br>per-tenant DKIM keys")]
   end
 
   subgraph SINKS ["Sinks"]
-    BRAIN["🧠 BRAIN<br/>summaries (opt-in) ·<br/>audit rows"]
-    OBS["👁 OBS<br/>traces + DMARC reports"]
-    CUO["🎯 CUO<br/>privileged agent"]
+    BRAIN["🧠 BRAIN<br>summaries (opt-in) ·<br>audit rows"]
+    OBS["👁 OBS<br>traces + DMARC reports"]
+    CUO["🎯 CUO<br>privileged agent"]
     AI["⚡ AI Gateway"]
   end
 
@@ -301,7 +301,7 @@ graph TB
 
   classDef planned fill:#e2e8f0,stroke:#334155
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   classDef camel fill:#fee2e2,stroke:#b91c1c,stroke-width:3px
   class SMTP,JMAP,IMAP,MTA_STS,THREAD,INBOX,SEARCH,CAL,SIEVE,DKIM_VERIFY,SPAM,DKIM_SIGN,ARC planned
   class CAMEL,EXTRACT camel
@@ -325,8 +325,8 @@ graph TB
         <tr><td><code>sieve.rs</code></td><td>services/email/src/sieve.rs</td><td>ManageSieve rules engine — per-Member auto-tag, auto-snooze, auto-route. Rules compiled to Stalwart's sieve runtime.</td></tr>
         <tr><td><code>ical.rs</code></td><td>services/email/src/ical.rs</td><td>iCal parser / generator. Calendar invites surface as native events in CyberOS Calendar.</td></tr>
         <tr><td><code>draft_ai.rs</code></td><td>services/email/src/draft_ai.rs</td><td>AI-suggested-reply pipeline. Pulls from AI Gateway; persona-stamped; CyberSkill voice; Vietnamese-aware salutation logic.</td></tr>
-        <tr><td><code>brain_summariser.rs</code></td><td>services/email/src/brain_summariser.rs</td><td>Per-thread summary writer. Calls AI Gateway in summarise mode; writes a single BRAIN row per thread with citations back to message IDs. Body bytes never enter BRAIN by default (FR-EMAIL-004).</td></tr>
-        <tr><td><code>dmarc_report.rs</code></td><td>services/email/src/dmarc_report.rs</td><td>Aggregate DMARC RUA / RUF reports per tenant; surface to Trust Center (FR-EMAIL-010).</td></tr>
+        <tr><td><code>brain_summariser.rs</code></td><td>services/email/src/brain_summariser.rs</td><td>Per-thread summary writer. Calls AI Gateway in summarise mode; writes a single BRAIN row per thread with citations back to message IDs. Body bytes never enter BRAIN by default ((FR pending)).</td></tr>
+        <tr><td><code>dmarc_report.rs</code></td><td>services/email/src/dmarc_report.rs</td><td>Aggregate DMARC RUA / RUF reports per tenant; surface to Trust Center ((FR pending)).</td></tr>
         <tr><td><code>dsar_export.rs</code></td><td>services/email/src/dsar_export.rs</td><td>DSAR bundle: every message a subject participated in, with attachments and decisions.</td></tr>
         <tr><td><code>migration_import.rs</code></td><td>services/email/src/migration_import.rs</td><td>Gmail / M365 / IMAP import. Walks the source via JMAP / IMAP, replays threads in CaMeL-filtered order, writes audit row per imported message.</td></tr>
         <tr><td><code>migrations/</code></td><td>services/email/migrations/</td><td>sqlx migrations. All identity-touching tables RLS-keyed by <code>tenant_id</code>; shared-inbox tables additionally RLS-keyed by <code>inbox_id</code>.</td></tr>
@@ -664,13 +664,13 @@ sequenceDiagram
   ST->>S3: write ciphertext body
   S3-->>ST: s3_key
   ST->>Q: extract({from, subject, body_text, body_html_stripped})
-  Note over Q: quarantined LLM has<br/>NO tools, NO memory,<br/>NO BRAIN access
+  Note over Q: quarantined LLM has<br>NO tools, NO memory,<br>NO BRAIN access
   Q-->>ST: {gist, action_requests, entities, injection_flag}
   ST->>T: merge by jmap_thread_id
   T->>PG: insert message + camel_extraction row
   T->>B: append email.inbound {actor:sender, decision:"received", camel_flag}
   T-->>U: WebSocket push: new message preview (gist only)
-  Note over U: SPA renders gist + redacted body;<br/>user can click "show raw" → fetches HTML<br/>with sandbox iframe; raw never enters CUO context
+  Note over U: SPA renders gist + redacted body;<br>user can click "show raw" → fetches HTML<br>with sandbox iframe; raw never enters CUO context
     </div>
     <p class="text-xs text-slate-500 mt-3">If <code>injection_flag</code> is set, the message is flagged in the UI with a banner and the AI-draft-reply tool refuses to run on that thread.</p>
   </div>
@@ -726,7 +726,7 @@ sequenceDiagram
   U->>API: draftReply(thread_id, intent:"acknowledge + ask follow-up")
   API->>CE: load sanitised gist + extracted entities
   CE-->>API: {gist, entities, language: "vi"}
-  Note over API,CU: raw body NEVER enters this path<br/>only the CaMeL gist + structured fields
+  Note over API,CU: raw body NEVER enters this path<br>only the CaMeL gist + structured fields
   API->>CU: compose({gist, intent, voice:"cyberskill", language:"vi"})
   CU->>AG: chat.completions (persona-stamped JWT, vi salutation rules)
   AG-->>CU: draft text
@@ -850,32 +850,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">EMAIL FRs from PRD §9.4. Full normative descriptions at <a href="../reference/fr-catalog.html#email" class="text-blue-700 font-semibold underline">fr-catalog.html#email</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-EMAIL-001</code></td><td>Stalwart-based mail server: JMAP, IMAP, SMTP, DKIM, MTA-STS, DANE, BIMI</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-002</code></td><td>Shared inbox UX: assignment, internal comments, snooze, tagging</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-003</code></td><td>CaMeL dual-LLM separation on every ingest path</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-004</code></td><td>Body content NOT ingested into BRAIN by default; opt-in per Member</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-005</code></td><td>Thread summary ingested into BRAIN Layer 3 with citations to messages</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-006</code></td><td>AI-suggested reply in CyberSkill voice; Vietnamese-aware salutations</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-007</code></td><td>CRM activity auto-log for tracked-domain mailboxes</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-008</code></td><td>"Promote to PROJ task" creates linked task with thread reference</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-009</code></td><td>Per-tenant DKIM key; ARC stamping on forward; SPF/DMARC reports</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-010</code></td><td>Trust Center publishes mail-server status, BIMI cert, last DMARC report</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-011</code></td><td>iCal calendar invite parsing → CyberOS Calendar event</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-012</code></td><td>ManageSieve rules engine — per-Member filters, auto-tag, auto-route</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-013</code></td><td>Gmail / M365 / IMAP migration import preserves threading + audit</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-014</code></td><td>DSAR export of all messages a subject participated in</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-EMAIL-015</code></td><td>Attachment antivirus scan (ClamAV) — quarantined until clean</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-EMAIL-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -889,19 +870,19 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-EMAIL-PERF-001</code></td><td>Inbound message → thread visible to recipient</td><td>p95 ≤ 5 s</td><td>k6 SMTP-to-UI test · nightly</td></tr>
-        <tr><td><code>NFR-EMAIL-PERF-002</code></td><td>Outbound message accepted to relay</td><td>p95 ≤ 2 s</td><td>k6 send-loop · nightly</td></tr>
-        <tr><td><code>NFR-EMAIL-PERF-003</code></td><td>CaMeL extraction latency</td><td>p95 ≤ 1.2 s</td><td>AI Gateway histogram</td></tr>
-        <tr><td><code>NFR-EMAIL-PERF-004</code></td><td>Thread list page load (50 threads)</td><td>p95 ≤ 350 ms</td><td>SPA RUM</td></tr>
-        <tr><td><code>NFR-EMAIL-REL-001</code></td><td>Outbound DMARC pass rate</td><td>≥ 99% of attempted</td><td>weekly DMARC aggregate</td></tr>
-        <tr><td><code>NFR-EMAIL-REL-002</code></td><td>Inbound deliverability (Tier-1 MX accept rate)</td><td>≥ 99.5%</td><td>SMTP 250-OK ratio</td></tr>
-        <tr><td><code>NFR-EMAIL-AVL-001</code></td><td>SMTP-receive availability (28-day)</td><td>≥ 99.9%</td><td>OBS SLO monitor</td></tr>
-        <tr><td><code>NFR-EMAIL-SEC-001</code></td><td>CaMeL injection-block rate on red-team corpus</td><td>≥ 99.5%</td><td>monthly red-team replay</td></tr>
-        <tr><td><code>NFR-EMAIL-SEC-002</code></td><td>Body bytes in BRAIN without opt-in</td><td>= 0</td><td>CI gate on BRAIN ingestion paths</td></tr>
-        <tr><td><code>NFR-EMAIL-DUR-001</code></td><td>Message durability after acceptance</td><td>0 lost messages under crash</td><td>chaos test · BRAIN ledger walk</td></tr>
-        <tr><td><code>NFR-EMAIL-USE-001</code></td><td>AI-draft acceptance rate</td><td>≥ 40% by Member</td><td>SPA telemetry</td></tr>
-        <tr><td><code>NFR-EMAIL-USE-002</code></td><td>Shared-inbox first-response time</td><td>p50 ≤ 30 min business hours</td><td>BRAIN assignment events</td></tr>
-        <tr><td><code>NFR-EMAIL-COMP-001</code></td><td>VN-residency tenant message storage region</td><td>100% hanoi-1</td><td>S3 key-prefix audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Inbound message → thread visible to recipient</td><td>p95 ≤ 5 s</td><td>k6 SMTP-to-UI test · nightly</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Outbound message accepted to relay</td><td>p95 ≤ 2 s</td><td>k6 send-loop · nightly</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>CaMeL extraction latency</td><td>p95 ≤ 1.2 s</td><td>AI Gateway histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Thread list page load (50 threads)</td><td>p95 ≤ 350 ms</td><td>SPA RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Outbound DMARC pass rate</td><td>≥ 99% of attempted</td><td>weekly DMARC aggregate</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Inbound deliverability (Tier-1 MX accept rate)</td><td>≥ 99.5%</td><td>SMTP 250-OK ratio</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>SMTP-receive availability (28-day)</td><td>≥ 99.9%</td><td>OBS SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>CaMeL injection-block rate on red-team corpus</td><td>≥ 99.5%</td><td>monthly red-team replay</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Body bytes in BRAIN without opt-in</td><td>= 0</td><td>CI gate on BRAIN ingestion paths</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Message durability after acceptance</td><td>0 lost messages under crash</td><td>chaos test · BRAIN ledger walk</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>AI-draft acceptance rate</td><td>≥ 40% by Member</td><td>SPA telemetry</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Shared-inbox first-response time</td><td>p50 ≤ 30 min business hours</td><td>BRAIN assignment events</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VN-residency tenant message storage region</td><td>100% hanoi-1</td><td>S3 key-prefix audit</td></tr>
       </tbody>
     </table>
   </div>
@@ -919,21 +900,21 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["EMAIL depends on"]
-    AUTH["🔐 AUTH<br/>OAuth · RBAC"]
-    BRAIN["🧠 BRAIN<br/>audit + opt-in summary"]
-    AI["⚡ AI Gateway<br/>CaMeL + draft"]
-    MCP["🔌 MCP<br/>CUO tools"]
-    OBS["👁 OBS<br/>traces + DMARC"]
-    STALWART["📦 Stalwart<br/>(vendored Rust)"]
-    KMS["🔑 KMS<br/>DKIM keys"]
-    S3["🗄 S3<br/>bodies + attachments"]
+    AUTH["🔐 AUTH<br>OAuth · RBAC"]
+    BRAIN["🧠 BRAIN<br>audit + opt-in summary"]
+    AI["⚡ AI Gateway<br>CaMeL + draft"]
+    MCP["🔌 MCP<br>CUO tools"]
+    OBS["👁 OBS<br>traces + DMARC"]
+    STALWART["📦 Stalwart<br>(vendored Rust)"]
+    KMS["🔑 KMS<br>DKIM keys"]
+    S3["🗄 S3<br>bodies + attachments"]
   end
   EMAIL["✉️ EMAIL"]
   subgraph downstream ["EMAIL is depended on by"]
-    CRM["🤝 CRM<br/>email→activity"]
-    PROJ["📋 PROJ<br/>thread→issue"]
-    CUO["🎯 CUO<br/>shared-inbox classifier"]
-    KB["📚 KB<br/>email digests"]
+    CRM["🤝 CRM<br>email→activity"]
+    PROJ["📋 PROJ<br>thread→issue"]
+    CUO["🎯 CUO<br>shared-inbox classifier"]
+    KB["📚 KB<br>email digests"]
     PORTAL["Portal · P2"]
   end
   AUTH --> EMAIL
@@ -950,8 +931,8 @@ graph LR
   EMAIL --> KB
   EMAIL --> PORTAL
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN,STALWART,KMS,S3 shipped
   class EMAIL,AUTH,AI,MCP,OBS,CRM,PROJ,CUO,KB,PORTAL planned
     </div>
@@ -1198,7 +1179,7 @@ if address :is "from" "noreply@github.com" {
     <ul class="space-y-2 text-sm">
       <li><strong>PRD §9.4</strong> — EMAIL strategy: Stalwart + Missive-style UX + CaMeL.</li>
       <li><strong>PRD §11.2.3</strong> — Security NFRs that EMAIL must satisfy.</li>
-      <li><strong>SRS §4.4</strong> — Formal FR-EMAIL-001 through FR-EMAIL-015 with verification methods.</li>
+      <li><strong>SRS §4.4</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Stalwart Mail Server</strong> — <code>github.com/stalwartlabs/mail-server</code> (AGPL-3.0).</li>
       <li><strong>CaMeL paper</strong> — Google DeepMind, May 2025; "Defending LLM agents against prompt injection via privilege separation".</li>
       <li><strong>EchoLeak (CVE-2025-32711)</strong> — May 2025 advisory on M365 Copilot prompt-injection exfiltration.</li>

@@ -8,7 +8,7 @@
   <meta name="description" content="TEN — Tenancy &amp; Billing. The SaaS-ification module. Multi-tenant signup, Stripe + VN-PSP billing, plan tiers, usage metering, tenant isolation invariants, 90-day offboarding grace, SOC 2 / ISO 27017 tenant-isolation controls.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -82,7 +82,7 @@
       The SaaS-ification module. Self-serve tenant signup, plan management, Stripe + VN-PSP billing, usage metering, tenant isolation invariants, 90-day offboarding grace. This is what unlocks CyberOS as an external product.
     </p>
     <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      TEN is the module that takes CyberOS from an internal CyberSkill OS to an external multi-tenant SaaS. Until TEN lands, CyberOS is a single-tenant system operating under the <em>tenant-as-degenerate-tenant</em> decision (DEC-058 in SRS) — every multi-tenant invariant is already in place but the tenant population is one. TEN turns that population into N. It owns: self-serve signup with residency choice + plan selection (FR-TEN-001); Stripe (international) and Vietnamese PSP (domestic) billing (FR-TEN-002); plan tiers Starter (≤ 10 seats) / Team (≤ 50) / Enterprise (custom) (FR-TEN-003); per-tenant brand pack overriding the @cyberskill/tokens layer (FR-TEN-004); a tenant-admin UI surface for billing, seats, audit, residency, and retention overrides (FR-TEN-005); a signed bundle export of all tenant data — BRAIN + module data — for portability and DSAR (FR-TEN-006); and 90-day offboarding with irreversible delete + attestation (FR-TEN-007). It also owns usage metering — API calls, AI tokens, storage, seats — surfaced as both a tenant-admin dashboard and a revenue-ops feed. Tenant data isolation is the central invariant: every Postgres table has tenant_id RLS, every NATS subject is tenant-scoped, every S3 bucket prefix is tenant-scoped. The SOC 2 CC6.6 and ISO 27017 controls live here. PRD §9.22 and SRS §7.22 lock the FRs; this page documents the planned implementation at <code>cyberos/services/ten/</code>.
+      TEN is the module that takes CyberOS from an internal CyberSkill OS to an external multi-tenant SaaS. Until TEN lands, CyberOS is a single-tenant system operating under the <em>tenant-as-degenerate-tenant</em> decision (DEC-058 in SRS) — every multi-tenant invariant is already in place but the tenant population is one. TEN turns that population into N. It owns: self-serve signup with residency choice + plan selection ((FR pending)); Stripe (international) and Vietnamese PSP (domestic) billing ((FR pending)); plan tiers Starter (≤ 10 seats) / Team (≤ 50) / Enterprise (custom) ((FR pending)); per-tenant brand pack overriding the @cyberskill/tokens layer ((FR pending)); a tenant-admin UI surface for billing, seats, audit, residency, and retention overrides ((FR pending)); a signed bundle export of all tenant data — BRAIN + module data — for portability and DSAR ((FR pending)); and 90-day offboarding with irreversible delete + attestation ((FR pending)). It also owns usage metering — API calls, AI tokens, storage, seats — surfaced as both a tenant-admin dashboard and a revenue-ops feed. Tenant data isolation is the central invariant: every Postgres table has tenant_id RLS, every NATS subject is tenant-scoped, every S3 bucket prefix is tenant-scoped. The SOC 2 CC6.6 and ISO 27017 controls live here. PRD §9.22 and SRS §7.22 lock the FRs; this page documents the planned implementation at <code>cyberos/services/ten/</code>.
     </p>
     <div class="flex flex-wrap gap-3 mt-6">
       <a href="#architecture" class="btn btn-primary">Architecture
@@ -205,12 +205,12 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because the multi-tenant control plane is its own primary concern — distinct from any one feature module. SOC 2 / ISO 27017 expect this control plane to be auditable and isolated from the application layer.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Signup flow: account create → residency pick → plan pick → payment method capture → tenant provision (schema namespace + S3 prefix + NATS subject + AUTH tenant row + first founder Subject + default RBAC seed) → SSO + first-login redirect. Usage metering: per-tenant NATS subject aggregator; nightly rollup; monthly invoice generation.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P4: control plane ~$60 / month (Fargate + Postgres for control state + Redis). Stripe pass-through fee 2.9% + 30¢; VN PSPs ~1.5% + 1,000 VND. Per-tenant ongoing infra: ~$5–$80 / month depending on plan.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Zero cross-tenant data leakage (SOC 2 CC6.6 + NFR-SEC-001). (b) PCI scope minimisation — CyberOS never touches PAN. (c) Vietnamese PSP regulations (Circular 18/2018/TT-NHNN). (d) GDPR Art. 20 portability + Art. 17 erasure. (e) Tenant signup ≤ 30s p95.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Zero cross-tenant data leakage (SOC 2 CC6.6 + N(FR pending)). (b) PCI scope minimisation — CyberOS never touches PAN. (c) Vietnamese PSP regulations (Circular 18/2018/TT-NHNN). (d) GDPR Art. 20 portability + Art. 17 erasure. (e) Tenant signup ≤ 30s p95.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · Redis 7 · Stripe Rust SDK · VnPay / Momo / ZaloPay HTTP clients · NATS JetStream · AWS Fargate · OpenTelemetry.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Tenant provisioning is idempotent + atomic across modules (saga pattern). Usage metering is event-sourced (NATS aggregates → cumulative counters). Offboarding is two-phase: read-only-30d → recoverable-60d → wipe. Billing reconciliation is per-PSP scheduled job.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate control-plane task + scheduled-job task. Per-tenant data partition keyed by residency-region.</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.6 FTE at P4 + revenue-ops part-time. CFO seat owns billing + revenue dashboards. CSO seat owns isolation verification.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-TEN-SEC-001 (= 0 cross-tenant leaks), NFR-TEN-PERF-001 (signup ≤ 30s p95). KPIs: ARR, NDR, churn, CAC, seat-utilisation per tenant, isolation-probe pass rate.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (= 0 cross-tenant leaks), N(FR pending) (signup ≤ 30s p95). KPIs: ARR, NDR, churn, CAC, seat-utilisation per tenant, isolation-probe pass rate.</td></tr>
       </tbody>
     </table>
   </div>
@@ -229,50 +229,50 @@
     <div class="mermaid">
 graph TB
   subgraph PUBLIC ["Public surfaces"]
-    SIGN["Signup SPA<br/>(unauth)"]
-    ADMIN["Tenant-admin SPA<br/>(post-signup)"]
+    SIGN["Signup SPA<br>(unauth)"]
+    ADMIN["Tenant-admin SPA<br>(post-signup)"]
     BILL["Billing UI"]
   end
 
   subgraph TEN ["TEN service (Rust · axum)"]
-    SU["signup.rs<br/>signup flow"]
-    PROV["provisioner.rs<br/>tenant saga"]
-    PLAN["plan.rs<br/>plan / subscription CRUD"]
-    SEAT["seat.rs<br/>seat add/remove"]
-    BRAND_S["branding.rs<br/>brand pack"]
-    METER["meter.rs<br/>usage aggregation"]
-    ISO["isolation.rs<br/>verification harness"]
-    OFFBOARD["offboard.rs<br/>90d grace + wipe"]
-    EXPORT["export.rs<br/>signed bundle"]
-    ARR["arr.rs<br/>revenue rollup"]
+    SU["signup.rs<br>signup flow"]
+    PROV["provisioner.rs<br>tenant saga"]
+    PLAN["plan.rs<br>plan / subscription CRUD"]
+    SEAT["seat.rs<br>seat add/remove"]
+    BRAND_S["branding.rs<br>brand pack"]
+    METER["meter.rs<br>usage aggregation"]
+    ISO["isolation.rs<br>verification harness"]
+    OFFBOARD["offboard.rs<br>90d grace + wipe"]
+    EXPORT["export.rs<br>signed bundle"]
+    ARR["arr.rs<br>revenue rollup"]
   end
 
   subgraph PSP ["Payment partners"]
-    STRIPE["💳 Stripe<br/>international + USD"]
+    STRIPE["💳 Stripe<br>international + USD"]
     VNPAY["🇻🇳 VnPay"]
     MOMO["🇻🇳 Momo"]
     ZALO["🇻🇳 ZaloPay"]
   end
 
   subgraph DOWNSTREAM ["Module orchestration"]
-    AUTH_M["🔐 AUTH<br/>tenant + founder Subject"]
-    BRAIN_M["🧠 BRAIN<br/>chain init"]
-    ALL_M["all 21 modules<br/>schema namespace"]
+    AUTH_M["🔐 AUTH<br>tenant + founder Subject"]
+    BRAIN_M["🧠 BRAIN<br>chain init"]
+    ALL_M["all 21 modules<br>schema namespace"]
     S3_M["S3 prefix"]
     NATS_M["NATS subject"]
-    AI_M["🧠 AI gateway<br/>per-tenant quota"]
+    AI_M["🧠 AI gateway<br>per-tenant quota"]
   end
 
   subgraph STORES ["Control-plane stores"]
-    PG[("PostgreSQL<br/>ten.tenant · plan<br/>subscription · seat<br/>branding · usage_meter<br/>retention_policy")]
-    REDIS[("Redis 7<br/>signup-flow state")]
-    NATS_USAGE[("NATS JetStream<br/>tenant.*.usage.*")]
+    PG[("PostgreSQL<br>ten.tenant · plan<br>subscription · seat<br>branding · usage_meter<br>retention_policy")]
+    REDIS[("Redis 7<br>signup-flow state")]
+    NATS_USAGE[("NATS JetStream<br>tenant.*.usage.*")]
   end
 
   subgraph SINKS ["Audit + ops"]
-    BRAIN["🧠 BRAIN<br/>tenant.* rows"]
+    BRAIN["🧠 BRAIN<br>tenant.* rows"]
     OBS["👁 OBS"]
-    CFO["💰 CFO dashboard<br/>ARR / NDR / churn"]
+    CFO["💰 CFO dashboard<br>ARR / NDR / churn"]
   end
 
   SIGN --> SU
@@ -304,7 +304,7 @@ graph TB
 
   classDef planned fill:#e2e8f0,stroke:#1e293b
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   classDef partner fill:#fef2f2,stroke:#7f1d1d
   class SIGN,ADMIN,BILL,SU,PROV,PLAN,SEAT,BRAND_S,METER,ISO,OFFBOARD,EXPORT,ARR,AUTH_M,BRAIN_M,ALL_M,S3_M,NATS_M,AI_M planned
   class PG,REDIS,NATS_USAGE store
@@ -765,7 +765,7 @@ sequenceDiagram
 sequenceDiagram
   autonumber
   participant MODS as 21 module services
-  participant NATS as NATS JetStream<br/>tenant.{id}.usage.*
+  participant NATS as NATS JetStream<br>tenant.{id}.usage.*
   participant M as meter.rs
   participant PG as PostgreSQL (usage_meter)
   participant CR as cron (nightly)
@@ -834,32 +834,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">TEN FRs from PRD §9.22 plus implementation-tier additions for usage metering and saga compensation.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-TEN-001</code></td><td>Self-serve tenant signup with org name, residency choice, plan selection</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-002</code></td><td>Billing via Stripe (international) and VND-PSP (domestic)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-003</code></td><td>Plan tiers: Starter (≤ 10 seats), Team (≤ 50), Enterprise (custom)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-004</code></td><td>Per-tenant brand pack; @cyberskill/tokens override layer</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-005</code></td><td>Tenant-admin UX: billing, seats, audit, residency, retention overrides</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-006</code></td><td>Tenant data export: full export as signed bundle (BRAIN + module data)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-007</code></td><td>Tenant offboarding: 90-day grace, then irreversible delete with attestation</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-008</code></td><td>Tenant provisioning saga: atomic + idempotent + compensating</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-009</code></td><td>Three-layer tenant isolation: PG RLS + NATS subject + S3 prefix</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-010</code></td><td>Usage metering across 4 axes: API calls, AI tokens, storage GB, seats</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-011</code></td><td>Plan feature flags: gate modules per tier</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-012</code></td><td>Per-tenant retention-policy override (DPO-bounded)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-013</code></td><td>ARR / NDR / churn dashboard with monthly snapshots</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-014</code></td><td>Webhook signature verification on all PSP integrations</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TEN-015</code></td><td>Audit-chain: every tenant lifecycle event lands in BRAIN</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-TEN-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -873,18 +854,18 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-TEN-SEC-001</code></td><td>Cross-tenant data leakage incidents</td><td>= 0 (sev-0)</td><td>100k-probe isolation harness on every release + quarterly pen-test</td></tr>
-        <tr><td><code>NFR-TEN-SEC-002</code></td><td>PSP webhook signature verification</td><td>= 100% rejected unsigned</td><td>integration test</td></tr>
-        <tr><td><code>NFR-TEN-SEC-003</code></td><td>PCI scope</td><td>SAQ-A (Stripe / PSP handles PAN)</td><td>annual PCI attestation</td></tr>
-        <tr><td><code>NFR-TEN-PERF-001</code></td><td>Tenant signup end-to-end p95</td><td>≤ 30 s</td><td>k6 + RUM</td></tr>
-        <tr><td><code>NFR-TEN-PERF-002</code></td><td>Plan upgrade p95</td><td>≤ 5 s</td><td>k6</td></tr>
-        <tr><td><code>NFR-TEN-PERF-003</code></td><td>Tenant-admin SPA TTFB</td><td>≤ 500 ms</td><td>RUM</td></tr>
-        <tr><td><code>NFR-TEN-AVL-001</code></td><td>TEN control-plane availability</td><td>≥ 99.95%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-TEN-DUR-001</code></td><td>Tenant export bundle integrity</td><td>= 100% sha256-verified</td><td>cosign verification on every export</td></tr>
-        <tr><td><code>NFR-TEN-INT-001</code></td><td>Provisioning saga atomicity under crash injection</td><td>0 inconsistent tenants</td><td>chaos test (1000 runs)</td></tr>
-        <tr><td><code>NFR-TEN-INT-002</code></td><td>Usage-meter accuracy vs ground truth (NATS replay)</td><td>≤ 0.5% drift / 24h</td><td>weekly reconciliation</td></tr>
-        <tr><td><code>NFR-TEN-COMP-001</code></td><td>SOC 2 CC6.6 control objective</td><td>passed (annual)</td><td>external audit</td></tr>
-        <tr><td><code>NFR-TEN-COMP-002</code></td><td>ISO 27017 cloud-services controls</td><td>passed</td><td>external audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cross-tenant data leakage incidents</td><td>= 0 (sev-0)</td><td>100k-probe isolation harness on every release + quarterly pen-test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>PSP webhook signature verification</td><td>= 100% rejected unsigned</td><td>integration test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>PCI scope</td><td>SAQ-A (Stripe / PSP handles PAN)</td><td>annual PCI attestation</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Tenant signup end-to-end p95</td><td>≤ 30 s</td><td>k6 + RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Plan upgrade p95</td><td>≤ 5 s</td><td>k6</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Tenant-admin SPA TTFB</td><td>≤ 500 ms</td><td>RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>TEN control-plane availability</td><td>≥ 99.95%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Tenant export bundle integrity</td><td>= 100% sha256-verified</td><td>cosign verification on every export</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Provisioning saga atomicity under crash injection</td><td>0 inconsistent tenants</td><td>chaos test (1000 runs)</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Usage-meter accuracy vs ground truth (NATS replay)</td><td>≤ 0.5% drift / 24h</td><td>weekly reconciliation</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>SOC 2 CC6.6 control objective</td><td>passed (annual)</td><td>external audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>ISO 27017 cloud-services controls</td><td>passed</td><td>external audit</td></tr>
       </tbody>
     </table>
   </div>
@@ -913,7 +894,7 @@ graph LR
   end
   TEN["🏢 TEN"]
   subgraph downstream ["TEN orchestrates"]
-    PROV["module provisioning<br/>(all 21 modules)"]
+    PROV["module provisioning<br>(all 21 modules)"]
     BILL["billing flows"]
     METER["usage metering"]
     ISO["isolation harness"]
@@ -922,7 +903,7 @@ graph LR
   subgraph CONSUMERS ["Used by"]
     CFO_D["💰 CFO dashboard"]
     ADMIN["tenant-admin SPA"]
-    EDGE["Apollo Router<br/>plan / quota gate"]
+    EDGE["Apollo Router<br>plan / quota gate"]
     PORTAL["🌐 PORTAL"]
   end
   AUTH --> TEN
@@ -972,7 +953,7 @@ graph LR
         <tr><td>Vietnam Circular 18/2018/TT-NHNN</td><td>Payment intermediary rules</td><td>VnPay / Momo / ZaloPay are SBV-licenced PSPs.</td></tr>
         <tr><td>Vietnam Decree 13/2023</td><td>Personal data processing</td><td>Per-tenant retention policy + 90d offboarding grace.</td></tr>
         <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Signed-bundle export covers all tenant data.</td></tr>
-        <tr><td>GDPR (EU 2016/679)</td><td>Art. 20 — Right to portability</td><td>Signed-bundle export covers FR-TEN-006.</td></tr>
+        <tr><td>GDPR (EU 2016/679)</td><td>Art. 20 — Right to portability</td><td>Signed-bundle export covers (FR pending).</td></tr>
         <tr><td>GDPR</td><td>Art. 17 — Right to erasure</td><td>Offboarding wipe with audit attestation.</td></tr>
         <tr><td>GDPR</td><td>Art. 28 — Processor obligations</td><td>DPA per tenant; sub-processor list on Trust Center.</td></tr>
       </tbody>
@@ -1186,7 +1167,7 @@ Type the tenant slug AGAIN to confirm: acme-corp
         <tr><td>Provisioning saga with compensation</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
         <tr><td>Three-layer isolation enforcement</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
         <tr><td>Isolation verification harness (100k probes)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
-        <tr><td>Signed export bundle (FR-TEN-006)</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
+        <tr><td>Signed export bundle ((FR pending))</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
         <tr><td>90-day offboarding grace + wipe attestation</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
         <tr><td>ARR / NDR / churn dashboard</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
         <tr><td>SOC 2 Type II audit</td><td><span class="pill pill-planned">planned · P4+</span></td></tr>

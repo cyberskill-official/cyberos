@@ -7,7 +7,7 @@
   <meta name="description" content="CyberOS — AI-native internal operations platform. 22 federated modules across 5 phased rollouts. Built by CyberSkill.">
   <link rel="stylesheet" href="assets/tokens.css">
   <link rel="stylesheet" href="assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,12 +27,12 @@
   <div class="container py-16 lg:py-24">
     <div class="grid lg:grid-cols-12 gap-10 items-center">
       <div class="lg:col-span-7">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-5">
-          <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-5" style="background:var(--ochre-50);color:var(--umber-700)">
+          <span class="w-2 h-2 rounded-full animate-pulse" style="background:var(--ochre-500)"></span>
           v2026.05 · Architecture &amp; Product Specification
         </div>
         <h1 class="h-display mb-6">
-          Cyber<span class="bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-500 bg-clip-text text-transparent">OS</span>
+          Cyber<span style="background:linear-gradient(90deg,var(--umber-500),var(--ochre-700),var(--ochre-500));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent">OS</span>
         </h1>
         <p class="text-xl lg:text-2xl text-slate-700 font-medium leading-snug mb-6 max-w-2xl">
           AI-native internal operations platform — turning <em class="text-slate-900 font-bold">will</em> into <em class="text-slate-900 font-bold">real</em>.
@@ -60,114 +60,121 @@
               <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.08"/>
             </filter>
           </defs>
+          <!-- Brand palette: Umber #45210e + Ochre #f4ba17 anchors per design-system DESIGN.md.
+               All fills/strokes below are members of the Umber/Ochre/Neutral families only. -->
           <g filter="url(#shadow)">
-            <rect x="60" y="20" width="170" height="60" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
-            <text x="145" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#78350f">USER</text>
-            <text x="145" y="65" text-anchor="middle" font-size="11" fill="#92400e">natural language request</text>
+            <rect x="60" y="20" width="170" height="60" rx="12" fill="#fef6e0" stroke="#9c750a" stroke-width="2"/>
+            <text x="145" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#45210e">USER</text>
+            <text x="145" y="65" text-anchor="middle" font-size="11" fill="#2a1208">natural language request</text>
           </g>
           <g filter="url(#shadow)">
-            <rect x="270" y="20" width="170" height="60" rx="12" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
-            <text x="355" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#78350f">AI AGENT</text>
-            <text x="355" y="65" text-anchor="middle" font-size="11" fill="#92400e">Claude / Codex / Cursor</text>
+            <rect x="270" y="20" width="170" height="60" rx="12" fill="#fef6e0" stroke="#9c750a" stroke-width="2"/>
+            <text x="355" y="48" text-anchor="middle" font-size="14" font-weight="700" fill="#45210e">AI AGENT</text>
+            <text x="355" y="65" text-anchor="middle" font-size="11" fill="#2a1208">Claude / Codex / Cursor</text>
           </g>
-          <path d="M145 80 L 200 130" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-          <path d="M355 80 L 300 130" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <path d="M145 80 L 200 130" stroke="#7a5538" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <path d="M355 80 L 300 130" stroke="#7a5538" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
           <a href="modules/cuo.html">
             <g filter="url(#shadow)">
-              <rect x="170" y="135" width="160" height="70" rx="14" fill="#f3e8ff" stroke="#7e22ce" stroke-width="2.5"/>
-              <text x="250" y="160" text-anchor="middle" font-size="20" font-weight="800" fill="#581c87">CUO</text>
-              <text x="250" y="180" text-anchor="middle" font-size="11" font-weight="600" fill="#6b21a8">Chief Universal Officer</text>
-              <text x="250" y="195" text-anchor="middle" font-size="10" fill="#7e22ce">router · orchestrator</text>
+              <rect x="170" y="135" width="160" height="70" rx="14" fill="#f9c64f" stroke="#45210e" stroke-width="2.5"/>
+              <text x="250" y="160" text-anchor="middle" font-size="20" font-weight="800" fill="#45210e">CUO</text>
+              <text x="250" y="180" text-anchor="middle" font-size="11" font-weight="600" fill="#2a1208">Chief Universal Officer</text>
+              <text x="250" y="195" text-anchor="middle" font-size="10" fill="#45210e">router · orchestrator</text>
             </g>
           </a>
-          <path d="M205 205 L 130 260" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-          <text x="148" y="240" font-size="10" font-style="italic" fill="#475569">routes</text>
-          <path d="M295 205 L 370 260" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-          <text x="345" y="240" font-size="10" font-style="italic" fill="#475569">records</text>
+          <path d="M205 205 L 130 260" stroke="#7a5538" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <text x="148" y="240" font-size="10" font-style="italic" fill="#4d4641">routes</text>
+          <path d="M295 205 L 370 260" stroke="#7a5538" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+          <text x="345" y="240" font-size="10" font-style="italic" fill="#4d4641">records</text>
           <a href="modules/skill.html">
             <g filter="url(#shadow)">
-              <rect x="40" y="265" width="180" height="80" rx="14" fill="#d1fae5" stroke="#047857" stroke-width="2.5"/>
-              <text x="130" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#064e3b">SKILL</text>
-              <text x="130" y="313" text-anchor="middle" font-size="11" font-weight="600" fill="#065f46">portable agentic skills</text>
-              <text x="130" y="328" text-anchor="middle" font-size="10" fill="#047857">Rust host · Bun toolchain</text>
+              <rect x="40" y="265" width="180" height="80" rx="14" fill="#f5ede6" stroke="#45210e" stroke-width="2.5"/>
+              <text x="130" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#45210e">SKILL</text>
+              <text x="130" y="313" text-anchor="middle" font-size="11" font-weight="600" fill="#2a1208">portable agentic skills</text>
+              <text x="130" y="328" text-anchor="middle" font-size="10" fill="#45210e">Rust host · Bun toolchain</text>
             </g>
           </a>
           <a href="modules/brain.html">
             <g filter="url(#shadow)">
-              <rect x="280" y="265" width="180" height="80" rx="14" fill="#dbeafe" stroke="#1e40af" stroke-width="2.5"/>
-              <text x="370" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#1e3a8a">MEMORY</text>
-              <text x="370" y="313" text-anchor="middle" font-size="11" font-weight="600" fill="#1e40af">audit-chained ledger</text>
-              <text x="370" y="328" text-anchor="middle" font-size="10" fill="#1e40af">.cyberos-memory/ · MMR · STH</text>
+              <rect x="280" y="265" width="180" height="80" rx="14" fill="#e8d4c2" stroke="#45210e" stroke-width="2.5"/>
+              <text x="370" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#45210e">MEMORY</text>
+              <text x="370" y="313" text-anchor="middle" font-size="11" font-weight="600" fill="#2a1208">audit-chained ledger</text>
+              <text x="370" y="328" text-anchor="middle" font-size="10" fill="#45210e">.cyberos-memory/ · MMR · STH</text>
             </g>
           </a>
-          <path d="M220 305 L 280 305" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
-          <text x="250" y="298" text-anchor="middle" font-size="9" font-style="italic" fill="#64748b">caps broker</text>
+          <path d="M220 305 L 280 305" stroke="#9c9286" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+          <text x="250" y="298" text-anchor="middle" font-size="9" font-style="italic" fill="#6f665d">caps broker</text>
 
           <a href="architecture/infrastructure.html">
             <g>
-              <rect x="20" y="360" width="460" height="50" rx="10" fill="#fef9c3" stroke="#a16207" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.7"/>
-              <text x="250" y="378" text-anchor="middle" font-size="10" font-weight="700" fill="#78350f">CROSS-CUTTING INFRASTRUCTURE (P0)</text>
-              <text x="50"  y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">AUTH</text>
-              <text x="115" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">AI GW</text>
-              <text x="175" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">MCP GW</text>
-              <text x="240" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">OBS</text>
-              <text x="305" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">GraphQL</text>
-              <text x="380" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#92400e">NATS</text>
-              <text x="450" y="397" text-anchor="middle" font-size="9" fill="#a16207">↑ all modules use</text>
+              <rect x="20" y="360" width="460" height="50" rx="10" fill="#fef6e0" stroke="#9c750a" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.85"/>
+              <text x="250" y="378" text-anchor="middle" font-size="10" font-weight="700" fill="#45210e">CROSS-CUTTING INFRASTRUCTURE (P0)</text>
+              <text x="50"  y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2a1208">AUTH</text>
+              <text x="115" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2a1208">AI GW</text>
+              <text x="175" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2a1208">MCP GW</text>
+              <text x="240" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2a1208">OBS</text>
+              <text x="305" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2a1208">GraphQL</text>
+              <text x="380" y="397" text-anchor="middle" font-size="9.5" font-weight="600" fill="#2a1208">NATS</text>
+              <text x="450" y="397" text-anchor="middle" font-size="9" fill="#9c750a">↑ all modules use</text>
             </g>
           </a>
 
-          <g opacity="0.95">
-            <rect x="20" y="425" width="460" height="38" rx="8" fill="#dbeafe" stroke="#1e40af" stroke-width="1.2"/>
-            <text x="50"  y="442" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">P0</text>
-            <text x="50"  y="455" text-anchor="middle" font-size="8" font-weight="600" fill="#1e40af">Foundation</text>
-            <text x="105" y="442" text-anchor="middle" font-size="10" fill="#1e40af">CHAT</text>
-            <text x="160" y="442" text-anchor="middle" font-size="10" fill="#1e40af">BRAIN</text>
-            <text x="215" y="442" text-anchor="middle" font-size="10" fill="#1e40af">SKILL</text>
-            <text x="270" y="442" text-anchor="middle" font-size="10" fill="#1e40af">GENIE/CUO</text>
-            <text x="345" y="442" text-anchor="middle" font-size="9" fill="#1e40af">(+ 6 infra)</text>
-            <text x="430" y="442" text-anchor="middle" font-size="9" font-weight="700" fill="#1e3a8a">7/22</text>
+          <g opacity="0.98">
+            <!-- P0 — Umber-50 (lightest, current/foundation) -->
+            <rect x="20" y="425" width="460" height="38" rx="8" fill="#f5ede6" stroke="#45210e" stroke-width="1.2"/>
+            <text x="50"  y="442" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">P0</text>
+            <text x="50"  y="455" text-anchor="middle" font-size="8" font-weight="600" fill="#2a1208">Foundation</text>
+            <text x="105" y="442" text-anchor="middle" font-size="10" fill="#2a1208">CHAT</text>
+            <text x="160" y="442" text-anchor="middle" font-size="10" fill="#2a1208">BRAIN</text>
+            <text x="215" y="442" text-anchor="middle" font-size="10" fill="#2a1208">SKILL</text>
+            <text x="270" y="442" text-anchor="middle" font-size="10" fill="#2a1208">GENIE/CUO</text>
+            <text x="345" y="442" text-anchor="middle" font-size="9" fill="#2a1208">(+ 6 infra)</text>
+            <text x="430" y="442" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">7/22</text>
 
-            <rect x="20" y="468" width="460" height="38" rx="8" fill="#d1fae5" stroke="#047857" stroke-width="1.2"/>
-            <text x="50"  y="485" text-anchor="middle" font-size="9" font-weight="700" fill="#064e3b">P1</text>
-            <text x="50"  y="498" text-anchor="middle" font-size="8" font-weight="600" fill="#047857">Productivity</text>
-            <text x="105" y="485" text-anchor="middle" font-size="10" fill="#047857">EMAIL</text>
-            <text x="160" y="485" text-anchor="middle" font-size="10" fill="#047857">PROJ</text>
-            <text x="215" y="485" text-anchor="middle" font-size="10" fill="#047857">TIME</text>
-            <text x="270" y="485" text-anchor="middle" font-size="10" fill="#047857">CRM · KB</text>
-            <text x="350" y="485" text-anchor="middle" font-size="10" fill="#047857">HR · REW · LEARN</text>
-            <text x="450" y="485" text-anchor="middle" font-size="9" font-weight="700" fill="#064e3b">15/22</text>
+            <!-- P1 — Umber-100 -->
+            <rect x="20" y="468" width="460" height="38" rx="8" fill="#e8d4c2" stroke="#45210e" stroke-width="1.2"/>
+            <text x="50"  y="485" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">P1</text>
+            <text x="50"  y="498" text-anchor="middle" font-size="8" font-weight="600" fill="#2a1208">Productivity</text>
+            <text x="105" y="485" text-anchor="middle" font-size="10" fill="#2a1208">EMAIL</text>
+            <text x="160" y="485" text-anchor="middle" font-size="10" fill="#2a1208">PROJ</text>
+            <text x="215" y="485" text-anchor="middle" font-size="10" fill="#2a1208">TIME</text>
+            <text x="270" y="485" text-anchor="middle" font-size="10" fill="#2a1208">CRM · KB</text>
+            <text x="350" y="485" text-anchor="middle" font-size="10" fill="#2a1208">HR · REW · LEARN</text>
+            <text x="450" y="485" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">15/22</text>
 
-            <rect x="20" y="511" width="460" height="38" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="1.2"/>
-            <text x="50"  y="528" text-anchor="middle" font-size="9" font-weight="700" fill="#78350f">P2</text>
-            <text x="50"  y="541" text-anchor="middle" font-size="8" font-weight="600" fill="#b45309">Operations</text>
-            <text x="150" y="528" text-anchor="middle" font-size="10" fill="#92400e">INV</text>
-            <text x="240" y="528" text-anchor="middle" font-size="10" fill="#92400e">ESOP</text>
-            <text x="430" y="528" text-anchor="middle" font-size="9" font-weight="700" fill="#78350f">17/22</text>
+            <!-- P2 — Ochre-50 -->
+            <rect x="20" y="511" width="460" height="38" rx="8" fill="#fef6e0" stroke="#9c750a" stroke-width="1.2"/>
+            <text x="50"  y="528" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">P2</text>
+            <text x="50"  y="541" text-anchor="middle" font-size="8" font-weight="600" fill="#2a1208">Operations</text>
+            <text x="150" y="528" text-anchor="middle" font-size="10" fill="#2a1208">INV</text>
+            <text x="240" y="528" text-anchor="middle" font-size="10" fill="#2a1208">ESOP</text>
+            <text x="430" y="528" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">17/22</text>
 
-            <rect x="20" y="554" width="460" height="38" rx="8" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.2"/>
-            <text x="50"  y="571" text-anchor="middle" font-size="9" font-weight="700" fill="#581c87">P3</text>
-            <text x="50"  y="584" text-anchor="middle" font-size="8" font-weight="600" fill="#7e22ce">SaaS-ready</text>
-            <text x="150" y="571" text-anchor="middle" font-size="10" fill="#6b21a8">RES</text>
-            <text x="240" y="571" text-anchor="middle" font-size="10" fill="#6b21a8">OKR</text>
-            <text x="430" y="571" text-anchor="middle" font-size="9" font-weight="700" fill="#581c87">19/22</text>
+            <!-- P3 — Ochre-100 -->
+            <rect x="20" y="554" width="460" height="38" rx="8" fill="#fde7b3" stroke="#9c750a" stroke-width="1.2"/>
+            <text x="50"  y="571" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">P3</text>
+            <text x="50"  y="584" text-anchor="middle" font-size="8" font-weight="600" fill="#2a1208">SaaS-ready</text>
+            <text x="150" y="571" text-anchor="middle" font-size="10" fill="#2a1208">RES</text>
+            <text x="240" y="571" text-anchor="middle" font-size="10" fill="#2a1208">OKR</text>
+            <text x="430" y="571" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">19/22</text>
 
-            <rect x="20" y="597" width="460" height="20" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 3"/>
-            <text x="50"  y="611" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">P4</text>
-            <text x="180" y="611" text-anchor="middle" font-size="9" fill="#475569">DOC · PORTAL · TEN (external GA)</text>
-            <text x="430" y="611" text-anchor="middle" font-size="9" font-weight="700" fill="#334155">22/22</text>
+            <!-- P4 — Neutral, dashed, "future" -->
+            <rect x="20" y="597" width="460" height="20" rx="6" fill="#f0eee9" stroke="#9c9286" stroke-width="1" stroke-dasharray="3 3"/>
+            <text x="50"  y="611" text-anchor="middle" font-size="9" font-weight="700" fill="#322d29">P4</text>
+            <text x="180" y="611" text-anchor="middle" font-size="9" fill="#4d4641">DOC · PORTAL · TEN (external GA)</text>
+            <text x="430" y="611" text-anchor="middle" font-size="9" font-weight="700" fill="#322d29">22/22</text>
           </g>
         </svg>
       </div>
     </div>
 
-    <!-- BENTO STATS -->
+    <!-- BENTO STATS — unified Umber numerals, Ochre accent on the first stat -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-12">
-      <div class="bbg-card p-5"><div class="stat-num text-blue-600">22</div><div class="text-sm text-slate-500 font-medium mt-1">modules total</div><div class="text-xs text-slate-400 mt-0.5">7 at P0 → 22 at P4</div></div>
-      <div class="bbg-card p-5"><div class="stat-num text-purple-600">10</div><div class="text-sm text-slate-500 font-medium mt-1">C-level personas</div><div class="text-xs text-slate-400 mt-0.5">CEO · COO · CFO · CMO · …</div></div>
-      <div class="bbg-card p-5"><div class="stat-num text-emerald-600">3</div><div class="text-sm text-slate-500 font-medium mt-1">BRAIN memory layers</div><div class="text-xs text-slate-400 mt-0.5">FS · Vector+Graph · Archival</div></div>
-      <div class="bbg-card p-5"><div class="stat-num text-amber-600">26+</div><div class="text-sm text-slate-500 font-medium mt-1">AI clients</div><div class="text-xs text-slate-400 mt-0.5">via Agent Skills standard</div></div>
-      <div class="bbg-card p-5"><div class="stat-num text-rose-600">6</div><div class="text-sm text-slate-500 font-medium mt-1">VN-market skills</div><div class="text-xs text-slate-400 mt-0.5">MST · CCCD · GDT · VietQR</div></div>
+      <div class="bbg-card p-5"><div class="stat-num" style="color:var(--ochre-700)">22</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">modules total</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">7 at P0 → 22 at P4</div></div>
+      <div class="bbg-card p-5"><div class="stat-num" style="color:var(--umber-700)">10</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">C-level personas</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">CEO · COO · CFO · CMO · …</div></div>
+      <div class="bbg-card p-5"><div class="stat-num" style="color:var(--umber-700)">3</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">BRAIN memory layers</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">FS · Vector+Graph · Archival</div></div>
+      <div class="bbg-card p-5"><div class="stat-num" style="color:var(--umber-700)">26+</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">AI clients</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">via Agent Skills standard</div></div>
+      <div class="bbg-card p-5"><div class="stat-num" style="color:var(--ochre-700)">6</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">VN-market skills</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">MST · CCCD · GDT · VietQR</div></div>
     </div>
   </div>
 </section>
@@ -185,39 +192,39 @@
 
     <div class="grid md:grid-cols-3 gap-5">
       <!-- BRAIN -->
-      <a href="modules/brain.html" class="bbg-card lift-strong tint-memory p-6 block no-underline" style="text-decoration:none;color:inherit">
+      <a href="modules/brain.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
         <div class="flex items-center justify-between mb-3">
           <div class="text-4xl">🧠</div>
           <span class="phase-chip phase-p0">P0 · Shipped</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-1.5">BRAIN — the substrate</h3>
-        <p class="text-xs uppercase tracking-wider text-blue-700 font-semibold mb-3">Append-only audit ledger</p>
-        <p class="text-sm text-slate-600 leading-relaxed mb-4">Local-first, audit-chained memory. Three layers: FS at the edge (<code>.cyberos-memory/</code>), pgvector + Apache AGE in the middle, archival corpus at the cold tier. MMR inclusion proofs, Ed25519-signed tree heads, deterministic export, GDPR purge.</p>
-        <div class="text-sm font-bold text-blue-700">Read full BRAIN spec →</div>
+        <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">BRAIN — the substrate</h3>
+        <p class="text-xs uppercase tracking-wider font-semibold mb-3" style="color:var(--umber-700)">Append-only audit ledger</p>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">Local-first, audit-chained memory. Three layers: FS at the edge (<code>.cyberos-memory/</code>), pgvector + Apache AGE in the middle, archival corpus at the cold tier. MMR inclusion proofs, Ed25519-signed tree heads, deterministic export, GDPR purge.</p>
+        <div class="text-sm font-bold" style="color:var(--umber-700)">Read full BRAIN spec →</div>
       </a>
 
       <!-- Skill -->
-      <a href="modules/skill.html" class="bbg-card lift-strong tint-skill p-6 block no-underline" style="text-decoration:none;color:inherit">
+      <a href="modules/skill.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
         <div class="flex items-center justify-between mb-3">
           <div class="text-4xl">🛠</div>
-          <span class="phase-chip phase-p1">P0 · Shipped</span>
+          <span class="phase-chip phase-p0">P0 · Shipped</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Skill — the catalog</h3>
-        <p class="text-xs uppercase tracking-wider text-emerald-700 font-semibold mb-3">Portable agentic skills</p>
-        <p class="text-sm text-slate-600 leading-relaxed mb-4">Open Agent Skills standard (Anthropic · VS Code · Cursor · Codex). Rust host + Bun toolchain. 6 Vietnamese-market skills published (MST · VAT · VietQR · CCCD · legal · tax). Three-level progressive disclosure; 12/12 Python ↔ Rust parity tests green.</p>
-        <div class="text-sm font-bold text-emerald-700">Read full Skill spec →</div>
+        <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Skill — the catalog</h3>
+        <p class="text-xs uppercase tracking-wider font-semibold mb-3" style="color:var(--umber-700)">Portable agentic skills</p>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">Open Agent Skills standard (Anthropic · VS Code · Cursor · Codex). Rust host + Bun toolchain. 6 Vietnamese-market skills published (MST · VAT · VietQR · CCCD · legal · tax). Three-level progressive disclosure; 12/12 Python ↔ Rust parity tests green.</p>
+        <div class="text-sm font-bold" style="color:var(--umber-700)">Read full Skill spec →</div>
       </a>
 
-      <!-- CUO -->
-      <a href="modules/cuo.html" class="bbg-card lift-strong tint-cuo p-6 block no-underline" style="text-decoration:none;color:inherit">
+      <!-- CUO — Ochre accent border to distinguish (router/conductor role) -->
+      <a href="modules/cuo.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--ochre-500)">
         <div class="flex items-center justify-between mb-3">
           <div class="text-4xl">🎯</div>
-          <span class="phase-chip phase-p3">P0 · Phase 1</span>
+          <span class="phase-chip phase-p0">P0 · Phase 1</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-1.5">CUO — the orchestrator</h3>
-        <p class="text-xs uppercase tracking-wider text-purple-700 font-semibold mb-3">Chief Universal Officer</p>
-        <p class="text-sm text-slate-600 leading-relaxed mb-4">The router. Natural language in, skill chain out, memory record on file. Genie is the mascot; CUO is the inner decision frame. 10 C-level skills hot-reload on demand. Notify / Question / Review ambient modes — never auto-acts on irreversible operations.</p>
-        <div class="text-sm font-bold text-purple-700">Read full CUO spec →</div>
+        <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">CUO — the orchestrator</h3>
+        <p class="text-xs uppercase tracking-wider font-semibold mb-3" style="color:var(--ochre-700)">Chief Universal Officer</p>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">The router. Natural language in, skill chain out, memory record on file. Genie is the mascot; CUO is the inner decision frame. 10 C-level skills hot-reload on demand. Notify / Question / Review ambient modes — never auto-acts on irreversible operations.</p>
+        <div class="text-sm font-bold" style="color:var(--ochre-700)">Read full CUO spec →</div>
       </a>
     </div>
   </div>
@@ -308,15 +315,15 @@
       </div>
     </div>
 
-    <!-- Phase summary -->
-    <div class="bbg-card p-6 mt-10 bg-gradient-to-br from-blue-50 via-purple-50 to-emerald-50">
-      <h3 class="font-bold text-slate-900 mb-3">Module count by phase</h3>
+    <!-- Phase summary — Umber gradient, Ochre highlight on the current/foundation phase -->
+    <div class="bbg-card p-6 mt-10" style="background:linear-gradient(135deg,var(--umber-50) 0%,var(--ochre-50) 100%)">
+      <h3 class="font-bold mb-3" style="color:var(--text)">Module count by phase</h3>
       <div class="grid grid-cols-5 gap-4 text-center">
-        <div><div class="text-2xl font-black text-blue-600">7</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P0 · M0–M3</div></div>
-        <div><div class="text-2xl font-black text-emerald-600">15</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P1 · M4–M6</div></div>
-        <div><div class="text-2xl font-black text-amber-600">17</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P2 · M7–M9</div></div>
-        <div><div class="text-2xl font-black text-purple-600">19</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P3 · M10–M12</div></div>
-        <div><div class="text-2xl font-black text-slate-600">22</div><div class="text-xs font-semibold text-slate-700 mt-0.5">P4 · M13–M24</div></div>
+        <div><div class="text-2xl font-black" style="color:var(--ochre-700)">7</div><div class="text-xs font-semibold mt-0.5" style="color:var(--text)">P0 · M0–M3</div></div>
+        <div><div class="text-2xl font-black" style="color:var(--umber-700)">15</div><div class="text-xs font-semibold mt-0.5" style="color:var(--text)">P1 · M4–M6</div></div>
+        <div><div class="text-2xl font-black" style="color:var(--umber-700)">17</div><div class="text-xs font-semibold mt-0.5" style="color:var(--text)">P2 · M7–M9</div></div>
+        <div><div class="text-2xl font-black" style="color:var(--umber-700)">19</div><div class="text-xs font-semibold mt-0.5" style="color:var(--text)">P3 · M10–M12</div></div>
+        <div><div class="text-2xl font-black" style="color:var(--neutral-600)">22</div><div class="text-xs font-semibold mt-0.5" style="color:var(--text)">P4 · M13–M24</div></div>
       </div>
     </div>
   </div>
@@ -333,72 +340,79 @@
     <h2 class="h-1 mb-3">The 12-month arc</h2>
     <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Five gated phases (P0 → P4) over 24 months, anchored on dogfooding signal and compliance gates that flip every quarter. The headcount column tracks the founder's commitment: scale only when CyberOS itself absorbs the new operational load.</p>
 
+    <!-- Milestone arc — monochromatic Umber scale (50→500), with Ochre highlighting the current foundation phase -->
     <div class="bbg-card p-6 mb-10 overflow-x-auto">
       <div class="min-w-[900px]">
         <div class="grid grid-cols-5 gap-2 mb-2">
-          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-blue-700">P0 · Foundations</div><div class="text-[10px] text-slate-500">M0 – M+3</div></div>
-          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">P1 · Productivity</div><div class="text-[10px] text-slate-500">M+4 – M+6</div></div>
-          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-amber-700">P2 · Operations</div><div class="text-[10px] text-slate-500">M+7 – M+9</div></div>
-          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-purple-700">P3 · SaaS-ready</div><div class="text-[10px] text-slate-500">M+10 – M+12</div></div>
-          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider text-slate-600">P4 · External</div><div class="text-[10px] text-slate-500">M+13 – M+24</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--ochre-700)">P0 · Foundations</div><div class="text-[10px]" style="color:var(--text-mute)">M0 – M+3</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--umber-700)">P1 · Productivity</div><div class="text-[10px]" style="color:var(--text-mute)">M+4 – M+6</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--umber-700)">P2 · Operations</div><div class="text-[10px]" style="color:var(--text-mute)">M+7 – M+9</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--umber-700)">P3 · SaaS-ready</div><div class="text-[10px]" style="color:var(--text-mute)">M+10 – M+12</div></div>
+          <div class="text-center"><div class="text-[10px] font-bold uppercase tracking-wider" style="color:var(--neutral-600)">P4 · External</div><div class="text-[10px]" style="color:var(--text-mute)">M+13 – M+24</div></div>
         </div>
-        <div class="relative h-3 bg-slate-100 rounded-full mb-1">
-          <div class="absolute inset-y-0 left-0 w-1/5 bg-blue-500 rounded-l-full"></div>
-          <div class="absolute inset-y-0 left-[20%] w-1/5 bg-emerald-500"></div>
-          <div class="absolute inset-y-0 left-[40%] w-1/5 bg-amber-500"></div>
-          <div class="absolute inset-y-0 left-[60%] w-1/5 bg-purple-500"></div>
-          <div class="absolute inset-y-0 left-[80%] w-1/5 bg-slate-400 rounded-r-full"></div>
-          <div class="absolute -top-1 -translate-x-1/2 left-0"><div class="w-4 h-4 rounded-full bg-white border-2 border-blue-500"></div></div>
-          <div class="absolute -top-1 -translate-x-1/2 left-[20%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-emerald-500"></div></div>
-          <div class="absolute -top-1 -translate-x-1/2 left-[40%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-amber-500"></div></div>
-          <div class="absolute -top-1 -translate-x-1/2 left-[60%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-purple-500"></div></div>
-          <div class="absolute -top-1 -translate-x-1/2 left-[80%]"><div class="w-4 h-4 rounded-full bg-white border-2 border-slate-400"></div></div>
-          <div class="absolute -top-1 -translate-x-1/2 left-full"><div class="w-4 h-4 rounded-full bg-white border-2 border-slate-400"></div></div>
+        <div class="relative h-3 rounded-full mb-1" style="background:var(--neutral-100)">
+          <!-- Current phase = Ochre (P0); others are an Umber tint scale; P4 = neutral (future) -->
+          <div class="absolute inset-y-0 left-0 w-1/5 rounded-l-full" style="background:var(--ochre-500)"></div>
+          <div class="absolute inset-y-0 left-[20%] w-1/5" style="background:var(--umber-300)"></div>
+          <div class="absolute inset-y-0 left-[40%] w-1/5" style="background:var(--umber-400)"></div>
+          <div class="absolute inset-y-0 left-[60%] w-1/5" style="background:var(--umber-500)"></div>
+          <div class="absolute inset-y-0 left-[80%] w-1/5 rounded-r-full" style="background:var(--neutral-400)"></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-0"><div class="w-4 h-4 rounded-full" style="background:#fff;border:2px solid var(--ochre-500)"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[20%]"><div class="w-4 h-4 rounded-full" style="background:#fff;border:2px solid var(--umber-300)"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[40%]"><div class="w-4 h-4 rounded-full" style="background:#fff;border:2px solid var(--umber-400)"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[60%]"><div class="w-4 h-4 rounded-full" style="background:#fff;border:2px solid var(--umber-500)"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-[80%]"><div class="w-4 h-4 rounded-full" style="background:#fff;border:2px solid var(--neutral-400)"></div></div>
+          <div class="absolute -top-1 -translate-x-1/2 left-full"><div class="w-4 h-4 rounded-full" style="background:#fff;border:2px solid var(--neutral-400)"></div></div>
         </div>
         <div class="grid grid-cols-6 text-center mb-6 mt-3">
-          <div class="text-[10px] font-mono font-bold text-slate-500">M0</div>
-          <div class="text-[10px] font-mono font-bold text-slate-500">M+3</div>
-          <div class="text-[10px] font-mono font-bold text-slate-500">M+6</div>
-          <div class="text-[10px] font-mono font-bold text-slate-500">M+9</div>
-          <div class="text-[10px] font-mono font-bold text-slate-500">M+12</div>
-          <div class="text-[10px] font-mono font-bold text-slate-500">M+18/24</div>
+          <div class="text-[10px] font-mono font-bold" style="color:var(--text-mute)">M0</div>
+          <div class="text-[10px] font-mono font-bold" style="color:var(--text-mute)">M+3</div>
+          <div class="text-[10px] font-mono font-bold" style="color:var(--text-mute)">M+6</div>
+          <div class="text-[10px] font-mono font-bold" style="color:var(--text-mute)">M+9</div>
+          <div class="text-[10px] font-mono font-bold" style="color:var(--text-mute)">M+12</div>
+          <div class="text-[10px] font-mono font-bold" style="color:var(--text-mute)">M+18/24</div>
         </div>
 
         <div class="grid grid-cols-5 gap-3 text-xs">
-          <div class="p-3 bg-blue-50 rounded-lg">
-            <div class="font-bold text-blue-900 mb-1">P0 exit · M+3</div>
-            <div class="text-slate-600 mb-2"><strong>Modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
-            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 10 Members</div>
-            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> Slack + Zalo decommissioned</div>
-            <div class="text-blue-700 font-bold">7 of 22 modules ready</div>
+          <!-- P0 — Ochre tint (current phase) -->
+          <div class="p-3 rounded-lg" style="background:var(--ochre-50);border:1px solid var(--ochre-100)">
+            <div class="font-bold mb-1" style="color:var(--umber-900)">P0 exit · M+3</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Headcount:</strong> 10 Members</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Outcome:</strong> Slack + Zalo decommissioned</div>
+            <div class="font-bold" style="color:var(--ochre-700)">7 of 22 modules ready</div>
           </div>
-          <div class="p-3 bg-emerald-50 rounded-lg">
-            <div class="font-bold text-emerald-900 mb-1">P1 exit · M+6</div>
-            <div class="text-slate-600 mb-2"><strong>Modules:</strong> PROJ · TIME · CRM · KB · HR · EMAIL · REW (core) · LEARN</div>
-            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 12 Members</div>
-            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First payroll cycle through REW</div>
-            <div class="text-emerald-700 font-bold">15 of 22 ready</div>
+          <!-- P1 — Umber-50 -->
+          <div class="p-3 rounded-lg" style="background:var(--umber-50);border:1px solid var(--umber-100)">
+            <div class="font-bold mb-1" style="color:var(--umber-900)">P1 exit · M+6</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Modules:</strong> PROJ · TIME · CRM · KB · HR · EMAIL · REW (core) · LEARN</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Headcount:</strong> 12 Members</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Outcome:</strong> First payroll cycle through REW</div>
+            <div class="font-bold" style="color:var(--umber-700)">15 of 22 ready</div>
           </div>
-          <div class="p-3 bg-amber-50 rounded-lg">
-            <div class="font-bold text-amber-900 mb-1">P2 exit · M+9</div>
-            <div class="text-slate-600 mb-2"><strong>Modules:</strong> INV · full REW pool calc · ESOP</div>
-            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 14 Members</div>
-            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First SP grant issued</div>
-            <div class="text-amber-700 font-bold">17 of 22 ready</div>
+          <!-- P2 — Umber-50 -->
+          <div class="p-3 rounded-lg" style="background:var(--umber-50);border:1px solid var(--umber-100)">
+            <div class="font-bold mb-1" style="color:var(--umber-900)">P2 exit · M+9</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Modules:</strong> INV · full REW pool calc · ESOP</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Headcount:</strong> 14 Members</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Outcome:</strong> First SP grant issued</div>
+            <div class="font-bold" style="color:var(--umber-700)">17 of 22 ready</div>
           </div>
-          <div class="p-3 bg-purple-50 rounded-lg">
-            <div class="font-bold text-purple-900 mb-1">P3 exit · M+12</div>
-            <div class="text-slate-600 mb-2"><strong>Modules:</strong> RES · OKR live; mobile evaluated</div>
-            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 16 Members</div>
-            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First quarterly OKR cycle · <strong>Singapore HoldCo flip if ARR ≥ $1.5M</strong></div>
-            <div class="text-purple-700 font-bold">19 of 22 ready</div>
+          <!-- P3 — Umber-50 -->
+          <div class="p-3 rounded-lg" style="background:var(--umber-50);border:1px solid var(--umber-100)">
+            <div class="font-bold mb-1" style="color:var(--umber-900)">P3 exit · M+12</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Modules:</strong> RES · OKR live; mobile evaluated</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Headcount:</strong> 16 Members</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Outcome:</strong> First quarterly OKR cycle · <strong style="color:var(--text)">Singapore HoldCo flip if ARR ≥ $1.5M</strong></div>
+            <div class="font-bold" style="color:var(--umber-700)">19 of 22 ready</div>
           </div>
-          <div class="p-3 bg-slate-100 rounded-lg">
-            <div class="font-bold text-slate-900 mb-1">P4 entry · M+18</div>
-            <div class="text-slate-600 mb-2"><strong>Modules:</strong> DOC (eIDAS QTSP) · PORTAL · TEN</div>
-            <div class="text-slate-600 mb-2"><strong>Headcount:</strong> 20 Members</div>
-            <div class="text-slate-600 mb-2"><strong>Outcome:</strong> First external paying tenant</div>
-            <div class="text-slate-700 font-bold">22 of 22 ready</div>
+          <!-- P4 — Neutral (future) -->
+          <div class="p-3 rounded-lg" style="background:var(--neutral-100);border:1px solid var(--neutral-200)">
+            <div class="font-bold mb-1" style="color:var(--text)">P4 entry · M+18</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Modules:</strong> DOC (eIDAS QTSP) · PORTAL · TEN</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Headcount:</strong> 20 Members</div>
+            <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Outcome:</strong> First external paying tenant</div>
+            <div class="font-bold" style="color:var(--neutral-600)">22 of 22 ready</div>
           </div>
         </div>
       </div>
@@ -418,63 +432,63 @@
     <div class="flex items-center gap-4 mb-2">
       <span class="section-badge" style="background:var(--cuo-tint);color:var(--cuo-dark)">The C-suite</span>
     </div>
-    <h2 class="h-1 mb-3">CUO is one persona — <span class="text-purple-600">ten specialists</span> behind it</h2>
+    <h2 class="h-1 mb-3">CUO is one persona — <span style="color:var(--ochre-700)">ten specialists</span> behind it</h2>
     <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CUO presents as one Genie. Internally, ten C-level skills load on demand via the open <strong>Anthropic Agent Skills</strong> format. The user sees Genie; Genie routes to whichever skill best fits the request. Same BRAIN, same persona-version stamp, same audit chain. Click any role to jump to its detail on the CUO page.</p>
 
     <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
       <a href="modules/cuo.html#persona-ceo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">🎯</div><div class="font-bold text-slate-900">CEO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Vision · Strategy</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Vision · Strategy</p>
         <p class="text-xs text-slate-600">Strategy memos · OKR cascade reviews · weekly state-of-business.</p>
       </a>
       <a href="modules/cuo.html#persona-coo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">⚙️</div><div class="font-bold text-slate-900">COO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Operations</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Operations</p>
         <p class="text-xs text-slate-600">Status digests · blocker triage · cycle-end summaries.</p>
       </a>
       <a href="modules/cuo.html#persona-cfo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">💰</div><div class="font-bold text-slate-900">CFO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Finance · Runway</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Finance · Runway</p>
         <p class="text-xs text-slate-600">Cashflow · AR/AP digests · burn alerts.</p>
       </a>
       <a href="modules/cuo.html#persona-cmo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">📣</div><div class="font-bold text-slate-900">CMO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Marketing · Demand</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Marketing · Demand</p>
         <p class="text-xs text-slate-600">Campaign briefs · content calendars · channel reports.</p>
       </a>
       <a href="modules/cuo.html#persona-cto" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">💻</div><div class="font-bold text-slate-900">CTO / CIO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Technology · Info Systems</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Technology · Info Systems</p>
         <p class="text-xs text-slate-600">Tech debt · security advisories · OBS digests.</p>
       </a>
       <a href="modules/cuo.html#persona-chro" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">👥</div><div class="font-bold text-slate-900">CHRO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">People · Talent</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">People · Talent</p>
         <p class="text-xs text-slate-600">1:1 prep · performance summaries · onboarding.</p>
       </a>
       <a href="modules/cuo.html#persona-cso" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">🧭</div><div class="font-bold text-slate-900">CSO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Strategy</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Strategy</p>
         <p class="text-xs text-slate-600">Competitive intel · scenario modelling · partnerships.</p>
       </a>
       <a href="modules/cuo.html#persona-clo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">⚖️</div><div class="font-bold text-slate-900">CLO / CCO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Legal · Compliance</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Legal · Compliance</p>
         <p class="text-xs text-slate-600">Contract redline · GDPR/PDPL audits · DSAR triage.</p>
       </a>
       <a href="modules/cuo.html#persona-cdo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">📊</div><div class="font-bold text-slate-900">CDO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Data</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Data</p>
         <p class="text-xs text-slate-600">Data quality · lineage · residency reviews.</p>
       </a>
       <a href="modules/cuo.html#persona-cpo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
         <div class="text-2xl mb-1">🚀</div><div class="font-bold text-slate-900">CPO</div>
-        <p class="text-[11px] text-purple-700 font-bold uppercase tracking-wider mb-1">Product</p>
+        <p class="text-[11px] font-bold uppercase tracking-wider mb-1" style="color:var(--umber-700)">Product</p>
         <p class="text-xs text-slate-600">PRD drafts · roadmap analysis · user-research synthesis.</p>
       </a>
     </div>
 
-    <p class="text-sm text-slate-500 mt-6">+ 4 emerging 2026 sub-personas: CAIO, CXO, CRO, CSO-Sustainability. See <a href="modules/cuo.html#emerging" class="text-purple-700 font-semibold">CUO page →</a></p>
+    <p class="text-sm mt-6" style="color:var(--text-mute)">+ 4 emerging 2026 sub-personas: CAIO, CXO, CRO, CSO-Sustainability. See <a href="modules/cuo.html#emerging" class="font-semibold" style="color:var(--umber-700)">CUO page →</a></p>
   </div>
 </section>
 
@@ -490,31 +504,36 @@
     <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CyberOS plans for three jurisdictional concentric rings simultaneously. The inner ring (Vietnam) is the cornerstone — every CyberOS deployment respects it. The middle ring (cross-border) adds GDPR + Singapore PDPA when Singapore HoldCo flips at P3. The outer ring (international standards) lights up gate-by-gate.</p>
 
     <div class="bbg-card p-6">
+      <!-- Compliance rings — Umber/Ochre concentric.
+           Inner (Vietnam home) is Ochre (warmest, brand accent); Cross-border + Standards step out to Umber tints. -->
       <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" class="w-full max-w-2xl mx-auto h-auto" role="img" aria-label="CyberOS three-ring compliance scope">
         <defs>
-          <radialGradient id="ringGrad1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#93c5fd"/></radialGradient>
-          <radialGradient id="ringGrad2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#d1fae5"/><stop offset="100%" stop-color="#6ee7b7"/></radialGradient>
-          <radialGradient id="ringGrad3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fef3c7"/><stop offset="100%" stop-color="#fcd34d"/></radialGradient>
+          <radialGradient id="ringGrad1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fef6e0"/><stop offset="100%" stop-color="#f9c64f"/></radialGradient>
+          <radialGradient id="ringGrad2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f5ede6"/><stop offset="100%" stop-color="#cba88a"/></radialGradient>
+          <radialGradient id="ringGrad3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#faf8f6"/><stop offset="100%" stop-color="#c5bdb0"/></radialGradient>
         </defs>
-        <circle cx="300" cy="300" r="270" fill="url(#ringGrad3)" stroke="#b45309" stroke-width="2" opacity="0.45"/>
-        <text x="300" y="50" text-anchor="middle" font-size="14" font-weight="800" fill="#78350f">Standards · ISO + SOC + CSA</text>
-        <text x="300" y="68" text-anchor="middle" font-size="10" fill="#92400e">ISO 27001:2022 · ISO 42001 · ISO 27701 · SOC 2 · CSA STAR L1→L2</text>
-        <circle cx="300" cy="300" r="200" fill="url(#ringGrad2)" stroke="#047857" stroke-width="2" opacity="0.65"/>
-        <text x="300" y="125" text-anchor="middle" font-size="13" font-weight="800" fill="#064e3b">Cross-border</text>
-        <text x="300" y="142" text-anchor="middle" font-size="10" fill="#065f46">GDPR · EU AI Act Annex III §4 · Singapore PDPA</text>
-        <circle cx="300" cy="300" r="130" fill="url(#ringGrad1)" stroke="#1e40af" stroke-width="2.5" opacity="0.85"/>
-        <text x="300" y="270" text-anchor="middle" font-size="14" font-weight="800" fill="#1e3a8a">Vietnam — Home Regime</text>
-        <text x="300" y="290" text-anchor="middle" font-size="10" fill="#1e40af">PDPL Law 91/2025 · Decree 356</text>
-        <text x="300" y="306" text-anchor="middle" font-size="10" fill="#1e40af">Decree 13/2023 (Personal Data)</text>
-        <text x="300" y="322" text-anchor="middle" font-size="10" fill="#1e40af">Decree 53/2022 (Cyber Security)</text>
-        <text x="300" y="338" text-anchor="middle" font-size="10" fill="#1e40af">Decree 20/2026 (SME)</text>
-        <text x="60" y="555" font-size="9" fill="#78350f">⌖ P3 exit: ISO 42001 AIMS</text>
-        <text x="60" y="568" font-size="9" fill="#78350f">⌖ P2 exit: ISO 27001:2022</text>
-        <text x="60" y="581" font-size="9" fill="#78350f">⌖ P1 exit: SOC 2 Type I + CSA STAR L1</text>
-        <text x="430" y="555" font-size="9" fill="#065f46">⌖ P2 exit: EU AI Act Annex III §4</text>
-        <text x="430" y="568" font-size="9" fill="#065f46">⌖ P3+: Singapore PDPA (HoldCo flip)</text>
-        <text x="430" y="581" font-size="9" fill="#065f46">⌖ P3+: GDPR (EU tenant residency)</text>
-        <text x="240" y="568" font-size="9" fill="#1e3a8a">⌖ P0 exit: A05 DPIA + DPO + Trust Center</text>
+        <!-- Outer ring (Standards) — neutral/warm, dampest -->
+        <circle cx="300" cy="300" r="270" fill="url(#ringGrad3)" stroke="#7a5538" stroke-width="2" opacity="0.55"/>
+        <text x="300" y="50" text-anchor="middle" font-size="14" font-weight="800" fill="#45210e">Standards · ISO + SOC + CSA</text>
+        <text x="300" y="68" text-anchor="middle" font-size="10" fill="#2a1208">ISO 27001:2022 · ISO 42001 · ISO 27701 · SOC 2 · CSA STAR L1→L2</text>
+        <!-- Middle ring (Cross-border) — Umber tints -->
+        <circle cx="300" cy="300" r="200" fill="url(#ringGrad2)" stroke="#45210e" stroke-width="2" opacity="0.7"/>
+        <text x="300" y="125" text-anchor="middle" font-size="13" font-weight="800" fill="#45210e">Cross-border</text>
+        <text x="300" y="142" text-anchor="middle" font-size="10" fill="#2a1208">GDPR · EU AI Act Annex III §4 · Singapore PDPA</text>
+        <!-- Inner ring (Vietnam home) — Ochre (brand accent, hottest/closest) -->
+        <circle cx="300" cy="300" r="130" fill="url(#ringGrad1)" stroke="#9c750a" stroke-width="2.5" opacity="0.9"/>
+        <text x="300" y="270" text-anchor="middle" font-size="14" font-weight="800" fill="#45210e">Vietnam — Home Regime</text>
+        <text x="300" y="290" text-anchor="middle" font-size="10" fill="#2a1208">PDPL Law 91/2025 · Decree 356</text>
+        <text x="300" y="306" text-anchor="middle" font-size="10" fill="#2a1208">Decree 13/2023 (Personal Data)</text>
+        <text x="300" y="322" text-anchor="middle" font-size="10" fill="#2a1208">Decree 53/2022 (Cyber Security)</text>
+        <text x="300" y="338" text-anchor="middle" font-size="10" fill="#2a1208">Decree 20/2026 (SME)</text>
+        <text x="60" y="555" font-size="9" fill="#45210e">⌖ P3 exit: ISO 42001 AIMS</text>
+        <text x="60" y="568" font-size="9" fill="#45210e">⌖ P2 exit: ISO 27001:2022</text>
+        <text x="60" y="581" font-size="9" fill="#45210e">⌖ P1 exit: SOC 2 Type I + CSA STAR L1</text>
+        <text x="430" y="555" font-size="9" fill="#45210e">⌖ P2 exit: EU AI Act Annex III §4</text>
+        <text x="430" y="568" font-size="9" fill="#45210e">⌖ P3+: Singapore PDPA (HoldCo flip)</text>
+        <text x="430" y="581" font-size="9" fill="#45210e">⌖ P3+: GDPR (EU tenant residency)</text>
+        <text x="240" y="568" font-size="9" fill="#9c750a">⌖ P0 exit: A05 DPIA + DPO + Trust Center</text>
       </svg>
     </div>
 
@@ -532,7 +551,7 @@
 <section id="stack" class="bg-white border-t border-slate-200">
   <div class="container py-16">
     <div class="flex items-center gap-4 mb-2">
-      <span class="section-badge" style="background:#e0e7ff;color:#3730a3">Tech stack</span>
+      <span class="section-badge" style="background:var(--ochre-50);color:var(--umber-700)">Tech stack</span>
     </div>
     <h2 class="h-1 mb-3">The stack, top to bottom</h2>
     <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Every layer locked in PRD §8 + Part 14. The bias is toward open-source, self-hostable, audit-able primitives — never lock CyberOS to a vendor that could later compromise the company's Vietnamese data sovereignty.</p>
@@ -541,7 +560,7 @@
       <div class="mermaid">
 flowchart TB
   subgraph T1 ["Persona / Agent layer"]
-    PERSONA["LangGraph supervisor<br/>+ LiteLLM router<br/>+ Anthropic Skills format (10 C-level skills)"]
+    PERSONA["LangGraph supervisor<br>+ LiteLLM router<br>+ Anthropic Skills format (10 C-level skills)"]
   end
   subgraph T2 ["Frontend layer"]
     HOST["Host shell · Vite + React 19 + Tauri"]
@@ -565,12 +584,13 @@ flowchart TB
   end
   T1 --> T2 --> T3 --> T4 --> T5
   T4 --> T6
-  classDef agent fill:#f3e8ff,stroke:#7e22ce,stroke-width:2px
-  classDef fe fill:#dbeafe,stroke:#1e40af
-  classDef gw fill:#fef3c7,stroke:#b45309,stroke-width:2px
-  classDef be fill:#d1fae5,stroke:#047857
-  classDef data fill:#e0e7ff,stroke:#3730a3
-  classDef infra fill:#fce7f3,stroke:#9d174d
+  %% Brand-aligned palette per design-system DESIGN.md Part 21 — Umber + Ochre only.
+  classDef agent fill:#f9c64f,stroke:#45210e,stroke-width:2px,color:#45210e
+  classDef fe    fill:#f5ede6,stroke:#45210e,stroke-width:1.5px,color:#2a1208
+  classDef gw    fill:#fef6e0,stroke:#9c750a,stroke-width:2px,color:#45210e
+  classDef be    fill:#e8d4c2,stroke:#45210e,stroke-width:1.5px,color:#2a1208
+  classDef data  fill:#cba88a,stroke:#2a1208,stroke-width:1.5px,color:#110703
+  classDef infra fill:#fde7b3,stroke:#9c750a,stroke-width:1.5px,color:#45210e
   class PERSONA agent
   class HOST,REMOTES fe
   class APOLLO,MCPGW,AIGW gw
@@ -598,85 +618,85 @@ flowchart TB
     <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Four entry points into the rest of the documentation site. Each module page mirrors the same 5W1H structure used on the BRAIN / Skill / CUO pages — the architecture pages cross-cut by concern; the reference pages flatten everything into one searchable list.</p>
 
     <div class="grid md:grid-cols-2 gap-5">
-      <!-- Module pages -->
-      <div class="bbg-card tint-memory p-6">
+      <!-- Module pages — Umber border accent -->
+      <div class="bbg-card p-6" style="border-top:3px solid var(--umber-500)">
         <div class="flex items-center justify-between mb-3">
           <div class="text-3xl">📦</div>
-          <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-bold">22 pages</span>
+          <span class="text-xs px-2 py-1 rounded-full font-bold" style="background:var(--umber-50);color:var(--umber-700)">22 pages</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Module pages</h3>
-        <p class="text-sm text-slate-600 leading-relaxed mb-4">One dedicated page per module with full 5W1H, dependencies, tech stack, status, FR/NFR mapping, sequence diagrams. Three shipped (BRAIN, Skill, CUO) have the deepest treatment.</p>
+        <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Module pages</h3>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">One dedicated page per module with full 5W1H, dependencies, tech stack, status, FR/NFR mapping, sequence diagrams. Three shipped (BRAIN, Skill, CUO) have the deepest treatment.</p>
         <div class="grid grid-cols-3 gap-1.5 mt-4 text-[11px]">
-          <a href="modules/brain.html"  class="px-2 py-1 bg-blue-50 text-blue-700 rounded font-mono font-bold hover:bg-blue-100">BRAIN</a>
-          <a href="modules/cuo.html"    class="px-2 py-1 bg-purple-50 text-purple-700 rounded font-mono font-bold hover:bg-purple-100">CUO</a>
-          <a href="modules/skill.html"  class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">SKILL</a>
-          <a href="modules/auth.html"   class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">AUTH</a>
-          <a href="modules/ai.html"     class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">AI</a>
-          <a href="modules/mcp.html"    class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">MCP</a>
-          <a href="modules/obs.html"    class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">OBS</a>
-          <a href="modules/chat.html"   class="px-2 py-1 bg-blue-50 text-blue-700 rounded font-mono font-bold hover:bg-blue-100">CHAT</a>
-          <a href="modules/email.html"  class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">EMAIL</a>
-          <a href="modules/proj.html"   class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">PROJ</a>
-          <a href="modules/time.html"   class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">TIME</a>
-          <a href="modules/crm.html"    class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">CRM</a>
-          <a href="modules/kb.html"     class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">KB</a>
-          <a href="modules/hr.html"     class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">HR</a>
-          <a href="modules/rew.html"    class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">REW</a>
-          <a href="modules/learn.html"  class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded font-mono font-bold hover:bg-emerald-100">LEARN</a>
-          <a href="modules/inv.html"    class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">INV</a>
-          <a href="modules/esop.html"   class="px-2 py-1 bg-amber-50 text-amber-700 rounded font-mono font-bold hover:bg-amber-100">ESOP</a>
-          <a href="modules/res.html"    class="px-2 py-1 bg-purple-50 text-purple-700 rounded font-mono font-bold hover:bg-purple-100">RES</a>
-          <a href="modules/okr.html"    class="px-2 py-1 bg-purple-50 text-purple-700 rounded font-mono font-bold hover:bg-purple-100">OKR</a>
-          <a href="modules/doc.html"    class="px-2 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold hover:bg-slate-200">DOC</a>
-          <a href="modules/portal.html" class="px-2 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold hover:bg-slate-200">PORTAL</a>
-          <a href="modules/ten.html"    class="px-2 py-1 bg-slate-100 text-slate-700 rounded font-mono font-bold hover:bg-slate-200">TEN</a>
+          <a href="modules/brain.html"  class="ds-modpill">BRAIN</a>
+          <a href="modules/cuo.html"    class="ds-modpill">CUO</a>
+          <a href="modules/skill.html"  class="ds-modpill">SKILL</a>
+          <a href="modules/auth.html"   class="ds-modpill">AUTH</a>
+          <a href="modules/ai.html"     class="ds-modpill">AI</a>
+          <a href="modules/mcp.html"    class="ds-modpill">MCP</a>
+          <a href="modules/obs.html"    class="ds-modpill">OBS</a>
+          <a href="modules/chat.html"   class="ds-modpill">CHAT</a>
+          <a href="modules/email.html"  class="ds-modpill">EMAIL</a>
+          <a href="modules/proj.html"   class="ds-modpill">PROJ</a>
+          <a href="modules/time.html"   class="ds-modpill">TIME</a>
+          <a href="modules/crm.html"    class="ds-modpill">CRM</a>
+          <a href="modules/kb.html"     class="ds-modpill">KB</a>
+          <a href="modules/hr.html"     class="ds-modpill">HR</a>
+          <a href="modules/rew.html"    class="ds-modpill">REW</a>
+          <a href="modules/learn.html"  class="ds-modpill">LEARN</a>
+          <a href="modules/inv.html"    class="ds-modpill">INV</a>
+          <a href="modules/esop.html"   class="ds-modpill">ESOP</a>
+          <a href="modules/res.html"    class="ds-modpill">RES</a>
+          <a href="modules/okr.html"    class="ds-modpill">OKR</a>
+          <a href="modules/doc.html"    class="ds-modpill ds-modpill--future">DOC</a>
+          <a href="modules/portal.html" class="ds-modpill ds-modpill--future">PORTAL</a>
+          <a href="modules/ten.html"    class="ds-modpill ds-modpill--future">TEN</a>
         </div>
       </div>
 
-      <!-- Architecture -->
-      <div class="bbg-card tint-infra p-6">
+      <!-- Architecture — Ochre border accent -->
+      <div class="bbg-card p-6" style="border-top:3px solid var(--ochre-500)">
         <div class="flex items-center justify-between mb-3">
           <div class="text-3xl">🏗</div>
-          <span class="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full font-bold">4 pages</span>
+          <span class="text-xs px-2 py-1 rounded-full font-bold" style="background:var(--ochre-50);color:var(--umber-700)">4 pages</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Architecture</h3>
-        <p class="text-sm text-slate-600 leading-relaxed mb-4">Cross-cutting concerns. Infrastructure plane (6 P0 pillars). Compliance plan (3 rings · phase gates). Tech stack (layer-by-layer rationale). Milestones (24-month timeline with exit gates).</p>
+        <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Architecture</h3>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">Cross-cutting concerns. Infrastructure plane (6 P0 pillars). Compliance plan (3 rings · phase gates). Tech stack (layer-by-layer rationale). Milestones (24-month timeline with exit gates).</p>
         <ul class="text-sm space-y-1.5">
-          <li><a href="architecture/infrastructure.html" class="text-amber-700 font-semibold hover:underline">Infrastructure → AUTH · AI · MCP · OBS · GraphQL · NATS</a></li>
-          <li><a href="architecture/compliance.html"     class="text-amber-700 font-semibold hover:underline">Compliance → Vietnam · cross-border · standards</a></li>
-          <li><a href="architecture/tech-stack.html"     class="text-amber-700 font-semibold hover:underline">Tech stack → 8 layers · 16 choices</a></li>
-          <li><a href="architecture/milestones.html"     class="text-amber-700 font-semibold hover:underline">Milestones → 12-month arc · phase gates</a></li>
+          <li><a href="architecture/infrastructure.html" class="font-semibold hover:underline" style="color:var(--umber-700)">Infrastructure → AUTH · AI · MCP · OBS · GraphQL · NATS</a></li>
+          <li><a href="architecture/compliance.html"     class="font-semibold hover:underline" style="color:var(--umber-700)">Compliance → Vietnam · cross-border · standards</a></li>
+          <li><a href="architecture/tech-stack.html"     class="font-semibold hover:underline" style="color:var(--umber-700)">Tech stack → 8 layers · 16 choices</a></li>
+          <li><a href="architecture/milestones.html"     class="font-semibold hover:underline" style="color:var(--umber-700)">Milestones → 12-month arc · phase gates</a></li>
         </ul>
       </div>
 
-      <!-- Reference -->
-      <div class="bbg-card tint-cuo p-6">
+      <!-- Reference — Umber border accent -->
+      <div class="bbg-card p-6" style="border-top:3px solid var(--umber-500)">
         <div class="flex items-center justify-between mb-3">
           <div class="text-3xl">📖</div>
-          <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-bold">4 pages</span>
+          <span class="text-xs px-2 py-1 rounded-full font-bold" style="background:var(--umber-50);color:var(--umber-700)">4 pages</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Reference</h3>
-        <p class="text-sm text-slate-600 leading-relaxed mb-4">Flattened catalogs for search and traceability. FR Catalog (every functional requirement). NFR Catalog (latency · throughput · availability budgets). Glossary (every term · acronym · invariant). Risk Register (every risk · likelihood · owner).</p>
+        <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Reference</h3>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">Flattened catalogs for search and traceability. FR Catalog (every functional requirement). NFR Catalog (latency · throughput · availability budgets). Glossary (every term · acronym · invariant). Risk Register (every risk · likelihood · owner).</p>
         <ul class="text-sm space-y-1.5">
-          <li><a href="reference/fr-catalog.html"    class="text-purple-700 font-semibold hover:underline">FR Catalog → functional requirements (FR-NNN)</a></li>
-          <li><a href="reference/nfr-catalog.html"   class="text-purple-700 font-semibold hover:underline">NFR Catalog → non-functional budgets</a></li>
-          <li><a href="reference/glossary.html"      class="text-purple-700 font-semibold hover:underline">Glossary → BCP-14 terms · acronyms</a></li>
-          <li><a href="reference/risk-register.html" class="text-purple-700 font-semibold hover:underline">Risk Register → likelihood · impact · owner</a></li>
+          <li><a href="reference/fr-catalog.html"    class="font-semibold hover:underline" style="color:var(--umber-700)">FR Catalog → functional requirements ((FR pending))</a></li>
+          <li><a href="reference/nfr-catalog.html"   class="font-semibold hover:underline" style="color:var(--umber-700)">NFR Catalog → non-functional budgets</a></li>
+          <li><a href="reference/glossary.html"      class="font-semibold hover:underline" style="color:var(--umber-700)">Glossary → BCP-14 terms · acronyms</a></li>
+          <li><a href="reference/risk-register.html" class="font-semibold hover:underline" style="color:var(--umber-700)">Risk Register → likelihood · impact · owner</a></li>
         </ul>
       </div>
 
-      <!-- Source -->
-      <div class="bbg-card tint-skill p-6">
+      <!-- Source — Ochre border accent -->
+      <div class="bbg-card p-6" style="border-top:3px solid var(--ochre-500)">
         <div class="flex items-center justify-between mb-3">
           <div class="text-3xl">⚙️</div>
-          <span class="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">GitHub</span>
+          <span class="text-xs px-2 py-1 rounded-full font-bold" style="background:var(--ochre-50);color:var(--umber-700)">GitHub</span>
         </div>
-        <h3 class="text-xl font-bold text-slate-900 mb-1.5">Source &amp; tooling</h3>
-        <p class="text-sm text-slate-600 leading-relaxed mb-4">CyberOS is built in the open. Memory module (Python · BCP-14 normative spec), Skill module (Rust host · Bun toolchain · MCP-compliant), CUO module (LangGraph + LiteLLM). Schema-validated; CHANGELOG newest-first.</p>
+        <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Source &amp; tooling</h3>
+        <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">CyberOS is built in the open. Memory module (Python · BCP-14 normative spec), Skill module (Rust host · Bun toolchain · MCP-compliant), CUO module (LangGraph + LiteLLM). Schema-validated; CHANGELOG newest-first.</p>
         <ul class="text-sm space-y-1.5">
-          <li><a href="https://github.com/cyberskill/cyberos" class="text-emerald-700 font-semibold hover:underline">github.com/cyberskill/cyberos</a> <span class="text-slate-400">(placeholder)</span></li>
-          <li><a href="https://cyberskill.io" class="text-emerald-700 font-semibold hover:underline">cyberskill.io</a> <span class="text-slate-400">(public landing)</span></li>
-          <li><a href="modules/brain.html#interop" class="text-emerald-700 font-semibold hover:underline">BRAIN interop subset (INTEROP.md)</a></li>
+          <li><a href="https://github.com/cyberskill/cyberos" class="font-semibold hover:underline" style="color:var(--umber-700)">github.com/cyberskill/cyberos</a> <span style="color:var(--text-mute)">(placeholder)</span></li>
+          <li><a href="https://cyberskill.io" class="font-semibold hover:underline" style="color:var(--umber-700)">cyberskill.io</a> <span style="color:var(--text-mute)">(public landing)</span></li>
+          <li><a href="modules/brain.html#interop" class="font-semibold hover:underline" style="color:var(--umber-700)">BRAIN interop subset (INTEROP.md)</a></li>
         </ul>
       </div>
     </div>

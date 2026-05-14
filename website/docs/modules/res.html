@@ -8,7 +8,7 @@
   <meta name="description" content="RES — Resource planning. Per-Member capacity vs forecast, allocation Gantt, hiring forecast, skills-gap analysis. Pulls from HR / PROJ / TIME / LEARN; emits CUO/COO-skill reallocation recommendations. Vietnamese labour-law overtime caps enforced.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -150,8 +150,8 @@
       <div class="fact-card"><div class="label">Data sources</div><div class="value">4 modules</div><div class="note">HR · PROJ · TIME · LEARN</div></div>
       <div class="fact-card"><div class="label">Default capacity</div><div class="value">40h / week</div><div class="note">configurable per Member</div></div>
       <div class="fact-card"><div class="label">OT cap (VN)</div><div class="value">200h / year</div><div class="note">300h with MoLISA registration</div></div>
-      <div class="fact-card"><div class="label">Over-alloc flag</div><div class="value">&gt; 110%</div><div class="note">FR-RES-004</div></div>
-      <div class="fact-card"><div class="label">Under-alloc flag</div><div class="value">&lt; 60%</div><div class="note">FR-RES-004</div></div>
+      <div class="fact-card"><div class="label">Over-alloc flag</div><div class="value">&gt; 110%</div><div class="note">(FR pending)</div></div>
+      <div class="fact-card"><div class="label">Under-alloc flag</div><div class="value">&lt; 60%</div><div class="note">(FR pending)</div></div>
       <div class="fact-card"><div class="label">Depends on</div><div class="value">HR · PROJ · TIME · LEARN</div><div class="note">+ AUTH · BRAIN · OKR (P3) · OBS</div></div>
       <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~8,500</div><div class="note">Rust + TS Gantt SPA</div></div>
     </div>
@@ -210,7 +210,7 @@
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Event-driven matrix refresh (PROJ + TIME + HR + LEARN emit NATS events; RES subscribes). Materialised view rebuilds incrementally. Hiring forecast: simple convex optimisation (LP via Gurobi or HiGHS) — minimise hiring cost subject to forecast coverage. Skills gap: bipartite matching scored by mastery × demand.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P3). Read replica for the materialised-view-heavy read path. DuckDB embedded for the dashboards.</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.25 FTE at P3; data-platform engineer for the matrix-refresh pipeline. COO seat owns product direction.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-RES-LAT-001 (Gantt drag-drop p95 ≤ 200 ms), NFR-RES-FRESH-001 (matrix freshness ≤ 5 s after upstream event), NFR-RES-OT-001 (zero plans accepted that breach Art. 107). KPIs: allocation utilisation, hiring-forecast accuracy, skills-gap remediation time.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (Gantt drag-drop p95 ≤ 200 ms), N(FR pending) (matrix freshness ≤ 5 s after upstream event), N(FR pending) (zero plans accepted that breach Art. 107). KPIs: allocation utilisation, hiring-forecast accuracy, skills-gap remediation time.</td></tr>
       </tbody>
     </table>
   </div>
@@ -229,41 +229,41 @@
     <div class="mermaid">
 graph TB
   subgraph UPSTREAM ["Upstream data sources"]
-    HR["👥 HR<br/>member · contract · PTO · sabbatical"]
-    PROJ["📋 PROJ<br/>project · issue · estimated_hours"]
-    TIME["⏱ TIME<br/>actual hours logged"]
-    LEARN["📚 LEARN<br/>skill · mastery_level"]
-    CRM["🏢 CRM<br/>pipeline · win_probability"]
+    HR["👥 HR<br>member · contract · PTO · sabbatical"]
+    PROJ["📋 PROJ<br>project · issue · estimated_hours"]
+    TIME["⏱ TIME<br>actual hours logged"]
+    LEARN["📚 LEARN<br>skill · mastery_level"]
+    CRM["🏢 CRM<br>pipeline · win_probability"]
   end
 
   subgraph RES ["RES service (Rust · axum)"]
-    INGEST["event_ingest.rs<br/>NATS subscriber"]
-    MATRIX["matrix.rs<br/>allocation matrix builder"]
-    FORECAST["forecast.rs<br/>demand projection"]
-    HIRING["hiring_forecast.rs<br/>LP-solver wrapper"]
-    GAP["skills_gap.rs<br/>bipartite matching"]
-    OT["overtime_guard.rs<br/>VN Art. 107 enforcer"]
-    GQL["gql_subgraph.rs<br/>federated read API"]
-    AGENT["agent_bridge.rs<br/>COO/CHRO-skill RPC"]
+    INGEST["event_ingest.rs<br>NATS subscriber"]
+    MATRIX["matrix.rs<br>allocation matrix builder"]
+    FORECAST["forecast.rs<br>demand projection"]
+    HIRING["hiring_forecast.rs<br>LP-solver wrapper"]
+    GAP["skills_gap.rs<br>bipartite matching"]
+    OT["overtime_guard.rs<br>VN Art. 107 enforcer"]
+    GQL["gql_subgraph.rs<br>federated read API"]
+    AGENT["agent_bridge.rs<br>COO/CHRO-skill RPC"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL 16<br/>res.allocation · res.forecast<br/>materialised views<br/>RLS by tenant_id")]
-    DUCK[("DuckDB embedded<br/>ad-hoc analytics")]
-    NATS[("NATS JetStream<br/>upstream events")]
+    PG[("PostgreSQL 16<br>res.allocation · res.forecast<br>materialised views<br>RLS by tenant_id")]
+    DUCK[("DuckDB embedded<br>ad-hoc analytics")]
+    NATS[("NATS JetStream<br>upstream events")]
   end
 
   subgraph CONSUMERS ["Consumers"]
-    SPA["Gantt SPA<br/>(React + visx + Yjs)"]
-    COO_SK["🤖 COO-skill<br/>allocation recommendations"]
-    CHRO_SK["🤖 CHRO-skill<br/>over-allocation Notify"]
-    OKR_M["🎯 OKR<br/>hiring objective progress"]
+    SPA["Gantt SPA<br>(React + visx + Yjs)"]
+    COO_SK["🤖 COO-skill<br>allocation recommendations"]
+    CHRO_SK["🤖 CHRO-skill<br>over-allocation Notify"]
+    OKR_M["🎯 OKR<br>hiring objective progress"]
     DASH["📊 OBS dashboard"]
   end
 
   subgraph SINKS ["Audit"]
-    BRAIN["🧠 BRAIN<br/>allocation.* rows"]
-    OBS["👁 OBS<br/>traces + metrics"]
+    BRAIN["🧠 BRAIN<br>allocation.* rows"]
+    OBS["👁 OBS<br>traces + metrics"]
   end
 
   HR --> NATS
@@ -292,7 +292,7 @@ graph TB
 
   classDef planned fill:#cffafe,stroke:#155e75
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class INGEST,MATRIX,FORECAST,HIRING,GAP,OT,GQL,AGENT,SPA,COO_SK,CHRO_SK,OKR_M,DASH planned
   class PG,DUCK,NATS store
   class BRAIN,OBS sink
@@ -311,7 +311,7 @@ graph TB
         <tr><td><code>skills_gap.rs</code></td><td>services/res/src/skills_gap.rs</td><td>Bipartite-matching: demand-side (PROJ skills × hours) vs supply-side (LEARN mastery × Member capacity). Output: gap heatmap by skill × week.</td></tr>
         <tr><td><code>overtime_guard.rs</code></td><td>services/res/src/overtime_guard.rs</td><td>Hard predicate on every allocation write. Rejects writes that would push a Member past Labor Code 2019 Art. 107 OT cap. Reads HR Member.country to apply correct cap.</td></tr>
         <tr><td><code>gantt_ws.rs</code></td><td>services/res/src/gantt_ws.rs</td><td>WebSocket fan-out for collaborative Gantt drag-drop. Yjs Y-doc per (project, quarter).</td></tr>
-        <tr><td><code>conflict.rs</code></td><td>services/res/src/conflict.rs</td><td>Detect over-allocation (&gt; 110% per FR-RES-004) and under-allocation (&lt; 60% sustained &gt; 2 weeks). Emits ConflictRecord rows.</td></tr>
+        <tr><td><code>conflict.rs</code></td><td>services/res/src/conflict.rs</td><td>Detect over-allocation (&gt; 110% per (FR pending)) and under-allocation (&lt; 60% sustained &gt; 2 weeks). Emits ConflictRecord rows.</td></tr>
         <tr><td><code>gql_subgraph.rs</code></td><td>services/res/src/gql_subgraph.rs</td><td>Apollo federation subgraph. Types: Allocation, Capacity, ForecastedNeed, SkillGap, HiringPlan, ConflictRecord.</td></tr>
         <tr><td><code>agent_bridge.rs</code></td><td>services/res/src/agent_bridge.rs</td><td>RPC surface for COO-skill / CHRO-skill — returns ranked recommendations with deterministic ordering for replay.</td></tr>
         <tr><td><code>audit_bridge.rs</code></td><td>services/res/src/audit_bridge.rs</td><td>Write every allocation / conflict / reallocation event to BRAIN canonical writer.</td></tr>
@@ -848,32 +848,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">RES FRs from PRD §9.18 plus implementation-tier derivations for the matrix, conflict-detection, and hiring-forecast surfaces.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-RES-001</code></td><td>Per-Member weekly capacity (default 40h, configurable, sabbatical-aware)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-002</code></td><td>Per-engagement forecast: weeks × hours; per-skill breakdown</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-003</code></td><td>Allocation view: capacity vs forecast vs actual</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-004</code></td><td>CUO/COO-skill flags over-allocation &gt; 110%, under-allocation &lt; 60%</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-005</code></td><td>Mobile-friendly capacity view (P3+)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-006</code></td><td>Vietnamese Labor Code Art. 107 OT cap enforced as predicate (block, not warn)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-007</code></td><td>Skills-gap analysis: bipartite matching of demand vs supply per skill family</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-008</code></td><td>Hiring forecast: LP-solver generates dated hire requisitions</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-009</code></td><td>Reallocation suggestions are advisory; human approval mandatory before write</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-010</code></td><td>Collaborative Gantt drag-drop via Yjs CRDT (multi-user offline-edit merge)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-011</code></td><td>OKR integration: hiring-plan progress feeds quarterly hiring objective</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-012</code></td><td>Per-Member allocation timeline visible to that Member (privacy: cannot see peers')</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-013</code></td><td>Audit-chain: every allocation write / reject / reallocation lands in BRAIN</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-014</code></td><td>Bulk CSV import for legacy migration; idempotent re-import via deterministic key</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-RES-015</code></td><td>Per-tenant data residency; VN tenants on hanoi-1 partition</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-RES-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -887,17 +868,17 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-RES-LAT-001</code></td><td>Gantt drag-drop optimistic-write p95</td><td>≤ 200 ms</td><td>k6 load + browser instrumentation</td></tr>
-        <tr><td><code>NFR-RES-LAT-002</code></td><td>upsertAllocation server-canonical p95</td><td>≤ 400 ms</td><td>k6 + Apollo Router latency histogram</td></tr>
-        <tr><td><code>NFR-RES-LAT-003</code></td><td>allocationMatrix query p95 (4-week × 50 members)</td><td>≤ 250 ms</td><td>k6</td></tr>
-        <tr><td><code>NFR-RES-FRESH-001</code></td><td>Materialised-view freshness after upstream event</td><td>≤ 5 s p99</td><td>NATS event → matrix-row diff probe</td></tr>
-        <tr><td><code>NFR-RES-OT-001</code></td><td>Allocation plans accepted that breach Art. 107 cap</td><td>= 0</td><td>property-based test + chaos replay</td></tr>
-        <tr><td><code>NFR-RES-ACC-001</code></td><td>Hiring-forecast accuracy (drift between forecast and actual hire date)</td><td>≤ 14 d MAE</td><td>monthly backtest</td></tr>
-        <tr><td><code>NFR-RES-AVL-001</code></td><td>RES availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-RES-USAB-001</code></td><td>Time to first Gantt-paint, 26 weeks × 50 members</td><td>≤ 1.5 s p95</td><td>Lighthouse + RUM</td></tr>
-        <tr><td><code>NFR-RES-USAB-002</code></td><td>Yjs CRDT merge correctness under offline-edit conflict</td><td>= 0 lost updates / 10k</td><td>fuzz test in CI</td></tr>
-        <tr><td><code>NFR-RES-SEC-001</code></td><td>Cross-tenant matrix read</td><td>= 0 leaks</td><td>RLS verification harness</td></tr>
-        <tr><td><code>NFR-RES-COST-001</code></td><td>Per-tenant infra cost at 50 Members</td><td>≤ $10 / mo</td><td>monthly billing review</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Gantt drag-drop optimistic-write p95</td><td>≤ 200 ms</td><td>k6 load + browser instrumentation</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>upsertAllocation server-canonical p95</td><td>≤ 400 ms</td><td>k6 + Apollo Router latency histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>allocationMatrix query p95 (4-week × 50 members)</td><td>≤ 250 ms</td><td>k6</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Materialised-view freshness after upstream event</td><td>≤ 5 s p99</td><td>NATS event → matrix-row diff probe</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Allocation plans accepted that breach Art. 107 cap</td><td>= 0</td><td>property-based test + chaos replay</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Hiring-forecast accuracy (drift between forecast and actual hire date)</td><td>≤ 14 d MAE</td><td>monthly backtest</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>RES availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Time to first Gantt-paint, 26 weeks × 50 members</td><td>≤ 1.5 s p95</td><td>Lighthouse + RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Yjs CRDT merge correctness under offline-edit conflict</td><td>= 0 lost updates / 10k</td><td>fuzz test in CI</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cross-tenant matrix read</td><td>= 0 leaks</td><td>RLS verification harness</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Per-tenant infra cost at 50 Members</td><td>≤ $10 / mo</td><td>monthly billing review</td></tr>
       </tbody>
     </table>
   </div>
@@ -915,19 +896,19 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["RES depends on"]
-    AUTH["🔐 AUTH<br/>RBAC + scope"]
-    BRAIN["🧠 BRAIN<br/>audit rows"]
-    OBS["👁 OBS<br/>traces + metrics"]
-    HR["👥 HR<br/>Member roster + contract"]
-    PROJ["📋 PROJ<br/>project + issue estimates"]
-    TIME["⏱ TIME<br/>actual hours"]
-    LEARN["📚 LEARN<br/>skill mastery"]
-    CRM["🏢 CRM<br/>pipeline + win prob"]
+    AUTH["🔐 AUTH<br>RBAC + scope"]
+    BRAIN["🧠 BRAIN<br>audit rows"]
+    OBS["👁 OBS<br>traces + metrics"]
+    HR["👥 HR<br>Member roster + contract"]
+    PROJ["📋 PROJ<br>project + issue estimates"]
+    TIME["⏱ TIME<br>actual hours"]
+    LEARN["📚 LEARN<br>skill mastery"]
+    CRM["🏢 CRM<br>pipeline + win prob"]
     NATS["📡 NATS JetStream"]
   end
   RES["📅 RES"]
   subgraph downstream ["Used by"]
-    OKR["🎯 OKR<br/>hiring objective"]
+    OKR["🎯 OKR<br>hiring objective"]
     COO["🤖 COO-skill"]
     CHRO["🤖 CHRO-skill"]
     PROJ_D["📋 PROJ staffing dash"]
@@ -951,7 +932,7 @@ graph LR
   RES --> DASH
 
   classDef planned fill:#cffafe,stroke:#155e75
-  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef shipped fill:#f5ede6,stroke:#45210e
   class AUTH,BRAIN,OBS,HR,PROJ,TIME,LEARN,CRM,NATS,RES,OKR,COO,CHRO,PROJ_D,CUO,DASH planned
     </div>
   </div>
@@ -971,7 +952,7 @@ graph LR
         <tr><td>Vietnam Labor Code 2019</td><td>Art. 105 — daily / weekly working hours</td><td>Capacity model defaults to 40h / week × 8h / day; allocations cannot exceed daily cap.</td></tr>
         <tr><td>Vietnam Labor Code 2019</td><td>Art. 111 — weekly rest</td><td>Capacity respects weekly rest day; allocations cannot land on rest days.</td></tr>
         <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Per-Member allocation timeline exportable via <code>cyberos-res dsar-export</code>.</td></tr>
-        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Employment-related AI</td><td>Hiring-forecast LP is a decision-support tool, not auto-act; FR-RES-009 mandates human-in-the-loop.</td></tr>
+        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Employment-related AI</td><td>Hiring-forecast LP is a decision-support tool, not auto-act; (FR pending) mandates human-in-the-loop.</td></tr>
         <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>COO-skill suggestions are Notify cards; mutation requires explicit COO action.</td></tr>
         <tr><td>EU AI Act</td><td>Art. 22 — No automated decision-making</td><td>Reallocation never auto-applied; explicit approval predicate.</td></tr>
         <tr><td>GDPR (EU 2016/679)</td><td>Art. 22 — Automated decision-making</td><td>Same as EU AI Act; explicit human approval before any allocation write.</td></tr>
@@ -999,7 +980,7 @@ graph LR
         <tr><td><code>R-RES-005</code></td><td>EU AI Act Annex III interpretation drift (hiring tool reclassified high-risk)</td><td>Medium</td><td>High</td><td>CLO</td><td>Conservative classification today (high-risk); annual legal review post-AI-Act enforcement-act publication.</td></tr>
         <tr><td><code>R-RES-006</code></td><td>Cross-tenant allocation leak via predicate-elision in GraphQL</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>RLS at Postgres + scope-required directive on every field; test gate on cross-tenant.</td></tr>
         <tr><td><code>R-RES-007</code></td><td>LP solver returns infeasible plan when demand &gt; supply over horizon</td><td>Medium</td><td>Low</td><td>CTO</td><td>Infeasibility detected and surfaced as Notify card "demand unbookable through 2026-Q4"; never silent.</td></tr>
-        <tr><td><code>R-RES-008</code></td><td>Member privacy: peer allocation visibility leak</td><td>Low</td><td>Medium</td><td>CSO</td><td>FR-RES-012 enforced — Member can only read own row; cross-Member read requires res.read_all scope.</td></tr>
+        <tr><td><code>R-RES-008</code></td><td>Member privacy: peer allocation visibility leak</td><td>Low</td><td>Medium</td><td>CSO</td><td>(FR pending) enforced — Member can only read own row; cross-Member read requires res.read_all scope.</td></tr>
         <tr><td><code>R-RES-009</code></td><td>Sabbatical / parental leave miscount inflates capacity</td><td>Medium</td><td>Medium</td><td>CHRO</td><td>HR sabbatical event drives capacity event; integration test on each HR schema change.</td></tr>
       </tbody>
     </table>

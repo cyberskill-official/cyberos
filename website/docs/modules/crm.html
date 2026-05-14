@@ -8,7 +8,7 @@
   <meta name="description" content="CRM — Client management. Account / Contact / Deal pipeline with Vietnamese-market specifics: MST validation, VietQR collection, hóa đơn generation. AI lead scoring, next-best-action, pipeline forecasting.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -203,7 +203,7 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Activity volume, ACL granularity (per-deal), and Vietnamese-skill integration are too specific to belong elsewhere. Folding into PROJ corrupts both data models.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Accounts are validated on write (MST → GDT registry). Contacts have a normalised phone (E.164) and email; merge candidates surface when two contacts share either. Deals carry stage, value, probability, expected close. Activities are append-only and feed from EMAIL / CHAT / Calendar with idempotency keys.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$60 / month single-tenant pilot (Fargate + RDS + Redis). 50-tenant: ~$240 / month. AI lead scoring runs nightly batch; ~$0.001 per deal per night.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Per-deal ACL — private deals not visible cross-workspace (FR-CRM-007). (b) Email-to-CRM auto-log only for tracked domains (FR-CRM-004) — never auto-attach a personal email. (c) Vietnamese-formatting helpers (Anh / Chị / Bạn) on every contact display. (d) Deals only ingested into BRAIN after closed / lost — never open pipeline data.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Per-deal ACL — private deals not visible cross-workspace ((FR pending)). (b) Email-to-CRM auto-log only for tracked domains ((FR pending)) — never auto-attach a personal email. (c) Vietnamese-formatting helpers (Anh / Chị / Bạn) on every contact display. (d) Deals only ingested into BRAIN after closed / lost — never open pipeline data.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · Redis 7 · React + Zustand · vn-mst-validate skill · vn-bank-transfer skill · vn-vat-invoice skill · libphonenumber · OpenTelemetry SDK.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Three-primitive Account / Contact / Deal (no Lead as separate primitive — Leads are Contacts with no Deal). Configurable pipeline stages (not free-form). Phone normalisation to E.164 (libphonenumber). Per-deal ACL. Idempotent activity feed (idempotency key = source event id).</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. NATS for pipeline-event fan-out. Skill invocations via the Skill module's WASM host.</td></tr>
@@ -234,7 +234,7 @@ graph TB
   subgraph EDGE ["Edge"]
     GQL["GraphQL subgraph"]
     REST["REST admin"]
-    WS["WebSocket<br/>pipeline drag-drop"]
+    WS["WebSocket<br>pipeline drag-drop"]
     MCP["MCP tools"]
   end
 
@@ -242,37 +242,37 @@ graph TB
     ACC["Account handler"]
     CON["Contact handler"]
     DEAL["Deal handler"]
-    PIPE["Pipeline engine<br/>(stages + rules)"]
-    ACT["Activity feed<br/>auto-log"]
+    PIPE["Pipeline engine<br>(stages + rules)"]
+    ACT["Activity feed<br>auto-log"]
     AI_SCORE["AI lead scoring"]
     AI_NBA["Next-best-action"]
     AI_FORECAST["Forecast"]
     MERGE["Merge candidate detector"]
-    BRAIN_ING["BRAIN ingestor<br/>(closed deals)"]
+    BRAIN_ING["BRAIN ingestor<br>(closed deals)"]
   end
 
   subgraph SKILLS ["VN-market skills"]
     MST["vn-mst-validate"]
-    VQR["vn-bank-transfer<br/>(VietQR)"]
-    HD["vn-vat-invoice<br/>(hóa đơn)"]
+    VQR["vn-bank-transfer<br>(VietQR)"]
+    HD["vn-vat-invoice<br>(hóa đơn)"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br/>RLS by tenant_id<br/>per-deal ACL")]
-    RED[("Redis 7<br/>WS rooms · search cache")]
-    NATS[("NATS JetStream<br/>pipeline events")]
+    PG[("PostgreSQL<br>RLS by tenant_id<br>per-deal ACL")]
+    RED[("Redis 7<br>WS rooms · search cache")]
+    NATS[("NATS JetStream<br>pipeline events")]
   end
 
   subgraph SOURCES ["Activity sources"]
-    EMAIL["✉️ EMAIL<br/>tracked domains"]
-    CHAT["💬 CHAT<br/>meeting notes"]
-    CAL["📅 Calendar<br/>attendance"]
+    EMAIL["✉️ EMAIL<br>tracked domains"]
+    CHAT["💬 CHAT<br>meeting notes"]
+    CAL["📅 Calendar<br>attendance"]
   end
 
   subgraph SINKS ["Sinks"]
-    BRAIN["🧠 BRAIN<br/>closed deals only"]
-    PROJ["📋 PROJ<br/>deal close → Engagement"]
-    INV["🧾 INV<br/>hóa đơn invoice"]
+    BRAIN["🧠 BRAIN<br>closed deals only"]
+    PROJ["📋 PROJ<br>deal close → Engagement"]
+    INV["🧾 INV<br>hóa đơn invoice"]
     OBS["👁 OBS"]
   end
 
@@ -316,9 +316,9 @@ graph TB
   DEAL --> OBS
 
   classDef planned fill:#ffe4e6,stroke:#9f1239
-  classDef skill fill:#fef3c7,stroke:#b45309
+  classDef skill fill:#fef6e0,stroke:#9c750a
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class SPA,AGENT,GQL,REST,WS,MCP,ACC,CON,DEAL,PIPE,ACT,AI_SCORE,AI_NBA,AI_FORECAST,MERGE,BRAIN_ING planned
   class MST,VQR,HD skill
   class PG,RED,NATS store
@@ -336,15 +336,15 @@ graph TB
         <tr><td><code>deal.rs</code></td><td>services/crm/src/deal.rs</td><td>Deal CRUD. Stage transitions with workflow rules. Value / probability / expected-close. Per-deal ACL.</td></tr>
         <tr><td><code>pipeline.rs</code></td><td>services/crm/src/pipeline.rs</td><td>Pipeline definition + stage transition rules. Workspace-configurable. WebSocket fan-out on drag-drop.</td></tr>
         <tr><td><code>activity_feed.rs</code></td><td>services/crm/src/activity_feed.rs</td><td>Auto-log from EMAIL / CHAT / Calendar. Idempotency by source event id.</td></tr>
-        <tr><td><code>email_logger.rs</code></td><td>services/crm/src/email_logger.rs</td><td>Listens to EMAIL events; auto-logs inbound / outbound for tracked-domain mailboxes (FR-CRM-004).</td></tr>
+        <tr><td><code>email_logger.rs</code></td><td>services/crm/src/email_logger.rs</td><td>Listens to EMAIL events; auto-logs inbound / outbound for tracked-domain mailboxes ((FR pending)).</td></tr>
         <tr><td><code>ai_lead_scoring.rs</code></td><td>services/crm/src/ai_lead_scoring.rs</td><td>Nightly batch lead scoring. Features: activity recency, engagement size, account vertical, historical win-rate.</td></tr>
         <tr><td><code>ai_nba.rs</code></td><td>services/crm/src/ai_nba.rs</td><td>Next-best-action generator. For each open deal, produces a concrete suggestion ("send proposal", "schedule check-in", "request VietQR collection").</td></tr>
         <tr><td><code>ai_forecast.rs</code></td><td>services/crm/src/ai_forecast.rs</td><td>Confidence-banded forecast (CUO/CRO-skill). Per-pipeline VND total + USD total with 50% / 80% / 95% bands.</td></tr>
-        <tr><td><code>merge_detector.rs</code></td><td>services/crm/src/merge_detector.rs</td><td>Detects ≥ 2 contacts sharing email or normalised phone; surfaces as a Notify (FR-CRM-005 SRS).</td></tr>
+        <tr><td><code>merge_detector.rs</code></td><td>services/crm/src/merge_detector.rs</td><td>Detects ≥ 2 contacts sharing email or normalised phone; surfaces as a Notify ((FR pending) SRS).</td></tr>
         <tr><td><code>vn_mst.rs</code></td><td>services/crm/src/vn_mst.rs</td><td>Adapter to <code>vn-mst-validate</code> skill. Caches results 7 days.</td></tr>
         <tr><td><code>vn_vietqr.rs</code></td><td>services/crm/src/vn_vietqr.rs</td><td>Adapter to <code>vn-bank-transfer</code> skill. Generates Napas247 QR on demand.</td></tr>
         <tr><td><code>vn_hoadon.rs</code></td><td>services/crm/src/vn_hoadon.rs</td><td>Adapter to <code>vn-vat-invoice</code> skill. Fires on deal close.</td></tr>
-        <tr><td><code>brain_ingest.rs</code></td><td>services/crm/src/brain_ingest.rs</td><td>Layer 3 ingestion of closed deals only (FR-CRM-006).</td></tr>
+        <tr><td><code>brain_ingest.rs</code></td><td>services/crm/src/brain_ingest.rs</td><td>Layer 3 ingestion of closed deals only ((FR pending)).</td></tr>
         <tr><td><code>acl.rs</code></td><td>services/crm/src/acl.rs</td><td>Per-deal ACL. Private deals not visible cross-workspace.</td></tr>
         <tr><td><code>vn_salutation.rs</code></td><td>services/crm/src/vn_salutation.rs</td><td>Vietnamese salutation helper. Anh / Chị / Bạn picker from gender + age signal.</td></tr>
         <tr><td><code>migrations/</code></td><td>services/crm/migrations/</td><td>sqlx migrations. RLS on every table.</td></tr>
@@ -740,7 +740,7 @@ sequenceDiagram
   API->>BR: crm.deal_closed {ingested into Layer 3 — closed deals only}
   API-->>U: 200 {deal, vietqr, invoice, engagement}
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-CRM-006: deals only ingested into BRAIN after closed / lost — open pipeline data never enters BRAIN.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): deals only ingested into BRAIN after closed / lost — open pipeline data never enters BRAIN.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 4 — Email auto-log to CRM (tracked domain)</h3>
@@ -760,7 +760,7 @@ sequenceDiagram
     ACT->>PG: INSERT activity {kind:"email", source_event_id=message_id} ON CONFLICT DO NOTHING
     ACT->>N: publish crm.activity.created
   else not tracked
-    ACT-->>EM: ignore (FR-CRM-004 boundary respected)
+    ACT-->>EM: ignore ((FR pending) boundary respected)
   end
     </div>
     <p class="text-xs text-slate-500 mt-3">Personal emails never auto-attach. Only tenant-configured tracked domains; the configuration is itself audited.</p>
@@ -836,32 +836,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">CRM FRs from PRD §9.11 (product) and §19.6 (SRS-tier). Full normative descriptions at <a href="../reference/fr-catalog.html#crm" class="text-blue-700 font-semibold underline">fr-catalog.html#crm</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-CRM-001</code></td><td>Account / Contact / Deal entities with custom fields per workspace</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-002</code></td><td>Configurable pipeline stages with transition rules</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-003</code></td><td>Activity log: emails, calls, meetings, notes; agent-loggable via MCP</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-004</code></td><td>Email-to-CRM auto-log for tracked-domain mailboxes (EMAIL integration)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-005</code></td><td>Deal forecasting via CUO/CRO-skill: confidence-banded</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-006</code></td><td>Activities ingested into BRAIN; deals only after closed / lost</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-007</code></td><td>Per-deal ACL; private deals not visible cross-workspace</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-008</code></td><td>Vietnamese-formatting helpers (Anh / Chị / Bạn salutation, address parsing)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-009</code></td><td>MST validation via vn-mst-validate skill on every Account write</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-010</code></td><td>VietQR generation on Deal for invoice collection</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-011</code></td><td>Hóa đơn emission on deal close via vn-vat-invoice</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-012</code></td><td>AI lead scoring (nightly batch) with tier and reasons</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-013</code></td><td>Next-best-action suggestion per open deal</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-014</code></td><td>Merge candidate detection (email or normalised phone match)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CRM-015</code></td><td>Deal close auto-creates a PROJ Engagement</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-CRM-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -875,18 +856,18 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-CRM-PERF-001</code></td><td>Pipeline view load (200 deals)</td><td>p95 ≤ 350 ms</td><td>SPA RUM</td></tr>
-        <tr><td><code>NFR-CRM-PERF-002</code></td><td>Stage drag-drop response</td><td>p95 ≤ 200 ms</td><td>WS latency histogram</td></tr>
-        <tr><td><code>NFR-CRM-PERF-003</code></td><td>Account search (10k accounts)</td><td>p95 ≤ 300 ms</td><td>k6</td></tr>
-        <tr><td><code>NFR-CRM-PERF-004</code></td><td>MST validation</td><td>p95 ≤ 1.5 s (cache-cold)</td><td>histogram</td></tr>
-        <tr><td><code>NFR-CRM-USE-001</code></td><td>Pipeline drag-drop drop-rate (loss)</td><td>= 0</td><td>BRAIN audit reconciliation</td></tr>
-        <tr><td><code>NFR-CRM-USE-002</code></td><td>Vietnamese salutation accuracy</td><td>≥ 92% on 200-contact eval</td><td>quarterly review</td></tr>
-        <tr><td><code>NFR-CRM-AVL-001</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
-        <tr><td><code>NFR-CRM-SEC-001</code></td><td>Private-deal isolation</td><td>= 0 cross-leak</td><td>CI test + quarterly red-team</td></tr>
-        <tr><td><code>NFR-CRM-SEC-002</code></td><td>Personal email auto-attach</td><td>= 0 (tracked-domain only)</td><td>policy gate test</td></tr>
-        <tr><td><code>NFR-CRM-INT-001</code></td><td>Activity-feed idempotency</td><td>= 0 duplicates</td><td>idempotency key DB constraint</td></tr>
-        <tr><td><code>NFR-CRM-INT-002</code></td><td>Deal close → Engagement durability</td><td>100% within 60 s</td><td>BRAIN audit cross-check</td></tr>
-        <tr><td><code>NFR-CRM-COMP-001</code></td><td>Hóa đơn XML schema compliance</td><td>100% pass Circular 78/2021</td><td>CI test against GDT XSD</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Pipeline view load (200 deals)</td><td>p95 ≤ 350 ms</td><td>SPA RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Stage drag-drop response</td><td>p95 ≤ 200 ms</td><td>WS latency histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Account search (10k accounts)</td><td>p95 ≤ 300 ms</td><td>k6</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>MST validation</td><td>p95 ≤ 1.5 s (cache-cold)</td><td>histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Pipeline drag-drop drop-rate (loss)</td><td>= 0</td><td>BRAIN audit reconciliation</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Vietnamese salutation accuracy</td><td>≥ 92% on 200-contact eval</td><td>quarterly review</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Private-deal isolation</td><td>= 0 cross-leak</td><td>CI test + quarterly red-team</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Personal email auto-attach</td><td>= 0 (tracked-domain only)</td><td>policy gate test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Activity-feed idempotency</td><td>= 0 duplicates</td><td>idempotency key DB constraint</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Deal close → Engagement durability</td><td>100% within 60 s</td><td>BRAIN audit cross-check</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Hóa đơn XML schema compliance</td><td>100% pass Circular 78/2021</td><td>CI test against GDT XSD</td></tr>
       </tbody>
     </table>
   </div>
@@ -937,8 +918,8 @@ graph LR
   CRM --> INV
   CRM --> PORTAL
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN,MST,VQR,HD shipped
   class CRM,AUTH,EMAIL,CHAT,CAL,AI,MCP,OBS,PROJ,INV,PORTAL planned
     </div>
@@ -989,7 +970,7 @@ graph LR
         <tr><td><code>R-CRM-007</code></td><td>VietQR generated with wrong account number → payment misdirected</td><td>Low</td><td>High</td><td>CFO</td><td>Per-tenant bank-account allow-list; Member confirm step on first use.</td></tr>
         <tr><td><code>R-CRM-008</code></td><td>Merge proposes false-positive (same email shared family)</td><td>Medium</td><td>Low</td><td>CRO</td><td>Merge requires explicit Member confirm; confidence threshold ≥ 0.85.</td></tr>
         <tr><td><code>R-CRM-009</code></td><td>BRAIN ingest of closed deals leaks competitive data</td><td>Low</td><td>Medium</td><td>CDO</td><td>Closed deals respect deal ACL on BRAIN side; private deals never ingested.</td></tr>
-        <tr><td><code>R-CRM-010</code></td><td>Open-pipeline data ingested into BRAIN by accident (FR-CRM-006 violation)</td><td>Low</td><td>High</td><td>CDO</td><td>BRAIN ingest path gated by deal.status &amp; ('won','lost'); CI test asserts.</td></tr>
+        <tr><td><code>R-CRM-010</code></td><td>Open-pipeline data ingested into BRAIN by accident ((FR pending) violation)</td><td>Low</td><td>High</td><td>CDO</td><td>BRAIN ingest path gated by deal.status &amp; ('won','lost'); CI test asserts.</td></tr>
       </tbody>
     </table>
   </div>
@@ -1177,7 +1158,7 @@ top 5 deals by probability×value:
       <li><strong>PRD §9.11</strong> — CRM product FRs.</li>
       <li><strong>PRD §19.6</strong> — CRM SRS-tier FRs.</li>
       <li><strong>PRD §11.2</strong> — NFRs.</li>
-      <li><strong>SRS §4.11</strong> — Formal FR-CRM-001 through FR-CRM-015.</li>
+      <li><strong>SRS §4.11</strong> — Formal (FR pending) through (FR pending).</li>
       <li><strong>Vietnam Decree 123/2020/NĐ-CP</strong> — Electronic invoice issuance and storage.</li>
       <li><strong>Vietnam Circular 78/2021/TT-BTC</strong> — Hóa đơn format.</li>
       <li><strong>Vietnam PDPL (Law 91/2025/QH15)</strong>.</li>

@@ -8,7 +8,7 @@
   <meta name="description" content="OKR — Objectives &amp; Key Results. Quarterly cycle with Company → Team → Member cascade, confidence-band weekly check-ins, auto-pulled progress from PROJ / TIME / INV / HR / LEARN. Vietnamese face-saving language; EU AI Act Art. 14 human-in-the-loop.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -205,12 +205,12 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because the cascade graph is referenced by REW (P3 performance pool depends on team-objective achievement), by HR (promotion review reads Member-OKR history), by CRM (revenue KRs feed pipeline forecast), and by the Founder daily flow. Owning it once means every consumer reads the same source-of-truth.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>OKR primitives stored in <code>okr.*</code> tables. Alignments are FK edges in <code>okr.alignment</code> with type ∈ {contributes_to, supports, depends_on}. Confidence check-ins append to <code>okr.check_in</code>. Auto-progress: each KR declares <code>progress_source</code> (a small DSL) and a refresh job materialises the current value. Retros land in BRAIN under <code>module/okr/cycle-YYYY-Qn/</code>.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P3: ~$25 / month (PG read replica + small Fargate + nightly refresh job). Low data volume — Cycle × Objective × KR cardinality is bounded.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) EU AI Act Art. 14 — OKR-driven employment decisions require human approval. (b) GDPR Art. 22 — same. (c) Vietnamese cultural fit: face-saving language; no "missed" / "failed" without "learned". (d) Append-only history — modifications post-cycle-end create supersession entries, never overwrites (FR-OKR-006).</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) EU AI Act Art. 14 — OKR-driven employment decisions require human approval. (b) GDPR Art. 22 — same. (c) Vietnamese cultural fit: face-saving language; no "missed" / "failed" without "learned". (d) Append-only history — modifications post-cycle-end create supersession entries, never overwrites ((FR pending)).</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · React + visx for cascade tree · DSL parser (nom) for progress-source expressions · OpenTelemetry.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Cycle is a calendar with explicit phases (planning · execution · check-ins · retro · close). KR is typed (hit-target / improvement / milestone) with type-specific computation. Confidence band is a 1-10 scalar plus rationale text; trend is computed over 4 weeks. Retros are CSV-prompt-driven (5 questions) and CUO-summarised.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P3). Standard PG read replica. Scheduled jobs for weekly check-in reminders and nightly auto-progress refresh.</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.2 FTE at P3; CSO seat owns product direction; CEO-skill drives Founder digests.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-OKR-USAB-001 (drag-drop cascade p95 ≤ 200 ms), NFR-OKR-REL-001 (auto-progress refresh success ≥ 99.5%). KPIs: cascade-coverage %, weekly check-in participation %, end-of-quarter retro completion %, average final score.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (drag-drop cascade p95 ≤ 200 ms), N(FR pending) (auto-progress refresh success ≥ 99.5%). KPIs: cascade-coverage %, weekly check-in participation %, end-of-quarter retro completion %, average final score.</td></tr>
       </tbody>
     </table>
   </div>
@@ -229,38 +229,38 @@
     <div class="mermaid">
 graph TB
   subgraph UI ["UI surfaces"]
-    SPA["Cascade SPA<br/>(React + visx tree)"]
+    SPA["Cascade SPA<br>(React + visx tree)"]
     CHECKIN["Weekly check-in modal"]
     RETRO["Retro composer"]
   end
 
   subgraph OKR ["OKR service (Rust · axum)"]
-    AUTHOR["author.rs<br/>Objective + KR CRUD"]
-    CASCADE["cascade.rs<br/>Alignment graph"]
-    PROGRESS["progress.rs<br/>auto-pull engine"]
-    DSL["dsl.rs<br/>progress-source parser (nom)"]
-    CHECKIN_S["checkin.rs<br/>confidence rollup"]
-    RETRO_S["retro.rs<br/>retrospective composer"]
-    DIGEST["digest.rs<br/>Monday CUO digest"]
-    GQL["gql_subgraph.rs<br/>federated read API"]
+    AUTHOR["author.rs<br>Objective + KR CRUD"]
+    CASCADE["cascade.rs<br>Alignment graph"]
+    PROGRESS["progress.rs<br>auto-pull engine"]
+    DSL["dsl.rs<br>progress-source parser (nom)"]
+    CHECKIN_S["checkin.rs<br>confidence rollup"]
+    RETRO_S["retro.rs<br>retrospective composer"]
+    DIGEST["digest.rs<br>Monday CUO digest"]
+    GQL["gql_subgraph.rs<br>federated read API"]
   end
 
   subgraph SOURCES ["Auto-progress sources"]
-    PROJ["📋 PROJ<br/>issue.completed"]
-    TIME["⏱ TIME<br/>hours.logged"]
-    INV["💰 INV<br/>invoice.paid"]
-    HR["👥 HR<br/>hire.created"]
-    LEARN["📚 LEARN<br/>mastery.attained"]
+    PROJ["📋 PROJ<br>issue.completed"]
+    TIME["⏱ TIME<br>hours.logged"]
+    INV["💰 INV<br>invoice.paid"]
+    HR["👥 HR<br>hire.created"]
+    LEARN["📚 LEARN<br>mastery.attained"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL 16<br/>okr.cycle · objective<br/>key_result · check_in<br/>alignment · progress_source")]
+    PG[("PostgreSQL 16<br>okr.cycle · objective<br>key_result · check_in<br>alignment · progress_source")]
   end
 
   subgraph SINKS ["Audit + AI"]
-    BRAIN["🧠 BRAIN<br/>okr.* rows<br/>retros under module/okr/"]
-    CUO["🧠 CUO<br/>Monday digest"]
-    OBS["👁 OBS<br/>traces + metrics"]
+    BRAIN["🧠 BRAIN<br>okr.* rows<br>retros under module/okr/"]
+    CUO["🧠 CUO<br>Monday digest"]
+    OBS["👁 OBS<br>traces + metrics"]
   end
 
   SPA --> AUTHOR
@@ -287,9 +287,9 @@ graph TB
   CASCADE --> BRAIN
   OKR --> OBS
 
-  classDef planned fill:#e0e7ff,stroke:#4338ca
+  classDef planned fill:#cba88a,stroke:#4338ca
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class SPA,CHECKIN,RETRO,AUTHOR,CASCADE,PROGRESS,DSL,CHECKIN_S,RETRO_S,DIGEST,GQL,PROJ,TIME,INV,HR,LEARN planned
   class PG store
   class BRAIN,CUO,OBS sink
@@ -310,7 +310,7 @@ graph TB
         <tr><td><code>digest.rs</code></td><td>services/okr/src/digest.rs</td><td>Monday-morning CUO digest. Confidence drops, KRs off-track, suggested founder questions.</td></tr>
         <tr><td><code>blocker.rs</code></td><td>services/okr/src/blocker.rs</td><td>Blocker detection: monitors CHAT for KR-related "blocked by" mentions and surfaces to digest.</td></tr>
         <tr><td><code>cascade_check.rs</code></td><td>services/okr/src/cascade_check.rs</td><td>Cascade-coherence check: every Member OKR must align to a Team OKR; every Team OKR must align to a Company OKR (configurable strict / soft mode).</td></tr>
-        <tr><td><code>supersession.rs</code></td><td>services/okr/src/supersession.rs</td><td>Append-only history. Mid-cycle KR target changes create supersession rows; originals remain visible (FR-OKR-006).</td></tr>
+        <tr><td><code>supersession.rs</code></td><td>services/okr/src/supersession.rs</td><td>Append-only history. Mid-cycle KR target changes create supersession rows; originals remain visible ((FR pending)).</td></tr>
         <tr><td><code>i18n.rs</code></td><td>services/okr/src/i18n.rs</td><td>Vietnamese face-saving language pack. Maps internal status codes to UI strings: "miss"→"đã học được"/"learning achieved"; never "fail".</td></tr>
         <tr><td><code>audit_bridge.rs</code></td><td>services/okr/src/audit_bridge.rs</td><td>Writes every OKR + check-in event to BRAIN canonical writer.</td></tr>
         <tr><td><code>migrations/</code></td><td>services/okr/migrations/</td><td>sqlx migrations. RLS by <code>tenant_id</code>. Indices on (cycle_id, objective_id) and (subject_id, cycle_id).</td></tr>
@@ -320,7 +320,7 @@ graph TB
 
   <div class="invariant-box mt-5">
     <div class="label">OKR-INV-001 · Post-cycle history is append-only</div>
-    <p class="text-sm text-slate-700 mt-2 mb-0">After a Cycle reaches <code>execution</code> phase, KR target modifications are <strong>supersession entries</strong>, not overwrites. The original target value remains visible in the timeline; the new target carries <code>superseded_by</code> linkage. Verification: SRS §4 FR-OKR-006 — attempt to modify in-place is rejected with <code>code: "OKR-IMMUTABLE-POST-CYCLE"</code>; the supersession path produces a chained BRAIN audit row.</p>
+    <p class="text-sm text-slate-700 mt-2 mb-0">After a Cycle reaches <code>execution</code> phase, KR target modifications are <strong>supersession entries</strong>, not overwrites. The original target value remains visible in the timeline; the new target carries <code>superseded_by</code> linkage. Verification: SRS §4 (FR pending) — attempt to modify in-place is rejected with <code>code: "OKR-IMMUTABLE-POST-CYCLE"</code>; the supersession path produces a chained BRAIN audit row.</p>
   </div>
 </section>
 
@@ -809,7 +809,7 @@ stateDiagram-v2
       <thead><tr><th>Phase</th><th>Duration</th><th>Rules</th></tr></thead>
       <tbody>
         <tr><td>Planning</td><td>2 weeks</td><td>Objectives + KRs editable freely. Alignments built. Cascade coherence must pass before transition.</td></tr>
-        <tr><td>Execution</td><td>10 weeks (quarter)</td><td>KR target modifications require supersession (FR-OKR-006). Auto-progress refresh hourly. Weekly check-ins enforced.</td></tr>
+        <tr><td>Execution</td><td>10 weeks (quarter)</td><td>KR target modifications require supersession ((FR pending)). Auto-progress refresh hourly. Weekly check-ins enforced.</td></tr>
         <tr><td>CheckIns (sub-state)</td><td>weekly Fri 17:00</td><td>All Members with active KRs receive prompts; missing check-ins flagged in next-week digest.</td></tr>
         <tr><td>MidQuarter (sub-state)</td><td>week 6</td><td>Mandatory CEO + Team Lead review. Confidence-band review; off-track KRs get rationale entry.</td></tr>
         <tr><td>Retro</td><td>1 week</td><td>CUO drafts retro summary; team reviews; final lands in BRAIN under <code>module/okr/cycle-YYYY-Qn/retro.md</code>.</td></tr>
@@ -821,32 +821,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">OKR FRs from PRD §9.19 and SRS §4 (FR-OKR-001 through FR-OKR-006), plus implementation-tier additions for auto-progress, cascade, and digest surfaces.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-OKR-001</code></td><td>Quarterly cycle with company → team → Member cascade</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-002</code></td><td>Confidence-band updates; CUO digest weekly to Founder</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-003</code></td><td>OKR retro at quarter close; "what would change my mind" prompts</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-004</code></td><td>Public OKR view per workspace (Members see all team OKRs by default)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-005</code></td><td>Integrate with PROJ to auto-link key results to project milestones</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-006</code></td><td>Post-cycle KR modifications are supersession entries; originals remain visible</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-007</code></td><td>Auto-progress sources: PROJ / TIME / INV / HR / LEARN via DSL</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-008</code></td><td>KR type enum: hit-target · improvement · milestone</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-009</code></td><td>Orphan-OKR detection: every Member OKR must align upward to Team OKR</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-010</code></td><td>Cascade cycle-detection: alignments must not form circular references</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-011</code></td><td>KR phrasing assistant via AI gateway (measurability score)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-012</code></td><td>Vietnamese face-saving language pack (no "miss" / "fail" UI strings)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-013</code></td><td>EU AI Act Art. 14 — OKR-driven employment decisions require human approval</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-014</code></td><td>Audit-chain: every Objective / KR / CheckIn lands in BRAIN</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-OKR-015</code></td><td>Cycle export: full cascade + check-ins + retro as deterministic zip</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-OKR-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -860,17 +841,17 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-OKR-USAB-001</code></td><td>Cascade-tree drag-drop p95</td><td>≤ 200 ms</td><td>RUM + Lighthouse</td></tr>
-        <tr><td><code>NFR-OKR-USAB-002</code></td><td>Check-in modal open-to-submit p95</td><td>≤ 60 s end-to-end</td><td>RUM</td></tr>
-        <tr><td><code>NFR-OKR-LAT-001</code></td><td>cascade(cycleCode) query p95</td><td>≤ 350 ms (100-objective cascade)</td><td>k6</td></tr>
-        <tr><td><code>NFR-OKR-LAT-002</code></td><td>submitCheckIn server-canonical p95</td><td>≤ 250 ms</td><td>k6 + Apollo Router metrics</td></tr>
-        <tr><td><code>NFR-OKR-REL-001</code></td><td>Auto-progress refresh success rate</td><td>≥ 99.5% / day</td><td>OBS daily report</td></tr>
-        <tr><td><code>NFR-OKR-REL-002</code></td><td>Federated query timeout fallback</td><td>≤ 2 s; on timeout, retain last value + flag</td><td>chaos test</td></tr>
-        <tr><td><code>NFR-OKR-INT-001</code></td><td>Append-only history under modification attempt</td><td>= 0 in-place updates after Execution phase</td><td>property test + DB audit</td></tr>
-        <tr><td><code>NFR-OKR-INT-002</code></td><td>Cascade cycle-detection accuracy</td><td>= 100% (zero false negatives)</td><td>property-based test</td></tr>
-        <tr><td><code>NFR-OKR-AVL-001</code></td><td>OKR availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-OKR-SEC-001</code></td><td>Cross-tenant cascade leak</td><td>= 0</td><td>RLS verification harness</td></tr>
-        <tr><td><code>NFR-OKR-A11Y-001</code></td><td>Cascade tree keyboard-navigable (WCAG 2.1 AA)</td><td>full coverage</td><td>axe-core audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cascade-tree drag-drop p95</td><td>≤ 200 ms</td><td>RUM + Lighthouse</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Check-in modal open-to-submit p95</td><td>≤ 60 s end-to-end</td><td>RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>cascade(cycleCode) query p95</td><td>≤ 350 ms (100-objective cascade)</td><td>k6</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>submitCheckIn server-canonical p95</td><td>≤ 250 ms</td><td>k6 + Apollo Router metrics</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Auto-progress refresh success rate</td><td>≥ 99.5% / day</td><td>OBS daily report</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Federated query timeout fallback</td><td>≤ 2 s; on timeout, retain last value + flag</td><td>chaos test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Append-only history under modification attempt</td><td>= 0 in-place updates after Execution phase</td><td>property test + DB audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cascade cycle-detection accuracy</td><td>= 100% (zero false negatives)</td><td>property-based test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OKR availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cross-tenant cascade leak</td><td>= 0</td><td>RLS verification harness</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cascade tree keyboard-navigable (WCAG 2.1 AA)</td><td>full coverage</td><td>axe-core audit</td></tr>
       </tbody>
     </table>
   </div>
@@ -888,23 +869,23 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["OKR depends on"]
-    AUTH["🔐 AUTH<br/>RBAC + scope"]
-    BRAIN["🧠 BRAIN<br/>audit + retros"]
-    AI["🧠 AI Gateway<br/>phrasing + summarisation"]
+    AUTH["🔐 AUTH<br>RBAC + scope"]
+    BRAIN["🧠 BRAIN<br>audit + retros"]
+    AI["🧠 AI Gateway<br>phrasing + summarisation"]
     OBS["👁 OBS"]
-    PROJ["📋 PROJ<br/>auto-progress"]
-    TIME["⏱ TIME<br/>auto-progress"]
-    INV["💰 INV<br/>auto-progress"]
-    HR["👥 HR<br/>auto-progress"]
-    LEARN["📚 LEARN<br/>auto-progress"]
-    CRM["🏢 CRM<br/>pipeline KRs"]
+    PROJ["📋 PROJ<br>auto-progress"]
+    TIME["⏱ TIME<br>auto-progress"]
+    INV["💰 INV<br>auto-progress"]
+    HR["👥 HR<br>auto-progress"]
+    LEARN["📚 LEARN<br>auto-progress"]
+    CRM["🏢 CRM<br>pipeline KRs"]
   end
   OKR["🎯 OKR"]
   subgraph downstream ["Used by"]
-    REW["💎 REW<br/>P3 perf pool"]
-    HR_D["👥 HR<br/>promotion review"]
-    CUO["🧠 CUO<br/>daily digest"]
-    RES["📅 RES<br/>hiring objective"]
+    REW["💎 REW<br>P3 perf pool"]
+    HR_D["👥 HR<br>promotion review"]
+    CUO["🧠 CUO<br>daily digest"]
+    RES["📅 RES<br>hiring objective"]
     DASH["📊 OBS dashboards"]
   end
   AUTH --> OKR
@@ -923,8 +904,8 @@ graph LR
   OKR --> RES
   OKR --> DASH
 
-  classDef planned fill:#e0e7ff,stroke:#4338ca
-  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#cba88a,stroke:#4338ca
+  classDef shipped fill:#f5ede6,stroke:#45210e
   class AUTH,BRAIN,AI,OBS,PROJ,TIME,INV,HR,LEARN,CRM,OKR,REW,HR_D,CUO,RES,DASH planned
     </div>
   </div>
@@ -940,7 +921,7 @@ graph LR
     <table class="kt">
       <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>OKR feature that satisfies it</th></tr></thead>
       <tbody>
-        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Employment</td><td>OKR outputs that feed REW or HR are gated by human approval (FR-OKR-013).</td></tr>
+        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Employment</td><td>OKR outputs that feed REW or HR are gated by human approval ((FR pending)).</td></tr>
         <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>CUO digest is advisory; no automated promotion / compensation action.</td></tr>
         <tr><td>GDPR (EU 2016/679)</td><td>Art. 22 — Automated decision-making</td><td>Same as Art. 14; explicit human approval predicate.</td></tr>
         <tr><td>GDPR</td><td>Art. 15 — Right of access</td><td><code>cyberos-okr dsar-export</code> returns full Objective + KR + CheckIn history for a Subject.</td></tr>
@@ -964,9 +945,9 @@ graph LR
     <table class="kt">
       <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
       <tbody>
-        <tr><td><code>R-OKR-001</code></td><td>Tampering — KR target lowered post-cycle to inflate achievement</td><td>Low</td><td>High</td><td>CSO</td><td>Append-only history (FR-OKR-006); supersession-only modification; CI test verifies in-place blocked.</td></tr>
+        <tr><td><code>R-OKR-001</code></td><td>Tampering — KR target lowered post-cycle to inflate achievement</td><td>Low</td><td>High</td><td>CSO</td><td>Append-only history ((FR pending)); supersession-only modification; CI test verifies in-place blocked.</td></tr>
         <tr><td><code>R-OKR-002</code></td><td>Auto-progress source returns stale value silently</td><td>Medium</td><td>Medium</td><td>CTO</td><td>last_refreshed_at exposed in UI; freshness alert at &gt; 24 h; manual force-refresh endpoint.</td></tr>
-        <tr><td><code>R-OKR-003</code></td><td>OKR-driven employment decision automated without human gate</td><td>Low</td><td>High</td><td>CLO</td><td>FR-OKR-013 enforced; REW boundary requires human approval; audit alarm on any direct write.</td></tr>
+        <tr><td><code>R-OKR-003</code></td><td>OKR-driven employment decision automated without human gate</td><td>Low</td><td>High</td><td>CLO</td><td>(FR pending) enforced; REW boundary requires human approval; audit alarm on any direct write.</td></tr>
         <tr><td><code>R-OKR-004</code></td><td>Cascade cycle causes infinite-loop in tree render</td><td>Low</td><td>Medium</td><td>CTO</td><td>Cycle-detection at alignment-write boundary; rejects with OKR-CYCLE error; integration test.</td></tr>
         <tr><td><code>R-OKR-005</code></td><td>Cross-tenant cascade leak via federated query</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>RLS at Postgres + @requiresScopes on every GraphQL field; cross-tenant test gate.</td></tr>
         <tr><td><code>R-OKR-006</code></td><td>Face-saving language pack drift (English "miss" leaks through)</td><td>Medium</td><td>Low</td><td>CPO</td><td>i18n.rs central mapping; lint rule on all UI strings; manual QA per release.</td></tr>
@@ -1150,7 +1131,7 @@ $ cyberos-okr kr add \
         <tr><td>KR phrasing assistant (AI gateway)</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
         <tr><td>Monday CUO digest</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
         <tr><td>Retrospective composer + BRAIN persistence</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
-        <tr><td>Append-only supersession (FR-OKR-006)</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+        <tr><td>Append-only supersession ((FR pending))</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
         <tr><td>Vietnamese face-saving language pack</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
         <tr><td>Cascade cycle-detection</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
         <tr><td>OKR-driven REW pool integration</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
@@ -1171,7 +1152,7 @@ $ cyberos-okr kr add \
       <li><strong>PRD §3</strong> — Vietnamese cultural fit (face-saving framing).</li>
       <li><strong>PRD §11.2.x</strong> — Performance / usability NFRs.</li>
       <li><strong>SRS §7.15</strong> — OKR — Objectives and Key Results subjects + cascade.</li>
-      <li><strong>SRS §4 FR-OKR-001..006</strong> — Formal requirements with verification methods.</li>
+      <li><strong>SRS §4 (FR pending)..006</strong> — Formal requirements with verification methods.</li>
       <li><strong>John Doerr, "Measure What Matters" (2018)</strong> — Canonical OKR methodology reference.</li>
       <li><strong>EU AI Act (Reg. 2024/1689)</strong> — Annex III §4 (employment), Art. 14 (human oversight).</li>
       <li><strong>GDPR (EU 2016/679)</strong> — Art. 15 (DSAR), Art. 22 (automated decision-making).</li>

@@ -8,7 +8,7 @@
   <meta name="description" content="PROJ — Project management. Linear-style three-primitive model (Issue, Cycle, Project) plus Engagement for consultancy contracts. Sync-engine with optimistic local mutations + Yjs CRDT offline-edit + server-canonical resolution.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -205,7 +205,7 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate tracker?</td><td>Existing trackers do not natively model the Engagement / rate-card / billable-time loop; sync-engine UX is rare outside Linear; and BRAIN-linked work is a CyberOS-specific need that no off-the-shelf tracker provides.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Mutations: client-side optimistic apply → JMAP-like RPC over WebSocket → server validates → server-canonical state broadcast to all connected SPAs → conflicts resolved server-side and rebased into the client. CRDT: long-form fields (description, comment body) are Yjs documents; the rest is last-write-wins with a vector clock.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$80 / month for SG-1 single-tenant pilot. 50-tenant: ~$340 / month (RDS + Redis + Fargate + S3). Per-issue write cost ~$0.0000004.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Issues ingested into BRAIN Layer 3 — but body content gates as per FR-PROJ-009. (b) Per-task ACL — private engagements MUST NOT be visible to non-engaged Members. (c) Vietnamese localisation of status / UI strings — non-negotiable for P1 launch.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Issues ingested into BRAIN Layer 3 — but body content gates as per (FR pending). (b) Per-task ACL — private engagements MUST NOT be visible to non-engaged Members. (c) Vietnamese localisation of status / UI strings — non-negotiable for P1 launch.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 + PGroonga · Redis 7 · S3 + KMS · Yjs (server-side ywasm + client TS) · TypeScript SPA (React + Zustand) · WebSocket fan-out via NATS JetStream · OpenTelemetry SDK.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Three-primitive model (Linear). Sync-engine UX (Linear). Yjs for CRDT long-form (because OT is too brittle at scale). Closed status enum + workflow overlay (not free-form labels). PGroonga for VN search. NATS JetStream for fan-out (not a Postgres LISTEN/NOTIFY — won't scale past 1k WS connections).</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Per-tenant Fargate axum binary handling WebSocket + REST. Postgres RDS Multi-AZ. Redis for hot-cache and WS rooms. NATS JetStream cluster (3 nodes P2+). S3 for attachments.</td></tr>
@@ -229,40 +229,40 @@
     <div class="mermaid">
 graph TB
   subgraph CLIENT ["Clients"]
-    SPA["SPA<br/>React + Zustand"]
+    SPA["SPA<br>React + Zustand"]
     MOBILE["Mobile (P3)"]
-    AGENT["🎯 CUO agent<br/>via MCP"]
+    AGENT["🎯 CUO agent<br>via MCP"]
   end
 
   subgraph EDGE ["Edge"]
-    WSGW["WebSocket gateway<br/>JWT-authed"]
-    GQL["GraphQL subgraph<br/>(federated)"]
+    WSGW["WebSocket gateway<br>JWT-authed"]
+    GQL["GraphQL subgraph<br>(federated)"]
     REST["Admin REST"]
     MCP["MCP tool surface"]
   end
 
   subgraph CORE ["PROJ service (Rust)"]
-    SYNC["Sync engine<br/>optimistic + rebase"]
-    CRDT["Yjs document server<br/>(ywasm)"]
-    WF["Workflow engine<br/>status transitions"]
-    AI["AI hooks<br/>blocker · review · calibration"]
-    BRAIN_ING["BRAIN ingestor<br/>Layer 3"]
+    SYNC["Sync engine<br>optimistic + rebase"]
+    CRDT["Yjs document server<br>(ywasm)"]
+    WF["Workflow engine<br>status transitions"]
+    AI["AI hooks<br>blocker · review · calibration"]
+    BRAIN_ING["BRAIN ingestor<br>Layer 3"]
     AUTH_CHK["RBAC + per-task ACL"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL + PGroonga<br/>issues · cycles · projects<br/>RLS by tenant_id")]
-    RED[("Redis 7<br/>WS rooms · search cache")]
-    S3[("S3 + KMS<br/>attachments")]
-    NATS[("NATS JetStream<br/>mutation fan-out")]
+    PG[("PostgreSQL + PGroonga<br>issues · cycles · projects<br>RLS by tenant_id")]
+    RED[("Redis 7<br>WS rooms · search cache")]
+    S3[("S3 + KMS<br>attachments")]
+    NATS[("NATS JetStream<br>mutation fan-out")]
   end
 
   subgraph SINKS ["Sinks"]
-    BRAIN["🧠 BRAIN<br/>Layer 3 ingest · audit"]
-    TIME["⏱ TIME<br/>billable / non-billable"]
-    INV["🧾 INV<br/>billable hours → invoice"]
-    OBS["👁 OBS<br/>traces + SLO"]
-    CUO["🎯 CUO<br/>Notify · review draft"]
+    BRAIN["🧠 BRAIN<br>Layer 3 ingest · audit"]
+    TIME["⏱ TIME<br>billable / non-billable"]
+    INV["🧾 INV<br>billable hours → invoice"]
+    OBS["👁 OBS<br>traces + SLO"]
+    CUO["🎯 CUO<br>Notify · review draft"]
   end
 
   SPA --> WSGW
@@ -289,9 +289,9 @@ graph TB
   SYNC --> S3
   SYNC --> OBS
 
-  classDef planned fill:#e0e7ff,stroke:#3730a3
+  classDef planned fill:#cba88a,stroke:#45210e
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class SPA,MOBILE,AGENT,WSGW,GQL,REST,MCP,SYNC,CRDT,WF,AI,BRAIN_ING,AUTH_CHK planned
   class PG,RED,S3,NATS store
   class BRAIN,TIME,INV,OBS,CUO sink
@@ -301,7 +301,7 @@ graph TB
   <h3 class="text-lg font-bold mt-6 mb-3">The four primitives</h3>
   <div class="grid md:grid-cols-2 gap-4 mb-5">
     <div class="primitive-card"><div class="pname">Issue (the atomic unit)</div><p class="text-sm text-slate-600 mt-1">A discrete piece of work. Has title, description (Yjs), status, priority, assignee, estimate, labels, dependencies, parent issue, cycle binding. Comments are sub-resources.</p></div>
-    <div class="primitive-card"><div class="pname">Cycle (1-2 week sprint)</div><p class="text-sm text-slate-600 mt-1">A time-boxed bucket of Issues. Has start / end dates, target velocity, retro link. Incomplete Issues auto-roll to the next cycle if the team configures it (FR-PROJ-005).</p></div>
+    <div class="primitive-card"><div class="pname">Cycle (1-2 week sprint)</div><p class="text-sm text-slate-600 mt-1">A time-boxed bucket of Issues. Has start / end dates, target velocity, retro link. Incomplete Issues auto-roll to the next cycle if the team configures it ((FR pending)).</p></div>
     <div class="primitive-card"><div class="pname">Project (durable container)</div><p class="text-sm text-slate-600 mt-1">A multi-cycle initiative. Has roadmap view, status (planned / active / paused / completed), client visibility flag (visible via PORTAL when the Engagement permits).</p></div>
     <div class="primitive-card"><div class="pname">Engagement (the contract)</div><p class="text-sm text-slate-600 mt-1">The contract under which a Project is delivered for a Client. Carries rate card, billable / non-billable rules, ACL. TIME → INV pulls from here. Vietnamese-consultancy-specific.</p></div>
   </div>
@@ -317,9 +317,9 @@ graph TB
         <tr><td><code>ai_blocker.rs</code></td><td>services/proj/src/ai_blocker.rs</td><td>Blocker detection from comment stream. "blocked by", "waiting on", and dwell-time heuristics → CUO Notify.</td></tr>
         <tr><td><code>ai_review.rs</code></td><td>services/proj/src/ai_review.rs</td><td>End-of-cycle review draft generator. Pulls from issue changelog + comments; CUO-stamped persona; AM edits before sending.</td></tr>
         <tr><td><code>ai_calibration.rs</code></td><td>services/proj/src/ai_calibration.rs</td><td>Estimate vs actual hours per Member per task class. Surfaces calibration drift to Member's dashboard.</td></tr>
-        <tr><td><code>brain_ingest.rs</code></td><td>services/proj/src/brain_ingest.rs</td><td>Layer 3 ingestion of issues + comments (FR-PROJ-009). Body content gates per ACL.</td></tr>
-        <tr><td><code>acl.rs</code></td><td>services/proj/src/acl.rs</td><td>Per-task / per-engagement ACL. Private engagements not visible to non-engaged Members (FR-PROJ-010).</td></tr>
-        <tr><td><code>autoroll.rs</code></td><td>services/proj/src/autoroll.rs</td><td>End-of-cycle auto-roll. Incomplete issues move to next cycle if team config permits (FR-PROJ-005).</td></tr>
+        <tr><td><code>brain_ingest.rs</code></td><td>services/proj/src/brain_ingest.rs</td><td>Layer 3 ingestion of issues + comments ((FR pending)). Body content gates per ACL.</td></tr>
+        <tr><td><code>acl.rs</code></td><td>services/proj/src/acl.rs</td><td>Per-task / per-engagement ACL. Private engagements not visible to non-engaged Members ((FR pending)).</td></tr>
+        <tr><td><code>autoroll.rs</code></td><td>services/proj/src/autoroll.rs</td><td>End-of-cycle auto-roll. Incomplete issues move to next cycle if team config permits ((FR pending)).</td></tr>
         <tr><td><code>nats_fanout.rs</code></td><td>services/proj/src/nats_fanout.rs</td><td>NATS JetStream publisher / subscriber for mutation fan-out.</td></tr>
         <tr><td><code>search.rs</code></td><td>services/proj/src/search.rs</td><td>PGroonga query builder; VN bigram tokenisation.</td></tr>
         <tr><td><code>graphql.rs</code></td><td>services/proj/src/graphql.rs</td><td>Federated subgraph; <code>@key(fields:"id")</code> on every primitive.</td></tr>
@@ -805,7 +805,7 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>Issue status at cycle close</th><th>Auto-roll behaviour</th><th>Configurable?</th></tr></thead>
       <tbody>
-        <tr><td><code>todo</code></td><td>Roll to next cycle</td><td>yes (FR-PROJ-005)</td></tr>
+        <tr><td><code>todo</code></td><td>Roll to next cycle</td><td>yes ((FR pending))</td></tr>
         <tr><td><code>in-progress</code></td><td>Roll to next cycle</td><td>yes</td></tr>
         <tr><td><code>in-review</code></td><td>Roll to next cycle</td><td>yes</td></tr>
         <tr><td><code>done</code></td><td>Stay in original cycle (velocity counts)</td><td>no</td></tr>
@@ -817,32 +817,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">PROJ FRs from PRD §9.5. Full normative descriptions at <a href="../reference/fr-catalog.html#proj" class="text-blue-700 font-semibold underline">fr-catalog.html#proj</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-PROJ-001</code></td><td>Three primitives Issue / Cycle / Project, plus Engagement</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-002</code></td><td>Sync-engine: optimistic local mutations + WebSocket + server-canonical</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-003</code></td><td>Per-engagement rate cards, billable/non-billable distinction</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-004</code></td><td>Time entries integrate from TIME module 1:1; INV pulls from TIME</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-005</code></td><td>Auto-roll incomplete tasks to next cycle; configurable per team</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-006</code></td><td>Blocker detection from comments → CUO Notify</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-007</code></td><td>Cycle-review draft generation; editable before send</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-008</code></td><td>Estimate calibration report per Member per task class</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-009</code></td><td>Tasks ingested into BRAIN Layer 3; comments included</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-010</code></td><td>Per-task ACL; private engagements not visible to non-engaged Members</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-011</code></td><td>Vietnamese localisation of status enums and UI strings</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-012</code></td><td>Offline edit via Yjs CRDT; merges without prompts</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-013</code></td><td>Dependency graph (blocks / relates_to / duplicates) with cycle detection</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-014</code></td><td>BRAIN-link from issue (cites · implements · supersedes)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-PROJ-015</code></td><td>Custom workflow per project (rename / reorder states; categories fixed)</td><td><span class="pill pill-could">COULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-PROJ-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -856,18 +837,18 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-PROJ-PERF-001</code></td><td>Issue update mutation</td><td>p95 ≤ 120 ms server-side</td><td>histogram via OBS</td></tr>
-        <tr><td><code>NFR-PROJ-PERF-002</code></td><td>Issue list view (50 issues)</td><td>p95 ≤ 250 ms (network + render)</td><td>SPA RUM</td></tr>
-        <tr><td><code>NFR-PROJ-PERF-003</code></td><td>WebSocket fan-out latency (mutation → other clients)</td><td>p95 ≤ 200 ms within region</td><td>NATS lag metric</td></tr>
-        <tr><td><code>NFR-PROJ-PERF-004</code></td><td>BRAIN ingestion (issue create → indexed)</td><td>p95 ≤ 5 s</td><td>BRAIN ingest histogram</td></tr>
-        <tr><td><code>NFR-PROJ-USE-001</code></td><td>Offline-edit merge correctness</td><td>≥ 99.9%</td><td>property-based test (10k random workloads)</td></tr>
-        <tr><td><code>NFR-PROJ-USE-002</code></td><td>Vietnamese search recall (50-query corpus)</td><td>≥ 90%</td><td>quarterly eval</td></tr>
-        <tr><td><code>NFR-PROJ-USE-003</code></td><td>Cycle-review draft acceptance rate</td><td>≥ 60% by AM</td><td>SPA telemetry</td></tr>
-        <tr><td><code>NFR-PROJ-AVL-001</code></td><td>Service availability (28-day)</td><td>≥ 99.9%</td><td>OBS SLO monitor</td></tr>
-        <tr><td><code>NFR-PROJ-SEC-001</code></td><td>Private-engagement isolation</td><td>= 0 cross-leak</td><td>CI test on every PR</td></tr>
-        <tr><td><code>NFR-PROJ-SEC-002</code></td><td>RLS coverage</td><td>100% of tables</td><td>migration-CI gate</td></tr>
-        <tr><td><code>NFR-PROJ-DUR-001</code></td><td>Mutation durability after WS ack</td><td>= 0 dropped under crash</td><td>chaos test + BRAIN walk</td></tr>
-        <tr><td><code>NFR-PROJ-SCAL-001</code></td><td>WS connections per tenant per axum task</td><td>≥ 5k sustained</td><td>k6 load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Issue update mutation</td><td>p95 ≤ 120 ms server-side</td><td>histogram via OBS</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Issue list view (50 issues)</td><td>p95 ≤ 250 ms (network + render)</td><td>SPA RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>WebSocket fan-out latency (mutation → other clients)</td><td>p95 ≤ 200 ms within region</td><td>NATS lag metric</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>BRAIN ingestion (issue create → indexed)</td><td>p95 ≤ 5 s</td><td>BRAIN ingest histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Offline-edit merge correctness</td><td>≥ 99.9%</td><td>property-based test (10k random workloads)</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Vietnamese search recall (50-query corpus)</td><td>≥ 90%</td><td>quarterly eval</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cycle-review draft acceptance rate</td><td>≥ 60% by AM</td><td>SPA telemetry</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Service availability (28-day)</td><td>≥ 99.9%</td><td>OBS SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Private-engagement isolation</td><td>= 0 cross-leak</td><td>CI test on every PR</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>RLS coverage</td><td>100% of tables</td><td>migration-CI gate</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Mutation durability after WS ack</td><td>= 0 dropped under crash</td><td>chaos test + BRAIN walk</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>WS connections per tenant per axum task</td><td>≥ 5k sustained</td><td>k6 load test</td></tr>
       </tbody>
     </table>
   </div>
@@ -895,10 +876,10 @@ graph LR
   end
   PROJ["📋 PROJ"]
   subgraph downstream ["PROJ is depended on by"]
-    INV["🧾 INV<br/>billable roll-up"]
-    CRM["🤝 CRM<br/>deal→engagement"]
-    KB["📚 KB<br/>project docs"]
-    EMAIL["✉️ EMAIL<br/>thread→issue"]
+    INV["🧾 INV<br>billable roll-up"]
+    CRM["🤝 CRM<br>deal→engagement"]
+    KB["📚 KB<br>project docs"]
+    EMAIL["✉️ EMAIL<br>thread→issue"]
     PORTAL["Portal · P2"]
   end
   AUTH --> PROJ
@@ -914,8 +895,8 @@ graph LR
   EMAIL --> PROJ
   PROJ --> PORTAL
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN shipped
   class PROJ,AUTH,TIME,AI,MCP,NATS,OBS,INV,CRM,KB,EMAIL,PORTAL planned
     </div>
@@ -1145,7 +1126,7 @@ overall          39         1.18×        +18%   ▲ improving</code></pre>
       <li><strong>PRD §9.5</strong> — PROJ module: three primitives, sync-engine, AI features, FRs.</li>
       <li><strong>PRD §9.10</strong> — TIME module (upstream dependency).</li>
       <li><strong>PRD §11.2</strong> — NFRs that PROJ must satisfy.</li>
-      <li><strong>SRS §4.5</strong> — Formal FR-PROJ-001 through FR-PROJ-015 with verification methods.</li>
+      <li><strong>SRS §4.5</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Linear sync-engine</strong> — Tuomas Artman, "Scaling the Linear Sync Engine" (2023 talk).</li>
       <li><strong>Yjs CRDT framework</strong> — <code>github.com/yjs/yjs</code>; ywasm Rust binding.</li>
       <li><strong>PGroonga</strong> — Postgres full-text search with CJK tokenisation.</li>

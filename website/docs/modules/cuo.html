@@ -8,7 +8,7 @@
   <meta name="description" content="CUO — Chief Universal Officer. The CyberOS router: natural-language in, skill chain out, decision recorded in BRAIN. One persona, ten C-level skills.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -238,23 +238,23 @@
 graph TB
   subgraph CLIENTS ["Clients"]
     USER["User · Tauri / CLI"]
-    AGENT["External agent<br/>(Claude / Codex / Cursor)"]
+    AGENT["External agent<br>(Claude / Codex / Cursor)"]
   end
 
   subgraph CUO ["CUO router (cuo/core/)"]
-    PARSE["parse<br/>NFC-normalise query"]
-    CATALOG["catalog.py<br/>read Skill manifests"]
-    ROUTER["router.py<br/>score &amp; pick"]
-    EXTRACT["arg extractors<br/>(per-skill, pure)"]
-    INVOKER["invoker.py<br/>shell out to Skill"]
-    TRACE["trace.py<br/>structured row"]
-    BRIDGE["memory_bridge.py<br/>write to BRAIN"]
+    PARSE["parse<br>NFC-normalise query"]
+    CATALOG["catalog.py<br>read Skill manifests"]
+    ROUTER["router.py<br>score &amp; pick"]
+    EXTRACT["arg extractors<br>(per-skill, pure)"]
+    INVOKER["invoker.py<br>shell out to Skill"]
+    TRACE["trace.py<br>structured row"]
+    BRIDGE["memory_bridge.py<br>write to BRAIN"]
   end
 
   subgraph DOWNSTREAM ["Downstream"]
-    SKILL["🛠 Skill host<br/>(Rust cyberos-skill-cli)"]
-    AI["⚡ AI Gateway<br/>(Phase 2 LLM cascade)"]
-    BRAIN["🧠 BRAIN<br/>(audit chain)"]
+    SKILL["🛠 Skill host<br>(Rust cyberos-skill-cli)"]
+    AI["⚡ AI Gateway<br>(Phase 2 LLM cascade)"]
+    BRAIN["🧠 BRAIN<br>(audit chain)"]
   end
 
   USER --> PARSE
@@ -271,8 +271,8 @@ graph TB
   TRACE --> BRIDGE
   BRIDGE --> BRAIN
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class PARSE,CATALOG,ROUTER,EXTRACT,INVOKER,TRACE,BRIDGE,SKILL,BRAIN shipped
   class AI planned
     </div>
@@ -562,8 +562,8 @@ flowchart TB
   CLAR --&gt; REC
   DEFER --&gt; REC
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class P1,SCORE,INV,CLAR,DEFER,REC shipped
   class P2,P2SCORE planned
     </div>
@@ -759,32 +759,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
-  <header class="section-head"><span class="section-num">9</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">CUO-specific FRs as catalogued in PRD §9.2. Full descriptions at <a href="../reference/fr-catalog.html#cuo" class="text-blue-700 font-semibold underline">fr-catalog.html#cuo</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-CUO-001</code></td><td>Deterministic Phase-1 rule-based router</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-002</code></td><td>Per-skill keyword bank + region scoring</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-003</code></td><td>Pure-function per-skill argument extractors</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-004</code></td><td>Confidence threshold gate &amp; defer-to-human</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-005</code></td><td>Audit-chained recording of every decision (BRAIN bridge)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-006</code></td><td>Skill catalog read in sorted-path order</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-007</code></td><td>Delegation of execution to Skill module (no in-process exec)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-008</code></td><td>Capability gating via Skill broker (no bypass)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-009</code></td><td>Phase 2 LLM cascade with full prompt logging</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-010</code></td><td>LangGraph supervisor + Postgres checkpointer (EU AI Act Art. 12)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0+</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-011</code></td><td>Phase 3 multi-skill chains via <code>depends_on</code></td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-012</code></td><td>Phase 4 persona-classification first router</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-013</code></td><td>Ambient nudges (Notify · Question · Review modes)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-014</code></td><td>Persona-version stamp on every decision row</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-CUO-015</code></td><td>Trust calibration (uncertainty surfaced to user)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-CUO-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -797,14 +778,14 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-CUO-LAT-001</code></td><td>Phase-1 routing p95</td><td>≤ 5 ms (catalog cached)</td><td>fixtures/golden_routing.json benchmark</td></tr>
-        <tr><td><code>NFR-CUO-LAT-002</code></td><td>Phase-2 LLM cascade p95</td><td>≤ 800 ms incl. network</td><td>AI Gateway latency budget</td></tr>
-        <tr><td><code>NFR-CUO-LAT-003</code></td><td>Catalog refresh p95</td><td>≤ 50 ms over 100 skills</td><td>catalog.scan() benchmark</td></tr>
-        <tr><td><code>NFR-CUO-DET-001</code></td><td>Phase-1 determinism</td><td>100% (same query+catalog → same decision)</td><td>15 routing fixtures, golden tests</td></tr>
-        <tr><td><code>NFR-CUO-ESC-001</code></td><td>Escalation rate to LLM</td><td>≤ 10% of queries (after warm-up)</td><td>BRAIN audit replay · weekly KPI</td></tr>
-        <tr><td><code>NFR-CUO-DEF-001</code></td><td>Defer-to-human rate</td><td>≤ 5% of queries</td><td>BRAIN audit replay</td></tr>
-        <tr><td><code>NFR-CUO-COV-001</code></td><td>Test coverage of router.py</td><td>≥ 90% line · 100% branch</td><td>coverage.py</td></tr>
-        <tr><td><code>NFR-CUO-AVL-001</code></td><td>Availability (in-process)</td><td>same as caller</td><td>n/a — co-located</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Phase-1 routing p95</td><td>≤ 5 ms (catalog cached)</td><td>fixtures/golden_routing.json benchmark</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Phase-2 LLM cascade p95</td><td>≤ 800 ms incl. network</td><td>AI Gateway latency budget</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Catalog refresh p95</td><td>≤ 50 ms over 100 skills</td><td>catalog.scan() benchmark</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Phase-1 determinism</td><td>100% (same query+catalog → same decision)</td><td>15 routing fixtures, golden tests</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Escalation rate to LLM</td><td>≤ 10% of queries (after warm-up)</td><td>BRAIN audit replay · weekly KPI</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Defer-to-human rate</td><td>≤ 5% of queries</td><td>BRAIN audit replay</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Test coverage of router.py</td><td>≥ 90% line · 100% branch</td><td>coverage.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Availability (in-process)</td><td>same as caller</td><td>n/a — co-located</td></tr>
       </tbody>
     </table>
   </div>
@@ -849,8 +830,8 @@ graph LR
   CUO_M --> KB
   CUO_M --> OTHERS
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class CUO_M,BRAIN,SKILL shipped
   class AUTH,AI,MCP,CHAT,EMAIL,PROJ,CRM,HR,KB,OTHERS planned
     </div>

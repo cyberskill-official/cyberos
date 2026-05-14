@@ -8,7 +8,7 @@
   <meta name="description" content="AUTH — Authentication & Authorization. Postgres-backed identity, RBAC + scope contract grants, OAuth 2.1 + PKCE, OIDC SSO, WebAuthn L3, agent-equal predicate evaluation. The shared identity plane every module bolts onto.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -199,7 +199,7 @@
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>OAuth 2.1 (not 2.0 — PKCE mandatory). RBAC + Scope Contract Grants (no ABAC complexity at P0). JWT RS256 (not HS256 — separates signer from verifier). Argon2id for password hashing. Refresh-token rotation with reuse detection (RFC 6749 §10.4). Row-level security on every identity table keyed by tenant_id.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P0). Multi-AZ Postgres RDS. Redis cluster mode at P3+. WebAuthn relying-party ID = the company root domain (P0: <code>cyberos.com</code>).</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE today (covered by CEO). By P1: CSO seat owns 100% capacity + 24/7 on-call rotation with CTO.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-SEC-001..012 (PRD §11.2.3) — zero tenant-data leakage, zero compensation in BRAIN, mandatory mTLS, OWASP Gen AI Top-10 mitigations all green. Per-tenant auth-decision dashboard. Annual penetration test (P2+).</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending)..012 (PRD §11.2.3) — zero tenant-data leakage, zero compensation in BRAIN, mandatory mTLS, OWASP Gen AI Top-10 mitigations all green. Per-tenant auth-decision dashboard. Annual penetration test (P2+).</td></tr>
       </tbody>
     </table>
   </div>
@@ -218,35 +218,35 @@
     <div class="mermaid">
 graph TB
   subgraph CLIENTS ["Clients"]
-    BROWSER["Browser SPA<br/>(OIDC + PKCE)"]
+    BROWSER["Browser SPA<br>(OIDC + PKCE)"]
     MOBILE["Mobile (P3)"]
-    AGENT["CUO agent<br/>persona-stamped JWT"]
-    SVC["Module service<br/>(mTLS · client_credentials)"]
+    AGENT["CUO agent<br>persona-stamped JWT"]
+    SVC["Module service<br>(mTLS · client_credentials)"]
   end
 
   subgraph EDGE ["Edge"]
-    AR["Apollo Router<br/>verifies JWT @JwtAuth"]
-    MCP["MCP Gateway<br/>verifies OAuth 2.1 PRM"]
+    AR["Apollo Router<br>verifies JWT @JwtAuth"]
+    MCP["MCP Gateway<br>verifies OAuth 2.1 PRM"]
   end
 
   subgraph AUTH ["AUTH service (Rust · axum)"]
-    OIDC["OIDC issuer<br/>/.well-known/openid-configuration"]
-    OAUTH["OAuth 2.1 token endpoint<br/>PKCE · audience-bound"]
-    WA["WebAuthn / TOTP<br/>passkey + 2FA"]
-    RBAC["RBAC engine<br/>predicate evaluator"]
-    SCOPE["Scope Contract<br/>Grant resolver"]
-    ADMIN["Admin REST<br/>role / tenant CRUD"]
+    OIDC["OIDC issuer<br>/.well-known/openid-configuration"]
+    OAUTH["OAuth 2.1 token endpoint<br>PKCE · audience-bound"]
+    WA["WebAuthn / TOTP<br>passkey + 2FA"]
+    RBAC["RBAC engine<br>predicate evaluator"]
+    SCOPE["Scope Contract<br>Grant resolver"]
+    ADMIN["Admin REST<br>role / tenant CRUD"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br/>identity · roles · sessions<br/>RLS by tenant_id")]
-    RED[("Redis 7<br/>session + RBAC cache<br/>TTL ≤ 15 min")]
-    KMS[("AWS KMS<br/>RS256 signing key<br/>wrapped on disk")]
+    PG[("PostgreSQL<br>identity · roles · sessions<br>RLS by tenant_id")]
+    RED[("Redis 7<br>session + RBAC cache<br>TTL ≤ 15 min")]
+    KMS[("AWS KMS<br>RS256 signing key<br>wrapped on disk")]
   end
 
   subgraph SINKS ["Audit & telemetry"]
-    BRAIN["🧠 BRAIN<br/>auth.decision rows"]
-    OBS["👁 OBS<br/>traces + metrics"]
+    BRAIN["🧠 BRAIN<br>auth.decision rows"]
+    OBS["👁 OBS<br>traces + metrics"]
   end
 
   BROWSER --> OIDC
@@ -268,9 +268,9 @@ graph TB
   RBAC --> BRAIN
   AUTH --> OBS
 
-  classDef planned fill:#e0e7ff,stroke:#4338ca
+  classDef planned fill:#cba88a,stroke:#4338ca
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class OIDC,OAUTH,WA,RBAC,SCOPE,ADMIN,AR,MCP planned
   class PG,RED,KMS store
   class BRAIN,OBS sink
@@ -290,10 +290,10 @@ graph TB
         <tr><td><code>scope.rs</code></td><td>services/auth/src/scope.rs</td><td>Scope Contract Grant resolver. Reads agent-persona scope sheets from BRAIN; emits effective scope set per JWT.</td></tr>
         <tr><td><code>session.rs</code></td><td>services/auth/src/session.rs</td><td>Session manager — issue, validate, revoke. Device tracking + impossible-travel detection.</td></tr>
         <tr><td><code>jwt.rs</code></td><td>services/auth/src/jwt.rs</td><td>JWT issuance / verification. RS256 via KMS; key rotation; JWKS publication.</td></tr>
-        <tr><td><code>impossible_travel.rs</code></td><td>services/auth/src/impossible_travel.rs</td><td>Geographic-velocity check on consecutive logins (PRD FR-AUTH-006); challenge if velocity &gt; 1,000 km/h.</td></tr>
+        <tr><td><code>impossible_travel.rs</code></td><td>services/auth/src/impossible_travel.rs</td><td>Geographic-velocity check on consecutive logins (PRD (FR pending)); challenge if velocity &gt; 1,000 km/h.</td></tr>
         <tr><td><code>password.rs</code></td><td>services/auth/src/password.rs</td><td>Argon2id hashing, password-policy enforcement, breach-list check via HIBP k-anonymity API.</td></tr>
-        <tr><td><code>device.rs</code></td><td>services/auth/src/device.rs</td><td>Device fingerprinting (FR-AUTH-006), new-device email, force-logout endpoint.</td></tr>
-        <tr><td><code>magic_link.rs</code></td><td>services/auth/src/magic_link.rs</td><td>Magic-link onboarding flow (FR-AUTH-008) — single-use, time-bound, onboarding-only.</td></tr>
+        <tr><td><code>device.rs</code></td><td>services/auth/src/device.rs</td><td>Device fingerprinting ((FR pending)), new-device email, force-logout endpoint.</td></tr>
+        <tr><td><code>magic_link.rs</code></td><td>services/auth/src/magic_link.rs</td><td>Magic-link onboarding flow ((FR pending)) — single-use, time-bound, onboarding-only.</td></tr>
         <tr><td><code>audit_bridge.rs</code></td><td>services/auth/src/audit_bridge.rs</td><td>Writes every decision to BRAIN via the canonical writer. Includes <code>actor</code>, <code>action</code>, <code>resource</code>, <code>decision</code>, <code>reason</code>.</td></tr>
         <tr><td><code>admin.rs</code></td><td>services/auth/src/admin.rs</td><td>Admin REST — create tenant, assign role, revoke session, view audit. CSO + CEO scope only.</td></tr>
         <tr><td><code>migrations/</code></td><td>services/auth/migrations/</td><td>sqlx migrations. Every table has RLS by <code>tenant_id</code>. Indices for hot-path queries.</td></tr>
@@ -671,7 +671,7 @@ sequenceDiagram
   A-->>SPA: {access_token, refresh_token}
   Note over SPA: subsequent calls carry Bearer JWT
     </div>
-    <p class="text-xs text-slate-500 mt-3">WebAuthn replaces the password leg entirely for elevated roles (CEO / CFO / CHRO / CSO / CLO). TOTP remains as fallback for member-tier accounts (FR-AUTH-002).</p>
+    <p class="text-xs text-slate-500 mt-3">WebAuthn replaces the password leg entirely for elevated roles (CEO / CFO / CHRO / CSO / CLO). TOTP remains as fallback for member-tier accounts ((FR pending)).</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 2 — TOTP MFA login (member tier)</h3>
@@ -723,7 +723,7 @@ sequenceDiagram
   participant B as BRAIN write
 
   Note over CUO: CUO needs to invoke a skill on behalf of stephen@…
-  CUO->>A: POST /oauth/token<br/>grant_type=urn:cyberos:agent-impersonation<br/>actor_jwt=cuo-service-jwt<br/>on_behalf_of=stephen@…<br/>persona_version=cuo-v2.3.1
+  CUO->>A: POST /oauth/token<br>grant_type=urn:cyberos:agent-impersonation<br>actor_jwt=cuo-service-jwt<br>on_behalf_of=stephen@…<br>persona_version=cuo-v2.3.1
   A->>SC: resolve scope for persona cuo-v2.3.1
   SC->>BR: read meta/persona/cuo/v2.3.1/scope.md
   BR-->>SC: {scope_set, valid_to}
@@ -732,7 +732,7 @@ sequenceDiagram
   K-->>A: signed token
   A->>B: auth.decision {subject:cuo, action:"impersonate", on_behalf_of:stephen, allow}
   A-->>CUO: {access_token, ttl:15min}
-  Note over CUO: every downstream call carries this persona-stamped JWT;<br/>BRAIN audit rows capture both `actor` and `on_behalf_of`.
+  Note over CUO: every downstream call carries this persona-stamped JWT;<br>BRAIN audit rows capture both `actor` and `on_behalf_of`.
     </div>
     <p class="text-xs text-slate-500 mt-3">The agent token's effective scope is the intersection of (a) what the user could do, (b) what the persona is granted, and (c) what AUTH's policy allows. Three-way narrowing means an agent can never exceed its user, nor its persona contract.</p>
   </div>
@@ -784,7 +784,7 @@ sequenceDiagram
   participant B as BRAIN
 
   Note over SVC: CHAT needs to call BRAIN's put endpoint
-  SVC->>A: POST /oauth/token<br/>grant_type=client_credentials<br/>client_id=chat-service<br/>client_secret=…<br/>scope=brain.put<br/>audience=brain.cyberos.internal
+  SVC->>A: POST /oauth/token<br>grant_type=client_credentials<br>client_id=chat-service<br>client_secret=…<br>scope=brain.put<br>audience=brain.cyberos.internal
   A->>A: verify client secret (argon2id)
   A->>A: check audience ∈ allowed_audiences
   A->>K: sign JWT {sub:chat-service, aud:brain, scope:brain.put, exp:15m}
@@ -830,10 +830,10 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>Token type</th><th>Lifetime</th><th>Rotation</th><th>Notes</th></tr></thead>
       <tbody>
-        <tr><td>Access token (JWT RS256)</td><td>15 minutes</td><td>none (issue new)</td><td>FR-AUTH-003 — short-lived</td></tr>
-        <tr><td>Refresh token</td><td>30 days</td><td>every use</td><td>FR-AUTH-004 — replay invalidates session</td></tr>
+        <tr><td>Access token (JWT RS256)</td><td>15 minutes</td><td>none (issue new)</td><td>(FR pending) — short-lived</td></tr>
+        <tr><td>Refresh token</td><td>30 days</td><td>every use</td><td>(FR pending) — replay invalidates session</td></tr>
         <tr><td>OAuth authorization code</td><td>60 seconds</td><td>single-use</td><td>PKCE-bound</td></tr>
-        <tr><td>Magic link</td><td>15 minutes</td><td>single-use</td><td>FR-AUTH-008 — onboarding only</td></tr>
+        <tr><td>Magic link</td><td>15 minutes</td><td>single-use</td><td>(FR pending) — onboarding only</td></tr>
         <tr><td>Agent persona token</td><td>15 minutes</td><td>each tool call may refresh</td><td>scope ⊂ user × persona × policy</td></tr>
         <tr><td>API key</td><td>configurable (default 90 d)</td><td>manual</td><td>argon2id-hashed; <code>ck_live_…</code> prefix</td></tr>
         <tr><td>WebAuthn credential</td><td>indefinite</td><td>user-initiated revoke</td><td>sign_count tracked to detect cloning</td></tr>
@@ -843,37 +843,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">AUTH FRs as catalogued in PRD §9.6 and SRS §4.6. Full normative descriptions and verification methods at <a href="../reference/fr-catalog.html#auth" class="text-blue-700 font-semibold underline">fr-catalog.html#auth</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-AUTH-001</code></td><td>OAuth 2.1 with PKCE for all browser-based logins</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-002</code></td><td>MFA mandatory (TOTP minimum, WebAuthn for elevated roles)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-003</code></td><td>JWT RS256 access tokens, ≤ 15-minute lifetime</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-004</code></td><td>Refresh-token rotation; reuse triggers session invalidation</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-005</code></td><td>RBAC + Scope Contract Grants enforced on every cross-module call</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-006</code></td><td>Detect &amp; challenge impossible-travel sessions</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-007</code></td><td>Log every auth event (success, failure, MFA use) to the audit chain</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-008</code></td><td>Magic-link login restricted to onboarding flows only</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-009</code></td><td>Admin session revoke propagates within 5 seconds end-to-end</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-010</code></td><td>Compensation routes require CFO + CHRO co-sign at request time</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-011</code></td><td>OIDC SSO support (Google Workspace, Microsoft 365, Okta)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1+</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-012</code></td><td>Per-tenant authorisation server for OAuth 2.1 (MCP)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-013</code></td><td>Device tracking; new-device email; force-logout from any device</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-014</code></td><td>Service-account flow (<code>client_credentials</code>) with audience binding</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-015</code></td><td>API-key issuance with prefix display + argon2id hash storage</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-015" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-016</code></td><td>Password breach-list check via HIBP k-anonymity API</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-016" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-017</code></td><td>Per-tenant data residency enforcement (VN: hanoi-1; SG: sg-1)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-017" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-018</code></td><td>Vietnam Decree 53 — MoPS notification ≤ 24h on auth breach</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-018" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-019</code></td><td>Agent JWT token-exchange with persona-version stamping</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-019" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-AUTH-020</code></td><td>Penetration test cadence (annual P2+; after major releases)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2+</span></td><td><a href="../reference/fr-catalog.html#FR-AUTH-020" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -887,23 +863,23 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-SEC-001</code></td><td>Tenant data leakage incidents</td><td>= 0 (sev-0)</td><td>quarterly pen-test + automated cross-tenant test gate</td></tr>
-        <tr><td><code>NFR-SEC-002</code></td><td>P1 base-salary system-reduction</td><td>= 0 — legal commitment</td><td>policy gate on REW + audit replay</td></tr>
-        <tr><td><code>NFR-SEC-006</code></td><td>Agent auto-act on irreversible op without confirm</td><td>= 0 — runtime check</td><td>MCP gateway annotation check; CI test</td></tr>
-        <tr><td><code>NFR-SEC-007</code></td><td>Prompt-injection exfiltration via email/document</td><td>= 0 — CaMeL enforced</td><td>CaMeL test suite + red-team</td></tr>
-        <tr><td><code>NFR-SEC-008</code></td><td>TLS for all inter-service traffic</td><td>mTLS in cluster; HTTPS external</td><td>config inspection + Istio audit</td></tr>
-        <tr><td><code>NFR-SEC-009</code></td><td>Penetration-test cadence</td><td>annual (P2+); after major releases</td><td>contract evidence</td></tr>
-        <tr><td><code>NFR-SEC-010</code></td><td>Vulnerability remediation SLO</td><td>Critical ≤ 24 h; High ≤ 7 d</td><td>JIRA SLA tracking</td></tr>
-        <tr><td><code>NFR-SEC-011</code></td><td>Sub-processor list public on Trust Center</td><td>always</td><td>web-page diff alert</td></tr>
-        <tr><td><code>NFR-SEC-012</code></td><td>OWASP Gen AI Top-10 mitigations</td><td>all addressed</td><td>annual attestation</td></tr>
-        <tr><td><code>NFR-AUTH-LAT-001</code></td><td>RBAC predicate p95 (cache hit)</td><td>≤ 8 ms</td><td>bench/rbac.rs · nightly</td></tr>
-        <tr><td><code>NFR-AUTH-LAT-002</code></td><td>RBAC predicate p95 (cache miss)</td><td>≤ 25 ms</td><td>bench/rbac.rs · nightly</td></tr>
-        <tr><td><code>NFR-AUTH-LAT-003</code></td><td>OAuth token endpoint p95</td><td>≤ 250 ms</td><td>k6 load test</td></tr>
-        <tr><td><code>NFR-AUTH-LAT-004</code></td><td>WebAuthn assertion verify p95</td><td>≤ 50 ms</td><td>k6 load test</td></tr>
-        <tr><td><code>NFR-AUTH-AVL-001</code></td><td>AUTH availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor (NFR-REL-001)</td></tr>
-        <tr><td><code>NFR-AUTH-DUR-001</code></td><td>Auth-decision durability</td><td>0 dropped rows under crash</td><td>chaos test + BRAIN ledger walk</td></tr>
-        <tr><td><code>NFR-AUTH-INT-001</code></td><td>Refresh-token reuse detection rate</td><td>100% (zero false negatives)</td><td>property-based test</td></tr>
-        <tr><td><code>NFR-AUTH-RTO-001</code></td><td>Session revoke propagation</td><td>≤ 5 s end-to-end</td><td>FR-AUTH-009 test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Tenant data leakage incidents</td><td>= 0 (sev-0)</td><td>quarterly pen-test + automated cross-tenant test gate</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>P1 base-salary system-reduction</td><td>= 0 — legal commitment</td><td>policy gate on REW + audit replay</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Agent auto-act on irreversible op without confirm</td><td>= 0 — runtime check</td><td>MCP gateway annotation check; CI test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Prompt-injection exfiltration via email/document</td><td>= 0 — CaMeL enforced</td><td>CaMeL test suite + red-team</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>TLS for all inter-service traffic</td><td>mTLS in cluster; HTTPS external</td><td>config inspection + Istio audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Penetration-test cadence</td><td>annual (P2+); after major releases</td><td>contract evidence</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Vulnerability remediation SLO</td><td>Critical ≤ 24 h; High ≤ 7 d</td><td>JIRA SLA tracking</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Sub-processor list public on Trust Center</td><td>always</td><td>web-page diff alert</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OWASP Gen AI Top-10 mitigations</td><td>all addressed</td><td>annual attestation</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>RBAC predicate p95 (cache hit)</td><td>≤ 8 ms</td><td>bench/rbac.rs · nightly</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>RBAC predicate p95 (cache miss)</td><td>≤ 25 ms</td><td>bench/rbac.rs · nightly</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OAuth token endpoint p95</td><td>≤ 250 ms</td><td>k6 load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>WebAuthn assertion verify p95</td><td>≤ 50 ms</td><td>k6 load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>AUTH availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor (N(FR pending))</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Auth-decision durability</td><td>0 dropped rows under crash</td><td>chaos test + BRAIN ledger walk</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Refresh-token reuse detection rate</td><td>100% (zero false negatives)</td><td>property-based test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Session revoke propagation</td><td>≤ 5 s end-to-end</td><td>(FR pending) test</td></tr>
       </tbody>
     </table>
   </div>
@@ -921,17 +897,17 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["AUTH depends on"]
-    BRAIN["🧠 BRAIN<br/>auth.decision rows"]
-    OBS["👁 OBS<br/>traces + alerts"]
-    KMS["🔑 AWS KMS<br/>RS256 signing key"]
-    PG["🗄 PostgreSQL<br/>identity store"]
-    REDIS["⚡ Redis 7<br/>session + RBAC cache"]
+    BRAIN["🧠 BRAIN<br>auth.decision rows"]
+    OBS["👁 OBS<br>traces + alerts"]
+    KMS["🔑 AWS KMS<br>RS256 signing key"]
+    PG["🗄 PostgreSQL<br>identity store"]
+    REDIS["⚡ Redis 7<br>session + RBAC cache"]
   end
   AUTH["🔐 AUTH"]
   subgraph downstream ["Used by all 22 modules"]
-    AR["Apollo Router<br/>JWT verify @ edge"]
-    MCP["🔌 MCP Gateway<br/>tool-call gating"]
-    AI["🧠 AI Gateway<br/>per-tenant routing"]
+    AR["Apollo Router<br>JWT verify @ edge"]
+    MCP["🔌 MCP Gateway<br>tool-call gating"]
+    AI["🧠 AI Gateway<br>per-tenant routing"]
     CHAT["💬 CHAT"]
     REW["💎 REW"]
     HR["👥 HR"]
@@ -952,8 +928,8 @@ graph LR
   AUTH --> CRM
   AUTH --> OTHERS
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN shipped
   class AUTH,AR,MCP,AI,CHAT,REW,HR,CRM,OTHERS,OBS planned
   class KMS,PG,REDIS shipped
@@ -1009,7 +985,7 @@ graph LR
         <tr><td><code>R-AUTH-006</code></td><td>HIBP outage during signup blocks new users</td><td>Medium</td><td>Low</td><td>CTO</td><td>HIBP check is best-effort; on timeout, log + allow with policy reviewer note.</td></tr>
         <tr><td><code>R-AUTH-007</code></td><td>TOTP secret leakage via DB backup</td><td>Low</td><td>High</td><td>CSO</td><td>Column-level KMS encryption; backups encrypted with separate keys.</td></tr>
         <tr><td><code>R-AUTH-008</code></td><td>OAuth implementation CVE (e.g., authorization-code injection)</td><td>Medium</td><td>High</td><td>CSO</td><td>OAuth 2.1-only (mandatory PKCE); annual pen-test; subscribe to RFC drafts watchlist.</td></tr>
-        <tr><td><code>R-AUTH-009</code></td><td>Compensation co-sign bypass via direct DB write</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>FR-AUTH-010 enforced at REW boundary; direct DB write requires CSO+CFO co-sign; audit alarm.</td></tr>
+        <tr><td><code>R-AUTH-009</code></td><td>Compensation co-sign bypass via direct DB write</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>(FR pending) enforced at REW boundary; direct DB write requires CSO+CFO co-sign; audit alarm.</td></tr>
         <tr><td><code>R-AUTH-010</code></td><td>Audit-chain write outage blinds the SOC</td><td>Low</td><td>High</td><td>CTO</td><td>Bounded local buffer + retry; alert on backlog &gt; 60 s; AUTH refuses new logins after 5 min buffer.</td></tr>
       </tbody>
     </table>
@@ -1033,7 +1009,7 @@ graph LR
         <tr><td><strong>Refresh-reuse detections</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; expect &lt; 5/month</td></tr>
         <tr><td><strong>Impossible-travel challenges</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; alert on &gt; 50/day</td></tr>
         <tr><td><strong>Auth-decision durability</strong></td><td><code>rows_in_brain / rows_emitted</code></td><td>chaos test</td><td>100%</td></tr>
-        <tr><td><strong>Session revoke p95 (end-to-end)</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 s (FR-AUTH-009)</td></tr>
+        <tr><td><strong>Session revoke p95 (end-to-end)</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 s ((FR pending))</td></tr>
         <tr><td><strong>Penetration-test critical findings</strong></td><td>count</td><td>annual report</td><td>= 0 critical · ≤ 2 high</td></tr>
       </tbody>
     </table>
@@ -1185,9 +1161,9 @@ graph LR
     <ul class="space-y-2 text-sm">
       <li><strong>PRD §8.4</strong> — Identity, authorisation server, OAuth 2.1 conventions.</li>
       <li><strong>PRD §8.6</strong> — RBAC role catalogue (closed enum).</li>
-      <li><strong>PRD §9.6</strong> — FR-AUTH-001 through FR-AUTH-008 (PRD-tier).</li>
+      <li><strong>PRD §9.6</strong> — (FR pending) through (FR pending) (PRD-tier).</li>
       <li><strong>PRD §11.2.3</strong> — Security NFRs (SEC-001 through SEC-012).</li>
-      <li><strong>SRS §4.6</strong> — Formal FR-AUTH-001 through FR-AUTH-010 with verification methods.</li>
+      <li><strong>SRS §4.6</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Decree 53/2022/NĐ-CP (Vietnam)</strong> — Cybersecurity Law implementing decree; data-residency + breach notification.</li>
       <li><strong>Decree 13/2023/NĐ-CP (Vietnam)</strong> — Personal data processing protection.</li>
       <li><strong>Law 91/2025/QH15 (Vietnam PDPL)</strong> — Personal Data Protection Law.</li>

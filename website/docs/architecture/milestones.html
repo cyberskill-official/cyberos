@@ -7,7 +7,7 @@
   <meta name="description" content="The 12-month milestone arc. Five phases (P0 → P4), 22 modules, compliance gates that flip every quarter.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <script type="module" src="../assets/scripts.js"></script>
 </head>
@@ -282,10 +282,10 @@ gantt
       <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
         <li>All 10 internal Members on CyberOS for chat + memory by M+3</li>
         <li>Slack + Zalo billing terminated by M+3</li>
-        <li>CUO answers ≥ 50 questions/week with ≥ 98% citation rate (NFR-USAB-005)</li>
+        <li>CUO answers ≥ 50 questions/week with ≥ 98% citation rate (N(FR pending))</li>
         <li>BRAIN search p95 ≤ 250ms on 50k-chunk corpus</li>
         <li>Zero compensation/equity facts ingested into BRAIN (denylist DEC-036)</li>
-        <li>p95 GraphQL ≤ 400ms across all subgraphs (NFR-PERF-001)</li>
+        <li>p95 GraphQL ≤ 400ms across all subgraphs (N(FR pending))</li>
       </ul>
     </div>
     <div class="bbg-card p-5">
@@ -363,7 +363,7 @@ gantt
       <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
         <li>First full payroll cycle issued through REW (month-end M+6)</li>
         <li>First promotion review through Hội đồng Chuyên môn</li>
-        <li>P1 base salary invariant verified: zero system-reductions (NFR-SEC-002)</li>
+        <li>P1 base salary invariant verified: zero system-reductions (N(FR pending))</li>
         <li>BP balance tracked with anti-inflation interest at ACB rate</li>
         <li>EMAIL daily summary in BRAIN for every Member</li>
         <li>CRM activities auto-logged from EMAIL outgoing (CaMeL safe extraction)</li>
@@ -374,7 +374,7 @@ gantt
   <div class="bbg-card p-5">
     <h4 class="font-bold mb-2">Risks</h4>
     <ul class="text-sm text-slate-600 space-y-1.5">
-      <li><strong class="text-rose-700">R-101 (M×H)</strong> — REW parameter versioning bug; retroactive recompute could violate NFR-SEC-003. <em>Mitigation: anti-retroactive CI gate; replay tests on every release.</em></li>
+      <li><strong class="text-rose-700">R-101 (M×H)</strong> — REW parameter versioning bug; retroactive recompute could violate N(FR pending). <em>Mitigation: anti-retroactive CI gate; replay tests on every release.</em></li>
       <li><strong class="text-rose-700">R-102 (M×H)</strong> — EU AI Act Annex III §4 over-application; HR features flagged as high-risk. <em>Mitigation: DEC-054 — drafts only, no scoring.</em></li>
       <li><strong class="text-amber-700">R-103 (M×M)</strong> — Stalwart self-hosted EMAIL reliability. <em>Mitigation: fallback SMTP relay; OBS alarms on bounce rate.</em></li>
       <li><strong class="text-amber-700">R-104 (L×M)</strong> — SOC 2 Type I auditor unavailability in Vietnam. <em>Mitigation: Schellman, A-LIGN shortlist; remote audit option.</em></li>
@@ -560,7 +560,7 @@ gantt
         <li>5 external paying tenants by M+21</li>
         <li>10 external paying tenants by M+24 → ARR ≥ $3M</li>
         <li>NPS ≥ 40 from external tenants</li>
-        <li>Zero tenant data leakage incidents (NFR-SEC-001 maintained)</li>
+        <li>Zero tenant data leakage incidents (N(FR pending) maintained)</li>
         <li>First eIDAS QTSP-signed document issued</li>
       </ul>
     </div>
@@ -657,11 +657,11 @@ flowchart LR
   INV --> TEN
   KB --> DOC
 
-  classDef p0 fill:#dbeafe,stroke:#1e40af,stroke-width:2px
-  classDef p1 fill:#d1fae5,stroke:#047857
-  classDef p2 fill:#fef3c7,stroke:#b45309
-  classDef p3 fill:#f3e8ff,stroke:#7e22ce
-  classDef p4 fill:#f1f5f9,stroke:#475569
+  classDef p0 fill:#e8d4c2,stroke:#45210e,stroke-width:2px
+  classDef p1 fill:#f5ede6,stroke:#45210e
+  classDef p2 fill:#fef6e0,stroke:#9c750a
+  classDef p3 fill:#f9c64f,stroke:#9c750a
+  classDef p4 fill:#f0eee9,stroke:#475569
 
   class AUTH,AI,MCP,OBS,BRAIN,CUO,CHAT p0
   class PROJ,TIME,CRM,KB,HR,EMAIL,REW,LEARN p1
@@ -801,12 +801,12 @@ xychart-beta
     <div class="bbg-card p-5">
       <h4 class="font-bold mb-2 text-slate-900">Continuous (cross-phase) NFRs</h4>
       <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>NFR-PERF-001 GraphQL p95 ≤ 400ms</li>
-        <li>NFR-PERF-004 BRAIN search p95 ≤ 250ms on 1M chunks</li>
-        <li>NFR-REL-001 Platform availability ≥ 99.5%</li>
-        <li>NFR-REL-002 CHAT availability ≥ 99.9%</li>
-        <li>NFR-SEC-001 Tenant data leakage = 0</li>
-        <li>NFR-USAB-005 CUO citation rate ≥ 98%</li>
+        <li>N(FR pending) GraphQL p95 ≤ 400ms</li>
+        <li>N(FR pending) BRAIN search p95 ≤ 250ms on 1M chunks</li>
+        <li>N(FR pending) Platform availability ≥ 99.5%</li>
+        <li>N(FR pending) CHAT availability ≥ 99.9%</li>
+        <li>N(FR pending) Tenant data leakage = 0</li>
+        <li>N(FR pending) CUO citation rate ≥ 98%</li>
       </ul>
     </div>
     <div class="bbg-card p-5">

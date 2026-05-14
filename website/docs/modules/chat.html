@@ -8,7 +8,7 @@
   <meta name="description" content="CHAT — internal real-time chat. Mattermost fork + CyberOS auth/UI shell, channels, threads, attachments, PGroonga VN search, AI-native (summarisation, smart-reply), Slack/Zalo import, mobile via Tauri.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -129,9 +129,9 @@
       <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+2</div></div>
       <div class="fact-card"><div class="label">Strategy</div><div class="value">Fork Mattermost</div><div class="note">open-core · MIT/Apache</div></div>
       <div class="fact-card"><div class="label">Search engine</div><div class="value">PGroonga</div><div class="note">VN tokeniser · recall ≥ 80%</div></div>
-      <div class="fact-card"><div class="label">Send p95</div><div class="value">≤ 200 ms</div><div class="note">NFR-PERF-002</div></div>
-      <div class="fact-card"><div class="label">Availability</div><div class="value">≥ 99.9%</div><div class="note">NFR-REL-002</div></div>
-      <div class="fact-card"><div class="label">BRAIN ingest p95</div><div class="value">≤ 5 s</div><div class="note">FR-CHAT-008</div></div>
+      <div class="fact-card"><div class="label">Send p95</div><div class="value">≤ 200 ms</div><div class="note">N(FR pending)</div></div>
+      <div class="fact-card"><div class="label">Availability</div><div class="value">≥ 99.9%</div><div class="note">N(FR pending)</div></div>
+      <div class="fact-card"><div class="label">BRAIN ingest p95</div><div class="value">≤ 5 s</div><div class="note">(FR pending)</div></div>
       <div class="fact-card"><div class="label">Desktop / mobile</div><div class="value">Tauri</div><div class="note">offline-first via Yjs</div></div>
       <div class="fact-card"><div class="label">Voice ASR</div><div class="value">Whisper-large-v3</div><div class="note">self-hosted · VN + EN</div></div>
     </div>
@@ -183,7 +183,7 @@
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>WebSocket for hot push; long-poll fallback. Logical replication slot to BRAIN. PGroonga full-text index per channel. CRDT for offline draft sync. ASR runs locally on a shared GPU pod.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate (Go service · 2 CPU · 4 GB). RDS Postgres 16. Redis 7. MinIO on EBS-backed volumes.</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.3 FTE CPO + 0.5 FTE CTO at P0. P1+: 1 FTE PM + 1 FTE FE eng + ongoing.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-PERF-002 (send p95 ≤ 200 ms), NFR-REL-002 (availability ≥ 99.9%), FR-CHAT-006 (VN search recall ≥ 80%), FR-CHAT-008 (BRAIN ingest p95 ≤ 5 s).</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (send p95 ≤ 200 ms), N(FR pending) (availability ≥ 99.9%), (FR pending) (VN search recall ≥ 80%), (FR pending) (BRAIN ingest p95 ≤ 5 s).</td></tr>
       </tbody>
     </table>
   </div>
@@ -205,35 +205,35 @@ graph TB
   end
 
   subgraph CHAT ["CHAT service (Go · Mattermost fork)"]
-    WS["websocket.go<br/>hot push"]
-    API["api.go<br/>HTTP + GraphQL"]
-    CHAN["channels.go<br/>public · private · DM"]
-    THR["threads.go<br/>reply chains"]
-    MSG["messages.go<br/>create · update · delete"]
-    PRES["presence.go<br/>online/away/dnd"]
-    NOTIF["notifications.go<br/>FCM + APNs fanout"]
+    WS["websocket.go<br>hot push"]
+    API["api.go<br>HTTP + GraphQL"]
+    CHAN["channels.go<br>public · private · DM"]
+    THR["threads.go<br>reply chains"]
+    MSG["messages.go<br>create · update · delete"]
+    PRES["presence.go<br>online/away/dnd"]
+    NOTIF["notifications.go<br>FCM + APNs fanout"]
   end
 
   subgraph CYBER ["CyberOS native plug-ins"]
-    AUTHB["auth_bridge.go<br/>JWT verify + RBAC.Check"]
-    SEARCH["search.go<br/>PGroonga adapter · VN tokenise"]
-    BRAINB["brain_bridge.go<br/>logical replication tail"]
-    IMP["importers/<br/>slack · zalo"]
-    ASR["asr_client.go<br/>Whisper gRPC"]
-    YJS["yjs_sync.go<br/>CRDT draft sync"]
+    AUTHB["auth_bridge.go<br>JWT verify + RBAC.Check"]
+    SEARCH["search.go<br>PGroonga adapter · VN tokenise"]
+    BRAINB["brain_bridge.go<br>logical replication tail"]
+    IMP["importers/<br>slack · zalo"]
+    ASR["asr_client.go<br>Whisper gRPC"]
+    YJS["yjs_sync.go<br>CRDT draft sync"]
   end
 
   subgraph AI ["AI features"]
-    GENIE["genie.go<br/>@genie mention handler"]
-    SUMM["summarise.go<br/>/summarise thread"]
-    SREPLY["smart_reply.go<br/>3 suggestions / mention"]
-    DIG["digest.go<br/>daily channel digest"]
+    GENIE["genie.go<br>@genie mention handler"]
+    SUMM["summarise.go<br>/summarise thread"]
+    SREPLY["smart_reply.go<br>3 suggestions / mention"]
+    DIG["digest.go<br>daily channel digest"]
   end
 
   subgraph STORES
-    PG[("PostgreSQL 16<br/>+ PGroonga<br/>messages · channels<br/>RLS by tenant_id")]
-    REDIS[("Redis 7<br/>presence + push fanout")]
-    MINIO[("MinIO (S3-compatible)<br/>attachments")]
+    PG[("PostgreSQL 16<br>+ PGroonga<br>messages · channels<br>RLS by tenant_id")]
+    REDIS[("Redis 7<br>presence + push fanout")]
+    MINIO[("MinIO (S3-compatible)<br>attachments")]
   end
 
   subgraph EXT ["External CyberOS services"]
@@ -281,9 +281,9 @@ graph TB
   ASR --> GPU
   CHAT --> OBS
 
-  classDef planned fill:#ecfdf5,stroke:#047857
+  classDef planned fill:#ecfdf5,stroke:#45210e
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef ext fill:#fef3c7,stroke:#b45309
+  classDef ext fill:#fef6e0,stroke:#9c750a
   class WS,API,CHAN,THR,MSG,PRES,NOTIF,AUTHB,SEARCH,BRAINB,IMP,ASR,YJS,GENIE,SUMM,SREPLY,DIG,DT,MOB,WEB planned
   class PG,REDIS,MINIO store
   class AUTH,AIGW,BRAIN,OBS,GPU ext
@@ -311,8 +311,8 @@ graph TB
         <tr><td><code>yjs_sync.go</code></td><td>services/chat/native/yjs_sync.go</td><td>Yjs CRDT-based offline draft sync. Draft conflicts resolved per CRDT rules.</td></tr>
         <tr><td><code>genie.go</code></td><td>services/chat/ai/genie.go</td><td>@genie mention handler. Builds context from thread + channel; calls AI Gateway; posts answer with citations.</td></tr>
         <tr><td><code>summarise.go</code></td><td>services/chat/ai/summarise.go</td><td><code>/summarise</code> slash command. Thread → summary with TL;DR and action items.</td></tr>
-        <tr><td><code>smart_reply.go</code></td><td>services/chat/ai/smart_reply.go</td><td>On every @-mention to a user, generate 3 reply suggestions (latency p95 ≤ 1.4 s, FR-CHAT-004).</td></tr>
-        <tr><td><code>digest.go</code></td><td>services/chat/ai/digest.go</td><td>Daily channel digest (FR-CHAT-005) for members in "Notify" mode.</td></tr>
+        <tr><td><code>smart_reply.go</code></td><td>services/chat/ai/smart_reply.go</td><td>On every @-mention to a user, generate 3 reply suggestions (latency p95 ≤ 1.4 s, (FR pending)).</td></tr>
+        <tr><td><code>digest.go</code></td><td>services/chat/ai/digest.go</td><td>Daily channel digest ((FR pending)) for members in "Notify" mode.</td></tr>
         <tr><td><code>tauri_shell/</code></td><td>services/chat/tauri/</td><td>Tauri Rust shell. Desktop (macOS · Windows · Linux) + mobile (iOS · Android via Tauri 2.0 mobile).</td></tr>
       </tbody>
     </table>
@@ -590,7 +590,7 @@ sequenceDiagram
     NOT->>WS: trigger @genie handler
   end
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-CHAT-008: BRAIN ingest p95 ≤ 5 s. Logical replication is the load-bearing piece — Postgres ships the WAL, the bridge transforms each row into a BRAIN put.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): BRAIN ingest p95 ≤ 5 s. Logical replication is the load-bearing piece — Postgres ships the WAL, the bridge transforms each row into a BRAIN put.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 2 — Thread reply</h3>
@@ -634,7 +634,7 @@ sequenceDiagram
   S-->>API: 23 hits
   API-->>U: results
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-CHAT-006: PGroonga VN tokeniser; recall ≥ 80% on the public VN test set. Membership filter applied first to enforce ACL.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): PGroonga VN tokeniser; recall ≥ 80% on the public VN test set. Membership filter applied first to enforce ACL.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 4 — Thread summarisation (<code>/summarise</code>)</h3>
@@ -658,7 +658,7 @@ sequenceDiagram
   SUM->>API: render as inline reply
   API-->>U: "TL;DR: … Action items: …"
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-CHAT-003: thread summarisation p95 ≤ 3 s. Most cost in AI Gateway call; CHAT adds ~80 ms overhead.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): thread summarisation p95 ≤ 3 s. Most cost in AI Gateway call; CHAT adds ~80 ms overhead.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 5 — Slack import</h3>
@@ -687,7 +687,7 @@ sequenceDiagram
   IMP-->>CLI: done
   CLI-->>ADMIN: report (channels, messages, attachments transferred)
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-CHAT-007: Slack import path; Zalo where API allows. Backfill BRAIN ingest is throttled to avoid swamping the chain (max 1k ops/sec).</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): Slack import path; Zalo where API allows. Backfill BRAIN ingest is throttled to avoid swamping the chain (max 1k ops/sec).</p>
   </div>
 </section>
 
@@ -730,30 +730,14 @@ stateDiagram-v2
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">CHAT FRs from PRD §9.3 + SRS §4.3. Full normative descriptions at <a href="../reference/fr-catalog.html#chat" class="text-blue-700 font-semibold underline">fr-catalog.html#chat</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-CHAT-001</code></td><td>Mattermost server fork with CyberOS-specific plugins</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-002</code></td><td>@genie inline mention surfaces a Genie answer with citations</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-003</code></td><td>Thread summarisation (<code>/summarise</code>) within p95 ≤ 3 s</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-004</code></td><td>Smart-reply suggestions latency p95 ≤ 1.4 s</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td><code>FR-CHAT-005</code></td><td>Daily channel digest in Notify mode (Member-ranked)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td><code>FR-CHAT-006</code></td><td>Vietnamese tokenisation via PGroonga; search recall ≥ 80%</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-007</code></td><td>Slack import; Zalo import where API allows</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-008</code></td><td>CHAT messages ingested into BRAIN Layer 3 within p95 ≤ 5 s</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-009</code></td><td>Per-channel ACL; private DM messages namespace-isolated in BRAIN</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-010</code></td><td>Compliance export reuses Mattermost's format + CyberOS audit chain</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-011</code></td><td>Voice messages with VN + EN ASR (Whisper-large-v3 self-hosted)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td><code>FR-CHAT-012</code></td><td>Mobile sync engine: offline-first with conflict resolution (Yjs)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td></tr>
-        <tr><td><code>FR-CHAT-013</code></td><td>PDPL Art. 14 DSAR — full message export per subject</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-014</code></td><td>Send-message p95 ≤ 200 ms (NFR alignment)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-CHAT-015</code></td><td>Per-tenant data residency (VN / SG / EU)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -763,19 +747,19 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-PERF-002</code></td><td>CHAT message-deliver p95</td><td>≤ 200 ms</td><td>WebSocket round-trip · k6</td></tr>
-        <tr><td><code>NFR-REL-002</code></td><td>CHAT availability (28-day)</td><td>≥ 99.9%</td><td>SLO</td></tr>
-        <tr><td><code>NFR-CHAT-LAT-001</code></td><td>Thread summarisation p95</td><td>≤ 3 s</td><td>FR-CHAT-003 test</td></tr>
-        <tr><td><code>NFR-CHAT-LAT-002</code></td><td>Smart-reply suggestion p95</td><td>≤ 1.4 s</td><td>FR-CHAT-004</td></tr>
-        <tr><td><code>NFR-CHAT-LAT-003</code></td><td>VN search query p95</td><td>≤ 250 ms over 1M messages</td><td>k6 search test</td></tr>
-        <tr><td><code>NFR-CHAT-LAT-004</code></td><td>BRAIN ingest end-to-end p95</td><td>≤ 5 s</td><td>FR-CHAT-008</td></tr>
-        <tr><td><code>NFR-CHAT-SEARCH-001</code></td><td>VN search recall on test set</td><td>≥ 80%</td><td>FR-CHAT-006</td></tr>
-        <tr><td><code>NFR-CHAT-SEARCH-002</code></td><td>VN search precision on test set</td><td>≥ 85%</td><td>FR-CHAT-006 test</td></tr>
-        <tr><td><code>NFR-CHAT-SCALE-001</code></td><td>Concurrent WS connections (P0)</td><td>≥ 5,000</td><td>load test</td></tr>
-        <tr><td><code>NFR-CHAT-SCALE-002</code></td><td>Messages / second (P0)</td><td>≥ 500</td><td>k6 sustained</td></tr>
-        <tr><td><code>NFR-CHAT-DSAR-001</code></td><td>DSAR export completeness</td><td>100% messages + reactions + attachments</td><td>fixture test</td></tr>
-        <tr><td><code>NFR-CHAT-AUD-001</code></td><td>Message → BRAIN audit link rate</td><td>100% (no dropped messages)</td><td>continuous reconciliation</td></tr>
-        <tr><td><code>NFR-CHAT-COST-001</code></td><td>P0 infra cost</td><td>≤ $45/month</td><td>OBS cost dashboard</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>CHAT message-deliver p95</td><td>≤ 200 ms</td><td>WebSocket round-trip · k6</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>CHAT availability (28-day)</td><td>≥ 99.9%</td><td>SLO</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Thread summarisation p95</td><td>≤ 3 s</td><td>(FR pending) test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Smart-reply suggestion p95</td><td>≤ 1.4 s</td><td>(FR pending)</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VN search query p95</td><td>≤ 250 ms over 1M messages</td><td>k6 search test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>BRAIN ingest end-to-end p95</td><td>≤ 5 s</td><td>(FR pending)</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VN search recall on test set</td><td>≥ 80%</td><td>(FR pending)</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VN search precision on test set</td><td>≥ 85%</td><td>(FR pending) test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Concurrent WS connections (P0)</td><td>≥ 5,000</td><td>load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Messages / second (P0)</td><td>≥ 500</td><td>k6 sustained</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>DSAR export completeness</td><td>100% messages + reactions + attachments</td><td>fixture test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Message → BRAIN audit link rate</td><td>100% (no dropped messages)</td><td>continuous reconciliation</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>P0 infra cost</td><td>≤ $45/month</td><td>OBS cost dashboard</td></tr>
       </tbody>
     </table>
   </div>
@@ -787,14 +771,14 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["CHAT depends on"]
-    AUTH["🔐 AUTH<br/>JWT + RBAC<br/>+ user sync"]
-    BRAIN["🧠 BRAIN<br/>message corpus<br/>(Layer 3)"]
-    AIGW["🧠 AI Gateway<br/>genie · summarise · smart-reply"]
-    OBS["👁 OBS<br/>traces + metrics"]
-    PG["🗄 Postgres<br/>+ PGroonga"]
-    REDIS["⚡ Redis<br/>presence + push"]
-    S3["☁️ MinIO/S3<br/>attachments"]
-    GPU["Whisper GPU<br/>voice ASR"]
+    AUTH["🔐 AUTH<br>JWT + RBAC<br>+ user sync"]
+    BRAIN["🧠 BRAIN<br>message corpus<br>(Layer 3)"]
+    AIGW["🧠 AI Gateway<br>genie · summarise · smart-reply"]
+    OBS["👁 OBS<br>traces + metrics"]
+    PG["🗄 Postgres<br>+ PGroonga"]
+    REDIS["⚡ Redis<br>presence + push"]
+    S3["☁️ MinIO/S3<br>attachments"]
+    GPU["Whisper GPU<br>voice ASR"]
   end
   CHAT["💬 CHAT"]
   subgraph consumers ["CHAT used by"]
@@ -816,8 +800,8 @@ graph LR
   CHAT --> OBS2
   CHAT --> USERS
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#ecfdf5,stroke:#047857
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#ecfdf5,stroke:#45210e
   class BRAIN,SK shipped
   class CHAT,AUTH,AIGW,OBS,CUO,OBS2,USERS planned
   class PG,REDIS,S3,GPU planned
@@ -881,7 +865,7 @@ graph LR
         <tr><td><strong>VN search recall</strong></td><td>TP / (TP + FN)</td><td>CI test set</td><td>≥ 80%</td></tr>
         <tr><td><strong>VN search query p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 250 ms</td></tr>
         <tr><td><strong>@genie usage (DAU)</strong></td><td>distinct subjects / day</td><td>chat events</td><td>tracked; ≥ 60% of users</td></tr>
-        <tr><td><strong>Concurrent WS connections (peak)</strong></td><td>gauge</td><td>OBS</td><td>≤ NFR-SCALE-001 (5k P0)</td></tr>
+        <tr><td><strong>Concurrent WS connections (peak)</strong></td><td>gauge</td><td>OBS</td><td>≤ N(FR pending) (5k P0)</td></tr>
         <tr><td><strong>Message volume / day (tenant)</strong></td><td>count</td><td>OBS</td><td>tracked for capacity planning</td></tr>
         <tr><td><strong>DSAR fulfilment time</strong></td><td>request → export delivered</td><td>request tracker</td><td>≤ 24 h</td></tr>
       </tbody>
@@ -1021,10 +1005,10 @@ messages_today:       18,420</code></pre>
   <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
-      <li><strong>PRD §9.3</strong> — CHAT module specification + FR-CHAT-001 through FR-CHAT-012.</li>
-      <li><strong>PRD §11.2.1</strong> — NFR-PERF-002 (CHAT message-deliver p95 ≤ 200 ms).</li>
-      <li><strong>PRD §11.2.2</strong> — NFR-REL-002 (CHAT availability ≥ 99.9%).</li>
-      <li><strong>SRS §4.3</strong> — Formal FR-CHAT catalogue with verification methods.</li>
+      <li><strong>PRD §9.3</strong> — CHAT module specification + (FR pending) through (FR pending).</li>
+      <li><strong>PRD §11.2.1</strong> — N(FR pending) (CHAT message-deliver p95 ≤ 200 ms).</li>
+      <li><strong>PRD §11.2.2</strong> — N(FR pending) (CHAT availability ≥ 99.9%).</li>
+      <li><strong>SRS §4.3</strong> — Formal (FR pending) catalogue with verification methods.</li>
       <li><strong>Mattermost upstream</strong> — open-core MIT/Apache messaging substrate.</li>
       <li><strong>PGroonga</strong> — Postgres full-text extension with VN tokenisation support.</li>
       <li><strong>Yjs</strong> — CRDT library for offline draft sync.</li>

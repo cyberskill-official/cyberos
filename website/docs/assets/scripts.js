@@ -11,7 +11,7 @@ mermaid.initialize({
   startOnLoad: false,
   theme: 'base',
   themeVariables: {
-    fontFamily: 'Inter, "Be Vietnam Pro", system-ui, sans-serif',
+    fontFamily: '"Be Vietnam Pro", Inter, system-ui, sans-serif',
     primaryColor:        '#f5ede6',   // umber-50
     primaryTextColor:    '#45210e',   // umber-500 (anchor)
     primaryBorderColor:  '#45210e',

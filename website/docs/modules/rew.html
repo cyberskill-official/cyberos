@@ -8,7 +8,7 @@
   <meta name="description" content="REW — Total Rewards (Compensation). 3P income model (P1 Base + P2 Allowance + P3 Performance), BP fund, anti-retroactive parameter versioning, P1-protection invariant, structural exclusion from BRAIN. EU AI Act Annex III §4 high-risk.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -221,7 +221,7 @@
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes last 24 months on every parameter change.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 retention lock = 10 years. SG HoldCo branch: SGD payroll mode (P2 stretch).</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>HR/Ops Lead (R for operations) + CEO (A for sign-off) + CFO (R for commit co-sign) + CHRO (R for co-sign, P3+ seat).</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>FR-REW-001..010 (PRD §9.14). KPIs: close-cycle completion days, recompute-determinism CI pass rate, BRAIN-leak incident count, P1-cut-attempt blocked count.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>(FR pending)..010 (PRD §9.14). KPIs: close-cycle completion days, recompute-determinism CI pass rate, BRAIN-leak incident count, P1-cut-attempt blocked count.</td></tr>
       </tbody>
     </table>
   </div>
@@ -243,37 +243,37 @@ graph TB
     HR["HR/Ops (SPA)"]
     CFO["CFO co-sign UX"]
     CHRO["CHRO co-sign UX"]
-    MEMBER["Member portal<br/>(own payslip only)"]
-    CUO["🤖 CUO/CFO-skill<br/>narrator · read-only"]
+    MEMBER["Member portal<br>(own payslip only)"]
+    CUO["🤖 CUO/CFO-skill<br>narrator · read-only"]
   end
 
   subgraph EDGE ["Edge"]
-    AR["Apollo Router<br/>JWT + RBAC + co-sign predicate"]
+    AR["Apollo Router<br>JWT + RBAC + co-sign predicate"]
   end
 
   subgraph REW ["REW service (Rust · axum)"]
-    GQL["GraphQL subgraph<br/>read-mostly"]
-    REST["REST admin<br/>close · commit · publish"]
-    KERNEL["compute_kernel.rs<br/>pure deterministic fn"]
-    PARAM["parameters.rs<br/>append-only versioned"]
-    BP["bp_ledger.rs<br/>BP unit-of-account + interest"]
-    PDF["pdf_renderer.rs<br/>tectonic deterministic"]
-    NARR["narrator.rs<br/>payslip_explain (read-only)"]
-    COSIGN["cosign_guard.rs<br/>CFO + CHRO predicate"]
-    REPLAY["replay_check.rs<br/>determinism CI"]
+    GQL["GraphQL subgraph<br>read-mostly"]
+    REST["REST admin<br>close · commit · publish"]
+    KERNEL["compute_kernel.rs<br>pure deterministic fn"]
+    PARAM["parameters.rs<br>append-only versioned"]
+    BP["bp_ledger.rs<br>BP unit-of-account + interest"]
+    PDF["pdf_renderer.rs<br>tectonic deterministic"]
+    NARR["narrator.rs<br>payslip_explain (read-only)"]
+    COSIGN["cosign_guard.rs<br>CFO + CHRO predicate"]
+    REPLAY["replay_check.rs<br>determinism CI"]
   end
 
   subgraph STORES ["Stores (isolated)"]
-    PG[("PostgreSQL<br/>compensation_change · payslip<br/>parameters · bp_ledger<br/>REW-specific KMS key")]
-    S3[("AWS S3<br/>payslip PDFs · object-lock 10y<br/>REW-specific KMS")]
-    KMS[("AWS KMS<br/>rew-comp-key<br/>distinct from HR + BRAIN")]
+    PG[("PostgreSQL<br>compensation_change · payslip<br>parameters · bp_ledger<br>REW-specific KMS key")]
+    S3[("AWS S3<br>payslip PDFs · object-lock 10y<br>REW-specific KMS")]
+    KMS[("AWS KMS<br>rew-comp-key<br>distinct from HR + BRAIN")]
   end
 
   subgraph BOUNDARIES ["Compliance boundaries"]
-    BRAIN["🧠 BRAIN<br/>opaque event refs ONLY<br/>(no comp numbers)"]
-    OBS["👁 OBS<br/>timing only<br/>(no comp in traces)"]
-    HRMOD["👥 HR<br/>Member roster (read)"]
-    AUTH["🔐 AUTH<br/>co-sign predicate"]
+    BRAIN["🧠 BRAIN<br>opaque event refs ONLY<br>(no comp numbers)"]
+    OBS["👁 OBS<br>timing only<br>(no comp in traces)"]
+    HRMOD["👥 HR<br>Member roster (read)"]
+    AUTH["🔐 AUTH<br>co-sign predicate"]
   end
 
   HR --> AR
@@ -302,10 +302,10 @@ graph TB
   REW --> OBS
   REPLAY --> KERNEL
 
-  classDef planned fill:#fef3c7,stroke:#92400e
+  classDef planned fill:#fef6e0,stroke:#92400e
   classDef store fill:#f5f3ff,stroke:#7c3aed
   classDef boundary fill:#fee2e2,stroke:#dc2626
-  classDef extern fill:#d1fae5,stroke:#047857
+  classDef extern fill:#f5ede6,stroke:#45210e
   class GQL,REST,KERNEL,PARAM,BP,PDF,NARR,COSIGN,REPLAY planned
   class PG,S3,KMS store
   class BRAIN,OBS boundary
@@ -615,7 +615,7 @@ sequenceDiagram
   R->>S3: archive PDFs (KMS, object-lock 10y)
   R->>R: payslip.status="published", record pdf_sha256
   R->>B: opaque ref "rew.payslip.published:<opaque_id>"
-  Note over R,B: BRAIN row contains NO comp numbers,<br/>just an opaque pointer.
+  Note over R,B: BRAIN row contains NO comp numbers,<br>just an opaque pointer.
     </div>
     <p class="text-xs text-slate-500 mt-3">CFO + CHRO assertions must both arrive within 5 minutes; otherwise <code>cosign_guard</code> resets and both must re-submit. This prevents accidental long-pending half-signed commits.</p>
   </div>
@@ -633,9 +633,9 @@ sequenceDiagram
   participant RPC as replay_check.rs (CI)
   participant B as 🧠 BRAIN
 
-  CEO->>R: POST /admin/parameters<br/>{name:"p1-base-schedule", version:"2026.05", payload:…}
+  CEO->>R: POST /admin/parameters<br>{name:"p1-base-schedule", version:"2026.05", payload:…}
   R->>R: 3-way co-sign (CEO + CFO + CHRO)
-  R->>R: INSERT parameter_version row<br/>(prior version effective_to = now)
+  R->>R: INSERT parameter_version row<br>(prior version effective_to = now)
   R->>RPC: trigger replay of last 24 months
   RPC->>K: replay april-2024 with parameters effective at april-2024-end
   K-->>RPC: SHA-256 of payslip PDF
@@ -648,7 +648,7 @@ sequenceDiagram
     RPC-->>R: ✗ FAIL — determinism broken
     R->>R: ROLLBACK parameter change
     R->>B: opaque ref "rew.params.rejected:replay_drift"
-    Note over R,B: New parameters NEVER affect old periods.<br/>If replay drifts, parameters are rejected.
+    Note over R,B: New parameters NEVER affect old periods.<br>If replay drifts, parameters are rejected.
   end
     </div>
     <p class="text-xs text-slate-500 mt-3">This is the anti-retroactive invariant in action: <em>publishing</em> a new parameter version is only allowed if recomputing the last 24 months against the historical effective parameters still yields byte-identical PDFs. If the kernel itself changed in a way that breaks determinism, the change is rejected.</p>
@@ -668,7 +668,7 @@ sequenceDiagram
   participant B as 🧠 BRAIN
 
   L-->>HR: promotion outcome "L2 → L3 for mai@…"
-  HR->>R: POST /admin/compensation/<mai>/change<br/>{level:"L3", p1_base:<new>, reason:"promotion"}
+  HR->>R: POST /admin/compensation/<mai>/change<br>{level:"L3", p1_base:<new>, reason:"promotion"}
   R->>P1G: check new_p1 ≥ prior_p1 ?
   alt p1 raised (or equal)
     P1G-->>R: ✓ P1-invariant preserved
@@ -682,7 +682,7 @@ sequenceDiagram
     P1G-->>R: ✗ sev-0 P1 cut attempted
     R-->>HR: 422 "P1 protection invariant"
     R->>B: opaque ref "rew.p1_cut_attempted:blocked"
-    Note over R,B: A bug — or a malicious actor — cannot reduce P1 in cash;<br/>only a multi-party amendment to the Total Rewards Appendix could.
+    Note over R,B: A bug — or a malicious actor — cannot reduce P1 in cash;<br>only a multi-party amendment to the Total Rewards Appendix could.
   end
     </div>
   </div>
@@ -700,7 +700,7 @@ sequenceDiagram
   participant M as Member portal
   participant B as 🧠 BRAIN
 
-  CEO->>R: POST /admin/bonus-pool/2026<br/>{pool_size: <X> VND}
+  CEO->>R: POST /admin/bonus-pool/2026<br>{pool_size: <X> VND}
   R->>R: co-sign (CEO + CFO)
   R->>L: read VP per Member
   L-->>R: VP map
@@ -709,7 +709,7 @@ sequenceDiagram
   R->>R: INSERT pool_distribution
   R->>R: per-Member: append P3 to current period payslip
   R->>B: opaque ref "rew.pool.distributed:2026"
-  Note over M: at next published payslip,<br/>Member sees P3 line item with narrative explanation.
+  Note over M: at next published payslip,<br>Member sees P3 line item with narrative explanation.
     </div>
   </div>
 
@@ -727,10 +727,10 @@ sequenceDiagram
   CUO->>NARR: cyberos.rew.payslip_explain {payslip_id}
   NARR->>PG: read payslip + parameter_version (self-scope)
   PG-->>NARR: payslip + params
-  NARR->>NARR: synthesise prose narrative<br/>(refers to "P1 component" "P2 component" — not numeric)
+  NARR->>NARR: synthesise prose narrative<br>(refers to "P1 component" "P2 component" — not numeric)
   NARR-->>CUO: narrative text
-  CUO-->>U: "Your April payslip reflects the P1 schedule for L2 engineer,<br/>plus a P2 allowance for mentorship, plus a P3 distribution<br/>from the 2026 bonus pool of 0.4× pool share. See your portal<br/>for the numeric breakdown."
-  Note over NARR,CUO: numeric values stay in REW's keyspace;<br/>only the Member portal renders them to the Member directly.
+  CUO-->>U: "Your April payslip reflects the P1 schedule for L2 engineer,<br>plus a P2 allowance for mentorship, plus a P3 distribution<br>from the 2026 bonus pool of 0.4× pool share. See your portal<br>for the numeric breakdown."
+  Note over NARR,CUO: numeric values stay in REW's keyspace;<br>only the Member portal renders them to the Member directly.
     </div>
   </div>
 </section>
@@ -776,37 +776,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">REW FRs as catalogued in PRD §9.14 and SRS §4.14. Full normative descriptions at <a href="../reference/fr-catalog.html#rew" class="text-blue-700 font-semibold underline">fr-catalog.html#rew</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-REW-001</code></td><td>3P income structure: P1 Base + P2 Allowance + P3 Performance</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-002</code></td><td>BP ledger with anti-inflation interest at ACB savings rate</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-003</code></td><td>P1-protection invariant — never reduces P1 base in cash (sev-0)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-004</code></td><td>Anti-retroactive parameter versioning — immutable published versions</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-005</code></td><td>Monthly close cycle: HR initiates → narrate → Founder approves → publish</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-006</code></td><td>Payslip narrative via <code>cyberos.rew.payslip_explain</code> (read-only)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-007</code></td><td>Compensation values structurally excluded from BRAIN ingestion (DEC-036)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-008</code></td><td>EU AI Act high-risk conformity pack at P2 (Annex III §4)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-REW-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-009</code></td><td>Singapore HoldCo support: SGD payroll branch when entity selected</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-REW-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-010</code></td><td>Vietnamese SI/PIT line-items per Decree 152/2020 + Circular 111/2013</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-011</code></td><td>CFO + CHRO co-sign required for cycle commit</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-012</code></td><td>Deterministic compute: same inputs → same PDF SHA-256 forever</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-013</code></td><td>Replay-check CI gate on every parameter change (24-month window)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-014</code></td><td>Payslip PDF SHA-256 stored alongside row for tamper detection</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-015</code></td><td>10-year retention via S3 object-lock; comp records immutable</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-015" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-016</code></td><td>BP balance interest accrued monthly at ACB savings rate (versioned)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-016" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-017</code></td><td>BP → P3 conversion windowed (member-initiated, twice/year)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-REW-017" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-018</code></td><td>Anomaly surface during close (±20% delta flag)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-018" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-019</code></td><td>EU AI Act Art. 14 human override — Member can dispute; CEO adjudicates</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-REW-019" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-REW-020</code></td><td>DSAR comp-bundle (member-self or DPO-scoped); managers blocked</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-REW-020" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -820,19 +796,19 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-REW-SEC-001</code></td><td>Comp number in BRAIN ledger row</td><td>= 0 — sev-0</td><td>CI: brain_bridge emit JSON inspected against blocklist of keys + numeric value patterns</td></tr>
-        <tr><td><code>NFR-REW-SEC-002</code></td><td>P1 reduction attempts blocked</td><td>= 100% (zero leak)</td><td>p1_guard property test; chaos test injects p1 cut and asserts rejection</td></tr>
-        <tr><td><code>NFR-REW-SEC-003</code></td><td>Single-signer commit attempts blocked</td><td>= 100%</td><td>cosign_guard integration test</td></tr>
-        <tr><td><code>NFR-REW-SEC-004</code></td><td>KMS-key isolation (REW key distinct from HR + BRAIN)</td><td>3 distinct key handles</td><td>KMS policy inspection; cross-key access blocked</td></tr>
-        <tr><td><code>NFR-REW-INT-001</code></td><td>Determinism — same inputs → same PDF SHA-256</td><td>100% (24-month replay)</td><td>replay_check.rs CI on every parameter change</td></tr>
-        <tr><td><code>NFR-REW-INT-002</code></td><td>Append-only at DB layer (no UPDATE / DELETE grant on ledger tables)</td><td>enforced</td><td>DB role inspection · CI gate on migrations</td></tr>
-        <tr><td><code>NFR-REW-LAT-001</code></td><td>Cycle draft compute p95 (50 members)</td><td>≤ 8 s</td><td>bench/cycle.rs</td></tr>
-        <tr><td><code>NFR-REW-LAT-002</code></td><td>PDF render p95 (per payslip)</td><td>≤ 600 ms</td><td>bench/pdf.rs</td></tr>
-        <tr><td><code>NFR-REW-AVL-001</code></td><td>Cycle-day availability</td><td>≥ 99.9% during D-3..D+5</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-REW-DUR-001</code></td><td>Payslip durability (10-year retention)</td><td>0 lost PDFs</td><td>S3 object-lock + quarterly inventory</td></tr>
-        <tr><td><code>NFR-REW-USAB-001</code></td><td>Payslip explainability (EU AI Act Art. 14)</td><td>narrator covers all line items</td><td>policy review + member usability test</td></tr>
-        <tr><td><code>NFR-REW-USAB-002</code></td><td>Member dispute path SLO</td><td>≤ 5 working days to CEO adjudication</td><td>dispute queue dashboard</td></tr>
-        <tr><td><code>NFR-REW-COMP-001</code></td><td>EU AI Act Annex III §4 conformity at P2</td><td>full conformity pack signed by DPO + CLO</td><td>P2 release gate</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Comp number in BRAIN ledger row</td><td>= 0 — sev-0</td><td>CI: brain_bridge emit JSON inspected against blocklist of keys + numeric value patterns</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>P1 reduction attempts blocked</td><td>= 100% (zero leak)</td><td>p1_guard property test; chaos test injects p1 cut and asserts rejection</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Single-signer commit attempts blocked</td><td>= 100%</td><td>cosign_guard integration test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>KMS-key isolation (REW key distinct from HR + BRAIN)</td><td>3 distinct key handles</td><td>KMS policy inspection; cross-key access blocked</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Determinism — same inputs → same PDF SHA-256</td><td>100% (24-month replay)</td><td>replay_check.rs CI on every parameter change</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Append-only at DB layer (no UPDATE / DELETE grant on ledger tables)</td><td>enforced</td><td>DB role inspection · CI gate on migrations</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cycle draft compute p95 (50 members)</td><td>≤ 8 s</td><td>bench/cycle.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>PDF render p95 (per payslip)</td><td>≤ 600 ms</td><td>bench/pdf.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cycle-day availability</td><td>≥ 99.9% during D-3..D+5</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Payslip durability (10-year retention)</td><td>0 lost PDFs</td><td>S3 object-lock + quarterly inventory</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Payslip explainability (EU AI Act Art. 14)</td><td>narrator covers all line items</td><td>policy review + member usability test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Member dispute path SLO</td><td>≤ 5 working days to CEO adjudication</td><td>dispute queue dashboard</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>EU AI Act Annex III §4 conformity at P2</td><td>full conformity pack signed by DPO + CLO</td><td>P2 release gate</td></tr>
       </tbody>
     </table>
   </div>
@@ -850,20 +826,20 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["REW depends on"]
-    AUTH["🔐 AUTH<br/>JWT + co-sign predicate"]
-    HRMOD["👥 HR<br/>roster + leave (read)"]
-    TIME["⏱ TIME<br/>timesheet (read)"]
-    LEARN["📈 LEARN<br/>VP for P3 distribution"]
-    KMS["🔑 AWS KMS<br/>rew-comp-key (distinct)"]
-    S3["🗂 AWS S3<br/>PDFs · object-lock 10y"]
-    BRAIN["🧠 BRAIN<br/>opaque refs only"]
+    AUTH["🔐 AUTH<br>JWT + co-sign predicate"]
+    HRMOD["👥 HR<br>roster + leave (read)"]
+    TIME["⏱ TIME<br>timesheet (read)"]
+    LEARN["📈 LEARN<br>VP for P3 distribution"]
+    KMS["🔑 AWS KMS<br>rew-comp-key (distinct)"]
+    S3["🗂 AWS S3<br>PDFs · object-lock 10y"]
+    BRAIN["🧠 BRAIN<br>opaque refs only"]
   end
   REW["💎 REW"]
   subgraph downstream ["REW is read by"]
-    CUO["🤖 CUO/CFO-skill<br/>narrator only"]
-    MEM["Member portal<br/>self-payslip only"]
-    INV["🧾 INV<br/>(not used; INV is AR side)"]
-    DPO["DPO<br/>DSAR exports"]
+    CUO["🤖 CUO/CFO-skill<br>narrator only"]
+    MEM["Member portal<br>self-payslip only"]
+    INV["🧾 INV<br>(not used; INV is AR side)"]
+    DPO["DPO<br>DSAR exports"]
   end
   AUTH --> REW
   HRMOD --> REW
@@ -876,8 +852,8 @@ graph LR
   REW --> MEM
   REW --> DPO
 
-  classDef planned fill:#fef3c7,stroke:#92400e
-  classDef shipped fill:#d1fae5,stroke:#047857
+  classDef planned fill:#fef6e0,stroke:#92400e
+  classDef shipped fill:#f5ede6,stroke:#45210e
   classDef forbidden fill:#fee2e2,stroke:#dc2626
   class REW planned
   class AUTH,HRMOD,TIME,LEARN,CUO,MEM,DPO planned
@@ -897,7 +873,7 @@ graph LR
     <table class="kt">
       <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>REW feature that satisfies it</th></tr></thead>
       <tbody>
-        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Employment & worker management</td><td>REW is the high-risk system. P2 conformity pack: risk management, data governance, technical docs, transparency, human oversight (FR-REW-019), accuracy/robustness (FR-REW-012 determinism).</td></tr>
+        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Annex III §4 — Employment & worker management</td><td>REW is the high-risk system. P2 conformity pack: risk management, data governance, technical docs, transparency, human oversight ((FR pending)), accuracy/robustness ((FR pending) determinism).</td></tr>
         <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>Member can dispute → CEO adjudicates within 5 working days; CEO can override any automated computation.</td></tr>
         <tr><td>EU AI Act</td><td>Art. 13 — Transparency</td><td><code>cyberos.rew.payslip_explain</code> narrator; user-facing PDF includes parameter version + computation explanation.</td></tr>
         <tr><td>Vietnam Labour Code (2019)</td><td>Art. 90 — Wage / salary</td><td>P1 floor is the contractual base; P1-guard invariant enforces.</td></tr>
@@ -905,9 +881,9 @@ graph LR
         <tr><td>Decree 152/2020/NĐ-CP</td><td>Art. 5 — SI contribution rates</td><td>BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% encoded as versioned parameter <code>si-rates-vn</code>.</td></tr>
         <tr><td>Circular 111/2013/TT-BTC</td><td>Art. 7 — Personal income tax</td><td>PIT progressive schedule encoded as versioned parameter <code>pit-schedule-vn</code>.</td></tr>
         <tr><td>VN Tax Law</td><td>10-year retention</td><td>S3 object-lock 10-year + DB row append-only.</td></tr>
-        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Member-self DSAR (FR-REW-020); managers structurally blocked from cross-member comp views.</td></tr>
+        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Member-self DSAR ((FR pending)); managers structurally blocked from cross-member comp views.</td></tr>
         <tr><td>Vietnam PDPL</td><td>Art. 7 — Sensitive data</td><td>Comp classified <code>restricted</code>; separate KMS; access requires <code>rew.payslip_read</code> scope.</td></tr>
-        <tr><td>GDPR (EU 2016/679)</td><td>Art. 22 — Automated individual decision-making</td><td>EU AI Act conformity pack + Art. 14 human override (FR-REW-019).</td></tr>
+        <tr><td>GDPR (EU 2016/679)</td><td>Art. 22 — Automated individual decision-making</td><td>EU AI Act conformity pack + Art. 14 human override ((FR pending)).</td></tr>
         <tr><td>GDPR</td><td>Art. 32 — Security of processing</td><td>KMS-wrapped at rest · co-sign at commit · append-only ledger.</td></tr>
         <tr><td>ISO/IEC 27001:2022</td><td>A.5.13 — Information labelling</td><td>Comp fields classified; cross-module exfiltration blocked at gateway.</td></tr>
         <tr><td>SOC 2 Type II</td><td>CC6.1, CC8.1</td><td>RBAC + co-sign + audit chain + deterministic replay.</td></tr>
@@ -1127,11 +1103,11 @@ graph LR
   <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
-      <li><strong>PRD §9.14</strong> — REW module FRs (FR-REW-001 through FR-REW-010).</li>
+      <li><strong>PRD §9.14</strong> — REW module FRs ((FR pending) through (FR pending)).</li>
       <li><strong>PRD §19.14</strong> — REW architecture posture, Bet 5 framing.</li>
       <li><strong>PRD Bet 5</strong> — "The Total Rewards Appendix is a moat too" (DEC-036 BRAIN exclusion).</li>
       <li><strong>PRD §11.2.3</strong> — Security NFRs (SEC-002: zero P1 reduction).</li>
-      <li><strong>SRS §4.14</strong> — Formal FR-REW-001 through FR-REW-008 with verification methods.</li>
+      <li><strong>SRS §4.14</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Total Rewards &amp; Career Path Appendix</strong> — Legal source of truth; 3P decomposition; P1 protection.</li>
       <li><strong>EU AI Act (Reg. 2024/1689)</strong> — Annex III §4 employment-decision automation high-risk classification; Art. 13 transparency; Art. 14 human oversight.</li>
       <li><strong>GDPR (EU 2016/679)</strong> — Art. 22 automated decision-making safeguards.</li>

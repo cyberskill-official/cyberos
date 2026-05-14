@@ -7,7 +7,7 @@
   <meta name="description" content="The six cross-cutting infrastructure pillars: AUTH, AI Gateway, MCP Gateway, OBS, GraphQL Federation, NATS JetStream.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <script type="module" src="../assets/scripts.js"></script>
 </head>
@@ -95,18 +95,18 @@
     <div class="mermaid">
 flowchart TB
   subgraph TOP ["End users · agents"]
-    USER[("Member<br/>browser / Tauri")]
-    AGENT[("Claude / Codex / Cursor<br/>via Skills + MCP")]
+    USER[("Member<br>browser / Tauri")]
+    AGENT[("Claude / Codex / Cursor<br>via Skills + MCP")]
   end
 
   subgraph PLANE ["Cross-cutting infrastructure plane (P0)"]
     direction LR
-    AUTH["🔐 AUTH<br/>OAuth 2.1 + JWT (RS256)<br/>per-tenant authz server"]
-    AIGW["⚡ AI Gateway<br/>LiteLLM router<br/>Bedrock · Anthropic · OpenAI"]
-    MCPGW["🔌 MCP Gateway<br/>2025-11-25 spec<br/>per-module servers"]
-    OBS["👁 OBS<br/>LGTM stack<br/>Loki · Grafana · Tempo · Mimir"]
-    GQL["🌐 Apollo Router<br/>Federation v2.5+<br/>persisted queries"]
-    NATS_BUS["📬 NATS JetStream<br/>cyberos.{tenant}.{module}.{entity}.{verb}"]
+    AUTH["🔐 AUTH<br>OAuth 2.1 + JWT (RS256)<br>per-tenant authz server"]
+    AIGW["⚡ AI Gateway<br>LiteLLM router<br>Bedrock · Anthropic · OpenAI"]
+    MCPGW["🔌 MCP Gateway<br>2025-11-25 spec<br>per-module servers"]
+    OBS["👁 OBS<br>LGTM stack<br>Loki · Grafana · Tempo · Mimir"]
+    GQL["🌐 Apollo Router<br>Federation v2.5+<br>persisted queries"]
+    NATS_BUS["📬 NATS JetStream<br>cyberos.{tenant}.{module}.{entity}.{verb}"]
   end
 
   subgraph MODS ["22 functional modules — subgraph + MCP + UI remote"]
@@ -117,8 +117,8 @@ flowchart TB
   end
 
   subgraph DATA ["Per-module data layer"]
-    PG[("PostgreSQL 17<br/>per-module schema<br/>RLS enforced")]
-    S3[("S3 / R2 / MinIO<br/>object store")]
+    PG[("PostgreSQL 17<br>per-module schema<br>RLS enforced")]
+    S3[("S3 / R2 / MinIO<br>object store")]
   end
 
   USER --> GQL
@@ -153,10 +153,10 @@ flowchart TB
   MCPGW -. "traces" .-> OBS
   GQL   -. "traces" .-> OBS
 
-  classDef plane fill:#fef3c7,stroke:#b45309,stroke-width:2px
-  classDef mod fill:#dbeafe,stroke:#1e40af
-  classDef ext fill:#f3e8ff,stroke:#7e22ce
-  classDef data fill:#e0e7ff,stroke:#3730a3
+  classDef plane fill:#fef6e0,stroke:#9c750a,stroke-width:2px
+  classDef mod fill:#e8d4c2,stroke:#45210e
+  classDef ext fill:#f9c64f,stroke:#9c750a
+  classDef data fill:#cba88a,stroke:#45210e
 
   class AUTH,AIGW,MCPGW,OBS,GQL,NATS_BUS plane
   class BRAIN,CHAT,PROJ,OTHERS mod
@@ -244,13 +244,13 @@ flowchart TB
 flowchart TB
   subgraph AUTH_INT ["AUTH module"]
     direction TB
-    OAUTH["OAuth 2.1 server<br/>per-tenant authz server"]
-    JWTISSUER["JWT issuer<br/>RS256 · 24h expiry"]
-    REFRESH["Refresh token store<br/>opaque tokens · cookie"]
-    MFAVERIFY["MFA verifier<br/>TOTP + WebAuthn"]
-    RBAC["RBAC predicate engine<br/>role × resource × action"]
-    KEYS["Signing key rotation<br/>JWKS endpoint"]
-    SESSIONDB[("Postgres<br/>sessions · refresh · MFA enrolment")]
+    OAUTH["OAuth 2.1 server<br>per-tenant authz server"]
+    JWTISSUER["JWT issuer<br>RS256 · 24h expiry"]
+    REFRESH["Refresh token store<br>opaque tokens · cookie"]
+    MFAVERIFY["MFA verifier<br>TOTP + WebAuthn"]
+    RBAC["RBAC predicate engine<br>role × resource × action"]
+    KEYS["Signing key rotation<br>JWKS endpoint"]
+    SESSIONDB[("Postgres<br>sessions · refresh · MFA enrolment")]
   end
 
   USER[("Member browser")] --> OAUTH
@@ -262,11 +262,11 @@ flowchart TB
   OAUTH -.-> REFRESH
 
   SUBG[("Any subgraph")] -. "JWKS fetch · cache" .-> KEYS
-  SUBG -. "validates JWT<br/>checks RBAC predicate" .-> RBAC
+  SUBG -. "validates JWT<br>checks RBAC predicate" .-> RBAC
 
-  classDef int fill:#dbeafe,stroke:#1e40af
-  classDef ext fill:#f3e8ff,stroke:#7e22ce
-  classDef db fill:#fce7f3,stroke:#9d174d
+  classDef int fill:#e8d4c2,stroke:#45210e
+  classDef ext fill:#f9c64f,stroke:#9c750a
+  classDef db fill:#fde7b3,stroke:#9c750a
   class OAUTH,JWTISSUER,REFRESH,MFAVERIFY,RBAC,KEYS int
   class USER,SUBG ext
   class SESSIONDB db
@@ -455,17 +455,17 @@ cyberos.auth.audit_login  # readOnly=true (own sessions only)</code></pre></div>
     <div class="mermaid">
 flowchart TB
   CALLER[("Subgraph or CUO")] --> INGRESS["Ingress · JWT + tenant validation"]
-  INGRESS --> COSTGATE{"Cost budget check<br/>per-tenant ceiling"}
+  INGRESS --> COSTGATE{"Cost budget check<br>per-tenant ceiling"}
   COSTGATE -- "over budget" --> REJECT[/"429 quota exceeded"/]
-  COSTGATE -- "ok" --> REDACT["Presidio redaction<br/>+ VN identifier rules"]
-  REDACT --> PERSONA["Persona-version stamp<br/>prepend system prompt"]
+  COSTGATE -- "ok" --> REDACT["Presidio redaction<br>+ VN identifier rules"]
+  REDACT --> PERSONA["Persona-version stamp<br>prepend system prompt"]
   PERSONA --> CACHE{"Semantic + exact cache"}
-  CACHE -- "hit" --> CACHEHIT["Return cached response<br/>fresh persona stamp"]
-  CACHE -- "miss" --> ROUTER["LiteLLM router<br/>model selection by capability"]
+  CACHE -- "hit" --> CACHEHIT["Return cached response<br>fresh persona stamp"]
+  CACHE -- "miss" --> ROUTER["LiteLLM router<br>model selection by capability"]
   ROUTER --> RESIDENCY{"Tenant residency"}
-  RESIDENCY -- "vn-shard" --> BEDROCK_SG["Bedrock<br/>ap-southeast-1"]
-  RESIDENCY -- "eu-shard" --> BEDROCK_EU["Bedrock<br/>eu-central-1"]
-  RESIDENCY -- "us-shard" --> BEDROCK_US["Bedrock<br/>us-east-2"]
+  RESIDENCY -- "vn-shard" --> BEDROCK_SG["Bedrock<br>ap-southeast-1"]
+  RESIDENCY -- "eu-shard" --> BEDROCK_EU["Bedrock<br>eu-central-1"]
+  RESIDENCY -- "us-shard" --> BEDROCK_US["Bedrock<br>us-east-2"]
   BEDROCK_SG --> RESPONSE["Stream response"]
   BEDROCK_EU --> RESPONSE
   BEDROCK_US --> RESPONSE
@@ -478,8 +478,8 @@ flowchart TB
   LEDGER --> CALLER
   CACHEHIT --> CALLER
 
-  classDef gate fill:#fef3c7,stroke:#b45309,stroke-width:2px
-  classDef prov fill:#dbeafe,stroke:#1e40af
+  classDef gate fill:#fef6e0,stroke:#9c750a,stroke-width:2px
+  classDef prov fill:#e8d4c2,stroke:#45210e
   classDef block fill:#fecaca,stroke:#b91c1c
   class INGRESS,COSTGATE,REDACT,PERSONA,CACHE,ROUTER,RESIDENCY,RESPONSE,LEDGER,AUDIT,CACHEHIT gate
   class BEDROCK_SG,BEDROCK_EU,BEDROCK_US,ANTHROPIC,OPENAI prov
@@ -683,30 +683,30 @@ X-Cyberos-Persona-Version: cfo-v3.2.1</code></pre></div>
     <div class="text-sm font-semibold text-slate-700 mb-2 text-center">MCP Gateway architecture · federation, not monolith</div>
     <div class="mermaid">
 flowchart TB
-  CLIENT[("Claude Desktop / Codex / Cursor<br/>26+ AI clients")]
-  CLIENT --> DISCOVERY["/.well-known/mcp<br/>SEP-986 discovery"]
-  DISCOVERY --> PRM["/.well-known/oauth-protected-resource<br/>per-tenant"]
-  PRM --> AUTHSRV["OAuth authorisation server<br/>(AUTH module)"]
-  CLIENT --> ROUTER["MCP Gateway router<br/>Streamable HTTP"]
-  ROUTER --> REGISTRY[("Tool registry<br/>annotation-validated")]
+  CLIENT[("Claude Desktop / Codex / Cursor<br>26+ AI clients")]
+  CLIENT --> DISCOVERY["/.well-known/mcp<br>SEP-986 discovery"]
+  DISCOVERY --> PRM["/.well-known/oauth-protected-resource<br>per-tenant"]
+  PRM --> AUTHSRV["OAuth authorisation server<br>(AUTH module)"]
+  CLIENT --> ROUTER["MCP Gateway router<br>Streamable HTTP"]
+  ROUTER --> REGISTRY[("Tool registry<br>annotation-validated")]
   ROUTER --> HITL{"destructive?"}
-  HITL -- "yes" --> CONFIRM["LangGraph interrupt()<br/>user confirm in Genie panel"]
+  HITL -- "yes" --> CONFIRM["LangGraph interrupt()<br>user confirm in Genie panel"]
   HITL -- "no" --> DISPATCH["dispatch to module server"]
   CONFIRM --> DISPATCH
 
-  DISPATCH --> BRAIN_MCP["BRAIN MCP server<br/>cyberos.brain.*"]
-  DISPATCH --> CHAT_MCP["CHAT MCP server<br/>cyberos.chat.*"]
-  DISPATCH --> PROJ_MCP["PROJ MCP server<br/>cyberos.proj.*"]
-  DISPATCH --> REW_MCP["REW MCP server<br/>cyberos.rew.* (read-only)"]
+  DISPATCH --> BRAIN_MCP["BRAIN MCP server<br>cyberos.brain.*"]
+  DISPATCH --> CHAT_MCP["CHAT MCP server<br>cyberos.chat.*"]
+  DISPATCH --> PROJ_MCP["PROJ MCP server<br>cyberos.proj.*"]
+  DISPATCH --> REW_MCP["REW MCP server<br>cyberos.rew.* (read-only)"]
   DISPATCH --> OTHER["…19 more"]
 
   BRAIN_MCP --> AUDITNATS["NATS audit row"]
   CHAT_MCP --> AUDITNATS
   PROJ_MCP --> AUDITNATS
 
-  classDef gw fill:#fef3c7,stroke:#b45309,stroke-width:2px
-  classDef mod fill:#dbeafe,stroke:#1e40af
-  classDef ext fill:#f3e8ff,stroke:#7e22ce
+  classDef gw fill:#fef6e0,stroke:#9c750a,stroke-width:2px
+  classDef mod fill:#e8d4c2,stroke:#45210e
+  classDef ext fill:#f9c64f,stroke:#9c750a
   classDef block fill:#fecaca,stroke:#b91c1c
   class DISCOVERY,PRM,ROUTER,REGISTRY,DISPATCH,CONFIRM gw
   class BRAIN_MCP,CHAT_MCP,PROJ_MCP,REW_MCP,OTHER mod
@@ -863,20 +863,20 @@ flowchart LR
     M4[Front-end host] --> OTEL
     M5[NATS · S3 · Postgres] --> OTEL
   end
-  OTEL[("OpenTelemetry Collector<br/>gRPC :4317 · HTTP :4318")]
-  OTEL --> LOKI[("Loki<br/>logs · S3 backend")]
-  OTEL --> TEMPO[("Tempo<br/>traces · S3 backend")]
-  OTEL --> MIMIR[("Mimir<br/>metrics · S3 backend")]
-  LOKI --> GRAFANA[("Grafana<br/>dashboards · LGTM unified")]
+  OTEL[("OpenTelemetry Collector<br>gRPC :4317 · HTTP :4318")]
+  OTEL --> LOKI[("Loki<br>logs · S3 backend")]
+  OTEL --> TEMPO[("Tempo<br>traces · S3 backend")]
+  OTEL --> MIMIR[("Mimir<br>metrics · S3 backend")]
+  LOKI --> GRAFANA[("Grafana<br>dashboards · LGTM unified")]
   TEMPO --> GRAFANA
   MIMIR --> GRAFANA
-  GRAFANA --> ALERT[("Alertmanager<br/>PagerDuty webhook")]
-  GRAFANA --> CUO_CTO[("CUO · CTO skill<br/>weekly digest")]
+  GRAFANA --> ALERT[("Alertmanager<br>PagerDuty webhook")]
+  GRAFANA --> CUO_CTO[("CUO · CTO skill<br>weekly digest")]
 
-  classDef src fill:#dbeafe,stroke:#1e40af
-  classDef pipe fill:#fef3c7,stroke:#b45309,stroke-width:2px
-  classDef store fill:#e0e7ff,stroke:#3730a3
-  classDef vis fill:#d1fae5,stroke:#047857
+  classDef src fill:#e8d4c2,stroke:#45210e
+  classDef pipe fill:#fef6e0,stroke:#9c750a,stroke-width:2px
+  classDef store fill:#cba88a,stroke:#45210e
+  classDef vis fill:#f5ede6,stroke:#45210e
   class M1,M2,M3,M4,M5 src
   class OTEL pipe
   class LOKI,TEMPO,MIMIR store
@@ -926,7 +926,7 @@ flowchart LR
         <li>PRD §8.7 — Audit &amp; event log</li>
         <li>SRS DEC-021 — LGTM observability stack</li>
         <li>OpenTelemetry semantic conventions 1.27+</li>
-        <li>NFR-PERF-012 — p99 latency degradation budget (CI gate)</li>
+        <li>N(FR pending) — p99 latency degradation budget (CI gate)</li>
       </ul>
     </div>
   </div>
@@ -972,7 +972,7 @@ flowchart LR
         <li><strong>Apollo Router, not GraphQL Mesh</strong> · production-grade Rust runtime; query plan cache; Federation v2.5 reference.</li>
         <li><strong>Persisted queries mandatory</strong> · zero query injection surface; CDN-cacheable; rate-shaped.</li>
         <li><strong>Federation v2.5</strong> · <code>@interfaceObject</code> (P3 module hierarchies), <code>@progressive @override</code> (zero-downtime schema moves).</li>
-        <li><strong>Schema deprecation discipline</strong> · removal requires ≥ 1 phase notice (NFR-MAINT-004); breaks no client mid-phase.</li>
+        <li><strong>Schema deprecation discipline</strong> · removal requires ≥ 1 phase notice (N(FR pending)); breaks no client mid-phase.</li>
       </ul>
     </div>
   </div>
@@ -982,11 +982,11 @@ flowchart LR
     <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Federation composition · 22 subgraphs → one supergraph</div>
     <div class="mermaid">
 flowchart TB
-  HOST[("Host shell · Module Federation<br/>Vite · React 19 · Tauri")]
-  HOST --> ROUTER["Apollo Router v1.50+<br/>query plan · auth context · cache"]
-  ROUTER --> COMPOSITION{"Persisted query<br/>hash lookup"}
+  HOST[("Host shell · Module Federation<br>Vite · React 19 · Tauri")]
+  HOST --> ROUTER["Apollo Router v1.50+<br>query plan · auth context · cache"]
+  ROUTER --> COMPOSITION{"Persisted query<br>hash lookup"}
   COMPOSITION -- "miss" --> REJECT[/"400 unregistered"/]
-  COMPOSITION -- "hit" --> PLAN["Query plan<br/>parallel subgraph fanout"]
+  COMPOSITION -- "hit" --> PLAN["Query plan<br>parallel subgraph fanout"]
 
   PLAN --> SG_BRAIN["BRAIN subgraph"]
   PLAN --> SG_CHAT["CHAT subgraph"]
@@ -994,16 +994,16 @@ flowchart TB
   PLAN --> SG_AUTH["AUTH subgraph"]
   PLAN --> SG_DOTS["…18 more"]
 
-  SG_BRAIN --> PG_BRAIN[("BRAIN schema<br/>RLS-enforced")]
-  SG_CHAT --> PG_CHAT[("CHAT schema<br/>RLS-enforced")]
-  SG_PROJ --> PG_PROJ[("PROJ schema<br/>RLS-enforced")]
+  SG_BRAIN --> PG_BRAIN[("BRAIN schema<br>RLS-enforced")]
+  SG_CHAT --> PG_CHAT[("CHAT schema<br>RLS-enforced")]
+  SG_PROJ --> PG_PROJ[("PROJ schema<br>RLS-enforced")]
   SG_AUTH --> PG_AUTH[("AUTH schema")]
 
-  classDef gw fill:#fef3c7,stroke:#b45309,stroke-width:2px
-  classDef mod fill:#dbeafe,stroke:#1e40af
-  classDef ext fill:#f3e8ff,stroke:#7e22ce
+  classDef gw fill:#fef6e0,stroke:#9c750a,stroke-width:2px
+  classDef mod fill:#e8d4c2,stroke:#45210e
+  classDef ext fill:#f9c64f,stroke:#9c750a
   classDef block fill:#fecaca,stroke:#b91c1c
-  classDef db fill:#fce7f3,stroke:#9d174d
+  classDef db fill:#fde7b3,stroke:#9c750a
   class ROUTER,PLAN gw
   class SG_BRAIN,SG_CHAT,SG_PROJ,SG_AUTH,SG_DOTS mod
   class HOST ext
@@ -1057,22 +1057,22 @@ sequenceDiagram
     <div class="bbg-card p-4">
       <div class="h-eyebrow mb-1">GraphQL p95</div>
       <div class="text-xl font-black text-amber-600">≤ 400 ms</div>
-      <div class="text-xs text-slate-500 mt-1">NFR-PERF-001</div>
+      <div class="text-xs text-slate-500 mt-1">N(FR pending)</div>
     </div>
     <div class="bbg-card p-4">
       <div class="h-eyebrow mb-1">Cache hit rate</div>
       <div class="text-xl font-black text-amber-600">≥ 70%</div>
-      <div class="text-xs text-slate-500 mt-1">NFR-REL-008 persisted-query</div>
+      <div class="text-xs text-slate-500 mt-1">N(FR pending) persisted-query</div>
     </div>
     <div class="bbg-card p-4">
       <div class="h-eyebrow mb-1">Subgraph deploy</div>
       <div class="text-xl font-black text-amber-600">≤ 10 min</div>
-      <div class="text-xs text-slate-500 mt-1">NFR-MAINT-001 module CI</div>
+      <div class="text-xs text-slate-500 mt-1">N(FR pending) module CI</div>
     </div>
     <div class="bbg-card p-4">
       <div class="h-eyebrow mb-1">Composition check</div>
       <div class="text-xl font-black text-amber-600">pass</div>
-      <div class="text-xs text-slate-500 mt-1">NFR-FUNC-002 per release</div>
+      <div class="text-xs text-slate-500 mt-1">N(FR pending) per release</div>
     </div>
   </div>
 

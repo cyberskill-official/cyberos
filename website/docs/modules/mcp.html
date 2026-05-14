@@ -8,7 +8,7 @@
   <meta name="description" content="MCP Gateway — Model Context Protocol federation router. 2025-11-25 spec compliance, OAuth 2.1 PRM, Streamable HTTP, Tasks, Elicitation, tool registry across all modules.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,7 +68,7 @@
       A single MCP face for the whole platform — every module's tools, one well-known endpoint, OAuth-protected, persona-stamped, audit-chained.
     </p>
     <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      MCP Gateway is the federation router that composes a single Model Context Protocol surface from every module's per-server tool catalogue. From the outside, Claude / Codex / Cursor / any MCP 2025-11-25 client discovers one server at <code>https://mcp.cyberos.com</code>; inside, the gateway forwards tool calls to <code>cyberos.{module}.{verb}_{noun}</code> servers, enforces OAuth 2.1 + PKCE (audience-bound), evaluates tool annotations (destructive / readOnly / idempotent / openWorld), runs the RBAC predicate via AUTH, gates destructive calls behind human-confirm or elicitation, tracks long-running work via the Tasks primitive, and lands one audit row per invocation. Persona-version stamping (FR-MCP-006) means every tool call records which agent identity authored it — so "the AI did it" is replayable down to the system-prompt revision. PRD §8.4 + §9.8 lock the FRs; the implementation lives at <code>cyberos/services/mcp-gateway/</code>.
+      MCP Gateway is the federation router that composes a single Model Context Protocol surface from every module's per-server tool catalogue. From the outside, Claude / Codex / Cursor / any MCP 2025-11-25 client discovers one server at <code>https://mcp.cyberos.com</code>; inside, the gateway forwards tool calls to <code>cyberos.{module}.{verb}_{noun}</code> servers, enforces OAuth 2.1 + PKCE (audience-bound), evaluates tool annotations (destructive / readOnly / idempotent / openWorld), runs the RBAC predicate via AUTH, gates destructive calls behind human-confirm or elicitation, tracks long-running work via the Tasks primitive, and lands one audit row per invocation. Persona-version stamping ((FR pending)) means every tool call records which agent identity authored it — so "the AI did it" is replayable down to the system-prompt revision. PRD §8.4 + §9.8 lock the FRs; the implementation lives at <code>cyberos/services/mcp-gateway/</code>.
     </p>
     <div class="flex flex-wrap gap-3 mt-6">
       <a href="#architecture" class="btn btn-primary">Architecture
@@ -179,12 +179,12 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a gateway?</td><td>Because N agent clients × N modules = N² OAuth registrations otherwise. Federation collapses to N+1.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Agent does OAuth 2.1 PKCE → gateway issues audience-bound token → agent calls <code>tools/list</code> → gateway aggregates from federated servers → agent calls a tool → gateway validates audience + scope + annotation → forwards via mTLS gRPC to module → streams response back → audit row written.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>Negligible — Fargate task ~$30/month at P0. The gateway adds ~3 ms per tool call; the audit write is the main cost.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) MCP 2025-11-25 spec compliance. (b) PKCE-only (no implicit grant). (c) Destructive tools MUST require human-confirm. (d) Persona-version MUST be stamped in audit (FR-MCP-006). (e) Tool names MUST follow SEP-986 verbNoun.dotted.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) MCP 2025-11-25 spec compliance. (b) PKCE-only (no implicit grant). (c) Destructive tools MUST require human-confirm. (d) Persona-version MUST be stamped in audit ((FR pending)). (e) Tool names MUST follow SEP-986 verbNoun.dotted.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · rmcp (Rust MCP SDK) · tonic (gRPC to per-module servers) · OAuth via AUTH service · OpenTelemetry · serde_json for spec serialisation.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Streamable HTTP transport (chunked transfer). SSE for server→client events. Tasks primitive over polling endpoint. Elicitation as inline request/response interrupt. Tool registry as DB-backed catalogue + in-memory cache.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate (2 CPU · 4 GB); behind ALB with WAF. Per-module backends are also Fargate, addressed by Cloud Map service-discovery.</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.3 FTE CTO + 0.2 FTE CSO at P0. Each module owner extends the tool catalogue for their module.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-PERF-006 (read tool p95 ≤ 500 ms) + NFR-PERF-007 (write tool p95 ≤ 1 s). Spec compliance via the MCP conformance test suite. Audit completeness at 100%.</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (read tool p95 ≤ 500 ms) + N(FR pending) (write tool p95 ≤ 1 s). Spec compliance via the MCP conformance test suite. Audit completeness at 100%.</td></tr>
       </tbody>
     </table>
   </div>
@@ -207,29 +207,29 @@ graph TB
   end
 
   subgraph GATEWAY ["MCP Gateway (Rust axum + rmcp)"]
-    WK["well_known.rs<br/>/.well-known/mcp<br/>/.well-known/oauth-protected-resource (PRM)"]
-    AUTH_E["oauth_edge.rs<br/>OAuth 2.1 PKCE handshake<br/>(delegates to AUTH service)"]
-    DISC["discovery.rs<br/>tools/list aggregation"]
-    ROUT["federation.rs<br/>tool name → backend server"]
-    ANN["annotations.rs<br/>destructive · readOnly · idempotent"]
-    GATE["gate.rs<br/>RBAC + human-confirm + audience check"]
-    TASKS["tasks.rs<br/>long-running primitive"]
-    ELI["elicitation.rs<br/>mid-execution prompt proxy"]
-    AUD["audit.rs<br/>per-call BRAIN write"]
+    WK["well_known.rs<br>/.well-known/mcp<br>/.well-known/oauth-protected-resource (PRM)"]
+    AUTH_E["oauth_edge.rs<br>OAuth 2.1 PKCE handshake<br>(delegates to AUTH service)"]
+    DISC["discovery.rs<br>tools/list aggregation"]
+    ROUT["federation.rs<br>tool name → backend server"]
+    ANN["annotations.rs<br>destructive · readOnly · idempotent"]
+    GATE["gate.rs<br>RBAC + human-confirm + audience check"]
+    TASKS["tasks.rs<br>long-running primitive"]
+    ELI["elicitation.rs<br>mid-execution prompt proxy"]
+    AUD["audit.rs<br>per-call BRAIN write"]
   end
 
   subgraph BACKENDS ["Per-module MCP servers (mTLS gRPC)"]
-    BR["cyberos.brain<br/>put_memory · view · search · …"]
-    SK["cyberos.skill<br/>invoke_skill · list_skills · …"]
-    AU["cyberos.auth<br/>whoami · check_permission · …"]
-    AI["cyberos.ai<br/>complete · embed · usage_mtd"]
-    CRM["cyberos.crm<br/>(planned · 16 more modules)"]
+    BR["cyberos.brain<br>put_memory · view · search · …"]
+    SK["cyberos.skill<br>invoke_skill · list_skills · …"]
+    AU["cyberos.auth<br>whoami · check_permission · …"]
+    AI["cyberos.ai<br>complete · embed · usage_mtd"]
+    CRM["cyberos.crm<br>(planned · 16 more modules)"]
   end
 
   subgraph SINKS
-    AUTHSVC["🔐 AUTH service<br/>token issuance + RBAC.Check"]
-    BRAIN["🧠 BRAIN<br/>mcp.invocation rows"]
-    OBS["👁 OBS<br/>traces + metrics"]
+    AUTHSVC["🔐 AUTH service<br>token issuance + RBAC.Check"]
+    BRAIN["🧠 BRAIN<br>mcp.invocation rows"]
+    OBS["👁 OBS<br>traces + metrics"]
   end
 
   CL_D --> WK
@@ -258,7 +258,7 @@ graph TB
 
   classDef planned fill:#e0f2fe,stroke:#0369a1
   classDef backend fill:#cffafe,stroke:#0891b2
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class WK,AUTH_E,DISC,ROUT,ANN,GATE,TASKS,ELI,AUD,CL_D,CL_C,CUR,CUO planned
   class BR,SK,AU,AI,CRM backend
   class AUTHSVC,BRAIN,OBS sink
@@ -276,14 +276,14 @@ graph TB
         <tr><td><code>federation.rs</code></td><td>services/mcp-gateway/src/federation.rs</td><td>Routes a tool call (<code>cyberos.brain.put_memory</code>) to the right backend server via mTLS gRPC. Caches resolved endpoints in-memory.</td></tr>
         <tr><td><code>annotations.rs</code></td><td>services/mcp-gateway/src/annotations.rs</td><td>Parses tool annotations from backend manifest. Enforces destructive → human-confirm; readOnly → fast-path RBAC; idempotent → safe-retry; openWorld → strict scope check.</td></tr>
         <tr><td><code>gate.rs</code></td><td>services/mcp-gateway/src/gate.rs</td><td>Composite gate — verifies audience claim, calls AUTH RBAC.Check, validates idempotency-key, applies rate-limit token bucket.</td></tr>
-        <tr><td><code>tasks.rs</code></td><td>services/mcp-gateway/src/tasks.rs</td><td>Tasks primitive (FR-MCP-002 / FR-MCP-003) — long-running tool invocations get a task_id; clients poll for status / result; results streamed via SSE.</td></tr>
-        <tr><td><code>elicitation.rs</code></td><td>services/mcp-gateway/src/elicitation.rs</td><td>Elicitation (FR-MCP-010) — mid-execution, a backend can request user input; gateway proxies that back to the agent client with content-safety filter.</td></tr>
-        <tr><td><code>tool_registry.rs</code></td><td>services/mcp-gateway/src/tool_registry.rs</td><td>Postgres-backed registry. Each backend registers its tools with annotations; collisions rejected at register time (FR-MCP-007).</td></tr>
+        <tr><td><code>tasks.rs</code></td><td>services/mcp-gateway/src/tasks.rs</td><td>Tasks primitive ((FR pending)) — long-running tool invocations get a task_id; clients poll for status / result; results streamed via SSE.</td></tr>
+        <tr><td><code>elicitation.rs</code></td><td>services/mcp-gateway/src/elicitation.rs</td><td>Elicitation ((FR pending)) — mid-execution, a backend can request user input; gateway proxies that back to the agent client with content-safety filter.</td></tr>
+        <tr><td><code>tool_registry.rs</code></td><td>services/mcp-gateway/src/tool_registry.rs</td><td>Postgres-backed registry. Each backend registers its tools with annotations; collisions rejected at register time ((FR pending)).</td></tr>
         <tr><td><code>rate_limit.rs</code></td><td>services/mcp-gateway/src/rate_limit.rs</td><td>Per-tool + per-tenant token-bucket rate limit; circuit-breaker on backend errors.</td></tr>
-        <tr><td><code>idempotency.rs</code></td><td>services/mcp-gateway/src/idempotency.rs</td><td>Replay safety via Idempotency-Key header (FR-MCP-004).</td></tr>
+        <tr><td><code>idempotency.rs</code></td><td>services/mcp-gateway/src/idempotency.rs</td><td>Replay safety via Idempotency-Key header ((FR pending)).</td></tr>
         <tr><td><code>audit.rs</code></td><td>services/mcp-gateway/src/audit.rs</td><td>Emits one <code>mcp.invocation</code> row per call: agent · tool · args_hash · RBAC-decision · latency · outcome · persona-version.</td></tr>
         <tr><td><code>streamable_http.rs</code></td><td>services/mcp-gateway/src/streamable_http.rs</td><td>RFC 9112 chunked-transfer HTTP transport per MCP 2025-11-25.</td></tr>
-        <tr><td><code>conformance.rs</code></td><td>services/mcp-gateway/tests/conformance.rs</td><td>MCP conformance test suite runner. Gating CI test (FR-MCP-001).</td></tr>
+        <tr><td><code>conformance.rs</code></td><td>services/mcp-gateway/tests/conformance.rs</td><td>MCP conformance test suite runner. Gating CI test ((FR pending)).</td></tr>
       </tbody>
     </table>
   </div>
@@ -426,7 +426,7 @@ erDiagram
         <tr><td>JSON-RPC</td><td><code>tasks/get</code></td><td>Poll long-running task status.</td></tr>
         <tr><td>JSON-RPC</td><td><code>tasks/cancel</code></td><td>Cancel running task.</td></tr>
         <tr><td>JSON-RPC</td><td><code>elicitation/respond</code></td><td>Reply to a server-initiated elicitation.</td></tr>
-        <tr><td>JSON-RPC</td><td><code>sampling/createMessage</code></td><td>Server-initiated LLM sampling (rate-limited, FR-MCP-003).</td></tr>
+        <tr><td>JSON-RPC</td><td><code>sampling/createMessage</code></td><td>Server-initiated LLM sampling (rate-limited, (FR pending)).</td></tr>
         <tr><td>JSON-RPC</td><td><code>logging/setLevel</code></td><td>Server log-level config.</td></tr>
         <tr><td>JSON-RPC</td><td><code>roots/list</code></td><td>List filesystem roots.</td></tr>
         <tr><td>JSON-RPC</td><td><code>notifications/initialized</code></td><td>Capability acknowledgement.</td></tr>
@@ -551,7 +551,7 @@ sequenceDiagram
   participant AUD as audit.rs
   participant B as 🧠 BRAIN
 
-  A->>G: POST /mcp {method:"tools/call", name:"cyberos.brain.put_memory",<br/>arguments:{path:"…", body:"…"}, idempotency_key:"…"}
+  A->>G: POST /mcp {method:"tools/call", name:"cyberos.brain.put_memory",<br>arguments:{path:"…", body:"…"}, idempotency_key:"…"}
   G->>GA: verify audience claim (mcp.cyberos.com)
   G->>GA: load annotations(destructive=false, scope_required=brain.put)
   GA->>AS: RBAC.Check(subject_jwt, action="brain.put", resource="memories/…")
@@ -577,7 +577,7 @@ sequenceDiagram
   participant U as User UI (CHAT or IDE)
   participant SK as cyberos.skill
 
-  A->>G: tools/call {name:"cyberos.skill.invoke_skill",<br/>arguments:{skill_id:"vn-vat-invoice"}}
+  A->>G: tools/call {name:"cyberos.skill.invoke_skill",<br>arguments:{skill_id:"vn-vat-invoice"}}
   G->>ANN: load annotations
   ANN-->>G: destructive=true, requiresConfirm=true
   G->>ELI: needs user confirmation
@@ -594,7 +594,7 @@ sequenceDiagram
     G-->>A: {error:"user_denied", isError:true}
   end
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-MCP-005: destructive tool calls without confirmation are rejected. The elicitation UI is rendered by the agent client (Claude Desktop, Cursor) — the gateway is content-agnostic.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): destructive tool calls without confirmation are rejected. The elicitation UI is rendered by the agent client (Claude Desktop, Cursor) — the gateway is content-agnostic.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 4 — Long-running task via Tasks primitive</h3>
@@ -623,7 +623,7 @@ sequenceDiagram
   A->>G: tasks/get
   G-->>A: {status:"completed", result:{…}}
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-MCP-002: Tasks primitive for long-running tool invocations. The agent can release the call and resume the conversation; polling fetches updates.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): Tasks primitive for long-running tool invocations. The agent can release the call and resume the conversation; polling fetches updates.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 5 — Mid-execution elicitation</h3>
@@ -649,7 +649,7 @@ sequenceDiagram
   SK-->>G: result {napas_tx_id:"…"}
   G-->>A: result
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-MCP-010: elicitation proxied with content-safety filter — prevents a compromised backend from injecting prompts that exfiltrate via the user.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending): elicitation proxied with content-safety filter — prevents a compromised backend from injecting prompts that exfiltrate via the user.</p>
   </div>
 </section>
 
@@ -689,32 +689,14 @@ stateDiagram-v2
   </div>
 </section>
 
+<!-- ============================================================ -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">MCP-specific FRs from PRD §9.8 + SRS §4.8. Full normative descriptions at <a href="../reference/fr-catalog.html#mcp" class="text-blue-700 font-semibold underline">fr-catalog.html#mcp</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-MCP-001</code></td><td>MCP 2025-11-25 spec compliance including OAuth 2.1 + PKCE</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-002</code></td><td>Tasks primitive for long-running tool invocations</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-003</code></td><td>Sampling-with-Tools rate-limited per session</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td><code>FR-MCP-004</code></td><td>Idempotency-Key enforcement on destructive tool calls</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-005</code></td><td>Destructive tool annotation + human-confirm gate</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-006</code></td><td>Persona-version stamp recorded in audit chain</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-007</code></td><td>Persona scope contracts enforced at gateway, not via prompt</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-008</code></td><td>SEP-986 verbNoun.dotted naming convention</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-009</code></td><td>Streamable HTTP transport (RFC 9112 chunked)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-010</code></td><td>Elicitation back-channel proxied with content-safety filter</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-011</code></td><td>Well-known discovery (<code>/.well-known/mcp</code>)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-012</code></td><td>Well-known PRM (<code>/.well-known/oauth-protected-resource</code>)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-013</code></td><td>Tool-name registry; collisions rejected at registration</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-014</code></td><td>Per-tool rate limits and circuit breakers</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-015</code></td><td>Audit log per tool call (agent, tool, args_hash, decision, latency, outcome)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-016</code></td><td>Tool annotations enforced (destructive→gate, readOnly→fast)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td><code>FR-MCP-017</code></td><td>Per-tenant authorisation server with PKCE + audience binding</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -725,19 +707,19 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-PERF-006</code></td><td>MCP read tool p95</td><td>≤ 500 ms</td><td>k6 load test</td></tr>
-        <tr><td><code>NFR-PERF-007</code></td><td>MCP write tool p95</td><td>≤ 1 s</td><td>k6 load test</td></tr>
-        <tr><td><code>NFR-MCP-LAT-001</code></td><td>Gateway overhead per call</td><td>≤ 5 ms p95</td><td>internal bench</td></tr>
-        <tr><td><code>NFR-MCP-LAT-002</code></td><td>tools/list discovery</td><td>≤ 100 ms p95 (cache hit)</td><td>internal bench</td></tr>
-        <tr><td><code>NFR-MCP-AVL-001</code></td><td>Gateway availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-MCP-CON-001</code></td><td>MCP spec conformance</td><td>100% of conformance suite</td><td>CI gate</td></tr>
-        <tr><td><code>NFR-MCP-AUD-001</code></td><td>Audit completeness</td><td>100% (no dropped invocations)</td><td>chaos test + BRAIN walk</td></tr>
-        <tr><td><code>NFR-MCP-DES-001</code></td><td>Destructive without confirm</td><td>= 0 events</td><td>CI regression + runtime check</td></tr>
-        <tr><td><code>NFR-MCP-NAM-001</code></td><td>Tool name violations</td><td>= 0 (rejected at register)</td><td>registry validator</td></tr>
-        <tr><td><code>NFR-MCP-IDM-001</code></td><td>Idempotency-key collision rate</td><td>= 0 false positives</td><td>property-based test</td></tr>
-        <tr><td><code>NFR-MCP-TSK-001</code></td><td>Task status update latency</td><td>≤ 2 s after backend update</td><td>bench/tasks</td></tr>
-        <tr><td><code>NFR-MCP-RATE-001</code></td><td>Per-tool rate-limit enforcement</td><td>100% (no overflow)</td><td>load test</td></tr>
-        <tr><td><code>NFR-MCP-OAUTH-001</code></td><td>OAuth 2.1 conformance</td><td>OAuth 2.1 + RFC 9728 PRM</td><td>Conformance suite</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>MCP read tool p95</td><td>≤ 500 ms</td><td>k6 load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>MCP write tool p95</td><td>≤ 1 s</td><td>k6 load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Gateway overhead per call</td><td>≤ 5 ms p95</td><td>internal bench</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>tools/list discovery</td><td>≤ 100 ms p95 (cache hit)</td><td>internal bench</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Gateway availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>MCP spec conformance</td><td>100% of conformance suite</td><td>CI gate</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Audit completeness</td><td>100% (no dropped invocations)</td><td>chaos test + BRAIN walk</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Destructive without confirm</td><td>= 0 events</td><td>CI regression + runtime check</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Tool name violations</td><td>= 0 (rejected at register)</td><td>registry validator</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Idempotency-key collision rate</td><td>= 0 false positives</td><td>property-based test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Task status update latency</td><td>≤ 2 s after backend update</td><td>bench/tasks</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Per-tool rate-limit enforcement</td><td>100% (no overflow)</td><td>load test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OAuth 2.1 conformance</td><td>OAuth 2.1 + RFC 9728 PRM</td><td>Conformance suite</td></tr>
       </tbody>
     </table>
   </div>
@@ -749,11 +731,11 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["MCP Gateway depends on"]
-    AUTH["🔐 AUTH<br/>token + RBAC.Check"]
-    BRAIN["🧠 BRAIN<br/>mcp.invocation rows"]
-    OBS["👁 OBS<br/>traces + metrics"]
-    PG["🗄 PostgreSQL<br/>tool registry"]
-    REDIS["⚡ Redis<br/>catalogue + tasks cache"]
+    AUTH["🔐 AUTH<br>token + RBAC.Check"]
+    BRAIN["🧠 BRAIN<br>mcp.invocation rows"]
+    OBS["👁 OBS<br>traces + metrics"]
+    PG["🗄 PostgreSQL<br>tool registry"]
+    REDIS["⚡ Redis<br>catalogue + tasks cache"]
   end
   MCP["🔌 MCP Gateway"]
   subgraph backends ["Per-module servers"]
@@ -784,8 +766,8 @@ graph LR
   CUR --> MCP
   INT --> MCP
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN,SK,REDIS,PG shipped
   class MCP,AUTH,AI,AU,BR,OTH,OBS planned
   class CL,CC,CUR,INT shipped
@@ -801,7 +783,7 @@ graph LR
       <tbody>
         <tr><td>EU AI Act</td><td>Art. 12 — Logging</td><td>One <code>mcp.invocation</code> row per tool call.</td></tr>
         <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>Destructive tools require human-confirm via elicitation.</td></tr>
-        <tr><td>EU AI Act</td><td>Art. 26 — Deployer obligations</td><td>Persona-version stamping (FR-MCP-006).</td></tr>
+        <tr><td>EU AI Act</td><td>Art. 26 — Deployer obligations</td><td>Persona-version stamping ((FR pending)).</td></tr>
         <tr><td>Vietnam PDPL</td><td>Art. 14 — DSAR</td><td>Per-subject mcp.invocation export.</td></tr>
         <tr><td>GDPR</td><td>Art. 25 — Privacy by design</td><td>Audience-bound tokens; confused-deputy mitigation.</td></tr>
         <tr><td>GDPR</td><td>Art. 32 — Security of processing</td><td>OAuth 2.1 PKCE only; mTLS to backends.</td></tr>
@@ -823,7 +805,7 @@ graph LR
       <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
       <tbody>
         <tr><td><code>R-MCP-001</code></td><td>Spec drift — agent client expects newer features than gateway provides</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Quarterly spec sync; CI gates on conformance suite; capability negotiation surfaces gaps.</td></tr>
-        <tr><td><code>R-MCP-002</code></td><td>Tool-name squatting — module registers a tool name belonging to another</td><td>Low</td><td>High</td><td>CTO</td><td>Server_id is part of registry key; cross-module names rejected at register (FR-MCP-013).</td></tr>
+        <tr><td><code>R-MCP-002</code></td><td>Tool-name squatting — module registers a tool name belonging to another</td><td>Low</td><td>High</td><td>CTO</td><td>Server_id is part of registry key; cross-module names rejected at register ((FR pending)).</td></tr>
         <tr><td><code>R-MCP-003</code></td><td>Confused-deputy attack — token from one audience used against another module</td><td>Medium</td><td>High</td><td>CSO</td><td>Audience claim mandatory + verified at backend; mTLS pins to right service.</td></tr>
         <tr><td><code>R-MCP-004</code></td><td>Destructive tool annotation bypass via newly-added tool</td><td>Medium</td><td>High</td><td>CSO</td><td>Registration requires CTO + CSO approval; default annotation is destructive=true.</td></tr>
         <tr><td><code>R-MCP-005</code></td><td>Tasks primitive leak — task_id reused across tenants</td><td>Low</td><td>High</td><td>CTO</td><td>task_id is UUIDv7 + tenant_id in lookup; cross-tenant query property-tested.</td></tr>
@@ -831,7 +813,7 @@ graph LR
         <tr><td><code>R-MCP-007</code></td><td>Backend slow → caller times out → orphaned audit row</td><td>Medium</td><td>Low</td><td>CTO</td><td>Per-tool timeout enforced; audit row written on cancellation; reconciliation job catches orphans.</td></tr>
         <tr><td><code>R-MCP-008</code></td><td>OAuth registration scaling — every agent client must register</td><td>Low</td><td>Low</td><td>CTO</td><td>Dynamic Client Registration (DCR) per RFC 7591; tenant admin approves before activation.</td></tr>
         <tr><td><code>R-MCP-009</code></td><td>Tool catalogue cache staleness after backend deploy</td><td>Medium</td><td>Low</td><td>CTO</td><td>60 s TTL + register-time invalidation; deploys trigger cache reset.</td></tr>
-        <tr><td><code>R-MCP-010</code></td><td>Sampling-with-Tools amplification (LLM-driven loop)</td><td>Medium</td><td>Medium</td><td>CSO</td><td>FR-MCP-003: per-session sampling rate limit; circuit-breaker on recursion depth.</td></tr>
+        <tr><td><code>R-MCP-010</code></td><td>Sampling-with-Tools amplification (LLM-driven loop)</td><td>Medium</td><td>Medium</td><td>CSO</td><td>(FR pending): per-session sampling rate limit; circuit-breaker on recursion depth.</td></tr>
       </tbody>
     </table>
   </div>
@@ -995,8 +977,8 @@ input_schema:   {path: string, mode: "tombstone"|"purge", reason: string?}</code
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
       <li><strong>PRD §8.4</strong> — MCP Gateway architecture, PRM flow, tasks primitive.</li>
-      <li><strong>PRD §9.8</strong> — FR-MCP-001 through FR-MCP-010 (PRD-tier).</li>
-      <li><strong>SRS §4.8</strong> — Formal FR-MCP catalogue with verification methods.</li>
+      <li><strong>PRD §9.8</strong> — (FR pending) through (FR pending) (PRD-tier).</li>
+      <li><strong>SRS §4.8</strong> — Formal (FR pending) catalogue with verification methods.</li>
       <li><strong>MCP Specification 2025-11-25</strong> — <code>modelcontextprotocol.io/specification/2025-11-25</code>.</li>
       <li><strong>SEP-986</strong> — verbNoun.dotted tool naming convention.</li>
       <li><strong>RFC 6749 / draft-ietf-oauth-v2-1</strong> — OAuth 2.1.</li>

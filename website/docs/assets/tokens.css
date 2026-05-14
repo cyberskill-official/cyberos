@@ -117,9 +117,10 @@
   --phase-p4-bg:   var(--neutral-100);
 
   /* === TYPOGRAPHY === */
-  --font-display: 'Inter', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
-  --font-body:    'Inter', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
-  --font-sans:    'Inter', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  /* Vietnamese-first per design-system DESIGN.md — Be Vietnam Pro before Inter. */
+  --font-display: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body:    'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans:    'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --font-vietnamese: 'Be Vietnam Pro', 'Inter', system-ui, sans-serif;
 

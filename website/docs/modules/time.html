@@ -8,7 +8,7 @@
   <meta name="description" content="TIME — Time tracking, leave, and expense capture. Start/stop and retroactive entries, billable distinction, photo-receipt OCR, weekly approval workflow, immutable audit, multi-currency, feeds INV.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -197,13 +197,13 @@
       <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
       <tbody>
         <tr><td><strong>5W · What</strong></td><td>What is TIME?</td><td>Three sub-modules: time tracking (start/stop, retroactive, billable flag), leave management (annual, sick, sabbatical, unpaid, other), and expense capture (camera + OCR + categorise). All three share a Postgres canonical store, an append-only audit chain into BRAIN, and a weekly approval workflow.</td></tr>
-        <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Members:</strong> log time + expense + leave daily; submit weekly. <strong>Account Managers:</strong> approve weekly per Engagement. <strong>CFO:</strong> view consolidated dashboards, approve overtime exceptions, sign off on reimbursement batches. <strong>CHRO:</strong> own leave policy + labour-law cap enforcement. <strong>Agents:</strong> CUO/COO-skill nudges Members who haven't logged time in 2 days (FR-TIME-005).</td></tr>
+        <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Members:</strong> log time + expense + leave daily; submit weekly. <strong>Account Managers:</strong> approve weekly per Engagement. <strong>CFO:</strong> view consolidated dashboards, approve overtime exceptions, sign off on reimbursement batches. <strong>CHRO:</strong> own leave policy + labour-law cap enforcement. <strong>Agents:</strong> CUO/COO-skill nudges Members who haven't logged time in 2 days ((FR pending)).</td></tr>
         <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: SPA timer, mobile capture. Weekly: batch approval cycle (Sunday 23:59 → Monday 09:00 AM review). Nightly: leave accrual recompute, overtime cap check, expense reimbursement batch. Monthly: hours summary to REW.</td></tr>
         <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (SG-1) with VN-residency S3 for receipt images. P3+: multi-region. The OCR pipeline runs as a Fargate task per OCR job; bursty workloads scale to 50 parallel tasks via SQS.</td></tr>
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Audit integrity, labour-law caps, and receipt OCR are three concerns that do not belong in PROJ. Splitting them out keeps PROJ's sync-engine simple and gives the regulator a single place to look.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Timer: SPA writes start_time; on stop, end_time + duration computed server-side as a generated column. Retroactive: Member enters duration + date; same path. Expense: camera capture → S3 → OCR Lambda → categoriser → Member confirm → entry. Leave: form submit → approver Notify → decision → calendar sync.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$70 / month for SG-1 single-tenant pilot. OCR cost averages $0.002 per receipt (AWS Textract); ~$50 / month for 25k receipts at 50 Members. 50-tenant: ~$280 / month.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Audit append-only — non-negotiable. (b) Labour-law caps enforced as hard rules. (c) Multi-currency at every layer. (d) Member time-log annotations are private namespace (FR-TIME-008) — not visible to AM. (e) Receipt OCR must handle hóa đơn (Vietnamese VAT invoice) format.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Audit append-only — non-negotiable. (b) Labour-law caps enforced as hard rules. (c) Multi-currency at every layer. (d) Member time-log annotations are private namespace ((FR pending)) — not visible to AM. (e) Receipt OCR must handle hóa đơn (Vietnamese VAT invoice) format.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · Redis 7 · S3 + KMS · AWS Textract (or PaddleOCR self-hosted at P2+) · vn-mst-validate skill · OpenTelemetry SDK · React + Zustand SPA · React Native (P3+).</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with <code>correction_to</code> (not in-place edit). Generated column for <code>duration_minutes</code>. Per-Engagement billable_default + per-entry override. Weekly batch approval (not per-entry). Camera-first expense capture. Multi-currency stored as canonical-VND + spot-FX-rate snapshot.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. S3 + KMS for receipt images. SQS-driven OCR pool. Calendar sync via OAuth (Google / Outlook).</td></tr>
@@ -227,9 +227,9 @@
     <div class="mermaid">
 graph TB
   subgraph CLIENT ["Clients"]
-    SPA["SPA<br/>timer + form"]
+    SPA["SPA<br>timer + form"]
     MOB["Mobile capture (P3)"]
-    AGENT["🎯 CUO<br/>via MCP"]
+    AGENT["🎯 CUO<br>via MCP"]
   end
 
   subgraph EDGE ["Edge"]
@@ -242,31 +242,31 @@ graph TB
     TE["TimeEntry handler"]
     EX["Expense handler"]
     LR["Leave handler"]
-    LAW["VN labour-law<br/>cap enforcer"]
+    LAW["VN labour-law<br>cap enforcer"]
     APPR["Approval workflow"]
     FX["FX rate snapshotter"]
-    CAL_SYNC["Calendar sync<br/>(Google / Outlook)"]
+    CAL_SYNC["Calendar sync<br>(Google / Outlook)"]
     AUDIT["BRAIN audit bridge"]
   end
 
   subgraph OCR ["OCR pipeline"]
     SQS["SQS queue"]
     OW["Fargate OCR worker"]
-    TX["AWS Textract<br/>(or PaddleOCR)"]
-    VN["vn-mst-validate<br/>skill"]
+    TX["AWS Textract<br>(or PaddleOCR)"]
+    VN["vn-mst-validate<br>skill"]
     CAT["Categoriser"]
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br/>time_entry · expense<br/>leave_request<br/>append-only audit-side")]
-    RED[("Redis 7<br/>active timers · FX cache")]
-    S3[("S3 + KMS<br/>receipt images")]
+    PG[("PostgreSQL<br>time_entry · expense<br>leave_request<br>append-only audit-side")]
+    RED[("Redis 7<br>active timers · FX cache")]
+    S3[("S3 + KMS<br>receipt images")]
   end
 
   subgraph SINKS ["Sinks"]
-    BRAIN["🧠 BRAIN<br/>audit + summary"]
-    INV["🧾 INV<br/>billable summary"]
-    REW["💎 REW<br/>hours context"]
+    BRAIN["🧠 BRAIN<br>audit + summary"]
+    INV["🧾 INV<br>billable summary"]
+    REW["💎 REW<br>hours context"]
     OBS["👁 OBS"]
   end
 
@@ -306,7 +306,7 @@ graph TB
 
   classDef planned fill:#ccfbf1,stroke:#115e59
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   class SPA,MOB,AGENT,GQL,REST,MCP,TE,EX,LR,LAW,APPR,FX,CAL_SYNC,AUDIT,SQS,OW,TX,VN,CAT planned
   class PG,RED,S3 store
   class BRAIN,INV,REW,OBS sink
@@ -322,13 +322,13 @@ graph TB
         <tr><td><code>expense.rs</code></td><td>services/time/src/expense.rs</td><td>Expense CRUD. Camera-capture → S3 → OCR queue. Categorisation via per-tenant chart of accounts.</td></tr>
         <tr><td><code>leave_request.rs</code></td><td>services/time/src/leave_request.rs</td><td>LeaveRequest CRUD. Kinds: <code>annual · sick · sabbatical · unpaid · other</code>. Approver flow via Notify.</td></tr>
         <tr><td><code>law_caps.rs</code></td><td>services/time/src/law_caps.rs</td><td>Vietnamese Labour Code Art. 105 / 107 enforcement. 40 h regular / week, 300 h overtime / year. Hard-blocks save on violation; pages CHRO.</td></tr>
-        <tr><td><code>approval.rs</code></td><td>services/time/src/approval.rs</td><td>Weekly approval workflow. Member submit → AM approve → CFO visibility. Self-approval rejected (FR-TIME-004).</td></tr>
+        <tr><td><code>approval.rs</code></td><td>services/time/src/approval.rs</td><td>Weekly approval workflow. Member submit → AM approve → CFO visibility. Self-approval rejected ((FR pending)).</td></tr>
         <tr><td><code>fx.rs</code></td><td>services/time/src/fx.rs</td><td>FX rate snapshotter. Pulls Vietcombank rate daily; stores snapshot per entry for invoice-time fidelity.</td></tr>
         <tr><td><code>ocr_pipeline.rs</code></td><td>services/time/src/ocr_pipeline.rs</td><td>SQS-driven OCR worker. Calls AWS Textract (P1) or PaddleOCR self-hosted (P2+). Parses Vietnamese hóa đơn format.</td></tr>
         <tr><td><code>categoriser.rs</code></td><td>services/time/src/categoriser.rs</td><td>Expense categoriser via AI Gateway. Picks from per-tenant chart of accounts; confidence threshold for auto-apply.</td></tr>
-        <tr><td><code>calendar_sync.rs</code></td><td>services/time/src/calendar_sync.rs</td><td>Two-way Google / Outlook sync for leave events (FR-TIME-007).</td></tr>
-        <tr><td><code>nudge.rs</code></td><td>services/time/src/nudge.rs</td><td>CUO/COO-skill nudge for Members who haven't logged time in 2 days (FR-TIME-005).</td></tr>
-        <tr><td><code>inconsistency.rs</code></td><td>services/time/src/inconsistency.rs</td><td>Detect overlapping entries, &gt; 12 h continuous, and other anomalies (FR-TIME-006 SRS).</td></tr>
+        <tr><td><code>calendar_sync.rs</code></td><td>services/time/src/calendar_sync.rs</td><td>Two-way Google / Outlook sync for leave events ((FR pending)).</td></tr>
+        <tr><td><code>nudge.rs</code></td><td>services/time/src/nudge.rs</td><td>CUO/COO-skill nudge for Members who haven't logged time in 2 days ((FR pending)).</td></tr>
+        <tr><td><code>inconsistency.rs</code></td><td>services/time/src/inconsistency.rs</td><td>Detect overlapping entries, &gt; 12 h continuous, and other anomalies ((FR pending) SRS).</td></tr>
         <tr><td><code>inv_export.rs</code></td><td>services/time/src/inv_export.rs</td><td>Weekly batched billable summary export to INV.</td></tr>
         <tr><td><code>dsar_export.rs</code></td><td>services/time/src/dsar_export.rs</td><td>DSAR bundle for a Member.</td></tr>
         <tr><td><code>migrations/</code></td><td>services/time/migrations/</td><td>sqlx migrations. All tables RLS by <code>tenant_id</code>; <code>time_entry.member_id</code> additionally enforced.</td></tr>
@@ -700,9 +700,9 @@ sequenceDiagram
   end
   API->>CFO: visibility on dashboard (no decision needed at AM-approved tier)
 
-  Note over CFO: CFO may flag for personal review<br/>overtime exceptions require explicit CFO sign-off
+  Note over CFO: CFO may flag for personal review<br>overtime exceptions require explicit CFO sign-off
     </div>
-    <p class="text-xs text-slate-500 mt-3">FR-TIME-004 — a Member MUST NOT be able to approve their own entries; self-approval attempts rejected at the API.</p>
+    <p class="text-xs text-slate-500 mt-3">(FR pending) — a Member MUST NOT be able to approve their own entries; self-approval attempts rejected at the API.</p>
   </div>
 
   <h3 class="text-lg font-bold mb-3">Flow 3 — Expense capture with OCR</h3>
@@ -737,7 +737,7 @@ sequenceDiagram
   CAT-->>OW: {category_code, confidence}
   OW->>PG: UPDATE expense + INSERT ocr_result
   OW->>B: time.expense_ocr_complete
-  Note over OW,U: SPA polls /time/expense/{id}/ocr<br/>or receives push via WebSocket
+  Note over OW,U: SPA polls /time/expense/{id}/ocr<br>or receives push via WebSocket
 
   U->>API: confirm / correct + submit
   API->>PG: status=submitted
@@ -793,7 +793,7 @@ sequenceDiagram
   API->>B: time.leave_requested
   APPR->>API: approve
   API->>API: status=approved · decided_at=now()
-  API->>CAL: create event (two-way sync, FR-TIME-007)
+  API->>CAL: create event (two-way sync, (FR pending))
   CAL-->>API: provider_event_id
   API->>B: time.leave_approved
   API->>N: ping Member "approved"
@@ -845,32 +845,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">TIME FRs from PRD §9.10 (product) and §19.5 (SRS-tier). Full normative descriptions at <a href="../reference/fr-catalog.html#time" class="text-blue-700 font-semibold underline">fr-catalog.html#time</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-TIME-001</code></td><td>Daily time entry with start/end or duration; per-task assignment</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-002</code></td><td>Billable / non-billable rule by Engagement default + per-entry override</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-003</code></td><td>Receipt capture (camera, file upload, email forward)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-004</code></td><td>Weekly approval flow: Member submit → AM approve → CFO visibility; self-approval rejected</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-005</code></td><td>CUO/COO-skill nudges Members who haven't logged time in 2 days</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-006</code></td><td>Export to INV: weekly batched per-Engagement billable summary</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-007</code></td><td>Time entries ingested into BRAIN Layer 3; aggregates by CRO-skill</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-008</code></td><td>Per-Member personal time-log annotations are private namespace</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-009</code></td><td>Leave requests with kinds + approver workflow; self-approval rejected</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-010</code></td><td>Calendar two-way sync (Google / Outlook) for approved leave</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-011</code></td><td>VN Labour Code Art. 105 / 107 caps enforced as hard rules</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-012</code></td><td>Inconsistency detection (overlapping entries, &gt; 12h continuous)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-013</code></td><td>Append-only audit; corrections via <code>correction_to</code></td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-014</code></td><td>Multi-currency entries with FX snapshot at entry time</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-TIME-015</code></td><td>Vietnamese hóa đơn OCR with MST validation</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-TIME-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -884,18 +865,18 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-TIME-PERF-001</code></td><td>Timer start / stop API</td><td>p95 ≤ 250 ms</td><td>k6 + RUM</td></tr>
-        <tr><td><code>NFR-TIME-PERF-002</code></td><td>Weekly summary view (5 weeks)</td><td>p95 ≤ 400 ms</td><td>SPA RUM</td></tr>
-        <tr><td><code>NFR-TIME-PERF-003</code></td><td>OCR turn-around (receipt → result)</td><td>p95 ≤ 8 s</td><td>SQS + worker histogram</td></tr>
-        <tr><td><code>NFR-TIME-USE-001</code></td><td>Mobile capture viable on 3G</td><td>≤ 3 s upload at 150 KB receipt</td><td>simulated network test</td></tr>
-        <tr><td><code>NFR-TIME-USE-002</code></td><td>OCR accuracy on hóa đơn corpus</td><td>≥ 90% field-level</td><td>quarterly eval on 200-receipt corpus</td></tr>
-        <tr><td><code>NFR-TIME-SEC-001</code></td><td>Append-only audit integrity</td><td>0 in-place edits</td><td>schema constraint + CI gate</td></tr>
-        <tr><td><code>NFR-TIME-SEC-002</code></td><td>Receipt image at rest</td><td>KMS-encrypted, RLS by tenant</td><td>policy audit</td></tr>
-        <tr><td><code>NFR-TIME-AVL-001</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
-        <tr><td><code>NFR-TIME-COMP-001</code></td><td>VN Labour Code cap violations</td><td>= 0 (hard rule)</td><td>law_caps.rs runtime + CI test</td></tr>
-        <tr><td><code>NFR-TIME-INT-001</code></td><td>INV billable summary durability</td><td>100% delivered</td><td>retry + dead-letter monitor</td></tr>
-        <tr><td><code>NFR-TIME-DUR-001</code></td><td>Approval decisions persisted</td><td>0 lost under crash</td><td>chaos test</td></tr>
-        <tr><td><code>NFR-TIME-AUD-001</code></td><td>Correction-chain integrity</td><td>cycles forbidden; max depth 50</td><td>migration constraint + CI</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Timer start / stop API</td><td>p95 ≤ 250 ms</td><td>k6 + RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Weekly summary view (5 weeks)</td><td>p95 ≤ 400 ms</td><td>SPA RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OCR turn-around (receipt → result)</td><td>p95 ≤ 8 s</td><td>SQS + worker histogram</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Mobile capture viable on 3G</td><td>≤ 3 s upload at 150 KB receipt</td><td>simulated network test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>OCR accuracy on hóa đơn corpus</td><td>≥ 90% field-level</td><td>quarterly eval on 200-receipt corpus</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Append-only audit integrity</td><td>0 in-place edits</td><td>schema constraint + CI gate</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Receipt image at rest</td><td>KMS-encrypted, RLS by tenant</td><td>policy audit</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VN Labour Code cap violations</td><td>= 0 (hard rule)</td><td>law_caps.rs runtime + CI test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>INV billable summary durability</td><td>100% delivered</td><td>retry + dead-letter monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Approval decisions persisted</td><td>0 lost under crash</td><td>chaos test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Correction-chain integrity</td><td>cycles forbidden; max depth 50</td><td>migration constraint + CI</td></tr>
       </tbody>
     </table>
   </div>
@@ -917,7 +898,7 @@ graph LR
     BRAIN["🧠 BRAIN"]
     PROJ["📋 PROJ"]
     AI["⚡ AI Gateway"]
-    OCR["AWS Textract<br/>(or PaddleOCR)"]
+    OCR["AWS Textract<br>(or PaddleOCR)"]
     MCP["🔌 MCP"]
     OBS["👁 OBS"]
     VN["vn-mst-validate skill"]
@@ -942,8 +923,8 @@ graph LR
   TIME --> HR
   TIME --> PORTAL
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN,VN shipped
   class TIME,AUTH,PROJ,AI,OCR,MCP,OBS,INV,REW,HR,PORTAL planned
     </div>
@@ -969,7 +950,7 @@ graph LR
         <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>DSAR export includes time entries, expenses, leave.</td></tr>
         <tr><td>GDPR (EU 2016/679)</td><td>Art. 32 — Security of processing</td><td>KMS-encrypted receipt images, RLS, audit chain.</td></tr>
         <tr><td>ISO/IEC 27001:2022</td><td>A.5.36 — Compliance with policies</td><td>Approval workflow enforces policy on every entry.</td></tr>
-        <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RBAC + per-Member private namespace (FR-TIME-008).</td></tr>
+        <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RBAC + per-Member private namespace ((FR pending)).</td></tr>
         <tr><td>SOC 2 Type II</td><td>CC7.1 — Detection / monitoring</td><td>Inconsistency detection (overlap / &gt; 12 h).</td></tr>
       </tbody>
     </table>
@@ -1171,7 +1152,7 @@ hai@cyberskill.world    287       300   95.7%     ▼ critical → CHRO sign-off
       <li><strong>PRD §9.10</strong> — TIME product FRs.</li>
       <li><strong>PRD §19.5</strong> — Schedule, Leave, Attendance SRS-tier FRs.</li>
       <li><strong>PRD §11.2</strong> — NFRs that TIME must satisfy.</li>
-      <li><strong>SRS §4.10</strong> — Formal FR-TIME-001 through FR-TIME-015 with verification methods.</li>
+      <li><strong>SRS §4.10</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Vietnam Labour Code (Law 45/2019/QH14)</strong> — Art. 105 (working hours), Art. 107 (overtime), Art. 113 (annual leave).</li>
       <li><strong>Vietnam Decree 13/2023/NĐ-CP</strong> — Personal data processing.</li>
       <li><strong>Vietnam Decree 53/2022/NĐ-CP</strong> — Data residency.</li>

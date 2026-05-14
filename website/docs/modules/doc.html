@@ -8,7 +8,7 @@
   <meta name="description" content="DOC — Document signing. eIDAS QTSP-conformant qualified e-signatures, AATL chain for non-EU, multi-party workflows, VN Decree 130/2018 + VNeID integration, S3-immutable archival with 10-year retention.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -210,7 +210,7 @@
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>PAdES-B-LT (long-term) format for archived PDFs — includes cert chain + revocation info + LTV. Per-document hash-chained audit log mirrors BRAIN chain semantics. Multi-signer workflows are state machines.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate tasks (workflow), separate task for archival jobs. S3 Object-Lock buckets per residency. KMS-wrapped encryption for at-rest documents.</td></tr>
         <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.3 FTE at P4; legal counsel reviews QTSP partner contracts annually; security review of cert-chain handling annually.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>NFR-DOC-SEC-001 (signature non-repudiation — cosign verifies any archive byte-for-byte), NFR-DOC-DUR-001 (zero archive loss over 10 years), KPI signature-time p95 (≤ 5 min including human-confirm).</td></tr>
+        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (signature non-repudiation — cosign verifies any archive byte-for-byte), N(FR pending) (zero archive loss over 10 years), KPI signature-time p95 (≤ 5 min including human-confirm).</td></tr>
       </tbody>
     </table>
   </div>
@@ -229,21 +229,21 @@
     <div class="mermaid">
 graph TB
   subgraph UI ["UI surfaces"]
-    SPA["Signer SPA<br/>(React + pdf.js)"]
+    SPA["Signer SPA<br>(React + pdf.js)"]
     TPL["Template designer"]
     INBOX["Counterparty link"]
   end
 
   subgraph DOC ["DOC service (Rust · axum)"]
-    DCRUD["doc.rs<br/>document CRUD"]
-    TPL_S["template.rs<br/>field overlay"]
-    SESSION["session.rs<br/>signing-session state machine"]
-    SIGNER["signer.rs<br/>per-signer flow"]
-    IDV["idv.rs<br/>identity verification dispatcher"]
-    BROKER["broker.rs<br/>QTSP routing"]
-    ARCHIVE["archive.rs<br/>PAdES-LT + S3 Object-Lock"]
-    MIGRATE["migrate.rs<br/>DocuSign / AdobeSign import"]
-    PDF["pdf.rs<br/>pdfium wrapper"]
+    DCRUD["doc.rs<br>document CRUD"]
+    TPL_S["template.rs<br>field overlay"]
+    SESSION["session.rs<br>signing-session state machine"]
+    SIGNER["signer.rs<br>per-signer flow"]
+    IDV["idv.rs<br>identity verification dispatcher"]
+    BROKER["broker.rs<br>QTSP routing"]
+    ARCHIVE["archive.rs<br>PAdES-LT + S3 Object-Lock"]
+    MIGRATE["migrate.rs<br>DocuSign / AdobeSign import"]
+    PDF["pdf.rs<br>pdfium wrapper"]
   end
 
   subgraph IDV_BACKENDS ["Identity-verification backends"]
@@ -262,13 +262,13 @@ graph TB
   end
 
   subgraph STORES ["Stores"]
-    PG[("PostgreSQL 16<br/>doc.document · template<br/>session · signer · signature<br/>audit_event")]
-    S3[("S3 Object-Lock Compliance<br/>10y retention<br/>residency-pinned")]
-    KMS[("AWS KMS<br/>document encryption keys")]
+    PG[("PostgreSQL 16<br>doc.document · template<br>session · signer · signature<br>audit_event")]
+    S3[("S3 Object-Lock Compliance<br>10y retention<br>residency-pinned")]
+    KMS[("AWS KMS<br>document encryption keys")]
   end
 
   subgraph SINKS ["Audit"]
-    BRAIN["🧠 BRAIN<br/>doc.* rows"]
+    BRAIN["🧠 BRAIN<br>doc.* rows"]
     OBS["👁 OBS"]
   end
 
@@ -302,7 +302,7 @@ graph TB
 
   classDef planned fill:#fde68a,stroke:#78350f
   classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#d1fae5,stroke:#047857
+  classDef sink fill:#f5ede6,stroke:#45210e
   classDef partner fill:#fef2f2,stroke:#7f1d1d
   class SPA,TPL,INBOX,DCRUD,TPL_S,SESSION,SIGNER,IDV,BROKER,ARCHIVE,MIGRATE,PDF planned
   class PG,S3,KMS store
@@ -851,32 +851,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">DOC FRs from PRD §9.20 and SRS §4 (FR-DOC-001..006), plus implementation-tier additions for migration and VN integration.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-DOC-001</code></td><td>eIDAS QTSP integration via partner (GlobalSign, Cryptomathic, …)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-002</code></td><td>AATL adv-cert for non-EU jurisdictions</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-003</code></td><td>Audit-log chain: certificate hash + signature + timestamp authority</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-004</code></td><td>Vietnamese e-signature per Decree 130/2018 + VNeID integration</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-005</code></td><td>Archival to S3 immutable bucket with 10-year retention</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-006</code></td><td>Document bundle export (PDF + cert chain + audit log) for legal discovery</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-007</code></td><td>SHA-256 integrity hash stored at upload + verified on read</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-008</code></td><td>Multi-signer workflow (sequential + parallel) with WebAuthn binding</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-009</code></td><td>Identity-verification methods: WebAuthn / VNeID / SMS-OTP / email-link</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-010</code></td><td>Migration import from DocuSign / Adobe Sign / HelloSign</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-011</code></td><td>Template definition with auto-fill from CRM / HR / INV</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-012</code></td><td>Legal-hold flag prevents retention purge</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-013</code></td><td>Notary-fraud detection (velocity, geo, device fingerprint)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-014</code></td><td>PDPL Art. 14 DSAR — export all signed docs for a Subject</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-DOC-015</code></td><td>GDPR Art. 17 — purge with archival exemption for signed legal docs</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P4</span></td><td><a href="../reference/fr-catalog.html#FR-DOC-015" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -890,17 +871,17 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-DOC-SEC-001</code></td><td>Signature non-repudiation (cosign verifies archive byte-for-byte)</td><td>100% of archives</td><td>quarterly chaos audit (random 1%)</td></tr>
-        <tr><td><code>NFR-DOC-SEC-002</code></td><td>Cross-tenant document leak</td><td>= 0</td><td>RLS verification harness</td></tr>
-        <tr><td><code>NFR-DOC-DUR-001</code></td><td>Archive durability (no archive loss over 10 years)</td><td>11x9s (S3 Object-Lock guarantee)</td><td>S3 SLA</td></tr>
-        <tr><td><code>NFR-DOC-DUR-002</code></td><td>Audit-chain integrity</td><td>= 0 broken chains</td><td>nightly walker job</td></tr>
-        <tr><td><code>NFR-DOC-LAT-001</code></td><td>uploadDocument server-canonical p95</td><td>≤ 3 s (10 MB PDF)</td><td>k6</td></tr>
-        <tr><td><code>NFR-DOC-LAT-002</code></td><td>End-to-end sign (after IDV) p95</td><td>≤ 8 s</td><td>RUM</td></tr>
-        <tr><td><code>NFR-DOC-LAT-003</code></td><td>QTSP partner round-trip p95</td><td>≤ 5 s (network)</td><td>per-partner SLO</td></tr>
-        <tr><td><code>NFR-DOC-AVL-001</code></td><td>DOC availability</td><td>≥ 99.9% (P4)</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-DOC-AVL-002</code></td><td>QTSP partner failover RTO</td><td>≤ 60 s on partner outage</td><td>chaos test</td></tr>
-        <tr><td><code>NFR-DOC-COMP-001</code></td><td>eIDAS QES conformity (annual audit)</td><td>passed</td><td>external auditor</td></tr>
-        <tr><td><code>NFR-DOC-COMP-002</code></td><td>VN Decree 130/2018 cert chain validity</td><td>100%</td><td>VN CA SLA</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Signature non-repudiation (cosign verifies archive byte-for-byte)</td><td>100% of archives</td><td>quarterly chaos audit (random 1%)</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cross-tenant document leak</td><td>= 0</td><td>RLS verification harness</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Archive durability (no archive loss over 10 years)</td><td>11x9s (S3 Object-Lock guarantee)</td><td>S3 SLA</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Audit-chain integrity</td><td>= 0 broken chains</td><td>nightly walker job</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>uploadDocument server-canonical p95</td><td>≤ 3 s (10 MB PDF)</td><td>k6</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>End-to-end sign (after IDV) p95</td><td>≤ 8 s</td><td>RUM</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>QTSP partner round-trip p95</td><td>≤ 5 s (network)</td><td>per-partner SLO</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>DOC availability</td><td>≥ 99.9% (P4)</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>QTSP partner failover RTO</td><td>≤ 60 s on partner outage</td><td>chaos test</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>eIDAS QES conformity (annual audit)</td><td>passed</td><td>external auditor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>VN Decree 130/2018 cert chain validity</td><td>100%</td><td>VN CA SLA</td></tr>
       </tbody>
     </table>
   </div>
@@ -918,24 +899,24 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["DOC depends on"]
-    AUTH["🔐 AUTH<br/>WebAuthn + RBAC"]
-    BRAIN["🧠 BRAIN<br/>audit chain"]
+    AUTH["🔐 AUTH<br>WebAuthn + RBAC"]
+    BRAIN["🧠 BRAIN<br>audit chain"]
     OBS["👁 OBS"]
     KMS["🔑 AWS KMS"]
     S3["🗄 S3 Object-Lock"]
     VNEID["🇻🇳 VNeID API"]
-    QTSP["🤝 QTSP partners<br/>GlobalSign · DigiCert · VnPay · MK · Viettel-CA"]
+    QTSP["🤝 QTSP partners<br>GlobalSign · DigiCert · VnPay · MK · Viettel-CA"]
     TSA["RFC 3161 TSA"]
-    CRM["🏢 CRM<br/>contact auto-fill"]
-    HR_UP["👥 HR<br/>member auto-fill"]
+    CRM["🏢 CRM<br>contact auto-fill"]
+    HR_UP["👥 HR<br>member auto-fill"]
   end
   DOC["✍️ DOC"]
   subgraph downstream ["Used by"]
-    CRM_D["🏢 CRM<br/>deal contracts"]
-    HR_D["👥 HR<br/>employment contracts"]
-    INV_D["💰 INV<br/>signed POs"]
-    PORTAL["🌐 PORTAL<br/>client signing"]
-    BRAIN_D["🧠 BRAIN<br/>doc citations"]
+    CRM_D["🏢 CRM<br>deal contracts"]
+    HR_D["👥 HR<br>employment contracts"]
+    INV_D["💰 INV<br>signed POs"]
+    PORTAL["🌐 PORTAL<br>client signing"]
+    BRAIN_D["🧠 BRAIN<br>doc citations"]
   end
   AUTH --> DOC
   BRAIN --> DOC
@@ -1005,7 +986,7 @@ graph LR
         <tr><td><code>R-DOC-003</code></td><td>QTSP partner outage during signing campaign</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Multi-partner per jurisdiction; broker.rs failover; 60s RTO chaos-tested.</td></tr>
         <tr><td><code>R-DOC-004</code></td><td>VNeID API breaking change</td><td>Medium</td><td>High</td><td>CTO</td><td>Adapter pattern in vneid.rs; integration tests on every release; VN CA fallback for non-biometric path.</td></tr>
         <tr><td><code>R-DOC-005</code></td><td>S3 Object-Lock misconfiguration allows premature deletion</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Compliance mode (not Governance); CI test verifies retention-until; account-root cannot override.</td></tr>
-        <tr><td><code>R-DOC-006</code></td><td>Legal-hold lift granted to non-CLO</td><td>Low</td><td>High</td><td>CSO</td><td>FR-DOC-012 scope=doc.legal_hold limited to CLO + DPO; quarterly access review.</td></tr>
+        <tr><td><code>R-DOC-006</code></td><td>Legal-hold lift granted to non-CLO</td><td>Low</td><td>High</td><td>CSO</td><td>(FR pending) scope=doc.legal_hold limited to CLO + DPO; quarterly access review.</td></tr>
         <tr><td><code>R-DOC-007</code></td><td>Cert chain expires; PAdES-LT cannot validate decades later</td><td>Medium</td><td>High</td><td>CTO</td><td>PAdES-B-LT includes LTV outer timestamp; periodic re-stamping job at year 9 (1y before retention end).</td></tr>
         <tr><td><code>R-DOC-008</code></td><td>Cross-tenant document leak via shared S3 bucket</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Per-tenant bucket prefix; IAM scoped per tenant; pre-signed-URL audience-bound.</td></tr>
         <tr><td><code>R-DOC-009</code></td><td>Migration import accepts forged DocuSign trail</td><td>Low</td><td>High</td><td>CLO</td><td>Imports flagged trust=external; cert chain validated against AATL root; CLO approves import batches.</td></tr>
@@ -1193,7 +1174,7 @@ graph LR
     <ul class="space-y-2 text-sm">
       <li><strong>PRD §9.20</strong> — DOC — Document signing. FRs 001..005.</li>
       <li><strong>SRS §7.20</strong> — Document management with e-signatures.</li>
-      <li><strong>SRS §4 FR-DOC-001..006</strong> — Formal requirements with verification methods.</li>
+      <li><strong>SRS §4 (FR pending)..006</strong> — Formal requirements with verification methods.</li>
       <li><strong>eIDAS Regulation (EU 910/2014)</strong> — qualified e-signatures and trust services.</li>
       <li><strong>ETSI EN 319 142-1</strong> — PAdES baseline profile.</li>
       <li><strong>ETSI TS 119 312</strong> — PAdES long-term validation profiles.</li>

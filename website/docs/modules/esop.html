@@ -8,7 +8,7 @@
   <meta name="description" content="ESOP — Phantom Stock plan. Synthetic equity (avoids VN securities regulation). Annual SP valuation with CFO + Board sign-off. Put options from Year 3. Good Leaver / Bad Leaver branches. M&A acceleration. Singapore HoldCo flip path.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -216,7 +216,7 @@
         <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because grant + valuation history is sensitive board-level data that must be append-only and dual-signed. Co-mingling with HR or REW would weaken the audit posture and risk leakage.</td></tr>
         <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Append-only grant + vesting_event + valuation rows in Postgres. Vesting compute is a deterministic function of (grant, today, valuation). Put-option exercise schedules a wire transfer via Wise (multi-currency) or VietQR (VND). HoldCo flip is a one-way migration — phantom row → real_share row with full audit trail.</td></tr>
         <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P2: ~$25/month (small RDS schema + Fargate share + S3 retention). 50-tenant: ~$80/month. Per-grant cost negligible.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Dual sign-off mandatory on grants + valuations (FR-ESOP-003, FR-ESOP-008). (b) Append-only (FR-ESOP-004, FR-ESOP-009). (c) Zero BRAIN ingestion (FR-ESOP-007 + DEC-036). (d) 10-year retention. (e) M&amp;A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.</td></tr>
+        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Dual sign-off mandatory on grants + valuations ((FR pending)). (b) Append-only ((FR pending)). (c) Zero BRAIN ingestion ((FR pending) + DEC-036). (d) 10-year retention. (e) M&amp;A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.</td></tr>
         <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · tectonic for grant + valuation PDFs · ring for SHA-256 · cyberskill-vn skills (vn-bank-transfer for put-option wires) · AWS S3 with retention lock · KMS.</td></tr>
         <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with supersession. Deterministic vesting compute (pure fn). Dual sign-off enforced at AUTH cosign predicate. Annual valuation is a versioned row analogous to REW parameter versioning.</td></tr>
         <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate in SG-1 (P2). Multi-AZ Postgres RDS. S3 retention 10 years.</td></tr>
@@ -244,45 +244,45 @@ graph TB
     CFO["CFO (valuation co-sign)"]
     BOARD["Board chair (co-sign)"]
     AUDITOR["External auditor (attest)"]
-    MEM["Member portal<br/>own grants + put schedule"]
-    CUO["🤖 CUO/CFO-skill<br/>narrator only"]
+    MEM["Member portal<br>own grants + put schedule"]
+    CUO["🤖 CUO/CFO-skill<br>narrator only"]
   end
 
   subgraph EDGE ["Edge"]
-    AR["Apollo Router<br/>JWT + RBAC + multi-sign predicate"]
+    AR["Apollo Router<br>JWT + RBAC + multi-sign predicate"]
   end
 
   subgraph ESOP ["ESOP service (Rust · axum)"]
-    GQL["GraphQL subgraph<br/>read-mostly · self-scope"]
-    REST["REST admin<br/>grant · vest · valuate · put"]
+    GQL["GraphQL subgraph<br>read-mostly · self-scope"]
+    REST["REST admin<br>grant · vest · valuate · put"]
     MCP["MCP narrator"]
-    GRANT["grant.rs<br/>3-sign issuance"]
-    VEST["vesting.rs<br/>deterministic monthly compute"]
-    VAL["valuation.rs<br/>annual cycle"]
-    PUT["put_option.rs<br/>Y3+ exercise + wire"]
-    LEAVE["leaver.rs<br/>GL/BL branch"]
-    POOL["pool.rs<br/>balance + replenish"]
-    MA["ma_acceleration.rs<br/>board-only trigger"]
-    HOLDCO["holdco_flip.rs<br/>phantom → SG real share"]
-    NARR["narrator.rs<br/>explain vesting + put"]
+    GRANT["grant.rs<br>3-sign issuance"]
+    VEST["vesting.rs<br>deterministic monthly compute"]
+    VAL["valuation.rs<br>annual cycle"]
+    PUT["put_option.rs<br>Y3+ exercise + wire"]
+    LEAVE["leaver.rs<br>GL/BL branch"]
+    POOL["pool.rs<br>balance + replenish"]
+    MA["ma_acceleration.rs<br>board-only trigger"]
+    HOLDCO["holdco_flip.rs<br>phantom → SG real share"]
+    NARR["narrator.rs<br>explain vesting + put"]
   end
 
   subgraph STORES ["Stores (isolated)"]
-    PG[("PostgreSQL<br/>grant · vesting_event<br/>valuation · put_exercise<br/>ESOP-specific KMS key")]
-    S3[("AWS S3<br/>grant PDFs · valuation reports<br/>10-year object-lock")]
-    KMS[("AWS KMS<br/>esop-key<br/>distinct from REW + HR + BRAIN")]
+    PG[("PostgreSQL<br>grant · vesting_event<br>valuation · put_exercise<br>ESOP-specific KMS key")]
+    S3[("AWS S3<br>grant PDFs · valuation reports<br>10-year object-lock")]
+    KMS[("AWS KMS<br>esop-key<br>distinct from REW + HR + BRAIN")]
   end
 
   subgraph BRIDGES ["External bridges"]
-    BANK["🛠 vn-bank-transfer<br/>put-option wire (VietQR)"]
+    BANK["🛠 vn-bank-transfer<br>put-option wire (VietQR)"]
     WISE["Wise (SGD wire)"]
-    DOC["📄 DOC<br/>HoldCo paperwork (P4)"]
-    HRMOD["👥 HR<br/>roster · termination"]
+    DOC["📄 DOC<br>HoldCo paperwork (P4)"]
+    HRMOD["👥 HR<br>roster · termination"]
   end
 
   subgraph BOUNDARIES ["Compliance boundaries"]
-    BRAIN["🧠 BRAIN<br/>opaque event refs ONLY<br/>(no ESOP numbers)"]
-    OBS["👁 OBS<br/>timing only"]
+    BRAIN["🧠 BRAIN<br>opaque event refs ONLY<br>(no ESOP numbers)"]
+    OBS["👁 OBS<br>timing only"]
     AUTH["🔐 AUTH"]
   end
 
@@ -318,10 +318,10 @@ graph TB
   REST -.opaque ref.-> BRAIN
   ESOP --> OBS
 
-  classDef planned fill:#bfdbfe,stroke:#1e40af
+  classDef planned fill:#bfdbfe,stroke:#45210e
   classDef store fill:#f5f3ff,stroke:#7c3aed
   classDef boundary fill:#fee2e2,stroke:#dc2626
-  classDef extern fill:#d1fae5,stroke:#047857
+  classDef extern fill:#f5ede6,stroke:#45210e
   class GQL,REST,MCP,GRANT,VEST,VAL,PUT,LEAVE,POOL,MA,HOLDCO,NARR planned
   class PG,S3,KMS store
   class BRAIN,OBS boundary
@@ -338,7 +338,7 @@ graph TB
         <tr><td><code>vesting.rs</code></td><td>services/esop/src/vesting.rs</td><td>Pure-function vesting compute. Input: (grant, asof_date). Output: vested_sp count. 12-month cliff + monthly thereafter. Deterministic.</td></tr>
         <tr><td><code>vesting_cron.rs</code></td><td>services/esop/src/vesting_cron.rs</td><td>Monthly cron that materialises vesting_event rows. Idempotent (UNIQUE by (grant_id, period)).</td></tr>
         <tr><td><code>valuation.rs</code></td><td>services/esop/src/valuation.rs</td><td>Annual valuation cycle. CFO inputs base value; Board signs Industry Multiplier; auditor attests. New <code>valuation</code> row supersedes prior.</td></tr>
-        <tr><td><code>put_option.rs</code></td><td>services/esop/src/put_option.rs</td><td>Put-option exercise. Year 3+ window (annual July). Capped by FR-ESOP-003 per-Member per-year limit. Wires cash via vn-bank-transfer or Wise.</td></tr>
+        <tr><td><code>put_option.rs</code></td><td>services/esop/src/put_option.rs</td><td>Put-option exercise. Year 3+ window (annual July). Capped by (FR pending) per-Member per-year limit. Wires cash via vn-bank-transfer or Wise.</td></tr>
         <tr><td><code>leaver.rs</code></td><td>services/esop/src/leaver.rs</td><td>Termination handler. Good Leaver: vested retained, future vesting halted, put rights preserved. Bad Leaver: vested retained at appendix discount, put rights frozen. Requires CFO + CEO co-sign.</td></tr>
         <tr><td><code>pool.rs</code></td><td>services/esop/src/pool.rs</td><td>Pool balance. Replenishment annually by % of profit (Board-signed parameter). GL/BL split for top-performers vs broad.</td></tr>
         <tr><td><code>ma_acceleration.rs</code></td><td>services/esop/src/ma_acceleration.rs</td><td>M&amp;A acceleration. Board fires; bulk vesting event for all open grants. Tax-implication note attached.</td></tr>
@@ -625,7 +625,7 @@ sequenceDiagram
   participant K as KMS
   participant B as 🧠 BRAIN
 
-  CEO->>E: POST /admin/grants<br/>{member_id, kind:"founding", sp_count:5000, schedule:"4y-12mo"}
+  CEO->>E: POST /admin/grants<br>{member_id, kind:"founding", sp_count:5000, schedule:"4y-12mo"}
   E->>E: validate pool.available_sp ≥ 5000
   E->>CEO: request WebAuthn co-sign
   E->>CFO: request WebAuthn co-sign
@@ -643,7 +643,7 @@ sequenceDiagram
   E->>E: update pool_balance.issued_sp += 5000
   E->>B: opaque ref "esop.grant.issued:<opaque_id>"
   E-->>CEO: grant issued
-  Note over E,B: BRAIN row contains NO sp_count, NO valuation.<br/>Only an opaque pointer to ESOP DB.
+  Note over E,B: BRAIN row contains NO sp_count, NO valuation.<br>Only an opaque pointer to ESOP DB.
     </div>
   </div>
 
@@ -660,7 +660,7 @@ sequenceDiagram
   participant S3 as AWS S3
   participant B as 🧠 BRAIN
 
-  CFO->>V: POST /admin/valuations<br/>{period:"2026", base_value_vnd:50e9, industry_multiplier:8.0}
+  CFO->>V: POST /admin/valuations<br>{period:"2026", base_value_vnd:50e9, industry_multiplier:8.0}
   V->>POOL: read total_outstanding_sp
   POOL-->>V: 100,000 SP
   V->>V: compute sp_unit_value = base × mult / total = 4,000,000 VND/SP
@@ -672,10 +672,10 @@ sequenceDiagram
   BC-->>V: WebAuthn ✓
   AUD-->>V: attestation document + signature (auditor-token)
   V->>V: cosign_guard ✓ (CFO + Board + Auditor)
-  V->>V: status="published"<br/>prior valuation effective_to=now
+  V->>V: status="published"<br>prior valuation effective_to=now
   V->>S3: archive valuation report PDF (10y)
   V->>B: opaque ref "esop.valuation.published:2026"
-  Note over V,B: SP unit value, base value, multiplier all<br/>stay in ESOP keyspace. Members see only the unit value.
+  Note over V,B: SP unit value, base value, multiplier all<br>stay in ESOP keyspace. Members see only the unit value.
     </div>
     <p class="text-xs text-slate-500 mt-3">Once published, the valuation row is immutable. Subsequent put exercises in 2026 use this valuation. A 2027 valuation supersedes; 2026 historical put exercises remain priced at the 2026 valuation forever.</p>
   </div>
@@ -701,7 +701,7 @@ sequenceDiagram
     VC->>PG: INSERT vesting_event (idempotent)
   end
   VC->>B: opaque ref "esop.vesting.materialised:2026-04 ×N"
-  Note over V: pure fn · no I/O · no clock (today is INPUT).<br/>Replay test: vest at 2025-12-31 always gives same result.
+  Note over V: pure fn · no I/O · no clock (today is INPUT).<br>Replay test: vest at 2025-12-31 always gives same result.
     </div>
   </div>
 
@@ -768,7 +768,7 @@ sequenceDiagram
     H->>H: holdco_flip_record row (one-way; phantom grant → status=flipped)
   end
   E->>B: opaque ref "esop.holdco.flipped:2027-Q2"
-  Note over H: One-way migration. Phantom grants permanently inactive.<br/>Future grants are real SG HoldCo shares.
+  Note over H: One-way migration. Phantom grants permanently inactive.<br>Future grants are real SG HoldCo shares.
     </div>
     <p class="text-xs text-slate-500 mt-3">The flip is a strategic transition — it changes the legal substrate but not the economic outcome. Each Member's real shares carry the same vesting schedule as the source phantom grant (e.g. unvested phantom → unvested real with same dates).</p>
   </div>
@@ -822,37 +822,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">ESOP FRs as catalogued in PRD §9.17 and SRS §4.17. Full normative descriptions at <a href="../reference/fr-catalog.html#esop" class="text-blue-700 font-semibold underline">fr-catalog.html#esop</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-ESOP-001</code></td><td>4-year vesting schedule (Appendix default; configurable per grant)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-002</code></td><td>Annual SP valuation: Board signs Industry Multiplier; CFO inputs base</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-003</code></td><td>Put options exercisable from Year 3; cap per-Member per-year</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-004</code></td><td>Good Leaver: vested SP retained; future vesting forfeited; put preserved</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-005</code></td><td>Bad Leaver: vested SP at appendix discount; put rights frozen</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-006</code></td><td>M&amp;A acceleration: Board signs; bulk vesting event; tax-implication note</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-007</code></td><td>ESOP values structurally excluded from BRAIN ingestion (DEC-036)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-008</code></td><td>CFO + Board dual sign on annual valuation</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-009</code></td><td>Anti-retroactive: valuation versions immutable; historic statements stable</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-010</code></td><td>CEO + CFO + Board co-sign required for every new grant</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-011</code></td><td>Vesting compute deterministic — same inputs → same vested_sp</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-012</code></td><td>Quarterly cap-table snapshot stored immutably</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-013</code></td><td>Dilution simulator returns projected cap table without state change</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-014</code></td><td>Pool replenishment from % of profit, Board-signed parameter</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-015</code></td><td>External auditor attestation step in annual valuation cycle</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-015" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-016</code></td><td>Put-option SLO: exercise → wire ≤ 10 working days</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-016" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-017</code></td><td>HoldCo flip — one-way phantom → SG real share with same schedule</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-017" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-018</code></td><td>10-year statutory retention on grant + valuation records</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-018" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-019</code></td><td>Member portal: own grants + put schedule only; aggregate cap table blocked</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-019" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-ESOP-020</code></td><td>Singapore HoldCo SGD wire path (Wise) for SG-domiciled Members</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-ESOP-020" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -866,18 +842,18 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-ESOP-SEC-001</code></td><td>Grant row UPDATE attempted</td><td>= 0 — DB role lacks UPDATE</td><td>DB role inspection in CI</td></tr>
-        <tr><td><code>NFR-ESOP-SEC-002</code></td><td>Valuation row UPDATE attempted</td><td>= 0 — DB role lacks UPDATE</td><td>DB role inspection in CI</td></tr>
-        <tr><td><code>NFR-ESOP-SEC-003</code></td><td>BRAIN row containing ESOP numeric value</td><td>= 0 — sev-0</td><td>CI: brain_bridge emit JSON inspected against numeric blocklist</td></tr>
-        <tr><td><code>NFR-ESOP-SEC-004</code></td><td>Single-signer grant or valuation</td><td>= 0 — cosign_guard blocks</td><td>integration test injects single-sign attempt</td></tr>
-        <tr><td><code>NFR-ESOP-SEC-005</code></td><td>KMS key isolation (esop-key distinct)</td><td>1 distinct key handle</td><td>KMS policy inspection</td></tr>
-        <tr><td><code>NFR-ESOP-INT-001</code></td><td>Vesting determinism — replay equality</td><td>100% (property test)</td><td>proptest: vest at past dates → identical output</td></tr>
-        <tr><td><code>NFR-ESOP-INT-002</code></td><td>Cap-table snapshot integrity (quarterly)</td><td>SHA-256 stable</td><td>chaos test recomputes; asserts equality</td></tr>
-        <tr><td><code>NFR-ESOP-REL-001</code></td><td>Put-option SLO (exercise → wire)</td><td>≤ 10 working days p95</td><td>OBS dashboard</td></tr>
-        <tr><td><code>NFR-ESOP-AVL-001</code></td><td>ESOP availability</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
-        <tr><td><code>NFR-ESOP-DUR-001</code></td><td>Grant + valuation durability (10-year)</td><td>0 lost objects</td><td>S3 object-lock + quarterly inventory</td></tr>
-        <tr><td><code>NFR-ESOP-LAT-001</code></td><td>Vesting compute p95 (single grant)</td><td>≤ 5 ms</td><td>bench/vesting.rs</td></tr>
-        <tr><td><code>NFR-ESOP-LAT-002</code></td><td>Annual vesting cron (50 members · 200 grants)</td><td>≤ 30 s</td><td>bench/vesting_cron.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Grant row UPDATE attempted</td><td>= 0 — DB role lacks UPDATE</td><td>DB role inspection in CI</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Valuation row UPDATE attempted</td><td>= 0 — DB role lacks UPDATE</td><td>DB role inspection in CI</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>BRAIN row containing ESOP numeric value</td><td>= 0 — sev-0</td><td>CI: brain_bridge emit JSON inspected against numeric blocklist</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Single-signer grant or valuation</td><td>= 0 — cosign_guard blocks</td><td>integration test injects single-sign attempt</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>KMS key isolation (esop-key distinct)</td><td>1 distinct key handle</td><td>KMS policy inspection</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Vesting determinism — replay equality</td><td>100% (property test)</td><td>proptest: vest at past dates → identical output</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Cap-table snapshot integrity (quarterly)</td><td>SHA-256 stable</td><td>chaos test recomputes; asserts equality</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Put-option SLO (exercise → wire)</td><td>≤ 10 working days p95</td><td>OBS dashboard</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>ESOP availability</td><td>≥ 99.5%</td><td>SLO monitor</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Grant + valuation durability (10-year)</td><td>0 lost objects</td><td>S3 object-lock + quarterly inventory</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Vesting compute p95 (single grant)</td><td>≤ 5 ms</td><td>bench/vesting.rs</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Annual vesting cron (50 members · 200 grants)</td><td>≤ 30 s</td><td>bench/vesting_cron.rs</td></tr>
       </tbody>
     </table>
   </div>
@@ -895,25 +871,25 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["ESOP depends on"]
-    AUTH["🔐 AUTH<br/>multi-sign predicate"]
-    HRMOD["👥 HR<br/>roster + termination"]
-    BRAIN["🧠 BRAIN<br/>opaque refs only"]
+    AUTH["🔐 AUTH<br>multi-sign predicate"]
+    HRMOD["👥 HR<br>roster + termination"]
+    BRAIN["🧠 BRAIN<br>opaque refs only"]
     OBS["👁 OBS"]
     KMS["🔑 esop-key (distinct)"]
     S3["🗂 S3 (10y object-lock)"]
   end
   subgraph skills ["External services"]
-    BANK["🛠 vn-bank-transfer<br/>put-option VND wires"]
-    WISE["Wise<br/>SGD wires"]
-    DOC["📄 DOC<br/>HoldCo paperwork · P4"]
-    ACRA["Singapore ACRA<br/>HoldCo registry"]
+    BANK["🛠 vn-bank-transfer<br>put-option VND wires"]
+    WISE["Wise<br>SGD wires"]
+    DOC["📄 DOC<br>HoldCo paperwork · P4"]
+    ACRA["Singapore ACRA<br>HoldCo registry"]
   end
   ESOP["📊 ESOP"]
   subgraph downstream ["ESOP feeds"]
-    MEM["Member portal<br/>own grants + put"]
-    CUO["🤖 CUO/CFO-skill<br/>narrator"]
-    CEO["CEO + CFO + Board<br/>cap-table reads"]
-    DPO["DPO<br/>DSAR own scope"]
+    MEM["Member portal<br>own grants + put"]
+    CUO["🤖 CUO/CFO-skill<br>narrator"]
+    CEO["CEO + CFO + Board<br>cap-table reads"]
+    DPO["DPO<br>DSAR own scope"]
   end
   AUTH --> ESOP
   HRMOD --> ESOP
@@ -930,9 +906,9 @@ graph LR
   ESOP --> CEO
   ESOP --> DPO
 
-  classDef planned fill:#bfdbfe,stroke:#1e40af
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef ext fill:#fef3c7,stroke:#b45309
+  classDef planned fill:#bfdbfe,stroke:#45210e
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef ext fill:#fef6e0,stroke:#9c750a
   class ESOP planned
   class AUTH,HRMOD,MEM,CUO,CEO,DPO,DOC,OBS planned
   class BRAIN,KMS,S3,BANK shipped
@@ -1215,10 +1191,10 @@ pool total:                                       100,000     100%
   <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
   <div class="bbg-card p-5">
     <ul class="space-y-2 text-sm">
-      <li><strong>PRD §9.17</strong> — ESOP module FRs (FR-ESOP-001 through FR-ESOP-009).</li>
+      <li><strong>PRD §9.17</strong> — ESOP module FRs ((FR pending) through (FR pending)).</li>
       <li><strong>PRD §19.17</strong> — ESOP architecture posture, Phantom Stock framing.</li>
       <li><strong>PRD §11.2.3</strong> — Security NFRs (zero ESOP in BRAIN, dual sign-off).</li>
-      <li><strong>SRS §4.17</strong> — Formal FR-ESOP-001 through FR-ESOP-008 with verification methods.</li>
+      <li><strong>SRS §4.17</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
       <li><strong>Total Rewards &amp; Career Path Appendix</strong> — ESOP allocation, BL discount %, vesting defaults.</li>
       <li><strong>Vietnam Law on Enterprises (Law 59/2020/QH14)</strong> — Art. 114 share issuance (which Phantom Stock avoids).</li>
       <li><strong>Vietnam Securities Law (Law 54/2019/QH14)</strong> — Art. 30 public offering (which Phantom Stock is not).</li>

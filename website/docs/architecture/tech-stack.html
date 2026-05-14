@@ -7,7 +7,7 @@
   <meta name="description" content="The 8-tier tech stack — framework picks, alternatives considered, trade-offs, production cost implications.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <script type="module" src="../assets/scripts.js"></script>
 </head>
@@ -150,14 +150,14 @@ flowchart TB
   T4 --> T7
   T4 --> T8
 
-  classDef t1 fill:#f3e8ff,stroke:#7e22ce
-  classDef t2 fill:#dbeafe,stroke:#1e40af
-  classDef t3 fill:#fef3c7,stroke:#b45309
-  classDef t4 fill:#d1fae5,stroke:#047857
-  classDef t5 fill:#e0e7ff,stroke:#3730a3
-  classDef t6 fill:#fce7f3,stroke:#9d174d
+  classDef t1 fill:#f9c64f,stroke:#9c750a
+  classDef t2 fill:#e8d4c2,stroke:#45210e
+  classDef t3 fill:#fef6e0,stroke:#9c750a
+  classDef t4 fill:#f5ede6,stroke:#45210e
+  classDef t5 fill:#cba88a,stroke:#45210e
+  classDef t6 fill:#fde7b3,stroke:#9c750a
   classDef t7 fill:#fee2e2,stroke:#b91c1c
-  classDef t8 fill:#f1f5f9,stroke:#475569
+  classDef t8 fill:#f0eee9,stroke:#475569
 
   class LANG,SKILLS,LITELLM_T1 t1
   class HOST,REMOTES t2
@@ -174,7 +174,7 @@ flowchart TB
     <h3 class="h-2 mb-3">Three design constraints driving every pick</h3>
     <ol class="text-sm text-slate-700 space-y-2 leading-relaxed">
       <li><strong>1. Vietnamese data sovereignty</strong> — no SaaS dependency where Vietnamese-origin personal data must travel through a US-based vendor's servers. AWS Bedrock is acceptable because of the ap-southeast-1 region; OpenAI direct is not (no Singapore endpoint).</li>
-      <li><strong>2. Cost ceiling at scale</strong> — ≤ $150/mo LLM + $230/mo infra at 10-Member internal; ≤ $4/active user/mo LLM + $2,200/mo infra at 50-tenant (NFR-PERF-010, NFR-PERF-011). Anything that doesn't fit that envelope is rejected.</li>
+      <li><strong>2. Cost ceiling at scale</strong> — ≤ $150/mo LLM + $230/mo infra at 10-Member internal; ≤ $4/active user/mo LLM + $2,200/mo infra at 50-tenant (N(FR pending), N(FR pending)). Anything that doesn't fit that envelope is rejected.</li>
       <li><strong>3. Migration door always open</strong> — every pick has a documented escape hatch. Storage is S3-compatible (DEC-005), so R2 ↔ MinIO ↔ AWS S3 is a config flip. SQL is portable, audit chain is exportable, MCP servers are spec-conforming.</li>
     </ol>
   </div>
@@ -283,9 +283,9 @@ flowchart TB
     <div class="bbg-card p-5">
       <h4 class="font-bold mb-2 text-slate-900">NFR ceilings</h4>
       <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>NFR-PERF-008</strong> — module first-paint ≤ 1.5s on cold load</li>
-        <li><strong>NFR-PERF-009</strong> — initial module bundle ≤ 50 KB gzipped JS</li>
-        <li><strong>NFR-MAINT-005</strong> — module-rebuild time on token change ≤ 30 min including tests</li>
+        <li><strong>N(FR pending)</strong> — module first-paint ≤ 1.5s on cold load</li>
+        <li><strong>N(FR pending)</strong> — initial module bundle ≤ 50 KB gzipped JS</li>
+        <li><strong>N(FR pending)</strong> — module-rebuild time on token change ≤ 30 min including tests</li>
       </ul>
     </div>
   </div>
@@ -390,8 +390,8 @@ flowchart TB
     <div class="bbg-card p-5">
       <h4 class="font-bold mb-2 text-slate-900">Cost ceiling</h4>
       <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>NFR-PERF-010 — ≤ $150/mo internal LLM</li>
-        <li>NFR-PERF-011 — ≤ $4/active user/mo at 50-tenant</li>
+        <li>N(FR pending) — ≤ $150/mo internal LLM</li>
+        <li>N(FR pending) — ≤ $4/active user/mo at 50-tenant</li>
         <li>Semantic + exact-prompt cache ≥ 30% hit rate</li>
         <li>Self-hosted BGE-M3 embeddings on shared GPU node (~$80/mo for GPU)</li>
       </ul>
@@ -503,7 +503,7 @@ flowchart TB
     <div class="bbg-card p-5">
       <h4 class="font-bold mb-2 text-slate-900">NFR ceilings</h4>
       <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>NFR-PERF-004 — BRAIN search ≤ 250ms p95 on 1M chunks</li>
+        <li>N(FR pending) — BRAIN search ≤ 250ms p95 on 1M chunks</li>
         <li>Embed p95 ≤ 80ms; rerank p95 ≤ 200ms</li>
         <li>End-to-end retrieve: embed + pgvector + rerank ≤ 250ms p95</li>
       </ul>
@@ -624,7 +624,7 @@ flowchart TB
         <li><strong>BRAIN audit chain</strong> — every memory operation appends a leaf; STH signed per consolidation.</li>
         <li><strong>PRD §8.7 AuditEvent</strong> — per-scope Merkle chain; prevHash chained.</li>
         <li><strong>DEC-019</strong> — Merkle-chained audit log invariant.</li>
-        <li><strong>NFR-TRAN-003</strong> — BRAIN signed-zip portability: Ed25519 sig + Merkle proof.</li>
+        <li><strong>N(FR pending)</strong> — BRAIN signed-zip portability: Ed25519 sig + Merkle proof.</li>
       </ul>
     </div>
   </div>
@@ -696,7 +696,7 @@ flowchart TB
         <li><strong>Astro</strong> — static site generator with MDX support</li>
         <li><strong>Auth</strong> — NDA click-wrap before downloading reports (AUTH module integration)</li>
         <li><strong>Signed URLs</strong> — 24-hour TTL via R2 presigned URLs</li>
-        <li><strong>Audit</strong> — every download logged for NFR-SEC-011 compliance</li>
+        <li><strong>Audit</strong> — every download logged for N(FR pending) compliance</li>
       </ul>
     </div>
   </div>
@@ -713,7 +713,7 @@ flowchart TB
   <div class="bbg-card p-6 mb-5">
     <p class="text-slate-700 mb-3"><strong>Pick:</strong> Be Vietnam Pro (UI) + JetBrains Mono (code) + CyberSkill Global Design System v1.0.0.</p>
     <p class="text-slate-600 text-sm leading-relaxed">
-      Be Vietnam Pro is the diacritic-aware Vietnamese-first typeface; the Design System Part 5 specifies stack-fidelity (NFR-USAB-004). Tokens are exported in W3C DTCG format (2025.10) for cross-platform consumption (Style Dictionary, Tailwind via PostCSS plugin, iOS/Android, Figma).
+      Be Vietnam Pro is the diacritic-aware Vietnamese-first typeface; the Design System Part 5 specifies stack-fidelity (N(FR pending)). Tokens are exported in W3C DTCG format (2025.10) for cross-platform consumption (Style Dictionary, Tailwind via PostCSS plugin, iOS/Android, Figma).
     </p>
   </div>
   <div class="bbg-card p-5">
@@ -782,8 +782,8 @@ sequenceDiagram
   <div class="bbg-card p-4">
     <div class="mermaid">
 flowchart LR
-  USER[("User · Agent")] --> HOST["Host shell<br/>Vite + React 19"]
-  HOST --> REMOTE["Module remote<br/>Webpack 5 + MF"]
+  USER[("User · Agent")] --> HOST["Host shell<br>Vite + React 19"]
+  HOST --> REMOTE["Module remote<br>Webpack 5 + MF"]
   REMOTE --> APOLLO["Apollo Router"]
   APOLLO --> AUTH["AUTH JWKS"]
   APOLLO --> SUBG["Subgraph (TS/Rust)"]
@@ -797,7 +797,7 @@ flowchart LR
   LL --> OAI["OpenAI ZDR"]
   LL --> BGE["BGE-M3 (self-hosted GPU)"]
 
-  USER --> MCPCLT[("MCP client<br/>Claude / Cursor")]
+  USER --> MCPCLT[("MCP client<br>Claude / Cursor")]
   MCPCLT --> MCPGW["MCP Gateway"]
   MCPGW --> AUTH
   MCPGW --> SUBG
@@ -807,12 +807,12 @@ flowchart LR
   AIGW -. trace .-> OBS
   MCPGW -. trace .-> OBS
 
-  classDef u fill:#fef3c7,stroke:#b45309
-  classDef fe fill:#dbeafe,stroke:#1e40af
-  classDef gw fill:#f3e8ff,stroke:#7e22ce
-  classDef be fill:#d1fae5,stroke:#047857
-  classDef data fill:#e0e7ff,stroke:#3730a3
-  classDef ext fill:#fce7f3,stroke:#9d174d
+  classDef u fill:#fef6e0,stroke:#9c750a
+  classDef fe fill:#e8d4c2,stroke:#45210e
+  classDef gw fill:#f9c64f,stroke:#9c750a
+  classDef be fill:#f5ede6,stroke:#45210e
+  classDef data fill:#cba88a,stroke:#45210e
+  classDef ext fill:#fde7b3,stroke:#9c750a
   class USER,MCPCLT u
   class HOST,REMOTE fe
   class APOLLO,MCPGW,AIGW,AUTH gw
@@ -840,21 +840,21 @@ flowchart LR
     <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Cost flow — where the dollar goes at internal scale</div>
     <div class="mermaid">
 flowchart LR
-  BUDGET[("$535/mo<br/>NFR-PERF-010 envelope")] --> LLM["28% · LLM<br/>$150 · primarily Sonnet + Haiku via Bedrock"]
-  BUDGET --> COMPUTE["17% · K8s compute<br/>$90 · 22 subgraphs + gateways"]
-  BUDGET --> PG["15% · Postgres<br/>$80 · primary + read replica"]
-  BUDGET --> OBS_C["15% · OBS (LGTM)<br/>$80 · Loki + Tempo + Mimir + Grafana"]
-  BUDGET --> GPU["15% · GPU embed<br/>$80 · shared BGE-M3 node"]
-  BUDGET --> STORE["5% · object storage<br/>$25 · R2 zero-egress"]
-  BUDGET --> NATS_C["4% · NATS<br/>$20 · single-node JetStream"]
-  BUDGET --> EDGE["1% · CDN + auth<br/>$10"]
+  BUDGET[("$535/mo<br>N(FR pending) envelope")] --> LLM["28% · LLM<br>$150 · primarily Sonnet + Haiku via Bedrock"]
+  BUDGET --> COMPUTE["17% · K8s compute<br>$90 · 22 subgraphs + gateways"]
+  BUDGET --> PG["15% · Postgres<br>$80 · primary + read replica"]
+  BUDGET --> OBS_C["15% · OBS (LGTM)<br>$80 · Loki + Tempo + Mimir + Grafana"]
+  BUDGET --> GPU["15% · GPU embed<br>$80 · shared BGE-M3 node"]
+  BUDGET --> STORE["5% · object storage<br>$25 · R2 zero-egress"]
+  BUDGET --> NATS_C["4% · NATS<br>$20 · single-node JetStream"]
+  BUDGET --> EDGE["1% · CDN + auth<br>$10"]
 
-  classDef envelope fill:#fef3c7,stroke:#b45309,stroke-width:2px
-  classDef llm fill:#f3e8ff,stroke:#7e22ce
-  classDef compute fill:#d1fae5,stroke:#047857
-  classDef data fill:#dbeafe,stroke:#1e40af
-  classDef obs fill:#fce7f3,stroke:#9d174d
-  classDef ext fill:#e0e7ff,stroke:#3730a3
+  classDef envelope fill:#fef6e0,stroke:#9c750a,stroke-width:2px
+  classDef llm fill:#f9c64f,stroke:#9c750a
+  classDef compute fill:#f5ede6,stroke:#45210e
+  classDef data fill:#e8d4c2,stroke:#45210e
+  classDef obs fill:#fde7b3,stroke:#9c750a
+  classDef ext fill:#cba88a,stroke:#45210e
   class BUDGET envelope
   class LLM,GPU llm
   class COMPUTE compute
@@ -872,7 +872,7 @@ xychart-beta
   y-axis "USD per month" 0 --> 600
   bar [150, 80, 90, 25, 80, 20, 5, 80]
     </div>
-    <div class="text-center text-sm text-slate-500 mt-2">Internal scale (10 Members) — total ≤ $530/mo against NFR-PERF-010 budget of $530/mo ($150 LLM + $380 infra)</div>
+    <div class="text-center text-sm text-slate-500 mt-2">Internal scale (10 Members) — total ≤ $530/mo against N(FR pending) budget of $530/mo ($150 LLM + $380 infra)</div>
   </div>
 
   <div class="bbg-card p-4 mb-6">
@@ -883,7 +883,7 @@ xychart-beta
   y-axis "USD per month" 0 --> 1400
   bar [800, 600, 500, 200, 200, 100, 50, 200]
     </div>
-    <div class="text-center text-sm text-slate-500 mt-2">50-tenant scale — total ≤ $2,650/mo against NFR-PERF-011 budget of $2,200 + $4/user/mo LLM</div>
+    <div class="text-center text-sm text-slate-500 mt-2">50-tenant scale — total ≤ $2,650/mo against N(FR pending) budget of $2,200 + $4/user/mo LLM</div>
   </div>
 
   <!-- Per-tier table -->
@@ -937,7 +937,7 @@ xychart-beta
           <tr><td><strong>Postgres + pgvector HNSW</strong></td><td>One DB; transactional embed-writes; structural joins; cheap; VN-tokenisation via PGroonga</td><td>Operational complexity (more extensions); ~10% slower than dedicated vector DB at very large scale</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
           <tr><td>Pinecone</td><td>Best-in-class recall; managed; horizontal scaling</td><td>Vendor lock; egress fees; no Singapore region; not transactional w/ source-of-truth</td><td>Rejected — sovereignty + cost</td></tr>
           <tr><td>Weaviate</td><td>OSS; multi-modal; GraphQL native</td><td>Memory-heavy; Janus runtime; embedded-mode not prod-grade for 1M+ chunks</td><td>Rejected — operational cost</td></tr>
-          <tr><td>Qdrant</td><td>Rust-native; fast; OSS</td><td>Two-system writes still required; smaller community</td><td>Reconsider if pgvector p95 fails NFR-PERF-004</td></tr>
+          <tr><td>Qdrant</td><td>Rust-native; fast; OSS</td><td>Two-system writes still required; smaller community</td><td>Reconsider if pgvector p95 fails N(FR pending)</td></tr>
           <tr><td>Milvus / Zilliz</td><td>Scales to billions; cloud-native</td><td>K8s-heavy ops; same two-system issue</td><td>Out of scope for 10–50 tenant scale</td></tr>
         </tbody>
       </table>

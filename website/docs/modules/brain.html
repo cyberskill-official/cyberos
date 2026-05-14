@@ -8,7 +8,7 @@
   <meta name="description" content="BRAIN — local-first, audit-chained personal memory. Append-only ledger, MMR proofs, signed tree heads, deterministic export. The substrate every CyberOS module depends on.">
   <link rel="stylesheet" href="../assets/tokens.css">
   <link rel="stylesheet" href="../assets/styles.css">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/tailwind.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -219,21 +219,21 @@
     <div class="mermaid">
 graph TB
   subgraph CLIENTS ["Clients (untrusted from protocol pov)"]
-    AGENT["Claude / Codex / Cursor<br/>via MCP tool"]
+    AGENT["Claude / Codex / Cursor<br>via MCP tool"]
     CLI["cyberos CLI"]
-    SUBG["Module subgraphs<br/>(via memory bridge)"]
-    CUO_M["CUO router<br/>(decision rows)"]
+    SUBG["Module subgraphs<br>(via memory bridge)"]
+    CUO_M["CUO router<br>(decision rows)"]
   end
 
   subgraph CORE ["BRAIN canonical writer (cyberos/core/)"]
-    OPS["ops.py<br/>put · move · delete"]
-    LOCK["lock.py<br/>leased .lock"]
-    WRITER["writer.py<br/>group-commit ledger"]
-    WALKER["walker.py<br/>mmap ledger replay"]
-    READER["reader.py<br/>seqlock lock-free reads"]
-    INDEX["index.py<br/>WAL-mode SQLite"]
-    MMR["mmr.py<br/>Merkle Mountain Range"]
-    STH["sth.py<br/>Ed25519 tree heads"]
+    OPS["ops.py<br>put · move · delete"]
+    LOCK["lock.py<br>leased .lock"]
+    WRITER["writer.py<br>group-commit ledger"]
+    WALKER["walker.py<br>mmap ledger replay"]
+    READER["reader.py<br>seqlock lock-free reads"]
+    INDEX["index.py<br>WAL-mode SQLite"]
+    MMR["mmr.py<br>Merkle Mountain Range"]
+    STH["sth.py<br>Ed25519 tree heads"]
   end
 
   subgraph LAYER1 ["Layer 1 · Filesystem ledger (.cyberos-memory/)"]
@@ -251,11 +251,11 @@ graph TB
   end
 
   subgraph LAYER2S ["Layer 2 (slice) · Local embeddings (shipped)"]
-    EMB["sentence-transformers<br/>BGE-M3 (optional dep)"]
+    EMB["sentence-transformers<br>BGE-M3 (optional dep)"]
   end
 
   subgraph LAYER3 ["Layer 3 · Archival corpus (planned)"]
-    S3["S3 / R2 / MinIO<br/>cold tier"]
+    S3["S3 / R2 / MinIO<br>cold tier"]
   end
 
   AGENT --> OPS
@@ -282,8 +282,8 @@ graph TB
   FILES -. P1+ .-> AGE
   CHK -. P2+ archive .-> S3
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#f1f5f9,stroke:#94a3b8,stroke-dasharray:4 3
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
   class OPS,LOCK,WRITER,WALKER,READER,INDEX,MMR,STH,FILES,META,BINLOG,HEAD,MANI,CHK,EMB,AGENT,CLI shipped
   class PGV,AGE,S3,SUBG planned
     </div>
@@ -608,7 +608,7 @@ sequenceDiagram
   O->>W: build frame {seq, ts_ns, op:"put", body_hash, prev_chain}
   W->>W: chain = SHA-256(canonical(frame) || prev_chain)
   W->>F: write tmpfile + rename + parent-dir fsync
-  Note over F: macOS F_BARRIERFSYNC per-batch<br/>F_FULLFSYNC at checkpoint
+  Note over F: macOS F_BARRIERFSYNC per-batch<br>F_FULLFSYNC at checkpoint
   W->>M: append_leaf(chain)
   M-->>W: leaf_index, peaks
   W->>S: check trigger (every consolidation OR explicit)
@@ -725,7 +725,7 @@ sequenceDiagram
   W-->>D: chain committed
   D->>D: redact body file (zero-fill + unlink)
   D->>D: tombstone sidecar (retain meta minus PII)
-  Note over W: The FACT of purge is itself a ledger leaf<br/>and is not itself erasable.
+  Note over W: The FACT of purge is itself a ledger leaf<br>and is not itself erasable.
   D-->>OP: {seq, chain, redacted_hash}
     </div>
     <p class="text-xs text-slate-500 mt-3">Per AGENTS.md §17.1, the audit fact of erasure is unerasable. The body is gone; the chain remembers the redaction.</p>
@@ -783,35 +783,13 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs -->
+<!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
   <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">BRAIN-specific FRs as catalogued in PRD §9.1. Full normative descriptions and verification methods at <a href="../reference/fr-catalog.html#brain" class="text-blue-700 font-semibold underline">fr-catalog.html#brain</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Status</th><th>Link</th></tr></thead>
-      <tbody>
-        <tr><td><code>FR-BRAIN-001</code></td><td>Append-only audit ledger with SHA-256 chain</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-001" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-002</code></td><td>Six canonical file operations (put · view · move · delete · …)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-002" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-003</code></td><td>MMR inclusion proofs (logarithmic)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-003" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-004</code></td><td>Ed25519-signed tree heads at consolidation</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-004" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-005</code></td><td>Deterministic zip export (byte-identical across runs)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-005" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-006</code></td><td>GDPR Art. 17 purge mode with unerasable audit fact</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-006" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-007</code></td><td>Lock-free seqlock reader · no <code>.lock</code> on read path</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-007" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-008</code></td><td>15 doctor invariants enforced pre-write</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-008" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-009</code></td><td>Cross-BRAIN import preserves foreign chain in <code>extra</code></td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-009" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-010</code></td><td>Platform-correct durability (Darwin <code>F_BARRIERFSYNC</code>)</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-010" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-011</code></td><td>Sidecar JSON metadata format with body-hash binding</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-011" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-012</code></td><td>Encryption envelope for <code>restricted</code> classifications</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-012" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-013</code></td><td>Semantic search via local BGE-M3 embeddings</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-013" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-014</code></td><td>HTTP REST mode for IDE / mobile clients</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-shipped">shipped</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-014" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-015</code></td><td>GraphQL subgraph for federation gateway</td><td><span class="pill pill-must">MUST</span></td><td><span class="pill pill-planned">planned · P0+</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-015" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-016</code></td><td>pgvector + Apache AGE second layer</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P1</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-016" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-017</code></td><td>Archival corpus on S3 / R2 cold tier</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P2</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-017" class="text-blue-700">details →</a></td></tr>
-        <tr><td><code>FR-BRAIN-018</code></td><td>Public anchoring of STH (transparency log)</td><td><span class="pill pill-should">SHOULD</span></td><td><span class="pill pill-planned">planned · P3</span></td><td><a href="../reference/fr-catalog.html#FR-BRAIN-018" class="text-blue-700">details →</a></td></tr>
-      </tbody>
-    </table>
+  <div class="bbg-card p-5">
+    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
   </div>
 </section>
 
@@ -825,18 +803,18 @@ stateDiagram-v2
     <table class="kt">
       <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
       <tbody>
-        <tr><td><code>NFR-BRAIN-LAT-001</code></td><td>Write p50 (group-committed)</td><td>≤ 150 µs</td><td><code>bench/throughput.py</code> · nightly</td></tr>
-        <tr><td><code>NFR-BRAIN-LAT-002</code></td><td>Write p95 (group-committed)</td><td>≤ 500 µs</td><td>bench/throughput · alert on regression &gt; 10%</td></tr>
-        <tr><td><code>NFR-BRAIN-LAT-003</code></td><td>Write p99 (cold, single writer)</td><td>≤ 10 ms</td><td>bench/cold_cli.py</td></tr>
-        <tr><td><code>NFR-BRAIN-LAT-004</code></td><td>Read p50 (mmap seqlock)</td><td>≤ 10 µs</td><td>bench/reader.py</td></tr>
-        <tr><td><code>NFR-BRAIN-LAT-005</code></td><td>Search p95 (lexical)</td><td>≤ 50 ms over 10k memories</td><td>bench/search.py</td></tr>
-        <tr><td><code>NFR-BRAIN-LAT-006</code></td><td>Search p95 (semantic, local BGE-M3)</td><td>≤ 200 ms over 10k memories</td><td>bench/semantic.py</td></tr>
-        <tr><td><code>NFR-BRAIN-THR-001</code></td><td>Sustained write throughput</td><td>≥ 8,000 ops/sec single thread</td><td>bench/throughput.py</td></tr>
-        <tr><td><code>NFR-BRAIN-DUR-001</code></td><td>Durability guarantee</td><td>fsync-per-batch · 0 lost frames at process kill</td><td>bench/crash_recovery.py</td></tr>
-        <tr><td><code>NFR-BRAIN-INT-001</code></td><td>Chain integrity rate</td><td>100% (15/15 invariants)</td><td><code>cyberos doctor</code> · CI nightly</td></tr>
-        <tr><td><code>NFR-BRAIN-EXP-001</code></td><td>Export determinism</td><td>byte-identical across 3 platforms</td><td>bench/determinism.py · macOS + Linux + WSL</td></tr>
-        <tr><td><code>NFR-BRAIN-STO-001</code></td><td>Storage overhead vs raw body</td><td>≤ 35% (chain + sidecar + index)</td><td>bench/storage.py</td></tr>
-        <tr><td><code>NFR-BRAIN-AVL-001</code></td><td>Single-process availability</td><td>≥ 99.99% (local FS dependent)</td><td>observed from <code>cyberos state</code> uptime</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Write p50 (group-committed)</td><td>≤ 150 µs</td><td><code>bench/throughput.py</code> · nightly</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Write p95 (group-committed)</td><td>≤ 500 µs</td><td>bench/throughput · alert on regression &gt; 10%</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Write p99 (cold, single writer)</td><td>≤ 10 ms</td><td>bench/cold_cli.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Read p50 (mmap seqlock)</td><td>≤ 10 µs</td><td>bench/reader.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Search p95 (lexical)</td><td>≤ 50 ms over 10k memories</td><td>bench/search.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Search p95 (semantic, local BGE-M3)</td><td>≤ 200 ms over 10k memories</td><td>bench/semantic.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Sustained write throughput</td><td>≥ 8,000 ops/sec single thread</td><td>bench/throughput.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Durability guarantee</td><td>fsync-per-batch · 0 lost frames at process kill</td><td>bench/crash_recovery.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Chain integrity rate</td><td>100% (15/15 invariants)</td><td><code>cyberos doctor</code> · CI nightly</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Export determinism</td><td>byte-identical across 3 platforms</td><td>bench/determinism.py · macOS + Linux + WSL</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Storage overhead vs raw body</td><td>≤ 35% (chain + sidecar + index)</td><td>bench/storage.py</td></tr>
+        <tr><td><code>N(FR pending)</code></td><td>Single-process availability</td><td>≥ 99.99% (local FS dependent)</td><td>observed from <code>cyberos state</code> uptime</td></tr>
       </tbody>
     </table>
   </div>
@@ -854,9 +832,9 @@ stateDiagram-v2
     <div class="mermaid">
 graph LR
   subgraph upstream ["BRAIN depends on"]
-    AUTH["🔐 AUTH<br/>actor identity"]
-    AI["⚡ AI Gateway<br/>digest · semantic"]
-    MCP["🔌 MCP Gateway<br/>tool exposure"]
+    AUTH["🔐 AUTH<br>actor identity"]
+    AI["⚡ AI Gateway<br>digest · semantic"]
+    MCP["🔌 MCP Gateway<br>tool exposure"]
   end
   BRAIN["🧠 BRAIN"]
   subgraph downstream ["Used by all 22 modules"]
@@ -879,8 +857,8 @@ graph LR
   BRAIN --> REW
   BRAIN --> OTHERS
 
-  classDef shipped fill:#d1fae5,stroke:#047857
-  classDef planned fill:#fef3c7,stroke:#b45309
+  classDef shipped fill:#f5ede6,stroke:#45210e
+  classDef planned fill:#fef6e0,stroke:#9c750a
   class BRAIN shipped
   class AUTH,AI,MCP planned
     </div>
