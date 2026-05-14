@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>CHAT — CyberOS</title>
- <meta name="description" content="CHAT — internal real-time chat. Mattermost fork + CyberOS auth/UI shell, channels, threads, attachments, PGroonga VN search, AI-native (summarisation, smart-reply), Slack/Zalo import, mobile via Tauri.">
+ <title>CHAT — P0 dogfood gate · Mattermost fork · @lumi BRAIN capture · CyberOS</title>
+ <meta name="description" content="CHAT — internal real-time chat that decommissions Slack + Zalo at P0 exit. Mattermost fork + CyberOS auth shell. PGroonga Vietnamese search. @lumi mention emits BRAIN memory rows. Slack/Zalo migration tooling. The dogfood signal that gates the entire platform thesis.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -42,10 +42,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CPO (vacant) → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Mattermost fork wrapped in CyberOS auth and UI shell — AI-native team chat with PGroonga Vietnamese search and Slack/Zalo import.
+ The P0 dogfood gate. <strong>Slack + Zalo decommissioned at P0 exit (M+3)</strong> — or the whole platform thesis fails. Mattermost fork + CyberOS auth shell + PGroonga Vietnamese search + <code>@lumi</code> mention → BRAIN memory row.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CHAT is the team-communication module for CyberOS. The strategy is to fork Mattermost (open-core, MIT/Apache-licensed core) for the messaging substrate and layer CyberOS-native auth (AUTH service), UI shell (Tauri desktop + mobile shell), search (PGroonga for Vietnamese full-text), and AI-native features (thread summarisation via <code>/summarise</code>, smart-reply suggestions, daily digest, mention-aware answers from Genie) on top. Channels, threads, file attachments, reactions, voice messages, Slack import, Zalo import where API allows — all the table-stakes plus an offline-first sync engine (Yjs CRDT) for desktop draft editing. specifies the 12 FRs; §11.2.2 sets the availability target (≥ 99.9%); §11.2.1 sets the message-deliver p95 (≤ 200 ms). PDPL Art. 14 DSAR is satisfied by per-subject message export.
+ CHAT is the single most strategically loaded P0 module. <strong>Per the audit-and-plan §3 milestones</strong>, P0 exit is defined as "Slack + Zalo decommissioned" — meaning every internal CyberSkill team conversation moves to CHAT before M+3. If CHAT ships late or feels worse than Slack, the 10-Member team falls back to Slack and the dogfooding signal that justifies the entire P1+ build never materialises. <strong>Per <a href="../../docs/RESEARCH_REVIEW_2026_05_14.md" class="text-blue-700 underline">research review §3</a></strong>, CHAT is currently rated "Solid" — adequate scope, missing on data-model ERD depth + key-flow coverage + dogfooding-decommission KPI. This page closes those gaps. The strategy: fork Mattermost (open-core, MIT/Apache-licensed) for the messaging substrate; layer CyberOS-native auth (AUTH service), UI shell (Tauri desktop + mobile), search (PGroonga for Vietnamese full-text — recall ≥ 80% on VN test set), and AI-native features (<code>@lumi</code> inline mentions, <code>/summarise</code> threads, smart-reply, daily digest). Every <code>@lumi</code>-tagged message emits a BRAIN memory row per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a>. Channels, threads, attachments, reactions, voice (Whisper-large-v3 ASR), Slack/Zalo import — all table-stakes plus Yjs CRDT offline-first drafts. PDPL Art. 14 DSAR satisfied by per-subject message export.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -66,8 +66,14 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture</a></li>
  <li><a class="toc-link" href="#why">Why CHAT exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#realtime-stack">Real-time stack — Mattermost fork rationale</a></li>
+ <li><a class="toc-link" href="#lumi-capture">@lumi → BRAIN capture</a></li>
+ <li><a class="toc-link" href="#e2ee">E2EE decision</a></li>
+ <li><a class="toc-link" href="#migration">Slack / Zalo migration</a></li>
+ <li><a class="toc-link" href="#kpi-decom">Decommission KPI</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
@@ -103,16 +109,86 @@
  CHAT is the <strong>internal team-communication module</strong>, layered on a Mattermost fork that provides battle-tested messaging primitives (channels, threads, attachments, reactions, presence, mobile push). On top of that fork, CyberOS adds: a native auth bridge to the AUTH service (no separate Mattermost user database), a Tauri-based desktop + mobile shell that matches the rest of CyberOS, PGroonga as the full-text engine (for Vietnamese tokenisation — measured recall ≥ 80% on a public VN test set), a Slack/Zalo import path, AI-native features driven by the AI Gateway (<code>@genie</code> inline mentions, <code>/summarise</code> thread compactions, smart-reply, daily digest), an offline draft sync engine using Yjs CRDT, and a BRAIN bridge that streams every message into Layer 3 of memory within p95 ≤ 5 s. The compliance export reuses Mattermost's format plus the CyberOS audit chain anchor — so regulators see one bundle.
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+2</div></div>
- <div class="fact-card"><div class="label">Strategy</div><div class="value">Fork Mattermost</div><div class="note">open-core · MIT/Apache</div></div>
- <div class="fact-card"><div class="label">Search engine</div><div class="value">PGroonga</div><div class="note">VN tokeniser · recall ≥ 80%</div></div>
- <div class="fact-card"><div class="label">Send p95</div><div class="value">≤ 200 ms</div><div class="note">N(FR pending)</div></div>
- <div class="fact-card"><div class="label">Availability</div><div class="value">≥ 99.9%</div><div class="note">N(FR pending)</div></div>
- <div class="fact-card"><div class="label">BRAIN ingest p95</div><div class="value">≤ 5 s</div><div class="note">(FR pending)</div></div>
- <div class="fact-card"><div class="label">Desktop / mobile</div><div class="value">Tauri</div><div class="note">offline-first via Yjs</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned · slice-1 design-locked</div><div class="note">P0 · M+2.5 → M+3 · gates P0 exit</div></div>
+ <div class="fact-card"><div class="label">Decom gate</div><div class="value">Slack + Zalo killed by M+3</div><div class="note">the dogfood signal · P0 exit criterion</div></div>
+ <div class="fact-card"><div class="label">Strategy</div><div class="value">Fork Mattermost</div><div class="note">open-core · MIT/Apache · pinned commit</div></div>
+ <div class="fact-card"><div class="label">Search engine</div><div class="value">PGroonga + TinySegmenter</div><div class="note">VN tokeniser · recall ≥ 80%</div></div>
+ <div class="fact-card"><div class="label">Send p95</div><div class="value">≤ 200 ms</div><div class="note">PRD NFR — primary perf target</div></div>
+ <div class="fact-card"><div class="label">Availability</div><div class="value">≥ 99.9%</div><div class="note">required to displace Slack</div></div>
+ <div class="fact-card"><div class="label">BRAIN ingest p95</div><div class="value">≤ 5 s</div><div class="note">every @lumi msg → memory row</div></div>
+ <div class="fact-card"><div class="label">E2EE decision</div><div class="value">Per-tenant Postgres encryption</div><div class="note">NOT end-to-end · see §2.7</div></div>
+ <div class="fact-card"><div class="label">Desktop / mobile</div><div class="value">Tauri + Yjs CRDT</div><div class="note">offline-first drafts</div></div>
  <div class="fact-card"><div class="label">Voice ASR</div><div class="value">Whisper-large-v3</div><div class="note">self-hosted · VN + EN</div></div>
  </div>
  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ CHAT is the most strategically loaded P0 module because it carries three obligations that no other module shares simultaneously. Reading it under any single lens misses two-thirds of the design. The three roles below MUST all be true at P0 exit (M+3); otherwise the platform fails its dogfooding bet.
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Role 1 · Dogfood gate</div>
+ <div class="text-2xl mb-2">⛔</div>
+ <div class="font-bold text-slate-900 mb-1">Kill Slack + Zalo by M+3</div>
+ <p class="text-sm text-slate-600 mb-3">Per audit-and-plan §3, P0 exit = "Slack + Zalo decommissioned." The 10-Member CyberSkill team must voluntarily abandon Slack + Zalo before M+3. If they don't, the platform's central thesis (internal-first compounds into external) collapses — the dogfooding signal that gates P1+ never materialises.</p>
+ <p class="text-xs" style="color:var(--text-mute)">Concrete KPI: <code>messages_in_chat / total_team_messages</code> ≥ 95% by M+3 · §kpi-decom</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--ochre-700)">Role 2 · BRAIN capture surface</div>
+ <div class="text-2xl mb-2">🧠</div>
+ <div class="font-bold text-slate-900 mb-1">@lumi → memory row</div>
+ <p class="text-sm text-slate-600 mb-3">Per BRAIN_AUTOSYNC_DESIGN.md §5, CHAT is one of three first-class capture surfaces (Cowork, Claude Code, CHAT). Every <code>@lumi</code>-tagged message emits a memory row to the user's Personal BRAIN. Untagged messages are NOT auto-captured (privacy floor). Sample-based capture optional via per-channel config for high-signal channels (#decisions, #rfcs).</p>
+ <p class="text-xs" style="color:var(--text-mute)">BRAIN ingest p95 ≤ 5 s · sync_class default <code>shareable</code> in shared channels, <code>personal</code> in DMs</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Role 3 · Vietnamese-first chat</div>
+ <div class="text-2xl mb-2">🇻🇳</div>
+ <div class="font-bold text-slate-900 mb-1">PGroonga search · &gt; 80% VN recall</div>
+ <p class="text-sm text-slate-600 mb-3">No global vendor (Slack, Discord, Teams) handles Vietnamese full-text well — they rely on naive whitespace tokenisation that misses 40%+ of recall for diacritic-laden compound terms. PGroonga + TinySegmenter + VietBERT-derived rules give CHAT a defensible local edge. Be Vietnam Pro font throughout.</p>
+ <p class="text-xs" style="color:var(--text-mute)">Recall measured against public VN test set · NFR-CHAT-001</p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">P0-exit gate dependency map</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
+graph LR
+ BRAIN["🧠 BRAIN<br>shipped"]
+ AI["⚡ AI Gateway<br>@ M+1"]
+ AUTH_STUB["🔐 AUTH stub<br>@ M+2"]
+ MCP["🔌 MCP Gateway<br>@ M+2.5"]
+ CHAT["💬 CHAT<br>@ M+3"]
+ SLACK_OFF["✂️ Slack decommissioned"]
+ ZALO_OFF["✂️ Zalo decommissioned"]
+ P0_EXIT["✅ P0 exit · M+3"]
+ BRAIN --> CHAT
+ AI --> CHAT
+ AUTH_STUB --> CHAT
+ MCP --> CHAT
+ CHAT --> SLACK_OFF
+ CHAT --> ZALO_OFF
+ SLACK_OFF --> P0_EXIT
+ ZALO_OFF --> P0_EXIT
+ classDef shipped fill:#f5ede6,stroke:#45210e,stroke-width:2px
+ classDef gating fill:#fde7b3,stroke:#9c750a,stroke-width:2px
+ classDef self fill:#f9c64f,stroke:#45210e,stroke-width:2.5px
+ classDef gate fill:#cba88a,stroke:#2a1208,stroke-width:2px
+ class BRAIN shipped
+ class AI,AUTH_STUB,MCP gating
+ class CHAT self
+ class SLACK_OFF,ZALO_OFF,P0_EXIT gate
+ </div>
+ </div>
+ <p class="text-sm mt-3" style="color:var(--text-mute)">
+ <strong>What this means in practice:</strong> CHAT is the LAST P0 module to ship (M+3), but it is the GATE for P0 exit. If AI Gateway slips, CHAT slips, Slack survives, dogfooding fails. The 28-day window between AUTH stub (M+2) and CHAT (M+3) is the single most-watched milestone in the platform.
+ </p>
 </section>
 
 <section id="why" class="module-section">
@@ -164,6 +240,248 @@
  </tbody>
  </table>
  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REAL-TIME STACK DECISION -->
+<!-- ============================================================ -->
+<section id="realtime-stack" class="module-section">
+ <header class="section-head"><span class="section-num">2.5</span><h2>Real-time stack — why Mattermost fork (decision-locked)</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Four real-time architectures were evaluated for CHAT. The decision (locked 2026-05-14) is <strong>fork Mattermost</strong> + layer CyberOS auth/UI/search/AI on top. The decision-record table below is the formal rationale.
+ </p>
+
+ <div class="bbg-card p-5 mb-6 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Option</th><th>Cost to ship by M+3</th><th>Production hardening</th><th>Vendor risk</th><th>Vietnamese-tokenisation fit</th><th>Verdict</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Mattermost fork</strong> (chosen)</td><td>Low — ~3 person-weeks for auth/UI/search wrap</td><td>High — years of production scaling at &gt; 1M MAU deployments</td><td>Medium — Mattermost has had license churn (MIT → MIT+SSPL +MIT once); we pin to a known-MIT/Apache commit</td><td>Medium — replace stock tokeniser with PGroonga</td><td>✅ Ship-by-M+3 wins</td></tr>
+ <tr><td>Matrix (Synapse / Conduit / Dendrite)</td><td>High — federation complexity is gratuitous for a single-tenant chat; Dendrite is still pre-1.0</td><td>Medium — Element's deployments hit scale but at sustained ops cost</td><td>Low — Matrix.org Foundation governance is robust</td><td>Low — would re-tokenise on top of an opaque event-graph DB</td><td>❌ Federation overkill for internal chat</td></tr>
+ <tr><td>Phoenix Channels (Elixir / OTP)</td><td>Very high — build everything (channels, threads, attachments, mobile push) ground-up in Elixir</td><td>Low — would be greenfield code; no operational base</td><td>Low — pure-OSS Erlang/Elixir</td><td>High — Elixir's <code>:utf8</code> tokeniser is great; could use Vntk natively</td><td>❌ Build cost &gt;&gt; M+3 window</td></tr>
+ <tr><td>Build from scratch (Rust + WebSocket)</td><td>Astronomical — 6-12 months minimum</td><td>None</td><td>Lowest possible</td><td>Highest possible (custom)</td><td>❌ The "rebuild Slack" trap</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">What we own vs what Mattermost owns</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Concern</th><th>Owned by Mattermost fork</th><th>Owned by CyberOS</th></tr></thead>
+ <tbody>
+ <tr><td>Channel + thread + message + attachment + reaction primitives</td><td>✅ unchanged</td><td>—</td></tr>
+ <tr><td>WebSocket transport + Redis presence fanout</td><td>✅ unchanged</td><td>—</td></tr>
+ <tr><td>Mobile push (FCM / APNs)</td><td>✅ unchanged</td><td>—</td></tr>
+ <tr><td>User identity database</td><td>❌ removed (we trust AUTH JWTs)</td><td>✅ AUTH module's tenant + subject tables</td></tr>
+ <tr><td>Search engine</td><td>❌ swapped out</td><td>✅ PGroonga + TinySegmenter</td></tr>
+ <tr><td>Desktop / mobile UI shell</td><td>❌ replaced</td><td>✅ Tauri + CyberOS design system (Liquid Glass, Be Vietnam Pro, Umber/Ochre)</td></tr>
+ <tr><td>AI features (@lumi, /summarise, smart-reply, daily digest)</td><td>—</td><td>✅ via AI Gateway + CUO router</td></tr>
+ <tr><td>BRAIN capture pipeline</td><td>—</td><td>✅ Postgres logical replication slot → BRAIN Writer</td></tr>
+ <tr><td>Voice ASR</td><td>—</td><td>✅ Whisper-large-v3 self-hosted</td></tr>
+ <tr><td>Slack / Zalo import</td><td>Slack import exists; ❌ rewired to AUTH-managed subjects</td><td>✅ Zalo import is custom (no SDK)</td></tr>
+ <tr><td>Admin REST surface</td><td>❌ replaced</td><td>✅ unified CyberOS admin REST via AUTH-issued admin JWT</td></tr>
+ <tr><td>Compliance export</td><td>Partial — Mattermost format</td><td>✅ extended with CyberOS audit-chain anchor</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <p class="text-sm text-slate-600 leading-relaxed">
+ <strong>Fork governance:</strong> Mattermost upstream tracking via quarterly rebase + security-patch cherry-pick (handled by CSEC). Fork pinned at <code>cyberos/chat-server</code> with explicit upstream commit hash in <code>VERSION</code> file. Per <a href="#risk-entries">R-CHAT-013</a>, license drift is monitored quarterly; if upstream re-licenses (e.g. to SSPL or AGPL), we have a documented downstream-only path.
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- @LUMI → BRAIN CAPTURE -->
+<!-- ============================================================ -->
+<section id="lumi-capture" class="module-section">
+ <header class="section-head"><span class="section-num">2.6</span><h2>@lumi → BRAIN capture — chat as a memory surface</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a>, CHAT is one of three first-class capture surfaces (Cowork · Claude Code · CHAT). The capture rule is conservative-by-default: <strong>only <code>@lumi</code>-tagged messages auto-capture</strong>. Passive messages are NOT captured (privacy floor) unless the channel has explicit opt-in sampling for high-signal flows.
+ </p>
+
+ <h3 class="text-lg font-bold mb-3">Capture rules</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Trigger</th><th>Captures?</th><th>BRAIN target</th><th>sync_class default</th><th>Owner consent</th></tr></thead>
+ <tbody>
+ <tr><td>Message contains <code>@lumi</code> (or <code>@genie</code>)</td><td>✅ yes — primary capture trigger</td><td>Author's Personal BRAIN</td><td>Channel default (shared chan: <code>shareable</code>; DM: <code>personal</code>)</td><td>Per-tenant onboarding consent at signup</td></tr>
+ <tr><td>Message in <code>#decisions</code> / <code>#rfcs</code> / similar opted-in channels</td><td>✅ yes — sampling at every Nth msg (default N=1, every msg)</td><td>Author's Personal BRAIN</td><td><code>shareable</code></td><td>Tenant-admin opts the channel in</td></tr>
+ <tr><td>Message in any other channel (no <code>@lumi</code>)</td><td>❌ no — privacy floor</td><td>—</td><td>—</td><td>—</td></tr>
+ <tr><td>Direct message (DM)</td><td>❌ no unless <code>@lumi</code> mentioned</td><td>If <code>@lumi</code> → Author's Personal BRAIN</td><td><code>personal</code></td><td>Both parties' consent for capture</td></tr>
+ <tr><td>Voice message ASR transcript</td><td>Inherits trigger from message text</td><td>Same as text trigger</td><td>Same as text trigger</td><td>Same</td></tr>
+ <tr><td>File attachment</td><td>❌ no auto-capture — files are referenced, not embodied; the message itself may capture per above rules</td><td>—</td><td>—</td><td>—</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">@lumi handling flow (message → CUO route → BRAIN memory row)</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant U as User (CHAT client)
+ participant CHAT as CHAT service<br>(Mattermost fork)
+ participant LP as @lumi parser<br>(CHAT plugin)
+ participant CUO as CUO router
+ participant AI as AI Gateway
+ participant BR as BRAIN Writer<br>(Personal)
+ participant L as Lumi's BRAIN<br>(cloud · pull queue)
+ U->>CHAT: "Hey @lumi, summarise this thread for me"
+ CHAT->>CHAT: persist message (WebSocket fanout)
+ CHAT->>LP: hook(message_create) · text contains @lumi
+ LP->>BR: put(memories/discussions/chat-<chan>-<msg>.md, sync_class=channel_default)
+ BR-->>LP: chain_hash · audit row appended
+ LP->>CUO: route(message_body, channel_context, user_id)
+ CUO->>CUO: rule-based scoring (Phase 1) · pick skill
+ alt high-confidence rule match
+ CUO->>AI: invoke skill via AI Gateway with persona stamp
+ AI-->>CUO: response · persona-version stamped
+ else low confidence
+ CUO->>AI: LLM cascade (Phase 2 — gated by AI Gateway budget)
+ AI-->>CUO: response
+ end
+ CUO->>BR: put(memories/decisions/cuo-response-<id>.md) · the response is itself memory
+ BR-->>CUO: chain_hash
+ CUO->>CHAT: post_reply(channel, thread_id, response, persona_version)
+ CHAT->>U: real-time response via WebSocket
+ BR-->>L: sync orchestrator next window: push shareable rows to Lumi's BRAIN
+ L-->>BR: confirmed · lumi_chain_hash recorded
+ </div>
+ </div>
+
+ <p class="text-sm text-slate-600 leading-relaxed">
+ <strong>What the audit row captures:</strong> the original message body, the user_id, the channel id (subject to ACL), the thread id, the timestamp, the <code>@lumi</code> trigger flag, the resolved CUO skill, the persona-version stamp, the AI Gateway latency + token cost, the BRAIN chain hash, and the channel's sync_class default. Every <code>@lumi</code> response is fully replayable from BRAIN — "what did the CFO skill tell us about runway last Tuesday?" → grep audit chain.
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- E2EE DECISION -->
+<!-- ============================================================ -->
+<section id="e2ee" class="module-section">
+ <header class="section-head"><span class="section-num">2.7</span><h2>E2EE decision — server-visible by design (locked)</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ CHAT does NOT use end-to-end encryption. Messages are server-visible to the tenant's CHAT service. Encryption-at-rest is provided at the Postgres column level (KMS-wrapped keys per tenant). This is a deliberate trade — not an accident — and documenting it here heads off the recurring debate.
+ </p>
+
+ <h3 class="text-lg font-bold mb-3">The decision-record</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Capability requirement</th><th>E2EE (Signal-style)</th><th>Per-tenant Postgres encryption-at-rest (chosen)</th></tr></thead>
+ <tbody>
+ <tr><td>@lumi can read messages</td><td>❌ no — would defeat the purpose</td><td>✅ yes — AI features work</td></tr>
+ <tr><td>PGroonga full-text search</td><td>❌ no — server can't index ciphertext</td><td>✅ yes</td></tr>
+ <tr><td>BRAIN capture from @lumi messages</td><td>❌ no — server can't read</td><td>✅ yes</td></tr>
+ <tr><td>Compliance export (PDPL Art. 14 DSAR)</td><td>Possible but complex — keys held by user; server can't decrypt for regulator without user signoff</td><td>✅ straightforward — tenant admin exports</td></tr>
+ <tr><td>Key escrow on employee offboarding</td><td>Hard — Signal-style keys are tied to devices</td><td>✅ trivial — KMS key escrow</td></tr>
+ <tr><td>Threat model: rogue server admin</td><td>✅ mitigated</td><td>❌ NOT mitigated — server admin can decrypt</td></tr>
+ <tr><td>Threat model: external attacker with DB dump only</td><td>✅ mitigated</td><td>✅ mitigated — column ciphertext, KMS-wrapped keys</td></tr>
+ <tr><td>Threat model: physical disk loss</td><td>✅ mitigated</td><td>✅ mitigated</td></tr>
+ <tr><td>Threat model: backup compromise</td><td>✅ mitigated</td><td>✅ mitigated — backups use separate KMS key</td></tr>
+ <tr><td>Onboarding UX (new device key exchange)</td><td>Hard — Signal protocol or WebCrypto + Web Push</td><td>✅ trivial — login + JWT</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Why per-tenant Postgres encryption wins</h3>
+ <ol class="text-sm leading-relaxed ml-5 mb-4" style="color:var(--text);list-style:decimal">
+ <li class="mb-2">The platform's value proposition <em>requires</em> server-side message access — @lumi, search, BRAIN capture, daily digest. E2EE would break all four.</li>
+ <li class="mb-2">The rogue-server-admin threat is real but manageable: SOC 2 access controls + audit-chain on every admin operation + four-eyes principle for production database access. Risk is procedural, not cryptographic.</li>
+ <li class="mb-2">The other four common threat models (external attacker with DB dump, physical disk loss, backup compromise, snapshot theft) ARE mitigated by per-tenant Postgres encryption-at-rest — same security posture as E2EE for these.</li>
+ <li class="mb-2">Slack, Notion, Linear, Carta, every B2B platform with AI features makes the same call. The market expectation is "encrypted-at-rest, not E2EE."</li>
+ <li>Re-evaluating this decision is a P3+ exercise — only if a specific high-security tenant requests E2EE as a contract requirement. At which point a separate "E2EE-only channel" mode could be offered with explicit @lumi-disabled limitation.</li>
+ </ol>
+
+ <h3 class="text-lg font-bold mb-3">What encryption-at-rest looks like concretely</h3>
+ <p class="text-sm text-slate-600 leading-relaxed mb-3">
+ Per-tenant KMS-wrapped column encryption on <code>messages.body</code>, <code>messages.attachments_meta</code>, <code>direct_messages.body</code>. Each tenant has a dedicated AWS KMS Customer Managed Key. CHAT service holds the data key in memory only (re-fetched on rotation). DB dump alone yields ciphertext. Backups use a separate KMS key with separate rotation cadence. Per-tenant KMS revocation is supported (within 15 minutes a tenant's data becomes unreadable system-wide).
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- SLACK/ZALO MIGRATION -->
+<!-- ============================================================ -->
+<section id="migration" class="module-section">
+ <header class="section-head"><span class="section-num">2.8</span><h2>Slack / Zalo migration — the import tooling</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Slack and Zalo migration is non-negotiable for the M+3 dogfood gate. If the team can't bring their 3-year Slack history with them, they won't move. The tooling spec below targets a one-day cutover for the 10-Member CyberSkill team and a one-week cutover for an external 100-Member tenant.
+ </p>
+
+ <h3 class="text-lg font-bold mb-3">Slack import tool — <code>cyberos-chat import slack</code></h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Step</th><th>What it does</th><th>Tooling</th><th>Time (10-Member team)</th></tr></thead>
+ <tbody>
+ <tr><td>1. Export</td><td>Slack admin exports workspace data (Standard Export or Corporate Export depending on plan)</td><td>Slack admin web UI · ~30 min wait for Slack to bundle</td><td>30 min</td></tr>
+ <tr><td>2. Validate</td><td>Run <code>cyberos-chat import slack --validate ./slack-export.zip</code> — checks user-mapping completeness, channel structure, attachment integrity</td><td>CHAT CLI</td><td>2 min</td></tr>
+ <tr><td>3. User map</td><td>Map Slack user IDs to AUTH subjects. Auto-match on email; manual review for ambiguities</td><td>Interactive CLI</td><td>5 min</td></tr>
+ <tr><td>4. Dry-run</td><td>Generate the would-be import plan: channels created, messages mapped, attachments uploaded</td><td>CHAT CLI · prints summary</td><td>2 min</td></tr>
+ <tr><td>5. Import</td><td>Execute. Channels created. Messages inserted with original timestamps + original-Slack-msg-ID preserved in <code>messages.metadata.slack_origin_id</code>. Attachments uploaded to MinIO/S3. Reactions, threads, pinned messages all preserved.</td><td>CHAT CLI · parallelised</td><td>~15 min for 3-year history</td></tr>
+ <tr><td>6. PGroonga index</td><td>Trigger PGroonga reindex on imported content (Vietnamese-tokenised)</td><td>auto-triggered</td><td>~5 min for 100k messages</td></tr>
+ <tr><td>7. BRAIN sample-capture</td><td>For channels marked high-signal (decisions, rfcs), retroactively emit memory rows. <strong>Default OFF</strong> — opt-in only.</td><td>CHAT CLI <code>--retro-capture</code> flag</td><td>variable</td></tr>
+ <tr><td>8. Switch</td><td>Tenant admin posts in #general: "Slack is read-only from today; new messages in CyberOS CHAT only." Cutover.</td><td>Manual</td><td>0 min</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Zalo import — the harder problem</h3>
+ <p class="text-sm text-slate-600 leading-relaxed mb-3">
+ Zalo has NO official enterprise export API. Two pragmatic paths:
+ </p>
+ <ol class="text-sm leading-relaxed ml-5 mb-4" style="color:var(--text);list-style:decimal">
+ <li class="mb-2"><strong>Manual per-conversation export</strong> via Zalo's "Save chat" feature. Each user runs the export against their conversations and uploads to a CHAT staging bucket. CHAT then imports via <code>cyberos-chat import zalo --personal ./exports/</code>. Awkward but works. ~1 hr per user.</li>
+ <li class="mb-2"><strong>Read-from-Zalo desktop client</strong> via OS-level integration (macOS Accessibility API) — captures the on-screen chat list in batches. Higher infrastructure cost; lower per-user time. Requires <code>cyberos-zalo-bridge</code> companion (~Q3 2026 if priority).</li>
+ </ol>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ The 10-Member CyberSkill team can do Zalo migration manually in one afternoon. For external tenants at 50+ members, path 2 is required — adds 4 weeks to TEN module's onboarding spec.
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- DECOMMISSION KPI -->
+<!-- ============================================================ -->
+<section id="kpi-decom" class="module-section">
+ <header class="section-head"><span class="section-num">2.9</span><h2>Decommission KPI — the only metric that matters at P0 exit</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ P0 exit (M+3) is gated on Slack + Zalo decommissioned. That is not a vibes assertion; it is a measurable KPI. The definition below is what gets evaluated at the P0 exit gate review.
+ </p>
+
+ <h3 class="text-lg font-bold mb-3">Definition</h3>
+ <div class="bbg-card p-5 mb-5">
+<pre><code>decommission_signal := (
+  messages_per_day_in_cyberos_chat
+  /
+  (messages_per_day_in_cyberos_chat + messages_per_day_in_slack + messages_per_day_in_zalo)
+) ≥ 0.95
+
+over a rolling 14-day window, sampled daily.
+
+Plus:
+- Slack workspace set to read-only (admin signoff)
+- Zalo company group: announced sunset (manual confirmation)
+- No team member has logged into Slack in the prior 7 days
+</code></pre>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Why 95%, not 100%</h3>
+ <p class="text-sm text-slate-600 leading-relaxed mb-3">
+ 100% is unrealistic — the team will receive Slack DMs from external partners using old habits for months. The decommission gate is about <em>where new conversation lands by default</em>, not about achieving zero Slack presence ever again. The "no team member has logged into Slack in the prior 7 days" qualifier handles the case where the messages-per-day ratio passes but a few stragglers are still using Slack as their primary surface.
+ </p>
+
+ <h3 class="text-lg font-bold mb-3">Tracking instrumentation</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Source</th><th>What we instrument</th><th>How</th></tr></thead>
+ <tbody>
+ <tr><td>CHAT (CyberOS)</td><td>messages_per_day count, by-user breakdown</td><td>OBS metric · <code>cyberos_chat_message_count</code></td></tr>
+ <tr><td>Slack</td><td>messages_per_day, login_per_user_per_day</td><td>Slack analytics export · weekly cron pull</td></tr>
+ <tr><td>Zalo</td><td>self-reported per-team-member weekly</td><td>1-question Cowork survey at end of every Friday standup</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">What happens if M+3 misses the gate</h3>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Per <a href="../../docs/AUDIT_AND_PLAN_2026_05_14.md" class="text-blue-700 underline">audit-and-plan §1.3</a>, if the M+3 dogfood gate misses, the M+4 P1-scope-collapse fail-mode immediately activates: HR-full split + LEARN deferred. The platform doesn't fail; the timeline slips by 1 quarter while CHAT's missing features get prioritised. Concrete remediation triggers: if <code>decommission_signal &lt; 0.50</code> at M+3 → 90-day CHAT-only sprint, no P1 modules start. If <code>0.50 ≤ signal &lt; 0.95</code> at M+3 → 30-day catch-up, P1 modules start at M+4 with reduced scope.
+ </p>
 </section>
 
 <section id="architecture" class="module-section">
@@ -825,6 +1143,16 @@ graph LR
  <tr><td><code>R-CHAT-008</code></td><td>WebSocket connection limit hit at scale</td><td>Medium</td><td>Medium</td><td>CTO</td><td>P0 budget: 5k concurrent. Horizontal scale-out via Redis pub-sub for fanout at P1+.</td></tr>
  <tr><td><code>R-CHAT-009</code></td><td>Mobile draft sync conflict produces double-post</td><td>Low</td><td>Medium</td><td>CPO</td><td>Yjs CRDT semantics + send-once token on submit.</td></tr>
  <tr><td><code>R-CHAT-010</code></td><td>Compliance export omits CyberOS audit anchor</td><td>Low</td><td>Medium</td><td>CLO</td><td>Export test verifies BRAIN chain hashes for every message in bundle.</td></tr>
+ <tr><td><code>R-CHAT-011</code></td><td><strong>Dogfooding never actually happens</strong> — team keeps falling back to Slack/Zalo past M+3 because CHAT is "almost there"</td><td>High</td><td>Critical</td><td>CEO</td><td>Hard <code>decommission_signal ≥ 0.95</code> gate at M+3; miss-the-gate = 2-week sprint freeze on net-new modules, focus only on CHAT polish + migration tooling (§2.9 remediation tier 1). If still &lt; 0.85 by M+4, escalate to platform-thesis review.</td></tr>
+ <tr><td><code>R-CHAT-012</code></td><td>Enterprise tenant demands E2EE → forces design pivot mid-build</td><td>Medium</td><td>High</td><td>CSO</td><td>§2.7 decision document — present per-tenant Postgres encryption-at-rest + signed audit chain as compliance equivalent for SOC 2 / ISO 27001 / PDPL. If specific tenant requires E2EE, offer optional per-channel client-side encryption plugin at P3 (search disabled on those channels).</td></tr>
+ <tr><td><code>R-CHAT-013</code></td><td>Voice ASR leaks PII into BRAIN before redaction policy applied</td><td>Medium</td><td>High</td><td>DPO</td><td>ASR pipeline runs through AI Gateway PII scrubber before BRAIN ingest; tested with VN-specific PII set (CCCD, phone, NĐD). Voice OFF by default at P1; tenant opt-in via Lumi setting.</td></tr>
+ <tr><td><code>R-CHAT-014</code></td><td>Mattermost upstream license drift escalation (MIT/Apache → BSL or AGPL)</td><td>Low</td><td>High</td><td>CLO</td><td>Fork at pinned LTS commit (v9.x last MIT/Apache); legal monitor on Mattermost GitHub LICENSE file via watcher. If drift detected, freeze upstream merges and back-port security only. Long-term fallback: pivot to Synapse (Matrix) bridge at P4.</td></tr>
+ <tr><td><code>R-CHAT-015</code></td><td>@lumi mention rate-limit abuse → AI Gateway cost overrun</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-user @lumi rate limit (≤ 30/hour default) at AI Gateway. Per-tenant monthly @lumi budget surfaced in CUO dashboard. Burst @lumi → fast-fail with friendly "Lumi đang nghỉ ngơi, thử lại sau 1 phút".</td></tr>
+ <tr><td><code>R-CHAT-016</code></td><td>Cross-tenant message leak via PGroonga search index corruption</td><td>Low</td><td>Critical</td><td>CSO</td><td>Tenant_id is mandatory shard key on all PGroonga indexes; cross-tenant property-based test in CI; quarterly red-team query test against staging multi-tenant fixture. RLS (row-level security) enforced at Postgres role layer.</td></tr>
+ <tr><td><code>R-CHAT-017</code></td><td>Slack import partial failure leaves CHAT inconsistent (some threads imported, some not)</td><td>Medium</td><td>Medium</td><td>CPO</td><td>Importer is idempotent + checkpointed (resume from last <code>channel_id × msg_id</code>). Pre-import dry-run report. On failure, partial state is tagged <code>state=importing</code> and hidden from search until reconciled.</td></tr>
+ <tr><td><code>R-CHAT-018</code></td><td>Retro-capture (@lumi remember the last 10 messages) breaks privacy floor when applied to non-@lumi history</td><td>Medium</td><td>High</td><td>DPO</td><td>Retro-capture is per-message opt-in (UI dialog), never automatic. Audit row records the explicit user action + scope (e.g. <code>retro_capture_count=10</code>). Cannot retro-capture other users' messages without their consent (cross-author consent prompt).</td></tr>
+ <tr><td><code>R-CHAT-019</code></td><td>Mobile push notification carries message body → leaks via locked-screen preview</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Push payload = title + sender only ("Stephen sent you a message"); body fetched after device unlock. Configurable per-user (default = privacy-on).</td></tr>
+ <tr><td><code>R-CHAT-020</code></td><td>VN tokeniser cannot disambiguate code-switched VN/EN messages → search misses</td><td>Medium</td><td>Low</td><td>CDO</td><td>Dual-pass indexing: TinySegmenter for VN tokens + ICU for EN tokens, both into the same PGroonga index. CI test includes 200 code-switched fixtures from real Slack export.</td></tr>
  </tbody>
  </table>
  </div>
@@ -845,6 +1173,15 @@ graph LR
  <tr><td><strong>Concurrent WS connections (peak)</strong></td><td>gauge</td><td>OBS</td><td>≤ N(FR pending) (5k P0)</td></tr>
  <tr><td><strong>Message volume / day (tenant)</strong></td><td>count</td><td>OBS</td><td>tracked for capacity planning</td></tr>
  <tr><td><strong>DSAR fulfilment time</strong></td><td>request → export delivered</td><td>request tracker</td><td>≤ 24 h</td></tr>
+ <tr><td><strong>decommission_signal (P0-exit gate)</strong></td><td>msgs_in_chat / (msgs_in_chat + msgs_in_slack + msgs_in_zalo), 14-day rolling</td><td>OBS + Slack export ETL + Zalo manual log</td><td><strong>≥ 0.95 by M+3</strong>; miss → §2.9 tier-1 remediation</td></tr>
+ <tr><td><strong>@lumi capture-rate</strong></td><td>@lumi-mentions stored as BRAIN rows / total @lumi-mentions</td><td>chat events + brain audit</td><td>≥ 0.999 (loss budget: 1 in 1000)</td></tr>
+ <tr><td><strong>@lumi response p95</strong></td><td>histogram, @lumi mention → first response token</td><td>OBS span tags</td><td>≤ 4 s (CUO-mediated answer)</td></tr>
+ <tr><td><strong>VN tokeniser recall (continuous)</strong></td><td>TP / (TP + FN) on production-grade 1,000-fixture set, weekly run</td><td>CI nightly + weekly</td><td>≥ 0.80 (alert &lt; 0.78)</td></tr>
+ <tr><td><strong>BRAIN-ingest backlog (max)</strong></td><td>max(replication_slot_lag_seconds) over 24h</td><td>brain_bridge metrics</td><td>≤ 60 s; page on &gt; 300 s</td></tr>
+ <tr><td><strong>Retro-capture opt-in rate</strong></td><td>retro_capture dialogs accepted / shown</td><td>chat events</td><td>tracked; expect 30–60%</td></tr>
+ <tr><td><strong>Mobile push delivery rate</strong></td><td>delivered notifications / sent (excluding user-disabled)</td><td>APNs + FCM webhooks</td><td>≥ 0.98 on a 7-day rolling window</td></tr>
+ <tr><td><strong>Cross-tenant query reject rate</strong></td><td>RLS rejections / total queries</td><td>Postgres audit log</td><td>tracked; spike = security alert</td></tr>
+ <tr><td><strong>Dogfooding intensity (internal-only KPI, M+0..M+3)</strong></td><td>distinct internal users posting ≥ 5 msgs/day in CHAT</td><td>chat events filtered to <code>tenant_id=org:cyberskill</code></td><td>P0-gate: 100% of full-time team by M+2</td></tr>
  </tbody>
  </table>
  </div>
@@ -994,6 +1331,14 @@ messages_today: 18,420</code></pre>
  <li><strong>Vietnam PDPL (Law 91/2025)</strong> — Art. 14 DSAR.</li>
  <li><strong>EU AI Act</strong> — Art. 12 logging, Art. 13 transparency (AI label on @genie answers).</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/runtime.html#chat" class="text-blue-700 underline">runtime.html#chat</a>.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CHAT is one of four canonical capture surfaces (alongside FS watcher, Cowork, Claude Code hook).</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — CHAT FRs to be re-authored one-by-one via the <code>fr-author</code> Agent Skill; placeholder "(FR pending)" markers in this page are intentional.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — CHAT placed at M+2 in the reordered P0 build sequence (AI Gateway → AUTH stub → MCP → CHAT → Slack/Zalo decom).</li>
+ <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §3</a> — external reviewer rated CHAT module as "Solid" (8/10) with caveat that decommission gate is the biggest single risk in P0.</li>
+ <li><strong>Mattermost upstream governance:</strong> <a href="https://docs.mattermost.com/about/licensing.html" class="text-blue-700 underline">docs.mattermost.com/about/licensing</a> — fork pinned at last MIT/Apache LTS commit; license-drift watcher in legal-monitor pipeline.</li>
+ <li><strong>PGroonga + TinySegmenter:</strong> <a href="https://pgroonga.github.io/" class="text-blue-700 underline">pgroonga.github.io</a> + <a href="https://github.com/cmkang/tinysegmenter4j" class="text-blue-700 underline">TinySegmenter</a> — VN full-text recall baseline.</li>
+ <li><strong>Vietnam PDPL (Law 91/2025):</strong> Art. 7 (data-subject rights), Art. 14 (DSAR), Art. 20 (security obligations), Art. 38 (cross-border transfer).</li>
+ <li><strong>EU AI Act:</strong> Art. 12 (logging — BRAIN audit chain satisfies), Art. 13 (transparency — @lumi/@genie carry "AI-generated" label), Art. 50 (provider transparency obligation).</li>
  </ul>
  </div>
 </section>

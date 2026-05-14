@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Skill — CyberOS</title>
- <meta name="description" content="SKILL — portable, capability-sandboxed agentic skills. Anthropic Agent Skills standard. Rust host · Bun toolchain · 20 SKILL.md bundles indexed · 6 Vietnamese-market skills published.">
+ <title>Skill — Open Agent Skills · BRAIN-integrated · Vertical-pack moat · CyberOS</title>
+ <meta name="description" content="SKILL — portable capability-sandboxed agentic skills. Open Anthropic Agent Skills standard. Rust host · Bun toolchain · 20 SKILL.md bundles · 6 Vietnamese-market skills. Every skill declares allowed_brain_scopes; the capability broker enforces against Personal BRAIN + Lumi's BRAIN. The vertical-pack pattern (cyberskill-vn first) compounds into a global moat.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -45,10 +45,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat (currently CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Portable, capability-sandboxed agentic skills — the open Anthropic Agent Skills standard, hosted in Rust.
+ The catalog. Portable. Capability-sandboxed. BRAIN-integrated. Open Anthropic Agent Skills standard hosted in Rust. <strong>The vertical-pack pattern is the moat.</strong>
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- The Skill module is the catalog. It hosts CyberOS's portable agentic skills following the open Anthropic <strong>Agent Skills</strong> standard (SKILL.md + progressive disclosure + filesystem discovery) — the same format adopted by Microsoft, GitHub Copilot, OpenAI Codex CLI, Cursor, Goose, Amp, Gemini CLI, and 20+ other clients. A Rust workspace (4 crates) owns the canonical host; a Bun + esbuild toolchain compiles TypeScript skills to <code>wasm32-wasi</code> components; 20 SKILL.md bundles are indexed (14 CUO C-level skills + 6 cyberskill-vn Vietnamese-market skills). The 13 May 2026 architectural audit closed with all seven phases done — header-only indexing, lazy activation, DashMap-sharded registry, Wasmtime executor, capability broker, legacy retirement plan. Python ↔ Rust parity is 12/12 green.
+ Skill plays three strategic roles simultaneously. <strong>(1) Open-standard citizen:</strong> every CyberOS skill follows the Anthropic <em>Agent Skills</em> standard (SKILL.md + progressive disclosure + filesystem discovery), unmodified-runnable in Claude Code, Codex CLI, Cursor, VS Code with Copilot, Goose, Amp, Gemini CLI, and 20+ other 26+ clients. Day-1 distribution reach via <code>agentskills.io</code>. <strong>(2) BRAIN-protocol enabler:</strong> every skill bundle declares <code>allowed_brain_scopes</code> against both Personal BRAIN and Lumi's BRAIN; the Rust capability broker enforces — first-use approval, scope-limited reads, audit-chain emission on every invocation. The capture daemon itself is a skill bundle (<code>brain-capture@1</code>); the synthesis sub-skill that drives multi-brain auto-evolve is a skill bundle (<code>cuo/personas/synthesis-author/SKILL.md</code>). <strong>(3) Vertical-pack moat:</strong> the cyberskill-vn collection (6 high-quality Vietnamese-market skills — MST · VAT · VietQR · CCCD · legal · tax) is the proof-of-pattern; the same recipe produces cyberskill-sg, -id, -th, -eu, -us packs — each a defensible local moat a global vendor cannot easily replicate. 4 Rust crates own the canonical host; Bun + esbuild compiles TypeScript skills to <code>wasm32-wasi</code> components; 20 SKILL.md bundles indexed today (14 CUO C-level + 6 cyberskill-vn). The 13 May 2026 architectural audit closed all seven phases — header-only indexing, lazy activation, DashMap-sharded registry, Wasmtime executor, capability broker, legacy retirement plan. Python ↔ Rust parity 12/12 green.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#vn-skills" class="btn btn-primary">The 6 VN skills
@@ -72,9 +72,13 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture</a></li>
  <li><a class="toc-link" href="#why">Why Skill exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
+ <li><a class="toc-link" href="#brain-integration">BRAIN integration</a></li>
+ <li><a class="toc-link" href="#vertical-packs">Vertical-pack pattern</a></li>
+ <li><a class="toc-link" href="#distribution">Distribution roadmap</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
  <li><a class="toc-link" href="#key-flows">Key flows</a></li>
@@ -120,16 +124,85 @@
  <strong>Skill is the catalog</strong>. It does not invent a competing format; it embraces the open Anthropic <em>Agent Skills</em> standard verbatim so a CyberOS skill works unmodified in Claude Code, Codex CLI, Cursor, VS Code with Copilot, Goose, Amp, Gemini CLI. The Rust host indexes SKILL.md frontmatter at boot (~100 tokens/skill, parsed in parallel), activates bodies lazily, runs WASM components in Wasmtime with WASI capability grants, and falls back to a sandboxed script path for trusted internal skills. The differentiation is the curated <strong>cyberskill-vn</strong> collection: six high-quality Vietnamese-market skills (MST · VAT · VietQR · CCCD · legal · tax) published on the open registry where the entire Agent Skills ecosystem can install them.
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Phases 0–7 shipped</div><div class="note">audit complete · 30-day soak active</div></div>
- <div class="fact-card"><div class="label">LoC (Rust host)</div><div class="value">~3,000</div><div class="note">4 crates · cargo workspace</div></div>
+ <div class="fact-card"><div class="label">Status (open-std)</div><div class="value">Phases 0–7 shipped</div><div class="note">audit complete · 30-day soak active</div></div>
+ <div class="fact-card"><div class="label">Status (BRAIN-int)</div><div class="value">Phase 8 designed</div><div class="note">capability broker → allowed_brain_scopes</div></div>
+ <div class="fact-card"><div class="label">LoC (Rust host)</div><div class="value">~3,000 + ~1,500 (Phase 8)</div><div class="note">4 crates · cargo workspace · +brain-broker</div></div>
  <div class="fact-card"><div class="label">LoC (Bun toolchain)</div><div class="value">~2,500</div><div class="note">TS authoring → wasm32-wasi</div></div>
  <div class="fact-card"><div class="label">Tests</div><div class="value">4 + 12/12 parity + 2 grants</div><div class="note">cargo test · pytest parity</div></div>
  <div class="fact-card"><div class="label">SKILL.md bundles</div><div class="value">20 indexed</div><div class="note">14 CUO + 6 cyberskill-vn</div></div>
+ <div class="fact-card"><div class="label">Vertical packs</div><div class="value">1 shipped · 6 planned</div><div class="note">vn · sg · id · th · eu · us · hr-legal</div></div>
  <div class="fact-card"><div class="label">Ecosystem reach</div><div class="value">26+ clients</div><div class="note">via open Agent Skills standard</div></div>
  <div class="fact-card"><div class="label">Cold start (header)</div><div class="value">~100 tok/skill</div><div class="note">parallel via tokio::JoinSet</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH</div><div class="note">(when P0 lands)</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN + AUTH</div><div class="note">tenant-scoped capability broker</div></div>
  </div>
  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Skill is the only module that plays three distinct strategic roles at once. Reviewing it under any single lens (open-standard runtime, BRAIN integration enabler, or vertical-pack moat) misses two-thirds of its value. The three roles must be held simultaneously.
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Role 1 · Open-standard citizen</div>
+ <div class="text-2xl mb-2">🌐</div>
+ <div class="font-bold text-slate-900 mb-1">Day-1 distribution reach</div>
+ <p class="text-sm text-slate-600 mb-3">Every CyberOS skill loads unmodified in Claude Code, Codex, Cursor, VS Code+Copilot, Goose, Amp, Gemini CLI. The standard is open; we don't invent. Distribution via local cache · OCI registry · <code>agentskills.io</code>.</p>
+ <p class="text-xs" style="color:var(--text-mute)">26+ clients · Anthropic Agent Skills spec · OCI + cosign verifiable</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--ochre-700)">Role 2 · BRAIN-protocol enabler</div>
+ <div class="text-2xl mb-2">🧠</div>
+ <div class="font-bold text-slate-900 mb-1">Capability broker → audit chain</div>
+ <p class="text-sm text-slate-600 mb-3">Every skill declares <code>allowed_brain_scopes</code>. The capability broker enforces — first-use approval, scope-limited reads against Personal BRAIN + Lumi's BRAIN, every invocation emits a memory row. The capture daemon is a skill bundle. The synthesis sub-skill is a skill bundle.</p>
+ <p class="text-xs" style="color:var(--text-mute)">Per AGENTS.md §3.6 + §11 · BRAIN_AUTOSYNC_DESIGN.md Stages 1–5</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Role 3 · Vertical-pack moat</div>
+ <div class="text-2xl mb-2">🇻🇳</div>
+ <div class="font-bold text-slate-900 mb-1">Locally-defensible differentiation</div>
+ <p class="text-sm text-slate-600 mb-3">cyberskill-vn (6 skills: MST · VAT · VietQR · CCCD · legal · tax) is the proof-of-pattern. The same recipe produces cyberskill-sg / -id / -th / -eu / -us packs. Each pack is a defensible local moat a global vendor cannot easily replicate.</p>
+ <p class="text-xs" style="color:var(--text-mute)">Strategy doc §4 Level-4 · vertical packs as the actual compounding asset</p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Where Skill sits in the CyberOS dependency graph</h3>
+ <div class="bbg-card p-5 mb-4">
+ <div class="mermaid">
+graph TB
+ BRAIN["🧠 BRAIN<br>Personal + Lumi's<br>shipped + Stages 1–5"]
+ AUTH["🔐 AUTH<br>tenant + subject identity<br>planned"]
+ AI["⚡ AI Gateway<br>LLM cost ledger<br>planned"]
+ MCP["🔌 MCP Gateway<br>tool federation<br>planned"]
+ SKILL["🛠 SKILL<br><strong>this module</strong>"]
+ CUO["🎯 CUO<br>router · 10 C-level skills"]
+ ANY["any tenant module"]
+ EXT["external Agent Skills clients<br>Claude / Codex / Cursor / etc."]
+ BRAIN --> SKILL
+ AUTH --> SKILL
+ AI --> SKILL
+ MCP --> SKILL
+ SKILL --> CUO
+ SKILL --> ANY
+ SKILL --> EXT
+ SKILL -. allowed_brain_scopes .-> BRAIN
+ CUO -. uses .-> SKILL
+ classDef shipped fill:#f5ede6,stroke:#45210e,stroke-width:2px
+ classDef self fill:#f9c64f,stroke:#45210e,stroke-width:2.5px
+ classDef planned fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ class BRAIN,CUO,EXT shipped
+ class SKILL self
+ class AUTH,AI,MCP,ANY planned
+ </div>
+ </div>
+ <p class="text-sm" style="color:var(--text-mute)">
+ Skill is the <em>only</em> module that touches the open external ecosystem (the right-hand "external Agent Skills clients" node) and produces consumable artefacts for it. This is what makes the OSS distribution surface real — a CyberOS skill is an Agent Skills skill, not a CyberOS-proprietary thing.
+ </p>
 </section>
 
 <!-- ============================================================ -->
@@ -285,6 +358,187 @@ graph TB
  </tbody>
  </table>
  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- BRAIN INTEGRATION -->
+<!-- ============================================================ -->
+<section id="brain-integration" class="module-section">
+ <header class="section-head"><span class="section-num">3.5</span><h2>BRAIN integration — the capability broker enforces against Personal &amp; Lumi's BRAIN</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a>, every skill bundle declares <code>allowed_brain_scopes</code> in its SKILL.md frontmatter. The Skill module's <strong>capability broker</strong> (Phase 6 — shipped for legacy scopes; Phase 8 — designed for the universal-protocol BRAIN scopes) enforces these declarations at invocation time: first-use approval, scope-narrowing, audit-chain emission on every read/write, refusal when out-of-scope. The broker is the single point of integration between the open Agent Skills standard and the closed BRAIN protocol; nothing else needs to know about BRAIN to consume the platform's audit-grade memory.
+ </p>
+
+ <h3 class="text-lg font-bold mb-3">SKILL.md frontmatter — BRAIN-aware fields</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+<pre><code class="language-yaml">---
+name: fr-author
+version: 0.2.2
+description: Generate audited Feature Request backlog from PRD/spec docs.
+persona: cuo-cpo
+
+# === BRAIN scopes — enforced by capability broker ===
+allowed_brain_scopes:
+  read:
+    - personal:project:*              # this user's project memories (Personal BRAIN)
+    - personal:module:*               # this user's module memories
+    - lumi:org:locked-decisions       # org-wide locked decisions (Lumi's BRAIN)
+    - lumi:org:shared-rfcs            # team RFCs
+    - lumi:synthesis:weekly-*         # synthesised wisdom artefacts
+  write:
+    - personal:project:*              # write back project memories
+    - lumi:fr-decisions               # the FR row itself lands on Lumi's BRAIN if sync_class shareable+
+
+# === MCP tools — orthogonal to BRAIN scopes ===
+allowed_mcp_tools:
+  - kb.read
+  - kb.search
+  - brain.search          # search Personal BRAIN body content
+  - brain.write_memory    # canonical put through Writer
+  - brain.lumi_search     # search Lumi's BRAIN within tenant scope
+  - audit.append          # explicit audit row emission
+
+# === Escalation policy ===
+escalation:
+  to_persona_on_legal: cuo-clo
+  to_persona_on_security: cuo-cseco
+  to_persona_on_compliance: cuo-clo
+  to_human_on_irreversible: true
+---</code></pre>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Capability broker enforcement flow</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant C as Caller (CUO / agent / CLI)
+ participant S as Skill host (Rust)
+ participant B as Capability broker
+ participant BR as BRAIN protocol
+ participant BC as Personal BRAIN<br>(~/.cyberos-memory/)
+ participant LB as Lumi's BRAIN<br>(cloud tenant)
+ participant W as Wasmtime / script runtime
+ participant A as audit-chain writer
+
+ C->>S: invoke(skill_id, input)
+ S->>S: lookup SKILL.md header (DashMap O(1))
+ S->>B: check_grants(skill, allowed_brain_scopes, allowed_mcp_tools)
+ alt first invocation
+ B->>C: surface approval UI (Cowork inline / desktop notif)
+ C-->>B: approved · grants persisted by content hash
+ end
+ B-->>S: grants OK
+ S->>W: instantiate Wasmtime Store with grants applied
+ W->>W: execute skill body
+ W->>BR: read(personal:project:my-rfc)
+ BR->>BC: filesystem read · seqlock
+ BC-->>BR: body + frontmatter
+ BR-->>W: memory record
+ W->>BR: write(lumi:fr-decisions:FR-AUTH-001)
+ BR->>BC: local put (becomes pending-push)
+ BR->>LB: sync orchestrator pushes (next window)
+ LB-->>BR: pushed · confirmed · lumi_chain_hash
+ BR->>A: emit audit row {skill, persona-version, brain ops, mcp tools used}
+ A-->>S: chain advanced
+ W-->>S: skill_output
+ S-->>C: {output, persona_version_stamp, audit_seq}
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Universal-protocol skills shipped by CyberOS</h3>
+ <p class="text-sm text-slate-600 mb-3">Two skills are part of the BRAIN protocol surface itself, not just consumers of it. Both ship as SKILL.md bundles to honour the "everything is a skill" architectural rule.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Skill bundle</th><th>Role</th><th>Stage</th><th>Description</th></tr></thead>
+ <tbody>
+ <tr><td><code>brain-capture@1</code><br><span class="text-xs text-slate-500">skill/skills/system/brain-capture/</span></td><td>The capture daemon as a skill</td><td>2</td><td>Watches filesystem + Cowork session + Claude Code tool calls. Emits memory rows through the canonical Writer. Long-running activation via WASI host call rather than per-invocation execution. <code>allowed_brain_scopes</code> = write to <code>personal:*</code> only.</td></tr>
+ <tr><td><code>brain-sync@1</code><br><span class="text-xs text-slate-500">skill/skills/system/brain-sync/</span></td><td>The sync orchestrator</td><td>4</td><td>Tails the local audit chain, filters by <code>sync_class</code>, pushes shareable+ to Lumi's BRAIN over JWT-authenticated HTTP. Pulls inbound via the same envelope. <code>allowed_brain_scopes</code> = read all local + write <code>lumi:&lt;tenant&gt;:*</code>.</td></tr>
+ <tr><td><code>cuo/personas/synthesis-author@1</code><br><span class="text-xs text-slate-500">skill/skills/cuo/personas/synthesis-author/</span></td><td>Multi-brain auto-evolve</td><td>5</td><td>Runs nightly on Lumi's BRAIN tenant compute window. Walks prior 24 h of memories, clusters by topic via BGE-M3 embeddings, deduplicates cross-person decisions, emits <code>synthesis@1</code> artefacts (daily / weekly / decisions-pending). <code>allowed_brain_scopes</code> = read <code>lumi:&lt;tenant&gt;:shareable</code> + write <code>lumi:&lt;tenant&gt;:synthesis</code>.</td></tr>
+ <tr><td><code>cuo/cpo/fr-author@0.2.2</code><br><span class="text-xs text-slate-500">skill/skills/cuo/cpo/fr-author/</span></td><td>Canonical FR creation</td><td>shipped + integrating</td><td>Per <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>. Standalone-mode interview or chained-from-RFC; emits <code>feature_request@1</code> markdowns to <code>docs/feature-requests/&lt;module&gt;/</code> with audit-chain rows. Already ships; integrates with Lumi's BRAIN at Stage 4.</td></tr>
+ <tr><td><code>cuo/cpo/fr-audit@0.1.0</code><br><span class="text-xs text-slate-500">skill/skills/cuo/cpo/fr-audit/</span></td><td>FR quality gate</td><td>shipped</td><td>Chains from fr-author. Audits each FR against the AUDIT_RUBRIC for atomicity, BCP-14 compliance, verification method, acceptance criteria. Emits <code>audit_response@1</code> alongside the FR. Decision states: PASS / PASS_WITH_REVISIONS / FAIL.</td></tr>
+ </tbody>
+ </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- VERTICAL PACK PATTERN -->
+<!-- ============================================================ -->
+<section id="vertical-packs" class="module-section">
+ <header class="section-head"><span class="section-num">3.6</span><h2>Vertical-pack pattern — beyond cyberskill-vn</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The cyberskill-vn collection (6 skills · MST + VAT + VietQR + CCCD + legal + tax) is not the strategy. It is the <em>proof-of-pattern</em>. The strategy is to systematise vertical packs as a repeatable production unit and replicate it across SEA, EU, US, and across cross-cutting verticals (HR, legal, accounting). Per <a href="../../strategy/CYBEROS_STRATEGY.md" class="text-blue-700 underline">strategy doc §4.4</a>, vertical packs are <strong>Level 4</strong> productization and the actual compounding margin (70%+ since the base CyberOS is open-source). Each pack is a defensible local moat a global vendor cannot easily replicate.
+ </p>
+
+ <h3 class="text-lg font-bold mb-3">The pack recipe</h3>
+ <div class="bbg-card p-5 mb-5">
+ <ol class="text-sm leading-relaxed ml-5" style="list-style:decimal;color:var(--text)">
+ <li class="mb-2"><strong>Pick the jurisdiction.</strong> Each pack maps to a single regulatory authority (Vietnam MoPS, Singapore PDPC, Indonesia OJK, Thailand RD, EU GDPR, US state-by-state, etc.). One regulator = one pack.</li>
+ <li class="mb-2"><strong>Identify 5–8 "high-pain, high-frequency" workflows.</strong> The bar: each workflow takes a Vietnamese SME accountant or HR officer ≥ 1 hour per week today; the skill reduces that to ≤ 5 minutes. cyberskill-vn picked MST (every customer record needs validation), VAT (every invoice), VietQR (every payment), CCCD (every employee), legal (every Decree 13 audit), tax (monthly + quarterly returns).</li>
+ <li class="mb-2"><strong>Author each as an Agent Skills bundle.</strong> SKILL.md frontmatter declares <code>allowed_brain_scopes</code> + <code>allowed_mcp_tools</code> + jurisdiction-specific compliance metadata. The bundle ships with sample data, golden fixtures, and a parity harness against the regulator's published reference behaviour where available.</li>
+ <li class="mb-2"><strong>Localise the language layer.</strong> Vietnamese: NFC normalisation, PGroonga tokenisation, Be Vietnam Pro font. Same pattern for Bahasa Indonesia, Thai, Tagalog, Arabic, etc.</li>
+ <li class="mb-2"><strong>Compliance-verify each skill.</strong> Every cyberskill-vn skill cites the relevant decree article and ships a verification test that exercises the regulator's reference data (where available) or a golden-master fixture extracted from real-world filings.</li>
+ <li class="mb-2"><strong>Publish to agentskills.io.</strong> Each pack ships under <code>agentskills.io/cyberskill/&lt;pack&gt;/</code>. Other Anthropic Agent Skills consumers (Claude, Cursor, etc.) can install from there without any CyberOS dependency.</li>
+ <li><strong>Sell via Lumi's BRAIN tenants.</strong> The pack is a paid add-on to the Lumi's BRAIN tenant SKU. Bundle revenue + base SaaS revenue compounds.</li>
+ </ol>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">The vertical-pack roadmap</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Pack</th><th>Geo</th><th>Anchor skills</th><th>Status</th><th>Target ship</th><th>Annual unit pricing (planned)</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberskill-vn</code></td><td>Vietnam (cornerstone)</td><td>vn-mst-validate · vn-vat-invoice · vn-bank-transfer (VietQR) · vneid-integration (CCCD) · vn-legal-compliance · vn-tax-filing</td><td><span class="pill pill-shipped">Shipped</span> 6/6</td><td>M+0 (done)</td><td>included in Pro tier · $0 add-on for Vietnam-domiciled tenants</td></tr>
+ <tr><td><code>cyberskill-sg</code></td><td>Singapore</td><td>sg-uen-validate · sg-paynow-transfer · sg-cpf-contrib · sg-iras-tax-filing · sg-acra-filings · sg-pdpa-compliance</td><td><span class="pill pill-planned">Planned</span></td><td>P3 entry (Singapore HoldCo flip · M+10)</td><td>USD 250 / tenant / month</td></tr>
+ <tr><td><code>cyberskill-id</code></td><td>Indonesia</td><td>id-npwp-validate · id-bri-transfer · id-bpjs-contrib · id-djp-tax-filing · id-uupdp-compliance · id-djpb-filings</td><td><span class="pill pill-planned">Planned</span></td><td>P4 (SEA-3 wave · M+18)</td><td>USD 200 / tenant / month</td></tr>
+ <tr><td><code>cyberskill-th</code></td><td>Thailand</td><td>th-tax-id · th-promptpay-transfer · th-sso-contrib · th-rd-tax-filing · th-pdpa-compliance</td><td><span class="pill pill-planned">Planned</span></td><td>P4 (SEA-3 wave · M+18)</td><td>USD 200 / tenant / month</td></tr>
+ <tr><td><code>cyberskill-eu</code></td><td>EU (post-HoldCo)</td><td>eu-vat-validate · eu-sepa-transfer · eu-gdpr-dsar · eu-aia-conformity · eu-ec-mandatory-disclosures · eu-eidas-qtsp</td><td><span class="pill pill-planned">Planned</span></td><td>P3 exit (eu-shard activation · M+12)</td><td>EUR 400 / tenant / month</td></tr>
+ <tr><td><code>cyberskill-us</code></td><td>United States</td><td>us-ein-validate · us-ach-transfer · us-w-2-issue · us-1099-issue · us-irs-940 · us-state-tax (50-state pluggable)</td><td><span class="pill pill-planned">Planned</span></td><td>P4 (post-US-sub) · M+18+</td><td>USD 500 / tenant / month</td></tr>
+ <tr><td><code>cyberskill-hr</code></td><td>Cross-cutting (HR vertical)</td><td>vn-bhxh-bhyt · us-w-2 · eu-employment-contract-templates · sg-cpf · cross-border-payroll-prep</td><td><span class="pill pill-planned">Planned</span></td><td>P2+ (depends on HR module)</td><td>USD 150 / tenant / month</td></tr>
+ <tr><td><code>cyberskill-legal</code></td><td>Cross-cutting (legal vertical)</td><td>contract-review-redline · litigation-tracker · billable-hours · ndr-templates-by-jurisdiction · clm-import</td><td><span class="pill pill-planned">Planned</span></td><td>P3+ (depends on DOC module)</td><td>USD 300 / tenant / month</td></tr>
+ <tr><td><code>cyberskill-accounting</code></td><td>Cross-cutting (accounting vertical)</td><td>gaap-ifrs-reports · year-end-close-orchestration · audit-trail-summarisation · multi-currency-revaluation</td><td><span class="pill pill-planned">Planned</span></td><td>P3+ (depends on INV + REW)</td><td>USD 300 / tenant / month</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <p class="text-sm text-slate-600 leading-relaxed">
+ <strong>Margin math:</strong> at 50 paying tenants × avg 2 packs per tenant × USD 300 / pack / month = USD 360k ARR from packs alone, on top of base SaaS. At 500 paying tenants × 3 packs avg = USD 5.4M ARR. The compounding rate is what makes Level-4 the actual moat — base SaaS revenue grows linearly with seat count; pack revenue grows multiplicatively with both seat count <em>and</em> packs-per-tenant.
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- DISTRIBUTION ROADMAP -->
+<!-- ============================================================ -->
+<section id="distribution" class="module-section">
+ <header class="section-head"><span class="section-num">3.7</span><h2>Distribution roadmap — local → agentskills.io → marketplace</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Skill distribution is staged so that each rung has a clear consumer cohort and a clear next-tier graduation criterion. Per the strategy doc §4 (productization levels) and the research review §7.3 verdict ("marketplace is premature; the moat is the memory + the packs"), the marketplace rung is intentionally deferred to ≥ 50 paying tenants.
+ </p>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Rung</th><th>Distribution mechanism</th><th>Consumer cohort</th><th>Status</th><th>Graduation criterion</th></tr></thead>
+ <tbody>
+ <tr><td><strong>R0 · Local cache</strong></td><td><code>~/.cyberos/skills/</code> filesystem discovery (per Anthropic Agent Skills spec)</td><td>Developer · author iteration</td><td><span class="pill pill-shipped">Shipped</span></td><td>—</td></tr>
+ <tr><td><strong>R1 · .skill bundles</strong></td><td>zip of the skill folder + content hash; loadable via <code>cyberos-skill-cli install &lt;file&gt;</code></td><td>Single-machine distribution; teams without registry</td><td><span class="pill pill-shipped">Shipped</span></td><td>OCI registry available</td></tr>
+ <tr><td><strong>R2 · OCI registry</strong></td><td>Push to any OCI v1.0-conformant registry (GHCR, ECR, ACR, Harbor); pull by digest; cosign signature verification</td><td>CyberSkill internal team · OSS contributors</td><td><span class="pill pill-partial">Partial · cosign-verify pending</span></td><td>cosign verify-by-default ships</td></tr>
+ <tr><td><strong>R3 · agentskills.io</strong></td><td>Submit to the open Anthropic Agent Skills directory at <code>agentskills.io/cyberskill/&lt;pack&gt;/</code></td><td>Anthropic Agent Skills ecosystem (Claude, Cursor, Codex, VS Code, Goose, Amp, Gemini CLI users — 26+ clients)</td><td><span class="pill pill-planned">Planned · waits for registry API</span></td><td>registry API stable; cyberskill-vn submitted</td></tr>
+ <tr><td><strong>R4 · marketplace.cyberskill.world</strong></td><td>CyberSkill's own marketplace UI — vetted-by-CyberSkill badge, revenue share (70/30), per-skill or per-pack pricing, in-tenant install</td><td>Lumi's BRAIN paying tenants</td><td><span class="pill pill-planned">Deferred</span></td><td>≥ 50 paying Lumi's BRAIN tenants</td></tr>
+ <tr><td><strong>R5 · enterprise private marketplace</strong></td><td>White-label per-enterprise. ISVs publish into the enterprise's private marketplace (not the public one); the enterprise vets + curates</td><td>Level-5 Ecosystem-as-a-Service customers (P4+24)</td><td><span class="pill pill-planned">Aspirational</span></td><td>first white-label enterprise deal signed</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Why each rung is gated</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ <strong>R3 (agentskills.io) waits on the registry API:</strong> Anthropic's directory accepts submissions today but lacks programmatic publishing. We don't want to gate cyberskill-vn distribution on manual upload-and-wait. Once the API is stable (target Q3 2026 per Anthropic roadmap), we ship.
+ </p>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ <strong>R4 (own marketplace) waits on tenant density:</strong> Salesforce AppExchange (~5,000 apps) took 7 years and a buyer-side ecosystem of millions to reach critical mass. Atlassian Marketplace took ~5 years. CyberOS at M+24 with 10 paying tenants has no buyer-side density — 3rd-party developers will not contribute. Until paying tenants exceed 50 (per the research review §7.3), the OSS Skill catalog <em>is</em> the marketplace story. Build it as PR/recruiting; don't invest in tooling.
+ </p>
+ <p class="text-slate-700 leading-relaxed">
+ <strong>R5 (enterprise private marketplace) is the Level-5 endgame:</strong> sells the CyberOS framework itself as a private-cloud branded platform. "Acme Corp Operating System, powered by CyberOS." 80%+ margins on multi-year contracts. Not before P4+24.
+ </p>
 </section>
 
 <!-- ============================================================ -->
@@ -918,6 +1172,14 @@ graph LR
  <tr><td><code>R-SKILL-005</code></td><td>Parity regression (legacy Python ↔ Rust diverges)</td><td>High</td><td>Medium</td><td>CTO</td><td>12/12 parity harness blocks Phase 7 retirement · CI gate on every PR · soak window mandatory.</td></tr>
  <tr><td><code>R-SKILL-006</code></td><td>VN-skill regulatory churn (GDT schema changes, PDPL evolution)</td><td>High</td><td>Medium</td><td>CLO</td><td>Skill versions follow GDT/PDPL revisions · CHANGELOG newest-first · semver compatibility tested vs prior outputs.</td></tr>
  <tr><td><code>R-SKILL-007</code></td><td>Python-on-WASI heavy cold-start regression</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Default executable skills to Rust or TS-via-Bun guests · Python flagged "preview" · benchmark cold-start per skill in CI · alert &gt; 100 ms p95.</td></tr>
+ <tr><td colspan="6" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">BRAIN-integration risks (Phase 8 designed)</td></tr>
+ <tr><td><code>R-SKILL-008</code></td><td><strong>Capability broker bypass via WASI host call</strong> — skill emits BRAIN write outside declared <code>allowed_brain_scopes</code></td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Broker mediates EVERY BRAIN write via the canonical Writer trait. WASI host call cannot reach the filesystem layer directly; only the broker can. Conformance test in CI: synthetic skill attempts out-of-scope write, expects 403. <code>cyberos doctor</code> invariant <code>skill-broker-mediated-only</code> warns if any audit row's actor matches a skill but bypasses the broker signature.</td></tr>
+ <tr><td><code>R-SKILL-009</code></td><td><strong>Multi-tenant skill bleed</strong> — skill invocation in tenant A reads/writes tenant B's Lumi's BRAIN row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Lumi's BRAIN row reads scoped by Postgres RLS on <code>tenant_id</code> · JWT issued by AUTH carries <code>tenant_id</code> claim · capability broker rewrites <code>lumi:&lt;tenant&gt;:*</code> scopes per invoker · weekly chaos-test attempts cross-tenant read and asserts 403. Same control plane as R-BRAIN-009.</td></tr>
+ <tr><td><code>R-SKILL-010</code></td><td><strong>Sync-state corruption from skill</strong> — skill emits Writer ops out of order, breaking the sync orchestrator's queue invariants</td><td>Low</td><td>High</td><td>CTO</td><td>Writer is single-threaded per BRAIN, lease-protected; the broker uses the Writer's append API so ordering is enforced. Sync state machine is authoritative — never derived from skill output. <code>sync-state-monotonic</code> invariant on the manifest.</td></tr>
+ <tr><td><code>R-SKILL-011</code></td><td><strong>Synthesis sub-skill PII leak</strong> — Stage 5 synthesis pass extracts PII into a wisdom artefact, then propagates back to all team members on pull</td><td>Medium</td><td>High</td><td>DPO</td><td>Synthesis sub-skill's <code>allowed_brain_scopes</code> = read only <code>shareable</code>+ (private memories are never visible) · output artefact runs through Presidio at write time · weekly review of any artefact flagged for PII leak · kill-switch if synthesis-useful-rate drops &lt; 50%.</td></tr>
+ <tr><td><code>R-SKILL-012</code></td><td><strong>Vertical-pack legal drift</strong> — a vertical pack's regulatory citations fall behind the actual regulator's published rules (e.g. PDPL evolution, new GDT VAT decree)</td><td>High</td><td>Medium</td><td>CLO</td><td>Per-pack CHANGELOG newest-first. Per-pack legal owner (CLO consult). Quarterly regulatory-drift review meeting. <code>vn-legal-compliance</code> skill explicitly tracks decree-revision dates. Each pack ships a "last verified against regulator" date in frontmatter.</td></tr>
+ <tr><td><code>R-SKILL-013</code></td><td><strong>OCI registry signing-key compromise</strong> — attacker steals cosign key, signs a malicious skill version, distributes via OCI</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Cosign keys stored in KMS · per-pack signing keys (compromise scope-limits to one pack) · Rekor transparency log for all signatures · CyberSkill rotates signing keys quarterly · all clients pin acceptable cosign issuers in their <code>cyberos brain config</code>.</td></tr>
+ <tr><td><code>R-SKILL-014</code></td><td><strong>agentskills.io marketplace policy hostile</strong> — Anthropic or AAIF changes directory policy to disallow vendor-specific extensions (<code>cyberos-*</code> frontmatter), forcing pack rewrites</td><td>Low</td><td>Medium</td><td>CTO</td><td>Track AAIF + Anthropic upstream governance · CyberOS-specific fields live under <code>metadata.cyberos-*</code> namespace (always strippable) · packs work unmodified in non-CyberOS clients (the <code>cyberos-*</code> fields are ignored, not required).</td></tr>
  </tbody>
  </table>
  </div>
@@ -940,6 +1202,15 @@ graph LR
  <tr><td><strong>WASM invocation p95</strong></td><td>activate_to_return</td><td>Criterion bench</td><td>≤ 5 ms</td><td>~ 1.4 ms (AOT-cached)</td></tr>
  <tr><td><strong>Ecosystem reach</strong></td><td>compatible clients</td><td>open spec adoption</td><td>≥ 20</td><td>26+</td></tr>
  <tr><td><strong>VN-skill catalog growth</strong></td><td>skills shipped (monthly)</td><td>git log</td><td>≥ 1/month at P1</td><td>6 shipped (lifetime)</td></tr>
+ <tr><td colspan="5" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">BRAIN-integration KPIs (Phase 8 — measured once shipped)</td></tr>
+ <tr><td><strong>Broker-mediated rate</strong></td><td><code>broker_mediated_writes / total_brain_writes_from_skills</code></td><td>audit-chain replay</td><td>100% (every skill BRAIN write MUST go through broker)</td><td>— (Phase 8)</td></tr>
+ <tr><td><strong>First-use approval latency</strong></td><td><code>time(approval) - time(prompt)</code> p50</td><td>capability broker logs</td><td>≤ 30 s · alert if &gt; 5 min (user abandoned)</td><td>— (Phase 8)</td></tr>
+ <tr><td><strong>Capability scope reject rate</strong></td><td><code>denied_invocations / total</code></td><td>broker logs</td><td>≤ 0.5% under steady state · spike → mis-declared <code>allowed_brain_scopes</code></td><td>— (Phase 8)</td></tr>
+ <tr><td><strong>Synthesis sub-skill emit rate</strong></td><td><code>synthesis_artefacts_per_tenant_per_day</code></td><td>Lumi's BRAIN audit chain</td><td>1 daily + 1 weekly + ≤ 3 decisions-pending per active tenant</td><td>— (Phase 8 / Stage 5)</td></tr>
+ <tr><td><strong>Vertical-pack tenant attach rate</strong></td><td><code>tenants_with_≥_1_pack / total_paying_tenants</code></td><td>TEN module billing</td><td>≥ 60% within 6 months of pack launch</td><td>— (P3+)</td></tr>
+ <tr><td><strong>Vertical-pack revenue share</strong></td><td><code>pack_revenue / total_recurring_revenue</code></td><td>TEN module billing</td><td>≥ 30% at M+18 (the compounding moat)</td><td>— (P3+)</td></tr>
+ <tr><td><strong>Marketplace publish-to-install</strong></td><td><code>installs_within_30d / publishes</code></td><td>agentskills.io directory · own marketplace</td><td>≥ 5 installs per published pack within 30 days · floor of 1 for niche packs</td><td>— (R3+)</td></tr>
+ <tr><td><strong>Pack legal-drift detection</strong></td><td><code>days_since_last_regulator_verification</code> per pack</td><td>pack CHANGELOG + jurisdictional review log</td><td>≤ 90 days for tax/legal packs · ≤ 180 days for HR/accounting packs</td><td>— (P3+)</td></tr>
  </tbody>
  </table>
  </div>
@@ -962,6 +1233,16 @@ graph LR
  <tr><td>cyberskill-vn collection authoring</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
  <tr><td>VN regulatory tracking (GDT, PDPL)</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td></tr>
  <tr><td>Phase 7 retirement signoff</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td colspan="6" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">BRAIN-integration + vertical-pack + distribution additions</td></tr>
+ <tr><td>Phase 8 capability broker → BRAIN integration</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Synthesis sub-skill spec + implementation (Stage 5)</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>brain-capture@1 + brain-sync@1 skill bundles</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>cyberskill-sg pack authoring (P3 entry)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
+ <tr><td>cyberskill-eu pack (post-HoldCo)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td></tr>
+ <tr><td>cyberskill-us pack (post-US sub)</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td></tr>
+ <tr><td>agentskills.io directory submission (R3)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>marketplace.cyberskill.world (R4)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td></tr>
+ <tr><td>Quarterly regulatory-drift review (per pack)</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td></tr>
  </tbody>
  </table>
  </div>
@@ -1091,8 +1372,20 @@ $ cyberos-skill-cli build --lang ts./src/
  <tr><td>VN catalog (6 skills)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td>OCI registry distribution</td><td><span class="pill pill-planned">planned</span></td></tr>
  <tr><td>Cosign signature verification at install</td><td><span class="pill pill-shipped">shipped</span></td></tr>
- <tr><td><code>agentskills.io</code> submission</td><td><span class="pill pill-planned">planned (waits for registry API)</span></td></tr>
+ <tr><td><code>agentskills.io</code> submission (R3)</td><td><span class="pill pill-planned">planned (waits for registry API)</span></td></tr>
  <tr><td>GraphQL subgraph</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
+ <tr><td colspan="2" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Phase 8 + BRAIN integration + vertical-pack roadmap</td></tr>
+ <tr><td><strong>Phase 8</strong> — Capability broker extends to BRAIN protocol (Personal + Lumi's BRAIN scopes)<br><span class="text-xs text-slate-500">+1,500 LoC · broker mediates every BRAIN read/write from a skill · audit-chain emission per invocation</span></td><td><span class="pill" style="background:var(--ochre-100);color:var(--umber-700)">designed · BRAIN_AUTOSYNC_DESIGN.md Stage 2/4</span></td></tr>
+ <tr><td><code>brain-capture@1</code> skill bundle (the capture daemon as a skill)</td><td><span class="pill" style="background:var(--ochre-100);color:var(--umber-700)">designed · Stage 2 of BRAIN protocol</span></td></tr>
+ <tr><td><code>brain-sync@1</code> skill bundle (the 2-way sync orchestrator)</td><td><span class="pill" style="background:var(--ochre-100);color:var(--umber-700)">designed · Stage 4 of BRAIN protocol</span></td></tr>
+ <tr><td><code>cuo/personas/synthesis-author@1</code> skill bundle (multi-brain auto-evolve)</td><td><span class="pill pill-planned">designed · Stage 5 (P3)</span></td></tr>
+ <tr><td>cyberskill-sg vertical pack (6 SG skills · Singapore HoldCo flip)</td><td><span class="pill pill-planned">planned · P3 entry (M+10)</span></td></tr>
+ <tr><td>cyberskill-eu vertical pack (6 EU skills · post-HoldCo)</td><td><span class="pill pill-planned">planned · P3 exit (M+12)</span></td></tr>
+ <tr><td>cyberskill-id / -th vertical packs (SEA-3 wave)</td><td><span class="pill pill-planned">planned · P4 (M+18)</span></td></tr>
+ <tr><td>cyberskill-us vertical pack (post-US sub)</td><td><span class="pill pill-planned">planned · P4+18</span></td></tr>
+ <tr><td>cyberskill-hr / -legal / -accounting cross-cutting packs</td><td><span class="pill pill-planned">planned · P3+ (depend on module shipping)</span></td></tr>
+ <tr><td>marketplace.cyberskill.world (R4 own marketplace)</td><td><span class="pill pill-planned">deferred · gated on ≥ 50 paying tenants</span></td></tr>
+ <tr><td>Enterprise private marketplace (R5 white-label)</td><td><span class="pill pill-planned">aspirational · P4+24</span></td></tr>
  </tbody>
  </table>
  </div>
@@ -1105,15 +1398,19 @@ $ cyberos-skill-cli build --lang ts./src/
  <header class="section-head"><span class="section-num">19</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — Module catalog row for SKILL.</li>
- <li> — Formal FR catalog for SKILL.</li>
- <li><strong>AUDIT.md</strong> (13 May 2026) — full architectural audit + migration plan — <code>cyberos/skill/docs/AUDIT.md</code>.</li>
+ <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (v1.0.0 design-locked 2026-05-14) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. §6 Lumi's BRAIN spec, §5 capture daemon spec, §8 multi-brain auto-evolve — defines the contract that <code>brain-capture@1</code>, <code>brain-sync@1</code>, and <code>cuo/personas/synthesis-author@1</code> implement.</li>
+ <li><strong>FR_AUTHORING_WORKFLOW.md</strong> — <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">canonical FR creation playbook</a>. fr-author + fr-audit are reference implementations of the universal-protocol skill pattern.</li>
+ <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/memory/docs/AGENTS.md</code>. §3.6 <code>allowed_brain_scopes</code> · §11 trust model · §14 cross-agent interop · §15 sync_class taxonomy.</li>
+ <li><strong>AUDIT.md</strong> (13 May 2026) — full architectural audit + migration plan — <code>cyberos/skill/docs/AUDIT.md</code>. Phases 0–7 closure rationale and Phase 8 (BRAIN integration) handoff.</li>
  <li><strong>SPEC.md</strong> — protocol summary — <code>cyberos/skill/docs/SPEC.md</code>.</li>
- <li><strong>PUBLISH.md</strong> — OCI / cosign / agentskills.io publication workflow.</li>
+ <li><strong>PUBLISH.md</strong> — OCI / cosign / agentskills.io publication workflow. The R0 → R5 distribution rungs land here as concrete operator procedures.</li>
  <li><strong>PHASE_5_ACTIVATION.md</strong> — Wasmtime runtime activation guidance.</li>
  <li><strong>PHASE_7_RETIREMENT.md</strong> — legacy retirement runbook.</li>
- <li><strong>Source:</strong> <code>cyberos/skill/crates/</code><code>cyberos/skill/toolchain/</code><code>cyberos/skill/skills/</code><code>cyberos/skill/tests/</code>.</li>
+ <li><strong>Source:</strong> <code>cyberos/skill/crates/</code> · <code>cyberos/skill/toolchain/</code> · <code>cyberos/skill/skills/</code> · <code>cyberos/skill/tests/</code>. Stage-2+ skills land at <code>cyberos/skill/skills/system/brain-capture/</code>, <code>cyberos/skill/skills/system/brain-sync/</code>, <code>cyberos/skill/skills/cuo/personas/synthesis-author/</code>.</li>
  <li><strong>External:</strong> <a href="https://agentskills.io/specification">agentskills.io/specification</a> · Anthropic engineering blog "Equipping agents for the real world with Agent Skills" (Oct 16 2025, updated Dec 18 2025) · <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview">docs.claude.com Agent Skills overview</a>.</li>
+ <li><strong>Cross-module:</strong> <a href="brain.html" class="text-blue-700 underline">BRAIN module page</a> — where the Stage 1–5 protocol roadmap lives. <a href="cuo.html" class="text-blue-700 underline">CUO module page</a> — where the 10 C-level skills are detailed.</li>
+ <li><strong>Strategy:</strong> <a href="../../strategy/CYBEROS_STRATEGY.md" class="text-blue-700 underline">CYBEROS_STRATEGY.md</a> §4.4 vertical packs as Level-4 productization · §3 docs site Tier 1+2 features that the marketplace deferred-list comes from.</li>
+ <li><strong>AUDIT + PLAN:</strong> <a href="../../docs/AUDIT_AND_PLAN_2026_05_14.md" class="text-blue-700 underline">24-week build plan</a> · <a href="../../docs/RESEARCH_REVIEW_2026_05_14.md" class="text-blue-700 underline">pre-launch research review</a> §3 (Skill is "Gold standard"); §7.3 (defer the marketplace, sell the packs).</li>
  <li><strong>CHANGELOG:</strong> <code>cyberos/skill/docs/CHANGELOG.md</code> (newest-first).</li>
  </ul>
  </div>

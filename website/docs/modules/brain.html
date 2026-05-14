@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>BRAIN — CyberOS</title>
- <meta name="description" content="BRAIN — local-first, audit-chained personal memory. Append-only ledger, MMR proofs, signed tree heads, deterministic export. The substrate every CyberOS module depends on.">
+ <title>BRAIN — Universal Personal &amp; Shared Memory Protocol · CyberOS</title>
+ <meta name="description" content="BRAIN — the universal personal-and-shared memory protocol. Offline-first Personal BRAIN on any folder, captures everything (files + discussions), portable by folder copy, two-way sync with Lumi's BRAIN (cloud) for shared org memory and multi-brain auto-evolve. CyberOS is the first consumer; the protocol stands alone.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -45,10 +45,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Local-first, audit-chained personal memory. The substrate every other module reads from and writes to.
+ The universal personal-and-shared memory protocol. Offline-first. Captures everything — files <em>and</em> discussions. Portable by folder copy. Two-way sync with Lumi's BRAIN.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- BRAIN is the universal memory module of CyberOS. It is what makes <em>state</em> portable, <em>history</em> replayable, and <em>compliance</em> defensible — every routing decision, every artefact, every audit fact lands as an append-only row whose cryptographic chain refuses to forget. Three layers were specified (filesystem at the edge, pgvector + Apache AGE in the middle, archival corpus at the cold tier); Layer 1 ships today, hardened by 255 green tests, 15/15 doctor invariants, Ed25519-signed tree heads, MMR inclusion proofs, and a deterministic export that produces byte-identical zips across machines. locks the shape; this page documents the in-tree implementation at <code>cyberos/memory/</code>.
+ BRAIN is no longer just CyberOS's memory module — it's an open protocol that turns any human's laptop into an append-only, audit-chained, offline-first long-term memory store. <strong>Personal BRAIN</strong> watches whichever folders you opt in (and captures Cowork / Claude Code / discussion surfaces); the store is portable — copy <code>~/.cyberos-memory/</code> between laptops, desktops, phones, and your memory moves with you. <strong>Lumi's BRAIN</strong> (also called CUO's BRAIN or CyberSkill's BRAIN) is the cloud-hosted org-tenant counterpart; two-way sync flows shareable memories up and team-shared memories down. Over time, N personal BRAINs feed one Lumi's BRAIN and <strong>multi-brain auto-evolve</strong> emerges — pattern recognition, dedup, synthesised wisdom that exceeds any single contributor. This is the moat. Layer 1 (the audit-chained filesystem ledger) ships today — 255 green tests, 15/15 doctor invariants, Ed25519-signed tree heads, MMR inclusion proofs, byte-identical exports. Stages 1–5 of the universal protocol are designed in <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> and land between now and P3.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -72,9 +72,11 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture</a></li>
  <li><a class="toc-link" href="#why">Why BRAIN exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
+ <li><a class="toc-link" href="#stages">Stages 1–5 roadmap</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
  <li><a class="toc-link" href="#key-flows">Key flows</a></li>
@@ -112,16 +114,78 @@
  BRAIN is an <strong>append-only, audit-chained ledger</strong> of structured memory files. It is local-first (the canonical state is on the laptop), portable (deterministic <code>zip</code> export), and cryptographically verifiable (Merkle Mountain Range + Ed25519 signed tree heads). Every byte written to a CyberOS memory store can be replayed, proved-included, or — if compliance demands it — purged with a tamper-evident audit trail. The protocol lives at <code>memory/docs/AGENTS.md</code>; the implementation lives at <code>memory/cyberos/core/</code>; the CLI is <code>cyberos</code>.
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Shipped</div><div class="note">P0 · 7 of 7 phases done</div></div>
- <div class="fact-card"><div class="label">LoC (core)</div><div class="value">~5,000</div><div class="note">Python 3.13 · pure stdlib + msgspec</div></div>
- <div class="fact-card"><div class="label">Tests</div><div class="value">255 green</div><div class="note">pytest · regression suite</div></div>
- <div class="fact-card"><div class="label">Invariants</div><div class="value">15/15</div><div class="note"><code>cyberos doctor</code> on live BRAIN</div></div>
- <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30</div><div class="note">put · view · doctor · prove · …</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · AI · MCP</div><div class="note">(when P0 infra lands)</div></div>
- <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules</div><div class="note">memory bridge required</div></div>
- <div class="fact-card"><div class="label">Schema</div><div class="value"><code>memory.schema.json</code></div><div class="note">closed enum · BCP-14 normative</div></div>
+ <div class="fact-card"><div class="label">Layer 1 status</div><div class="value">Shipped</div><div class="note">filesystem ledger · 7/7 phases · 12 audit proposals</div></div>
+ <div class="fact-card"><div class="label">Stages 1–5</div><div class="value">Designed</div><div class="note">universal protocol roadmap · see §Stages</div></div>
+ <div class="fact-card"><div class="label">Tests</div><div class="value">255 green</div><div class="note">pytest · regression suite · &lt; 18s wall</div></div>
+ <div class="fact-card"><div class="label">Invariants</div><div class="value">15/15</div><div class="note"><code>cyberos doctor</code> · all PASS on live store</div></div>
+ <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30 shipped + 8 designed</div><div class="note">+ `brain init/watch/status/sync/...`</div></div>
+ <div class="fact-card"><div class="label">Stores</div><div class="value">Personal + Lumi's</div><div class="note">offline-first laptop · cloud org-tenant</div></div>
+ <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules + any folder</div><div class="note">universal — not just CyberOS</div></div>
+ <div class="fact-card"><div class="label">Schema</div><div class="value"><code>memory.schema.json</code></div><div class="note">closed enum · BCP-14 normative · P13 extends</div></div>
  </div>
  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — Personal BRAIN, Lumi's BRAIN, the protocol</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The original BRAIN scope — "the audit-chained substrate of CyberOS" — understated what the protocol is. As of v1.0.0 of <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> (locked 2026-05-14), BRAIN is reframed as <strong>the universal personal-and-shared memory protocol</strong>. CyberOS is the first consumer but does not own the protocol. Three concepts to hold simultaneously:
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Layer 1 · Personal</div>
+ <div class="text-2xl mb-2">🧠</div>
+ <div class="font-bold text-slate-900 mb-1">Personal BRAIN</div>
+ <p class="text-sm text-slate-600 mb-3">One per human. Lives at <code>~/.cyberos-memory/</code>. Watches whichever folders you opt in (any folder — not just <code>cyberos/</code>). Captures files, decisions, discussions. <strong>Portable</strong>: copy the folder = move your memory.</p>
+ <p class="text-xs" style="color:var(--text-mute)">Offline-first · cryptographically chained · open protocol</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--ochre-700)">Layer 2 · Sync</div>
+ <div class="text-2xl mb-2">🔄</div>
+ <div class="font-bold text-slate-900 mb-1">Two-way sync orchestrator</div>
+ <p class="text-sm text-slate-600 mb-3">Background daemon. Personal BRAIN <strong>pushes</strong> shareable memories up to Lumi's BRAIN. Personal BRAIN <strong>pulls</strong> shared-team memories down. Conflict resolution by chain-position (per AGENTS.md §14.2 — every import is a fresh local <code>put</code>).</p>
+ <p class="text-xs" style="color:var(--text-mute)">5-min default window · configurable · privacy-class enforced</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Layer 3 · Shared</div>
+ <div class="text-2xl mb-2">☁️</div>
+ <div class="font-bold text-slate-900 mb-1">Lumi's BRAIN (cloud)</div>
+ <p class="text-sm text-slate-600 mb-3">Cloud-hosted org-tenant BRAIN. Same protocol, multi-tenant deployment. Three names for three audiences: <strong>Lumi's BRAIN</strong> (user-facing), <strong>CUO's BRAIN</strong> (technical), <strong>CyberSkill's BRAIN</strong> (deployment-specific). Gated on AUTH + TEN + AI Gateway.</p>
+ <p class="text-xs" style="color:var(--text-mute)">RLS-isolated Postgres · S3/R2 · per-tenant · ships P2</p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">What's automatic, what's manual</h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Activity</th><th>Captured automatically?</th><th>By which capture surface</th></tr></thead>
+ <tbody>
+ <tr><td>File edit inside a <em>watched</em> folder</td><td>✅ yes</td><td>Filesystem watcher daemon</td></tr>
+ <tr><td><code>git commit</code> inside a watched folder</td><td>✅ yes — emits <code>decisions</code></td><td>Filesystem watcher + git hook</td></tr>
+ <tr><td>Cowork session locks a decision</td><td>✅ yes</td><td>Cowork session hook (Stage 2 week 3)</td></tr>
+ <tr><td>Claude Code tool call mutating working folder</td><td>✅ yes</td><td>Claude Code hook (Stage 2 week 4)</td></tr>
+ <tr><td>Slack / Zalo message tagged <code>@lumi</code></td><td>✅ yes (when MCP feed enabled — deferred)</td><td>Slack/Zalo MCP bridge</td></tr>
+ <tr><td>Granola / Meet transcript at meeting end</td><td>✅ yes (when MCP feed enabled — deferred)</td><td>Granola/Meet MCP bridge</td></tr>
+ <tr><td>Apple Notes / Obsidian / Notion save</td><td>✅ yes (when MCP feed enabled — deferred)</td><td>Notes-app MCP bridge</td></tr>
+ <tr><td>File edit in an <em>unwatched</em> folder</td><td>❌ no — privacy floor</td><td>—</td></tr>
+ <tr><td>Random browsing (no <code>@brain</code>/<code>@lumi</code> tag)</td><td>❌ no — privacy floor</td><td>—</td></tr>
+ <tr><td>Manual <code>cyberos brain capture &lt;text&gt;</code></td><td>n/a — explicit one-off</td><td>CLI</td></tr>
+ </tbody>
+ </table>
+ </div>
+ <p class="text-sm mt-3" style="color:var(--text-mute)"><strong>Initial scope (Stage 2 sprint):</strong> Claude-only — Cowork sessions + Claude Code. Other MCP surfaces queue behind explicit team adoption.</p>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Strategic implication — this is the moat</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ A tenant six months into using Lumi's BRAIN has accumulated context that no competitor can replicate. The longer the org uses the platform, the smarter Lumi becomes. <strong>Switching cost = value of the org's accumulated BRAIN.</strong> This is the answer to the strategic GTM question — not the marketplace; the memory.
+ </p>
+ <p class="text-slate-700 leading-relaxed">
+ Personal BRAIN ships under the open BRAIN protocol — Apache 2.0, no login, useful to anyone with a laptop. Lumi's BRAIN is the commercial offering — sold per tenant, per seat, per storage tier, provisioned at tenant create-time via the TEN module. Personal BRAIN is the OSS distribution surface; Lumi's BRAIN is the SaaS product; multi-brain auto-evolve is the compounding moat.
+ </p>
 </section>
 
 <!-- ============================================================ -->
@@ -130,27 +194,35 @@
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why BRAIN exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Every agentic system eventually trips on the same wall: <em>state lives nowhere persistent and replayable</em>. Chat sessions evaporate, vendor memory APIs become single points of failure and audit, and the company's institutional knowledge ends up trapped in screenshots and Slack threads. BRAIN starts from a different axiom — <strong>the laptop filesystem is the canonical store</strong>, every mutation is an append, and every append is anchored in a Merkle chain so corruption is detectable and tampering is impossible.
+ Every agentic system eventually trips on the same wall: <em>state lives nowhere persistent and replayable</em>. Chat sessions evaporate, vendor memory APIs become single points of failure and audit, institutional knowledge ends up trapped in screenshots and Slack threads, and <strong>nobody can answer "what did we decide last quarter?" without spelunking through search logs</strong>. BRAIN starts from a different axiom: <strong>the laptop filesystem is the canonical store for one human's memory</strong>, every mutation is an append, every append is anchored in a Merkle chain so corruption is detectable and tampering is impossible — and then the same protocol extends to a <strong>cloud-hosted org tenant</strong> (Lumi's BRAIN) that aggregates the team's shareable memories and lets the org's accumulated wisdom compound over time.
  </p>
- <div class="grid md:grid-cols-3 gap-4 my-5">
- <div class="bbg-card p-5">
+ <div class="grid md:grid-cols-4 gap-4 my-5">
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
  <div class="text-2xl mb-2">🔒</div>
- <div class="font-bold text-slate-900 mb-1">Local-first sovereignty</div>
- <p class="text-sm text-slate-600">No vendor lock-in. The <code>.cyberos-memory/</code> directory is a complete, portable snapshot — your laptop, your data, your audit trail.</p>
+ <div class="font-bold text-slate-900 mb-1">Sovereign by design</div>
+ <p class="text-sm text-slate-600">No vendor lock-in. <code>~/.cyberos-memory/</code> is a complete, portable snapshot of one human's memory — copy the folder, take it anywhere, no DB rebuild.</p>
  </div>
- <div class="bbg-card p-5">
+ <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
  <div class="text-2xl mb-2">⛓</div>
  <div class="font-bold text-slate-900 mb-1">Cryptographic provenance</div>
- <p class="text-sm text-slate-600">Every audit row carries <code>prev_chain</code> + <code>chain</code>. An MMR overlay produces logarithmic inclusion proofs and Ed25519-signed tree heads.</p>
+ <p class="text-sm text-slate-600">Every audit row carries <code>prev_chain</code> + <code>chain</code>. MMR overlay produces logarithmic inclusion proofs · Ed25519 signs tree heads · the chain refuses to forget.</p>
  </div>
- <div class="bbg-card p-5">
- <div class="text-2xl mb-2">🇻🇳 / 🇪🇺</div>
- <div class="font-bold text-slate-900 mb-1">Compliance as a property</div>
- <p class="text-sm text-slate-600">PDPL Art. 14 DSAR, GDPR Art. 17 erasure, EU AI Act Art. 12 logging — all expressible as ledger operations rather than bolt-on policies.</p>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-2xl mb-2">🔄</div>
+ <div class="font-bold text-slate-900 mb-1">Universal capture</div>
+ <p class="text-sm text-slate-600">Watch any folder; the protocol captures file activity AND discussions (Cowork, Claude Code, MCP feeds). Explicit opt-in per folder. The "remember everything" guarantee only applies where you let it.</p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
+ <div class="text-2xl mb-2">🧠×N</div>
+ <div class="font-bold text-slate-900 mb-1">Multi-brain power</div>
+ <p class="text-sm text-slate-600">N personal BRAINs → 1 Lumi's BRAIN → synthesised cross-person wisdom. The longer the org uses the platform, the smarter Lumi becomes. <strong>This is the moat.</strong></p>
  </div>
  </div>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ The bet is twofold: <strong>(1)</strong> pay the cost of a real audit chain <em>once</em>, at the substrate layer, and every downstream consumer — Skill, CUO, EMAIL, PROJ, CRM, HR, INV, plus any future module or third-party tool — inherits provenance, replay, and erasure for free. Without BRAIN, every module would re-invent its own audit table. <strong>(2)</strong> Pay the cost of a real <em>shareable</em> memory layer once, and the org gains a compounding wisdom asset that grows monotonically: accumulated decisions, recurring patterns, dedup-ed answers to questions the team has asked before. A new hire joining six months in inherits the entire org's institutional memory from day one.
+ </p>
  <p class="text-slate-700 leading-relaxed">
- The bet is simple: pay the cost of a real audit chain <em>once</em>, at the substrate layer, and every downstream module — Skill, CUO, EMAIL, PROJ, CRM, HR, INV — inherits provenance, replay, and erasure for free. Without BRAIN, every module would re-invent its own audit table. With BRAIN, audit is a property of the platform.
+ Compliance becomes a property of the platform, not a policy bolt-on. Vietnam PDPL Art. 14 DSAR, Art. 16 erasure, Art. 7 no-data-sale; GDPR Art. 17 right-to-erasure, Art. 30 records-of-processing; EU AI Act Art. 12 logging and Art. 50 transparency — all expressible as ledger operations or sync-class enforcement. Audit is a property of the protocol; CyberOS modules inherit it; Lumi's BRAIN inherits it; the synthesis sub-skill inherits it. Every memory carries its own evidence.
  </p>
 </section>
 
@@ -164,19 +236,19 @@
  <table class="kt">
  <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
  <tbody>
- <tr><td><strong>5W · What</strong></td><td>What is BRAIN?</td><td>An append-only ledger of immutable memory files. Every mutation is a canonical operation (<code>put</code>, <code>move</code>, <code>delete</code>) that appends one frame to <code>audit/current.binlog</code> and one row to a derived SQLite index. The store is <code>.cyberos-memory/</code>; the protocol is BCP-14 normative.</td></tr>
- <tr><td><strong>5W · Who</strong></td><td>Who reads/writes?</td><td><strong>Writers:</strong> CUO router (decisions), Skill host (invocation records), every module's subgraph (entity mutations). <strong>Readers:</strong> any agent (Claude, Codex, Cursor), the user via CLI, downstream automation (digest, publish, semantic search). <strong>Owner:</strong> CEO (Stephen Cheng) until the CDO seat is filled.</td></tr>
- <tr><td><strong>5W · When</strong></td><td>When does write happen?</td><td>Synchronously on every protocol-level mutation. Group-commit windows of 5 ms aggregate concurrent writers behind one <code>fsync</code> barrier. Consolidation triggers when the ledger exceeds 5 MB or 5,000 rows.</td></tr>
- <tr><td><strong>5W · Where</strong></td><td>Where does it live?</td><td>Resolved local path <code>.cyberos-memory/</code> at the project root (symlinks resolved). Sandbox/ephemeral paths are rejected (<code>layout-no-sandbox-path</code> invariant). Real paths only — no fake mounts.</td></tr>
- <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>Because cloud memory APIs sacrifice sovereignty, vendor APIs sacrifice replay, and SQLite-only stores sacrifice cryptographic provenance. The append-only + MMR + Ed25519 STH combination is the smallest set of primitives that delivers all three.</td></tr>
- <tr><td><strong>1H · How</strong></td><td>How does it work end-to-end?</td><td>Six canonical operations → two-phase atomic write (tmpfile + rename + parent-dir fsync) → group-commit audit frame → MMR leaf insertion → derived SQLite index update → <code>HEAD</code> seqlock advance. Readers snapshot HEAD, mmap the target, re-stat. See <a href="#key-flows">Key flows</a>.</td></tr>
- <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>Per-write: ~120 µs hot path (group-committed), ~3 ms cold (single-writer). Per-read: ~6 µs (mmap'd, seqlock retry). Storage overhead: <strong>~28%</strong> chain + sidecar + index vs raw body. STH signing: ~0.4 ms Ed25519.</td></tr>
- <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) macOS uses <code>F_BARRIERFSYNC</code> per-batch and <code>F_FULLFSYNC</code> per-checkpoint (plain <code>fsync</code> is insufficient on Darwin). (b) Cross-platform: launchd / systemd / Task Scheduler. (c) Single canonical writer at a time (lease + <code>.lock</code>). (d) Sandbox paths are protocol-rejected.</td></tr>
- <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>POSIX filesystem · SHA-256 · Ed25519 (cryptography lib) · libyaml-backed msgspec for frontmatter · zstd for compaction · SQLite (WAL mode) · optional sentence-transformers for semantic search.</td></tr>
- <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only ledger (no in-place mutation), seqlock for lock-free reads, MMR Merkle proofs, RFC 8785 JCS canonical JSON, BCP-14 normative protocol, deterministic export (sorted paths · fixed timestamps · fixed mode · zstd level 6).</td></tr>
- <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>Any laptop (primary). Future: an HTTP REST mode (<code>cyberos serve</code> — shipped) and a mobile read-only static site (<code>cyberos publish</code> — shipped). No server-side database required; the laptop <em>is</em> the database.</td></tr>
- <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>1 IC owner (Stephen Cheng) today. By P1 exit: CTO seat picks up second on-call rotation. The module is small (~5k LoC) and the protocol is closed.</td></tr>
- <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>15 doctor invariants (chain continuity, op-enum closure, layout canonical, MMR cross-check, STH signature verification, …). Continuous benchmark suite (cold-CLI latency, throughput, determinism). CHANGELOG.md newest-first; CI nightly + weekly regression gates.</td></tr>
+ <tr><td><strong>5W · What</strong></td><td>What is BRAIN?</td><td>An open, normative <em>protocol</em> for append-only audit-chained personal-and-shared memory. Two concrete instances: <strong>Personal BRAIN</strong> (one per human, lives at <code>~/.cyberos-memory/</code>, captures activity across watched folders + discussion surfaces) and <strong>Lumi's BRAIN</strong> (cloud-hosted per-org tenant, 2-way sync target). Every mutation is one of three canonical ops — <code>put</code>, <code>move</code>, <code>delete</code>. Closed schema, BCP-14 normative.</td></tr>
+ <tr><td><strong>5W · Who</strong></td><td>Who reads/writes?</td><td><strong>Personal BRAIN writers:</strong> the human owner (CLI), the capture daemon (filesystem watcher · Cowork hook · Claude Code hook · MCP feeds), CUO routing decisions on the user's behalf, every module's subgraph that the user authored. <strong>Lumi's BRAIN writers:</strong> sync orchestrator pushing on each user's behalf; synthesis sub-skill nightly. <strong>Readers:</strong> any agent (Claude, Codex, Cursor) the user has authorized, Lumi/CUO during conversation, downstream automation. <strong>Owner:</strong> the human for Personal BRAIN; the org (CDO seat at P1+) for Lumi's BRAIN.</td></tr>
+ <tr><td><strong>5W · When</strong></td><td>When does write happen?</td><td><strong>Personal:</strong> on every captured activity — file event from any watched folder, end-of-Cowork-turn lock, Claude Code tool call, manual <code>cyberos brain capture</code>. Group-commit window 5 ms; consolidation at &gt;5 MB or &gt;5,000 rows. <strong>Sync to Lumi's:</strong> default 5-min window for shareable+ memories; mode configurable (realtime / frequent / normal / infrequent / manual). <strong>Synthesis on Lumi's:</strong> nightly, walks prior 24 h, emits cluster + dedup + wisdom artefacts.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it live?</td><td><strong>Personal BRAIN:</strong> resolved at <code>$HOME/.cyberos-memory/</code> by default (override via <code>$CYBEROS_BRAIN_HOME</code>). <strong>Portable</strong> — copy the folder between machines (laptop, desktop, USB, iCloud Drive, Dropbox) to move your memory. Symlinks resolved; sandbox paths rejected (<code>layout-no-sandbox-path</code> invariant). <strong>Lumi's BRAIN:</strong> a CyberOS multi-tenant deployment (Postgres + RLS + S3/R2) provisioned at tenant create-time via the TEN module. Per-tenant subject <code>org:&lt;slug&gt;</code>.</td></tr>
+ <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>Three failure modes BRAIN solves simultaneously: (1) <strong>vendor lock-in</strong> — your memory walks with you on any laptop; (2) <strong>state without replay</strong> — every byte is replayable from the ledger; (3) <strong>no team-level wisdom</strong> — Lumi's BRAIN aggregates across N personal BRAINs to produce synthesised org-level memory that no single contributor could write alone. The append-only + MMR + Ed25519 STH + sync-class taxonomy is the smallest primitive set that delivers all three plus cryptographic provenance.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work end-to-end?</td><td>Capture surface emits → canonical op (<code>put</code>/<code>move</code>/<code>delete</code>) → two-phase atomic write → group-commit audit frame → MMR leaf → derived SQLite index → HEAD seqlock advance. Sync orchestrator tails the local chain, filters by <code>sync_class</code>, pushes shareable+ to Lumi's BRAIN over JWT-authenticated HTTP. Pulls inbound via the same envelope; each pulled record becomes a fresh local <code>put</code> per AGENTS.md §14.2 — never a chain-mutation. See <a href="#key-flows">Key flows</a> for sequence diagrams of capture, sync, and synthesis.</td></tr>
+ <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td><strong>Personal BRAIN per-write:</strong> ~120 µs hot path (group-committed), ~3 ms cold. <strong>Read:</strong> ~6 µs (mmap seqlock). <strong>Storage overhead:</strong> ~28% vs raw body. <strong>STH signing:</strong> ~0.4 ms Ed25519. <strong>Sync push:</strong> ~50 ms p95 over LAN, ~150 ms p95 over WAN per memory; batched. <strong>Lumi's BRAIN infra:</strong> ~$2/seat/month per-tenant baseline (RDS micro tier + S3 + signed-URL CDN) at P2 launch scale. <strong>Synthesis sub-skill:</strong> nightly LLM-cost ≈ $0.05/user/day at BGE-M3 embeddings + Haiku synthesis.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) macOS durability: <code>F_BARRIERFSYNC</code> per-batch, <code>F_FULLFSYNC</code> at checkpoint. (b) Single canonical writer per Personal BRAIN at a time (lease + <code>.lock</code>). (c) Sandbox paths protocol-rejected. (d) Sync requires AUTH-issued JWT — no anonymous push to Lumi's. (e) PII detected at capture surfaces with sync_class ≠ private is <em>held back from sync</em> and prompts the user via the configured prompt UX (Cowork-inline / desktop-notif / <code>brain pending</code>). (f) Right-to-forget (PDPL Art. 16 / GDPR Art. 17) propagates across BRAINs but the <em>fact</em> of erasure is itself unerasable.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>POSIX filesystem · SHA-256 · Ed25519 (cryptography lib) · libyaml-backed msgspec for frontmatter · zstd for compaction · SQLite (WAL mode) · optional sentence-transformers (BGE-M3) for semantic search · <strong>Stage 2+:</strong> Rust binary using <code>notify</code> crate for filesystem watcher · launchd/systemd-user/Task Scheduler for daemon supervision · <strong>Stage 3+ (Lumi's BRAIN):</strong> Postgres 17 + RLS · pgvector HNSW · Apache AGE 1.5 · S3/R2/MinIO · AUTH-issued JWT (RS256) · LiteLLM via AI Gateway for synthesis.</td></tr>
+ <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only ledger (no in-place mutation). Seqlock for lock-free reads. MMR Merkle proofs. RFC 8785 JCS canonical JSON. BCP-14 normative protocol. Deterministic export (sorted paths · fixed timestamps · fixed mode · zstd level 6). <strong>Universal-protocol additions:</strong> explicit opt-in per watched folder (privacy floor). PII detection at capture write (Presidio). Sync conflict resolution via chain-position-wins + fresh-local-<code>put</code> on import (per §14.2). Synthesis as a CUO sub-skill, not a separate module — wisdom artefacts follow the same protocol.</td></tr>
+ <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>Personal BRAIN: any laptop / desktop (macOS primary; Linux + WSL + Windows supported). Optional HTTP REST mode (<code>cyberos serve</code> — shipped) and mobile read-only static site (<code>cyberos publish</code> — shipped). No server-side database for Personal BRAIN — the laptop <em>is</em> the database. Lumi's BRAIN: managed cloud deployment per tenant (AWS Singapore primary; Azure VN secondary; per-tenant region pinning via TEN). Synthesis runs nightly in tenant's compute window.</td></tr>
+ <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>Personal BRAIN: 1 IC owner (Stephen Cheng / future CDO seat) — module is small (~5k LoC + capture daemon adds ~2k). Open-source contributions welcome. Lumi's BRAIN: shared on-call with TEN module owner from P2 forward; eventually CDO seat at P1+ takes accountability; Cloud-DBA + Sync-SRE specialists join at P3+.</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>15 doctor invariants (chain continuity, op-enum closure, layout-canonical, MMR cross-check, STH signature, …) plus 4 universal-protocol invariants (<code>layout-watched-folders-exist</code>, <code>layout-watched-folders-permissions</code>, <code>capture-daemon-not-stuck</code>, <code>sync-orchestrator-running</code>). 5 new KPIs at Lumi's BRAIN scale: capture-rate per user, sync-success rate, sync-conflict rate, synthesis-useful rate (per-user thumbs up/down), Lumi's BRAIN seq counter. Continuous benchmark suite. CHANGELOG newest-first.</td></tr>
  </tbody>
  </table>
  </div>
@@ -295,6 +367,196 @@ graph TB
 </section>
 
 <!-- ============================================================ -->
+<!-- STAGES 1-5 — UNIVERSAL PROTOCOL ROADMAP -->
+<!-- ============================================================ -->
+<section id="stages" class="module-section">
+ <header class="section-head"><span class="section-num">3.5</span><h2>Stages 1–5 — universal protocol roadmap</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The roadmap from "BRAIN is CyberOS's audit ledger" (shipped today, Stage 0) to "Personal + Lumi's BRAIN with multi-brain auto-evolve" (Stage 5, P3) is gated in five stages. Stages 1 and 2 are buildable today against the existing memory module; Stages 3–5 ride the P0+P2 critical path (AUTH + AI Gateway + TEN). The full design is normative in <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> §3 and lands as Proposal P13 in <code>memory/docs/PROPOSAL.md</code>.
+ </p>
+
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+flowchart LR
+ subgraph S0 ["Stage 0 · shipped"]
+ S0L1["Layer 1<br>filesystem ledger<br>MMR · STH · 15 invariants"]
+ end
+ subgraph S1 ["Stage 1 · ready"]
+ S1A["Personal BRAIN<br>any folder · portable"]
+ S1B["brain init / watch / status"]
+ S1C["watched_folders schema"]
+ end
+ subgraph S2 ["Stage 2 · 2-4 weeks"]
+ S2A["Capture daemon<br>FS watcher · Rust + notify"]
+ S2B["Cowork session hook"]
+ S2C["Claude Code hook"]
+ end
+ subgraph S3 ["Stage 3 · P2"]
+ S3A["Lumi's BRAIN<br>cloud per-tenant"]
+ S3B["TEN · AUTH · AI Gateway"]
+ end
+ subgraph S4 ["Stage 4 · P2"]
+ S4A["2-way sync orchestrator<br>JWT push / pull"]
+ S4B["sync_class enforcement"]
+ end
+ subgraph S5 ["Stage 5 · P3"]
+ S5A["Multi-brain auto-evolve<br>synthesis sub-skill"]
+ S5B["nightly dedup · cluster · synthesize"]
+ end
+ S0 --> S1
+ S1 --> S2
+ S2 -. requires .-> S3
+ S3 --> S4
+ S4 --> S5
+ classDef shipped fill:#f5ede6,stroke:#45210e,stroke-width:2px
+ classDef ready fill:#fde7b3,stroke:#9c750a,stroke-width:2px
+ classDef designed fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ class S0L1 shipped
+ class S1A,S1B,S1C ready
+ class S2A,S2B,S2C,S3A,S3B,S4A,S4B,S5A,S5B designed
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Stage gating</h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Stage</th><th>Deliverable</th><th>Gating dependency</th><th>Buildable when</th><th>Effort</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Stage 0</strong></td><td>Layer 1 filesystem ledger · 6 ops · 15 doctor invariants · MMR · Ed25519 STH · deterministic export · sync-conflict awareness</td><td>—</td><td><span class="pill pill-shipped">Shipped</span> — 255 tests, 13–15 doctor invariants on live BRAIN</td><td>—</td></tr>
+ <tr><td><strong>Stage 1</strong></td><td>Personal BRAIN — universal protocol: any folder, multi-folder watch, explicit-opt-in privacy floor, portable by folder copy. CLI: <code>brain init/watch/unwatch/status/capture</code>. Manifest schema + 2 new doctor invariants.</td><td>None — extends shipped memory module</td><td><strong>Now</strong> — no external deps</td><td>~1 week (1 IC)</td></tr>
+ <tr><td><strong>Stage 2</strong></td><td>Capture daemon: filesystem watcher (Rust + <code>notify</code>) · Cowork session hook · Claude Code hook · rate limiting + content dedup + PII detection. <em>Initial scope: Claude-only.</em> Slack/Granola/Notes/etc. deferred to explicit team adoption.</td><td>Stage 1</td><td><strong>2–4 weeks from Stage 1</strong></td><td>~3 weeks (1–2 ICs)</td></tr>
+ <tr><td><strong>Stage 3</strong></td><td>Lumi's BRAIN — cloud-hosted org tenant deployment of the BRAIN protocol. RLS-isolated Postgres + S3/R2. Per-user JWT issued by AUTH. Read scopes per AGENTS.md §3.6 / SKILL.md frontmatter.</td><td>AUTH + AI Gateway + TEN modules + thin-TEN-billing slice</td><td><strong>P2 (M+9)</strong> per reviewer's reorder</td><td>~6–8 weeks (2 ICs)</td></tr>
+ <tr><td><strong>Stage 4</strong></td><td>2-way sync orchestrator: push state-machine (local-write → pending-push → pushed → confirmed) and pull state-machine (remote-write → pending-pull → imported). Conflict resolution = chain-position-wins + fresh-local-<code>put</code>. Configurable sync intervals.</td><td>Stage 3 + JWT wire protocol</td><td><strong>P2 (M+9) — parallel to Stage 3</strong></td><td>~4 weeks (1 IC)</td></tr>
+ <tr><td><strong>Stage 5</strong></td><td>Multi-brain auto-evolve: synthesis-author CUO sub-skill runs nightly over Lumi's BRAIN. Emits daily / weekly / decision-pending wisdom artefacts. Cross-person dedup, pattern recognition, accumulated org learning.</td><td>Stage 4 + synthesis sub-skill spec</td><td><strong>P3 (M+12)</strong></td><td>~6 weeks (1 IC + 1 part-time CDO seat)</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Personal BRAIN sub-architecture</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
+graph TB
+ subgraph CAP ["Capture surfaces (Stage 2)"]
+ FSW["Filesystem watcher<br>Rust + notify"]
+ COW["Cowork session hook"]
+ CCH["Claude Code hook"]
+ MCP_S["MCP feeds (deferred)<br>Slack · Granola · Notes"]
+ CLI_C["cyberos brain capture<br>manual one-off"]
+ end
+ subgraph PROTO ["BRAIN protocol (Stage 0 — shipped)"]
+ OPS["canonical ops<br>put · move · delete"]
+ WRITER["writer<br>group-commit ledger"]
+ MMR_P["MMR + Ed25519 STH"]
+ INV["15 doctor invariants"]
+ end
+ subgraph PB_STORE ["~/.cyberos-memory/ (Stage 1 — ready)"]
+ MANI["manifest.json<br>watched_folders[]"]
+ MEMS["memories/<kind>/<hex>/<file>.md"]
+ AUD["audit/current.binlog"]
+ HEAD_S["HEAD seqlock"]
+ end
+ subgraph SYNC_O ["Sync orchestrator (Stage 4 — P2)"]
+ OUT["push queue<br>shareable+ memories"]
+ IN["pull queue<br>shared team memories"]
+ end
+ FSW --> OPS
+ COW --> OPS
+ CCH --> OPS
+ MCP_S -. when enabled .-> OPS
+ CLI_C --> OPS
+ OPS --> WRITER
+ WRITER --> MMR_P
+ WRITER --> AUD
+ WRITER --> MEMS
+ WRITER --> HEAD_S
+ INV -. validates .-> AUD
+ AUD --> OUT
+ IN -.-> OPS
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef ready fill:#fde7b3,stroke:#9c750a
+ classDef designed fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ classDef deferred fill:#faf8f6,stroke:#c5bdb0,stroke-dasharray:2 2
+ class OPS,WRITER,MMR_P,INV,MANI,MEMS,AUD,HEAD_S shipped
+ class FSW,COW,CCH,CLI_C ready
+ class OUT,IN designed
+ class MCP_S deferred
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mb-3">Lumi's BRAIN sub-architecture (Stages 3–5)</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
+graph TB
+ subgraph PEOPLE ["Personal BRAINs (N humans per org)"]
+ PB1["Stephen's<br>~/.cyberos-memory/"]
+ PB2["Teammate A's<br>~/.cyberos-memory/"]
+ PB3["Teammate B's<br>~/.cyberos-memory/"]
+ end
+ subgraph SYNC ["Sync transport (Stage 4)"]
+ PUSH["push pipeline<br>shareable+ → Lumi"]
+ PULL["pull pipeline<br>shared → personal"]
+ JWT["AUTH JWT<br>RS256 · per-user"]
+ end
+ subgraph LUMI ["Lumi's BRAIN — cloud tenant (Stage 3)"]
+ LMANI["manifest.json<br>tenant-scoped"]
+ LAUD["audit/binlog<br>per-tenant"]
+ LMEMS["memories/<kind>/<hex>/.md<br>RLS by org_id"]
+ PGV["pgvector HNSW<br>BGE-M3 embeddings"]
+ AGE["Apache AGE<br>org relationship graph"]
+ end
+ subgraph SYN ["Synthesis sub-skill (Stage 5)"]
+ NIGHTLY["nightly walk<br>last 24h memories"]
+ CLUSTER["topic cluster<br>BGE-M3 + DBSCAN"]
+ DEDUP["cross-person dedup<br>semantic + chain"]
+ WISDOM["synthesis@1 artefacts<br>daily · weekly · decisions-pending"]
+ end
+ subgraph LUMI_R ["Lumi (the Genie) reads here"]
+ CUO["CUO router<br>tenant-scoped reads"]
+ end
+ PB1 --> PUSH
+ PB2 --> PUSH
+ PB3 --> PUSH
+ PUSH --> JWT
+ JWT --> LAUD
+ LAUD --> LMEMS
+ LMEMS --> PGV
+ LMEMS --> AGE
+ LMEMS --> NIGHTLY
+ NIGHTLY --> CLUSTER
+ CLUSTER --> DEDUP
+ DEDUP --> WISDOM
+ WISDOM --> LMEMS
+ LMEMS --> PULL
+ PULL --> PB1
+ PULL --> PB2
+ PULL --> PB3
+ LMEMS --> CUO
+ PGV --> CUO
+ AGE --> CUO
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef designed fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ class PB1,PB2,PB3 shipped
+ class PUSH,PULL,JWT,LMANI,LAUD,LMEMS,PGV,AGE,NIGHTLY,CLUSTER,DEDUP,WISDOM,CUO designed
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Sync-class privacy model</h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Class</th><th>Visibility</th><th>Stays where</th><th>Default for</th></tr></thead>
+ <tbody>
+ <tr><td><code>private</code></td><td>Personal BRAIN only · never pushed</td><td>Owner's BRAIN, all machines (via folder copy)</td><td>Random browser scraps, half-finished notes, tool-output snippets, anything PII-flagged</td></tr>
+ <tr><td><code>personal</code></td><td>Owner's Personal BRAIN · syncs across owner's own machines (laptop ↔ desktop) but NOT to Lumi</td><td>Owner's BRAINs only (Stage 4+ multi-device sync)</td><td>Personal notes, drafts, exploratory work</td></tr>
+ <tr><td><code>shareable</code></td><td>Eligible for push to Lumi's BRAIN · subject to ACL filter at push time</td><td>Owner's BRAIN + Lumi's tenant (sync push gated by PII + ACL)</td><td>Decisions, completed deliverables, meeting outcomes</td></tr>
+ <tr><td><code>team-public</code></td><td>Pushed to Lumi's BRAIN AND visible to all org members via shared scope</td><td>Owner + Lumi + all org members' Personal BRAINs (via pull)</td><td>Locked policy decisions, RFC approvals, OKR commits</td></tr>
+ <tr><td><code>org-only</code></td><td>Pushed to Lumi's BRAIN but restricted by RBAC role</td><td>Owner + Lumi + RBAC-eligible members' Personal BRAINs</td><td>Compensation decisions, hiring decisions, financial state</td></tr>
+ </tbody>
+ </table>
+ </div>
+ <p class="text-sm mt-3" style="color:var(--text-mute)"><strong>Default:</strong> <code>private</code>. Per-folder override at <code>cyberos brain watch &lt;path&gt; --default-sync-class &lt;class&gt;</code>. Per-memory override via <code>cyberos brain reclass &lt;memory-id&gt; &lt;class&gt;</code>.</p>
+</section>
+
+<!-- ============================================================ -->
 <!-- DATA MODEL -->
 <!-- ============================================================ -->
 <section id="data-model" class="module-section">
@@ -394,6 +656,88 @@ erDiagram
  string path PK
  string reason
  int64 tombstoned_at_seq
+ }
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Universal-protocol entities (P13 — Stages 1–5)</h3>
+ <p class="text-sm text-slate-600 mb-3">
+ Five new entities encode the universal-protocol scope. Three are managed by the Personal BRAIN owner (WatchedFolder · CaptureEvent · SyncState); two are managed on Lumi's BRAIN (SharedMemoryAcl · SynthesisArtefact).
+ </p>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+erDiagram
+ MANIFEST ||--o{ WATCHED_FOLDER: "lists"
+ WATCHED_FOLDER ||--o{ CAPTURE_EVENT: "produces"
+ CAPTURE_EVENT ||--|| MEMORY_FILE: "emits"
+ MEMORY_FILE ||--o| SYNC_STATE: "tracked by"
+ SYNC_STATE }o--|| LUMI_ROW: "pushed to"
+ LUMI_ROW ||--o{ SHARED_MEMORY_ACL: "scoped by"
+ SHARED_MEMORY_ACL }o--o{ ORG_MEMBER: "grants to"
+ LUMI_ROW ||--o{ SYNTHESIS_INPUT: "feeds"
+ SYNTHESIS_INPUT }o--|| SYNTHESIS_ARTEFACT: "rolls up to"
+
+ WATCHED_FOLDER {
+ string path PK
+ string default_sync_class
+ string default_classification
+ int64 added_at_seq
+ string added_by_actor
+ bool active
+ }
+ CAPTURE_EVENT {
+ string event_id PK
+ string capture_surface "filesystem | cowork | claude-code | mcp | cli"
+ string source_path_or_url
+ int64 captured_at_ns
+ string capture_daemon_version
+ string trigger_kind "create | modify | commit | session-end | tool-call"
+ bool auto_capture "vs manual"
+ obj pii_flags
+ }
+ SYNC_STATE {
+ string memory_path PK
+ string state "local-write | pending-push | pushed | confirmed | pending-pull | imported"
+ int64 last_attempt_ns
+ int64 last_success_ns
+ string lumi_chain_hash "set on confirm"
+ int retry_count
+ }
+ LUMI_ROW {
+ int64 lumi_seq PK
+ string tenant_id FK
+ string user_id FK
+ string source_brain_fingerprint
+ int64 source_local_seq
+ int64 imported_at_ns
+ string sync_class
+ }
+ SHARED_MEMORY_ACL {
+ string memory_path PK
+ string subject "user:* | role:* | org:*"
+ string rights "read | write | grant"
+ bool inherited "from folder default"
+ int64 granted_at_seq
+ }
+ ORG_MEMBER {
+ string user_id PK
+ string email
+ string role "from AUTH RBAC catalogue"
+ obj rbac_grants
+ }
+ SYNTHESIS_INPUT {
+ string memory_path PK
+ int64 cluster_id FK
+ float relevance_score
+ }
+ SYNTHESIS_ARTEFACT {
+ string artefact_path PK "memories-synthesis-daily-YYYY-MM-DD.md"
+ string kind "daily | weekly | decisions-pending"
+ int64 walked_from_lumi_seq
+ int64 walked_to_lumi_seq
+ obj source_memory_paths "array"
+ string synthesis_skill_version
+ obj cluster_meta
  }
  </div>
  </div>
@@ -550,6 +894,25 @@ enum DeleteMode { TOMBSTONE PURGE }</code></pre>
  <tr><td><code>cyberos walk</code></td><td>Replay binlog</td><td><code>cyberos walk --from-seq 0</code></td></tr>
  <tr><td><code>cyberos session start/end</code></td><td>Bracket import or batch</td><td><code>cyberos session start</code></td></tr>
  <tr><td colspan="3"><em>+ 10 more: <code>encrypt</code>, <code>decrypt</code>, <code>rotate-key</code>, <code>conflicts</code>, <code>tail</code>, <code>show-config</code>, <code>show-manifest</code>, <code>checkpoints</code>, <code>repair-index</code>, <code>profile</code>.</em></td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">CLI surface — universal protocol (Stage 1+ designed)</h3>
+ <p class="text-sm text-slate-600 mb-3">Eight new subcommands extend the existing 30. Implements §15.1 / §15.4 of <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> — locked 2026-05-14. All chain-touching operations remain single-writer + lease-protected.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Subcommand</th><th>Purpose</th><th>Stage</th><th>Example</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos brain init</code></td><td>Create <code>$HOME/.cyberos-memory/</code>; explicit opt-in privacy floor (watches nothing yet)</td><td>1</td><td><code>cyberos brain init</code></td></tr>
+ <tr><td><code>cyberos brain watch &lt;path&gt;</code></td><td>Add folder to capture daemon's watch list. Per-folder <code>--default-sync-class</code> + <code>--default-classification</code></td><td>1</td><td><code>cyberos brain watch ~/Projects/cyberos --default-sync-class shareable</code></td></tr>
+ <tr><td><code>cyberos brain unwatch &lt;path&gt;</code></td><td>Remove folder from watch list. Captured memories remain; new activity in that folder stops landing on the chain</td><td>1</td><td><code>cyberos brain unwatch ~/Documents/Personal</code></td></tr>
+ <tr><td><code>cyberos brain status</code></td><td>Full Personal-BRAIN digest: watched-folder list, last sync time, pending-PII count, audit-row count, doctor invariant summary</td><td>1</td><td><code>cyberos brain status [--json]</code></td></tr>
+ <tr><td><code>cyberos brain capture &lt;text-or-path&gt;</code></td><td>One-off manual capture (CLI fallback when no daemon-observed surface). Emits a <code>facts</code> or <code>discussions</code> memory depending on input</td><td>1</td><td><code>cyberos brain capture "Locked: AI Gateway ships before AUTH"</code></td></tr>
+ <tr><td><code>cyberos brain sync</code></td><td>Trigger sync window now (force push pending + pull latest). Subject to AUTH JWT + Lumi's BRAIN reachability</td><td>4</td><td><code>cyberos brain sync [--push-only|--pull-only]</code></td></tr>
+ <tr><td><code>cyberos brain sync-mode &lt;mode&gt;</code></td><td>Set sync cadence: <code>realtime</code> (10 s) · <code>frequent</code> (1 min) · <code>normal</code> (5 min · default) · <code>infrequent</code> (1 hr) · <code>manual</code></td><td>4</td><td><code>cyberos brain sync-mode normal</code></td></tr>
+ <tr><td><code>cyberos brain pending</code></td><td>List items the daemon is holding back: PII-detected sync candidates, new-folder defaults awaiting confirmation, conflict-resolution prompts</td><td>2 / 4</td><td><code>cyberos brain pending [--resolve]</code></td></tr>
+ <tr><td><code>cyberos brain reclass &lt;memory-id&gt; &lt;class&gt;</code></td><td>Change a memory's <code>sync_class</code> (private / personal / shareable / team-public / org-only). Propagates to next sync window</td><td>1 / 4</td><td><code>cyberos brain reclass memories/decisions/holdco-flip.md team-public</code></td></tr>
  </tbody>
  </table>
  </div>
@@ -864,6 +1227,13 @@ graph LR
  <tr><td>ISO/IEC 27001:2022</td><td>A.8.15 — Logging</td><td>Audit chain · 100% integrity rate.</td></tr>
  <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 8.2 — Data management</td><td>Sync-class taxonomy + acl + classification + Ed25519-anchored chain.</td></tr>
  <tr><td>SOC 2 Type II</td><td>CC7.2 · CC7.3 — Monitoring</td><td>Doctor invariants run nightly; alert on first failure.</td></tr>
+ <tr><td colspan="3" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Universal-protocol compliance scope (Stages 1–5)</td></tr>
+ <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 7 — No personal data sale</td><td>Lumi's BRAIN is multi-tenant but tenant-isolated; no inter-tenant memory transfer mechanism exists. Synthesis sub-skill operates within tenant boundary only. ToS for Lumi's BRAIN explicitly prohibits selling tenant data.</td></tr>
+ <tr><td>Vietnam PDPL</td><td>Art. 20 — Cross-border transfer (60-day post-audit)</td><td>Lumi's BRAIN cloud deployment defaults to AWS Singapore. EU-resident tenants opt into <code>eu-fra-1</code> shard at P3; impact assessment submitted to MoPS within 60 days of first transfer. Per-tenant residency pinning via TEN module.</td></tr>
+ <tr><td>Vietnam PDPL</td><td>Art. 38 — SME grace period</td><td>5-year window from 2026-01-01 — small enterprises and start-ups may defer Art. 21 (impact assessment), DPO appointment, and certain other provisions. CyberSkill JSC is in scope. Lumi's BRAIN tenants whose orgs qualify can opt out via TEN tenant config flag <code>pdpl_sme_grace = true</code> until 2031-01-01.</td></tr>
+ <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging for the synthesis sub-skill</td><td>Stage 5 synthesis is a CUO sub-skill making content-influencing decisions; logged per Art. 12 with persona-version stamp, source-memory citations, and reproducibility-via-replay. Synthesis output is itself a memory, so Art. 12's logging requirement is satisfied by the BRAIN protocol itself, not bolted on.</td></tr>
+ <tr><td>EU AI Act</td><td>Art. 50 — Transparency for AI-generated content</td><td>Every synthesis artefact carries <code>extra.synthesised_by = "cuo/personas/synthesis-author@&lt;version&gt;"</code> in its audit frame. End-user surfaces (Lumi UI) label synthesised wisdom with an "AI synthesis" badge.</td></tr>
+ <tr><td>ISO/IEC 27018:2019</td><td>§ A.5 — Customer agreement</td><td>Lumi's BRAIN customer agreement explicitly enumerates: which capture surfaces, default sync-class semantics, the synthesis sub-skill scope. Customers can opt out of synthesis per tenant via TEN flag.</td></tr>
  </tbody>
  </table>
  </div>
@@ -887,6 +1257,12 @@ graph LR
  <tr><td><code>R-BRAIN-006</code></td><td>Schema drift breaks downstream consumers (e.g. CUO bridge)</td><td>Low</td><td>Medium</td><td>CTO</td><td><code>memory.schema.json</code> regenerated from types at every release · schema-drift regression test gate.</td></tr>
  <tr><td><code>R-BRAIN-007</code></td><td>Operator accidentally purges legally-required data</td><td>Low</td><td>High</td><td>CLO</td><td>Purge mode requires explicit chat-turn approval AND non-empty reason. Two-person sign-off in production tenants (P3+).</td></tr>
  <tr><td><code>R-BRAIN-008</code></td><td>Encryption envelope key loss (KMS outage / rotation bug)</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Key escrow + N-of-M reconstruction (P2+). Sidecar always plaintext so metadata survives body loss.</td></tr>
+ <tr><td><code>R-BRAIN-009</code></td><td><strong>Lumi's BRAIN tenant compromise</strong> — credential theft or tenant-isolation bypass exposes shared org memories across tenants</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Stage 3+: Postgres RLS by <code>tenant_id</code> on every table · per-tenant S3 prefix · per-user JWT scoped to tenant · weekly chaos-test of cross-tenant leak surface (read another tenant's row returns 403) · AUTH module's RBAC predicate gates every cross-module call.</td></tr>
+ <tr><td><code>R-BRAIN-010</code></td><td><strong>Sync conflict storm</strong> — N personal BRAINs producing high-volume concurrent shareable writes overwhelm Lumi's chain extension or produce cascading import-failures</td><td>Medium</td><td>High</td><td>CTO</td><td>Stage 4: per-tenant push-rate limit (default 100 ops/min/user) · server-side idempotency via content-hash dedup · client-side retry with exponential backoff + jitter · sync orchestrator surfaces stuck-state via <code>sync-orchestrator-not-stuck</code> doctor invariant · synthesis pass dampens duplicate decisions.</td></tr>
+ <tr><td><code>R-BRAIN-011</code></td><td><strong>Synthesis sub-skill hallucination</strong> — Stage 5 wisdom artefact emits a false "synthesised decision" that does not actually appear in any source memory</td><td>Medium</td><td>High</td><td>CDO</td><td>Every synthesis claim hash-anchored to the underlying memory rows (citation-mandatory) · synthesis output is itself a memory and follows the protocol (replayable) · weekly user-flag "useful / not useful / wrong" → if "wrong" rate &gt; 5% in any tenant, synthesis pauses for review · LLM caller stamped with persona-version per AGENTS.md §11.</td></tr>
+ <tr><td><code>R-BRAIN-012</code></td><td><strong>Capture daemon crash recovery</strong> — daemon dies mid-capture and resumes producing duplicate or out-of-order memories</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Content-addressed puts are idempotent per AGENTS.md §3.4 (duplicate emits become no-ops at writer). Daemon checkpoint state in <code>~/.cyberos-memory/capture-daemon.state.json</code>. <code>capture-daemon-not-stuck</code> doctor invariant warns if no emit in &gt; 24 h on watched folder. launchd / systemd-user auto-restart on crash.</td></tr>
+ <tr><td><code>R-BRAIN-013</code></td><td><strong>iCloud / Dropbox sibling explosion</strong> — when Personal BRAIN store is itself synced by a cloud-FS provider, "filename (Mac).md" / "filename (iPhone).md" siblings multiply and the audit chain partitions</td><td>Medium</td><td>High</td><td>CDO</td><td>Existing <code>layout-no-sync-conflict-siblings</code> invariant detects siblings · operator-driven resolver at <code>cyberos conflicts resolve</code> · Stage 4 documentation explicitly recommends Lumi's BRAIN sync over iCloud/Dropbox folder-sync as the cross-machine path (less brittle).</td></tr>
+ <tr><td><code>R-BRAIN-014</code></td><td><strong>PII leak via auto-capture</strong> — capture daemon emits a memory containing PII before the user can mark it private; PII reaches Lumi's BRAIN unintended</td><td>Medium</td><td>High</td><td>DPO</td><td>Stage 2 Presidio at capture write time — every PII-flagged memory is <em>held back from sync</em> until user confirms via prompt UX (Cowork-inline / desktop-notif / <code>brain pending</code>). Default <code>sync_class</code> remains <code>private</code> unless folder override. Right-to-forget propagates: a purge on Personal BRAIN issues <code>purge_propagate</code> to Lumi.</td></tr>
  </tbody>
  </table>
  </div>
@@ -910,6 +1286,15 @@ graph LR
  <tr><td><strong>Export determinism rate</strong></td><td><code>identical_exports / runs</code></td><td>bench/determinism</td><td>100%</td><td>100% (3 platforms)</td></tr>
  <tr><td><strong>Storage overhead</strong></td><td><code>(chain + sidecar + index) / raw_body</code></td><td>bench/storage</td><td>≤ 35%</td><td>~ 28%</td></tr>
  <tr><td><strong>Test pass rate</strong></td><td><code>green / total</code></td><td>pytest CI</td><td>100%</td><td>255/255 (100%)</td></tr>
+ <tr><td colspan="5" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Universal-protocol KPIs (Stages 1–5 — measured once each stage ships)</td></tr>
+ <tr><td><strong>Capture rate per user</strong></td><td><code>captured_memories / day / user</code></td><td>capture daemon ledger</td><td>≥ 20 / day / active user (signal floor) · ≤ 500 / day (noise ceiling)</td><td>—  (Stage 2)</td></tr>
+ <tr><td><strong>Sync success rate</strong></td><td><code>successful_pushes / total_push_attempts</code></td><td>sync orchestrator</td><td>≥ 99.5% p95 over 7-day window</td><td>—  (Stage 4)</td></tr>
+ <tr><td><strong>Sync conflict rate</strong></td><td><code>conflicts / total_imports</code></td><td>sync orchestrator</td><td>≤ 1% (per AGENTS.md §14.2 fresh-put semantics; most "conflicts" are content-different)</td><td>—  (Stage 4)</td></tr>
+ <tr><td><strong>Synthesis useful-rate</strong></td><td><code>thumbs_up / (thumbs_up + thumbs_down + thumbs_wrong)</code></td><td>synthesis sub-skill feedback rows</td><td>≥ 75% per user per week (kill-switch if &lt; 50%)</td><td>—  (Stage 5)</td></tr>
+ <tr><td><strong>Lumi's BRAIN seq counter</strong></td><td><code>monotone seq on Lumi tenant chain</code></td><td><code>cyberos --store lumi audit head</code></td><td>≥ 10× the largest single user's Personal BRAIN seq (org-aggregate signal)</td><td>—  (Stage 3)</td></tr>
+ <tr><td><strong>PII held-back rate</strong></td><td><code>held_back_for_pii / shareable_candidates</code></td><td>capture daemon + Presidio</td><td>3–8% expected band · alert if &gt; 15% (too noisy) or &lt; 1% (under-detecting)</td><td>—  (Stage 2)</td></tr>
+ <tr><td><strong>Capture daemon health</strong></td><td><code>1 - (down_minutes / total_minutes)</code> over 7 days</td><td><code>capture-daemon-not-stuck</code> doctor invariant</td><td>≥ 99.9%</td><td>—  (Stage 2)</td></tr>
+ <tr><td><strong>Cross-machine portability</strong></td><td><code>identical_chain_head_after_rsync / total_rsyncs</code></td><td>portability bench</td><td>100% (folder copy is the source of truth)</td><td>—  (Stage 1)</td></tr>
  </tbody>
  </table>
  </div>
@@ -933,9 +1318,19 @@ graph LR
  <tr><td>DSAR fulfilment</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td></tr>
  <tr><td>Purge approval</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-r">R</td></tr>
  <tr><td>Key rotation (STH Ed25519)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td colspan="7" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Stages 1–5 — universal protocol RACI additions (Cloud-DBA and Sync-SRE roles join at P3+)</td></tr>
+ <tr><td>Stage 1: <code>brain init/watch/...</code> CLI design</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 2: Capture daemon implementation (Rust)</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 3: Lumi's BRAIN cloud deployment + per-tenant RLS</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 4: 2-way sync orchestrator</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Stage 5: Synthesis sub-skill + auto-evolve cadence</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Personal-BRAIN portability across user's machines</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>PII detection at capture write (Presidio configuration)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td></tr>
+ <tr><td>Cross-tenant isolation testing (chaos)</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Synthesis-skill output review (weekly thumb-poll)</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
  </tbody>
  </table>
- <p class="text-xs text-slate-500 mt-3"><strong>R</strong> = Responsible · <strong>A</strong> = Accountable · <strong>C</strong> = Consulted · <strong>I</strong> = Informed.</p>
+ <p class="text-xs text-slate-500 mt-3"><strong>R</strong> = Responsible · <strong>A</strong> = Accountable · <strong>C</strong> = Consulted · <strong>I</strong> = Informed. Stage-3+ adds Cloud-DBA (under CTO) and Sync-SRE (under CTO) as specialists.</p>
  </div>
 </section>
 
@@ -1073,6 +1468,12 @@ $ cyberos verify-proof proof.json
  <tr><td>S3 / R2 archival Layer 3</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>iOS companion app</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
  <tr><td>Public STH anchoring (transparency log)</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+ <tr><td colspan="2" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Universal-protocol roadmap (Proposal P13)</td></tr>
+ <tr><td><strong>Stage 1</strong> — Personal BRAIN universal protocol (any folder, portable, explicit-opt-in)<br><span class="text-xs text-slate-500">CLI: <code>brain init/watch/unwatch/status/capture</code> · manifest schema + 2 new invariants</span></td><td><span class="pill" style="background:var(--ochre-100);color:var(--umber-700)">design-locked · ready to code</span></td></tr>
+ <tr><td><strong>Stage 2</strong> — Capture daemon (FS watcher + Cowork hook + Claude Code hook)<br><span class="text-xs text-slate-500">Initial scope: Claude-only. Slack/Granola/Notes deferred.</span></td><td><span class="pill" style="background:var(--ochre-100);color:var(--umber-700)">design-locked · 2–4 weeks from Stage 1</span></td></tr>
+ <tr><td><strong>Stage 3</strong> — Lumi's BRAIN cloud deployment<br><span class="text-xs text-slate-500">Gated on AUTH + AI Gateway + TEN-billing thin slice</span></td><td><span class="pill pill-planned">designed · P2 (M+9)</span></td></tr>
+ <tr><td><strong>Stage 4</strong> — 2-way sync orchestrator<br><span class="text-xs text-slate-500">Push / pull state machines · conflict resolution via chain-position + §14.2 fresh-put</span></td><td><span class="pill pill-planned">designed · P2 (M+9) parallel to Stage 3</span></td></tr>
+ <tr><td><strong>Stage 5</strong> — Multi-brain auto-evolve · synthesis sub-skill<br><span class="text-xs text-slate-500">Nightly walk · cluster · dedup · synthesis@1 wisdom artefacts</span></td><td><span class="pill pill-planned">designed · P3 (M+12)</span></td></tr>
  </tbody>
  </table>
  </div>
@@ -1085,17 +1486,18 @@ $ cyberos verify-proof proof.json
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li><strong>–§5.9</strong> — BRAIN architecture, three layers, six operations, conflict resolution, NL CRUD.</li>
- <li> — BRAIN deep-dive: GraphQL contract, MCP tool surface, FRs.</li>
- <li> — KPI definitions and budgets.</li>
- <li> — Formal FR catalog for BRAIN.</li>
- <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/memory/docs/AGENTS.md</code>.</li>
+ <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (v1.0.0 design-locked 2026-05-14) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. The single source of truth for everything on this page beyond Stage 0.</li>
+ <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/memory/docs/AGENTS.md</code>. §3 canonical ops · §11 trust model · §14 cross-agent interop and the basis for the 2-way sync semantics · §15 sync_class taxonomy.</li>
+ <li><strong>PROPOSAL.md</strong> — <code>cyberos/memory/docs/PROPOSAL.md</code> — where <strong>Proposal P13</strong> (universal protocol Stages 1–5) lands as formal protocol extension. P1–P12 + P2-Stage-3 already shipped.</li>
  <li><strong>SPEC.md</strong> — formal contract summary — <code>cyberos/memory/docs/SPEC.md</code>.</li>
  <li><strong>EVOLUTION.md</strong> — history and rejected designs (informative).</li>
  <li><strong>INTEROP.md</strong> — Cursor / Codex-compatible read-only subset (≤ 6,000 chars).</li>
- <li><strong>memory.schema.json</strong> — JSON Schema for frontmatter, audit rows, manifest.</li>
- <li><strong>memory.invariants.yaml</strong> — invariant list consumed by the walker.</li>
- <li><strong>Source:</strong> <code>cyberos/memory/cyberos/core/</code><code>cyberos/memory/tests/</code><code>cyberos/memory/bench/</code>.</li>
+ <li><strong>memory.schema.json</strong> — JSON Schema for frontmatter, audit rows, manifest. P13 extends with <code>watched_folders</code>, <code>capture_event</code>, <code>sync_state</code>, <code>shared_memory_acl</code>, <code>synthesis_artefact</code> entities.</li>
+ <li><strong>memory.invariants.yaml</strong> — invariant list consumed by the walker. P13 adds 4 invariants: <code>layout-watched-folders-exist</code>, <code>layout-watched-folders-permissions</code>, <code>capture-daemon-not-stuck</code>, <code>sync-orchestrator-running</code>.</li>
+ <li><strong>FR_AUTHORING_WORKFLOW.md</strong> — <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">how new FRs are authored via the fr-author Agent Skill</a>. Every BRAIN FR (Stages 1–5) lands via this workflow.</li>
+ <li><strong>AUDIT_AND_PLAN_2026_05_14.md</strong> — <a href="../../docs/AUDIT_AND_PLAN_2026_05_14.md" class="text-blue-700 underline">24-week build plan</a> placing Stages 3–5 on the P0+P2 critical path.</li>
+ <li><strong>RESEARCH_REVIEW_2026_05_14.md</strong> — <a href="../../docs/RESEARCH_REVIEW_2026_05_14.md" class="text-blue-700 underline">pre-launch external review</a>. §2 confirms BRAIN as the strategic moat; §7 confirms multi-brain as the GTM answer.</li>
+ <li><strong>Source code:</strong> <code>cyberos/memory/cyberos/core/</code> · <code>cyberos/memory/tests/</code> · <code>cyberos/memory/bench/</code>. Stage 2 capture daemon lands at <code>cyberos/memory/daemon/</code> (planned, Rust).</li>
  <li><strong>CHANGELOG:</strong> <code>cyberos/memory/docs/CHANGELOG.md</code> (newest-first).</li>
  </ul>
  </div>

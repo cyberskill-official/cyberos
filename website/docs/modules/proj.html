@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>PROJ — CyberOS</title>
- <meta name="description" content="PROJ — Project management. Linear-style three-primitive model (Issue, Cycle, Project) plus Engagement for consultancy contracts. Sync-engine with optimistic local mutations + Yjs CRDT offline-edit + server-canonical resolution.">
+ <title>PROJ — Orchestration spine · BRAIN-anchored decisions · Engagement billing · CyberOS</title>
+ <meta name="description" content="PROJ — the orchestration spine that joins CRM → PROJECT → TIME → INV → REW → KB → BRAIN. Decisions live in BRAIN, not Jira. Linear-style three-primitive model (Issue · Cycle · Project) + the consultancy-native Engagement primitive (rate-card + billable rules + TIME→INV chain). Sync-engine with optimistic local mutations + Yjs CRDT offline-edit + server-canonical resolution. Liquid-Glass UI exemplar (timeline + board + Gantt + brief).">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -52,10 +52,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: COO seat (interim CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- Project management for consultancies — Linear's three-primitive model (Issue · Cycle · Project), plus an Engagement primitive for the contract under which delivery happens, with a sync-engine that feels instant.
+ <strong>The orchestration spine.</strong> PROJ is where work, time, billing, knowledge, and decisions meet — the CRM lead becomes an Engagement, the Engagement carries the rate card, the issues bind to BRAIN memories, the time entries roll up to INV, and the cycle review is drafted by CUO and accountable to an Account Manager.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- PROJ adopts the Linear / Height / Cycle / Plane model that has been validated by every modern consultancy-friendly issue tracker: Issues are the unit of work, Cycles are the 1-2 week iterations issues are scheduled into, and Projects are durable containers that aggregate issues across cycles. CyberOS adds the <strong>Engagement</strong> primitive — the contract with a Client under which a Project is delivered — because consultancies need the rate-card, billable / non-billable split, and TIME→INV flow that pure product-shop tools assume away. Mutation UX is sync-engine: every change applies optimistically to local state, propagates via WebSocket, and the server-canonical state wins on conflict. Yjs CRDTs handle the offline-edit case. Vietnamese localisation covers status names, salutations, and UI strings. locks the FRs; this page documents the planned implementation at <code>cyberos/services/proj/</code>.
+ PROJ plays three strategic roles simultaneously. <strong>Role 1 — orchestration spine</strong>: every other module reaches into PROJ at some join (CRM deal → Engagement, TIME entries → Issue, Issue done → INV billable line, completed Issue → BRAIN Layer-3 ingestion, weekly cycle review → KB archive, Member calibration → REW signal). <strong>Role 2 — BRAIN-anchored decisions</strong>: an Issue is not a Jira ticket with stale prose; it is a node that cites BRAIN memories, links to the decision-log entry that spawned it, and emits a chained audit row on every state change. <strong>Role 3 — Engagement billing surface</strong>: the consultancy-specific primitive (T&amp;M / fixed-fee / retainer with localised rate cards) that nothing off the shelf models natively. UX is sync-engine — optimistic local mutations, WebSocket fan-out via NATS JetStream, server-canonical rebase on conflict, Yjs CRDT for description + comment bodies. Vietnamese localisation is non-negotiable for P1. FRs are being re-authored via the <code>fr-author</code> skill; this page documents the planned implementation at <code>cyberos/services/proj/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -79,8 +79,13 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
  <li><a class="toc-link" href="#why">Why PROJ exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#orchestration-spine">Orchestration spine</a></li>
+ <li><a class="toc-link" href="#engagement-economics">Engagement economics</a></li>
+ <li><a class="toc-link" href="#brain-anchored">BRAIN-anchored decisions</a></li>
+ <li><a class="toc-link" href="#ui-surfaces">Liquid-Glass UI surfaces</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
@@ -119,15 +124,109 @@
  PROJ is CyberOS's <strong>project tracker, sprint engine, and Engagement billing surface</strong> in one. The data model is Issue → Cycle → Project plus Engagement (the contract). Status is a closed enum (<code>backlog · todo · in-progress · in-review · done · cancelled</code>) with a configurable per-project workflow on top. Priority is the standard <code>urgent · high · medium · low · none</code>. Mutations are optimistic locally, server-canonical eventually; Yjs CRDTs let two Members edit the same description offline and merge without conflict. Every issue can link to BRAIN entries — a memory becomes a citation, a decision-log row becomes a sub-task. AI features are first-class: CUO drafts the cycle review at end-of-cycle; the blocker-detector watches comments for "blocked by"; estimate calibration tracks estimated vs actual hours per Member per task class..
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">Orchestration spine</div><div class="note">CRM→PROJ→TIME→INV→KB→BRAIN</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase · M+5</div></div>
  <div class="fact-card"><div class="label">Primitives</div><div class="value">4</div><div class="note">Issue · Cycle · Project · Engagement</div></div>
+ <div class="fact-card"><div class="label">Cross-module joins</div><div class="value">7</div><div class="note">CRM · TIME · INV · KB · REW · BRAIN · OKR</div></div>
  <div class="fact-card"><div class="label">Sync</div><div class="value">Optimistic</div><div class="note">WebSocket + server-canonical</div></div>
  <div class="fact-card"><div class="label">Offline</div><div class="value">Yjs CRDT</div><div class="note">offline-edit + merge</div></div>
- <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">status / UI strings</div></div>
- <div class="fact-card"><div class="label">AI features</div><div class="value">4</div><div class="note">triage · blocker · review · calibration</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · TIME</div><div class="note">+ AI · MCP · OBS</div></div>
+ <div class="fact-card"><div class="label">BRAIN integration</div><div class="value">Bidirectional</div><div class="note">Issue ↔ memory cite + Layer-3 ingest</div></div>
+ <div class="fact-card"><div class="label">Engagement model</div><div class="value">3 modes</div><div class="note">T&amp;M · fixed-fee · retainer</div></div>
+ <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">status / UI strings / cycle reviews</div></div>
+ <div class="fact-card"><div class="label">AI features</div><div class="value">5</div><div class="note">triage · blocker · review · calibration · scope-creep</div></div>
+ <div class="fact-card"><div class="label">UI surfaces</div><div class="value">4</div><div class="note">Board · Timeline · Gantt · Brief</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · TIME</div><div class="note">+ AI · MCP · OBS · NATS</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~11,000</div><div class="note">Rust + TS SPA + Yjs</div></div>
  </div>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE -->
+<!-- ============================================================ -->
+<section id="bigger-picture" class="module-section">
+ <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
+
+ <p class="text-slate-700 leading-relaxed mb-4">
+ PROJ is not "a project tracker." It is the <strong>orchestration spine of CyberOS</strong> — the module where every other module's data joins around a unit of work. Reading this page as "yet another Linear clone" misses the point. Three distinct roles land in one Postgres schema, and the design treats them as equal-weight requirements, not nice-to-have add-ons.
+ </p>
+
+ <div class="grid md:grid-cols-3 gap-4 my-6">
+ <div class="bbg-card p-5" style="border-top:4px solid var(--proj)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--proj-dark)">Role 1 · Orchestration spine</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Every module's join lives here</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ CRM creates a deal → PROJ converts it into an Engagement. TIME logs hours against an Issue, INV pulls those hours via the Engagement rate card. KB archives the cycle review. REW pulls Member calibration. OKR ties to Project status. BRAIN ingests every state change as a Layer-3 node. PROJ is where the threads of work cross — and where the audit trail of "did we do what we said we'd do" lands.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--proj)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--proj-dark)">Role 2 · BRAIN-anchored decisions</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Issues cite memories, not stale prose</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ An Issue is a node that <em>references</em> a BRAIN memory (the decision that spawned it, the spec it implements, the prior issue it supersedes). Every state change emits a chained audit row to the local BRAIN. When the cycle closes, the review draft cites the actual decisions that drove the work — not "we decided to do X" without a source. This is the difference between a Jira ticket and a verifiable work record.
+ </p>
+ </div>
+ <div class="bbg-card p-5" style="border-top:4px solid var(--proj)">
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--proj-dark)">Role 3 · Engagement billing surface</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Consultancies need this — product trackers assume it away</div>
+ <p class="text-sm text-slate-600 leading-relaxed">
+ Linear assumes a product team. Jira assumes either. We assume <em>consultancy delivery</em>: a Client signs an Engagement at a billing mode (T&amp;M / fixed-fee / retainer) with a localised rate card, time entries are billable-by-default with per-task overrides, and the TIME→INV chain ride on the Engagement, not the Project. Pure product trackers cannot model this without bolting on a billing add-on; we model it natively.
+ </p>
+ </div>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">The PROJ join surface (every module touches it)</h3>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
+flowchart LR
+ CRM["🤝 CRM<br>Deal won"]
+ PROJ["📋 PROJ<br>Engagement · Project · Cycle · Issue"]
+ TIME["⏱ TIME<br>billable hours"]
+ INV["🧾 INV<br>billable line items"]
+ KB["📚 KB<br>cycle review archive"]
+ REW["💰 REW<br>calibration → bonus"]
+ OKR["🎯 OKR<br>Project → key result"]
+ BRAIN["🧠 BRAIN<br>Layer-3 ingest + audit chain"]
+ PORTAL["🚪 PORTAL<br>client-visible view"]
+ EMAIL["✉ EMAIL<br>thread → issue"]
+
+ CRM -->|"deal.won → engagement.create"| PROJ
+ EMAIL -->|"client reply → comment / issue"| PROJ
+ PROJ -->|"issue tracked + rate card"| TIME
+ TIME -->|"hours × rate (billable)"| INV
+ PROJ -->|"cycle review · MD doc"| KB
+ PROJ -->|"calibration snapshot"| REW
+ PROJ -->|"project status"| OKR
+ PROJ -->|"every mutation → audit row"| BRAIN
+ PROJ -->|"client-visible Project view (P2)"| PORTAL
+ BRAIN -.->|"cite memory"| PROJ
+
+ classDef hub fill:#e0e7ff,stroke:#3730a3,stroke-width:3px,color:#1e1b4b
+ classDef other fill:#f5ede6,stroke:#45210e
+ classDef brain fill:#fef6e0,stroke:#9c750a
+ class PROJ hub
+ class CRM,TIME,INV,KB,REW,OKR,PORTAL,EMAIL other
+ class BRAIN brain
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Every arrow is a data dependency. Removing PROJ from the architecture means rebuilding the same join in 8 other places — that's why PROJ is the orchestration spine, not just "the issue tracker."</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Auto vs manual operations matrix</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
+ <tbody>
+ <tr><td>Issue create</td><td><strong>Manual</strong> · Member-driven in SPA</td><td>Work units must be intentional; auto-creating issues from chatter is noise.</td></tr>
+ <tr><td>Status transition</td><td><strong>Manual</strong> with WF validator + optimistic apply</td><td>The Member's act of moving an Issue is itself a meaningful event for the audit trail.</td></tr>
+ <tr><td>Blocker detection</td><td><strong>Auto</strong> · pattern match on comments + dwell time</td><td>Members forget to surface blockers; CUO Notify nudges the assigner without forcing a UI change.</td></tr>
+ <tr><td>Auto-roll at cycle close</td><td><strong>Auto</strong> when project config enables it</td><td>Default off; teams opt-in once they trust the roll behaviour. Saves an evening of dragging.</td></tr>
+ <tr><td>Cycle review draft</td><td><strong>Auto</strong> at cycle close, <strong>manual</strong> review by AM before send</td><td>LLMs hallucinate; AM is accountable for the prose; draft saves 1-2 hours per cycle.</td></tr>
+ <tr><td>BRAIN Layer-3 ingest</td><td><strong>Auto</strong> on every state change</td><td>The audit chain must be complete; opt-out is at the privacy class level (sync_class), not per-issue.</td></tr>
+ <tr><td>TIME → INV roll-up</td><td><strong>Auto</strong> at invoice generation</td><td>Billable hours computed from Engagement rate card automatically; AM reviews the draft invoice in INV.</td></tr>
+ <tr><td>Calibration snapshot</td><td><strong>Auto</strong> nightly batch</td><td>The data is too noisy to update per-issue; nightly aggregation is the cadence dashboards need.</td></tr>
+ <tr><td>Issue ↔ BRAIN memory link</td><td><strong>Manual</strong> in SPA (with smart suggestions)</td><td>The citation is a deliberate authoring act, not an LLM guess; we surface candidates but the Member confirms.</td></tr>
+ </tbody>
+ </table>
  </div>
 </section>
 
@@ -186,6 +285,259 @@
  <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Issue write p95 ≤ 120 ms; SPA list-view load p95 ≤ 250 ms; offline-merge correctness ≥ 99.9% (property tests); BRAIN ingestion p95 ≤ 5 s; cycle-review draft acceptance rate ≥ 60% by Account Manager.</td></tr>
  </tbody>
  </table>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.5 — ORCHESTRATION SPINE -->
+<!-- ============================================================ -->
+<section id="orchestration-spine" class="module-section">
+ <header class="section-head"><span class="section-num">2.5</span><h2>Orchestration spine — cross-module join contracts</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ PROJ is downstream of 2 modules (CRM, EMAIL) and upstream of 6 (TIME, INV, KB, REW, OKR, PORTAL); every other CyberOS module that touches "work" reads from or writes to a PROJ join contract. The contracts are stable interfaces — modules can be re-implemented behind them without breaking PROJ. The table below is the canonical list; every change to PROJ's data model must consider whether it widens a contract or breaks one.
+ </p>
+
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Counterparty</th><th>Direction</th><th>Join key</th><th>Trigger</th><th>Payload shape</th><th>Failure mode</th></tr></thead>
+ <tbody>
+ <tr><td><strong>🤝 CRM</strong></td><td>CRM → PROJ</td><td><code>crm.deal_id → engagement.source_deal_id</code></td><td><code>deal.stage = "won"</code> + AM clicks "Convert to Engagement"</td><td><code>{deal_id, client_account_id, value_vnd, contract_url, am_id}</code></td><td>Manual fallback: AM creates Engagement directly; deal link added retroactively.</td></tr>
+ <tr><td><strong>✉ EMAIL</strong></td><td>EMAIL → PROJ</td><td><code>email.thread_id → issue.source_thread_id</code> OR <code>issue_id</code> in comment</td><td>Member uses "Convert to issue" or replies with <code>#PROJ-1234</code> mention</td><td><code>{thread_id, from, subject, body, attachments[]}</code></td><td>Thread reply with no PROJ tag stays in EMAIL; not auto-promoted.</td></tr>
+ <tr><td><strong>⏱ TIME</strong></td><td>TIME → PROJ</td><td><code>time_entry.issue_id → issue.id</code></td><td>Member logs hours via TIME UI or timer auto-stop</td><td><code>{issue_id, member_id, minutes, entry_date, billable_override?}</code></td><td>If <code>issue_id</code> missing or invalid → entry tagged <code>unallocated</code>; AM triages weekly.</td></tr>
+ <tr><td><strong>🧾 INV</strong></td><td>PROJ → INV</td><td><code>engagement.id + cycle.id → invoice.source_engagement_id</code></td><td>INV draft invoice generation (monthly) or fixed-fee milestone</td><td><code>{engagement_id, billable_hours_by_member_by_class, rate_card_snapshot, milestone_id?}</code></td><td>If rate card changed mid-cycle, INV uses snapshot at time of entry — never retroactive.</td></tr>
+ <tr><td><strong>📚 KB</strong></td><td>PROJ → KB</td><td><code>cycle.review.id → kb_doc.source_id</code></td><td>AM clicks "Send + archive" on cycle review</td><td><code>{cycle_id, project_id, review_markdown_sent, sent_at, sent_to}</code></td><td>If KB unavailable, review stays in PROJ; backfill via <code>cyberos-kb backfill</code>.</td></tr>
+ <tr><td><strong>💰 REW</strong></td><td>PROJ → REW</td><td><code>calibration_snapshot.member_id → rew.calibration_input</code></td><td>Nightly batch (PROJ side) → REW reads daily</td><td><code>{member_id, period, ratio_by_task_class, completion_rate, blocker_authorship_rate}</code></td><td>REW uses only Member-confirmed calibration signals; raw drift never feeds bonus directly.</td></tr>
+ <tr><td><strong>🎯 OKR</strong></td><td>PROJ → OKR</td><td><code>project.id → okr_kr.project_link</code></td><td>OKR-side query: "what projects ladder to KR-Q3-rev?"</td><td><code>{project_id, status, % issues done, cycle_review_links[]}</code></td><td>OKR view degrades to status-only if cycle reviews absent.</td></tr>
+ <tr><td><strong>🚪 PORTAL (P2)</strong></td><td>PROJ → PORTAL</td><td><code>project.id → portal_view.project_id</code> with <code>client_visible=true</code></td><td>Client logs into PORTAL; PORTAL fetches via federated GraphQL</td><td>Subset of project: title, status %, public cycles, public comments only</td><td>RLS + <code>client_visible</code> flag enforced; misconfig = test failure in CI.</td></tr>
+ <tr><td><strong>🧠 BRAIN</strong></td><td>Both directions</td><td><code>issue.id ↔ brain.path</code> (BRAIN_LINK table)</td><td>Mutation (auto-ingest) · Member cites memory (manual link)</td><td>Outbound: audit row per mutation. Inbound: <code>{path, relation: "cites" / "implements" / "supersedes"}</code></td><td>BRAIN backlog &gt; 60 s → PROJ falls back to in-memory queue + retry; alert on &gt; 5 min.</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Contract stability policy</h3>
+ <div class="bbg-card p-5">
+ <p class="text-sm text-slate-600 mb-3">Each join contract above is a <strong>versioned interface</strong>. Breaking changes require:</p>
+ <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
+ <li><strong>ADR</strong> with the counterparty module owner co-signing.</li>
+ <li><strong>Deprecation window:</strong> ≥ 1 minor release with both old + new shape supported and a deprecation warning on old.</li>
+ <li><strong>Migration test:</strong> integration test that exercises both versions end-to-end.</li>
+ <li><strong>BRAIN memory:</strong> the deprecation itself becomes a decision memory at <code>memories/decisions/proj-contract-change-&lt;name&gt;.md</code> for traceability.</li>
+ </ul>
+ <p class="text-sm text-slate-600 mt-3">This is a deliberate brake: PROJ's data shape is the most expensive thing in CyberOS to mutate, because 8 downstream modules read from it.</p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.6 — ENGAGEMENT ECONOMICS -->
+<!-- ============================================================ -->
+<section id="engagement-economics" class="module-section">
+ <header class="section-head"><span class="section-num">2.6</span><h2>Engagement economics — the consultancy-native primitive</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The fourth primitive — Engagement — is where CyberOS earns its "consultancy-native" framing. A pure product tracker has Project but not the contract under which Project runs. A pure ERP has the contract but not the issues. PROJ owns both, joined by <code>project.engagement_id</code>. Below is the full economic model: billing modes, rate-card mechanics, and the per-Member, per-task-class billability rules that drive INV.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">Three billing modes</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Mode</th><th>How it works</th><th>What INV pulls</th><th>Risk</th><th>Typical use</th></tr></thead>
+ <tbody>
+ <tr><td><strong>T&amp;M (Time &amp; Materials)</strong></td><td>Each billable hour × rate-card row → invoice line.</td><td>SUM(time_entries WHERE billable=true) grouped by Member role</td><td>Hours underestimated → invoice surprise → client disputes.</td><td>Staff-aug deals · ongoing platform work · &lt; 6 months</td></tr>
+ <tr><td><strong>Fixed-fee</strong></td><td>Total fee divided into milestones; INV invoices on milestone completion.</td><td>Milestone marker (not time entries); time entries logged for cost analysis only</td><td>Scope creep eats the margin — see <code>R-PROJ-013</code>.</td><td>Discrete deliverables · &lt; 3 months · clear acceptance criteria</td></tr>
+ <tr><td><strong>Retainer</strong></td><td>Flat monthly fee for capped hours; overage at T&amp;M rate.</td><td>Monthly invoice + overage hours if any</td><td>Member capacity assumed but not always available → SLA risk.</td><td>Ongoing advisory · maintenance · 6+ months</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Rate card structure (per Engagement)</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">Every Engagement has 1..N rate-card rows. A row is <code>(role × currency)</code> → hourly rate + billable default. Currency is fixed per row to avoid FX drift mid-cycle.</p>
+ <div class="bbg-card p-5 mb-5">
+<pre><code class="language-yaml">engagement: acme-q3-platform-build
+billing_mode: T_AND_M
+currency_primary: VND
+rate_cards:
+  - role: architect
+    rate_vnd_per_hour: 2,500,000
+    rate_usd_per_hour: 100
+    billable_default: true
+  - role: senior_engineer
+    rate_vnd_per_hour: 1,800,000
+    rate_usd_per_hour: 72
+    billable_default: true
+  - role: mid_engineer
+    rate_vnd_per_hour: 1,200,000
+    rate_usd_per_hour: 48
+    billable_default: true
+  - role: junior_engineer
+    rate_vnd_per_hour: 700,000
+    rate_usd_per_hour: 28
+    billable_default: false  # juniors non-billable on this engagement
+non_billable_categories:
+  - "internal_meeting"
+  - "training"
+  - "rework_due_to_our_fault"</code></pre>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Billable / non-billable computation</h3>
+ <div class="bbg-card p-5 mb-5">
+ <p class="text-sm text-slate-600 mb-3">The default cascade for "is this hour billable?":</p>
+ <ol class="text-sm text-slate-600 space-y-2 list-decimal list-inside">
+ <li><strong>Member-level override</strong> on the TIME entry — if Member set <code>billable=false</code> explicitly, that wins.</li>
+ <li><strong>Task class</strong> — if Issue is labelled in <code>non_billable_categories</code> on the Engagement (e.g. <code>internal_meeting</code>, <code>rework_due_to_our_fault</code>), → non-billable.</li>
+ <li><strong>Role default</strong> — fall back to <code>rate_card.billable_default</code> for the Member's role.</li>
+ <li>Otherwise → billable.</li>
+ </ol>
+ <p class="text-sm text-slate-600 mt-3">The decision is logged as a snapshot in the TIME entry (immutable) so retroactive rate-card changes don't shift past invoices.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Margin watchdog (planned · P2)</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ For fixed-fee engagements, the scope-creep risk (<code>R-PROJ-013</code>) needs an early warning. PROJ surfaces a per-Engagement margin chart: <code>(fee × % milestone done) − (hours_burned × cost_per_hour)</code>. When projected margin drops below 30% of the original budget, CUO Notify pings the AM + CEO. This is a one-screen view in the SPA, not a separate module — because the consultancy founder needs to see it without context switching.
+ </p>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.7 — BRAIN-ANCHORED DECISIONS -->
+<!-- ============================================================ -->
+<section id="brain-anchored" class="module-section">
+ <header class="section-head"><span class="section-num">2.7</span><h2>BRAIN-anchored decisions — issues cite memories</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ In a typical tracker, an Issue's <em>why</em> lives in stale prose ("Discussed in 5/14 standup — see Confluence page X" — which has since moved). In PROJ, an Issue's <em>why</em> lives in BRAIN as a memory the Issue <code>cites</code>. When BRAIN changes — a decision is superseded, a fact is corrected — the Issue's citation graph updates. This is the difference between a project history that ages well and one that decays.
+ </p>
+
+ <h3 class="text-lg font-bold mt-4 mb-3">Three citation relations</h3>
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th>Relation</th><th>Meaning</th><th>Example</th></tr></thead>
+ <tbody>
+ <tr><td><code>cites</code></td><td>This Issue is informed by, but doesn't fully implement, the memory.</td><td>"Issue: Add OTP rate-limit. Cites: <code>memories/decisions/auth-flow-hardening.md</code>."</td></tr>
+ <tr><td><code>implements</code></td><td>This Issue is the implementation of a specific decision in the memory.</td><td>"Issue: Replace mocked DB with real Postgres. Implements: <code>memories/decisions/proj-006-no-mocked-tests.md</code>."</td></tr>
+ <tr><td><code>supersedes</code></td><td>This Issue replaces work that was previously done; the old work's memory is now historical.</td><td>"Issue: Migrate to new auth flow. Supersedes: <code>memories/decisions/old-jwt-flow.md</code>."</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">The decision → sub-task pattern</h3>
+ <div class="bbg-card p-5 mb-5">
+ <p class="text-sm text-slate-600 mb-3">A common workflow: a BRAIN decision memory becomes a parent Issue with sub-tasks. The skill that handles this is <code>cuo.cpo.decision-to-issues@1</code>:</p>
+ <div class="mermaid">
+sequenceDiagram
+ autonumber
+ participant U as User: "convert this decision to issues"
+ participant CU as 🎯 CUO/CPO skill
+ participant BR as 🧠 BRAIN read
+ participant PR as 📋 PROJ
+ participant BW as 🧠 BRAIN write (audit)
+
+ U->>CU: invoke decision-to-issues@1 (memory path)
+ CU->>BR: fetch memories/decisions/&lt;slug&gt;.md
+ BR-->>CU: decision text + sub-decisions
+ CU->>CU: extract action items via LLM (structured output)
+ CU->>U: present draft (parent issue + N sub-tasks)
+ U->>CU: confirm / edit
+ CU->>PR: create_issue (parent) + create_issue × N (children, implements relation)
+ PR->>BW: emit proj.issue_create × (N+1) audit rows, each citing the decision memory
+ BW-->>PR: ok
+ PR-->>U: issues created, BRAIN-linked
+ </div>
+ <p class="text-xs text-slate-500 mt-3">This pattern is how a strategic decision in BRAIN becomes verifiable work in PROJ — with a citation graph that survives leadership changes and tracker migrations.</p>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Audit chain across PROJ and BRAIN</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ Every PROJ mutation writes <em>two</em> audit rows: one in PROJ's own <code>history_event</code> table (fast, queryable) and one in the local BRAIN (chained, signed, exportable). The BRAIN row carries the same <code>chain</code> hash that PROJ's row references via <code>history_event.brain_chain</code>. This dual-write is the mechanism behind the "decisions live in BRAIN, not Jira" claim — PROJ's local history is useful for the UI, but the cryptographic provenance lives in BRAIN.
+ </p>
+ <div class="bbg-card p-5">
+<pre><code class="language-sql">-- PROJ history_event row (Postgres, fast queries)
+INSERT INTO history_event (id, issue_id, actor_id, kind, from_value, to_value, ts, brain_chain)
+VALUES (
+  'he_01HZ…',
+  'is_01HZ…',
+  'sub_stephen@…',
+  'status',
+  'in-progress',
+  'in-review',
+  '2026-05-15T08:42:11Z',
+  '69e6…488a'   -- ← references the BRAIN audit row's chain hash
+);
+
+-- BRAIN audit row (immutable, chained, exportable)
+{
+  "seq": 18420,
+  "ts_ns": 1763112131_000_000_000,
+  "op": "put",
+  "path": "memories/projects/proj-3110-status-transition.md",
+  "actor": "sub_stephen@cyberskill.world",
+  "extra": { "issue_code": "PROJ-3110", "from": "in-progress", "to": "in-review" },
+  "prev_chain": "…",
+  "chain": "69e6…488a"
+}</code></pre>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §2.8 — LIQUID-GLASS UI SURFACES -->
+<!-- ============================================================ -->
+<section id="ui-surfaces" class="module-section">
+ <header class="section-head"><span class="section-num">2.8</span><h2>Liquid-Glass UI surfaces — Board · Timeline · Gantt · Brief</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ PROJ is the design-system exemplar for the rest of CyberOS — every other module's table, timeline, and brief view borrows from PROJ's four canonical UI surfaces. The Liquid-Glass surface treatment (Part 21 of the design system: Umber #45210E base, Ochre #F4BA17 accent, blur backdrop, generous whitespace, Be Vietnam Pro 16px base) lands here first because PROJ is what Members look at all day.
+ </p>
+
+ <div class="bbg-card p-5 mb-5">
+ <table class="kt">
+ <thead><tr><th style="width:18%">Surface</th><th>Primary use</th><th>Default view</th><th>Density</th><th>Keyboard-first?</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Board</strong> (Kanban)</td><td>Daily Member workflow — drag issues across columns.</td><td>Current cycle · grouped by status · 5 columns</td><td>Comfortable (rows ≈ 56 px)</td><td>Yes — <code>j/k</code> navigate, <code>e</code> edit, <code>1-5</code> status</td></tr>
+ <tr><td><strong>Timeline</strong></td><td>Plan view — see what's happening this cycle by day.</td><td>Cycle window · grouped by assignee · day columns</td><td>Compact (rows ≈ 40 px)</td><td>Yes — <code>←/→</code> shift day, <code>↑/↓</code> shift Member</td></tr>
+ <tr><td><strong>Gantt</strong></td><td>Multi-cycle planning — see Project-level dependencies.</td><td>Project view · 3-month span · dependency arrows</td><td>Compact (bars ≈ 28 px)</td><td>Partial — <code>+/-</code> zoom, click-drag adjust dates</td></tr>
+ <tr><td><strong>Brief</strong></td><td>Single-issue deep view — for editing / commenting / linking.</td><td>Full-page modal with description (Yjs) + comments + meta sidebar</td><td>Spacious (paragraph leading 1.6)</td><td>Yes — <code>c</code> comment, <code>l</code> link memory, <code>r</code> review</td></tr>
+ </tbody>
+ </table>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Design tokens (PROJ-specific overlay)</h3>
+ <p class="text-slate-700 leading-relaxed mb-3">
+ PROJ inherits all tokens from <code>website/docs/assets/tokens.css</code> and adds an indigo overlay because the status colour palette is most readable in cool tones (warm anchors would clash with priority colours).
+ </p>
+ <div class="bbg-card p-5 mb-5">
+<pre><code class="language-css">/* tokens.proj.css — PROJ-specific overlay (loaded after tokens.css) */
+:root {
+  --proj-indigo: #4f46e5;     /* primary action */
+  --proj-indigo-bg: #eef2ff;  /* surface tint */
+  --proj-indigo-dk: #3730a3;  /* on-hover, text accent */
+
+  /* Status colours — readable on both light + dark surfaces */
+  --status-backlog: #94a3b8;   /* slate-400 */
+  --status-todo: #3b82f6;      /* blue-500 */
+  --status-inprog: #f59e0b;    /* amber-500 */
+  --status-inreview: #8b5cf6;  /* violet-500 */
+  --status-done: #10b981;      /* emerald-500 */
+  --status-cancelled: #64748b; /* slate-500, dimmed */
+
+  /* Priority colours */
+  --priority-urgent: #dc2626;  /* red-600 */
+  --priority-high: #f97316;    /* orange-500 */
+  --priority-medium: #eab308;  /* yellow-500 */
+  --priority-low: #22c55e;     /* green-500 */
+  --priority-none: transparent;
+
+  /* Liquid-Glass surface (PROJ's primary card treatment) */
+  --proj-glass-bg: rgba(248, 250, 252, 0.72);
+  --proj-glass-border: rgba(79, 70, 229, 0.12);
+  --proj-glass-blur: blur(18px) saturate(180%);
+}</code></pre>
+ </div>
+
+ <h3 class="text-lg font-bold mt-6 mb-3">Accessibility commitments</h3>
+ <div class="bbg-card p-5">
+ <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
+ <li><strong>WCAG 2.1 AA</strong> contrast ratios on every status/priority pill — measured in CI via <code>axe-core</code> on the Storybook build.</li>
+ <li><strong>Keyboard-only navigation</strong> for Board + Timeline + Brief — explicit acceptance criterion in the SPA's e2e suite.</li>
+ <li><strong>Screen-reader labels</strong> on every status transition: "Status changed from In progress to In review" announced via <code>aria-live=polite</code>.</li>
+ <li><strong>Focus trap discipline</strong>: the Brief modal traps focus; <code>Esc</code> closes without losing draft (Yjs preserves it).</li>
+ <li><strong>Reduce-motion mode</strong>: <code>prefers-reduced-motion: reduce</code> disables drag animations and Yjs presence cursors.</li>
+ <li><strong>Vietnamese diacritic-correct fonts</strong>: Be Vietnam Pro 400/600/800 weights; fallback stack <code>"Be Vietnam Pro", "Inter", system-ui</code>.</li>
+ </ul>
  </div>
 </section>
 
@@ -919,6 +1271,16 @@ graph LR
  <tr><td><code>R-PROJ-008</code></td><td>BRAIN ingestion lag breaks cross-module search</td><td>Low</td><td>Medium</td><td>CDO</td><td>p95 ≤ 5 s SLO; backlog alarm pages CDO + CTO.</td></tr>
  <tr><td><code>R-PROJ-009</code></td><td>Calibration data weaponised in performance review</td><td>Medium</td><td>Low</td><td>CHRO</td><td>Calibration visible only to Member + manager + CHRO; never client-visible; never used as sole performance signal (HR policy).</td></tr>
  <tr><td><code>R-PROJ-010</code></td><td>Vietnamese tokenisation regressions on PGroonga upgrade</td><td>Low</td><td>Low</td><td>CTO</td><td>50-query VN test corpus run on every PGroonga upgrade.</td></tr>
+ <tr><td><code>R-PROJ-011</code></td><td><strong>Orchestration spine becomes single point of failure</strong> — PROJ outage cascades to TIME / INV / KB / REW / OKR / PORTAL simultaneously</td><td>Low</td><td>Critical</td><td>CTO</td><td>SLO ≥ 99.9% with multi-AZ Postgres + Redis + NATS; degraded-mode reads from BRAIN audit chain when PROJ DB unreachable; OBS-driven dependency map surfaces fallout radius; quarterly chaos test cuts PROJ off and verifies downstream module graceful degradation.</td></tr>
+ <tr><td><code>R-PROJ-012</code></td><td>Join-contract breaking change ships without ADR + counterparty co-sign</td><td>Medium</td><td>High</td><td>CTO</td><td>CI gate on <code>services/proj/contracts/*</code> requires &gt; 1 module owner approval; contract schema versioned + frozen at minor releases; deprecation window enforced via dual-shape test.</td></tr>
+ <tr><td><code>R-PROJ-013</code></td><td><strong>Fixed-fee scope creep eats margin</strong> — work delivered exceeds milestone scope, margin drops below 30% before AM notices</td><td>High</td><td>High</td><td>COO</td><td>Margin watchdog at P2: per-Engagement margin chart + CUO Notify when projected margin &lt; 30%; mandatory weekly AM review of fixed-fee deals; "scope change order" workflow surfaces a billable change.</td></tr>
+ <tr><td><code>R-PROJ-014</code></td><td>BRAIN citation drift — Issue cites memory path that's been moved or tombstoned</td><td>Medium</td><td>Low</td><td>CDO</td><td><code>BRAIN_LINK</code> table stores the chain hash at time of citation; on BRAIN move/tombstone, citation is flagged stale + Member sees a UI nudge to update; never auto-broken because BRAIN is append-only at the chain layer.</td></tr>
+ <tr><td><code>R-PROJ-015</code></td><td>AI cycle-review draft cites work that was actually done in another cycle</td><td>Medium</td><td>Medium</td><td>COO</td><td>Draft generator constrained to events with <code>ts</code> inside cycle window; LLM prompt includes explicit boundary dates; AM signs off as the human-in-loop; never auto-sent.</td></tr>
+ <tr><td><code>R-PROJ-016</code></td><td>Engagement billing-mode change mid-cycle creates inconsistent invoice</td><td>Low</td><td>High</td><td>COO</td><td>Billing-mode change requires explicit "effective_from" date + AM sign-off + INV draft pre-view; time entries before that date use the prior mode's rate-card snapshot (immutable).</td></tr>
+ <tr><td><code>R-PROJ-017</code></td><td>Decision-to-issues skill produces parent + children that drift from the BRAIN memory's intent</td><td>Medium</td><td>Medium</td><td>CPO</td><td>Skill outputs a confidence score per sub-task; Member must confirm before issues created; CI replay test ensures &gt; 80% of historical decision memories produce semantically aligned issues (LLM-judged on a fixed eval set).</td></tr>
+ <tr><td><code>R-PROJ-018</code></td><td>Liquid-Glass surface fails accessibility at lower contrast on Members' laptops</td><td>Medium</td><td>Medium</td><td>CDO</td><td>axe-core CI gate on Storybook build; per-pill contrast measured against worst-case backdrop (busy timeline view); failing component blocks PR.</td></tr>
+ <tr><td><code>R-PROJ-019</code></td><td><strong>SPA cold-load p95 &gt; 5 s on Vietnamese mobile networks</strong> — Members give up and use Excel</td><td>Medium</td><td>High</td><td>CTO</td><td>SPA bundle &lt; 220 KB gzipped; route-level code-split; preload critical font subset (VN diacritics) inline; RUM monitor in OBS targeting Viettel/Mobifone networks specifically.</td></tr>
+ <tr><td><code>R-PROJ-020</code></td><td>NATS JetStream backlog after a multi-AZ failover leaves SPAs displaying stale state for &gt; 30 s</td><td>Low</td><td>Medium</td><td>CTO</td><td>NATS depth gauge alerted at &gt; 1k msgs; SPA reconnect after WS close triggers full state refetch; degraded-mode banner shown to Member.</td></tr>
  </tbody>
  </table>
  </div>
@@ -943,6 +1305,15 @@ graph LR
  <tr><td><strong>BRAIN ingestion lag p95</strong></td><td>histogram</td><td>BRAIN</td><td>≤ 5 s</td></tr>
  <tr><td><strong>Estimate calibration drift</strong></td><td>actual / estimate − 1</td><td>calibration_snapshot</td><td>tracked per Member</td></tr>
  <tr><td><strong>Offline-merge incidents</strong></td><td>conflicts / month</td><td>BRAIN audit</td><td>tracked; expect &lt; 5 / mo</td></tr>
+ <tr><td><strong>Join-contract stability</strong></td><td>breaking changes / quarter, weighted by counterparty count</td><td>contract-schema CI gate</td><td>≤ 1 per quarter (with full ADR + dual-shape window)</td></tr>
+ <tr><td><strong>Engagement margin (T&amp;M)</strong></td><td>(revenue − cost) / revenue per Engagement</td><td>INV + cost ledger</td><td>tracked per Engagement; target ≥ 35%</td></tr>
+ <tr><td><strong>Engagement margin (fixed-fee)</strong></td><td>(fee − hours_burned × cost_per_hour) / fee</td><td>PROJ time entries + INV</td><td>≥ 30% on close; alert if projection &lt; 30% mid-engagement (<code>R-PROJ-013</code>)</td></tr>
+ <tr><td><strong>Issues with BRAIN citation</strong></td><td>issues_with_brain_link / total issues</td><td>BRAIN_LINK table</td><td>tracked; expect ≥ 40% of high-priority issues to cite a memory</td></tr>
+ <tr><td><strong>Decision-to-issues skill acceptance</strong></td><td>drafts confirmed by Member / drafts generated</td><td>cuo.cpo.decision-to-issues@1 telemetry</td><td>≥ 70%</td></tr>
+ <tr><td><strong>SPA cold-load p95 (VN mobile)</strong></td><td>RUM Time-to-Interactive on Viettel/Mobifone networks</td><td>OBS RUM</td><td>≤ 3.5 s P50, ≤ 5 s P95</td></tr>
+ <tr><td><strong>Citation-drift rate</strong></td><td>BRAIN_LINKs flagged stale / total BRAIN_LINKs, 28-day window</td><td>BRAIN_LINK + BRAIN audit</td><td>≤ 5%</td></tr>
+ <tr><td><strong>Cross-tenant ACL rejection rate</strong></td><td>RLS / ACL rejections / total queries</td><td>Postgres audit log</td><td>tracked; spike = security alert</td></tr>
+ <tr><td><strong>Dogfooding cycle-review draft acceptance (internal)</strong></td><td>internal team draft accept-rate</td><td>SPA telemetry filtered to <code>tenant_id=org:cyberskill</code></td><td>≥ 70% (the founders use this themselves before selling it)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1096,15 +1467,32 @@ overall 39 1.18× +18% ▲ improving</code></pre>
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — PROJ module: three primitives, sync-engine, AI features, FRs.</li>
- <li> — TIME module (upstream dependency).</li>
- <li> — NFRs that PROJ must satisfy.</li>
- <li> — Formal (FR pending) through (FR pending) with verification methods.</li>
- <li><strong>Linear sync-engine</strong> — Tuomas Artman, "Scaling the Linear Sync Engine" (2023 talk).</li>
- <li><strong>Yjs CRDT framework</strong> — <code>github.com/yjs/yjs</code>; ywasm Rust binding.</li>
- <li><strong>PGroonga</strong> — Postgres full-text search with CJK tokenisation.</li>
- <li><strong>NATS JetStream</strong> — message-streaming layer for WebSocket fan-out.</li>
- <li><strong>Apollo Federation v2.5</strong> — subgraph composition spec.</li>
+ <li><strong>Cross-module join contracts:</strong> §2.5 above — the 9-row canonical table that every counterparty module reads from.</li>
+ <li><strong>Engagement economic model:</strong> §2.6 above — 3 billing modes + rate-card YAML + billable cascade.</li>
+ <li><strong>BRAIN-anchored decisions:</strong> §2.7 above — citation relations + decision-to-issues sequence + dual-write audit chain.</li>
+ <li><strong>Liquid-Glass UI exemplar:</strong> §2.8 above — 4 canonical surfaces + tokens.proj.css overlay + accessibility commitments.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — PROJ mutations are one of the four canonical capture inputs to the local BRAIN.</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — PROJ FRs to be re-authored one-by-one via the <code>fr-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — PROJ placed at M+5 in the P1 sequence (after CHAT decommission gate clears at M+3).</li>
+ <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §4</a> — reviewer flagged the consultancy-Engagement primitive as the highest-leverage differentiator vs Linear/Jira; orchestration spine framing addresses §6 "what makes this not a feature?".</li>
+ <li><strong>Cross-module page links:</strong>
+ <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
+ <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
+ <a href="chat.html" class="text-blue-700 underline">chat.html</a> ·
+ <a href="time.html" class="text-blue-700 underline">time.html</a> ·
+ <a href="inv.html" class="text-blue-700 underline">inv.html</a> ·
+ <a href="crm.html" class="text-blue-700 underline">crm.html</a> ·
+ <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
+ <a href="rew.html" class="text-blue-700 underline">rew.html</a> ·
+ <a href="okr.html" class="text-blue-700 underline">okr.html</a> ·
+ <a href="portal.html" class="text-blue-700 underline">portal.html</a></li>
+ <li><strong>Linear sync-engine:</strong> Tuomas Artman, "Scaling the Linear Sync Engine" (2023 talk) — informs the optimistic / rebase pattern.</li>
+ <li><strong>Yjs CRDT framework:</strong> <code>github.com/yjs/yjs</code>; ywasm Rust binding.</li>
+ <li><strong>PGroonga + TinySegmenter:</strong> Postgres full-text search with VN tokenisation; baseline recall ≥ 90% on 50-query corpus.</li>
+ <li><strong>NATS JetStream:</strong> message-streaming layer for WebSocket fan-out.</li>
+ <li><strong>Apollo Federation v2.5:</strong> subgraph composition spec; PROJ exposes the federated subgraph that every cross-module GraphQL query goes through.</li>
+ <li><strong>Vietnam PDPL (Law 91/2025):</strong> Art. 7 (data-subject rights), Art. 14 (DSAR), Art. 20 (security obligations).</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#proj" class="text-blue-700 underline">infrastructure.html#proj</a>.</li>
  </ul>
  </div>
