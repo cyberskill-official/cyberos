@@ -311,10 +311,39 @@ section { scroll-margin-top: 80px; }
 
 /* ---------- HEADINGS ---------- */
 h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text); letter-spacing: -0.015em; }
-.h-display { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.025em; }
-.h-1 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; line-height: 1.15; margin-block-end: 1rem; }
-.h-2 { font-size: 1.5rem; font-weight: 700; line-height: 1.25; }
-.h-3 { font-size: 1.125rem; font-weight: 700; }
+/* Heading rhythm — Be Vietnam Pro has taller ascenders + descenders than Inter,
+   so the previous Inter-tuned line-heights collide. These values are tuned
+   for BVP first, Inter fallback. Always pair with `margin-block-end` and a
+   following block-level element's `margin-block-start: 0` to avoid collapse. */
+.h-display {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.1;                /* was 1.05 — BVP needs +0.05 */
+  letter-spacing: -0.025em;
+  margin-block-end: 1.25rem;
+}
+.h-1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.25;               /* was 1.15 — BVP needs +0.1 */
+  letter-spacing: -0.015em;
+  margin-block-end: 1.25rem;
+}
+.h-2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.4;                /* was 1.25 — small heading, larger gap helps */
+  margin-block-end: 0.75rem;
+}
+.h-3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-block-end: 0.5rem;
+}
+/* Don't let `mb-*` Tailwind utilities collapse against the heading's
+   block-end margin — applies a tiny min-gap. */
+.h-display + *, .h-1 + *, .h-2 + *, .h-3 + * { margin-block-start: 0; }
 .h-eyebrow { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-mute); }
 
 /* ---------- HERO GRADIENT ---------- */
