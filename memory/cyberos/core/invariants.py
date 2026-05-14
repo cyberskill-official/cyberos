@@ -311,21 +311,30 @@ def check_ledger_append_only(store: Path) -> tuple[bool, str]:
 def check_manifest_validates(store: Path) -> tuple[bool, str]:
     """Validate manifest.json against memory.schema.json#/definitions/Manifest.
 
-    Uses jsonschema if installed; otherwise skips with a warning.
+    Parseability of `manifest.json` is checked unconditionally — an unparseable
+    manifest is a catastrophic-class failure per AGENTS.md §12 and the check
+    must NOT skip merely because the optional `jsonschema` package is absent.
+    Full schema validation requires `jsonschema`; when it is not installed we
+    still report parseability + a skip note for the schema layer.
     """
     schema_path = _find_memory_schema(store)
-    if schema_path is None:
-        return True, "memory.schema.json not located; skip"
     manifest_path = store / "manifest.json"
     if not manifest_path.is_file():
         return False, "manifest.json missing"
+    # Step 1 — parseability (always runs; no optional deps required).
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return False, f"manifest.json unparseable: {exc}"
+    if schema_path is None:
+        return True, "memory.schema.json not located; parseability OK, schema skip"
+    # Step 2 — optional schema validation via jsonschema.
     try:
         import jsonschema  # type: ignore[import-not-found]
     except ImportError:
-        return True, "jsonschema not installed; skip"
+        return True, "jsonschema not installed; parseability OK, schema skip"
     try:
         full = json.loads(schema_path.read_text(encoding="utf-8"))
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         # Pick the newest validator class the installed version exposes.
         # jsonschema < 4.0 only has Draft7Validator; 4.x adds 2019/2020.
         validator_cls = (
