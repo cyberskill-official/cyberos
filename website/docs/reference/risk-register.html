@@ -1,311 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CyberOS — Risk Register</title>
-  <meta name="description" content="Top risks across technical, compliance, operational, strategic, financial and legal categories. Likelihood × impact heatmap, owner, mitigation, contingency.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="module" src="../assets/scripts.js"></script>
-  <style>
-    .risk-row { padding: 0.75rem 1rem; margin-bottom: 0.5rem; display: grid; grid-template-columns: 5rem 2fr 1.2fr 6rem 6rem 5rem 7rem; gap: 0.75rem; align-items: center; font-size: 0.8125rem; cursor:pointer; }
-    .risk-row:hover { background: var(--memory-bg); }
-    .risk-row .id { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: var(--memory-dark); }
-    .risk-row .title { font-weight: 700; color: var(--text); }
-    .risk-row .desc-snip { color: var(--text-mute); font-size: 0.6875rem; margin-top: 0.125rem; }
-    .risk-row .cat { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; }
-    .risk-detail { background: var(--future-bg); border-top: 1px dashed var(--border); padding: 1rem 1.25rem; margin: 0 -1rem; font-size: 0.8125rem; line-height: 1.55; }
-    .risk-detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1rem; }
-    .risk-detail dt { font-weight: 700; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-mute); }
-    .risk-detail dd { margin: 0; color: var(--text-soft); }
-    .heat-cell { display:inline-flex; align-items:center; justify-content:center; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; font-family: var(--font-mono); }
-    .h-low      { background:#d1fae5; color:#047857; }
-    .h-med      { background:#fef3c7; color:#b45309; }
-    .h-high     { background:#fed7aa; color:#9a3412; }
-    .h-cat      { background:#fee2e2; color:#b91c1c; }
-    .cat-tech       { color: #1e40af; }
-    .cat-compliance { color: #b91c1c; }
-    .cat-operational{ color: #b45309; }
-    .cat-strategic  { color: #6b21a8; }
-    .cat-financial  { color: #065f46; }
-    .cat-legal      { color: #9d174d; }
-    .heatmap { display:grid; grid-template-columns: 4rem repeat(3, 1fr); grid-template-rows: 2rem repeat(3, 5rem); gap: 0.25rem; max-width: 36rem; }
-    .heatmap .cell { display:flex; align-items:center; justify-content:center; border-radius:0.5rem; font-weight:700; font-size:0.75rem; padding:0.375rem; position:relative; flex-wrap:wrap; gap:0.25rem; text-align:center; }
-    .heatmap .label { color: var(--text-mute); }
-    .heatmap .h-green  { background:#d1fae5; color:#065f46; }
-    .heatmap .h-yellow { background:#fef3c7; color:#b45309; }
-    .heatmap .h-orange { background:#fed7aa; color:#9a3412; }
-    .heatmap .h-red    { background:#fecaca; color:#991b1b; }
-    .heatmap .h-darkred{ background:#fca5a5; color:#7f1d1d; }
-    .heatmap .risk-chip { display:inline-block; background: rgba(255,255,255,0.7); border:1px solid currentColor; padding: 0.0625rem 0.3125rem; border-radius:0.25rem; font-family:var(--font-mono); font-size:0.625rem; }
-    .filter-row { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom: 0.75rem; }
-    .filter-row label { font-size:0.6875rem; font-weight:700; text-transform:uppercase; color:var(--text-mute); letter-spacing:0.06em; min-width:5rem; }
-    .filter-row input[type="search"] { padding:0.375rem 0.625rem; border:1px solid var(--border-strong); border-radius:0.375rem; font-size:0.8125rem; background:var(--bg-card); color:var(--text); min-width:18rem; }
-    .header-row { padding:0.5rem 1rem; display:grid; grid-template-columns: 5rem 2fr 1.2fr 6rem 6rem 5rem 7rem; gap:0.75rem; font-size:0.625rem; font-weight:800; text-transform:uppercase; color:var(--text-mute); letter-spacing:0.05em; border-bottom: 2px solid var(--border); }
-    .status-open      { background:#fee2e2; color:#b91c1c; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }
-    .status-mitigated { background:#fef3c7; color:#b45309; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }
-    .status-accepted  { background:#dbeafe; color:#1e40af; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }
-    .status-closed    { background:#d1fae5; color:#065f46; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }
-    .status-realised  { background:#fecaca; color:#7f1d1d; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>CyberOS — Risk Register</title>
+ <meta name="description" content="Top risks across technical, compliance, operational, strategic, financial and legal categories. Likelihood × impact heatmap, owner, mitigation, contingency.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
+ <style>.risk-row { padding: 0.75rem 1rem; margin-bottom: 0.5rem; display: grid; grid-template-columns: 5rem 2fr 1.2fr 6rem 6rem 5rem 7rem; gap: 0.75rem; align-items: center; font-size: 0.8125rem; cursor:pointer; }.risk-row:hover { background: var(--memory-bg); }.risk-row.id { font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: var(--memory-dark); }.risk-row.title { font-weight: 700; color: var(--text); }.risk-row.desc-snip { color: var(--text-mute); font-size: 0.6875rem; margin-top: 0.125rem; }.risk-row.cat { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; }.risk-detail { background: var(--future-bg); border-top: 1px dashed var(--border); padding: 1rem 1.25rem; margin: 0 -1rem; font-size: 0.8125rem; line-height: 1.55; }.risk-detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.5rem 1rem; }.risk-detail dt { font-weight: 700; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-mute); }.risk-detail dd { margin: 0; color: var(--text-soft); }.heat-cell { display:inline-flex; align-items:center; justify-content:center; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; font-family: var(--font-mono); }.h-low { background:#d1fae5; color:#047857; }.h-med { background:#fef3c7; color:#b45309; }.h-high { background:#fed7aa; color:#9a3412; }.h-cat { background:#fee2e2; color:#b91c1c; }.cat-tech { color: #1e40af; }.cat-compliance { color: #b91c1c; }.cat-operational{ color: #b45309; }.cat-strategic { color: #6b21a8; }.cat-financial { color: #065f46; }.cat-legal { color: #9d174d; }.heatmap { display:grid; grid-template-columns: 4rem repeat(3, 1fr); grid-template-rows: 2rem repeat(3, 5rem); gap: 0.25rem; max-width: 36rem; }.heatmap.cell { display:flex; align-items:center; justify-content:center; border-radius:0.5rem; font-weight:700; font-size:0.75rem; padding:0.375rem; position:relative; flex-wrap:wrap; gap:0.25rem; text-align:center; }.heatmap.label { color: var(--text-mute); }.heatmap.h-green { background:#d1fae5; color:#065f46; }.heatmap.h-yellow { background:#fef3c7; color:#b45309; }.heatmap.h-orange { background:#fed7aa; color:#9a3412; }.heatmap.h-red { background:#fecaca; color:#991b1b; }.heatmap.h-darkred{ background:#fca5a5; color:#7f1d1d; }.heatmap.risk-chip { display:inline-block; background: rgba(255,255,255,0.7); border:1px solid currentColor; padding: 0.0625rem 0.3125rem; border-radius:0.25rem; font-family:var(--font-mono); font-size:0.625rem; }.filter-row { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom: 0.75rem; }.filter-row label { font-size:0.6875rem; font-weight:700; text-transform:uppercase; color:var(--text-mute); letter-spacing:0.06em; min-width:5rem; }.filter-row input[type="search"] { padding:0.375rem 0.625rem; border:1px solid var(--border-strong); border-radius:0.375rem; font-size:0.8125rem; background:var(--bg-card); color:var(--text); min-width:18rem; }.header-row { padding:0.5rem 1rem; display:grid; grid-template-columns: 5rem 2fr 1.2fr 6rem 6rem 5rem 7rem; gap:0.75rem; font-size:0.625rem; font-weight:800; text-transform:uppercase; color:var(--text-mute); letter-spacing:0.05em; border-bottom: 2px solid var(--border); }.status-open { background:#fee2e2; color:#b91c1c; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }.status-mitigated { background:#fef3c7; color:#b45309; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }.status-accepted { background:#dbeafe; color:#1e40af; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }.status-closed { background:#d1fae5; color:#065f46; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }.status-realised { background:#fecaca; color:#7f1d1d; padding:0.125rem 0.5rem; border-radius:0.25rem; font-size:0.6875rem; font-weight:700; }
+ </style>
 </head>
 <body data-pagefind-filter="category:Reference">
 
 <div id="shared-nav"></div>
 
-<div x-data="riskRegister()" x-init="$nextTick(() => init())" class="container py-8">
+<div x-data="riskRegister" x-init="$nextTick( => init)" class="container py-8">
 
-  <nav class="breadcrumbs">
-    <a href="../index.html">Home</a><span class="sep">›</span>
-    <a href="../index.html#navigate">Reference</a><span class="sep">›</span>
-    <span class="current">Risk Register</span>
-  </nav>
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a><span class="sep">›</span>
+ <a href="../index.html#navigate">Reference</a><span class="sep">›</span>
+ <span class="current">Risk Register</span>
+ </nav>
 
-  <header class="mb-8">
-    <div class="flex items-center gap-3 mb-3">
-      <span class="section-badge" style="background:var(--compliance-tint);color:var(--compliance-dark)">Reference · Risk</span>
-      <span class="phase-chip phase-p0">PRD §15 + SRS / synthesised</span>
-    </div>
-    <h1 class="h-1 mb-3">Risk Register</h1>
-    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
-      The top risks tracked by the Founder weekly sync. Six categories — technical, compliance, operational, strategic, financial, legal — each with a likelihood × impact score, an owner, a mitigation, a contingency, and a status. Pulled from PRD §15 "Top 15 risks" and extended with the risks one would expect for a 24-month, 22-module, regulated-market platform build. Severity is recorded as Severity in the PRD table but re-cast here as Impact for heatmap clarity.
-    </p>
+ <header class="mb-8">
+ <div class="flex items-center gap-3 mb-3">
+ <span class="section-badge" style="background:var(--compliance-tint);color:var(--compliance-dark)">Reference · Risk</span>
+ <span class="phase-chip phase-p0"> + SRS / synthesised</span>
+ </div>
+ <h1 class="h-1 mb-3">Risk Register</h1>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
+ The top risks tracked by the Founder weekly sync. Six categories — technical, compliance, operational, strategic, financial, legal — each with a likelihood × impact score, an owner, a mitigation, a contingency, and a status. Pulled from "Top 15 risks" and extended with the risks one would expect for a 24-month, 22-module, regulated-market platform build. Severity is recorded as Severity in the PRD table but re-cast here as Impact for heatmap clarity.
+ </p>
 
-    <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mt-6">
-      <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="risks.length"></div><div class="text-xs text-slate-500 font-medium mt-1">Risks tracked</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-rose-600" x-text="countByImpact('Catastrophic') + countByImpact('High')"></div><div class="text-xs text-slate-500 font-medium mt-1">High / Catastrophic</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-amber-600" x-text="countByStatus('open')"></div><div class="text-xs text-slate-500 font-medium mt-1">Open</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-emerald-600" x-text="countByStatus('mitigated')"></div><div class="text-xs text-slate-500 font-medium mt-1">Mitigated</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-purple-600" x-text="countByStatus('accepted')"></div><div class="text-xs text-slate-500 font-medium mt-1">Accepted</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-slate-600">6</div><div class="text-xs text-slate-500 font-medium mt-1">Categories</div></div>
-    </div>
-  </header>
+ <div class="grid grid-cols-2 lg:grid-cols-6 gap-3 mt-6">
+ <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="risks.length"></div><div class="text-xs text-slate-500 font-medium mt-1">Risks tracked</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-rose-600" x-text="countByImpact('Catastrophic') + countByImpact('High')"></div><div class="text-xs text-slate-500 font-medium mt-1">High / Catastrophic</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-amber-600" x-text="countByStatus('open')"></div><div class="text-xs text-slate-500 font-medium mt-1">Open</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-emerald-600" x-text="countByStatus('mitigated')"></div><div class="text-xs text-slate-500 font-medium mt-1">Mitigated</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-purple-600" x-text="countByStatus('accepted')"></div><div class="text-xs text-slate-500 font-medium mt-1">Accepted</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-slate-600">6</div><div class="text-xs text-slate-500 font-medium mt-1">Categories</div></div>
+ </div>
+ </header>
 
-  <!-- HEATMAP -->
-  <section class="bbg-card p-5 mb-8">
-    <h2 class="h-3 mb-2">Likelihood × Impact heatmap</h2>
-    <p class="text-sm text-slate-600 mb-4">Cells are colour-coded by composite score. Any High-likelihood / High-impact cell is "sprint-blocking" under PRD §15.5 rules: it auto-creates a Question to the Founder via the Compliance Cockpit. Hover a chip to inspect.</p>
-    <div class="heatmap">
-      <div class="cell label"></div>
-      <div class="cell label">Impact: Low</div>
-      <div class="cell label">Impact: Med</div>
-      <div class="cell label">Impact: High</div>
+ <!-- HEATMAP -->
+ <section class="bbg-card p-5 mb-8">
+ <h2 class="h-3 mb-2">Likelihood × Impact heatmap</h2>
+ <p class="text-sm text-slate-600 mb-4">Cells are colour-coded by composite score. Any High-likelihood / High-impact cell is "sprint-blocking" under rules: it auto-creates a Question to the Founder via the Compliance Cockpit. Hover a chip to inspect.</p>
+ <div class="heatmap">
+ <div class="cell label"></div>
+ <div class="cell label">Impact: Low</div>
+ <div class="cell label">Impact: Med</div>
+ <div class="cell label">Impact: High</div>
 
-      <div class="cell label">Likely · High</div>
-      <div class="cell h-yellow"><template x-for="r in risksAt('High','Low')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
-      <div class="cell h-orange"><template x-for="r in risksAt('High','Medium')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
-      <div class="cell h-darkred"><template x-for="r in risksAt('High','High')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell label">Likely · High</div>
+ <div class="cell h-yellow"><template x-for="r in risksAt('High','Low')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell h-orange"><template x-for="r in risksAt('High','Medium')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell h-darkred"><template x-for="r in risksAt('High','High')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
 
-      <div class="cell label">Likely · Med</div>
-      <div class="cell h-green"><template x-for="r in risksAt('Medium','Low')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
-      <div class="cell h-yellow"><template x-for="r in risksAt('Medium','Medium')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
-      <div class="cell h-red"><template x-for="r in risksAt('Medium','High')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell label">Likely · Med</div>
+ <div class="cell h-green"><template x-for="r in risksAt('Medium','Low')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell h-yellow"><template x-for="r in risksAt('Medium','Medium')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell h-red"><template x-for="r in risksAt('Medium','High')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
 
-      <div class="cell label">Likely · Low</div>
-      <div class="cell h-green"><template x-for="r in risksAt('Low','Low')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
-      <div class="cell h-yellow"><template x-for="r in risksAt('Low','Medium')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
-      <div class="cell h-orange"><template x-for="r in risksAt('Low','High')" :key="r.id"><span class="risk-chip" :title="r.title" x-text="r.id"></span></template></div>
-    </div>
-    <div class="mt-4 text-xs text-slate-500 flex flex-wrap gap-3">
-      <span><span class="heat-cell h-low">low</span> = low concern</span>
-      <span><span class="heat-cell h-med">med</span> = monitor</span>
-      <span><span class="heat-cell h-high">high</span> = active mitigation required</span>
-      <span><span class="heat-cell h-cat">crit</span> = sprint-blocking, founder review</span>
-    </div>
-  </section>
+ <div class="cell label">Likely · Low</div>
+ <div class="cell h-green"><template x-for="r in risksAt('Low','Low')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell h-yellow"><template x-for="r in risksAt('Low','Medium')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
+ <div class="cell h-orange"><template x-for="r in risksAt('Low','High')":key="r.id"><span class="risk-chip":title="r.title" x-text="r.id"></span></template></div>
+ </div>
+ <div class="mt-4 text-xs text-slate-500 flex flex-wrap gap-3">
+ <span><span class="heat-cell h-low">low</span> = low concern</span>
+ <span><span class="heat-cell h-med">med</span> = monitor</span>
+ <span><span class="heat-cell h-high">high</span> = active mitigation required</span>
+ <span><span class="heat-cell h-cat">crit</span> = sprint-blocking, founder review</span>
+ </div>
+ </section>
 
-  <!-- FILTER UI -->
-  <section class="bbg-card p-5 mb-6 no-print">
-    <div class="filter-row">
-      <label>Category</label>
-      <template x-for="c in ['all','technical','compliance','operational','strategic','financial','legal']" :key="c">
-        <button class="chip" :class="{ 'active': filterCategory === c }" @click="filterCategory = c" x-text="c.toUpperCase()"></button>
-      </template>
-    </div>
-    <div class="filter-row">
-      <label>Likelihood</label>
-      <template x-for="l in ['all','Low','Medium','High']" :key="l">
-        <button class="chip" :class="{ 'active': filterLikelihood === l }" @click="filterLikelihood = l" x-text="l"></button>
-      </template>
-    </div>
-    <div class="filter-row">
-      <label>Impact</label>
-      <template x-for="i in ['all','Low','Medium','High','Catastrophic']" :key="i">
-        <button class="chip" :class="{ 'active': filterImpact === i }" @click="filterImpact = i" x-text="i"></button>
-      </template>
-    </div>
-    <div class="filter-row">
-      <label>Status</label>
-      <template x-for="s in ['all','open','mitigated','accepted','closed','realised']" :key="s">
-        <button class="chip" :class="{ 'active': filterStatus === s }" @click="filterStatus = s" x-text="s.toUpperCase()"></button>
-      </template>
-    </div>
-    <div class="filter-row">
-      <label>Search</label>
-      <input type="search" x-model="searchQuery" placeholder="title, description, owner, mitigation…">
-    </div>
-    <div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-100">
-      <div class="text-xs text-slate-500"><strong x-text="visibleCount()"></strong> of <strong x-text="risks.length"></strong> risks match current filters.</div>
-      <button class="btn btn-secondary text-xs" @click="reset()">Reset filters</button>
-    </div>
-  </section>
+ <!-- FILTER UI -->
+ <section class="bbg-card p-5 mb-6 no-print">
+ <div class="filter-row">
+ <label>Category</label>
+ <template x-for="c in ['all','technical','compliance','operational','strategic','financial','legal']":key="c">
+ <button class="chip":class="{ 'active': filterCategory === c }" @click="filterCategory = c" x-text="c.toUpperCase"></button>
+ </template>
+ </div>
+ <div class="filter-row">
+ <label>Likelihood</label>
+ <template x-for="l in ['all','Low','Medium','High']":key="l">
+ <button class="chip":class="{ 'active': filterLikelihood === l }" @click="filterLikelihood = l" x-text="l"></button>
+ </template>
+ </div>
+ <div class="filter-row">
+ <label>Impact</label>
+ <template x-for="i in ['all','Low','Medium','High','Catastrophic']":key="i">
+ <button class="chip":class="{ 'active': filterImpact === i }" @click="filterImpact = i" x-text="i"></button>
+ </template>
+ </div>
+ <div class="filter-row">
+ <label>Status</label>
+ <template x-for="s in ['all','open','mitigated','accepted','closed','realised']":key="s">
+ <button class="chip":class="{ 'active': filterStatus === s }" @click="filterStatus = s" x-text="s.toUpperCase"></button>
+ </template>
+ </div>
+ <div class="filter-row">
+ <label>Search</label>
+ <input type="search" x-model="searchQuery" placeholder="title, description, owner, mitigation…">
+ </div>
+ <div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-100">
+ <div class="text-xs text-slate-500"> of risks match current filters.</div>
+ <button class="btn btn-secondary text-xs" @click="reset">Reset filters</button>
+ </div>
+ </section>
 
-  <!-- RISK TABLE -->
-  <section class="bbg-card overflow-hidden" style="padding:0">
-    <div class="header-row">
-      <div>ID</div>
-      <div>Title</div>
-      <div>Category / Owner</div>
-      <div>Likelihood</div>
-      <div>Impact</div>
-      <div>Score</div>
-      <div>Status</div>
-    </div>
-    <template x-for="r in risks" :key="r.id">
-      <div x-show="matches(r)">
-        <div class="risk-row" @click="toggle(r.id)">
-          <div class="id" x-text="r.id"></div>
-          <div>
-            <div class="title" x-text="r.title"></div>
-            <div class="desc-snip" x-text="r.description.slice(0,140) + (r.description.length>140?'…':'')"></div>
-          </div>
-          <div>
-            <span class="cat" :class="`cat-${r.category}`" x-text="r.category.toUpperCase()"></span>
-            <div class="text-[10px] text-slate-500 mt-0.5" x-text="r.owner"></div>
-          </div>
-          <div><span class="heat-cell" :class="`h-${r.likelihood.toLowerCase()}`" x-text="r.likelihood"></span></div>
-          <div><span class="heat-cell" :class="impactClass(r.impact)" x-text="r.impact"></span></div>
-          <div class="font-mono font-bold" x-text="scoreFor(r)"></div>
-          <div><span :class="`status-${r.status}`" x-text="r.status.toUpperCase()"></span></div>
-        </div>
-        <div class="risk-detail" x-show="expanded === r.id" x-cloak>
-          <dl>
-            <dt>Description</dt><dd x-text="r.description"></dd>
-            <dt>Mitigation</dt><dd x-text="r.mitigation"></dd>
-            <dt>Contingency</dt><dd x-text="r.contingency"></dd>
-            <dt>Owner</dt><dd x-text="r.owner"></dd>
-            <dt>Last reviewed</dt><dd x-text="r.lastReviewed"></dd>
-            <dt>Reference</dt><dd class="font-mono" x-text="r.reference"></dd>
-          </dl>
-        </div>
-      </div>
-    </template>
-  </section>
+ <!-- RISK TABLE -->
+ <section class="bbg-card overflow-hidden" style="padding:0">
+ <div class="header-row">
+ <div>ID</div>
+ <div>Title</div>
+ <div>Category / Owner</div>
+ <div>Likelihood</div>
+ <div>Impact</div>
+ <div>Score</div>
+ <div>Status</div>
+ </div>
+ <template x-for="r in risks":key="r.id">
+ <div x-show="matches(r)">
+ <div class="risk-row" @click="toggle(r.id)">
+ <div class="id" x-text="r.id"></div>
+ <div>
+ <div class="title" x-text="r.title"></div>
+ <div class="desc-snip" x-text="r.description.slice(0,140) + (r.description.length>140?'…':'')"></div>
+ </div>
+ <div>
+ <span class="cat":class="`cat-${r.category}`" x-text="r.category.toUpperCase"></span>
+ <div class="text-[10px] text-slate-500 mt-0.5" x-text="r.owner"></div>
+ </div>
+ <div><span class="heat-cell":class="`h-${r.likelihood.toLowerCase}`" x-text="r.likelihood"></span></div>
+ <div><span class="heat-cell":class="impactClass(r.impact)" x-text="r.impact"></span></div>
+ <div class="font-mono font-bold" x-text="scoreFor(r)"></div>
+ <div><span:class="`status-${r.status}`" x-text="r.status.toUpperCase"></span></div>
+ </div>
+ <div class="risk-detail" x-show="expanded === r.id" x-cloak>
+ <dl>
+ <dt>Description</dt><dd x-text="r.description"></dd>
+ <dt>Mitigation</dt><dd x-text="r.mitigation"></dd>
+ <dt>Contingency</dt><dd x-text="r.contingency"></dd>
+ <dt>Owner</dt><dd x-text="r.owner"></dd>
+ <dt>Last reviewed</dt><dd x-text="r.lastReviewed"></dd>
+ <dt>Reference</dt><dd class="font-mono" x-text="r.reference"></dd>
+ </dl>
+ </div>
+ </div>
+ </template>
+ </section>
 
-  <div x-show="visibleCount() === 0" class="bbg-card p-10 text-center mt-6">
-    <p class="text-slate-500">No risks match the current filters. <button class="text-blue-600 font-bold underline" @click="reset()">Reset</button> to see the full register.</p>
-  </div>
+ <div x-show="visibleCount === 0" class="bbg-card p-10 text-center mt-6">
+ <p class="text-slate-500">No risks match the current filters. <button class="text-blue-600 font-bold underline" @click="reset">Reset</button> to see the full register.</p>
+ </div>
 
-  <!-- Operational rules card -->
-  <section class="bbg-card p-5 mt-8">
-    <h2 class="h-3 mb-2">Operational rules · PRD §15.5</h2>
-    <ul class="text-sm text-slate-600 leading-relaxed space-y-1.5 list-disc pl-5">
-      <li>Severity × Likelihood produces a heat-mapped score; any <strong>High–High</strong> lands on the Compliance Cockpit and triggers a Question to the Founder.</li>
-      <li>Risks are reviewed <strong>weekly</strong> during the Founder weekly sync; status (Open / Mitigated / Realised / Closed) is updated.</li>
-      <li>A <strong>realised risk</strong> triggers an AAR (After-Action Review); the AAR is captured in BRAIN Layer 2 with the <code class="text-xs">lesson-learned</code> tag and is surfaced in future similar contexts via GraphRAG.</li>
-      <li>New risks added between phases <strong>require Founder approval</strong>; they are not auto-accepted from CUO's suggestion stream.</li>
-    </ul>
-  </section>
+ <!-- Operational rules card -->
+ <section class="bbg-card p-5 mt-8">
+ <h2 class="h-3 mb-2">Operational rules</h2>
+ <ul class="text-sm text-slate-600 leading-relaxed space-y-1.5 list-disc pl-5">
+ <li>Severity × Likelihood produces a heat-mapped score; any <strong>High–High</strong> lands on the Compliance Cockpit and triggers a Question to the Founder.</li>
+ <li>Risks are reviewed <strong>weekly</strong> during the Founder weekly sync; status (Open / Mitigated / Realised / Closed) is updated.</li>
+ <li>A <strong>realised risk</strong> triggers an AAR (After-Action Review); the AAR is captured in BRAIN Layer 2 with the <code class="text-xs">lesson-learned</code> tag and is surfaced in future similar contexts via GraphRAG.</li>
+ <li>New risks added between phases <strong>require Founder approval</strong>; they are not auto-accepted from CUO's suggestion stream.</li>
+ </ul>
+ </section>
 
-  <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
-    <p>CyberOS Documentation · Risk Register · PRD v2026.05 §15 + synthesised additions</p>
-    <p class="text-xs text-slate-400 mt-1">RSK-01 through RSK-15 quote the PRD verbatim; R-EXT-* additions are inferred from project context and marked with their rationale.</p>
-  </div>
+ <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
+ <p>CyberOS Documentation · Risk Register · PRD v2026.05 §15 + synthesised additions</p>
+ <p class="text-xs text-slate-400 mt-1">RSK-01 through RSK-15 quote the PRD verbatim; R-EXT-* additions are inferred from project context and marked with their rationale.</p>
+ </div>
 </div>
 
 <script>
-function riskRegister() {
-  return {
-    filterCategory:'all', filterLikelihood:'all', filterImpact:'all', filterStatus:'all', searchQuery:'',
-    expanded: null,
-    risks: [],
-    init() { this.risks = RISKS; },
-    matches(r) {
-      if (this.filterCategory !== 'all' && r.category !== this.filterCategory) return false;
-      if (this.filterLikelihood !== 'all' && r.likelihood !== this.filterLikelihood) return false;
-      if (this.filterImpact !== 'all' && r.impact !== this.filterImpact) return false;
-      if (this.filterStatus !== 'all' && r.status !== this.filterStatus) return false;
-      if (this.searchQuery) {
-        const q = this.searchQuery.toLowerCase();
-        return r.title.toLowerCase().includes(q) || r.description.toLowerCase().includes(q) ||
-               r.owner.toLowerCase().includes(q) || r.mitigation.toLowerCase().includes(q);
-      }
-      return true;
-    },
-    visibleCount() { return this.risks.filter(r => this.matches(r)).length; },
-    countByImpact(i) { return this.risks.filter(r => r.impact === i).length; },
-    countByStatus(s) { return this.risks.filter(r => r.status === s).length; },
-    risksAt(lk, im) { return this.risks.filter(r => r.likelihood === lk && (r.impact === im || (im === 'High' && r.impact === 'Catastrophic'))); },
-    scoreFor(r) {
-      const lkMap = {Low:1,Medium:2,High:3};
-      const imMap = {Low:1,Medium:2,High:3,Catastrophic:4};
-      return lkMap[r.likelihood] * imMap[r.impact];
-    },
-    impactClass(i) { return ({'Low':'h-low','Medium':'h-med','High':'h-high','Catastrophic':'h-cat'})[i] || 'h-med'; },
-    toggle(id) { this.expanded = (this.expanded === id) ? null : id; },
-    reset() { this.filterCategory='all'; this.filterLikelihood='all'; this.filterImpact='all'; this.filterStatus='all'; this.searchQuery=''; },
-  };
+function riskRegister {
+ return {
+ filterCategory:'all', filterLikelihood:'all', filterImpact:'all', filterStatus:'all', searchQuery:'',
+ expanded: null,
+ risks:,
+ init { this.risks = RISKS; },
+ matches(r) {
+ if (this.filterCategory !== 'all' && r.category !== this.filterCategory) return false;
+ if (this.filterLikelihood !== 'all' && r.likelihood !== this.filterLikelihood) return false;
+ if (this.filterImpact !== 'all' && r.impact !== this.filterImpact) return false;
+ if (this.filterStatus !== 'all' && r.status !== this.filterStatus) return false;
+ if (this.searchQuery) {
+ const q = this.searchQuery.toLowerCase;
+ return r.title.toLowerCase.includes(q) || r.description.toLowerCase.includes(q) ||
+ r.owner.toLowerCase.includes(q) || r.mitigation.toLowerCase.includes(q);
+ }
+ return true;
+ },
+ visibleCount { return this.risks.filter(r => this.matches(r)).length; },
+ countByImpact(i) { return this.risks.filter(r => r.impact === i).length; },
+ countByStatus(s) { return this.risks.filter(r => r.status === s).length; },
+ risksAt(lk, im) { return this.risks.filter(r => r.likelihood === lk && (r.impact === im || (im === 'High' && r.impact === 'Catastrophic'))); },
+ scoreFor(r) {
+ const lkMap = {Low:1,Medium:2,High:3};
+ const imMap = {Low:1,Medium:2,High:3,Catastrophic:4};
+ return lkMap[r.likelihood] * imMap[r.impact];
+ },
+ impactClass(i) { return ({'Low':'h-low','Medium':'h-med','High':'h-high','Catastrophic':'h-cat'})[i] || 'h-med'; },
+ toggle(id) { this.expanded = (this.expanded === id) ? null: id; },
+ reset { this.filterCategory='all'; this.filterLikelihood='all'; this.filterImpact='all'; this.filterStatus='all'; this.searchQuery=''; },
+ };
 }
 
 const RISKS = [
-  // ────── TECHNICAL ──────
-  { id:'RSK-01', category:'technical', title:'Anthropic API pricing/rate-limit changes break AI Gateway economics', description:'Anthropic API pricing or rate-limiting changes break the AI Gateway economics. A 2x price spike or a sudden rate-cap could compress margins or stall throughput for the CUO persona that depends on long-context Claude.', likelihood:'Medium', impact:'High', owner:'CTO / CAIO', mitigation:'AI Gateway abstracts model choice; multi-provider routing (Bedrock primary + Anthropic + OpenAI fallback) live from P1; cost-per-tenant budgeting from P3; ZDR-attested endpoints maintained as a portable invariant.', contingency:'Failover to Bedrock + OpenAI; re-route CUO to cheaper haiku models for non-critical surfaces; absorb cost for ≤ 90 days while re-architecting prompts for cache hit-rate ≥ 60% ((FR pending)).', status:'mitigated', lastReviewed:'2026-04-30', reference:'PRD §15 RSK-01'},
-  { id:'RSK-02', category:'technical', title:'BRAIN Layer 2 retrieval quality degrades past 50K facts', description:'BRAIN Layer 2 retrieval quality degrades as memories scale past 50K facts. nDCG@10 could drop below the 0.65 floor without intervention; reranker latency might push p95 search beyond the 250ms budget.', likelihood:'Medium', impact:'High', owner:'CDO', mitigation:'GraphRAG community summarisation (Leiden default, k-core fallback); reranker (BAAI/bge-reranker-v2-m3) tuning quarterly; weekly retrieval-eval regression suite on Vi corpus.', contingency:'Switch reranker to a larger cross-encoder on a dedicated GPU node; partition tenants over sharded pgvector if scale demands; promote-to-canonical KB articles to boost recall.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-02 / N(FR pending)'},
-  { id:'RSK-03', category:'technical', title:'CRDT conflict UX too complex for non-technical users', description:'CRDT conflict resolution UX is too complex for non-technical users. The "keep both as disputed pair" model is correct but unfamiliar, leading to user-frustration and bad workarounds.', likelihood:'High', impact:'Medium', owner:'CPO', mitigation:'Defaults heavily favour latest-write-wins for non-critical scopes; Question class surfaces only on high-stakes scopes; chooser UI educates with one-line provenance.', contingency:'Add a "let CUO decide" auto-merge fallback for ambiguous scopes; rollback to single-device authoring if adoption fails.', status:'open', lastReviewed:'2026-05-01', reference:'PRD §15 RSK-03'},
-  { id:'RSK-04', category:'technical', title:'PGroonga Vietnamese edge cases untested', description:'Vietnamese full-text search via PGroonga has edge cases not covered by tests — compound nouns, mixed-diacritic queries, code-switch Vi/En in CHAT messages.', likelihood:'Medium', impact:'Medium', owner:'CTO', mitigation:'Bilingual test corpus from CHAT logs; weekly retrieval regression run; fallback to LLM-based search if PGroonga fails on a query class.', contingency:'Augment with BM25 over normalised diacritic-stripped form; LLM-driven query rewrite layer.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-04'},
-  { id:'RSK-06', category:'technical', title:'Postgres + pgvector noisy-neighbour at multi-tenant scale', description:'Multi-tenant noisy-neighbour effects on the Postgres + pgvector cluster. A single tenant\'s heavy vector workload could compress p95 search latency for every other tenant.', likelihood:'High', impact:'Medium', owner:'CTO', mitigation:'Per-tenant query budgets; row-level isolation enforced via RLS; vector-store sharding from P3.', contingency:'Move heavy tenants to dedicated nodes; auto-throttle on per-tenant CPU breach; emergency shard split.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-06'},
-  { id:'RSK-07', category:'technical', title:'Single-region (Hetzner) outage takes everything down', description:'Single-region (Hetzner) outage takes down all of CyberOS. CHAT 99.9% availability target becomes unachievable if any provider single-points-of-failure for >1h/month.', likelihood:'Low', impact:'High', owner:'CTO', mitigation:'Two regions from P0; warm-standby for Postgres; documented DR runbook; quarterly DR drill.', contingency:'Failover to SG/EU region (≤ 24h at P3); customer-facing status page with predicted ETA.', status:'mitigated', lastReviewed:'2026-04-30', reference:'PRD §15 RSK-07 / N(FR pending)'},
-  { id:'RSK-11', category:'technical', title:'Mattermost/Stalwart upstream stalls or license change', description:'Mattermost or Stalwart upstream changes licence terms or stalls development. CyberOS forks would inherit the maintenance burden.', likelihood:'Low', impact:'Medium', owner:'CTO', mitigation:'We fork at P0; licence audit at fork time; commit log monitored quarterly; we can self-maintain if needed.', contingency:'Internal maintainer rotation; back-port security fixes from community PRs; eventual fork-of-fork.', status:'mitigated', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-11'},
-  { id:'R-EXT-T1', category:'technical', title:'wasmtime regression breaks SKILL host', description:'A wasmtime release introduces a regression that breaks the SKILL Component-Model invariants or AOT cache key. Cold-start exceeds the 80ms budget; parity tests fail.', likelihood:'Low', impact:'High', owner:'Eng Lead', mitigation:'Pin wasmtime major; nightly regression suite against next-minor; Criterion benchmark gates AOT-cache content-hash determinism.', contingency:'Pin to last green minor; cherry-pick fixes; defer skill-host upgrade pending upstream fix.', status:'mitigated', lastReviewed:'2026-04-15', reference:'inferred / SKILL Phase 5-7'},
-  { id:'R-EXT-T2', category:'technical', title:'BRAIN AOC (audit-originating context) drift', description:'AOC drift — silent persona-version skew between client and gateway means audit rows misattribute writes. Could be invisible until forensic.', likelihood:'Medium', impact:'High', owner:'CDO', mitigation:'Persona-version stamp REQUIRED at gateway ((FR pending)); CI lint refuses client-injected stamps; persona-version drift detection ((FR pending)).', contingency:'Backfill from audit-row source IPs + timestamps; AAR + retro; surface drift sample in OBS.', status:'open', lastReviewed:'2026-05-07', reference:'inferred / (FR pending)'},
-  { id:'R-EXT-T3', category:'technical', title:'pgvector HNSW degrades at >1M chunks per tenant', description:'pgvector HNSW index performance degrades non-linearly as a tenant approaches 1M chunks. Re-index without downtime becomes hard.', likelihood:'Medium', impact:'High', owner:'CDO / CTO', mitigation:'Synthetic load tests at 1M-chunk floor (N(FR pending)); per-tenant chunk-cap warning at 750K; quarterly capacity review.', contingency:'Online rebuild with shadow index; cutover during low-traffic window; per-tenant shard.', status:'open', lastReviewed:'2026-05-07', reference:'inferred / N(FR pending) / RSK-06'},
-  { id:'R-EXT-T4', category:'technical', title:'GraphQL Federation v2 incompatibility on minor upgrade', description:'Apollo Federation v2 introduces a breaking change in a minor that wedges schema composition across 22 subgraphs.', likelihood:'Low', impact:'High', owner:'Eng Lead', mitigation:'Pin major; quarterly upgrade review (ASM-09); composition check gate runs in CI.', contingency:'Hold on last green; one subgraph at a time migration; Apollo Studio diff narrative published.', status:'mitigated', lastReviewed:'2026-04-30', reference:'ASM-09 / (FR pending)'},
-
-  // ────── COMPLIANCE ──────
-  { id:'RSK-05', category:'compliance', title:'EU AI Act Article 50 more aggressive than expected', description:'EU AI Act Article 50 transparency obligations interpreted more aggressively than expected. Could require disclosure beyond the persistent badge.', likelihood:'Medium', impact:'Medium', owner:'CLO', mitigation:'Persistent badge on every AI surface; Explanation pane on demand; legal review at P3 entry.', contingency:'Expanded badge with provenance trace; legal-review-driven badge spec update.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-05'},
-  { id:'R-EXT-C1', category:'compliance', title:'PDPL breach — sensitive PII leaked', description:'Vietnam PDPL Law 91/2025 / Decree 13/2023 breach: CCCD or VNeID-derived sensitive data leaks from HR or BRAIN. Severe regulator + reputational consequences.', likelihood:'Low', impact:'Catastrophic', owner:'DPO (Founder)', mitigation:'Government ID encrypted with separate KMS key ((FR pending)); access logged sev-1; never ingested into BRAIN; ingestion denylist ((FR pending)).', contingency:'Breach-notification artefacts generated within 72h ((FR pending)); regulator + subject notice; outside counsel engagement; remediation playbook.', status:'open', lastReviewed:'2026-05-07', reference:'PDPL / (FR pending)'},
-  { id:'R-EXT-C2', category:'compliance', title:'Data-localisation rule expansion (Decree 53/2022)', description:'Decree 53/2022 enforcement tightens, requiring more services to keep data in-VN. Could break the SG HoldCo flip plan or limit cross-region failover.', likelihood:'Medium', impact:'High', owner:'CLO / CTO', mitigation:'Tenant residency immutable after 7 days; per-tenant data-plane tags; legal review quarterly (ASM-04).', contingency:'In-VN-only mode for affected tenants; legal counsel engagement; backup region switched to VN provider (Viettel Cloud).', status:'open', lastReviewed:'2026-05-07', reference:'Decree 53/2022 / ASM-04'},
-  { id:'R-EXT-C3', category:'compliance', title:'EU AI Act Annex III §4 reclassification of REW/LEARN', description:'REW + LEARN currently treated as Annex III §4 high-risk. If an EU implementing regulation tightens the criteria, additional controls (CE-mark, post-market monitoring) could be required.', likelihood:'Medium', impact:'High', owner:'CLO', mitigation:'P2 conformity assessment pack; annual DPIA refresh; auto-generated audit rows on every promotion decision.', contingency:'Engage notified body; full FRIA (Fundamental Rights Impact Assessment); freeze ML-driven scoring until certified.', status:'open', lastReviewed:'2026-05-07', reference:'EU AI Act / (FR pending)'},
-  { id:'R-EXT-C4', category:'compliance', title:'GDPR Article 17 erasure crosses chain integrity', description:'A GDPR Art 17 erasure request demands deletion of a chain-leaf audit row, breaking immutable-by-construction. Conflict with the BRAIN MMR property.', likelihood:'Low', impact:'High', owner:'DPO / CTO', mitigation:'AGENTS.md §3.6 delete(path,"purge") preserves the redacted content\'s hash but not its body; the fact of purge is itself a chain leaf and is not erasable.', contingency:'Document the legal basis for keeping the purge-row; offer the subject a transparent attestation; outside counsel review.', status:'mitigated', lastReviewed:'2026-04-30', reference:'AGENTS.md §3.6 / (FR pending)'},
-  { id:'R-EXT-C5', category:'compliance', title:'ISO 27001/42001 audit cycle slips, blocks P2/P3 exit', description:'Annual audit cycle for ISO 27001 (P2 exit) or ISO 42001 AIMS (P3 exit) slips, blocking phase advancement.', likelihood:'Medium', impact:'High', owner:'CLO / DPO', mitigation:'External auditor engaged at P2 entry; gap analysis at P1 mid-phase; control evidence captured continuously by CP module.', contingency:'P3 entry conditional on letter-of-engagement, full certificate by P3+1; tenants notified.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §12 / N(FR pending)'},
-  { id:'R-EXT-C6', category:'compliance', title:'Trust Center spec drift', description:'Trust Center sub-processor list lags behind actual vendor onboarding. N(FR pending) violation.', likelihood:'Medium', impact:'Medium', owner:'DPO', mitigation:'Pre-commit hook checks vendor delta vs Trust Center page; Compliance Cockpit weekly review.', contingency:'72-hour catch-up; outside-counsel review of disclosed-vs-actual gap.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending) / Trust Center'},
-
-  // ────── OPERATIONAL ──────
-  { id:'RSK-08', category:'operational', title:'Slack/Zalo migration friction; employees revert', description:'Slack/Zalo migration friction causes employees to revert. CHAT adoption stalls; the 10-person pilot fails.', likelihood:'Medium', impact:'High', owner:'COO', mitigation:'CHAT importer for Slack history; bidirectional bridge for first 60 days; Founder mandate; Week-11 Slack/Zalo set to read-only (P0 12-week roadmap).', contingency:'Extended bridge to 90 days; per-team migration champions; CUO digest highlights migration friction patterns.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-08'},
-  { id:'RSK-09', category:'operational', title:'Founder bandwidth is the bottleneck (key-person)', description:'Founder bandwidth becomes the bottleneck — DPO + CLO + CFO + CHRO + CSO all covered by Founder until P3.', likelihood:'High', impact:'High', owner:'CEO', mitigation:'CUO covers drafting and surfacing; gate-readiness reports automate weekly state checks; explicit hire plan at P3 entry.', contingency:'Stretch P3 timeline; defer non-critical workstreams; engage fractional CFO/legal counsel as bridge.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-09'},
-  { id:'R-EXT-O1', category:'operational', title:'Sole-developer bottleneck on critical-path code', description:'Single engineer owns BRAIN + Skill + CUO core. Illness, family event, or external opportunity could stall the platform.', likelihood:'Medium', impact:'Catastrophic', owner:'CEO', mitigation:'Personal continuity plan at P2 entry (ASM-15); CUO absorbs ambient drafting; module specs are normative (AGENTS.md) so handover-friendly.', contingency:'Engage Vietnam-based senior contractor; 30-day onboarding via AGENTS.md + tests; pause non-critical phase work.', status:'open', lastReviewed:'2026-05-07', reference:'ASM-15 / RSK-09'},
-  { id:'R-EXT-O2', category:'operational', title:'Headcount ramp lags ARR — adoption gaps in P2/P3', description:'CyberSkill stays at 10 people through P1, but P2/P3 demands roles (CFO, DPO, AM, BD) not on payroll. ARR may scale faster than people.', likelihood:'Medium', impact:'Medium', owner:'CEO', mitigation:'Monthly headcount review (ASM-03); explicit hire trigger at $1M ARR; CUO scales founder-equivalent work.', contingency:'Hire fractional roles first (CFO, legal); defer non-revenue work; raise interim seed if growth outruns.', status:'open', lastReviewed:'2026-05-07', reference:'ASM-03'},
-  { id:'R-EXT-O3', category:'operational', title:'DR drill skip — RTO/RPO unverified', description:'Quarterly DR drill skipped under deadline pressure. N(FR pending) violation; RTO≤4h becomes aspirational.', likelihood:'Medium', impact:'High', owner:'Eng Lead', mitigation:'Drill scheduled in calendar as gate-blocking; missed drill auto-creates a Founder Question.', contingency:'24-hour catch-up drill with real failover; post-drill retro published.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending)'},
-  { id:'R-EXT-O4', category:'operational', title:'Skill hot-reload causes runtime instability', description:'A skill update on disk fails a schema check but the hot-reload path doesn\'t fail gracefully — leaks into the running supervisor.', likelihood:'Low', impact:'Medium', owner:'Eng Lead', mitigation:'Spec validator ((FR pending)) refuses load on schema delta; capability broker isolates failure; AOC unchanged on reject.', contingency:'Pin to last green skill version; CHAT alert to Founder.', status:'mitigated', lastReviewed:'2026-04-30', reference:'(FR pending)'},
-  { id:'R-EXT-O5', category:'operational', title:'Backup integrity not verified by restore drill', description:'Backups run nightly but the restore is never exercised on a real failure. Could find on the day that RPO objective is unmet.', likelihood:'Medium', impact:'High', owner:'Eng Lead', mitigation:'Quarterly restore drill; backup-integrity check on the restore-image via cyberos doctor.', contingency:'Promote a recent S3 snapshot; rebuild from BRAIN signed-zip export.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending)/006'},
-
-  // ────── STRATEGIC ──────
-  { id:'RSK-10', category:'strategic', title:'CUO emits high-confidence wrong answer with real impact', description:'CUO produces a high-confidence wrong answer that influences a real decision (e.g. mis-classifies a deal probability, mis-summarises a contract).', likelihood:'Medium', impact:'High', owner:'CDO', mitigation:'Defer-to-human triggers (PRD §6.4.1); Explanation pane mandatory; persona-version logged with every output; ≥98% citation rate (N(FR pending)).', contingency:'AAR + retro; refine persona scope contract; surface the failure mode in the next gate-readiness report.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-10'},
-  { id:'RSK-13', category:'strategic', title:'Microsoft-Recall–style backlash on BRAIN ingestion', description:'Microsoft Recall–style backlash if BRAIN ingestion appears too greedy. CyberSkill\'s Vietnamese-market positioning could flip negative quickly.', likelihood:'Medium', impact:'High', owner:'CPO', mitigation:'Default ingestion is strict (PRD §5.8); .cyberos-memory is the source of truth, user-facing; conflict UI educates; ingest denylist enforced.', contingency:'Public ingest-policy refresh; opt-out toggles per Member; CUO digest summarises what was ingested last week.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-13'},
-  { id:'R-EXT-S1', category:'strategic', title:'Anthropic Skills spec drifts after CyberOS commits', description:'Anthropic Agent Skills format evolves (e.g. new SKILL.md fields, allowed-tools spec change) faster than CyberOS can track. 6 published VN-market skills could go stale.', likelihood:'Medium', impact:'Medium', owner:'CTO', mitigation:'Spec validator surfaces drift ((FR pending)); quarterly conformance review; INTEROP.md maintained for third-party consumers.', contingency:'Spec-shim layer auto-converts old skills; deprecation period of one phase per N(FR pending).', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending) / N(FR pending)'},
-  { id:'R-EXT-S2', category:'strategic', title:'OpenAI Apps SDK or competing exec-layer launched in P2', description:'A competitor (Notion, Linear, ClickUp, OpenAI Apps SDK) launches a near-identical CUO-style executive layer in P2 timeframe. Could compress moat.', likelihood:'High', impact:'Medium', owner:'CEO', mitigation:'Vietnamese-market wedge (6 VN-specific skills); audit-chain depth; deep dogfood signal as differentiator.', contingency:'Accelerate VN-market skill catalog; re-position around "AI-native Vietnamese ops" rather than generic exec layer.', status:'open', lastReviewed:'2026-05-07', reference:'OQ-15'},
-  { id:'R-EXT-S3', category:'strategic', title:'Partnership lock-in with QTSP / Stripe / Bedrock', description:'A single provider partnership (e.g., eIDAS QTSP partner for DOC, Stripe for INV) becomes a lock-in. Switching cost high.', likelihood:'Medium', impact:'Medium', owner:'CEO / CFO', mitigation:'Abstract every external dependency behind an internal interface; multiple QTSP options researched (GlobalSign, Cryptomathic); multi-PSP from P2.', contingency:'90-day notice + parallel switch plan; data-plane export contract clauses.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending)'},
-  { id:'R-EXT-S4', category:'strategic', title:'Dogfood-first signal weak — internal use does not predict external', description:'CyberSkill\'s 10-person internal use may not generalise to 50-tenant external. Features tuned for the founder may not fit a real customer.', likelihood:'Medium', impact:'Medium', owner:'CPO / CEO', mitigation:'P3 first-tenant feedback as gate (ASM-12); design partner program at P2 exit; CUO digest tracks usage gaps.', contingency:'Re-prioritise modules based on early-tenant pain; defer P4 external launch if dogfood signal weak.', status:'open', lastReviewed:'2026-05-07', reference:'ASM-12'},
-
-  // ────── FINANCIAL ──────
-  { id:'RSK-14', category:'financial', title:'Singapore HoldCo flip costs more or takes longer', description:'Singapore HoldCo flip costs more or takes longer than anticipated. Could blow the $50K USD budget or stretch beyond 12 weeks.', likelihood:'Medium', impact:'Medium', owner:'CFO', mitigation:'Engage Singapore corporate counsel at P2 entry; budget reserves $50K USD; tenant-ownership tagging makes the flip data-light.', contingency:'Extend timeline by 4–6 weeks; reduce SG-side scope to essentials; raise interim bridge.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-14 / ASM-14'},
-  { id:'RSK-15', category:'financial', title:'Currency exposure compresses margins', description:'Currency exposure (USD-denominated AI cost; VND/SGD revenue mix) compresses margins. A 10% VND devaluation could erase margin on a Vietnamese tenant.', likelihood:'High', impact:'Medium', owner:'CFO', mitigation:'Quarterly hedging review at P3 entry; multi-currency pricing in INV from P2; CFO + CSO joint owner.', contingency:'VND-pricing-tier with USD-cost-passthrough; partial USD hedge.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-15'},
-  { id:'R-EXT-F1', category:'financial', title:'Runway shorter than expected on AI cost overrun', description:'AI Gateway cost overrun (cache-hit-rate ≤ 30%, model-mix shift) shortens runway materially. P0 → P3 burn could exceed plan by 25%.', likelihood:'Medium', impact:'High', owner:'CFO', mitigation:'Per-tenant cost ceiling enforced ((FR pending)); CUO/CFO-skill weekly burn-rate digest; system prompts hash-stabilised for cache.', contingency:'Throttle non-essential CUO surfaces; switch to cheaper Haiku for ambient digests; raise.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending) / N(FR pending)'},
-  { id:'R-EXT-F2', category:'financial', title:'ARR ramp slower than $1.5M target at P3', description:'P3 Singapore HoldCo flip is conditional on ARR ≥ $1.5M. Slower ramp delays HoldCo, EU-tenant pathway, ISO certifications.', likelihood:'Medium', impact:'High', owner:'CEO', mitigation:'P2 design-partner program; tenant pricing-tier diversity; CUO/CRO-skill forecasts.', contingency:'Delay HoldCo flip 6 months; bridge round if needed; double down on VN-market tenants while waiting.', status:'open', lastReviewed:'2026-05-07', reference:'PRD §15.4 / P3-exit criteria'},
-  { id:'R-EXT-F3', category:'financial', title:'50-tenant infra cost ceiling breached', description:'Per N(FR pending), 50-tenant scale infra cost ≤ $2.2k/mo + ≤ $4/active user/month LLM. Could blow ceiling if BRAIN ingest pattern is denser than planned.', likelihood:'Medium', impact:'Medium', owner:'CTO / CFO', mitigation:'Quarterly cost review; per-tenant cost dashboard ((FR pending)); chunk-cap warnings.', contingency:'Tier pricing shift; spot/preemptible GPU for embedder/reranker; cold-tier archival promotion.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending)/011'},
-
-  // ────── LEGAL ──────
-  { id:'RSK-12', category:'legal', title:'AI Gateway breach leaks one tenant\'s prompts to another', description:'A breach in the AI Gateway leaks one tenant\'s prompts to another. N(FR pending) = 0 cross-tenant leakage; even one incident is sev-0.', likelihood:'Low', impact:'Catastrophic', owner:'CTO / CSO', mitigation:'Per-tenant API keys; per-request sanitisation; never-cache rule for prompt content; audit of every cross-tenant call; quarterly red-team.', contingency:'Outage of AI Gateway for forensic; tenant-by-tenant notification; outside counsel; possible regulator notification (PDPL/GDPR).', status:'mitigated', lastReviewed:'2026-05-07', reference:'PRD §15 RSK-12 / N(FR pending)'},
-  { id:'R-EXT-L1', category:'legal', title:'IP claim — Anthropic Skills format trademark or patent', description:'A third party claims trademark/patent over Anthropic Agent Skills format or wasmtime usage. CyberOS rebrand or fork cost.', likelihood:'Low', impact:'Medium', owner:'CLO', mitigation:'AGPL/MIT licence audit at every dependency add; INTEROP.md positions CyberOS as compatible-not-derivative; Anthropic-published spec relied on.', contingency:'IP-counsel review; defensive patent or licence; alternative spec layer.', status:'open', lastReviewed:'2026-05-07', reference:'inferred / ASM-06/07'},
-  { id:'R-EXT-L2', category:'legal', title:'Contract risk — client demands data sovereignty beyond plan', description:'A future client demands data sovereignty (e.g., on-prem VPC, specific KMS BYOK) beyond what CyberOS offers in P3.', likelihood:'Medium', impact:'Medium', owner:'CLO / CEO', mitigation:'BYOK CMEK at Advanced tier (P3+); on-prem SKU evaluated under OQ-06.', contingency:'Engage in custom deployment as a one-off; price reflects engineering cost; deliver via partner.', status:'open', lastReviewed:'2026-05-07', reference:'OQ-06'},
-  { id:'R-EXT-L3', category:'legal', title:'Regulatory enforcement — VN MoPS/MoIC investigation', description:'Vietnam MoPS/MoIC opens an investigation into CCCD/VNeID data handling. Could halt operations during enforcement.', likelihood:'Low', impact:'Catastrophic', owner:'CLO / DPO', mitigation:'CCCD sev-1 access log; encrypted with separate KMS; never ingested into BRAIN; full data inventory in CP module.', contingency:'Outside counsel engagement; full DSAR pulled within 24h; potential service pause for compliant tenants.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending)'},
-  { id:'R-EXT-L4', category:'legal', title:'Total Rewards Appendix legal challenge (P1-protection)', description:'A departing Member challenges the P1-base-salary protection or BP anti-inflation calculation in court. CyberSkill\'s legal commitment (N(FR pending)) tested.', likelihood:'Low', impact:'High', owner:'CLO / CFO', mitigation:'Anti-retroactive parameter versioning ((FR pending)); recompute against an old payslip must be identical; written legal commitment in employment contract.', contingency:'Recompute property test as evidence; outside-counsel-driven settlement; AAR captured.', status:'mitigated', lastReviewed:'2026-04-30', reference:'N(FR pending)/004'},
-  { id:'R-EXT-L5', category:'legal', title:'PORTAL customer-agent MCP access — consent dispute', description:'A client\'s GPT/Claude/Gemini connects via MCP under (FR pending) but a downstream user disputes the consent scope. Liability for cross-tenant data exposure.', likelihood:'Low', impact:'High', owner:'CLO', mitigation:'Explicit consent dialog with scope-list; per-action audit row; MCP gateway enforces scope contract at runtime.', contingency:'Pause customer-agent feature for the tenant; outside counsel; consent dialog redesign.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending) / OQ-08'},
+ / ────── TECHNICAL ──────
+ { id:'RSK-01', category:'technical', title:'Anthropic API pricing/rate-limit changes break AI Gateway economics', description:'Anthropic API pricing or rate-limiting changes break the AI Gateway economics. A 2x price spike or a sudden rate-cap could compress margins or stall throughput for the CUO persona that depends on long-context Claude.', likelihood:'Medium', impact:'High', owner:'CTO / CAIO', mitigation:'AI Gateway abstracts model choice; multi-provider routing (Bedrock primary + Anthropic + OpenAI fallback) live from P1; cost-per-tenant budgeting from P3; ZDR-attested endpoints maintained as a portable invariant.', contingency:'Failover to Bedrock + OpenAI; re-route CUO to cheaper haiku models for non-critical surfaces; absorb cost for ≤ 90 days while re-architecting prompts for cache hit-rate ≥ 60% ((FR pending)).', status:'mitigated', lastReviewed:'2026-04-30', reference:' RSK-01'},
+ { id:'RSK-02', category:'technical', title:'BRAIN Layer 2 retrieval quality degrades past 50K facts', description:'BRAIN Layer 2 retrieval quality degrades as memories scale past 50K facts. nDCG@10 could drop below the 0.65 floor without intervention; reranker latency might push p95 search beyond the 250ms budget.', likelihood:'Medium', impact:'High', owner:'CDO', mitigation:'GraphRAG community summarisation (Leiden default, k-core fallback); reranker (BAAI/bge-reranker-v2-m3) tuning quarterly; weekly retrieval-eval regression suite on Vi corpus.', contingency:'Switch reranker to a larger cross-encoder on a dedicated GPU node; partition tenants over sharded pgvector if scale demands; promote-to-canonical KB articles to boost recall.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-02 / N(FR pending)'},
+ { id:'RSK-03', category:'technical', title:'CRDT conflict UX too complex for non-technical users', description:'CRDT conflict resolution UX is too complex for non-technical users. The "keep both as disputed pair" model is correct but unfamiliar, leading to user-frustration and bad workarounds.', likelihood:'High', impact:'Medium', owner:'CPO', mitigation:'Defaults heavily favour latest-write-wins for non-critical scopes; Question class surfaces only on high-stakes scopes; chooser UI educates with one-line provenance.', contingency:'Add a "let CUO decide" auto-merge fallback for ambiguous scopes; rollback to single-device authoring if adoption fails.', status:'open', lastReviewed:'2026-05-01', reference:' RSK-03'},
+ { id:'RSK-04', category:'technical', title:'PGroonga Vietnamese edge cases untested', description:'Vietnamese full-text search via PGroonga has edge cases not covered by tests — compound nouns, mixed-diacritic queries, code-switch Vi/En in CHAT messages.', likelihood:'Medium', impact:'Medium', owner:'CTO', mitigation:'Bilingual test corpus from CHAT logs; weekly retrieval regression run; fallback to LLM-based search if PGroonga fails on a query class.', contingency:'Augment with BM25 over normalised diacritic-stripped form; LLM-driven query rewrite layer.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-04'},
+ { id:'RSK-06', category:'technical', title:'Postgres + pgvector noisy-neighbour at multi-tenant scale', description:'Multi-tenant noisy-neighbour effects on the Postgres + pgvector cluster. A single tenant\'s heavy vector workload could compress p95 search latency for every other tenant.', likelihood:'High', impact:'Medium', owner:'CTO', mitigation:'Per-tenant query budgets; row-level isolation enforced via RLS; vector-store sharding from P3.', contingency:'Move heavy tenants to dedicated nodes; auto-throttle on per-tenant CPU breach; emergency shard split.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-06'},
+ { id:'RSK-07', category:'technical', title:'Single-region (Hetzner) outage takes everything down', description:'Single-region (Hetzner) outage takes down all of CyberOS. CHAT 99.9% availability target becomes unachievable if any provider single-points-of-failure for >1h/month.', likelihood:'Low', impact:'High', owner:'CTO', mitigation:'Two regions from P0; warm-standby for Postgres; documented DR runbook; quarterly DR drill.', contingency:'Failover to SG/EU region (≤ 24h at P3); customer-facing status page with predicted ETA.', status:'mitigated', lastReviewed:'2026-04-30', reference:' RSK-07 / N(FR pending)'},
+ { id:'RSK-11', category:'technical', title:'Mattermost/Stalwart upstream stalls or license change', description:'Mattermost or Stalwart upstream changes licence terms or stalls development. CyberOS forks would inherit the maintenance burden.', likelihood:'Low', impact:'Medium', owner:'CTO', mitigation:'We fork at P0; licence audit at fork time; commit log monitored quarterly; we can self-maintain if needed.', contingency:'Internal maintainer rotation; back-port security fixes from community PRs; eventual fork-of-fork.', status:'mitigated', lastReviewed:'2026-05-07', reference:' RSK-11'},
+ { id:'R-EXT-T1', category:'technical', title:'wasmtime regression breaks SKILL host', description:'A wasmtime release introduces a regression that breaks the SKILL Component-Model invariants or AOT cache key. Cold-start exceeds the 80ms budget; parity tests fail.', likelihood:'Low', impact:'High', owner:'Eng Lead', mitigation:'Pin wasmtime major; nightly regression suite against next-minor; Criterion benchmark gates AOT-cache content-hash determinism.', contingency:'Pin to last green minor; cherry-pick fixes; defer skill-host upgrade pending upstream fix.', status:'mitigated', lastReviewed:'2026-04-15', reference:'inferred / SKILL Phase 5-7'},
+ { id:'R-EXT-T2', category:'technical', title:'BRAIN AOC (audit-originating context) drift', description:'AOC drift — silent persona-version skew between client and gateway means audit rows misattribute writes. Could be invisible until forensic.', likelihood:'Medium', impact:'High', owner:'CDO', mitigation:'Persona-version stamp REQUIRED at gateway ((FR pending)); CI lint refuses client-injected stamps; persona-version drift detection ((FR pending)).', contingency:'Backfill from audit-row source IPs + timestamps; AAR + retro; surface drift sample in OBS.', status:'open', lastReviewed:'2026-05-07', reference:'inferred / (FR pending)'},
+ { id:'R-EXT-T3', category:'technical', title:'pgvector HNSW degrades at >1M chunks per tenant', description:'pgvector HNSW index performance degrades non-linearly as a tenant approaches 1M chunks. Re-index without downtime becomes hard.', likelihood:'Medium', impact:'High', owner:'CDO / CTO', mitigation:'Synthetic load tests at 1M-chunk floor (N(FR pending)); per-tenant chunk-cap warning at 750K; quarterly capacity review.', contingency:'Online rebuild with shadow index; cutover during low-traffic window; per-tenant shard.', status:'open', lastReviewed:'2026-05-07', reference:'inferred / N(FR pending) / RSK-06'},
+ { id:'R-EXT-T4', category:'technical', title:'GraphQL Federation v2 incompatibility on minor upgrade', description:'Apollo Federation v2 introduces a breaking change in a minor that wedges schema composition across 22 subgraphs.', likelihood:'Low', impact:'High', owner:'Eng Lead', mitigation:'Pin major; quarterly upgrade review (ASM-09); composition check gate runs in CI.', contingency:'Hold on last green; one subgraph at a time migration; Apollo Studio diff narrative published.', status:'mitigated', lastReviewed:'2026-04-30', reference:'ASM-09 / (FR pending)'},/ ────── COMPLIANCE ──────
+ { id:'RSK-05', category:'compliance', title:'EU AI Act Article 50 more aggressive than expected', description:'EU AI Act Article 50 transparency obligations interpreted more aggressively than expected. Could require disclosure beyond the persistent badge.', likelihood:'Medium', impact:'Medium', owner:'CLO', mitigation:'Persistent badge on every AI surface; Explanation pane on demand; legal review at P3 entry.', contingency:'Expanded badge with provenance trace; legal-review-driven badge spec update.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-05'},
+ { id:'R-EXT-C1', category:'compliance', title:'PDPL breach — sensitive PII leaked', description:'Vietnam PDPL Law 91/2025 / Decree 13/2023 breach: CCCD or VNeID-derived sensitive data leaks from HR or BRAIN. Severe regulator + reputational consequences.', likelihood:'Low', impact:'Catastrophic', owner:'DPO (Founder)', mitigation:'Government ID encrypted with separate KMS key ((FR pending)); access logged sev-1; never ingested into BRAIN; ingestion denylist ((FR pending)).', contingency:'Breach-notification artefacts generated within 72h ((FR pending)); regulator + subject notice; outside counsel engagement; remediation playbook.', status:'open', lastReviewed:'2026-05-07', reference:'PDPL / (FR pending)'},
+ { id:'R-EXT-C2', category:'compliance', title:'Data-localisation rule expansion (Decree 53/2022)', description:'Decree 53/2022 enforcement tightens, requiring more services to keep data in-VN. Could break the SG HoldCo flip plan or limit cross-region failover.', likelihood:'Medium', impact:'High', owner:'CLO / CTO', mitigation:'Tenant residency immutable after 7 days; per-tenant data-plane tags; legal review quarterly (ASM-04).', contingency:'In-VN-only mode for affected tenants; legal counsel engagement; backup region switched to VN provider (Viettel Cloud).', status:'open', lastReviewed:'2026-05-07', reference:'Decree 53/2022 / ASM-04'},
+ { id:'R-EXT-C3', category:'compliance', title:'EU AI Act Annex III §4 reclassification of REW/LEARN', description:'REW + LEARN currently treated as Annex III §4 high-risk. If an EU implementing regulation tightens the criteria, additional controls (CE-mark, post-market monitoring) could be required.', likelihood:'Medium', impact:'High', owner:'CLO', mitigation:'P2 conformity assessment pack; annual DPIA refresh; auto-generated audit rows on every promotion decision.', contingency:'Engage notified body; full FRIA (Fundamental Rights Impact Assessment); freeze ML-driven scoring until certified.', status:'open', lastReviewed:'2026-05-07', reference:'EU AI Act / (FR pending)'},
+ { id:'R-EXT-C4', category:'compliance', title:'GDPR Article 17 erasure crosses chain integrity', description:'A GDPR Art 17 erasure request demands deletion of a chain-leaf audit row, breaking immutable-by-construction. Conflict with the BRAIN MMR property.', likelihood:'Low', impact:'High', owner:'DPO / CTO', mitigation:'AGENTS.md §3.6 delete(path,"purge") preserves the redacted content\'s hash but not its body; the fact of purge is itself a chain leaf and is not erasable.', contingency:'Document the legal basis for keeping the purge-row; offer the subject a transparent attestation; outside counsel review.', status:'mitigated', lastReviewed:'2026-04-30', reference:'AGENTS.md §3.6 / (FR pending)'},
+ { id:'R-EXT-C5', category:'compliance', title:'ISO 27001/42001 audit cycle slips, blocks P2/P3 exit', description:'Annual audit cycle for ISO 27001 (P2 exit) or ISO 42001 AIMS (P3 exit) slips, blocking phase advancement.', likelihood:'Medium', impact:'High', owner:'CLO / DPO', mitigation:'External auditor engaged at P2 entry; gap analysis at P1 mid-phase; control evidence captured continuously by CP module.', contingency:'P3 entry conditional on letter-of-engagement, full certificate by P3+1; tenants notified.', status:'open', lastReviewed:'2026-05-07', reference:' / N(FR pending)'},
+ { id:'R-EXT-C6', category:'compliance', title:'Trust Center spec drift', description:'Trust Center sub-processor list lags behind actual vendor onboarding. N(FR pending) violation.', likelihood:'Medium', impact:'Medium', owner:'DPO', mitigation:'Pre-commit hook checks vendor delta vs Trust Center page; Compliance Cockpit weekly review.', contingency:'72-hour catch-up; outside-counsel review of disclosed-vs-actual gap.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending) / Trust Center'},/ ────── OPERATIONAL ──────
+ { id:'RSK-08', category:'operational', title:'Slack/Zalo migration friction; employees revert', description:'Slack/Zalo migration friction causes employees to revert. CHAT adoption stalls; the 10-person pilot fails.', likelihood:'Medium', impact:'High', owner:'COO', mitigation:'CHAT importer for Slack history; bidirectional bridge for first 60 days; Founder mandate; Week-11 Slack/Zalo set to read-only (P0 12-week roadmap).', contingency:'Extended bridge to 90 days; per-team migration champions; CUO digest highlights migration friction patterns.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-08'},
+ { id:'RSK-09', category:'operational', title:'Founder bandwidth is the bottleneck (key-person)', description:'Founder bandwidth becomes the bottleneck — DPO + CLO + CFO + CHRO + CSO all covered by Founder until P3.', likelihood:'High', impact:'High', owner:'CEO', mitigation:'CUO covers drafting and surfacing; gate-readiness reports automate weekly state checks; explicit hire plan at P3 entry.', contingency:'Stretch P3 timeline; defer non-critical workstreams; engage fractional CFO/legal counsel as bridge.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-09'},
+ { id:'R-EXT-O1', category:'operational', title:'Sole-developer bottleneck on critical-path code', description:'Single engineer owns BRAIN + Skill + CUO core. Illness, family event, or external opportunity could stall the platform.', likelihood:'Medium', impact:'Catastrophic', owner:'CEO', mitigation:'Personal continuity plan at P2 entry (ASM-15); CUO absorbs ambient drafting; module specs are normative (AGENTS.md) so handover-friendly.', contingency:'Engage Vietnam-based senior contractor; 30-day onboarding via AGENTS.md + tests; pause non-critical phase work.', status:'open', lastReviewed:'2026-05-07', reference:'ASM-15 / RSK-09'},
+ { id:'R-EXT-O2', category:'operational', title:'Headcount ramp lags ARR — adoption gaps in P2/P3', description:'CyberSkill stays at 10 people through P1, but P2/P3 demands roles (CFO, DPO, AM, BD) not on payroll. ARR may scale faster than people.', likelihood:'Medium', impact:'Medium', owner:'CEO', mitigation:'Monthly headcount review (ASM-03); explicit hire trigger at $1M ARR; CUO scales founder-equivalent work.', contingency:'Hire fractional roles first (CFO, legal); defer non-revenue work; raise interim seed if growth outruns.', status:'open', lastReviewed:'2026-05-07', reference:'ASM-03'},
+ { id:'R-EXT-O3', category:'operational', title:'DR drill skip — RTO/RPO unverified', description:'Quarterly DR drill skipped under deadline pressure. N(FR pending) violation; RTO≤4h becomes aspirational.', likelihood:'Medium', impact:'High', owner:'Eng Lead', mitigation:'Drill scheduled in calendar as gate-blocking; missed drill auto-creates a Founder Question.', contingency:'24-hour catch-up drill with real failover; post-drill retro published.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending)'},
+ { id:'R-EXT-O4', category:'operational', title:'Skill hot-reload causes runtime instability', description:'A skill update on disk fails a schema check but the hot-reload path doesn\'t fail gracefully — leaks into the running supervisor.', likelihood:'Low', impact:'Medium', owner:'Eng Lead', mitigation:'Spec validator ((FR pending)) refuses load on schema delta; capability broker isolates failure; AOC unchanged on reject.', contingency:'Pin to last green skill version; CHAT alert to Founder.', status:'mitigated', lastReviewed:'2026-04-30', reference:'(FR pending)'},
+ { id:'R-EXT-O5', category:'operational', title:'Backup integrity not verified by restore drill', description:'Backups run nightly but the restore is never exercised on a real failure. Could find on the day that RPO objective is unmet.', likelihood:'Medium', impact:'High', owner:'Eng Lead', mitigation:'Quarterly restore drill; backup-integrity check on the restore-image via cyberos doctor.', contingency:'Promote a recent S3 snapshot; rebuild from BRAIN signed-zip export.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending)/006'},/ ────── STRATEGIC ──────
+ { id:'RSK-10', category:'strategic', title:'CUO emits high-confidence wrong answer with real impact', description:'CUO produces a high-confidence wrong answer that influences a real decision (e.g. mis-classifies a deal probability, mis-summarises a contract).', likelihood:'Medium', impact:'High', owner:'CDO', mitigation:'Defer-to-human triggers; Explanation pane mandatory; persona-version logged with every output; ≥98% citation rate (N(FR pending)).', contingency:'AAR + retro; refine persona scope contract; surface the failure mode in the next gate-readiness report.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-10'},
+ { id:'RSK-13', category:'strategic', title:'Microsoft-Recall–style backlash on BRAIN ingestion', description:'Microsoft Recall–style backlash if BRAIN ingestion appears too greedy. CyberSkill\'s Vietnamese-market positioning could flip negative quickly.', likelihood:'Medium', impact:'High', owner:'CPO', mitigation:'Default ingestion is strict;.cyberos-memory is the source of truth, user-facing; conflict UI educates; ingest denylist enforced.', contingency:'Public ingest-policy refresh; opt-out toggles per Member; CUO digest summarises what was ingested last week.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-13'},
+ { id:'R-EXT-S1', category:'strategic', title:'Anthropic Skills spec drifts after CyberOS commits', description:'Anthropic Agent Skills format evolves (e.g. new SKILL.md fields, allowed-tools spec change) faster than CyberOS can track. 6 published VN-market skills could go stale.', likelihood:'Medium', impact:'Medium', owner:'CTO', mitigation:'Spec validator surfaces drift ((FR pending)); quarterly conformance review; INTEROP.md maintained for third-party consumers.', contingency:'Spec-shim layer auto-converts old skills; deprecation period of one phase per N(FR pending).', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending) / N(FR pending)'},
+ { id:'R-EXT-S2', category:'strategic', title:'OpenAI Apps SDK or competing exec-layer launched in P2', description:'A competitor (Notion, Linear, ClickUp, OpenAI Apps SDK) launches a near-identical CUO-style executive layer in P2 timeframe. Could compress moat.', likelihood:'High', impact:'Medium', owner:'CEO', mitigation:'Vietnamese-market wedge (6 VN-specific skills); audit-chain depth; deep dogfood signal as differentiator.', contingency:'Accelerate VN-market skill catalog; re-position around "AI-native Vietnamese ops" rather than generic exec layer.', status:'open', lastReviewed:'2026-05-07', reference:'OQ-15'},
+ { id:'R-EXT-S3', category:'strategic', title:'Partnership lock-in with QTSP / Stripe / Bedrock', description:'A single provider partnership (e.g., eIDAS QTSP partner for DOC, Stripe for INV) becomes a lock-in. Switching cost high.', likelihood:'Medium', impact:'Medium', owner:'CEO / CFO', mitigation:'Abstract every external dependency behind an internal interface; multiple QTSP options researched (GlobalSign, Cryptomathic); multi-PSP from P2.', contingency:'90-day notice + parallel switch plan; data-plane export contract clauses.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending)'},
+ { id:'R-EXT-S4', category:'strategic', title:'Dogfood-first signal weak — internal use does not predict external', description:'CyberSkill\'s 10-person internal use may not generalise to 50-tenant external. Features tuned for the founder may not fit a real customer.', likelihood:'Medium', impact:'Medium', owner:'CPO / CEO', mitigation:'P3 first-tenant feedback as gate (ASM-12); design partner program at P2 exit; CUO digest tracks usage gaps.', contingency:'Re-prioritise modules based on early-tenant pain; defer P4 external launch if dogfood signal weak.', status:'open', lastReviewed:'2026-05-07', reference:'ASM-12'},/ ────── FINANCIAL ──────
+ { id:'RSK-14', category:'financial', title:'Singapore HoldCo flip costs more or takes longer', description:'Singapore HoldCo flip costs more or takes longer than anticipated. Could blow the $50K USD budget or stretch beyond 12 weeks.', likelihood:'Medium', impact:'Medium', owner:'CFO', mitigation:'Engage Singapore corporate counsel at P2 entry; budget reserves $50K USD; tenant-ownership tagging makes the flip data-light.', contingency:'Extend timeline by 4–6 weeks; reduce SG-side scope to essentials; raise interim bridge.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-14 / ASM-14'},
+ { id:'RSK-15', category:'financial', title:'Currency exposure compresses margins', description:'Currency exposure (USD-denominated AI cost; VND/SGD revenue mix) compresses margins. A 10% VND devaluation could erase margin on a Vietnamese tenant.', likelihood:'High', impact:'Medium', owner:'CFO', mitigation:'Quarterly hedging review at P3 entry; multi-currency pricing in INV from P2; CFO + CSO joint owner.', contingency:'VND-pricing-tier with USD-cost-passthrough; partial USD hedge.', status:'open', lastReviewed:'2026-05-07', reference:' RSK-15'},
+ { id:'R-EXT-F1', category:'financial', title:'Runway shorter than expected on AI cost overrun', description:'AI Gateway cost overrun (cache-hit-rate ≤ 30%, model-mix shift) shortens runway materially. P0 → P3 burn could exceed plan by 25%.', likelihood:'Medium', impact:'High', owner:'CFO', mitigation:'Per-tenant cost ceiling enforced ((FR pending)); CUO/CFO-skill weekly burn-rate digest; system prompts hash-stabilised for cache.', contingency:'Throttle non-essential CUO surfaces; switch to cheaper Haiku for ambient digests; raise.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending) / N(FR pending)'},
+ { id:'R-EXT-F2', category:'financial', title:'ARR ramp slower than $1.5M target at P3', description:'P3 Singapore HoldCo flip is conditional on ARR ≥ $1.5M. Slower ramp delays HoldCo, EU-tenant pathway, ISO certifications.', likelihood:'Medium', impact:'High', owner:'CEO', mitigation:'P2 design-partner program; tenant pricing-tier diversity; CUO/CRO-skill forecasts.', contingency:'Delay HoldCo flip 6 months; bridge round if needed; double down on VN-market tenants while waiting.', status:'open', lastReviewed:'2026-05-07', reference:' / P3-exit criteria'},
+ { id:'R-EXT-F3', category:'financial', title:'50-tenant infra cost ceiling breached', description:'Per N(FR pending), 50-tenant scale infra cost ≤ $2.2k/mo + ≤ $4/active user/month LLM. Could blow ceiling if BRAIN ingest pattern is denser than planned.', likelihood:'Medium', impact:'Medium', owner:'CTO / CFO', mitigation:'Quarterly cost review; per-tenant cost dashboard ((FR pending)); chunk-cap warnings.', contingency:'Tier pricing shift; spot/preemptible GPU for embedder/reranker; cold-tier archival promotion.', status:'open', lastReviewed:'2026-05-07', reference:'N(FR pending)/011'},/ ────── LEGAL ──────
+ { id:'RSK-12', category:'legal', title:'AI Gateway breach leaks one tenant\'s prompts to another', description:'A breach in the AI Gateway leaks one tenant\'s prompts to another. N(FR pending) = 0 cross-tenant leakage; even one incident is sev-0.', likelihood:'Low', impact:'Catastrophic', owner:'CTO / CSO', mitigation:'Per-tenant API keys; per-request sanitisation; never-cache rule for prompt content; audit of every cross-tenant call; quarterly red-team.', contingency:'Outage of AI Gateway for forensic; tenant-by-tenant notification; outside counsel; possible regulator notification (PDPL/GDPR).', status:'mitigated', lastReviewed:'2026-05-07', reference:' RSK-12 / N(FR pending)'},
+ { id:'R-EXT-L1', category:'legal', title:'IP claim — Anthropic Skills format trademark or patent', description:'A third party claims trademark/patent over Anthropic Agent Skills format or wasmtime usage. CyberOS rebrand or fork cost.', likelihood:'Low', impact:'Medium', owner:'CLO', mitigation:'AGPL/MIT licence audit at every dependency add; INTEROP.md positions CyberOS as compatible-not-derivative; Anthropic-published spec relied on.', contingency:'IP-counsel review; defensive patent or licence; alternative spec layer.', status:'open', lastReviewed:'2026-05-07', reference:'inferred / ASM-06/07'},
+ { id:'R-EXT-L2', category:'legal', title:'Contract risk — client demands data sovereignty beyond plan', description:'A future client demands data sovereignty (e.g., on-prem VPC, specific KMS BYOK) beyond what CyberOS offers in P3.', likelihood:'Medium', impact:'Medium', owner:'CLO / CEO', mitigation:'BYOK CMEK at Advanced tier (P3+); on-prem SKU evaluated under OQ-06.', contingency:'Engage in custom deployment as a one-off; price reflects engineering cost; deliver via partner.', status:'open', lastReviewed:'2026-05-07', reference:'OQ-06'},
+ { id:'R-EXT-L3', category:'legal', title:'Regulatory enforcement — VN MoPS/MoIC investigation', description:'Vietnam MoPS/MoIC opens an investigation into CCCD/VNeID data handling. Could halt operations during enforcement.', likelihood:'Low', impact:'Catastrophic', owner:'CLO / DPO', mitigation:'CCCD sev-1 access log; encrypted with separate KMS; never ingested into BRAIN; full data inventory in CP module.', contingency:'Outside counsel engagement; full DSAR pulled within 24h; potential service pause for compliant tenants.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending)'},
+ { id:'R-EXT-L4', category:'legal', title:'Total Rewards Appendix legal challenge (P1-protection)', description:'A departing Member challenges the P1-base-salary protection or BP anti-inflation calculation in court. CyberSkill\'s legal commitment (N(FR pending)) tested.', likelihood:'Low', impact:'High', owner:'CLO / CFO', mitigation:'Anti-retroactive parameter versioning ((FR pending)); recompute against an old payslip must be identical; written legal commitment in employment contract.', contingency:'Recompute property test as evidence; outside-counsel-driven settlement; AAR captured.', status:'mitigated', lastReviewed:'2026-04-30', reference:'N(FR pending)/004'},
+ { id:'R-EXT-L5', category:'legal', title:'PORTAL customer-agent MCP access — consent dispute', description:'A client\'s GPT/Claude/Gemini connects via MCP under (FR pending) but a downstream user disputes the consent scope. Liability for cross-tenant data exposure.', likelihood:'Low', impact:'High', owner:'CLO', mitigation:'Explicit consent dialog with scope-list; per-action audit row; MCP gateway enforces scope contract at runtime.', contingency:'Pause customer-agent feature for the tenant; outside counsel; consent dialog redesign.', status:'open', lastReviewed:'2026-05-07', reference:'(FR pending) / OQ-08'},
 ];
 </script>
 

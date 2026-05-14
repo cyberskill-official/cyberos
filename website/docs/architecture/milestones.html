@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Milestones — CyberOS</title>
-  <meta name="description" content="The 12-month milestone arc. Five phases (P0 → P4), 22 modules, compliance gates that flip every quarter.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <script type="module" src="../assets/scripts.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Milestones — CyberOS</title>
+ <meta name="description" content="The 12-month milestone arc. Five phases (P0 → P4), 22 modules, compliance gates that flip every quarter.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <script type="module" src="../assets/scripts.js"></script>
 </head>
 <body data-pagefind-filter="category:Architecture">
 
@@ -19,53 +19,53 @@
 <!-- HEADER -->
 <!-- ============================================================ -->
 <header class="hero-gradient border-b border-slate-200">
-  <div class="container py-10 lg:py-14">
-    <nav class="breadcrumbs">
-      <a href="../index.html">Home</a>
-      <span class="sep">›</span>
-      <a href="../index.html#navigate">Architecture</a>
-      <span class="sep">›</span>
-      <span class="current">Milestones</span>
-    </nav>
-    <div class="flex items-center gap-3 mb-4">
-      <span class="section-badge" style="background:#fef3c7;color:#b45309">Roadmap</span>
-      <span class="phase-chip phase-p0">PRD §1.3 + §12.4</span>
-    </div>
-    <h1 class="h-display mb-4">The 24-month milestone arc</h1>
-    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Five gated phases (P0 → P4). 22 modules. 10 → 20 Members. Compliance gates that flip every quarter.</p>
-    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      CyberOS ships in five gated phases over 24 months, anchored on dogfooding signal and compliance gates. The founder's commitment is captured in the headcount column: <strong>scale only when CyberOS itself absorbs the new operational load</strong>. Per PRD §1.3, internal productivity (P1) is the moat — external SaaS is P4 only. This page enumerates each phase's modules, headcount budget, compliance gate, success criteria, and risks; ends with module dependency graph + headcount trajectory + KPI dashboard.
-    </p>
-    <div class="flex flex-wrap gap-3 mt-6">
-      <a href="#timeline" class="btn btn-primary">Horizontal timeline
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-      </a>
-      <a href="#dep-graph" class="btn btn-secondary">Dependency graph</a>
-      <a href="#trajectory" class="btn btn-secondary">Headcount + revenue</a>
-    </div>
-  </div>
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../index.html#navigate">Architecture</a>
+ <span class="sep">›</span>
+ <span class="current">Milestones</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4">
+ <span class="section-badge" style="background:#fef3c7;color:#b45309">Roadmap</span>
+ <span class="phase-chip phase-p0"> + §12.4</span>
+ </div>
+ <h1 class="h-display mb-4">The 24-month milestone arc</h1>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Five gated phases (P0 → P4). 22 modules. 10 → 20 Members. Compliance gates that flip every quarter.</p>
+ <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+ CyberOS ships in five gated phases over 24 months, anchored on dogfooding signal and compliance gates. The founder's commitment is captured in the headcount column: <strong>scale only when CyberOS itself absorbs the new operational load</strong>. Per, internal productivity (P1) is the moat — external SaaS is P4 only. This page enumerates each phase's modules, headcount budget, compliance gate, success criteria, and risks; ends with module dependency graph + headcount trajectory + KPI dashboard.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="#timeline" class="btn btn-primary">Horizontal timeline
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ <a href="#dep-graph" class="btn btn-secondary">Dependency graph</a>
+ <a href="#trajectory" class="btn btn-secondary">Headcount + revenue</a>
+ </div>
+ </div>
 </header>
 
 <div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
 
 <aside class="lg:col-span-3 order-2 lg:order-1">
-  <div class="lg:sticky lg:top-20">
-    <div class="bbg-card p-5">
-      <div class="h-eyebrow mb-3">On this page</div>
-      <ul class="space-y-1 text-sm">
-        <li><a href="#timeline" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Horizontal timeline</a></li>
-        <li><a href="#phase-p0" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p0)">P0</span> Foundations</a></li>
-        <li><a href="#phase-p1" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p1)">P1</span> Internal Productivity</a></li>
-        <li><a href="#phase-p2" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p2)">P2</span> Operations</a></li>
-        <li><a href="#phase-p3" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p3)">P3</span> SaaS Readiness</a></li>
-        <li><a href="#phase-p4" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p4)">P4</span> Client-Facing</a></li>
-        <li><a href="#dep-graph" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Module dependency graph</a></li>
-        <li><a href="#trajectory" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Headcount + revenue</a></li>
-        <li><a href="#kpis" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">KPI dashboard</a></li>
-        <li><a href="#references" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">References</a></li>
-      </ul>
-    </div>
-  </div>
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-1 text-sm">
+ <li><a href="#timeline" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Horizontal timeline</a></li>
+ <li><a href="#phase-p0" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p0)">P0</span> Foundations</a></li>
+ <li><a href="#phase-p1" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p1)">P1</span> Internal Productivity</a></li>
+ <li><a href="#phase-p2" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p2)">P2</span> Operations</a></li>
+ <li><a href="#phase-p3" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p3)">P3</span> SaaS Readiness</a></li>
+ <li><a href="#phase-p4" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs" style="color:var(--phase-p4)">P4</span> Client-Facing</a></li>
+ <li><a href="#dep-graph" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Module dependency graph</a></li>
+ <li><a href="#trajectory" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Headcount + revenue</a></li>
+ <li><a href="#kpis" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">KPI dashboard</a></li>
+ <li><a href="#references" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">References</a></li>
+ </ul>
+ </div>
+ </div>
 </aside>
 
 <main class="lg:col-span-9 order-1 lg:order-2 space-y-14">
@@ -74,821 +74,821 @@
 <!-- TIMELINE -->
 <!-- ============================================================ -->
 <section id="timeline">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-4">0</span>
-    <h2 class="h-1">The horizontal timeline</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    Five phases · five compliance gates · five module-count milestones. The slope changes after P3: P0–P3 is internal-first execution (12 months); P4 is the external-GA arc (M+13 → M+24).
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-4">0</span>
+ <h2 class="h-1">The horizontal timeline</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ Five phases · five compliance gates · five module-count milestones. The slope changes after P3: P0–P3 is internal-first execution (12 months); P4 is the external-GA arc (M+13 → M+24).
+ </p>
 
-  <!-- SVG horizontal timeline (lifted + enriched from index) -->
-  <div class="bbg-card p-6 mb-6 overflow-x-auto">
-    <div class="min-w-[1000px]">
-      <div class="grid grid-cols-5 gap-2 mb-2">
-        <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-blue-700">P0 · Foundations</div><div class="text-[10px] text-slate-500">M0 – M+3</div></div>
-        <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">P1 · Productivity</div><div class="text-[10px] text-slate-500">M+4 – M+6</div></div>
-        <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">P2 · Operations</div><div class="text-[10px] text-slate-500">M+7 – M+9</div></div>
-        <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-purple-700">P3 · SaaS-ready</div><div class="text-[10px] text-slate-500">M+10 – M+12</div></div>
-        <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-slate-600">P4 · Client-facing</div><div class="text-[10px] text-slate-500">M+13 – M+24</div></div>
-      </div>
-      <div class="relative h-4 bg-slate-100 rounded-full mb-2">
-        <div class="absolute inset-y-0 left-0 w-1/5 bg-blue-500 rounded-l-full"></div>
-        <div class="absolute inset-y-0 left-[20%] w-1/5 bg-emerald-500"></div>
-        <div class="absolute inset-y-0 left-[40%] w-1/5 bg-amber-500"></div>
-        <div class="absolute inset-y-0 left-[60%] w-1/5 bg-purple-500"></div>
-        <div class="absolute inset-y-0 left-[80%] w-1/5 bg-slate-400 rounded-r-full"></div>
-        <div class="absolute -top-1 -translate-x-1/2 left-0"><div class="w-5 h-5 rounded-full bg-white border-2 border-blue-500 shadow"></div></div>
-        <div class="absolute -top-1 -translate-x-1/2 left-[20%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-emerald-500 shadow"></div></div>
-        <div class="absolute -top-1 -translate-x-1/2 left-[40%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-amber-500 shadow"></div></div>
-        <div class="absolute -top-1 -translate-x-1/2 left-[60%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-purple-500 shadow"></div></div>
-        <div class="absolute -top-1 -translate-x-1/2 left-[80%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-slate-400 shadow"></div></div>
-        <div class="absolute -top-1 -translate-x-1/2 left-full"><div class="w-5 h-5 rounded-full bg-white border-2 border-slate-400 shadow"></div></div>
-      </div>
-      <div class="grid grid-cols-6 text-center mb-6 mt-3">
-        <div><div class="text-[10px] font-mono font-bold text-slate-500">M0</div><div class="text-[10px] text-blue-600">kickoff</div></div>
-        <div><div class="text-[10px] font-mono font-bold text-slate-500">M+3</div><div class="text-[10px] text-blue-600">P0 exit · 7/22</div></div>
-        <div><div class="text-[10px] font-mono font-bold text-slate-500">M+6</div><div class="text-[10px] text-emerald-600">P1 exit · 15/22</div></div>
-        <div><div class="text-[10px] font-mono font-bold text-slate-500">M+9</div><div class="text-[10px] text-amber-600">P2 exit · 17/22</div></div>
-        <div><div class="text-[10px] font-mono font-bold text-slate-500">M+12</div><div class="text-[10px] text-purple-600">P3 exit · 19/22</div></div>
-        <div><div class="text-[10px] font-mono font-bold text-slate-500">M+18/24</div><div class="text-[10px] text-slate-600">P4 · 22/22</div></div>
-      </div>
+ <!-- SVG horizontal timeline (lifted + enriched from index) -->
+ <div class="bbg-card p-6 mb-6 overflow-x-auto">
+ <div class="min-w-[1000px]">
+ <div class="grid grid-cols-5 gap-2 mb-2">
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-blue-700">P0 · Foundations</div><div class="text-[10px] text-slate-500">M0 – M+3</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">P1 · Productivity</div><div class="text-[10px] text-slate-500">M+4 – M+6</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">P2 · Operations</div><div class="text-[10px] text-slate-500">M+7 – M+9</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-purple-700">P3 · SaaS-ready</div><div class="text-[10px] text-slate-500">M+10 – M+12</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-slate-600">P4 · Client-facing</div><div class="text-[10px] text-slate-500">M+13 – M+24</div></div>
+ </div>
+ <div class="relative h-4 bg-slate-100 rounded-full mb-2">
+ <div class="absolute inset-y-0 left-0 w-1/5 bg-blue-500 rounded-l-full"></div>
+ <div class="absolute inset-y-0 left-[20%] w-1/5 bg-emerald-500"></div>
+ <div class="absolute inset-y-0 left-[40%] w-1/5 bg-amber-500"></div>
+ <div class="absolute inset-y-0 left-[60%] w-1/5 bg-purple-500"></div>
+ <div class="absolute inset-y-0 left-[80%] w-1/5 bg-slate-400 rounded-r-full"></div>
+ <div class="absolute -top-1 -translate-x-1/2 left-0"><div class="w-5 h-5 rounded-full bg-white border-2 border-blue-500 shadow"></div></div>
+ <div class="absolute -top-1 -translate-x-1/2 left-[20%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-emerald-500 shadow"></div></div>
+ <div class="absolute -top-1 -translate-x-1/2 left-[40%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-amber-500 shadow"></div></div>
+ <div class="absolute -top-1 -translate-x-1/2 left-[60%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-purple-500 shadow"></div></div>
+ <div class="absolute -top-1 -translate-x-1/2 left-[80%]"><div class="w-5 h-5 rounded-full bg-white border-2 border-slate-400 shadow"></div></div>
+ <div class="absolute -top-1 -translate-x-1/2 left-full"><div class="w-5 h-5 rounded-full bg-white border-2 border-slate-400 shadow"></div></div>
+ </div>
+ <div class="grid grid-cols-6 text-center mb-6 mt-3">
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">M0</div><div class="text-[10px] text-blue-600">kickoff</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">M+3</div><div class="text-[10px] text-blue-600">P0 exit · 7/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">M+6</div><div class="text-[10px] text-emerald-600">P1 exit · 15/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">M+9</div><div class="text-[10px] text-amber-600">P2 exit · 17/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">M+12</div><div class="text-[10px] text-purple-600">P3 exit · 19/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">M+18/24</div><div class="text-[10px] text-slate-600">P4 · 22/22</div></div>
+ </div>
 
-      <!-- Cards -->
-      <div class="grid grid-cols-5 gap-3 text-xs">
-        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <div class="font-bold text-blue-900 mb-1">P0 exit · M+3</div>
-          <div class="text-slate-600 mb-2"><strong>7 modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
-          <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 10</div>
-          <div class="text-blue-700 font-bold text-[11px]">Gate: T1 Floor</div>
-          <div class="text-slate-500 text-[10px]">A05 DPIA · DPO · Trust Center · Stripe SAQ-A · VPAT 2.5</div>
-        </div>
-        <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-          <div class="font-bold text-emerald-900 mb-1">P1 exit · M+6</div>
-          <div class="text-slate-600 mb-2"><strong>+8 modules:</strong> PROJ · TIME · CRM · KB · HR · EMAIL · REW · LEARN</div>
-          <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 12</div>
-          <div class="text-emerald-700 font-bold text-[11px]">Gate: T2 base</div>
-          <div class="text-slate-500 text-[10px]">SOC 2 Type I · CSA STAR L1 · AI-CAIQ · DSAR APIs</div>
-        </div>
-        <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
-          <div class="font-bold text-amber-900 mb-1">P2 exit · M+9</div>
-          <div class="text-slate-600 mb-2"><strong>+2 modules:</strong> INV · ESOP</div>
-          <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 14</div>
-          <div class="text-amber-700 font-bold text-[11px]">Gate: T2 EU enterprise</div>
-          <div class="text-slate-500 text-[10px]">SOC 2 Type II · ISO 27001:2022 · CSA STAR L2 · EU AI Act Annex III §4</div>
-        </div>
-        <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
-          <div class="font-bold text-purple-900 mb-1">P3 exit · M+12</div>
-          <div class="text-slate-600 mb-2"><strong>+2 modules:</strong> RES · OKR</div>
-          <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 16</div>
-          <div class="text-purple-700 font-bold text-[11px]">Gate: T3 large enterprise</div>
-          <div class="text-slate-500 text-[10px]">ISO 42001 AIMS · ISO 27701 · Singapore HoldCo flip (if ARR ≥ $1.5M)</div>
-        </div>
-        <div class="p-3 bg-slate-100 rounded-lg border border-slate-300">
-          <div class="font-bold text-slate-900 mb-1">P4 entry · M+18</div>
-          <div class="text-slate-600 mb-2"><strong>+3 modules:</strong> DOC · PORTAL · TEN</div>
-          <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 20</div>
-          <div class="text-slate-700 font-bold text-[11px]">Gate: T3+ regulated</div>
-          <div class="text-slate-500 text-[10px]">TX-RAMP · StateRAMP Cat 2 · FedRAMP 20x · eIDAS QTSP</div>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- Cards -->
+ <div class="grid grid-cols-5 gap-3 text-xs">
+ <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+ <div class="font-bold text-blue-900 mb-1">P0 exit · M+3</div>
+ <div class="text-slate-600 mb-2"><strong>7 modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
+ <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 10</div>
+ <div class="text-blue-700 font-bold text-[11px]">Gate: T1 Floor</div>
+ <div class="text-slate-500 text-[10px]">A05 DPIA · DPO · Trust Center · Stripe SAQ-A · VPAT 2.5</div>
+ </div>
+ <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+ <div class="font-bold text-emerald-900 mb-1">P1 exit · M+6</div>
+ <div class="text-slate-600 mb-2"><strong>+8 modules:</strong> PROJ · TIME · CRM · KB · HR · EMAIL · REW · LEARN</div>
+ <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 12</div>
+ <div class="text-emerald-700 font-bold text-[11px]">Gate: T2 base</div>
+ <div class="text-slate-500 text-[10px]">SOC 2 Type I · CSA STAR L1 · AI-CAIQ · DSAR APIs</div>
+ </div>
+ <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
+ <div class="font-bold text-amber-900 mb-1">P2 exit · M+9</div>
+ <div class="text-slate-600 mb-2"><strong>+2 modules:</strong> INV · ESOP</div>
+ <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 14</div>
+ <div class="text-amber-700 font-bold text-[11px]">Gate: T2 EU enterprise</div>
+ <div class="text-slate-500 text-[10px]">SOC 2 Type II · ISO 27001:2022 · CSA STAR L2 · EU AI Act Annex III §4</div>
+ </div>
+ <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
+ <div class="font-bold text-purple-900 mb-1">P3 exit · M+12</div>
+ <div class="text-slate-600 mb-2"><strong>+2 modules:</strong> RES · OKR</div>
+ <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 16</div>
+ <div class="text-purple-700 font-bold text-[11px]">Gate: T3 large enterprise</div>
+ <div class="text-slate-500 text-[10px]">ISO 42001 AIMS · ISO 27701 · Singapore HoldCo flip (if ARR ≥ $1.5M)</div>
+ </div>
+ <div class="p-3 bg-slate-100 rounded-lg border border-slate-300">
+ <div class="font-bold text-slate-900 mb-1">P4 entry · M+18</div>
+ <div class="text-slate-600 mb-2"><strong>+3 modules:</strong> DOC · PORTAL · TEN</div>
+ <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 20</div>
+ <div class="text-slate-700 font-bold text-[11px]">Gate: T3+ regulated</div>
+ <div class="text-slate-500 text-[10px]">TX-RAMP · StateRAMP Cat 2 · FedRAMP 20x · eIDAS QTSP</div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <!-- Phase-exit gate sequence -->
-  <div class="bbg-card p-4 mb-6">
-    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Phase-exit gate sequence — what "P-N exit" actually means</div>
-    <div class="mermaid">
+ <!-- Phase-exit gate sequence -->
+ <div class="bbg-card p-4 mb-6">
+ <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Phase-exit gate sequence — what "P-N exit" actually means</div>
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant ENG as Eng Lead
-  participant FOUNDER as Founder/CEO
-  participant DPO as DPO
-  participant CUO as CUO (CTO skill)
-  participant CP as CP module
-  participant AUDIT as Auditor (SOC 2 / ISO)
-  participant BOARD as Board (P2+)
+ autonumber
+ participant ENG as Eng Lead
+ participant FOUNDER as Founder/CEO
+ participant DPO as DPO
+ participant CUO as CUO (CTO skill)
+ participant CP as CP module
+ participant AUDIT as Auditor (SOC 2 / ISO)
+ participant BOARD as Board (P2+)
 
-  Note over ENG,BOARD: T-30 days before phase exit
-  ENG->>CUO: ready-check { phase: P-N }
-  CUO->>CP: enumerate compliance backlog
-  CP-->>CUO: { open: 12, closed: 88, blocked: 0 }
-  CUO-->>ENG: digest · what's missing
-  ENG->>ENG: ship remaining items
+ Note over ENG,BOARD: T-30 days before phase exit
+ ENG->>CUO: ready-check { phase: P-N }
+ CUO->>CP: enumerate compliance backlog
+ CP-->>CUO: { open: 12, closed: 88, blocked: 0 }
+ CUO-->>ENG: digest · what's missing
+ ENG->>ENG: ship remaining items
 
-  Note over ENG,BOARD: T-7 days
-  DPO->>CP: pre-audit DPIA review
-  AUDIT->>CP: dry-run access (read-only)
-  AUDIT-->>FOUNDER: findings · severity-tiered
+ Note over ENG,BOARD: T-7 days
+ DPO->>CP: pre-audit DPIA review
+ AUDIT->>CP: dry-run access (read-only)
+ AUDIT-->>FOUNDER: findings · severity-tiered
 
-  Note over ENG,BOARD: T0 phase exit
-  FOUNDER->>CP: declare phase exit
-  CP->>AUDIT: trigger formal audit window
-  CP->>BOARD: board approval (P2+ phases)
-  BOARD-->>CP: approve
-  CP-->>FOUNDER: phase N+1 unlocked
-  CP->>CUO: publish achievement memo
-    </div>
-  </div>
+ Note over ENG,BOARD: T0 phase exit
+ FOUNDER->>CP: declare phase exit
+ CP->>AUDIT: trigger formal audit window
+ CP->>BOARD: board approval (P2+ phases)
+ BOARD-->>CP: approve
+ CP-->>FOUNDER: phase N+1 unlocked
+ CP->>CUO: publish achievement memo
+ </div>
+ </div>
 
-  <!-- Mermaid gantt -->
-  <div class="bbg-card p-4 mb-6">
-    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Module rollout — Gantt view</div>
-    <div class="mermaid">
+ <!-- Mermaid gantt -->
+ <div class="bbg-card p-4 mb-6">
+ <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Module rollout — Gantt view</div>
+ <div class="mermaid">
 gantt
-  title CyberOS 24-month module rollout
-  dateFormat YYYY-MM
-  axisFormat M+%m
+ title CyberOS 24-month module rollout
+ dateFormat YYYY-MM
+ axisFormat M+%m
 
-  section P0 Foundation
-    AUTH                    :done, p0a, 2026-06, 60d
-    AI Gateway              :done, p0b, 2026-06, 60d
-    MCP Gateway             :done, p0c, 2026-06, 60d
-    OBS                     :done, p0d, 2026-07, 60d
-    CHAT                    :done, p0e, 2026-07, 60d
-    BRAIN                   :done, p0f, 2026-06, 90d
-    GENIE / CUO             :done, p0g, 2026-07, 60d
+ section P0 Foundation
+ AUTH:done, p0a, 2026-06, 60d
+ AI Gateway:done, p0b, 2026-06, 60d
+ MCP Gateway:done, p0c, 2026-06, 60d
+ OBS:done, p0d, 2026-07, 60d
+ CHAT:done, p0e, 2026-07, 60d
+ BRAIN:done, p0f, 2026-06, 90d
+ GENIE / CUO:done, p0g, 2026-07, 60d
 
-  section P1 Productivity
-    PROJ                    :p1a, 2026-09, 90d
-    TIME                    :p1b, 2026-09, 60d
-    CRM                     :p1c, 2026-09, 90d
-    KB                      :p1d, 2026-10, 60d
-    HR (full)               :p1e, 2026-10, 60d
-    EMAIL                   :p1f, 2026-10, 90d
-    REW (core)              :p1g, 2026-09, 90d
-    LEARN                   :p1h, 2026-11, 60d
+ section P1 Productivity
+ PROJ:p1a, 2026-09, 90d
+ TIME:p1b, 2026-09, 60d
+ CRM:p1c, 2026-09, 90d
+ KB:p1d, 2026-10, 60d
+ HR (full):p1e, 2026-10, 60d
+ EMAIL:p1f, 2026-10, 90d
+ REW (core):p1g, 2026-09, 90d
+ LEARN:p1h, 2026-11, 60d
 
-  section P2 Operations
-    INV                     :p2a, 2026-12, 90d
-    REW (full pool calc)    :p2b, 2026-12, 60d
-    ESOP                    :p2c, 2027-01, 90d
+ section P2 Operations
+ INV:p2a, 2026-12, 90d
+ REW (full pool calc):p2b, 2026-12, 60d
+ ESOP:p2c, 2027-01, 90d
 
-  section P3 SaaS-readiness
-    RES                     :p3a, 2027-03, 90d
-    OKR                     :p3b, 2027-04, 60d
-    Singapore HoldCo flip   :milestone, p3c, 2027-05, 1d
+ section P3 SaaS-readiness
+ RES:p3a, 2027-03, 90d
+ OKR:p3b, 2027-04, 60d
+ Singapore HoldCo flip:milestone, p3c, 2027-05, 1d
 
-  section P4 Client-facing
-    DOC (eIDAS QTSP)        :p4a, 2027-06, 180d
-    PORTAL                  :p4b, 2027-08, 180d
-    TEN (tenancy + billing) :p4c, 2027-08, 240d
-    First external tenant   :milestone, p4d, 2027-12, 1d
-    </div>
-  </div>
+ section P4 Client-facing
+ DOC (eIDAS QTSP):p4a, 2027-06, 180d
+ PORTAL:p4b, 2027-08, 180d
+ TEN (tenancy + billing):p4c, 2027-08, 240d
+ First external tenant:milestone, p4d, 2027-12, 1d
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PHASE P0 -->
 <!-- ============================================================ -->
 <section id="phase-p0">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="phase-chip phase-p0" style="font-size:0.9rem;padding:0.4rem 1rem">P0</span>
-    <h2 class="h-1">Foundations · M0 → M+3</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    The infrastructure plane plus the substrate (BRAIN), the catalog (SKILL — already shipped) and the orchestrator (CUO). At P0 exit, Slack and Zalo are decommissioned; CyberSkill's 10 Members work inside CyberOS-only.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="phase-chip phase-p0" style="font-size:0.9rem;padding:0.4rem 1rem">P0</span>
+ <h2 class="h-1">Foundations · M0 → M+3</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ The infrastructure plane plus the substrate (BRAIN), the catalog (SKILL — already shipped) and the orchestrator (CUO). At P0 exit, Slack and Zalo are decommissioned; CyberSkill's 10 Members work inside CyberOS-only.
+ </p>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5 tint-memory">
-      <h4 class="font-bold mb-2">Modules added (7 of 22)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>BRAIN</strong> — universal memory · 3-layer · already shipped</li>
-        <li><strong>GENIE/CUO</strong> — orchestrator · 5 of 10 C-level skills live</li>
-        <li><strong>AUTH</strong> — OAuth 2.1 + JWT + per-tenant authz server</li>
-        <li><strong>AI Gateway</strong> — LiteLLM + Bedrock + redaction + cost ledger</li>
-        <li><strong>MCP Gateway</strong> — 2025-11-25 spec + tool registry</li>
-        <li><strong>OBS</strong> — LGTM stack + LangSmith for CUO sessions</li>
-        <li><strong>CHAT</strong> — message + thread + @genie call-out</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Compliance gate at exit · T1 Floor</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>A05 DPIA filed with MoPS</li>
-        <li>DPO designated (Founder)</li>
-        <li>Trust Center live at <code>trust.cyberos.world</code></li>
-        <li>Stripe SAQ-A AOC published</li>
-        <li>VPAT 2.5 INT (accessibility) filed</li>
-        <li>Decree 20/2026 SME-status flag set</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5 tint-memory">
+ <h4 class="font-bold mb-2">Modules added (7 of 22)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>BRAIN</strong> — universal memory · 3-layer · already shipped</li>
+ <li><strong>GENIE/CUO</strong> — orchestrator · 5 of 10 C-level skills live</li>
+ <li><strong>AUTH</strong> — OAuth 2.1 + JWT + per-tenant authz server</li>
+ <li><strong>AI Gateway</strong> — LiteLLM + Bedrock + redaction + cost ledger</li>
+ <li><strong>MCP Gateway</strong> — 2025-11-25 spec + tool registry</li>
+ <li><strong>OBS</strong> — LGTM stack + LangSmith for CUO sessions</li>
+ <li><strong>CHAT</strong> — message + thread + @genie call-out</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Compliance gate at exit · T1 Floor</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li>A05 DPIA filed with MoPS</li>
+ <li>DPO designated (Founder)</li>
+ <li>Trust Center live at <code>trust.cyberos.world</code></li>
+ <li>Stripe SAQ-A AOC published</li>
+ <li>VPAT 2.5 INT (accessibility) filed</li>
+ <li>Decree 20/2026 SME-status flag set</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Success criteria</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>All 10 internal Members on CyberOS for chat + memory by M+3</li>
-        <li>Slack + Zalo billing terminated by M+3</li>
-        <li>CUO answers ≥ 50 questions/week with ≥ 98% citation rate (N(FR pending))</li>
-        <li>BRAIN search p95 ≤ 250ms on 50k-chunk corpus</li>
-        <li>Zero compensation/equity facts ingested into BRAIN (denylist DEC-036)</li>
-        <li>p95 GraphQL ≤ 400ms across all subgraphs (N(FR pending))</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Risks · likelihood × impact</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong class="text-rose-700">R-001 (M×H)</strong> — Anthropic Skills spec churns; CUO loadout breaks. <em>Mitigation: schema-pin + conformance tests.</em></li>
-        <li><strong class="text-rose-700">R-002 (M×H)</strong> — MCP 2025-11-25 spec evolves before P0 exit. <em>Mitigation: dual-spec compat for 1 phase.</em></li>
-        <li><strong class="text-amber-700">R-003 (L×M)</strong> — Bedrock Singapore region capacity issue. <em>Mitigation: Anthropic ZDR fallback already wired.</em></li>
-        <li><strong class="text-amber-700">R-004 (L×M)</strong> — Vietnamese embedding quality regression. <em>Mitigation: parity tests vs BGE-M3 baseline.</em></li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Success criteria</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li>All 10 internal Members on CyberOS for chat + memory by M+3</li>
+ <li>Slack + Zalo billing terminated by M+3</li>
+ <li>CUO answers ≥ 50 questions/week with ≥ 98% citation rate (N(FR pending))</li>
+ <li>BRAIN search p95 ≤ 250ms on 50k-chunk corpus</li>
+ <li>Zero compensation/equity facts ingested into BRAIN (denylist DEC-036)</li>
+ <li>p95 GraphQL ≤ 400ms across all subgraphs (N(FR pending))</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Risks · likelihood × impact</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong class="text-rose-700">R-001 (M×H)</strong> — Anthropic Skills spec churns; CUO loadout breaks. <em>Mitigation: schema-pin + conformance tests.</em></li>
+ <li><strong class="text-rose-700">R-002 (M×H)</strong> — MCP 2025-11-25 spec evolves before P0 exit. <em>Mitigation: dual-spec compat for 1 phase.</em></li>
+ <li><strong class="text-amber-700">R-003 (L×M)</strong> — Bedrock Singapore region capacity issue. <em>Mitigation: Anthropic ZDR fallback already wired.</em></li>
+ <li><strong class="text-amber-700">R-004 (L×M)</strong> — Vietnamese embedding quality regression. <em>Mitigation: parity tests vs BGE-M3 baseline.</em></li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2">Key milestones within P0</h4>
-    <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-      <li><strong>M0:</strong> module template + Federation router + design tokens repo live</li>
-      <li><strong>M+1:</strong> AUTH + AI Gateway in beta; BRAIN + SKILL already shipped baseline</li>
-      <li><strong>M+2:</strong> MCP Gateway live; CUO router-only mode</li>
-      <li><strong>M+3:</strong> CHAT live; OBS LGTM stack live; 7/22 modules ready; Trust Center launched</li>
-    </ul>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Key milestones within P0</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li><strong>M0:</strong> module template + Federation router + design tokens repo live</li>
+ <li><strong>M+1:</strong> AUTH + AI Gateway in beta; BRAIN + SKILL already shipped baseline</li>
+ <li><strong>M+2:</strong> MCP Gateway live; CUO router-only mode</li>
+ <li><strong>M+3:</strong> CHAT live; OBS LGTM stack live; 7/22 modules ready; Trust Center launched</li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PHASE P1 -->
 <!-- ============================================================ -->
 <section id="phase-p1">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="phase-chip phase-p1" style="font-size:0.9rem;padding:0.4rem 1rem">P1</span>
-    <h2 class="h-1">Internal Productivity · M+4 → M+6</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    The productivity moat. PROJ + TIME + CRM + KB + HR + EMAIL + REW + LEARN — eight modules that turn the platform from "infrastructure" into "the thing the team uses every day." First payroll cycle, first promotion review through Hội đồng Chuyên môn.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="phase-chip phase-p1" style="font-size:0.9rem;padding:0.4rem 1rem">P1</span>
+ <h2 class="h-1">Internal Productivity · M+4 → M+6</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ The productivity moat. PROJ + TIME + CRM + KB + HR + EMAIL + REW + LEARN — eight modules that turn the platform from "infrastructure" into "the thing the team uses every day." First payroll cycle, first promotion review through Hội đồng Chuyên môn.
+ </p>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5 tint-skill">
-      <h4 class="font-bold mb-2">Modules added (+8 = 15 of 22)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>PROJ</strong> — projects · tasks · cycles · assignments</li>
-        <li><strong>TIME</strong> — time entries · expense tracking</li>
-        <li><strong>CRM</strong> — clients · deals · activities</li>
-        <li><strong>KB</strong> — knowledge base · canonical docs</li>
-        <li><strong>HR (full)</strong> — Members · roles · leave · onboarding</li>
-        <li><strong>EMAIL</strong> — Stalwart-based mail + inbox + i18n RFC 6532</li>
-        <li><strong>REW (core)</strong> — 3P income · payslip · BP balance</li>
-        <li><strong>LEARN</strong> — career path · Hội đồng peer-review</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Compliance gate · T2 base</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>SOC 2 Type I issued (point-in-time)</li>
-        <li>CSA STAR L1 self-assessment via CAIQ v4.0.3</li>
-        <li>AI-CAIQ "Valid-AI-ted" badge</li>
-        <li>DSAR APIs end-to-end (GDPR Art. 15 ready)</li>
-        <li>Article 50 transparency badges in all AI surfaces</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5 tint-skill">
+ <h4 class="font-bold mb-2">Modules added (+8 = 15 of 22)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>PROJ</strong> — projects · tasks · cycles · assignments</li>
+ <li><strong>TIME</strong> — time entries · expense tracking</li>
+ <li><strong>CRM</strong> — clients · deals · activities</li>
+ <li><strong>KB</strong> — knowledge base · canonical docs</li>
+ <li><strong>HR (full)</strong> — Members · roles · leave · onboarding</li>
+ <li><strong>EMAIL</strong> — Stalwart-based mail + inbox + i18n RFC 6532</li>
+ <li><strong>REW (core)</strong> — 3P income · payslip · BP balance</li>
+ <li><strong>LEARN</strong> — career path · Hội đồng peer-review</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Compliance gate · T2 base</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li>SOC 2 Type I issued (point-in-time)</li>
+ <li>CSA STAR L1 self-assessment via CAIQ v4.0.3</li>
+ <li>AI-CAIQ "Valid-AI-ted" badge</li>
+ <li>DSAR APIs end-to-end (GDPR Art. 15 ready)</li>
+ <li>Article 50 transparency badges in all AI surfaces</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Headcount</h4>
-      <p class="text-sm text-slate-600 mb-2"><strong>10 → 12 Members</strong></p>
-      <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-        <li>+1 HR/Ops Lead (REW dogfooding)</li>
-        <li>+1 Engineer (PROJ + KB owner)</li>
-        <li>Existing Founder/CEO + Eng Lead + 7 Engineers continue</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Success criteria</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>First full payroll cycle issued through REW (month-end M+6)</li>
-        <li>First promotion review through Hội đồng Chuyên môn</li>
-        <li>P1 base salary invariant verified: zero system-reductions (N(FR pending))</li>
-        <li>BP balance tracked with anti-inflation interest at ACB rate</li>
-        <li>EMAIL daily summary in BRAIN for every Member</li>
-        <li>CRM activities auto-logged from EMAIL outgoing (CaMeL safe extraction)</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Headcount</h4>
+ <p class="text-sm text-slate-600 mb-2"><strong>10 → 12 Members</strong></p>
+ <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+ <li>+1 HR/Ops Lead (REW dogfooding)</li>
+ <li>+1 Engineer (PROJ + KB owner)</li>
+ <li>Existing Founder/CEO + Eng Lead + 7 Engineers continue</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Success criteria</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li>First full payroll cycle issued through REW (month-end M+6)</li>
+ <li>First promotion review through Hội đồng Chuyên môn</li>
+ <li>P1 base salary invariant verified: zero system-reductions (N(FR pending))</li>
+ <li>BP balance tracked with anti-inflation interest at ACB rate</li>
+ <li>EMAIL daily summary in BRAIN for every Member</li>
+ <li>CRM activities auto-logged from EMAIL outgoing (CaMeL safe extraction)</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2">Risks</h4>
-    <ul class="text-sm text-slate-600 space-y-1.5">
-      <li><strong class="text-rose-700">R-101 (M×H)</strong> — REW parameter versioning bug; retroactive recompute could violate N(FR pending). <em>Mitigation: anti-retroactive CI gate; replay tests on every release.</em></li>
-      <li><strong class="text-rose-700">R-102 (M×H)</strong> — EU AI Act Annex III §4 over-application; HR features flagged as high-risk. <em>Mitigation: DEC-054 — drafts only, no scoring.</em></li>
-      <li><strong class="text-amber-700">R-103 (M×M)</strong> — Stalwart self-hosted EMAIL reliability. <em>Mitigation: fallback SMTP relay; OBS alarms on bounce rate.</em></li>
-      <li><strong class="text-amber-700">R-104 (L×M)</strong> — SOC 2 Type I auditor unavailability in Vietnam. <em>Mitigation: Schellman, A-LIGN shortlist; remote audit option.</em></li>
-    </ul>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Risks</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong class="text-rose-700">R-101 (M×H)</strong> — REW parameter versioning bug; retroactive recompute could violate N(FR pending). <em>Mitigation: anti-retroactive CI gate; replay tests on every release.</em></li>
+ <li><strong class="text-rose-700">R-102 (M×H)</strong> — EU AI Act Annex III §4 over-application; HR features flagged as high-risk. <em>Mitigation: DEC-054 — drafts only, no scoring.</em></li>
+ <li><strong class="text-amber-700">R-103 (M×M)</strong> — Stalwart self-hosted EMAIL reliability. <em>Mitigation: fallback SMTP relay; OBS alarms on bounce rate.</em></li>
+ <li><strong class="text-amber-700">R-104 (L×M)</strong> — SOC 2 Type I auditor unavailability in Vietnam. <em>Mitigation: Schellman, A-LIGN shortlist; remote audit option.</em></li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PHASE P2 -->
 <!-- ============================================================ -->
 <section id="phase-p2">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="phase-chip phase-p2" style="font-size:0.9rem;padding:0.4rem 1rem">P2</span>
-    <h2 class="h-1">Operations · M+7 → M+9</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    Bill-to-cash and Phantom Stock. INV closes the revenue loop; ESOP closes the equity-honour loop. First SP grant issued; first annual SP valuation cycle complete.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="phase-chip phase-p2" style="font-size:0.9rem;padding:0.4rem 1rem">P2</span>
+ <h2 class="h-1">Operations · M+7 → M+9</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ Bill-to-cash and Phantom Stock. INV closes the revenue loop; ESOP closes the equity-honour loop. First SP grant issued; first annual SP valuation cycle complete.
+ </p>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5 tint-infra">
-      <h4 class="font-bold mb-2">Modules added (+2 = 17 of 22)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>INV</strong> — invoicing · MST validation · VAT e-invoice via GDT T-VAN · monthly VAT filing</li>
-        <li><strong>ESOP</strong> — Phantom Stock · 4-year vesting · put options from Year 3 · annual SP valuation</li>
-        <li><em>REW upgrade:</em> full pool calculation with BP overflow + sabbatical accrual</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Compliance gate · T2 EU enterprise</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>SOC 2 Type II issued (6-mo observation window)</li>
-        <li>ISO/IEC 27001:2022 Stage 1 audit complete</li>
-        <li>CSA STAR L2 third-party attestation</li>
-        <li>EU AI Act Annex III §4 conformity pack for REW + LEARN</li>
-        <li>Decree 13 full regime — graduate from SME</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5 tint-infra">
+ <h4 class="font-bold mb-2">Modules added (+2 = 17 of 22)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>INV</strong> — invoicing · MST validation · VAT e-invoice via GDT T-VAN · monthly VAT filing</li>
+ <li><strong>ESOP</strong> — Phantom Stock · 4-year vesting · put options from Year 3 · annual SP valuation</li>
+ <li><em>REW upgrade:</em> full pool calculation with BP overflow + sabbatical accrual</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Compliance gate · T2 EU enterprise</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li>SOC 2 Type II issued (6-mo observation window)</li>
+ <li>ISO/IEC 27001:2022 Stage 1 audit complete</li>
+ <li>CSA STAR L2 third-party attestation</li>
+ <li>EU AI Act Annex III §4 conformity pack for REW + LEARN</li>
+ <li>Decree 13 full regime — graduate from SME</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Headcount</h4>
-      <p class="text-sm text-slate-600 mb-2"><strong>12 → 14 Members</strong></p>
-      <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-        <li>+1 vCISO (fractional security · cert prep)</li>
-        <li>+1 Account Manager (CRM + INV dogfooding)</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Success criteria</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>First SP grant issued (after Board-approved valuation)</li>
-        <li>First annual SP valuation cycle complete</li>
-        <li>First e-invoice filed to GDT successfully</li>
-        <li>Monthly VAT return submitted via <code>vn-tax-filing</code> skill</li>
-        <li>ARR &gt; $300k (internal-equivalent or first design partner)</li>
-        <li>Good Leaver / Bad Leaver branch tested via tabletop exercise</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Headcount</h4>
+ <p class="text-sm text-slate-600 mb-2"><strong>12 → 14 Members</strong></p>
+ <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+ <li>+1 vCISO (fractional security · cert prep)</li>
+ <li>+1 Account Manager (CRM + INV dogfooding)</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Success criteria</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li>First SP grant issued (after Board-approved valuation)</li>
+ <li>First annual SP valuation cycle complete</li>
+ <li>First e-invoice filed to GDT successfully</li>
+ <li>Monthly VAT return submitted via <code>vn-tax-filing</code> skill</li>
+ <li>ARR &gt; $300k (internal-equivalent or first design partner)</li>
+ <li>Good Leaver / Bad Leaver branch tested via tabletop exercise</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2">Risks</h4>
-    <ul class="text-sm text-slate-600 space-y-1.5">
-      <li><strong class="text-rose-700">R-201 (L×VH)</strong> — ESOP put-option model violates Vietnamese tax interpretation. <em>Mitigation: counsel review at every parameter version; cash-collected pool only.</em></li>
-      <li><strong class="text-rose-700">R-202 (M×H)</strong> — SP valuation methodology challenged by Board. <em>Mitigation: dual-signed by Founder + Board; methodology in CP module.</em></li>
-      <li><strong class="text-amber-700">R-203 (M×M)</strong> — GDT T-VAN provider connectivity. <em>Mitigation: multiple T-VAN provider integrations; manual fallback via VN-tax-filing skill.</em></li>
-    </ul>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Risks</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong class="text-rose-700">R-201 (L×VH)</strong> — ESOP put-option model violates Vietnamese tax interpretation. <em>Mitigation: counsel review at every parameter version; cash-collected pool only.</em></li>
+ <li><strong class="text-rose-700">R-202 (M×H)</strong> — SP valuation methodology challenged by Board. <em>Mitigation: dual-signed by Founder + Board; methodology in CP module.</em></li>
+ <li><strong class="text-amber-700">R-203 (M×M)</strong> — GDT T-VAN provider connectivity. <em>Mitigation: multiple T-VAN provider integrations; manual fallback via VN-tax-filing skill.</em></li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PHASE P3 -->
 <!-- ============================================================ -->
 <section id="phase-p3">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="phase-chip phase-p3" style="font-size:0.9rem;padding:0.4rem 1rem">P3</span>
-    <h2 class="h-1">SaaS Readiness · M+10 → M+12</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    The platform earns the right to sell. RES + OKR ship; capacity planning becomes visible; the first quarterly OKR cycle closes. If ARR ≥ $1.5M, the Singapore HoldCo flip happens.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="phase-chip phase-p3" style="font-size:0.9rem;padding:0.4rem 1rem">P3</span>
+ <h2 class="h-1">SaaS Readiness · M+10 → M+12</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ The platform earns the right to sell. RES + OKR ship; capacity planning becomes visible; the first quarterly OKR cycle closes. If ARR ≥ $1.5M, the Singapore HoldCo flip happens.
+ </p>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5 tint-cuo">
-      <h4 class="font-bold mb-2">Modules added (+2 = 19 of 22)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>RES</strong> — resource plan · capacity vs forecast · CUO COO-skill rebalancing suggestions</li>
-        <li><strong>OKR</strong> — objectives · key results · quarterly cycle · CUO CEO/CSO-skill cycle-close prompts</li>
-        <li><em>Mobile app evaluation</em> — RN-based, P3 stretch</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Compliance gate · T3 Large enterprise</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>ISO/IEC 42001 (AIMS) certified</li>
-        <li>ISO/IEC 27701 (PIMS) — if EU/UK customers push</li>
-        <li>SOC 2 Type II annual refresh</li>
-        <li>Singapore HoldCo flip (CyberSkill Pte Ltd as parent · if ARR ≥ $1.5M)</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5 tint-cuo">
+ <h4 class="font-bold mb-2">Modules added (+2 = 19 of 22)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>RES</strong> — resource plan · capacity vs forecast · CUO COO-skill rebalancing suggestions</li>
+ <li><strong>OKR</strong> — objectives · key results · quarterly cycle · CUO CEO/CSO-skill cycle-close prompts</li>
+ <li><em>Mobile app evaluation</em> — RN-based, P3 stretch</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Compliance gate · T3 Large enterprise</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li>ISO/IEC 42001 (AIMS) certified</li>
+ <li>ISO/IEC 27701 (PIMS) — if EU/UK customers push</li>
+ <li>SOC 2 Type II annual refresh</li>
+ <li>Singapore HoldCo flip (CyberSkill Pte Ltd as parent · if ARR ≥ $1.5M)</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Headcount</h4>
-      <p class="text-sm text-slate-600 mb-2"><strong>14 → 16 Members</strong></p>
-      <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-        <li>+1 Designer (mobile evaluation + PORTAL prep)</li>
-        <li>+1 Engineer (TEN module groundwork)</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Success criteria</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>First full quarterly OKR cycle closed (Q1 2027)</li>
-        <li>Capacity-vs-forecast rebalancing run weekly via CUO</li>
-        <li>3 design-partner tenants signed (paid pilot)</li>
-        <li>ARR ≥ $1.5M triggers Singapore HoldCo flip</li>
-        <li>eu-shard activated for at least one EU pilot tenant</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Headcount</h4>
+ <p class="text-sm text-slate-600 mb-2"><strong>14 → 16 Members</strong></p>
+ <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+ <li>+1 Designer (mobile evaluation + PORTAL prep)</li>
+ <li>+1 Engineer (TEN module groundwork)</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Success criteria</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li>First full quarterly OKR cycle closed (Q1 2027)</li>
+ <li>Capacity-vs-forecast rebalancing run weekly via CUO</li>
+ <li>3 design-partner tenants signed (paid pilot)</li>
+ <li>ARR ≥ $1.5M triggers Singapore HoldCo flip</li>
+ <li>eu-shard activated for at least one EU pilot tenant</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2">Risks</h4>
-    <ul class="text-sm text-slate-600 space-y-1.5">
-      <li><strong class="text-rose-700">R-301 (M×H)</strong> — Singapore HoldCo flip legal complexity exceeds 3-month window. <em>Mitigation: counsel engaged at M+9; flip is optional gate.</em></li>
-      <li><strong class="text-rose-700">R-302 (M×H)</strong> — RES rebalancing flagged as employment-decision high-risk. <em>Mitigation: suggestion-only mode; human accept/reject required.</em></li>
-      <li><strong class="text-amber-700">R-303 (M×M)</strong> — ISO 42001 AIMS audit window misalignment. <em>Mitigation: Stage 1 readiness check at M+10.</em></li>
-    </ul>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Risks</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong class="text-rose-700">R-301 (M×H)</strong> — Singapore HoldCo flip legal complexity exceeds 3-month window. <em>Mitigation: counsel engaged at M+9; flip is optional gate.</em></li>
+ <li><strong class="text-rose-700">R-302 (M×H)</strong> — RES rebalancing flagged as employment-decision high-risk. <em>Mitigation: suggestion-only mode; human accept/reject required.</em></li>
+ <li><strong class="text-amber-700">R-303 (M×M)</strong> — ISO 42001 AIMS audit window misalignment. <em>Mitigation: Stage 1 readiness check at M+10.</em></li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PHASE P4 -->
 <!-- ============================================================ -->
 <section id="phase-p4">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="phase-chip phase-p4" style="font-size:0.9rem;padding:0.4rem 1rem">P4</span>
-    <h2 class="h-1">Client-Facing · M+13 → M+24</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    External GA. DOC + PORTAL + TEN close the gap. First external paying tenant onboarded. Multi-tenant external GA opens. Regulated-commercial path open via TX-RAMP, StateRAMP Cat 2, FedRAMP 20x Moderate (no-sponsor route if US sub exists).
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="phase-chip phase-p4" style="font-size:0.9rem;padding:0.4rem 1rem">P4</span>
+ <h2 class="h-1">Client-Facing · M+13 → M+24</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ External GA. DOC + PORTAL + TEN close the gap. First external paying tenant onboarded. Multi-tenant external GA opens. Regulated-commercial path open via TX-RAMP, StateRAMP Cat 2, FedRAMP 20x Moderate (no-sponsor route if US sub exists).
+ </p>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5 tint-future">
-      <h4 class="font-bold mb-2">Modules added (+3 = 22 of 22)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>DOC</strong> — document signing · eIDAS QTSP integration · PDF/A-2 archival</li>
-        <li><strong>PORTAL</strong> — external client portal · approval workflow · client-facing AI answers via CUO CXO skill</li>
-        <li><strong>TEN</strong> — tenancy management · per-tenant config · billing (Stripe + VNPay)</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Compliance gate · T3+ regulated</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>TX-RAMP (Texas state)</li>
-        <li>StateRAMP Cat 2</li>
-        <li>FedRAMP 20x Moderate (no-sponsor route if US sub exists)</li>
-        <li>eIDAS QTSP for DOC module — EU-compliant qualified e-signature</li>
-        <li>SOC 2 Type II + ISO 27001 + ISO 42001 all annual-refresh certified</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5 tint-future">
+ <h4 class="font-bold mb-2">Modules added (+3 = 22 of 22)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>DOC</strong> — document signing · eIDAS QTSP integration · PDF/A-2 archival</li>
+ <li><strong>PORTAL</strong> — external client portal · approval workflow · client-facing AI answers via CUO CXO skill</li>
+ <li><strong>TEN</strong> — tenancy management · per-tenant config · billing (Stripe + VNPay)</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Compliance gate · T3+ regulated</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li>TX-RAMP (Texas state)</li>
+ <li>StateRAMP Cat 2</li>
+ <li>FedRAMP 20x Moderate (no-sponsor route if US sub exists)</li>
+ <li>eIDAS QTSP for DOC module — EU-compliant qualified e-signature</li>
+ <li>SOC 2 Type II + ISO 27001 + ISO 42001 all annual-refresh certified</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Headcount</h4>
-      <p class="text-sm text-slate-600 mb-2"><strong>16 → 20 Members</strong></p>
-      <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-        <li>+2 Customer Engineers (onboard external tenants)</li>
-        <li>+1 Sales (Account Manager promoted to head)</li>
-        <li>+1 Legal Counsel (CLO; replaces CUO-as-CLO)</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2">Success criteria</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>First external paying tenant onboarded by M+18</li>
-        <li>5 external paying tenants by M+21</li>
-        <li>10 external paying tenants by M+24 → ARR ≥ $3M</li>
-        <li>NPS ≥ 40 from external tenants</li>
-        <li>Zero tenant data leakage incidents (N(FR pending) maintained)</li>
-        <li>First eIDAS QTSP-signed document issued</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Headcount</h4>
+ <p class="text-sm text-slate-600 mb-2"><strong>16 → 20 Members</strong></p>
+ <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+ <li>+2 Customer Engineers (onboard external tenants)</li>
+ <li>+1 Sales (Account Manager promoted to head)</li>
+ <li>+1 Legal Counsel (CLO; replaces CUO-as-CLO)</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Success criteria</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li>First external paying tenant onboarded by M+18</li>
+ <li>5 external paying tenants by M+21</li>
+ <li>10 external paying tenants by M+24 → ARR ≥ $3M</li>
+ <li>NPS ≥ 40 from external tenants</li>
+ <li>Zero tenant data leakage incidents (N(FR pending) maintained)</li>
+ <li>First eIDAS QTSP-signed document issued</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2">Risks</h4>
-    <ul class="text-sm text-slate-600 space-y-1.5">
-      <li><strong class="text-rose-700">R-401 (M×VH)</strong> — eIDAS QTSP integration partner unreliable. <em>Mitigation: multiple QTSP integrations; degraded mode = advanced e-signature.</em></li>
-      <li><strong class="text-rose-700">R-402 (M×H)</strong> — first external tenant onboarding takes 4× expected. <em>Mitigation: TEN module ships ≥ 3 months before first paid customer.</em></li>
-      <li><strong class="text-rose-700">R-403 (L×VH)</strong> — FedRAMP 20x no-sponsor route deprecated. <em>Mitigation: TX-RAMP + StateRAMP first; FedRAMP deferred.</em></li>
-    </ul>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2">Risks</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong class="text-rose-700">R-401 (M×VH)</strong> — eIDAS QTSP integration partner unreliable. <em>Mitigation: multiple QTSP integrations; degraded mode = advanced e-signature.</em></li>
+ <li><strong class="text-rose-700">R-402 (M×H)</strong> — first external tenant onboarding takes 4× expected. <em>Mitigation: TEN module ships ≥ 3 months before first paid customer.</em></li>
+ <li><strong class="text-rose-700">R-403 (L×VH)</strong> — FedRAMP 20x no-sponsor route deprecated. <em>Mitigation: TX-RAMP + StateRAMP first; FedRAMP deferred.</em></li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DEPENDENCY GRAPH -->
 <!-- ============================================================ -->
 <section id="dep-graph">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-7">A</span>
-    <h2 class="h-1">Module dependency graph</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    Every module depends on the P0 infrastructure plane (AUTH, AI, MCP, OBS) and on BRAIN for memory + audit. P1 modules dogfeed each other (TIME → REW; CRM → EMAIL); P2 modules close revenue + equity loops; P3 modules read from everything; P4 modules sit at the edge.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-7">A</span>
+ <h2 class="h-1">Module dependency graph</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ Every module depends on the P0 infrastructure plane (AUTH, AI, MCP, OBS) and on BRAIN for memory + audit. P1 modules dogfeed each other (TIME → REW; CRM → EMAIL); P2 modules close revenue + equity loops; P3 modules read from everything; P4 modules sit at the edge.
+ </p>
 
-  <div class="bbg-card p-4">
-    <div class="mermaid">
+ <div class="bbg-card p-4">
+ <div class="mermaid">
 flowchart LR
-  subgraph P0 ["P0 Foundation"]
-    AUTH(("AUTH"))
-    AI(("AI"))
-    MCP(("MCP"))
-    OBS(("OBS"))
-    BRAIN(("BRAIN"))
-    CUO(("CUO"))
-    CHAT(("CHAT"))
-  end
+ subgraph P0 ["P0 Foundation"]
+ AUTH(("AUTH"))
+ AI(("AI"))
+ MCP(("MCP"))
+ OBS(("OBS"))
+ BRAIN(("BRAIN"))
+ CUO(("CUO"))
+ CHAT(("CHAT"))
+ end
 
-  subgraph P1 ["P1 Productivity"]
-    PROJ(("PROJ"))
-    TIME(("TIME"))
-    CRM(("CRM"))
-    KB(("KB"))
-    HR(("HR"))
-    EMAIL(("EMAIL"))
-    REW(("REW"))
-    LEARN(("LEARN"))
-  end
+ subgraph P1 ["P1 Productivity"]
+ PROJ(("PROJ"))
+ TIME(("TIME"))
+ CRM(("CRM"))
+ KB(("KB"))
+ HR(("HR"))
+ EMAIL(("EMAIL"))
+ REW(("REW"))
+ LEARN(("LEARN"))
+ end
 
-  subgraph P2 ["P2 Operations"]
-    INV(("INV"))
-    ESOP(("ESOP"))
-  end
+ subgraph P2 ["P2 Operations"]
+ INV(("INV"))
+ ESOP(("ESOP"))
+ end
 
-  subgraph P3 ["P3 SaaS-ready"]
-    RES(("RES"))
-    OKR(("OKR"))
-  end
+ subgraph P3 ["P3 SaaS-ready"]
+ RES(("RES"))
+ OKR(("OKR"))
+ end
 
-  subgraph P4 ["P4 External"]
-    DOC(("DOC"))
-    PORTAL(("PORTAL"))
-    TEN(("TEN"))
-  end
+ subgraph P4 ["P4 External"]
+ DOC(("DOC"))
+ PORTAL(("PORTAL"))
+ TEN(("TEN"))
+ end
 
-  AUTH --> CHAT & PROJ & TIME & CRM & KB & HR & EMAIL & REW & LEARN & INV & ESOP & RES & OKR & DOC & PORTAL & TEN
-  AI --> CUO & BRAIN
-  MCP --> CUO
-  OBS -. observes .-> CHAT & PROJ & CRM & REW & ESOP & RES & OKR
+ AUTH --> CHAT & PROJ & TIME & CRM & KB & HR & EMAIL & REW & LEARN & INV & ESOP & RES & OKR & DOC & PORTAL & TEN
+ AI --> CUO & BRAIN
+ MCP --> CUO
+ OBS -. observes.-> CHAT & PROJ & CRM & REW & ESOP & RES & OKR
 
-  CUO --> CHAT & BRAIN
-  BRAIN --> CUO
+ CUO --> CHAT & BRAIN
+ BRAIN --> CUO
 
-  TIME --> REW
-  PROJ --> TIME
-  CRM --> EMAIL
-  CRM --> INV
-  EMAIL --> BRAIN
-  KB --> BRAIN
-  HR --> REW
-  REW --> LEARN
-  REW --> ESOP
+ TIME --> REW
+ PROJ --> TIME
+ CRM --> EMAIL
+ CRM --> INV
+ EMAIL --> BRAIN
+ KB --> BRAIN
+ HR --> REW
+ REW --> LEARN
+ REW --> ESOP
 
-  PROJ --> RES
-  TIME --> RES
-  HR --> OKR
-  RES --> OKR
+ PROJ --> RES
+ TIME --> RES
+ HR --> OKR
+ RES --> OKR
 
-  CRM --> PORTAL
-  HR --> TEN
-  AUTH --> TEN
-  INV --> TEN
-  KB --> DOC
+ CRM --> PORTAL
+ HR --> TEN
+ AUTH --> TEN
+ INV --> TEN
+ KB --> DOC
 
-  classDef p0 fill:#e8d4c2,stroke:#45210e,stroke-width:2px
-  classDef p1 fill:#f5ede6,stroke:#45210e
-  classDef p2 fill:#fef6e0,stroke:#9c750a
-  classDef p3 fill:#f9c64f,stroke:#9c750a
-  classDef p4 fill:#f0eee9,stroke:#475569
+ classDef p0 fill:#e8d4c2,stroke:#45210e,stroke-width:2px
+ classDef p1 fill:#f5ede6,stroke:#45210e
+ classDef p2 fill:#fef6e0,stroke:#9c750a
+ classDef p3 fill:#f9c64f,stroke:#9c750a
+ classDef p4 fill:#f0eee9,stroke:#475569
 
-  class AUTH,AI,MCP,OBS,BRAIN,CUO,CHAT p0
-  class PROJ,TIME,CRM,KB,HR,EMAIL,REW,LEARN p1
-  class INV,ESOP p2
-  class RES,OKR p3
-  class DOC,PORTAL,TEN p4
-    </div>
-  </div>
+ class AUTH,AI,MCP,OBS,BRAIN,CUO,CHAT p0
+ class PROJ,TIME,CRM,KB,HR,EMAIL,REW,LEARN p1
+ class INV,ESOP p2
+ class RES,OKR p3
+ class DOC,PORTAL,TEN p4
+ </div>
+ </div>
 
-  <p class="text-sm text-slate-500 mt-3">Cycle-free by construction. The only "circular" arrow (BRAIN ⇄ CUO) is the legitimate read/write split: CUO writes inquiry context, BRAIN returns search hits.</p>
+ <p class="text-sm text-slate-500 mt-3">Cycle-free by construction. The only "circular" arrow (BRAIN ⇄ CUO) is the legitimate read/write split: CUO writes inquiry context, BRAIN returns search hits.</p>
 </section>
 
 <!-- ============================================================ -->
 <!-- HEADCOUNT + REVENUE TRAJECTORY -->
 <!-- ============================================================ -->
 <section id="trajectory">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-8">B</span>
-    <h2 class="h-1">Headcount · modules · revenue trajectory</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    Three curves laid on the same time axis. Headcount grows only when CyberOS itself absorbs the operational load. Module count is the leading indicator; revenue is the trailing indicator.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-8">B</span>
+ <h2 class="h-1">Headcount · modules · revenue trajectory</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ Three curves laid on the same time axis. Headcount grows only when CyberOS itself absorbs the operational load. Module count is the leading indicator; revenue is the trailing indicator.
+ </p>
 
-  <div class="grid md:grid-cols-3 gap-5 mb-6">
-    <div class="bbg-card p-5">
-      <div class="text-xs uppercase text-blue-700 font-bold mb-1">Headcount (Members)</div>
-      <div class="text-3xl font-black text-blue-600 mb-2">10 → 20</div>
-      <div class="text-sm text-slate-600">+10 over 24 months. Hires are gated on CyberOS's ability to absorb that Member's onboarding via REW + LEARN + KB.</div>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-xs uppercase text-emerald-700 font-bold mb-1">Modules shipped</div>
-      <div class="text-3xl font-black text-emerald-600 mb-2">7 → 22</div>
-      <div class="text-sm text-slate-600">+15 over 24 months. The 7 P0 modules are the heaviest lift; subsequent phases ship 8 / 2 / 2 / 3.</div>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-xs uppercase text-amber-700 font-bold mb-1">ARR target</div>
-      <div class="text-3xl font-black text-amber-600 mb-2">$0 → $3M</div>
-      <div class="text-sm text-slate-600">$0 at P0 (internal). Design-partner pilots at P2. $1.5M trigger for HoldCo flip at P3. $3M+ at P4 with 10 paying tenants.</div>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-3 gap-5 mb-6">
+ <div class="bbg-card p-5">
+ <div class="text-xs uppercase text-blue-700 font-bold mb-1">Headcount (Members)</div>
+ <div class="text-3xl font-black text-blue-600 mb-2">10 → 20</div>
+ <div class="text-sm text-slate-600">+10 over 24 months. Hires are gated on CyberOS's ability to absorb that Member's onboarding via REW + LEARN + KB.</div>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-xs uppercase text-emerald-700 font-bold mb-1">Modules shipped</div>
+ <div class="text-3xl font-black text-emerald-600 mb-2">7 → 22</div>
+ <div class="text-sm text-slate-600">+15 over 24 months. The 7 P0 modules are the heaviest lift; subsequent phases ship 8 / 2 / 2 / 3.</div>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-xs uppercase text-amber-700 font-bold mb-1">ARR target</div>
+ <div class="text-3xl font-black text-amber-600 mb-2">$0 → $3M</div>
+ <div class="text-sm text-slate-600">$0 at P0 (internal). Design-partner pilots at P2. $1.5M trigger for HoldCo flip at P3. $3M+ at P4 with 10 paying tenants.</div>
+ </div>
+ </div>
 
-  <div class="bbg-card p-4 mb-6">
-    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Headcount trajectory</div>
-    <div class="mermaid">
+ <div class="bbg-card p-4 mb-6">
+ <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Headcount trajectory</div>
+ <div class="mermaid">
 xychart-beta
-  title "Member count over 24 months"
-  x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
-  y-axis "Members" 0 --> 22
-  line [10, 10, 12, 14, 16, 17, 18, 19, 20]
-    </div>
-  </div>
+ title "Member count over 24 months"
+ x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
+ y-axis "Members" 0 --> 22
+ line [10, 10, 12, 14, 16, 17, 18, 19, 20]
+ </div>
+ </div>
 
-  <div class="bbg-card p-4 mb-6">
-    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Module count trajectory</div>
-    <div class="mermaid">
+ <div class="bbg-card p-4 mb-6">
+ <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Module count trajectory</div>
+ <div class="mermaid">
 xychart-beta
-  title "Modules shipped (out of 22)"
-  x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
-  y-axis "Modules" 0 --> 22
-  line [3, 7, 15, 17, 19, 19, 20, 22, 22]
-    </div>
-  </div>
+ title "Modules shipped (out of 22)"
+ x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
+ y-axis "Modules" 0 --> 22
+ line [3, 7, 15, 17, 19, 19, 20, 22, 22]
+ </div>
+ </div>
 
-  <div class="bbg-card p-4 mb-6">
-    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">ARR trajectory ($k)</div>
-    <div class="mermaid">
+ <div class="bbg-card p-4 mb-6">
+ <div class="text-sm font-semibold text-slate-700 mb-2 text-center">ARR trajectory ($k)</div>
+ <div class="mermaid">
 xychart-beta
-  title "Annual Recurring Revenue projection ($k)"
-  x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
-  y-axis "ARR ($k)" 0 --> 3500
-  line [0, 0, 0, 300, 800, 1500, 2000, 2600, 3200]
-    </div>
-  </div>
+ title "Annual Recurring Revenue projection ($k)"
+ x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
+ y-axis "ARR ($k)" 0 --> 3500
+ line [0, 0, 0, 300, 800, 1500, 2000, 2600, 3200]
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- KPI DASHBOARD -->
 <!-- ============================================================ -->
 <section id="kpis">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-9">C</span>
-    <h2 class="h-1">KPI dashboard targets per phase</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    Each phase has a "north-star plus three" KPI set. North-star is the dogfooding-signal proxy; the three supporting metrics are the leading-edge measurements that tell the founder whether the phase is ready to exit.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-9">C</span>
+ <h2 class="h-1">KPI dashboard targets per phase</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ Each phase has a "north-star plus three" KPI set. North-star is the dogfooding-signal proxy; the three supporting metrics are the leading-edge measurements that tell the founder whether the phase is ready to exit.
+ </p>
 
-  <div class="bbg-card p-6 mb-6">
-    <div class="overflow-x-auto">
-      <table class="bbg-table">
-        <thead><tr>
-          <th>Phase</th><th>North-star</th><th>KPI 2</th><th>KPI 3</th><th>KPI 4 · guardrail</th>
-        </tr></thead>
-        <tbody>
-          <tr>
-            <td><strong class="text-blue-700">P0</strong></td>
-            <td>Slack + Zalo decommissioned · 100% Members on CHAT</td>
-            <td>CUO citation rate ≥ 98%</td>
-            <td>BRAIN search p95 ≤ 250ms</td>
-            <td>Zero compensation in BRAIN (denylist)</td>
-          </tr>
-          <tr>
-            <td><strong class="text-emerald-700">P1</strong></td>
-            <td>First full payroll cycle issued through REW</td>
-            <td>SOC 2 Type I issued</td>
-            <td>Time-tracked hours = 100% of billable</td>
-            <td>P1 base salary system-reductions = 0</td>
-          </tr>
-          <tr>
-            <td><strong class="text-amber-700">P2</strong></td>
-            <td>First SP grant + first SP valuation cycle complete</td>
-            <td>SOC 2 Type II + ISO 27001 Stage 1</td>
-            <td>VAT e-invoice file rate 100%</td>
-            <td>Parameter version retroactive mutations = 0</td>
-          </tr>
-          <tr>
-            <td><strong class="text-purple-700">P3</strong></td>
-            <td>Quarterly OKR cycle closed · capacity rebalanced weekly</td>
-            <td>ISO 42001 certified</td>
-            <td>ARR ≥ $1.5M (HoldCo trigger)</td>
-            <td>EU AI Act Annex III §4 conformance · 100% drafts-only</td>
-          </tr>
-          <tr>
-            <td><strong class="text-slate-700">P4</strong></td>
-            <td>First external paying tenant onboarded</td>
-            <td>10 paying tenants by M+24</td>
-            <td>NPS ≥ 40 from external tenants</td>
-            <td>Tenant data leakage incidents = 0</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+ <div class="bbg-card p-6 mb-6">
+ <div class="overflow-x-auto">
+ <table class="bbg-table">
+ <thead><tr>
+ <th>Phase</th><th>North-star</th><th>KPI 2</th><th>KPI 3</th><th>KPI 4 · guardrail</th>
+ </tr></thead>
+ <tbody>
+ <tr>
+ <td><strong class="text-blue-700">P0</strong></td>
+ <td>Slack + Zalo decommissioned · 100% Members on CHAT</td>
+ <td>CUO citation rate ≥ 98%</td>
+ <td>BRAIN search p95 ≤ 250ms</td>
+ <td>Zero compensation in BRAIN (denylist)</td>
+ </tr>
+ <tr>
+ <td><strong class="text-emerald-700">P1</strong></td>
+ <td>First full payroll cycle issued through REW</td>
+ <td>SOC 2 Type I issued</td>
+ <td>Time-tracked hours = 100% of billable</td>
+ <td>P1 base salary system-reductions = 0</td>
+ </tr>
+ <tr>
+ <td><strong class="text-amber-700">P2</strong></td>
+ <td>First SP grant + first SP valuation cycle complete</td>
+ <td>SOC 2 Type II + ISO 27001 Stage 1</td>
+ <td>VAT e-invoice file rate 100%</td>
+ <td>Parameter version retroactive mutations = 0</td>
+ </tr>
+ <tr>
+ <td><strong class="text-purple-700">P3</strong></td>
+ <td>Quarterly OKR cycle closed · capacity rebalanced weekly</td>
+ <td>ISO 42001 certified</td>
+ <td>ARR ≥ $1.5M (HoldCo trigger)</td>
+ <td>EU AI Act Annex III §4 conformance · 100% drafts-only</td>
+ </tr>
+ <tr>
+ <td><strong class="text-slate-700">P4</strong></td>
+ <td>First external paying tenant onboarded</td>
+ <td>10 paying tenants by M+24</td>
+ <td>NPS ≥ 40 from external tenants</td>
+ <td>Tenant data leakage incidents = 0</td>
+ </tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Continuous (cross-phase) NFRs</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>N(FR pending) GraphQL p95 ≤ 400ms</li>
-        <li>N(FR pending) BRAIN search p95 ≤ 250ms on 1M chunks</li>
-        <li>N(FR pending) Platform availability ≥ 99.5%</li>
-        <li>N(FR pending) CHAT availability ≥ 99.9%</li>
-        <li>N(FR pending) Tenant data leakage = 0</li>
-        <li>N(FR pending) CUO citation rate ≥ 98%</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Anti-metrics (we watch these <em>not</em> grow)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
-        <li>CUO auto-acts on irreversible op without confirm</li>
-        <li>P1 base salary system-reductions</li>
-        <li>Parameter version retroactive mutations</li>
-        <li>Compensation/equity facts in BRAIN</li>
-        <li>CUO answers without citation when source exists</li>
-        <li>Prompt-injection exfiltration via email/document</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Continuous (cross-phase) NFRs</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li>N(FR pending) GraphQL p95 ≤ 400ms</li>
+ <li>N(FR pending) BRAIN search p95 ≤ 250ms on 1M chunks</li>
+ <li>N(FR pending) Platform availability ≥ 99.5%</li>
+ <li>N(FR pending) CHAT availability ≥ 99.9%</li>
+ <li>N(FR pending) Tenant data leakage = 0</li>
+ <li>N(FR pending) CUO citation rate ≥ 98%</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Anti-metrics (we watch these <em>not</em> grow)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
+ <li>CUO auto-acts on irreversible op without confirm</li>
+ <li>P1 base salary system-reductions</li>
+ <li>Parameter version retroactive mutations</li>
+ <li>Compensation/equity facts in BRAIN</li>
+ <li>CUO answers without citation when source exists</li>
+ <li>Prompt-injection exfiltration via email/document</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- REFERENCES -->
 <!-- ============================================================ -->
 <section id="references">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-6">∞</span>
-    <h2 class="h-1">References</h2>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-6">∞</span>
+ <h2 class="h-1">References</h2>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-3">PRD source sections</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>PRD §1.3 — The 12-month milestone arc</li>
-        <li>PRD §4.2 — OKRs by phase exit</li>
-        <li>PRD §4.3 — Guardrail (anti-)metrics</li>
-        <li>PRD §7.1 — All 22 modules catalogued</li>
-        <li>PRD §11.1 — Foundational locked decisions</li>
-        <li>PRD §11.2 — Non-Functional Requirements</li>
-        <li>PRD §12.4 — Compliance tier model per phase</li>
-        <li>PRD §13 — AI-driven productivity matrix</li>
-        <li>PRD §17 — 12-week shipping plan</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-3">Cross-references in CyberOS docs</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><a href="infrastructure.html" class="text-amber-700 font-semibold">Infrastructure plane (six P0 pillars)</a></li>
-        <li><a href="compliance.html" class="text-amber-700 font-semibold">Compliance plan (three rings)</a></li>
-        <li><a href="tech-stack.html" class="text-amber-700 font-semibold">Tech stack (8 tiers)</a></li>
-        <li><a href="../modules/brain.html" class="text-amber-700 font-semibold">BRAIN module</a></li>
-        <li><a href="../modules/cuo.html" class="text-amber-700 font-semibold">CUO module</a></li>
-        <li><a href="../modules/skill.html" class="text-amber-700 font-semibold">Skill module</a></li>
-        <li><a href="../reference/nfr-catalog.html" class="text-amber-700 font-semibold">NFR Catalog (full table)</a></li>
-        <li><a href="../reference/risk-register.html" class="text-amber-700 font-semibold">Risk Register (full)</a></li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-3">PRD source sections</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li> — The 12-month milestone arc</li>
+ <li> — OKRs by phase exit</li>
+ <li> — Guardrail (anti-)metrics</li>
+ <li> — All 22 modules catalogued</li>
+ <li> — Foundational locked decisions</li>
+ <li> — Non-Functional Requirements</li>
+ <li> — Compliance tier model per phase</li>
+ <li> — AI-driven productivity matrix</li>
+ <li> — 12-week shipping plan</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-3">Cross-references in CyberOS docs</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><a href="infrastructure.html" class="text-amber-700 font-semibold">Infrastructure plane (six P0 pillars)</a></li>
+ <li><a href="compliance.html" class="text-amber-700 font-semibold">Compliance plan (three rings)</a></li>
+ <li><a href="tech-stack.html" class="text-amber-700 font-semibold">Tech stack (8 tiers)</a></li>
+ <li><a href="../modules/brain.html" class="text-amber-700 font-semibold">BRAIN module</a></li>
+ <li><a href="../modules/cuo.html" class="text-amber-700 font-semibold">CUO module</a></li>
+ <li><a href="../modules/skill.html" class="text-amber-700 font-semibold">Skill module</a></li>
+ <li><a href="../reference/nfr-catalog.html" class="text-amber-700 font-semibold">NFR Catalog (full table)</a></li>
+ <li><a href="../reference/risk-register.html" class="text-amber-700 font-semibold">Risk Register (full)</a></li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PAGE NAV -->
 <!-- ============================================================ -->
 <section>
-  <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-slate-200">
-    <a href="tech-stack.html" class="btn btn-secondary">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-      Previous · Tech stack
-    </a>
-    <a href="../index.html" class="btn btn-primary">
-      Back to home
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-    </a>
-  </div>
+ <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-slate-200">
+ <a href="tech-stack.html" class="btn btn-secondary">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+ Previous · Tech stack
+ </a>
+ <a href="../index.html" class="btn btn-primary">
+ Back to home
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ </div>
 </section>
 
 </main>
 </div>
 
 <footer class="border-t border-slate-200 bg-slate-50">
-  <div class="container py-8 text-sm text-slate-500">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>CyberOS Documentation · v2026.05 · Architecture / Milestones</div>
-      <div class="text-xs text-slate-400">Generated from PRD §1.3 + §11 + §12 · Last updated 2026-05-14</div>
-    </div>
-  </div>
+ <div class="container py-8 text-sm text-slate-500">
+ <div class="flex flex-wrap items-center justify-between gap-3">
+ <div>CyberOS Documentation · v2026.05 · Architecture / Milestones</div>
+ <div class="text-xs text-slate-400">Generated from + §11 + §12 · Last updated 2026-05-14</div>
+ </div>
+ </div>
 </footer>
 
 </body>

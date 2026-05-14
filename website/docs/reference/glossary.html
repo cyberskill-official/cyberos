@@ -1,408 +1,329 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CyberOS — Glossary</title>
-  <meta name="description" content="Comprehensive glossary of every CyberOS term, acronym, tech-stack component, regulatory reference, and Vietnamese-market concept.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="module" src="../assets/scripts.js"></script>
-  <style>
-    .term-card { padding: 1rem 1.25rem; margin-bottom: 0.5rem; }
-    .term-card header { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:baseline; margin-bottom:0.5rem; }
-    .term-card h3 { font-size: 1.0625rem; font-weight: 800; margin: 0; color: var(--text); }
-    .term-card .acronym { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 0.25rem; background: var(--future-tint); color: var(--text-mute); }
-    .term-card .acronym.cy-spec  { background: var(--memory-tint); color: var(--memory-dark); }
-    .term-card .acronym.tech     { background: var(--skill-tint); color: var(--skill-dark); }
-    .term-card .acronym.regul    { background: var(--compliance-tint); color: var(--compliance-dark); }
-    .term-card .acronym.business { background: var(--cuo-tint); color: var(--cuo-dark); }
-    .term-card .acronym.lang     { background: var(--infra-tint); color: var(--infra-dark); }
-    .term-card .vi { font-style: italic; color: var(--text-mute); font-size: 0.8125rem; font-weight: 500; }
-    .term-card .definition { font-size: 0.875rem; color: var(--text-soft); line-height: 1.55; margin: 0.25rem 0 0.5rem 0; }
-    .term-card .context { font-size: 0.8125rem; color: var(--text-mute); margin: 0; padding-top: 0.5rem; border-top: 1px dashed var(--border); }
-    .term-card .xrefs { font-size: 0.75rem; color: var(--text-mute); margin-top: 0.375rem; }
-    .term-card .xrefs a { color: var(--memory-dark); text-decoration: none; font-weight: 600; }
-    .term-card .xrefs a:hover { text-decoration: underline; }
-    .term-card .ext { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-mute); margin-top: 0.25rem; }
-    .term-card .ext a { color: inherit; text-decoration: underline; }
-    .letter-section { scroll-margin-top: 80px; margin-bottom: 2rem; }
-    .letter-section header { display:flex; align-items:baseline; gap:1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
-    .letter-section h2 { font-size: 2rem; font-weight: 900; margin: 0; color: var(--memory-dark); font-family: var(--font-mono); }
-    .letter-section .count { font-size: 0.75rem; color: var(--text-mute); font-weight: 600; }
-    .alphabet-jump { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 1rem; }
-    .alphabet-jump a { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 0.375rem; background: var(--bg-card); border: 1px solid var(--border); font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: var(--text-soft); text-decoration: none; transition: all 0.12s; }
-    .alphabet-jump a:hover { background: var(--memory-tint); color: var(--memory-dark); border-color: var(--memory); }
-    .alphabet-jump a.empty { opacity: 0.3; pointer-events: none; }
-    .legend-pill { display:inline-flex; align-items:center; gap:0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; }
-    .filter-bar { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom: 0.75rem; }
-    .filter-bar input { padding:0.5rem 0.875rem; border:1px solid var(--border-strong); border-radius:0.5rem; font-size:0.875rem; background:var(--bg-card); color:var(--text); min-width:24rem; }
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>CyberOS — Glossary</title>
+ <meta name="description" content="Comprehensive glossary of every CyberOS term, acronym, tech-stack component, regulatory reference, and Vietnamese-market concept.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
+ <style>.term-card { padding: 1rem 1.25rem; margin-bottom: 0.5rem; }.term-card header { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:baseline; margin-bottom:0.5rem; }.term-card h3 { font-size: 1.0625rem; font-weight: 800; margin: 0; color: var(--text); }.term-card.acronym { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 0.25rem; background: var(--future-tint); color: var(--text-mute); }.term-card.acronym.cy-spec { background: var(--memory-tint); color: var(--memory-dark); }.term-card.acronym.tech { background: var(--skill-tint); color: var(--skill-dark); }.term-card.acronym.regul { background: var(--compliance-tint); color: var(--compliance-dark); }.term-card.acronym.business { background: var(--cuo-tint); color: var(--cuo-dark); }.term-card.acronym.lang { background: var(--infra-tint); color: var(--infra-dark); }.term-card.vi { font-style: italic; color: var(--text-mute); font-size: 0.8125rem; font-weight: 500; }.term-card.definition { font-size: 0.875rem; color: var(--text-soft); line-height: 1.55; margin: 0.25rem 0 0.5rem 0; }.term-card.context { font-size: 0.8125rem; color: var(--text-mute); margin: 0; padding-top: 0.5rem; border-top: 1px dashed var(--border); }.term-card.xrefs { font-size: 0.75rem; color: var(--text-mute); margin-top: 0.375rem; }.term-card.xrefs a { color: var(--memory-dark); text-decoration: none; font-weight: 600; }.term-card.xrefs a:hover { text-decoration: underline; }.term-card.ext { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-mute); margin-top: 0.25rem; }.term-card.ext a { color: inherit; text-decoration: underline; }.letter-section { scroll-margin-top: 80px; margin-bottom: 2rem; }.letter-section header { display:flex; align-items:baseline; gap:1rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }.letter-section h2 { font-size: 2rem; font-weight: 900; margin: 0; color: var(--memory-dark); font-family: var(--font-mono); }.letter-section.count { font-size: 0.75rem; color: var(--text-mute); font-weight: 600; }.alphabet-jump { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 1rem; }.alphabet-jump a { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 0.375rem; background: var(--bg-card); border: 1px solid var(--border); font-family: var(--font-mono); font-weight: 700; font-size: 0.75rem; color: var(--text-soft); text-decoration: none; transition: all 0.12s; }.alphabet-jump a:hover { background: var(--memory-tint); color: var(--memory-dark); border-color: var(--memory); }.alphabet-jump a.empty { opacity: 0.3; pointer-events: none; }.legend-pill { display:inline-flex; align-items:center; gap:0.375rem; padding: 0.25rem 0.625rem; border-radius: 9999px; font-size: 0.6875rem; font-weight: 700; }.filter-bar { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom: 0.75rem; }.filter-bar input { padding:0.5rem 0.875rem; border:1px solid var(--border-strong); border-radius:0.5rem; font-size:0.875rem; background:var(--bg-card); color:var(--text); min-width:24rem; }
+ </style>
 </head>
 <body data-pagefind-filter="category:Reference">
 
 <div id="shared-nav"></div>
 
-<div x-data="glossary()" x-init="$nextTick(() => init())" class="container py-8">
+<div x-data="glossary" x-init="$nextTick( => init)" class="container py-8">
 
-  <nav class="breadcrumbs">
-    <a href="../index.html">Home</a><span class="sep">›</span>
-    <a href="../index.html#navigate">Reference</a><span class="sep">›</span>
-    <span class="current">Glossary</span>
-  </nav>
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a><span class="sep">›</span>
+ <a href="../index.html#navigate">Reference</a><span class="sep">›</span>
+ <span class="current">Glossary</span>
+ </nav>
 
-  <header class="mb-8">
-    <div class="flex items-center gap-3 mb-3">
-      <span class="section-badge" style="background:var(--skill-tint);color:var(--skill-dark)">Reference · Glossary</span>
-    </div>
-    <h1 class="h-1 mb-3">Glossary</h1>
-    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
-      Every term, acronym, and proper noun used across the CyberOS docs. Five colour-coded categories: CyberOS-specific (blue), Tech stack (emerald), Regulatory / compliance (red), Business / domain (purple), Vietnamese terms (amber). Use the search box for instant filter or the A–Z jump for quick navigation.
-    </p>
+ <header class="mb-8">
+ <div class="flex items-center gap-3 mb-3">
+ <span class="section-badge" style="background:var(--skill-tint);color:var(--skill-dark)">Reference · Glossary</span>
+ </div>
+ <h1 class="h-1 mb-3">Glossary</h1>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
+ Every term, acronym, and proper noun used across the CyberOS docs. Five colour-coded categories: CyberOS-specific (blue), Tech stack (emerald), Regulatory / compliance (red), Business / domain (purple), Vietnamese terms (amber). Use the search box for instant filter or the A–Z jump for quick navigation.
+ </p>
 
-    <div class="flex flex-wrap gap-2 mb-4">
-      <span class="legend-pill" style="background:var(--memory-tint);color:var(--memory-dark)">CyberOS-specific</span>
-      <span class="legend-pill" style="background:var(--skill-tint);color:var(--skill-dark)">Tech stack</span>
-      <span class="legend-pill" style="background:var(--compliance-tint);color:var(--compliance-dark)">Regulatory</span>
-      <span class="legend-pill" style="background:var(--cuo-tint);color:var(--cuo-dark)">Business / domain</span>
-      <span class="legend-pill" style="background:var(--infra-tint);color:var(--infra-dark)">Vietnamese / language</span>
-    </div>
+ <div class="flex flex-wrap gap-2 mb-4">
+ <span class="legend-pill" style="background:var(--memory-tint);color:var(--memory-dark)">CyberOS-specific</span>
+ <span class="legend-pill" style="background:var(--skill-tint);color:var(--skill-dark)">Tech stack</span>
+ <span class="legend-pill" style="background:var(--compliance-tint);color:var(--compliance-dark)">Regulatory</span>
+ <span class="legend-pill" style="background:var(--cuo-tint);color:var(--cuo-dark)">Business / domain</span>
+ <span class="legend-pill" style="background:var(--infra-tint);color:var(--infra-dark)">Vietnamese / language</span>
+ </div>
 
-    <div class="filter-bar no-print">
-      <input type="search" x-model="searchQuery" placeholder="Search terms · acronyms · definitions…">
-      <span class="text-xs text-slate-500"><strong x-text="visibleCount()"></strong> of <strong x-text="terms.length"></strong> terms shown</span>
-    </div>
+ <div class="filter-bar no-print">
+ <input type="search" x-model="searchQuery" placeholder="Search terms · acronyms · definitions…">
+ <span class="text-xs text-slate-500"> of terms shown</span>
+ </div>
 
-    <div class="alphabet-jump no-print">
-      <template x-for="L in alphabet" :key="L">
-        <a :href="`#letter-${L}`" :class="{ 'empty': !hasLetter(L) }" x-text="L"></a>
-      </template>
-    </div>
+ <div class="alphabet-jump no-print">
+ <template x-for="L in alphabet":key="L">
+ <a:href="`#letter-${L}`":class="{ 'empty': !hasLetter(L) }" x-text="L"></a>
+ </template>
+ </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
-      <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="terms.length"></div><div class="text-xs text-slate-500 font-medium mt-1">Terms total</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="countByCat('cy-spec')"></div><div class="text-xs text-slate-500 font-medium mt-1">CyberOS-specific</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-emerald-600" x-text="countByCat('tech')"></div><div class="text-xs text-slate-500 font-medium mt-1">Tech stack</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-rose-600" x-text="countByCat('regul')"></div><div class="text-xs text-slate-500 font-medium mt-1">Regulatory</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-purple-600" x-text="countByCat('business') + countByCat('lang')"></div><div class="text-xs text-slate-500 font-medium mt-1">Business + VN</div></div>
-    </div>
-  </header>
+ <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+ <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="terms.length"></div><div class="text-xs text-slate-500 font-medium mt-1">Terms total</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="countByCat('cy-spec')"></div><div class="text-xs text-slate-500 font-medium mt-1">CyberOS-specific</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-emerald-600" x-text="countByCat('tech')"></div><div class="text-xs text-slate-500 font-medium mt-1">Tech stack</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-rose-600" x-text="countByCat('regul')"></div><div class="text-xs text-slate-500 font-medium mt-1">Regulatory</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-purple-600" x-text="countByCat('business') + countByCat('lang')"></div><div class="text-xs text-slate-500 font-medium mt-1">Business + VN</div></div>
+ </div>
+ </header>
 
-  <!-- LETTER SECTIONS rendered via Alpine -->
-  <template x-for="L in alphabet" :key="L">
-    <section :id="`letter-${L}`" class="letter-section" x-show="termsByLetter(L).some(t => matches(t))">
-      <header><h2 x-text="L"></h2><span class="count" x-text="`${termsByLetter(L).length} terms`"></span></header>
-      <template x-for="t in termsByLetter(L)" :key="t.title">
-        <article class="bbg-card term-card" x-show="matches(t)">
-          <header>
-            <h3 x-text="t.title"></h3>
-            <span class="acronym" :class="t.cat" x-text="t.acronym || catLabel(t.cat)"></span>
-            <template x-if="t.vi"><span class="vi" x-text="`(VN: ${t.vi})`"></span></template>
-          </header>
-          <p class="definition" x-text="t.def"></p>
-          <template x-if="t.context"><p class="context" x-text="`Context: ${t.context}`"></p></template>
-          <template x-if="t.xrefs && t.xrefs.length">
-            <p class="xrefs">See also: <template x-for="(x, i) in t.xrefs" :key="i"><span><a :href="`#term-${x.replace(/[^a-zA-Z0-9]/g,'-')}`" x-text="x"></a><template x-if="i < t.xrefs.length - 1"><span>, </span></template></span></template></p>
-          </template>
-          <template x-if="t.ext"><p class="ext" x-text="`Ref: ${t.ext}`"></p></template>
-        </article>
-      </template>
-    </section>
-  </template>
+ <!-- LETTER SECTIONS rendered via Alpine -->
+ <template x-for="L in alphabet":key="L">
+ <section:id="`letter-${L}`" class="letter-section" x-show="termsByLetter(L).some(t => matches(t))">
+ <header><h2 x-text="L"></h2><span class="count" x-text="`${termsByLetter(L).length} terms`"></span></header>
+ <template x-for="t in termsByLetter(L)":key="t.title">
+ <article class="bbg-card term-card" x-show="matches(t)">
+ <header>
+ <h3 x-text="t.title"></h3>
+ <span class="acronym":class="t.cat" x-text="t.acronym || catLabel(t.cat)"></span>
+ <template x-if="t.vi"><span class="vi" x-text="`(VN: ${t.vi})`"></span></template>
+ </header>
+ <p class="definition" x-text="t.def"></p>
+ <template x-if="t.context"><p class="context" x-text="`Context: ${t.context}`"></p></template>
+ <template x-if="t.xrefs && t.xrefs.length">
+ <p class="xrefs">See also: <template x-for="(x, i) in t.xrefs":key="i"><span><a:href="`#term-${x.replace(/[^a-zA-Z0-9]/g,'-')}`" x-text="x"></a><template x-if="i < t.xrefs.length - 1"><span>, </span></template></span></template></p>
+ </template>
+ <template x-if="t.ext"><p class="ext" x-text="`Ref: ${t.ext}`"></p></template>
+ </article>
+ </template>
+ </section>
+ </template>
 
-  <div x-show="visibleCount() === 0" class="bbg-card p-10 text-center">
-    <p class="text-slate-500">No terms match the search. <button class="text-blue-600 font-bold underline" @click="searchQuery=''">Reset</button> to see the full glossary.</p>
-  </div>
+ <div x-show="visibleCount === 0" class="bbg-card p-10 text-center">
+ <p class="text-slate-500">No terms match the search. <button class="text-blue-600 font-bold underline" @click="searchQuery=''">Reset</button> to see the full glossary.</p>
+ </div>
 
-  <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
-    <p>CyberOS Documentation · Glossary · sourced from PRD §3.4, SRS §2, AGENTS.md, design system glossary</p>
-  </div>
+ <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
+ <p>CyberOS Documentation · Glossary · sourced from, AGENTS.md, design system glossary</p>
+ </div>
 </div>
 
 <script>
-function glossary() {
-  return {
-    searchQuery: '',
-    alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
-    terms: [],
-    init() { this.terms = TERMS; },
-    catLabel(c) {
-      return ({'cy-spec':'CyberOS','tech':'Tech','regul':'Regulatory','business':'Business','lang':'VN'})[c] || c;
-    },
-    matches(t) {
-      if (!this.searchQuery) return true;
-      const q = this.searchQuery.toLowerCase();
-      return t.title.toLowerCase().includes(q) ||
-             (t.def || '').toLowerCase().includes(q) ||
-             (t.acronym || '').toLowerCase().includes(q) ||
-             (t.context || '').toLowerCase().includes(q) ||
-             (t.vi || '').toLowerCase().includes(q);
-    },
-    visibleCount() { return this.terms.filter(t => this.matches(t)).length; },
-    countByCat(c) { return this.terms.filter(t => t.cat === c).length; },
-    termsByLetter(L) {
-      return this.terms.filter(t => t.title[0].toUpperCase() === L)
-                       .sort((a,b) => a.title.localeCompare(b.title));
-    },
-    hasLetter(L) { return this.termsByLetter(L).some(t => this.matches(t)); }
-  };
+function glossary {
+ return {
+ searchQuery: '',
+ alphabet: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
+ terms:,
+ init { this.terms = TERMS; },
+ catLabel(c) {
+ return ({'cy-spec':'CyberOS','tech':'Tech','regul':'Regulatory','business':'Business','lang':'VN'})[c] || c;
+ },
+ matches(t) {
+ if (!this.searchQuery) return true;
+ const q = this.searchQuery.toLowerCase;
+ return t.title.toLowerCase.includes(q) ||
+ (t.def || '').toLowerCase.includes(q) ||
+ (t.acronym || '').toLowerCase.includes(q) ||
+ (t.context || '').toLowerCase.includes(q) ||
+ (t.vi || '').toLowerCase.includes(q);
+ },
+ visibleCount { return this.terms.filter(t => this.matches(t)).length; },
+ countByCat(c) { return this.terms.filter(t => t.cat === c).length; },
+ termsByLetter(L) {
+ return this.terms.filter(t => t.title[0].toUpperCase === L).sort((a,b) => a.title.localeCompare(b.title));
+ },
+ hasLetter(L) { return this.termsByLetter(L).some(t => this.matches(t)); }
+ };
 }
 
 const TERMS = [
-  // ─────────── A ───────────
-  { title:'AAR', acronym:'AAR', vi:null, cat:'business', def:'After-Action Review. A short retrospective triggered when a risk is realised; the lesson-learned is ingested into BRAIN Layer 2 with the lesson-learned tag.', context:'CP module / Risk register operational rules', xrefs:['BRAIN','Risk Register'], ext:'PRD §15.5'},
-  { title:'AATL', acronym:'AATL', vi:null, cat:'tech', def:'Adobe Approved Trust List. Adobe-published list of CAs whose certificates yield a trusted signature appearance in Acrobat Reader. CyberOS uses AATL adv-certs for non-EU signature jurisdictions.', context:'DOC module', xrefs:['eIDAS','QTSP'], ext:'PRD §9.20 / (FR pending)'},
-  { title:'ACL', acronym:'ACL', cat:'tech', def:'Access Control List. Per-resource permission entry (member, scope, action). CyberOS uses per-tenant, per-channel, per-page, per-deal ACLs across CHAT, KB, CRM, PROJ.'},
-  { title:'AGENTS.md', acronym:'AGENTS', cat:'cy-spec', def:'The normative spec for the BRAIN protocol — Layer-1 memory invariants, file operations, audit ledger, consolidation, conflict resolution. Drafted in BCP-14 normative language with RFC 2119 keywords (MUST / SHOULD / MAY). Frozen prior version is AGENTS.v1.md.', context:'Every BRAIN consumer; project root', xrefs:['BRAIN','BCP-14','MMR','STH'], ext:'cyberos/AGENTS.md v2.0.0'},
-  { title:'Agent Skills', acronym:'open standard', cat:'tech', def:'The Anthropic-led open standard for portable agentic skills. Each skill is a directory with SKILL.md (frontmatter + body), allowed-tools, and runtime body. CyberOS\'s 10 C-level skills ship in this format and run unchanged in Claude Desktop, Cursor, Codex, Cline.', context:'SKILL module', xrefs:['MCP','SKILL.md','CUO','LangGraph'], ext:'anthropic.com/agent-skills'},
-  { title:'AI-CAIQ', acronym:'AI-CAIQ', cat:'regul', def:'AI-specific Consensus Assessment Initiative Questionnaire — CSA self-assessment overlay for AI workloads.', context:'Compliance plane (CP)', xrefs:['CSA STAR','ISO 42001']},
-  { title:'AI Gateway', acronym:'AI GW', cat:'cy-spec', def:'CyberOS module providing tenant-aware LLM routing via LiteLLM. Primary Bedrock; fallback Anthropic + OpenAI. Enforces budget caps, persona-version system-prompt injection, PII redaction, ZDR-only routes, OTel traces, never cross-tenant cache.', context:'P0 infrastructure', xrefs:['LiteLLM','Bedrock','ZDR','LLM','CUO'], ext:'PRD §9.4'},
-  { title:'Anthropic Agent Skills', acronym:'open standard', cat:'tech', def:'See "Agent Skills". An Anthropic-curated format for portable, host-agnostic skills.', xrefs:['Agent Skills','SKILL.md','MCP']},
-  { title:'Apache AGE', acronym:'AGE', cat:'tech', def:'Apache Incubator graph database extension for PostgreSQL adding OpenCypher support. BRAIN Layer 2 uses AGE 1.5 for graph-hop expansion in hybrid retrieval and for GraphRAG community summaries.', context:'BRAIN data plane', xrefs:['pgvector','GraphRAG','PGroonga'], ext:'age.apache.org'},
-  { title:'Apollo Federation', acronym:'v2.5+', cat:'tech', def:'Federated GraphQL composition model from Apollo. Each CyberOS module ships as a v2.5+ subgraph; the Apollo Router composes them and serves the host shell. Schema check is a CI gate (N(FR pending)).', context:'GraphQL plane', xrefs:['GraphQL','Apollo Router'], ext:'apollographql.com/federation'},
-  { title:'AOC', acronym:'AOC', cat:'cy-spec', def:'Audit-Originating Context. The persona+role+timestamp envelope every BRAIN write carries. AOC drift (silent persona-version skew between client and gateway) is risk-tracked.', xrefs:['Persona version','BRAIN']},
-  { title:'AOT', acronym:'AOT', cat:'tech', def:'Ahead-Of-Time compilation. CyberOS compiles wasmtime components AOT, keyed by content hash, so cold-start of a Vietnamese-market skill stays under 80 ms.', context:'SKILL module / Phase 5', xrefs:['wasmtime','SKILL']},
-  { title:'AR aging', acronym:'AR', cat:'business', def:'Accounts Receivable aging — outstanding invoices bucketed by days overdue. INV module surfaces AR aging; CUO/CFO-skill drafts dunning emails.', context:'INV / CFO', xrefs:['INV']},
-  { title:'ARC', acronym:'ARC', cat:'tech', def:'Authenticated Received Chain. Mail-header preservation chain so DKIM/SPF results survive forwarding. CyberOS EMAIL stamps ARC on forward.', context:'EMAIL', xrefs:['DKIM','DMARC','SPF']},
-  { title:'Auto Dream', acronym:'nightly cycle', cat:'cy-spec', def:'BRAIN\'s nightly consolidation cycle: Walk → Compact → Sign → Publish. Verifies hashes, archives sealed segments, produces a signed tree head, and atomically advances manifest.audit_chain_head.', context:'BRAIN', xrefs:['MMR','STH','BRAIN'], ext:'AGENTS.md §7'},
-
-  // ─────────── B ───────────
-  { title:'BCP-14', acronym:'BCP 14', cat:'regul', def:'IETF Best Current Practice 14, combining RFC 2119 and RFC 8174. Defines the all-caps keywords MUST / SHOULD / MAY etc. Used as the normative grammar of AGENTS.md.', xrefs:['AGENTS.md','RFC 2119']},
-  { title:'Bedrock', acronym:null, cat:'tech', def:'AWS Bedrock — managed multi-model LLM platform. CyberOS uses Bedrock as primary LLM provider for tenant-region pinning. Per-tenant residency means Bedrock endpoint matches tenant region ((FR pending)).', context:'AI Gateway', xrefs:['AI Gateway','LiteLLM','ZDR']},
-  { title:'BGE-M3', acronym:null, cat:'tech', def:'BAAI General Embedding Multi-lingual + Multi-functional + Multi-granularity — open multilingual embedding model that handles Vietnamese well. Self-hosted on a shared GPU node.', context:'AI Gateway / BRAIN', xrefs:['BRAIN','BAAI'], ext:'huggingface.co/BAAI/bge-m3'},
-  { title:'BGE-rerank-v2-m3', acronym:null, cat:'tech', def:'Multilingual cross-encoder reranker from BAAI. Applied at the tail of BRAIN hybrid retrieval to re-score the top-N candidates.', context:'BRAIN', xrefs:['BGE-M3','Reranker']},
-  { title:'BHXH', acronym:'BHXH', vi:'Bảo Hiểm Xã Hội', cat:'lang', def:'Vietnamese Social Insurance. Mandatory contribution by employer and employee; REW computes SI line-items per local law.', xrefs:['REW','PIT']},
-  { title:'BIMI', acronym:'BIMI', cat:'tech', def:'Brand Indicators for Message Identification. Verified-logo standard for mail clients. CyberOS EMAIL supports BIMI cert publication on Trust Center.', context:'EMAIL'},
-  { title:'Bonus Points', acronym:'BP', cat:'business', def:'CyberSkill\'s internal performance-points ledger. Anti-inflation interest applied at ACB savings rate. Sits inside the P3 Performance overflow of the 3P income structure.', xrefs:['REW','3P income']},
-  { title:'BP fund', acronym:'BP', cat:'business', def:'See "Bonus Points".', xrefs:['Bonus Points']},
-  { title:'BRAIN', acronym:'P0', cat:'cy-spec', def:'CyberOS\'s universal memory substrate. Three layers: Layer 1 filesystem at the edge (.cyberos-memory/), Layer 2 pgvector + Apache AGE in the middle, Layer 3 archival corpus. Append-only audit ledger with MMR + Ed25519-signed tree heads. Source of truth for every persona, every audit row.', context:'P0 module · shipped', xrefs:['AGENTS.md','MMR','STH','pgvector','Apache AGE'], ext:'PRD §5.4'},
-  { title:'BSEC', acronym:'BSEC', cat:'lang', def:'Bộ Khoa học, Công nghệ và Môi trường — Ministry of Science, Technology and Environment. Vietnamese regulator for tech / R&D incentives.', xrefs:['MoIC']},
-
-  // ─────────── C ───────────
-  { title:'CaMeL', acronym:'CaMeL', cat:'tech', def:'Capability-aware Model layer — dual-LLM separation pattern: a privileged planner LLM never sees untrusted external content; a separate quarantined LLM processes the untrusted text. CyberOS uses CaMeL on email/document ingest paths.', context:'CUO / EMAIL', xrefs:['CUO','EMAIL','Prompt injection'], ext:'GoogleDeepMind CaMeL paper'},
-  { title:'Capability broker', acronym:'caps broker', cat:'cy-spec', def:'Mediation layer between skills and host capabilities. No skill receives raw FS/HTTP capability; every host call goes through the broker which applies tenant + scope + audit. Shipped in SKILL Phase 6.', xrefs:['SKILL','wasmtime']},
-  { title:'CCCD', acronym:'CCCD', vi:'Căn Cước Công Dân', cat:'lang', def:'Vietnamese citizen ID card. Sensitive PII under Decree 13/2023. CCCD photos handled under sev-1 access log; never ingested into BRAIN.', xrefs:['VNeID','PDPL','HR'], ext:'vneid.gov.vn'},
-  { title:'CFO', acronym:'CFO', cat:'business', def:'Chief Financial Officer. One of CyberOS\'s ten C-level personas; surfaces cashflow, AR/AP, burn alerts.', xrefs:['CUO']},
-  { title:'CHRO', acronym:'CHRO', cat:'business', def:'Chief Human Resources Officer. One of CUO\'s ten C-level personas; surfaces 1:1 prep, performance summaries, onboarding.', xrefs:['CUO']},
-  { title:'CIO', acronym:'CIO', cat:'business', def:'Chief Information Officer. Bundled with CTO in CyberOS\'s persona catalog.', xrefs:['CTO','CUO']},
-  { title:'CLO', acronym:'CLO', cat:'business', def:'Chief Legal Officer. CUO persona for contract redline, GDPR/PDPL audits, DSAR triage.', xrefs:['CUO','DSAR']},
-  { title:'CMO', acronym:'CMO', cat:'business', def:'Chief Marketing Officer. CUO persona for campaign briefs, content calendars, channel reports.', xrefs:['CUO']},
-  { title:'COA', acronym:'COA', cat:'business', def:'Chart of Accounts. INV uses a tenant-configurable COA with Vietnam-default mapping.', xrefs:['INV']},
-  { title:'CODEOWNERS', acronym:null, cat:'tech', def:'GitHub-native file mapping paths to owner-reviewers. N(FR pending) requires one per module.', xrefs:['CI']},
-  { title:'Compliance Plane', acronym:'CP', cat:'cy-spec', def:'CyberOS module aggregating compliance posture: tenant data inventory, RTBE/DSAR execution, breach-notification artefacts, hash-chain tamper detection. P2 deliverable. Split from the prior single CP designation when PORTAL became its own module.', xrefs:['DSAR','RTBE','PORTAL'], ext:'SRS §4.18'},
-  { title:'Component Model', acronym:'CM', cat:'tech', def:'The WebAssembly Component Model — typed interfaces (WIT) for cross-language reuse. SKILL Phase 5 onwards uses Component Model under wasmtime.', xrefs:['wasmtime','WIT','WASI']},
-  { title:'CSA STAR', acronym:'STAR', cat:'regul', def:'Cloud Security Alliance — Security, Trust, Assurance, and Risk registry. CyberOS targets STAR Level 1 (self-assessment) at P1 exit, Level 2 (third-party audit) at P2/P3.', xrefs:['ISO 27001','SOC 2','AI-CAIQ']},
-  { title:'CRDT', acronym:'CRDT', cat:'tech', def:'Conflict-free Replicated Data Type. CyberOS BRAIN uses Yjs (text) and Automerge (structured) for two-device sync per Member. Conflict UI defers to server-canonical when ambiguous.', xrefs:['Yjs','Automerge','BRAIN']},
-  { title:'CrewAI', acronym:null, cat:'tech', def:'A multi-agent framework. CyberOS permits CrewAI only in prototyping; production paths must be on LangGraph. Enforced via CI lint.', xrefs:['LangGraph']},
-  { title:'CTO', acronym:'CTO', cat:'business', def:'Chief Technology Officer. CUO persona surfacing tech debt, security advisories, OBS digests.', xrefs:['CIO','CUO']},
-  { title:'CUO', acronym:'CUO', cat:'cy-spec', def:'Chief Universal Officer — the inner decision frame behind the Genie persona. Routes natural-language requests to one of 10 C-level skills (CEO, COO, CFO, CMO, CTO, CHRO, CSO, CLO, CDO, CPO). LangGraph supervisor; never auto-acts on irreversible operations.', context:'P0 module · Phase 1 live', xrefs:['Genie','LangGraph','CaMeL','BRAIN'], ext:'PRD §9.2'},
-
-  // ─────────── D ───────────
-  { title:'DashMap', acronym:null, cat:'tech', def:'A lock-free concurrent HashMap for Rust. Used in the SKILL Rust host registry hot-path.', xrefs:['SKILL']},
-  { title:'Decree 13/2023', acronym:'NĐ 13/2023', vi:'Nghị định 13/2023', cat:'regul', def:'Vietnam government decree on Personal Data Protection. Establishes consent, processing principles, sensitive-data categories, and breach notification obligations.', xrefs:['PDPL','CCCD','HR'], ext:'PRD §12'},
-  { title:'Decree 20/2026', acronym:'NĐ 20/2026', vi:'Nghị định 20/2026', cat:'regul', def:'Simplified SME regime for Vietnamese SMEs. CyberOS plan assumes Decree 20 remains in force (ASM-04).', xrefs:['PDPL']},
-  { title:'Decree 53/2022', acronym:'NĐ 53/2022', vi:'Nghị định 53/2022', cat:'regul', def:'Vietnam Cyber Security Decree. Carries data-localisation obligations for certain regulated services. CyberOS pins tenant residency to Vietnam by default.', xrefs:['PDPL','Decree 13/2023']},
-  { title:'DKIM', acronym:'DKIM', cat:'tech', def:'DomainKeys Identified Mail. CyberOS EMAIL uses per-tenant DKIM keys, ARC stamping on forward, and publishes DMARC reports.', xrefs:['ARC','DMARC','SPF','EMAIL']},
-  { title:'DMARC', acronym:'DMARC', cat:'tech', def:'Domain-based Message Authentication, Reporting and Conformance. CyberOS publishes DMARC reports to the Trust Center.', xrefs:['DKIM','SPF']},
-  { title:'DOC', acronym:'DOC', cat:'cy-spec', def:'CyberOS Document Signing module (P4). eIDAS QTSP partner integration, AATL adv-certs, hash-chain per document, 10-year S3 archival, Vietnamese e-sign per Decree 130/2018.', xrefs:['eIDAS','QTSP','AATL']},
-  { title:'DPIA', acronym:'DPIA', cat:'regul', def:'Data Protection Impact Assessment. Required under GDPR Art 35 and Vietnam PDPL for high-risk processing. CyberOS publishes the A05 DPIA at P0 exit.', xrefs:['DPO','GDPR','PDPL'], ext:'PRD §12'},
-  { title:'DPO', acronym:'DPO', cat:'regul', def:'Data Protection Officer. Founder fills the role until P3; explicit hire planned at P3 entry (RSK-09).', xrefs:['DPIA','GDPR']},
-  { title:'DSAR', acronym:'DSAR', cat:'regul', def:'Data Subject Access Request. Right under GDPR / PDPL for a data subject to request all PII held about them. CyberOS CP module fulfils DSARs via a single export bundle.', xrefs:['CP','GDPR','PDPL','RTBE']},
-
-  // ─────────── E ───────────
-  { title:'Ed25519', acronym:null, cat:'tech', def:'Edwards-curve Digital Signature Algorithm over Curve25519. CyberOS uses Ed25519 for signed BRAIN export bundles, signed STHs, and per-skill release signatures.', xrefs:['STH','MMR','BRAIN']},
-  { title:'EMAIL', acronym:'EMAIL', cat:'cy-spec', def:'CyberOS P1 mail module — Stalwart-based server (JMAP/IMAP/SMTP/DKIM/MTA-STS/DANE/BIMI) plus shared-inbox UX. CaMeL on every ingest. Body content NOT ingested into BRAIN by default.', xrefs:['Stalwart','CaMeL','DKIM','BRAIN'], ext:'PRD §9.8'},
-  { title:'eIDAS', acronym:'eIDAS', cat:'regul', def:'EU Regulation 910/2014 — Electronic Identification, Authentication and trust Services. Defines QES (Qualified Electronic Signature) and QTSPs. CyberOS DOC partners with a QTSP at P4.', xrefs:['QTSP','QES','DOC']},
-  { title:'ESOP', acronym:'ESOP', cat:'cy-spec', def:'Employee Stock Ownership Plan — in CyberOS, the Phantom Stock (SP) module. 4-year vesting with 12-month cliff defaults; annual SP valuation cycle; Good Leaver / Bad Leaver / M&A acceleration branches. Excluded from BRAIN.', xrefs:['SP','Good Leaver','Bad Leaver','BRAIN'], ext:'PRD §9.17'},
-  { title:'EU AI Act', acronym:'AI Act', cat:'regul', def:'EU Regulation 2024/1689 on Artificial Intelligence. Annex III §4 covers employment / worker management / access to self-employment. CyberOS REW + LEARN treated as high-risk; P2 conformity pack required.', xrefs:['Annex III','REW','LEARN'], ext:'PRD §12'},
-
-  // ─────────── F ───────────
-  { title:'F_BARRIERFSYNC', acronym:'fcntl', cat:'tech', def:'macOS-specific fcntl flag for per-batch durable sync. CyberOS BRAIN writers use F_BARRIERFSYNC per-batch and F_FULLFSYNC at checkpoint; plain fsync() is insufficient on Darwin.', xrefs:['fsync','BRAIN'], ext:'AGENTS.md §4.1'},
-  { title:'F_FULLFSYNC', acronym:'fcntl', cat:'tech', def:'macOS-specific fcntl flag for full durable sync at checkpoint. See F_BARRIERFSYNC.', xrefs:['F_BARRIERFSYNC']},
-
-  // ─────────── G ───────────
-  { title:'GDPR', acronym:'GDPR', cat:'regul', def:'EU General Data Protection Regulation 2016/679. CyberOS adds GDPR conformance at P3 when Singapore HoldCo flips and EU tenant residency becomes a path. Right to erasure (Art 17) maps to BRAIN purge.', xrefs:['DPIA','DSAR','PDPL'], ext:'PRD §12'},
-  { title:'GENIE', acronym:'GENIE', cat:'cy-spec', def:'The mascot persona of CUO — the public face. Genie is the entry point in CHAT (@genie inline), the host shell sidebar, and ambient surfaces. Genie routes to one of CUO\'s ten C-level skills.', xrefs:['CUO','Anthropic Agent Skills'], ext:'PRD §9.2'},
-  { title:'Good Leaver', acronym:null, cat:'business', def:'ESOP branch — voluntary or amicable departure. Vested SP retained; future vesting forfeited; put rights preserved.', xrefs:['ESOP','Bad Leaver']},
-  { title:'GraphQL Federation', acronym:'GQL Fed', cat:'tech', def:'Apollo Federation v2.5+ composition of per-module subgraphs into a single graph. The Apollo Router serves it.', xrefs:['Apollo Federation','Apollo Router']},
-  { title:'GraphRAG', acronym:null, cat:'tech', def:'Retrieval-augmented generation augmented by community-detected graph summaries. CyberOS BRAIN runs Leiden-default community detection nightly; k-core fallback on small graphs.', xrefs:['Apache AGE','Leiden','BRAIN'], ext:'Microsoft GraphRAG paper'},
-
-  // ─────────── H ───────────
-  { title:'HEAD', acronym:'HEAD', cat:'cy-spec', def:'BRAIN\'s 8-byte little-endian u64 monotonic seq counter, written atomically. Readers snapshot HEAD via the seqlock pattern; writers advance it through the lock.', xrefs:['BRAIN','seqlock','.lock'], ext:'AGENTS.md §2'},
-  { title:'Hetzner', acronym:null, cat:'tech', def:'EU-based cloud provider. Default deployment target for CyberOS\'s self-hosted infra; complemented by Vultr/OVH for SG region.', xrefs:['Vultr','OVH']},
-  { title:'HoldCo', acronym:'HoldCo', cat:'business', def:'Singapore Holding Company. CyberOS plans a SG HoldCo flip at P3 exit if ARR ≥ $1.5M. Tenant-ownership tagging makes the flip data-light.', xrefs:['Singapore','PDPA']},
-  { title:'Hội đồng Chuyên môn', acronym:null, vi:'Hội đồng Chuyên môn', cat:'lang', def:'Vietnamese for "Professional Council". CyberSkill\'s peer-review body for promotion decisions; multi-judge scoring; individual scores never ingested into BRAIN.', xrefs:['LEARN','Promotion']},
-  { title:'HNSW', acronym:'HNSW', cat:'tech', def:'Hierarchical Navigable Small World — approximate-nearest-neighbour index used by pgvector for fast vector retrieval at scale.', xrefs:['pgvector','BRAIN']},
-
-  // ─────────── I ───────────
-  { title:'IMAP', acronym:'IMAP', cat:'tech', def:'Internet Message Access Protocol. EMAIL exposes IMAP alongside JMAP and SMTP.', xrefs:['EMAIL','JMAP','SMTP']},
-  { title:'INV', acronym:'INV', cat:'cy-spec', def:'CyberOS Invoicing & Procurement module (P2). Multi-currency (VND/USD/SGD/EUR) with daily SBV rate snapshot; Stripe + Wise + VietQR; Vietnam e-invoice format (Decree 123 / Circular 78); AR aging + dunning.', xrefs:['VietQR','SBV','Stripe'], ext:'PRD §9.16'},
-  { title:'INTEROP.md', acronym:null, cat:'cy-spec', def:'≤ 6000-char subset of AGENTS.md for non-ledger consumers. Tells third-party agents how to read BRAIN without writing to audit/ or HEAD.', xrefs:['AGENTS.md','BRAIN'], ext:'cyberos/memory/INTEROP.md'},
-  { title:'ISO 27001:2022', acronym:'ISO 27001', cat:'regul', def:'International standard for Information Security Management Systems (ISMS). CyberOS targets ISO 27001:2022 certification at P2 exit.', xrefs:['ISO 27701','SOC 2']},
-  { title:'ISO 27701', acronym:'ISO 27701', cat:'regul', def:'Privacy Information Management System (PIMS) extension to ISO 27001. Maps GDPR controls.', xrefs:['ISO 27001','GDPR']},
-  { title:'ISO 42001', acronym:'ISO 42001', cat:'regul', def:'International standard for AI Management Systems (AIMS), published Dec 2023. CyberOS targets ISO 42001 at P3 exit — relevant for EU AI Act conformance.', xrefs:['EU AI Act','ISO 27001']},
-
-  // ─────────── J ───────────
-  { title:'jco', acronym:null, cat:'tech', def:'JavaScript host bindings generator for WebAssembly components. CyberOS uses jco to expose Component-Model skills to TypeScript subgraphs where useful.', xrefs:['Component Model','wasmtime']},
-  { title:'JetStream', acronym:'NATS JetStream', cat:'tech', def:'NATS persistence layer. CyberOS\'s event backbone — every inter-module event flows through JetStream subjects with per-subject retention.', xrefs:['NATS']},
-  { title:'JMAP', acronym:'JMAP', cat:'tech', def:'JSON Meta Application Protocol — modern mail-access spec. Stalwart and CyberOS EMAIL expose JMAP alongside IMAP.', xrefs:['IMAP','Stalwart']},
-
-  // ─────────── K ───────────
-  { title:'KB', acronym:'KB', cat:'cy-spec', def:'CyberOS Knowledge Base module (P1). Block-based editor; per-page ACL; share-link with token expiry; PGroonga full-text Vietnamese search; backlink graph; Notion import.', xrefs:['PGroonga','KB → BRAIN'], ext:'PRD §9.12'},
-  { title:'KMS', acronym:'KMS', cat:'tech', def:'Key Management Service. CyberOS uses separate KMS keys per sensitivity scope: general PII, compensation (REW), government ID (CCCD/passport). Rotation at least annually.', xrefs:['CMEK','REW','HR']},
-
-  // ─────────── L ───────────
-  { title:'LangGraph', acronym:null, cat:'tech', def:'LangChain\'s state-machine supervisor for agents. CyberOS CUO uses LangGraph with checkpointed state and interrupt() on destructive tools. Production paths must be LangGraph ((FR pending)).', xrefs:['CUO','CrewAI']},
-  { title:'LEARN', acronym:'LEARN', cat:'cy-spec', def:'CyberOS Learning & Promotion module (P1). VP roll-up from PROJ + TIME + KB; Hội đồng Chuyên môn workflow; promotion gate criteria. EU AI Act high-risk if used for performance assessment.', xrefs:['Hội đồng Chuyên môn','VP','Promotion','EU AI Act']},
-  { title:'Leiden', acronym:null, cat:'tech', def:'Community detection algorithm — improvement over Louvain. CyberOS BRAIN runs Leiden-default for GraphRAG community summaries.', xrefs:['GraphRAG','Apache AGE']},
-  { title:'LiteLLM', acronym:null, cat:'tech', def:'Vendor-agnostic LLM router supporting Bedrock, Anthropic API, OpenAI, etc. AI Gateway uses LiteLLM as the routing primitive.', xrefs:['AI Gateway','Bedrock']},
-  { title:'.lock', acronym:'.lock', cat:'cy-spec', def:'BRAIN\'s exclusive write lock at <memory-root>/.lock. Holds a lease record {pid, host, monotonic_ns, expiry_ns} with TTL 10s and 3s renew interval. Stale leases reaped on TTL expiry.', xrefs:['BRAIN','seqlock'], ext:'AGENTS.md §4.2'},
-
-  // ─────────── M ───────────
-  { title:'M+N', acronym:null, cat:'cy-spec', def:'Notation for "month N after kick-off". P0 runs M0 → M+3; P1 → M+6; P2 → M+9; P3 → M+12; P4 → M+24.', xrefs:['Roadmap','Phases']},
-  { title:'Mattermost', acronym:null, cat:'tech', def:'Open-source AGPL chat server. CyberOS forks Mattermost at P0 as the CHAT module foundation. Compliance export reuses Mattermost\'s format augmented with the CyberOS audit chain.', xrefs:['CHAT','AGPL']},
-  { title:'MCP', acronym:'MCP', cat:'tech', def:'Model Context Protocol — open standard for connecting AI agents to tools and resources. CyberOS MCP Gateway implements the 2025-11-25 spec including Streamable HTTP, OAuth 2.1+PKCE, Tasks primitive, Sampling-with-Tools.', xrefs:['MCP Gateway','Anthropic Agent Skills'], ext:'modelcontextprotocol.io'},
-  { title:'MCP Gateway', acronym:'MCP GW', cat:'cy-spec', def:'CyberOS module exposing every tool as MCP. .well-known/mcp discovery; .well-known/oauth-protected-resource (PRM); tool annotations (destructive → human-confirm; readOnly → fast path); per-tool rate limits and circuit breakers; SEP-986 verbNoun.dotted naming.', xrefs:['MCP','OAuth 2.1','PRM']},
-  { title:'MMR', acronym:'MMR', cat:'cy-spec', def:'Merkle Mountain Range. BRAIN\'s tree-structured commitment over canonical-JSON audit leaves, signed per consolidation via Ed25519 to produce an STH.', xrefs:['STH','Ed25519','Auto Dream'], ext:'AGENTS.md §6.4'},
-  { title:'Module Federation', acronym:'MF', cat:'tech', def:'Webpack 5 runtime module-sharing feature. Each CyberOS frontend module ships as a Module Federation remote consumed by the host shell.', xrefs:['Apollo Federation','Webpack 5']},
-  { title:'MoIC', acronym:'MoIC', cat:'lang', def:'Ministry of Information and Communications (Vietnam). Regulator for cyber security under Decree 53/2022.', xrefs:['MoPS','Decree 53/2022']},
-  { title:'MoPS', acronym:'MoPS', cat:'lang', def:'Ministry of Public Security (Vietnam). Operates VNeID; data-localisation rule enforcement.', xrefs:['VNeID','CCCD']},
-  { title:'msgspec', acronym:null, cat:'tech', def:'High-performance Python serialization library. Used by cyberos.core for canonical JSON (RFC 8785-conforming) in audit records.', xrefs:['BRAIN','RFC 8785']},
-  { title:'MST', acronym:'MST', vi:'Mã Số Thuế', cat:'lang', def:'Vietnamese Tax Code. Per-business tax-registration number. The vn-mst-validate skill validates MST format and check digit.', xrefs:['vn-mst-validate','PIT','VAT']},
-  { title:'MTA-STS', acronym:'MTA-STS', cat:'tech', def:'Mail Transfer Agent Strict Transport Security — TLS-enforcement for SMTP relays. Stalwart and CyberOS EMAIL support MTA-STS.', xrefs:['EMAIL','Stalwart']},
-
-  // ─────────── N ───────────
-  { title:'Napas247', acronym:'Napas247', cat:'tech', def:'Vietnamese 24/7 instant interbank payment network. The vn-bank-transfer skill uses Napas247 + VietQR for VND payouts.', xrefs:['VietQR','vn-bank-transfer','INV']},
-  { title:'NATS', acronym:'NATS', cat:'tech', def:'Open-source messaging system. CyberOS uses NATS with JetStream as the event backbone.', xrefs:['JetStream']},
-  { title:'nDCG@10', acronym:'nDCG@10', cat:'tech', def:'Normalised Discounted Cumulative Gain at rank 10. BRAIN retrieval eval target: ≥0.65 on Vietnamese corpus.', xrefs:['BRAIN','Reranker']},
-  { title:'NFR', acronym:'NFR', cat:'cy-spec', def:'Non-Functional Requirement. Quantitative budget or quality attribute (latency, availability, security target).', xrefs:['FR','PRD']},
-  { title:'NĐ 13/2023', acronym:'NĐ 13', cat:'regul', def:'See "Decree 13/2023".', xrefs:['Decree 13/2023']},
-
-  // ─────────── O ───────────
-  { title:'OAuth 2.1', acronym:null, cat:'tech', def:'Consolidated OAuth 2.0 spec with PKCE mandatory for public clients. CyberOS uses OAuth 2.1 + PKCE for browser logins and MCP tool authorisation.', xrefs:['PKCE','MCP','AUTH']},
-  { title:'OBS', acronym:'OBS', cat:'cy-spec', def:'CyberOS Observability module — structured JSON logs (PII-redacted), OpenTelemetry traces across Apollo Router → subgraphs → DB, per-module SLO dashboards, alert routing tiers.', xrefs:['OpenTelemetry','SLO','AI Gateway']},
-  { title:'OKR', acronym:'OKR', cat:'cy-spec', def:'CyberOS OKR & Strategy module (P3). Quarterly cycle with company → team → Member cascade. Confidence-band updates; CUO digest weekly to Founder. Post-cycle target mods are superseding entries, never edits.', xrefs:['OKR retro','CUO']},
-  { title:'OPA', acronym:'OPA', cat:'tech', def:'Open Policy Agent. CyberOS uses OPA for fine-grained policy across gateways (RBAC, scope-contract enforcement, sensitive-route gating).', xrefs:['AUTH','MCP','GraphQL']},
-  { title:'OpenTelemetry', acronym:'OTel', cat:'tech', def:'CNCF observability standard for distributed tracing, metrics, logs. CyberOS OBS uses OTel across the stack with trace_id propagation.', xrefs:['OBS']},
-
-  // ─────────── P ───────────
-  { title:'P0 / P1 / P2 / P3 / P4', acronym:'phases', cat:'cy-spec', def:'CyberOS\'s five gated phases. P0 Foundations (M0–M+3, 7 modules); P1 Productivity (M+4–M+6, +8); P2 Operations (M+7–M+9, +2); P3 SaaS-ready (M+10–M+12, +2); P4 External (M+13–M+24, +3).', xrefs:['Phases','Roadmap']},
-  { title:'PCI DSS', acronym:'PCI DSS', cat:'regul', def:'Payment Card Industry Data Security Standard. Relevant to INV if card data is handled; CyberOS uses Stripe-vault tokenisation to stay out of scope.', xrefs:['INV','Stripe']},
-  { title:'PDPA', acronym:'PDPA', cat:'regul', def:'Singapore Personal Data Protection Act. Becomes in-scope at P3 when Singapore HoldCo flips and CyberOS gains SG tenants.', xrefs:['Singapore','HoldCo']},
-  { title:'PDPL', acronym:'PDPL', cat:'regul', def:'Vietnam Personal Data Protection Law (Law 91/2025, Decree 356). The inner ring of CyberOS\'s three-ring compliance scope. RTBE within 60 days.', xrefs:['Decree 13/2023','GDPR','DSAR']},
-  { title:'Persona version', acronym:null, cat:'cy-spec', def:'Hash-pinned version of CUO\'s persona prompt + scope contract. Every AI write carries the persona-version stamp; drift means a refused request and an audit row.', xrefs:['CUO','BRAIN audit','AGENTS.md']},
-  { title:'pgvector', acronym:null, cat:'tech', def:'PostgreSQL extension for vector similarity search with HNSW + IVFFlat indexes. CyberOS BRAIN Layer 2 uses pgvector for dense retrieval.', xrefs:['HNSW','BRAIN','Apache AGE']},
-  { title:'PGroonga', acronym:null, cat:'tech', def:'PostgreSQL extension wrapping the Groonga full-text engine — strong Vietnamese tokenisation. CyberOS CHAT, KB, BRAIN use PGroonga for lexical matching.', xrefs:['BRAIN','CHAT','KB','Vietnamese']},
-  { title:'Phantom Stock', acronym:'SP', cat:'business', def:'Cash-equivalent equity instrument that mirrors shareholder economics without actual share issuance. CyberSkill\'s ESOP uses SP units with 4-year vesting + 12-month cliff.', xrefs:['ESOP','SP','Good Leaver']},
-  { title:'PIT', acronym:'PIT', cat:'business', def:'Personal Income Tax (Vietnam). REW computes PIT line-items per local law.', xrefs:['REW','BHXH']},
-  { title:'PKCE', acronym:'PKCE', cat:'tech', def:'Proof Key for Code Exchange — OAuth 2.1 extension making auth-code flows safe for public clients. Mandatory in CyberOS AUTH and MCP gateway.', xrefs:['OAuth 2.1','AUTH','MCP']},
-  { title:'PORTAL', acronym:'PORTAL', cat:'cy-spec', def:'CyberOS Client Portal module (P4). Per-tenant brandable, mobile-first PWA. Customers view shared projects, comment, sign documents, view/pay invoices. Customer agents may connect via MCP.', xrefs:['MCP','PWA','TEN']},
-  { title:'PRM', acronym:'PRM', cat:'tech', def:'Protected Resource Metadata — the .well-known/oauth-protected-resource endpoint published by the MCP gateway under OAuth 2.1.', xrefs:['MCP Gateway','OAuth 2.1']},
-  { title:'PROJ', acronym:'PROJ', cat:'cy-spec', def:'CyberOS Projects module (P1). Three primitives Issue / Cycle / Project, plus Engagement. Sync-engine with optimistic local mutations + WebSocket + server-canonical. Tasks ingested into BRAIN; per-task ACL.', xrefs:['TIME','INV','BRAIN']},
-  { title:'Prompt injection', acronym:null, cat:'tech', def:'Adversarial input crafted to override an LLM\'s instructions. CyberOS BRAIN content gate enforces dual-pass detection (whitespaced + letters-only-collapsed) over 78+ attack vectors; CaMeL separates planner from quarantined.', xrefs:['CaMeL','BRAIN content gate','OWASP LLM01']},
-  { title:'PWA', acronym:'PWA', cat:'tech', def:'Progressive Web App. CyberOS PORTAL ships PWA-installable for mobile-first deployment.', xrefs:['PORTAL']},
-
-  // ─────────── Q ───────────
-  { title:'QES', acronym:'QES', cat:'regul', def:'Qualified Electronic Signature under eIDAS — highest level of e-sign, legally equivalent to handwritten signature across EU. CyberOS DOC integrates with a QTSP for QES at P4.', xrefs:['eIDAS','QTSP','DOC']},
-  { title:'QTSP', acronym:'QTSP', cat:'regul', def:'Qualified Trust Service Provider under eIDAS — accredited CA / TSA for QES issuance. Examples: GlobalSign, Cryptomathic.', xrefs:['eIDAS','QES','DOC']},
-
-  // ─────────── R ───────────
-  { title:'RACI', acronym:'RACI', cat:'business', def:'Responsible / Accountable / Consulted / Informed matrix. CyberOS RACI per-module enforces single-owner responsibility.', xrefs:['CODEOWNERS','Governance']},
-  { title:'RBAC', acronym:'RBAC', cat:'tech', def:'Role-Based Access Control. CyberOS AUTH layers Scope Contract Grants on top of RBAC for fine-grained per-call enforcement at GraphQL/MCP gateways.', xrefs:['AUTH','OPA','Scope contract']},
-  { title:'Reranker', acronym:null, cat:'tech', def:'Cross-encoder model that re-scores a candidate set with full attention over query+document. CyberOS uses BGE-rerank-v2-m3 at the tail of hybrid retrieval.', xrefs:['BGE-rerank-v2-m3','BRAIN']},
-  { title:'RES', acronym:'RES', cat:'cy-spec', def:'CyberOS Resource Plan module (P3). Per-Member weekly capacity, per-engagement forecast, capacity vs forecast vs actual allocation. CUO/COO-skill flags over- and under-allocation.', xrefs:['PROJ','TIME','OKR']},
-  { title:'REW', acronym:'REW', cat:'cy-spec', def:'CyberOS Total Rewards module (P1). 3P income structure (P1 Base + P2 Allowance + P3 Performance). BP ledger with anti-inflation interest. P1-protection invariant: no system-driven base-salary reduction. Compensation structurally excluded from BRAIN.', xrefs:['3P income','BP','Phantom Stock','BRAIN denylist']},
-  { title:'RFC 2119', acronym:null, cat:'regul', def:'IETF RFC defining MUST / SHOULD / MAY normative keywords. With RFC 8174, forms BCP-14. Used as the grammar of AGENTS.md.', xrefs:['BCP-14','AGENTS.md']},
-  { title:'RFC 8174', acronym:null, cat:'regul', def:'IETF RFC clarifying that the BCP-14 keywords are normative only when in ALL-CAPS.', xrefs:['BCP-14','RFC 2119']},
-  { title:'RFC 8785', acronym:null, cat:'regul', def:'JSON Canonicalization Scheme (JCS). CyberOS BRAIN canonicalises audit-record payload per a JCS-conforming implementation enabled by the closed schema.', xrefs:['msgspec','BRAIN audit']},
-  { title:'RLS', acronym:'RLS', cat:'tech', def:'Row-Level Security (PostgreSQL). Enforced on every BRAIN/CRM/REW read; cross-tenant access blocks.', xrefs:['PostgreSQL','BRAIN','Tenant isolation']},
-  { title:'RPO', acronym:'RPO', cat:'business', def:'Recovery Point Objective — maximum allowable data loss in disaster. CyberOS target ≤ 1h.', xrefs:['RTO','DR drill']},
-  { title:'RTO', acronym:'RTO', cat:'business', def:'Recovery Time Objective — maximum allowable time to restore service. CyberOS target ≤ 4h; cross-region failover ≤ 24h at P3.', xrefs:['RPO','DR drill']},
-  { title:'RTBE', acronym:'RTBE', cat:'regul', def:'Right To Be Erased (Right to Erasure, GDPR Art 17 / PDPL equivalent). CyberOS CP module fulfils within 30 days (GDPR) / 60 days (PDPL).', xrefs:['GDPR','PDPL','DSAR','CP']},
-
-  // ─────────── S ───────────
-  { title:'SBV', acronym:'SBV', cat:'lang', def:'State Bank of Vietnam. CyberOS INV pulls daily SBV exchange-rate snapshots for multi-currency invoicing.', xrefs:['INV','Napas247']},
-  { title:'Scope contract', acronym:null, cat:'cy-spec', def:'CUO\'s per-persona allow-list of tools, modules, and operations. Enforced at the AUTH/MCP gateway, not via prompt. A scope-contract violation is refused and audited.', xrefs:['CUO','AUTH','MCP','Persona version']},
-  { title:'seqlock', acronym:null, cat:'tech', def:'Lock-free reader pattern: readers snapshot a sequence counter, read, then re-check; mismatch triggers retry. BRAIN uses seqlock against HEAD so readers don\'t need .lock.', xrefs:['.lock','HEAD','BRAIN']},
-  { title:'SEP-986', acronym:null, cat:'tech', def:'MCP Specification Enhancement Proposal #986 — verbNoun.dotted tool-naming convention. CyberOS MCP tool registry adopts SEP-986.', xrefs:['MCP','MCP Gateway']},
-  { title:'SI', acronym:'SI', cat:'business', def:'Social Insurance (Vietnam). See BHXH. REW computes SI line-items.', xrefs:['BHXH','PIT','REW']},
-  { title:'Singapore HoldCo', acronym:'HoldCo', cat:'business', def:'See "HoldCo".', xrefs:['HoldCo','PDPA']},
-  { title:'SKILL', acronym:'SKILL', cat:'cy-spec', def:'CyberOS\'s portable agentic skills catalog and runtime. Rust host (wasmtime + AOT cache) + Bun toolchain. Open Anthropic Agent Skills format. 6 Vietnamese-market skills shipped (MST, VAT, VietQR, CCCD, legal, tax). Three-level progressive disclosure. 12/12 Python ↔ Rust parity green.', xrefs:['Agent Skills','wasmtime','Capability broker']},
-  { title:'SKILL.md', acronym:null, cat:'cy-spec', def:'The per-skill manifest file — frontmatter (name, version, allowed-tools) + body. Format defined by the open Anthropic Agent Skills standard.', xrefs:['SKILL','Agent Skills']},
-  { title:'SLO', acronym:'SLO', cat:'tech', def:'Service Level Objective. Per-module SLOs (latency, error-rate, success-rate) surface in OBS dashboards; error-budget burn fires alerts at 50%/75%/100%.', xrefs:['OBS','NFR']},
-  { title:'SMTP', acronym:'SMTP', cat:'tech', def:'Simple Mail Transfer Protocol. EMAIL exposes SMTP alongside JMAP and IMAP.', xrefs:['EMAIL','IMAP','JMAP']},
-  { title:'SOC 2', acronym:'SOC 2', cat:'regul', def:'AICPA Service Organization Control 2 audit. CyberOS targets SOC 2 Type I at P1 exit, Type II at P2/P3.', xrefs:['ISO 27001','CSA STAR']},
-  { title:'SP', acronym:'SP', cat:'business', def:'Phantom Stock unit. See "Phantom Stock". Issued under ESOP with 4-year vesting and 12-month cliff defaults.', xrefs:['Phantom Stock','ESOP','VP']},
-  { title:'SPF', acronym:'SPF', cat:'tech', def:'Sender Policy Framework — mail authentication. Reported through DMARC.', xrefs:['DKIM','DMARC','EMAIL']},
-  { title:'Stalwart', acronym:null, cat:'tech', def:'Open-source mail server (AGPL). Foundation of CyberOS EMAIL — JMAP / IMAP / SMTP / DKIM / MTA-STS / DANE / BIMI.', xrefs:['EMAIL','JMAP']},
-  { title:'STH', acronym:'STH', cat:'cy-spec', def:'Signed Tree Head. BRAIN consolidation signs the MMR root with Ed25519 and writes a checkpoint to audit/checkpoints/.', xrefs:['MMR','Ed25519','Auto Dream','BRAIN']},
-  { title:'Stripe', acronym:null, cat:'tech', def:'International payments processor. CyberOS INV uses Stripe for USD/EUR billing; VND-PSP and Wise for VND/multi-currency.', xrefs:['INV','VietQR','Wise']},
-
-  // ─────────── T ───────────
-  { title:'Tauri', acronym:null, cat:'tech', def:'Rust-based desktop app framework (alternative to Electron). CyberOS host shell ships as a Tauri bundle on Windows 10+, macOS 12+, Ubuntu 22+.', xrefs:['Host shell','Vite']},
-  { title:'TEN', acronym:'TEN', cat:'cy-spec', def:'CyberOS Tenancy & Billing module (P4). Self-serve signup with residency choice + plan selection. Stripe + VND-PSP billing. 90-day offboarding grace. Per-tenant brand pack overrides @cyberskill/tokens.', xrefs:['PORTAL','Stripe','Per-tenant residency']},
-  { title:'TIME', acronym:'TIME', cat:'cy-spec', def:'CyberOS Time & Expense module (P1). Daily time entry with start/end or duration; billable / non-billable per Engagement; weekly approval flow; INV pulls weekly batched summaries.', xrefs:['PROJ','INV','HR']},
-  { title:'Trust Center', acronym:null, cat:'cy-spec', def:'CyberOS\'s public-readable compliance + status page surface — DPIA artefacts, sub-processor list, mail-server status, BIMI cert, last DMARC report, AI-Assisted badge documentation. Lives in KB.', xrefs:['DPIA','KB','EMAIL']},
-  { title:'TT 80/2021', acronym:'TT 80', cat:'regul', def:'Vietnamese Ministry of Finance Circular 80/2021 on tax administration — Form 01/GTGT VAT-return template.', xrefs:['VAT','PIT','vn-tax-filing']},
-
-  // ─────────── V ───────────
-  { title:'VAT', acronym:'VAT', cat:'business', def:'Value Added Tax (Vietnam). Standard rate 10%. The vn-vat-invoice skill generates VAT e-invoices conforming to Decree 123 / Circular 78.', xrefs:['vn-vat-invoice','MST','TT 80/2021']},
-  { title:'VAT Mẫu 01/GTGT', acronym:'Mẫu 01', cat:'lang', def:'The Vietnamese monthly VAT-return form. The vn-tax-filing skill auto-fills Mẫu 01/GTGT.', xrefs:['VAT','TT 80/2021']},
-  { title:'VietQR', acronym:'VietQR', cat:'tech', def:'Vietnamese QR-payment standard interoperating with Napas247. The vn-bank-transfer skill generates VietQR payment codes for VND payouts.', xrefs:['Napas247','vn-bank-transfer','INV']},
-  { title:'Vite', acronym:null, cat:'tech', def:'Bundler/dev-server for the CyberOS host shell (React 19 + Tauri). Module remotes use Webpack 5 + Module Federation.', xrefs:['Host shell','Module Federation','Tauri']},
-  { title:'VNeID', acronym:'VNeID', cat:'tech', def:'Vietnamese national digital ID app + API operated by the Ministry of Public Security. The vneid-integration skill validates CCCD and scaffolds VNeID API integration.', xrefs:['CCCD','MoPS','vneid-integration']},
-  { title:'VPAT 2.5', acronym:'VPAT', cat:'regul', def:'Voluntary Product Accessibility Template (Section 508 reporting). CyberOS publishes VPAT 2.5 INT (International) at P0 exit.', xrefs:['WCAG 2.2','Accessibility']},
-  { title:'VP', acronym:'VP', cat:'business', def:'Voting Power. CyberSkill\'s internal "earned voice" metric, rolled up by LEARN from PROJ + TIME + KB contributions.', xrefs:['LEARN','Promotion','Hội đồng Chuyên môn']},
-  { title:'vn-mst-validate', acronym:'skill', cat:'cy-spec', def:'Vietnamese tax-code validator skill — MST format and check-digit verification.', xrefs:['MST','SKILL']},
-  { title:'vn-vat-invoice', acronym:'skill', cat:'cy-spec', def:'Vietnamese VAT e-invoice generator (Decree 123 / Circular 78).', xrefs:['VAT','INV','SKILL']},
-  { title:'vn-bank-transfer', acronym:'skill', cat:'cy-spec', def:'Vietnamese bank-transfer skill using Napas247 and VietQR.', xrefs:['Napas247','VietQR','SKILL']},
-  { title:'vneid-integration', acronym:'skill', cat:'cy-spec', def:'CCCD validator + VNeID API scaffolding skill.', xrefs:['CCCD','VNeID','SKILL']},
-  { title:'vn-legal-compliance', acronym:'skill', cat:'cy-spec', def:'Reference-only procedural knowledge skill for Vietnamese legal compliance.', xrefs:['PDPL','SKILL']},
-  { title:'vn-tax-filing', acronym:'skill', cat:'cy-spec', def:'Vietnamese monthly + quarterly VAT-return filing skill.', xrefs:['VAT','TT 80/2021','SKILL']},
-
-  // ─────────── W ───────────
-  { title:'WASI', acronym:'WASI', cat:'tech', def:'WebAssembly System Interface. Underpins capability-mediated host calls in the SKILL runtime.', xrefs:['Component Model','wasmtime','SKILL']},
-  { title:'wasmtime', acronym:null, cat:'tech', def:'Bytecode-Alliance WebAssembly runtime. CyberOS SKILL host runs WASM components through wasmtime with AOT cache.', xrefs:['Component Model','WASI','SKILL']},
-  { title:'WCAG 2.2', acronym:'WCAG 2.2', cat:'regul', def:'W3C Web Content Accessibility Guidelines 2.2. CyberOS targets Level AA across host shell + module remotes.', xrefs:['VPAT 2.5','Accessibility']},
-  { title:'Webpack 5', acronym:null, cat:'tech', def:'Bundler with Module Federation support. CyberOS module FE remotes ship via Webpack 5 + Module Federation.', xrefs:['Module Federation','Vite']},
-  { title:'WIT', acronym:'WIT', cat:'tech', def:'WebAssembly Interface Type — typed cross-language interface descriptor for Component Model. CyberOS SKILL Phase 7+ exposes explicit WIT interfaces.', xrefs:['Component Model','wasmtime','SKILL']},
-  { title:'Wise', acronym:null, cat:'tech', def:'Multi-currency payments provider. CyberOS INV uses Wise alongside Stripe and VietQR/domestic VND PSP.', xrefs:['INV','Stripe','VietQR']},
-
-  // ─────────── Y ───────────
-  { title:'Yjs', acronym:null, cat:'tech', def:'CRDT library for shared text + structured data. CyberOS BRAIN sync uses Yjs + Automerge for two-device convergence per Member.', xrefs:['CRDT','Automerge','BRAIN']},
-
-  // ─────────── Z ───────────
-  { title:'Zalo', acronym:null, cat:'tech', def:'Vietnam\'s dominant chat app. CyberOS CHAT imports Zalo where API allows; bidirectional bridge during P0 migration.', xrefs:['CHAT','Slack import']},
-  { title:'ZDR', acronym:'ZDR', cat:'tech', def:'Zero-Data-Retention. AI Gateway enforces ZDR-attested endpoints for sensitive routes (compensation, ESOP, HR sensitive). Provider-attested + audited quarterly.', xrefs:['AI Gateway','Bedrock']},
-
-  // ─────────── numeric-style at A & T ───────────
-  { title:'3P income', acronym:null, cat:'business', def:'CyberSkill\'s reward structure: P1 Base salary (cash, never reduced), P2 Allowances (cash), P3 Performance overflow (cash). Together with BP and SP, the three Ps form the Total Rewards Appendix.', xrefs:['REW','BP','SP']},
-
-  // ─────────── Additional cross-cutting ───────────
-  { title:'Automerge', acronym:null, cat:'tech', def:'CRDT library for structured documents. Paired with Yjs in CyberOS BRAIN sync.', xrefs:['Yjs','CRDT','BRAIN']},
-  { title:'Bad Leaver', acronym:null, cat:'business', def:'ESOP branch — adversarial or for-cause termination. Vested SP retained at discount per Appendix; put rights frozen.', xrefs:['Good Leaver','ESOP']},
-  { title:'BAAI', acronym:'BAAI', cat:'tech', def:'Beijing Academy of AI. Publisher of the BGE-M3 embedder and BGE-rerank-v2-m3 reranker.', xrefs:['BGE-M3','BGE-rerank-v2-m3']},
-  { title:'Bun', acronym:null, cat:'tech', def:'JavaScript runtime + package manager. The developer toolchain for CyberOS SKILL — build, lint, test.', xrefs:['SKILL']},
-  { title:'CSA', acronym:'CSA', cat:'regul', def:'Cloud Security Alliance. Operates the STAR registry.', xrefs:['CSA STAR']},
-  { title:'CHAT', acronym:'CHAT', cat:'cy-spec', def:'CyberOS internal Chat module (P0). Mattermost fork. @genie inline mentions, /summarise, smart-reply, daily channel digest, PGroonga Vietnamese tokenisation, Slack/Zalo import, CHAT→BRAIN ingestion ≤5s, per-channel ACL, voice messages with Vi+En ASR (P3).', xrefs:['Mattermost','PGroonga','BRAIN','Slack import','Zalo']},
-  { title:'CRM', acronym:'CRM', cat:'cy-spec', def:'CyberOS Customer Relationship Management module (P1). Account → Contact → Deal entities; configurable pipeline with transition rules; deal forecasting via CUO/CRO-skill.', xrefs:['EMAIL','CUO']},
-  { title:'CDO', acronym:'CDO', cat:'business', def:'Chief Data Officer. CUO persona for data quality, lineage, residency reviews.', xrefs:['CUO','BRAIN']},
-  { title:'CPO', acronym:'CPO', cat:'business', def:'Chief Product Officer. CUO persona for PRD drafts, roadmap analysis, user-research synthesis.', xrefs:['CUO']},
-  { title:'CSO', acronym:'CSO', cat:'business', def:'Chief Strategy Officer. CUO persona for competitive intel, scenario modelling, partnerships.', xrefs:['CUO']},
-  { title:'CCO', acronym:'CCO', cat:'business', def:'Chief Compliance Officer. Sometimes bundled with CLO in CUO\'s persona catalog.', xrefs:['CLO','CUO']},
-  { title:'CAIO', acronym:'CAIO', cat:'business', def:'Chief AI Officer. Emerging 2026 sub-persona in CyberOS\'s C-suite.', xrefs:['CUO']},
-  { title:'COO', acronym:'COO', cat:'business', def:'Chief Operating Officer. CUO persona for status digests, blocker triage, cycle-end summaries.', xrefs:['CUO']},
-  { title:'CEO', acronym:'CEO', cat:'business', def:'Chief Executive Officer. CUO persona for strategy memos, OKR cascade, weekly state-of-business.', xrefs:['CUO','OKR']},
-  { title:'CRO', acronym:'CRO', cat:'business', def:'Chief Revenue Officer. Emerging 2026 sub-persona. Owns CRM deal forecasting + dunning narrative.', xrefs:['CUO','CRM']},
-  { title:'CXO', acronym:'CXO', cat:'business', def:'Chief Experience Officer. Emerging 2026 sub-persona.', xrefs:['CUO']},
-  { title:'CSO-Sus', acronym:'CSO-Sus', cat:'business', def:'Chief Sustainability Officer. Emerging 2026 sub-persona; placeholder for ESG-driven workloads.', xrefs:['CUO']},
-  { title:'NQ 142/2024', acronym:'NQ 142', cat:'regul', def:'Vietnamese National Assembly Resolution 142/2024 — covers AI policy directions.', xrefs:['PDPL']},
-  { title:'NĐ 20/2026', acronym:'NĐ 20', cat:'regul', def:'See "Decree 20/2026".', xrefs:['Decree 20/2026']},
-  { title:'ESG', acronym:'ESG', cat:'business', def:'Environmental, Social, Governance. Placeholder concern for the CSO-Sus emerging persona.', xrefs:['CSO-Sus']},
+ / ─────────── A ───────────
+ { title:'AAR', acronym:'AAR', vi:null, cat:'business', def:'After-Action Review. A short retrospective triggered when a risk is realised; the lesson-learned is ingested into BRAIN Layer 2 with the lesson-learned tag.', context:'CP module / Risk register operational rules', xrefs:['BRAIN','Risk Register'], ext:''},
+ { title:'AATL', acronym:'AATL', vi:null, cat:'tech', def:'Adobe Approved Trust List. Adobe-published list of CAs whose certificates yield a trusted signature appearance in Acrobat Reader. CyberOS uses AATL adv-certs for non-EU signature jurisdictions.', context:'DOC module', xrefs:['eIDAS','QTSP'], ext:' / (FR pending)'},
+ { title:'ACL', acronym:'ACL', cat:'tech', def:'Access Control List. Per-resource permission entry (member, scope, action). CyberOS uses per-tenant, per-channel, per-page, per-deal ACLs across CHAT, KB, CRM, PROJ.'},
+ { title:'AGENTS.md', acronym:'AGENTS', cat:'cy-spec', def:'The normative spec for the BRAIN protocol — Layer-1 memory invariants, file operations, audit ledger, consolidation, conflict resolution. Drafted in BCP-14 normative language with RFC 2119 keywords (MUST / SHOULD / MAY). Frozen prior version is AGENTS.v1.md.', context:'Every BRAIN consumer; project root', xrefs:['BRAIN','BCP-14','MMR','STH'], ext:'cyberos/AGENTS.md v2.0.0'},
+ { title:'Agent Skills', acronym:'open standard', cat:'tech', def:'The Anthropic-led open standard for portable agentic skills. Each skill is a directory with SKILL.md (frontmatter + body), allowed-tools, and runtime body. CyberOS\'s 10 C-level skills ship in this format and run unchanged in Claude Desktop, Cursor, Codex, Cline.', context:'SKILL module', xrefs:['MCP','SKILL.md','CUO','LangGraph'], ext:'anthropic.com/agent-skills'},
+ { title:'AI-CAIQ', acronym:'AI-CAIQ', cat:'regul', def:'AI-specific Consensus Assessment Initiative Questionnaire — CSA self-assessment overlay for AI workloads.', context:'Compliance plane (CP)', xrefs:['CSA STAR','ISO 42001']},
+ { title:'AI Gateway', acronym:'AI GW', cat:'cy-spec', def:'CyberOS module providing tenant-aware LLM routing via LiteLLM. Primary Bedrock; fallback Anthropic + OpenAI. Enforces budget caps, persona-version system-prompt injection, PII redaction, ZDR-only routes, OTel traces, never cross-tenant cache.', context:'P0 infrastructure', xrefs:['LiteLLM','Bedrock','ZDR','LLM','CUO'], ext:''},
+ { title:'Anthropic Agent Skills', acronym:'open standard', cat:'tech', def:'See "Agent Skills". An Anthropic-curated format for portable, host-agnostic skills.', xrefs:['Agent Skills','SKILL.md','MCP']},
+ { title:'Apache AGE', acronym:'AGE', cat:'tech', def:'Apache Incubator graph database extension for PostgreSQL adding OpenCypher support. BRAIN Layer 2 uses AGE 1.5 for graph-hop expansion in hybrid retrieval and for GraphRAG community summaries.', context:'BRAIN data plane', xrefs:['pgvector','GraphRAG','PGroonga'], ext:'age.apache.org'},
+ { title:'Apollo Federation', acronym:'v2.5+', cat:'tech', def:'Federated GraphQL composition model from Apollo. Each CyberOS module ships as a v2.5+ subgraph; the Apollo Router composes them and serves the host shell. Schema check is a CI gate (N(FR pending)).', context:'GraphQL plane', xrefs:['GraphQL','Apollo Router'], ext:'apollographql.com/federation'},
+ { title:'AOC', acronym:'AOC', cat:'cy-spec', def:'Audit-Originating Context. The persona+role+timestamp envelope every BRAIN write carries. AOC drift (silent persona-version skew between client and gateway) is risk-tracked.', xrefs:['Persona version','BRAIN']},
+ { title:'AOT', acronym:'AOT', cat:'tech', def:'Ahead-Of-Time compilation. CyberOS compiles wasmtime components AOT, keyed by content hash, so cold-start of a Vietnamese-market skill stays under 80 ms.', context:'SKILL module / Phase 5', xrefs:['wasmtime','SKILL']},
+ { title:'AR aging', acronym:'AR', cat:'business', def:'Accounts Receivable aging — outstanding invoices bucketed by days overdue. INV module surfaces AR aging; CUO/CFO-skill drafts dunning emails.', context:'INV / CFO', xrefs:['INV']},
+ { title:'ARC', acronym:'ARC', cat:'tech', def:'Authenticated Received Chain. Mail-header preservation chain so DKIM/SPF results survive forwarding. CyberOS EMAIL stamps ARC on forward.', context:'EMAIL', xrefs:['DKIM','DMARC','SPF']},
+ { title:'Auto Dream', acronym:'nightly cycle', cat:'cy-spec', def:'BRAIN\'s nightly consolidation cycle: Walk → Compact → Sign → Publish. Verifies hashes, archives sealed segments, produces a signed tree head, and atomically advances manifest.audit_chain_head.', context:'BRAIN', xrefs:['MMR','STH','BRAIN'], ext:'AGENTS.md §7'},/ ─────────── B ───────────
+ { title:'BCP-14', acronym:'BCP 14', cat:'regul', def:'IETF Best Current Practice 14, combining RFC 2119 and RFC 8174. Defines the all-caps keywords MUST / SHOULD / MAY etc. Used as the normative grammar of AGENTS.md.', xrefs:['AGENTS.md','RFC 2119']},
+ { title:'Bedrock', acronym:null, cat:'tech', def:'AWS Bedrock — managed multi-model LLM platform. CyberOS uses Bedrock as primary LLM provider for tenant-region pinning. Per-tenant residency means Bedrock endpoint matches tenant region ((FR pending)).', context:'AI Gateway', xrefs:['AI Gateway','LiteLLM','ZDR']},
+ { title:'BGE-M3', acronym:null, cat:'tech', def:'BAAI General Embedding Multi-lingual + Multi-functional + Multi-granularity — open multilingual embedding model that handles Vietnamese well. Self-hosted on a shared GPU node.', context:'AI Gateway / BRAIN', xrefs:['BRAIN','BAAI'], ext:'huggingface.co/BAAI/bge-m3'},
+ { title:'BGE-rerank-v2-m3', acronym:null, cat:'tech', def:'Multilingual cross-encoder reranker from BAAI. Applied at the tail of BRAIN hybrid retrieval to re-score the top-N candidates.', context:'BRAIN', xrefs:['BGE-M3','Reranker']},
+ { title:'BHXH', acronym:'BHXH', vi:'Bảo Hiểm Xã Hội', cat:'lang', def:'Vietnamese Social Insurance. Mandatory contribution by employer and employee; REW computes SI line-items per local law.', xrefs:['REW','PIT']},
+ { title:'BIMI', acronym:'BIMI', cat:'tech', def:'Brand Indicators for Message Identification. Verified-logo standard for mail clients. CyberOS EMAIL supports BIMI cert publication on Trust Center.', context:'EMAIL'},
+ { title:'Bonus Points', acronym:'BP', cat:'business', def:'CyberSkill\'s internal performance-points ledger. Anti-inflation interest applied at ACB savings rate. Sits inside the P3 Performance overflow of the 3P income structure.', xrefs:['REW','3P income']},
+ { title:'BP fund', acronym:'BP', cat:'business', def:'See "Bonus Points".', xrefs:['Bonus Points']},
+ { title:'BRAIN', acronym:'P0', cat:'cy-spec', def:'CyberOS\'s universal memory substrate. Three layers: Layer 1 filesystem at the edge (.cyberos-memory/), Layer 2 pgvector + Apache AGE in the middle, Layer 3 archival corpus. Append-only audit ledger with MMR + Ed25519-signed tree heads. Source of truth for every persona, every audit row.', context:'P0 module · shipped', xrefs:['AGENTS.md','MMR','STH','pgvector','Apache AGE'], ext:''},
+ { title:'BSEC', acronym:'BSEC', cat:'lang', def:'Bộ Khoa học, Công nghệ và Môi trường — Ministry of Science, Technology and Environment. Vietnamese regulator for tech / R&D incentives.', xrefs:['MoIC']},/ ─────────── C ───────────
+ { title:'CaMeL', acronym:'CaMeL', cat:'tech', def:'Capability-aware Model layer — dual-LLM separation pattern: a privileged planner LLM never sees untrusted external content; a separate quarantined LLM processes the untrusted text. CyberOS uses CaMeL on email/document ingest paths.', context:'CUO / EMAIL', xrefs:['CUO','EMAIL','Prompt injection'], ext:'GoogleDeepMind CaMeL paper'},
+ { title:'Capability broker', acronym:'caps broker', cat:'cy-spec', def:'Mediation layer between skills and host capabilities. No skill receives raw FS/HTTP capability; every host call goes through the broker which applies tenant + scope + audit. Shipped in SKILL Phase 6.', xrefs:['SKILL','wasmtime']},
+ { title:'CCCD', acronym:'CCCD', vi:'Căn Cước Công Dân', cat:'lang', def:'Vietnamese citizen ID card. Sensitive PII under Decree 13/2023. CCCD photos handled under sev-1 access log; never ingested into BRAIN.', xrefs:['VNeID','PDPL','HR'], ext:'vneid.gov.vn'},
+ { title:'CFO', acronym:'CFO', cat:'business', def:'Chief Financial Officer. One of CyberOS\'s ten C-level personas; surfaces cashflow, AR/AP, burn alerts.', xrefs:['CUO']},
+ { title:'CHRO', acronym:'CHRO', cat:'business', def:'Chief Human Resources Officer. One of CUO\'s ten C-level personas; surfaces 1:1 prep, performance summaries, onboarding.', xrefs:['CUO']},
+ { title:'CIO', acronym:'CIO', cat:'business', def:'Chief Information Officer. Bundled with CTO in CyberOS\'s persona catalog.', xrefs:['CTO','CUO']},
+ { title:'CLO', acronym:'CLO', cat:'business', def:'Chief Legal Officer. CUO persona for contract redline, GDPR/PDPL audits, DSAR triage.', xrefs:['CUO','DSAR']},
+ { title:'CMO', acronym:'CMO', cat:'business', def:'Chief Marketing Officer. CUO persona for campaign briefs, content calendars, channel reports.', xrefs:['CUO']},
+ { title:'COA', acronym:'COA', cat:'business', def:'Chart of Accounts. INV uses a tenant-configurable COA with Vietnam-default mapping.', xrefs:['INV']},
+ { title:'CODEOWNERS', acronym:null, cat:'tech', def:'GitHub-native file mapping paths to owner-reviewers. N(FR pending) requires one per module.', xrefs:['CI']},
+ { title:'Compliance Plane', acronym:'CP', cat:'cy-spec', def:'CyberOS module aggregating compliance posture: tenant data inventory, RTBE/DSAR execution, breach-notification artefacts, hash-chain tamper detection. P2 deliverable. Split from the prior single CP designation when PORTAL became its own module.', xrefs:['DSAR','RTBE','PORTAL'], ext:''},
+ { title:'Component Model', acronym:'CM', cat:'tech', def:'The WebAssembly Component Model — typed interfaces (WIT) for cross-language reuse. SKILL Phase 5 onwards uses Component Model under wasmtime.', xrefs:['wasmtime','WIT','WASI']},
+ { title:'CSA STAR', acronym:'STAR', cat:'regul', def:'Cloud Security Alliance — Security, Trust, Assurance, and Risk registry. CyberOS targets STAR Level 1 (self-assessment) at P1 exit, Level 2 (third-party audit) at P2/P3.', xrefs:['ISO 27001','SOC 2','AI-CAIQ']},
+ { title:'CRDT', acronym:'CRDT', cat:'tech', def:'Conflict-free Replicated Data Type. CyberOS BRAIN uses Yjs (text) and Automerge (structured) for two-device sync per Member. Conflict UI defers to server-canonical when ambiguous.', xrefs:['Yjs','Automerge','BRAIN']},
+ { title:'CrewAI', acronym:null, cat:'tech', def:'A multi-agent framework. CyberOS permits CrewAI only in prototyping; production paths must be on LangGraph. Enforced via CI lint.', xrefs:['LangGraph']},
+ { title:'CTO', acronym:'CTO', cat:'business', def:'Chief Technology Officer. CUO persona surfacing tech debt, security advisories, OBS digests.', xrefs:['CIO','CUO']},
+ { title:'CUO', acronym:'CUO', cat:'cy-spec', def:'Chief Universal Officer — the inner decision frame behind the Genie persona. Routes natural-language requests to one of 10 C-level skills (CEO, COO, CFO, CMO, CTO, CHRO, CSO, CLO, CDO, CPO). LangGraph supervisor; never auto-acts on irreversible operations.', context:'P0 module · Phase 1 live', xrefs:['Genie','LangGraph','CaMeL','BRAIN'], ext:''},/ ─────────── D ───────────
+ { title:'DashMap', acronym:null, cat:'tech', def:'A lock-free concurrent HashMap for Rust. Used in the SKILL Rust host registry hot-path.', xrefs:['SKILL']},
+ { title:'Decree 13/2023', acronym:'NĐ 13/2023', vi:'Nghị định 13/2023', cat:'regul', def:'Vietnam government decree on Personal Data Protection. Establishes consent, processing principles, sensitive-data categories, and breach notification obligations.', xrefs:['PDPL','CCCD','HR'], ext:''},
+ { title:'Decree 20/2026', acronym:'NĐ 20/2026', vi:'Nghị định 20/2026', cat:'regul', def:'Simplified SME regime for Vietnamese SMEs. CyberOS plan assumes Decree 20 remains in force (ASM-04).', xrefs:['PDPL']},
+ { title:'Decree 53/2022', acronym:'NĐ 53/2022', vi:'Nghị định 53/2022', cat:'regul', def:'Vietnam Cyber Security Decree. Carries data-localisation obligations for certain regulated services. CyberOS pins tenant residency to Vietnam by default.', xrefs:['PDPL','Decree 13/2023']},
+ { title:'DKIM', acronym:'DKIM', cat:'tech', def:'DomainKeys Identified Mail. CyberOS EMAIL uses per-tenant DKIM keys, ARC stamping on forward, and publishes DMARC reports.', xrefs:['ARC','DMARC','SPF','EMAIL']},
+ { title:'DMARC', acronym:'DMARC', cat:'tech', def:'Domain-based Message Authentication, Reporting and Conformance. CyberOS publishes DMARC reports to the Trust Center.', xrefs:['DKIM','SPF']},
+ { title:'DOC', acronym:'DOC', cat:'cy-spec', def:'CyberOS Document Signing module (P4). eIDAS QTSP partner integration, AATL adv-certs, hash-chain per document, 10-year S3 archival, Vietnamese e-sign per Decree 130/2018.', xrefs:['eIDAS','QTSP','AATL']},
+ { title:'DPIA', acronym:'DPIA', cat:'regul', def:'Data Protection Impact Assessment. Required under GDPR Art 35 and Vietnam PDPL for high-risk processing. CyberOS publishes the A05 DPIA at P0 exit.', xrefs:['DPO','GDPR','PDPL'], ext:''},
+ { title:'DPO', acronym:'DPO', cat:'regul', def:'Data Protection Officer. Founder fills the role until P3; explicit hire planned at P3 entry (RSK-09).', xrefs:['DPIA','GDPR']},
+ { title:'DSAR', acronym:'DSAR', cat:'regul', def:'Data Subject Access Request. Right under GDPR / PDPL for a data subject to request all PII held about them. CyberOS CP module fulfils DSARs via a single export bundle.', xrefs:['CP','GDPR','PDPL','RTBE']},/ ─────────── E ───────────
+ { title:'Ed25519', acronym:null, cat:'tech', def:'Edwards-curve Digital Signature Algorithm over Curve25519. CyberOS uses Ed25519 for signed BRAIN export bundles, signed STHs, and per-skill release signatures.', xrefs:['STH','MMR','BRAIN']},
+ { title:'EMAIL', acronym:'EMAIL', cat:'cy-spec', def:'CyberOS P1 mail module — Stalwart-based server (JMAP/IMAP/SMTP/DKIM/MTA-STS/DANE/BIMI) plus shared-inbox UX. CaMeL on every ingest. Body content NOT ingested into BRAIN by default.', xrefs:['Stalwart','CaMeL','DKIM','BRAIN'], ext:''},
+ { title:'eIDAS', acronym:'eIDAS', cat:'regul', def:'EU Regulation 910/2014 — Electronic Identification, Authentication and trust Services. Defines QES (Qualified Electronic Signature) and QTSPs. CyberOS DOC partners with a QTSP at P4.', xrefs:['QTSP','QES','DOC']},
+ { title:'ESOP', acronym:'ESOP', cat:'cy-spec', def:'Employee Stock Ownership Plan — in CyberOS, the Phantom Stock (SP) module. 4-year vesting with 12-month cliff defaults; annual SP valuation cycle; Good Leaver / Bad Leaver / M&A acceleration branches. Excluded from BRAIN.', xrefs:['SP','Good Leaver','Bad Leaver','BRAIN'], ext:''},
+ { title:'EU AI Act', acronym:'AI Act', cat:'regul', def:'EU Regulation 2024/1689 on Artificial Intelligence. Annex III §4 covers employment / worker management / access to self-employment. CyberOS REW + LEARN treated as high-risk; P2 conformity pack required.', xrefs:['Annex III','REW','LEARN'], ext:''},/ ─────────── F ───────────
+ { title:'F_BARRIERFSYNC', acronym:'fcntl', cat:'tech', def:'macOS-specific fcntl flag for per-batch durable sync. CyberOS BRAIN writers use F_BARRIERFSYNC per-batch and F_FULLFSYNC at checkpoint; plain fsync is insufficient on Darwin.', xrefs:['fsync','BRAIN'], ext:'AGENTS.md §4.1'},
+ { title:'F_FULLFSYNC', acronym:'fcntl', cat:'tech', def:'macOS-specific fcntl flag for full durable sync at checkpoint. See F_BARRIERFSYNC.', xrefs:['F_BARRIERFSYNC']},/ ─────────── G ───────────
+ { title:'GDPR', acronym:'GDPR', cat:'regul', def:'EU General Data Protection Regulation 2016/679. CyberOS adds GDPR conformance at P3 when Singapore HoldCo flips and EU tenant residency becomes a path. Right to erasure (Art 17) maps to BRAIN purge.', xrefs:['DPIA','DSAR','PDPL'], ext:''},
+ { title:'GENIE', acronym:'GENIE', cat:'cy-spec', def:'The mascot persona of CUO — the public face. Genie is the entry point in CHAT (@genie inline), the host shell sidebar, and ambient surfaces. Genie routes to one of CUO\'s ten C-level skills.', xrefs:['CUO','Anthropic Agent Skills'], ext:''},
+ { title:'Good Leaver', acronym:null, cat:'business', def:'ESOP branch — voluntary or amicable departure. Vested SP retained; future vesting forfeited; put rights preserved.', xrefs:['ESOP','Bad Leaver']},
+ { title:'GraphQL Federation', acronym:'GQL Fed', cat:'tech', def:'Apollo Federation v2.5+ composition of per-module subgraphs into a single graph. The Apollo Router serves it.', xrefs:['Apollo Federation','Apollo Router']},
+ { title:'GraphRAG', acronym:null, cat:'tech', def:'Retrieval-augmented generation augmented by community-detected graph summaries. CyberOS BRAIN runs Leiden-default community detection nightly; k-core fallback on small graphs.', xrefs:['Apache AGE','Leiden','BRAIN'], ext:'Microsoft GraphRAG paper'},/ ─────────── H ───────────
+ { title:'HEAD', acronym:'HEAD', cat:'cy-spec', def:'BRAIN\'s 8-byte little-endian u64 monotonic seq counter, written atomically. Readers snapshot HEAD via the seqlock pattern; writers advance it through the lock.', xrefs:['BRAIN','seqlock','.lock'], ext:'AGENTS.md §2'},
+ { title:'Hetzner', acronym:null, cat:'tech', def:'EU-based cloud provider. Default deployment target for CyberOS\'s self-hosted infra; complemented by Vultr/OVH for SG region.', xrefs:['Vultr','OVH']},
+ { title:'HoldCo', acronym:'HoldCo', cat:'business', def:'Singapore Holding Company. CyberOS plans a SG HoldCo flip at P3 exit if ARR ≥ $1.5M. Tenant-ownership tagging makes the flip data-light.', xrefs:['Singapore','PDPA']},
+ { title:'Hội đồng Chuyên môn', acronym:null, vi:'Hội đồng Chuyên môn', cat:'lang', def:'Vietnamese for "Professional Council". CyberSkill\'s peer-review body for promotion decisions; multi-judge scoring; individual scores never ingested into BRAIN.', xrefs:['LEARN','Promotion']},
+ { title:'HNSW', acronym:'HNSW', cat:'tech', def:'Hierarchical Navigable Small World — approximate-nearest-neighbour index used by pgvector for fast vector retrieval at scale.', xrefs:['pgvector','BRAIN']},/ ─────────── I ───────────
+ { title:'IMAP', acronym:'IMAP', cat:'tech', def:'Internet Message Access Protocol. EMAIL exposes IMAP alongside JMAP and SMTP.', xrefs:['EMAIL','JMAP','SMTP']},
+ { title:'INV', acronym:'INV', cat:'cy-spec', def:'CyberOS Invoicing & Procurement module (P2). Multi-currency (VND/USD/SGD/EUR) with daily SBV rate snapshot; Stripe + Wise + VietQR; Vietnam e-invoice format (Decree 123 / Circular 78); AR aging + dunning.', xrefs:['VietQR','SBV','Stripe'], ext:''},
+ { title:'INTEROP.md', acronym:null, cat:'cy-spec', def:'≤ 6000-char subset of AGENTS.md for non-ledger consumers. Tells third-party agents how to read BRAIN without writing to audit/ or HEAD.', xrefs:['AGENTS.md','BRAIN'], ext:'cyberos/memory/INTEROP.md'},
+ { title:'ISO 27001:2022', acronym:'ISO 27001', cat:'regul', def:'International standard for Information Security Management Systems (ISMS). CyberOS targets ISO 27001:2022 certification at P2 exit.', xrefs:['ISO 27701','SOC 2']},
+ { title:'ISO 27701', acronym:'ISO 27701', cat:'regul', def:'Privacy Information Management System (PIMS) extension to ISO 27001. Maps GDPR controls.', xrefs:['ISO 27001','GDPR']},
+ { title:'ISO 42001', acronym:'ISO 42001', cat:'regul', def:'International standard for AI Management Systems (AIMS), published Dec 2023. CyberOS targets ISO 42001 at P3 exit — relevant for EU AI Act conformance.', xrefs:['EU AI Act','ISO 27001']},/ ─────────── J ───────────
+ { title:'jco', acronym:null, cat:'tech', def:'JavaScript host bindings generator for WebAssembly components. CyberOS uses jco to expose Component-Model skills to TypeScript subgraphs where useful.', xrefs:['Component Model','wasmtime']},
+ { title:'JetStream', acronym:'NATS JetStream', cat:'tech', def:'NATS persistence layer. CyberOS\'s event backbone — every inter-module event flows through JetStream subjects with per-subject retention.', xrefs:['NATS']},
+ { title:'JMAP', acronym:'JMAP', cat:'tech', def:'JSON Meta Application Protocol — modern mail-access spec. Stalwart and CyberOS EMAIL expose JMAP alongside IMAP.', xrefs:['IMAP','Stalwart']},/ ─────────── K ───────────
+ { title:'KB', acronym:'KB', cat:'cy-spec', def:'CyberOS Knowledge Base module (P1). Block-based editor; per-page ACL; share-link with token expiry; PGroonga full-text Vietnamese search; backlink graph; Notion import.', xrefs:['PGroonga','KB → BRAIN'], ext:''},
+ { title:'KMS', acronym:'KMS', cat:'tech', def:'Key Management Service. CyberOS uses separate KMS keys per sensitivity scope: general PII, compensation (REW), government ID (CCCD/passport). Rotation at least annually.', xrefs:['CMEK','REW','HR']},/ ─────────── L ───────────
+ { title:'LangGraph', acronym:null, cat:'tech', def:'LangChain\'s state-machine supervisor for agents. CyberOS CUO uses LangGraph with checkpointed state and interrupt on destructive tools. Production paths must be LangGraph ((FR pending)).', xrefs:['CUO','CrewAI']},
+ { title:'LEARN', acronym:'LEARN', cat:'cy-spec', def:'CyberOS Learning & Promotion module (P1). VP roll-up from PROJ + TIME + KB; Hội đồng Chuyên môn workflow; promotion gate criteria. EU AI Act high-risk if used for performance assessment.', xrefs:['Hội đồng Chuyên môn','VP','Promotion','EU AI Act']},
+ { title:'Leiden', acronym:null, cat:'tech', def:'Community detection algorithm — improvement over Louvain. CyberOS BRAIN runs Leiden-default for GraphRAG community summaries.', xrefs:['GraphRAG','Apache AGE']},
+ { title:'LiteLLM', acronym:null, cat:'tech', def:'Vendor-agnostic LLM router supporting Bedrock, Anthropic API, OpenAI, etc. AI Gateway uses LiteLLM as the routing primitive.', xrefs:['AI Gateway','Bedrock']},
+ { title:'.lock', acronym:'.lock', cat:'cy-spec', def:'BRAIN\'s exclusive write lock at <memory-root>/.lock. Holds a lease record {pid, host, monotonic_ns, expiry_ns} with TTL 10s and 3s renew interval. Stale leases reaped on TTL expiry.', xrefs:['BRAIN','seqlock'], ext:'AGENTS.md §4.2'},/ ─────────── M ───────────
+ { title:'M+N', acronym:null, cat:'cy-spec', def:'Notation for "month N after kick-off". P0 runs M0 → M+3; P1 → M+6; P2 → M+9; P3 → M+12; P4 → M+24.', xrefs:['Roadmap','Phases']},
+ { title:'Mattermost', acronym:null, cat:'tech', def:'Open-source AGPL chat server. CyberOS forks Mattermost at P0 as the CHAT module foundation. Compliance export reuses Mattermost\'s format augmented with the CyberOS audit chain.', xrefs:['CHAT','AGPL']},
+ { title:'MCP', acronym:'MCP', cat:'tech', def:'Model Context Protocol — open standard for connecting AI agents to tools and resources. CyberOS MCP Gateway implements the 2025-11-25 spec including Streamable HTTP, OAuth 2.1+PKCE, Tasks primitive, Sampling-with-Tools.', xrefs:['MCP Gateway','Anthropic Agent Skills'], ext:'modelcontextprotocol.io'},
+ { title:'MCP Gateway', acronym:'MCP GW', cat:'cy-spec', def:'CyberOS module exposing every tool as MCP..well-known/mcp discovery;.well-known/oauth-protected-resource (PRM); tool annotations (destructive → human-confirm; readOnly → fast path); per-tool rate limits and circuit breakers; SEP-986 verbNoun.dotted naming.', xrefs:['MCP','OAuth 2.1','PRM']},
+ { title:'MMR', acronym:'MMR', cat:'cy-spec', def:'Merkle Mountain Range. BRAIN\'s tree-structured commitment over canonical-JSON audit leaves, signed per consolidation via Ed25519 to produce an STH.', xrefs:['STH','Ed25519','Auto Dream'], ext:'AGENTS.md §6.4'},
+ { title:'Module Federation', acronym:'MF', cat:'tech', def:'Webpack 5 runtime module-sharing feature. Each CyberOS frontend module ships as a Module Federation remote consumed by the host shell.', xrefs:['Apollo Federation','Webpack 5']},
+ { title:'MoIC', acronym:'MoIC', cat:'lang', def:'Ministry of Information and Communications (Vietnam). Regulator for cyber security under Decree 53/2022.', xrefs:['MoPS','Decree 53/2022']},
+ { title:'MoPS', acronym:'MoPS', cat:'lang', def:'Ministry of Public Security (Vietnam). Operates VNeID; data-localisation rule enforcement.', xrefs:['VNeID','CCCD']},
+ { title:'msgspec', acronym:null, cat:'tech', def:'High-performance Python serialization library. Used by cyberos.core for canonical JSON (RFC 8785-conforming) in audit records.', xrefs:['BRAIN','RFC 8785']},
+ { title:'MST', acronym:'MST', vi:'Mã Số Thuế', cat:'lang', def:'Vietnamese Tax Code. Per-business tax-registration number. The vn-mst-validate skill validates MST format and check digit.', xrefs:['vn-mst-validate','PIT','VAT']},
+ { title:'MTA-STS', acronym:'MTA-STS', cat:'tech', def:'Mail Transfer Agent Strict Transport Security — TLS-enforcement for SMTP relays. Stalwart and CyberOS EMAIL support MTA-STS.', xrefs:['EMAIL','Stalwart']},/ ─────────── N ───────────
+ { title:'Napas247', acronym:'Napas247', cat:'tech', def:'Vietnamese 24/7 instant interbank payment network. The vn-bank-transfer skill uses Napas247 + VietQR for VND payouts.', xrefs:['VietQR','vn-bank-transfer','INV']},
+ { title:'NATS', acronym:'NATS', cat:'tech', def:'Open-source messaging system. CyberOS uses NATS with JetStream as the event backbone.', xrefs:['JetStream']},
+ { title:'nDCG@10', acronym:'nDCG@10', cat:'tech', def:'Normalised Discounted Cumulative Gain at rank 10. BRAIN retrieval eval target: ≥0.65 on Vietnamese corpus.', xrefs:['BRAIN','Reranker']},
+ { title:'NFR', acronym:'NFR', cat:'cy-spec', def:'Non-Functional Requirement. Quantitative budget or quality attribute (latency, availability, security target).', xrefs:['FR','PRD']},
+ { title:'NĐ 13/2023', acronym:'NĐ 13', cat:'regul', def:'See "Decree 13/2023".', xrefs:['Decree 13/2023']},/ ─────────── O ───────────
+ { title:'OAuth 2.1', acronym:null, cat:'tech', def:'Consolidated OAuth 2.0 spec with PKCE mandatory for public clients. CyberOS uses OAuth 2.1 + PKCE for browser logins and MCP tool authorisation.', xrefs:['PKCE','MCP','AUTH']},
+ { title:'OBS', acronym:'OBS', cat:'cy-spec', def:'CyberOS Observability module — structured JSON logs (PII-redacted), OpenTelemetry traces across Apollo Router → subgraphs → DB, per-module SLO dashboards, alert routing tiers.', xrefs:['OpenTelemetry','SLO','AI Gateway']},
+ { title:'OKR', acronym:'OKR', cat:'cy-spec', def:'CyberOS OKR & Strategy module (P3). Quarterly cycle with company → team → Member cascade. Confidence-band updates; CUO digest weekly to Founder. Post-cycle target mods are superseding entries, never edits.', xrefs:['OKR retro','CUO']},
+ { title:'OPA', acronym:'OPA', cat:'tech', def:'Open Policy Agent. CyberOS uses OPA for fine-grained policy across gateways (RBAC, scope-contract enforcement, sensitive-route gating).', xrefs:['AUTH','MCP','GraphQL']},
+ { title:'OpenTelemetry', acronym:'OTel', cat:'tech', def:'CNCF observability standard for distributed tracing, metrics, logs. CyberOS OBS uses OTel across the stack with trace_id propagation.', xrefs:['OBS']},/ ─────────── P ───────────
+ { title:'P0 / P1 / P2 / P3 / P4', acronym:'phases', cat:'cy-spec', def:'CyberOS\'s five gated phases. P0 Foundations (M0–M+3, 7 modules); P1 Productivity (M+4–M+6, +8); P2 Operations (M+7–M+9, +2); P3 SaaS-ready (M+10–M+12, +2); P4 External (M+13–M+24, +3).', xrefs:['Phases','Roadmap']},
+ { title:'PCI DSS', acronym:'PCI DSS', cat:'regul', def:'Payment Card Industry Data Security Standard. Relevant to INV if card data is handled; CyberOS uses Stripe-vault tokenisation to stay out of scope.', xrefs:['INV','Stripe']},
+ { title:'PDPA', acronym:'PDPA', cat:'regul', def:'Singapore Personal Data Protection Act. Becomes in-scope at P3 when Singapore HoldCo flips and CyberOS gains SG tenants.', xrefs:['Singapore','HoldCo']},
+ { title:'PDPL', acronym:'PDPL', cat:'regul', def:'Vietnam Personal Data Protection Law (Law 91/2025, Decree 356). The inner ring of CyberOS\'s three-ring compliance scope. RTBE within 60 days.', xrefs:['Decree 13/2023','GDPR','DSAR']},
+ { title:'Persona version', acronym:null, cat:'cy-spec', def:'Hash-pinned version of CUO\'s persona prompt + scope contract. Every AI write carries the persona-version stamp; drift means a refused request and an audit row.', xrefs:['CUO','BRAIN audit','AGENTS.md']},
+ { title:'pgvector', acronym:null, cat:'tech', def:'PostgreSQL extension for vector similarity search with HNSW + IVFFlat indexes. CyberOS BRAIN Layer 2 uses pgvector for dense retrieval.', xrefs:['HNSW','BRAIN','Apache AGE']},
+ { title:'PGroonga', acronym:null, cat:'tech', def:'PostgreSQL extension wrapping the Groonga full-text engine — strong Vietnamese tokenisation. CyberOS CHAT, KB, BRAIN use PGroonga for lexical matching.', xrefs:['BRAIN','CHAT','KB','Vietnamese']},
+ { title:'Phantom Stock', acronym:'SP', cat:'business', def:'Cash-equivalent equity instrument that mirrors shareholder economics without actual share issuance. CyberSkill\'s ESOP uses SP units with 4-year vesting + 12-month cliff.', xrefs:['ESOP','SP','Good Leaver']},
+ { title:'PIT', acronym:'PIT', cat:'business', def:'Personal Income Tax (Vietnam). REW computes PIT line-items per local law.', xrefs:['REW','BHXH']},
+ { title:'PKCE', acronym:'PKCE', cat:'tech', def:'Proof Key for Code Exchange — OAuth 2.1 extension making auth-code flows safe for public clients. Mandatory in CyberOS AUTH and MCP gateway.', xrefs:['OAuth 2.1','AUTH','MCP']},
+ { title:'PORTAL', acronym:'PORTAL', cat:'cy-spec', def:'CyberOS Client Portal module (P4). Per-tenant brandable, mobile-first PWA. Customers view shared projects, comment, sign documents, view/pay invoices. Customer agents may connect via MCP.', xrefs:['MCP','PWA','TEN']},
+ { title:'PRM', acronym:'PRM', cat:'tech', def:'Protected Resource Metadata — the.well-known/oauth-protected-resource endpoint published by the MCP gateway under OAuth 2.1.', xrefs:['MCP Gateway','OAuth 2.1']},
+ { title:'PROJ', acronym:'PROJ', cat:'cy-spec', def:'CyberOS Projects module (P1). Three primitives Issue / Cycle / Project, plus Engagement. Sync-engine with optimistic local mutations + WebSocket + server-canonical. Tasks ingested into BRAIN; per-task ACL.', xrefs:['TIME','INV','BRAIN']},
+ { title:'Prompt injection', acronym:null, cat:'tech', def:'Adversarial input crafted to override an LLM\'s instructions. CyberOS BRAIN content gate enforces dual-pass detection (whitespaced + letters-only-collapsed) over 78+ attack vectors; CaMeL separates planner from quarantined.', xrefs:['CaMeL','BRAIN content gate','OWASP LLM01']},
+ { title:'PWA', acronym:'PWA', cat:'tech', def:'Progressive Web App. CyberOS PORTAL ships PWA-installable for mobile-first deployment.', xrefs:['PORTAL']},/ ─────────── Q ───────────
+ { title:'QES', acronym:'QES', cat:'regul', def:'Qualified Electronic Signature under eIDAS — highest level of e-sign, legally equivalent to handwritten signature across EU. CyberOS DOC integrates with a QTSP for QES at P4.', xrefs:['eIDAS','QTSP','DOC']},
+ { title:'QTSP', acronym:'QTSP', cat:'regul', def:'Qualified Trust Service Provider under eIDAS — accredited CA / TSA for QES issuance. Examples: GlobalSign, Cryptomathic.', xrefs:['eIDAS','QES','DOC']},/ ─────────── R ───────────
+ { title:'RACI', acronym:'RACI', cat:'business', def:'Responsible / Accountable / Consulted / Informed matrix. CyberOS RACI per-module enforces single-owner responsibility.', xrefs:['CODEOWNERS','Governance']},
+ { title:'RBAC', acronym:'RBAC', cat:'tech', def:'Role-Based Access Control. CyberOS AUTH layers Scope Contract Grants on top of RBAC for fine-grained per-call enforcement at GraphQL/MCP gateways.', xrefs:['AUTH','OPA','Scope contract']},
+ { title:'Reranker', acronym:null, cat:'tech', def:'Cross-encoder model that re-scores a candidate set with full attention over query+document. CyberOS uses BGE-rerank-v2-m3 at the tail of hybrid retrieval.', xrefs:['BGE-rerank-v2-m3','BRAIN']},
+ { title:'RES', acronym:'RES', cat:'cy-spec', def:'CyberOS Resource Plan module (P3). Per-Member weekly capacity, per-engagement forecast, capacity vs forecast vs actual allocation. CUO/COO-skill flags over- and under-allocation.', xrefs:['PROJ','TIME','OKR']},
+ { title:'REW', acronym:'REW', cat:'cy-spec', def:'CyberOS Total Rewards module (P1). 3P income structure (P1 Base + P2 Allowance + P3 Performance). BP ledger with anti-inflation interest. P1-protection invariant: no system-driven base-salary reduction. Compensation structurally excluded from BRAIN.', xrefs:['3P income','BP','Phantom Stock','BRAIN denylist']},
+ { title:'RFC 2119', acronym:null, cat:'regul', def:'IETF RFC defining MUST / SHOULD / MAY normative keywords. With RFC 8174, forms BCP-14. Used as the grammar of AGENTS.md.', xrefs:['BCP-14','AGENTS.md']},
+ { title:'RFC 8174', acronym:null, cat:'regul', def:'IETF RFC clarifying that the BCP-14 keywords are normative only when in ALL-CAPS.', xrefs:['BCP-14','RFC 2119']},
+ { title:'RFC 8785', acronym:null, cat:'regul', def:'JSON Canonicalization Scheme (JCS). CyberOS BRAIN canonicalises audit-record payload per a JCS-conforming implementation enabled by the closed schema.', xrefs:['msgspec','BRAIN audit']},
+ { title:'RLS', acronym:'RLS', cat:'tech', def:'Row-Level Security (PostgreSQL). Enforced on every BRAIN/CRM/REW read; cross-tenant access blocks.', xrefs:['PostgreSQL','BRAIN','Tenant isolation']},
+ { title:'RPO', acronym:'RPO', cat:'business', def:'Recovery Point Objective — maximum allowable data loss in disaster. CyberOS target ≤ 1h.', xrefs:['RTO','DR drill']},
+ { title:'RTO', acronym:'RTO', cat:'business', def:'Recovery Time Objective — maximum allowable time to restore service. CyberOS target ≤ 4h; cross-region failover ≤ 24h at P3.', xrefs:['RPO','DR drill']},
+ { title:'RTBE', acronym:'RTBE', cat:'regul', def:'Right To Be Erased (Right to Erasure, GDPR Art 17 / PDPL equivalent). CyberOS CP module fulfils within 30 days (GDPR) / 60 days (PDPL).', xrefs:['GDPR','PDPL','DSAR','CP']},/ ─────────── S ───────────
+ { title:'SBV', acronym:'SBV', cat:'lang', def:'State Bank of Vietnam. CyberOS INV pulls daily SBV exchange-rate snapshots for multi-currency invoicing.', xrefs:['INV','Napas247']},
+ { title:'Scope contract', acronym:null, cat:'cy-spec', def:'CUO\'s per-persona allow-list of tools, modules, and operations. Enforced at the AUTH/MCP gateway, not via prompt. A scope-contract violation is refused and audited.', xrefs:['CUO','AUTH','MCP','Persona version']},
+ { title:'seqlock', acronym:null, cat:'tech', def:'Lock-free reader pattern: readers snapshot a sequence counter, read, then re-check; mismatch triggers retry. BRAIN uses seqlock against HEAD so readers don\'t need.lock.', xrefs:['.lock','HEAD','BRAIN']},
+ { title:'SEP-986', acronym:null, cat:'tech', def:'MCP Specification Enhancement Proposal #986 — verbNoun.dotted tool-naming convention. CyberOS MCP tool registry adopts SEP-986.', xrefs:['MCP','MCP Gateway']},
+ { title:'SI', acronym:'SI', cat:'business', def:'Social Insurance (Vietnam). See BHXH. REW computes SI line-items.', xrefs:['BHXH','PIT','REW']},
+ { title:'Singapore HoldCo', acronym:'HoldCo', cat:'business', def:'See "HoldCo".', xrefs:['HoldCo','PDPA']},
+ { title:'SKILL', acronym:'SKILL', cat:'cy-spec', def:'CyberOS\'s portable agentic skills catalog and runtime. Rust host (wasmtime + AOT cache) + Bun toolchain. Open Anthropic Agent Skills format. 6 Vietnamese-market skills shipped (MST, VAT, VietQR, CCCD, legal, tax). Three-level progressive disclosure. 12/12 Python ↔ Rust parity green.', xrefs:['Agent Skills','wasmtime','Capability broker']},
+ { title:'SKILL.md', acronym:null, cat:'cy-spec', def:'The per-skill manifest file — frontmatter (name, version, allowed-tools) + body. Format defined by the open Anthropic Agent Skills standard.', xrefs:['SKILL','Agent Skills']},
+ { title:'SLO', acronym:'SLO', cat:'tech', def:'Service Level Objective. Per-module SLOs (latency, error-rate, success-rate) surface in OBS dashboards; error-budget burn fires alerts at 50%/75%/100%.', xrefs:['OBS','NFR']},
+ { title:'SMTP', acronym:'SMTP', cat:'tech', def:'Simple Mail Transfer Protocol. EMAIL exposes SMTP alongside JMAP and IMAP.', xrefs:['EMAIL','IMAP','JMAP']},
+ { title:'SOC 2', acronym:'SOC 2', cat:'regul', def:'AICPA Service Organization Control 2 audit. CyberOS targets SOC 2 Type I at P1 exit, Type II at P2/P3.', xrefs:['ISO 27001','CSA STAR']},
+ { title:'SP', acronym:'SP', cat:'business', def:'Phantom Stock unit. See "Phantom Stock". Issued under ESOP with 4-year vesting and 12-month cliff defaults.', xrefs:['Phantom Stock','ESOP','VP']},
+ { title:'SPF', acronym:'SPF', cat:'tech', def:'Sender Policy Framework — mail authentication. Reported through DMARC.', xrefs:['DKIM','DMARC','EMAIL']},
+ { title:'Stalwart', acronym:null, cat:'tech', def:'Open-source mail server (AGPL). Foundation of CyberOS EMAIL — JMAP / IMAP / SMTP / DKIM / MTA-STS / DANE / BIMI.', xrefs:['EMAIL','JMAP']},
+ { title:'STH', acronym:'STH', cat:'cy-spec', def:'Signed Tree Head. BRAIN consolidation signs the MMR root with Ed25519 and writes a checkpoint to audit/checkpoints/.', xrefs:['MMR','Ed25519','Auto Dream','BRAIN']},
+ { title:'Stripe', acronym:null, cat:'tech', def:'International payments processor. CyberOS INV uses Stripe for USD/EUR billing; VND-PSP and Wise for VND/multi-currency.', xrefs:['INV','VietQR','Wise']},/ ─────────── T ───────────
+ { title:'Tauri', acronym:null, cat:'tech', def:'Rust-based desktop app framework (alternative to Electron). CyberOS host shell ships as a Tauri bundle on Windows 10+, macOS 12+, Ubuntu 22+.', xrefs:['Host shell','Vite']},
+ { title:'TEN', acronym:'TEN', cat:'cy-spec', def:'CyberOS Tenancy & Billing module (P4). Self-serve signup with residency choice + plan selection. Stripe + VND-PSP billing. 90-day offboarding grace. Per-tenant brand pack overrides @cyberskill/tokens.', xrefs:['PORTAL','Stripe','Per-tenant residency']},
+ { title:'TIME', acronym:'TIME', cat:'cy-spec', def:'CyberOS Time & Expense module (P1). Daily time entry with start/end or duration; billable / non-billable per Engagement; weekly approval flow; INV pulls weekly batched summaries.', xrefs:['PROJ','INV','HR']},
+ { title:'Trust Center', acronym:null, cat:'cy-spec', def:'CyberOS\'s public-readable compliance + status page surface — DPIA artefacts, sub-processor list, mail-server status, BIMI cert, last DMARC report, AI-Assisted badge documentation. Lives in KB.', xrefs:['DPIA','KB','EMAIL']},
+ { title:'TT 80/2021', acronym:'TT 80', cat:'regul', def:'Vietnamese Ministry of Finance Circular 80/2021 on tax administration — Form 01/GTGT VAT-return template.', xrefs:['VAT','PIT','vn-tax-filing']},/ ─────────── V ───────────
+ { title:'VAT', acronym:'VAT', cat:'business', def:'Value Added Tax (Vietnam). Standard rate 10%. The vn-vat-invoice skill generates VAT e-invoices conforming to Decree 123 / Circular 78.', xrefs:['vn-vat-invoice','MST','TT 80/2021']},
+ { title:'VAT Mẫu 01/GTGT', acronym:'Mẫu 01', cat:'lang', def:'The Vietnamese monthly VAT-return form. The vn-tax-filing skill auto-fills Mẫu 01/GTGT.', xrefs:['VAT','TT 80/2021']},
+ { title:'VietQR', acronym:'VietQR', cat:'tech', def:'Vietnamese QR-payment standard interoperating with Napas247. The vn-bank-transfer skill generates VietQR payment codes for VND payouts.', xrefs:['Napas247','vn-bank-transfer','INV']},
+ { title:'Vite', acronym:null, cat:'tech', def:'Bundler/dev-server for the CyberOS host shell (React 19 + Tauri). Module remotes use Webpack 5 + Module Federation.', xrefs:['Host shell','Module Federation','Tauri']},
+ { title:'VNeID', acronym:'VNeID', cat:'tech', def:'Vietnamese national digital ID app + API operated by the Ministry of Public Security. The vneid-integration skill validates CCCD and scaffolds VNeID API integration.', xrefs:['CCCD','MoPS','vneid-integration']},
+ { title:'VPAT 2.5', acronym:'VPAT', cat:'regul', def:'Voluntary Product Accessibility Template (Section 508 reporting). CyberOS publishes VPAT 2.5 INT (International) at P0 exit.', xrefs:['WCAG 2.2','Accessibility']},
+ { title:'VP', acronym:'VP', cat:'business', def:'Voting Power. CyberSkill\'s internal "earned voice" metric, rolled up by LEARN from PROJ + TIME + KB contributions.', xrefs:['LEARN','Promotion','Hội đồng Chuyên môn']},
+ { title:'vn-mst-validate', acronym:'skill', cat:'cy-spec', def:'Vietnamese tax-code validator skill — MST format and check-digit verification.', xrefs:['MST','SKILL']},
+ { title:'vn-vat-invoice', acronym:'skill', cat:'cy-spec', def:'Vietnamese VAT e-invoice generator (Decree 123 / Circular 78).', xrefs:['VAT','INV','SKILL']},
+ { title:'vn-bank-transfer', acronym:'skill', cat:'cy-spec', def:'Vietnamese bank-transfer skill using Napas247 and VietQR.', xrefs:['Napas247','VietQR','SKILL']},
+ { title:'vneid-integration', acronym:'skill', cat:'cy-spec', def:'CCCD validator + VNeID API scaffolding skill.', xrefs:['CCCD','VNeID','SKILL']},
+ { title:'vn-legal-compliance', acronym:'skill', cat:'cy-spec', def:'Reference-only procedural knowledge skill for Vietnamese legal compliance.', xrefs:['PDPL','SKILL']},
+ { title:'vn-tax-filing', acronym:'skill', cat:'cy-spec', def:'Vietnamese monthly + quarterly VAT-return filing skill.', xrefs:['VAT','TT 80/2021','SKILL']},/ ─────────── W ───────────
+ { title:'WASI', acronym:'WASI', cat:'tech', def:'WebAssembly System Interface. Underpins capability-mediated host calls in the SKILL runtime.', xrefs:['Component Model','wasmtime','SKILL']},
+ { title:'wasmtime', acronym:null, cat:'tech', def:'Bytecode-Alliance WebAssembly runtime. CyberOS SKILL host runs WASM components through wasmtime with AOT cache.', xrefs:['Component Model','WASI','SKILL']},
+ { title:'WCAG 2.2', acronym:'WCAG 2.2', cat:'regul', def:'W3C Web Content Accessibility Guidelines 2.2. CyberOS targets Level AA across host shell + module remotes.', xrefs:['VPAT 2.5','Accessibility']},
+ { title:'Webpack 5', acronym:null, cat:'tech', def:'Bundler with Module Federation support. CyberOS module FE remotes ship via Webpack 5 + Module Federation.', xrefs:['Module Federation','Vite']},
+ { title:'WIT', acronym:'WIT', cat:'tech', def:'WebAssembly Interface Type — typed cross-language interface descriptor for Component Model. CyberOS SKILL Phase 7+ exposes explicit WIT interfaces.', xrefs:['Component Model','wasmtime','SKILL']},
+ { title:'Wise', acronym:null, cat:'tech', def:'Multi-currency payments provider. CyberOS INV uses Wise alongside Stripe and VietQR/domestic VND PSP.', xrefs:['INV','Stripe','VietQR']},/ ─────────── Y ───────────
+ { title:'Yjs', acronym:null, cat:'tech', def:'CRDT library for shared text + structured data. CyberOS BRAIN sync uses Yjs + Automerge for two-device convergence per Member.', xrefs:['CRDT','Automerge','BRAIN']},/ ─────────── Z ───────────
+ { title:'Zalo', acronym:null, cat:'tech', def:'Vietnam\'s dominant chat app. CyberOS CHAT imports Zalo where API allows; bidirectional bridge during P0 migration.', xrefs:['CHAT','Slack import']},
+ { title:'ZDR', acronym:'ZDR', cat:'tech', def:'Zero-Data-Retention. AI Gateway enforces ZDR-attested endpoints for sensitive routes (compensation, ESOP, HR sensitive). Provider-attested + audited quarterly.', xrefs:['AI Gateway','Bedrock']},/ ─────────── numeric-style at A & T ───────────
+ { title:'3P income', acronym:null, cat:'business', def:'CyberSkill\'s reward structure: P1 Base salary (cash, never reduced), P2 Allowances (cash), P3 Performance overflow (cash). Together with BP and SP, the three Ps form the Total Rewards Appendix.', xrefs:['REW','BP','SP']},/ ─────────── Additional cross-cutting ───────────
+ { title:'Automerge', acronym:null, cat:'tech', def:'CRDT library for structured documents. Paired with Yjs in CyberOS BRAIN sync.', xrefs:['Yjs','CRDT','BRAIN']},
+ { title:'Bad Leaver', acronym:null, cat:'business', def:'ESOP branch — adversarial or for-cause termination. Vested SP retained at discount per Appendix; put rights frozen.', xrefs:['Good Leaver','ESOP']},
+ { title:'BAAI', acronym:'BAAI', cat:'tech', def:'Beijing Academy of AI. Publisher of the BGE-M3 embedder and BGE-rerank-v2-m3 reranker.', xrefs:['BGE-M3','BGE-rerank-v2-m3']},
+ { title:'Bun', acronym:null, cat:'tech', def:'JavaScript runtime + package manager. The developer toolchain for CyberOS SKILL — build, lint, test.', xrefs:['SKILL']},
+ { title:'CSA', acronym:'CSA', cat:'regul', def:'Cloud Security Alliance. Operates the STAR registry.', xrefs:['CSA STAR']},
+ { title:'CHAT', acronym:'CHAT', cat:'cy-spec', def:'CyberOS internal Chat module (P0). Mattermost fork. @genie inline mentions,summarise, smart-reply, daily channel digest, PGroonga Vietnamese tokenisation, Slack/Zalo import, CHAT→BRAIN ingestion ≤5s, per-channel ACL, voice messages with Vi+En ASR (P3).', xrefs:['Mattermost','PGroonga','BRAIN','Slack import','Zalo']},
+ { title:'CRM', acronym:'CRM', cat:'cy-spec', def:'CyberOS Customer Relationship Management module (P1). Account → Contact → Deal entities; configurable pipeline with transition rules; deal forecasting via CUO/CRO-skill.', xrefs:['EMAIL','CUO']},
+ { title:'CDO', acronym:'CDO', cat:'business', def:'Chief Data Officer. CUO persona for data quality, lineage, residency reviews.', xrefs:['CUO','BRAIN']},
+ { title:'CPO', acronym:'CPO', cat:'business', def:'Chief Product Officer. CUO persona for PRD drafts, roadmap analysis, user-research synthesis.', xrefs:['CUO']},
+ { title:'CSO', acronym:'CSO', cat:'business', def:'Chief Strategy Officer. CUO persona for competitive intel, scenario modelling, partnerships.', xrefs:['CUO']},
+ { title:'CCO', acronym:'CCO', cat:'business', def:'Chief Compliance Officer. Sometimes bundled with CLO in CUO\'s persona catalog.', xrefs:['CLO','CUO']},
+ { title:'CAIO', acronym:'CAIO', cat:'business', def:'Chief AI Officer. Emerging 2026 sub-persona in CyberOS\'s C-suite.', xrefs:['CUO']},
+ { title:'COO', acronym:'COO', cat:'business', def:'Chief Operating Officer. CUO persona for status digests, blocker triage, cycle-end summaries.', xrefs:['CUO']},
+ { title:'CEO', acronym:'CEO', cat:'business', def:'Chief Executive Officer. CUO persona for strategy memos, OKR cascade, weekly state-of-business.', xrefs:['CUO','OKR']},
+ { title:'CRO', acronym:'CRO', cat:'business', def:'Chief Revenue Officer. Emerging 2026 sub-persona. Owns CRM deal forecasting + dunning narrative.', xrefs:['CUO','CRM']},
+ { title:'CXO', acronym:'CXO', cat:'business', def:'Chief Experience Officer. Emerging 2026 sub-persona.', xrefs:['CUO']},
+ { title:'CSO-Sus', acronym:'CSO-Sus', cat:'business', def:'Chief Sustainability Officer. Emerging 2026 sub-persona; placeholder for ESG-driven workloads.', xrefs:['CUO']},
+ { title:'NQ 142/2024', acronym:'NQ 142', cat:'regul', def:'Vietnamese National Assembly Resolution 142/2024 — covers AI policy directions.', xrefs:['PDPL']},
+ { title:'NĐ 20/2026', acronym:'NĐ 20', cat:'regul', def:'See "Decree 20/2026".', xrefs:['Decree 20/2026']},
+ { title:'ESG', acronym:'ESG', cat:'business', def:'Environmental, Social, Governance. Placeholder concern for the CSO-Sus emerging persona.', xrefs:['CSO-Sus']},
 ];
 </script>
 

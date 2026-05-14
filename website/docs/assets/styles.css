@@ -686,10 +686,13 @@ table.kt,
   -webkit-backdrop-filter: none;
 }
 
-/* Code blocks stay solid */
+/* Code blocks stay solid (prevent glass leakage from a glass parent).
+   IMPORTANT: don't override `background` here — the .codeblock rule above
+   already sets the dark surface (--neutral-900). Overriding it with
+   --bg-code (a light neutral) flips bg to white while leaving fg light,
+   making code invisible. Only kill the backdrop-filter inheritance. */
 .codeblock,
 pre.codeblock {
-  background: var(--bg-code);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }

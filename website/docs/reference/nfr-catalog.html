@@ -1,356 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CyberOS — NFR Catalog</title>
-  <meta name="description" content="Non-Functional Requirements catalog: performance, reliability, security, usability, maintainability, compatibility, transferability, functional suitability.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="module" src="../assets/scripts.js"></script>
-  <style>
-    .nfr-card { margin-bottom: 0.625rem; padding: 1rem 1.25rem; }
-    .nfr-card header { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.375rem; }
-    .nfr-id { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 0.25rem; }
-    .nfr-perf  { background: var(--memory-tint); color: var(--memory-dark); }
-    .nfr-rel   { background: var(--skill-tint); color: var(--skill-dark); }
-    .nfr-sec   { background: var(--compliance-tint); color: var(--compliance-dark); }
-    .nfr-usab  { background: var(--cuo-tint); color: var(--cuo-dark); }
-    .nfr-maint { background: var(--infra-tint); color: var(--infra-dark); }
-    .nfr-compat{ background: #e0e7ff; color: #3730a3; }
-    .nfr-tran  { background: #fce7f3; color: #9d174d; }
-    .nfr-func  { background: #ccfbf1; color: #115e59; }
-    .target-pill { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; background: #0f172a; color: #f1f5f9; padding: 0.125rem 0.5rem; border-radius: 0.375rem; }
-    .nfr-card h3 { font-size: 1rem; font-weight: 700; margin: 0 0 0.375rem 0; color: var(--text); }
-    .nfr-card .description { font-size: 0.875rem; color: var(--text-soft); line-height: 1.5; margin: 0 0 0.5rem 0; }
-    .nfr-card .grid-info { display:grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.875rem; font-size: 0.8125rem; }
-    .nfr-card .grid-info dt { font-weight:700; color: var(--text-mute); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; }
-    .nfr-card .grid-info dd { margin: 0; color: var(--text-soft); }
-    .filter-row { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom: 0.75rem; }
-    .filter-row label { font-size:0.6875rem; font-weight:700; text-transform:uppercase; color:var(--text-mute); letter-spacing:0.06em; min-width:5rem; }
-    .filter-row select, .filter-row input[type="search"] { padding:0.375rem 0.625rem; border:1px solid var(--border-strong); border-radius:0.375rem; font-size:0.8125rem; background:var(--bg-card); color:var(--text); }
-    .filter-row input[type="search"] { min-width: 18rem; }
-    .cat-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
-    .cat-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }
-    .cat-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; }
-    .cat-section header.section-head .meta { font-size: 0.75rem; color: var(--text-mute); margin-left:auto; }
-    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
-    .toc-link:hover { background: var(--future-tint); color: var(--text); }
-    .toc-link .count { float:right; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-mute); }
-    .toc-sticky { position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; padding: 1rem; }
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>CyberOS — NFR Catalog</title>
+ <meta name="description" content="Non-Functional Requirements catalog: performance, reliability, security, usability, maintainability, compatibility, transferability, functional suitability.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
+ <style>.nfr-card { margin-bottom: 0.625rem; padding: 1rem 1.25rem; }.nfr-card header { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.375rem; }.nfr-id { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 0.25rem; }.nfr-perf { background: var(--memory-tint); color: var(--memory-dark); }.nfr-rel { background: var(--skill-tint); color: var(--skill-dark); }.nfr-sec { background: var(--compliance-tint); color: var(--compliance-dark); }.nfr-usab { background: var(--cuo-tint); color: var(--cuo-dark); }.nfr-maint { background: var(--infra-tint); color: var(--infra-dark); }.nfr-compat{ background: #e0e7ff; color: #3730a3; }.nfr-tran { background: #fce7f3; color: #9d174d; }.nfr-func { background: #ccfbf1; color: #115e59; }.target-pill { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; background: #0f172a; color: #f1f5f9; padding: 0.125rem 0.5rem; border-radius: 0.375rem; }.nfr-card h3 { font-size: 1rem; font-weight: 700; margin: 0 0 0.375rem 0; color: var(--text); }.nfr-card.description { font-size: 0.875rem; color: var(--text-soft); line-height: 1.5; margin: 0 0 0.5rem 0; }.nfr-card.grid-info { display:grid; grid-template-columns: max-content 1fr; gap: 0.25rem 0.875rem; font-size: 0.8125rem; }.nfr-card.grid-info dt { font-weight:700; color: var(--text-mute); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; }.nfr-card.grid-info dd { margin: 0; color: var(--text-soft); }.filter-row { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom: 0.75rem; }.filter-row label { font-size:0.6875rem; font-weight:700; text-transform:uppercase; color:var(--text-mute); letter-spacing:0.06em; min-width:5rem; }.filter-row select,.filter-row input[type="search"] { padding:0.375rem 0.625rem; border:1px solid var(--border-strong); border-radius:0.375rem; font-size:0.8125rem; background:var(--bg-card); color:var(--text); }.filter-row input[type="search"] { min-width: 18rem; }.cat-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }.cat-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); }.cat-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; }.cat-section header.section-head.meta { font-size: 0.75rem; color: var(--text-mute); margin-left:auto; }.toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }.toc-link:hover { background: var(--future-tint); color: var(--text); }.toc-link.count { float:right; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-mute); }.toc-sticky { position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; padding: 1rem; }
+ </style>
 </head>
 <body data-pagefind-filter="category:Reference">
 
 <div id="shared-nav"></div>
 
-<div x-data="nfrCatalog()" x-init="$nextTick(() => init())" class="container py-8">
+<div x-data="nfrCatalog" x-init="$nextTick( => init)" class="container py-8">
 
-  <nav class="breadcrumbs">
-    <a href="../index.html">Home</a><span class="sep">›</span>
-    <a href="../index.html#navigate">Reference</a><span class="sep">›</span>
-    <span class="current">NFR Catalog</span>
-  </nav>
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a><span class="sep">›</span>
+ <a href="../index.html#navigate">Reference</a><span class="sep">›</span>
+ <span class="current">NFR Catalog</span>
+ </nav>
 
-  <header class="mb-8">
-    <div class="flex items-center gap-3 mb-3">
-      <span class="section-badge" style="background:var(--infra-tint);color:var(--infra-dark)">Reference · Catalog</span>
-      <span class="phase-chip phase-p0">PRD §11.2 + SRS §5</span>
-    </div>
-    <h1 class="h-1 mb-3">Non-Functional Requirements Catalog</h1>
-    <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
-      Every quantitative budget, threshold, and quality attribute CyberOS commits to. Eight ISO/IEC 25010 categories — performance, reliability, security, usability, maintainability, compatibility, transferability, functional suitability — each carrying a measurable target and a verification method (T = Test, I = Inspection, D = Demo, A = Analysis). Sourced from PRD §11.2 and the SRS NFR catalog.
-    </p>
+ <header class="mb-8">
+ <div class="flex items-center gap-3 mb-3">
+ <span class="section-badge" style="background:var(--infra-tint);color:var(--infra-dark)">Reference · Catalog</span>
+ <span class="phase-chip phase-p0"> + </span>
+ </div>
+ <h1 class="h-1 mb-3">Non-Functional Requirements Catalog</h1>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
+ Every quantitative budget, threshold, and quality attribute CyberOS commits to. Eight ISO/IEC 25010 categories — performance, reliability, security, usability, maintainability, compatibility, transferability, functional suitability — each carrying a measurable target and a verification method (T = Test, I = Inspection, D = Demo, A = Analysis). Sourced from and the SRS NFR catalog.
+ </p>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-      <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="nfrs.length"></div><div class="text-xs text-slate-500 font-medium mt-1">NFRs total</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-rose-600" x-text="countByCategory('SEC')"></div><div class="text-xs text-slate-500 font-medium mt-1">SEC (Security)</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-emerald-600" x-text="countByCategory('PERF')"></div><div class="text-xs text-slate-500 font-medium mt-1">PERF (Performance)</div></div>
-      <div class="bbg-card p-4"><div class="stat-num text-amber-600">8</div><div class="text-xs text-slate-500 font-medium mt-1">Categories</div></div>
-    </div>
-  </header>
+ <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+ <div class="bbg-card p-4"><div class="stat-num text-blue-600" x-text="nfrs.length"></div><div class="text-xs text-slate-500 font-medium mt-1">NFRs total</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-rose-600" x-text="countByCategory('SEC')"></div><div class="text-xs text-slate-500 font-medium mt-1">SEC (Security)</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-emerald-600" x-text="countByCategory('PERF')"></div><div class="text-xs text-slate-500 font-medium mt-1">PERF (Performance)</div></div>
+ <div class="bbg-card p-4"><div class="stat-num text-amber-600">8</div><div class="text-xs text-slate-500 font-medium mt-1">Categories</div></div>
+ </div>
+ </header>
 
-  <!-- LATENCY BUDGET VIZ -->
-  <section class="bbg-card p-5 mb-8">
-    <h2 class="h-3 mb-2">Performance budgets at a glance</h2>
-    <p class="text-sm text-slate-600 mb-3">The hot-path latencies CyberOS must hit before any feature ships. The chart plots p95 budgets (lower is better) for the latency-sensitive surfaces: BRAIN search, GraphQL queries, MCP read/write, CUO text answer, CHAT delivery and module first-paint.</p>
-    <div class="mermaid">
+ <!-- LATENCY BUDGET VIZ -->
+ <section class="bbg-card p-5 mb-8">
+ <h2 class="h-3 mb-2">Performance budgets at a glance</h2>
+ <p class="text-sm text-slate-600 mb-3">The hot-path latencies CyberOS must hit before any feature ships. The chart plots p95 budgets (lower is better) for the latency-sensitive surfaces: BRAIN search, GraphQL queries, MCP read/write, CUO text answer, CHAT delivery and module first-paint.</p>
+ <div class="mermaid">
 xychart-beta
-  title "p95 latency budgets (ms) — lower is better"
-  x-axis ["CHAT msg","BRAIN search","GraphQL","MCP read","CUO text","CHAT digest","MCP write","First-paint","Ingest"]
-  y-axis "p95 ms" 0 --> 5500
-  bar [200, 250, 400, 500, 2000, 3000, 1000, 1500, 5000]
-    </div>
-  </section>
+ title "p95 latency budgets (ms) — lower is better"
+ x-axis ["CHAT msg","BRAIN search","GraphQL","MCP read","CUO text","CHAT digest","MCP write","First-paint","Ingest"]
+ y-axis "p95 ms" 0 --> 5500
+ bar [200, 250, 400, 500, 2000, 3000, 1000, 1500, 5000]
+ </div>
+ </section>
 
-  <!-- AVAILABILITY VIZ -->
-  <section class="bbg-card p-5 mb-8">
-    <h2 class="h-3 mb-2">Availability + cost ceilings</h2>
-    <p class="text-sm text-slate-600 mb-3">Two reliability targets carry hard-stop semantics: CHAT must hit four-nine availability (≥99.9%) because Mattermost replaces Slack; the rest of the platform may operate at three-and-a-half-nine (≥99.5%). The cost ceiling steps from $380/mo at 10-person internal use to $2.2k/mo at 50 tenants.</p>
-    <div class="grid md:grid-cols-2 gap-4">
-      <div class="bbg-card p-4">
-        <div class="text-xs uppercase font-bold text-slate-500 mb-2">Availability targets</div>
-        <ul class="text-sm space-y-1">
-          <li><span class="font-mono text-emerald-700 font-bold">≥ 99.9%</span> · CHAT (~9 min/month outage budget)</li>
-          <li><span class="font-mono text-blue-700 font-bold">≥ 99.5%</span> · Platform (~3h 39m/month)</li>
-          <li><span class="font-mono text-blue-700 font-bold">≥ 99.5%</span> · BRAIN search</li>
-          <li><span class="font-mono text-slate-700 font-bold">RPO ≤ 1h</span> · backup recovery point</li>
-          <li><span class="font-mono text-slate-700 font-bold">RTO ≤ 4h</span> · recovery time objective</li>
-          <li><span class="font-mono text-slate-700 font-bold">DR ≤ 24h</span> · cross-region failover (P3)</li>
-        </ul>
-      </div>
-      <div class="bbg-card p-4">
-        <div class="text-xs uppercase font-bold text-slate-500 mb-2">Cost ceilings</div>
-        <ul class="text-sm space-y-1">
-          <li><span class="font-mono text-emerald-700 font-bold">≤ $380/mo</span> · infra · internal 10-person use</li>
-          <li><span class="font-mono text-emerald-700 font-bold">≤ $150/mo</span> · LLM · internal</li>
-          <li><span class="font-mono text-amber-700 font-bold">≤ $2.2k/mo</span> · infra · 50-tenant scale</li>
-          <li><span class="font-mono text-amber-700 font-bold">≤ $4/u/mo</span> · LLM · per active user · 50-tenant</li>
-          <li><span class="font-mono text-slate-700 font-bold">≤ $50K</span> · Singapore HoldCo flip budget (RSK-14)</li>
-        </ul>
-      </div>
-    </div>
-  </section>
+ <!-- AVAILABILITY VIZ -->
+ <section class="bbg-card p-5 mb-8">
+ <h2 class="h-3 mb-2">Availability + cost ceilings</h2>
+ <p class="text-sm text-slate-600 mb-3">Two reliability targets carry hard-stop semantics: CHAT must hit four-nine availability (≥99.9%) because Mattermost replaces Slack; the rest of the platform may operate at three-and-a-half-nine (≥99.5%). The cost ceiling steps from $380/mo at 10-person internal use to $2.2k/mo at 50 tenants.</p>
+ <div class="grid md:grid-cols-2 gap-4">
+ <div class="bbg-card p-4">
+ <div class="text-xs uppercase font-bold text-slate-500 mb-2">Availability targets</div>
+ <ul class="text-sm space-y-1">
+ <li><span class="font-mono text-emerald-700 font-bold">≥ 99.9%</span> · CHAT (~9 min/month outage budget)</li>
+ <li><span class="font-mono text-blue-700 font-bold">≥ 99.5%</span> · Platform (~3h 39m/month)</li>
+ <li><span class="font-mono text-blue-700 font-bold">≥ 99.5%</span> · BRAIN search</li>
+ <li><span class="font-mono text-slate-700 font-bold">RPO ≤ 1h</span> · backup recovery point</li>
+ <li><span class="font-mono text-slate-700 font-bold">RTO ≤ 4h</span> · recovery time objective</li>
+ <li><span class="font-mono text-slate-700 font-bold">DR ≤ 24h</span> · cross-region failover (P3)</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-4">
+ <div class="text-xs uppercase font-bold text-slate-500 mb-2">Cost ceilings</div>
+ <ul class="text-sm space-y-1">
+ <li><span class="font-mono text-emerald-700 font-bold">≤ $380/mo</span> · infra · internal 10-person use</li>
+ <li><span class="font-mono text-emerald-700 font-bold">≤ $150/mo</span> · LLM · internal</li>
+ <li><span class="font-mono text-amber-700 font-bold">≤ $2.2k/mo</span> · infra · 50-tenant scale</li>
+ <li><span class="font-mono text-amber-700 font-bold">≤ $4/u/mo</span> · LLM · per active user · 50-tenant</li>
+ <li><span class="font-mono text-slate-700 font-bold">≤ $50K</span> · Singapore HoldCo flip budget (RSK-14)</li>
+ </ul>
+ </div>
+ </div>
+ </section>
 
-  <!-- FILTER UI -->
-  <section class="bbg-card p-5 mb-8 no-print">
-    <div class="filter-row">
-      <label for="filter-cat">Category</label>
-      <select id="filter-cat" x-model="filterCategory">
-        <option value="all">All categories</option>
-        <template x-for="c in categories" :key="c.key"><option :value="c.key" x-text="`${c.code} — ${c.name} (${countByCategory(c.key)})`"></option></template>
-      </select>
-      <label for="filter-search" class="ml-4">Search</label>
-      <input id="filter-search" type="search" x-model="searchQuery" placeholder="e.g. ‘p95’, ‘WCAG’, ‘ISO 27001’…">
-    </div>
-    <div class="filter-row">
-      <label>Phase</label>
-      <template x-for="p in ['all','p0','p1','p2','p3','p4']" :key="p">
-        <button class="chip" :class="{ 'active': filterPhase === p, [`chip-${p}`]: filterPhase === p }" @click="filterPhase = p" x-text="p.toUpperCase()"></button>
-      </template>
-    </div>
-    <div class="filter-row">
-      <label>Verify</label>
-      <template x-for="v in ['all','T','I','D','A']" :key="v">
-        <button class="chip" :class="{ 'active': filterVerify === v }" @click="filterVerify = v" x-text="v"></button>
-      </template>
-    </div>
-    <div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-100">
-      <div class="text-xs text-slate-500"><strong x-text="visibleCount()"></strong> of <strong x-text="nfrs.length"></strong> NFRs match current filters.</div>
-      <button class="btn btn-secondary text-xs" @click="reset()">Reset filters</button>
-    </div>
-  </section>
+ <!-- FILTER UI -->
+ <section class="bbg-card p-5 mb-8 no-print">
+ <div class="filter-row">
+ <label for="filter-cat">Category</label>
+ <select id="filter-cat" x-model="filterCategory">
+ <option value="all">All categories</option>
+ <template x-for="c in categories":key="c.key"><option:value="c.key" x-text="`${c.code} — ${c.name} (${countByCategory(c.key)})`"></option></template>
+ </select>
+ <label for="filter-search" class="ml-4">Search</label>
+ <input id="filter-search" type="search" x-model="searchQuery" placeholder="e.g. ‘p95’, ‘WCAG’, ‘ISO 27001’…">
+ </div>
+ <div class="filter-row">
+ <label>Phase</label>
+ <template x-for="p in ['all','p0','p1','p2','p3','p4']":key="p">
+ <button class="chip":class="{ 'active': filterPhase === p, [`chip-${p}`]: filterPhase === p }" @click="filterPhase = p" x-text="p.toUpperCase"></button>
+ </template>
+ </div>
+ <div class="filter-row">
+ <label>Verify</label>
+ <template x-for="v in ['all','T','I','D','A']":key="v">
+ <button class="chip":class="{ 'active': filterVerify === v }" @click="filterVerify = v" x-text="v"></button>
+ </template>
+ </div>
+ <div class="flex items-center justify-between mt-2 pt-3 border-t border-slate-100">
+ <div class="text-xs text-slate-500"> of NFRs match current filters.</div>
+ <button class="btn btn-secondary text-xs" @click="reset">Reset filters</button>
+ </div>
+ </section>
 
-  <div class="grid lg:grid-cols-4 gap-6">
-    <aside class="lg:col-span-1 no-print">
-      <div class="toc-sticky bbg-card">
-        <h3 class="h-eyebrow mb-3">Categories</h3>
-        <template x-for="c in categories" :key="c.key">
-          <a class="toc-link" :href="`#${c.key}`">
-            <span x-text="`${c.code} · ${c.name}`"></span>
-            <span class="count" x-text="countByCategory(c.key)"></span>
-          </a>
-        </template>
-      </div>
-    </aside>
+ <div class="grid lg:grid-cols-4 gap-6">
+ <aside class="lg:col-span-1 no-print">
+ <div class="toc-sticky bbg-card">
+ <h3 class="h-eyebrow mb-3">Categories</h3>
+ <template x-for="c in categories":key="c.key">
+ <a class="toc-link":href="`#${c.key}`">
+ <span x-text="`${c.code} · ${c.name}`"></span>
+ <span class="count" x-text="countByCategory(c.key)"></span>
+ </a>
+ </template>
+ </div>
+ </aside>
 
-    <main class="lg:col-span-3">
+ <main class="lg:col-span-3">
 
-      <template x-for="c in categories" :key="c.key">
-        <section :id="c.key" class="cat-section">
-          <header class="section-head">
-            <span class="nfr-id" :class="`nfr-${c.key}`" x-text="c.code"></span>
-            <h2 x-text="c.name"></h2>
-            <span class="meta" x-text="c.meta"></span>
-          </header>
-          <template x-for="nfr in nfrs.filter(n => n.category === c.key)" :key="nfr.id">
-            <article class="bbg-card nfr-card" x-show="matches(nfr)">
-              <header>
-                <span class="nfr-id" :class="`nfr-${nfr.category}`" x-text="nfr.id"></span>
-                <span class="target-pill" x-text="nfr.target"></span>
-                <span class="phase-chip" :class="`phase-${nfr.phase}`" x-text="nfr.phase.toUpperCase()"></span>
-                <span class="verify-chip verify-t" x-text="`Verify: ${nfr.verify}`"></span>
-              </header>
-              <h3 x-text="nfr.title"></h3>
-              <p class="description" x-text="nfr.description"></p>
-              <dl class="grid-info">
-                <dt>Measurement</dt><dd x-text="nfr.measurement"></dd>
-                <dt>Modules</dt><dd x-text="nfr.modules"></dd>
-                <dt>Reference</dt><dd class="font-mono" x-text="nfr.reference"></dd>
-              </dl>
-            </article>
-          </template>
-        </section>
-      </template>
+ <template x-for="c in categories":key="c.key">
+ <section:id="c.key" class="cat-section">
+ <header class="section-head">
+ <span class="nfr-id":class="`nfr-${c.key}`" x-text="c.code"></span>
+ <h2 x-text="c.name"></h2>
+ <span class="meta" x-text="c.meta"></span>
+ </header>
+ <template x-for="nfr in nfrs.filter(n => n.category === c.key)":key="nfr.id">
+ <article class="bbg-card nfr-card" x-show="matches(nfr)">
+ <header>
+ <span class="nfr-id":class="`nfr-${nfr.category}`" x-text="nfr.id"></span>
+ <span class="target-pill" x-text="nfr.target"></span>
+ <span class="phase-chip":class="`phase-${nfr.phase}`" x-text="nfr.phase.toUpperCase"></span>
+ <span class="verify-chip verify-t" x-text="`Verify: ${nfr.verify}`"></span>
+ </header>
+ <h3 x-text="nfr.title"></h3>
+ <p class="description" x-text="nfr.description"></p>
+ <dl class="grid-info">
+ <dt>Measurement</dt><dd x-text="nfr.measurement"></dd>
+ <dt>Modules</dt><dd x-text="nfr.modules"></dd>
+ <dt>Reference</dt><dd class="font-mono" x-text="nfr.reference"></dd>
+ </dl>
+ </article>
+ </template>
+ </section>
+ </template>
 
-      <div x-show="visibleCount() === 0" class="bbg-card p-10 text-center">
-        <p class="text-slate-500">No NFRs match the current filters. <button class="text-blue-600 font-bold underline" @click="reset()">Reset</button> to see the full catalog.</p>
-      </div>
+ <div x-show="visibleCount === 0" class="bbg-card p-10 text-center">
+ <p class="text-slate-500">No NFRs match the current filters. <button class="text-blue-600 font-bold underline" @click="reset">Reset</button> to see the full catalog.</p>
+ </div>
 
-    </main>
-  </div>
+ </main>
+ </div>
 
-  <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
-    <p>CyberOS Documentation · NFR Catalog · PRD v2026.05 §11.2 + SRS §5</p>
-  </div>
+ <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
+ <p>CyberOS Documentation · NFR Catalog · PRD v2026.05 §11.2 + </p>
+ </div>
 </div>
 
 <script>
-function nfrCatalog() {
-  return {
-    filterCategory: 'all',
-    filterPhase: 'all',
-    filterVerify: 'all',
-    searchQuery: '',
-    categories: [
-      { key:'perf',  code:'PERF',   name:'Performance Efficiency', meta:'PRD §11.2.1 · 18 NFRs' },
-      { key:'rel',   code:'REL',    name:'Reliability',            meta:'PRD §11.2.2 · 12 NFRs' },
-      { key:'sec',   code:'SEC',    name:'Security',               meta:'PRD §11.2.3 · 24 NFRs' },
-      { key:'usab',  code:'USAB',   name:'Usability & Accessibility', meta:'PRD §11.2.4 · 12 NFRs' },
-      { key:'maint', code:'MAINT',  name:'Maintainability',        meta:'PRD §11.2.5 · 12 NFRs' },
-      { key:'compat',code:'COMPAT', name:'Compatibility',          meta:'PRD §11.2.6 · 10 NFRs' },
-      { key:'tran',  code:'TRAN',   name:'Transferability',        meta:'PRD §11.2.7 · 6 NFRs' },
-      { key:'func',  code:'FUNC',   name:'Functional Suitability', meta:'PRD §11.2.8 · 6 NFRs' },
-    ],
-    nfrs: [],
-    init() { this.nfrs = NFR_DATA; },
-    matches(n) {
-      if (this.filterCategory !== 'all' && n.category !== this.filterCategory) return false;
-      if (this.filterPhase !== 'all' && n.phase !== this.filterPhase) return false;
-      if (this.filterVerify !== 'all' && !n.verify.includes(this.filterVerify)) return false;
-      if (this.searchQuery) {
-        const q = this.searchQuery.toLowerCase();
-        return n.id.toLowerCase().includes(q) || n.title.toLowerCase().includes(q) ||
-               n.description.toLowerCase().includes(q) || n.target.toLowerCase().includes(q);
-      }
-      return true;
-    },
-    visibleCount() { return this.nfrs.filter(n => this.matches(n)).length; },
-    countByCategory(c) { return this.nfrs.filter(n => n.category === c).length; },
-    reset() { this.filterCategory='all'; this.filterPhase='all'; this.filterVerify='all'; this.searchQuery=''; },
-  };
+function nfrCatalog {
+ return {
+ filterCategory: 'all',
+ filterPhase: 'all',
+ filterVerify: 'all',
+ searchQuery: '',
+ categories: [
+ { key:'perf', code:'PERF', name:'Performance Efficiency', meta:' · 18 NFRs' },
+ { key:'rel', code:'REL', name:'Reliability', meta:' · 12 NFRs' },
+ { key:'sec', code:'SEC', name:'Security', meta:' · 24 NFRs' },
+ { key:'usab', code:'USAB', name:'Usability & Accessibility', meta:' · 12 NFRs' },
+ { key:'maint', code:'MAINT', name:'Maintainability', meta:' · 12 NFRs' },
+ { key:'compat',code:'COMPAT', name:'Compatibility', meta:' · 10 NFRs' },
+ { key:'tran', code:'TRAN', name:'Transferability', meta:' · 6 NFRs' },
+ { key:'func', code:'FUNC', name:'Functional Suitability', meta:' · 6 NFRs' },
+ ],
+ nfrs:,
+ init { this.nfrs = NFR_DATA; },
+ matches(n) {
+ if (this.filterCategory !== 'all' && n.category !== this.filterCategory) return false;
+ if (this.filterPhase !== 'all' && n.phase !== this.filterPhase) return false;
+ if (this.filterVerify !== 'all' && !n.verify.includes(this.filterVerify)) return false;
+ if (this.searchQuery) {
+ const q = this.searchQuery.toLowerCase;
+ return n.id.toLowerCase.includes(q) || n.title.toLowerCase.includes(q) ||
+ n.description.toLowerCase.includes(q) || n.target.toLowerCase.includes(q);
+ }
+ return true;
+ },
+ visibleCount { return this.nfrs.filter(n => this.matches(n)).length; },
+ countByCategory(c) { return this.nfrs.filter(n => n.category === c).length; },
+ reset { this.filterCategory='all'; this.filterPhase='all'; this.filterVerify='all'; this.searchQuery=''; },
+ };
 }
 
 const NFR_DATA = [
-  // ============ PERF ============
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'GraphQL p95 latency', description:'p95 latency for GraphQL Federation queries on the host shell.', target:'≤ 400 ms', measurement:'Apollo Router span ts → response ts', modules:'GraphQL · all subgraphs', verify:'T', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'CHAT message deliver p95', description:'Time from send-button to peer-render in CHAT.', target:'≤ 200 ms', measurement:'NATS subject latency + WebSocket fanout', modules:'CHAT', verify:'T', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'CUO text-answer p95', description:'p95 latency for CUO text answer (first byte to last byte).', target:'≤ 2 s', measurement:'CUO supervisor span', modules:'CUO · AI Gateway · BRAIN', verify:'T', reference:'PRD §11.2.1 / (FR pending)'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'BRAIN search p95', description:'p95 hybrid search latency over a 1M-chunk corpus.', target:'≤ 250 ms on 1M-chunk corpus', measurement:'Synthetic load with reranker enabled', modules:'BRAIN', verify:'T', reference:'PRD §11.2.1 / (FR pending)'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'BRAIN ingest-to-searchable p95', description:'From write commit to availability in hybrid search.', target:'≤ 5 s', measurement:'NATS event → BRAIN search-hit', modules:'BRAIN · NATS', verify:'T', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'MCP read tool p95', description:'p95 latency for any tool marked readOnly=true.', target:'≤ 500 ms', measurement:'MCP gateway span', modules:'MCP', verify:'T', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'MCP write tool p95', description:'p95 latency for non-readOnly tools.', target:'≤ 1 s', measurement:'MCP gateway span', modules:'MCP', verify:'T', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'Module first-paint', description:'Cold first-paint of any Module Federation remote.', target:'≤ 1.5 s', measurement:'Lighthouse FCP on cold cache', modules:'host shell · all FE remotes', verify:'T', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'Initial JS bundle size', description:'Initial JS bundle (gzipped) per module remote.', target:'≤ 50 KB JS gzipped', measurement:'Webpack stats output', modules:'all FE remotes', verify:'I', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'Cost ceiling (internal)', description:'Monthly USD cost ceiling for the 10-person internal deployment.', target:'≤ $380/mo infra · ≤ $150/mo LLM', measurement:'CFO monthly cost rollup', modules:'all', verify:'I', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p3', title:'Cost ceiling (50-tenant)', description:'Monthly USD cost ceiling at 50-tenant scale.', target:'≤ $2,200/mo infra · ≤ $4/active user/month LLM', measurement:'Per-tenant cost dashboard', modules:'all', verify:'I', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'p99 release-over-release degradation', description:'p99 latency MUST NOT degrade more than 20% release-over-release without rationale.', target:'< 20% degradation', measurement:'CI gate compares p99 vs baseline', modules:'all', verify:'T (CI gate)', reference:'PRD §11.2.1'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'Prompt-cache hit rate', description:'AI Gateway prompt-cache hit rate for system-prompt-stable calls.', target:'≥ 30% P0 · ≥ 60% P2+', measurement:'AI Gateway cache metric', modules:'AI Gateway', verify:'T', reference:'(FR pending) / N(FR pending)'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'Skill cold start p95', description:'WASM skill cold start including AOT cache lookup.', target:'≤ 80 ms', measurement:'wasmtime cold-start microbench', modules:'SKILL', verify:'T', reference:'inferred from Phase 5'},
-  { id:'N(FR pending)', category:'perf', phase:'p0', title:'Skill hot path execution p95', description:'Steady-state skill execution latency (warm cache).', target:'≤ 5 ms', measurement:'Criterion benchmark', modules:'SKILL', verify:'T', reference:'inferred from Phase 4'},
-  { id:'N(FR pending)', category:'perf', phase:'p1', title:'CHAT /summarise p95', description:'/summarise command end-to-end latency.', target:'≤ 3 s', measurement:'NATS span', modules:'CHAT · AI Gateway', verify:'T', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'perf', phase:'p1', title:'CHAT smart-reply p95', description:'Suggested-reply generation latency.', target:'≤ 1.4 s', measurement:'CHAT span', modules:'CHAT · AI Gateway', verify:'T', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'perf', phase:'p3', title:'CUO voice turn-completion p95', description:'P3 voice modality turn-completion latency.', target:'≤ 800 ms', measurement:'Voice trace', modules:'CUO · ASR · TTS', verify:'T', reference:'(FR pending)'},
-
-  // ============ REL ============
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'Platform availability', description:'Platform availability over a 28-day rolling window.', target:'≥ 99.5%', measurement:'OBS uptime probe', modules:'all', verify:'T', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'CHAT availability', description:'CHAT availability (Mattermost-replacement SLO).', target:'≥ 99.9%', measurement:'OBS uptime probe', modules:'CHAT', verify:'T', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'BRAIN search availability', description:'BRAIN search availability.', target:'≥ 99.5%', measurement:'BRAIN /search probe', modules:'BRAIN', verify:'T', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'AI Gateway failover', description:'AI Gateway with provider failover MUST be continuous on primary outage.', target:'Continuous on primary outage', measurement:'Chaos drill — kill primary', modules:'AI Gateway', verify:'T+I', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'Backup RPO', description:'Maximum data loss in disaster.', target:'≤ 1 h', measurement:'Backup-config inspection', modules:'PG · S3', verify:'I', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'Backup RTO', description:'Recovery time objective from full disaster.', target:'≤ 4 h', measurement:'DR drill quarterly', modules:'all', verify:'D', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p3', title:'Cross-region failover', description:'P3 cross-region failover budget.', target:'≤ 24 h', measurement:'DR drill', modules:'all', verify:'D', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'Persisted-query cache hit rate', description:'GraphQL persisted-query cache hit rate.', target:'≥ 70%', measurement:'Apollo Router metric', modules:'GraphQL', verify:'T', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'Quarterly DR drill', description:'DR drill MUST be exercised at least once per quarter and findings filed.', target:'≥ 4 drills/year', measurement:'Drill log + retro', modules:'all', verify:'I', reference:'PRD §11.2.2'},
-  { id:'N(FR pending)', category:'rel', phase:'p0', title:'BRAIN chain-integrity', description:'BRAIN audit-chain MUST verify end-to-end at every consolidation; any break is sev-0.', target:'Always verifies', measurement:'cyberos doctor + consolidation log', modules:'BRAIN', verify:'T', reference:'AGENTS.md §6 / RSK-12-mitigation'},
-  { id:'N(FR pending)', category:'rel', phase:'p1', title:'NATS JetStream retention', description:'JetStream per-subject retention policy must be configurable and inspected.', target:'Per-subject, ≥ 7 days for sensitive subjects', measurement:'JetStream config inspection', modules:'NATS', verify:'I', reference:'inferred'},
-  { id:'N(FR pending)', category:'rel', phase:'p2', title:'pgvector + AGE shard-rebalance budget', description:'Online shard-rebalance must keep p95 within +25% during operation.', target:'p95 +25% max during rebalance', measurement:'Synthetic load during rebalance', modules:'BRAIN data plane', verify:'T', reference:'RSK-06-mitigation'},
-
-  // ============ SEC ============
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Tenant data leakage incidents', description:'Zero tolerance for cross-tenant data leakage in any form.', target:'= 0; sev-0', measurement:'Synthetic cross-tenant probe + audit review', modules:'all', verify:'T+A', reference:'PRD §11.2.3'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'P1 base-salary reduction', description:'No system-driven reduction of P1 base salary in cash.', target:'= 0; legal commitment', measurement:'REW recompute property test', modules:'REW', verify:'T+A', reference:'PRD §11.2.3 / (FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'Parameter version retroactive mutation', description:'Published REW/LEARN parameter versions are immutable.', target:'= 0; immutable by construction', measurement:'Append-only column + DB trigger', modules:'REW · LEARN', verify:'A', reference:'PRD §11.2.3'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'Compensation in BRAIN', description:'Compensation values MUST never appear in BRAIN ingestion.', target:'= 0; ingestion denylist', measurement:'Synthetic comp event + denylist trace', modules:'BRAIN · REW · ESOP', verify:'T+A', reference:'PRD §11.2.3 / DEC-036'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Citation-missing-when-source-exists', description:'CUO answer without citation when a citable source exists must be zero.', target:'= 0; CI regression test', measurement:'200-query eval set + citation probe', modules:'CUO · BRAIN', verify:'T', reference:'PRD §11.2.3 / (FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Auto-act on irreversible without confirm', description:'CUO MUST never auto-act on irreversible operations without confirm.', target:'= 0; runtime check', measurement:'Tool annotation + audit trace', modules:'CUO · MCP', verify:'T+A', reference:'PRD §11.2.3 / (FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Prompt-injection exfiltration', description:'Email/document content must not exfiltrate via CUO/Genie.', target:'= 0; CaMeL enforced', measurement:'CaMeL test suite + adversarial corpus', modules:'CUO · EMAIL · CaMeL', verify:'T+A', reference:'PRD §11.2.3 / (FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'TLS everywhere', description:'mTLS in cluster; HTTPS at the edge.', target:'mTLS in cluster; HTTPS external', measurement:'Service-mesh policy + edge cert', modules:'all', verify:'I', reference:'PRD §11.2.3'},
-  { id:'N(FR pending)', category:'sec', phase:'p2', title:'Annual penetration test', description:'Penetration test cadence.', target:'Annual (P2+); after major releases', measurement:'External pentest report', modules:'all', verify:'D', reference:'PRD §11.2.3'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Vulnerability remediation SLO', description:'Time to remediate by severity.', target:'Critical ≤ 24 h; High ≤ 7 d', measurement:'CVE tracker + ticket SLA', modules:'all', verify:'I', reference:'PRD §11.2.3'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'Trust Center sub-processor list', description:'Sub-processor list must be public on Trust Center.', target:'Always', measurement:'Trust Center inspection', modules:'CP · KB', verify:'I', reference:'PRD §11.2.3'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'OWASP GenAI Top-10 coverage', description:'All present-day OWASP GenAI Top-10 mitigations addressed.', target:'All items addressed', measurement:'Threat-model + mitigation matrix', modules:'all AI-touching', verify:'A', reference:'PRD §11.2.3'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Audit chain tamper detection', description:'Tamper detection job MUST run at least daily.', target:'≥ 1/day; sev-1 alert on break', measurement:'Cron schedule + alert wiring', modules:'BRAIN · OBS', verify:'T', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'WebAuthn for sign authority', description:'WebAuthn required for any role with sign authority.', target:'100% coverage', measurement:'AUTH role registry inspection', modules:'AUTH · REW · ESOP · DOC', verify:'I', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Secrets in vault', description:'No secrets in source; all in vault with rotation.', target:'0 secrets in repo', measurement:'CI secret-scan + vault inventory', modules:'all', verify:'A', reference:'inferred'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'Per-tenant residency pin', description:'Tenant residency must be immutable after first 7 days post-signup.', target:'Immutable after 7d', measurement:'TEN config + migration script', modules:'TEN · CP', verify:'I', reference:'inferred'},
-  { id:'N(FR pending)', category:'sec', phase:'p2', title:'GDPR Article 17 erasure deadline', description:'RTBE requests fulfilled within statutory deadlines.', target:'GDPR ≤ 30d · PDPL ≤ 60d', measurement:'RTBE ticket SLA + sample audit', modules:'CP · BRAIN', verify:'T', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p2', title:'CMEK / KMS rotation', description:'KMS keys MUST rotate at least annually; on-demand rotation supported.', target:'≥ 1/year', measurement:'KMS rotation log', modules:'KMS', verify:'I', reference:'inferred'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'PII redaction recall', description:'PII redaction recall on Vietnamese + English corpora.', target:'≥ 99% (AI Gateway) · ≥ 99.5% (OBS logs)', measurement:'Presidio + custom test set', modules:'AI · OBS', verify:'T', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p0', title:'Path-traversal acceptance', description:'No path-traversal payload across the BRAIN attack corpus is accepted.', target:'0 acceptance · sev-0 on any', measurement:'78-payload adversarial test', modules:'BRAIN', verify:'T+A', reference:'(FR pending)/15/16'},
-  { id:'N(FR pending)', category:'sec', phase:'p2', title:'Annex III §4 conformity pack', description:'EU AI Act high-risk Annex III §4 conformity pack at P2 for REW + LEARN.', target:'Pack published & signed', measurement:'Pack inspection + counsel review', modules:'REW · LEARN', verify:'I', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'Audit log retention', description:'Audit log retention horizon.', target:'≥ 7 years for compliance-relevant rows', measurement:'BRAIN consolidation policy', modules:'BRAIN · CP', verify:'I', reference:'inferred'},
-  { id:'N(FR pending)', category:'sec', phase:'p1', title:'Compensation KMS isolation', description:'Compensation data must be encrypted with a REW-specific KMS key.', target:'Distinct key per scope', measurement:'KMS inventory inspection', modules:'REW · KMS', verify:'I', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'sec', phase:'p2', title:'Annual DPIA refresh', description:'DPIA must be refreshed annually and on any high-risk processing change.', target:'1/year + on change', measurement:'DPIA log + DPO sign-off', modules:'CP', verify:'I', reference:'PRD §12'},
-
-  // ============ USAB ============
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'WCAG 2.2 Level AA', description:'WCAG 2.2 Level AA conformance across host shell + modules.', target:'Level AA', measurement:'Axe + Lighthouse + manual sweep', modules:'all FE remotes', verify:'T+I', reference:'PRD §11.2.4'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'VPAT 2.5 INT publish', description:'VPAT 2.5 INT (International) published at P0 exit.', target:'Published P0 exit', measurement:'Trust Center artefact', modules:'all FE remotes', verify:'I', reference:'PRD §11.2.4'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'Keyboard-only operability', description:'Every interaction must be reachable; visible focus indicator on every focusable element.', target:'100% keyboard-reachable', measurement:'Manual sweep + axe', modules:'all FE remotes', verify:'T', reference:'PRD §11.2.4'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'Vietnamese diacritic stack-fidelity', description:'Diacritic stack-fidelity for Vietnamese typography per Design System Part 5.', target:'No diacritic mis-stacking', measurement:'Type review on rendered fixtures', modules:'all FE remotes', verify:'I', reference:'PRD §11.2.4'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'CUO citation rate', description:'CUO citation rate when relevant chunks exist.', target:'≥ 98%', measurement:'Eval-set probe', modules:'CUO · BRAIN', verify:'T', reference:'PRD §11.2.4 / N(FR pending)'},
-  { id:'N(FR pending)', category:'usab', phase:'p3', title:'Mobile P3 viewport parity', description:'Responsive 360 px+; 80% feature parity at P3.', target:'80% feature parity', measurement:'Feature-matrix audit', modules:'all FE remotes', verify:'T', reference:'PRD §11.2.4'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'Founder daily-review budget', description:'Founder daily review session must complete within budget.', target:'< 10 min', measurement:'OBS trace span', modules:'CUO · OBS', verify:'T', reference:'PRD §11.2.4 / RSK-09-mitigation'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'Reduced-motion respect', description:'prefers-reduced-motion MUST disable parallax + non-essential animation.', target:'100% respect', measurement:'Manual sweep + CSS audit', modules:'all FE remotes', verify:'T', reference:'inferred'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'Colour contrast', description:'Text contrast ratio per WCAG 2.2 AA (≥ 4.5:1 body; ≥ 3:1 large).', target:'≥ 4.5:1 body', measurement:'Axe audit', modules:'all FE remotes', verify:'T', reference:'inferred / WCAG'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'Persistent AI-Assisted badge', description:'EU AI Act Article 50 transparency: persistent badge on every AI surface.', target:'100% AI surfaces', measurement:'Component audit', modules:'CUO · CHAT · KB', verify:'I', reference:'PRD §12 / (FR pending)'},
-  { id:'N(FR pending)', category:'usab', phase:'p3', title:'Bilingual (Vi/En) UI', description:'All user-facing strings must have Vi + En translations.', target:'100% string coverage', measurement:'i18n catalog completeness check', modules:'all FE remotes', verify:'I', reference:'inferred'},
-  { id:'N(FR pending)', category:'usab', phase:'p0', title:'Error-message readability', description:'Error messages must be human-readable, never raw stack traces.', target:'0 raw traces in UI', measurement:'Error-boundary audit', modules:'all FE remotes', verify:'I', reference:'inferred'},
-
-  // ============ MAINT ============
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Module CI duration', description:'CI pipeline duration per module from PR open to merge.', target:'≤ 10 min', measurement:'CI run timing', modules:'all', verify:'T (CI gate)', reference:'PRD §11.2.5'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Test coverage per module', description:'Statement + branch coverage per module.', target:'≥ 70% line · ≥ 60% branch', measurement:'Coverage report in CI', modules:'all', verify:'T', reference:'PRD §11.2.5'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'CODEOWNERS file', description:'CODEOWNERS file present per module mapping to a single owner.', target:'Present per module', measurement:'Repo audit', modules:'all', verify:'I', reference:'PRD §11.2.5'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Schema deprecation notice', description:'GraphQL schema removal MUST give ≥ 1 phase notice before removal.', target:'≥ 1 phase notice', measurement:'Apollo Studio diff', modules:'GraphQL', verify:'I', reference:'PRD §11.2.5'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Module-rebuild on token change', description:'Token-change rebuild time including tests.', target:'≤ 30 min', measurement:'Token-change CI run', modules:'all FE remotes', verify:'T', reference:'PRD §11.2.5'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Skill hot-reload', description:'SKILL.md edits must be picked up without restart.', target:'≤ 60 s', measurement:'Live-update probe', modules:'SKILL', verify:'D', reference:'PRD §11.2.5 / (FR pending)'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Build determinism', description:'Re-running CI on the same SHA produces identical artefact hashes.', target:'Identical hashes', measurement:'Reproducible-build check', modules:'all', verify:'T', reference:'inferred'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Dependency audit', description:'npm/pip/cargo audit must run on every PR with no Critical findings.', target:'0 Critical CVEs', measurement:'CI gate', modules:'all', verify:'T', reference:'inferred / N(FR pending)'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'CHANGELOG newest-first', description:'Every shipped module maintains a CHANGELOG newest-first.', target:'Present + current', measurement:'Repo audit', modules:'all', verify:'I', reference:'inferred / CHANGELOG policy'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'PRD-FR traceability', description:'Every FR row in the PRD maps to an open or closed issue.', target:'100% traceability', measurement:'Catalog cross-link audit', modules:'PM', verify:'I', reference:'PRD §16'},
-  { id:'N(FR pending)', category:'maint', phase:'p1', title:'Skill schema-drift detection', description:'Spec validator MUST flag drift between local skills and Anthropic Skills spec.', target:'Continuous', measurement:'CI gate', modules:'SKILL', verify:'I', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Apollo Federation composition check', description:'Federation composition gate runs in CI on every PR.', target:'Composition green', measurement:'Apollo Rover check', modules:'GraphQL · all subgraphs', verify:'T', reference:'(FR pending) / N(FR pending)'},
-
-  // ============ COMPAT ============
-  { id:'N(FR pending)', category:'compat', phase:'p0', title:'Browser support', description:'Last-two-major versions of Chromium / Firefox / Safari.', target:'Chromium · Firefox · Safari last 2 versions', measurement:'BrowserStack matrix', modules:'all FE remotes', verify:'T', reference:'PRD §11.2.6'},
-  { id:'N(FR pending)', category:'compat', phase:'p0', title:'Desktop bundles', description:'Tauri-bundle ships for Windows 10+, macOS 12+, Ubuntu 22+.', target:'Win 10+ · macOS 12+ · Ubuntu 22+', measurement:'Bundle build + smoke', modules:'host shell', verify:'D', reference:'PRD §11.2.6'},
-  { id:'N(FR pending)', category:'compat', phase:'p0', title:'MCP client compatibility', description:'MCP gateway must work with Claude Desktop, Claude Code, Cursor, Cline at GA versions.', target:'≥ 4 clients green', measurement:'MCP client compat matrix', modules:'MCP', verify:'T', reference:'PRD §11.2.6'},
-  { id:'N(FR pending)', category:'compat', phase:'p1', title:'Email RFC compliance', description:'RFC 5322 + i18n RFC 6532; UTF-8 throughout.', target:'RFC 5322 + 6532 pass', measurement:'Email-test suite', modules:'EMAIL', verify:'T', reference:'PRD §11.2.6'},
-  { id:'N(FR pending)', category:'compat', phase:'p1', title:'iCalendar export', description:'RFC 5545 export per HR + PROJ.', target:'RFC 5545 pass', measurement:'External validator', modules:'HR · PROJ', verify:'T', reference:'PRD §11.2.6'},
-  { id:'N(FR pending)', category:'compat', phase:'p2', title:'PDF/A-2 archival', description:'INV + DOC archival format.', target:'PDF/A-2', measurement:'PDF/A validator', modules:'INV · DOC', verify:'T', reference:'PRD §11.2.6'},
-  { id:'N(FR pending)', category:'compat', phase:'p0', title:'OCI container compliance', description:'Every backend service ships as OCI-compliant container image.', target:'OCI v1.x', measurement:'Image inspect', modules:'all backend', verify:'I', reference:'inferred'},
-  { id:'N(FR pending)', category:'compat', phase:'p0', title:'SQL portable schema', description:'Database schema must use ANSI-portable types where possible; PG-specific extensions documented.', target:'Documented divergence', measurement:'Schema doc review', modules:'data plane', verify:'I', reference:'N(FR pending)'},
-  { id:'N(FR pending)', category:'compat', phase:'p1', title:'OAuth 2.1 + PKCE compliance', description:'AUTH and MCP gateway pass OAuth 2.1 conformance suite.', target:'Conformance green', measurement:'External test suite', modules:'AUTH · MCP', verify:'T', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'compat', phase:'p2', title:'CSV / Excel export', description:'All tabular reports support CSV + XLSX export.', target:'Both formats', measurement:'Export-format audit', modules:'all reporting', verify:'I', reference:'inferred'},
-
-  // ============ TRAN ============
-  { id:'N(FR pending)', category:'tran', phase:'p4', title:'Tenant data export ≤ 24h', description:'Full export within 24h of request as signed bundle.', target:'≤ 24 h', measurement:'Export-job timing', modules:'TEN · CP · BRAIN', verify:'T+D', reference:'PRD §11.2.7'},
-  { id:'N(FR pending)', category:'tran', phase:'p4', title:'Tenant data import', description:'Standard import paths for prior CyberOS, Notion, Slack tenants.', target:'≥ 3 formats green', measurement:'Import smoke', modules:'TEN', verify:'T', reference:'PRD §11.2.7'},
-  { id:'N(FR pending)', category:'tran', phase:'p0', title:'BRAIN signed-zip portability', description:'Verifiable Ed25519 signature; Merkle proof; deterministic export.', target:'Verifies + reproducible', measurement:'Round-trip test', modules:'BRAIN', verify:'T', reference:'PRD §11.2.7 / (FR pending) / AGENTS.md §10'},
-  { id:'N(FR pending)', category:'tran', phase:'p0', title:'No vendor lock at storage', description:'S3-compatible object store; SQL portable schema.', target:'Portable', measurement:'Architecture audit', modules:'all data plane', verify:'I', reference:'PRD §11.2.7'},
-  { id:'N(FR pending)', category:'tran', phase:'p4', title:'90-day offboarding grace', description:'Offboarded tenant gets 90-day grace before irreversible delete.', target:'≥ 90 d', measurement:'TEN offboarding job', modules:'TEN', verify:'I', reference:'(FR pending)'},
-  { id:'N(FR pending)', category:'tran', phase:'p0', title:'Skill portability across hosts', description:'Anthropic-format skill MUST run unchanged in Claude Desktop, Cursor, Codex.', target:'Same skill, ≥ 3 hosts', measurement:'Skill compat matrix', modules:'SKILL', verify:'T', reference:'PRD §5.2 / (FR pending)'},
-
-  // ============ FUNC ============
-  { id:'N(FR pending)', category:'func', phase:'p0', title:'Module Ready criterion', description:'Every module satisfies the 10-item Module Ready criterion at phase exit.', target:'All 10 items', measurement:'Gate-readiness report', modules:'all', verify:'I+D', reference:'PRD §11.2.8 / §7.2'},
-  { id:'N(FR pending)', category:'func', phase:'p0', title:'GraphQL composition pass', description:'Federation composition passes for every release.', target:'Schema check pass', measurement:'Apollo Studio check', modules:'GraphQL', verify:'T', reference:'PRD §11.2.8 / (FR pending)'},
-  { id:'N(FR pending)', category:'func', phase:'p1', title:'Anti-retroactive recompute', description:'Every published payslip must recompute identically under historical parameters.', target:'Identical recompute', measurement:'Property test', modules:'REW · LEARN', verify:'T', reference:'PRD §11.2.8 / (FR pending)'},
-  { id:'N(FR pending)', category:'func', phase:'p0', title:'CUO defer-trigger coverage', description:'CUO defer-trigger coverage on irreversible operations.', target:'≥ 99%', measurement:'Tool-annotation audit', modules:'CUO · MCP', verify:'T+A', reference:'PRD §11.2.8 / (FR pending)'},
-  { id:'N(FR pending)', category:'func', phase:'p0', title:'Audit row coverage', description:'Every write through the data plane MUST emit exactly one audit row.', target:'1 row / write', measurement:'CI gate + sample audit', modules:'all data plane', verify:'T', reference:'inferred / AGENTS.md §6'},
-  { id:'N(FR pending)', category:'func', phase:'p0', title:'Determinism under replay', description:'Replaying audit rows from t0 to t1 MUST yield the same materialized state.', target:'Bit-identical', measurement:'Replay harness', modules:'BRAIN · CP', verify:'T', reference:'inferred'},
+ / ============ PERF ============
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'GraphQL p95 latency', description:'p95 latency for GraphQL Federation queries on the host shell.', target:'≤ 400 ms', measurement:'Apollo Router span ts → response ts', modules:'GraphQL · all subgraphs', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'CHAT message deliver p95', description:'Time from send-button to peer-render in CHAT.', target:'≤ 200 ms', measurement:'NATS subject latency + WebSocket fanout', modules:'CHAT', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'CUO text-answer p95', description:'p95 latency for CUO text answer (first byte to last byte).', target:'≤ 2 s', measurement:'CUO supervisor span', modules:'CUO · AI Gateway · BRAIN', verify:'T', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'BRAIN search p95', description:'p95 hybrid search latency over a 1M-chunk corpus.', target:'≤ 250 ms on 1M-chunk corpus', measurement:'Synthetic load with reranker enabled', modules:'BRAIN', verify:'T', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'BRAIN ingest-to-searchable p95', description:'From write commit to availability in hybrid search.', target:'≤ 5 s', measurement:'NATS event → BRAIN search-hit', modules:'BRAIN · NATS', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'MCP read tool p95', description:'p95 latency for any tool marked readOnly=true.', target:'≤ 500 ms', measurement:'MCP gateway span', modules:'MCP', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'MCP write tool p95', description:'p95 latency for non-readOnly tools.', target:'≤ 1 s', measurement:'MCP gateway span', modules:'MCP', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'Module first-paint', description:'Cold first-paint of any Module Federation remote.', target:'≤ 1.5 s', measurement:'Lighthouse FCP on cold cache', modules:'host shell · all FE remotes', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'Initial JS bundle size', description:'Initial JS bundle (gzipped) per module remote.', target:'≤ 50 KB JS gzipped', measurement:'Webpack stats output', modules:'all FE remotes', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'Cost ceiling (internal)', description:'Monthly USD cost ceiling for the 10-person internal deployment.', target:'≤ $380/mo infra · ≤ $150/mo LLM', measurement:'CFO monthly cost rollup', modules:'all', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p3', title:'Cost ceiling (50-tenant)', description:'Monthly USD cost ceiling at 50-tenant scale.', target:'≤ $2,200/mo infra · ≤ $4/active user/month LLM', measurement:'Per-tenant cost dashboard', modules:'all', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'p99 release-over-release degradation', description:'p99 latency MUST NOT degrade more than 20% release-over-release without rationale.', target:'< 20% degradation', measurement:'CI gate compares p99 vs baseline', modules:'all', verify:'T (CI gate)', reference:''},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'Prompt-cache hit rate', description:'AI Gateway prompt-cache hit rate for system-prompt-stable calls.', target:'≥ 30% P0 · ≥ 60% P2+', measurement:'AI Gateway cache metric', modules:'AI Gateway', verify:'T', reference:'(FR pending) / N(FR pending)'},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'Skill cold start p95', description:'WASM skill cold start including AOT cache lookup.', target:'≤ 80 ms', measurement:'wasmtime cold-start microbench', modules:'SKILL', verify:'T', reference:'inferred from Phase 5'},
+ { id:'N(FR pending)', category:'perf', phase:'p0', title:'Skill hot path execution p95', description:'Steady-state skill execution latency (warm cache).', target:'≤ 5 ms', measurement:'Criterion benchmark', modules:'SKILL', verify:'T', reference:'inferred from Phase 4'},
+ { id:'N(FR pending)', category:'perf', phase:'p1', title:'CHAT /summarise p95', description:'/summarise command end-to-end latency.', target:'≤ 3 s', measurement:'NATS span', modules:'CHAT · AI Gateway', verify:'T', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'perf', phase:'p1', title:'CHAT smart-reply p95', description:'Suggested-reply generation latency.', target:'≤ 1.4 s', measurement:'CHAT span', modules:'CHAT · AI Gateway', verify:'T', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'perf', phase:'p3', title:'CUO voice turn-completion p95', description:'P3 voice modality turn-completion latency.', target:'≤ 800 ms', measurement:'Voice trace', modules:'CUO · ASR · TTS', verify:'T', reference:'(FR pending)'},/ ============ REL ============
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'Platform availability', description:'Platform availability over a 28-day rolling window.', target:'≥ 99.5%', measurement:'OBS uptime probe', modules:'all', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'CHAT availability', description:'CHAT availability (Mattermost-replacement SLO).', target:'≥ 99.9%', measurement:'OBS uptime probe', modules:'CHAT', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'BRAIN search availability', description:'BRAIN search availability.', target:'≥ 99.5%', measurement:'BRAIN /search probe', modules:'BRAIN', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'AI Gateway failover', description:'AI Gateway with provider failover MUST be continuous on primary outage.', target:'Continuous on primary outage', measurement:'Chaos drill — kill primary', modules:'AI Gateway', verify:'T+I', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'Backup RPO', description:'Maximum data loss in disaster.', target:'≤ 1 h', measurement:'Backup-config inspection', modules:'PG · S3', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'Backup RTO', description:'Recovery time objective from full disaster.', target:'≤ 4 h', measurement:'DR drill quarterly', modules:'all', verify:'D', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p3', title:'Cross-region failover', description:'P3 cross-region failover budget.', target:'≤ 24 h', measurement:'DR drill', modules:'all', verify:'D', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'Persisted-query cache hit rate', description:'GraphQL persisted-query cache hit rate.', target:'≥ 70%', measurement:'Apollo Router metric', modules:'GraphQL', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'Quarterly DR drill', description:'DR drill MUST be exercised at least once per quarter and findings filed.', target:'≥ 4 drills/year', measurement:'Drill log + retro', modules:'all', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'rel', phase:'p0', title:'BRAIN chain-integrity', description:'BRAIN audit-chain MUST verify end-to-end at every consolidation; any break is sev-0.', target:'Always verifies', measurement:'cyberos doctor + consolidation log', modules:'BRAIN', verify:'T', reference:'AGENTS.md §6 / RSK-12-mitigation'},
+ { id:'N(FR pending)', category:'rel', phase:'p1', title:'NATS JetStream retention', description:'JetStream per-subject retention policy must be configurable and inspected.', target:'Per-subject, ≥ 7 days for sensitive subjects', measurement:'JetStream config inspection', modules:'NATS', verify:'I', reference:'inferred'},
+ { id:'N(FR pending)', category:'rel', phase:'p2', title:'pgvector + AGE shard-rebalance budget', description:'Online shard-rebalance must keep p95 within +25% during operation.', target:'p95 +25% max during rebalance', measurement:'Synthetic load during rebalance', modules:'BRAIN data plane', verify:'T', reference:'RSK-06-mitigation'},/ ============ SEC ============
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Tenant data leakage incidents', description:'Zero tolerance for cross-tenant data leakage in any form.', target:'= 0; sev-0', measurement:'Synthetic cross-tenant probe + audit review', modules:'all', verify:'T+A', reference:''},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'P1 base-salary reduction', description:'No system-driven reduction of P1 base salary in cash.', target:'= 0; legal commitment', measurement:'REW recompute property test', modules:'REW', verify:'T+A', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'Parameter version retroactive mutation', description:'Published REW/LEARN parameter versions are immutable.', target:'= 0; immutable by construction', measurement:'Append-only column + DB trigger', modules:'REW · LEARN', verify:'A', reference:''},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'Compensation in BRAIN', description:'Compensation values MUST never appear in BRAIN ingestion.', target:'= 0; ingestion denylist', measurement:'Synthetic comp event + denylist trace', modules:'BRAIN · REW · ESOP', verify:'T+A', reference:' / DEC-036'},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Citation-missing-when-source-exists', description:'CUO answer without citation when a citable source exists must be zero.', target:'= 0; CI regression test', measurement:'200-query eval set + citation probe', modules:'CUO · BRAIN', verify:'T', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Auto-act on irreversible without confirm', description:'CUO MUST never auto-act on irreversible operations without confirm.', target:'= 0; runtime check', measurement:'Tool annotation + audit trace', modules:'CUO · MCP', verify:'T+A', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Prompt-injection exfiltration', description:'Email/document content must not exfiltrate via CUO/Genie.', target:'= 0; CaMeL enforced', measurement:'CaMeL test suite + adversarial corpus', modules:'CUO · EMAIL · CaMeL', verify:'T+A', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'TLS everywhere', description:'mTLS in cluster; HTTPS at the edge.', target:'mTLS in cluster; HTTPS external', measurement:'Service-mesh policy + edge cert', modules:'all', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'sec', phase:'p2', title:'Annual penetration test', description:'Penetration test cadence.', target:'Annual (P2+); after major releases', measurement:'External pentest report', modules:'all', verify:'D', reference:''},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Vulnerability remediation SLO', description:'Time to remediate by severity.', target:'Critical ≤ 24 h; High ≤ 7 d', measurement:'CVE tracker + ticket SLA', modules:'all', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'Trust Center sub-processor list', description:'Sub-processor list must be public on Trust Center.', target:'Always', measurement:'Trust Center inspection', modules:'CP · KB', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'OWASP GenAI Top-10 coverage', description:'All present-day OWASP GenAI Top-10 mitigations addressed.', target:'All items addressed', measurement:'Threat-model + mitigation matrix', modules:'all AI-touching', verify:'A', reference:''},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Audit chain tamper detection', description:'Tamper detection job MUST run at least daily.', target:'≥ 1/day; sev-1 alert on break', measurement:'Cron schedule + alert wiring', modules:'BRAIN · OBS', verify:'T', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'WebAuthn for sign authority', description:'WebAuthn required for any role with sign authority.', target:'100% coverage', measurement:'AUTH role registry inspection', modules:'AUTH · REW · ESOP · DOC', verify:'I', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Secrets in vault', description:'No secrets in source; all in vault with rotation.', target:'0 secrets in repo', measurement:'CI secret-scan + vault inventory', modules:'all', verify:'A', reference:'inferred'},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'Per-tenant residency pin', description:'Tenant residency must be immutable after first 7 days post-signup.', target:'Immutable after 7d', measurement:'TEN config + migration script', modules:'TEN · CP', verify:'I', reference:'inferred'},
+ { id:'N(FR pending)', category:'sec', phase:'p2', title:'GDPR Article 17 erasure deadline', description:'RTBE requests fulfilled within statutory deadlines.', target:'GDPR ≤ 30d · PDPL ≤ 60d', measurement:'RTBE ticket SLA + sample audit', modules:'CP · BRAIN', verify:'T', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p2', title:'CMEK / KMS rotation', description:'KMS keys MUST rotate at least annually; on-demand rotation supported.', target:'≥ 1/year', measurement:'KMS rotation log', modules:'KMS', verify:'I', reference:'inferred'},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'PII redaction recall', description:'PII redaction recall on Vietnamese + English corpora.', target:'≥ 99% (AI Gateway) · ≥ 99.5% (OBS logs)', measurement:'Presidio + custom test set', modules:'AI · OBS', verify:'T', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p0', title:'Path-traversal acceptance', description:'No path-traversal payload across the BRAIN attack corpus is accepted.', target:'0 acceptance · sev-0 on any', measurement:'78-payload adversarial test', modules:'BRAIN', verify:'T+A', reference:'(FR pending)/15/16'},
+ { id:'N(FR pending)', category:'sec', phase:'p2', title:'Annex III §4 conformity pack', description:'EU AI Act high-risk Annex III §4 conformity pack at P2 for REW + LEARN.', target:'Pack published & signed', measurement:'Pack inspection + counsel review', modules:'REW · LEARN', verify:'I', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'Audit log retention', description:'Audit log retention horizon.', target:'≥ 7 years for compliance-relevant rows', measurement:'BRAIN consolidation policy', modules:'BRAIN · CP', verify:'I', reference:'inferred'},
+ { id:'N(FR pending)', category:'sec', phase:'p1', title:'Compensation KMS isolation', description:'Compensation data must be encrypted with a REW-specific KMS key.', target:'Distinct key per scope', measurement:'KMS inventory inspection', modules:'REW · KMS', verify:'I', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'sec', phase:'p2', title:'Annual DPIA refresh', description:'DPIA must be refreshed annually and on any high-risk processing change.', target:'1/year + on change', measurement:'DPIA log + DPO sign-off', modules:'CP', verify:'I', reference:''},/ ============ USAB ============
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'WCAG 2.2 Level AA', description:'WCAG 2.2 Level AA conformance across host shell + modules.', target:'Level AA', measurement:'Axe + Lighthouse + manual sweep', modules:'all FE remotes', verify:'T+I', reference:''},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'VPAT 2.5 INT publish', description:'VPAT 2.5 INT (International) published at P0 exit.', target:'Published P0 exit', measurement:'Trust Center artefact', modules:'all FE remotes', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'Keyboard-only operability', description:'Every interaction must be reachable; visible focus indicator on every focusable element.', target:'100% keyboard-reachable', measurement:'Manual sweep + axe', modules:'all FE remotes', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'Vietnamese diacritic stack-fidelity', description:'Diacritic stack-fidelity for Vietnamese typography per Design System Part 5.', target:'No diacritic mis-stacking', measurement:'Type review on rendered fixtures', modules:'all FE remotes', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'CUO citation rate', description:'CUO citation rate when relevant chunks exist.', target:'≥ 98%', measurement:'Eval-set probe', modules:'CUO · BRAIN', verify:'T', reference:' / N(FR pending)'},
+ { id:'N(FR pending)', category:'usab', phase:'p3', title:'Mobile P3 viewport parity', description:'Responsive 360 px+; 80% feature parity at P3.', target:'80% feature parity', measurement:'Feature-matrix audit', modules:'all FE remotes', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'Founder daily-review budget', description:'Founder daily review session must complete within budget.', target:'< 10 min', measurement:'OBS trace span', modules:'CUO · OBS', verify:'T', reference:' / RSK-09-mitigation'},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'Reduced-motion respect', description:'prefers-reduced-motion MUST disable parallax + non-essential animation.', target:'100% respect', measurement:'Manual sweep + CSS audit', modules:'all FE remotes', verify:'T', reference:'inferred'},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'Colour contrast', description:'Text contrast ratio per WCAG 2.2 AA (≥ 4.5:1 body; ≥ 3:1 large).', target:'≥ 4.5:1 body', measurement:'Axe audit', modules:'all FE remotes', verify:'T', reference:'inferred / WCAG'},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'Persistent AI-Assisted badge', description:'EU AI Act Article 50 transparency: persistent badge on every AI surface.', target:'100% AI surfaces', measurement:'Component audit', modules:'CUO · CHAT · KB', verify:'I', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'usab', phase:'p3', title:'Bilingual (Vi/En) UI', description:'All user-facing strings must have Vi + En translations.', target:'100% string coverage', measurement:'i18n catalog completeness check', modules:'all FE remotes', verify:'I', reference:'inferred'},
+ { id:'N(FR pending)', category:'usab', phase:'p0', title:'Error-message readability', description:'Error messages must be human-readable, never raw stack traces.', target:'0 raw traces in UI', measurement:'Error-boundary audit', modules:'all FE remotes', verify:'I', reference:'inferred'},/ ============ MAINT ============
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Module CI duration', description:'CI pipeline duration per module from PR open to merge.', target:'≤ 10 min', measurement:'CI run timing', modules:'all', verify:'T (CI gate)', reference:''},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Test coverage per module', description:'Statement + branch coverage per module.', target:'≥ 70% line · ≥ 60% branch', measurement:'Coverage report in CI', modules:'all', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'CODEOWNERS file', description:'CODEOWNERS file present per module mapping to a single owner.', target:'Present per module', measurement:'Repo audit', modules:'all', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Schema deprecation notice', description:'GraphQL schema removal MUST give ≥ 1 phase notice before removal.', target:'≥ 1 phase notice', measurement:'Apollo Studio diff', modules:'GraphQL', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Module-rebuild on token change', description:'Token-change rebuild time including tests.', target:'≤ 30 min', measurement:'Token-change CI run', modules:'all FE remotes', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Skill hot-reload', description:'SKILL.md edits must be picked up without restart.', target:'≤ 60 s', measurement:'Live-update probe', modules:'SKILL', verify:'D', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Build determinism', description:'Re-running CI on the same SHA produces identical artefact hashes.', target:'Identical hashes', measurement:'Reproducible-build check', modules:'all', verify:'T', reference:'inferred'},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Dependency audit', description:'npm/pip/cargo audit must run on every PR with no Critical findings.', target:'0 Critical CVEs', measurement:'CI gate', modules:'all', verify:'T', reference:'inferred / N(FR pending)'},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'CHANGELOG newest-first', description:'Every shipped module maintains a CHANGELOG newest-first.', target:'Present + current', measurement:'Repo audit', modules:'all', verify:'I', reference:'inferred / CHANGELOG policy'},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'PRD-FR traceability', description:'Every FR row in the PRD maps to an open or closed issue.', target:'100% traceability', measurement:'Catalog cross-link audit', modules:'PM', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'maint', phase:'p1', title:'Skill schema-drift detection', description:'Spec validator MUST flag drift between local skills and Anthropic Skills spec.', target:'Continuous', measurement:'CI gate', modules:'SKILL', verify:'I', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'Apollo Federation composition check', description:'Federation composition gate runs in CI on every PR.', target:'Composition green', measurement:'Apollo Rover check', modules:'GraphQL · all subgraphs', verify:'T', reference:'(FR pending) / N(FR pending)'},/ ============ COMPAT ============
+ { id:'N(FR pending)', category:'compat', phase:'p0', title:'Browser support', description:'Last-two-major versions of Chromium / Firefox / Safari.', target:'Chromium · Firefox · Safari last 2 versions', measurement:'BrowserStack matrix', modules:'all FE remotes', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'compat', phase:'p0', title:'Desktop bundles', description:'Tauri-bundle ships for Windows 10+, macOS 12+, Ubuntu 22+.', target:'Win 10+ · macOS 12+ · Ubuntu 22+', measurement:'Bundle build + smoke', modules:'host shell', verify:'D', reference:''},
+ { id:'N(FR pending)', category:'compat', phase:'p0', title:'MCP client compatibility', description:'MCP gateway must work with Claude Desktop, Claude Code, Cursor, Cline at GA versions.', target:'≥ 4 clients green', measurement:'MCP client compat matrix', modules:'MCP', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'compat', phase:'p1', title:'Email RFC compliance', description:'RFC 5322 + i18n RFC 6532; UTF-8 throughout.', target:'RFC 5322 + 6532 pass', measurement:'Email-test suite', modules:'EMAIL', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'compat', phase:'p1', title:'iCalendar export', description:'RFC 5545 export per HR + PROJ.', target:'RFC 5545 pass', measurement:'External validator', modules:'HR · PROJ', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'compat', phase:'p2', title:'PDF/A-2 archival', description:'INV + DOC archival format.', target:'PDF/A-2', measurement:'PDF/A validator', modules:'INV · DOC', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'compat', phase:'p0', title:'OCI container compliance', description:'Every backend service ships as OCI-compliant container image.', target:'OCI v1.x', measurement:'Image inspect', modules:'all backend', verify:'I', reference:'inferred'},
+ { id:'N(FR pending)', category:'compat', phase:'p0', title:'SQL portable schema', description:'Database schema must use ANSI-portable types where possible; PG-specific extensions documented.', target:'Documented divergence', measurement:'Schema doc review', modules:'data plane', verify:'I', reference:'N(FR pending)'},
+ { id:'N(FR pending)', category:'compat', phase:'p1', title:'OAuth 2.1 + PKCE compliance', description:'AUTH and MCP gateway pass OAuth 2.1 conformance suite.', target:'Conformance green', measurement:'External test suite', modules:'AUTH · MCP', verify:'T', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'compat', phase:'p2', title:'CSV / Excel export', description:'All tabular reports support CSV + XLSX export.', target:'Both formats', measurement:'Export-format audit', modules:'all reporting', verify:'I', reference:'inferred'},/ ============ TRAN ============
+ { id:'N(FR pending)', category:'tran', phase:'p4', title:'Tenant data export ≤ 24h', description:'Full export within 24h of request as signed bundle.', target:'≤ 24 h', measurement:'Export-job timing', modules:'TEN · CP · BRAIN', verify:'T+D', reference:''},
+ { id:'N(FR pending)', category:'tran', phase:'p4', title:'Tenant data import', description:'Standard import paths for prior CyberOS, Notion, Slack tenants.', target:'≥ 3 formats green', measurement:'Import smoke', modules:'TEN', verify:'T', reference:''},
+ { id:'N(FR pending)', category:'tran', phase:'p0', title:'BRAIN signed-zip portability', description:'Verifiable Ed25519 signature; Merkle proof; deterministic export.', target:'Verifies + reproducible', measurement:'Round-trip test', modules:'BRAIN', verify:'T', reference:' / (FR pending) / AGENTS.md §10'},
+ { id:'N(FR pending)', category:'tran', phase:'p0', title:'No vendor lock at storage', description:'S3-compatible object store; SQL portable schema.', target:'Portable', measurement:'Architecture audit', modules:'all data plane', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'tran', phase:'p4', title:'90-day offboarding grace', description:'Offboarded tenant gets 90-day grace before irreversible delete.', target:'≥ 90 d', measurement:'TEN offboarding job', modules:'TEN', verify:'I', reference:'(FR pending)'},
+ { id:'N(FR pending)', category:'tran', phase:'p0', title:'Skill portability across hosts', description:'Anthropic-format skill MUST run unchanged in Claude Desktop, Cursor, Codex.', target:'Same skill, ≥ 3 hosts', measurement:'Skill compat matrix', modules:'SKILL', verify:'T', reference:' / (FR pending)'},/ ============ FUNC ============
+ { id:'N(FR pending)', category:'func', phase:'p0', title:'Module Ready criterion', description:'Every module satisfies the 10-item Module Ready criterion at phase exit.', target:'All 10 items', measurement:'Gate-readiness report', modules:'all', verify:'I+D', reference:' / §7.2'},
+ { id:'N(FR pending)', category:'func', phase:'p0', title:'GraphQL composition pass', description:'Federation composition passes for every release.', target:'Schema check pass', measurement:'Apollo Studio check', modules:'GraphQL', verify:'T', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'func', phase:'p1', title:'Anti-retroactive recompute', description:'Every published payslip must recompute identically under historical parameters.', target:'Identical recompute', measurement:'Property test', modules:'REW · LEARN', verify:'T', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'func', phase:'p0', title:'CUO defer-trigger coverage', description:'CUO defer-trigger coverage on irreversible operations.', target:'≥ 99%', measurement:'Tool-annotation audit', modules:'CUO · MCP', verify:'T+A', reference:' / (FR pending)'},
+ { id:'N(FR pending)', category:'func', phase:'p0', title:'Audit row coverage', description:'Every write through the data plane MUST emit exactly one audit row.', target:'1 row / write', measurement:'CI gate + sample audit', modules:'all data plane', verify:'T', reference:'inferred / AGENTS.md §6'},
+ { id:'N(FR pending)', category:'func', phase:'p0', title:'Determinism under replay', description:'Replaying audit rows from t0 to t1 MUST yield the same materialized state.', target:'Bit-identical', measurement:'Replay harness', modules:'BRAIN · CP', verify:'T', reference:'inferred'},
 ];
 </script>
 

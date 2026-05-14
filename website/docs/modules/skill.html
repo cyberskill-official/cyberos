@@ -1,56 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+ <meta charset="UTF-8">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Skill — CyberOS</title>
-  <meta name="description" content="SKILL — portable, capability-sandboxed agentic skills. Anthropic Agent Skills standard. Rust host · Bun toolchain · 20 SKILL.md bundles indexed · 6 Vietnamese-market skills published.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="module" src="../assets/scripts.js"></script>
-  <style>
-    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
-    .fact-card { background: var(--skill-bg); border:1px solid var(--skill-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
-    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--skill-dark); }
-    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
-    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
-    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
-    .toc-link:hover { background: var(--skill-bg); color: var(--skill-dark); }
-    .toc-link.active { background: var(--skill-tint); color: var(--skill-dark); font-weight: 600; }
-    .toc-link.indent { padding-left: 1.25rem; font-size: 0.75rem; }
-    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
-    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
-    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
-    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--skill); color:white; font-weight:800; font-size:0.875rem; }
-    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
-    .pill-must     { background:#fee2e2; color:#b91c1c; }
-    .pill-should   { background:#fef3c7; color:#b45309; }
-    .pill-shipped  { background:#d1fae5; color:#065f46; }
-    .pill-planned  { background:#e0e7ff; color:#3730a3; }
-    .pill-partial  { background:#fef3c7; color:#b45309; }
-    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
-    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
-    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
-    table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
-    .vn-skill { scroll-margin-top: 80px; padding: 1.25rem; border-left: 4px solid var(--skill); background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.625rem; margin-bottom: 1rem; }
-    .vn-skill h3 { display:flex; align-items:center; gap:0.5rem; font-size: 1.125rem; font-weight: 800; margin: 0 0 0.5rem 0; }
-    .vn-skill .role-tag { font-size: 0.6875rem; font-weight:700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--skill-dark); background: var(--skill-tint); padding: 0.125rem 0.5rem; border-radius: 0.375rem; }
-    .vn-skill .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-mute); margin-top: 0.75rem; margin-bottom: 0.25rem; }
-    .vn-skill pre { background: #0f172a; color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; overflow-x: auto; }
-    .phase-block { padding:1rem 1.25rem; border-radius: 0.625rem; margin-bottom: 0.75rem; border-left: 4px solid var(--skill); background: var(--bg-card); border: 1px solid var(--border); }
-    .phase-block .phase-title { font-weight: 800; color: var(--text); display:flex; align-items:center; gap:0.5rem; }
-    .phase-block .phase-num { background: var(--skill); color: white; width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; display:inline-flex; align-items:center; justify-content:center; font-weight: 800; }
-    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
-    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
-    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
-    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
-    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--skill-bg); border-radius: 0.75rem; border: 1px solid var(--skill-tint); }
-  </style>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Skill — CyberOS</title>
+ <meta name="description" content="SKILL — portable, capability-sandboxed agentic skills. Anthropic Agent Skills standard. Rust host · Bun toolchain · 20 SKILL.md bundles indexed · 6 Vietnamese-market skills published.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
+ <style>.fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }.fact-card { background: var(--skill-bg); border:1px solid var(--skill-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }.fact-card.label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--skill-dark); }.fact-card.value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }.fact-card.note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }.toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }.toc-link:hover { background: var(--skill-bg); color: var(--skill-dark); }.toc-link.active { background: var(--skill-tint); color: var(--skill-dark); font-weight: 600; }.toc-link.indent { padding-left: 1.25rem; font-size: 0.75rem; }.module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }.module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }.module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }.section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--skill); color:white; font-weight:800; font-size:0.875rem; }.pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }.pill-must { background:#fee2e2; color:#b91c1c; }.pill-should { background:#fef3c7; color:#b45309; }.pill-shipped { background:#d1fae5; color:#065f46; }.pill-planned { background:#e0e7ff; color:#3730a3; }.pill-partial { background:#fef3c7; color:#b45309; }
+ table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+ table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+ table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+ table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }.vn-skill { scroll-margin-top: 80px; padding: 1.25rem; border-left: 4px solid var(--skill); background: var(--bg-card); border: 1px solid var(--border); border-radius: 0.625rem; margin-bottom: 1rem; }.vn-skill h3 { display:flex; align-items:center; gap:0.5rem; font-size: 1.125rem; font-weight: 800; margin: 0 0 0.5rem 0; }.vn-skill.role-tag { font-size: 0.6875rem; font-weight:700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--skill-dark); background: var(--skill-tint); padding: 0.125rem 0.5rem; border-radius: 0.375rem; }.vn-skill.label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-mute); margin-top: 0.75rem; margin-bottom: 0.25rem; }.vn-skill pre { background: #0f172a; color: #e2e8f0; padding: 0.75rem; border-radius: 0.5rem; font-size: 0.75rem; overflow-x: auto; }.phase-block { padding:1rem 1.25rem; border-radius: 0.625rem; margin-bottom: 0.75rem; border-left: 4px solid var(--skill); background: var(--bg-card); border: 1px solid var(--border); }.phase-block.phase-title { font-weight: 800; color: var(--text); display:flex; align-items:center; gap:0.5rem; }.phase-block.phase-num { background: var(--skill); color: white; width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; display:inline-flex; align-items:center; justify-content:center; font-weight: 800; }.raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }.raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }.raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }.raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }.module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--skill-bg); border-radius: 0.75rem; border: 1px solid var(--skill-tint); }
+ </style>
 </head>
 <body data-pagefind-filter="category:Module">
 <span hidden data-pagefind-filter="phase:P0"></span>
@@ -61,36 +29,36 @@
 <!-- HEADER -->
 <!-- ============================================================ -->
 <header class="hero-gradient border-b border-slate-200">
-  <div class="container py-10 lg:py-14">
-    <nav class="breadcrumbs">
-      <a href="../index.html">Home</a>
-      <span class="sep">›</span>
-      <a href="../index.html#catalog">Modules</a>
-      <span class="sep">›</span>
-      <span class="current">Skill</span>
-    </nav>
-    <div class="flex items-center gap-3 mb-4 flex-wrap">
-      <span class="text-5xl">🛠</span>
-      <h1 class="h-display">Skill</h1>
-      <span class="phase-chip phase-p0">P0 · Foundation</span>
-      <span class="pill pill-shipped">Phases 0–7 shipped</span>
-      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat (currently CEO)</span>
-    </div>
-    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
-      Portable, capability-sandboxed agentic skills — the open Anthropic Agent Skills standard, hosted in Rust.
-    </p>
-    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      The Skill module is the catalog. It hosts CyberOS's portable agentic skills following the open Anthropic <strong>Agent Skills</strong> standard (SKILL.md + progressive disclosure + filesystem discovery) — the same format adopted by Microsoft, GitHub Copilot, OpenAI Codex CLI, Cursor, Goose, Amp, Gemini CLI, and 20+ other clients. A Rust workspace (4 crates) owns the canonical host; a Bun + esbuild toolchain compiles TypeScript skills to <code>wasm32-wasi</code> components; 20 SKILL.md bundles are indexed (14 CUO C-level skills + 6 cyberskill-vn Vietnamese-market skills). The 13 May 2026 architectural audit closed with all seven phases done — header-only indexing, lazy activation, DashMap-sharded registry, Wasmtime executor, capability broker, legacy retirement plan. Python ↔ Rust parity is 12/12 green.
-    </p>
-    <div class="flex flex-wrap gap-3 mt-6">
-      <a href="#vn-skills" class="btn btn-primary">The 6 VN skills
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-      </a>
-      <a href="#audit-phases" class="btn btn-secondary">Audit phases 0–7</a>
-      <a href="#cli-usage" class="btn btn-secondary">CLI usage</a>
-      <a href="../reference/fr-catalog.html#skill" class="btn btn-secondary">FR catalog</a>
-    </div>
-  </div>
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <span class="current">Skill</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">🛠</span>
+ <h1 class="h-display">Skill</h1>
+ <span class="phase-chip phase-p0">P0 · Foundation</span>
+ <span class="pill pill-shipped">Phases 0–7 shipped</span>
+ <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat (currently CEO)</span>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ Portable, capability-sandboxed agentic skills — the open Anthropic Agent Skills standard, hosted in Rust.
+ </p>
+ <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+ The Skill module is the catalog. It hosts CyberOS's portable agentic skills following the open Anthropic <strong>Agent Skills</strong> standard (SKILL.md + progressive disclosure + filesystem discovery) — the same format adopted by Microsoft, GitHub Copilot, OpenAI Codex CLI, Cursor, Goose, Amp, Gemini CLI, and 20+ other clients. A Rust workspace (4 crates) owns the canonical host; a Bun + esbuild toolchain compiles TypeScript skills to <code>wasm32-wasi</code> components; 20 SKILL.md bundles are indexed (14 CUO C-level skills + 6 cyberskill-vn Vietnamese-market skills). The 13 May 2026 architectural audit closed with all seven phases done — header-only indexing, lazy activation, DashMap-sharded registry, Wasmtime executor, capability broker, legacy retirement plan. Python ↔ Rust parity is 12/12 green.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="#vn-skills" class="btn btn-primary">The 6 VN skills
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ <a href="#audit-phases" class="btn btn-secondary">Audit phases 0–7</a>
+ <a href="#cli-usage" class="btn btn-secondary">CLI usage</a>
+ <a href="../reference/fr-catalog.html#skill" class="btn btn-secondary">FR catalog</a>
+ </div>
+ </div>
 </header>
 
 <div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
@@ -99,46 +67,46 @@
 <!-- STICKY TOC -->
 <!-- ============================================================ -->
 <aside class="lg:col-span-3 order-2 lg:order-1">
-  <div class="lg:sticky lg:top-20">
-    <div class="bbg-card p-5">
-      <div class="h-eyebrow mb-3">On this page</div>
-      <ul class="space-y-0.5 text-sm">
-        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
-        <li><a class="toc-link" href="#why">Why Skill exists</a></li>
-        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
-        <li><a class="toc-link" href="#architecture">Architecture</a></li>
-        <li><a class="toc-link" href="#data-model">Data model</a></li>
-        <li><a class="toc-link" href="#api-surface">API surface</a></li>
-        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
-        <li><a class="toc-link" href="#lifecycle">Skill lifecycle</a></li>
-        <li><a class="toc-link" href="#vn-skills">The 6 cyberskill-vn skills</a></li>
-        <li><a class="toc-link indent" href="#skill-mst">vn-mst-validate</a></li>
-        <li><a class="toc-link indent" href="#skill-vat">vn-vat-invoice</a></li>
-        <li><a class="toc-link indent" href="#skill-bank">vn-bank-transfer</a></li>
-        <li><a class="toc-link indent" href="#skill-vneid">vneid-integration</a></li>
-        <li><a class="toc-link indent" href="#skill-legal">vn-legal-compliance</a></li>
-        <li><a class="toc-link indent" href="#skill-tax">vn-tax-filing</a></li>
-        <li><a class="toc-link" href="#audit-phases">Audit phases 0–7</a></li>
-        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
-        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
-        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
-        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
-        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
-        <li><a class="toc-link" href="#kpis">KPIs</a></li>
-        <li><a class="toc-link" href="#raci">RACI</a></li>
-        <li><a class="toc-link" href="#cli-usage">CLI usage</a></li>
-        <li><a class="toc-link" href="#status">Phase status</a></li>
-        <li><a class="toc-link" href="#references">References</a></li>
-      </ul>
-      <hr class="my-4 border-slate-200">
-      <div class="h-eyebrow mb-2">Source</div>
-      <div class="text-xs text-slate-500 leading-relaxed">
-        <code>cyberos/skill/</code><br>
-        PRD §7.1 (catalog row)<br>
-        AUDIT.md (13 May 2026)
-      </div>
-    </div>
-  </div>
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+ <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#why">Why Skill exists</a></li>
+ <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#architecture">Architecture</a></li>
+ <li><a class="toc-link" href="#data-model">Data model</a></li>
+ <li><a class="toc-link" href="#api-surface">API surface</a></li>
+ <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+ <li><a class="toc-link" href="#lifecycle">Skill lifecycle</a></li>
+ <li><a class="toc-link" href="#vn-skills">The 6 cyberskill-vn skills</a></li>
+ <li><a class="toc-link indent" href="#skill-mst">vn-mst-validate</a></li>
+ <li><a class="toc-link indent" href="#skill-vat">vn-vat-invoice</a></li>
+ <li><a class="toc-link indent" href="#skill-bank">vn-bank-transfer</a></li>
+ <li><a class="toc-link indent" href="#skill-vneid">vneid-integration</a></li>
+ <li><a class="toc-link indent" href="#skill-legal">vn-legal-compliance</a></li>
+ <li><a class="toc-link indent" href="#skill-tax">vn-tax-filing</a></li>
+ <li><a class="toc-link" href="#audit-phases">Audit phases 0–7</a></li>
+ <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+ <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+ <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+ <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+ <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+ <li><a class="toc-link" href="#kpis">KPIs</a></li>
+ <li><a class="toc-link" href="#raci">RACI</a></li>
+ <li><a class="toc-link" href="#cli-usage">CLI usage</a></li>
+ <li><a class="toc-link" href="#status">Phase status</a></li>
+ <li><a class="toc-link" href="#references">References</a></li>
+ </ul>
+ <hr class="my-4 border-slate-200">
+ <div class="h-eyebrow mb-2">Source</div>
+ <div class="text-xs text-slate-500 leading-relaxed">
+ <code>cyberos/skill/</code><br>
+ (catalog row)<br>
+ AUDIT.md (13 May 2026)
+ </div>
+ </div>
+ </div>
 </aside>
 
 <main class="lg:col-span-9 order-1 lg:order-2">
@@ -147,1016 +115,1016 @@
 <!-- HERO -->
 <!-- ============================================================ -->
 <section id="hero" class="module-section">
-  <div class="bbg-card tint-skill p-6 mb-6">
-    <p class="text-lg text-slate-700 leading-relaxed mb-5">
-      <strong>Skill is the catalog</strong>. It does not invent a competing format; it embraces the open Anthropic <em>Agent Skills</em> standard verbatim so a CyberOS skill works unmodified in Claude Code, Codex CLI, Cursor, VS Code with Copilot, Goose, Amp, Gemini CLI. The Rust host indexes SKILL.md frontmatter at boot (~100 tokens/skill, parsed in parallel), activates bodies lazily, runs WASM components in Wasmtime with WASI capability grants, and falls back to a sandboxed script path for trusted internal skills. The differentiation is the curated <strong>cyberskill-vn</strong> collection: six high-quality Vietnamese-market skills (MST · VAT · VietQR · CCCD · legal · tax) published on the open registry where the entire Agent Skills ecosystem can install them.
-    </p>
-    <div class="fact-grid">
-      <div class="fact-card"><div class="label">Status</div><div class="value">Phases 0–7 shipped</div><div class="note">audit complete · 30-day soak active</div></div>
-      <div class="fact-card"><div class="label">LoC (Rust host)</div><div class="value">~3,000</div><div class="note">4 crates · cargo workspace</div></div>
-      <div class="fact-card"><div class="label">LoC (Bun toolchain)</div><div class="value">~2,500</div><div class="note">TS authoring → wasm32-wasi</div></div>
-      <div class="fact-card"><div class="label">Tests</div><div class="value">4 + 12/12 parity + 2 grants</div><div class="note">cargo test · pytest parity</div></div>
-      <div class="fact-card"><div class="label">SKILL.md bundles</div><div class="value">20 indexed</div><div class="note">14 CUO + 6 cyberskill-vn</div></div>
-      <div class="fact-card"><div class="label">Ecosystem reach</div><div class="value">26+ clients</div><div class="note">via open Agent Skills standard</div></div>
-      <div class="fact-card"><div class="label">Cold start (header)</div><div class="value">~100 tok/skill</div><div class="note">parallel via tokio::JoinSet</div></div>
-      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH</div><div class="note">(when P0 lands)</div></div>
-    </div>
-  </div>
+ <div class="bbg-card tint-skill p-6 mb-6">
+ <p class="text-lg text-slate-700 leading-relaxed mb-5">
+ <strong>Skill is the catalog</strong>. It does not invent a competing format; it embraces the open Anthropic <em>Agent Skills</em> standard verbatim so a CyberOS skill works unmodified in Claude Code, Codex CLI, Cursor, VS Code with Copilot, Goose, Amp, Gemini CLI. The Rust host indexes SKILL.md frontmatter at boot (~100 tokens/skill, parsed in parallel), activates bodies lazily, runs WASM components in Wasmtime with WASI capability grants, and falls back to a sandboxed script path for trusted internal skills. The differentiation is the curated <strong>cyberskill-vn</strong> collection: six high-quality Vietnamese-market skills (MST · VAT · VietQR · CCCD · legal · tax) published on the open registry where the entire Agent Skills ecosystem can install them.
+ </p>
+ <div class="fact-grid">
+ <div class="fact-card"><div class="label">Status</div><div class="value">Phases 0–7 shipped</div><div class="note">audit complete · 30-day soak active</div></div>
+ <div class="fact-card"><div class="label">LoC (Rust host)</div><div class="value">~3,000</div><div class="note">4 crates · cargo workspace</div></div>
+ <div class="fact-card"><div class="label">LoC (Bun toolchain)</div><div class="value">~2,500</div><div class="note">TS authoring → wasm32-wasi</div></div>
+ <div class="fact-card"><div class="label">Tests</div><div class="value">4 + 12/12 parity + 2 grants</div><div class="note">cargo test · pytest parity</div></div>
+ <div class="fact-card"><div class="label">SKILL.md bundles</div><div class="value">20 indexed</div><div class="note">14 CUO + 6 cyberskill-vn</div></div>
+ <div class="fact-card"><div class="label">Ecosystem reach</div><div class="value">26+ clients</div><div class="note">via open Agent Skills standard</div></div>
+ <div class="fact-card"><div class="label">Cold start (header)</div><div class="value">~100 tok/skill</div><div class="note">parallel via tokio::JoinSet</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH</div><div class="note">(when P0 lands)</div></div>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- WHY -->
 <!-- ============================================================ -->
 <section id="why" class="module-section">
-  <header class="section-head"><span class="section-num">1</span><h2>Why Skill exists</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Pre-2026, every "skills module" in every product is a proprietary container that re-invents discovery, lifecycle, capability grants, and authoring. The result is universal: eager activation O(N) cold-start tax, ambient-authority sandbox holes, bespoke manifests no one else can read. In December 2025 Anthropic released <strong>Agent Skills</strong> as an open standard at <code>agentskills.io</code>; within six months Microsoft, GitHub, OpenAI, Cursor, Goose, Amp, Gemini CLI, Mistral, Databricks, Letta, and 15+ others adopted it. Inventing a competing format in 2026 is value-destroying. The 13 May 2026 architectural audit (AUDIT.md) made the call: <em>adopt the standard verbatim, rebuild the host as a Rust core with Wasmtime, ship the Bun toolchain for TypeScript skill authors, and use the saved engineering to publish a defensible Vietnamese-market skill collection</em>.
-  </p>
-  <div class="grid md:grid-cols-3 gap-4 my-5">
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">🌐</div>
-      <div class="font-bold text-slate-900 mb-1">Open standard, day-1 reach</div>
-      <p class="text-sm text-slate-600">Every CyberOS skill loads in Claude Code / Codex / Cursor / VS Code unchanged. Distribution is OCI registry or <code>agentskills.io</code>.</p>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">🛡</div>
-      <div class="font-bold text-slate-900 mb-1">Capability-based sandbox</div>
-      <p class="text-sm text-slate-600">No ambient authority. Skills declare <code>allowed-tools</code>; the host translates to WASI grants. First-use approval; grants persisted by content hash.</p>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">🇻🇳</div>
-      <div class="font-bold text-slate-900 mb-1">VN-market collection as moat</div>
-      <p class="text-sm text-slate-600">Six high-quality Vietnamese-market skills (MST, VAT, VietQR, CCCD, legal, tax) — defensible differentiation a global vendor can't easily replicate.</p>
-    </div>
-  </div>
+ <header class="section-head"><span class="section-num">1</span><h2>Why Skill exists</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Pre-2026, every "skills module" in every product is a proprietary container that re-invents discovery, lifecycle, capability grants, and authoring. The result is universal: eager activation O(N) cold-start tax, ambient-authority sandbox holes, bespoke manifests no one else can read. In December 2025 Anthropic released <strong>Agent Skills</strong> as an open standard at <code>agentskills.io</code>; within six months Microsoft, GitHub, OpenAI, Cursor, Goose, Amp, Gemini CLI, Mistral, Databricks, Letta, and 15+ others adopted it. Inventing a competing format in 2026 is value-destroying. The 13 May 2026 architectural audit (AUDIT.md) made the call: <em>adopt the standard verbatim, rebuild the host as a Rust core with Wasmtime, ship the Bun toolchain for TypeScript skill authors, and use the saved engineering to publish a defensible Vietnamese-market skill collection</em>.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-5">
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">🌐</div>
+ <div class="font-bold text-slate-900 mb-1">Open standard, day-1 reach</div>
+ <p class="text-sm text-slate-600">Every CyberOS skill loads in Claude Code / Codex / Cursor / VS Code unchanged. Distribution is OCI registry or <code>agentskills.io</code>.</p>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">🛡</div>
+ <div class="font-bold text-slate-900 mb-1">Capability-based sandbox</div>
+ <p class="text-sm text-slate-600">No ambient authority. Skills declare <code>allowed-tools</code>; the host translates to WASI grants. First-use approval; grants persisted by content hash.</p>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">🇻🇳</div>
+ <div class="font-bold text-slate-900 mb-1">VN-market collection as moat</div>
+ <p class="text-sm text-slate-600">Six high-quality Vietnamese-market skills (MST, VAT, VietQR, CCCD, legal, tax) — defensible differentiation a global vendor can't easily replicate.</p>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- WHAT — 5W1H2C5M -->
 <!-- ============================================================ -->
 <section id="what" class="module-section">
-  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
-      <tbody>
-        <tr><td><strong>5W · What</strong></td><td>What is the Skill module?</td><td>A Rust host that discovers, validates, activates, invokes, and audits Agent Skills (SKILL.md bundles). Layered with a Bun + esbuild authoring toolchain for TypeScript skill authors and a capability broker enforcing WASI grants.</td></tr>
-        <tr><td><strong>5W · Who</strong></td><td>Who reads/writes?</td><td><strong>Skill authors</strong> (CyberSkill team + open contributors). <strong>Invokers:</strong> CUO router, agent controllers, the CLI. <strong>Owner:</strong> CTO seat (CEO carries today).</td></tr>
-        <tr><td><strong>5W · When</strong></td><td>When does activation happen?</td><td>Two levels. Level 1 (boot): frontmatter-only indexing, ~100 tokens/skill. Level 2 (activation): body load + WASM compile, triggered by either agent controller or VS-Code-style <code>activationEvents</code>.</td></tr>
-        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>The host is co-located with the user (Tauri or CLI). WASM components run in per-invocation Wasmtime <code>Store</code>s pulled from a pool. AOT-compiled components are cached on disk by content hash.</td></tr>
-        <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>To get 26+ client compatibility on Day 1 of compliance, sub-millisecond cold-starts via progressive disclosure, capability sandboxing via WASI, and the option to publish to the open registry.</td></tr>
-        <tr><td><strong>1H · How</strong></td><td>How does invocation work?</td><td>Header lookup (O(1) DashMap shard) → capability check → lazy body load + AOT-cached Wasmtime instantiation → execute → audit-log every WASI syscall → return JSON.</td></tr>
-        <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>Cold-start over 1,000 skills: &lt;100 ms (header-only). Per-WASM-skill invocation cold: sub-millisecond (AOT cached). Per-native-script invocation: O(process spawn). Memory per activated skill: ~10–50 KB (header) + body bytes (lazy).</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) The standard is "deliciously tiny" — under-specified in places; we treat <code>metadata.version</code> as required for registry-resolved skills. (b) WASI Preview 2 component model is required for executable skills. (c) First-use approval gates <code>allowed-tools</code>.</td></tr>
-        <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>Rust 1.80+ · tokio · DashMap · serde_yaml · wasmtime 27+ · zstd · cosign for signature verification · OCI clients · libyaml-backed YAML parser.</td></tr>
-        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Progressive disclosure (3 levels) · activation events (VS Code pattern) · component model + WIT (cross-language) · capability-based isolation (no ambient authority) · AOT cache + pool of <code>Store</code>s for hot-path concurrency.</td></tr>
-        <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>macOS / Linux / Windows. WASM runs anywhere Wasmtime runs. AOT artifacts are content-addressed, shareable across hosts.</td></tr>
-        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>1 IC owner today. Rust runtime is small (~3,000 LoC) and the spec is closed. Skill authoring is open to the team via the Bun toolchain.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Cold-start histogram (per-skill), invocation latency p50/p95, capability-grant rate, parity-test pass rate (12/12), Criterion benchmarks on registry hot path.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+ <tbody>
+ <tr><td><strong>5W · What</strong></td><td>What is the Skill module?</td><td>A Rust host that discovers, validates, activates, invokes, and audits Agent Skills (SKILL.md bundles). Layered with a Bun + esbuild authoring toolchain for TypeScript skill authors and a capability broker enforcing WASI grants.</td></tr>
+ <tr><td><strong>5W · Who</strong></td><td>Who reads/writes?</td><td><strong>Skill authors</strong> (CyberSkill team + open contributors). <strong>Invokers:</strong> CUO router, agent controllers, the CLI. <strong>Owner:</strong> CTO seat (CEO carries today).</td></tr>
+ <tr><td><strong>5W · When</strong></td><td>When does activation happen?</td><td>Two levels. Level 1 (boot): frontmatter-only indexing, ~100 tokens/skill. Level 2 (activation): body load + WASM compile, triggered by either agent controller or VS-Code-style <code>activationEvents</code>.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>The host is co-located with the user (Tauri or CLI). WASM components run in per-invocation Wasmtime <code>Store</code>s pulled from a pool. AOT-compiled components are cached on disk by content hash.</td></tr>
+ <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>To get 26+ client compatibility on Day 1 of compliance, sub-millisecond cold-starts via progressive disclosure, capability sandboxing via WASI, and the option to publish to the open registry.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does invocation work?</td><td>Header lookup (O(1) DashMap shard) → capability check → lazy body load + AOT-cached Wasmtime instantiation → execute → audit-log every WASI syscall → return JSON.</td></tr>
+ <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>Cold-start over 1,000 skills: &lt;100 ms (header-only). Per-WASM-skill invocation cold: sub-millisecond (AOT cached). Per-native-script invocation: O(process spawn). Memory per activated skill: ~10–50 KB (header) + body bytes (lazy).</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) The standard is "deliciously tiny" — under-specified in places; we treat <code>metadata.version</code> as required for registry-resolved skills. (b) WASI Preview 2 component model is required for executable skills. (c) First-use approval gates <code>allowed-tools</code>.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>Rust 1.80+ · tokio · DashMap · serde_yaml · wasmtime 27+ · zstd · cosign for signature verification · OCI clients · libyaml-backed YAML parser.</td></tr>
+ <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Progressive disclosure (3 levels) · activation events (VS Code pattern) · component model + WIT (cross-language) · capability-based isolation (no ambient authority) · AOT cache + pool of <code>Store</code>s for hot-path concurrency.</td></tr>
+ <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>macOS / Linux / Windows. WASM runs anywhere Wasmtime runs. AOT artifacts are content-addressed, shareable across hosts.</td></tr>
+ <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>1 IC owner today. Rust runtime is small (~3,000 LoC) and the spec is closed. Skill authoring is open to the team via the Bun toolchain.</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Cold-start histogram (per-skill), invocation latency p50/p95, capability-grant rate, parity-test pass rate (12/12), Criterion benchmarks on registry hot path.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- ARCHITECTURE -->
 <!-- ============================================================ -->
 <section id="architecture" class="module-section">
-  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Four Rust crates form the canonical host. A Bun toolchain handles authoring. Skills are distributed as <code>.skill</code> bundles (zip of the directory + content hash) resolvable from local cache, OCI registries, or HTTPS URLs.
-  </p>
+ <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Four Rust crates form the canonical host. A Bun toolchain handles authoring. Skills are distributed as <code>.skill</code> bundles (zip of the directory + content hash) resolvable from local cache, OCI registries, or HTTPS URLs.
+ </p>
 
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 graph TB
-  subgraph AUTHORING ["Authoring (Bun toolchain)"]
-    AUTH_BUN["Bun 1.3 + esbuild<br>cyberos skill new --lang ts"]
-    AUTH_BUILD["build.ts<br>TS → wasm32-wasi component"]
-    AUTH_TEST["bun test"]
-  end
+ subgraph AUTHORING ["Authoring (Bun toolchain)"]
+ AUTH_BUN["Bun 1.3 + esbuild<br>cyberos skill new --lang ts"]
+ AUTH_BUILD["build.ts<br>TS → wasm32-wasi component"]
+ AUTH_TEST["bun test"]
+ end
 
-  subgraph HOST ["Rust host (4 crates)"]
-    MANI_C["crates/manifest<br>serde model for SKILL.md frontmatter"]
-    HOST_C["crates/host<br>loader · registry · activator · invoker"]
-    RES_C["crates/resolver<br>OCI + HTTPS + local cache"]
-    CLI_C["crates/cli<br>cyberos-skill-cli"]
-  end
+ subgraph HOST ["Rust host (4 crates)"]
+ MANI_C["crates/manifest<br>serde model for SKILL.md frontmatter"]
+ HOST_C["crates/host<br>loader · registry · activator · invoker"]
+ RES_C["crates/resolver<br>OCI + HTTPS + local cache"]
+ CLI_C["crates/cli<br>cyberos-skill-cli"]
+ end
 
-  subgraph RUNTIME ["Runtime"]
-    REG["DashMap registry<br>sharded · read-mostly"]
-    WT["Wasmtime engine<br>WASI Preview 2 + Component Model"]
-    POOL["Pool<Store><br>per-skill"]
-    BROKER["Capability broker<br>allowed-tools → WASI grants"]
-    SCRIPT["Native-script executor<br>(scripts/*.py / *.sh)"]
-  end
+ subgraph RUNTIME ["Runtime"]
+ REG["DashMap registry<br>sharded · read-mostly"]
+ WT["Wasmtime engine<br>WASI Preview 2 + Component Model"]
+ POOL["Pool<Store><br>per-skill"]
+ BROKER["Capability broker<br>allowed-tools → WASI grants"]
+ SCRIPT["Native-script executor<br>(scripts/*.py / *.sh)"]
+ end
 
-  subgraph DIST ["Distribution"]
-    LOCAL["~/.cyberos/skills/"]
-    OCI["OCI registry<br>ghcr.io/cyberskill/*"]
-    HTTPS["HTTPS URL"]
-    REG_OPEN["agentskills.io"]
-  end
+ subgraph DIST ["Distribution"]
+ LOCAL["~/.cyberos/skills/"]
+ OCI["OCI registry<br>ghcr.io/cyberskill/*"]
+ HTTPS["HTTPS URL"]
+ REG_OPEN["agentskills.io"]
+ end
 
-  subgraph CONSUMERS ["Consumers"]
-    CUO_S["🎯 CUO router"]
-    AGENT_S["Claude / Codex / Cursor"]
-    CHAT_S["💬 CHAT / IDE host"]
-  end
+ subgraph CONSUMERS ["Consumers"]
+ CUO_S["🎯 CUO router"]
+ AGENT_S["Claude / Codex / Cursor"]
+ CHAT_S["💬 CHAT / IDE host"]
+ end
 
-  AUTH_BUN --> AUTH_BUILD
-  AUTH_BUILD --> LOCAL
-  AUTH_TEST --> AUTH_BUILD
+ AUTH_BUN --> AUTH_BUILD
+ AUTH_BUILD --> LOCAL
+ AUTH_TEST --> AUTH_BUILD
 
-  CLI_C --> HOST_C
-  HOST_C --> MANI_C
-  HOST_C --> RES_C
-  RES_C --> LOCAL
-  RES_C --> OCI
-  RES_C --> HTTPS
-  LOCAL --> REG_OPEN
+ CLI_C --> HOST_C
+ HOST_C --> MANI_C
+ HOST_C --> RES_C
+ RES_C --> LOCAL
+ RES_C --> OCI
+ RES_C --> HTTPS
+ LOCAL --> REG_OPEN
 
-  HOST_C --> REG
-  HOST_C --> WT
-  WT --> POOL
-  HOST_C --> BROKER
-  HOST_C --> SCRIPT
+ HOST_C --> REG
+ HOST_C --> WT
+ WT --> POOL
+ HOST_C --> BROKER
+ HOST_C --> SCRIPT
 
-  CUO_S --> CLI_C
-  AGENT_S --> CLI_C
-  CHAT_S --> CLI_C
+ CUO_S --> CLI_C
+ AGENT_S --> CLI_C
+ CHAT_S --> CLI_C
 
-  classDef shipped fill:#f5ede6,stroke:#45210e
-  classDef pending fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
-  class AUTH_BUN,AUTH_BUILD,AUTH_TEST,MANI_C,HOST_C,RES_C,CLI_C,REG,WT,POOL,BROKER,SCRIPT,LOCAL,CUO_S,AGENT_S shipped
-  class OCI,HTTPS,REG_OPEN,CHAT_S pending
-    </div>
-  </div>
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef pending fill:#f0eee9,stroke:#9c9286,stroke-dasharray:4 3
+ class AUTH_BUN,AUTH_BUILD,AUTH_TEST,MANI_C,HOST_C,RES_C,CLI_C,REG,WT,POOL,BROKER,SCRIPT,LOCAL,CUO_S,AGENT_S shipped
+ class OCI,HTTPS,REG_OPEN,CHAT_S pending
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Crate responsibilities</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Crate</th><th>Path</th><th>Responsibility</th></tr></thead>
-      <tbody>
-        <tr><td><code>cyberos-skill-manifest</code></td><td>crates/manifest/</td><td>Serde model for SKILL.md frontmatter (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>, <code>metadata</code>, <code>allowed-tools</code>). <code>parse_frontmatter()</code> returns manifest + body offset.</td></tr>
-        <tr><td><code>cyberos-skill-host</code></td><td>crates/host/</td><td>Two-phase loader (boot index → lazy activate). DashMap registry. Invoker with capability checks. Activator pulling Wasmtime <code>Store</code>s from a pool.</td></tr>
-        <tr><td><code>cyberos-skill-resolver</code></td><td>crates/resolver/</td><td><code>Resolver</code> trait — local cache + OCI + HTTPS. Cosign signature verification (refuses unsigned bundles unless <code>--allow-unsigned</code>).</td></tr>
-        <tr><td><code>cyberos-skill-cli</code></td><td>crates/cli/</td><td><code>cyberos-skill-cli</code> binary: list, install, validate, run, build, audit. Single entrypoint for users and CUO.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">Crate responsibilities</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Crate</th><th>Path</th><th>Responsibility</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos-skill-manifest</code></td><td>crates/manifest/</td><td>Serde model for SKILL.md frontmatter (<code>name</code>, <code>description</code>, <code>license</code>, <code>compatibility</code>, <code>metadata</code>, <code>allowed-tools</code>). <code>parse_frontmatter</code> returns manifest + body offset.</td></tr>
+ <tr><td><code>cyberos-skill-host</code></td><td>crates/host/</td><td>Two-phase loader (boot index → lazy activate). DashMap registry. Invoker with capability checks. Activator pulling Wasmtime <code>Store</code>s from a pool.</td></tr>
+ <tr><td><code>cyberos-skill-resolver</code></td><td>crates/resolver/</td><td><code>Resolver</code> trait — local cache + OCI + HTTPS. Cosign signature verification (refuses unsigned bundles unless <code>--allow-unsigned</code>).</td></tr>
+ <tr><td><code>cyberos-skill-cli</code></td><td>crates/cli/</td><td><code>cyberos-skill-cli</code> binary: list, install, validate, run, build, audit. Single entrypoint for users and CUO.</td></tr>
+ </tbody>
+ </table>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3 mt-6">Three-level progressive disclosure</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Level</th><th>When</th><th>What's read</th><th>Cost</th></tr></thead>
-      <tbody>
-        <tr><td><strong>L1 · Startup</strong></td><td>Host boot</td><td>SKILL.md frontmatter only · DashMap shard populated</td><td>~100 tokens/skill · parallel · &lt; 100 ms over 1,000 skills</td></tr>
-        <tr><td><strong>L2 · Activation</strong></td><td>Agent or activation event fires</td><td>SKILL.md body (up to ~5,000 tokens) · referenced <code>references/</code> files</td><td>One-time per skill instance · cached for session</td></tr>
-        <tr><td><strong>L3 · Execution</strong></td><td>Skill is invoked</td><td><code>scripts/*.py</code> or <code>dist/skill.wasm</code> · <code>assets/*</code></td><td>WASM cold-start sub-millisecond with AOT cache · native script: process-spawn cost</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3 mt-6">Three-level progressive disclosure</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Level</th><th>When</th><th>What's read</th><th>Cost</th></tr></thead>
+ <tbody>
+ <tr><td><strong>L1 · Startup</strong></td><td>Host boot</td><td>SKILL.md frontmatter only · DashMap shard populated</td><td>~100 tokens/skill · parallel · &lt; 100 ms over 1,000 skills</td></tr>
+ <tr><td><strong>L2 · Activation</strong></td><td>Agent or activation event fires</td><td>SKILL.md body (up to ~5,000 tokens) · referenced <code>references/</code> files</td><td>One-time per skill instance · cached for session</td></tr>
+ <tr><td><strong>L3 · Execution</strong></td><td>Skill is invoked</td><td><code>scripts/*.py</code> or <code>dist/skill.wasm</code><code>assets/*</code></td><td>WASM cold-start sub-millisecond with AOT cache · native script: process-spawn cost</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DATA MODEL -->
 <!-- ============================================================ -->
 <section id="data-model" class="module-section">
-  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 erDiagram
-  SKILL_BUNDLE ||--|| SKILL_MANIFEST : "ships"
-  SKILL_BUNDLE ||--o{ SCRIPT_FILE : "may contain"
-  SKILL_BUNDLE ||--o{ REFERENCE_FILE : "may contain"
-  SKILL_BUNDLE ||--o{ ASSET_FILE : "may contain"
-  SKILL_BUNDLE ||--o| WASM_COMPONENT : "may ship"
-  SKILL_MANIFEST ||--o{ ALLOWED_TOOL : "declares"
-  ACTIVATED_SKILL ||--|| SKILL_HEADER : "instance of"
-  ACTIVATED_SKILL ||--o| WASM_COMPONENT : "wraps"
-  ACTIVATED_SKILL ||--o{ INVOCATION : "records"
-  INVOCATION ||--o{ CAPABILITY_GRANT : "requires"
-  CAPABILITY_GRANT ||--|| GRANT_RECORD : "persists as"
-  GRANT_RECORD ||--|| CONTENT_HASH : "bound to"
+ SKILL_BUNDLE ||--|| SKILL_MANIFEST: "ships"
+ SKILL_BUNDLE ||--o{ SCRIPT_FILE: "may contain"
+ SKILL_BUNDLE ||--o{ REFERENCE_FILE: "may contain"
+ SKILL_BUNDLE ||--o{ ASSET_FILE: "may contain"
+ SKILL_BUNDLE ||--o| WASM_COMPONENT: "may ship"
+ SKILL_MANIFEST ||--o{ ALLOWED_TOOL: "declares"
+ ACTIVATED_SKILL ||--|| SKILL_HEADER: "instance of"
+ ACTIVATED_SKILL ||--o| WASM_COMPONENT: "wraps"
+ ACTIVATED_SKILL ||--o{ INVOCATION: "records"
+ INVOCATION ||--o{ CAPABILITY_GRANT: "requires"
+ CAPABILITY_GRANT ||--|| GRANT_RECORD: "persists as"
+ GRANT_RECORD ||--|| CONTENT_HASH: "bound to"
 
-  SKILL_BUNDLE {
-    string bundle_id PK "content hash"
-    string source "local | oci | https"
-    string oci_ref
-    string cosign_sig
-    int64  size_bytes
-  }
-  SKILL_MANIFEST {
-    string name PK "1-64 chars, lowercase + hyphens"
-    string description "1-1024 chars"
-    string license
-    string compatibility
-    obj    metadata "version, author, region"
-    string allowed_tools_raw
-  }
-  SKILL_HEADER {
-    string name PK
-    string skill_dir
-    int    body_offset
-    int64  file_size
-  }
-  ACTIVATED_SKILL {
-    string name FK
-    string body
-    bool   has_wasm
-    int64  invocations "AtomicU64"
-    int64  last_used_unix_ms
-    bool   revoked
-  }
-  ALLOWED_TOOL {
-    string capability "read_file | write_file | fetch_url(pattern) | …"
-    string pattern_or_path
-    bool   experimental
-  }
-  WASM_COMPONENT {
-    string component_id PK "content hash"
-    bytes  wasm_bytes
-    string aot_cache_key
-    string wit_interface
-  }
-  SCRIPT_FILE {
-    string path PK "scripts/*.py | *.sh"
-    string interpreter
-  }
-  REFERENCE_FILE {
-    string path PK "references/*.md"
-  }
-  ASSET_FILE {
-    string path PK "assets/*"
-  }
-  INVOCATION {
-    string invocation_id PK
-    string skill_name FK
-    int64  started_at_ns
-    int64  ended_at_ns
-    int    exit_code
-    string executor "wasm | script | inline"
-  }
-  CAPABILITY_GRANT {
-    string skill_name FK
-    string capability
-    string granted_by_actor
-    int64  granted_at_ns
-  }
-  GRANT_RECORD {
-    string filepath PK "~/.cyberos/grants.json entry"
-    string content_hash FK "skill must re-approve if changed"
-  }
-  CONTENT_HASH {
-    string hash PK "sha256"
-  }
-    </div>
-  </div>
+ SKILL_BUNDLE {
+ string bundle_id PK "content hash"
+ string source "local | oci | https"
+ string oci_ref
+ string cosign_sig
+ int64 size_bytes
+ }
+ SKILL_MANIFEST {
+ string name PK "1-64 chars, lowercase + hyphens"
+ string description "1-1024 chars"
+ string license
+ string compatibility
+ obj metadata "version, author, region"
+ string allowed_tools_raw
+ }
+ SKILL_HEADER {
+ string name PK
+ string skill_dir
+ int body_offset
+ int64 file_size
+ }
+ ACTIVATED_SKILL {
+ string name FK
+ string body
+ bool has_wasm
+ int64 invocations "AtomicU64"
+ int64 last_used_unix_ms
+ bool revoked
+ }
+ ALLOWED_TOOL {
+ string capability "read_file | write_file | fetch_url(pattern) | …"
+ string pattern_or_path
+ bool experimental
+ }
+ WASM_COMPONENT {
+ string component_id PK "content hash"
+ bytes wasm_bytes
+ string aot_cache_key
+ string wit_interface
+ }
+ SCRIPT_FILE {
+ string path PK "scripts/*.py | *.sh"
+ string interpreter
+ }
+ REFERENCE_FILE {
+ string path PK "references/*.md"
+ }
+ ASSET_FILE {
+ string path PK "assets/*"
+ }
+ INVOCATION {
+ string invocation_id PK
+ string skill_name FK
+ int64 started_at_ns
+ int64 ended_at_ns
+ int exit_code
+ string executor "wasm | script | inline"
+ }
+ CAPABILITY_GRANT {
+ string skill_name FK
+ string capability
+ string granted_by_actor
+ int64 granted_at_ns
+ }
+ GRANT_RECORD {
+ string filepath PK "~/.cyberos/grants.json entry"
+ string content_hash FK "skill must re-approve if changed"
+ }
+ CONTENT_HASH {
+ string hash PK "sha256"
+ }
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- API SURFACE -->
 <!-- ============================================================ -->
 <section id="api-surface" class="module-section">
-  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+ <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
 
-  <h3 class="text-lg font-bold mb-3 mt-2">GraphQL subgraph (planned · P0+)</h3>
-  <div class="bbg-card p-5 mb-5">
+ <h3 class="text-lg font-bold mb-3 mt-2">GraphQL subgraph (planned · P0+)</h3>
+ <div class="bbg-card p-5 mb-5">
 <pre><code class="language-graphql">extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key"])
+ @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key"])
 
 type Skill @key(fields: "name") {
-  name: String!
-  version: String
-  description: String!
-  license: String
-  region: String                     # e.g. "VN" | null
-  allowedTools: [String!]!
-  hasWasm: Boolean!
-  installSource: InstallSource!
-  contentHash: String!
-  invocationsLast24h: Int!
+ name: String!
+ version: String
+ description: String!
+ license: String
+ region: String # e.g. "VN" | null
+ allowedTools: [String!]!
+ hasWasm: Boolean!
+ installSource: InstallSource!
+ contentHash: String!
+ invocationsLast24h: Int!
 }
 
 type Invocation @key(fields: "invocationId") {
-  invocationId: ID!
-  skillName: String!
-  actor: String!
-  exitCode: Int!
-  startedAt: DateTime!
-  endedAt: DateTime!
-  executor: Executor!
-  capabilitiesGranted: [String!]!
+ invocationId: ID!
+ skillName: String!
+ actor: String!
+ exitCode: Int!
+ startedAt: DateTime!
+ endedAt: DateTime!
+ executor: Executor!
+ capabilitiesGranted: [String!]!
 }
 
 type CapabilityGrant @key(fields: "skillName") {
-  skillName: String!
-  capability: String!
-  grantedBy: String!
-  grantedAt: DateTime!
-  contentHashAtGrant: String!
-  stillValid: Boolean!               # false if skill rebuilt
+ skillName: String!
+ capability: String!
+ grantedBy: String!
+ grantedAt: DateTime!
+ contentHashAtGrant: String!
+ stillValid: Boolean! # false if skill rebuilt
 }
 
 enum InstallSource { LOCAL OCI HTTPS BUILTIN }
-enum Executor      { WASM SCRIPT INLINE }
+enum Executor { WASM SCRIPT INLINE }
 
 type Query {
-  skill(name: String!): Skill
-  skills(region: String, hasWasm: Boolean): [Skill!]!
-  invocation(invocationId: ID!): Invocation
-  capabilityGrants(skillName: String): [CapabilityGrant!]!
+ skill(name: String!): Skill
+ skills(region: String, hasWasm: Boolean): [Skill!]!
+ invocation(invocationId: ID!): Invocation
+ capabilityGrants(skillName: String): [CapabilityGrant!]!
 }
 
 type Mutation {
-  installSkill(source: String!): Skill!         # OCI ref or HTTPS
-  invokeSkill(name: String!, input: JSON!): Invocation!
-  grantCapability(skillName: String!, capability: String!): CapabilityGrant!
-  revokeSkill(name: String!, note: String): Skill!
+ installSkill(source: String!): Skill! # OCI ref or HTTPS
+ invokeSkill(name: String!, input: JSON!): Invocation!
+ grantCapability(skillName: String!, capability: String!): CapabilityGrant!
+ revokeSkill(name: String!, note: String): Skill!
 }</code></pre>
-  </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
-  <div class="bbg-card p-5 mb-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
-      <tbody>
-        <tr><td><code>skill.list</code></td><td>region?</td><td><code>Skill[]</code></td><td>readonly · cached · scope=read</td></tr>
-        <tr><td><code>skill.describe</code></td><td>name</td><td><code>{manifest, body}</code></td><td>readonly · L2 activation · scope=read</td></tr>
-        <tr><td><code>skill.invoke</code></td><td>name, input, caps_requested</td><td><code>Invocation</code></td><td>destructive · scope=invoke · cap-gated</td></tr>
-        <tr><td><code>skill.validate</code></td><td>path</td><td><code>{valid, errors[]}</code></td><td>readonly · pure · scope=read</td></tr>
-        <tr><td><code>skill.audit</code></td><td>skillName?</td><td><code>CapabilityGrant[]</code></td><td>readonly · scope=audit</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+ <tbody>
+ <tr><td><code>skill.list</code></td><td>region?</td><td><code>Skill</code></td><td>readonly · cached · scope=read</td></tr>
+ <tr><td><code>skill.describe</code></td><td>name</td><td><code>{manifest, body}</code></td><td>readonly · L2 activation · scope=read</td></tr>
+ <tr><td><code>skill.invoke</code></td><td>name, input, caps_requested</td><td><code>Invocation</code></td><td>destructive · scope=invoke · cap-gated</td></tr>
+ <tr><td><code>skill.validate</code></td><td>path</td><td><code>{valid, errors}</code></td><td>readonly · pure · scope=read</td></tr>
+ <tr><td><code>skill.audit</code></td><td>skillName?</td><td><code>CapabilityGrant</code></td><td>readonly · scope=audit</td></tr>
+ </tbody>
+ </table>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">CLI — <code>cyberos-skill-cli</code></h3>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Subcommand</th><th>Purpose</th><th>Example</th></tr></thead>
-      <tbody>
-        <tr><td><code>list</code></td><td>Enumerate indexed skills</td><td><code>cyberos-skill-cli list --region VN</code></td></tr>
-        <tr><td><code>install</code></td><td>Resolve + cosign-verify + cache</td><td><code>cyberos-skill-cli install ghcr.io/cyberskill/vn-mst-validate:0.2.0</code></td></tr>
-        <tr><td><code>validate</code></td><td>Spec-validate a SKILL.md</td><td><code>cyberos-skill-cli validate ./skills/my-skill/</code></td></tr>
-        <tr><td><code>run</code></td><td>Invoke a skill</td><td><code>cyberos-skill-cli run vn-mst-validate --executor wasm</code></td></tr>
-        <tr><td><code>build</code></td><td>Bun toolchain build</td><td><code>cyberos-skill-cli build --lang ts ./src/</code></td></tr>
-        <tr><td><code>audit</code></td><td>Capability grants report</td><td><code>cyberos-skill-cli audit --since 7d</code></td></tr>
-        <tr><td><code>revoke</code></td><td>Mark a skill revoked</td><td><code>cyberos-skill-cli revoke vn-bad-skill --note "CVE-2026-x"</code></td></tr>
-        <tr><td><code>fixtures</code></td><td>Run skill fixtures</td><td><code>cyberos-skill-cli fixtures vn-mst-validate</code></td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">CLI — <code>cyberos-skill-cli</code></h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Subcommand</th><th>Purpose</th><th>Example</th></tr></thead>
+ <tbody>
+ <tr><td><code>list</code></td><td>Enumerate indexed skills</td><td><code>cyberos-skill-cli list --region VN</code></td></tr>
+ <tr><td><code>install</code></td><td>Resolve + cosign-verify + cache</td><td><code>cyberos-skill-cli install ghcr.io/cyberskill/vn-mst-validate:0.2.0</code></td></tr>
+ <tr><td><code>validate</code></td><td>Spec-validate a SKILL.md</td><td><code>cyberos-skill-cli validate./skills/my-skill/</code></td></tr>
+ <tr><td><code>run</code></td><td>Invoke a skill</td><td><code>cyberos-skill-cli run vn-mst-validate --executor wasm</code></td></tr>
+ <tr><td><code>build</code></td><td>Bun toolchain build</td><td><code>cyberos-skill-cli build --lang ts./src/</code></td></tr>
+ <tr><td><code>audit</code></td><td>Capability grants report</td><td><code>cyberos-skill-cli audit --since 7d</code></td></tr>
+ <tr><td><code>revoke</code></td><td>Mark a skill revoked</td><td><code>cyberos-skill-cli revoke vn-bad-skill --note "CVE-2026-x"</code></td></tr>
+ <tr><td><code>fixtures</code></td><td>Run skill fixtures</td><td><code>cyberos-skill-cli fixtures vn-mst-validate</code></td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- KEY FLOWS -->
 <!-- ============================================================ -->
 <section id="key-flows" class="module-section">
-  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+ <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
 
-  <h3 class="text-lg font-bold mb-3 mt-2">Flow 1 — Install &amp; index</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3 mt-2">Flow 1 — Install &amp; index</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant U as User / CUO
-  participant CLI as cyberos-skill-cli install
-  participant R as resolver
-  participant CS as cosign verify
-  participant L as loader.index_one()
-  participant REG as DashMap registry
+ autonumber
+ participant U as User / CUO
+ participant CLI as cyberos-skill-cli install
+ participant R as resolver
+ participant CS as cosign verify
+ participant L as loader.index_one
+ participant REG as DashMap registry
 
-  U->>CLI: install ghcr.io/cyberskill/vn-mst-validate:0.2.0
-  CLI->>R: resolve(oci_ref)
-  R->>R: pull bundle · save to ~/.cyberos/skills/
-  R-->>CLI: bundle_path
-  CLI->>CS: verify cosign signature
-  alt unsigned
-    CS-->>CLI: refuse (unless --allow-unsigned)
-  end
-  CS-->>CLI: ok
-  CLI->>L: parse SKILL.md frontmatter
-  L->>L: validate name matches directory
-  L->>REG: insert_header(SkillHeader)
-  REG-->>CLI: indexed
-  CLI-->>U: installed (name, version, hash)
-    </div>
-  </div>
+ U->>CLI: install ghcr.io/cyberskill/vn-mst-validate:0.2.0
+ CLI->>R: resolve(oci_ref)
+ R->>R: pull bundle · save to ~/.cyberos/skills/
+ R-->>CLI: bundle_path
+ CLI->>CS: verify cosign signature
+ alt unsigned
+ CS-->>CLI: refuse (unless --allow-unsigned)
+ end
+ CS-->>CLI: ok
+ CLI->>L: parse SKILL.md frontmatter
+ L->>L: validate name matches directory
+ L->>REG: insert_header(SkillHeader)
+ REG-->>CLI: indexed
+ CLI-->>U: installed (name, version, hash)
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 2 — Invocation with capability check</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 2 — Invocation with capability check</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant C as Caller (CUO / agent)
-  participant I as Invoker
-  participant REG as DashMap registry
-  participant B as Capability broker
-  participant ACT as Activator
-  participant W as Wasmtime Store (from pool)
-  participant A as Audit (BRAIN)
+ autonumber
+ participant C as Caller (CUO / agent)
+ participant I as Invoker
+ participant REG as DashMap registry
+ participant B as Capability broker
+ participant ACT as Activator
+ participant W as Wasmtime Store (from pool)
+ participant A as Audit (BRAIN)
 
-  C->>I: invoke(name, input, requested_caps)
-  I->>REG: get_header(name)
-  REG-->>I: SkillHeader (O(1))
-  I->>B: check requested_caps subset of declared
-  alt cap denied
-    B-->>I: CapabilityDenied
-    I-->>C: error
-  end
-  B->>B: ensure first-use approval recorded
-  I->>ACT: activate(header)
-  alt cold activation
-    ACT->>ACT: read body · compile WASM · cache AOT
-  end
-  ACT-->>I: ActivatedSkill (Arc)
-  I->>W: pull Store from pool
-  W->>W: instantiate component · build WasiCtx with grants
-  W->>W: call run() export
-  W-->>I: result JSON
-  I->>W: return Store to pool
-  I->>A: log invocation row to BRAIN
-  I-->>C: {result, exit_code, elapsed_us}
-    </div>
-  </div>
+ C->>I: invoke(name, input, requested_caps)
+ I->>REG: get_header(name)
+ REG-->>I: SkillHeader (O(1))
+ I->>B: check requested_caps subset of declared
+ alt cap denied
+ B-->>I: CapabilityDenied
+ I-->>C: error
+ end
+ B->>B: ensure first-use approval recorded
+ I->>ACT: activate(header)
+ alt cold activation
+ ACT->>ACT: read body · compile WASM · cache AOT
+ end
+ ACT-->>I: ActivatedSkill (Arc)
+ I->>W: pull Store from pool
+ W->>W: instantiate component · build WasiCtx with grants
+ W->>W: call run export
+ W-->>I: result JSON
+ I->>W: return Store to pool
+ I->>A: log invocation row to BRAIN
+ I-->>C: {result, exit_code, elapsed_us}
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 3 — Capability approval (first-use)</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 3 — Capability approval (first-use)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant U as Operator
-  participant I as Invoker
-  participant B as Capability broker
-  participant G as ~/.cyberos/grants.json
-  participant H as content_hash check
+ autonumber
+ participant U as Operator
+ participant I as Invoker
+ participant B as Capability broker
+ participant G as ~/.cyberos/grants.json
+ participant H as content_hash check
 
-  I->>B: ensure_granted(skill, capability)
-  B->>G: lookup (skill, capability)
-  alt not found
-    B->>U: PROMPT — "vn-mst-validate requests read_file + write_file"
-    U-->>B: approve / deny
-    alt deny
-      B-->>I: GrantDenied
-    end
-    B->>H: compute current content_hash
-    B->>G: persist {skill, capability, content_hash, granted_by, granted_at}
-  end
-  G-->>B: existing grant
-  B->>H: re-verify content_hash
-  alt hash mismatch (skill rebuilt)
-    B-->>I: GrantStale — re-prompt required
-  end
-  B-->>I: granted
-    </div>
-  </div>
+ I->>B: ensure_granted(skill, capability)
+ B->>G: lookup (skill, capability)
+ alt not found
+ B->>U: PROMPT — "vn-mst-validate requests read_file + write_file"
+ U-->>B: approve / deny
+ alt deny
+ B-->>I: GrantDenied
+ end
+ B->>H: compute current content_hash
+ B->>G: persist {skill, capability, content_hash, granted_by, granted_at}
+ end
+ G-->>B: existing grant
+ B->>H: re-verify content_hash
+ alt hash mismatch (skill rebuilt)
+ B-->>I: GrantStale — re-prompt required
+ end
+ B-->>I: granted
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 4 — Python ↔ Rust parity check</h3>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 4 — Python ↔ Rust parity check</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant T as Parity harness (pytest)
-  participant FX as 12 golden fixtures
-  participant PY as Python runner (legacy)
-  participant RS as Rust host
+ autonumber
+ participant T as Parity harness (pytest)
+ participant FX as 12 golden fixtures
+ participant PY as Python runner (legacy)
+ participant RS as Rust host
 
-  T->>FX: load fixture (input.json + expected.json)
-  par parallel run
-    T->>PY: python -m runners.fr_with_tasks <fixture>
-    T->>RS: cyberos-skill-cli run <skill> < input.json
-  end
-  PY-->>T: py_output
-  RS-->>T: rs_output
-  T->>T: assert py_output == rs_output (byte-identical)
-  alt mismatch
-    T-->>T: FAIL — gate blocks Phase 7 retirement
-  end
-  T-->>T: 12/12 PASS — Rust host is canonical
-    </div>
-    <p class="text-xs text-slate-500 mt-3">The parity harness is the single objective gate that lets us delete the legacy Python runner at Phase 7. Today: 12/12 green.</p>
-  </div>
+ T->>FX: load fixture (input.json + expected.json)
+ par parallel run
+ T->>PY: python -m runners.fr_with_tasks <fixture>
+ T->>RS: cyberos-skill-cli run <skill> < input.json
+ end
+ PY-->>T: py_output
+ RS-->>T: rs_output
+ T->>T: assert py_output == rs_output (byte-identical)
+ alt mismatch
+ T-->>T: FAIL — gate blocks Phase 7 retirement
+ end
+ T-->>T: 12/12 PASS — Rust host is canonical
+ </div>
+ <p class="text-xs text-slate-500 mt-3">The parity harness is the single objective gate that lets us delete the legacy Python runner at Phase 7. Today: 12/12 green.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- LIFECYCLE -->
 <!-- ============================================================ -->
 <section id="lifecycle" class="module-section">
-  <header class="section-head"><span class="section-num">7</span><h2>Skill lifecycle</h2></header>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <header class="section-head"><span class="section-num">7</span><h2>Skill lifecycle</h2></header>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 stateDiagram-v2
-  [*] --> Authored: skill author writes SKILL.md (Bun toolchain)
-  Authored --> Built: cyberos-skill-cli build (TS → wasm32-wasi)
-  Built --> Signed: cosign sign bundle
-  Signed --> Published: push to OCI registry / agentskills.io
-  Published --> Installed: cyberos-skill-cli install &lt;oci_ref&gt;
-  Installed --> Indexed: loader reads frontmatter into DashMap
-  Indexed --> Activated: agent / activation event triggers body load + AOT compile
-  Activated --> Invoked: invoker pulls Store · runs · audits
-  Invoked --> Activated: re-invoke (cached)
-  Invoked --> Recorded: BRAIN audit row written
-  Activated --> Revoked: cyberos-skill-cli revoke
-  Revoked --> Retired: legacy retirement runbook (30-day soak then delete)
-  Retired --> [*]
+ [*] --> Authored: skill author writes SKILL.md (Bun toolchain)
+ Authored --> Built: cyberos-skill-cli build (TS → wasm32-wasi)
+ Built --> Signed: cosign sign bundle
+ Signed --> Published: push to OCI registry / agentskills.io
+ Published --> Installed: cyberos-skill-cli install &lt;oci_ref&gt;
+ Installed --> Indexed: loader reads frontmatter into DashMap
+ Indexed --> Activated: agent / activation event triggers body load + AOT compile
+ Activated --> Invoked: invoker pulls Store · runs · audits
+ Invoked --> Activated: re-invoke (cached)
+ Invoked --> Recorded: BRAIN audit row written
+ Activated --> Revoked: cyberos-skill-cli revoke
+ Revoked --> Retired: legacy retirement runbook (30-day soak then delete)
+ Retired --> [*]
 
-  note right of Indexed
-    Header in registry
-    ~100 tokens · O(1) lookup
-  end note
-  note right of Activated
-    Body loaded · WASM cached
-    AOT artifact on disk
-  end note
-    </div>
-  </div>
+ note right of Indexed
+ Header in registry
+ ~100 tokens · O(1) lookup
+ end note
+ note right of Activated
+ Body loaded · WASM cached
+ AOT artifact on disk
+ end note
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- VN SKILLS -->
 <!-- ============================================================ -->
 <section id="vn-skills" class="module-section">
-  <header class="section-head"><span class="section-num">8</span><h2>The 6 <code>cyberskill-vn</code> skills</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    The Vietnamese-market collection. Each is a valid Agent Skill that loads unchanged in Claude Code / Codex / Cursor / VS Code. All are MIT- or Apache-2.0-licensed, network-free where possible, and ship with a parity-tested Python reference implementation for audit.
-  </p>
+ <header class="section-head"><span class="section-num">8</span><h2>The 6 <code>cyberskill-vn</code> skills</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The Vietnamese-market collection. Each is a valid Agent Skill that loads unchanged in Claude Code / Codex / Cursor / VS Code. All are MIT- or Apache-2.0-licensed, network-free where possible, and ship with a parity-tested Python reference implementation for audit.
+ </p>
 
-  <!-- vn-mst-validate -->
-  <article id="skill-mst" class="vn-skill">
-    <h3>🇻🇳 <code>vn-mst-validate</code> <span class="role-tag">v0.2.0 · region:VN · MIT</span></h3>
-    <p class="text-sm text-slate-600 mb-3">
-      Validate a Vietnamese tax code (Mã số thuế). Per General Department of Taxation regulations, an MST is either 10 digits (legal entity) or 13 digits (branch — 10 digits + '-' + 3 digits). The skill returns a structured <code>{ok, format, reason?}</code>.
-    </p>
-    <div class="label">Quickstart</div>
+ <!-- vn-mst-validate -->
+ <article id="skill-mst" class="vn-skill">
+ <h3>🇻🇳 <code>vn-mst-validate</code> <span class="role-tag">v0.2.0 · region:VN · MIT</span></h3>
+ <p class="text-sm text-slate-600 mb-3">
+ Validate a Vietnamese tax code (Mã số thuế). Per General Department of Taxation regulations, an MST is either 10 digits (legal entity) or 13 digits (branch — 10 digits + '-' + 3 digits). The skill returns a structured <code>{ok, format, reason?}</code>.
+ </p>
+ <div class="label">Quickstart</div>
 <pre>$ cyberos-skill-cli run vn-mst-validate --input '{"mst":"0123456789-001"}'
 {"ok": true, "format": "13-digit-branch"}</pre>
-    <div class="label">When to use</div>
-    <p class="text-sm text-slate-600">User says "kiểm tra MST", "validate tax code", "mã số thuế 0123...". Routed automatically by CUO via the <code>mst</code>, <code>tax code</code>, <code>ma so thue</code> keywords.</p>
-    <div class="label">Capabilities</div>
-    <p class="text-sm text-slate-600"><code>read_file</code> · no network</p>
-  </article>
+ <div class="label">When to use</div>
+ <p class="text-sm text-slate-600">User says "kiểm tra MST", "validate tax code", "mã số thuế 0123...". Routed automatically by CUO via the <code>mst</code>, <code>tax code</code>, <code>ma so thue</code> keywords.</p>
+ <div class="label">Capabilities</div>
+ <p class="text-sm text-slate-600"><code>read_file</code> · no network</p>
+ </article>
 
-  <!-- vn-vat-invoice -->
-  <article id="skill-vat" class="vn-skill">
-    <h3>🇻🇳 <code>vn-vat-invoice</code> <span class="role-tag">v0.3.0 · region:VN · Apache-2.0</span></h3>
-    <p class="text-sm text-slate-600 mb-3">
-      Generate Vietnamese VAT-compliant electronic invoices (Hoá đơn GTGT điện tử) from a structured JSON line-item list. Produces XML conforming to General Department of Taxation schema v3.0. Validates buyer MST via the <code>vn-mst-validate</code> dependency (Phase 3 chain).
-    </p>
-    <div class="label">Quickstart</div>
+ <!-- vn-vat-invoice -->
+ <article id="skill-vat" class="vn-skill">
+ <h3>🇻🇳 <code>vn-vat-invoice</code> <span class="role-tag">v0.3.0 · region:VN · Apache-2.0</span></h3>
+ <p class="text-sm text-slate-600 mb-3">
+ Generate Vietnamese VAT-compliant electronic invoices (Hoá đơn GTGT điện tử) from a structured JSON line-item list. Produces XML conforming to General Department of Taxation schema v3.0. Validates buyer MST via the <code>vn-mst-validate</code> dependency (Phase 3 chain).
+ </p>
+ <div class="label">Quickstart</div>
 <pre>$ cyberos-skill-cli run vn-vat-invoice --input '{
-    "buyer_mst": "0123456789",
-    "seller_mst": "9876543210",
-    "lines": [{"item":"Consulting", "qty":1, "unit_price":10000000, "tax_rate":0.10}]
-  }'
+ "buyer_mst": "0123456789",
+ "seller_mst": "9876543210",
+ "lines": [{"item":"Consulting", "qty":1, "unit_price":10000000, "tax_rate":0.10}]
+ }'
 &lt;Invoice xmlns="urn:vn:gdt:v3"&gt;
-  &lt;BuyerTaxCode&gt;0123456789&lt;/BuyerTaxCode&gt;
-  &lt;LineItem&gt;...&lt;TaxAmount&gt;1000000&lt;/TaxAmount&gt;&lt;/LineItem&gt;
-&lt;/Invoice&gt;</pre>
-    <div class="label">When to use</div>
-    <p class="text-sm text-slate-600">User says "tạo hoá đơn", "xuất hoá đơn GTGT", "e-invoice Vietnam". CUO keywords: <code>invoice</code>, <code>hoa don</code>, <code>vat</code>, <code>gtgt</code>, <code>e-invoice</code>, <code>xuat hoa don</code>.</p>
-    <div class="label">Capabilities</div>
-    <p class="text-sm text-slate-600"><code>read_file</code> · <code>write_file</code> · no network. Round-half-up VAT per line.</p>
-  </article>
+ &lt;BuyerTaxCode&gt;0123456789&lt;BuyerTaxCode&gt;
+ &lt;LineItem&gt;...&lt;TaxAmount&gt;1000000&lt;TaxAmount&gt;&lt;LineItem&gt;
+&lt;Invoice&gt;</pre>
+ <div class="label">When to use</div>
+ <p class="text-sm text-slate-600">User says "tạo hoá đơn", "xuất hoá đơn GTGT", "e-invoice Vietnam". CUO keywords: <code>invoice</code>, <code>hoa don</code>, <code>vat</code>, <code>gtgt</code>, <code>e-invoice</code>, <code>xuat hoa don</code>.</p>
+ <div class="label">Capabilities</div>
+ <p class="text-sm text-slate-600"><code>read_file</code><code>write_file</code> · no network. Round-half-up VAT per line.</p>
+ </article>
 
-  <!-- vn-bank-transfer -->
-  <article id="skill-bank" class="vn-skill">
-    <h3>🇻🇳 <code>vn-bank-transfer</code> <span class="role-tag">v0.1.0 · region:VN · MIT</span></h3>
-    <p class="text-sm text-slate-600 mb-3">
-      Napas 24/7 + VietQR generator. Given a bank short-code, an account number, and an amount, produces (a) a VietQR EMVCo string for client-side QR rendering and (b) a Napas 24/7 transfer instruction payload. Does NOT execute transfers — that always defers to human approval.
-    </p>
-    <div class="label">Quickstart</div>
+ <!-- vn-bank-transfer -->
+ <article id="skill-bank" class="vn-skill">
+ <h3>🇻🇳 <code>vn-bank-transfer</code> <span class="role-tag">v0.1.0 · region:VN · MIT</span></h3>
+ <p class="text-sm text-slate-600 mb-3">
+ Napas 24/7 + VietQR generator. Given a bank short-code, an account number, and an amount, produces (a) a VietQR EMVCo string for client-side QR rendering and (b) a Napas 24/7 transfer instruction payload. Does NOT execute transfers — that always defers to human approval.
+ </p>
+ <div class="label">Quickstart</div>
 <pre>$ cyberos-skill-cli run vn-bank-transfer --input '{
-    "bank": "VCB", "account":"0011001234567", "amount_vnd": 5000000,
-    "memo": "Refund INV-2026-014"
-  }'
+ "bank": "VCB", "account":"0011001234567", "amount_vnd": 5000000,
+ "memo": "Refund INV-2026-014"
+ }'
 {
-  "vietqr_emv": "00020101021238540010A0000007270124000697040401120011001234567...",
-  "napas_payload": {...},
-  "render_url": "https://img.vietqr.io/image/VCB-0011001234567-..."
+ "vietqr_emv": "00020101021238540010A0000007270124000697040401120011001234567...",
+ "napas_payload": {...},
+ "render_url": "https://img.vietqr.io/image/VCB-0011001234567-..."
 }</pre>
-    <div class="label">When to use</div>
-    <p class="text-sm text-slate-600">User says "tạo QR chuyển khoản", "VietQR", "Napas 247". CUO keywords: <code>transfer</code>, <code>qr</code>, <code>chuyen khoan</code>, <code>vietqr</code>, <code>napas</code>, <code>ma qr</code>.</p>
-    <div class="label">Capabilities</div>
-    <p class="text-sm text-slate-600">No filesystem · no network. Deterministic generation only.</p>
-  </article>
+ <div class="label">When to use</div>
+ <p class="text-sm text-slate-600">User says "tạo QR chuyển khoản", "VietQR", "Napas 247". CUO keywords: <code>transfer</code>, <code>qr</code>, <code>chuyen khoan</code>, <code>vietqr</code>, <code>napas</code>, <code>ma qr</code>.</p>
+ <div class="label">Capabilities</div>
+ <p class="text-sm text-slate-600">No filesystem · no network. Deterministic generation only.</p>
+ </article>
 
-  <!-- vneid-integration -->
-  <article id="skill-vneid" class="vn-skill">
-    <h3>🇻🇳 <code>vneid-integration</code> <span class="role-tag">v0.1.0 · region:VN · MIT</span></h3>
-    <p class="text-sm text-slate-600 mb-3">
-      CCCD validator + VNeID API scaffolding. Validates 12-digit Citizen Identification Card (Căn cước công dân) checksums and shapes an API request to the VNeID gateway for downstream identity verification (gateway access requires PDPL Decree 13/2023 consent — out of scope for this skill, which only prepares the request).
-    </p>
-    <div class="label">Quickstart</div>
+ <!-- vneid-integration -->
+ <article id="skill-vneid" class="vn-skill">
+ <h3>🇻🇳 <code>vneid-integration</code> <span class="role-tag">v0.1.0 · region:VN · MIT</span></h3>
+ <p class="text-sm text-slate-600 mb-3">
+ CCCD validator + VNeID API scaffolding. Validates 12-digit Citizen Identification Card (Căn cước công dân) checksums and shapes an API request to the VNeID gateway for downstream identity verification (gateway access requires PDPL Decree 13/2023 consent — out of scope for this skill, which only prepares the request).
+ </p>
+ <div class="label">Quickstart</div>
 <pre>$ cyberos-skill-cli run vneid-integration --input '{"cccd":"079203012345"}'
 {
-  "valid": true,
-  "structure": {"province_code":"079", "year_of_birth_century":"2", "gender_code":"0"},
-  "vneid_request_payload": {...},
-  "next_action": "POST to https://vneid.gov.vn/api/v2/verify (requires consent flow)"
+ "valid": true,
+ "structure": {"province_code":"079", "year_of_birth_century":"2", "gender_code":"0"},
+ "vneid_request_payload": {...},
+ "next_action": "POST to https://vneid.gov.vn/api/v2/verify (requires consent flow)"
 }</pre>
-    <div class="label">When to use</div>
-    <p class="text-sm text-slate-600">User says "kiểm tra CCCD", "validate citizen ID", "VNeID lookup". CUO keywords: <code>cccd</code>, <code>citizen id</code>, <code>can cuoc</code>, <code>vneid</code>, <code>id card</code>, <code>danh tinh</code>.</p>
-    <div class="label">Capabilities</div>
-    <p class="text-sm text-slate-600">No filesystem · no network (scaffolds the request; caller is responsible for the call + consent record).</p>
-  </article>
+ <div class="label">When to use</div>
+ <p class="text-sm text-slate-600">User says "kiểm tra CCCD", "validate citizen ID", "VNeID lookup". CUO keywords: <code>cccd</code>, <code>citizen id</code>, <code>can cuoc</code>, <code>vneid</code>, <code>id card</code>, <code>danh tinh</code>.</p>
+ <div class="label">Capabilities</div>
+ <p class="text-sm text-slate-600">No filesystem · no network (scaffolds the request; caller is responsible for the call + consent record).</p>
+ </article>
 
-  <!-- vn-legal-compliance -->
-  <article id="skill-legal" class="vn-skill">
-    <h3>🇻🇳 <code>vn-legal-compliance</code> <span class="role-tag">v0.1.0 · region:VN · CC-BY-SA-4.0</span></h3>
-    <p class="text-sm text-slate-600 mb-3">
-      Reference-only procedural knowledge for Vietnamese legal/compliance: PDPL Law 91/2025 · Decree 13/2023 (Personal Data) · Decree 53/2022 (Cyber Security) · Decree 20/2026 (SME). Markdown-only skill (no executable code) that loads procedural guidance into the agent's context on activation.
-    </p>
-    <div class="label">Quickstart</div>
+ <!-- vn-legal-compliance -->
+ <article id="skill-legal" class="vn-skill">
+ <h3>🇻🇳 <code>vn-legal-compliance</code> <span class="role-tag">v0.1.0 · region:VN · CC-BY-SA-4.0</span></h3>
+ <p class="text-sm text-slate-600 mb-3">
+ Reference-only procedural knowledge for Vietnamese legal/compliance: PDPL Law 91/2025 · Decree 13/2023 (Personal Data) · Decree 53/2022 (Cyber Security) · Decree 20/2026 (SME). Markdown-only skill (no executable code) that loads procedural guidance into the agent's context on activation.
+ </p>
+ <div class="label">Quickstart</div>
 <pre>$ cyberos-skill-cli run vn-legal-compliance --input '{"topic":"DSAR fulfilment under PDPL Art. 14"}'
 {
-  "level": "instructions",
-  "guidance": "# DSAR fulfilment under PDPL Art. 14\n\n1. Verify identity via VNeID or...\n2. Within 30 days: ...\n3. Encryption envelope review (Decree 13/2023 Art. 17)..."
+ "level": "instructions",
+ "guidance": "# DSAR fulfilment under PDPL Art. 14\n\n1. Verify identity via VNeID or...\n2. Within 30 days:...\n3. Encryption envelope review (Decree 13/2023 Art. 17)..."
 }</pre>
-    <div class="label">When to use</div>
-    <p class="text-sm text-slate-600">User says "compliance check", "decree review", "PDPL question". CUO keywords: <code>compliance</code>, <code>law</code>, <code>decree</code>, <code>nghi dinh</code>, <code>thong tu</code>, <code>pdpl</code>, <code>cybersecurity</code>.</p>
-    <div class="label">Capabilities</div>
-    <p class="text-sm text-slate-600">Markdown-only — zero runtime cost.</p>
-  </article>
+ <div class="label">When to use</div>
+ <p class="text-sm text-slate-600">User says "compliance check", "decree review", "PDPL question". CUO keywords: <code>compliance</code>, <code>law</code>, <code>decree</code>, <code>nghi dinh</code>, <code>thong tu</code>, <code>pdpl</code>, <code>cybersecurity</code>.</p>
+ <div class="label">Capabilities</div>
+ <p class="text-sm text-slate-600">Markdown-only — zero runtime cost.</p>
+ </article>
 
-  <!-- vn-tax-filing -->
-  <article id="skill-tax" class="vn-skill">
-    <h3>🇻🇳 <code>vn-tax-filing</code> <span class="role-tag">v0.1.0 · region:VN · Apache-2.0</span></h3>
-    <p class="text-sm text-slate-600 mb-3">
-      Monthly + quarterly VAT return helper. Aggregates <code>vn-vat-invoice</code>-emitted XML invoices across a reporting period, sums output VAT and input VAT credits, and shapes the tax return XML for the GDT online filing portal. The skill never submits — submission is a deferred-to-human action.
-    </p>
-    <div class="label">Quickstart</div>
+ <!-- vn-tax-filing -->
+ <article id="skill-tax" class="vn-skill">
+ <h3>🇻🇳 <code>vn-tax-filing</code> <span class="role-tag">v0.1.0 · region:VN · Apache-2.0</span></h3>
+ <p class="text-sm text-slate-600 mb-3">
+ Monthly + quarterly VAT return helper. Aggregates <code>vn-vat-invoice</code>-emitted XML invoices across a reporting period, sums output VAT and input VAT credits, and shapes the tax return XML for the GDT online filing portal. The skill never submits — submission is a deferred-to-human action.
+ </p>
+ <div class="label">Quickstart</div>
 <pre>$ cyberos-skill-cli run vn-tax-filing --input '{
-    "period":"2026-Q2", "invoices_dir":"./invoices/2026-Q2/"
-  }'
+ "period":"2026-Q2", "invoices_dir":"./invoices/2026-Q2/"
+ }'
 {
-  "period": "2026-Q2",
-  "output_vat_total": 25_000_000,
-  "input_vat_total": 18_000_000,
-  "net_vat_due": 7_000_000,
-  "gdt_xml_path": "./returns/2026-Q2.xml",
-  "ready_for_submission": true,
-  "next_action": "human review then upload to https://thuedientu.gdt.gov.vn"
+ "period": "2026-Q2",
+ "output_vat_total": 25_000_000,
+ "input_vat_total": 18_000_000,
+ "net_vat_due": 7_000_000,
+ "gdt_xml_path": "./returns/2026-Q2.xml",
+ "ready_for_submission": true,
+ "next_action": "human review then upload to https://thuedientu.gdt.gov.vn"
 }</pre>
-    <div class="label">When to use</div>
-    <p class="text-sm text-slate-600">User says "monthly VAT return", "quarterly tax filing", "kê khai thuế". CUO keywords: <code>filing</code>, <code>return</code>, <code>to khai</code>, <code>ke khai thue</code>, <code>monthly vat</code>, <code>quarterly vat</code>.</p>
-    <div class="label">Capabilities</div>
-    <p class="text-sm text-slate-600"><code>read_file</code> (invoices) · <code>write_file</code> (return XML) · no network.</p>
-  </article>
+ <div class="label">When to use</div>
+ <p class="text-sm text-slate-600">User says "monthly VAT return", "quarterly tax filing", "kê khai thuế". CUO keywords: <code>filing</code>, <code>return</code>, <code>to khai</code>, <code>ke khai thue</code>, <code>monthly vat</code>, <code>quarterly vat</code>.</p>
+ <div class="label">Capabilities</div>
+ <p class="text-sm text-slate-600"><code>read_file</code> (invoices) · <code>write_file</code> (return XML) · no network.</p>
+ </article>
 </section>
 
 <!-- ============================================================ -->
 <!-- AUDIT PHASES -->
 <!-- ============================================================ -->
 <section id="audit-phases" class="module-section">
-  <header class="section-head"><span class="section-num">9</span><h2>Audit phases 0–7 — outcomes</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    The 13 May 2026 architectural audit (<code>skill/docs/AUDIT.md</code>) prescribed a seven-phase migration from the legacy in-house format to the open Anthropic Agent Skills standard. All seven phases are now done; Phase 7 is a 30-day soak window before legacy code deletion.
-  </p>
+ <header class="section-head"><span class="section-num">9</span><h2>Audit phases 0–7 — outcomes</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ The 13 May 2026 architectural audit (<code>skill/docs/AUDIT.md</code>) prescribed a seven-phase migration from the legacy in-house format to the open Anthropic Agent Skills standard. All seven phases are now done; Phase 7 is a 30-day soak window before legacy code deletion.
+ </p>
 
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">0</span>Phase 0 — Inventory &amp; freeze <span class="pill pill-shipped ml-auto">shipped</span></div>
-    <p class="text-sm text-slate-600 mt-2">Catalogued every legacy skill. Froze the legacy format — no new bespoke skills accepted past Day 0. Stood up <code>cyberos-skill-cli validate</code> that parses both legacy and SKILL.md formats and emits a diff.</p>
-  </div>
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">1</span>Phase 1 — Rust + Bun scaffold · spec validator <span class="pill pill-shipped ml-auto">shipped</span></div>
-    <p class="text-sm text-slate-600 mt-2">Stood up the 4-crate Rust workspace (manifest · host · resolver · cli) and the Bun + esbuild authoring toolchain. Added the SKILL.md loader alongside the legacy loader behind a <code>--skills-format=both|legacy|standard</code> flag. Audited deltas vs the open spec.</p>
-  </div>
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">2</span>Phase 2 — Parity harness (Python ↔ Rust) <span class="pill pill-shipped ml-auto">shipped · 12/12 green</span></div>
-    <p class="text-sm text-slate-600 mt-2">Built a property-test harness that asserts byte-identical agent outputs across both runners for the entire catalogue. 12/12 fixtures pass. This is the single objective gate for Phase 7.</p>
-  </div>
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">3</span>Phase 3 — Executor selection flag · default to Rust <span class="pill pill-shipped ml-auto">shipped</span></div>
-    <p class="text-sm text-slate-600 mt-2">Flipped the default from legacy Python to Rust host. Legacy runner remains compiled in for the soak window. Announced deprecation; the <code>cyberskill-vn</code> collection is now resolvable from the open registry.</p>
-  </div>
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">4</span>Phase 4 — DashMap registry + Criterion benchmarks <span class="pill pill-shipped ml-auto">shipped · ≥ 2× at contention</span></div>
-    <p class="text-sm text-slate-600 mt-2">Replaced the legacy global <code>Mutex&lt;HashMap&gt;</code> with <code>Arc&lt;DashMap&gt;</code> (64 shards). Criterion microbenchmarks show ≥ 2× throughput at 4+ concurrent invocations on a commodity laptop. Registry hot path is no longer a bottleneck.</p>
-  </div>
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">5</span>Phase 5 — Wasmtime engine + AOT cache + componentize <span class="pill pill-shipped ml-auto">scaffolded · runtime gated</span></div>
-    <p class="text-sm text-slate-600 mt-2">Wasmtime executor lands behind <code>--exec=script|wasm|auto</code>. Auto selects WASM when <code>dist/skill.wasm</code> is present. AOT artifacts cached on disk by content hash. Bun toolchain compiles TS skills to <code>wasm32-wasi</code> components. Runtime is feature-gated on user install per <code>docs/PHASE_5_ACTIVATION.md</code>.</p>
-  </div>
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">6</span>Phase 6 — Capability broker GA <span class="pill pill-shipped ml-auto">shipped</span></div>
-    <p class="text-sm text-slate-600 mt-2">Capability enforcement flipped from <code>warn</code> to <code>deny</code>. Operators approve each skill's <code>allowed-tools</code> on first use; the grant is recorded in <code>~/.cyberos/grants.json</code> bound to the skill's content hash. <code>cyberos-skill-cli audit</code> reports grants.</p>
-  </div>
-  <div class="phase-block">
-    <div class="phase-title"><span class="phase-num">7</span>Phase 7 — Legacy retirement <span class="pill pill-shipped ml-auto">runbook ready · 30-day soak</span></div>
-    <p class="text-sm text-slate-600 mt-2">Runbook ready (<code>docs/PHASE_7_RETIREMENT.md</code>). Executes after a 30-day soak with zero P0 incidents on the new defaults. Deletes the legacy loader, registry primitive, and executor; tags a new major version.</p>
-  </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">0</span>Phase 0 — Inventory &amp; freeze <span class="pill pill-shipped ml-auto">shipped</span></div>
+ <p class="text-sm text-slate-600 mt-2">Catalogued every legacy skill. Froze the legacy format — no new bespoke skills accepted past Day 0. Stood up <code>cyberos-skill-cli validate</code> that parses both legacy and SKILL.md formats and emits a diff.</p>
+ </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">1</span>Phase 1 — Rust + Bun scaffold · spec validator <span class="pill pill-shipped ml-auto">shipped</span></div>
+ <p class="text-sm text-slate-600 mt-2">Stood up the 4-crate Rust workspace (manifest · host · resolver · cli) and the Bun + esbuild authoring toolchain. Added the SKILL.md loader alongside the legacy loader behind a <code>--skills-format=both|legacy|standard</code> flag. Audited deltas vs the open spec.</p>
+ </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">2</span>Phase 2 — Parity harness (Python ↔ Rust) <span class="pill pill-shipped ml-auto">shipped · 12/12 green</span></div>
+ <p class="text-sm text-slate-600 mt-2">Built a property-test harness that asserts byte-identical agent outputs across both runners for the entire catalogue. 12/12 fixtures pass. This is the single objective gate for Phase 7.</p>
+ </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">3</span>Phase 3 — Executor selection flag · default to Rust <span class="pill pill-shipped ml-auto">shipped</span></div>
+ <p class="text-sm text-slate-600 mt-2">Flipped the default from legacy Python to Rust host. Legacy runner remains compiled in for the soak window. Announced deprecation; the <code>cyberskill-vn</code> collection is now resolvable from the open registry.</p>
+ </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">4</span>Phase 4 — DashMap registry + Criterion benchmarks <span class="pill pill-shipped ml-auto">shipped · ≥ 2× at contention</span></div>
+ <p class="text-sm text-slate-600 mt-2">Replaced the legacy global <code>Mutex&lt;HashMap&gt;</code> with <code>Arc&lt;DashMap&gt;</code> (64 shards). Criterion microbenchmarks show ≥ 2× throughput at 4+ concurrent invocations on a commodity laptop. Registry hot path is no longer a bottleneck.</p>
+ </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">5</span>Phase 5 — Wasmtime engine + AOT cache + componentize <span class="pill pill-shipped ml-auto">scaffolded · runtime gated</span></div>
+ <p class="text-sm text-slate-600 mt-2">Wasmtime executor lands behind <code>--exec=script|wasm|auto</code>. Auto selects WASM when <code>dist/skill.wasm</code> is present. AOT artifacts cached on disk by content hash. Bun toolchain compiles TS skills to <code>wasm32-wasi</code> components. Runtime is feature-gated on user install per <code>docs/PHASE_5_ACTIVATION.md</code>.</p>
+ </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">6</span>Phase 6 — Capability broker GA <span class="pill pill-shipped ml-auto">shipped</span></div>
+ <p class="text-sm text-slate-600 mt-2">Capability enforcement flipped from <code>warn</code> to <code>deny</code>. Operators approve each skill's <code>allowed-tools</code> on first use; the grant is recorded in <code>~/.cyberos/grants.json</code> bound to the skill's content hash. <code>cyberos-skill-cli audit</code> reports grants.</p>
+ </div>
+ <div class="phase-block">
+ <div class="phase-title"><span class="phase-num">7</span>Phase 7 — Legacy retirement <span class="pill pill-shipped ml-auto">runbook ready · 30-day soak</span></div>
+ <p class="text-sm text-slate-600 mt-2">Runbook ready (<code>docs/PHASE_7_RETIREMENT.md</code>). Executes after a 30-day soak with zero P0 incidents on the new defaults. Deletes the legacy loader, registry primitive, and executor; tags a new major version.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
-  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <div class="bbg-card p-5">
-    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
-    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
-  </div>
+ <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+ <div class="bbg-card p-5">
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- NFRs -->
 <!-- ============================================================ -->
 <section id="non-functional-requirements" class="module-section">
-  <header class="section-head"><span class="section-num">11</span><h2>Non-Functional Requirements</h2></header>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
-      <tbody>
-        <tr><td><code>N(FR pending)</code></td><td>Cold-start (1,000 skills indexed)</td><td>≤ 100 ms · parallel</td><td>Criterion bench · macOS M2</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Header lookup p99</td><td>≤ 5 µs (DashMap shard read)</td><td>Criterion bench</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>WASM invocation cold-start (AOT cached)</td><td>≤ 1 ms</td><td>wasm_invoke bench</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Native-script invocation</td><td>≤ 50 ms (process spawn dominated)</td><td>script_invoke bench</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Trivial native-script throughput</td><td>≥ 10,000 inv/sec</td><td>Criterion mixed workload</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>WASM with capability checks throughput</td><td>≥ 1,000 inv/sec</td><td>Criterion bench</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Python ↔ Rust parity</td><td>12/12 fixtures byte-identical</td><td>pytest parity harness · CI</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Memory per indexed skill</td><td>≤ 1 KB (header)</td><td>process RSS · 1,000-skill load</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Unsigned bundle refusal</td><td>100% (unless <code>--allow-unsigned</code>)</td><td>install_test suite</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Open spec compliance</td><td>100% — skill loads in Claude Code unmodified</td><td>cross-host loader test</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">11</span><h2>Non-Functional Requirements</h2></header>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+ <tbody>
+ <tr><td><code>N(FR pending)</code></td><td>Cold-start (1,000 skills indexed)</td><td>≤ 100 ms · parallel</td><td>Criterion bench · macOS M2</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Header lookup p99</td><td>≤ 5 µs (DashMap shard read)</td><td>Criterion bench</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>WASM invocation cold-start (AOT cached)</td><td>≤ 1 ms</td><td>wasm_invoke bench</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Native-script invocation</td><td>≤ 50 ms (process spawn dominated)</td><td>script_invoke bench</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Trivial native-script throughput</td><td>≥ 10,000 inv/sec</td><td>Criterion mixed workload</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>WASM with capability checks throughput</td><td>≥ 1,000 inv/sec</td><td>Criterion bench</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Python ↔ Rust parity</td><td>12/12 fixtures byte-identical</td><td>pytest parity harness · CI</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Memory per indexed skill</td><td>≤ 1 KB (header)</td><td>process RSS · 1,000-skill load</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Unsigned bundle refusal</td><td>100% (unless <code>--allow-unsigned</code>)</td><td>install_test suite</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Open spec compliance</td><td>100% — skill loads in Claude Code unmodified</td><td>cross-host loader test</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DEPENDENCIES -->
 <!-- ============================================================ -->
 <section id="dependencies" class="module-section">
-  <header class="section-head"><span class="section-num">12</span><h2>Dependencies</h2></header>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <header class="section-head"><span class="section-num">12</span><h2>Dependencies</h2></header>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 graph LR
-  subgraph upstream ["Skill depends on"]
-    AUTH["🔐 AUTH<br>actor identity"]
-  end
-  SKILL_M["🛠 Skill host"]
-  subgraph downstream ["Used by"]
-    CUO_M["🎯 CUO router"]
-    AGENT_M["External agents"]
-    EVERY["Every module that invokes a skill"]
-  end
-  AUTH --> SKILL_M
-  SKILL_M --> CUO_M
-  SKILL_M --> AGENT_M
-  SKILL_M --> EVERY
+ subgraph upstream ["Skill depends on"]
+ AUTH["🔐 AUTH<br>actor identity"]
+ end
+ SKILL_M["🛠 Skill host"]
+ subgraph downstream ["Used by"]
+ CUO_M["🎯 CUO router"]
+ AGENT_M["External agents"]
+ EVERY["Every module that invokes a skill"]
+ end
+ AUTH --> SKILL_M
+ SKILL_M --> CUO_M
+ SKILL_M --> AGENT_M
+ SKILL_M --> EVERY
 
-  classDef shipped fill:#f5ede6,stroke:#45210e
-  classDef planned fill:#fef6e0,stroke:#9c750a
-  class SKILL_M,CUO_M,AGENT_M shipped
-  class AUTH,EVERY planned
-    </div>
-  </div>
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef planned fill:#fef6e0,stroke:#9c750a
+ class SKILL_M,CUO_M,AGENT_M shipped
+ class AUTH,EVERY planned
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- COMPLIANCE -->
 <!-- ============================================================ -->
 <section id="compliance" class="module-section">
-  <header class="section-head"><span class="section-num">13</span><h2>Compliance scope</h2></header>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>SKILL feature that satisfies it</th></tr></thead>
-      <tbody>
-        <tr><td>EU AI Act</td><td>Art. 12 — Logging</td><td>Every invocation is an audit row · WASI syscalls intercepted at <code>info</code>; sensitive grants logged at <code>warn</code>.</td></tr>
-        <tr><td>EU AI Act</td><td>Art. 26 — Human oversight</td><td>First-use approval gate · operator must approve each <code>allowed-tools</code> set.</td></tr>
-        <tr><td>NIST SSDF (SP 800-218)</td><td>§ PW.4 — Code provenance</td><td>Cosign signature verification on install · refuses unsigned bundles by default.</td></tr>
-        <tr><td>SLSA Level 3</td><td>Build integrity</td><td>SBOM provenance per bundle (planned P1) · AOT artifacts content-hashed.</td></tr>
-        <tr><td>ISO/IEC 27001:2022</td><td>A.8.25 — Secure development</td><td>Capability-based sandboxing (defence in depth) — no ambient authority.</td></tr>
-        <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 8.3 — Operational planning</td><td>Phase 7 retirement runbook · soak windows · reversible flag-driven migration.</td></tr>
-        <tr><td>OWASP Top 10 LLM</td><td>LLM03 — Training data poisoning</td><td>Skill bodies are loaded into LLM context — covered by content-hash binding so a modified skill must be re-approved.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">13</span><h2>Compliance scope</h2></header>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>SKILL feature that satisfies it</th></tr></thead>
+ <tbody>
+ <tr><td>EU AI Act</td><td>Art. 12 — Logging</td><td>Every invocation is an audit row · WASI syscalls intercepted at <code>info</code>; sensitive grants logged at <code>warn</code>.</td></tr>
+ <tr><td>EU AI Act</td><td>Art. 26 — Human oversight</td><td>First-use approval gate · operator must approve each <code>allowed-tools</code> set.</td></tr>
+ <tr><td>NIST SSDF (SP 800-218)</td><td>§ PW.4 — Code provenance</td><td>Cosign signature verification on install · refuses unsigned bundles by default.</td></tr>
+ <tr><td>SLSA Level 3</td><td>Build integrity</td><td>SBOM provenance per bundle (planned P1) · AOT artifacts content-hashed.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.8.25 — Secure development</td><td>Capability-based sandboxing (defence in depth) — no ambient authority.</td></tr>
+ <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 8.3 — Operational planning</td><td>Phase 7 retirement runbook · soak windows · reversible flag-driven migration.</td></tr>
+ <tr><td>OWASP Top 10 LLM</td><td>LLM03 — Training data poisoning</td><td>Skill bodies are loaded into LLM context — covered by content-hash binding so a modified skill must be re-approved.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- RISK -->
 <!-- ============================================================ -->
 <section id="risk-entries" class="module-section">
-  <header class="section-head"><span class="section-num">14</span><h2>Risk entries</h2></header>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
-      <tbody>
-        <tr><td><code>R-SKILL-001</code></td><td>Capability escape (WASI grant misconfiguration)</td><td>Low</td><td>High</td><td>CSO</td><td>Default empty grant set · first-use approval · WASI enforces at host syscall layer regardless of declaration · audit interception logs every syscall.</td></tr>
-        <tr><td><code>R-SKILL-002</code></td><td>Supply-chain attack on third-party skill</td><td>Medium</td><td>High</td><td>CSO</td><td>Cosign verification mandatory · OCI registry checks · content-hash binding means modified skill triggers re-approval · audit table queryable.</td></tr>
-        <tr><td><code>R-SKILL-003</code></td><td>WASM zero-day in Wasmtime runtime</td><td>Low</td><td>High</td><td>CTO</td><td>Track wasmtime security advisories · pinned version in <code>Cargo.toml</code> · staged rollout on bumps · skills fall back to script executor if runtime down.</td></tr>
-        <tr><td><code>R-SKILL-004</code></td><td>Agent Skills spec drift (governance under AAIF / Linux Foundation)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Track <code>agentskills/agentskills</code> + AAIF mailing list · pin spec revision per release · CyberOS-specific extensions live under <code>metadata.cyberos-*</code>.</td></tr>
-        <tr><td><code>R-SKILL-005</code></td><td>Parity regression (legacy Python ↔ Rust diverges)</td><td>High</td><td>Medium</td><td>CTO</td><td>12/12 parity harness blocks Phase 7 retirement · CI gate on every PR · soak window mandatory.</td></tr>
-        <tr><td><code>R-SKILL-006</code></td><td>VN-skill regulatory churn (GDT schema changes, PDPL evolution)</td><td>High</td><td>Medium</td><td>CLO</td><td>Skill versions follow GDT/PDPL revisions · CHANGELOG newest-first · semver compatibility tested vs prior outputs.</td></tr>
-        <tr><td><code>R-SKILL-007</code></td><td>Python-on-WASI heavy cold-start regression</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Default executable skills to Rust or TS-via-Bun guests · Python flagged "preview" · benchmark cold-start per skill in CI · alert &gt; 100 ms p95.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">14</span><h2>Risk entries</h2></header>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+ <tbody>
+ <tr><td><code>R-SKILL-001</code></td><td>Capability escape (WASI grant misconfiguration)</td><td>Low</td><td>High</td><td>CSO</td><td>Default empty grant set · first-use approval · WASI enforces at host syscall layer regardless of declaration · audit interception logs every syscall.</td></tr>
+ <tr><td><code>R-SKILL-002</code></td><td>Supply-chain attack on third-party skill</td><td>Medium</td><td>High</td><td>CSO</td><td>Cosign verification mandatory · OCI registry checks · content-hash binding means modified skill triggers re-approval · audit table queryable.</td></tr>
+ <tr><td><code>R-SKILL-003</code></td><td>WASM zero-day in Wasmtime runtime</td><td>Low</td><td>High</td><td>CTO</td><td>Track wasmtime security advisories · pinned version in <code>Cargo.toml</code> · staged rollout on bumps · skills fall back to script executor if runtime down.</td></tr>
+ <tr><td><code>R-SKILL-004</code></td><td>Agent Skills spec drift (governance under AAIF / Linux Foundation)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Track <code>agentskills/agentskills</code> + AAIF mailing list · pin spec revision per release · CyberOS-specific extensions live under <code>metadata.cyberos-*</code>.</td></tr>
+ <tr><td><code>R-SKILL-005</code></td><td>Parity regression (legacy Python ↔ Rust diverges)</td><td>High</td><td>Medium</td><td>CTO</td><td>12/12 parity harness blocks Phase 7 retirement · CI gate on every PR · soak window mandatory.</td></tr>
+ <tr><td><code>R-SKILL-006</code></td><td>VN-skill regulatory churn (GDT schema changes, PDPL evolution)</td><td>High</td><td>Medium</td><td>CLO</td><td>Skill versions follow GDT/PDPL revisions · CHANGELOG newest-first · semver compatibility tested vs prior outputs.</td></tr>
+ <tr><td><code>R-SKILL-007</code></td><td>Python-on-WASI heavy cold-start regression</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Default executable skills to Rust or TS-via-Bun guests · Python flagged "preview" · benchmark cold-start per skill in CI · alert &gt; 100 ms p95.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- KPIs -->
 <!-- ============================================================ -->
 <section id="kpis" class="module-section">
-  <header class="section-head"><span class="section-num">15</span><h2>KPIs</h2></header>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th><th>Current</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Install success rate</strong></td><td>successful_installs / attempts</td><td>install_log</td><td>≥ 99%</td><td>100% (local · OCI pending)</td></tr>
-        <tr><td><strong>Capability grant rate</strong></td><td>granted / requested</td><td>grants.json audit</td><td>≥ 90% (sensible asks)</td><td>~ 95% (small sample)</td></tr>
-        <tr><td><strong>Invocation success rate</strong></td><td>exit_code 0 / total</td><td>BRAIN audit replay</td><td>≥ 98%</td><td>100% (12 fixtures)</td></tr>
-        <tr><td><strong>Parity coverage</strong></td><td>fixtures matching byte-identical</td><td>parity harness</td><td>100%</td><td>12/12 (100%)</td></tr>
-        <tr><td><strong>Cold-start (1k skills)</strong></td><td>boot_to_indexed_ms</td><td>Criterion bench</td><td>≤ 100 ms</td><td>~ 65 ms (M2)</td></tr>
-        <tr><td><strong>WASM invocation p95</strong></td><td>activate_to_return</td><td>Criterion bench</td><td>≤ 5 ms</td><td>~ 1.4 ms (AOT-cached)</td></tr>
-        <tr><td><strong>Ecosystem reach</strong></td><td>compatible clients</td><td>open spec adoption</td><td>≥ 20</td><td>26+</td></tr>
-        <tr><td><strong>VN-skill catalog growth</strong></td><td>skills shipped (monthly)</td><td>git log</td><td>≥ 1/month at P1</td><td>6 shipped (lifetime)</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">15</span><h2>KPIs</h2></header>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th><th>Current</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Install success rate</strong></td><td>successful_installs / attempts</td><td>install_log</td><td>≥ 99%</td><td>100% (local · OCI pending)</td></tr>
+ <tr><td><strong>Capability grant rate</strong></td><td>granted / requested</td><td>grants.json audit</td><td>≥ 90% (sensible asks)</td><td>~ 95% (small sample)</td></tr>
+ <tr><td><strong>Invocation success rate</strong></td><td>exit_code 0 / total</td><td>BRAIN audit replay</td><td>≥ 98%</td><td>100% (12 fixtures)</td></tr>
+ <tr><td><strong>Parity coverage</strong></td><td>fixtures matching byte-identical</td><td>parity harness</td><td>100%</td><td>12/12 (100%)</td></tr>
+ <tr><td><strong>Cold-start (1k skills)</strong></td><td>boot_to_indexed_ms</td><td>Criterion bench</td><td>≤ 100 ms</td><td>~ 65 ms (M2)</td></tr>
+ <tr><td><strong>WASM invocation p95</strong></td><td>activate_to_return</td><td>Criterion bench</td><td>≤ 5 ms</td><td>~ 1.4 ms (AOT-cached)</td></tr>
+ <tr><td><strong>Ecosystem reach</strong></td><td>compatible clients</td><td>open spec adoption</td><td>≥ 20</td><td>26+</td></tr>
+ <tr><td><strong>VN-skill catalog growth</strong></td><td>skills shipped (monthly)</td><td>git log</td><td>≥ 1/month at P1</td><td>6 shipped (lifetime)</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- RACI -->
 <!-- ============================================================ -->
 <section id="raci" class="module-section">
-  <header class="section-head"><span class="section-num">16</span><h2>RACI matrix</h2></header>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>CPO</th><th>CSO</th><th>CLO</th></tr></thead>
-      <tbody>
-        <tr><td>Host runtime (Rust crates)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Skill authoring SDK (Bun toolchain)</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Spec compliance (Agent Skills)</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Capability broker policy</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td></tr>
-        <tr><td>Cosign signing infrastructure</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>cyberskill-vn collection authoring</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
-        <tr><td>VN regulatory tracking (GDT, PDPL)</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td></tr>
-        <tr><td>Phase 7 retirement signoff</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">16</span><h2>RACI matrix</h2></header>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>CPO</th><th>CSO</th><th>CLO</th></tr></thead>
+ <tbody>
+ <tr><td>Host runtime (Rust crates)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Skill authoring SDK (Bun toolchain)</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Spec compliance (Agent Skills)</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Capability broker policy</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td></tr>
+ <tr><td>Cosign signing infrastructure</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>cyberskill-vn collection authoring</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
+ <tr><td>VN regulatory tracking (GDT, PDPL)</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td></tr>
+ <tr><td>Phase 7 retirement signoff</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- CLI USAGE -->
 <!-- ============================================================ -->
 <section id="cli-usage" class="module-section">
-  <header class="section-head"><span class="section-num">17</span><h2>CLI usage — real examples</h2></header>
+ <header class="section-head"><span class="section-num">17</span><h2>CLI usage — real examples</h2></header>
 
-  <h3 class="text-lg font-bold mb-2">1. List installed skills</h3>
+ <h3 class="text-lg font-bold mb-2">1. List installed skills</h3>
 <pre><code>$ cyberos-skill-cli list
 
 ╭──────────────────────────────────────┬─────────┬────────┬───────────╮
-│ name                                 │ version │ region │ executor  │
+│ name │ version │ region │ executor │
 ├──────────────────────────────────────┼─────────┼────────┼───────────┤
-│ cuo/cpo/prd-author                   │ 0.4.1   │ —      │ inline    │
-│ cuo/cpo/fr-author                    │ 0.3.0   │ —      │ inline    │
-│ cuo/cto/srs-author                   │ 0.2.0   │ —      │ inline    │
-│ ...                                  │         │        │           │
-│ cyberskill-vn/vn-mst-validate        │ 0.2.0   │ VN     │ script    │
-│ cyberskill-vn/vn-vat-invoice         │ 0.3.0   │ VN     │ script    │
-│ cyberskill-vn/vn-bank-transfer       │ 0.1.0   │ VN     │ wasm      │
-│ cyberskill-vn/vneid-integration      │ 0.1.0   │ VN     │ script    │
-│ cyberskill-vn/vn-legal-compliance    │ 0.1.0   │ VN     │ inline    │
-│ cyberskill-vn/vn-tax-filing          │ 0.1.0   │ VN     │ script    │
+│ cuo/cpo/prd-author │ 0.4.1 │ — │ inline │
+│ cuo/cpo/fr-author │ 0.3.0 │ — │ inline │
+│ cuo/cto/srs-author │ 0.2.0 │ — │ inline │
+│... │ │ │ │
+│ cyberskill-vn/vn-mst-validate │ 0.2.0 │ VN │ script │
+│ cyberskill-vn/vn-vat-invoice │ 0.3.0 │ VN │ script │
+│ cyberskill-vn/vn-bank-transfer │ 0.1.0 │ VN │ wasm │
+│ cyberskill-vn/vneid-integration │ 0.1.0 │ VN │ script │
+│ cyberskill-vn/vn-legal-compliance │ 0.1.0 │ VN │ inline │
+│ cyberskill-vn/vn-tax-filing │ 0.1.0 │ VN │ script │
 ╰──────────────────────────────────────┴─────────┴────────┴───────────╯
 
 20 skills indexed · cold-start 65 ms · all parity-verified</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">2. Install from OCI registry (with cosign verification)</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">2. Install from OCI registry (with cosign verification)</h3>
 <pre><code>$ cyberos-skill-cli install ghcr.io/cyberskill/vn-mst-validate:0.2.0
 
-[resolver]   pulling ghcr.io/cyberskill/vn-mst-validate:0.2.0 ...  OK (842 KB)
-[cosign]     verifying signature ...  OK (key=cyberskill-release)
-[manifest]   parsing SKILL.md frontmatter ...  OK
-[manifest]   name=vn-mst-validate  version=0.2.0  region=VN
-[registry]   inserting header into DashMap  (shard 14)
-[install]    cached at ~/.cyberos/skills/vn-mst-validate-0.2.0/
-[install]    content_hash sha256:a3b8d4...</code></pre>
+[resolver] pulling ghcr.io/cyberskill/vn-mst-validate:0.2.0... OK (842 KB)
+[cosign] verifying signature... OK (key=cyberskill-release)
+[manifest] parsing SKILL.md frontmatter... OK
+[manifest] name=vn-mst-validate version=0.2.0 region=VN
+[registry] inserting header into DashMap (shard 14)
+[install] cached at ~/.cyberos/skills/vn-mst-validate-0.2.0/
+[install] content_hash sha256:a3b8d4...</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">3. Validate a skill manifest</h3>
-<pre><code>$ cyberos-skill-cli validate ./skills/cyberskill-vn/vn-tax-filing/
+ <h3 class="text-lg font-bold mb-2 mt-5">3. Validate a skill manifest</h3>
+<pre><code>$ cyberos-skill-cli validate./skills/cyberskill-vn/vn-tax-filing/
 
-[validate]   reading SKILL.md ...  OK (1.3 KB)
-[validate]   frontmatter parse ...  OK
-[validate]   field: name=vn-tax-filing  OK (dir-match)
-[validate]   field: description (412 chars)  OK
-[validate]   field: license=Apache-2.0  OK (SPDX)
-[validate]   field: metadata.version=0.1.0  OK (SemVer)
-[validate]   field: metadata.region=VN  OK
-[validate]   field: allowed-tools=read_file,write_file  OK (declared)
-[validate]   referenced files: references/gdt-q-return-schema-v3.md  OK
-[validate]   ✅ valid Agent Skill · would load in Claude Code, Codex, Cursor, VS Code</code></pre>
+[validate] reading SKILL.md... OK (1.3 KB)
+[validate] frontmatter parse... OK
+[validate] field: name=vn-tax-filing OK (dir-match)
+[validate] field: description (412 chars) OK
+[validate] field: license=Apache-2.0 OK (SPDX)
+[validate] field: metadata.version=0.1.0 OK (SemVer)
+[validate] field: metadata.region=VN OK
+[validate] field: allowed-tools=read_file,write_file OK (declared)
+[validate] referenced files: references/gdt-q-return-schema-v3.md OK
+[validate] ✅ valid Agent Skill · would load in Claude Code, Codex, Cursor, VS Code</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">4. Run a skill</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">4. Run a skill</h3>
 <pre><code>$ echo '{"mst":"0123456789-001"}' | cyberos-skill-cli run vn-mst-validate --executor script
 
-[invoke]     skill=vn-mst-validate  executor=script
-[broker]     declared allowed-tools: [read_file]
-[broker]     requested: []  -- no caps needed for this invocation
-[broker]     ok (within declared set)
-[invoke]     script: scripts/validate_mst.py
-[invoke]     elapsed_ms=24  exit_code=0
+[invoke] skill=vn-mst-validate executor=script
+[broker] declared allowed-tools: [read_file]
+[broker] requested: -- no caps needed for this invocation
+[broker] ok (within declared set)
+[invoke] script: scripts/validate_mst.py
+[invoke] elapsed_ms=24 exit_code=0
 
 {"ok": true, "format": "13-digit-branch"}</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">5. Audit capability grants</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">5. Audit capability grants</h3>
 <pre><code>$ cyberos-skill-cli audit --since 7d
 
 ╭───────────────────────────────────┬────────────────────────┬──────────────┬──────────╮
-│ skill                             │ capability             │ granted_by   │ valid?   │
+│ skill │ capability │ granted_by │ valid? │
 ├───────────────────────────────────┼────────────────────────┼──────────────┼──────────┤
-│ vn-mst-validate                   │ read_file              │ stephen      │ ✓        │
-│ vn-vat-invoice                    │ read_file              │ stephen      │ ✓        │
-│ vn-vat-invoice                    │ write_file             │ stephen      │ ✓        │
-│ vn-tax-filing                     │ read_file              │ stephen      │ ✓        │
-│ vn-tax-filing                     │ write_file             │ stephen      │ ✓        │
-│ vn-bank-transfer                  │ (none — pure compute)  │ —            │ ✓        │
-│ vneid-integration                 │ (none — pure compute)  │ —            │ ✓        │
-│ vn-legal-compliance               │ (inline · no exec)     │ —            │ ✓        │
+│ vn-mst-validate │ read_file │ stephen │ ✓ │
+│ vn-vat-invoice │ read_file │ stephen │ ✓ │
+│ vn-vat-invoice │ write_file │ stephen │ ✓ │
+│ vn-tax-filing │ read_file │ stephen │ ✓ │
+│ vn-tax-filing │ write_file │ stephen │ ✓ │
+│ vn-bank-transfer │ (none — pure compute) │ — │ ✓ │
+│ vneid-integration │ (none — pure compute) │ — │ ✓ │
+│ vn-legal-compliance │ (inline · no exec) │ — │ ✓ │
 ╰───────────────────────────────────┴────────────────────────┴──────────────┴──────────╯
 
 8 grants on file · 0 stale · 0 revoked</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">6. Build a TypeScript skill (Bun toolchain)</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">6. Build a TypeScript skill (Bun toolchain)</h3>
 <pre><code>$ cd skills/my-new-skill/
-$ cyberos-skill-cli build --lang ts ./src/
+$ cyberos-skill-cli build --lang ts./src/
 
-[bun]        installing deps ...  OK (240 ms)
-[esbuild]    bundling src/index.ts ...  OK (12 ms)
-[wasm]       wasm32-wasi component target ...  OK (1.4 MB)
-[component]  wit-bindgen output  ...  OK
-[aot]        wasmtime compile · cache key sha256:b9e2c8...
-[build]      dist/skill.wasm  ✓
-[build]      ready for: cyberos-skill-cli install ./skills/my-new-skill/</code></pre>
+[bun] installing deps... OK (240 ms)
+[esbuild] bundling src/index.ts... OK (12 ms)
+[wasm] wasm32-wasi component target... OK (1.4 MB)
+[component] wit-bindgen output... OK
+[aot] wasmtime compile · cache key sha256:b9e2c8...
+[build] dist/skill.wasm ✓
+[build] ready for: cyberos-skill-cli install./skills/my-new-skill/</code></pre>
 </section>
 
 <!-- ============================================================ -->
 <!-- STATUS -->
 <!-- ============================================================ -->
 <section id="status" class="module-section">
-  <header class="section-head"><span class="section-num">18</span><h2>Phase status &amp; code stats</h2></header>
+ <header class="section-head"><span class="section-num">18</span><h2>Phase status &amp; code stats</h2></header>
 
-  <div class="grid md:grid-cols-3 gap-4 mb-6">
-    <div class="fact-card"><div class="label">LoC (Rust host)</div><div class="value">~3,000</div><div class="note">4 crates</div></div>
-    <div class="fact-card"><div class="label">LoC (Bun toolchain)</div><div class="value">~2,500</div><div class="note">TypeScript</div></div>
-    <div class="fact-card"><div class="label">SKILL.md bundles</div><div class="value">20</div><div class="note">14 CUO + 6 VN</div></div>
-    <div class="fact-card"><div class="label">Tests</div><div class="value">4 unit + 12 parity + 2 grants</div><div class="note">cargo + pytest harness</div></div>
-    <div class="fact-card"><div class="label">Audit phases shipped</div><div class="value">7 of 7</div><div class="note">Phase 7 in 30-day soak</div></div>
-    <div class="fact-card"><div class="label">Ecosystem reach</div><div class="value">26+ clients</div><div class="note">via open Agent Skills</div></div>
-  </div>
+ <div class="grid md:grid-cols-3 gap-4 mb-6">
+ <div class="fact-card"><div class="label">LoC (Rust host)</div><div class="value">~3,000</div><div class="note">4 crates</div></div>
+ <div class="fact-card"><div class="label">LoC (Bun toolchain)</div><div class="value">~2,500</div><div class="note">TypeScript</div></div>
+ <div class="fact-card"><div class="label">SKILL.md bundles</div><div class="value">20</div><div class="note">14 CUO + 6 VN</div></div>
+ <div class="fact-card"><div class="label">Tests</div><div class="value">4 unit + 12 parity + 2 grants</div><div class="note">cargo + pytest harness</div></div>
+ <div class="fact-card"><div class="label">Audit phases shipped</div><div class="value">7 of 7</div><div class="note">Phase 7 in 30-day soak</div></div>
+ <div class="fact-card"><div class="label">Ecosystem reach</div><div class="value">26+ clients</div><div class="note">via open Agent Skills</div></div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Phase / capability</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>Phase 0 — Inventory + freeze</td><td><span class="pill pill-shipped">shipped</span></td></tr>
-        <tr><td>Phase 1 — Rust + Bun scaffold · spec validator</td><td><span class="pill pill-shipped">shipped</span></td></tr>
-        <tr><td>Phase 2 — Parity harness</td><td><span class="pill pill-shipped">shipped · 12/12 pass</span></td></tr>
-        <tr><td>Phase 3 — Executor selection</td><td><span class="pill pill-shipped">shipped (default Rust)</span></td></tr>
-        <tr><td>Phase 4 — DashMap concurrency</td><td><span class="pill pill-shipped">shipped · ≥ 2× at contention</span></td></tr>
-        <tr><td>Phase 5 — WASM execution</td><td><span class="pill pill-shipped">scaffolded · runtime feature-gated</span></td></tr>
-        <tr><td>Phase 6 — Capability broker</td><td><span class="pill pill-shipped">shipped</span></td></tr>
-        <tr><td>Phase 7 — Legacy retirement</td><td><span class="pill pill-shipped">runbook ready · 30-day soak</span></td></tr>
-        <tr><td>VN catalog (6 skills)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
-        <tr><td>OCI registry distribution</td><td><span class="pill pill-planned">planned</span></td></tr>
-        <tr><td>Cosign signature verification at install</td><td><span class="pill pill-shipped">shipped</span></td></tr>
-        <tr><td><code>agentskills.io</code> submission</td><td><span class="pill pill-planned">planned (waits for registry API)</span></td></tr>
-        <tr><td>GraphQL subgraph</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
-      </tbody>
-    </table>
-  </div>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Phase / capability</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td>Phase 0 — Inventory + freeze</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 1 — Rust + Bun scaffold · spec validator</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 2 — Parity harness</td><td><span class="pill pill-shipped">shipped · 12/12 pass</span></td></tr>
+ <tr><td>Phase 3 — Executor selection</td><td><span class="pill pill-shipped">shipped (default Rust)</span></td></tr>
+ <tr><td>Phase 4 — DashMap concurrency</td><td><span class="pill pill-shipped">shipped · ≥ 2× at contention</span></td></tr>
+ <tr><td>Phase 5 — WASM execution</td><td><span class="pill pill-shipped">scaffolded · runtime feature-gated</span></td></tr>
+ <tr><td>Phase 6 — Capability broker</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 7 — Legacy retirement</td><td><span class="pill pill-shipped">runbook ready · 30-day soak</span></td></tr>
+ <tr><td>VN catalog (6 skills)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>OCI registry distribution</td><td><span class="pill pill-planned">planned</span></td></tr>
+ <tr><td>Cosign signature verification at install</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td><code>agentskills.io</code> submission</td><td><span class="pill pill-planned">planned (waits for registry API)</span></td></tr>
+ <tr><td>GraphQL subgraph</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- REFERENCES -->
 <!-- ============================================================ -->
 <section id="references" class="module-section">
-  <header class="section-head"><span class="section-num">19</span><h2>References</h2></header>
-  <div class="bbg-card p-5">
-    <ul class="space-y-2 text-sm">
-      <li><strong>PRD §7.1</strong> — Module catalog row for SKILL.</li>
-      <li><strong>SRS §4.3</strong> — Formal FR catalog for SKILL.</li>
-      <li><strong>AUDIT.md</strong> (13 May 2026) — full architectural audit + migration plan — <code>cyberos/skill/docs/AUDIT.md</code>.</li>
-      <li><strong>SPEC.md</strong> — protocol summary — <code>cyberos/skill/docs/SPEC.md</code>.</li>
-      <li><strong>PUBLISH.md</strong> — OCI / cosign / agentskills.io publication workflow.</li>
-      <li><strong>PHASE_5_ACTIVATION.md</strong> — Wasmtime runtime activation guidance.</li>
-      <li><strong>PHASE_7_RETIREMENT.md</strong> — legacy retirement runbook.</li>
-      <li><strong>Source:</strong> <code>cyberos/skill/crates/</code> · <code>cyberos/skill/toolchain/</code> · <code>cyberos/skill/skills/</code> · <code>cyberos/skill/tests/</code>.</li>
-      <li><strong>External:</strong> <a href="https://agentskills.io/specification">agentskills.io/specification</a> · Anthropic engineering blog "Equipping agents for the real world with Agent Skills" (Oct 16 2025, updated Dec 18 2025) · <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview">docs.claude.com Agent Skills overview</a>.</li>
-      <li><strong>CHANGELOG:</strong> <code>cyberos/skill/docs/CHANGELOG.md</code> (newest-first).</li>
-    </ul>
-  </div>
+ <header class="section-head"><span class="section-num">19</span><h2>References</h2></header>
+ <div class="bbg-card p-5">
+ <ul class="space-y-2 text-sm">
+ <li> — Module catalog row for SKILL.</li>
+ <li> — Formal FR catalog for SKILL.</li>
+ <li><strong>AUDIT.md</strong> (13 May 2026) — full architectural audit + migration plan — <code>cyberos/skill/docs/AUDIT.md</code>.</li>
+ <li><strong>SPEC.md</strong> — protocol summary — <code>cyberos/skill/docs/SPEC.md</code>.</li>
+ <li><strong>PUBLISH.md</strong> — OCI / cosign / agentskills.io publication workflow.</li>
+ <li><strong>PHASE_5_ACTIVATION.md</strong> — Wasmtime runtime activation guidance.</li>
+ <li><strong>PHASE_7_RETIREMENT.md</strong> — legacy retirement runbook.</li>
+ <li><strong>Source:</strong> <code>cyberos/skill/crates/</code><code>cyberos/skill/toolchain/</code><code>cyberos/skill/skills/</code><code>cyberos/skill/tests/</code>.</li>
+ <li><strong>External:</strong> <a href="https://agentskills.io/specification">agentskills.io/specification</a> · Anthropic engineering blog "Equipping agents for the real world with Agent Skills" (Oct 16 2025, updated Dec 18 2025) · <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview">docs.claude.com Agent Skills overview</a>.</li>
+ <li><strong>CHANGELOG:</strong> <code>cyberos/skill/docs/CHANGELOG.md</code> (newest-first).</li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PREV / NEXT NAV -->
 <!-- ============================================================ -->
 <nav class="module-nav-footer mt-12">
-  <a href="cuo.html" class="text-emerald-700 font-semibold no-underline hover:underline">← Previous: CUO</a>
-  <a href="../index.html#catalog" class="text-emerald-700 font-semibold no-underline hover:underline">All modules →</a>
+ <a href="cuo.html" class="text-emerald-700 font-semibold no-underline hover:underline">← Previous: CUO</a>
+ <a href="../index.html#catalog" class="text-emerald-700 font-semibold no-underline hover:underline">All modules →</a>
 </nav>
 
 </main>

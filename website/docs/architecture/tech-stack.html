@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tech Stack — CyberOS</title>
-  <meta name="description" content="The 8-tier tech stack — framework picks, alternatives considered, trade-offs, production cost implications.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <script type="module" src="../assets/scripts.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Tech Stack — CyberOS</title>
+ <meta name="description" content="The 8-tier tech stack — framework picks, alternatives considered, trade-offs, production cost implications.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <script type="module" src="../assets/scripts.js"></script>
 </head>
 <body data-pagefind-filter="category:Architecture">
 
@@ -19,31 +19,31 @@
 <!-- HEADER -->
 <!-- ============================================================ -->
 <header class="hero-gradient border-b border-slate-200">
-  <div class="container py-10 lg:py-14">
-    <nav class="breadcrumbs">
-      <a href="../index.html">Home</a>
-      <span class="sep">›</span>
-      <a href="../index.html#navigate">Architecture</a>
-      <span class="sep">›</span>
-      <span class="current">Tech stack</span>
-    </nav>
-    <div class="flex items-center gap-3 mb-4">
-      <span class="section-badge" style="background:#e0e7ff;color:#3730a3">Tech stack</span>
-      <span class="phase-chip phase-p0">Locked in PRD §8 + SRS DEC-001..066</span>
-    </div>
-    <h1 class="h-display mb-4">The stack, top to bottom</h1>
-    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Eight tiers, sixteen major picks, every choice motivated by the same bias: open-source, self-hostable, audit-able primitives.</p>
-    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      Every layer of CyberOS is locked in PRD §8 and the SRS DEC-001..DEC-066 log. The bias is consistent: open-source, self-hostable, audit-able primitives — never lock the company to a vendor that could later compromise Vietnamese data sovereignty or push the cost ceiling above $4/active-user/month at 50-tenant scale. This page traces each of the eight tiers, the specific framework chosen, the rejected alternatives, the production cost shape, and the migration door if the choice goes wrong.
-    </p>
-    <div class="flex flex-wrap gap-3 mt-6">
-      <a href="#overview" class="btn btn-primary">Stack diagram
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-      </a>
-      <a href="#alternatives" class="btn btn-secondary">Alternatives considered</a>
-      <a href="#cost-model" class="btn btn-secondary">Cost model</a>
-    </div>
-  </div>
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../index.html#navigate">Architecture</a>
+ <span class="sep">›</span>
+ <span class="current">Tech stack</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4">
+ <span class="section-badge" style="background:#e0e7ff;color:#3730a3">Tech stack</span>
+ <span class="phase-chip phase-p0">Locked in + SRS DEC-001..066</span>
+ </div>
+ <h1 class="h-display mb-4">The stack, top to bottom</h1>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Eight tiers, sixteen major picks, every choice motivated by the same bias: open-source, self-hostable, audit-able primitives.</p>
+ <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+ Every layer of CyberOS is locked in and the SRS DEC-001..DEC-066 log. The bias is consistent: open-source, self-hostable, audit-able primitives — never lock the company to a vendor that could later compromise Vietnamese data sovereignty or push the cost ceiling above $4/active-user/month at 50-tenant scale. This page traces each of the eight tiers, the specific framework chosen, the rejected alternatives, the production cost shape, and the migration door if the choice goes wrong.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="#overview" class="btn btn-primary">Stack diagram
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ <a href="#alternatives" class="btn btn-secondary">Alternatives considered</a>
+ <a href="#cost-model" class="btn btn-secondary">Cost model</a>
+ </div>
+ </div>
 </header>
 
 <div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
@@ -52,33 +52,33 @@
 <!-- ASIDE TOC -->
 <!-- ============================================================ -->
 <aside class="lg:col-span-3 order-2 lg:order-1">
-  <div class="lg:sticky lg:top-20">
-    <div class="bbg-card p-5">
-      <div class="h-eyebrow mb-3">On this page</div>
-      <ul class="space-y-1 text-sm">
-        <li><a href="#overview" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">8-tier overview</a></li>
-        <li><a href="#tier-1" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T1·</span> Persona / Agent</a></li>
-        <li><a href="#tier-2" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T2·</span> Frontend host</a></li>
-        <li><a href="#tier-3" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T3·</span> Frontend remotes</a></li>
-        <li><a href="#tier-4" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T4·</span> API gateway</a></li>
-        <li><a href="#tier-5" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T5·</span> MCP gateway</a></li>
-        <li><a href="#tier-6" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T6·</span> AI gateway</a></li>
-        <li><a href="#tier-7" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T7·</span> Backend services</a></li>
-        <li><a href="#tier-8" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T8·</span> Data layer</a></li>
-        <li><a href="#tier-9" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T9·</span> Search / embed</a></li>
-        <li><a href="#tier-10" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T10·</span> Event bus</a></li>
-        <li><a href="#tier-11" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T11·</span> Object storage</a></li>
-        <li><a href="#tier-12" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T12·</span> Realtime sync</a></li>
-        <li><a href="#tier-13" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T13·</span> Cryptography</a></li>
-        <li><a href="#tier-14" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T14·</span> Audit ledger</a></li>
-        <li><a href="#tier-15" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T15·</span> Compliance</a></li>
-        <li><a href="#tier-16" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T16·</span> Typography</a></li>
-        <li><a href="#dep-graph" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Dependency graph</a></li>
-        <li><a href="#cost-model" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Cost model</a></li>
-        <li><a href="#alternatives" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Alternatives considered</a></li>
-      </ul>
-    </div>
-  </div>
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-1 text-sm">
+ <li><a href="#overview" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">8-tier overview</a></li>
+ <li><a href="#tier-1" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T1·</span> Persona / Agent</a></li>
+ <li><a href="#tier-2" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T2·</span> Frontend host</a></li>
+ <li><a href="#tier-3" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T3·</span> Frontend remotes</a></li>
+ <li><a href="#tier-4" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T4·</span> API gateway</a></li>
+ <li><a href="#tier-5" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T5·</span> MCP gateway</a></li>
+ <li><a href="#tier-6" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T6·</span> AI gateway</a></li>
+ <li><a href="#tier-7" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T7·</span> Backend services</a></li>
+ <li><a href="#tier-8" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T8·</span> Data layer</a></li>
+ <li><a href="#tier-9" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T9·</span> Search / embed</a></li>
+ <li><a href="#tier-10" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T10·</span> Event bus</a></li>
+ <li><a href="#tier-11" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T11·</span> Object storage</a></li>
+ <li><a href="#tier-12" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T12·</span> Realtime sync</a></li>
+ <li><a href="#tier-13" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T13·</span> Cryptography</a></li>
+ <li><a href="#tier-14" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T14·</span> Audit ledger</a></li>
+ <li><a href="#tier-15" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T15·</span> Compliance</a></li>
+ <li><a href="#tier-16" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50"><span class="font-mono text-xs text-slate-400">T16·</span> Typography</a></li>
+ <li><a href="#dep-graph" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Dependency graph</a></li>
+ <li><a href="#cost-model" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Cost model</a></li>
+ <li><a href="#alternatives" class="block py-1.5 px-2 rounded text-slate-700 hover:text-slate-900 hover:bg-slate-50">Alternatives considered</a></li>
+ </ul>
+ </div>
+ </div>
 </aside>
 
 <main class="lg:col-span-9 order-1 lg:order-2 space-y-14">
@@ -87,958 +87,958 @@
 <!-- OVERVIEW -->
 <!-- ============================================================ -->
 <section id="overview">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-3">0</span>
-    <h2 class="h-1">Eight tiers, one supergraph</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    CyberOS has more than 8 distinct concerns (we enumerate 16 below), but they cluster cleanly into 8 architectural <em>tiers</em>. Each tier is a separate deployment unit, scales independently, and exposes a stable contract to the tier above.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-3">0</span>
+ <h2 class="h-1">Eight tiers, one supergraph</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ CyberOS has more than 8 distinct concerns (we enumerate 16 below), but they cluster cleanly into 8 architectural <em>tiers</em>. Each tier is a separate deployment unit, scales independently, and exposes a stable contract to the tier above.
+ </p>
 
-  <div class="bbg-card p-4 mb-6">
-    <div class="mermaid">
+ <div class="bbg-card p-4 mb-6">
+ <div class="mermaid">
 flowchart TB
-  subgraph T1 ["T1 · Persona / Agent layer"]
-    LANG["LangGraph supervisor (StateGraph + interrupt)"]
-    SKILLS["Anthropic Skills format · 10 C-level skills hot-reload"]
-    LITELLM_T1["LiteLLM client (routing core)"]
-  end
+ subgraph T1 ["T1 · Persona / Agent layer"]
+ LANG["LangGraph supervisor (StateGraph + interrupt)"]
+ SKILLS["Anthropic Skills format · 10 C-level skills hot-reload"]
+ LITELLM_T1["LiteLLM client (routing core)"]
+ end
 
-  subgraph T2 ["T2/T3 · Frontend layer"]
-    HOST["Host shell · Vite + React 19 + Tauri (desktop)"]
-    REMOTES["Module remotes · Webpack 5 + Module Federation"]
-  end
+ subgraph T2 ["T2/T3 · Frontend layer"]
+ HOST["Host shell · Vite + React 19 + Tauri (desktop)"]
+ REMOTES["Module remotes · Webpack 5 + Module Federation"]
+ end
 
-  subgraph T3 ["T4/T5/T6 · API + Agent surface"]
-    APOLLO["Apollo Router · GraphQL Federation v2.5+"]
-    MCPGW["MCP Gateway · Streamable HTTP · 2025-11-25"]
-    AIGW["AI Gateway · LiteLLM router · Bedrock primary"]
-  end
+ subgraph T3 ["T4/T5/T6 · API + Agent surface"]
+ APOLLO["Apollo Router · GraphQL Federation v2.5+"]
+ MCPGW["MCP Gateway · Streamable HTTP · 2025-11-25"]
+ AIGW["AI Gateway · LiteLLM router · Bedrock primary"]
+ end
 
-  subgraph T4 ["T7 · Backend services"]
-    SUBGRAPHS["22 subgraphs · TypeScript (Yoga) or Rust (async-graphql)"]
-    MCPSERVERS["22 MCP servers · per-module · TS SDK or mcp-rs"]
-  end
+ subgraph T4 ["T7 · Backend services"]
+ SUBGRAPHS["22 subgraphs · TypeScript (Yoga) or Rust (async-graphql)"]
+ MCPSERVERS["22 MCP servers · per-module · TS SDK or mcp-rs"]
+ end
 
-  subgraph T5 ["T8/T9 · Data + search"]
-    PG["PostgreSQL 17 + pgvector HNSW + Apache AGE 1.5 + PGroonga"]
-    EMBED["BGE-M3 embedder + BGE-rerank-v2-m3 (self-hosted)"]
-  end
+ subgraph T5 ["T8/T9 · Data + search"]
+ PG["PostgreSQL 17 + pgvector HNSW + Apache AGE 1.5 + PGroonga"]
+ EMBED["BGE-M3 embedder + BGE-rerank-v2-m3 (self-hosted)"]
+ end
 
-  subgraph T6 ["T10/T11 · Infrastructure"]
-    NATS_T["NATS JetStream (event spine)"]
-    S3["S3 / R2 / MinIO (object storage)"]
-  end
+ subgraph T6 ["T10/T11 · Infrastructure"]
+ NATS_T["NATS JetStream (event spine)"]
+ S3["S3 / R2 / MinIO (object storage)"]
+ end
 
-  subgraph T7 ["T12/T13/T14 · Cryptography + sync"]
-    YJS["Yjs / Automerge (CRDTs for realtime)"]
-    CRYPTO["Ed25519 + scrypt key wrap + MMR + STH"]
-    LEDGER["msgspec canonical JSON · binlog framing"]
-  end
+ subgraph T7 ["T12/T13/T14 · Cryptography + sync"]
+ YJS["Yjs / Automerge (CRDTs for realtime)"]
+ CRYPTO["Ed25519 + scrypt key wrap + MMR + STH"]
+ LEDGER["msgspec canonical JSON · binlog framing"]
+ end
 
-  subgraph T8 ["T15/T16 · Compliance + UX"]
-    OPA["OPA + Conftest (policy)"]
-    TRUST["Trust Center (cert hosting)"]
-    BVP["Be Vietnam Pro · CyberSkill design system"]
-  end
+ subgraph T8 ["T15/T16 · Compliance + UX"]
+ OPA["OPA + Conftest (policy)"]
+ TRUST["Trust Center (cert hosting)"]
+ BVP["Be Vietnam Pro · CyberSkill design system"]
+ end
 
-  T1 --> T2
-  T2 --> T3
-  T3 --> T4
-  T4 --> T5
-  T4 --> T6
-  T4 --> T7
-  T4 --> T8
+ T1 --> T2
+ T2 --> T3
+ T3 --> T4
+ T4 --> T5
+ T4 --> T6
+ T4 --> T7
+ T4 --> T8
 
-  classDef t1 fill:#f9c64f,stroke:#9c750a
-  classDef t2 fill:#e8d4c2,stroke:#45210e
-  classDef t3 fill:#fef6e0,stroke:#9c750a
-  classDef t4 fill:#f5ede6,stroke:#45210e
-  classDef t5 fill:#cba88a,stroke:#45210e
-  classDef t6 fill:#fde7b3,stroke:#9c750a
-  classDef t7 fill:#fee2e2,stroke:#b91c1c
-  classDef t8 fill:#f0eee9,stroke:#475569
+ classDef t1 fill:#f9c64f,stroke:#9c750a
+ classDef t2 fill:#e8d4c2,stroke:#45210e
+ classDef t3 fill:#fef6e0,stroke:#9c750a
+ classDef t4 fill:#f5ede6,stroke:#45210e
+ classDef t5 fill:#cba88a,stroke:#45210e
+ classDef t6 fill:#fde7b3,stroke:#9c750a
+ classDef t7 fill:#fee2e2,stroke:#b91c1c
+ classDef t8 fill:#f0eee9,stroke:#475569
 
-  class LANG,SKILLS,LITELLM_T1 t1
-  class HOST,REMOTES t2
-  class APOLLO,MCPGW,AIGW t3
-  class SUBGRAPHS,MCPSERVERS t4
-  class PG,EMBED t5
-  class NATS_T,S3 t6
-  class YJS,CRYPTO,LEDGER t7
-  class OPA,TRUST,BVP t8
-    </div>
-  </div>
+ class LANG,SKILLS,LITELLM_T1 t1
+ class HOST,REMOTES t2
+ class APOLLO,MCPGW,AIGW t3
+ class SUBGRAPHS,MCPSERVERS t4
+ class PG,EMBED t5
+ class NATS_T,S3 t6
+ class YJS,CRYPTO,LEDGER t7
+ class OPA,TRUST,BVP t8
+ </div>
+ </div>
 
-  <div class="bbg-card p-6 bg-gradient-to-br from-indigo-50/40 to-white">
-    <h3 class="h-2 mb-3">Three design constraints driving every pick</h3>
-    <ol class="text-sm text-slate-700 space-y-2 leading-relaxed">
-      <li><strong>1. Vietnamese data sovereignty</strong> — no SaaS dependency where Vietnamese-origin personal data must travel through a US-based vendor's servers. AWS Bedrock is acceptable because of the ap-southeast-1 region; OpenAI direct is not (no Singapore endpoint).</li>
-      <li><strong>2. Cost ceiling at scale</strong> — ≤ $150/mo LLM + $230/mo infra at 10-Member internal; ≤ $4/active user/mo LLM + $2,200/mo infra at 50-tenant (N(FR pending), N(FR pending)). Anything that doesn't fit that envelope is rejected.</li>
-      <li><strong>3. Migration door always open</strong> — every pick has a documented escape hatch. Storage is S3-compatible (DEC-005), so R2 ↔ MinIO ↔ AWS S3 is a config flip. SQL is portable, audit chain is exportable, MCP servers are spec-conforming.</li>
-    </ol>
-  </div>
+ <div class="bbg-card p-6 bg-gradient-to-br from-indigo-50/40 to-white">
+ <h3 class="h-2 mb-3">Three design constraints driving every pick</h3>
+ <ol class="text-sm text-slate-700 space-y-2 leading-relaxed">
+ <li><strong>1. Vietnamese data sovereignty</strong> — no SaaS dependency where Vietnamese-origin personal data must travel through a US-based vendor's servers. AWS Bedrock is acceptable because of the ap-southeast-1 region; OpenAI direct is not (no Singapore endpoint).</li>
+ <li><strong>2. Cost ceiling at scale</strong> — ≤ $150/mo LLM + $230/mo infra at 10-Member internal; ≤ $4/active user/mo LLM + $2,200/mo infra at 50-tenant (N(FR pending), N(FR pending)). Anything that doesn't fit that envelope is rejected.</li>
+ <li><strong>3. Migration door always open</strong> — every pick has a documented escape hatch. Storage is S3-compatible (DEC-005), so R2 ↔ MinIO ↔ AWS S3 is a config flip. SQL is portable, audit chain is exportable, MCP servers are spec-conforming.</li>
+ </ol>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 1 -->
 <!-- ============================================================ -->
 <section id="tier-1">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-3">1</span>
-    <h2 class="h-1">Tier 1 — Persona / Agent layer</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> LangGraph (state graph) + LiteLLM (routing) + Anthropic Skills format (10 C-level skills hot-reloadable).</p>
-    <p class="text-slate-600 text-sm leading-relaxed mb-3">
-      LangGraph is the agentic-supervisor framework. Its <code>StateGraph</code> primitive models CUO as a graph of nodes (router, skill-load, tool-call, HITL-confirm, answer-compose) with first-class <code>interrupt()</code> support for human-in-the-loop gates on destructive tools. LiteLLM is the model-routing core that owns provider failover and prompt caching. Anthropic Skills format (<code>SKILL.md</code> + <code>scripts/</code> + <code>references/</code>) keeps each C-level skill as a hot-reloadable directory.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-3">1</span>
+ <h2 class="h-1">Tier 1 — Persona / Agent layer</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> LangGraph (state graph) + LiteLLM (routing) + Anthropic Skills format (10 C-level skills hot-reloadable).</p>
+ <p class="text-slate-600 text-sm leading-relaxed mb-3">
+ LangGraph is the agentic-supervisor framework. Its <code>StateGraph</code> primitive models CUO as a graph of nodes (router, skill-load, tool-call, HITL-confirm, answer-compose) with first-class <code>interrupt</code> support for human-in-the-loop gates on destructive tools. LiteLLM is the model-routing core that owns provider failover and prompt caching. Anthropic Skills format (<code>SKILL.md</code> + <code>scripts/</code> + <code>references/</code>) keeps each C-level skill as a hot-reloadable directory.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Why these picks</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>LangGraph, not DSPy / native LangChain</strong> — StateGraph models CUO's interrupt/resume semantics natively; DSPy is optimisation-first (signature → optimiser pipeline) and not a fit for a long-lived router; native LangChain agents are imperative and harder to audit.</li>
-        <li><strong>LiteLLM</strong> — MIT-licensed, OpenAI-shaped surface, 100+ providers behind a single API, drop-in OTel hooks.</li>
-        <li><strong>Anthropic Skills format</strong> — open standard (Anthropic + VS Code + Cursor + Codex compat); hot-reload via <code>watchexec</code>; metadata-first dispatch keeps context window lean.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Trade-offs</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>LangGraph cost:</strong> Python-only (no Rust); requires an LLM API per supervisor decision (mitigated by Haiku-tier routing).</li>
-        <li><strong>Skill format:</strong> not yet a published RFC; depends on Anthropic continuing to evolve it. Mitigation: schema-pinned to 2025-04 spec; conformance tests in CI.</li>
-        <li><strong>LiteLLM fork risk:</strong> CyberOS-specific middleware (Presidio redaction, VN identifier rules, persona stamping) lives as a fork branch; rebases monthly.</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why these picks</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>LangGraph, not DSPy / native LangChain</strong> — StateGraph models CUO's interrupt/resume semantics natively; DSPy is optimisation-first (signature → optimiser pipeline) and not a fit for a long-lived router; native LangChain agents are imperative and harder to audit.</li>
+ <li><strong>LiteLLM</strong> — MIT-licensed, OpenAI-shaped surface, 100+ providers behind a single API, drop-in OTel hooks.</li>
+ <li><strong>Anthropic Skills format</strong> — open standard (Anthropic + VS Code + Cursor + Codex compat); hot-reload via <code>watchexec</code>; metadata-first dispatch keeps context window lean.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Trade-offs</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>LangGraph cost:</strong> Python-only (no Rust); requires an LLM API per supervisor decision (mitigated by Haiku-tier routing).</li>
+ <li><strong>Skill format:</strong> not yet a published RFC; depends on Anthropic continuing to evolve it. Mitigation: schema-pinned to 2025-04 spec; conformance tests in CI.</li>
+ <li><strong>LiteLLM fork risk:</strong> CyberOS-specific middleware (Presidio redaction, VN identifier rules, persona stamping) lives as a fork branch; rebases monthly.</li>
+ </ul>
+ </div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2 text-slate-900">Production cost</h4>
-    <p class="text-sm text-slate-600">≤ $0 host cost (runs inside the CUO service Pod). LLM cost flows through Tier 6 AI Gateway.</p>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Production cost</h4>
+ <p class="text-sm text-slate-600">≤ $0 host cost (runs inside the CUO service Pod). LLM cost flows through Tier 6 AI Gateway.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 2 -->
 <!-- ============================================================ -->
 <section id="tier-2">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-1">2</span>
-    <h2 class="h-1">Tier 2 — Frontend host shell</h2>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-1">2</span>
+ <h2 class="h-1">Tier 2 — Frontend host shell</h2>
+ </div>
 
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> Vite + React 19 + Tauri (desktop bundling).</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      The host shell is the thin orchestrator that hosts Module-Federation remotes. Vite (Rollup-based) for dev-server speed; React 19 for the new <code>use()</code> hook and React Compiler's automatic memoisation; Tauri for the desktop bundling story.
-    </p>
-  </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Vite + React 19 + Tauri (desktop bundling).</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ The host shell is the thin orchestrator that hosts Module-Federation remotes. Vite (Rollup-based) for dev-server speed; React 19 for the new <code>use</code> hook and React Compiler's automatic memoisation; Tauri for the desktop bundling story.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Why these picks</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Vite</strong> — sub-second HMR; ESM-native; Rollup-based prod build; Module Federation plugin (<code>@module-federation/vite</code>) stable in late 2025.</li>
-        <li><strong>React 19</strong> — React Compiler removes most <code>useMemo</code>/<code>useCallback</code> ceremony; <code>use()</code> hook simplifies suspense; concurrent rendering is GA.</li>
-        <li><strong>Tauri 2 (Rust)</strong> — 3-10 MB bundle vs Electron's 100+ MB; uses OS webview; passes Apple notarisation by default.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Trade-offs</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Webview consistency:</strong> Tauri uses OS-native webviews (Edge WebView2, WKWebView, WebKitGTK) → CSS feature parity needs CI matrix testing.</li>
-        <li><strong>Module Federation + Vite:</strong> the official plugin is <em>newer</em> than Webpack's; some plugins lag behind. Mitigation: host shell built around the official plugin's stable subset only.</li>
-        <li><strong>React 19 ecosystem:</strong> some libraries (charts, drag-drop) still pinning React 18; monitor and pin as needed.</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why these picks</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Vite</strong> — sub-second HMR; ESM-native; Rollup-based prod build; Module Federation plugin (<code>@module-federation/vite</code>) stable in late 2025.</li>
+ <li><strong>React 19</strong> — React Compiler removes most <code>useMemo</code>/<code>useCallback</code> ceremony; <code>use</code> hook simplifies suspense; concurrent rendering is GA.</li>
+ <li><strong>Tauri 2 (Rust)</strong> — 3-10 MB bundle vs Electron's 100+ MB; uses OS webview; passes Apple notarisation by default.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Trade-offs</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Webview consistency:</strong> Tauri uses OS-native webviews (Edge WebView2, WKWebView, WebKitGTK) → CSS feature parity needs CI matrix testing.</li>
+ <li><strong>Module Federation + Vite:</strong> the official plugin is <em>newer</em> than Webpack's; some plugins lag behind. Mitigation: host shell built around the official plugin's stable subset only.</li>
+ <li><strong>React 19 ecosystem:</strong> some libraries (charts, drag-drop) still pinning React 18; monitor and pin as needed.</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 3 -->
 <!-- ============================================================ -->
 <section id="tier-3">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-1">3</span>
-    <h2 class="h-1">Tier 3 — Frontend remotes (per module)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> Webpack 5 + Module Federation v2 per module.</p>
-    <p class="text-slate-600 text-sm leading-relaxed mb-3">
-      Each module ships as an MF remote bundle. The host shell lazy-loads on route entry. CSS scoped via CSS Modules to prevent cross-module collisions. Design tokens come from one published package (<code>@cyberskill/tokens</code>).
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-1">3</span>
+ <h2 class="h-1">Tier 3 — Frontend remotes (per module)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Webpack 5 + Module Federation v2 per module.</p>
+ <p class="text-slate-600 text-sm leading-relaxed mb-3">
+ Each module ships as an MF remote bundle. The host shell lazy-loads on route entry. CSS scoped via CSS Modules to prevent cross-module collisions. Design tokens come from one published package (<code>@cyberskill/tokens</code>).
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Why Webpack for remotes, Vite for host?</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Module Federation maturity</strong> — Webpack's MF plugin has 4+ years of production miles; remote bundling, runtime versioning, and shared-deps resolution are battle-tested.</li>
-        <li><strong>Bidirectional remotes</strong> — Webpack MF supports remote-as-host (a module can host its own sub-remotes); useful for SKILL → CUO interactions.</li>
-        <li><strong>Host can be Vite</strong> — the Vite MF plugin can consume Webpack remotes; the inverse is not always true.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">NFR ceilings</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>N(FR pending)</strong> — module first-paint ≤ 1.5s on cold load</li>
-        <li><strong>N(FR pending)</strong> — initial module bundle ≤ 50 KB gzipped JS</li>
-        <li><strong>N(FR pending)</strong> — module-rebuild time on token change ≤ 30 min including tests</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why Webpack for remotes, Vite for host?</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Module Federation maturity</strong> — Webpack's MF plugin has 4+ years of production miles; remote bundling, runtime versioning, and shared-deps resolution are battle-tested.</li>
+ <li><strong>Bidirectional remotes</strong> — Webpack MF supports remote-as-host (a module can host its own sub-remotes); useful for SKILL → CUO interactions.</li>
+ <li><strong>Host can be Vite</strong> — the Vite MF plugin can consume Webpack remotes; the inverse is not always true.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">NFR ceilings</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>N(FR pending)</strong> — module first-paint ≤ 1.5s on cold load</li>
+ <li><strong>N(FR pending)</strong> — initial module bundle ≤ 50 KB gzipped JS</li>
+ <li><strong>N(FR pending)</strong> — module-rebuild time on token change ≤ 30 min including tests</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 4 -->
 <!-- ============================================================ -->
 <section id="tier-4">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-4">4</span>
-    <h2 class="h-1">Tier 4 — API gateway (GraphQL Federation)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> Apollo Router (Rust) — Federation v2.5+ compliant.</p>
-    <p class="text-slate-600 text-sm leading-relaxed mb-3">
-      The Rust-based Apollo Router executes the composed supergraph plan. Validates JWTs, attaches tenant + actor context, runs persisted-query lookup, dispatches subgraph fanout in parallel. Detailed in the <a href="infrastructure.html#graphql-federation" class="text-amber-700 font-semibold">Infrastructure page</a>.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-4">4</span>
+ <h2 class="h-1">Tier 4 — API gateway (GraphQL Federation)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Apollo Router (Rust) — Federation v2.5+ compliant.</p>
+ <p class="text-slate-600 text-sm leading-relaxed mb-3">
+ The Rust-based Apollo Router executes the composed supergraph plan. Validates JWTs, attaches tenant + actor context, runs persisted-query lookup, dispatches subgraph fanout in parallel. Detailed in the <a href="infrastructure.html#graphql-federation" class="text-amber-700 font-semibold">Infrastructure page</a>.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Why Apollo Router, not Mesh / Hasura / Yoga?</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Apollo Router</strong> — production-grade Rust runtime; reference implementation for Federation v2.5; query plan cache; persisted-query story is first-class.</li>
-        <li><strong>GraphQL Mesh</strong> — flexible but is the wrong abstraction for federation (REST/SOAP/SQL adapters; not a router).</li>
-        <li><strong>Hasura</strong> — Postgres-first; doesn't model multi-subgraph federation; vendor lock-in concerns.</li>
-        <li><strong>GraphQL Yoga (as router)</strong> — Yoga is great as a subgraph server; not as a federation router.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Trade-offs</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Elastic License (v1.2)</strong> — non-OSI but production-friendly; review legal before commercial offering.</li>
-        <li><strong>Single binary</strong> — Rust-only; tweaks require Rust expertise (or YAML config + Rhai script).</li>
-        <li><strong>Telemetry surface</strong> — needs OTel collector + Grafana to be useful (already in OBS).</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why Apollo Router, not Mesh / Hasura / Yoga?</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Apollo Router</strong> — production-grade Rust runtime; reference implementation for Federation v2.5; query plan cache; persisted-query story is first-class.</li>
+ <li><strong>GraphQL Mesh</strong> — flexible but is the wrong abstraction for federation (REST/SOAP/SQL adapters; not a router).</li>
+ <li><strong>Hasura</strong> — Postgres-first; doesn't model multi-subgraph federation; vendor lock-in concerns.</li>
+ <li><strong>GraphQL Yoga (as router)</strong> — Yoga is great as a subgraph server; not as a federation router.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Trade-offs</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Elastic License (v1.2)</strong> — non-OSI but production-friendly; review legal before commercial offering.</li>
+ <li><strong>Single binary</strong> — Rust-only; tweaks require Rust expertise (or YAML config + Rhai script).</li>
+ <li><strong>Telemetry surface</strong> — needs OTel collector + Grafana to be useful (already in OBS).</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 5 -->
 <!-- ============================================================ -->
 <section id="tier-5">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-4">5</span>
-    <h2 class="h-1">Tier 5 — MCP Gateway (per-module servers)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> Per-module MCP servers + federation router · 2025-11-25 spec.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      Each module owns its MCP server. The gateway is a federation router, not a monolith. Streamable HTTP, OAuth-PRM, well-known discovery, tool annotations. Detailed in the <a href="infrastructure.html#mcp-gateway" class="text-amber-700 font-semibold">Infrastructure page</a>.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-4">5</span>
+ <h2 class="h-1">Tier 5 — MCP Gateway (per-module servers)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Per-module MCP servers + federation router · 2025-11-25 spec.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ Each module owns its MCP server. The gateway is a federation router, not a monolith. Streamable HTTP, OAuth-PRM, well-known discovery, tool annotations. Detailed in the <a href="infrastructure.html#mcp-gateway" class="text-amber-700 font-semibold">Infrastructure page</a>.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">SDK choice</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>TypeScript:</strong> official <code>@modelcontextprotocol/sdk</code> (1.20+) — used by 19 of 22 modules</li>
-        <li><strong>Rust:</strong> CyberSkill-published <code>mcp-rs</code> — used by BRAIN, Skill (the two Rust-first modules)</li>
-        <li><strong>Tool registration</strong> — annotation-validated at startup; CI conformance test in module-template</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Spec version policy</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Current:</strong> 2025-11-25 (production-stable as of May 2026)</li>
-        <li><strong>Previous:</strong> 2025-06-18 (one phase grace period after spec bump)</li>
-        <li><strong>Tested clients:</strong> Claude Desktop, Claude Code, Cursor, Cline, Codex (covers ~26 AI clients)</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">SDK choice</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>TypeScript:</strong> official <code>@modelcontextprotocol/sdk</code> (1.20+) — used by 19 of 22 modules</li>
+ <li><strong>Rust:</strong> CyberSkill-published <code>mcp-rs</code> — used by BRAIN, Skill (the two Rust-first modules)</li>
+ <li><strong>Tool registration</strong> — annotation-validated at startup; CI conformance test in module-template</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Spec version policy</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Current:</strong> 2025-11-25 (production-stable as of May 2026)</li>
+ <li><strong>Previous:</strong> 2025-06-18 (one phase grace period after spec bump)</li>
+ <li><strong>Tested clients:</strong> Claude Desktop, Claude Code, Cursor, Cline, Codex (covers ~26 AI clients)</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 6 -->
 <!-- ============================================================ -->
 <section id="tier-6">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-4">6</span>
-    <h2 class="h-1">Tier 6 — AI Gateway (LiteLLM router)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> LiteLLM with CyberOS middleware overlay.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      One gateway, one cost ledger, one residency policy. Routes between Bedrock primary (Sonnet 4.6, Haiku 4.5), Anthropic ZDR fallback, OpenAI ZDR fallback. Detailed in the <a href="infrastructure.html#ai-gateway" class="text-amber-700 font-semibold">Infrastructure page</a>.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-4">6</span>
+ <h2 class="h-1">Tier 6 — AI Gateway (LiteLLM router)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> LiteLLM with CyberOS middleware overlay.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ One gateway, one cost ledger, one residency policy. Routes between Bedrock primary (Sonnet 4.6, Haiku 4.5), Anthropic ZDR fallback, OpenAI ZDR fallback. Detailed in the <a href="infrastructure.html#ai-gateway" class="text-amber-700 font-semibold">Infrastructure page</a>.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Why these providers</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Bedrock primary</strong> — ZDR by default, regional Singapore endpoint for VN tenants, Anthropic Sonnet/Haiku available without contract overhead.</li>
-        <li><strong>Anthropic ZDR fallback</strong> — direct API at Anthropic's <em>Zero Data Retention</em> contract tier; bypasses Bedrock when AWS has regional issues.</li>
-        <li><strong>OpenAI ZDR fallback</strong> — third tier; explicitly enabled per-tenant; covers Bedrock + Anthropic dual outage.</li>
-        <li><strong>No Gemini for now</strong> — no Singapore ZDR endpoint at suitable contract; revisit when GCP Singapore Gemini Enterprise ships.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Cost ceiling</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>N(FR pending) — ≤ $150/mo internal LLM</li>
-        <li>N(FR pending) — ≤ $4/active user/mo at 50-tenant</li>
-        <li>Semantic + exact-prompt cache ≥ 30% hit rate</li>
-        <li>Self-hosted BGE-M3 embeddings on shared GPU node (~$80/mo for GPU)</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why these providers</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Bedrock primary</strong> — ZDR by default, regional Singapore endpoint for VN tenants, Anthropic Sonnet/Haiku available without contract overhead.</li>
+ <li><strong>Anthropic ZDR fallback</strong> — direct API at Anthropic's <em>Zero Data Retention</em> contract tier; bypasses Bedrock when AWS has regional issues.</li>
+ <li><strong>OpenAI ZDR fallback</strong> — third tier; explicitly enabled per-tenant; covers Bedrock + Anthropic dual outage.</li>
+ <li><strong>No Gemini for now</strong> — no Singapore ZDR endpoint at suitable contract; revisit when GCP Singapore Gemini Enterprise ships.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Cost ceiling</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li>N(FR pending) — ≤ $150/mo internal LLM</li>
+ <li>N(FR pending) — ≤ $4/active user/mo at 50-tenant</li>
+ <li>Semantic + exact-prompt cache ≥ 30% hit rate</li>
+ <li>Self-hosted BGE-M3 embeddings on shared GPU node (~$80/mo for GPU)</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 7 -->
 <!-- ============================================================ -->
 <section id="tier-7">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-2">7</span>
-    <h2 class="h-1">Tier 7 — Backend services (per-module subgraphs)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> TypeScript (GraphQL Yoga) or Rust (async-graphql) per subgraph, choice owned by module owner.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      Most subgraphs are TypeScript for developer ergonomics. The two performance-critical modules — BRAIN (memory writer hot path) and Skill (Wasmtime runtime, capability broker) — are Rust. Module owners pick per module; the contract (Apollo Federation SDL) is identical regardless.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-2">7</span>
+ <h2 class="h-1">Tier 7 — Backend services (per-module subgraphs)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> TypeScript (GraphQL Yoga) or Rust (async-graphql) per subgraph, choice owned by module owner.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ Most subgraphs are TypeScript for developer ergonomics. The two performance-critical modules — BRAIN (memory writer hot path) and Skill (Wasmtime runtime, capability broker) — are Rust. Module owners pick per module; the contract (Apollo Federation SDL) is identical regardless.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">TypeScript stack (default)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Runtime:</strong> Bun 1.2+ (faster startup, native TS/JS)</li>
-        <li><strong>GraphQL server:</strong> GraphQL Yoga (urql-team-maintained, federation-aware)</li>
-        <li><strong>ORM:</strong> Prisma 5 (the audit-event schema in PRD §8.7 is a Prisma model)</li>
-        <li><strong>Validation:</strong> Zod + GraphQL codegen</li>
-        <li><strong>Testing:</strong> Vitest + Playwright (component + e2e)</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Rust stack (perf-critical)</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Runtime:</strong> Tokio + axum</li>
-        <li><strong>GraphQL server:</strong> async-graphql (federation v2 supported)</li>
-        <li><strong>ORM:</strong> SQLx (compile-time-checked queries)</li>
-        <li><strong>Validation:</strong> serde + msgspec for canonical-JSON ledger entries</li>
-        <li><strong>Testing:</strong> cargo test + criterion benchmarks</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">TypeScript stack (default)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Runtime:</strong> Bun 1.2+ (faster startup, native TS/JS)</li>
+ <li><strong>GraphQL server:</strong> GraphQL Yoga (urql-team-maintained, federation-aware)</li>
+ <li><strong>ORM:</strong> Prisma 5 (the audit-event schema in is a Prisma model)</li>
+ <li><strong>Validation:</strong> Zod + GraphQL codegen</li>
+ <li><strong>Testing:</strong> Vitest + Playwright (component + e2e)</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Rust stack (perf-critical)</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Runtime:</strong> Tokio + axum</li>
+ <li><strong>GraphQL server:</strong> async-graphql (federation v2 supported)</li>
+ <li><strong>ORM:</strong> SQLx (compile-time-checked queries)</li>
+ <li><strong>Validation:</strong> serde + msgspec for canonical-JSON ledger entries</li>
+ <li><strong>Testing:</strong> cargo test + criterion benchmarks</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 8 -->
 <!-- ============================================================ -->
 <section id="tier-8">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-2">8</span>
-    <h2 class="h-1">Tier 8 — Data layer (Postgres + extensions)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> PostgreSQL 17 + pgvector HNSW + Apache AGE 1.5 + PGroonga.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      One Postgres database per region, with extensions stacked: pgvector for vector search (HNSW index), Apache AGE for graph traversal (OpenCypher dialect), PGroonga for Vietnamese-tokenised lexical search. Per-module schema isolation; RLS on every tenant-keyed table.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-2">8</span>
+ <h2 class="h-1">Tier 8 — Data layer (Postgres + extensions)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> PostgreSQL 17 + pgvector HNSW + Apache AGE 1.5 + PGroonga.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ One Postgres database per region, with extensions stacked: pgvector for vector search (HNSW index), Apache AGE for graph traversal (OpenCypher dialect), PGroonga for Vietnamese-tokenised lexical search. Per-module schema isolation; RLS on every tenant-keyed table.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5 mb-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Why Postgres + pgvector vs separate vector DB?</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Joins.</strong> CUO queries routinely combine a vector hit with structured filter (tenant_id, scope, classification). Vector-DB-only solutions (Pinecone, Weaviate) make this two-roundtrip.</li>
-        <li><strong>Transactional.</strong> Embeddings must be written atomically with the source row. Two-system writes need 2PC; one Postgres avoids it.</li>
-        <li><strong>Cost.</strong> Pinecone scales linearly with vectors; Postgres scales with hardware. At 1M chunks the cost flip favours Postgres.</li>
-        <li><strong>HNSW maturity.</strong> pgvector 0.7+ HNSW index now matches Pinecone recall on MIRACL benchmarks for VN content.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">RLS posture</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Every tenant-keyed table</strong> has <code>RLS ENABLED</code> + <code>FORCE ROW LEVEL SECURITY</code>.</li>
-        <li><strong>Session GUC:</strong> <code>SET LOCAL app.tenant_id = $1</code> at session start.</li>
-        <li><strong>Bypass:</strong> only the migration runner has <code>BYPASSRLS</code>; standard app role does not.</li>
-        <li><strong>Audit:</strong> RLS policy violations are blocked at DB level (logged + alerted).</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5 mb-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why Postgres + pgvector vs separate vector DB?</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Joins.</strong> CUO queries routinely combine a vector hit with structured filter (tenant_id, scope, classification). Vector-DB-only solutions (Pinecone, Weaviate) make this two-roundtrip.</li>
+ <li><strong>Transactional.</strong> Embeddings must be written atomically with the source row. Two-system writes need 2PC; one Postgres avoids it.</li>
+ <li><strong>Cost.</strong> Pinecone scales linearly with vectors; Postgres scales with hardware. At 1M chunks the cost flip favours Postgres.</li>
+ <li><strong>HNSW maturity.</strong> pgvector 0.7+ HNSW index now matches Pinecone recall on MIRACL benchmarks for VN content.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">RLS posture</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Every tenant-keyed table</strong> has <code>RLS ENABLED</code> + <code>FORCE ROW LEVEL SECURITY</code>.</li>
+ <li><strong>Session GUC:</strong> <code>SET LOCAL app.tenant_id = $1</code> at session start.</li>
+ <li><strong>Bypass:</strong> only the migration runner has <code>BYPASSRLS</code>; standard app role does not.</li>
+ <li><strong>Audit:</strong> RLS policy violations are blocked at DB level (logged + alerted).</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 9 -->
 <!-- ============================================================ -->
 <section id="tier-9">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-2">9</span>
-    <h2 class="h-1">Tier 9 — Search &amp; embeddings (self-hosted)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> BAAI/bge-m3 (embedder) + BAAI/bge-reranker-v2-m3 (reranker), self-hosted on one shared GPU node.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      BGE-M3 produces 1024-dim dense + sparse + multi-vector embeddings in one pass. Multilingual native (top MIRACL Vietnamese scores). The reranker re-orders top-150 hits to top-20 using cross-encoder scoring. Both run on a single shared GPU node (Hetzner CCX23 + RTX A4000 or similar; ~$80/mo).
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-2">9</span>
+ <h2 class="h-1">Tier 9 — Search &amp; embeddings (self-hosted)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> BAAI/bge-m3 (embedder) + BAAI/bge-reranker-v2-m3 (reranker), self-hosted on one shared GPU node.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ BGE-M3 produces 1024-dim dense + sparse + multi-vector embeddings in one pass. Multilingual native (top MIRACL Vietnamese scores). The reranker re-orders top-150 hits to top-20 using cross-encoder scoring. Both run on a single shared GPU node (Hetzner CCX23 + RTX A4000 or similar; ~$80/mo).
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Why self-hosted vs OpenAI text-embedding-3-large?</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Cost.</strong> OpenAI embeddings at scale (50-tenant × 100k chunks/tenant × 30 reembeds/year) dominate the LLM bill. Self-hosted GPU is a fixed $80/mo.</li>
-        <li><strong>Latency.</strong> Sub-30ms p50 vs ~150ms via OpenAI (network + queue).</li>
-        <li><strong>Vietnamese quality.</strong> BGE-M3 outscores OpenAI on MIRACL-VI (Vietnamese subset) by ~8 points.</li>
-        <li><strong>Residency.</strong> No data leaves CyberOS-controlled hardware. Compliance Q&amp;A answers itself.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">NFR ceilings</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li>N(FR pending) — BRAIN search ≤ 250ms p95 on 1M chunks</li>
-        <li>Embed p95 ≤ 80ms; rerank p95 ≤ 200ms</li>
-        <li>End-to-end retrieve: embed + pgvector + rerank ≤ 250ms p95</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why self-hosted vs OpenAI text-embedding-3-large?</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Cost.</strong> OpenAI embeddings at scale (50-tenant × 100k chunks/tenant × 30 reembeds/year) dominate the LLM bill. Self-hosted GPU is a fixed $80/mo.</li>
+ <li><strong>Latency.</strong> Sub-30ms p50 vs ~150ms via OpenAI (network + queue).</li>
+ <li><strong>Vietnamese quality.</strong> BGE-M3 outscores OpenAI on MIRACL-VI (Vietnamese subset) by ~8 points.</li>
+ <li><strong>Residency.</strong> No data leaves CyberOS-controlled hardware. Compliance Q&amp;A answers itself.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">NFR ceilings</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li>N(FR pending) — BRAIN search ≤ 250ms p95 on 1M chunks</li>
+ <li>Embed p95 ≤ 80ms; rerank p95 ≤ 200ms</li>
+ <li>End-to-end retrieve: embed + pgvector + rerank ≤ 250ms p95</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 10 -->
 <!-- ============================================================ -->
 <section id="tier-10">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-5">10</span>
-    <h2 class="h-1">Tier 10 — Event bus (NATS JetStream)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> NATS Server 2.10+ with JetStream durable consumers.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      Detailed in the <a href="infrastructure.html#nats-jetstream" class="text-amber-700 font-semibold">Infrastructure page</a>. Choice driven by subject-hierarchy native fit (<code>cyberos.{tenant}.{module}.{entity}.{verb}</code>), sub-millisecond latency, and single-binary operational footprint.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-5">10</span>
+ <h2 class="h-1">Tier 10 — Event bus (NATS JetStream)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> NATS Server 2.10+ with JetStream durable consumers.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ Detailed in the <a href="infrastructure.html#nats-jetstream" class="text-amber-700 font-semibold">Infrastructure page</a>. Choice driven by subject-hierarchy native fit (<code>cyberos.{tenant}.{module}.{entity}.{verb}</code>), sub-millisecond latency, and single-binary operational footprint.
+ </p>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2 text-slate-900">Why NATS, not Kafka / Redpanda?</h4>
-    <p class="text-sm text-slate-600">See the alternatives table at <a href="#alternatives" class="text-amber-700 font-semibold">§Alternatives considered</a> for the full comparison.</p>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Why NATS, not Kafka / Redpanda?</h4>
+ <p class="text-sm text-slate-600">See the alternatives table at <a href="#alternatives" class="text-amber-700 font-semibold">§Alternatives considered</a> for the full comparison.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 11 -->
 <!-- ============================================================ -->
 <section id="tier-11">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-5">11</span>
-    <h2 class="h-1">Tier 11 — Object storage (S3-compatible)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> S3-compatible — Cloudflare R2 (zero-egress) or MinIO (self-host) per environment.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      DEC-005 locks the choice to S3-compatible <em>protocol</em>, not specific vendor. Production internal uses Cloudflare R2 (zero egress fee, global CDN). Self-hosted demo / on-prem tenant uses MinIO. Migration is a config flip.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-5">11</span>
+ <h2 class="h-1">Tier 11 — Object storage (S3-compatible)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> S3-compatible — Cloudflare R2 (zero-egress) or MinIO (self-host) per environment.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ DEC-005 locks the choice to S3-compatible <em>protocol</em>, not specific vendor. Production internal uses Cloudflare R2 (zero egress fee, global CDN). Self-hosted demo / on-prem tenant uses MinIO. Migration is a config flip.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-3 gap-4">
-    <div class="bbg-card p-4">
-      <div class="h-eyebrow mb-1">R2 cost</div>
-      <div class="text-xl font-black text-rose-600">$0 egress</div>
-      <div class="text-xs text-slate-500 mt-1">$0.015/GB-month storage</div>
-    </div>
-    <div class="bbg-card p-4">
-      <div class="h-eyebrow mb-1">MinIO</div>
-      <div class="text-xl font-black text-rose-600">self-host</div>
-      <div class="text-xs text-slate-500 mt-1">Apache-2; single binary</div>
-    </div>
-    <div class="bbg-card p-4">
-      <div class="h-eyebrow mb-1">Use cases</div>
-      <div class="text-xl font-black text-rose-600">5+</div>
-      <div class="text-xs text-slate-500 mt-1">BRAIN archival, OBS logs, INV PDFs, ESOP docs, DOC signed</div>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-3 gap-4">
+ <div class="bbg-card p-4">
+ <div class="h-eyebrow mb-1">R2 cost</div>
+ <div class="text-xl font-black text-rose-600">$0 egress</div>
+ <div class="text-xs text-slate-500 mt-1">$0.015/GB-month storage</div>
+ </div>
+ <div class="bbg-card p-4">
+ <div class="h-eyebrow mb-1">MinIO</div>
+ <div class="text-xl font-black text-rose-600">self-host</div>
+ <div class="text-xs text-slate-500 mt-1">Apache-2; single binary</div>
+ </div>
+ <div class="bbg-card p-4">
+ <div class="h-eyebrow mb-1">Use cases</div>
+ <div class="text-xl font-black text-rose-600">5+</div>
+ <div class="text-xs text-slate-500 mt-1">BRAIN archival, OBS logs, INV PDFs, ESOP docs, DOC signed</div>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 12 -->
 <!-- ============================================================ -->
 <section id="tier-12">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-7">12</span>
-    <h2 class="h-1">Tier 12 — Realtime sync (CRDTs)</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> Yjs (CHAT, collaborative docs) + Automerge (offline-first complex models).</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      Yjs is the production-grade CRDT lib for text + lists (rich-text CHAT messages, KB docs). Automerge owns the offline-first model surface for clients that need to edit while disconnected (Tauri desktop ⇄ web). Both speak similar BinaryDoc formats; conversion when needed.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-7">12</span>
+ <h2 class="h-1">Tier 12 — Realtime sync (CRDTs)</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Yjs (CHAT, collaborative docs) + Automerge (offline-first complex models).</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ Yjs is the production-grade CRDT lib for text + lists (rich-text CHAT messages, KB docs). Automerge owns the offline-first model surface for clients that need to edit while disconnected (Tauri desktop ⇄ web). Both speak similar BinaryDoc formats; conversion when needed.
+ </p>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2 text-slate-900">Where they're used</h4>
-    <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
-      <li><strong>CHAT</strong> — rich-text message editing, threaded reply collaboration (Yjs)</li>
-      <li><strong>KB</strong> — collaborative document editing (Yjs + Tiptap editor)</li>
-      <li><strong>PROJ</strong> — task description rich-text + checklist (Yjs)</li>
-      <li><strong>Desktop offline</strong> — Tauri-based offline edits sync via Automerge when reconnected</li>
-      <li><strong>BRAIN cross-tenant import</strong> — CRDT-style merge for `cyberos import` (memory module §14.2)</li>
-    </ul>
-  </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Where they're used</h4>
+ <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
+ <li><strong>CHAT</strong> — rich-text message editing, threaded reply collaboration (Yjs)</li>
+ <li><strong>KB</strong> — collaborative document editing (Yjs + Tiptap editor)</li>
+ <li><strong>PROJ</strong> — task description rich-text + checklist (Yjs)</li>
+ <li><strong>Desktop offline</strong> — Tauri-based offline edits sync via Automerge when reconnected</li>
+ <li><strong>BRAIN cross-tenant import</strong> — CRDT-style merge for `cyberos import` (memory module §14.2)</li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 13 -->
 <!-- ============================================================ -->
 <section id="tier-13">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-7">13</span>
-    <h2 class="h-1">Tier 13 — Cryptography</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> Ed25519 signatures + scrypt key-wrap + Merkle Mountain Range (MMR) + Signed Tree Heads (STH).</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      BRAIN's audit ledger uses MMR for additive inclusion proofs. Each consolidation cycle signs a Tree Head with Ed25519. Signing keys are passphrase-wrapped via scrypt (P2 Stage 2). Detailed in <a href="../modules/brain.html" class="text-rose-700 font-semibold">BRAIN module page</a>.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-7">13</span>
+ <h2 class="h-1">Tier 13 — Cryptography</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Ed25519 signatures + scrypt key-wrap + Merkle Mountain Range (MMR) + Signed Tree Heads (STH).</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ BRAIN's audit ledger uses MMR for additive inclusion proofs. Each consolidation cycle signs a Tree Head with Ed25519. Signing keys are passphrase-wrapped via scrypt (P2 Stage 2). Detailed in <a href="../modules/brain.html" class="text-rose-700 font-semibold">BRAIN module page</a>.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Primitive choice</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Ed25519, not RSA-4096</strong> — 32-byte keys, deterministic, FIPS 186-5 approved.</li>
-        <li><strong>SHA-256, not BLAKE2</strong> — universally available, audit-time discoverable.</li>
-        <li><strong>scrypt for key wrap</strong> — memory-hard; deliberately expensive at unwrap time.</li>
-        <li><strong>MMR over Merkle tree</strong> — supports unbounded appends without re-balancing; matches Certificate Transparency Log convention.</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Where used</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>BRAIN audit chain</strong> — every memory operation appends a leaf; STH signed per consolidation.</li>
-        <li><strong>PRD §8.7 AuditEvent</strong> — per-scope Merkle chain; prevHash chained.</li>
-        <li><strong>DEC-019</strong> — Merkle-chained audit log invariant.</li>
-        <li><strong>N(FR pending)</strong> — BRAIN signed-zip portability: Ed25519 sig + Merkle proof.</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Primitive choice</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Ed25519, not RSA-4096</strong> — 32-byte keys, deterministic, FIPS 186-5 approved.</li>
+ <li><strong>SHA-256, not BLAKE2</strong> — universally available, audit-time discoverable.</li>
+ <li><strong>scrypt for key wrap</strong> — memory-hard; deliberately expensive at unwrap time.</li>
+ <li><strong>MMR over Merkle tree</strong> — supports unbounded appends without re-balancing; matches Certificate Transparency Log convention.</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Where used</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>BRAIN audit chain</strong> — every memory operation appends a leaf; STH signed per consolidation.</li>
+ <li><strong> AuditEvent</strong> — per-scope Merkle chain; prevHash chained.</li>
+ <li><strong>DEC-019</strong> — Merkle-chained audit log invariant.</li>
+ <li><strong>N(FR pending)</strong> — BRAIN signed-zip portability: Ed25519 sig + Merkle proof.</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 14 -->
 <!-- ============================================================ -->
 <section id="tier-14">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-7">14</span>
-    <h2 class="h-1">Tier 14 — Audit ledger encoding</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> msgspec canonical-JSON + binlog framing (length + CRC32C + seq + ts + payload).</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      <code>msgspec</code> (Python; mirrored in Rust via custom serde) produces deterministic JSON (sorted keys, UTF-8 NFC, no insignificant whitespace) → meets RFC 8785 JCS. The binary frame header makes the ledger durable under partial-write conditions.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-7">14</span>
+ <h2 class="h-1">Tier 14 — Audit ledger encoding</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> msgspec canonical-JSON + binlog framing (length + CRC32C + seq + ts + payload).</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ <code>msgspec</code> (Python; mirrored in Rust via custom serde) produces deterministic JSON (sorted keys, UTF-8 NFC, no insignificant whitespace) → meets RFC 8785 JCS. The binary frame header makes the ledger durable under partial-write conditions.
+ </p>
+ </div>
 
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2 text-slate-900">Format spec (Memory AGENTS.md §6.2)</h4>
-    <div class="codeblock"><pre><code># Each ledger record frame:
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Format spec (Memory AGENTS.md §6.2)</h4>
+ <div class="codeblock"><pre><code># Each ledger record frame:
 [u32 length BE][u32 crc32c BE][u64 seq BE][u64 ts_ns BE][payload]
 
 # Payload = msgspec canonical JSON of:
 {
-  "seq": 12345,
-  "ts_ns": 1715683200000000000,
-  "tenant": "cyberskill",
-  "actor": "member:trinh",
-  "op": "put",
-  "path": "memories/decisions/...",
-  "body_hash": "sha256:abc...",
-  "prev_chain": "sha256:xyz...",
-  "chain": "sha256:def..."   # SHA-256(canonical(record_minus_chain) || prev_chain)
+ "seq": 12345,
+ "ts_ns": 1715683200000000000,
+ "tenant": "cyberskill",
+ "actor": "member:trinh",
+ "op": "put",
+ "path": "memories/decisions/...",
+ "body_hash": "sha256:abc...",
+ "prev_chain": "sha256:xyz...",
+ "chain": "sha256:def..." # SHA-256(canonical(record_minus_chain) || prev_chain)
 }</code></pre></div>
-  </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 15 -->
 <!-- ============================================================ -->
 <section id="tier-15">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-9">15</span>
-    <h2 class="h-1">Tier 15 — Compliance tooling</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> OPA (Open Policy Agent) + Conftest + Trust Center (static site).</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      OPA enforces Rego policies across Kubernetes manifests, GraphQL operation directives, and IAM transitions. Conftest runs OPA in CI for declarative-file validation. Trust Center is a static site (Astro + MDX) hosting VPAT, SOC 2, ISO 27001, CSA STAR docs.
-    </p>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-9">15</span>
+ <h2 class="h-1">Tier 15 — Compliance tooling</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> OPA (Open Policy Agent) + Conftest + Trust Center (static site).</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ OPA enforces Rego policies across Kubernetes manifests, GraphQL operation directives, and IAM transitions. Conftest runs OPA in CI for declarative-file validation. Trust Center is a static site (Astro + MDX) hosting VPAT, SOC 2, ISO 27001, CSA STAR docs.
+ </p>
+ </div>
 
-  <div class="grid md:grid-cols-2 gap-5">
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">What OPA enforces</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>K8s admission</strong> — block deploys missing tenant labels, resource limits, network policies</li>
-        <li><strong>GraphQL directives</strong> — every @sensitive field must have classification</li>
-        <li><strong>IAM transitions</strong> — Founder role grants require dual-approval workflow</li>
-        <li><strong>MCP tool annotations</strong> — destructive tool registration validation</li>
-      </ul>
-    </div>
-    <div class="bbg-card p-5">
-      <h4 class="font-bold mb-2 text-slate-900">Trust Center stack</h4>
-      <ul class="text-sm text-slate-600 space-y-1.5">
-        <li><strong>Astro</strong> — static site generator with MDX support</li>
-        <li><strong>Auth</strong> — NDA click-wrap before downloading reports (AUTH module integration)</li>
-        <li><strong>Signed URLs</strong> — 24-hour TTL via R2 presigned URLs</li>
-        <li><strong>Audit</strong> — every download logged for N(FR pending) compliance</li>
-      </ul>
-    </div>
-  </div>
+ <div class="grid md:grid-cols-2 gap-5">
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">What OPA enforces</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>K8s admission</strong> — block deploys missing tenant labels, resource limits, network policies</li>
+ <li><strong>GraphQL directives</strong> — every @sensitive field must have classification</li>
+ <li><strong>IAM transitions</strong> — Founder role grants require dual-approval workflow</li>
+ <li><strong>MCP tool annotations</strong> — destructive tool registration validation</li>
+ </ul>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Trust Center stack</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Astro</strong> — static site generator with MDX support</li>
+ <li><strong>Auth</strong> — NDA click-wrap before downloading reports (AUTH module integration)</li>
+ <li><strong>Signed URLs</strong> — 24-hour TTL via R2 presigned URLs</li>
+ <li><strong>Audit</strong> — every download logged for N(FR pending) compliance</li>
+ </ul>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- TIER 16 -->
 <!-- ============================================================ -->
 <section id="tier-16">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-6">16</span>
-    <h2 class="h-1">Tier 16 — Typography &amp; design tokens</h2>
-  </div>
-  <div class="bbg-card p-6 mb-5">
-    <p class="text-slate-700 mb-3"><strong>Pick:</strong> Be Vietnam Pro (UI) + JetBrains Mono (code) + CyberSkill Global Design System v1.0.0.</p>
-    <p class="text-slate-600 text-sm leading-relaxed">
-      Be Vietnam Pro is the diacritic-aware Vietnamese-first typeface; the Design System Part 5 specifies stack-fidelity (N(FR pending)). Tokens are exported in W3C DTCG format (2025.10) for cross-platform consumption (Style Dictionary, Tailwind via PostCSS plugin, iOS/Android, Figma).
-    </p>
-  </div>
-  <div class="bbg-card p-5">
-    <h4 class="font-bold mb-2 text-slate-900">Token surface</h4>
-    <ul class="text-sm text-slate-600 space-y-1.5">
-      <li><strong>Anchors</strong> — Umber #45210E, Ochre #F4BA17, sub-brand accents</li>
-      <li><strong>Typography</strong> — Be Vietnam Pro (UI), JetBrains Mono (code)</li>
-      <li><strong>Spacing rhythm</strong> — 4px base; powers-of-two scale</li>
-      <li><strong>Genie token set</strong> — dedicated panel/chip/mode-indicator tokens; versioned alongside CUO persona</li>
-    </ul>
-  </div>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-6">16</span>
+ <h2 class="h-1">Tier 16 — Typography &amp; design tokens</h2>
+ </div>
+ <div class="bbg-card p-6 mb-5">
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Be Vietnam Pro (UI) + JetBrains Mono (code) + CyberSkill Global Design System v1.0.0.</p>
+ <p class="text-slate-600 text-sm leading-relaxed">
+ Be Vietnam Pro is the diacritic-aware Vietnamese-first typeface; the Design System Part 5 specifies stack-fidelity (N(FR pending)). Tokens are exported in W3C DTCG format (2025.10) for cross-platform consumption (Style Dictionary, Tailwind via PostCSS plugin, iOS/Android, Figma).
+ </p>
+ </div>
+ <div class="bbg-card p-5">
+ <h4 class="font-bold mb-2 text-slate-900">Token surface</h4>
+ <ul class="text-sm text-slate-600 space-y-1.5">
+ <li><strong>Anchors</strong> — Umber #45210E, Ochre #F4BA17, sub-brand accents</li>
+ <li><strong>Typography</strong> — Be Vietnam Pro (UI), JetBrains Mono (code)</li>
+ <li><strong>Spacing rhythm</strong> — 4px base; powers-of-two scale</li>
+ <li><strong>Genie token set</strong> — dedicated panel/chip/mode-indicator tokens; versioned alongside CUO persona</li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DEPENDENCY GRAPH -->
 <!-- ============================================================ -->
 <section id="dep-graph">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-1">17</span>
-    <h2 class="h-1">"What calls what" — dependency graph</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    The tiers compose left-to-right: every request from a user or agent flows through this graph. Cycles are forbidden by design.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-1">17</span>
+ <h2 class="h-1">"What calls what" — dependency graph</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ The tiers compose left-to-right: every request from a user or agent flows through this graph. Cycles are forbidden by design.
+ </p>
 
-  <!-- Tier traversal sequence -->
-  <div class="bbg-card p-4 mb-6">
-    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">One request traverses every tier — sequence view</div>
-    <div class="mermaid">
+ <!-- Tier traversal sequence -->
+ <div class="bbg-card p-4 mb-6">
+ <div class="text-sm font-semibold text-slate-700 mb-2 text-center">One request traverses every tier — sequence view</div>
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  actor U as User
-  participant T2 as T2 Host shell
-  participant T3 as T3 Module remote
-  participant T4 as T4 Apollo Router
-  participant T7 as T7 Subgraph (Bun/Tokio)
-  participant T8 as T8 Postgres + ext
-  participant T6 as T6 AI Gateway
-  participant T9 as T9 BGE-M3 (GPU)
-  participant T10 as T10 NATS
-  participant T11 as T11 R2
-  participant T14 as T14 Audit ledger
+ autonumber
+ actor U as User
+ participant T2 as T2 Host shell
+ participant T3 as T3 Module remote
+ participant T4 as T4 Apollo Router
+ participant T7 as T7 Subgraph (Bun/Tokio)
+ participant T8 as T8 Postgres + ext
+ participant T6 as T6 AI Gateway
+ participant T9 as T9 BGE-M3 (GPU)
+ participant T10 as T10 NATS
+ participant T11 as T11 R2
+ participant T14 as T14 Audit ledger
 
-  U->>T2: open route
-  T2->>T3: lazy-load remote
-  T3->>T4: persisted query hash
-  T4->>T7: federated query plan
-  T7->>T8: SELECT (RLS-scoped)
-  T8-->>T7: rows
-  T7->>T6: POST /v1/embeddings
-  T6->>T9: BGE-M3 self-hosted
-  T9-->>T6: vector
-  T6-->>T7: embed
-  T7->>T8: SELECT pgvector
-  T8-->>T7: hits
-  T7->>T10: publish event
-  T7->>T11: write attachment (if any)
-  T7->>T14: append audit row (msgspec canonical)
-  T7-->>T4: response
-  T4-->>T3: composed result
-  T3-->>T2: render
-  T2-->>U: paint
-    </div>
-  </div>
+ U->>T2: open route
+ T2->>T3: lazy-load remote
+ T3->>T4: persisted query hash
+ T4->>T7: federated query plan
+ T7->>T8: SELECT (RLS-scoped)
+ T8-->>T7: rows
+ T7->>T6: POST /v1/embeddings
+ T6->>T9: BGE-M3 self-hosted
+ T9-->>T6: vector
+ T6-->>T7: embed
+ T7->>T8: SELECT pgvector
+ T8-->>T7: hits
+ T7->>T10: publish event
+ T7->>T11: write attachment (if any)
+ T7->>T14: append audit row (msgspec canonical)
+ T7-->>T4: response
+ T4-->>T3: composed result
+ T3-->>T2: render
+ T2-->>U: paint
+ </div>
+ </div>
 
-  <div class="bbg-card p-4">
-    <div class="mermaid">
+ <div class="bbg-card p-4">
+ <div class="mermaid">
 flowchart LR
-  USER[("User · Agent")] --> HOST["Host shell<br>Vite + React 19"]
-  HOST --> REMOTE["Module remote<br>Webpack 5 + MF"]
-  REMOTE --> APOLLO["Apollo Router"]
-  APOLLO --> AUTH["AUTH JWKS"]
-  APOLLO --> SUBG["Subgraph (TS/Rust)"]
-  SUBG --> PG[("Postgres 17 + ext.")]
-  SUBG --> AIGW["AI Gateway"]
-  SUBG --> NATS_DEP[("NATS JetStream")]
-  SUBG --> S3_DEP[("R2 / MinIO")]
-  AIGW --> LL["LiteLLM"]
-  LL --> BEDROCK["AWS Bedrock"]
-  LL --> ANT["Anthropic ZDR"]
-  LL --> OAI["OpenAI ZDR"]
-  LL --> BGE["BGE-M3 (self-hosted GPU)"]
+ USER[("User · Agent")] --> HOST["Host shell<br>Vite + React 19"]
+ HOST --> REMOTE["Module remote<br>Webpack 5 + MF"]
+ REMOTE --> APOLLO["Apollo Router"]
+ APOLLO --> AUTH["AUTH JWKS"]
+ APOLLO --> SUBG["Subgraph (TS/Rust)"]
+ SUBG --> PG[("Postgres 17 + ext.")]
+ SUBG --> AIGW["AI Gateway"]
+ SUBG --> NATS_DEP[("NATS JetStream")]
+ SUBG --> S3_DEP[("R2 / MinIO")]
+ AIGW --> LL["LiteLLM"]
+ LL --> BEDROCK["AWS Bedrock"]
+ LL --> ANT["Anthropic ZDR"]
+ LL --> OAI["OpenAI ZDR"]
+ LL --> BGE["BGE-M3 (self-hosted GPU)"]
 
-  USER --> MCPCLT[("MCP client<br>Claude / Cursor")]
-  MCPCLT --> MCPGW["MCP Gateway"]
-  MCPGW --> AUTH
-  MCPGW --> SUBG
+ USER --> MCPCLT[("MCP client<br>Claude / Cursor")]
+ MCPCLT --> MCPGW["MCP Gateway"]
+ MCPGW --> AUTH
+ MCPGW --> SUBG
 
-  SUBG -. trace .-> OBS["OBS · OTel"]
-  APOLLO -. trace .-> OBS
-  AIGW -. trace .-> OBS
-  MCPGW -. trace .-> OBS
+ SUBG -. trace.-> OBS["OBS · OTel"]
+ APOLLO -. trace.-> OBS
+ AIGW -. trace.-> OBS
+ MCPGW -. trace.-> OBS
 
-  classDef u fill:#fef6e0,stroke:#9c750a
-  classDef fe fill:#e8d4c2,stroke:#45210e
-  classDef gw fill:#f9c64f,stroke:#9c750a
-  classDef be fill:#f5ede6,stroke:#45210e
-  classDef data fill:#cba88a,stroke:#45210e
-  classDef ext fill:#fde7b3,stroke:#9c750a
-  class USER,MCPCLT u
-  class HOST,REMOTE fe
-  class APOLLO,MCPGW,AIGW,AUTH gw
-  class SUBG be
-  class PG,NATS_DEP,S3_DEP data
-  class LL,BEDROCK,ANT,OAI,BGE,OBS ext
-    </div>
-  </div>
+ classDef u fill:#fef6e0,stroke:#9c750a
+ classDef fe fill:#e8d4c2,stroke:#45210e
+ classDef gw fill:#f9c64f,stroke:#9c750a
+ classDef be fill:#f5ede6,stroke:#45210e
+ classDef data fill:#cba88a,stroke:#45210e
+ classDef ext fill:#fde7b3,stroke:#9c750a
+ class USER,MCPCLT u
+ class HOST,REMOTE fe
+ class APOLLO,MCPGW,AIGW,AUTH gw
+ class SUBG be
+ class PG,NATS_DEP,S3_DEP data
+ class LL,BEDROCK,ANT,OAI,BGE,OBS ext
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- COST MODEL -->
 <!-- ============================================================ -->
 <section id="cost-model">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-3">18</span>
-    <h2 class="h-1">Cost-vs-tier model</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    Two reference scales — 10 Members internal (P0–P2) and 50 tenants (P4 GA). Each tier's contribution maps to a hard NFR ceiling.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-3">18</span>
+ <h2 class="h-1">Cost-vs-tier model</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ Two reference scales — 10 Members internal (P0–P2) and 50 tenants (P4 GA). Each tier's contribution maps to a hard NFR ceiling.
+ </p>
 
-  <!-- Cost composition pie-style flow -->
-  <div class="bbg-card p-4 mb-6">
-    <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Cost flow — where the dollar goes at internal scale</div>
-    <div class="mermaid">
+ <!-- Cost composition pie-style flow -->
+ <div class="bbg-card p-4 mb-6">
+ <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Cost flow — where the dollar goes at internal scale</div>
+ <div class="mermaid">
 flowchart LR
-  BUDGET[("$535/mo<br>N(FR pending) envelope")] --> LLM["28% · LLM<br>$150 · primarily Sonnet + Haiku via Bedrock"]
-  BUDGET --> COMPUTE["17% · K8s compute<br>$90 · 22 subgraphs + gateways"]
-  BUDGET --> PG["15% · Postgres<br>$80 · primary + read replica"]
-  BUDGET --> OBS_C["15% · OBS (LGTM)<br>$80 · Loki + Tempo + Mimir + Grafana"]
-  BUDGET --> GPU["15% · GPU embed<br>$80 · shared BGE-M3 node"]
-  BUDGET --> STORE["5% · object storage<br>$25 · R2 zero-egress"]
-  BUDGET --> NATS_C["4% · NATS<br>$20 · single-node JetStream"]
-  BUDGET --> EDGE["1% · CDN + auth<br>$10"]
+ BUDGET[("$535/mo<br>N(FR pending) envelope")] --> LLM["28% · LLM<br>$150 · primarily Sonnet + Haiku via Bedrock"]
+ BUDGET --> COMPUTE["17% · K8s compute<br>$90 · 22 subgraphs + gateways"]
+ BUDGET --> PG["15% · Postgres<br>$80 · primary + read replica"]
+ BUDGET --> OBS_C["15% · OBS (LGTM)<br>$80 · Loki + Tempo + Mimir + Grafana"]
+ BUDGET --> GPU["15% · GPU embed<br>$80 · shared BGE-M3 node"]
+ BUDGET --> STORE["5% · object storage<br>$25 · R2 zero-egress"]
+ BUDGET --> NATS_C["4% · NATS<br>$20 · single-node JetStream"]
+ BUDGET --> EDGE["1% · CDN + auth<br>$10"]
 
-  classDef envelope fill:#fef6e0,stroke:#9c750a,stroke-width:2px
-  classDef llm fill:#f9c64f,stroke:#9c750a
-  classDef compute fill:#f5ede6,stroke:#45210e
-  classDef data fill:#e8d4c2,stroke:#45210e
-  classDef obs fill:#fde7b3,stroke:#9c750a
-  classDef ext fill:#cba88a,stroke:#45210e
-  class BUDGET envelope
-  class LLM,GPU llm
-  class COMPUTE compute
-  class PG,STORE data
-  class OBS_C obs
-  class NATS_C,EDGE ext
-    </div>
-  </div>
+ classDef envelope fill:#fef6e0,stroke:#9c750a,stroke-width:2px
+ classDef llm fill:#f9c64f,stroke:#9c750a
+ classDef compute fill:#f5ede6,stroke:#45210e
+ classDef data fill:#e8d4c2,stroke:#45210e
+ classDef obs fill:#fde7b3,stroke:#9c750a
+ classDef ext fill:#cba88a,stroke:#45210e
+ class BUDGET envelope
+ class LLM,GPU llm
+ class COMPUTE compute
+ class PG,STORE data
+ class OBS_C obs
+ class NATS_C,EDGE ext
+ </div>
+ </div>
 
-  <div class="bbg-card p-4 mb-6">
-    <div class="mermaid">
+ <div class="bbg-card p-4 mb-6">
+ <div class="mermaid">
 xychart-beta
-  title "Monthly cost per tier ($USD)"
-  x-axis ["LLM (T1+T6)", "Postgres (T8)", "Compute (T7)", "Storage (T11)", "OBS (LGTM)", "NATS (T10)", "AUTH (T4-side)", "Embeddings GPU (T9)"]
-  y-axis "USD per month" 0 --> 600
-  bar [150, 80, 90, 25, 80, 20, 5, 80]
-    </div>
-    <div class="text-center text-sm text-slate-500 mt-2">Internal scale (10 Members) — total ≤ $530/mo against N(FR pending) budget of $530/mo ($150 LLM + $380 infra)</div>
-  </div>
+ title "Monthly cost per tier ($USD)"
+ x-axis ["LLM (T1+T6)", "Postgres (T8)", "Compute (T7)", "Storage (T11)", "OBS (LGTM)", "NATS (T10)", "AUTH (T4-side)", "Embeddings GPU (T9)"]
+ y-axis "USD per month" 0 --> 600
+ bar [150, 80, 90, 25, 80, 20, 5, 80]
+ </div>
+ <div class="text-center text-sm text-slate-500 mt-2">Internal scale (10 Members) — total ≤ $530/mo against N(FR pending) budget of $530/mo ($150 LLM + $380 infra)</div>
+ </div>
 
-  <div class="bbg-card p-4 mb-6">
-    <div class="mermaid">
+ <div class="bbg-card p-4 mb-6">
+ <div class="mermaid">
 xychart-beta
-  title "Cost shape at 50-tenant scale ($USD/month)"
-  x-axis ["LLM", "Postgres (3 regions)", "Compute (k8s)", "Storage", "OBS", "NATS (cluster)", "AUTH", "GPU embed"]
-  y-axis "USD per month" 0 --> 1400
-  bar [800, 600, 500, 200, 200, 100, 50, 200]
-    </div>
-    <div class="text-center text-sm text-slate-500 mt-2">50-tenant scale — total ≤ $2,650/mo against N(FR pending) budget of $2,200 + $4/user/mo LLM</div>
-  </div>
+ title "Cost shape at 50-tenant scale ($USD/month)"
+ x-axis ["LLM", "Postgres (3 regions)", "Compute (k8s)", "Storage", "OBS", "NATS (cluster)", "AUTH", "GPU embed"]
+ y-axis "USD per month" 0 --> 1400
+ bar [800, 600, 500, 200, 200, 100, 50, 200]
+ </div>
+ <div class="text-center text-sm text-slate-500 mt-2">50-tenant scale — total ≤ $2,650/mo against N(FR pending) budget of $2,200 + $4/user/mo LLM</div>
+ </div>
 
-  <!-- Per-tier table -->
-  <div class="bbg-card p-6">
-    <h3 class="h-2 mb-3">Per-tier production cost (M+6, M+18 projections)</h3>
-    <div class="overflow-x-auto">
-      <table class="bbg-table">
-        <thead><tr><th>Tier</th><th>Pick</th><th>Internal (10 Members)</th><th>50-tenant scale</th><th>Migration door</th></tr></thead>
-        <tbody>
-          <tr><td>T1 Persona / Agent</td><td>LangGraph + LiteLLM</td><td>$0 host</td><td>$0 host</td><td>Replace LangGraph supervisor</td></tr>
-          <tr><td>T2 Host shell</td><td>Vite + React 19 + Tauri</td><td>$5/mo CDN</td><td>$50/mo CDN</td><td>Switch host to Next.js</td></tr>
-          <tr><td>T3 Module remotes</td><td>Webpack 5 + MF</td><td>included</td><td>included</td><td>Pin MF v2 spec</td></tr>
-          <tr><td>T4 Apollo Router</td><td>Apollo Router</td><td>$0 (OSS binary)</td><td>$50/mo VM cluster</td><td>Elastic License v1.2 review</td></tr>
-          <tr><td>T5 MCP Gateway</td><td>Custom router + per-module servers</td><td>$0 (in-cluster)</td><td>$30/mo</td><td>MCP spec preserves portability</td></tr>
-          <tr><td>T6 AI Gateway</td><td>LiteLLM + Bedrock primary</td><td>$150/mo</td><td>$800/mo (+ per-user)</td><td>Provider mix via config</td></tr>
-          <tr><td>T7 Backend</td><td>Bun / Tokio · 22 subgraphs</td><td>$90/mo k8s</td><td>$500/mo k8s</td><td>Containers, portable</td></tr>
-          <tr><td>T8 Data</td><td>Postgres 17 + pgvector + AGE + PGroonga</td><td>$80/mo</td><td>$600/mo (3 regions)</td><td>SQL portable</td></tr>
-          <tr><td>T9 Embeddings</td><td>BGE-M3 + reranker (GPU)</td><td>$80/mo</td><td>$200/mo (multi-GPU)</td><td>Switch to OpenAI text-embed</td></tr>
-          <tr><td>T10 Event bus</td><td>NATS JetStream</td><td>$20/mo VM</td><td>$100/mo cluster</td><td>NATS subjects → Kafka topics</td></tr>
-          <tr><td>T11 Object storage</td><td>R2 / MinIO</td><td>$25/mo</td><td>$200/mo</td><td>S3-compatible config flip</td></tr>
-          <tr><td>T12 CRDT sync</td><td>Yjs / Automerge</td><td>$0 (libs)</td><td>$0 (libs)</td><td>Doc-format-portable</td></tr>
-          <tr><td>T13–14 Cryptography + Ledger</td><td>Ed25519 + MMR + msgspec</td><td>$0</td><td>$0</td><td>Schema-portable</td></tr>
-          <tr><td>T15 Compliance</td><td>OPA + Trust Center</td><td>$5/mo static host</td><td>$20/mo</td><td>OPA Rego portable</td></tr>
-          <tr><td>OBS (LGTM)</td><td>Grafana / Loki / Tempo / Mimir</td><td>$80/mo</td><td>$200/mo</td><td>OTel-native; switch backend</td></tr>
-          <tr><th>Total</th><th>—</th><th class="text-emerald-700">≤ $535/mo</th><th class="text-amber-700">~$2,750/mo</th><th>—</th></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+ <!-- Per-tier table -->
+ <div class="bbg-card p-6">
+ <h3 class="h-2 mb-3">Per-tier production cost (M+6, M+18 projections)</h3>
+ <div class="overflow-x-auto">
+ <table class="bbg-table">
+ <thead><tr><th>Tier</th><th>Pick</th><th>Internal (10 Members)</th><th>50-tenant scale</th><th>Migration door</th></tr></thead>
+ <tbody>
+ <tr><td>T1 Persona / Agent</td><td>LangGraph + LiteLLM</td><td>$0 host</td><td>$0 host</td><td>Replace LangGraph supervisor</td></tr>
+ <tr><td>T2 Host shell</td><td>Vite + React 19 + Tauri</td><td>$5/mo CDN</td><td>$50/mo CDN</td><td>Switch host to Next.js</td></tr>
+ <tr><td>T3 Module remotes</td><td>Webpack 5 + MF</td><td>included</td><td>included</td><td>Pin MF v2 spec</td></tr>
+ <tr><td>T4 Apollo Router</td><td>Apollo Router</td><td>$0 (OSS binary)</td><td>$50/mo VM cluster</td><td>Elastic License v1.2 review</td></tr>
+ <tr><td>T5 MCP Gateway</td><td>Custom router + per-module servers</td><td>$0 (in-cluster)</td><td>$30/mo</td><td>MCP spec preserves portability</td></tr>
+ <tr><td>T6 AI Gateway</td><td>LiteLLM + Bedrock primary</td><td>$150/mo</td><td>$800/mo (+ per-user)</td><td>Provider mix via config</td></tr>
+ <tr><td>T7 Backend</td><td>Bun / Tokio · 22 subgraphs</td><td>$90/mo k8s</td><td>$500/mo k8s</td><td>Containers, portable</td></tr>
+ <tr><td>T8 Data</td><td>Postgres 17 + pgvector + AGE + PGroonga</td><td>$80/mo</td><td>$600/mo (3 regions)</td><td>SQL portable</td></tr>
+ <tr><td>T9 Embeddings</td><td>BGE-M3 + reranker (GPU)</td><td>$80/mo</td><td>$200/mo (multi-GPU)</td><td>Switch to OpenAI text-embed</td></tr>
+ <tr><td>T10 Event bus</td><td>NATS JetStream</td><td>$20/mo VM</td><td>$100/mo cluster</td><td>NATS subjects → Kafka topics</td></tr>
+ <tr><td>T11 Object storage</td><td>R2 / MinIO</td><td>$25/mo</td><td>$200/mo</td><td>S3-compatible config flip</td></tr>
+ <tr><td>T12 CRDT sync</td><td>Yjs / Automerge</td><td>$0 (libs)</td><td>$0 (libs)</td><td>Doc-format-portable</td></tr>
+ <tr><td>T13–14 Cryptography + Ledger</td><td>Ed25519 + MMR + msgspec</td><td>$0</td><td>$0</td><td>Schema-portable</td></tr>
+ <tr><td>T15 Compliance</td><td>OPA + Trust Center</td><td>$5/mo static host</td><td>$20/mo</td><td>OPA Rego portable</td></tr>
+ <tr><td>OBS (LGTM)</td><td>Grafana / Loki / Tempo / Mimir</td><td>$80/mo</td><td>$200/mo</td><td>OTel-native; switch backend</td></tr>
+ <tr><th>Total</th><th>—</th><th class="text-emerald-700">≤ $535/mo</th><th class="text-amber-700">~$2,750/mo</th><th>—</th></tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- ALTERNATIVES -->
 <!-- ============================================================ -->
 <section id="alternatives">
-  <div class="flex items-center gap-3 mb-3">
-    <span class="callout callout-lg callout-9">19</span>
-    <h2 class="h-1">Alternatives considered (per major pick)</h2>
-  </div>
-  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
-    Five major architectural picks deserve an explicit alternatives table. Each rejected option has a documented rejection rationale and a "would reconsider when..." trigger.
-  </p>
+ <div class="flex items-center gap-3 mb-3">
+ <span class="callout callout-lg callout-9">19</span>
+ <h2 class="h-1">Alternatives considered (per major pick)</h2>
+ </div>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
+ Five major architectural picks deserve an explicit alternatives table. Each rejected option has a documented rejection rationale and a "would reconsider when..." trigger.
+ </p>
 
-  <!-- Postgres+pgvector vs separate -->
-  <article class="bbg-card p-6 mb-5">
-    <h3 class="h-3 mb-3">Postgres + pgvector — vs separate vector DB</h3>
-    <div class="overflow-x-auto">
-      <table class="bbg-table">
-        <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Postgres + pgvector HNSW</strong></td><td>One DB; transactional embed-writes; structural joins; cheap; VN-tokenisation via PGroonga</td><td>Operational complexity (more extensions); ~10% slower than dedicated vector DB at very large scale</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
-          <tr><td>Pinecone</td><td>Best-in-class recall; managed; horizontal scaling</td><td>Vendor lock; egress fees; no Singapore region; not transactional w/ source-of-truth</td><td>Rejected — sovereignty + cost</td></tr>
-          <tr><td>Weaviate</td><td>OSS; multi-modal; GraphQL native</td><td>Memory-heavy; Janus runtime; embedded-mode not prod-grade for 1M+ chunks</td><td>Rejected — operational cost</td></tr>
-          <tr><td>Qdrant</td><td>Rust-native; fast; OSS</td><td>Two-system writes still required; smaller community</td><td>Reconsider if pgvector p95 fails N(FR pending)</td></tr>
-          <tr><td>Milvus / Zilliz</td><td>Scales to billions; cloud-native</td><td>K8s-heavy ops; same two-system issue</td><td>Out of scope for 10–50 tenant scale</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </article>
+ <!-- Postgres+pgvector vs separate -->
+ <article class="bbg-card p-6 mb-5">
+ <h3 class="h-3 mb-3">Postgres + pgvector — vs separate vector DB</h3>
+ <div class="overflow-x-auto">
+ <table class="bbg-table">
+ <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Postgres + pgvector HNSW</strong></td><td>One DB; transactional embed-writes; structural joins; cheap; VN-tokenisation via PGroonga</td><td>Operational complexity (more extensions); ~10% slower than dedicated vector DB at very large scale</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
+ <tr><td>Pinecone</td><td>Best-in-class recall; managed; horizontal scaling</td><td>Vendor lock; egress fees; no Singapore region; not transactional w/ source-of-truth</td><td>Rejected — sovereignty + cost</td></tr>
+ <tr><td>Weaviate</td><td>OSS; multi-modal; GraphQL native</td><td>Memory-heavy; Janus runtime; embedded-mode not prod-grade for 1M+ chunks</td><td>Rejected — operational cost</td></tr>
+ <tr><td>Qdrant</td><td>Rust-native; fast; OSS</td><td>Two-system writes still required; smaller community</td><td>Reconsider if pgvector p95 fails N(FR pending)</td></tr>
+ <tr><td>Milvus / Zilliz</td><td>Scales to billions; cloud-native</td><td>K8s-heavy ops; same two-system issue</td><td>Out of scope for 10–50 tenant scale</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </article>
 
-  <!-- GraphQL vs REST/gRPC -->
-  <article class="bbg-card p-6 mb-5">
-    <h3 class="h-3 mb-3">Apollo Federation v2 — vs REST / gRPC / single GraphQL</h3>
-    <div class="overflow-x-auto">
-      <table class="bbg-table">
-        <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Apollo Federation v2.5+</strong></td><td>Per-module subgraph ownership; single agent surface; persisted query budget; query plan cache</td><td>Apollo Router Elastic License (non-OSI); Rust expertise to extend</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
-          <tr><td>REST per module</td><td>Universal; cacheable</td><td>N round-trips per page; no agent-friendly introspection; N OpenAPIs to maintain</td><td>Rejected — agent ergonomics</td></tr>
-          <tr><td>gRPC + ConnectRPC</td><td>Strongly typed; fast; protobuf schema</td><td>Browser story still weak; no native cross-subgraph composition; agents don't speak gRPC natively</td><td>Rejected — frontend friction</td></tr>
-          <tr><td>Single monolithic GraphQL</td><td>Single schema</td><td>Merge conflicts every PR; team coupling; deploy-coupling</td><td>Rejected — team scale</td></tr>
-          <tr><td>tRPC</td><td>Excellent DX; TS-end-to-end</td><td>TS-only; no agent-facing surface; per-module schemas don't compose</td><td>Rejected — language lock</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </article>
+ <!-- GraphQL vs REST/gRPC -->
+ <article class="bbg-card p-6 mb-5">
+ <h3 class="h-3 mb-3">Apollo Federation v2 — vs REST / gRPC / single GraphQL</h3>
+ <div class="overflow-x-auto">
+ <table class="bbg-table">
+ <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Apollo Federation v2.5+</strong></td><td>Per-module subgraph ownership; single agent surface; persisted query budget; query plan cache</td><td>Apollo Router Elastic License (non-OSI); Rust expertise to extend</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
+ <tr><td>REST per module</td><td>Universal; cacheable</td><td>N round-trips per page; no agent-friendly introspection; N OpenAPIs to maintain</td><td>Rejected — agent ergonomics</td></tr>
+ <tr><td>gRPC + ConnectRPC</td><td>Strongly typed; fast; protobuf schema</td><td>Browser story still weak; no native cross-subgraph composition; agents don't speak gRPC natively</td><td>Rejected — frontend friction</td></tr>
+ <tr><td>Single monolithic GraphQL</td><td>Single schema</td><td>Merge conflicts every PR; team coupling; deploy-coupling</td><td>Rejected — team scale</td></tr>
+ <tr><td>tRPC</td><td>Excellent DX; TS-end-to-end</td><td>TS-only; no agent-facing surface; per-module schemas don't compose</td><td>Rejected — language lock</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </article>
 
-  <!-- LangGraph vs DSPy/LangChain -->
-  <article class="bbg-card p-6 mb-5">
-    <h3 class="h-3 mb-3">LangGraph — vs DSPy / native LangChain / Semantic Kernel</h3>
-    <div class="overflow-x-auto">
-      <table class="bbg-table">
-        <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td><strong>LangGraph</strong></td><td>StateGraph native; <code>interrupt()</code> HITL; checkpointer for resumability; LangSmith tracing</td><td>Python-only; ties to LangChain ecosystem</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
-          <tr><td>DSPy</td><td>Optimisation-first; auto-prompting</td><td>Not a router framework; long-lived agent loop awkward</td><td>Reconsider for batch evals only</td></tr>
-          <tr><td>Native LangChain agents</td><td>Mature; vast tool catalog</td><td>Imperative loop; hard to audit; HITL via callbacks is brittle</td><td>Rejected — auditability</td></tr>
-          <tr><td>Semantic Kernel</td><td>C# / Python native; Microsoft-backed</td><td>Smaller community; MS ecosystem bias</td><td>Rejected — community size</td></tr>
-          <tr><td>CrewAI</td><td>Multi-agent ergonomics</td><td>Less mature; HITL gates not first-class</td><td>Watching</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </article>
+ <!-- LangGraph vs DSPy/LangChain -->
+ <article class="bbg-card p-6 mb-5">
+ <h3 class="h-3 mb-3">LangGraph — vs DSPy / native LangChain / Semantic Kernel</h3>
+ <div class="overflow-x-auto">
+ <table class="bbg-table">
+ <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td><strong>LangGraph</strong></td><td>StateGraph native; <code>interrupt</code> HITL; checkpointer for resumability; LangSmith tracing</td><td>Python-only; ties to LangChain ecosystem</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
+ <tr><td>DSPy</td><td>Optimisation-first; auto-prompting</td><td>Not a router framework; long-lived agent loop awkward</td><td>Reconsider for batch evals only</td></tr>
+ <tr><td>Native LangChain agents</td><td>Mature; vast tool catalog</td><td>Imperative loop; hard to audit; HITL via callbacks is brittle</td><td>Rejected — auditability</td></tr>
+ <tr><td>Semantic Kernel</td><td>C# / Python native; Microsoft-backed</td><td>Smaller community; MS ecosystem bias</td><td>Rejected — community size</td></tr>
+ <tr><td>CrewAI</td><td>Multi-agent ergonomics</td><td>Less mature; HITL gates not first-class</td><td>Watching</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </article>
 
-  <!-- NATS vs Kafka -->
-  <article class="bbg-card p-6 mb-5">
-    <h3 class="h-3 mb-3">NATS JetStream — vs Kafka / Redpanda</h3>
-    <div class="overflow-x-auto">
-      <table class="bbg-table">
-        <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td><strong>NATS JetStream</strong></td><td>Subject hierarchy native; sub-ms latency; single 50MB binary; runs on $20/mo VM at internal scale</td><td>Smaller community than Kafka; less tooling around DLQ replay</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
-          <tr><td>Apache Kafka</td><td>Industry standard; massive tooling; Confluent SaaS available</td><td>JVM ops complexity; flat topics; Zookeeper/Kraft cluster mandatory; expensive at 10-Member scale</td><td>Rejected — footprint</td></tr>
-          <tr><td>Redpanda</td><td>Kafka-protocol-compatible; Rust; lower ops cost</td><td>Same flat-topic model; less mature than Kafka</td><td>Reconsider if Kafka-tooling needed</td></tr>
-          <tr><td>AWS SQS / EventBridge</td><td>Managed; pay-per-message</td><td>Vendor lock; no subject hierarchy; latency 30-100ms typical</td><td>Rejected — sovereignty</td></tr>
-          <tr><td>Apache Pulsar</td><td>Multi-tenant native; geo-replication</td><td>Operational complexity (BookKeeper); overkill at our scale</td><td>Out of scope</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </article>
+ <!-- NATS vs Kafka -->
+ <article class="bbg-card p-6 mb-5">
+ <h3 class="h-3 mb-3">NATS JetStream — vs Kafka / Redpanda</h3>
+ <div class="overflow-x-auto">
+ <table class="bbg-table">
+ <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td><strong>NATS JetStream</strong></td><td>Subject hierarchy native; sub-ms latency; single 50MB binary; runs on $20/mo VM at internal scale</td><td>Smaller community than Kafka; less tooling around DLQ replay</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
+ <tr><td>Apache Kafka</td><td>Industry standard; massive tooling; Confluent SaaS available</td><td>JVM ops complexity; flat topics; Zookeeper/Kraft cluster mandatory; expensive at 10-Member scale</td><td>Rejected — footprint</td></tr>
+ <tr><td>Redpanda</td><td>Kafka-protocol-compatible; Rust; lower ops cost</td><td>Same flat-topic model; less mature than Kafka</td><td>Reconsider if Kafka-tooling needed</td></tr>
+ <tr><td>AWS SQS / EventBridge</td><td>Managed; pay-per-message</td><td>Vendor lock; no subject hierarchy; latency 30-100ms typical</td><td>Rejected — sovereignty</td></tr>
+ <tr><td>Apache Pulsar</td><td>Multi-tenant native; geo-replication</td><td>Operational complexity (BookKeeper); overkill at our scale</td><td>Out of scope</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </article>
 
-  <!-- Tauri vs Electron -->
-  <article class="bbg-card p-6 mb-5">
-    <h3 class="h-3 mb-3">Tauri — vs Electron / Wails / Native</h3>
-    <div class="overflow-x-auto">
-      <table class="bbg-table">
-        <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Tauri 2</strong></td><td>3-10MB bundle (vs Electron's 100+); Rust backend; OS webview; passes Apple notarisation by default</td><td>OS-native webview means CSS testing matrix; Rust IPC layer to learn</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
-          <tr><td>Electron</td><td>Mature; Chrome consistency; vast plugin ecosystem</td><td>100+ MB bundle; memory-hungry; security-update treadmill</td><td>Rejected — bundle size</td></tr>
-          <tr><td>Wails (Go backend)</td><td>Go single-binary feel; webview-based</td><td>Smaller community; v3 still maturing</td><td>Reconsider</td></tr>
-          <tr><td>Native (Swift / WinUI / GTK)</td><td>Best UX; smallest bundles</td><td>3× the code; can't reuse React components</td><td>Rejected — scope</td></tr>
-          <tr><td>Web-only (PWA)</td><td>No native ship</td><td>No file-system access; no native notification UX</td><td>Reconsider at P3 mobile evaluation</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </article>
+ <!-- Tauri vs Electron -->
+ <article class="bbg-card p-6 mb-5">
+ <h3 class="h-3 mb-3">Tauri — vs Electron / Wails / Native</h3>
+ <div class="overflow-x-auto">
+ <table class="bbg-table">
+ <thead><tr><th>Option</th><th>Pros</th><th>Cons</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Tauri 2</strong></td><td>3-10MB bundle (vs Electron's 100+); Rust backend; OS webview; passes Apple notarisation by default</td><td>OS-native webview means CSS testing matrix; Rust IPC layer to learn</td><td class="text-emerald-700 font-bold">SELECTED</td></tr>
+ <tr><td>Electron</td><td>Mature; Chrome consistency; vast plugin ecosystem</td><td>100+ MB bundle; memory-hungry; security-update treadmill</td><td>Rejected — bundle size</td></tr>
+ <tr><td>Wails (Go backend)</td><td>Go single-binary feel; webview-based</td><td>Smaller community; v3 still maturing</td><td>Reconsider</td></tr>
+ <tr><td>Native (Swift / WinUI / GTK)</td><td>Best UX; smallest bundles</td><td>3× the code; can't reuse React components</td><td>Rejected — scope</td></tr>
+ <tr><td>Web-only (PWA)</td><td>No native ship</td><td>No file-system access; no native notification UX</td><td>Reconsider at P3 mobile evaluation</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </article>
 </section>
 
 <!-- ============================================================ -->
 <!-- PAGE NAV -->
 <!-- ============================================================ -->
 <section>
-  <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-slate-200">
-    <a href="../index.html" class="btn btn-secondary">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-      Back to home
-    </a>
-    <a href="milestones.html" class="btn btn-primary">
-      Next · Milestones
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-    </a>
-  </div>
+ <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-slate-200">
+ <a href="../index.html" class="btn btn-secondary">
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+ Back to home
+ </a>
+ <a href="milestones.html" class="btn btn-primary">
+ Next · Milestones
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ </div>
 </section>
 
 </main>
 </div>
 
 <footer class="border-t border-slate-200 bg-slate-50">
-  <div class="container py-8 text-sm text-slate-500">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div>CyberOS Documentation · v2026.05 · Architecture / Tech stack</div>
-      <div class="text-xs text-slate-400">Generated from PRD §8 + SRS DEC-001..066 · Last updated 2026-05-14</div>
-    </div>
-  </div>
+ <div class="container py-8 text-sm text-slate-500">
+ <div class="flex flex-wrap items-center justify-between gap-3">
+ <div>CyberOS Documentation · v2026.05 · Architecture / Tech stack</div>
+ <div class="text-xs text-slate-400">Generated from + SRS DEC-001..066 · Last updated 2026-05-14</div>
+ </div>
+ </div>
 </footer>
 
 </body>

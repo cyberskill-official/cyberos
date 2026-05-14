@@ -1,68 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CyberOS — FR Catalog (rebuilding)</title>
-  <meta name="description" content="The CyberOS Functional Requirements catalog is being rebuilt one feature at a time via the open fr-author Agent Skill.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="module" src="../assets/scripts.js"></script>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>CyberOS — FR Catalog (rebuilding)</title>
+ <meta name="description" content="The CyberOS Functional Requirements catalog is being rebuilt one feature at a time via the open fr-author Agent Skill.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
 </head>
 <body data-pagefind-filter="category:Reference">
 
 <div id="shared-nav"></div>
 
 <main class="container py-16">
-  <nav class="text-sm mb-4" style="color:var(--text-mute)">
-    <a href="../index.html" style="color:var(--umber-700)">Home</a>
-    <span style="color:var(--text-mute)"> &middot; </span>
-    <span>Reference</span>
-    <span style="color:var(--text-mute)"> &middot; </span>
-    <span>FR Catalog</span>
-  </nav>
+ <nav class="text-sm mb-4" style="color:var(--text-mute)">
+ <a href="../index.html" style="color:var(--umber-700)">Home</a>
+ <span style="color:var(--text-mute)"> &middot; </span>
+ <span>Reference</span>
+ <span style="color:var(--text-mute)"> &middot; </span>
+ <span>FR Catalog</span>
+ </nav>
 
-  <span class="pill--brand" style="margin-bottom:1rem;display:inline-flex">REBUILDING</span>
+ <span class="pill--brand" style="margin-bottom:1rem;display:inline-flex">REBUILDING</span>
 
-  <h1 class="h-display mb-3" style="margin-top:0.75rem">Functional Requirements Catalog</h1>
-  <p class="text-xl mb-8" style="color:var(--text-mute);max-width:42rem">
-    The catalog is being rebuilt one feature at a time via the open
-    <strong style="color:var(--text)">fr-author</strong> Agent Skill.
-  </p>
+ <h1 class="h-display mb-3" style="margin-top:0.75rem">Functional Requirements Catalog</h1>
+ <p class="text-xl mb-8" style="color:var(--text-mute);max-width:42rem">
+ The catalog is being rebuilt one feature at a time via the open
+ <strong style="color:var(--text)">fr-author</strong> Agent Skill.
+ </p>
 
-  <div class="bbg-card p-8" style="max-width:48rem">
-    <h2 class="text-xl font-bold mb-3" style="color:var(--text)">Why the catalog is empty</h2>
-    <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">
-      Earlier iterations of CyberOS shipped with a ~350-FR catalog inherited from the PRD/SRS markdown. As of <strong style="color:var(--text)">2026-05-14</strong>, every FR is being re-authored individually through the CyberOS Skill module's <code>fr-author</code> workflow so each requirement gets:
-    </p>
-    <ul class="text-sm leading-relaxed mb-6 ml-5" style="color:var(--text-mute);list-style:disc">
-      <li>A versioned, audited <code>feature_request@1</code> artefact on the BRAIN audit chain</li>
-      <li>A normative description following BCP-14 keywords (MUST / SHOULD / MAY)</li>
-      <li>An explicit verification method (unit / integration / chaos / manual)</li>
-      <li>Forward and backward traceability to PRD/SRS narrative</li>
-      <li>An owning module + priority + phase</li>
-    </ul>
+ <div class="bbg-card p-8" style="max-width:48rem">
+ <h2 class="text-xl font-bold mb-3" style="color:var(--text)">Why the catalog is empty</h2>
+ <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">
+ Earlier iterations of CyberOS shipped with a ~350-FR catalog inherited from the PRD/SRS markdown. As of <strong style="color:var(--text)">2026-05-14</strong>, every FR is being re-authored individually through the CyberOS Skill module's <code>fr-author</code> workflow so each requirement gets:
+ </p>
+ <ul class="text-sm leading-relaxed mb-6 ml-5" style="color:var(--text-mute);list-style:disc">
+ <li>A versioned, audited <code>feature_request@1</code> artefact on the BRAIN audit chain</li>
+ <li>A normative description following BCP-14 keywords (MUST / SHOULD / MAY)</li>
+ <li>An explicit verification method (unit / integration / chaos / manual)</li>
+ <li>Forward and backward traceability to PRD/SRS narrative</li>
+ <li>An owning module + priority + phase</li>
+ </ul>
 
-    <h2 class="text-xl font-bold mb-3" style="color:var(--text)">How to add a new FR</h2>
-    <p class="text-sm leading-relaxed mb-3" style="color:var(--text-mute)">From the repo root:</p>
-    <pre class="codeblock" style="background:var(--bg-code);padding:1rem;border-radius:0.5rem;font-family:var(--font-mono);font-size:0.8125rem;overflow-x:auto;margin-bottom:1.5rem"><code>cd skill
+ <h2 class="text-xl font-bold mb-3" style="color:var(--text)">How to add a new FR</h2>
+ <p class="text-sm leading-relaxed mb-3" style="color:var(--text-mute)">From the repo root:</p>
+ <pre class="codeblock" style="background:var(--bg-code);padding:1rem;border-radius:0.5rem;font-family:var(--font-mono);font-size:0.8125rem;overflow-x:auto;margin-bottom:1.5rem"><code>cd skill
 cargo run -p cyberos-skill-cli -- run fr-author --executor script</code></pre>
 
-    <h2 class="text-xl font-bold mb-3" style="color:var(--text)">Authoritative sources</h2>
-    <ul class="text-sm leading-relaxed ml-5" style="color:var(--text-mute);list-style:disc">
-      <li>PRD narrative: <a href="https://github.com/cyberskill/cyberos/blob/main/docs/prd/PRD.md" style="color:var(--umber-700);font-weight:600">docs/prd/PRD.md</a></li>
-      <li>SRS narrative: <a href="https://github.com/cyberskill/cyberos/blob/main/docs/srs/SRS.md" style="color:var(--umber-700);font-weight:600">docs/srs/SRS.md</a></li>
-      <li>fr-author skill source: <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" style="color:var(--umber-700);font-weight:600">skill/skills/cuo/cpo/fr-author/</a></li>
-      <li>Audit + plan: <a href="https://github.com/cyberskill/cyberos/blob/main/docs/AUDIT_AND_PLAN_2026_05_14.md" style="color:var(--umber-700);font-weight:600">docs/AUDIT_AND_PLAN_2026_05_14.md</a></li>
-    </ul>
-  </div>
+ <h2 class="text-xl font-bold mb-3" style="color:var(--text)">Authoritative sources</h2>
+ <ul class="text-sm leading-relaxed ml-5" style="color:var(--text-mute);list-style:disc">
+ <li>PRD narrative: <a href="https://github.com/cyberskill/cyberos/blob/main/docs/prd/PRD.md" style="color:var(--umber-700);font-weight:600">docs/prd/PRD.md</a></li>
+ <li>SRS narrative: <a href="https://github.com/cyberskill/cyberos/blob/main/docs/srs/SRS.md" style="color:var(--umber-700);font-weight:600">docs/srs/SRS.md</a></li>
+ <li>fr-author skill source: <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" style="color:var(--umber-700);font-weight:600">skill/skills/cuo/cpo/fr-author/</a></li>
+ <li>Audit + plan: <a href="https://github.com/cyberskill/cyberos/blob/main/docs/AUDIT_AND_PLAN_2026_05_14.md" style="color:var(--umber-700);font-weight:600">docs/AUDIT_AND_PLAN_2026_05_14.md</a></li>
+ </ul>
+ </div>
 
-  <p class="mt-10 text-sm" style="color:var(--text-mute)">
-    <a href="../index.html" style="color:var(--umber-700);font-weight:600">&larr; Back to docs home</a>
-  </p>
+ <p class="mt-10 text-sm" style="color:var(--text-mute)">
+ <a href="../index.html" style="color:var(--umber-700);font-weight:600">&larr; Back to docs home</a>
+ </p>
 </main>
 
 </body>

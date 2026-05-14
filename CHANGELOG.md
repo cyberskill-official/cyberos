@@ -2,6 +2,13 @@
 
 All notable changes to the umbrella CyberOS repository, newest-first.
 
+## 2026-05-14 — Code-block contrast fix + PRD/SRS sweep + repair regression + Research Mode brief
+
+- **Fixed code-block invisible-text bug.** A late-stage override in `assets/styles.css` (`.codeblock { background: var(--bg-code) }`) was flipping the dark `--neutral-900` background to a light `--bg-code` while leaving text colour at light `--neutral-100` → code invisible on auth.html and other module pages. Removed the `background` override; kept the `backdrop-filter: none` (which prevents glass-leakage from a glass parent).
+- **Swept PRD/SRS back-references out of the docs site.** The docs site is now the single source of truth — removed every `PRD §X.Y`, `SRS §X.Y`, "per PRD", "see PRD", "sourced from PRD" reference across 33 HTML files. Replaced `Source: PRD §...` / `Reference: SRS §...` labels with `(covered on this page)`. Net 29,710 substitutions.
+- **Repaired regex over-strip regression.** The sweep's separator-collapse regex had a false-positive: `(/)\s*(/)` matched `://` in URLs and collapsed them to `:/`. 175 URLs (Google Fonts, jsdelivr CDN, GitHub repo links, SVG xmlns, etc.) were silently broken across all HTML files. Wrote a repair pass that restored `https?:/` → `https?://` plus cleaned up 83 empty `<strong></strong>` / `<em></em>` / `<code></code>` tags and orphan-separator artifacts. Zero broken URLs verified after repair.
+- **Added `docs/RESEARCH_MODE_BRIEF.md`** — canonical brief for the pre-lock comprehensive review via Claude Chat's Research Mode. Contains the full prompt covering 8 review dimensions (strategic coherence, architecture, spec quality, UX, info architecture, compliance, GTM, next-7-days actions), the 10-file input bundle (~250 KB total of curated source-of-truth markdown), why we DON'T attach the docs HTML (token waste + visual UX requires live URL crawl), how to drive the mid-review conversation, and how to operationalize the returned document.
+
 ## 2026-05-14 — Heading line-height fix + FR authoring workflow guide
 
 - Fixed heading collision on H2 elements caused by the Be-Vietnam-Pro font swap. BVP has taller ascenders + descenders than Inter at the same `font-size`. The previous Inter-tuned `line-height: 1.05` (h-display), `1.15` (h-1), `1.25` (h-2) values were too tight and let the heading bounding box collide with the following paragraph (visible on the "The substrate · the catalog · the orchestrator" H2 on index.html). Updated `assets/styles.css` heading rhythm: h-display 1.05→1.1, h-1 1.15→1.25, h-2 1.25→1.4, h-3 (added) 1.45. Added explicit `margin-block-end` on each + an `h-* + * { margin-block-start: 0 }` rule to neutralise Tailwind `mb-*` collapse.

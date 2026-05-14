@@ -1,47 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+ <meta charset="UTF-8">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AUTH — CyberOS</title>
-  <meta name="description" content="AUTH — Authentication & Authorization. Postgres-backed identity, RBAC + scope contract grants, OAuth 2.1 + PKCE, OIDC SSO, WebAuthn L3, agent-equal predicate evaluation. The shared identity plane every module bolts onto.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="module" src="../assets/scripts.js"></script>
-  <style>
-    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
-    .fact-card { background: var(--future-bg); border:1px solid var(--future-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
-    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--future-dark); }
-    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
-    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
-    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
-    .toc-link:hover { background: var(--future-bg); color: var(--future-dark); }
-    .toc-link.active { background: var(--future-tint); color: var(--future-dark); font-weight: 600; }
-    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
-    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
-    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
-    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--future-dark); color:white; font-weight:800; font-size:0.875rem; }
-    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
-    .pill-must     { background:#fee2e2; color:#b91c1c; }
-    .pill-should   { background:#fef3c7; color:#b45309; }
-    .pill-shipped  { background:#d1fae5; color:#065f46; }
-    .pill-planned  { background:#e0e7ff; color:#3730a3; }
-    .pill-partial  { background:#fef3c7; color:#b45309; }
-    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
-    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
-    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
-    table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }
-    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
-    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
-    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
-    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
-    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--future-bg); border-radius: 0.75rem; border: 1px solid var(--future-tint); }
-  </style>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>AUTH — CyberOS</title>
+ <meta name="description" content="AUTH — Authentication & Authorization. Postgres-backed identity, RBAC + scope contract grants, OAuth 2.1 + PKCE, OIDC SSO, WebAuthn L3, agent-equal predicate evaluation. The shared identity plane every module bolts onto.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
+ <style>.fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }.fact-card { background: var(--future-bg); border:1px solid var(--future-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }.fact-card.label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--future-dark); }.fact-card.value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }.fact-card.note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }.toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }.toc-link:hover { background: var(--future-bg); color: var(--future-dark); }.toc-link.active { background: var(--future-tint); color: var(--future-dark); font-weight: 600; }.module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }.module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }.module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }.section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--future-dark); color:white; font-weight:800; font-size:0.875rem; }.pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }.pill-must { background:#fee2e2; color:#b91c1c; }.pill-should { background:#fef3c7; color:#b45309; }.pill-shipped { background:#d1fae5; color:#065f46; }.pill-planned { background:#e0e7ff; color:#3730a3; }.pill-partial { background:#fef3c7; color:#b45309; }
+ table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+ table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+ table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+ table.kt tbody tr:nth-child(even) td { background: var(--future-bg); }.raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }.raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }.raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }.raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }.module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--future-bg); border-radius: 0.75rem; border: 1px solid var(--future-tint); }
+ </style>
 </head>
 <body data-pagefind-filter="category:Module">
 <span hidden data-pagefind-filter="phase:P0"></span>
@@ -52,36 +29,36 @@
 <!-- HEADER -->
 <!-- ============================================================ -->
 <header class="hero-gradient border-b border-slate-200">
-  <div class="container py-10 lg:py-14">
-    <nav class="breadcrumbs">
-      <a href="../index.html">Home</a>
-      <span class="sep">›</span>
-      <a href="../index.html#catalog">Modules</a>
-      <span class="sep">›</span>
-      <span class="current">AUTH</span>
-    </nav>
-    <div class="flex items-center gap-3 mb-4 flex-wrap">
-      <span class="text-5xl">🔐</span>
-      <h1 class="h-display">AUTH</h1>
-      <span class="phase-chip phase-p0">P0 · Foundation</span>
-      <span class="pill pill-planned">Planned · P0 design phase</span>
-      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CSO (vacant) → interim CEO</span>
-    </div>
-    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
-      The shared identity plane — every human, agent, and service authenticates here, and every cross-module call has its RBAC + Scope Contract Grant predicate evaluated here.
-    </p>
-    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      AUTH is the most sensitive single piece of CyberOS infrastructure. It owns the identity database, signs the JWTs every other module trusts, and applies the same predicate to a human and to an agent so the platform never has a "second-class" auth path. The shape is conventional: a Postgres identity store, an OAuth 2.1 authorisation server (PKCE-only, audience-bound), an OIDC SSO front door, WebAuthn passkeys for elevated roles, TOTP for everyone else, and an RBAC engine that consumes Scope Contract Grants from BRAIN. What is unconventional is the agent-equal property: a persona-versioned agent JWT is evaluated by the same code path as a human one, so "the AI did it" is never a special case — it is just another actor with a smaller scope. PRD §8.6 locks the role catalogue, §9.6 specifies the FRs, §11.2.3 sets the security NFRs. This page documents the planned implementation at <code>cyberos/services/auth/</code>.
-    </p>
-    <div class="flex flex-wrap gap-3 mt-6">
-      <a href="#architecture" class="btn btn-primary">Architecture
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-      </a>
-      <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
-      <a href="#api-surface" class="btn btn-secondary">API surface</a>
-      <a href="../reference/fr-catalog.html#auth" class="btn btn-secondary">FR catalog</a>
-    </div>
-  </div>
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <span class="current">AUTH</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">🔐</span>
+ <h1 class="h-display">AUTH</h1>
+ <span class="phase-chip phase-p0">P0 · Foundation</span>
+ <span class="pill pill-planned">Planned · P0 design phase</span>
+ <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CSO (vacant) → interim CEO</span>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ The shared identity plane — every human, agent, and service authenticates here, and every cross-module call has its RBAC + Scope Contract Grant predicate evaluated here.
+ </p>
+ <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+ AUTH is the most sensitive single piece of CyberOS infrastructure. It owns the identity database, signs the JWTs every other module trusts, and applies the same predicate to a human and to an agent so the platform never has a "second-class" auth path. The shape is conventional: a Postgres identity store, an OAuth 2.1 authorisation server (PKCE-only, audience-bound), an OIDC SSO front door, WebAuthn passkeys for elevated roles, TOTP for everyone else, and an RBAC engine that consumes Scope Contract Grants from BRAIN. What is unconventional is the agent-equal property: a persona-versioned agent JWT is evaluated by the same code path as a human one, so "the AI did it" is never a special case — it is just another actor with a smaller scope. locks the role catalogue, §9.6 specifies the FRs, §11.2.3 sets the security NFRs. This page documents the planned implementation at <code>cyberos/services/auth/</code>.
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="#architecture" class="btn btn-primary">Architecture
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
+ <a href="#api-surface" class="btn btn-secondary">API surface</a>
+ <a href="../reference/fr-catalog.html#auth" class="btn btn-secondary">FR catalog</a>
+ </div>
+ </div>
 </header>
 
 <div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
@@ -90,38 +67,38 @@
 <!-- STICKY TOC -->
 <!-- ============================================================ -->
 <aside class="lg:col-span-3 order-2 lg:order-1">
-  <div class="lg:sticky lg:top-20">
-    <div class="bbg-card p-5">
-      <div class="h-eyebrow mb-3">On this page</div>
-      <ul class="space-y-0.5 text-sm">
-        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
-        <li><a class="toc-link" href="#why">Why AUTH exists</a></li>
-        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
-        <li><a class="toc-link" href="#architecture">Architecture</a></li>
-        <li><a class="toc-link" href="#data-model">Data model</a></li>
-        <li><a class="toc-link" href="#api-surface">API surface</a></li>
-        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
-        <li><a class="toc-link" href="#lifecycle">Session lifecycle</a></li>
-        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
-        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
-        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
-        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
-        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
-        <li><a class="toc-link" href="#kpis">KPIs</a></li>
-        <li><a class="toc-link" href="#raci">RACI</a></li>
-        <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
-        <li><a class="toc-link" href="#status">Phase status</a></li>
-        <li><a class="toc-link" href="#references">References</a></li>
-      </ul>
-      <hr class="my-4 border-slate-200">
-      <div class="h-eyebrow mb-2">Source</div>
-      <div class="text-xs text-slate-500 leading-relaxed">
-        <code>cyberos/services/auth/</code><br>
-        PRD §8.6 · §9.6 · §11.2.3<br>
-        SRS §4.6
-      </div>
-    </div>
-  </div>
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+ <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#why">Why AUTH exists</a></li>
+ <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#architecture">Architecture</a></li>
+ <li><a class="toc-link" href="#data-model">Data model</a></li>
+ <li><a class="toc-link" href="#api-surface">API surface</a></li>
+ <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+ <li><a class="toc-link" href="#lifecycle">Session lifecycle</a></li>
+ <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+ <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+ <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+ <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+ <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+ <li><a class="toc-link" href="#kpis">KPIs</a></li>
+ <li><a class="toc-link" href="#raci">RACI</a></li>
+ <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
+ <li><a class="toc-link" href="#status">Phase status</a></li>
+ <li><a class="toc-link" href="#references">References</a></li>
+ </ul>
+ <hr class="my-4 border-slate-200">
+ <div class="h-eyebrow mb-2">Source</div>
+ <div class="text-xs text-slate-500 leading-relaxed">
+ <code>cyberos/services/auth/</code><br>
+ · §9.6 · §11.2.3<br>
+ 
+ </div>
+ </div>
+ </div>
 </aside>
 
 <main class="lg:col-span-9 order-1 lg:order-2">
@@ -130,409 +107,409 @@
 <!-- HERO -->
 <!-- ============================================================ -->
 <section id="hero" class="module-section">
-  <div class="bbg-card tint-future p-6 mb-6">
-    <p class="text-lg text-slate-700 leading-relaxed mb-5">
-      AUTH is the <strong>identity and authorisation service</strong> for every actor inside CyberOS — humans (CEO, CFO, members, clients) and agents (CUO persona-versioned tokens, Skill bot accounts, scheduled tasks). It speaks OAuth 2.1 + PKCE to the world, OIDC for SSO federation, WebAuthn L3 for passkey enrolment, and TOTP / RFC 6238 for the soft-MFA fallback. Inside, it sits on PostgreSQL with row-level security keyed by <code>tenant_id</code>, a Redis hot-path session cache, and an HSM-resident RS256 signing key. Every authentication and authorisation decision lands as a chained audit row in BRAIN — so "did this agent really have permission to delete that record?" is never an interpretation, it is a replay.
-    </p>
-    <div class="fact-grid">
-      <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
-      <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~7,000</div><div class="note">Rust (axum) + sqlx</div></div>
-      <div class="fact-card"><div class="label">Planned tests</div><div class="value">120+</div><div class="note">incl. WebAuthn / OAuth flow suite</div></div>
-      <div class="fact-card"><div class="label">RBAC roles</div><div class="value">22</div><div class="note">PRD §8.6.1 closed catalogue</div></div>
-      <div class="fact-card"><div class="label">JWT</div><div class="value">RS256 · 15 min</div><div class="note">refresh: 30 d rotating</div></div>
-      <div class="fact-card"><div class="label">MFA</div><div class="value">TOTP + WebAuthn</div><div class="note">passkey mandatory at T2+</div></div>
-      <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS</div><div class="note">audit + telemetry sink</div></div>
-      <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules</div><div class="note">cross-module call → predicate</div></div>
-    </div>
-  </div>
+ <div class="bbg-card tint-future p-6 mb-6">
+ <p class="text-lg text-slate-700 leading-relaxed mb-5">
+ AUTH is the <strong>identity and authorisation service</strong> for every actor inside CyberOS — humans (CEO, CFO, members, clients) and agents (CUO persona-versioned tokens, Skill bot accounts, scheduled tasks). It speaks OAuth 2.1 + PKCE to the world, OIDC for SSO federation, WebAuthn L3 for passkey enrolment, and TOTP / RFC 6238 for the soft-MFA fallback. Inside, it sits on PostgreSQL with row-level security keyed by <code>tenant_id</code>, a Redis hot-path session cache, and an HSM-resident RS256 signing key. Every authentication and authorisation decision lands as a chained audit row in BRAIN — so "did this agent really have permission to delete that record?" is never an interpretation, it is a replay.
+ </p>
+ <div class="fact-grid">
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
+ <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~7,000</div><div class="note">Rust (axum) + sqlx</div></div>
+ <div class="fact-card"><div class="label">Planned tests</div><div class="value">120+</div><div class="note">incl. WebAuthn / OAuth flow suite</div></div>
+ <div class="fact-card"><div class="label">RBAC roles</div><div class="value">22</div><div class="note"> closed catalogue</div></div>
+ <div class="fact-card"><div class="label">JWT</div><div class="value">RS256 · 15 min</div><div class="note">refresh: 30 d rotating</div></div>
+ <div class="fact-card"><div class="label">MFA</div><div class="value">TOTP + WebAuthn</div><div class="note">passkey mandatory at T2+</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS</div><div class="note">audit + telemetry sink</div></div>
+ <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules</div><div class="note">cross-module call → predicate</div></div>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- WHY -->
 <!-- ============================================================ -->
 <section id="why" class="module-section">
-  <header class="section-head"><span class="section-num">1</span><h2>Why AUTH exists</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Per-module auth is one of the easiest mistakes to make and one of the hardest to unmake. The first version of any platform ships with one module that has "owns its own login", the second module copies the pattern, the third inherits a subtle bug, and within a year there are four MFA implementations, three session models, and zero coherent answer to "who can do what". CyberOS treats this as a P0 design constraint: a single authentication service, a single authorisation predicate, a single audit trail. Every module that wants to know "can this actor do X to that resource?" asks AUTH the same way.
-  </p>
-  <div class="grid md:grid-cols-3 gap-4 my-5">
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">🆔</div>
-      <div class="font-bold text-slate-900 mb-1">One identity, many shapes</div>
-      <p class="text-sm text-slate-600">Humans, agents, service accounts, and API keys all materialise as <code>Subject</code> rows. Same predicate; different scopes.</p>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">⚖️</div>
-      <div class="font-bold text-slate-900 mb-1">Agent-equal evaluation</div>
-      <p class="text-sm text-slate-600">An agent JWT is not a magic backdoor. The RBAC engine evaluates it with exactly the same code path as a human JWT — just with a smaller, persona-bound scope.</p>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">📜</div>
-      <div class="font-bold text-slate-900 mb-1">Every decision auditable</div>
-      <p class="text-sm text-slate-600">Login, logout, MFA challenge, role grant, scope decision — each one writes a chained row to BRAIN. "Did Compliance permit this?" → grep <code>auth.decision</code>.</p>
-    </div>
-  </div>
-  <p class="text-slate-700 leading-relaxed">
-    The bet is the same bet BRAIN makes about audit: pay the cost once at the infrastructure layer, and every module inherits the property for free. Without AUTH as a shared plane, every module re-implements login, every module ships its own MFA bug, and "who has access to what" is a vibes question. With AUTH as a shared plane, the answer is a row in <code>auth.decision</code> and a JWT claim — the regulator can read it, the auditor can verify it, the engineer can replay it.
-  </p>
+ <header class="section-head"><span class="section-num">1</span><h2>Why AUTH exists</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Per-module auth is one of the easiest mistakes to make and one of the hardest to unmake. The first version of any platform ships with one module that has "owns its own login", the second module copies the pattern, the third inherits a subtle bug, and within a year there are four MFA implementations, three session models, and zero coherent answer to "who can do what". CyberOS treats this as a P0 design constraint: a single authentication service, a single authorisation predicate, a single audit trail. Every module that wants to know "can this actor do X to that resource?" asks AUTH the same way.
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-5">
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">🆔</div>
+ <div class="font-bold text-slate-900 mb-1">One identity, many shapes</div>
+ <p class="text-sm text-slate-600">Humans, agents, service accounts, and API keys all materialise as <code>Subject</code> rows. Same predicate; different scopes.</p>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">⚖️</div>
+ <div class="font-bold text-slate-900 mb-1">Agent-equal evaluation</div>
+ <p class="text-sm text-slate-600">An agent JWT is not a magic backdoor. The RBAC engine evaluates it with exactly the same code path as a human JWT — just with a smaller, persona-bound scope.</p>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">📜</div>
+ <div class="font-bold text-slate-900 mb-1">Every decision auditable</div>
+ <p class="text-sm text-slate-600">Login, logout, MFA challenge, role grant, scope decision — each one writes a chained row to BRAIN. "Did Compliance permit this?" → grep <code>auth.decision</code>.</p>
+ </div>
+ </div>
+ <p class="text-slate-700 leading-relaxed">
+ The bet is the same bet BRAIN makes about audit: pay the cost once at the infrastructure layer, and every module inherits the property for free. Without AUTH as a shared plane, every module re-implements login, every module ships its own MFA bug, and "who has access to what" is a vibes question. With AUTH as a shared plane, the answer is a row in <code>auth.decision</code> and a JWT claim — the regulator can read it, the auditor can verify it, the engineer can replay it.
+ </p>
 </section>
 
 <!-- ============================================================ -->
 <!-- WHAT — 5W1H2C5M -->
 <!-- ============================================================ -->
 <section id="what" class="module-section">
-  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of AUTH's scope. Every cell traces back to PRD §8.6 + §9.6 + §11.2.3.</p>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
-      <tbody>
-        <tr><td><strong>5W · What</strong></td><td>What is AUTH?</td><td>A Postgres-backed OAuth 2.1 + OIDC server with WebAuthn / TOTP MFA, an RBAC engine, a Scope Contract Grant evaluator, and an HSM-resident JWT signing key. Single Rust binary, exposed over gRPC internally and HTTPS externally.</td></tr>
-        <tr><td><strong>5W · Who</strong></td><td>Who authenticates?</td><td><strong>Humans:</strong> founders, members, clients, employees, contractors. <strong>Agents:</strong> CUO persona-stamped tokens, Skill bot accounts, scheduled tasks. <strong>Services:</strong> module-to-module mTLS clients (separate cert root). <strong>Owner:</strong> CSO seat (interim CEO until filled).</td></tr>
-        <tr><td><strong>5W · When</strong></td><td>When does auth happen?</td><td>(a) at session start (login + MFA); (b) at every cross-module API call (RBAC predicate); (c) at every MCP tool invocation (Scope Contract Grant); (d) on token refresh (rotation + reuse detection). Hot-path RBAC is sub-millisecond against Redis cache.</td></tr>
-        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P0: single region (Singapore SG-1) backed by AWS RDS Postgres + ElastiCache Redis. P3: multi-region active-active with eventual JWT consistency. WebAuthn / TOTP secrets at rest in KMS-wrapped column-level encryption.</td></tr>
-        <tr><td><strong>5W · Why</strong></td><td>Why a separate layer?</td><td>Because per-module auth is the single biggest source of platform-wide CVE class regression. Centralise the primitive, never the policy.</td></tr>
-        <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>OAuth 2.1 with PKCE for browser flows; <code>client_credentials</code> for service-to-service; <code>refresh_token</code> with rotation + reuse detection for long sessions; WebAuthn discoverable credentials for passkey login; TOTP RFC 6238 for fallback; OIDC for SSO federation with Google / Microsoft 365 / Okta. RBAC is a single Rego-like predicate evaluated at every cross-module call. Each decision is a chained audit row.</td></tr>
-        <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P0: ~$60/month (RDS t4g.small + ElastiCache cache.t4g.micro + one Fargate task). 50-tenant: ~$220/month. Per-login cost ~$0.000002 amortised; RBAC predicate ~$0.00000005.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) FIDO Alliance L3 WebAuthn for elevated roles. (b) Vietnamese Decree 53: data-residency proof for VN tenants. (c) Vietnam Decree 53 Art. 26 — incident notification ≤ 24h to MoPS. (d) PDPL Art. 14 — DSAR data export. (e) Per-module auth is strictly forbidden.</td></tr>
-        <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · Redis 7 · WebAuthn-rs · totp-rs · rsa for JWT signing · AWS KMS for signing-key wrap · OpenTelemetry SDK · LiteFS for read replicas at P3+.</td></tr>
-        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>OAuth 2.1 (not 2.0 — PKCE mandatory). RBAC + Scope Contract Grants (no ABAC complexity at P0). JWT RS256 (not HS256 — separates signer from verifier). Argon2id for password hashing. Refresh-token rotation with reuse detection (RFC 6749 §10.4). Row-level security on every identity table keyed by tenant_id.</td></tr>
-        <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P0). Multi-AZ Postgres RDS. Redis cluster mode at P3+. WebAuthn relying-party ID = the company root domain (P0: <code>cyberos.com</code>).</td></tr>
-        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE today (covered by CEO). By P1: CSO seat owns 100% capacity + 24/7 on-call rotation with CTO.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending)..012 (PRD §11.2.3) — zero tenant-data leakage, zero compensation in BRAIN, mandatory mTLS, OWASP Gen AI Top-10 mitigations all green. Per-tenant auth-decision dashboard. Annual penetration test (P2+).</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of AUTH's scope. Every cell traces back to + §9.6 + §11.2.3.</p>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+ <tbody>
+ <tr><td><strong>5W · What</strong></td><td>What is AUTH?</td><td>A Postgres-backed OAuth 2.1 + OIDC server with WebAuthn / TOTP MFA, an RBAC engine, a Scope Contract Grant evaluator, and an HSM-resident JWT signing key. Single Rust binary, exposed over gRPC internally and HTTPS externally.</td></tr>
+ <tr><td><strong>5W · Who</strong></td><td>Who authenticates?</td><td><strong>Humans:</strong> founders, members, clients, employees, contractors. <strong>Agents:</strong> CUO persona-stamped tokens, Skill bot accounts, scheduled tasks. <strong>Services:</strong> module-to-module mTLS clients (separate cert root). <strong>Owner:</strong> CSO seat (interim CEO until filled).</td></tr>
+ <tr><td><strong>5W · When</strong></td><td>When does auth happen?</td><td>(a) at session start (login + MFA); (b) at every cross-module API call (RBAC predicate); (c) at every MCP tool invocation (Scope Contract Grant); (d) on token refresh (rotation + reuse detection). Hot-path RBAC is sub-millisecond against Redis cache.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P0: single region (Singapore SG-1) backed by AWS RDS Postgres + ElastiCache Redis. P3: multi-region active-active with eventual JWT consistency. WebAuthn / TOTP secrets at rest in KMS-wrapped column-level encryption.</td></tr>
+ <tr><td><strong>5W · Why</strong></td><td>Why a separate layer?</td><td>Because per-module auth is the single biggest source of platform-wide CVE class regression. Centralise the primitive, never the policy.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>OAuth 2.1 with PKCE for browser flows; <code>client_credentials</code> for service-to-service; <code>refresh_token</code> with rotation + reuse detection for long sessions; WebAuthn discoverable credentials for passkey login; TOTP RFC 6238 for fallback; OIDC for SSO federation with Google / Microsoft 365 / Okta. RBAC is a single Rego-like predicate evaluated at every cross-module call. Each decision is a chained audit row.</td></tr>
+ <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P0: ~$60/month (RDS t4g.small + ElastiCache cache.t4g.micro + one Fargate task). 50-tenant: ~$220/month. Per-login cost ~$0.000002 amortised; RBAC predicate ~$0.00000005.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) FIDO Alliance L3 WebAuthn for elevated roles. (b) Vietnamese Decree 53: data-residency proof for VN tenants. (c) Vietnam Decree 53 Art. 26 — incident notification ≤ 24h to MoPS. (d) PDPL Art. 14 — DSAR data export. (e) Per-module auth is strictly forbidden.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · Redis 7 · WebAuthn-rs · totp-rs · rsa for JWT signing · AWS KMS for signing-key wrap · OpenTelemetry SDK · LiteFS for read replicas at P3+.</td></tr>
+ <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>OAuth 2.1 (not 2.0 — PKCE mandatory). RBAC + Scope Contract Grants (no ABAC complexity at P0). JWT RS256 (not HS256 — separates signer from verifier). Argon2id for password hashing. Refresh-token rotation with reuse detection (RFC 6749 §10.4). Row-level security on every identity table keyed by tenant_id.</td></tr>
+ <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P0). Multi-AZ Postgres RDS. Redis cluster mode at P3+. WebAuthn relying-party ID = the company root domain (P0: <code>cyberos.com</code>).</td></tr>
+ <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE today (covered by CEO). By P1: CSO seat owns 100% capacity + 24/7 on-call rotation with CTO.</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending)..012 — zero tenant-data leakage, zero compensation in BRAIN, mandatory mTLS, OWASP Gen AI Top-10 mitigations all green. Per-tenant auth-decision dashboard. Annual penetration test (P2+).</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- ARCHITECTURE -->
 <!-- ============================================================ -->
 <section id="architecture" class="module-section">
-  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    AUTH is one Rust service with five surfaces (OIDC issuer, OAuth 2.1 token endpoint, WebAuthn endpoints, RBAC gRPC API, admin REST), three stores (Postgres for identity / role / session, Redis for hot-path session and RBAC cache, KMS for signing-key wrap), and a single audit sink (BRAIN). The diagram below shows the canonical request flow for a cross-module call.
-  </p>
+ <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ AUTH is one Rust service with five surfaces (OIDC issuer, OAuth 2.1 token endpoint, WebAuthn endpoints, RBAC gRPC API, admin REST), three stores (Postgres for identity / role / session, Redis for hot-path session and RBAC cache, KMS for signing-key wrap), and a single audit sink (BRAIN). The diagram below shows the canonical request flow for a cross-module call.
+ </p>
 
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 graph TB
-  subgraph CLIENTS ["Clients"]
-    BROWSER["Browser SPA<br>(OIDC + PKCE)"]
-    MOBILE["Mobile (P3)"]
-    AGENT["CUO agent<br>persona-stamped JWT"]
-    SVC["Module service<br>(mTLS · client_credentials)"]
-  end
+ subgraph CLIENTS ["Clients"]
+ BROWSER["Browser SPA<br>(OIDC + PKCE)"]
+ MOBILE["Mobile (P3)"]
+ AGENT["CUO agent<br>persona-stamped JWT"]
+ SVC["Module service<br>(mTLS · client_credentials)"]
+ end
 
-  subgraph EDGE ["Edge"]
-    AR["Apollo Router<br>verifies JWT @JwtAuth"]
-    MCP["MCP Gateway<br>verifies OAuth 2.1 PRM"]
-  end
+ subgraph EDGE ["Edge"]
+ AR["Apollo Router<br>verifies JWT @JwtAuth"]
+ MCP["MCP Gateway<br>verifies OAuth 2.1 PRM"]
+ end
 
-  subgraph AUTH ["AUTH service (Rust · axum)"]
-    OIDC["OIDC issuer<br>/.well-known/openid-configuration"]
-    OAUTH["OAuth 2.1 token endpoint<br>PKCE · audience-bound"]
-    WA["WebAuthn / TOTP<br>passkey + 2FA"]
-    RBAC["RBAC engine<br>predicate evaluator"]
-    SCOPE["Scope Contract<br>Grant resolver"]
-    ADMIN["Admin REST<br>role / tenant CRUD"]
-  end
+ subgraph AUTH ["AUTH service (Rust · axum)"]
+ OIDC["OIDC issuer<br>/.well-known/openid-configuration"]
+ OAUTH["OAuth 2.1 token endpoint<br>PKCE · audience-bound"]
+ WA["WebAuthn / TOTP<br>passkey + 2FA"]
+ RBAC["RBAC engine<br>predicate evaluator"]
+ SCOPE["Scope Contract<br>Grant resolver"]
+ ADMIN["Admin REST<br>role / tenant CRUD"]
+ end
 
-  subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br>identity · roles · sessions<br>RLS by tenant_id")]
-    RED[("Redis 7<br>session + RBAC cache<br>TTL ≤ 15 min")]
-    KMS[("AWS KMS<br>RS256 signing key<br>wrapped on disk")]
-  end
+ subgraph STORES ["Stores"]
+ PG[("PostgreSQL<br>identity · roles · sessions<br>RLS by tenant_id")]
+ RED[("Redis 7<br>session + RBAC cache<br>TTL ≤ 15 min")]
+ KMS[("AWS KMS<br>RS256 signing key<br>wrapped on disk")]
+ end
 
-  subgraph SINKS ["Audit & telemetry"]
-    BRAIN["🧠 BRAIN<br>auth.decision rows"]
-    OBS["👁 OBS<br>traces + metrics"]
-  end
+ subgraph SINKS ["Audit & telemetry"]
+ BRAIN["🧠 BRAIN<br>auth.decision rows"]
+ OBS["👁 OBS<br>traces + metrics"]
+ end
 
-  BROWSER --> OIDC
-  MOBILE --> OIDC
-  OIDC --> OAUTH
-  AGENT --> OAUTH
-  SVC --> OAUTH
-  OAUTH --> WA
-  WA --> PG
-  OAUTH --> PG
-  OAUTH --> KMS
-  AR --> RBAC
-  MCP --> RBAC
-  RBAC --> SCOPE
-  SCOPE --> PG
-  RBAC --> RED
-  ADMIN --> PG
-  OAUTH --> BRAIN
-  RBAC --> BRAIN
-  AUTH --> OBS
+ BROWSER --> OIDC
+ MOBILE --> OIDC
+ OIDC --> OAUTH
+ AGENT --> OAUTH
+ SVC --> OAUTH
+ OAUTH --> WA
+ WA --> PG
+ OAUTH --> PG
+ OAUTH --> KMS
+ AR --> RBAC
+ MCP --> RBAC
+ RBAC --> SCOPE
+ SCOPE --> PG
+ RBAC --> RED
+ ADMIN --> PG
+ OAUTH --> BRAIN
+ RBAC --> BRAIN
+ AUTH --> OBS
 
-  classDef planned fill:#cba88a,stroke:#4338ca
-  classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#f5ede6,stroke:#45210e
-  class OIDC,OAUTH,WA,RBAC,SCOPE,ADMIN,AR,MCP planned
-  class PG,RED,KMS store
-  class BRAIN,OBS sink
-    </div>
-  </div>
+ classDef planned fill:#cba88a,stroke:#4338ca
+ classDef store fill:#f5f3ff,stroke:#7c3aed
+ classDef sink fill:#f5ede6,stroke:#45210e
+ class OIDC,OAUTH,WA,RBAC,SCOPE,ADMIN,AR,MCP planned
+ class PG,RED,KMS store
+ class BRAIN,OBS sink
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
-      <tbody>
-        <tr><td><code>oidc.rs</code></td><td>services/auth/src/oidc.rs</td><td>OIDC issuer — discovery doc, JWKS endpoint, ID-token issuance. Pure OpenID Connect Core 1.0 compliance.</td></tr>
-        <tr><td><code>oauth.rs</code></td><td>services/auth/src/oauth.rs</td><td>OAuth 2.1 token endpoint — PKCE-required, audience-bound, refresh-token rotation, reuse detection.</td></tr>
-        <tr><td><code>webauthn.rs</code></td><td>services/auth/src/webauthn.rs</td><td>WebAuthn L3 — credential creation, assertion verification, attestation parsing. Wraps webauthn-rs.</td></tr>
-        <tr><td><code>totp.rs</code></td><td>services/auth/src/totp.rs</td><td>RFC 6238 TOTP — enrollment QR generation, code verification, replay window enforcement.</td></tr>
-        <tr><td><code>rbac.rs</code></td><td>services/auth/src/rbac.rs</td><td>RBAC predicate evaluator. Input: (subject, action, resource). Output: allow / deny + audit record. Hot-path cache in Redis.</td></tr>
-        <tr><td><code>scope.rs</code></td><td>services/auth/src/scope.rs</td><td>Scope Contract Grant resolver. Reads agent-persona scope sheets from BRAIN; emits effective scope set per JWT.</td></tr>
-        <tr><td><code>session.rs</code></td><td>services/auth/src/session.rs</td><td>Session manager — issue, validate, revoke. Device tracking + impossible-travel detection.</td></tr>
-        <tr><td><code>jwt.rs</code></td><td>services/auth/src/jwt.rs</td><td>JWT issuance / verification. RS256 via KMS; key rotation; JWKS publication.</td></tr>
-        <tr><td><code>impossible_travel.rs</code></td><td>services/auth/src/impossible_travel.rs</td><td>Geographic-velocity check on consecutive logins (PRD (FR pending)); challenge if velocity &gt; 1,000 km/h.</td></tr>
-        <tr><td><code>password.rs</code></td><td>services/auth/src/password.rs</td><td>Argon2id hashing, password-policy enforcement, breach-list check via HIBP k-anonymity API.</td></tr>
-        <tr><td><code>device.rs</code></td><td>services/auth/src/device.rs</td><td>Device fingerprinting ((FR pending)), new-device email, force-logout endpoint.</td></tr>
-        <tr><td><code>magic_link.rs</code></td><td>services/auth/src/magic_link.rs</td><td>Magic-link onboarding flow ((FR pending)) — single-use, time-bound, onboarding-only.</td></tr>
-        <tr><td><code>audit_bridge.rs</code></td><td>services/auth/src/audit_bridge.rs</td><td>Writes every decision to BRAIN via the canonical writer. Includes <code>actor</code>, <code>action</code>, <code>resource</code>, <code>decision</code>, <code>reason</code>.</td></tr>
-        <tr><td><code>admin.rs</code></td><td>services/auth/src/admin.rs</td><td>Admin REST — create tenant, assign role, revoke session, view audit. CSO + CEO scope only.</td></tr>
-        <tr><td><code>migrations/</code></td><td>services/auth/migrations/</td><td>sqlx migrations. Every table has RLS by <code>tenant_id</code>. Indices for hot-path queries.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
+ <tbody>
+ <tr><td><code>oidc.rs</code></td><td>services/auth/src/oidc.rs</td><td>OIDC issuer — discovery doc, JWKS endpoint, ID-token issuance. Pure OpenID Connect Core 1.0 compliance.</td></tr>
+ <tr><td><code>oauth.rs</code></td><td>services/auth/src/oauth.rs</td><td>OAuth 2.1 token endpoint — PKCE-required, audience-bound, refresh-token rotation, reuse detection.</td></tr>
+ <tr><td><code>webauthn.rs</code></td><td>services/auth/src/webauthn.rs</td><td>WebAuthn L3 — credential creation, assertion verification, attestation parsing. Wraps webauthn-rs.</td></tr>
+ <tr><td><code>totp.rs</code></td><td>services/auth/src/totp.rs</td><td>RFC 6238 TOTP — enrollment QR generation, code verification, replay window enforcement.</td></tr>
+ <tr><td><code>rbac.rs</code></td><td>services/auth/src/rbac.rs</td><td>RBAC predicate evaluator. Input: (subject, action, resource). Output: allow / deny + audit record. Hot-path cache in Redis.</td></tr>
+ <tr><td><code>scope.rs</code></td><td>services/auth/src/scope.rs</td><td>Scope Contract Grant resolver. Reads agent-persona scope sheets from BRAIN; emits effective scope set per JWT.</td></tr>
+ <tr><td><code>session.rs</code></td><td>services/auth/src/session.rs</td><td>Session manager — issue, validate, revoke. Device tracking + impossible-travel detection.</td></tr>
+ <tr><td><code>jwt.rs</code></td><td>services/auth/src/jwt.rs</td><td>JWT issuance / verification. RS256 via KMS; key rotation; JWKS publication.</td></tr>
+ <tr><td><code>impossible_travel.rs</code></td><td>services/auth/src/impossible_travel.rs</td><td>Geographic-velocity check on consecutive logins (PRD (FR pending)); challenge if velocity &gt; 1,000 km/h.</td></tr>
+ <tr><td><code>password.rs</code></td><td>services/auth/src/password.rs</td><td>Argon2id hashing, password-policy enforcement, breach-list check via HIBP k-anonymity API.</td></tr>
+ <tr><td><code>device.rs</code></td><td>services/auth/src/device.rs</td><td>Device fingerprinting ((FR pending)), new-device email, force-logout endpoint.</td></tr>
+ <tr><td><code>magic_link.rs</code></td><td>services/auth/src/magic_link.rs</td><td>Magic-link onboarding flow ((FR pending)) — single-use, time-bound, onboarding-only.</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/auth/src/audit_bridge.rs</td><td>Writes every decision to BRAIN via the canonical writer. Includes <code>actor</code>, <code>action</code>, <code>resource</code>, <code>decision</code>, <code>reason</code>.</td></tr>
+ <tr><td><code>admin.rs</code></td><td>services/auth/src/admin.rs</td><td>Admin REST — create tenant, assign role, revoke session, view audit. CSO + CEO scope only.</td></tr>
+ <tr><td><code>migrations/</code></td><td>services/auth/migrations/</td><td>sqlx migrations. Every table has RLS by <code>tenant_id</code>. Indices for hot-path queries.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DATA MODEL -->
 <!-- ============================================================ -->
 <section id="data-model" class="module-section">
-  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Identity, role, and session live in PostgreSQL with row-level security keyed by <code>tenant_id</code>. The schema is normalised but optimised for hot-path RBAC: the <code>subject_role</code> and <code>role_permission</code> tables are de-normalised into a materialised <code>subject_effective_permission</code> view that Redis caches with a 15-minute TTL.
-  </p>
+ <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Identity, role, and session live in PostgreSQL with row-level security keyed by <code>tenant_id</code>. The schema is normalised but optimised for hot-path RBAC: the <code>subject_role</code> and <code>role_permission</code> tables are de-normalised into a materialised <code>subject_effective_permission</code> view that Redis caches with a 15-minute TTL.
+ </p>
 
-  <div class="bbg-card p-5 mb-5">
-    <div class="mermaid">
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
 erDiagram
-  TENANT ||--o{ SUBJECT : "owns"
-  TENANT ||--o{ ROLE : "defines"
-  SUBJECT ||--o{ SESSION : "creates"
-  SUBJECT ||--o{ API_KEY : "owns"
-  SUBJECT ||--o{ WEBAUTHN_CREDENTIAL : "registers"
-  SUBJECT ||--o| TOTP_SECRET : "has"
-  SUBJECT ||--o{ SUBJECT_ROLE : "holds"
-  ROLE ||--o{ SUBJECT_ROLE : "granted"
-  ROLE ||--o{ ROLE_PERMISSION : "carries"
-  PERMISSION ||--o{ ROLE_PERMISSION : "grants"
-  SUBJECT ||--o{ SCOPE_CONTRACT_GRANT : "has agent scope"
-  SUBJECT ||--o{ AUTH_DECISION : "subject of"
-  SUBJECT ||--o{ DEVICE : "trusts"
-  SESSION }o--|| DEVICE : "issued from"
-  SERVICE_ACCOUNT ||--|| SUBJECT : "is a"
+ TENANT ||--o{ SUBJECT: "owns"
+ TENANT ||--o{ ROLE: "defines"
+ SUBJECT ||--o{ SESSION: "creates"
+ SUBJECT ||--o{ API_KEY: "owns"
+ SUBJECT ||--o{ WEBAUTHN_CREDENTIAL: "registers"
+ SUBJECT ||--o| TOTP_SECRET: "has"
+ SUBJECT ||--o{ SUBJECT_ROLE: "holds"
+ ROLE ||--o{ SUBJECT_ROLE: "granted"
+ ROLE ||--o{ ROLE_PERMISSION: "carries"
+ PERMISSION ||--o{ ROLE_PERMISSION: "grants"
+ SUBJECT ||--o{ SCOPE_CONTRACT_GRANT: "has agent scope"
+ SUBJECT ||--o{ AUTH_DECISION: "subject of"
+ SUBJECT ||--o{ DEVICE: "trusts"
+ SESSION }o--|| DEVICE: "issued from"
+ SERVICE_ACCOUNT ||--|| SUBJECT: "is a"
 
-  TENANT {
-    uuid id PK
-    string slug
-    string display_name
-    string country "VN or SG or other"
-    string data_residency "vn-hanoi or sg-1"
-    timestamp created_at
-  }
-  SUBJECT {
-    uuid id PK
-    uuid tenant_id FK
-    string kind "human or agent or service or api_key"
-    string email
-    string display_name
-    string status "active or locked or disabled"
-    string password_hash "argon2id - null for agents"
-    timestamp created_at
-    timestamp last_login_at
-  }
-  ROLE {
-    uuid id PK
-    uuid tenant_id FK
-    string code "CEO or CFO or CHRO or CTO or other"
-    string display_name
-    string scope_level "platform or tenant or project"
-  }
-  PERMISSION {
-    string code PK "rew.write_run or brain.put or other"
-    string action "read or write or delete or invoke"
-    string resource_class
-  }
-  ROLE_PERMISSION {
-    uuid role_id FK
-    string permission_code FK
-  }
-  SUBJECT_ROLE {
-    uuid subject_id FK
-    uuid role_id FK
-    timestamp granted_at
-    timestamp expires_at
-    uuid granted_by FK
-  }
-  SESSION {
-    uuid id PK
-    uuid subject_id FK
-    string jti "JWT ID"
-    string refresh_jti
-    timestamp issued_at
-    timestamp expires_at
-    string ip_address
-    string user_agent
-    uuid device_id FK
-    string status "active or revoked"
-  }
-  API_KEY {
-    uuid id PK
-    uuid subject_id FK
-    string prefix "ck_live_…"
-    string secret_hash "argon2id"
-    string scopes "comma-separated"
-    timestamp last_used_at
-    timestamp expires_at
-  }
-  WEBAUTHN_CREDENTIAL {
-    bytea credential_id PK
-    uuid subject_id FK
-    bytea public_key
-    bigint sign_count
-    string aaguid
-    string transports
-    timestamp created_at
-  }
-  TOTP_SECRET {
-    uuid subject_id PK
-    bytea secret_encrypted "KMS-wrapped"
-    timestamp enrolled_at
-  }
-  DEVICE {
-    uuid id PK
-    uuid subject_id FK
-    string fingerprint_sha256
-    string label
-    timestamp first_seen_at
-    timestamp last_seen_at
-    bool   trusted
-  }
-  SCOPE_CONTRACT_GRANT {
-    uuid id PK
-    uuid subject_id FK "agent persona"
-    string persona_version "cuo-v2.3.1"
-    string scope_set "comma-separated permission codes"
-    timestamp valid_from
-    timestamp valid_to
-  }
-  SERVICE_ACCOUNT {
-    uuid subject_id PK
-    string client_id
-    bytea client_secret_hash
-    string allowed_audiences
-  }
-  AUTH_DECISION {
-    uuid id PK
-    uuid tenant_id FK
-    uuid subject_id FK
-    string action
-    string resource
-    string decision "allow or deny or challenge"
-    string reason_code
-    timestamp ts
-    string brain_chain "linked audit row chain hash"
-  }
-    </div>
-  </div>
+ TENANT {
+ uuid id PK
+ string slug
+ string display_name
+ string country "VN or SG or other"
+ string data_residency "vn-hanoi or sg-1"
+ timestamp created_at
+ }
+ SUBJECT {
+ uuid id PK
+ uuid tenant_id FK
+ string kind "human or agent or service or api_key"
+ string email
+ string display_name
+ string status "active or locked or disabled"
+ string password_hash "argon2id - null for agents"
+ timestamp created_at
+ timestamp last_login_at
+ }
+ ROLE {
+ uuid id PK
+ uuid tenant_id FK
+ string code "CEO or CFO or CHRO or CTO or other"
+ string display_name
+ string scope_level "platform or tenant or project"
+ }
+ PERMISSION {
+ string code PK "rew.write_run or brain.put or other"
+ string action "read or write or delete or invoke"
+ string resource_class
+ }
+ ROLE_PERMISSION {
+ uuid role_id FK
+ string permission_code FK
+ }
+ SUBJECT_ROLE {
+ uuid subject_id FK
+ uuid role_id FK
+ timestamp granted_at
+ timestamp expires_at
+ uuid granted_by FK
+ }
+ SESSION {
+ uuid id PK
+ uuid subject_id FK
+ string jti "JWT ID"
+ string refresh_jti
+ timestamp issued_at
+ timestamp expires_at
+ string ip_address
+ string user_agent
+ uuid device_id FK
+ string status "active or revoked"
+ }
+ API_KEY {
+ uuid id PK
+ uuid subject_id FK
+ string prefix "ck_live_…"
+ string secret_hash "argon2id"
+ string scopes "comma-separated"
+ timestamp last_used_at
+ timestamp expires_at
+ }
+ WEBAUTHN_CREDENTIAL {
+ bytea credential_id PK
+ uuid subject_id FK
+ bytea public_key
+ bigint sign_count
+ string aaguid
+ string transports
+ timestamp created_at
+ }
+ TOTP_SECRET {
+ uuid subject_id PK
+ bytea secret_encrypted "KMS-wrapped"
+ timestamp enrolled_at
+ }
+ DEVICE {
+ uuid id PK
+ uuid subject_id FK
+ string fingerprint_sha256
+ string label
+ timestamp first_seen_at
+ timestamp last_seen_at
+ bool trusted
+ }
+ SCOPE_CONTRACT_GRANT {
+ uuid id PK
+ uuid subject_id FK "agent persona"
+ string persona_version "cuo-v2.3.1"
+ string scope_set "comma-separated permission codes"
+ timestamp valid_from
+ timestamp valid_to
+ }
+ SERVICE_ACCOUNT {
+ uuid subject_id PK
+ string client_id
+ bytea client_secret_hash
+ string allowed_audiences
+ }
+ AUTH_DECISION {
+ uuid id PK
+ uuid tenant_id FK
+ uuid subject_id FK
+ string action
+ string resource
+ string decision "allow or deny or challenge"
+ string reason_code
+ timestamp ts
+ string brain_chain "linked audit row chain hash"
+ }
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">RBAC role catalogue (PRD §8.6.1 — closed)</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Role code</th><th>Display</th><th>Scope level</th><th>Examples of permissions</th></tr></thead>
-      <tbody>
-        <tr><td><code>founder</code></td><td>Founder / CEO</td><td>platform</td><td>All; sign authority.</td></tr>
-        <tr><td><code>cfo</code></td><td>Chief Financial Officer</td><td>tenant</td><td><code>finance.*</code>, <code>rew.read_run</code> (not write).</td></tr>
-        <tr><td><code>chro</code></td><td>Chief Human Resources Officer</td><td>tenant</td><td><code>hr.*</code>, <code>rew.write_run</code> (with CFO co-sign).</td></tr>
-        <tr><td><code>cto</code></td><td>Chief Technology Officer</td><td>tenant</td><td><code>engineering.*</code>, <code>auth.admin</code>.</td></tr>
-        <tr><td><code>cso</code></td><td>Chief Security Officer</td><td>tenant</td><td><code>auth.*</code>, <code>obs.audit_read</code>, key-rotation.</td></tr>
-        <tr><td><code>clo</code></td><td>Chief Legal Officer</td><td>tenant</td><td><code>legal.*</code>, <code>brain.delete_purge_approve</code>.</td></tr>
-        <tr><td><code>dpo</code></td><td>Data Protection Officer</td><td>tenant</td><td><code>brain.dsar_export</code>, <code>auth.audit_read</code>.</td></tr>
-        <tr><td><code>cdo</code></td><td>Chief Data Officer</td><td>tenant</td><td><code>brain.admin</code>, <code>obs.read</code>.</td></tr>
-        <tr><td><code>cpo</code></td><td>Chief Product Officer</td><td>tenant</td><td><code>product.*</code>, <code>kb.write</code>.</td></tr>
-        <tr><td><code>cmo</code></td><td>Chief Marketing Officer</td><td>tenant</td><td><code>marketing.*</code>, <code>crm.read</code>.</td></tr>
-        <tr><td><code>cco</code></td><td>Chief Customer Officer</td><td>tenant</td><td><code>support.*</code>, <code>crm.write</code>.</td></tr>
-        <tr><td><code>member</code></td><td>Operating Member</td><td>tenant</td><td>Scope-narrowed per module; default <code>chat.*</code> + <code>brain.read_own</code>.</td></tr>
-        <tr><td><code>contributor</code></td><td>External Contributor</td><td>project</td><td>Project-scoped read + comment only.</td></tr>
-        <tr><td><code>client</code></td><td>Client User</td><td>project</td><td>Per-project shared workspace; no cross-tenant access.</td></tr>
-        <tr><td><code>service</code></td><td>Service Account</td><td>tenant</td><td><code>client_credentials</code> only; explicit audience.</td></tr>
-        <tr><td><code>agent.cuo</code></td><td>CUO Agent</td><td>tenant</td><td>Routing only; never destructive without human gate.</td></tr>
-        <tr><td><code>agent.skill</code></td><td>Skill Agent</td><td>tenant</td><td>Per-skill scope; capability-broker gated.</td></tr>
-        <tr><td><code>agent.scheduled</code></td><td>Scheduled Task</td><td>tenant</td><td>Single-purpose; cron-defined scope.</td></tr>
-        <tr><td>+ 4 more</td><td>(auditor, intern, vendor, partner)</td><td>tenant / project</td><td>See PRD §8.6.1.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">RBAC role catalogue ( — closed)</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Role code</th><th>Display</th><th>Scope level</th><th>Examples of permissions</th></tr></thead>
+ <tbody>
+ <tr><td><code>founder</code></td><td>Founder / CEO</td><td>platform</td><td>All; sign authority.</td></tr>
+ <tr><td><code>cfo</code></td><td>Chief Financial Officer</td><td>tenant</td><td><code>finance.*</code>, <code>rew.read_run</code> (not write).</td></tr>
+ <tr><td><code>chro</code></td><td>Chief Human Resources Officer</td><td>tenant</td><td><code>hr.*</code>, <code>rew.write_run</code> (with CFO co-sign).</td></tr>
+ <tr><td><code>cto</code></td><td>Chief Technology Officer</td><td>tenant</td><td><code>engineering.*</code>, <code>auth.admin</code>.</td></tr>
+ <tr><td><code>cso</code></td><td>Chief Security Officer</td><td>tenant</td><td><code>auth.*</code>, <code>obs.audit_read</code>, key-rotation.</td></tr>
+ <tr><td><code>clo</code></td><td>Chief Legal Officer</td><td>tenant</td><td><code>legal.*</code>, <code>brain.delete_purge_approve</code>.</td></tr>
+ <tr><td><code>dpo</code></td><td>Data Protection Officer</td><td>tenant</td><td><code>brain.dsar_export</code>, <code>auth.audit_read</code>.</td></tr>
+ <tr><td><code>cdo</code></td><td>Chief Data Officer</td><td>tenant</td><td><code>brain.admin</code>, <code>obs.read</code>.</td></tr>
+ <tr><td><code>cpo</code></td><td>Chief Product Officer</td><td>tenant</td><td><code>product.*</code>, <code>kb.write</code>.</td></tr>
+ <tr><td><code>cmo</code></td><td>Chief Marketing Officer</td><td>tenant</td><td><code>marketing.*</code>, <code>crm.read</code>.</td></tr>
+ <tr><td><code>cco</code></td><td>Chief Customer Officer</td><td>tenant</td><td><code>support.*</code>, <code>crm.write</code>.</td></tr>
+ <tr><td><code>member</code></td><td>Operating Member</td><td>tenant</td><td>Scope-narrowed per module; default <code>chat.*</code> + <code>brain.read_own</code>.</td></tr>
+ <tr><td><code>contributor</code></td><td>External Contributor</td><td>project</td><td>Project-scoped read + comment only.</td></tr>
+ <tr><td><code>client</code></td><td>Client User</td><td>project</td><td>Per-project shared workspace; no cross-tenant access.</td></tr>
+ <tr><td><code>service</code></td><td>Service Account</td><td>tenant</td><td><code>client_credentials</code> only; explicit audience.</td></tr>
+ <tr><td><code>agent.cuo</code></td><td>CUO Agent</td><td>tenant</td><td>Routing only; never destructive without human gate.</td></tr>
+ <tr><td><code>agent.skill</code></td><td>Skill Agent</td><td>tenant</td><td>Per-skill scope; capability-broker gated.</td></tr>
+ <tr><td><code>agent.scheduled</code></td><td>Scheduled Task</td><td>tenant</td><td>Single-purpose; cron-defined scope.</td></tr>
+ <tr><td>+ 4 more</td><td>(auditor, intern, vendor, partner)</td><td>tenant / project</td><td>See.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- API SURFACE -->
 <!-- ============================================================ -->
 <section id="api-surface" class="module-section">
-  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Four surfaces: an OIDC + OAuth 2.1 HTTPS edge for browsers and agents, a gRPC API for internal RBAC predicate evaluation, an MCP tool catalogue (the security-sensitive subset), and a small admin CLI surface.
-  </p>
+ <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Four surfaces: an OIDC + OAuth 2.1 HTTPS edge for browsers and agents, a gRPC API for internal RBAC predicate evaluation, an MCP tool catalogue (the security-sensitive subset), and a small admin CLI surface.
+ </p>
 
-  <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (federated)</h3>
-  <p class="text-sm text-slate-600 mb-3">AUTH publishes a thin federated subgraph for cross-module identity queries. Sensitive writes (role grant, session revoke) remain on the admin REST API.</p>
-  <div class="bbg-card p-5 mb-5">
+ <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph (federated)</h3>
+ <p class="text-sm text-slate-600 mb-3">AUTH publishes a thin federated subgraph for cross-module identity queries. Sensitive writes (role grant, session revoke) remain on the admin REST API.</p>
+ <div class="bbg-card p-5 mb-5">
 <pre><code class="language-graphql">extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable", "@requiresScopes"])
+ @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@external", "@shareable", "@requiresScopes"])
 
 type Subject @key(fields: "id") {
-  id: ID!
-  tenantId: ID!
-  kind: SubjectKind!
-  email: String
-  displayName: String!
-  status: SubjectStatus!
-  roles: [Role!]! @requiresScopes(scopes: [["auth.read"]])
-  effectivePermissions: [String!]! @requiresScopes(scopes: [["auth.read"]])
-  lastLoginAt: DateTime
-  createdAt: DateTime!
+ id: ID!
+ tenantId: ID!
+ kind: SubjectKind!
+ email: String
+ displayName: String!
+ status: SubjectStatus!
+ roles: [Role!]! @requiresScopes(scopes: [["auth.read"]])
+ effectivePermissions: [String!]! @requiresScopes(scopes: [["auth.read"]])
+ lastLoginAt: DateTime
+ createdAt: DateTime!
 }
 
 type Role @key(fields: "code tenantId") {
-  code: String!
-  tenantId: ID!
-  displayName: String!
-  scopeLevel: ScopeLevel!
+ code: String!
+ tenantId: ID!
+ displayName: String!
+ scopeLevel: ScopeLevel!
 }
 
 type Session @key(fields: "id") @requiresScopes(scopes: [["auth.session_read"]]) {
-  id: ID!
-  subjectId: ID!
-  issuedAt: DateTime!
-  expiresAt: DateTime!
-  status: SessionStatus!
-  device: Device
+ id: ID!
+ subjectId: ID!
+ issuedAt: DateTime!
+ expiresAt: DateTime!
+ status: SessionStatus!
+ device: Device
 }
 
 type Device {
-  id: ID!
-  label: String!
-  trusted: Boolean!
-  lastSeenAt: DateTime!
+ id: ID!
+ label: String!
+ trusted: Boolean!
+ lastSeenAt: DateTime!
 }
 
 type AuthDecision @key(fields: "id") @requiresScopes(scopes: [["auth.audit_read"]]) {
-  id: ID!
-  subjectId: ID!
-  action: String!
-  resource: String!
-  decision: Decision!
-  reasonCode: String!
-  ts: DateTime!
-  brainChain: String!
+ id: ID!
+ subjectId: ID!
+ action: String!
+ resource: String!
+ decision: Decision!
+ reasonCode: String!
+ ts: DateTime!
+ brainChain: String!
 }
 
 enum SubjectKind { HUMAN AGENT SERVICE API_KEY }
@@ -542,649 +519,647 @@ enum SessionStatus { ACTIVE REVOKED EXPIRED }
 enum Decision { ALLOW DENY CHALLENGE }
 
 type Query {
-  me: Subject!
-  subject(id: ID!): Subject
-  decisions(subjectId: ID, since: DateTime, limit: Int = 50): [AuthDecision!]!
-    @requiresScopes(scopes: [["auth.audit_read"]])
+ me: Subject!
+ subject(id: ID!): Subject
+ decisions(subjectId: ID, since: DateTime, limit: Int = 50): [AuthDecision!]!
+ @requiresScopes(scopes: [["auth.audit_read"]])
 }
 
 type Mutation {
-  revokeSession(id: ID!): Boolean!
-    @requiresScopes(scopes: [["auth.session_revoke"]])
-  grantRole(subjectId: ID!, roleCode: String!, expiresAt: DateTime): Boolean!
-    @requiresScopes(scopes: [["auth.role_grant"]])
-  rotateApiKey(id: ID!): ApiKeyRotation!
-    @requiresScopes(scopes: [["auth.api_key_rotate"]])
+ revokeSession(id: ID!): Boolean!
+ @requiresScopes(scopes: [["auth.session_revoke"]])
+ grantRole(subjectId: ID!, roleCode: String!, expiresAt: DateTime): Boolean!
+ @requiresScopes(scopes: [["auth.role_grant"]])
+ rotateApiKey(id: ID!): ApiKeyRotation!
+ @requiresScopes(scopes: [["auth.api_key_rotate"]])
 }</code></pre>
-  </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">REST + OAuth surface (planned)</h3>
-  <div class="bbg-card p-5 mb-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
-      <tbody>
-        <tr><td>GET</td><td><code>/.well-known/openid-configuration</code></td><td>OIDC discovery document.</td></tr>
-        <tr><td>GET</td><td><code>/.well-known/oauth-authorization-server</code></td><td>OAuth 2.1 metadata (RFC 8414).</td></tr>
-        <tr><td>GET</td><td><code>/.well-known/jwks.json</code></td><td>JWKS for JWT verification.</td></tr>
-        <tr><td>GET</td><td><code>/oauth/authorize</code></td><td>Authorisation endpoint (PKCE-required).</td></tr>
-        <tr><td>POST</td><td><code>/oauth/token</code></td><td>Token endpoint — authorization_code · refresh_token · client_credentials.</td></tr>
-        <tr><td>POST</td><td><code>/oauth/revoke</code></td><td>Token revocation (RFC 7009).</td></tr>
-        <tr><td>POST</td><td><code>/oauth/introspect</code></td><td>Token introspection (RFC 7662) — internal mTLS only.</td></tr>
-        <tr><td>POST</td><td><code>/webauthn/register/begin</code></td><td>Start passkey registration.</td></tr>
-        <tr><td>POST</td><td><code>/webauthn/register/finish</code></td><td>Finish passkey registration.</td></tr>
-        <tr><td>POST</td><td><code>/webauthn/authenticate/begin</code></td><td>Start passkey assertion.</td></tr>
-        <tr><td>POST</td><td><code>/webauthn/authenticate/finish</code></td><td>Finish passkey assertion.</td></tr>
-        <tr><td>POST</td><td><code>/totp/enroll</code></td><td>Begin TOTP enrolment (QR generation).</td></tr>
-        <tr><td>POST</td><td><code>/totp/verify</code></td><td>Verify TOTP code.</td></tr>
-        <tr><td>POST</td><td><code>/magic-link/request</code></td><td>Request onboarding magic link.</td></tr>
-        <tr><td>GET</td><td><code>/magic-link/consume?token=…</code></td><td>Consume magic link.</td></tr>
-        <tr><td>GET</td><td><code>/admin/sessions</code></td><td>List sessions (admin scope).</td></tr>
-        <tr><td>POST</td><td><code>/admin/sessions/{id}/revoke</code></td><td>Revoke session.</td></tr>
-        <tr><td>POST</td><td><code>/admin/roles/grant</code></td><td>Grant role.</td></tr>
-        <tr><td>POST</td><td><code>/admin/sso/saml/config</code></td><td>Configure SAML IdP (P1).</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">REST + OAuth surface (planned)</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+ <tbody>
+ <tr><td>GET</td><td><code>/.well-known/openid-configuration</code></td><td>OIDC discovery document.</td></tr>
+ <tr><td>GET</td><td><code>/.well-known/oauth-authorization-server</code></td><td>OAuth 2.1 metadata (RFC 8414).</td></tr>
+ <tr><td>GET</td><td><code>/.well-known/jwks.json</code></td><td>JWKS for JWT verification.</td></tr>
+ <tr><td>GET</td><td><code>/oauth/authorize</code></td><td>Authorisation endpoint (PKCE-required).</td></tr>
+ <tr><td>POST</td><td><code>/oauth/token</code></td><td>Token endpoint — authorization_code · refresh_token · client_credentials.</td></tr>
+ <tr><td>POST</td><td><code>/oauth/revoke</code></td><td>Token revocation (RFC 7009).</td></tr>
+ <tr><td>POST</td><td><code>/oauth/introspect</code></td><td>Token introspection (RFC 7662) — internal mTLS only.</td></tr>
+ <tr><td>POST</td><td><code>/webauthn/register/begin</code></td><td>Start passkey registration.</td></tr>
+ <tr><td>POST</td><td><code>/webauthn/register/finish</code></td><td>Finish passkey registration.</td></tr>
+ <tr><td>POST</td><td><code>/webauthn/authenticate/begin</code></td><td>Start passkey assertion.</td></tr>
+ <tr><td>POST</td><td><code>/webauthn/authenticate/finish</code></td><td>Finish passkey assertion.</td></tr>
+ <tr><td>POST</td><td><code>/totp/enroll</code></td><td>Begin TOTP enrolment (QR generation).</td></tr>
+ <tr><td>POST</td><td><code>/totp/verify</code></td><td>Verify TOTP code.</td></tr>
+ <tr><td>POST</td><td><code>/magic-link/request</code></td><td>Request onboarding magic link.</td></tr>
+ <tr><td>GET</td><td><code>/magic-link/consume?token=…</code></td><td>Consume magic link.</td></tr>
+ <tr><td>GET</td><td><code>/admin/sessions</code></td><td>List sessions (admin scope).</td></tr>
+ <tr><td>POST</td><td><code>/admin/sessions/{id}/revoke</code></td><td>Revoke session.</td></tr>
+ <tr><td>POST</td><td><code>/admin/roles/grant</code></td><td>Grant role.</td></tr>
+ <tr><td>POST</td><td><code>/admin/sso/saml/config</code></td><td>Configure SAML IdP (P1).</td></tr>
+ </tbody>
+ </table>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">gRPC RBAC API (internal)</h3>
-  <div class="bbg-card p-5 mb-5">
+ <h3 class="text-lg font-bold mb-3">gRPC RBAC API (internal)</h3>
+ <div class="bbg-card p-5 mb-5">
 <pre><code class="language-proto">syntax = "proto3";
 package cyberos.auth.v1;
 
 service RBAC {
-  // Hot-path predicate. Sub-millisecond Redis cache.
-  rpc Check(CheckRequest) returns (CheckResponse);
-  // Batch variant for module gateways.
-  rpc CheckBatch(CheckBatchRequest) returns (CheckBatchResponse);
-  // Resolve effective permissions for a subject.
-  rpc EffectivePermissions(SubjectRef) returns (PermissionSet);
+ / Hot-path predicate. Sub-millisecond Redis cache.
+ rpc Check(CheckRequest) returns (CheckResponse);/ Batch variant for module gateways.
+ rpc CheckBatch(CheckBatchRequest) returns (CheckBatchResponse);/ Resolve effective permissions for a subject.
+ rpc EffectivePermissions(SubjectRef) returns (PermissionSet);
 }
 
 message CheckRequest {
-  string subject_jwt = 1;           // verified upstream
-  string action = 2;                // "rew.write_run"
-  string resource = 3;              // "rew/run/2026-05"
-  map&lt;string, string&gt; attrs = 4;    // optional ABAC hints (P3+)
+ string subject_jwt = 1;/ verified upstream
+ string action = 2;/ "rew.write_run"
+ string resource = 3;/ "rew/run/2026-05"
+ map&lt;string, string&gt; attrs = 4;/ optional ABAC hints (P3+)
 }
 
 message CheckResponse {
-  bool allow = 1;
-  string reason_code = 2;           // "policy.role.cfo_required" | "ok"
-  string brain_chain = 3;           // audit row chain hash
+ bool allow = 1;
+ string reason_code = 2;/ "policy.role.cfo_required" | "ok"
+ string brain_chain = 3;/ audit row chain hash
 }</code></pre>
-  </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
-      <tbody>
-        <tr><td><code>cyberos.auth.whoami</code></td><td>—</td><td>Subject</td><td>readonly · scope=auth.read</td></tr>
-        <tr><td><code>cyberos.auth.check_permission</code></td><td>action, resource</td><td>{allow, reason}</td><td>readonly</td></tr>
-        <tr><td><code>cyberos.auth.list_sessions</code></td><td>subject_id</td><td>Session[]</td><td>readonly · scope=auth.session_read</td></tr>
-        <tr><td><code>cyberos.auth.revoke_session</code></td><td>session_id</td><td>{ok}</td><td>destructive · scope=auth.session_revoke · human-confirm</td></tr>
-        <tr><td><code>cyberos.auth.grant_role</code></td><td>subject_id, role_code, expires_at?</td><td>{ok, audit_row}</td><td>destructive · scope=auth.role_grant · human-confirm</td></tr>
-        <tr><td><code>cyberos.auth.list_decisions</code></td><td>subject_id?, since?, limit</td><td>AuthDecision[]</td><td>readonly · scope=auth.audit_read</td></tr>
-        <tr><td><code>cyberos.auth.rotate_api_key</code></td><td>api_key_id</td><td>{new_key, prefix}</td><td>destructive · scope=auth.api_key_rotate</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos.auth.whoami</code></td><td>—</td><td>Subject</td><td>readonly · scope=auth.read</td></tr>
+ <tr><td><code>cyberos.auth.check_permission</code></td><td>action, resource</td><td>{allow, reason}</td><td>readonly</td></tr>
+ <tr><td><code>cyberos.auth.list_sessions</code></td><td>subject_id</td><td>Session</td><td>readonly · scope=auth.session_read</td></tr>
+ <tr><td><code>cyberos.auth.revoke_session</code></td><td>session_id</td><td>{ok}</td><td>destructive · scope=auth.session_revoke · human-confirm</td></tr>
+ <tr><td><code>cyberos.auth.grant_role</code></td><td>subject_id, role_code, expires_at?</td><td>{ok, audit_row}</td><td>destructive · scope=auth.role_grant · human-confirm</td></tr>
+ <tr><td><code>cyberos.auth.list_decisions</code></td><td>subject_id?, since?, limit</td><td>AuthDecision</td><td>readonly · scope=auth.audit_read</td></tr>
+ <tr><td><code>cyberos.auth.rotate_api_key</code></td><td>api_key_id</td><td>{new_key, prefix}</td><td>destructive · scope=auth.api_key_rotate</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- KEY FLOWS -->
 <!-- ============================================================ -->
 <section id="key-flows" class="module-section">
-  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+ <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
 
-  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Human login with WebAuthn passkey</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Human login with WebAuthn passkey</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant U as User (browser)
-  participant SPA as CyberOS SPA
-  participant A as AUTH /oauth/authorize
-  participant W as AUTH /webauthn/*
-  participant PG as PostgreSQL
-  participant K as AWS KMS
-  participant B as BRAIN audit
+ autonumber
+ participant U as User (browser)
+ participant SPA as CyberOS SPA
+ participant A as AUTH /oauth/authorize
+ participant W as AUTH /webauthn/*
+ participant PG as PostgreSQL
+ participant K as AWS KMS
+ participant B as BRAIN audit
 
-  U->>SPA: open app
-  SPA->>A: GET /oauth/authorize?client=cyberos-spa&PKCE_S256=…
-  A-->>SPA: redirect to login form
-  SPA->>W: POST /webauthn/authenticate/begin {email}
-  W->>PG: lookup credential by email
-  PG-->>W: credential metadata
-  W-->>SPA: assertion challenge
-  SPA->>U: navigator.credentials.get(challenge)
-  U->>SPA: signed assertion
-  SPA->>W: POST /webauthn/authenticate/finish {assertion}
-  W->>W: verify signature against stored public key
-  W->>PG: update sign_count, last_seen_at
-  W-->>A: subject_id authenticated
-  A->>K: sign JWT (RS256, 15-min lifetime)
-  K-->>A: signed access + refresh tokens
-  A->>B: append auth.decision {subject, action:"login", decision:"allow"}
-  A-->>SPA: 302 redirect with auth code
-  SPA->>A: POST /oauth/token (code + PKCE verifier)
-  A-->>SPA: {access_token, refresh_token}
-  Note over SPA: subsequent calls carry Bearer JWT
-    </div>
-    <p class="text-xs text-slate-500 mt-3">WebAuthn replaces the password leg entirely for elevated roles (CEO / CFO / CHRO / CSO / CLO). TOTP remains as fallback for member-tier accounts ((FR pending)).</p>
-  </div>
+ U->>SPA: open app
+ SPA->>A: GET /oauth/authorize?client=cyberos-spa&PKCE_S256=…
+ A-->>SPA: redirect to login form
+ SPA->>W: POST /webauthn/authenticate/begin {email}
+ W->>PG: lookup credential by email
+ PG-->>W: credential metadata
+ W-->>SPA: assertion challenge
+ SPA->>U: navigator.credentials.get(challenge)
+ U->>SPA: signed assertion
+ SPA->>W: POST /webauthn/authenticate/finish {assertion}
+ W->>W: verify signature against stored public key
+ W->>PG: update sign_count, last_seen_at
+ W-->>A: subject_id authenticated
+ A->>K: sign JWT (RS256, 15-min lifetime)
+ K-->>A: signed access + refresh tokens
+ A->>B: append auth.decision {subject, action:"login", decision:"allow"}
+ A-->>SPA: 302 redirect with auth code
+ SPA->>A: POST /oauth/token (code + PKCE verifier)
+ A-->>SPA: {access_token, refresh_token}
+ Note over SPA: subsequent calls carry Bearer JWT
+ </div>
+ <p class="text-xs text-slate-500 mt-3">WebAuthn replaces the password leg entirely for elevated roles (CEO / CFO / CHRO / CSO / CLO). TOTP remains as fallback for member-tier accounts ((FR pending)).</p>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 2 — TOTP MFA login (member tier)</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 2 — TOTP MFA login (member tier)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant U as User
-  participant SPA as SPA
-  participant A as AUTH /oauth/authorize
-  participant P as AUTH /password
-  participant T as AUTH /totp/verify
-  participant K as KMS
-  participant B as BRAIN
+ autonumber
+ participant U as User
+ participant SPA as SPA
+ participant A as AUTH /oauth/authorize
+ participant P as AUTH /password
+ participant T as AUTH /totp/verify
+ participant K as KMS
+ participant B as BRAIN
 
-  U->>SPA: open app
-  SPA->>A: GET /oauth/authorize
-  A-->>SPA: login form
-  U->>SPA: email + password
-  SPA->>P: verify password (argon2id)
-  P-->>SPA: 200 — TOTP required
-  SPA-->>U: show TOTP prompt
-  U->>SPA: 6-digit code
-  SPA->>T: POST /totp/verify {code}
-  T->>T: window-check (±1 step, replay-list check)
-  alt valid + not replayed
-    T-->>A: subject authenticated
-    A->>K: sign JWT
-    K-->>A: tokens
-    A->>B: auth.decision {decision:"allow"}
-    A-->>SPA: tokens
-  else replayed code
-    T->>B: auth.decision {decision:"deny", reason:"totp.replay"}
-    T-->>SPA: 401
-  end
-    </div>
-  </div>
+ U->>SPA: open app
+ SPA->>A: GET /oauth/authorize
+ A-->>SPA: login form
+ U->>SPA: email + password
+ SPA->>P: verify password (argon2id)
+ P-->>SPA: 200 — TOTP required
+ SPA-->>U: show TOTP prompt
+ U->>SPA: 6-digit code
+ SPA->>T: POST /totp/verify {code}
+ T->>T: window-check (±1 step, replay-list check)
+ alt valid + not replayed
+ T-->>A: subject authenticated
+ A->>K: sign JWT
+ K-->>A: tokens
+ A->>B: auth.decision {decision:"allow"}
+ A-->>SPA: tokens
+ else replayed code
+ T->>B: auth.decision {decision:"deny", reason:"totp.replay"}
+ T-->>SPA: 401
+ end
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 3 — Agent authentication (CUO persona-stamped token)</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 3 — Agent authentication (CUO persona-stamped token)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant CUO as CUO router
-  participant A as AUTH /oauth/token
-  participant SC as scope.rs (Scope Contract resolver)
-  participant BR as 🧠 BRAIN read
-  participant K as KMS
-  participant B as BRAIN write
+ autonumber
+ participant CUO as CUO router
+ participant A as AUTH /oauth/token
+ participant SC as scope.rs (Scope Contract resolver)
+ participant BR as 🧠 BRAIN read
+ participant K as KMS
+ participant B as BRAIN write
 
-  Note over CUO: CUO needs to invoke a skill on behalf of stephen@…
-  CUO->>A: POST /oauth/token<br>grant_type=urn:cyberos:agent-impersonation<br>actor_jwt=cuo-service-jwt<br>on_behalf_of=stephen@…<br>persona_version=cuo-v2.3.1
-  A->>SC: resolve scope for persona cuo-v2.3.1
-  SC->>BR: read meta/persona/cuo/v2.3.1/scope.md
-  BR-->>SC: {scope_set, valid_to}
-  SC-->>A: effective scope ⊂ user's scope ∩ persona scope
-  A->>K: sign JWT with claims {sub:stephen, act:cuo-v2.3.1, scope:…}
-  K-->>A: signed token
-  A->>B: auth.decision {subject:cuo, action:"impersonate", on_behalf_of:stephen, allow}
-  A-->>CUO: {access_token, ttl:15min}
-  Note over CUO: every downstream call carries this persona-stamped JWT;<br>BRAIN audit rows capture both `actor` and `on_behalf_of`.
-    </div>
-    <p class="text-xs text-slate-500 mt-3">The agent token's effective scope is the intersection of (a) what the user could do, (b) what the persona is granted, and (c) what AUTH's policy allows. Three-way narrowing means an agent can never exceed its user, nor its persona contract.</p>
-  </div>
+ Note over CUO: CUO needs to invoke a skill on behalf of stephen@…
+ CUO->>A: POST /oauth/token<br>grant_type=urn:cyberos:agent-impersonation<br>actor_jwt=cuo-service-jwt<br>on_behalf_of=stephen@…<br>persona_version=cuo-v2.3.1
+ A->>SC: resolve scope for persona cuo-v2.3.1
+ SC->>BR: read meta/persona/cuo/v2.3.1/scope.md
+ BR-->>SC: {scope_set, valid_to}
+ SC-->>A: effective scope ⊂ user's scope ∩ persona scope
+ A->>K: sign JWT with claims {sub:stephen, act:cuo-v2.3.1, scope:…}
+ K-->>A: signed token
+ A->>B: auth.decision {subject:cuo, action:"impersonate", on_behalf_of:stephen, allow}
+ A-->>CUO: {access_token, ttl:15min}
+ Note over CUO: every downstream call carries this persona-stamped JWT;<br>BRAIN audit rows capture both `actor` and `on_behalf_of`.
+ </div>
+ <p class="text-xs text-slate-500 mt-3">The agent token's effective scope is the intersection of (a) what the user could do, (b) what the persona is granted, and (c) what AUTH's policy allows. Three-way narrowing means an agent can never exceed its user, nor its persona contract.</p>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 4 — RBAC predicate on cross-module call</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 4 — RBAC predicate on cross-module call</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant M as Module (e.g. REW)
-  participant AR as Apollo Router
-  participant R as AUTH RBAC.Check (gRPC)
-  participant RC as Redis cache
-  participant PG as PostgreSQL
-  participant B as BRAIN
+ autonumber
+ participant M as Module (e.g. REW)
+ participant AR as Apollo Router
+ participant R as AUTH RBAC.Check (gRPC)
+ participant RC as Redis cache
+ participant PG as PostgreSQL
+ participant B as BRAIN
 
-  M->>AR: GraphQL mutation rewriteRun(…)
-  AR->>AR: verify JWT signature + audience
-  AR->>R: Check{subject_jwt, action:"rew.write_run", resource:"rew/run/2026-05"}
-  R->>RC: GET subject_effective_permissions:<sub>
-  alt cache hit
-    RC-->>R: permission set
-  else cache miss
-    R->>PG: SELECT * FROM subject_effective_permission WHERE subject_id=…
-    PG-->>R: rows
-    R->>RC: SET subject_effective_permissions:<sub> TTL=15min
-  end
-  alt allowed
-    R-->>AR: {allow:true, reason:"ok"}
-    AR->>M: forward request
-    R->>B: auth.decision (async)
-  else denied
-    R-->>AR: {allow:false, reason:"policy.role.cfo_required"}
-    AR-->>M: 403 Forbidden
-    R->>B: auth.decision {decision:"deny"}
-  end
-    </div>
-    <p class="text-xs text-slate-500 mt-3">Hot-path latency budget: ≤ 8 ms p95 with cache hit, ≤ 25 ms p95 with miss. Audit write is fire-and-forget over a bounded channel.</p>
-  </div>
+ M->>AR: GraphQL mutation rewriteRun(…)
+ AR->>AR: verify JWT signature + audience
+ AR->>R: Check{subject_jwt, action:"rew.write_run", resource:"rew/run/2026-05"}
+ R->>RC: GET subject_effective_permissions:<sub>
+ alt cache hit
+ RC-->>R: permission set
+ else cache miss
+ R->>PG: SELECT * FROM subject_effective_permission WHERE subject_id=…
+ PG-->>R: rows
+ R->>RC: SET subject_effective_permissions:<sub> TTL=15min
+ end
+ alt allowed
+ R-->>AR: {allow:true, reason:"ok"}
+ AR->>M: forward request
+ R->>B: auth.decision (async)
+ else denied
+ R-->>AR: {allow:false, reason:"policy.role.cfo_required"}
+ AR-->>M: 403 Forbidden
+ R->>B: auth.decision {decision:"deny"}
+ end
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Hot-path latency budget: ≤ 8 ms p95 with cache hit, ≤ 25 ms p95 with miss. Audit write is fire-and-forget over a bounded channel.</p>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 5 — Service-account token-exchange (module-to-module)</h3>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 5 — Service-account token-exchange (module-to-module)</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant SVC as CHAT service
-  participant A as AUTH /oauth/token
-  participant K as KMS
-  participant B as BRAIN
+ autonumber
+ participant SVC as CHAT service
+ participant A as AUTH /oauth/token
+ participant K as KMS
+ participant B as BRAIN
 
-  Note over SVC: CHAT needs to call BRAIN's put endpoint
-  SVC->>A: POST /oauth/token<br>grant_type=client_credentials<br>client_id=chat-service<br>client_secret=…<br>scope=brain.put<br>audience=brain.cyberos.internal
-  A->>A: verify client secret (argon2id)
-  A->>A: check audience ∈ allowed_audiences
-  A->>K: sign JWT {sub:chat-service, aud:brain, scope:brain.put, exp:15m}
-  K-->>A: token
-  A->>B: auth.decision {subject:chat-service, action:"token_exchange"}
-  A-->>SVC: {access_token, ttl:900}
-    </div>
-    <p class="text-xs text-slate-500 mt-3">Service-to-service calls always use <code>client_credentials</code> with an <em>audience</em> claim — receiving services reject tokens not aimed at them, eliminating confused-deputy attacks.</p>
-  </div>
+ Note over SVC: CHAT needs to call BRAIN's put endpoint
+ SVC->>A: POST /oauth/token<br>grant_type=client_credentials<br>client_id=chat-service<br>client_secret=…<br>scope=brain.put<br>audience=brain.cyberos.internal
+ A->>A: verify client secret (argon2id)
+ A->>A: check audience ∈ allowed_audiences
+ A->>K: sign JWT {sub:chat-service, aud:brain, scope:brain.put, exp:15m}
+ K-->>A: token
+ A->>B: auth.decision {subject:chat-service, action:"token_exchange"}
+ A-->>SVC: {access_token, ttl:900}
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Service-to-service calls always use <code>client_credentials</code> with an <em>audience</em> claim — receiving services reject tokens not aimed at them, eliminating confused-deputy attacks.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- LIFECYCLE -->
 <!-- ============================================================ -->
 <section id="lifecycle" class="module-section">
-  <header class="section-head"><span class="section-num">7</span><h2>Session lifecycle</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    A session traverses six states from issuance to expiry, with three terminal states (revoked, expired, replaced). Every transition writes an <code>auth.decision</code> row to BRAIN.
-  </p>
-  <div class="bbg-card p-5 mb-5">
-    <div class="mermaid">
+ <header class="section-head"><span class="section-num">7</span><h2>Session lifecycle</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ A session traverses six states from issuance to expiry, with three terminal states (revoked, expired, replaced). Every transition writes an <code>auth.decision</code> row to BRAIN.
+ </p>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
 stateDiagram-v2
-  [*] --> Authenticating: user submits credentials
-  Authenticating --> MFA_Required: password verified, 2FA outstanding
-  Authenticating --> Locked: too many failures (≥ 5 in 10 min)
-  MFA_Required --> Active: TOTP / WebAuthn assertion verified
-  MFA_Required --> Locked: too many 2FA failures
-  Active --> Refreshing: access_token within 1 min of expiry
-  Refreshing --> Active: rotated refresh + new access issued
-  Refreshing --> Revoked: reuse detected (refresh replay)
-  Active --> Revoked: admin revoke OR impossible-travel challenge
-  Active --> Expired: refresh_token TTL reached (30 d)
-  Active --> Replaced: user logs in from a new device, old session optionally evicted
-  Revoked --> [*]
-  Expired --> [*]
-  Replaced --> [*]
-  Locked --> Active: lockout cleared (15 min auto OR admin unlock)
-    </div>
-  </div>
+ [*] --> Authenticating: user submits credentials
+ Authenticating --> MFA_Required: password verified, 2FA outstanding
+ Authenticating --> Locked: too many failures (≥ 5 in 10 min)
+ MFA_Required --> Active: TOTP / WebAuthn assertion verified
+ MFA_Required --> Locked: too many 2FA failures
+ Active --> Refreshing: access_token within 1 min of expiry
+ Refreshing --> Active: rotated refresh + new access issued
+ Refreshing --> Revoked: reuse detected (refresh replay)
+ Active --> Revoked: admin revoke OR impossible-travel challenge
+ Active --> Expired: refresh_token TTL reached (30 d)
+ Active --> Replaced: user logs in from a new device, old session optionally evicted
+ Revoked --> [*]
+ Expired --> [*]
+ Replaced --> [*]
+ Locked --> Active: lockout cleared (15 min auto OR admin unlock)
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Token lifetime budget</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Token type</th><th>Lifetime</th><th>Rotation</th><th>Notes</th></tr></thead>
-      <tbody>
-        <tr><td>Access token (JWT RS256)</td><td>15 minutes</td><td>none (issue new)</td><td>(FR pending) — short-lived</td></tr>
-        <tr><td>Refresh token</td><td>30 days</td><td>every use</td><td>(FR pending) — replay invalidates session</td></tr>
-        <tr><td>OAuth authorization code</td><td>60 seconds</td><td>single-use</td><td>PKCE-bound</td></tr>
-        <tr><td>Magic link</td><td>15 minutes</td><td>single-use</td><td>(FR pending) — onboarding only</td></tr>
-        <tr><td>Agent persona token</td><td>15 minutes</td><td>each tool call may refresh</td><td>scope ⊂ user × persona × policy</td></tr>
-        <tr><td>API key</td><td>configurable (default 90 d)</td><td>manual</td><td>argon2id-hashed; <code>ck_live_…</code> prefix</td></tr>
-        <tr><td>WebAuthn credential</td><td>indefinite</td><td>user-initiated revoke</td><td>sign_count tracked to detect cloning</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">Token lifetime budget</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Token type</th><th>Lifetime</th><th>Rotation</th><th>Notes</th></tr></thead>
+ <tbody>
+ <tr><td>Access token (JWT RS256)</td><td>15 minutes</td><td>none (issue new)</td><td>(FR pending) — short-lived</td></tr>
+ <tr><td>Refresh token</td><td>30 days</td><td>every use</td><td>(FR pending) — replay invalidates session</td></tr>
+ <tr><td>OAuth authorization code</td><td>60 seconds</td><td>single-use</td><td>PKCE-bound</td></tr>
+ <tr><td>Magic link</td><td>15 minutes</td><td>single-use</td><td>(FR pending) — onboarding only</td></tr>
+ <tr><td>Agent persona token</td><td>15 minutes</td><td>each tool call may refresh</td><td>scope ⊂ user × persona × policy</td></tr>
+ <tr><td>API key</td><td>configurable (default 90 d)</td><td>manual</td><td>argon2id-hashed; <code>ck_live_…</code> prefix</td></tr>
+ <tr><td>WebAuthn credential</td><td>indefinite</td><td>user-initiated revoke</td><td>sign_count tracked to detect cloning</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
-  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <div class="bbg-card p-5">
-    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
-    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
-  </div>
+ <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+ <div class="bbg-card p-5">
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- NFRs -->
 <!-- ============================================================ -->
 <section id="non-functional-requirements" class="module-section">
-  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">PRD §11.2.3 security NFRs all flow through AUTH. Cross-referenced at <a href="../reference/nfr-catalog.html#auth" class="text-blue-700 font-semibold underline">nfr-catalog.html#auth</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
-      <tbody>
-        <tr><td><code>N(FR pending)</code></td><td>Tenant data leakage incidents</td><td>= 0 (sev-0)</td><td>quarterly pen-test + automated cross-tenant test gate</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>P1 base-salary system-reduction</td><td>= 0 — legal commitment</td><td>policy gate on REW + audit replay</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Agent auto-act on irreversible op without confirm</td><td>= 0 — runtime check</td><td>MCP gateway annotation check; CI test</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Prompt-injection exfiltration via email/document</td><td>= 0 — CaMeL enforced</td><td>CaMeL test suite + red-team</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>TLS for all inter-service traffic</td><td>mTLS in cluster; HTTPS external</td><td>config inspection + Istio audit</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Penetration-test cadence</td><td>annual (P2+); after major releases</td><td>contract evidence</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Vulnerability remediation SLO</td><td>Critical ≤ 24 h; High ≤ 7 d</td><td>JIRA SLA tracking</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Sub-processor list public on Trust Center</td><td>always</td><td>web-page diff alert</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>OWASP Gen AI Top-10 mitigations</td><td>all addressed</td><td>annual attestation</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>RBAC predicate p95 (cache hit)</td><td>≤ 8 ms</td><td>bench/rbac.rs · nightly</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>RBAC predicate p95 (cache miss)</td><td>≤ 25 ms</td><td>bench/rbac.rs · nightly</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>OAuth token endpoint p95</td><td>≤ 250 ms</td><td>k6 load test</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>WebAuthn assertion verify p95</td><td>≤ 50 ms</td><td>k6 load test</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>AUTH availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor (N(FR pending))</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Auth-decision durability</td><td>0 dropped rows under crash</td><td>chaos test + BRAIN ledger walk</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Refresh-token reuse detection rate</td><td>100% (zero false negatives)</td><td>property-based test</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Session revoke propagation</td><td>≤ 5 s end-to-end</td><td>(FR pending) test</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4"> security NFRs all flow through AUTH. Cross-referenced at <a href="../reference/nfr-catalog.html#auth" class="text-blue-700 font-semibold underline">nfr-catalog.html#auth</a>.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+ <tbody>
+ <tr><td><code>N(FR pending)</code></td><td>Tenant data leakage incidents</td><td>= 0 (sev-0)</td><td>quarterly pen-test + automated cross-tenant test gate</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>P1 base-salary system-reduction</td><td>= 0 — legal commitment</td><td>policy gate on REW + audit replay</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Agent auto-act on irreversible op without confirm</td><td>= 0 — runtime check</td><td>MCP gateway annotation check; CI test</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Prompt-injection exfiltration via email/document</td><td>= 0 — CaMeL enforced</td><td>CaMeL test suite + red-team</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>TLS for all inter-service traffic</td><td>mTLS in cluster; HTTPS external</td><td>config inspection + Istio audit</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Penetration-test cadence</td><td>annual (P2+); after major releases</td><td>contract evidence</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Vulnerability remediation SLO</td><td>Critical ≤ 24 h; High ≤ 7 d</td><td>JIRA SLA tracking</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Sub-processor list public on Trust Center</td><td>always</td><td>web-page diff alert</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>OWASP Gen AI Top-10 mitigations</td><td>all addressed</td><td>annual attestation</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>RBAC predicate p95 (cache hit)</td><td>≤ 8 ms</td><td>bench/rbac.rs · nightly</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>RBAC predicate p95 (cache miss)</td><td>≤ 25 ms</td><td>bench/rbac.rs · nightly</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>OAuth token endpoint p95</td><td>≤ 250 ms</td><td>k6 load test</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>WebAuthn assertion verify p95</td><td>≤ 50 ms</td><td>k6 load test</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>AUTH availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor (N(FR pending))</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Auth-decision durability</td><td>0 dropped rows under crash</td><td>chaos test + BRAIN ledger walk</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Refresh-token reuse detection rate</td><td>100% (zero false negatives)</td><td>property-based test</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Session revoke propagation</td><td>≤ 5 s end-to-end</td><td>(FR pending) test</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DEPENDENCIES -->
 <!-- ============================================================ -->
 <section id="dependencies" class="module-section">
-  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    AUTH depends on three primitives (BRAIN for audit, OBS for telemetry, KMS for the signing key) and is depended on by every module that does anything cross-tenant or cross-module — which is to say, all of them.
-  </p>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ AUTH depends on three primitives (BRAIN for audit, OBS for telemetry, KMS for the signing key) and is depended on by every module that does anything cross-tenant or cross-module — which is to say, all of them.
+ </p>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 graph LR
-  subgraph upstream ["AUTH depends on"]
-    BRAIN["🧠 BRAIN<br>auth.decision rows"]
-    OBS["👁 OBS<br>traces + alerts"]
-    KMS["🔑 AWS KMS<br>RS256 signing key"]
-    PG["🗄 PostgreSQL<br>identity store"]
-    REDIS["⚡ Redis 7<br>session + RBAC cache"]
-  end
-  AUTH["🔐 AUTH"]
-  subgraph downstream ["Used by all 22 modules"]
-    AR["Apollo Router<br>JWT verify @ edge"]
-    MCP["🔌 MCP Gateway<br>tool-call gating"]
-    AI["🧠 AI Gateway<br>per-tenant routing"]
-    CHAT["💬 CHAT"]
-    REW["💎 REW"]
-    HR["👥 HR"]
-    CRM["🏢 CRM"]
-    OTHERS["…16 more"]
-  end
-  BRAIN --> AUTH
-  OBS --> AUTH
-  KMS --> AUTH
-  PG --> AUTH
-  REDIS --> AUTH
-  AUTH --> AR
-  AUTH --> MCP
-  AUTH --> AI
-  AUTH --> CHAT
-  AUTH --> REW
-  AUTH --> HR
-  AUTH --> CRM
-  AUTH --> OTHERS
+ subgraph upstream ["AUTH depends on"]
+ BRAIN["🧠 BRAIN<br>auth.decision rows"]
+ OBS["👁 OBS<br>traces + alerts"]
+ KMS["🔑 AWS KMS<br>RS256 signing key"]
+ PG["🗄 PostgreSQL<br>identity store"]
+ REDIS["⚡ Redis 7<br>session + RBAC cache"]
+ end
+ AUTH["🔐 AUTH"]
+ subgraph downstream ["Used by all 22 modules"]
+ AR["Apollo Router<br>JWT verify @ edge"]
+ MCP["🔌 MCP Gateway<br>tool-call gating"]
+ AI["🧠 AI Gateway<br>per-tenant routing"]
+ CHAT["💬 CHAT"]
+ REW["💎 REW"]
+ HR["👥 HR"]
+ CRM["🏢 CRM"]
+ OTHERS["…16 more"]
+ end
+ BRAIN --> AUTH
+ OBS --> AUTH
+ KMS --> AUTH
+ PG --> AUTH
+ REDIS --> AUTH
+ AUTH --> AR
+ AUTH --> MCP
+ AUTH --> AI
+ AUTH --> CHAT
+ AUTH --> REW
+ AUTH --> HR
+ AUTH --> CRM
+ AUTH --> OTHERS
 
-  classDef shipped fill:#f5ede6,stroke:#45210e
-  classDef planned fill:#fef6e0,stroke:#9c750a
-  class BRAIN shipped
-  class AUTH,AR,MCP,AI,CHAT,REW,HR,CRM,OTHERS,OBS planned
-  class KMS,PG,REDIS shipped
-    </div>
-  </div>
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef planned fill:#fef6e0,stroke:#9c750a
+ class BRAIN shipped
+ class AUTH,AR,MCP,AI,CHAT,REW,HR,CRM,OTHERS,OBS planned
+ class KMS,PG,REDIS shipped
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- COMPLIANCE -->
 <!-- ============================================================ -->
 <section id="compliance" class="module-section">
-  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">AUTH is the regulator's first stop. The audit chain it produces — co-owned with BRAIN — answers every identity, access, and breach-notification question across PDPL, GDPR, ISO 27001, and SOC 2.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>AUTH feature that satisfies it</th></tr></thead>
-      <tbody>
-        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 4 — Lawful processing basis</td><td>Each subject row records consent basis; each auth.decision carries reason_code.</td></tr>
-        <tr><td>Vietnam PDPL</td><td>Art. 14 — DSAR</td><td><code>cyberos-auth dsar-export</code> bundles identity + decisions for a subject.</td></tr>
-        <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Personal data processing log</td><td>auth.decision rows are the processing log for identity events.</td></tr>
-        <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Data localisation; breach notification ≤ 24h</td><td>Per-tenant data-residency tag; auto-page MoPS template generator (planned P1).</td></tr>
-        <tr><td>GDPR (EU 2016/679)</td><td>Art. 32 — Security of processing</td><td>WebAuthn L3 · TLS 1.3 · KMS-wrapped signing · row-level security · Argon2id.</td></tr>
-        <tr><td>GDPR</td><td>Art. 33 — Breach notification</td><td>auth.decision chain provides forensic timeline; alert templates auto-fill.</td></tr>
-        <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 14 — Human oversight</td><td>Destructive tool calls require human-confirm; agent JWTs cannot escalate.</td></tr>
-        <tr><td>ISO/IEC 27001:2022</td><td>A.5.16 — Identity management</td><td>Closed role catalogue + scope contract grants.</td></tr>
-        <tr><td>ISO/IEC 27001:2022</td><td>A.5.17 — Authentication information</td><td>Argon2id hashes; KMS-wrapped TOTP secrets.</td></tr>
-        <tr><td>ISO/IEC 27001:2022</td><td>A.8.5 — Secure authentication</td><td>OAuth 2.1 + PKCE + MFA mandatory.</td></tr>
-        <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RBAC predicate at every API boundary + audit chain.</td></tr>
-        <tr><td>SOC 2 Type II</td><td>CC6.6 — Restricted access</td><td>RLS + scope contract grants narrow agents to a subset of users.</td></tr>
-        <tr><td>OWASP Gen AI Top-10 (2025)</td><td>LLM02: Insecure output handling</td><td>MCP destructive-confirm gating routed through AUTH RBAC.</td></tr>
-        <tr><td>OWASP Gen AI Top-10 (2025)</td><td>LLM08: Excessive agency</td><td>Three-way scope narrowing (user × persona × policy).</td></tr>
-        <tr><td>NIST SP 800-63B</td><td>AAL2 / AAL3</td><td>TOTP for AAL2; WebAuthn (phishing-resistant) for AAL3.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">AUTH is the regulator's first stop. The audit chain it produces — co-owned with BRAIN — answers every identity, access, and breach-notification question across PDPL, GDPR, ISO 27001, and SOC 2.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>AUTH feature that satisfies it</th></tr></thead>
+ <tbody>
+ <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 4 — Lawful processing basis</td><td>Each subject row records consent basis; each auth.decision carries reason_code.</td></tr>
+ <tr><td>Vietnam PDPL</td><td>Art. 14 — DSAR</td><td><code>cyberos-auth dsar-export</code> bundles identity + decisions for a subject.</td></tr>
+ <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Personal data processing log</td><td>auth.decision rows are the processing log for identity events.</td></tr>
+ <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Data localisation; breach notification ≤ 24h</td><td>Per-tenant data-residency tag; auto-page MoPS template generator (planned P1).</td></tr>
+ <tr><td>GDPR (EU 2016/679)</td><td>Art. 32 — Security of processing</td><td>WebAuthn L3 · TLS 1.3 · KMS-wrapped signing · row-level security · Argon2id.</td></tr>
+ <tr><td>GDPR</td><td>Art. 33 — Breach notification</td><td>auth.decision chain provides forensic timeline; alert templates auto-fill.</td></tr>
+ <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 14 — Human oversight</td><td>Destructive tool calls require human-confirm; agent JWTs cannot escalate.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.5.16 — Identity management</td><td>Closed role catalogue + scope contract grants.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.5.17 — Authentication information</td><td>Argon2id hashes; KMS-wrapped TOTP secrets.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.8.5 — Secure authentication</td><td>OAuth 2.1 + PKCE + MFA mandatory.</td></tr>
+ <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RBAC predicate at every API boundary + audit chain.</td></tr>
+ <tr><td>SOC 2 Type II</td><td>CC6.6 — Restricted access</td><td>RLS + scope contract grants narrow agents to a subset of users.</td></tr>
+ <tr><td>OWASP Gen AI Top-10 (2025)</td><td>LLM02: Insecure output handling</td><td>MCP destructive-confirm gating routed through AUTH RBAC.</td></tr>
+ <tr><td>OWASP Gen AI Top-10 (2025)</td><td>LLM08: Excessive agency</td><td>Three-way scope narrowing (user × persona × policy).</td></tr>
+ <tr><td>NIST SP 800-63B</td><td>AAL2 / AAL3</td><td>TOTP for AAL2; WebAuthn (phishing-resistant) for AAL3.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- RISK -->
 <!-- ============================================================ -->
 <section id="risk-entries" class="module-section">
-  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">AUTH-specific risks tracked in the <a href="../reference/risk-register.html#auth" class="text-blue-700 font-semibold underline">risk register</a>. AUTH carries the highest single-module risk weight; one bug here is platform-wide.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
-      <tbody>
-        <tr><td><code>R-AUTH-001</code></td><td>JWT signing-key compromise</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>KMS-wrapped at rest; rotation every 90 d; old JWKS retained 30 d for verification.</td></tr>
-        <tr><td><code>R-AUTH-002</code></td><td>Refresh-token replay leading to permanent session hijack</td><td>Low</td><td>High</td><td>CSO</td><td>Rotation-on-use with reuse detection. Reuse → all sessions for that subject revoked.</td></tr>
-        <tr><td><code>R-AUTH-003</code></td><td>Cross-tenant RLS bypass via subquery</td><td>Low</td><td>Catastrophic</td><td>CTO</td><td>RLS enabled on every table at migration time; CI test verifies cross-tenant read fails.</td></tr>
-        <tr><td><code>R-AUTH-004</code></td><td>Agent JWT scope-escalation via prompt injection</td><td>Medium</td><td>High</td><td>CSO</td><td>Scope is policy-resolved at AUTH not prompt-derived; injection cannot widen.</td></tr>
-        <tr><td><code>R-AUTH-005</code></td><td>WebAuthn relying-party-ID mismatch breaks logins after domain change</td><td>Low</td><td>Medium</td><td>CTO</td><td>RP-ID stored per credential; migration tooling re-enrols passkeys with new RP-ID.</td></tr>
-        <tr><td><code>R-AUTH-006</code></td><td>HIBP outage during signup blocks new users</td><td>Medium</td><td>Low</td><td>CTO</td><td>HIBP check is best-effort; on timeout, log + allow with policy reviewer note.</td></tr>
-        <tr><td><code>R-AUTH-007</code></td><td>TOTP secret leakage via DB backup</td><td>Low</td><td>High</td><td>CSO</td><td>Column-level KMS encryption; backups encrypted with separate keys.</td></tr>
-        <tr><td><code>R-AUTH-008</code></td><td>OAuth implementation CVE (e.g., authorization-code injection)</td><td>Medium</td><td>High</td><td>CSO</td><td>OAuth 2.1-only (mandatory PKCE); annual pen-test; subscribe to RFC drafts watchlist.</td></tr>
-        <tr><td><code>R-AUTH-009</code></td><td>Compensation co-sign bypass via direct DB write</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>(FR pending) enforced at REW boundary; direct DB write requires CSO+CFO co-sign; audit alarm.</td></tr>
-        <tr><td><code>R-AUTH-010</code></td><td>Audit-chain write outage blinds the SOC</td><td>Low</td><td>High</td><td>CTO</td><td>Bounded local buffer + retry; alert on backlog &gt; 60 s; AUTH refuses new logins after 5 min buffer.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">AUTH-specific risks tracked in the <a href="../reference/risk-register.html#auth" class="text-blue-700 font-semibold underline">risk register</a>. AUTH carries the highest single-module risk weight; one bug here is platform-wide.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+ <tbody>
+ <tr><td><code>R-AUTH-001</code></td><td>JWT signing-key compromise</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>KMS-wrapped at rest; rotation every 90 d; old JWKS retained 30 d for verification.</td></tr>
+ <tr><td><code>R-AUTH-002</code></td><td>Refresh-token replay leading to permanent session hijack</td><td>Low</td><td>High</td><td>CSO</td><td>Rotation-on-use with reuse detection. Reuse → all sessions for that subject revoked.</td></tr>
+ <tr><td><code>R-AUTH-003</code></td><td>Cross-tenant RLS bypass via subquery</td><td>Low</td><td>Catastrophic</td><td>CTO</td><td>RLS enabled on every table at migration time; CI test verifies cross-tenant read fails.</td></tr>
+ <tr><td><code>R-AUTH-004</code></td><td>Agent JWT scope-escalation via prompt injection</td><td>Medium</td><td>High</td><td>CSO</td><td>Scope is policy-resolved at AUTH not prompt-derived; injection cannot widen.</td></tr>
+ <tr><td><code>R-AUTH-005</code></td><td>WebAuthn relying-party-ID mismatch breaks logins after domain change</td><td>Low</td><td>Medium</td><td>CTO</td><td>RP-ID stored per credential; migration tooling re-enrols passkeys with new RP-ID.</td></tr>
+ <tr><td><code>R-AUTH-006</code></td><td>HIBP outage during signup blocks new users</td><td>Medium</td><td>Low</td><td>CTO</td><td>HIBP check is best-effort; on timeout, log + allow with policy reviewer note.</td></tr>
+ <tr><td><code>R-AUTH-007</code></td><td>TOTP secret leakage via DB backup</td><td>Low</td><td>High</td><td>CSO</td><td>Column-level KMS encryption; backups encrypted with separate keys.</td></tr>
+ <tr><td><code>R-AUTH-008</code></td><td>OAuth implementation CVE (e.g., authorization-code injection)</td><td>Medium</td><td>High</td><td>CSO</td><td>OAuth 2.1-only (mandatory PKCE); annual pen-test; subscribe to RFC drafts watchlist.</td></tr>
+ <tr><td><code>R-AUTH-009</code></td><td>Compensation co-sign bypass via direct DB write</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>(FR pending) enforced at REW boundary; direct DB write requires CSO+CFO co-sign; audit alarm.</td></tr>
+ <tr><td><code>R-AUTH-010</code></td><td>Audit-chain write outage blinds the SOC</td><td>Low</td><td>High</td><td>CTO</td><td>Bounded local buffer + retry; alert on backlog &gt; 60 s; AUTH refuses new logins after 5 min buffer.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- KPIs -->
 <!-- ============================================================ -->
 <section id="kpis" class="module-section">
-  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">AUTH health rolls up into 9 KPIs covering authentication success, authorisation correctness, performance, and compliance posture.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Successful login rate</strong></td><td><code>logins.success / logins.total</code></td><td>auth.decision</td><td>≥ 99.5% / day</td></tr>
-        <tr><td><strong>MFA challenge success</strong></td><td><code>mfa.success / mfa.total</code></td><td>auth.decision</td><td>≥ 98%</td></tr>
-        <tr><td><strong>RBAC predicate p95 (cache hit)</strong></td><td>Prometheus histogram</td><td>OBS</td><td>≤ 8 ms</td></tr>
-        <tr><td><strong>Token endpoint p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 250 ms</td></tr>
-        <tr><td><strong>Refresh-reuse detections</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; expect &lt; 5/month</td></tr>
-        <tr><td><strong>Impossible-travel challenges</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; alert on &gt; 50/day</td></tr>
-        <tr><td><strong>Auth-decision durability</strong></td><td><code>rows_in_brain / rows_emitted</code></td><td>chaos test</td><td>100%</td></tr>
-        <tr><td><strong>Session revoke p95 (end-to-end)</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 s ((FR pending))</td></tr>
-        <tr><td><strong>Penetration-test critical findings</strong></td><td>count</td><td>annual report</td><td>= 0 critical · ≤ 2 high</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">AUTH health rolls up into 9 KPIs covering authentication success, authorisation correctness, performance, and compliance posture.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Successful login rate</strong></td><td><code>logins.success / logins.total</code></td><td>auth.decision</td><td>≥ 99.5% / day</td></tr>
+ <tr><td><strong>MFA challenge success</strong></td><td><code>mfa.success / mfa.total</code></td><td>auth.decision</td><td>≥ 98%</td></tr>
+ <tr><td><strong>RBAC predicate p95 (cache hit)</strong></td><td>Prometheus histogram</td><td>OBS</td><td>≤ 8 ms</td></tr>
+ <tr><td><strong>Token endpoint p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 250 ms</td></tr>
+ <tr><td><strong>Refresh-reuse detections</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; expect &lt; 5/month</td></tr>
+ <tr><td><strong>Impossible-travel challenges</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; alert on &gt; 50/day</td></tr>
+ <tr><td><strong>Auth-decision durability</strong></td><td><code>rows_in_brain / rows_emitted</code></td><td>chaos test</td><td>100%</td></tr>
+ <tr><td><strong>Session revoke p95 (end-to-end)</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 s ((FR pending))</td></tr>
+ <tr><td><strong>Penetration-test critical findings</strong></td><td>count</td><td>annual report</td><td>= 0 critical · ≤ 2 high</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- RACI -->
 <!-- ============================================================ -->
 <section id="raci" class="module-section">
-  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">AUTH is owned by the CSO seat. Today (CSO vacant), the CEO is interim accountable with the CTO as engineering owner.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>CSO</th><th>CDO</th><th>CLO</th><th>DPO</th></tr></thead>
-      <tbody>
-        <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>On-call rotation</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Penetration testing</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Role catalogue changes</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Key rotation (JWT signing)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Incident response (auth breach)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td></tr>
-        <tr><td>Decree 53 MoPS notification</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td></tr>
-        <tr><td>DSAR fulfilment (auth scope)</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td></tr>
-      </tbody>
-    </table>
-    <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
-  </div>
+ <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">AUTH is owned by the CSO seat. Today (CSO vacant), the CEO is interim accountable with the CTO as engineering owner.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Activity</th><th>CEO</th><th>CTO</th><th>CSO</th><th>CDO</th><th>CLO</th><th>DPO</th></tr></thead>
+ <tbody>
+ <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>On-call rotation</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Penetration testing</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Role catalogue changes</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Key rotation (JWT signing)</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Incident response (auth breach)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td></tr>
+ <tr><td>Decree 53 MoPS notification</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td></tr>
+ <tr><td>DSAR fulfilment (auth scope)</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td></tr>
+ </tbody>
+ </table>
+ <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- CLI USAGE -->
 <!-- ============================================================ -->
 <section id="cli-usage" class="module-section">
-  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">A single admin CLI <code>cyberos-auth</code> for tenant operators. Every destructive command writes a chained audit row before exit.</p>
+ <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">A single admin CLI <code>cyberos-auth</code> for tenant operators. Every destructive command writes a chained audit row before exit.</p>
 
-  <h3 class="text-lg font-bold mb-2">1. Create a tenant</h3>
+ <h3 class="text-lg font-bold mb-2">1. Create a tenant</h3>
 <pre><code>$ cyberos-auth tenant create \
-    --slug stephen-personal \
-    --display "Stephen Personal" \
-    --country VN \
-    --residency vn-hanoi-1
+ --slug stephen-personal \
+ --display "Stephen Personal" \
+ --country VN \
+ --residency vn-hanoi-1
 
 [tenant created]
-  id:        01HZJ8R4M2K7QXP3F9D8YN7B2T
-  slug:      stephen-personal
-  residency: vn-hanoi-1
-  audit:     brain seq=14823 chain=9f3e2a1b…8d4c</code></pre>
+ id: 01HZJ8R4M2K7QXP3F9D8YN7B2T
+ slug: stephen-personal
+ residency: vn-hanoi-1
+ audit: brain seq=14823 chain=9f3e2a1b…8d4c</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">2. Enrol a passkey (interactive)</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">2. Enrol a passkey (interactive)</h3>
 <pre><code>$ cyberos-auth webauthn enrol --subject stephen@cyberskill.com
 
 → open https://auth.cyberos.com/webauthn/enrol?token=eyJhbGc… on the device
 ✓ credential registered
-  credential_id: AaJ9K… (TouchID, MacBook Pro 16, 2023)
-  aaguid:        adce0002-35bc-c60a-648b-0b25f1f05503</code></pre>
+ credential_id: AaJ9K… (TouchID, MacBook Pro 16, 2023)
+ aaguid: adce0002-35bc-c60a-648b-0b25f1f05503</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">3. Grant a role</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">3. Grant a role</h3>
 <pre><code>$ cyberos-auth role grant \
-    --subject acme-cfo@acme.com \
-    --role cfo \
-    --expires 2027-12-31T00:00:00Z
+ --subject acme-cfo@acme.com \
+ --role cfo \
+ --expires 2027-12-31T00:00:00Z
 
-[role granted]  subject=acme-cfo@acme.com  role=cfo  expires=2027-12-31
-[audit]         brain seq=14831 chain=b8d4…e3f7</code></pre>
+[role granted] subject=acme-cfo@acme.com role=cfo expires=2027-12-31
+[audit] brain seq=14831 chain=b8d4…e3f7</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">4. Revoke a session</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">4. Revoke a session</h3>
 <pre><code>$ cyberos-auth session revoke --id 01HZJ8…JTC
 
-[revoke]    session 01HZJ8…JTC → status=revoked
+[revoke] session 01HZJ8…JTC → status=revoked
 [propagated] Redis cache invalidated; Apollo Router will reject within 5 s
-[audit]      brain seq=14832 chain=c9e5…f4a8</code></pre>
+[audit] brain seq=14832 chain=c9e5…f4a8</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">5. Read auth decisions for a subject (DSAR-style)</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">5. Read auth decisions for a subject (DSAR-style)</h3>
 <pre><code>$ cyberos-auth decisions list --subject stephen@cyberskill.com --since 7d --format jsonl | head -3
 {"ts":"2026-05-13T09:21:08Z","action":"login","decision":"allow","reason":"webauthn.aal3","device":"MacBook Pro 16"}
 {"ts":"2026-05-13T09:21:09Z","action":"brain.put","decision":"allow","reason":"role.founder","resource":"memories/decisions/holdco-flip.md"}
 {"ts":"2026-05-13T11:04:32Z","action":"rew.write_run","decision":"deny","reason":"policy.cfo_co_sign_required","resource":"rew/run/2026-05"}</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">6. Rotate the JWT signing key</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">6. Rotate the JWT signing key</h3>
 <pre><code>$ cyberos-auth keys rotate --reason "quarterly-scheduled"
 
-[rotate]   new key id: 2026-q2-sig
-[kms]      old key id 2026-q1-sig retained for verification (30 d)
-[jwks]     /.well-known/jwks.json updated; downstream propagation: ≤ 60 s
-[audit]    brain seq=14841 chain=d1f3…a8c7</code></pre>
+[rotate] new key id: 2026-q2-sig
+[kms] old key id 2026-q1-sig retained for verification (30 d)
+[jwks] /.well-known/jwks.json updated; downstream propagation: ≤ 60 s
+[audit] brain seq=14841 chain=d1f3…a8c7</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">7. Export DSAR bundle</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">7. Export DSAR bundle</h3>
 <pre><code>$ cyberos-auth dsar-export --subject acme-contact@acme.com --output dsar.zip
 
-[dsar]  subject:    acme-contact@acme.com
-[dsar]  identity:   1 row
-[dsar]  decisions:  4,217 rows (28 d)
-[dsar]  sessions:   12 rows
-[dsar]  devices:    3 rows
-[dsar]  webauthn:   0 credentials (none registered)
-[dsar]  written:    dsar.zip (412 KB)</code></pre>
+[dsar] subject: acme-contact@acme.com
+[dsar] identity: 1 row
+[dsar] decisions: 4,217 rows (28 d)
+[dsar] sessions: 12 rows
+[dsar] devices: 3 rows
+[dsar] webauthn: 0 credentials (none registered)
+[dsar] written: dsar.zip (412 KB)</code></pre>
 </section>
 
 <!-- ============================================================ -->
 <!-- STATUS -->
 <!-- ============================================================ -->
 <section id="status" class="module-section">
-  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
+ <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
 
-  <div class="grid md:grid-cols-3 gap-4 mb-6">
-    <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 design phase · M+1 start</div></div>
-    <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~7,000</div><div class="note">services/auth + sqlx migrations</div></div>
-    <div class="fact-card"><div class="label">Planned tests</div><div class="value">120+</div><div class="note">unit · integration · OAuth conformance</div></div>
-    <div class="fact-card"><div class="label">External libs</div><div class="value">~12</div><div class="note">axum · sqlx · webauthn-rs · totp-rs · rsa</div></div>
-    <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">~25 planned</div><div class="note"><code>cyberos-auth</code> entrypoint</div></div>
-    <div class="fact-card"><div class="label">P0 budget</div><div class="value">~$60/mo</div><div class="note">RDS + Redis + Fargate</div></div>
-  </div>
+ <div class="grid md:grid-cols-3 gap-4 mb-6">
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 design phase · M+1 start</div></div>
+ <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~7,000</div><div class="note">services/auth + sqlx migrations</div></div>
+ <div class="fact-card"><div class="label">Planned tests</div><div class="value">120+</div><div class="note">unit · integration · OAuth conformance</div></div>
+ <div class="fact-card"><div class="label">External libs</div><div class="value">~12</div><div class="note">axum · sqlx · webauthn-rs · totp-rs · rsa</div></div>
+ <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">~25 planned</div><div class="note"><code>cyberos-auth</code> entrypoint</div></div>
+ <div class="fact-card"><div class="label">P0 budget</div><div class="value">~$60/mo</div><div class="note">RDS + Redis + Fargate</div></div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>OAuth 2.1 + PKCE token endpoint</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>WebAuthn L3 (passkeys)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>TOTP MFA</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>RBAC predicate gRPC API</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>JWT RS256 with KMS signing</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>Refresh-token rotation + reuse detection</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>Service-account client_credentials</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>Magic-link onboarding</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>Audit-chain integration (auth.decision)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>Agent token-exchange (persona-stamped)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
-        <tr><td>OIDC SSO (Google · M365 · Okta)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Impossible-travel detection</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Device tracking + new-device email</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Decree 53 MoPS-notification automation</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Multi-region active-active</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
-        <tr><td>SAML 2.0 enterprise SSO</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
-        <tr><td>FIDO2 hardware-key attestation</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
-      </tbody>
-    </table>
-  </div>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td>OAuth 2.1 + PKCE token endpoint</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>WebAuthn L3 (passkeys)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>TOTP MFA</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>RBAC predicate gRPC API</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>JWT RS256 with KMS signing</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>Refresh-token rotation + reuse detection</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>Service-account client_credentials</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>Magic-link onboarding</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>Audit-chain integration (auth.decision)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>Agent token-exchange (persona-stamped)</td><td><span class="pill pill-planned">planned · P0</span></td></tr>
+ <tr><td>OIDC SSO (Google · M365 · Okta)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Impossible-travel detection</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Device tracking + new-device email</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Decree 53 MoPS-notification automation</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Multi-region active-active</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
+ <tr><td>SAML 2.0 enterprise SSO</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
+ <tr><td>FIDO2 hardware-key attestation</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- REFERENCES -->
 <!-- ============================================================ -->
 <section id="references" class="module-section">
-  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
-  <div class="bbg-card p-5">
-    <ul class="space-y-2 text-sm">
-      <li><strong>PRD §8.4</strong> — Identity, authorisation server, OAuth 2.1 conventions.</li>
-      <li><strong>PRD §8.6</strong> — RBAC role catalogue (closed enum).</li>
-      <li><strong>PRD §9.6</strong> — (FR pending) through (FR pending) (PRD-tier).</li>
-      <li><strong>PRD §11.2.3</strong> — Security NFRs (SEC-001 through SEC-012).</li>
-      <li><strong>SRS §4.6</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
-      <li><strong>Decree 53/2022/NĐ-CP (Vietnam)</strong> — Cybersecurity Law implementing decree; data-residency + breach notification.</li>
-      <li><strong>Decree 13/2023/NĐ-CP (Vietnam)</strong> — Personal data processing protection.</li>
-      <li><strong>Law 91/2025/QH15 (Vietnam PDPL)</strong> — Personal Data Protection Law.</li>
-      <li><strong>RFC 6749 / draft-ietf-oauth-v2-1</strong> — OAuth 2.1 specification.</li>
-      <li><strong>RFC 7636</strong> — Proof Key for Code Exchange (PKCE).</li>
-      <li><strong>RFC 6238</strong> — Time-Based One-Time Password.</li>
-      <li><strong>RFC 7519</strong> — JSON Web Token (JWT).</li>
-      <li><strong>RFC 8414</strong> — OAuth Authorization Server Metadata.</li>
-      <li><strong>WebAuthn Level 3</strong> — W3C Recommendation 2023.</li>
-      <li><strong>NIST SP 800-63B</strong> — Digital Identity Authenticator Assurance Levels.</li>
-      <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#auth" class="text-blue-700 underline">infrastructure.html#auth</a>.</li>
-    </ul>
-  </div>
+ <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+ <div class="bbg-card p-5">
+ <ul class="space-y-2 text-sm">
+ <li> — Identity, authorisation server, OAuth 2.1 conventions.</li>
+ <li> — RBAC role catalogue (closed enum).</li>
+ <li> — (FR pending) through (FR pending) (PRD-tier).</li>
+ <li> — Security NFRs (SEC-001 through SEC-012).</li>
+ <li> — Formal (FR pending) through (FR pending) with verification methods.</li>
+ <li><strong>Decree 53/2022/NĐ-CP (Vietnam)</strong> — Cybersecurity Law implementing decree; data-residency + breach notification.</li>
+ <li><strong>Decree 13/2023/NĐ-CP (Vietnam)</strong> — Personal data processing protection.</li>
+ <li><strong>Law 91/2025/QH15 (Vietnam PDPL)</strong> — Personal Data Protection Law.</li>
+ <li><strong>RFC 6749 / draft-ietf-oauth-v2-1</strong> — OAuth 2.1 specification.</li>
+ <li><strong>RFC 7636</strong> — Proof Key for Code Exchange (PKCE).</li>
+ <li><strong>RFC 6238</strong> — Time-Based One-Time Password.</li>
+ <li><strong>RFC 7519</strong> — JSON Web Token (JWT).</li>
+ <li><strong>RFC 8414</strong> — OAuth Authorization Server Metadata.</li>
+ <li><strong>WebAuthn Level 3</strong> — W3C Recommendation 2023.</li>
+ <li><strong>NIST SP 800-63B</strong> — Digital Identity Authenticator Assurance Levels.</li>
+ <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#auth" class="text-blue-700 underline">infrastructure.html#auth</a>.</li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PREV / NEXT NAV -->
 <!-- ============================================================ -->
 <nav class="module-nav-footer mt-12">
-  <a href="../index.html#catalog" class="text-blue-700 font-semibold no-underline hover:underline">← All modules</a>
-  <a href="ai.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: AI Gateway →</a>
+ <a href="../index.html#catalog" class="text-blue-700 font-semibold no-underline hover:underline">← All modules</a>
+ <a href="ai.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: AI Gateway →</a>
 </nav>
 
 </main>

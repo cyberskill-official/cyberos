@@ -1,56 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+ <meta charset="UTF-8">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRM — CyberOS</title>
-  <meta name="description" content="CRM — Client management. Account / Contact / Deal pipeline with Vietnamese-market specifics: MST validation, VietQR collection, hóa đơn generation. AI lead scoring, next-best-action, pipeline forecasting.">
-  <link rel="stylesheet" href="../assets/tokens.css">
-  <link rel="stylesheet" href="../assets/styles.css">
-  <link rel="stylesheet" href="../assets/tailwind.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <script type="module" src="../assets/scripts.js"></script>
-  <style>
-    /* CRM module palette — rose */
-    :root {
-      --crm:       #e11d48;
-      --crm-bg:    #fff1f2;
-      --crm-tint:  #ffe4e6;
-      --crm-dark:  #9f1239;
-    }
-    .fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
-    .fact-card { background: var(--crm-bg); border:1px solid var(--crm-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }
-    .fact-card .label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--crm-dark); }
-    .fact-card .value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }
-    .fact-card .note  { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }
-    .toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }
-    .toc-link:hover { background: var(--crm-bg); color: var(--crm-dark); }
-    .toc-link.active { background: var(--crm-tint); color: var(--crm-dark); font-weight: 600; }
-    .module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }
-    .module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }
-    .module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }
-    .section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--crm-dark); color:white; font-weight:800; font-size:0.875rem; }
-    .pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }
-    .pill-must     { background:#fee2e2; color:#b91c1c; }
-    .pill-should   { background:#fef3c7; color:#b45309; }
-    .pill-could    { background:#e0f2fe; color:#075985; }
-    .pill-shipped  { background:#d1fae5; color:#065f46; }
-    .pill-planned  { background:#e0e7ff; color:#3730a3; }
-    .pill-partial  { background:#fef3c7; color:#b45309; }
-    table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
-    table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
-    table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
-    table.kt tbody tr:nth-child(even) td { background: var(--crm-bg); }
-    .raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }
-    .raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }
-    .raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }
-    .raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }
-    .module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--crm-bg); border-radius: 0.75rem; border: 1px solid var(--crm-tint); }
-    .bbg-card.tint-crm { border-top: 4px solid var(--crm); }
-  </style>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>CRM — CyberOS</title>
+ <meta name="description" content="CRM — Client management. Account / Contact / Deal pipeline with Vietnamese-market specifics: MST validation, VietQR collection, hóa đơn generation. AI lead scoring, next-best-action, pipeline forecasting.">
+ <link rel="stylesheet" href="../assets/tokens.css">
+ <link rel="stylesheet" href="../assets/styles.css">
+ <link rel="stylesheet" href="../assets/tailwind.min.css">
+ <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <script type="module" src="../assets/scripts.js"></script>
+ <style>
+ /* CRM module palette — rose */
+:root {
+ --crm: #e11d48;
+ --crm-bg: #fff1f2;
+ --crm-tint: #ffe4e6;
+ --crm-dark: #9f1239;
+ }.fact-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }.fact-card { background: var(--crm-bg); border:1px solid var(--crm-tint); padding: 0.875rem 1rem; border-radius: 0.625rem; }.fact-card.label { font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--crm-dark); }.fact-card.value { font-size: 1.125rem; font-weight: 800; color: var(--text); margin-top:0.25rem; }.fact-card.note { font-size: 0.75rem; color: var(--text-soft); margin-top: 0.125rem; }.toc-link { display:block; padding:0.375rem 0.625rem; font-size:0.8125rem; color:var(--text-soft); text-decoration:none; border-radius:0.375rem; transition: all 0.12s; }.toc-link:hover { background: var(--crm-bg); color: var(--crm-dark); }.toc-link.active { background: var(--crm-tint); color: var(--crm-dark); font-weight: 600; }.module-section { scroll-margin-top: 80px; margin-bottom: 2.5rem; }.module-section header.section-head { display:flex; align-items:center; gap:0.75rem; margin-bottom: 0.75rem; }.module-section header.section-head h2 { font-size: 1.5rem; font-weight: 800; margin:0; color: var(--text); }.section-num { display:inline-flex; align-items:center; justify-content:center; width:1.75rem; height:1.75rem; border-radius:0.5rem; background:var(--crm-dark); color:white; font-weight:800; font-size:0.875rem; }.pill { display:inline-flex; gap:0.25rem; padding: 0.125rem 0.5rem; border-radius:9999px; font-size:0.6875rem; font-weight:700; }.pill-must { background:#fee2e2; color:#b91c1c; }.pill-should { background:#fef3c7; color:#b45309; }.pill-could { background:#e0f2fe; color:#075985; }.pill-shipped { background:#d1fae5; color:#065f46; }.pill-planned { background:#e0e7ff; color:#3730a3; }.pill-partial { background:#fef3c7; color:#b45309; }
+ table.kt { width:100%; border-collapse: collapse; font-size: 0.8125rem; }
+ table.kt thead th { text-align:left; font-weight:700; color:var(--text); padding: 0.5rem 0.625rem; border-bottom: 2px solid var(--border); background: var(--bg-card); }
+ table.kt tbody td { padding: 0.5rem 0.625rem; border-bottom: 1px solid var(--border); color: var(--text-soft); vertical-align: top; }
+ table.kt tbody tr:nth-child(even) td { background: var(--crm-bg); }.raci-cell-r { background:#dcfce7; color:#166534; font-weight:700; }.raci-cell-a { background:#dbeafe; color:#1e40af; font-weight:700; }.raci-cell-c { background:#fef3c7; color:#92400e; font-weight:700; }.raci-cell-i { background:#f1f5f9; color:#475569; font-weight:700; }.module-nav-footer { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1.25rem; background:var(--crm-bg); border-radius: 0.75rem; border: 1px solid var(--crm-tint); }.bbg-card.tint-crm { border-top: 4px solid var(--crm); }
+ </style>
 </head>
 <body data-pagefind-filter="category:Module">
 <span hidden data-pagefind-filter="phase:P1"></span>
@@ -61,36 +36,36 @@
 <!-- HEADER -->
 <!-- ============================================================ -->
 <header class="hero-gradient border-b border-slate-200">
-  <div class="container py-10 lg:py-14">
-    <nav class="breadcrumbs">
-      <a href="../index.html">Home</a>
-      <span class="sep">›</span>
-      <a href="../index.html#catalog">Modules</a>
-      <span class="sep">›</span>
-      <span class="current">CRM</span>
-    </nav>
-    <div class="flex items-center gap-3 mb-4 flex-wrap">
-      <span class="text-5xl">🤝</span>
-      <h1 class="h-display">CRM</h1>
-      <span class="phase-chip phase-p1">P1 · Internal productivity</span>
-      <span class="pill pill-planned">Planned · P1 design phase</span>
-      <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CRO seat (interim CEO)</span>
-    </div>
-    <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
-      Vietnamese-market-first client management — Account / Contact / Deal with MST validation, VietQR collection, hóa đơn generation, and Vietnamese-aware salutation logic baked into every contact field.
-    </p>
-    <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
-      CRM is the customer-facing memory and pipeline. Three primitives — <code>Account</code>, <code>Contact</code>, <code>Deal</code> — with customisable pipelines, configurable stages, and per-deal probability + expected close date for forecasting. Activities (calls, emails, meetings, notes) feed from CHAT, EMAIL, and Calendar automatically. The Vietnamese-specific bits matter: account types map to legal entity kinds (Sole proprietor / LLC / JSC / FDI), <code>MST</code> tax codes are validated through the <code>vn-mst-validate</code> skill against the GDT registry, the <code>vn-bank-transfer</code> skill generates VietQR codes for invoice collection, and <code>vn-vat-invoice</code> issues the hóa đơn on deal close. AI features: lead scoring, next-best-action suggestions, win/loss analysis after a deal closes. PRD §9.11.
-    </p>
-    <div class="flex flex-wrap gap-3 mt-6">
-      <a href="#architecture" class="btn btn-primary">Architecture
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-      </a>
-      <a href="#key-flows" class="btn btn-secondary">Pipeline flows</a>
-      <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
-      <a href="../reference/fr-catalog.html#crm" class="btn btn-secondary">FR catalog</a>
-    </div>
-  </div>
+ <div class="container py-10 lg:py-14">
+ <nav class="breadcrumbs">
+ <a href="../index.html">Home</a>
+ <span class="sep">›</span>
+ <a href="../index.html#catalog">Modules</a>
+ <span class="sep">›</span>
+ <span class="current">CRM</span>
+ </nav>
+ <div class="flex items-center gap-3 mb-4 flex-wrap">
+ <span class="text-5xl">🤝</span>
+ <h1 class="h-display">CRM</h1>
+ <span class="phase-chip phase-p1">P1 · Internal productivity</span>
+ <span class="pill pill-planned">Planned · P1 design phase</span>
+ <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CRO seat (interim CEO)</span>
+ </div>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
+ Vietnamese-market-first client management — Account / Contact / Deal with MST validation, VietQR collection, hóa đơn generation, and Vietnamese-aware salutation logic baked into every contact field.
+ </p>
+ <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
+ CRM is the customer-facing memory and pipeline. Three primitives — <code>Account</code>, <code>Contact</code>, <code>Deal</code> — with customisable pipelines, configurable stages, and per-deal probability + expected close date for forecasting. Activities (calls, emails, meetings, notes) feed from CHAT, EMAIL, and Calendar automatically. The Vietnamese-specific bits matter: account types map to legal entity kinds (Sole proprietor / LLC / JSC / FDI), <code>MST</code> tax codes are validated through the <code>vn-mst-validate</code> skill against the GDT registry, the <code>vn-bank-transfer</code> skill generates VietQR codes for invoice collection, and <code>vn-vat-invoice</code> issues the hóa đơn on deal close. AI features: lead scoring, next-best-action suggestions, win/loss analysis after a deal closes..
+ </p>
+ <div class="flex flex-wrap gap-3 mt-6">
+ <a href="#architecture" class="btn btn-primary">Architecture
+ <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+ </a>
+ <a href="#key-flows" class="btn btn-secondary">Pipeline flows</a>
+ <a href="#cli-usage" class="btn btn-secondary">Planned CLI</a>
+ <a href="../reference/fr-catalog.html#crm" class="btn btn-secondary">FR catalog</a>
+ </div>
+ </div>
 </header>
 
 <div class="container py-10 lg:py-14 grid lg:grid-cols-12 gap-10">
@@ -99,38 +74,38 @@
 <!-- STICKY TOC -->
 <!-- ============================================================ -->
 <aside class="lg:col-span-3 order-2 lg:order-1">
-  <div class="lg:sticky lg:top-20">
-    <div class="bbg-card p-5">
-      <div class="h-eyebrow mb-3">On this page</div>
-      <ul class="space-y-0.5 text-sm">
-        <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
-        <li><a class="toc-link" href="#why">Why CRM exists</a></li>
-        <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
-        <li><a class="toc-link" href="#architecture">Architecture</a></li>
-        <li><a class="toc-link" href="#data-model">Data model</a></li>
-        <li><a class="toc-link" href="#api-surface">API surface</a></li>
-        <li><a class="toc-link" href="#key-flows">Key flows</a></li>
-        <li><a class="toc-link" href="#lifecycle">Deal lifecycle</a></li>
-        <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
-        <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
-        <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
-        <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
-        <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
-        <li><a class="toc-link" href="#kpis">KPIs</a></li>
-        <li><a class="toc-link" href="#raci">RACI</a></li>
-        <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
-        <li><a class="toc-link" href="#status">Phase status</a></li>
-        <li><a class="toc-link" href="#references">References</a></li>
-      </ul>
-      <hr class="my-4 border-slate-200">
-      <div class="h-eyebrow mb-2">Source</div>
-      <div class="text-xs text-slate-500 leading-relaxed">
-        <code>cyberos/services/crm/</code><br>
-        PRD §9.11 · §19.6<br>
-        SRS §4.11
-      </div>
-    </div>
-  </div>
+ <div class="lg:sticky lg:top-20">
+ <div class="bbg-card p-5">
+ <div class="h-eyebrow mb-3">On this page</div>
+ <ul class="space-y-0.5 text-sm">
+ <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#why">Why CRM exists</a></li>
+ <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
+ <li><a class="toc-link" href="#architecture">Architecture</a></li>
+ <li><a class="toc-link" href="#data-model">Data model</a></li>
+ <li><a class="toc-link" href="#api-surface">API surface</a></li>
+ <li><a class="toc-link" href="#key-flows">Key flows</a></li>
+ <li><a class="toc-link" href="#lifecycle">Deal lifecycle</a></li>
+ <li><a class="toc-link" href="#functional-requirements">FRs</a></li>
+ <li><a class="toc-link" href="#non-functional-requirements">NFRs</a></li>
+ <li><a class="toc-link" href="#dependencies">Dependencies</a></li>
+ <li><a class="toc-link" href="#compliance">Compliance scope</a></li>
+ <li><a class="toc-link" href="#risk-entries">Risk entries</a></li>
+ <li><a class="toc-link" href="#kpis">KPIs</a></li>
+ <li><a class="toc-link" href="#raci">RACI</a></li>
+ <li><a class="toc-link" href="#cli-usage">Planned CLI</a></li>
+ <li><a class="toc-link" href="#status">Phase status</a></li>
+ <li><a class="toc-link" href="#references">References</a></li>
+ </ul>
+ <hr class="my-4 border-slate-200">
+ <div class="h-eyebrow mb-2">Source</div>
+ <div class="text-xs text-slate-500 leading-relaxed">
+ <code>cyberos/services/crm/</code><br>
+ · §19.6<br>
+ 
+ </div>
+ </div>
+ </div>
 </aside>
 
 <main class="lg:col-span-9 order-1 lg:order-2">
@@ -139,470 +114,470 @@
 <!-- HERO -->
 <!-- ============================================================ -->
 <section id="hero" class="module-section">
-  <div class="bbg-card tint-crm p-6 mb-6">
-    <p class="text-lg text-slate-700 leading-relaxed mb-5">
-      CRM is CyberOS's <strong>customer pipeline, account intelligence, and Vietnamese-market commercial layer</strong>. The data model is Salesforce-flavoured (Account → Contact → Deal) but the integrations bake in Vietnamese specifics: <code>vn-mst-validate</code> verifies a tax code against the General Department of Taxation registry; <code>vn-bank-transfer</code> generates a Napas247 / VietQR code so a deal can request collection with one tap; <code>vn-vat-invoice</code> emits the hóa đơn directly on deal close. Pipelines are workspace-configurable (sales / partner / inbound / outbound shapes) with custom transition rules. Activities — calls, emails, meetings, notes — appear automatically: EMAIL auto-logs inbound/outbound for tracked domains, CHAT logs meeting notes, Calendar logs meeting attendance. CUO/CRO-skill produces lead scoring, next-best-action, and confidence-banded forecasts. PRD §9.11.
-    </p>
-    <div class="fact-grid">
-      <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
-      <div class="fact-card"><div class="label">Primitives</div><div class="value">3</div><div class="note">Account · Contact · Deal</div></div>
-      <div class="fact-card"><div class="label">Pipeline</div><div class="value">Custom</div><div class="note">stages + transition rules</div></div>
-      <div class="fact-card"><div class="label">VN skills</div><div class="value">3 native</div><div class="note">MST · VietQR · hóa đơn</div></div>
-      <div class="fact-card"><div class="label">Activity feeds</div><div class="value">CHAT · EMAIL · Cal</div><div class="note">auto-logged</div></div>
-      <div class="fact-card"><div class="label">AI features</div><div class="value">3</div><div class="note">score · NBA · forecast</div></div>
-      <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · EMAIL</div><div class="note">+ AI · MCP · INV · Skills</div></div>
-      <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~8,500</div><div class="note">Rust + TS pipeline UI</div></div>
-    </div>
-  </div>
+ <div class="bbg-card tint-crm p-6 mb-6">
+ <p class="text-lg text-slate-700 leading-relaxed mb-5">
+ CRM is CyberOS's <strong>customer pipeline, account intelligence, and Vietnamese-market commercial layer</strong>. The data model is Salesforce-flavoured (Account → Contact → Deal) but the integrations bake in Vietnamese specifics: <code>vn-mst-validate</code> verifies a tax code against the General Department of Taxation registry; <code>vn-bank-transfer</code> generates a Napas247 / VietQR code so a deal can request collection with one tap; <code>vn-vat-invoice</code> emits the hóa đơn directly on deal close. Pipelines are workspace-configurable (sales / partner / inbound / outbound shapes) with custom transition rules. Activities — calls, emails, meetings, notes — appear automatically: EMAIL auto-logs inbound/outbound for tracked domains, CHAT logs meeting notes, Calendar logs meeting attendance. CUO/CRO-skill produces lead scoring, next-best-action, and confidence-banded forecasts..
+ </p>
+ <div class="fact-grid">
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+ <div class="fact-card"><div class="label">Primitives</div><div class="value">3</div><div class="note">Account · Contact · Deal</div></div>
+ <div class="fact-card"><div class="label">Pipeline</div><div class="value">Custom</div><div class="note">stages + transition rules</div></div>
+ <div class="fact-card"><div class="label">VN skills</div><div class="value">3 native</div><div class="note">MST · VietQR · hóa đơn</div></div>
+ <div class="fact-card"><div class="label">Activity feeds</div><div class="value">CHAT · EMAIL · Cal</div><div class="note">auto-logged</div></div>
+ <div class="fact-card"><div class="label">AI features</div><div class="value">3</div><div class="note">score · NBA · forecast</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · EMAIL</div><div class="note">+ AI · MCP · INV · Skills</div></div>
+ <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~8,500</div><div class="note">Rust + TS pipeline UI</div></div>
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- WHY -->
 <!-- ============================================================ -->
 <section id="why" class="module-section">
-  <header class="section-head"><span class="section-num">1</span><h2>Why CRM exists</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Off-the-shelf CRMs (Salesforce, HubSpot, Pipedrive) work, but they do not natively model Vietnamese commercial realities. MST validation requires a custom integration; VietQR generation needs a separate plugin; hóa đơn generation almost always lands as a third-party Misa or Viettel-eInvoice connector that breaks on every release. Building CRM as a CyberOS module means these become first-class: the <code>vn-mst-validate</code> skill is invoked on every Account write, the <code>vn-bank-transfer</code> skill is one click away on every Deal, and <code>vn-vat-invoice</code> fires automatically on deal close into INV. Beyond the VN specifics, CyberOS-native CRM benefits from the audit chain (every stage transition is a BRAIN row), the agent-equal model (CUO can log activities just like a Member), and tight coupling to PROJ (a closed deal becomes an Engagement, no manual re-keying).
-  </p>
-  <div class="grid md:grid-cols-3 gap-4 my-5">
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">🇻🇳</div>
-      <div class="font-bold text-slate-900 mb-1">Vietnamese-first</div>
-      <p class="text-sm text-slate-600">MST, VietQR, hóa đơn, Anh/Chị salutation, address-parsing helpers — built in, not bolted on.</p>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">🪢</div>
-      <div class="font-bold text-slate-900 mb-1">Activity auto-log</div>
-      <p class="text-sm text-slate-600">Inbound / outbound emails to tracked domains, calendar attendance, CHAT meeting notes — all appear in the activity timeline without manual entry.</p>
-    </div>
-    <div class="bbg-card p-5">
-      <div class="text-2xl mb-2">🔮</div>
-      <div class="font-bold text-slate-900 mb-1">AI forecasting + NBA</div>
-      <p class="text-sm text-slate-600">CUO/CRO-skill produces confidence-banded forecasts and concrete next-best-action prompts for each open Deal.</p>
-    </div>
-  </div>
-  <p class="text-slate-700 leading-relaxed">
-    The bet is that the Vietnamese consultancy buyer values "this works with our hóa đơn flow" more than "this has 700 SaaS integrations". Coupling CRM tightly to CyberOS skills means the VN-native flows are native, not a bolted-on plugin layer. The cost is that CyberOS owns the surface forever; the benefit is that a deal close is a one-tap event from VietQR to hóa đơn to Engagement.
-  </p>
+ <header class="section-head"><span class="section-num">1</span><h2>Why CRM exists</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Off-the-shelf CRMs (Salesforce, HubSpot, Pipedrive) work, but they do not natively model Vietnamese commercial realities. MST validation requires a custom integration; VietQR generation needs a separate plugin; hóa đơn generation almost always lands as a third-party Misa or Viettel-eInvoice connector that breaks on every release. Building CRM as a CyberOS module means these become first-class: the <code>vn-mst-validate</code> skill is invoked on every Account write, the <code>vn-bank-transfer</code> skill is one click away on every Deal, and <code>vn-vat-invoice</code> fires automatically on deal close into INV. Beyond the VN specifics, CyberOS-native CRM benefits from the audit chain (every stage transition is a BRAIN row), the agent-equal model (CUO can log activities just like a Member), and tight coupling to PROJ (a closed deal becomes an Engagement, no manual re-keying).
+ </p>
+ <div class="grid md:grid-cols-3 gap-4 my-5">
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">🇻🇳</div>
+ <div class="font-bold text-slate-900 mb-1">Vietnamese-first</div>
+ <p class="text-sm text-slate-600">MST, VietQR, hóa đơn, Anh/Chị salutation, address-parsing helpers — built in, not bolted on.</p>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">🪢</div>
+ <div class="font-bold text-slate-900 mb-1">Activity auto-log</div>
+ <p class="text-sm text-slate-600">Inbound / outbound emails to tracked domains, calendar attendance, CHAT meeting notes — all appear in the activity timeline without manual entry.</p>
+ </div>
+ <div class="bbg-card p-5">
+ <div class="text-2xl mb-2">🔮</div>
+ <div class="font-bold text-slate-900 mb-1">AI forecasting + NBA</div>
+ <p class="text-sm text-slate-600">CUO/CRO-skill produces confidence-banded forecasts and concrete next-best-action prompts for each open Deal.</p>
+ </div>
+ </div>
+ <p class="text-slate-700 leading-relaxed">
+ The bet is that the Vietnamese consultancy buyer values "this works with our hóa đơn flow" more than "this has 700 SaaS integrations". Coupling CRM tightly to CyberOS skills means the VN-native flows are native, not a bolted-on plugin layer. The cost is that CyberOS owns the surface forever; the benefit is that a deal close is a one-tap event from VietQR to hóa đơn to Engagement.
+ </p>
 </section>
 
 <!-- ============================================================ -->
 <!-- WHAT — 5W1H2C5M -->
 <!-- ============================================================ -->
 <section id="what" class="module-section">
-  <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of CRM's scope. Every cell traces back to PRD §9.11 and §19.6.</p>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
-      <tbody>
-        <tr><td><strong>5W · What</strong></td><td>What is CRM?</td><td>An Account / Contact / Deal pipeline tracker with customisable per-pipeline stages, automatic activity feed from CHAT / EMAIL / Calendar, BRAIN-ingested closed deals, and Vietnamese-market skill integrations (MST, VietQR, hóa đơn).</td></tr>
-        <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Sales:</strong> create and progress deals; daily pipeline review. <strong>Account Managers:</strong> own client relationships; log activities. <strong>CRO:</strong> dashboard + forecast review. <strong>Marketing:</strong> read-only on activity + lead source. <strong>Agents:</strong> CUO/CRO-skill logs activities, suggests NBAs, produces forecasts.</td></tr>
-        <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: SPA pipeline view; WebSocket on stage transitions. Hourly: activity feed reconciliation (EMAIL → CRM). Nightly: AI lead scoring refresh + win/loss analysis on closed deals. On deal close: VietQR + hóa đơn + PROJ Engagement creation.</td></tr>
-        <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (SG-1) with VN-residency RDS for VN tenants. P3+: multi-region. The CRM service is one axum binary; the pipeline UI is a React SPA component.</td></tr>
-        <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Activity volume, ACL granularity (per-deal), and Vietnamese-skill integration are too specific to belong elsewhere. Folding into PROJ corrupts both data models.</td></tr>
-        <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Accounts are validated on write (MST → GDT registry). Contacts have a normalised phone (E.164) and email; merge candidates surface when two contacts share either. Deals carry stage, value, probability, expected close. Activities are append-only and feed from EMAIL / CHAT / Calendar with idempotency keys.</td></tr>
-        <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$60 / month single-tenant pilot (Fargate + RDS + Redis). 50-tenant: ~$240 / month. AI lead scoring runs nightly batch; ~$0.001 per deal per night.</td></tr>
-        <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Per-deal ACL — private deals not visible cross-workspace ((FR pending)). (b) Email-to-CRM auto-log only for tracked domains ((FR pending)) — never auto-attach a personal email. (c) Vietnamese-formatting helpers (Anh / Chị / Bạn) on every contact display. (d) Deals only ingested into BRAIN after closed / lost — never open pipeline data.</td></tr>
-        <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · Redis 7 · React + Zustand · vn-mst-validate skill · vn-bank-transfer skill · vn-vat-invoice skill · libphonenumber · OpenTelemetry SDK.</td></tr>
-        <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Three-primitive Account / Contact / Deal (no Lead as separate primitive — Leads are Contacts with no Deal). Configurable pipeline stages (not free-form). Phone normalisation to E.164 (libphonenumber). Per-deal ACL. Idempotent activity feed (idempotency key = source event id).</td></tr>
-        <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. NATS for pipeline-event fan-out. Skill invocations via the Skill module's WASM host.</td></tr>
-        <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE (CRO seat) at P1 launch. By P2+: CRO owns product; CMO consulted on activity feed schema; CFO consulted on hóa đơn flow.</td></tr>
-        <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Pipeline drag-drop response p95 ≤ 200 ms; activity-feed reconciliation p95 ≤ 60 s after EMAIL receipt; lead-scoring precision ≥ 70% on validated wins; deal-close → INV invoice generated within 60 s (P1: 5 min).</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">2</span><h2>What it does — 5W1H2C5M</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-5">A structured decomposition of CRM's scope. Every cell traces back to and §19.6.</p>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
+ <tbody>
+ <tr><td><strong>5W · What</strong></td><td>What is CRM?</td><td>An Account / Contact / Deal pipeline tracker with customisable per-pipeline stages, automatic activity feed from CHAT / EMAIL / Calendar, BRAIN-ingested closed deals, and Vietnamese-market skill integrations (MST, VietQR, hóa đơn).</td></tr>
+ <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Sales:</strong> create and progress deals; daily pipeline review. <strong>Account Managers:</strong> own client relationships; log activities. <strong>CRO:</strong> dashboard + forecast review. <strong>Marketing:</strong> read-only on activity + lead source. <strong>Agents:</strong> CUO/CRO-skill logs activities, suggests NBAs, produces forecasts.</td></tr>
+ <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: SPA pipeline view; WebSocket on stage transitions. Hourly: activity feed reconciliation (EMAIL → CRM). Nightly: AI lead scoring refresh + win/loss analysis on closed deals. On deal close: VietQR + hóa đơn + PROJ Engagement creation.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (SG-1) with VN-residency RDS for VN tenants. P3+: multi-region. The CRM service is one axum binary; the pipeline UI is a React SPA component.</td></tr>
+ <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Activity volume, ACL granularity (per-deal), and Vietnamese-skill integration are too specific to belong elsewhere. Folding into PROJ corrupts both data models.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Accounts are validated on write (MST → GDT registry). Contacts have a normalised phone (E.164) and email; merge candidates surface when two contacts share either. Deals carry stage, value, probability, expected close. Activities are append-only and feed from EMAIL / CHAT / Calendar with idempotency keys.</td></tr>
+ <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$60 / month single-tenant pilot (Fargate + RDS + Redis). 50-tenant: ~$240 / month. AI lead scoring runs nightly batch; ~$0.001 per deal per night.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Per-deal ACL — private deals not visible cross-workspace ((FR pending)). (b) Email-to-CRM auto-log only for tracked domains ((FR pending)) — never auto-attach a personal email. (c) Vietnamese-formatting helpers (Anh / Chị / Bạn) on every contact display. (d) Deals only ingested into BRAIN after closed / lost — never open pipeline data.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · Redis 7 · React + Zustand · vn-mst-validate skill · vn-bank-transfer skill · vn-vat-invoice skill · libphonenumber · OpenTelemetry SDK.</td></tr>
+ <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Three-primitive Account / Contact / Deal (no Lead as separate primitive — Leads are Contacts with no Deal). Configurable pipeline stages (not free-form). Phone normalisation to E.164 (libphonenumber). Per-deal ACL. Idempotent activity feed (idempotency key = source event id).</td></tr>
+ <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. NATS for pipeline-event fan-out. Skill invocations via the Skill module's WASM host.</td></tr>
+ <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE (CRO seat) at P1 launch. By P2+: CRO owns product; CMO consulted on activity feed schema; CFO consulted on hóa đơn flow.</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Pipeline drag-drop response p95 ≤ 200 ms; activity-feed reconciliation p95 ≤ 60 s after EMAIL receipt; lead-scoring precision ≥ 70% on validated wins; deal-close → INV invoice generated within 60 s (P1: 5 min).</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- ARCHITECTURE -->
 <!-- ============================================================ -->
 <section id="architecture" class="module-section">
-  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    CRM is one axum service with four surfaces (GraphQL subgraph, REST admin, MCP, WebSocket for pipeline drag-drop), three stores (Postgres canonical, Redis hot cache, NATS pipeline-event fan-out), and three Vietnamese-market skill invocations (MST validate, VietQR, hóa đơn).
-  </p>
+ <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ CRM is one axum service with four surfaces (GraphQL subgraph, REST admin, MCP, WebSocket for pipeline drag-drop), three stores (Postgres canonical, Redis hot cache, NATS pipeline-event fan-out), and three Vietnamese-market skill invocations (MST validate, VietQR, hóa đơn).
+ </p>
 
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 graph TB
-  subgraph CLIENT ["Clients"]
-    SPA["SPA pipeline · contact view"]
-    AGENT["🎯 CUO via MCP"]
-  end
+ subgraph CLIENT ["Clients"]
+ SPA["SPA pipeline · contact view"]
+ AGENT["🎯 CUO via MCP"]
+ end
 
-  subgraph EDGE ["Edge"]
-    GQL["GraphQL subgraph"]
-    REST["REST admin"]
-    WS["WebSocket<br>pipeline drag-drop"]
-    MCP["MCP tools"]
-  end
+ subgraph EDGE ["Edge"]
+ GQL["GraphQL subgraph"]
+ REST["REST admin"]
+ WS["WebSocket<br>pipeline drag-drop"]
+ MCP["MCP tools"]
+ end
 
-  subgraph CORE ["CRM service (Rust)"]
-    ACC["Account handler"]
-    CON["Contact handler"]
-    DEAL["Deal handler"]
-    PIPE["Pipeline engine<br>(stages + rules)"]
-    ACT["Activity feed<br>auto-log"]
-    AI_SCORE["AI lead scoring"]
-    AI_NBA["Next-best-action"]
-    AI_FORECAST["Forecast"]
-    MERGE["Merge candidate detector"]
-    BRAIN_ING["BRAIN ingestor<br>(closed deals)"]
-  end
+ subgraph CORE ["CRM service (Rust)"]
+ ACC["Account handler"]
+ CON["Contact handler"]
+ DEAL["Deal handler"]
+ PIPE["Pipeline engine<br>(stages + rules)"]
+ ACT["Activity feed<br>auto-log"]
+ AI_SCORE["AI lead scoring"]
+ AI_NBA["Next-best-action"]
+ AI_FORECAST["Forecast"]
+ MERGE["Merge candidate detector"]
+ BRAIN_ING["BRAIN ingestor<br>(closed deals)"]
+ end
 
-  subgraph SKILLS ["VN-market skills"]
-    MST["vn-mst-validate"]
-    VQR["vn-bank-transfer<br>(VietQR)"]
-    HD["vn-vat-invoice<br>(hóa đơn)"]
-  end
+ subgraph SKILLS ["VN-market skills"]
+ MST["vn-mst-validate"]
+ VQR["vn-bank-transfer<br>(VietQR)"]
+ HD["vn-vat-invoice<br>(hóa đơn)"]
+ end
 
-  subgraph STORES ["Stores"]
-    PG[("PostgreSQL<br>RLS by tenant_id<br>per-deal ACL")]
-    RED[("Redis 7<br>WS rooms · search cache")]
-    NATS[("NATS JetStream<br>pipeline events")]
-  end
+ subgraph STORES ["Stores"]
+ PG[("PostgreSQL<br>RLS by tenant_id<br>per-deal ACL")]
+ RED[("Redis 7<br>WS rooms · search cache")]
+ NATS[("NATS JetStream<br>pipeline events")]
+ end
 
-  subgraph SOURCES ["Activity sources"]
-    EMAIL["✉️ EMAIL<br>tracked domains"]
-    CHAT["💬 CHAT<br>meeting notes"]
-    CAL["📅 Calendar<br>attendance"]
-  end
+ subgraph SOURCES ["Activity sources"]
+ EMAIL["✉️ EMAIL<br>tracked domains"]
+ CHAT["💬 CHAT<br>meeting notes"]
+ CAL["📅 Calendar<br>attendance"]
+ end
 
-  subgraph SINKS ["Sinks"]
-    BRAIN["🧠 BRAIN<br>closed deals only"]
-    PROJ["📋 PROJ<br>deal close → Engagement"]
-    INV["🧾 INV<br>hóa đơn invoice"]
-    OBS["👁 OBS"]
-  end
+ subgraph SINKS ["Sinks"]
+ BRAIN["🧠 BRAIN<br>closed deals only"]
+ PROJ["📋 PROJ<br>deal close → Engagement"]
+ INV["🧾 INV<br>hóa đơn invoice"]
+ OBS["👁 OBS"]
+ end
 
-  SPA --> WS
-  SPA --> GQL
-  AGENT --> MCP
-  GQL --> ACC
-  GQL --> CON
-  GQL --> DEAL
-  REST --> ACC
-  REST --> CON
-  REST --> DEAL
-  MCP --> ACC
-  MCP --> CON
-  MCP --> DEAL
-  WS --> PIPE
-  ACC --> MST
-  DEAL --> VQR
-  DEAL --> HD
-  HD --> INV
-  EMAIL --> ACT
-  CHAT --> ACT
-  CAL --> ACT
-  ACT --> DEAL
-  ACT --> CON
-  DEAL --> PIPE
-  PIPE --> NATS
-  NATS --> WS
-  CON --> MERGE
-  DEAL --> AI_SCORE
-  DEAL --> AI_NBA
-  DEAL --> AI_FORECAST
-  DEAL --> BRAIN_ING
-  BRAIN_ING --> BRAIN
-  DEAL --> PROJ
-  ACC --> PG
-  CON --> PG
-  DEAL --> PG
-  ACT --> PG
-  PIPE --> RED
-  DEAL --> OBS
+ SPA --> WS
+ SPA --> GQL
+ AGENT --> MCP
+ GQL --> ACC
+ GQL --> CON
+ GQL --> DEAL
+ REST --> ACC
+ REST --> CON
+ REST --> DEAL
+ MCP --> ACC
+ MCP --> CON
+ MCP --> DEAL
+ WS --> PIPE
+ ACC --> MST
+ DEAL --> VQR
+ DEAL --> HD
+ HD --> INV
+ EMAIL --> ACT
+ CHAT --> ACT
+ CAL --> ACT
+ ACT --> DEAL
+ ACT --> CON
+ DEAL --> PIPE
+ PIPE --> NATS
+ NATS --> WS
+ CON --> MERGE
+ DEAL --> AI_SCORE
+ DEAL --> AI_NBA
+ DEAL --> AI_FORECAST
+ DEAL --> BRAIN_ING
+ BRAIN_ING --> BRAIN
+ DEAL --> PROJ
+ ACC --> PG
+ CON --> PG
+ DEAL --> PG
+ ACT --> PG
+ PIPE --> RED
+ DEAL --> OBS
 
-  classDef planned fill:#ffe4e6,stroke:#9f1239
-  classDef skill fill:#fef6e0,stroke:#9c750a
-  classDef store fill:#f5f3ff,stroke:#7c3aed
-  classDef sink fill:#f5ede6,stroke:#45210e
-  class SPA,AGENT,GQL,REST,WS,MCP,ACC,CON,DEAL,PIPE,ACT,AI_SCORE,AI_NBA,AI_FORECAST,MERGE,BRAIN_ING planned
-  class MST,VQR,HD skill
-  class PG,RED,NATS store
-  class BRAIN,PROJ,INV,OBS,EMAIL,CHAT,CAL sink
-    </div>
-  </div>
+ classDef planned fill:#ffe4e6,stroke:#9f1239
+ classDef skill fill:#fef6e0,stroke:#9c750a
+ classDef store fill:#f5f3ff,stroke:#7c3aed
+ classDef sink fill:#f5ede6,stroke:#45210e
+ class SPA,AGENT,GQL,REST,WS,MCP,ACC,CON,DEAL,PIPE,ACT,AI_SCORE,AI_NBA,AI_FORECAST,MERGE,BRAIN_ING planned
+ class MST,VQR,HD skill
+ class PG,RED,NATS store
+ class BRAIN,PROJ,INV,OBS,EMAIL,CHAT,CAL sink
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
-      <tbody>
-        <tr><td><code>account.rs</code></td><td>services/crm/src/account.rs</td><td>Account CRUD. MST validation on write (Vietnamese tenants). Address parser. Custom fields per workspace.</td></tr>
-        <tr><td><code>contact.rs</code></td><td>services/crm/src/contact.rs</td><td>Contact CRUD. E.164 phone normalisation. Anh / Chị / Bạn salutation derivation. Merge candidate detection.</td></tr>
-        <tr><td><code>deal.rs</code></td><td>services/crm/src/deal.rs</td><td>Deal CRUD. Stage transitions with workflow rules. Value / probability / expected-close. Per-deal ACL.</td></tr>
-        <tr><td><code>pipeline.rs</code></td><td>services/crm/src/pipeline.rs</td><td>Pipeline definition + stage transition rules. Workspace-configurable. WebSocket fan-out on drag-drop.</td></tr>
-        <tr><td><code>activity_feed.rs</code></td><td>services/crm/src/activity_feed.rs</td><td>Auto-log from EMAIL / CHAT / Calendar. Idempotency by source event id.</td></tr>
-        <tr><td><code>email_logger.rs</code></td><td>services/crm/src/email_logger.rs</td><td>Listens to EMAIL events; auto-logs inbound / outbound for tracked-domain mailboxes ((FR pending)).</td></tr>
-        <tr><td><code>ai_lead_scoring.rs</code></td><td>services/crm/src/ai_lead_scoring.rs</td><td>Nightly batch lead scoring. Features: activity recency, engagement size, account vertical, historical win-rate.</td></tr>
-        <tr><td><code>ai_nba.rs</code></td><td>services/crm/src/ai_nba.rs</td><td>Next-best-action generator. For each open deal, produces a concrete suggestion ("send proposal", "schedule check-in", "request VietQR collection").</td></tr>
-        <tr><td><code>ai_forecast.rs</code></td><td>services/crm/src/ai_forecast.rs</td><td>Confidence-banded forecast (CUO/CRO-skill). Per-pipeline VND total + USD total with 50% / 80% / 95% bands.</td></tr>
-        <tr><td><code>merge_detector.rs</code></td><td>services/crm/src/merge_detector.rs</td><td>Detects ≥ 2 contacts sharing email or normalised phone; surfaces as a Notify ((FR pending) SRS).</td></tr>
-        <tr><td><code>vn_mst.rs</code></td><td>services/crm/src/vn_mst.rs</td><td>Adapter to <code>vn-mst-validate</code> skill. Caches results 7 days.</td></tr>
-        <tr><td><code>vn_vietqr.rs</code></td><td>services/crm/src/vn_vietqr.rs</td><td>Adapter to <code>vn-bank-transfer</code> skill. Generates Napas247 QR on demand.</td></tr>
-        <tr><td><code>vn_hoadon.rs</code></td><td>services/crm/src/vn_hoadon.rs</td><td>Adapter to <code>vn-vat-invoice</code> skill. Fires on deal close.</td></tr>
-        <tr><td><code>brain_ingest.rs</code></td><td>services/crm/src/brain_ingest.rs</td><td>Layer 3 ingestion of closed deals only ((FR pending)).</td></tr>
-        <tr><td><code>acl.rs</code></td><td>services/crm/src/acl.rs</td><td>Per-deal ACL. Private deals not visible cross-workspace.</td></tr>
-        <tr><td><code>vn_salutation.rs</code></td><td>services/crm/src/vn_salutation.rs</td><td>Vietnamese salutation helper. Anh / Chị / Bạn picker from gender + age signal.</td></tr>
-        <tr><td><code>migrations/</code></td><td>services/crm/migrations/</td><td>sqlx migrations. RLS on every table.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mt-6 mb-3">Internal components</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
+ <tbody>
+ <tr><td><code>account.rs</code></td><td>services/crm/src/account.rs</td><td>Account CRUD. MST validation on write (Vietnamese tenants). Address parser. Custom fields per workspace.</td></tr>
+ <tr><td><code>contact.rs</code></td><td>services/crm/src/contact.rs</td><td>Contact CRUD. E.164 phone normalisation. Anh / Chị / Bạn salutation derivation. Merge candidate detection.</td></tr>
+ <tr><td><code>deal.rs</code></td><td>services/crm/src/deal.rs</td><td>Deal CRUD. Stage transitions with workflow rules. Value / probability / expected-close. Per-deal ACL.</td></tr>
+ <tr><td><code>pipeline.rs</code></td><td>services/crm/src/pipeline.rs</td><td>Pipeline definition + stage transition rules. Workspace-configurable. WebSocket fan-out on drag-drop.</td></tr>
+ <tr><td><code>activity_feed.rs</code></td><td>services/crm/src/activity_feed.rs</td><td>Auto-log from EMAIL / CHAT / Calendar. Idempotency by source event id.</td></tr>
+ <tr><td><code>email_logger.rs</code></td><td>services/crm/src/email_logger.rs</td><td>Listens to EMAIL events; auto-logs inbound / outbound for tracked-domain mailboxes ((FR pending)).</td></tr>
+ <tr><td><code>ai_lead_scoring.rs</code></td><td>services/crm/src/ai_lead_scoring.rs</td><td>Nightly batch lead scoring. Features: activity recency, engagement size, account vertical, historical win-rate.</td></tr>
+ <tr><td><code>ai_nba.rs</code></td><td>services/crm/src/ai_nba.rs</td><td>Next-best-action generator. For each open deal, produces a concrete suggestion ("send proposal", "schedule check-in", "request VietQR collection").</td></tr>
+ <tr><td><code>ai_forecast.rs</code></td><td>services/crm/src/ai_forecast.rs</td><td>Confidence-banded forecast (CUO/CRO-skill). Per-pipeline VND total + USD total with 50% / 80% / 95% bands.</td></tr>
+ <tr><td><code>merge_detector.rs</code></td><td>services/crm/src/merge_detector.rs</td><td>Detects ≥ 2 contacts sharing email or normalised phone; surfaces as a Notify ((FR pending) SRS).</td></tr>
+ <tr><td><code>vn_mst.rs</code></td><td>services/crm/src/vn_mst.rs</td><td>Adapter to <code>vn-mst-validate</code> skill. Caches results 7 days.</td></tr>
+ <tr><td><code>vn_vietqr.rs</code></td><td>services/crm/src/vn_vietqr.rs</td><td>Adapter to <code>vn-bank-transfer</code> skill. Generates Napas247 QR on demand.</td></tr>
+ <tr><td><code>vn_hoadon.rs</code></td><td>services/crm/src/vn_hoadon.rs</td><td>Adapter to <code>vn-vat-invoice</code> skill. Fires on deal close.</td></tr>
+ <tr><td><code>brain_ingest.rs</code></td><td>services/crm/src/brain_ingest.rs</td><td>Layer 3 ingestion of closed deals only ((FR pending)).</td></tr>
+ <tr><td><code>acl.rs</code></td><td>services/crm/src/acl.rs</td><td>Per-deal ACL. Private deals not visible cross-workspace.</td></tr>
+ <tr><td><code>vn_salutation.rs</code></td><td>services/crm/src/vn_salutation.rs</td><td>Vietnamese salutation helper. Anh / Chị / Bạn picker from gender + age signal.</td></tr>
+ <tr><td><code>migrations/</code></td><td>services/crm/migrations/</td><td>sqlx migrations. RLS on every table.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DATA MODEL -->
 <!-- ============================================================ -->
 <section id="data-model" class="module-section">
-  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Three primitives (Account, Contact, Deal) plus support tables for activities, pipelines, stages, merges, and AI outputs. Accounts carry Vietnamese-specific fields (account_type, MST). Contacts normalise phone to E.164 and persist a salutation hint. Deals carry per-deal ACL and stage transitions are audited.
-  </p>
+ <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Three primitives (Account, Contact, Deal) plus support tables for activities, pipelines, stages, merges, and AI outputs. Accounts carry Vietnamese-specific fields (account_type, MST). Contacts normalise phone to E.164 and persist a salutation hint. Deals carry per-deal ACL and stage transitions are audited.
+ </p>
 
-  <div class="bbg-card p-5 mb-5">
-    <div class="mermaid">
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
 erDiagram
-  TENANT ||--o{ ACCOUNT : "owns"
-  ACCOUNT ||--o{ CONTACT : "has"
-  ACCOUNT ||--o{ DEAL : "has"
-  CONTACT ||--o{ DEAL : "primary contact"
-  DEAL ||--o{ ACTIVITY : "log"
-  CONTACT ||--o{ ACTIVITY : "log"
-  ACCOUNT ||--o{ ACTIVITY : "log"
-  DEAL ||--o| PIPELINE : "lives in"
-  PIPELINE ||--o{ STAGE : "has"
-  DEAL ||--o| STAGE : "currently at"
-  DEAL ||--o{ STAGE_TRANSITION : "history"
-  DEAL ||--o| LEAD_SCORE : "scored"
-  DEAL ||--o| NBA_SUGGESTION : "advised"
-  DEAL ||--o| VIETQR : "collection"
-  DEAL ||--o| HOA_DON : "invoice"
-  CONTACT ||--o{ CONTACT_MERGE_CANDIDATE : "candidate"
-  DEAL ||--o| DEAL_ACL : "private"
+ TENANT ||--o{ ACCOUNT: "owns"
+ ACCOUNT ||--o{ CONTACT: "has"
+ ACCOUNT ||--o{ DEAL: "has"
+ CONTACT ||--o{ DEAL: "primary contact"
+ DEAL ||--o{ ACTIVITY: "log"
+ CONTACT ||--o{ ACTIVITY: "log"
+ ACCOUNT ||--o{ ACTIVITY: "log"
+ DEAL ||--o| PIPELINE: "lives in"
+ PIPELINE ||--o{ STAGE: "has"
+ DEAL ||--o| STAGE: "currently at"
+ DEAL ||--o{ STAGE_TRANSITION: "history"
+ DEAL ||--o| LEAD_SCORE: "scored"
+ DEAL ||--o| NBA_SUGGESTION: "advised"
+ DEAL ||--o| VIETQR: "collection"
+ DEAL ||--o| HOA_DON: "invoice"
+ CONTACT ||--o{ CONTACT_MERGE_CANDIDATE: "candidate"
+ DEAL ||--o| DEAL_ACL: "private"
 
-  TENANT { uuid id PK string slug }
-  ACCOUNT {
-    uuid id PK
-    uuid tenant_id FK
-    string name
-    string account_type "sole_proprietor | llc | jsc | fdi | individual | other"
-    string vn_mst "10 or 13 digits"
-    bool   vn_mst_validated
-    string industry
-    string country
-    string address_street
-    string address_ward
-    string address_district
-    string address_province
-    string lead_source
-    timestamp created_at
-    uuid owner_member_id FK
-    string custom_fields "json"
-  }
-  CONTACT {
-    uuid id PK
-    uuid tenant_id FK
-    uuid account_id FK
-    string first_name
-    string last_name
-    string display_name
-    string email
-    string phone_e164
-    string phone_raw
-    string salutation "Anh | Chị | Bạn | Em"
-    string title
-    bool   is_primary
-    string custom_fields "json"
-  }
-  DEAL {
-    uuid id PK
-    uuid tenant_id FK
-    uuid account_id FK
-    uuid primary_contact_id FK
-    string name
-    string description_short
-    int amount_minor_vnd
-    int amount_minor_usd "nullable"
-    string currency "VND | USD"
-    string pipeline_id FK
-    uuid stage_id FK
-    int probability_pct
-    date expected_close_date
-    string status "open | won | lost | cancelled"
-    string lost_reason "nullable"
-    date closed_date
-    uuid owner_member_id FK
-    string acl_mode "default | restricted"
-    timestamp created_at
-  }
-  PIPELINE {
-    uuid id PK
-    uuid tenant_id FK
-    string name "sales | partner | inbound | outbound"
-    bool default
-  }
-  STAGE {
-    uuid id PK
-    uuid pipeline_id FK
-    string code
-    string display_name_vi
-    string display_name_en
-    int order_idx
-    int default_probability_pct
-    string category "open | won | lost"
-  }
-  STAGE_TRANSITION {
-    uuid id PK
-    uuid deal_id FK
-    uuid from_stage_id FK
-    uuid to_stage_id FK
-    uuid actor_id FK
-    timestamp ts
-    string brain_chain
-  }
-  ACTIVITY {
-    uuid id PK
-    uuid tenant_id FK
-    uuid deal_id FK "nullable"
-    uuid contact_id FK "nullable"
-    uuid account_id FK "nullable"
-    string kind "email | call | meeting | note | task | site_visit"
-    string subject
-    string body_markdown
-    timestamp occurred_at
-    string source "manual | email | chat | calendar | mcp"
-    string source_event_id "idempotency key"
-    uuid created_by FK
-  }
-  LEAD_SCORE {
-    uuid deal_id PK
-    int score_0_100
-    string tier "hot | warm | cold"
-    string reasons "json array"
-    timestamp computed_at
-  }
-  NBA_SUGGESTION {
-    uuid deal_id PK
-    string action_code "send_proposal | schedule_checkin | request_payment | …"
-    string explanation_markdown
-    int confidence_pct
-    timestamp computed_at
-  }
-  VIETQR {
-    uuid id PK
-    uuid deal_id FK
-    string bank_bin "970418 | …"
-    string account_number
-    int amount_minor_vnd
-    string addinfo
-    string qr_payload "EMVCo string"
-    timestamp generated_at
-  }
-  HOA_DON {
-    uuid id PK
-    uuid deal_id FK
-    string invoice_number
-    string template_code
-    int total_minor_vnd
-    int vat_minor_vnd
-    string xml_url "GDT-compliant XML"
-    timestamp issued_at
-  }
-  CONTACT_MERGE_CANDIDATE {
-    uuid id PK
-    uuid contact_a FK
-    uuid contact_b FK
-    string match_reason "email | phone | both"
-    float confidence
-    string status "pending | merged | dismissed"
-  }
-  DEAL_ACL {
-    uuid deal_id PK
-    string allow_role_codes "csv"
-    string allow_member_ids "csv"
-  }
-    </div>
-  </div>
+ TENANT { uuid id PK string slug }
+ ACCOUNT {
+ uuid id PK
+ uuid tenant_id FK
+ string name
+ string account_type "sole_proprietor | llc | jsc | fdi | individual | other"
+ string vn_mst "10 or 13 digits"
+ bool vn_mst_validated
+ string industry
+ string country
+ string address_street
+ string address_ward
+ string address_district
+ string address_province
+ string lead_source
+ timestamp created_at
+ uuid owner_member_id FK
+ string custom_fields "json"
+ }
+ CONTACT {
+ uuid id PK
+ uuid tenant_id FK
+ uuid account_id FK
+ string first_name
+ string last_name
+ string display_name
+ string email
+ string phone_e164
+ string phone_raw
+ string salutation "Anh | Chị | Bạn | Em"
+ string title
+ bool is_primary
+ string custom_fields "json"
+ }
+ DEAL {
+ uuid id PK
+ uuid tenant_id FK
+ uuid account_id FK
+ uuid primary_contact_id FK
+ string name
+ string description_short
+ int amount_minor_vnd
+ int amount_minor_usd "nullable"
+ string currency "VND | USD"
+ string pipeline_id FK
+ uuid stage_id FK
+ int probability_pct
+ date expected_close_date
+ string status "open | won | lost | cancelled"
+ string lost_reason "nullable"
+ date closed_date
+ uuid owner_member_id FK
+ string acl_mode "default | restricted"
+ timestamp created_at
+ }
+ PIPELINE {
+ uuid id PK
+ uuid tenant_id FK
+ string name "sales | partner | inbound | outbound"
+ bool default
+ }
+ STAGE {
+ uuid id PK
+ uuid pipeline_id FK
+ string code
+ string display_name_vi
+ string display_name_en
+ int order_idx
+ int default_probability_pct
+ string category "open | won | lost"
+ }
+ STAGE_TRANSITION {
+ uuid id PK
+ uuid deal_id FK
+ uuid from_stage_id FK
+ uuid to_stage_id FK
+ uuid actor_id FK
+ timestamp ts
+ string brain_chain
+ }
+ ACTIVITY {
+ uuid id PK
+ uuid tenant_id FK
+ uuid deal_id FK "nullable"
+ uuid contact_id FK "nullable"
+ uuid account_id FK "nullable"
+ string kind "email | call | meeting | note | task | site_visit"
+ string subject
+ string body_markdown
+ timestamp occurred_at
+ string source "manual | email | chat | calendar | mcp"
+ string source_event_id "idempotency key"
+ uuid created_by FK
+ }
+ LEAD_SCORE {
+ uuid deal_id PK
+ int score_0_100
+ string tier "hot | warm | cold"
+ string reasons "json array"
+ timestamp computed_at
+ }
+ NBA_SUGGESTION {
+ uuid deal_id PK
+ string action_code "send_proposal | schedule_checkin | request_payment | …"
+ string explanation_markdown
+ int confidence_pct
+ timestamp computed_at
+ }
+ VIETQR {
+ uuid id PK
+ uuid deal_id FK
+ string bank_bin "970418 | …"
+ string account_number
+ int amount_minor_vnd
+ string addinfo
+ string qr_payload "EMVCo string"
+ timestamp generated_at
+ }
+ HOA_DON {
+ uuid id PK
+ uuid deal_id FK
+ string invoice_number
+ string template_code
+ int total_minor_vnd
+ int vat_minor_vnd
+ string xml_url "GDT-compliant XML"
+ timestamp issued_at
+ }
+ CONTACT_MERGE_CANDIDATE {
+ uuid id PK
+ uuid contact_a FK
+ uuid contact_b FK
+ string match_reason "email | phone | both"
+ float confidence
+ string status "pending | merged | dismissed"
+ }
+ DEAL_ACL {
+ uuid deal_id PK
+ string allow_role_codes "csv"
+ string allow_member_ids "csv"
+ }
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Vietnamese account types</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Code</th><th>Vietnamese</th><th>English</th><th>MST length</th><th>Hóa đơn template</th></tr></thead>
-      <tbody>
-        <tr><td><code>sole_proprietor</code></td><td>Hộ kinh doanh</td><td>Sole proprietor</td><td>10 digits</td><td>06GTKT (simplified)</td></tr>
-        <tr><td><code>llc</code></td><td>Công ty TNHH</td><td>LLC</td><td>10 / 13 digits</td><td>01GTKT</td></tr>
-        <tr><td><code>jsc</code></td><td>Công ty cổ phần</td><td>JSC</td><td>10 / 13 digits</td><td>01GTKT</td></tr>
-        <tr><td><code>fdi</code></td><td>FDI</td><td>Foreign-invested</td><td>10 / 13 digits</td><td>01GTKT</td></tr>
-        <tr><td><code>individual</code></td><td>Cá nhân</td><td>Individual</td><td>10 digits (CCCD-linked)</td><td>06GTKT</td></tr>
-        <tr><td><code>other</code></td><td>Khác</td><td>Other</td><td>—</td><td>manual</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">Vietnamese account types</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Code</th><th>Vietnamese</th><th>English</th><th>MST length</th><th>Hóa đơn template</th></tr></thead>
+ <tbody>
+ <tr><td><code>sole_proprietor</code></td><td>Hộ kinh doanh</td><td>Sole proprietor</td><td>10 digits</td><td>06GTKT (simplified)</td></tr>
+ <tr><td><code>llc</code></td><td>Công ty TNHH</td><td>LLC</td><td>10 / 13 digits</td><td>01GTKT</td></tr>
+ <tr><td><code>jsc</code></td><td>Công ty cổ phần</td><td>JSC</td><td>10 / 13 digits</td><td>01GTKT</td></tr>
+ <tr><td><code>fdi</code></td><td>FDI</td><td>Foreign-invested</td><td>10 / 13 digits</td><td>01GTKT</td></tr>
+ <tr><td><code>individual</code></td><td>Cá nhân</td><td>Individual</td><td>10 digits (CCCD-linked)</td><td>06GTKT</td></tr>
+ <tr><td><code>other</code></td><td>Khác</td><td>Other</td><td>—</td><td>manual</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- API SURFACE -->
 <!-- ============================================================ -->
 <section id="api-surface" class="module-section">
-  <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    Four surfaces: a federated GraphQL subgraph (cross-module joins to PROJ Engagement and INV Invoice); a REST admin surface for bulk operations and migration import; a WebSocket sync for the pipeline drag-drop UI; and an MCP tool catalogue for CUO.
-  </p>
+ <header class="section-head"><span class="section-num">5</span><h2>API surface</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Four surfaces: a federated GraphQL subgraph (cross-module joins to PROJ Engagement and INV Invoice); a REST admin surface for bulk operations and migration import; a WebSocket sync for the pipeline drag-drop UI; and an MCP tool catalogue for CUO.
+ </p>
 
-  <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph</h3>
-  <div class="bbg-card p-5 mb-5">
+ <h3 class="text-lg font-bold mb-3 mt-6">GraphQL subgraph</h3>
+ <div class="bbg-card p-5 mb-5">
 <pre><code class="language-graphql">extend schema
-  @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@requiresScopes"])
+ @link(url: "https://specs.apollo.dev/federation/v2.5", import: ["@key", "@requiresScopes"])
 
 type Account @key(fields: "id") {
-  id: ID!
-  name: String!
-  accountType: AccountType!
-  vnMst: String
-  vnMstValidated: Boolean!
-  industry: String
-  contacts: [Contact!]!
-  deals(status: DealStatus): [Deal!]!
-  activities(limit: Int = 50): [Activity!]!
-  customFields: JSON
-  leadSource: String
-  owner: Subject
+ id: ID!
+ name: String!
+ accountType: AccountType!
+ vnMst: String
+ vnMstValidated: Boolean!
+ industry: String
+ contacts: [Contact!]!
+ deals(status: DealStatus): [Deal!]!
+ activities(limit: Int = 50): [Activity!]!
+ customFields: JSON
+ leadSource: String
+ owner: Subject
 }
 
 type Contact @key(fields: "id") {
-  id: ID!
-  account: Account!
-  firstName: String!
-  lastName: String!
-  displayName: String!
-  email: String
-  phoneE164: String
-  salutation: Salutation!
-  title: String
-  isPrimary: Boolean!
+ id: ID!
+ account: Account!
+ firstName: String!
+ lastName: String!
+ displayName: String!
+ email: String
+ phoneE164: String
+ salutation: Salutation!
+ title: String
+ isPrimary: Boolean!
 }
 
 type Deal @key(fields: "id") {
-  id: ID!
-  account: Account!
-  primaryContact: Contact
-  name: String!
-  amountMinorVnd: Int!
-  currency: Currency!
-  pipeline: Pipeline!
-  stage: Stage!
-  probabilityPct: Int!
-  expectedCloseDate: Date
-  status: DealStatus!
-  leadScore: LeadScore
-  nextBestAction: NBA
-  activities: [Activity!]!
-  vietqr: VietQR
-  hoaDon: HoaDon
-  acl: DealACL
+ id: ID!
+ account: Account!
+ primaryContact: Contact
+ name: String!
+ amountMinorVnd: Int!
+ currency: Currency!
+ pipeline: Pipeline!
+ stage: Stage!
+ probabilityPct: Int!
+ expectedCloseDate: Date
+ status: DealStatus!
+ leadScore: LeadScore
+ nextBestAction: NBA
+ activities: [Activity!]!
+ vietqr: VietQR
+ hoaDon: HoaDon
+ acl: DealACL
 }
 
 enum AccountType { SOLE_PROPRIETOR LLC JSC FDI INDIVIDUAL OTHER }
@@ -611,574 +586,574 @@ enum DealStatus { OPEN WON LOST CANCELLED }
 enum Currency { VND USD }
 
 type Mutation {
-  createAccount(input: CreateAccountInput!): Account!
-    @requiresScopes(scopes: [["crm.write"]])
-  validateAccountMst(id: ID!): Account!
-  createDeal(input: CreateDealInput!): Deal!
-  moveDealStage(id: ID!, toStageId: ID!): Deal!
-  generateVietQR(dealId: ID!, bankBin: String!, accountNumber: String!): VietQR!
-  closeDeal(id: ID!, outcome: DealStatus!, lostReason: String): CloseDealResult!
-    @requiresScopes(scopes: [["crm.close"]])
-  logActivity(input: ActivityInput!): Activity!
-  mergeContacts(keepId: ID!, mergeId: ID!): Contact!
-    @requiresScopes(scopes: [["crm.contact.merge"]])
+ createAccount(input: CreateAccountInput!): Account!
+ @requiresScopes(scopes: [["crm.write"]])
+ validateAccountMst(id: ID!): Account!
+ createDeal(input: CreateDealInput!): Deal!
+ moveDealStage(id: ID!, toStageId: ID!): Deal!
+ generateVietQR(dealId: ID!, bankBin: String!, accountNumber: String!): VietQR!
+ closeDeal(id: ID!, outcome: DealStatus!, lostReason: String): CloseDealResult!
+ @requiresScopes(scopes: [["crm.close"]])
+ logActivity(input: ActivityInput!): Activity!
+ mergeContacts(keepId: ID!, mergeId: ID!): Contact!
+ @requiresScopes(scopes: [["crm.contact.merge"]])
 }</code></pre>
-  </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
-  <div class="bbg-card p-5 mb-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
-      <tbody>
-        <tr><td><code>cyberos.crm.search_accounts</code></td><td>query, account_type?, limit</td><td>Account[]</td><td>readonly</td></tr>
-        <tr><td><code>cyberos.crm.get_account</code></td><td>id</td><td>Account</td><td>readonly</td></tr>
-        <tr><td><code>cyberos.crm.create_account</code></td><td>CreateAccountInput</td><td>Account</td><td>scope=crm.write</td></tr>
-        <tr><td><code>cyberos.crm.validate_mst</code></td><td>mst</td><td>{valid, name, address}</td><td>readonly</td></tr>
-        <tr><td><code>cyberos.crm.list_deals</code></td><td>account_id?, pipeline_id?, stage_id?</td><td>Deal[]</td><td>readonly · scope=crm.read</td></tr>
-        <tr><td><code>cyberos.crm.create_deal</code></td><td>CreateDealInput</td><td>Deal</td><td>scope=crm.write</td></tr>
-        <tr><td><code>cyberos.crm.move_stage</code></td><td>deal_id, to_stage</td><td>Deal</td><td>scope=crm.write</td></tr>
-        <tr><td><code>cyberos.crm.close_deal</code></td><td>deal_id, outcome, lost_reason?</td><td>Deal + side-effects</td><td>destructive · human-confirm · scope=crm.close</td></tr>
-        <tr><td><code>cyberos.crm.generate_vietqr</code></td><td>deal_id, bank_bin, account_number</td><td>VietQR</td><td>scope=crm.payment</td></tr>
-        <tr><td><code>cyberos.crm.forecast</code></td><td>pipeline_id?, range</td><td>Forecast with bands</td><td>readonly</td></tr>
-        <tr><td><code>cyberos.crm.next_best_action</code></td><td>deal_id?</td><td>NBA[]</td><td>readonly</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">MCP tool catalogue</h3>
+ <div class="bbg-card p-5 mb-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Tool name</th><th>Inputs</th><th>Outputs</th><th>Annotations</th></tr></thead>
+ <tbody>
+ <tr><td><code>cyberos.crm.search_accounts</code></td><td>query, account_type?, limit</td><td>Account</td><td>readonly</td></tr>
+ <tr><td><code>cyberos.crm.get_account</code></td><td>id</td><td>Account</td><td>readonly</td></tr>
+ <tr><td><code>cyberos.crm.create_account</code></td><td>CreateAccountInput</td><td>Account</td><td>scope=crm.write</td></tr>
+ <tr><td><code>cyberos.crm.validate_mst</code></td><td>mst</td><td>{valid, name, address}</td><td>readonly</td></tr>
+ <tr><td><code>cyberos.crm.list_deals</code></td><td>account_id?, pipeline_id?, stage_id?</td><td>Deal</td><td>readonly · scope=crm.read</td></tr>
+ <tr><td><code>cyberos.crm.create_deal</code></td><td>CreateDealInput</td><td>Deal</td><td>scope=crm.write</td></tr>
+ <tr><td><code>cyberos.crm.move_stage</code></td><td>deal_id, to_stage</td><td>Deal</td><td>scope=crm.write</td></tr>
+ <tr><td><code>cyberos.crm.close_deal</code></td><td>deal_id, outcome, lost_reason?</td><td>Deal + side-effects</td><td>destructive · human-confirm · scope=crm.close</td></tr>
+ <tr><td><code>cyberos.crm.generate_vietqr</code></td><td>deal_id, bank_bin, account_number</td><td>VietQR</td><td>scope=crm.payment</td></tr>
+ <tr><td><code>cyberos.crm.forecast</code></td><td>pipeline_id?, range</td><td>Forecast with bands</td><td>readonly</td></tr>
+ <tr><td><code>cyberos.crm.next_best_action</code></td><td>deal_id?</td><td>NBA</td><td>readonly</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- KEY FLOWS -->
 <!-- ============================================================ -->
 <section id="key-flows" class="module-section">
-  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
+ <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
 
-  <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Add an Account with MST validation</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Add an Account with MST validation</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant U as Member SPA
-  participant API as CRM GraphQL
-  participant MST as vn-mst-validate skill
-  participant GDT as GDT registry
-  participant PG as PostgreSQL
-  participant B as BRAIN audit
+ autonumber
+ participant U as Member SPA
+ participant API as CRM GraphQL
+ participant MST as vn-mst-validate skill
+ participant GDT as GDT registry
+ participant PG as PostgreSQL
+ participant B as BRAIN audit
 
-  U->>API: createAccount {name, account_type:LLC, vn_mst:"0314…"}
-  API->>API: validate MST format (10 or 13 digits)
-  API->>MST: invoke skill {mst:"0314…"}
-  MST->>GDT: HTTP GET registry endpoint
-  GDT-->>MST: {name:"CÔNG TY TNHH ACME VN", address:"…"}
-  MST-->>API: {valid:true, canonical_name, address}
-  alt name match within tolerance
-    API->>PG: INSERT account {vn_mst_validated:true}
-  else mismatch
-    API->>PG: INSERT account {vn_mst_validated:true, name=canonical_name}
-    API-->>U: warning: name normalised to GDT value
-  end
-  API->>B: crm.account_created
-  API-->>U: 200 Account
-    </div>
-  </div>
+ U->>API: createAccount {name, account_type:LLC, vn_mst:"0314…"}
+ API->>API: validate MST format (10 or 13 digits)
+ API->>MST: invoke skill {mst:"0314…"}
+ MST->>GDT: HTTP GET registry endpoint
+ GDT-->>MST: {name:"CÔNG TY TNHH ACME VN", address:"…"}
+ MST-->>API: {valid:true, canonical_name, address}
+ alt name match within tolerance
+ API->>PG: INSERT account {vn_mst_validated:true}
+ else mismatch
+ API->>PG: INSERT account {vn_mst_validated:true, name=canonical_name}
+ API-->>U: warning: name normalised to GDT value
+ end
+ API->>B: crm.account_created
+ API-->>U: 200 Account
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 2 — Move deal through pipeline (drag-drop)</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 2 — Move deal through pipeline (drag-drop)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant U as Member SPA
-  participant WS as WebSocket
-  participant API as CRM service
-  participant PIPE as Pipeline rules
-  participant PG as PostgreSQL
-  participant N as NATS pipeline events
-  participant B as BRAIN audit
+ autonumber
+ participant U as Member SPA
+ participant WS as WebSocket
+ participant API as CRM service
+ participant PIPE as Pipeline rules
+ participant PG as PostgreSQL
+ participant N as NATS pipeline events
+ participant B as BRAIN audit
 
-  U->>U: optimistic move card to new stage
-  U->>WS: deal.move_stage {deal_id, to_stage_id}
-  WS->>API: dispatch
-  API->>PIPE: validate transition (rule engine)
-  alt allowed
-    PIPE-->>API: ok
-    API->>PG: INSERT stage_transition + UPDATE deal.stage_id
-    API->>N: publish pipeline.{pipeline_id}
-    N->>WS: fan-out to other SPAs
-    API->>B: crm.stage_transition
-    API-->>U: confirm (canonical state)
-  else blocked
-    PIPE-->>API: violation
-    API-->>U: rollback + reason
-  end
-    </div>
-  </div>
+ U->>U: optimistic move card to new stage
+ U->>WS: deal.move_stage {deal_id, to_stage_id}
+ WS->>API: dispatch
+ API->>PIPE: validate transition (rule engine)
+ alt allowed
+ PIPE-->>API: ok
+ API->>PG: INSERT stage_transition + UPDATE deal.stage_id
+ API->>N: publish pipeline.{pipeline_id}
+ N->>WS: fan-out to other SPAs
+ API->>B: crm.stage_transition
+ API-->>U: confirm (canonical state)
+ else blocked
+ PIPE-->>API: violation
+ API-->>U: rollback + reason
+ end
+ </div>
+ </div>
 
-  <h3 class="text-lg function-bold mb-3">Flow 3 — Deal close → VietQR → hóa đơn → Engagement</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg function-bold mb-3">Flow 3 — Deal close → VietQR → hóa đơn → Engagement</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant U as Sales Member
-  participant API as CRM
-  participant VQR as vn-bank-transfer skill
-  participant HD as vn-vat-invoice skill
-  participant INV as 🧾 INV
-  participant PROJ as 📋 PROJ
-  participant BR as 🧠 BRAIN
+ autonumber
+ participant U as Sales Member
+ participant API as CRM
+ participant VQR as vn-bank-transfer skill
+ participant HD as vn-vat-invoice skill
+ participant INV as 🧾 INV
+ participant PROJ as 📋 PROJ
+ participant BR as 🧠 BRAIN
 
-  U->>API: closeDeal(id, outcome:WON)
-  API->>API: validate user has crm.close scope
-  API->>API: UPDATE deal.status=won, closed_date=today
-  API->>VQR: generate VietQR (bank, account, amount, addinfo)
-  VQR-->>API: {qr_payload, qr_image_url}
-  API->>HD: emit hóa đơn (template based on account_type)
-  HD->>HD: assemble XML per Circular 78/2021
-  HD-->>API: {invoice_number, xml_url}
-  API->>INV: register invoice (status=issued)
-  INV-->>API: invoice_id
-  API->>PROJ: create Engagement (auto-link from Deal)
-  PROJ-->>API: engagement_id
-  API->>BR: crm.deal_closed {ingested into Layer 3 — closed deals only}
-  API-->>U: 200 {deal, vietqr, invoice, engagement}
-    </div>
-    <p class="text-xs text-slate-500 mt-3">(FR pending): deals only ingested into BRAIN after closed / lost — open pipeline data never enters BRAIN.</p>
-  </div>
+ U->>API: closeDeal(id, outcome:WON)
+ API->>API: validate user has crm.close scope
+ API->>API: UPDATE deal.status=won, closed_date=today
+ API->>VQR: generate VietQR (bank, account, amount, addinfo)
+ VQR-->>API: {qr_payload, qr_image_url}
+ API->>HD: emit hóa đơn (template based on account_type)
+ HD->>HD: assemble XML per Circular 78/2021
+ HD-->>API: {invoice_number, xml_url}
+ API->>INV: register invoice (status=issued)
+ INV-->>API: invoice_id
+ API->>PROJ: create Engagement (auto-link from Deal)
+ PROJ-->>API: engagement_id
+ API->>BR: crm.deal_closed {ingested into Layer 3 — closed deals only}
+ API-->>U: 200 {deal, vietqr, invoice, engagement}
+ </div>
+ <p class="text-xs text-slate-500 mt-3">(FR pending): deals only ingested into BRAIN after closed / lost — open pipeline data never enters BRAIN.</p>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 4 — Email auto-log to CRM (tracked domain)</h3>
-  <div class="bbg-card p-5 mb-6">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 4 — Email auto-log to CRM (tracked domain)</h3>
+ <div class="bbg-card p-5 mb-6">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant EM as ✉️ EMAIL inbound
-  participant ACT as CRM activity feed
-  participant PG as PostgreSQL
-  participant N as NATS
+ autonumber
+ participant EM as ✉️ EMAIL inbound
+ participant ACT as CRM activity feed
+ participant PG as PostgreSQL
+ participant N as NATS
 
-  EM->>ACT: event {from:"buyer@acme.com", subject:"…", message_id}
-  ACT->>PG: SELECT account WHERE domain = "acme.com" AND tracked=true
-  alt account found
-    ACT->>PG: SELECT contact WHERE email = "buyer@acme.com"
-    ACT->>PG: INSERT activity {kind:"email", source_event_id=message_id} ON CONFLICT DO NOTHING
-    ACT->>N: publish crm.activity.created
-  else not tracked
-    ACT-->>EM: ignore ((FR pending) boundary respected)
-  end
-    </div>
-    <p class="text-xs text-slate-500 mt-3">Personal emails never auto-attach. Only tenant-configured tracked domains; the configuration is itself audited.</p>
-  </div>
+ EM->>ACT: event {from:"buyer@acme.com", subject:"…", message_id}
+ ACT->>PG: SELECT account WHERE domain = "acme.com" AND tracked=true
+ alt account found
+ ACT->>PG: SELECT contact WHERE email = "buyer@acme.com"
+ ACT->>PG: INSERT activity {kind:"email", source_event_id=message_id} ON CONFLICT DO NOTHING
+ ACT->>N: publish crm.activity.created
+ else not tracked
+ ACT-->>EM: ignore ((FR pending) boundary respected)
+ end
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Personal emails never auto-attach. Only tenant-configured tracked domains; the configuration is itself audited.</p>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Flow 5 — AI lead scoring nightly batch</h3>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <h3 class="text-lg font-bold mb-3">Flow 5 — AI lead scoring nightly batch</h3>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 sequenceDiagram
-  autonumber
-  participant CR as Nightly cron
-  participant SC as Lead scoring engine
-  participant PG as PostgreSQL
-  participant AG as ⚡ AI Gateway (CUO/CRO-skill)
-  participant B as BRAIN audit
+ autonumber
+ participant CR as Nightly cron
+ participant SC as Lead scoring engine
+ participant PG as PostgreSQL
+ participant AG as ⚡ AI Gateway (CUO/CRO-skill)
+ participant B as BRAIN audit
 
-  CR->>SC: run for tenant
-  SC->>PG: SELECT open deals + features (recency, value, account vertical, history)
-  PG-->>SC: rows
-  SC->>AG: chat.completions {features, scoring rubric}
-  AG-->>SC: scores + reasons
-  SC->>PG: UPSERT lead_score
-  SC->>B: crm.lead_scoring_run {count, avg_score}
-    </div>
-  </div>
+ CR->>SC: run for tenant
+ SC->>PG: SELECT open deals + features (recency, value, account vertical, history)
+ PG-->>SC: rows
+ SC->>AG: chat.completions {features, scoring rubric}
+ AG-->>SC: scores + reasons
+ SC->>PG: UPSERT lead_score
+ SC->>B: crm.lead_scoring_run {count, avg_score}
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- LIFECYCLE -->
 <!-- ============================================================ -->
 <section id="lifecycle" class="module-section">
-  <header class="section-head"><span class="section-num">7</span><h2>Deal lifecycle</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    A deal traverses the pipeline stages, ending in one of three terminal statuses (won, lost, cancelled). Stage transitions are governed by per-pipeline workflow rules.
-  </p>
-  <div class="bbg-card p-5 mb-5">
-    <div class="mermaid">
+ <header class="section-head"><span class="section-num">7</span><h2>Deal lifecycle</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ A deal traverses the pipeline stages, ending in one of three terminal statuses (won, lost, cancelled). Stage transitions are governed by per-pipeline workflow rules.
+ </p>
+ <div class="bbg-card p-5 mb-5">
+ <div class="mermaid">
 stateDiagram-v2
-  [*] --> Qualifying: created
-  Qualifying --> Discovery: budget + authority confirmed
-  Discovery --> Proposal: needs scoped
-  Proposal --> Negotiation: proposal sent
-  Negotiation --> ClosedWon: contract signed
-  Negotiation --> ClosedLost: lost reason recorded
-  Negotiation --> Cancelled: client withdrew
-  Discovery --> ClosedLost: dropped during discovery
-  Proposal --> ClosedLost: rejected
-  Qualifying --> Cancelled: unqualified
-  ClosedWon --> [*]
-  ClosedLost --> [*]
-  Cancelled --> [*]
+ [*] --> Qualifying: created
+ Qualifying --> Discovery: budget + authority confirmed
+ Discovery --> Proposal: needs scoped
+ Proposal --> Negotiation: proposal sent
+ Negotiation --> ClosedWon: contract signed
+ Negotiation --> ClosedLost: lost reason recorded
+ Negotiation --> Cancelled: client withdrew
+ Discovery --> ClosedLost: dropped during discovery
+ Proposal --> ClosedLost: rejected
+ Qualifying --> Cancelled: unqualified
+ ClosedWon --> [*]
+ ClosedLost --> [*]
+ Cancelled --> [*]
 
-  Note right of ClosedWon: VietQR generated · hóa đơn issued · Engagement created in PROJ
-  Note right of ClosedLost: lost_reason mandatory · win/loss analysis triggered
-    </div>
-  </div>
+ Note right of ClosedWon: VietQR generated · hóa đơn issued · Engagement created in PROJ
+ Note right of ClosedLost: lost_reason mandatory · win/loss analysis triggered
+ </div>
+ </div>
 
-  <h3 class="text-lg font-bold mb-3">Default pipeline stages (sales)</h3>
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Code</th><th>vi</th><th>en</th><th>Default probability</th><th>Category</th></tr></thead>
-      <tbody>
-        <tr><td><code>qualifying</code></td><td>Đánh giá</td><td>Qualifying</td><td>10%</td><td>open</td></tr>
-        <tr><td><code>discovery</code></td><td>Khám phá</td><td>Discovery</td><td>25%</td><td>open</td></tr>
-        <tr><td><code>proposal</code></td><td>Đề xuất</td><td>Proposal</td><td>50%</td><td>open</td></tr>
-        <tr><td><code>negotiation</code></td><td>Đàm phán</td><td>Negotiation</td><td>75%</td><td>open</td></tr>
-        <tr><td><code>closed_won</code></td><td>Thắng</td><td>Closed Won</td><td>100%</td><td>won</td></tr>
-        <tr><td><code>closed_lost</code></td><td>Thua</td><td>Closed Lost</td><td>0%</td><td>lost</td></tr>
-        <tr><td><code>cancelled</code></td><td>Huỷ</td><td>Cancelled</td><td>0%</td><td>lost</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <h3 class="text-lg font-bold mb-3">Default pipeline stages (sales)</h3>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Code</th><th>vi</th><th>en</th><th>Default probability</th><th>Category</th></tr></thead>
+ <tbody>
+ <tr><td><code>qualifying</code></td><td>Đánh giá</td><td>Qualifying</td><td>10%</td><td>open</td></tr>
+ <tr><td><code>discovery</code></td><td>Khám phá</td><td>Discovery</td><td>25%</td><td>open</td></tr>
+ <tr><td><code>proposal</code></td><td>Đề xuất</td><td>Proposal</td><td>50%</td><td>open</td></tr>
+ <tr><td><code>negotiation</code></td><td>Đàm phán</td><td>Negotiation</td><td>75%</td><td>open</td></tr>
+ <tr><td><code>closed_won</code></td><td>Thắng</td><td>Closed Won</td><td>100%</td><td>won</td></tr>
+ <tr><td><code>closed_lost</code></td><td>Thua</td><td>Closed Lost</td><td>0%</td><td>lost</td></tr>
+ <tr><td><code>cancelled</code></td><td>Huỷ</td><td>Cancelled</td><td>0%</td><td>lost</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- FRs (stub — see skill module's fr-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
-  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
-  <div class="bbg-card p-5">
-    <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
-    <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
-  </div>
+ <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
+ <div class="bbg-card p-5">
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- NFRs -->
 <!-- ============================================================ -->
 <section id="non-functional-requirements" class="module-section">
-  <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">NFRs from PRD §11.2 that CRM must satisfy.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
-      <tbody>
-        <tr><td><code>N(FR pending)</code></td><td>Pipeline view load (200 deals)</td><td>p95 ≤ 350 ms</td><td>SPA RUM</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Stage drag-drop response</td><td>p95 ≤ 200 ms</td><td>WS latency histogram</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Account search (10k accounts)</td><td>p95 ≤ 300 ms</td><td>k6</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>MST validation</td><td>p95 ≤ 1.5 s (cache-cold)</td><td>histogram</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Pipeline drag-drop drop-rate (loss)</td><td>= 0</td><td>BRAIN audit reconciliation</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Vietnamese salutation accuracy</td><td>≥ 92% on 200-contact eval</td><td>quarterly review</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Private-deal isolation</td><td>= 0 cross-leak</td><td>CI test + quarterly red-team</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Personal email auto-attach</td><td>= 0 (tracked-domain only)</td><td>policy gate test</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Activity-feed idempotency</td><td>= 0 duplicates</td><td>idempotency key DB constraint</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Deal close → Engagement durability</td><td>100% within 60 s</td><td>BRAIN audit cross-check</td></tr>
-        <tr><td><code>N(FR pending)</code></td><td>Hóa đơn XML schema compliance</td><td>100% pass Circular 78/2021</td><td>CI test against GDT XSD</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">9</span><h2>Non-Functional Requirements</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">NFRs from that CRM must satisfy.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
+ <tbody>
+ <tr><td><code>N(FR pending)</code></td><td>Pipeline view load (200 deals)</td><td>p95 ≤ 350 ms</td><td>SPA RUM</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Stage drag-drop response</td><td>p95 ≤ 200 ms</td><td>WS latency histogram</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Account search (10k accounts)</td><td>p95 ≤ 300 ms</td><td>k6</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>MST validation</td><td>p95 ≤ 1.5 s (cache-cold)</td><td>histogram</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Pipeline drag-drop drop-rate (loss)</td><td>= 0</td><td>BRAIN audit reconciliation</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Vietnamese salutation accuracy</td><td>≥ 92% on 200-contact eval</td><td>quarterly review</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Service availability</td><td>≥ 99.9% (28-day)</td><td>OBS SLO</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Private-deal isolation</td><td>= 0 cross-leak</td><td>CI test + quarterly red-team</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Personal email auto-attach</td><td>= 0 (tracked-domain only)</td><td>policy gate test</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Activity-feed idempotency</td><td>= 0 duplicates</td><td>idempotency key DB constraint</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Deal close → Engagement durability</td><td>100% within 60 s</td><td>BRAIN audit cross-check</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Hóa đơn XML schema compliance</td><td>100% pass Circular 78/2021</td><td>CI test against GDT XSD</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- DEPENDENCIES -->
 <!-- ============================================================ -->
 <section id="dependencies" class="module-section">
-  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">
-    CRM depends on AUTH (every call), BRAIN (activity ingest + audit), EMAIL (auto-log), CHAT (meeting notes), Calendar (attendance), AI (scoring + NBA + forecast), MCP, OBS, and three CyberOS skills (vn-mst-validate, vn-bank-transfer, vn-vat-invoice). It is depended on by PROJ (Engagement creation), INV (hóa đơn emission), and PORTAL (client-visible deal status at P2+).
-  </p>
-  <div class="bbg-card p-5">
-    <div class="mermaid">
+ <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ CRM depends on AUTH (every call), BRAIN (activity ingest + audit), EMAIL (auto-log), CHAT (meeting notes), Calendar (attendance), AI (scoring + NBA + forecast), MCP, OBS, and three CyberOS skills (vn-mst-validate, vn-bank-transfer, vn-vat-invoice). It is depended on by PROJ (Engagement creation), INV (hóa đơn emission), and PORTAL (client-visible deal status at P2+).
+ </p>
+ <div class="bbg-card p-5">
+ <div class="mermaid">
 graph LR
-  subgraph upstream ["CRM depends on"]
-    AUTH["🔐 AUTH"]
-    BRAIN["🧠 BRAIN"]
-    EMAIL["✉️ EMAIL"]
-    CHAT["💬 CHAT"]
-    CAL["📅 Calendar"]
-    AI["⚡ AI Gateway"]
-    MCP["🔌 MCP"]
-    OBS["👁 OBS"]
-    MST["vn-mst-validate"]
-    VQR["vn-bank-transfer"]
-    HD["vn-vat-invoice"]
-  end
-  CRM["🤝 CRM"]
-  subgraph downstream ["CRM is depended on by"]
-    PROJ["📋 PROJ"]
-    INV["🧾 INV"]
-    PORTAL["Portal · P2"]
-  end
-  AUTH --> CRM
-  BRAIN --> CRM
-  EMAIL --> CRM
-  CHAT --> CRM
-  CAL --> CRM
-  AI --> CRM
-  MCP --> CRM
-  OBS --> CRM
-  MST --> CRM
-  VQR --> CRM
-  HD --> CRM
-  CRM --> PROJ
-  CRM --> INV
-  CRM --> PORTAL
+ subgraph upstream ["CRM depends on"]
+ AUTH["🔐 AUTH"]
+ BRAIN["🧠 BRAIN"]
+ EMAIL["✉️ EMAIL"]
+ CHAT["💬 CHAT"]
+ CAL["📅 Calendar"]
+ AI["⚡ AI Gateway"]
+ MCP["🔌 MCP"]
+ OBS["👁 OBS"]
+ MST["vn-mst-validate"]
+ VQR["vn-bank-transfer"]
+ HD["vn-vat-invoice"]
+ end
+ CRM["🤝 CRM"]
+ subgraph downstream ["CRM is depended on by"]
+ PROJ["📋 PROJ"]
+ INV["🧾 INV"]
+ PORTAL["Portal · P2"]
+ end
+ AUTH --> CRM
+ BRAIN --> CRM
+ EMAIL --> CRM
+ CHAT --> CRM
+ CAL --> CRM
+ AI --> CRM
+ MCP --> CRM
+ OBS --> CRM
+ MST --> CRM
+ VQR --> CRM
+ HD --> CRM
+ CRM --> PROJ
+ CRM --> INV
+ CRM --> PORTAL
 
-  classDef shipped fill:#f5ede6,stroke:#45210e
-  classDef planned fill:#fef6e0,stroke:#9c750a
-  class BRAIN,MST,VQR,HD shipped
-  class CRM,AUTH,EMAIL,CHAT,CAL,AI,MCP,OBS,PROJ,INV,PORTAL planned
-    </div>
-  </div>
+ classDef shipped fill:#f5ede6,stroke:#45210e
+ classDef planned fill:#fef6e0,stroke:#9c750a
+ class BRAIN,MST,VQR,HD shipped
+ class CRM,AUTH,EMAIL,CHAT,CAL,AI,MCP,OBS,PROJ,INV,PORTAL planned
+ </div>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- COMPLIANCE -->
 <!-- ============================================================ -->
 <section id="compliance" class="module-section">
-  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">CRM holds Customer personal data and processes hóa đơn-relevant fields; it sits inside PDPL / Circular 78/2021 / GDPR scope.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>CRM feature that satisfies it</th></tr></thead>
-      <tbody>
-        <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>DSAR export includes contact + activity + deal data.</td></tr>
-        <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Processing log</td><td>Every CRM mutation writes a BRAIN audit row.</td></tr>
-        <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Residency</td><td>Per-tenant residency tag; VN tenants on hanoi-1.</td></tr>
-        <tr><td>Vietnam Circular 78/2021/TT-BTC</td><td>Hóa đơn e-invoice format</td><td>vn-vat-invoice emits compliant XML.</td></tr>
-        <tr><td>Vietnam Decree 123/2020/NĐ-CP</td><td>Invoice issuance &amp; storage</td><td>HOA_DON table with XML link + 10-year retention.</td></tr>
-        <tr><td>GDPR (EU 2016/679)</td><td>Art. 17 — Right to erasure</td><td>Contact delete + DSAR-driven hard purge.</td></tr>
-        <tr><td>GDPR</td><td>Art. 25 — Privacy by design</td><td>Per-deal ACL prevents cross-workspace leak.</td></tr>
-        <tr><td>ISO/IEC 27001:2022</td><td>A.8.2 — Privileged access</td><td>RBAC + per-deal ACL.</td></tr>
-        <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RLS + ACL enforced at every mutation.</td></tr>
-        <tr><td>OWASP Top-10 (web)</td><td>A01 — Broken access control</td><td>ACL enforced server-side; CI test on every PR.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">CRM holds Customer personal data and processes hóa đơn-relevant fields; it sits inside PDPL / Circular 78/2021 / GDPR scope.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>CRM feature that satisfies it</th></tr></thead>
+ <tbody>
+ <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>DSAR export includes contact + activity + deal data.</td></tr>
+ <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Processing log</td><td>Every CRM mutation writes a BRAIN audit row.</td></tr>
+ <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Residency</td><td>Per-tenant residency tag; VN tenants on hanoi-1.</td></tr>
+ <tr><td>Vietnam Circular 78/2021/TT-BTC</td><td>Hóa đơn e-invoice format</td><td>vn-vat-invoice emits compliant XML.</td></tr>
+ <tr><td>Vietnam Decree 123/2020/NĐ-CP</td><td>Invoice issuance &amp; storage</td><td>HOA_DON table with XML link + 10-year retention.</td></tr>
+ <tr><td>GDPR (EU 2016/679)</td><td>Art. 17 — Right to erasure</td><td>Contact delete + DSAR-driven hard purge.</td></tr>
+ <tr><td>GDPR</td><td>Art. 25 — Privacy by design</td><td>Per-deal ACL prevents cross-workspace leak.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.8.2 — Privileged access</td><td>RBAC + per-deal ACL.</td></tr>
+ <tr><td>SOC 2 Type II</td><td>CC6.1 — Logical access</td><td>RLS + ACL enforced at every mutation.</td></tr>
+ <tr><td>OWASP Top-10 (web)</td><td>A01 — Broken access control</td><td>ACL enforced server-side; CI test on every PR.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- RISK -->
 <!-- ============================================================ -->
 <section id="risk-entries" class="module-section">
-  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">CRM-specific risks tracked in the <a href="../reference/risk-register.html#crm" class="text-blue-700 font-semibold underline">risk register</a>.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
-      <tbody>
-        <tr><td><code>R-CRM-001</code></td><td>GDT MST registry endpoint outage</td><td>Medium</td><td>Medium</td><td>CTO</td><td>7-day cache; validation marked stale; user warned but write permitted.</td></tr>
-        <tr><td><code>R-CRM-002</code></td><td>Hóa đơn XML schema drift breaks emission</td><td>Medium</td><td>High</td><td>CFO</td><td>CI test against GDT XSD weekly; skill version pinned; rollback plan documented.</td></tr>
-        <tr><td><code>R-CRM-003</code></td><td>Personal email auto-attaches to CRM via misconfig</td><td>Low</td><td>High</td><td>CSO</td><td>Tracked-domain config audited; CI test asserts personal domains stay out.</td></tr>
-        <tr><td><code>R-CRM-004</code></td><td>Private-deal leak via cross-workspace GraphQL query</td><td>Low</td><td>High</td><td>CSO</td><td>ACL CI gate; quarterly red-team on subgraph.</td></tr>
-        <tr><td><code>R-CRM-005</code></td><td>Activity-feed duplicate from EMAIL retry</td><td>Medium</td><td>Low</td><td>CTO</td><td>Idempotency key on source event id; DB unique constraint.</td></tr>
-        <tr><td><code>R-CRM-006</code></td><td>Lead-scoring bias against specific account verticals</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Quarterly fairness review of scoring inputs; reasons surfaced to user.</td></tr>
-        <tr><td><code>R-CRM-007</code></td><td>VietQR generated with wrong account number → payment misdirected</td><td>Low</td><td>High</td><td>CFO</td><td>Per-tenant bank-account allow-list; Member confirm step on first use.</td></tr>
-        <tr><td><code>R-CRM-008</code></td><td>Merge proposes false-positive (same email shared family)</td><td>Medium</td><td>Low</td><td>CRO</td><td>Merge requires explicit Member confirm; confidence threshold ≥ 0.85.</td></tr>
-        <tr><td><code>R-CRM-009</code></td><td>BRAIN ingest of closed deals leaks competitive data</td><td>Low</td><td>Medium</td><td>CDO</td><td>Closed deals respect deal ACL on BRAIN side; private deals never ingested.</td></tr>
-        <tr><td><code>R-CRM-010</code></td><td>Open-pipeline data ingested into BRAIN by accident ((FR pending) violation)</td><td>Low</td><td>High</td><td>CDO</td><td>BRAIN ingest path gated by deal.status &amp; ('won','lost'); CI test asserts.</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">CRM-specific risks tracked in the <a href="../reference/risk-register.html#crm" class="text-blue-700 font-semibold underline">risk register</a>.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
+ <tbody>
+ <tr><td><code>R-CRM-001</code></td><td>GDT MST registry endpoint outage</td><td>Medium</td><td>Medium</td><td>CTO</td><td>7-day cache; validation marked stale; user warned but write permitted.</td></tr>
+ <tr><td><code>R-CRM-002</code></td><td>Hóa đơn XML schema drift breaks emission</td><td>Medium</td><td>High</td><td>CFO</td><td>CI test against GDT XSD weekly; skill version pinned; rollback plan documented.</td></tr>
+ <tr><td><code>R-CRM-003</code></td><td>Personal email auto-attaches to CRM via misconfig</td><td>Low</td><td>High</td><td>CSO</td><td>Tracked-domain config audited; CI test asserts personal domains stay out.</td></tr>
+ <tr><td><code>R-CRM-004</code></td><td>Private-deal leak via cross-workspace GraphQL query</td><td>Low</td><td>High</td><td>CSO</td><td>ACL CI gate; quarterly red-team on subgraph.</td></tr>
+ <tr><td><code>R-CRM-005</code></td><td>Activity-feed duplicate from EMAIL retry</td><td>Medium</td><td>Low</td><td>CTO</td><td>Idempotency key on source event id; DB unique constraint.</td></tr>
+ <tr><td><code>R-CRM-006</code></td><td>Lead-scoring bias against specific account verticals</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Quarterly fairness review of scoring inputs; reasons surfaced to user.</td></tr>
+ <tr><td><code>R-CRM-007</code></td><td>VietQR generated with wrong account number → payment misdirected</td><td>Low</td><td>High</td><td>CFO</td><td>Per-tenant bank-account allow-list; Member confirm step on first use.</td></tr>
+ <tr><td><code>R-CRM-008</code></td><td>Merge proposes false-positive (same email shared family)</td><td>Medium</td><td>Low</td><td>CRO</td><td>Merge requires explicit Member confirm; confidence threshold ≥ 0.85.</td></tr>
+ <tr><td><code>R-CRM-009</code></td><td>BRAIN ingest of closed deals leaks competitive data</td><td>Low</td><td>Medium</td><td>CDO</td><td>Closed deals respect deal ACL on BRAIN side; private deals never ingested.</td></tr>
+ <tr><td><code>R-CRM-010</code></td><td>Open-pipeline data ingested into BRAIN by accident ((FR pending) violation)</td><td>Low</td><td>High</td><td>CDO</td><td>BRAIN ingest path gated by deal.status &amp; ('won','lost'); CI test asserts.</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- KPIs -->
 <!-- ============================================================ -->
 <section id="kpis" class="module-section">
-  <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">CRM rolls up 10 KPIs covering pipeline health, AI feature efficacy, integration durability, and VN-specific flow correctness.</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Pipeline value (VND)</strong></td><td>sum(open_deal.amount × probability)</td><td>PG</td><td>tracked daily</td></tr>
-        <tr><td><strong>Stage drag-drop p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 200 ms</td></tr>
-        <tr><td><strong>Win rate</strong></td><td>won / (won + lost)</td><td>BRAIN audit</td><td>tracked per pipeline</td></tr>
-        <tr><td><strong>Average deal cycle</strong></td><td>median(closed_date − created_at)</td><td>BRAIN audit</td><td>tracked per Engagement type</td></tr>
-        <tr><td><strong>Lead-scoring precision</strong></td><td>true_hot / scored_hot</td><td>retrospective on wins</td><td>≥ 70%</td></tr>
-        <tr><td><strong>NBA acceptance</strong></td><td>actioned / suggested</td><td>SPA telemetry</td><td>tracked; target ≥ 35%</td></tr>
-        <tr><td><strong>Activity auto-log durability</strong></td><td>logged / source_events</td><td>EMAIL ↔ CRM reconciliation</td><td>100%</td></tr>
-        <tr><td><strong>Hóa đơn emission success</strong></td><td>issued / close_won</td><td>BRAIN audit</td><td>100%</td></tr>
-        <tr><td><strong>MST validation rate</strong></td><td>validated / vn_accounts</td><td>BRAIN audit</td><td>≥ 95%</td></tr>
-        <tr><td><strong>Cross-workspace ACL violations</strong></td><td>count</td><td>BRAIN audit</td><td>= 0</td></tr>
-      </tbody>
-    </table>
-  </div>
+ <header class="section-head"><span class="section-num">13</span><h2>KPIs</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">CRM rolls up 10 KPIs covering pipeline health, AI feature efficacy, integration durability, and VN-specific flow correctness.</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
+ <tbody>
+ <tr><td><strong>Pipeline value (VND)</strong></td><td>sum(open_deal.amount × probability)</td><td>PG</td><td>tracked daily</td></tr>
+ <tr><td><strong>Stage drag-drop p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 200 ms</td></tr>
+ <tr><td><strong>Win rate</strong></td><td>won / (won + lost)</td><td>BRAIN audit</td><td>tracked per pipeline</td></tr>
+ <tr><td><strong>Average deal cycle</strong></td><td>median(closed_date − created_at)</td><td>BRAIN audit</td><td>tracked per Engagement type</td></tr>
+ <tr><td><strong>Lead-scoring precision</strong></td><td>true_hot / scored_hot</td><td>retrospective on wins</td><td>≥ 70%</td></tr>
+ <tr><td><strong>NBA acceptance</strong></td><td>actioned / suggested</td><td>SPA telemetry</td><td>tracked; target ≥ 35%</td></tr>
+ <tr><td><strong>Activity auto-log durability</strong></td><td>logged / source_events</td><td>EMAIL ↔ CRM reconciliation</td><td>100%</td></tr>
+ <tr><td><strong>Hóa đơn emission success</strong></td><td>issued / close_won</td><td>BRAIN audit</td><td>100%</td></tr>
+ <tr><td><strong>MST validation rate</strong></td><td>validated / vn_accounts</td><td>BRAIN audit</td><td>≥ 95%</td></tr>
+ <tr><td><strong>Cross-workspace ACL violations</strong></td><td>count</td><td>BRAIN audit</td><td>= 0</td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- RACI -->
 <!-- ============================================================ -->
 <section id="raci" class="module-section">
-  <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4">CRM is owned by CRO seat (interim CEO).</p>
-  <div class="bbg-card p-5 overflow-x-auto">
-    <table class="kt">
-      <thead><tr><th>Activity</th><th>CEO</th><th>CRO</th><th>CFO</th><th>CTO</th><th>CSO</th><th>CMO</th></tr></thead>
-      <tbody>
-        <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td></tr>
-        <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Pipeline / stage config</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
-        <tr><td>Tracked-domain config</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Hóa đơn flow review</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Lead-scoring fairness review</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td></tr>
-        <tr><td>ACL audit</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>DSAR fulfilment</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td></tr>
-        <tr><td>Incident response</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td></tr>
-      </tbody>
-    </table>
-    <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
-  </div>
+ <header class="section-head"><span class="section-num">14</span><h2>RACI matrix</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4">CRM is owned by CRO seat (interim CEO).</p>
+ <div class="bbg-card p-5 overflow-x-auto">
+ <table class="kt">
+ <thead><tr><th>Activity</th><th>CEO</th><th>CRO</th><th>CFO</th><th>CTO</th><th>CSO</th><th>CMO</th></tr></thead>
+ <tbody>
+ <tr><td>Service design + spec</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td></tr>
+ <tr><td>Implementation</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Pipeline / stage config</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td></tr>
+ <tr><td>Tracked-domain config</td><td class="raci-cell-i">I</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Hóa đơn flow review</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Lead-scoring fairness review</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td></tr>
+ <tr><td>ACL audit</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>DSAR fulfilment</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Incident response</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-r">R</td><td class="raci-cell-r">R</td><td class="raci-cell-i">I</td></tr>
+ </tbody>
+ </table>
+ <p class="text-xs text-slate-500 mt-3"><strong>R</strong> Responsible · <strong>A</strong> Accountable · <strong>C</strong> Consulted · <strong>I</strong> Informed.</p>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- CLI USAGE -->
 <!-- ============================================================ -->
 <section id="cli-usage" class="module-section">
-  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
-  <p class="text-slate-700 leading-relaxed mb-4"><code>cyberos-crm</code> for tenant operators and bulk import / export.</p>
+ <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
+ <p class="text-slate-700 leading-relaxed mb-4"><code>cyberos-crm</code> for tenant operators and bulk import / export.</p>
 
-  <h3 class="text-lg font-bold mb-2">1. Add a Vietnamese LLC account</h3>
+ <h3 class="text-lg font-bold mb-2">1. Add a Vietnamese LLC account</h3>
 <pre><code>$ cyberos-crm account create \
-    --name "ACME Vietnam Co., Ltd." \
-    --type llc \
-    --mst 0314556677 \
-    --owner stephen@cyberskill.world
+ --name "ACME Vietnam Co., Ltd." \
+ --type llc \
+ --mst 0314556677 \
+ --owner stephen@cyberskill.world
 
-[mst]      vn-mst-validate skill invoked
-[mst]      ✓ matches GDT registry: "CÔNG TY TNHH ACME VIỆT NAM"
-[mst]      ⚠ name normalised to GDT canonical
-[create]   account_id: 01HZK7…
-[audit]    brain seq=15301 chain=…</code></pre>
+[mst] vn-mst-validate skill invoked
+[mst] ✓ matches GDT registry: "CÔNG TY TNHH ACME VIỆT NAM"
+[mst] ⚠ name normalised to GDT canonical
+[create] account_id: 01HZK7…
+[audit] brain seq=15301 chain=…</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">2. List contacts at an account</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">2. List contacts at an account</h3>
 <pre><code>$ cyberos-crm contact list --account 01HZK7…
 
-display_name              email                  phone          salutation  primary
-Nguyễn Văn A              vana@acme.vn           +84903123456   Anh          yes
-Trần Thị B                thib@acme.vn           +84909222333   Chị          no
-Phạm Minh C               minhc@acme.vn          +84908111222   Anh          no</code></pre>
+display_name email phone salutation primary
+Nguyễn Văn A vana@acme.vn +84903123456 Anh yes
+Trần Thị B thib@acme.vn +84909222333 Chị no
+Phạm Minh C minhc@acme.vn +84908111222 Anh no</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">3. Move a deal stage</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">3. Move a deal stage</h3>
 <pre><code>$ cyberos-crm deal move --id 01HZK8… --to-stage proposal
 
-[validate]   transition discovery → proposal allowed
-[move]       deal status: open  stage: proposal  probability: 50%
-[ws]         broadcast to 4 connected SPAs
-[audit]      brain seq=15315 chain=…</code></pre>
+[validate] transition discovery → proposal allowed
+[move] deal status: open stage: proposal probability: 50%
+[ws] broadcast to 4 connected SPAs
+[audit] brain seq=15315 chain=…</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">4. Close a deal (won) — full flow</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">4. Close a deal (won) — full flow</h3>
 <pre><code>$ cyberos-crm deal close --id 01HZK8… --outcome won
 
-[close]      status=won · closed_date=2026-05-14
-[vietqr]     vn-bank-transfer skill invoked
-[vietqr]     generated: bank=Vietcombank · account=0011 0023 4567 · amount=750,000,000 VND
-[hoadon]     vn-vat-invoice skill invoked (template=01GTKT)
-[hoadon]     invoice_number: C26TAA/0001234 · XML: s3://cyberos/hoadon/01HZK9…xml
-[inv]        INV invoice registered (id=01HZKB…)
-[proj]       Engagement created: "ACME Q3 platform build"
-[brain]      deal ingested into Layer 3 (closed deal)
-[audit]      brain seq=15327 chain=…</code></pre>
+[close] status=won · closed_date=2026-05-14
+[vietqr] vn-bank-transfer skill invoked
+[vietqr] generated: bank=Vietcombank · account=0011 0023 4567 · amount=750,000,000 VND
+[hoadon] vn-vat-invoice skill invoked (template=01GTKT)
+[hoadon] invoice_number: C26TAA/0001234 · XML: s3:/cyberos/hoadon/01HZK9…xml
+[inv] INV invoice registered (id=01HZKB…)
+[proj] Engagement created: "ACME Q3 platform build"
+[brain] deal ingested into Layer 3 (closed deal)
+[audit] brain seq=15327 chain=…</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">5. Forecast</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">5. Forecast</h3>
 <pre><code>$ cyberos-crm forecast --pipeline sales --range 90d
 
-pipeline:  sales (next 90 days)
-band       vnd_low         vnd_mid         vnd_high
-50%        1,200,000,000   1,450,000,000   1,750,000,000
-80%          800,000,000   1,100,000,000   1,500,000,000
-95%          500,000,000     750,000,000   1,100,000,000
+pipeline: sales (next 90 days)
+band vnd_low vnd_mid vnd_high
+50% 1,200,000,000 1,450,000,000 1,750,000,000
+80% 800,000,000 1,100,000,000 1,500,000,000
+95% 500,000,000 750,000,000 1,100,000,000
 
 top 5 deals by probability×value:
-  01HZK8… ACME Q3 build      750,000,000   75%
-  01HZKC… BetaCo retainer    240,000,000   80%
-  …</code></pre>
+ 01HZK8… ACME Q3 build 750,000,000 75%
+ 01HZKC… BetaCo retainer 240,000,000 80%
+ …</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">6. Merge contacts</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">6. Merge contacts</h3>
 <pre><code>$ cyberos-crm contact merge --keep 01HZKD… --merge 01HZKE…
 
-[merge]   keep: Nguyễn Văn A (vana@acme.vn)
-[merge]   merge: A Nguyen Van (vana@acme.vn)  ← duplicate
-[merge]   ✓ activities reassigned: 47
-[merge]   ✓ deals reassigned: 3
-[merge]   ✓ contact 01HZKE… tombstoned
-[audit]   brain seq=15334 chain=…</code></pre>
+[merge] keep: Nguyễn Văn A (vana@acme.vn)
+[merge] merge: A Nguyen Van (vana@acme.vn) ← duplicate
+[merge] ✓ activities reassigned: 47
+[merge] ✓ deals reassigned: 3
+[merge] ✓ contact 01HZKE… tombstoned
+[audit] brain seq=15334 chain=…</code></pre>
 
-  <h3 class="text-lg font-bold mb-2 mt-5">7. DSAR export for a contact</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">7. DSAR export for a contact</h3>
 <pre><code>$ cyberos-crm dsar-export --contact 01HZKD… --output a-nguyen.zip
 
-[dsar]   contact:    01HZKD… Nguyễn Văn A
-[dsar]   activities: 412
-[dsar]   deals:      6 (3 won, 1 lost, 2 cancelled)
-[dsar]   written:    a-nguyen.zip (8 MB)</code></pre>
+[dsar] contact: 01HZKD… Nguyễn Văn A
+[dsar] activities: 412
+[dsar] deals: 6 (3 won, 1 lost, 2 cancelled)
+[dsar] written: a-nguyen.zip (8 MB)</code></pre>
 </section>
 
 <!-- ============================================================ -->
 <!-- STATUS -->
 <!-- ============================================================ -->
 <section id="status" class="module-section">
-  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
+ <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
 
-  <div class="grid md:grid-cols-3 gap-4 mb-6">
-    <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
-    <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~8,500</div><div class="note">Rust + TS pipeline UI</div></div>
-    <div class="fact-card"><div class="label">Planned tests</div><div class="value">100+</div><div class="note">incl. ACL fuzzing</div></div>
-    <div class="fact-card"><div class="label">External libs</div><div class="value">~12</div><div class="note">axum · sqlx · libphonenumber</div></div>
-    <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">~20 planned</div><div class="note"><code>cyberos-crm</code></div></div>
-    <div class="fact-card"><div class="label">P1 budget</div><div class="value">~$60/mo</div><div class="note">Fargate + RDS + Redis</div></div>
-  </div>
+ <div class="grid md:grid-cols-3 gap-4 mb-6">
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
+ <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~8,500</div><div class="note">Rust + TS pipeline UI</div></div>
+ <div class="fact-card"><div class="label">Planned tests</div><div class="value">100+</div><div class="note">incl. ACL fuzzing</div></div>
+ <div class="fact-card"><div class="label">External libs</div><div class="value">~12</div><div class="note">axum · sqlx · libphonenumber</div></div>
+ <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">~20 planned</div><div class="note"><code>cyberos-crm</code></div></div>
+ <div class="fact-card"><div class="label">P1 budget</div><div class="value">~$60/mo</div><div class="note">Fargate + RDS + Redis</div></div>
+ </div>
 
-  <div class="bbg-card p-5">
-    <table class="kt">
-      <thead><tr><th>Capability</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>Account / Contact / Deal CRUD</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Configurable pipeline + stages</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>WebSocket drag-drop pipeline</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Activity auto-log (EMAIL / CHAT / Calendar)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>vn-mst-validate integration</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>vn-bank-transfer (VietQR)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>vn-vat-invoice (hóa đơn)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Deal close → PROJ Engagement</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>AI lead scoring (nightly batch)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Next-best-action suggestion</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Confidence-banded forecast</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Contact merge candidate detection</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Per-deal ACL</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>Vietnamese salutation helper</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
-        <tr><td>HubSpot / Salesforce migration import</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
-        <tr><td>Client-visible PORTAL view</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
-      </tbody>
-    </table>
-  </div>
+ <div class="bbg-card p-5">
+ <table class="kt">
+ <thead><tr><th>Capability</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td>Account / Contact / Deal CRUD</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Configurable pipeline + stages</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>WebSocket drag-drop pipeline</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Activity auto-log (EMAIL / CHAT / Calendar)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>vn-mst-validate integration</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>vn-bank-transfer (VietQR)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>vn-vat-invoice (hóa đơn)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Deal close → PROJ Engagement</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>AI lead scoring (nightly batch)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Next-best-action suggestion</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Confidence-banded forecast</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Contact merge candidate detection</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Per-deal ACL</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Vietnamese salutation helper</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>HubSpot / Salesforce migration import</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
+ <tr><td>Client-visible PORTAL view</td><td><span class="pill pill-planned">planned · P2+</span></td></tr>
+ </tbody>
+ </table>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- REFERENCES -->
 <!-- ============================================================ -->
 <section id="references" class="module-section">
-  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
-  <div class="bbg-card p-5">
-    <ul class="space-y-2 text-sm">
-      <li><strong>PRD §9.11</strong> — CRM product FRs.</li>
-      <li><strong>PRD §19.6</strong> — CRM SRS-tier FRs.</li>
-      <li><strong>PRD §11.2</strong> — NFRs.</li>
-      <li><strong>SRS §4.11</strong> — Formal (FR pending) through (FR pending).</li>
-      <li><strong>Vietnam Decree 123/2020/NĐ-CP</strong> — Electronic invoice issuance and storage.</li>
-      <li><strong>Vietnam Circular 78/2021/TT-BTC</strong> — Hóa đơn format.</li>
-      <li><strong>Vietnam PDPL (Law 91/2025/QH15)</strong>.</li>
-      <li><strong>Vietnam Decree 13/2023</strong> — Personal data.</li>
-      <li><strong>Napas247 / VietQR specification</strong> — bank transfer QR.</li>
-      <li><strong>vn-mst-validate skill</strong> — CyberOS skill for MST validation.</li>
-      <li><strong>vn-bank-transfer skill</strong> — VietQR generator.</li>
-      <li><strong>vn-vat-invoice skill</strong> — hóa đơn generator.</li>
-      <li><strong>libphonenumber</strong> — E.164 normalisation.</li>
-      <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#crm" class="text-blue-700 underline">infrastructure.html#crm</a>.</li>
-    </ul>
-  </div>
+ <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
+ <div class="bbg-card p-5">
+ <ul class="space-y-2 text-sm">
+ <li> — CRM product FRs.</li>
+ <li> — CRM SRS-tier FRs.</li>
+ <li> — NFRs.</li>
+ <li> — Formal (FR pending) through (FR pending).</li>
+ <li><strong>Vietnam Decree 123/2020/NĐ-CP</strong> — Electronic invoice issuance and storage.</li>
+ <li><strong>Vietnam Circular 78/2021/TT-BTC</strong> — Hóa đơn format.</li>
+ <li><strong>Vietnam PDPL (Law 91/2025/QH15)</strong>.</li>
+ <li><strong>Vietnam Decree 13/2023</strong> — Personal data.</li>
+ <li><strong>Napas247 / VietQR specification</strong> — bank transfer QR.</li>
+ <li><strong>vn-mst-validate skill</strong> — CyberOS skill for MST validation.</li>
+ <li><strong>vn-bank-transfer skill</strong> — VietQR generator.</li>
+ <li><strong>vn-vat-invoice skill</strong> — hóa đơn generator.</li>
+ <li><strong>libphonenumber</strong> — E.164 normalisation.</li>
+ <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#crm" class="text-blue-700 underline">infrastructure.html#crm</a>.</li>
+ </ul>
+ </div>
 </section>
 
 <!-- ============================================================ -->
 <!-- PREV / NEXT NAV -->
 <!-- ============================================================ -->
 <nav class="module-nav-footer mt-12">
-  <a href="time.html" class="text-blue-700 font-semibold no-underline hover:underline">← Previous module: TIME</a>
-  <a href="kb.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: KB →</a>
+ <a href="time.html" class="text-blue-700 font-semibold no-underline hover:underline">← Previous module: TIME</a>
+ <a href="kb.html" class="text-blue-700 font-semibold no-underline hover:underline">Next module: KB →</a>
 </nav>
 
 </main>
