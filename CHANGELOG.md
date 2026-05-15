@@ -2,6 +2,39 @@
 
 All notable changes to the umbrella CyberOS repository, newest-first.
 
+## 2026-05-15 — UI bug fixes from screenshots (Mermaid syntax + diagram sizing + title overlap + mobile overflow + PRD/SRS sweep cleanup)
+
+Stephen flagged five UI bugs from live deploy screenshots; all fixed.
+
+**Bug 1 — Hero h1 overlap (`.h-1 mb-3 + p` collision on index.html):**
+- `assets/styles.css:325–355` — bumped `.h-1` line-height 1.25 → 1.3, `margin-block-end` 1.25rem → 1.5rem, added `padding-block-end: 0.25rem` to protect BVP descenders.
+- Changed sibling rule line 346: `margin-block-start: 0` → `0.5rem !important` for h-display + h-1 successors. Guarantees min-gap even when Tailwind `mb-3` overrides.
+
+**Bug 2 — Mermaid "Syntax error in text" in BRAIN §3:**
+- Root cause: `FILES["memories/<kind>/<hex>/<file>.md"]` — Mermaid 11.4.1 parses `<kind>`/`<hex>`/`<file>` as unknown HTML tags inside node labels.
+- Fixed 3 locations in `modules/brain.html` (lines 288, 454, 503): `<kind>` → `{kind}` etc.
+- Fixed 1 location in `modules/hr.html:841` (same root cause inside a Mermaid sequence).
+- Repo-wide sweep confirmed no other `<placeholder>` patterns in Mermaid blocks.
+
+**Bug 3 — Stage 0→5 flowchart rendered microscopic:**
+- Root cause: `.mermaid svg { max-width: 100%; height: auto; }` forced wide flowcharts to shrink to ~700px parent, making labels unreadable.
+- Fix at `assets/styles.css:429–449`: dropped `display:flex; justify-content:center;` (which fought overflow scroll), changed `max-width: 100%` → `max-width: none !important` on SVG. Now wide diagrams scroll horizontally instead of shrinking. Added scrollbar styling for visual hint.
+
+**Bug 4 — Mobile horizontal overflow:**
+- Added 70-line mobile safety net at `assets/styles.css:1017–1085`:
+  - `html, body { overflow-x: hidden; max-width: 100vw; }` to clamp viewport
+  - `.container { min-width: 0 }` so flex/grid children can shrink
+  - `.bbg-card { overflow-wrap: anywhere }` so long URLs/codes wrap
+  - `@media (max-width: 768px)`: tables wrap their card in scroll, code blocks pre-wrap, fact-grid `minmax(140px, 1fr)`, h-display clamp 1.875–2.5rem
+  - `@media (max-width: 480px)`: tighter container padding + 120px fact-card minimum
+  - Mermaid `max-height: 70vh` on mobile to prevent monstrous portrait diagrams
+
+**Bug 5 — Lingering PRD/SRS references:**
+- 47 textual edits across 28 HTML files in `website/docs/` (per Agent sweep). Removed: "PRD/SRS narrative remains authoritative" disclaimers (23), "PRD coverage" eyebrows, broken `<a href="#"></a>` empty anchors, "Generated from PRD + SRS source" footer, "DEC-NNN in SRS" → "DEC-NNN" rewrites (5 in infrastructure.html + 1 in ten.html), persona "draft PRD/SRS" chip rephrases. Preserved: the two intentional github.com canonical-spec links in `fr-catalog.html` lines 56–57.
+- Grep verification: `\bPRD\b|\bSRS\b` across `website/docs/*.html` → 2 hits, both intentional.
+
+Verified: brain.html Mermaid no longer has `<kind>/<hex>/<file>` patterns; styles.css line counts went from 1018 → 1085. The fix should ship cleanly to Cloudflare Pages on next deploy.
+
 ## 2026-05-15 — RES module page rewritten to Gold (capacity-vs-forecast integrator + hiring forecast + allocation engine)
 
 Rewrote `website/docs/modules/res.html` to Gold. Three strategic roles: (1) capacity-vs-forecast integrator (joins HR + PROJ + TIME + LEARN on Member-id × week; integrator not source-of-truth), (2) hiring forecast (skill-gap × CRM pipeline × LEARN mastery → hire trigger before deliverables drop), (3) allocation engine (CUO/COO drafts rebalance recommendations; VN Labour Code Art. 107 OT caps hard-floor).
