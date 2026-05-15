@@ -431,7 +431,7 @@ graph TB
 
  <h3 class="text-lg font-bold mt-6 mb-3">Cross-tenant synthesis — what Lumi actually <em>does</em> at P3+</h3>
  <p class="text-slate-700 leading-relaxed mb-3">
- Lumi runs on Lumi's BRAIN (the cloud-hosted org-tenant store). Per tenant, it ingests <code>sync_class ∈ {shareable, team-public, org-only}</code> memories from each Member's personal BRAIN and from CUO's decision rows. The compounding moat comes from one fact: <strong>the cross-team synthesis improves the personas everyone uses</strong>. When the CPO persona gets better at PRD authoring because Lumi has seen 200 PRDs across 50 tenants, every tenant's CPO improves. The synthesis is bounded by sync_class — never private/personal — and by jurisdictional residency (Lumi's BRAIN shards by region).
+ Lumi runs on Lumi's BRAIN (the cloud-hosted org-tenant store). Per tenant, it ingests <code>sync_class ∈ {shareable, team-public, org-only}</code> memories from each Member's personal BRAIN and from CUO's decision rows. The compounding moat comes from one fact: <strong>the cross-team synthesis improves the personas everyone uses</strong>. When the CPO persona gets better at product-brief authoring because Lumi has seen 200 product briefs across 50 tenants, every tenant's CPO improves. The synthesis is bounded by sync_class — never private/personal — and by jurisdictional residency (Lumi's BRAIN shards by region).
  </p>
  <div class="bbg-card p-5">
  <table class="kt">
@@ -519,7 +519,7 @@ sequenceDiagram
  <tr><td><strong>CSO</strong></td><td>risk register entry · vulnerability summary</td><td>access revoke · incident escalation send · firewall change</td></tr>
  <tr><td><strong>CLO</strong></td><td>contract redline · NDA triage · compliance check</td><td>contract sign · litigation response · regulator filing</td></tr>
  <tr><td><strong>CDO</strong></td><td>SQL draft · dashboard scaffold · stats summary</td><td>prod query execute · data export to third party · model train trigger</td></tr>
- <tr><td><strong>CPO</strong></td><td>PRD draft · spec audit · roadmap update draft</td><td>roadmap publish · public roadmap send · spec freeze announce</td></tr>
+ <tr><td><strong>CPO</strong></td><td>prd-author draft · prd-audit · roadmap update draft</td><td>roadmap publish · public roadmap send · spec freeze announce</td></tr>
  </tbody>
  </table>
  </div>
@@ -940,7 +940,7 @@ stateDiagram-v2
  <h3><span class="emoji">💻</span>CTO / CIO · Technology &amp; Information Systems <span class="role-tag">co-owned: CEO + CTO seat</span></h3>
  <p class="text-sm text-slate-600">Tech-debt triage, security advisories digest, OBS metric review, dependency upgrades, architecture decision records. Owner of "is the platform safe and fast".</p>
  <div class="label">Auto OK</div>
- <div><span class="auto-ok">propose ADR</span><span class="auto-ok">draft SRS</span><span class="auto-ok">test-coverage report</span><span class="auto-ok">summarise OBS digest</span><span class="auto-ok">flag CVE</span></div>
+ <div><span class="auto-ok">propose ADR</span><span class="auto-ok">draft tech spec</span><span class="auto-ok">test-coverage report</span><span class="auto-ok">summarise OBS digest</span><span class="auto-ok">flag CVE</span></div>
  <div class="label">Defers to human</div>
  <div><span class="defers">deploy to production</span><span class="defers">rotate KMS key</span><span class="defers">grant new capability</span><span class="defers">disable security control</span></div>
  </article>
@@ -988,9 +988,9 @@ stateDiagram-v2
  <!-- CPO -->
  <article id="persona-cpo" class="persona-card">
  <h3><span class="emoji">🚀</span>CPO · Product <span class="role-tag">P0 co-owned with CEO seat</span></h3>
- <p class="text-sm text-slate-600">PRD drafts, roadmap analysis, requirements discovery, user-research synthesis, FR catalogue maintenance. Owner of "are we building the right thing". Today's most-exercised persona — the FR-author / SRS-author / requirements-discovery skills all live here.</p>
+ <p class="text-sm text-slate-600">Product-brief drafts, roadmap analysis, requirements discovery, user-research synthesis, FR catalogue maintenance. Owner of "are we building the right thing". Today's most-exercised persona — the fr-author / prd-author / requirements-discovery skills all live here.</p>
  <div class="label">Auto OK</div>
- <div><span class="auto-ok">draft PRD</span><span class="auto-ok">FR catalog refresh</span><span class="auto-ok">requirements discovery interview</span><span class="auto-ok">user-research synthesis</span><span class="auto-ok">roadmap update</span></div>
+ <div><span class="auto-ok">prd-author draft</span><span class="auto-ok">FR catalog refresh</span><span class="auto-ok">requirements discovery interview</span><span class="auto-ok">user-research synthesis</span><span class="auto-ok">roadmap update</span></div>
  <div class="label">Defers to human</div>
  <div><span class="defers">ship feature</span><span class="defers">make customer-facing promise</span><span class="defers">change pricing</span><span class="defers">commit to roadmap publicly</span></div>
  </article>
@@ -1026,7 +1026,7 @@ stateDiagram-v2
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
  <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
 

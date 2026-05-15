@@ -55,7 +55,7 @@
  The legal heart of the social contract. 3P income (P1 Base + P2 Allowance + P3 Performance), an inflation-protected BP ledger, anti-retroactive parameter versioning, and a P1-protection invariant that cannot be violated even by accident.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- REW encodes the Total Rewards & Career Path Appendix exactly. It is "Bet 5" in the PRD: a moat. The three-component 3P model decomposes monthly pay into <strong>P1 (Base, cash, contractually guaranteed)</strong>, <strong>P2 (Allowance, cash, role-tier-based)</strong>, and <strong>P3 (Performance, cash overflow from bonus pool)</strong>. The BP (Bonus Points) ledger is a unit-of-account ledger with anti-inflation interest pegged to the ACB savings rate. Two hard invariants make this module legally distinctive: (1) <strong>the system never reduces P1 base salary in cash</strong> as a result of an evaluation — even a bad performance review cannot trigger a P1 cut; and (2) <strong>published parameter versions are immutable</strong> — recomputing an old payslip against the parameters effective at that period_end must yield byte-identical output forever. Compensation values are structurally excluded from BRAIN ingestion (DEC-036). The module is EU AI Act Annex III §4 high-risk because payroll computation is employment-decision automation. locks the FRs; binds them to verification methods.
+ REW encodes the Total Rewards & Career Path Appendix exactly. It is "Bet 5" in the strategy: a moat. The three-component 3P model decomposes monthly pay into <strong>P1 (Base, cash, contractually guaranteed)</strong>, <strong>P2 (Allowance, cash, role-tier-based)</strong>, and <strong>P3 (Performance, cash overflow from bonus pool)</strong>. The BP (Bonus Points) ledger is a unit-of-account ledger with anti-inflation interest pegged to the ACB savings rate. Two hard invariants make this module legally distinctive: (1) <strong>the system never reduces P1 base salary in cash</strong> as a result of an evaluation — even a bad performance review cannot trigger a P1 cut; and (2) <strong>published parameter versions are immutable</strong> — recomputing an old payslip against the parameters effective at that period_end must yield byte-identical output forever. Compensation values are structurally excluded from BRAIN ingestion (DEC-036). The module is EU AI Act Annex III §4 high-risk because payroll computation is employment-decision automation. locks the FRs; binds them to verification methods.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -149,7 +149,7 @@
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- REW is "Bet 5" in the PRD — the moat. The point is that compensation is not a HR feature: it's a sovereign, legally-sensitive computation plane that must be architecturally separated from everything else. HR holds identity; REW holds the numbers. The P1-protection invariant + anti-retroactive parameter versioning + structural BRAIN exclusion (DEC-036) are non-negotiable hard rules.
+ REW is "Bet 5" in the strategy — the moat. The point is that compensation is not a HR feature: it's a sovereign, legally-sensitive computation plane that must be architecturally separated from everything else. HR holds identity; REW holds the numbers. The P1-protection invariant + anti-retroactive parameter versioning + structural BRAIN exclusion (DEC-036) are non-negotiable hard rules.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-6">
  <div class="bbg-card p-5" style="border-top:4px solid var(--rew)">
@@ -251,7 +251,7 @@ flowchart TB
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
- The bet (Bet 5 in the PRD) is that <em>treating Total Rewards as a moat</em> is itself the moat. Companies that get comp wrong lose people; companies that get comp <em>verifiable and explainable</em> earn trust that compounds. REW's invariants — append-only, deterministic, P1-protected, parameter-versioned — make the comp system itself a trust-producing artifact, not just a payroll engine.
+ The bet (Bet 5 in the strategy) is that <em>treating Total Rewards as a moat</em> is itself the moat. Companies that get comp wrong lose people; companies that get comp <em>verifiable and explainable</em> earn trust that compounds. REW's invariants — append-only, deterministic, P1-protected, parameter-versioned — make the comp system itself a trust-producing artifact, not just a payroll engine.
  </p>
 </section>
 
@@ -838,7 +838,7 @@ stateDiagram-v2
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
  <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
 
@@ -1182,7 +1182,7 @@ graph LR
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li> — REW module FRs ((FR pending) through (FR pending)).</li>
  <li> — REW architecture posture, Bet 5 framing.</li>
- <li><strong>PRD Bet 5</strong> — "The Total Rewards Appendix is a moat too" (DEC-036 BRAIN exclusion).</li>
+ <li><strong>Strategy Bet 5</strong> — "The Total Rewards Appendix is a moat too" (DEC-036 BRAIN exclusion).</li>
  <li> — Security NFRs (SEC-002: zero P1 reduction).</li>
  <li> — Formal (FR pending) through (FR pending) with verification methods.</li>
  <li><strong>Total Rewards &amp; Career Path Appendix</strong> — Legal source of truth; 3P decomposition; P1 protection.</li>

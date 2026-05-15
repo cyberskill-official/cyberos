@@ -393,7 +393,7 @@ graph TB
  <tr><td><code>ai_lead_scoring.rs</code></td><td>services/crm/src/ai_lead_scoring.rs</td><td>Nightly batch lead scoring. Features: activity recency, engagement size, account vertical, historical win-rate.</td></tr>
  <tr><td><code>ai_nba.rs</code></td><td>services/crm/src/ai_nba.rs</td><td>Next-best-action generator. For each open deal, produces a concrete suggestion ("send proposal", "schedule check-in", "request VietQR collection").</td></tr>
  <tr><td><code>ai_forecast.rs</code></td><td>services/crm/src/ai_forecast.rs</td><td>Confidence-banded forecast (CUO/CRO-skill). Per-pipeline VND total + USD total with 50% / 80% / 95% bands.</td></tr>
- <tr><td><code>merge_detector.rs</code></td><td>services/crm/src/merge_detector.rs</td><td>Detects ≥ 2 contacts sharing email or normalised phone; surfaces as a Notify ((FR pending) SRS).</td></tr>
+ <tr><td><code>merge_detector.rs</code></td><td>services/crm/src/merge_detector.rs</td><td>Detects ≥ 2 contacts sharing email or normalised phone; surfaces as a Notify ((FR pending)).</td></tr>
  <tr><td><code>vn_mst.rs</code></td><td>services/crm/src/vn_mst.rs</td><td>Adapter to <code>vn-mst-validate</code> skill. Caches results 7 days.</td></tr>
  <tr><td><code>vn_vietqr.rs</code></td><td>services/crm/src/vn_vietqr.rs</td><td>Adapter to <code>vn-bank-transfer</code> skill. Generates Napas247 QR on demand.</td></tr>
  <tr><td><code>vn_hoadon.rs</code></td><td>services/crm/src/vn_hoadon.rs</td><td>Adapter to <code>vn-vat-invoice</code> skill. Fires on deal close.</td></tr>
@@ -895,7 +895,7 @@ stateDiagram-v2
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
  <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
 

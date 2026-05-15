@@ -315,7 +315,7 @@ gantt
  <tr><td>9</td><td><code>coo</code></td><td>COO seat. Cross-module status digests · blocker triage · process changes.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>10</td><td><code>chro</code></td><td>CHRO seat. HR records · onboarding · performance review · PII-read elevated.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>11</td><td><code>cmo</code></td><td>CMO seat. Campaign briefs · content calendars · external comms approval.</td><td>—</td><td>slice 4</td></tr>
- <tr><td>12</td><td><code>cpo</code></td><td>CPO seat. PRD signoff · roadmap commits · fr-author canonical role.</td><td>—</td><td>slice 4</td></tr>
+ <tr><td>12</td><td><code>cpo</code></td><td>CPO seat. Product-brief signoff · roadmap commits · fr-author canonical role.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>13</td><td><code>cso</code></td><td>CSO (Strategy) seat. OKR cascade · scenario modelling · competitive intel read.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>14</td><td><code>cseco</code></td><td>CSO (Security) seat. Security review · key rotation approval · vulnerability triage.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>15</td><td><code>clo</code></td><td>CLO (Compliance/Legal) seat. Contract redline · DSAR triage · regulatory drift signoff.</td><td>—</td><td>slice 4</td></tr>
@@ -522,7 +522,7 @@ graph TB
  <tr><td><code>scope.rs</code></td><td>services/auth/src/scope.rs</td><td>Scope Contract Grant resolver. Reads agent-persona scope sheets from BRAIN; emits effective scope set per JWT.</td></tr>
  <tr><td><code>session.rs</code></td><td>services/auth/src/session.rs</td><td>Session manager — issue, validate, revoke. Device tracking + impossible-travel detection.</td></tr>
  <tr><td><code>jwt.rs</code></td><td>services/auth/src/jwt.rs</td><td>JWT issuance / verification. RS256 via KMS; key rotation; JWKS publication.</td></tr>
- <tr><td><code>impossible_travel.rs</code></td><td>services/auth/src/impossible_travel.rs</td><td>Geographic-velocity check on consecutive logins (PRD (FR pending)); challenge if velocity &gt; 1,000 km/h.</td></tr>
+ <tr><td><code>impossible_travel.rs</code></td><td>services/auth/src/impossible_travel.rs</td><td>Geographic-velocity check on consecutive logins ((FR pending)); challenge if velocity &gt; 1,000 km/h.</td></tr>
  <tr><td><code>password.rs</code></td><td>services/auth/src/password.rs</td><td>Argon2id hashing, password-policy enforcement, breach-list check via HIBP k-anonymity API.</td></tr>
  <tr><td><code>device.rs</code></td><td>services/auth/src/device.rs</td><td>Device fingerprinting ((FR pending)), new-device email, force-logout endpoint.</td></tr>
  <tr><td><code>magic_link.rs</code></td><td>services/auth/src/magic_link.rs</td><td>Magic-link onboarding flow ((FR pending)) — single-use, time-bound, onboarding-only.</td></tr>
@@ -1079,7 +1079,7 @@ stateDiagram-v2
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
  <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
 

@@ -34,7 +34,7 @@
  </div>
  <h1 class="h-1 mb-3">Non-Functional Requirements Catalog</h1>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-4">
- Every quantitative budget, threshold, and quality attribute CyberOS commits to. Eight ISO/IEC 25010 categories — performance, reliability, security, usability, maintainability, compatibility, transferability, functional suitability — each carrying a measurable target and a verification method (T = Test, I = Inspection, D = Demo, A = Analysis). Sourced from and the SRS NFR catalog.
+ Every quantitative budget, threshold, and quality attribute CyberOS commits to. Eight ISO/IEC 25010 categories — performance, reliability, security, usability, maintainability, compatibility, transferability, functional suitability — each carrying a measurable target and a verification method (T = Test, I = Inspection, D = Demo, A = Analysis).
  </p>
 
  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
@@ -166,7 +166,7 @@ xychart-beta
  </div>
 
  <div class="mt-16 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
- <p>CyberOS Documentation · NFR Catalog · PRD v2026.05 §11.2 + </p>
+ <p>CyberOS Documentation · NFR Catalog · v2026.05</p>
  </div>
 </div>
 
@@ -283,7 +283,7 @@ const NFR_DATA = [
  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Build determinism', description:'Re-running CI on the same SHA produces identical artefact hashes.', target:'Identical hashes', measurement:'Reproducible-build check', modules:'all', verify:'T', reference:'inferred'},
  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Dependency audit', description:'npm/pip/cargo audit must run on every PR with no Critical findings.', target:'0 Critical CVEs', measurement:'CI gate', modules:'all', verify:'T', reference:'inferred / N(FR pending)'},
  { id:'N(FR pending)', category:'maint', phase:'p0', title:'CHANGELOG newest-first', description:'Every shipped module maintains a CHANGELOG newest-first.', target:'Present + current', measurement:'Repo audit', modules:'all', verify:'I', reference:'inferred / CHANGELOG policy'},
- { id:'N(FR pending)', category:'maint', phase:'p0', title:'PRD-FR traceability', description:'Every FR row in the PRD maps to an open or closed issue.', target:'100% traceability', measurement:'Catalog cross-link audit', modules:'PM', verify:'I', reference:''},
+ { id:'N(FR pending)', category:'maint', phase:'p0', title:'FR traceability', description:'Every FR row maps to an open or closed issue.', target:'100% traceability', measurement:'Catalog cross-link audit', modules:'PM', verify:'I', reference:''},
  { id:'N(FR pending)', category:'maint', phase:'p1', title:'Skill schema-drift detection', description:'Spec validator MUST flag drift between local skills and Anthropic Skills spec.', target:'Continuous', measurement:'CI gate', modules:'SKILL', verify:'I', reference:'(FR pending)'},
  { id:'N(FR pending)', category:'maint', phase:'p0', title:'Apollo Federation composition check', description:'Federation composition gate runs in CI on every PR.', target:'Composition green', measurement:'Apollo Rover check', modules:'GraphQL · all subgraphs', verify:'T', reference:'(FR pending) / N(FR pending)'},/ ============ COMPAT ============
  { id:'N(FR pending)', category:'compat', phase:'p0', title:'Browser support', description:'Last-two-major versions of Chromium / Firefox / Safari.', target:'Chromium · Firefox · Safari last 2 versions', measurement:'BrowserStack matrix', modules:'all FE remotes', verify:'T', reference:''},

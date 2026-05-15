@@ -276,7 +276,7 @@ flowchart TB
  <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Fargate task in SG-1 (P0); read-only embedder/reranker GPU node (shared with KB). Multi-region active-active at P3+.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why a separate layer?</td><td>Because per-module SDK adoption creates cost untraceability, PII drift, and failover ratchets. One gateway eliminates all three.</td></tr>
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Receive gRPC call → resolve tenant policy from BRAIN (cached) → look up cache → on miss, redact PII → inject persona-version system prompt → call primary provider with 2 retries → on continued failure within 30 s, fail over to secondary → stream response back via SSE → store redacted prompt + response in cache → emit <code>ai.invocation</code> audit row → return.</td></tr>
- <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>P0 budget: ≤ $150 / month LLM (PRD N(FR pending)). 50-tenant budget: ≤ $4 / active user / month LLM. Cache hit rate is the dominant lever.</td></tr>
+ <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>P0 budget: ≤ $150 / month LLM (N(FR pending)). 50-tenant budget: ≤ $4 / active user / month LLM. Cache hit rate is the dominant lever.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Zero cross-tenant cache. (b) PII recall ≥ 99% measured against a public VN+EN test set. (c) Provider must be on ZDR (Zero-Data-Retention) attested endpoint for sensitive routes. (d) Per-tenant monthly USD cap hard-enforced.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Python 3.13 · LiteLLM (vendored) · grpc-py · Presidio · regex-based VN PII rules · Redis (cache) · DuckDB (usage roll-up) · OpenTelemetry · self-hosted BGE-M3 embedder + BGE-rerank on a shared L4 GPU.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Streaming-first (SSE end-to-end). Circuit breaker per provider × model. Hash-keyed cache (SHA-256 of canonical prompt + model + parameters). Idempotency-Key header for replay safety. Per-route latency budgets (read ≤ 800 ms, write ≤ 2 s, ingest ≤ 5 s).</td></tr>
@@ -1091,7 +1091,7 @@ stateDiagram-v2
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
  <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
 

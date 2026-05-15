@@ -264,7 +264,7 @@ flowchart LR
  <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because AR-ledger drift and tax-compliance surprise are existential to small companies. INV is the one source of truth for "what did we bill, what did they pay, who owes what".</td></tr>
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Postgres for invoice + payment + reminder rows. Stripe / Wise webhooks → cash_application engine matches receipts to invoices by metadata + amount. VietQR generated via <code>vn-bank-transfer</code> skill; bank confirms via screen-scrape OR open-banking API (Napas247 P3). Vietnamese e-invoice via <code>vn-vat-invoice</code> skill → POST to GDT.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P2: ~$40/month (RDS + Fargate + Stripe/Wise pass-through fees). 50-tenant: ~$150/month. Per-invoice cost: ~$0.02 + payment processor fee.</td></tr>
- <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Vietnam Decree 123 + Circular 78 — e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items ((FR pending)). (d) Approved invoices are append-only ((FR pending) SRS); corrections via credit note.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Vietnam Decree 123 + Circular 78 — e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items ((FR pending)). (d) Approved invoices are append-only ((FR pending)); corrections via credit note.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · stripe-rust · wise sdk · typst / tectonic for PDF · async-graphql · cyberskill-vn skills · AWS S3 (immutable archive).</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Idempotent webhooks (Stripe idempotency-key + DB UNIQUE on external_event_id). VND rate snapshot daily from SBV REST endpoint. Multi-rail collection abstracted behind <code>PaymentRail</code> trait. Append-only invoice rows; credit-note for corrections.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate in SG-1. Multi-AZ Postgres RDS. S3 immutable bucket for PDFs.</td></tr>
@@ -890,7 +890,7 @@ stateDiagram-v2
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
  <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
 

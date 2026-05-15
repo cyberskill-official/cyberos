@@ -325,15 +325,16 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text); letter-spacing: -
 .h-1 {
   font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 800;
-  line-height: 1.25;               /* was 1.15 — BVP needs +0.1 */
+  line-height: 1.3;                /* bumped 1.25→1.3 — BVP descenders need extra room at large sizes */
   letter-spacing: -0.015em;
-  margin-block-end: 1.25rem;
+  margin-block-end: 1.5rem;        /* bumped 1.25→1.5 — eliminate overlap with following paragraph */
+  padding-block-end: 0.25rem;      /* protect descenders from sibling collisions */
 }
 .h-2 {
   font-size: 1.5rem;
   font-weight: 700;
-  line-height: 1.4;                /* was 1.25 — small heading, larger gap helps */
-  margin-block-end: 0.75rem;
+  line-height: 1.4;
+  margin-block-end: 0.875rem;      /* slight bump for safety */
 }
 .h-3 {
   font-size: 1.125rem;
@@ -341,9 +342,10 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text); letter-spacing: -
   line-height: 1.45;
   margin-block-end: 0.5rem;
 }
-/* Don't let `mb-*` Tailwind utilities collapse against the heading's
-   block-end margin — applies a tiny min-gap. */
-.h-display + *, .h-1 + *, .h-2 + *, .h-3 + * { margin-block-start: 0; }
+/* Headings get a guaranteed minimum gap to following content even when Tailwind
+   `mb-*` is applied — prevents BVP-descender collisions on h-display / .h-1. */
+.h-display + *, .h-1 + * { margin-block-start: 0.5rem !important; }
+.h-2 + *, .h-3 + * { margin-block-start: 0.25rem; }
 .h-eyebrow { font-size: 0.6875rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-mute); }
 
 /* ---------- HERO GRADIENT ---------- */
@@ -426,15 +428,26 @@ table.bbg-table tbody td {
 table.bbg-table tbody tr:nth-child(even) td { background: var(--future-bg); }
 table.bbg-table tbody tr:hover td { background: var(--memory-bg); }
 
-/* ---------- MERMAID CONTAINER ---------- */
+/* ---------- MERMAID CONTAINER ----------
+   Mermaid SVGs are wider than their parent on complex flowcharts. We must NOT
+   shrink them (that makes labels microscopic). Instead let the container scroll
+   horizontally and keep the SVG at its natural intrinsic size. */
 .mermaid {
-  display: flex;
-  justify-content: center;
   padding: 1rem;
   max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
-.mermaid svg { max-width: 100%; height: auto; }
+.mermaid svg {
+  max-width: none !important;       /* override Mermaid's default 100% */
+  height: auto;
+  display: block;
+  margin: 0 auto;                   /* center when narrower than container */
+}
+/* Subtle scroll hint so users notice horizontal scroll is available */
+.mermaid::-webkit-scrollbar { height: 8px; }
+.mermaid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 /* ---------- EXPAND / COLLAPSE ---------- */
 [x-cloak] { display: none !important; }
@@ -1002,3 +1015,76 @@ pre.codeblock {
 .text-purple-600,  .text-purple-700,  .text-purple-900  { color: var(--ochre-700) !important; }
 .text-amber-600,   .text-amber-700,   .text-amber-900   { color: var(--ochre-700) !important; }
 .text-rose-600,    .text-rose-700                       { color: var(--ochre-700) !important; }
+
+/* ============================================================
+   MOBILE OVERFLOW SAFETY NET
+   Prevents the horizontal-scroll-on-page bug observed on Cloudflare
+   deploy. The root cause is wide content (tables, pre, fact-grids,
+   Mermaid SVGs) escaping their column on viewports < 768px.
+   ============================================================ */
+html, body { overflow-x: hidden; max-width: 100vw; }
+
+.container { width: 100%; max-width: 80rem; min-width: 0; }
+
+/* Any grid/flex child needs min-width:0 so wide content can shrink instead
+   of forcing the parent to overflow. */
+.bbg-card, .tile, main, aside { min-width: 0; }
+.bbg-card { overflow-wrap: anywhere; }
+
+/* Tables get a responsive wrapper. Module pages use `.kt` and `.bbg-table`. */
+table.kt, table.bbg-table { max-width: 100%; }
+
+/* Bare <pre> blocks (not inside .codeblock) — let them wrap on narrow viewports
+   instead of forcing horizontal scroll on the whole page. */
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  /* Tighter container padding on mobile. */
+  .container { padding-left: 1rem; padding-right: 1rem; }
+
+  /* Tables wider than viewport scroll horizontally inside their card,
+     not page-wide. */
+  .bbg-card > table,
+  .bbg-card .kt,
+  table.kt, table.bbg-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  .bbg-card > table > tbody > tr > td,
+  .bbg-card > table > thead > tr > th {
+    white-space: normal;
+  }
+
+  /* Wrap long code lines instead of horizontal-scrolling. */
+  pre, code { white-space: pre-wrap; word-break: break-word; }
+  .codeblock pre { white-space: pre; }   /* keep .codeblock as-is — has its own scroll */
+
+  /* Fact grid: smaller minimum + visual tightening. */
+  .fact-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; gap: 0.5rem; }
+  .fact-card { padding: 0.625rem 0.75rem; }
+  .fact-card .value { font-size: 1rem; }
+
+  /* Hero display heading: tighter on small viewports. */
+  .h-display { font-size: clamp(1.875rem, 8vw, 2.5rem); line-height: 1.2; }
+  .h-1 { font-size: clamp(1.625rem, 6vw, 2.25rem); line-height: 1.3; }
+
+  /* Sticky TOC: drop sticky on mobile so it doesn't pin awkwardly above
+     the scroll area. (Tailwind `lg:sticky` is on the inner div, not the aside.) */
+  aside .lg\:sticky { position: static; top: auto; }
+
+  /* Mermaid container: cap height to prevent monstrous portrait diagrams
+     from overwhelming the page on mobile. */
+  .mermaid { max-height: 70vh; overflow: auto; }
+  .mermaid svg { max-height: 70vh; width: auto; }
+}
+
+@media (max-width: 480px) {
+  .container { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .fact-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important; }
+}

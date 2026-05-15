@@ -387,7 +387,7 @@ graph TB
  <tr><td><code>categoriser.rs</code></td><td>services/time/src/categoriser.rs</td><td>Expense categoriser via AI Gateway. Picks from per-tenant chart of accounts; confidence threshold for auto-apply.</td></tr>
  <tr><td><code>calendar_sync.rs</code></td><td>services/time/src/calendar_sync.rs</td><td>Two-way Google / Outlook sync for leave events ((FR pending)).</td></tr>
  <tr><td><code>nudge.rs</code></td><td>services/time/src/nudge.rs</td><td>CUO/COO-skill nudge for Members who haven't logged time in 2 days ((FR pending)).</td></tr>
- <tr><td><code>inconsistency.rs</code></td><td>services/time/src/inconsistency.rs</td><td>Detect overlapping entries, &gt; 12 h continuous, and other anomalies ((FR pending) SRS).</td></tr>
+ <tr><td><code>inconsistency.rs</code></td><td>services/time/src/inconsistency.rs</td><td>Detect overlapping entries, &gt; 12 h continuous, and other anomalies ((FR pending)).</td></tr>
  <tr><td><code>inv_export.rs</code></td><td>services/time/src/inv_export.rs</td><td>Weekly batched billable summary export to INV.</td></tr>
  <tr><td><code>dsar_export.rs</code></td><td>services/time/src/dsar_export.rs</td><td>DSAR bundle for a Member.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/time/migrations/</td><td>sqlx migrations. All tables RLS by <code>tenant_id</code>; <code>time_entry.member_id</code> additionally enforced.</td></tr>
@@ -910,7 +910,7 @@ stateDiagram-v2
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
  <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. PRD/SRS narrative remains authoritative for the spec; specific FRs land here as they are re-authored.</p>
+ <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
 
