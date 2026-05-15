@@ -315,6 +315,15 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; color: var(--text); letter-spacing: -
    so the previous Inter-tuned line-heights collide. These values are tuned
    for BVP first, Inter fallback. Always pair with `margin-block-end` and a
    following block-level element's `margin-block-start: 0` to avoid collapse. */
+/* CRITICAL: Tailwind's vendored stylesheet defines `.h-1`, `.h-2`, `.h-3` as
+   spacing utilities (`height: 0.25rem`, `0.5rem`, `0.75rem`). Our typography
+   classes share the same selector and Tailwind wins on `height` — collapsing
+   the heading box to 4-12px and causing the text-overflow-into-paragraph bug
+   observed on the live deploy. Force `height: auto !important` to override.
+   (Long-term fix: rename to `.h-display`, `.h-title`, `.h-section`, etc. —
+   tracked but not done here to minimise blast radius.) */
+.h-display, .h-1, .h-2, .h-3 { height: auto !important; }
+
 .h-display {
   font-size: clamp(2.5rem, 6vw, 4.5rem);
   font-weight: 900;

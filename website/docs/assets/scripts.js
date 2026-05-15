@@ -45,6 +45,31 @@ async function renderMermaid() {
     try { await mermaid.run({ nodes }); }
     catch (e) { console.warn('mermaid render error', e); }
   }
+  // Post-process: Mermaid emits SVG with width="100%" which forces the SVG to
+  // shrink-fit its container. For wide flowchart-LR diagrams (e.g. Stages 1-5
+  // with viewBox 4200x190), this compresses the rendered height to ~50px and
+  // makes labels microscopic. Fix: replace width="100%" with the viewBox's
+  // natural width, so the SVG keeps its true aspect ratio and the .mermaid
+  // container's overflow-x:auto provides horizontal scroll on narrow viewports.
+  document.querySelectorAll('.mermaid svg').forEach(svg => {
+    if (svg.dataset.sizingFixed === '1') return;
+    const vb = svg.getAttribute('viewBox');
+    if (!vb) return;
+    const parts = vb.split(/\s+/);
+    if (parts.length !== 4) return;
+    const naturalW = parseFloat(parts[2]);
+    const naturalH = parseFloat(parts[3]);
+    if (!isFinite(naturalW) || !isFinite(naturalH)) return;
+    // Cap super-tall diagrams at 80vh; wider-than-container diagrams keep natural width.
+    svg.removeAttribute('width');
+    svg.removeAttribute('height');
+    svg.style.width = naturalW + 'px';
+    svg.style.height = naturalH + 'px';
+    svg.style.maxWidth = 'none';
+    svg.style.maxHeight = 'none';
+    svg.style.display = 'block';
+    svg.dataset.sizingFixed = '1';
+  });
 }
 
 /* ---------- Path helper — figure out where /assets/ lives from current page ----------

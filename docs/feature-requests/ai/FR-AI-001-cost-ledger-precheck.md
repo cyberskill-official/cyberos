@@ -1,0 +1,409 @@
+---
+# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+id: FR-AI-001
+title: "AI Gateway cost-ledger pre-call check"
+module: AI
+priority: MUST           # MUST | SHOULD | COULD | MAY
+status: draft            # draft → audited → accepted → building → shipped (or deferred / rejected / superseded)
+verify: T                # T (test) | I (inspection) | A (analysis) | D (demonstration)
+phase: P0
+milestone: M+1
+slice: 1                 # AI Gateway slice 1 of 5
+owner: Stephen Cheng
+created: 2026-05-15
+shipped: null
+brain_chain_hash: null   # filled by fr-author / first commit
+related_frs: []          # cross-refs added after fr-audit
+depends_on: []           # nothing — this is FR-AI-001, the very first AI Gateway FR
+blocks: [FR-AI-002, FR-AI-003, FR-AI-004]   # subsequent slice-1 FRs
+
+# ───── Source contracts (where the spec authority lives) ─────
+source_pages:
+  - website/docs/modules/ai.html#cost-gate
+  - website/docs/modules/ai.html#bigger-picture
+source_decisions:
+  - AUDIT_AND_PLAN_2026_05_14.md §3.3 (M+1 build placement)
+  - RESEARCH_REVIEW_2026_05_14.md §2.4 (reorder before AUTH)
+
+# ───── Build envelope (read by AI agent before code-gen) ─────
+language: rust 1.81
+service: cyberos/services/ai-gateway/
+new_files:
+  - services/ai-gateway/src/cost_ledger.rs
+  - services/ai-gateway/src/policy.rs
+  - services/ai-gateway/migrations/0001_cost_ledger.sql
+  - services/ai-gateway/tests/cost_precheck_test.rs
+modified_files:
+  - services/ai-gateway/src/lib.rs
+  - services/ai-gateway/src/handlers/chat.rs
+  - services/ai-gateway/Cargo.toml
+allowed_tools:           # what an AI-agent implementer is permitted to invoke
+  - file_read: services/ai-gateway/**
+  - file_write: services/ai-gateway/{src,tests,migrations}/**
+  - bash: cargo test -p cyberos-ai-gateway
+  - bash: cargo sqlx migrate run
+  - brain: write meta/ai-invocations/* via canonical Writer (NOT directly)
+disallowed_tools:        # protocol-level forbidden — refuse if caller proposes
+  - touch services/auth/** (AUTH is downstream of AI Gateway at M+1)
+  - in-place edit of services/ai-gateway/src/lib.rs `lib::run()` signature
+  - bypass cost_ledger.precheck() from any new code path
+
+# ───── Estimated work (for human triage + scheduling) ─────
+effort_hours: 8           # 1 person-day; sub-tasks below
+sub_tasks:
+  - "0.5h: sqlx migration for cost_ledger table (3 columns + 2 indexes)"
+  - "1.0h: TenantPolicy YAML parser + load-from-config"
+  - "2.0h: precheck() function with token-estimate + cap check"
+  - "1.5h: hold creation + 60s TTL job"
+  - "1.5h: BRAIN audit row emission via Writer subprocess"
+  - "1.5h: integration test (real Postgres container)"
+risk_if_skipped: "Every consumer module (CUO, KB, CHAT) will hit raw provider APIs with no cost cap. Tenant surprise-bill blast radius is unbounded. This is the protocol-level invariant the M+1 reorder exists to enforce."
+---
+
+## §1 — Description (BCP-14 normative)
+
+The AI Gateway service **MUST** expose a `cost_ledger::precheck(request)` function that runs synchronously before any LLM-provider call. Given a `ChatCompleteRequest` with `tenant_id` and `agent_persona`, the function:
+
+1. **MUST** estimate the request's USD cost from the prompt token count × the provider's per-1k-token rate at the resolved model alias.
+2. **MUST** read the tenant's `monthly_cap_usd` and current MTD `spent_usd` from the `cost_ledger` table (Postgres).
+3. **MUST** refuse with `402 PAYMENT_REQUIRED` if `estimated_cost + current_spent > monthly_cap_usd × 1.0` (the hard floor).
+4. **SHOULD** emit a `warn_threshold_crossed` event to OBS if `current_spent` crosses `monthly_cap_usd × warn_threshold` (default 0.80).
+5. **MUST** create a `cost_ledger_hold` row in Postgres with `estimated_usd`, `tenant_id`, `idempotency_key`, `expires_at = now() + 60s` before returning `allow`.
+6. **MUST** emit one `ai.precheck` audit row on the local BRAIN via the canonical Writer subprocess before returning `allow` (audit-before-action invariant).
+7. **MUST** return synchronously within 50ms p95 — the precheck is on the hot path of every chat call.
+
+This is the cost-of-everything gate per the AI Gateway page §0 Role 1 and §2.5. Every consumer (CUO, KB, CHAT, PROJ inline genie, OBS auto-triage) inherits this gate; there is no bypass path.
+
+---
+
+## §2 — Why this design (rationale for humans)
+
+**The naive design** would compute cost post-hoc — let the provider charge, then check budget. That works until the first tenant blows past their cap mid-month and discovers it on the invoice. The trust loss is permanent.
+
+**The two-phase design** (precheck + post-reconcile, this FR + FR-AI-002) borrows from database transaction theory: estimate the cost first, hold it, then reconcile. Holds expire after 60s if the post-check never arrives — defensive. The pre-call cost overhead is ~5ms of Postgres I/O.
+
+**The hard-stop default at 1.0×** (not 1.1× or "soft warn") is deliberate. Soft caps in finance always become hard losses when the tenant disputes the overage. The override path exists (`policy.emergency_override: true`) but requires CFO sign-off recorded in BRAIN — *not* an automatic fallback.
+
+**Why this is FR-AI-001 specifically** (not FR-AUTH-001): per research review §2.4, AI Gateway ships at M+1 *before* AUTH. The X-Tenant header (HMAC-signed by a deployment secret) substitutes for JWT auth in slice 1; once AUTH ships at M+2, the tenant_id source switches to the AUTH JWT claim per AI Gateway page §2.5. This FR therefore uses the X-Tenant header path; FR-AI-006 (slice 2) replaces it with JWT extraction.
+
+---
+
+## §3 — API contract (formal spec for AI-agent implementers)
+
+### Public function signature
+
+```rust
+// services/ai-gateway/src/cost_ledger.rs
+pub async fn precheck(
+    req: &ChatCompleteRequest,
+    pool: &PgPool,
+    policy: &TenantPolicy,
+) -> Result<PrecheckOutcome, PrecheckError>;
+
+pub enum PrecheckOutcome {
+    Allow { hold_id: Uuid, estimated_usd: Decimal, ttl_seconds: u32 },
+    Refuse { reason: RefuseReason, current_spent_usd: Decimal, cap_usd: Decimal },
+}
+
+pub enum RefuseReason {
+    BudgetCapExceeded,
+    TenantSuspended,
+    ProviderUnavailable,   // resolved-provider cost-table missing
+    InvalidIdempotencyKey,
+}
+
+pub enum PrecheckError {
+    DbError(sqlx::Error),
+    BrainWriterFailed { stderr: String },
+    PolicyLoadFailed,
+    CostEstimateFailed { reason: String },
+}
+```
+
+### HTTP behavior on the chat handler
+
+| Caller intent | HTTP response |
+|---|---|
+| `precheck → Allow` then provider call succeeds | `200 OK` + chat response body; post-reconcile fires (FR-AI-002) |
+| `precheck → Refuse{BudgetCapExceeded}` | `402 PAYMENT_REQUIRED` + `{error: "budget_cap_exceeded", current_spent_usd, cap_usd, suggest: "downshift to chat.fast or wait until next cycle"}` |
+| `precheck → Refuse{TenantSuspended}` | `403 FORBIDDEN` + `{error: "tenant_suspended", contact: "billing@..."}` |
+| `precheck → Refuse{ProviderUnavailable}` | `503 SERVICE_UNAVAILABLE` + `{error: "no_cost_table_for_model", model: "..."}` (don't proceed without cost data) |
+| `precheck → Err(_)` | `500 INTERNAL_SERVER_ERROR` + opaque `request_id` (do NOT leak internals) |
+
+### Postgres schema (`migrations/0001_cost_ledger.sql`)
+
+```sql
+CREATE TABLE cost_ledger (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id       TEXT NOT NULL,
+    period          DATE NOT NULL,             -- first-of-month UTC
+    spent_usd       NUMERIC(12,4) NOT NULL DEFAULT 0,
+    monthly_cap_usd NUMERIC(12,2) NOT NULL,
+    UNIQUE (tenant_id, period)
+);
+
+CREATE TABLE cost_ledger_hold (
+    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id        TEXT NOT NULL,
+    idempotency_key  TEXT NOT NULL,
+    estimated_usd    NUMERIC(12,4) NOT NULL,
+    resolved_provider TEXT NOT NULL,
+    resolved_model   TEXT NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at       TIMESTAMPTZ NOT NULL,
+    state            TEXT NOT NULL CHECK (state IN ('held','reconciled','expired','refused')),
+    UNIQUE (tenant_id, idempotency_key)
+);
+
+CREATE INDEX cost_ledger_period_idx ON cost_ledger (tenant_id, period);
+CREATE INDEX cost_ledger_hold_expiry_idx ON cost_ledger_hold (expires_at) WHERE state = 'held';
+```
+
+### Tenant policy YAML shape (FR-AI-005 builds the loader; this FR consumes it)
+
+```yaml
+# config/tenants/<tenant_id>.yaml (slice-1 location; moves to TEN module at P2)
+tenant_id: org:cyberskill
+ai_policy:
+  monthly_cap_usd: 150
+  warn_threshold: 0.80
+  hard_stop: true
+  emergency_override:
+    enabled: true
+    requires: ["cfo_signoff", "audit_row"]
+```
+
+---
+
+## §4 — Acceptance criteria (testable, ordered, numbered)
+
+1. **Happy path (allow)** — Given tenant `org:test-a` with `monthly_cap_usd: 100` and `spent_usd: 50`, when `precheck()` is called with an estimated cost of $5, it MUST return `Allow { hold_id, estimated_usd: 5.00, ttl_seconds: 60 }` and MUST insert exactly one row into `cost_ledger_hold` with `state='held'`.
+2. **Refuse on over-budget** — Same tenant with `spent_usd: 98`, estimated cost $5, MUST return `Refuse { reason: BudgetCapExceeded }`; MUST NOT insert any hold row; the HTTP handler MUST return `402 PAYMENT_REQUIRED`.
+3. **Exact-cap edge** — Tenant with `spent_usd: 95`, estimated cost $5.00, MUST return `Allow` (boundary inclusive: spent + estimated == cap is permitted; only strictly-over refused).
+4. **Idempotent retry** — Calling `precheck` with the same `idempotency_key` twice MUST return the existing hold (same `hold_id`), MUST NOT insert a second row.
+5. **Audit row emitted** — Every `Allow` MUST be preceded by a BRAIN audit row at `meta/ai-invocations/<ts_ns>_<tenant>_<idempotency_key>.md` with kind `ai.precheck`, `extra.tenant_id`, `extra.estimated_usd`, `extra.resolved_provider`. If BRAIN Writer fails, the function MUST return `Err(BrainWriterFailed)` and MUST NOT return `Allow`.
+6. **Hold TTL** — A `cost_ledger_hold` row with `expires_at < NOW()` and `state='held'` MUST be transitioned to `state='expired'` by the cleanup job within 60s of expiry (cleanup job is FR-AI-004; this FR only writes the row correctly).
+7. **Provider cost-table missing** — If `policy.primary_provider` resolves to a model alias with no entry in the cost-table fixture, `precheck()` MUST return `Refuse { reason: ProviderUnavailable }`; MUST emit a `Provider-Unavailable` warn-level log to OBS.
+8. **Latency budget** — On a warm Postgres pool, `precheck()` MUST complete within 50ms p95 over a 1000-call integration test. Measured via `tokio::time::Instant`.
+
+---
+
+## §5 — Verification method
+
+**Integration test:** `services/ai-gateway/tests/cost_precheck_test.rs`
+
+```rust
+#[tokio::test]
+async fn precheck_allows_under_budget() {
+    let env = TestEnv::new().await;
+    env.seed_tenant("org:test-a", monthly_cap = 100, spent_usd = 50);
+    let req = chat_request("org:test-a", prompt_tokens = 1000, model = "chat.smart");
+
+    let outcome = cost_ledger::precheck(&req, &env.pool, &env.policy).await.unwrap();
+
+    assert!(matches!(outcome, PrecheckOutcome::Allow { .. }));
+    assert_eq!(env.count_holds("org:test-a").await, 1);
+    assert!(env.brain_has_row("ai.precheck", &req.idempotency_key).await);
+}
+```
+
+Full test suite (8 cases, one per acceptance criterion) at the same file. Run via:
+
+```bash
+cd /Users/stephencheng/Projects/CyberSkill/cyberos
+cargo test -p cyberos-ai-gateway cost_precheck
+```
+
+CI gate: this test file is in the `cyberos-ai-gateway` package; CI runs it on every PR touching `services/ai-gateway/**`. Failure blocks merge.
+
+---
+
+## §6 — Implementation skeleton (suggested scaffold for AI-agent code-gen)
+
+```rust
+// services/ai-gateway/src/cost_ledger.rs
+
+use sqlx::PgPool;
+use uuid::Uuid;
+use rust_decimal::Decimal;
+use chrono::{DateTime, Utc};
+
+const HOLD_TTL_SECONDS: u32 = 60;
+
+pub async fn precheck(
+    req: &ChatCompleteRequest,
+    pool: &PgPool,
+    policy: &TenantPolicy,
+) -> Result<PrecheckOutcome, PrecheckError> {
+    // 1. Resolve provider + model from alias
+    let (provider, model) = resolve_model_alias(&req.model_alias, policy)
+        .ok_or(PrecheckError::CostEstimateFailed { reason: "no_provider".into() })?;
+
+    // 2. Estimate cost
+    let cost_per_1k = cost_table::lookup(&provider, &model)
+        .ok_or_else(|| PrecheckError::CostEstimateFailed { reason: "no_cost_entry".into() })?;
+    let estimated_usd = (Decimal::from(req.prompt_tokens) / Decimal::from(1000)) * cost_per_1k.input
+                      + (Decimal::from(req.expected_completion_tokens) / Decimal::from(1000)) * cost_per_1k.output;
+
+    // 3. Read current MTD spend (UPSERT pattern — initialises row at first call of month)
+    let current = sqlx::query_as::<_, CostLedgerRow>(
+        "INSERT INTO cost_ledger (tenant_id, period, monthly_cap_usd) \
+         VALUES ($1, date_trunc('month', NOW())::date, $2) \
+         ON CONFLICT (tenant_id, period) DO UPDATE SET tenant_id = EXCLUDED.tenant_id \
+         RETURNING *"
+    ).bind(&req.tenant_id).bind(policy.monthly_cap_usd).fetch_one(pool).await?;
+
+    // 4. Cap check (boundary inclusive)
+    if current.spent_usd + estimated_usd > current.monthly_cap_usd {
+        return Ok(PrecheckOutcome::Refuse {
+            reason: RefuseReason::BudgetCapExceeded,
+            current_spent_usd: current.spent_usd,
+            cap_usd: current.monthly_cap_usd,
+        });
+    }
+
+    // 5. Insert hold (idempotent via UNIQUE on (tenant_id, idempotency_key))
+    let hold_id = sqlx::query_scalar::<_, Uuid>(
+        "INSERT INTO cost_ledger_hold (tenant_id, idempotency_key, estimated_usd, resolved_provider, resolved_model, expires_at, state) \
+         VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '60 seconds', 'held') \
+         ON CONFLICT (tenant_id, idempotency_key) DO UPDATE SET state = cost_ledger_hold.state \
+         RETURNING id"
+    ).bind(&req.tenant_id).bind(&req.idempotency_key).bind(estimated_usd)
+     .bind(&provider).bind(&model).fetch_one(pool).await?;
+
+    // 6. Emit BRAIN audit row (before returning Allow — audit-before-action invariant)
+    brain_writer::emit(
+        kind = "ai.precheck",
+        path = format!("meta/ai-invocations/{}_{}_{}.md", chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0), &req.tenant_id, &req.idempotency_key),
+        extra = json!({
+            "tenant_id": &req.tenant_id,
+            "agent_persona": &req.agent_persona,
+            "model_alias": &req.model_alias,
+            "resolved_provider": provider,
+            "resolved_model": model,
+            "estimated_usd": estimated_usd,
+            "current_spent_usd": current.spent_usd,
+        }),
+    ).await.map_err(|e| PrecheckError::BrainWriterFailed { stderr: e.to_string() })?;
+
+    Ok(PrecheckOutcome::Allow { hold_id, estimated_usd, ttl_seconds: HOLD_TTL_SECONDS })
+}
+```
+
+*Scaffold above is suggestive, not normative. The acceptance criteria (§4) are the contract.*
+
+---
+
+## §7 — Dependencies
+
+**Code dependencies (must exist before this FR can build):**
+- BRAIN module — shipped. The `cyberos.core.writer.Writer` subprocess CLI MUST be available at `cyberos memory put`. Used in step §6 of the skeleton.
+- `cyberos-ai-gateway` crate skeleton — created by FR-AI-000 (if needed) or as part of this FR's first commit. Cargo workspace member.
+
+**Concept dependencies (must be agreed before this FR can be audited):**
+- Model-alias resolution rules (FR-AI-005 will formalise; for slice 1 use a hardcoded enum).
+- Cost-table source (FR-AI-007; for slice 1 hardcode 3 providers' rates as a const HashMap).
+
+**Operational dependencies:**
+- A Postgres instance reachable at `DATABASE_URL`. For the integration test, the CI uses a Postgres 16 container via `testcontainers-rs`.
+
+---
+
+## §8 — Example payloads
+
+### Request (HTTP body)
+
+```http
+POST /v1/chat/completions HTTP/1.1
+Host: ai.cyberos.com
+X-Tenant: org:cyberskill                     # slice-1 only; replaced by JWT at M+2
+X-CyberOS-Module: cuo                         # which module is the cost centre
+X-Idempotency-Key: 01HZK9R7A2B4C8D6E1F3G5H8
+Content-Type: application/json
+
+{
+  "model": "chat.smart",
+  "messages": [
+    {"role": "system", "content": "You are Genie. Be concise."},
+    {"role": "user", "content": "summarise Q1 OKRs"}
+  ],
+  "agent_persona": "cuo-cpo@0.4.1",
+  "max_tokens": 1024,
+  "stream": false
+}
+```
+
+### Response — Allow path (HTTP 200, after provider call succeeds — FR-AI-002 handles the actual provider call + post-reconcile)
+
+```json
+{
+  "id": "ai_01HZK9R7A2B4C8D6",
+  "model": "bedrock:anthropic.claude-3.5-sonnet",
+  "choices": [{"message":{"role":"assistant","content":"Q1 OKRs are…"}}],
+  "usage": {
+    "prompt_tokens": 120,
+    "completion_tokens": 450,
+    "usd_cost": 0.0078,
+    "cache_state": "miss",
+    "hold_id": "01HZK9R8M3X5C8Q4",
+    "failover_path": "primary"
+  }
+}
+```
+
+### Response — Refuse path (HTTP 402)
+
+```json
+{
+  "error": "budget_cap_exceeded",
+  "current_spent_usd": 148.20,
+  "cap_usd": 150.00,
+  "estimated_usd": 5.50,
+  "suggest": "downshift to chat.fast or wait until 2026-06-01"
+}
+```
+
+### BRAIN audit row written
+
+```json
+{
+  "seq": 18421,
+  "ts_ns": 1763112131000000000,
+  "op": "put",
+  "path": "meta/ai-invocations/1763112131_org-cyberskill_01HZK9R7A2B4C8D6.md",
+  "extra": {
+    "kind": "ai.precheck",
+    "tenant_id": "org:cyberskill",
+    "agent_persona": "cuo-cpo@0.4.1",
+    "model_alias": "chat.smart",
+    "resolved_provider": "bedrock",
+    "resolved_model": "anthropic.claude-3.5-sonnet",
+    "estimated_usd": 0.0085,
+    "current_spent_usd": 47.23
+  },
+  "prev_chain": "...",
+  "chain": "..."
+}
+```
+
+---
+
+## §9 — Open questions (must resolve before status=accepted)
+
+1. **Cost-table source for slice 1** — hardcode as `const` (fastest) or YAML config in `services/ai-gateway/config/cost_rates.yaml` (more flexible)? Proposed default: YAML config — cost rates change weekly. **Decision needed before §6 skeleton lands.**
+2. **What if tenant policy file is missing?** — Two options: (a) refuse all calls with `503 POLICY_NOT_FOUND`, or (b) apply a "default tenant" policy with `monthly_cap_usd: 10` (fail-safe small cap). Proposed: option (a) — explicit policy required, no silent defaults. Loud failure preferable to silent surprise.
+3. **Idempotency-Key collision across tenants** — Postgres UNIQUE on `(tenant_id, idempotency_key)` is correct; but does the precheck need to validate format (UUID? ULID? free-string)? Proposed: free-string ≤ 64 chars, reject longer with 400.
+4. **Audit-row emission via Writer subprocess: synchronous or async?** — Subprocess fork adds ~30ms latency. Async-spawn and proceed risks emitting Allow before the audit row lands (violates audit-before-action). Proposed: synchronous in slice 1; FR-AI-008 explores PyO3 in-process Writer at slice 5 for the latency gain.
+
+---
+
+## §10 — Notes (informational, no normative force)
+
+- Slice 1 of AI Gateway is 5 FRs (FR-AI-001..005). This one is the gate; FR-AI-002 is the post-reconcile; FR-AI-003 is the BRAIN audit-bridge; FR-AI-004 is the hold-expiry cleanup job; FR-AI-005 is the tenant-policy loader.
+- After this FR ships, every other module (CUO, KB, CHAT, …) inherits the cost gate automatically by calling `ai_gateway::chat_complete()` instead of a raw provider SDK. The "no SDK in any other module" rule (AI Gateway page §0) is enforced architecturally, not by lint.
+- The 50ms p95 latency budget is tight but achievable: Postgres read (~5ms) + Postgres write (~10ms) + BRAIN Writer subprocess (~30ms). The subprocess is the bottleneck — see §9 Q4.
+- This FR's verification test fixture should land in `services/ai-gateway/tests/fixtures/cost_ledger/` and become a reusable property-test seed for FR-AI-002 + FR-AI-004.
+
+---
+
+*End of FR-AI-001. Run `fr-audit` next: `cargo run -p cyberos-skill-cli -- run fr-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck.md"}'`*
