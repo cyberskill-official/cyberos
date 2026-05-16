@@ -17,7 +17,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-003, FR-AI-004, FR-AI-005]
 depends_on: [FR-AI-003, FR-AI-005, FR-AI-007]
-blocks: [FR-AI-002, FR-AI-004]
+blocks: [FR-AI-002, FR-AI-004, FR-TEN-004]
 
 # ───── Source contracts (where the spec authority lives) ─────
 source_pages:

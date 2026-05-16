@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-HR-001, FR-KB-001, FR-REW-001, FR-DOC-001, FR-OKR-001]
 depends_on: [FR-AUTH-005]
-blocks: [FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-DOC-001, FR-HR-001, FR-KB-001, FR-OKR-001, FR-REW-001]   # all 8 entries are placeholders — not yet specified (downstream consumers; this FR ships before any of them)
+blocks: [FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-DOC-001, FR-HR-001, FR-KB-001, FR-OKR-001, FR-REW-001, FR-TIME-001, FR-INV-005, FR-AUTH-104, FR-INV-003]   # FR-REW-001 remains placeholder — not yet specified (downstream consumer)
 
 source_pages:
   - website/docs/modules/auth.html#rbac-catalogue

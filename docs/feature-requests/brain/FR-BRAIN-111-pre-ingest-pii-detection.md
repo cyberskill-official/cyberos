@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-BRAIN-107, FR-BRAIN-109, FR-AI-011, FR-AI-012, FR-AI-013, FR-OBS-007]
 depends_on: [FR-BRAIN-107, FR-AI-012]
-blocks: []
+blocks: [FR-TEN-004]
 
 source_pages:
   - website/docs/modules/brain.html#pii-pre-ingest

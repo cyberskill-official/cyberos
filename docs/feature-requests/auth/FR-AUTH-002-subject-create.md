@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-101]
 depends_on: [FR-AUTH-001]
-blocks: [FR-AUTH-004, FR-AUTH-005, FR-AUTH-006]
+blocks: [FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-102, FR-AUTH-106, FR-AUTH-107]
 
 source_pages:
   - website/docs/modules/auth.html#subject-create

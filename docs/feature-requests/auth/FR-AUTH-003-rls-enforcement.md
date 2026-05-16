@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-004, FR-AUTH-005, FR-AI-018]
 depends_on: [FR-AUTH-001]
-blocks: [FR-AUTH-004, FR-AUTH-005, FR-PROJ-001, FR-BRAIN-101]
+blocks: [FR-AUTH-004, FR-AUTH-005, FR-PROJ-001, FR-BRAIN-101, FR-HR-001, FR-TIME-001, FR-KB-001, FR-CRM-001, FR-OKR-001, FR-TEN-004]
 
 source_pages:
   - website/docs/modules/auth.html#rls

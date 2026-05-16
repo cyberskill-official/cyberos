@@ -13,7 +13,7 @@ created: 2026-05-16
 shipped: null
 brain_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-004, FR-PROJ-011, FR-AI-014, FR-CUO-101]
-depends_on: [FR-PROJ-004]
+depends_on: [FR-PROJ-004, FR-CUO-101]
 blocks: []
 
 source_pages:
