@@ -108,7 +108,7 @@
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Strategic role</div><div class="value">External-agent door</div><div class="note">22 modules → one MCP server</div></div>
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+2.5</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · P0 · slice 3</div></div>
  <div class="fact-card"><div class="label">Spec compliance</div><div class="value">MCP 2025-11-25</div><div class="note">Streamable HTTP · Tasks · Elicitation</div></div>
  <div class="fact-card"><div class="label">External clients (target)</div><div class="value">Claude · Cursor · Codex · Cline</div><div class="note">all 2025-11-25 compliant clients</div></div>
  <div class="fact-card"><div class="label">Transports</div><div class="value">Streamable HTTP · SSE</div><div class="note">RFC 9112 chunked + EventSource</div></div>
@@ -117,7 +117,7 @@
  <div class="fact-card"><div class="label">Tools at P3 (est.)</div><div class="value">~300+</div><div class="note">22 modules × ~15 verbs each</div></div>
  <div class="fact-card"><div class="label">Destructive-op gating</div><div class="value">Human-confirm</div><div class="note">via Elicitation or explicit token</div></div>
  <div class="fact-card"><div class="label">Persona stamp coverage</div><div class="value">100%</div><div class="note">on every audit row</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">+ AI Gateway (M+1)</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">+ AI Gateway (P0 · slice 1)</div></div>
  <div class="fact-card"><div class="label">Naming convention</div><div class="value">SEP-986</div><div class="note">cyberos.{module}.{verb}_{noun}</div></div>
  </div>
  </div>
@@ -1104,7 +1104,7 @@ graph LR
  <tr><td><code>R-MCP-016</code></td><td>Resource leak via subscribed list_changed notifications (agent disconnects, gateway keeps emitting)</td><td>Medium</td><td>Low</td><td>CTO</td><td>Subscription tied to session lifetime; ping/pong heartbeat 30 s; auto-unsubscribe on missed heartbeats.</td></tr>
  <tr><td><code>R-MCP-017</code></td><td>Per-module heartbeat false-positive — gateway marks healthy module as down</td><td>Low</td><td>Medium</td><td>CTO</td><td>3 consecutive heartbeat misses required (not 1); module health endpoint independent of MCP server itself; manual override via <code>cyberos-mcp servers reactivate</code>.</td></tr>
  <tr><td><code>R-MCP-018</code></td><td>OAuth Dynamic Client Registration (DCR) abuse — attacker registers many clients</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Tenant admin approval gate before activation; rate limit on DCR endpoint (10/hour per tenant); flag suspicious registrations (unusual redirect URIs).</td></tr>
- <tr><td><code>R-MCP-019</code></td><td>Older 2024-11-05 client connects, falls back to SSE + bearer token, less secure</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Older clients explicitly opted in per tenant (deny by default); audit row flags "older protocol session"; sunset older protocol by M+12 (push all tenants to 2025-11-25).</td></tr>
+ <tr><td><code>R-MCP-019</code></td><td>Older 2024-11-05 client connects, falls back to SSE + bearer token, less secure</td><td>Medium</td><td>Medium</td><td>CSO</td><td>Older clients explicitly opted in per tenant (deny by default); audit row flags "older protocol session"; sunset older protocol by P3 · exit (push all tenants to 2025-11-25).</td></tr>
  <tr><td><code>R-MCP-020</code></td><td>SEP-986 naming collision (two modules define <code>delete_thing</code>)</td><td>Low</td><td>Medium</td><td>CTO</td><td>The <code>cyberos.&lt;module&gt;</code> prefix is namespace; cross-module same-noun is allowed; registration validator rejects exact duplicates within the same prefix.</td></tr>
  </tbody>
  </table>
@@ -1130,7 +1130,7 @@ graph LR
  <tr><td><strong>Elicitation acceptance rate</strong></td><td>user-confirmed elicitations / total elicitations</td><td>mcp.invocation rows</td><td>tracked; sudden drop = UI confusion alarm</td></tr>
  <tr><td><strong>Tasks completion rate</strong></td><td>completed / created</td><td>tasks DB</td><td>≥ 95% (excluding user-cancelled)</td></tr>
  <tr><td><strong>Cross-tenant token-replay attempts</strong></td><td>count / 28 d</td><td>OAuth + audit cross-check</td><td>tracked; spike = active attack</td></tr>
- <tr><td><strong>Older-protocol session rate</strong></td><td>2024-11-05 sessions / total</td><td>session init logs</td><td>declining trend; = 0 by M+12</td></tr>
+ <tr><td><strong>Older-protocol session rate</strong></td><td>2024-11-05 sessions / total</td><td>session init logs</td><td>declining trend; = 0 by P3 · exit</td></tr>
  <tr><td><strong>List_changed push latency p95</strong></td><td>histogram, module deploy → subscriber notified</td><td>OBS</td><td>≤ 30 s</td></tr>
  <tr><td><strong>Destructive-op confirm fatigue</strong></td><td>median elicitations per Member per day</td><td>mcp.invocation rows</td><td>≤ 5; alarm on &gt; 15 (rubber-stamping signal)</td></tr>
  <tr><td><strong>External-client tools coverage</strong></td><td>distinct external clients that successfully invoked ≥ 1 tool / total registered</td><td>session logs</td><td>≥ 0.90 (clients should not register and never call)</td></tr>
@@ -1241,7 +1241,7 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
 
  <div class="grid md:grid-cols-3 gap-4 mb-6">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+2</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · P0 · slice 2</div></div>
  <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~5,500</div><div class="note">services/mcp-gateway</div></div>
  <div class="fact-card"><div class="label">Planned tests</div><div class="value">142 conformance + 60 unit</div><div class="note">MCP spec suite</div></div>
  <div class="fact-card"><div class="label">P0 tools (est.)</div><div class="value">~80</div><div class="note">BRAIN · Skill · AUTH · AI</div></div>
@@ -1290,8 +1290,8 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
  <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
  <a href="chat.html" class="text-blue-700 underline">chat.html</a></li>
- <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — MCP Gateway placed at M+2.5 in the P0 sequence (after AI Gateway + AUTH stub).</li>
- <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §5</a> — MCP Gateway rated "Strong" (9/10); reviewer flagged the elicitation-fatigue risk (R-MCP-013) and the older-protocol sunset as the two operational concerns.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — MCP Gateway placed at P0 · slice 3 in the P0 sequence (after AI Gateway + AUTH stub).</li>
+ <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §5</a> — MCP Gateway rated "Strong" (9/10); reviewer flagged the elicitation-fatigue risk (R-MCP-013) and the older-protocol sunset as the two operational concerns.</li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — MCP tool invocations are one of four canonical capture surfaces for the local BRAIN (every tool call → audit row); §6 — Lumi exposes cross-tenant MCP federation at P3+ for org-tenant agents.</li>
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — MCP Gateway FRs land via the <code>fr-author</code> Agent Skill.</li>
  <li><strong>MCP Specification 2025-11-25</strong> — <code>modelcontextprotocol.io/specification/2025-11-25</code>.</li>

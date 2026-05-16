@@ -789,7 +789,7 @@ sequenceDiagram
  end
  L->>NATS: publish learn.vp.changed (batch)
  REW-->>NATS: subscriber updates BP fund weighting
- Note over L,REW: same inputs → same vp_total.<br>Replay test asserts byte-identical 12-month output.
+ Note over L,REW: same inputs → same vp_total.<br>Replay test asserts byte-identical phased output.
  </div>
  </div>
 
@@ -884,7 +884,7 @@ stateDiagram-v2
  <tbody>
  <tr><td><code>N(FR pending)</code></td><td>Per-judge data exposed beyond Council Vault</td><td>= 0 occurrences</td><td>integration test asserts GraphQL + REST never returns council_vote rows; HR DB role inspection</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Council Vault schema isolation</td><td>HR + Member roles lack SELECT</td><td>DB role test in CI</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>VP deterministic replay (12-month history)</td><td>100% byte-identical</td><td>replay job runs nightly, asserts vp_total stable for last 12 snapshots</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>VP deterministic replay (phased history)</td><td>100% byte-identical</td><td>replay job runs nightly, asserts vp_total stable for last 12 snapshots</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Parameter version supersession (no UPDATE on published rows)</td><td>enforced at DB layer</td><td>migration grep + DB role inspection</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Career-path next-level checklist completeness</td><td>covers 100% of gate criteria</td><td>spec test; usability review</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Promotion-case explanation (EU AI Act Art. 13)</td><td>narrator covers outcome + recommendation + summary</td><td>narrator output review at P2 conformity</td></tr>
@@ -984,7 +984,7 @@ graph LR
  <tbody>
  <tr><td><code>R-LEARN-001</code></td><td>Per-judge score leaks via GraphQL or audit row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Vault schema · stricter RLS · HR + Member roles lack SELECT · integration test asserts no council_vote in any API response.</td></tr>
  <tr><td><code>R-LEARN-002</code></td><td>Council bias (judges from same team, same gender, …)</td><td>Medium</td><td>High</td><td>CHRO</td><td>Panel-assignment diversity heuristic; annual bias audit; chair-selection rotates.</td></tr>
- <tr><td><code>R-LEARN-003</code></td><td>VP drift (kernel non-determinism)</td><td>Medium</td><td>High</td><td>CTO</td><td>vp.rs is a pure fn · no clock · no randomness · CI replay asserts byte-identical 12-month history.</td></tr>
+ <tr><td><code>R-LEARN-003</code></td><td>VP drift (kernel non-determinism)</td><td>Medium</td><td>High</td><td>CTO</td><td>vp.rs is a pure fn · no clock · no randomness · CI replay asserts byte-identical phased history.</td></tr>
  <tr><td><code>R-LEARN-004</code></td><td>Retroactive gate-criteria change mid-case</td><td>Low</td><td>High</td><td>CHRO</td><td>parameter_version snapshotted at submission; CASE judged against snapshot, not current parameters.</td></tr>
  <tr><td><code>R-LEARN-005</code></td><td>Free-text skill creep (catalogue drift)</td><td>Medium</td><td>Low</td><td>HR/Ops</td><td>Closed-enum at DB layer; new skills require parameter publish (3-way co-sign).</td></tr>
  <tr><td><code>R-LEARN-006</code></td><td>External certification fraud (faked PDF)</td><td>Medium</td><td>Medium</td><td>HR/Ops</td><td>Issuer field + verify URL; HR follow-up on randomly sampled 10%/year; QR-signed provenance for internal certs.</td></tr>
@@ -1208,7 +1208,7 @@ graph LR
  <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
  <a href="brain.html" class="text-blue-700 underline">brain.html</a></li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — LEARN deliberations sync_class=private; never ingested.</li>
- <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — LEARN at M+7 (P1).</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — LEARN at P2 · start (P1).</li>
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li> — LEARN module FRs ((FR pending) through (FR pending)).</li>
  <li> — LEARN architecture posture, council workflow design.</li>

@@ -336,7 +336,7 @@ A: Yes — CUO can invoke it as part of a longer pipeline. See `skill/skills/cuo
 
 ## §10 — Where this fits in the build sequence
 
-Per [`AUDIT_AND_PLAN_2026_05_14.md §3.3`](AUDIT_AND_PLAN_2026_05_14.md#33-recommended-build-sequence):
+Per [`archive/2026-05-14/AUDIT_AND_PLAN.md §3.3`](archive/2026-05-14/AUDIT_AND_PLAN.md#33-recommended-build-sequence):
 
 1. **For each module on the build-readiness list**, write the RFC (use `services/auth/RFC.md` as template).
 2. **Run fr-author** against the RFC + slice-1 brief → 5–7 FRs.

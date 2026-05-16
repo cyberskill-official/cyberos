@@ -1,0 +1,2574 @@
+{
+  "schema_version": "v1",
+  "generated_at_marker": "deterministic",
+  "count": 89,
+  "frs": [
+    {
+      "id": "FR-AI-001",
+      "title": "AI Gateway cost-ledger pre-call check",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [],
+      "path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck.md"
+    },
+    {
+      "id": "FR-AI-002",
+      "title": "AI Gateway cost-ledger post-call reconcile",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AI-001",
+        "FR-AI-007",
+        "FR-AI-003"
+      ],
+      "blocks": [
+        "FR-AI-008",
+        "FR-AI-010",
+        "FR-AI-021"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-003",
+        "FR-AI-004"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-002-cost-ledger-postcall-reconcile.md"
+    },
+    {
+      "id": "FR-AI-003",
+      "title": "BRAIN audit-row bridge — canonical Writer for AI Gateway",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 5,
+      "depends_on": [],
+      "blocks": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-014",
+        "FR-AI-022",
+        "FR-AI-004",
+        "FR-PROJ-002",
+        "FR-SKILL-101"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-014",
+        "FR-OBS-008"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-003-brain-audit-bridge.md"
+    },
+    {
+      "id": "FR-AI-004",
+      "title": "Cost-hold expiry cleanup job — refund unsettled holds + emit audit",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 3,
+      "depends_on": [
+        "FR-AI-001",
+        "FR-AI-003"
+      ],
+      "blocks": [
+        "FR-AI-021"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-003"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-004-cost-hold-expiry-cleanup.md"
+    },
+    {
+      "id": "FR-AI-005",
+      "title": "Tenant-policy YAML loader — per-tenant cap + warn + override + residency",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 5,
+      "depends_on": [],
+      "blocks": [
+        "FR-AI-001",
+        "FR-AI-006",
+        "FR-AI-021"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-006",
+        "FR-AI-015",
+        "FR-AI-016"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-005-tenant-policy-yaml-loader.md"
+    },
+    {
+      "id": "FR-AI-006",
+      "title": "Model-alias resolution (chat.smart → bedrock:claude-3.5-sonnet) with per-tenant override",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [],
+      "blocks": [
+        "FR-AI-008",
+        "FR-AI-009",
+        "FR-AI-015",
+        "FR-AI-016"
+      ],
+      "related_frs": [
+        "FR-AI-005",
+        "FR-AI-007",
+        "FR-AI-008",
+        "FR-AI-015",
+        "FR-AI-016"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-006-model-alias-resolution.md"
+    },
+    {
+      "id": "FR-AI-007",
+      "title": "Provider cost-table loader — YAML-backed, hot-reloadable rate table",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 4,
+      "depends_on": [],
+      "blocks": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-006",
+        "FR-AI-008"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-005",
+        "FR-AI-006",
+        "FR-AI-008"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-007-provider-cost-table-loader.md"
+    },
+    {
+      "id": "FR-AI-008",
+      "title": "LiteLLM-derived multi-provider router with retry + 30s failover SLA",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-AI-006",
+        "FR-AI-007",
+        "FR-AI-002"
+      ],
+      "blocks": [
+        "FR-AI-009",
+        "FR-AI-010",
+        "FR-AI-021",
+        "FR-AI-011",
+        "FR-AI-017",
+        "FR-AI-022"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-006",
+        "FR-AI-007",
+        "FR-AI-009",
+        "FR-AI-010",
+        "FR-AI-015",
+        "FR-AI-021"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-008-multi-provider-router.md"
+    },
+    {
+      "id": "FR-AI-009",
+      "title": "Circuit breaker per (provider, model) with half-open recovery probing",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AI-008",
+        "FR-AI-006"
+      ],
+      "blocks": [
+        "FR-AI-021"
+      ],
+      "related_frs": [
+        "FR-AI-006",
+        "FR-AI-007",
+        "FR-AI-008",
+        "FR-AI-021"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-009-circuit-breaker.md"
+    },
+    {
+      "id": "FR-AI-010",
+      "title": "Streaming SSE end-to-end (token-by-token to client)",
+      "module": "AI",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AI-008",
+        "FR-AI-002"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-006",
+        "FR-AI-007",
+        "FR-AI-008",
+        "FR-AI-009"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-010-streaming-sse.md"
+    },
+    {
+      "id": "FR-AI-011",
+      "title": "Presidio EN-base PII redaction in-flight (every prompt)",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AI-008"
+      ],
+      "blocks": [
+        "FR-AI-012",
+        "FR-AI-013"
+      ],
+      "related_frs": [
+        "FR-AI-002",
+        "FR-AI-005",
+        "FR-AI-008",
+        "FR-AI-012",
+        "FR-AI-013",
+        "FR-AI-021"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-011-presidio-pii-redaction.md"
+    },
+    {
+      "id": "FR-AI-012",
+      "title": "VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account)",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-AI-011"
+      ],
+      "blocks": [
+        "FR-AI-013"
+      ],
+      "related_frs": [
+        "FR-AI-002",
+        "FR-AI-005",
+        "FR-AI-008",
+        "FR-AI-011",
+        "FR-AI-013"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-012-vn-pii-plugin.md"
+    },
+    {
+      "id": "FR-AI-013",
+      "title": "VN-PII recall ≥ 99% per-recognizer CI gate on 200-sample fixture",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AI-012",
+        "FR-AI-011"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-011",
+        "FR-AI-012",
+        "FR-AI-022"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-013-vn-pii-recall-gate.md"
+    },
+    {
+      "id": "FR-AI-014",
+      "title": "Persona-version system-prompt injection from BRAIN memories/personas/<handle>.md",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AI-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-003",
+        "FR-AI-005",
+        "FR-AI-008",
+        "FR-AI-022"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-014-persona-version-stamping.md"
+    },
+    {
+      "id": "FR-AI-015",
+      "title": "ZDR (Zero Data Retention) attestation table + enforcement when tenant policy requires",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AI-006"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-005",
+        "FR-AI-006",
+        "FR-AI-008",
+        "FR-AI-016"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-015-zdr-enforcement.md"
+    },
+    {
+      "id": "FR-AI-016",
+      "title": "Tenant residency pinning (sg-1 / eu-1 / us-1 / vn-1) propagating to provider region selection",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 4",
+      "slice": 4,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AI-006"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-005",
+        "FR-AI-006",
+        "FR-AI-008",
+        "FR-AI-015",
+        "FR-AI-022"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-016-residency-pinning.md"
+    },
+    {
+      "id": "FR-AI-017",
+      "title": "Per-tenant Redis response cache keyed by (tenant × redacted-prompt × model × persona); ≥30% hit-rate P0 target",
+      "module": "AI",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 4",
+      "slice": 4,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AI-008"
+      ],
+      "blocks": [
+        "FR-AI-018"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-008",
+        "FR-AI-010",
+        "FR-AI-011",
+        "FR-AI-014",
+        "FR-AI-018"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-017-per-tenant-cache.md"
+    },
+    {
+      "id": "FR-AI-018",
+      "title": "Cross-tenant cache leak property-test (hard zero) — 200K random ops + 7 regression scenarios + adversarial inputs",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 4",
+      "slice": 4,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AI-017"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-005",
+        "FR-AI-014",
+        "FR-AI-016",
+        "FR-AI-017"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-018-cache-cross-tenant-leak-test.md"
+    },
+    {
+      "id": "FR-AI-019",
+      "title": "Self-hosted BGE-M3 embeddings (single L4 GPU sidecar) + ONNX-CPU fallback + adaptive batching",
+      "module": "AI",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 4",
+      "slice": 4,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [],
+      "blocks": [
+        "FR-AI-020",
+        "FR-BRAIN-101"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-006",
+        "FR-AI-007",
+        "FR-AI-008",
+        "FR-AI-009",
+        "FR-AI-016",
+        "FR-AI-020"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-019-bge-m3-embeddings.md"
+    },
+    {
+      "id": "FR-AI-020",
+      "title": "BGE-reranker-v2-m3 cross-encoder for KB reranking (per-region sidecar; CPU fallback)",
+      "module": "AI",
+      "priority": "COULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 4",
+      "slice": 4,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AI-019"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-006",
+        "FR-AI-008",
+        "FR-AI-009",
+        "FR-AI-016",
+        "FR-AI-019"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-020-bge-rerank.md"
+    },
+    {
+      "id": "FR-AI-021",
+      "title": "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · brain) with --confirm + --json + audit",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 5",
+      "slice": 5,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 14,
+      "depends_on": [
+        "FR-AI-005",
+        "FR-AI-008",
+        "FR-AI-002",
+        "FR-AI-004",
+        "FR-AI-009"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-003",
+        "FR-AI-004",
+        "FR-AI-005",
+        "FR-AI-007",
+        "FR-AI-008",
+        "FR-AI-009",
+        "FR-AI-014",
+        "FR-AI-015",
+        "FR-AI-022"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-021-operator-cli.md"
+    },
+    {
+      "id": "FR-AI-022",
+      "title": "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes",
+      "module": "AI",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 5",
+      "slice": 5,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AI-008",
+        "FR-AI-003",
+        "FR-OBS-001"
+      ],
+      "blocks": [
+        "FR-OBS-004"
+      ],
+      "related_frs": [
+        "FR-AI-001",
+        "FR-AI-002",
+        "FR-AI-008",
+        "FR-AI-009",
+        "FR-AI-010",
+        "FR-AI-014",
+        "FR-AI-017",
+        "FR-AI-019",
+        "FR-AI-021",
+        "FR-OBS-001",
+        "FR-OBS-004",
+        "FR-OBS-005",
+        "FR-OBS-006"
+      ],
+      "path": "docs/feature-requests/ai/FR-AI-022-otel-trace-emission.md"
+    },
+    {
+      "id": "FR-AUTH-001",
+      "title": "Tenant create — root-admin in tenant 0 calls POST /v1/admin/tenants with idempotency + RLS provisioning",
+      "module": "AUTH",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [],
+      "blocks": [
+        "FR-AUTH-002",
+        "FR-AUTH-003",
+        "FR-AUTH-005",
+        "FR-AUTH-006",
+        "FR-PROJ-001"
+      ],
+      "related_frs": [
+        "FR-AUTH-002",
+        "FR-AUTH-003",
+        "FR-AUTH-004",
+        "FR-AUTH-005",
+        "FR-AUTH-006"
+      ],
+      "path": "docs/feature-requests/auth/FR-AUTH-001-tenant-create.md"
+    },
+    {
+      "id": "FR-AUTH-002",
+      "title": "Subject create — POST /v1/admin/subjects with bcrypt + role allow-list + idempotency + RLS-enforced cross-tenant blocking",
+      "module": "AUTH",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AUTH-001"
+      ],
+      "blocks": [
+        "FR-AUTH-004",
+        "FR-AUTH-005",
+        "FR-AUTH-006"
+      ],
+      "related_frs": [
+        "FR-AUTH-001",
+        "FR-AUTH-003",
+        "FR-AUTH-004",
+        "FR-AUTH-005",
+        "FR-AUTH-006",
+        "FR-AUTH-101"
+      ],
+      "path": "docs/feature-requests/auth/FR-AUTH-002-subject-create.md"
+    },
+    {
+      "id": "FR-AUTH-003",
+      "title": "RLS enforcement at every tenant-scoped table — USING + WITH CHECK + per-connection app.tenant_id + property test",
+      "module": "AUTH",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-AUTH-001"
+      ],
+      "blocks": [
+        "FR-AUTH-004",
+        "FR-AUTH-005",
+        "FR-PROJ-001",
+        "FR-BRAIN-101"
+      ],
+      "related_frs": [
+        "FR-AUTH-001",
+        "FR-AUTH-002",
+        "FR-AUTH-004",
+        "FR-AUTH-005",
+        "FR-AI-018"
+      ],
+      "path": "docs/feature-requests/auth/FR-AUTH-003-rls-enforcement.md"
+    },
+    {
+      "id": "FR-AUTH-004",
+      "title": "JWT issuance + JWKS endpoint (RS256) with tenant_id + agent_persona + scope_grants + dual-rate-limit + jti dedup",
+      "module": "AUTH",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-AUTH-002",
+        "FR-AUTH-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AUTH-001",
+        "FR-AUTH-002",
+        "FR-AUTH-003",
+        "FR-AUTH-005",
+        "FR-AUTH-006",
+        "FR-AUTH-007",
+        "FR-MCP-004",
+        "FR-AI-001",
+        "FR-AI-006"
+      ],
+      "path": "docs/feature-requests/auth/FR-AUTH-004-jwt-jwks.md"
+    },
+    {
+      "id": "FR-AUTH-005",
+      "title": "Admin REST: list tenants + list subjects + revoke subject + unrevoke + cursor pagination + jti deny-list",
+      "module": "AUTH",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-AUTH-001",
+        "FR-AUTH-002",
+        "FR-AUTH-003",
+        "FR-AUTH-004"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AUTH-001",
+        "FR-AUTH-002",
+        "FR-AUTH-003",
+        "FR-AUTH-004",
+        "FR-AUTH-006"
+      ],
+      "path": "docs/feature-requests/auth/FR-AUTH-005-admin-rest.md"
+    },
+    {
+      "id": "FR-AUTH-006",
+      "title": "cyberos-auth bootstrap CLI: tenant 0 + root-admin + initial signing key + sweepers + idempotency-table cleanup",
+      "module": "AUTH",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "D",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AUTH-001",
+        "FR-AUTH-002",
+        "FR-AUTH-004"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-AUTH-001",
+        "FR-AUTH-002",
+        "FR-AUTH-003",
+        "FR-AUTH-004",
+        "FR-AUTH-005"
+      ],
+      "path": "docs/feature-requests/auth/FR-AUTH-006-bootstrap-cli.md"
+    },
+    {
+      "id": "FR-BRAIN-101",
+      "title": "Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) — chain-anchor verification + 1s p95 lag + per-tenant cursor + idempotent UPSERT",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CDO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 18,
+      "depends_on": [
+        "FR-AI-019",
+        "FR-AUTH-003"
+      ],
+      "blocks": [
+        "FR-BRAIN-102",
+        "FR-BRAIN-103",
+        "FR-BRAIN-106",
+        "FR-BRAIN-108"
+      ],
+      "related_frs": [
+        "FR-BRAIN-102",
+        "FR-BRAIN-108",
+        "FR-BRAIN-110",
+        "FR-AI-019",
+        "FR-AUTH-003",
+        "FR-OBS-001"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-101-layer2-ingest-pipeline.md"
+    },
+    {
+      "id": "FR-BRAIN-102",
+      "title": "Layer-2 rebuild-from-Layer-1 CI gate — deterministic rebuild + spot-check + 30min budget + mid-rebuild resume + multi-tenant",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CDO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-BRAIN-101"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-BRAIN-101",
+        "FR-BRAIN-110",
+        "FR-AI-019"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-102-layer2-rebuild-ci-gate.md"
+    },
+    {
+      "id": "FR-BRAIN-103",
+      "title": "brain-sync daemon — laptop A ↔ Cloud BRAIN ↔ laptop B with sync_class gating + CRDT conflict + 10K offline buffer + device-id stamp",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CDO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 18,
+      "depends_on": [
+        "FR-BRAIN-101"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-BRAIN-101",
+        "FR-BRAIN-104",
+        "FR-BRAIN-105",
+        "FR-BRAIN-106"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-103-multi-device-sync.md"
+    },
+    {
+      "id": "FR-BRAIN-104",
+      "title": "Tauri 2.x desktop app — macOS + Windows + Linux signed/notarised + auto-update + tray + quick capture + Full Disk Access",
+      "module": "BRAIN",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "D",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng (CDO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 28,
+      "depends_on": [
+        "FR-BRAIN-103"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-BRAIN-103",
+        "FR-BRAIN-105",
+        "FR-BRAIN-108"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-104-tauri-app.md"
+    },
+    {
+      "id": "FR-BRAIN-105",
+      "title": "cyberos doctor — watched-folders integrity invariants (manifest ↔ filesystem ↔ HEAD reconciliation; 5 new invariants in memory.invariants.yaml)",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 7,
+      "depends_on": [
+        "FR-BRAIN-101"
+      ],
+      "blocks": [
+        "FR-BRAIN-107",
+        "FR-BRAIN-110"
+      ],
+      "related_frs": [
+        "FR-BRAIN-101",
+        "FR-BRAIN-102",
+        "FR-BRAIN-103",
+        "FR-BRAIN-104",
+        "FR-BRAIN-107",
+        "FR-BRAIN-110"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-105-doctor-watched-folders-invariants.md"
+    },
+    {
+      "id": "FR-BRAIN-106",
+      "title": "BRAIN sync_class enforcement — private vs shareable + ACL filtering + structural compensation exclusion + property test",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CDO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-BRAIN-101",
+        "FR-BRAIN-103"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-BRAIN-103",
+        "FR-BRAIN-107",
+        "FR-BRAIN-108"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-106-sync-class-enforcement.md"
+    },
+    {
+      "id": "FR-BRAIN-107",
+      "title": "BRAIN capture daemon — Rust + notify crate FS watcher with rate-limit + content-dedup + backpressure + W3C trace propagation",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 14,
+      "depends_on": [
+        "FR-BRAIN-102",
+        "FR-BRAIN-105"
+      ],
+      "blocks": [
+        "FR-BRAIN-108",
+        "FR-BRAIN-109",
+        "FR-BRAIN-110",
+        "FR-BRAIN-111"
+      ],
+      "related_frs": [
+        "FR-BRAIN-101",
+        "FR-BRAIN-102",
+        "FR-BRAIN-104",
+        "FR-BRAIN-105",
+        "FR-BRAIN-108",
+        "FR-BRAIN-109",
+        "FR-BRAIN-110",
+        "FR-BRAIN-111"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-107-fs-watcher.md"
+    },
+    {
+      "id": "FR-BRAIN-108",
+      "title": "BRAIN search — vector + graph + full-text in parallel + RRF fusion + BGE-rerank + RLS + ACL + chain_anchor verify + 250ms p95",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng (CDO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-BRAIN-101"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-BRAIN-101",
+        "FR-BRAIN-106",
+        "FR-AI-019",
+        "FR-AI-020",
+        "FR-AUTH-003",
+        "FR-AUTH-004"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-108-search-api.md"
+    },
+    {
+      "id": "FR-BRAIN-109",
+      "title": "Claude Code hook capture — UserPromptSubmit + PostToolUse + Stop hooks emit BRAIN memories with prompt + diff + trace correlation",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-BRAIN-107"
+      ],
+      "blocks": [
+        "FR-BRAIN-110"
+      ],
+      "related_frs": [
+        "FR-BRAIN-101",
+        "FR-BRAIN-107",
+        "FR-BRAIN-108",
+        "FR-BRAIN-110",
+        "FR-BRAIN-111",
+        "FR-AI-022",
+        "FR-AI-014",
+        "FR-SKILL-101"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-109-claude-code-hook-capture.md"
+    },
+    {
+      "id": "FR-BRAIN-110",
+      "title": "BRAIN capture daemon supervision — systemd + launchd units + /healthz + watchdog + crash-restart with exponential backoff + sweeper cron",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-BRAIN-105",
+        "FR-BRAIN-107"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-BRAIN-105",
+        "FR-BRAIN-107",
+        "FR-BRAIN-108",
+        "FR-BRAIN-109",
+        "FR-OBS-001",
+        "FR-OBS-007"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-110-capture-daemon-health-restart.md"
+    },
+    {
+      "id": "FR-BRAIN-111",
+      "title": "BRAIN pre-ingest PII detection — Presidio EN + custom VN recognisers; ≥ 99.5% held-back recall on labelled fixture; auto-redact at capture boundary",
+      "module": "BRAIN",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 9,
+      "depends_on": [
+        "FR-BRAIN-107",
+        "FR-AI-012"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-BRAIN-107",
+        "FR-BRAIN-109",
+        "FR-AI-011",
+        "FR-AI-012",
+        "FR-AI-013",
+        "FR-OBS-007"
+      ],
+      "path": "docs/feature-requests/brain/FR-BRAIN-111-pre-ingest-pii-detection.md"
+    },
+    {
+      "id": "FR-CHAT-001",
+      "title": "Mattermost v9.x fork at pinned MIT-Apache commit + automated license-drift watcher + CI gate",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "I",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [],
+      "blocks": [
+        "FR-CHAT-002",
+        "FR-CHAT-003"
+      ],
+      "related_frs": [
+        "FR-CHAT-002",
+        "FR-CHAT-003",
+        "FR-CHAT-005",
+        "FR-CHAT-011"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-001-mattermost-fork.md"
+    },
+    {
+      "id": "FR-CHAT-002",
+      "title": "cyberos-chat-authbridge plugin — Mattermost auth delegates to FR-AUTH-004 JWT with tenant_id propagation and SCIM-free provisioning",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-CHAT-001",
+        "FR-AUTH-004"
+      ],
+      "blocks": [
+        "FR-CHAT-003"
+      ],
+      "related_frs": [
+        "FR-CHAT-001",
+        "FR-CHAT-003",
+        "FR-AUTH-004",
+        "FR-AUTH-005"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-002-authbridge-plugin.md"
+    },
+    {
+      "id": "FR-CHAT-003",
+      "title": "Per-tenant CHAT deployment — AWS Fargate + RDS Multi-AZ + Redis ElastiCache with Terraform module and per-tenant isolation",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "I",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-CHAT-001",
+        "FR-CHAT-002"
+      ],
+      "blocks": [
+        "FR-CHAT-004",
+        "FR-CHAT-005"
+      ],
+      "related_frs": [
+        "FR-CHAT-001",
+        "FR-CHAT-002",
+        "FR-CHAT-004",
+        "FR-CHAT-005",
+        "FR-OBS-001"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-003-fargate-deployment.md"
+    },
+    {
+      "id": "FR-CHAT-004",
+      "title": "PGroonga + custom Vietnamese bigram tokeniser — VN message search with ≥ 80% recall CI gate and dual-path (VN-bigram / EN-PGroonga) hybrid routing",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-CHAT-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-CHAT-003",
+        "FR-CHAT-005",
+        "FR-BRAIN-108"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-004-vn-search.md"
+    },
+    {
+      "id": "FR-CHAT-005",
+      "title": "BRAIN bridge — Postgres logical replication from chat to BRAIN Layer-3 ingest with p95 ≤ 5s latency",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-CHAT-003"
+      ],
+      "blocks": [
+        "FR-CHAT-006",
+        "FR-CHAT-008",
+        "FR-CHAT-012"
+      ],
+      "related_frs": [
+        "FR-CHAT-003",
+        "FR-CHAT-006",
+        "FR-CHAT-008",
+        "FR-CHAT-012",
+        "FR-BRAIN-101",
+        "FR-BRAIN-107",
+        "FR-BRAIN-111"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-005-brain-bridge.md"
+    },
+    {
+      "id": "FR-CHAT-006",
+      "title": "Slack import — `cyberos-chat import slack` with 8-step idempotent checkpoint-driven workflow",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-CHAT-005"
+      ],
+      "blocks": [
+        "FR-CHAT-010"
+      ],
+      "related_frs": [
+        "FR-CHAT-005",
+        "FR-CHAT-007",
+        "FR-CHAT-010"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-006-slack-import.md"
+    },
+    {
+      "id": "FR-CHAT-007",
+      "title": "Zalo manual export importer — `cyberos-chat import zalo --bundle.zip` with VN-Unicode normalisation and Zalo-specific message kinds",
+      "module": "CHAT",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-CHAT-006"
+      ],
+      "blocks": [
+        "FR-CHAT-010"
+      ],
+      "related_frs": [
+        "FR-CHAT-005",
+        "FR-CHAT-006",
+        "FR-CHAT-010"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-007-zalo-import.md"
+    },
+    {
+      "id": "FR-CHAT-008",
+      "title": "@lumi mention parser — message mentions trigger CUO routing + BRAIN capture row + reply",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-CHAT-005"
+      ],
+      "blocks": [
+        "FR-CHAT-009"
+      ],
+      "related_frs": [
+        "FR-CHAT-005",
+        "FR-CHAT-009",
+        "FR-AI-014",
+        "FR-CUO-101",
+        "FR-BRAIN-101"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-008-lumi-mention.md"
+    },
+    {
+      "id": "FR-CHAT-009",
+      "title": "Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in checkboxes and aggregated BRAIN memory",
+      "module": "CHAT",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-CHAT-008"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-CHAT-005",
+        "FR-CHAT-008",
+        "FR-BRAIN-111",
+        "FR-BRAIN-101"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-009-retro-capture.md"
+    },
+    {
+      "id": "FR-CHAT-010",
+      "title": "Decommission signal — (chat msgs) / (chat + slack + zalo msgs) ≥ 0.95 over 14-day rolling window with per-tenant trigger",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 5,
+      "depends_on": [
+        "FR-CHAT-006"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-CHAT-006",
+        "FR-CHAT-007",
+        "FR-OBS-007"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-010-decommission-signal.md"
+    },
+    {
+      "id": "FR-CHAT-011",
+      "title": "Mobile push delivery — APNS + FCM with privacy-preserving payload (title + sender only; no body)",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-CHAT-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-CHAT-003",
+        "FR-CHAT-005"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-011-mobile-push.md"
+    },
+    {
+      "id": "FR-CHAT-012",
+      "title": "DSAR export — Data Subject Access Request: every message a subject authored + chained BRAIN audit hashes for tamper-evidence",
+      "module": "CHAT",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-CHAT-005"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-CHAT-005",
+        "FR-BRAIN-101",
+        "FR-AUTH-005"
+      ],
+      "path": "docs/feature-requests/chat/FR-CHAT-012-dsar-export.md"
+    },
+    {
+      "id": "FR-DOCS-001",
+      "title": "Server-render NFR catalog + Risk Register + FR catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence",
+      "module": "DOCS",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "I",
+      "phase": "P0",
+      "milestone": "P0 · polish slice",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 14,
+      "depends_on": [],
+      "blocks": [],
+      "related_frs": [],
+      "path": "docs/feature-requests/docs/FR-DOCS-001-server-render-reference-pages.md"
+    },
+    {
+      "id": "FR-OBS-001",
+      "title": "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2 (after AI Gateway slice 1)",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [],
+      "blocks": [
+        "FR-OBS-002",
+        "FR-OBS-003",
+        "FR-OBS-004",
+        "FR-OBS-005",
+        "FR-OBS-006",
+        "FR-AI-022"
+      ],
+      "related_frs": [
+        "FR-OBS-002",
+        "FR-OBS-003",
+        "FR-OBS-004",
+        "FR-OBS-005",
+        "FR-OBS-006",
+        "FR-OBS-007",
+        "FR-OBS-008",
+        "FR-OBS-009",
+        "FR-AI-022"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-001-otel-collector.md"
+    },
+    {
+      "id": "FR-OBS-002",
+      "title": "Tenant-aware Grafana proxy (Rust) — AST-injects tenant_id into PromQL/LogQL/TraceQL with anti-bypass + property test + audit log",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-OBS-001",
+        "FR-AUTH-004"
+      ],
+      "blocks": [
+        "FR-OBS-007",
+        "FR-OBS-008"
+      ],
+      "related_frs": [
+        "FR-OBS-001",
+        "FR-OBS-007",
+        "FR-OBS-008",
+        "FR-OBS-009",
+        "FR-AUTH-004",
+        "FR-AUTH-108",
+        "FR-AI-018"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-002-tenant-aware-grafana.md"
+    },
+    {
+      "id": "FR-OBS-003",
+      "title": "Per-service RED metrics (rate/errors/duration) via cyberos-obs-sdk shared crate with macro + CI lint + standardised buckets",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-OBS-001"
+      ],
+      "blocks": [
+        "FR-OBS-007",
+        "FR-OBS-005"
+      ],
+      "related_frs": [
+        "FR-OBS-001",
+        "FR-OBS-002",
+        "FR-OBS-007",
+        "FR-AI-022"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-003-red-metrics.md"
+    },
+    {
+      "id": "FR-OBS-004",
+      "title": "LangSmith integration for AI traces — self-hosted + per-tenant opt-in + redacted-prompts-only + W3C TraceContext correlation + async non-blocking",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AI-022",
+        "FR-OBS-001"
+      ],
+      "blocks": [
+        "FR-OBS-005"
+      ],
+      "related_frs": [
+        "FR-AI-011",
+        "FR-AI-014",
+        "FR-AI-022",
+        "FR-OBS-001",
+        "FR-OBS-005"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-004-langsmith-ai-traces.md"
+    },
+    {
+      "id": "FR-OBS-005",
+      "title": "W3C TraceContext correlation across logs/metrics/traces/AI-traces — propagate, embed, exemplar, end-to-end CI test",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-OBS-001",
+        "FR-OBS-003",
+        "FR-OBS-004"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-OBS-001",
+        "FR-OBS-002",
+        "FR-OBS-003",
+        "FR-OBS-004",
+        "FR-AI-022"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-005-tracecontext-correlation.md"
+    },
+    {
+      "id": "FR-OBS-006",
+      "title": "Tail-based sampling at OTel collector — 100% errors/5xx/slow/flagged + 10% normal + decision_wait + flagged-tenants config",
+      "module": "OBS",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-OBS-001"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-OBS-001",
+        "FR-OBS-005",
+        "FR-AI-022",
+        "FR-AI-021"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-006-tail-sampling.md"
+    },
+    {
+      "id": "FR-OBS-007",
+      "title": "obs-router: Alertmanager → CUO obs.triage-alert@1 skill → CHAT (≥0.70 conf) OR PagerDuty + sev-1 always pages + ack-button + audit",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-OBS-002",
+        "FR-OBS-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-OBS-001",
+        "FR-OBS-003",
+        "FR-OBS-005",
+        "FR-CUO-101",
+        "FR-KB-008"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-007-alertmanager-cuo-runbook-routing.md"
+    },
+    {
+      "id": "FR-OBS-008",
+      "title": "obs-compliance-view: pre-built read-only views (EU AI Act / PDPL / SOC 2 / ISO 27001) over BRAIN audit chain with Ed25519 chain-proof + tenant-scoped + PDF/JSON export",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 14,
+      "depends_on": [
+        "FR-OBS-002"
+      ],
+      "blocks": [
+        "FR-OBS-009"
+      ],
+      "related_frs": [
+        "FR-OBS-002",
+        "FR-OBS-009",
+        "FR-AI-022",
+        "FR-AUTH-004"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-008-compliance-view-scoping.md"
+    },
+    {
+      "id": "FR-OBS-009",
+      "title": "Chain-of-custody manifest with Ed25519 signature on every compliance export — PDF cover + JSON sidecar + audit row + verifier CLI",
+      "module": "OBS",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P0",
+      "milestone": "P0 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-OBS-008"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-OBS-008",
+        "FR-AUTH-006"
+      ],
+      "path": "docs/feature-requests/obs/FR-OBS-009-chain-of-custody-manifest.md"
+    },
+    {
+      "id": "FR-PROJ-001",
+      "title": "PROJ Issue + Cycle + Engagement schema — RLS + cross-module linkable + status FSM + audit + assignee validation",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CPO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-AUTH-001",
+        "FR-AUTH-003"
+      ],
+      "blocks": [
+        "FR-PROJ-002"
+      ],
+      "related_frs": [
+        "FR-PROJ-002",
+        "FR-PROJ-003",
+        "FR-AUTH-001",
+        "FR-AUTH-003",
+        "FR-AI-003"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-001-issue-schema.md"
+    },
+    {
+      "id": "FR-PROJ-002",
+      "title": "BRAIN-anchored proj.decision row per Issue state change — reason + prior_chain link + cross-module references + ACL + audit-before-action",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CPO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 7,
+      "depends_on": [
+        "FR-PROJ-001",
+        "FR-AI-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-AI-003",
+        "FR-BRAIN-106",
+        "FR-BRAIN-108"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-002-brain-decision-anchoring.md"
+    },
+    {
+      "id": "FR-PROJ-003",
+      "title": "Yjs CRDT for issue description + comment-body fields; LWW for scalar metadata; reconnection state recovery; conflict-free multi-cursor editing",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-PROJ-002"
+      ],
+      "blocks": [
+        "FR-PROJ-017"
+      ],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-002",
+        "FR-PROJ-017",
+        "FR-AUTH-003",
+        "FR-AUTH-004"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-003-yjs-crdt-collaboration.md"
+    },
+    {
+      "id": "FR-PROJ-004",
+      "title": "Issue lifecycle FSM — backlog → todo → in-progress → in-review → done | cancelled with FR-PROJ-002 audit trail, validation, and forward-only enforcement",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 5,
+      "depends_on": [
+        "FR-PROJ-001",
+        "FR-PROJ-002"
+      ],
+      "blocks": [
+        "FR-PROJ-008"
+      ],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-002",
+        "FR-PROJ-003",
+        "FR-PROJ-008",
+        "FR-BRAIN-101"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-004-issue-lifecycle-fsm.md"
+    },
+    {
+      "id": "FR-PROJ-005",
+      "title": "Rate-card schema per Engagement — (role × currency × hourly_rate × billable_default) with effective-date versioning and FR-AUTH-003 RLS",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 4,
+      "depends_on": [
+        "FR-PROJ-001"
+      ],
+      "blocks": [
+        "FR-PROJ-006",
+        "FR-PROJ-007"
+      ],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-006",
+        "FR-PROJ-007",
+        "FR-AUTH-003",
+        "FR-BRAIN-101"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-005-rate-card-schema.md"
+    },
+    {
+      "id": "FR-PROJ-006",
+      "title": "Billable cascade — Member-override → task-class → role-default → fallback; resolution snapshot at time-entry write",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-PROJ-005"
+      ],
+      "blocks": [
+        "FR-PROJ-007"
+      ],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-005",
+        "FR-PROJ-007",
+        "FR-TIME-005",
+        "FR-AUTH-003"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-006-billable-cascade.md"
+    },
+    {
+      "id": "FR-PROJ-007",
+      "title": "Three billing modes — Time & Materials, Fixed-Fee, Retainer — with mode-aware rollups and per-mode invoice generation hooks",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-PROJ-005"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-005",
+        "FR-PROJ-006",
+        "FR-INV-001",
+        "FR-TIME-005",
+        "FR-TEN-203"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-007-billing-modes.md"
+    },
+    {
+      "id": "FR-PROJ-008",
+      "title": "BRAIN audit row per issue mutation — chained to PROJ history_event table with field-level diff and chain_anchor verification",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 5,
+      "depends_on": [
+        "FR-PROJ-001",
+        "FR-BRAIN-101"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-003",
+        "FR-PROJ-004",
+        "FR-BRAIN-101"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-008-brain-audit-row-per-mutation.md"
+    },
+    {
+      "id": "FR-PROJ-009",
+      "title": "BRAIN_LINK schema — Issue ↔ BRAIN memory linkage (cites | implements | supersedes) with bidirectional traversal and link-graph queries",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 5,
+      "depends_on": [
+        "FR-PROJ-001"
+      ],
+      "blocks": [
+        "FR-PROJ-010"
+      ],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-010",
+        "FR-BRAIN-101",
+        "FR-BRAIN-108"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-009-brain-link-schema.md"
+    },
+    {
+      "id": "FR-PROJ-010",
+      "title": "Citation drift detector — nightly sweep flags stale BRAIN_LINKs (deleted target, superseded chain, broken memory_row_id) with operator notification",
+      "module": "PROJ",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 4,
+      "depends_on": [
+        "FR-PROJ-009"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-009",
+        "FR-BRAIN-101",
+        "FR-BRAIN-108",
+        "FR-OBS-007"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-010-citation-drift-detector.md"
+    },
+    {
+      "id": "FR-PROJ-011",
+      "title": "Blocker detector from comment stream — `blocked by` parser + dwell-time monitor + CUO Notify on stale blockers",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-PROJ-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-003",
+        "FR-PROJ-004",
+        "FR-CUO-101",
+        "FR-OBS-007",
+        "FR-BRAIN-101"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-011-blocker-detector.md"
+    },
+    {
+      "id": "FR-PROJ-012",
+      "title": "Cycle-review draft generator — CUO/COO-persona LLM compose at cycle close with completion stats, blocker recap, and editable BRAIN draft",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-PROJ-004"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-004",
+        "FR-PROJ-011",
+        "FR-AI-014",
+        "FR-CUO-101"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-012-cycle-review-draft.md"
+    },
+    {
+      "id": "FR-PROJ-013",
+      "title": "Estimate calibration snapshot — per-member per-task-class nightly batch with Bayesian update and operator-visible accuracy trend",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-PROJ-002"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-002",
+        "FR-PROJ-004",
+        "FR-TIME-001",
+        "FR-BRAIN-101"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-013-estimate-calibration.md"
+    },
+    {
+      "id": "FR-PROJ-014",
+      "title": "Kanban Board view — drag/drop status transition + keyboard-first navigation + 60fps virtualised list rendering",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-PROJ-002"
+      ],
+      "blocks": [
+        "FR-PROJ-018"
+      ],
+      "related_frs": [
+        "FR-PROJ-002",
+        "FR-PROJ-003",
+        "FR-PROJ-004",
+        "FR-PROJ-017",
+        "FR-PROJ-018"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-014-kanban-board.md"
+    },
+    {
+      "id": "FR-PROJ-015",
+      "title": "Timeline view — cycle window × assignee swimlane with day-grid layout, drag-resize for date changes, and milestone markers",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-PROJ-002"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-002",
+        "FR-PROJ-003",
+        "FR-PROJ-007",
+        "FR-PROJ-014",
+        "FR-PROJ-018"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-015-timeline-view.md"
+    },
+    {
+      "id": "FR-PROJ-016",
+      "title": "Gantt view with dependency arrows — issue-to-issue precedence + critical path highlighting + roll-up to parent issue",
+      "module": "PROJ",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-PROJ-002"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-001",
+        "FR-PROJ-002",
+        "FR-PROJ-015",
+        "FR-PROJ-018"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-016-gantt-view.md"
+    },
+    {
+      "id": "FR-PROJ-017",
+      "title": "Brief Modal — issue deep-view with Yjs description editor + threaded comments + LWW meta sidebar + presence cursors",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-PROJ-003"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-002",
+        "FR-PROJ-003",
+        "FR-PROJ-004",
+        "FR-PROJ-008",
+        "FR-PROJ-014",
+        "FR-PROJ-018"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-017-brief-modal.md"
+    },
+    {
+      "id": "FR-PROJ-018",
+      "title": "Liquid-Glass design tokens (tokens.proj.css) + axe-core CI accessibility gate + Storybook visual regression",
+      "module": "PROJ",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 8,
+      "depends_on": [
+        "FR-PROJ-014"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-PROJ-014",
+        "FR-PROJ-015",
+        "FR-PROJ-016",
+        "FR-PROJ-017"
+      ],
+      "path": "docs/feature-requests/proj/FR-PROJ-018-design-tokens-a11y-ci.md"
+    },
+    {
+      "id": "FR-SKILL-101",
+      "title": "Skill BRAIN integration — skill.invoked_started + skill.invoked_completed audit rows (skill.* namespace) + args_hash + trace_id propagation + panic-recovery",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 6,
+      "depends_on": [
+        "FR-AI-003"
+      ],
+      "blocks": [
+        "FR-SKILL-102"
+      ],
+      "related_frs": [
+        "FR-AI-003",
+        "FR-AI-022",
+        "FR-SKILL-102"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-101-brain-integration.md"
+    },
+    {
+      "id": "FR-SKILL-102",
+      "title": "Self-hosted OCI registry for .skill bundles — cosign signing + tenant-scoped + immutable tags + 100MB cap + audit",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng (CTO)",
+      "created": "2026-05-15",
+      "shipped": null,
+      "effort_hours": 10,
+      "depends_on": [
+        "FR-SKILL-101"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-101",
+        "FR-AUTH-004",
+        "FR-AUTH-003"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-102-oci-registry.md"
+    },
+    {
+      "id": "FR-SKILL-103",
+      "title": "SKILL.md frontmatter extension — allowed_brain_scopes + allowed_tools + version + signature enforced by capability broker",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 7,
+      "depends_on": [
+        "FR-SKILL-101"
+      ],
+      "blocks": [
+        "FR-SKILL-104",
+        "FR-SKILL-105"
+      ],
+      "related_frs": [
+        "FR-SKILL-101",
+        "FR-SKILL-102",
+        "FR-SKILL-104",
+        "FR-SKILL-105",
+        "FR-BRAIN-106",
+        "FR-AUTH-003"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-103-frontmatter-extension.md"
+    },
+    {
+      "id": "FR-SKILL-104",
+      "title": "Capability broker — subprocess sandbox enforces allowed_tools + allowed_brain_scopes at invoke time; tool-name allowlist + path-glob allowlist + timeout enforcement",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 12,
+      "depends_on": [
+        "FR-SKILL-103"
+      ],
+      "blocks": [
+        "FR-SKILL-105"
+      ],
+      "related_frs": [
+        "FR-SKILL-101",
+        "FR-SKILL-102",
+        "FR-SKILL-103",
+        "FR-SKILL-105",
+        "FR-BRAIN-101",
+        "FR-BRAIN-106",
+        "FR-AUTH-003"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-104-capability-broker.md"
+    },
+    {
+      "id": "FR-SKILL-105",
+      "title": "brain-capture@1 skill bundle — canonical SDK-style entry point for emitting BRAIN capture rows from tools, scripts, and external integrations",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 2",
+      "slice": 2,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 9,
+      "depends_on": [
+        "FR-SKILL-103",
+        "FR-SKILL-104"
+      ],
+      "blocks": [
+        "FR-SKILL-106"
+      ],
+      "related_frs": [
+        "FR-SKILL-101",
+        "FR-SKILL-102",
+        "FR-SKILL-103",
+        "FR-SKILL-104",
+        "FR-SKILL-106",
+        "FR-BRAIN-101",
+        "FR-BRAIN-106",
+        "FR-BRAIN-107",
+        "FR-BRAIN-109",
+        "FR-BRAIN-111"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-105-brain-capture-bundle.md"
+    },
+    {
+      "id": "FR-SKILL-106",
+      "title": "brain-sync@1 skill bundle — operator-facing sync trigger that defers to Stage 4 orchestrator (slice-3 stub; full sync ships P2)",
+      "module": "SKILL",
+      "priority": "SHOULD",
+      "status": "accepted",
+      "verify": "I",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 4,
+      "depends_on": [
+        "FR-SKILL-105"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-104",
+        "FR-SKILL-105",
+        "FR-BRAIN-103"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-106-brain-sync-bundle.md"
+    },
+    {
+      "id": "FR-SKILL-107",
+      "title": "synthesis-author@1 skill — nightly multi-brain auto-evolve composes derived memories from clustered raw captures (P3 — stub scaffold in P1)",
+      "module": "SKILL",
+      "priority": "COULD",
+      "status": "accepted",
+      "verify": "I",
+      "phase": "P3",
+      "milestone": "P3 · slice 1",
+      "slice": 1,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 3,
+      "depends_on": [
+        "FR-SKILL-106"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-104",
+        "FR-SKILL-105",
+        "FR-SKILL-106",
+        "FR-BRAIN-108"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-107-synthesis-author.md"
+    },
+    {
+      "id": "FR-SKILL-108",
+      "title": "vn-mst-validate@1 skill — Vietnamese Tax ID (MST) validation against General Department of Taxation (GDT) public registry",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 7,
+      "depends_on": [
+        "FR-SKILL-104"
+      ],
+      "blocks": [
+        "FR-SKILL-109",
+        "FR-SKILL-110"
+      ],
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-104",
+        "FR-SKILL-105",
+        "FR-SKILL-109",
+        "FR-SKILL-110",
+        "FR-BRAIN-111",
+        "FR-AI-016"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-108-vn-mst-validate.md"
+    },
+    {
+      "id": "FR-SKILL-109",
+      "title": "vn-bank-transfer@1 skill — VietQR + Napas247 transfer-code generator with bank-prefix validation, BRAIN audit, and per-transfer idempotency",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 7,
+      "depends_on": [
+        "FR-SKILL-104",
+        "FR-SKILL-108"
+      ],
+      "blocks": [
+        "FR-SKILL-110"
+      ],
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-104",
+        "FR-SKILL-105",
+        "FR-SKILL-108",
+        "FR-SKILL-110",
+        "FR-BRAIN-111"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-109-vn-bank-transfer.md"
+    },
+    {
+      "id": "FR-SKILL-110",
+      "title": "vn-vat-invoice@1 skill — Vietnamese e-invoice (hóa đơn) Decree 123 XML emitter with GDT submission, digital signature, and per-invoice audit trail",
+      "module": "SKILL",
+      "priority": "MUST",
+      "status": "accepted",
+      "verify": "T",
+      "phase": "P1",
+      "milestone": "P1 · slice 3",
+      "slice": 3,
+      "owner": "Stephen Cheng",
+      "created": "2026-05-16",
+      "shipped": null,
+      "effort_hours": 11,
+      "depends_on": [
+        "FR-SKILL-104",
+        "FR-SKILL-108",
+        "FR-SKILL-109"
+      ],
+      "blocks": [],
+      "related_frs": [
+        "FR-SKILL-103",
+        "FR-SKILL-104",
+        "FR-SKILL-105",
+        "FR-SKILL-108",
+        "FR-SKILL-109",
+        "FR-BRAIN-111",
+        "FR-AUTH-003"
+      ],
+      "path": "docs/feature-requests/skill/FR-SKILL-110-vn-vat-invoice.md"
+    }
+  ]
+}

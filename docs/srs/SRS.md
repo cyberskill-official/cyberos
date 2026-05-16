@@ -8361,7 +8361,7 @@ For each risk, list the mitigations applied. Mitigations must be specific, verif
 
   - **Organisational controls.** E.g., "Compensation data access requires CFO + CHRO co-sign; quarterly access review."
 
-  - **Procedural controls.** E.g., "DPIA review every 12 months or on processing change."
+  - **Procedural controls.** E.g., "DPIA review every P0 → P3 horizon or on processing change."
 
 <span id="h_h_8_section_8_residual_risk" class="anchor"></span>**H.8 Section 8 — Residual risk**
 
@@ -8383,7 +8383,7 @@ The DPIA is not complete without DPO sign-off. The signature block records:
 
   - **CLO co-sign (always).** The Compliance Officer's signature with date.
 
-  - **Next review date.** When this DPIA must be re-reviewed (default: 12 months).
+  - **Next review date.** When this DPIA must be re-reviewed (default: P0 → P3 horizon).
 
   - **Hash chain entry.** cp.audit\_log entry recording the sign-off, with the DPIA document SHA-256 hash.
 

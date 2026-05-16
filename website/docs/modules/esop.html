@@ -5,7 +5,7 @@
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>ESOP — Phantom Stock vesting · Good/Bad Leaver branch · Singapore HoldCo flip · CyberOS</title>
- <meta name="description" content="ESOP — three strategic roles: (1) Phantom Stock grant lifecycle (issue/vest/cliff/cancel; 4-year vest with 12-month cliff), (2) Good Leaver vs Bad Leaver branch on HR offboarding (vested SP retained at full or appendix discount), (3) liquidity-event simulator (annual Board-signed valuation; put options from Year 3; Singapore HoldCo flip at ARR ≥ $1.5M). Append-only valuation versioning."
+ <meta name="description" content="ESOP — three strategic roles: (1) Phantom Stock grant lifecycle (issue/vest/cliff/cancel; 4-year vest with phased cliff), (2) Good Leaver vs Bad Leaver branch on HR offboarding (vested SP retained at full or appendix discount), (3) liquidity-event simulator (annual Board-signed valuation; put options from Year 3; Singapore HoldCo flip at ARR ≥ $1.5M). Append-only valuation versioning."
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -55,7 +55,7 @@
  Phantom Stock plan — synthetic equity that avoids Vietnamese securities-issuance regulation while preserving the economic outcome of an ESOP. Grants, vesting, annual valuation, put options, Good/Bad Leaver branches, M&amp;A acceleration, and a Singapore HoldCo flip path.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- ESOP is the retention moat. The structure is <strong>Phantom Stock (Stock Phantom — SP)</strong>: no actual shares are issued, no Vietnamese securities-issuance regulation applies, and yet the economic profile matches a real ESOP from the holder's perspective. Each Member receives <strong>SP grants</strong> with default 4-year vesting (12-month cliff + monthly thereafter). Every year the Board signs off an Industry Multiplier and the CFO inputs a base valuation; the resulting SP unit value is locked into a versioned valuation row. From Year 3 onward, Members can <strong>exercise put options</strong> — sell N% of vested SP back to the company at the most recent valuation; the company wires VND (or SGD if Singapore HoldCo flipped). Two terminal branches gate exit: <strong>Good Leaver</strong> (vested SP retained, put rights preserved, future vesting forfeited) or <strong>Bad Leaver</strong> (vested SP retained at appendix discount, put rights frozen). When ARR reaches the trigger ($1.5M), the CEO can designate a HoldCo flip — phantom shares convert to real Singapore HoldCo shares. locks the FRs; binds them.
+ ESOP is the retention moat. The structure is <strong>Phantom Stock (Stock Phantom — SP)</strong>: no actual shares are issued, no Vietnamese securities-issuance regulation applies, and yet the economic profile matches a real ESOP from the holder's perspective. Each Member receives <strong>SP grants</strong> with default 4-year vesting (phased cliff + monthly thereafter). Every year the Board signs off an Industry Multiplier and the CFO inputs a base valuation; the resulting SP unit value is locked into a versioned valuation row. From Year 3 onward, Members can <strong>exercise put options</strong> — sell N% of vested SP back to the company at the most recent valuation; the company wires VND (or SGD if Singapore HoldCo flipped). Two terminal branches gate exit: <strong>Good Leaver</strong> (vested SP retained, put rights preserved, future vesting forfeited) or <strong>Bad Leaver</strong> (vested SP retained at appendix discount, put rights frozen). When ARR reaches the trigger ($1.5M), the CEO can designate a HoldCo flip — phantom shares convert to real Singapore HoldCo shares. locks the FRs; binds them.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -117,7 +117,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-esop p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- ESOP is the <strong>synthetic equity plane</strong> — a tracked-on-books economic interest in the company that vests over time, can be valued, and can be cashed out under defined windows. No share certificates are ever issued; no Vietnamese securities-regulation filing applies (Decree 38/2020 corporate governance treatment instead, as deferred compensation). The core entities are <strong>Grants</strong> (each tied to a Member, type, schedule), <strong>VestingEvents</strong> (the monthly vest after the 12-month cliff), <strong>Valuations</strong> (annual, signed by CFO + Board), <strong>PutOptionExercises</strong> (Year-3+ cash-out windows), and <strong>PoolBalance</strong> (the pool replenishment from % of annual profit, with GL/BL branches for top-performers vs broad distribution).
+ ESOP is the <strong>synthetic equity plane</strong> — a tracked-on-books economic interest in the company that vests over time, can be valued, and can be cashed out under defined windows. No share certificates are ever issued; no Vietnamese securities-regulation filing applies (Decree 38/2020 corporate governance treatment instead, as deferred compensation). The core entities are <strong>Grants</strong> (each tied to a Member, type, schedule), <strong>VestingEvents</strong> (the monthly vest after the phased cliff), <strong>Valuations</strong> (annual, signed by CFO + Board), <strong>PutOptionExercises</strong> (Year-3+ cash-out windows), and <strong>PoolBalance</strong> (the pool replenishment from % of annual profit, with GL/BL branches for top-performers vs broad distribution).
  </p>
 
  <div class="invariant-box">
@@ -156,7 +156,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--esop-dark)">Role 1 · Grant lifecycle</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Issue · vest · cliff · cancel · put</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- SP (Stock Phantom) grant types: founder · early · standard · ad-hoc. Default vesting: 4 years with 12-month cliff + monthly thereafter. Put options open from Year 3, capped per Member per year. M&amp;A acceleration clauses standard. Cancellation only by Board sign-off; never automatic.
+ SP (Stock Phantom) grant types: founder · early · standard · ad-hoc. Default vesting: 4 years with phased cliff + monthly thereafter. Put options open from Year 3, capped per Member per year. M&amp;A acceleration clauses standard. Cancellation only by Board sign-off; never automatic.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--esop)">
@@ -388,7 +388,7 @@ graph TB
  <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
  <tbody>
  <tr><td><code>grant.rs</code></td><td>services/esop/src/grant.rs</td><td>Append-only grant issuance. Requires CEO + CFO + Board-designate WebAuthn co-sign before INSERT. Types: founding, milestone, retention.</td></tr>
- <tr><td><code>vesting.rs</code></td><td>services/esop/src/vesting.rs</td><td>Pure-function vesting compute. Input: (grant, asof_date). Output: vested_sp count. 12-month cliff + monthly thereafter. Deterministic.</td></tr>
+ <tr><td><code>vesting.rs</code></td><td>services/esop/src/vesting.rs</td><td>Pure-function vesting compute. Input: (grant, asof_date). Output: vested_sp count. phased cliff + monthly thereafter. Deterministic.</td></tr>
  <tr><td><code>vesting_cron.rs</code></td><td>services/esop/src/vesting_cron.rs</td><td>Monthly cron that materialises vesting_event rows. Idempotent (UNIQUE by (grant_id, period)).</td></tr>
  <tr><td><code>valuation.rs</code></td><td>services/esop/src/valuation.rs</td><td>Annual valuation cycle. CFO inputs base value; Board signs Industry Multiplier; auditor attests. New <code>valuation</code> row supersedes prior.</td></tr>
  <tr><td><code>put_option.rs</code></td><td>services/esop/src/put_option.rs</td><td>Put-option exercise. Year 3+ window (annual July). Capped by (FR pending) per-Member per-year limit. Wires cash via vn-bank-transfer or Wise.</td></tr>
@@ -436,7 +436,7 @@ erDiagram
  string kind "founding | milestone | retention"
  decimal sp_count "synthetic units"
  date grant_date
- date cliff_date "+ 12 months default"
+ date cliff_date "+ P0 → P3 horizon default"
  date final_vest_date "+ 48 months default"
  string vesting_schedule "monthly | quarterly | custom"
  uuid pdf_s3_uri FK
@@ -1273,7 +1273,7 @@ pool total: 100,000 100%
  <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
  <a href="doc.html" class="text-blue-700 underline">doc.html</a></li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — ESOP value structurally excluded from BRAIN.</li>
- <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — ESOP at M+9 (P2).</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — ESOP at P2 · exit (P2).</li>
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>Singapore Companies Act (Cap. 50)</strong> — S 67 share issuance, applicable post-HoldCo-flip.</li>
  <li><strong>Singapore ACRA filings</strong> — Form 24 (share allotment), Form 45 (allotment return).</li>

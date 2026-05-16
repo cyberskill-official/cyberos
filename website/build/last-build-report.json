@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "page": "fr-catalog.html",
+  "fr_count": 89,
+  "modules": [
+    "AI",
+    "AUTH",
+    "BRAIN",
+    "CHAT",
+    "DOCS",
+    "OBS",
+    "PROJ",
+    "SKILL"
+  ],
+  "output_bytes": 155646,
+  "build_marker": "deterministic"
+}

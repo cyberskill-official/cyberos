@@ -127,7 +127,7 @@
 
  <div class="invariant-box">
  <div class="label">Invariant — anti-retroactive parameter versioning</div>
- <p class="text-sm text-slate-700 mt-1">Published parameter versions are immutable. A recompute of any old payslip — say, January 2024 — against the parameters effective at 2024-01-31 23:59:59 UTC must produce a byte-identical PDF. Parameter rows have <code>effective_to + superseded_by</code>; never UPDATE. <strong>Violation = sev-0.</strong> Verified by a CI replay job that recomputes the last 24 months' payslips at every parameter change.</p>
+ <p class="text-sm text-slate-700 mt-1">Published parameter versions are immutable. A recompute of any old payslip — say, January 2024 — against the parameters effective at 2024-01-31 23:59:59 UTC must produce a byte-identical PDF. Parameter rows have <code>effective_to + superseded_by</code>; never UPDATE. <strong>Violation = sev-0.</strong> Verified by a CI replay job that recomputes the last P0 → P4 horizon' payslips at every parameter change.</p>
  </div>
 
  <div class="fact-grid">
@@ -274,7 +274,7 @@ flowchart TB
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$30/month (RDS schema + Fargate task + S3 with object-lock). 50-tenant: ~$100/month. Per-payslip cost: ~$0.01 amortised (LaTeX rendering dominates).</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) P1 invariant — sev-0 if violated. (b) Anti-retroactive — sev-0 if violated. (c) BRAIN exclusion (DEC-036) — CI gate. (d) Vietnamese SI/PIT line-items per Decree 152/2020 + Circular 111/2013. (e) 10-year retention. (f) EU AI Act high-risk — conformity pack at P2.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · LaTeX (tectonic) for deterministic PDF · ring for SHA-256 · serde for canonical-JSON input snapshots · AWS KMS for per-payslip encryption · S3 with object-lock for archival.</td></tr>
- <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes last 24 months on every parameter change.</td></tr>
+ <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes last P0 → P4 horizon on every parameter change.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 retention lock = 10 years. SG HoldCo branch: SGD payroll mode (P2 stretch).</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>HR/Ops Lead (R for operations) + CEO (A for sign-off) + CFO (R for commit co-sign) + CHRO (R for co-sign, P3+ seat).</td></tr>
  <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>(FR pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, BRAIN-leak incident count, P1-cut-attempt blocked count.</td></tr>
@@ -382,7 +382,7 @@ graph TB
  <tr><td><code>cosign_guard.rs</code></td><td>services/rew/src/cosign_guard.rs</td><td>Predicate check at commit boundary: requires both <code>rew.commit_co_sign:cfo</code> and <code>rew.commit_co_sign:chro</code> within 5-minute window. Single-signer commits rejected.</td></tr>
  <tr><td><code>narrator.rs</code></td><td>services/rew/src/narrator.rs</td><td>Read-only MCP surface for the CUO/CFO-skill: explains a payslip in prose. Never proposes changes. Never writes.</td></tr>
  <tr><td><code>anomaly_surface.rs</code></td><td>services/rew/src/anomaly_surface.rs</td><td>Surfaces deltas vs prior month — flags ±20% swings for HR review during close. Narrative-only output.</td></tr>
- <tr><td><code>replay_check.rs</code></td><td>services/rew/src/replay_check.rs</td><td>CI replay job. On every parameter change, recomputes last 24 months' payslips; asserts byte-identical SHA-256.</td></tr>
+ <tr><td><code>replay_check.rs</code></td><td>services/rew/src/replay_check.rs</td><td>CI replay job. On every parameter change, recomputes last P0 → P4 horizon' payslips; asserts byte-identical SHA-256.</td></tr>
  <tr><td><code>p1_guard.rs</code></td><td>services/rew/src/p1_guard.rs</td><td>P1-protection invariant enforcer. Rejects any <code>compensation_change</code> row that would result in a smaller P1 cash value than the prior period.</td></tr>
  <tr><td><code>si_pit.rs</code></td><td>services/rew/src/si_pit.rs</td><td>Vietnamese SI (BHXH + BHYT + BHTN) and PIT line-item computation per Decree 152/2020 + Circular 111/2013. Versioned along with other parameters.</td></tr>
  <tr><td><code>sg_branch.rs</code></td><td>services/rew/src/sg_branch.rs</td><td>SGD payroll branch for Singapore HoldCo. Activated only when tenant's <code>data_residency = "sg-1"</code> and member's <code>jurisdiction = "SG"</code>. (P2 stretch.)</td></tr>
@@ -602,7 +602,7 @@ type Query {
  <tr><td>POST</td><td><code>/admin/bonus-pool/{year}</code></td><td>Allocate the annual bonus pool.</td><td><strong>CEO + CFO</strong></td></tr>
  <tr><td>POST</td><td><code>/admin/bp/award</code></td><td>Award BP to a Member. Founder approval gate.</td><td><strong>Founder</strong></td></tr>
  <tr><td>POST</td><td><code>/admin/bp/convert</code></td><td>Convert BP → P3 cash (member-initiated, windowed).</td><td>Member self</td></tr>
- <tr><td>POST</td><td><code>/admin/replay-check</code></td><td>Run the 24-month replay; CI hook.</td><td>internal · CI</td></tr>
+ <tr><td>POST</td><td><code>/admin/replay-check</code></td><td>Run the phased replay; CI hook.</td><td>internal · CI</td></tr>
  <tr><td>POST</td><td><code>/admin/dsar/{member_id}/export</code></td><td>DSAR comp bundle (own only; managers blocked).</td><td>DPO</td></tr>
  </tbody>
  </table>
@@ -692,11 +692,11 @@ sequenceDiagram
  CEO->>R: POST /admin/parameters<br>{name:"p1-base-schedule", version:"2026.05", payload:…}
  R->>R: 3-way co-sign (CEO + CFO + CHRO)
  R->>R: INSERT parameter_version row<br>(prior version effective_to = now)
- R->>RPC: trigger replay of last 24 months
+ R->>RPC: trigger replay of last P0 → P4 horizon
  RPC->>K: replay april-2024 with parameters effective at april-2024-end
  K-->>RPC: SHA-256 of payslip PDF
  RPC->>RPC: compare with stored sha
- alt all 24 months identical
+ alt all P0 → P4 horizon identical
  RPC-->>R: ✓ determinism preserved
  R->>R: parameter_version.status = "published"
  R->>B: opaque ref "rew.params.published:2026.05"
@@ -707,7 +707,7 @@ sequenceDiagram
  Note over R,B: New parameters NEVER affect old periods.<br>If replay drifts, parameters are rejected.
  end
  </div>
- <p class="text-xs text-slate-500 mt-3">This is the anti-retroactive invariant in action: <em>publishing</em> a new parameter version is only allowed if recomputing the last 24 months against the historical effective parameters still yields byte-identical PDFs. If the kernel itself changed in a way that breaks determinism, the change is rejected.</p>
+ <p class="text-xs text-slate-500 mt-3">This is the anti-retroactive invariant in action: <em>publishing</em> a new parameter version is only allowed if recomputing the last P0 → P4 horizon against the historical effective parameters still yields byte-identical PDFs. If the kernel itself changed in a way that breaks determinism, the change is rejected.</p>
  </div>
 
  <h3 class="text-lg font-bold mb-3">Flow 3 — Promotion → compensation change (P1-guard in action)</h3>
@@ -856,7 +856,7 @@ stateDiagram-v2
  <tr><td><code>N(FR pending)</code></td><td>P1 reduction attempts blocked</td><td>= 100% (zero leak)</td><td>p1_guard property test; chaos test injects p1 cut and asserts rejection</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Single-signer commit attempts blocked</td><td>= 100%</td><td>cosign_guard integration test</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>KMS-key isolation (REW key distinct from HR + BRAIN)</td><td>3 distinct key handles</td><td>KMS policy inspection; cross-key access blocked</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Determinism — same inputs → same PDF SHA-256</td><td>100% (24-month replay)</td><td>replay_check.rs CI on every parameter change</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Determinism — same inputs → same PDF SHA-256</td><td>100% (phased replay)</td><td>replay_check.rs CI on every parameter change</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Append-only at DB layer (no UPDATE / DELETE grant on ledger tables)</td><td>enforced</td><td>DB role inspection · CI gate on migrations</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Cycle draft compute p95 (50 members)</td><td>≤ 8 s</td><td>bench/cycle.rs</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>PDF render p95 (per payslip)</td><td>≤ 600 ms</td><td>bench/pdf.rs</td></tr>
@@ -960,7 +960,7 @@ graph LR
  <tbody>
  <tr><td><code>R-REW-001</code></td><td>Comp number leaks into BRAIN audit row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>brain_bridge.rs emit JSON inspected by CI gate against numeric blocklist; integration test asserts opaque ref pattern only.</td></tr>
  <tr><td><code>R-REW-002</code></td><td>P1 cut proposed by buggy evaluation</td><td>Low</td><td>Catastrophic (legal)</td><td>CEO</td><td>p1_guard at app layer + DB CHECK constraint; property test attempts P1 cut and asserts rejection.</td></tr>
- <tr><td><code>R-REW-003</code></td><td>Retroactive parameter change breaks old payslip recomputation</td><td>Medium</td><td>High</td><td>CTO</td><td>replay_check.rs CI on every parameter change; rejects publish if any of last 24 months drifts.</td></tr>
+ <tr><td><code>R-REW-003</code></td><td>Retroactive parameter change breaks old payslip recomputation</td><td>Medium</td><td>High</td><td>CTO</td><td>replay_check.rs CI on every parameter change; rejects publish if any of last P0 → P4 horizon drifts.</td></tr>
  <tr><td><code>R-REW-004</code></td><td>Single-signer commit slips through</td><td>Low</td><td>High</td><td>CFO</td><td>cosign_guard with 5-min window; both signatures required; integration test asserts blockage.</td></tr>
  <tr><td><code>R-REW-005</code></td><td>Deterministic PDF render breaks (font/timestamp drift)</td><td>Medium</td><td>High</td><td>CTO</td><td>Tectonic with pinned font versions; PDF metadata stripped to {producer:none, creation_date:fixed}; CI byte-identical assertion.</td></tr>
  <tr><td><code>R-REW-006</code></td><td>Cross-tenant comp leakage via manager scope</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>Manager role has NO <code>rew.payslip_read</code> scope; can only see HR data; DSAR queries reject if subject ≠ self.</td></tr>
@@ -1090,9 +1090,9 @@ graph LR
  --cosign-ceo --cosign-cfo --cosign-chro
 
 [3-way cosign] ceo ✓ cfo ✓ chro ✓
-[replay-check] replaying last 24 months against historical params…
+[replay-check] replaying last P0 → P4 horizon against historical params…
 [replay-check] apr-2024 ✓ may-2024 ✓ … mar-2026 ✓
-[replay-check] all 24 months: SHA-256 byte-identical ✓
+[replay-check] all P0 → P4 horizon: SHA-256 byte-identical ✓
 [publish] p1-base-schedule v2026.05 published
 [supersede] prior version v2026.04 effective_to = now
 [audit] brain seq=15045 (opaque "rew.params.published:2026.05")</code></pre>
@@ -1147,7 +1147,7 @@ graph LR
  <tr><td>Monthly close cycle UX</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Anomaly surface (±20% delta)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Deterministic PDF render (tectonic)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
- <tr><td>24-month replay CI gate</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>phased replay CI gate</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>BP ledger + ACB interest accrual</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Payslip narrator MCP (read-only)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Vietnamese SI/PIT line-items</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
@@ -1178,7 +1178,7 @@ graph LR
  <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
  <a href="auth.html" class="text-blue-700 underline">auth.html</a></li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — comp data structurally excluded from BRAIN; Lumi cross-tenant synthesis cannot read REW.</li>
- <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — REW at M+6 (P1, after HR).</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — REW at P1 · exit (P1, after HR).</li>
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li> — REW module FRs ((FR pending) through (FR pending)).</li>
  <li> — REW architecture posture, Bet 5 framing.</li>

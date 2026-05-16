@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>AUTH — M+2 stub → P3 full · Lumi tenant identity · Agent-equal · CyberOS</title>
- <meta name="description" content="AUTH — Authentication & Authorization. M+2 magic-link+TOTP+stub-RBAC stub vs P3 full WebAuthn+per-tenant authz. Tenant identity for Lumi's BRAIN at Stage 3+. Agent-equal predicate evaluation. OAuth 2.1 + PKCE, OIDC SSO, RS256 JWT. The shared identity plane every module bolts onto.">
+ <title>AUTH — P0 · slice 2 stub → P3 full · Lumi tenant identity · Agent-equal · CyberOS</title>
+ <meta name="description" content="AUTH — Authentication & Authorization. P0 · slice 2 magic-link+TOTP+stub-RBAC stub vs P3 full WebAuthn+per-tenant authz. Tenant identity for Lumi's BRAIN at Stage 3+. Agent-equal predicate evaluation. OAuth 2.1 + PKCE, OIDC SSO, RS256 JWT. The shared identity plane every module bolts onto.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -45,10 +45,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CSO (vacant) → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- The shared identity plane. <strong>M+2 stub</strong> (magic-link + TOTP + stub RBAC) → <strong>P3 full</strong> (WebAuthn L3 + per-tenant authz + agent-equal predicate). Tenant identity for Lumi's BRAIN at Stage 3+.
+ The shared identity plane. <strong>P0 · slice 2 stub</strong> (magic-link + TOTP + stub RBAC) → <strong>P3 full</strong> (WebAuthn L3 + per-tenant authz + agent-equal predicate). Tenant identity for Lumi's BRAIN at Stage 3+.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- AUTH is the most sensitive single piece of CyberOS infrastructure — and per the <a href="../../docs/RESEARCH_REVIEW_2026_05_14.md" class="text-blue-700 underline">2026-05-14 research review §2.4</a> it is <strong>not P0 #1</strong>. The reordered P0 build sequence is <strong>AI Gateway @ M+1 → AUTH @ M+2 → MCP Gateway @ M+2.5 → OBS at M+0 (parallel) → CHAT + CUO Phase 1 @ M+3</strong>. AUTH at M+2 is a <em>stub</em>: magic-link login + TOTP MFA + an RBAC predicate that hard-codes the 5 essential roles. The full 7,000 LoC build (WebAuthn L3 passkeys, per-tenant authz server, JWKS rotation, all 22 RBAC roles, KMS-wrapped signing keys, impossible-travel detection) is delivered across slices 2–5 in <a href="../../services/auth/RFC.md" class="text-blue-700 underline">services/auth/RFC.md</a>, landing fully at P3 (M+12). The architecture below is the P3-full target; the §"M+2 stub vs P3 full" section documents the staged delivery. AUTH owns the identity database, signs the JWTs every other module trusts, and applies the same predicate to a human and to an agent so the platform never has a "second-class" auth path. The agent-equal property is non-negotiable: a persona-versioned agent JWT is evaluated by the same code path as a human one. Lumi's BRAIN (the cloud-hosted org tenant per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> Stage 3+) consumes AUTH's tenant-scoped JWT to enforce row-level isolation. <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">Sign-in UI mockup</a> implements the design system's Liquid Glass + Umber/Ochre brand.
+ AUTH is the most sensitive single piece of CyberOS infrastructure — and per the <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">2026-05-14 research review §2.4</a> it is <strong>not P0 #1</strong>. The reordered P0 build sequence is <strong>AI Gateway @ P0 · slice 1 → AUTH @ P0 · slice 2 → MCP Gateway @ P0 · slice 3 → OBS at P0 · start (parallel) → CHAT + CUO Phase 1 @ P0 · exit</strong>. AUTH at P0 · slice 2 is a <em>stub</em>: magic-link login + TOTP MFA + an RBAC predicate that hard-codes the 5 essential roles. The full 7,000 LoC build (WebAuthn L3 passkeys, per-tenant authz server, JWKS rotation, all 22 RBAC roles, KMS-wrapped signing keys, impossible-travel detection) is delivered across slices 2–5 in <a href="../../services/auth/RFC.md" class="text-blue-700 underline">services/auth/RFC.md</a>, landing fully at P3 (P3 · exit). The architecture below is the P3-full target; the §"P0 · slice 2 stub vs P3 full" section documents the staged delivery. AUTH owns the identity database, signs the JWTs every other module trusts, and applies the same predicate to a human and to an agent so the platform never has a "second-class" auth path. The agent-equal property is non-negotiable: a persona-versioned agent JWT is evaluated by the same code path as a human one. Lumi's BRAIN (the cloud-hosted org tenant per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> Stage 3+) consumes AUTH's tenant-scoped JWT to enforce row-level isolation. <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">Sign-in UI mockup</a> implements the design system's Liquid Glass + Umber/Ochre brand.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -75,7 +75,7 @@
  <li><a class="toc-link" href="#bigger-picture">The bigger picture</a></li>
  <li><a class="toc-link" href="#why">Why AUTH exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
- <li><a class="toc-link" href="#stub-vs-full">M+2 stub vs P3 full</a></li>
+ <li><a class="toc-link" href="#stub-vs-full">P0 · slice 2 stub vs P3 full</a></li>
  <li><a class="toc-link" href="#rbac-catalogue">22-role RBAC catalogue</a></li>
  <li><a class="toc-link" href="#lumi-integration">AUTH ↔ Lumi's BRAIN</a></li>
  <li><a class="toc-link" href="#open-questions">RFC open questions resolved</a></li>
@@ -117,14 +117,14 @@
  AUTH is the <strong>identity and authorisation service</strong> for every actor inside CyberOS — humans (CEO, CFO, members, clients) and agents (CUO persona-versioned tokens, Skill bot accounts, scheduled tasks). It speaks OAuth 2.1 + PKCE to the world, OIDC for SSO federation, WebAuthn L3 for passkey enrolment, and TOTP / RFC 6238 for the soft-MFA fallback. Inside, it sits on PostgreSQL with row-level security keyed by <code>tenant_id</code>, a Redis hot-path session cache, and an HSM-resident RS256 signing key. Every authentication and authorisation decision lands as a chained audit row in BRAIN — so "did this agent really have permission to delete that record?" is never an interpretation, it is a replay.
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">M+2 stub status</div><div class="value">Designed · RFC drafted</div><div class="note">5 slices · 5 open Qs in RFC §6</div></div>
- <div class="fact-card"><div class="label">P3 full status</div><div class="value">Designed · M+12 target</div><div class="note">full WebAuthn L3 + per-tenant authz</div></div>
- <div class="fact-card"><div class="label">M+2 stub LoC</div><div class="value">~1,500</div><div class="note">slice 1: tenant + subject CRUD + RLS</div></div>
+ <div class="fact-card"><div class="label">P0 · slice 2 stub status</div><div class="value">Designed · RFC drafted</div><div class="note">5 slices · 5 open Qs in RFC §6</div></div>
+ <div class="fact-card"><div class="label">P3 full status</div><div class="value">Designed · P3 · exit target</div><div class="note">full WebAuthn L3 + per-tenant authz</div></div>
+ <div class="fact-card"><div class="label">P0 · slice 2 stub LoC</div><div class="value">~1,500</div><div class="note">slice 1: tenant + subject CRUD + RLS</div></div>
  <div class="fact-card"><div class="label">P3 full LoC</div><div class="value">~7,000</div><div class="note">Rust (axum) + sqlx · 5 slices</div></div>
  <div class="fact-card"><div class="label">Planned tests</div><div class="value">120+</div><div class="note">incl. WebAuthn / OAuth flow suite</div></div>
  <div class="fact-card"><div class="label">RBAC roles</div><div class="value">5 (stub) → 22 (full)</div><div class="note">closed catalogue · see §RBAC</div></div>
  <div class="fact-card"><div class="label">JWT</div><div class="value">RS256 · 15 min</div><div class="note">refresh: 30 d rotating · KMS at slice 5</div></div>
- <div class="fact-card"><div class="label">MFA</div><div class="value">TOTP (M+2) → WebAuthn (P3)</div><div class="note">passkey mandatory at T2+ once full</div></div>
+ <div class="fact-card"><div class="label">MFA</div><div class="value">TOTP (P0 · slice 2) → WebAuthn (P3)</div><div class="note">passkey mandatory at T2+ once full</div></div>
  <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS · AI Gateway</div><div class="note">audit + telemetry sink + cost-of-everything</div></div>
  <div class="fact-card"><div class="label">Enables</div><div class="value">Lumi's BRAIN tenant isolation</div><div class="note">Stage 3 of universal protocol</div></div>
  </div>
@@ -137,22 +137,22 @@
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic moves</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- AUTH on this page is presented at <em>three time horizons simultaneously</em>: the M+2 stub that unblocks the rest of P0, the P3 full identity platform, and the Lumi's BRAIN tenant identity that turns BRAIN's universal protocol into a multi-tenant cloud product. Holding all three lenses lets engineers reading the page cold understand both what ships first and what the end-state looks like — without conflating them.
+ AUTH on this page is presented at <em>three time horizons simultaneously</em>: the P0 · slice 2 stub that unblocks the rest of P0, the P3 full identity platform, and the Lumi's BRAIN tenant identity that turns BRAIN's universal protocol into a multi-tenant cloud product. Holding all three lenses lets engineers reading the page cold understand both what ships first and what the end-state looks like — without conflating them.
  </p>
 
  <div class="grid md:grid-cols-3 gap-4 my-6">
  <div class="bbg-card p-5" style="border-top:3px solid var(--ochre-500)">
- <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--ochre-700)">Move 1 · M+2 stub</div>
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--ochre-700)">Move 1 · P0 · slice 2 stub</div>
  <div class="text-2xl mb-2">🚀</div>
  <div class="font-bold text-slate-900 mb-1">Unblock the rest of P0</div>
- <p class="text-sm text-slate-600 mb-3">Magic-link login + TOTP MFA + 5 hard-coded RBAC roles + JWT RS256 with dev keys. ~1,500 LoC. Lands at M+2 so CHAT/CUO Phase 1/OBS instrumentation can identify the actor on every cross-module call. <strong>Per research review §2.4 — AI Gateway is P0 #1, not AUTH.</strong></p>
+ <p class="text-sm text-slate-600 mb-3">Magic-link login + TOTP MFA + 5 hard-coded RBAC roles + JWT RS256 with dev keys. ~1,500 LoC. Lands at P0 · slice 2 so CHAT/CUO Phase 1/OBS instrumentation can identify the actor on every cross-module call. <strong>Per research review §2.4 — AI Gateway is P0 #1, not AUTH.</strong></p>
  <p class="text-xs" style="color:var(--text-mute)">Scope: tenant + subject CRUD with RLS · admin REST · audit-chain bridge · 15 tests</p>
  </div>
  <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Move 2 · P3 full</div>
  <div class="text-2xl mb-2">🔐</div>
  <div class="font-bold text-slate-900 mb-1">Production-grade identity</div>
- <p class="text-sm text-slate-600 mb-3">WebAuthn L3 passkeys · per-tenant OAuth 2.1 authz server with PKCE · OIDC SSO · KMS-wrapped signing keys with JWKS rotation · all 22 RBAC roles · Scope Contract Grants · impossible-travel detection · HIBP password-breach check · audit-chain emission on every decision. ~7,000 LoC across slices 2–5. P3 (M+12) target.</p>
+ <p class="text-sm text-slate-600 mb-3">WebAuthn L3 passkeys · per-tenant OAuth 2.1 authz server with PKCE · OIDC SSO · KMS-wrapped signing keys with JWKS rotation · all 22 RBAC roles · Scope Contract Grants · impossible-travel detection · HIBP password-breach check · audit-chain emission on every decision. ~7,000 LoC across slices 2–5. P3 (P3 · exit) target.</p>
  <p class="text-xs" style="color:var(--text-mute)">Slices 2–5 in RFC §3 · 120+ tests · OAuth 2.1 conformance suite</p>
  </div>
  <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
@@ -175,23 +175,23 @@ gantt
  BRAIN (shipped) :done, brain, 2026-05-01, 1d
  SKILL (shipped) :done, skill, 2026-05-01, 1d
  OBS instrumentation :active, obs, 2026-05-01, 90d
- section M+1
+ section P0 · slice 1
  AI Gateway slice 1 :crit, ai, 2026-06-01, 30d
- section M+2
+ section P0 · slice 2
  AUTH slice 1 (stub) :crit, auth1, after ai, 30d
  MCP Gateway slice 1 :mcp, after auth1, 15d
- section M+2.5 → M+3
+ section P0 · slice 3 → P0 · exit
  CHAT slice 1 :chat, after mcp, 30d
  CUO Phase 1 (shipped) :done, cuo, 2026-05-01, 1d
- section M+3 → M+9
+ section P0 · exit → P2 · exit
  AUTH slices 2-4 (full) :auth_full, after chat, 180d
- section M+10 → M+12
+ section P3 phase
  AUTH slice 5 (KMS+OIDC) :auth5, after auth_full, 60d
  Lumi's BRAIN Stage 3 :crit, lumi, after auth5, 30d
  </div>
  </div>
  <p class="text-sm" style="color:var(--text-mute)">
- <strong>Why this order:</strong> AI Gateway is the cost-of-everything-else gate (every CHAT @genie, every CUO Phase 2, every BRAIN semantic search depends on it). AUTH at M+2 is a stub because for the first 6 months CyberSkill has 10 Members and one tenant — full WebAuthn + 22-role RBAC at M+1 is over-engineering. Per reviewer: "AUTH at M+2 can be magic-link + TOTP with a stub RBAC. WebAuthn passkeys for the Founder and a per-tenant authz server can land at M+3 without blocking any other module."
+ <strong>Why this order:</strong> AI Gateway is the cost-of-everything-else gate (every CHAT @genie, every CUO Phase 2, every BRAIN semantic search depends on it). AUTH at P0 · slice 2 is a stub because for the first 6 months CyberSkill has 10 Members and one tenant — full WebAuthn + 22-role RBAC at P0 · slice 1 is over-engineering. Per reviewer: "AUTH at P0 · slice 2 can be magic-link + TOTP with a stub RBAC. WebAuthn passkeys for the Founder and a per-tenant authz server can land at P0 · exit without blocking any other module."
  </p>
 </section>
 
@@ -254,17 +254,17 @@ gantt
 </section>
 
 <!-- ============================================================ -->
-<!-- M+2 STUB vs P3 FULL -->
+<!-- P0 · slice 2 STUB vs P3 FULL -->
 <!-- ============================================================ -->
 <section id="stub-vs-full" class="module-section">
- <header class="section-head"><span class="section-num">2.5</span><h2>M+2 stub vs P3 full — what ships when</h2></header>
+ <header class="section-head"><span class="section-num">2.5</span><h2>P0 · slice 2 stub vs P3 full — what ships when</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Per the reviewer's reorder, AUTH ships in two distinct shapes separated by 10 months. The <strong>M+2 stub</strong> is mergeable in one week; it unblocks every other P0 module by giving them an actor identity. The <strong>P3 full</strong> AUTH ships over slices 2–5 across M+3 through M+12 and is what the SOC 2 Type II auditor evaluates. Confusing the two is the most common bug in module-page reading; this table is the disambiguator.
+ Per the reviewer's reorder, AUTH ships in two distinct shapes separated by 10 months. The <strong>P0 · slice 2 stub</strong> is mergeable in one week; it unblocks every other P0 module by giving them an actor identity. The <strong>P3 full</strong> AUTH ships over slices 2–5 across P0 · exit through P3 · exit and is what the SOC 2 Type II auditor evaluates. Confusing the two is the most common bug in module-page reading; this table is the disambiguator.
  </p>
 
  <div class="bbg-card p-5 mb-6 overflow-x-auto">
  <table class="kt">
- <thead><tr><th style="width:18%">Capability</th><th>M+2 stub (slice 1)</th><th>P3 full (slices 2–5)</th></tr></thead>
+ <thead><tr><th style="width:18%">Capability</th><th>P0 · slice 2 stub (slice 1)</th><th>P3 full (slices 2–5)</th></tr></thead>
  <tbody>
  <tr><td><strong>Login mechanism</strong></td><td>Magic-link via email · valid 15 min · single-use</td><td>WebAuthn L3 passkeys (mandatory at T2+) · OAuth 2.1 + PKCE · OIDC SSO (Google / Microsoft 365 / Okta)</td></tr>
  <tr><td><strong>MFA</strong></td><td>TOTP (RFC 6238) optional · enforced for tenant admins</td><td>TOTP + WebAuthn · passkey mandatory for T2+ subjects · impossible-travel challenge · HIBP password-breach check</td></tr>
@@ -277,17 +277,17 @@ gantt
  <tr><td><strong>LoC</strong></td><td>~1,500 Rust</td><td>~7,000 Rust (cumulative over slices 1–5)</td></tr>
  <tr><td><strong>Tests</strong></td><td>15 (tenant + subject CRUD + RLS isolation)</td><td>120+ (OAuth 2.1 conformance + WebAuthn flow + RBAC predicate matrix + audit-chain integration)</td></tr>
  <tr><td><strong>Lumi's BRAIN integration</strong></td><td>JWT carries <code>tenant_id</code> claim; Lumi's BRAIN deployment (Stage 3) comes online in parallel</td><td>Tenant residency claim · agent-persona claim · Scope Contract Grant claim · all consumed by Lumi's BRAIN read scoping</td></tr>
- <tr><td><strong>SOC 2 / ISO 27001 evidence</strong></td><td>Not auditor-ready · stub mode is internal-only</td><td>P1 SOC 2 Type I evidence window opens at M+3 · P2 ISO 27001:2022 + Type II at M+9 · ISO 42001 AIMS at M+12</td></tr>
+ <tr><td><strong>SOC 2 / ISO 27001 evidence</strong></td><td>Not auditor-ready · stub mode is internal-only</td><td>P1 SOC 2 Type I evidence window opens at P0 · exit · P2 ISO 27001:2022 + Type II at P2 · exit · ISO 42001 AIMS at P3 · exit</td></tr>
  </tbody>
  </table>
  </div>
 
  <h3 class="text-lg font-bold mb-3">Migration discipline</h3>
  <p class="text-sm text-slate-600 leading-relaxed mb-3">
- The transition from M+2 stub to P3 full is not a rewrite — it is a layered addition. Each slice adds capability without changing the M+2 contract. Pre-existing tenants/subjects/JWT claims continue to validate at every slice boundary. The conformance test suite runs both old and new code paths through M+12; once Type I evidence is collected, the stub-only paths are retired.
+ The transition from P0 · slice 2 stub to P3 full is not a rewrite — it is a layered addition. Each slice adds capability without changing the P0 · slice 2 contract. Pre-existing tenants/subjects/JWT claims continue to validate at every slice boundary. The conformance test suite runs both old and new code paths through P3 · exit; once Type I evidence is collected, the stub-only paths are retired.
  </p>
  <p class="text-sm text-slate-600 leading-relaxed">
- What the M+2 stub does <em>not</em> compromise on: (a) agent-equal evaluation (the agent-persona role is in the 5-role stub catalogue), (b) audit-chain emission (every decision is chain-linked from day one), (c) RLS isolation (the database scope is set correctly from slice 1, even if WebAuthn isn't there). What it <em>does</em> defer: signing key in KMS, OIDC SSO, full 22-role catalogue, JWKS rotation, passkey enrolment, impossible-travel challenge, HIBP integration.
+ What the P0 · slice 2 stub does <em>not</em> compromise on: (a) agent-equal evaluation (the agent-persona role is in the 5-role stub catalogue), (b) audit-chain emission (every decision is chain-linked from day one), (c) RLS isolation (the database scope is set correctly from slice 1, even if WebAuthn isn't there). What it <em>does</em> defer: signing key in KMS, OIDC SSO, full 22-role catalogue, JWKS rotation, passkey enrolment, impossible-travel challenge, HIBP integration.
  </p>
 </section>
 
@@ -297,12 +297,12 @@ gantt
 <section id="rbac-catalogue" class="module-section">
  <header class="section-head"><span class="section-num">2.6</span><h2>The 22-role RBAC catalogue (closed)</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The closed RBAC catalogue is the same shape per the original AUTH spec, refactored slightly so the M+2 stub catalogue is a strict subset. Adding a new role to the catalogue is an ADR — not a code change. The 5 stub roles are the first 5; the remaining 17 land across P0→P3.
+ The closed RBAC catalogue is the same shape per the original AUTH spec, refactored slightly so the P0 · slice 2 stub catalogue is a strict subset. Adding a new role to the catalogue is an ADR — not a code change. The 5 stub roles are the first 5; the remaining 17 land across P0→P3.
  </p>
 
  <div class="bbg-card p-5 mb-6 overflow-x-auto">
  <table class="kt">
- <thead><tr><th>#</th><th>Role</th><th>Scope summary</th><th>Stub (M+2)?</th><th>Lands at</th></tr></thead>
+ <thead><tr><th>#</th><th>Role</th><th>Scope summary</th><th>Stub (P0 · slice 2)?</th><th>Lands at</th></tr></thead>
  <tbody>
  <tr><td>1</td><td><code>root-admin</code></td><td>Cross-tenant superuser. Reserved for CyberSkill operators. Cannot be self-assigned.</td><td>✅ yes</td><td>slice 1</td></tr>
  <tr><td>2</td><td><code>tenant-admin</code></td><td>Full admin within one tenant. Manage subjects, roles, billing, residency.</td><td>✅ yes</td><td>slice 1</td></tr>
@@ -427,7 +427,7 @@ sequenceDiagram
  <tr><td><strong>Q2 — Memory bridge timing</strong></td><td><strong>Subprocess shim at slice 4 → PyO3 at slice 5.</strong> Slice 4 (RBAC + audit-chain bridge) accepts <code>cyberos --store $BRAIN put …</code> via stdin; slice 5 evaluates PyO3 binding for &lt; 1ms p99.</td><td>Subprocess overhead acceptable at audit-chain write rate (≤ 100 writes/sec in P0). Mergeable in 1 week vs PyO3 binding's ~2 week effort. Defer the optimisation to when its absence is felt.</td></tr>
  <tr><td><strong>Q3 — Tenant-0 bootstrap</strong></td><td><strong><code>cyberos-auth bootstrap</code> CLI subcommand</strong> runs as root, seeds tenant 0 + the first <code>root-admin</code> subject with a one-time enrolment URL.</td><td>Avoids the chicken-and-egg "no admin to create the first admin" problem. Single-use URL with 1-hour expiry minimises bootstrap-credential risk window. CLI requires sudo + audit-emit.</td></tr>
  <tr><td><strong>Q4 — HIBP integration toggle</strong></td><td><strong>Enabled by default; per-tenant opt-out via <code>tenant.security_config.hibp_check = false</code>.</strong></td><td>Outbound HTTPS to <code>api.pwnedpasswords.com</code> is one extra dependency but k-anonymity-protected (only first 5 chars of password hash leave the host). For Vietnamese-residency-paranoid tenants (Decree 53), the opt-out exists. Default-on protects ≥ 95% of users at near-zero engineering cost.</td></tr>
- <tr><td><strong>Q5 — OBS deferral</strong></td><td><strong>Slice 1 emits structured tracing logs to stdout; slice 5 switches to OTLP once OBS lands.</strong></td><td>OBS at M+0 (parallel to BRAIN) means OTLP is available by AUTH slice 5 at M+12. Slice 1 stdout logs are sufficient for engineer-local development. Slice 5 single-config swap to OTLP doesn't change AUTH's design.</td></tr>
+ <tr><td><strong>Q5 — OBS deferral</strong></td><td><strong>Slice 1 emits structured tracing logs to stdout; slice 5 switches to OTLP once OBS lands.</strong></td><td>OBS at P0 · start (parallel to BRAIN) means OTLP is available by AUTH slice 5 at P3 · exit. Slice 1 stdout logs are sufficient for engineer-local development. Slice 5 single-config swap to OTLP doesn't change AUTH's design.</td></tr>
  </tbody>
  </table>
  </div>
@@ -1218,8 +1218,8 @@ graph LR
  <tr><td><code>R-AUTH-009</code></td><td>Compensation co-sign bypass via direct DB write</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>(FR pending) enforced at REW boundary; direct DB write requires CSO+CFO co-sign; audit alarm.</td></tr>
  <tr><td><code>R-AUTH-010</code></td><td>Audit-chain write outage blinds the SOC</td><td>Low</td><td>High</td><td>CTO</td><td>Bounded local buffer + retry; alert on backlog &gt; 60 s; AUTH refuses new logins after 5 min buffer.</td></tr>
  <tr><td colspan="6" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Reordering + stub + Lumi integration risks (per research review)</td></tr>
- <tr><td><code>R-AUTH-011</code></td><td><strong>M+2 stub stays in production past P3</strong> — the team relies on magic-link for too long, never adopts WebAuthn passkeys; SOC 2 evidence window opens with the stub still primary</td><td>High</td><td>Medium</td><td>CTO</td><td>SOC 2 readiness gate at M+3 explicitly requires WebAuthn enrolment for T2+ subjects. P1 exit blocked if &gt; 50% of T2+ subjects haven't enrolled a passkey. Stub-only paths retire at M+6 per migration discipline.</td></tr>
- <tr><td><code>R-AUTH-012</code></td><td><strong>AI-Gateway-before-AUTH reorder regret</strong> — early modules embed mock auth that becomes hard to replace at M+2</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Mock-auth at M+1 (during AI Gateway slice 1) MUST use a single shared "mock-AUTH" library that lives in <code>services/auth/mock/</code> with the SAME API as the real AUTH. At M+2 slice 1, the mock library imports the real AUTH via feature flag; mock-only paths retire at M+3.</td></tr>
+ <tr><td><code>R-AUTH-011</code></td><td><strong>P0 · slice 2 stub stays in production past P3</strong> — the team relies on magic-link for too long, never adopts WebAuthn passkeys; SOC 2 evidence window opens with the stub still primary</td><td>High</td><td>Medium</td><td>CTO</td><td>SOC 2 readiness gate at P0 · exit explicitly requires WebAuthn enrolment for T2+ subjects. P1 exit blocked if &gt; 50% of T2+ subjects haven't enrolled a passkey. Stub-only paths retire at P1 · exit per migration discipline.</td></tr>
+ <tr><td><code>R-AUTH-012</code></td><td><strong>AI-Gateway-before-AUTH reorder regret</strong> — early modules embed mock auth that becomes hard to replace at P0 · slice 2</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Mock-auth at P0 · slice 1 (during AI Gateway slice 1) MUST use a single shared "mock-AUTH" library that lives in <code>services/auth/mock/</code> with the SAME API as the real AUTH. At P0 · slice 2 slice 1, the mock library imports the real AUTH via feature flag; mock-only paths retire at P0 · exit.</td></tr>
  <tr><td><code>R-AUTH-013</code></td><td><strong>Lumi's BRAIN tenant-id claim spoofing</strong> — attacker steals an AUTH-issued JWT, modifies tenant_id, presents to Lumi's BRAIN</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>JWT is RS256-signed; modifying any claim invalidates signature. JWKS endpoint over HTTPS-only with certificate pinning. Lumi's BRAIN re-verifies signature on every request (cached JWKS for JWT-lifetime ≤ 15 min). Audit-chain emission on every Lumi push includes the verifying key's <code>kid</code>.</td></tr>
  <tr><td><code>R-AUTH-014</code></td><td><strong>Cross-shard JWT replay</strong> — a tenant pinned to <code>sg-1</code> has its JWT presented to the <code>eu-fra-1</code> Lumi's BRAIN shard</td><td>Medium</td><td>High</td><td>CTO</td><td>JWT carries <code>tenant_residency</code> claim. Each Lumi's BRAIN shard rejects JWTs whose <code>tenant_residency</code> doesn't match its own shard ID. Cross-shard migration requires explicit <code>cross-shard-migrate</code> claim (CDO + CLO co-signed, 1-hour TTL, one-time-use).</td></tr>
  <tr><td><code>R-AUTH-015</code></td><td><strong>Sub-process audit-bridge slow path</strong> — slice-4 subprocess shim becomes a bottleneck at &gt; 100 auth decisions/sec, audit-chain backlog grows</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Slice 5 PyO3 binding target &lt; 1ms p99. If slice 4 subprocess hits &gt; 60 s backlog at sustained load, AUTH refuses new logins (per R-AUTH-010). Bench at every slice ship; alert if p95 of subprocess invocation &gt; 50 ms.</td></tr>
@@ -1249,9 +1249,9 @@ graph LR
  <tr><td><strong>Auth-decision durability</strong></td><td><code>rows_in_brain / rows_emitted</code></td><td>chaos test</td><td>100%</td></tr>
  <tr><td><strong>Session revoke p95 (end-to-end)</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 s ((FR pending))</td></tr>
  <tr><td><strong>Penetration-test critical findings</strong></td><td>count</td><td>annual report</td><td>= 0 critical · ≤ 2 high</td></tr>
- <tr><td colspan="4" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">M+2-stub-vs-P3-full + Lumi-integration KPIs</td></tr>
- <tr><td><strong>Stub-to-full migration coverage</strong></td><td><code>subjects_with_webauthn / total_T2+_subjects</code></td><td>auth subjects table</td><td>≥ 50% by M+4 · ≥ 95% by M+6 (P1 exit gate)</td></tr>
- <tr><td><strong>Mock-AUTH retirement</strong></td><td><code>days_since_module_X_consumed_mock_auth</code></td><td>module dependency graph + CI</td><td>0 modules consuming mock-AUTH by M+3 (all migrated to real AUTH)</td></tr>
+ <tr><td colspan="4" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">P0 · slice 2-stub-vs-P3-full + Lumi-integration KPIs</td></tr>
+ <tr><td><strong>Stub-to-full migration coverage</strong></td><td><code>subjects_with_webauthn / total_T2+_subjects</code></td><td>auth subjects table</td><td>≥ 50% by P1 · start · ≥ 95% by P1 · exit (P1 exit gate)</td></tr>
+ <tr><td><strong>Mock-AUTH retirement</strong></td><td><code>days_since_module_X_consumed_mock_auth</code></td><td>module dependency graph + CI</td><td>0 modules consuming mock-AUTH by P0 · exit (all migrated to real AUTH)</td></tr>
  <tr><td><strong>Lumi tenant-id verification success rate</strong></td><td><code>verified_jwts / total_lumi_sync_requests</code></td><td>Lumi's BRAIN access logs</td><td>≥ 99.99% — non-verification means JWKS outage</td></tr>
  <tr><td><strong>Cross-shard rejection rate</strong></td><td><code>rejected_cross_shard / total</code></td><td>Lumi's BRAIN edge proxy</td><td>0% under steady state; spike means tenant residency misconfigured</td></tr>
  <tr><td><strong>Audit-bridge p99 latency</strong></td><td>subprocess shim or PyO3</td><td>OBS</td><td>slice 4: ≤ 50 ms · slice 5: ≤ 1 ms (PyO3 target)</td></tr>
@@ -1364,7 +1364,7 @@ graph LR
  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
 
  <div class="grid md:grid-cols-3 gap-4 mb-6">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 design phase · M+1 start</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 design phase · P0 · slice 1 start</div></div>
  <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~7,000</div><div class="note">services/auth + sqlx migrations</div></div>
  <div class="fact-card"><div class="label">Planned tests</div><div class="value">120+</div><div class="note">unit · integration · OAuth conformance</div></div>
  <div class="fact-card"><div class="label">External libs</div><div class="value">~12</div><div class="note">axum · sqlx · webauthn-rs · totp-rs · rsa</div></div>
@@ -1405,11 +1405,11 @@ graph LR
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li><strong>services/auth/RFC.md</strong> (drafted 2026-05-14) — <a href="../../services/auth/RFC.md" class="text-blue-700 underline">implementation RFC</a>: 5-slice ship plan · 5 open questions · audit-chain bridge design · DoD. The source-of-truth for everything M+2 → P3.</li>
+ <li><strong>services/auth/RFC.md</strong> (drafted 2026-05-14) — <a href="../../services/auth/RFC.md" class="text-blue-700 underline">implementation RFC</a>: 5-slice ship plan · 5 open questions · audit-chain bridge design · DoD. The source-of-truth for everything P0 · slice 2 → P3.</li>
  <li><strong>services/auth/mockups/sign-in.html</strong> — <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">first AUTH UI mockup</a> — Liquid Glass + Umber/Ochre · Be Vietnam Pro · passkey-first flow · MFA chips · BRAIN audit-chain trust footnote. Implements design system Part 21.</li>
  <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> §6 — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">Lumi's BRAIN spec</a>. AUTH issues the tenant-scoped JWT that Lumi consumes for row-level isolation. AUTH is gated by AI Gateway + TEN per the reordered P0 sequence.</li>
- <li><strong>RESEARCH_REVIEW_2026_05_14.md</strong> §2.4 — <a href="../../docs/RESEARCH_REVIEW_2026_05_14.md" class="text-blue-700 underline">research review</a>. The "AUTH not P0 #1" reorder rationale. Section 2.4 verbatim: "AUTH at M+2 can be magic-link + TOTP with a stub RBAC. WebAuthn passkeys for the Founder and a per-tenant authz server can land at M+3 without blocking any other module."</li>
- <li><strong>AUDIT_AND_PLAN_2026_05_14.md</strong> — <a href="../../docs/AUDIT_AND_PLAN_2026_05_14.md" class="text-blue-700 underline">24-week build plan</a>. AUTH's 5-slice progression and slice ordering relative to AI Gateway / MCP Gateway / OBS / CHAT.</li>
+ <li><strong>archive/2026-05-14/RESEARCH_REVIEW.md</strong> §2.4 — <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">research review</a>. The "AUTH not P0 #1" reorder rationale. Section 2.4 verbatim: "AUTH at P0 · slice 2 can be magic-link + TOTP with a stub RBAC. WebAuthn passkeys for the Founder and a per-tenant authz server can land at P0 · exit without blocking any other module."</li>
+ <li><strong>archive/2026-05-14/AUDIT_AND_PLAN.md</strong> — <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">24-week build plan</a>. AUTH's 5-slice progression and slice ordering relative to AI Gateway / MCP Gateway / OBS / CHAT.</li>
  <li><strong>FR_AUTHORING_WORKFLOW.md</strong> — <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">FR authoring playbook</a>. AUTH FRs land here via fr-author skill once slice 1 ships. Worked example for FR-AUTH-001 is in the workflow doc §8.</li>
  <li><strong>AGENTS.md</strong> §3.6 + §11 — <a href="../../memory/docs/AGENTS.md" class="text-blue-700 underline">BRAIN protocol</a>. <code>allowed_brain_scopes</code> + trust model · the basis for AUTH's audit-chain bridge contract.</li>
  <li><strong>Decree 53/2022/NĐ-CP (Vietnam)</strong> — Cybersecurity Law implementing decree; data-residency + breach notification.</li>

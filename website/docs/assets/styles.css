@@ -458,6 +458,39 @@ table.bbg-table tbody tr:hover td { background: var(--memory-bg); }
 .mermaid::-webkit-scrollbar { height: 8px; }
 .mermaid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
+/* ---------- UX FIX #10: Tall Mermaid flowcharts push TOC off-screen at 1280px+
+   Cap diagram height to viewport-relative value; let internal vertical scroll
+   handle overflow. */
+.mermaid {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.mermaid svg {
+  max-height: 80vh;
+}
+
+/* ---------- UX FIX #11: Code blocks need horizontal scroll on mobile to avoid
+   overflowing the right column. */
+pre, pre code {
+  overflow-x: auto;
+  white-space: pre;
+  -webkit-overflow-scrolling: touch;
+}
+pre {
+  max-width: 100%;
+}
+
+/* ---------- UX FIX #15: Focus ring on coloured chip pills is the same colour
+   as the chip background — invisible. Add 2px offset + accent ring colour. */
+.phase-chip:focus-visible,
+.section-badge:focus-visible,
+.bbg-chip:focus-visible,
+.role-tag:focus-visible {
+  outline: 2px solid var(--ochre-700, #9c750a);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px var(--bg-page, #fff);
+}
+
 /* ---------- EXPAND / COLLAPSE ---------- */
 [x-cloak] { display: none !important; }
 

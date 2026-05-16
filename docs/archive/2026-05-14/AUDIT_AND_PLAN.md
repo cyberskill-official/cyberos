@@ -233,7 +233,7 @@ Below: for each unbuilt module, spec depth, dependencies, position on the critic
 14. **TIME slice 1** (entry + approval + rollup)
 15. **REW slice 1** (salary table + payslip) — *P1 exit gate*
 
-After phase D you hit the strategy doc's `M+6 first payroll through REW` milestone. Phases E–H cover the remaining P1–P4 modules at roughly the same cadence (~2 slices / 2 weeks per module).
+After phase D you hit the strategy doc's `P1 · exit first payroll through REW` milestone. Phases E–H cover the remaining P1–P4 modules at roughly the same cadence (~2 slices / 2 weeks per module).
 
 ### §3.4 What every unbuilt module's slice 1 needs from you
 

@@ -45,7 +45,7 @@
  <strong>The observability spine.</strong> Every module emits through here. The question "is CyberOS healthy?" has exactly one answer source — and so does "what did the AI just decide on behalf of this tenant?".
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- OBS plays three strategic roles simultaneously. <strong>Role 1 — three-pillars unified pane</strong>: every of the 22 modules emits OpenTelemetry; logs (Loki), metrics (Prometheus), traces (Tempo), and AI traces (LangSmith) all correlate by <code>trace_id</code> and <code>tenant_id</code>; one dashboard answers "what happened" across the full request path from external MCP client to Postgres write. <strong>Role 2 — auto-runbook router</strong>: alerts don't page people, they trigger a CUO triage skill that consults the runbook catalogue, suggests the first step, and creates a BRAIN audit row; only un-runbookable alerts page on-call — the rest become self-service tickets in CHAT. <strong>Role 3 — compliance evidence surface</strong>: a read-only view of the BRAIN audit chain, scoped per-regulator, satisfies EU AI Act Art. 12 (decision logging), PDPL Art. 14 (DSAR transparency), and SOC 2 CC7.2 (monitoring) without exposing the underlying operational data. The planned implementation lives at <code>cyberos/services/obs/</code>; the M+1 build sequence puts OBS alongside AI Gateway as one of the first two P0 modules to ship.
+ OBS plays three strategic roles simultaneously. <strong>Role 1 — three-pillars unified pane</strong>: every of the 22 modules emits OpenTelemetry; logs (Loki), metrics (Prometheus), traces (Tempo), and AI traces (LangSmith) all correlate by <code>trace_id</code> and <code>tenant_id</code>; one dashboard answers "what happened" across the full request path from external MCP client to Postgres write. <strong>Role 2 — auto-runbook router</strong>: alerts don't page people, they trigger a CUO triage skill that consults the runbook catalogue, suggests the first step, and creates a BRAIN audit row; only un-runbookable alerts page on-call — the rest become self-service tickets in CHAT. <strong>Role 3 — compliance evidence surface</strong>: a read-only view of the BRAIN audit chain, scoped per-regulator, satisfies EU AI Act Art. 12 (decision logging), PDPL Art. 14 (DSAR transparency), and SOC 2 CC7.2 (monitoring) without exposing the underlying operational data. The planned implementation lives at <code>cyberos/services/obs/</code>; the P0 · slice 1 build sequence puts OBS alongside AI Gateway as one of the first two P0 modules to ship.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -108,7 +108,7 @@
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Strategic role</div><div class="value">Observability spine</div><div class="note">3 pillars + AI traces + audit</div></div>
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · P0 · slice 1</div></div>
  <div class="fact-card"><div class="label">Stack</div><div class="value">LGTM + LangSmith</div><div class="note">Loki · Grafana · Tempo · Prometheus</div></div>
  <div class="fact-card"><div class="label">Trace exporter</div><div class="value">OTel SDK</div><div class="note">in every service binary</div></div>
  <div class="fact-card"><div class="label">Correlation key</div><div class="value">trace_id × tenant_id</div><div class="note">propagated W3C TraceContext</div></div>
@@ -117,7 +117,7 @@
  <div class="fact-card"><div class="label">SLO targets</div><div class="value">≥ 99.5%</div><div class="note">platform composite SLO</div></div>
  <div class="fact-card"><div class="label">Auto-runbook coverage</div><div class="value">≥ 60% by P1</div><div class="note">alerts → CUO triage skill</div></div>
  <div class="fact-card"><div class="label">Compliance surfaces</div><div class="value">EU AI Act · PDPL · SOC 2</div><div class="note">read-only regulator views</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN</div><div class="note">+ AUTH (M+2) · AI Gateway (M+1)</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN</div><div class="note">+ AUTH (P0 · slice 2) · AI Gateway (P0 · slice 1)</div></div>
  <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules</div><div class="note">every service emits OTel</div></div>
  </div>
  </div>
@@ -130,7 +130,7 @@
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
 
  <p class="text-slate-700 leading-relaxed mb-4">
- OBS is one of the two earliest P0 modules to ship (M+1, alongside AI Gateway), because <em>any</em> debugging requires it. The naive read is "it's the Grafana installation." The real read is: this is the protocol-level guarantee that any incident — operational, AI-decision, or compliance — has exactly one investigation surface; not three competing dashboards from three vendors.
+ OBS is one of the two earliest P0 modules to ship (P0 · slice 1, alongside AI Gateway), because <em>any</em> debugging requires it. The naive read is "it's the Grafana installation." The real read is: this is the protocol-level guarantee that any incident — operational, AI-decision, or compliance — has exactly one investigation surface; not three competing dashboards from three vendors.
  </p>
 
  <div class="grid md:grid-cols-3 gap-4 my-6">
@@ -1295,7 +1295,7 @@ slo:
  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
 
  <div class="grid md:grid-cols-3 gap-4 mb-6">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · P0 · slice 1</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~3,000</div><div class="note">Rust query proxy + Go collector configs</div></div>
  <div class="fact-card"><div class="label">SLOs at P0</div><div class="value">~11</div><div class="note">platform + per-module</div></div>
  <div class="fact-card"><div class="label">P0 budget</div><div class="value">~$130/mo</div><div class="note">LGTM hosting + LangSmith starter</div></div>
@@ -1342,8 +1342,8 @@ slo:
  <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
  <a href="chat.html" class="text-blue-700 underline">chat.html</a> ·
  <a href="proj.html" class="text-blue-700 underline">proj.html</a></li>
- <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — OBS placed at M+1 alongside AI Gateway as the two earliest P0 modules.</li>
- <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §6</a> — OBS rated "Strong" (9/10); auto-runbook-router framing flagged as the most differentiated operational play.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — OBS placed at P0 · slice 1 alongside AI Gateway as the two earliest P0 modules.</li>
+ <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §6</a> — OBS rated "Strong" (9/10); auto-runbook-router framing flagged as the most differentiated operational play.</li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §8</a> — OBS reads from BRAIN's audit chain for compliance exports; never writes back (BRAIN is upstream).</li>
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
  <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 logging, Art. 13 transparency, Art. 14 human oversight, Art. 26 deployer obligations.</li>

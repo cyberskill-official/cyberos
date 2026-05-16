@@ -5,7 +5,7 @@
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>AI Gateway — Cost-of-everything gate · Provider-agnostic router · Compliance plane · CyberOS</title>
- <meta name="description" content="AI Gateway — the M+1 cost-of-everything gate that ships BEFORE AUTH per research review §2.4. Three strategic roles: (1) cost gate (per-tenant token caps + budget alerts + invoice line-item attribution), (2) provider-agnostic router (LiteLLM-compatible — swap Anthropic/OpenAI/Bedrock/Vertex without rewriting consumers), (3) compliance plane (Presidio + VN-PII scrubber + persona-version stamp + audit chain). Zero retention, tenant-keyed cache, 30 s failover SLA.">
+ <meta name="description" content="AI Gateway — the P0 · slice 1 cost-of-everything gate that ships BEFORE AUTH per research review §2.4. Three strategic roles: (1) cost gate (per-tenant token caps + budget alerts + invoice line-item attribution), (2) provider-agnostic router (LiteLLM-compatible — swap Anthropic/OpenAI/Bedrock/Vertex without rewriting consumers), (3) compliance plane (Presidio + VN-PII scrubber + persona-version stamp + audit chain). Zero retention, tenant-keyed cache, 30 s failover SLA.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -42,10 +42,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO (vacant) → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- <strong>The cost-of-everything gate.</strong> Per research review §2.4, AI Gateway ships at M+1 — <strong>before AUTH</strong> — because if you can't account for and cap LLM spend, every other module bleeds money invisibly. One door for every model call, persona-stamped, PII-scrubbed, tenant-capped, audit-chained.
+ <strong>The cost-of-everything gate.</strong> Per research review §2.4, AI Gateway ships at P0 · slice 1 — <strong>before AUTH</strong> — because if you can't account for and cap LLM spend, every other module bleeds money invisibly. One door for every model call, persona-stamped, PII-scrubbed, tenant-capped, audit-chained.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- AI Gateway plays three strategic roles simultaneously. <strong>Role 1 — cost-of-everything gate</strong>: every LLM call is metered, attributed to a tenant, capped against a monthly budget, and surfaced as invoice line items; a single overrun tenant cannot starve the rest. <strong>Role 2 — provider-agnostic router</strong>: LiteLLM-derived adapter speaks Bedrock / Anthropic / OpenAI / Vertex behind one gRPC interface; failover SLA ≤ 30 s; swapping providers is a config change, never a code change in consumers (CUO, CHAT, KB, every module that calls an LLM). <strong>Role 3 — compliance plane</strong>: Presidio + custom VN-PII scrubber runs before bytes leave the cluster; persona-version is stamped on every call so the audit row records which agent identity sent the request; zero retention from providers (ZDR contracts required at P0); EU AI Act Art. 12 logging satisfied by the <code>ai.invocation</code> audit chain. Two hard flags: <em>no LLM SDK is allowed</em> in any other module — they all call AI Gateway over gRPC — and <em>no cache row crosses tenant boundaries</em>. The planned implementation lives at <code>cyberos/services/ai-gateway/</code>; the M+1 build sequence is locked in <code>AUDIT_AND_PLAN_2026_05_14.md §3.3</code>.
+ AI Gateway plays three strategic roles simultaneously. <strong>Role 1 — cost-of-everything gate</strong>: every LLM call is metered, attributed to a tenant, capped against a monthly budget, and surfaced as invoice line items; a single overrun tenant cannot starve the rest. <strong>Role 2 — provider-agnostic router</strong>: LiteLLM-derived adapter speaks Bedrock / Anthropic / OpenAI / Vertex behind one gRPC interface; failover SLA ≤ 30 s; swapping providers is a config change, never a code change in consumers (CUO, CHAT, KB, every module that calls an LLM). <strong>Role 3 — compliance plane</strong>: Presidio + custom VN-PII scrubber runs before bytes leave the cluster; persona-version is stamped on every call so the audit row records which agent identity sent the request; zero retention from providers (ZDR contracts required at P0); EU AI Act Art. 12 logging satisfied by the <code>ai.invocation</code> audit chain. Two hard flags: <em>no LLM SDK is allowed</em> in any other module — they all call AI Gateway over gRPC — and <em>no cache row crosses tenant boundaries</em>. The planned implementation lives at <code>cyberos/services/ai-gateway/</code>; the P0 · slice 1 build sequence is locked in <code>archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -107,9 +107,9 @@
  AI Gateway is the <strong>policy-enforcement and routing layer</strong> for every model call inside CyberOS. From the outside it is one gRPC service speaking <code>chat.complete</code>, <code>embed</code>, <code>rerank</code>, and <code>image.generate</code>. Inside, a LiteLLM-derived router consults per-tenant policy, applies persona-version system prompts, runs Presidio + custom-VN PII redaction, looks up the prompt-cache, picks a primary provider, retries twice with backoff, fails over to the secondary, accounts for tokens against the tenant's monthly cap, streams the response back over SSE, and emits one <code>ai.invocation</code> audit row per call. Zero retention — no provider sees cross-tenant prompts; no cache row crosses a tenant boundary; the only thing that leaves the cluster is the prompt and the response, and even those are PII-scrubbed.
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Strategic role</div><div class="value">Cost-of-everything gate</div><div class="note">Ships M+1 · before AUTH</div></div>
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
- <div class="fact-card"><div class="label">Build placement</div><div class="value">M+1 (P0 #1)</div><div class="note">Reordered per research review §2.4</div></div>
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">Cost-of-everything gate</div><div class="note">Ships P0 · slice 1 · before AUTH</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · P0 · slice 1</div></div>
+ <div class="fact-card"><div class="label">Build placement</div><div class="value">P0 · slice 1 (P0 #1)</div><div class="note">Reordered per research review §2.4</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~6,500</div><div class="note">Python 3.13 + Rust edge proxy</div></div>
  <div class="fact-card"><div class="label">Providers (P0)</div><div class="value">Bedrock · Anthropic · OpenAI</div><div class="note">+ self-hosted BGE</div></div>
  <div class="fact-card"><div class="label">Failover SLA</div><div class="value">≤ 30 s</div><div class="note">primary down → secondary live</div></div>
@@ -117,7 +117,7 @@
  <div class="fact-card"><div class="label">Cache hit rate</div><div class="value">≥ 30% (P0)</div><div class="note">≥ 60% (P2+) · tenant-keyed</div></div>
  <div class="fact-card"><div class="label">Cost-cap enforcement</div><div class="value">Hard-stop</div><div class="note">tenant cannot exceed monthly cap</div></div>
  <div class="fact-card"><div class="label">ZDR (zero retention)</div><div class="value">Required</div><div class="note">P0 provider contracts</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS</div><div class="note">+ AUTH (M+2) · TEN (P2+)</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS</div><div class="note">+ AUTH (P0 · slice 2) · TEN (P2+)</div></div>
  <div class="fact-card"><div class="label">Used by</div><div class="value">CUO · Skill · KB · CHAT · …</div><div class="note">every LLM-calling module</div></div>
  </div>
  </div>
@@ -130,7 +130,7 @@
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
 
  <p class="text-slate-700 leading-relaxed mb-4">
- AI Gateway is the most under-rated module in CyberOS. The naive read is "it's a thin proxy in front of LiteLLM." The real read is: <strong>this is the single most leveraged P0 module</strong>, because every other module that touches an LLM (CUO, CHAT, KB, PROJ, every Genie surface) inherits its cost behaviour, compliance posture, and provider resilience. Research review §2.4 explicitly reordered the build sequence to land AI Gateway at M+1 — <em>before AUTH</em> — for this reason.
+ AI Gateway is the most under-rated module in CyberOS. The naive read is "it's a thin proxy in front of LiteLLM." The real read is: <strong>this is the single most leveraged P0 module</strong>, because every other module that touches an LLM (CUO, CHAT, KB, PROJ, every Genie surface) inherits its cost behaviour, compliance posture, and provider resilience. Research review §2.4 explicitly reordered the build sequence to land AI Gateway at P0 · slice 1 — <em>before AUTH</em> — for this reason.
  </p>
 
  <div class="grid md:grid-cols-3 gap-4 my-6">
@@ -183,7 +183,7 @@ flowchart TB
  subgraph platform["Platform deps"]
  BRAIN["🧠 BRAIN audit chain"]
  OBS2["👁 OBS metrics + traces"]
- AUTH["🔐 AUTH (M+2 onward)"]
+ AUTH["🔐 AUTH (P0 · slice 2 onward)"]
  TEN["🏢 TEN tenant config (P2+)"]
  end
 
@@ -202,7 +202,7 @@ flowchart TB
 
  AIGW --> BRAIN
  AIGW --> OBS2
- AIGW -. "JWT verify (M+2+)".-> AUTH
+ AIGW -. "JWT verify (P0 · slice 2+)".-> AUTH
  AIGW -. "tenant policy".-> TEN
 
  classDef hub fill:#dbeafe,stroke:#1e40af,stroke-width:3px,color:#1e3a8a
@@ -360,7 +360,7 @@ sequenceDiagram
  <table class="kt">
  <thead><tr><th>Dimension</th><th>Source</th><th>What it answers</th></tr></thead>
  <tbody>
- <tr><td><code>tenant_id</code></td><td>JWT claim (M+2+) or X-Tenant header (M+1)</td><td>Which tenant's budget does this debit?</td></tr>
+ <tr><td><code>tenant_id</code></td><td>JWT claim (P0 · slice 2+) or X-Tenant header (P0 · slice 1)</td><td>Which tenant's budget does this debit?</td></tr>
  <tr><td><code>agent_persona</code></td><td>JWT claim per AUTH §2.7</td><td>Which agent identity made this call? (cuo-cpo@0.4.1 vs genie@1.0.2)</td></tr>
  <tr><td><code>module</code></td><td>X-CyberOS-Module header (set by caller)</td><td>Which module is the cost centre? (kb / chat / proj / …)</td></tr>
  <tr><td><code>cost_centre</code></td><td>Policy mapping per persona</td><td>P&amp;L line: ops · cogs · r&amp;d · g&amp;a · marketing</td></tr>
@@ -425,7 +425,7 @@ sequenceDiagram
  <tr><td><code>vn-1</code> (Vietnam)</td><td>Bedrock AP-SE-1 + PDPL DPA · Anthropic with VN DPA</td><td>AP-SE-1 only</td><td>PDPL Art. 38: cross-border requires bilateral DPA; SG-1 is the closest compliant route.</td></tr>
  </tbody>
  </table>
- <p class="text-sm text-slate-600 mt-3">Residency is pinned in the tenant policy (and in the AUTH JWT at M+2+); the router rejects any model alias that resolves to a non-compliant provider for the calling tenant.</p>
+ <p class="text-sm text-slate-600 mt-3">Residency is pinned in the tenant policy (and in the AUTH JWT at P0 · slice 2+); the router rejects any model alias that resolves to a non-compliant provider for the calling tenant.</p>
  </div>
 </section>
 
@@ -1221,7 +1221,7 @@ graph LR
  <tr><td><code>R-AI-008</code></td><td>Cache poisoning via adversarial canonical prompt</td><td>Low</td><td>High</td><td>CSO</td><td>Cache key includes tenant_id + idempotency-key; provider response hash compared to in-flight verification on critical routes.</td></tr>
  <tr><td><code>R-AI-009</code></td><td>BGE-M3 GPU pod single point of failure</td><td>Medium</td><td>Medium</td><td>CTO</td><td>2-replica deployment at P1+; CPU fallback (slow) on hot-path embed.</td></tr>
  <tr><td><code>R-AI-010</code></td><td>Vendor SDK CVE blocks release</td><td>Medium</td><td>Low</td><td>CTO</td><td>LiteLLM is vendored — patch in-tree; Renovate watches upstream weekly.</td></tr>
- <tr><td><code>R-AI-011</code></td><td><strong>M+1 build sequence slips → AUTH lands first → tenant cost overruns invisible until invoice arrives</strong></td><td>Medium</td><td>Critical</td><td>CEO</td><td>Hard P0 ship order locked in AUDIT_AND_PLAN_2026_05_14 §3.3; the M+1 milestone is the cost-gate go-live, not "AI Gateway feature-complete"; pre-AUTH AI Gateway uses X-Tenant header signed with a static HMAC.</td></tr>
+ <tr><td><code>R-AI-011</code></td><td><strong>P0 · slice 1 build sequence slips → AUTH lands first → tenant cost overruns invisible until invoice arrives</strong></td><td>Medium</td><td>Critical</td><td>CEO</td><td>Hard P0 ship order locked in AUDIT_AND_PLAN_2026_05_14 §3.3; the P0 · slice 1 milestone is the cost-gate go-live, not "AI Gateway feature-complete"; pre-AUTH AI Gateway uses X-Tenant header signed with a static HMAC.</td></tr>
  <tr><td><code>R-AI-012</code></td><td>Persona prompt cache poisoning (Lumi push corrupts a persona used by all tenants)</td><td>Low</td><td>Critical</td><td>CSO</td><td>Persona-version pinning per tenant; tenant must opt-in to a new version; Lumi-pushed updates land as a candidate version, not active.</td></tr>
  <tr><td><code>R-AI-013</code></td><td>Provider DPA cancellation (Anthropic / OpenAI changes ZDR terms mid-quarter)</td><td>Low</td><td>High</td><td>CLO</td><td>Legal monitor on provider DPAs; tenant policy <code>require_zdr</code> rejects non-compliant providers; emergency model-alias re-resolution within 1 hour.</td></tr>
  <tr><td><code>R-AI-014</code></td><td>Cost ledger hold leak (60 s expiry never fires → false debits accumulate)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Hold rows have hard TTL via Postgres scheduled job; nightly reconciliation against provider bill; spot-test alarms on cumulative drift &gt; 5%.</td></tr>
@@ -1370,7 +1370,7 @@ self-hosted:bge-rerank-v2-m3 rerank — free</code></pre>
  <header class="section-head"><span class="section-num">16</span><h2>Phase status &amp; estimates</h2></header>
 
  <div class="grid md:grid-cols-3 gap-4 mb-6">
- <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · M+1</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · P0 · slice 1</div></div>
  <div class="fact-card"><div class="label">Est. LoC (Python + Rust)</div><div class="value">~6,500</div><div class="note">Python core + Rust edge proxy</div></div>
  <div class="fact-card"><div class="label">Planned tests</div><div class="value">90+</div><div class="note">unit + integration + chaos</div></div>
  <div class="fact-card"><div class="label">P0 monthly LLM budget</div><div class="value">$150</div><div class="note">N(FR pending)</div></div>
@@ -1417,8 +1417,8 @@ self-hosted:bge-rerank-v2-m3 rerank — free</code></pre>
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
  <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
  <a href="ten.html" class="text-blue-700 underline">ten.html</a></li>
- <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — AI Gateway placed at M+1 (P0 #1), the cost-of-everything gate before AUTH.</li>
- <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §2.4</a> — explicit "Reorder AI Gateway before AUTH" recommendation; AI Gateway flagged as the highest-leverage cost-control module.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — AI Gateway placed at P0 · slice 1 (P0 #1), the cost-of-everything gate before AUTH.</li>
+ <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §2.4</a> — explicit "Reorder AI Gateway before AUTH" recommendation; AI Gateway flagged as the highest-leverage cost-control module.</li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §7</a> — every <code>ai.invocation</code> audit row is a BRAIN capture event; Lumi cross-tenant synthesis depends on aggregate cost + persona signals at P3+.</li>
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — AI Gateway FRs land via the <code>fr-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
  <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 (logging via audit chain), Art. 13 (transparency — persona stamp), Art. 14 (human oversight — CFO cost-override), Art. 15 (accuracy + robustness — failover SLA), Art. 26 (operator obligations), Art. 50 (transparency — watermark for image gen at P2+).</li>

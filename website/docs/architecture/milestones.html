@@ -4,7 +4,7 @@
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>Milestones — CyberOS</title>
- <meta name="description" content="The 12-month milestone arc. Five phases (P0 → P4), 22 modules, compliance gates that flip every quarter.">
+ <meta name="description" content="The phased milestone arc. Five phases (P0 → P4), 22 modules, compliance gates that flip every quarter.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -31,10 +31,10 @@
  <span class="section-badge" style="background:#fef3c7;color:#b45309">Roadmap</span>
  <span class="phase-chip phase-p0"> + §12.4</span>
  </div>
- <h1 class="h-display mb-4">The 24-month milestone arc</h1>
+ <h1 class="h-display mb-4">The phased milestone arc</h1>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Five gated phases (P0 → P4). 22 modules. 10 → 20 Members. Compliance gates that flip every quarter.</p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CyberOS ships in five gated phases over 24 months, anchored on dogfooding signal and compliance gates. The founder's commitment is captured in the headcount column: <strong>scale only when CyberOS itself absorbs the new operational load</strong>. Per, internal productivity (P1) is the moat — external SaaS is P4 only. This page enumerates each phase's modules, headcount budget, compliance gate, success criteria, and risks; ends with module dependency graph + headcount trajectory + KPI dashboard.
+ CyberOS ships in five gated phases over P0 → P4, anchored on dogfooding signal and compliance gates. The founder's commitment is captured in the headcount column: <strong>scale only when CyberOS itself absorbs the new operational load</strong>. Per, internal productivity (P1) is the moat — external SaaS is P4 only. This page enumerates each phase's modules, headcount budget, compliance gate, success criteria, and risks; ends with module dependency graph + headcount trajectory + KPI dashboard.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#timeline" class="btn btn-primary">Horizontal timeline
@@ -79,18 +79,18 @@
  <h2 class="h-1">The horizontal timeline</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
- Five phases · five compliance gates · five module-count milestones. The slope changes after P3: P0–P3 is internal-first execution (12 months); P4 is the external-GA arc (M+13 → M+24).
+ Five phases · five compliance gates · five module-count milestones. The slope changes after P3: P0–P3 is internal-first execution; P4 is the external-GA arc (P4 phase).
  </p>
 
  <!-- SVG horizontal timeline (lifted + enriched from index) -->
  <div class="bbg-card p-6 mb-6 overflow-x-auto">
  <div class="min-w-[1000px]">
  <div class="grid grid-cols-5 gap-2 mb-2">
- <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-blue-700">P0 · Foundations</div><div class="text-[10px] text-slate-500">M0 – M+3</div></div>
- <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">P1 · Productivity</div><div class="text-[10px] text-slate-500">M+4 – M+6</div></div>
- <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">P2 · Operations</div><div class="text-[10px] text-slate-500">M+7 – M+9</div></div>
- <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-purple-700">P3 · SaaS-ready</div><div class="text-[10px] text-slate-500">M+10 – M+12</div></div>
- <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-slate-600">P4 · Client-facing</div><div class="text-[10px] text-slate-500">M+13 – M+24</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-blue-700">P0 · Foundations</div><div class="text-[10px] text-slate-500">P0 phase</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">P1 · Productivity</div><div class="text-[10px] text-slate-500">P1 phase</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">P2 · Operations</div><div class="text-[10px] text-slate-500">P2 phase</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-purple-700">P3 · SaaS-ready</div><div class="text-[10px] text-slate-500">P3 phase</div></div>
+ <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wider text-slate-600">P4 · Client-facing</div><div class="text-[10px] text-slate-500">P4 phase</div></div>
  </div>
  <div class="relative h-4 bg-slate-100 rounded-full mb-2">
  <div class="absolute inset-y-0 left-0 w-1/5 bg-blue-500 rounded-l-full"></div>
@@ -106,46 +106,46 @@
  <div class="absolute -top-1 -translate-x-1/2 left-full"><div class="w-5 h-5 rounded-full bg-white border-2 border-slate-400 shadow"></div></div>
  </div>
  <div class="grid grid-cols-6 text-center mb-6 mt-3">
- <div><div class="text-[10px] font-mono font-bold text-slate-500">M0</div><div class="text-[10px] text-blue-600">kickoff</div></div>
- <div><div class="text-[10px] font-mono font-bold text-slate-500">M+3</div><div class="text-[10px] text-blue-600">P0 exit · 7/22</div></div>
- <div><div class="text-[10px] font-mono font-bold text-slate-500">M+6</div><div class="text-[10px] text-emerald-600">P1 exit · 15/22</div></div>
- <div><div class="text-[10px] font-mono font-bold text-slate-500">M+9</div><div class="text-[10px] text-amber-600">P2 exit · 17/22</div></div>
- <div><div class="text-[10px] font-mono font-bold text-slate-500">M+12</div><div class="text-[10px] text-purple-600">P3 exit · 19/22</div></div>
- <div><div class="text-[10px] font-mono font-bold text-slate-500">M+18/24</div><div class="text-[10px] text-slate-600">P4 · 22/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">P0 · start</div><div class="text-[10px] text-blue-600">kickoff</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">P0 · exit</div><div class="text-[10px] text-blue-600">P0 exit · 7/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">P1 · exit</div><div class="text-[10px] text-emerald-600">P1 exit · 15/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">P2 · exit</div><div class="text-[10px] text-amber-600">P2 exit · 17/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">P3 · exit</div><div class="text-[10px] text-purple-600">P3 exit · 19/22</div></div>
+ <div><div class="text-[10px] font-mono font-bold text-slate-500">P4 · GA</div><div class="text-[10px] text-slate-600">P4 · 22/22</div></div>
  </div>
 
  <!-- Cards -->
  <div class="grid grid-cols-5 gap-3 text-xs">
  <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
- <div class="font-bold text-blue-900 mb-1">P0 exit · M+3</div>
+ <div class="font-bold text-blue-900 mb-1">P0 exit · P0 · exit</div>
  <div class="text-slate-600 mb-2"><strong>7 modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
  <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 10</div>
  <div class="text-blue-700 font-bold text-[11px]">Gate: T1 Floor</div>
  <div class="text-slate-500 text-[10px]">A05 DPIA · DPO · Trust Center · Stripe SAQ-A · VPAT 2.5</div>
  </div>
  <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
- <div class="font-bold text-emerald-900 mb-1">P1 exit · M+6</div>
+ <div class="font-bold text-emerald-900 mb-1">P1 exit · P1 · exit</div>
  <div class="text-slate-600 mb-2"><strong>+8 modules:</strong> PROJ · TIME · CRM · KB · HR · EMAIL · REW · LEARN</div>
  <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 12</div>
  <div class="text-emerald-700 font-bold text-[11px]">Gate: T2 base</div>
  <div class="text-slate-500 text-[10px]">SOC 2 Type I · CSA STAR L1 · AI-CAIQ · DSAR APIs</div>
  </div>
  <div class="p-3 bg-amber-50 rounded-lg border border-amber-200">
- <div class="font-bold text-amber-900 mb-1">P2 exit · M+9</div>
+ <div class="font-bold text-amber-900 mb-1">P2 exit · P2 · exit</div>
  <div class="text-slate-600 mb-2"><strong>+2 modules:</strong> INV · ESOP</div>
  <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 14</div>
  <div class="text-amber-700 font-bold text-[11px]">Gate: T2 EU enterprise</div>
  <div class="text-slate-500 text-[10px]">SOC 2 Type II · ISO 27001:2022 · CSA STAR L2 · EU AI Act Annex III §4</div>
  </div>
  <div class="p-3 bg-purple-50 rounded-lg border border-purple-200">
- <div class="font-bold text-purple-900 mb-1">P3 exit · M+12</div>
+ <div class="font-bold text-purple-900 mb-1">P3 exit · P3 · exit</div>
  <div class="text-slate-600 mb-2"><strong>+2 modules:</strong> RES · OKR</div>
  <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 16</div>
  <div class="text-purple-700 font-bold text-[11px]">Gate: T3 large enterprise</div>
  <div class="text-slate-500 text-[10px]">ISO 42001 AIMS · ISO 27701 · Singapore HoldCo flip (if ARR ≥ $1.5M)</div>
  </div>
  <div class="p-3 bg-slate-100 rounded-lg border border-slate-300">
- <div class="font-bold text-slate-900 mb-1">P4 entry · M+18</div>
+ <div class="font-bold text-slate-900 mb-1">P4 entry · P4 · mid</div>
  <div class="text-slate-600 mb-2"><strong>+3 modules:</strong> DOC · PORTAL · TEN</div>
  <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 20</div>
  <div class="text-slate-700 font-bold text-[11px]">Gate: T3+ regulated</div>
@@ -196,7 +196,7 @@ sequenceDiagram
  <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Module rollout — Gantt view</div>
  <div class="mermaid">
 gantt
- title CyberOS 24-month module rollout
+ title CyberOS phased module rollout
  dateFormat YYYY-MM
  axisFormat M+%m
 
@@ -244,7 +244,7 @@ gantt
 <section id="phase-p0">
  <div class="flex items-center gap-3 mb-3">
  <span class="phase-chip phase-p0" style="font-size:0.9rem;padding:0.4rem 1rem">P0</span>
- <h2 class="h-1">Foundations · M0 → M+3</h2>
+ <h2 class="h-1">Foundations · P0 phase</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
  The infrastructure plane plus the substrate (BRAIN), the catalog (SKILL — already shipped) and the orchestrator (CUO). At P0 exit, Slack and Zalo are decommissioned; CyberSkill's 10 Members work inside CyberOS-only.
@@ -271,7 +271,7 @@ gantt
  <li>Trust Center live at <code>trust.cyberos.world</code></li>
  <li>Stripe SAQ-A AOC published</li>
  <li>VPAT 2.5 INT (accessibility) filed</li>
- <li>Decree 20/2026 SME-status flag set</li>
+ <li>PDPL Art. 38 SME grace-period flag set</li>
  </ul>
  </div>
  </div>
@@ -280,8 +280,8 @@ gantt
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2">Success criteria</h4>
  <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
- <li>All 10 internal Members on CyberOS for chat + memory by M+3</li>
- <li>Slack + Zalo billing terminated by M+3</li>
+ <li>All 10 internal Members on CyberOS for chat + memory by P0 · exit</li>
+ <li>Slack + Zalo billing terminated by P0 · exit</li>
  <li>CUO answers ≥ 50 questions/week with ≥ 98% citation rate (N(FR pending))</li>
  <li>BRAIN search p95 ≤ 250ms on 50k-chunk corpus</li>
  <li>Zero compensation/equity facts ingested into BRAIN (denylist DEC-036)</li>
@@ -302,11 +302,56 @@ gantt
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2">Key milestones within P0</h4>
  <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
- <li><strong>M0:</strong> module template + Federation router + design tokens repo live</li>
- <li><strong>M+1:</strong> AUTH + AI Gateway in beta; BRAIN + SKILL already shipped baseline</li>
- <li><strong>M+2:</strong> MCP Gateway live; CUO router-only mode</li>
- <li><strong>M+3:</strong> CHAT live; OBS LGTM stack live; 7/22 modules ready; Trust Center launched</li>
+ <li><strong>P0 · start:</strong> module template + Federation router + design tokens repo live</li>
+ <li><strong>P0 · slice 1:</strong> AUTH + AI Gateway in beta; BRAIN + SKILL already shipped baseline</li>
+ <li><strong>P0 · slice 2:</strong> MCP Gateway live; CUO router-only mode</li>
+ <li><strong>P0 · exit:</strong> CHAT live; OBS LGTM stack live; 7/22 modules ready; Trust Center launched</li>
  </ul>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PHASE P0 → P1 DESCOPE GATE -->
+<!-- ============================================================ -->
+<section id="p0-p1-descope-gate">
+ <div class="bbg-card p-6 mb-8 border-2 border-rose-500" style="background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%);">
+ <div class="flex items-center gap-3 mb-3">
+ <span class="text-3xl">⚠️</span>
+ <h2 class="h-2 text-rose-900">P0 → P1 descope gate</h2>
+ <span class="text-xs px-2 py-0.5 bg-rose-100 text-rose-800 rounded-full font-bold">MANDATORY · runs at P1 · start</span>
+ </div>
+ <p class="text-slate-700 leading-relaxed mb-4">
+ Every plan that adds modules monotonically becomes a death march. CyberOS must have explicit language for <em>"this module is descoped to P2 because of P1 reality."</em> The descope gate runs at P1 · start (after P0 exit declared) and asks four questions; if any of them score Red, two P1 modules MUST be deferred to P2 before the phase commits.
+ </p>
+
+ <h3 class="font-bold mb-2 text-rose-800">Gate questions (all four scored Green / Amber / Red at P1 · start)</h3>
+ <ol class="list-decimal pl-6 text-sm text-slate-700 space-y-2 mb-4">
+ <li><strong>Did P0 exit ship clean?</strong> All 5 P0 modules (AI Gateway · OBS · AUTH stub · MCP Gateway · CHAT) at <code>status: shipped</code>; Trust Center live; SOC 2 readiness signal positive; 0 cross-tenant leak incidents in P0. <em>Amber = 1 module slipped to P1; Red = 2+ modules slipped, or any incident.</em></li>
+ <li><strong>Is CHAT decommission ≥ 0.95?</strong> 14-day rolling decommission signal: how much of CyberSkill's internal chatter is in CHAT vs Slack/Zalo. <em>Amber = 0.85–0.94; Red = &lt; 0.85.</em></li>
+ <li><strong>Is the AI Gateway cost-of-everything gate fully operational?</strong> FR-AI-001..005 shipped and audited; 0 budget breaches; cache hit rate ≥ 30%. <em>Amber = 1 of the 5 FRs deferred; Red = 2+ deferred or any budget breach.</em></li>
+ <li><strong>Is the headcount ramp on track?</strong> 10 → 12 hires by P1 · start. <em>Amber = 1 hire late by ≤ 30 days; Red = 1+ hire late by &gt; 30 days, or any hire pulled.</em></li>
+ </ol>
+
+ <h3 class="font-bold mb-2 text-rose-800">Descope rules (if any Red)</h3>
+ <ul class="list-disc pl-6 text-sm text-slate-700 space-y-1 mb-4">
+ <li><strong>First descope candidate: LEARN.</strong> Defer to P2 entirely. The promotion review through Hội đồng Chuyên môn needs at least one quarter of TIME data anyway; running it in P1 was always optimistic.</li>
+ <li><strong>Second descope candidate: HR split.</strong> Split into HR-roster (keep at P1, slice 1 of 3) and HR-full (defer to P2). HR-roster covers member directory + 5 contract types + leave; HR-full covers onboarding orchestrator + performance signals.</li>
+ <li><strong>Third descope candidate (only if 2 Reds): EMAIL slice 3.</strong> Keep Stalwart core + shared inbox (slices 1+2); defer Genie draft + bulk send (slice 3) to P2.</li>
+ <li><strong>Never descope these:</strong> PROJ slice 1, TIME, CRM slice 1, KB slice 1, REW core. These are load-bearing for revenue + payroll + dogfood.</li>
+ </ul>
+
+ <h3 class="font-bold mb-2 text-rose-800">Decision protocol</h3>
+ <ol class="list-decimal pl-6 text-sm text-slate-700 space-y-1 mb-2">
+ <li>Founder + CTO + CHRO run the 4-question scorecard within 7 days of P0 · exit.</li>
+ <li>If any Red: descope 1 module per Red, in the order above.</li>
+ <li>Descope decision MUST be recorded as a BRAIN audit row at <code>memories/decisions/p0-p1-descope-<timestamp>.md</code>.</li>
+ <li>Descoped modules carry status <code>deferred</code> with the new target phase; reappear in BACKLOG.md at the new position.</li>
+ <li>Re-engaging a descoped module requires explicit phase-entry re-evaluation; it doesn't drift back into P1 silently.</li>
+ </ol>
+
+ <div class="bbg-card p-4 bg-rose-50 mt-3 border-l-4 border-rose-500">
+ <p class="text-sm"><strong class="text-rose-900">Why this gate exists:</strong> The P1 module batch (8 modules in ~3 phases of build time) is realistic only if the P0 infrastructure ships clean AND hires arrive on schedule. Both are 60-percent-confidence bets at best. Having an explicit "descope which two" gate written into the plan converts "death march" failure into "graceful descope" survival. The research review §1.3 names this as the single biggest sequencing protection CyberOS has not yet written down.</p>
+ </div>
  </div>
 </section>
 
@@ -316,10 +361,10 @@ gantt
 <section id="phase-p1">
  <div class="flex items-center gap-3 mb-3">
  <span class="phase-chip phase-p1" style="font-size:0.9rem;padding:0.4rem 1rem">P1</span>
- <h2 class="h-1">Internal Productivity · M+4 → M+6</h2>
+ <h2 class="h-1">Internal Productivity · P1 phase</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
- The productivity moat. PROJ + TIME + CRM + KB + HR + EMAIL + REW + LEARN — eight modules that turn the platform from "infrastructure" into "the thing the team uses every day." First payroll cycle, first promotion review through Hội đồng Chuyên môn.
+ The productivity moat. PROJ + TIME + CRM + KB + HR + EMAIL + REW + LEARN — eight modules that turn the platform from "infrastructure" into "the thing the team uses every day." First payroll cycle, first promotion review through Hội đồng Chuyên môn. <strong>Note:</strong> this 8-module count is the maximum; the P0 → P1 descope gate above may reduce it to 6 or 7 depending on P0 exit scorecard.
  </p>
 
  <div class="grid md:grid-cols-2 gap-5 mb-5">
@@ -361,7 +406,7 @@ gantt
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2">Success criteria</h4>
  <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
- <li>First full payroll cycle issued through REW (month-end M+6)</li>
+ <li>First full payroll cycle issued through REW (month-end P1 · exit)</li>
  <li>First promotion review through Hội đồng Chuyên môn</li>
  <li>P1 base salary invariant verified: zero system-reductions (N(FR pending))</li>
  <li>BP balance tracked with anti-inflation interest at ACB rate</li>
@@ -388,7 +433,7 @@ gantt
 <section id="phase-p2">
  <div class="flex items-center gap-3 mb-3">
  <span class="phase-chip phase-p2" style="font-size:0.9rem;padding:0.4rem 1rem">P2</span>
- <h2 class="h-1">Operations · M+7 → M+9</h2>
+ <h2 class="h-1">Operations · P2 phase</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
  Bill-to-cash and Phantom Stock. INV closes the revenue loop; ESOP closes the equity-honour loop. First SP grant issued; first annual SP valuation cycle complete.
@@ -453,7 +498,7 @@ gantt
 <section id="phase-p3">
  <div class="flex items-center gap-3 mb-3">
  <span class="phase-chip phase-p3" style="font-size:0.9rem;padding:0.4rem 1rem">P3</span>
- <h2 class="h-1">SaaS Readiness · M+10 → M+12</h2>
+ <h2 class="h-1">SaaS Readiness · P3 phase</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
  The platform earns the right to sell. RES + OKR ship; capacity planning becomes visible; the first quarterly OKR cycle closes. If ARR ≥ $1.5M, the Singapore HoldCo flip happens.
@@ -503,9 +548,9 @@ gantt
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2">Risks</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><strong class="text-rose-700">R-301 (M×H)</strong> — Singapore HoldCo flip legal complexity exceeds 3-month window. <em>Mitigation: counsel engaged at M+9; flip is optional gate.</em></li>
+ <li><strong class="text-rose-700">R-301 (M×H)</strong> — Singapore HoldCo flip legal complexity exceeds phase window. <em>Mitigation: counsel engaged at P2 · exit; flip is optional gate.</em></li>
  <li><strong class="text-rose-700">R-302 (M×H)</strong> — RES rebalancing flagged as employment-decision high-risk. <em>Mitigation: suggestion-only mode; human accept/reject required.</em></li>
- <li><strong class="text-amber-700">R-303 (M×M)</strong> — ISO 42001 AIMS audit window misalignment. <em>Mitigation: Stage 1 readiness check at M+10.</em></li>
+ <li><strong class="text-amber-700">R-303 (M×M)</strong> — ISO 42001 AIMS audit window misalignment. <em>Mitigation: Stage 1 readiness check at P3 · start.</em></li>
  </ul>
  </div>
 </section>
@@ -516,7 +561,7 @@ gantt
 <section id="phase-p4">
  <div class="flex items-center gap-3 mb-3">
  <span class="phase-chip phase-p4" style="font-size:0.9rem;padding:0.4rem 1rem">P4</span>
- <h2 class="h-1">Client-Facing · M+13 → M+24</h2>
+ <h2 class="h-1">Client-Facing · P4 phase</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
  External GA. DOC + PORTAL + TEN close the gap. First external paying tenant onboarded. Multi-tenant external GA opens. Regulated-commercial path open via TX-RAMP, StateRAMP Cat 2, FedRAMP 20x Moderate (no-sponsor route if US sub exists).
@@ -556,9 +601,9 @@ gantt
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2">Success criteria</h4>
  <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
- <li>First external paying tenant onboarded by M+18</li>
- <li>5 external paying tenants by M+21</li>
- <li>10 external paying tenants by M+24 → ARR ≥ $3M</li>
+ <li>First external paying tenant onboarded by P4 · mid</li>
+ <li>5 external paying tenants by P4 · late</li>
+ <li>10 external paying tenants by P4 · GA → ARR ≥ $3M</li>
  <li>NPS ≥ 40 from external tenants</li>
  <li>Zero tenant data leakage incidents (N(FR pending) maintained)</li>
  <li>First eIDAS QTSP-signed document issued</li>
@@ -690,12 +735,12 @@ flowchart LR
  <div class="bbg-card p-5">
  <div class="text-xs uppercase text-blue-700 font-bold mb-1">Headcount (Members)</div>
  <div class="text-3xl font-black text-blue-600 mb-2">10 → 20</div>
- <div class="text-sm text-slate-600">+10 over 24 months. Hires are gated on CyberOS's ability to absorb that Member's onboarding via REW + LEARN + KB.</div>
+ <div class="text-sm text-slate-600">+10 over P0 → P4. Hires are gated on CyberOS's ability to absorb that Member's onboarding via REW + LEARN + KB.</div>
  </div>
  <div class="bbg-card p-5">
  <div class="text-xs uppercase text-emerald-700 font-bold mb-1">Modules shipped</div>
  <div class="text-3xl font-black text-emerald-600 mb-2">7 → 22</div>
- <div class="text-sm text-slate-600">+15 over 24 months. The 7 P0 modules are the heaviest lift; subsequent phases ship 8 / 2 / 2 / 3.</div>
+ <div class="text-sm text-slate-600">+15 over P0 → P4. The 7 P0 modules are the heaviest lift; subsequent phases ship 8 / 2 / 2 / 3.</div>
  </div>
  <div class="bbg-card p-5">
  <div class="text-xs uppercase text-amber-700 font-bold mb-1">ARR target</div>
@@ -708,8 +753,8 @@ flowchart LR
  <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Headcount trajectory</div>
  <div class="mermaid">
 xychart-beta
- title "Member count over 24 months"
- x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
+ title "Member count over P0 → P4"
+ x-axis ["P0 · start", "P0 · exit", "P1 · exit", "P2 · exit", "P3 · exit", "P4 · early", "P4 · mid", "P4 · late", "P4 · GA"]
  y-axis "Members" 0 --> 22
  line [10, 10, 12, 14, 16, 17, 18, 19, 20]
  </div>
@@ -720,7 +765,7 @@ xychart-beta
  <div class="mermaid">
 xychart-beta
  title "Modules shipped (out of 22)"
- x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
+ x-axis ["P0 · start", "P0 · exit", "P1 · exit", "P2 · exit", "P3 · exit", "P4 · early", "P4 · mid", "P4 · late", "P4 · GA"]
  y-axis "Modules" 0 --> 22
  line [3, 7, 15, 17, 19, 19, 20, 22, 22]
  </div>
@@ -731,7 +776,7 @@ xychart-beta
  <div class="mermaid">
 xychart-beta
  title "Annual Recurring Revenue projection ($k)"
- x-axis ["M0", "M+3", "M+6", "M+9", "M+12", "M+15", "M+18", "M+21", "M+24"]
+ x-axis ["P0 · start", "P0 · exit", "P1 · exit", "P2 · exit", "P3 · exit", "P4 · early", "P4 · mid", "P4 · late", "P4 · GA"]
  y-axis "ARR ($k)" 0 --> 3500
  line [0, 0, 0, 300, 800, 1500, 2000, 2600, 3200]
  </div>
@@ -788,7 +833,7 @@ xychart-beta
  <tr>
  <td><strong class="text-slate-700">P4</strong></td>
  <td>First external paying tenant onboarded</td>
- <td>10 paying tenants by M+24</td>
+ <td>10 paying tenants by P4 · GA</td>
  <td>NPS ≥ 40 from external tenants</td>
  <td>Tenant data leakage incidents = 0</td>
  </tr>
@@ -836,7 +881,7 @@ xychart-beta
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-3">Strategy source sections</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li>The 12-month milestone arc</li>
+ <li>The phased milestone arc</li>
  <li>OKRs by phase exit</li>
  <li>Guardrail (anti-)metrics</li>
  <li>All 22 modules catalogued</li>
@@ -844,7 +889,7 @@ xychart-beta
  <li>Non-Functional Requirements</li>
  <li>Compliance tier model per phase</li>
  <li>AI-driven productivity matrix</li>
- <li>12-week shipping plan</li>
+ <li>phased shipping plan</li>
  </ul>
  </div>
  <div class="bbg-card p-5">

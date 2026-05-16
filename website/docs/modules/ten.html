@@ -52,7 +52,7 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CEO + CFO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- <strong>The SaaS-ification module.</strong> Per research review §7.3, a TEN-billing thin slice ships at P2 (M+9, not M+18) — because vertical-pack pricing requires usage metering + Stripe + plan tiers <em>before</em> the marketplace launch. Full SaaS comes at P4.
+ <strong>The SaaS-ification module.</strong> Per research review §7.3, a TEN-billing thin slice ships at P2 (P2 · exit, not P4 · mid) — because vertical-pack pricing requires usage metering + Stripe + plan tiers <em>before</em> the marketplace launch. Full SaaS comes at P4.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  TEN is the module that takes CyberOS from an internal CyberSkill OS to an external multi-tenant SaaS. Until TEN lands, CyberOS is a single-tenant system operating under the <em>tenant-as-degenerate-tenant</em> decision (DEC-058) — every multi-tenant invariant is already in place but the tenant population is one. TEN turns that population into N. It owns: self-serve signup with residency choice + plan selection ((FR pending)); Stripe (international) and Vietnamese PSP (domestic) billing ((FR pending)); plan tiers Starter (≤ 10 seats) / Team (≤ 50) / Enterprise (custom) ((FR pending)); per-tenant brand pack overriding the @cyberskill/tokens layer ((FR pending)); a tenant-admin UI surface for billing, seats, audit, residency, and retention overrides ((FR pending)); a signed bundle export of all tenant data — BRAIN + module data — for portability and DSAR ((FR pending)); and 90-day offboarding with irreversible delete + attestation ((FR pending)). It also owns usage metering — API calls, AI tokens, storage, seats — surfaced as both a tenant-admin dashboard and a revenue-ops feed. Tenant data isolation is the central invariant: every Postgres table has tenant_id RLS, every NATS subject is tenant-scoped, every S3 bucket prefix is tenant-scoped. The SOC 2 CC6.6 and ISO 27017 controls live here. and lock the FRs; this page documents the planned implementation at <code>cyberos/services/ten/</code>.
@@ -124,7 +124,7 @@
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Strategic role</div><div class="value">SaaS-ification spine</div><div class="note">tenant lifecycle + billing + isolation</div></div>
- <div class="fact-card"><div class="label">Status</div><div class="value">P2 slice · P4 full</div><div class="note">M+9 billing slice; M+18+ full</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">P2 slice · P4 full</div><div class="note">P2 · exit billing slice; P4 · mid+ full</div></div>
  <div class="fact-card"><div class="label">P2 slice scope</div><div class="value">Plans + Stripe</div><div class="note">enables vertical-pack pricing</div></div>
  <div class="fact-card"><div class="label">P4 full scope</div><div class="value">Self-serve + VN PSP + offboarding</div><div class="note">≤ 30s signup + 90d grace</div></div>
  <div class="fact-card"><div class="label">Plan tiers</div><div class="value">3</div><div class="note">Starter · Team · Enterprise</div></div>
@@ -146,7 +146,7 @@
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
 
  <p class="text-slate-700 leading-relaxed mb-4">
- TEN is the module that turns CyberOS from "Stephen's internal OS" into "a thing you can buy." But the naive plan — full multi-tenant SaaS at P4 — leaves money on the table for two years. Research review §7.3 caught this: the vertical-pack moat (cyberskill-vn at $X/year, sg + id + th + eu + us at $Y/year) requires billing infrastructure at P2, not P4. So TEN ships in two passes: thin slice at M+9 (plans + Stripe + per-tenant cost cap) just enough to charge for vertical packs; full SaaS at P4 (M+18+) with self-serve signup + VN-PSP + offboarding.
+ TEN is the module that turns CyberOS from "Stephen's internal OS" into "a thing you can buy." But the naive plan — full multi-tenant SaaS at P4 — leaves money on the table for two years. Research review §7.3 caught this: the vertical-pack moat (cyberskill-vn at $X/year, sg + id + th + eu + us at $Y/year) requires billing infrastructure at P2, not P4. So TEN ships in two passes: thin slice at P2 · exit (plans + Stripe + per-tenant cost cap) just enough to charge for vertical packs; full SaaS at P4 (P4 · mid+) with self-serve signup + VN-PSP + offboarding.
  </p>
 
  <div class="grid md:grid-cols-3 gap-4 my-6">
@@ -250,13 +250,13 @@ flowchart TB
 <section id="p2-slice" class="module-section">
  <header class="section-head"><span class="section-num">2.5</span><h2>P2 thin slice scope — minimum billing for vertical packs</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The TEN-billing thin slice at P2 (M+9) is the minimum infrastructure to charge tenants for vertical packs without building the full P4 SaaS. This section locks the scope; anything not in the table is explicitly deferred to P4.
+ The TEN-billing thin slice at P2 (P2 · exit) is the minimum infrastructure to charge tenants for vertical packs without building the full P4 SaaS. This section locks the scope; anything not in the table is explicitly deferred to P4.
  </p>
 
  <h3 class="text-lg font-bold mt-4 mb-3">P2 thin slice — what ships vs what defers</h3>
  <div class="bbg-card p-5 mb-5">
  <table class="kt">
- <thead><tr><th>Capability</th><th>P2 thin slice (M+9)</th><th>P4 full (M+18+)</th></tr></thead>
+ <thead><tr><th>Capability</th><th>P2 thin slice (P2 · exit)</th><th>P4 full (P4 · mid+)</th></tr></thead>
  <tbody>
  <tr><td><strong>Tenant provisioning</strong></td><td>CLI: <code>cyberos-ten provision</code> (ops-driven)</td><td>Self-serve signup form ≤ 30 s</td></tr>
  <tr><td><strong>Plan tiers</strong></td><td>3 hardcoded (Starter / Team / Enterprise)</td><td>Dynamic + per-tenant custom</td></tr>
@@ -1210,7 +1210,7 @@ graph LR
  <tr><td><code>R-TEN-010</code></td><td>Export-bundle leaks via mis-scoped pre-signed URL</td><td>Low</td><td>High</td><td>CSO</td><td>Pre-signed URL audience-bound + 24h TTL; tenant-scope verified in URL signer.</td></tr>
  <tr><td><code>R-TEN-011</code></td><td>Cancellation-saga compensation fails partially</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Idempotent compensation; backup wipe-cron picks up partial state nightly.</td></tr>
  <tr><td><code>R-TEN-012</code></td><td>SBV compliance change affecting VN PSP onboarding</td><td>Medium</td><td>Medium</td><td>CLO</td><td>Quarterly review of Circular 18/2018; PSP partner notification subscription.</td></tr>
- <tr><td><code>R-TEN-013</code></td><td><strong>P2 thin slice slips → vertical-pack pricing has no billing rail → margin moat delayed</strong></td><td>Medium</td><td>High</td><td>CEO</td><td>Hard M+9 ship gate per research review §7.3; thin-slice scope locked at §2.5 above; any P2-slice scope addition requires CEO ADR sign-off.</td></tr>
+ <tr><td><code>R-TEN-013</code></td><td><strong>P2 thin slice slips → vertical-pack pricing has no billing rail → margin moat delayed</strong></td><td>Medium</td><td>High</td><td>CEO</td><td>Hard P2 · exit ship gate per research review §7.3; thin-slice scope locked at §2.5 above; any P2-slice scope addition requires CEO ADR sign-off.</td></tr>
  <tr><td><code>R-TEN-014</code></td><td>Residency change request mid-engagement (tenant moves SG → EU)</td><td>Medium</td><td>High</td><td>CTO</td><td>Multi-day migration job with read-only window; never automatic; CSO + DPO sign-off; tested via quarterly drill on staging.</td></tr>
  <tr><td><code>R-TEN-015</code></td><td>Hostile termination (customer fraud) requires premature wipe — but 90d grace blocks it</td><td>Low</td><td>Medium</td><td>CLO</td><td>Hostile-termination override exists for legal compliance (fraud, court order); requires CEO + CLO + CSO sign-off + court order or equivalent; emits enhanced audit chain.</td></tr>
  <tr><td><code>R-TEN-016</code></td><td>Stripe DPA insufficient for EU residency → customer rejection</td><td>Medium</td><td>Medium</td><td>CLO</td><td>EU tenants use Stripe Europe entity + EU-DPA; reviewed quarterly; backup plan: Mollie for EU-only customers if Stripe insufficient.</td></tr>
@@ -1244,8 +1244,8 @@ graph LR
  <tr><td><strong>Provisioning saga success rate</strong></td><td>complete / started</td><td>provisioner.rs</td><td>≥ 99.9%</td></tr>
  <tr><td><strong>Offboarding compliance</strong></td><td>wiped_on_or_after_day_91 / offboarded</td><td>tenant</td><td>= 100%</td></tr>
  <tr><td><strong>Export-bundle integrity rate</strong></td><td>verified / generated</td><td>export.rs</td><td>= 100%</td></tr>
- <tr><td><strong>P2 slice ship date adherence</strong></td><td>scope-locked at M+9</td><td>roadmap tracker</td><td>= M+9 (no slip)</td></tr>
- <tr><td><strong>Vertical-pack revenue share</strong></td><td>pack_revenue / total_revenue</td><td>Stripe + audit cross-check</td><td>≥ 30% of ARR by M+18 (the moat target)</td></tr>
+ <tr><td><strong>P2 slice ship date adherence</strong></td><td>scope-locked at P2 · exit</td><td>roadmap tracker</td><td>= P2 · exit (no slip)</td></tr>
+ <tr><td><strong>Vertical-pack revenue share</strong></td><td>pack_revenue / total_revenue</td><td>Stripe + audit cross-check</td><td>≥ 30% of ARR by P4 · mid (the moat target)</td></tr>
  <tr><td><strong>Cross-leak rate (production)</strong></td><td>cross-tenant access events / total queries</td><td>OBS query proxy + audit</td><td>= 0 (hard floor)</td></tr>
  <tr><td><strong>Residency-change drill MTTR</strong></td><td>migration job duration</td><td>quarterly drill</td><td>≤ 72 h end-to-end</td></tr>
  <tr><td><strong>Plan-downgrade overage handling</strong></td><td>downgrades with explicit grace acceptance / total downgrades</td><td>plan-change events</td><td>= 1.0 (never surprise)</td></tr>
@@ -1439,8 +1439,8 @@ Type the tenant slug AGAIN to confirm: acme-corp
  <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
  <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
  <a href="portal.html" class="text-blue-700 underline">portal.html</a></li>
- <li><strong>Build-readiness audit:</strong> <a href="../../AUDIT_AND_PLAN_2026_05_14.html" class="text-blue-700 underline">AUDIT_AND_PLAN_2026_05_14.md §3.3</a> — TEN-billing thin slice at M+9; full SaaS at M+18+.</li>
- <li><strong>Research review:</strong> <a href="../../RESEARCH_REVIEW_2026_05_14.html" class="text-blue-700 underline">RESEARCH_REVIEW_2026_05_14.md §7.3</a> — explicit recommendation: TEN-billing thin slice at P2 (not P4) to enable vertical-pack pricing.</li>
+ <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — TEN-billing thin slice at P2 · exit; full SaaS at P4 · mid+.</li>
+ <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §7.3</a> — explicit recommendation: TEN-billing thin slice at P2 (not P4) to enable vertical-pack pricing.</li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §6</a> — Lumi cross-tenant synthesis depends on TEN's tenant identity + residency pinning.</li>
  <li><strong>SOC 2 Type II</strong> — Trust Service Criteria CC6.1, CC6.6, CC7.2.</li>
  <li><strong>ISO/IEC 27017:2015</strong> — Cloud-services security controls.</li>

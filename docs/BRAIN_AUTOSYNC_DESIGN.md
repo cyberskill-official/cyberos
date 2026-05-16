@@ -419,9 +419,9 @@ The reviewer's GTM concern was that the "ecosystem-as-a-service" thesis becomes 
 | **Stage 0** | Memory module shipped | — | ✅ Done (255 tests, 13/13 doctor invariants) |
 | **Stage 1** | Personal BRAIN — universal | Extend memory module: `brain init`, `brain watch`, `brain status`, multi-folder watch in manifest.json | **Now** — no external dep |
 | **Stage 2** | Capture daemon + Cowork hook + initial MCP feeds | Stage 1 + capture-daemon design + agreed event-to-memory mappings | **Within 2-4 weeks of Stage 1** |
-| **Stage 3** | Lumi's BRAIN deployment | TEN module + AUTH module + AI Gateway (per reviewer's reorder) | **P2 (M+9)** — gated on those three modules shipping |
-| **Stage 4** | 2-way sync orchestrator | Stage 3 + sync state machine + JWT-based wire protocol | **P2 (M+9) — runs in parallel to Stage 3** |
-| **Stage 5** | Multi-brain auto-evolve | Stage 4 + synthesis sub-skill | **P3 (M+12)** |
+| **Stage 3** | Lumi's BRAIN deployment | TEN module + AUTH module + AI Gateway (per reviewer's reorder) | **P2 (P2 · exit)** — gated on those three modules shipping |
+| **Stage 4** | 2-way sync orchestrator | Stage 3 + sync state machine + JWT-based wire protocol | **P2 (P2 · exit) — runs in parallel to Stage 3** |
+| **Stage 5** | Multi-brain auto-evolve | Stage 4 + synthesis sub-skill | **P3 (P3 · exit)** |
 
 Stage 1 + 2 are **buildable today** and don't require any of the unbuilt P0+ modules to ship first. Stages 3–5 ride the P0+P2 critical path.
 
@@ -635,8 +635,8 @@ These are not blocking Stage 1 but should be answered before Stage 2 ships:
 - [`memory/docs/PROPOSAL.md`](../memory/docs/PROPOSAL.md) — where Proposal P13 (stages 1-5) lands as formal protocol extension
 - [`memory/docs/memory.schema.json`](../memory/docs/memory.schema.json) — schema additions for this design
 - [`docs/FR_AUTHORING_WORKFLOW.md`](FR_AUTHORING_WORKFLOW.md) — every FR in this design is authored via `fr-author`
-- [`docs/AUDIT_AND_PLAN_2026_05_14.md`](AUDIT_AND_PLAN_2026_05_14.md) — where Stage 3+ slots into the build sequence
-- [`docs/RESEARCH_REVIEW_2026_05_14.md`](RESEARCH_REVIEW_2026_05_14.md) §2 + §7 — confirms the strategic case (this is the moat the reviewer was looking for)
+- [`docs/archive/2026-05-14/AUDIT_AND_PLAN.md`](archive/2026-05-14/AUDIT_AND_PLAN.md) — where Stage 3+ slots into the build sequence
+- [`docs/archive/2026-05-14/RESEARCH_REVIEW.md`](archive/2026-05-14/RESEARCH_REVIEW.md) §2 + §7 — confirms the strategic case (this is the moat the reviewer was looking for)
 - [`strategy/CYBEROS_STRATEGY.md`](../strategy/CYBEROS_STRATEGY.md) §4 — to be updated: Personal BRAIN as a Level-2 OSS distribution surface; Lumi's BRAIN as a Level-3 SaaS product
 
 ---

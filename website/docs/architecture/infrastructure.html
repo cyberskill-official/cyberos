@@ -35,7 +35,7 @@
  <h1 class="h-display mb-4">The infrastructure plane</h1>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Six shared pillars that every CyberOS module bolts onto — never re-implemented per-module, never bypassed.</p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- The infrastructure plane is the boring substrate that makes the 22 functional modules interesting. Auth, an AI gateway, an MCP gateway, observability, a GraphQL supergraph, and a NATS event spine — six pillars that ship as P0 deliverables and continue to absorb load for the rest of the 24-month arc. The bet is simple: pay the upfront cost of <em>real</em> shared infrastructure once, and every new module after M+3 ships in days, not weeks. The cost of doing this lazily — re-implementing auth per-module, embedding LLM SDKs in subgraphs, or letting each team choose its own observability stack — is a kind of debt that compounds with every module added to the catalog. locks the shape of all six pillars; this page traces each one end-to-end.
+ The infrastructure plane is the boring substrate that makes the 22 functional modules interesting. Auth, an AI gateway, an MCP gateway, observability, a GraphQL supergraph, and a NATS event spine — six pillars that ship as P0 deliverables and continue to absorb load for the rest of the phased arc. The bet is simple: pay the upfront cost of <em>real</em> shared infrastructure once, and every new module after P0 · exit ships in days, not weeks. The cost of doing this lazily — re-implementing auth per-module, embedding LLM SDKs in subgraphs, or letting each team choose its own observability stack — is a kind of debt that compounds with every module added to the catalog. locks the shape of all six pillars; this page traces each one end-to-end.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#auth" class="btn btn-primary">Start with AUTH
@@ -378,7 +378,7 @@ cyberos.auth.audit_login # readOnly=true (own sessions only)</code></pre></div>
  <div class="grid md:grid-cols-2 gap-5">
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Status</h4>
- <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · M0 → M+3 build window</p>
+ <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · P0 phase build window</p>
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
  <li>OAuth 2.1 PRM compatible with §8.4.3 MCP discovery</li>
  <li>JWKS endpoint live before any subgraph deploys</li>
@@ -587,7 +587,7 @@ X-Cyberos-Persona-Version: cfo-v3.2.1</code></pre></div>
  <div class="grid md:grid-cols-2 gap-5">
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Status</h4>
- <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · M+1 → M+3</p>
+ <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · P0 · slice 1 → P0 · exit</p>
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
  <li>LiteLLM forked at <code>cyberos/litellm-cyberos</code> with middleware overlay</li>
  <li>Presidio rule pack <code>cyberos-vn-rules</code> covers MST, CCCD, VietQR</li>
@@ -678,7 +678,7 @@ X-Cyberos-Persona-Version: cfo-v3.2.1</code></pre></div>
  <div class="text-sm font-semibold text-slate-700 mb-2 text-center">MCP Gateway architecture · federation, not monolith</div>
  <div class="mermaid">
 flowchart TB
- CLIENT[("Claude Desktop / Codex / Cursor<br>26+ AI clients")]
+ CLIENT[("Claude Desktop / Codex / Cursor<br>12+ AI clients · all MCP 2025-11-25-compatible")]
  CLIENT --> DISCOVERY["/.well-known/mcp<br>SEP-986 discovery"]
  DISCOVERY --> PRM["/.well-known/oauth-protected-resource<br>per-tenant"]
  PRM --> AUTHSRV["OAuth authorisation server<br>(AUTH module)"]
@@ -779,12 +779,12 @@ sequenceDiagram
  <div class="grid md:grid-cols-2 gap-5">
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Status</h4>
- <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · M+1 → M+3</p>
+ <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · P0 · slice 1 → P0 · exit</p>
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
  <li>2025-11-25 spec targeted (Tasks, Streamable HTTP, Elicitation, PRM)</li>
  <li>Per-module servers ship alongside subgraphs; reuse RBAC/DB pool</li>
  <li>Tool annotations validated at registration; runtime check on call</li>
- <li>26+ AI client compatibility tested (Claude Desktop, Code, Cursor, Cline)</li>
+ <li>12+ AI client compatibility tested (Claude products, Cursor, Cline, Codex); all MCP 2025-11-25-compatible</li>
  </ul>
  </div>
  <div class="bbg-card p-5">
@@ -907,7 +907,7 @@ flowchart LR
  <div class="grid md:grid-cols-2 gap-5">
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Status</h4>
- <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · M+2 → M+3</p>
+ <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · P0 · slice 2 → P0 · exit</p>
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
  <li>LGTM stack via Grafana Cloud free tier in P0, self-host at P1</li>
  <li>OTel instrumentation in module-template; every new subgraph wired by default</li>
@@ -1074,10 +1074,10 @@ sequenceDiagram
  <div class="grid md:grid-cols-2 gap-5">
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Status</h4>
- <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · M0 → M+1</p>
+ <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · P0 · start → P0 · slice 1</p>
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
- <li>Apollo Router scaffold + composition CI live at M0</li>
- <li>BRAIN, AUTH subgraphs first to integrate at M+1</li>
+ <li>Apollo Router scaffold + composition CI live at P0 · start</li>
+ <li>BRAIN, AUTH subgraphs first to integrate at P0 · slice 1</li>
  <li>Persisted query registration auto-bound to host-shell build</li>
  <li>Schema deprecation policy in CONTRIBUTING.md</li>
  </ul>
@@ -1230,9 +1230,9 @@ sequenceDiagram
  <div class="grid md:grid-cols-2 gap-5">
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Status</h4>
- <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · M0 → M+1</p>
+ <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · P0 · start → P0 · slice 1</p>
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
- <li>Single-node NATS at M0; 3-node cluster at M+6</li>
+ <li>Single-node NATS at P0 · start; 3-node cluster at P1 · exit</li>
  <li>Module-template includes typed publisher/consumer helpers</li>
  <li>Schema registry CI-validated at subgraph PR-time</li>
  <li>Per-tenant subject ACLs at NATS-level (defense in depth alongside RLS)</li>

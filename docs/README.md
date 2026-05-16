@@ -1,53 +1,64 @@
 # `docs/` — Project-level documentation
 
-| Folder | Purpose | Entry point |
-| --- | --- | --- |
-| [`prd/`](prd/) | Product Requirements Document for CyberOS itself (markdown is source of truth; `make docx` regenerates `PRD.docx`) | [`prd/README.md`](prd/README.md) |
-| [`srs/`](srs/) | System Requirements Specification (markdown is source of truth; `make docx` regenerates `SRS.docx`) | [`srs/README.md`](srs/README.md) |
-| [`skills/`](skills/) | Skills layer — CPO/CTO chain skills + chain orchestrator + host adapters (will move into a `skills/` module folder next pass) | [`skills/README.md`](skills/README.md) |
-| [`contracts/`](contracts/) | Versioned artefact schemas (`feature_request@1`, `task@1`, `prd@1`, `srs@1`, …) — pending skill module move | [`contracts/README.md`](contracts/README.md) |
-| [`tours/`](tours/) | Guided walkthroughs (`.tour` files) for common workflows — pending skill module move | [`tours/README.md`](tours/README.md) |
+This folder holds CyberOS's canonical specifications, the FR backlog, design references, and the document-conversion toolchain.
 
-The memory protocol now lives in [`../memory/docs/`](../memory/docs/) (relocated 2026-05-13 during the memory-module restructure). The schema, invariants, AGENTS.md, EVOLUTION.md, INTEROP.md, PROPOSAL.md, and CHANGELOG.md are all there.
+| Folder / File | Purpose | Entry point |
+|---|---|---|
+| [`prd/`](prd/) | Product Requirements Document — canonical product brief (Markdown is source of truth; `make docx` regenerates `PRD.docx`) | [`prd/README.md`](prd/README.md) |
+| [`srs/`](srs/) | System Requirements Specification — technical spec derived from PRD | [`srs/README.md`](srs/README.md) |
+| [`feature-requests/`](feature-requests/) | Living FR backlog, organised by module. Each FR is a markdown file authored via the `fr-author` skill | [`BACKLOG.md`](feature-requests/BACKLOG.md) (index, when present) |
+| [`tours/`](tours/) | VS Code CodeTour walkthroughs for common operator workflows | [`tours/README.md`](tours/README.md) |
+| [`BRAIN_AUTOSYNC_DESIGN.md`](BRAIN_AUTOSYNC_DESIGN.md) | Locked design for the universal-personal-and-Lumi BRAIN auto-sync system (referenced from every module page) | — |
+| [`FR_AUTHORING_WORKFLOW.md`](FR_AUTHORING_WORKFLOW.md) | Canonical playbook for authoring new FRs via the `fr-author` skill | — |
+| [`archive/`](archive/) | Historical / one-time documents superseded by later work (kept for traceability) | — |
+| [`Makefile`](Makefile) | pandoc round-trip for PRD.md ↔ PRD.docx, SRS.md ↔ SRS.docx | — |
+
+The memory protocol's source-of-truth lives in [`../memory/docs/`](../memory/docs/) (AGENTS.md, EVOLUTION.md, INTEROP.md, PROPOSAL.md, schema, invariants).
+
+The Skill layer lives in [`../skill/`](../skill/) (Rust host + Bun runtime + per-skill `SKILL.md` files).
+
+The CUO orchestrator lives in [`../cuo/`](../cuo/).
 
 ## How the layers relate
 
-```text
-PRD  ─authority──►  SRS  ─authority──►  AGENTS protocol
-                                              │
-                                              ▼
-                                       Skills layer
-                                              │
-                                              ▼
-                                    contracts (artefact schemas)
-                                              │
-                                              ▼
-                                     runtime/ implements everything
+```
+PRD ── authority ──▶ SRS ── authority ──▶ AGENTS protocol (memory module)
+                                                │
+                                                ▼
+                                          Skill layer
+                                                │
+                                                ▼
+                                            CUO orchestrator
+                                                │
+                                                ▼
+                                        Implementation modules
+                                        (ai-gateway, auth, mcp, chat, …)
 ```
 
 - **PRD** says *what we're building and why*.
 - **SRS** says *how it's structured technically*.
-- **AGENTS protocol** says *how a memory works, how the BRAIN operates*.
-- **Skills** say *what work an agent can do*.
-- **Contracts** say *what shape the inputs/outputs of skills must conform to*.
-- **Runtime** under `../runtime/` implements all of it as Python tools.
+- **AGENTS protocol** specifies the memory store + audit chain semantics.
+- **Skills** are agentic capabilities (CPO / CTO / etc.) with frontmatter + bodies.
+- **CUO** orchestrates skill invocations and writes BRAIN audit rows.
+- **Implementation modules** are the runtime services (services/auth, services/ai-gateway, etc.) that satisfy the FRs.
 
 ## Naming convention
 
-- Top-level folder entry point: **`README.md`**.
-- Skill folder entry point: **`SKILL.md`** (established convention; tools look up skills by this filename).
-- Contract folder entry point: **`CONTRACT.md`** (deliberate signal that "this is a schema, not a skill").
-- Daily history: **`CHANGELOG.md`**.
+| Convention | Filename | Purpose |
+|---|---|---|
+| Top-level folder index | `README.md` | What's in this folder |
+| Skill index | `SKILL.md` | Skill manifest + body (canonical name; tools look up skills by this filename) |
+| Contract index | `CONTRACT.md` | Versioned artefact schema (e.g. `feature_request@1`) |
+| FR markdown | `FR-{MOD}-{NNN}-{slug}.md` | One FR per file |
+| Per-folder log | `CHANGELOG.md` | Newest-first history |
 
-## Cross-references
+## Roadmap reference
 
-- The single source of truth for the memory protocol is [`../memory/docs/AGENTS.md`](../memory/docs/AGENTS.md) (RFC, v2).
-- The CLI is `python -m cyberos` (or `cyberos` after `cd memory && pip install -e .`).
-- Per-batch history lives in [`../memory/docs/CHANGELOG.md`](../memory/docs/CHANGELOG.md).
+CyberOS ships in five gated phases — P0 (Foundation) → P1 (Productivity) → P2 (Operations) → P3 (SaaS-ready) → P4 (Client-facing GA). The phase-by-phase milestone arc is documented on the docs site at [`website/docs/architecture/milestones.html`](../website/docs/architecture/milestones.html). All work in `feature-requests/` is tagged by phase.
 
 ## Docx ↔ markdown round-trip
 
-`PRD.md` and `SRS.md` are the source of truth; `.docx` outputs are regenerated via pandoc:
+`PRD.md` and `SRS.md` are the working source; `.docx` outputs are regenerated via pandoc:
 
 ```bash
 cd docs
