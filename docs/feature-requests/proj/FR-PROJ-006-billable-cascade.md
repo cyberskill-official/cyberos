@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-005, FR-PROJ-007, FR-TIME-005, FR-AUTH-003]
 depends_on: [FR-PROJ-005]
-blocks: [FR-PROJ-007]
+blocks: [FR-PROJ-007, FR-TIME-005]
 
 source_pages:
   - website/docs/modules/proj.html#billable-cascade

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.customer-health-review-audit.output/v1",
+  "title": "customer-health-review-audit output envelope",
+  "type": "object",
+  "required": ["skill_id", "skill_version", "audit_rubric_version", "total_artefacts", "overall_status_counts", "exit_code", "per_artefact", "hitl_required"],
+  "additionalProperties": false,
+  "properties": {
+    "skill_id": { "type": "string", "const": "customer-health-review-audit" },
+    "skill_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?$" },
+    "audit_rubric_version": { "type": "string" },
+    "total_artefacts": { "type": "integer", "minimum": 0 },
+    "overall_status_counts": {
+      "type": "object",
+      "required": ["pass", "needs_human", "fail"],
+      "properties": {
+        "pass":         { "type": "integer", "minimum": 0 },
+        "needs_human":  { "type": "integer", "minimum": 0 },
+        "fail":         { "type": "integer", "minimum": 0 },
+        "exhausted":    { "type": "integer", "minimum": 0, "default": 0 },
+        "no_progress":  { "type": "integer", "minimum": 0, "default": 0 }
+      }
+    },
+    "exit_code": {
+      "type": "integer",
+      "description": "0 if all pass; 1 if any needs_human; 2 if any fail/exhausted/no_progress."
+    },
+    "per_artefact": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["artefact_path", "audit_path", "status", "iterations", "audited_file_sha256"],
+        "properties": {
+          "artefact_path":       { "type": "string" },
+          "audit_path":          { "type": "string" },
+          "status":              { "type": "string", "enum": ["pass", "needs_human", "fail", "exhausted", "no_progress"] },
+          "iterations":          { "type": "integer", "minimum": 0 },
+          "audited_file_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "issues_open":         { "type": "integer", "minimum": 0 },
+          "issues_human":        { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "hitl_required": { "type": "boolean" },
+    "requires_regen": { "type": "boolean", "default": false, "description": "True when the upstream author should be re-invoked (e.g. STALE-001 + REVERT_TO_MANIFEST)." },
+    "next_skill_recommendation": { "type": "string", "default": "" }
+  }
+}

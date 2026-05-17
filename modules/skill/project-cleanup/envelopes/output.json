@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "project-cleanup output envelope",
+  "type": "object",
+  "required": ["project_root", "scope", "phase_1_inventory", "phase_2_absorbs", "phase_3_deletes", "phase_4_verify", "report_path", "report_sha256"],
+  "properties": {
+    "project_root": {"type": "string"},
+    "scope": {"type": "string", "enum": ["cyberos", "generic"]},
+    "started_at": {"type": "string", "format": "date-time"},
+    "completed_at": {"type": "string", "format": "date-time"},
+    "phase_1_inventory": {
+      "type": "object",
+      "properties": {
+        "files_scanned": {"type": "integer"},
+        "fragments_detected": {"type": "integer"},
+        "suspicious_leftovers": {"type": "integer"},
+        "orphan_audits": {"type": "integer"},
+        "broken_links": {"type": "integer"}
+      }
+    },
+    "phase_2_absorbs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fragment": {"type": "string"},
+          "merged_into": {"type": "string"},
+          "lines_absorbed": {"type": "integer"},
+          "operator_approved": {"type": "boolean"}
+        }
+      }
+    },
+    "phase_3_deletes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {"type": "string"},
+          "reason": {"type": "string"},
+          "operator_approved": {"type": "boolean"}
+        }
+      }
+    },
+    "phase_4_verify": {
+      "type": "object",
+      "properties": {
+        "coherence_errors": {"type": "integer"},
+        "missing_audits": {"type": "integer"},
+        "stale_references": {"type": "integer"},
+        "broken_links": {"type": "integer"},
+        "changelog_stale_days": {"type": "integer"},
+        "overall": {"type": "string", "enum": ["PASS", "FAIL", "WARN"]}
+      }
+    },
+    "report_path": {"type": "string"},
+    "report_sha256": {"type": "string"}
+  }
+}

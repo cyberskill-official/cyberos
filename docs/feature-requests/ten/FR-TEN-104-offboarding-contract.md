@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-TEN-001, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-TEN-105, FR-TEN-106, FR-TEN-202, FR-OBS-007]
 depends_on: [FR-TEN-001]
-blocks: [FR-TEN-105, FR-TEN-106]   # both placeholders — not yet specified
+blocks: [FR-TEN-105, FR-TEN-106, FR-TEN-202]
 
 source_pages:
   - website/docs/modules/ten.html#offboarding

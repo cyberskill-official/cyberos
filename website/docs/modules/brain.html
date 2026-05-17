@@ -95,7 +95,7 @@
  <hr class="my-4 border-slate-200">
  <div class="h-eyebrow mb-2">Source</div>
  <div class="text-xs text-slate-500 leading-relaxed">
- <code>cyberos/memory/</code><br>
+ <code>cyberos/modules/memory/</code><br>
  –§5.9 · §9.1<br>
  AGENTS.md (RFC v2.0.0)
  </div>
@@ -1487,9 +1487,9 @@ $ cyberos verify-proof proof.json
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
  <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (v1.0.0 design-locked 2026-05-14) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. The single source of truth for everything on this page beyond Stage 0.</li>
- <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/memory/docs/AGENTS.md</code>. §3 canonical ops · §11 trust model · §14 cross-agent interop and the basis for the 2-way sync semantics · §15 sync_class taxonomy.</li>
- <li><strong>PROPOSAL.md</strong> — <code>cyberos/memory/docs/PROPOSAL.md</code> — where <strong>Proposal P13</strong> (universal protocol Stages 1–5) lands as formal protocol extension. P1–P12 + P2-Stage-3 already shipped.</li>
- <li><strong>SPEC.md</strong> — formal contract summary — <code>cyberos/memory/docs/SPEC.md</code>.</li>
+ <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/modules/memory/AGENTS.md</code>. §3 canonical ops · §11 trust model · §14 cross-agent interop and the basis for the 2-way sync semantics · §15 sync_class taxonomy.</li>
+ <li><strong>PROPOSAL.md</strong> — <code>cyberos/modules/memory/README.md (Appendix D — Proposals)</code> — where <strong>Proposal P13</strong> (universal protocol Stages 1–5) lands as formal protocol extension. P1–P12 + P2-Stage-3 already shipped.</li>
+ <li><strong>SPEC.md</strong> — formal contract summary — <code>cyberos/modules/memory/docs/SPEC.md</code>.</li>
  <li><strong>EVOLUTION.md</strong> — history and rejected designs (informative).</li>
  <li><strong>INTEROP.md</strong> — Cursor / Codex-compatible read-only subset (≤ 6,000 chars).</li>
  <li><strong>memory.schema.json</strong> — JSON Schema for frontmatter, audit rows, manifest. P13 extends with <code>watched_folders</code>, <code>capture_event</code>, <code>sync_state</code>, <code>shared_memory_acl</code>, <code>synthesis_artefact</code> entities.</li>
@@ -1497,8 +1497,8 @@ $ cyberos verify-proof proof.json
  <li><strong>FR_AUTHORING_WORKFLOW.md</strong> — <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">how new FRs are authored via the fr-author Agent Skill</a>. Every BRAIN FR (Stages 1–5) lands via this workflow.</li>
  <li><strong>archive/2026-05-14/AUDIT_AND_PLAN.md</strong> — <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">24-week build plan</a> placing Stages 3–5 on the P0+P2 critical path.</li>
  <li><strong>archive/2026-05-14/RESEARCH_REVIEW.md</strong> — <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">pre-launch external review</a>. §2 confirms BRAIN as the strategic moat; §7 confirms multi-brain as the GTM answer.</li>
- <li><strong>Source code:</strong> <code>cyberos/memory/cyberos/core/</code> · <code>cyberos/memory/tests/</code> · <code>cyberos/memory/bench/</code>. Stage 2 capture daemon lands at <code>cyberos/memory/daemon/</code> (planned, Rust).</li>
- <li><strong>CHANGELOG:</strong> <code>cyberos/memory/docs/CHANGELOG.md</code> (newest-first).</li>
+ <li><strong>Source code:</strong> <code>cyberos/modules/memory/cyberos/core/</code> · <code>cyberos/modules/memory/tests/</code> · <code>cyberos/modules/memory/bench/</code>. Stage 2 capture daemon lands at <code>cyberos/modules/memory/daemon/</code> (planned, Rust).</li>
+ <li><strong>CHANGELOG:</strong> <code>cyberos/CHANGELOG.md (entries tagged [MEMORY])</code> (newest-first).</li>
  </ul>
  </div>
 </section>

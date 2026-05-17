@@ -39,9 +39,9 @@ cd ~/Projects/my-new-thing
 # 2. Edit manifest.json — set project.id, project.name
 $EDITOR .cyberos-memory/manifest.json
 
-# 3. Symlink CLAUDE.md + AGENTS.md → docs/memory/AGENTS.md (single source of truth)
-ln -s /path/to/cyberos/docs/memory/AGENTS.md AGENTS.md
-ln -s /path/to/cyberos/docs/memory/AGENTS.md CLAUDE.md
+# 3. Symlink CLAUDE.md + AGENTS.md → memory/docs/AGENTS.md (single source of truth)
+ln -s /path/to/cyberos/memory/docs/AGENTS.md AGENTS.md
+ln -s /path/to/cyberos/memory/docs/AGENTS.md CLAUDE.md
 
 # 4. Run onboard wizard
 /path/to/cyberos/runtime/tools/cyberos onboard

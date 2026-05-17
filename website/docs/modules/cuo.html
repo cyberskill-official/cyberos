@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>CUO — AI orchestrator · Skill-routing brain · Lumi tenant persona · CyberOS</title>
- <meta name="description" content="CUO — the agent orchestrator above BRAIN + Skill. Three strategic roles: (1) skill-routing brain (NL → score → invoke → audit), (2) persona catalogue (Genie + 10 C-level specialists, agent-equal), (3) Lumi identity wrapper (the org-tenant persona that owns BRAIN sync + cross-team synthesis). Phase 1 shipped — deterministic rule router, BRAIN audit chain. Phases 2-4 planned: LangGraph LLM cascade · multi-skill chains · per-persona routing.">
+ <title>CUO v2.0.0 — 47/48 personas with workflows · 194 workflows live · CyberOS</title>
+ <meta name="description" content="CUO v2.0.0 (2026-05-17 rebuild, persona first-coverage COMPLETE 2026-05-18) — persona-aware orchestration layer above CyberOS. 48 C-suite persona folders rendered from docs/The C-Suite Reference.md §5; 47 with shipped first-coverage workflows (chief-metaverse-officer intentionally EXTINCT per §8 rule 4). 194 workflows live chaining skills from the SKILL module's 104-pair catalog. Two-stage routing: query → persona → workflow → skill chain. v3.0.0 Python supervisor build pending.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -72,7 +72,8 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
- <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles</a></li>
+ <li><a class="toc-link" href="#v2-rebuild"><strong>CUO v2.0.0 rebuild (NEW)</strong></a></li>
+ <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles (legacy framing)</a></li>
  <li><a class="toc-link" href="#why">Why CUO exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
@@ -109,7 +110,7 @@
  <hr class="my-4 border-slate-200">
  <div class="h-eyebrow mb-2">Source</div>
  <div class="text-xs text-slate-500 leading-relaxed">
- <code>cyberos/cuo/</code><br>
+ <code>cyberos/modules/cuo/</code><br>
  –§6.10 · §9.2<br>
  AGENTS.md v0.1.0
  </div>
@@ -145,7 +146,32 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- §0 — THE BIGGER PICTURE -->
+<!-- v2.0.0 REBUILD CALLOUT (added 2026-05-17 evening) -->
+<!-- ============================================================ -->
+<section id="v2-rebuild" class="module-section">
+ <header class="section-head"><span class="section-num">★</span><h2>CUO v2.0.0 — persona/workflow rebuild (2026-05-17 evening)</h2></header>
+
+ <div class="bbg-card p-5 mb-4" style="border-left: 4px solid #f59e0b; background:#fef3c7">
+  <p class="text-sm text-amber-900 leading-relaxed mb-2">
+   <strong>Paradigm shift.</strong> The legacy v0.1.0 Python rule-based router was retired. v2.0.0 is markdown-driven: <strong>persona folders + workflow files</strong>. Every C-suite role from <code>docs/The C-Suite Reference.md</code> §5 ships as <code>cuo/&lt;persona-slug&gt;/</code> with a 9-block-schema README. Each persona's <code>workflows/&lt;workflow&gt;.md</code> declares a chain of SKILL module skills the persona orchestrates.
+  </p>
+  <p class="text-sm text-amber-900 leading-relaxed">
+   <strong>48 persona folders, 47 with shipped workflows (chief-metaverse-officer EXTINCT) = 194 workflows live as of 2026-05-18:</strong> CEO (5), COO (4), CFO (6), CTO (5), CMO (4), CHRO (5), CRO-Revenue/CRO-Risk/CRO-Restructuring (4 each), CCO-Commercial/CCO-Compliance/CCO-Customer/CCO-Communications (4 each), CDO-Data/CDO-Digital/CDO-Diversity (4 each), CSO-Strategy/CSO-Security/CSO-Sustainability/CSO-Sales (4 each), CPO-People/CPO-Product/CPO-Privacy/CPO-Procurement (4 each), CAO-Admin/CAO-Accounting (4 each), CIO-Information/CIO-Investment (4 each), CLO-Legal (5) / CLO-Learning (4), CGO/CXO/CISO/CAIO (4 each), plus specialty roles Chief-Architect/Chief-Brand/Chief-Trust/Chief-Ethics/Chief-ESG/Chief-Transformation/Chief-Innovation/Chief-Knowledge/Chief-Medical/Chief-Automation/Chief-Remote/Chief-Happiness (4 each) and Chief-of-Staff (4). Acronym collisions resolved via folder-name suffix per C-Suite Reference §2.
+  </p>
+  <p class="text-sm text-amber-900 leading-relaxed mt-2">
+   <strong>CTO is the canonical reference persona</strong> with 5 fully-wired workflows: <code>architect-new-system</code> (10-step SRS→ADR→threat-model→SDD→impl-plan chain) · <code>adr-quick-capture</code> · <code>post-incident-review</code> · <code>deploy-readiness-review</code> · <code>threat-model-refresh</code>. <strong>Sessions D-N (2026-05-17→2026-05-18) shipped first-coverage workflows for 46 additional personas</strong> across CyberSkill priority tiers (Now-tier 4 personas + Series-A 4 + Scale-up 2 + Enterprise 5 + niche 31). 194 total workflows live; chief-metaverse-officer remains intentionally EXTINCT per §8 rule 4 (cautionary-tale entry).
+  </p>
+  <p class="text-sm text-amber-900 leading-relaxed mt-2">
+   <strong>Catalog gaps CLOSED.</strong> <code>cuo/docs/NEEDED_SKILLS.md</code> initially identified 66 author+audit pairs needed across Tiers 1-3. Sessions A-C shipped them. Sessions D-H surfaced 17 more skills across Tiers 4-7 (legal / Series-A security/sales / churn / Enterprise product+data+AI+CS+knowledge). All 83 skills now shipped at 10/10. <strong>Sessions I-N (6 consecutive sessions) shipped 124 niche-persona workflows with zero new skills surfaced — validating the catalog has reached steady-state.</strong> Final progress: 83/83 = 100% of new-pair scope shipped; 194 workflows across 47/48 personas.
+  </p>
+  <p class="text-xs text-amber-800 mt-2 italic">
+   See <code>cuo/MODULE.md</code> §4 for the canonical catalog; <code>cuo/docs/AGENTS.md</code> for protocol normativity; <code>cuo/docs/ROUTING.md</code> for the two-stage (persona → workflow → skill chain) routing algorithm with worked examples.
+  </p>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- §0 — THE BIGGER PICTURE (legacy v0.1.0 framing — being superseded by v2.0.0 above) -->
 <!-- ============================================================ -->
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
@@ -1335,11 +1361,11 @@ allowed_tools: [read_file, write_file]</code></pre>
  <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — CUO FRs land via the <code>fr-author</code> Agent Skill (CUO already-shipped: the first 50 FRs are CUO + BRAIN + Skill).</li>
  <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — Phase 2 LangGraph at P0 · exit, Phase 3 chains at P1 · exit, Phase 4 personas at P2 · exit; Lumi (P3) at P3 · exit+.</li>
  <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §2</a> — reviewer rated CUO as "Solid (8.5/10)" with the persona catalogue + Lumi-identity framing flagged as the highest-leverage architectural choice.</li>
- <li><strong>AGENTS.md</strong> (v0.1.0, normative) — <code>cyberos/cuo/docs/AGENTS.md</code>.</li>
- <li><strong>SPEC.md</strong> — contract summary — <code>cyberos/cuo/docs/SPEC.md</code>.</li>
- <li><strong>ROUTING.md</strong> — keyword-bank rationale + Phase 2 LLM design — <code>cyberos/cuo/docs/ROUTING.md</code>.</li>
- <li><strong>Source:</strong> <code>cyberos/cuo/cuo/core/</code>, <code>cyberos/cuo/tests/</code>, <code>cyberos/cuo/fixtures/</code>.</li>
- <li><strong>CHANGELOG:</strong> <code>cyberos/cuo/docs/CHANGELOG.md</code> (newest-first).</li>
+ <li><strong>AGENTS.md</strong> (v0.1.0, normative) — <code>cyberos/modules/cuo/README.md (Appendix A — Protocol)</code>.</li>
+ <li><strong>SPEC.md</strong> — contract summary — <code>cyberos/modules/cuo/README.md §10 (Data shapes)</code>.</li>
+ <li><strong>ROUTING.md</strong> — keyword-bank rationale + Phase 2 LLM design — <code>cyberos/modules/cuo/README.md §9 (Routing algorithm)</code>.</li>
+ <li><strong>Source:</strong> <code>cyberos/modules/cuo/cuo/core/</code>, <code>cyberos/modules/cuo/tests/</code>, <code>cyberos/modules/cuo/tests/fixtures/ (if present)</code>.</li>
+ <li><strong>CHANGELOG:</strong> <code>cyberos/CHANGELOG.md (entries tagged [CUO])</code> (newest-first).</li>
  <li><strong>EU AI Act Art. 12 + 14 + 26:</strong> logging requirements, human oversight, operator obligations — all routed through the audit chain.</li>
  <li><strong>Vietnam PDPL (Law 91/2025):</strong> Art. 14 — decision transparency surfaced via DSAR.</li>
  </ul>

@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-PROJ-001, FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-TIME-006, FR-TIME-007, FR-TIME-009, FR-HR-001, FR-HR-008]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
-blocks: [FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-TIME-006, FR-TIME-007, FR-TIME-009, FR-HR-008, FR-RES-001]   # all 8 entries are placeholders — not yet specified (downstream consumers)
+blocks: [FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-TIME-006, FR-TIME-007, FR-TIME-009, FR-HR-008, FR-LEARN-003, FR-RES-001]   # 9 downstream consumers
 
 source_pages:
   - website/docs/modules/time.html#what

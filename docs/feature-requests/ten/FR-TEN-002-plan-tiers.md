@@ -16,7 +16,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-TEN-001, FR-TEN-003, FR-TEN-004, FR-TEN-005]
 depends_on: [FR-TEN-001]
-blocks: [FR-TEN-005]
+blocks: [FR-TEN-003, FR-TEN-005, FR-TEN-101]
 
 source_pages:
   - website/docs/modules/ten.html#plans

@@ -1,0 +1,23 @@
+# chat-image-promote.yml — STUB
+#
+# Auto-generated 2026-05-17 from FR build_envelope references.
+# Declared by: FR-CHAT-003
+#
+# Implementation team: replace this stub with the real workflow YAML
+# per the spec details in the declaring FR(s) above.
+# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
+
+name: chat-image-promote
+
+on:
+  pull_request:
+    paths:
+      # TODO: per declaring FR
+      - 'services/**'
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: TODO — implement per FR(s) FR-CHAT-003
+        run: echo 'Stub — see FR specs for canonical workflow YAML'

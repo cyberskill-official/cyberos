@@ -1,9 +1,50 @@
 # CyberOS — Feature Request Backlog
 
-**Owner:** Stephen Cheng (CEO) · **Status:** v0.1.0 — initial index, 2026-05-15
+**Owner:** Stephen Cheng (CEO) · **Status:** v0.3.0 — spec-corpus complete + CUO supervisor v3.0.0a3 shipped + catalog complete, 2026-05-18
 **Source of truth:** the markdown files in this folder. This index is regenerated when FRs land or change status.
-**Authoring playbook:** [`../FR_AUTHORING_WORKFLOW.md`](../FR_AUTHORING_WORKFLOW.md)
+**Authoring playbook:** [`AUTHORING.md`](AUTHORING.md)
 **Roadmap:** [`../../website/docs/architecture/milestones.html`](../../website/docs/architecture/milestones.html)
+**Repo layout:** modules live under `../../modules/<name>/` (post-2026-05-18 refactor)
+
+---
+
+## §0.5 — Implementation-readiness state (as of 2026-05-18)
+
+The spec corpus is **closed** and ready for implementation kickoff. Three production modules now ship working bootstraps that the FR-driven implementation phase will extend.
+
+| Metric | Value |
+|---|---:|
+| Total FRs authored | **242** (+1 today: `FR-CUO-106`) |
+| FRs at 10/10 audit score | **242** (100%) |
+| FRs missing audit file | **0** |
+| Reciprocity errors in DAG | **0** |
+| Total engineering-hours | **~1,820h** (est. +30h for Phase 4 handlers) |
+| Modules with full spec coverage | **24** |
+| Dependency layers (topo build sequence) | **13** |
+
+### Production module status (2026-05-18)
+
+| Module | Layer | What's shipped (bootstrap) | What FRs cover next |
+|---|---|---|---|
+| `modules/memory/` | BRAIN protocol + Python impl | 255 green tests; P1–P12 audit proposals + P2 Stage 3 MMR/STH; HTTP REST; cross-BRAIN merge; deterministic export | `brain/FR-BRAIN-101…111` extend Layer-2 ingest, multi-device sync, search API, fs-watcher, capture daemon, pre-ingest PII |
+| `modules/skill/` | Anthropic Agent Skills catalog | 104 author+audit pairs (208 bundles) + 108 contracts; all chain through SDP; zero `planned:` gaps after Session H | `skill/FR-SKILL-101…201` add OCI registry, capability broker, brain-capture/sync system skills, VN-regulatory bundles |
+| `modules/cuo/` | Python supervisor v3.0.0a3 | Catalog scanner + 2-stage router with domain-fallback + Invoker ABC (Mock/Subprocess/LLM) + execute_chain + BRAIN bridge; 21/22 tests pass; 47 personas + 194 workflows | `cuo/FR-CUO-101…106` add LangGraph productionization, PG checkpointer, trace replay, topological walk, per-step rollback, **Phase-4 special handlers (NEW today)** |
+
+**Companion artifacts** (generated 2026-05-17 — all 4 consolidated into [`REPORTS.md`](REPORTS.md) on 2026-05-18; slated for regeneration after FR-CUO-106 lands):
+- [`REPORTS.md`](REPORTS.md) §1 — Contract verification report (orphan-endpoint scan, 333 endpoints)
+- [`REPORTS.md`](REPORTS.md) §2 — Implementation order (topological, 13 dependency layers)
+- [`REPORTS.md`](REPORTS.md) §3 — Sprint plan (effort rollup by module + slice; ~1,820h)
+- [`REPORTS.md`](REPORTS.md) §4 — Migration audit (327 SQL files across 23 modules)
+
+**Status reconciliation:** the §2–§6 phase tables below were drafted at v0.1.0 (2026-05-15) with most FRs in `planned` state. The catalog-complete bootstrap (104 skills + 194 workflows) shipped 2026-05-17/18 satisfies the spec-side of `skill/` and `cuo/`; the runtime-side FRs in `cuo/`, `skill/`, `brain/`, `auth/`, etc. are now the next implementation surface. The truth-source remains each FR's frontmatter `status:` field; this index lags. Trust the FR frontmatter for status; trust this index for narrative groupings + compliance gates.
+
+### What changed since v0.2.0 (2026-05-17 → 2026-05-18)
+
+- **Catalog completion:** Sessions A–N closed all `planned:` gaps. 104 author+audit pairs ship across all 7 tiers; 194 workflows live across 47 active personas.
+- **CUO supervisor Phase 1+2+3:** Python bootstrap shipped (`modules/cuo/cuo/`). Phase 4 (5 special-case workflow handlers) is now `FR-CUO-106`.
+- **Repo refactor:** `cuo/`, `skill/`, `memory/` moved into `modules/<name>/`. Path references in this catalog now read `modules/...`. Module docs consolidated into single `README.md` per module.
+- **Deleted artefacts:** `docs/prd/` + `docs/srs/` (frozen 2026-05-15 — superseded by this FR catalog). `docs/tours/` promoted to repo-root `tours/`.
+- **CHANGELOG centralised:** all per-module CHANGELOGs folded into repo-root `CHANGELOG.md`, sorted by date.
 
 ---
 
@@ -749,7 +790,7 @@ These do not have individual FRs because they apply to **every** FR. Auditors of
 
 ## §8 — How this backlog grows
 
-- **New FRs:** authored via the `fr-author` skill per [`FR_AUTHORING_WORKFLOW.md`](../FR_AUTHORING_WORKFLOW.md). The skill writes the markdown into `docs/feature-requests/{module}/` and updates `MANIFEST.json`. This backlog is regenerated from those files.
+- **New FRs:** authored per [`AUTHORING.md`](AUTHORING.md) discipline. Each FR is a markdown file at `docs/feature-requests/{module}/FR-{MOD}-{NNN}-{slug}.md` with a sibling `.audit.md` at 10/10 score. This backlog is regenerated from those files.
 - **FR status flow:** `draft → audited (fr-audit ran) → accepted (you signed off) → building (in-flight) → shipped (PR merged)`. Or `deferred / rejected / superseded` at any point.
 - **Re-prioritising:** edit `priority` in the FR's frontmatter, then re-generate this backlog. Don't edit this index directly — it's a derived view.
 - **Re-phasing:** if a P1 FR becomes urgent for P0, edit `phase: P0` in the FR's frontmatter. The phase exit gate criteria above don't change — just move the FR.

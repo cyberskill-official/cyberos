@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-CHAT-003, FR-CHAT-006, FR-CHAT-008, FR-CHAT-012, FR-BRAIN-101, FR-BRAIN-107, FR-BRAIN-111]
 depends_on: [FR-CHAT-003]
-blocks: [FR-CHAT-006, FR-CHAT-008, FR-CHAT-012]
+blocks: [FR-CHAT-006, FR-CHAT-008, FR-CHAT-012, FR-PORTAL-006]
 
 source_pages:
   - website/docs/modules/chat.html#brain-bridge

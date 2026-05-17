@@ -17,7 +17,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-014, FR-OBS-008]
 depends_on: []
-blocks: [FR-AI-001, FR-AI-002, FR-AI-014, FR-AI-022, FR-AI-004, FR-PROJ-002, FR-SKILL-101]
+blocks: [FR-AI-001, FR-AI-002, FR-AI-014, FR-AI-022, FR-AI-004, FR-PROJ-002, FR-SKILL-101, FR-EMAIL-005]
 
 # ───── Source contracts ─────
 source_pages:

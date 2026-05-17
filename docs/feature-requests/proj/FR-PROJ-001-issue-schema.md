@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-PROJ-002, FR-PROJ-003, FR-AUTH-001, FR-AUTH-003, FR-AI-003]
 depends_on: [FR-AUTH-001, FR-AUTH-003]
-blocks: [FR-PROJ-002, FR-PROJ-004, FR-PROJ-005, FR-PROJ-008, FR-PROJ-009]
+blocks: [FR-PROJ-002, FR-PROJ-004, FR-PROJ-005, FR-PROJ-008, FR-PROJ-009, FR-EMAIL-007, FR-RES-001]
 
 source_pages:
   - website/docs/modules/proj.html#issue-schema

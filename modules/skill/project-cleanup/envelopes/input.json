@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "project-cleanup input envelope",
+  "type": "object",
+  "required": ["project_root"],
+  "properties": {
+    "project_root": {
+      "type": "string",
+      "description": "Absolute path to the project root (e.g. /Users/stephencheng/Projects/CyberSkill/cyberos)."
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["auto", "cyberos", "generic"],
+      "default": "auto",
+      "description": "Project flavor. 'auto' detects by file signatures (presence of docs/feature-requests/AUTHORING.md → cyberos; else generic). 'cyberos' or 'generic' force the flavor."
+    },
+    "dry_run": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true: report what would be done without mutating any file."
+    },
+    "absorb_threshold_lines": {
+      "type": "integer",
+      "default": 80,
+      "minimum": 10,
+      "maximum": 500,
+      "description": "Markdown files smaller than this many lines are candidates for absorption into a parent doc."
+    },
+    "leftover_patterns": {
+      "type": "array",
+      "items": {"type": "string"},
+      "default": [
+        "*_SUMMARY.md",
+        "*_PROGRESS.md",
+        "*_NOTES.md",
+        "*.md.bak",
+        "*.old.md",
+        "tmp_*.md",
+        "draft_*.md"
+      ],
+      "description": "Glob patterns for suspicious leftover files. Operator can override per-invocation."
+    },
+    "exclude_paths": {
+      "type": "array",
+      "items": {"type": "string"},
+      "default": [
+        ".git/",
+        "node_modules/",
+        "target/",
+        "dist/",
+        "build/",
+        ".venv/",
+        "__pycache__/"
+      ],
+      "description": "Paths to skip entirely during scan."
+    }
+  }
+}

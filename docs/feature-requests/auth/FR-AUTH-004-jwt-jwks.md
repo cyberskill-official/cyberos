@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-005, FR-AUTH-006, FR-AUTH-007, FR-MCP-004, FR-AI-001, FR-AI-006]
 depends_on: [FR-AUTH-002, FR-AUTH-003]
-blocks: [FR-AUTH-005, FR-AI-006, FR-MCP-004, FR-AUTH-006, FR-OBS-002, FR-CHAT-002, FR-MCP-001, FR-AUTH-104, FR-AUTH-103]   # FR-MCP-004 = placeholder (OAuth 2.1 PKCE FR, not yet specified)
+blocks: [FR-AUTH-005, FR-AI-006, FR-MCP-004, FR-AUTH-006, FR-OBS-002, FR-CHAT-002, FR-MCP-001, FR-AUTH-104, FR-AUTH-103, FR-EMAIL-002]
 
 source_pages:
   - website/docs/modules/auth.html#jwt

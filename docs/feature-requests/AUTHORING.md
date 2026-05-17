@@ -330,4 +330,72 @@ This document follows the same precedence rule as `AGENTS.md` §0: explicit user
 
 ---
 
-*End of AUTHORING.md — version 1.0 — 2026-05-16*
+## §7 — Session continuation policy (autonomous march)
+
+**Added 2026-05-17 by explicit operator approval.**
+
+When the operator says "continue", "march", or any equivalent open-ended go-ahead, the FR-authoring agent **MUST** keep draining the topological-order frontier autonomously and **MUST NOT** stop between FRs to ask "should I keep going?" The agent stops only when one of these conditions fires:
+
+1. **Decision required.** A genuine design choice surfaces that the operator alone can resolve — e.g., the next FR's scope is ambiguous in the BACKLOG, a normative DEC entry would commit the company to a course not previously chosen, or a coherence error implies a backlog-level priority swap. In that case stop, summarise the decision, and present 2–4 options via `AskUserQuestion`.
+2. **Session-limit warning.** The harness signals approaching context exhaustion (system reminder about token budget, or the agent observes the working set creeping toward the context window). In that case stop after the current FR's audit-loop + coherence patch reach a clean state, then emit the §14 block + a "resume point" pointer naming the next-ready FR.
+3. **Coherence sweep fails post-patch.** If `coherence_check.py` reports errors that mechanical reciprocity edits can't resolve (e.g., a true cycle in the dependency graph), stop and surface the dependency conflict.
+4. **Audit cannot reach 10/10 in three loops.** If three iterations of audit→revise→re-audit on a single FR fail to land 10/10 (rare — usually means the FR's scope is genuinely under-specified at the backlog level), stop and ask the operator to clarify scope before continuing.
+
+Routine surprises (a single missing dependency on an upstream FR, a one-off reciprocity gap, a small clarification needed in implementation details) are **NOT** stop conditions — the agent fills the gap inline and continues.
+
+**Per-FR loop the agent runs without prompting:** pick next-ready from frontier → write spec → write audit → loop to 10/10 → run coherence check → patch upstream reciprocity → emit single-line FR-shipped marker → loop back to pick next-ready.
+
+**End-of-march report (when stop condition fires):** a single response covering every FR drained in the session, with §14 block listing every non-BRAIN file change in one consolidated `📁 Files changed:` block.
+
+---
+
+## §8 — Audit-finding pattern library
+
+**Consolidated 2026-05-17 from STRICT_REDO_PROGRESS.md (now deleted).** When auditing an FR, run this checklist before declaring 10/10. Each pattern below has been a real ISS finding on a shipped FR — they are the categories of mechanical concern that the AUTHORING discipline catches.
+
+### §8.1 — Cross-FR / single-source-of-truth concerns
+
+- **§8.1a Single-source-of-truth violations.** When two modules can answer the same question (`Provider::is_zdr()` AND `zdr::is_zdr`), pick one as canonical and remove the other surface. Origin: FR-AI-006 ISS-001.
+- **§8.1b §1 SHOULD vs §4 MUST mismatch.** Never have §1 say MAY/SHOULD when §4 asserts MUST. Either scope SHOULDs to a specific slice, move them to the FR that owns the behaviour, or upgrade §1 to MUST. Origin: FR-AI-008 ISS-001.
+- **§8.1c Invariants declared in §1 but not enforced in §6.** Every §1 MUST-clause needs §6 enforcement or §4 verification. If §1 #12 says "is_embedding ⇒ output=0", the loader must check it. Origin: FR-AI-007 ISS-002.
+- **§8.1d Constant defined but never referenced.** Every documented constant MUST appear in at least one §6 code path; otherwise the SLA it represents isn't enforced. Origin: FR-AI-010 ISS-002.
+- **§8.1e Metric-label cardinality drift between §1 and §6.** Every documented label value must have at least one emit site in §6, OR be removed from §1's enumeration. Origin: FR-AI-008 ISS-004.
+
+### §8.2 — Test coverage gaps
+
+- **§8.2a Promised tests not in §5.** Every AC referencing a test type (proptest, property test, integration test) must have an example body in §5 — not just a named tokio test. Origin: FR-AI-006 ISS-002, FR-AI-007 ISS-001.
+- **§8.2b Metric assertions promised in ACs but no test body.** Every metric-MUST in §4 needs a `metric_value(name, labels)` helper invocation in §5. State-only checks don't verify the metric emission. Origin: FR-AI-009 ISS-001.
+- **§8.2c Aggregate metric hides per-component regression.** When an SLO is "≥X% recall" or "≤Y latency" across N components, the test MUST assert per-component AND aggregate, not just aggregate. Origin: FR-AI-012 ISS-004.
+- **§8.2d Absence claims need lints.** When §1 claims ABSENCE ("no network calls", "no persistence", "no DB"), the FR must include an AST/grep-based CI lint that enforces the absence at PR time. Origin: FR-AI-012 ISS-002.
+
+### §8.3 — Concurrency + state-transition correctness
+
+- **§8.3a State transitions not CAS-guarded → emit_transition fires twice under race.** Any "MUST emit once" transition needs a CAS that gates the emit on CAS-winner status. Origin: FR-AI-009 ISS-002.
+- **§8.3b Registration function not idempotent → silent duplicate registration.** Any "register-X-at-startup" function needs a guard global + WARN-on-double-call + `reset_for_tests()` cfg-gated reset. Origin: FR-AI-012 ISS-003, FR-AI-009 ISS-004.
+- **§8.3c `init` swallowing double-call errors via `.ok()` breaks test isolation.** Surface programmer errors with `.expect()` AND provide a `reset_for_tests()` cfg-gated function for legitimate test re-init. Origin: FR-AI-009 ISS-004.
+- **§8.3d Per-call String allocation on the hot path contradicts <100ns claim.** When a §1 latency MUST is "<100ns single atomic load", the lookup key MUST use `Borrow`-based zero-alloc lookup, not owned-key construction. Origin: FR-AI-009 ISS-003.
+
+### §8.4 — Stream / async / cleanup hygiene
+
+- **§8.4a `let _ = tx.send().await` swallows disconnect on terminal events.** In mpsc-based stream pipelines, EVERY send needs an `.is_err()` branch that propagates disconnect — silent swallow on terminal events misclassifies outcome. Origin: FR-AI-010 ISS-003.
+- **§8.4b `Drop` impl using `Handle::try_current()` fails silently during shutdown.** When Drop tries to async-spawn, branch on runtime availability — log loudly + emit OBS counter when unavailable so cleanup-job dependence is visible to operators. Origin: FR-AI-010 ISS-004.
+
+### §8.5 — PII / security / trust-boundary concerns
+
+- **§8.5a Trusting upstream sort order without defensive re-sort.** When correctness depends on a property in another module/process, re-assert the property defensively. Origin: FR-AI-011 ISS-002.
+- **§8.5b Denylist sanitizer for error-message PII leak.** For PII-safety filters, prefer allowlist (known error codes) over denylist (heuristic patterns). Denylists always have edge cases. Origin: FR-AI-011 ISS-003.
+- **§8.5c Closed-enum `from_str` returns None silently → PII passthrough.** Every `from_str` mapping a string to a closed enum needs a runtime warn/counter on the unmapped path AND a CI test that asserts coverage. Origin: FR-AI-011 ISS-004.
+
+### §8.6 — Data-shape / parsing fragility
+
+- **§8.6a Metric label fragility from Debug-format.** Using `format!("{:?}", enum)` for OBS labels couples your wire format to Debug output (which Rust may change). Explicit `as_metric_label()` method, never Debug-format an enum to a metric label. Origin: FR-AI-007 ISS-003.
+- **§8.6b Path-handling edge cases.** `path.parent()` for bare filenames returns `Some("")` not None. Use explicit match arms, not optimistic `unwrap_or`. Origin: FR-AI-007 ISS-004.
+- **§8.6c Header data via string-scraping instead of structured field.** Header semantics belong in a structured field on the error variant; never reverse-parse data out of error messages. Origin: FR-AI-008 ISS-003.
+
+### How to use §8
+
+When writing a `*.audit.md`, walk this checklist. Many findings will not apply to a given FR — that's fine. The point is that the categories themselves are the audit's pressure-test rubric. New patterns surfaced in future audits SHOULD be appended here with origin reference.
+
+---
+
+*End of AUTHORING.md — version 1.2 — 2026-05-17*

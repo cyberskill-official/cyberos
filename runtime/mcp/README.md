@@ -42,6 +42,6 @@ The protocol's audit-ledger invariants (AGENTS §0.6, §5.3, §8.7) require ever
 
 ## Related
 
-- BRAIN spec: [`../../docs/memory/AGENTS.md`](../../docs/memory/AGENTS.md)
+- BRAIN spec: [`../../memory/docs/AGENTS.md`](../../memory/docs/AGENTS.md)
 - Canonical writer: [`../lib/brain_writer.py`](../lib/brain_writer.py)
-- Aspect 12.7 in the operator manual: [`../../docs/memory/README.md`](../../docs/memory/README.md) Part 26.12.7
+- Aspect 12.7 in the operator manual: [`../../memory/docs/README.md`](../../memory/docs/README.md) Part 26.12.7

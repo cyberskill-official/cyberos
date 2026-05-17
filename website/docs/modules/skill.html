@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>Skill — Open Agent Skills · BRAIN-integrated · Vertical-pack moat · CyberOS</title>
- <meta name="description" content="SKILL — portable capability-sandboxed agentic skills. Open Anthropic Agent Skills standard. Rust host · Bun toolchain · 20 SKILL.md bundles · 6 Vietnamese-market skills. Every skill declares allowed_brain_scopes; the capability broker enforces against Personal BRAIN + Lumi's BRAIN. The vertical-pack pattern (cyberskill-vn first) compounds into a global moat.">
+ <title>Skill — 104 author+audit pairs · SDP + 7 persona-driven tiers · BRAIN-integrated · CyberOS</title>
+ <meta name="description" content="SKILL — portable capability-sandboxed agentic skills. Open Anthropic Agent Skills standard. As of 2026-05-18 the catalog is 104 author+audit pairs / 208 bundles / 108 contracts. Built across 8 sessions: 21 SDP-original (morning rebuild) + 78 persona-driven across Tiers 1-7 (Sessions A/B/C/E/F/G/H). Drives 194 workflows across 47 personas in the CUO module. Every pair runs the 8-step audit-fix loop until 10/10.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -45,8 +45,21 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat (currently CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- The catalog. Portable. Capability-sandboxed. BRAIN-integrated. Open Anthropic Agent Skills standard hosted in Rust. <strong>The vertical-pack pattern is the moat.</strong>
+ The catalog. Portable. Capability-sandboxed. BRAIN-integrated. Open Anthropic Agent Skills standard hosted in Rust. <strong>Rebuilt 2026-05-17 around the 13-stage SDLC from <code>docs/Software Development Process.md</code> — flat layout, author+audit pair per artifact, audit-fix loop until 10/10.</strong>
  </p>
+
+ <div class="mt-4 mb-2 p-4 rounded-xl border border-amber-200 bg-amber-50">
+   <div class="flex items-baseline gap-2 mb-1">
+     <span class="text-xs font-bold tracking-wide uppercase text-amber-800">What's new · 2026-05-17</span>
+     <span class="pill pill-shipped">v2.0.0 rebuild</span>
+   </div>
+   <p class="text-sm text-amber-900 leading-relaxed">
+     The legacy persona-organized catalog (<code>skill/skills/cuo/cpo/</code>, <code>cuo/chief-technology-officer/</code>, etc.) was retired. Skill bundles now live <strong>flat at <code>skill/&lt;name&gt;/</code></strong>; persona/role concerns live in the <code>cuo/</code> module. Every artefact CyberSkill produces ships as a <code>&lt;artifact&gt;-author</code> + <code>&lt;artifact&gt;-audit</code> pair — <strong>104 pairs (208 bundles) + 108 contracts shipped at 10/10 across 8 build sessions (morning rebuild + Sessions A/B/C/E/F/G/H)</strong>. Catalog source-of-truth: <code>skill/MODULE.md</code> §3.0 (SDP-original) + §3.1-§3.7 (Tier-1 through Tier-7 session records). Every audit skill implements the 8-step audit-fix loop in <code>skill/docs/AUDIT_LOOP.md</code> and terminates only on PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS.
+   </p>
+   <p class="text-sm text-amber-900 leading-relaxed mt-2">
+     <strong>Final state 2026-05-18:</strong> 21 SDP-original (sow, srs, fr, dor-dod, project-plan, stage-gate, adr, threat-model, sdd, impl-plan, code-review, test-strategy, deploy-checklist, release-notes, runbook, postmortem, rtm, prd, retro, closure, decomm + project-cleanup) <strong>+ 78 net-new persona-driven pairs across 7 tiers</strong>: Tier-1 (29 — CFO/CEO/CHRO/CRO-Revenue/Chief-of-Staff/CCO-Customer/COO/CPO-Privacy/CAIO/Chief-Ethics-Officer essentials), Tier-2 (29 — CRO-Risk/CDO-Data/CMO/Chief-Brand/Chief-Transformation/Chief-Digital/Chief-ESG/CSO-Sustainability/CCO-Communications/Chief-Knowledge/Chief-Innovation/Chief-Automation/Chief-Trust/CPO-Procurement/CSO-Strategy/CCO-Commercial), Tier-3 (8 niche — Chief-Medical/CIO-Investment/CRO-Restructuring/Chief-Remote/Chief-Happiness), Tier-4 (5 legal — contract-review/nda-triage/regulatory-filing/ip-strategy/litigation-mgmt-update), Tier-5 (6 Series-A — gtm-plan/vulnerability-mgmt-report/pen-test-report/soc2-evidence/security-strategy/delivery-review), Tier-6 (1 churn-analysis), Tier-7 (5 Enterprise — product-metrics-review/customer-360/ai-strategy/customer-health-review/knowledge-pipeline). <strong>The CUO module consumes this catalog and 194 workflows live across 47/48 personas</strong> — see <code>cuo/MODULE.md</code> §4. Public skills at <code>skill/public/</code> (5 Vietnamese-market — vn-mst-validate, vn-vat-invoice, vn-bank-transfer, vneid-integration, vn-legal-compliance) co-exist with the SDP-driven catalog via loader auto-discovery.
+   </p>
+ </div>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  Skill plays three strategic roles simultaneously. <strong>(1) Open-standard citizen:</strong> every CyberOS skill follows the Anthropic <em>Agent Skills</em> standard (SKILL.md + progressive disclosure + filesystem discovery), unmodified-runnable in Claude Code, Codex CLI, Cursor, VS Code with Copilot, Goose, Amp, Gemini CLI, and 20+ other 12+ clients. Day-1 distribution reach via <code>agentskills.io</code>. <strong>(2) BRAIN-protocol enabler:</strong> every skill bundle declares <code>allowed_brain_scopes</code> against both Personal BRAIN and Lumi's BRAIN; the Rust capability broker enforces — first-use approval, scope-limited reads, audit-chain emission on every invocation. The capture daemon itself is a skill bundle (<code>brain-capture@1</code>); the synthesis sub-skill that drives multi-brain auto-evolve is a skill bundle (<code>cuo/personas/synthesis-author/SKILL.md</code>). <strong>(3) Vertical-pack moat:</strong> the cyberskill-vn collection (6 high-quality Vietnamese-market skills — MST · VAT · VietQR · CCCD · legal · tax) is the proof-of-pattern; the same recipe produces cyberskill-sg, -id, -th, -eu, -us packs — each a defensible local moat a global vendor cannot easily replicate. 4 Rust crates own the canonical host; Bun + esbuild compiles TypeScript skills to <code>wasm32-wasi</code> components; 20 SKILL.md bundles indexed today (14 CUO C-level + 6 cyberskill-vn). The 13 May 2026 architectural audit closed all seven phases — header-only indexing, lazy activation, DashMap-sharded registry, Wasmtime executor, capability broker, legacy retirement plan. Python ↔ Rust parity 12/12 green.
  </p>
@@ -72,6 +85,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
+ <li><a class="toc-link" href="#sdp-catalog"><strong>SDP-driven catalog (v2.0.0)</strong></a></li>
  <li><a class="toc-link" href="#bigger-picture">The bigger picture</a></li>
  <li><a class="toc-link" href="#why">Why Skill exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
@@ -105,7 +119,7 @@
  <hr class="my-4 border-slate-200">
  <div class="h-eyebrow mb-2">Source</div>
  <div class="text-xs text-slate-500 leading-relaxed">
- <code>cyberos/skill/</code><br>
+ <code>cyberos/modules/skill/</code><br>
  (catalog row)<br>
  AUDIT.md (13 May 2026)
  </div>
@@ -136,6 +150,53 @@
  <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN + AUTH</div><div class="note">tenant-scoped capability broker</div></div>
  </div>
  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- SDP-DRIVEN CATALOG — added in 2026-05-17 v2.0.0 rebuild -->
+<!-- ============================================================ -->
+<section id="sdp-catalog" class="module-section">
+ <header class="section-head"><span class="section-num">★</span><h2>SDP-driven catalog (2026-05-17 v2.0.0)</h2></header>
+
+ <p class="text-base text-slate-700 leading-relaxed mb-4">
+  The runtime catalog is rebuilt around the 13-stage SDLC from <code>docs/Software Development Process.md</code>. Every artefact CyberSkill produces in the SDLC ships as a <strong><code>&lt;artifact&gt;-author</code> + <code>&lt;artifact&gt;-audit</code> pair</strong> at <code>skill/&lt;name&gt;/</code> (flat layout — no persona subfolders). Every audit skill implements the 8-step audit-fix loop in <code>skill/docs/AUDIT_LOOP.md</code> and terminates only on PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS. Catalog source-of-truth: <code>skill/MODULE.md</code> §3.
+ </p>
+
+ <table class="kt">
+  <thead><tr><th>SDP §2 stage</th><th>Author skill</th><th>Audit skill</th><th>Rubric</th></tr></thead>
+  <tbody>
+   <tr><td>(a) Pre-engagement / Discovery</td><td><code>sow-author</code></td><td><code>sow-audit</code></td><td><code>sow_rubric@1.0</code></td></tr>
+   <tr><td>(b) Requirements — SRS (IEEE 830)</td><td><code>srs-author</code></td><td><code>srs-audit</code></td><td><code>srs_rubric@1.0</code></td></tr>
+   <tr><td>(b) Requirements — backlog</td><td><code>fr-author</code></td><td><code>fr-audit</code></td><td><code>audit_rubric@2.0</code></td></tr>
+   <tr><td>(b) Requirements — DoR/DoD</td><td><code>dor-dod-author</code></td><td><code>dor-dod-audit</code></td><td><code>dor_dod_rubric@1.0</code></td></tr>
+   <tr><td>(c) Feasibility + project planning</td><td><code>project-plan-author</code></td><td><code>project-plan-audit</code></td><td><code>project_plan_rubric@1.0</code></td></tr>
+   <tr><td>(c) Stage-gate governance</td><td><code>stage-gate-author</code></td><td><code>stage-gate-audit</code></td><td><code>stage_gate_rubric@1.0</code></td></tr>
+   <tr><td>(d) Architecture decisions</td><td><code>adr-author</code></td><td><code>adr-audit</code></td><td><code>adr_rubric@1.0</code></td></tr>
+   <tr><td>(d) STRIDE threat model</td><td><code>threat-model-author</code></td><td><code>threat-model-audit</code></td><td><code>threat_model_rubric@1.0</code></td></tr>
+   <tr><td>(e) Detailed design (IEEE 1016)</td><td><code>sdd-author</code></td><td><code>sdd-audit</code></td><td><code>sdd_rubric@1.0</code></td></tr>
+   <tr><td>(f) Implementation plan</td><td><code>impl-plan-author</code></td><td><code>impl-plan-audit</code></td><td><code>impl_plan_rubric@1.0</code></td></tr>
+   <tr><td>(g) Code review (IEEE 1028 + AI checks)</td><td><code>code-review-author</code></td><td><code>code-review-audit</code></td><td><code>code_review_rubric@1.0</code></td></tr>
+   <tr><td>(h) Test strategy</td><td><code>test-strategy-author</code></td><td><code>test-strategy-audit</code></td><td><code>test_strategy_rubric@1.0</code></td></tr>
+   <tr><td>(i) Deployment readiness</td><td><code>deploy-checklist-author</code></td><td><code>deploy-checklist-audit</code></td><td><code>deploy_checklist_rubric@1.0</code></td></tr>
+   <tr><td>(i) Release notes</td><td><code>release-notes-author</code></td><td><code>release-notes-audit</code></td><td><code>release_notes_rubric@1.0</code></td></tr>
+   <tr><td>(j) Operational runbook</td><td><code>runbook-author</code></td><td><code>runbook-audit</code></td><td><code>runbook_rubric@1.0</code></td></tr>
+   <tr><td>(j) Blameless post-mortem</td><td><code>postmortem-author</code></td><td><code>postmortem-audit</code></td><td><code>postmortem_rubric@1.0</code></td></tr>
+   <tr><td>cross-cutting — PRD</td><td><code>prd-author</code></td><td><code>prd-audit</code></td><td><code>prd_rubric@1.0</code></td></tr>
+   <tr><td>cross-cutting — Traceability matrix</td><td><code>rtm-author</code></td><td><code>rtm-audit</code></td><td><code>rtm_rubric@1.0</code></td></tr>
+   <tr><td>(l) Retrospective</td><td><code>retro-author</code></td><td><code>retro-audit</code></td><td><code>retro_rubric@1.0</code></td></tr>
+   <tr><td>(l) Project closure</td><td><code>closure-author</code></td><td><code>closure-audit</code></td><td><code>closure_rubric@1.0</code></td></tr>
+   <tr><td>(m) Decommissioning</td><td><code>decomm-author</code></td><td><code>decomm-audit</code></td><td><code>decomm_rubric@1.0</code></td></tr>
+   <tr><td>hygiene — self-auditing</td><td colspan="2"><code>project-cleanup</code></td><td>—</td></tr>
+  </tbody>
+ </table>
+
+ <p class="text-sm text-slate-600 mt-4 leading-relaxed">
+  <strong>Total: 104 author+audit pairs = 208 skill-bundle directories + 108 contracts at <code>skill/&lt;name&gt;/</code> + project-cleanup + _template scaffold + 5 public/ VN bundles.</strong> Every pair ships its own <code>SKILL.md</code> + <code>INVARIANTS.md</code> + <code>RUBRIC.md</code> (audit half) + <code>envelopes/</code> + <code>references/</code> + <code>acceptance/</code>. Authoritative authoring scaffold: <code>skill/_template/{author,audit}/</code>. Rust host supports flat layout via <code>crates/host/src/loader.rs</code> <code>EXCLUDED_DIR_NAMES</code>. <strong>Catalog reached stable steady-state after Session H (2026-05-18)</strong> — Sessions I-N shipped 124 niche workflows in the CUO module with zero new skills surfaced, validating that ~100 well-designed pairs serve the vast majority of C-suite persona orchestration.
+ </p>
+
+ <p class="text-sm text-slate-600 mt-3 leading-relaxed">
+  Each rubric maps to authoritative standards: <strong>IEEE 830 / 1016 / 1028</strong> · <strong>ISO/IEC 25010:2023</strong> (nine quality characteristics enforced via <code>QA-NFR-001</code>) · <strong>OWASP Top 10:2025</strong> + <strong>OWASP ASVS</strong> · <strong>STRIDE</strong> + <strong>LINDDUN</strong> · <strong>PMBOK 8 / PRINCE2 7</strong> · <strong>DORA</strong> four key metrics + small-batch discipline · <strong>Keep-a-Changelog</strong> 1.1.0 · <strong>SemVer</strong> 2.0.0 · <strong>WCAG 2.2</strong> · <strong>GDPR Art. 17 + 33</strong> · <strong>Vietnam Decree 13/2023 PDPD</strong> + <strong>Decree 53/2022</strong> · <strong>PCI-DSS 9.8</strong> · <strong>HIPAA 45 CFR § 164.310(d)(2)</strong>.
+ </p>
 </section>
 
 <!-- ============================================================ -->
@@ -1262,7 +1323,7 @@ graph LR
 ├──────────────────────────────────────┼─────────┼────────┼───────────┤
 │ cuo/cpo/prd-author │ 0.4.1 │ — │ inline │
 │ cuo/cpo/fr-author │ 0.3.0 │ — │ inline │
-│ cuo/cto/srs-author │ 0.2.0 │ — │ inline │
+│ cuo/chief-technology-officer/srs-author │ 0.2.0 │ — │ inline │
 │... │ │ │ │
 │ cyberskill-vn/vn-mst-validate │ 0.2.0 │ VN │ script │
 │ cyberskill-vn/vn-vat-invoice │ 0.3.0 │ VN │ script │
@@ -1400,18 +1461,18 @@ $ cyberos-skill-cli build --lang ts./src/
  <ul class="space-y-2 text-sm">
  <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (v1.0.0 design-locked 2026-05-14) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. §6 Lumi's BRAIN spec, §5 capture daemon spec, §8 multi-brain auto-evolve — defines the contract that <code>brain-capture@1</code>, <code>brain-sync@1</code>, and <code>cuo/personas/synthesis-author@1</code> implement.</li>
  <li><strong>FR_AUTHORING_WORKFLOW.md</strong> — <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">canonical FR creation playbook</a>. fr-author + fr-audit are reference implementations of the universal-protocol skill pattern.</li>
- <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/memory/docs/AGENTS.md</code>. §3.6 <code>allowed_brain_scopes</code> · §11 trust model · §14 cross-agent interop · §15 sync_class taxonomy.</li>
- <li><strong>AUDIT.md</strong> (13 May 2026) — full architectural audit + migration plan — <code>cyberos/skill/docs/AUDIT.md</code>. Phases 0–7 closure rationale and Phase 8 (BRAIN integration) handoff.</li>
- <li><strong>SPEC.md</strong> — protocol summary — <code>cyberos/skill/docs/SPEC.md</code>.</li>
+ <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/modules/memory/AGENTS.md</code>. §3.6 <code>allowed_brain_scopes</code> · §11 trust model · §14 cross-agent interop · §15 sync_class taxonomy.</li>
+ <li><strong>AUDIT.md</strong> (13 May 2026) — full architectural audit + migration plan — <code>cyberos/modules/skill/README.md (Appendix H)</code>. Phases 0–7 closure rationale and Phase 8 (BRAIN integration) handoff.</li>
+ <li><strong>SPEC.md</strong> — protocol summary — <code>cyberos/modules/skill/README.md (Appendix A)</code>.</li>
  <li><strong>PUBLISH.md</strong> — OCI / cosign / agentskills.io publication workflow. The R0 → R5 distribution rungs land here as concrete operator procedures.</li>
  <li><strong>PHASE_5_ACTIVATION.md</strong> — Wasmtime runtime activation guidance.</li>
  <li><strong>PHASE_7_RETIREMENT.md</strong> — legacy retirement runbook.</li>
- <li><strong>Source:</strong> <code>cyberos/skill/crates/</code> · <code>cyberos/skill/toolchain/</code> · <code>cyberos/skill/skills/</code> · <code>cyberos/skill/tests/</code>. Stage-2+ skills land at <code>cyberos/skill/skills/system/brain-capture/</code>, <code>cyberos/skill/skills/system/brain-sync/</code>, <code>cyberos/skill/skills/cuo/personas/synthesis-author/</code>.</li>
+ <li><strong>Source:</strong> <code>cyberos/modules/skill/crates/</code> · <code>cyberos/modules/skill/toolchain/</code> · <code>cyberos/modules/skill/<skill>/ (flat — was skill/skills/)</code> · <code>cyberos/modules/skill/tests/</code>. Stage-2+ skills land at <code>cyberos/modules/skill/<skill>/ (flat layout — no skills/ subdir)</code>, <code>cyberos/modules/skill/<skill>/</code>, <code>cyberos/modules/skill/<skill>/</code>.</li>
  <li><strong>External:</strong> <a href="https://agentskills.io/specification">agentskills.io/specification</a> · Anthropic engineering blog "Equipping agents for the real world with Agent Skills" (Oct 16 2025, updated Dec 18 2025) · <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview">docs.claude.com Agent Skills overview</a>.</li>
  <li><strong>Cross-module:</strong> <a href="brain.html" class="text-blue-700 underline">BRAIN module page</a> — where the Stage 1–5 protocol roadmap lives. <a href="cuo.html" class="text-blue-700 underline">CUO module page</a> — where the 10 C-level skills are detailed.</li>
  <li><strong>Strategy:</strong> <a href="../../strategy/CYBEROS_STRATEGY.md" class="text-blue-700 underline">CYBEROS_STRATEGY.md</a> §4.4 vertical packs as Level-4 productization · §3 docs site Tier 1+2 features that the marketplace deferred-list comes from.</li>
  <li><strong>AUDIT + PLAN:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">24-week build plan</a> · <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">pre-launch research review</a> §3 (Skill is "Gold standard"); §7.3 (defer the marketplace, sell the packs).</li>
- <li><strong>CHANGELOG:</strong> <code>cyberos/skill/docs/CHANGELOG.md</code> (newest-first).</li>
+ <li><strong>CHANGELOG:</strong> <code>cyberos/CHANGELOG.md (entries tagged [SKILL])</code> (newest-first).</li>
  </ul>
  </div>
 </section>

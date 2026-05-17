@@ -15,7 +15,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AI-005, FR-AI-006, FR-AI-008, FR-AI-015, FR-AI-022]
 depends_on: [FR-AI-006]
-blocks: [FR-AI-104]   # placeholder for VN-provider integration FR
+blocks: [FR-TEN-103, FR-AI-104]   # FR-AI-104 placeholder — not yet specified
 
 # ───── Source contracts ─────
 source_pages:

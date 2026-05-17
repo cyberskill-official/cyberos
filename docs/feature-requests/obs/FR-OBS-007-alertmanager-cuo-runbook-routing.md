@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-003, FR-OBS-005, FR-CUO-101, FR-KB-008]
 depends_on: [FR-OBS-002, FR-OBS-003]
-blocks: []
+blocks: [FR-KB-008]
 
 source_pages:
   - website/docs/modules/obs.html#alert-routing

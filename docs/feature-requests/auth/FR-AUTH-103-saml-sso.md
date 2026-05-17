@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-AUTH-104, FR-PORTAL-003]
 depends_on: [FR-AUTH-004]
-blocks: [FR-PORTAL-003]   # placeholder — not yet specified
+blocks: [FR-PORTAL-003]
 
 source_pages:
   - website/docs/modules/auth.html#saml-sso
@@ -839,7 +839,7 @@ fn email_address_format_accepted() {
   "subject_id_hash16": "9b1deb4d3b7d4bad",
   "nameid_hash16": "abc123def4567890",
   "nameid_format": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
-  "granted_role": "cfo",
+  "granted_role": "chief-financial-officer",
   "was_jit": false,
   "ts_ns": 1747920731000000000
 }

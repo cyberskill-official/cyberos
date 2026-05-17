@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-014, FR-AI-022, FR-AUTH-004, FR-AUTH-101, FR-BRAIN-101, FR-AI-003, FR-CUO-102, FR-CUO-103, FR-CUO-104, FR-CUO-105]
 depends_on: [FR-AI-008]
-blocks: [FR-CUO-102, FR-CUO-103, FR-CUO-104, FR-CRM-005, FR-CRM-006, FR-CRM-007, FR-DOC-009, FR-EMAIL-008, FR-INV-010, FR-OKR-006, FR-OKR-007, FR-PROJ-011, FR-PROJ-012, FR-RES-004]   # all 14 entries are placeholders — not yet specified (downstream consumers of CUO)
+blocks: [FR-CUO-102, FR-CUO-103, FR-CUO-104, FR-CRM-005, FR-CRM-006, FR-CRM-007, FR-DOC-009, FR-EMAIL-008, FR-INV-010, FR-KB-007, FR-OKR-006, FR-OKR-007, FR-PORTAL-005, FR-PROJ-011, FR-PROJ-012, FR-RES-004]   # 15 downstream consumers of CUO
 
 source_pages:
   - website/docs/modules/cuo.html#what
@@ -507,14 +507,14 @@ PERSONA_CATALOGUE = {
         defer_to_human_matrix=["wire_transfer", "subject_role_grant_reserved"],
     ),
     "cfo": Persona(
-        key="cfo",
+        key="chief-financial-officer",
         display_name="CFO",
         keyword_bank=["invoice", "vat", "hoa don", "bhxh", "p1", "p2", "p3", "payroll", "approve"],
         system_prompt="You are the CFO persona. Refuse to auto-execute disbursements; require human sign-off.",
         defer_to_human_matrix=["wire_transfer", "invoice_emit", "payroll_commit", "esop_grant_signoff", "po_cancellation"],
     ),
     "cto": Persona(
-        key="cto",
+        key="chief-technology-officer",
         display_name="CTO",
         keyword_bank=["deploy", "rollback", "incident", "p0", "p1", "tech-debt", "security"],
         system_prompt="You are the CTO persona. Refuse to auto-execute production deploys or rollbacks.",
@@ -686,7 +686,7 @@ async def test_cfo_persona_blocks_invoice_emit_even_at_high_confidence(mock_cata
     mock_catalog.set_score("vn-vat-invoice@1.2", 0.95)  # high confidence
     result = await run_supervisor(
         query="emit hoa don for ACME 4M VND",
-        persona_key="cfo",
+        persona_key="chief-financial-officer",
         do_invoke=True, do_record=True,
     )
     assert result.routed is False
@@ -751,7 +751,7 @@ async def test_rule_path_under_50ms_p95():
     latencies = []
     for _ in range(1000):
         t0 = time.monotonic()
-        await run_supervisor(query="validate MST 0301479073", persona_key="cfo", do_invoke=False, do_record=False)
+        await run_supervisor(query="validate MST 0301479073", persona_key="chief-financial-officer", do_invoke=False, do_record=False)
         latencies.append((time.monotonic() - t0) * 1000.0)
     latencies.sort()
     p95 = latencies[int(len(latencies) * 0.95)]
@@ -762,7 +762,7 @@ async def test_rule_path_under_50ms_p95():
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton. The remaining 8 persona definitions in §3.6 — CEO/COO/CMO/CHRO/CSO/CLO/CDO/CPO — are filled in during implementation following the same shape as cfo/cto.)
+(API contract above is the skeleton. The remaining 8 persona definitions in §3.6 — CEO/COO/CMO/CHRO/CSO/CLO/CDO/CPO — are filled in during implementation following the same shape as chief-financial-officer/cto.)
 
 ---
 
@@ -876,7 +876,7 @@ $ cyberos-cuo supervisor route --query "asdfghjkl" --persona genie --json
   "kind": "cuo.routing_decision",
   "tenant_id": "5e8f1d2a-...",
   "subject_id_hash16": "9b1deb4d3b7d4bad",
-  "persona_key": "cfo",
+  "persona_key": "chief-financial-officer",
   "persona_version": "cuo-cfo@0.4.1",
   "query": "validate MST [REDACTED-MST]",
   "rule_scores": [
@@ -900,7 +900,7 @@ $ cyberos-cuo supervisor route --query "asdfghjkl" --persona genie --json
 {
   "kind": "cuo.persona_defer_block",
   "tenant_id": "5e8f1d2a-...",
-  "persona_key": "cfo",
+  "persona_key": "chief-financial-officer",
   "operation": "invoice_emit",
   "rule_top_skill": "vn-vat-invoice@1.2",
   "rule_top_confidence": 0.95,

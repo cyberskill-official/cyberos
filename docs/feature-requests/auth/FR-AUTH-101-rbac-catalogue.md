@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-HR-001, FR-KB-001, FR-REW-001, FR-DOC-001, FR-OKR-001]
 depends_on: [FR-AUTH-005]
-blocks: [FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-DOC-001, FR-HR-001, FR-KB-001, FR-OKR-001, FR-REW-001, FR-TIME-001, FR-INV-005, FR-AUTH-104, FR-INV-003]   # FR-REW-001 remains placeholder — not yet specified (downstream consumer)
+blocks: [FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-DOC-001, FR-HR-001, FR-KB-001, FR-OKR-001, FR-REW-001, FR-TIME-001, FR-INV-005, FR-AUTH-104, FR-INV-003, FR-INV-004]
 
 source_pages:
   - website/docs/modules/auth.html#rbac-catalogue
@@ -195,7 +195,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 **Why the 5-role stub is a strict prefix (§1 #19, DEC-123)?** FR-AUTH-002 shipped a 2-name allow-list (`tenant-admin`, `tenant-member`); the wider stub used in FR-AUTH-005/006 included `root-admin`, `service-account`, `agent-persona`. Those 5 names are not "temporary placeholder names" — they ARE the production names. This FR adds 17 more without renaming any of the 5. The `rbac_stub_compat_test` regression test makes this guarantee enforceable: prior subjects holding `tenant-admin` keep exactly the same matrix-permission set + any new (resource, action) tuples that were absent before. This is the property that lets existing tokens (without `rbac_v`) keep working — the underlying matrix is additive only.
 
-**Why a permission matrix layer instead of role checks directly in code (§1 #4, DEC-122)?** Role checks scattered across services produce drift: service A might use `caller.has_role("cfo")`, service B might write `caller.role == "cfo" || caller.role == "founder"`. The matrix centralises the truth — `caller.has_permission(Resource::InvInvoice, Action::Approve)` is the canonical check, and the matrix decides which roles satisfy it. Adding a new role only requires updating the matrix; consuming services don't change. This is the ISO 27001:2022 A.5.18 recommendation (access rights provisioned via documented roles), not via inline string comparisons.
+**Why a permission matrix layer instead of role checks directly in code (§1 #4, DEC-122)?** Role checks scattered across services produce drift: service A might use `caller.has_role("chief-financial-officer")`, service B might write `caller.role == "cfo" || caller.role == "founder"`. The matrix centralises the truth — `caller.has_permission(Resource::InvInvoice, Action::Approve)` is the canonical check, and the matrix decides which roles satisfy it. Adding a new role only requires updating the matrix; consuming services don't change. This is the ISO 27001:2022 A.5.18 recommendation (access rights provisioned via documented roles), not via inline string comparisons.
 
 **Why role + scope-grant layered (§1 #20, DEC-124)?** Pure RBAC over-grants: giving an external auditor the `auditor` role grants matrix-wide read; we only want them to see the specific audit window they were engaged for. The scope-grant layer narrows: `auditor` role provides base privilege; the `scope_grants` row narrows it to `resource_id IN (engagement-2026-q3)`. Without scope-grants, we'd be forced to invent per-audit roles (`auditor-2026-q3`) — and that's the ABAC slide the closed catalogue is designed to prevent. Scope grants are NOT standalone privileges (they cannot grant what the role does not already permit); they only narrow/restrict. This preserves the matrix as the source of truth for "what is allowed in principle."
 
@@ -278,18 +278,18 @@ impl Role {
             Role::ServiceAccount => "service-account",
             Role::AgentPersona => "agent-persona",
             Role::Founder => "founder",
-            Role::Cfo => "cfo",
-            Role::Cto => "cto",
-            Role::Coo => "coo",
-            Role::Chro => "chro",
-            Role::Cmo => "cmo",
+            Role::Cfo => "chief-financial-officer",
+            Role::Cto => "chief-technology-officer",
+            Role::Coo => "chief-operating-officer",
+            Role::Chro => "chief-human-resources-officer",
+            Role::Cmo => "chief-marketing-officer",
             Role::Cpo => "cpo",
             Role::Cso => "cso",
             Role::Cseco => "cseco",
             Role::Clo => "clo",
             Role::Cdo => "cdo",
             Role::Dpo => "dpo",
-            Role::Caio => "caio",
+            Role::Caio => "chief-ai-officer",
             Role::ClientPortalUser => "client-portal-user",
             Role::Auditor => "auditor",
             Role::Regulator => "regulator",
@@ -913,7 +913,7 @@ async fn assign_role_emits_audit_row() {
     let rows = ctx.brain_audit_rows("auth.role_assigned").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["subject_id"], target_id.to_string());
-    assert_eq!(rows[0]["role"], "cfo");
+    assert_eq!(rows[0]["role"], "chief-financial-officer");
 }
 ```
 
@@ -1020,7 +1020,7 @@ async fn stub_role_permissions_strictly_additive() {
 ```json
 {
   "subject_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-  "role": "cfo",
+  "role": "chief-financial-officer",
   "granted_by": "8a7c8c80-1234-4567-89ab-cdef01234567",
   "granted_at": "2026-05-16T14:32:11Z"
 }
@@ -1034,7 +1034,7 @@ async fn stub_role_permissions_strictly_additive() {
   "tenant_id": "5e8f1d2a-...",
   "subject_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
   "subject_id_hash16": "9b1deb4d3b7d4bad",
-  "role": "cfo",
+  "role": "chief-financial-officer",
   "granted_by": "8a7c8c80-1234-4567-89ab-cdef01234567",
   "rbac_v": 2,
   "trace_id": "4bf92f3577b34da6a3ce929d0e0e4736",
@@ -1065,7 +1065,7 @@ async fn stub_role_permissions_strictly_additive() {
   "iat": 1747920731,
   "exp": 1747924331,
   "nbf": 1747920731,
-  "roles": ["tenant-member", "cfo"],
+  "roles": ["tenant-member", "chief-financial-officer"],
   "rbac_v": 2
 }
 ```

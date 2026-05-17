@@ -14,7 +14,7 @@ shipped: now()
 brain_chain_hash: null
 related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-OKR-002, FR-OKR-003, FR-OKR-004, FR-OKR-005, FR-OKR-006, FR-OKR-007, FR-HR-001]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
-blocks: [FR-OKR-002, FR-OKR-003, FR-OKR-005]   # all 3 entries are placeholders — not yet specified (downstream consumers)
+blocks: [FR-OKR-002, FR-OKR-003, FR-OKR-005, FR-OKR-007]   # 4 downstream consumers
 
 source_pages:
   - website/docs/modules/okr.html#what

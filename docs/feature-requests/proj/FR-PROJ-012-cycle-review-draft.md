@@ -81,7 +81,7 @@ The cycle-review generator **MUST** compose a draft review at every cycle close.
     4. Recommendation for next cycle's priorities.
     Tone: factual, constructive, Vietnamese-context-aware. Avoid blame.
     ```
-4. **MUST** save the draft as a BRAIN memory at `memories/projects/<engagement_id>/cycle-reviews/<cycle_id>.md` with frontmatter `{kind: cycle_review, status: draft, sync_class: shareable, generated_by_persona: coo@<version>, generated_at: <iso>}`. The body is markdown.
+4. **MUST** save the draft as a BRAIN memory at `memories/projects/<engagement_id>/cycle-reviews/<cycle_id>.md` with frontmatter `{kind: cycle_review, status: draft, sync_class: shareable, generated_by_persona: chief-operating-officer@<version>, generated_at: <iso>}`. The body is markdown.
 5. **MUST** emit `proj.cycle_review_drafted` BRAIN audit row with payload `{cycle_id, engagement_id, memory_path, draft_byte_count, persona_version, generated_at_ns, trace_id}`.
 6. **MUST** NEVER auto-promote draft to `status: accepted`. Operator (COO) edits + accepts via UI / CLI; acceptance flips frontmatter `status` and emits `proj.cycle_review_accepted` row.
 7. **MUST** redact PII in input context via FR-BRAIN-111 before LLM call (issue descriptions may contain customer info; redact before composition).

@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-SKILL-103, FR-SKILL-104, FR-SKILL-105, FR-SKILL-106, FR-BRAIN-108]
 depends_on: [FR-SKILL-106]
-blocks: []
+blocks: [FR-TEN-005]
 
 source_pages:
   - website/docs/skills/synthesis-author.html

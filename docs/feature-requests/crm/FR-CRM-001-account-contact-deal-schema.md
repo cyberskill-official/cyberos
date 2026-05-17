@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-CRM-002, FR-CRM-003, FR-CRM-004, FR-CRM-005, FR-PROJ-005, FR-HR-001]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
-blocks: [FR-CRM-002, FR-CRM-003, FR-CRM-004]   # all 3 entries are placeholders — not yet specified (downstream consumers)
+blocks: [FR-CRM-002, FR-CRM-003, FR-CRM-004, FR-CRM-005, FR-CRM-006, FR-CRM-007, FR-CRM-009, FR-EMAIL-006, FR-RES-004]
 
 source_pages:
   - website/docs/modules/crm.html#what

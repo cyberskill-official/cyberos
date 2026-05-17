@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cyberos.skill.investor-update-author.input/v1",
+  "title": "investor-update-author input envelope",
+  "type": "object",
+  "required": ["source_files", "output_dir"],
+  "additionalProperties": false,
+  "properties": {
+    "source_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "media_type"],
+        "properties": {
+          "path": { "type": "string", "description": "Project-relative or absolute path to the source file." },
+          "media_type": { "type": "string", "description": "IANA media type, e.g. text/markdown, application/json." }
+        },
+        "additionalProperties": false
+      }
+    },
+    "output_dir": {
+      "type": "string",
+      "description": "Directory the skill writes artefacts + manifest to. Created if missing; subject to scope sandbox."
+    },
+    "manifest_path": {
+      "type": "string",
+      "description": "Override path to manifest.json. Defaults to <output_dir>/manifest.json."
+    },
+    "batch_size": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10,
+      "default": 3,
+      "description": "Soft-cap 5, hard-cap 10. Higher values rejected at parse-time."
+    },
+    "caller_persona": {
+      "type": "string",
+      "default": "cuo-cpo",
+      "enum": ["cuo-cpo", "cuo-cto", "cuo-clo", "cuo-cseco", "cuo-coo", "cuo-ceo", "cuo-cfo", "cuo-chro", "cuo-cdo"]
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "UUID for genie.action_log correlation. Auto-generated if absent."
+    },
+    "chain_to": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": ["investor-update-audit"],
+      "description": "Downstream skill IDs to invoke on PASS. Empty list disables chaining."
+    }
+  }
+}

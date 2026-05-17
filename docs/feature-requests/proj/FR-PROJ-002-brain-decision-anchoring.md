@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-PROJ-001, FR-AI-003, FR-BRAIN-106, FR-BRAIN-108]
 depends_on: [FR-PROJ-001, FR-AI-003]
-blocks: [FR-PROJ-003, FR-PROJ-004, FR-PROJ-013, FR-PROJ-014, FR-PROJ-015, FR-PROJ-016]
+blocks: [FR-PROJ-003, FR-PROJ-004, FR-PROJ-013, FR-PROJ-014, FR-PROJ-015, FR-PROJ-016, FR-TIME-004]
 
 source_pages:
   - website/docs/modules/proj.html#brain-anchoring

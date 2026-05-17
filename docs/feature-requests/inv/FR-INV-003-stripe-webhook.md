@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-INV-005, FR-INV-006, FR-TEN-003, FR-OBS-007]
 depends_on: [FR-AUTH-101]
-blocks: [FR-INV-006, FR-TEN-003]   # both placeholders — not yet specified
+blocks: [FR-INV-006, FR-TEN-003]
 
 source_pages:
   - website/docs/modules/inv.html#stripe

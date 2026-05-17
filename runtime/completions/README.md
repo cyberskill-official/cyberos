@@ -46,4 +46,4 @@ cyberos completions emit fish > runtime/completions/cyberos.fish
 
 ## Related
 
-- Aspect 1.4 in the operator manual: [`../../docs/memory/README.md`](../../docs/memory/README.md) Part 26.1.4
+- Aspect 1.4 in the operator manual: [`../../memory/docs/README.md`](../../memory/docs/README.md) Part 26.1.4

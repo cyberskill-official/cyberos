@@ -26,5 +26,5 @@ The shell scripts are invoked as commands by `cyberos rollout` and `cyberos clea
 
 ## Related
 
-- BRAIN protocol that `brain_writer.py` enforces: [`../../docs/memory/AGENTS.md`](../../docs/memory/AGENTS.md)
-- Rollout flow that invokes `apply-bundle-Q.sh`: [`../../docs/memory/README.md` Part 26.0.5](../../docs/memory/README.md)
+- BRAIN protocol that `brain_writer.py` enforces: [`../../memory/docs/AGENTS.md`](../../memory/docs/AGENTS.md)
+- Rollout flow that invokes `apply-bundle-Q.sh`: [`../../memory/docs/README.md` Part 26.0.5](../../memory/docs/README.md)

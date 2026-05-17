@@ -18,7 +18,7 @@ blocks: [FR-BRAIN-104, FR-BRAIN-106, FR-BRAIN-105]
 
 source_pages:
   - website/docs/modules/brain.html#multi-device-sync
-  - BRAIN_AUTOSYNC_DESIGN.md
+  - memory/docs/AUTOSYNC_DESIGN.md
 source_decisions:
   - DEC-036 (compensation/equity rows excluded from sync at any boundary)
   - DEC-070 (Layer 1 source of truth; sync preserves chain integrity per AGENTS.md §14.2)
@@ -79,7 +79,7 @@ risk_if_skipped: "Each Member's laptop has an isolated BRAIN. Founder switching 
 
 ## §1 — Description (BCP-14 normative)
 
-A `brain-sync` Rust daemon **MUST** run on every device, syncing the personal BRAIN to a designated Cloud BRAIN per BRAIN_AUTOSYNC_DESIGN.md:
+A `brain-sync` Rust daemon **MUST** run on every device, syncing the personal BRAIN to a designated Cloud BRAIN per `memory/docs/AUTOSYNC_DESIGN.md`:
 
 1. **MUST** push every local chain row to Cloud BRAIN via gRPC stream (TLS + bearer auth). Push is unidirectional; one row per stream message; ack-per-row.
 2. **MUST** pull foreign-origin rows from Cloud BRAIN; apply via local-import per AGENTS.md §14.2 — each foreign row becomes a fresh `put` on the LOCAL chain whose `extra.imported_from` identifies the source device fingerprint AND `extra.foreign_chain` records the source chain hash.

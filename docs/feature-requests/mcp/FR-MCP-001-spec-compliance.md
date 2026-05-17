@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-005, FR-MCP-006, FR-MCP-007, FR-MCP-008]
 depends_on: [FR-AUTH-004]
-blocks: [FR-MCP-002, FR-MCP-003, FR-MCP-006, FR-MCP-007, FR-MCP-008]   # all 5 entries are placeholders — not yet specified
+blocks: [FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-006, FR-MCP-007, FR-MCP-008]
 
 source_pages:
   - website/docs/modules/mcp.html#what

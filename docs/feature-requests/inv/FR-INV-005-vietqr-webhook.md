@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-INV-001, FR-INV-006, FR-REW-009, FR-OBS-007]
 depends_on: [FR-AUTH-101]
-blocks: [FR-INV-006, FR-REW-009]   # both placeholders — not yet specified
+blocks: [FR-INV-006, FR-TEN-102, FR-REW-009, FR-ESOP-004]
 
 source_pages:
   - website/docs/modules/inv.html#vietqr-napas247

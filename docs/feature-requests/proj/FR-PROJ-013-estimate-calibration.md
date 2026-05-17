@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-002, FR-PROJ-004, FR-TIME-001, FR-BRAIN-101]
 depends_on: [FR-PROJ-002]
-blocks: []
+blocks: [FR-HR-008, FR-LEARN-003]
 
 source_pages:
   - website/docs/modules/proj.html#estimate-calibration

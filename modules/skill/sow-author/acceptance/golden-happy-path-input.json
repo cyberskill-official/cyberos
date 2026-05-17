@@ -1,0 +1,12 @@
+{
+  "source_files": [
+    {"path": "./golden-happy-path-brief.md", "media_type": "text/markdown"}
+  ],
+  "output_dir": "./",
+  "manifest_path": "./golden-happy-path-manifest.json",
+  "client_name": "Acme Corporation",
+  "engagement_model": "fixed_price",
+  "target_close_date": "2026-11-30",
+  "caller_persona": "cuo-cpo",
+  "trace_id": "00000000-0000-0000-0000-000000000001"
+}

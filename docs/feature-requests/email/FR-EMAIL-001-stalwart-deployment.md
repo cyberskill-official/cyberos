@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AI-016, FR-AI-003, FR-BRAIN-101, FR-OBS-001, FR-EMAIL-002, FR-EMAIL-003, FR-EMAIL-004, FR-EMAIL-005, FR-EMAIL-006, FR-EMAIL-007, FR-EMAIL-009, FR-EMAIL-011]
 depends_on: []
-blocks: [FR-EMAIL-002, FR-EMAIL-003, FR-EMAIL-004, FR-EMAIL-006, FR-EMAIL-007, FR-EMAIL-011]   # all 6 entries are placeholders — not yet specified (downstream consumers)
+blocks: [FR-EMAIL-002, FR-EMAIL-003, FR-EMAIL-004, FR-EMAIL-005, FR-EMAIL-006, FR-EMAIL-007, FR-EMAIL-008, FR-EMAIL-011]   # 8 downstream consumers of substrate
 
 source_pages:
   - website/docs/modules/email.html#what

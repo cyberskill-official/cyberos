@@ -1,0 +1,301 @@
+"""LLMInvoker — drives prompt-only SDP skills via LLM API.
+
+Most CyberOS skills (sow-author, srs-author, adr-author, etc.) are prompt-only:
+their SKILL.md body IS the system prompt, and the audit-pair `<skill>-audit`'s
+RUBRIC.md is the validation prompt. They cannot be subprocess-invoked because
+there's no executable to run.
+
+LLMInvoker reads the skill's SKILL.md body (after YAML frontmatter) and uses it
+as the system prompt. The user prompt is the JSON-encoded inputs the supervisor
+hands off from the prior step. The LLM response is parsed as the structured
+output (best-effort JSON extraction; falls back to wrapping raw text).
+
+Two modes:
+
+  1. **Mock-LLM mode** (default, no API key required) — simulates an LLM
+     response by parroting the contract template's H2 headings as keys and
+     "[mock-llm output]" as the value. Better than MockInvoker because the
+     output keys reflect the actual artefact structure the skill produces.
+
+  2. **Anthropic API mode** (when `ANTHROPIC_API_KEY` env var is set OR an
+     api_key is passed to __init__) — uses the Anthropic Messages API
+     (claude-sonnet-4-6 by default) to actually compute. Requires the `anthropic`
+     Python SDK; emits a clear error if missing.
+
+Future modes (Phase 3.1+):
+  - OpenAI / Azure OpenAI
+  - Local-host (LM Studio / Ollama)
+  - Multi-model cascade (LiteLLM)
+
+This is Phase 3 of the v3.0.0 supervisor build. Phase 2's `MockInvoker` and
+`SubprocessInvoker` cover deterministic mocking + Rust-binary subprocess; this
+adds the LLM-driven path that prompt-only SDP skills need.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import time
+from pathlib import Path
+
+from cuo.core.invoker import Invoker, StepResult, _strip_role_suffix, _stringify_inputs
+
+
+# Default Claude model — Sonnet 4.6 for the right cost/quality balance.
+_DEFAULT_MODEL = "claude-sonnet-4-6"
+
+# Extract YAML frontmatter to skip it when reading the skill body.
+_FRONTMATTER_RE = re.compile(r"\A---\n.*?\n---\n", re.DOTALL)
+
+
+class LLMInvoker(Invoker):
+    """Invoker that drives prompt-only skills via an LLM.
+
+    Default mode is "mock-llm" — no network, deterministic, simulates an LLM
+    response shaped like the skill's contract template. Useful for testing the
+    LLM-driven path without API costs.
+
+    When `api_key` is supplied (or `ANTHROPIC_API_KEY` env var is set) AND the
+    `anthropic` SDK is installed, switches to real API calls.
+    """
+
+    def __init__(
+        self,
+        *,
+        model: str = _DEFAULT_MODEL,
+        api_key: str | None = None,
+        max_tokens: int = 4000,
+        mock_only: bool = False,
+    ):
+        self.model = model
+        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        self.max_tokens = max_tokens
+        self.mock_only = mock_only
+        self._client = None  # lazy init
+
+    @property
+    def mode(self) -> str:
+        """'real' if Anthropic API will be used, 'mock-llm' otherwise."""
+        if self.mock_only:
+            return "mock-llm"
+        if not self.api_key:
+            return "mock-llm"
+        if self._try_import_anthropic() is None:
+            return "mock-llm"
+        return "real"
+
+    def invoke(
+        self,
+        skill_name: str,
+        inputs: dict,
+        skill_root: Path,
+        output_dir: Path,
+        step_num: int,
+    ) -> StepResult:
+        t0 = time.monotonic_ns()
+        result = StepResult(step=step_num, skill=skill_name, status="FAILED")
+
+        skill_dir = skill_root / skill_name
+        skill_md = skill_dir / "SKILL.md"
+        if not skill_md.is_file():
+            result.notes.append(f"skill not found at {skill_md}")
+            result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
+            return result
+
+        # Read skill body (after frontmatter) as the system prompt.
+        try:
+            full = skill_md.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            result.notes.append(f"could not read SKILL.md: {e}")
+            result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
+            return result
+        system_prompt = _FRONTMATTER_RE.sub("", full).strip()
+
+        # For audit skills, also include the RUBRIC.md as a guardrail.
+        if skill_name.endswith("-audit"):
+            rubric_path = skill_dir / "RUBRIC.md"
+            if rubric_path.is_file():
+                try:
+                    rubric_txt = rubric_path.read_text(encoding="utf-8")
+                    system_prompt += "\n\n---\n\n# RUBRIC (validation rules)\n\n" + rubric_txt
+                except (OSError, UnicodeDecodeError):
+                    pass
+
+        # Build the user prompt from the inputs map.
+        user_prompt = self._build_user_prompt(skill_name, inputs)
+
+        # Dispatch to real-API or mock-LLM.
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / f"step{step_num:02d}_{skill_name}.json"
+
+        if self.mode == "real":
+            output, status, notes = self._call_anthropic(system_prompt, user_prompt)
+        else:
+            output, status, notes = self._mock_llm(skill_name, skill_root, inputs)
+
+        try:
+            output_path.write_text(json.dumps(output, indent=2, sort_keys=True), encoding="utf-8")
+        except OSError as e:
+            result.notes.append(f"could not write output: {e}")
+            result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
+            return result
+
+        result.status = status
+        result.output = output
+        result.output_path = output_path
+        result.notes.extend(notes)
+        result.duration_ms = (time.monotonic_ns() - t0) // 1_000_000
+        return result
+
+    # ---------- helpers ----------
+
+    def _build_user_prompt(self, skill_name: str, inputs: dict) -> str:
+        """Build the user prompt — JSON-encoded inputs + task framing."""
+        stringified = _stringify_inputs(inputs)
+        return (
+            f"# Task\n\n"
+            f"You are invoking the `{skill_name}` skill within a CUO workflow chain.\n"
+            f"Your inputs (resolved from the prior chain step's outputs) are below.\n\n"
+            f"# Inputs\n\n```json\n{json.dumps(stringified, indent=2, sort_keys=True)}\n```\n\n"
+            f"# Output format\n\n"
+            f"Respond with a single JSON object containing the artefact's structured fields.\n"
+            f"For author skills, the keys should be the H2 headings of the artefact template.\n"
+            f"For audit skills, return: `{{rule_outcomes: {{...}}, score: 0-10, pass: bool, fixes: [...]}}`.\n"
+        )
+
+    def _mock_llm(self, skill_name: str, skill_root: Path, inputs: dict) -> tuple[dict, str, list[str]]:
+        """Simulate an LLM response by parroting the contract template structure."""
+        base_name = _strip_role_suffix(skill_name)
+        template_path = skill_root / "contracts" / base_name / "template.md"
+
+        output: dict = {
+            "skill": skill_name,
+            "step_invocation": "mock-llm",
+            "synthetic": True,
+            "inputs_received": _stringify_inputs(inputs),
+            "model": self.model,
+            "ts_ns": time.time_ns(),
+        }
+
+        if template_path.is_file():
+            try:
+                txt = template_path.read_text(encoding="utf-8")
+                fields = [
+                    line[3:].strip()
+                    for line in txt.splitlines()
+                    if line.startswith("## ") and not line.startswith("## §")
+                ]
+                output["artefact_fields"] = {
+                    field: "[mock-llm placeholder — real LLM would compute]"
+                    for field in fields
+                }
+            except (OSError, UnicodeDecodeError):
+                pass
+
+        # For audit skills, also produce a synthetic rubric outcome.
+        if skill_name.endswith("-audit"):
+            output["rubric_outcome"] = {
+                "score": 10,
+                "pass": True,
+                "fixes": [],
+                "note": "[mock-llm — no real validation performed]",
+            }
+
+        notes = [
+            f"mock-llm mode (model={self.model} — no API call); "
+            f"set ANTHROPIC_API_KEY + install anthropic SDK for real LLM"
+        ]
+        return output, "MOCKED", notes
+
+    def _call_anthropic(self, system_prompt: str, user_prompt: str) -> tuple[dict, str, list[str]]:
+        """Call Anthropic Messages API. Returns (output, status, notes)."""
+        anthropic_mod = self._try_import_anthropic()
+        if anthropic_mod is None:
+            return (
+                {"error": "anthropic SDK not installed"},
+                "FAILED",
+                ["install with `pip install anthropic`"],
+            )
+        if not self.api_key:
+            return (
+                {"error": "no API key"},
+                "FAILED",
+                ["set ANTHROPIC_API_KEY env var or pass api_key= to LLMInvoker()"],
+            )
+
+        if self._client is None:
+            self._client = anthropic_mod.Anthropic(api_key=self.api_key)
+
+        try:
+            msg = self._client.messages.create(
+                model=self.model,
+                max_tokens=self.max_tokens,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+        except Exception as e:  # noqa: BLE001
+            return (
+                {"error": f"Anthropic API call failed: {e}"},
+                "FAILED",
+                [f"API error: {e}"],
+            )
+
+        # Extract response text. Anthropic SDK returns content as a list of blocks.
+        response_text = ""
+        for block in msg.content:
+            if hasattr(block, "text"):
+                response_text += block.text
+
+        # Best-effort JSON parse — LLM may wrap in markdown or include preamble.
+        output = self._extract_json(response_text)
+        if output is None:
+            output = {"raw_response": response_text, "warning": "could not parse as JSON"}
+            return output, "OK", [
+                f"Anthropic API succeeded but response was not parseable JSON",
+            ]
+
+        # Attach metadata.
+        if isinstance(output, dict):
+            output.setdefault("_llm_meta", {})["model"] = self.model
+            output["_llm_meta"]["usage"] = {
+                "input_tokens": getattr(msg.usage, "input_tokens", None),
+                "output_tokens": getattr(msg.usage, "output_tokens", None),
+            }
+        return output, "OK", [f"Anthropic API call succeeded (model={self.model})"]
+
+    @staticmethod
+    def _try_import_anthropic():
+        """Best-effort import of anthropic SDK. Returns module or None."""
+        try:
+            import anthropic
+            return anthropic
+        except ImportError:
+            return None
+
+    @staticmethod
+    def _extract_json(text: str):
+        """Extract first JSON object from text (handles ```json fences or preamble)."""
+        text = text.strip()
+        # Try direct parse first.
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            pass
+        # Look for ```json ... ``` fence.
+        fence_match = re.search(r"```(?:json)?\n(.*?)\n```", text, re.DOTALL)
+        if fence_match:
+            try:
+                return json.loads(fence_match.group(1))
+            except json.JSONDecodeError:
+                pass
+        # Look for first {...} balanced block (greedy from first `{`).
+        first_brace = text.find("{")
+        last_brace = text.rfind("}")
+        if first_brace >= 0 and last_brace > first_brace:
+            try:
+                return json.loads(text[first_brace:last_brace + 1])
+            except json.JSONDecodeError:
+                pass
+        return None

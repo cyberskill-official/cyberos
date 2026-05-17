@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-101, FR-AI-016, FR-AI-003, FR-BRAIN-101, FR-TEN-002, FR-TEN-104, FR-TEN-103]
 depends_on: [FR-AUTH-001]
-blocks: [FR-TEN-002, FR-TEN-004, FR-TEN-104]
+blocks: [FR-TEN-002, FR-TEN-004, FR-TEN-101, FR-TEN-103, FR-TEN-104]
 
 source_pages:
   - website/docs/modules/ten.html#what

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cyberos-cuo"
+version = "3.0.0a4"
+description = "CyberOS CUO supervisor — persona-aware orchestration above SKILL module"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "CyberSkill", email = "info@cyberskill.world" },
+]
+dependencies = [
+  "pyyaml>=6.0",
+  "click>=8.1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+]
+
+[project.scripts]
+cyberos-cuo = "cuo.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cuo"]

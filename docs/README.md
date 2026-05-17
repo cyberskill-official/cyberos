@@ -1,69 +1,78 @@
 # `docs/` — Project-level documentation
 
-This folder holds CyberOS's canonical specifications, the FR backlog, design references, and the document-conversion toolchain.
+This folder holds CyberOS's canonical specifications (SDP + C-Suite Reference) and the FR backlog. Module-specific docs live in each module's `README.md` (see [`../modules/`](../modules/)). Operational tours live at [`../tours/`](../tours/).
 
 | Folder / File | Purpose | Entry point |
 |---|---|---|
-| [`prd/`](prd/) | Product Requirements Document — canonical product brief (Markdown is source of truth; `make docx` regenerates `PRD.docx`) | [`prd/README.md`](prd/README.md) |
-| [`srs/`](srs/) | System Requirements Specification — technical spec derived from PRD | [`srs/README.md`](srs/README.md) |
-| [`feature-requests/`](feature-requests/) | Living FR backlog, organised by module. Each FR is a markdown file authored via the `fr-author` skill | [`BACKLOG.md`](feature-requests/BACKLOG.md) (index, when present) |
-| [`tours/`](tours/) | VS Code CodeTour walkthroughs for common operator workflows | [`tours/README.md`](tours/README.md) |
-| [`BRAIN_AUTOSYNC_DESIGN.md`](BRAIN_AUTOSYNC_DESIGN.md) | Locked design for the universal-personal-and-Lumi BRAIN auto-sync system (referenced from every module page) | — |
-| [`FR_AUTHORING_WORKFLOW.md`](FR_AUTHORING_WORKFLOW.md) | Canonical playbook for authoring new FRs via the `fr-author` skill | — |
-| [`archive/`](archive/) | Historical / one-time documents superseded by later work (kept for traceability) | — |
-| [`Makefile`](Makefile) | pandoc round-trip for PRD.md ↔ PRD.docx, SRS.md ↔ SRS.docx | — |
+| [`Software Development Process.md`](Software%20Development%20Process.md) | **Normative.** The 13-stage SDP (SOW → SRS → FRs → ADR → SDD → impl → review → test → deploy → release → runbook → retro → decomm). Every skill chains a sub-set of these stages | — |
+| [`The C-Suite Reference.md`](The%20C-Suite%20Reference.md) | **Normative.** 48-persona atlas (47 active + 1 EXTINCT cautionary tale). Source for every `modules/cuo/<persona-slug>/README.md`. Sections §2 (acronym matrix), §4 (9-block schema), §5 (per-persona profiles), §7 (CyberSkill priority order), §8 (commercial baselines) | — |
+| [`feature-requests/`](feature-requests/) | **Living.** ~556 FRs organised across 26 domains (ai, auth, brain, chat, crm, cuo, doc, docs, email, esop, hr, inv, kb, learn, mcp, obs, okr, portal, proj, res, rew, skill, ten, time). Each FR authored via the `fr-author` skill | [`feature-requests/BACKLOG.md`](feature-requests/BACKLOG.md) (index) + [`feature-requests/AUTHORING.md`](feature-requests/AUTHORING.md) (discipline) |
+| [`Makefile`](Makefile) | pandoc round-trip utility for any md ↔ docx work | — |
 
-The memory protocol's source-of-truth lives in [`../memory/docs/`](../memory/docs/) (AGENTS.md, EVOLUTION.md, INTEROP.md, PROPOSAL.md, schema, invariants).
+### What's gone (deleted 2026-05-18)
 
-The Skill layer lives in [`../skill/`](../skill/) (Rust host + Bun runtime + per-skill `SKILL.md` files).
+- **`docs/prd/`** — frozen 2026-05-15. The PRD was a 434 KB Markdown brief plus docx export. Superseded by the FR catalog under `feature-requests/` (FR-level granularity beats document-level granularity for AI-assisted work).
+- **`docs/srs/`** — frozen 2026-05-15. Same logic — the SRS is now expressed as FRs + per-module `README.md` files.
 
-The CUO orchestrator lives in [`../cuo/`](../cuo/).
+### What moved (2026-05-18)
+
+- **`docs/tours/` → [`../tours/`](../tours/)** — promoted out of `docs/`. CodeTour walkthroughs are operational runbooks, not project documentation.
+
+### Where module docs live now
+
+Each module has a single comprehensive `README.md` at module root with sections for install / audit / fine-tune / deploy. The per-module `docs/` subfolders are gone.
+
+| Module | Read |
+|---|---|
+| BRAIN protocol + reference impl | [`../modules/memory/README.md`](../modules/memory/README.md) + [`../modules/memory/AGENTS.md`](../modules/memory/AGENTS.md) (Layer-1 spec) + [`../modules/memory/INTEROP.md`](../modules/memory/INTEROP.md) (non-ledger subset) |
+| Agent Skills catalog | [`../modules/skill/README.md`](../modules/skill/README.md) (single 4,100-line guide consolidating AUDIT, AUDIT_LOOP, FINE_TUNE, RUBRIC_FORMAT, PUBLISH, SPEC, Phase-5/7 runbooks) |
+| Persona-aware orchestration | [`../modules/cuo/README.md`](../modules/cuo/README.md) + [`../modules/cuo/MODULE.md`](../modules/cuo/MODULE.md) (persona catalog) |
 
 ## How the layers relate
 
 ```
-PRD ── authority ──▶ SRS ── authority ──▶ AGENTS protocol (memory module)
-                                                │
-                                                ▼
-                                          Skill layer
-                                                │
-                                                ▼
-                                            CUO orchestrator
-                                                │
-                                                ▼
-                                        Implementation modules
-                                        (ai-gateway, auth, mcp, chat, …)
+SDP ── normative ──▶ FRs ── authority ──▶ Skill catalog ── compose ──▶ CUO workflows
+                                                                            │
+                                                                            ▼
+                                                                      BRAIN (memory module)
+                                                                            │
+                                                                            ▼
+                                                                   Implementation modules
+                                                                   (ai-gateway, auth, mcp, …)
 ```
 
-- **PRD** says *what we're building and why*.
-- **SRS** says *how it's structured technically*.
-- **AGENTS protocol** specifies the memory store + audit chain semantics.
-- **Skills** are agentic capabilities (CPO / CTO / etc.) with frontmatter + bodies.
-- **CUO** orchestrates skill invocations and writes BRAIN audit rows.
-- **Implementation modules** are the runtime services (services/auth, services/ai-gateway, etc.) that satisfy the FRs.
+- **SDP** (`Software Development Process.md`) defines the 13 stages every deliverable flows through.
+- **C-Suite Reference** (`The C-Suite Reference.md`) defines the 48 personas + the 9-block schema each persona spec must render.
+- **FRs** (`feature-requests/`) capture every concrete change request, tagged by phase + module.
+- **Skill catalog** (`modules/skill/`) ships 104 author+audit pairs that materialise SDP stages into agentic Skills.
+- **CUO workflows** (`modules/cuo/`) chain Skills into persona-owned deliverables (194 workflows live).
+- **BRAIN** (`modules/memory/`) records every chain decision in an append-only audit chain.
+- **Implementation modules** (planned in FRs) are the runtime services (services/auth, services/ai-gateway, etc.) that satisfy the FRs.
 
 ## Naming convention
 
 | Convention | Filename | Purpose |
 |---|---|---|
 | Top-level folder index | `README.md` | What's in this folder |
-| Skill index | `SKILL.md` | Skill manifest + body (canonical name; tools look up skills by this filename) |
-| Contract index | `CONTRACT.md` | Versioned artefact schema (e.g. `feature_request@1`) |
-| FR markdown | `FR-{MOD}-{NNN}-{slug}.md` | One FR per file |
-| Per-folder log | `CHANGELOG.md` | Newest-first history |
+| Module spec (Layer-1) | `AGENTS.md` | Normative protocol — currently only the BRAIN module has one |
+| Skill manifest | `SKILL.md` | Skill body + frontmatter (Anthropic Agent Skills standard) |
+| Audit rubric | `RUBRIC.md` | Per-skill rubric for the audit-loop |
+| Contract schema | `CONTRACT.md` | Versioned artefact schema (e.g. `feature_request@1`) |
+| FR markdown | `FR-{MOD}-{NNN}-{slug}.md` | One FR per file (e.g. `FR-AUTH-001-magic-link.md`) |
+| Per-folder log | `CHANGELOG.md` | Newest-first release history |
 
 ## Roadmap reference
 
-CyberOS ships in five gated phases — P0 (Foundation) → P1 (Productivity) → P2 (Operations) → P3 (SaaS-ready) → P4 (Client-facing GA). The phase-by-phase milestone arc is documented on the docs site at [`website/docs/architecture/milestones.html`](../website/docs/architecture/milestones.html). All work in `feature-requests/` is tagged by phase.
+CyberOS ships in five gated phases — P0 (Foundation) → P1 (Productivity) → P2 (Operations) → P3 (SaaS-ready) → P4 (Client-facing GA). The phase-by-phase milestone arc is documented on the docs site at [`../website/docs/architecture/milestones.html`](../website/docs/architecture/milestones.html). All work in `feature-requests/` is tagged by phase.
 
-## Docx ↔ markdown round-trip
+## Docx ↔ markdown utility
 
-`PRD.md` and `SRS.md` are the working source; `.docx` outputs are regenerated via pandoc:
+If you need to convert any future Markdown to/from docx (e.g. for sharing with non-technical reviewers):
 
 ```bash
 cd docs
-make docx     # md → docx (after editing the markdown)
-make md       # docx → md (after a Word user applied changes)
+make docx INPUT=path/to/file.md
+make md   INPUT=path/to/file.docx
 ```
 
 Requires `pandoc` (`brew install pandoc` / `apt-get install pandoc`). See [`Makefile`](Makefile) for the exact commands.

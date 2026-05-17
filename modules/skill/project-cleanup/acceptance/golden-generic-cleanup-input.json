@@ -1,0 +1,13 @@
+{
+  "project_root": "/path/to/generic-repo",
+  "scope": "generic",
+  "dry_run": false,
+  "absorb_threshold_lines": 80,
+  "_fixture_seed": {
+    "fragments_at_input": [
+      {"path": "notes/draft_idea.md", "lines": 23}
+    ],
+    "broken_links_at_input": 1,
+    "missing_files": ["CHANGELOG.md"]
+  }
+}

@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AUTH-102, FR-AI-003, FR-BRAIN-101, FR-OBS-007]
 depends_on: [FR-AUTH-102]
-blocks: []
+blocks: [FR-DOC-006]
 
 source_pages:
   - website/docs/modules/auth.html#passkeys

@@ -14,7 +14,7 @@ shipped: null
 brain_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-006, FR-PROJ-007, FR-AUTH-003, FR-BRAIN-101]
 depends_on: [FR-PROJ-001]
-blocks: [FR-PROJ-006, FR-PROJ-007]
+blocks: [FR-PROJ-006, FR-PROJ-007, FR-CRM-004]
 
 source_pages:
   - website/docs/modules/proj.html#rate-cards
