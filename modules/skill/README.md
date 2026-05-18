@@ -6,12 +6,14 @@
 |---|---|
 | **Module name** | `skill` |
 | **Layout** | `modules/skill/<name>/` flat — 104 `<author>` + `<audit>` pairs (208 bundles), 5 public/VN bundles, 108 artefact contracts, 1 `_template/`, 1 `project-cleanup/` |
-| **Catalog status** | Catalog-complete post-Session H (2026-05-18); zero `planned:` gaps |
+| **Catalog status** | Catalog-complete post-Session H (2026-05-18); zero `planned:` gaps. Registry v0.2.5 (2026-05-19): Anthropic Skills portability pass — FR-SKILL-111 description format + FR-SKILL-112 TRIGGER_TESTS + FR-SKILL-113 XML-free frontmatter + FR-SKILL-114 BASELINE.md (see [`SKILL_BUNDLE_RUBRIC.md`](SKILL_BUNDLE_RUBRIC.md) + [`ANTHROPIC_GUIDE_DIGEST.md`](ANTHROPIC_GUIDE_DIGEST.md)) |
 | **Spec status** | Normative (Appendix A — SPEC) |
 | **Runtime** | Rust host + WASM execution path (feature-gated; activated via Phase 5 runbook in Appendix F) |
 | **License** | MIT |
 
 This README is the **single source of truth** for the SKILL module. It consolidates what previously lived in `docs/AUDIT.md` (architectural audit), `docs/AUDIT_LOOP.md` (8-step audit algorithm), `docs/FINE_TUNE.md` (fine-tune discipline playbook), `docs/RUBRIC_FORMAT.md` (`audit_rubric@N.M` format), `docs/PUBLISH.md` (publishing model), `docs/PHASE_5_ACTIVATION.md` (WASM activation), `docs/PHASE_7_RETIREMENT.md` (legacy retirement), `docs/SPEC.md` (protocol spec). The persona catalog lives in [`MODULE.md`](MODULE.md); release history is in [`CHANGELOG.md`](CHANGELOG.md). The 3 `.tour` walkthroughs (onboarding, protocol-upgrade, refinement-loop) for this module live in [`tours/`](tours/); the cross-module operational runbooks live at [`../../tours/`](../../tours/).
+
+> **Production deploy:** Wave 1 ships the catalog itself (markdown bundles consumed by the CUO supervisor). No Rust broker yet — that's FR-SKILL-103, deferred per [`FR_111_115_COMPLETION_PLAN.md`](FR_111_115_COMPLETION_PLAN.md) Session 3. The canonical deploy steps for Wave 1 live in **root README §5 — SKILL deploy** ([`../../README.md`](../../README.md#5--skill-deploy)). The SKB-* validator suite (`cuo.trigger_tests` + `cuo.baseline` + `cuo.placeholder_check`) gates the catalog quality.
 
 > **🚀 Running the chain TODAY (before runtime ships)?** Two modes:
 >

@@ -53,7 +53,7 @@ cd apps/brain
 pnpm tauri build
 ```
 
-Bundles land under `apps/brain/src-tauri/target/release/bundle/`.
+Bundles land under `services/brain/desktop/src-tauri/target/release/bundle/`.
 
 ## Signing + notarisation
 
@@ -65,7 +65,7 @@ cd apps/brain
 ```
 
 Paste the printed public key into
-`apps/brain/src-tauri/tauri.conf.json` →
+`services/brain/desktop/src-tauri/tauri.conf.json` →
 `plugins.updater.pubkey`. Keep `./out/tauri-updater.key` in your secrets
 vault — releases sign update manifests with it.
 

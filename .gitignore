@@ -70,3 +70,6 @@ dist/
 htmlcov/
 *.cover
 website/docs/.wrangler/
+
+# Cargo build artefacts (per repo-layout-doctrine in README — services/ is a workspace)
+services/target/

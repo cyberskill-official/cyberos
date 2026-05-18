@@ -25,30 +25,30 @@ source_decisions:
   - DEC-193 (auto-update via Tauri updater; signed manifests; rollback on signature failure)
 
 language: rust 1.81 + svelte 5 + tailwind
-service: cyberos/apps/brain/
+service: cyberos/services/brain/desktop/
 new_files:
-  - apps/brain/src-tauri/Cargo.toml
-  - apps/brain/src-tauri/tauri.conf.json
-  - apps/brain/src-tauri/src/main.rs
-  - apps/brain/src-tauri/src/commands.rs
-  - apps/brain/src-tauri/src/sync_supervisor.rs
-  - apps/brain/src-tauri/src/tray.rs
-  - apps/brain/src-tauri/src/updater.rs
-  - apps/brain/src-tauri/src/permissions.rs
-  - apps/brain/src/App.svelte
-  - apps/brain/src/routes/+page.svelte
-  - apps/brain/src/routes/search/+page.svelte
-  - apps/brain/src/routes/sync/+page.svelte
-  - apps/brain/src/lib/quick_capture.ts
-  - apps/brain/src-tauri/build.rs
-  - apps/brain/src-tauri/icons/
-  - apps/brain/.github/workflows/release.yml
-  - apps/brain/scripts/sign-and-notarize-macos.sh
-  - apps/brain/scripts/sign-windows.sh
+  - services/brain/desktop/src-tauri/Cargo.toml
+  - services/brain/desktop/src-tauri/tauri.conf.json
+  - services/brain/desktop/src-tauri/src/main.rs
+  - services/brain/desktop/src-tauri/src/commands.rs
+  - services/brain/desktop/src-tauri/src/sync_supervisor.rs
+  - services/brain/desktop/src-tauri/src/tray.rs
+  - services/brain/desktop/src-tauri/src/updater.rs
+  - services/brain/desktop/src-tauri/src/permissions.rs
+  - services/brain/desktop/src/App.svelte
+  - services/brain/desktop/src/routes/+page.svelte
+  - services/brain/desktop/src/routes/search/+page.svelte
+  - services/brain/desktop/src/routes/sync/+page.svelte
+  - services/brain/desktop/src/lib/quick_capture.ts
+  - services/brain/desktop/src-tauri/build.rs
+  - services/brain/desktop/src-tauri/icons/
+  - services/brain/desktop/.github/workflows/release.yml
+  - services/brain/desktop/scripts/sign-and-notarize-macos.sh
+  - services/brain/desktop/scripts/sign-windows.sh
 modified_files: []
 allowed_tools:
-  - file_read: apps/brain/**
-  - file_write: apps/brain/**
+  - file_read: services/brain/desktop/**
+  - file_write: services/brain/desktop/**
   - bash: cd apps/brain && cargo tauri dev
   - bash: cd apps/brain && cargo tauri build
   - bash: codesign --verify Brain.app   # macOS
@@ -158,7 +158,7 @@ A Tauri 2.x desktop app **MUST** bundle the BRAIN sync daemon + a minimal UI for
 ## §3 — API contract
 
 ```rust
-// apps/brain/src-tauri/src/commands.rs
+// services/brain/desktop/src-tauri/src/commands.rs
 use tauri::State;
 
 #[tauri::command]
@@ -201,7 +201,7 @@ pub struct SyncState {
 ```
 
 ```rust
-// apps/brain/src-tauri/src/sync_supervisor.rs
+// services/brain/desktop/src-tauri/src/sync_supervisor.rs
 pub struct SyncSupervisor {
     handle: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
     last_sync_at: Arc<RwLock<Option<DateTime<Utc>>>>,
@@ -229,7 +229,7 @@ impl SyncSupervisor {
 ```
 
 ```rust
-// apps/brain/src-tauri/src/main.rs
+// services/brain/desktop/src-tauri/src/main.rs
 #[derive(clap::Parser)]
 struct Cli {
     #[arg(long)] headless: bool,
@@ -270,7 +270,7 @@ async fn main() {
 ```
 
 ```json
-// apps/brain/src-tauri/tauri.conf.json (excerpt)
+// services/brain/desktop/src-tauri/tauri.conf.json (excerpt)
 {
   "tauri": {
     "bundle": {
@@ -301,7 +301,7 @@ async fn main() {
 ```
 
 ```yaml
-# apps/brain/.github/workflows/release.yml
+# services/brain/desktop/.github/workflows/release.yml
 name: Release Brain App
 on:
   push: { tags: ['brain-v*'] }
@@ -387,7 +387,7 @@ dpkg-deb --info ./src-tauri/target/release/bundle/deb/brain_*.deb
 ```
 
 ```rust
-// apps/brain/src-tauri/tests/sync_supervisor_test.rs
+// services/brain/desktop/src-tauri/tests/sync_supervisor_test.rs
 #[tokio::test]
 async fn supervisor_restarts_daemon_on_crash() {
     let supervisor = SyncSupervisor::new();
@@ -402,7 +402,7 @@ async fn supervisor_restarts_daemon_on_crash() {
 ```
 
 ```typescript
-// apps/brain/src/lib/__tests__/quick_capture.test.ts
+// services/brain/desktop/src/lib/__tests__/quick_capture.test.ts
 test('quick_capture writes a row via Tauri command', async () => {
   const { invoke } = await import('@tauri-apps/api/core');
   await invoke('write_quick_note', { text: 'test note' });
@@ -443,7 +443,7 @@ ls -lh ./src-tauri/target/release/bundle/msi/Brain.msi
 See §3.
 
 ```rust
-// apps/brain/src-tauri/src/tray.rs
+// services/brain/desktop/src-tauri/src/tray.rs
 pub fn install(app: &mut tauri::App) -> tauri::Result<()> {
     let tray_menu = Menu::new()
         .add_item(MenuItem::with_id("open", "Open BRAIN"))

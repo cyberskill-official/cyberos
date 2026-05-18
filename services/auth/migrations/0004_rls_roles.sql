@@ -4,8 +4,20 @@
 -- query runs as this role with `SET LOCAL app.current_tenant_id = '<uuid>'`
 -- set per connection by the auth middleware. RLS policies in 0005 use that
 -- GUC to filter every tenant-scoped table.
+--
+-- Migration idempotency: wrap CREATE ROLE in DO blocks so re-runs against
+-- a database that already has the role succeed silently. CI environments
+-- + dev rollbacks re-apply migrations against state that may already have
+-- some objects.
 
-CREATE ROLE cyberos_app NOLOGIN;
+DO $$
+BEGIN
+    CREATE ROLE cyberos_app NOLOGIN;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END
+$$;
+
 GRANT USAGE ON SCHEMA public TO cyberos_app;
 
 -- Future-table-default: every new table created under `public` schema by
@@ -15,12 +27,20 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 
 -- A separate read-only role for analytics / OBS dashboards / DSAR exports.
 -- Cannot mutate; cannot read across tenants (RLS still applies).
-CREATE ROLE cyberos_ro NOLOGIN;
+DO $$
+BEGIN
+    CREATE ROLE cyberos_ro NOLOGIN;
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END
+$$;
+
 GRANT USAGE ON SCHEMA public TO cyberos_ro;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT SELECT ON TABLES TO cyberos_ro;
 
 -- Backfill grants for the tables already created (tenants, subjects, admin_idempotency).
+-- GRANT is naturally idempotent; no DO-block wrapping needed.
 GRANT SELECT, INSERT, UPDATE, DELETE ON tenants            TO cyberos_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON subjects           TO cyberos_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON admin_idempotency  TO cyberos_app;

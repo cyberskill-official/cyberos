@@ -337,6 +337,8 @@ cyberos import teammate-export.zip --filter "sync_class=shareable"
 
 ## 9. Deploy strategy
 
+> **Production deploy:** the canonical runbook for taking MEMORY to AWS Fargate lives in the **root README §3 — MEMORY deploy** ([`../../README.md`](../../README.md#3--memory-deploy)). It covers prerequisites (Postgres 16 + pgvector + AGE + Redis 7), the Rust BRAIN service build, migration sequence, JWK bootstrap, smoke tests, ECS deploy, rollback, observability dashboards, and secret management. Sections 9.1-9.5 below cover local/development scenarios — they are NOT the production path.
+
 ### 9.1 Local-dev (every project)
 
 Symlink `AGENTS.md` + `CLAUDE.md` from project root → `modules/memory/AGENTS.md` (or copy if your filesystem doesn't support symlinks). BRAIN lives at project-root `.cyberos-memory/`. Maintenance is `cyberos doctor` (manual) or automation (background).

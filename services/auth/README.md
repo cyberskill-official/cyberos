@@ -2,6 +2,12 @@
 
 Implements **tenant + subject create + RLS** as the Wave 2 first-slice. Spec source: [`docs/feature-requests/auth/FR-AUTH-001…109`](../../docs/feature-requests/auth/).
 
+## Production deploy
+
+The canonical Fargate runbook lives in the **root README §4 — AUTH deploy** ([`../../README.md`](../../README.md#4--auth-deploy)). It walks: Rust build (`cargo build --release -p cyberos-auth`), the 20-migration sequence (idempotent post-2026-05-19 fix to migration 0004), JWK keygen for production, the `bootstrap` CLI for root-tenant + first-admin (with TOTP setup), HTTP-server boot with all flags, smoke tests via JWKS + OIDC discovery + TOTP flow, ECR push + ECS `update-service`, rollback (including the `sqlx migrate revert` requirement for cross-migration rollbacks), Grafana dashboard, and AWS Secrets Manager layout.
+
+Use the **Quick start** below for local dev only.
+
 ## Quick start
 
 ```bash
