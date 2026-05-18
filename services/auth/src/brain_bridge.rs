@@ -362,4 +362,207 @@ mod tests {
         assert!(body.contains("\"bootstrap_environment\":\"production\""));
         assert!(body.contains("\"bootstrapped_by\":\"stephencheng\""));
     }
+
+    // ─── FR-AUTH-004 §1 #6 — token_issued / token_failed payloads ──────────
+
+    #[test]
+    fn token_issued_payload_canonical_json() {
+        let p = TokenIssuedPayload {
+            subject_id: Uuid::nil(),
+            tenant_id: Uuid::nil(),
+            jti: "abcdef123",
+            roles: &["tenant-admin".to_string()],
+            scope_grants_count: 5,
+            expires_at: 1_763_115_600,
+            source_ip_hash16: "4b8c0d2f1a7e9c3b",
+            request_id: Some("req-1"),
+        };
+        let body = p.to_body_string();
+        assert!(body.contains("\"event_type\":\"auth.token_issued\""));
+        assert!(body.contains("\"jti\":\"abcdef123\""));
+        assert!(body.contains("\"scope_grants_count\":5"));
+        assert!(body.contains("\"source_ip_hash16\":\"4b8c0d2f1a7e9c3b\""));
+        assert!(body.contains("\"roles\":[\"tenant-admin\"]"));
+        // PII discipline: no raw IP, no jti-secret-prefix leak
+        assert!(!body.contains("@"));
+    }
+
+    #[test]
+    fn token_failed_payload_omits_plaintext_pii() {
+        let p = TokenFailedPayload {
+            tenant_slug: "acme",
+            email_hash16: "ab12cd34ef56gh78",
+            reason: "invalid_credentials",
+            source_ip_hash16: "4b8c0d2f1a7e9c3b",
+            request_id: Some("req-1"),
+        };
+        let body = p.to_body_string();
+        assert!(body.contains("\"event_type\":\"auth.token_failed\""));
+        assert!(body.contains("\"tenant_slug\":\"acme\""));
+        assert!(body.contains("\"email_hash16\":\"ab12cd34ef56gh78\""));
+        assert!(body.contains("\"reason\":\"invalid_credentials\""));
+        // §1 #6 privacy contract: no plaintext email, no raw IP, no password.
+        assert!(!body.contains("@"));
+        assert!(!body.to_lowercase().contains("password"));
+    }
+
+    #[test]
+    fn source_ip_hash16_salts_by_date() {
+        // Same IP → same hash within a day (test runs in microseconds; date unchanged).
+        let h1 = source_ip_hash16("1.2.3.4");
+        let h2 = source_ip_hash16("1.2.3.4");
+        assert_eq!(h1, h2);
+        assert_eq!(h1.len(), 16);
+        // Different IP → different hash.
+        assert_ne!(h1, source_ip_hash16("5.6.7.8"));
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FR-AUTH-004 §1 #6 — auth.token_issued + auth.token_failed audit rows
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Privacy-safe per-day IP fingerprint. SHA-256("YYYY-MM-DD|<ip>") first 16
+/// hex chars. Salted with the current UTC date so the same IP correlates
+/// within a day (useful for incident response) but NOT across days
+/// (preventing long-term IP tracking). Matches the construction described
+/// in FR-AUTH-004 §1 #6 + §2 rationale.
+pub fn source_ip_hash16(source_ip: &str) -> String {
+    let date = chrono::Utc::now().format("%Y-%m-%d").to_string();
+    let mut h = Sha256::new();
+    h.update(date.as_bytes());
+    h.update(b"|");
+    h.update(source_ip.as_bytes());
+    let bytes = h.finalize();
+    bytes.iter().take(8).map(|b| format!("{b:02x}")).collect()
+}
+
+/// Payload for `auth.token_issued`. Per §1 #6, the row carries no raw email,
+/// no raw IP, no password — only the privacy-safe `*_hash16` digests.
+#[derive(Debug)]
+pub struct TokenIssuedPayload<'a> {
+    pub subject_id: Uuid,
+    pub tenant_id: Uuid,
+    pub jti: &'a str,
+    pub roles: &'a [String],
+    pub scope_grants_count: usize,
+    pub expires_at: i64,
+    pub source_ip_hash16: &'a str,
+    pub request_id: Option<&'a str>,
+}
+
+impl<'a> TokenIssuedPayload<'a> {
+    pub fn to_body_string(&self) -> String {
+        let body = json!({
+            "event_type": "auth.token_issued",
+            "subject_id": self.subject_id.to_string(),
+            "tenant_id": self.tenant_id.to_string(),
+            "jti": self.jti,
+            "roles": self.roles,
+            "scope_grants_count": self.scope_grants_count,
+            "expires_at": self.expires_at,
+            "source_ip_hash16": self.source_ip_hash16,
+            "request_id": self.request_id,
+        });
+        serde_json::to_string(&body).expect("json::to_string of static keys cannot fail")
+    }
+}
+
+/// Payload for `auth.token_failed`. Captures every failed authentication
+/// attempt for credential-stuffing detection. The `reason` discriminates
+/// between `invalid_credentials` | `suspended` | `rate_limited` |
+/// `unknown_tenant` so a single time-series query can plot each curve.
+#[derive(Debug)]
+pub struct TokenFailedPayload<'a> {
+    pub tenant_slug: &'a str,
+    pub email_hash16: &'a str,
+    pub reason: &'a str,
+    pub source_ip_hash16: &'a str,
+    pub request_id: Option<&'a str>,
+}
+
+impl<'a> TokenFailedPayload<'a> {
+    pub fn to_body_string(&self) -> String {
+        let body = json!({
+            "event_type": "auth.token_failed",
+            "tenant_slug": self.tenant_slug,
+            "email_hash16": self.email_hash16,
+            "reason": self.reason,
+            "source_ip_hash16": self.source_ip_hash16,
+            "request_id": self.request_id,
+        });
+        serde_json::to_string(&body).expect("json::to_string of static keys cannot fail")
+    }
+}
+
+/// Best-effort insert of `auth.token_issued` into `l1_audit_log`. Unlike
+/// `emit_tenant_created` / `emit_subject_created`, this is NOT in the
+/// caller's transaction — token issuance shouldn't fail because the audit
+/// log is unreachable. Failures log a `tracing::warn!` but are silently
+/// swallowed; the FR-OBS-001 alarm catches a sustained spike in dropped
+/// audit rows.
+///
+/// Path: `auth/token/<tenant_id>/<jti>/issued`. The jti uniquely keys the
+/// row so retries (e.g. CDC replay) merge cleanly.
+pub async fn emit_token_issued(
+    pool: &sqlx::PgPool,
+    payload: TokenIssuedPayload<'_>,
+) -> Result<i64, sqlx::Error> {
+    let body = payload.to_body_string();
+    let anchor = chain_anchor(None, &body);
+    let ts_ns = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
+    let path = format!("auth/token/{}/{}/issued", payload.tenant_id, payload.jti);
+
+    let row: (i64,) = sqlx::query_as(
+        "INSERT INTO l1_audit_log
+            (tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns)
+         VALUES ($1, $2, 'put', $3, $4, NULL, $5, $6)
+         RETURNING seq",
+    )
+    .bind(payload.tenant_id)
+    .bind(payload.subject_id)
+    .bind(&path)
+    .bind(&body)
+    .bind(&anchor)
+    .bind(ts_ns)
+    .fetch_one(pool)
+    .await?;
+    Ok(row.0)
+}
+
+/// Best-effort insert of `auth.token_failed` into `l1_audit_log`. Path
+/// scheme matches `emit_token_issued` but with `/failed/<reason>` so a
+/// path-prefix scan can isolate each failure reason.
+///
+/// Note `tenant_id` may be unknown if the tenant_slug didn't resolve —
+/// callers pass `Uuid::nil()` in that case so the row still chains to the
+/// root-tenant's audit history.
+pub async fn emit_token_failed(
+    pool: &sqlx::PgPool,
+    tenant_id: Uuid,
+    payload: TokenFailedPayload<'_>,
+) -> Result<i64, sqlx::Error> {
+    let body = payload.to_body_string();
+    let anchor = chain_anchor(None, &body);
+    let ts_ns = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
+    let path = format!(
+        "auth/token/{}/{}/failed/{}",
+        tenant_id, payload.email_hash16, payload.reason
+    );
+
+    let row: (i64,) = sqlx::query_as(
+        "INSERT INTO l1_audit_log
+            (tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns)
+         VALUES ($1, $2, 'put', $3, $4, NULL, $5, $6)
+         RETURNING seq",
+    )
+    .bind(tenant_id)
+    .bind(Uuid::nil())       // subject_id unknown on failure
+    .bind(&path)
+    .bind(&body)
+    .bind(&anchor)
+    .bind(ts_ns)
+    .fetch_one(pool)
+    .await?;
+    Ok(row.0)
 }

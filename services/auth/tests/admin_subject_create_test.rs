@@ -37,6 +37,7 @@ async fn build_app() -> axum::Router {
         geoip: std::sync::Arc::new(cyberos_auth::geoip::NullResolver),
         travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
+        rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
     })
 }
 
@@ -86,6 +87,7 @@ async fn tenant_admin_token(pool: &PgPool) -> (String, uuid::Uuid) {
         .issue(
             TenantId(tenant_uuid),
             SubjectId(uuid::Uuid::new_v4()),
+            "",     // FR-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-admin".into()],
@@ -399,6 +401,7 @@ async fn create_subject_without_tenant_admin_role_returns_403() {
         .issue(
             TenantId(tenant_uuid),
             SubjectId(uuid::Uuid::new_v4()),
+            "",     // FR-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-member".into()],

@@ -2,6 +2,7 @@
 
 use crate::geoip::{self, GeoIpResolver};
 use crate::oidc::PendingState;
+use crate::rate_limit::RateLimiter;
 use crate::rbac::RoleMatrix;
 use crate::travel_policy::{PolicyCache, StickySuppress};
 use sqlx::{postgres::PgPoolOptions, PgPool};
@@ -32,6 +33,10 @@ pub struct AppState {
     /// all login flows so a passed MFA from one flow suppresses re-challenge
     /// in another flow (within the configured window).
     pub sticky_suppress: Arc<StickySuppress>,
+    /// FR-AUTH-004 §1 #5 — dual rate-limiter for `POST /v1/auth/token`
+    /// (per-IP 10/min + per-account 5/min). In-memory; multi-instance prod
+    /// will swap to Redis when FR-OBS-002 ships.
+    pub rate_limit: Arc<RateLimiter>,
 }
 
 impl AppState {
@@ -107,6 +112,7 @@ impl AppState {
             geoip,
             travel_policy: PolicyCache::new(),
             sticky_suppress: StickySuppress::new(),
+            rate_limit: Arc::new(RateLimiter::new()),
         })
     }
 

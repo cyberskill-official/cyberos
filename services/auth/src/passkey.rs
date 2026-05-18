@@ -299,6 +299,7 @@ pub async fn login_finish(
         .issue(
             cyberos_types::TenantId(tenant_id),
             cyberos_types::SubjectId(subject_id),
+            "",     // FR-AUTH-004 §1 #2 — passkey login doesn't carry plaintext email
             "human",
             vec![],
             roles,

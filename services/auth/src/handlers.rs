@@ -1365,13 +1365,47 @@ async fn password_grant(
         Json(json!({"error": "password grant requires `password`"}))
     ))?;
 
+    // FR-AUTH-004 §1 #5 — slice-1 audit-fix G-001: dual rate-limit BEFORE
+    // any DB work. Both checks share the same window; either tripping returns
+    // 429 + structured retry_after_seconds body. Per-IP catches single-IP
+    // brute force; per-account catches distributed credential stuffing.
+    if let Err(retry) = state.rate_limit.check_ip(&caller_ip.to_string()) {
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(json!({"error": "rate_limited", "scope": "ip", "retry_after_seconds": retry})),
+        ));
+    }
+    if let Err(retry) = state.rate_limit.check_account(tenant_slug, handle) {
+        return Err((
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(json!({"error": "rate_limited", "scope": "account", "retry_after_seconds": retry})),
+        ));
+    }
+
+    // FR-AUTH-004 §1 #9 — constant-time email/handle lookup. We ALWAYS run a
+    // dummy bcrypt::verify on subject-not-found so the response time matches
+    // the wrong-password path; without this, an attacker enumerates valid
+    // (tenant_slug, handle) pairs via timing.
+    //
+    // Constant dummy hash: bcrypt of "constant-dummy-payload-for-timing-leak-defence"
+    // at cost 12. Hash is stable so its verify-time matches the real path.
+    const DUMMY_BCRYPT_HASH: &str =
+        "$2b$12$abcdefghijklmnopqrstuOXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+
+    // Request-id surfaces via the traceparent header for now. When FR-OBS-001
+    // adds a dedicated x-request-id header, swap this for the value pulled
+    // from there.
+    let source_ip_str = caller_ip.to_string();
+    let source_ip_hash = crate::brain_bridge::source_ip_hash16(&source_ip_str);
+    let email_hash = crate::brain_bridge::email_hash16(handle);
+
     // Look up tenant + subject under root context.
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
         .execute(&mut *tx).await.map_err(db_err)?;
 
-    let row: Option<(Uuid, Uuid, String, String, Option<String>, Vec<String>)> = sqlx::query_as(
-        "SELECT s.id, s.tenant_id, s.kind, s.status, s.password_hash, s.roles
+    let row: Option<(Uuid, Uuid, String, String, Option<String>, Vec<String>, Option<String>)> = sqlx::query_as(
+        "SELECT s.id, s.tenant_id, s.kind, s.status, s.password_hash, s.roles, s.email
              FROM subjects s
              JOIN tenants t ON t.id = s.tenant_id
             WHERE t.slug = $1 AND s.handle = $2",
@@ -1383,11 +1417,38 @@ async fn password_grant(
     .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
 
-    let (sub_id, tenant_id, kind, status, pw_hash, roles) = match row {
+    // §1 #9 — if no row, run dummy bcrypt so response time matches the
+    // wrong-password path. Then emit audit + return 401.
+    let (sub_id, tenant_id, kind, status, pw_hash, roles, subject_email) = match row {
         Some(r) => r,
-        None => return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "invalid credentials"})))),
+        None => {
+            let _ = bcrypt::verify(password, DUMMY_BCRYPT_HASH); // intentionally discard
+            let _ = crate::brain_bridge::emit_token_failed(
+                &state.pg,
+                Uuid::nil(),
+                crate::brain_bridge::TokenFailedPayload {
+                    tenant_slug,
+                    email_hash16: &email_hash,
+                    reason: "invalid_credentials",
+                    source_ip_hash16: &source_ip_hash,
+                    request_id: traceparent.as_deref(),
+                },
+            ).await;
+            return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "invalid credentials"}))));
+        }
     };
     if status != "active" {
+        let _ = crate::brain_bridge::emit_token_failed(
+            &state.pg,
+            tenant_id,
+            crate::brain_bridge::TokenFailedPayload {
+                tenant_slug,
+                email_hash16: &email_hash,
+                reason: "suspended",
+                source_ip_hash16: &source_ip_hash,
+                request_id: traceparent.as_deref(),
+            },
+        ).await;
         return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "subject is not active"}))));
     }
     let pw_hash = match pw_hash {
@@ -1396,31 +1457,77 @@ async fn password_grant(
     };
     let ok = bcrypt::verify(password, &pw_hash).map_err(|e| internal_err(e))?;
     if !ok {
+        let _ = crate::brain_bridge::emit_token_failed(
+            &state.pg,
+            tenant_id,
+            crate::brain_bridge::TokenFailedPayload {
+                tenant_slug,
+                email_hash16: &email_hash,
+                reason: "invalid_credentials",
+                source_ip_hash16: &source_ip_hash,
+                request_id: traceparent.as_deref(),
+            },
+        ).await;
         return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "invalid credentials"}))));
     }
 
     let svc = JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
-    let granted = effective_scopes(req.scope, &roles);
+    // FR-AUTH-004 §1 #13 — derive scope_grants from roles via scope_map
+    // (was: 1:1 role-mirroring via effective_scopes). Caller's request can
+    // narrow but not widen via `scope_map::intersect`.
+    let assigned_roles_for_scope = load_subject_roles(&state, tenant_id, sub_id, &roles).await;
+    let granted = crate::scope_map::intersect(&req.scope, &assigned_roles_for_scope);
 
     // FR-AUTH-101 §1 #8 — embed the subject's full role membership + the
     // live catalogue version. Falls back to the legacy `subjects.roles`
     // array column if `subject_roles` table doesn't exist (pre-101 schema).
-    let assigned_roles = load_subject_roles(&state, tenant_id, sub_id, &roles).await;
+    let assigned_roles = assigned_roles_for_scope;
     let rbac_v = state.role_matrix.read().await.version();
+
+    let email_for_claim = subject_email.clone().unwrap_or_default();
+    // FR-AUTH-004 §1 #12 — slice-1 audit-fix G-007: `agent_persona` defaults
+    // to "cuo-cpo@0.4.1" per spec. Override via subjects.default_persona
+    // lands in FR-AUTH-005; for now the default carries through.
+    let agent_persona = Some("cuo-cpo@0.4.1".to_string());
 
     let tokens = svc.issue(
         TenantId(tenant_id),
         SubjectId(sub_id),
+        &email_for_claim,
         &kind,
-        granted,
-        assigned_roles,
+        granted.clone(),
+        assigned_roles.clone(),
         Some(rbac_v),
-        None,
+        agent_persona,
         traceparent,
     ).await.map_err(|e| (
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(json!({"error": format!("jwt issuance failed: {e}")})),
     ))?;
+
+    // FR-AUTH-004 §1 #6 — slice-1 audit-fix G-002: emit `auth.token_issued`
+    // BRAIN audit row. Best-effort; tracing::warn on failure but never
+    // block token issuance for an audit miss.
+    let verified = svc.verify(&tokens.access_token).await.ok();
+    let jti_for_audit = verified
+        .as_ref()
+        .map(|c| c.jti.clone())
+        .unwrap_or_else(|| "unknown".to_string());
+    let exp_for_audit = verified.as_ref().map(|c| c.exp).unwrap_or(0);
+    let _ = crate::brain_bridge::emit_token_issued(
+        &state.pg,
+        crate::brain_bridge::TokenIssuedPayload {
+            subject_id: sub_id,
+            tenant_id,
+            jti: &jti_for_audit,
+            roles: &assigned_roles,
+            scope_grants_count: granted.len(),
+            expires_at: exp_for_audit,
+            source_ip_hash16: &source_ip_hash,
+            request_id: traceparent.as_deref(),
+        },
+    )
+    .await;
 
     // FR-AUTH-106 — record login + assess. Slice-3 wraps the detector chain
     // with per-tenant policy + CIDR allowlist + anonymous-IP + sticky-
@@ -1601,22 +1708,28 @@ async fn refresh_grant(
             .filter(|s| prior.iter().any(|p| s == p))
             .collect()
     };
-    // Also re-restrict by current subject roles in case roles changed.
-    let granted = effective_scopes(granted, &roles);
-
-    // Refresh re-mints roles + rbac_v from the live state, not the prior token —
-    // catches catalogue bumps + subject role-revokes that happened mid-session.
+    // FR-AUTH-004 §1 #13 — also re-restrict by current subject roles in case
+    // roles changed; scope_map ensures we never widen beyond what the
+    // current role membership allows.
     let fresh_roles = load_subject_roles(state, tenant_id, sub_id, &roles).await;
+    let granted = crate::scope_map::intersect(&granted, &fresh_roles);
     let live_rbac_v = state.role_matrix.read().await.version();
+
+    // FR-AUTH-004 §1 #12 — agent_persona carries through from the prior
+    // token; if the prior token didn't have one, default to "cuo-cpo@0.4.1".
+    let agent_persona = claims.agent_persona
+        .clone()
+        .or_else(|| Some("cuo-cpo@0.4.1".to_string()));
 
     let tokens = svc.issue(
         TenantId(tenant_id),
         SubjectId(sub_id),
+        &claims.email,
         &kind,
         granted,
         fresh_roles,
         Some(live_rbac_v),
-        claims.agent_persona,
+        agent_persona,
         traceparent,
     ).await.map_err(|e| (
         StatusCode::INTERNAL_SERVER_ERROR,
@@ -1626,13 +1739,13 @@ async fn refresh_grant(
     Ok((StatusCode::OK, Json(token_response_body(&tokens))))
 }
 
-/// Intersect requested scope with the subject's role-granted scopes.
-/// The full RBAC mapping lives with FR-AUTH-101; until then we treat
-/// "admin" as an umbrella role that grants any scope.
+/// **Deprecated** — superseded by `crate::scope_map::intersect` per
+/// FR-AUTH-004 §1 #13. Retained `#[allow(dead_code)]` so an external
+/// caller from the pre-scope_map era won't break before its callsite is
+/// migrated; will be removed once all callers move over.
+#[allow(dead_code)]
 fn effective_scopes(requested: Vec<String>, roles: &[String]) -> Vec<String> {
     if requested.is_empty() {
-        // Default to mirroring roles 1:1 — gives password-grant clients
-        // something to work with before FR-AUTH-101 lands.
         return roles.to_vec();
     }
     requested

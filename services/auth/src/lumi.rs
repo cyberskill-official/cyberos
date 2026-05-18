@@ -101,6 +101,7 @@ pub async fn issue(
         .issue(
             TenantId(tenant_id),
             SubjectId(body.subject_id),
+            "",              // FR-AUTH-004 §1 #2 — Lumi tokens are agent-scoped, no email
             &kind,
             scopes.clone(),
             vec![],          // roles intentionally empty — Lumi token isn't a session JWT

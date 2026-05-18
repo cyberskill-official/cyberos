@@ -64,7 +64,7 @@ async fn admin_endpoint_accepts_valid_bearer() {
     let subject = SubjectId::new();
     let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
     let tokens = svc
-        .issue(tenant, subject, "human", vec!["admin".into()], vec!["tenant-admin".into()], Some(1), None, None)
+        .issue(tenant, subject, "", "human", vec!["admin".into()], vec!["tenant-admin".into()], Some(1), None, None)
         .await
         .expect("issue");
 
@@ -80,6 +80,7 @@ async fn admin_endpoint_accepts_valid_bearer() {
         geoip: std::sync::Arc::new(cyberos_auth::geoip::NullResolver),
         travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
+        rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
     });
 
     let res = app
@@ -118,6 +119,7 @@ async fn build_app() -> axum::Router {
         geoip: std::sync::Arc::new(cyberos_auth::geoip::NullResolver),
         travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
+        rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
     })
 }
 

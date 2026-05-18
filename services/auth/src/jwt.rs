@@ -60,6 +60,11 @@ pub struct Claims {
     pub jti: String,
     /// CyberOS extensions — tenant id, persona, scopes, traceparent.
     pub tenant_id: String,
+    /// FR-AUTH-004 §1 #2 — subject's primary email. Empty string when the
+    /// subject has no email (agent / system subjects). `#[serde(default)]`
+    /// so legacy tokens issued before this field landed still verify.
+    #[serde(default)]
+    pub email: String,
     /// Subject kind (`human` | `agent` | `system`).
     pub kind: String,
     /// Granted scopes (e.g. `["admin:tenants", "admin:subjects"]`).
@@ -127,10 +132,15 @@ impl JwtService {
     /// subject's current role membership + the live `RoleMatrix.version`.
     /// Empty `roles` and `rbac_v = None` produce a stub-era token compatible
     /// with verifiers running under the grace window.
+    ///
+    /// `email` is the FR-AUTH-004 §1 #2 addition — pass the subject's
+    /// primary email or empty string when not applicable.
+    #[allow(clippy::too_many_arguments)]
     pub async fn issue(
         &self,
         tenant: TenantId,
         subject: SubjectId,
+        email: &str,
         kind: &str,
         scopes: Vec<String>,
         roles: Vec<String>,
@@ -144,6 +154,7 @@ impl JwtService {
             &active,
             tenant,
             subject,
+            email,
             kind,
             scopes.clone(),
             roles.clone(),
@@ -160,6 +171,7 @@ impl JwtService {
             &active,
             tenant,
             subject,
+            email,
             kind,
             vec!["refresh".to_string()],
             roles,
@@ -276,6 +288,7 @@ impl JwtService {
         key: &SigningKeyRow,
         tenant: TenantId,
         subject: SubjectId,
+        email: &str,
         kind: &str,
         scope_grants: Vec<String>,
         roles: Vec<String>,
@@ -298,6 +311,7 @@ impl JwtService {
             nbf: now.timestamp(),
             jti: Uuid::new_v4().to_string(),
             tenant_id: tenant.to_string(),
+            email: email.to_string(),
             kind: kind.to_string(),
             scope_grants,
             roles,

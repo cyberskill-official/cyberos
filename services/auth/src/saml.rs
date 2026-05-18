@@ -283,6 +283,7 @@ pub async fn acs(
         .issue(
             cyberos_types::TenantId(tenant_id),
             cyberos_types::SubjectId(subject_id),
+            "",     // FR-AUTH-004 §1 #2 — SAML callback doesn't pass plaintext email through
             "human",
             vec![],
             roles,

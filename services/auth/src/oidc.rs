@@ -318,6 +318,7 @@ pub async fn callback(
         .issue(
             cyberos_types::TenantId(idp.tenant_id),
             cyberos_types::SubjectId(subject_id),
+            idp_email.as_deref().unwrap_or(""),     // FR-AUTH-004 §1 #2 — OIDC userinfo carries the email
             "human",
             vec![],
             assigned_roles,
