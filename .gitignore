@@ -47,6 +47,9 @@ var/
 target/
 **/target/
 
+# Transient commit-message scratch files (created mid-session, deleted after commit)
+.commit-msg-*.txt
+
 # Node / JS deps + build output
 node_modules/
 dist/

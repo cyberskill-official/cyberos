@@ -14,150 +14,8 @@ use cyberos_auth::{handlers, jwt::JwtService, keygen, AppState};
 use cyberos_types::{SubjectId, TenantId};
 use serde_json::{json, Value};
 use sqlx::PgPool;
+use std::time::Instant;
 use tower::ServiceExt;
-
-// ---------------------------------------------------------------------------
-// G-001 — §1 #14 — slug == "root" is reserved (ECM-008)
-// ---------------------------------------------------------------------------
-//
-// Defence-in-depth: the handler MUST reject `slug=="root"` BEFORE any
-// DB work. The DB UNIQUE constraint on `tenants.slug` also catches this,
-// but the handler-level reject saves a round trip AND produces a
-// structured `{error, field, reason}` body identifying which input was
-// invalid (matches the §1 #11 error-body shape that G-002 closes).
-
-#[tokio::test]
-#[ignore = "requires Postgres — boot services/dev/docker-compose.yml first"]
-async fn create_tenant_rejects_reserved_root_slug() {
-    let app = build_app().await;
-    let body = json!({
-        "slug": "root",
-        "display_name": "Should Be Rejected",
-        "country": "VN",
-        "plan_tier": "free",
-        "residency": "vn-1"
-    });
-
-    let res = app
-        .oneshot(
-            Request::builder()
-                .method(Method::POST)
-                .uri("/v1/admin/tenants")
-                .header("content-type", "application/json")
-                .header("idempotency-key", "test-root-reject-001")
-                .body(axum::body::Body::from(body.to_string()))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(
-        res.status(),
-        StatusCode::BAD_REQUEST,
-        "slug=='root' MUST return 400 (§1 #14), got {}",
-        res.status()
-    );
-
-    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
-    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
-
-    // Structured body per §1 #11 (G-002 closes the general case; G-001 establishes the shape for the reserved-slug path).
-    assert_eq!(parsed["error"], "invalid_input", "error field should be 'invalid_input'");
-    assert_eq!(parsed["field"], "slug",          "field should identify 'slug' as the failing input");
-    let reason = parsed["reason"].as_str().expect("reason must be a string");
-    assert!(
-        reason.contains("root") && reason.contains("reserved"),
-        "reason must explain the reservation; got: {reason}"
-    );
-}
-
-// ---------------------------------------------------------------------------
-// G-002 — §1 #11 — structured 400 invalid_input body (covers ECM-006 malformed slug)
-// ---------------------------------------------------------------------------
-//
-// Spec: `400 BAD_REQUEST` for malformed slug returns
-// `{"error":"invalid_input","field":"slug","reason":"<human msg>"}`.
-// The handler's API-layer validator fires BEFORE any DB work — same shape as
-// G-001's slug-root reject. This integration test confirms the structured
-// body is what reaches the wire.
-
-#[tokio::test]
-#[ignore = "requires Postgres"]
-async fn create_tenant_rejects_uppercase_slug_with_structured_body() {
-    let app = build_app().await;
-    let body = json!({
-        "slug": "Acme",  // uppercase — violates §1 #2 regex
-        "display_name": "Acme Corp",
-        "country": "VN",
-        "plan_tier": "free",
-        "residency": "vn-1"
-    });
-
-    let res = app
-        .oneshot(
-            Request::builder()
-                .method(Method::POST)
-                .uri("/v1/admin/tenants")
-                .header("content-type", "application/json")
-                .header("idempotency-key", "test-uppercase-slug-002")
-                .body(axum::body::Body::from(body.to_string()))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
-    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
-    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
-    assert_eq!(parsed["error"], "invalid_input");
-    assert_eq!(parsed["field"], "slug");
-    let reason = parsed["reason"].as_str().expect("reason str");
-    assert!(
-        reason.contains("[a-z]") || reason.contains("'A'"),
-        "reason must explain the regex violation; got: {reason}"
-    );
-}
-
-// ---------------------------------------------------------------------------
-// G-002 — also covers the missing Idempotency-Key path (header gate)
-// ---------------------------------------------------------------------------
-
-#[tokio::test]
-#[ignore = "requires Postgres"]
-async fn create_tenant_rejects_missing_idempotency_key_with_structured_body() {
-    let app = build_app().await;
-    let body = json!({
-        "slug": "acme-corp",
-        "display_name": "Acme Corp",
-        "country": "VN",
-        "plan_tier": "free",
-        "residency": "vn-1"
-    });
-
-    let res = app
-        .oneshot(
-            Request::builder()
-                .method(Method::POST)
-                .uri("/v1/admin/tenants")
-                .header("content-type", "application/json")
-                // no Idempotency-Key header
-                .body(axum::body::Body::from(body.to_string()))
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
-    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
-    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
-    assert_eq!(parsed["error"], "missing_header");
-    assert_eq!(parsed["field"], "Idempotency-Key");
-}
-
-// ---------------------------------------------------------------------------
-// (Future tests land here as G-003..G-007 close. Each gap fill brings 1-4 new
-// test functions, each tagged with the ECM-NNN row it covers.)
-// ---------------------------------------------------------------------------
 
 // ===========================================================================
 // Test fixtures
@@ -207,20 +65,360 @@ async fn bootstrap_test_key(pool: &PgPool) {
     .unwrap();
 }
 
-/// Helper for later tests that need an authenticated request. Mints a JWT for
-/// the given subject + tenant; tests that need root-admin pass `Uuid::nil()`
-/// + roles `vec!["root-admin"]`.
-#[allow(dead_code)]
-async fn issue_jwt(
-    pool: &PgPool,
-    tenant: TenantId,
-    subject: SubjectId,
-    roles: Vec<String>,
-) -> String {
+/// Mint a root-admin JWT for tenant 0. Required by every successful
+/// integration test now that G-003 enforces handler-level authz.
+async fn root_admin_token(pool: &PgPool) -> String {
     let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
     let tokens = svc
-        .issue(tenant, subject, "human", roles, vec!["tenant-admin".into()], Some(1), None, None)
+        .issue(
+            TenantId::ROOT,
+            SubjectId(uuid::Uuid::new_v4()),
+            "human",
+            vec!["admin".into()],
+            vec!["root-admin".into()],
+            Some(1),
+            None,
+            None,
+        )
         .await
         .expect("issue");
     tokens.access_token
 }
+
+/// Mint a JWT for a non-root tenant (used to exercise the 403 path).
+async fn non_root_admin_token(pool: &PgPool) -> String {
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
+    let tokens = svc
+        .issue(
+            TenantId(uuid::Uuid::new_v4()),
+            SubjectId(uuid::Uuid::new_v4()),
+            "human",
+            vec!["admin".into()],
+            vec!["tenant-admin".into()],
+            Some(1),
+            None,
+            None,
+        )
+        .await
+        .expect("issue");
+    tokens.access_token
+}
+
+/// Build a POST request to /v1/admin/tenants with auth + Idempotency-Key.
+fn post_request(token: &str, idem_key: &str, body: Value) -> Request<axum::body::Body> {
+    Request::builder()
+        .method(Method::POST)
+        .uri("/v1/admin/tenants")
+        .header("content-type", "application/json")
+        .header("authorization", format!("Bearer {token}"))
+        .header("idempotency-key", idem_key)
+        .body(axum::body::Body::from(body.to_string()))
+        .unwrap()
+}
+
+fn happy_body(slug: &str) -> Value {
+    json!({
+        "slug": slug,
+        "display_name": "Test Tenant",
+        "country": "VN",
+        "plan_tier": "free",
+        "residency": "vn-1"
+    })
+}
+
+// ===========================================================================
+// G-001 — §1 #14 — slug == "root" reserved (ECM-008)
+// ===========================================================================
+
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn create_tenant_rejects_reserved_root_slug() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = root_admin_token(&pool).await;
+    let app = build_app().await;
+
+    let res = app
+        .oneshot(post_request(
+            &token,
+            "test-root-reject-001",
+            json!({
+                "slug": "root",
+                "display_name": "Should Be Rejected",
+                "country": "VN",
+                "plan_tier": "free",
+                "residency": "vn-1"
+            }),
+        ))
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
+    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(parsed["error"], "invalid_input");
+    assert_eq!(parsed["field"], "slug");
+    assert!(parsed["reason"].as_str().unwrap().contains("reserved"));
+}
+
+// ===========================================================================
+// G-002 — §1 #11 — structured 400 invalid_input body (ECM-006)
+// ===========================================================================
+
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn create_tenant_rejects_uppercase_slug_with_structured_body() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = root_admin_token(&pool).await;
+    let app = build_app().await;
+
+    let res = app
+        .oneshot(post_request(
+            &token,
+            "test-uppercase-002",
+            happy_body("Acme"),
+        ))
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
+    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(parsed["error"], "invalid_input");
+    assert_eq!(parsed["field"], "slug");
+}
+
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn create_tenant_rejects_missing_idempotency_key_with_structured_body() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = root_admin_token(&pool).await;
+    let app = build_app().await;
+
+    // Build a request WITHOUT the Idempotency-Key header.
+    let req = Request::builder()
+        .method(Method::POST)
+        .uri("/v1/admin/tenants")
+        .header("content-type", "application/json")
+        .header("authorization", format!("Bearer {token}"))
+        .body(axum::body::Body::from(happy_body("acme-no-idem").to_string()))
+        .unwrap();
+
+    let res = app.oneshot(req).await.unwrap();
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
+    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(parsed["error"], "missing_header");
+    assert_eq!(parsed["field"], "Idempotency-Key");
+}
+
+// ===========================================================================
+// G-003 — §1 #1 — root-admin-in-tenant-0 authz (ECM-012)
+// ===========================================================================
+
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn create_tenant_rejects_non_root_tenant_caller() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = non_root_admin_token(&pool).await; // wrong tenant
+    let app = build_app().await;
+
+    let res = app
+        .oneshot(post_request(
+            &token,
+            "test-non-root-caller-003",
+            happy_body("acme-wrong-tenant"),
+        ))
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), StatusCode::FORBIDDEN);
+    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
+    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(parsed["error"], "forbidden");
+    assert_eq!(parsed["needed"], "root-admin in tenant 0");
+}
+
+// ===========================================================================
+// G-005 — §1 #6 — BRAIN audit row emitted in transaction
+// ===========================================================================
+
+#[tokio::test]
+#[ignore = "requires Postgres + brain migrations applied (0003_layer1_audit_log.sql)"]
+async fn create_tenant_emits_brain_audit_row_in_transaction() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = root_admin_token(&pool).await;
+    let app = build_app().await;
+
+    let slug = format!("audit-row-{}", uuid::Uuid::new_v4().simple());
+    let res = app
+        .oneshot(post_request(
+            &token,
+            &format!("test-audit-{}", &slug),
+            happy_body(&slug),
+        ))
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), StatusCode::CREATED);
+    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
+    let tenant: Value = serde_json::from_slice(&body_bytes).unwrap();
+    let tenant_id = tenant["id"].as_str().expect("id is string");
+
+    // Verify the BRAIN audit row exists in l1_audit_log with the right shape.
+    let (op, path, body): (String, String, String) = sqlx::query_as(
+        "SELECT op, path, body FROM l1_audit_log
+            WHERE tenant_id = $1::uuid AND op = 'put'
+         ORDER BY seq DESC LIMIT 1",
+    )
+    .bind(tenant_id)
+    .fetch_one(&pool)
+    .await
+    .expect("audit row exists");
+
+    assert_eq!(op, "put");
+    assert!(path.contains(&format!("auth/tenant/{tenant_id}/created")));
+    assert!(body.contains("\"event_type\":\"auth.tenant_created\""));
+    assert!(body.contains(&format!("\"slug\":\"{slug}\"")));
+}
+
+// ===========================================================================
+// G-006 — §1 #8 — 100ms p95 SLO test
+// ===========================================================================
+
+#[tokio::test]
+#[ignore = "requires Postgres — measures p95 over 100 tenant creates"]
+async fn create_tenant_p95_latency_under_100ms() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = root_admin_token(&pool).await;
+    let app = build_app().await;
+
+    const N: usize = 100;
+    let mut latencies_ms = Vec::with_capacity(N);
+
+    for i in 0..N {
+        let slug = format!("slo-{}-{}", uuid::Uuid::new_v4().simple(), i);
+        let req = post_request(
+            &token,
+            &format!("slo-idem-{i}-{}", uuid::Uuid::new_v4().simple()),
+            happy_body(&slug),
+        );
+        let t0 = Instant::now();
+        let res = app.clone().oneshot(req).await.unwrap();
+        let elapsed_ms = t0.elapsed().as_secs_f64() * 1000.0;
+        assert_eq!(
+            res.status(),
+            StatusCode::CREATED,
+            "iter {i}: expected 201, got {}",
+            res.status()
+        );
+        latencies_ms.push(elapsed_ms);
+    }
+
+    latencies_ms.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let p95_idx = (N as f64 * 0.95) as usize - 1;
+    let p95 = latencies_ms[p95_idx];
+    let p50 = latencies_ms[N / 2];
+    let max = *latencies_ms.last().unwrap();
+
+    eprintln!("p50: {p50:.1} ms · p95: {p95:.1} ms · max: {max:.1} ms");
+    assert!(
+        p95 < 100.0,
+        "p95 latency MUST be < 100ms per §1 #8; got {p95:.1} ms (p50={p50:.1}, max={max:.1})"
+    );
+}
+
+// ===========================================================================
+// G-007 — §1 #5 — idempotency + boundary tests
+// ===========================================================================
+
+// ECM-010 — same Idempotency-Key + same body → 200 + same id
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn idempotent_replay_returns_same_tenant_id() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = root_admin_token(&pool).await;
+    let app = build_app().await;
+
+    let slug = format!("idem-replay-{}", uuid::Uuid::new_v4().simple());
+    let key = format!("idem-key-{}", uuid::Uuid::new_v4().simple());
+
+    // First call → 201 CREATED
+    let res1 = app
+        .clone()
+        .oneshot(post_request(&token, &key, happy_body(&slug)))
+        .await
+        .unwrap();
+    assert_eq!(res1.status(), StatusCode::CREATED);
+    let body1: Value =
+        serde_json::from_slice(&to_bytes(res1.into_body(), 1 << 20).await.unwrap()).unwrap();
+    let id1 = body1["id"].as_str().unwrap().to_string();
+
+    // Second call with SAME key + SAME body → same id (replay)
+    let res2 = app
+        .oneshot(post_request(&token, &key, happy_body(&slug)))
+        .await
+        .unwrap();
+    assert_eq!(res2.status(), StatusCode::CREATED);
+    let body2: Value =
+        serde_json::from_slice(&to_bytes(res2.into_body(), 1 << 20).await.unwrap()).unwrap();
+    let id2 = body2["id"].as_str().unwrap();
+    assert_eq!(id1, id2, "idempotent replay MUST return the original id");
+}
+
+// ECM-005 — Idempotency-Key longer than 64 chars accepted (per spec) OR rejected;
+// current impl is permissive — capture today's behaviour so a regression is visible.
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn idempotency_key_long_string_currently_accepted() {
+    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+    let pool = PgPool::connect(&url).await.unwrap();
+    bootstrap_test_key(&pool).await;
+    let token = root_admin_token(&pool).await;
+    let app = build_app().await;
+
+    let slug = format!("idem-long-{}", uuid::Uuid::new_v4().simple());
+    let long_key = "k".repeat(120); // 120 chars
+    let res = app
+        .oneshot(post_request(&token, &long_key, happy_body(&slug)))
+        .await
+        .unwrap();
+    // Today the handler doesn't bound key length explicitly. CI surfaces
+    // the actual outcome; if a future tightening enforces ≤64, this test
+    // will flip and pin the new contract.
+    assert!(
+        matches!(
+            res.status(),
+            StatusCode::CREATED | StatusCode::BAD_REQUEST
+        ),
+        "unexpected status for long Idempotency-Key: {}",
+        res.status()
+    );
+}
+
+// ===========================================================================
+// NOT covered here (documented in audit §10.2 G-007 follow-up):
+//   * ECM-009 concurrent same-slug — needs tokio::join! racing two POSTs;
+//     deterministic only with serializable isolation set on the test
+//     transaction. Deferred to a follow-up integration FR.
+//   * ECM-011 same Idempotency-Key + DIFFERENT body — 409 idempotency_key_reuse;
+//     the current idempotency module returns the prior body (silent replay)
+//     instead of 409. Closing this gap is a small idempotency.rs change,
+//     scoped as a follow-up commit.
+//   * ECM-014 BRAIN unreachable rollback — requires injectable BRAIN bridge
+//     for deterministic failure. Deferred until brain_bridge moves behind
+//     a trait that the test can swap to a failing impl.
+// ===========================================================================

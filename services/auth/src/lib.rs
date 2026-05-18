@@ -12,6 +12,7 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod brain_bridge;
 pub mod geoip;
 pub mod handlers;
 pub mod hibp;

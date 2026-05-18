@@ -122,11 +122,40 @@ async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
 }
 
 /// FR-AUTH-001 — Tenant create. Idempotent on `Idempotency-Key` header.
+// FR-AUTH-001 §1 #13 — emit OTel span `auth.create_tenant` around the whole
+// handler. `outcome` is recorded dynamically (created | idempotent_replay |
+// conflict | forbidden | invalid_input | error) at each return. The trace
+// context propagates W3C TraceContext per FR-AI-022 — the verify_jwt
+// middleware already extracts traceparent from the JWT into the request.
+#[tracing::instrument(
+    name = "auth.create_tenant",
+    skip(state, claims, headers, req),
+    fields(
+        slug = %req.slug,
+        caller_tenant_id = %claims.tenant_id,
+        outcome = tracing::field::Empty,
+    )
+)]
 async fn create_tenant(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     headers: HeaderMap,
     Json(req): Json<CreateTenantRequest>,
 ) -> Result<(StatusCode, Json<Tenant>), (StatusCode, Json<Value>)> {
+    use tracing::Span;
+    let span = Span::current();
+
+    // FR-AUTH-001 §1 #1 — Handler-level authz: caller MUST be in tenant 0
+    // AND hold the `root-admin` role. The `verify_jwt` middleware (FR-AUTH-004)
+    // has already validated the signature + populated `claims`; this check
+    // is the defence-in-depth role guard at the handler layer. The 403 body
+    // is explicit about WHAT permission would have succeeded so operators
+    // can grant it correctly.
+    if let Err(e) = require_root_admin_in_tenant_0(&claims) {
+        span.record("outcome", "forbidden");
+        return Err(e);
+    }
+
     // FR-AUTH-001 §1 #14 — Defence-in-depth: reject reserved slug "root"
     // before any DB work. Tenant 0 (the root tenant) is bootstrapped by
     // FR-AUTH-006 CLI; this endpoint MUST NOT create a second tenant
@@ -135,6 +164,7 @@ async fn create_tenant(
     // also catches this, but the early-return saves a transaction round
     // trip and produces a structured error body.
     if req.slug == "root" {
+        span.record("outcome", "invalid_input");
         return Err(invalid_input(
             "slug",
             "slug \"root\" is reserved for tenant 0 (use cyberos-auth-bootstrap)",
@@ -145,8 +175,14 @@ async fn create_tenant(
     // DB CHECK constraint (defence in depth). The 400 body identifies
     // exactly which input failed and why so the client can render
     // actionable error UI without inspecting logs.
-    validate_slug(&req.slug)?;
-    validate_display_name(&req.display_name)?;
+    if let Err(e) = validate_slug(&req.slug) {
+        span.record("outcome", "invalid_input");
+        return Err(e);
+    }
+    if let Err(e) = validate_display_name(&req.display_name) {
+        span.record("outcome", "invalid_input");
+        return Err(e);
+    }
 
     // Only the root tenant can create new tenants. The auth middleware
     // (FR-AUTH-004) will validate the JWT and set `app.current_tenant_id`.
@@ -162,17 +198,23 @@ async fn create_tenant(
         .map_err(internal_err)?;
 
     // Idempotency-Key is required on admin POSTs.
-    let key = headers
+    let key = match headers
         .get("idempotency-key")
         .and_then(|h| h.to_str().ok())
-        .ok_or_else(|| (
-            StatusCode::BAD_REQUEST,
-            Json(json!({
-                "error": "missing_header",
-                "field": "Idempotency-Key",
-                "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-001 §1 #5)"
-            })),
-        ))?;
+    {
+        Some(k) => k,
+        None => {
+            span.record("outcome", "missing_header");
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "missing_header",
+                    "field": "Idempotency-Key",
+                    "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-001 §1 #5)"
+                })),
+            ));
+        }
+    };
 
     let route = "POST /v1/admin/tenants";
     let root_uuid = Uuid::nil();
@@ -181,13 +223,14 @@ async fn create_tenant(
         .map_err(internal_err)?
     {
         // Replay the prior response bit-for-bit.
+        span.record("outcome", "idempotent_replay");
         let tenant: Tenant = serde_json::from_value(body)
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
         return Ok((StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK), Json(tenant)));
     }
 
     let new_id = TenantId::new();
-    let row: Tenant = sqlx::query_as::<_, (Uuid, String, String, String, String, String, String, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>)>(
+    let insert_result: Result<(Uuid, String, String, String, String, String, String, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>), sqlx::Error> = sqlx::query_as::<_, (Uuid, String, String, String, String, String, String, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>)>(
         "INSERT INTO tenants (id, slug, display_name, country, plan_tier, status, residency)
               VALUES ($1, $2, $3, $4, $5, 'active', $6)
             RETURNING id, slug, display_name, country, plan_tier, status, residency, created_at, updated_at",
@@ -199,31 +242,66 @@ async fn create_tenant(
     .bind(&req.plan_tier)
     .bind(&req.residency)
     .fetch_one(&mut *tx)
-    .await
-    .map_err(|e| match e {
-        // FR-AUTH-001 §1 #4 — Structured 409 body so the client can
-        // present the conflict without parsing free-form error strings.
-        sqlx::Error::Database(db) if db.is_unique_violation() => (
-            StatusCode::CONFLICT,
-            Json(json!({"error": "slug_taken", "slug": req.slug})),
-        ),
-        other => internal_err(other),
-    })
-    .map(|(id, slug, display_name, country, plan_tier, status, residency, created_at, updated_at)| {
-        Tenant {
-            id: TenantId(id),
-            slug,
-            display_name,
-            country,
-            plan_tier,
-            status,
-            residency,
-            created_at,
-            updated_at,
-        }
-    })?;
+    .await;
 
-    tx.commit().await.map_err(internal_err)?;
+    let row: Tenant = match insert_result {
+        Err(sqlx::Error::Database(db)) if db.is_unique_violation() => {
+            // FR-AUTH-001 §1 #4 — Structured 409 body so the client can
+            // present the conflict without parsing free-form error strings.
+            span.record("outcome", "conflict");
+            return Err((
+                StatusCode::CONFLICT,
+                Json(json!({"error": "slug_taken", "slug": req.slug})),
+            ));
+        }
+        Err(other) => {
+            span.record("outcome", "error");
+            return Err(internal_err(other));
+        }
+        Ok((id, slug, display_name, country, plan_tier, status, residency, created_at, updated_at)) => {
+            Tenant {
+                id: TenantId(id),
+                slug,
+                display_name,
+                country,
+                plan_tier,
+                status,
+                residency,
+                created_at,
+                updated_at,
+            }
+        }
+    };
+
+    // FR-AUTH-001 §1 #6 + §1 #12 — Emit `auth.tenant_created` BRAIN audit row
+    // INSIDE the same transaction. If this write fails (or any later step
+    // before commit), the entire tx rolls back — both the tenant row and
+    // the audit row are discarded together. The partial state of "tenant
+    // exists but no audit trail" is forbidden by construction.
+    let caller_subject_id =
+        Uuid::parse_str(&claims.sub).unwrap_or_else(|_| Uuid::nil());
+    let request_id = headers
+        .get("x-request-id")
+        .and_then(|h| h.to_str().ok());
+    let payload = crate::brain_bridge::TenantCreatedPayload {
+        tenant_id: row.id.as_uuid(),
+        slug: &row.slug,
+        display_name: &row.display_name,
+        created_by_subject_id: caller_subject_id,
+        idempotency_key: Some(key),
+        request_id,
+    };
+    if let Err(e) = crate::brain_bridge::emit_tenant_created(&mut tx, payload).await {
+        span.record("outcome", "error");
+        // tx will roll back on drop since we return Err here. The tenant
+        // INSERT never commits — audit failure → no tenant.
+        return Err(internal_err(e));
+    }
+
+    tx.commit().await.map_err(|e| {
+        span.record("outcome", "error");
+        internal_err(e)
+    })?;
 
     let body = serde_json::to_value(&row).map_err(|e| (
         StatusCode::INTERNAL_SERVER_ERROR,
@@ -240,6 +318,7 @@ async fn create_tenant(
     .await
     .map_err(internal_err)?;
 
+    span.record("outcome", "created");
     Ok((StatusCode::CREATED, Json(row)))
 }
 
@@ -373,6 +452,47 @@ fn internal_err<E: std::fmt::Display>(e: E) -> (StatusCode, Json<Value>) {
 // logs. The constant `error` enum-value is "invalid_input" for validation
 // failures; other 400-class errors (e.g. missing required header) use
 // "missing_header" / etc. but keep the same {error, field, reason} triple.
+
+/// FR-AUTH-001 §1 #1 + §1 #10 — assert caller is root-admin in tenant 0.
+///
+/// Two conjunctive conditions:
+///   1. `claims.tenant_id` parses as the nil-UUID (the canonical "tenant 0").
+///   2. `claims.roles` contains the literal `"root-admin"`.
+///
+/// Either failing → 403 FORBIDDEN with body
+/// `{"error":"forbidden","needed":"root-admin in tenant 0"}` — explicit about
+/// WHAT permission would have granted access (per §1 #10) so operators can
+/// fix the role assignment without inspecting logs or source.
+///
+/// The `verify_jwt` middleware (FR-AUTH-004) has already validated the JWT
+/// signature + issuer + expiry; this is a defence-in-depth role guard at
+/// the handler layer. Even if the middleware were bypassed (e.g. by a
+/// route-mounting mistake), this check still fires.
+fn require_root_admin_in_tenant_0(claims: &Claims) -> Result<(), (StatusCode, Json<Value>)> {
+    const NEEDED: &str = "root-admin in tenant 0";
+    let caller_tenant = uuid::Uuid::parse_str(&claims.tenant_id).map_err(|_| {
+        // A claims.tenant_id that doesn't parse as a UUID is suspicious —
+        // surface as forbidden (not 500) so attackers don't learn which
+        // form is "almost right".
+        (
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "forbidden", "needed": NEEDED})),
+        )
+    })?;
+    if caller_tenant != uuid::Uuid::nil() {
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "forbidden", "needed": NEEDED})),
+        ));
+    }
+    if !claims.roles.iter().any(|r| r == "root-admin") {
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "forbidden", "needed": NEEDED})),
+        ));
+    }
+    Ok(())
+}
 
 /// Build a 400 BAD_REQUEST with structured `{error, field, reason}` body.
 fn invalid_input(field: &str, reason: impl Into<String>) -> (StatusCode, Json<Value>) {
@@ -528,6 +648,78 @@ mod validate_tests {
         assert_eq!(body["error"], "invalid_input");
         assert_eq!(body["field"], "slug");
         assert_eq!(body["reason"], "reason msg");
+    }
+
+    // ─── G-003 — root-admin-in-tenant-0 authz (FR-AUTH-001 §1 #1) ────────
+
+    fn build_claims(tenant_id: &str, roles: Vec<&str>) -> Claims {
+        Claims {
+            iss: "https://auth.cyberos.local".into(),
+            sub: uuid::Uuid::new_v4().to_string(),
+            aud: vec!["cyberos".into()],
+            exp: 0,
+            iat: 0,
+            nbf: 0,
+            jti: uuid::Uuid::new_v4().to_string(),
+            tenant_id: tenant_id.into(),
+            kind: "human".into(),
+            scope_grants: vec!["admin:tenants".into()],
+            roles: roles.into_iter().map(String::from).collect(),
+            rbac_v: Some(1),
+            agent_persona: None,
+            traceparent: None,
+        }
+    }
+
+    #[test]
+    fn root_admin_in_tenant_0_passes() {
+        let claims = build_claims("00000000-0000-0000-0000-000000000000", vec!["root-admin"]);
+        assert!(require_root_admin_in_tenant_0(&claims).is_ok());
+    }
+
+    // ECM-012 — caller is in a non-root tenant.
+    #[test]
+    fn non_root_tenant_caller_returns_403() {
+        let claims = build_claims("11111111-1111-1111-1111-111111111111", vec!["root-admin"]);
+        let (status, Json(body)) = require_root_admin_in_tenant_0(&claims).unwrap_err();
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        assert_eq!(body["error"], "forbidden");
+        assert_eq!(body["needed"], "root-admin in tenant 0");
+    }
+
+    // ECM-013 — caller is in tenant 0 but lacks the role.
+    #[test]
+    fn root_tenant_without_root_admin_role_returns_403() {
+        let claims = build_claims("00000000-0000-0000-0000-000000000000", vec!["tenant-admin"]);
+        let (status, Json(body)) = require_root_admin_in_tenant_0(&claims).unwrap_err();
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        assert_eq!(body["needed"], "root-admin in tenant 0");
+    }
+
+    #[test]
+    fn root_tenant_with_empty_roles_returns_403() {
+        let claims = build_claims("00000000-0000-0000-0000-000000000000", vec![]);
+        let (status, _) = require_root_admin_in_tenant_0(&claims).unwrap_err();
+        assert_eq!(status, StatusCode::FORBIDDEN);
+    }
+
+    #[test]
+    fn malformed_tenant_id_returns_403_not_500() {
+        let claims = build_claims("not-a-uuid", vec!["root-admin"]);
+        let (status, Json(body)) = require_root_admin_in_tenant_0(&claims).unwrap_err();
+        // 403 (not 500) so the failure mode doesn't leak parser internals
+        // to a hostile caller probing for "almost right" tenant IDs.
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        assert_eq!(body["error"], "forbidden");
+    }
+
+    #[test]
+    fn root_admin_alongside_other_roles_still_passes() {
+        let claims = build_claims(
+            "00000000-0000-0000-0000-000000000000",
+            vec!["tenant-admin", "root-admin", "auditor"],
+        );
+        assert!(require_root_admin_in_tenant_0(&claims).is_ok());
     }
 }
 

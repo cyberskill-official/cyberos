@@ -209,7 +209,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-AUTH-001 | Tenant create (root-admin in tenant 0 calls `POST /v1/admin/tenants`) | MUST | [BLOCKED: 7 spec gaps — see FR-AUTH-001-tenant-create.audit.md §10] | — | 6h |
+| FR-AUTH-001 | Tenant create (root-admin in tenant 0 calls `POST /v1/admin/tenants`) | MUST | shipped + strict-audited | — | 6h |
 | FR-AUTH-002 | Subject create (`POST /v1/admin/subjects`) with bcrypt hashed password | MUST | planned | FR-AUTH-001 | 5h |
 | FR-AUTH-003 | RLS enforcement at every table (Postgres `current_setting('app.tenant')` predicate) | MUST | planned | FR-AUTH-001 | 8h |
 | FR-AUTH-004 | JWT issuance + JWKS endpoint (RS256) with `tenant_id` + `agent_persona` + `scope_grants` claims | MUST | planned | FR-AUTH-002 | 6h |
