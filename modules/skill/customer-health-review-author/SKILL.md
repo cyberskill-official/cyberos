@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: customer-health-review-author
 description: Authors a quarterly customer-health review across the ACTIVE customer base — health-score distribution (green/yellow/red by segment+tier), at-risk-account intervention list, expansion-pipeline candidates, advocacy-pipeline (referrals + case studies), CS team utilization, cohort trend analysis. Distinct from churn-analysis (backward on churners). Per Gainsight Customer Success Operating Model + Catalyst CS Ops + TSIA Customer Success benchmarks + Bessemer Cloud Index CS benchmarks.
-  Author a CUSTOMER_HEALTH_REVIEW markdown from <input artefact(s)>. Generates a
+  Author a CUSTOMER_HEALTH_REVIEW markdown from source artefact(s). Generates a
   versioned customer-health-review@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   customer-health-review-audit by default. Refuses to author when upstream artefact

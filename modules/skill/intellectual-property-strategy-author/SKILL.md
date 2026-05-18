@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: intellectual-property-strategy-author
 description: Authors the annual (or per-event) IP portfolio strategy — patent filings, trademark portfolio, trade-secret protection plan, defensive vs offensive posture, FTO (freedom-to-operate) opinions. Per WIPO IP strategy framework + USPTO MPEP + Madrid Protocol (trademarks) + UTSA/DTSA (trade secrets) + PCT for international filings.
-  Author a IP_STRATEGY markdown from <input artefact(s)>. Generates a
+  Author a IP_STRATEGY markdown from source artefact(s). Generates a
   versioned intellectual-property-strategy@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   intellectual-property-strategy-audit by default. Refuses to author when upstream artefact

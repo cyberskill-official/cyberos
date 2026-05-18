@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: security-strategy-author
 description: Authors the annual information-security strategy. Threat landscape, current posture vs NIST CSF 2.0, CIS Controls IG1/IG2/IG3 maturity, prioritized initiatives, budget envelope, security OKRs, board narrative. Per NIST CSF 2.0 + ISO/IEC 27001:2022 + CIS Controls v8 + Verizon DBIR + MITRE ATT&CK.
-  Author a SECURITY_STRATEGY markdown from <input artefact(s)>. Generates a
+  Author a SECURITY_STRATEGY markdown from source artefact(s). Generates a
   versioned security-strategy@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   security-strategy-audit by default. Refuses to author when upstream artefact

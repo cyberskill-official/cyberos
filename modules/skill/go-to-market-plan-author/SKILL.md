@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: go-to-market-plan-author
 description: Authors the annual go-to-market plan — ICP & segmentation, channel strategy (sales-led / PLG / partner), pricing posture, sales motion + qualification (MEDDIC / SPICED), quota + attainment model, enablement plan, KPIs. Per Winning by Design revenue-architecture framework + MEDDIC/MEDDPICC + Predictable Revenue (Aaron Ross) + OpenView PLG playbook.
-  Author a GTM_PLAN markdown from <input artefact(s)>. Generates a
+  Author a GTM_PLAN markdown from source artefact(s). Generates a
   versioned go-to-market-plan@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   go-to-market-plan-audit by default. Refuses to author when upstream artefact

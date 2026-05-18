@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: customer-360-author
 description: Audits the customer-360 / CDP (Customer Data Platform) state and proposes the next-quarter architecture refinement. Inventory of customer-data sources, identity resolution match-rate, master entity model, activation surfaces, consent + governance posture, data-quality scorecards, gap analysis. Per CDP Institute reference architecture + Segment / RudderStack / mParticle CDP patterns + IAB GVL/TCF + ISO/IEC 19944 + DAMA-DMBOK MDM chapter.
-  Author a CUSTOMER_360 markdown from <input artefact(s)>. Generates a
+  Author a CUSTOMER_360 markdown from source artefact(s). Generates a
   versioned customer-360@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   customer-360-audit by default. Refuses to author when upstream artefact

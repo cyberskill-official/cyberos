@@ -7,7 +7,7 @@ description: |
   same write that emits the workflow_complete BRAIN audit row). Status is
   derived from steps 1–16 outcome: `shipped + strict-audited`,
   `shipped + mocked-dependency`, `[FAILED: UNRESOLVABLE ERROR]`, or
-  `[BLOCKED: <reason>]`. Used by chief-technology-officer/implement-backlog-frs
+  `[BLOCKED: {reason}]`. Used by chief-technology-officer/implement-backlog-frs
   as step 17.
 license: Apache-2.0
 metadata:
@@ -22,8 +22,8 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/backlog-state-update
-    - project:backlog/<fr_id>
+    - project:fr/{fr_id}/backlog-state-update
+    - project:backlog/{fr_id}
 audit:
   row_kind: backlog_state_update_authored
   required_fields: [fr_id, prior_status, new_status, line_number, evidence_artefact_ids]

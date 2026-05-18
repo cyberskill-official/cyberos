@@ -1,15 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: deployment-checklist-author
-description: |
-  Author a Deployment Readiness Checklist (deploy-checklist@1) per
-  Software Development Process.md Template §4.7 for a specific release
-  candidate. Captures: DoDs met, release notes, rollback plan, feature
-  flags configured, database migrations rehearsed, monitoring/alerts in
-  place, on-call notified, security scan clean, change ticket approved,
-  SBOM published. DORA metric hooks (deployment frequency, lead time,
-  change failure rate, failed-deployment recovery time) recorded as
-  baseline. Chains naturally into deployment-checklist-audit.
+description: >-
+  Author a production deployment checklist (deployment-checklist@1) from an approved release plan + impl-plan + test-strategy verdict. Use when user asks to "draft a deploy checklist", "create the production deploy plan", or "outline the rollout for the AUTH slice". Captures prereqs, migration order, smoke tests per service, rollback steps, observability dashboards, on-call coverage, security review, change-window booking. Covers SDP §4(c) Release engineering. Chains naturally into deployment-checklist-audit. Do NOT use for "audit an existing deploy checklist" (use deployment-checklist-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

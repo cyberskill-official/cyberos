@@ -10,6 +10,37 @@ Format conventions:
 
 ---
 
+## 2026-05-19 — [SKILL] FR-SKILL-115 sweep applied + registry v0.2.5 → v0.2.6
+
+**Registry: v0.2.6.** Catalog placeholder-free (SKB-030 invariant met).
+
+Closes Wave 1 of the Anthropic Skills portability pass. Per FR-SKILL-115:
+
+- **Mechanical sweep (stage default)** — 132 SKILL.md files had `metadata.stage: <SDP §2 stage letter or "cross">` substituted to `metadata.stage: cross` via `tools/sweep-placeholders/apply.py --stage-only`. The suggester's default reflects that these are cross-cutting skills (no single SDP stage in body).
+- **Nuanced sweep** — 31 additional SKILL.md files had per-field substitutions: 17× `<input artefact(s)>` → `source artefact(s)` (descriptive text); 16× `<fr_id>`/`<run_id>`/`<reason>` → `{fr_id}`/`{run_id}`/`{reason}` (runtime-parameter convention preserves semantic without XML brackets — Anthropic Reference B compliant).
+- **Verification**: `python3 -m cuo.placeholder_check --catalog modules/skill/` reports **0 hits across 229 production skills + 2 _template/ exempt**. FR-113 invariant (211 files carry `wrap_in_marker: "untrusted_content"`) preserved.
+- **Operator attestation**: substitutions applied by claude-opus-4-7 in session 2026-05-19; high-confidence stage defaults auto-applied; nuanced values reviewed against body context per FR-SKILL-115 §1 #4 + §1 #10.
+- **Catalog impact**: 231 SKILL.md files scanned; 229 in production are now Anthropic-host-portable at the frontmatter layer (Phase-B transpilers no longer blocked by Reference B's bracket prohibition).
+
+### Files touched
+
+`modules/skill/**/SKILL.md` — 163 production files (132 stage + 31 nuanced). Diff is mechanical; no body changes; no audit-row impact.
+
+### Validators shipped earlier in 2026-05-19 session
+
+- `modules/cuo/cuo/placeholder_check.py` + 13 pytest tests (SKB-030 detector)
+- `tools/sweep-placeholders/{detect.py,suggest.py,apply.py}` + `report-2026-05-18.md`
+- `modules/skill/SKILL_BUNDLE_RUBRIC.md` §2.5 SKB-030 rule
+- `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` §3.13 rule 38f
+
+### Next FR-SKILL-111..115 100%-completion work
+
+Per [`modules/skill/FR_111_115_COMPLETION_PLAN.md`](modules/skill/FR_111_115_COMPLETION_PLAN.md):
+- **G** (in-progress this session) — 10-skill priority backfill cohort for FR-111 + FR-112 (P0 personas: cpo + cto)
+- **H** (in-progress this session) — Rust skill-broker scaffold for FR-103 + FR-111 + FR-113 validators
+
+---
+
 ## 2026-05-18 — Wave-1+2 impl sessions 15-18: embed sidecar, NFR audits, SAML XML-DSig, GeoIP+policy, Tauri desktop, slice-3 universal wiring + admin REST
 
 End-of-day continuation of the Wave-1+2 implementation phase. Eight items shipped end-to-end:

@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: non-disclosure-agreement-triage-author
 description: Rapidly triages an incoming NDA — classifies GREEN (standard, sign), YELLOW (counsel review), RED (full legal review). Screens for embedded non-compete, non-solicit, missing mutuality, missing carveouts, residuals clause issues. Per ACC NDA triage standard + WorldCC NDA best practices + ABA Model Mutual NDA.
-  Author a NDA_TRIAGE markdown from <input artefact(s)>. Generates a
+  Author a NDA_TRIAGE markdown from source artefact(s). Generates a
   versioned non-disclosure-agreement-triage@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   non-disclosure-agreement-triage-audit by default. Refuses to author when upstream artefact

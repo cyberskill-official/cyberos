@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: product-metrics-review-author
 description: Authors a quarterly product OKR + metrics review — DAU/WAU/MAU + stickiness, retention cohorts (Day-1/7/30), feature-adoption funnels, north-star metric movement, per-OKR attainment, top wins/losses, next-quarter focus. Per Amplitude Product Analytics Playbook + Mixpanel North Star Framework + Pendo Product Engagement + Reforge Product Strategy + Sequoia PLG Playbook + Hooked (Nir Eyal) habit-loop framework.
-  Author a PRODUCT_METRICS_REVIEW markdown from <input artefact(s)>. Generates a
+  Author a PRODUCT_METRICS_REVIEW markdown from source artefact(s). Generates a
   versioned product-metrics-review@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   product-metrics-review-audit by default. Refuses to author when upstream artefact

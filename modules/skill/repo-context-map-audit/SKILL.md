@@ -20,7 +20,7 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/repo-context-map.audit
+    - project:fr/{fr_id}/repo-context-map.audit
 
 audit:
   row_kind: repo_context_map_audited

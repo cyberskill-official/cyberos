@@ -26,7 +26,7 @@ allowed_brain_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/<fr_id>/repo-context-map
+    - project:fr/{fr_id}/repo-context-map
 audit:
   row_kind: repo_context_map_authored
   required_fields: [fr_id, files_in_immediate_domain, files_outside_immediate_domain, modules_touched, blast_radius_score, existing_patterns_count]

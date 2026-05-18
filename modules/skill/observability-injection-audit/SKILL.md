@@ -19,7 +19,7 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/observability-injection.audit
+    - project:fr/{fr_id}/observability-injection.audit
 
 audit:
   row_kind: observability_injection_audited

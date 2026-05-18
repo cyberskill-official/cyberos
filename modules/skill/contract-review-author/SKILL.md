@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: contract-review-author
 description: Reviews incoming third-party contracts (MSA / NDA / DPA / SOW) against the organization's negotiation playbook. Flags deviations against named playbook positions, generates redlines with severity + business impact, classifies as GREEN/YELLOW/RED. Per ABA Model Contract Clauses + ACC (Association of Corporate Counsel) Contract Playbook + WorldCC benchmarking.
-  Author a CONTRACT_REVIEW markdown from <input artefact(s)>. Generates a
+  Author a CONTRACT_REVIEW markdown from source artefact(s). Generates a
   versioned contract-review@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   contract-review-audit by default. Refuses to author when upstream artefact

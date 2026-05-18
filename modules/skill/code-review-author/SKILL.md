@@ -1,15 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: code-review-author
-description: |
-  Author a structured code-review write-up (code-review@1) per IEEE
-  1028 review/audit standard from a PR diff + linked impl-plan + linked
-  FR. Captures: correctness vs ticket, readability, test coverage,
-  secret-scan, injection paths, input validation, error handling,
-  logging without PII, performance considerations, backwards
-  compatibility, and the AI-specific checks per Software Development
-  Process.md §5 (hallucinated APIs, oversized diffs, dependency
-  additions). Chains naturally into code-review-audit.
+description: >-
+  Author a structured code-review write-up (code-review@1) per IEEE 1028 review standard from a PR diff + linked impl-plan + linked FR. Use when user asks to "review this PR", "draft a code review for the auth changes", or "audit the implementation against the FR". Captures correctness vs ticket, readability, test coverage, secret-scan, injection paths, input validation, error handling, logging without PII, performance, backwards compatibility, and AI-specific checks per SDP §5 (hallucinated APIs, oversized diffs). Chains naturally into code-review-audit. Do NOT use for "audit an existing code-review.md" (use code-review-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

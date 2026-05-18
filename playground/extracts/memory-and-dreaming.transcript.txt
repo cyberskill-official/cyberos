@@ -1,0 +1,399 @@
+[    0.00 ->     7.63]  Hello.
+[    7.63 ->     9.63]  Hey everyone.
+[    9.63 ->    10.63]  How's it going?
+[   10.63 ->    14.30]  Thanks for coming.
+[   14.30 ->    19.30]  My name is Maheesh and I'm a product manager on the platform team here at
+[   19.30 ->    20.30]  Endropic.
+[   20.30 ->    25.30]  Over the past year and a half, I've gotten to work on primitives like MTP and
+[   25.30 ->    26.30]  Skills.
+[   26.30 ->    30.30]  And today I want to talk about the primitive that I'm most excited about next,
+[   30.30 ->    31.30]  which is memory.
+[   31.30 ->    36.30]  I'll talk about why we think memory is so important and why we've been spending so
+[   36.30 ->    38.30]  much time on it at Endropic.
+[   38.30 ->    42.30]  How we think about designing memory systems that are built for frontier
+[   42.30 ->    43.30]  agents.
+[   43.30 ->    48.30]  And I'm excited to also talk about dreaming a brand new product that we're launching today
+[   48.30 ->    56.26]  in research preview in the managed agents API.
+[   56.26 ->    60.26]  Model capabilities have improved really quickly over the last couple of years.
+[   60.26 ->    66.26]  And agents are capable of tasks that take many, many hours and can run for
+[   66.26 ->    68.26]  hours or almost days at a time.
+[   68.26 ->    72.26]  And as models and agents have improved, we've also invested in building
+[   72.26 ->    77.26]  higher and higher level capabilities and primitives that kind of get out of those
+[   77.26 ->    82.26]  models way and give them access to additional bits of their environment and
+[   82.26 ->    86.26]  things that they can manage and become more powerful over time.
+[   86.26 ->    91.26]  So for example, we launched MCP, which gives agents access to external
+[   91.26 ->    93.26]  tools and data.
+[   93.26 ->    97.26]  We launched harnesses that were really powerful like Claude code and the
+[   97.26 ->    98.26]  agent SDK.
+[   98.26 ->   103.26]  In October, we launched skills, which let agents pick up brand new capabilities
+[  103.26 ->   107.26]  that either other agents have designed and shared with them or humans and
+[  107.26 ->   110.26]  users that they interact with designed for them.
+[  110.26 ->   115.26]  Each primitive has let agents do increasingly powerful things for longer
+[  115.26 ->   116.26]  periods of time.
+[  116.26 ->   120.26]  But we still think that something is still kind of unsolved and that's
+[  120.26 ->   126.26]  continuous self-learning and context management over long horizon tasks.
+[  126.26 ->   130.67]  So memory is the next primitive.
+[  130.67 ->   134.67]  It's the thing that I think will get us to self-learning agents that
+[  134.67 ->   138.67]  evolve and improve based on the tasks that they're working on and their own
+[  138.67 ->   140.67]  experience.
+[  140.67 ->   144.67]  With memory, agents can learn about the tasks they work on, things like the
+[  144.67 ->   150.67]  success criteria, common mistakes, strategies that are or not working.
+[  150.67 ->   153.67]  They can learn about their environments, things like the code bases that they
+[  153.67 ->   157.67]  interact with, the files and the assets that they're constantly keeping up
+[  157.67 ->   158.67]  to date.
+[  158.67 ->   162.67]  And they can also learn from other agents that are in the same environment as
+[  162.67 ->   163.67]  them.
+[  163.67 ->   166.67]  They can share learnings, they can figure out what's going wrong, elsewhere in
+[  166.67 ->   169.67]  a system and incorporate that into their own memory.
+[  169.67 ->   173.67]  And I think this last point is the one that I've been most excited about this
+[  173.67 ->   175.67]  year and over the next couple of months.
+[  175.67 ->   179.67]  I think self-managed memory is going to be super important in these large and
+[  179.67 ->   183.67]  complex multi-agent systems where a swarm of agents that are working in a
+[  183.67 ->   188.67]  similar environment on discrete tasks are essentially building up their own
+[  188.67 ->   194.67]  understanding, their own model of the world that they're in over time.
+[  194.67 ->   198.67]  So to help get to this vision, we just launched memory and
+[  198.67 ->   201.67]  cloud managed agents in public beta a couple of weeks ago.
+[  201.67 ->   206.67]  These divs developers a frontier memory system that works out of the box to
+[  206.67 ->   212.67]  maximize intelligence by default to support these systems of many agents
+[  212.67 ->   215.67]  running concurrently in the same environment.
+[  215.67 ->   219.67]  And most importantly to give enterprises and developers the flexibility and
+[  219.67 ->   224.67]  control they need to actually run these in production in an enterprise setting.
+[  224.67 ->   230.08]  We've already heard from a bunch of teams building on this to date that all
+[  230.08 ->   234.08]  say that this helps them get to continuous learning and
+[  234.08 ->   237.08]  continuous improving agents a lot faster.
+[  237.08 ->   240.08]  Rockerton for example mentioned that this helps
+[  240.00 ->   246.00]  them drop their first past mistakes in their internal knowledge agents by 90% because
+[  246.00 ->   250.72]  agents were able to catch mistakes and share them with the next iteration of agents,
+[  250.72 ->   255.64]  which also led to better token efficiency and lower costs and better latency because
+[  255.64 ->   260.90]  they started deploying memory systems.
+[  260.90 ->   265.34]  So I want to talk a bit about the requirements that we kept in mind that we discovered
+[  265.34 ->   268.18]  while talking to customers and building this.
+[  268.22 ->   274.62]  The first and most important is memory needs to be built to maximize intelligence by default.
+[  274.62 ->   277.90]  Agent builders have been designing memory systems for a while.
+[  277.90 ->   283.06]  I mean, we are cells launched Cloud.md originally with Cloud Code, I think, about a year
+[  283.06 ->   284.06]  and a half ago.
+[  284.06 ->   288.66]  And this was a pretty constrained early version of memory where an agent could leave
+[  288.66 ->   293.82]  notes for itself, sometimes the user would also leave notes in the same memory file.
+[  293.82 ->   298.14]  And we also launched something like the memory tool within our SDKs, which was a
+[  298.14 ->   305.14]  pretty well-specified tool call with specific parameters and output formats that API builders
+[  305.14 ->   306.78]  could use.
+[  306.78 ->   311.82]  As agents have improved, we've tried to get more and more out of Cloud's way and delegate
+[  311.82 ->   318.34]  more of this decision-making to Cloud without over constraining the design of these harnesses.
+[  318.34 ->   323.14]  And as we did with skills, we kind of came to the conclusion that, hey, we know that agents
+[  323.14 ->   327.62]  are able to manage a virtual environment and manage their own file system.
+[  327.62 ->   331.22]  So why can't we go in the same direction with memory?
+[  331.22 ->   335.78]  Memory in Cloud-managed agents models memory as a file system to Cloud.
+[  335.78 ->   341.30]  A series of files with a specific hierarchy and format that Cloud can manage and update on
+[  341.30 ->   342.66]  its own.
+[  342.66 ->   348.58]  It can use familiar tools like Bash and grep to update this memory to keep it organized
+[  348.58 ->   352.90]  and to constantly change it as it starts working on a task.
+[  352.90 ->   356.70]  Now this also tracks with what we're seeing in the latest models.
+[  356.70 ->   361.30]  With Cloud Opus 4.7, which we just launched last month, we saw that it was state of the
+[  361.30 ->   363.66]  art at file system-based memory.
+[  363.66 ->   368.76]  That means it's a lot better at discerning what content to put into memory, what's worth
+[  368.76 ->   369.96]  remembering.
+[  369.96 ->   372.78]  It's better at figuring out what's the right structure for memory.
+[  372.78 ->   375.66]  How many files should I split memory into?
+[  375.66 ->   378.82]  How do I keep it organized inside of a file system?
+[  378.82 ->   383.10]  And ultimately, it all does this with just Bash tools and grep tools that already make
+[  383.10 ->   389.66]  a Cloud so good at agentic coding.
+[  389.66 ->   394.22]  The other thing that we had in mind when designing memory is that it needs to scale with
+[  394.22 ->   398.34]  the multi-agent systems that we're going to be building over the coming months.
+[  398.34 ->   402.50]  Multi-parallel agents is something that we're already kind of starting to do with Cloud
+[  402.50 ->   403.50]  code.
+[  403.50 ->   407.70]  There's a lot of buy-putters that have like 10 or 15 Cloud code sessions running at the
+[  407.70 ->   408.70]  same time.
+[  408.70 ->   412.82]  And we're starting to see this in an enterprise setting as well where enterprises, including
+[  412.82 ->   417.70]  and drop-back, have hundreds or sometimes even thousands of agents running in parallel,
+[  417.70 ->   422.26]  interacting with the same set of shared state and the same shared memory.
+[  422.26 ->   424.98]  So there's a couple of properties that come out of this.
+[  424.98 ->   429.98]  One is we want to give agents the ability to mix and match between the session and the work
+[  429.98 ->   434.86]  that it's doing and the set of memory stories that it has access to.
+[  434.86 ->   439.46]  So one property of memory and managed agents is permission scopes.
+[  439.46 ->   443.74]  The ability for one agent to have read-only access to one memory store.
+[  443.74 ->   449.94]  And maybe that memory store is organization-wide knowledge, a set of best practices, a
+[  449.94 ->   452.66]  runbook for how to deal with these common tasks.
+[  452.66 ->   455.74]  And then it has read-write memory for another memory store.
+[  455.74 ->   460.22]  So maybe that's another one where it has working memory that's a lot more specific and
+[  460.22 ->   464.54]  frequently updated based on the work it's doing.
+[  464.54 ->   468.18]  The other property that came out of this was concurrency.
+[  468.18 ->   472.18]  If there are hundreds or thousands of agents interacting at the same time with the same
+[  472.18 ->   476.46]  set of memory state, it needs to be able to know that it's not going to clobber the memory
+[  476.46 ->   478.98]  or overwrite it as it continues working.
+[  478.98 ->   479.98]  So we implement-
+[  480.00 ->   486.30]  optimistic currency where one agent can essentially use a content hash to check if it's
+[  486.30 ->   493.68]  going to overwrite another agent's memory before it actually makes an update.
+[  493.68 ->   498.84]  From talking to customers, the final and most important property from all of this is about
+[  498.84 ->   503.22]  developer and enterprise control for actual production agents.
+[  503.22 ->   505.00]  A couple of things came out of this.
+[  505.00 ->   509.68]  The first and probably most sought after property is version history.
+[  509.68 ->   515.32]  It's the ability for the developers building with managed agents to see an entire audit
+[  515.32 ->   521.00]  log of every time memory was updated and to actually even give an agent's access to
+[  521.00 ->   526.80]  the same audit log in the future so they can keep track of what change was made and when.
+[  526.80 ->   531.88]  It's also attribution metadata to say what agent made an update, what time did it make
+[  531.88 ->   536.04]  that update, what session made that specific change and to go super granularly so this
+[  536.04 ->   540.72]  is predictable and in developers control.
+[  540.72 ->   544.76]  The other property that came out of this was a standalone API.
+[  544.76 ->   548.84]  We talked to a lot of customers that are building the spoke systems outside of managed
+[  548.84 ->   552.56]  agents to manage and curate their memory and keep it up to date.
+[  552.56 ->   557.04]  We talked to customers that do PII scanning to make sure that memory doesn't have sensitive
+[  557.04 ->   559.32]  content that shouldn't be in there.
+[  559.32 ->   563.28]  We also talked to customers that wanted to clean up memory in their own separate pipeline
+[  563.28 ->   566.24]  or to clone it into external systems.
+[  566.24 ->   570.12]  So we didn't want to lock them in into a specific system that was only available to manage
+[  570.12 ->   571.12]  agents.
+[  571.12 ->   579.11]  We built this portable API so they could go and control these additional things on their own.
+[  579.11 ->   584.11]  So taking a step back we've started to form this picture of the different layers that
+[  584.11 ->   587.75]  we need to work in as we build a frontier memory system.
+[  587.75 ->   592.83]  We've talked about the storage layer which is where the data is actually stored, what kind
+[  592.83 ->   597.51]  of metadata and attribution data we're leaving alongside of it.
+[  597.51 ->   600.47]  We've talked about the structure and the content layer.
+[  600.47 ->   606.31]  This is things like our decision to model files memory as files in a file system and earlier
+[  606.31 ->   610.95]  with skills as a form of procedural memory that have a pretty lightweight spec that say,
+[  610.95 ->   615.23]  hey here's how you can actually learn how to do this new capability and equip yourself
+[  615.23 ->   617.27]  with new knowledge.
+[  617.27 ->   618.87]  And then there's the process layer.
+[  618.87 ->   624.23]  This is things like how often is memory actually updated, what triggers updates to that
+[  624.23 ->   629.63]  memory and what sources does it use to decide what changes to make the memory and have
+[  629.63 ->   632.43]  new things to learn.
+[  632.43 ->   637.59]  And we think that agent memory, the API that we've been discussing, solves part of this.
+[  637.59 ->   642.03]  But as we started to scale this up into these more complex multi agent systems, we also
+[  642.03 ->   644.23]  saw a bunch of limitations.
+[  644.27 ->   649.87]  We saw cases where memory was sessions were missing learnings that other agents and other
+[  649.87 ->   652.71]  sessions had already kind of figured out on their own.
+[  652.71 ->   657.19]  We saw these common mistakes and these shared patterns across multiple agents working
+[  657.19 ->   659.19]  in the same environment.
+[  659.19 ->   663.55]  And we also saw that they weren't super efficient at keeping up this large scale memory
+[  663.55 ->   666.99]  store and keeping it up to date in a holistic and efficient way.
+[  666.99 ->   671.47]  They were kind of siloed into the specific tasks that they were working on.
+[  671.47 ->   675.61]  So for the past couple of months, we've been experimenting with a couple of different types
+[  675.61 ->   679.03]  of processes to kind of supplement this with.
+[  679.03 ->   681.39]  And we landed on one.
+[  681.39 ->   685.91]  We call this process dreaming and today we're launching this in research preview in the
+[  685.91 ->   689.39]  managed agents API.
+[  689.39 ->   694.23]  Dreaming is a process that looks for patterns and mistakes across your recent agent sessions
+[  694.23 ->   702.30]  and their transcripts and automatically produces organized and up-to-date memory content.
+[  702.30 ->   707.34]  We've worked with a few customers in early testing and for example, Harvey, when they deployed
+[  707.34 ->   712.42]  dreaming in one of their legal benchmarks, which tests out a pretty realistic legal scenario,
+[  712.42 ->   717.86]  they saw a six times increase in the task completion rate for one of their legal scenarios.
+[  717.86 ->   719.98]  And we're really excited to see how other customers.
+[  720.00 ->   724.40]  is use this when they start testing out this research preview.
+[  724.40 ->   727.96]  So let's talk a bit about why we got excited about dreaming
+[  727.96 ->   730.40]  in the first place and some of the design and harness
+[  730.40 ->   734.44]  considerations we kept in mind as we designed it.
+[  734.44 ->   735.76]  So how does dreaming work?
+[  735.76 ->   738.92]  It's a batch asynchronous process that
+[  738.92 ->   741.04]  runs separately from the work that you're
+[  741.04 ->   743.44]  doing within a specific session that's
+[  743.44 ->   745.64]  working on a specific task.
+[  745.64 ->   749.08]  You can pick off dreaming periodically using our console
+[  749.08 ->   752.48]  or API on a cron basis.
+[  752.48 ->   755.68]  Or you can plug it in using our API into an existing process.
+[  755.68 ->   757.88]  For example, some customers kick off dreaming
+[  757.88 ->   761.40]  once their agents have finished a task and are spinning down
+[  761.40 ->   765.00]  and want to save those learnings to the memory state.
+[  765.00 ->   768.20]  And dreaming comprehensively looks through recent transcripts,
+[  768.20 ->   770.72]  looks for common mistakes, things that a bunch of agents
+[  770.72 ->   773.60]  are doing like a failed tool call or strategies
+[  773.60 ->   776.12]  that are working out for them, and finds opportunities
+[  776.12 ->   778.92]  to update the memory state that will improve it
+[  778.92 ->   779.76]  in the future.
+[  779.76 ->   781.96]  And it produces this updated memory state
+[  781.96 ->   784.96]  that you can then apply immediately to your memory store.
+[  784.96 ->   786.36]  Or maybe you want to run some checks
+[  786.36 ->   790.60]  and do some manual review, which you can do via the API.
+[  790.60 ->   793.88]  The ultimate goal of dreaming is continuous self-learning
+[  793.88 ->   797.32]  and self-improvement, where the next day's agents automatically
+[  797.32 ->   799.64]  get better based on the learnings and the work
+[  799.64 ->   806.76]  of the previous day's experience.
+[  806.76 ->   809.60]  We're excited about dreaming from a design and research
+[  809.60 ->   812.36]  perspective for a couple of reasons.
+[  812.40 ->   815.32]  The first property is compared to the memory APIs
+[  815.32 ->   817.08]  we've been talking about previously,
+[  817.08 ->   818.40]  dreaming is out of band.
+[  818.40 ->   821.76]  It happens outside the context of an agent working
+[  821.76 ->   825.08]  on a specific session or a specific task.
+[  825.08 ->   826.76]  And this has a couple of benefits.
+[  826.76 ->   829.64]  The first that is that it's a really good fit
+[  829.64 ->   832.20]  for multi-agent systems.
+[  832.20 ->   834.40]  When a single agent is reading and writing memory,
+[  834.40 ->   837.56]  it has the perspective of itself, of its own context,
+[  837.56 ->   838.40]  and of its task.
+[  838.40 ->   841.60]  But dreaming lets us go kind of a step above that
+[  841.60 ->   844.08]  and look at multiple agents at the same time
+[  844.08 ->   845.92]  to find these shared patterns and learnings
+[  845.92 ->   848.88]  that a single agent might not learn or notice
+[  848.88 ->   851.84]  from its own limited perspective.
+[  851.84 ->   854.00]  From a harness design perspective,
+[  854.00 ->   856.24]  we've also found consistently that's
+[  856.24 ->   857.90]  it's important for agents to have really
+[  857.90 ->   862.32]  discrete and clear objectives as they start working on a task.
+[  862.32 ->   864.36]  So dreaming really lets us separate out
+[  864.36 ->   867.08]  this new objective of memory quality,
+[  867.08 ->   869.00]  because we think over the coming months,
+[  869.00 ->   871.16]  memory is going to be increasingly important
+[  871.16 ->   873.44]  in load bearing to the actual outcomes
+[  873.44 ->   875.88]  and the work that agents are doing.
+[  875.88 ->   879.28]  So this lets us separate the memory quality objective
+[  879.28 ->   881.96]  from the task completion and task performance
+[  881.96 ->   886.08]  objectives that a lot of agents already have today.
+[  886.08 ->   888.76]  And again, because dreaming is an out of band process,
+[  888.76 ->   890.04]  it's in the background.
+[  890.04 ->   892.04]  It does this without adding any latency
+[  892.04 ->   898.42]  to the hot path of an agent's existing task.
+[  898.42 ->   900.46]  The other design perspective we had here and think
+[  900.46 ->   902.94]  that we wanted to enable, which I'm very excited about,
+[  902.94 ->   905.10]  is large-scale memory systems.
+[  905.10 ->   907.34]  And how we can use compute effectively
+[  907.34 ->   909.54]  to create and curate these.
+[  909.54 ->   912.30]  Today, most memory deployments are pretty localized
+[  912.30 ->   915.18]  to a specific user or a specific task,
+[  915.18 ->   917.42]  or maybe a small team that's working together.
+[  917.42 ->   921.06]  But agent systems are quickly getting to enterprise scale.
+[  921.06 ->   924.30]  And again, within an anthropic and within other enterprises
+[  924.30 ->   927.02]  that we work with, they already have hundreds or thousands
+[  927.02 ->   930.26]  of agents running concurrently that share a state.
+[  930.26 ->   931.82]  So this effectively starts to turn
+[  931.82 ->   933.86]  into a really large knowledge base,
+[  933.86 ->   936.66]  as opposed to just a simple memory store to store
+[  936.66 ->   940.22]  working context about a specific task.
+[  940.22 ->   942.50]  And to support this, we need to find ways
+[  942.50 ->   945.78]  to let cloud scale up memory systems to be super large,
+[  945.78 ->   947.90]  while still being up to date and fresh,
+[  947.90 ->   950.42]  and not too token intensive.
+[  950.42 ->   952.42]  Dreaming is a process that lets us do this
+[  952.42 ->   955.30]  by essentially following similar scaling laws
+[  955.30 ->   958.06]  of using additional compute and additional effort
+[  958.06 ->   960.06]  to keep these memory systems organized.
+[  960.37 ->   966.49]  One way to think about this is how we consider test time compute or thinking models from a couple of years ago where
+[  967.09 ->   970.97]  giving models the ability to go explore and try different things and especially
+[  971.41 ->   973.73]  Spend more tokens leads to a lot better
+[  974.25 ->   979.07]  Final outcomes on the task that they're working on and dreaming is a similar thing that lets a dreaming agent
+[  979.33 ->   983.41]  Spend more tokens to keep these systems well organized and up to date
+[  984.97 ->   988.09]  Another perspective we have here is like a search system where
+[  988.45 ->   993.51]  There's this upfront effort to kind of produce this high quality up-to-date index
+[  993.69 ->   998.41]  That then is then used at retrieval time or search time to get the latest results
+[  998.85 ->  1000.53]  Super-efficiently and performatively
+[ 1000.53 ->  1008.25]  So this is something that dreaming also lets us do by creating this index up front and then curating it so that all the downstream
+[ 1008.25 ->  1014.49]  Agents can use it and effectively lets us amortize this effort across all those agents that are reading from a memory store
+[ 1014.89 ->  1021.74]  So now with memory and dreaming in the managed agents API
+[ 1021.94 ->  1027.04]  We start to build this picture of what we think of as a frontier memory system at least so far
+[ 1027.94 ->  1036.26]  Memory on the left side is a primitive for agents to immediately in real time read and write things and remember things as they're working on a task and
+[ 1036.78 ->  1046.82]  Dreaming is a comprehensive process built on top of them to verify the state of memory to organize it and to enrich and backfill it with additional information
+[ 1047.30 ->  1050.62]  That based on the tasks that the agents are doing during a day
+[ 1051.54 ->  1057.78]  Dreaming is kind of the bridge between these more intermediate memory systems and these larger scale knowledge bases
+[ 1057.78 ->  1060.90]  That again, we think are going to be really prominent over the next few months
+[ 1061.46 ->  1065.25]  so let's walk through a
+[ 1066.41 ->  1068.41]  quick demo
+[ 1069.05 ->  1071.05]  What we're looking at here is a
+[ 1071.77 ->  1077.69]  SRE agent, let me make sure this starts there you go that is looking at alerts that are coming in and
+[ 1078.41 ->  1083.89]  It's reacting based on those alerts spinning up specific agents that either do a bunch of triage work
+[ 1084.01 ->  1091.37]  Maybe sometimes it's been a spins up an agent to go submit PRs and each of these agents are equipped with a couple of memory stores
+[ 1091.81 ->  1095.49]  We can see that it has an org wide knowledge memory store
+[ 1095.65 ->  1102.09]  It has an sRE and a code-based memory store and so if we click into the org wide knowledge memory store
+[ 1102.09 ->  1107.17]  We can see it's read only it's a set of let's say runbooks and SLO guidelines
+[ 1107.85 ->  1114.21]  It it points the agents to the specific owners that they might need to go ping and it's something that doesn't get updated very often
+[ 1114.21 ->  1117.69]  We don't want agents necessarily to be going and making changes as they work
+[ 1118.29 ->  1123.77]  Now there's also the sRE memory store that's read right and of course the sRE agents are able to
+[ 1124.25 ->  1128.45]  Constantly make changes to this as they react and learn from the environment around them
+[ 1129.21 ->  1135.37]  So we see this alert this p1 that's coming in from the dispatch service and we spin up this sRE agent
+[ 1135.85 ->  1141.09]  That goes and starts to kick off an investigation. It goes and investigates the CPU utilization
+[ 1141.49 ->  1146.93]  Maybe it goes and checks out some of the traffic patterns and queries for some of the recent PRs that have gotten deployed
+[ 1147.57 ->  1148.33]  it
+[ 1148.33 ->  1151.93]  writes down these learnings if we click into the sRE memory store and
+[ 1152.41 ->  1158.49]  notes these in a new diff that gets updated in that memory store now a couple minutes later that same alert gets
+[ 1158.49 ->  1163.01]  Paged again and a different sRE agent spins up with access to the same memory store
+[ 1163.25 ->  1167.41]  The first thing it does is it sees that note within its memory store that says hey
+[ 1167.41 ->  1173.29]  We already did this investigation. Here's what we found here's a way you can short circuit what you're looking at and ultimately it saves
+[ 1173.97 ->  1178.37]  The a bunch of time that it would have spent going and investigating the same thing
+[ 1178.37 ->  1183.31]  So we see an immediate token efficiency gain and an intelligence gain since it now knows
+[ 1184.01 ->  1186.01]  What else it can go investigate?
+[ 1186.65 ->  1187.81]  Now this is great
+[ 1187.85 ->  1195.05]  But we want to actually be able to deploy these in an enterprise and actually have reliability and see what decision-making led to certain things
+[ 1195.61 ->  1199.95]  Certain outcomes. So if we click into the memory store. We can see it has version history
+[ 1200.00 ->  1203.20]  It says every single time an update was made to this,
+[ 1203.20 ->  1207.12]  we can actually go back in time and see what changes were made.
+[ 1207.12 ->  1209.36]  We can also see which agent made that change.
+[ 1209.36 ->  1210.64]  When was it written?
+[ 1210.64 ->  1212.52]  And we also have this little precondition hash,
+[ 1212.52 ->  1215.48]  which is, again, what lets us do this optimistic concurrency
+[ 1215.48 ->  1217.00]  to say, hey, I made this change.
+[ 1217.00 ->  1222.00]  Let's actually verify it is what it is before I go and override it.
+[ 1222.00 ->  1223.80]  So we've been talking about agent memory,
+[ 1223.80 ->  1226.88]  but let's now see how dreaming can now
+[ 1226.88 ->  1230.40]  make this a more holistic and up-to-date memory system.
+[ 1230.40 ->  1235.16]  So we'll go and pivot over to the Cloud Console,
+[ 1235.16 ->  1237.28]  where it actually reflects the exact state
+[ 1237.28 ->  1238.96]  of what we're looking at in the API.
+[ 1238.96 ->  1241.64]  It's the set of memory stores that we've created,
+[ 1241.64 ->  1244.22]  and we'll click into the TMSRE Memory Store, which, again,
+[ 1244.22 ->  1247.84]  reflects the latest state of memory that we had written.
+[ 1247.84 ->  1251.32]  If we go and navigate to the Dreaming tab, specifically,
+[ 1251.32 ->  1254.32]  we can kick off a dreaming job where we say, hey,
+[ 1254.32 ->  1257.80]  I want to go and update and create this specific memory store.
+[ 1257.80 ->  1260.20]  And I want to look at a bunch of the sessions
+[ 1260.20 ->  1262.04]  that we've been looking at for the past seven days.
+[ 1262.04 ->  1264.76]  These are all the sessions that touch this memory store,
+[ 1264.76 ->  1268.84]  and we want to start dreaming job to look over those.
+[ 1268.84 ->  1271.00]  So I'll click into the Dream, and we
+[ 1271.00 ->  1273.36]  can see some of the work that it's doing under the hood.
+[ 1273.36 ->  1275.28]  It says, hey, here are some of the input sessions
+[ 1275.28 ->  1277.28]  that it's going to go and spend time looking into,
+[ 1277.28 ->  1278.88]  look through the transcripts.
+[ 1278.88 ->  1281.40]  And it spins up within the Cloud Console,
+[ 1281.40 ->  1283.56]  an actual session where you can go and see what's happening.
+[ 1283.56 ->  1286.32]  It's looking at the specific transcript entries.
+[ 1286.32 ->  1288.80]  And it's going to spin up a bunch of sub-agents that go
+[ 1288.80 ->  1290.44]  and look through those transcripts,
+[ 1290.44 ->  1292.76]  try to identify those learnings, and then
+[ 1292.76 ->  1295.84]  produce that updated memory state.
+[ 1295.84 ->  1297.60]  So we'll jump ahead a few minutes,
+[ 1297.60 ->  1299.24]  and look at the completed dreaming job
+[ 1299.24 ->  1301.80]  to see what the output was.
+[ 1301.80 ->  1305.12]  It produces a diff, which is a set of updated files
+[ 1305.12 ->  1307.64]  that it's going to apply to this memory store.
+[ 1307.64 ->  1310.60]  The first one is an update to this dispatch latency note
+[ 1310.60 ->  1312.92]  that we were looking at in the demo earlier.
+[ 1312.92 ->  1314.92]  It said, hey, a bunch of these agents
+[ 1314.92 ->  1318.92]  were triggered exactly 60 seconds after an upstream spike
+[ 1318.92 ->  1320.64]  in CPU realization.
+[ 1320.64 ->  1322.24]  And it kind of figures out, based on that pattern,
+[ 1322.24 ->  1324.32]  that there might be some retry logic that's
+[ 1324.32 ->  1326.84]  getting triggered that's really inefficient and leading
+[ 1326.84 ->  1328.44]  to a lot of wasted time when we're actually
+[ 1328.44 ->  1329.88]  triaging this stuff.
+[ 1329.88 ->  1333.12]  So it identifies that because each of the individual agents
+[ 1333.12 ->  1334.32]  aren't really noticing that pattern.
+[ 1334.32 ->  1335.84]  They don't know that other agents are also
+[ 1335.84 ->  1339.08]  seeing kind of that 60-second pattern every single time,
+[ 1339.08 ->  1339.92]  and it leaves a note.
+[ 1339.92 ->  1342.44]  And the goal with this is future agents benefit
+[ 1342.44 ->  1346.12]  from this learning and can go figure this out more efficiently.
+[ 1346.12 ->  1348.72]  It also does a deduplication and curation step.
+[ 1348.72 ->  1351.84]  It sees that there were five of the same entries
+[ 1351.84 ->  1354.56]  from previous agents that were working with this memory store,
+[ 1354.56 ->  1358.04]  and it consolidates that into a single entry.
+[ 1358.04 ->  1360.60]  It removes a stale entry that's no longer valid,
+[ 1360.60 ->  1364.20]  that it's saw on the transcript that is no longer relevant.
+[ 1364.20 ->  1366.04]  And then it adds this verification note.
+[ 1366.04 ->  1368.32]  It says, at this time, based on this transcript,
+[ 1368.32 ->  1371.04]  I just looked at, this memory is actually accurate.
+[ 1371.04 ->  1373.12]  I was able to verify it based on the work
+[ 1373.12 ->  1374.32]  that the agent was doing.
+[ 1374.32 ->  1376.80]  And therefore, you can rely on it in the next day
+[ 1376.80 ->  1379.44]  when you start using the same memory store.
+[ 1379.44 ->  1382.72]  So there's that verification backfill organization steps
+[ 1382.72 ->  1386.40]  that we think memory and dreaming are really useful for.
+[ 1386.40 ->  1388.40]  And so with this demo, what we've kind of seen
+[ 1388.40 ->  1392.28]  is how we can actually build production agents using the memory
+[ 1392.28 ->  1395.64]  and dreaming APIs in the managed agents API.
+[ 1395.64 ->  1398.84]  And to close out, I think that over the next couple of months,
+[ 1398.84 ->  1401.44]  we're going to start seeing agents that run for days
+[ 1401.44 ->  1403.84]  or many, many hours at a time.
+[ 1403.84 ->  1407.60]  And I think that memory is going to be a really important part
+[ 1407.60 ->  1410.80]  of that system and what makes it ultimately possible.
+[ 1410.80 ->  1412.28]  So I'm really excited to see what everyone
+[ 1412.28 ->  1414.24]  builds with memory and dreaming in the Cloud
+[ 1414.24 ->  1416.12]  managed agents API.
+[ 1416.12 ->  1418.04]  And you should get started today.
+[ 1418.04 ->  1419.04]  Thank you.

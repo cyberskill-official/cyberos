@@ -11,7 +11,7 @@ license: Apache-2.0
 metadata:
   version: 1.0.0
   module: skill
-  stage: <SDP §2 stage letter or "cross">
+  stage: cross
   cyberos-template: internal-newsletter@1
   cyberos-rubric-version: internal-newsletter_rubric@1.0
 

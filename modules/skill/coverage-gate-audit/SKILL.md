@@ -18,7 +18,7 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/coverage-gate.audit
+    - project:fr/{fr_id}/coverage-gate.audit
 
 audit:
   row_kind: coverage_gate_audited

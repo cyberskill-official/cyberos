@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: runbook-audit
-description: |
-  Audit one or more existing runbook@1 markdowns against
-  runbook_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  runbook-author.
+description: >-
+  Audit one or more existing runbook@1 markdowns against runbook_rubric@1.0. Use when user asks to "audit this runbook", "verify the runbook covers the rollback path", or "check the on-call procedure meets SDP §4(d)". Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after runbook-author. Do NOT use for "draft a new runbook" (use runbook-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

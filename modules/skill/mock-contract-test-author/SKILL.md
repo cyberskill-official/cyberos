@@ -27,7 +27,7 @@ allowed_brain_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/<fr_id>/mock-contract-test
+    - project:fr/{fr_id}/mock-contract-test
 audit:
   row_kind: mock_contract_test_authored
   required_fields: [fr_id, dependency_name, request_response_pairs, contract_tests, sunset_criterion]

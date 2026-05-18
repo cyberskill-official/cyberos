@@ -18,7 +18,7 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/debug-trace.audit
+    - project:fr/{fr_id}/debug-trace.audit
 
 audit:
   row_kind: debug_cycle_audited

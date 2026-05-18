@@ -1,14 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: architecture-decision-record-author
-description: |
-  Author one or more Architecture Decision Records (adr@1) from an
-  approved SRS plus architectural-spike output, capturing significant
-  technical decisions with context, options considered, decision,
-  consequences. Aligned with Michael Nygard's ADR format and arc42
-  documentation conventions. Covers Software Development Process.md
-  §2(d) System architecture and high-level design. Chains naturally
-  into architecture-decision-record-audit, threat-model-author, and software-design-document-author.
+description: >-
+  Author one or more Architecture Decision Records (adr@1) from an approved SRS plus architectural-spike output. Use when user asks to "draft an ADR", "record this architecture decision", or "document the technical choice". Captures significant technical decisions with context, options considered, decision, consequences. Aligned with Michael Nygard's ADR format and arc42 documentation conventions. Covers SDP §2(d) System architecture. Chains naturally into architecture-decision-record-audit, threat-model-author, software-design-document-author. Do NOT use for "audit this existing ADR" (use architecture-decision-record-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

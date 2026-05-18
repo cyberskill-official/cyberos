@@ -1,14 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: runbook-author
-description: |
-  Author an operational runbook (runbook@1) for a service / system.
-  Captures: SLOs/SLAs, on-call rota reference, alert response
-  procedures (per Google SRE practices), error-budget policy,
-  observability hooks (Grafana / Datadog / OpenTelemetry), proactive
-  vulnerability-management cadence. Covers Software Development
-  Process.md §2(j) Operations, monitoring, maintenance, support.
-  Chains naturally into runbook-audit.
+description: >-
+  Author a production operational runbook (runbook@1) for a specific failure mode or recurring task from incident history + observability dashboards + on-call notes. Use when user asks to "draft a runbook for high BRAIN ingest lag", "create the on-call runbook for AUTH 5xx spikes", or "document the recovery procedure". Captures preconditions, detection signals, decision tree, step-by-step recovery, rollback, post-incident handover. Covers SDP §4(d) Operational readiness. Chains naturally into runbook-audit. Do NOT use for "audit an existing runbook" (use runbook-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

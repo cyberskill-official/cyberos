@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: test-strategy-audit
-description: |
-  Audit one or more existing test-strategy@1 markdowns against
-  test-strategy_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  test-strategy-author.
+description: >-
+  Audit one or more existing test-strategy@1 markdowns against test_strategy_rubric@1.0. Use when user asks to "audit this test strategy", "check the test-plan rubric", or "verify the strategy meets ISO 29119-3 coverage". Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after test-strategy-author. Do NOT use for "draft a new test strategy" (use test-strategy-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

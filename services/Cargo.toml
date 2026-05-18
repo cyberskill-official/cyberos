@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "brain",
     "auth",
+    "skill-broker",
     "shared/cyberos-cli-exit",
     "shared/cyberos-types",
 ]

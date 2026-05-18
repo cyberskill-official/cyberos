@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: regulatory-filing-author
 description: Authors a regulatory submission — SEC filing (10-K / 10-Q / 8-K per Reg S-K), FDA submission (IND / NDA / PMA per 21 CFR), EU AI Act Annex IV conformity assessment, GDPR Art. 33 breach notification, Vietnam Decree 13/2023 PDPD registration, or similar. Section ordering MUST match the regulator's structural mandate.
-  Author a REGULATORY_FILING markdown from <input artefact(s)>. Generates a
+  Author a REGULATORY_FILING markdown from source artefact(s). Generates a
   versioned regulatory-filing@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   regulatory-filing-audit by default. Refuses to author when upstream artefact

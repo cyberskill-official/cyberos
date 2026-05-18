@@ -7,7 +7,7 @@ license: Apache-2.0
 metadata:
   version: 1.0.0
   module: skill
-  stage: <SDP §2 stage letter or "cross">
+  stage: cross
   cyberos-template: feature_request@1   # replace with this skill's artefact template id
   cyberos-rubric-target: sustainability-report_rubric@1.0
 

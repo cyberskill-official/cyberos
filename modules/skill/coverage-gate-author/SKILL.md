@@ -22,7 +22,7 @@ allowed_brain_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/<fr_id>/coverage-gate
+    - project:fr/{fr_id}/coverage-gate
 audit:
   row_kind: coverage_gate_authored
   required_fields: [fr_id, files_touched, files_below_90pct, total_tests_run, tests_failed, ecm_rows_uncovered]

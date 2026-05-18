@@ -1,15 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: test-strategy-author
-description: |
-  Author a Test Strategy outline (test-strategy@1) per Software
-  Development Process.md Template §4.6. Captures: scope, risk-based
-  test priorities, test levels (unit / integration / system / UAT),
-  test types (functional, performance, security, accessibility,
-  regression), environments and data, tooling, entry/exit criteria,
-  defect management, metrics. Maps NFRs to test types and OWASP Top
-  10:2025 to threat-led pen-test scope. Chains naturally into
-  test-strategy-audit.
+description: >-
+  Author a test strategy document (test-strategy@1) per ISO/IEC/IEEE 29119-3 from an approved SRS or impl-plan. Use when user asks to "draft a test strategy", "outline the test plan for the auth slice", or "design the testing approach". Captures test types (unit / integration / e2e / property / fuzz / chaos), coverage targets, test data strategy, environment matrix, entry/exit criteria, risk-based prioritisation. Covers SDP §3(b) Test strategy. Chains naturally into test-strategy-audit. Do NOT use for "audit an existing test strategy" (use test-strategy-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

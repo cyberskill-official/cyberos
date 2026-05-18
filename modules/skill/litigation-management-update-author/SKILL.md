@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: litigation-management-update-author
 description: Authors a quarterly (or per-board-meeting) litigation management status update. Covers active matters, exposure quantification (USD potential damages), settlement posture, outside-counsel costs vs ACC Value-Challenge benchmark, reserve recommendation, board-chapter content. Per Litify case-mgmt model + ABA Litigation Section best practices.
-  Author a LITIGATION_MGMT_UPDATE markdown from <input artefact(s)>. Generates a
+  Author a LITIGATION_MGMT_UPDATE markdown from source artefact(s). Generates a
   versioned litigation-management-update@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   litigation-management-update-audit by default. Refuses to author when upstream artefact

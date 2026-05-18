@@ -25,7 +25,7 @@ allowed_brain_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/<fr_id>/debug-trace
+    - project:fr/{fr_id}/debug-trace
 audit:
   row_kind: debug_cycle_authored
   required_fields: [fr_id, attempts, failure_vectors_seen, consecutive_failures, circuit_breaker_tripped]

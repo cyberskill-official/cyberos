@@ -23,7 +23,7 @@ allowed_brain_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/<fr_id>/observability-injection
+    - project:fr/{fr_id}/observability-injection
 audit:
   row_kind: observability_injection_authored
   required_fields: [fr_id, log_points, trace_spans, error_counters, branch_coverage_pct]

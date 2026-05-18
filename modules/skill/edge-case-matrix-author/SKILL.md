@@ -26,7 +26,7 @@ allowed_brain_scopes:
     - project:*
     - module:*
   write:
-    - project:fr/<fr_id>/edge-case-matrix
+    - project:fr/{fr_id}/edge-case-matrix
 audit:
   row_kind: edge_case_matrix_authored
   required_fields: [fr_id, total_rows, categories_covered, security_class_count, planned_test_paths]

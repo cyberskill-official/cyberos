@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: knowledge-pipeline-author
 description: Authors the quarterly knowledge-asset codification pipeline — engagement-by-engagement candidate harvest, codification queue with per-asset owner + due-date + stage, published-this-period asset list, reuse metrics (downloads / cites / engagement-use-count), taxonomy + tagging hygiene, backlog + next-quarter priorities. Critical for consulting firms where IP/asset codification is the moat. Per Nonaka SECI knowledge-conversion + Wenger Communities of Practice + Davenport Working Knowledge + ANSI Z39.19 controlled-vocabulary guidelines + McKinsey Knowledge Management practice (internal model).
-  Author a KNOWLEDGE_PIPELINE markdown from <input artefact(s)>. Generates a
+  Author a KNOWLEDGE_PIPELINE markdown from source artefact(s). Generates a
   versioned knowledge-pipeline@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   knowledge-pipeline-audit by default. Refuses to author when upstream artefact

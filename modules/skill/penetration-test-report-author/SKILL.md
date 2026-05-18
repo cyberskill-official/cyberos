@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: penetration-test-report-author
 description: Authors a penetration-test engagement report (internal red-team or external third-party). Executive summary, scope + rules of engagement, methodology, findings ranked by CVSS with PoC + remediation, retest plan. Per OWASP Web Security Testing Guide v4.2 + PTES + NIST SP 800-115 + OWASP ASVS v5.0 + MITRE ATT&CK.
-  Author a PEN_TEST_REPORT markdown from <input artefact(s)>. Generates a
+  Author a PEN_TEST_REPORT markdown from source artefact(s). Generates a
   versioned penetration-test-report@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   penetration-test-report-audit by default. Refuses to author when upstream artefact

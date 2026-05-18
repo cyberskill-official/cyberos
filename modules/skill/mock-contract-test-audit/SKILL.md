@@ -20,7 +20,7 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/mock-contract-test.audit
+    - project:fr/{fr_id}/mock-contract-test.audit
 
 audit:
   row_kind: mock_contract_test_audited

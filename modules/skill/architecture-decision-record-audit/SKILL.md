@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: architecture-decision-record-audit
-description: |
-  Audit one or more existing architecture-decision-record@1 markdowns against
-  adr_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  architecture-decision-record-author.
+description: >-
+  Audit one or more existing adr@1 markdowns against adr_rubric@1.0. Use when user asks to "audit this ADR", "check the rubric on the ADR", or "tell me which ADRs would fail review today". Produces a sibling .audit.md per ADR plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after architecture-decision-record-author. Do NOT use for "draft a new ADR" (use architecture-decision-record-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

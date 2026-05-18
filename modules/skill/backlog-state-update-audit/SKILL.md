@@ -21,8 +21,8 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/backlog-state-update.audit
-    - project:workflow/<run_id>/complete
+    - project:fr/{fr_id}/backlog-state-update.audit
+    - project:workflow/{run_id}/complete
 
 audit:
   row_kind: backlog_state_update_audited

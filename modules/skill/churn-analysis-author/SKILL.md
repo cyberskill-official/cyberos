@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: churn-analysis-author
 description: Authors a quarterly churn-analysis report — cohort identification, segmentation by reason / size / tenure / persona-fit, root-cause synthesis on verbatims + exit-interview data, win-back program design, leading indicators for at-risk accounts. Per Reichheld customer-economics + Gainsight + Catalyst customer-success benchmarks + TSIA churn-benchmarking + Bessemer Cloud Index SaaS benchmarks.
-  Author a CHURN_ANALYSIS markdown from <input artefact(s)>. Generates a
+  Author a CHURN_ANALYSIS markdown from source artefact(s). Generates a
   versioned churn-analysis@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   churn-analysis-audit by default. Refuses to author when upstream artefact

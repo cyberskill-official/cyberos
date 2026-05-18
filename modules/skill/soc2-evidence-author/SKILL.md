@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: soc2-evidence-author
 description: Assembles the SOC 2 Type I or Type II evidence package. Control inventory mapped to AICPA Trust Services Criteria, per-control evidence with collection date + period, auditor-facing index, gap analysis, remediation plan. Per AICPA TSC 2017 (with 2022 points-of-focus) + ISAE 3000/3402.
-  Author a SOC2_EVIDENCE markdown from <input artefact(s)>. Generates a
+  Author a SOC2_EVIDENCE markdown from source artefact(s). Generates a
   versioned soc2-evidence@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   soc2-evidence-audit by default. Refuses to author when upstream artefact

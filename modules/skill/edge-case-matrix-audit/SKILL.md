@@ -19,7 +19,7 @@ allowed_brain_scopes:
   read:
     - project:*
   write:
-    - project:fr/<fr_id>/edge-case-matrix.audit
+    - project:fr/{fr_id}/edge-case-matrix.audit
 
 audit:
   row_kind: edge_case_matrix_audited

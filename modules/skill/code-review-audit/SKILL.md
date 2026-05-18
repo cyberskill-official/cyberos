@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: code-review-audit
-description: |
-  Audit one or more existing code-review@1 markdowns against
-  code-review_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  code-review-author.
+description: >-
+  Audit one or more existing code-review@1 markdowns against code_review_rubric@1.0. Use when user asks to "audit this code review", "check the code-review rubric", or "verify the PR review meets SDP §5". Produces a sibling .audit.md per review plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after code-review-author. Do NOT use for "review a new PR diff" (use code-review-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0

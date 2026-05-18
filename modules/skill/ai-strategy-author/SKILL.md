@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: ai-strategy-author
 description: Authors the annual AI strategy — use-case portfolio (business value × feasibility × risk), build/buy/partner per use case, model governance posture, training-data strategy, MLOps maturity (Google MLOps levels), EU AI Act risk classification per use case (prohibited / high-risk / limited-risk / minimal-risk), AI ethics posture, budget envelope, AI OKRs. Per NIST AI RMF 1.0 + EU AI Act Regulation (EU) 2024/1689 + ISO/IEC 42001:2023 + Stanford HAI policy framework + Google MLOps maturity + Anthropic Responsible Scaling Policy as industry reference pattern.
-  Author a AI_STRATEGY markdown from <input artefact(s)>. Generates a
+  Author a AI_STRATEGY markdown from source artefact(s). Generates a
   versioned ai-strategy@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   ai-strategy-audit by default. Refuses to author when upstream artefact

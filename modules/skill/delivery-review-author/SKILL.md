@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: delivery-review-author
 description: Authors a COO-level quarterly delivery-health review. Per-engagement traffic-light status, utilization roll-up by role/team/org, margin analysis (gross + net), risks + escalations, customer satisfaction (CSAT/NPS), capacity-vs-pipeline alignment. Per Bain agile-PMO + McKinsey delivery-excellence + DORA metrics + TSIA benchmarks.
-  Author a DELIVERY_REVIEW markdown from <input artefact(s)>. Generates a
+  Author a DELIVERY_REVIEW markdown from source artefact(s). Generates a
   versioned delivery-review@1 file under output_dir, with per-claim authority
   markers and provenance to the source. Chains naturally into
   delivery-review-audit by default. Refuses to author when upstream artefact
