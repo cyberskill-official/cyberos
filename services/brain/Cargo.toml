@@ -30,6 +30,7 @@ uuid.workspace = true
 chrono.workspace = true
 sha2.workspace = true
 async-trait = "0.1"
+regex = "1"
 
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true

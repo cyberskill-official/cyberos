@@ -211,7 +211,7 @@ flowchart TB
  OBS --> ALERT
  ALERT --> CUO_TRIAGE
  CUO_TRIAGE -.->|"conf ≥ 0.70"| CHAT
- CUO_TRIAGE -.->|"conf &lt; 0.70 OR P1"| PAGER
+ CUO_TRIAGE -.->|"conf below 0.70 OR P1"| PAGER
  OBS --> COMP
 
  classDef hub fill:#ede9fe,stroke:#5b21b6,stroke-width:3px,color:#3b0764
@@ -376,7 +376,7 @@ sequenceDiagram
  alt confidence ≥ 0.70 AND severity ≤ P2
    C->>CH: post ticket with runbook link + suggested first step
    C->>B: audit row (alert · runbook · routing=self-service)
- else confidence &lt; 0.70 OR severity ∈ {P0, P1}
+ else confidence below 0.70 OR severity ∈ {P0, P1}
    C->>PD: escalate with suggested first step pre-attached
    C->>B: audit row (alert · routing=pagerduty)
  end
@@ -861,7 +861,7 @@ sequenceDiagram
  PROM->>SVC: GET /metrics (every 15 s)
  SVC-->>PROM: ai_request_latency_p95_seconds 2.3<br>ai_provider_error_total 47
  loop alert eval every 30 s
- PROM->>PROM: evaluate rule: ai_request_latency_p95_seconds &gt; 2 for 5m
+ PROM->>PROM: evaluate rule: ai_request_latency_p95_seconds above 2 for 5m
  alt firing
  PROM->>AM: alert {severity=critical, service=ai-gateway}
  AM->>AM: route by labels
@@ -920,13 +920,13 @@ sequenceDiagram
  participant OPS as On-call engineer
 
  R->>AM: alert {severity, service, summary}
- alt severity=critical (SLO burn fast, error_budget &lt; 5%)
+ alt severity=critical (SLO burn fast, error_budget below 5%)
  AM->>PD: trigger incident
  AM->>CHAT: post #incidents
  PD->>OPS: page
  OPS->>CHAT: acknowledge
  OPS->>OPS: investigate via Grafana
- else severity=warning (burn slow, budget &lt; 30%)
+ else severity=warning (burn slow, budget below 30%)
  AM->>CHAT: post #cyberos-alerts
  Note over OPS: handled async; SLA 4h
  else severity=info (trend, advisory)
@@ -973,7 +973,7 @@ sequenceDiagram
  <div class="mermaid">
 stateDiagram-v2
  [*] --> Inactive: rule loaded
- Inactive --> Pending: condition met for &lt; for_seconds
+ Inactive --> Pending: condition met for below for_seconds
  Pending --> Inactive: condition cleared before for_seconds
  Pending --> Firing: condition held for ≥ for_seconds
  Firing --> Acknowledged: on-call ack
@@ -1014,7 +1014,7 @@ stateDiagram-v2
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" target="_blank" rel="noopener" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -1342,10 +1342,10 @@ slo:
  <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
  <a href="chat.html" class="text-blue-700 underline">chat.html</a> ·
  <a href="proj.html" class="text-blue-700 underline">proj.html</a></li>
- <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — OBS placed at P0 · slice 1 alongside AI Gateway as the two earliest P0 modules.</li>
- <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §6</a> — OBS rated "Strong" (9/10); auto-runbook-router framing flagged as the most differentiated operational play.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §8</a> — OBS reads from BRAIN's audit chain for compliance exports; never writes back (BRAIN is upstream).</li>
- <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a>.</li>
+ <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — OBS placed at P0 · slice 1 alongside AI Gateway as the two earliest P0 modules.</li>
+ <li><strong>Research review:</strong> <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — OBS rated "Strong" (9/10); auto-runbook-router framing flagged as the most differentiated operational play.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §8</a> — OBS reads from BRAIN's audit chain for compliance exports; never writes back (BRAIN is upstream).</li>
+ <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 logging, Art. 13 transparency, Art. 14 human oversight, Art. 26 deployer obligations.</li>
  <li><strong>ISO/IEC 27001:2022</strong> — A.8.15 logging, A.8.16 monitoring activities.</li>
  <li><strong>ISO/IEC 42001 (AIMS)</strong> — § 9.1 performance evaluation.</li>

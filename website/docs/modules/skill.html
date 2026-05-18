@@ -226,7 +226,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Role 3 · Vertical-pack moat</div>
  <div class="text-2xl mb-2">🇻🇳</div>
  <div class="font-bold text-slate-900 mb-1">Locally-defensible differentiation</div>
- <p class="text-sm text-slate-600 mb-3">cyberskill-vn (5 skills: MST · VAT · VietQR · CCCD · legal) is the proof-of-pattern. The same recipe produces cyberskill-sg / -id / -th / -eu / -us packs. Each pack is a defensible local moat a global vendor cannot easily replicate.</p>
+ <p class="text-sm text-slate-600 mb-3">cyberskill-vn (5 shipped: <code>vietnam-mst-validate</code> · <code>vietnam-vat-invoice</code> · <code>vietnam-bank-transfer</code> · <code>vietnam-vneid-integration</code> · <code>vietnam-legal-compliance</code>; <code>vn-tax-filing</code> planned) is the proof-of-pattern. The same recipe produces cyberskill-sg / -id / -th / -eu / -us packs. Each pack is a defensible local moat a global vendor cannot easily replicate.</p>
  <p class="text-xs" style="color:var(--text-mute)">Strategy doc §4 Level-4 · vertical packs as the actual compounding asset</p>
  </div>
  </div>
@@ -240,7 +240,7 @@ graph TB
  AI["⚡ AI Gateway<br>LLM cost ledger<br>planned"]
  MCP["🔌 MCP Gateway<br>tool federation<br>planned"]
  SKILL["🛠 SKILL<br><strong>this module</strong>"]
- CUO["🎯 CUO<br>router · 10 C-level skills"]
+ CUO["🎯 CUO<br>router · 47 persona workflows · 104 author+audit pairs"]
  ANY["any tenant module"]
  EXT["external Agent Skills clients<br>Claude / Codex / Cursor / etc."]
  BRAIN --> SKILL
@@ -287,7 +287,7 @@ graph TB
  <div class="bbg-card p-5">
  <div class="text-2xl mb-2">🇻🇳</div>
  <div class="font-bold text-slate-900 mb-1">VN-market collection as moat</div>
- <p class="text-sm text-slate-600">Six high-quality Vietnamese-market skills (MST, VAT, VietQR, CCCD, legal, tax) — defensible differentiation a global vendor can't easily replicate.</p>
+ <p class="text-sm text-slate-600">Five shipped Vietnamese-market public skills (<code>vietnam-mst-validate</code>, <code>vietnam-vat-invoice</code>, <code>vietnam-bank-transfer</code>, <code>vietnam-vneid-integration</code>, <code>vietnam-legal-compliance</code>; <code>vn-tax-filing</code> planned) — defensible differentiation a global vendor can't easily replicate.</p>
  </div>
  </div>
 </section>
@@ -528,14 +528,14 @@ sequenceDiagram
 <section id="vertical-packs" class="module-section">
  <header class="section-head"><span class="section-num">3.6</span><h2>Vertical-pack pattern — beyond cyberskill-vn</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The cyberskill-vn collection (6 skills · MST + VAT + VietQR + CCCD + legal + tax) is not the strategy. It is the <em>proof-of-pattern</em>. The strategy is to systematise vertical packs as a repeatable production unit and replicate it across SEA, EU, US, and across cross-cutting verticals (HR, legal, accounting). Per <a href="../../strategy/CYBEROS_STRATEGY.md" class="text-blue-700 underline">strategy doc §4.4</a>, vertical packs are <strong>Level 4</strong> productization and the actual compounding margin (70%+ since the base CyberOS is open-source). Each pack is a defensible local moat a global vendor cannot easily replicate.
+ The cyberskill-vn collection (5 shipped · MST + VAT + VietQR + CCCD + legal; tax-filing planned) is not the strategy. It is the <em>proof-of-pattern</em>. The strategy is to systematise vertical packs as a repeatable production unit and replicate it across SEA, EU, US, and across cross-cutting verticals (HR, legal, accounting). Per <a href="../../strategy/CYBEROS_STRATEGY.md" class="text-blue-700 underline">strategy doc §4.4</a>, vertical packs are <strong>Level 4</strong> productization and the actual compounding margin (70%+ since the base CyberOS is open-source). Each pack is a defensible local moat a global vendor cannot easily replicate.
  </p>
 
  <h3 class="text-lg font-bold mb-3">The pack recipe</h3>
  <div class="bbg-card p-5 mb-5">
  <ol class="text-sm leading-relaxed ml-5" style="list-style:decimal;color:var(--text)">
  <li class="mb-2"><strong>Pick the jurisdiction.</strong> Each pack maps to a single regulatory authority (Vietnam MoPS, Singapore PDPC, Indonesia OJK, Thailand RD, EU GDPR, US state-by-state, etc.). One regulator = one pack.</li>
- <li class="mb-2"><strong>Identify 5–8 "high-pain, high-frequency" workflows.</strong> The bar: each workflow takes a Vietnamese SME accountant or HR officer ≥ 1 hour per week today; the skill reduces that to ≤ 5 minutes. cyberskill-vn picked MST (every customer record needs validation), VAT (every invoice), VietQR (every payment), CCCD (every employee), legal (every Decree 13 audit), tax (monthly + quarterly returns).</li>
+ <li class="mb-2"><strong>Identify 5–8 "high-pain, high-frequency" workflows.</strong> The bar: each workflow takes a Vietnamese SME accountant or HR officer ≥ 1 hour per week today; the skill reduces that to ≤ 5 minutes. cyberskill-vn picked MST validation (every customer record), VAT invoicing (every sale), VietQR / Napas (every payment), CCCD / VNeID (every employee onboarding), legal-compliance scaffold (every Decree 13 audit). Tax filing remains the next planned bundle.</li>
  <li class="mb-2"><strong>Author each as an Agent Skills bundle.</strong> SKILL.md frontmatter declares <code>allowed_brain_scopes</code> + <code>allowed_mcp_tools</code> + jurisdiction-specific compliance metadata. The bundle ships with sample data, golden fixtures, and a parity harness against the regulator's published reference behaviour where available.</li>
  <li class="mb-2"><strong>Localise the language layer.</strong> Vietnamese: NFC normalisation, PGroonga tokenisation, Be Vietnam Pro font. Same pattern for Bahasa Indonesia, Thai, Tagalog, Arabic, etc.</li>
  <li class="mb-2"><strong>Compliance-verify each skill.</strong> Every cyberskill-vn skill cites the relevant decree article and ships a verification test that exercises the regulator's reference data (where available) or a golden-master fixture extracted from real-world filings.</li>
@@ -933,7 +933,7 @@ stateDiagram-v2
  Authored --> Built: cyberos-skill-cli build (TS → wasm32-wasi)
  Built --> Signed: cosign sign bundle
  Signed --> Published: push to OCI registry / agentskills.io
- Published --> Installed: cyberos-skill-cli install &lt;oci_ref&gt;
+ Published --> Installed: cyberos-skill-cli install {oci_ref}
  Installed --> Indexed: loader reads frontmatter into DashMap
  Indexed --> Activated: agent / activation event triggers body load + AOT compile
  Activated --> Invoked: invoker pulls Store · runs · audits
@@ -1119,7 +1119,7 @@ stateDiagram-v2
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill. Authoring discipline lives at <code>modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</code>.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" target="_blank" rel="noopener" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill. Authoring discipline lives at <code>modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</code>.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -1409,7 +1409,7 @@ $ cyberos-skill-cli build --lang ts./src/
  <tr><td>Phase 5 — WASM execution</td><td><span class="pill pill-shipped">scaffolded · runtime feature-gated</span></td></tr>
  <tr><td>Phase 6 — Capability broker</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td>Phase 7 — Legacy retirement</td><td><span class="pill pill-shipped">runbook ready · 30-day soak</span></td></tr>
- <tr><td>VN catalog (6 skills)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>VN catalog (5 shipped · 1 planned)</td><td><span class="pill pill-shipped">5 shipped</span> <span class="pill pill-planned">tax-filing planned</span></td></tr>
  <tr><td>OCI registry distribution</td><td><span class="pill pill-planned">planned</span></td></tr>
  <tr><td>Cosign signature verification at install</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td><code>agentskills.io</code> submission (R3)</td><td><span class="pill pill-planned">planned (waits for registry API)</span></td></tr>
@@ -1438,8 +1438,8 @@ $ cyberos-skill-cli build --lang ts./src/
  <header class="section-head"><span class="section-num">19</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (v1.0.0 design-locked 2026-05-14) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. §6 Lumi's BRAIN spec, §5 capture daemon spec, §8 multi-brain auto-evolve — defines the contract that <code>brain-capture@1</code>, <code>brain-sync@1</code>, and <code>cuo/personas/synthesis-author@1</code> implement.</li>
- <li><strong>FR_AUTHORING_WORKFLOW.md</strong> — <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">canonical FR creation playbook</a>. feature-request-author + feature-request-audit are reference implementations of the universal-protocol skill pattern.</li>
+ <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (archived 2026-05-18 — original 2026-05-14 design lock) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. §6 Lumi's BRAIN spec, §5 capture daemon spec, §8 multi-brain auto-evolve. Live implementation guidance now lives under <code>modules/memory/</code> + <code>services/brain/</code> + <code>docs/feature-requests/brain/</code>.</li>
+ <li><strong>AUTHORING_DISCIPLINE.md</strong> — <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">canonical FR creation playbook</a>. feature-request-author + feature-request-audit are reference implementations of the universal-protocol skill pattern.</li>
  <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/modules/memory/AGENTS.md</code>. §3.6 <code>allowed_brain_scopes</code> · §11 trust model · §14 cross-agent interop · §15 sync_class taxonomy.</li>
  <li><strong>AUDIT.md</strong> (13 May 2026) — full architectural audit + migration plan — <code>cyberos/modules/skill/README.md (Appendix H)</code>. Phases 0–7 closure rationale and Phase 8 (BRAIN integration) handoff.</li>
  <li><strong>SPEC.md</strong> — protocol summary — <code>cyberos/modules/skill/README.md (Appendix A)</code>.</li>
@@ -1447,10 +1447,10 @@ $ cyberos-skill-cli build --lang ts./src/
  <li><strong>PHASE_5_ACTIVATION.md</strong> — Wasmtime runtime activation guidance.</li>
  <li><strong>PHASE_7_RETIREMENT.md</strong> — legacy retirement runbook.</li>
  <li><strong>Source:</strong> <code>cyberos/modules/skill/crates/</code> · <code>cyberos/modules/skill/toolchain/</code> · <code>cyberos/modules/skill/<skill>/ (flat — was skill/skills/)</code> · <code>cyberos/modules/skill/tests/</code>. Stage-2+ skills land at <code>cyberos/modules/skill/<skill>/ (flat layout — no skills/ subdir)</code>, <code>cyberos/modules/skill/<skill>/</code>, <code>cyberos/modules/skill/<skill>/</code>.</li>
- <li><strong>External:</strong> <a href="https://agentskills.io/specification">agentskills.io/specification</a> · Anthropic engineering blog "Equipping agents for the real world with Agent Skills" (Oct 16 2025, updated Dec 18 2025) · <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview">docs.claude.com Agent Skills overview</a>.</li>
- <li><strong>Cross-module:</strong> <a href="brain.html" class="text-blue-700 underline">BRAIN module page</a> — where the Stage 1–5 protocol roadmap lives. <a href="cuo.html" class="text-blue-700 underline">CUO module page</a> — where the 10 C-level skills are detailed.</li>
+ <li><strong>External:</strong> <a href="https://agentskills.io/specification" target="_blank" rel="noopener">agentskills.io/specification</a> · Anthropic engineering blog "Equipping agents for the real world with Agent Skills" (Oct 16 2025, updated Dec 18 2025) · <a href="https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview" target="_blank" rel="noopener">docs.claude.com Agent Skills overview</a>.</li>
+ <li><strong>Cross-module:</strong> <a href="brain.html" class="text-blue-700 underline">BRAIN module page</a> — where the Stage 1–5 protocol roadmap lives. <a href="cuo.html" class="text-blue-700 underline">CUO module page</a> — where the 47 personas + 221 workflows are detailed.</li>
  <li><strong>Strategy:</strong> <a href="../../strategy/CYBEROS_STRATEGY.md" class="text-blue-700 underline">CYBEROS_STRATEGY.md</a> §4.4 vertical packs as Level-4 productization · §3 docs site Tier 1+2 features that the marketplace deferred-list comes from.</li>
- <li><strong>AUDIT + PLAN:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">24-week build plan</a> · <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">pre-launch research review</a> §3 (Skill is "Gold standard"); §7.3 (defer the marketplace, sell the packs).</li>
+ <li><strong>AUDIT + PLAN:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> · <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> §3 (Skill is "Gold standard"); §7.3 (defer the marketplace, sell the packs).</li>
  <li><strong>CHANGELOG:</strong> <code>cyberos/CHANGELOG.md (entries tagged [SKILL])</code> (newest-first).</li>
  </ul>
  </div>

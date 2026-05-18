@@ -9,6 +9,7 @@
 #![warn(missing_docs)]
 
 pub mod layer2;
+pub mod search;
 pub mod state;
 
 pub use state::AppState;

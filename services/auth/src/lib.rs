@@ -14,7 +14,11 @@
 
 pub mod handlers;
 pub mod idempotency;
+pub mod jwt;
+pub mod keygen;
+pub mod middleware;
 pub mod models;
+pub mod rbac;
 pub mod state;
 
 pub use state::AppState;

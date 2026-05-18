@@ -45,7 +45,7 @@
  The P0 dogfood gate. <strong>Slack + Zalo decommissioned at P0 exit (P0 · exit)</strong> — or the whole platform thesis fails. Mattermost fork + CyberOS auth shell + PGroonga Vietnamese search + <code>@lumi</code> mention → BRAIN memory row.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CHAT is the single most strategically loaded P0 module. <strong>Per the audit-and-plan §3 milestones</strong>, P0 exit is defined as "Slack + Zalo decommissioned" — meaning every internal CyberSkill team conversation moves to CHAT before P0 · exit. If CHAT ships late or feels worse than Slack, the 10-Member team falls back to Slack and the dogfooding signal that justifies the entire P1+ build never materialises. <strong>Per <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">research review §3</a></strong>, CHAT is currently rated "Solid" — adequate scope, missing on data-model ERD depth + key-flow coverage + dogfooding-decommission KPI. This page closes those gaps. The strategy: fork Mattermost (open-core, MIT/Apache-licensed) for the messaging substrate; layer CyberOS-native auth (AUTH service), UI shell (Tauri desktop + mobile), search (PGroonga for Vietnamese full-text — recall ≥ 80% on VN test set), and AI-native features (<code>@lumi</code> inline mentions, <code>/summarise</code> threads, smart-reply, daily digest). Every <code>@lumi</code>-tagged message emits a BRAIN memory row per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a>. Channels, threads, attachments, reactions, voice (Whisper-large-v3 ASR), Slack/Zalo import — all table-stakes plus Yjs CRDT offline-first drafts. PDPL Art. 14 DSAR satisfied by per-subject message export.
+ CHAT is the single most strategically loaded P0 module. <strong>Per the audit-and-plan §3 milestones</strong>, P0 exit is defined as "Slack + Zalo decommissioned" — meaning every internal CyberSkill team conversation moves to CHAT before P0 · exit. If CHAT ships late or feels worse than Slack, the 10-Member team falls back to Slack and the dogfooding signal that justifies the entire P1+ build never materialises. <strong>Per <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span></strong>, CHAT is currently rated "Solid" — adequate scope, missing on data-model ERD depth + key-flow coverage + dogfooding-decommission KPI. This page closes those gaps. The strategy: fork Mattermost (open-core, MIT/Apache-licensed) for the messaging substrate; layer CyberOS-native auth (AUTH service), UI shell (Tauri desktop + mobile), search (PGroonga for Vietnamese full-text — recall ≥ 80% on VN test set), and AI-native features (<code>@lumi</code> inline mentions, <code>/summarise</code> threads, smart-reply, daily digest). Every <code>@lumi</code>-tagged message emits a BRAIN memory row per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a>. Channels, threads, attachments, reactions, voice (Whisper-large-v3 ASR), Slack/Zalo import — all table-stakes plus Yjs CRDT offline-first drafts. PDPL Art. 14 DSAR satisfied by per-subject message export.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -480,7 +480,7 @@ Plus:
 
  <h3 class="text-lg font-bold mb-3">What happens if P0 · exit misses the gate</h3>
  <p class="text-sm text-slate-600 leading-relaxed">
- Per <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">audit-and-plan §1.3</a>, if the P0 · exit dogfood gate misses, the P1 · start P1-scope-collapse fail-mode immediately activates: HR-full split + LEARN deferred. The platform doesn't fail; the timeline slips by 1 quarter while CHAT's missing features get prioritised. Concrete remediation triggers: if <code>decommission_signal &lt; 0.50</code> at P0 · exit → 90-day CHAT-only sprint, no P1 modules start. If <code>0.50 ≤ signal &lt; 0.95</code> at P0 · exit → 30-day catch-up, P1 modules start at P1 · start with reduced scope.
+ Per <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span>, if the P0 · exit dogfood gate misses, the P1 · start P1-scope-collapse fail-mode immediately activates: HR-full split + LEARN deferred. The platform doesn't fail; the timeline slips by 1 quarter while CHAT's missing features get prioritised. Concrete remediation triggers: if <code>decommission_signal &lt; 0.50</code> at P0 · exit → 90-day CHAT-only sprint, no P1 modules start. If <code>0.50 ≤ signal &lt; 0.95</code> at P0 · exit → 30-day catch-up, P1 modules start at P1 · start with reduced scope.
  </p>
 </section>
 
@@ -1031,7 +1031,7 @@ stateDiagram-v2
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" target="_blank" rel="noopener" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -1319,10 +1319,10 @@ messages_today: 18,420</code></pre>
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li> — CHAT module specification + (FR pending) through (FR pending).</li>
- <li> — N(FR pending) (CHAT message-deliver p95 ≤ 200 ms).</li>
- <li> — N(FR pending) (CHAT availability ≥ 99.9%).</li>
- <li> — Formal (FR pending) catalogue with verification methods.</li>
+ <li><strong>CHAT module specification</strong> — (FR pending) through (FR pending).</li>
+ <li><strong>NFR — latency</strong> — N(FR pending) (CHAT message-deliver p95 ≤ 200 ms).</li>
+ <li><strong>NFR — availability</strong> — N(FR pending) (CHAT availability ≥ 99.9%).</li>
+ <li><strong>Formal FR catalogue</strong> — (FR pending) catalogue with verification methods.</li>
  <li><strong>Mattermost upstream</strong> — open-core MIT/Apache messaging substrate.</li>
  <li><strong>PGroonga</strong> — Postgres full-text extension with VN tokenisation support.</li>
  <li><strong>Yjs</strong> — CRDT library for offline draft sync.</li>
@@ -1331,12 +1331,12 @@ messages_today: 18,420</code></pre>
  <li><strong>Vietnam PDPL (Law 91/2025)</strong> — Art. 14 DSAR.</li>
  <li><strong>EU AI Act</strong> — Art. 12 logging, Art. 13 transparency (AI label on @genie answers).</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/runtime.html#chat" class="text-blue-700 underline">runtime.html#chat</a>.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CHAT is one of four canonical capture surfaces (alongside FS watcher, Cowork, Claude Code hook).</li>
- <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — CHAT FRs to be re-authored one-by-one via the <code>feature-request-author</code> Agent Skill; placeholder "(FR pending)" markers in this page are intentional.</li>
- <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — CHAT placed at P0 · slice 2 in the reordered P0 build sequence (AI Gateway → AUTH stub → MCP → CHAT → Slack/Zalo decom).</li>
- <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §3</a> — external reviewer rated CHAT module as "Solid" (8/10) with caveat that decommission gate is the biggest single risk in P0.</li>
- <li><strong>Mattermost upstream governance:</strong> <a href="https://docs.mattermost.com/about/licensing.html" class="text-blue-700 underline">docs.mattermost.com/about/licensing</a> — fork pinned at last MIT/Apache LTS commit; license-drift watcher in legal-monitor pipeline.</li>
- <li><strong>PGroonga + TinySegmenter:</strong> <a href="https://pgroonga.github.io/" class="text-blue-700 underline">pgroonga.github.io</a> + <a href="https://github.com/cmkang/tinysegmenter4j" class="text-blue-700 underline">TinySegmenter</a> — VN full-text recall baseline.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CHAT is one of four canonical capture surfaces (alongside FS watcher, Cowork, Claude Code hook).</li>
+ <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a> — CHAT FRs re-authored one-by-one via the <code>feature-request-author</code> Agent Skill; placeholder "(FR pending)" markers in this page are intentional.</li>
+ <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — CHAT placed at P0 · slice 2 in the reordered P0 build sequence (AI Gateway → AUTH stub → MCP → CHAT → Slack/Zalo decom).</li>
+ <li><strong>Research review:</strong> <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — external reviewer rated CHAT module as "Solid" (8/10) with caveat that decommission gate is the biggest single risk in P0.</li>
+ <li><strong>Mattermost upstream governance:</strong> <a href="https://docs.mattermost.com/about/licensing.html" target="_blank" rel="noopener" class="text-blue-700 underline">docs.mattermost.com/about/licensing</a> — fork pinned at last MIT/Apache LTS commit; license-drift watcher in legal-monitor pipeline.</li>
+ <li><strong>PGroonga + TinySegmenter:</strong> <a href="https://pgroonga.github.io/" target="_blank" rel="noopener" class="text-blue-700 underline">pgroonga.github.io</a> + <a href="https://github.com/cmkang/tinysegmenter4j" target="_blank" rel="noopener" class="text-blue-700 underline">TinySegmenter</a> — VN full-text recall baseline.</li>
  <li><strong>Vietnam PDPL (Law 91/2025):</strong> Art. 7 (data-subject rights), Art. 14 (DSAR), Art. 20 (security obligations), Art. 38 (cross-border transfer).</li>
  <li><strong>EU AI Act:</strong> Art. 12 (logging — BRAIN audit chain satisfies), Art. 13 (transparency — @lumi/@genie carry "AI-generated" label), Art. 50 (provider transparency obligation).</li>
  </ul>

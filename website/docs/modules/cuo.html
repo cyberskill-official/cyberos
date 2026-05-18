@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>CUO v3.0.0-a4 — 47/48 personas · 221 workflows live · Phase 4 handlers shipped · CyberOS</title>
- <meta name="description" content="CUO v3.0.0-a4 (Phase 4 handlers shipped 2026-05-18) — persona-aware orchestration layer above CyberOS. 48 C-suite persona folders; 47 with shipped workflows (chief-metaverse-officer intentionally EXTINCT). 221 workflows live (post Tier-C1 depth additions) chaining skills from the SKILL module's 104-pair catalog. Two-stage routing: query → persona → workflow → skill chain. Python supervisor at v3.0.0-a4 with 49/50 tests green and 5 Handler subclasses (Linear/TimeCritical/PerInstance/MultiOutput/SequentialApproval/PersonaPair).">
+ <title>CUO · 47/48 personas · 221 workflows live · Phase 4 handlers shipped · CyberOS</title>
+ <meta name="description" content="CUO — persona-aware orchestration layer above CyberOS. 48 C-suite persona folders; 47 with shipped workflows (chief-metaverse-officer intentionally EXTINCT). 221 workflows live chaining skills from the SKILL module's 104-pair catalog. Two-stage routing: query → persona → workflow → skill chain. Python supervisor with 49/50 tests green and 6 Handler subclasses (Linear/TimeCritical/PerInstance/MultiOutput/SequentialApproval/PersonaPair) shipped.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -41,17 +41,17 @@
  <span class="text-5xl">🎯</span>
  <h1 class="h-display">CUO</h1>
  <span class="phase-chip phase-p0">P0 · Phases 1–4 shipped</span>
- <span class="pill pill-shipped">v3.0.0-a4 · supervisor + handlers shipped</span>
+ <span class="pill pill-shipped">Supervisor + handlers shipped</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- <strong>The agent orchestrator.</strong> Genie is the face; ten C-level sub-skills are the muscle; the BRAIN-anchored audit chain is the receipt. At org scale, the same orchestrator becomes <strong>Lumi</strong> — the tenant persona that owns BRAIN sync + cross-team synthesis.
+ <strong>The agent orchestrator.</strong> Genie is the face; the 47-persona workflow catalog are the muscle; the BRAIN-anchored audit chain is the receipt. At org scale, the same orchestrator becomes <strong>Lumi</strong> — the tenant persona that owns BRAIN sync + cross-team synthesis.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CUO plays three strategic roles simultaneously. <strong>Role 1 — skill-routing brain</strong>: every natural-language request to CyberOS that is not a direct CRUD on a known entity flows through CUO; CUO parses, scores against the Skill catalog, invokes the winner through the Skill host's capability broker, and records the decision in BRAIN. <strong>Role 2 — persona catalogue</strong>: agent-equal members modelled as C-level specialists (CEO · COO · CFO · CMO · CTO · CHRO · CSO · CLO · CDO · CPO + emerging sub-personas), each with its own keyword bank, persona prompt, and defer-to-human matrix. <strong>Role 3 — Lumi tenant identity</strong>: at P3+, CUO is the local-tenant face of Lumi — the org-tenant persona whose JWT (<code>agent_persona: cuo-cpo@0.4.1</code>) is verified by AUTH, whose audit rows feed Lumi's BRAIN, and whose cross-tenant synthesis is the compounding moat. Phase 1 shipped: deterministic rule router (200 LoC · 15 fixtures · BRAIN audit). Phase 2 (P0 · exit) adds LangGraph + LiteLLM cascade; Phase 3 (P1 · exit) enables multi-skill chains via <code>depends_on</code> walks; Phase 4 (P2 · exit) splits the keyword bank by persona. The BCP-14 protocol is at <code>cuo/docs/AGENTS.md</code>; the implementation is at <code>cuo/cuo/core/</code>.
+ CUO plays three strategic roles simultaneously. <strong>Role 1 — skill-routing brain</strong>: every natural-language request to CyberOS that is not a direct CRUD on a known entity flows through CUO; CUO parses, scores against the Skill catalog, invokes the winner through the Skill host's capability broker, and records the decision in BRAIN. <strong>Role 2 — persona catalogue</strong>: agent-equal members modelled as C-level specialists (CEO · COO · CFO · CMO · CTO · CHRO · CSO · CLO · CDO · CPO + emerging sub-personas), each with its own keyword bank, persona prompt, and defer-to-human matrix. <strong>Role 3 — Lumi tenant identity</strong>: at P3+, CUO is the local-tenant face of Lumi — the org-tenant persona whose JWT (<code>agent_persona: cuo-cpo@0.4.1</code>) is verified by AUTH, whose audit rows feed Lumi's BRAIN, and whose cross-tenant synthesis is the compounding moat. Phases 1–4 all shipped (2026-05-18): Phase 1 — deterministic rule router with two-stage routing (persona → workflow → skill chain) plus domain-language fallback. Phase 2 — pluggable Invoker (`MockInvoker` / `SubprocessInvoker` / `LLMInvoker`) + `execute_chain()` filesystem hand-off. Phase 3 — real Anthropic Messages API integration + `BRAIN audit-chain` emission per step + workflow summary. Phase 4 — 5 special-case Handler subclasses dispatched by workflow `pattern:` (Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair). 49/50 tests pass (1 skip = catalog-completeness invariant). The CLI auto-dispatches handlers via `cyberos-cuo execute` with optional `--explain` and `--no-handler-dispatch` flags. The BCP-14 protocol is at <code>cuo/docs/AGENTS.md</code>; the implementation is at <code>cuo/cuo/core/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
- <a href="#personas" class="btn btn-primary">Meet the 10 personas
+ <a href="#personas" class="btn btn-primary">Meet the 47 personas
  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
  </a>
  <a href="#architecture" class="btn btn-secondary">Architecture</a>
@@ -72,7 +72,7 @@
  <div class="h-eyebrow mb-3">On this page</div>
  <ul class="space-y-0.5 text-sm">
  <li><a class="toc-link" href="#hero">Elevator pitch</a></li>
- <li><a class="toc-link" href="#v2-rebuild"><strong>CUO v3.0.0-a4 — supervisor + handlers</strong></a></li>
+ <li><a class="toc-link" href="#v2-rebuild"><strong>CUO supervisor + handlers</strong></a></li>
  <li><a class="toc-link" href="#bigger-picture">The bigger picture · 3 roles (legacy framing)</a></li>
  <li><a class="toc-link" href="#why">Why CUO exists</a></li>
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
@@ -84,7 +84,7 @@
  <li><a class="toc-link" href="#api-surface">API surface</a></li>
  <li><a class="toc-link" href="#key-flows">Key flows</a></li>
  <li><a class="toc-link" href="#lifecycle">Decision lifecycle</a></li>
- <li><a class="toc-link" href="#personas">10 C-level personas</a></li>
+ <li><a class="toc-link" href="#personas">47 C-suite personas</a></li>
  <li><a class="toc-link indent" href="#persona-ceo">CEO</a></li>
  <li><a class="toc-link indent" href="#persona-coo">COO</a></li>
  <li><a class="toc-link indent" href="#persona-cfo">CFO</a></li>
@@ -112,7 +112,7 @@
  <div class="text-xs text-slate-500 leading-relaxed">
  <code>cyberos/modules/cuo/</code><br>
  –§6.10 · §9.2<br>
- supervisor v3.0.0-a4
+ supervisor (Phase 4 shipped)
  </div>
  </div>
  </div>
@@ -126,11 +126,11 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-cuo p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- <strong>CUO is one persona</strong> — Genie — backed by <strong>ten C-level specialists</strong> that load on demand. It is deliberately minimal: parse the query, score candidates, pick one, invoke through the Skill host, write the decision row to BRAIN. The router is rule-based today (deterministic, sub-millisecond) and will layer in an LLM cascade at Phase 2 (the trade is latency for ambiguous queries). Every decision is itself an audit-chained memory, so every routing choice CUO ever made is replayable from disk.
+ <strong>CUO is one persona</strong> — Genie — backed by <strong>the 47-persona workflow catalog</strong> that load on demand. It is deliberately minimal: parse the query, score candidates, pick one, invoke through the Skill host, write the decision row to BRAIN. The router is rule-based today (deterministic, sub-millisecond) and will layer in an LLM cascade at Phase 2 (the trade is latency for ambiguous queries). Every decision is itself an audit-chained memory, so every routing choice CUO ever made is replayable from disk.
  </p>
  <div class="fact-grid">
- <div class="fact-card"><div class="label">Strategic role</div><div class="value">Agent orchestrator</div><div class="note">Genie · 10 C-level · Lumi at P3+</div></div>
- <div class="fact-card"><div class="label">Status</div><div class="value">v3.0.0-a4 · Phases 1–4 shipped</div><div class="note">supervisor + 5 handlers · 2026-05-18</div></div>
+ <div class="fact-card"><div class="label">Strategic role</div><div class="value">Agent orchestrator</div><div class="note">Genie · 47 persona workflows · Lumi at P3+</div></div>
+ <div class="fact-card"><div class="label">Status</div><div class="value">Phases 1–4 shipped</div><div class="note">supervisor + 5 handlers</div></div>
  <div class="fact-card"><div class="label">LoC (core)</div><div class="value">~1,600</div><div class="note">Python · supervisor + handlers</div></div>
  <div class="fact-card"><div class="label">Tests</div><div class="value">49/50</div><div class="note">1 skip = catalog-completeness invariant</div></div>
  <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">5</div><div class="note">list-personas · list-workflows · route · dry-run · execute</div></div>
@@ -146,14 +146,14 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- v3.0.0-a4 SUPERVISOR + HANDLERS CALLOUT (refreshed 2026-05-18) -->
+<!-- SUPERVISOR + HANDLERS CALLOUT -->
 <!-- ============================================================ -->
 <section id="v2-rebuild" class="module-section">
- <header class="section-head"><span class="section-num">★</span><h2>CUO v3.0.0-a4 — Python supervisor + 5 Handler dispatchers (Phase 4 shipped)</h2></header>
+ <header class="section-head"><span class="section-num">★</span><h2>CUO Python supervisor + 6 Handler dispatchers</h2></header>
 
  <div class="bbg-card p-5 mb-4" style="border-left: 4px solid #f59e0b; background:#fef3c7">
   <p class="text-sm text-amber-900 leading-relaxed mb-2">
-   <strong>Where we are.</strong> The markdown-driven persona/workflow rebuild is complete and now sits under a Python supervisor at <strong>v3.0.0-a4</strong> (Phase 4 shipped 2026-05-18). Every C-suite role from <code>docs/The C-Suite Reference.md</code> §5 ships as <code>modules/cuo/&lt;persona-slug&gt;/</code> with a 9-block-schema README. Each persona's <code>workflows/&lt;workflow&gt;.md</code> declares a chain of SKILL module skills, and the supervisor auto-dispatches one of 5 Handler subclasses (Linear / TimeCritical / PerInstance / MultiOutput / SequentialApproval / PersonaPair) per the workflow's <code>pattern:</code> frontmatter.
+   <strong>Where we are.</strong> The markdown-driven persona/workflow rebuild is complete and now sits under a Python supervisor with all four phases shipped (Phase 4 — the 6 Handler subclasses — landed on 2026-05-18). Every C-suite role from <code>docs/The C-Suite Reference.md</code> §5 ships as <code>modules/cuo/&lt;persona-slug&gt;/</code> with a 9-block-schema README. Each persona's <code>workflows/&lt;workflow&gt;.md</code> declares a chain of SKILL module skills, and the supervisor auto-dispatches one of 6 Handler subclasses (Linear / TimeCritical / PerInstance / MultiOutput / SequentialApproval / PersonaPair) per the workflow's <code>pattern:</code> frontmatter.
   </p>
   <p class="text-sm text-amber-900 leading-relaxed">
    <strong>48 persona folders, 47 with shipped workflows (chief-metaverse-officer EXTINCT) = 221 workflows live as of 2026-05-18</strong> (post Tier-C1 depth additions across 14 priority personas). Persona first-coverage was closed Sessions D–N; Tier-C1 added 27 depth workflows across ceo/cfo/cto/chro/cso-sales/coo/cmo/ciso/cdo-data/cpo-product/chief-of-staff/cro-revenue/caio/cpo-privacy. Acronym collisions resolved by full <code>chief-{role}-officer</code> slug normalisation (2026-05-18).
@@ -171,7 +171,7 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- §0 — THE BIGGER PICTURE (legacy framing — retained for historical context; current state is the v3.0.0-a4 callout above) -->
+<!-- §0 — THE BIGGER PICTURE (longer-form framing of Personal/Lumi BRAIN) -->
 <!-- ============================================================ -->
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
@@ -190,9 +190,9 @@
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 2 · Persona catalogue</div>
- <div class="font-bold text-slate-900 mb-2 text-base">Genie + 10 C-level specialists, agent-equal</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Genie + 47 C-suite persona workflows, agent-equal</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- The user sees one face — Genie — but the routing layer hands off to one of ten C-level personas (CEO/COO/CFO/CMO/CTO/CHRO/CSO/CLO/CDO/CPO). Each persona carries its own keyword bank, voice contract, and defer-to-human matrix. Personas are <em>agent-equal members</em>: same AUTH subject shape as human Members, same RBAC scope checks, same BRAIN sync_class rules. The persona is a contract, not a chatbot skin.
+ The user sees one face — Genie — but the routing layer hands off to one of the 47 C-suite persona workflows (CEO, COO, CFO, CMO, CTO, CHRO, CRO-Revenue/CRO-Risk/CRO-Restructuring, CDO-Data/CDO-Digital/CDO-Diversity, CSO-Strategy/CSO-Sales/CSO-Security/CSO-Sustainability, CLO-Legal/CLO-Learning, CCO-Customer/CCO-Communications/CCO-Compliance/CCO-Commercial, CPO-People/CPO-Product/CPO-Privacy/CPO-Procurement, plus Chief-of-Staff, Chief-Architect, Chief-Ethics, Chief-Trust, Chief-Innovation, Chief-Knowledge, Chief-Automation, Chief-ESG, Chief-Brand, Chief-Transformation, Chief-Digital, CAO-Admin/CAO-Accounting, CIO-Information/CIO-Investment, CAIO, CISO, CGO, CXO, Chief-Medical, Chief-Remote, Chief-Happiness). Each persona carries its own keyword bank, voice contract, and defer-to-human matrix. Personas are <em>agent-equal members</em>: same AUTH subject shape as human Members, same RBAC scope checks, same BRAIN sync_class rules. The persona is a contract, not a chatbot skin.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
@@ -299,7 +299,7 @@ flowchart TB
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
- CUO is also the entry-point that lets the company hire <strong>one</strong> persona — Genie — and gradually grow ten specialist skills behind it without changing the user-facing interface. The same Slack thread / chat box that asked Genie to "validate MST 0123456789" yesterday can ask it to "draft the Q3 OKR cascade" tomorrow, and the right C-level skill will load.
+ CUO is also the entry-point that lets the company hire <strong>one</strong> persona — Genie — and gradually grow the 47 C-suite specialist personas behind it without changing the user-facing interface. The same Slack thread / chat box that asked Genie to "validate MST 0123456789" yesterday can ask it to "draft the Q3 OKR cascade" tomorrow, and the right C-level persona workflow will load.
  </p>
 </section>
 
@@ -403,10 +403,10 @@ graph TB
  <table class="kt">
  <thead><tr><th>Phase</th><th>What changes</th><th>Why</th><th>Status</th></tr></thead>
  <tbody>
- <tr><td><strong>Phase 1</strong></td><td>Filesystem catalog scanner · two-stage route (persona → workflow) · BRAIN dry-run</td><td>Markdown-driven, deterministic; no LLM dependency for routing</td><td><span class="pill pill-shipped">shipped · v3.0.0-a1</span></td></tr>
- <tr><td><strong>Phase 2</strong></td><td>Pluggable Invoker (Mock / Subprocess) · <code>execute_chain()</code> walks workflow with filesystem hand-off</td><td>End-to-end chain execution against SKILL CLI subprocess</td><td><span class="pill pill-shipped">shipped · v3.0.0-a2</span></td></tr>
- <tr><td><strong>Phase 3</strong></td><td>LLMInvoker (mock-llm + Anthropic Messages API) · BRAIN audit-chain emission per step + per chain</td><td>LLM-driven authoring with full audit trail through Writer</td><td><span class="pill pill-shipped">shipped · v3.0.0-a3</span></td></tr>
- <tr><td><strong>Phase 4</strong></td><td>5 Handler subclasses dispatched by workflow <code>pattern:</code> frontmatter (Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair) · 8 new BRAIN audit kinds</td><td>Heterogeneous workflow types — incidents, breach response, per-customer loops, multi-output writes, approval gates</td><td><span class="pill pill-shipped">shipped · v3.0.0-a4 · 2026-05-18</span></td></tr>
+ <tr><td><strong>Phase 1</strong></td><td>Filesystem catalog scanner · two-stage route (persona → workflow) · BRAIN dry-run</td><td>Markdown-driven, deterministic; no LLM dependency for routing</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td><strong>Phase 2</strong></td><td>Pluggable Invoker (Mock / Subprocess) · <code>execute_chain()</code> walks workflow with filesystem hand-off</td><td>End-to-end chain execution against SKILL CLI subprocess</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td><strong>Phase 3</strong></td><td>LLMInvoker (mock-llm + Anthropic Messages API) · BRAIN audit-chain emission per step + per chain</td><td>LLM-driven authoring with full audit trail through Writer</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td><strong>Phase 4</strong></td><td>6 Handler subclasses dispatched by workflow <code>pattern:</code> frontmatter (Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair) · 8 new BRAIN audit kinds</td><td>Heterogeneous workflow types — incidents, breach response, per-customer loops, multi-output writes, approval gates, cross-persona handoffs</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  </tbody>
  </table>
  </div>
@@ -447,7 +447,7 @@ graph TB
   "agent_persona": "cuo-cpo@0.4.1",
   "scope_grants": [
     {"resource": "brain", "actions": ["read", "write"], "sync_class_max": "shareable"},
-    {"resource": "skill",  "actions": ["invoke"], "skills": ["cpo/product-requirements-document-author@0.4.1", "cyberskill-vn/vietnam-mst-validate@0.2.0"]},
+    {"resource": "skill",  "actions": ["invoke"], "skills": ["product-requirements-document-author@0.4.1", "vietnam-mst-validate@0.2.0"]},
     {"resource": "proj",   "actions": ["read", "write"], "engagements": ["acme-q3-platform-build"]}
   ],
   "jti": "01HZK…"
@@ -497,7 +497,7 @@ sequenceDiagram
 
  U->>C: NL query
  C->>CAT: load skill catalog (sorted)
- CAT-->>C: 20 skills
+ CAT-->>C: 208 skills (104 author+audit pairs)
  C->>C: score · pick (conf=0.7)
  C->>BR: invoke(skill, args, agent_persona, subject)
  BR->>AU: scope_grants.invoke include this skill?
@@ -751,16 +751,19 @@ type RoutingPreview {
  </table>
  </div>
 
- <h3 class="text-lg font-bold mb-3">CLI — <code>cyberos-cuo</code></h3>
+ <h3 class="text-lg font-bold mb-3">CLI — <code>cyberos-cuo</code> (5 subcommands shipped)</h3>
  <div class="bbg-card p-5 overflow-x-auto">
  <table class="kt">
  <thead><tr><th>Subcommand</th><th>Purpose</th><th>Example</th></tr></thead>
  <tbody>
- <tr><td><code>cyberos-cuo catalog</code></td><td>List skills CUO can route to</td><td><code>cyberos-cuo catalog --format json</code></td></tr>
- <tr><td><code>cyberos-cuo route</code></td><td>Score a query, optionally invoke + record</td><td><code>cyberos-cuo route "validate MST 0123456789" --invoke --record</code></td></tr>
- <tr><td><code>cyberos-cuo skills</code></td><td>Show keyword bank + extractors per skill</td><td><code>cyberos-cuo skills vietnam-mst-validate</code></td></tr>
+ <tr><td><code>list-personas</code></td><td>Enumerate the 48 persona folders (47 with workflows)</td><td><code>cyberos-cuo list-personas</code></td></tr>
+ <tr><td><code>list-workflows</code></td><td>Enumerate all 221 workflows (filter by persona)</td><td><code>cyberos-cuo list-workflows --persona chief-technology-officer</code></td></tr>
+ <tr><td><code>route</code></td><td>Two-stage route a natural-language query (persona → workflow)</td><td><code>cyberos-cuo route "validate MST 0123456789"</code></td></tr>
+ <tr><td><code>dry-run</code></td><td>Walk a workflow's skill chain without executing</td><td><code>cyberos-cuo dry-run chief-technology-officer/architect-new-system</code></td></tr>
+ <tr><td><code>execute</code></td><td>Execute a workflow chain through the selected invoker; optionally emit a BRAIN audit row per step</td><td><code>cyberos-cuo execute chief-technology-officer/adr-quick-capture --invoker llm --brain-emit --actor stephen@cyberskill</code></td></tr>
  </tbody>
  </table>
+ <p class="text-sm text-slate-600 mt-3">Flags: <code>--explain</code> (print handler dispatch reasoning), <code>--no-handler-dispatch</code> (force linear walk), <code>--invoker {mock,subprocess,llm}</code>, <code>--brain-emit</code>, <code>--actor &lt;subject&gt;</code>, <code>--output-dir &lt;path&gt;</code>.</p>
  </div>
 </section>
 
@@ -794,7 +797,7 @@ sequenceDiagram
  E-->>C: {mst:"0123456789", amount_vnd:10_000_000}
  alt --invoke
  C->>SkillHost: cyberos-skill-cli run vietnam-vat-invoice --args...
- SkillHost-->>C: {exit:0, stdout:"&lt;Invoice xmlns=...&gt;"}
+ SkillHost-->>C: {exit:0, stdout:Invoice XML 'fpt-2024-001'}
  end
  alt --record
  C->>B: write trace to BRAIN
@@ -838,13 +841,13 @@ sequenceDiagram
 flowchart TB
  Q[User query] --&gt; P1[Phase 1 rule-based scorer]
  P1 --&gt; SCORE{Top score?}
- SCORE -- "&ge; 0.70 (auto)" --&gt; INV[Auto-invoke top skill]
- SCORE -- "0.50–0.70 (ask)" --&gt; CLAR[Ask clarification · surface top 3]
- SCORE -- "0.10–0.50 (escalate)" --&gt; P2[Phase 2 LLM cascade]
- SCORE -- "&lt; 0.10 (defer)" --&gt; DEFER[Defer to human · no candidate]
+ SCORE -- "0.70+ auto" --&gt; INV[Auto-invoke top skill]
+ SCORE -- "0.50 to 0.70 ask" --&gt; CLAR[Ask clarification · surface top 3]
+ SCORE -- "0.10 to 0.50 escalate" --&gt; P2[Phase 2 LLM cascade]
+ SCORE -- "below 0.10 defer" --&gt; DEFER[Defer to human · no candidate]
  P2 --&gt; P2SCORE{LLM confidence?}
- P2SCORE -- "&ge; 0.70" --&gt; INV
- P2SCORE -- "&lt; 0.70" --&gt; CLAR
+ P2SCORE -- "0.70+" --&gt; INV
+ P2SCORE -- "below 0.70" --&gt; CLAR
  INV --&gt; REC[Record decision + result in BRAIN]
  CLAR --&gt; REC
  DEFER --&gt; REC
@@ -916,9 +919,9 @@ stateDiagram-v2
 <!-- PERSONAS -->
 <!-- ============================================================ -->
 <section id="personas" class="module-section">
- <header class="section-head"><span class="section-num">8</span><h2>The 10 C-level personas</h2></header>
+ <header class="section-head"><span class="section-num">8</span><h2>The 47 C-suite personas</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Each persona is a curated subset of the Skill catalog. Today the catalog lives flat under <code>modules/skill/&lt;name&gt;</code> with full-format names; the v3.0.0-a4 supervisor routes via two stages (persona → workflow) then auto-dispatches one of 5 Handlers per workflow <code>pattern:</code> frontmatter. The <em>Auto OK</em> column lists actions that may complete without explicit operator approval; the <em>Defers</em> column lists actions that always escape to the human.
+ Each persona is a curated subset of the Skill catalog. Today the catalog lives flat under <code>modules/skill/&lt;name&gt;</code> with full-format names; the supervisor routes via two stages (persona → workflow) then auto-dispatches one of 6 Handlers per workflow <code>pattern:</code> frontmatter. The <em>Auto OK</em> column lists actions that may complete without explicit operator approval; the <em>Defers</em> column lists actions that always escape to the human.
  </p>
 
  <!-- CEO -->
@@ -1051,7 +1054,7 @@ stateDiagram-v2
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" target="_blank" rel="noopener" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -1216,7 +1219,7 @@ graph LR
  <table class="kt">
  <thead><tr><th>Activity</th><th>CEO</th><th>CPO</th><th>CTO</th><th>CXO*</th><th>CSO</th><th>CLO</th></tr></thead>
  <tbody>
- <tr><td>Persona definition (10 C-level)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
+ <tr><td>Persona definition (47 C-suite + 1 extinct)</td><td class="raci-cell-a">A</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
  <tr><td>Keyword bank maintenance</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-a">A</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
  <tr><td>Phase 2 LLM cascade design</td><td class="raci-cell-c">C</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A/R</td><td class="raci-cell-i">I</td><td class="raci-cell-c">C</td><td class="raci-cell-i">I</td></tr>
  <tr><td>Trust calibration KPI review</td><td class="raci-cell-i">I</td><td class="raci-cell-r">R</td><td class="raci-cell-c">C</td><td class="raci-cell-a">A</td><td class="raci-cell-i">I</td><td class="raci-cell-i">I</td></tr>
@@ -1240,11 +1243,11 @@ graph LR
 {
  "fingerprint": "9c8e2a...4b7d",
  "scanned_at": "2026-05-14T07:30:11Z",
- "skill_count": 20,
+ "skill_count": 208,
  "skills": [
- {"name": "cpo/product-requirements-document-author", "version": "0.4.1", "region": null, "keywords": ["prd", "author", "draft prd", "product requirements"]},
- {"name": "cyberskill-vn/vietnam-mst-validate", "version": "0.2.0", "region": "VN", "keywords": ["mst", "tax code", "ma so thue"]},
- {"name": "cyberskill-vn/vietnam-vat-invoice", "version": "0.3.0", "region": "VN", "keywords": ["invoice", "hoa don", "vat", "gtgt"]},...
+ {"name": "product-requirements-document-author", "version": "0.4.1", "region": null, "keywords": ["prd", "author", "draft prd", "product requirements"]},
+ {"name": "vietnam-mst-validate", "version": "0.2.0", "region": "VN", "keywords": ["mst", "tax code", "ma so thue"]},
+ {"name": "vietnam-vat-invoice", "version": "0.3.0", "region": "VN", "keywords": ["invoice", "hoa don", "vat", "gtgt"]},...
  ]
 }</code></pre>
 
@@ -1252,22 +1255,22 @@ graph LR
 <pre><code>$ cyberos-cuo route "kiểm tra MST 0123456789-001"
 
 decision:
- skill_name: cyberskill-vn/vietnam-mst-validate
+ skill_name: vietnam-mst-validate
  arguments: {mst: "0123456789-001"}
  confidence: 1.0
  rationale: "VN-diacritic query + region=VN bonus + 2 keyword hits + name-substring match"
  routed: true
 
 alternatives:
- - cyberskill-vn/vn-tax-filing score=0.3
- - cyberskill-vn/vietnam-vat-invoice score=0.2
+ - vietnam-tax-filing score=0.3
+ - vietnam-vat-invoice score=0.2
 
 (not invoked — pass --invoke to dispatch through the Skill host)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Route, invoke, and record in BRAIN</h3>
 <pre><code>$ cyberos-cuo route "validate MST 0123456789" --invoke --record
 
-decision: cyberskill-vn/vietnam-mst-validate (conf=0.7)
+decision: vietnam-mst-validate (conf=0.7)
 invocation: exit=0 elapsed_ms=24
 stdout: {"ok": true, "format": "10-digit"}
 recorded: brain:/meta/cuo-decisions/1747200611_8c4e.md
@@ -1285,7 +1288,7 @@ schema: cuo-decision-v1
 
 **Query:** validate MST 0123456789
 **Catalog fingerprint:** 9c8e2a4b7d...
-**Decision:** cyberskill-vn/vietnam-mst-validate
+**Decision:** vietnam-mst-validate
 **Confidence:** 0.7
 **Rationale:** 1 name-substring hit + 1 keyword + region tiebreaker
 **Alternatives:** [...]
@@ -1295,7 +1298,7 @@ schema: cuo-decision-v1
  <h3 class="text-lg font-bold mb-2 mt-5">5. Show keyword bank + extractors for a skill</h3>
 <pre><code>$ cyberos-cuo skills vietnam-vat-invoice
 
-skill: cyberskill-vn/vietnam-vat-invoice
+skill: vietnam-vat-invoice
 region: VN
 keywords: [invoice, hoa don, vat, gtgt, e-invoice, xuat hoa don]
 extractor: detect-amount
@@ -1324,10 +1327,10 @@ allowed_tools: [read_file, write_file]</code></pre>
  <table class="kt">
  <thead><tr><th>Phase / capability</th><th>Status</th></tr></thead>
  <tbody>
- <tr><td>Phase 1 — filesystem catalog scanner · two-stage router · BRAIN dry-run</td><td><span class="pill pill-shipped">shipped · v3.0.0-a1</span></td></tr>
- <tr><td>Phase 2 — pluggable Invoker (Mock + Subprocess) · <code>execute_chain()</code></td><td><span class="pill pill-shipped">shipped · v3.0.0-a2</span></td></tr>
- <tr><td>Phase 3 — LLMInvoker (mock-llm + Anthropic) · BRAIN audit-chain emission</td><td><span class="pill pill-shipped">shipped · v3.0.0-a3</span></td></tr>
- <tr><td>Phase 4 — 5 Handler subclasses · auto-dispatch by <code>pattern:</code> frontmatter · 8 new BRAIN audit kinds</td><td><span class="pill pill-shipped">shipped · v3.0.0-a4 · 2026-05-18</span></td></tr>
+ <tr><td>Phase 1 — filesystem catalog scanner · two-stage router · BRAIN dry-run</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 2 — pluggable Invoker (Mock + Subprocess) · <code>execute_chain()</code></td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 3 — LLMInvoker (mock-llm + Anthropic) · BRAIN audit-chain emission</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 4 — 6 Handler subclasses · auto-dispatch by <code>pattern:</code> frontmatter · 8 new BRAIN audit kinds</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td>Postgres checkpointer (EU AI Act Art. 12)</td><td><span class="pill pill-planned">planned · P0 · exit</span></td></tr>
  <tr><td>Ambient nudge modes (Notify · Question · Review)</td><td><span class="pill pill-planned">planned</span></td></tr>
  <tr><td>GraphQL subgraph</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
@@ -1356,10 +1359,9 @@ allowed_tools: [read_file, write_file]</code></pre>
  <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
  <a href="mcp.html" class="text-blue-700 underline">mcp.html</a> ·
  <a href="obs.html" class="text-blue-700 underline">obs.html</a></li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CUO decisions are one of four canonical capture inputs to the local BRAIN; §6 (Lumi cross-tenant synthesis).</li>
- <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — CUO FRs land via the <code>feature-request-author</code> Agent Skill (CUO already-shipped: the first 50 FRs are CUO + BRAIN + Skill).</li>
- <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — Phase 2 LangGraph at P0 · exit, Phase 3 chains at P1 · exit, Phase 4 personas at P2 · exit; Lumi (P3) at P3 · exit+.</li>
- <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §2</a> — reviewer rated CUO as "Solid (8.5/10)" with the persona catalogue + Lumi-identity framing flagged as the highest-leverage architectural choice.</li>
+ <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CUO decisions are one of four canonical capture inputs to the local BRAIN; §6 (Lumi cross-tenant synthesis).</li>
+ <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a> — CUO FRs land via the <code>feature-request-author</code> Agent Skill (CUO already-shipped: the first 50 FRs are CUO + BRAIN + Skill).</li>
+ <li><strong>Phase rollout history:</strong> All four supervisor phases (rule-based routing → pluggable invoker → LLM invoker + BRAIN audit emission → 6-Handler dispatch) shipped 2026-05-18. See <code>cyberos/CHANGELOG.md</code> entries tagged <code>[CUO]</code> for per-phase details.</li>
  <li><strong>AGENTS.md</strong> (normative) — <code>cyberos/modules/cuo/AGENTS.md</code>.</li>
  <li><strong>SPEC.md</strong> — contract summary — <code>cyberos/modules/cuo/README.md §10 (Data shapes)</code>.</li>
  <li><strong>ROUTING.md</strong> — keyword-bank rationale + Phase 2 LLM design — <code>cyberos/modules/cuo/README.md §9 (Routing algorithm)</code>.</li>

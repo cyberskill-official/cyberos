@@ -10,6 +10,10 @@ description = "AUTH module — tenant + subject + RLS + JWT + MFA (FR-AUTH-001..
 name = "cyberos-auth"
 path = "src/main.rs"
 
+[[bin]]
+name = "cyberos-auth-bootstrap"
+path = "src/bin/bootstrap.rs"
+
 [lib]
 name = "cyberos_auth"
 path = "src/lib.rs"
@@ -30,6 +34,10 @@ uuid.workspace = true
 chrono.workspace = true
 bcrypt.workspace = true
 jsonwebtoken.workspace = true
+base64 = "0.22"
+rsa = { version = "0.9", features = ["pem"] }
+rand = "0.8"
+futures-util = "0.3"
 
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true

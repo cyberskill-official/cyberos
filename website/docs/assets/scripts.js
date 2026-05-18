@@ -124,6 +124,7 @@ function ensureMermaidModal() {
   });
   const stage = el.querySelector('.mermaid-modal-stage');
   stage.addEventListener('wheel', (e) => {
+    if (!__mermaidPanState) return;
     e.preventDefault();
     const dir = e.deltaY < 0 ? 1.1 : (1 / 1.1);
     setMermaidZoom(__mermaidPanState.scale * dir, e.clientX, e.clientY);
@@ -133,13 +134,13 @@ function ensureMermaidModal() {
   window.addEventListener('mouseup', endMermaidPan);
   el.querySelector('[data-action="zoom-in"]').addEventListener('click', () => setMermaidZoom(__mermaidPanState.scale * 1.25));
   el.querySelector('[data-action="zoom-out"]').addEventListener('click', () => setMermaidZoom(__mermaidPanState.scale / 1.25));
-  el.querySelector('[data-action="zoom-reset"]').addEventListener('click', () => { __mermaidPanState.scale = 1; __mermaidPanState.x = 0; __mermaidPanState.y = 0; applyMermaidTransform(); });
+  el.querySelector('[data-action="zoom-reset"]').addEventListener('click', () => { resetMermaidZoom(); });
   document.addEventListener('keydown', (e) => {
     if (!el.classList.contains('open')) return;
     if (e.key === 'Escape') closeMermaidModal();
     if (e.key === '+' || e.key === '=') setMermaidZoom(__mermaidPanState.scale * 1.25);
     if (e.key === '-' || e.key === '_') setMermaidZoom(__mermaidPanState.scale / 1.25);
-    if (e.key === '0') { __mermaidPanState.scale = 1; __mermaidPanState.x = 0; __mermaidPanState.y = 0; applyMermaidTransform(); }
+    if (e.key === '0') { resetMermaidZoom(); }
   });
   __mermaidModalEl = el;
   return el;
@@ -151,21 +152,56 @@ function openMermaidModal(sourceBox) {
   const svg = sourceBox.querySelector('svg');
   if (!svg) return;
   const clone = svg.cloneNode(true);
-  // Modal renders at full viewBox size; CSS contains it. Strip inline fixed sizes
-  // so the zoom-transform layer is the only sizing authority.
-  clone.removeAttribute('width');
-  clone.removeAttribute('height');
-  clone.style.width = '';
-  clone.style.height = '';
-  clone.style.maxWidth = '';
-  clone.style.maxHeight = '';
+
+  // Determine the SVG's intrinsic pixel size from its viewBox so it renders
+  // at full natural size inside the modal canvas. Without explicit width/height,
+  // browsers can render an SVG at 0×0 when its parent has `max-width: none`.
+  let naturalW = 0;
+  let naturalH = 0;
+  const vb = clone.getAttribute('viewBox');
+  if (vb) {
+    const parts = vb.trim().split(/\s+/);
+    if (parts.length === 4) {
+      naturalW = parseFloat(parts[2]) || 0;
+      naturalH = parseFloat(parts[3]) || 0;
+    }
+  }
+  // Fallback to whatever was set on the source SVG (post-renderMermaid sizing).
+  if (!naturalW) naturalW = parseFloat(svg.getAttribute('width')) || parseFloat(svg.style.width) || 800;
+  if (!naturalH) naturalH = parseFloat(svg.getAttribute('height')) || parseFloat(svg.style.height) || 600;
+
+  // Set explicit pixel size on the clone — overrides the css `max-width: none`
+  // and gives the canvas a deterministic intrinsic size to scale + pan around.
+  clone.setAttribute('width', String(naturalW));
+  clone.setAttribute('height', String(naturalH));
+  clone.style.width = naturalW + 'px';
+  clone.style.height = naturalH + 'px';
+  clone.style.maxWidth = 'none';
+  clone.style.maxHeight = 'none';
   clone.style.display = 'block';
+
   stage.innerHTML = '';
   const inner = document.createElement('div');
   inner.className = 'mermaid-modal-canvas';
+  // Compute an initial fit-to-stage scale so the diagram is fully visible on open.
+  // We don't have layout yet (stage isn't visible), so we approximate using window size
+  // minus toolbar height and the 2vh/2vw margins from the shell.
+  const availW = Math.max(320, (window.innerWidth || 1280) * 0.92 - 32);
+  const availH = Math.max(240, (window.innerHeight || 800) * 0.92 - 80);
+  const fit = Math.min(1, availW / naturalW, availH / naturalH);
   inner.appendChild(clone);
   stage.appendChild(inner);
-  __mermaidPanState = { scale: 1, x: 0, y: 0, drag: false, sx: 0, sy: 0 };
+
+  __mermaidPanState = {
+    scale: fit > 0 ? fit : 1,
+    x: 0,
+    y: 0,
+    drag: false,
+    sx: 0,
+    sy: 0,
+    naturalW,
+    naturalH,
+  };
   applyMermaidTransform();
   modal.hidden = false;
   // next tick for transition
@@ -188,8 +224,26 @@ function closeMermaidModal() {
 
 function setMermaidZoom(next, cx, cy) {
   if (!__mermaidPanState) return;
-  const clamped = Math.max(0.25, Math.min(8, next));
+  const clamped = Math.max(0.1, Math.min(8, next));
   __mermaidPanState.scale = clamped;
+  applyMermaidTransform();
+}
+
+/// Reset to the initial fit-to-stage scale + center pan.
+function resetMermaidZoom() {
+  if (!__mermaidPanState) return;
+  const { naturalW, naturalH } = __mermaidPanState;
+  const stage = __mermaidModalEl && __mermaidModalEl.querySelector('.mermaid-modal-stage');
+  let fit = 1;
+  if (stage && naturalW > 0 && naturalH > 0) {
+    const r = stage.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      fit = Math.min(1, r.width / naturalW, r.height / naturalH);
+    }
+  }
+  __mermaidPanState.scale = fit > 0 ? fit : 1;
+  __mermaidPanState.x = 0;
+  __mermaidPanState.y = 0;
   applyMermaidTransform();
 }
 
@@ -197,7 +251,13 @@ function applyMermaidTransform() {
   if (!__mermaidModalEl || !__mermaidPanState) return;
   const canvas = __mermaidModalEl.querySelector('.mermaid-modal-canvas');
   if (!canvas) return;
-  canvas.style.transform = `translate(${__mermaidPanState.x}px, ${__mermaidPanState.y}px) scale(${__mermaidPanState.scale})`;
+  // The canvas is positioned at left:50%/top:50% in CSS, so we have to
+  // re-apply the -50%/-50% centering offsets in EVERY transform — otherwise
+  // they get overwritten and the canvas's top-left lands at the stage's
+  // center, leaving most of the diagram off-screen / invisible.
+  const { x, y, scale } = __mermaidPanState;
+  canvas.style.transform =
+    `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(${scale})`;
 }
 
 function startMermaidPan(e) {

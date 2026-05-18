@@ -548,7 +548,7 @@ table.bbg-table tbody tr:hover td { background: var(--memory-bg); }
   transition: none;
   will-change: transform;
 }
-.mermaid-modal-canvas svg { display: block; max-width: none !important; max-height: none !important; }
+.mermaid-modal-canvas svg { display: block; max-width: none !important; max-height: none !important; width: auto; height: auto; }
 @media (max-width: 640px) {
   .mermaid-modal-shell { margin: 0; border-radius: 0; }
   .mermaid-zoom-hint { font-size: 0.625rem; }

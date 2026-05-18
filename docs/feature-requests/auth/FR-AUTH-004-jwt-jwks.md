@@ -3,7 +3,7 @@ id: FR-AUTH-004
 title: "JWT issuance + JWKS endpoint (RS256) with tenant_id + agent_persona + scope_grants + dual-rate-limit + jti dedup"
 module: AUTH
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P0
 milestone: P0 · slice 2

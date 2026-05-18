@@ -3,7 +3,7 @@ id: FR-AUTH-101
 title: "AUTH 22-role RBAC catalogue — closed enum + permission matrix + role-assignment REST + JWT claims + ADR gate + stub→full migration"
 module: AUTH
 priority: MUST
-status: draft
+status: building
 verify: T
 phase: P3
 milestone: P3 · slice 1

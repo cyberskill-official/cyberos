@@ -388,9 +388,9 @@ cyberos.auth.audit_login # readOnly=true (own sessions only)</code></pre></div>
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">References</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li> — Authentication &amp; RBAC</li>
- <li> — Role catalogue (technical detail)</li>
- <li> — OAuth 2.1 for MCP (audience binding)</li>
+ <li>Internal spec — Authentication &amp; RBAC</li>
+ <li>Internal spec — Role catalogue (technical detail)</li>
+ <li>Internal spec — OAuth 2.1 for MCP (audience binding)</li>
  <li>RFC 7519 (JWT), RFC 7636 (PKCE), W3C WebAuthn L3</li>
  </ul>
  </div>
@@ -422,7 +422,7 @@ cyberos.auth.audit_login # readOnly=true (own sessions only)</code></pre></div>
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Tech stack</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><strong>Routing core</strong><a href="https://github.com/BerriAI/litellm" class="text-amber-700 font-semibold">LiteLLM</a> (MIT) — 100+ provider unified API</li>
+ <li><strong>Routing core</strong><a href="https://github.com/BerriAI/litellm" target="_blank" rel="noopener" class="text-amber-700 font-semibold">LiteLLM</a> (MIT) — 100+ provider unified API</li>
  <li><strong>Providers</strong> · primary AWS Bedrock (Claude Sonnet 4.6 / Haiku 4.5) → fallback Anthropic API ZDR → fallback OpenAI ZDR</li>
  <li><strong>Embeddings</strong> · self-hosted BAAI/bge-m3 on a shared GPU node</li>
  <li><strong>Rerank</strong> · self-hosted BAAI/bge-reranker-v2-m3</li>
@@ -598,8 +598,8 @@ X-Cyberos-Persona-Version: cfo-v3.2.1</code></pre></div>
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">References</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li> — AI Gateway</li>
- <li> — Latency budgets</li>
+ <li>Internal spec — AI Gateway</li>
+ <li>Internal spec — Latency budgets</li>
  <li>OWASP Gen AI Top 10 (2025-04 revision)</li>
  <li>NIST AI 600-1 (GenAI Risk Profile)</li>
  </ul>
@@ -790,11 +790,11 @@ sequenceDiagram
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">References</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li> — MCP Gateway &amp; 2025-11-25 spec</li>
- <li> — Authentication &amp; authorisation</li>
- <li> — Tool registry &amp; per-module servers</li>
- <li> — OAuth-Protected Resource &amp; PRM flow</li>
- <li><a href="https://modelcontextprotocol.io/specification/2025-11-25" class="text-amber-700 font-semibold">MCP 2025-11-25 spec</a></li>
+ <li>Internal spec — MCP Gateway &amp; 2025-11-25 spec</li>
+ <li>Internal spec — Authentication &amp; authorisation</li>
+ <li>Internal spec — Tool registry &amp; per-module servers</li>
+ <li>Internal spec — OAuth-Protected Resource &amp; PRM flow</li>
+ <li><a href="https://modelcontextprotocol.io/specification/2025-11-25" target="_blank" rel="noopener" class="text-amber-700 font-semibold" rel="noopener" target="_blank">MCP 2025-11-25 spec</a></li>
  </ul>
  </div>
  </div>
@@ -1086,7 +1086,7 @@ sequenceDiagram
  <h4 class="font-bold mb-2 text-slate-900">References</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
  <li>DEC-002 — Apollo Federation v2.5+</li>
- <li><a href="https://www.apollographql.com/docs/federation/" class="text-amber-700 font-semibold">Apollo Federation v2 docs</a></li>
+ <li><a href="https://www.apollographql.com/docs/federation/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">Apollo Federation v2 docs</a></li>
  </ul>
  </div>
  </div>
@@ -1242,7 +1242,7 @@ sequenceDiagram
  <h4 class="font-bold mb-2 text-slate-900">References</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
  <li>DEC-004 — NATS JetStream events</li>
- <li><a href="https://docs.nats.io/nats-concepts/jetstream" class="text-amber-700 font-semibold">NATS JetStream docs</a></li>
+ <li><a href="https://docs.nats.io/nats-concepts/jetstream" target="_blank" rel="noopener" class="text-amber-700 font-semibold">NATS JetStream docs</a></li>
  </ul>
  </div>
  </div>
@@ -1344,29 +1344,29 @@ sequenceDiagram
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-3 text-slate-900">CyberOS source documents</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li> — The high-level system</li>
- <li> — GraphQL Federation</li>
- <li> — Module Federation (frontend)</li>
- <li> — MCP Gateway and the 2025-11-25 spec</li>
- <li> — Authentication and authorisation</li>
- <li> — Tool registry and per-module servers</li>
- <li> — OAuth-protected resource and PRM flow</li>
- <li> — AI Gateway</li>
+ <li>Internal spec — The high-level system</li>
+ <li>Internal spec — GraphQL Federation</li>
+ <li>Internal spec — Module Federation (frontend)</li>
+ <li>Internal spec — MCP Gateway and the 2025-11-25 spec</li>
+ <li>Internal spec — Authentication and authorisation</li>
+ <li>Internal spec — Tool registry and per-module servers</li>
+ <li>Internal spec — OAuth-protected resource and PRM flow</li>
+ <li>Internal spec — AI Gateway</li>
  <li>DEC-001..DEC-066 — locked decisions</li>
  </ul>
  </div>
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-3 text-slate-900">External standards &amp; specs</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><a href="https://modelcontextprotocol.io/specification/2025-11-25" class="text-amber-700 font-semibold">MCP 2025-11-25 specification</a></li>
- <li><a href="https://www.apollographql.com/docs/federation/" class="text-amber-700 font-semibold">Apollo Federation v2 docs</a></li>
+ <li><a href="https://modelcontextprotocol.io/specification/2025-11-25" target="_blank" rel="noopener" class="text-amber-700 font-semibold">MCP 2025-11-25 specification</a></li>
+ <li><a href="https://www.apollographql.com/docs/federation/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">Apollo Federation v2 docs</a></li>
  <li>RFC 7519 — JSON Web Token (JWT)</li>
  <li>RFC 7636 — PKCE for OAuth 2.0</li>
  <li>RFC 6749 — OAuth 2.0 / draft OAuth 2.1</li>
  <li>RFC 6238 — TOTP</li>
  <li>W3C WebAuthn Level 3</li>
  <li>RFC 6532 — Internationalized email (UTF-8 throughout)</li>
- <li><a href="https://docs.nats.io/" class="text-amber-700 font-semibold">NATS JetStream documentation</a></li>
+ <li><a href="https://docs.nats.io/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">NATS JetStream documentation</a></li>
  <li>OpenTelemetry semantic conventions 1.27+</li>
  <li>OWASP Generative AI Top 10 (2025-04)</li>
  <li>NIST AI 600-1 — Generative AI Risk Profile</li>

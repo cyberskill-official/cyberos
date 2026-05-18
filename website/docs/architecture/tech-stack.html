@@ -100,7 +100,7 @@
 flowchart TB
  subgraph T1 ["T1 · Persona / Agent layer"]
  LANG["LangGraph supervisor (StateGraph + interrupt)"]
- SKILLS["Anthropic Skills format · 10 C-level skills hot-reload"]
+ SKILLS["Anthropic Skills format · 47 C-suite persona workflows hot-reload"]
  LITELLM_T1["LiteLLM client (routing core)"]
  end
 
@@ -189,7 +189,7 @@ flowchart TB
  <h2 class="h-1">Tier 1 — Persona / Agent layer</h2>
  </div>
  <div class="bbg-card p-6 mb-5">
- <p class="text-slate-700 mb-3"><strong>Pick:</strong> LangGraph (state graph) + LiteLLM (routing) + Anthropic Skills format (10 C-level skills hot-reloadable).</p>
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> LangGraph (state graph) + LiteLLM (routing) + Anthropic Skills format (47 C-suite persona workflows · hot-reloadable).</p>
  <p class="text-slate-600 text-sm leading-relaxed mb-3">
  LangGraph is the agentic-supervisor framework. Its <code>StateGraph</code> primitive models CUO as a graph of nodes (router, skill-load, tool-call, HITL-confirm, answer-compose) with first-class <code>interrupt</code> support for human-in-the-loop gates on destructive tools. LiteLLM is the model-routing core that owns provider failover and prompt caching. Anthropic Skills format (<code>SKILL.md</code> + <code>scripts/</code> + <code>references/</code>) keeps each C-level skill as a hot-reloadable directory.
  </p>

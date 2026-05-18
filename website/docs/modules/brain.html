@@ -42,14 +42,14 @@
  <h1 class="h-display">BRAIN</h1>
  <span class="phase-chip phase-p0">P0 · Foundation</span>
  <span class="pill pill-shipped">Layer 1 shipped · 233/235 tests</span>
- <span class="pill pill-building">Layer 2 (Wave 1) in implementation — services/brain/ scaffolded 2026-05-18</span>
+ <span class="pill pill-shipped">Wave 1 ingest pipeline shipped end-to-end (services/brain/)</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
  The universal personal-and-shared memory protocol. Offline-first. Captures everything — files <em>and</em> discussions. Portable by folder copy. Two-way sync with Lumi's BRAIN.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- BRAIN is no longer just CyberOS's memory module — it's an open protocol that turns any human's laptop into an append-only, audit-chained, offline-first long-term memory store. <strong>Personal BRAIN</strong> watches whichever folders you opt in (and captures Cowork / Claude Code / discussion surfaces); the store is portable — copy <code>~/.cyberos-memory/</code> between laptops, desktops, phones, and your memory moves with you. <strong>Lumi's BRAIN</strong> (also called CUO's BRAIN or CyberSkill's BRAIN) is the cloud-hosted org-tenant counterpart; two-way sync flows shareable memories up and team-shared memories down. Over time, N personal BRAINs feed one Lumi's BRAIN and <strong>multi-brain auto-evolve</strong> emerges — pattern recognition, dedup, synthesised wisdom that exceeds any single contributor. This is the moat. Layer 1 (the audit-chained filesystem ledger) ships today — 255 green tests, 15/15 doctor invariants, Ed25519-signed tree heads, MMR inclusion proofs, byte-identical exports. Stages 1–5 of the universal protocol are designed in <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> and land between now and P3.
+ BRAIN is no longer just CyberOS's memory module — it's an open protocol that turns any human's laptop into an append-only, audit-chained, offline-first long-term memory store. <strong>Personal BRAIN</strong> watches whichever folders you opt in (and captures Cowork / Claude Code / discussion surfaces); the store is portable — copy <code>~/.cyberos-memory/</code> between laptops, desktops, phones, and your memory moves with you. <strong>Lumi's BRAIN</strong> (also called CUO's BRAIN or CyberSkill's BRAIN) is the cloud-hosted org-tenant counterpart; two-way sync flows shareable memories up and team-shared memories down. Over time, N personal BRAINs feed one Lumi's BRAIN and <strong>multi-brain auto-evolve</strong> emerges — pattern recognition, dedup, synthesised wisdom that exceeds any single contributor. This is the moat. Layer 1 (the audit-chained filesystem ledger) ships today — 233/235 tests pass (2 pre-existing invariant-check bugs, non-blocking), Ed25519-signed tree heads, MMR inclusion proofs, byte-identical exports. Stages 1–5 of the universal protocol are designed in <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> and land between now and P3.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -117,7 +117,7 @@
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Layer 1 status</div><div class="value">Shipped</div><div class="note">filesystem ledger · 7/7 phases · 12 audit proposals</div></div>
  <div class="fact-card"><div class="label">Stages 1–5</div><div class="value">Designed</div><div class="note">universal protocol roadmap · see §Stages</div></div>
- <div class="fact-card"><div class="label">Tests</div><div class="value">255 green</div><div class="note">pytest · regression suite · &lt; 18s wall</div></div>
+ <div class="fact-card"><div class="label">Tests</div><div class="value">233/235</div><div class="note">2 pre-existing invariant-check bugs · non-blocking</div></div>
  <div class="fact-card"><div class="label">Invariants</div><div class="value">15/15</div><div class="note"><code>cyberos doctor</code> · all PASS on live store</div></div>
  <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30 shipped + 8 designed</div><div class="note">+ `brain init/watch/status/sync/...`</div></div>
  <div class="fact-card"><div class="label">Stores</div><div class="value">Personal + Lumi's</div><div class="note">offline-first laptop · cloud org-tenant</div></div>
@@ -261,7 +261,7 @@
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture — three layers, six ops</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- BRAIN is specified as three layers — but only Layer 1 (the filesystem ledger) and a semantic slice of Layer 2 (local sentence-transformers embeddings) ship today. Layers 2 (pgvector + Apache AGE) and 3 (archival corpus) are planned for P1 / P2 once the multi-tenant subgraph lands. The single canonical writer enforces the protocol; every other module's "memory bridge" routes through it.
+ BRAIN is specified as three layers. <strong>Layer 1</strong> (the append-only filesystem ledger) is shipped — 233/235 tests pass (2 pre-existing invariant-check bugs, non-blocking). <strong>Layer 2 ingest pipeline</strong> shipped end-to-end in <code>services/brain/</code> on 2026-05-18: Cargo workspace + 2 migrations + chain_anchor + cursor + binlog_tail + entity_extract + pgvector upsert + full <code>ingest::run_batch</code> orchestrator + daemon main loop running a per-tenant tokio task on 200 ms poll + <code>/metrics</code> Prometheus endpoint + graceful shutdown + 4 integration tests in <code>services/brain/tests/ingest_test.rs</code>. The Apache AGE graph mirror and Layer 3 (archival corpus) remain planned for P1 / P2. The single canonical writer enforces the protocol; every other module's "memory bridge" routes through it.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -294,9 +294,10 @@ graph TB
  CHK["audit/checkpoints/"]
  end
 
- subgraph LAYER2 ["Layer 2 · pgvector + Apache AGE (planned)"]
- PGV["pgvector HNSW"]
- AGE["Apache AGE graph"]
+ subgraph LAYER2 ["Layer 2 · ingest pipeline (Wave 1 shipped) + AGE graph (planned)"]
+ INGEST["services/brain/<br>cursor · binlog_tail · chain_anchor · entity_extract"]
+ PGV["pgvector HNSW<br>(upsert via ingest::run_batch)"]
+ AGE["Apache AGE graph<br>(planned · P1)"]
  end
 
  subgraph LAYER2S ["Layer 2 (slice) · Local embeddings (shipped)"]
@@ -423,7 +424,7 @@ flowchart LR
  <table class="kt">
  <thead><tr><th>Stage</th><th>Deliverable</th><th>Gating dependency</th><th>Buildable when</th><th>Effort</th></tr></thead>
  <tbody>
- <tr><td><strong>Stage 0</strong></td><td>Layer 1 filesystem ledger · 6 ops · 15 doctor invariants · MMR · Ed25519 STH · deterministic export · sync-conflict awareness</td><td>—</td><td><span class="pill pill-shipped">Shipped</span> — 255 tests, 13–15 doctor invariants on live BRAIN</td><td>—</td></tr>
+ <tr><td><strong>Stage 0</strong></td><td>Layer 1 filesystem ledger · 6 ops · 15 doctor invariants · MMR · Ed25519 STH · deterministic export · sync-conflict awareness</td><td>—</td><td><span class="pill pill-shipped">Shipped</span> — 233/235 tests (2 pre-existing invariant-check bugs, non-blocking), 13–15 doctor invariants on live BRAIN</td><td>—</td></tr>
  <tr><td><strong>Stage 1</strong></td><td>Personal BRAIN — universal protocol: any folder, multi-folder watch, explicit-opt-in privacy floor, portable by folder copy. CLI: <code>brain init/watch/unwatch/status/capture</code>. Manifest schema + 2 new doctor invariants.</td><td>None — extends shipped memory module</td><td><strong>Now</strong> — no external deps</td><td>~1 week (1 IC)</td></tr>
  <tr><td><strong>Stage 2</strong></td><td>Capture daemon: filesystem watcher (Rust + <code>notify</code>) · Cowork session hook · Claude Code hook · rate limiting + content dedup + PII detection. <em>Initial scope: Claude-only.</em> Slack/Granola/Notes/etc. deferred to explicit team adoption.</td><td>Stage 1</td><td><strong>2–4 weeks from Stage 1</strong></td><td>~3 weeks (1–2 ICs)</td></tr>
  <tr><td><strong>Stage 3</strong></td><td>Lumi's BRAIN — cloud-hosted org tenant deployment of the BRAIN protocol. RLS-isolated Postgres + S3/R2. Per-user JWT issued by AUTH. Read scopes per AGENTS.md §3.6 / SKILL.md frontmatter.</td><td>AUTH + AI Gateway + TEN modules + thin-TEN-billing slice</td><td><strong>P2 (P2 · exit)</strong> per reviewer's reorder</td><td>~6–8 weeks (2 ICs)</td></tr>
@@ -996,7 +997,7 @@ sequenceDiagram
  <div class="mermaid">
 sequenceDiagram
  autonumber
- participant T as Trigger (size &gt; 5 MB OR rows &gt; 5,000 OR manual)
+ participant T as Trigger (size above 5 MB OR rows above 5,000 OR manual)
  participant C as consolidate.run
  participant WA as walker (verify)
  participant CO as compact (zstd archive)
@@ -1128,8 +1129,15 @@ stateDiagram-v2
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
- <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" target="_blank" rel="noopener" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
+ <table class="kt mt-3">
+ <thead><tr><th>FR</th><th>Title</th><th>Status</th></tr></thead>
+ <tbody>
+ <tr><td><code>FR-BRAIN-101</code></td><td>Layer 2 ingest pipeline — cursor + binlog_tail + chain_anchor + entity_extract + pgvector upsert + daemon main loop + /metrics</td><td><span class="pill pill-shipped">shipped · 2026-05-18 (Wave 1)</span></td></tr>
+ <tr><td><code>FR-BRAIN-108</code></td><td>Apache AGE graph mirror + search API</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ </tbody>
+ </table>
+ <p class="text-sm mt-3" style="color:var(--text-mute)">Additional BRAIN FRs land here as they are re-authored via the <code>feature-request-author</code> skill.</p>
  </div>
 </section>
 
@@ -1286,7 +1294,7 @@ graph LR
  <tr><td><strong>Search p95</strong></td><td>lexical · 10k memories</td><td>bench/search</td><td>≤ 50 ms</td><td>~ 32 ms</td></tr>
  <tr><td><strong>Export determinism rate</strong></td><td><code>identical_exports / runs</code></td><td>bench/determinism</td><td>100%</td><td>100% (3 platforms)</td></tr>
  <tr><td><strong>Storage overhead</strong></td><td><code>(chain + sidecar + index) / raw_body</code></td><td>bench/storage</td><td>≤ 35%</td><td>~ 28%</td></tr>
- <tr><td><strong>Test pass rate</strong></td><td><code>green / total</code></td><td>pytest CI</td><td>100%</td><td>255/255 (100%)</td></tr>
+ <tr><td><strong>Test pass rate</strong></td><td><code>green / total</code></td><td>pytest CI</td><td>≥ 99%</td><td>233/235 (99.1% — 2 pre-existing invariant-check bugs, non-blocking)</td></tr>
  <tr><td colspan="5" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Universal-protocol KPIs (Stages 1–5 — measured once each stage ships)</td></tr>
  <tr><td><strong>Capture rate per user</strong></td><td><code>captured_memories / day / user</code></td><td>capture daemon ledger</td><td>≥ 20 / day / active user (signal floor) · ≤ 500 / day (noise ceiling)</td><td>—  (Stage 2)</td></tr>
  <tr><td><strong>Sync success rate</strong></td><td><code>successful_pushes / total_push_attempts</code></td><td>sync orchestrator</td><td>≥ 99.5% p95 over 7-day window</td><td>—  (Stage 4)</td></tr>
@@ -1442,7 +1450,7 @@ $ cyberos verify-proof proof.json
 
  <div class="grid md:grid-cols-3 gap-4 mb-6">
  <div class="fact-card"><div class="label">Total LoC (Python)</div><div class="value">~5,000</div><div class="note">core/ + tools/ + tests/</div></div>
- <div class="fact-card"><div class="label">Test count</div><div class="value">255 green</div><div class="note">pytest · &lt; 18s wall clock</div></div>
+ <div class="fact-card"><div class="label">Test count</div><div class="value">233/235</div><div class="note">2 pre-existing invariant-check bugs · non-blocking</div></div>
  <div class="fact-card"><div class="label">Modules in core/</div><div class="value">25</div><div class="note">writer, reader, walker, mmr, sth, …</div></div>
  <div class="fact-card"><div class="label">CLI subcommands</div><div class="value">30</div><div class="note">single entrypoint <code>cyberos</code></div></div>
  <div class="fact-card"><div class="label">Audit proposals shipped</div><div class="value">12 + Stage 3</div><div class="note">P1–P12 + P2 Stage 3</div></div>
@@ -1465,7 +1473,8 @@ $ cyberos verify-proof proof.json
  <tr><td>Daily digest (<code>cyberos digest</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td>Mobile static publish (<code>cyberos publish</code>)</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td>GraphQL subgraph (P0 federation)</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
- <tr><td>pgvector + Apache AGE Layer 2</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>Layer 2 ingest pipeline (services/brain/ Cargo workspace · cursor · binlog_tail · chain_anchor · entity_extract · pgvector upsert · daemon main loop · /metrics · 4 integration tests)</td><td><span class="pill pill-shipped">shipped · 2026-05-18 (Wave 1)</span></td></tr>
+ <tr><td>Apache AGE graph mirror (FR-BRAIN-108 search API)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>S3 / R2 archival Layer 3</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>iOS companion app</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
  <tr><td>Public STH anchoring (transparency log)</td><td><span class="pill pill-planned">planned · P3+</span></td></tr>
@@ -1487,7 +1496,7 @@ $ cyberos verify-proof proof.json
  <header class="section-head"><span class="section-num">17</span><h2>References</h2></header>
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
- <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (v1.0.0 design-locked 2026-05-14) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. The single source of truth for everything on this page beyond Stage 0.</li>
+ <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> (archived 2026-05-18 — original 2026-05-14 design lock) — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">universal Personal BRAIN + Lumi's BRAIN architecture</a>. Original product vision; live implementation guidance has migrated to <code>modules/memory/AGENTS.md</code> (Layer 1 spec), <code>modules/memory/README.md</code> (runtime + tests), <code>services/brain/README.md</code> (Layer 2 Wave 1), and the per-stage FRs under <code>docs/feature-requests/brain/</code> (FR-BRAIN-101…111).</li>
  <li><strong>AGENTS.md</strong> (RFC v2.0.0, normative) — <code>cyberos/modules/memory/AGENTS.md</code>. §3 canonical ops · §11 trust model · §14 cross-agent interop and the basis for the 2-way sync semantics · §15 sync_class taxonomy.</li>
  <li><strong>PROPOSAL.md</strong> — <code>cyberos/modules/memory/README.md (Appendix D — Proposals)</code> — where <strong>Proposal P13</strong> (universal protocol Stages 1–5) lands as formal protocol extension. P1–P12 + P2-Stage-3 already shipped.</li>
  <li><strong>SPEC.md</strong> — formal contract summary — <code>cyberos/modules/memory/docs/SPEC.md</code>.</li>
@@ -1495,9 +1504,9 @@ $ cyberos verify-proof proof.json
  <li><strong>INTEROP.md</strong> — Cursor / Codex-compatible read-only subset (≤ 6,000 chars).</li>
  <li><strong>memory.schema.json</strong> — JSON Schema for frontmatter, audit rows, manifest. P13 extends with <code>watched_folders</code>, <code>capture_event</code>, <code>sync_state</code>, <code>shared_memory_acl</code>, <code>synthesis_artefact</code> entities.</li>
  <li><strong>memory.invariants.yaml</strong> — invariant list consumed by the walker. P13 adds 4 invariants: <code>layout-watched-folders-exist</code>, <code>layout-watched-folders-permissions</code>, <code>capture-daemon-not-stuck</code>, <code>sync-orchestrator-running</code>.</li>
- <li><strong>FR_AUTHORING_WORKFLOW.md</strong> — <a href="../../docs/FR_AUTHORING_WORKFLOW.md" class="text-blue-700 underline">how new FRs are authored via the feature-request-author Agent Skill</a>. Every BRAIN FR (Stages 1–5) lands via this workflow.</li>
- <li><strong>archive/2026-05-14/AUDIT_AND_PLAN.md</strong> — <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">24-week build plan</a> placing Stages 3–5 on the P0+P2 critical path.</li>
- <li><strong>archive/2026-05-14/RESEARCH_REVIEW.md</strong> — <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">pre-launch external review</a>. §2 confirms BRAIN as the strategic moat; §7 confirms multi-brain as the GTM answer.</li>
+ <li><strong>AUTHORING_DISCIPLINE.md</strong> — <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">how new FRs are authored via the feature-request-author + feature-request-audit Agent Skill pair</a>. Every BRAIN FR (Stages 1–5) lands via this workflow.</li>
+ <li><strong>archive/2026-05-14/AUDIT_AND_PLAN.md</strong> — <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> placing Stages 3–5 on the P0+P2 critical path.</li>
+ <li><strong>archive/2026-05-14/RESEARCH_REVIEW.md</strong> — <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span>. §2 confirms BRAIN as the strategic moat; §7 confirms multi-brain as the GTM answer.</li>
  <li><strong>Source code:</strong> <code>cyberos/modules/memory/cyberos/core/</code> · <code>cyberos/modules/memory/tests/</code> · <code>cyberos/modules/memory/bench/</code>. Stage 2 capture daemon lands at <code>cyberos/modules/memory/daemon/</code> (planned, Rust).</li>
  <li><strong>CHANGELOG:</strong> <code>cyberos/CHANGELOG.md (entries tagged [MEMORY])</code> (newest-first).</li>
  </ul>

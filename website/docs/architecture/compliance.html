@@ -326,13 +326,13 @@
  <h3 class="h-2">NQ 142/2024 + TT 80/2021 — VAT &amp; e-invoice framework</h3>
  <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-bold">in force 2022 / 2024 amend.</span>
  </div>
- <p class="text-slate-600 leading-relaxed mb-3">Mandatory e-invoice issuance, monthly VAT declaration, MST (tax code) validation on every invoice line. CyberOS handles this via the INV module (P2) and the <code>vietnam-mst-validate</code> + <code>vietnam-vat-invoice</code> + <code>vn-tax-filing</code> skills (shipped in the Skill module).</p>
+ <p class="text-slate-600 leading-relaxed mb-3">Mandatory e-invoice issuance, monthly VAT declaration, MST (tax code) validation on every invoice line. CyberOS handles this via the INV module (P2) and the <code>vietnam-mst-validate</code> + <code>vietnam-vat-invoice</code> skills (shipped). <code>vietnam-tax-filing</code> for the monthly VAT return is planned (not yet in the 5-skill public collection).</p>
 
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
  <li><strong>e-invoice format:</strong> XML (Decree 123/2020), uploaded to GDT (General Department of Taxation) via T-VAN provider.</li>
  <li><strong>MST validation:</strong> 10-digit (entity) or 13-digit (branch); checksum via Modulus-11 algorithm; live GDT API lookup.</li>
  <li><strong>VAT rates:</strong> 0% (export), 5% (essentials), 8% (NQ 142/2024 stimulus, expires periodically), 10% (default).</li>
- <li><strong>Monthly filing:</strong> by 20th of following month via the <code>vn-tax-filing</code> skill.</li>
+ <li><strong>Monthly filing:</strong> by 20th of following month via the <code>vietnam-tax-filing</code> skill (planned).</li>
  <li><strong>Retention:</strong> 10 years (Law on Accounting Article 41).</li>
  </ul>
  </article>
@@ -827,7 +827,7 @@ sequenceDiagram
  participant SUBJ as Affected data subjects
  participant TC as Trust Center
 
- OB->>DPO: alert · anomaly score &gt; 0.9
+ OB->>DPO: alert · anomaly score above 0.9
  DPO->>CP: classify(severity=high, scope=acme-tenant, dataCount=312)
  CP->>CP: T0 timestamp · 72-h clock starts
  CP->>OB: span "breach.classified"
@@ -929,11 +929,11 @@ sequenceDiagram
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-3">Vietnamese regulations (Ring 1)</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Decree 13/2023/NĐ-CP</a> — Personal Data Protection</li>
- <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Decree 53/2022/NĐ-CP</a> — Cybersecurity</li>
- <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">PDPL Art. 38 (Law 91/2025)</a> — SME grace period</li>
- <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Law 91/2025/QH15</a> — PDPL national law</li>
- <li><a href="https://thuvienphapluat.vn/" class="text-amber-700 font-semibold">Decree 356/2025</a> — PDPL implementing decree</li>
+ <li><a href="https://thuvienphapluat.vn/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">Decree 13/2023/NĐ-CP</a> — Personal Data Protection</li>
+ <li><a href="https://thuvienphapluat.vn/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">Decree 53/2022/NĐ-CP</a> — Cybersecurity</li>
+ <li><a href="https://thuvienphapluat.vn/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">PDPL Art. 38 (Law 91/2025)</a> — SME grace period</li>
+ <li><a href="https://thuvienphapluat.vn/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">Law 91/2025/QH15</a> — PDPL national law</li>
+ <li><a href="https://thuvienphapluat.vn/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">Decree 356/2025</a> — PDPL implementing decree</li>
  <li>NQ 142/2024/QH15 — National Assembly tax stimulus</li>
  <li>TT 80/2021/TT-BTC — Tax administration</li>
  <li>Decree 123/2020/NĐ-CP — e-invoice rules</li>
@@ -944,17 +944,17 @@ sequenceDiagram
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-3">Cross-border + standards (Ring 2/3)</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><a href="https://gdpr.eu/" class="text-amber-700 font-semibold">GDPR (Regulation EU 2016/679)</a></li>
- <li><a href="https://artificialintelligenceact.eu/" class="text-amber-700 font-semibold">EU AI Act (Regulation EU 2024/1689)</a></li>
- <li><a href="https://www.pdpc.gov.sg/" class="text-amber-700 font-semibold">Singapore PDPA</a></li>
- <li><a href="https://www.iso.org/standard/27001" class="text-amber-700 font-semibold">ISO/IEC 27001:2022</a></li>
- <li><a href="https://www.iso.org/standard/81230.html" class="text-amber-700 font-semibold">ISO/IEC 42001:2023 (AIMS)</a></li>
- <li><a href="https://www.iso.org/standard/71670.html" class="text-amber-700 font-semibold">ISO/IEC 27701:2019 (PIMS)</a></li>
- <li><a href="https://www.aicpa.org/" class="text-amber-700 font-semibold">AICPA SOC 2 TSC 2017</a></li>
- <li><a href="https://cloudsecurityalliance.org/star" class="text-amber-700 font-semibold">CSA STAR Program</a></li>
- <li><a href="https://cloudsecurityalliance.org/research/working-groups/ai-controls" class="text-amber-700 font-semibold">AI-CAIQ / AICM</a></li>
- <li> — Compliance Strategy (full text)</li>
- <li> — Locked decisions DEC-053 / DEC-054 / DEC-055</li>
+ <li><a href="https://gdpr.eu/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">GDPR (Regulation EU 2016/679)</a></li>
+ <li><a href="https://artificialintelligenceact.eu/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">EU AI Act (Regulation EU 2024/1689)</a></li>
+ <li><a href="https://www.pdpc.gov.sg/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">Singapore PDPA</a></li>
+ <li><a href="https://www.iso.org/standard/27001" target="_blank" rel="noopener" class="text-amber-700 font-semibold">ISO/IEC 27001:2022</a></li>
+ <li><a href="https://www.iso.org/standard/81230.html" target="_blank" rel="noopener" class="text-amber-700 font-semibold">ISO/IEC 42001:2023 (AIMS)</a></li>
+ <li><a href="https://www.iso.org/standard/71670.html" target="_blank" rel="noopener" class="text-amber-700 font-semibold">ISO/IEC 27701:2019 (PIMS)</a></li>
+ <li><a href="https://www.aicpa.org/" target="_blank" rel="noopener" class="text-amber-700 font-semibold">AICPA SOC 2 TSC 2017</a></li>
+ <li><a href="https://cloudsecurityalliance.org/star" target="_blank" rel="noopener" class="text-amber-700 font-semibold">CSA STAR Program</a></li>
+ <li><a href="https://cloudsecurityalliance.org/research/working-groups/ai-controls" target="_blank" rel="noopener" class="text-amber-700 font-semibold">AI-CAIQ / AICM</a></li>
+ <li>Internal spec — Compliance Strategy (full text)</li>
+ <li>Internal spec — Locked decisions DEC-053 / DEC-054 / DEC-055</li>
  </ul>
  </div>
  </div>

@@ -1,0 +1,119 @@
+name: services
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'services/**'
+      - '.github/workflows/services.yml'
+  pull_request:
+    paths:
+      - 'services/**'
+      - '.github/workflows/services.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Pure-Rust gate — fmt, clippy, build, unit tests (no Postgres).
+  # ---------------------------------------------------------------------------
+  lint-and-test:
+    name: lint + test (pure-Rust)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.81.0
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            services/target
+          key: cargo-services-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
+          restore-keys: |
+            cargo-services-${{ runner.os }}-
+
+      - name: cargo fmt --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets --no-deps
+
+      - name: cargo build
+        run: cargo build --workspace
+
+      - name: cargo test (no postgres)
+        run: cargo test --workspace --no-fail-fast
+
+  # ---------------------------------------------------------------------------
+  # Integration gate — boots Postgres + Apache AGE + Redis via docker-compose
+  # and runs the `--ignored` tests (FR-AUTH-003 RLS isolation + FR-AUTH-004
+  # JWT roundtrip + FR-BRAIN-101 chain-anchor against real DB).
+  # ---------------------------------------------------------------------------
+  integration:
+    name: integration (Postgres + Redis)
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    defaults:
+      run:
+        working-directory: services
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.81.0
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            services/target
+          key: cargo-services-${{ runner.os }}-${{ hashFiles('services/**/Cargo.lock', 'services/**/Cargo.toml') }}
+
+      - name: Boot dev stack (Postgres + Apache AGE + Redis)
+        run: |
+          cd dev
+          docker compose up -d
+          # Wait until Postgres reports healthy.
+          for i in {1..30}; do
+            if docker compose ps postgres | grep -q '(healthy)'; then echo "postgres is up"; break; fi
+            sleep 2
+          done
+
+      - name: Install sqlx-cli
+        run: cargo install --locked --version 0.8.0 sqlx-cli --no-default-features --features postgres
+
+      - name: Apply migrations — auth
+        env:
+          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
+        run: cd auth && sqlx migrate run
+
+      - name: Apply migrations — brain
+        env:
+          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
+        run: cd brain && sqlx migrate run
+
+      - name: cargo test (Postgres-required)
+        env:
+          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
+        run: cargo test --workspace --no-fail-fast -- --ignored
+
+      - name: Tear down dev stack
+        if: always()
+        run: cd dev && docker compose down -v

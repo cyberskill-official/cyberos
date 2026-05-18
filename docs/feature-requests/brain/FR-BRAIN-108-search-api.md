@@ -3,7 +3,7 @@ id: FR-BRAIN-108
 title: "BRAIN search — vector + graph + full-text in parallel + RRF fusion + BGE-rerank + RLS + ACL + chain_anchor verify + 250ms p95"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 2
