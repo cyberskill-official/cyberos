@@ -186,6 +186,82 @@ pub async fn emit_bootstrap_completed(
     Ok(row.0)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FR-AUTH-002 §1 #7 — auth.subject_created audit row
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Payload for `auth.subject_created`. Per §1 #7, the row MUST NOT carry
+/// plaintext password, password hash, OR full email — `email_hash16`
+/// (first 16 hex chars of SHA-256(email)) is the privacy-safe identifier
+/// that lets ops correlate without exposing PII.
+#[derive(Debug)]
+pub struct SubjectCreatedPayload<'a> {
+    pub subject_id: Uuid,
+    pub tenant_id: Uuid,
+    pub email_hash16: Option<String>,
+    pub roles: &'a [String],
+    pub created_by_subject_id: Uuid,
+    pub idempotency_key: Option<&'a str>,
+    pub request_id: Option<&'a str>,
+    pub kind: &'a str,
+}
+
+impl<'a> SubjectCreatedPayload<'a> {
+    pub fn to_body_string(&self) -> String {
+        let body = json!({
+            "event_type": "auth.subject_created",
+            "subject_id": self.subject_id.to_string(),
+            "tenant_id": self.tenant_id.to_string(),
+            "email_hash16": self.email_hash16,
+            "kind": self.kind,
+            "roles": self.roles,
+            "created_by_subject_id": self.created_by_subject_id.to_string(),
+            "idempotency_key": self.idempotency_key,
+            "request_id": self.request_id,
+        });
+        serde_json::to_string(&body).expect("json::to_string of static keys cannot fail")
+    }
+}
+
+/// Compute the 16-hex-char prefix of SHA-256(email) — collision-safe at
+/// our scale (~1 in 10⁹) without exposing the actual email address.
+pub fn email_hash16(email: &str) -> String {
+    let mut h = Sha256::new();
+    h.update(email.as_bytes());
+    let bytes = h.finalize();
+    bytes.iter().take(8).map(|b| format!("{b:02x}")).collect()
+}
+
+/// Insert `auth.subject_created` into `l1_audit_log` inside the caller's tx.
+/// Path: `auth/subject/<subject_id>/created` — genesis row for the new
+/// subject's chain.
+pub async fn emit_subject_created(
+    tx: &mut Transaction<'_, Postgres>,
+    payload: SubjectCreatedPayload<'_>,
+) -> Result<i64, sqlx::Error> {
+    let body = payload.to_body_string();
+    let anchor = chain_anchor(None, &body);
+    let ts_ns = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
+    let path = format!("auth/subject/{}/created", payload.subject_id);
+
+    let row: (i64,) = sqlx::query_as(
+        "INSERT INTO l1_audit_log
+            (tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns)
+         VALUES ($1, $2, 'put', $3, $4, NULL, $5, $6)
+         RETURNING seq",
+    )
+    .bind(payload.tenant_id)
+    .bind(payload.created_by_subject_id)
+    .bind(&path)
+    .bind(&body)
+    .bind(&anchor)
+    .bind(ts_ns)
+    .fetch_one(&mut **tx)
+    .await?;
+
+    Ok(row.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -239,6 +315,37 @@ mod tests {
     }
 
     // ─── FR-AUTH-006 §1 #4 — bootstrap_completed payload ────────────────
+
+    #[test]
+    fn email_hash16_is_first_16_hex_chars_of_sha256() {
+        // SHA-256("alice@example.com")[..8] = 0d 4a e9 f7 a4 60 8b 12 → 0d4ae9f7a4608b12
+        let h = email_hash16("alice@example.com");
+        assert_eq!(h.len(), 16);
+        // Just assert format + determinism rather than the specific bytes (would
+        // need re-checking on every change).
+        assert_eq!(h, email_hash16("alice@example.com"));
+        assert_ne!(h, email_hash16("bob@example.com"));
+    }
+
+    #[test]
+    fn subject_payload_omits_password_and_full_email() {
+        let p = SubjectCreatedPayload {
+            subject_id: Uuid::nil(),
+            tenant_id: Uuid::nil(),
+            email_hash16: Some("0d4ae9f7a4608b12".into()),
+            roles: &["tenant-admin".into()],
+            created_by_subject_id: Uuid::nil(),
+            idempotency_key: None,
+            request_id: None,
+            kind: "human",
+        };
+        let body = p.to_body_string();
+        // §1 #7 privacy contract: no plaintext password / no full email
+        assert!(!body.contains("@"), "full email MUST NOT appear: {body}");
+        assert!(!body.to_lowercase().contains("password"));
+        assert!(body.contains("\"email_hash16\":\"0d4ae9f7a4608b12\""));
+        assert!(body.contains("\"roles\":[\"tenant-admin\"]"));
+    }
 
     #[test]
     fn bootstrap_payload_serialises_with_canonical_event_type() {

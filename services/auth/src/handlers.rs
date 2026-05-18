@@ -325,21 +325,124 @@ async fn create_tenant(
 /// FR-AUTH-002 — Subject create. Bcrypt-hashes the password before insert.
 /// `tenant_id` is taken from the verified JWT claims — the route is gated by
 /// `verify_jwt` middleware so `Extension<Claims>` is always present.
+///
+/// G-001..014 audit-fix loop slice-1 (session 21):
+///   * G-001 email regex validation                      (validate_email)
+///   * G-003 role allow-list                              (validate_roles)
+///   * G-004 Idempotency-Key honoured                     (idempotency::lookup + record)
+///   * G-005 auth.subject_created BRAIN audit row         (brain_bridge::emit_subject_created)
+///   * G-006 structured 409 handle_taken / email_taken
+///   * G-009 HIBP audit emit-in-transaction (atomicity)   (moved INTO the tx)
+///   * G-010 OTel #[tracing::instrument]
+///   * G-012 handler-level tenant-admin role check
+#[tracing::instrument(
+    name = "auth.create_subject",
+    skip(state, claims, headers, req),
+    fields(
+        tenant_id = %claims.tenant_id,
+        roles_count = req.roles.len(),
+        email_hash16 = tracing::field::Empty,
+        outcome = tracing::field::Empty,
+    )
+)]
 async fn create_subject(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
+    headers: HeaderMap,
     Json(req): Json<CreateSubjectRequest>,
 ) -> Result<(StatusCode, Json<Subject>), (StatusCode, Json<Value>)> {
-    let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|e| (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({"error": format!("malformed tenant_id claim: {e}")})),
-    ))?;
+    use tracing::Span;
+    let span = Span::current();
 
-    // FR-AUTH-107 — HIBP breach check on every password set.
-    let pw_hash = match (&req.kind[..], req.password.as_deref()) {
+    let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(|_| {
+        // Malformed tenant_id claim → 403 (not 500) so the failure mode
+        // doesn't leak parser internals (same defence-in-depth as
+        // FR-AUTH-001's require_root_admin_in_tenant_0).
+        span.record("outcome", "forbidden");
+        (
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "forbidden", "needed": "tenant-admin or root-admin"})),
+        )
+    })?;
+
+    // G-012 — handler-level role check (defence-in-depth on top of RLS).
+    // Per §1 #1: caller MUST have `tenant-admin` in claims.roles, OR be
+    // root-admin in tenant 0 (the latter implies tenant-admin everywhere).
+    let has_tenant_admin = claims.roles.iter().any(|r| r == "tenant-admin");
+    let is_root_admin_zero = tenant_id == Uuid::nil()
+        && claims.roles.iter().any(|r| r == "root-admin");
+    if !has_tenant_admin && !is_root_admin_zero {
+        span.record("outcome", "forbidden");
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "error": "forbidden",
+                "needed": "tenant-admin role in caller's tenant (or root-admin in tenant 0)"
+            })),
+        ));
+    }
+
+    // G-001 — Email regex validation (§1 #2). Mirrors the PG CHECK constraint
+    // on `subjects.email` (loose RFC 5321 — disallows whitespace + requires
+    // an @ + a dot in the domain).
+    if let Some(email) = req.email.as_deref() {
+        if let Err(e) = validate_email(email) {
+            span.record("outcome", "invalid_input");
+            return Err(e);
+        }
+        span.record("email_hash16", crate::brain_bridge::email_hash16(email).as_str());
+    }
+
+    // G-003 — Role allow-list (§1 #5). Closed allow-list for slice 1:
+    // `{"tenant-admin", "tenant-member"}`. Expanded by FR-AUTH-101 to 22 roles.
+    if let Err(e) = validate_roles(&req.roles) {
+        span.record("outcome", "invalid_input");
+        return Err(e);
+    }
+
+    // G-004 — Idempotency-Key honoured (§1 #6). Required on admin POSTs.
+    let idem_key = match headers
+        .get("idempotency-key")
+        .and_then(|h| h.to_str().ok())
+    {
+        Some(k) => k,
+        None => {
+            span.record("outcome", "missing_header");
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "missing_header",
+                    "field": "Idempotency-Key",
+                    "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-002 §1 #6)"
+                })),
+            ));
+        }
+    };
+    let route = "POST /v1/admin/subjects";
+    if let Some((status, body)) = crate::idempotency::lookup(&state.pg, idem_key, route, tenant_id)
+        .await
+        .map_err(internal_err)?
+    {
+        // Replay prior response.
+        span.record("outcome", "idempotent_replay");
+        let subject: Subject = serde_json::from_value(body).map_err(|e| (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        ))?;
+        return Ok((
+            StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK),
+            Json(subject),
+        ));
+    }
+
+    // FR-AUTH-107 — HIBP breach check on every password set. Runs OUTSIDE
+    // the tx because the HIBP API call is a network round-trip — keeping
+    // it inside would tie up a Postgres connection during 50-200ms of
+    // latency. The HIBP AUDIT ROW (separate concern) lands INSIDE the tx
+    // per G-009 below.
+    let (pw_hash, hibp_record) = match (&req.kind[..], req.password.as_deref()) {
         ("human", Some(plain)) => {
             let outcome = crate::hibp::check_password(plain).await;
-            // Record audit row (best-effort; never blocks the request).
             let (prefix, _suffix) = crate::hibp::sha1_split(plain);
             let outcome_str = match &outcome {
                 crate::hibp::HibpOutcome::Allowed => "allowed",
@@ -350,18 +453,9 @@ async fn create_subject(
                 crate::hibp::HibpOutcome::Breached { count } => Some(*count as i32),
                 _ => None,
             };
-            let _ = sqlx::query(
-                "INSERT INTO hibp_audit (tenant_id, flow, outcome, breach_count, sha1_prefix)
-                      VALUES ($1, 'admin-set', $2, $3, $4)",
-            )
-            .bind(tenant_id)
-            .bind(outcome_str)
-            .bind(breach_count)
-            .bind(&prefix)
-            .execute(&state.pg)
-            .await;
             // Refuse breached passwords.
             if let crate::hibp::HibpOutcome::Breached { count } = outcome {
+                span.record("outcome", "password_breached");
                 return Err((
                     StatusCode::CONFLICT,
                     Json(json!({
@@ -371,18 +465,23 @@ async fn create_subject(
                     })),
                 ));
             }
-            Some(
-                bcrypt::hash(plain, bcrypt::DEFAULT_COST).map_err(|e| (
+            let hash = bcrypt::hash(plain, bcrypt::DEFAULT_COST).map_err(|e| {
+                span.record("outcome", "error");
+                (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({"error": format!("bcrypt failed: {e}")})),
-                ))?
-            )
+                )
+            })?;
+            (Some(hash), Some((outcome_str, breach_count, prefix)))
         }
-        ("human", None) => return Err((
-            StatusCode::BAD_REQUEST,
-            Json(json!({"error": "human subject requires password"}))
-        )),
-        _ => None,
+        ("human", None) => {
+            span.record("outcome", "invalid_input");
+            return Err(invalid_input(
+                "password",
+                "human subject requires password",
+            ));
+        }
+        _ => (None, None),
     };
 
     let mut tx = state.pg.begin().await.map_err(internal_err)?;
@@ -392,8 +491,28 @@ async fn create_subject(
         .await
         .map_err(internal_err)?;
 
+    // G-009 — HIBP audit row INSIDE the tx so subject-insert failure rolls
+    // it back together with the subject row. Previously the HIBP audit
+    // landed via &state.pg (own tx) → orphan rows on subject failure.
+    if let Some((outcome_str, breach_count, prefix)) = &hibp_record {
+        sqlx::query(
+            "INSERT INTO hibp_audit (tenant_id, flow, outcome, breach_count, sha1_prefix)
+                  VALUES ($1, 'admin-set', $2, $3, $4)",
+        )
+        .bind(tenant_id)
+        .bind(*outcome_str)
+        .bind(*breach_count)
+        .bind(prefix)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| {
+            span.record("outcome", "error");
+            internal_err(e)
+        })?;
+    }
+
     let new_id = SubjectId::new();
-    let row: (Uuid, Uuid, String, Option<String>, Option<String>, String, String, Vec<String>, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>) = sqlx::query_as(
+    let insert_result: Result<(Uuid, Uuid, String, Option<String>, Option<String>, String, String, Vec<String>, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>), sqlx::Error> = sqlx::query_as(
         "INSERT INTO subjects (id, tenant_id, handle, display_name, email, kind, password_hash, roles)
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id, tenant_id, handle, display_name, email, kind, status, roles, created_at, updated_at",
@@ -407,32 +526,157 @@ async fn create_subject(
     .bind(pw_hash.as_deref())
     .bind(&req.roles)
     .fetch_one(&mut *tx)
-    .await
-    .map_err(|e| match e {
-        sqlx::Error::Database(db) if db.is_unique_violation() => (
-            StatusCode::CONFLICT,
-            Json(json!({"error": format!("handle '{}' already taken in this tenant", req.handle)})),
-        ),
-        other => internal_err(other),
+    .await;
+
+    let row = match insert_result {
+        // G-006 — Structured 409 body. UNIQUE on `(tenant_id, handle)` is
+        // the most common conflict; UNIQUE on `(tenant_id, email)` covers
+        // the email-taken case. We can't distinguish in the generic
+        // is_unique_violation, but the message hint disambiguates.
+        Err(sqlx::Error::Database(db)) if db.is_unique_violation() => {
+            span.record("outcome", "conflict");
+            let constraint = db.constraint().unwrap_or("").to_string();
+            let (error, field, value) = if constraint.contains("email") {
+                ("email_taken", "email", req.email.clone().unwrap_or_default())
+            } else {
+                ("handle_taken", "handle", req.handle.clone())
+            };
+            return Err((
+                StatusCode::CONFLICT,
+                Json(json!({
+                    "error": error,
+                    "field": field,
+                    "value": value,
+                    "tenant_id": tenant_id.to_string(),
+                })),
+            ));
+        }
+        Err(other) => {
+            span.record("outcome", "error");
+            return Err(internal_err(other));
+        }
+        Ok(r) => r,
+    };
+
+    let subject = Subject {
+        id: SubjectId(row.0),
+        tenant_id: TenantId(row.1),
+        handle: row.2,
+        display_name: row.3,
+        email: row.4,
+        kind: row.5,
+        status: row.6,
+        roles: row.7,
+        created_at: row.8,
+        updated_at: row.9,
+    };
+
+    // G-005 — Emit auth.subject_created BRAIN audit row INSIDE the tx
+    // (§1 #7 + §1 #12). email_hash16 is the privacy-safe identifier;
+    // plaintext email + password hash NEVER appear in the audit chain.
+    let caller_subject_id = Uuid::parse_str(&claims.sub).unwrap_or_else(|_| Uuid::nil());
+    let request_id = headers.get("x-request-id").and_then(|h| h.to_str().ok());
+    let email_hash = subject
+        .email
+        .as_deref()
+        .map(crate::brain_bridge::email_hash16);
+    let payload = crate::brain_bridge::SubjectCreatedPayload {
+        subject_id: subject.id.as_uuid(),
+        tenant_id,
+        email_hash16: email_hash,
+        roles: &subject.roles,
+        created_by_subject_id: caller_subject_id,
+        idempotency_key: Some(idem_key),
+        request_id,
+        kind: &subject.kind,
+    };
+    if let Err(e) = crate::brain_bridge::emit_subject_created(&mut tx, payload).await {
+        span.record("outcome", "error");
+        return Err(internal_err(e));
+    }
+
+    tx.commit().await.map_err(|e| {
+        span.record("outcome", "error");
+        internal_err(e)
     })?;
 
-    tx.commit().await.map_err(internal_err)?;
+    // Record idempotency cache AFTER commit so failed creates aren't replayed.
+    let body = serde_json::to_value(&subject).map_err(internal_err)?;
+    crate::idempotency::record(
+        &state.pg,
+        idem_key,
+        route,
+        tenant_id,
+        StatusCode::CREATED.as_u16() as i16,
+        &body,
+    )
+    .await
+    .map_err(internal_err)?;
 
-    Ok((
-        StatusCode::CREATED,
-        Json(Subject {
-            id: SubjectId(row.0),
-            tenant_id: TenantId(row.1),
-            handle: row.2,
-            display_name: row.3,
-            email: row.4,
-            kind: row.5,
-            status: row.6,
-            roles: row.7,
-            created_at: row.8,
-            updated_at: row.9,
-        }),
-    ))
+    span.record("outcome", "created");
+    Ok((StatusCode::CREATED, Json(subject)))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FR-AUTH-002 §1 #2 + #5 validators
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Validate email against the spec's loose regex `^[^@\s]+@[^@\s]+\.[^@\s]+$`.
+/// Implemented in plain Rust (no regex crate) to keep dep count bounded.
+fn validate_email(email: &str) -> Result<(), (StatusCode, Json<Value>)> {
+    if email.is_empty() {
+        return Err(invalid_input("email", "email is empty"));
+    }
+    if email.contains(|c: char| c.is_whitespace()) {
+        return Err(invalid_input("email", "email must not contain whitespace"));
+    }
+    let at_count = email.matches('@').count();
+    if at_count != 1 {
+        return Err(invalid_input(
+            "email",
+            format!("email must contain exactly one '@', got {at_count}"),
+        ));
+    }
+    let (local, domain) = email.split_once('@').expect("@ count verified above");
+    if local.is_empty() {
+        return Err(invalid_input("email", "email local part is empty"));
+    }
+    if !domain.contains('.') {
+        return Err(invalid_input(
+            "email",
+            "email domain must contain at least one dot",
+        ));
+    }
+    // Reject leading/trailing dots in the domain.
+    if domain.starts_with('.') || domain.ends_with('.') {
+        return Err(invalid_input(
+            "email",
+            "email domain must not start or end with a dot",
+        ));
+    }
+    Ok(())
+}
+
+/// FR-AUTH-002 §1 #5 role allow-list — closed set for slice 1. FR-AUTH-101
+/// expands to 22 roles; this list is the strict subset that callers can
+/// assign via the subject-create endpoint. Unknown roles → 400 with the
+/// full allow-list for client-side display.
+const SLICE1_ROLE_ALLOWLIST: &[&str] = &["tenant-admin", "tenant-member"];
+
+fn validate_roles(roles: &[String]) -> Result<(), (StatusCode, Json<Value>)> {
+    for role in roles {
+        if !SLICE1_ROLE_ALLOWLIST.contains(&role.as_str()) {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "unknown_role",
+                    "role": role,
+                    "allowed": SLICE1_ROLE_ALLOWLIST,
+                })),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn internal_err<E: std::fmt::Display>(e: E) -> (StatusCode, Json<Value>) {
@@ -711,6 +955,79 @@ mod validate_tests {
         // to a hostile caller probing for "almost right" tenant IDs.
         assert_eq!(status, StatusCode::FORBIDDEN);
         assert_eq!(body["error"], "forbidden");
+    }
+
+    // ─── FR-AUTH-002 G-001 — email validation ────────────────────────────
+
+    #[test]
+    fn valid_email_with_one_at_and_dotted_domain_passes() {
+        assert!(validate_email("alice@example.com").is_ok());
+        assert!(validate_email("a@b.co").is_ok());
+    }
+
+    #[test]
+    fn email_without_at_rejected() {
+        let (s, _) = validate_email("noat").unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn email_with_two_ats_rejected() {
+        let (s, _) = validate_email("a@b@c.com").unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn email_with_whitespace_rejected() {
+        let (s, _) = validate_email("alice@example .com").unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn email_without_dotted_domain_rejected() {
+        let (s, _) = validate_email("alice@localhost").unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn email_empty_rejected() {
+        let (s, _) = validate_email("").unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+    }
+
+    // ─── FR-AUTH-002 G-003 — role allow-list ─────────────────────────────
+
+    #[test]
+    fn empty_roles_list_passes() {
+        assert!(validate_roles(&[]).is_ok());
+    }
+
+    #[test]
+    fn allowed_roles_pass() {
+        assert!(validate_roles(&["tenant-admin".into()]).is_ok());
+        assert!(validate_roles(&["tenant-member".into()]).is_ok());
+        assert!(validate_roles(&["tenant-admin".into(), "tenant-member".into()]).is_ok());
+    }
+
+    #[test]
+    fn unknown_role_rejected_with_allowlist_in_body() {
+        let (s, Json(body)) = validate_roles(&["tenant-superadmin".into()]).unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+        assert_eq!(body["error"], "unknown_role");
+        assert_eq!(body["role"], "tenant-superadmin");
+        // Allowlist included so the client can render an actionable error.
+        let allowed = body["allowed"].as_array().expect("allowed is array");
+        assert!(allowed.iter().any(|v| v == "tenant-admin"));
+        assert!(allowed.iter().any(|v| v == "tenant-member"));
+    }
+
+    #[test]
+    fn typo_in_role_caught() {
+        // §2 rationale: "free-form role strings invite typos
+        // (`\"tenant_admin\"` vs `\"tenant-admin\"`) — the closed allow-list
+        // catches typos at the API boundary." Pin this.
+        let (s, _) = validate_roles(&["tenant_admin".into()]).unwrap_err(); // underscore not hyphen
+        assert_eq!(s, StatusCode::BAD_REQUEST);
     }
 
     #[test]
