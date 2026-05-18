@@ -435,12 +435,34 @@ async fn create_subject(
         ));
     }
 
+    // FR-AUTH-002 §1 #3 + §1 #4 (slice-2) — validate password complexity
+    // BEFORE the network round-trip to HIBP. Catches weak passwords cheaply
+    // (the HIBP call costs 50-200ms; complexity validation is microseconds).
+    // The password is wrapped in `Zeroizing<String>` so the plaintext bytes
+    // are overwritten on drop — even if a panic unwinds the stack mid-flow,
+    // the wrapper's Drop runs.
+    let zeroized_password: Option<crate::password::ZeroizedString<String>> = req
+        .password
+        .as_deref()
+        .map(crate::password::wrap);
+    if let (Some(z), "human") = (zeroized_password.as_deref(), req.kind.as_str()) {
+        let email_local_part = req
+            .email
+            .as_deref()
+            .and_then(|e| e.split_once('@').map(|(local, _)| local))
+            .unwrap_or("");
+        if let Err(e) = crate::password::validate_plaintext(z, email_local_part) {
+            span.record("outcome", "weak_password");
+            return Err(e);
+        }
+    }
+
     // FR-AUTH-107 — HIBP breach check on every password set. Runs OUTSIDE
     // the tx because the HIBP API call is a network round-trip — keeping
     // it inside would tie up a Postgres connection during 50-200ms of
     // latency. The HIBP AUDIT ROW (separate concern) lands INSIDE the tx
     // per G-009 below.
-    let (pw_hash, hibp_record) = match (&req.kind[..], req.password.as_deref()) {
+    let (pw_hash, hibp_record) = match (&req.kind[..], zeroized_password.as_deref()) {
         ("human", Some(plain)) => {
             let outcome = crate::hibp::check_password(plain).await;
             let (prefix, _suffix) = crate::hibp::sha1_split(plain);

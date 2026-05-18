@@ -26,6 +26,7 @@ pub mod migration_state;
 pub mod models;
 pub mod oidc;
 pub mod passkey;
+pub mod password;
 pub mod rbac;
 pub mod saml;
 pub mod saml_sig;
