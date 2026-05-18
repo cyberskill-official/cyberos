@@ -5,7 +5,7 @@ purpose: Zero-touch end-to-end execution of the `docs/feature-requests/BACKLOG.m
 persona: cuo/chief-technology-officer
 cadence: per-FR (loops continuously over BACKLOG.md)
 status: shipped
-pattern: per-instance
+pattern: linear
 
 inputs:
   - { name: backlog,                source: docs/feature-requests/BACKLOG.md,                                       format: markdown }
@@ -21,24 +21,24 @@ outputs:
   - { name: debug_trace,            format: debug-trace@1 (one per failed FR attempt),     recipient: BRAIN audit chain }
 
 skill_chain:
-  - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, fr_id: next_fr_id },              outputs_to: context_map_draft,        planned: true }
-  - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map,              planned: true }
+  - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, fr_id: next_fr_id },              outputs_to: context_map_draft }
+  - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map }
   - { step: 3,  skill: architecture-decision-record-author,        inputs_from: { context_map: context_map, fr: next_fr },                outputs_to: adr_draft,                                 condition: "context_map.files_outside_immediate_domain > 3" }
   - { step: 4,  skill: architecture-decision-record-audit,         inputs_from: adr_draft,                                                outputs_to: adr,                                       condition: "step 3 ran" }
   - { step: 5,  skill: edge-case-matrix-author,                    inputs_from: { fr: next_fr, context_map: context_map },                outputs_to: edge_case_matrix_draft }
   - { step: 6,  skill: edge-case-matrix-audit,                     inputs_from: edge_case_matrix_draft,                                   outputs_to: edge_case_matrix }
-  - { step: 7,  skill: mock-contract-test-author,                  inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix },      outputs_to: mock_contracts_draft,     planned: true,                  condition: "fr.has_external_dependency" }
-  - { step: 8,  skill: mock-contract-test-audit,                   inputs_from: mock_contracts_draft,                                     outputs_to: mock_contracts,           planned: true,                  condition: "step 7 ran" }
+  - { step: 7,  skill: mock-contract-test-author,                  inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix },      outputs_to: mock_contracts_draft,                      condition: "fr.has_external_dependency" }
+  - { step: 8,  skill: mock-contract-test-audit,                   inputs_from: mock_contracts_draft,                                     outputs_to: mock_contracts,                            condition: "step 7 ran" }
   - { step: 9,  skill: implementation-plan-author,                 inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix, adr: adr },  outputs_to: impl_plan_draft }
   - { step: 10, skill: implementation-plan-audit,                  inputs_from: impl_plan_draft,                                          outputs_to: impl_plan }
-  - { step: 11, skill: observability-injection-author,             inputs_from: { fr: next_fr, impl_plan: impl_plan },                    outputs_to: obs_injection_plan,       planned: true }
-  - { step: 12, skill: observability-injection-audit,              inputs_from: obs_injection_plan,                                       outputs_to: obs_injection,            planned: true }
+  - { step: 11, skill: observability-injection-author,             inputs_from: { fr: next_fr, impl_plan: impl_plan },                    outputs_to: obs_injection_plan }
+  - { step: 12, skill: observability-injection-audit,              inputs_from: obs_injection_plan,                                       outputs_to: obs_injection }
   - { step: 13, skill: coverage-gate-author,                       inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix },      outputs_to: coverage_gate_draft }
   - { step: 14, skill: coverage-gate-audit,                        inputs_from: coverage_gate_draft,                                      outputs_to: coverage_report }
-  - { step: 15, skill: debugging-cycle-author,                     inputs_from: { fr: next_fr, coverage_report: coverage_report },        outputs_to: debug_cycle_draft,        planned: true,                  condition: "coverage_report.tests_failed > 0" }
-  - { step: 16, skill: debugging-cycle-audit,                      inputs_from: debug_cycle_draft,                                        outputs_to: debug_trace,              planned: true,                  condition: "step 15 ran" }
-  - { step: 17, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, outcome: derived_from_steps_1_to_16 },     outputs_to: backlog_mutation_draft,   planned: true }
-  - { step: 18, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_draft,                                   outputs_to: updated_backlog,          planned: true }
+  - { step: 15, skill: debugging-cycle-author,                     inputs_from: { fr: next_fr, coverage_report: coverage_report },        outputs_to: debug_cycle_draft,                         condition: "coverage_report.tests_failed > 0" }
+  - { step: 16, skill: debugging-cycle-audit,                      inputs_from: debug_cycle_draft,                                        outputs_to: debug_trace,                               condition: "step 15 ran" }
+  - { step: 17, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, outcome: derived_from_steps_1_to_16 },     outputs_to: backlog_mutation_draft }
+  - { step: 18, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_draft,                                   outputs_to: updated_backlog }
 
 escalates_to:
   - { persona: cuo/chief-information-security-officer,             when: "step 5 edge-case-matrix flags a SECURITY-class entry above warning + no corresponding ADR exists yet" }

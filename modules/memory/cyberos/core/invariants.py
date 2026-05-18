@@ -453,7 +453,10 @@ def _find_memory_schema(store: Path) -> Path | None:
     try:
         import cyberos
         pkg_parent = Path(cyberos.__file__).resolve().parent.parent
-        # New layout: cyberos package lives at memory/cyberos/, schema at memory/docs/.
+        # Current layout (post-modules/-refactor 2026-05-18): schema sits next
+        # to the package at modules/memory/memory.schema.json.
+        candidates.append(pkg_parent / "memory.schema.json")
+        # Intermediate layout: cyberos package lives at memory/cyberos/, schema at memory/docs/.
         candidates.append(pkg_parent / "docs" / "memory.schema.json")
         # Legacy layout: cyberos at repo-root, schema at docs/memory/.
         candidates.append(pkg_parent.parent / "docs" / "memory" / "memory.schema.json")
@@ -480,7 +483,12 @@ def _find_invariants_yaml() -> Path | None:
     try:
         import cyberos
         pkg_parent = Path(cyberos.__file__).resolve().parent.parent
-        # New layout: memory/cyberos/ + memory/docs/memory.invariants.yaml.
+        # Current layout (post-modules/-refactor 2026-05-18): file lives at
+        # the module root next to the package — modules/memory/memory.invariants.yaml.
+        candidate = pkg_parent / "memory.invariants.yaml"
+        if candidate.is_file():
+            return candidate
+        # Intermediate layout: memory/cyberos/ + memory/docs/memory.invariants.yaml.
         candidate = pkg_parent / "docs" / "memory.invariants.yaml"
         if candidate.is_file():
             return candidate

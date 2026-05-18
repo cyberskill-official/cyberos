@@ -513,4 +513,60 @@ See "Next-session prompt" appended below this addendum.
 
 ---
 
-*End of WAVE-1-2-CONTINUATION.md — 2026-05-18 (session 18 addendum).*
+## Session 19 (2026-05-18 — Cowork) — zero-touch loop closure + CI fix + memory invariants bugfix
+
+**A. CTO implement-backlog-frs workflow goes zero-touch (Task #69).** Authored the 6 `planned: true` skill pairs from session 18 — 12 SKILL.md files following the lightweight edge-case-matrix / coverage-gate template:
+
+- `repo-context-map-author/-audit` — pre-flight repo deep-scan: existing patterns (error_type, DI, state-mgmt, logging, test framework), schemas, files-outside-immediate-domain, blast-radius score, module-placement sanity. Triggers the auto-ADR branch when `files_outside_immediate_domain.length > 3`.
+- `mock-contract-test-author/-audit` — when an FR declares an external dep that's not built yet (missing API key, future service, paywall, 2FA), capture the expected Request/Response shape + Mock implementation + contract tests + observable sunset criterion. Tags BACKLOG status `shipped + mocked-dependency`.
+- `observability-injection-author/-audit` — emit log/trace/counter points at every state transition + external IO + error branch. Audit enforces ≥80% branch coverage + redaction_policy presence when PII is in scope.
+- `debugging-cycle-author/-audit` — 5-attempt budget per FR with vector classification (state/network/memory/logic/flake/env), exact file:line change per hypothesis, re-run loop, and circuit-breaker arithmetic (`consecutive_failures ≥ 5 → trip`).
+- `backlog-state-update-author/-audit` — the only authorised writer of BACKLOG.md status cells. Closed enum on `new_status`, optimistic-concurrency check on `old_line` byte-for-byte, cross-references all 5 evidence artefact ids. Audit emits the workflow_complete BRAIN row as a side effect.
+
+**B. Workflow runnability fix.** The workflow declared `pattern: per-instance` which the Phase-4 PerInstanceHandler reads as needing a static `instance_descriptor` list — wrong model for a queue-drain workflow. Changed to `pattern: linear` (per §10 of the workflow doc: the outer loop is the supervisor's job, not the handler's). Also cleared 8 stale `planned: true` markers since the target skills now exist on disk.
+
+**Validation:**
+- `cyberos-cuo dry-run chief-technology-officer/implement-backlog-frs` → `RUNNABLE · chain length 18 · found 18 · missing 0 · planned 0`.
+- 3 live e2e invocations (FR-PROJ-010, FR-SKILL-105, FR-OBS-006) via `cyberos-cuo execute … --invoker llm --brain-emit` — chain head advanced `1f → 32 → 45` (57 BRAIN audit rows). Workflow plumbing validated; real BACKLOG drain requires `ANTHROPIC_API_KEY` (cowork sandbox uses mock-llm).
+- modules/cuo tests still 49 passed / 1 skipped.
+
+**C. CI services.yml Rust toolchain bump (Task #70).** GitHub Actions `lint + test (pure-Rust)` job was failing with `feature 'edition2024' is required` while compiling transitive dep `time-core v0.1.8` (pulled by `webauthn-rs-proto`). Root cause: workflow pinned `dtolnay/rust-toolchain@stable` to `toolchain: 1.81.0` (Aug 2024); `edition2024` was stabilized in Rust 1.85 (Feb 2025). Bumped both jobs (lint+test + integration) to `1.85.0`. No other 1.81 references remain in the workflow file. **Verify locally on Mac:** `cd services && rustup install 1.85.0 && cargo +1.85.0 build --workspace && cargo +1.85.0 clippy --workspace --all-targets`.
+
+**D. modules/memory invariants/schema finder fix (Task #71).** Closed the 2 long-standing test failures from "Known issues" #1.
+
+- Root cause: post-`modules/`-refactor (session 18), `memory.invariants.yaml` and `memory.schema.json` moved to module root (`modules/memory/memory.{invariants.yaml,schema.json}`), but `cyberos/core/invariants.py`'s `_find_invariants_yaml()` and `_find_memory_schema()` only checked `docs/`-subpath candidates. Result: `load_invariants_yaml()` returned `[]`, `run_all()` produced zero results, and `_cmd_state` reported READY even on unparseable manifest because there were no errors to surface.
+- Fix: added the module-root path as the first candidate in both finders (current layout). Preserved the intermediate-layout and legacy-layout candidates underneath for backward compatibility.
+- Verification: `pytest modules/memory/` → **311 passed, 4 skipped** (was 309 passed, 2 failed pre-fix). `test_frozen_human_when_manifest_unparseable` and `test_frozen_human_when_chain_link_broken` now both green.
+
+### Cumulative state after session 19
+
+| Surface | State |
+|---|---|
+| CTO `implement-backlog-frs` workflow zero-touch | ✓ shipped (6 skill pairs + pattern fix; dry-run 0 gaps) |
+| CI services.yml Rust toolchain | ✓ bumped 1.81.0 → 1.85.0 |
+| modules/memory invariants/schema finder | ✓ fixed (311/315 passing) |
+| BRAIN ingest + AGE + search + sync | ✓ end-to-end (sessions 3-5) |
+| BRAIN embed sidecar (FR-AI-019) | ✓ shipped (10/10 tests) |
+| AUTH 001-006 + 101 + 102 + 103 + 104 + 105 + 106 + 107 + 108 + 109 | ✓ shipped per slice |
+| FR-BRAIN-104 Tauri scaffold | ✓ first-slice (release runbook ready) |
+| NFR audit-pair coverage | ✓ 153/153 |
+| CUO supervisor v3.0.0-a4 Phase 1-4 | ✓ shipped (49/50 tests) |
+
+### What's still open
+
+- **Local cargo build verification.** Sandbox lacks `cargo` — bump-to-1.85 is a paper change here. Run `cargo +1.85.0 build --workspace` on the Mac before merging to confirm no remaining compile errors in the auth/brain crates (sessions 3-18 shipped a lot of code without sandbox build verification).
+- **`hex` crate workspace pin** (Known issues #2) — `services/brain/src/layer2/chain_anchor.rs` still vendors a tiny `hex::encode` inline. Convenience-only refactor.
+- **Tauri 2 updater pubkey** — `apps/brain/src-tauri/tauri.conf.json` has blank pubkey; generate via `tauri signer generate`.
+- **Production GeoLite2 mmdb vendoring** — install-geoip.sh exists but the prod-image step that loads it isn't authored.
+- **xml-c14n namespace-prefix rewriting** — only triggers if a non-Okta/AzureAD/Google-Workspace IdP fails verify. Track if it lands.
+
+### Next-session prompt (session 20)
+
+Two clean continuations from where this session lands:
+
+1. **Drain BACKLOG.md via Cowork (Option B from this session's Q1)** — operator pastes one of the Phase-2 prompts from session 19 chat, I drive `implement-backlog-frs` turn-by-turn for one or more FRs. One FR per turn; backlog status mutated atomically; BRAIN heartbeat at the end.
+2. **Cargo build verification + fixes** — operator runs `cargo +1.85.0 build --workspace` on Mac, pastes any compile errors back, I fix them in this session. Most-likely fixes: `sha1` crate version pin (mfa.rs), `urlencoding_minimal` ASCII-byte handling, sqlx `query_as` tuple wildcards, axum 0.7 path-extractor types.
+
+---
+
+*End of WAVE-1-2-CONTINUATION.md — 2026-05-18 (session 19 addendum, Cowork).*
