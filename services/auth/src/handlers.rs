@@ -382,6 +382,18 @@ async fn create_subject(
         ));
     }
 
+    // G-008 — §1 #11 — HTTPS required for password-bearing requests. The
+    // reverse-proxy sets `X-Forwarded-Proto: https` after TLS termination.
+    // Production refuses without it. Test environment short-circuits via
+    // `AUTH_TEST_ALLOW_HTTP=1` so integration tests don't need to spin up
+    // a TLS listener. Plaintext password over HTTP is a categorical no.
+    if req.kind == "human" && req.password.is_some() {
+        if let Err(e) = require_https(&headers) {
+            span.record("outcome", "https_required");
+            return Err(e);
+        }
+    }
+
     // G-001 — Email regex validation (§1 #2). Mirrors the PG CHECK constraint
     // on `subjects.email` (loose RFC 5321 — disallows whitespace + requires
     // an @ + a dot in the domain).
@@ -677,6 +689,39 @@ fn validate_email(email: &str) -> Result<(), (StatusCode, Json<Value>)> {
         ));
     }
     Ok(())
+}
+
+/// FR-AUTH-002 §1 #11 — HTTPS-required check (G-008 slice-3).
+///
+/// Returns 400 with `{error:"https_required"}` if the request was not
+/// proxied over TLS. Detection: the reverse proxy MUST set
+/// `X-Forwarded-Proto: https` after TLS termination. Tests short-circuit
+/// via `AUTH_TEST_ALLOW_HTTP=1` so integration tests don't need TLS.
+///
+/// Rationale (§2): plaintext password over HTTP is a credentials-on-the-wire
+/// failure mode. Reject as early as possible — before validation runs.
+fn require_https(headers: &HeaderMap) -> Result<(), (StatusCode, Json<Value>)> {
+    // Test/dev escape hatch — explicit env var so it never leaks into prod
+    // by accident. CI integration job + local dev set this; production
+    // images MUST NOT.
+    if std::env::var("AUTH_TEST_ALLOW_HTTP").is_ok() {
+        return Ok(());
+    }
+    let proto = headers
+        .get("x-forwarded-proto")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("");
+    if proto.eq_ignore_ascii_case("https") {
+        Ok(())
+    } else {
+        Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": "https_required",
+                "reason": "password-bearing requests MUST be proxied over TLS (X-Forwarded-Proto: https)"
+            })),
+        ))
+    }
 }
 
 /// FR-AUTH-002 §1 #5 role allow-list — closed set for slice 1. FR-AUTH-101
@@ -1041,6 +1086,58 @@ mod validate_tests {
         let allowed = body["allowed"].as_array().expect("allowed is array");
         assert!(allowed.iter().any(|v| v == "tenant-admin"));
         assert!(allowed.iter().any(|v| v == "tenant-member"));
+    }
+
+    // ─── FR-AUTH-002 G-008 — HTTPS gate ──────────────────────────────────
+
+    fn mk_headers(pairs: &[(&str, &str)]) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        for (k, v) in pairs {
+            h.insert(
+                axum::http::HeaderName::from_bytes(k.as_bytes()).unwrap(),
+                axum::http::HeaderValue::from_str(v).unwrap(),
+            );
+        }
+        h
+    }
+
+    #[test]
+    fn https_proto_accepted() {
+        std::env::remove_var("AUTH_TEST_ALLOW_HTTP");
+        let h = mk_headers(&[("x-forwarded-proto", "https")]);
+        assert!(require_https(&h).is_ok());
+    }
+
+    #[test]
+    fn http_proto_rejected() {
+        std::env::remove_var("AUTH_TEST_ALLOW_HTTP");
+        let h = mk_headers(&[("x-forwarded-proto", "http")]);
+        let (s, Json(body)) = require_https(&h).unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+        assert_eq!(body["error"], "https_required");
+    }
+
+    #[test]
+    fn missing_proto_header_rejected() {
+        std::env::remove_var("AUTH_TEST_ALLOW_HTTP");
+        let h = mk_headers(&[]);
+        let (s, _) = require_https(&h).unwrap_err();
+        assert_eq!(s, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn test_env_var_short_circuits() {
+        std::env::set_var("AUTH_TEST_ALLOW_HTTP", "1");
+        let h = mk_headers(&[]); // no x-forwarded-proto at all
+        assert!(require_https(&h).is_ok());
+        std::env::remove_var("AUTH_TEST_ALLOW_HTTP");
+    }
+
+    #[test]
+    fn case_insensitive_proto_match() {
+        std::env::remove_var("AUTH_TEST_ALLOW_HTTP");
+        let h = mk_headers(&[("x-forwarded-proto", "HTTPS")]);
+        assert!(require_https(&h).is_ok());
     }
 
     #[test]
