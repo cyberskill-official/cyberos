@@ -47,7 +47,7 @@ NetSuite / Sage Intacct / Oracle (GL); BlackLine (close + recon); Workiva (SOX);
 |---|---|---|---|---|
 | `monthly-close-execution` | Controller execution: accruals + recs + technical-accounting + sign-offs | monthly | monthly-close@1 (controller execution log) | shipped (1.0.0) |
 | `quarterly-audit-readiness` | Control testing + evidence + walkthroughs + position papers | quarterly | compliance-program@1 (audit-readiness chapter) | shipped (1.0.0) |
-| `annual-accounting-policy` | Policy manual: rev rec / leases / equity / segment / standard adoptions | annual | strategy-doc@1 (accounting-policy chapter) | shipped (1.0.0) |
+| `annual-accounting-policy` | Policy manual: rev rec / leases / equity / segment / standard adoptions | annual | strategy-document@1 (accounting-policy chapter) | shipped (1.0.0) |
 | `annual-budget-controllership` | Controllership support for budget cycle: actuals + classification | annual | budget@1 (controllership chapter) | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-1 skills (`monthly-close`, `compliance-program`, `strategy-doc`, `budget`). See `../../skill/MODULE.md` §3.1 + §3.2.

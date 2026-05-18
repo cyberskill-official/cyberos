@@ -163,7 +163,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 12. **MUST** use a **Postgres checkpointer** for LangGraph state persistence per EU AI Act Art. 12 (logging requirement). Slice 2 (this FR) ships an in-memory checkpointer scaffold — the production Postgres-backed checkpointer ships in FR-CUO-102. The state schema is versioned: `cuo_state_v = 1` (per DEC-167); replays from `cuo_state_v` within ±2 of current are tolerated, beyond rejected with `state_version_unsupported`.
 
-13. **MUST** support **transparent end-of-response disclosure** (EU AI Act Art. 13): every supervisor return value includes `transparency: {skill_chosen, confidence, alternatives: list[{skill, confidence}], path_taken, llm_used: bool}` so the caller can render the disclosure to the user. CHAT/EMAIL/PROJ surfaces consume this for the "🤖 routed via Genie → cfo persona → vn-vat-invoice@1.2 · 0.84" footer.
+13. **MUST** support **transparent end-of-response disclosure** (EU AI Act Art. 13): every supervisor return value includes `transparency: {skill_chosen, confidence, alternatives: list[{skill, confidence}], path_taken, llm_used: bool}` so the caller can render the disclosure to the user. CHAT/EMAIL/PROJ surfaces consume this for the "🤖 routed via Genie → cfo persona → vietnam-vat-invoice@1.2 · 0.84" footer.
 
 14. **MUST** emit OTel span `cuo.supervisor.route` per request with attributes: `tenant_id`, `subject_id_hash16`, `persona_key`, `path_taken`, `confidence`, `llm_used`, `outcome` (success | routed_false | invoke_error | persona_mismatch | timeout | unknown_persona). Sampling: 1% steady-state; 100% on non-success outcomes.
 
@@ -180,7 +180,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 18. **MUST NOT** invoke a skill on the **defer path**. The decision returned has `routed: false`, `alternatives: [<top 3>]`, and the caller (CHAT, EMAIL, etc.) renders the alternatives for the operator to pick — never auto-invoking. This is the EU AI Act Art. 26 hard guarantee.
 
-19. **MUST** treat the **`defer_to_human_matrix`** as ROLE-INTRINSIC: even if the supervisor scores `vn-vat-invoice@1.2 + 0.95` for a CFO persona, if `cfo.defer_to_human_matrix` lists `invoice_emit`, the supervisor refuses to auto-invoke and returns `{routed: false, reason: "persona_defer_matrix", operation: "invoice_emit"}`. Emit `cuo.persona_defer_block` BRAIN audit row.
+19. **MUST** treat the **`defer_to_human_matrix`** as ROLE-INTRINSIC: even if the supervisor scores `vietnam-vat-invoice@1.2 + 0.95` for a CFO persona, if `cfo.defer_to_human_matrix` lists `invoice_emit`, the supervisor refuses to auto-invoke and returns `{routed: false, reason: "persona_defer_matrix", operation: "invoice_emit"}`. Emit `cuo.persona_defer_block` BRAIN audit row.
 
 20. **MUST** support **two invocation modes** via CLI flags:
     - `--invoke` (default true): runs through to `invoke` node when path = `auto` or `cascade_then_auto`.
@@ -610,7 +610,7 @@ def route(query: str, persona: str, invoke: bool, record: bool, json_out: bool):
 8. **LLM timeout** — mocked AI Gateway delays 5s; supervisor falls through to `ask`; `cuo.llm_cascade_timeout` BRAIN row emitted.
 9. **LLM freeform rejected** — mocked AI Gateway returns "I think you should..." → Pydantic validation fails twice → fall through to `ask`.
 10. **LLM hallucinated skill rejected** — LLM returns `{skill_name: "make-up-skill"}` not in catalog → reject → retry → fall through to `ask`.
-11. **Persona matrix blocks auto-invoke** — query routes to `vn-vat-invoice@1.2` with cfo persona at confidence 0.95; cfo.defer_to_human_matrix contains `invoice_emit` → refuse auto, return `{routed: false, reason: "persona_defer_matrix"}`; `cuo.persona_defer_block` BRAIN row.
+11. **Persona matrix blocks auto-invoke** — query routes to `vietnam-vat-invoice@1.2` with cfo persona at confidence 0.95; cfo.defer_to_human_matrix contains `invoice_emit` → refuse auto, return `{routed: false, reason: "persona_defer_matrix"}`; `cuo.persona_defer_block` BRAIN row.
 12. **Destructive skill bypass blocked** — skill annotated `destructive: true` at confidence 1.0 → capability broker FR-SKILL-104 gates via Elicitation; supervisor's invoke node refuses to override.
 13. **Persona JWT mismatch** — caller JWT has `agent_persona: cuo-cto@0.1.0` but requests `cfo` persona → 403 with `persona_mismatch`.
 14. **Unknown persona** — `--persona foo` → exit 65, `cuo.persona_unknown` BRAIN row.
@@ -683,7 +683,7 @@ from cyberos.cuo.supervisor import run_supervisor
 
 @pytest.mark.asyncio
 async def test_cfo_persona_blocks_invoice_emit_even_at_high_confidence(mock_catalog):
-    mock_catalog.set_score("vn-vat-invoice@1.2", 0.95)  # high confidence
+    mock_catalog.set_score("vietnam-vat-invoice@1.2", 0.95)  # high confidence
     result = await run_supervisor(
         query="emit hoa don for ACME 4M VND",
         persona_key="chief-financial-officer",
@@ -801,16 +801,16 @@ async def test_rule_path_under_50ms_p95():
 $ cyberos-cuo supervisor route --query "validate MST 0301479073" --persona cfo --json
 {
   "routed": true,
-  "skill_chosen": "vn-mst-validate@1.0",
+  "skill_chosen": "vietnam-mst-validate@1.0",
   "confidence": 0.92,
   "path_taken": "auto",
   "llm_used": false,
   "alternatives": [
-    {"skill": "vn-bank-transfer@1.0", "confidence": 0.18},
+    {"skill": "vietnam-bank-transfer@1.0", "confidence": 0.18},
     {"skill": "crm-account-create@1.0", "confidence": 0.12}
   ],
   "invocation_result": {
-    "skill_name": "vn-mst-validate@1.0",
+    "skill_name": "vietnam-mst-validate@1.0",
     "exit_code": 0,
     "stdout": "{\"mst\":\"0301479073\",\"valid\":true,\"company\":\"ACME JSC\"}",
     "stderr": "",
@@ -818,7 +818,7 @@ $ cyberos-cuo supervisor route --query "validate MST 0301479073" --persona cfo -
   },
   "next_step": null,
   "transparency": {
-    "skill_chosen": "vn-mst-validate@1.0",
+    "skill_chosen": "vietnam-mst-validate@1.0",
     "confidence": 0.92,
     "path_taken": "auto",
     "llm_used": false
@@ -880,11 +880,11 @@ $ cyberos-cuo supervisor route --query "asdfghjkl" --persona genie --json
   "persona_version": "cuo-cfo@0.4.1",
   "query": "validate MST [REDACTED-MST]",
   "rule_scores": [
-    {"skill_name": "vn-mst-validate@1.0", "confidence": 0.92, "arguments": {"mst": "[REDACTED]"}, "score_components": {"name_match": 5.0, "keyword_hits": 3.0, "region_bonus": 2.0}}
+    {"skill_name": "vietnam-mst-validate@1.0", "confidence": 0.92, "arguments": {"mst": "[REDACTED]"}, "score_components": {"name_match": 5.0, "keyword_hits": 3.0, "region_bonus": 2.0}}
   ],
   "path_taken": "auto",
   "llm_pick": null,
-  "invocation_result": {"skill_name": "vn-mst-validate@1.0", "exit_code": 0, "duration_ms": 14.2},
+  "invocation_result": {"skill_name": "vietnam-mst-validate@1.0", "exit_code": 0, "duration_ms": 14.2},
   "cuo_state_v": 1,
   "next_step": null,
   "request_id": "01HG7V8B0K8M4Z8Z8M8M8M8M8M",
@@ -902,7 +902,7 @@ $ cyberos-cuo supervisor route --query "asdfghjkl" --persona genie --json
   "tenant_id": "5e8f1d2a-...",
   "persona_key": "chief-financial-officer",
   "operation": "invoice_emit",
-  "rule_top_skill": "vn-vat-invoice@1.2",
+  "rule_top_skill": "vietnam-vat-invoice@1.2",
   "rule_top_confidence": 0.95,
   "request_id": "01HG7V8B0K8M4Z8Z8M8M8M8M8M",
   "ts_ns": 1747920731000000000

@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: prior_program,         source: last year's partner-program@1, format: partner-program@1 }
-  - { name: gtm_plan,              source: cuo/chief-sales-officer/annual-gtm-plan, format: gtm-plan@1 }
+  - { name: gtm_plan,              source: cuo/chief-sales-officer/annual-gtm-plan, format: go-to-market-plan@1 }
   - { name: partner_performance,   source: per-partner pipeline + revenue contribution, format: csv }
   - { name: ceo_priorities,        source: cuo/ceo, format: markdown }
 

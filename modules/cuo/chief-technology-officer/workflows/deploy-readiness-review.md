@@ -20,8 +20,8 @@ outputs:
 skill_chain:
   - { step: 1, skill: release-notes-author,    inputs_from: { changelog_range: changelog_range, release_id: release_id, prior_release_id: <prior tag> }, outputs_to: release_notes_draft }
   - { step: 2, skill: release-notes-audit,     inputs_from: release_notes_draft, outputs_to: release_notes }
-  - { step: 3, skill: deploy-checklist-author, inputs_from: { release_notes: release_notes, release_candidate_sha: release_candidate_sha, target_environment: target_environment, deploy_window: deploy_window }, outputs_to: deploy_checklist_draft }
-  - { step: 4, skill: deploy-checklist-audit,  inputs_from: deploy_checklist_draft, outputs_to: deploy_checklist }
+  - { step: 3, skill: deployment-checklist-author, inputs_from: { release_notes: release_notes, release_candidate_sha: release_candidate_sha, target_environment: target_environment, deploy_window: deploy_window }, outputs_to: deploy_checklist_draft }
+  - { step: 4, skill: deployment-checklist-audit,  inputs_from: deploy_checklist_draft, outputs_to: deploy_checklist }
 
 escalates_to:
   - { persona: cuo/chief-legal-officer,    when: "release-notes contains a security advisory (CVE patched) OR breaking change to data-handling — Compliance Notes required (COND-004)" }
@@ -84,13 +84,13 @@ cyberos-cuo run cuo/chief-technology-officer/deploy-readiness-review \
 - **Outputs:** `release_notes` at 10/10.
 - **Pause point:** HITL on COND-001 (breaking → required Upgrade Notes + Migration Guide) or COND-002 (CVE-patched → required §Security entries).
 
-### Step 3: `deploy-checklist-author`
-- **What it does:** Authors the 12-item deploy-readiness checklist per `deploy-checklist-audit/RUBRIC.md` `DEP-001..012`, plus any conditional rows (production / breaking / large migration / regulated / canary / AI-model update).
+### Step 3: `deployment-checklist-author`
+- **What it does:** Authors the 12-item deploy-readiness checklist per `deployment-checklist-audit/RUBRIC.md` `DEP-001..012`, plus any conditional rows (production / breaking / large migration / regulated / canary / AI-model update).
 - **Inputs:** `{release_notes, release_candidate_sha, target_environment, deploy_window}`.
 - **Outputs:** `deploy_checklist_draft`.
 - **Pause point:** PLAN approval on progressive_delivery choice (canary / blue_green / feature_flag / rolling / direct).
 
-### Step 4: `deploy-checklist-audit`
+### Step 4: `deployment-checklist-audit`
 - **What it does:** Validates against `deploy_checklist_rubric@1.0`. Critical rules: every ✅ has an evidence link (QA-EVIDENCE-001); DEP-011 has DORA baseline captured (QA-DORA-001); rollback plan references a specific runbook section (QA-ROLLBACK-001).
 - **Inputs:** `deploy_checklist_draft`.
 - **Outputs:** `deploy_checklist` at 10/10 — this is the go/no-go artefact.

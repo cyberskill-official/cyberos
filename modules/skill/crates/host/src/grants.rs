@@ -139,10 +139,10 @@ mod tests {
     fn record_then_load() {
         let (_t, p) = fixture_path();
         let cap = Capability { name: "read_file".to_owned(), argument: None };
-        record_grant(&p, "vn-mst-validate", "abc123", &[cap.clone()], "stephen").unwrap();
-        assert!(is_granted(&p, "vn-mst-validate", "abc123", &cap));
+        record_grant(&p, "vietnam-mst-validate", "abc123", &[cap.clone()], "stephen").unwrap();
+        assert!(is_granted(&p, "vietnam-mst-validate", "abc123", &cap));
         // Wrong hash → not granted (force re-approval on edit)
-        assert!(!is_granted(&p, "vn-mst-validate", "different", &cap));
+        assert!(!is_granted(&p, "vietnam-mst-validate", "different", &cap));
         // Wrong skill → not granted
         assert!(!is_granted(&p, "other-skill", "abc123", &cap));
     }

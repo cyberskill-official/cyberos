@@ -41,8 +41,8 @@ Salesforce / HubSpot (CRM); Gong / Chorus (call intel); Clari / Aviso (forecast)
 |---|---|---|---|---|
 | `weekly-pipeline-review` | Stage health + slippage + commit-vs-quota forecast | weekly | pipeline-report@1 | shipped (1.0.0) |
 | `quarterly-account-plan` | Stakeholder map + white-space + growth thesis (per top account) | quarterly | account-plan@1 | shipped (1.0.0) |
-| `annual-gtm-plan` | ICP + segmentation + channel strategy + quota model | annual | gtm-plan@1 | shipped (1.0.0) |
-| `quarterly-nps-program` | Customer NPS survey + root-cause + action plan | quarterly | nps-program@1 | shipped (1.0.0) |
+| `annual-gtm-plan` | ICP + segmentation + channel strategy + quota model | annual | go-to-market-plan@1 | shipped (1.0.0) |
+| `quarterly-nps-program` | Customer NPS survey + root-cause + action plan | quarterly | net-promoter-score-program@1 | shipped (1.0.0) |
 
 All workflows chain through shipped skills — Tier-1 (`pipeline-report`, `account-plan`, `nps-program`) + Tier-5 (`gtm-plan`). See `../../skill/MODULE.md` §3.1 + §3.5.
 

@@ -39,7 +39,7 @@ Qualtrics / Medallia (XM); Hotjar / FullStory (session replay); ContentSquare / 
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `quarterly-customer-experience-review` | End-to-end journey health + friction + experience-debt | quarterly | customer-health-review@1 (CX-augmented) | shipped (1.0.0) |
-| `annual-cx-strategy` | Experience vision + journey priorities + experience-debt roadmap | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-cx-strategy` | Experience vision + journey priorities + experience-debt roadmap | annual | strategy-document@1 | shipped (1.0.0) |
 | `per-journey-charter` | Journey-redesign program: current-state + friction + future-state | per-event | program-charter@1 | shipped (1.0.0) |
 | `annual-customer-360-engagement` | CX-lens augmentation of CDO-Data's customer-360 architecture | annual | customer-360@1 (CX-lens chapter) | shipped (1.0.0) |
 

@@ -13,9 +13,9 @@ _Generated 2026-05-17 — 10 FRs, 52 engineering-hours total._
 | [FR-CRM-005](FR-CRM-005-next-action-skill.md) | MUST | 6 | 6 | CRM CUO crm.next-action@1 skill — AI-ranked top-3 next moves per open deal with rationale and deep-l |
 | [FR-CRM-006](FR-CRM-006-ai-lead-scoring.md) | SHOULD | 6 | 5 | CRM AI lead scoring — contact-creation-time score + nightly refresh based on activity signals, accou |
 | [FR-CRM-007](FR-CRM-007-win-loss-analysis.md) | SHOULD | 6 | 5 | CRM win/loss analysis CUO draft — auto-generate analysis at deal close + BRAIN memory persistence fo |
-| [FR-CRM-008](FR-CRM-008-mst-validate-skill.md) | MUST | 7 | 3 | CRM vn-mst-validate skill — synchronous GDT lookup on Account write to confirm MST format + entity n |
-| [FR-CRM-009](FR-CRM-009-vietqr-skill.md) | MUST | 7 | 4 | CRM vn-bank-transfer skill — VietQR payment image generation for deal collection with embedded amoun |
-| [FR-CRM-010](FR-CRM-010-hoadon-skill.md) | MUST | 7 | 5 | CRM vn-vat-invoice skill — Decree 123 hóa đơn auto-emit on deal.stage=won + invoice issuance + verif |
+| [FR-CRM-008](FR-CRM-008-mst-validate-skill.md) | MUST | 7 | 3 | CRM vietnam-mst-validate skill — synchronous GDT lookup on Account write to confirm MST format + entity n |
+| [FR-CRM-009](FR-CRM-009-vietqr-skill.md) | MUST | 7 | 4 | CRM vietnam-bank-transfer skill — VietQR payment image generation for deal collection with embedded amoun |
+| [FR-CRM-010](FR-CRM-010-hoadon-skill.md) | MUST | 7 | 5 | CRM vietnam-vat-invoice skill — Decree 123 hóa đơn auto-emit on deal.stage=won + invoice issuance + verif |
 
 ## Cross-module dependencies
 

@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-021
 title: "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · brain) with --confirm + --json + audit"
 module: AI

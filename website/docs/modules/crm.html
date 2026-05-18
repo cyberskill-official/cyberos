@@ -55,7 +55,7 @@
  <strong>The sales-pipeline spine.</strong> Upstream of PROJ. When deal.stage = won, CRM fires the join contract (PROJ §2.5) and an Engagement is born with rate card + billable rules pre-wired.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CRM plays three strategic roles. <strong>Role 1 — sales pipeline</strong>: Account / Contact / Deal with customisable stages, probability × expected-close forecasting, activity feed from CHAT/EMAIL/Calendar. Vietnamese-aware throughout: account-type mapping to legal entity (Sole proprietor / LLC / JSC / FDI), MST validation via <code>vn-mst-validate</code> skill against GDT registry, VietQR for invoice collection, hóa đơn (VAT invoice) generation. <strong>Role 2 — deal-to-engagement bridge</strong>: when deal.stage transitions to "won", CRM emits the canonical join event that PROJ §2.5 consumes — AM clicks "Convert to Engagement", a PROJ Engagement is created with rate card pre-populated from the deal's pricing, and the TIME → INV chain is wired automatically. <strong>Role 3 — next-action engine</strong>: CUO's <code>crm.next-action@1</code> skill consults BRAIN context (prior calls, similar deals) and ranks the next moves; AI lead scoring at signup; win/loss analysis after close.
+ CRM plays three strategic roles. <strong>Role 1 — sales pipeline</strong>: Account / Contact / Deal with customisable stages, probability × expected-close forecasting, activity feed from CHAT/EMAIL/Calendar. Vietnamese-aware throughout: account-type mapping to legal entity (Sole proprietor / LLC / JSC / FDI), MST validation via <code>vietnam-mst-validate</code> skill against GDT registry, VietQR for invoice collection, hóa đơn (VAT invoice) generation. <strong>Role 2 — deal-to-engagement bridge</strong>: when deal.stage transitions to "won", CRM emits the canonical join event that PROJ §2.5 consumes — AM clicks "Convert to Engagement", a PROJ Engagement is created with rate card pre-populated from the deal's pricing, and the TIME → INV chain is wired automatically. <strong>Role 3 — next-action engine</strong>: CUO's <code>crm.next-action@1</code> skill consults BRAIN context (prior calls, similar deals) and ranks the next moves; AI lead scoring at signup; win/loss analysis after close.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -117,7 +117,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-crm p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- CRM is CyberOS's <strong>customer pipeline, account intelligence, and Vietnamese-market commercial layer</strong>. The data model is Salesforce-flavoured (Account → Contact → Deal) but the integrations bake in Vietnamese specifics: <code>vn-mst-validate</code> verifies a tax code against the General Department of Taxation registry; <code>vn-bank-transfer</code> generates a Napas247 / VietQR code so a deal can request collection with one tap; <code>vn-vat-invoice</code> emits the hóa đơn directly on deal close. Pipelines are workspace-configurable (sales / partner / inbound / outbound shapes) with custom transition rules. Activities — calls, emails, meetings, notes — appear automatically: EMAIL auto-logs inbound/outbound for tracked domains, CHAT logs meeting notes, Calendar logs meeting attendance. CUO/CRO-skill produces lead scoring, next-best-action, and confidence-banded forecasts..
+ CRM is CyberOS's <strong>customer pipeline, account intelligence, and Vietnamese-market commercial layer</strong>. The data model is Salesforce-flavoured (Account → Contact → Deal) but the integrations bake in Vietnamese specifics: <code>vietnam-mst-validate</code> verifies a tax code against the General Department of Taxation registry; <code>vietnam-bank-transfer</code> generates a Napas247 / VietQR code so a deal can request collection with one tap; <code>vietnam-vat-invoice</code> emits the hóa đơn directly on deal close. Pipelines are workspace-configurable (sales / partner / inbound / outbound shapes) with custom transition rules. Activities — calls, emails, meetings, notes — appear automatically: EMAIL auto-logs inbound/outbound for tracked domains, CHAT logs meeting notes, Calendar logs meeting attendance. CUO/CRO-skill produces lead scoring, next-best-action, and confidence-banded forecasts..
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Strategic role</div><div class="value">Sales-pipeline spine</div><div class="note">upstream of PROJ Engagement</div></div>
@@ -148,7 +148,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--crm-dark)">Role 1 · Sales pipeline (VN-first)</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Account · Contact · Deal with VN integrations native</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Three primitives + customisable pipelines. Vietnamese specifics are protocol features, not plugins: account type maps to VN legal entities (sole proprietor / LLC / JSC / FDI), MST validated through <code>cyberos.vn-mst-validate</code> skill, VietQR for collection, hóa đơn on deal close. Salutation logic (Anh/Chị/Em) baked into contact fields.
+ Three primitives + customisable pipelines. Vietnamese specifics are protocol features, not plugins: account type maps to VN legal entities (sole proprietor / LLC / JSC / FDI), MST validated through <code>cyberos.vietnam-mst-validate</code> skill, VietQR for collection, hóa đơn on deal close. Salutation logic (Anh/Chị/Em) baked into contact fields.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--crm)">
@@ -215,7 +215,7 @@ flowchart LR
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why CRM exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Off-the-shelf CRMs (Salesforce, HubSpot, Pipedrive) work, but they do not natively model Vietnamese commercial realities. MST validation requires a custom integration; VietQR generation needs a separate plugin; hóa đơn generation almost always lands as a third-party Misa or Viettel-eInvoice connector that breaks on every release. Building CRM as a CyberOS module means these become first-class: the <code>vn-mst-validate</code> skill is invoked on every Account write, the <code>vn-bank-transfer</code> skill is one click away on every Deal, and <code>vn-vat-invoice</code> fires automatically on deal close into INV. Beyond the VN specifics, CyberOS-native CRM benefits from the audit chain (every stage transition is a BRAIN row), the agent-equal model (CUO can log activities just like a Member), and tight coupling to PROJ (a closed deal becomes an Engagement, no manual re-keying).
+ Off-the-shelf CRMs (Salesforce, HubSpot, Pipedrive) work, but they do not natively model Vietnamese commercial realities. MST validation requires a custom integration; VietQR generation needs a separate plugin; hóa đơn generation almost always lands as a third-party Misa or Viettel-eInvoice connector that breaks on every release. Building CRM as a CyberOS module means these become first-class: the <code>vietnam-mst-validate</code> skill is invoked on every Account write, the <code>vietnam-bank-transfer</code> skill is one click away on every Deal, and <code>vietnam-vat-invoice</code> fires automatically on deal close into INV. Beyond the VN specifics, CyberOS-native CRM benefits from the audit chain (every stage transition is a BRAIN row), the agent-equal model (CUO can log activities just like a Member), and tight coupling to PROJ (a closed deal becomes an Engagement, no manual re-keying).
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-5">
  <div class="bbg-card p-5">
@@ -257,7 +257,7 @@ flowchart LR
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Accounts are validated on write (MST → GDT registry). Contacts have a normalised phone (E.164) and email; merge candidates surface when two contacts share either. Deals carry stage, value, probability, expected close. Activities are append-only and feed from EMAIL / CHAT / Calendar with idempotency keys.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$60 / month single-tenant pilot (Fargate + RDS + Redis). 50-tenant: ~$240 / month. AI lead scoring runs nightly batch; ~$0.001 per deal per night.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Per-deal ACL — private deals not visible cross-workspace ((FR pending)). (b) Email-to-CRM auto-log only for tracked domains ((FR pending)) — never auto-attach a personal email. (c) Vietnamese-formatting helpers (Anh / Chị / Bạn) on every contact display. (d) Deals only ingested into BRAIN after closed / lost — never open pipeline data.</td></tr>
- <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · Redis 7 · React + Zustand · vn-mst-validate skill · vn-bank-transfer skill · vn-vat-invoice skill · libphonenumber · OpenTelemetry SDK.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · Redis 7 · React + Zustand · vietnam-mst-validate skill · vietnam-bank-transfer skill · vietnam-vat-invoice skill · libphonenumber · OpenTelemetry SDK.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Three-primitive Account / Contact / Deal (no Lead as separate primitive — Leads are Contacts with no Deal). Configurable pipeline stages (not free-form). Phone normalisation to E.164 (libphonenumber). Per-deal ACL. Idempotent activity feed (idempotency key = source event id).</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. NATS for pipeline-event fan-out. Skill invocations via the Skill module's WASM host.</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE (CRO seat) at P1 launch. By P2+: CRO owns product; CMO consulted on activity feed schema; CFO consulted on hóa đơn flow.</td></tr>
@@ -305,9 +305,9 @@ graph TB
  end
 
  subgraph SKILLS ["VN-market skills"]
- MST["vn-mst-validate"]
- VQR["vn-bank-transfer<br>(VietQR)"]
- HD["vn-vat-invoice<br>(hóa đơn)"]
+ MST["vietnam-mst-validate"]
+ VQR["vietnam-bank-transfer<br>(VietQR)"]
+ HD["vietnam-vat-invoice<br>(hóa đơn)"]
  end
 
  subgraph STORES ["Stores"]
@@ -394,9 +394,9 @@ graph TB
  <tr><td><code>ai_nba.rs</code></td><td>services/crm/src/ai_nba.rs</td><td>Next-best-action generator. For each open deal, produces a concrete suggestion ("send proposal", "schedule check-in", "request VietQR collection").</td></tr>
  <tr><td><code>ai_forecast.rs</code></td><td>services/crm/src/ai_forecast.rs</td><td>Confidence-banded forecast (CUO/CRO-skill). Per-pipeline VND total + USD total with 50% / 80% / 95% bands.</td></tr>
  <tr><td><code>merge_detector.rs</code></td><td>services/crm/src/merge_detector.rs</td><td>Detects ≥ 2 contacts sharing email or normalised phone; surfaces as a Notify ((FR pending)).</td></tr>
- <tr><td><code>vn_mst.rs</code></td><td>services/crm/src/vn_mst.rs</td><td>Adapter to <code>vn-mst-validate</code> skill. Caches results 7 days.</td></tr>
- <tr><td><code>vn_vietqr.rs</code></td><td>services/crm/src/vn_vietqr.rs</td><td>Adapter to <code>vn-bank-transfer</code> skill. Generates Napas247 QR on demand.</td></tr>
- <tr><td><code>vn_hoadon.rs</code></td><td>services/crm/src/vn_hoadon.rs</td><td>Adapter to <code>vn-vat-invoice</code> skill. Fires on deal close.</td></tr>
+ <tr><td><code>vn_mst.rs</code></td><td>services/crm/src/vn_mst.rs</td><td>Adapter to <code>vietnam-mst-validate</code> skill. Caches results 7 days.</td></tr>
+ <tr><td><code>vn_vietqr.rs</code></td><td>services/crm/src/vn_vietqr.rs</td><td>Adapter to <code>vietnam-bank-transfer</code> skill. Generates Napas247 QR on demand.</td></tr>
+ <tr><td><code>vn_hoadon.rs</code></td><td>services/crm/src/vn_hoadon.rs</td><td>Adapter to <code>vietnam-vat-invoice</code> skill. Fires on deal close.</td></tr>
  <tr><td><code>brain_ingest.rs</code></td><td>services/crm/src/brain_ingest.rs</td><td>Layer 3 ingestion of closed deals only ((FR pending)).</td></tr>
  <tr><td><code>acl.rs</code></td><td>services/crm/src/acl.rs</td><td>Per-deal ACL. Private deals not visible cross-workspace.</td></tr>
  <tr><td><code>vn_salutation.rs</code></td><td>services/crm/src/vn_salutation.rs</td><td>Vietnamese salutation helper. Anh / Chị / Bạn picker from gender + age signal.</td></tr>
@@ -712,7 +712,7 @@ sequenceDiagram
  autonumber
  participant U as Member SPA
  participant API as CRM GraphQL
- participant MST as vn-mst-validate skill
+ participant MST as vietnam-mst-validate skill
  participant GDT as GDT registry
  participant PG as PostgreSQL
  participant B as BRAIN audit
@@ -772,8 +772,8 @@ sequenceDiagram
  autonumber
  participant U as Sales Member
  participant API as CRM
- participant VQR as vn-bank-transfer skill
- participant HD as vn-vat-invoice skill
+ participant VQR as vietnam-bank-transfer skill
+ participant HD as vietnam-vat-invoice skill
  participant INV as 🧾 INV
  participant PROJ as 📋 PROJ
  participant BR as 🧠 BRAIN
@@ -889,12 +889,12 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- FRs (stub — see skill module's feature-request-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -932,7 +932,7 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- CRM depends on AUTH (every call), BRAIN (activity ingest + audit), EMAIL (auto-log), CHAT (meeting notes), Calendar (attendance), AI (scoring + NBA + forecast), MCP, OBS, and three CyberOS skills (vn-mst-validate, vn-bank-transfer, vn-vat-invoice). It is depended on by PROJ (Engagement creation), INV (hóa đơn emission), and PORTAL (client-visible deal status at P2+).
+ CRM depends on AUTH (every call), BRAIN (activity ingest + audit), EMAIL (auto-log), CHAT (meeting notes), Calendar (attendance), AI (scoring + NBA + forecast), MCP, OBS, and three CyberOS skills (vietnam-mst-validate, vietnam-bank-transfer, vietnam-vat-invoice). It is depended on by PROJ (Engagement creation), INV (hóa đơn emission), and PORTAL (client-visible deal status at P2+).
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
@@ -946,9 +946,9 @@ graph LR
  AI["⚡ AI Gateway"]
  MCP["🔌 MCP"]
  OBS["👁 OBS"]
- MST["vn-mst-validate"]
- VQR["vn-bank-transfer"]
- HD["vn-vat-invoice"]
+ MST["vietnam-mst-validate"]
+ VQR["vietnam-bank-transfer"]
+ HD["vietnam-vat-invoice"]
  end
  CRM["🤝 CRM"]
  subgraph downstream ["CRM is depended on by"]
@@ -992,7 +992,7 @@ graph LR
  <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>DSAR export includes contact + activity + deal data.</td></tr>
  <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Processing log</td><td>Every CRM mutation writes a BRAIN audit row.</td></tr>
  <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Residency</td><td>Per-tenant residency tag; VN tenants on hanoi-1.</td></tr>
- <tr><td>Vietnam Circular 78/2021/TT-BTC</td><td>Hóa đơn e-invoice format</td><td>vn-vat-invoice emits compliant XML.</td></tr>
+ <tr><td>Vietnam Circular 78/2021/TT-BTC</td><td>Hóa đơn e-invoice format</td><td>vietnam-vat-invoice emits compliant XML.</td></tr>
  <tr><td>Vietnam Decree 123/2020/NĐ-CP</td><td>Invoice issuance &amp; storage</td><td>HOA_DON table with XML link + 10-year retention.</td></tr>
  <tr><td>GDPR (EU 2016/679)</td><td>Art. 17 — Right to erasure</td><td>Contact delete + DSAR-driven hard purge.</td></tr>
  <tr><td>GDPR</td><td>Art. 25 — Privacy by design</td><td>Per-deal ACL prevents cross-workspace leak.</td></tr>
@@ -1104,7 +1104,7 @@ graph LR
  --mst 0314556677 \
  --owner stephen@cyberskill.world
 
-[mst] vn-mst-validate skill invoked
+[mst] vietnam-mst-validate skill invoked
 [mst] ✓ matches GDT registry: "CÔNG TY TNHH ACME VIỆT NAM"
 [mst] ⚠ name normalised to GDT canonical
 [create] account_id: 01HZK7…
@@ -1130,9 +1130,9 @@ Phạm Minh C minhc@acme.vn +84908111222 Anh no</code></pre>
 <pre><code>$ cyberos-crm deal close --id 01HZK8… --outcome won
 
 [close] status=won · closed_date=2026-05-14
-[vietqr] vn-bank-transfer skill invoked
+[vietqr] vietnam-bank-transfer skill invoked
 [vietqr] generated: bank=Vietcombank · account=0011 0023 4567 · amount=750,000,000 VND
-[hoadon] vn-vat-invoice skill invoked (template=01GTKT)
+[hoadon] vietnam-vat-invoice skill invoked (template=01GTKT)
 [hoadon] invoice_number: C26TAA/0001234 · XML: s3:/cyberos/hoadon/01HZK9…xml
 [inv] INV invoice registered (id=01HZKB…)
 [proj] Engagement created: "ACME Q3 platform build"
@@ -1195,9 +1195,9 @@ top 5 deals by probability×value:
  <tr><td>Configurable pipeline + stages</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>WebSocket drag-drop pipeline</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Activity auto-log (EMAIL / CHAT / Calendar)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
- <tr><td>vn-mst-validate integration</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
- <tr><td>vn-bank-transfer (VietQR)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
- <tr><td>vn-vat-invoice (hóa đơn)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>vietnam-mst-validate integration</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>vietnam-bank-transfer (VietQR)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>vietnam-vat-invoice (hóa đơn)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Deal close → PROJ Engagement</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>AI lead scoring (nightly batch)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Next-best-action suggestion</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
@@ -1238,7 +1238,7 @@ top 5 deals by probability×value:
  <li><strong>Vietnam PDPL (Law 91/2025/QH15)</strong> — Art. 7 erasure, Art. 14 DSAR, Art. 20 security.</li>
  <li><strong>Vietnam Decree 13/2023</strong> — Personal data processing.</li>
  <li><strong>Napas247 / VietQR specification</strong> — bank transfer QR.</li>
- <li><strong>vn-mst-validate / vn-bank-transfer / vn-vat-invoice skills</strong> — CyberOS skill bundle (cyberskill-vn pack).</li>
+ <li><strong>vietnam-mst-validate / vietnam-bank-transfer / vietnam-vat-invoice skills</strong> — CyberOS skill bundle (cyberskill-vn pack).</li>
  <li><strong>libphonenumber</strong> — E.164 normalisation.</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#crm" class="text-blue-700 underline">infrastructure.html#crm</a>.</li>
  </ul>

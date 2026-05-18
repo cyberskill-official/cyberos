@@ -9,14 +9,14 @@ status: shipped
 inputs:
   - { name: program_charter,       source: cuo/chief-transformation-officer/per-program-charter, format: program-charter@1 }
   - { name: stakeholder_map,       source: change-impact analysis, format: markdown }
-  - { name: prior_change_plans,    source: similar prior change-mgmt-plan@1, format: change-mgmt-plan@1 (multiple) }
+  - { name: prior_change_plans,    source: similar prior change-mgmt-plan@1, format: change-management-plan@1 (multiple) }
 
 outputs:
   - { name: change_mgmt_plan,      format: change-mgmt-plan@1, recipient: cuo/chief-transformation-officer + program owner + cuo/chro + cuo/cco-communications }
 
 skill_chain:
-  - { step: 1, skill: change-mgmt-plan-author, inputs_from: { program_charter: program_charter, stakeholder_map: stakeholder_map, prior_change_plans: prior_change_plans }, outputs_to: plan_draft }
-  - { step: 2, skill: change-mgmt-plan-audit,  inputs_from: plan_draft, outputs_to: change_mgmt_plan }
+  - { step: 1, skill: change-management-plan-author, inputs_from: { program_charter: program_charter, stakeholder_map: stakeholder_map, prior_change_plans: prior_change_plans }, outputs_to: plan_draft }
+  - { step: 2, skill: change-management-plan-audit,  inputs_from: plan_draft, outputs_to: change_mgmt_plan }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "change-impact analysis surfaces risk of >10% attrition in affected functions" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-transformation-officer/per-program-change-management \
 
 ## Skill chain
 
-- **Step 1 `change-mgmt-plan-author`** — drafts per Prosci ADKAR + Kotter + Bridges.
-- **Step 2 `change-mgmt-plan-audit`** — validates per `change_mgmt_plan_rubric@1.0`.
+- **Step 1 `change-management-plan-author`** — drafts per Prosci ADKAR + Kotter + Bridges.
+- **Step 2 `change-management-plan-audit`** — validates per `change_mgmt_plan_rubric@1.0`.
 
 ## Failure modes
 

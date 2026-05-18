@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_playbook,        source: last year's crisis-comms-playbook@1, format: crisis-comms-playbook@1 }
+  - { name: prior_playbook,        source: last year's crisis-comms-playbook@1, format: crisis-communications-playbook@1 }
   - { name: incident_lookback,     source: 12 months of incident postmortems, format: postmortem@1 (multiple) }
   - { name: regulator_calendar,    source: cuo/clo-legal's regulatory calendar, format: markdown }
   - { name: stakeholder_register,  source: PR + IR stakeholder DB, format: markdown }
@@ -16,8 +16,8 @@ outputs:
   - { name: crisis_playbook,       format: crisis-comms-playbook@1, recipient: cuo/cco-communications + cuo/ceo + cuo/clo-legal + cuo/ciso + cuo/cpo-privacy }
 
 skill_chain:
-  - { step: 1, skill: crisis-comms-playbook-author, inputs_from: { prior_playbook: prior_playbook, incident_lookback: incident_lookback, regulator_calendar: regulator_calendar, stakeholder_register: stakeholder_register }, outputs_to: playbook_draft }
-  - { step: 2, skill: crisis-comms-playbook-audit,  inputs_from: playbook_draft, outputs_to: crisis_playbook }
+  - { step: 1, skill: crisis-communications-playbook-author, inputs_from: { prior_playbook: prior_playbook, incident_lookback: incident_lookback, regulator_calendar: regulator_calendar, stakeholder_register: stakeholder_register }, outputs_to: playbook_draft }
+  - { step: 2, skill: crisis-communications-playbook-audit,  inputs_from: playbook_draft, outputs_to: crisis_playbook }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "playbook adds new scenario class (e.g. AI-incident, climate-related)" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-communications-officer/annual-crisis-playbook \
 
 ## Skill chain
 
-- **Step 1 `crisis-comms-playbook-author`** — drafts per PRSA + Coombs SCCT + ICM.
-- **Step 2 `crisis-comms-playbook-audit`** — validates per `crisis_comms_playbook_rubric@1.0`.
+- **Step 1 `crisis-communications-playbook-author`** — drafts per PRSA + Coombs SCCT + ICM.
+- **Step 2 `crisis-communications-playbook-audit`** — validates per `crisis_comms_playbook_rubric@1.0`.
 
 ## Failure modes
 

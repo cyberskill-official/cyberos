@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (investment chapter), format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (investment chapter), format: strategy-document@1 }
   - { name: ips,                   source: Investment Policy Statement, format: markdown }
   - { name: macro_outlook,         source: macro research, format: markdown }
 
@@ -15,8 +15,8 @@ outputs:
   - { name: investment_strategy,   format: strategy-doc@1, recipient: cuo/cio-investment + investment committee + LP advisors + Board }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, ips: ips, macro_outlook: macro_outlook }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: investment_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, ips: ips, macro_outlook: macro_outlook }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: investment_strategy }
 
 audit_hooks:
   - workflow_complete row on PASS with investment_strategy hash

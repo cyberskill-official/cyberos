@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + fr-catalog renderer) ─────
 id: FR-BRAIN-105
 title: "cyberos doctor — watched-folders integrity invariants (manifest ↔ filesystem ↔ HEAD reconciliation; 5 new invariants in memory.invariants.yaml)"
 module: BRAIN

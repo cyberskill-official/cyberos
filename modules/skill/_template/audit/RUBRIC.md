@@ -6,7 +6,7 @@ This file is a template. When copying to a real `<artifact>-audit/RUBRIC.md`:
 
 1. Replace `<ARTIFACT>` and `<artifact>` placeholders throughout.
 2. Add rules to each family that are specific to the artefact's contract.
-3. Add skill-specific families if the artefact has domain-specific concerns (e.g. `IEEE-NNN` for `srs-audit`, `OWASP-NNN` for `threat-model-audit`).
+3. Add skill-specific families if the artefact has domain-specific concerns (e.g. `IEEE-NNN` for `software-requirements-specification-audit`, `OWASP-NNN` for `threat-model-audit`).
 4. Document the auto-fixable flag for every rule.
 
 ---

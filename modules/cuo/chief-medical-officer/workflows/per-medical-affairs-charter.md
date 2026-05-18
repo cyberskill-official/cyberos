@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: program_brief,         source: medical-affairs team, format: markdown }
-  - { name: medical_strategy,      source: cuo/chief-medical-officer/annual-medical-strategy, format: strategy-doc@1 }
+  - { name: medical_strategy,      source: cuo/chief-medical-officer/annual-medical-strategy, format: strategy-document@1 }
 
 outputs:
   - { name: medical_affairs_charter, format: program-charter@1, recipient: cuo/chief-medical-officer + cuo/clo-legal (compliance) + program sponsor }

@@ -1,10 +1,10 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AUTH-001
 title: "Tenant create — root-admin in tenant 0 calls POST /v1/admin/tenants with idempotency + RLS provisioning"
 module: AUTH
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P0
 milestone: P0 · slice 2

@@ -51,8 +51,8 @@ NetSuite / SAP / Oracle (ERP); Adaptive / Anaplan / Pigment (FP&A); Stripe data 
 | `quarterly-forecast` | Build the rolling 4Q driver-based forecast | quarterly | forecast@1 | shipped (1.0.0) |
 | `annual-budget` | Build the annual operating budget | annual | budget@1 | shipped (1.0.0) |
 | `quarterly-board-financials` | Author the financial chapter of the board deck | quarterly | board-deck@1 chapter | shipped (1.0.0) |
-| `monthly-cash-management` | Refresh the 13-week cash forecast (TWCF) | monthly | 13-week-cash-flow@1 | shipped (1.0.0) |
-| `annual-strategic-plan` | Capital structure + M&A capacity + hurdle rates + investor narrative | annual | strategy-doc@1 | shipped (1.0.0) |
+| `monthly-cash-management` | Refresh the 13-week cash forecast (TWCF) | monthly | thirteen-week-cash-flow@1 | shipped (1.0.0) |
+| `annual-strategic-plan` | Capital structure + M&A capacity + hurdle rates + investor narrative | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped skills — Tier-1 (`monthly-close`, `forecast`, `budget`, `board-deck`) + Tier-2 (`strategy-doc`) + Tier-3 (`13-week-cash-flow`). See `../../skill/MODULE.md` §3.1 + §3.2 + §3.3.
 

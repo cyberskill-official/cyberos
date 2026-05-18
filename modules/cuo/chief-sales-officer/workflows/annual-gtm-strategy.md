@@ -14,8 +14,8 @@ outputs:
   - { name: annual_gtm_strategy_artefact, format: ad-hoc-md, recipient: persona owner + downstream consumers }
 
 skill_chain:
-  - { step: 1, skill: gtm-plan-author, inputs_from: brief, outputs_to: gtm_draft }
-  - { step: 2, skill: gtm-plan-audit, inputs_from: gtm_draft, outputs_to: gtm_final }
+  - { step: 1, skill: go-to-market-plan-author, inputs_from: brief, outputs_to: gtm_draft }
+  - { step: 2, skill: go-to-market-plan-audit, inputs_from: gtm_draft, outputs_to: gtm_final }
 
 escalates_to: []
 
@@ -56,9 +56,9 @@ cyberos-cuo execute chief-sales-officer/annual-gtm-strategy \
 
 ## Skill-chain step-by-step
 
-**Step 1 — `gtm-plan-author`**: produces the artefact body in the shape declared by `modules/skill/gtm-plan-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
+**Step 1 — `go-to-market-plan-author`**: produces the artefact body in the shape declared by `modules/skill/go-to-market-plan-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
 
-**Step 2 — `gtm-plan-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
+**Step 2 — `go-to-market-plan-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
 
 ## Failure modes
 
@@ -76,6 +76,6 @@ cyberos-cuo execute chief-sales-officer/annual-gtm-strategy \
 
 ## Cross-references
 
-- Skill chain anchors: see `modules/skill/gtm-plan-author/` + `modules/skill/gtm-plan-audit/`
+- Skill chain anchors: see `modules/skill/go-to-market-plan-author/` + `modules/skill/go-to-market-plan-audit/`
 - Persona spec: see `modules/cuo/chief-sales-officer/README.md` (9-block schema, §8 Audit criteria)
 - BRAIN protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)

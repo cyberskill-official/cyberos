@@ -180,7 +180,7 @@ def test_mock_invoker_writes_output(cuo_root: Path, skill_root: Path, tmp_path: 
     inv = MockInvoker()
     out_dir = tmp_path / "step-output"
     result = inv.invoke(
-        skill_name="sow-author",
+        skill_name="statement-of-work-author",
         inputs={"foo": "bar"},
         skill_root=skill_root,
         output_dir=out_dir,
@@ -188,7 +188,7 @@ def test_mock_invoker_writes_output(cuo_root: Path, skill_root: Path, tmp_path: 
     )
     assert result.status == "MOCKED", f"unexpected status: {result.status}; notes={result.notes}"
     assert result.output_path is not None and result.output_path.is_file()
-    assert result.output["skill"] == "sow-author"
+    assert result.output["skill"] == "statement-of-work-author"
     assert result.output["synthetic"] is True
 
 
@@ -277,7 +277,7 @@ def test_llm_invoker_mock_produces_artefact_fields(cuo_root: Path, skill_root: P
     inv = LLMInvoker(mock_only=True)
     out_dir = tmp_path / "llm-mock"
     result = inv.invoke(
-        skill_name="sow-author",
+        skill_name="statement-of-work-author",
         inputs={"engagement": "acme"},
         skill_root=skill_root,
         output_dir=out_dir,
@@ -294,7 +294,7 @@ def test_llm_invoker_audit_skill_includes_rubric_outcome(cuo_root: Path, skill_r
     inv = LLMInvoker(mock_only=True)
     out_dir = tmp_path / "llm-audit"
     result = inv.invoke(
-        skill_name="sow-audit",
+        skill_name="statement-of-work-audit",
         inputs={"sow": "/tmp/foo.md"},
         skill_root=skill_root,
         output_dir=out_dir,

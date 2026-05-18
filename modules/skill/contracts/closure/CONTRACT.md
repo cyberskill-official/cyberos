@@ -20,4 +20,4 @@ emitted_source_freshness_tier: 10
 
 - SDP §2(l) — Closure stage source.
 - SDP §6 — Offboarding pack source.
-- Consumers: `closure-author`, `closure-audit`, downstream `decomm-author` (if system is being retired).
+- Consumers: `closure-author`, `closure-audit`, downstream `decommissioning-author` (if system is being retired).

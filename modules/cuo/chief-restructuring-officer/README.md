@@ -39,7 +39,7 @@ AlixPartners / FTI / A&M / Alvarez (turnaround toolkits); 13-week-cash-flow mode
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `per-turnaround-plan` | Situation + stabilization + value creation + exit | per-event | turnaround-plan@1 | shipped (1.0.0) |
-| `weekly-cash-flow` | Distress-mode TWCF with same-day actuals reconciliation | weekly | 13-week-cash-flow@1 | shipped (1.0.0) |
+| `weekly-cash-flow` | Distress-mode TWCF with same-day actuals reconciliation | weekly | thirteen-week-cash-flow@1 | shipped (1.0.0) |
 | `per-stakeholder-communication` | Distress stakeholder comms (lenders/employees/customers/suppliers/board) | per-event | decision-log@1 | shipped (1.0.0) |
 | `monthly-restructuring-update` | Monthly status: plan progress + milestones + covenant + stakeholders | monthly | turnaround-plan@1 (monthly chapter) | shipped (1.0.0) |
 

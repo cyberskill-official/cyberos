@@ -7,16 +7,16 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: ciso_vuln_report,      source: cuo/chief-information-security-officer/monthly-vuln-management (quarterly roll-up), format: vulnerability-mgmt-report@1 (3 months) }
+  - { name: ciso_vuln_report,      source: cuo/chief-information-security-officer/monthly-vuln-management (quarterly roll-up), format: vulnerability-management-report@1 (3 months) }
   - { name: physical_audit,        source: facility audits + access-log review, format: csv }
   - { name: supply_chain_intel,    source: supply-chain vendor security signals, format: markdown }
 
 outputs:
-  - { name: converged_vuln_report, format: vulnerability-mgmt-report@1 (converged), recipient: cuo/cso-security + cuo/ciso + cuo/cao-admin + Board (security chapter) }
+  - { name: converged_vuln_report, format: vulnerability-management-report@1 (converged), recipient: cuo/cso-security + cuo/ciso + cuo/cao-admin + Board (security chapter) }
 
 skill_chain:
-  - { step: 1, skill: vulnerability-mgmt-report-author, inputs_from: { ciso_vuln_report: ciso_vuln_report, physical_audit: physical_audit, supply_chain_intel: supply_chain_intel }, outputs_to: report_draft }
-  - { step: 2, skill: vulnerability-mgmt-report-audit,  inputs_from: report_draft, outputs_to: converged_vuln_report }
+  - { step: 1, skill: vulnerability-management-report-author, inputs_from: { ciso_vuln_report: ciso_vuln_report, physical_audit: physical_audit, supply_chain_intel: supply_chain_intel }, outputs_to: report_draft }
+  - { step: 2, skill: vulnerability-management-report-audit,  inputs_from: report_draft, outputs_to: converged_vuln_report }
 
 audit_hooks:
   - workflow_complete row on PASS with converged_vuln_report hash

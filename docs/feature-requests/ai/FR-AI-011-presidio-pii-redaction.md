@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-011
 title: "Presidio EN-base PII redaction in-flight (every prompt)"
 module: AI

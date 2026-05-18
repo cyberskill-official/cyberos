@@ -9,7 +9,7 @@ status: shipped
 inputs:
   - { name: collaboration_telemetry, source: Slack/Zoom/Notion/etc. telemetry, format: csv }
   - { name: prior_review,          source: last quarter's review, format: remote-policy@1 (effectiveness chapter) }
-  - { name: employee_pulse,        source: cuo/chief-human-resources-officer/quarterly-enps-pulse remote slice, format: enps-program@1 }
+  - { name: employee_pulse,        source: cuo/chief-human-resources-officer/quarterly-enps-pulse remote slice, format: employee-net-promoter-score-program@1 }
 
 outputs:
   - { name: remote_effectiveness,  format: remote-policy@1 (quarterly chapter), recipient: cuo/chief-remote-officer + cuo/chro + cuo/coo }

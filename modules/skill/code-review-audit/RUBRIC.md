@@ -23,7 +23,7 @@
 | `FM-104` | `pr_size_loc` | required, integer (lines of code changed) | error | false |
 | `FM-105` | `reviewer` | required, matches `^@[A-Za-z0-9_.-]{1,38}$` (the human reviewer; bot-only review is not allowed for high-risk PRs) | error | false |
 | `FM-106` | `reviewed_at` | required, ISO 8601 | error | true |
-| `FM-107` | `linked_impl_plan` | required, resolves to an impl-plan that passed impl-plan-audit | error | false |
+| `FM-107` | `linked_impl_plan` | required, resolves to an impl-plan that passed implementation-plan-audit | error | false |
 | `FM-108` | `ai_assisted` | required, boolean (true if any portion of the PR was AI-generated) | error | false |
 | `FM-109` | `provenance.source_path`, `provenance.source_hash` | required | error | false |
 | `FM-110` | `verdict` | required, one of: approved, request_changes, approved_with_conditions, blocked | error | false |
@@ -99,7 +99,7 @@
 | ------- | ----- | -------- |
 | `XCHAIN-001` | `provenance.source_path` matches author manifest | warning |
 | `XCHAIN-002` | `provenance.source_hash` matches at write time | error |
-| `XCHAIN-003` | `linked_impl_plan` resolves to an impl-plan that passed impl-plan-audit at 10/10 | error |
+| `XCHAIN-003` | `linked_impl_plan` resolves to an impl-plan that passed implementation-plan-audit at 10/10 | error |
 | `XCHAIN-004` | The linked FR's `priority` matches the urgency of the review (P0 PRs reviewed within SLA) | info |
 
 ## §9  Staleness

@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-002
 title: "AI Gateway cost-ledger post-call reconcile"
 module: AI
@@ -577,4 +577,4 @@ All resolved 2026-05-15 (round 2). Promoted to §1/§4 normative clauses:
 
 ---
 
-*End of FR-AI-002. Run `fr-audit` next: `cargo run -p cyberos-skill-cli -- run fr-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-002-cost-ledger-postcall-reconcile.md"}'`*
+*End of FR-AI-002. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-002-cost-ledger-postcall-reconcile.md"}'`*

@@ -46,9 +46,9 @@ Amplitude / Mixpanel / Heap (product analytics); Segment / Rudderstack (CDP); Hu
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `weekly-growth-cadence` | PQL conversion + viral loops + activation funnel + expansion | weekly | rhythm-of-business@1 (growth chapter) | shipped (1.0.0) |
-| `annual-growth-strategy` | North-star metric + growth loops + channel mix + monetization model | annual | gtm-plan@1 | shipped (1.0.0) |
+| `annual-growth-strategy` | North-star metric + growth loops + channel mix + monetization model | annual | go-to-market-plan@1 | shipped (1.0.0) |
 | `quarterly-experimentation-portfolio` | Experiment portfolio: ICE/RICE + results + queue | quarterly | program-charter@1 (portfolio summary) | shipped (1.0.0) |
-| `quarterly-monetization-review` | Pricing experiments + plan adoption + expansion ARPU + packaging | quarterly | gtm-plan@1 (monetization chapter) | shipped (1.0.0) |
+| `quarterly-monetization-review` | Pricing experiments + plan adoption + expansion ARPU + packaging | quarterly | go-to-market-plan@1 (monetization chapter) | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-1/Tier-2/Tier-5 skills (`rhythm-of-business`, `gtm-plan`, `program-charter`). See `../../skill/MODULE.md` §3.1 + §3.5.
 

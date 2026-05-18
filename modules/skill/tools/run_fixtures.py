@@ -25,10 +25,10 @@ from typing import Iterable
 
 # Map skill name -> primary entry script (best-effort heuristic).
 PRIMARY_SCRIPT = {
-    "vn-mst-validate": "scripts/validate_mst.py",
-    "vn-vat-invoice": "scripts/generate_invoice.py",
-    "vn-bank-transfer": "scripts/generate_qr.py",
-    "vneid-integration": "scripts/validate_cccd.py",
+    "vietnam-mst-validate": "scripts/validate_mst.py",
+    "vietnam-vat-invoice": "scripts/generate_invoice.py",
+    "vietnam-bank-transfer": "scripts/generate_qr.py",
+    "vietnam-vneid-integration": "scripts/validate_cccd.py",
     "vn-tax-filing": "scripts/generate_return.py",
 }
 
@@ -43,7 +43,7 @@ def _input_payload(case: dict) -> str:
 
     Cases come in two shapes:
       - {"input": <str|dict|list>, "expected": ..., "_label": ...}
-      - vn-vat-invoice shape: case IS the invoice document, plus _label /
+      - vietnam-vat-invoice shape: case IS the invoice document, plus _label /
         _expected_totals / _expected_error_contains auxiliary fields.
     """
     if "input" in case:

@@ -2,7 +2,7 @@
 
 ## 2026-05-12 — Introduced as part of skills-Stage-1 collapse
 
-Promoted from informal "work-package" wording inside `feature_request@1` and `tech_spec@1` to a first-class contract. Drives the new `solo` chain_profile that collapses `fr-author` + `fr-to-tech-spec` into a single `fr-with-tasks` skill for small-team workflows (CyberSkill internal use today).
+Promoted from informal "work-package" wording inside `feature_request@1` and `tech_spec@1` to a first-class contract. Drives the new `solo` chain_profile that collapses `feature-request-author` + `fr-to-tech-spec` into a single `fr-with-tasks` skill for small-team workflows (CyberSkill internal use today).
 
 ### Added
 

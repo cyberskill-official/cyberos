@@ -3,7 +3,7 @@
 contract_id: feature-request
 contract_version: v1
 template_literal: feature_request@1
-description: Canonical feature_request@1 schema body — frontmatter contract + Markdown skeleton for every Feature Request artefact in CyberOS. Loaded by fr-author as the generation skeleton; loaded by fr-audit as the validation target.
+description: Canonical feature_request@1 schema body — frontmatter contract + Markdown skeleton for every Feature Request artefact in CyberOS. Loaded by feature-request-author as the generation skeleton; loaded by feature-request-audit as the validation target.
 contract_kind: artefact_schema      # artefact_schema | envelope_schema | wire_protocol
 locked_at: 2026-05-05
 moved_from: cuo/_shared/feature-request-template/   # (DEC-090, registry v0.2.0)
@@ -26,7 +26,7 @@ emitted_source_freshness_tier: 10   # high authority — this IS the schema
 
 # `feature_request@1` — canonical FR contract
 
-> A **contract**, not a skill. Holds the single source of truth for the Feature Request artefact shape across CyberOS. Loaded by both `cuo/cpo/fr-author` (as the generation skeleton) and `cuo/cpo/fr-audit` (as the validation target). Future workflows like a `tech-spec-from-fr` skill will load this to understand FR structure before deriving downstream artefacts.
+> A **contract**, not a skill. Holds the single source of truth for the Feature Request artefact shape across CyberOS. Loaded by both `cuo/cpo/feature-request-author` (as the generation skeleton) and `cuo/cpo/feature-request-audit` (as the validation target). Future workflows like a `tech-spec-from-fr` skill will load this to understand FR structure before deriving downstream artefacts.
 
 ## What is a contract (vs. a skill)?
 
@@ -36,11 +36,11 @@ Contracts live under `cyberos/docs/contracts/<contract-id>/` (flat layout per re
 
 ## How to use this contract
 
-`fr-author` reads `template.md` (in this folder) as the body skeleton and adapts it per-FR. `fr-audit` reads it via the rule IDs encoded in `fr-audit/RUBRIC.md` — every audit rule's "what's expected" field maps to a region of this contract. Other workflows that need to know "what is an FR" should `read_file('cyberos/docs/contracts/feature-request/template.md')` rather than hard-code the shape.
+`feature-request-author` reads `template.md` (in this folder) as the body skeleton and adapts it per-FR. `feature-request-audit` reads it via the rule IDs encoded in `feature-request-audit/RUBRIC.md` — every audit rule's "what's expected" field maps to a region of this contract. Other workflows that need to know "what is an FR" should `read_file('cyberos/docs/contracts/feature-request/template.md')` rather than hard-code the shape.
 
 ## Frontmatter contract (FM-001..111)
 
-The frontmatter that every `feature_request@1` document MUST carry, with audit rule IDs in parentheses (rules live in `cuo/cpo/fr-audit/RUBRIC.md`):
+The frontmatter that every `feature_request@1` document MUST carry, with audit rule IDs in parentheses (rules live in `cuo/cpo/feature-request-audit/RUBRIC.md`):
 
 | Field | Type / enum | Required | Audit rule |
 | --- | --- | --- | --- |
@@ -93,15 +93,15 @@ The complete skeleton lives in [`template.md`](./template.md) — sourced verbat
 - Quotes outside the block are a SAFE-004 audit warning.
 - Nested `<untrusted_content>` blocks are a SAFE-001 error.
 - Unclosed blocks at EOF are a SAFE-002 error.
-- The interior of `<untrusted_content>` is scanned for prompt-injection markers per the SAFE-003 list (also lives in `cuo/cpo/fr-audit/RUBRIC.md` §15.6).
+- The interior of `<untrusted_content>` is scanned for prompt-injection markers per the SAFE-003 list (also lives in `cuo/cpo/feature-request-audit/RUBRIC.md` §15.6).
 - Attributions ("— @customer-handle, 2026-04-12") appear OUTSIDE the untrusted block.
 
 ## Consumers (declared via `depends_on_contracts:`)
 
 | Skill | Skill version | Contract version pinned | Consumer role |
 | --- | --- | --- | --- |
-| `cuo/cpo/fr-author` | v0.2.0+ | `feature-request@v1` | generation skeleton |
-| `cuo/cpo/fr-audit`  | v0.2.0+ | `feature-request@v1` | validation target |
+| `cuo/cpo/feature-request-author` | v0.2.0+ | `feature-request@v1` | generation skeleton |
+| `cuo/cpo/feature-request-audit`  | v0.2.0+ | `feature-request@v1` | validation target |
 
 When this contract bumps to v2, the registry CI matrix verifies every declared consumer has been updated to pin the new version OR remained on v1 with explicit acknowledgement in their CHANGELOG.
 

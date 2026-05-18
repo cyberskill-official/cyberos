@@ -21,4 +21,4 @@ emitted_source_freshness_tier: 9
 - SDP §2(j) — Operations stage source.
 - Google SRE Book — SLOs, error budgets.
 - OpenTelemetry — observability conventions.
-- Consumers: `runbook-author`, `runbook-audit`, `postmortem-audit` (XCHAIN-003 — every services_affected has a runbook), `deploy-checklist-audit` (XCHAIN-005).
+- Consumers: `runbook-author`, `runbook-audit`, `postmortem-audit` (XCHAIN-003 — every services_affected has a runbook), `deployment-checklist-audit` (XCHAIN-005).

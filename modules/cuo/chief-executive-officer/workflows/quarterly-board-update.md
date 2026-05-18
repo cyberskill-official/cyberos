@@ -7,7 +7,7 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: prior_okrs,         source: cuo/chief-of-staff/quarterly-okr-cascade or last quarter's deck,  format: okr-set@1 }
+  - { name: prior_okrs,         source: cuo/chief-of-staff/quarterly-okr-cascade or last quarter's deck,  format: objectives-and-key-results-set@1 }
   - { name: financials,         source: cuo/chief-financial-officer/quarterly-board-financials,                               format: monthly-close@1 + forecast@1 }
   - { name: ask_envelope,       source: workflow-caller,                                                  format: markdown brief (3-5 board asks) }
 

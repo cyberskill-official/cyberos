@@ -134,27 +134,27 @@ Per `NEEDED_SKILLS.md` §4:
 - `skill/docs/AUDIT_LOOP.md` — the 8-step audit algorithm spec.
 - `skill/docs/RUBRIC_FORMAT.md` — the rubric format spec (FM/SEC/COND/QA/SAFE/STALE rule families with stable rule_ids).
 - **All 22 author+audit pairs shipped at 10/10** in the same 2026-05-17 session — full catalog complete. Each `<artifact>-audit` validates its sibling `<artifact>-author`'s output against the corresponding `<artifact>_rubric@1.0` (or `audit_rubric@2.0` for FR). Pairs by SDP §2 stage:
-  - **(a) Pre-engagement**: `sow-author` + `sow-audit` (Template §4.9 — 12-section SOW skeleton, `sow_rubric@1.0`).
-  - **(b) Requirements**: `srs-author` + `srs-audit` (IEEE 830 + ISO/IEC 25010:2023 nine-quality enforcement, `srs_rubric@1.0`); `fr-author` + `fr-audit` (proven `audit_rubric@2.0` ported verbatim from legacy `cuo/cpo/fr-audit`); `dor-dod-author` + `dor-dod-audit` (Templates §4.1 + §4.2, `dor_dod_rubric@1.0`).
+  - **(a) Pre-engagement**: `statement-of-work-author` + `statement-of-work-audit` (Template §4.9 — 12-section SOW skeleton, `sow_rubric@1.0`).
+  - **(b) Requirements**: `software-requirements-specification-author` + `software-requirements-specification-audit` (IEEE 830 + ISO/IEC 25010:2023 nine-quality enforcement, `srs_rubric@1.0`); `feature-request-author` + `feature-request-audit` (proven `audit_rubric@2.0` ported verbatim from legacy `cuo/cpo/feature-request-audit`); `definition-of-ready-and-done-author` + `definition-of-ready-and-done-audit` (Templates §4.1 + §4.2, `dor_dod_rubric@1.0`).
   - **(c) Planning**: `project-plan-author` + `project-plan-audit` (PMBOK 8 / PRINCE2 7 mapping, `project_plan_rubric@1.0`); `stage-gate-author` + `stage-gate-audit` (Template §4.3, `stage_gate_rubric@1.0`).
-  - **(d) Architecture**: `adr-author` + `adr-audit` (Nygard ADR format + ISO/IEC 25010 impact mapping, `adr_rubric@1.0`); `threat-model-author` + `threat-model-audit` (STRIDE + OWASP Top 10:2025 + OWASP ASVS, `threat_model_rubric@1.0`).
-  - **(e) Detailed design**: `sdd-author` + `sdd-audit` (IEEE 1016 viewpoints, `sdd_rubric@1.0`).
-  - **(f) Implementation prep**: `impl-plan-author` + `impl-plan-audit` (DORA small-batch + AI-tooling discipline, `impl_plan_rubric@1.0`).
+  - **(d) Architecture**: `architecture-decision-record-author` + `architecture-decision-record-audit` (Nygard ADR format + ISO/IEC 25010 impact mapping, `adr_rubric@1.0`); `threat-model-author` + `threat-model-audit` (STRIDE + OWASP Top 10:2025 + OWASP ASVS, `threat_model_rubric@1.0`).
+  - **(e) Detailed design**: `software-design-document-author` + `software-design-document-audit` (IEEE 1016 viewpoints, `sdd_rubric@1.0`).
+  - **(f) Implementation prep**: `implementation-plan-author` + `implementation-plan-audit` (DORA small-batch + AI-tooling discipline, `impl_plan_rubric@1.0`).
   - **(g) Code review**: `code-review-author` + `code-review-audit` (IEEE 1028 + Template §4.5 + SDP §5 AI-specific checks for hallucinated APIs / oversized diffs / dependency provenance, `code_review_rubric@1.0`).
   - **(h) Testing**: `test-strategy-author` + `test-strategy-audit` (Template §4.6 + WCAG 2.2 accessibility, `test_strategy_rubric@1.0`).
-  - **(i) Deployment**: `deploy-checklist-author` + `deploy-checklist-audit` (Template §4.7 + DORA baseline capture, `deploy_checklist_rubric@1.0`); `release-notes-author` + `release-notes-audit` (Keep-a-Changelog 1.1.0 + SemVer 2.0.0 + CVE format, `release_notes_rubric@1.0`).
+  - **(i) Deployment**: `deployment-checklist-author` + `deployment-checklist-audit` (Template §4.7 + DORA baseline capture, `deploy_checklist_rubric@1.0`); `release-notes-author` + `release-notes-audit` (Keep-a-Changelog 1.1.0 + SemVer 2.0.0 + CVE format, `release_notes_rubric@1.0`).
   - **(j) Operations**: `runbook-author` + `runbook-audit` (Google SRE SLO/error-budget + OTel observability, `runbook_rubric@1.0`); `postmortem-author` + `postmortem-audit` (blameless culture + Five-Whys + GDPR Art. 33 timeline, `postmortem_rubric@1.0`).
-  - **Cross-cutting**: `rtm-author` + `rtm-audit` (Template §4.4 REQ↔design↔code↔test↔release matrix, `rtm_rubric@1.0`); `prd-author` + `prd-audit` (ISO/IEC 25010:2023 NFR coverage, `prd_rubric@1.0`).
-  - **(l) Closure**: `retro-author` + `retro-audit` (Template §4.8 Start/Stop/Continue + DORA review, `retro_rubric@1.0`); `closure-author` + `closure-audit` (sign-off + lessons + KT + asset handover, `closure_rubric@1.0`).
-  - **(m) Decommissioning**: `decomm-author` + `decomm-audit` (data export / destruction certificate + GDPR Art. 17 + PCI-DSS 9.8 + HIPAA disposal compliance, `decomm_rubric@1.0`).
+  - **Cross-cutting**: `requirements-traceability-matrix-author` + `requirements-traceability-matrix-audit` (Template §4.4 REQ↔design↔code↔test↔release matrix, `rtm_rubric@1.0`); `product-requirements-document-author` + `product-requirements-document-audit` (ISO/IEC 25010:2023 NFR coverage, `prd_rubric@1.0`).
+  - **(l) Closure**: `retrospective-author` + `retrospective-audit` (Template §4.8 Start/Stop/Continue + DORA review, `retro_rubric@1.0`); `closure-author` + `closure-audit` (sign-off + lessons + KT + asset handover, `closure_rubric@1.0`).
+  - **(m) Decommissioning**: `decommissioning-author` + `decommissioning-audit` (data export / destruction certificate + GDPR Art. 17 + PCI-DSS 9.8 + HIPAA disposal compliance, `decomm_rubric@1.0`).
 - `skill/project-cleanup/` — preserved from legacy `skill/skills/shared/project-cleanup/` (4-phase pipeline: inventory + absorb + delete + verify; self-auditing).
 - Updated `skill/README.md` for the new layout, MODULE.md as catalog source-of-truth pointer, the three-rule philosophy (flat / pair-per-artifact / 10/10 loop).
 
 ### Removed
 
-- All Vietnamese-market skills from `skill/skills/cyberskill-vn/` (vn-bank-transfer, vn-legal-compliance, vn-mst-validate, vn-tax-filing, vn-vat-invoice, vneid-integration). They remain preserved at `cyberos/public-skills/` for open-registry publication; they are not part of the SDP-driven core catalog in this module.
-- Legacy `cuo/cpo/{fr-author, fr-audit, prd-author, prd-audit, requirements-discovery, chain-selector, fr-with-tasks}` — replaced by the flat reference pairs above; the proven patterns (CONTRACT_ECHO, PLAN/WORKER/RESUME, HITL halt-batch, audit_rubric@2.0) are preserved verbatim in the new bundles.
-- Legacy `cuo/chief-technology-officer/{srs-author, srs-audit, fr-to-tech-spec, spec-to-impl-plan}` — planned for re-introduction as `srs-author/audit`, `sdd-author/audit`, `impl-plan-author/audit` flat pairs in a subsequent rebuild session.
+- All Vietnamese-market skills from `skill/skills/cyberskill-vn/` (vietnam-bank-transfer, vietnam-legal-compliance, vietnam-mst-validate, vn-tax-filing, vietnam-vat-invoice, vietnam-vneid-integration). They remain preserved at `cyberos/public-skills/` for open-registry publication; they are not part of the SDP-driven core catalog in this module.
+- Legacy `cuo/cpo/{feature-request-author, feature-request-audit, product-requirements-document-author, product-requirements-document-audit, requirements-discovery, chain-selector, fr-with-tasks}` — replaced by the flat reference pairs above; the proven patterns (CONTRACT_ECHO, PLAN/WORKER/RESUME, HITL halt-batch, audit_rubric@2.0) are preserved verbatim in the new bundles.
+- Legacy `cuo/chief-technology-officer/{software-requirements-specification-author, software-requirements-specification-audit, fr-to-tech-spec, spec-to-impl-plan}` — planned for re-introduction as `software-requirements-specification-author/audit`, `software-design-document-author/audit`, `implementation-plan-author/audit` flat pairs in a subsequent rebuild session.
 - Legacy `cuo/_shared/hello-world/` — superseded by `_template/` which serves as both example and authoring scaffold.
 
 ### Catalog complete
@@ -337,7 +337,7 @@ Key changes:
 
 ## 2026-05-15 — INV module page rewritten to Gold (billable rollup invoicing + hóa đơn emission + dunning automation)
 
-Rewrote `website/docs/modules/inv.html` to Gold by encoding three strategic roles: (1) billable rollup → invoice line items (consumes TIME per-cycle rollup; rate-card snapshot preserved), (2) hóa đơn emission (Decree 123 + Circular 78 GDT XML via vn-vat-invoice skill; Mẫu 01/GTGT; MST validation gate), (3) revenue recognition + dunning (CUO drafts overdue chase; human sends; aging report; cash application via 4 rails).
+Rewrote `website/docs/modules/inv.html` to Gold by encoding three strategic roles: (1) billable rollup → invoice line items (consumes TIME per-cycle rollup; rate-card snapshot preserved), (2) hóa đơn emission (Decree 123 + Circular 78 GDT XML via vietnam-vat-invoice skill; Mẫu 01/GTGT; MST validation gate), (3) revenue recognition + dunning (CUO drafts overdue chase; human sends; aging report; cash application via 4 rails).
 
 Key changes:
 - Title/meta + hero reframed
@@ -578,7 +578,7 @@ Changes by section:
 - **Hero fact-grid** — added "Status (BRAIN-int) Phase 8 designed" + "Vertical packs 1 shipped · 6 planned"; updated dependencies to BRAIN + AUTH.
 - **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (Role 1 / Role 2 / Role 3); dependency graph Mermaid showing Skill's unique position touching the external Agent Skills ecosystem.
 - **TOC** — added Bigger picture · BRAIN integration · Vertical-pack pattern · Distribution roadmap entries.
-- **NEW §3.5 "BRAIN integration"** — full SKILL.md frontmatter example with BRAIN-aware fields (allowed_brain_scopes for personal + lumi scopes); capability broker enforcement sequence diagram (8 actors, 14 steps); table of 5 universal-protocol skills (brain-capture@1, brain-sync@1, synthesis-author@1, fr-author, fr-audit).
+- **NEW §3.5 "BRAIN integration"** — full SKILL.md frontmatter example with BRAIN-aware fields (allowed_brain_scopes for personal + lumi scopes); capability broker enforcement sequence diagram (8 actors, 14 steps); table of 5 universal-protocol skills (brain-capture@1, brain-sync@1, synthesis-author@1, feature-request-author, feature-request-audit).
 - **NEW §3.6 "Vertical-pack pattern"** — 7-step pack recipe (jurisdiction → high-pain workflows → SKILL.md bundle → localise language → compliance-verify → agentskills.io publish → Lumi tenant sell); 9-pack roadmap table (vn shipped + sg + id + th + eu + us + hr + legal + accounting) with target ship dates and annual unit pricing; margin math worked example.
 - **NEW §3.7 "Distribution roadmap R0→R5"** — 6-rung distribution table (local cache → .skill bundles → OCI registry → agentskills.io → own marketplace → enterprise white-label); explicit gating criteria; why each rung is gated (R3 waits on registry API, R4 waits on ≥50 paying tenants per research review §7.3).
 - **§12 Risks** — added 7 new BRAIN-integration + vertical-pack + distribution risks (R-SKILL-008..014): capability broker bypass, multi-tenant skill bleed, sync-state corruption, synthesis PII leak, vertical-pack legal drift, OCI signing-key compromise, agentskills.io policy hostility.
@@ -626,7 +626,7 @@ Result: BRAIN page now reflects the expanded universal-protocol vision while pre
 
 ## 2026-05-14 — Research review ingested + BRAIN auto-sync design v1.0 locked
 
-- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via fr-author, 7 missing risks, TEN-billing P2 slice, UX defects, BRAIN Layer 2 source-of-truth one-pager, BRAIN decision memory.
+- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via feature-request-author, 7 missing risks, TEN-billing P2 slice, UX defects, BRAIN Layer 2 source-of-truth one-pager, BRAIN decision memory.
 - **Wrote `docs/BRAIN_AUTOSYNC_DESIGN.md`** (~700 lines, design v1.0.0) — universal Personal BRAIN + Lumi's BRAIN architecture. Per Stephen's clarified vision: (1) Personal BRAIN works on any folder, not just cyberos; (2) captures everything including discussions, not just file deliverables; (3) portable by folder copy across user's machines; (4) 2-way sync with Cloud BRAIN aka Lumi's BRAIN (also CUO's BRAIN, CyberSkill's BRAIN — same store, different names for different audiences); (5) multi-brain power + auto-evolve memory at scale.
   - 16 sections: vision, naming, three-layer architecture, Personal BRAIN spec, Capture daemon spec, Lumi's BRAIN spec, Sync orchestrator, Multi-brain auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.
   - Stage gating: **Stage 1 (Personal BRAIN universal) + Stage 2 (capture daemon) are buildable today** — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).
@@ -655,7 +655,7 @@ Result: BRAIN page now reflects the expanded universal-protocol vision while pre
 Added `docs/AUDIT_AND_PLAN_2026_05_14.md` — single comprehensive audit + build-readiness plan covering UI glitches (severity-ranked), FR landscape, per-module build sequence for the 19 unbuilt modules with slice-1 outlines, and strategic followups. Designed as the source of truth for the next 2 weeks of work.
 
 **FR catalog strip (per user decision: strip-everything).** Stripped:
-- All 22 module pages: each "Functional Requirements" section (the `<section id="functional-requirements">` block, lines ~789–820 across modules) replaced with a stub linking to the `fr-author` Agent Skill workflow. 23/23 pages patched cleanly via regex sweep.
+- All 22 module pages: each "Functional Requirements" section (the `<section id="functional-requirements">` block, lines ~789–820 across modules) replaced with a stub linking to the `feature-request-author` Agent Skill workflow. 23/23 pages patched cleanly via regex sweep.
 - `website/docs/reference/fr-catalog.html`: 1006-line generated catalog replaced with a 70-line stub explaining the rebuild + how to author new FRs via the skill module.
 
 **Partially stripped (cross-refs remain — call to extend):**
@@ -841,7 +841,7 @@ See per-module CHANGELOG.md files for module-specific history:
 - **Phase 5 — WASM execution path** — wasmtime engine, AOT cache, WASI capability translator, jco componentize pipeline. **Feature-gated**: `cargo build --features wasm`. Activation runbook at `docs/PHASE_5_ACTIVATION.md` (one-shot user install of `wasm32-wasi` target, wasmtime CLI, jco).
 - **Phase 6 — Capability broker GA** — capability grants enforced via the host's broker; audit-row emission on grant/deny.
 - **Phase 7 — Legacy retirement** — runbook at `docs/PHASE_7_RETIREMENT.md`; executes after the 30-day Phase-5 soak completes with zero P0 incidents.
-- **VN catalog** — 6 `cyberskill-vn` skills shipped: `vn-mst-validate`, `vn-vat-invoice`, `vn-bank-transfer`, `vneid-integration`, `vn-legal-compliance`, `vn-tax-filing`.
+- **VN catalog** — 6 `cyberskill-vn` skills shipped: `vietnam-mst-validate`, `vietnam-vat-invoice`, `vietnam-bank-transfer`, `vietnam-vneid-integration`, `vietnam-legal-compliance`, `vn-tax-filing`.
 
 ### Pending — future work
 
@@ -1754,7 +1754,7 @@ Stephen: *"too many docs inside skills folder that made me confuse, can we combi
 
 **`runtime/tools/cyberos_cross_skill.py` + `cyberos cross-skill <chain-dir>`** — Tier α.7 — 5 cross-skill consistency checks:
 - C1 task ID references resolve
-- C2 fr-audit covered every FR
+- C2 feature-request-audit covered every FR
 - C3 every tech-spec references a real FR (standard/full profiles)
 - C4 every impl-plan ticket maps to a known task
 - C5 chain-manifest plan steps and emitted files align
@@ -1859,13 +1859,13 @@ Batches 17-20 ship 18 items from Stages 3, 4, 5, 6, 8 of the post-Batch-16 catal
 
 ## [MEMORY] 2026-05-12 — Batch 16 ship: skills-Stage-1 collapse — fr-with-tasks + solo profile + cyberos chain umbrella
 
-> First batch that touches the **skills** layer (CPO/CTO chain) rather than Layer 1 operator tools. Implements skills-Stage-1 + Stage-2 + S7.1 from the catalog the user reviewed. Collapses the 2-stage `fr-author + fr-to-tech-spec` flow into a single `fr-with-tasks` skill for the new default `solo` chain_profile.
+> First batch that touches the **skills** layer (CPO/CTO chain) rather than Layer 1 operator tools. Implements skills-Stage-1 + Stage-2 + S7.1 from the catalog the user reviewed. Collapses the 2-stage `feature-request-author + fr-to-tech-spec` flow into a single `fr-with-tasks` skill for the new default `solo` chain_profile.
 
 ### Added
 
 **S2.1 — `task@1` contract** at `docs/contracts/task/{CONTRACT,template,CHANGELOG}.md`. Comprehensive task shape with 14 required + 6 optional fields. Task IDs `FR-NNN-T-MM`. ≥200-char description floor. Acceptance test must be `shell` or `assertion` (concrete). Assignable_to: `[human, ai-agent]` with profile + token/hour estimates.
 
-**S1.1 — `fr-with-tasks` skill** at `docs/skills/cuo/cpo/fr-with-tasks/`. Collapses CPO→CTO 2-step into a single skill emitting `feature_request@1` with embedded `task@1` list. Replaces `fr-author + fr-to-tech-spec` for the `solo` profile. 14 INVARIANTS, 3-question standalone interview, self-audit before emit.
+**S1.1 — `fr-with-tasks` skill** at `docs/skills/cuo/cpo/fr-with-tasks/`. Collapses CPO→CTO 2-step into a single skill emitting `feature_request@1` with embedded `task@1` list. Replaces `feature-request-author + fr-to-tech-spec` for the `solo` profile. 14 INVARIANTS, 3-question standalone interview, self-audit before emit.
 
 **S1.2 — `solo` chain_profile** added to `chain-selector` skill. Default for CyberSkill internal workflows (1-10 person team, client_visible:false, EU AI Act limited or below). Replaces `standard` as the new default for non-client work.
 
@@ -1891,7 +1891,7 @@ Drove a real pitch ("Slack HR-policy bot MVP") through the solo chain:
 
 ### Honest framing
 
-The collapsed `fr-with-tasks` skill is the right shape **for CyberSkill internal use today**. The 2-stage `fr-author + fr-to-tech-spec` chain remains intact (deliberately) for future client-facing work where CPO + CTO persona separation matters for EU AI Act §8 audit trails. The `solo` profile is opinionated about the trade-off: persona-separation theatre out, founder velocity in.
+The collapsed `fr-with-tasks` skill is the right shape **for CyberSkill internal use today**. The 2-stage `feature-request-author + fr-to-tech-spec` chain remains intact (deliberately) for future client-facing work where CPO + CTO persona separation matters for EU AI Act §8 audit trails. The `solo` profile is opinionated about the trade-off: persona-separation theatre out, founder velocity in.
 
 ### Verified
 
@@ -2350,7 +2350,7 @@ Three additions deferred to runtime-bring-up:
 
 ### Tension noted (not a change, a stance)
 
-mattpocock-skills is **deliberately opposed** to "process-owning frameworks" (their words) — the chain (`requirements-discovery → chain-selector → prd-author → ...`) IS process-owning by design. Resolution: **`chain_profile: lean`** is the mattpocock-stance on-ramp for solo-engineer / small-team users. CyberOS doesn't pick a side; it gives users the dial. Standard/full profiles serve regulated / multi-tenant / agency-style work where process-owning is the value proposition.
+mattpocock-skills is **deliberately opposed** to "process-owning frameworks" (their words) — the chain (`requirements-discovery → chain-selector → product-requirements-document-author → ...`) IS process-owning by design. Resolution: **`chain_profile: lean`** is the mattpocock-stance on-ramp for solo-engineer / small-team users. CyberOS doesn't pick a side; it gives users the dial. Standard/full profiles serve regulated / multi-tenant / agency-style work where process-owning is the value proposition.
 
 ### Real-world trigger
 
@@ -2876,7 +2876,7 @@ The healthcheck also discovered the BRAIN's 269-row pre-upgrade ledger was writt
 
 ### Added
 
-- **NEW contract: `impl_plan@1`** under `cyberos/docs/contracts/impl-plan/`. Stewarded by `cuo-cto`. The shadow record of engineering tickets created in PROJ MCP — markdown lives in repo, actual tickets live in Linear/Jira/GitHub. 12 frontmatter fields + 5 required H2 sections + 2 conditional sections.
+- **NEW contract: `impl_plan@1`** under `cyberos/docs/contracts/implementation-plan/`. Stewarded by `cuo-cto`. The shadow record of engineering tickets created in PROJ MCP — markdown lives in repo, actual tickets live in Linear/Jira/GitHub. 12 frontmatter fields + 5 required H2 sections + 2 conditional sections.
 - **NEW skill: `cuo/chief-technology-officer/spec-to-impl-plan/`** v0.1.0 — the LAST skill in the chain. Consumes either `tech_spec@1` (standard/full chain_profile) OR audited `feature_request@1` (lean chain_profile, no tech-spec exists). Emits `impl_plan@1` markdown + optionally creates tickets via `proj.create_issue`. INV-001 (refuse non-pass input) sev-0; INV-002 (never auto-create tickets without explicit human approval — even with `create_tickets: true`, runtime forces final HALT_BEFORE_CREATE prompt) sev-0.
 
 ### Chain end-to-end now covered
@@ -2885,11 +2885,11 @@ The healthcheck also discovered the BRAIN's 269-row pre-upgrade ledger was writt
 human chat + BRAIN
   → requirements-discovery → project_brief@1
   → chain-selector → chain_plan
-  → prd-author → prd@1
-  → [if standard|full] prd-audit → audited prd@1
-  → [if full] srs-author → srs@1 → srs-audit → audited srs@1
-  → fr-author → FR markdowns
-  → fr-audit → audited FRs
+  → product-requirements-document-author → product-requirements-document@1
+  → [if standard|full] product-requirements-document-audit → audited product-requirements-document@1
+  → [if full] software-requirements-specification-author → software-requirements-specification@1 → software-requirements-specification-audit → audited software-requirements-specification@1
+  → feature-request-author → FR markdowns
+  → feature-request-audit → audited FRs
   → [if standard|full] fr-to-tech-spec → tech_spec@1
   → spec-to-impl-plan → impl_plan@1 + tickets in PROJ MCP
 ```
@@ -2910,18 +2910,18 @@ Pure addition. New contract + new skill. Both gated until runtime (`gated_until_
 
 ### Added
 
-- **`chain_profile` field** added to `project_brief@1` (FM-121) + `prd@1` (FM-118) frontmatter. Enum: `lean` / `standard` / `full`. Brief sets it (via chain-selector); PRD inherits and CANNOT override.
+- **`chain_profile` field** added to `project_brief@1` (FM-121) + `product-requirements-document@1` (FM-118) frontmatter. Enum: `lean` / `standard` / `full`. Brief sets it (via chain-selector); PRD inherits and CANNOT override.
 - **NEW skill: `cuo/cpo/chain-selector/`** v0.1.0 — reads brief frontmatter (project_kind, eu_ai_act_risk_class, confidentiality, budget_band, target_release, client_visible) → picks chain_profile via 3-tier first-match-wins rules → emits chain_plan (list of skill_ids). User can override with reasoning. Auto-invoked by supervisor at brief-completion time; chained-only invocation mode (no standalone interview).
-- 4 self-audit invariants. INV-001 (deterministic selection from frontmatter) sev-0; INV-003 (warn before skipping prd-audit when client_visible) sev-1.
+- 4 self-audit invariants. INV-001 (deterministic selection from frontmatter) sev-0; INV-003 (warn before skipping product-requirements-document-audit when client_visible) sev-1.
 - `project-brief@1` CONTRACT.md gains a `## Chain profile` section documenting the 3 profiles + skill-list-per-profile + per-project-kind defaults.
 
 ### Lean / Standard / Full profiles
 
 | Profile | Default for | Chain |
 | --- | --- | --- |
-| `lean` (4 skills) | internal_tooling, research_spike, projects under ~2 engineer-weeks | prd-author → fr-author → fr-audit → spec-to-impl-plan |
-| `standard` (6 skills, default) | software_product, software_consulting_engagement, projects 2-12 engineer-weeks | prd-author → prd-audit → fr-author → fr-audit → fr-to-tech-spec → spec-to-impl-plan |
-| `full` (8 skills) | confidentiality: regulated, eu_ai_act_risk_class: high, multi-year projects | + srs-author → srs-audit |
+| `lean` (4 skills) | internal_tooling, research_spike, projects under ~2 engineer-weeks | product-requirements-document-author → feature-request-author → feature-request-audit → spec-to-impl-plan |
+| `standard` (6 skills, default) | software_product, software_consulting_engagement, projects 2-12 engineer-weeks | product-requirements-document-author → product-requirements-document-audit → feature-request-author → feature-request-audit → fr-to-tech-spec → spec-to-impl-plan |
+| `full` (8 skills) | confidentiality: regulated, eu_ai_act_risk_class: high, multi-year projects | + software-requirements-specification-author → software-requirements-specification-audit |
 
 ### Driver
 
@@ -2930,24 +2930,24 @@ User said "B: yes — chain-selector skill" in registry v0.2.7 design conversati
 ### Backwards compatibility
 
 - Existing briefs without `chain_profile` field → schema validation will fail under v0.2.8. Mitigation: chain-selector treats missing `chain_profile` as `standard` and writes the field on its first invocation. Pre-v0.2.8 briefs auto-upgrade.
-- `prd@1` field addition is purely additive — existing PRDs get `chain_profile: standard` written on first audit pass.
+- `product-requirements-document@1` field addition is purely additive — existing PRDs get `chain_profile: standard` written on first audit pass.
 
 ---
 
 ---
 
-## [SKILL] v0.2.7 — 2026-05-06 (rename fr-create → fr-author for naming consistency; PATCH)
+## [SKILL] v0.2.7 — 2026-05-06 (rename fr-create → feature-request-author for naming consistency; PATCH)
 
 ### Changed
 
-- **`cuo/cpo/fr-create/` → `cuo/cpo/fr-author/`** — folder renamed. All artefact-emitting skills now use the "author" verb consistently (prd-author, srs-author, fr-author). The "audit" suffix stays for audit skills. `requirements-discovery` keeps its name (the central activity is interview, not the artefact emission).
-- All references swept across the registry: skill_id paths, NATS subject names (`cuo.fr_create.* → cuo.fr_author.*`), prompt_revision (`fr_create@* → fr_author@*`), envelope file names (`fr-create.input.json → fr-author.input.json`), persona-card owned-workflows table, contract consumer lists, README indexes, runtime/ docs, SVG diagram labels. ~74 files / ~633 string replacements.
-- Renamed asset: `assets/diagrams/11-fr-create-fr-audit-chain-sequence.svg` → `11-fr-author-fr-audit-chain-sequence.svg`. README link updated.
+- **`cuo/cpo/fr-create/` → `cuo/cpo/feature-request-author/`** — folder renamed. All artefact-emitting skills now use the "author" verb consistently (product-requirements-document-author, software-requirements-specification-author, feature-request-author). The "audit" suffix stays for audit skills. `requirements-discovery` keeps its name (the central activity is interview, not the artefact emission).
+- All references swept across the registry: skill_id paths, NATS subject names (`cuo.fr_create.* → cuo.fr_author.*`), prompt_revision (`fr_create@* → fr_author@*`), envelope file names (`fr-create.input.json → feature-request-author.input.json`), persona-card owned-workflows table, contract consumer lists, README indexes, runtime/ docs, SVG diagram labels. ~74 files / ~633 string replacements.
+- Renamed asset: `assets/diagrams/11-fr-create-feature-request-audit-chain-sequence.svg` → `11-feature-request-author-feature-request-audit-chain-sequence.svg`. README link updated.
 - Historical references to the SOURCE prompt name `fr_create_and_audit@2.0.0` (in CHANGELOG entries describing the v0.1.0 port history) preserved verbatim — those describe what the skills were ported FROM, not what they're called NOW.
 
 ### Driver
 
-User-driven naming-consistency cleanup (Q1 of registry v0.2.7 design conversation). Three artefact-emitting skills (`prd-author`, `srs-author`, `fr-create`) used inconsistent verbs. Rename `fr-create → fr-author` aligns the convention to "author" (every artefact has an `author:` frontmatter field; matching the verb to the field is cleaner). Mechanical rename, no semantic changes.
+User-driven naming-consistency cleanup (Q1 of registry v0.2.7 design conversation). Three artefact-emitting skills (`product-requirements-document-author`, `software-requirements-specification-author`, `fr-create`) used inconsistent verbs. Rename `fr-create → feature-request-author` aligns the convention to "author" (every artefact has an `author:` frontmatter field; matching the verb to the field is cleaner). Mechanical rename, no semantic changes.
 
 ### Backwards compatibility
 
@@ -2984,23 +2984,23 @@ Pure addition. No registry contract changes. No skill changes. Future v0.3.0 (th
 
 ---
 
-## [SKILL] v0.2.6 — 2026-05-06 (Stage C: srs-author + srs-audit + srs@1 contract; MINOR)
+## [SKILL] v0.2.6 — 2026-05-06 (Stage C: software-requirements-specification-author + software-requirements-specification-audit + software-requirements-specification@1 contract; MINOR)
 
 ### Added
 
-- **NEW contract: `srs@1`** under `cyberos/docs/contracts/srs/`. Stewarded by `cuo-cto`. Documents the system in technical detail (architecture, data model, API surface, data flows, NFRs, failure modes, security posture, telemetry); distinct from `prd@1` (product spec). 12 frontmatter fields + 10 required H2 sections + 3 conditional sections.
-- **NEW skill: `cuo/chief-technology-officer/srs-author/`** v0.1.0 — consumes audited `prd@1` + 5-7 architectural-review questions + `module:*` BRAIN reads → emits `srs@1`. INV-001 refuses non-pass PRDs (sev-0); INV-002 forbids llm-implicit on Architecture (sev-0).
-- **NEW skill: `cuo/chief-technology-officer/srs-audit/`** v0.1.0 — quality gate on SRSs. Mirrors prd-audit's advisory-leaning approach (most rules warning). `srs_rubric@1.0` with 6 rule families (FM/SEC/COND/AUTH/QA/SAFE + STALE).
+- **NEW contract: `software-requirements-specification@1`** under `cyberos/docs/contracts/software-requirements-specification/`. Stewarded by `cuo-cto`. Documents the system in technical detail (architecture, data model, API surface, data flows, NFRs, failure modes, security posture, telemetry); distinct from `product-requirements-document@1` (product spec). 12 frontmatter fields + 10 required H2 sections + 3 conditional sections.
+- **NEW skill: `cuo/chief-technology-officer/software-requirements-specification-author/`** v0.1.0 — consumes audited `product-requirements-document@1` + 5-7 architectural-review questions + `module:*` BRAIN reads → emits `software-requirements-specification@1`. INV-001 refuses non-pass PRDs (sev-0); INV-002 forbids llm-implicit on Architecture (sev-0).
+- **NEW skill: `cuo/chief-technology-officer/software-requirements-specification-audit/`** v0.1.0 — quality gate on SRSs. Mirrors product-requirements-document-audit's advisory-leaning approach (most rules warning). `srs_rubric@1.0` with 6 rule families (FM/SEC/COND/AUTH/QA/SAFE + STALE).
 
 ### Changed
 
-- `cuo/chief-technology-officer/SKILL.md` owned-workflows table extended: srs-author + srs-audit added.
-- `cyberos/docs/contracts/README.md` index extended with `srs@1` row + extended `prd@1` consumers list.
+- `cuo/chief-technology-officer/SKILL.md` owned-workflows table extended: software-requirements-specification-author + software-requirements-specification-audit added.
+- `cyberos/docs/contracts/README.md` index extended with `software-requirements-specification@1` row + extended `product-requirements-document@1` consumers list.
 - `cyberos/docs/skills/README.md` Part 23.1 + 23.2 indexes extended.
 
 ### Driver
 
-User said "do all stages" after registry v0.2.4 ship. Stage C: srs-author closes the upstream side of the engineering-handoff seam (PRD → SRS); srs-audit gates the SRS before tech-spec authoring.
+User said "do all stages" after registry v0.2.4 ship. Stage C: software-requirements-specification-author closes the upstream side of the engineering-handoff seam (PRD → SRS); software-requirements-specification-audit gates the SRS before tech-spec authoring.
 
 ### Backwards compatibility
 
@@ -3010,21 +3010,21 @@ All additions are additive; both new skills carry `gated_until_phase: runtime_v0
 
 ---
 
-## [SKILL] v0.2.5 — 2026-05-06 (Stage B: prd-audit; MINOR)
+## [SKILL] v0.2.5 — 2026-05-06 (Stage B: product-requirements-document-audit; MINOR)
 
 ### Added
 
-- **NEW skill: `cuo/cpo/prd-audit/`** v0.1.0 — quality gate on PRDs. Advisory-leaning per Q4 of registry v0.2.4 design (most rules warning, structural rules error). `prd_rubric@1.0` with 7 rule families (FM/SEC/COND/AUTH/QA/SAFE/STALE) — AUTH-001..004 is NEW vs fr-audit and enforces per-claim authority markers per AGENTS.md §5.3.
+- **NEW skill: `cuo/cpo/product-requirements-document-audit/`** v0.1.0 — quality gate on PRDs. Advisory-leaning per Q4 of registry v0.2.4 design (most rules warning, structural rules error). `prd_rubric@1.0` with 7 rule families (FM/SEC/COND/AUTH/QA/SAFE/STALE) — AUTH-001..004 is NEW vs feature-request-audit and enforces per-claim authority markers per AGENTS.md §5.3.
 - 6 self-audit invariants. INV-001 (verdict reproducibility on mechanical rules) is sev-0; LLM-judgement rules are explicitly band-reproducible only.
 - Full scaffold: SKILL.md + RUBRIC.md + INVARIANTS.md + AUDIT_LOOP.md + REPORT_FORMAT.md + STANDALONE_INTERVIEW.md + HUMAN_SUMMARY.md + envelopes + acceptance.
 
 ### Changed
 
-- `cuo/cpo/SKILL.md` owned-workflows table extended: prd-audit added.
+- `cuo/cpo/SKILL.md` owned-workflows table extended: product-requirements-document-audit added.
 
 ### Driver
 
-Stage B: closes the quality gate between `prd-author` and downstream consumers (`fr-author` once it migrates to consume `prd@1` at v0.3.0+; `srs-author` already consumes audited PRD via INV-001 in this release).
+Stage B: closes the quality gate between `product-requirements-document-author` and downstream consumers (`feature-request-author` once it migrates to consume `product-requirements-document@1` at v0.3.0+; `software-requirements-specification-author` already consumes audited PRD via INV-001 in this release).
 
 ### Backwards compatibility
 
@@ -3034,48 +3034,48 @@ Pure addition; gated_until_phase: runtime_v0_3_0.
 
 ---
 
-## [SKILL] v0.2.4 — 2026-05-06 (chain entry point: requirements-discovery + prd-author + project-brief@1 + prd@1 contracts; contracts layout simplified; MINOR)
+## [SKILL] v0.2.4 — 2026-05-06 (chain entry point: requirements-discovery + product-requirements-document-author + project-brief@1 + product-requirements-document@1 contracts; contracts layout simplified; MINOR)
 
 ### Layout
 
 - **Contracts layout simplified** (per REF-018): `<contract-id>/v<n>/` collapsed to `<contract-id>/`. The major version stays in CONTRACT.md frontmatter (`contract_version: v1`); the v<n>/ folder structure was over-engineered for current scale (no parallel-version maintenance need yet). When a contract MAJOR-bumps to v2, the preferred path is "extend the existing folder" (CONTRACT.md documents both versions; template-v2.md added; single CHANGELOG continues). Reviving v<n>/ folders is option B if parallel maintenance becomes burdensome. Mechanical migration: 4 folders moved, 6 SKILL.md `pin_path` declarations updated, 2 README layout diagrams updated, ~93 string replacements across 24 files. Zero contract-semantics changes.
-- **NEW contract: `project-brief@1`** registered under `cyberos/docs/contracts/project-brief/`. `artefact_schema` kind; stewarded by `cuo-cpo`. The structured-intake artefact emitted by `requirements-discovery` and consumed by `prd-author`. 16 frontmatter fields + 9 required H2 sections + 4 conditional sections + per-Goal authority markers per AGENTS.md §5.3.
-- **NEW contract: `prd@1`** registered under `cyberos/docs/contracts/prd/`. `artefact_schema` kind; stewarded by `cuo-cpo`. The Product Requirements Document artefact emitted by `prd-author`; consumed by future `prd-audit` (v0.2.5) + future `fr-author` v0.3.0+ (when fr-author migrates from generic "PRD/spec docs" to `prd@1`). 15 frontmatter fields + 11 required H2 sections + 4 conditional sections.
+- **NEW contract: `project-brief@1`** registered under `cyberos/docs/contracts/project-brief/`. `artefact_schema` kind; stewarded by `cuo-cpo`. The structured-intake artefact emitted by `requirements-discovery` and consumed by `product-requirements-document-author`. 16 frontmatter fields + 9 required H2 sections + 4 conditional sections + per-Goal authority markers per AGENTS.md §5.3.
+- **NEW contract: `product-requirements-document@1`** registered under `cyberos/docs/contracts/product-requirements-document/`. `artefact_schema` kind; stewarded by `cuo-cpo`. The Product Requirements Document artefact emitted by `product-requirements-document-author`; consumed by future `product-requirements-document-audit` (v0.2.5) + future `feature-request-author` v0.3.0+ (when feature-request-author migrates from generic "PRD/spec docs" to `product-requirements-document@1`). 15 frontmatter fields + 11 required H2 sections + 4 conditional sections.
 - **NEW skill: `cuo/cpo/requirements-discovery/`** scaffolded at v0.1.0. The chain ENTRY POINT for new projects. Reads BRAIN (`company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `member:*` excluding `private/`, `client:*` when commissioned) AND conducts a 20-question interview (5 triage gates + 15 discovery questions) AND folds in project-triage gating, then synthesises a `project_brief@1`. Project-kind-agnostic per Q2 of the design conversation (handles software, marketing, hiring, partnerships, research, etc.).
-- **NEW skill: `cuo/cpo/prd-author/`** scaffolded at v0.1.0. Consumes a `project_brief@1` + 3-5 follow-up questions (feature-flag strategy, telemetry, approval workflow, rollback triggers) + targeted BRAIN reads; emits a `prd@1` draft. Refuses (INV-001) any brief with `triage_verdict: reject`. Refuses (INV-003) `triage_verdict: revise` unless the input envelope sets `proceed_despite_revise: true`. Enforces (INV-002) zero `llm-implicit` authority on Goals.
+- **NEW skill: `cuo/cpo/product-requirements-document-author/`** scaffolded at v0.1.0. Consumes a `project_brief@1` + 3-5 follow-up questions (feature-flag strategy, telemetry, approval workflow, rollback triggers) + targeted BRAIN reads; emits a `product-requirements-document@1` draft. Refuses (INV-001) any brief with `triage_verdict: reject`. Refuses (INV-003) `triage_verdict: revise` unless the input envelope sets `proceed_despite_revise: true`. Enforces (INV-002) zero `llm-implicit` authority on Goals.
 
 ### Added
 
 Contracts:
 
 - `cyberos/docs/contracts/project-brief/` — CONTRACT.md, template.md, CHANGELOG.md.
-- `cyberos/docs/contracts/prd/` — CONTRACT.md, template.md, CHANGELOG.md.
+- `cyberos/docs/contracts/product-requirements-document/` — CONTRACT.md, template.md, CHANGELOG.md.
 
 Skills:
 
 - `cuo/cpo/requirements-discovery/` — SKILL.md (full v0.2.0 frontmatter), CHANGELOG.md, INVARIANTS.md (6 invariants; INV-001 BRAIN-must-be-reachable is sev-0), STANDALONE_INTERVIEW.md (20-question script: 5 triage + 15 discovery), HUMAN_SUMMARY.md, envelopes/input.json + output.json, acceptance/README.md (12 priority scenarios).
-- `cuo/cpo/prd-author/` — SKILL.md (full v0.2.0 frontmatter), CHANGELOG.md, INVARIANTS.md (7 invariants; INV-001 refuse-rejected-briefs + INV-002 no-llm-implicit-on-Goals are sev-0), STANDALONE_INTERVIEW.md (3-5 follow-up questions + Q5 authority-elevation pass), HUMAN_SUMMARY.md, envelopes/input.json + output.json (6 outcome enums including REFUSED_REJECTED_BRIEF and REFUSED_REVISE_NEEDS_OVERRIDE), acceptance/README.md (12 priority scenarios).
+- `cuo/cpo/product-requirements-document-author/` — SKILL.md (full v0.2.0 frontmatter), CHANGELOG.md, INVARIANTS.md (7 invariants; INV-001 refuse-rejected-briefs + INV-002 no-llm-implicit-on-Goals are sev-0), STANDALONE_INTERVIEW.md (3-5 follow-up questions + Q5 authority-elevation pass), HUMAN_SUMMARY.md, envelopes/input.json + output.json (6 outcome enums including REFUSED_REJECTED_BRIEF and REFUSED_REVISE_NEEDS_OVERRIDE), acceptance/README.md (12 priority scenarios).
 
 ### Changed
 
 - `cyberos/docs/contracts/README.md` — Layout section rewritten to reflect flat folder structure; "How to add a new contract" recipe simplified (no v<n>/ folder); index extended with `project-brief`, `prd`, plus `fr-to-tech-spec` added as consumer of `feature-request`.
 - `cyberos/docs/skills/README.md` Part 8.1 table — Folder location row updated (`<contract-id>/` not `<contract-id>/v<n>/`); Versioned-how row clarifies `contract_version` lives in frontmatter, layout is flat per registry v0.2.4.
-- `cyberos/docs/skills/cuo/cpo/SKILL.md` owned-workflows table extended: `requirements-discovery` v0.1.0 (scaffold) + `prd-author` v0.1.0 (scaffold) added as the upstream chain entries; existing fr-author + fr-audit rows preserved.
-- All `pin_path` declarations in 3 existing SKILL.md files (fr-author, fr-audit, fr-to-tech-spec) updated from `/v1/` to flat. ~93 string replacements across 24 files completed via sed sweep + verification grep returned clean.
-- **`cuo/cpo/SKILL.md` bumped 0.2.0 → 0.3.0 (MAJOR):** scope-ceiling expansion. Added read scopes `company:values`, `memories:refinements`, `member:*`, `client:*`; added `read_excluded: member:*/private/`. Required by the new chain-entry-point skills (requirements-discovery + prd-author) which would otherwise have violated the workflows-must-be-subsets rule. Audit-fix-audit on v0.2.4 surfaced the gap.
-- **`cuo/chief-technology-officer/SKILL.md` bumped 0.1.0 → 0.2.0 (MAJOR):** same scope expansion as cpo, applied pre-emptively for srs-author + srs-audit landing in v0.2.6 (Stage C).
+- `cyberos/docs/skills/cuo/cpo/SKILL.md` owned-workflows table extended: `requirements-discovery` v0.1.0 (scaffold) + `product-requirements-document-author` v0.1.0 (scaffold) added as the upstream chain entries; existing feature-request-author + feature-request-audit rows preserved.
+- All `pin_path` declarations in 3 existing SKILL.md files (feature-request-author, feature-request-audit, fr-to-tech-spec) updated from `/v1/` to flat. ~93 string replacements across 24 files completed via sed sweep + verification grep returned clean.
+- **`cuo/cpo/SKILL.md` bumped 0.2.0 → 0.3.0 (MAJOR):** scope-ceiling expansion. Added read scopes `company:values`, `memories:refinements`, `member:*`, `client:*`; added `read_excluded: member:*/private/`. Required by the new chain-entry-point skills (requirements-discovery + product-requirements-document-author) which would otherwise have violated the workflows-must-be-subsets rule. Audit-fix-audit on v0.2.4 surfaced the gap.
+- **`cuo/chief-technology-officer/SKILL.md` bumped 0.1.0 → 0.2.0 (MAJOR):** same scope expansion as cpo, applied pre-emptively for software-requirements-specification-author + software-requirements-specification-audit landing in v0.2.6 (Stage C).
 - README Part 23.1 + 23.2 indexes extended with the 4 new entries (2 skills, 2 contracts).
 - Stale `<contract-id>/v<n>/` references in `feature-request/CONTRACT.md` body, README Recipe 7 + Recipe 13, and fr-to-tech-spec forward-references all updated to flat layout.
 
 ### Driver
 
-User-driven design conversation: "the first inputs should be the BRAIN info itself, because i'll create new project and begin interact with it: so BRAIN + human inputs => PRD/SRS/other specs.... => cuo/cpo/fr-author". Identified the chain's missing entry point. Six HITL design questions answered:
+User-driven design conversation: "the first inputs should be the BRAIN info itself, because i'll create new project and begin interact with it: so BRAIN + human inputs => PRD/SRS/other specs.... => cuo/cpo/feature-request-author". Identified the chain's missing entry point. Six HITL design questions answered:
 
 - **Q1 naming** — `requirements-discovery` (chosen over `project-discovery`, `intake`, `kickoff`).
-- **Q2 project-kind taxonomy** — fr-author stays universal; no kind-based routing.
+- **Q2 project-kind taxonomy** — feature-request-author stays universal; no kind-based routing.
 - **Q3 triage** — fold into requirements-discovery; no separate `project-triage` skill.
-- **Q4 PRD audit severity** — PRDs are judgement-heavy; prd-audit (v0.2.5) will be more advisory than fr-audit.
-- **Q5 iteration** — amendment-batch protocol (mirror fr-author's).
+- **Q4 PRD audit severity** — PRDs are judgement-heavy; product-requirements-document-audit (v0.2.5) will be more advisory than feature-request-audit.
+- **Q5 iteration** — amendment-batch protocol (mirror feature-request-author's).
 - **Q6 BRAIN scopes** — defaults applied: `company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `member:*` (excluding `private/`), `client:*` (when commissioned).
 
 User's bonus question on contracts layout (`<contract-id>/v<n>/` vs flat) — answered as "over-engineered for current scale; simplify now". The simplification was applied as part of v0.2.4.
@@ -3084,8 +3084,8 @@ User's bonus question on contracts layout (`<contract-id>/v<n>/` vs flat) — an
 
 This is a **MINOR** registry bump (not PATCH) for two reasons:
 
-1. New skills added (`requirements-discovery`, `prd-author`) — registry layout grows.
-2. New contracts added (`project-brief@1`, `prd@1`).
+1. New skills added (`requirements-discovery`, `product-requirements-document-author`) — registry layout grows.
+2. New contracts added (`project-brief@1`, `product-requirements-document@1`).
 
 The contracts-layout simplification (the v<n>/ collapse) is, on its own, a PATCH-level structural cleanup with no semantic changes. But it's bundled into v0.2.4 because the new contracts get authored under the new layout from the start; doing them in two separate releases would introduce inconsistency.
 
@@ -3093,9 +3093,9 @@ The contracts-layout simplification (the v<n>/ collapse) is, on its own, a PATCH
 
 - Existing skill SKILL.md files keep working — the `pin_path` updates are mechanical; the resolved files at the new paths are byte-identical to the v0.2.3 files (the v1/ folder was just removed; contents unchanged).
 - `feature-request@v1` and `nats-subjects@v1` contracts: byte-identical at the new flat path.
-- `fr-author`, `fr-audit`, `fr-to-tech-spec`, `cpo`, `cto` SKILL.md files: only `pin_path` lines + body cross-reference paths changed; all other content preserved.
+- `feature-request-author`, `feature-request-audit`, `fr-to-tech-spec`, `cpo`, `cto` SKILL.md files: only `pin_path` lines + body cross-reference paths changed; all other content preserved.
 - New skills + contracts are purely additive.
-- `requirements-discovery` and `prd-author` carry `gated_until_phase: runtime_v0_3_0` per REF-017; the supervisor MUST NOT route to them until the runtime ships.
+- `requirements-discovery` and `product-requirements-document-author` carry `gated_until_phase: runtime_v0_3_0` per REF-017; the supervisor MUST NOT route to them until the runtime ships.
 
 ---
 
@@ -3106,7 +3106,7 @@ The contracts-layout simplification (the v<n>/ collapse) is, on its own, a PATCH
 ### Layout
 
 - **NEW persona** — `cuo/chief-technology-officer/` registered as the second sub-persona under CUO (after `cuo/cpo/`). Persona-card + CHANGELOG.md authored at v0.1.0. Steward of the technical-artefact lifecycle (tech specs, ADRs, runtime stewardship). Stewards the new `nats-subjects@v1` wire-protocol contract introduced in v0.2.2.
-- **NEW skill** — `cuo/chief-technology-officer/fr-to-tech-spec/` scaffolded at v0.1.0. The next downstream skill in the chain after `cuo/cpo/fr-audit`. Consumes audited FRs (pass-verdict only per its INV-001) and emits tech specs. Carries `gated_until_phase: runtime_v0_3_0` — the scaffold ships now (full v0.2.0 frontmatter contract; INVARIANTS.md; envelopes; STANDALONE_INTERVIEW.md; HUMAN_SUMMARY.md; acceptance/README.md), the executable runtime ships in v0.3.0.
+- **NEW skill** — `cuo/chief-technology-officer/fr-to-tech-spec/` scaffolded at v0.1.0. The next downstream skill in the chain after `cuo/cpo/feature-request-audit`. Consumes audited FRs (pass-verdict only per its INV-001) and emits tech specs. Carries `gated_until_phase: runtime_v0_3_0` — the scaffold ships now (full v0.2.0 frontmatter contract; INVARIANTS.md; envelopes; STANDALONE_INTERVIEW.md; HUMAN_SUMMARY.md; acceptance/README.md), the executable runtime ships in v0.3.0.
 
 ### Added
 
@@ -3120,20 +3120,20 @@ The contracts-layout simplification (the v<n>/ collapse) is, on its own, a PATCH
 - `cuo/chief-technology-officer/fr-to-tech-spec/envelopes/fr-to-tech-spec.input.json` — JSON Schema (2 required, 6 optional).
 - `cuo/chief-technology-officer/fr-to-tech-spec/envelopes/fr-to-tech-spec.output.json` — JSON Schema with HITL_PAUSE / EXHAUSTED / REFUSED branches.
 - `cuo/chief-technology-officer/fr-to-tech-spec/acceptance/README.md` — 10 priority scenarios pending v0.3.0 harness (5 sev-0 / 4 sev-1 / 1 sev-2).
-- `cuo/cpo/fr-author/acceptance/sample-prd.md` — worked-example PRD ("Saved Searches & Saved Filters"). Realistically-shaped input that demonstrates what fr-author consumes; useful as a manual-walkthrough example until the harness lands.
+- `cuo/cpo/feature-request-author/acceptance/sample-prd.md` — worked-example PRD ("Saved Searches & Saved Filters"). Realistically-shaped input that demonstrates what feature-request-author consumes; useful as a manual-walkthrough example until the harness lands.
 
 ### Changed
 
 - `README.md` Part 3 (5 inherited contracts table) — `wire_protocol` row's example updated from "the genie.action_log row format itself, when it lands as a contract" (stale) to "`nats-subjects@v1` (subject names + payload shapes for every NATS subject CyberOS skills emit; first concrete wire_protocol contract, registered v0.2.2)".
 - `README.md` Part 18 (Anti-patterns) — new entry "Don't over-specify a new contract beyond what consumers actually do" citing the v0.2.2 audit-fix-audit catch + REF-016.
 - `README.md` Part 19 (Cookbook) — bumped from "12 recipes" to "13 recipes"; added Recipe 13 "Register a new contract with the audit-fix-audit discipline" (7-step procedure).
-- `README.md` Part 23.1 (Skills index) — versions bumped: fr-author v0.2.0 → v0.2.2; fr-audit v0.2.0 → v0.2.2; new row for `cuo/chief-technology-officer/fr-to-tech-spec` v0.1.0 (scaffold).
+- `README.md` Part 23.1 (Skills index) — versions bumped: feature-request-author v0.2.0 → v0.2.2; feature-request-audit v0.2.0 → v0.2.2; new row for `cuo/chief-technology-officer/fr-to-tech-spec` v0.1.0 (scaffold).
 - `README.md` Part 23.2 (Contracts index) — new row for `nats-subjects@v1`; existing `feature-request@v1` row updated to include `cuo/chief-technology-officer/fr-to-tech-spec` v0.1.0+ as a consumer.
 - `README.md` table of contents — Part 19 entry updated to "Cookbook: 13 recipes".
 
 ### Driver
 
-User-driven follow-up after registry v0.2.2 audit-fix-audit loop completed. Direct quote: "Q1: apply all you can — Q2: apply all you can — yes, yes." Q1 was README updates (5 changes); Q2 was next-step actions for fr-author + fr-audit (scaffold cto + worked-example PRD); the two "yes"es confirmed both. Acts on the next-step plan from the post-audit recommendations; nothing here is novel design, it's all execution of plans documented earlier in the conversation.
+User-driven follow-up after registry v0.2.2 audit-fix-audit loop completed. Direct quote: "Q1: apply all you can — Q2: apply all you can — yes, yes." Q1 was README updates (5 changes); Q2 was next-step actions for feature-request-author + feature-request-audit (scaffold cto + worked-example PRD); the two "yes"es confirmed both. Acts on the next-step plan from the post-audit recommendations; nothing here is novel design, it's all execution of plans documented earlier in the conversation.
 
 ### Backwards compatibility
 
@@ -3150,18 +3150,18 @@ This is a **MINOR** registry bump (not PATCH) because a new persona namespace wa
 
 ---
 
-## [SKILL] v0.2.2 — 2026-05-06 (fr-author + fr-audit pre-deployment audit + Tier-2/3 absorption; PATCH)
+## [SKILL] v0.2.2 — 2026-05-06 (feature-request-author + feature-request-audit pre-deployment audit + Tier-2/3 absorption; PATCH)
 
 ### Layout
 
-- **NEW contract** — `cyberos/docs/contracts/nats-subjects/` registered. Wire-protocol contract documenting every NATS subject emitted or subscribed by a CyberOS skill (subject naming convention, payload schemas, QoS levels, durability tiers, operational protocol). Stewarded by `cuo-cto`. First consumers: `cuo/cpo/fr-author` + `cuo/cpo/fr-audit` v0.2.2. Three files: `CONTRACT.md` + `schema.json` + `protocol.md` + `CHANGELOG.md`. Resolves the gap that both fr-author and fr-audit emitted NATS subjects without a declared contract — risked future skills colliding on subject names without a single source of truth.
+- **NEW contract** — `cyberos/docs/contracts/nats-subjects/` registered. Wire-protocol contract documenting every NATS subject emitted or subscribed by a CyberOS skill (subject naming convention, payload schemas, QoS levels, durability tiers, operational protocol). Stewarded by `cuo-cto`. First consumers: `cuo/cpo/feature-request-author` + `cuo/cpo/feature-request-audit` v0.2.2. Three files: `CONTRACT.md` + `schema.json` + `protocol.md` + `CHANGELOG.md`. Resolves the gap that both feature-request-author and feature-request-audit emitted NATS subjects without a declared contract — risked future skills colliding on subject names without a single source of truth.
 
 ### Changed
 
-- `cuo/cpo/fr-author` v0.2.0 → v0.2.1 → v0.2.2:
+- `cuo/cpo/feature-request-author` v0.2.0 → v0.2.1 → v0.2.2:
   - **v0.2.1 (Tier-1)** — dead links to `references/HASHING.md` + `references/OUTPUT_FORMATS.md` resolved to actual files; input envelope schema's `required` array aligned with SKILL.md `expects.required_fields` (6 → 3); `chain_to` documented in `optional_fields`; `acceptance/README.md` stub added with 9 priority scenarios.
-  - **v0.2.2 (Tier-2/3)** — `depends_on_contracts:` extended with `nats-subjects/v1`; `references/README.md` added (index + per-skill divergence note explaining why HITL_PROTOCOL/UNTRUSTED_CONTENT/ANTI_FABRICATION/EU_AI_ACT_DECISION_TREE differ between fr-author and fr-audit by SHA-256, deferred consolidation to v0.3.0).
-- `cuo/cpo/fr-audit` v0.2.0 → v0.2.1 → v0.2.2:
+  - **v0.2.2 (Tier-2/3)** — `depends_on_contracts:` extended with `nats-subjects/v1`; `references/README.md` added (index + per-skill divergence note explaining why HITL_PROTOCOL/UNTRUSTED_CONTENT/ANTI_FABRICATION/EU_AI_ACT_DECISION_TREE differ between feature-request-author and feature-request-audit by SHA-256, deferred consolidation to v0.3.0).
+- `cuo/cpo/feature-request-audit` v0.2.0 → v0.2.1 → v0.2.2:
   - **v0.2.1 (Tier-1)** — missing `stale_fr_disposition` added to CONTRACT_ECHO `hitl_categories` (STALE-001 maps to it but it was undeclared); stale `skill_version: 0.1.0` example fixed in output-envelope JSON; input envelope schema's `required` trimmed (3 → 1) and `rubric_version` field added; `caller_persona` + `max_iterations_per_fr` documented in `optional_fields`; `acceptance/README.md` stub added with 10 priority scenarios including INV-001 (verdict determinism) as sev-0.
   - **v0.2.2 (Tier-2/3)** — `depends_on_contracts:` extended with `nats-subjects/v1`; `references/README.md` added; `RUBRIC.md` §15.9 (`## Confidence-band reporting`) added — documents per-rule confidence bands (mechanical-rule majority ≥0.95; LLM-judgement minority QA-007 / QA-009 capped at 0.7); `AUDIT_LOOP.md` §"Deterministic-input rule" added — defines the closed input set for verdict computation, makes INV-001's auto-refinement template's anchor target resolve cleanly; INV-006 severity demoted from `error` to `info` (schema validation already enforces presence + range; runtime invariant was redundant).
 - `cuo/cpo/SKILL.md` owned-workflows table updated to v0.2.2 / v0.2.2.
@@ -3169,7 +3169,7 @@ This is a **MINOR** registry bump (not PATCH) because a new persona namespace wa
 
 ### Driver
 
-User-driven request to "audit and refine fr-author and fr-audit", followed by HITL approval to absorb Tier-2/3 follow-ups ("HITL decisions, do as your suggestions"). Ran the manual-fine-tune playbook (registry README Part 7) in pre-deployment mode. Applied the README Part 24.1 self-test checklist + Part 18 anti-pattern scan + cross-skill consistency check. Six Tier-1 findings absorbed first (v0.2.1); five Tier-2/3 findings absorbed second (v0.2.2): B1 (per-skill divergence — documented as intentional), B2 (NATS subjects undocumented — promoted to wire-protocol contract), B3 (confidence bands per rule — documented), B4 (INV-006 redundancy — demoted), C3 (deterministic-input rule referenced but never defined — added). Two Tier-3 items deferred: C1 (batch_size soft-cap — already in schema description), and the four-way reference-doc consolidation (deferred to v0.3.0 when consolidation pain is shown to outweigh per-skill clarity).
+User-driven request to "audit and refine feature-request-author and feature-request-audit", followed by HITL approval to absorb Tier-2/3 follow-ups ("HITL decisions, do as your suggestions"). Ran the manual-fine-tune playbook (registry README Part 7) in pre-deployment mode. Applied the README Part 24.1 self-test checklist + Part 18 anti-pattern scan + cross-skill consistency check. Six Tier-1 findings absorbed first (v0.2.1); five Tier-2/3 findings absorbed second (v0.2.2): B1 (per-skill divergence — documented as intentional), B2 (NATS subjects undocumented — promoted to wire-protocol contract), B3 (confidence bands per rule — documented), B4 (INV-006 redundancy — demoted), C3 (deterministic-input rule referenced but never defined — added). Two Tier-3 items deferred: C1 (batch_size soft-cap — already in schema description), and the four-way reference-doc consolidation (deferred to v0.3.0 when consolidation pain is shown to outweigh per-skill clarity).
 
 ### Backwards compatibility
 
@@ -3183,15 +3183,15 @@ Pure PATCH cleanup at the registry level. No frontmatter contract changes. No en
 
 ### Changed
 
-- **`README.md`** — substantially expanded from 27 to 27+ Parts with new content covering runtime architecture (LangGraph + action_log + NATS), security model deep-dive, performance & observability, localization & i18n, anti-patterns, per-persona quickstart, migration paths from non-CyberOS skills, and an end-to-end worked example chaining fr-author → fr-audit. **Removed Part 0 (CyberSkill Design System)** — not skill-related; the design system is applied silently to visual artefacts but isn't a skill-wiki concern. Reorganised TOC to 27 Parts.
-- **All embedded Mermaid diagrams extracted to standalone SVG files** under `assets/diagrams/`. README now references each diagram via `![alt](./assets/diagrams/NN-name.svg)` rather than inlining Mermaid blocks. Cleaner rendering across viewers; no more in-page diagram bugs; each diagram is independently printable. Eleven diagrams total: skill-folder-anatomy, frontmatter-field-families, five-contracts, dual-mode-invocation, exposability-surfaces, auto-refinement-loop, manual-fine-tune-7-step, host-adapter-pipeline, validation-pyramid, skill-lifecycle-state, fr-author-fr-audit-chain-sequence.
+- **`README.md`** — substantially expanded from 27 to 27+ Parts with new content covering runtime architecture (LangGraph + action_log + NATS), security model deep-dive, performance & observability, localization & i18n, anti-patterns, per-persona quickstart, migration paths from non-CyberOS skills, and an end-to-end worked example chaining feature-request-author → feature-request-audit. **Removed Part 0 (CyberSkill Design System)** — not skill-related; the design system is applied silently to visual artefacts but isn't a skill-wiki concern. Reorganised TOC to 27 Parts.
+- **All embedded Mermaid diagrams extracted to standalone SVG files** under `assets/diagrams/`. README now references each diagram via `![alt](./assets/diagrams/NN-name.svg)` rather than inlining Mermaid blocks. Cleaner rendering across viewers; no more in-page diagram bugs; each diagram is independently printable. Eleven diagrams total: skill-folder-anatomy, frontmatter-field-families, five-contracts, dual-mode-invocation, exposability-surfaces, auto-refinement-loop, manual-fine-tune-7-step, host-adapter-pipeline, validation-pyramid, skill-lifecycle-state, feature-request-author-feature-request-audit-chain-sequence.
 - **All prose paragraphs rewritten as single unbroken lines** (no manual hard-wraps mid-sentence). Hard-wrapping at column 80 was producing visually-fragmented text in some Markdown viewers where the last word or two of a sentence ended up alone on a wrapped line, looking like orphan list items. Fixed across the entire README.
 - **`assets/skills-anatomy-infographic.svg`** — remade as one connected master infographic. Old version was 1600×3200 with 8 stacked sections that didn't visually link. New version is 2400×4800 with 8 numbered bands (① INPUT → ② SKILL + 5 contracts → ③ DUAL-MODE → ④ EXPOSABILITY → ⑤ AUTO-REFINEMENT → ⑥ MANUAL FINE-TUNE → ⑦ HOST-ADAPTER PIPELINE → ⑧ DESTINATIONS) with explicit connecting arrows showing data flow end-to-end. Larger type, more breathing room, printable at poster size.
 
 ### Added
 
 - `assets/diagrams/` — eleven standalone SVG diagrams (one per major concept). Each carries its own filename caption at the bottom for traceability when extracted.
-- README Part 11 — worked example end-to-end: fr-author → fr-audit. Narrated walk-through plus the sequence diagram and the action_log SQL trace.
+- README Part 11 — worked example end-to-end: feature-request-author → feature-request-audit. Narrated walk-through plus the sequence diagram and the action_log SQL trace.
 - README Part 12 — runtime architecture deep-dive: LangGraph supervisor + genie.action_log + NATS event bus + crash recovery semantics.
 - README Part 15 — security model deep-dive: scope contract, untrusted-content discipline, denylist, EU AI Act compliance, hash-chain integrity.
 - README Part 16 — performance & observability: latency budgets per layer, OBS metrics, logging conventions, tracing.
@@ -3246,11 +3246,11 @@ User feedback after v0.2.0 release (2026-05-06): (1) "the embed visualize materi
 
 ### Changed
 
-- **`cuo/cpo/fr-author`** — v0.1.0 → v0.2.0. Adopts every new frontmatter block. Adds `STANDALONE_INTERVIEW.md`, `HUMAN_SUMMARY.md`, `INVARIANTS.md` (8 invariants: citation completeness, manifest↔disk parity, ingestion coverage, FR-ID uniqueness, fabrication boundary, scope discipline, EU AI Act non-degradation, confidence reporting). Output envelope shape unchanged.
-- **`cuo/cpo/fr-audit`** — v0.1.0 → v0.2.0. Same v0.2.0 frontmatter expansion. `INVARIANTS.md` adds INV-001 (verdict determinism) as a sev-0 invariant — fr-audit's reproducibility is its highest-value contract.
+- **`cuo/cpo/feature-request-author`** — v0.1.0 → v0.2.0. Adopts every new frontmatter block. Adds `STANDALONE_INTERVIEW.md`, `HUMAN_SUMMARY.md`, `INVARIANTS.md` (8 invariants: citation completeness, manifest↔disk parity, ingestion coverage, FR-ID uniqueness, fabrication boundary, scope discipline, EU AI Act non-degradation, confidence reporting). Output envelope shape unchanged.
+- **`cuo/cpo/feature-request-audit`** — v0.1.0 → v0.2.0. Same v0.2.0 frontmatter expansion. `INVARIANTS.md` adds INV-001 (verdict determinism) as a sev-0 invariant — feature-request-audit's reproducibility is its highest-value contract.
 - **`cuo/cpo/SKILL.md`** persona-card — v0.1.0 → v0.2.0. Adopts the persona-strict subset of new fields (no pipeline interface, no contract dependencies). Owned-workflow table updated to v0.2.0.
 - **`cuo/README.md`** — `_shared/` index updated. The former `feature-request-template` row marked as "promoted to contract" with a pointer to the new location.
-- **All cross-references to `cuo/_shared/feature-request-template/`** updated across `cuo/cpo/fr-author/`, `cuo/cpo/fr-audit/`, `cuo/cpo/AUDIT_TRACE_EXAMPLE.md`, `cuo/cpo/fr-author/PIPELINE.md`, reference docs, and the registry README. Old path 100% retired outside of historical CHANGELOG entries (v0.1.0 entries preserved intact as history).
+- **All cross-references to `cuo/_shared/feature-request-template/`** updated across `cuo/cpo/feature-request-author/`, `cuo/cpo/feature-request-audit/`, `cuo/cpo/AUDIT_TRACE_EXAMPLE.md`, `cuo/cpo/feature-request-author/PIPELINE.md`, reference docs, and the registry README. Old path 100% retired outside of historical CHANGELOG entries (v0.1.0 entries preserved intact as history).
 
 ### Removed
 
@@ -3280,7 +3280,7 @@ Plus three §0.4 refinement candidates surfaced in conversation (continuing the 
 - **Registry layout** — adds `cyberos/docs/contracts/`. Existing `cyberos/docs/skills/` tree shape is unchanged; only one folder relocated (`feature-request-template` → contracts).
 - **Frontmatter contract** — pure additions. v0.1.x SKILL.md files remain valid; the validator gates "passes v0.2.0 self-test checklist" but does NOT reject v0.1.x files outright. Skills can promote to v0.2.0 at their own cadence per Recipe 4 (README Part 13).
 - **Audit row schema** — extended additively (`refinement_proposal`, `self_refinement_proposal` are new enum values). Existing rows still parse cleanly.
-- **Output envelope shapes** — fr-author and fr-audit envelope shapes unchanged. v0.2.0 additions all sit under new top-level keys.
+- **Output envelope shapes** — feature-request-author and feature-request-audit envelope shapes unchanged. v0.2.0 additions all sit under new top-level keys.
 
 ### Migration notes for existing skills
 
@@ -3738,7 +3738,7 @@ Pure additions. The hello-world skill is deliberately at v1.0.0 (not v0.1.0) bec
 
 ### Added
 
-- `cyberos/docs/skills/GETTING_STARTED.md` — the operational view of the registry: 30-second mental model, the two unrelated meanings of "audit" (action_log row vs. fr-audit skill), the three trigger paths (direct / supervisor-routed / chained), a 5-command worked example for building a tiny new skill (`fr-priority-rebalance`), the three layers of skill validation (mechanical / functional / operational), the fine-tuning lifecycle (tightening, prompt refinement, acceptance-set growth, drift-signal feedback, replacement vs revision), a "what doesn't exist yet" section, and a TL;DR cookbook table.
+- `cyberos/docs/skills/GETTING_STARTED.md` — the operational view of the registry: 30-second mental model, the two unrelated meanings of "audit" (action_log row vs. feature-request-audit skill), the three trigger paths (direct / supervisor-routed / chained), a 5-command worked example for building a tiny new skill (`fr-priority-rebalance`), the three layers of skill validation (mechanical / functional / operational), the fine-tuning lifecycle (tightening, prompt refinement, acceptance-set growth, drift-signal feedback, replacement vs revision), a "what doesn't exist yet" section, and a TL;DR cookbook table.
 - `acceptance/` folder convention referenced. Skills SHOULD ship golden-input + golden-output pairs for regression testing; the runner is not yet built.
 - README.md updated to point at GETTING_STARTED.md as the entry point.
 
@@ -3762,8 +3762,8 @@ Pure additions; no existing skill needs to change. Existing reference docs conti
 - `cyberos/docs/skills/cuo/README.md` — CUO persona namespace index. Lists the 14 sub-personas (10 canonical + 4 emergent) per DEC-052; marks per-phase availability.
 - `cyberos/docs/skills/cuo/cpo/SKILL.md` — first persona-card (Chief Product Officer). Owns FR backlog management.
 - `cyberos/docs/skills/cuo/_shared/feature-request-template/` — first cross-persona shared skill: holds the canonical `feature_request@1` template (sourced verbatim from `feature-request/FR_CREATE_AND_AUDIT.md` v2.0.0 §18).
-- `cyberos/docs/skills/cuo/cpo/fr-author/` — port of the create-and-audit prompt's create half (sections §0–§14 + §18 of v2.0.0). Standalone trigger: PRD → backlog → FR markdowns. Produces FR files + a `fr-manifest@2` state file.
-- `cyberos/docs/skills/cuo/cpo/fr-audit/` — port of the create-and-audit prompt's audit half (sections §15–§17 of v2.0.0, plus shared §7 HITL + §12 untrusted-content). Standalone trigger: existing FR markdowns → sibling audit reports. Chains naturally after `fr-author`.
+- `cyberos/docs/skills/cuo/cpo/feature-request-author/` — port of the create-and-audit prompt's create half (sections §0–§14 + §18 of v2.0.0). Standalone trigger: PRD → backlog → FR markdowns. Produces FR files + a `fr-manifest@2` state file.
+- `cyberos/docs/skills/cuo/cpo/feature-request-audit/` — port of the create-and-audit prompt's audit half (sections §15–§17 of v2.0.0, plus shared §7 HITL + §12 untrusted-content). Standalone trigger: existing FR markdowns → sibling audit reports. Chains naturally after `feature-request-author`.
 
 ### Layout decision (Option B trade-off)
 
@@ -3790,8 +3790,8 @@ A skill is registry-valid when ALL of:
 
 ### Known follow-ups (tracked outside this CHANGELOG)
 
-- Wire the registry into the CyberOS-PRD/SRS source-of-truth (a one-line reference from PRD Part 6 + SRS Part 6.2 pointing here). Parked because PRD/SRS are .docx and must be edited in Word; raised as a separate feature request once `fr-author` is operational and can self-host the request.
-- Migrate the existing `feature-request/FR_CREATE_AND_AUDIT.md` repo into this registry as a soft-deprecation: leave the prompt in place, point its README to `cyberos/docs/skills/cuo/cpo/fr-author/` + `fr-audit/`. Bump that prompt's CHANGELOG to v2.1.0 with a "MOVED" note.
+- Wire the registry into the CyberOS-PRD/SRS source-of-truth (a one-line reference from PRD Part 6 + SRS Part 6.2 pointing here). Parked because PRD/SRS are .docx and must be edited in Word; raised as a separate feature request once `feature-request-author` is operational and can self-host the request.
+- Migrate the existing `feature-request/FR_CREATE_AND_AUDIT.md` repo into this registry as a soft-deprecation: leave the prompt in place, point its README to `cyberos/docs/skills/cuo/cpo/feature-request-author/` + `feature-request-audit/`. Bump that prompt's CHANGELOG to v2.1.0 with a "MOVED" note.
 - Define `_shared/` for additional cross-persona skills as they emerge (e.g., `draft-payslip-explanation` from DEC-061's worked example, owned by neither CFO nor CHRO exclusively).
 
 ---

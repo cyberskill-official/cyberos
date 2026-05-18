@@ -41,7 +41,7 @@ Gainsight / ChurnZero / Catalyst (CS platform); Zendesk / Intercom / Front (supp
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `quarterly-customer-health-review` | Health distribution + at-risk + expansion + advocacy + CSM utilization | quarterly | customer-health-review@1 | shipped (1.0.0) |
-| `per-account-cs-engagement` | Per-account relationship map + success criteria + cadence + expansion thesis | per-event | cs-engagement@1 | shipped (1.0.0) |
+| `per-account-cs-engagement` | Per-account relationship map + success criteria + cadence + expansion thesis | per-event | customer-success-engagement@1 | shipped (1.0.0) |
 | `quarterly-cab-cycle` | CAB agenda + curated attendees + synthesis + commitments | quarterly | customer-advisory-board@1 | shipped (1.0.0) |
 | `quarterly-churn-collaboration` | CS-side churn root-cause partner workflow to CRO-Revenue churn analysis | quarterly | churn-analysis@1 (CS-augmented) | shipped (1.0.0) |
 

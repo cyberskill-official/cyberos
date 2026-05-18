@@ -49,27 +49,27 @@ The Software Development Process.md document at the project root defines 13 SDLC
 
 | SDP §2 stage | Primary artifact(s) | Author skill | Audit skill | Template ref |
 |---|---|---|---|---|
-| (a) Pre-engagement / Discovery / Pre-sales | SOW / Project Charter | `sow-author` | `sow-audit` | §4.9 |
-| (b) Requirements gathering and analysis | SRS per IEEE 830 | `srs-author` | `srs-audit` | — |
-| (b) Requirements — backlog | Prioritized feature backlog | `fr-author` | `fr-audit` | — |
-| (b) Requirements — governance | Definition of Ready/Done | `dor-dod-author` | `dor-dod-audit` | §4.1, §4.2 |
+| (a) Pre-engagement / Discovery / Pre-sales | SOW / Project Charter | `statement-of-work-author` | `statement-of-work-audit` | §4.9 |
+| (b) Requirements gathering and analysis | SRS per IEEE 830 | `software-requirements-specification-author` | `software-requirements-specification-audit` | — |
+| (b) Requirements — backlog | Prioritized feature backlog | `feature-request-author` | `feature-request-audit` | — |
+| (b) Requirements — governance | Definition of Ready/Done | `definition-of-ready-and-done-author` | `definition-of-ready-and-done-audit` | §4.1, §4.2 |
 | (c) Feasibility study and project planning | Feasibility memo + project plan + RAID log | `project-plan-author` | `project-plan-audit` | — |
 | (c) Planning — governance | Stage-gate sign-off | `stage-gate-author` | `stage-gate-audit` | §4.3 |
-| (d) System architecture and high-level design | ADRs + C4 diagrams + tech selection | `adr-author` | `adr-audit` | — |
+| (d) System architecture and high-level design | ADRs + C4 diagrams + tech selection | `architecture-decision-record-author` | `architecture-decision-record-audit` | — |
 | (d) Architecture — security | STRIDE threat model + OWASP ASVS map | `threat-model-author` | `threat-model-audit` | — |
-| (e) Detailed design | SDD per IEEE 1016 + OpenAPI + DB schema | `sdd-author` | `sdd-audit` | — |
-| (f) Implementation / Coding | Implementation plan (FR → tasks) | `impl-plan-author` | `impl-plan-audit` | — |
+| (e) Detailed design | SDD per IEEE 1016 + OpenAPI + DB schema | `software-design-document-author` | `software-design-document-audit` | — |
+| (f) Implementation / Coding | Implementation plan (FR → tasks) | `implementation-plan-author` | `implementation-plan-audit` | — |
 | (g) Code review and integration | Code-review write-up per IEEE 1028 | `code-review-author` | `code-review-audit` | §4.5 |
 | (h) Testing | Test Strategy | `test-strategy-author` | `test-strategy-audit` | §4.6 |
-| (i) Deployment and release management | Deployment Readiness Checklist | `deploy-checklist-author` | `deploy-checklist-audit` | §4.7 |
+| (i) Deployment and release management | Deployment Readiness Checklist | `deployment-checklist-author` | `deployment-checklist-audit` | §4.7 |
 | (i) Release | Customer-facing release notes | `release-notes-author` | `release-notes-audit` | — |
 | (j) Operations, monitoring, maintenance | Operational runbook + SLO/SLA declaration | `runbook-author` | `runbook-audit` | — |
 | (j) Operations — incidents | Blameless post-mortem | `postmortem-author` | `postmortem-audit` | — |
-| Cross-cutting | Requirements Traceability Matrix | `rtm-author` | `rtm-audit` | §4.4 |
-| Cross-cutting | Product Requirements Document | `prd-author` | `prd-audit` | — |
-| (l) Project closure and retrospective | Retrospective | `retro-author` | `retro-audit` | §4.8 |
+| Cross-cutting | Requirements Traceability Matrix | `requirements-traceability-matrix-author` | `requirements-traceability-matrix-audit` | §4.4 |
+| Cross-cutting | Product Requirements Document | `product-requirements-document-author` | `product-requirements-document-audit` | — |
+| (l) Project closure and retrospective | Retrospective | `retrospective-author` | `retrospective-audit` | §4.8 |
 | (l) Closure — sign-off | Closure cert + lessons learned + KT pack | `closure-author` | `closure-audit` | — |
-| (m) Decommissioning / Retirement | Data export/destruction certificate + DNS retirement + license cancellation | `decomm-author` | `decomm-audit` | — |
+| (m) Decommissioning / Retirement | Data export/destruction certificate + DNS retirement + license cancellation | `decommissioning-author` | `decommissioning-audit` | — |
 | Project hygiene | Repo state audit + fragment absorption | `project-cleanup` | (self-auditing) | — |
 
 Total: 22 author+audit pairs + 1 self-auditing utility = **45 skill bundles** when the catalog is fully shipped.
@@ -82,48 +82,48 @@ Total: 22 author+audit pairs + 1 self-auditing utility = **45 skill bundles** wh
 |---|---|---|---|
 | `_template/` | meta | shipped | 1.0.0 |
 | `project-cleanup/` | hygiene | shipped (preserved) | 1.0.1 |
-| `sow-author/` | (a) | shipped | 1.0.0 |
-| `sow-audit/` | (a) | shipped | 1.0.0 |
-| `srs-author/` | (b) | shipped | 1.0.0 |
-| `srs-audit/` | (b) | shipped | 1.0.0 |
-| `fr-author/` | (b) | shipped | 1.0.0 |
-| `fr-audit/` | (b) | shipped | 1.0.0 |
-| `dor-dod-author/` | (b) | shipped | 1.0.0 |
-| `dor-dod-audit/` | (b) | shipped | 1.0.0 |
+| `statement-of-work-author/` | (a) | shipped | 1.0.0 |
+| `statement-of-work-audit/` | (a) | shipped | 1.0.0 |
+| `software-requirements-specification-author/` | (b) | shipped | 1.0.0 |
+| `software-requirements-specification-audit/` | (b) | shipped | 1.0.0 |
+| `feature-request-author/` | (b) | shipped | 1.0.0 |
+| `feature-request-audit/` | (b) | shipped | 1.0.0 |
+| `definition-of-ready-and-done-author/` | (b) | shipped | 1.0.0 |
+| `definition-of-ready-and-done-audit/` | (b) | shipped | 1.0.0 |
 | `project-plan-author/` | (c) | shipped | 1.0.0 |
 | `project-plan-audit/` | (c) | shipped | 1.0.0 |
 | `stage-gate-author/` | (c) | shipped | 1.0.0 |
 | `stage-gate-audit/` | (c) | shipped | 1.0.0 |
-| `adr-author/` | (d) | shipped | 1.0.0 |
-| `adr-audit/` | (d) | shipped | 1.0.0 |
+| `architecture-decision-record-author/` | (d) | shipped | 1.0.0 |
+| `architecture-decision-record-audit/` | (d) | shipped | 1.0.0 |
 | `threat-model-author/` | (d) | shipped | 1.0.0 |
 | `threat-model-audit/` | (d) | shipped | 1.0.0 |
-| `sdd-author/` | (e) | shipped | 1.0.0 |
-| `sdd-audit/` | (e) | shipped | 1.0.0 |
-| `impl-plan-author/` | (f) | shipped | 1.0.0 |
-| `impl-plan-audit/` | (f) | shipped | 1.0.0 |
+| `software-design-document-author/` | (e) | shipped | 1.0.0 |
+| `software-design-document-audit/` | (e) | shipped | 1.0.0 |
+| `implementation-plan-author/` | (f) | shipped | 1.0.0 |
+| `implementation-plan-audit/` | (f) | shipped | 1.0.0 |
 | `code-review-author/` | (g) | shipped | 1.0.0 |
 | `code-review-audit/` | (g) | shipped | 1.0.0 |
 | `test-strategy-author/` | (h) | shipped | 1.0.0 |
 | `test-strategy-audit/` | (h) | shipped | 1.0.0 |
-| `deploy-checklist-author/` | (i) | shipped | 1.0.0 |
-| `deploy-checklist-audit/` | (i) | shipped | 1.0.0 |
+| `deployment-checklist-author/` | (i) | shipped | 1.0.0 |
+| `deployment-checklist-audit/` | (i) | shipped | 1.0.0 |
 | `release-notes-author/` | (i) | shipped | 1.0.0 |
 | `release-notes-audit/` | (i) | shipped | 1.0.0 |
 | `runbook-author/` | (j) | shipped | 1.0.0 |
 | `runbook-audit/` | (j) | shipped | 1.0.0 |
 | `postmortem-author/` | (j) | shipped | 1.0.0 |
 | `postmortem-audit/` | (j) | shipped | 1.0.0 |
-| `rtm-author/` | cross | shipped | 1.0.0 |
-| `rtm-audit/` | cross | shipped | 1.0.0 |
-| `prd-author/` | cross | shipped | 1.0.0 |
-| `prd-audit/` | cross | shipped | 1.0.0 |
-| `retro-author/` | (l) | shipped | 1.0.0 |
-| `retro-audit/` | (l) | shipped | 1.0.0 |
+| `requirements-traceability-matrix-author/` | cross | shipped | 1.0.0 |
+| `requirements-traceability-matrix-audit/` | cross | shipped | 1.0.0 |
+| `product-requirements-document-author/` | cross | shipped | 1.0.0 |
+| `product-requirements-document-audit/` | cross | shipped | 1.0.0 |
+| `retrospective-author/` | (l) | shipped | 1.0.0 |
+| `retrospective-audit/` | (l) | shipped | 1.0.0 |
 | `closure-author/` | (l) | shipped | 1.0.0 |
 | `closure-audit/` | (l) | shipped | 1.0.0 |
-| `decomm-author/` | (m) | shipped | 1.0.0 |
-| `decomm-audit/` | (m) | shipped | 1.0.0 |
+| `decommissioning-author/` | (m) | shipped | 1.0.0 |
+| `decommissioning-audit/` | (m) | shipped | 1.0.0 |
 
 **Catalog complete: 22 author+audit pairs + project-cleanup + _template = 46 bundles.** Every pair shipped at 10/10 on its own rubric (each `<artifact>-audit` validates its sibling `<artifact>-author`'s output against the corresponding `<artifact>_rubric@1.0`).
 
@@ -135,32 +135,32 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §1, 29 new author+audit pairs shipped to unb
 
 | Skill bundle | Persona driver | Status | Version |
 |---|---|---|---|
-| `okr-set-author/` + `okr-set-audit/` | CEO / Chief of Staff | shipped | 1.0.0 |
+| `objectives-and-key-results-set-author/` + `objectives-and-key-results-set-audit/` | CEO / Chief of Staff | shipped | 1.0.0 |
 | `board-deck-author/` + `board-deck-audit/` | CEO / CFO / CTO | shipped | 1.0.0 |
 | `investor-update-author/` + `investor-update-audit/` | CEO / CFO | shipped | 1.0.0 |
-| `cap-alloc-memo-author/` + `cap-alloc-memo-audit/` | CEO + CFO | shipped | 1.0.0 |
+| `capital-allocation-memo-author/` + `capital-allocation-memo-audit/` | CEO + CFO | shipped | 1.0.0 |
 | `hire-decision-author/` + `hire-decision-audit/` | CEO + CHRO | shipped | 1.0.0 |
 | `forecast-author/` + `forecast-audit/` | CFO | shipped | 1.0.0 |
 | `budget-author/` + `budget-audit/` | CFO + CEO | shipped | 1.0.0 |
 | `monthly-close-author/` + `monthly-close-audit/` | CFO + CAO-Accounting | shipped | 1.0.0 |
-| `comp-plan-author/` + `comp-plan-audit/` | CHRO + CRO-Revenue (for sales) | shipped | 1.0.0 |
+| `compensation-plan-author/` + `compensation-plan-audit/` | CHRO + CRO-Revenue (for sales) | shipped | 1.0.0 |
 | `workforce-plan-author/` + `workforce-plan-audit/` | CHRO | shipped | 1.0.0 |
 | `onboarding-pack-author/` + `onboarding-pack-audit/` | CHRO + Chief of Staff | shipped | 1.0.0 |
-| `enps-program-author/` + `enps-program-audit/` | CHRO + Chief Happiness Officer | shipped | 1.0.0 |
+| `employee-net-promoter-score-program-author/` + `employee-net-promoter-score-program-audit/` | CHRO + Chief Happiness Officer | shipped | 1.0.0 |
 | `pipeline-report-author/` + `pipeline-report-audit/` | CRO-Revenue + CSO-Sales | shipped | 1.0.0 |
 | `account-plan-author/` + `account-plan-audit/` | CRO-Revenue + CCO-Customer | shipped | 1.0.0 |
 | `decision-log-author/` + `decision-log-audit/` | Chief of Staff | shipped | 1.0.0 |
 | `rhythm-of-business-author/` + `rhythm-of-business-audit/` | Chief of Staff | shipped | 1.0.0 |
-| `cs-engagement-author/` + `cs-engagement-audit/` | CCO-Customer | shipped | 1.0.0 |
-| `nps-program-author/` + `nps-program-audit/` | CCO-Customer + CPO-Product | shipped | 1.0.0 |
+| `customer-success-engagement-author/` + `customer-success-engagement-audit/` | CCO-Customer | shipped | 1.0.0 |
+| `net-promoter-score-program-author/` + `net-promoter-score-program-audit/` | CCO-Customer + CPO-Product | shipped | 1.0.0 |
 | `vendor-scorecard-author/` + `vendor-scorecard-audit/` | COO + CPO-Procurement | shipped | 1.0.0 |
 | `operating-model-author/` + `operating-model-audit/` | COO | shipped | 1.0.0 |
 | `capacity-plan-author/` + `capacity-plan-audit/` | COO | shipped | 1.0.0 |
-| `dei-program-author/` + `dei-program-audit/` | CDO-Diversity + CHRO | shipped | 1.0.0 |
+| `diversity-equity-inclusion-program-author/` + `diversity-equity-inclusion-program-audit/` | CDO-Diversity + CHRO | shipped | 1.0.0 |
 | `compliance-program-author/` + `compliance-program-audit/` | CCO-Compliance + CPO-Privacy | shipped | 1.0.0 |
-| `pia-author/` + `pia-audit/` | CPO-Privacy | shipped | 1.0.0 |
+| `privacy-impact-assessment-author/` + `privacy-impact-assessment-audit/` | CPO-Privacy | shipped | 1.0.0 |
 | `breach-notification-author/` + `breach-notification-audit/` | CPO-Privacy + CISO + CLO-Legal | shipped | 1.0.0 |
-| `dsr-runbook-author/` + `dsr-runbook-audit/` | CPO-Privacy | shipped | 1.0.0 |
+| `data-subject-request-runbook-author/` + `data-subject-request-runbook-audit/` | CPO-Privacy | shipped | 1.0.0 |
 | `model-card-author/` + `model-card-audit/` | CAIO + Chief Ethics Officer | shipped | 1.0.0 |
 | `ai-use-case-portfolio-author/` + `ai-use-case-portfolio-audit/` | CAIO | shipped | 1.0.0 |
 | `bias-audit-author/` + `bias-audit-audit/` | Chief Ethics Officer + CAIO | shipped | 1.0.0 |
@@ -182,7 +182,7 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §2, 29 new author+audit pairs shipped to unb
 | Skill bundle | Persona driver | Status | Version |
 |---|---|---|---|
 | `enterprise-risk-framework-author` + `-audit` | CRO-Risk | shipped | 1.0.0 |
-| `kri-dashboard-author` + `-audit` | CRO-Risk | shipped | 1.0.0 |
+| `key-risk-indicator-dashboard-author` + `-audit` | CRO-Risk | shipped | 1.0.0 |
 | `data-strategy-author` + `-audit` | CDO-Data | shipped | 1.0.0 |
 | `data-product-author` + `-audit` | CDO-Data | shipped | 1.0.0 |
 | `data-governance-author` + `-audit` | CDO-Data + CCO-Compliance + CPO-Privacy | shipped | 1.0.0 |
@@ -193,7 +193,7 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §2, 29 new author+audit pairs shipped to unb
 | `transformation-roadmap-author` + `-audit` | Chief Transformation + Chief Digital | shipped | 1.0.0 |
 | `sustainability-report-author` + `-audit` | CSO-Sustainability + Chief ESG | shipped | 1.0.0 |
 | `emissions-inventory-author` + `-audit` | CSO-Sustainability | shipped | 1.0.0 |
-| `crisis-comms-playbook-author` + `-audit` | CCO-Communications + CSO-Security | shipped | 1.0.0 |
+| `crisis-communications-playbook-author` + `-audit` | CCO-Communications + CSO-Security | shipped | 1.0.0 |
 | `press-release-author` + `-audit` | CCO-Communications | shipped | 1.0.0 |
 | `internal-newsletter-author` + `-audit` | CCO-Communications + Chief of Staff | shipped | 1.0.0 |
 | `analyst-briefing-author` + `-audit` | CCO-Communications + CEO + CPO-Product | shipped | 1.0.0 |
@@ -203,19 +203,19 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §2, 29 new author+audit pairs shipped to unb
 | `trust-portal-update-author` + `-audit` | Chief Trust Officer + CPO-Privacy | shipped | 1.0.0 |
 | `transparency-report-author` + `-audit` | Chief Trust Officer | shipped | 1.0.0 |
 | `ethics-review-author` + `-audit` | Chief Ethics Officer | shipped | 1.0.0 |
-| `change-mgmt-plan-author` + `-audit` | Chief Transformation Officer | shipped | 1.0.0 |
+| `change-management-plan-author` + `-audit` | Chief Transformation Officer | shipped | 1.0.0 |
 | `program-charter-author` + `-audit` | Chief Transformation + Chief Innovation | shipped | 1.0.0 |
 | `innovation-portfolio-author` + `-audit` | Chief Innovation Officer | shipped | 1.0.0 |
 | `partner-program-author` + `-audit` | CCO-Commercial | shipped | 1.0.0 |
 | `procurement-strategy-author` + `-audit` | CPO-Procurement | shipped | 1.0.0 |
-| `mna-thesis-author` + `-audit` | CSO-Strategy + CFO | shipped | 1.0.0 |
-| `strategy-doc-author` + `-audit` | CSO-Strategy or CEO | shipped | 1.0.0 |
+| `mergers-and-acquisitions-thesis-author` + `-audit` | CSO-Strategy + CFO | shipped | 1.0.0 |
+| `strategy-document-author` + `-audit` | CSO-Strategy or CEO | shipped | 1.0.0 |
 
 **Session B subtotal: 29 new pairs (58 new bundles) + 29 new contracts shipped.**
 
 **Updated catalog grand total: 21 (SDP morning) + 29 (Tier-1 Session A) + 29 (Tier-2 Session B) = 79 author+audit pairs = 158 SDP/persona-aligned bundles + project-cleanup + _template + 5 public/ VN bundles + 83 contracts.**
 
-Note: `product-roadmap` was renamed from the originally-listed `prd-strategic` in `NEEDED_SKILLS.md` §2 to avoid collision with the existing `prd-author/audit` pair (which covers the broader PRD artefact per SDP §2(b)).
+Note: `product-roadmap` was renamed from the originally-listed `prd-strategic` in `NEEDED_SKILLS.md` §2 to avoid collision with the existing `product-requirements-document-author/audit` pair (which covers the broader PRD artefact per SDP §2(b)).
 
 ---
 
@@ -228,9 +228,9 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §3, 8 new author+audit pairs shipped to unbl
 | `clinical-protocol-author` + `-audit` | Chief Medical Officer | shipped | 1.0.0 |
 | `safety-report-author` + `-audit` | Chief Medical Officer | shipped | 1.0.0 |
 | `investment-thesis-author` + `-audit` | CIO-Investment | shipped | 1.0.0 |
-| `lp-letter-author` + `-audit` | CIO-Investment | shipped | 1.0.0 |
+| `limited-partner-letter-author` + `-audit` | CIO-Investment | shipped | 1.0.0 |
 | `turnaround-plan-author` + `-audit` | CRO-Restructuring | shipped | 1.0.0 |
-| `13-week-cash-flow-author` + `-audit` | CRO-Restructuring + CFO (distress) | shipped | 1.0.0 |
+| `thirteen-week-cash-flow-author` + `-audit` | CRO-Restructuring + CFO (distress) | shipped | 1.0.0 |
 | `remote-policy-author` + `-audit` | Chief Remote Officer + CHRO | shipped | 1.0.0 |
 | `happiness-program-author` + `-audit` | Chief Happiness Officer + CHRO | shipped | 1.0.0 |
 
@@ -240,7 +240,7 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §3, 8 new author+audit pairs shipped to unbl
 
 Standards cited in Tier-3 contracts: ICH-GCP E6(R3) (`clinical-protocol`); ICH E2D PSUR + 21 CFR 314.80 (`safety-report`); Soros/Druckenmiller/Marks investment-pattern literature (`investment-thesis`); ILPA Reporting Template (`lp-letter`); AlixPartners / FTI / Alvarez & Marsal turnaround playbooks (`turnaround-plan`); industry-standard 13-week TWCF model (`13-week-cash-flow`); GitLab Remote Manifesto + Buffer State-of-Remote (`remote-policy`); Officevibe / TINYpulse / Culture Amp + Shawn Achor positive-psychology research (`happiness-program`).
 
-**Per-skill fine-tune overrides:** none of the 8 Tier-3 skills shipped with a `<skill>/FINE_TUNE.md` override (default discipline applies). The 4 existing FINE_TUNE overrides (fr-audit, code-review-audit, threat-model-audit, decomm-audit) remain. For clinical-protocol + safety-report specifically, a v1.1 fine-tune is a likely candidate once a regulated-pharma engagement surfaces ICH-GCP/E2D section-ordering deviations through real use.
+**Per-skill fine-tune overrides:** none of the 8 Tier-3 skills shipped with a `<skill>/FINE_TUNE.md` override (default discipline applies). The 4 existing FINE_TUNE overrides (feature-request-audit, code-review-audit, threat-model-audit, decommissioning-audit) remain. For clinical-protocol + safety-report specifically, a v1.1 fine-tune is a likely candidate once a regulated-pharma engagement surfaces ICH-GCP/E2D section-ordering deviations through real use.
 
 With Session C complete, **66 / 66 = 100 % of the original new-pair scope identified in `NEEDED_SKILLS.md` is shipped**. Session E later added 5 more pairs (Tier-4 legal, surfaced during Session D workflow authoring) bringing the closed-gap total to 71/71.
 
@@ -253,10 +253,10 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §4, 5 new author+audit pairs shipped to unbl
 | Skill bundle | Persona driver | Status | Version |
 |---|---|---|---|
 | `contract-review-author` + `-audit` | CLO-Legal (general contract review across the firm) | shipped | 1.0.0 |
-| `nda-triage-author` + `-audit` | CLO-Legal | shipped | 1.0.0 |
+| `non-disclosure-agreement-triage-author` + `-audit` | CLO-Legal | shipped | 1.0.0 |
 | `regulatory-filing-author` + `-audit` | CLO-Legal + CPO-Privacy (breach notification) | shipped | 1.0.0 |
-| `ip-strategy-author` + `-audit` | CLO-Legal | shipped | 1.0.0 |
-| `litigation-mgmt-update-author` + `-audit` | CLO-Legal | shipped | 1.0.0 |
+| `intellectual-property-strategy-author` + `-audit` | CLO-Legal | shipped | 1.0.0 |
+| `litigation-management-update-author` + `-audit` | CLO-Legal | shipped | 1.0.0 |
 
 **Session E subtotal: 5 new pairs (10 new bundles) + 5 new contracts shipped.**
 
@@ -276,9 +276,9 @@ Per `../cuo/docs/NEEDED_SKILLS.md` §4b, 6 new author+audit pairs shipped to unb
 
 | Skill bundle | Persona driver | Status | Version |
 |---|---|---|---|
-| `gtm-plan-author` + `-audit` | CSO-Sales / CGO | shipped | 1.0.0 |
-| `vulnerability-mgmt-report-author` + `-audit` | CISO | shipped | 1.0.0 |
-| `pen-test-report-author` + `-audit` | CISO | shipped | 1.0.0 |
+| `go-to-market-plan-author` + `-audit` | CSO-Sales / CGO | shipped | 1.0.0 |
+| `vulnerability-management-report-author` + `-audit` | CISO | shipped | 1.0.0 |
+| `penetration-test-report-author` + `-audit` | CISO | shipped | 1.0.0 |
 | `soc2-evidence-author` + `-audit` | CISO + CCO-Compliance | shipped | 1.0.0 |
 | `security-strategy-author` + `-audit` | CISO | shipped | 1.0.0 |
 | `delivery-review-author` + `-audit` | COO (Head of Delivery) | shipped | 1.0.0 |
@@ -344,15 +344,15 @@ With Session H complete, the catalog is **104 author+audit pairs / 208 bundles /
 Skills are independently invocable, but the **default chain** for a full delivery flow is:
 
 ```
-sow-author → sow-audit
+statement-of-work-author → statement-of-work-audit
    ↓ (on PASS)
-prd-author → prd-audit
+product-requirements-document-author → product-requirements-document-audit
    ↓ (on PASS)
-srs-author → srs-audit
+software-requirements-specification-author → software-requirements-specification-audit
    ↓ (on PASS)
-fr-author → fr-audit
+feature-request-author → feature-request-audit
    ↓ (on PASS, per-FR)
-impl-plan-author → impl-plan-audit
+implementation-plan-author → implementation-plan-audit
    ↓ (on PASS, per-FR)
 [engineering execution — no skill]
    ↓
@@ -360,7 +360,7 @@ code-review-author → code-review-audit
    ↓ (on PASS)
 test-strategy-author → test-strategy-audit
    ↓ (on PASS)
-deploy-checklist-author → deploy-checklist-audit
+deployment-checklist-author → deployment-checklist-audit
    ↓ (on PASS, per-release)
 release-notes-author → release-notes-audit
    ↓ (on PASS)
@@ -368,19 +368,19 @@ runbook-author → runbook-audit
    ↓ (per-incident, on demand)
 postmortem-author → postmortem-audit
    ↓ (per-sprint, on demand)
-retro-author → retro-audit
+retrospective-author → retrospective-audit
    ↓ (on engagement end)
 closure-author → closure-audit
    ↓ (on decommission decision)
-decomm-author → decomm-audit
+decommissioning-author → decommissioning-audit
 ```
 
 Side-chains:
-- `adr-author → adr-audit` runs alongside (d) — typically before `sdd-author`. Triggered whenever an architectural decision is taken.
+- `architecture-decision-record-author → architecture-decision-record-audit` runs alongside (d) — typically before `software-design-document-author`. Triggered whenever an architectural decision is taken.
 - `threat-model-author → threat-model-audit` runs alongside (d) — once per major architecture change.
 - `stage-gate-author → stage-gate-audit` runs at each stage boundary in fixed-price engagements.
-- `dor-dod-author → dor-dod-audit` runs once per engagement at kickoff (and on policy changes).
-- `rtm-author → rtm-audit` runs continuously — re-generated after every merged FR or test.
+- `definition-of-ready-and-done-author → definition-of-ready-and-done-audit` runs once per engagement at kickoff (and on policy changes).
+- `requirements-traceability-matrix-author → requirements-traceability-matrix-audit` runs continuously — re-generated after every merged FR or test.
 
 `project-cleanup/` runs on demand — monthly or pre-handoff — and is self-auditing (4-phase pipeline includes inventory + verify).
 
@@ -426,9 +426,9 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
 | Preserved `skill/crates/, toolchain/, runners/, tools/, tests/, tours/` | Rust host, Bun toolchain, Python parity runners, parity harness — runtime infrastructure unchanged. |
 | Added `skill/MODULE.md` (this file) | Canonical catalog. |
 | Added `skill/_template/` | Canonical skeleton for new author/audit skills. |
-| Added `skill/sow-author/, sow-audit/, fr-author/, fr-audit/, prd-author/, prd-audit/` | Four canonical reference pairs proving the new pattern (stages a, b, cross). |
+| Added `skill/statement-of-work-author/, statement-of-work-audit/, feature-request-author/, feature-request-audit/, product-requirements-document-author/, product-requirements-document-audit/` | Four canonical reference pairs proving the new pattern (stages a, b, cross). |
 | `skill/<name>-author/` + `skill/<name>-audit/` for stages (b second skill), (c)–(m), cross | Planned. Built session-by-session under the FR-authoring loop discipline. |
-| Vietnamese-market skills (vn-bank-transfer, vn-legal-compliance, vn-mst-validate, vn-tax-filing, vn-vat-invoice, vneid-integration) wiped from this module | Preserved at `public-skills/` (cyberos project root) for open-registry publication. Not part of the SDP-driven core catalog. |
+| Vietnamese-market skills (vietnam-bank-transfer, vietnam-legal-compliance, vietnam-mst-validate, vn-tax-filing, vietnam-vat-invoice, vietnam-vneid-integration) wiped from this module | Preserved at `public-skills/` (cyberos project root) for open-registry publication. Not part of the SDP-driven core catalog. |
 
 The wipe was destructive. Recovery is via git history. No memory entries were touched.
 
@@ -436,7 +436,7 @@ The wipe was destructive. Recovery is via git history. No memory entries were to
 
 ## §8  Vietnamese-market skills + the `public/` open-distribution channel
 
-The five VN-market skills (`vn-bank-transfer`, `vn-legal-compliance`, `vn-mst-validate`, `vn-vat-invoice`, `vneid-integration`) live at **`skill/public/<skill-name>/`** as of the 2026-05-17 evening rebuild. They were absorbed from the legacy `cyberos/public-skills/` tree into the SKILL module per user direction. They co-exist with the SDP-driven catalog: runtime discovery picks them up automatically via the loader's flat-layout walk (no exclusion for `public/`).
+The five VN-market skills (`vietnam-bank-transfer`, `vietnam-legal-compliance`, `vietnam-mst-validate`, `vietnam-vat-invoice`, `vietnam-vneid-integration`) live at **`skill/public/<skill-name>/`** as of the 2026-05-17 evening rebuild. They were absorbed from the legacy `cyberos/public-skills/` tree into the SKILL module per user direction. They co-exist with the SDP-driven catalog: runtime discovery picks them up automatically via the loader's flat-layout walk (no exclusion for `public/`).
 
 §8.1  **Why a `public/` subfolder (not flat at `skill/<vn-name>/`).** Two channels with different audiences:
 
@@ -447,7 +447,7 @@ The five VN-market skills (`vn-bank-transfer`, `vn-legal-compliance`, `vn-mst-va
 
 Keeping them under `public/` preserves the OSS-distribution assets shipped alongside the VN skills (`LICENSE`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `INSTALL.md`, `.github/workflows/validate.yml`, `.github/ISSUE_TEMPLATE/`, `announcements/blog-post.md` + `linkedin-*.md` + `twitter-thread.md`) — those would clutter the runtime catalog if flattened.
 
-§8.2  **Runtime discovery.** `crates/host/src/loader.rs` does NOT exclude `public/` from the walkdir. Each VN bundle's `SKILL.md` is registered alongside the SDP-driven pairs. Operators invoke via `cyberos-skill run vn-mst-validate ...` exactly as they invoke `cyberos-skill run sow-author ...`.
+§8.2  **Runtime discovery.** `crates/host/src/loader.rs` does NOT exclude `public/` from the walkdir. Each VN bundle's `SKILL.md` is registered alongside the SDP-driven pairs. Operators invoke via `cyberos-skill run vietnam-mst-validate ...` exactly as they invoke `cyberos-skill run statement-of-work-author ...`.
 
 §8.3  **Open-publication workflow.** When a new VN skill is ready for publication, drop it under `skill/public/<name>/`, run the validate workflow at `skill/public/.github/workflows/validate.yml`, and push. The `agentskills.io` submission process pulls from the public/ subtree only — the SDP runtime catalog (everything else under `skill/`) is internal.
 

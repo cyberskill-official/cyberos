@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (product chapter), format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (product chapter), format: strategy-document@1 }
   - { name: market_intel,          source: cuo/cmo + competitive-brief, format: markdown }
   - { name: metrics_history,       source: 4 quarters of product-metrics-review@1, format: product-metrics-review@1 (4Q) }
   - { name: ceo_priorities,        source: cuo/ceo (vision brief), format: markdown }
@@ -16,8 +16,8 @@ outputs:
   - { name: product_strategy,      format: strategy-doc@1, recipient: cuo/cpo-product + cuo/ceo + cuo/cto + cuo/cmo + Board (annual review) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, market_intel: market_intel, metrics_history: metrics_history, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: product_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, market_intel: market_intel, metrics_history: metrics_history, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: product_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes a pillar deprecation OR new pillar requiring significant capital" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-product-officer/annual-product-strategy \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per Cagan + Roger Martin + Rumelt.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per Cagan + Roger Martin + Rumelt.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

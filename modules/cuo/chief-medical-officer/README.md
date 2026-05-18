@@ -40,7 +40,7 @@ Veeva Vault (clinical); Medidata Rave (EDC); regulator portals.
 |---|---|---|---|---|
 | `per-clinical-protocol` | Per-study clinical trial protocol per ICH-GCP E6(R3) | per-event | clinical-protocol@1 | shipped (1.0.0) |
 | `quarterly-safety-report` | Adverse-event review + signal detection (PSUR/DSUR) | quarterly | safety-report@1 | shipped (1.0.0) |
-| `annual-medical-strategy` | Therapeutic-area focus + evidence-gen + RWE + KOL engagement | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-medical-strategy` | Therapeutic-area focus + evidence-gen + RWE + KOL engagement | annual | strategy-document@1 | shipped (1.0.0) |
 | `per-medical-affairs-charter` | MSL / KOL / evidence / medical-ed program charter | per-event | program-charter@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2/Tier-3 skills (`clinical-protocol`, `safety-report`, `strategy-doc`, `program-charter`). See `../../skill/MODULE.md` §3.2 + §3.3.

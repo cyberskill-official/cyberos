@@ -9,15 +9,15 @@ status: shipped
 inputs:
   - { name: scanner_export,     source: Tenable / Qualys / Wiz / Snyk / Dependabot, format: csv / json }
   - { name: ticket_export,      source: Jira / Linear (security tickets),            format: csv }
-  - { name: prior_report,       source: last month's vulnerability-mgmt-report@1,    format: vulnerability-mgmt-report@1 }
+  - { name: prior_report,       source: last month's vulnerability-mgmt-report@1,    format: vulnerability-management-report@1 }
   - { name: exception_register, source: ciso exception-tracking register,             format: markdown }
 
 outputs:
   - { name: vuln_report,        format: vulnerability-mgmt-report@1, recipient: cuo/ciso + cuo/cto + cuo/cco-compliance }
 
 skill_chain:
-  - { step: 1, skill: vulnerability-mgmt-report-author, inputs_from: { scanner_export: scanner_export, ticket_export: ticket_export, prior_report: prior_report, exception_register: exception_register }, outputs_to: report_draft }
-  - { step: 2, skill: vulnerability-mgmt-report-audit,  inputs_from: report_draft, outputs_to: vuln_report }
+  - { step: 1, skill: vulnerability-management-report-author, inputs_from: { scanner_export: scanner_export, ticket_export: ticket_export, prior_report: prior_report, exception_register: exception_register }, outputs_to: report_draft }
+  - { step: 2, skill: vulnerability-management-report-audit,  inputs_from: report_draft, outputs_to: vuln_report }
 
 escalates_to:
   - { persona: cuo/chief-technology-officer,         when: "Critical CVSS unremediated past SLA (7 days for internet-facing, 30 days for internal)" }
@@ -60,8 +60,8 @@ cyberos-cuo run cuo/chief-information-security-officer/monthly-vuln-management \
 
 ## Skill chain
 
-- **Step 1 `vulnerability-mgmt-report-author`** — drafts per CIS Controls v8 + NIST SP 800-40 Rev 4 + CVSS v3.1/v4.0 structure.
-- **Step 2 `vulnerability-mgmt-report-audit`** — validates per `vulnerability_mgmt_report_rubric@1.0`.
+- **Step 1 `vulnerability-management-report-author`** — drafts per CIS Controls v8 + NIST SP 800-40 Rev 4 + CVSS v3.1/v4.0 structure.
+- **Step 2 `vulnerability-management-report-audit`** — validates per `vulnerability_mgmt_report_rubric@1.0`.
 
 ## Failure modes
 

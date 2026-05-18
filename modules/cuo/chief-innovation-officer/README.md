@@ -41,7 +41,7 @@ Pipefy / Wellspring (innovation portfolio); Brightidea / IdeaScale (ideation); c
 | `annual-innovation-portfolio` | Horizons 1/2/3 + investment thesis per bet + stage-gates + kill criteria | annual | innovation-portfolio@1 | shipped (1.0.0) |
 | `per-innovation-charter` | Per-bet (H2/H3) charter with hypothesis + experiment + stage-gates | per-event | program-charter@1 | shipped (1.0.0) |
 | `quarterly-portfolio-review` | Stage-gate decisions + kill / graduate / pivot recommendations | quarterly | innovation-portfolio@1 chapter | shipped (1.0.0) |
-| `annual-innovation-strategy` | Moonshot vision + operating model + partnership + innovation OKRs | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-innovation-strategy` | Moonshot vision + operating model + partnership + innovation OKRs | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2 skills (`innovation-portfolio`, `program-charter`, `strategy-doc`). See `../../skill/MODULE.md` §3.2.
 

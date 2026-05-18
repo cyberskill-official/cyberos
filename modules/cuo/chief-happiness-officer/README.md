@@ -40,8 +40,8 @@ Officevibe / TINYpulse / Culture Amp (happiness survey); Donut (random-coffee); 
 |---|---|---|---|---|
 | `quarterly-happiness-program` | Engagement surveys + recognition + wellbeing initiatives + action plans | quarterly | happiness-program@1 | shipped (1.0.0) |
 | `per-wellbeing-intervention` | Burnout-prevention / mental-health / recognition / culture-fix intervention | per-event | program-charter@1 | shipped (1.0.0) |
-| `annual-happiness-strategy` | Wellbeing pillars + portfolio + manager-enablement + measurement | annual | strategy-doc@1 | shipped (1.0.0) |
-| `quarterly-enps-deep-dive` | Verbatim coding + theme clustering + root-cause synthesis | quarterly | enps-program@1 (analytical chapter) | shipped (1.0.0) |
+| `annual-happiness-strategy` | Wellbeing pillars + portfolio + manager-enablement + measurement | annual | strategy-document@1 | shipped (1.0.0) |
+| `quarterly-enps-deep-dive` | Verbatim coding + theme clustering + root-cause synthesis | quarterly | employee-net-promoter-score-program@1 (analytical chapter) | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-1/Tier-2/Tier-3 skills (`happiness-program`, `program-charter`, `strategy-doc`, `enps-program`). See `../../skill/MODULE.md` §3.1 + §3.2 + §3.3.
 

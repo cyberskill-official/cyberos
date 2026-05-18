@@ -9,7 +9,7 @@ status: shipped
 inputs:
   - { name: system_under_threat,    source: workflow caller,                       format: string }
   - { name: prior_threat_model,     source: ./threat-models/<system>.md,           format: threat-model@1 }
-  - { name: linked_srs,             source: current SRS for the system,            format: srs@1 }
+  - { name: linked_srs,             source: current SRS for the system,            format: software-requirements-specification@1 }
   - { name: linked_adrs,            source: list of ADRs (esp. those accepted since prior_threat_model.modelled_at), format: "list[adr@1]" }
   - { name: changelog_since_prior,  source: git log since prior_threat_model.modelled_at, format: markdown }
 

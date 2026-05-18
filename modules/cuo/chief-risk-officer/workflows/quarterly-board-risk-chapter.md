@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: erm_framework,         source: cuo/chief-risk-officer/annual-erm-framework, format: enterprise-risk-framework@1 }
-  - { name: kri_dashboard,         source: cuo/chief-risk-officer/quarterly-kri-dashboard, format: kri-dashboard@1 }
+  - { name: kri_dashboard,         source: cuo/chief-risk-officer/quarterly-kri-dashboard, format: key-risk-indicator-dashboard@1 }
   - { name: incident_corpus,       source: quarter's risk-postmortems, format: postmortem@1 (multiple) }
   - { name: regulator_corpus,      source: cuo/chief-legal-officer/quarterly-regulatory-cycle filings, format: regulatory-filing@1 set }
 

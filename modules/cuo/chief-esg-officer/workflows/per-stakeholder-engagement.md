@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: stakeholder_brief,     source: requestor, format: markdown }
-  - { name: esg_strategy_context,  source: cuo/chief-esg-officer/annual-esg-strategy, format: strategy-doc@1 }
+  - { name: esg_strategy_context,  source: cuo/chief-esg-officer/annual-esg-strategy, format: strategy-document@1 }
 
 outputs:
   - { name: stakeholder_charter,   format: program-charter@1, recipient: cuo/chief-esg-officer + program sponsor + cuo/cco-communications }

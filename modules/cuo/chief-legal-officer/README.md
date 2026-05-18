@@ -47,10 +47,10 @@ Ironclad / Juro / DocuSign CLM (contracts); LexisNexis / Westlaw (research); Lit
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `msa-contract-review` | Review an incoming MSA against the playbook | on-demand | contract-review@1 | shipped (1.0.0) |
-| `incoming-nda-triage` | Triage an incoming NDA (GREEN/YELLOW/RED) | on-demand | nda-triage@1 | shipped (1.0.0) |
+| `incoming-nda-triage` | Triage an incoming NDA (GREEN/YELLOW/RED) | on-demand | non-disclosure-agreement-triage@1 | shipped (1.0.0) |
 | `quarterly-regulatory-cycle` | Author the quarter's regulatory filings | quarterly | regulatory-filing@1 (multiple) | shipped (1.0.0) |
-| `annual-ip-strategy` | Author the annual IP portfolio strategy | annual | ip-strategy@1 | shipped (1.0.0) |
-| `quarterly-board-legal-chapter` | Author the legal chapter of the board deck | quarterly | litigation-mgmt-update@1 + board-deck@1 chapter | shipped (1.0.0) |
+| `annual-ip-strategy` | Author the annual IP portfolio strategy | annual | intellectual-property-strategy@1 | shipped (1.0.0) |
+| `quarterly-board-legal-chapter` | Author the legal chapter of the board deck | quarterly | litigation-management-update@1 + board-deck@1 chapter | shipped (1.0.0) |
 
 All workflows chain through Tier-4 legal skills (`contract-review`, `nda-triage`, `regulatory-filing`, `ip-strategy`, `litigation-mgmt-update`) — shipped Session E 2026-05-17 — plus shipped Tier-1 (`board-deck`, `compliance-program`). See `../../skill/MODULE.md` §3.4.
 

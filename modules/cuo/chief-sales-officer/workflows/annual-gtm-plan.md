@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_gtm,          source: last year's gtm-plan@1,                     format: gtm-plan@1 }
+  - { name: prior_gtm,          source: last year's gtm-plan@1,                     format: go-to-market-plan@1 }
   - { name: ceo_priorities,     source: cuo/ceo (vision brief),                     format: markdown }
   - { name: prior_pipeline,     source: prior year's pipeline-report@1 set,         format: pipeline-report@1 (4 quarters) }
   - { name: win_loss_corpus,    source: prior-year deal post-mortems + CRM stage-out reasons, format: markdown / csv }
@@ -16,8 +16,8 @@ outputs:
   - { name: gtm_plan,           format: gtm-plan@1, recipient: cuo/cso-sales + cuo/ceo + cuo/cmo + cuo/cfo + Board (annual review) }
 
 skill_chain:
-  - { step: 1, skill: gtm-plan-author, inputs_from: { prior_gtm: prior_gtm, ceo_priorities: ceo_priorities, prior_pipeline: prior_pipeline, win_loss_corpus: win_loss_corpus }, outputs_to: gtm_draft }
-  - { step: 2, skill: gtm-plan-audit,  inputs_from: gtm_draft, outputs_to: gtm_plan }
+  - { step: 1, skill: go-to-market-plan-author, inputs_from: { prior_gtm: prior_gtm, ceo_priorities: ceo_priorities, prior_pipeline: prior_pipeline, win_loss_corpus: win_loss_corpus }, outputs_to: gtm_draft }
+  - { step: 2, skill: go-to-market-plan-audit,  inputs_from: gtm_draft, outputs_to: gtm_plan }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,         when: "GTM proposes channel-strategy change (sales-led → PLG, or vice versa)" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-sales-officer/annual-gtm-plan \
 
 ## Skill chain
 
-- **Step 1 `gtm-plan-author`** — drafts per Winning by Design + MEDDIC + Predictable Revenue + OpenView PLG.
-- **Step 2 `gtm-plan-audit`** — validates per `gtm_plan_rubric@1.0`.
+- **Step 1 `go-to-market-plan-author`** — drafts per Winning by Design + MEDDIC + Predictable Revenue + OpenView PLG.
+- **Step 2 `go-to-market-plan-audit`** — validates per `gtm_plan_rubric@1.0`.
 
 ## Failure modes
 

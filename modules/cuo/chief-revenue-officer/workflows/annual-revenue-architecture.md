@@ -7,17 +7,17 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: gtm_plan,           source: cuo/chief-sales-officer/annual-gtm-plan,                  format: gtm-plan@1 }
+  - { name: gtm_plan,           source: cuo/chief-sales-officer/annual-gtm-plan,                  format: go-to-market-plan@1 }
   - { name: prior_churn,        source: cuo/chief-revenue-officer/quarterly-churn-analysis (4Q),  format: churn-analysis@1 (4 quarters) }
-  - { name: nps_history,        source: cuo/chief-sales-officer/quarterly-nps-program (4Q),       format: nps-program@1 (4 quarters) }
+  - { name: nps_history,        source: cuo/chief-sales-officer/quarterly-nps-program (4Q),       format: net-promoter-score-program@1 (4 quarters) }
   - { name: ceo_priorities,     source: cuo/ceo (vision brief),                         format: markdown }
 
 outputs:
   - { name: revenue_architecture, format: strategy-doc@1, recipient: cuo/cro-revenue + cuo/ceo + cuo/cso-sales + cuo/cco-customer + cuo/cmo + Board (annual) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { gtm_plan: gtm_plan, prior_churn: prior_churn, nps_history: nps_history, ceo_priorities: ceo_priorities }, outputs_to: arch_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: arch_draft, outputs_to: revenue_architecture }
+  - { step: 1, skill: strategy-document-author, inputs_from: { gtm_plan: gtm_plan, prior_churn: prior_churn, nps_history: nps_history, ceo_priorities: ceo_priorities }, outputs_to: arch_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: arch_draft, outputs_to: revenue_architecture }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,         when: "architecture proposes motion-shift (e.g. add PLG + product-qualified leads layer)" }
@@ -60,8 +60,8 @@ cyberos-cuo run cuo/chief-revenue-officer/annual-revenue-architecture \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per Rumelt good-strategy kernel + Winning by Design revenue-architecture.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per Rumelt good-strategy kernel + Winning by Design revenue-architecture.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

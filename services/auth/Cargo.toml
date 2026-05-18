@@ -1,0 +1,38 @@
+[package]
+name = "cyberos-auth"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "AUTH module — tenant + subject + RLS + JWT + MFA (FR-AUTH-001..109)"
+
+[[bin]]
+name = "cyberos-auth"
+path = "src/main.rs"
+
+[lib]
+name = "cyberos_auth"
+path = "src/lib.rs"
+
+[dependencies]
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+bcrypt.workspace = true
+jsonwebtoken.workspace = true
+
+cyberos-cli-exit.workspace = true
+cyberos-types.workspace = true
+
+[dev-dependencies]
+tokio-test.workspace = true

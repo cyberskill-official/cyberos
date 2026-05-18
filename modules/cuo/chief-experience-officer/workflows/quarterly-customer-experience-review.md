@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: customer_health,       source: cuo/chief-customer-officer/quarterly-customer-health-review, format: customer-health-review@1 }
-  - { name: nps_data,              source: cuo/chief-sales-officer/quarterly-nps-program, format: nps-program@1 }
+  - { name: nps_data,              source: cuo/chief-sales-officer/quarterly-nps-program, format: net-promoter-score-program@1 }
   - { name: product_metrics,       source: cuo/chief-product-officer/quarterly-product-metrics-review, format: product-metrics-review@1 }
   - { name: journey_telemetry,     source: customer-journey analytics, format: csv }
 

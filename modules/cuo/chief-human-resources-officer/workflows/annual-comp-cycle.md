@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_comp_plan,    source: last year's comp-plan@1,                  format: comp-plan@1 }
+  - { name: prior_comp_plan,    source: last year's comp-plan@1,                  format: compensation-plan@1 }
   - { name: market_data,        source: Radford / Pave / Compa / Levels.fyi snap, format: csv export }
   - { name: budget_envelope,    source: cuo/cfo (annual budget comp line),        format: budget@1 chapter }
   - { name: perf_distribution,  source: prior-cycle performance ratings,          format: csv }
@@ -16,8 +16,8 @@ outputs:
   - { name: comp_plan,          format: comp-plan@1, recipient: cuo/chro + cuo/cfo + cuo/ceo + managers (cascade) }
 
 skill_chain:
-  - { step: 1, skill: comp-plan-author, inputs_from: { prior_comp_plan: prior_comp_plan, market_data: market_data, budget_envelope: budget_envelope, perf_distribution: perf_distribution }, outputs_to: plan_draft }
-  - { step: 2, skill: comp-plan-audit,  inputs_from: plan_draft, outputs_to: comp_plan }
+  - { step: 1, skill: compensation-plan-author, inputs_from: { prior_comp_plan: prior_comp_plan, market_data: market_data, budget_envelope: budget_envelope, perf_distribution: perf_distribution }, outputs_to: plan_draft }
+  - { step: 2, skill: compensation-plan-audit,  inputs_from: plan_draft, outputs_to: comp_plan }
 
 escalates_to:
   - { persona: cuo/chief-financial-officer,         when: "total recommendation > budget envelope by > 5%" }
@@ -60,8 +60,8 @@ cyberos-cuo run cuo/chief-human-resources-officer/annual-comp-cycle \
 
 ## Skill chain
 
-- **Step 1 `comp-plan-author`** — drafts per Radford / WorldatWork methodology.
-- **Step 2 `comp-plan-audit`** — validates per `comp_plan_rubric@1.0` (FM + SEC + QA-BIAS-001 + QA-PAY-EQUITY-001 + QA-BUDGET-001).
+- **Step 1 `compensation-plan-author`** — drafts per Radford / WorldatWork methodology.
+- **Step 2 `compensation-plan-audit`** — validates per `comp_plan_rubric@1.0` (FM + SEC + QA-BIAS-001 + QA-PAY-EQUITY-001 + QA-BUDGET-001).
 
 ## Failure modes
 

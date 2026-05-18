@@ -42,7 +42,7 @@ Watershed / Persefoni / Sweep (carbon mgmt); Workiva (ESG reporting); EcoVadis (
 | `annual-emissions-inventory` | Scope 1/2/3 calculation + base-year + assurance readiness | annual | emissions-inventory@1 | shipped (1.0.0) |
 | `annual-sustainability-report` | Env-specific report: emissions + water + waste + supply chain | annual | sustainability-report@1 | shipped (1.0.0) |
 | `quarterly-target-tracking` | Net-zero + SBTi + renewable + circular targets vs baseline | quarterly | emissions-inventory@1 (quarterly chapter) | shipped (1.0.0) |
-| `annual-sustainability-strategy` | Climate ambition + supply-chain + circularity + regenerative | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-sustainability-strategy` | Climate ambition + supply-chain + circularity + regenerative | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2 skills (`emissions-inventory`, `sustainability-report`, `strategy-doc`). See `../../skill/MODULE.md` §3.2.
 

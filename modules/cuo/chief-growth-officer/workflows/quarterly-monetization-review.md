@@ -12,11 +12,11 @@ inputs:
   - { name: customer_signals,      source: cuo/chief-customer-officer/quarterly-customer-health-review verbatims on pricing, format: customer-health-review@1 chapter }
 
 outputs:
-  - { name: monetization_review,   format: gtm-plan@1 (monetization chapter), recipient: cuo/cgo + cuo/cpo-product + cuo/cro-revenue + cuo/cfo }
+  - { name: monetization_review,   format: go-to-market-plan@1 (monetization chapter), recipient: cuo/cgo + cuo/cpo-product + cuo/cro-revenue + cuo/cfo }
 
 skill_chain:
-  - { step: 1, skill: gtm-plan-author, inputs_from: { revenue_review: revenue_review, pricing_experiments: pricing_experiments, customer_signals: customer_signals }, outputs_to: review_draft }
-  - { step: 2, skill: gtm-plan-audit,  inputs_from: review_draft, outputs_to: monetization_review }
+  - { step: 1, skill: go-to-market-plan-author, inputs_from: { revenue_review: revenue_review, pricing_experiments: pricing_experiments, customer_signals: customer_signals }, outputs_to: review_draft }
+  - { step: 2, skill: go-to-market-plan-audit,  inputs_from: review_draft, outputs_to: monetization_review }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "review recommends pricing-model change" }

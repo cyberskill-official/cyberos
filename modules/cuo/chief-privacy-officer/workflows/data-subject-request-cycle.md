@@ -15,8 +15,8 @@ outputs:
   - { name: dsr_response,       format: dsr-runbook@1, recipient: data subject + cuo/cpo-privacy (audit log) }
 
 skill_chain:
-  - { step: 1, skill: dsr-runbook-author, inputs_from: { dsr_intake: dsr_intake, data_inventory: data_inventory, identity_evidence: identity_evidence }, outputs_to: response_draft }
-  - { step: 2, skill: dsr-runbook-audit,  inputs_from: response_draft, outputs_to: dsr_response }
+  - { step: 1, skill: data-subject-request-runbook-author, inputs_from: { dsr_intake: dsr_intake, data_inventory: data_inventory, identity_evidence: identity_evidence }, outputs_to: response_draft }
+  - { step: 2, skill: data-subject-request-runbook-audit,  inputs_from: response_draft, outputs_to: dsr_response }
 
 escalates_to:
   - { persona: cuo/chief-legal-officer,   when: "request is unusual: deletion of customer of record / class request / litigation-related" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-privacy-officer/data-subject-request-cycle \
 
 ## Skill chain
 
-- **Step 1 `dsr-runbook-author`** — drafts per GDPR Art. 12-22 / PDPD / CCPA structure.
-- **Step 2 `dsr-runbook-audit`** — validates per `dsr_runbook_rubric@1.0`.
+- **Step 1 `data-subject-request-runbook-author`** — drafts per GDPR Art. 12-22 / PDPD / CCPA structure.
+- **Step 2 `data-subject-request-runbook-audit`** — validates per `dsr_runbook_rubric@1.0`.
 
 ## Failure modes
 

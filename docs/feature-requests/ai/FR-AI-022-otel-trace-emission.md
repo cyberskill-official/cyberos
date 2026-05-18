@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-022
 title: "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes"
 module: AI

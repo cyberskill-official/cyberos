@@ -807,6 +807,6 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses:
 
 ---
 
-*End of FR-AI-005. Run `fr-audit` next: `cargo run -p cyberos-skill-cli -- run fr-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-005-tenant-policy-yaml-loader.md"}'`*
+*End of FR-AI-005. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-005-tenant-policy-yaml-loader.md"}'`*
 
-**Slice-1 status after FR-AI-005:** all 5 slice-1 FRs (FR-AI-001 .. FR-AI-005) are now `status: draft`. Next step per workflow §4: run `fr-audit` on the batch, then the user reviews and accepts. After accept, slice 1 is implementable as 5 PRs (one per FR) in dependency order: FR-AI-005 (loader) → FR-AI-003 (audit bridge) → FR-AI-001 (precheck) → FR-AI-002 (reconcile) → FR-AI-004 (cleanup).
+**Slice-1 status after FR-AI-005:** all 5 slice-1 FRs (FR-AI-001 .. FR-AI-005) are now `status: draft`. Next step per workflow §4: run `feature-request-audit` on the batch, then the user reviews and accepts. After accept, slice 1 is implementable as 5 PRs (one per FR) in dependency order: FR-AI-005 (loader) → FR-AI-003 (audit bridge) → FR-AI-001 (precheck) → FR-AI-002 (reconcile) → FR-AI-004 (cleanup).

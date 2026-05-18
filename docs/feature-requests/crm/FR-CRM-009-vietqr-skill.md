@@ -1,6 +1,6 @@
 ---
 id: FR-CRM-009
-title: "CRM vn-bank-transfer skill — VietQR payment image generation for deal collection with embedded amount + memo + bank routing"
+title: "CRM vietnam-bank-transfer skill — VietQR payment image generation for deal collection with embedded amount + memo + bank routing"
 module: CRM
 priority: MUST
 status: draft
@@ -21,7 +21,7 @@ source_pages:
   - https://vietqr.io/  # VietQR spec reference
 
 source_decisions:
-  - DEC-1690 2026-05-17 — Skill name: vn-bank-transfer@1; generates VietQR PNG with embedded payment metadata
+  - DEC-1690 2026-05-17 — Skill name: vietnam-bank-transfer@1; generates VietQR PNG with embedded payment metadata
   - DEC-1691 2026-05-17 — Closed enum `qr_purpose` = {deal_collection, invoice_payment, manual_request}; cardinality 3
   - DEC-1692 2026-05-17 — VietQR spec: bank_bin + account_number + amount + memo (alphanumeric, max 100 chars)
   - DEC-1693 2026-05-17 — Per-tenant bank config: bank_bin, account_number, account_holder_name; CFO-only writes via FR-AUTH-101
@@ -70,9 +70,9 @@ risk_if_skipped: "Without VietQR generation, CFO sends bank details as text — 
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship vn-bank-transfer@1 skill at `services/crm/src/vn/vietqr_skill.rs` generating VietQR PNG with embedded payment metadata, per-tenant bank config, 3 BRAIN audit kinds.
+The CRM service **MUST** ship vietnam-bank-transfer@1 skill at `services/crm/src/vn/vietqr_skill.rs` generating VietQR PNG with embedded payment metadata, per-tenant bank config, 3 BRAIN audit kinds.
 
-1. **MUST** register skill `vn-bank-transfer@1` per DEC-1690.
+1. **MUST** register skill `vietnam-bank-transfer@1` per DEC-1690.
 
 2. **MUST** validate `qr_purpose` against closed enum per DEC-1691.
 
@@ -101,7 +101,7 @@ The CRM service **MUST** ship vn-bank-transfer@1 skill at `services/crm/src/vn/v
 
 7. **MUST** expose skill endpoint:
    ```text
-   POST   /v1/crm/skill/vn-bank-transfer
+   POST   /v1/crm/skill/vietnam-bank-transfer
          body: {qr_purpose, amount_vnd, deal_id?, memo_override?}
    ```
 
@@ -132,7 +132,7 @@ The CRM service **MUST** ship vn-bank-transfer@1 skill at `services/crm/src/vn/v
 ## §3 — API contract
 
 ```text
-POST   /v1/crm/skill/vn-bank-transfer
+POST   /v1/crm/skill/vietnam-bank-transfer
 PUT    /v1/crm/bank-config                (CFO-only)
 GET    /v1/crm/bank-config                (read by skill caller)
 ```
@@ -160,7 +160,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **Skill registered as vn-bank-transfer@1**. 2. **Bank config required (412 if not set)**. 3. **CFO-only bank config (403 for others)**. 4. **PNG generated with VietQR payload**. 5. **Memo template applied (tenant_short + deal_id_8)**. 6. **Memo override accepted (optional)**. 7. **qr_purpose enum 3 + cardinality test**. 8. **Amount > 0 enforced**. 9. **Amount ≤ 1B VND enforced**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (account_number+amount SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Memo matches FR-INV-005 regex**. 15. **PNG render deterministic for same input**. 16. **Bank config update increments updated_at**. 17. **bank_bin format 6-digit numeric**. 18. **account_number max 20 chars**. 19. **account_holder_name required**. 20. **No QR for non-VN tenant amounts (currency=VND only)**.
+1. **Skill registered as vietnam-bank-transfer@1**. 2. **Bank config required (412 if not set)**. 3. **CFO-only bank config (403 for others)**. 4. **PNG generated with VietQR payload**. 5. **Memo template applied (tenant_short + deal_id_8)**. 6. **Memo override accepted (optional)**. 7. **qr_purpose enum 3 + cardinality test**. 8. **Amount > 0 enforced**. 9. **Amount ≤ 1B VND enforced**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (account_number+amount SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Memo matches FR-INV-005 regex**. 15. **PNG render deterministic for same input**. 16. **Bank config update increments updated_at**. 17. **bank_bin format 6-digit numeric**. 18. **account_number max 20 chars**. 19. **account_holder_name required**. 20. **No QR for non-VN tenant amounts (currency=VND only)**.
 
 ---
 

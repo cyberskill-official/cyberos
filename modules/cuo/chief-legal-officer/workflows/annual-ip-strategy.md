@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: portfolio_inventory, source: IP register (USPTO / WIPO / firm IP-mgmt tool), format: csv export }
-  - { name: prior_strategy,      source: last year's ip-strategy@1,                     format: ip-strategy@1 }
+  - { name: prior_strategy,      source: last year's ip-strategy@1,                     format: intellectual-property-strategy@1 }
   - { name: product_roadmap,     source: cuo/cpo-product or cuo/cto,                    format: product-roadmap@1 }
   - { name: budget_envelope,     source: cuo/cfo (annual budget IP line),               format: budget@1 chapter }
 
@@ -16,8 +16,8 @@ outputs:
   - { name: ip_strategy,         format: ip-strategy@1, recipient: cuo/clo-legal + cuo/ceo + Board (annual review) }
 
 skill_chain:
-  - { step: 1, skill: ip-strategy-author, inputs_from: { portfolio_inventory: portfolio_inventory, prior_strategy: prior_strategy, product_roadmap: product_roadmap, budget_envelope: budget_envelope }, outputs_to: strategy_draft }
-  - { step: 2, skill: ip-strategy-audit,  inputs_from: strategy_draft, outputs_to: ip_strategy }
+  - { step: 1, skill: intellectual-property-strategy-author, inputs_from: { portfolio_inventory: portfolio_inventory, prior_strategy: prior_strategy, product_roadmap: product_roadmap, budget_envelope: budget_envelope }, outputs_to: strategy_draft }
+  - { step: 2, skill: intellectual-property-strategy-audit,  inputs_from: strategy_draft, outputs_to: ip_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,           when: "strategy proposes offensive posture (enforcement litigation) with budget > $500K" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-legal-officer/annual-ip-strategy \
 
 ## Skill chain
 
-- **Step 1 `ip-strategy-author`** — drafts per WIPO + USPTO MPEP structure: inventory / posture / patent plan / trademark plan / trade-secret controls / FTO / budget / risks.
-- **Step 2 `ip-strategy-audit`** — validates per `ip_strategy_rubric@1.0` (FM + SEC + QA-FTO-001 + QA-BUDGET-001 + QA-POSTURE-001).
+- **Step 1 `intellectual-property-strategy-author`** — drafts per WIPO + USPTO MPEP structure: inventory / posture / patent plan / trademark plan / trade-secret controls / FTO / budget / risks.
+- **Step 2 `intellectual-property-strategy-audit`** — validates per `ip_strategy_rubric@1.0` (FM + SEC + QA-FTO-001 + QA-BUDGET-001 + QA-POSTURE-001).
 
 ## Failure modes
 

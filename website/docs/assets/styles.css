@@ -147,7 +147,9 @@ section { scroll-margin-top: 80px; }
   transition: background 0.12s, color 0.12s;
 }
 .nav-dropdown-link:hover { background: var(--future-tint); color: var(--text); }
-.nav-dropdown-link .code { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-mute); margin-left: auto; }
+.nav-dropdown-link > span:first-child { display: inline-flex; align-items: baseline; gap: 0.4375rem; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-dropdown-link .code-tag { font-family: var(--font-mono); font-style: normal; font-size: 0.625rem; font-weight: 600; letter-spacing: 0.04em; color: var(--text-mute); background: var(--future-tint, rgba(0,0,0,0.06)); border-radius: 0.25rem; padding: 0.0625rem 0.3125rem; }
+.nav-dropdown-link .code { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--text-mute); margin-left: auto; flex: 0 0 auto; }
 
 .nav-actions { display: flex; align-items: center; gap: 0.375rem; }
 .nav-btn {
@@ -467,6 +469,89 @@ table.bbg-table tbody tr:hover td { background: var(--memory-bg); }
 }
 .mermaid svg {
   max-height: 80vh;
+}
+
+/* ---------- Mermaid click-to-zoom affordance + modal ---------- */
+.mermaid-zoomable { position: relative; cursor: zoom-in; }
+.mermaid-zoomable:hover { box-shadow: 0 0 0 1px var(--accent, #f4ba17) inset; }
+.mermaid-zoom-hint {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  padding: 0.1875rem 0.4375rem;
+  border-radius: 0.25rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.mermaid-zoomable:hover .mermaid-zoom-hint { opacity: 1; }
+
+.mermaid-modal {
+  position: fixed; inset: 0; z-index: 2000;
+  display: flex; align-items: stretch; justify-content: stretch;
+  opacity: 0; pointer-events: none; transition: opacity 0.18s ease;
+}
+.mermaid-modal.open { opacity: 1; pointer-events: auto; }
+.mermaid-modal-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(15, 10, 5, 0.72);
+  backdrop-filter: blur(2px);
+}
+.mermaid-modal-shell {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  flex: 1 1 100%;
+  margin: 2vh 2vw;
+  background: var(--bg, #ffffff);
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 70px rgba(0,0,0,0.45);
+  overflow: hidden;
+}
+.mermaid-modal-toolbar {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border, #e7e5df);
+  background: var(--bg-soft, #faf9f6);
+}
+.mermaid-modal-spacer { flex: 1 1 auto; }
+.mermaid-modal-btn {
+  border: 1px solid var(--border, #e7e5df);
+  background: var(--bg, #ffffff);
+  border-radius: 0.375rem;
+  padding: 0.3125rem 0.625rem;
+  font: 600 0.8125rem/1 var(--font-mono, ui-monospace, monospace);
+  cursor: pointer;
+  color: var(--text, #1d0c05);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.mermaid-modal-btn:hover { background: var(--future-tint, rgba(0,0,0,0.06)); border-color: var(--accent, #f4ba17); }
+.mermaid-modal-close { font-size: 1rem; line-height: 1; padding: 0.375rem 0.5625rem; }
+.mermaid-modal-stage {
+  flex: 1 1 auto; min-height: 0;
+  position: relative; overflow: hidden;
+  cursor: grab;
+  background:
+    linear-gradient(0deg, transparent 24%, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.04) 26%, transparent 27%, transparent 74%, rgba(0,0,0,0.04) 75%, rgba(0,0,0,0.04) 76%, transparent 77%, transparent) 0 0 / 28px 28px,
+    linear-gradient(90deg, transparent 24%, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.04) 26%, transparent 27%, transparent 74%, rgba(0,0,0,0.04) 75%, rgba(0,0,0,0.04) 76%, transparent 77%, transparent) 0 0 / 28px 28px,
+    var(--bg, #ffffff);
+}
+.mermaid-modal-stage:active { cursor: grabbing; }
+.mermaid-modal-canvas {
+  position: absolute; left: 50%; top: 50%;
+  transform-origin: 0 0;
+  transform: translate(-50%, -50%) scale(1);
+  transition: none;
+  will-change: transform;
+}
+.mermaid-modal-canvas svg { display: block; max-width: none !important; max-height: none !important; }
+@media (max-width: 640px) {
+  .mermaid-modal-shell { margin: 0; border-radius: 0; }
+  .mermaid-zoom-hint { font-size: 0.625rem; }
 }
 
 /* ---------- UX FIX #11: Code blocks need horizontal scroll on mobile to avoid

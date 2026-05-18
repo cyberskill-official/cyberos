@@ -15,7 +15,7 @@
   <rect x="60" y="120" width="900" height="560" rx="14" fill="#fff" stroke="#E2E8F0" filter="url(#sh)"/>
   <rect x="60" y="120" width="900" height="50" rx="14" fill="url(#g1)"/>
   <rect x="60" y="150" width="900" height="20" fill="url(#g1)"/>
-  <text x="80" y="153" font-size="16" font-weight="600" fill="#fff" font-family="JetBrains Mono, monospace">📁 cuo/cpo/fr-author/</text>
+  <text x="80" y="153" font-size="16" font-weight="600" fill="#fff" font-family="JetBrains Mono, monospace">📁 cuo/cpo/feature-request-author/</text>
 
   <g font-family="JetBrains Mono, monospace" font-size="14">
     <rect x="80" y="190" width="860" height="44" rx="8" fill="#F59E0B" opacity="0.15"/>

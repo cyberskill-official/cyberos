@@ -14,7 +14,7 @@ inputs:
   - { name: account_brief,      source: account-team brief,                       format: markdown }
   - { name: prior_plan,         source: last quarter's account-plan@1,            format: account-plan@1 }
   - { name: crm_activity,       source: Salesforce / HubSpot (last 90 days),      format: csv export }
-  - { name: customer_signals,   source: cs-engagement@1 (if existing customer),   format: cs-engagement@1 }
+  - { name: customer_signals,   source: customer-success-engagement@1 (if existing customer),   format: customer-success-engagement@1 }
 
 outputs:
   - { name: account_plan,       format: account-plan@1, recipient: cuo/cso-sales + AE + CS owner + cuo/cco-customer }

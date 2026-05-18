@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: turnaround_plan,       source: cuo/chief-restructuring-officer/per-turnaround-plan, format: turnaround-plan@1 }
-  - { name: cash_forecast,         source: cuo/chief-restructuring-officer/weekly-cash-flow (latest), format: 13-week-cash-flow@1 }
+  - { name: cash_forecast,         source: cuo/chief-restructuring-officer/weekly-cash-flow (latest), format: thirteen-week-cash-flow@1 }
   - { name: milestone_status,      source: per-milestone progress data, format: markdown }
 
 outputs:

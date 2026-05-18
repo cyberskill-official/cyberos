@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (digital chapter), format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (digital chapter), format: strategy-document@1 }
   - { name: ceo_priorities,        source: cuo/ceo, format: markdown }
   - { name: digital_quotient,      source: McKinsey DQ benchmark or internal, format: markdown }
 
@@ -15,8 +15,8 @@ outputs:
   - { name: digital_strategy,      format: strategy-doc@1, recipient: cuo/chief-digital-officer + cuo/ceo + Board (annual digital chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, digital_quotient: digital_quotient }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: digital_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, digital_quotient: digital_quotient }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: digital_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes business-model change" }

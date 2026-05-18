@@ -40,7 +40,7 @@ Daily standup (internal); weekly client status; fortnightly demo; monthly steeri
 Test approach summary + acceptance-gate strategy. References `test-strategy@1` once created.
 
 ## 8. Definition of Ready / Done
-References `dor-dod@1` at `./dor-dod.md` (or inlined here for small engagements).
+References `definition-of-ready-and-done@1` at `./dor-dod.md` (or inlined here for small engagements).
 
 ## 9. Change-Control Process
 <How scope changes are proposed, approved, priced.>

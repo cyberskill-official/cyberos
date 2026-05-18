@@ -7,33 +7,33 @@ cadence: per-event
 status: shipped
 
 inputs:
-  - { name: prd,                source: cuo/cpo-product or external,                                    format: prd@1 }
+  - { name: prd,                source: cuo/cpo-product or external,                                    format: product-requirements-document@1 }
   - { name: capacity_signal,    source: project-plan or fractional-PM input,                            format: markdown brief }
   - { name: target_quarter,     source: workflow-caller,                                                format: string (e.g. "2026-Q3") }
 
 outputs:
   - { name: srs,                format: srs@1,                       recipient: cuo/cto + cuo/cpo-product }
-  - { name: adrs,               format: adr@1 (multiple),            recipient: cuo/cto + future-engineers }
+  - { name: adrs,               format: architecture-decision-record@1 (multiple),            recipient: cuo/cto + future-engineers }
   - { name: threat_model,       format: threat-model@1,              recipient: cuo/cto + cuo/ciso }
   - { name: sdd,                format: sdd@1,                       recipient: cuo/cto + impl team }
   - { name: impl_plan,          format: impl-plan@1,                 recipient: impl team (Linear / Jira / GitHub Projects) }
 
 skill_chain:
-  - { step: 1, skill: srs-author,          inputs_from: prd,                            outputs_to: srs_draft }
-  - { step: 2, skill: srs-audit,           inputs_from: srs_draft,                      outputs_to: srs }
-  - { step: 3, skill: adr-author,          inputs_from: srs,                            outputs_to: adrs_draft }
-  - { step: 4, skill: adr-audit,           inputs_from: adrs_draft,                     outputs_to: adrs }
+  - { step: 1, skill: software-requirements-specification-author,          inputs_from: prd,                            outputs_to: srs_draft }
+  - { step: 2, skill: software-requirements-specification-audit,           inputs_from: srs_draft,                      outputs_to: srs }
+  - { step: 3, skill: architecture-decision-record-author,          inputs_from: srs,                            outputs_to: adrs_draft }
+  - { step: 4, skill: architecture-decision-record-audit,           inputs_from: adrs_draft,                     outputs_to: adrs }
   - { step: 5, skill: threat-model-author, inputs_from: { srs: srs, adrs: adrs },       outputs_to: threat_model_draft }
   - { step: 6, skill: threat-model-audit,  inputs_from: threat_model_draft,             outputs_to: threat_model }
-  - { step: 7, skill: sdd-author,          inputs_from: { srs: srs, adrs: adrs },       outputs_to: sdd_draft }
-  - { step: 8, skill: sdd-audit,           inputs_from: sdd_draft,                      outputs_to: sdd }
-  - { step: 9, skill: impl-plan-author,    inputs_from: { sdd: sdd, target_quarter: target_quarter }, outputs_to: impl_plan_draft }
-  - { step: 10, skill: impl-plan-audit,    inputs_from: impl_plan_draft,                outputs_to: impl_plan }
+  - { step: 7, skill: software-design-document-author,          inputs_from: { srs: srs, adrs: adrs },       outputs_to: sdd_draft }
+  - { step: 8, skill: software-design-document-audit,           inputs_from: sdd_draft,                      outputs_to: sdd }
+  - { step: 9, skill: implementation-plan-author,    inputs_from: { sdd: sdd, target_quarter: target_quarter }, outputs_to: impl_plan_draft }
+  - { step: 10, skill: implementation-plan-audit,    inputs_from: impl_plan_draft,                outputs_to: impl_plan }
 
 escalates_to:
   - { persona: cuo/chief-information-security-officer,           when: "threat-model-audit STRIDE-S/E/T rules fire above warning + a corresponding ADR doesn't yet exist" }
-  - { persona: cuo/chief-product-officer,    when: "srs-audit QA-NFR-001 fires — NFR coverage gap; product owner needs to refine acceptance criteria" }
-  - { persona: cuo/chief-financial-officer,            when: "impl-plan-audit total_estimate_pts implies >25% capacity for the target quarter" }
+  - { persona: cuo/chief-product-officer,    when: "software-requirements-specification-audit QA-NFR-001 fires — NFR coverage gap; product owner needs to refine acceptance criteria" }
+  - { persona: cuo/chief-financial-officer,            when: "implementation-plan-audit total_estimate_pts implies >25% capacity for the target quarter" }
 
 consults:
   - { persona: cuo/chief-privacy-officer,    when: "the system processes personal data — verify GDPR / Vietnam Decree 13/2023 coverage in SRS COND-002" }
@@ -76,25 +76,25 @@ cyberos-cuo run cuo/chief-technology-officer/architect-new-system \
 
 ## Skill chain — step by step
 
-### Step 1: `srs-author`
+### Step 1: `software-requirements-specification-author`
 - **What it does:** Authors a Software Requirements Specification per IEEE 830 + ISO/IEC 25010:2023 NFR coverage from the input PRD.
 - **Inputs from this workflow:** `prd` (path to an audited PRD artefact).
-- **Outputs:** `srs_draft` — a `srs@1` markdown.
+- **Outputs:** `srs_draft` — a `software-requirements-specification@1` markdown.
 - **Pause point:** PLAN approval (the skill emits an SRS outline and halts for operator approval before WORKER phase).
 
-### Step 2: `srs-audit`
+### Step 2: `software-requirements-specification-audit`
 - **What it does:** Validates `srs_draft` against `srs_rubric@1.0` (IEEE 830 conformance + ISO 25010 nine-quality coverage + cross-skill chain rules). Iterates until 10/10.
 - **Inputs:** `srs_draft`.
 - **Outputs:** `srs` — the SRS at 10/10.
 - **Pause point:** HITL on QA-NFR-001 if NFR coverage gap → escalate to `cuo/cpo-product`.
 
-### Step 3: `adr-author`
+### Step 3: `architecture-decision-record-author`
 - **What it does:** Surfaces architectural decisions implied by the SRS and authors them in Michael Nygard format. Typically produces 3–7 ADRs per non-trivial SRS.
 - **Inputs:** `srs`.
-- **Outputs:** `adrs_draft` — list of `adr@1` markdowns.
+- **Outputs:** `adrs_draft` — list of `architecture-decision-record@1` markdowns.
 - **Pause point:** PLAN approval on which decisions warrant an ADR.
 
-### Step 4: `adr-audit`
+### Step 4: `architecture-decision-record-audit`
 - **What it does:** Validates each ADR against `adr_rubric@1.0` (Nygard format + ISO/IEC 25010 impact mapping + the ≥2-option rule).
 - **Inputs:** `adrs_draft`.
 - **Outputs:** `adrs` — all ADRs at 10/10.
@@ -112,25 +112,25 @@ cyberos-cuo run cuo/chief-technology-officer/architect-new-system \
 - **Outputs:** `threat_model` at 10/10.
 - **Pause point:** HITL on STRIDE-S/T threats touching auth/crypto boundaries → escalate to `cuo/ciso`.
 
-### Step 7: `sdd-author`
+### Step 7: `software-design-document-author`
 - **What it does:** Authors a Software Design Description per IEEE 1016 viewpoints, using SRS + ADRs as input. Produces 1-N SDDs per major component.
 - **Inputs:** `{srs, adrs}`.
-- **Outputs:** `sdd_draft` — list of `sdd@1` markdowns.
+- **Outputs:** `sdd_draft` — list of `software-design-document@1` markdowns.
 - **Pause point:** PLAN approval on component decomposition (which viewpoints to include).
 
-### Step 8: `sdd-audit`
+### Step 8: `software-design-document-audit`
 - **What it does:** Validates each SDD against `sdd_rubric@1.0` (IEEE 1016 viewpoint coverage + traceability to SRS REQ-IDs + design-contradicts-ADR check).
 - **Inputs:** `sdd_draft`.
 - **Outputs:** `sdd` at 10/10.
 - **Pause point:** HITL on QA-ADR-001 (design contradicts an accepted ADR — usually means the ADR needs revision).
 
-### Step 9: `impl-plan-author`
+### Step 9: `implementation-plan-author`
 - **What it does:** Translates the SDD into engineering tickets with estimates, owner assignments, branch/PR strategy, test approach, observability hooks. Conducts a 2-3 question sprint-planning interview.
 - **Inputs:** `{sdd, target_quarter}`.
-- **Outputs:** `impl_plan_draft` — an `impl-plan@1` markdown.
+- **Outputs:** `impl_plan_draft` — an `implementation-plan@1` markdown.
 - **Pause point:** capacity sign-off — if `total_estimate_pts` > 25% of the quarter's capacity, escalate to `cuo/cfo`.
 
-### Step 10: `impl-plan-audit`
+### Step 10: `implementation-plan-audit`
 - **What it does:** Validates the impl plan against `impl_plan_rubric@1.0` (DORA small-batch + AI-tooling discipline + per-task acceptance link + AI-specific code-review plan if `ai_assisted` is high).
 - **Inputs:** `impl_plan_draft`.
 - **Outputs:** `impl_plan` at 10/10 — ready for ticket creation in the target proj-management system.

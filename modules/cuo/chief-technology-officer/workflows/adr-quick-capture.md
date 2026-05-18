@@ -14,8 +14,8 @@ outputs:
   - { name: adr, format: adr@1, recipient: cuo/cto + future-engineers + any threat-model referring to this decision }
 
 skill_chain:
-  - { step: 1, skill: adr-author, inputs_from: decision_context, outputs_to: adr_draft }
-  - { step: 2, skill: adr-audit,  inputs_from: adr_draft,        outputs_to: adr }
+  - { step: 1, skill: architecture-decision-record-author, inputs_from: decision_context, outputs_to: adr_draft }
+  - { step: 2, skill: architecture-decision-record-audit,  inputs_from: adr_draft,        outputs_to: adr }
 
 escalates_to:
   - { persona: cuo/chief-information-security-officer, when: "ADR audit fires COND-001 (decision touches security boundary) AND no threat-model entry references this ADR within 14 days" }
@@ -24,8 +24,8 @@ consults:
   - { persona: cuo/chief-product-officer, when: "decision_context references PRD use cases — verify the ADR aligns with product intent" }
 
 audit_hooks:
-  - adr-author emits one artefact_write row
-  - adr-audit emits one artefact_write row per audit iteration
+  - architecture-decision-record-author emits one artefact_write row
+  - architecture-decision-record-audit emits one artefact_write row per audit iteration
   - workflow emits a workflow_complete row with the final ADR-NNNN id + sha256
 ---
 
@@ -59,13 +59,13 @@ cyberos-cuo run cuo/chief-technology-officer/adr-quick-capture \
 
 ## Skill chain — step by step
 
-### Step 1: `adr-author`
+### Step 1: `architecture-decision-record-author`
 - **What it does:** Renders the Nygard format (Context / Options Considered / Decision / Consequences / Compliance & Quality Impact / Notes & References) from the decision-context input.
 - **Inputs:** `decision_context` + optional `linked_srs_reqs`.
-- **Outputs:** `adr_draft` — an `adr@1` markdown.
+- **Outputs:** `adr_draft` — an `architecture-decision-record@1` markdown.
 - **Pause point:** typically none; the chain is short enough to run unattended.
 
-### Step 2: `adr-audit`
+### Step 2: `architecture-decision-record-audit`
 - **What it does:** Validates the ADR against `adr_rubric@1.0`. Common failure modes: QA-OPT-001 (single option), QA-CONSEQ-001 (only positive consequences), QA-ISO-001 (missing ISO 25010 mapping).
 - **Inputs:** `adr_draft`.
 - **Outputs:** `adr` — the ADR at 10/10.
@@ -89,4 +89,4 @@ cyberos-cuo run cuo/chief-technology-officer/adr-quick-capture \
 
 - `../README.md` — CTO 9-block spec.
 - `./architect-new-system.md` — the longer workflow that includes ADR authoring as steps 3-4.
-- `../../../skill/adr-author/SKILL.md`, `../../../skill/adr-audit/SKILL.md`, `../../../skill/adr-audit/RUBRIC.md`.
+- `../../../skill/architecture-decision-record-author/SKILL.md`, `../../../skill/architecture-decision-record-audit/SKILL.md`, `../../../skill/architecture-decision-record-audit/RUBRIC.md`.

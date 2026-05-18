@@ -14,7 +14,7 @@
 
 ### Driver
 
-User's request after registry v0.2.3: "the first inputs should be the BRAIN info itself, because i'll create new project and begin interact with it: so BRAIN + human inputs => PRD/SRS/other specs.... => cuo/cpo/fr-author". The chain currently jumps directly from "PRD/spec docs" to fr-author — there's no upstream skill that consumes BRAIN + human dialogue and produces structured intake. v0.2.4 fills this gap. `project-brief@1` is the artefact that sits between "user has an idea" and "we have a PRD".
+User's request after registry v0.2.3: "the first inputs should be the BRAIN info itself, because i'll create new project and begin interact with it: so BRAIN + human inputs => PRD/SRS/other specs.... => cuo/cpo/feature-request-author". The chain currently jumps directly from "PRD/spec docs" to feature-request-author — there's no upstream skill that consumes BRAIN + human dialogue and produces structured intake. v0.2.4 fills this gap. `project-brief@1` is the artefact that sits between "user has an idea" and "we have a PRD".
 
 ### Layout decision
 
@@ -26,7 +26,7 @@ First version. No predecessor.
 
 ### Acceptance evidence (when harness ships)
 
-- A round-trip test: `requirements-discovery` produces a brief; `prd-audit` (v0.2.5) validates frontmatter; `prd-author` consumes brief; produced PRD references the brief by `memory_id` or path.
+- A round-trip test: `requirements-discovery` produces a brief; `product-requirements-document-audit` (v0.2.5) validates frontmatter; `product-requirements-document-author` consumes brief; produced PRD references the brief by `memory_id` or path.
 
 ## How to add a future entry
 

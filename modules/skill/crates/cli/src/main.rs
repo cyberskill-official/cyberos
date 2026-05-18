@@ -214,8 +214,8 @@ async fn main() -> Result<()> {
 /// 2026-05-17 flat-layout rebuild: the SDP-driven catalog (sow/srs/fr/prd/etc.
 /// author+audit pairs) executes through LLM prompts described in each SKILL.md
 /// body — none of them ship a primary executable script in this generation.
-/// The VN bundles (vn-mst-validate, vn-vat-invoice, vn-bank-transfer,
-/// vneid-integration, vn-tax-filing) have moved to `cyberos/public-skills/`
+/// The VN bundles (vietnam-mst-validate, vietnam-vat-invoice, vietnam-bank-transfer,
+/// vietnam-vneid-integration, vn-tax-filing) have moved to `cyberos/public-skills/`
 /// for open-registry publication; their mappings are kept here only for the
 /// 30-day Phase 7 soak compat window. After Phase 7 finalisation, this
 /// function reduces to `_ => None`.
@@ -223,10 +223,10 @@ fn primary_script(name: &str) -> Option<&'static str> {
     match name {
         // Legacy VN bundles (soak-window compat only — present at
         // cyberos/public-skills/ for open-registry publication).
-        "vn-mst-validate"   => Some("scripts/validate_mst.py"),
-        "vn-vat-invoice"    => Some("scripts/generate_invoice.py"),
-        "vn-bank-transfer"  => Some("scripts/generate_qr.py"),
-        "vneid-integration" => Some("scripts/validate_cccd.py"),
+        "vietnam-mst-validate"   => Some("scripts/validate_mst.py"),
+        "vietnam-vat-invoice"    => Some("scripts/generate_invoice.py"),
+        "vietnam-bank-transfer"  => Some("scripts/generate_qr.py"),
+        "vietnam-vneid-integration" => Some("scripts/validate_cccd.py"),
         "vn-tax-filing"     => Some("scripts/generate_return.py"),
         // SDP-driven catalog bundles: no primary script — body is prompt-only.
         _ => None,

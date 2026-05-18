@@ -14,7 +14,7 @@
 
 ### Driver
 
-Pre-deployment audit of `cuo/cpo/fr-author` + `cuo/cpo/fr-audit` v0.2.1 (registry v0.2.2 audit) surfaced the gap: both skills declare `chat.notify` and `audit.append` MCP tools but the underlying NATS subjects they publish (`cuo.fr_author.fr_written`, `cuo.fr_audit.audit_written`, etc.) were undocumented anywhere — neither skill nor contract namespace owned the wire format. Without a canonical contract, two future skills could independently invent overlapping subject names. This contract fixes the names at the registry level.
+Pre-deployment audit of `cuo/cpo/feature-request-author` + `cuo/cpo/feature-request-audit` v0.2.1 (registry v0.2.2 audit) surfaced the gap: both skills declare `chat.notify` and `audit.append` MCP tools but the underlying NATS subjects they publish (`cuo.fr_author.fr_written`, `cuo.fr_audit.audit_written`, etc.) were undocumented anywhere — neither skill nor contract namespace owned the wire format. Without a canonical contract, two future skills could independently invent overlapping subject names. This contract fixes the names at the registry level.
 
 The contract's first draft over-specified the naming convention as `<sub-persona>.<skill_id>.<event>` (e.g. `cuo_cpo.fr_author.fr_written`); the audit-fix-audit loop caught the drift between the over-specified contract and the pre-existing skill body convention `<top-level-persona>.<skill_id>.<event>` (e.g. `cuo.fr_author.fr_written`) within the same release. Reality won — the contract was corrected before merge to match the existing skill bodies.
 
@@ -26,10 +26,10 @@ First version. No prior contract to migrate from. Skills v0.2.2+ declare `depend
 
 ### Acceptance evidence
 
-- All 7 currently-emitted subjects across `cuo/cpo/fr-author` + `cuo/cpo/fr-audit` are listed in `CONTRACT.md`'s inventory table.
+- All 7 currently-emitted subjects across `cuo/cpo/feature-request-author` + `cuo/cpo/feature-request-audit` are listed in `CONTRACT.md`'s inventory table.
 - All 7 subjects have a payload schema in `schema.json` under `payloads/<event_name>`.
 - `protocol.md` operational rules align with NATS JetStream defaults at the time of writing (NATS 2.10+).
-- One acceptance test pending under `cyberos/docs/skills/cuo/cpo/fr-author/acceptance/` to publish + subscribe + assert payload shape (v0.3.0 milestone).
+- One acceptance test pending under `cyberos/docs/skills/cuo/cpo/feature-request-author/acceptance/` to publish + subscribe + assert payload shape (v0.3.0 milestone).
 
 ## How to add a future entry
 

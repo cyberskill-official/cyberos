@@ -15,8 +15,8 @@ outputs:
   - { name: prd,                   format: prd@1, recipient: cuo/cpo-product + cuo/cto + design + engineering }
 
 skill_chain:
-  - { step: 1, skill: prd-author, inputs_from: { opportunity_brief: opportunity_brief, research_synthesis: research_synthesis, design_explorations: design_explorations }, outputs_to: prd_draft }
-  - { step: 2, skill: prd-audit,  inputs_from: prd_draft, outputs_to: prd }
+  - { step: 1, skill: product-requirements-document-author, inputs_from: { opportunity_brief: opportunity_brief, research_synthesis: research_synthesis, design_explorations: design_explorations }, outputs_to: prd_draft }
+  - { step: 2, skill: product-requirements-document-audit,  inputs_from: prd_draft, outputs_to: prd }
 
 escalates_to:
   - { persona: cuo/chief-product-officer,    when: "PRD audit fires repeated QA-OUTCOME-001 — outcome not measurable" }
@@ -59,8 +59,8 @@ cyberos-cuo run cuo/chief-product-officer/feature-prd-intake \
 
 ## Skill chain
 
-- **Step 1 `prd-author`** — drafts per Cagan PRD framework + Reforge discovery.
-- **Step 2 `prd-audit`** — validates per `prd_rubric@1.0`.
+- **Step 1 `product-requirements-document-author`** — drafts per Cagan PRD framework + Reforge discovery.
+- **Step 2 `product-requirements-document-audit`** — validates per `prd_rubric@1.0`.
 
 ## Failure modes
 

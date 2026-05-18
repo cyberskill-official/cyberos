@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-007
 title: "Provider cost-table loader — YAML-backed, hot-reloadable rate table"
 module: AI
@@ -885,4 +885,4 @@ For reference, the questions considered + resolved during authoring:
 
 ---
 
-*End of FR-AI-007. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `fr-audit` next.*
+*End of FR-AI-007. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `feature-request-audit` next.*

@@ -15,8 +15,8 @@ outputs:
   - { name: cap_alloc_memo,     format: cap-alloc-memo@1, recipient: Board of Directors }
 
 skill_chain:
-  - { step: 1, skill: cap-alloc-memo-author, inputs_from: { proposal_brief: proposal_brief, financials_context: financials_context, alternatives: alternatives }, outputs_to: memo_draft }
-  - { step: 2, skill: cap-alloc-memo-audit,  inputs_from: memo_draft, outputs_to: cap_alloc_memo }
+  - { step: 1, skill: capital-allocation-memo-author, inputs_from: { proposal_brief: proposal_brief, financials_context: financials_context, alternatives: alternatives }, outputs_to: memo_draft }
+  - { step: 2, skill: capital-allocation-memo-audit,  inputs_from: memo_draft, outputs_to: cap_alloc_memo }
 
 escalates_to:
   - { persona: cuo/chief-financial-officer,         when: "cap-alloc amount > 10% of quarterly free cash flow OR triggers covenant in debt agreement" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-executive-officer/capital-allocation-memo \
 
 ## Skill chain
 
-- **Step 1 `cap-alloc-memo-author`** — drafts per Thorndike / Buffett template: thesis / amount / expected return / alternatives / risks / decision-criteria.
-- **Step 2 `cap-alloc-memo-audit`** — validates per `cap_alloc_memo_rubric@1.0` (FM + SEC + QA-ALTS-001 (≥2 alts) + QA-IRR-001 (IRR assumption stated)).
+- **Step 1 `capital-allocation-memo-author`** — drafts per Thorndike / Buffett template: thesis / amount / expected return / alternatives / risks / decision-criteria.
+- **Step 2 `capital-allocation-memo-audit`** — validates per `cap_alloc_memo_rubric@1.0` (FM + SEC + QA-ALTS-001 (≥2 alts) + QA-IRR-001 (IRR assumption stated)).
 
 ## Failure modes
 

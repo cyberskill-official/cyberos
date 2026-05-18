@@ -40,9 +40,9 @@ Coursera / LinkedIn Learning / Udemy Business + Custom LMS (Cornerstone, Docebo,
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `annual-learning-program` | Capability framework + learning paths + manager training + leadership pipeline | annual | onboarding-pack@1 (annual L&D extension) | shipped (1.0.0) |
-| `quarterly-learning-effectiveness` | Completion + satisfaction + behavior + business impact (Kirkpatrick) | quarterly | enps-program@1 (learning chapter) | shipped (1.0.0) |
+| `quarterly-learning-effectiveness` | Completion + satisfaction + behavior + business impact (Kirkpatrick) | quarterly | employee-net-promoter-score-program@1 (learning chapter) | shipped (1.0.0) |
 | `per-leadership-development-program` | Per-cohort: emerging-leader / mid-manager / executive-readiness | per-event | program-charter@1 | shipped (1.0.0) |
-| `annual-learning-strategy` | Capability vision + skills-of-the-future + leadership pipeline + tech stack | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-learning-strategy` | Capability vision + skills-of-the-future + leadership pipeline + tech stack | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-1/Tier-2 skills (`onboarding-pack`, `enps-program`, `program-charter`, `strategy-doc`). See `../../skill/MODULE.md` §3.1 + §3.2.
 

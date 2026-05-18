@@ -1,6 +1,6 @@
 # project-cleanup — golden expected output (generic flavor)
 
-For a generic repo without docs/feature-requests/AUTHORING.md, the skill
+For a generic repo without modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md (or the legacy docs/feature-requests/AUTHORING.md), the skill
 runs the generic verification pipeline.
 
 ---

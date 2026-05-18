@@ -55,7 +55,7 @@
  <strong>The orchestration spine.</strong> PROJ is where work, time, billing, knowledge, and decisions meet — the CRM lead becomes an Engagement, the Engagement carries the rate card, the issues bind to BRAIN memories, the time entries roll up to INV, and the cycle review is drafted by CUO and accountable to an Account Manager.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- PROJ plays three strategic roles simultaneously. <strong>Role 1 — orchestration spine</strong>: every other module reaches into PROJ at some join (CRM deal → Engagement, TIME entries → Issue, Issue done → INV billable line, completed Issue → BRAIN Layer-3 ingestion, weekly cycle review → KB archive, Member calibration → REW signal). <strong>Role 2 — BRAIN-anchored decisions</strong>: an Issue is not a Jira ticket with stale prose; it is a node that cites BRAIN memories, links to the decision-log entry that spawned it, and emits a chained audit row on every state change. <strong>Role 3 — Engagement billing surface</strong>: the consultancy-specific primitive (T&amp;M / fixed-fee / retainer with localised rate cards) that nothing off the shelf models natively. UX is sync-engine — optimistic local mutations, WebSocket fan-out via NATS JetStream, server-canonical rebase on conflict, Yjs CRDT for description + comment bodies. Vietnamese localisation is non-negotiable for P1. FRs are being re-authored via the <code>fr-author</code> skill; this page documents the planned implementation at <code>cyberos/services/proj/</code>.
+ PROJ plays three strategic roles simultaneously. <strong>Role 1 — orchestration spine</strong>: every other module reaches into PROJ at some join (CRM deal → Engagement, TIME entries → Issue, Issue done → INV billable line, completed Issue → BRAIN Layer-3 ingestion, weekly cycle review → KB archive, Member calibration → REW signal). <strong>Role 2 — BRAIN-anchored decisions</strong>: an Issue is not a Jira ticket with stale prose; it is a node that cites BRAIN memories, links to the decision-log entry that spawned it, and emits a chained audit row on every state change. <strong>Role 3 — Engagement billing surface</strong>: the consultancy-specific primitive (T&amp;M / fixed-fee / retainer with localised rate cards) that nothing off the shelf models natively. UX is sync-engine — optimistic local mutations, WebSocket fan-out via NATS JetStream, server-canonical rebase on conflict, Yjs CRDT for description + comment bodies. Vietnamese localisation is non-negotiable for P1. FRs are being re-authored via the <code>feature-request-author</code> skill; this page documents the planned implementation at <code>cyberos/services/proj/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -1142,12 +1142,12 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- FRs (stub — see skill module's feature-request-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -1472,7 +1472,7 @@ overall 39 1.18× +18% ▲ improving</code></pre>
  <li><strong>BRAIN-anchored decisions:</strong> §2.7 above — citation relations + decision-to-issues sequence + dual-write audit chain.</li>
  <li><strong>Liquid-Glass UI exemplar:</strong> §2.8 above — 4 canonical surfaces + tokens.proj.css overlay + accessibility commitments.</li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — PROJ mutations are one of the four canonical capture inputs to the local BRAIN.</li>
- <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — PROJ FRs to be re-authored one-by-one via the <code>fr-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — PROJ FRs to be re-authored one-by-one via the <code>feature-request-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
  <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — PROJ placed at P1 · mid in the P1 sequence (after CHAT decommission gate clears at P0 · exit).</li>
  <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §4</a> — reviewer flagged the consultancy-Engagement primitive as the highest-leverage differentiator vs Linear/Jira; orchestration spine framing addresses §6 "what makes this not a feature?".</li>
  <li><strong>Cross-module page links:</strong>

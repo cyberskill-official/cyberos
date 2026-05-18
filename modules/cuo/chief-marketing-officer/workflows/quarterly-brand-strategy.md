@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: prior_brand_strategy,  source: last quarter's brand-strategy@1, format: brand-strategy@1 }
-  - { name: gtm_plan,              source: cuo/chief-sales-officer/annual-gtm-plan, format: gtm-plan@1 }
+  - { name: gtm_plan,              source: cuo/chief-sales-officer/annual-gtm-plan, format: go-to-market-plan@1 }
   - { name: competitive_intel,     source: competitive-brief outputs, format: markdown }
   - { name: customer_research,     source: cuo/cco-customer + CAB synthesis, format: customer-advisory-board@1 + research notes }
 

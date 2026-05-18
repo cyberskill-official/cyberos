@@ -72,10 +72,10 @@ def main() -> int:
         if not fp.is_file():
             continue
         from_runner_map = {
-            "vn-mst-validate": "scripts/validate_mst.py",
-            "vn-vat-invoice": "scripts/generate_invoice.py",
-            "vn-bank-transfer": "scripts/generate_qr.py",
-            "vneid-integration": "scripts/validate_cccd.py",
+            "vietnam-mst-validate": "scripts/validate_mst.py",
+            "vietnam-vat-invoice": "scripts/generate_invoice.py",
+            "vietnam-bank-transfer": "scripts/generate_qr.py",
+            "vietnam-vneid-integration": "scripts/validate_cccd.py",
         }
         if name not in from_runner_map:
             continue

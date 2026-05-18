@@ -9,16 +9,16 @@ pattern: time_critical
 sla_minutes: 120  # 2h — initial public statement window during reputational crisis
 
 inputs:
-  - { name: crisis_playbook,       source: cuo/chief-communications-officer/annual-crisis-playbook, format: crisis-comms-playbook@1 }
+  - { name: crisis_playbook,       source: cuo/chief-communications-officer/annual-crisis-playbook, format: crisis-communications-playbook@1 }
   - { name: incident_brief,        source: incident-detection source (CISO / CPO-Privacy / ops), format: markdown }
   - { name: stakeholder_status,    source: CRM + IR DB + media status, format: markdown }
 
 outputs:
-  - { name: crisis_response,       format: crisis-comms-playbook@1 (incident-augmented log), recipient: cuo/cco-communications + cuo/ceo + cuo/clo-legal + affected stakeholders }
+  - { name: crisis_response,       format: crisis-communications-playbook@1 (incident-augmented log), recipient: cuo/cco-communications + cuo/ceo + cuo/clo-legal + affected stakeholders }
 
 skill_chain:
-  - { step: 1, skill: crisis-comms-playbook-author, inputs_from: { crisis_playbook: crisis_playbook, incident_brief: incident_brief, stakeholder_status: stakeholder_status }, outputs_to: response_draft }
-  - { step: 2, skill: crisis-comms-playbook-audit,  inputs_from: response_draft, outputs_to: crisis_response }
+  - { step: 1, skill: crisis-communications-playbook-author, inputs_from: { crisis_playbook: crisis_playbook, incident_brief: incident_brief, stakeholder_status: stakeholder_status }, outputs_to: response_draft }
+  - { step: 2, skill: crisis-communications-playbook-audit,  inputs_from: response_draft, outputs_to: crisis_response }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "any tier-1 crisis (material breach / litigation / safety / executive)" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-communications-officer/per-crisis-response \
 
 ## Skill chain
 
-- **Step 1 `crisis-comms-playbook-author`** — augments playbook with incident specifics.
-- **Step 2 `crisis-comms-playbook-audit`** — validates per `crisis_comms_playbook_rubric@1.0`.
+- **Step 1 `crisis-communications-playbook-author`** — augments playbook with incident specifics.
+- **Step 2 `crisis-communications-playbook-audit`** — validates per `crisis_comms_playbook_rubric@1.0`.
 
 ## Failure modes
 

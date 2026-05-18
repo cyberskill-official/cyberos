@@ -39,7 +39,7 @@ ServiceNow / Jira Service Mgmt (ITSM); Okta / Azure AD (IAM); Datadog / Splunk (
 ## Workflows
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `annual-it-strategy` | Service catalog + infra roadmap + vendor stack + cost optimization | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-it-strategy` | Service catalog + infra roadmap + vendor stack + cost optimization | annual | strategy-document@1 | shipped (1.0.0) |
 | `quarterly-it-operating-review` | Uptime + SLA + MTTR + change-success + spend trends | quarterly | operating-model@1 (IT quarterly chapter) | shipped (1.0.0) |
 | `quarterly-it-vendor-scorecard` | IT vendor scoring: SLA + security + sustainability + renewal | quarterly | vendor-scorecard@1 | shipped (1.0.0) |
 | `annual-it-security-strategy` | IT-lens input to security strategy: endpoint + IAM + network + BCP/DR | annual | security-strategy@1 (IT chapter) | shipped (1.0.0) |

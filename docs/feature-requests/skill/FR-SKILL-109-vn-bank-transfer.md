@@ -1,6 +1,6 @@
 ---
 id: FR-SKILL-109
-title: "vn-bank-transfer@1 skill — VietQR + Napas247 transfer-code generator with bank-prefix validation, BRAIN audit, and per-transfer idempotency"
+title: "vietnam-bank-transfer@1 skill — VietQR + Napas247 transfer-code generator with bank-prefix validation, BRAIN audit, and per-transfer idempotency"
 module: SKILL
 priority: MUST
 status: accepted
@@ -17,7 +17,7 @@ depends_on: [FR-SKILL-104, FR-SKILL-108]
 blocks: [FR-SKILL-110]
 
 source_pages:
-  - website/docs/skills/vn-bank-transfer.html
+  - website/docs/skills/vietnam-bank-transfer.html
   - website/docs/legal/vn-payments.html
 source_decisions:
   - DEC-220 (VietQR is the canonical inter-bank QR format; Napas247 backbone)
@@ -26,20 +26,20 @@ source_decisions:
   - DEC-223 (idempotency key required for repeat-safe QR generation per transaction)
 
 language: rust 1.81
-service: cyberos/skills/vn-bank-transfer/
+service: cyberos/skills/vietnam-bank-transfer/
 new_files:
-  - skills/vn-bank-transfer/SKILL.md
-  - skills/vn-bank-transfer/main.rs
-  - skills/vn-bank-transfer/src/lib.rs
-  - skills/vn-bank-transfer/src/vietqr.rs
-  - skills/vn-bank-transfer/src/banks.rs
-  - skills/vn-bank-transfer/src/crc16.rs
-  - skills/vn-bank-transfer/tests/vietqr_test.rs
-  - skills/vn-bank-transfer/tests/banks_test.rs
+  - skills/vietnam-bank-transfer/SKILL.md
+  - skills/vietnam-bank-transfer/main.rs
+  - skills/vietnam-bank-transfer/src/lib.rs
+  - skills/vietnam-bank-transfer/src/vietqr.rs
+  - skills/vietnam-bank-transfer/src/banks.rs
+  - skills/vietnam-bank-transfer/src/crc16.rs
+  - skills/vietnam-bank-transfer/tests/vietqr_test.rs
+  - skills/vietnam-bank-transfer/tests/banks_test.rs
 allowed_tools:
-  - file_read: skills/vn-bank-transfer/**
-  - file_write: skills/vn-bank-transfer/**
-  - bash: cd skills/vn-bank-transfer && cargo test
+  - file_read: skills/vietnam-bank-transfer/**
+  - file_write: skills/vietnam-bank-transfer/**
+  - bash: cd skills/vietnam-bank-transfer && cargo test
 disallowed_tools:
   - call any external payment API (per §1 — skill is offline; only generates the QR string, doesn't execute transfer)
   - skip CRC16-CCITT-FALSE on QR payload (per VietQR spec; banks reject malformed QR)
@@ -62,7 +62,7 @@ risk_if_skipped: "Without authoritative VietQR generation, every payment-collect
 
 ## §1 — Description (BCP-14 normative)
 
-The `vn-bank-transfer@1` skill **MUST** generate VietQR strings conforming to NAPAS's EMVCo-based Merchant Presented Mode (MPM) specification. The skill is pure-local — it generates the QR payload string; banks/customers scan it; settlement happens out-of-band via Napas247. The contract:
+The `vietnam-bank-transfer@1` skill **MUST** generate VietQR strings conforming to NAPAS's EMVCo-based Merchant Presented Mode (MPM) specification. The skill is pure-local — it generates the QR payload string; banks/customers scan it; settlement happens out-of-band via Napas247. The contract:
 
 1. **MUST** accept a `TransferRequest` with: `receiver_account` (6–18 digits), `receiver_bank_bin` (6-digit NAPAS BIN), `receiver_name` (≤ 25 ASCII chars; non-ASCII transliterated), `amount` (i64 VND, ≥ 0 — 0 = "amount unspecified, customer enters"), `memo` (≤ 25 ASCII chars), `idempotency_key` (UUID).
 2. **MUST** validate `receiver_bank_bin` against the embedded NAPAS bank registry (40+ Vietnamese banks). Unknown BIN → `BankError::UnknownBin(<bin>)`.
@@ -125,7 +125,7 @@ The `vn-bank-transfer@1` skill **MUST** generate VietQR strings conforming to NA
 ### Public API
 
 ```rust
-// skills/vn-bank-transfer/src/lib.rs
+// skills/vietnam-bank-transfer/src/lib.rs
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -206,7 +206,7 @@ pub fn generate_vietqr(req: TransferRequest) -> Result<GenerateOutcome, BankErro
 ### Bank registry
 
 ```rust
-// skills/vn-bank-transfer/src/banks.rs
+// skills/vietnam-bank-transfer/src/banks.rs
 pub struct BankEntry {
     pub bin:       &'static str,
     pub short:     &'static str,
@@ -236,7 +236,7 @@ pub fn lookup(bin: &str) -> Option<&'static BankEntry> {
 ### TLV composer
 
 ```rust
-// skills/vn-bank-transfer/src/vietqr.rs
+// skills/vietnam-bank-transfer/src/vietqr.rs
 pub fn compose(
     bank_bin: &str,
     account:  &str,
@@ -281,7 +281,7 @@ pub fn compose(
 ### CRC
 
 ```rust
-// skills/vn-bank-transfer/src/crc16.rs
+// skills/vietnam-bank-transfer/src/crc16.rs
 pub fn ccitt_false(bytes: &[u8]) -> u16 {
     let mut crc: u16 = 0xFFFF;
     for &b in bytes {
@@ -330,7 +330,7 @@ pub fn ccitt_false(bytes: &[u8]) -> u16 {
 ## §5 — Verification
 
 ```rust
-// skills/vn-bank-transfer/tests/vietqr_test.rs
+// skills/vietnam-bank-transfer/tests/vietqr_test.rs
 
 #[test]
 fn vpbank_dynamic_qr_generates() {
@@ -409,8 +409,8 @@ fn audit_row_emitted() {
 - **FR-SKILL-103** — frontmatter schema.
 - **FR-SKILL-104** — broker enforces `allowed_tools: [BrainEmit]`; verifies skill cannot call HttpFetch.
 - **FR-SKILL-105** — brain-capture SDK used internally for audit emit.
-- **FR-SKILL-108** — vn-mst-validate is a sibling VN-pack skill; both depend on shared `transliterate()` + `redact()` helpers (in `cyberos-vn-common` crate).
-- **FR-SKILL-110** — vn-vat-invoice depends on this skill for embedding QR in hóa đơn.
+- **FR-SKILL-108** — vietnam-mst-validate is a sibling VN-pack skill; both depend on shared `transliterate()` + `redact()` helpers (in `cyberos-vn-common` crate).
+- **FR-SKILL-110** — vietnam-vat-invoice depends on this skill for embedding QR in hóa đơn.
 - **FR-BRAIN-111** — PII detection ruleset includes `VnBankAccount` tag.
 
 ---

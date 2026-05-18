@@ -270,7 +270,7 @@ flowchart TB
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Append-only grant + vesting_event + valuation rows in Postgres. Vesting compute is a deterministic function of (grant, today, valuation). Put-option exercise schedules a wire transfer via Wise (multi-currency) or VietQR (VND). HoldCo flip is a one-way migration — phantom row → real_share row with full audit trail.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P2: ~$25/month (small RDS schema + Fargate share + S3 retention). 50-tenant: ~$80/month. Per-grant cost negligible.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Dual sign-off mandatory on grants + valuations ((FR pending)). (b) Append-only ((FR pending)). (c) Zero BRAIN ingestion ((FR pending) + DEC-036). (d) 10-year retention. (e) M&amp;A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.</td></tr>
- <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · tectonic for grant + valuation PDFs · ring for SHA-256 · cyberskill-vn skills (vn-bank-transfer for put-option wires) · AWS S3 with retention lock · KMS.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · tectonic for grant + valuation PDFs · ring for SHA-256 · cyberskill-vn skills (vietnam-bank-transfer for put-option wires) · AWS S3 with retention lock · KMS.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with supersession. Deterministic vesting compute (pure fn). Dual sign-off enforced at AUTH cosign predicate. Annual valuation is a versioned row analogous to REW parameter versioning.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate in SG-1 (P2). Multi-AZ Postgres RDS. S3 retention 10 years.</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>CFO (R for valuation + grant) + CEO (A for grants + HoldCo flip) + 0.1 FTE eng for monthly vesting + put-option workflows.</td></tr>
@@ -327,7 +327,7 @@ graph TB
  end
 
  subgraph BRIDGES ["External bridges"]
- BANK["🛠 vn-bank-transfer<br>put-option wire (VietQR)"]
+ BANK["🛠 vietnam-bank-transfer<br>put-option wire (VietQR)"]
  WISE["Wise (SGD wire)"]
  DOC["📄 DOC<br>HoldCo paperwork (P4)"]
  HRMOD["👥 HR<br>roster · termination"]
@@ -391,7 +391,7 @@ graph TB
  <tr><td><code>vesting.rs</code></td><td>services/esop/src/vesting.rs</td><td>Pure-function vesting compute. Input: (grant, asof_date). Output: vested_sp count. phased cliff + monthly thereafter. Deterministic.</td></tr>
  <tr><td><code>vesting_cron.rs</code></td><td>services/esop/src/vesting_cron.rs</td><td>Monthly cron that materialises vesting_event rows. Idempotent (UNIQUE by (grant_id, period)).</td></tr>
  <tr><td><code>valuation.rs</code></td><td>services/esop/src/valuation.rs</td><td>Annual valuation cycle. CFO inputs base value; Board signs Industry Multiplier; auditor attests. New <code>valuation</code> row supersedes prior.</td></tr>
- <tr><td><code>put_option.rs</code></td><td>services/esop/src/put_option.rs</td><td>Put-option exercise. Year 3+ window (annual July). Capped by (FR pending) per-Member per-year limit. Wires cash via vn-bank-transfer or Wise.</td></tr>
+ <tr><td><code>put_option.rs</code></td><td>services/esop/src/put_option.rs</td><td>Put-option exercise. Year 3+ window (annual July). Capped by (FR pending) per-Member per-year limit. Wires cash via vietnam-bank-transfer or Wise.</td></tr>
  <tr><td><code>leaver.rs</code></td><td>services/esop/src/leaver.rs</td><td>Termination handler. Good Leaver: vested retained, future vesting halted, put rights preserved. Bad Leaver: vested retained at appendix discount, put rights frozen. Requires CFO + CEO co-sign.</td></tr>
  <tr><td><code>pool.rs</code></td><td>services/esop/src/pool.rs</td><td>Pool balance. Replenishment annually by % of profit (Board-signed parameter). GL/BL split for top-performers vs broad.</td></tr>
  <tr><td><code>ma_acceleration.rs</code></td><td>services/esop/src/ma_acceleration.rs</td><td>M&amp;A acceleration. Board fires; bulk vesting event for all open grants. Tax-implication note attached.</td></tr>
@@ -768,7 +768,7 @@ sequenceDiagram
  participant P as put_option.rs
  participant V as latest valuation
  participant CFO as CFO (approver)
- participant BANK as 🛠 vn-bank-transfer / Wise
+ participant BANK as 🛠 vietnam-bank-transfer / Wise
  participant B as 🧠 BRAIN
 
  Note over M: July annual window opens for Year-3+ Members.
@@ -875,12 +875,12 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- FRs (stub — see skill module's feature-request-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -918,7 +918,7 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- ESOP reads roster from HR (for terminations) and writes opaque references to BRAIN. Put-option wires go through vn-bank-transfer (VND) or Wise (SGD). HoldCo flip goes through DOC for Singapore paperwork.
+ ESOP reads roster from HR (for terminations) and writes opaque references to BRAIN. Put-option wires go through vietnam-bank-transfer (VND) or Wise (SGD). HoldCo flip goes through DOC for Singapore paperwork.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
@@ -932,7 +932,7 @@ graph LR
  S3["🗂 S3 (10y object-lock)"]
  end
  subgraph skills ["External services"]
- BANK["🛠 vn-bank-transfer<br>put-option VND wires"]
+ BANK["🛠 vietnam-bank-transfer<br>put-option VND wires"]
  WISE["Wise<br>SGD wires"]
  DOC["📄 DOC<br>HoldCo paperwork · P4"]
  ACRA["Singapore ACRA<br>HoldCo registry"]
@@ -1012,7 +1012,7 @@ graph LR
  <tr><td><code>R-ESOP-002</code></td><td>Single-signer grant issuance (CEO unilateral)</td><td>Low</td><td>Catastrophic</td><td>CEO</td><td>cosign_guard requires 3 signatures within 24h window; integration test asserts single-sign rejected.</td></tr>
  <tr><td><code>R-ESOP-003</code></td><td>Valuation drift across recompute (non-determinism)</td><td>Low</td><td>High</td><td>CTO</td><td>vesting.rs is a pure fn; replay test asserts byte-identical output for historical dates.</td></tr>
  <tr><td><code>R-ESOP-004</code></td><td>Bad Leaver classification disputed (legal exposure)</td><td>Medium</td><td>High</td><td>CLO</td><td>BL decision is human-only (CEO + CFO co-sign), with documented reason; appeal path via Board chair.</td></tr>
- <tr><td><code>R-ESOP-005</code></td><td>Put-option wire fails or delays past 10-day SLO</td><td>Medium</td><td>Low</td><td>CFO</td><td>vn-bank-transfer / Wise integration with retry + alert; manual fallback workflow.</td></tr>
+ <tr><td><code>R-ESOP-005</code></td><td>Put-option wire fails or delays past 10-day SLO</td><td>Medium</td><td>Low</td><td>CFO</td><td>vietnam-bank-transfer / Wise integration with retry + alert; manual fallback workflow.</td></tr>
  <tr><td><code>R-ESOP-006</code></td><td>External auditor unavailable for annual valuation</td><td>Low</td><td>Medium</td><td>CFO</td><td>Engaged auditor on retainer + secondary auditor relationship for continuity.</td></tr>
  <tr><td><code>R-ESOP-007</code></td><td>ESOP value leaks via BRAIN audit row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>brain_bridge inspects emit JSON; CI gate rejects numeric values in ESOP rows; opaque refs only.</td></tr>
  <tr><td><code>R-ESOP-008</code></td><td>HoldCo flip fails — Singapore filing rejected</td><td>Medium</td><td>High</td><td>CEO + CLO</td><td>DOC integration with ACRA tested in P4 sandbox; flip executed Member-by-Member with rollback path.</td></tr>
@@ -1152,7 +1152,7 @@ graph LR
 [cap] max 25%/yr of vested = max 500 SP this year ✓
 [valuation] 2028 unit value: 5,500,000 VND/SP
 [cash] 400 × 5,500,000 = 2,200,000,000 VND
-[wire] via vn-bank-transfer → mai's BIDV account
+[wire] via vietnam-bank-transfer → mai's BIDV account
 [status] requested → awaiting CFO approval
 
 # (CFO approves separately)
@@ -1237,7 +1237,7 @@ pool total: 100,000 100%
  <tr><td>Cap table (CEO/CFO/Board scope)</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>Quarterly cap-table immutable snapshot</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>Dilution simulator (read-only)</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
- <tr><td>vn-bank-transfer integration for put VND wires</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
+ <tr><td>vietnam-bank-transfer integration for put VND wires</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>Wise integration for SGD wires</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
  <tr><td>HoldCo flip — phantom → SG real share</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
  <tr><td>ACRA Form 24 generation via DOC</td><td><span class="pill pill-planned">planned · P4</span></td></tr>
@@ -1279,7 +1279,7 @@ pool total: 100,000 100%
  <li><strong>Singapore ACRA filings</strong> — Form 24 (share allotment), Form 45 (allotment return).</li>
  <li><strong>VAS 17 — Income Taxes</strong> — deferred-comp liability accrual.</li>
  <li><strong>ISO/IEC 27001:2022</strong> — A.5.13, A.8.10 mapped to append-only grant + valuation.</li>
- <li><strong>cyberskill-vn collection</strong> — vn-bank-transfer skill used for put-option VND wires.</li>
+ <li><strong>cyberskill-vn collection</strong> — vietnam-bank-transfer skill used for put-option VND wires.</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/services.html#esop" class="text-blue-700 underline">services.html#esop</a>.</li>
  </ul>
  </div>

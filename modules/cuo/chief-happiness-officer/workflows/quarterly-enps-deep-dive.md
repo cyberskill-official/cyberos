@@ -7,15 +7,15 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: enps_pulse,            source: cuo/chief-human-resources-officer/quarterly-enps-pulse, format: enps-program@1 }
+  - { name: enps_pulse,            source: cuo/chief-human-resources-officer/quarterly-enps-pulse, format: employee-net-promoter-score-program@1 }
   - { name: verbatims_corpus,      source: full survey verbatims, format: csv }
 
 outputs:
-  - { name: enps_deep_dive,        format: enps-program@1 (analytical chapter), recipient: cuo/chief-happiness-officer + cuo/chro + cuo/ceo + all managers }
+  - { name: enps_deep_dive,        format: employee-net-promoter-score-program@1 (analytical chapter), recipient: cuo/chief-happiness-officer + cuo/chro + cuo/ceo + all managers }
 
 skill_chain:
-  - { step: 1, skill: enps-program-author, inputs_from: { enps_pulse: enps_pulse, verbatims_corpus: verbatims_corpus }, outputs_to: deep_dive_draft }
-  - { step: 2, skill: enps-program-audit,  inputs_from: deep_dive_draft, outputs_to: enps_deep_dive }
+  - { step: 1, skill: employee-net-promoter-score-program-author, inputs_from: { enps_pulse: enps_pulse, verbatims_corpus: verbatims_corpus }, outputs_to: deep_dive_draft }
+  - { step: 2, skill: employee-net-promoter-score-program-audit,  inputs_from: deep_dive_draft, outputs_to: enps_deep_dive }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "executive-team trust score < 50 OR detractor cluster identified" }

@@ -44,10 +44,10 @@ Strategy decks (Pitch, Pages, Notion); financial modelling (Excel, Causal); mark
 ## Workflows
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `annual-corporate-strategy` | Master strategy: diagnosis + guiding policy + coherent actions + WTP/HTW | annual | strategy-doc@1 | shipped (1.0.0) |
-| `per-mna-thesis` | Per-target M&A thesis: rationale + synergy + integration + economics | per-event | mna-thesis@1 | shipped (1.0.0) |
-| `quarterly-strategy-review` | Progress on bets + environment monitoring + course corrections | quarterly | strategy-doc@1 (chapter) | shipped (1.0.0) |
-| `annual-portfolio-strategy` | BU / product-line invest / hold / harvest / divest classification | annual | strategy-doc@1 (portfolio chapter) | shipped (1.0.0) |
+| `annual-corporate-strategy` | Master strategy: diagnosis + guiding policy + coherent actions + WTP/HTW | annual | strategy-document@1 | shipped (1.0.0) |
+| `per-mna-thesis` | Per-target M&A thesis: rationale + synergy + integration + economics | per-event | mergers-and-acquisitions-thesis@1 | shipped (1.0.0) |
+| `quarterly-strategy-review` | Progress on bets + environment monitoring + course corrections | quarterly | strategy-document@1 (chapter) | shipped (1.0.0) |
+| `annual-portfolio-strategy` | BU / product-line invest / hold / harvest / divest classification | annual | strategy-document@1 (portfolio chapter) | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2 skills (`strategy-doc`, `mna-thesis`). See `../../skill/MODULE.md` §3.2.
 

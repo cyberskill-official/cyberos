@@ -7,7 +7,7 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: prior_nps,          source: last quarter's nps-program@1,                          format: nps-program@1 }
+  - { name: prior_nps,          source: last quarter's nps-program@1,                          format: net-promoter-score-program@1 }
   - { name: survey_results,     source: Delighted / Qualtrics / SurveyMonkey / built-in CRM,   format: csv export }
   - { name: open_actions,       source: prior-quarter action plan + status,                    format: markdown }
 
@@ -15,8 +15,8 @@ outputs:
   - { name: nps_pulse,          format: nps-program@1, recipient: cuo/cso-sales + cuo/cco-customer + cuo/ceo + Board (chapter) }
 
 skill_chain:
-  - { step: 1, skill: nps-program-author, inputs_from: { prior_nps: prior_nps, survey_results: survey_results, open_actions: open_actions }, outputs_to: pulse_draft }
-  - { step: 2, skill: nps-program-audit,  inputs_from: pulse_draft, outputs_to: nps_pulse }
+  - { step: 1, skill: net-promoter-score-program-author, inputs_from: { prior_nps: prior_nps, survey_results: survey_results, open_actions: open_actions }, outputs_to: pulse_draft }
+  - { step: 2, skill: net-promoter-score-program-audit,  inputs_from: pulse_draft, outputs_to: nps_pulse }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,         when: "company NPS drops >10 pts QoQ" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-sales-officer/quarterly-nps-program \
 
 ## Skill chain
 
-- **Step 1 `nps-program-author`** — drafts per Reichheld / Bain NPS + Net Promoter System.
-- **Step 2 `nps-program-audit`** — validates per `nps_program_rubric@1.0`.
+- **Step 1 `net-promoter-score-program-author`** — drafts per Reichheld / Bain NPS + Net Promoter System.
+- **Step 2 `net-promoter-score-program-audit`** — validates per `nps_program_rubric@1.0`.
 
 ## Failure modes
 

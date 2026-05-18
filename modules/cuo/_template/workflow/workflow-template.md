@@ -10,7 +10,7 @@ inputs:
   - { name: <input-name>, source: <where>, format: <markdown | json | dashboard | verbal-brief | meeting-notes> }
 
 outputs:
-  - { name: <output-name>, format: <artifact type — e.g. prd@1 | sow@1 | runbook@1 | ad-hoc-md>, recipient: <persona-slug or external> }
+  - { name: <output-name>, format: <artifact type — e.g. product-requirements-document@1 | statement-of-work@1 | runbook@1 | ad-hoc-md>, recipient: <persona-slug or external> }
 
 skill_chain:
   - { step: 1, skill: <skill-name>, inputs_from: <workflow input name OR prior-step output>, outputs_to: <next-step input OR workflow output> }

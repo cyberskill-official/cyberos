@@ -38,10 +38,10 @@ C4 model + structurizr (diagrams); ThoughtWorks Tech Radar pattern; archi (TOGAF
 ## Workflows
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `per-architecture-decision` | ADR per Nygard format with threat-model + SDD chain | per-event | adr@1 | shipped (1.0.0) |
-| `annual-architecture-vision` | Reference architecture + principles + tech-radar + debt portfolio | annual | strategy-doc@1 | shipped (1.0.0) |
+| `per-architecture-decision` | ADR per Nygard format with threat-model + SDD chain | per-event | architecture-decision-record@1 | shipped (1.0.0) |
+| `annual-architecture-vision` | Reference architecture + principles + tech-radar + debt portfolio | annual | strategy-document@1 | shipped (1.0.0) |
 | `per-threat-model-review` | Per-system STRIDE + ASVS + mitigations review | per-event | threat-model@1 | shipped (1.0.0) |
-| `quarterly-design-review` | Cross-SDD review: design coherence + ADR alignment + NFR coverage | quarterly | sdd@1 (review chapter) | shipped (1.0.0) |
+| `quarterly-design-review` | Cross-SDD review: design coherence + ADR alignment + NFR coverage | quarterly | software-design-document@1 (review chapter) | shipped (1.0.0) |
 
 All workflows chain through shipped SDP-original + Tier-2 skills (`adr`, `threat-model`, `sdd`, `strategy-doc`). See `../../skill/MODULE.md` §3 + §3.2.
 

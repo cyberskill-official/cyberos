@@ -7,7 +7,7 @@ cadence: monthly
 status: shipped
 
 inputs:
-  - { name: prior_twcf,         source: last month's 13-week-cash-flow@1, format: 13-week-cash-flow@1 }
+  - { name: prior_twcf,         source: last month's 13-week-cash-flow@1, format: thirteen-week-cash-flow@1 }
   - { name: ar_aging,           source: NetSuite / SAP AR module,         format: csv aging report }
   - { name: ap_aging,           source: NetSuite / SAP AP module,         format: csv aging report }
   - { name: payroll_schedule,   source: Gusto / ADP / Rippling,           format: csv calendar }
@@ -17,11 +17,11 @@ outputs:
   - { name: cash_forecast,      format: 13-week-cash-flow@1, recipient: cuo/cfo + cuo/ceo + lenders (covenant compliance) }
 
 skill_chain:
-  - { step: 1, skill: 13-week-cash-flow-author, inputs_from: { prior_twcf: prior_twcf, ar_aging: ar_aging, ap_aging: ap_aging, payroll_schedule: payroll_schedule, debt_schedule: debt_schedule }, outputs_to: twcf_draft }
-  - { step: 2, skill: 13-week-cash-flow-audit,  inputs_from: twcf_draft, outputs_to: cash_forecast }
+  - { step: 1, skill: thirteen-week-cash-flow-author, inputs_from: { prior_twcf: prior_twcf, ar_aging: ar_aging, ap_aging: ap_aging, payroll_schedule: payroll_schedule, debt_schedule: debt_schedule }, outputs_to: twcf_draft }
+  - { step: 2, skill: thirteen-week-cash-flow-audit,  inputs_from: twcf_draft, outputs_to: cash_forecast }
 
 escalates_to:
-  - { persona: cuo/chief-executive-officer,         when: "13-week-cash-flow-audit fires QA-RUNWAY-001 — runway <6 months at projected burn" }
+  - { persona: cuo/chief-executive-officer,         when: "thirteen-week-cash-flow-audit fires QA-RUNWAY-001 — runway <6 months at projected burn" }
   - { persona: cuo/chief-legal-officer,   when: "QA-COVENANT-001 fires — covenant breach risk within forecast window" }
 
 consults:
@@ -62,8 +62,8 @@ cyberos-cuo run cuo/chief-financial-officer/monthly-cash-management \
 
 ## Skill chain
 
-- **Step 1 `13-week-cash-flow-author`** — drafts per TWCF standard structure: 13 weekly columns × (operating receipts / operating disbursements / financing / net change / cumulative cash).
-- **Step 2 `13-week-cash-flow-audit`** — validates per `13_week_cash_flow_rubric@1.0` (FM + SEC + QA-CASH-RECON-001 (period-over-period reconciliation) + QA-RUNWAY-001 + QA-COVENANT-001).
+- **Step 1 `thirteen-week-cash-flow-author`** — drafts per TWCF standard structure: 13 weekly columns × (operating receipts / operating disbursements / financing / net change / cumulative cash).
+- **Step 2 `thirteen-week-cash-flow-audit`** — validates per `13_week_cash_flow_rubric@1.0` (FM + SEC + QA-CASH-RECON-001 (period-over-period reconciliation) + QA-RUNWAY-001 + QA-COVENANT-001).
 
 ## Failure modes
 

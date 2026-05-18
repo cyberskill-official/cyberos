@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: prior_program,         source: last quarter's happiness-program@1, format: happiness-program@1 }
-  - { name: enps_data,             source: cuo/chief-human-resources-officer/quarterly-enps-pulse, format: enps-program@1 }
+  - { name: enps_data,             source: cuo/chief-human-resources-officer/quarterly-enps-pulse, format: employee-net-promoter-score-program@1 }
   - { name: wellbeing_metrics,     source: Officevibe / TINYpulse / Culture Amp wellbeing module, format: csv }
 
 outputs:

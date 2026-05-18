@@ -14,8 +14,8 @@ outputs:
   - { name: annual_pia_portfolio_refresh_artefact, format: ad-hoc-md, recipient: persona owner + downstream consumers }
 
 skill_chain:
-  - { step: 1, skill: pia-author, inputs_from: brief, outputs_to: pia_draft }
-  - { step: 2, skill: pia-audit, inputs_from: pia_draft, outputs_to: pia_final }
+  - { step: 1, skill: privacy-impact-assessment-author, inputs_from: brief, outputs_to: pia_draft }
+  - { step: 2, skill: privacy-impact-assessment-audit, inputs_from: pia_draft, outputs_to: pia_final }
 
 escalates_to: []
 
@@ -56,9 +56,9 @@ cyberos-cuo execute chief-privacy-officer/annual-pia-portfolio-refresh \
 
 ## Skill-chain step-by-step
 
-**Step 1 — `pia-author`**: produces the artefact body in the shape declared by `modules/skill/pia-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
+**Step 1 — `privacy-impact-assessment-author`**: produces the artefact body in the shape declared by `modules/skill/privacy-impact-assessment-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
 
-**Step 2 — `pia-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
+**Step 2 — `privacy-impact-assessment-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
 
 ## Failure modes
 
@@ -76,6 +76,6 @@ cyberos-cuo execute chief-privacy-officer/annual-pia-portfolio-refresh \
 
 ## Cross-references
 
-- Skill chain anchors: see `modules/skill/pia-author/` + `modules/skill/pia-audit/`
+- Skill chain anchors: see `modules/skill/privacy-impact-assessment-author/` + `modules/skill/privacy-impact-assessment-audit/`
 - Persona spec: see `modules/cuo/chief-privacy-officer/README.md` (9-block schema, §8 Audit criteria)
 - BRAIN protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)

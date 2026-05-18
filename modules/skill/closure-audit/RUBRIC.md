@@ -22,7 +22,7 @@
 | `FM-103` | `client` | required, string | error | false |
 | `FM-104` | `closure_date` | required, ISO 8601 | error | true |
 | `FM-105` | `closure_version` | required, SemVer | error | true |
-| `FM-106` | `linked_sow` | required, resolves to a SOW that passed sow-audit | error | false |
+| `FM-106` | `linked_sow` | required, resolves to a SOW that passed statement-of-work-audit | error | false |
 | `FM-107` | `provenance.source_path`, `provenance.source_hash` | required | error | false |
 | `FM-108` | `client_nps` | required, integer 0-10 | error | false |
 | `FM-109` | `signers` | required, array of `{handle, role, signed_at}` covering Client_Sponsor, EM, TL | error | false |
@@ -86,7 +86,7 @@
 | ------- | ----- | -------- |
 | `XCHAIN-001` | `provenance.source_path` matches author manifest | warning |
 | `XCHAIN-002` | `provenance.source_hash` matches at write time | error |
-| `XCHAIN-003` | `linked_sow` resolves to a SOW that passed sow-audit at 10/10 | error |
+| `XCHAIN-003` | `linked_sow` resolves to a SOW that passed statement-of-work-audit at 10/10 | error |
 | `XCHAIN-004` | Every deliverable in linked SOW is enumerated in §2 | error |
 | `XCHAIN-005` | Runbook references in §6 are at 10/10 audit | warning |
 

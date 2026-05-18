@@ -14,8 +14,8 @@ outputs:
   - { name: annual_strategic_narrative_artefact, format: ad-hoc-md, recipient: persona owner + downstream consumers }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: brief, outputs_to: narrative_draft }
-  - { step: 2, skill: strategy-doc-audit, inputs_from: narrative_draft, outputs_to: annual_narrative }
+  - { step: 1, skill: strategy-document-author, inputs_from: brief, outputs_to: narrative_draft }
+  - { step: 2, skill: strategy-document-audit, inputs_from: narrative_draft, outputs_to: annual_narrative }
 
 escalates_to: []
 
@@ -56,9 +56,9 @@ cyberos-cuo execute chief-executive-officer/annual-strategic-narrative \
 
 ## Skill-chain step-by-step
 
-**Step 1 — `strategy-doc-author`**: produces the artefact body in the shape declared by `modules/skill/strategy-doc-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
+**Step 1 — `strategy-document-author`**: produces the artefact body in the shape declared by `modules/skill/strategy-document-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
 
-**Step 2 — `strategy-doc-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
+**Step 2 — `strategy-document-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
 
 ## Failure modes
 
@@ -76,6 +76,6 @@ cyberos-cuo execute chief-executive-officer/annual-strategic-narrative \
 
 ## Cross-references
 
-- Skill chain anchors: see `modules/skill/strategy-doc-author/` + `modules/skill/strategy-doc-audit/`
+- Skill chain anchors: see `modules/skill/strategy-document-author/` + `modules/skill/strategy-document-audit/`
 - Persona spec: see `modules/cuo/chief-executive-officer/README.md` (9-block schema, §8 Audit criteria)
 - BRAIN protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)

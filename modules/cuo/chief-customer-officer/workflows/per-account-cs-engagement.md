@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: account_brief,         source: CSM, format: markdown }
-  - { name: prior_engagement,      source: last engagement plan for the account (if any), format: cs-engagement@1 }
+  - { name: prior_engagement,      source: last engagement plan for the account (if any), format: customer-success-engagement@1 }
   - { name: crm_history,           source: CRM activity, format: csv (last 90 days) }
   - { name: product_usage,         source: telemetry, format: csv }
 
@@ -16,8 +16,8 @@ outputs:
   - { name: cs_engagement,         format: cs-engagement@1, recipient: cuo/cco-customer + CSM + account team }
 
 skill_chain:
-  - { step: 1, skill: cs-engagement-author, inputs_from: { account_brief: account_brief, prior_engagement: prior_engagement, crm_history: crm_history, product_usage: product_usage }, outputs_to: engagement_draft }
-  - { step: 2, skill: cs-engagement-audit,  inputs_from: engagement_draft, outputs_to: cs_engagement }
+  - { step: 1, skill: customer-success-engagement-author, inputs_from: { account_brief: account_brief, prior_engagement: prior_engagement, crm_history: crm_history, product_usage: product_usage }, outputs_to: engagement_draft }
+  - { step: 2, skill: customer-success-engagement-audit,  inputs_from: engagement_draft, outputs_to: cs_engagement }
 
 escalates_to:
   - { persona: cuo/chief-customer-officer,   when: "account is top-tier and engagement plan lacks executive sponsor" }
@@ -60,8 +60,8 @@ cyberos-cuo run cuo/chief-customer-officer/per-account-cs-engagement \
 
 ## Skill chain
 
-- **Step 1 `cs-engagement-author`** — drafts per Gainsight methodology.
-- **Step 2 `cs-engagement-audit`** — validates per `cs_engagement_rubric@1.0`.
+- **Step 1 `customer-success-engagement-author`** — drafts per Gainsight methodology.
+- **Step 2 `customer-success-engagement-audit`** — validates per `cs_engagement_rubric@1.0`.
 
 ## Failure modes
 

@@ -14,8 +14,8 @@ outputs:
   - { name: annual_comp_plan_design_artefact, format: ad-hoc-md, recipient: persona owner + downstream consumers }
 
 skill_chain:
-  - { step: 1, skill: comp-plan-author, inputs_from: brief, outputs_to: scp_draft }
-  - { step: 2, skill: comp-plan-audit, inputs_from: scp_draft, outputs_to: scp_final }
+  - { step: 1, skill: compensation-plan-author, inputs_from: brief, outputs_to: scp_draft }
+  - { step: 2, skill: compensation-plan-audit, inputs_from: scp_draft, outputs_to: scp_final }
 
 escalates_to: []
 
@@ -56,9 +56,9 @@ cyberos-cuo execute chief-revenue-officer/annual-comp-plan-design \
 
 ## Skill-chain step-by-step
 
-**Step 1 — `comp-plan-author`**: produces the artefact body in the shape declared by `modules/skill/comp-plan-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
+**Step 1 — `compensation-plan-author`**: produces the artefact body in the shape declared by `modules/skill/compensation-plan-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
 
-**Step 2 — `comp-plan-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
+**Step 2 — `compensation-plan-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
 
 ## Failure modes
 
@@ -76,6 +76,6 @@ cyberos-cuo execute chief-revenue-officer/annual-comp-plan-design \
 
 ## Cross-references
 
-- Skill chain anchors: see `modules/skill/comp-plan-author/` + `modules/skill/comp-plan-audit/`
+- Skill chain anchors: see `modules/skill/compensation-plan-author/` + `modules/skill/compensation-plan-audit/`
 - Persona spec: see `modules/cuo/chief-revenue-officer/README.md` (9-block schema, §8 Audit criteria)
 - BRAIN protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)

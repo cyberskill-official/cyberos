@@ -53,7 +53,7 @@ def validate_chain(workflow: WorkflowEntry, skill_root: Path) -> ValidationResul
     """Validate that every step in `workflow.skill_chain` references a shipped skill.
 
     A chain step has shape:
-        {step: 1, skill: "srs-author", inputs_from: ..., outputs_to: ...}
+        {step: 1, skill: "software-requirements-specification-author", inputs_from: ..., outputs_to: ...}
 
     The validator:
     - Counts a step as PLANNED if its `skill` value starts with `planned:` —

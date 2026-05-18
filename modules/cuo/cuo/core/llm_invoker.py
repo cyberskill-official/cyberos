@@ -1,6 +1,6 @@
 """LLMInvoker — drives prompt-only SDP skills via LLM API.
 
-Most CyberOS skills (sow-author, srs-author, adr-author, etc.) are prompt-only:
+Most CyberOS skills (statement-of-work-author, software-requirements-specification-author, architecture-decision-record-author, etc.) are prompt-only:
 their SKILL.md body IS the system prompt, and the audit-pair `<skill>-audit`'s
 RUBRIC.md is the validation prompt. They cannot be subprocess-invoked because
 there's no executable to run.

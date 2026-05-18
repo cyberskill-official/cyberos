@@ -10,7 +10,7 @@ inputs:
   - { name: engagement_register, source: PMO / Linear / Jira / project tracker, format: csv export }
   - { name: utilization_data,    source: timesheet / capacity tool,             format: csv }
   - { name: financials,          source: cuo/cfo (engagement-level P&L),        format: monthly-close@1 segment data }
-  - { name: csat_pulse,          source: cs-engagement@1 outputs (per engagement), format: cs-engagement@1 set }
+  - { name: csat_pulse,          source: customer-success-engagement@1 outputs (per engagement), format: customer-success-engagement@1 set }
 
 outputs:
   - { name: delivery_review,     format: delivery-review@1, recipient: cuo/coo + cuo/ceo + Board (quarterly chapter) }

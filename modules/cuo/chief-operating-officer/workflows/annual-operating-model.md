@@ -10,7 +10,7 @@ inputs:
   - { name: prior_model,        source: last year's operating-model@1,      format: operating-model@1 }
   - { name: org_chart,          source: cuo/chro (current),                  format: csv / markdown }
   - { name: ceo_priorities,     source: cuo/ceo (vision for the year),       format: markdown brief }
-  - { name: incident_lessons,   source: prior-year postmortem@1 + retro@1,   format: postmortem@1 + retro@1 set }
+  - { name: incident_lessons,   source: prior-year postmortem@1 + retro@1,   format: postmortem@1 + retrospective@1 set }
 
 outputs:
   - { name: operating_model,    format: operating-model@1, recipient: cuo/coo + cuo/ceo + entire C-suite }

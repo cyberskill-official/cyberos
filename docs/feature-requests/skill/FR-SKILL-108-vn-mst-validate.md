@@ -1,6 +1,6 @@
 ---
 id: FR-SKILL-108
-title: "vn-mst-validate@1 skill — Vietnamese Tax ID (MST) validation against General Department of Taxation (GDT) public registry"
+title: "vietnam-mst-validate@1 skill — Vietnamese Tax ID (MST) validation against General Department of Taxation (GDT) public registry"
 module: SKILL
 priority: MUST
 status: accepted
@@ -17,7 +17,7 @@ depends_on: [FR-SKILL-104]
 blocks: [FR-SKILL-109, FR-SKILL-110]
 
 source_pages:
-  - website/docs/skills/vn-mst-validate.html
+  - website/docs/skills/vietnam-mst-validate.html
   - website/docs/legal/vn-pdpl-compliance.html#mst
 source_decisions:
   - DEC-210 (MST validation MUST be authoritative — local checksum + remote GDT lookup; both required)
@@ -26,22 +26,22 @@ source_decisions:
   - DEC-213 (PDPL 2025: MST is PII; redact in logs; never persist raw outside the audit row)
 
 language: rust 1.81
-service: cyberos/skills/vn-mst-validate/
+service: cyberos/skills/vietnam-mst-validate/
 new_files:
-  - skills/vn-mst-validate/SKILL.md
-  - skills/vn-mst-validate/main.rs
-  - skills/vn-mst-validate/src/lib.rs
-  - skills/vn-mst-validate/src/checksum.rs
-  - skills/vn-mst-validate/src/gdt_client.rs
-  - skills/vn-mst-validate/src/cache.rs
-  - skills/vn-mst-validate/tests/checksum_test.rs
-  - skills/vn-mst-validate/tests/integration_test.rs
+  - skills/vietnam-mst-validate/SKILL.md
+  - skills/vietnam-mst-validate/main.rs
+  - skills/vietnam-mst-validate/src/lib.rs
+  - skills/vietnam-mst-validate/src/checksum.rs
+  - skills/vietnam-mst-validate/src/gdt_client.rs
+  - skills/vietnam-mst-validate/src/cache.rs
+  - skills/vietnam-mst-validate/tests/checksum_test.rs
+  - skills/vietnam-mst-validate/tests/integration_test.rs
 modified_files:
   - cyberos/Cargo.toml                                  # workspace member
 allowed_tools:
-  - file_read: skills/vn-mst-validate/**
-  - file_write: skills/vn-mst-validate/**
-  - bash: cd skills/vn-mst-validate && cargo test
+  - file_read: skills/vietnam-mst-validate/**
+  - file_write: skills/vietnam-mst-validate/**
+  - bash: cd skills/vietnam-mst-validate && cargo test
 disallowed_tools:
   - call GDT public API with > 100 req/min (per official rate limit; will be rate-limited otherwise)
   - cache MST validation results > 24h (per DEC-212; data freshness matters for KYC)
@@ -49,7 +49,7 @@ disallowed_tools:
 
 effort_hours: 7
 sub_tasks:
-  - "0.5h: SKILL.md — id=vn-mst-validate, version=1.0.0, allowed_tools=[BrainEmit, HttpFetch], allowed_brain_scopes=memories/compliance/mst/**"
+  - "0.5h: SKILL.md — id=vietnam-mst-validate, version=1.0.0, allowed_tools=[BrainEmit, HttpFetch], allowed_brain_scopes=memories/compliance/mst/**"
   - "1.0h: checksum.rs — 10-digit GDT checksum (weight vector [31,29,23,19,17,13,7,5,3,1]); 13-digit branch (prefix-3 + dash + 10-digit)"
   - "1.5h: gdt_client.rs — POST to https://gdtapi.gdt.gov.vn/Service.asmx; parse SOAP XML response; map to canonical struct"
   - "0.5h: cache.rs — sled-backed local cache; 24h TTL; key = MST, value = ValidationOutcome"
@@ -62,7 +62,7 @@ risk_if_skipped: "Without authoritative MST validation, customer-onboarded MSTs 
 
 ## §1 — Description (BCP-14 normative)
 
-The `vn-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) using a two-stage process: local checksum + remote GDT verification. The contract:
+The `vietnam-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) using a two-stage process: local checksum + remote GDT verification. The contract:
 
 1. **MUST** accept input as a 10-digit or 13-digit MST string. 10-digit = company head office; 13-digit = company branch (`AAAAAAAAAA-BBB` format where AAAAAAAAAA is the parent 10-digit and BBB is the branch suffix).
 2. **MUST** run local checksum FIRST per the official GDT algorithm:
@@ -117,7 +117,7 @@ The `vn-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) using a
 
 ```markdown
 ---
-id: vn-mst-validate
+id: vietnam-mst-validate
 version: 1.0.0
 description: Validate Vietnamese Tax ID (MST) via GDT public API + local checksum.
 allowed_brain_scopes:
@@ -137,7 +137,7 @@ x-allowed-domains:
   - gdtapi.gdt.gov.vn
 ---
 
-# vn-mst-validate@1
+# vietnam-mst-validate@1
 
 Vietnamese Tax ID (MST) validation skill.
 
@@ -154,7 +154,7 @@ if outcome.valid {
 ### Rust API
 
 ```rust
-// skills/vn-mst-validate/src/lib.rs
+// skills/vietnam-mst-validate/src/lib.rs
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -235,7 +235,7 @@ fn normalise_mst(mst: &str) -> Result<String, MstError> {
 ### Checksum
 
 ```rust
-// skills/vn-mst-validate/src/checksum.rs
+// skills/vietnam-mst-validate/src/checksum.rs
 use crate::MstError;
 
 const WEIGHTS: [u32; 10] = [31, 29, 23, 19, 17, 13, 7, 5, 3, 1];
@@ -257,7 +257,7 @@ pub fn verify(normalised: &str) -> Result<(), MstError> {
 ### GDT client (SOAP)
 
 ```rust
-// skills/vn-mst-validate/src/gdt_client.rs
+// skills/vietnam-mst-validate/src/gdt_client.rs
 use std::time::Duration;
 use governor::{Quota, RateLimiter};
 use std::num::NonZeroU32;
@@ -385,7 +385,7 @@ struct GdtResponse {
 ## §5 — Verification
 
 ```rust
-// skills/vn-mst-validate/tests/checksum_test.rs
+// skills/vietnam-mst-validate/tests/checksum_test.rs
 #[test]
 fn valid_10_digit_passes() {
     assert!(checksum::verify("0312345678").is_ok());
@@ -407,7 +407,7 @@ fn invalid_length_rejected() {
 ```
 
 ```rust
-// skills/vn-mst-validate/tests/integration_test.rs
+// skills/vietnam-mst-validate/tests/integration_test.rs
 #[tokio::test]
 async fn happy_path_against_mock_gdt() {
     let mock = MockGdt::start_with("0312345678", "00", "CYBERSKILL JSC").await;

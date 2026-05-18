@@ -22,4 +22,4 @@ emitted_source_freshness_tier: 9
 - Google SRE Book — blameless culture.
 - GDPR Art. 33 — 72-hour data-breach notification.
 - Vietnam Decree 13/2023 PDPD.
-- Consumers: `postmortem-author`, `postmortem-audit`, `retro-author` (incident reflection in COND-001).
+- Consumers: `postmortem-author`, `postmortem-audit`, `retrospective-author` (incident reflection in COND-001).

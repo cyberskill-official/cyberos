@@ -86,8 +86,8 @@
 | ------- | ----- | -------- |
 | `XCHAIN-001` | `provenance.source_path` matches author manifest | warning |
 | `XCHAIN-002` | `provenance.source_hash` matches author manifest at write time | error |
-| `XCHAIN-003` | `linked_sow` resolves to a SOW that passed sow-audit at 10/10 | warning |
-| `XCHAIN-004` | `linked_srs` resolves to an SRS that passed srs-audit at 10/10 | warning |
+| `XCHAIN-003` | `linked_sow` resolves to a SOW that passed statement-of-work-audit at 10/10 | warning |
+| `XCHAIN-004` | `linked_srs` resolves to an SRS that passed software-requirements-specification-audit at 10/10 | warning |
 | `XCHAIN-005` | `engagement_model` in this plan matches the linked SOW's `engagement_model` | error |
 
 ## §8  Staleness

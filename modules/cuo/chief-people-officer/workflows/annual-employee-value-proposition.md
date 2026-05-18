@@ -7,16 +7,16 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_evp,             source: last year's EVP doc, format: strategy-doc@1 (EVP chapter) }
-  - { name: enps_history,          source: 4 quarters of enps-program@1, format: enps-program@1 (4Q) }
+  - { name: prior_evp,             source: last year's EVP doc, format: strategy-document@1 (EVP chapter) }
+  - { name: enps_history,          source: 4 quarters of enps-program@1, format: employee-net-promoter-score-program@1 (4Q) }
   - { name: brand_strategy,        source: cuo/chief-brand-officer/annual-brand-strategy, format: brand-strategy@1 }
 
 outputs:
-  - { name: evp,                   format: strategy-doc@1 (EVP chapter), recipient: cuo/cpo-people + cuo/chro + cuo/cmo + cuo/chief-brand-officer + Board }
+  - { name: evp,                   format: strategy-document@1 (EVP chapter), recipient: cuo/cpo-people + cuo/chro + cuo/cmo + cuo/chief-brand-officer + Board }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_evp: prior_evp, enps_history: enps_history, brand_strategy: brand_strategy }, outputs_to: evp_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: evp_draft, outputs_to: evp }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_evp: prior_evp, enps_history: enps_history, brand_strategy: brand_strategy }, outputs_to: evp_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: evp_draft, outputs_to: evp }
 
 audit_hooks:
   - workflow_complete row on PASS with evp hash

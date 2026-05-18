@@ -561,4 +561,4 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses or deferred
 
 ---
 
-*End of FR-AI-004. Run `fr-audit` next: `cargo run -p cyberos-skill-cli -- run fr-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-004-cost-hold-expiry-cleanup.md"}'`*
+*End of FR-AI-004. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-004-cost-hold-expiry-cleanup.md"}'`*

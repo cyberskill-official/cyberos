@@ -8,9 +8,9 @@ status: shipped
 
 inputs:
   - { name: prior_program,      source: last year's compliance-program@1 (privacy chapter), format: compliance-program@1 }
-  - { name: dsr_log,            source: cuo/chief-privacy-officer/data-subject-request-cycle (4Q),    format: dsr-runbook@1 (multiple) }
+  - { name: dsr_log,            source: cuo/chief-privacy-officer/data-subject-request-cycle (4Q),    format: data-subject-request-runbook@1 (multiple) }
   - { name: breach_log,         source: cuo/chief-privacy-officer/breach-response-cycle (4Q),         format: breach-notification@1 (multiple) }
-  - { name: pia_inventory,      source: cuo/chief-privacy-officer/privacy-impact-assessment (4Q),     format: pia@1 (multiple) }
+  - { name: pia_inventory,      source: cuo/chief-privacy-officer/privacy-impact-assessment (4Q),     format: privacy-impact-assessment@1 (multiple) }
 
 outputs:
   - { name: privacy_program,    format: compliance-program@1, recipient: cuo/cpo-privacy + cuo/clo-legal + cuo/ceo + Board (annual privacy chapter) }

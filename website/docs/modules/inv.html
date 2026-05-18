@@ -5,7 +5,7 @@
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>INV — Billable rollup invoicing · Hóa đơn emission · Dunning automation · CyberOS</title>
- <meta name="description" content="INV — closes the PROJ → TIME → INV billable chain. Three strategic roles: (1) billable rollup → invoice line items (consumes TIME per-cycle rollup; rate-card snapshot preservation; multi-currency), (2) hóa đơn emission (Decree 123 + Circular 78 GDT XML via vn-vat-invoice skill), (3) revenue recognition + dunning (CUO drafts overdue chase emails; human sends; aging report; cash application via 4 payment rails).">
+ <meta name="description" content="INV — closes the PROJ → TIME → INV billable chain. Three strategic roles: (1) billable rollup → invoice line items (consumes TIME per-cycle rollup; rate-card snapshot preservation; multi-currency), (2) hóa đơn emission (Decree 123 + Circular 78 GDT XML via vietnam-vat-invoice skill), (3) revenue recognition + dunning (CUO drafts overdue chase emails; human sends; aging report; cash application via 4 payment rails).">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -55,7 +55,7 @@
  <strong>The AR plane.</strong> Where PROJ Engagements + TIME rollups become sent invoices, tracked payments, and reconciled revenue. The Vietnamese hóa đơn flow is first-class — not an afterthought.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- INV is the AR (Accounts Receivable) side of finance — the place where billable work becomes a sent invoice, a tracked payment, an aged balance, or a reconciled receipt. The architecture is composition-first: invoices draft automatically from TIME entries per engagement (per (FR pending)), multi-currency (VND, USD, SGD, EUR) with daily SBV rate snapshots, payment collection through Stripe (USD/EUR), Wise (multi-currency), and the Vietnamese domestic stack (VietQR / Napas247 / MoMo / ZaloPay / VNPay) for VND. For Vietnamese tenants, the <code>vn-vat-invoice</code> skill generates Decree-123-compliant e-invoices in the GDT XML format (Circular 78); the schema embeds Mẫu 01/GTGT line items with MST validation via <code>vn-mst-validate</code>. The CUO/CFO-skill drafts dunning emails on overdue but never sends them without human approval. locks the FRs; binds them to verification methods.
+ INV is the AR (Accounts Receivable) side of finance — the place where billable work becomes a sent invoice, a tracked payment, an aged balance, or a reconciled receipt. The architecture is composition-first: invoices draft automatically from TIME entries per engagement (per (FR pending)), multi-currency (VND, USD, SGD, EUR) with daily SBV rate snapshots, payment collection through Stripe (USD/EUR), Wise (multi-currency), and the Vietnamese domestic stack (VietQR / Napas247 / MoMo / ZaloPay / VNPay) for VND. For Vietnamese tenants, the <code>vietnam-vat-invoice</code> skill generates Decree-123-compliant e-invoices in the GDT XML format (Circular 78); the schema embeds Mẫu 01/GTGT line items with MST validation via <code>vietnam-mst-validate</code>. The CUO/CFO-skill drafts dunning emails on overdue but never sends them without human approval. locks the FRs; binds them to verification methods.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -117,7 +117,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-inv p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- INV is the <strong>AR plane</strong>. Invoices begin life as a draft auto-populated from TIME entries against an engagement's billable rules; a human reviews + sends; the customer pays through one of four payment rails (Stripe, Wise, domestic VND PSP, manual bank transfer); the receipt matches back to the invoice (cash application); the GL takes the revenue. The Vietnamese-context specifics — Decree 123 e-invoice schema, Circular 78 GDT format, Mẫu 01/GTGT, MST validation, VietQR collection — are wrapped in three reusable CyberSkill skills (<code>vn-vat-invoice</code>, <code>vn-mst-validate</code>, <code>vn-bank-transfer</code>) so the same primitives serve INV here and any external SaaS that adopts the cyberskill-vn collection.
+ INV is the <strong>AR plane</strong>. Invoices begin life as a draft auto-populated from TIME entries against an engagement's billable rules; a human reviews + sends; the customer pays through one of four payment rails (Stripe, Wise, domestic VND PSP, manual bank transfer); the receipt matches back to the invoice (cash application); the GL takes the revenue. The Vietnamese-context specifics — Decree 123 e-invoice schema, Circular 78 GDT format, Mẫu 01/GTGT, MST validation, VietQR collection — are wrapped in three reusable CyberSkill skills (<code>vietnam-vat-invoice</code>, <code>vietnam-mst-validate</code>, <code>vietnam-bank-transfer</code>) so the same primitives serve INV here and any external SaaS that adopts the cyberskill-vn collection.
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P2 · design phase</div></div>
@@ -125,7 +125,7 @@
  <div class="fact-card"><div class="label">Planned tests</div><div class="value">100+</div><div class="note">incl. webhook idempotency + currency rounding</div></div>
  <div class="fact-card"><div class="label">Currencies</div><div class="value">VND · USD · SGD · EUR</div><div class="note">SBV daily snapshot</div></div>
  <div class="fact-card"><div class="label">Payment rails</div><div class="value">Stripe · Wise · VietQR · manual</div><div class="note">+ MoMo/ZaloPay/VNPay (P3)</div></div>
- <div class="fact-card"><div class="label">VN e-invoice</div><div class="value">Decree 123</div><div class="note">via vn-vat-invoice skill</div></div>
+ <div class="fact-card"><div class="label">VN e-invoice</div><div class="value">Decree 123</div><div class="note">via vietnam-vat-invoice skill</div></div>
  <div class="fact-card"><div class="label">Depends on</div><div class="value">TIME · CRM · AUTH</div><div class="note">+ skills · S3 · NATS</div></div>
  <div class="fact-card"><div class="label">Feeds</div><div class="value">CRM · GL · BRAIN audit</div><div class="note">payment status events</div></div>
  </div>
@@ -152,7 +152,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--inv-dark)">Role 2 · Hóa đơn emission (VN regulator)</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Decree 123 + Circular 78 GDT format</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- For Vietnamese tenants, the <code>vn-vat-invoice</code> skill generates the GDT-compliant XML with Mẫu 01/GTGT line items; <code>vn-mst-validate</code> verifies both customer and tenant MSTs against GDT registry before emission; emission writes to the GDT API and stores the signed receipt. Status flows back: pending → emitted → cancelled (if needed via Decree 123 Art. 19). Non-VN tenants skip this entirely; their invoices are Stripe/Wise PDFs.
+ For Vietnamese tenants, the <code>vietnam-vat-invoice</code> skill generates the GDT-compliant XML with Mẫu 01/GTGT line items; <code>vietnam-mst-validate</code> verifies both customer and tenant MSTs against GDT registry before emission; emission writes to the GDT API and stores the signed receipt. Status flows back: pending → emitted → cancelled (if needed via Decree 123 Art. 19). Non-VN tenants skip this entirely; their invoices are Stripe/Wise PDFs.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--inv)">
@@ -257,12 +257,12 @@ flowchart LR
  <table class="kt">
  <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
  <tbody>
- <tr><td><strong>5W · What</strong></td><td>What is INV?</td><td>An AR + multi-currency invoicing + payment integration service. Drafts invoices from TIME entries; sends; tracks payments; ages receivables; reconciles cash to invoices; routes Vietnamese e-invoices to GDT via the vn-vat-invoice skill.</td></tr>
+ <tr><td><strong>5W · What</strong></td><td>What is INV?</td><td>An AR + multi-currency invoicing + payment integration service. Drafts invoices from TIME entries; sends; tracks payments; ages receivables; reconciles cash to invoices; routes Vietnamese e-invoices to GDT via the vietnam-vat-invoice skill.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who uses INV?</td><td><strong>CFO / Finance:</strong> close, AR aging, dunning approval. <strong>Project lead / Account Manager:</strong> invoice draft preview + send. <strong>Customer:</strong> receives invoice + pays. <strong>CUO/CFO-skill:</strong> drafts dunning + payment-status narrative.</td></tr>
  <tr><td><strong>5W · When</strong></td><td>When does INV act?</td><td>(a) Engagement milestone or month-end → invoice draft. (b) Send invoice → email/portal. (c) Payment webhook → cash application. (d) Overdue tick → dunning. (e) Quarter-end → AR aging report. (f) Year-end → 1099-style summaries.</td></tr>
  <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P2: single region (SG-1) backed by AWS RDS Postgres. Per-tenant data-residency for VN tenants (vn-hanoi-1) by P3.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because AR-ledger drift and tax-compliance surprise are existential to small companies. INV is the one source of truth for "what did we bill, what did they pay, who owes what".</td></tr>
- <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Postgres for invoice + payment + reminder rows. Stripe / Wise webhooks → cash_application engine matches receipts to invoices by metadata + amount. VietQR generated via <code>vn-bank-transfer</code> skill; bank confirms via screen-scrape OR open-banking API (Napas247 P3). Vietnamese e-invoice via <code>vn-vat-invoice</code> skill → POST to GDT.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Postgres for invoice + payment + reminder rows. Stripe / Wise webhooks → cash_application engine matches receipts to invoices by metadata + amount. VietQR generated via <code>vietnam-bank-transfer</code> skill; bank confirms via screen-scrape OR open-banking API (Napas247 P3). Vietnamese e-invoice via <code>vietnam-vat-invoice</code> skill → POST to GDT.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P2: ~$40/month (RDS + Fargate + Stripe/Wise pass-through fees). 50-tenant: ~$150/month. Per-invoice cost: ~$0.02 + payment processor fee.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Vietnam Decree 123 + Circular 78 — e-invoice format. (b) Currency rounding policy (VND has no decimals; round to nearest 1,000 for display). (c) Per-engagement billable rules drive line items ((FR pending)). (d) Approved invoices are append-only ((FR pending)); corrections via credit note.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · stripe-rust · wise sdk · typst / tectonic for PDF · async-graphql · cyberskill-vn skills · AWS S3 (immutable archive).</td></tr>
@@ -281,7 +281,7 @@ flowchart LR
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- INV composes three external systems (Stripe, Wise, Vietnamese payment stack), one e-invoice issuer (GDT via the <code>vn-vat-invoice</code> skill), and one rate source (SBV daily snapshot) into a single AR ledger. The diagram below shows the canonical invoice → payment lifecycle.
+ INV composes three external systems (Stripe, Wise, Vietnamese payment stack), one e-invoice issuer (GDT via the <code>vietnam-vat-invoice</code> skill), and one rate source (SBV daily snapshot) into a single AR ledger. The diagram below shows the canonical invoice → payment lifecycle.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -313,9 +313,9 @@ graph TB
  end
 
  subgraph SKILLS ["cyberskill-vn (skill bridges)"]
- VAT["vn-vat-invoice<br>Mẫu 01/GTGT · GDT XML"]
- MST["vn-mst-validate<br>customer + tenant MST"]
- BANK["vn-bank-transfer<br>VietQR generator"]
+ VAT["vietnam-vat-invoice<br>Mẫu 01/GTGT · GDT XML"]
+ MST["vietnam-mst-validate<br>customer + tenant MST"]
+ BANK["vietnam-bank-transfer<br>VietQR generator"]
  end
 
  subgraph STORES ["Stores"]
@@ -395,9 +395,9 @@ graph TB
  <tr><td><code>aging.rs</code></td><td>services/inv/src/aging.rs</td><td>AR aging bucket report: 0–30 / 31–60 / 61–90 / 90+ days.</td></tr>
  <tr><td><code>dunning.rs</code></td><td>services/inv/src/dunning.rs</td><td>Drafts dunning emails (T+1, T+7, T+30 of overdue). Sends ONLY after CFO/AM approval.</td></tr>
  <tr><td><code>fx.rs</code></td><td>services/inv/src/fx.rs</td><td>Daily SBV rate snapshot. Cached per day; new invoices use today's snapshot.</td></tr>
- <tr><td><code>vn_vat_bridge.rs</code></td><td>services/inv/src/vn_vat_bridge.rs</td><td>Bridge to <code>vn-vat-invoice</code> skill — Mẫu 01/GTGT generation + GDT submission.</td></tr>
- <tr><td><code>mst_bridge.rs</code></td><td>services/inv/src/mst_bridge.rs</td><td>Bridge to <code>vn-mst-validate</code> skill — customer + tenant MST validation before send.</td></tr>
- <tr><td><code>bank_bridge.rs</code></td><td>services/inv/src/bank_bridge.rs</td><td>Bridge to <code>vn-bank-transfer</code> skill — VietQR generator.</td></tr>
+ <tr><td><code>vn_vat_bridge.rs</code></td><td>services/inv/src/vn_vat_bridge.rs</td><td>Bridge to <code>vietnam-vat-invoice</code> skill — Mẫu 01/GTGT generation + GDT submission.</td></tr>
+ <tr><td><code>mst_bridge.rs</code></td><td>services/inv/src/mst_bridge.rs</td><td>Bridge to <code>vietnam-mst-validate</code> skill — customer + tenant MST validation before send.</td></tr>
+ <tr><td><code>bank_bridge.rs</code></td><td>services/inv/src/bank_bridge.rs</td><td>Bridge to <code>vietnam-bank-transfer</code> skill — VietQR generator.</td></tr>
  <tr><td><code>audit_bridge.rs</code></td><td>services/inv/src/audit_bridge.rs</td><td>Lifecycle rows to BRAIN.</td></tr>
  <tr><td><code>nats_bridge.rs</code></td><td>services/inv/src/nats_bridge.rs</td><td>Event publisher — sent/paid/overdue events for CRM + KPI dashboards.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/inv/migrations/</td><td>sqlx migrations. UNIQUE on external_event_id; append-only on invoice after status=sent.</td></tr>
@@ -674,8 +674,8 @@ type Mutation {
  <tr><td><code>cyberos.inv.draft_dunning</code></td><td>invoice_id</td><td>email draft</td><td>readwrite (draft only) · human-confirm before send</td></tr>
  <tr><td><code>cyberos.inv.explain_aging</code></td><td>as_of?</td><td>narrative AR report</td><td>readonly</td></tr>
  <tr><td><code>cyberos.inv.summarise_payment_status</code></td><td>invoice_id</td><td>narrative</td><td>readonly</td></tr>
- <tr><td><code>cyberos.inv.validate_mst</code></td><td>mst_string</td><td>{valid, taxpayer_info}</td><td>readonly · bridges vn-mst-validate skill</td></tr>
- <tr><td><code>cyberos.inv.generate_vietqr</code></td><td>amount, bank, account</td><td>QR data + image</td><td>readonly · bridges vn-bank-transfer skill</td></tr>
+ <tr><td><code>cyberos.inv.validate_mst</code></td><td>mst_string</td><td>{valid, taxpayer_info}</td><td>readonly · bridges vietnam-mst-validate skill</td></tr>
+ <tr><td><code>cyberos.inv.generate_vietqr</code></td><td>amount, bank, account</td><td>QR data + image</td><td>readonly · bridges vietnam-bank-transfer skill</td></tr>
  </tbody>
  </table>
  </div>
@@ -712,15 +712,15 @@ sequenceDiagram
  </div>
  </div>
 
- <h3 class="text-lg font-bold mb-3">Flow 2 — Send (with VN e-invoice via vn-vat-invoice skill)</h3>
+ <h3 class="text-lg font-bold mb-3">Flow 2 — Send (with VN e-invoice via vietnam-vat-invoice skill)</h3>
  <div class="bbg-card p-5 mb-6">
  <div class="mermaid">
 sequenceDiagram
  autonumber
  participant PM as PM
  participant I as INV /admin/invoice/{id}/send
- participant MST as 🛠 vn-mst-validate skill
- participant VAT as 🛠 vn-vat-invoice skill
+ participant MST as 🛠 vietnam-mst-validate skill
+ participant VAT as 🛠 vietnam-vat-invoice skill
  participant GDT as 🇻🇳 GDT (Tổng cục Thuế)
  participant PDF as pdf_renderer.rs
  participant S3 as AWS S3 (immutable)
@@ -789,7 +789,7 @@ sequenceDiagram
  autonumber
  participant PM as PM
  participant I as INV send.rs
- participant BANK as 🛠 vn-bank-transfer skill
+ participant BANK as 🛠 vietnam-bank-transfer skill
  participant C as Customer (VN)
  participant B247 as Napas247 bank (BIDV/MB/…)
  participant W as INV /webhook/bank/{code}
@@ -884,12 +884,12 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- FRs (stub — see skill module's feature-request-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -926,7 +926,7 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- INV reads from TIME, CRM, and AUTH; bridges to three skills (vn-vat-invoice, vn-mst-validate, vn-bank-transfer); integrates with four external rails (Stripe, Wise, VietQR/Napas247, GDT). Events flow to CRM via NATS.
+ INV reads from TIME, CRM, and AUTH; bridges to three skills (vietnam-vat-invoice, vietnam-mst-validate, vietnam-bank-transfer); integrates with four external rails (Stripe, Wise, VietQR/Napas247, GDT). Events flow to CRM via NATS.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
@@ -941,9 +941,9 @@ graph LR
  S3["🗂 S3 (immutable)"]
  end
  subgraph skills ["Skill bridges"]
- VAT["🛠 vn-vat-invoice"]
- MST["🛠 vn-mst-validate"]
- BANK["🛠 vn-bank-transfer"]
+ VAT["🛠 vietnam-vat-invoice"]
+ MST["🛠 vietnam-mst-validate"]
+ BANK["🛠 vietnam-bank-transfer"]
  end
  subgraph external ["External rails"]
  STR["Stripe"]
@@ -1000,11 +1000,11 @@ graph LR
  <table class="kt">
  <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>INV feature that satisfies it</th></tr></thead>
  <tbody>
- <tr><td>Decree 123/2020/NĐ-CP</td><td>Art. 7 — Electronic invoice mandate</td><td>vn-vat-invoice skill generates GDT-compliant e-invoice for every VN tenant invoice.</td></tr>
+ <tr><td>Decree 123/2020/NĐ-CP</td><td>Art. 7 — Electronic invoice mandate</td><td>vietnam-vat-invoice skill generates GDT-compliant e-invoice for every VN tenant invoice.</td></tr>
  <tr><td>Circular 78/2021/TT-BTC</td><td>Schema — GDT XML format</td><td>Skill emits Circular 78 XML; submits to GDT via authenticated endpoint.</td></tr>
  <tr><td>Decree 119/2018/NĐ-CP</td><td>Art. 4 — E-invoice retention</td><td>S3 immutable bucket; 10-year retention lock.</td></tr>
  <tr><td>Vietnam VAT Law (Law 13/2008)</td><td>Art. 8 — VAT rate categories</td><td>Line items carry VAT category code: 0%, 5%, 8%, 10% (Vietnamese categories).</td></tr>
- <tr><td>Vietnam Tax Administration Law (2019)</td><td>Art. 33 — MST</td><td>MST validated (tenant + customer) via vn-mst-validate before submission.</td></tr>
+ <tr><td>Vietnam Tax Administration Law (2019)</td><td>Art. 33 — MST</td><td>MST validated (tenant + customer) via vietnam-mst-validate before submission.</td></tr>
  <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>Customer invoice history exportable as DSAR bundle.</td></tr>
  <tr><td>GDPR (EU 2016/679)</td><td>Art. 6 — Lawful processing</td><td>Customer billing data processed on contractual basis.</td></tr>
  <tr><td>PCI DSS</td><td>Cardholder data scope minimisation</td><td>No raw PAN stored; Stripe handles card data; INV stores only Stripe customer tokens.</td></tr>
@@ -1031,7 +1031,7 @@ graph LR
  <tr><td><code>R-INV-001</code></td><td>Webhook spoofing leads to false payment record</td><td>Low</td><td>High</td><td>CTO</td><td>HMAC signature verification on every webhook; unsigned events rejected; integration test injects unsigned payload.</td></tr>
  <tr><td><code>R-INV-002</code></td><td>Duplicate webhook causes double cash-application</td><td>Medium</td><td>Medium</td><td>CTO</td><td>UNIQUE on external_event_id; idempotent INSERT; chaos test replays webhook 100×.</td></tr>
  <tr><td><code>R-INV-003</code></td><td>Cash-application false match (wrong invoice)</td><td>Medium</td><td>Medium</td><td>CFO</td><td>Strict matching: metadata.invoice_id OR (amount + customer + ±1k VND tolerance); ambiguous cases land in manual-override queue.</td></tr>
- <tr><td><code>R-INV-004</code></td><td>GDT e-invoice submission rejected (Mẫu format drift)</td><td>Medium</td><td>Medium</td><td>CTO + CFO</td><td>vn-vat-invoice skill versioned; CI test against GDT sandbox; alert on rejected status.</td></tr>
+ <tr><td><code>R-INV-004</code></td><td>GDT e-invoice submission rejected (Mẫu format drift)</td><td>Medium</td><td>Medium</td><td>CTO + CFO</td><td>vietnam-vat-invoice skill versioned; CI test against GDT sandbox; alert on rejected status.</td></tr>
  <tr><td><code>R-INV-005</code></td><td>Currency rounding drift on cross-currency invoice</td><td>Medium</td><td>Low</td><td>CFO</td><td>Round-half-to-even at line-item level; VND no decimals; property test asserts deterministic.</td></tr>
  <tr><td><code>R-INV-006</code></td><td>SBV rate API outage blocks new cross-currency invoices</td><td>Medium</td><td>Low</td><td>CTO</td><td>Last-known-good cached; on outage, use yesterday's rate + flag invoice for review.</td></tr>
  <tr><td><code>R-INV-007</code></td><td>CUO sends dunning email without approval</td><td>Low</td><td>Medium</td><td>CSO</td><td>MCP tool annotated destructive=false; reminder.status="drafted" cannot transition to "sent" without approval_id; CI verifies.</td></tr>
@@ -1042,7 +1042,7 @@ graph LR
  <tr><td><code>R-INV-012</code></td><td>Rate-card snapshot on TimeEntry diverges from invoiced rate</td><td>Low</td><td>High</td><td>CFO</td><td>Snapshot is immutable on TimeEntry; INV reads from snapshot; CI test asserts invoice line-amount = snapshot × hours.</td></tr>
  <tr><td><code>R-INV-013</code></td><td>Hóa đơn cancellation (Decree 123 Art. 19) without dual approval</td><td>Low</td><td>Critical</td><td>CFO</td><td>Cancellation requires AM + CFO approval tokens both; CI verifies API rejects single-approval cancel; GDT API call audit-chained.</td></tr>
  <tr><td><code>R-INV-014</code></td><td>Dunning email auto-send bug</td><td>Low</td><td>High</td><td>CSO</td><td>MCP tool annotation destructive=true on dunning send; AM/CFO approval token required; CI gate verifies; OBS alarm on send rate &gt; 0 without approval ID.</td></tr>
- <tr><td><code>R-INV-015</code></td><td>Vietnamese hóa đơn template drift after Decree 123 amendment</td><td>Medium</td><td>High</td><td>CLO</td><td>vn-vat-invoice skill version-pinned; legal monitor watches GDT bulletins; quarterly drill emit against staging GDT sandbox.</td></tr>
+ <tr><td><code>R-INV-015</code></td><td>Vietnamese hóa đơn template drift after Decree 123 amendment</td><td>Medium</td><td>High</td><td>CLO</td><td>vietnam-vat-invoice skill version-pinned; legal monitor watches GDT bulletins; quarterly drill emit against staging GDT sandbox.</td></tr>
  </tbody>
  </table>
  </div>
@@ -1141,7 +1141,7 @@ graph LR
  <h3 class="text-lg font-bold mb-2 mt-5">3. Generate VietQR for an invoice</h3>
 <pre><code>$ cyberos-inv vietqr --invoice INV-2026-04-005
 
-[vn-bank-transfer skill]
+[vietnam-bank-transfer skill]
  account: 0307654321 @ BIDV
  amount: 45,000,000 VND
  addInfo: INV-2026-04-005
@@ -1232,8 +1232,8 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
  <tr><td>Wise integration (multi-currency)</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>VietQR / Napas247 collection</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>Vietnamese e-invoice (Decree 123 + Circular 78)</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
- <tr><td>MST validation (vn-mst-validate skill)</td><td><span class="pill pill-shipped">skill shipped</span></td></tr>
- <tr><td>vn-vat-invoice + vn-bank-transfer skills</td><td><span class="pill pill-shipped">skills shipped</span></td></tr>
+ <tr><td>MST validation (vietnam-mst-validate skill)</td><td><span class="pill pill-shipped">skill shipped</span></td></tr>
+ <tr><td>vietnam-vat-invoice + vietnam-bank-transfer skills</td><td><span class="pill pill-shipped">skills shipped</span></td></tr>
  <tr><td>AR aging report</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>Dunning automation (drafts only · human send)</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
  <tr><td>Cash application (auto-match + manual override)</td><td><span class="pill pill-planned">planned · P2</span></td></tr>
@@ -1277,7 +1277,7 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
  <li><strong>SBV Circular 35/2018</strong> — Daily FX rate disclosure obligations.</li>
  <li><strong>VAS 14 — Revenue</strong> — Vietnamese Accounting Standards revenue recognition.</li>
  <li><strong>PCI DSS 4.0</strong> — Card data scope; INV stays out of scope by using Stripe.</li>
- <li><strong>cyberskill-vn collection</strong> — vn-vat-invoice · vn-mst-validate · vn-bank-transfer skills.</li>
+ <li><strong>cyberskill-vn collection</strong> — vietnam-vat-invoice · vietnam-mst-validate · vietnam-bank-transfer skills.</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/services.html#inv" class="text-blue-700 underline">services.html#inv</a>.</li>
  </ul>
  </div>

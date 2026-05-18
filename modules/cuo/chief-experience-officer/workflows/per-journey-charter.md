@@ -9,7 +9,7 @@ status: shipped
 inputs:
   - { name: journey_brief,         source: requestor, format: markdown }
   - { name: customer_research,     source: journey research (interviews + telemetry), format: markdown }
-  - { name: cx_strategy,           source: cuo/chief-experience-officer/annual-cx-strategy, format: strategy-doc@1 }
+  - { name: cx_strategy,           source: cuo/chief-experience-officer/annual-cx-strategy, format: strategy-document@1 }
 
 outputs:
   - { name: journey_charter,       format: program-charter@1, recipient: cuo/cxo + cross-functional journey owners + cuo/cpo-product + cuo/cco-customer }

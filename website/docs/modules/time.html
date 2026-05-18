@@ -263,7 +263,7 @@ flowchart LR
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Timer: SPA writes start_time; on stop, end_time + duration computed server-side as a generated column. Retroactive: Member enters duration + date; same path. Expense: camera capture → S3 → OCR Lambda → categoriser → Member confirm → entry. Leave: form submit → approver Notify → decision → calendar sync.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$70 / month for SG-1 single-tenant pilot. OCR cost averages $0.002 per receipt (AWS Textract); ~$50 / month for 25k receipts at 50 Members. 50-tenant: ~$280 / month.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Audit append-only — non-negotiable. (b) Labour-law caps enforced as hard rules. (c) Multi-currency at every layer. (d) Member time-log annotations are private namespace ((FR pending)) — not visible to AM. (e) Receipt OCR must handle hóa đơn (Vietnamese VAT invoice) format.</td></tr>
- <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · Redis 7 · S3 + KMS · AWS Textract (or PaddleOCR self-hosted at P2+) · vn-mst-validate skill · OpenTelemetry SDK · React + Zustand SPA · React Native (P3+).</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · Redis 7 · S3 + KMS · AWS Textract (or PaddleOCR self-hosted at P2+) · vietnam-mst-validate skill · OpenTelemetry SDK · React + Zustand SPA · React Native (P3+).</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with <code>correction_to</code> (not in-place edit). Generated column for <code>duration_minutes</code>. Per-Engagement billable_default + per-entry override. Weekly batch approval (not per-entry). Camera-first expense capture. Multi-currency stored as canonical-VND + spot-FX-rate snapshot.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. Redis hot cache. S3 + KMS for receipt images. SQS-driven OCR pool. Calendar sync via OAuth (Google / Outlook).</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE (CFO seat) at P1 launch + 0.25 FTE (CHRO for leave policy). CTO owns the engine.</td></tr>
@@ -312,7 +312,7 @@ graph TB
  SQS["SQS queue"]
  OW["Fargate OCR worker"]
  TX["AWS Textract<br>(or PaddleOCR)"]
- VN["vn-mst-validate<br>skill"]
+ VN["vietnam-mst-validate<br>skill"]
  CAT["Categoriser"]
  end
 
@@ -775,7 +775,7 @@ sequenceDiagram
  participant SQS as SQS
  participant OW as OCR worker
  participant TX as AWS Textract
- participant VN as vn-mst-validate skill
+ participant VN as vietnam-mst-validate skill
  participant CAT as Categoriser (AI Gateway)
  participant PG as PostgreSQL
  participant B as BRAIN audit
@@ -790,7 +790,7 @@ sequenceDiagram
  OW->>TX: detect_document_text(s3_key)
  TX-->>OW: lines + words
  OW->>OW: parse hóa đơn structure (header, MST, line items, VAT)
- OW->>VN: validate MST (vn-mst-validate skill)
+ OW->>VN: validate MST (vietnam-mst-validate skill)
  VN-->>OW: {valid:true, vendor_name_canonical:…}
  OW->>CAT: classify category (chart_of_accounts)
  CAT-->>OW: {category_code, confidence}
@@ -904,12 +904,12 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- FRs (stub — see skill module's feature-request-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -960,7 +960,7 @@ graph LR
  OCR["AWS Textract<br>(or PaddleOCR)"]
  MCP["🔌 MCP"]
  OBS["👁 OBS"]
- VN["vn-mst-validate skill"]
+ VN["vietnam-mst-validate skill"]
  end
  TIME["⏱ TIME"]
  subgraph downstream ["TIME is depended on by"]
@@ -1028,7 +1028,7 @@ graph LR
  <tbody>
  <tr><td><code>R-TIME-001</code></td><td>Audit chain breakage via direct DB edit</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>schema constraint forbids UPDATE on canonical columns; in-place change rejected at trigger.</td></tr>
  <tr><td><code>R-TIME-002</code></td><td>Overtime cap bypass via timer-then-retroactive trick</td><td>Medium</td><td>High</td><td>CHRO</td><td>Cap enforcer evaluates total per ISO-week regardless of entry mode.</td></tr>
- <tr><td><code>R-TIME-003</code></td><td>OCR mis-parse of MST → wrong vendor on invoice</td><td>Medium</td><td>Medium</td><td>CFO</td><td>vn-mst-validate skill checks; Member confirm step required before submit.</td></tr>
+ <tr><td><code>R-TIME-003</code></td><td>OCR mis-parse of MST → wrong vendor on invoice</td><td>Medium</td><td>Medium</td><td>CFO</td><td>vietnam-mst-validate skill checks; Member confirm step required before submit.</td></tr>
  <tr><td><code>R-TIME-004</code></td><td>Self-approval via direct API call</td><td>Low</td><td>High</td><td>CFO</td><td>API rejects approver_id == member_id; CI test on every PR.</td></tr>
  <tr><td><code>R-TIME-005</code></td><td>INV pulls double after correction</td><td>Low</td><td>High</td><td>CFO</td><td>INV reads <code>WHERE correction_to IS NULL</code>; chain walk asserted in test.</td></tr>
  <tr><td><code>R-TIME-006</code></td><td>Receipt image leaks via presigned URL replay</td><td>Low</td><td>Medium</td><td>CSO</td><td>5-min presign TTL; one-time use; audit row on every presign.</td></tr>
@@ -1148,7 +1148,7 @@ hai@cyberskill.world 287 300 95.7% ▼ critical → CHRO sign-off required</code
 
 [replay] re-running OCR pipeline (engine=textract)
 [replay] parsed: vendor=Highlands Coffee, MST=0304556677, amount=178,000 VND, VAT=16,182 VND
-[replay] vn-mst-validate: ✓ matches GDT registry
+[replay] vietnam-mst-validate: ✓ matches GDT registry
 [replay] categoriser: T&E.meals (confidence=0.93)
 [audit] brain seq=15218 chain=…</code></pre>
 
@@ -1237,7 +1237,7 @@ hai@cyberskill.world 287 300 95.7% ▼ critical → CHRO sign-off required</code
  <li><strong>Circular 88/2020/TT-BTC</strong> — Hóa đơn (Vietnamese VAT e-invoice) format.</li>
  <li><strong>AWS Textract</strong> — OCR engine (P1).</li>
  <li><strong>PaddleOCR</strong> — open-source alternative for P2+ self-hosting.</li>
- <li><strong>vn-mst-validate</strong> — CyberOS skill for MST validation against GDT.</li>
+ <li><strong>vietnam-mst-validate</strong> — CyberOS skill for MST validation against GDT.</li>
  <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#time" class="text-blue-700 underline">infrastructure.html#time</a>.</li>
  </ul>
  </div>

@@ -41,8 +41,8 @@ Crowdstrike / SentinelOne (EDR); Splunk / Sentinel (SIEM); Snyk / GitGuardian (D
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `annual-security-strategy` | Threat landscape + NIST CSF posture + initiatives + OKRs | annual | security-strategy@1 | shipped (1.0.0) |
-| `monthly-vuln-management` | Open vulns + SLA + exceptions + remediation roadmap | monthly | vulnerability-mgmt-report@1 | shipped (1.0.0) |
-| `annual-pen-test-cycle` | Scope + engagement + findings + retest | annual | pen-test-report@1 | shipped (1.0.0) |
+| `monthly-vuln-management` | Open vulns + SLA + exceptions + remediation roadmap | monthly | vulnerability-management-report@1 | shipped (1.0.0) |
+| `annual-pen-test-cycle` | Scope + engagement + findings + retest | annual | penetration-test-report@1 | shipped (1.0.0) |
 | `soc2-audit-readiness` | TSC evidence + gap analysis + remediation | annual | soc2-evidence@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-5 skills (`security-strategy`, `vulnerability-mgmt-report`, `pen-test-report`, `soc2-evidence`). See `../../skill/MODULE.md` §3.5.

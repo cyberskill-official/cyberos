@@ -40,7 +40,7 @@ Workiva / Archer / Riskonnect (ERM); BlackRock Aladdin / Numerix (FS scenario en
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `annual-erm-framework` | Risk taxonomy + appetite + risk-and-control matrix + governance | annual | enterprise-risk-framework@1 | shipped (1.0.0) |
-| `quarterly-kri-dashboard` | KRI thresholds + breach analysis + escalations + trend | quarterly | kri-dashboard@1 | shipped (1.0.0) |
+| `quarterly-kri-dashboard` | KRI thresholds + breach analysis + escalations + trend | quarterly | key-risk-indicator-dashboard@1 | shipped (1.0.0) |
 | `per-incident-postmortem` | Risk-lens postmortem with control-failure attribution | per-event | postmortem@1 (risk lens) | shipped (1.0.0) |
 | `quarterly-board-risk-chapter` | Risk chapter for quarterly board deck | quarterly | board-deck@1 chapter | shipped (1.0.0) |
 

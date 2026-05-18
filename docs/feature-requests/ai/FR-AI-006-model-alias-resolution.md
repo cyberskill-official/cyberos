@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-006
 title: "Model-alias resolution (chat.smart → bedrock:claude-3.5-sonnet) with per-tenant override"
 module: AI
@@ -826,4 +826,4 @@ For reference, the questions considered + resolved during authoring:
 
 ---
 
-*End of FR-AI-006. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `fr-audit` next: `cargo run -p cyberos-skill-cli -- run fr-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-006-model-alias-resolution.md"}'`*
+*End of FR-AI-006. Status: draft (10/10 target, expanded from compressed first-pass per workflow correction 2026-05-15). Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-006-model-alias-resolution.md"}'`*

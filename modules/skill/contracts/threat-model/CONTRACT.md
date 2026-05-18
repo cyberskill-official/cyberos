@@ -23,4 +23,4 @@ emitted_source_freshness_tier: 10
 - STRIDE (Microsoft) — primary threat-modelling framework.
 - LINDDUN (KU Leuven) — privacy threat-modelling for COND-001.
 - OWASP Top 10:2025, OWASP ASVS — mapping sources.
-- Consumers: `threat-model-author`, `threat-model-audit`, `adr-audit` (XCHAIN-004), `code-review-audit` (COND-002 references threat-model entries).
+- Consumers: `threat-model-author`, `threat-model-audit`, `architecture-decision-record-audit` (XCHAIN-004), `code-review-audit` (COND-002 references threat-model entries).

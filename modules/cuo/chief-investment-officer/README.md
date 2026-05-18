@@ -40,9 +40,9 @@ Bloomberg / Refinitiv (data); Aladdin / Charles River (PMS); Tableau / custom (L
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `per-investment-thesis` | Per-position: hypothesis + valuation + catalysts + risks + sizing | per-event | investment-thesis@1 | shipped (1.0.0) |
-| `quarterly-lp-letter` | LP letter: performance + positioning + market commentary | quarterly | lp-letter@1 | shipped (1.0.0) |
-| `annual-investment-strategy` | Asset allocation + sector tilts + risk budget + IPS alignment | annual | strategy-doc@1 | shipped (1.0.0) |
-| `quarterly-portfolio-review` | Attribution + risk exposures + thesis re-validation + rebalance | quarterly | strategy-doc@1 (quarterly chapter) | shipped (1.0.0) |
+| `quarterly-lp-letter` | LP letter: performance + positioning + market commentary | quarterly | limited-partner-letter@1 | shipped (1.0.0) |
+| `annual-investment-strategy` | Asset allocation + sector tilts + risk budget + IPS alignment | annual | strategy-document@1 | shipped (1.0.0) |
+| `quarterly-portfolio-review` | Attribution + risk exposures + thesis re-validation + rebalance | quarterly | strategy-document@1 (quarterly chapter) | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2/Tier-3 skills (`investment-thesis`, `lp-letter`, `strategy-doc`). See `../../skill/MODULE.md` §3.2 + §3.3.
 

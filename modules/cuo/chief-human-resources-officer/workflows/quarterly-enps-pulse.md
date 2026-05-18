@@ -7,7 +7,7 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: prior_enps,         source: last quarter's enps-program@1,                  format: enps-program@1 }
+  - { name: prior_enps,         source: last quarter's enps-program@1,                  format: employee-net-promoter-score-program@1 }
   - { name: survey_results,     source: Culture Amp / Lattice / Officevibe / TINYpulse, format: csv export }
   - { name: open_actions,       source: prior-quarter action plan + status,             format: markdown }
 
@@ -15,8 +15,8 @@ outputs:
   - { name: enps_pulse,         format: enps-program@1, recipient: cuo/chro + cuo/ceo + all managers (their team detail) }
 
 skill_chain:
-  - { step: 1, skill: enps-program-author, inputs_from: { prior_enps: prior_enps, survey_results: survey_results, open_actions: open_actions }, outputs_to: pulse_draft }
-  - { step: 2, skill: enps-program-audit,  inputs_from: pulse_draft, outputs_to: enps_pulse }
+  - { step: 1, skill: employee-net-promoter-score-program-author, inputs_from: { prior_enps: prior_enps, survey_results: survey_results, open_actions: open_actions }, outputs_to: pulse_draft }
+  - { step: 2, skill: employee-net-promoter-score-program-audit,  inputs_from: pulse_draft, outputs_to: enps_pulse }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,         when: "company eNPS drops >10 pts QoQ OR any team eNPS < -10" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-human-resources-officer/quarterly-enps-pulse \
 
 ## Skill chain
 
-- **Step 1 `enps-program-author`** — drafts per Officevibe / Culture Amp + First Round benchmarks.
-- **Step 2 `enps-program-audit`** — validates per `enps_program_rubric@1.0`.
+- **Step 1 `employee-net-promoter-score-program-author`** — drafts per Officevibe / Culture Amp + First Round benchmarks.
+- **Step 2 `employee-net-promoter-score-program-audit`** — validates per `enps_program_rubric@1.0`.
 
 ## Failure modes
 

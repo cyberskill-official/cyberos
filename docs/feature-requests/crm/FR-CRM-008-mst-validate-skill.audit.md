@@ -9,6 +9,6 @@ issues_resolved: 6
 template: engineering-spec@1
 ---
 
-CRM vn-mst-validate@1 skill with GDT TIN lookup + 30d cache + Levenshtein name match + non-blocking. 220 lines, 12 §1 clauses, 20 ACs, 3 tests, 10 failure modes, 5 notes. 6 issues resolved (non-blocking on GDT down — account save succeeds, 30d cache namespaced per-tenant, Levenshtein ≤3 tolerance with normalization, result enum cardinality 5, append-only audit, PII scrub MST+names SHA256). **Score = 10/10.**
+CRM vietnam-mst-validate@1 skill with GDT TIN lookup + 30d cache + Levenshtein name match + non-blocking. 220 lines, 12 §1 clauses, 20 ACs, 3 tests, 10 failure modes, 5 notes. 6 issues resolved (non-blocking on GDT down — account save succeeds, 30d cache namespaced per-tenant, Levenshtein ≤3 tolerance with normalization, result enum cardinality 5, append-only audit, PII scrub MST+names SHA256). **Score = 10/10.**
 
 *End of FR-CRM-008 audit.*

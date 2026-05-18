@@ -1,6 +1,6 @@
 ---
 id: FR-CRM-008
-title: "CRM vn-mst-validate skill — synchronous GDT lookup on Account write to confirm MST format + entity name match"
+title: "CRM vietnam-mst-validate skill — synchronous GDT lookup on Account write to confirm MST format + entity name match"
 module: CRM
 priority: MUST
 status: draft
@@ -21,7 +21,7 @@ source_pages:
   - https://gdt.gov.vn/  # GDT TIN lookup API
 
 source_decisions:
-  - DEC-1680 2026-05-17 — Skill name: vn-mst-validate@1; called on Account create/update when vn_account_type set and residency=vn-1
+  - DEC-1680 2026-05-17 — Skill name: vietnam-mst-validate@1; called on Account create/update when vn_account_type set and residency=vn-1
   - DEC-1681 2026-05-17 — Closed enum `mst_validation_result` = {confirmed, name_mismatch, mst_not_found, gdt_unavailable, format_invalid}; cardinality 5
   - DEC-1682 2026-05-17 — Confirmation requires: MST format pass (FR-CRM-003) + GDT registered entity name match (Levenshtein distance ≤3)
   - DEC-1683 2026-05-17 — Non-blocking: validation result stored; account write proceeds (CRO can fix later)
@@ -69,9 +69,9 @@ risk_if_skipped: "Without validation, invalid MSTs persist → FR-INV-007 hóa �
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship vn-mst-validate@1 skill at `services/crm/src/vn/mst_validate_skill.rs` calling GDT TIN lookup on VN account writes, non-blocking result, 30d cache, 3 BRAIN audit kinds.
+The CRM service **MUST** ship vietnam-mst-validate@1 skill at `services/crm/src/vn/mst_validate_skill.rs` calling GDT TIN lookup on VN account writes, non-blocking result, 30d cache, 3 BRAIN audit kinds.
 
-1. **MUST** register skill name `vn-mst-validate@1` per DEC-1680.
+1. **MUST** register skill name `vietnam-mst-validate@1` per DEC-1680.
 
 2. **MUST** hook into account create/update — if `residency='vn-1'` and `mst` set, invoke skill async.
 
@@ -152,7 +152,7 @@ Sample result:
 ---
 
 ## §4 — Acceptance criteria
-1. **Skill registered as vn-mst-validate@1**. 2. **Hook on account create+update when vn-1 + mst set**. 3. **Non-blocking (account save succeeds even if GDT down)**. 4. **GDT API called for new MST**. 5. **Cache hit on repeat call within 30d**. 6. **Levenshtein ≤3 → confirmed**. 7. **>3 → name_mismatch**. 8. **404 from GDT → mst_not_found**. 9. **GDT 5xx → gdt_unavailable**. 10. **Format invalid → format_invalid (before HTTP)**. 11. **5-result enum + cardinality test**. 12. **3 BRAIN audit kinds emitted**. 13. **PII scrubbed (MST+names SHA256)**. 14. **RLS denies cross-tenant**. 15. **Trace_id preserved**. 16. **Result row append-only**. 17. **Manual revalidate via POST**. 18. **History queryable (latest in GET)**. 19. **Account update doesn't block on pending validation**. 20. **GDT cache namespaced per-tenant**.
+1. **Skill registered as vietnam-mst-validate@1**. 2. **Hook on account create+update when vn-1 + mst set**. 3. **Non-blocking (account save succeeds even if GDT down)**. 4. **GDT API called for new MST**. 5. **Cache hit on repeat call within 30d**. 6. **Levenshtein ≤3 → confirmed**. 7. **>3 → name_mismatch**. 8. **404 from GDT → mst_not_found**. 9. **GDT 5xx → gdt_unavailable**. 10. **Format invalid → format_invalid (before HTTP)**. 11. **5-result enum + cardinality test**. 12. **3 BRAIN audit kinds emitted**. 13. **PII scrubbed (MST+names SHA256)**. 14. **RLS denies cross-tenant**. 15. **Trace_id preserved**. 16. **Result row append-only**. 17. **Manual revalidate via POST**. 18. **History queryable (latest in GET)**. 19. **Account update doesn't block on pending validation**. 20. **GDT cache namespaced per-tenant**.
 
 ---
 

@@ -41,7 +41,7 @@ Genetec / Milestone (VMS); LenelS2 (access control); Cyware (CTI); FusionCenter.
 | `annual-converged-security-strategy` | Physical + info-sec + supply-chain + insider-threat + exec protection | annual | security-strategy@1 (converged) | shipped (1.0.0) |
 | `per-physical-security-charter` | Physical-security program: facility / exec-protection / supply-chain / insider | per-event | program-charter@1 | shipped (1.0.0) |
 | `per-converged-incident-postmortem` | Converged postmortem: physical + info-sec + supply-chain root cause | per-event | postmortem@1 | shipped (1.0.0) |
-| `quarterly-vuln-management` | Converged VM: physical-facility + info-sec + supply-chain + insider-threat | quarterly | vulnerability-mgmt-report@1 (converged) | shipped (1.0.0) |
+| `quarterly-vuln-management` | Converged VM: physical-facility + info-sec + supply-chain + insider-threat | quarterly | vulnerability-management-report@1 (converged) | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2/Tier-5 + SDP-original skills (`security-strategy`, `program-charter`, `postmortem`, `vulnerability-mgmt-report`). See `../../skill/MODULE.md` §3 + §3.2 + §3.5.
 

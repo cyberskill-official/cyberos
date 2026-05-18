@@ -7,16 +7,16 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_portfolio,       source: last year's portfolio chapter of strategy-doc@1, format: strategy-doc@1 }
+  - { name: prior_portfolio,       source: last year's portfolio chapter of strategy-doc@1, format: strategy-document@1 }
   - { name: bu_performance,        source: BU / product-line P&L + growth metrics, format: markdown }
   - { name: market_attractiveness, source: industry analyses per BU, format: markdown }
 
 outputs:
-  - { name: portfolio_strategy,    format: strategy-doc@1 (portfolio chapter), recipient: cuo/cso-strategy + cuo/ceo + cuo/cfo + Board (annual portfolio review) }
+  - { name: portfolio_strategy,    format: strategy-document@1 (portfolio chapter), recipient: cuo/cso-strategy + cuo/ceo + cuo/cfo + Board (annual portfolio review) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_portfolio: prior_portfolio, bu_performance: bu_performance, market_attractiveness: market_attractiveness }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: portfolio_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_portfolio: prior_portfolio, bu_performance: bu_performance, market_attractiveness: market_attractiveness }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: portfolio_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "recommends divestiture or major reorg" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-strategy-officer/annual-portfolio-strategy \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per BCG + GE-McKinsey 9-box.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per BCG + GE-McKinsey 9-box.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

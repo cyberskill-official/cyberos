@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-020
 title: "BGE-reranker-v2-m3 cross-encoder for KB reranking (per-region sidecar; CPU fallback)"
 module: AI

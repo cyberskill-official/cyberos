@@ -73,7 +73,7 @@ class Invoker(abc.ABC):
         """Invoke `skill_name` with `inputs` and write its output to `output_dir`.
 
         Args:
-            skill_name: e.g. "srs-author" — must correspond to a directory at
+            skill_name: e.g. "software-requirements-specification-author" — must correspond to a directory at
                 `skill_root/<skill_name>/SKILL.md`.
             inputs: dict of input-name → value (file path string OR primitive).
             skill_root: filesystem path to `skill/` (must contain MODULE.md).
@@ -278,7 +278,7 @@ def select_invoker(prefer: str = "auto") -> Invoker:
 
 
 def _strip_role_suffix(skill_name: str) -> str:
-    """Convert 'sow-author' or 'sow-audit' → 'sow' for contract lookups."""
+    """Convert 'statement-of-work-author' or 'statement-of-work-audit' → 'sow' for contract lookups."""
     if skill_name.endswith("-author"):
         return skill_name[: -len("-author")]
     if skill_name.endswith("-audit"):

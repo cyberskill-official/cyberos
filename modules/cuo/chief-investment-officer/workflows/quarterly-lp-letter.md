@@ -7,7 +7,7 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: prior_letter,          source: last quarter's lp-letter@1, format: lp-letter@1 }
+  - { name: prior_letter,          source: last quarter's lp-letter@1, format: limited-partner-letter@1 }
   - { name: performance_data,      source: fund-administrator NAV + attribution, format: csv }
   - { name: market_commentary,     source: market intel, format: markdown }
 
@@ -15,8 +15,8 @@ outputs:
   - { name: lp_letter,             format: lp-letter@1, recipient: cuo/cio-investment + LPs + GP team }
 
 skill_chain:
-  - { step: 1, skill: lp-letter-author, inputs_from: { prior_letter: prior_letter, performance_data: performance_data, market_commentary: market_commentary }, outputs_to: letter_draft }
-  - { step: 2, skill: lp-letter-audit,  inputs_from: letter_draft, outputs_to: lp_letter }
+  - { step: 1, skill: limited-partner-letter-author, inputs_from: { prior_letter: prior_letter, performance_data: performance_data, market_commentary: market_commentary }, outputs_to: letter_draft }
+  - { step: 2, skill: limited-partner-letter-audit,  inputs_from: letter_draft, outputs_to: lp_letter }
 
 escalates_to:
   - { persona: cuo/chief-legal-officer,      when: "letter requires forward-looking-statement disclaimer (SEC IA Marketing Rule)" }

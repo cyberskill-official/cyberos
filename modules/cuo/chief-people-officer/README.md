@@ -37,9 +37,9 @@ Same as CHRO.
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `synonym-pointer-readme` | Pointer: CPO-People is synonym of CHRO; use CHRO workflows for actual HR work | on-demand | decision-log@1 | shipped (1.0.0) |
-| `annual-people-strategy` | Annual people strategy (synonym variant) | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-people-strategy` | Annual people strategy (synonym variant) | annual | strategy-document@1 | shipped (1.0.0) |
 | `quarterly-people-review` | Consolidated quarterly people review (workforce + engagement + DEI) | quarterly | rhythm-of-business@1 (people chapter) | shipped (1.0.0) |
-| `annual-employee-value-proposition` | EVP: culture + total rewards + career growth + mission alignment | annual | strategy-doc@1 (EVP chapter) | shipped (1.0.0) |
+| `annual-employee-value-proposition` | EVP: culture + total rewards + career growth + mission alignment | annual | strategy-document@1 (EVP chapter) | shipped (1.0.0) |
 
 **CPO-People is a synonym of CHRO** at firms that prefer "People" nomenclature. All workflows chain through shipped Tier-1/Tier-2 skills (`decision-log`, `strategy-doc`, `rhythm-of-business`). See `../chro/` for canonical implementation and `../../skill/MODULE.md` §3.1 + §3.2.
 

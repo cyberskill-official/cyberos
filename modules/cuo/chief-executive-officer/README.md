@@ -91,12 +91,12 @@
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `quarterly-board-update` | Author the quarterly board deck | quarterly | board-deck@1 | shipped (1.0.0) |
-| `okr-cascade` | Drive the company-OKR cascade from vision | quarterly | okr-set@1 | shipped (1.0.0) |
+| `okr-cascade` | Drive the company-OKR cascade from vision | quarterly | objectives-and-key-results-set@1 | shipped (1.0.0) |
 | `monthly-investor-update` | Author the investor monthly update | monthly | investor-update@1 | shipped (1.0.0) |
 | `c-suite-hire-decision` | Drive a C-suite hire decision (interview loop + offer) | per-event | hire-decision-record@1 | shipped (1.0.0) |
-| `capital-allocation-memo` | Author a capital-allocation memo for the board | per-event | cap-alloc-memo@1 | shipped (1.0.0) |
+| `capital-allocation-memo` | Author a capital-allocation memo for the board | per-event | capital-allocation-memo@1 | shipped (1.0.0) |
 
-All workflows chain through shipped Tier-1 skills (board-deck-author/audit, okr-set-author/audit, investor-update-author/audit, hire-decision-author/audit, cap-alloc-memo-author/audit) — see `../../skill/MODULE.md` §3.1.
+All workflows chain through shipped Tier-1 skills (board-deck-author/audit, objectives-and-key-results-set-author/audit, investor-update-author/audit, hire-decision-author/audit, capital-allocation-memo-author/audit) — see `../../skill/MODULE.md` §3.1.
 
 ---
 

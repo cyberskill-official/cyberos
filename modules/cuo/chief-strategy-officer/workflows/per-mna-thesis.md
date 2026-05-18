@@ -8,16 +8,16 @@ status: shipped
 
 inputs:
   - { name: target_brief,          source: corporate-development team, format: markdown }
-  - { name: strategy_context,      source: cuo/chief-strategy-officer/annual-corporate-strategy, format: strategy-doc@1 }
+  - { name: strategy_context,      source: cuo/chief-strategy-officer/annual-corporate-strategy, format: strategy-document@1 }
   - { name: financial_diligence,   source: cuo/cfo (preliminary financial review), format: markdown }
-  - { name: comparable_deals,      source: prior mna-thesis@1 + market deal database, format: mna-thesis@1 (set) }
+  - { name: comparable_deals,      source: prior mergers-and-acquisitions-thesis@1 + market deal database, format: mergers-and-acquisitions-thesis@1 (set) }
 
 outputs:
   - { name: mna_thesis,            format: mna-thesis@1, recipient: cuo/cso-strategy + cuo/ceo + cuo/cfo + cuo/clo-legal + Board (per-deal review) }
 
 skill_chain:
-  - { step: 1, skill: mna-thesis-author, inputs_from: { target_brief: target_brief, strategy_context: strategy_context, financial_diligence: financial_diligence, comparable_deals: comparable_deals }, outputs_to: thesis_draft }
-  - { step: 2, skill: mna-thesis-audit,  inputs_from: thesis_draft, outputs_to: mna_thesis }
+  - { step: 1, skill: mergers-and-acquisitions-thesis-author, inputs_from: { target_brief: target_brief, strategy_context: strategy_context, financial_diligence: financial_diligence, comparable_deals: comparable_deals }, outputs_to: thesis_draft }
+  - { step: 2, skill: mergers-and-acquisitions-thesis-audit,  inputs_from: thesis_draft, outputs_to: mna_thesis }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "thesis recommends PROCEED on a deal > 10% of market cap" }
@@ -62,8 +62,8 @@ cyberos-cuo run cuo/chief-strategy-officer/per-mna-thesis \
 
 ## Skill chain
 
-- **Step 1 `mna-thesis-author`** — drafts per McKinsey/Bain M&A playbook + Bruner + Damodaran.
-- **Step 2 `mna-thesis-audit`** — validates per `mna_thesis_rubric@1.0`.
+- **Step 1 `mergers-and-acquisitions-thesis-author`** — drafts per McKinsey/Bain M&A playbook + Bruner + Damodaran.
+- **Step 2 `mergers-and-acquisitions-thesis-audit`** — validates per `mna_thesis_rubric@1.0`.
 
 ## Failure modes
 

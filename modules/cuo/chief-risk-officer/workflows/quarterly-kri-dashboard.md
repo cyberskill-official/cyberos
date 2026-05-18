@@ -8,15 +8,15 @@ status: shipped
 
 inputs:
   - { name: erm_framework,         source: cuo/chief-risk-officer/annual-erm-framework, format: enterprise-risk-framework@1 }
-  - { name: prior_dashboard,       source: last quarter's kri-dashboard@1, format: kri-dashboard@1 }
+  - { name: prior_dashboard,       source: last quarter's kri-dashboard@1, format: key-risk-indicator-dashboard@1 }
   - { name: source_metrics,        source: per-KRI data feeds (security tooling, financial systems, ops, HR), format: csv }
 
 outputs:
   - { name: kri_dashboard,         format: kri-dashboard@1, recipient: cuo/cro-risk + cuo/ceo + Board (quarterly risk chapter) }
 
 skill_chain:
-  - { step: 1, skill: kri-dashboard-author, inputs_from: { erm_framework: erm_framework, prior_dashboard: prior_dashboard, source_metrics: source_metrics }, outputs_to: dashboard_draft }
-  - { step: 2, skill: kri-dashboard-audit,  inputs_from: dashboard_draft, outputs_to: kri_dashboard }
+  - { step: 1, skill: key-risk-indicator-dashboard-author, inputs_from: { erm_framework: erm_framework, prior_dashboard: prior_dashboard, source_metrics: source_metrics }, outputs_to: dashboard_draft }
+  - { step: 2, skill: key-risk-indicator-dashboard-audit,  inputs_from: dashboard_draft, outputs_to: kri_dashboard }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "any tier-1 KRI breaches threshold (e.g. cash runway, audit finding, material litigation)" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-risk-officer/quarterly-kri-dashboard \
 
 ## Skill chain
 
-- **Step 1 `kri-dashboard-author`** — drafts per RIMS + COSO ERM.
-- **Step 2 `kri-dashboard-audit`** — validates per `kri_dashboard_rubric@1.0`.
+- **Step 1 `key-risk-indicator-dashboard-author`** — drafts per RIMS + COSO ERM.
+- **Step 2 `key-risk-indicator-dashboard-audit`** — validates per `kri_dashboard_rubric@1.0`.
 
 ## Failure modes
 

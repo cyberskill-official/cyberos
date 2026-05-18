@@ -7,16 +7,16 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (sustainability chapter), format: strategy-doc@1 }
-  - { name: esg_strategy,          source: cuo/chief-esg-officer/annual-esg-strategy, format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (sustainability chapter), format: strategy-document@1 }
+  - { name: esg_strategy,          source: cuo/chief-esg-officer/annual-esg-strategy, format: strategy-document@1 }
   - { name: ceo_priorities,        source: cuo/ceo, format: markdown }
 
 outputs:
   - { name: sustainability_strategy, format: strategy-doc@1, recipient: cuo/cso-sustainability + cuo/chief-esg-officer + cuo/ceo + Board (annual chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, esg_strategy: esg_strategy, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: sustainability_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, esg_strategy: esg_strategy, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: sustainability_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes net-zero acceleration OR major capex commitment" }

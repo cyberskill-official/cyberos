@@ -9,7 +9,7 @@ status: shipped
 inputs:
   - { name: cfo_budget,            source: cuo/chief-financial-officer/annual-budget, format: budget@1 }
   - { name: prior_actuals,         source: 12 months of monthly-close@1, format: monthly-close@1 (12) }
-  - { name: accounting_policy,     source: cuo/chief-accounting-officer/annual-accounting-policy, format: strategy-doc@1 (policy chapter) }
+  - { name: accounting_policy,     source: cuo/chief-accounting-officer/annual-accounting-policy, format: strategy-document@1 (policy chapter) }
 
 outputs:
   - { name: budget_controllership, format: budget@1 (controllership chapter), recipient: cuo/cao-accounting + cuo/cfo + function heads }

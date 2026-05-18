@@ -42,8 +42,8 @@ Linear / Jira (roadmap); Productboard / Aha! (vision); Amplitude / Mixpanel (ana
 |---|---|---|---|---|
 | `quarterly-roadmap-planning` | Opportunity-solution tree + prioritization + capacity vs commit | quarterly | product-roadmap@1 | shipped (1.0.0) |
 | `quarterly-product-metrics-review` | DAU/WAU/MAU + retention + funnels + north-star + OKRs | quarterly | product-metrics-review@1 | shipped (1.0.0) |
-| `annual-product-strategy` | Vision + pillars + kill criteria + 18-month bets | annual | strategy-doc@1 | shipped (1.0.0) |
-| `feature-prd-intake` | Per-feature PRD authoring per Cagan/Reforge discovery | per-event | prd@1 | shipped (1.0.0) |
+| `annual-product-strategy` | Vision + pillars + kill criteria + 18-month bets | annual | strategy-document@1 | shipped (1.0.0) |
+| `feature-prd-intake` | Per-feature PRD authoring per Cagan/Reforge discovery | per-event | product-requirements-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped skills — Tier-2 (`product-roadmap`, `strategy-doc`) + Tier-7 (`product-metrics-review`) + SDP-original (`prd`). See `../../skill/MODULE.md` §3 + §3.2 + §3.7.
 

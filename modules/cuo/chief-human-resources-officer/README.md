@@ -41,11 +41,11 @@ Workday / BambooHR / HiBob (HRIS); Lattice / 15Five / Leapsome (perf); Greenhous
 ## Workflows
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `annual-comp-cycle` | Bands + per-employee recs + equity + calibration | annual | comp-plan@1 | shipped (1.0.0) |
+| `annual-comp-cycle` | Bands + per-employee recs + equity + calibration | annual | compensation-plan@1 | shipped (1.0.0) |
 | `quarterly-workforce-plan` | Rolling 4Q hire-by-quarter + attrition forecast | quarterly | workforce-plan@1 | shipped (1.0.0) |
 | `new-hire-onboarding` | Day-1 / Week-1 / 30-60-90 plan + buddy + accounts | per-event | onboarding-pack@1 | shipped (1.0.0) |
-| `quarterly-enps-pulse` | Survey + analysis + per-manager insights + action plan | quarterly | enps-program@1 | shipped (1.0.0) |
-| `quarterly-dei-program-review` | Representation + pipeline diversity + pay-equity + inclusion | quarterly | dei-program@1 | shipped (1.0.0) |
+| `quarterly-enps-pulse` | Survey + analysis + per-manager insights + action plan | quarterly | employee-net-promoter-score-program@1 | shipped (1.0.0) |
+| `quarterly-dei-program-review` | Representation + pipeline diversity + pay-equity + inclusion | quarterly | diversity-equity-inclusion-program@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-1 skills (`comp-plan`, `workforce-plan`, `onboarding-pack`, `enps-program`, `dei-program`). See `../../skill/MODULE.md` §3.1.
 

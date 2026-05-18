@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: ceo_vision_brief,   source: cuo/ceo (verbal or written brief),                       format: markdown brief }
-  - { name: prior_okrs,         source: last quarter's okr-set@1,                                format: okr-set@1 }
+  - { name: prior_okrs,         source: last quarter's okr-set@1,                                format: objectives-and-key-results-set@1 }
   - { name: function_drafts,    source: each function head (CTO / CFO / CPO / CRO / etc.),       format: markdown (one per function) }
 
 outputs:
@@ -16,8 +16,8 @@ outputs:
   - { name: decision_log_entry, format: decision-log@1 entry, recipient: cuo/chief-of-staff + cuo/ceo (audit trail) }
 
 skill_chain:
-  - { step: 1, skill: okr-set-author, inputs_from: { ceo_vision_brief: ceo_vision_brief, prior_okrs: prior_okrs, function_drafts: function_drafts }, outputs_to: okrs_draft }
-  - { step: 2, skill: okr-set-audit,  inputs_from: okrs_draft, outputs_to: company_okrs }
+  - { step: 1, skill: objectives-and-key-results-set-author, inputs_from: { ceo_vision_brief: ceo_vision_brief, prior_okrs: prior_okrs, function_drafts: function_drafts }, outputs_to: okrs_draft }
+  - { step: 2, skill: objectives-and-key-results-set-audit,  inputs_from: okrs_draft, outputs_to: company_okrs }
   - { step: 3, skill: decision-log-author, inputs_from: { cascade_summary: company_okrs }, outputs_to: log_entry_draft }
   - { step: 4, skill: decision-log-audit,  inputs_from: log_entry_draft, outputs_to: decision_log_entry }
 
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-of-staff/quarterly-okr-cascade \
 
 ## Skill chain
 
-- **Step 1 `okr-set-author`** — drafts the company OKR set with function cascades.
-- **Step 2 `okr-set-audit`** — validates per `okr_set_rubric@1.0`.
+- **Step 1 `objectives-and-key-results-set-author`** — drafts the company OKR set with function cascades.
+- **Step 2 `objectives-and-key-results-set-audit`** — validates per `okr_set_rubric@1.0`.
 - **Step 3 `decision-log-author`** — records the cascade as a decision-log entry.
 - **Step 4 `decision-log-audit`** — validates per `decision_log_rubric@1.0`.
 

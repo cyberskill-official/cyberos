@@ -72,10 +72,10 @@ cyberos-cuo list-workflows cto                    # → 5 workflows
 cyberos-cuo route "Architect a new payment-processing system for Acme"
 # → persona: chief-technology-officer (95% confidence)
 # → workflow: architect-new-system (97% confidence)
-# → skill chain: srs-author → srs-audit → adr-author → adr-audit
+# → skill chain: software-requirements-specification-author → software-requirements-specification-audit → architecture-decision-record-author → architecture-decision-record-audit
 #                → threat-model-author → threat-model-audit
-#                → sdd-author → sdd-audit
-#                → impl-plan-author → impl-plan-audit (10 steps)
+#                → software-design-document-author → software-design-document-audit
+#                → implementation-plan-author → implementation-plan-audit (10 steps)
 cyberos-cuo dry-run chief-technology-officer/architect-new-system      # → validates chain; refuses if any planned: skills
 cyberos-cuo execute chief-technology-officer/adr-quick-capture \
     --output-dir /tmp/run-1 \
@@ -203,7 +203,7 @@ cyberos-cuo execute chief-technology-officer/adr-quick-capture \
     --output-dir /tmp/audit-run \
     --invoker mock \
     --brain-emit
-# → walks the 2-step chain (adr-author → adr-audit)
+# → walks the 2-step chain (architecture-decision-record-author → architecture-decision-record-audit)
 # → writes step-1.json, step-2.json under /tmp/audit-run
 # → emits 2 view rows + 1 session.end row to the BRAIN
 # → HEAD seq counter advances from N → N+2
@@ -223,7 +223,7 @@ After Session N (2026-05-18) the catalog has **zero `planned:` gaps** across 194
 
 ## 7. Fine-tune (LLM invoker)
 
-`LLMInvoker` drives **prompt-only SDP skills** (sow-author, srs-author, adr-author, etc.) via the Anthropic Messages API. It reads `modules/skill/<name>/SKILL.md` body (after the YAML frontmatter) as the LLM **system prompt** — no template injection. For audit skills (`<x>-audit` name suffix), it additionally appends `RUBRIC.md` to the system prompt as a guardrail.
+`LLMInvoker` drives **prompt-only SDP skills** (statement-of-work-author, software-requirements-specification-author, architecture-decision-record-author, etc.) via the Anthropic Messages API. It reads `modules/skill/<name>/SKILL.md` body (after the YAML frontmatter) as the LLM **system prompt** — no template injection. For audit skills (`<x>-audit` name suffix), it additionally appends `RUBRIC.md` to the system prompt as a guardrail.
 
 Two operating modes (computed at access time via `inv.mode`):
 
@@ -234,7 +234,7 @@ Two operating modes (computed at access time via `inv.mode`):
 
 ```bash
 # 1. Edit the skill's SKILL.md body — that IS the LLM system prompt
-$EDITOR modules/skill/sow-author/SKILL.md
+$EDITOR modules/skill/statement-of-work-author/SKILL.md
 
 # 2. Re-run a workflow that chains through it
 cyberos-cuo execute chief-of-staff/exec-onboarding \
@@ -362,9 +362,9 @@ Each step writes a single JSON file: `<output-dir>/step-<N>-<skill>.json`. The n
 
 ```yaml
 skill_chain:
-  - { step: 1, skill: srs-author, inputs_from: [workflow.inputs.brief],
+  - { step: 1, skill: software-requirements-specification-author, inputs_from: [workflow.inputs.brief],
                  outputs_to: [step1.srs_md] }
-  - { step: 2, skill: srs-audit, inputs_from: [step1.srs_md],
+  - { step: 2, skill: software-requirements-specification-audit, inputs_from: [step1.srs_md],
                  outputs_to: [step2.audit_verdict] }
 ```
 

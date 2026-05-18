@@ -42,7 +42,7 @@ Notion / Confluence / Slite (KB); Glean / Coveo (search); custom IP portals; Lin
 | `quarterly-knowledge-pipeline` | Harvest candidates + codification queue + publish + reuse metrics | quarterly | knowledge-pipeline@1 | shipped (1.0.0) |
 | `annual-knowledge-taxonomy` | Vocabulary + hierarchy + facets + multi-language refresh | annual | knowledge-taxonomy@1 | shipped (1.0.0) |
 | `per-asset-knowledge-codification` | Codify one engagement learning into a transferable asset | per-event | knowledge-asset@1 | shipped (1.0.0) |
-| `annual-knowledge-strategy` | KM vision + asset roadmap + investments + reuse-economics + tech stack | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-knowledge-strategy` | KM vision + asset roadmap + investments + reuse-economics + tech stack | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped skills — Tier-2 (`knowledge-asset`, `knowledge-taxonomy`, `strategy-doc`) + Tier-7 (`knowledge-pipeline`). See `../../skill/MODULE.md` §3.2 + §3.7.
 

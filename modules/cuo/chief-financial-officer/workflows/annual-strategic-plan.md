@@ -7,17 +7,17 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,     source: last year's strategy-doc@1 (CFO chapter), format: strategy-doc@1 }
+  - { name: prior_strategy,     source: last year's strategy-document@1 (CFO chapter), format: strategy-document@1 }
   - { name: ceo_priorities,     source: cuo/ceo (vision brief),                   format: markdown }
   - { name: prior_forecasts,    source: cuo/chief-financial-officer/quarterly-forecast (4Q),          format: forecast@1 (4 quarters) }
-  - { name: prior_cap_alloc,    source: cuo/chief-executive-officer/capital-allocation-memo set,      format: cap-alloc-memo@1 (multiple) }
+  - { name: prior_cap_alloc,    source: cuo/chief-executive-officer/capital-allocation-memo set,      format: capital-allocation-memo@1 (multiple) }
 
 outputs:
   - { name: strategic_plan,     format: strategy-doc@1, recipient: cuo/cfo + cuo/ceo + Board (annual finance strategy chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, prior_forecasts: prior_forecasts, prior_cap_alloc: prior_cap_alloc }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: strategic_plan }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, prior_forecasts: prior_forecasts, prior_cap_alloc: prior_cap_alloc }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: strategic_plan }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,         when: "strategy proposes capital-structure change (debt raise / equity raise / buyback)" }
@@ -60,8 +60,8 @@ cyberos-cuo run cuo/chief-financial-officer/annual-strategic-plan \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per Rumelt + Roger Martin Playing-to-Win + Thorndike capital-allocation.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per Rumelt + Roger Martin Playing-to-Win + Thorndike capital-allocation.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

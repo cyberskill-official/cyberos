@@ -10,7 +10,7 @@ sla_minutes: 240  # 4h — GDPR Art. 33 + PDPD 72h floor with 4h initial-notific
 
 inputs:
   - { name: incident_brief,     source: cuo/ciso / on-call (initial incident detection), format: markdown }
-  - { name: forensic_findings,  source: cuo/ciso (security investigation),               format: markdown / pen-test-report@1 if available }
+  - { name: forensic_findings,  source: cuo/ciso (security investigation),               format: markdown / penetration-test-report@1 if available }
   - { name: affected_inventory, source: data inventory + breach-scope analysis,          format: csv }
 
 outputs:

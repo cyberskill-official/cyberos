@@ -7,16 +7,16 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (DEI chapter), format: strategy-doc@1 }
-  - { name: dei_program_state,     source: cuo/chief-diversity-officer/annual-dei-program, format: dei-program@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (DEI chapter), format: strategy-document@1 }
+  - { name: dei_program_state,     source: cuo/chief-diversity-officer/annual-dei-program, format: diversity-equity-inclusion-program@1 }
   - { name: ceo_priorities,        source: cuo/ceo, format: markdown }
 
 outputs:
   - { name: dei_strategy,          format: strategy-doc@1, recipient: cuo/cdo-diversity + cuo/chro + cuo/ceo + Board (DEI strategic chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, dei_program_state: dei_program_state, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: dei_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, dei_program_state: dei_program_state, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: dei_strategy }
 
 audit_hooks:
   - workflow_complete row on PASS with dei_strategy hash

@@ -9,7 +9,7 @@ status: shipped
 inputs:
   - { name: prior_policy,          source: last year's remote-policy@1, format: remote-policy@1 }
   - { name: workforce_distribution, source: HRIS geography data, format: csv }
-  - { name: employee_pulse,        source: cuo/chief-human-resources-officer/quarterly-enps-pulse (remote slices), format: enps-program@1 }
+  - { name: employee_pulse,        source: cuo/chief-human-resources-officer/quarterly-enps-pulse (remote slices), format: employee-net-promoter-score-program@1 }
   - { name: ceo_priorities,        source: cuo/ceo, format: markdown }
 
 outputs:

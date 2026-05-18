@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0F172A"/>
+    </marker>
+    <marker id="arrh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7C3AED"/>
+    </marker>
+    <filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/></filter>
+  </defs>
+  <rect width="1400" height="1000" fill="#F8FAFC"/>
+  <text x="700" y="50" font-size="26" font-weight="700" fill="#0F172A" text-anchor="middle">Worked example — feature-request-author → feature-request-audit chain</text>
+  <text x="700" y="80" font-size="14" fill="#64748B" text-anchor="middle">Two atomic skills chained by the supervisor. Standalone or pipeline-driven; both modes write the same audit trail.</text>
+
+  <!-- Lanes -->
+  <g font-size="13" font-weight="700">
+    <rect x="60" y="120" width="220" height="50" rx="8" fill="#7C3AED"/>
+    <text x="170" y="151" fill="#fff" text-anchor="middle">👤 User in CHAT</text>
+    <line x1="170" y1="170" x2="170" y2="940" stroke="#7C3AED" stroke-width="2" stroke-dasharray="4,4"/>
+
+    <rect x="300" y="120" width="220" height="50" rx="8" fill="#1E2A78"/>
+    <text x="410" y="151" fill="#fff" text-anchor="middle">CUO Supervisor</text>
+    <line x1="410" y1="170" x2="410" y2="940" stroke="#1E2A78" stroke-width="2" stroke-dasharray="4,4"/>
+
+    <rect x="540" y="120" width="220" height="50" rx="8" fill="#F59E0B"/>
+    <text x="650" y="151" fill="#fff" text-anchor="middle">cuo/cpo/feature-request-author</text>
+    <line x1="650" y1="170" x2="650" y2="940" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4,4"/>
+
+    <rect x="780" y="120" width="220" height="50" rx="8" fill="#DC2626"/>
+    <text x="890" y="151" fill="#fff" text-anchor="middle">genie.action_log</text>
+    <line x1="890" y1="170" x2="890" y2="940" stroke="#DC2626" stroke-width="2" stroke-dasharray="4,4"/>
+
+    <rect x="1020" y="120" width="220" height="50" rx="8" fill="#F59E0B"/>
+    <text x="1130" y="151" fill="#fff" text-anchor="middle">cuo/cpo/feature-request-audit</text>
+    <line x1="1130" y1="170" x2="1130" y2="940" stroke="#F59E0B" stroke-width="2" stroke-dasharray="4,4"/>
+  </g>
+
+  <!-- Step 1: User → Supervisor -->
+  <text x="100" y="210" font-size="11" font-weight="700" fill="#7C3AED">1</text>
+  <path d="M 170 210 L 410 210" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+  <rect x="180" y="195" width="220" height="30" rx="6" fill="#fff" stroke="#7C3AED"/>
+  <text x="290" y="215" font-size="11" fill="#0F172A" text-anchor="middle">"Turn this PRD into a backlog and audit it"</text>
+
+  <!-- Step 2: Supervisor classify -->
+  <text x="340" y="270" font-size="11" font-weight="700" fill="#1E2A78">2</text>
+  <rect x="300" y="245" width="220" height="40" rx="6" fill="#1E2A78"/>
+  <text x="410" y="265" font-size="11" fill="#fff" text-anchor="middle">classify_act → feature-request-author</text>
+  <text x="410" y="280" font-size="10" fill="#C7D2FE" text-anchor="middle">persona_id=cuo-cpo, confidence=0.93</text>
+
+  <!-- Step 3: Supervisor → feature-request-author -->
+  <text x="450" y="320" font-size="11" font-weight="700" fill="#1E2A78">3</text>
+  <path d="M 410 320 L 650 320" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <rect x="420" y="305" width="220" height="30" rx="6" fill="#fff" stroke="#1E2A78"/>
+  <text x="530" y="325" font-size="10" fill="#0F172A" text-anchor="middle">invoke envelope {requirements_files, …}</text>
+
+  <!-- Step 4: feature-request-author PLAN phase -->
+  <text x="670" y="360" font-size="11" font-weight="700" fill="#F59E0B">4</text>
+  <rect x="540" y="345" width="220" height="60" rx="6" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="650" y="365" font-size="11" font-weight="700" fill="#B45309" text-anchor="middle">PLAN phase</text>
+  <text x="650" y="382" font-size="10" fill="#0F172A" text-anchor="middle">read PRD, enumerate FRs</text>
+  <text x="650" y="397" font-size="10" fill="#0F172A" text-anchor="middle">invariants: INV-003 coverage check</text>
+
+  <!-- Step 5: feature-request-author → action_log (question row) -->
+  <text x="780" y="430" font-size="11" font-weight="700" fill="#DC2626">5</text>
+  <path d="M 650 430 L 890 430" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <rect x="660" y="415" width="220" height="30" rx="6" fill="#fff" stroke="#DC2626"/>
+  <text x="770" y="435" font-size="10" fill="#0F172A" text-anchor="middle">+1 row · row_kind: question</text>
+
+  <!-- Step 6: feature-request-author → user (HALT, plan approval) -->
+  <text x="290" y="475" font-size="11" font-weight="700" fill="#7C3AED">6</text>
+  <path d="M 650 475 L 170 475" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+  <rect x="180" y="460" width="460" height="30" rx="6" fill="#fff" stroke="#7C3AED"/>
+  <text x="410" y="480" font-size="11" fill="#0F172A" text-anchor="middle">PROPOSED FR BACKLOG block (HUMAN_SUMMARY.md) · HALT</text>
+
+  <!-- Step 7: User APPROVE -->
+  <text x="100" y="520" font-size="11" font-weight="700" fill="#7C3AED">7</text>
+  <path d="M 170 520 L 410 520" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+  <rect x="180" y="505" width="220" height="30" rx="6" fill="#fff" stroke="#7C3AED"/>
+  <text x="290" y="525" font-size="11" fill="#0F172A" text-anchor="middle">"APPROVE"</text>
+
+  <!-- Step 8: Supervisor resume → feature-request-author WORKER -->
+  <text x="450" y="565" font-size="11" font-weight="700" fill="#1E2A78">8</text>
+  <path d="M 410 565 L 650 565" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <rect x="420" y="550" width="220" height="30" rx="6" fill="#fff" stroke="#1E2A78"/>
+  <text x="530" y="570" font-size="10" fill="#0F172A" text-anchor="middle">resume from checkpoint</text>
+
+  <!-- Step 9: feature-request-author WORKER → action_log -->
+  <text x="780" y="610" font-size="11" font-weight="700" fill="#DC2626">9</text>
+  <rect x="540" y="595" width="220" height="30" rx="6" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="650" y="615" font-size="11" fill="#B45309" text-anchor="middle">WORKER: write FR-001 to FR-003</text>
+  <path d="M 650 640 L 890 640" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <rect x="660" y="625" width="220" height="30" rx="6" fill="#fff" stroke="#DC2626"/>
+  <text x="770" y="645" font-size="10" fill="#0F172A" text-anchor="middle">+3 rows · row_kind: artefact_write</text>
+
+  <!-- Step 10: feature-request-author → Supervisor (BATCH_COMPLETE) -->
+  <text x="450" y="690" font-size="11" font-weight="700" fill="#F59E0B">10</text>
+  <path d="M 650 690 L 410 690" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <rect x="420" y="675" width="220" height="30" rx="6" fill="#fff" stroke="#F59E0B"/>
+  <text x="530" y="695" font-size="10" fill="#0F172A" text-anchor="middle">output envelope: next_skill=feature-request-audit</text>
+
+  <!-- Step 11: Supervisor → feature-request-audit -->
+  <text x="690" y="735" font-size="11" font-weight="700" fill="#1E2A78">11</text>
+  <path d="M 410 735 L 1130 735" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <rect x="430" y="720" width="690" height="30" rx="6" fill="#fff" stroke="#1E2A78"/>
+  <text x="775" y="740" font-size="10" fill="#0F172A" text-anchor="middle">conditional edge fires (next_skill_recommendation) → invoke feature-request-audit with {fr_paths, upstream_context}</text>
+
+  <!-- Step 12: feature-request-audit runs -->
+  <text x="1150" y="775" font-size="11" font-weight="700" fill="#F59E0B">12</text>
+  <rect x="1020" y="760" width="220" height="60" rx="6" fill="#FEF3C7" stroke="#F59E0B"/>
+  <text x="1130" y="780" font-size="11" font-weight="700" fill="#B45309" text-anchor="middle">8-step audit loop</text>
+  <text x="1130" y="797" font-size="10" fill="#0F172A" text-anchor="middle">audit_rubric@2.0 vs each FR</text>
+  <text x="1130" y="812" font-size="10" fill="#0F172A" text-anchor="middle">INV-001: verdict determinism</text>
+
+  <!-- Step 13: feature-request-audit → action_log -->
+  <text x="900" y="855" font-size="11" font-weight="700" fill="#DC2626">13</text>
+  <path d="M 1130 855 L 890 855" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <rect x="900" y="840" width="220" height="30" rx="6" fill="#fff" stroke="#DC2626"/>
+  <text x="1010" y="860" font-size="10" fill="#0F172A" text-anchor="middle">+3 rows · row_kind: artefact_write</text>
+
+  <!-- Step 14: feature-request-audit → Supervisor → User -->
+  <text x="700" y="900" font-size="11" font-weight="700" fill="#7C3AED">14</text>
+  <path d="M 1130 900 L 170 900" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrh)"/>
+  <rect x="180" y="885" width="940" height="30" rx="6" fill="#fff" stroke="#7C3AED"/>
+  <text x="650" y="905" font-size="11" fill="#0F172A" text-anchor="middle">3 audit reports written, all PASS · HUMAN_SUMMARY rendered to chat · trace_id correlates all 7 action_log rows</text>
+
+  <text x="700" y="980" font-size="11" fill="#94A3B8" text-anchor="middle">11-feature-request-author-feature-request-audit-chain-sequence.svg</text>
+</svg>

@@ -17,7 +17,7 @@ DEC-090: a contract is not a skill. The previous "schema living as a skill" mode
 
 ### Backwards compatibility
 
-- Body of `template.md` is byte-identical → existing consumers (`cuo/cpo/fr-author` v0.1.0, `cuo/cpo/fr-audit` v0.1.0) continue to validate against `feature_request@1`.
+- Body of `template.md` is byte-identical → existing consumers (`cuo/cpo/feature-request-author` v0.1.0, `cuo/cpo/feature-request-audit` v0.1.0) continue to validate against `feature_request@1`.
 - The path move requires every consumer to update its `references/` cross-links. Tracked via the v0.2.0 registry-level CHANGELOG.
 - The old location (`cuo/_shared/feature-request-template/`) is deleted in the same commit that lands this v1.1.0.
 
@@ -35,7 +35,7 @@ DEC-090: a contract is not a skill. The previous "schema living as a skill" mode
 `feature_request@1` — pinned. Any change to required frontmatter or required H2 sections requires bumping to `feature_request@2`, which in turn forces:
 
 1. This contract's `contract_version` to v2.
-2. `cuo/cpo/fr-audit/RUBRIC.md` (audit rubric) to `audit_rubric@3.0`.
+2. `cuo/cpo/feature-request-audit/RUBRIC.md` (audit rubric) to `audit_rubric@3.0`.
 3. Every consumer skill's `depends_on_contracts:` pin to update (`feature-request@v1` → `feature-request@v2`), with a MAJOR `skill_version` bump.
 4. A `MIGRATE_FORWARD` audit row appended to BRAIN noting the schema advance for any in-flight `fr-manifest@2` instance.
 

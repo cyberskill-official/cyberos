@@ -9,7 +9,7 @@ status: shipped
 inputs:
   - { name: prior_experiments,     source: last quarter's experiment log, format: program-charter@1 (set) }
   - { name: results,               source: experiment-platform results (Optimizely / VWO / Statsig), format: csv }
-  - { name: growth_strategy,       source: cuo/chief-growth-officer/annual-growth-strategy, format: gtm-plan@1 }
+  - { name: growth_strategy,       source: cuo/chief-growth-officer/annual-growth-strategy, format: go-to-market-plan@1 }
 
 outputs:
   - { name: experimentation_portfolio, format: program-charter@1 (portfolio summary), recipient: cuo/cgo + cuo/cpo-product + cuo/cmo }

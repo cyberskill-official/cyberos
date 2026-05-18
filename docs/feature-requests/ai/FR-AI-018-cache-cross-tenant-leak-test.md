@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-018
 title: "Cross-tenant cache leak property-test (hard zero) — 200K random ops + 7 regression scenarios + adversarial inputs"
 module: AI

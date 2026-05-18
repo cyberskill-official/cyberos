@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (trust chapter), format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (trust chapter), format: strategy-document@1 }
   - { name: portal_history,        source: 4 quarters of trust-portal-update@1, format: trust-portal-update@1 (4Q) }
   - { name: transparency_history,  source: prior transparency-report@1, format: transparency-report@1 }
   - { name: ceo_priorities,        source: cuo/ceo (vision brief), format: markdown }
@@ -16,8 +16,8 @@ outputs:
   - { name: trust_strategy,        format: strategy-doc@1, recipient: cuo/chief-trust-officer + cuo/ceo + cuo/ciso + cuo/cpo-privacy + Board (annual trust chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, portal_history: portal_history, transparency_history: transparency_history, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: trust_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, portal_history: portal_history, transparency_history: transparency_history, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: trust_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes new certification pursuit (FedRAMP High, IRAP, etc.) requiring 1-2 year + significant investment" }
@@ -60,8 +60,8 @@ cyberos-cuo run cuo/chief-trust-officer/annual-trust-strategy \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per Rumelt + Edelman + Santa Clara.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per Rumelt + Edelman + Santa Clara.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

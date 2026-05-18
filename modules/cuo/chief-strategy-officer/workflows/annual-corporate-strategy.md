@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1, format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-doc@1, format: strategy-document@1 }
   - { name: ceo_priorities,        source: cuo/ceo (vision brief), format: markdown }
   - { name: market_intel,          source: industry + competitive intel, format: markdown }
   - { name: portfolio_state,       source: business-unit performance + product/innovation portfolios, format: markdown }
@@ -16,8 +16,8 @@ outputs:
   - { name: corporate_strategy,    format: strategy-doc@1, recipient: cuo/cso-strategy + cuo/ceo + entire C-suite + Board (annual strategy) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, market_intel: market_intel, portfolio_state: portfolio_state }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: corporate_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, market_intel: market_intel, portfolio_state: portfolio_state }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: corporate_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes exit-a-market, enter-a-market, M&A initiative" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-strategy-officer/annual-corporate-strategy \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per Rumelt + Roger Martin + Porter + Christensen.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per Rumelt + Roger Martin + Porter + Christensen.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

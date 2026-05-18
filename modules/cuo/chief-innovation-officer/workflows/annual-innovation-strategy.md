@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (innovation chapter), format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (innovation chapter), format: strategy-document@1 }
   - { name: portfolio,             source: cuo/chief-innovation-officer/annual-innovation-portfolio, format: innovation-portfolio@1 }
   - { name: ceo_priorities,        source: cuo/ceo (vision brief), format: markdown }
 
@@ -15,8 +15,8 @@ outputs:
   - { name: innovation_strategy,   format: strategy-doc@1, recipient: cuo/chief-innovation-officer + cuo/ceo + Board (annual innovation chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, portfolio: portfolio, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: innovation_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, portfolio: portfolio, ceo_priorities: ceo_priorities }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: innovation_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes new innovation operating model (CVC arm, accelerator, M&A engine)" }
@@ -57,8 +57,8 @@ cyberos-cuo run cuo/chief-innovation-officer/annual-innovation-strategy \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per Rumelt + McKinsey + Christensen.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per Rumelt + McKinsey + Christensen.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

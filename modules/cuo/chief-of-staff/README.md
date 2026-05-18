@@ -40,7 +40,7 @@ Linear / Asana / ClickUp (special projects); Lattice / Ally / Workboard (OKRs); 
 
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `quarterly-okr-cascade` | Govern the OKR cascade with decision-log trail | quarterly | okr-set@1 + decision-log@1 | shipped (1.0.0) |
+| `quarterly-okr-cascade` | Govern the OKR cascade with decision-log trail | quarterly | objectives-and-key-results-set@1 + decision-log@1 | shipped (1.0.0) |
 | `weekly-rhythm-of-business` | Refresh the operating rhythm + CEO calendar | weekly | rhythm-of-business@1 | shipped (1.0.0) |
 | `decision-log-keeping` | Capture a single decision as a structured log entry | on-demand | decision-log@1 | shipped (1.0.0) |
 | `special-project-charter` | Charter a CEO-sponsored special project | per-event | program-charter@1 | shipped (1.0.0) |

@@ -38,10 +38,10 @@ Tableau / Power BI (DEI dashboards); Culture Amp / Glint (inclusion survey); Gre
 ## Workflows
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `annual-dei-program` | Representation goals + pipeline + inclusion + ERGs + equity audit | annual | dei-program@1 | shipped (1.0.0) |
-| `quarterly-dei-progress-review` | Representation deltas + pipeline funnel + inclusion pulse | quarterly | dei-program@1 (quarterly chapter) | shipped (1.0.0) |
+| `annual-dei-program` | Representation goals + pipeline + inclusion + ERGs + equity audit | annual | diversity-equity-inclusion-program@1 | shipped (1.0.0) |
+| `quarterly-dei-progress-review` | Representation deltas + pipeline funnel + inclusion pulse | quarterly | diversity-equity-inclusion-program@1 (quarterly chapter) | shipped (1.0.0) |
 | `per-erg-charter` | Per-Employee-Resource-Group charter (mission + sponsor + membership + budget) | per-event | program-charter@1 | shipped (1.0.0) |
-| `annual-dei-strategy` | Equity vision + intersectional priorities + supplier diversity + external commitments | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-dei-strategy` | Equity vision + intersectional priorities + supplier diversity + external commitments | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-1/Tier-2 skills (`dei-program`, `program-charter`, `strategy-doc`). See `../../skill/MODULE.md` §3.1 + §3.2.
 

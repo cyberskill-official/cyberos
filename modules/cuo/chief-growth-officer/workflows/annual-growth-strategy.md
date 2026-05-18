@@ -7,16 +7,16 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's gtm-plan@1 (growth chapter), format: gtm-plan@1 }
+  - { name: prior_strategy,        source: last year's go-to-market-plan@1 (growth chapter), format: go-to-market-plan@1 }
   - { name: ceo_priorities,        source: cuo/ceo, format: markdown }
-  - { name: product_strategy,      source: cuo/chief-product-officer/annual-product-strategy, format: strategy-doc@1 }
+  - { name: product_strategy,      source: cuo/chief-product-officer/annual-product-strategy, format: strategy-document@1 }
 
 outputs:
   - { name: growth_strategy,       format: gtm-plan@1, recipient: cuo/cgo + cuo/cmo + cuo/cpo-product + cuo/cso-sales + cuo/ceo + Board (growth chapter) }
 
 skill_chain:
-  - { step: 1, skill: gtm-plan-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, product_strategy: product_strategy }, outputs_to: strategy_draft }
-  - { step: 2, skill: gtm-plan-audit,  inputs_from: strategy_draft, outputs_to: growth_strategy }
+  - { step: 1, skill: go-to-market-plan-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, product_strategy: product_strategy }, outputs_to: strategy_draft }
+  - { step: 2, skill: go-to-market-plan-audit,  inputs_from: strategy_draft, outputs_to: growth_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes monetization-model shift" }

@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-012
 title: "VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account)"
 module: AI

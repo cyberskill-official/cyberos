@@ -242,7 +242,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 
 **Why deal close emits 3 distinct audit kinds (deal_won, deal_lost, deal_cancelled) instead of one (DEC-349, §1 #17)?** Different operator queries: "show me wins this quarter" filters `crm.deal_won`; "show me losses to investigate root causes" filters `crm.deal_lost`. One kind with a status field would force every consumer to filter — fewer selectivity benefits.
 
-**Why MST field present but validation deferred (DEC-343, §1 #1)?** The column needs to exist now so deals can be created with the field; FR-CRM-003 ships the validation (calls `vn-mst-validate` skill on write). Slice 1 stores any 10–13 char string; slice 2 enforces format + GDT registry check.
+**Why MST field present but validation deferred (DEC-343, §1 #1)?** The column needs to exist now so deals can be created with the field; FR-CRM-003 ships the validation (calls `vietnam-mst-validate` skill on write). Slice 1 stores any 10–13 char string; slice 2 enforces format + GDT registry check.
 
 **Why pipeline_stages position 1-50 (§1 #6)?** Reasonable practical bound — pipelines deeper than 50 stages are pathological (operators lose track). 1-indexed for natural display order.
 

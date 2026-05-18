@@ -4,7 +4,7 @@ runtime/skill_runners/base.py — base class for deterministic per-skill runners
 
 Tier α.1 (Batch 21).
 
-Each skill (fr-with-tasks, fr-author, prd-author, etc.) gets a concrete
+Each skill (fr-with-tasks, feature-request-author, product-requirements-document-author, etc.) gets a concrete
 subclass that implements the small fraction of skill logic that is
 deterministic (interview loop, INVARIANT checks, content-gate filtering,
 audit-fix loop). Only the judgement-driven authoring is delegated to

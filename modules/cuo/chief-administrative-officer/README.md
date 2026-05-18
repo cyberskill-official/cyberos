@@ -47,7 +47,7 @@ ERP + workplace mgmt + records mgmt systems.
 | `annual-administrative-operating-model` | Back-office org + processes + governance + shared-services | annual | operating-model@1 | shipped (1.0.0) |
 | `weekly-back-office-cadence` | Function-head sync + ticket queues + escalation + vendor coordination | weekly | rhythm-of-business@1 | shipped (1.0.0) |
 | `annual-vendor-consolidation` | Overlap analysis + contract rationalization + savings + transition | annual | vendor-scorecard@1 (consolidation chapter) | shipped (1.0.0) |
-| `annual-ga-strategy` | G&A function priorities + automation + shared-services + cost targets | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-ga-strategy` | G&A function priorities + automation + shared-services + cost targets | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-1/Tier-2 skills (`operating-model`, `rhythm-of-business`, `vendor-scorecard`, `strategy-doc`). See `../../skill/MODULE.md` §3.1 + §3.2.
 

@@ -39,10 +39,10 @@ Cision / Meltwater (PR + monitoring); Notified (IR portal); Staffbase / Firstup 
 ## Workflows
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `annual-crisis-playbook` | Scenario inventory + holding statements + escalation + stakeholder maps | annual | crisis-comms-playbook@1 | shipped (1.0.0) |
+| `annual-crisis-playbook` | Scenario inventory + holding statements + escalation + stakeholder maps | annual | crisis-communications-playbook@1 | shipped (1.0.0) |
 | `per-press-release` | Distribution + wire + media-list + earned-media follow-through | per-event | press-release@1 (with distribution log) | shipped (1.0.0) |
 | `monthly-internal-newsletter` | All-hands newsletter: wins / decisions / OKRs / people moves / asks | monthly | internal-newsletter@1 | shipped (1.0.0) |
-| `per-crisis-response` | Invoke playbook + draft/distribute statements + stakeholder coordination | per-event | crisis-comms-playbook@1 (incident-augmented) | shipped (1.0.0) |
+| `per-crisis-response` | Invoke playbook + draft/distribute statements + stakeholder coordination | per-event | crisis-communications-playbook@1 (incident-augmented) | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2 skills (`crisis-comms-playbook`, `press-release`, `internal-newsletter`). See `../../skill/MODULE.md` §3.2.
 

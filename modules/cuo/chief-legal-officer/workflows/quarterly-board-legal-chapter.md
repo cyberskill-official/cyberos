@@ -13,11 +13,11 @@ inputs:
   - { name: ma_status,            source: cuo/cso-strategy + cuo/clo-legal (active M&A pipeline),    format: markdown brief }
 
 outputs:
-  - { name: legal_chapter,        format: litigation-mgmt-update@1 + board-deck@1 chapter, recipient: cuo/ceo (for inclusion in quarterly-board-update) + Board }
+  - { name: legal_chapter,        format: litigation-management-update@1 + board-deck@1 chapter, recipient: cuo/ceo (for inclusion in quarterly-board-update) + Board }
 
 skill_chain:
-  - { step: 1, skill: litigation-mgmt-update-author, inputs_from: { matter_list: matter_list, counsel_bills: counsel_bills, regulatory_summary: regulatory_summary, ma_status: ma_status }, outputs_to: litigation_update_draft }
-  - { step: 2, skill: litigation-mgmt-update-audit,  inputs_from: litigation_update_draft, outputs_to: litigation_update }
+  - { step: 1, skill: litigation-management-update-author, inputs_from: { matter_list: matter_list, counsel_bills: counsel_bills, regulatory_summary: regulatory_summary, ma_status: ma_status }, outputs_to: litigation_update_draft }
+  - { step: 2, skill: litigation-management-update-audit,  inputs_from: litigation_update_draft, outputs_to: litigation_update }
   - { step: 3, skill: board-deck-author,             inputs_from: { litigation_update: litigation_update, chapter_mode: "legal" }, outputs_to: legal_chapter_draft }
   - { step: 4, skill: board-deck-audit,              inputs_from: legal_chapter_draft, outputs_to: legal_chapter }
 
@@ -62,8 +62,8 @@ cyberos-cuo run cuo/chief-legal-officer/quarterly-board-legal-chapter \
 
 ## Skill chain
 
-- **Step 1 `litigation-mgmt-update-author`** — drafts per Litify model: active matters / exposure / settlement posture / counsel costs / reserve.
-- **Step 2 `litigation-mgmt-update-audit`** — validates per `litigation_mgmt_update_rubric@1.0`.
+- **Step 1 `litigation-management-update-author`** — drafts per Litify model: active matters / exposure / settlement posture / counsel costs / reserve.
+- **Step 2 `litigation-management-update-audit`** — validates per `litigation_mgmt_update_rubric@1.0`.
 - **Step 3 `board-deck-author`** — renders legal-chapter view of the litigation update for board consumption.
 - **Step 4 `board-deck-audit`** — validates per `board_deck_rubric@1.0` chapter-mode rules.
 

@@ -9,8 +9,8 @@ status: shipped
 inputs:
   - { name: financials,         source: cuo/chief-financial-officer/quarterly-board-financials, format: monthly-close@1 + forecast@1 }
   - { name: pipeline_history,   source: prior quarter pipeline-report@1 set, format: pipeline-report@1 (13 weeks) }
-  - { name: cs_engagements,     source: cs-engagement@1 for all customers,   format: cs-engagement@1 (multiple) }
-  - { name: gtm_plan,           source: cuo/chief-sales-officer/annual-gtm-plan,       format: gtm-plan@1 }
+  - { name: cs_engagements,     source: customer-success-engagement@1 for all customers,   format: customer-success-engagement@1 (multiple) }
+  - { name: gtm_plan,           source: cuo/chief-sales-officer/annual-gtm-plan,       format: go-to-market-plan@1 }
 
 outputs:
   - { name: revenue_review,     format: board-deck@1 chapter (revenue), recipient: cuo/cro-revenue + cuo/ceo + Board (chapter) }

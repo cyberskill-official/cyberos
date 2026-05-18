@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_strategy,        source: last year's strategy-doc@1 (knowledge chapter), format: strategy-doc@1 }
+  - { name: prior_strategy,        source: last year's strategy-document@1 (knowledge chapter), format: strategy-document@1 }
   - { name: ceo_priorities,        source: cuo/ceo (vision brief), format: markdown }
   - { name: pipeline_history,      source: 4 quarters of knowledge-pipeline@1, format: knowledge-pipeline@1 (4Q) }
   - { name: practice_input,        source: practice leads (per-practice knowledge needs), format: markdown briefs }
@@ -16,8 +16,8 @@ outputs:
   - { name: knowledge_strategy,    format: strategy-doc@1, recipient: cuo/chief-knowledge-officer + cuo/ceo + cuo/coo + practice leads + Board (annual KM chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, pipeline_history: pipeline_history, practice_input: practice_input }, outputs_to: strategy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: strategy_draft, outputs_to: knowledge_strategy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_strategy: prior_strategy, ceo_priorities: ceo_priorities, pipeline_history: pipeline_history, practice_input: practice_input }, outputs_to: strategy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: strategy_draft, outputs_to: knowledge_strategy }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy proposes IP-asset productization (knowledge → product transition)" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-knowledge-officer/annual-knowledge-strategy \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts per Rumelt + Davenport + McKinsey KM.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts per Rumelt + Davenport + McKinsey KM.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

@@ -7,7 +7,7 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_vision,          source: last year's strategy-doc@1 (architecture chapter), format: strategy-doc@1 }
+  - { name: prior_vision,          source: last year's strategy-document@1 (architecture chapter), format: strategy-document@1 }
   - { name: cto_priorities,        source: cuo/cto, format: markdown }
   - { name: tech_debt_inventory,   source: engineering tech-debt register, format: markdown }
 
@@ -15,8 +15,8 @@ outputs:
   - { name: architecture_vision,   format: strategy-doc@1, recipient: cuo/chief-architect + cuo/cto + engineering leads + Board (technical chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_vision: prior_vision, cto_priorities: cto_priorities, tech_debt_inventory: tech_debt_inventory }, outputs_to: vision_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: vision_draft, outputs_to: architecture_vision }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_vision: prior_vision, cto_priorities: cto_priorities, tech_debt_inventory: tech_debt_inventory }, outputs_to: vision_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: vision_draft, outputs_to: architecture_vision }
 
 audit_hooks:
   - workflow_complete row on PASS with architecture_vision hash

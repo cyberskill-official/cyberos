@@ -1,6 +1,6 @@
 ---
 id: FR-SKILL-110
-title: "vn-vat-invoice@1 skill — Vietnamese e-invoice (hóa đơn) Decree 123 XML emitter with GDT submission, digital signature, and per-invoice audit trail"
+title: "vietnam-vat-invoice@1 skill — Vietnamese e-invoice (hóa đơn) Decree 123 XML emitter with GDT submission, digital signature, and per-invoice audit trail"
 module: SKILL
 priority: MUST
 status: accepted
@@ -17,7 +17,7 @@ depends_on: [FR-SKILL-104, FR-SKILL-108, FR-SKILL-109]
 blocks: []
 
 source_pages:
-  - website/docs/skills/vn-vat-invoice.html
+  - website/docs/skills/vietnam-vat-invoice.html
   - website/docs/legal/vn-decree-123-hoa-don.html
 source_decisions:
   - DEC-230 (hóa đơn XML conforms to Decree 123/2020/NĐ-CP + Circular 78/2021/TT-BTC schemas)
@@ -27,24 +27,24 @@ source_decisions:
   - DEC-234 (invoice number monotonically increasing per tenant per template; gap detection sev-1)
 
 language: rust 1.81
-service: cyberos/skills/vn-vat-invoice/
+service: cyberos/skills/vietnam-vat-invoice/
 new_files:
-  - skills/vn-vat-invoice/SKILL.md
-  - skills/vn-vat-invoice/main.rs
-  - skills/vn-vat-invoice/src/lib.rs
-  - skills/vn-vat-invoice/src/xml_builder.rs
-  - skills/vn-vat-invoice/src/signer.rs
-  - skills/vn-vat-invoice/src/gdt_submit.rs
-  - skills/vn-vat-invoice/src/numbering.rs
-  - skills/vn-vat-invoice/src/template.rs
-  - skills/vn-vat-invoice/tests/xml_schema_test.rs
-  - skills/vn-vat-invoice/tests/signer_test.rs
-  - skills/vn-vat-invoice/tests/integration_test.rs
-  - skills/vn-vat-invoice/schemas/HDDT_v123_2020.xsd      # Decree 123 schema
+  - skills/vietnam-vat-invoice/SKILL.md
+  - skills/vietnam-vat-invoice/main.rs
+  - skills/vietnam-vat-invoice/src/lib.rs
+  - skills/vietnam-vat-invoice/src/xml_builder.rs
+  - skills/vietnam-vat-invoice/src/signer.rs
+  - skills/vietnam-vat-invoice/src/gdt_submit.rs
+  - skills/vietnam-vat-invoice/src/numbering.rs
+  - skills/vietnam-vat-invoice/src/template.rs
+  - skills/vietnam-vat-invoice/tests/xml_schema_test.rs
+  - skills/vietnam-vat-invoice/tests/signer_test.rs
+  - skills/vietnam-vat-invoice/tests/integration_test.rs
+  - skills/vietnam-vat-invoice/schemas/HDDT_v123_2020.xsd      # Decree 123 schema
 allowed_tools:
-  - file_read: skills/vn-vat-invoice/**
-  - file_write: skills/vn-vat-invoice/**
-  - bash: cd skills/vn-vat-invoice && cargo test
+  - file_read: skills/vietnam-vat-invoice/**
+  - file_write: skills/vietnam-vat-invoice/**
+  - bash: cd skills/vietnam-vat-invoice && cargo test
 disallowed_tools:
   - emit invoice without GDT submission (per DEC-232; receipt code is legally required)
   - reuse invoice numbers (per §1 #6 — strictly monotonic per tenant)
@@ -69,12 +69,12 @@ risk_if_skipped: "Without authoritative hóa đơn emission, VN businesses canno
 
 ## §1 — Description (BCP-14 normative)
 
-The `vn-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese VAT invoices (hóa đơn điện tử) with digital signature and GDT submission. The contract:
+The `vietnam-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese VAT invoices (hóa đơn điện tử) with digital signature and GDT submission. The contract:
 
 1. **MUST** accept an `InvoiceRequest` with: `seller` (object: tenant_id, mst, name, address, certificate_id), `buyer` (object: mst OR personal_id, name, address, optional phone, optional email), `lines` (array of `LineItem { description, quantity, unit, unit_price_vnd, tax_rate (0|5|8|10), discount_pct (0-100) }`), `template_id` (registered with GDT), `issue_date` (ISO date), `payment_method` (`cash | bank_transfer | other`), `currency` (default `VND`; foreign currency captured separately), `idempotency_key` (UUID; same key = same invoice).
 2. **MUST** validate buyer MST via FR-SKILL-108 BEFORE invoice generation. Inactive MST → `Err(BuyerMstInactive { status })`. Buyer-without-MST (private individual) → `personal_id` field used instead (CCCD via FR-BRAIN-111 ruleset).
 3. **MUST** assign an invoice number monotonically per (tenant_id, template_id):
-    - Read current counter from sled `~/.cyberos/skills/vn-vat-invoice/<tenant_id>/<template_id>.seq`.
+    - Read current counter from sled `~/.cyberos/skills/vietnam-vat-invoice/<tenant_id>/<template_id>.seq`.
     - Increment by 1; persist atomically (sled transaction).
     - Format: `<sym><number_padded_to_7>` (e.g. `0001234`). The `<sym>` is the template's registered series symbol from GDT.
 4. **MUST** compose the XML per Decree 123 v1.2.0 schema:
@@ -94,14 +94,14 @@ The `vn-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese VAT i
 9. **MUST** emit BRAIN audit row `vn.invoice_emitted` on successful submission with payload `{idempotency_key, invoice_serial, invoice_number, seller_mst, buyer_mst_redacted, total_vnd, tax_vnd, gdt_receipt_code, xml_hash, signed_xml_hash, submitted_at_ns, trace_id}`. The redacted buyer MST is `XX******<last_4>`.
 10. **MUST** emit `vn.invoice_submission_failed` on permanent failure with payload `{idempotency_key, invoice_serial, invoice_number, gdt_error_code, gdt_error_message, attempted_at_ns, trace_id}` so the operator can manually reconcile.
 11. **MUST** detect numbering gaps via `numbering::check_consecutive(tenant_id, template_id)`: lists missing numbers in the sequence; if any gap exists → emit `vn.invoice_gap_detected` sev-1 alarm via FR-OBS-007. Operator MUST file a "lost invoice" notice with GDT within 30 days.
-12. **MUST** support `cyberos skill vn-vat-invoice replay <idempotency_key>` for crash-recovery: looks up the BRAIN audit row; if `vn.invoice_emitted` exists, returns prior outcome (idempotent). If `vn.invoice_submission_failed` exists but no emit-row → return the prior error.
+12. **MUST** support `cyberos skill vietnam-vat-invoice replay <idempotency_key>` for crash-recovery: looks up the BRAIN audit row; if `vn.invoice_emitted` exists, returns prior outcome (idempotent). If `vn.invoice_submission_failed` exists but no emit-row → return the prior error.
 13. **MUST** emit OTel span `skill.vn_vat_invoice.emit` with attrs `seller_mst`, `template_id`, `total_vnd_bucket` (log-binned), `outcome`, `gdt_round_trip_ms`, `duration_ms`.
 14. **MUST** emit OTel metrics:
     - `skill_vn_vat_invoice_emits_total{outcome}` (counter; outcome ∈ ok | xml_schema | gdt_rejected | gdt_unreachable | buyer_mst_inactive).
     - `skill_vn_vat_invoice_gdt_round_trip_seconds` (histogram).
     - `skill_vn_vat_invoice_numbering_gap_total` (counter; sev-1 if >0).
 15. **MUST** redact buyer info in all logs (tracing) — buyer name partial (`Nguyễn V*`), buyer MST redacted, phone/email full-masked.
-16. **SHOULD** support PDF rendering alongside XML via `cyberos-vn-vat-invoice render-pdf <invoice_id>` (uses wkhtmltopdf + Decree 123 visual template; produces the human-readable copy).
+16. **SHOULD** support PDF rendering alongside XML via `cyberos-vietnam-vat-invoice render-pdf <invoice_id>` (uses wkhtmltopdf + Decree 123 visual template; produces the human-readable copy).
 
 ---
 
@@ -132,7 +132,7 @@ The `vn-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese VAT i
 ### Public API
 
 ```rust
-// skills/vn-vat-invoice/src/lib.rs
+// skills/vietnam-vat-invoice/src/lib.rs
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -267,7 +267,7 @@ pub async fn emit_invoice(req: InvoiceRequest) -> Result<InvoiceOutcome, Invoice
 ### XML composer (excerpt)
 
 ```rust
-// skills/vn-vat-invoice/src/xml_builder.rs
+// skills/vietnam-vat-invoice/src/xml_builder.rs
 pub fn compose(req: &InvoiceRequest, serial: &str, number: &str) -> String {
     let mut buf = String::with_capacity(8192);
     buf.push_str(r#"<?xml version="1.0" encoding="UTF-8"?>"#);
@@ -349,7 +349,7 @@ fn escape(s: &str) -> String {
 ### Signer
 
 ```rust
-// skills/vn-vat-invoice/src/signer.rs
+// skills/vietnam-vat-invoice/src/signer.rs
 use ed25519_dalek::{Signer, SigningKey};
 
 pub fn sign_ed25519(xml_unsigned: &str, cert: &TenantCert) -> Result<String, InvoiceError> {
@@ -373,7 +373,7 @@ pub fn sign_ed25519(xml_unsigned: &str, cert: &TenantCert) -> Result<String, Inv
 ### GDT submitter
 
 ```rust
-// skills/vn-vat-invoice/src/gdt_submit.rs
+// skills/vietnam-vat-invoice/src/gdt_submit.rs
 const GDT_URL: &str = "https://hoadondientu.gdt.gov.vn/HoaDon/Submit";
 
 pub async fn submit_with_retry(xml: &str, req: &InvoiceRequest) -> Result<String, InvoiceError> {
@@ -439,7 +439,7 @@ async fn submit_once(xml: &str) -> Result<String, InvoiceError> {
 19. **BRAIN audit success row schema** — `vn.invoice_emitted` row contains `buyer_mst_redacted` (not full MST); `xml_hash` + `signed_xml_hash` differ.
 20. **OTel span emitted** — span `skill.vn_vat_invoice.emit` with `total_vnd_bucket` log-binned (1k/10k/100k/1M/10M/100M/1B+).
 21. **Multi-rate invoice totals correct** — lines with mixed 0%/8%/10% tax → `TToan` has 3 rate buckets; sum equals grand total.
-22. **CLI replay command** — `cyberos skill vn-vat-invoice replay <key>` → prints prior outcome JSON; exit 0.
+22. **CLI replay command** — `cyberos skill vietnam-vat-invoice replay <key>` → prints prior outcome JSON; exit 0.
 23. **Broker enforcement** — skill attempts `Bash` (not in allowed_tools) → broker denial; skill cannot exfiltrate.
 24. **Domain enforcement** — HttpFetch to non-`hoadondientu.gdt.gov.vn` → broker denial.
 
@@ -448,7 +448,7 @@ async fn submit_once(xml: &str) -> Result<String, InvoiceError> {
 ## §5 — Verification
 
 ```rust
-// skills/vn-vat-invoice/tests/xml_schema_test.rs
+// skills/vietnam-vat-invoice/tests/xml_schema_test.rs
 
 #[test]
 fn happy_invoice_validates_against_xsd() {
@@ -493,7 +493,7 @@ fn amount_in_words_populated() {
 ```
 
 ```rust
-// skills/vn-vat-invoice/tests/integration_test.rs
+// skills/vietnam-vat-invoice/tests/integration_test.rs
 
 #[tokio::test]
 async fn happy_path_emit_and_submit() {
@@ -672,7 +672,7 @@ All resolved. Deferred:
 - The `numbering::reserve` API is async (sled is sync but wrapped in `spawn_blocking`); the transaction guarantees no double-issue under concurrency.
 - The `IdempotentReplay` variant of InvoiceError carries the prior outcome boxed (avoids large stack frames); callers pattern-match to extract.
 - `amount_to_words` lives in `cyberos-vn-common` because it's also used by FR-INV (invoice module's UI rendering).
-- The CLI `cyberos skill vn-vat-invoice replay` is implemented as a BRAIN query (filter `vn.invoice_emitted` + `vn.invoice_submission_failed` by `idempotency_key`); no separate state store.
+- The CLI `cyberos skill vietnam-vat-invoice replay` is implemented as a BRAIN query (filter `vn.invoice_emitted` + `vn.invoice_submission_failed` by `idempotency_key`); no separate state store.
 - The PDF renderer (§1 #16 SHOULD) is deferred; the XML emitter is the legal artifact.
 - Operators who need to mass-resubmit failed invoices (after fixing the GDT config issue) use new idempotency_keys; the failed-audit rows remain as the manual-reconciliation trail.
 

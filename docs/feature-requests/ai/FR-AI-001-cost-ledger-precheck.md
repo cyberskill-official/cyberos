@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-001
 title: "AI Gateway cost-ledger pre-call check"
 module: AI
@@ -478,4 +478,4 @@ All resolved 2026-05-15. Promoted to §1 normative clauses:
 
 ---
 
-*End of FR-AI-001. Run `fr-audit` next: `cargo run -p cyberos-skill-cli -- run fr-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck.md"}'`*
+*End of FR-AI-001. Run `feature-request-audit` next: `cargo run -p cyberos-skill-cli -- run feature-request-audit --input '{"fr_path": "docs/feature-requests/ai/FR-AI-001-cost-ledger-precheck.md"}'`*

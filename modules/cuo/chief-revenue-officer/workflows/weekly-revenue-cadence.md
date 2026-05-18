@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: pipeline,           source: cuo/chief-sales-officer/weekly-pipeline-review, format: pipeline-report@1 }
-  - { name: cs_engagement_set,  source: cs-engagement@1 for top accounts,     format: cs-engagement@1 (multiple) }
+  - { name: cs_engagement_set,  source: customer-success-engagement@1 for top accounts,     format: customer-success-engagement@1 (multiple) }
   - { name: prior_cadence,      source: last week's rhythm-of-business@1,     format: rhythm-of-business@1 }
 
 outputs:

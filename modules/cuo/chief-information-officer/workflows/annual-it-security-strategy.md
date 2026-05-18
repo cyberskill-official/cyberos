@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: ciso_strategy,         source: cuo/chief-information-security-officer/annual-security-strategy, format: security-strategy@1 }
-  - { name: it_strategy,           source: cuo/chief-information-officer/annual-it-strategy, format: strategy-doc@1 }
+  - { name: it_strategy,           source: cuo/chief-information-officer/annual-it-strategy, format: strategy-document@1 }
   - { name: incident_lookback,     source: prior-year IT-security incidents, format: markdown }
 
 outputs:

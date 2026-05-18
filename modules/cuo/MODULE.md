@@ -183,7 +183,7 @@ cadence: <daily | weekly | monthly | quarterly | annual | on-demand | per-event>
 inputs:
   - { name: <input-name>, source: <where it comes from>, format: <markdown / json / dashboard / verbal-brief> }
 outputs:
-  - { name: <output-name>, format: <artifact type — e.g. prd@1 / sow@1 / runbook@1>, recipient: <persona or external> }
+  - { name: <output-name>, format: <artifact type — e.g. product-requirements-document@1 / statement-of-work@1 / runbook@1>, recipient: <persona or external> }
 skill_chain:
   - step: 1
     skill: <skill-name from SKILL module>

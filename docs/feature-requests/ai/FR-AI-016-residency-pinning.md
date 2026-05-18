@@ -1,5 +1,5 @@
 ---
-# ───── Machine-readable frontmatter (parsed by fr-audit + future fr-catalog renderer) ─────
+# ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-016
 title: "Tenant residency pinning (sg-1 / eu-1 / us-1 / vn-1) propagating to provider region selection"
 module: AI

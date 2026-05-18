@@ -70,6 +70,152 @@ async function renderMermaid() {
     svg.style.display = 'block';
     svg.dataset.sizingFixed = '1';
   });
+
+  // Wire each .mermaid container as click-to-zoom: opens a modal with a scaled,
+  // pan-and-pinch-zoomable copy of the SVG. Prevents the horizontal-overflow
+  // scroll-trap on wide flowchart-LR diagrams (and keeps non-zoom users intact).
+  document.querySelectorAll('.mermaid').forEach(box => {
+    if (box.dataset.zoomBound === '1') return;
+    if (!box.querySelector('svg')) return;
+    box.dataset.zoomBound = '1';
+    box.classList.add('mermaid-zoomable');
+    if (!box.querySelector('.mermaid-zoom-hint')) {
+      const hint = document.createElement('span');
+      hint.className = 'mermaid-zoom-hint';
+      hint.setAttribute('aria-hidden', 'true');
+      hint.textContent = '⤢ click to zoom';
+      box.appendChild(hint);
+    }
+    box.addEventListener('click', (e) => {
+      // Ignore selection-text clicks
+      if (window.getSelection && String(window.getSelection()).length > 0) return;
+      openMermaidModal(box);
+    });
+  });
+}
+
+/* ---------- Mermaid zoom modal ---------- */
+let __mermaidModalEl = null;
+let __mermaidPanState = null;
+function ensureMermaidModal() {
+  if (__mermaidModalEl) return __mermaidModalEl;
+  const el = document.createElement('div');
+  el.className = 'mermaid-modal';
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('aria-label', 'Diagram zoom view');
+  el.hidden = true;
+  el.innerHTML = `
+    <div class="mermaid-modal-backdrop" data-close="1"></div>
+    <div class="mermaid-modal-shell">
+      <div class="mermaid-modal-toolbar">
+        <button type="button" class="mermaid-modal-btn" data-action="zoom-out" title="Zoom out">−</button>
+        <button type="button" class="mermaid-modal-btn" data-action="zoom-reset" title="Reset zoom">100%</button>
+        <button type="button" class="mermaid-modal-btn" data-action="zoom-in" title="Zoom in">+</button>
+        <span class="mermaid-modal-spacer"></span>
+        <button type="button" class="mermaid-modal-btn mermaid-modal-close" data-close="1" title="Close (Esc)" aria-label="Close">✕</button>
+      </div>
+      <div class="mermaid-modal-stage" tabindex="0"></div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  el.addEventListener('click', (e) => {
+    if (e.target && e.target.closest('[data-close]')) closeMermaidModal();
+  });
+  const stage = el.querySelector('.mermaid-modal-stage');
+  stage.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const dir = e.deltaY < 0 ? 1.1 : (1 / 1.1);
+    setMermaidZoom(__mermaidPanState.scale * dir, e.clientX, e.clientY);
+  }, { passive: false });
+  stage.addEventListener('mousedown', startMermaidPan);
+  window.addEventListener('mousemove', moveMermaidPan);
+  window.addEventListener('mouseup', endMermaidPan);
+  el.querySelector('[data-action="zoom-in"]').addEventListener('click', () => setMermaidZoom(__mermaidPanState.scale * 1.25));
+  el.querySelector('[data-action="zoom-out"]').addEventListener('click', () => setMermaidZoom(__mermaidPanState.scale / 1.25));
+  el.querySelector('[data-action="zoom-reset"]').addEventListener('click', () => { __mermaidPanState.scale = 1; __mermaidPanState.x = 0; __mermaidPanState.y = 0; applyMermaidTransform(); });
+  document.addEventListener('keydown', (e) => {
+    if (!el.classList.contains('open')) return;
+    if (e.key === 'Escape') closeMermaidModal();
+    if (e.key === '+' || e.key === '=') setMermaidZoom(__mermaidPanState.scale * 1.25);
+    if (e.key === '-' || e.key === '_') setMermaidZoom(__mermaidPanState.scale / 1.25);
+    if (e.key === '0') { __mermaidPanState.scale = 1; __mermaidPanState.x = 0; __mermaidPanState.y = 0; applyMermaidTransform(); }
+  });
+  __mermaidModalEl = el;
+  return el;
+}
+
+function openMermaidModal(sourceBox) {
+  const modal = ensureMermaidModal();
+  const stage = modal.querySelector('.mermaid-modal-stage');
+  const svg = sourceBox.querySelector('svg');
+  if (!svg) return;
+  const clone = svg.cloneNode(true);
+  // Modal renders at full viewBox size; CSS contains it. Strip inline fixed sizes
+  // so the zoom-transform layer is the only sizing authority.
+  clone.removeAttribute('width');
+  clone.removeAttribute('height');
+  clone.style.width = '';
+  clone.style.height = '';
+  clone.style.maxWidth = '';
+  clone.style.maxHeight = '';
+  clone.style.display = 'block';
+  stage.innerHTML = '';
+  const inner = document.createElement('div');
+  inner.className = 'mermaid-modal-canvas';
+  inner.appendChild(clone);
+  stage.appendChild(inner);
+  __mermaidPanState = { scale: 1, x: 0, y: 0, drag: false, sx: 0, sy: 0 };
+  applyMermaidTransform();
+  modal.hidden = false;
+  // next tick for transition
+  requestAnimationFrame(() => modal.classList.add('open'));
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMermaidModal() {
+  if (!__mermaidModalEl) return;
+  __mermaidModalEl.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    if (!__mermaidModalEl.classList.contains('open')) {
+      __mermaidModalEl.hidden = true;
+      const stage = __mermaidModalEl.querySelector('.mermaid-modal-stage');
+      if (stage) stage.innerHTML = '';
+    }
+  }, 200);
+}
+
+function setMermaidZoom(next, cx, cy) {
+  if (!__mermaidPanState) return;
+  const clamped = Math.max(0.25, Math.min(8, next));
+  __mermaidPanState.scale = clamped;
+  applyMermaidTransform();
+}
+
+function applyMermaidTransform() {
+  if (!__mermaidModalEl || !__mermaidPanState) return;
+  const canvas = __mermaidModalEl.querySelector('.mermaid-modal-canvas');
+  if (!canvas) return;
+  canvas.style.transform = `translate(${__mermaidPanState.x}px, ${__mermaidPanState.y}px) scale(${__mermaidPanState.scale})`;
+}
+
+function startMermaidPan(e) {
+  if (!__mermaidPanState) return;
+  if (e.button !== 0) return;
+  __mermaidPanState.drag = true;
+  __mermaidPanState.sx = e.clientX - __mermaidPanState.x;
+  __mermaidPanState.sy = e.clientY - __mermaidPanState.y;
+  e.preventDefault();
+}
+function moveMermaidPan(e) {
+  if (!__mermaidPanState || !__mermaidPanState.drag) return;
+  __mermaidPanState.x = e.clientX - __mermaidPanState.sx;
+  __mermaidPanState.y = e.clientY - __mermaidPanState.sy;
+  applyMermaidTransform();
+}
+function endMermaidPan() {
+  if (__mermaidPanState) __mermaidPanState.drag = false;
 }
 
 /* ---------- Path helper — figure out where /assets/ lives from current page ----------
@@ -410,4 +556,6 @@ if (document.readyState === 'loading') {
 
 // Expose for ad-hoc re-render after Alpine inserts content
 window.rerenderMermaid = renderMermaid;
-window.cyberosDocs = { renderMermaid, runSearch, toggleDarkMode, setupPagefindSearch };
+window.openMermaidModal = openMermaidModal;
+window.closeMermaidModal = closeMermaidModal;
+window.cyberosDocs = { renderMermaid, runSearch, toggleDarkMode, setupPagefindSearch, openMermaidModal, closeMermaidModal };

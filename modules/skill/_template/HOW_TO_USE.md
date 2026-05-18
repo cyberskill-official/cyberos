@@ -6,7 +6,7 @@ This directory ships the reusable scaffold every new author/audit skill pair cop
 
 ### 1. Pick a name
 
-Skill names use `kebab-case`, lowercase, `[a-z0-9-]+`. Follow `<artifact>-author` / `<artifact>-audit` for the author/audit pair convention. Examples already in the catalog: `sow-author`, `sow-audit`, `fr-author`, `fr-audit`, `prd-author`, `prd-audit`.
+Skill names use `kebab-case`, lowercase, `[a-z0-9-]+`. Follow `<artifact>-author` / `<artifact>-audit` for the author/audit pair convention. Examples already in the catalog: `statement-of-work-author`, `statement-of-work-audit`, `feature-request-author`, `feature-request-audit`, `product-requirements-document-author`, `product-requirements-document-audit`.
 
 ### 2. Copy the scaffold
 

@@ -51,7 +51,7 @@ Salesforce / HubSpot / Pipedrive (CRM); Outreach / Apollo / Salesloft (engagemen
 | `weekly-revenue-cadence` | Pipeline + CS + expansion + renewal-at-risk consolidated view | weekly | rhythm-of-business@1 chapter | shipped (1.0.0) |
 | `quarterly-revenue-review` | ARR / NDR / GRR / mix decomposition (board chapter) | quarterly | board-deck@1 chapter | shipped (1.0.0) |
 | `quarterly-churn-analysis` | Cohort + reason + root-cause + win-back + leading indicators | quarterly | churn-analysis@1 | shipped (1.0.0) |
-| `annual-revenue-architecture` | Integrated new-biz / expansion / renewal / churn-prevention motion design | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-revenue-architecture` | Integrated new-biz / expansion / renewal / churn-prevention motion design | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped skills — Tier-1 (`rhythm-of-business`, `board-deck`) + Tier-2 (`strategy-doc`) + Tier-6 (`churn-analysis`). See `../../skill/MODULE.md` §3.1 + §3.2 + §3.6.
 

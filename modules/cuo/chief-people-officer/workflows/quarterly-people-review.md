@@ -8,8 +8,8 @@ status: shipped
 
 inputs:
   - { name: workforce_plan,        source: cuo/chief-human-resources-officer/quarterly-workforce-plan, format: workforce-plan@1 }
-  - { name: enps_data,             source: cuo/chief-human-resources-officer/quarterly-enps-pulse, format: enps-program@1 }
-  - { name: dei_progress,          source: cuo/chief-diversity-officer/quarterly-dei-progress-review, format: dei-program@1 (quarterly) }
+  - { name: enps_data,             source: cuo/chief-human-resources-officer/quarterly-enps-pulse, format: employee-net-promoter-score-program@1 }
+  - { name: dei_progress,          source: cuo/chief-diversity-officer/quarterly-dei-progress-review, format: diversity-equity-inclusion-program@1 (quarterly) }
 
 outputs:
   - { name: people_review,         format: rhythm-of-business@1 (people chapter), recipient: cuo/cpo-people + cuo/ceo + Board (people chapter) }

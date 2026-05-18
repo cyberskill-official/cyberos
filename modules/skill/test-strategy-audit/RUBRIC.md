@@ -19,7 +19,7 @@
 | ------- | ----- | ---- | -------- | ------------ |
 | `FM-101` | `title` | required, string | error | skeleton |
 | `FM-102` | `strategy_version` | required, SemVer | error | true |
-| `FM-103` | `linked_srs` | required, resolves to an SRS that passed srs-audit | error | false |
+| `FM-103` | `linked_srs` | required, resolves to an SRS that passed software-requirements-specification-audit | error | false |
 | `FM-104` | `risk_class` | required, one of: low, medium, high (per the SDP §3 risk heatmap) | error | false |
 | `FM-105` | `provenance.source_path`, `provenance.source_hash` | required | error | false |
 | `FM-106` | `effective_date` | required, ISO 8601 | error | true |

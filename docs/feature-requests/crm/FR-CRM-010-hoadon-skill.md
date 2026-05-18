@@ -1,6 +1,6 @@
 ---
 id: FR-CRM-010
-title: "CRM vn-vat-invoice skill — Decree 123 hóa đơn auto-emit on deal.stage=won + invoice issuance + verification code retrieval"
+title: "CRM vietnam-vat-invoice skill — Decree 123 hóa đơn auto-emit on deal.stage=won + invoice issuance + verification code retrieval"
 module: CRM
 priority: MUST
 status: draft
@@ -21,7 +21,7 @@ source_pages:
   - https://gdt.gov.vn/  # Decree 123/2020
 
 source_decisions:
-  - DEC-1700 2026-05-17 — Skill name: vn-vat-invoice@1; triggered on deal.stage=won for VN tenants; creates invoice via FR-INV-001 + emits hóa đơn via FR-INV-007
+  - DEC-1700 2026-05-17 — Skill name: vietnam-vat-invoice@1; triggered on deal.stage=won for VN tenants; creates invoice via FR-INV-001 + emits hóa đơn via FR-INV-007
   - DEC-1701 2026-05-17 — Closed enum `vat_invoice_trigger` = {deal_won_auto, manual_emit, retry_on_failure}; cardinality 3
   - DEC-1702 2026-05-17 — Idempotency: one hóa đơn per deal; UNIQUE(deal_id) on emission table
   - DEC-1703 2026-05-17 — Delegates to FR-INV-007 for actual GDT emit — this skill orchestrates: create invoice → set vn-residency → trigger emit → return status
@@ -68,9 +68,9 @@ risk_if_skipped: "Without CRM-side trigger, CFO must manually create invoice + e
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship vn-vat-invoice@1 skill at `services/crm/src/vn/vat_invoice_skill.rs` triggered on deal.stage=won for VN tenants, creating invoice via FR-INV-001 + delegating emit to FR-INV-007, idempotent, 4 BRAIN audit kinds.
+The CRM service **MUST** ship vietnam-vat-invoice@1 skill at `services/crm/src/vn/vat_invoice_skill.rs` triggered on deal.stage=won for VN tenants, creating invoice via FR-INV-001 + delegating emit to FR-INV-007, idempotent, 4 BRAIN audit kinds.
 
-1. **MUST** register skill `vn-vat-invoice@1` per DEC-1700.
+1. **MUST** register skill `vietnam-vat-invoice@1` per DEC-1700.
 
 2. **MUST** hook into deal stage transitions at `services/crm/src/deals.rs` — on `won` AND `tenant.residency='vn-1'` AND `account.vn_account_type IS NOT NULL`, invoke skill async.
 
@@ -109,9 +109,9 @@ The CRM service **MUST** ship vn-vat-invoice@1 skill at `services/crm/src/vn/vat
 
 6. **MUST** expose skill endpoint:
    ```text
-   POST   /v1/crm/skill/vn-vat-invoice
+   POST   /v1/crm/skill/vietnam-vat-invoice
          body: {deal_id, trigger: 'manual_emit'|'retry_on_failure'}
-   GET    /v1/crm/skill/vn-vat-invoice/emissions/{deal_id}
+   GET    /v1/crm/skill/vietnam-vat-invoice/emissions/{deal_id}
    ```
 
 7. **MUST** emit 4 BRAIN audit kinds per DEC-1704. PII per FR-BRAIN-111: deal_value SHA-256 hashed; ids ok.
@@ -141,8 +141,8 @@ The CRM service **MUST** ship vn-vat-invoice@1 skill at `services/crm/src/vn/vat
 ## §3 — API contract
 
 ```text
-POST   /v1/crm/skill/vn-vat-invoice       (manual call)
-GET    /v1/crm/skill/vn-vat-invoice/emissions/{deal_id}
+POST   /v1/crm/skill/vietnam-vat-invoice       (manual call)
+GET    /v1/crm/skill/vietnam-vat-invoice/emissions/{deal_id}
 ```
 
 Sample manual request:

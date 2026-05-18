@@ -544,7 +544,7 @@ INSERT INTO roles (name, display, reserved, requires_webauthn, scope_summary, la
   ('coo',                'COO',                FALSE, FALSE, 'Cross-module status + blocker triage + process',        4),
   ('chro',               'CHRO',               FALSE, FALSE, 'HR records + onboarding + perf review + PII-elevated', 4),
   ('cmo',                'CMO',                FALSE, FALSE, 'Campaign briefs + content calendars + comms approval',  4),
-  ('cpo',                'CPO',                FALSE, FALSE, 'Product brief + roadmap + fr-author canonical',         4),
+  ('cpo',                'CPO',                FALSE, FALSE, 'Product brief + roadmap + feature-request-author canonical',         4),
   ('cso',                'CSO (Strategy)',     FALSE, FALSE, 'OKR cascade + scenarios + competitive intel read',      4),
   ('cseco',              'CSO (Security)',     FALSE, FALSE, 'Security review + key rotation + vuln triage',          4),
   ('clo',                'CLO',                FALSE, FALSE, 'Contract redline + DSAR triage + regulatory signoff',   4),

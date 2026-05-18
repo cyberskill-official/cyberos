@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: cdo_customer_360,      source: cuo/chief-data-officer/annual-customer-360-architecture, format: customer-360@1 }
-  - { name: cx_priorities,         source: cuo/chief-experience-officer/annual-cx-strategy, format: strategy-doc@1 }
+  - { name: cx_priorities,         source: cuo/chief-experience-officer/annual-cx-strategy, format: strategy-document@1 }
 
 outputs:
   - { name: cx_360_engagement,     format: customer-360@1 (CX-lens chapter), recipient: cuo/cxo + cuo/cdo-data + cuo/cpo-product }

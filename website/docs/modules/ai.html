@@ -1085,12 +1085,12 @@ stateDiagram-v2
 </section>
 
 <!-- ============================================================ -->
-<!-- FRs (stub — see skill module's fr-author workflow) -->
+<!-- FRs (stub — see skill module's feature-request-author workflow) -->
 <!-- ============================================================ -->
 <section id="functional-requirements" class="module-section">
  <header class="section-head"><span class="section-num">8</span><h2>Functional Requirements</h2></header>
  <div class="bbg-card p-5">
- <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/skill/skills/cuo/cpo/fr-author" class="font-semibold" style="color:var(--umber-700)">fr-author</a> Agent Skill.</p>
+ <p class="text-slate-700 leading-relaxed mb-3">The CyberOS FR catalogue is being rebuilt one feature at a time via the open <a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/feature-request-author" class="font-semibold" style="color:var(--umber-700)">feature-request-author</a> Agent Skill.</p>
  <p class="text-sm" style="color:var(--text-mute)">Previous FR enumerations were archived 2026-05-14 and are no longer reflected on this page. Specific FRs land here as they are re-authored.</p>
  </div>
 </section>
@@ -1420,7 +1420,7 @@ self-hosted:bge-rerank-v2-m3 rerank — free</code></pre>
  <li><strong>Build-readiness audit:</strong> <a href="../../docs/archive/2026-05-14/AUDIT_AND_PLAN.md" class="text-blue-700 underline">archive/2026-05-14/AUDIT_AND_PLAN.md §3.3</a> — AI Gateway placed at P0 · slice 1 (P0 #1), the cost-of-everything gate before AUTH.</li>
  <li><strong>Research review:</strong> <a href="../../docs/archive/2026-05-14/RESEARCH_REVIEW.md" class="text-blue-700 underline">archive/2026-05-14/RESEARCH_REVIEW.md §2.4</a> — explicit "Reorder AI Gateway before AUTH" recommendation; AI Gateway flagged as the highest-leverage cost-control module.</li>
  <li><strong>BRAIN auto-sync vision:</strong> <a href="../../BRAIN_AUTOSYNC_DESIGN.html" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §7</a> — every <code>ai.invocation</code> audit row is a BRAIN capture event; Lumi cross-tenant synthesis depends on aggregate cost + persona signals at P3+.</li>
- <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — AI Gateway FRs land via the <code>fr-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
+ <li><strong>FR authoring workflow:</strong> <a href="../../FR_AUTHORING_WORKFLOW.html" class="text-blue-700 underline">FR_AUTHORING_WORKFLOW.md</a> — AI Gateway FRs land via the <code>feature-request-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
  <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 (logging via audit chain), Art. 13 (transparency — persona stamp), Art. 14 (human oversight — CFO cost-override), Art. 15 (accuracy + robustness — failover SLA), Art. 26 (operator obligations), Art. 50 (transparency — watermark for image gen at P2+).</li>
  <li><strong>OWASP Gen AI Top-10 (2025):</strong> LLM01 prompt injection · LLM06 sensitive disclosure · LLM08 supply-chain · LLM10 model theft — gateway-level mitigations.</li>
  <li><strong>ISO/IEC 42001 (AIMS)</strong> — § 8.3 lifecycle and persona-version stamping.</li>

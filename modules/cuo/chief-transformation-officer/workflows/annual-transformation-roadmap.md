@@ -10,7 +10,7 @@ inputs:
   - { name: prior_roadmap,         source: last year's transformation-roadmap@1, format: transformation-roadmap@1 }
   - { name: ceo_priorities,        source: cuo/ceo (vision brief), format: markdown }
   - { name: operating_model,       source: cuo/chief-operating-officer/annual-operating-model, format: operating-model@1 }
-  - { name: prior_change_plans,    source: prior change-mgmt-plan@1 set, format: change-mgmt-plan@1 (multiple) }
+  - { name: prior_change_plans,    source: prior change-management-plan@1 set, format: change-management-plan@1 (multiple) }
 
 outputs:
   - { name: transformation_roadmap, format: transformation-roadmap@1, recipient: cuo/chief-transformation-officer + cuo/ceo + cuo/coo + cuo/chro + Board (annual transformation chapter) }

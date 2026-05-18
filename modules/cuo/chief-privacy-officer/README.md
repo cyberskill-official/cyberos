@@ -40,8 +40,8 @@ OneTrust / TrustArc / DataGrail (privacy mgmt); Privado / Securiti (privacy engi
 
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
-| `data-subject-request-cycle` | Handle a single DSR within statutory window (GDPR/PDPD 30d / CCPA 45d) | on-demand | dsr-runbook@1 | shipped (1.0.0) |
-| `privacy-impact-assessment` | Per-feature PIA (escalates to DPIA per GDPR Art. 35) | per-event | pia@1 | shipped (1.0.0) |
+| `data-subject-request-cycle` | Handle a single DSR within statutory window (GDPR/PDPD 30d / CCPA 45d) | on-demand | data-subject-request-runbook@1 | shipped (1.0.0) |
+| `privacy-impact-assessment` | Per-feature PIA (escalates to DPIA per GDPR Art. 35) | per-event | privacy-impact-assessment@1 | shipped (1.0.0) |
 | `breach-response-cycle` | 72-hour GDPR Art. 33 / PDPD breach notification cycle | per-event | breach-notification@1 | shipped (1.0.0) |
 | `annual-privacy-program` | ROPA + DPIA inventory + DSR metrics + breach lookback + regulator status | annual | compliance-program@1 | shipped (1.0.0) |
 

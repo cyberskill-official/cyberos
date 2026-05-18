@@ -9,15 +9,15 @@ status: shipped
 inputs:
   - { name: scope_definition,    source: ciso + cto (in-scope systems + rules of engagement), format: markdown }
   - { name: vendor_engagement,   source: third-party pen-test vendor or internal red-team,    format: markdown brief }
-  - { name: prior_reports,       source: last year's pen-test-report@1 set,                   format: pen-test-report@1 }
+  - { name: prior_reports,       source: last year's penetration-test-report@1 set,                   format: penetration-test-report@1 }
   - { name: threat_model,        source: cuo/chief-technology-officer/threat-model-refresh,                        format: threat-model@1 }
 
 outputs:
   - { name: pen_test_report,     format: pen-test-report@1, recipient: cuo/ciso + cuo/cto + cuo/clo-legal (for material-finding disclosure) }
 
 skill_chain:
-  - { step: 1, skill: pen-test-report-author, inputs_from: { scope_definition: scope_definition, vendor_engagement: vendor_engagement, prior_reports: prior_reports, threat_model: threat_model }, outputs_to: report_draft }
-  - { step: 2, skill: pen-test-report-audit,  inputs_from: report_draft, outputs_to: pen_test_report }
+  - { step: 1, skill: penetration-test-report-author, inputs_from: { scope_definition: scope_definition, vendor_engagement: vendor_engagement, prior_reports: prior_reports, threat_model: threat_model }, outputs_to: report_draft }
+  - { step: 2, skill: penetration-test-report-audit,  inputs_from: report_draft, outputs_to: pen_test_report }
 
 escalates_to:
   - { persona: cuo/chief-technology-officer,         when: "Critical CVSS finding requires architecture change" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-information-security-officer/annual-pen-test-cycle \
 
 ## Skill chain
 
-- **Step 1 `pen-test-report-author`** — drafts per OWASP WSTG + PTES + NIST SP 800-115 + ASVS structure.
-- **Step 2 `pen-test-report-audit`** — validates per `pen_test_report_rubric@1.0`.
+- **Step 1 `penetration-test-report-author`** — drafts per OWASP WSTG + PTES + NIST SP 800-115 + ASVS structure.
+- **Step 2 `penetration-test-report-audit`** — validates per `pen_test_report_rubric@1.0`.
 
 ## Failure modes
 

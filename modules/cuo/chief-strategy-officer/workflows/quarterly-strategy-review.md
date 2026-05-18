@@ -7,16 +7,16 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: corporate_strategy,    source: cuo/chief-strategy-officer/annual-corporate-strategy, format: strategy-doc@1 }
+  - { name: corporate_strategy,    source: cuo/chief-strategy-officer/annual-corporate-strategy, format: strategy-document@1 }
   - { name: bet_progress,          source: per-bet sponsor updates, format: markdown briefs }
   - { name: market_signals,        source: cuo/cmo competitive-brief, format: markdown }
 
 outputs:
-  - { name: strategy_review,       format: strategy-doc@1 (quarterly chapter), recipient: cuo/cso-strategy + cuo/ceo + Board (strategy chapter) }
+  - { name: strategy_review,       format: strategy-document@1 (quarterly chapter), recipient: cuo/cso-strategy + cuo/ceo + Board (strategy chapter) }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { corporate_strategy: corporate_strategy, bet_progress: bet_progress, market_signals: market_signals }, outputs_to: review_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: review_draft, outputs_to: strategy_review }
+  - { step: 1, skill: strategy-document-author, inputs_from: { corporate_strategy: corporate_strategy, bet_progress: bet_progress, market_signals: market_signals }, outputs_to: review_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: review_draft, outputs_to: strategy_review }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,            when: "strategy review recommends a strategic pivot OR kill of an active bet" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-strategy-officer/quarterly-strategy-review \
 
 ## Skill chain
 
-- **Step 1 `strategy-doc-author`** — drafts quarterly chapter.
-- **Step 2 `strategy-doc-audit`** — validates per `strategy_doc_rubric@1.0`.
+- **Step 1 `strategy-document-author`** — drafts quarterly chapter.
+- **Step 2 `strategy-document-audit`** — validates per `strategy_doc_rubric@1.0`.
 
 ## Failure modes
 

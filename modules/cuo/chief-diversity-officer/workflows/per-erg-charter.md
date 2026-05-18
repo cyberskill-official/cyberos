@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: erg_brief,             source: ERG founder, format: markdown }
-  - { name: dei_program,           source: cuo/chief-diversity-officer/annual-dei-program, format: dei-program@1 }
+  - { name: dei_program,           source: cuo/chief-diversity-officer/annual-dei-program, format: diversity-equity-inclusion-program@1 }
 
 outputs:
   - { name: erg_charter,           format: program-charter@1, recipient: cuo/cdo-diversity + ERG sponsor + cuo/chro }

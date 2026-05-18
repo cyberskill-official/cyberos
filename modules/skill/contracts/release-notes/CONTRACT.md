@@ -21,4 +21,4 @@ emitted_source_freshness_tier: 12
 - Keep-a-Changelog 1.1.0.
 - SemVer 2.0.0.
 - NVD / MITRE CVE format — prevents fabricated CVE IDs per `QA-CVE-001`.
-- Consumers: `release-notes-author`, `release-notes-audit`, downstream `deploy-checklist-author` (DEP-002 references the audited release notes).
+- Consumers: `release-notes-author`, `release-notes-audit`, downstream `deployment-checklist-author` (DEP-002 references the audited release notes).

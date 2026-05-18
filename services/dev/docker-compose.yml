@@ -1,0 +1,55 @@
+# CyberOS — Local dev infrastructure
+# Starts Postgres 16 + pgvector + Apache AGE + Redis on standard ports.
+# Used by FR-BRAIN-101 (Layer-2 ingest) and FR-AUTH-001..003 (tenant/subject/RLS).
+#
+# Quick start (from this directory):
+#   docker compose up -d           # Boot Postgres + Redis
+#   docker compose logs -f         # Watch logs
+#   docker compose down -v         # Tear down + wipe volumes
+#
+# Connection string for sqlx tooling:
+#   export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
+#
+# Postgres ships with pgvector preinstalled. Apache AGE is included via the
+# `apache/age:PG16_latest` image (community-maintained). pgcrypto/uuid-ossp
+# are stdlib extensions enabled in `postgres-init.sql`.
+
+services:
+  postgres:
+    image: apache/age:PG16_latest      # Postgres 16 + Apache AGE + pgvector
+    container_name: cyberos-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: cyberos
+      POSTGRES_USER: cyberos
+      POSTGRES_PASSWORD: cyberos
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - cyberos-pg-data:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cyberos -d cyberos"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: cyberos-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - cyberos-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  cyberos-pg-data:
+  cyberos-redis-data:

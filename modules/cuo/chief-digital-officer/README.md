@@ -41,7 +41,7 @@ PMO tools (Smartsheet, MS Project); transformation-monitoring dashboards.
 | `annual-digital-transformation-roadmap` | Digital experience vision + channels + platform + data/AI integration | annual | transformation-roadmap@1 | shipped (1.0.0) |
 | `per-channel-program-charter` | Per-channel modernization (web/mobile/app/IoT/voice) | per-event | program-charter@1 | shipped (1.0.0) |
 | `quarterly-digital-portfolio-review` | Program health + channel performance + CX metrics | quarterly | transformation-roadmap@1 chapter | shipped (1.0.0) |
-| `annual-digital-strategy` | Digital ambition + business-model + tech bets + capabilities | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-digital-strategy` | Digital ambition + business-model + tech bets + capabilities | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2 skills (`transformation-roadmap`, `program-charter`, `strategy-doc`). See `../../skill/MODULE.md` §3.2.
 

@@ -14,8 +14,8 @@ outputs:
   - { name: nda_triage,         format: nda-triage@1, recipient: cuo/clo-legal + originating function (sales, BD, M&A) }
 
 skill_chain:
-  - { step: 1, skill: nda-triage-author, inputs_from: { nda_doc: nda_doc, business_context: business_context }, outputs_to: triage_draft }
-  - { step: 2, skill: nda-triage-audit,  inputs_from: triage_draft, outputs_to: nda_triage }
+  - { step: 1, skill: non-disclosure-agreement-triage-author, inputs_from: { nda_doc: nda_doc, business_context: business_context }, outputs_to: triage_draft }
+  - { step: 2, skill: non-disclosure-agreement-triage-audit,  inputs_from: triage_draft, outputs_to: nda_triage }
 
 escalates_to:
   - { persona: cuo/chief-legal-officer,      when: "triage classification is RED — full legal review required (not auto-signable under standard delegation)" }
@@ -56,8 +56,8 @@ cyberos-cuo run cuo/chief-legal-officer/incoming-nda-triage \
 
 ## Skill chain
 
-- **Step 1 `nda-triage-author`** — drafts per ACC NDA triage standard: parties / triage / screening checklist / action required / cycle time.
-- **Step 2 `nda-triage-audit`** — validates per `nda_triage_rubric@1.0` (FM + SEC + QA-CARVEOUT-001 + QA-CLASS-001 + QA-MUTUALITY-001).
+- **Step 1 `non-disclosure-agreement-triage-author`** — drafts per ACC NDA triage standard: parties / triage / screening checklist / action required / cycle time.
+- **Step 2 `non-disclosure-agreement-triage-audit`** — validates per `nda_triage_rubric@1.0` (FM + SEC + QA-CARVEOUT-001 + QA-CLASS-001 + QA-MUTUALITY-001).
 
 ## Failure modes
 

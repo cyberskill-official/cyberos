@@ -37,7 +37,7 @@ Same as CSO-Sustainability + IR portals (Q4).
 | Workflow | Purpose | Cadence | Output | Status |
 |---|---|---|---|---|
 | `annual-esg-report` | ESG strategy + performance + stakeholder + regulatory disclosures | annual | sustainability-report@1 | shipped (1.0.0) |
-| `annual-esg-strategy` | Materiality + targets + investment + stakeholder engagement | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-esg-strategy` | Materiality + targets + investment + stakeholder engagement | annual | strategy-document@1 | shipped (1.0.0) |
 | `quarterly-esg-compliance` | CSRD/ESRS + SEC climate + ISSB readiness | quarterly | compliance-program@1 (ESG chapter) | shipped (1.0.0) |
 | `per-stakeholder-engagement` | Charter investor/NGO/community/ERG engagement programs | per-event | program-charter@1 | shipped (1.0.0) |
 

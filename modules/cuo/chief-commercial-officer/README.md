@@ -42,7 +42,7 @@ Salesforce / HubSpot (CRM); Crossbeam / Reveal (PRM); Outreach / Salesloft (enga
 | `annual-partner-program` | Partner taxonomy + tiering + enablement + economics + joint GTM | annual | partner-program@1 | shipped (1.0.0) |
 | `per-strategic-partnership` | Per-partner charter: profile + value + joint-investment + governance | per-event | program-charter@1 | shipped (1.0.0) |
 | `quarterly-partner-scorecard` | Pipeline + attribution + tier promotion/demotion | quarterly | partner-program@1 (quarterly chapter) | shipped (1.0.0) |
-| `annual-channel-strategy` | Direct vs partner vs marketplace mix + conflict policy | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-channel-strategy` | Direct vs partner vs marketplace mix + conflict policy | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2 skills (`partner-program`, `program-charter`, `strategy-doc`). See `../../skill/MODULE.md` §3.2.
 

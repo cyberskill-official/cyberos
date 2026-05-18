@@ -3,7 +3,7 @@
 contract_id: project-brief
 contract_version: v1
 template_literal: project_brief@1
-description: "Canonical project_brief@1 schema body — frontmatter contract + Markdown skeleton for the structured intake artefact emitted by `cuo/cpo/requirements-discovery`. The brief captures everything needed downstream by `prd-author` (and any other consumer) — goals, audience, constraints, kill-criteria, regulatory context, BRAIN-derived background, stakeholder map, project_kind classification, target release, and a triage verdict (proceed / revise / reject)."
+description: "Canonical project_brief@1 schema body — frontmatter contract + Markdown skeleton for the structured intake artefact emitted by `cuo/cpo/requirements-discovery`. The brief captures everything needed downstream by `product-requirements-document-author` (and any other consumer) — goals, audience, constraints, kill-criteria, regulatory context, BRAIN-derived background, stakeholder map, project_kind classification, target release, and a triage verdict (proceed / revise / reject)."
 contract_kind: artefact_schema
 locked_at: 2026-05-06
 
@@ -17,7 +17,7 @@ escalation_on_breach:
 # ── Determinism ──────────────────────────────────────────────────────
 determinism:
   reproducible: true
-  fixity_notes: "Template body is byte-stable. Bumping the template body requires a MAJOR contract_version bump (project_brief@2) and a coordinated update to every consumer (requirements-discovery, prd-author)."
+  fixity_notes: "Template body is byte-stable. Bumping the template body requires a MAJOR contract_version bump (project_brief@2) and a coordinated update to every consumer (requirements-discovery, product-requirements-document-author)."
 
 # ── Source-tier emitted ──────────────────────────────────────────────
 emitted_source_freshness_tier: 12   # high authority — the project brief IS the structured intake schema
@@ -25,7 +25,7 @@ emitted_source_freshness_tier: 12   # high authority — the project brief IS th
 
 # `project_brief@1` — canonical project-brief contract
 
-> A **contract**, not a skill. Holds the single source of truth for the project-brief artefact shape across CyberOS. Loaded by `cuo/cpo/requirements-discovery` (as the generation skeleton) and `cuo/cpo/prd-author` (as the input shape it consumes). Future skills (e.g., `cuo/cao/sales-playbook-author` for non-software project kinds) may also consume this contract.
+> A **contract**, not a skill. Holds the single source of truth for the project-brief artefact shape across CyberOS. Loaded by `cuo/cpo/requirements-discovery` (as the generation skeleton) and `cuo/cpo/product-requirements-document-author` (as the input shape it consumes). Future skills (e.g., `cuo/cao/sales-playbook-author` for non-software project kinds) may also consume this contract.
 
 ## When to use this contract
 
@@ -33,7 +33,7 @@ A project brief sits between "user has an idea" and "we have a PRD." It captures
 
 ## Frontmatter contract
 
-The frontmatter that every `project_brief@1` document MUST carry, with audit rule IDs in parentheses (rules will live in `cuo/cpo/prd-audit/RUBRIC.md` once that skill ships at registry v0.2.5):
+The frontmatter that every `project_brief@1` document MUST carry, with audit rule IDs in parentheses (rules will live in `cuo/cpo/product-requirements-document-audit/RUBRIC.md` once that skill ships at registry v0.2.5):
 
 | Field | Type / enum | Required | Audit rule (future) |
 | --- | --- | --- | --- |
@@ -61,7 +61,7 @@ Every `project_brief@1` body MUST contain these H2 sections in this order:
 
 1. **`## Background`** — 2-5 paragraphs of context. WHY are we considering this? What signal triggered it? BRAIN-citations are encouraged but optional in v1.
 2. **`## Goals`** — 1-5 numbered goals; each is a ≤2-sentence statement of an outcome (not an output) the project must achieve. Each goal carries an embedded `<!-- authority: human-edited|human-confirmed|llm-explicit|llm-implicit -->` marker per AGENTS.md §5.3.
-3. **`## Audience`** — who benefits? Internal users / external customers / specific personas / a specific client. Be specific; "users" is rejected by the rubric (when prd-audit ships).
+3. **`## Audience`** — who benefits? Internal users / external customers / specific personas / a specific client. Be specific; "users" is rejected by the rubric (when product-requirements-document-audit ships).
 4. **`## Success Metrics`** — at minimum 1 primary metric with baseline + target + deadline; up to 1 guardrail metric. Vanity metrics (signups without definition, views without engagement context) are rejected.
 5. **`## Constraints`** — what's NOT negotiable: timeline, budget, regulatory, technical platform, headcount. List each as a bullet.
 6. **`## Kill Criteria`** — under what observable conditions does the project STOP? "We'd kill this if [X observable signal]". Forces honesty about when to walk away.
@@ -75,8 +75,8 @@ Every `project_brief@1` body MUST contain these H2 sections in this order:
 
 | Profile | Default for | Skills that run | Skills SKIPPED |
 | --- | --- | --- | --- |
-| `lean` | `internal_tooling`, `research_spike`, projects under ~2 engineer-weeks | prd-author → fr-author → fr-audit → spec-to-impl-plan | prd-audit, srs-author, srs-audit, fr-to-tech-spec |
-| `standard` (default) | `software_product`, `software_consulting_engagement`, projects 2-12 engineer-weeks | prd-author → prd-audit → fr-author → fr-audit → fr-to-tech-spec → spec-to-impl-plan | srs-author, srs-audit |
+| `lean` | `internal_tooling`, `research_spike`, projects under ~2 engineer-weeks | product-requirements-document-author → feature-request-author → feature-request-audit → spec-to-impl-plan | product-requirements-document-audit, software-requirements-specification-author, software-requirements-specification-audit, fr-to-tech-spec |
+| `standard` (default) | `software_product`, `software_consulting_engagement`, projects 2-12 engineer-weeks | product-requirements-document-author → product-requirements-document-audit → feature-request-author → feature-request-audit → fr-to-tech-spec → spec-to-impl-plan | software-requirements-specification-author, software-requirements-specification-audit |
 | `full` | `confidentiality: regulated`, `eu_ai_act_risk_class: high`, multi-year projects | every skill in the chain | (none — all run) |
 
 `requirements-discovery` defaults the `chain_profile` from the project_kind + EU AI Act risk class + confidentiality + budget combination. The user can override during the discovery interview ("I want lean for this small experiment" → set `chain_profile: lean`). The `cuo/cpo/chain-selector` skill (v0.2.8+) is invoked by the supervisor at brief-completion time to validate the choice and emit the chain plan.
@@ -92,11 +92,11 @@ Every `project_brief@1` body MUST contain these H2 sections in this order:
 
 ## How `requirements-discovery` produces this contract
 
-The discovery skill conducts a 15-20 question interview (per its `STANDALONE_INTERVIEW.md`), folds in a project-triage assessment (gating questions about strategic fit, capacity, runway, customer signal strength), reads BRAIN scopes for prior art, then synthesises the answers into this artefact. Iteration via amendment-batch protocol (mirroring fr-author's): the user reviews v1, batches amendments, and the skill applies them in v2. `discovery_iteration` increments; the same `project_brief@1.md` file is rewritten in place.
+The discovery skill conducts a 15-20 question interview (per its `STANDALONE_INTERVIEW.md`), folds in a project-triage assessment (gating questions about strategic fit, capacity, runway, customer signal strength), reads BRAIN scopes for prior art, then synthesises the answers into this artefact. Iteration via amendment-batch protocol (mirroring feature-request-author's): the user reviews v1, batches amendments, and the skill applies them in v2. `discovery_iteration` increments; the same `project_brief@1.md` file is rewritten in place.
 
-## How `prd-author` consumes this contract
+## How `product-requirements-document-author` consumes this contract
 
-`prd-author` reads the brief as its primary input. It does NOT re-ask the user the intake questions — those are answered in the brief. It DOES read additional BRAIN scopes (specifically `module:*` for technical-context lookup) and conduct a smaller follow-up interview (3-5 questions) for PRD-specific decisions (e.g., feature-flag strategy, rollout plan, telemetry).
+`product-requirements-document-author` reads the brief as its primary input. It does NOT re-ask the user the intake questions — those are answered in the brief. It DOES read additional BRAIN scopes (specifically `module:*` for technical-context lookup) and conduct a smaller follow-up interview (3-5 questions) for PRD-specific decisions (e.g., feature-flag strategy, rollout plan, telemetry).
 
 ## Citations
 
@@ -104,4 +104,4 @@ The discovery skill conducts a 15-20 question interview (per its `STANDALONE_INT
 - Registry v0.2.4 — first contract authored under the simplified flat-folder layout (no `v<n>/` folder).
 - Registry README Part 8 — full skill-vs-contract semantics.
 - AGENTS.md §5.3 — authority hierarchy for the embedded markers in goal statements.
-- Future consumers: `cuo/cpo/requirements-discovery` v0.1.0 (this version), `cuo/cpo/prd-author` v0.1.0 (this version), `cuo/cpo/prd-audit` v0.1.0 (registry v0.2.5).
+- Future consumers: `cuo/cpo/requirements-discovery` v0.1.0 (this version), `cuo/cpo/product-requirements-document-author` v0.1.0 (this version), `cuo/cpo/product-requirements-document-audit` v0.1.0 (registry v0.2.5).

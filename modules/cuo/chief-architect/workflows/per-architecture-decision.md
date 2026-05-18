@@ -9,14 +9,14 @@ status: shipped
 inputs:
   - { name: decision_brief,        source: requestor (engineer / CTO / Chief-Architect), format: markdown }
   - { name: srs_context,           source: upstream SRS or PRD, format: markdown }
-  - { name: prior_adrs,            source: existing ADRs (decision history), format: adr@1 (set) }
+  - { name: prior_adrs,            source: existing ADRs (decision history), format: architecture-decision-record@1 (set) }
 
 outputs:
   - { name: adr,                   format: adr@1, recipient: cuo/chief-architect + cuo/cto + engineering team + future engineers }
 
 skill_chain:
-  - { step: 1, skill: adr-author, inputs_from: { decision_brief: decision_brief, srs_context: srs_context, prior_adrs: prior_adrs }, outputs_to: adr_draft }
-  - { step: 2, skill: adr-audit,  inputs_from: adr_draft, outputs_to: adr }
+  - { step: 1, skill: architecture-decision-record-author, inputs_from: { decision_brief: decision_brief, srs_context: srs_context, prior_adrs: prior_adrs }, outputs_to: adr_draft }
+  - { step: 2, skill: architecture-decision-record-audit,  inputs_from: adr_draft, outputs_to: adr }
 
 escalates_to:
   - { persona: cuo/chief-information-security-officer,           when: "decision touches security boundary (auth / crypto / data-handling)" }

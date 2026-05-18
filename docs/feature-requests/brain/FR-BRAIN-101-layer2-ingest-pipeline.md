@@ -3,7 +3,7 @@ id: FR-BRAIN-101
 title: "Layer-2 ingest pipeline (binlog → pgvector + Apache AGE) — chain-anchor verification + 1s p95 lag + per-tenant cursor + idempotent UPSERT"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 1

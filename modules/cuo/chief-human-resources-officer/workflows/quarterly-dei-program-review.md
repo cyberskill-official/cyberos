@@ -7,7 +7,7 @@ cadence: quarterly
 status: shipped
 
 inputs:
-  - { name: prior_program,      source: last quarter's dei-program@1,             format: dei-program@1 }
+  - { name: prior_program,      source: last quarter's dei-program@1,             format: diversity-equity-inclusion-program@1 }
   - { name: hr_demographics,    source: HRIS demographic + tenure + level data,   format: csv (anonymized aggregates) }
   - { name: pipeline_data,      source: ATS demographic data per stage,           format: csv }
   - { name: inclusion_survey,   source: Culture Amp / Lattice DEI-pulse module,   format: csv export }
@@ -16,8 +16,8 @@ outputs:
   - { name: dei_program,        format: dei-program@1, recipient: cuo/chro + cuo/ceo + Board (DEI chapter) + cuo/cdo-diversity (if exists) }
 
 skill_chain:
-  - { step: 1, skill: dei-program-author, inputs_from: { prior_program: prior_program, hr_demographics: hr_demographics, pipeline_data: pipeline_data, inclusion_survey: inclusion_survey }, outputs_to: program_draft }
-  - { step: 2, skill: dei-program-audit,  inputs_from: program_draft, outputs_to: dei_program }
+  - { step: 1, skill: diversity-equity-inclusion-program-author, inputs_from: { prior_program: prior_program, hr_demographics: hr_demographics, pipeline_data: pipeline_data, inclusion_survey: inclusion_survey }, outputs_to: program_draft }
+  - { step: 2, skill: diversity-equity-inclusion-program-audit,  inputs_from: program_draft, outputs_to: dei_program }
 
 escalates_to:
   - { persona: cuo/chief-executive-officer,         when: "representation drops > 5pts in any reported segment OR pay-equity gap widens" }
@@ -61,8 +61,8 @@ cyberos-cuo run cuo/chief-human-resources-officer/quarterly-dei-program-review \
 
 ## Skill chain
 
-- **Step 1 `dei-program-author`** — drafts per SHRM DEI framework + McKinsey Diversity Matters + EEOC.
-- **Step 2 `dei-program-audit`** — validates per `dei_program_rubric@1.0`.
+- **Step 1 `diversity-equity-inclusion-program-author`** — drafts per SHRM DEI framework + McKinsey Diversity Matters + EEOC.
+- **Step 2 `diversity-equity-inclusion-program-audit`** — validates per `dei_program_rubric@1.0`.
 
 ## Failure modes
 

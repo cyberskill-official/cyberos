@@ -40,7 +40,7 @@ PMO tools + change-mgmt platforms (Prosci, WalkMe).
 |---|---|---|---|---|
 | `annual-transformation-roadmap` | Vision + value streams + programs + milestones + governance | annual | transformation-roadmap@1 | shipped (1.0.0) |
 | `per-program-charter` | Per-program scope + owner + value + milestones + governance | per-event | program-charter@1 | shipped (1.0.0) |
-| `per-program-change-management` | ADKAR change-mgmt plan per program | per-event | change-mgmt-plan@1 | shipped (1.0.0) |
+| `per-program-change-management` | ADKAR change-mgmt plan per program | per-event | change-management-plan@1 | shipped (1.0.0) |
 | `quarterly-portfolio-review` | Portfolio health + value realization + rebalancing | quarterly | transformation-roadmap@1 chapter | shipped (1.0.0) |
 
 All workflows chain through shipped Tier-2 skills (`transformation-roadmap`, `program-charter`, `change-mgmt-plan`). See `../../skill/MODULE.md` §3.2.

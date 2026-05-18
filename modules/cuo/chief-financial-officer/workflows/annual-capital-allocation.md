@@ -14,8 +14,8 @@ outputs:
   - { name: annual_capital_allocation_artefact, format: ad-hoc-md, recipient: persona owner + downstream consumers }
 
 skill_chain:
-  - { step: 1, skill: cap-alloc-memo-author, inputs_from: brief, outputs_to: cap_alloc_draft }
-  - { step: 2, skill: cap-alloc-memo-audit, inputs_from: cap_alloc_draft, outputs_to: cap_alloc_final }
+  - { step: 1, skill: capital-allocation-memo-author, inputs_from: brief, outputs_to: cap_alloc_draft }
+  - { step: 2, skill: capital-allocation-memo-audit, inputs_from: cap_alloc_draft, outputs_to: cap_alloc_final }
 
 escalates_to: []
 
@@ -56,9 +56,9 @@ cyberos-cuo execute chief-financial-officer/annual-capital-allocation \
 
 ## Skill-chain step-by-step
 
-**Step 1 — `cap-alloc-memo-author`**: produces the artefact body in the shape declared by `modules/skill/cap-alloc-memo-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
+**Step 1 — `capital-allocation-memo-author`**: produces the artefact body in the shape declared by `modules/skill/capital-allocation-memo-author/CONTRACT.md`. Consumes the `brief` input (workflow-supplied) plus any prior-step hand-off.
 
-**Step 2 — `cap-alloc-memo-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
+**Step 2 — `capital-allocation-memo-audit`**: validates the upstream artefact against the per-skill RUBRIC. Returns `rubric_outcome: {score, pass, fixes}` plus a verdict (pass / needs_human / fail / exhausted).
 
 ## Failure modes
 
@@ -76,6 +76,6 @@ cyberos-cuo execute chief-financial-officer/annual-capital-allocation \
 
 ## Cross-references
 
-- Skill chain anchors: see `modules/skill/cap-alloc-memo-author/` + `modules/skill/cap-alloc-memo-audit/`
+- Skill chain anchors: see `modules/skill/capital-allocation-memo-author/` + `modules/skill/capital-allocation-memo-audit/`
 - Persona spec: see `modules/cuo/chief-financial-officer/README.md` (9-block schema, §8 Audit criteria)
 - BRAIN protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)

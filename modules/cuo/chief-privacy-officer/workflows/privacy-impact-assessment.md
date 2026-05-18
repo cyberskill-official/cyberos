@@ -9,14 +9,14 @@ status: shipped
 inputs:
   - { name: feature_brief,      source: cuo/cpo-product (PRD or feature spec), format: markdown }
   - { name: data_flow_diagram,  source: cuo/cto / engineering team,            format: markdown / diagram }
-  - { name: prior_pia,          source: similar features' prior pia@1 (if any), format: pia@1 }
+  - { name: prior_pia,          source: similar features' prior privacy-impact-assessment@1 (if any), format: privacy-impact-assessment@1 }
 
 outputs:
   - { name: pia,                format: pia@1, recipient: cuo/cpo-privacy + cuo/clo-legal + cuo/cto + cuo/cpo-product }
 
 skill_chain:
-  - { step: 1, skill: pia-author, inputs_from: { feature_brief: feature_brief, data_flow_diagram: data_flow_diagram, prior_pia: prior_pia }, outputs_to: pia_draft }
-  - { step: 2, skill: pia-audit,  inputs_from: pia_draft, outputs_to: pia }
+  - { step: 1, skill: privacy-impact-assessment-author, inputs_from: { feature_brief: feature_brief, data_flow_diagram: data_flow_diagram, prior_pia: prior_pia }, outputs_to: pia_draft }
+  - { step: 2, skill: privacy-impact-assessment-audit,  inputs_from: pia_draft, outputs_to: pia }
 
 escalates_to:
   - { persona: cuo/chief-legal-officer,   when: "PIA surfaces high-risk processing requiring DPIA (GDPR Art. 35) or regulator consultation (Art. 36)" }
@@ -58,8 +58,8 @@ cyberos-cuo run cuo/chief-privacy-officer/privacy-impact-assessment \
 
 ## Skill chain
 
-- **Step 1 `pia-author`** — drafts per GDPR Art. 35 + ICO PIA framework + NIST Privacy Framework.
-- **Step 2 `pia-audit`** — validates per `pia_rubric@1.0`.
+- **Step 1 `privacy-impact-assessment-author`** — drafts per GDPR Art. 35 + ICO PIA framework + NIST Privacy Framework.
+- **Step 2 `privacy-impact-assessment-audit`** — validates per `pia_rubric@1.0`.
 
 ## Failure modes
 

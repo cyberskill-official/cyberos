@@ -8,15 +8,15 @@ status: shipped
 
 inputs:
   - { name: lms_data,              source: LMS (Workday Learning / Cornerstone / Docebo / 360Learning) telemetry, format: csv }
-  - { name: enps_data,             source: cuo/chief-human-resources-officer/quarterly-enps-pulse (learning slices), format: enps-program@1 }
-  - { name: prior_review,          source: last quarter's effectiveness review, format: enps-program@1 (learning chapter) }
+  - { name: enps_data,             source: cuo/chief-human-resources-officer/quarterly-enps-pulse (learning slices), format: employee-net-promoter-score-program@1 }
+  - { name: prior_review,          source: last quarter's effectiveness review, format: employee-net-promoter-score-program@1 (learning chapter) }
 
 outputs:
-  - { name: learning_effectiveness, format: enps-program@1 (learning chapter), recipient: cuo/clo-learning + cuo/chro }
+  - { name: learning_effectiveness, format: employee-net-promoter-score-program@1 (learning chapter), recipient: cuo/clo-learning + cuo/chro }
 
 skill_chain:
-  - { step: 1, skill: enps-program-author, inputs_from: { lms_data: lms_data, enps_data: enps_data, prior_review: prior_review }, outputs_to: review_draft }
-  - { step: 2, skill: enps-program-audit,  inputs_from: review_draft, outputs_to: learning_effectiveness }
+  - { step: 1, skill: employee-net-promoter-score-program-author, inputs_from: { lms_data: lms_data, enps_data: enps_data, prior_review: prior_review }, outputs_to: review_draft }
+  - { step: 2, skill: employee-net-promoter-score-program-audit,  inputs_from: review_draft, outputs_to: learning_effectiveness }
 
 audit_hooks:
   - workflow_complete row on PASS with learning_effectiveness hash

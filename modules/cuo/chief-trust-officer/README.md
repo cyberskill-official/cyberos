@@ -42,7 +42,7 @@ Vanta / Drata / SecureFrame (audit auto); Trust portal (custom or Drata Trust); 
 | `quarterly-trust-portal-update` | Refresh customer-facing trust portal: certs / privacy / subprocessors | quarterly | trust-portal-update@1 | shipped (1.0.0) |
 | `annual-transparency-report` | Govt-data-requests + moderation + abuse metrics + model decisions | annual | transparency-report@1 | shipped (1.0.0) |
 | `per-trust-incident-update` | Time-sensitive incident disclosure on public trust portal | per-event | trust-portal-update@1 (incident-augmented) | shipped (1.0.0) |
-| `annual-trust-strategy` | Trust posture vision + cert roadmap + transparency program + customer-trust metrics | annual | strategy-doc@1 | shipped (1.0.0) |
+| `annual-trust-strategy` | Trust posture vision + cert roadmap + transparency program + customer-trust metrics | annual | strategy-document@1 | shipped (1.0.0) |
 
 All workflows chain through shipped skills — Tier-2 (`trust-portal-update`, `transparency-report`, `strategy-doc`). See `../../skill/MODULE.md` §3.2.
 

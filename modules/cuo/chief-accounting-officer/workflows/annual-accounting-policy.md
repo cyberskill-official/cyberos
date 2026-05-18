@@ -7,16 +7,16 @@ cadence: annual
 status: shipped
 
 inputs:
-  - { name: prior_policy,          source: last year's strategy-doc@1 (accounting-policy chapter), format: strategy-doc@1 }
+  - { name: prior_policy,          source: last year's strategy-document@1 (accounting-policy chapter), format: strategy-document@1 }
   - { name: standard_updates,      source: FASB / IASB pronouncements + interpretations, format: markdown }
   - { name: business_changes,      source: M&A / new revenue streams / capital structure changes, format: markdown }
 
 outputs:
-  - { name: accounting_policy,     format: strategy-doc@1 (accounting-policy chapter), recipient: cuo/cao-accounting + cuo/cfo + external auditors + Audit Committee }
+  - { name: accounting_policy,     format: strategy-document@1 (accounting-policy chapter), recipient: cuo/cao-accounting + cuo/cfo + external auditors + Audit Committee }
 
 skill_chain:
-  - { step: 1, skill: strategy-doc-author, inputs_from: { prior_policy: prior_policy, standard_updates: standard_updates, business_changes: business_changes }, outputs_to: policy_draft }
-  - { step: 2, skill: strategy-doc-audit,  inputs_from: policy_draft, outputs_to: accounting_policy }
+  - { step: 1, skill: strategy-document-author, inputs_from: { prior_policy: prior_policy, standard_updates: standard_updates, business_changes: business_changes }, outputs_to: policy_draft }
+  - { step: 2, skill: strategy-document-audit,  inputs_from: policy_draft, outputs_to: accounting_policy }
 
 audit_hooks:
   - workflow_complete row on PASS with accounting_policy hash

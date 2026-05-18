@@ -9,7 +9,7 @@ status: shipped
 inputs:
   - { name: system_design,         source: SDD or architecture brief, format: markdown }
   - { name: prior_threat_model,    source: prior threat-model@1 if exists, format: threat-model@1 }
-  - { name: adr_set,               source: relevant ADRs, format: adr@1 (set) }
+  - { name: adr_set,               source: relevant ADRs, format: architecture-decision-record@1 (set) }
 
 outputs:
   - { name: threat_model,          format: threat-model@1, recipient: cuo/chief-architect + cuo/ciso + cuo/cto + engineering team }

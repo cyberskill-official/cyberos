@@ -15,7 +15,7 @@ inputs:
   - { name: prior_analysis,     source: last quarter's churn-analysis@1,                        format: churn-analysis@1 }
   - { name: churned_accounts,   source: CRM export filtered for churned accounts in quarter,    format: csv }
   - { name: exit_interviews,    source: CS exit-interview corpus,                               format: markdown / csv }
-  - { name: cs_engagements,     source: cs-engagement@1 for churned accounts (last 4 quarters), format: cs-engagement@1 (multiple) }
+  - { name: cs_engagements,     source: customer-success-engagement@1 for churned accounts (last 4 quarters), format: customer-success-engagement@1 (multiple) }
 
 outputs:
   - { name: churn_analysis,     format: churn-analysis@1, recipient: cuo/cro-revenue + cuo/cco-customer + cuo/cpo-product + cuo/ceo }
