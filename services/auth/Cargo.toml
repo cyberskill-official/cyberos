@@ -14,6 +14,16 @@ path = "src/main.rs"
 name = "cyberos-auth-bootstrap"
 path = "src/bin/bootstrap.rs"
 
+# FR-AUTH-006 slice-2 — unified operations CLI. Name follows industry
+# convention (`systemctl`, `journalctl`, `kubectl`) — the FR's spec'd
+# `cyberos-auth` name collides with the HTTP server's binary, so
+# `cyberos-authctl` resolves the conflict without renaming the daemon.
+# `cyberos-auth-bootstrap` remains as a transitional alias for slice-1
+# scripts; slice-3 (future FR) removes it.
+[[bin]]
+name = "cyberos-authctl"
+path = "src/bin/cli.rs"
+
 [lib]
 name = "cyberos_auth"
 path = "src/lib.rs"
@@ -45,6 +55,7 @@ ipnetwork = "0.20"
 maxminddb = "0.24"
 sha2 = { workspace = true }
 linked-hash-map = "0.5"
+clap = { workspace = true }
 
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true

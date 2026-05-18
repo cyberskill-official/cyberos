@@ -92,6 +92,28 @@ This rubric is a port of the proven rule set from the legacy `cuo/cpo/feature-re
 | ------- | ------- | ------ | -------- |
 | `STALE-001` | Source artefact hash differs from `provenance.source_hash` | Reset open + needs_human issues to open; re-evaluate. Surface diff to operator. | warning → needs_human (`stale_artefact_disposition`) |
 
+## §9  Spec-vs-implementation traceability  *(applies to cyberos-style §1/§4/§5 FR template only)*
+
+These rules apply to FRs that use the cyberos template (numbered §1 normative clauses · §4 acceptance criteria · §5 verification/tests), per `AUTHORING_DISCIPLINE.md` §1. Added 2026-05-18 (session 21) after the audit-fix loop on FR-AUTH-001 + FR-AUTH-006 surfaced 13 §1↔§4 / §4↔§5 traceability gaps in two "shipped" FRs — see memory feedback `feedback_fr_author_clause_to_test_traceability.md`. The upstream fix: refuse to score 10/10 if any §1 clause lacks a downstream test, so future FRs can't ship code that passes §5 tests while missing §1 clauses.
+
+| rule_id | Check | Severity | Auto-fixable |
+| ------- | ----- | -------- | ------------ |
+| `TRACE-001` | Every §1 numbered clause with a BCP-14 keyword (MUST · MUST NOT · SHOULD · SHOULD NOT · MAY) is cited by at least one §4 AC. Citation form: `§1 #N` or `§1.N` inside the AC's rationale or in the AC's `traces_to:` frontmatter field. Clauses explicitly tagged `(deferred to slice N)` in §1 are exempt. | error → needs_human (`spec_clause_without_ac`) | skeleton (insert AC stub with TODO marker linked to §1 #N) |
+| `TRACE-002` | Every §4 AC cites at least one §5 verification entry — typically a named test function (e.g. `services/<crate>/tests/<file>.rs::<test_fn>`) OR a manual verification step with a rationale (manual is acceptable only for ops/UI flows that can't be automated, and must justify why). | error → needs_human (`ac_without_test`) | skeleton (insert §5 test-name placeholder) |
+| `TRACE-003` | Every §5 test path is either listed in `frontmatter.new_files` (test file will be authored as part of this FR's implementation) OR resolves to an existing file on disk. Dangling test references (test name with no file) → fail. | error | false |
+| `TRACE-004` | If `status: shipped`, every §1 clause's cited test is `passed` in the most recent `implementation_audit.coverage_report` (§10.3 audit-fix log). Tests in `building`/`draft` FRs are exempt. | error → needs_human (`shipped_with_untested_clause`) | false |
+| `TRACE-005` | When an FR uses the deferred-slice pattern (e.g. "§1 #8 — deferred to slice 2"), §10.7 of the `.audit.md` MUST enumerate the deferred clauses with a scope estimate per the FR-AUTH-006 slice-2 precedent. Missing §10.7 with deferred clauses → fail. | warning | false |
+
+**Rationale:** the audit-fix loop on FR-AUTH-001 surfaced 7 spec-vs-code gaps where §1 MUST clauses had no §4 AC or no §5 test backing them — the implementer passed all declared tests while quietly missing 7 normative clauses. TRACE-001..005 close that gap structurally: an FR can't score 10/10 (and thus can't move from `draft` → `accepted` → `shipped`) if any of its §1 clauses lacks a downstream test. **The audit becomes the source of truth for "what's actually shipped" instead of `BACKLOG.md` status alone.**
+
+**Worked example** (FR-AUTH-001's §1 #14 — `slug == "root"` defence-in-depth reject):
+- §1 #14 says: `MUST NOT create a tenant with slug "root"`
+- §4 AC #11 says: `Reserved-slug validator returns 400 with structured body before DB transaction (traces_to: §1 #14)`
+- §5 test entry says: `services/auth/tests/admin_tenant_create_test.rs::create_tenant_rejects_reserved_root_slug` (covers ECM-008)
+- §5 test file is in `frontmatter.new_files: [services/auth/tests/admin_tenant_create_test.rs, ...]`
+- Pre-G-001 the file didn't exist on disk → TRACE-003 would have failed
+- Post-G-001 the file + test exist → TRACE-003 + TRACE-001 + TRACE-002 all pass
+
 ---
 
 ## Rule auto-fix behaviour catalogue
