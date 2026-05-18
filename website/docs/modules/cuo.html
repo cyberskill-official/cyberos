@@ -896,20 +896,20 @@ sequenceDiagram
  <div class="bbg-card p-5">
  <div class="mermaid">
 stateDiagram-v2
- [*] --> Received: NL query arrives
- Received --> Routing: catalog loaded · scoring in progress
- Routing --> Picked: top candidate ≥ threshold
- Routing --> Deferred: no candidate ≥ threshold
- Routing --> Escalated: 0.10 ≤ score ≤ 0.50 (Phase 2)
+ [*] --> Received
+ Received --> Routing: NL query arrives
+ Routing --> Picked: top candidate at-or-above threshold
+ Routing --> Deferred: no candidate at threshold
+ Routing --> Escalated: borderline score Phase-2 cascade
  Escalated --> Picked: LLM picks
  Escalated --> Deferred: LLM also abstains
- Picked --> Invoking: --invoke true
- Picked --> Recorded: --invoke false · decision-only
- Invoking --> Succeeded: exit_code == 0
- Invoking --> Failed: exit_code != 0
- Succeeded --> Recorded: trace + result → BRAIN
- Failed --> Recorded: trace + error → BRAIN
- Deferred --> Recorded: routed:false row → BRAIN
+ Picked --> Invoking: invoke flag true
+ Picked --> Recorded: invoke flag false - decision only
+ Invoking --> Succeeded: exit code 0
+ Invoking --> Failed: exit code non-zero
+ Succeeded --> Recorded: trace plus result to BRAIN
+ Failed --> Recorded: trace plus error to BRAIN
+ Deferred --> Recorded: routed false row to BRAIN
  Recorded --> [*]
  </div>
  </div>
@@ -924,6 +924,148 @@ stateDiagram-v2
  Each persona is a curated subset of the Skill catalog. Today the catalog lives flat under <code>modules/skill/&lt;name&gt;</code> with full-format names; the supervisor routes via two stages (persona → workflow) then auto-dispatches one of 6 Handlers per workflow <code>pattern:</code> frontmatter. The <em>Auto OK</em> column lists actions that may complete without explicit operator approval; the <em>Defers</em> column lists actions that always escape to the human.
  </p>
 
+ <!-- ============================================================ -->
+ <!-- §8.1 — Per-persona row table (every active persona) -->
+ <!-- ============================================================ -->
+ <h3 class="text-xl font-bold mt-6 mb-2">8.1 — All 47 active personas (per-row catalog)</h3>
+ <p class="text-slate-600 mb-4">Every persona folder lives at <code>modules/cuo/&lt;persona-slug&gt;/</code> with a 9-block-schema README and its own <code>workflows/</code> directory. <strong>221 workflows live across 47 active personas.</strong> The supervisor routes a natural-language query → persona → workflow → skill chain, then auto-dispatches one of 6 Handlers per workflow <code>pattern:</code>. The <strong>Tier</strong> column reflects the staged-introduction wave that first shipped that persona's workflows (Now / Series-A / Scale-up / Enterprise / Niche); operators can ignore tier ordering at runtime — it only governs the authoring backlog. The <strong>Representative workflow</strong> column links to a concrete, file-verified workflow under that persona's <code>workflows/</code> folder; some personas carry 5–8 workflows after Tier-C1 depth additions (chief-of-staff, chief-financial-officer, chief-information-security-officer, etc.).</p>
+
+ <!-- Now-tier (Sessions D-E, founding wave) -->
+ <h4 class="text-base font-bold mt-5 mb-2 text-cuo-dark"><span class="pill pill-must mr-2">Now-tier</span> Founding rhythm of any startup (5 personas, ~28 workflows)</h4>
+ <div class="overflow-x-auto mb-5">
+  <table class="kt">
+   <thead><tr><th style="width:18%">Persona</th><th style="width:48%">Mandate (per <code>README.md</code> §1)</th><th style="width:9%; text-align:center">Workflows</th><th style="width:25%">Representative workflow</th></tr></thead>
+   <tbody>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-executive-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-executive-officer</a></td><td>Highest authority; sets vision; allocates capital; owns the board relationship and the external narrative.</td><td class="text-center">7</td><td><code class="text-xs">quarterly-board-update</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-financial-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-financial-officer</a></td><td>Owns FP&amp;A, capital, controls, investor relations; modern CFOs co-own data &amp; tech investment decisions (Deloitte 2025).</td><td class="text-center">8</td><td><code class="text-xs">monthly-close</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-technology-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-technology-officer</a></td><td>Owns outward-facing technical proposition — architecture, eng org, build-vs-buy — accountable for the system's ability to scale, evolve, stay defensible.</td><td class="text-center">5</td><td><code class="text-xs">architect-new-system</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-of-staff" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-of-staff</a></td><td>CEO leverage multiplier; rhythm-of-business owner; OKR/decision tracker; special-projects lead. One of the most important early hires.</td><td class="text-center">6</td><td><code class="text-xs">weekly-rhythm-of-business</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-legal-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-legal-officer</a></td><td>Contracts, regulatory posture, IP, litigation; at Series-A onward typically combines with Compliance &amp; Privacy until those split.</td><td class="text-center">5</td><td><code class="text-xs">msa-contract-review</code></td></tr>
+   </tbody>
+  </table>
+ </div>
+
+ <!-- Series-A-tier (Session F, security/sales/HR/delivery wave) -->
+ <h4 class="text-base font-bold mt-5 mb-2 text-cuo-dark"><span class="pill pill-should mr-2">Series-A-tier</span> Adds when scaling beyond the founders (4 personas, ~16 workflows)</h4>
+ <div class="overflow-x-auto mb-5">
+  <table class="kt">
+   <thead><tr><th style="width:18%">Persona</th><th style="width:48%">Mandate (per <code>README.md</code> §1)</th><th style="width:9%; text-align:center">Workflows</th><th style="width:25%">Representative workflow</th></tr></thead>
+   <tbody>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-operating-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-operating-officer</a></td><td>Owns "did we ship". Run-the-business across functions; cycle status; cross-team coordination; vendor performance; SLA enforcement.</td><td class="text-center">6</td><td><code class="text-xs">quarterly-operating-review</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-human-resources-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-human-resources-officer</a></td><td>People operations: workforce plan, comp bands, talent review, eNPS, onboarding, DEI program. Reports to CEO; partners w/ CFO on comp.</td><td class="text-center">7</td><td><code class="text-xs">quarterly-workforce-plan</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-sales-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-sales-officer</a></td><td>Owns the number. Pipeline coverage, account plans, GTM strategy, NPS program; at Series-A often co-owned with CRO until split.</td><td class="text-center">6</td><td><code class="text-xs">weekly-pipeline-review</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-information-security-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-information-security-officer</a></td><td>Threat posture + SOC2 + vuln management + breach response readiness. Time-critical surface; partners w/ CTO on architecture.</td><td class="text-center">6</td><td><code class="text-xs">quarterly-security-posture-review</code></td></tr>
+   </tbody>
+  </table>
+ </div>
+
+ <!-- Scale-up-tier (Session G, revenue arch + privacy wave) -->
+ <h4 class="text-base font-bold mt-5 mb-2 text-cuo-dark"><span class="pill pill-shipped mr-2">Scale-up-tier</span> Adds when the org passes ~100 people (2 personas, ~10 workflows)</h4>
+ <div class="overflow-x-auto mb-5">
+  <table class="kt">
+   <thead><tr><th style="width:18%">Persona</th><th style="width:48%">Mandate (per <code>README.md</code> §1)</th><th style="width:9%; text-align:center">Workflows</th><th style="width:25%">Representative workflow</th></tr></thead>
+   <tbody>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-revenue-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-revenue-officer</a></td><td>Top of the GTM org: sales + marketing + customer-success + revenue-ops aligned on revenue architecture, comp plan, churn analysis.</td><td class="text-center">6</td><td><code class="text-xs">monthly-revenue-forecast</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-privacy-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-privacy-officer</a></td><td>Owns PDPL / GDPR / CCPA posture, DSR pipeline, PIA portfolio, 72-hour breach-notification readiness. Time-critical surface.</td><td class="text-center">6</td><td><code class="text-xs">breach-response-cycle</code></td></tr>
+   </tbody>
+  </table>
+ </div>
+
+ <!-- Enterprise-tier (Session H, product/data/AI/customer wave) -->
+ <h4 class="text-base font-bold mt-5 mb-2 text-cuo-dark"><span class="pill pill-planned mr-2">Enterprise-tier</span> Adds at Growth/Enterprise stage (5 personas, ~22 workflows)</h4>
+ <div class="overflow-x-auto mb-5">
+  <table class="kt">
+   <thead><tr><th style="width:18%">Persona</th><th style="width:48%">Mandate (per <code>README.md</code> §1)</th><th style="width:9%; text-align:center">Workflows</th><th style="width:25%">Representative workflow</th></tr></thead>
+   <tbody>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-product-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-product-officer</a></td><td>Owns "are we building the right thing". Roadmap, requirements discovery, user-research synthesis, FR catalogue maintenance.</td><td class="text-center">5</td><td><code class="text-xs">quarterly-roadmap-planning</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-data-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-data-officer</a></td><td>Owns the data estate: governance, quality, lineage, data products, customer-360, regulator data-subject responses.</td><td class="text-center">6</td><td><code class="text-xs">quarterly-data-governance-review</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-ai-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-ai-officer</a></td><td>Owns AI strategy &amp; portfolio; model cards, bias audits; partners w/ CTO on infra and Ethics on governance.</td><td class="text-center">6</td><td><code class="text-xs">quarterly-ai-portfolio-review</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-customer-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-customer-officer</a></td><td>Owns post-sale value: customer health, CAB, churn analysis (w/ CRO), expansion plays, success engagement.</td><td class="text-center">4</td><td><code class="text-xs">quarterly-customer-health-review</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-knowledge-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-knowledge-officer</a></td><td>Owns the org's collective know-how: knowledge taxonomy, codification pipeline, knowledge graph (BRAIN governance partner).</td><td class="text-center">4</td><td><code class="text-xs">quarterly-knowledge-pipeline</code></td></tr>
+   </tbody>
+  </table>
+ </div>
+
+ <!-- Niche-tier (Sessions I-N, no-new-skills wave) -->
+ <h4 class="text-base font-bold mt-5 mb-2 text-cuo-dark"><span class="pill pill-partial mr-2">Niche-tier</span> Niche / specialty seats added through stable catalog (31 personas, ~124 workflows)</h4>
+ <p class="text-sm text-slate-600 mb-2">Authored across Sessions I–N as "no new skills needed" waves — every workflow chains through the already-shipped Tier-1/Tier-2 catalog. This validates the v3.0.0 supervisor hypothesis: a stable ~100-skill catalog can serve the long tail.</p>
+ <div class="overflow-x-auto mb-5">
+  <table class="kt">
+   <thead><tr><th style="width:18%">Persona</th><th style="width:48%">Mandate (per <code>README.md</code> §1)</th><th style="width:9%; text-align:center">Workflows</th><th style="width:25%">Representative workflow</th></tr></thead>
+   <tbody>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-marketing-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-marketing-officer</a></td><td>Brand + demand; pressure to narrow as some CMOs absorb into CRO. Owns campaigns, content calendar, analyst relations.</td><td class="text-center">6</td><td><code class="text-xs">per-campaign-plan</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-communications-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-communications-officer</a></td><td>Internal newsletter cadence, press releases, narrative consistency across audiences. Crisis-comm playbook owner.</td><td class="text-center">4</td><td><code class="text-xs">monthly-internal-newsletter</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-risk-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-risk-officer</a></td><td>Enterprise risk management (ERM) framework, KRI dashboards, board risk chapter, per-incident post-mortems.</td><td class="text-center">4</td><td><code class="text-xs">quarterly-kri-dashboard</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-ethics-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-ethics-officer</a></td><td>Use-case ethics review, bias portfolio audit, model card ethics sign-off, ethics program governance.</td><td class="text-center">4</td><td><code class="text-xs">per-model-card-ethics-sign-off</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-transformation-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-transformation-officer</a></td><td>Owns multi-quarter change programs; portfolio reviews; change-management discipline; transformation roadmap.</td><td class="text-center">4</td><td><code class="text-xs">quarterly-portfolio-review</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-brand-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-brand-officer</a></td><td>Brand-strategy, brand campaigns, analyst-brand briefings; partner w/ CMO when both seats exist.</td><td class="text-center">4</td><td><code class="text-xs">annual-brand-strategy</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-innovation-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-innovation-officer</a></td><td>Innovation portfolio governance, charter authoring, horizon-3 bets; partner w/ CTO + CSO-Strategy.</td><td class="text-center">4</td><td><code class="text-xs">per-innovation-charter</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-trust-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-trust-officer</a></td><td>External-facing trust posture: trust portal, transparency report, time-critical trust-incident updates.</td><td class="text-center">4</td><td><code class="text-xs">per-trust-incident-update</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-compliance-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-compliance-officer</a></td><td>Compliance program, control testing, regulatory filings, board compliance chapter.</td><td class="text-center">4</td><td><code class="text-xs">quarterly-control-testing</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-strategy-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-strategy-officer</a></td><td>Corporate strategy, portfolio strategy, M&amp;A theses, quarterly strategy review.</td><td class="text-center">4</td><td><code class="text-xs">per-mna-thesis</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-digital-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-digital-officer</a></td><td>Digital transformation roadmap, channel program charters, digital portfolio review.</td><td class="text-center">4</td><td><code class="text-xs">annual-digital-transformation-roadmap</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-esg-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-esg-officer</a></td><td>ESG strategy + reporting, compliance, stakeholder engagement; partner w/ Sustainability.</td><td class="text-center">4</td><td><code class="text-xs">annual-esg-report</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-sustainability-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-sustainability-officer</a></td><td>Emissions inventory, target tracking, annual sustainability report, sustainability strategy.</td><td class="text-center">4</td><td><code class="text-xs">annual-emissions-inventory</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-automation-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-automation-officer</a></td><td>Automation roadmap, charter authoring, portfolio review, operating-model impact assessment.</td><td class="text-center">4</td><td><code class="text-xs">annual-automation-roadmap</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-procurement-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-procurement-officer</a></td><td>Procurement strategy, supplier scorecard, sourcing-event-per-category, savings tracker.</td><td class="text-center">4</td><td><code class="text-xs">quarterly-supplier-scorecard</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-commercial-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-commercial-officer</a></td><td>Partner program, channel strategy, partner scorecard, strategic-partnership-per-deal.</td><td class="text-center">4</td><td><code class="text-xs">annual-channel-strategy</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-growth-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-growth-officer</a></td><td>Growth-loop ownership, weekly growth cadence, experimentation portfolio, monetization review.</td><td class="text-center">4</td><td><code class="text-xs">weekly-growth-cadence</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-medical-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-medical-officer</a></td><td>Clinical protocol, quarterly safety report, medical-affairs charters; healthcare-vertical only.</td><td class="text-center">4</td><td><code class="text-xs">per-clinical-protocol</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-investment-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-investment-officer</a></td><td>Investment thesis-per-target, portfolio review, LP letters; PE/VC-vertical or scale-corp-development.</td><td class="text-center">4</td><td><code class="text-xs">per-investment-thesis</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-restructuring-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-restructuring-officer</a></td><td>Turnaround plan, stakeholder-communication-per-event; distressed-situation specialist.</td><td class="text-center">4</td><td><code class="text-xs">per-turnaround-plan</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-accounting-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-accounting-officer</a></td><td>Monthly-close execution, quarterly audit readiness; partners w/ CFO at scale-up onward.</td><td class="text-center">4</td><td><code class="text-xs">monthly-close-execution</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-administrative-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-administrative-officer</a></td><td>Weekly back-office cadence, vendor consolidation, administrative operating model.</td><td class="text-center">4</td><td><code class="text-xs">annual-vendor-consolidation</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-remote-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-remote-officer</a></td><td>Distributed-work program, remote effectiveness review, remote-policy authoring.</td><td class="text-center">4</td><td><code class="text-xs">annual-remote-policy</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-happiness-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-happiness-officer</a></td><td>eNPS deep-dive, wellbeing intervention, happiness program; people-experience specialist.</td><td class="text-center">4</td><td><code class="text-xs">quarterly-enps-deep-dive</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-experience-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-experience-officer</a></td><td>End-to-end customer-experience strategy, journey charter, CX review, customer-360 engagement.</td><td class="text-center">4</td><td><code class="text-xs">per-journey-charter</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-architect" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-architect</a></td><td>Architecture vision, design reviews, per-decision ADRs, threat-model reviews. Reports to CTO at most companies.</td><td class="text-center">4</td><td><code class="text-xs">per-architecture-decision</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-information-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-information-officer</a></td><td>Internal IT estate; vendor scorecard, IT operating review, IT strategy + IT security strategy.</td><td class="text-center">4</td><td><code class="text-xs">annual-it-strategy</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-diversity-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-diversity-officer</a></td><td>DEI program, DEI progress review, ERG charters, DEI strategy; partner w/ CHRO.</td><td class="text-center">4</td><td><code class="text-xs">annual-dei-strategy</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-learning-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-learning-officer</a></td><td>Learning strategy, leadership development program, learning effectiveness review.</td><td class="text-center">4</td><td><code class="text-xs">annual-learning-strategy</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-security-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-security-officer</a></td><td>Converged security (cyber + physical + insider); per-converged-incident-postmortem, physical-security charter.</td><td class="text-center">4</td><td><code class="text-xs">annual-converged-security-strategy</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-people-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-people-officer</a></td><td>Sister-title for CHRO at some companies (people-first framing). Employee value proposition, people strategy, people review. Synonym-pointer README to CHRO when both seats coexist.</td><td class="text-center">4</td><td><code class="text-xs">annual-employee-value-proposition</code></td></tr>
+   </tbody>
+  </table>
+ </div>
+
+ <p class="text-sm text-slate-600 mb-6">Total: 47 active personas (chief-metaverse-officer is EXTINCT — see §8.3) · 221 workflows live · all chain through the SKILL module's <strong>104 author+audit pairs / 108 contracts</strong>. <a href="../../docs/The%20C-Suite%20Reference.md" class="text-blue-700 underline">The C-Suite Reference §5</a> is the canonical role atlas; the staged-introduction order is documented in <a href="https://github.com/cyberskill/cyberos/blob/main/docs/feature-requests/REPORTS.md" target="_blank" rel="noopener" class="text-blue-700 underline">REPORTS.md §2</a>.</p>
+
+ <!-- §8.1b — Quick family-grid (kept as compact second view) -->
+ <details class="bbg-card p-4 mb-6">
+  <summary class="font-bold cursor-pointer text-sm">Alternative view: personas grouped by functional family (13 buckets)</summary>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4 text-sm">
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Executive (4)</div><div class="text-slate-600">chief-executive-officer · chief-operating-officer · chief-financial-officer · chief-of-staff</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Technology &amp; AI (5)</div><div class="text-slate-600">chief-technology-officer · chief-information-officer · chief-ai-officer · chief-architect · chief-automation-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Data &amp; knowledge (4)</div><div class="text-slate-600">chief-data-officer · chief-digital-officer · chief-knowledge-officer · chief-information-security-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Product &amp; design (3)</div><div class="text-slate-600">chief-product-officer · chief-innovation-officer · chief-experience-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Revenue &amp; growth (4)</div><div class="text-slate-600">chief-revenue-officer · chief-sales-officer · chief-marketing-officer · chief-growth-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Customer &amp; brand (4)</div><div class="text-slate-600">chief-customer-officer · chief-communications-officer · chief-brand-officer · chief-commercial-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">People (5)</div><div class="text-slate-600">chief-human-resources-officer · chief-people-officer · chief-learning-officer · chief-diversity-officer · chief-happiness-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Legal · privacy · trust (4)</div><div class="text-slate-600">chief-legal-officer · chief-privacy-officer · chief-trust-officer · chief-ethics-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Risk · security · compliance (3)</div><div class="text-slate-600">chief-risk-officer · chief-security-officer · chief-compliance-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Finance ops &amp; investment (3)</div><div class="text-slate-600">chief-accounting-officer · chief-investment-officer · chief-restructuring-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Operations &amp; procurement (2)</div><div class="text-slate-600">chief-procurement-officer · chief-administrative-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Strategy · transformation · ESG (4)</div><div class="text-slate-600">chief-strategy-officer · chief-transformation-officer · chief-sustainability-officer · chief-esg-officer</div></div>
+   <div class="bbg-card p-3"><div class="font-bold mb-1">Specialist (3)</div><div class="text-slate-600">chief-medical-officer · chief-remote-officer · <span class="text-slate-400">chief-metaverse-officer (extinct)</span></div></div>
+  </div>
+ </details>
+
+ <!-- §8.1c — Workflow density facts -->
+ <div class="fact-grid mb-6">
+  <div class="fact-card"><div class="label">Personas live</div><div class="value">47 / 48</div><div class="note">chief-metaverse-officer EXTINCT</div></div>
+  <div class="fact-card"><div class="label">Workflows shipped</div><div class="value">221</div><div class="note">avg 4.7 per persona</div></div>
+  <div class="fact-card"><div class="label">Skills behind workflows</div><div class="value">104 pairs</div><div class="note">208 author+audit bundles</div></div>
+  <div class="fact-card"><div class="label">Contracts</div><div class="value">108</div><div class="note">per-output template + invariants</div></div>
+  <div class="fact-card"><div class="label">Handler subclasses</div><div class="value">6</div><div class="note">Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair</div></div>
+  <div class="fact-card"><div class="label">Tier waves</div><div class="value">5</div><div class="note">Now · Series-A · Scale-up · Enterprise · Niche</div></div>
+ </div>
+
+ <!-- ============================================================ -->
+ <!-- §8.2 — Deep-dive cards for the canonical 10 (kept as worked examples) -->
+ <!-- ============================================================ -->
+ <h3 class="text-xl font-bold mt-8 mb-2">8.2 — Worked examples · canonical 10 deep-dive</h3>
+ <p class="text-slate-600 mb-4">The 10 cards below illustrate the persona-card shape every README under <code>modules/cuo/&lt;persona-slug&gt;/</code> renders — the routed scope, an Auto-OK action list (low-stakes, takes the auto-action), a Defers-to-human list (high-stakes, escapes to the operator). The full 47-row catalog is in §8.1 above; the patterns shown here generalise to every persona. Per <a href="https://github.com/cyberskill/cyberos/blob/main/modules/cuo/_template/persona/README.md" target="_blank" rel="noopener" class="text-blue-700 underline"><code>modules/cuo/_template/persona/README.md</code></a> the per-persona README always follows the 9-block schema from C-Suite Reference §4.</p>
+
  <!-- CEO -->
  <article id="persona-ceo" class="persona-card">
  <h3><span class="emoji">🎯</span>CEO · Vision &amp; Strategy <span class="role-tag">Stephen Cheng (Founder seat)</span></h3>
@@ -936,7 +1078,7 @@ stateDiagram-v2
 
  <!-- COO -->
  <article id="persona-coo" class="persona-card">
- <h3><span class="emoji">⚙️</span>COO · Operations <span class="role-tag">to be filled · P1+</span></h3>
+ <h3><span class="emoji">⚙️</span>COO · Operations <span class="role-tag">shipped · 4 workflows (Series-A wave)</span></h3>
  <p class="text-sm text-slate-600">Cycle status digests, blocker triage, cross-team coordination, weekly ops review, vendor performance. Owner of "did we ship".</p>
  <div class="label">Auto OK</div>
  <div><span class="auto-ok">status digest from PROJ</span><span class="auto-ok">flag overdue tasks</span><span class="auto-ok">summarise cycle end</span><span class="auto-ok">draft 1:1 prep</span></div>
@@ -946,7 +1088,7 @@ stateDiagram-v2
 
  <!-- CFO -->
  <article id="persona-cfo" class="persona-card">
- <h3><span class="emoji">💰</span>CFO · Finance &amp; Runway <span class="role-tag">to be filled · P2+</span></h3>
+ <h3><span class="emoji">💰</span>CFO · Finance &amp; Runway <span class="role-tag">shipped · 6 workflows (Now + depth)</span></h3>
  <p class="text-sm text-slate-600">Cashflow position, AR/AP digests, burn alerts, payroll cycles, VAT/CIT compliance posture. Owner of "do we have runway".</p>
  <div class="label">Auto OK</div>
  <div><span class="auto-ok">cashflow snapshot</span><span class="auto-ok">AR aging report</span><span class="auto-ok">draft invoice (via INV)</span><span class="auto-ok">flag overdue receivable</span></div>
@@ -956,7 +1098,7 @@ stateDiagram-v2
 
  <!-- CMO -->
  <article id="persona-cmo" class="persona-card">
- <h3><span class="emoji">📣</span>CMO · Marketing &amp; Demand <span class="role-tag">to be filled · P2+</span></h3>
+ <h3><span class="emoji">📣</span>CMO · Marketing &amp; Demand <span class="role-tag">shipped · 4 workflows (Session I)</span></h3>
  <p class="text-sm text-slate-600">Campaign briefs, content calendar, channel reports, brand voice consistency. Owner of "do prospects know us".</p>
  <div class="label">Auto OK</div>
  <div><span class="auto-ok">draft campaign brief</span><span class="auto-ok">summarise channel performance</span><span class="auto-ok">propose A/B test</span><span class="auto-ok">enforce brand voice</span></div>
@@ -976,7 +1118,7 @@ stateDiagram-v2
 
  <!-- CHRO -->
  <article id="persona-chro" class="persona-card">
- <h3><span class="emoji">👥</span>CHRO · People &amp; Talent <span class="role-tag">to be filled · P1+</span></h3>
+ <h3><span class="emoji">👥</span>CHRO · People &amp; Talent <span class="role-tag">shipped · 5 workflows (Series-A + depth)</span></h3>
  <p class="text-sm text-slate-600">1:1 prep, performance summaries, onboarding paths, role descriptions, retention signals, growth ladders. Owner of "do we have the right people".</p>
  <div class="label">Auto OK</div>
  <div><span class="auto-ok">draft 1:1 agenda</span><span class="auto-ok">summarise perf reviews</span><span class="auto-ok">draft job description</span><span class="auto-ok">onboarding checklist</span></div>
@@ -1024,27 +1166,11 @@ stateDiagram-v2
  <div><span class="defers">ship feature</span><span class="defers">make customer-facing promise</span><span class="defers">change pricing</span><span class="defers">commit to roadmap publicly</span></div>
  </article>
 
- <section id="emerging" class="mt-8">
- <h3 class="text-xl font-bold mb-3">Emerging sub-personas (2026 trajectory)</h3>
- <p class="text-slate-600 mb-4">Four additional C-level seats are watched but not provisioned at P0. The router treats their skills as belonging to the closest existing persona until the seat is split out.</p>
- <div class="grid md:grid-cols-2 gap-4">
- <div class="bbg-card p-4">
- <div class="font-bold">🤖 CAIO · AI Officer</div>
- <p class="text-sm text-slate-600">Owns the AI Gateway, model selection, prompt governance, AI risk register. Currently rolled into CTO. Split-out at P2 when GA AI Act compliance becomes operational load.</p>
- </div>
- <div class="bbg-card p-4">
- <div class="font-bold">🎨 CXO · Experience Officer</div>
- <p class="text-sm text-slate-600">Owns CUO persona consistency, end-to-end member experience, ambient nudges. Today is a CEO concern; split-out at P3 when external tenants arrive.</p>
- </div>
- <div class="bbg-card p-4">
- <div class="font-bold">💼 CRO · Revenue Officer</div>
- <p class="text-sm text-slate-600">Owns pipeline, win rates, churn signals, expansion. Today rolled into CEO + CFO. Split-out at P4 when external SaaS begins selling.</p>
- </div>
- <div class="bbg-card p-4">
- <div class="font-bold">🌱 CSO-Sustainability</div>
- <p class="text-sm text-slate-600">Owns ESG metrics, climate reporting, vendor sustainability scoring. Watched for 2026 EU reporting evolution.</p>
- </div>
- </div>
+ <section id="extinct" class="mt-8">
+ <h3 class="text-xl font-bold mb-3">8.3 — Why one persona is extinct</h3>
+ <p class="text-slate-600 mb-4">
+ <code>chief-metaverse-officer</code> sits in the catalog as an empty husk — its folder exists but has no shipped workflows and never will. Per <a href="../../docs/The%20C-Suite%20Reference.md" class="text-blue-700 underline">The C-Suite Reference §8 rule 4</a>, when a C-role concept fails the market test (the metaverse-as-business-platform thesis collapsed 2022-2024), we KEEP its folder as a cautionary tale rather than delete it. New persona proposals MUST reference the extinct list during ADR review and explain why the proposed role isn't another metaverse moment.
+ </p>
  </section>
 </section>
 

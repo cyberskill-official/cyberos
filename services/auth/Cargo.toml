@@ -38,6 +38,13 @@ base64 = "0.22"
 rsa = { version = "0.9", features = ["pem"] }
 rand = "0.8"
 futures-util = "0.3"
+sha1 = "0.10"
+reqwest = { version = "0.12", features = ["rustls-tls", "json"], default-features = false }
+webauthn-rs = "0.5"
+ipnetwork = "0.20"
+maxminddb = "0.24"
+sha2 = { workspace = true }
+linked-hash-map = "0.5"
 
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true

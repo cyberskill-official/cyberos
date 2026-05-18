@@ -39,7 +39,17 @@ pub fn router(state: AppState) -> Router {
     let public = Router::new()
         .route("/healthz", get(healthz))
         .route("/v1/auth/token", post(issue_token))
-        .route("/.well-known/jwks.json", get(jwks));
+        .route("/.well-known/jwks.json", get(jwks))
+        // FR-AUTH-104 OIDC SSO — public flow (no JWT required to initiate)
+        .route("/v1/auth/oidc/initiate", get(crate::oidc::initiate))
+        .route("/v1/auth/oidc/callback", get(crate::oidc::callback))
+        // FR-AUTH-105 Passkey — login is public (the whole point is no-password auth)
+        .route("/v1/auth/passkey/login/begin", post(crate::passkey::login_begin))
+        .route("/v1/auth/passkey/login/finish", post(crate::passkey::login_finish))
+        // FR-AUTH-103 SAML — initiate + ACS + SP metadata are PUBLIC
+        .route("/v1/auth/saml/initiate", get(crate::saml::initiate))
+        .route("/v1/auth/saml/acs", post(crate::saml::acs))
+        .route("/v1/auth/saml/idp-configs/:id/sp-metadata", get(crate::saml::sp_metadata));
 
     let admin = Router::new()
         .route("/v1/admin/tenants", post(create_tenant).get(list_tenants))
@@ -55,6 +65,40 @@ pub fn router(state: AppState) -> Router {
         .route(
             "/v1/admin/subjects/:id/roles/:role",
             axum::routing::delete(crate::rbac::assignment::revoke_role),
+        )
+        // FR-AUTH-102 MFA — TOTP enrolment + verify (auth'd; the password
+        // grant is what eventually CALLS verify, but enrolment requires an
+        // authenticated session).
+        .route("/v1/auth/mfa/factors/totp/enrol", post(crate::mfa::totp_enrol_start))
+        .route("/v1/auth/mfa/factors/totp/enrol/finish", post(crate::mfa::totp_enrol_finish))
+        .route("/v1/auth/mfa/verify", post(crate::mfa::totp_verify))
+        // FR-AUTH-104 OIDC admin — create/update IdP config (JWT-gated)
+        .route("/v1/admin/oidc/idp-configs", post(crate::oidc::create_idp_config))
+        // FR-AUTH-105 Passkey enrol — requires authenticated session
+        .route("/v1/auth/passkey/enrol/begin", post(crate::passkey::enrol_begin))
+        .route("/v1/auth/passkey/enrol/finish", post(crate::passkey::enrol_finish))
+        // FR-AUTH-103 SAML admin — create/update IdP config (JWT-gated)
+        .route("/v1/admin/saml/idp-configs", post(crate::saml::create_idp_config))
+        // FR-AUTH-109 stub→full migration enforcer (root-admin only)
+        .route("/v1/admin/auth/migration/preview", get(crate::migration_state::preview))
+        .route("/v1/admin/auth/migration/extend-grace", post(crate::migration_state::extend_grace))
+        // FR-AUTH-108 Lumi tenant-identity JWT — admin-gated issue/revoke
+        .route("/v1/auth/lumi/issue", post(crate::lumi::issue))
+        .route("/v1/auth/lumi/verify", get(crate::lumi::verify))
+        .route("/v1/admin/lumi/revoke/:jti", post(crate::lumi::revoke))
+        // FR-AUTH-106 slice-3 — per-tenant travel-policy mutation
+        .route(
+            "/v1/admin/tenants/:tenant_id/travel-policy",
+            axum::routing::put(crate::travel_admin::put_policy)
+                .get(crate::travel_admin::get_policy),
+        )
+        .route(
+            "/v1/admin/tenants/:tenant_id/travel-policy/cidrs",
+            post(crate::travel_admin::add_cidr).get(crate::travel_admin::list_cidrs),
+        )
+        .route(
+            "/v1/admin/tenants/:tenant_id/travel-policy/cidrs/:cidr_id",
+            axum::routing::delete(crate::travel_admin::delete_cidr),
         )
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
@@ -185,13 +229,49 @@ async fn create_subject(
         Json(json!({"error": format!("malformed tenant_id claim: {e}")})),
     ))?;
 
+    // FR-AUTH-107 — HIBP breach check on every password set.
     let pw_hash = match (&req.kind[..], req.password.as_deref()) {
-        ("human", Some(plain)) => Some(
-            bcrypt::hash(plain, bcrypt::DEFAULT_COST).map_err(|e| (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(json!({"error": format!("bcrypt failed: {e}")})),
-            ))?
-        ),
+        ("human", Some(plain)) => {
+            let outcome = crate::hibp::check_password(plain).await;
+            // Record audit row (best-effort; never blocks the request).
+            let (prefix, _suffix) = crate::hibp::sha1_split(plain);
+            let outcome_str = match &outcome {
+                crate::hibp::HibpOutcome::Allowed => "allowed",
+                crate::hibp::HibpOutcome::Breached { .. } => "breached",
+                crate::hibp::HibpOutcome::ApiUnreachable => "api-unreachable",
+            };
+            let breach_count = match &outcome {
+                crate::hibp::HibpOutcome::Breached { count } => Some(*count as i32),
+                _ => None,
+            };
+            let _ = sqlx::query(
+                "INSERT INTO hibp_audit (tenant_id, flow, outcome, breach_count, sha1_prefix)
+                      VALUES ($1, 'admin-set', $2, $3, $4)",
+            )
+            .bind(tenant_id)
+            .bind(outcome_str)
+            .bind(breach_count)
+            .bind(&prefix)
+            .execute(&state.pg)
+            .await;
+            // Refuse breached passwords.
+            if let crate::hibp::HibpOutcome::Breached { count } = outcome {
+                return Err((
+                    StatusCode::CONFLICT,
+                    Json(json!({
+                        "error": "password_breached",
+                        "detail": "password appears in known breach corpora",
+                        "hibp_count": count,
+                    })),
+                ));
+            }
+            Some(
+                bcrypt::hash(plain, bcrypt::DEFAULT_COST).map_err(|e| (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"error": format!("bcrypt failed: {e}")})),
+                ))?
+            )
+        }
         ("human", None) => return Err((
             StatusCode::BAD_REQUEST,
             Json(json!({"error": "human subject requires password"}))
@@ -409,9 +489,11 @@ async fn issue_token(
         .get("traceparent")
         .and_then(|h| h.to_str().ok())
         .map(|s| s.to_string());
+    let caller = caller_ip(&headers);
+    let ua = headers.get("user-agent").and_then(|h| h.to_str().ok()).map(String::from);
 
     match req.grant_type.as_str() {
-        "password" => password_grant(&state, req, traceparent).await,
+        "password" => password_grant(&state, req, traceparent, caller, ua).await,
         "refresh_token" => refresh_grant(&state, req, traceparent).await,
         other => Err((
             StatusCode::BAD_REQUEST,
@@ -426,6 +508,8 @@ async fn password_grant(
     state: &AppState,
     req: TokenRequest,
     traceparent: Option<String>,
+    caller_ip: std::net::IpAddr,
+    user_agent: Option<String>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let tenant_slug = req.tenant_slug.as_deref().ok_or_else(|| (
         StatusCode::BAD_REQUEST,
@@ -477,11 +561,19 @@ async fn password_grant(
     let svc = JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
     let granted = effective_scopes(req.scope, &roles);
 
+    // FR-AUTH-101 §1 #8 — embed the subject's full role membership + the
+    // live catalogue version. Falls back to the legacy `subjects.roles`
+    // array column if `subject_roles` table doesn't exist (pre-101 schema).
+    let assigned_roles = load_subject_roles(&state, tenant_id, sub_id, &roles).await;
+    let rbac_v = state.role_matrix.read().await.version();
+
     let tokens = svc.issue(
         TenantId(tenant_id),
         SubjectId(sub_id),
         &kind,
         granted,
+        assigned_roles,
+        Some(rbac_v),
         None,
         traceparent,
     ).await.map_err(|e| (
@@ -489,7 +581,116 @@ async fn password_grant(
         Json(json!({"error": format!("jwt issuance failed: {e}")})),
     ))?;
 
-    Ok((StatusCode::OK, Json(token_response_body(&tokens))))
+    // FR-AUTH-106 — record login + assess. Slice-3 wraps the detector chain
+    // with per-tenant policy + CIDR allowlist + anonymous-IP + sticky-
+    // suppression. `assess_login` returns one of Clear / Challenge / Block.
+    let deps = crate::travel::AssessDeps {
+        pool: &state.pg,
+        geoip: &state.geoip,
+        policy_cache: &state.travel_policy,
+        sticky_suppress: &state.sticky_suppress,
+    };
+    let travel = crate::travel::assess_login(
+        &deps,
+        tenant_id,
+        sub_id,
+        "password",
+        caller_ip,
+        user_agent.as_deref(),
+    )
+    .await
+    .ok();
+    let body = match travel {
+        Some(crate::travel::TravelOutcome::Block { kind, .. }) => {
+            // Policy says block — refuse the login outright. No token issued.
+            return Err((
+                StatusCode::FORBIDDEN,
+                Json(json!({
+                    "error": "impossible_travel_blocked",
+                    "kind": kind,
+                })),
+            ));
+        }
+        Some(crate::travel::TravelOutcome::Challenge { kind, login_id, .. }) => {
+            // Token is issued but the client MUST complete an MFA challenge
+            // before using it. The needs_mfa_challenge flag tells the client
+            // to call /v1/auth/mfa/verify (TOTP) or /v1/auth/passkey/login.
+            json!({
+                "access_token": tokens.access_token,
+                "refresh_token": tokens.refresh_token,
+                "token_type": tokens.token_type,
+                "expires_in": tokens.expires_in,
+                "kid": tokens.kid,
+                "needs_mfa_challenge": true,
+                "challenge_reason": kind,
+                "challenge_login_id": login_id,
+            })
+        }
+        _ => token_response_body(&tokens),
+    };
+
+    Ok((StatusCode::OK, Json(body)))
+}
+
+/// Public wrapper for `load_subject_roles` — used by OIDC callback handler
+/// to embed roles + rbac_v in the access token it mints.
+pub async fn load_subject_roles_pub(
+    state: &AppState,
+    tenant_id: Uuid,
+    subject_id: Uuid,
+    legacy_roles: &[String],
+) -> Vec<String> {
+    load_subject_roles(state, tenant_id, subject_id, legacy_roles).await
+}
+
+/// FR-AUTH-106 — extract caller IP from request headers (prefers `X-Forwarded-For`
+/// first hop, falls back to a synthesised 0.0.0.0 if no header — slice 1 only;
+/// production reverse-proxy is configured to always send this).
+pub fn caller_ip(headers: &HeaderMap) -> std::net::IpAddr {
+    if let Some(v) = headers.get("x-forwarded-for").and_then(|h| h.to_str().ok()) {
+        if let Some(first) = v.split(',').next() {
+            if let Ok(ip) = first.trim().parse::<std::net::IpAddr>() {
+                return ip;
+            }
+        }
+    }
+    if let Some(v) = headers.get("x-real-ip").and_then(|h| h.to_str().ok()) {
+        if let Ok(ip) = v.trim().parse::<std::net::IpAddr>() {
+            return ip;
+        }
+    }
+    std::net::IpAddr::V4(std::net::Ipv4Addr::new(0, 0, 0, 0))
+}
+
+/// Pull the subject's role list. Prefers `subject_roles` (FR-AUTH-101);
+/// falls back to the legacy `subjects.roles` array column.
+async fn load_subject_roles(
+    state: &AppState,
+    tenant_id: Uuid,
+    subject_id: Uuid,
+    legacy_roles: &[String],
+) -> Vec<String> {
+    let mut tx = match state.pg.begin().await {
+        Ok(t) => t,
+        Err(_) => return legacy_roles.to_vec(),
+    };
+    let _ = sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx).await;
+
+    let res: Result<Vec<(String,)>, sqlx::Error> = sqlx::query_as(
+        "SELECT role FROM subject_roles WHERE subject_id = $1",
+    )
+    .bind(subject_id)
+    .fetch_all(&mut *tx)
+    .await;
+    let _ = tx.commit().await;
+
+    match res {
+        Ok(rows) if !rows.is_empty() => rows.into_iter().map(|(r,)| r).collect(),
+        // No FR-AUTH-101 rows yet — fall back to the legacy text[] column.
+        _ => legacy_roles.to_vec(),
+    }
 }
 
 /// FR-AUTH-004 — `grant_type=refresh_token` exchange.
@@ -562,11 +763,18 @@ async fn refresh_grant(
     // Also re-restrict by current subject roles in case roles changed.
     let granted = effective_scopes(granted, &roles);
 
+    // Refresh re-mints roles + rbac_v from the live state, not the prior token —
+    // catches catalogue bumps + subject role-revokes that happened mid-session.
+    let fresh_roles = load_subject_roles(state, tenant_id, sub_id, &roles).await;
+    let live_rbac_v = state.role_matrix.read().await.version();
+
     let tokens = svc.issue(
         TenantId(tenant_id),
         SubjectId(sub_id),
         &kind,
         granted,
+        fresh_roles,
+        Some(live_rbac_v),
         claims.agent_persona,
         traceparent,
     ).await.map_err(|e| (

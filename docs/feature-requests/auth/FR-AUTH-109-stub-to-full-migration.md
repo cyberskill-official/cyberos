@@ -3,7 +3,7 @@ id: FR-AUTH-109
 title: "AUTH stub → full migration enforcer — 30-day grace window + cutover timestamp + rejection metric + per-tenant override"
 module: AUTH
 priority: MUST
-status: draft
+status: building
 verify: T
 phase: P3
 milestone: P3 · slice 1

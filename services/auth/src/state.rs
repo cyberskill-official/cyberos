@@ -1,7 +1,11 @@
 //! Shared application state.
 
+use crate::geoip::{self, GeoIpResolver};
+use crate::oidc::PendingState;
 use crate::rbac::RoleMatrix;
+use crate::travel_policy::{PolicyCache, StickySuppress};
 use sqlx::{postgres::PgPoolOptions, PgPool};
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::RwLock;
@@ -12,8 +16,22 @@ pub struct AppState {
     /// Issuer URL — included as the `iss` claim in every JWT.
     pub jwt_issuer: String,
     /// In-memory RBAC matrix (FR-AUTH-101 §1 #9, #21). Loaded at boot;
-    /// 60s refresher lands as a follow-up.
+    /// 60s refresher swaps via `Arc<RwLock>`.
     pub role_matrix: Arc<RwLock<RoleMatrix>>,
+    /// FR-AUTH-104 OIDC PKCE pending-state map (state_token → verifier).
+    /// 10-minute TTL enforced at callback time; sweeper deferred to slice 2.
+    pub oidc_pending: Arc<RwLock<HashMap<String, PendingState>>>,
+    /// FR-AUTH-106 slice-2 — GeoIP resolver. Either MaxMindResolver (when
+    /// `AUTH_GEOIP_DB` is set + readable) or NullResolver (degradation matches
+    /// slice-1). The resolver is consulted on every `record_login_and_assess`
+    /// call; it must be cheap to invoke and Send + Sync (the MaxMind reader is).
+    pub geoip: Arc<dyn GeoIpResolver>,
+    /// FR-AUTH-106 slice-3 — per-tenant policy cache (60s TTL).
+    pub travel_policy: PolicyCache,
+    /// FR-AUTH-106 slice-3 — sticky-challenge suppression LRU. Shared across
+    /// all login flows so a passed MFA from one flow suppresses re-challenge
+    /// in another flow (within the configured window).
+    pub sticky_suppress: Arc<StickySuppress>,
 }
 
 impl AppState {
@@ -69,10 +87,26 @@ impl AppState {
         };
         let role_matrix = Arc::new(RwLock::new(role_matrix));
 
+        // FR-AUTH-106 slice-2 — load GeoIP resolver. Honours AUTH_GEOIP_DB
+        // and AUTH_GEOIP_REQUIRED. Failure to read the DB is sticky when
+        // _REQUIRED=1; otherwise the service falls back to NullResolver and
+        // logs once at startup so ops sees the kind-2/3 detectors are inactive.
+        let geoip = match geoip::from_env() {
+            Ok(r) => r,
+            Err(e) => {
+                tracing::error!(error = %e, "GeoIP init failed — refusing to start");
+                return Err(sqlx::Error::Configuration(e.to_string().into()));
+            }
+        };
+
         Ok(Self {
             pg,
             jwt_issuer,
             role_matrix,
+            oidc_pending: Arc::new(RwLock::new(HashMap::new())),
+            geoip,
+            travel_policy: PolicyCache::new(),
+            sticky_suppress: StickySuppress::new(),
         })
     }
 

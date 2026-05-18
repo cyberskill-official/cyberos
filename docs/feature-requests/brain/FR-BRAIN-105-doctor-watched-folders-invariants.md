@@ -4,7 +4,7 @@ id: FR-BRAIN-105
 title: "cyberos doctor — watched-folders integrity invariants (manifest ↔ filesystem ↔ HEAD reconciliation; 5 new invariants in memory.invariants.yaml)"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 2

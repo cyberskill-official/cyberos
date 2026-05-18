@@ -3,7 +3,7 @@ id: FR-BRAIN-107
 title: "BRAIN capture daemon — Rust + notify crate FS watcher with rate-limit + content-dedup + backpressure + W3C trace propagation"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 2

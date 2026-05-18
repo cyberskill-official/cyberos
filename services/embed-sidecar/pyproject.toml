@@ -1,0 +1,39 @@
+[project]
+name = "cyberos-embed-sidecar"
+version = "0.1.0"
+description = "FR-AI-019 — bge-m3 embedding HTTP sidecar for CyberOS BRAIN search"
+authors = [{ name = "CyberSkill", email = "eng@cyberskill.world" }]
+license = "Apache-2.0"
+requires-python = ">=3.10"
+
+# Runtime deps live in two tiers so dev/test can run without downloading
+# multi-GB model files. Set CYBEROS_EMBED_MODE=mock to use the deterministic
+# stub; CYBEROS_EMBED_MODE=real (default) loads the actual bge-m3 weights.
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "pydantic>=2.6",
+]
+
+[project.optional-dependencies]
+real = [
+    "sentence-transformers>=2.7",
+    "torch>=2.2",
+]
+dev = [
+    "pytest>=8",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+cyberos-embed-sidecar = "cyberos_embed_sidecar.server:run"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

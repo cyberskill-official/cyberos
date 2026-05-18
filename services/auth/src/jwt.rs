@@ -38,6 +38,10 @@ pub enum JwtError {
 }
 
 /// Claims included in every issued JWT.
+///
+/// FR-AUTH-101 §1 #8 added two new claims (`roles`, `rbac_v`). The verifier
+/// treats absent `rbac_v` as implicit `rbac_v = 1` for the 30-day grace
+/// window after FR-AUTH-101 ships (DEC-125).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Claims {
     /// Issuer — the auth service URL.
@@ -60,6 +64,15 @@ pub struct Claims {
     pub kind: String,
     /// Granted scopes (e.g. `["admin:tenants", "admin:subjects"]`).
     pub scope_grants: Vec<String>,
+    /// FR-AUTH-101 §1 #8 — array of role names (kebab-case) the subject
+    /// holds at issuance time. Empty array for subjects with no roles.
+    #[serde(default)]
+    pub roles: Vec<String>,
+    /// FR-AUTH-101 §1 #8 — catalogue version embedded for replay-resistance.
+    /// Absent claim → implicit 1 (grace window). Verifiers can challenge
+    /// tokens issued > 2 versions behind the live `RoleMatrix.version`.
+    #[serde(default)]
+    pub rbac_v: Option<i32>,
     /// For agent JWTs — the persona version (e.g. `cuo@2.3.1`).
     pub agent_persona: Option<String>,
     /// W3C traceparent for OBS request stitching (AUTHORING §3.7 rule 22).
@@ -109,12 +122,19 @@ impl JwtService {
     }
 
     /// Mint an access + refresh token pair.
+    ///
+    /// `roles` + `rbac_v` are FR-AUTH-101 additions. Callers SHOULD pass the
+    /// subject's current role membership + the live `RoleMatrix.version`.
+    /// Empty `roles` and `rbac_v = None` produce a stub-era token compatible
+    /// with verifiers running under the grace window.
     pub async fn issue(
         &self,
         tenant: TenantId,
         subject: SubjectId,
         kind: &str,
         scopes: Vec<String>,
+        roles: Vec<String>,
+        rbac_v: Option<i32>,
         agent_persona: Option<String>,
         traceparent: Option<String>,
     ) -> Result<IssuedTokens, JwtError> {
@@ -126,19 +146,24 @@ impl JwtService {
             subject,
             kind,
             scopes.clone(),
+            roles.clone(),
+            rbac_v,
             agent_persona.clone(),
             traceparent.clone(),
             now,
             DEFAULT_TTL_SECS,
             "access",
         )?;
-        // Refresh token: longer ttl, narrower aud.
+        // Refresh token: longer ttl, narrower aud. roles + rbac_v carry through
+        // so refresh-time can re-validate the catalogue version.
         let refresh = self.mint(
             &active,
             tenant,
             subject,
             kind,
             vec!["refresh".to_string()],
+            roles,
+            rbac_v,
             agent_persona,
             traceparent,
             now,
@@ -253,6 +278,8 @@ impl JwtService {
         subject: SubjectId,
         kind: &str,
         scope_grants: Vec<String>,
+        roles: Vec<String>,
+        rbac_v: Option<i32>,
         agent_persona: Option<String>,
         traceparent: Option<String>,
         now: DateTime<Utc>,
@@ -273,6 +300,8 @@ impl JwtService {
             tenant_id: tenant.to_string(),
             kind: kind.to_string(),
             scope_grants,
+            roles,
+            rbac_v,
             agent_persona,
             traceparent,
         };

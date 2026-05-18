@@ -3,7 +3,7 @@ id: FR-BRAIN-110
 title: "BRAIN capture daemon supervision — systemd + launchd units + /healthz + watchdog + crash-restart with exponential backoff + sweeper cron"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 2

@@ -41,8 +41,11 @@
  <span class="text-5xl">🧠</span>
  <h1 class="h-display">BRAIN</h1>
  <span class="phase-chip phase-p0">P0 · Foundation</span>
- <span class="pill pill-shipped">Layer 1 shipped · 233/235 tests</span>
- <span class="pill pill-shipped">Wave 1 ingest pipeline shipped end-to-end (services/brain/)</span>
+ <span class="pill pill-shipped">Layer 1 shipped · 309/311 tests</span>
+ <span class="pill pill-shipped">Wave 1 ingest + AGE + hybrid search (RRF lexical + bge-m3 vector) shipped end-to-end</span>
+ <span class="pill pill-shipped">Multi-device sync daemon (push + pull + dead-letter) shipped (FR-BRAIN-103)</span>
+ <span class="pill pill-shipped">bge-m3 embedding sidecar (services/embed-sidecar/) shipped · 10/10 tests · FR-AI-019</span>
+ <span class="pill pill-building">Tauri 2.x desktop scaffold (apps/brain/) building · FR-BRAIN-104</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
@@ -1109,8 +1112,8 @@ stateDiagram-v2
  READY --> FROZEN_RECOVERABLE: invariant failure (chain gap, MMR mismatch)
  FROZEN_RECOVERABLE --> READY: cyberos doctor --repair
  FROZEN_RECOVERABLE --> FROZEN_HUMAN: catastrophic divergence
- READY --> FROZEN_HUMAN: chain corruption · manifest unparseable
- FROZEN_HUMAN --> READY: cyberos doctor --repair --reason "<text>"
+ READY --> FROZEN_HUMAN: chain corruption or manifest unparseable
+ FROZEN_HUMAN --> READY: cyberos doctor repair with reason flag
  note right of FROZEN_RECOVERABLE
  Reads OK · writes refused
  Auto-repair available
@@ -1510,6 +1513,38 @@ $ cyberos verify-proof proof.json
  <li><strong>Source code:</strong> <code>cyberos/modules/memory/cyberos/core/</code> · <code>cyberos/modules/memory/tests/</code> · <code>cyberos/modules/memory/bench/</code>. Stage 2 capture daemon lands at <code>cyberos/modules/memory/daemon/</code> (planned, Rust).</li>
  <li><strong>CHANGELOG:</strong> <code>cyberos/CHANGELOG.md (entries tagged [MEMORY])</code> (newest-first).</li>
  </ul>
+ </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PERSONA / SKILL AFFINITIES -->
+<!-- ============================================================ -->
+<section id="persona-affinities" class="module-section">
+ <header class="section-head"><span class="section-num">★</span><h2>Personas &amp; skill bundles that touch BRAIN</h2></header>
+ <p class="text-slate-700 mb-3">Every persona writes to BRAIN through its workflows' audit chain. The personas below have BRAIN as a first-class concern of their role profile — they govern BRAIN's shape, classification, and synthesis. The CUO supervisor itself emits one BRAIN audit row per workflow step + one summary row per chain (see <code>modules/cuo/cuo/core/brain_bridge.py</code>).</p>
+ <div class="grid md:grid-cols-2 gap-4">
+  <div class="bbg-card p-4">
+   <div class="text-xs font-bold uppercase tracking-wider mb-1 text-cuo-dark">Persona governance (6 of 47)</div>
+   <ul class="text-sm text-slate-700 list-disc pl-5 space-y-1">
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-knowledge-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-knowledge-officer</a> · BRAIN graph governance + canonicalisation pipeline</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-data-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-data-officer</a> · BRAIN data quality + lineage + retention policy</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-privacy-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-privacy-officer</a> · DSR fulfilment by BRAIN sync-class enforcement</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-information-security-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-information-security-officer</a> · BRAIN audit-chain integrity + 72h breach readiness</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-trust-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-trust-officer</a> · BRAIN-backed transparency report + trust-incident updates</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-ai-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-ai-officer</a> · LLMInvoker prompt + cost logging into BRAIN</li>
+   </ul>
+  </div>
+  <div class="bbg-card p-4">
+   <div class="text-xs font-bold uppercase tracking-wider mb-1 text-cuo-dark">Skill bundles that emit BRAIN rows</div>
+   <ul class="text-sm text-slate-700 list-disc pl-5 space-y-1">
+    <li><strong>Every author skill</strong> — emits a <code>view</code> row per step output (the chain ledger receipt)</li>
+    <li><strong>Every audit skill</strong> — emits a <code>session.end</code> row when PASS / HITL_PAUSE / EXHAUSTED / NO_PROGRESS reached</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/knowledge-pipeline-author" target="_blank" class="font-mono text-xs text-blue-700">knowledge-pipeline-author</a> + audit · CKO's BRAIN-canonical pipeline</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/data-governance-author" target="_blank" class="font-mono text-xs text-blue-700">data-governance-author</a> + audit · CDO BRAIN-classification policy</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/breach-notification-author" target="_blank" class="font-mono text-xs text-blue-700">breach-notification-author</a> + audit · 72-hour GDPR Art. 33 / PDPL Art. 16 timer pulled from BRAIN audit chain</li>
+    <li><strong>synthesis-author</strong> (Stage 5 CUO sub-skill) · nightly walks Lumi's BRAIN, emits <code>synthesis@1</code> wisdom artefacts</li>
+   </ul>
+  </div>
  </div>
 </section>
 

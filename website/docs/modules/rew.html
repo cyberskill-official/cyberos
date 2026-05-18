@@ -48,7 +48,7 @@
  <span class="text-5xl">💎</span>
  <h1 class="h-display">REW</h1>
  <span class="phase-chip phase-p1">P1 · Total Rewards</span>
- <span class="pill pill-planned">Planned · P1 design phase</span>
+ <span class="pill pill-planned">Planned · 10 FRs at 10/10 audit · ships at P2 after INV</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: HR/Ops + CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
@@ -805,7 +805,7 @@ stateDiagram-v2
  [*] --> Open: HR/Ops opens cycle for period
  Open --> Drafted: kernel runs · payslips draft rows
  Drafted --> Reviewed: anomalies surfaced · HR investigates · adjusts inputs
- Reviewed --> Committed: CFO + CHRO co-sign within 5min
+ Reviewed --> Committed: CFO and CHRO co-sign within 5min
  Reviewed --> Drafted: re-draft after input adjustment
  Committed --> Published: CEO approves · PDFs rendered · S3 archived
  Published --> [*]

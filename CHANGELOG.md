@@ -10,6 +10,24 @@ Format conventions:
 
 ---
 
+## 2026-05-18 — Wave-1+2 impl sessions 15-18: embed sidecar, NFR audits, SAML XML-DSig, GeoIP+policy, Tauri desktop, slice-3 universal wiring + admin REST
+
+End-of-day continuation of the Wave-1+2 implementation phase. Eight items shipped end-to-end:
+
+**[AI] FR-AI-019 embedding sidecar closed end-to-end.** New `services/embed-sidecar/` — FastAPI server with mock + real backends behind `CYBEROS_EMBED_MODE`. `POST /embed` matches the Rust `EmbeddingClient` wire protocol. Mock backend hashes inputs to deterministic unit-norm 1024-vectors; real backend lazy-loads `BAAI/bge-m3` via sentence-transformers. **10/10 pytest cases pass.**
+
+**NFR audit-pair coverage.** All 153 NFR specs across 18 module directories now have `.audit.md` siblings on the `nfr-spec@1` rubric. 153/153 scored 10/10.
+
+**[AUTH] FR-AUTH-103 SAML XML-DSig (slice-2) + xml-c14n hardening.** `services/auth/src/saml_sig.rs` (~520 lines): ds:Signature discovery, strict algorithm allowlist (RSA-SHA256 + SHA-256 + exc-c14n), enveloped-signature stripping, reference-by-ID resolution, RSA-PKCS1-v1.5 verify, hand-rolled X.509 → SPKI TLV walk. Migration 0017 adds per-IdP `allow_unsigned BOOLEAN DEFAULT FALSE` — replaces the legacy `AUTH_SAML_ALLOW_UNSIGNED=1` env-var escape hatch. `exc_c14n` rewritten as a proper tokeniser: XML-decl + comment + PI stripping, attribute sort (xmlns first, then alpha by qualified name), single→double quote normalisation, XML-attr escaping. 14 canonicaliser tests + 7 X.509/PEM tests.
+
+**[AUTH] FR-AUTH-106 GeoIP + policy + CIDR + sticky-suppression (slices 2 + 3).** New `services/auth/src/geoip.rs` with `GeoIpResolver` trait, `MaxMindResolver` (GeoLite2-City + optional Anonymous-IP), `NullResolver` fallback. Activates `cross_continent_velocity` (country flip < 6h) and `geo_velocity_exceeded` (haversine > 1000 km/h) detectors. Migration 0018 ships `travel_policy`, `travel_cidr_allowlist` (with /9-IPv4 + /17-IPv6 prefix-tightness CHECK), `travel_policy_audit` (reason ≥10 chars). New `travel_policy.rs` — 60s `PolicyCache`, bounded-50k `StickySuppress` LRU. New `TravelOutcome::Block` variant. New `assess_login` wraps the detector chain with policy + CIDR + anonymous-IP + sticky. New `travel_admin.rs` exposes 5 routes (`PUT/GET travel-policy`, `POST/GET cidrs`, `DELETE cidrs/:id`) gated by `security-admin` / `tenant-admin`, writes audit rows, invalidates `PolicyCache`. **All four login flows** (password, OIDC, SAML, Passkey) now go through `assess_login` — Block → 403, Challenge → token + `needs_mfa_challenge`.
+
+**Production runbook + CI for GeoIP.** New `services/auth/scripts/install-geoip.sh` (MaxMind direct or internal mirror). New `services/auth/tests/geoip_test.rs` (skips when DB absent, asserts `8.8.8.8 → US` and `165.21.0.1 → SG` when present). `.github/workflows/services.yml` gains an install step gated on `secrets.MAXMIND_LICENSE_KEY`.
+
+**[BRAIN] FR-BRAIN-104 Tauri 2.x desktop scaffold.** New `apps/brain/` (19 files). Backend: Tauri 2 + plugin-shell + plugin-fs; `commands.rs` for search/quick-capture/sync-state; `sync_supervisor.rs` supervises the Python brain-sync daemon with 5-restarts-per-60s circuit breaker. Frontend: Svelte 5 runes + Vite + Tailwind 3 — `App.svelte` with Dashboard / Search / Sync tabs. **NOT in `services/Cargo.toml` workspace** — own Cargo.lock. Signing scripts: `generate-updater-keys.sh` (tauri signer generate), `sign-and-notarize-macos.sh` (codesign + notarytool + staple + spctl + auto-generated entitlements), `sign-windows.sh` (signtool + SHA-256 + RFC 3161). README documents the full release runbook. FR-BRAIN-104 status bumped `accepted → building`.
+
+---
+
 ## 2026-05-18 — Modules refactor + doc consolidation + CUO v3.0.0-a4 supervisor (Phases 1+2+3+4) + Sessions A–N catalog completion + CHANGELOG centralisation + FR-CUO-106
 
 Massive multi-stream day. Four parallel programs landed end-to-end:

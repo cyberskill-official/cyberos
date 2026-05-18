@@ -40,6 +40,21 @@ pub async fn verify_jwt(
         .await
         .map_err(|e| unauthorized(&format!("jwt verification failed: {e}")))?;
 
+    // FR-AUTH-101 §1 #10 — set the per-connection `app.roles` GUC so
+    // RLS policies can call `auth.has_role(<role>)` directly. The GUC is
+    // a comma-separated list; the SQL function splits on `,`.
+    // Best-effort: failure to set the GUC doesn't fail the request, but it
+    // means RLS that depends on role checks may deny a legitimate read.
+    if let Ok(mut conn) = state.pg.acquire().await {
+        let role_csv = claims.roles.join(",");
+        let _ = sqlx::query(&format!(
+            "SELECT set_config('app.roles', $1, false)"
+        ))
+        .bind(role_csv)
+        .execute(&mut *conn)
+        .await;
+    }
+
     request.extensions_mut().insert(claims);
     Ok(next.run(request).await)
 }

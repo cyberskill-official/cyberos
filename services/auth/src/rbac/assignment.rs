@@ -32,7 +32,7 @@ pub async fn assign_role(
     Json(body): Json<AssignRoleBody>,
 ) -> Response {
     // 1. Caller authz.
-    let caller_roles = parse_caller_roles(&claims.scope_grants);
+    let caller_roles = parse_caller_roles(&claims);
     let matrix = state.role_matrix.read().await;
     let authorised = matrix.any_role_has_permission(
         caller_roles.iter().copied(),
@@ -77,19 +77,24 @@ pub async fn assign_role(
             .into_response();
     }
 
-    // 4. WebAuthn-required gate (DEC-128) — `founder` requires a registered factor.
-    //    FR-AUTH-105 (WebAuthn enrolment) is not yet shipped; treat as "no factor"
-    //    so this gate always refuses founder for now. Future fix: query mfa_factors.
+    // 4. WebAuthn-required gate (DEC-128) — `founder` requires a registered
+    //    WebAuthn factor. Query mfa_factors directly so this works the moment
+    //    FR-AUTH-105 WebAuthn enrolment lands (no code change needed here).
     if role.requires_webauthn() {
-        return (
-            StatusCode::CONFLICT,
-            Json(json!({
-                "error": "webauthn_required",
-                "role": role.as_str(),
-                "detail": "founder role assignment requires a registered WebAuthn factor (FR-AUTH-105)",
-            })),
-        )
-            .into_response();
+        let has_webauthn = subject_has_active_factor(&state.pg, subject_id, "webauthn")
+            .await
+            .unwrap_or(false);
+        if !has_webauthn {
+            return (
+                StatusCode::CONFLICT,
+                Json(json!({
+                    "error": "webauthn_required",
+                    "role": role.as_str(),
+                    "detail": "founder role assignment requires a registered WebAuthn factor (FR-AUTH-105)",
+                })),
+            )
+                .into_response();
+        }
     }
 
     // 5. Tenant scope from JWT.
@@ -153,7 +158,7 @@ pub async fn revoke_role(
     Extension(claims): Extension<Claims>,
     Path((subject_id, role)): Path<(Uuid, String)>,
 ) -> Response {
-    let caller_roles = parse_caller_roles(&claims.scope_grants);
+    let caller_roles = parse_caller_roles(&claims);
     let matrix = state.role_matrix.read().await;
     let authorised = matrix.any_role_has_permission(
         caller_roles.iter().copied(),
@@ -180,18 +185,25 @@ pub async fn revoke_role(
     StatusCode::NO_CONTENT.into_response()
 }
 
-/// Treat scope_grants as a placeholder for the caller's effective roles.
-/// FR-AUTH-101 introduces a dedicated `roles` claim — once `Claims` carries
-/// that field, swap this for `claims.roles`. For now we recognise the
-/// stub strings "admin", "tenant-admin", "root-admin" as `TenantAdmin`-level.
-fn parse_caller_roles(scopes: &[String]) -> Vec<Role> {
+/// Parse the caller's effective Role membership from the JWT.
+/// FR-AUTH-101 §1 #8 — `Claims.roles` is the canonical source; the prior
+/// `scope_grants` fallback handles tokens issued before this FR shipped
+/// (the 30-day grace window per DEC-125).
+fn parse_caller_roles(claims: &Claims) -> Vec<Role> {
+    // Prefer the canonical `roles` claim if present (FR-AUTH-101 era).
+    if !claims.roles.is_empty() {
+        return claims
+            .roles
+            .iter()
+            .filter_map(|s| Role::from_str(s).ok())
+            .collect();
+    }
+    // Grace-window fallback: parse scope_grants the old way.
     let mut out = Vec::new();
-    for s in scopes {
+    for s in &claims.scope_grants {
         if let Ok(r) = Role::from_str(s) {
             out.push(r);
         } else if s == "admin" {
-            // Until FR-AUTH-101's `roles` claim ships, scope `admin` is treated
-            // as TenantAdmin (matches the matrix seed in migration 0007).
             out.push(Role::TenantAdmin);
         }
     }
@@ -200,4 +212,22 @@ fn parse_caller_roles(scopes: &[String]) -> Vec<Role> {
 
 fn internal<E: std::fmt::Display>(e: E) -> Response {
     (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))).into_response()
+}
+
+/// Returns true if `subject_id` has an active MFA factor of the requested
+/// `factor_type`. Used by the founder webauthn gate.
+async fn subject_has_active_factor(
+    pool: &sqlx::PgPool,
+    subject_id: Uuid,
+    factor_type: &str,
+) -> Result<bool, sqlx::Error> {
+    let (count,): (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM mfa_factors
+          WHERE subject_id = $1 AND factor_type = $2 AND status = 'active'",
+    )
+    .bind(subject_id)
+    .bind(factor_type)
+    .fetch_one(pool)
+    .await?;
+    Ok(count > 0)
 }

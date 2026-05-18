@@ -1032,9 +1032,9 @@ stateDiagram-v2
  Provisioning --> Active: saga completes successfully
  Provisioning --> Failed: saga compensation; refund
  Active --> Suspended: billing past_due > 14d OR admin action
- Suspended --> Active: payment recovered OR admin reactivate
+ Suspended --> Active: payment recovered or admin reactivate
  Active --> Offboarding: founder initiates close (confirm-twice)
- Suspended --> Offboarding: 60d past_due → auto-cancel
+ Suspended --> Offboarding: 60d past_due then auto-cancel
  Offboarding --> Grace: day 1 of 90d window
  Grace --> Active: founder cancels offboard (within 30d read-only window)
  Grace --> Closed: day 91 — sweep + wipe

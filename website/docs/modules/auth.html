@@ -41,11 +41,11 @@
  <span class="text-5xl">🔐</span>
  <h1 class="h-display">AUTH</h1>
  <span class="phase-chip phase-p0">P0 · Foundation</span>
- <span class="pill pill-building">Wave 2 · in implementation — FR-AUTH-001/002/003 scaffolded · FR-AUTH-004 (JWT+JWKS) + FR-AUTH-005 (admin REST) shipped 2026-05-18</span>
+ <span class="pill pill-shipped">Wave 2 + slice-3 shipped · 18 migrations · JWT/JWKS · admin REST · bootstrap CLI · 22-role RBAC · TOTP MFA · HIBP · OIDC + SAML + Passkey SSO · GeoIP impossible-travel with per-tenant policy + CIDR allowlist + sticky-suppression + admin REST · SAML XML-DSig verify with exc-c14n</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CSO (vacant) → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- The shared identity plane. <strong>P0 · slice 2 stub</strong> (magic-link + TOTP + stub RBAC) → <strong>P3 full</strong> (WebAuthn L3 + per-tenant authz + agent-equal predicate). Tenant identity for Lumi's BRAIN at Stage 3+.
+ The shared identity plane. <strong>Wave 2 + slice-3 shipped 2026-05-18</strong> — JWT RS256 + JWKS + admin REST + bootstrap CLI + 22-role closed-enum RBAC + TOTP MFA + HIBP breach check + OIDC Authorization Code + PKCE + WebAuthn passkey enrolment/login + SAML 2.0 SP-initiated SSO with full XML-DSig verify (RSA-SHA256 + exclusive-c14n) + GeoIP impossible-travel detector (slice-2: MaxMind GeoLite2 + cross-continent + haversine 1000km/h) + per-tenant policy + CIDR allowlist + sticky-challenge suppression + admin REST for policy mutation. All four login flows (password, OIDC, SAML, Passkey) honour the policy via <code>assess_login</code>. Tenant identity for Lumi's BRAIN at Stage 3+.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  AUTH is the most sensitive single piece of CyberOS infrastructure — and per the 2026-05-14 research review (archived; see <code>cyberos/CHANGELOG.md</code> for that decision entry) it is <strong>not P0 #1</strong>. The reordered P0 build sequence is <strong>AI Gateway @ P0 · slice 1 → AUTH @ P0 · slice 2 → MCP Gateway @ P0 · slice 3 → OBS at P0 · start (parallel) → CHAT + CUO Phase 1 @ P0 · exit</strong>. AUTH at P0 · slice 2 is a <em>stub</em>: magic-link login + TOTP MFA + an RBAC predicate that hard-codes the 5 essential roles. The full 7,000 LoC build (WebAuthn L3 passkeys, per-tenant authz server, JWKS rotation, all 22 RBAC roles, KMS-wrapped signing keys, impossible-travel detection) is delivered across slices 2–5 in <a href="../../services/auth/RFC.md" class="text-blue-700 underline">services/auth/RFC.md</a>, landing fully at P3 (P3 · exit). The architecture below is the P3-full target; the §"P0 · slice 2 stub vs P3 full" section documents the staged delivery. AUTH owns the identity database, signs the JWTs every other module trusts, and applies the same predicate to a human and to an agent so the platform never has a "second-class" auth path. The agent-equal property is non-negotiable: a persona-versioned agent JWT is evaluated by the same code path as a human one. Lumi's BRAIN (the cloud-hosted org tenant per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> Stage 3+) consumes AUTH's tenant-scoped JWT to enforce row-level isolation. <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">Sign-in UI mockup</a> implements the design system's Liquid Glass + Umber/Ochre brand.
@@ -1039,7 +1039,7 @@ sequenceDiagram
 stateDiagram-v2
  [*] --> Authenticating: user submits credentials
  Authenticating --> MFA_Required: password verified, 2FA outstanding
- Authenticating --> Locked: too many failures (≥ 5 in 10 min)
+ Authenticating --> Locked: too many failures
  MFA_Required --> Active: TOTP / WebAuthn assertion verified
  MFA_Required --> Locked: too many 2FA failures
  Active --> Refreshing: access_token within 1 min of expiry
@@ -1436,6 +1436,37 @@ graph LR
  <li><strong>Architecture context:</strong> <a href="../architecture/infrastructure.html#auth" class="text-blue-700 underline">infrastructure.html#auth</a>.</li>
  </ul>
  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PERSONA / SKILL AFFINITIES -->
+<!-- ============================================================ -->
+<section id="persona-affinities" class="module-section">
+ <header class="section-head"><span class="section-num">★</span><h2>Personas &amp; skill bundles that touch AUTH</h2></header>
+ <p class="text-slate-700 mb-3">AUTH issues 47 distinct <code>agent-persona</code> JWT shapes (one per active CUO persona, plus the human roles in the 22-role RBAC catalogue). The personas below govern AUTH's policy itself, while every other persona consumes the JWTs AUTH issues.</p>
+ <div class="grid md:grid-cols-2 gap-4">
+  <div class="bbg-card p-4">
+   <div class="text-xs font-bold uppercase tracking-wider mb-1 text-cuo-dark">Persona governance (5 of 47)</div>
+   <ul class="text-sm text-slate-700 list-disc pl-5 space-y-1">
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-security-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-security-officer</a> · converged-security-strategy (AUTH policy owner)</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-information-security-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-information-security-officer</a> · monthly-vuln-management + SOC2 evidence</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-privacy-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-privacy-officer</a> · privacy-impact-assessment + data-subject-request</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-information-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-information-officer</a> · IT-vendor-scorecard (SSO providers + KMS)</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-trust-officer/workflows" target="_blank" class="font-mono text-xs text-blue-700">chief-trust-officer</a> · trust-portal updates referencing AUTH's RBAC posture</li>
+   </ul>
+  </div>
+  <div class="bbg-card p-4">
+   <div class="text-xs font-bold uppercase tracking-wider mb-1 text-cuo-dark">Skill bundles AUTH gates</div>
+   <ul class="text-sm text-slate-700 list-disc pl-5 space-y-1">
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/soc2-evidence-author" target="_blank" class="font-mono text-xs text-blue-700">soc2-evidence-author</a> + audit · evidence harvest for AUTH controls (CC6, CC7)</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/security-strategy-author" target="_blank" class="font-mono text-xs text-blue-700">security-strategy-author</a> + audit · annual posture + AUTH roadmap</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/pen-test-report-author" target="_blank" class="font-mono text-xs text-blue-700">pen-test-report-author</a> + audit · per-engagement test of AUTH endpoints</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/breach-notification-author" target="_blank" class="font-mono text-xs text-blue-700">breach-notification-author</a> + audit · per-credential-compromise 72h pack</li>
+    <li><a href="https://github.com/cyberskill/cyberos/tree/main/modules/skill/vietnam-vneid-integration" target="_blank" class="font-mono text-xs text-blue-700">vietnam-vneid-integration</a> · VN high-assurance identity assertion</li>
+   </ul>
+  </div>
+ </div>
+ <p class="text-xs text-slate-500 mt-3">Every other CUO persona (42 of 47) consumes AUTH JWTs to read scope-limited BRAIN data per the Scope Contract Grant mechanism. See <a href="#rbac-catalogue" class="text-blue-700 underline">§ RBAC catalogue</a> above.</p>
 </section>
 
 <!-- ============================================================ -->

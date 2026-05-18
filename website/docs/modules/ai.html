@@ -38,8 +38,8 @@
  <span class="text-5xl">🧠</span>
  <h1 class="h-display">AI</h1>
  <span class="phase-chip phase-p0">P0 · Foundation</span>
- <span class="pill pill-planned">Planned · P0 design phase</span>
- <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO (vacant) → interim CEO</span>
+ <span class="pill pill-planned">Planned · 22 FRs at 10/10 audit · build queued behind BRAIN Wave 1 + AUTH Wave 2</span>
+ <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
  <strong>The cost-of-everything gate.</strong> Per research review §2.4, AI Gateway ships at P0 · slice 1 — <strong>before AUTH</strong> — because if you can't account for and cap LLM spend, every other module bleeds money invisibly. One door for every model call, persona-stamped, PII-scrubbed, tenant-capped, audit-chained.
@@ -913,7 +913,7 @@ sequenceDiagram
  AI->>B: ai.invocation row {…}
  STR-->>CUO: done event with Usage
  </div>
- <p class="text-xs text-slate-500 mt-3">Cache-miss latency budget: ≤ 2 s p95 (N(FR pending)). Provider latency dominates; gateway overhead is &lt; 50 ms typical.</p>
+ <p class="text-xs text-slate-500 mt-3">Cache-miss latency budget: ≤ 2 s p95 (NFR-AI-001). Provider latency dominates; gateway overhead is &lt; 50 ms typical.</p>
  </div>
 
  <h3 class="text-lg font-bold mb-3">Flow 2 — Cache hit (deterministic replay)</h3>
@@ -976,7 +976,7 @@ sequenceDiagram
  AI-->>K: response
  Note over CB: 30 s later HALF_OPEN; first success closes breaker
  </div>
- <p class="text-xs text-slate-500 mt-3">(FR pending): failover within 30 s of primary failure. The circuit breaker prevents pile-up against a degraded provider.</p>
+ <p class="text-xs text-slate-500 mt-3">FR-AI-008 / FR-AI-009: failover within 30 s of primary failure (NFR-AI-015). The circuit breaker prevents pile-up against a degraded provider.</p>
  </div>
 
  <h3 class="text-lg function-bold mb-3">Flow 4 — Per-tenant cost cap enforcement</h3>
@@ -1052,14 +1052,14 @@ stateDiagram-v2
  [*] --> Received: gRPC ingress
  Received --> AuthValidated: AUTH verifies JWT, resolves tenant
  AuthValidated --> PolicyResolved: tenant_policy + budget check
- PolicyResolved --> Blocked: cap exceeded (100%)
+ PolicyResolved --> Blocked: cap exceeded 100 percent
  PolicyResolved --> PersonaInjected: system prompt prepended
  PersonaInjected --> Redacted: PII scrubbed
  Redacted --> CacheCheck: hash key built
  CacheCheck --> Streaming: HIT (cached response)
  CacheCheck --> Routing: MISS
  Routing --> Streaming: provider produced chunk
- Routing --> Failover: primary errored 2× + 30s elapsed
+ Routing --> Failover: primary errored twice and 30s elapsed
  Failover --> Streaming: secondary producing chunks
  Streaming --> Accounted: tokens + USD totalled
  Accounted --> Audited: ai.invocation row to BRAIN
@@ -1102,21 +1102,21 @@ stateDiagram-v2
  <table class="kt">
  <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
  <tbody>
- <tr><td><code>N(FR pending)</code></td><td>AI request p95 latency (chat, miss)</td><td>≤ 2 s</td><td>k6 load test against gateway</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Streaming TTFB p95</td><td>≤ 500 ms</td><td>k6 streaming test</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Cache-hit response p95</td><td>≤ 50 ms</td><td>internal bench</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Embed call p95 (per item)</td><td>≤ 120 ms</td><td>BGE-M3 GPU bench</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Rerank call p95 (per pair)</td><td>≤ 80 ms</td><td>BGE-rerank bench</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Cache hit rate at P0</td><td>≥ 30%</td><td>weekly roll-up</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Cache hit rate at P2+</td><td>≥ 60%</td><td>weekly roll-up</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Cost ceiling (internal P0)</td><td>≤ $150/month LLM</td><td>DuckDB invoice export</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Cost ceiling (50-tenant)</td><td>≤ $4/active user/month LLM</td><td>per-tenant dashboard</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>PII redaction recall (VN+EN)</td><td>≥ 99%</td><td>(FR pending) test set</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>PII redaction precision</td><td>≥ 95%</td><td>false-positive rate measured</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>AI gateway provider failover</td><td>continuous on primary outage</td><td>chaos test</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Gateway availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Cross-tenant cache leakage</td><td>= 0</td><td>property-based test in CI</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Failover detection latency</td><td>≤ 30 s</td><td>chaos test (kill primary)</td></tr>
+ <tr><td><code>NFR-AI-001</code></td><td>AI request p95 latency (chat, miss)</td><td>≤ 2 s</td><td>k6 load test against gateway</td></tr>
+ <tr><td><code>NFR-AI-002</code></td><td>Streaming TTFB p95</td><td>≤ 500 ms</td><td>k6 streaming test (FR-AI-010)</td></tr>
+ <tr><td><code>NFR-AI-003</code></td><td>Cache-hit response p95</td><td>≤ 50 ms</td><td>internal bench</td></tr>
+ <tr><td><code>NFR-AI-004</code></td><td>Embed call p95 (per item)</td><td>≤ 120 ms</td><td>BGE-M3 GPU bench (FR-AI-019)</td></tr>
+ <tr><td><code>NFR-AI-005</code></td><td>Rerank call p95 (per pair)</td><td>≤ 80 ms</td><td>BGE-rerank bench (FR-AI-020)</td></tr>
+ <tr><td><code>NFR-AI-006</code></td><td>Cache hit rate at P0</td><td>≥ 30%</td><td>weekly roll-up (FR-AI-017)</td></tr>
+ <tr><td><code>NFR-AI-007</code></td><td>Cache hit rate at P2+</td><td>≥ 60%</td><td>weekly roll-up (FR-AI-017)</td></tr>
+ <tr><td><code>NFR-AI-008</code></td><td>Cost ceiling (internal P0)</td><td>≤ $150/month LLM</td><td>DuckDB invoice export (FR-AI-007)</td></tr>
+ <tr><td><code>NFR-AI-009</code></td><td>Cost ceiling (50-tenant)</td><td>≤ $4/active user/month LLM</td><td>per-tenant dashboard</td></tr>
+ <tr><td><code>NFR-AI-010</code></td><td>PII redaction recall (VN+EN)</td><td>≥ 99%</td><td>VN-PII golden test set (FR-AI-013)</td></tr>
+ <tr><td><code>NFR-AI-011</code></td><td>PII redaction precision</td><td>≥ 95%</td><td>false-positive rate measured (FR-AI-012)</td></tr>
+ <tr><td><code>NFR-AI-012</code></td><td>AI gateway provider failover</td><td>continuous on primary outage</td><td>chaos test (FR-AI-008/009)</td></tr>
+ <tr><td><code>NFR-AI-013</code></td><td>Gateway availability (28-day)</td><td>≥ 99.9%</td><td>SLO monitor (FR-OBS-003)</td></tr>
+ <tr><td><code>NFR-AI-014</code></td><td>Cross-tenant cache leakage</td><td>= 0</td><td>property-based test in CI (FR-AI-018)</td></tr>
+ <tr><td><code>NFR-AI-015</code></td><td>Failover detection latency</td><td>≤ 30 s</td><td>chaos test on circuit breaker (FR-AI-009)</td></tr>
  </tbody>
  </table>
  </div>

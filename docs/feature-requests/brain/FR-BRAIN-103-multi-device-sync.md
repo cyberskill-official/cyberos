@@ -3,7 +3,7 @@ id: FR-BRAIN-103
 title: "brain-sync daemon — laptop A ↔ Cloud BRAIN ↔ laptop B with sync_class gating + CRDT conflict + 10K offline buffer + device-id stamp"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 1

@@ -1,8 +1,10 @@
 //! cyberos-auth — main binary.
 
-use cyberos_auth::{handlers, AppState, VERSION};
+use cyberos_auth::{handlers, rbac, AppState, VERSION};
 use cyberos_cli_exit::ExitCode;
 use std::net::SocketAddr;
+use std::sync::Arc;
+use tokio::sync::Notify;
 use tracing::info;
 
 #[tokio::main]
@@ -23,6 +25,14 @@ async fn main() -> ExitCode {
         }
     };
 
+    // FR-AUTH-101 §1 #9 — spawn the 60s RoleMatrix refresher.
+    let shutdown = Arc::new(Notify::new());
+    let refresher = rbac::refresher::spawn(
+        state.pg.clone(),
+        state.role_matrix.clone(),
+        shutdown.clone(),
+    );
+
     let app = handlers::router(state);
 
     let addr: SocketAddr = std::env::var("AUTH_LISTEN_ADDR")
@@ -36,14 +46,28 @@ async fn main() -> ExitCode {
         Ok(l) => l,
         Err(e) => {
             tracing::error!(error = %e, %addr, "failed to bind");
+            shutdown.notify_waiters();
             return ExitCode::NetworkError;
         }
     };
 
-    if let Err(e) = axum::serve(listener, app).await {
-        tracing::error!(error = %e, "axum serve failed");
-        return ExitCode::Generic;
-    }
+    let serve = axum::serve(listener, app).with_graceful_shutdown({
+        let shutdown = shutdown.clone();
+        async move {
+            let _ = tokio::signal::ctrl_c().await;
+            info!("ctrl-c received — shutting down");
+            shutdown.notify_waiters();
+        }
+    });
 
-    ExitCode::Ok
+    let result = serve.await;
+    let _ = tokio::time::timeout(std::time::Duration::from_secs(5), refresher).await;
+
+    match result {
+        Ok(()) => ExitCode::Ok,
+        Err(e) => {
+            tracing::error!(error = %e, "axum serve failed");
+            ExitCode::Generic
+        }
+    }
 }

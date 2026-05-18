@@ -64,7 +64,7 @@ async fn admin_endpoint_accepts_valid_bearer() {
     let subject = SubjectId::new();
     let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
     let tokens = svc
-        .issue(tenant, subject, "human", vec!["admin".into()], None, None)
+        .issue(tenant, subject, "human", vec!["admin".into()], vec!["tenant-admin".into()], Some(1), None, None)
         .await
         .expect("issue");
 
@@ -74,6 +74,12 @@ async fn admin_endpoint_accepts_valid_bearer() {
         role_matrix: std::sync::Arc::new(tokio::sync::RwLock::new(
             cyberos_auth::rbac::RoleMatrix::empty(),
         )),
+        oidc_pending: std::sync::Arc::new(tokio::sync::RwLock::new(
+            std::collections::HashMap::new(),
+        )),
+        geoip: std::sync::Arc::new(cyberos_auth::geoip::NullResolver),
+        travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
+        sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
     });
 
     let res = app
@@ -103,6 +109,15 @@ async fn build_app() -> axum::Router {
     handlers::router(AppState {
         pg: pool,
         jwt_issuer: "https://auth.cyberos.local".into(),
+        role_matrix: std::sync::Arc::new(tokio::sync::RwLock::new(
+            cyberos_auth::rbac::RoleMatrix::empty(),
+        )),
+        oidc_pending: std::sync::Arc::new(tokio::sync::RwLock::new(
+            std::collections::HashMap::new(),
+        )),
+        geoip: std::sync::Arc::new(cyberos_auth::geoip::NullResolver),
+        travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
+        sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
     })
 }
 

@@ -4,14 +4,14 @@ id: FR-AI-019
 title: "Self-hosted BGE-M3 embeddings (single L4 GPU sidecar) + ONNX-CPU fallback + adaptive batching"
 module: AI
 priority: SHOULD
-status: accepted
+status: shipped
 verify: T
 phase: P0
 milestone: P0 · slice 4
 slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-18
 brain_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-009, FR-AI-016, FR-AI-020]
 depends_on: []

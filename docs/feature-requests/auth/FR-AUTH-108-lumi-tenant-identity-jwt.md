@@ -3,7 +3,7 @@ id: FR-AUTH-108
 title: "AUTH Lumi tenant-identity JWT shape — agent_persona + tenant_residency + lumi_org_tenant claims + persona-version stamping + cross-tenant sync identity"
 module: AUTH
 priority: MUST
-status: draft
+status: building
 verify: T
 phase: P3
 milestone: P3 · slice 1

@@ -35,7 +35,7 @@ async fn issue_then_verify_round_trips_with_correct_claims() {
     let subject = SubjectId::new();
     let scopes = vec!["admin:tenants".to_string(), "admin:subjects".to_string()];
     let tokens = svc
-        .issue(tenant, subject, "human", scopes.clone(), None, Some("00-traceparent-x-01".into()))
+        .issue(tenant, subject, "human", scopes.clone(), vec![], None, None, Some("00-traceparent-x-01".into()))
         .await
         .expect("issue");
 

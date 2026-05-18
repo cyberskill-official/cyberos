@@ -3,7 +3,7 @@ id: FR-BRAIN-106
 title: "BRAIN sync_class enforcement — private vs shareable + ACL filtering + structural compensation exclusion + property test"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 1

@@ -3,7 +3,7 @@ id: FR-BRAIN-111
 title: "BRAIN pre-ingest PII detection — Presidio EN + custom VN recognisers; ≥ 99.5% held-back recall on labelled fixture; auto-redact at capture boundary"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 2

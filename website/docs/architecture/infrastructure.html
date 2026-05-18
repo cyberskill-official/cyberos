@@ -35,7 +35,7 @@
  <h1 class="h-display mb-4">The infrastructure plane</h1>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Six shared pillars that every CyberOS module bolts onto — never re-implemented per-module, never bypassed.</p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- The infrastructure plane is the boring substrate that makes the 22 functional modules interesting. Auth, an AI gateway, an MCP gateway, observability, a GraphQL supergraph, and a NATS event spine — six pillars that ship as P0 deliverables and continue to absorb load for the rest of the phased arc. The bet is simple: pay the upfront cost of <em>real</em> shared infrastructure once, and every new module after P0 · exit ships in days, not weeks. The cost of doing this lazily — re-implementing auth per-module, embedding LLM SDKs in subgraphs, or letting each team choose its own observability stack — is a kind of debt that compounds with every module added to the catalog. locks the shape of all six pillars; this page traces each one end-to-end.
+ The infrastructure plane is the boring substrate that makes the 22 functional modules interesting. Auth, an AI gateway, an MCP gateway, observability, a GraphQL supergraph, and a NATS event spine — six pillars that ship as P0 deliverables and continue to absorb load for the rest of the phased arc. The bet is simple: pay the upfront cost of <em>real</em> shared infrastructure once, and every new module after P0 · exit ships in days, not weeks. The cost of doing this lazily — re-implementing auth per-module, embedding LLM SDKs in subgraphs, or letting each team choose its own observability stack — is a kind of debt that compounds with every module added to the catalog. The architecture decision record locks the shape of all six pillars; this page traces each one end-to-end.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#auth" class="btn btn-primary">Start with AUTH
@@ -82,7 +82,7 @@
  <h2 class="h-1">The six-pillar plane</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
- locks the high-level shape: every module is an independently deployable Apollo Federation subgraph and a Module-Federation frontend remote, sitting on top of six cross-cutting pillars. The pillars are <em>infrastructure modules</em> — they are owned, versioned, and on-call exactly like the functional modules — but they are special in that every other module depends on them. Removing any one of the six breaks the platform.
+ The platform contract locks the high-level shape: every module is an independently deployable Apollo Federation subgraph and a Module-Federation frontend remote, sitting on top of six cross-cutting pillars. The pillars are <em>infrastructure modules</em> — they are owned, versioned, and on-call exactly like the functional modules — but they are special in that every other module depends on them. Removing any one of the six breaks the platform.
  </p>
 
  <!-- Architecture diagram -->

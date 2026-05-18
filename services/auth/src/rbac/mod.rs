@@ -20,6 +20,7 @@ pub mod catalogue;
 pub mod catalogue_endpoint;
 pub mod matrix;
 pub mod permissions;
+pub mod refresher;
 
 pub use catalogue::{Role, RoleParseError};
 pub use matrix::RoleMatrix;

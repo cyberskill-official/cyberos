@@ -1,0 +1,85 @@
+---
+# ── Identity ─────────────────────────────────────────────────────────
+name: coverage-gate-author
+description: |
+  Run the project's test suite + measure coverage on the files touched
+  by the current FR (per the `git diff` since the FR's "building"
+  status was set). Emits a coverage-gate@1 artefact: raw terminal
+  output of the coverage tool, per-file coverage %, list of files
+  below 90 %, list of edge-case-matrix rows without a corresponding
+  test. Used by chief-technology-officer/implement-backlog-frs as
+  step 13.
+license: Apache-2.0
+metadata:
+  version: 1.0.0
+  module: skill
+  stage: e
+  cyberos-template: coverage-gate@1
+  cyberos-rubric-target: coverage_gate_rubric@1.0
+
+allowed_brain_scopes:
+  read:
+    - project:*
+    - module:*
+  write:
+    - project:fr/<fr_id>/coverage-gate
+audit:
+  row_kind: coverage_gate_authored
+  required_fields: [fr_id, files_touched, files_below_90pct, total_tests_run, tests_failed, ecm_rows_uncovered]
+
+inputs:
+  - { name: fr,                 format: feature-request@1,            required: true }
+  - { name: edge_case_matrix,   format: edge-case-matrix@1,           required: true }
+outputs:
+  - { name: report, format: coverage-gate@1 }
+
+triggers:
+  - workflow `chief-technology-officer/implement-backlog-frs` step 13
+blockers:
+  - "no coverage tool configured in repo — must be resolved first"
+  - "test framework is broken — diagnose before running this skill"
+---
+
+# coverage-gate-author
+
+## 1. What it does
+
+1. Reads the FR's `building` status timestamp from BACKLOG.md.
+2. `git diff --name-only <building_ts>..HEAD` → the touched-files set.
+3. Picks the right coverage tool per language (rust: `cargo tarpaulin`
+   or `cargo llvm-cov`; python: `pytest --cov`; node: `vitest --coverage`).
+4. Runs the full test suite.
+5. Reports per-file coverage for every file in the touched set.
+6. Cross-references the edge-case matrix: every row's `planned_test`
+   must exist + must have passed.
+
+## 2. Output schema
+
+```yaml
+# coverage-gate@1
+fr_id: FR-<MODULE>-<NNN>
+generated_at: <ISO-8601>
+language: rust | python | typescript | mixed
+tool: tarpaulin | llvm-cov | pytest-cov | vitest | ...
+total_tests_run: <int>
+tests_failed: <int>
+overall_coverage_pct: <float>
+files_touched:
+  - { path: "...", coverage_pct: 92.3, lines_covered: 314, lines_total: 340 }
+files_below_90pct: [...]
+ecm_rows_uncovered: [ECM-003, ECM-007, ...]
+raw_terminal: |
+  <full stdout/stderr of the coverage run, untruncated>
+```
+
+## 3. Pass criterion
+
+- `tests_failed == 0`
+- `files_below_90pct` is empty
+- `ecm_rows_uncovered` is empty
+
+If any of those fails → trip the workflow's debugging-cycle (step 15).
+
+---
+
+*End of coverage-gate-author SKILL.md.*

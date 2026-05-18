@@ -159,7 +159,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | **FR-AI-016** | Tenant residency pinning (`sg-1` / `eu-1` / `us-1` / `vn-1`) propagating to provider selection | MUST | draft (10/10) | FR-AI-006 | 5h |
 | **FR-AI-017** | Cache (Redis) keyed by (tenant_id × prompt_hash × model); ≥ 30% hit rate P0 target | SHOULD | draft (10/10) | FR-AI-008 | 6h |
 | **FR-AI-018** | Cross-tenant cache leak property-test (hard zero) | MUST | draft (10/10) | FR-AI-017 | 3h |
-| **FR-AI-019** | Self-hosted BGE-M3 embeddings (single L4 GPU pod) + CPU fallback | SHOULD | draft (10/10) | — | 8h |
+| **FR-AI-019** | Self-hosted BGE-M3 embeddings (single L4 GPU pod) + CPU fallback | SHOULD | shipped (10/10) | — | 8h |
 | **FR-AI-020** | BGE-rerank-v2-m3 cross-encoder for KB reranking | COULD | draft (10/10) | FR-AI-019 | 5h |
 
 #### Slice 5 — operator surface + observability
@@ -692,10 +692,10 @@ This document is the **single source of truth** for what CyberOS is going to bui
 |---|---|:-:|:-:|---|---:|
 | FR-AUTH-101 | 22-role RBAC catalogue (full bands: root-admin → tenant-member + 17 specialist roles) | MUST | planned | FR-AUTH-005 | 12h |
 | FR-AUTH-102 | TOTP + WebAuthn MFA flows | MUST | planned | FR-AUTH-002 | 10h |
-| FR-AUTH-103 | SAML 2.0 SSO (per-tenant IdP config) | MUST | planned | FR-AUTH-004 | 12h |
+| FR-AUTH-103 | SAML 2.0 SSO (per-tenant IdP config) | MUST | building (slice-2: XML-DSig verify + exc-c14n shipped) | FR-AUTH-004 | 12h |
 | FR-AUTH-104 | OIDC SSO with discovery + JWKS rotation | MUST | planned | FR-AUTH-004 | 10h |
 | FR-AUTH-105 | Passkey enrolment + login | MUST | planned | FR-AUTH-102 | 8h |
-| FR-AUTH-106 | Impossible-travel detection + adaptive challenge | SHOULD | planned | FR-AUTH-002 | 8h |
+| FR-AUTH-106 | Impossible-travel detection + adaptive challenge | SHOULD | building (slices 1+2+3: GeoIP + policy + CIDR + sticky + admin REST + universal flow wiring) | FR-AUTH-002 | 8h |
 | FR-AUTH-107 | HIBP password breach check on signup + rotation | SHOULD | planned | FR-AUTH-002 | 4h |
 | FR-AUTH-108 | Lumi tenant-identity JWT shape (`agent_persona` + `tenant_residency` claims) | MUST | planned | FR-AUTH-101 | 6h |
 | FR-AUTH-109 | Stub → full migration path (existing tokens valid for grace window) | MUST | planned | FR-AUTH-101 | 5h |

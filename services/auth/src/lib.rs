@@ -12,14 +12,26 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod geoip;
 pub mod handlers;
+pub mod hibp;
 pub mod idempotency;
 pub mod jwt;
 pub mod keygen;
+pub mod lumi;
+pub mod mfa;
 pub mod middleware;
+pub mod migration_state;
 pub mod models;
+pub mod oidc;
+pub mod passkey;
 pub mod rbac;
+pub mod saml;
+pub mod saml_sig;
 pub mod state;
+pub mod travel;
+pub mod travel_admin;
+pub mod travel_policy;
 
 pub use state::AppState;
 

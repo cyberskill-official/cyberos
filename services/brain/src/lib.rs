@@ -8,7 +8,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod embeddings;
 pub mod layer2;
+pub mod rebuild;
 pub mod search;
 pub mod state;
 

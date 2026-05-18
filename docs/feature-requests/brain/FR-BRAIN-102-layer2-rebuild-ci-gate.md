@@ -3,7 +3,7 @@ id: FR-BRAIN-102
 title: "Layer-2 rebuild-from-Layer-1 CI gate — deterministic rebuild + spot-check + 30min budget + mid-rebuild resume + multi-tenant"
 module: BRAIN
 priority: MUST
-status: accepted
+status: building
 verify: T
 phase: P1
 milestone: P1 · slice 1
