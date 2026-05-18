@@ -78,13 +78,13 @@ All 6 mechanical revisions applied (2026-05-16). **Score = 10/10.**
 
 | # | Spec ref | Gap | Severity | Effort | Status |
 |---|---|---|---|---|---|
-| G-001 | §1 #14 | `slug == "root"` defence-in-depth reject not enforced in handler | medium | 5 LOC + 1 test | open |
-| G-002 | §1 #11 | Error body shape uses ad-hoc `{error: "X"}` instead of spec'd `{error, field, reason}` structure | medium | 25 LOC + 4 tests | open |
+| G-001 | §1 #14 | `slug == "root"` defence-in-depth reject not enforced in handler | medium | 5 LOC + 1 test | **CLOSED** |
+| G-002 | §1 #11 | Error body shape uses ad-hoc `{error: "X"}` instead of spec'd `{error, field, reason}` structure + slug regex / length / display_name validation | medium | ~170 LOC + 14 tests | **CLOSED** |
 | G-003 | §1 #1 | Handler does NOT assert `caller.claims.tenant_id == Uuid::nil() AND 'root-admin' in claims.roles`; relies on middleware only | critical | 15 LOC + 2 tests | open |
 | G-004 | §1 #13 | OTel `auth.create_tenant` span not emitted — no `#[tracing::instrument]` macro | medium | 10 LOC | open |
 | G-005 | §1 #6 | `auth.tenant_created` BRAIN audit row not emitted in-transaction; no BRAIN bridge wired | high | 35 LOC + ADR DEC-BRAIN-BRIDGE-001 + 1 test | open |
 | G-006 | §1 #8 | 100 ms p95 SLO not asserted by any test | medium | 60 LOC (new test file) | open |
-| G-007 | §new_files | Test files declared in FR header but absent on disk: `admin_tenant_create_test.rs`, `admin_tenant_idempotency_test.rs`, `admin_tenant_rls_test.rs` | high | 410 LOC across 3 files | open (overlaps G-001/002/003/006) |
+| G-007 | §new_files | Test files declared in FR header but absent on disk: `admin_tenant_create_test.rs`, `admin_tenant_idempotency_test.rs`, `admin_tenant_rls_test.rs` | high | 410 LOC across 3 files | open (admin_tenant_create_test.rs partially landed via G-001+G-002) |
 
 **Edge-case-matrix coverage (referenced by gap closures):** 14 rows × 6 categories — all currently uncovered. Each gap closure adds the corresponding ECM rows to a real test. Full ECM enumeration captured during step 5; preserved in §10.5 working notes below.
 
@@ -92,7 +92,8 @@ All 6 mechanical revisions applied (2026-05-16). **Score = 10/10.**
 
 | ts | gap | change | tests | cargo result | commit |
 |---|---|---|---|---|---|
-| 2026-05-18T15:35:00Z | G-001 | `services/auth/src/handlers.rs:125-145` — added early-return on `req.slug == "root"` before idempotency lookup + DB transaction; returns 400 + `{error:"invalid_input", field:"slug", reason:"slug \"root\" is reserved …"}` | new file `services/auth/tests/admin_tenant_create_test.rs` (1 test: `create_tenant_rejects_reserved_root_slug` — covers ECM-008; gated by `#[ignore]`, runs in `cargo test -- --ignored` integration tier with Postgres) | `cargo build --workspace`: **green** (rustc 1.93.1, after closing 7 unrelated workspace bugs — see §10.6); `cargo test --workspace` (lib tier, no Postgres): **61 passed / 2 failed** (2 failures are pre-existing test bugs in `geoip::from_env_required_without_db_errors` + `saml_sig::verify_rejects_when_no_signature_element`, both unrelated to G-001 — see §10.6) | _pending commit_ |
+| 2026-05-18T15:35:00Z | G-001 | `services/auth/src/handlers.rs:125-145` — added early-return on `req.slug == "root"` before idempotency lookup + DB transaction; returns 400 + `{error:"invalid_input", field:"slug", reason:"slug \"root\" is reserved …"}` | new file `services/auth/tests/admin_tenant_create_test.rs` (1 test: `create_tenant_rejects_reserved_root_slug` — covers ECM-008; gated by `#[ignore]`, runs in `cargo test -- --ignored` integration tier with Postgres) | `cargo build --workspace`: **green** (rustc 1.93.1, after closing 7 unrelated workspace bugs — see §10.6); `cargo test --workspace` (lib tier, no Postgres): **61 passed / 2 failed** (2 failures are pre-existing test bugs in `geoip::from_env_required_without_db_errors` + `saml_sig::verify_rejects_when_no_signature_element`, both unrelated to G-001 — see §10.6) | `71439b7` |
+| 2026-05-18T16:05:00Z | G-002 | `services/auth/src/handlers.rs:359-510` — added `invalid_input(field, reason)` helper + `validate_slug` (1..=40 chars · `[a-z]` start · `[a-z0-9-]` body, matches Postgres CHECK constraint) + `validate_display_name` (1..=80 chars · no null bytes). Handler now refactored: §1 #14 slug-root reject uses `invalid_input()`; §1 #11 validation runs before DB tx via `validate_slug(&req.slug)?` + `validate_display_name(&req.display_name)?`; §1 #4 slug-conflict 409 body is `{error: "slug_taken", slug}` (was free-form string); missing-Idempotency-Key body is `{error: "missing_header", field, reason}` (was free-form). All four 4xx error paths now share the structured shape | `services/auth/src/handlers.rs::validate_tests` — 12 unit tests covering ECM-003 / ECM-004 / ECM-006 / ECM-007 (slug length boundaries 1/40/41 · slug regex violations: starting digit, uppercase, special char · display_name 1/80/81 · null byte · response body shape) + 2 new ignored integration tests in `admin_tenant_create_test.rs` covering ECM-006 (uppercase slug end-to-end) + missing Idempotency-Key header path | `cargo test --workspace`: **74 passed / 0 failed** (auth lib tier; up from 62 pre-G-002 — 12 new validate_tests passing). `cargo build --workspace --tests`: green in 10.19s | _pending commit_ |
 
 (Append rows here as each gap closes. Format: `ISO-8601 | G-NNN | file:line summary | new test names | cargo +1.85.0 build/test outcome | git sha`.)
 
@@ -175,4 +176,4 @@ Treat both as new gaps for FR-AUTH-103 / FR-AUTH-106 implementation audits in a 
 
 ---
 
-*End of FR-AUTH-001 audit. Spec quality: PASS 10/10. Implementation: 1/7 gaps closed; workspace compiles green; 61/63 tests pass.*
+*End of FR-AUTH-001 audit. Spec quality: PASS 10/10. Implementation: 2/7 gaps closed (G-001 + G-002); workspace compiles green; 74/74 auth-lib tests pass; 5 remaining gaps (G-003 root-admin authz, G-004 OTel span, G-005 BRAIN audit row, G-006 100ms SLO, G-007 remaining test-file authoring).*

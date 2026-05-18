@@ -72,7 +72,90 @@ async fn create_tenant_rejects_reserved_root_slug() {
 }
 
 // ---------------------------------------------------------------------------
-// (Future tests land here as G-002..G-007 close. Each gap fill brings 1-4 new
+// G-002 — §1 #11 — structured 400 invalid_input body (covers ECM-006 malformed slug)
+// ---------------------------------------------------------------------------
+//
+// Spec: `400 BAD_REQUEST` for malformed slug returns
+// `{"error":"invalid_input","field":"slug","reason":"<human msg>"}`.
+// The handler's API-layer validator fires BEFORE any DB work — same shape as
+// G-001's slug-root reject. This integration test confirms the structured
+// body is what reaches the wire.
+
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn create_tenant_rejects_uppercase_slug_with_structured_body() {
+    let app = build_app().await;
+    let body = json!({
+        "slug": "Acme",  // uppercase — violates §1 #2 regex
+        "display_name": "Acme Corp",
+        "country": "VN",
+        "plan_tier": "free",
+        "residency": "vn-1"
+    });
+
+    let res = app
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri("/v1/admin/tenants")
+                .header("content-type", "application/json")
+                .header("idempotency-key", "test-uppercase-slug-002")
+                .body(axum::body::Body::from(body.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
+    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(parsed["error"], "invalid_input");
+    assert_eq!(parsed["field"], "slug");
+    let reason = parsed["reason"].as_str().expect("reason str");
+    assert!(
+        reason.contains("[a-z]") || reason.contains("'A'"),
+        "reason must explain the regex violation; got: {reason}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// G-002 — also covers the missing Idempotency-Key path (header gate)
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+#[ignore = "requires Postgres"]
+async fn create_tenant_rejects_missing_idempotency_key_with_structured_body() {
+    let app = build_app().await;
+    let body = json!({
+        "slug": "acme-corp",
+        "display_name": "Acme Corp",
+        "country": "VN",
+        "plan_tier": "free",
+        "residency": "vn-1"
+    });
+
+    let res = app
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri("/v1/admin/tenants")
+                .header("content-type", "application/json")
+                // no Idempotency-Key header
+                .body(axum::body::Body::from(body.to_string()))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    let body_bytes = to_bytes(res.into_body(), 1 << 20).await.unwrap();
+    let parsed: Value = serde_json::from_slice(&body_bytes).unwrap();
+    assert_eq!(parsed["error"], "missing_header");
+    assert_eq!(parsed["field"], "Idempotency-Key");
+}
+
+// ---------------------------------------------------------------------------
+// (Future tests land here as G-003..G-007 close. Each gap fill brings 1-4 new
 // test functions, each tagged with the ECM-NNN row it covers.)
 // ---------------------------------------------------------------------------
 

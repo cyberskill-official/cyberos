@@ -828,9 +828,15 @@ mod tests {
     #[test]
     fn verify_rejects_when_no_signature_element() {
         let xml = "<root><a/></root>";
-        let pem = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0\n-----END PUBLIC KEY-----";
-        let err = verify(xml, pem).unwrap_err();
-        assert!(matches!(err, SamlSigError::NoSignature));
+        // Use a *valid* PEM so `verify()` gets past parse_rsa_pubkey_from_pem
+        // and actually exercises the no-Signature branch. The previous truncated
+        // PEM tripped CertParse before NoSignature could fire.
+        let pem = sample_rsa_public_pem();
+        let err = verify(xml, &pem).unwrap_err();
+        assert!(
+            matches!(err, SamlSigError::NoSignature),
+            "expected NoSignature, got {err:?}"
+        );
     }
 
     #[test]

@@ -135,15 +135,18 @@ async fn create_tenant(
     // also catches this, but the early-return saves a transaction round
     // trip and produces a structured error body.
     if req.slug == "root" {
-        return Err((
-            StatusCode::BAD_REQUEST,
-            Json(json!({
-                "error": "invalid_input",
-                "field": "slug",
-                "reason": "slug \"root\" is reserved for tenant 0 (use cyberos-auth-bootstrap)"
-            })),
+        return Err(invalid_input(
+            "slug",
+            "slug \"root\" is reserved for tenant 0 (use cyberos-auth-bootstrap)",
         ));
     }
+
+    // FR-AUTH-001 §1 #2 + #11 — Per-field validation runs at API layer +
+    // DB CHECK constraint (defence in depth). The 400 body identifies
+    // exactly which input failed and why so the client can render
+    // actionable error UI without inspecting logs.
+    validate_slug(&req.slug)?;
+    validate_display_name(&req.display_name)?;
 
     // Only the root tenant can create new tenants. The auth middleware
     // (FR-AUTH-004) will validate the JWT and set `app.current_tenant_id`.
@@ -164,7 +167,11 @@ async fn create_tenant(
         .and_then(|h| h.to_str().ok())
         .ok_or_else(|| (
             StatusCode::BAD_REQUEST,
-            Json(json!({"error": "Idempotency-Key header required"}))
+            Json(json!({
+                "error": "missing_header",
+                "field": "Idempotency-Key",
+                "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-001 §1 #5)"
+            })),
         ))?;
 
     let route = "POST /v1/admin/tenants";
@@ -194,9 +201,11 @@ async fn create_tenant(
     .fetch_one(&mut *tx)
     .await
     .map_err(|e| match e {
+        // FR-AUTH-001 §1 #4 — Structured 409 body so the client can
+        // present the conflict without parsing free-form error strings.
         sqlx::Error::Database(db) if db.is_unique_violation() => (
             StatusCode::CONFLICT,
-            Json(json!({"error": format!("slug '{}' already taken", req.slug)})),
+            Json(json!({"error": "slug_taken", "slug": req.slug})),
         ),
         other => internal_err(other),
     })
@@ -352,6 +361,174 @@ fn internal_err<E: std::fmt::Display>(e: E) -> (StatusCode, Json<Value>) {
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(json!({"error": e.to_string()})),
     )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FR-AUTH-001 §1 #11 — structured 400 error helpers
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// All API-layer validation errors share a single body shape:
+//   { "error": "invalid_input", "field": "<name>", "reason": "<human msg>" }
+// so the client can render actionable per-field error UI without inspecting
+// logs. The constant `error` enum-value is "invalid_input" for validation
+// failures; other 400-class errors (e.g. missing required header) use
+// "missing_header" / etc. but keep the same {error, field, reason} triple.
+
+/// Build a 400 BAD_REQUEST with structured `{error, field, reason}` body.
+fn invalid_input(field: &str, reason: impl Into<String>) -> (StatusCode, Json<Value>) {
+    (
+        StatusCode::BAD_REQUEST,
+        Json(json!({
+            "error": "invalid_input",
+            "field": field,
+            "reason": reason.into(),
+        })),
+    )
+}
+
+/// Validate tenant `slug` per FR-AUTH-001 §1 #2:
+///   * 1..=40 chars
+///   * first char `[a-z]`
+///   * remaining chars `[a-z0-9-]`
+///
+/// Matches the Postgres CHECK constraint at services/auth/migrations/0001_tenants.sql
+/// (defence in depth — the DB will also reject malformed slugs, but the API-layer
+/// check produces a structured body instead of a generic 500 on constraint failure).
+fn validate_slug(slug: &str) -> Result<(), (StatusCode, Json<Value>)> {
+    if slug.is_empty() {
+        return Err(invalid_input("slug", "slug is empty (1..=40 chars required)"));
+    }
+    if slug.len() > 40 {
+        return Err(invalid_input(
+            "slug",
+            format!("slug is {} chars (max 40)", slug.len()),
+        ));
+    }
+    let mut chars = slug.chars();
+    let first = chars.next().expect("non-empty verified above");
+    if !first.is_ascii_lowercase() {
+        return Err(invalid_input(
+            "slug",
+            format!("slug must start with [a-z], got '{first}'"),
+        ));
+    }
+    for c in chars {
+        if !(c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-') {
+            return Err(invalid_input(
+                "slug",
+                format!("slug contains invalid char '{c}'; allowed: [a-z0-9-]"),
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Validate tenant `display_name` per FR-AUTH-001 §1 #2:
+///   * 1..=80 chars
+///   * no null bytes
+fn validate_display_name(name: &str) -> Result<(), (StatusCode, Json<Value>)> {
+    if name.is_empty() {
+        return Err(invalid_input(
+            "display_name",
+            "display_name is empty (1..=80 chars required)",
+        ));
+    }
+    if name.chars().count() > 80 {
+        return Err(invalid_input(
+            "display_name",
+            format!("display_name is {} chars (max 80)", name.chars().count()),
+        ));
+    }
+    if name.contains('\0') {
+        return Err(invalid_input(
+            "display_name",
+            "display_name contains a null byte",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod validate_tests {
+    use super::*;
+
+    // ECM-003 — slug at exact length boundaries.
+    #[test]
+    fn slug_min_length_one_char_accepted() {
+        assert!(validate_slug("a").is_ok());
+    }
+
+    #[test]
+    fn slug_max_length_forty_chars_accepted() {
+        let s = "a".repeat(40);
+        assert!(validate_slug(&s).is_ok());
+    }
+
+    #[test]
+    fn slug_forty_one_chars_rejected() {
+        let s = "a".repeat(41);
+        let (status, _) = validate_slug(&s).unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    // ECM-006 — malformed slug.
+    #[test]
+    fn slug_starting_with_digit_rejected() {
+        let (status, _) = validate_slug("1foo").unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn slug_with_uppercase_rejected() {
+        let (status, _) = validate_slug("Acme").unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn slug_with_special_char_rejected() {
+        let (status, _) = validate_slug("a_b").unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn slug_empty_rejected() {
+        let (status, _) = validate_slug("").unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    // ECM-004 — display_name boundaries.
+    #[test]
+    fn display_name_min_one_char_accepted() {
+        assert!(validate_display_name("x").is_ok());
+    }
+
+    #[test]
+    fn display_name_max_eighty_chars_accepted() {
+        let s = "n".repeat(80);
+        assert!(validate_display_name(&s).is_ok());
+    }
+
+    #[test]
+    fn display_name_eighty_one_chars_rejected() {
+        let s = "n".repeat(81);
+        let (status, _) = validate_display_name(&s).unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    // ECM-007 — null byte in display_name.
+    #[test]
+    fn display_name_with_null_byte_rejected() {
+        let (status, _) = validate_display_name("foo\0bar").unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[test]
+    fn invalid_input_body_shape_is_error_field_reason() {
+        let (_, Json(body)) = invalid_input("slug", "reason msg");
+        assert_eq!(body["error"], "invalid_input");
+        assert_eq!(body["field"], "slug");
+        assert_eq!(body["reason"], "reason msg");
+    }
 }
 
 // ---------------------------------------------------------------------------

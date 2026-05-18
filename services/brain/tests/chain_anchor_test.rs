@@ -8,12 +8,17 @@ use cyberos_brain::layer2::chain_anchor;
 
 #[test]
 fn anchor_matches_known_vector() {
-    // Vector: prev_hash = "00", body = "" → SHA256("00") =
-    // 5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9
+    // Vector: prev_hash_hex = "00" (2-byte ASCII "00", NOT the decoded null byte;
+    // see chain_anchor::compute — it hashes the ASCII bytes of prev_hash_hex
+    // directly, not the hex-decoded prev_hash). body = "" → SHA-256(b"00") =
+    // f1534392279bddbf9d43dde8701cb5be14b82f76ec6607bf8d6ad557f60f304e.
+    //
+    // (For reference: SHA-256(b"0") = 5feceb66… — that's the 1-byte ASCII zero,
+    // which is what an earlier version of this comment incorrectly claimed.)
     let got = chain_anchor::compute(Some("00"), "");
     assert_eq!(
         got,
-        "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        "f1534392279bddbf9d43dde8701cb5be14b82f76ec6607bf8d6ad557f60f304e"
     );
 }
 

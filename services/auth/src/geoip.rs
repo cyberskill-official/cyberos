@@ -239,21 +239,23 @@ mod tests {
         assert!(g.country_iso.is_none() && g.lat.is_none() && g.continent.is_none());
     }
 
+    /// Both `from_env_*` cases mutate process-wide env vars; running them as
+    /// separate `#[test]` functions raced under cargo's default parallel
+    /// test executor (`AUTH_GEOIP_DB`/`AUTH_GEOIP_REQUIRED` are shared state).
+    /// Combined here into a single sequential test so the cases never race.
+    /// Pattern: prefer in-process state mutation in one test over the
+    /// alternative of pulling in `serial_test` for two assertions.
     #[test]
-    fn from_env_with_no_db_returns_null_resolver() {
+    fn from_env_cases_sequential() {
+        // Case 1 — neither env var set → NullResolver Ok.
         std::env::remove_var("AUTH_GEOIP_DB");
         std::env::remove_var("AUTH_GEOIP_REQUIRED");
         let r = from_env().expect("should fall back to NullResolver");
         let g = r.lookup("203.0.113.42".parse().unwrap());
-        assert!(g.country_iso.is_none());
-    }
+        assert!(g.country_iso.is_none(), "NullResolver must return empty lookup");
 
-    #[test]
-    fn from_env_required_without_db_errors() {
-        std::env::remove_var("AUTH_GEOIP_DB");
+        // Case 2 — REQUIRED=1 + no DB → GeoIpError::Required.
         std::env::set_var("AUTH_GEOIP_REQUIRED", "1");
-        // Can't use `.unwrap_err()` because `Arc<dyn GeoIpResolver>` is not Debug.
-        // Pattern-match the Result directly instead.
         match from_env() {
             Err(GeoIpError::Required) => {} // expected
             Err(other) => panic!("expected GeoIpError::Required, got {other:?}"),
