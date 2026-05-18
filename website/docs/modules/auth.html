@@ -391,7 +391,7 @@ sequenceDiagram
  L-->>U: 403 (wrong shard for this tenant)
  end
  L->>L: extract sync payload · validate sync_class
- L->>P: SET LOCAL app.current_tenant_id = '<tenant_id>'
+ L->>P: SET LOCAL app.current_tenant_id = '&lt;tenant_id&gt;'
  L->>W: write through canonical Writer (lumi-scoped)
  W->>P: INSERT with RLS · tenant_id auto-bound
  P-->>W: row inserted

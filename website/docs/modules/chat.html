@@ -328,7 +328,7 @@ sequenceDiagram
  U->>CHAT: "Hey @lumi, summarise this thread for me"
  CHAT->>CHAT: persist message (WebSocket fanout)
  CHAT->>LP: hook(message_create) · text contains @lumi
- LP->>BR: put(memories/discussions/chat-<chan>-<msg>.md, sync_class=channel_default)
+ LP->>BR: put(memories/discussions/chat-&lt;chan&gt;-&lt;msg&gt;.md, sync_class=channel_default)
  BR-->>LP: chain_hash · audit row appended
  LP->>CUO: route(message_body, channel_context, user_id)
  CUO->>CUO: rule-based scoring (Phase 1) · pick skill
@@ -339,7 +339,7 @@ sequenceDiagram
  CUO->>AI: LLM cascade (Phase 2 — gated by AI Gateway budget)
  AI-->>CUO: response
  end
- CUO->>BR: put(memories/decisions/cuo-response-<id>.md) · the response is itself memory
+ CUO->>BR: put(memories/decisions/cuo-response-&lt;id&gt;.md) · the response is itself memory
  BR-->>CUO: chain_hash
  CUO->>CHAT: post_reply(channel, thread_id, response, persona_version)
  CHAT->>U: real-time response via WebSocket
@@ -878,7 +878,7 @@ sequenceDiagram
  NOT->>FCM: push to offline users
  par BRAIN ingest (async, p95 ≤ 5s)
  PG-->>BB: logical replication event
- BB->>BR: put memories/chat/<channel>/<msg>.md
+ BB->>BR: put memories/chat/&lt;channel&gt;/&lt;msg&gt;.md
  BR-->>BB: {seq, chain}
  BB->>PG: UPDATE brain_chain on message
  and Genie answer (if mention)
@@ -898,9 +898,9 @@ sequenceDiagram
  participant API as api
  participant PG as Postgres
 
- U->>WS: send {parent_id:<root>, body}
+ U->>WS: send {parent_id:&lt;root&gt;, body}
  WS->>API: persist as reply
- API->>PG: INSERT message WHERE parent_id=<root>
+ API->>PG: INSERT message WHERE parent_id=&lt;root&gt;
  PG-->>API: row + thread.reply_count++
  API->>WS: thread.updated event to followers
  WS-->>U: ack with thread_id
@@ -945,7 +945,7 @@ sequenceDiagram
 
  U->>API: slash command "/summarise"
  API->>SUM: thread_id
- SUM->>PG: SELECT messages WHERE parent_id=<thread> ORDER BY created_at
+ SUM->>PG: SELECT messages WHERE parent_id=&lt;thread&gt; ORDER BY created_at
  PG-->>SUM: 47 messages
  SUM->>SUM: build context, redact PII names
  SUM->>AI: ChatComplete(persona="genie", model=auto, messages=…)
@@ -977,7 +977,7 @@ sequenceDiagram
  IMP->>PG: INSERT messages (batched 500)
  PG-->>IMP: rows
  IMP->>BB: trigger backfill ingest
- BB->>BR: put memories/chat/<channel>/...
+ BB->>BR: put memories/chat/&lt;channel&gt;/...
  end
  IMP-->>CLI: done
  CLI-->>ADMIN: report (channels, messages, attachments transferred)

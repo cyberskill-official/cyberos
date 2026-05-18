@@ -710,7 +710,7 @@ sequenceDiagram
  else over 300h annual overtime
  LAW-->>API: 422 hard-block · pages CHRO
  end
- API->>R: SET active_timer:<member> = {entry_id, start_time}
+ API->>R: SET active_timer:&lt;member&gt; = {entry_id, start_time}
  API->>FX: snapshot rate for date
  FX-->>API: rate
  API->>PG: INSERT time_entry (status=draft, start_time, …)
@@ -720,7 +720,7 @@ sequenceDiagram
  Note over U:... work happens...
 
  U->>API: POST /time/timer/stop {description}
- API->>R: GET active_timer:<member>
+ API->>R: GET active_timer:&lt;member&gt;
  R-->>API: {entry_id, start_time}
  API->>PG: UPDATE time_entry SET end_time=now, status=draft, description=…
  API->>B: time.entry_stop {duration_minutes}

@@ -774,7 +774,7 @@ sequenceDiagram
  TPL-->>H: PDF bytes
  H->>K: wrap with contract KMS key
  K-->>H: ciphertext
- H->>S3: PUT contracts/<member_id>/<id>.pdf (object-lock 10y)
+ H->>S3: PUT contracts/&lt;member_id&gt;/&lt;id&gt;.pdf (object-lock 10y)
  S3-->>H: s3_uri + etag
  H->>D: send for e-sign (WebAuthn binding)
  D->>M: present contract + WebAuthn challenge
@@ -809,7 +809,7 @@ sequenceDiagram
  CHR-->>L: confirm outcome
  L-->>H: review_outcome {summary, recommendation}
  H->>H: store review_outcome row (no per-judge data)
- H->>B: audit "hr.review.closed" reason=<recommendation>
+ H->>B: audit "hr.review.closed" reason=&lt;recommendation&gt;
  Note over L,H: individual peer scores NEVER cross the HR boundary;<br>(FR pending) enforced at LEARN export gate.
  </div>
  </div>
@@ -828,7 +828,7 @@ sequenceDiagram
  participant ASSET as Asset return checklist
  participant B as 🧠 BRAIN
 
- HR->>OFF: POST /admin/members/<id>/terminate {kind=resignation|dismissal}
+ HR->>OFF: POST /admin/members/&lt;id&gt;/terminate {kind=resignation|dismissal}
  OFF->>CEO: request co-sign (mandatory for Bad Leaver)
  CEO-->>OFF: approve
  par revocations

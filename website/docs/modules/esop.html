@@ -691,10 +691,10 @@ sequenceDiagram
  E->>P: render grant PDF (deterministic)
  P->>K: wrap with esop-key
  K-->>P: ciphertext
- P->>S3: PUT grants/<member>/<id>.pdf (10y object-lock)
+ P->>S3: PUT grants/&lt;member&gt;/&lt;id&gt;.pdf (10y object-lock)
  S3-->>E: s3_uri
  E->>E: update pool_balance.issued_sp += 5000
- E->>B: opaque ref "esop.grant.issued:<opaque_id>"
+ E->>B: opaque ref "esop.grant.issued:&lt;opaque_id&gt;"
  E-->>CEO: grant issued
  Note over E,B: BRAIN row contains NO sp_count, NO valuation.<br>Only an opaque pointer to ESOP DB.
  </div>
@@ -786,7 +786,7 @@ sequenceDiagram
  BANK-->>P: transfer_id + ack
  P->>P: status="wired" → "settled"
  P->>P: grant.sp_count_remaining -= 500
- E->>B: opaque ref "esop.put.settled:<opaque_id>"
+ E->>B: opaque ref "esop.put.settled:&lt;opaque_id&gt;"
  E-->>M: notification "put exercise settled"
  Note over E,B: ESOP value not in BRAIN; only opaque event ref.
  </div>

@@ -670,7 +670,7 @@ sequenceDiagram
  R->>K: render PDFs (deterministic tectonic)
  R->>S3: archive PDFs (KMS, object-lock 10y)
  R->>R: payslip.status="published", record pdf_sha256
- R->>B: opaque ref "rew.payslip.published:<opaque_id>"
+ R->>B: opaque ref "rew.payslip.published:&lt;opaque_id&gt;"
  Note over R,B: BRAIN row contains NO comp numbers,<br>just an opaque pointer.
  </div>
  <p class="text-xs text-slate-500 mt-3">CFO + CHRO assertions must both arrive within 5 minutes; otherwise <code>cosign_guard</code> resets and both must re-submit. This prevents accidental long-pending half-signed commits.</p>
@@ -724,7 +724,7 @@ sequenceDiagram
  participant B as 🧠 BRAIN
 
  L-->>HR: promotion outcome "L2 → L3 for mai@…"
- HR->>R: POST /admin/compensation/<mai>/change<br>{level:"L3", p1_base:<new>, reason:"promotion"}
+ HR->>R: POST /admin/compensation/&lt;mai&gt;/change<br>{level:"L3", p1_base:&lt;new&gt;, reason:"promotion"}
  R->>P1G: check new_p1 ≥ prior_p1 ?
  alt p1 raised (or equal)
  P1G-->>R: ✓ P1-invariant preserved
@@ -733,7 +733,7 @@ sequenceDiagram
  CFO-->>R: WebAuthn (cosign:cfo)
  CHRO-->>R: WebAuthn (cosign:chro)
  R->>R: INSERT compensation_change row
- R->>B: opaque ref "rew.comp.changed:<opaque>"
+ R->>B: opaque ref "rew.comp.changed:&lt;opaque&gt;"
  else p1 reduced — REJECT
  P1G-->>R: ✗ sev-0 P1 cut attempted
  R-->>HR: 422 "P1 protection invariant"
@@ -756,7 +756,7 @@ sequenceDiagram
  participant M as Member portal
  participant B as 🧠 BRAIN
 
- CEO->>R: POST /admin/bonus-pool/2026<br>{pool_size: <X> VND}
+ CEO->>R: POST /admin/bonus-pool/2026<br>{pool_size: &lt;X&gt; VND}
  R->>R: co-sign (CEO + CFO)
  R->>L: read VP per Member
  L-->>R: VP map

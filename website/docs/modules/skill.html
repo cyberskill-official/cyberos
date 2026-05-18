@@ -628,7 +628,7 @@ graph TB
  subgraph RUNTIME ["Runtime"]
  REG["DashMap registry<br>sharded · read-mostly"]
  WT["Wasmtime engine<br>WASI Preview 2 + Component Model"]
- POOL["Pool<Store><br>per-skill"]
+ POOL["Pool&lt;Store&gt;<br>per-skill"]
  BROKER["Capability broker<br>allowed-tools → WASI grants"]
  SCRIPT["Native-script executor<br>(scripts/*.py / *.sh)"]
  end
@@ -1187,8 +1187,8 @@ sequenceDiagram
 
  T->>FX: load fixture (input.json + expected.json)
  par parallel run
- T->>PY: python -m runners.fr_with_tasks <fixture>
- T->>RS: cyberos-skill-cli run <skill> < input.json
+ T->>PY: python -m runners.fr_with_tasks &lt;fixture&gt;
+ T->>RS: cyberos-skill-cli run &lt;skill&gt; < input.json
  end
  PY-->>T: py_output
  RS-->>T: rs_output

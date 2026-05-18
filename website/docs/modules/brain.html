@@ -1063,7 +1063,7 @@ sequenceDiagram
 
  SUB->>OP: DSAR / erasure request
  OP->>C: explicit chat-turn approval (§3.6 gate)
- C->>D: cyberos delete <path> --mode purge --reason "DSAR-2026-014"
+ C->>D: cyberos delete &lt;path&gt; --mode purge --reason "DSAR-2026-014"
  D->>D: validate reason non-empty
  D->>W: append purge row {op:"delete", path, body_hash, mode:"purge", reason}
  W-->>D: chain committed
