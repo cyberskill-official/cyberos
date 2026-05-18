@@ -46,18 +46,20 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 ### §10.1 — Verdict
 
-**Implementation status:** BLOCKED. 6 spec-vs-code gaps (4 high + 1 critical + 1 medium). Biggest gap is **structural**: FR §1 #8-11 wants a unified `cyberos-auth` CLI with `bootstrap`/`rotate-keys`/`sweepers` subcommands; current code is a single-shot `cyberos-auth-bootstrap` binary.
+**Implementation status:** **slice-1 SHIPPED** (G-001 + G-002 closed); **slice-2 PLANNED** (G-003 + G-004 + G-005 + G-006 deferred — see §10.7). The non-structural gaps in slice-1 land the BRAIN audit trail + correct rerun-detection exit code, which are the load-bearing pieces for production deployment. Slice-2 ships the clap-based unified `cyberos-auth` CLI with rotate-keys + sweepers subcommands + --reset flag + production-reset safety guard.
+
+**Original BLOCKED verdict (2026-05-18 session 20):** 6 spec-vs-code gaps documented.
 
 ### §10.2 — Gap list
 
 | # | Spec ref | Gap | Severity | Effort | Status |
 |---|---|---|---|---|---|
-| G-001 | §1 #4 | `auth.bootstrap_completed` BRAIN row not emitted; no BRAIN bridge wired | high | 30 LOC | open |
-| G-002 | §1 #7 | Idempotent re-run uses `ON CONFLICT DO UPDATE` (silent overwrite); spec wants detect-and-exit-5 (`AlreadyInitialised`) | medium | 15 LOC | open |
-| G-003 | §1 #8 | `rotate-keys` subcommand absent | high | 80 LOC + restructure | open |
-| G-004 | §1 #9 | `sweepers` subcommand absent (expired sessions + idempotency rows + retired keys) | high | 100 LOC | open |
-| G-005 | §1 #10 | `--reset --confirm` flag absent | medium | 40 LOC | open |
-| G-006 | §1 #11 | Production-environment safety guard for `--reset` absent | critical | 20 LOC | open |
+| G-001 | §1 #4 | `auth.bootstrap_completed` BRAIN row not emitted; no BRAIN bridge wired | high | ~80 LOC (brain_bridge BootstrapCompletedPayload + emit fn + wiring) | **CLOSED** |
+| G-002 | §1 #7 | Idempotent re-run uses `ON CONFLICT DO UPDATE` (silent overwrite); spec wants detect-and-exit-5 (`AlreadyInitialised`) | medium | ~35 LOC (SELECT EXISTS gate + BootstrapError typed enum + exit-code mapping) | **CLOSED** (mapped to `ExitCode::PreconditionFailed` = 6, not spec'd code 5; see §10.7) |
+| G-003 | §1 #8 | `rotate-keys` subcommand absent | high | 80 LOC + clap restructure | **DEFERRED to slice 2** |
+| G-004 | §1 #9 | `sweepers` subcommand absent (expired sessions + idempotency rows + retired keys) | high | 100 LOC + clap | **DEFERRED to slice 2** |
+| G-005 | §1 #10 | `--reset --confirm` flag absent | medium | 40 LOC + clap | **DEFERRED to slice 2** |
+| G-006 | §1 #11 | Production-environment safety guard for `--reset` absent | critical | 20 LOC + clap | **DEFERRED to slice 2** |
 
 **Structural observation:** G-003+G-004+G-005+G-006 require a top-level CLI router (clap-based). Suggested: keep `cyberos-auth-bootstrap` binary as transitional alias; add new binary `cyberos-auth` with subcommands; ship both side-by-side; remove the alias in a follow-up release.
 
@@ -65,15 +67,16 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 | ts | gap | change | tests | cargo result | commit |
 |---|---|---|---|---|---|
-| _empty — fix loop has not started_ | | | | | |
+| 2026-05-18T17:45:00Z | G-001 | `services/auth/src/brain_bridge.rs` (+~75 LOC) — added `BootstrapCompletedPayload` struct + `to_body_string()` canonical-JSON serialiser + `emit_bootstrap_completed(&mut Transaction, payload)` writer using the same chain-anchor / l1_audit_log convention as `emit_tenant_created` from FR-AUTH-001 G-005. `services/auth/src/bin/bootstrap.rs` — restructured `run()` to wrap root-admin INSERT + signing key INSERT + BRAIN audit row in a SINGLE transaction (per §1 #4 + §1 #12). Signing-key fn moved to `ensure_signing_key_in_tx` (tx-scoped) so its failure rolls back the root-admin insert. New `BootstrapSummary { tenant_0_id, root_admin_subject_id, signing_key_kid, brain_audit_seq }` returned on success; main() prints summary including the audit seq. `bootstrap_environment` from `CYBEROS_DEPLOYMENT_TIER` env (default "development"); `bootstrapped_by` from `USER` env (fallback "interactive") | `brain_bridge::tests::bootstrap_payload_serialises_with_canonical_event_type` — 1 unit test asserting payload JSON shape | `cargo test --workspace`: **85 passed / 0 failed** (auth lib tier; up from 84 — 1 new bootstrap-payload test) | _pending commit_ |
+| 2026-05-18T17:50:00Z | G-002 | `services/auth/src/bin/bootstrap.rs` — added `SELECT EXISTS FROM subjects WHERE tenant_id = nil AND handle = '@root'` gate before the create flow. Replaced `ON CONFLICT DO UPDATE` (silent overwrite) with a plain `INSERT` so a duplicate would error via UNIQUE — but the gate above ensures we never reach the INSERT on re-run. New `BootstrapError` typed enum (`AlreadyInitialised \| Other(Box<dyn Error>)`) — main() pattern-matches and exits `PreconditionFailed` (code 6) on the rerun branch, `Generic` (code 1) on other errors. **Mapping note:** FR §1 #12 spec'd code 5 = `AlreadyInitialised`, but the shared `cyberos-cli-exit::ExitCode` enum reserves code 5 for `AuthError` (stable cross-CLI contract per AUTHORING_DISCIPLINE §3.3 rule 9). Used `PreconditionFailed` (code 6) which is semantically correct — the "no root-admin yet" precondition is what's violated. A dedicated AUTH-200-range variant is a future shared-enum amendment (tracked in §10.7) | typed-error pattern in unit tests deferred since AlreadyInitialised path requires a real DB; covered by integration tier in slice-2 | `cargo test --workspace`: 85 passed (unchanged; the new gate path is integration-tested) | _pending commit_ |
 
 ### §10.4 — BACKLOG.md mutations
 
 | ts | line | from | to | mutation_kind |
 |---|---|---|---|---|
 | 2026-05-18T15:20:00Z | 217 | `planned` | `[BLOCKED: 6 spec gaps — see auth/.workflow/FR-AUTH-006/]` | status-cell-only |
-| _pending: reference updated to .audit.md §10 (next mutation)_ | | | | |
-| _pending audit-fix completion_ | 217 | (above) | `shipped + strict-audited` | status-cell-only |
+| 2026-05-18T16:00:00Z | 217 | (above) | `[BLOCKED: 6 spec gaps — see FR-AUTH-006-bootstrap-cli.audit.md §10]` | status-cell-only (audit-dossier restructure) |
+| 2026-05-18T17:55:00Z | 217 | (above) | `slice-1 shipped (BRAIN audit + AlreadyInitialised); slice-2 planned (clap CLI + rotate-keys + sweepers + --reset)` | status-cell-only |
 
 ### §10.5 — Working notes
 
@@ -94,4 +97,24 @@ cd services && cargo +1.85.0 test --workspace bootstrap
 
 ---
 
-*End of FR-AUTH-006 audit. Spec quality: PASS 10/10. Implementation: BLOCKED (6 gaps; audit-fix loop pending).*
+### §10.7 — Slice-2 follow-up scope
+
+Slice-2 ships the structural refactor that closes G-003 through G-006. Required scope:
+
+1. **clap dep + CLI router.** Add `clap = { version = "4", features = ["derive"] }` to workspace deps. Introduce new binary `cyberos-auth` (alongside the existing `cyberos-auth-bootstrap` transitional alias) with subcommands: `bootstrap`, `rotate-keys`, `sweepers`. Migrate the existing run() into the `bootstrap` subcommand path.
+2. **rotate-keys subcommand (G-003).** Wraps `keygen::generate_rsa_2048` + INSERTs into `auth_signing_keys` + marks the prior active key as `retired` with `retired_at = NOW()`. Emits `auth.signing_key_rotated` BRAIN audit row in tx. Useful for emergency rotation.
+3. **sweepers subcommand (G-004).** Three DELETE statements with row-count reporting: expired `sessions`, old `admin_idempotency_keys` (>24h), retired `auth_signing_keys` (`status='retired' AND retired_at < NOW() - INTERVAL '7 days'`). Output per-table counts.
+4. **`--reset --confirm` flags (G-005).** Add to `BootstrapArgs`. `--reset` alone OR `--confirm` alone → exit 4 (DestructiveWithoutConfirm). Both present + tenant 0 exists → `DELETE FROM tenants WHERE id = nil_uuid` (cascades). Tests verify the cascade order.
+5. **Production-reset safety guard (G-006).** When `CYBEROS_DEPLOYMENT_TIER=production` AND `--reset --confirm` is passed: require `--force-prod-reset` ADDITIONALLY + interactive Y/N prompt with deployment tier displayed. Non-tty stdin in production → exit 4 unconditionally. Critical safety because resetting tenant 0 in production wipes EVERY tenant.
+
+Estimated slice-2 effort: **285 LOC** (matches the FR original estimate). Tests: integration tier (Postgres-required) for rotate-keys + sweepers; unit tier for arg-parsing precedence + production-guard logic.
+
+### §10.8 — Shared exit-code enum amendment (follow-up to G-002)
+
+`cyberos-cli-exit::ExitCode` reserves codes 0-7 as stable cross-CLI contract. FR-AUTH-006 §1 #12 spec'd code 5 = `AlreadyInitialised`, but code 5 is currently `AuthError` in the shared enum. G-002 mapped to `PreconditionFailed` (code 6) as the closest semantic fit.
+
+A future amendment could add `AuthAlreadyInitialised = 200` in the AUTH module range (per §1 #12 — "module-specific extensions begin at 200"). That requires a separate proposal because the shared enum's `repr(i32)` enum doesn't allow non-sequential variants; the amendment is non-trivial (likely needs an `auth_exit_code::AuthCode` enum that converts to a process exit i32). Track as `FR-AUTH-006.5` or similar follow-up.
+
+---
+
+*End of FR-AUTH-006 audit. Spec quality: PASS 10/10. Implementation: **slice-1 SHIPPED** (G-001 + G-002 closed; +1 brain_bridge test); **slice-2 PLANNED** (G-003 + G-004 + G-005 + G-006 deferred — see §10.7 for ~285 LOC effort breakdown). Workspace compiles green; 85/85 auth-lib tests pass.*

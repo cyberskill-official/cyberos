@@ -214,7 +214,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 | FR-AUTH-003 | RLS enforcement at every table (Postgres `current_setting('app.tenant')` predicate) | MUST | planned | FR-AUTH-001 | 8h |
 | FR-AUTH-004 | JWT issuance + JWKS endpoint (RS256) with `tenant_id` + `agent_persona` + `scope_grants` claims | MUST | planned | FR-AUTH-002 | 6h |
 | FR-AUTH-005 | Admin REST: list tenants + list subjects + revoke subject | MUST | planned | FR-AUTH-001, FR-AUTH-002 | 5h |
-| FR-AUTH-006 | `cyberos-auth bootstrap` CLI for tenant-0 root-admin (no UI required) | MUST | [BLOCKED: 6 spec gaps — see FR-AUTH-006-bootstrap-cli.audit.md §10] | FR-AUTH-001 | 3h |
+| FR-AUTH-006 | `cyberos-auth bootstrap` CLI for tenant-0 root-admin (no UI required) | MUST | slice-1 shipped (BRAIN audit + AlreadyInitialised); slice-2 planned (clap CLI + rotate-keys + sweepers + --reset) | FR-AUTH-001 | 3h |
 
 ---
 

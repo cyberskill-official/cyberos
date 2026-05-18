@@ -63,19 +63,65 @@ async fn main() -> ExitCode {
         }
     };
 
-    if let Err(e) = run(&pool, &args).await {
-        eprintln!("bootstrap failed: {e}");
-        return ExitCode::Generic;
+    match run(&pool, &args).await {
+        Ok(summary) => {
+            // FR-AUTH-006 §1 #13 — print summary on success. Note: email
+            // intentionally omitted — operator knows what they typed, and
+            // echoing email risks landing in logs.
+            println!("✓ bootstrap complete");
+            println!("  • root tenant:        {}", summary.tenant_0_id);
+            println!("  • root-admin subject: {}", summary.root_admin_subject_id);
+            println!("  • signing key kid:    {}", summary.signing_key_kid);
+            println!("  • brain audit seq:    {}", summary.brain_audit_seq);
+            println!();
+            println!(
+                "Next: POST /v1/auth/token with grant_type=password, \
+                 tenant_slug=root, handle={ROOT_HANDLE}"
+            );
+            ExitCode::Ok
+        }
+        // FR-AUTH-006 §1 #7 — distinguish "already done, no action needed"
+        // from generic failure so CI scripts can detect rerun-after-success.
+        // Maps to the shared enum's `PreconditionFailed` (code 6) — the
+        // "no root-admin already exists" precondition is what's violated.
+        // FR spec §1 #12 mentions a future AUTH-200-range variant for this;
+        // tracked in §10.7 of the audit as a follow-up to the
+        // cyberos-cli-exit shared enum.
+        Err(BootstrapError::AlreadyInitialised) => {
+            eprintln!(
+                "✗ Tenant 0 + root-admin already exist. \
+                 Use --reset --confirm to recreate (destructive). \
+                 [Future: slice-2 will add the --reset flag.]"
+            );
+            ExitCode::PreconditionFailed
+        }
+        Err(BootstrapError::Other(e)) => {
+            eprintln!("bootstrap failed: {e}");
+            ExitCode::Generic
+        }
     }
+}
 
-    println!("✓ bootstrap complete");
-    println!("  • root tenant:    {ROOT_TENANT}");
-    println!("  • root subject:   {ROOT_HANDLE}");
-    println!("  • email:          {}", args.email);
-    println!("  • signing key:    active 90-day RSA-2048");
-    println!();
-    println!("Next: POST /v1/auth/token with grant_type=password, tenant_slug=root, handle={ROOT_HANDLE}");
-    ExitCode::Ok
+/// Typed errors so main() can distinguish "already initialised" (exit 6,
+/// rerun-safe) from generic failures (exit 1).
+#[derive(Debug)]
+enum BootstrapError {
+    AlreadyInitialised,
+    Other(Box<dyn std::error::Error + Send + Sync>),
+}
+
+impl<E: std::error::Error + Send + Sync + 'static> From<E> for BootstrapError {
+    fn from(e: E) -> Self {
+        BootstrapError::Other(Box::new(e))
+    }
+}
+
+/// Summary returned on success — fields used to print the post-bootstrap report.
+struct BootstrapSummary {
+    tenant_0_id: Uuid,
+    root_admin_subject_id: Uuid,
+    signing_key_kid: String,
+    brain_audit_seq: i64,
 }
 
 struct Args {
@@ -105,7 +151,7 @@ fn parse_args() -> Result<Args, String> {
     Ok(Args { email, password })
 }
 
-async fn run(pool: &PgPool, args: &Args) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapError> {
     // 1. Confirm root tenant exists. The 0001 migration seeded it; this check
     // exists so the operator gets a clean error if migrations haven't run.
     let (exists,): (bool,) = sqlx::query_as(
@@ -115,11 +161,29 @@ async fn run(pool: &PgPool, args: &Args) -> Result<(), Box<dyn std::error::Error
     .fetch_one(pool)
     .await?;
     if !exists {
-        return Err("root tenant missing — apply services/auth/migrations/0001_tenants.sql first".into());
+        return Err(BootstrapError::Other(
+            "root tenant missing — apply services/auth/migrations/0001_tenants.sql first".into(),
+        ));
     }
     println!("✓ root tenant present");
 
-    // 2. Seed the root-admin subject. RLS forces us to set the GUC.
+    // 2. FR-AUTH-006 §1 #7 — Idempotency gate: if a root-admin already exists
+    // for the root tenant, exit AlreadyInitialised (code 6) so CI scripts can
+    // distinguish "rerun, no-op" from "bad input". Previous impl silently
+    // ON CONFLICT-DO-UPDATE-ed the row, which lost the rerun-detection signal.
+    let (root_admin_exists,): (bool,) = sqlx::query_as(
+        "SELECT EXISTS(SELECT 1 FROM subjects WHERE tenant_id = $1 AND handle = $2)",
+    )
+    .bind(ROOT_TENANT)
+    .bind(ROOT_HANDLE)
+    .fetch_one(pool)
+    .await?;
+    if root_admin_exists {
+        return Err(BootstrapError::AlreadyInitialised);
+    }
+
+    // 3. Single tx wraps root-admin INSERT + BRAIN audit row INSERT
+    //    (FR-AUTH-006 §1 #4). Both commit or both rollback.
     let mut tx = pool.begin().await?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
         .execute(&mut *tx).await?;
@@ -128,10 +192,6 @@ async fn run(pool: &PgPool, args: &Args) -> Result<(), Box<dyn std::error::Error
     let res = sqlx::query(
         "INSERT INTO subjects (tenant_id, handle, display_name, email, kind, password_hash, status, roles)
               VALUES ($1, $2, 'Root Admin', $3, 'human', $4, 'active', ARRAY['root-admin'])
-         ON CONFLICT (tenant_id, handle) DO UPDATE
-            SET email = EXCLUDED.email,
-                password_hash = EXCLUDED.password_hash,
-                updated_at = NOW()
        RETURNING id",
     )
     .bind(ROOT_TENANT)
@@ -141,13 +201,36 @@ async fn run(pool: &PgPool, args: &Args) -> Result<(), Box<dyn std::error::Error
     .fetch_one(&mut *tx)
     .await?;
     let subject_id: Uuid = res.get(0);
-    tx.commit().await?;
     println!("✓ root-admin subject: {subject_id}");
 
-    // 3. Force a signing key into existence. Uses the same logic AppState
-    //    does at boot — extracted here as a public helper.
-    ensure_signing_key(pool).await?;
-    println!("✓ active RSA-2048 signing key present");
+    // 4. Force a signing key into existence (still inside the tx so a
+    //    keygen failure rolls back the root-admin insert).
+    let signing_key_kid = ensure_signing_key_in_tx(&mut tx)
+        .await
+        .map_err(BootstrapError::Other)?;
+    println!("✓ active RSA-2048 signing key present: {signing_key_kid}");
+
+    // 5. FR-AUTH-006 §1 #4 — Emit auth.bootstrap_completed BRAIN audit row
+    //    INSIDE the same tx. Failure → return Err → tx auto-rolls back the
+    //    root-admin + signing key INSERTs together.
+    let env_tier =
+        std::env::var("CYBEROS_DEPLOYMENT_TIER").unwrap_or_else(|_| "development".into());
+    let bootstrapped_by = std::env::var("USER")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "interactive".into());
+    let payload = cyberos_auth::brain_bridge::BootstrapCompletedPayload {
+        tenant_0_id: ROOT_TENANT,
+        root_admin_subject_id: subject_id,
+        initial_signing_key_kid: &signing_key_kid,
+        bootstrap_environment: &env_tier,
+        bootstrapped_by: &bootstrapped_by,
+    };
+    let brain_audit_seq =
+        cyberos_auth::brain_bridge::emit_bootstrap_completed(&mut tx, payload).await?;
+    println!("✓ BRAIN audit row emitted: seq={brain_audit_seq}");
+
+    tx.commit().await?;
 
     // 4. Best-effort: if the RBAC migrations have been applied, grant
     //    `root-admin` on the subject_roles table too. If they haven't,
@@ -178,17 +261,30 @@ async fn run(pool: &PgPool, args: &Args) -> Result<(), Box<dyn std::error::Error
         println!("• subject_roles table absent — apply migration 0007 to enable FR-AUTH-101 RBAC");
     }
 
-    Ok(())
+    Ok(BootstrapSummary {
+        tenant_0_id: ROOT_TENANT,
+        root_admin_subject_id: subject_id,
+        signing_key_kid,
+        brain_audit_seq,
+    })
 }
 
-async fn ensure_signing_key(pool: &PgPool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let n: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM auth_signing_keys WHERE status = 'active' AND expires_at > NOW()",
+/// Tx-scoped signing-key ensure. Returns the kid (newly minted or existing).
+/// Per FR-AUTH-006 §1 #4 + #12, this runs inside the bootstrap transaction
+/// so signing-key generation failure rolls back the root-admin INSERT.
+async fn ensure_signing_key_in_tx(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    // Reuse existing key if active + not expiring.
+    let existing: Option<(String,)> = sqlx::query_as(
+        "SELECT kid FROM auth_signing_keys
+            WHERE status = 'active' AND expires_at > NOW()
+         ORDER BY expires_at DESC LIMIT 1",
     )
-    .fetch_one(pool)
+    .fetch_optional(&mut **tx)
     .await?;
-    if n > 0 {
-        return Ok(());
+    if let Some((kid,)) = existing {
+        return Ok(kid);
     }
     let key = keygen::generate_rsa_2048()?;
     let kid = format!("auth-{}", chrono::Utc::now().format("%Y-%m-%d"));
@@ -202,9 +298,9 @@ async fn ensure_signing_key(pool: &PgPool) -> Result<(), Box<dyn std::error::Err
     .bind(&key.public_pem)
     .bind(&key.private_pem)
     .bind(expires)
-    .execute(pool)
+    .execute(&mut **tx)
     .await?;
-    Ok(())
+    Ok(kid)
 }
 
 use sqlx::Row;

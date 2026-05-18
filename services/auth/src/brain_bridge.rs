@@ -122,6 +122,70 @@ pub async fn emit_tenant_created(
     Ok(row.0)
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FR-AUTH-006 §1 #4 — auth.bootstrap_completed audit row
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Payload for the `auth.bootstrap_completed` audit row emitted by
+/// `cyberos-auth-bootstrap` after tenant 0 + root-admin + initial signing key
+/// land. Lives inside the `body` column as canonical JSON.
+#[derive(Debug)]
+pub struct BootstrapCompletedPayload<'a> {
+    pub tenant_0_id: Uuid,
+    pub root_admin_subject_id: Uuid,
+    pub initial_signing_key_kid: &'a str,
+    pub bootstrap_environment: &'a str, // development | staging | production
+    pub bootstrapped_by: &'a str,       // system user from $USER or "interactive"
+}
+
+impl<'a> BootstrapCompletedPayload<'a> {
+    pub fn to_body_string(&self) -> String {
+        let body = json!({
+            "event_type": "auth.bootstrap_completed",
+            "tenant_0_id": self.tenant_0_id.to_string(),
+            "root_admin_subject_id": self.root_admin_subject_id.to_string(),
+            "initial_signing_key_kid": self.initial_signing_key_kid,
+            "bootstrap_environment": self.bootstrap_environment,
+            "bootstrapped_by": self.bootstrapped_by,
+        });
+        serde_json::to_string(&body).expect("json::to_string of static keys cannot fail")
+    }
+}
+
+/// Insert the `auth.bootstrap_completed` row into `l1_audit_log` inside the
+/// caller's Postgres transaction. Caller MUST pass the SAME `tx` they used
+/// for the root-admin INSERT — tx rollback rolls both back.
+///
+/// Path convention: `auth/bootstrap/<tenant_0_id>/completed`. Since
+/// `tenant_0_id` is always nil-UUID, this lets brain's Layer-2 entity-extract
+/// MERGE a `Doc` node + `MENTIONS` edge to the canonical root-tenant entity.
+pub async fn emit_bootstrap_completed(
+    tx: &mut Transaction<'_, Postgres>,
+    payload: BootstrapCompletedPayload<'_>,
+) -> Result<i64, sqlx::Error> {
+    let body = payload.to_body_string();
+    let anchor = chain_anchor(None, &body); // genesis row for tenant 0's chain
+    let ts_ns = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
+    let path = format!("auth/bootstrap/{}/completed", payload.tenant_0_id);
+
+    let row: (i64,) = sqlx::query_as(
+        "INSERT INTO l1_audit_log
+            (tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns)
+         VALUES ($1, $2, 'put', $3, $4, NULL, $5, $6)
+         RETURNING seq",
+    )
+    .bind(payload.tenant_0_id)
+    .bind(payload.root_admin_subject_id)
+    .bind(&path)
+    .bind(&body)
+    .bind(&anchor)
+    .bind(ts_ns)
+    .fetch_one(&mut **tx)
+    .await?;
+
+    Ok(row.0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -172,5 +236,23 @@ mod tests {
         let body = p.to_body_string();
         assert!(body.contains("\"idempotency_key\":null"));
         assert!(body.contains("\"request_id\":null"));
+    }
+
+    // ─── FR-AUTH-006 §1 #4 — bootstrap_completed payload ────────────────
+
+    #[test]
+    fn bootstrap_payload_serialises_with_canonical_event_type() {
+        let p = BootstrapCompletedPayload {
+            tenant_0_id: Uuid::nil(),
+            root_admin_subject_id: Uuid::nil(),
+            initial_signing_key_kid: "auth-2026-05-18",
+            bootstrap_environment: "production",
+            bootstrapped_by: "stephencheng",
+        };
+        let body = p.to_body_string();
+        assert!(body.contains("\"event_type\":\"auth.bootstrap_completed\""));
+        assert!(body.contains("\"initial_signing_key_kid\":\"auth-2026-05-18\""));
+        assert!(body.contains("\"bootstrap_environment\":\"production\""));
+        assert!(body.contains("\"bootstrapped_by\":\"stephencheng\""));
     }
 }
