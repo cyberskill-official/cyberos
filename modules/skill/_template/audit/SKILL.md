@@ -1,12 +1,14 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: <artifact>-audit
-description: |
-  Audit one or more existing <artifact>@1 markdowns against
-  <artifact>_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  <artifact>-author.
+description: >-
+  Audit one or more existing <artefact>@1 markdowns against
+  <artefact>_rubric@1.0. Use when user asks to "audit this <ARTIFACT>"
+  or "check the rubric on this <ARTIFACT>". Produces a sibling
+  .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on
+  needs_human verdicts; resumable on audited_file_sha256. Standalone
+  trigger or chains naturally after <artifact>-author. Do NOT use for
+  "generate new <ARTIFACT>s" (use <artifact>-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -84,9 +86,9 @@ confidence_band:
   defer_below: 0.5
   cite_sources: required
 
-# ── Untrusted-content discipline ─────────────────────────────────────
+# ── Untrusted-content discipline (FR-SKILL-113 registry v0.2.5) ──────
 untrusted_inputs:
-  wrap_in: <untrusted_content/>
+  wrap_in_marker: "untrusted_content"
   injection_scan: required
   on_marker_hit: surface_to_human
 

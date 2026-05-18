@@ -41,7 +41,7 @@ confidence_band:
   defer_below: 0.7
   cite_sources: required
 untrusted_inputs:
-  wrap_in: <untrusted_content/>
+  wrap_in_marker: "untrusted_content"
   injection_scan: required
   on_marker_hit: surface_to_human
 determinism:

@@ -1,14 +1,17 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: product-requirements-document-author
-description: |
+description: >-
   Author a Product Requirements Document (prd@1) from an approved SOW
-  or project-brief plus discovery artefacts. Conducts a 3-5 question
-  follow-up interview for PRD-specific decisions the brief did not
-  cover, reads targeted BRAIN scopes for additional context, applies
-  amendment-batch protocol for iteration, and emits a draft PRD with
-  per-claim authority markers. Cross-cutting (used at stage b and
-  feeds stages d/e/f). Chains naturally into product-requirements-document-audit.
+  or project-brief plus discovery artefacts. Use when user asks to
+  "draft a PRD", "turn this brief into a PRD", or "expand the SOW into
+  product requirements". Conducts a 3-5 question follow-up interview
+  for PRD-specific decisions the brief did not cover, reads targeted
+  BRAIN scopes for additional context, applies amendment-batch protocol
+  for iteration, and emits a draft PRD with per-claim authority markers.
+  Cross-cutting (used at stage b and feeds stages d/e/f). Chains
+  naturally into product-requirements-document-audit. Do NOT use for
+  "audit an existing PRD" (use product-requirements-document-audit).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -96,7 +99,7 @@ confidence_band:
 
 # ── Untrusted-content discipline ─────────────────────────────────────
 untrusted_inputs:
-  wrap_in: <untrusted_content/>
+  wrap_in_marker: "untrusted_content"
   injection_scan: required
   on_marker_hit: surface_to_human
 

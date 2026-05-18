@@ -1,8 +1,19 @@
 # Untrusted-content discipline
 
-Version: 1.0.0  Status: Normative for every skill in the SKILL module.
+Version: 1.1.0  Status: Normative for every skill in the SKILL module.
 
 This file is copied verbatim into every skill bundle. Customize only if the skill has domain-specific markers.
+
+---
+
+## §0  Two layers — declaration vs runtime wrap (FR-SKILL-113 registry v0.2.5)
+
+This discipline lives in **two layers**:
+
+- **Frontmatter declares the marker name as a string**: `untrusted_inputs.wrap_in_marker: "untrusted_content"` in `SKILL.md`. This is a *declaration* — it tells the runtime, auditor, and scanner which marker shape the skill uses. The declaration is plain YAML; no XML brackets in frontmatter (Anthropic Reference B host-portability boundary).
+- **Body wraps untrusted bytes in the corresponding XML tags**: when the auditor reads an audited artefact's bytes, it emits `<untrusted_content source="..." page="...">…body bytes…</untrusted_content>` *into the markdown body* before reasoning over the content. This is the runtime wrapper — where wrapping actually happens.
+
+By convention, the frontmatter marker name (`"untrusted_content"`) matches the body XML tag name (`<untrusted_content>`). The two layers stay in sync.
 
 ---
 

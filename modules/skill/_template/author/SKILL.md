@@ -1,12 +1,15 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: <artifact>-author
-description: |
-  Author a <ARTIFACT> markdown from <input artefact(s)>. Generates a
-  versioned <artefact>@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  <artifact>-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Generate a versioned <artefact>@1 markdown from one or more <input
+  artefact(s)>. Use when user asks to "draft a <ARTIFACT>" or "turn this
+  <input> into a <ARTIFACT>". Halts at PLAN approval and HITL gates;
+  resumable from manifest.json state. Chains naturally into
+  <artifact>-audit by default. Outputs versioned <ARTIFACT>-NNN-slug.md
+  files with per-claim authority markers and source provenance. Refuses
+  to author when upstream artefact is in non-pass state. Do NOT use for
+  "audit existing <ARTIFACT>s" (use <artifact>-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -92,9 +95,9 @@ confidence_band:
   defer_below: 0.5
   cite_sources: required
 
-# ── Untrusted-content discipline ─────────────────────────────────────
+# ── Untrusted-content discipline (FR-SKILL-113 registry v0.2.5) ──────
 untrusted_inputs:
-  wrap_in: <untrusted_content/>
+  wrap_in_marker: "untrusted_content"
   injection_scan: required
   on_marker_hit: surface_to_human
 

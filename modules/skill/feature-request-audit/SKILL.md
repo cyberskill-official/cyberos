@@ -1,12 +1,15 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: feature-request-audit
-description: |
+description: >-
   Audit one or more existing feature_request@1 markdowns against
-  audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/STALE rule families).
-  Produces a sibling .audit.md per FR plus an AUDIT_BATCH_SUMMARY.
-  Halts on needs_human verdicts; resumable on audited_file_sha256.
-  Standalone trigger or chains naturally after feature-request-author.
+  audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/STALE rule families). Use when
+  user asks to "audit this FR", "check the rubric on this FR", or "tell
+  me which FRs would fail acceptance today". Produces a sibling
+  .audit.md per FR plus an AUDIT_BATCH_SUMMARY. Halts on needs_human
+  verdicts; resumable on audited_file_sha256. Standalone trigger or
+  chains naturally after feature-request-author. Do NOT use for "draft
+  a new FR from this PRD" (use feature-request-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -86,7 +89,7 @@ confidence_band:
 
 # ── Untrusted-content discipline ─────────────────────────────────────
 untrusted_inputs:
-  wrap_in: <untrusted_content/>
+  wrap_in_marker: "untrusted_content"
   injection_scan: required
   on_marker_hit: surface_to_human
 

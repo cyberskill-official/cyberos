@@ -1,12 +1,15 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: feature-request-author
-description: |
-  Generate a versioned, audited Feature Request backlog from one or
-  more PRD/spec/SRS documents. Halts at PLAN approval, HITL gates,
-  and amendment batches; resumable from manifest state. Outputs
-  feature_request@1 markdowns + a fr-manifest@2 state file. Covers
-  SDP §2(b) Requirements — backlog. Chains naturally into feature-request-audit.
+description: >-
+  Generate a versioned, audited Feature Request backlog from one or more
+  PRD/spec/SRS documents. Use when user asks to "draft an FR", "turn this
+  PRD into a backlog", or "expand this spec into FRs". Halts at PLAN
+  approval, HITL gates, and amendment batches; resumable from manifest
+  state. Outputs feature_request@1 markdowns + a fr-manifest@2 state
+  file. Covers SDP §2(b) Requirements — backlog. Chains naturally into
+  feature-request-audit. Do NOT use for "audit existing FRs" (use
+  feature-request-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -94,7 +97,7 @@ confidence_band:
 
 # ── Untrusted-content discipline ─────────────────────────────────────
 untrusted_inputs:
-  wrap_in: <untrusted_content/>
+  wrap_in_marker: "untrusted_content"
   injection_scan: required
   on_marker_hit: surface_to_human
 

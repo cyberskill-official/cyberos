@@ -86,7 +86,7 @@ confidence_band:
 
 # ── Untrusted-content discipline ─────────────────────────────────────
 untrusted_inputs:
-  wrap_in: <untrusted_content/>
+  wrap_in_marker: "untrusted_content"
   injection_scan: required
   on_marker_hit: surface_to_human
 
