@@ -65,7 +65,7 @@ pub enum SamlSigError {
     DigestMismatch,
     #[error("signature mismatch — RSA verify failed: {0}")]
     SignatureMismatch(String),
-    #[error("invalid base64 in {field}: {detail}")]
+    #[error("invalid base64 in {0}: {1}")]
     Base64(&'static str, String),
     #[error("invalid signing cert: {0}")]
     CertParse(String),
@@ -805,7 +805,7 @@ mod tests {
 
     #[test]
     fn locate_attr_finds_uri() {
-        let xml = r#"<root><Reference URI="#abc" Type="x"/></root>"#;
+        let xml = r##"<root><Reference URI="#abc" Type="x"/></root>"##;
         assert_eq!(locate_attr(xml, "Reference", "URI"), Some("#abc".into()));
     }
 
@@ -835,7 +835,7 @@ mod tests {
 
     #[test]
     fn verify_rejects_sha1_signature_method() {
-        let xml = r#"<root>
+        let xml = r##"<root>
             <Assertion ID="a"><Foo/></Assertion>
             <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
                 <ds:SignedInfo>
@@ -848,7 +848,7 @@ mod tests {
                 </ds:SignedInfo>
                 <ds:SignatureValue>x</ds:SignatureValue>
             </ds:Signature>
-        </root>"#;
+        </root>"##;
         // Pass a syntactically-valid PEM so we fail at algorithm check, not PEM parse.
         let pem = sample_rsa_public_pem();
         let err = verify(xml, &pem).unwrap_err();

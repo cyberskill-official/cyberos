@@ -127,6 +127,24 @@ async fn create_tenant(
     headers: HeaderMap,
     Json(req): Json<CreateTenantRequest>,
 ) -> Result<(StatusCode, Json<Tenant>), (StatusCode, Json<Value>)> {
+    // FR-AUTH-001 §1 #14 — Defence-in-depth: reject reserved slug "root"
+    // before any DB work. Tenant 0 (the root tenant) is bootstrapped by
+    // FR-AUTH-006 CLI; this endpoint MUST NOT create a second tenant
+    // with slug "root" (would shadow the canonical root in operator
+    // mental models even though id is unique). The DB UNIQUE constraint
+    // also catches this, but the early-return saves a transaction round
+    // trip and produces a structured error body.
+    if req.slug == "root" {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": "invalid_input",
+                "field": "slug",
+                "reason": "slug \"root\" is reserved for tenant 0 (use cyberos-auth-bootstrap)"
+            })),
+        ));
+    }
+
     // Only the root tenant can create new tenants. The auth middleware
     // (FR-AUTH-004) will validate the JWT and set `app.current_tenant_id`.
     // Until then, this handler runs in the root context.

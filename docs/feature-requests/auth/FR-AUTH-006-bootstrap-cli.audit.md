@@ -40,4 +40,58 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 ---
 
-*End of FR-AUTH-006 audit.*
+## §10 — Implementation audit (code-vs-spec)
+
+> Added 2026-05-18 (session 20) by `chief-technology-officer/implement-backlog-frs` workflow.
+
+### §10.1 — Verdict
+
+**Implementation status:** BLOCKED. 6 spec-vs-code gaps (4 high + 1 critical + 1 medium). Biggest gap is **structural**: FR §1 #8-11 wants a unified `cyberos-auth` CLI with `bootstrap`/`rotate-keys`/`sweepers` subcommands; current code is a single-shot `cyberos-auth-bootstrap` binary.
+
+### §10.2 — Gap list
+
+| # | Spec ref | Gap | Severity | Effort | Status |
+|---|---|---|---|---|---|
+| G-001 | §1 #4 | `auth.bootstrap_completed` BRAIN row not emitted; no BRAIN bridge wired | high | 30 LOC | open |
+| G-002 | §1 #7 | Idempotent re-run uses `ON CONFLICT DO UPDATE` (silent overwrite); spec wants detect-and-exit-5 (`AlreadyInitialised`) | medium | 15 LOC | open |
+| G-003 | §1 #8 | `rotate-keys` subcommand absent | high | 80 LOC + restructure | open |
+| G-004 | §1 #9 | `sweepers` subcommand absent (expired sessions + idempotency rows + retired keys) | high | 100 LOC | open |
+| G-005 | §1 #10 | `--reset --confirm` flag absent | medium | 40 LOC | open |
+| G-006 | §1 #11 | Production-environment safety guard for `--reset` absent | critical | 20 LOC | open |
+
+**Structural observation:** G-003+G-004+G-005+G-006 require a top-level CLI router (clap-based). Suggested: keep `cyberos-auth-bootstrap` binary as transitional alias; add new binary `cyberos-auth` with subcommands; ship both side-by-side; remove the alias in a follow-up release.
+
+### §10.3 — Audit-fix log
+
+| ts | gap | change | tests | cargo result | commit |
+|---|---|---|---|---|---|
+| _empty — fix loop has not started_ | | | | | |
+
+### §10.4 — BACKLOG.md mutations
+
+| ts | line | from | to | mutation_kind |
+|---|---|---|---|---|
+| 2026-05-18T15:20:00Z | 217 | `planned` | `[BLOCKED: 6 spec gaps — see auth/.workflow/FR-AUTH-006/]` | status-cell-only |
+| _pending: reference updated to .audit.md §10 (next mutation)_ | | | | |
+| _pending audit-fix completion_ | 217 | (above) | `shipped + strict-audited` | status-cell-only |
+
+### §10.5 — Working notes
+
+**Code state at audit time:**
+- `services/auth/src/bin/bootstrap.rs` (213 LOC) handles only the bootstrap path.
+- Confirms root tenant via `SELECT EXISTS FROM tenants WHERE id = nil_uuid`.
+- Root-admin INSERT … ON CONFLICT DO UPDATE in single tx with `SET LOCAL app.current_tenant_id` GUC.
+- `bcrypt::DEFAULT_COST` (12).
+- `ensure_signing_key` creates RSA-2048 if no active key (90-day TTL).
+- Best-effort `subject_roles` INSERT when migration 0007 is present.
+
+**Edge-case-matrix rows (12 total):** NULL_INPUT × 2 · BOUNDARY × 2 · MALFORMED × 2 · CONCURRENT × 2 · SECURITY × 2 (--reset prod safety + plaintext-password leak) · DEGRADATION × 2.
+
+**Coverage-gate verify command:**
+```bash
+cd services && cargo +1.85.0 test --workspace bootstrap
+```
+
+---
+
+*End of FR-AUTH-006 audit. Spec quality: PASS 10/10. Implementation: BLOCKED (6 gaps; audit-fix loop pending).*

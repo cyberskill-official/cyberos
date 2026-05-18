@@ -252,8 +252,13 @@ mod tests {
     fn from_env_required_without_db_errors() {
         std::env::remove_var("AUTH_GEOIP_DB");
         std::env::set_var("AUTH_GEOIP_REQUIRED", "1");
-        let err = from_env().unwrap_err();
-        assert!(matches!(err, GeoIpError::Required));
+        // Can't use `.unwrap_err()` because `Arc<dyn GeoIpResolver>` is not Debug.
+        // Pattern-match the Result directly instead.
+        match from_env() {
+            Err(GeoIpError::Required) => {} // expected
+            Err(other) => panic!("expected GeoIpError::Required, got {other:?}"),
+            Ok(_) => panic!("expected error, got Ok resolver"),
+        }
         std::env::remove_var("AUTH_GEOIP_REQUIRED");
     }
 }

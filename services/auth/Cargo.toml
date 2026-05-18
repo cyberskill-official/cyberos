@@ -40,7 +40,7 @@ rand = "0.8"
 futures-util = "0.3"
 sha1 = "0.10"
 reqwest = { version = "0.12", features = ["rustls-tls", "json"], default-features = false }
-webauthn-rs = "0.5"
+webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"] }
 ipnetwork = "0.20"
 maxminddb = "0.24"
 sha2 = { workspace = true }

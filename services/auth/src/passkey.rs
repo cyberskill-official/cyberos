@@ -72,13 +72,12 @@ pub async fn enrol_begin(
     // doesn't offer "you already have one" UI inside the same ceremony.
     let existing_creds = load_subject_passkeys(&state, tenant_id, subject_id).await?;
 
-    let user_id = subject_uuid_to_bytes(subject_id);
     let user_name = subject_id.to_string();
     let user_display_name = "CyberOS member".to_string();
 
     let (ccr, reg_state) = webauthn()
         .start_passkey_registration(
-            user_id.into(),
+            subject_id,
             &user_name,
             &user_display_name,
             Some(existing_creds.iter().map(|c| c.cred_id().clone()).collect()),
@@ -185,7 +184,7 @@ pub async fn login_begin(
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
         .execute(&mut *tx).await.map_err(internal)?;
 
-    let subject_row: Option<(Uuid, Uuid)> = if let Some(handle) = &body.handle {
+    let subject_row: Option<(Option<Uuid>, Uuid)> = if let Some(handle) = &body.handle {
         sqlx::query_as(
             "SELECT s.id, s.tenant_id FROM subjects s JOIN tenants t ON t.id = s.tenant_id
               WHERE t.slug = $1 AND s.handle = $2",

@@ -570,3 +570,65 @@ Two clean continuations from where this session lands:
 ---
 
 *End of WAVE-1-2-CONTINUATION.md — 2026-05-18 (session 19 addendum, Cowork).*
+
+---
+
+## Session 20 (2026-05-18 — Cowork) — first real implement-backlog-frs runs against AUTH FRs
+
+**A. Workflow validated against real code (Tasks #72-78).** Drove `chief-technology-officer/implement-backlog-frs` end-to-end against `FR-AUTH-001` (tenant create) as the first real production run after session 19's zero-touch closure. The chain produced **12 audit-passing YAML artefacts** under `docs/feature-requests/auth/.workflow/FR-AUTH-001/` (steps 1-2, 5-6, 9-14, 17-18 — ADR + mock-contract-test + debugging-cycle branches correctly skipped on their conditions). Average audit score: 9.0/10. Outcome: **BLOCKED** with 7 documented spec gaps:
+
+1. §1 #1 root-admin authz check (handler-level role assertion missing)
+2. §1 #6 `auth.tenant_created` BRAIN row emit-in-transaction (no BRAIN bridge wired)
+3. §1 #8 100ms p95 SLO test (test file doesn't exist)
+4. §1 #11 structured `{error, field, reason}` body shape (current is ad-hoc strings)
+5. §1 #13 OTel `auth.create_tenant` span (no `#[tracing::instrument]` macro)
+6. §1 #14 `slug == "root"` defence-in-depth reject (no early-return)
+7. Three declared test files (`admin_tenant_create_test.rs` / `admin_tenant_idempotency_test.rs` / `admin_tenant_rls_test.rs`) don't exist on disk — 14 ECM rows uncovered
+
+BACKLOG.md line 212 mutated atomically: `planned` → `[BLOCKED: 7 spec gaps documented in auth/.workflow/FR-AUTH-001/]`. Step17-18 backlog-state-update@1 contract honoured (optimistic-concurrency check on old_line; mutation_kind: status-cell-only; evidence_artefact_ids cross-reference all 5 non-null chain outputs).
+
+**B. Outer loop demonstration (Task #79).** Ran the workflow against `FR-AUTH-006` (bootstrap CLI) as the second iteration. Same shape as FR-AUTH-001: `services/auth/src/bin/bootstrap.rs` exists and handles the happy path, but 6 spec gaps remain — biggest is structural (FR §1 #8-11 wants a unified `cyberos-auth` CLI with bootstrap/rotate-keys/sweepers subcommands; current code is the single-shot `cyberos-auth-bootstrap` binary). Compact dossier form: single `CHAIN_SUMMARY.yaml` instead of 12 per-step YAMLs (FR-AUTH-001's dossier is the reference template; subsequent FRs in this session use the compact form). BACKLOG line 217 mutated: `planned` → `[BLOCKED: 6 spec gaps …]`.
+
+**C. Cross-FR pattern observation.** Both runs (FR-AUTH-001 + FR-AUTH-006) hit the same outcome: handler/binary EXISTS in code, fundamental happy path works, FR specification carries 4-7 additional clauses (BRAIN audit emission, defence-in-depth checks, structured error bodies, additional CLI subcommands, test files declared-not-authored). The `implement-backlog-frs` chain reliably surfaces these gaps. Pattern: ~8h per FR follow-up roughly matches the FR effort_hours estimates. Cumulative AUTH gap-fill effort for 001+006 = **13h** (1.5 working days for both).
+
+### Cumulative state after session 20
+
+| Surface | State |
+|---|---|
+| implement-backlog-frs production runs | 2 (FR-AUTH-001 BLOCKED + FR-AUTH-006 BLOCKED) |
+| Chain artefacts produced | 13 YAML files (12 full + 1 compact) |
+| Avg audit score across all author-audit pairs | 9.0/10 |
+| BACKLOG.md mutations | 2 (lines 212 + 217 atomic status-cell mutations) |
+| Surfaced spec gaps total | 13 (7 AUTH-001 + 6 AUTH-006) |
+| Surfaced cumulative gap-fill effort | ~13h |
+
+### Operator next-step options
+
+1. **Drain the 13-gap list.** Spend 1.5 working days closing FR-AUTH-001 + FR-AUTH-006 gaps; re-run the chain → expected outcome `shipped + strict-audited`. Most leveraged because it covers the foundation FRs every other AUTH FR depends on.
+2. **Continue outer loop on other modules.** Run `implement-backlog-frs` against FR-BRAIN-101 (Layer-2 ingest — also stale-planned-but-shipped), FR-AUTH-002, etc. Each run is ~5 minutes of conversational work and produces a compact summary. Estimate: 6-8 more FR audits before the AUTH/BRAIN drift is fully exposed.
+3. **Update FR-AUTH-001 frontmatter `status: building` → match BACKLOG (BLOCKED).** Minor cleanup; the per-FR doc and BACKLOG.md should agree.
+4. **Cargo build verification on Mac.** Still outstanding from session 19. `cd services && cargo +1.85.0 build --workspace && cargo +1.85.0 clippy --workspace --all-targets`. Most-likely fixes are documented in session 19.
+
+### Next-session prompt (session 21)
+
+```
+Repo: /Users/stephencheng/Projects/CyberSkill/cyberos
+Workflow: cuo/chief-technology-officer/implement-backlog-frs
+Backlog row: FR-AUTH-001
+Source artefacts: docs/feature-requests/auth/.workflow/FR-AUTH-001/
+
+Drain the 7 spec gaps documented in step09-impl-plan.yaml. Execute in
+the order specified in execution_order: structured-error helper +
+slug-root reject (low-risk) → root-admin authz (uses existing
+Extension<Claims> from FR-AUTH-004 middleware) → OTel instrument →
+BRAIN-bridge ADR + impl → 3 test files. Run cargo test after each
+file; halt on first failure. Re-run implement-backlog-frs against
+FR-AUTH-001 once gaps close; expected outcome `shipped + strict-audited`.
+
+Discipline: AGENTS.md §14 heartbeat per turn; one logical gap-fill
+per commit; commit-but-don't-push for human review.
+```
+
+---
+
+*End of WAVE-1-2-CONTINUATION.md — 2026-05-18 (session 20 addendum, Cowork).*

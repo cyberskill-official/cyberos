@@ -43,6 +43,16 @@ var/
 !.vscode/settings.json
 !.vscode/extensions.json
 
+# Rust / Cargo build output (large, regenerable)
+target/
+**/target/
+
+# Node / JS deps + build output
+node_modules/
+dist/
+.next/
+.nuxt/
+
 # Secrets — defense-in-depth (denylist §9.3 also catches them)
 .env
 .env.*

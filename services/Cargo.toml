@@ -23,7 +23,7 @@ tower-http  = { version = "0.6", features = ["trace", "cors"] }
 hyper       = "1.5"
 
 # Postgres + migrations
-sqlx        = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json", "migrate"] }
+sqlx        = { version = "0.8", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "json", "migrate", "ipnetwork"] }
 
 # Serialization
 serde       = { version = "1", features = ["derive"] }
@@ -40,7 +40,7 @@ uuid        = { version = "1.11", features = ["v4", "serde"] }
 chrono      = { version = "0.4", features = ["serde"] }
 
 # Crypto
-sha2        = "0.10"
+sha2        = { version = "0.10", features = ["oid"] }
 bcrypt      = "0.16"
 jsonwebtoken = "9"
 
