@@ -153,11 +153,26 @@ while ! stop_signal:
 
 The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the BRAIN chain), parallelism (multiple FRs may run in parallel when their dependency cones don't overlap), and observability (one workflow_complete row per FR is enough to reconstruct the run).
 
+## 11. No partial-ship-and-pause within an FR
+
+Added 2026-05-19 after FR-AUTH-002 ran three slices across multiple sessions. The workflow MUST drive **all slices of an FR to completion in one continuous session**. Pause only between FRs. The chain doesn't yield mid-FR.
+
+**Rules:**
+
+1. Read the full gap list + §10.7 slice plan BEFORE running any step.
+2. Don't ask between slices — continuation is implied by "drive this FR".
+3. Commit per slice for git-history hygiene; each slice = own conventional commit + cargo verify gate.
+4. Only pause between FRs — that's a fresh priority decision.
+5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the .audit.md with required-decision text, mark BACKLOG row `[BLOCKED: needs decision X]`, surface to operator. Do NOT silently ship a partial slice and walk away.
+
+See `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` §9.1 for the full clause + grandfathered exceptions.
+
 ## Cross-references
 
 - Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
 - BACKLOG state engine: `docs/feature-requests/BACKLOG.md` + the `AUTHORING_DISCIPLINE.md` companion at `modules/skill/feature-request-audit/`.
 - Companion workflow: `chief-technology-officer/architect-new-system` — produces the FRs this workflow consumes.
+- No-partial-ship rule: `AUTHORING_DISCIPLINE.md` §9.1.
 
 ---
 

@@ -402,4 +402,39 @@ When writing a `*.audit.md`, walk this checklist. Many findings will not apply t
 
 ---
 
-*End of AUTHORING_DISCIPLINE.md — version 1.3 — 2026-05-18 (absorbed into `feature-request-audit` skill from former `docs/feature-requests/AUTHORING.md`).*
+---
+
+## §9 — Implementation-audit discipline (added 2026-05-19)
+
+The §10 Implementation audit dossier (per `feedback_cyberos_audit_dossier_location.md`) is where code-vs-spec drift is tracked. Three rules govern HOW the audit-fix loop runs against an FR:
+
+### §9.1 — No partial-ship-and-pause within an FR
+
+When running the `chief-technology-officer/implement-backlog-frs` workflow against an FR, **drive ALL slices to completion in a single continuous session**. Pause only between FRs.
+
+**Origin:** FR-AUTH-002 took three commits (slice-1 · slice-2 · slice-3) spread across multiple "continue" cycles in session 21+22. Stephen flagged the fragmentation on 2026-05-19: partial-ship states (`slice-N shipped (N/M gaps); slice-{N+1} planned`) sit in BACKLOG between sessions, fragmenting review and delaying the strict-audited signal.
+
+**Rules:**
+1. Read the full gap list + §10.7 slice plan BEFORE starting any slice
+2. Don't ask between slices — continuation is implied by "drive this FR to completion"
+3. Commit per slice for git-history hygiene (each slice = its own conventional commit + cargo verify gate)
+4. Only pause between FRs — that's a fresh priority decision
+5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 with required-decision text, mark `[BLOCKED: needs decision X]` in BACKLOG, surface to operator. Do NOT silently ship a partial slice and walk away.
+
+**Grandfathered exception:** the FR-AUTH-002 multi-commit slice run (commits `d1dea2e` + `d32f9f6` + `6e58ad4`) predates this rule.
+
+### §9.2 — Audit dossier first, code second
+
+Before writing any G-NNN code-fix, the §10 audit dossier MUST exist with the full gap enumeration. The dossier is the contract that gap-closures trace against. Skipping straight to code without the dossier produces drift on top of drift.
+
+### §9.3 — Defer-with-rationale rules
+
+When a gap is deferred to a later slice or another FR (e.g. FR-AUTH-002 G-011 OTel metrics → FR-OBS-001), the §10.2 status cell MUST include both:
+1. The destination (slice-N OR FR-X-NNN)
+2. A one-sentence rationale (why deferred, not just where)
+
+This prevents "deferred to slice 2" entries that nobody can pick up because nobody remembers WHY.
+
+---
+
+*End of AUTHORING_DISCIPLINE.md — version 1.4 — 2026-05-19 (added §9 implementation-audit discipline).*

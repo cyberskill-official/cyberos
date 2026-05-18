@@ -27,6 +27,7 @@ pub mod models;
 pub mod oidc;
 pub mod passkey;
 pub mod password;
+pub mod rls;
 pub mod rbac;
 pub mod saml;
 pub mod saml_sig;

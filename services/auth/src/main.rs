@@ -1,6 +1,6 @@
 //! cyberos-auth — main binary.
 
-use cyberos_auth::{handlers, rbac, AppState, VERSION};
+use cyberos_auth::{handlers, rbac, rls, AppState, VERSION};
 use cyberos_cli_exit::ExitCode;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -24,6 +24,15 @@ async fn main() -> ExitCode {
             return ExitCode::ConfigError;
         }
     };
+
+    // FR-AUTH-003 §1 #9 — boot-time RLS invariant check. Refuses to accept
+    // traffic if any registered tenant-scoped table is missing RLS or has
+    // zero policies. Catches the "registry says it's covered but the
+    // migration was never written" failure mode before requests can leak.
+    if let Err(diagnostic) = rls::verify_rls_at_boot(&state.pg).await {
+        tracing::error!(error = %diagnostic, "RLS boot-check failed — refusing to start");
+        return ExitCode::ConfigError;
+    }
 
     // FR-AUTH-101 §1 #9 — spawn the 60s RoleMatrix refresher.
     let shutdown = Arc::new(Notify::new());

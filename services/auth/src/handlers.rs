@@ -191,11 +191,11 @@ async fn create_tenant(
         .pg
         .begin()
         .await
-        .map_err(internal_err)?;
+        .map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
         .execute(&mut *tx)
         .await
-        .map_err(internal_err)?;
+        .map_err(db_err)?;
 
     // Idempotency-Key is required on admin POSTs.
     let key = match headers
@@ -220,7 +220,7 @@ async fn create_tenant(
     let root_uuid = Uuid::nil();
     if let Some((status, body)) = crate::idempotency::lookup(&state.pg, key, route, root_uuid)
         .await
-        .map_err(internal_err)?
+        .map_err(db_err)?
     {
         // Replay the prior response bit-for-bit.
         span.record("outcome", "idempotent_replay");
@@ -316,7 +316,7 @@ async fn create_tenant(
         &body,
     )
     .await
-    .map_err(internal_err)?;
+    .map_err(db_err)?;
 
     span.record("outcome", "created");
     Ok((StatusCode::CREATED, Json(row)))
@@ -433,7 +433,7 @@ async fn create_subject(
     let route = "POST /v1/admin/subjects";
     if let Some((status, body)) = crate::idempotency::lookup(&state.pg, idem_key, route, tenant_id)
         .await
-        .map_err(internal_err)?
+        .map_err(db_err)?
     {
         // Replay prior response.
         span.record("outcome", "idempotent_replay");
@@ -518,12 +518,12 @@ async fn create_subject(
         _ => (None, None),
     };
 
-    let mut tx = state.pg.begin().await.map_err(internal_err)?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
-        .map_err(internal_err)?;
+        .map_err(db_err)?;
 
     // G-009 — HIBP audit row INSIDE the tx so subject-insert failure rolls
     // it back together with the subject row. Previously the HIBP audit
@@ -645,7 +645,7 @@ async fn create_subject(
         &body,
     )
     .await
-    .map_err(internal_err)?;
+    .map_err(db_err)?;
 
     span.record("outcome", "created");
     Ok((StatusCode::CREATED, Json(subject)))
@@ -751,6 +751,24 @@ fn internal_err<E: std::fmt::Display>(e: E) -> (StatusCode, Json<Value>) {
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(json!({"error": e.to_string()})),
     )
+}
+
+/// FR-AUTH-003 §1 #8 — slice-1 audit-fix G-003.
+///
+/// `db_err` is the sqlx-specific equivalent of `internal_err`. It first runs
+/// `rls::map_pg_error` to detect Postgres `42501 insufficient_privilege`
+/// errors (the WITH CHECK RLS rejection) and surface them as a structured
+/// 403 `rls_check_violation` body; only if the error is something else does
+/// it fall through to the generic 500 path.
+///
+/// Use `db_err` (NOT `internal_err`) on every `.map_err(...)` directly
+/// downstream of a sqlx call. The `rls_property_test::with_check_rejects_wrong_tenant_insert_via_map_pg_error`
+/// integration test pins this dispatch.
+fn db_err(e: sqlx::Error) -> (StatusCode, Json<Value>) {
+    if let Some(mapped) = crate::rls::map_pg_error(&e) {
+        return mapped;
+    }
+    internal_err(e)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1176,9 +1194,9 @@ async fn list_tenants(
     Query(q): Query<ListQuery>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     // List tenants under root context only. Non-root sees zero rows via RLS.
-    let mut tx = state.pg.begin().await.map_err(internal_err)?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal_err)?;
+        .execute(&mut *tx).await.map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
     let cursor_uuid = parse_cursor(q.cursor.as_deref());
@@ -1194,8 +1212,8 @@ async fn list_tenants(
     .bind(limit)
     .fetch_all(&mut *tx)
     .await
-    .map_err(internal_err)?;
-    tx.commit().await.map_err(internal_err)?;
+    .map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
 
     let next_cursor = rows.last().map(|r| make_cursor(r.0));
     let items: Vec<Tenant> = rows.into_iter().map(|r| Tenant {
@@ -1213,9 +1231,9 @@ async fn list_subjects(
     Query(q): Query<ListQuery>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(internal_err)?;
-    let mut tx = state.pg.begin().await.map_err(internal_err)?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
-        .bind(tenant_id.to_string()).execute(&mut *tx).await.map_err(internal_err)?;
+        .bind(tenant_id.to_string()).execute(&mut *tx).await.map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
     let cursor_uuid = parse_cursor(q.cursor.as_deref());
@@ -1231,8 +1249,8 @@ async fn list_subjects(
     .bind(limit)
     .fetch_all(&mut *tx)
     .await
-    .map_err(internal_err)?;
-    tx.commit().await.map_err(internal_err)?;
+    .map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
 
     let next_cursor = rows.last().map(|r| make_cursor(r.0));
     let items: Vec<Subject> = rows.into_iter().map(|r| Subject {
@@ -1266,14 +1284,14 @@ async fn flip_subject_status(
     new_status: &str,
 ) -> Result<StatusCode, (StatusCode, Json<Value>)> {
     let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(internal_err)?;
-    let mut tx = state.pg.begin().await.map_err(internal_err)?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
-        .bind(tenant_id.to_string()).execute(&mut *tx).await.map_err(internal_err)?;
+        .bind(tenant_id.to_string()).execute(&mut *tx).await.map_err(db_err)?;
 
     let result = sqlx::query("UPDATE subjects SET status = $1, updated_at = NOW() WHERE id = $2")
         .bind(new_status).bind(id)
-        .execute(&mut *tx).await.map_err(internal_err)?;
-    tx.commit().await.map_err(internal_err)?;
+        .execute(&mut *tx).await.map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
     if result.rows_affected() == 0 {
         return Err((StatusCode::NOT_FOUND, Json(json!({"error": "subject not found in this tenant"}))));
     }
@@ -1348,9 +1366,9 @@ async fn password_grant(
     ))?;
 
     // Look up tenant + subject under root context.
-    let mut tx = state.pg.begin().await.map_err(internal_err)?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal_err)?;
+        .execute(&mut *tx).await.map_err(db_err)?;
 
     let row: Option<(Uuid, Uuid, String, String, Option<String>, Vec<String>)> = sqlx::query_as(
         "SELECT s.id, s.tenant_id, s.kind, s.status, s.password_hash, s.roles
@@ -1362,8 +1380,8 @@ async fn password_grant(
     .bind(handle)
     .fetch_optional(&mut *tx)
     .await
-    .map_err(internal_err)?;
-    tx.commit().await.map_err(internal_err)?;
+    .map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
 
     let (sub_id, tenant_id, kind, status, pw_hash, roles) = match row {
         Some(r) => r,
@@ -1552,9 +1570,9 @@ async fn refresh_grant(
 
     // Confirm the subject is still active under root context (refresh flow
     // crosses tenant scope checks).
-    let mut tx = state.pg.begin().await.map_err(internal_err)?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal_err)?;
+        .execute(&mut *tx).await.map_err(db_err)?;
     let status_row: Option<(String, String, Vec<String>)> = sqlx::query_as(
         "SELECT status, kind, roles FROM subjects WHERE id = $1 AND tenant_id = $2",
     )
@@ -1562,8 +1580,8 @@ async fn refresh_grant(
     .bind(tenant_id)
     .fetch_optional(&mut *tx)
     .await
-    .map_err(internal_err)?;
-    tx.commit().await.map_err(internal_err)?;
+    .map_err(db_err)?;
+    tx.commit().await.map_err(db_err)?;
 
     let (status, kind, roles) = match status_row {
         Some(r) => r,

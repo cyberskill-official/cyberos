@@ -1,23 +1,96 @@
-# rls-property-gate.yml — STUB
-#
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-AUTH-003
-#
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
-
 name: rls-property-gate
+
+# FR-AUTH-003 §1 #6 — PR-time CI gate that runs the registry-completeness
+# test + RLS property test against a real docker-compose Postgres on every
+# migration PR. Catches:
+#   * Operator added a tenant-scoped table without updating TENANT_SCOPED_TABLES
+#   * Operator added an entry to TENANT_SCOPED_TABLES without a CREATE POLICY migration
+#   * RLS policy missing WITH CHECK (silent wrong-tenant write smuggle)
+#   * Cross-tenant SELECT/INSERT/UPDATE/DELETE leak across 100 random tenant pairs
 
 on:
   pull_request:
     paths:
-      # TODO: per declaring FR
-      - 'services/**'
+      - 'services/auth/migrations/**.sql'
+      - 'services/auth/src/rls.rs'
+      - 'services/auth/tests/rls_*.rs'
+      - '.github/workflows/rls-property-gate.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'services/auth/migrations/**.sql'
+      - 'services/auth/src/rls.rs'
+      - 'services/auth/tests/rls_*.rs'
+
+concurrency:
+  group: rls-property-gate-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  placeholder:
+  rls-property-tests:
+    name: RLS registry + property tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: cyberos_app
+          POSTGRES_PASSWORD: dev-only-not-secret
+          POSTGRES_DB: cyberos_auth_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://cyberos_app:dev-only-not-secret@localhost:5432/cyberos_auth_test
+      RUST_BACKTRACE: 1
+      SQLX_OFFLINE: "false"
+
     steps:
-      - name: TODO — implement per FR(s) FR-AUTH-003
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+          shared-key: rls-property-gate
+
+      # Pre-create the supporting roles the migrations expect. The
+      # postgres service container only created cyberos_app; we add
+      # cyberos_ro so the 0019 and 0020 GRANT statements succeed.
+      # cyberos_ops is CREATEd by 0020 itself.
+      - name: Bootstrap supporting roles
+        run: |
+          PGPASSWORD=dev-only-not-secret psql \
+              -h localhost -U cyberos_app -d cyberos_auth_test \
+              -c "CREATE ROLE cyberos_ro WITH LOGIN PASSWORD 'dev-only';" \
+              || true
+        continue-on-error: true
+
+      - name: Install sqlx-cli
+        run: cargo install sqlx-cli --version 0.8.2 --no-default-features --features postgres
+
+      - name: Apply migrations
+        working-directory: services/auth
+        run: sqlx migrate run --source migrations
+
+      - name: rls_registry_completeness_test
+        working-directory: services/auth
+        run: cargo test --test rls_registry_completeness_test -- --nocapture --include-ignored
+
+      - name: rls_property_test
+        working-directory: services/auth
+        run: cargo test --test rls_property_test -- --nocapture --test-threads=1 --include-ignored
+
+      - name: rls module unit tests
+        working-directory: services/auth
+        run: cargo test --lib rls::tests -- --nocapture
