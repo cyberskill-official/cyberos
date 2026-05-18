@@ -36,6 +36,14 @@ impl TenantId {
     }
 }
 
+impl Default for TenantId {
+    /// Default constructor — generates a fresh tenant id (UUIDv4).
+    /// NOT the root tenant; use `TenantId::ROOT` for that.
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for TenantId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -62,6 +70,13 @@ impl SubjectId {
     /// Underlying UUID accessor.
     pub fn as_uuid(self) -> Uuid {
         self.0
+    }
+}
+
+impl Default for SubjectId {
+    /// Default constructor — generates a fresh subject id (UUIDv4).
+    fn default() -> Self {
+        Self::new()
     }
 }
 
