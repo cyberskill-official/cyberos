@@ -290,9 +290,21 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 36. **Every audit file MUST list at least 6 ISS-xxx findings.** Below 6 = author didn't pressure-test the spec enough.
 37. **`score_post_revision: 10/10` is the only acceptable shipping score.** Lower scores require explicit operator approval before status transition.
 
-### §3.13 — Frontmatter-comment hygiene (NICE-TO-FIX)
+### §3.13 — Frontmatter-comment hygiene + skill-bundle discipline (NICE-TO-FIX + MUST)
 
 38. **Avoid trailing `#` comments on frontmatter value lines.** Use standalone comment lines above the field instead. Trailing comments break YAML parsers (observed in early FR-AI-001..005 where `priority: MUST   # MUST | SHOULD | COULD | MAY` polluted parsed value).
+
+38a. **(MUST — FR-SKILL-113)** SKILL.md frontmatter values are strings, not markup. No unescaped `<` or `>` anywhere in YAML values; markup belongs in body prose or `references/`. Enforced by `SKILL_BUNDLE_RUBRIC.md` SKB-040 (severity: error at all status levels).
+
+38b. **(MUST — FR-SKILL-113)** When declaring an untrusted-content marker, use `wrap_in_marker: "untrusted_content"`. Never `wrap_in: <untrusted_content/>` (legacy v0.2.4 form, rejected post-v0.2.5). Enforced by SKB-041 + SKB-042. Auto-fix is enabled for the legacy → new rename only.
+
+38c. **(MUST — FR-SKILL-111)** SKILL.md `description:` carries WHAT + WHEN + KEY VALUE: a verb stem (action), ≥2 quoted trigger phrases (`Use when user asks to "<phrase>"` or `Triggers on "<phrase>"`), and an outcome anchor. Length 80–1024 chars (flattened). Enforced by SKB-020..023.
+
+38d. **(MUST — FR-SKILL-112)** Production SKILL.md files (`status: accepted` or higher) carry `acceptance/TRIGGER_TESTS.md` with ≥3 positive + ≥3 negative trigger phrases verified against the supervisor classifier. Enforced by SKB-050..057.
+
+38e. **(MUST at v1.0 — FR-SKILL-114)** Skills at `skill_version >= 1.0.0` carry sibling `BASELINE.md` documenting tool-call / token / failure-rate measurements without-vs-with the skill, with operator-attested signoff + 12-month review cadence. Required earlier when `exposable_as.partner_connector: true`. Enforced by SKB-060..066.
+
+38f. **(MUST — FR-SKILL-115)** Production SKILL.md (`status: accepted` or higher) MUST NOT carry template-scaffold placeholder syntax in any frontmatter field. Examples of forbidden values: `metadata.stage: <SDP §2 stage letter or "cross">`, `description: "Author a <artifact> from <input>"`, `allowed_brain_scopes.write: ["<fr_id>"]`. Each placeholder MUST be substituted with a concrete value derived from the skill's body, sibling docs, or persona-card context. Detection via `python3 tools/sweep-placeholders/detect.py`; suggestion via `tools/sweep-placeholders/suggest.py`; runtime validator at `cuo.placeholder_check`. EXEMPT: any path under `_template/` (scaffolds use placeholders by design). Enforced by SKB-030 (severity: error on accepted+; warning on draft).
 
 ### §3.14 — Spec-depth calibration (NICE-TO-FIX)
 

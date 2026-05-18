@@ -16,22 +16,24 @@ The spec corpus is **closed** and ready for implementation kickoff. Three produc
 
 | Metric | Value |
 |---|---:|
-| Total FRs authored | **242** |
-| FRs at 10/10 audit score | **242** (100%) |
+| Total FRs authored | **245** |
+| FRs at 10/10 audit score | **245** (100%) |
 | FRs missing audit file | **0** |
 | Reciprocity errors in DAG | **0** |
-| Total engineering-hours | **~1,820h** |
+| Total engineering-hours | **~1,878h** (+58h from FR-SKILL-111..115 — Anthropic Skills portability wave 2026-05-19) |
 | Modules with full spec coverage | **24** |
 | Dependency layers (topo build sequence) | **13** |
 | API endpoints declared in §3 contracts | **261** |
 | Migration files declared | **327** across 23 modules |
+
+> **2026-05-19 — Anthropic Skills portability wave.** Authored FR-SKILL-111 (description trigger enrichment) + FR-SKILL-112 (TRIGGER_TESTS.md) + FR-SKILL-113 (XML-free frontmatter, registry v0.2.5) + FR-SKILL-114 (BASELINE.md at v1.0 promotion) + FR-SKILL-115 (134-file placeholder sweep, queued for v0.2.6). All 5 at 10/10. See [`modules/skill/ANTHROPIC_GUIDE_DIGEST.md`](../../modules/skill/ANTHROPIC_GUIDE_DIGEST.md) for findings + [`modules/skill/FR_111_115_COMPLETION_PLAN.md`](../../modules/skill/FR_111_115_COMPLETION_PLAN.md) for the 3-session implementation cut (38-46h).
 
 ### Production module status
 
 | Module | Layer | What's shipped (bootstrap) | What FRs cover next |
 |---|---|---|---|
 | `modules/memory/` | BRAIN protocol + Python impl | 255 green tests; P1–P12 audit proposals + P2 Stage 3 MMR/STH; HTTP REST; cross-BRAIN merge; deterministic export | `brain/FR-BRAIN-101…111` extend Layer-2 ingest, multi-device sync, search API, fs-watcher, capture daemon, pre-ingest PII |
-| `modules/skill/` | Anthropic Agent Skills catalog | 104 author+audit pairs (208 bundles) + 108 contracts; all chain through SDP; zero `planned:` gaps; full-format names (e.g. `feature-request-audit`) as of 2026-05-18 rename | `skill/FR-SKILL-101…201` add OCI registry, capability broker, brain-capture/sync system skills, VN-regulatory bundles |
+| `modules/skill/` | Anthropic Agent Skills catalog | 104 author+audit pairs (208 bundles) + 108 contracts; all chain through SDP; zero `planned:` gaps; **registry v0.2.5 (2026-05-19): Anthropic Skills portability — FR-SKILL-111..114 shipped, FR-SKILL-115 queued for v0.2.6**; 209-file `wrap_in:` → `wrap_in_marker:` sweep complete; 3 backfill exemplars (FR-author / FR-audit / PRD-author) carry enriched descriptions + TRIGGER_TESTS.md fixtures; `cuo.trigger_tests` + `cuo.baseline` Python validators shipped | `skill/FR-SKILL-101..115` + `…201` add OCI registry, capability broker, brain-capture/sync system skills, VN-regulatory bundles, plus FR-115 (134-file stale-placeholder sweep). [SKILL_BUNDLE_RUBRIC.md](../../modules/skill/SKILL_BUNDLE_RUBRIC.md) lives in the SKILL module |
 | `modules/cuo/` | Python supervisor v3.0.0-a4 | Catalog scanner + 2-stage router with domain-fallback + Invoker ABC (Mock/Subprocess/LLM) + execute_chain + BRAIN bridge + Phase 4 special-case handlers (Linear / TimeCritical / PerInstance / MultiOutput / SequentialApproval / PersonaPair); **49/50 tests pass**; 47/48 personas + 221 workflows (Tier-C1 depth additions shipped) | Implementation phase: deploy modules per the §0.6 roadmap |
 
 ### §0.6 — Deploy roadmap → cyberos.cyberskill.world (Vercel)

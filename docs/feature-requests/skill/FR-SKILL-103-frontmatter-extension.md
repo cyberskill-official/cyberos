@@ -12,9 +12,9 @@ owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
 brain_chain_hash: null
-related_frs: [FR-SKILL-101, FR-SKILL-102, FR-SKILL-104, FR-SKILL-105, FR-BRAIN-106, FR-AUTH-003]
+related_frs: [FR-SKILL-101, FR-SKILL-102, FR-SKILL-104, FR-SKILL-105, FR-SKILL-111, FR-SKILL-112, FR-SKILL-113, FR-SKILL-114, FR-SKILL-115, FR-BRAIN-106, FR-AUTH-003]
 depends_on: [FR-SKILL-101]
-blocks: [FR-SKILL-104, FR-SKILL-105]
+blocks: [FR-SKILL-104, FR-SKILL-105, FR-SKILL-111, FR-SKILL-112, FR-SKILL-113, FR-SKILL-114, FR-SKILL-115]
 
 source_pages:
   - website/docs/modules/skill.html#frontmatter
