@@ -16,7 +16,7 @@ async fn issue_then_verify_round_trips_with_correct_claims() {
     // Bootstrap a fresh signing key for this test (kid prefixed to avoid clashes).
     let kid = format!("test-{}", uuid::Uuid::new_v4().simple());
     let key = keygen::generate_rsa_2048().expect("keygen");
-    let expires = chrono::Utc::now() + chrono::Duration::hours(1);
+    let expires = chrono::Utc::now() + chrono::Duration::days(30);
     sqlx::query(
         "INSERT INTO auth_signing_keys (kid, algorithm, public_pem, private_pem, status, expires_at)
          VALUES ($1, 'RS256', $2, $3, 'active', $4)",
@@ -77,7 +77,7 @@ async fn jwks_publishes_active_key() {
 
     let kid = format!("test-jwks-{}", uuid::Uuid::new_v4().simple());
     let key = keygen::generate_rsa_2048().expect("keygen");
-    let expires = chrono::Utc::now() + chrono::Duration::hours(1);
+    let expires = chrono::Utc::now() + chrono::Duration::days(30);
     sqlx::query(
         "INSERT INTO auth_signing_keys (kid, algorithm, public_pem, private_pem, status, expires_at)
          VALUES ($1, 'RS256', $2, $3, 'active', $4)",

@@ -23,7 +23,17 @@ use tower::ServiceExt;
 
 async fn build_app() -> axum::Router {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL env var");
-    let pool = PgPool::connect(&url).await.expect("connect");
+    let pool = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(5)
+        .after_connect(|conn, _meta| {
+            Box::pin(async move {
+                sqlx::query("SET ROLE cyberos_app").execute(conn).await.ok();
+                Ok(())
+            })
+        })
+        .connect(&url)
+        .await
+        .expect("connect");
     bootstrap_test_key(&pool).await;
 
     handlers::router(AppState {

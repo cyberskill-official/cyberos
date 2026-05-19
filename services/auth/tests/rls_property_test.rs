@@ -246,6 +246,10 @@ async fn with_check_rejects_wrong_tenant_insert_via_map_pg_error() {
     // Switch to Alice; try to insert a subject with Bob's tenant_id.
     let err = {
         let mut tx = pool.begin().await.unwrap();
+        sqlx::query("SET LOCAL ROLE cyberos_app")
+            .execute(&mut *tx)
+            .await
+            .unwrap();
         sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
             .bind(alice.to_string())
             .execute(&mut *tx)

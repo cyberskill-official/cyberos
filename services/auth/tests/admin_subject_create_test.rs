@@ -22,7 +22,17 @@ use tower::ServiceExt;
 
 async fn build_app() -> axum::Router {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL env var");
-    let pool = PgPool::connect(&url).await.expect("connect");
+    let pool = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(5)
+        .after_connect(|conn, _meta| {
+            Box::pin(async move {
+                sqlx::query("SET ROLE cyberos_app").execute(conn).await.ok();
+                Ok(())
+            })
+        })
+        .connect(&url)
+        .await
+        .expect("connect");
     bootstrap_test_key(&pool).await;
 
     handlers::router(AppState {
@@ -267,7 +277,7 @@ async fn create_subject_idempotent_replay_returns_same_id() {
 
     let handle = format!("@idem-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
     let key = format!("idem-key-{}", uuid::Uuid::new_v4().simple());
-    let body = happy_subject_body(&handle, &format!("{handle}@example.com"));
+    let body = happy_subject_body(&handle, &format!("{}@example.com", &handle[1..]));
 
     let r1 = app
         .clone()
@@ -299,7 +309,7 @@ async fn create_subject_emits_memory_audit_row() {
     let app = build_app().await;
 
     let handle = format!("@audit-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
-    let email = format!("{handle}@example.com");
+    let email = format!("{}@example.com", &handle[1..]);
     let res = app
         .oneshot(post_subject(
             &token,
@@ -356,7 +366,7 @@ async fn create_subject_p95_latency_under_200ms() {
 
     for i in 0..N {
         let handle = format!("@slo-{}-{}", &uuid::Uuid::new_v4().simple().to_string()[..8], i);
-        let email = format!("{handle}@example.com");
+        let email = format!("{}@example.com", &handle[1..]);
         let req = post_subject(
             &token,
             &format!("slo-{}-{i}", uuid::Uuid::new_v4().simple()),
