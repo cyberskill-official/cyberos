@@ -57,7 +57,7 @@ fn run(args: Args) -> ExitCode {
                     }
                 }
                 None => {
-                    print!("{}", content);
+                    print!("{content}");
                     ExitCode::Ok
                 }
             }
