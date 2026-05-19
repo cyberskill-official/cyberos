@@ -20,9 +20,11 @@ CREATE TABLE auth_signing_keys (
 );
 
 -- Index for the JWKS endpoint query (active + non-expired).
+-- Note: retired-key visibility window is enforced at query time, not here,
+-- because Postgres requires index predicates to use IMMUTABLE functions only.
 CREATE INDEX auth_signing_keys_published_idx
     ON auth_signing_keys (status, expires_at)
-    WHERE status = 'active' OR retired_at > NOW() - INTERVAL '7 days';
+    WHERE status = 'active';
 
 -- The signing keys table is NOT tenant-scoped — it's cluster-wide. Skip RLS.
 -- Access is restricted via the `cyberos_app` role grant.
