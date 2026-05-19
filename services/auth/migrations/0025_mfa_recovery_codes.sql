@@ -4,7 +4,7 @@ BEGIN;
 CREATE TABLE mfa_recovery_codes (
     id                  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id           UUID         NOT NULL,
-    subject_id          UUID         NOT NULL REFERENCES auth.subjects(id) ON DELETE RESTRICT,
+    subject_id          UUID         NOT NULL REFERENCES subjects(id) ON DELETE RESTRICT,
     code_bcrypt_hash    TEXT         NOT NULL,
     batch_id            UUID         NOT NULL,
     consumed            BOOLEAN      NOT NULL DEFAULT false,

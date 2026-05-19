@@ -9,7 +9,7 @@ CREATE TYPE factor_kind AS ENUM ('totp', 'webauthn_platform', 'webauthn_cross_pl
 CREATE TABLE mfa_factors (
     id                          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id                   UUID         NOT NULL,
-    subject_id                  UUID         NOT NULL REFERENCES auth.subjects(id) ON DELETE RESTRICT,
+    subject_id                  UUID         NOT NULL REFERENCES subjects(id) ON DELETE RESTRICT,
     factor_kind                 factor_kind  NOT NULL,
     display_name                TEXT         NOT NULL CHECK (length(display_name) BETWEEN 1 AND 80),
     totp_secret_kms_blob        BYTEA,

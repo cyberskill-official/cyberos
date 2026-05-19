@@ -2,7 +2,7 @@
 BEGIN;
 
 CREATE TABLE mfa_lockout_state (
-    subject_id           UUID         PRIMARY KEY REFERENCES auth.subjects(id) ON DELETE RESTRICT,
+    subject_id           UUID         PRIMARY KEY REFERENCES subjects(id) ON DELETE RESTRICT,
     tenant_id            UUID         NOT NULL,
     failed_count         INT          NOT NULL DEFAULT 0 CHECK (failed_count >= 0),
     window_started_at    TIMESTAMPTZ  NOT NULL DEFAULT now(),
