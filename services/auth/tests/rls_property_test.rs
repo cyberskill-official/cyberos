@@ -32,6 +32,10 @@ const NIL_TENANT: &str = "00000000-0000-0000-0000-000000000000";
 macro_rules! with_tenant {
     ($pool:expr, $tenant:expr, $tx:ident, $body:expr) => {{
         let mut $tx = $pool.begin().await.expect("begin tx");
+        sqlx::query("SET LOCAL ROLE cyberos_app")
+            .execute(&mut *$tx)
+            .await
+            .expect("set role");
         sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
             .bind($tenant.to_string())
             .execute(&mut *$tx)

@@ -134,7 +134,7 @@ async fn revoke_idempotency_key_replay_is_no_op() {
     .unwrap();
     sqlx::query(
         "INSERT INTO subjects(id, tenant_id, handle, email, kind, password_hash, roles)
-                 VALUES ($1, $2, 'target', 'target@x.com', 'human', 'h', ARRAY['tenant-member'])",
+                 VALUES ($1, $2, '@target', 'target@x.com', 'human', 'h', ARRAY['tenant-member'])",
     )
     .bind(target_id)
     .bind(tenant_id)
@@ -245,7 +245,7 @@ async fn revoke_cross_tenant_returns_404() {
     // Target lives in OTHER tenant.
     sqlx::query(
         "INSERT INTO subjects(id, tenant_id, handle, email, kind, password_hash, roles)
-                 VALUES ($1, $2, 'cross', 'c@x.com', 'human', 'h', ARRAY['tenant-member'])",
+                 VALUES ($1, $2, '@cross', 'c@x.com', 'human', 'h', ARRAY['tenant-member'])",
     )
     .bind(target_id)
     .bind(other_tenant)

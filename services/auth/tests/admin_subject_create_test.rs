@@ -138,7 +138,7 @@ async fn create_subject_happy_path_returns_201_with_clean_body() {
     let (token, _) = tenant_admin_token(&pool).await;
     let app = build_app().await;
 
-    let handle = format!("user-{}", uuid::Uuid::new_v4().simple());
+    let handle = format!("@user-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
     let res = app
         .oneshot(post_subject(
             &token,
@@ -187,7 +187,7 @@ async fn create_subject_rejects_http_request() {
         .header("idempotency-key", "test-http-reject")
         // No X-Forwarded-Proto — should be rejected.
         .body(axum::body::Body::from(
-            happy_subject_body("http-user", "alice@example.com").to_string(),
+            happy_subject_body("@http-user", "alice@example.com").to_string(),
         ))
         .unwrap();
     let res = app.oneshot(req).await.unwrap();
@@ -210,7 +210,7 @@ async fn create_subject_rejects_weak_password_with_multiple_reasons() {
     let (token, _) = tenant_admin_token(&pool).await;
     let app = build_app().await;
 
-    let mut body = happy_subject_body("weak-user", "alice@example.com");
+    let mut body = happy_subject_body("@weak-user", "alice@example.com");
     body["password"] = json!("short"); // 5 chars, lowercase only
     let res = app
         .oneshot(post_subject(&token, "test-weak-pw", body))
@@ -239,7 +239,7 @@ async fn create_subject_rejects_unknown_role() {
     let (token, _) = tenant_admin_token(&pool).await;
     let app = build_app().await;
 
-    let mut body = happy_subject_body("typo-user", "alice@example.com");
+    let mut body = happy_subject_body("@typo-user", "alice@example.com");
     body["roles"] = json!(["tenant-superadmin"]); // not in slice-1 allow-list
     let res = app
         .oneshot(post_subject(&token, "test-bad-role", body))
@@ -265,7 +265,7 @@ async fn create_subject_idempotent_replay_returns_same_id() {
     let (token, _) = tenant_admin_token(&pool).await;
     let app = build_app().await;
 
-    let handle = format!("idem-{}", uuid::Uuid::new_v4().simple());
+    let handle = format!("@idem-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
     let key = format!("idem-key-{}", uuid::Uuid::new_v4().simple());
     let body = happy_subject_body(&handle, &format!("{handle}@example.com"));
 
@@ -298,7 +298,7 @@ async fn create_subject_emits_memory_audit_row() {
     let (token, tenant_uuid) = tenant_admin_token(&pool).await;
     let app = build_app().await;
 
-    let handle = format!("audit-{}", uuid::Uuid::new_v4().simple());
+    let handle = format!("@audit-{}", &uuid::Uuid::new_v4().simple().to_string()[..8]);
     let email = format!("{handle}@example.com");
     let res = app
         .oneshot(post_subject(
@@ -355,7 +355,7 @@ async fn create_subject_p95_latency_under_200ms() {
     let mut latencies_ms = Vec::with_capacity(N);
 
     for i in 0..N {
-        let handle = format!("slo-{}-{}", uuid::Uuid::new_v4().simple(), i);
+        let handle = format!("@slo-{}-{}", &uuid::Uuid::new_v4().simple().to_string()[..8], i);
         let email = format!("{handle}@example.com");
         let req = post_subject(
             &token,
@@ -424,7 +424,7 @@ async fn create_subject_without_tenant_admin_role_returns_403() {
         .oneshot(post_subject(
             &tokens.access_token,
             "test-non-admin",
-            happy_subject_body("non-admin", "x@example.com"),
+            happy_subject_body("@non-admin", "x@example.com"),
         ))
         .await
         .unwrap();

@@ -79,8 +79,8 @@ async fn jwks_publishes_active_key() {
     let key = keygen::generate_rsa_2048().expect("keygen");
     let expires = chrono::Utc::now() + chrono::Duration::hours(1);
     sqlx::query(
-        "INSERT INTO auth_signing_keys (kid, public_pem, private_pem, expires_at)
-         VALUES ($1, $2, $3, $4)",
+        "INSERT INTO auth_signing_keys (kid, algorithm, public_pem, private_pem, status, expires_at)
+         VALUES ($1, 'RS256', $2, $3, 'active', $4)",
     )
     .bind(&kid)
     .bind(&key.public_pem)
