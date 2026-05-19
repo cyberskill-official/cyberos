@@ -14,7 +14,7 @@
 //! alert can call these on a schedule; the 30-minute reconcile cadence
 //! lands in FR-OBS-001's alertmanager config (not in this crate).
 
-use crate::layer2::{binlog_tail, chain_anchor, ingest};
+use crate::layer2::{chain_anchor, ingest};
 use cyberos_types::TenantId;
 use serde::Serialize;
 use sqlx::PgPool;
