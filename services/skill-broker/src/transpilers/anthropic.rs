@@ -82,61 +82,57 @@ fn render_anthropic_frontmatter(fm: &SkillFrontmatter) -> String {
         // Wrap at 78 chars for YAML-pretty output
         let wrapped = wrap_text(flat, 78);
         for line in wrapped.lines() {
-            out.push_str(&format!("  {}\n", line));
+            out.push_str(&format!("  {line}\n"));
         }
     } else {
-        out.push_str(&format!("description: {}\n", flat));
+        out.push_str(&format!("description: {flat}\n"));
     }
 
     // Optional pass-through fields from `extras`. We extract only the
     // Anthropic-portable keys: license, allowed_mcp_tools (→ allowed-tools),
     // metadata. The rest are CyberOS-specific governance + dropped here.
-    if let Some(license) = fm.extras.get(serde_yaml::Value::String("license".into())) {
-        if let serde_yaml::Value::String(s) = license {
-            out.push_str(&format!("license: {}\n", s));
-        }
+    if let Some(serde_yaml::Value::String(s)) =
+        fm.extras.get(serde_yaml::Value::String("license".into()))
+    {
+        out.push_str(&format!("license: {s}\n"));
     }
 
-    if let Some(tools) = fm
+    if let Some(serde_yaml::Value::Sequence(seq)) = fm
         .extras
         .get(serde_yaml::Value::String("allowed_mcp_tools".into()))
     {
-        if let serde_yaml::Value::Sequence(seq) = tools {
-            let names: Vec<String> = seq
-                .iter()
-                .filter_map(|v| {
-                    if let serde_yaml::Value::String(s) = v {
-                        Some(s.clone())
-                    } else {
-                        None
-                    }
-                })
-                .collect();
-            if !names.is_empty() {
-                // Anthropic format: space-separated string
-                out.push_str(&format!("allowed-tools: {}\n", names.join(" ")));
-            }
+        let names: Vec<String> = seq
+            .iter()
+            .filter_map(|v| {
+                if let serde_yaml::Value::String(s) = v {
+                    Some(s.clone())
+                } else {
+                    None
+                }
+            })
+            .collect();
+        if !names.is_empty() {
+            // Anthropic format: space-separated string
+            out.push_str(&format!("allowed-tools: {}\n", names.join(" ")));
         }
     }
 
-    if let Some(meta) = fm
+    if let Some(serde_yaml::Value::Mapping(m)) = fm
         .extras
         .get(serde_yaml::Value::String("metadata".into()))
     {
-        if let serde_yaml::Value::Mapping(m) = meta {
-            if !m.is_empty() {
-                out.push_str("metadata:\n");
-                for (k, v) in m {
-                    if let serde_yaml::Value::String(key) = k {
-                        match v {
-                            serde_yaml::Value::String(s) => {
-                                out.push_str(&format!("  {}: {}\n", key, s));
-                            }
-                            serde_yaml::Value::Number(n) => {
-                                out.push_str(&format!("  {}: {}\n", key, n));
-                            }
-                            _ => {} // Skip nested structures — Anthropic metadata is flat KV.
+        if !m.is_empty() {
+            out.push_str("metadata:\n");
+            for (k, v) in m {
+                if let serde_yaml::Value::String(key) = k {
+                    match v {
+                        serde_yaml::Value::String(s) => {
+                            out.push_str(&format!("  {key}: {s}\n"));
                         }
+                        serde_yaml::Value::Number(n) => {
+                            out.push_str(&format!("  {key}: {n}\n"));
+                        }
+                        _ => {} // Skip nested structures — Anthropic metadata is flat KV.
                     }
                 }
             }
