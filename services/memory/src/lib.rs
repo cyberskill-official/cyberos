@@ -6,7 +6,9 @@
 //! a read scale-out projection in Postgres + pgvector + Apache AGE.
 
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
+// `missing_docs` is deferred — see services/auth/src/lib.rs for the rationale.
+// Tracking: FR-MEMORY-NNN-restore-missing-docs-lint (TBD).
+#![allow(missing_docs)]
 
 pub mod embeddings;
 pub mod layer2;

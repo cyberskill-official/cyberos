@@ -16,7 +16,9 @@
 //! residency · cache · operator CLI) per the build order locked in `docs/feature-requests/BACKLOG.md`.
 
 #![deny(missing_debug_implementations)]
-#![warn(missing_docs)]
+// `missing_docs` is deferred — see services/auth/src/lib.rs for the rationale.
+// Tracking: FR-AI-NNN-restore-missing-docs-lint (TBD).
+#![allow(missing_docs)]
 
 pub mod policy;
 pub mod memory_writer;
