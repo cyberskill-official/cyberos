@@ -82,7 +82,7 @@ async fn ac3_invalid_schema_rejected_on_init() {
 
     let res = policy::init_loader(dir.path()).await;
     assert!(matches!(res, Err(policy::LoaderInitError::Schema { .. })),
-        "expected Schema error, got {:?}", res);
+        "expected Schema error, got {res:?}");
 }
 
 #[tokio::test]
