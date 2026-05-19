@@ -36,5 +36,6 @@ $$;
 GRANT INSERT ON mfa_challenge_log TO mfa_challenge_writer, cyberos_app;
 GRANT UPDATE (status, consumed_at) ON mfa_challenge_log TO mfa_challenge_writer;
 GRANT SELECT ON mfa_challenge_log TO cyberos_app;
+GRANT USAGE, SELECT ON SEQUENCE mfa_challenge_log_id_seq TO cyberos_app, mfa_challenge_writer;
 
 COMMIT;

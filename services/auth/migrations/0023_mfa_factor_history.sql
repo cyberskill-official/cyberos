@@ -24,5 +24,6 @@ CREATE POLICY mfa_factor_history_tenant_iso ON mfa_factor_history
 
 REVOKE UPDATE, DELETE ON mfa_factor_history FROM cyberos_app;
 GRANT INSERT, SELECT ON mfa_factor_history TO cyberos_app;
+GRANT USAGE, SELECT ON SEQUENCE mfa_factor_history_id_seq TO cyberos_app;
 
 COMMIT;

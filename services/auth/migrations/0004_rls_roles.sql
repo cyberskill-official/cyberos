@@ -24,6 +24,8 @@ GRANT USAGE ON SCHEMA public TO cyberos_app;
 -- the app role should grant SELECT/INSERT/UPDATE/DELETE to cyberos_app.
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO cyberos_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT USAGE, SELECT ON SEQUENCES TO cyberos_app;
 
 -- A separate read-only role for analytics / OBS dashboards / DSAR exports.
 -- Cannot mutate; cannot read across tenants (RLS still applies).
@@ -38,6 +40,8 @@ $$;
 GRANT USAGE ON SCHEMA public TO cyberos_ro;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT SELECT ON TABLES TO cyberos_ro;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+    GRANT SELECT ON SEQUENCES TO cyberos_ro;
 
 -- Backfill grants for the tables already created (tenants, subjects, admin_idempotency).
 -- GRANT is naturally idempotent; no DO-block wrapping needed.

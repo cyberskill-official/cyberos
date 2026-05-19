@@ -107,6 +107,12 @@ jobs:
             sleep 2
           done
 
+      - name: Install pgvector in Postgres container
+        run: |
+          docker exec -u 0 cyberos-postgres apt-get update
+          docker exec -u 0 cyberos-postgres apt-get install -y postgresql-16-pgvector
+          docker exec -i cyberos-postgres psql -U cyberos -d cyberos -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
       - name: Install sqlx-cli
         run: cargo install --locked --version 0.8.0 sqlx-cli --no-default-features --features postgres
 

@@ -32,3 +32,4 @@ CREATE INDEX l1_audit_log_ingested_idx   ON l1_audit_log (ingested_at DESC);
 -- Grants for the layer2 ingest worker.
 GRANT SELECT ON l1_audit_log TO cyberos_app;
 GRANT INSERT ON l1_audit_log TO cyberos_app;
+GRANT USAGE, SELECT ON SEQUENCE l1_audit_log_seq_seq TO cyberos_app;
