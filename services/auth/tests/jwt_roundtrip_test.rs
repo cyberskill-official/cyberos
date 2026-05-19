@@ -103,12 +103,12 @@ async fn jwks_publishes_active_key() {
     .await
     .expect("select keys");
     
-    println!("DEBUG: db_now={:?}, expires={:?}", db_now, expires);
+    println!("DEBUG: db_now={db_now:?}, expires={expires:?}");
     for (k_kid, k_status, k_pem, k_expires) in &keys_in_db {
-        println!("DEBUG: key in db: kid={}, status={}, expires_at={:?}", k_kid, k_status, k_expires);
+        println!("DEBUG: key in db: kid={k_kid}, status={k_status}, expires_at={k_expires:?}");
         if k_kid == &kid {
             let has_pub = k_pem.contains("-----BEGIN PUBLIC KEY-----") || k_pem.contains("-----BEGIN RSA PUBLIC KEY-----");
-            println!("DEBUG: pem has public block: {}", has_pub);
+            println!("DEBUG: pem has public block: {has_pub}");
         }
     }
 

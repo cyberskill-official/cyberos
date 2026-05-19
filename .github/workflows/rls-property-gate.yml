@@ -35,7 +35,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: cyberos_app
+          POSTGRES_USER: postgres
           POSTGRES_PASSWORD: dev-only-not-secret
           POSTGRES_DB: cyberos_auth_test
         ports:
@@ -47,7 +47,7 @@ jobs:
           --health-retries 10
 
     env:
-      DATABASE_URL: postgres://cyberos_app:dev-only-not-secret@localhost:5432/cyberos_auth_test
+      DATABASE_URL: postgres://postgres:dev-only-not-secret@localhost:5432/cyberos_auth_test
       RUST_BACKTRACE: 1
       SQLX_OFFLINE: "false"
 
@@ -65,13 +65,13 @@ jobs:
           shared-key: rls-property-gate
 
       # Pre-create the supporting roles the migrations expect. The
-      # postgres service container only created cyberos_app; we add
+      # postgres service container only created postgres; we add
       # cyberos_ro so the 0019 and 0020 GRANT statements succeed.
       # cyberos_ops is CREATEd by 0020 itself.
       - name: Bootstrap supporting roles
         run: |
           PGPASSWORD=dev-only-not-secret psql \
-              -h localhost -U cyberos_app -d cyberos_auth_test \
+              -h localhost -U postgres -d cyberos_auth_test \
               -c "CREATE ROLE cyberos_ro WITH LOGIN PASSWORD 'dev-only';" \
               || true
         continue-on-error: true
