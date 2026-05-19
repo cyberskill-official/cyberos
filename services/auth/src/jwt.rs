@@ -387,13 +387,15 @@ fn parse_pem_block(pem: &[u8], label: &str) -> Option<Vec<u8>> {
 /// This is a minimal hand-rolled ASN.1 reader.
 fn extract_rsa_n_e_from_spki(der: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
     let mut r = AsnReader::new(der);
-    r.read_sequence()?; // outer SEQ
-    let _algid = r.read_sequence()?; // algorithm id
-    let bitstr = r.read_bit_string()?;
+    let outer_body = r.read_sequence()?; // outer SEQ
+    let mut outer = AsnReader::new(outer_body);
+    let _algid = outer.read_sequence()?; // algorithm id
+    let bitstr = outer.read_bit_string()?;
     let mut inner = AsnReader::new(bitstr);
-    inner.read_sequence()?;
-    let n = inner.read_integer_unsigned()?;
-    let e = inner.read_integer_unsigned()?;
+    let inner_body = inner.read_sequence()?; // inner RSAPublicKey SEQ
+    let mut rsa_seq = AsnReader::new(inner_body);
+    let n = rsa_seq.read_integer_unsigned()?;
+    let e = rsa_seq.read_integer_unsigned()?;
     Some((n, e))
 }
 
