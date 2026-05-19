@@ -16,6 +16,12 @@ pub async fn record(
     response_status: i16,
     response_body: &Value,
 ) -> Result<(), sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await?;
+
     sqlx::query(
         "INSERT INTO admin_idempotency
                 (idempotency_key, route, tenant_id, response_status, response_body)
@@ -27,9 +33,10 @@ pub async fn record(
     .bind(tenant_id)
     .bind(response_status)
     .bind(response_body)
-    .execute(pool)
-    .await
-    .map(|_| ())
+    .execute(&mut *tx)
+    .await?;
+    
+    tx.commit().await
 }
 
 /// Look up a prior idempotent response.
@@ -39,7 +46,13 @@ pub async fn lookup(
     route: &str,
     tenant_id: Uuid,
 ) -> Result<Option<(i16, Value)>, sqlx::Error> {
-    sqlx::query_as::<_, (i16, Value)>(
+    let mut tx = pool.begin().await?;
+    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await?;
+
+    let row = sqlx::query_as::<_, (i16, Value)>(
         "SELECT response_status, response_body
            FROM admin_idempotency
           WHERE idempotency_key = $1
@@ -50,6 +63,9 @@ pub async fn lookup(
     .bind(idempotency_key)
     .bind(route)
     .bind(tenant_id)
-    .fetch_optional(pool)
-    .await
+    .fetch_optional(&mut *tx)
+    .await?;
+
+    tx.commit().await?;
+    Ok(row)
 }
