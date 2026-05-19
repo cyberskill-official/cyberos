@@ -11,12 +11,12 @@
 #   export DATABASE_URL=postgres://cyberos:cyberos@localhost:5432/cyberos
 #
 # Postgres ships with pgvector preinstalled. Apache AGE is included via the
-# `apache/age:PG16_latest` image (community-maintained). pgcrypto/uuid-ossp
+# `apache/age:release_PG16_1.6.0` image (community-maintained). pgcrypto/uuid-ossp
 # are stdlib extensions enabled in `postgres-init.sql`.
 
 services:
   postgres:
-    image: apache/age:PG16_latest      # Postgres 16 + Apache AGE + pgvector
+    image: apache/age:release_PG16_1.6.0  # Postgres 16 + Apache AGE
     container_name: cyberos-postgres
     restart: unless-stopped
     ports:
