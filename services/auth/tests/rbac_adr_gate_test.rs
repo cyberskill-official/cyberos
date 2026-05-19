@@ -5,7 +5,7 @@ use std::path::Path;
 fn test_adr_gate() {
     let migrations_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("migrations");
     let adr_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("adr");
-    
+
     match validate_migrations(&migrations_dir, &adr_dir) {
         Ok(_) => (),
         Err(e) => panic!("{}", e),

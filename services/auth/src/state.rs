@@ -45,9 +45,8 @@ pub struct AppState {
 
 impl AppState {
     pub async fn connect_from_env() -> Result<Self, sqlx::Error> {
-        let url = std::env::var("DATABASE_URL").map_err(|_| {
-            sqlx::Error::Configuration("DATABASE_URL env var must be set".into())
-        })?;
+        let url = std::env::var("DATABASE_URL")
+            .map_err(|_| sqlx::Error::Configuration("DATABASE_URL env var must be set".into()))?;
 
         let pg = PgPoolOptions::new()
             .max_connections(8)
@@ -58,10 +57,7 @@ impl AppState {
                     // so RLS policies apply. Root-tenant ops use SET ROLE in
                     // the bootstrap path; the default for everyday queries
                     // must be cyberos_app.
-                    sqlx::query("SET ROLE cyberos_app")
-                        .execute(conn)
-                        .await
-                        .ok();
+                    sqlx::query("SET ROLE cyberos_app").execute(conn).await.ok();
                     Ok(())
                 })
             })
@@ -121,7 +117,9 @@ impl AppState {
         })
     }
 
-    async fn ensure_signing_key(pg: &PgPool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    async fn ensure_signing_key(
+        pg: &PgPool,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let row: Option<(i64,)> = sqlx::query_as(
             "SELECT COUNT(*) FROM auth_signing_keys WHERE status = 'active' AND expires_at > NOW()",
         )

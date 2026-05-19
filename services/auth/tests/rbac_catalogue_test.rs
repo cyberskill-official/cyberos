@@ -8,7 +8,11 @@ use std::str::FromStr;
 
 #[test]
 fn role_catalogue_count_is_locked_at_22() {
-    assert_eq!(Role::ALL.len(), 22, "DEC-121 invariant — adding a role requires an ADR");
+    assert_eq!(
+        Role::ALL.len(),
+        22,
+        "DEC-121 invariant — adding a role requires an ADR"
+    );
 }
 
 #[test]
@@ -26,7 +30,8 @@ fn role_strings_are_kebab_case_no_caps_no_underscores() {
     for r in Role::ALL {
         let s = r.as_str();
         assert!(
-            s.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'),
+            s.chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'),
             "role name must be kebab-case ASCII: {s:?}"
         );
         assert!(!s.is_empty());
@@ -39,7 +44,8 @@ fn resource_strings_are_kebab_case_no_caps_no_underscores() {
     for r in Resource::ALL {
         let s = r.as_str();
         assert!(
-            s.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'),
+            s.chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'),
             "resource name must be kebab-case ASCII: {s:?}"
         );
     }
@@ -49,7 +55,11 @@ fn resource_strings_are_kebab_case_no_caps_no_underscores() {
 fn no_duplicate_role_names() {
     let mut seen = std::collections::HashSet::new();
     for r in Role::ALL {
-        assert!(seen.insert(r.as_str()), "duplicate role string {:?}", r.as_str());
+        assert!(
+            seen.insert(r.as_str()),
+            "duplicate role string {:?}",
+            r.as_str()
+        );
     }
 }
 
@@ -66,7 +76,11 @@ fn stub_tier_is_strict_prefix_of_catalogue() {
 
 #[test]
 fn reserved_roles_are_exactly_dec_127_list() {
-    let reserved: Vec<_> = Role::ALL.iter().filter(|r| r.is_reserved()).copied().collect();
+    let reserved: Vec<_> = Role::ALL
+        .iter()
+        .filter(|r| r.is_reserved())
+        .copied()
+        .collect();
     let expected = [
         Role::RootAdmin,
         Role::ClientPortalUser,

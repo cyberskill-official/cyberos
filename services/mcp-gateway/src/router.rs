@@ -69,10 +69,10 @@ async fn handle_mcp(
             warn!(error = %e, "parse failure");
             return (
                 StatusCode::OK,
-                Json(serde_json::to_value(Response::error(
-                    Value::Null,
-                    err(codes::PARSE_ERROR, &e),
-                )).expect("serialise")),
+                Json(
+                    serde_json::to_value(Response::error(Value::Null, err(codes::PARSE_ERROR, &e)))
+                        .expect("serialise"),
+                ),
             );
         }
     };
@@ -97,7 +97,10 @@ async fn handle_mcp(
                 }
                 out.push(dispatch_one(&state, r).await);
             }
-            (StatusCode::OK, Json(serde_json::to_value(out).expect("serialise")))
+            (
+                StatusCode::OK,
+                Json(serde_json::to_value(out).expect("serialise")),
+            )
         }
     }
 }
@@ -176,7 +179,13 @@ async fn dispatch_one(state: &AppState, req: Request) -> Response {
             // return success.
             Response::success(id, Value::Null)
         }
-        other => Response::error(id, err(codes::METHOD_NOT_FOUND, &format!("method not found: {other}"))),
+        other => Response::error(
+            id,
+            err(
+                codes::METHOD_NOT_FOUND,
+                &format!("method not found: {other}"),
+            ),
+        ),
     }
 }
 
@@ -197,7 +206,9 @@ mod tests {
                 vec!["mcp:tools".into()],
             );
         }
-        AppState { registry: Arc::new(r) }
+        AppState {
+            registry: Arc::new(r),
+        }
     }
 
     #[tokio::test]

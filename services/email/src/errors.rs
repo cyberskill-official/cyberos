@@ -30,7 +30,9 @@ pub enum EmailError {
     #[error("dkim key for tenant {0} (selector={1}) not found")]
     DkimKeyNotFound(Uuid, String),
 
-    #[error("dkim key for tenant {0} already exists at selector={1}; rotate via cyberos-email-cli")]
+    #[error(
+        "dkim key for tenant {0} already exists at selector={1}; rotate via cyberos-email-cli"
+    )]
     DkimKeyAlreadyExists(Uuid, String),
 
     #[error("database error: {0}")]

@@ -16,7 +16,11 @@ use clap::{Parser, Subcommand};
 use uuid::Uuid;
 
 #[derive(Parser, Debug)]
-#[command(name = "cyberos-email-cli", version, about = "EMAIL slice-1 operator CLI")]
+#[command(
+    name = "cyberos-email-cli",
+    version,
+    about = "EMAIL slice-1 operator CLI"
+)]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
@@ -83,7 +87,11 @@ async fn run(cli: Cli) -> Result<(), cyberos_email::EmailError> {
         .map_err(cyberos_email::EmailError::Db)?;
 
     match cli.cmd {
-        Cmd::Provision { tenant_id, local_part, display_name } => {
+        Cmd::Provision {
+            tenant_id,
+            local_part,
+            display_name,
+        } => {
             // §1 #16 — slice-1 provisioning: ensure DKIM key exists,
             // surface the local-part for the operator to create in
             // Stalwart's admin UI (real Stalwart admin API wires in
@@ -94,10 +102,15 @@ async fn run(cli: Cli) -> Result<(), cyberos_email::EmailError> {
             // caller in slice 2 when the JWT subject context is available;
             // for now we surface a placeholder line so operators can spot it.
             println!("  → DKIM active key ensured");
-            println!("  → memory audit row email.user_provisioned: pending (wired in FR-EMAIL-002)");
+            println!(
+                "  → memory audit row email.user_provisioned: pending (wired in FR-EMAIL-002)"
+            );
             Ok(())
         }
-        Cmd::RotateDkim { tenant_id, selector } => {
+        Cmd::RotateDkim {
+            tenant_id,
+            selector,
+        } => {
             let enc = cyberos_email::dkim::keystore::MockKmsEncryptor;
             let (old, new) = cyberos_email::dkim::keystore::rotate_key(
                 &pool,

@@ -49,12 +49,11 @@ pub async fn run_full(pool: &PgPool, tenant: TenantId) -> Result<RebuildSummary,
     info!(?tenant, "rebuild starting");
 
     // Step 1 — record what we're about to destroy so the summary is accurate.
-    let (rows_before,): (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM l2_memory WHERE tenant_id = $1",
-    )
-    .bind(tenant.as_uuid())
-    .fetch_one(pool)
-    .await?;
+    let (rows_before,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM l2_memory WHERE tenant_id = $1")
+            .bind(tenant.as_uuid())
+            .fetch_one(pool)
+            .await?;
 
     // Step 2 — truncate (DELETE in a transaction so concurrent readers don't
     // see emptiness — they see either old rows + a then-empty result depending
@@ -62,19 +61,32 @@ pub async fn run_full(pool: &PgPool, tenant: TenantId) -> Result<RebuildSummary,
     let mut tx = pool.begin().await?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant.to_string())
-        .execute(&mut *tx).await?;
+        .execute(&mut *tx)
+        .await?;
 
     sqlx::query("DELETE FROM l2_memory WHERE tenant_id = $1")
-        .bind(tenant.as_uuid()).execute(&mut *tx).await?;
+        .bind(tenant.as_uuid())
+        .execute(&mut *tx)
+        .await?;
     sqlx::query("DELETE FROM l2_entity WHERE tenant_id = $1")
-        .bind(tenant.as_uuid()).execute(&mut *tx).await?;
+        .bind(tenant.as_uuid())
+        .execute(&mut *tx)
+        .await?;
     sqlx::query("DELETE FROM l2_ingest_cursor WHERE tenant_id = $1")
-        .bind(tenant.as_uuid()).execute(&mut *tx).await?;
+        .bind(tenant.as_uuid())
+        .execute(&mut *tx)
+        .await?;
     sqlx::query("DELETE FROM l2_ingest_cursor_history WHERE tenant_id = $1")
-        .bind(tenant.as_uuid()).execute(&mut *tx).await?;
+        .bind(tenant.as_uuid())
+        .execute(&mut *tx)
+        .await?;
     tx.commit().await?;
 
-    info!(?tenant, rows_truncated = rows_before, "rebuild truncate complete; re-ingesting");
+    info!(
+        ?tenant,
+        rows_truncated = rows_before,
+        "rebuild truncate complete; re-ingesting"
+    );
 
     // Step 3 — drain batches until no more rows. Cap iterations defensively.
     let mut batches = 0usize;
@@ -96,7 +108,10 @@ pub async fn run_full(pool: &PgPool, tenant: TenantId) -> Result<RebuildSummary,
     }
 
     let duration_secs = start.elapsed().as_secs() as i64;
-    info!(?tenant, rows_reingested, batches, duration_secs, "rebuild complete");
+    info!(
+        ?tenant,
+        rows_reingested, batches, duration_secs, "rebuild complete"
+    );
     Ok(RebuildSummary {
         tenant_id: tenant,
         rows_truncated: rows_before,

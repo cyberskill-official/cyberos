@@ -65,7 +65,10 @@ impl EmbeddingClient {
     /// if the env var is missing — callers treat this as "skip embeddings".
     pub fn from_env() -> Result<Self, EmbedError> {
         let url = std::env::var("MEMORY_EMBED_URL").map_err(|_| EmbedError::NotConfigured)?;
-        Ok(Self { base_url: url, timeout: DEFAULT_TIMEOUT })
+        Ok(Self {
+            base_url: url,
+            timeout: DEFAULT_TIMEOUT,
+        })
     }
 
     /// Embed a batch of texts. Returns one `Vec<f32>` per input, all of length
@@ -75,7 +78,10 @@ impl EmbeddingClient {
         if texts.is_empty() {
             return Err(EmbedError::EmptyBatch);
         }
-        let req = EmbedRequest { texts, model: BGE_M3 };
+        let req = EmbedRequest {
+            texts,
+            model: BGE_M3,
+        };
         let client = reqwest::Client::builder()
             .timeout(self.timeout)
             .build()

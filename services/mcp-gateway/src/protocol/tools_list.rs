@@ -122,14 +122,18 @@ mod tests {
 
         let p2 = build_response(
             &r,
-            &ToolsListParams { cursor: p1.next_cursor.clone() },
+            &ToolsListParams {
+                cursor: p1.next_cursor.clone(),
+            },
         );
         assert_eq!(p2.tools.len(), 100);
         assert!(p2.next_cursor.is_some());
 
         let p3 = build_response(
             &r,
-            &ToolsListParams { cursor: p2.next_cursor.clone() },
+            &ToolsListParams {
+                cursor: p2.next_cursor.clone(),
+            },
         );
         assert_eq!(p3.tools.len(), 50);
         assert!(p3.next_cursor.is_none());

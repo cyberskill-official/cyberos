@@ -262,7 +262,11 @@ impl JwtService {
         .fetch_optional(&self.pool)
         .await?;
         match row {
-            Some((kid, public_pem, private_pem)) => Ok(SigningKeyRow { kid, public_pem, private_pem }),
+            Some((kid, public_pem, private_pem)) => Ok(SigningKeyRow {
+                kid,
+                public_pem,
+                private_pem,
+            }),
             None => Err(JwtError::NoActiveKey),
         }
     }
@@ -277,7 +281,11 @@ impl JwtService {
         .fetch_optional(&self.pool)
         .await?;
         match row {
-            Some((kid, public_pem, private_pem)) => Ok(SigningKeyRow { kid, public_pem, private_pem }),
+            Some((kid, public_pem, private_pem)) => Ok(SigningKeyRow {
+                kid,
+                public_pem,
+                private_pem,
+            }),
             None => Err(JwtError::UnknownKid(kid.to_string())),
         }
     }
@@ -345,8 +353,8 @@ fn rsa_pem_to_jwk(kid: &str, pem: &str) -> Result<JwkPublic, JwtError> {
     let der = parse_pem_block(pem_bytes, "PUBLIC KEY")
         .or_else(|| parse_pem_block(pem_bytes, "RSA PUBLIC KEY"))
         .ok_or_else(|| JwtError::InvalidPem("no -----BEGIN PUBLIC KEY----- block found".into()))?;
-    let (n, e) = extract_rsa_n_e_from_spki(&der).ok_or_else(||
-        JwtError::InvalidPem("could not parse RSA n/e from SPKI".into()))?;
+    let (n, e) = extract_rsa_n_e_from_spki(&der)
+        .ok_or_else(|| JwtError::InvalidPem("could not parse RSA n/e from SPKI".into()))?;
     Ok(JwkPublic {
         kid: kid.to_string(),
         alg: "RS256",
@@ -379,8 +387,8 @@ fn parse_pem_block(pem: &[u8], label: &str) -> Option<Vec<u8>> {
 /// This is a minimal hand-rolled ASN.1 reader.
 fn extract_rsa_n_e_from_spki(der: &[u8]) -> Option<(Vec<u8>, Vec<u8>)> {
     let mut r = AsnReader::new(der);
-    r.read_sequence()?;                // outer SEQ
-    let _algid = r.read_sequence()?;   // algorithm id
+    r.read_sequence()?; // outer SEQ
+    let _algid = r.read_sequence()?; // algorithm id
     let bitstr = r.read_bit_string()?;
     let mut inner = AsnReader::new(bitstr);
     inner.read_sequence()?;
@@ -436,7 +444,11 @@ impl<'a> AsnReader<'a> {
     fn read_integer_unsigned(&mut self) -> Option<Vec<u8>> {
         let body = self.read_tag(0x02)?;
         // strip leading 0x00 sign byte if present
-        let stripped = if body.first().copied() == Some(0) { &body[1..] } else { body };
+        let stripped = if body.first().copied() == Some(0) {
+            &body[1..]
+        } else {
+            body
+        };
         Some(stripped.to_vec())
     }
 }

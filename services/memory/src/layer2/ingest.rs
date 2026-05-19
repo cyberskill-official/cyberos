@@ -10,7 +10,10 @@
 //! Wraps everything in a single Postgres transaction so a crash mid-batch
 //! is fully rewound — re-running picks up from the unchanged cursor.
 
-use crate::layer2::{age, binlog_tail, chain_anchor, cursor::PgCursorStore, cursor::CursorStore, entity_extract, pgvector};
+use crate::layer2::{
+    age, binlog_tail, chain_anchor, cursor::CursorStore, cursor::PgCursorStore, entity_extract,
+    pgvector,
+};
 use cyberos_types::TenantId;
 use sqlx::PgPool;
 use std::time::Instant;
@@ -70,9 +73,10 @@ pub async fn run_batch(
     for r in &rows {
         if cyberos_types::TenantId(r.tenant_id) != tenant {
             warn!(?tenant, foreign = ?r.tenant_id, "tenant isolation violation in batch — aborting");
-            return Err(IngestError::Sqlx(sqlx::Error::Protocol(
-                format!("tenant isolation violation: expected {}, row has {}", tenant, r.tenant_id),
-            )));
+            return Err(IngestError::Sqlx(sqlx::Error::Protocol(format!(
+                "tenant isolation violation: expected {}, row has {}",
+                tenant, r.tenant_id
+            ))));
         }
     }
 
@@ -114,7 +118,14 @@ pub async fn run_batch(
 
     let dur = start.elapsed().as_millis() as i64;
     store
-        .advance(tenant, cursor.last_seq, to_seq, rows.len() as i32, dur, last_anchor_hex)
+        .advance(
+            tenant,
+            cursor.last_seq,
+            to_seq,
+            rows.len() as i32,
+            dur,
+            last_anchor_hex,
+        )
         .await?;
 
     info!(

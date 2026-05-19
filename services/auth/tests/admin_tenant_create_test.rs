@@ -75,7 +75,7 @@ async fn root_admin_token(pool: &PgPool) -> String {
         .issue(
             TenantId::ROOT,
             SubjectId(uuid::Uuid::new_v4()),
-            "",     // FR-AUTH-004 §1 #2 — root-admin test token, no email needed
+            "", // FR-AUTH-004 §1 #2 — root-admin test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["root-admin".into()],
@@ -95,7 +95,7 @@ async fn non_root_admin_token(pool: &PgPool) -> String {
         .issue(
             TenantId(uuid::Uuid::new_v4()),
             SubjectId(uuid::Uuid::new_v4()),
-            "",     // FR-AUTH-004 §1 #2 — test token, no email needed
+            "", // FR-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-admin".into()],
@@ -210,7 +210,9 @@ async fn create_tenant_rejects_missing_idempotency_key_with_structured_body() {
         .uri("/v1/admin/tenants")
         .header("content-type", "application/json")
         .header("authorization", format!("Bearer {token}"))
-        .body(axum::body::Body::from(happy_body("acme-no-idem").to_string()))
+        .body(axum::body::Body::from(
+            happy_body("acme-no-idem").to_string(),
+        ))
         .unwrap();
 
     let res = app.oneshot(req).await.unwrap();
@@ -404,10 +406,7 @@ async fn idempotency_key_long_string_currently_accepted() {
     // the actual outcome; if a future tightening enforces ≤64, this test
     // will flip and pin the new contract.
     assert!(
-        matches!(
-            res.status(),
-            StatusCode::CREATED | StatusCode::BAD_REQUEST
-        ),
+        matches!(res.status(), StatusCode::CREATED | StatusCode::BAD_REQUEST),
         "unexpected status for long Idempotency-Key: {}",
         res.status()
     );

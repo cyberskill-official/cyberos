@@ -236,13 +236,20 @@ mod tests {
             assert!(r.is_stub_tier(), "first 5 must be stub-tier; {r:?} isn't");
         }
         for r in Role::ALL.iter().skip(5) {
-            assert!(!r.is_stub_tier(), "non-first-5 must NOT be stub-tier; {r:?} is");
+            assert!(
+                !r.is_stub_tier(),
+                "non-first-5 must NOT be stub-tier; {r:?} is"
+            );
         }
     }
 
     #[test]
     fn reserved_roles_match_dec_127() {
-        let reserved: Vec<_> = Role::ALL.iter().filter(|r| r.is_reserved()).copied().collect();
+        let reserved: Vec<_> = Role::ALL
+            .iter()
+            .filter(|r| r.is_reserved())
+            .copied()
+            .collect();
         assert_eq!(reserved.len(), 5);
         assert!(reserved.contains(&Role::RootAdmin));
         assert!(reserved.contains(&Role::ClientPortalUser));
@@ -253,7 +260,11 @@ mod tests {
 
     #[test]
     fn only_founder_requires_webauthn() {
-        let with_webauthn: Vec<_> = Role::ALL.iter().filter(|r| r.requires_webauthn()).copied().collect();
+        let with_webauthn: Vec<_> = Role::ALL
+            .iter()
+            .filter(|r| r.requires_webauthn())
+            .copied()
+            .collect();
         assert_eq!(with_webauthn, vec![Role::Founder]);
     }
 

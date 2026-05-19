@@ -12,8 +12,8 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use thiserror::Error;
 
-use super::{description_validator, marker_validator};
 use super::schema::SkillFrontmatter;
+use super::{description_validator, marker_validator};
 
 /// Matches a YAML block-scalar header — `key: >-`, `key: >+`, `key: |`, etc.
 ///
@@ -154,12 +154,16 @@ mod tests {
 
     #[test]
     fn quoted_brackets_not_flagged() {
-        assert!(!has_unquoted_angle_bracket(r#"description: "Use \"<\" carefully""#));
+        assert!(!has_unquoted_angle_bracket(
+            r#"description: "Use \"<\" carefully""#
+        ));
     }
 
     #[test]
     fn unquoted_brackets_flagged() {
         assert!(has_unquoted_angle_bracket("wrap_in: <untrusted_content/>"));
-        assert!(has_unquoted_angle_bracket("description: Author <FR> from PRD"));
+        assert!(has_unquoted_angle_bracket(
+            "description: Author <FR> from PRD"
+        ));
     }
 }

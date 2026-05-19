@@ -69,7 +69,9 @@ mod tests {
         for (plain, _hash) in &codes {
             assert_eq!(plain.len(), RECOVERY_CODE_LEN);
             // All chars from the alphabet
-            assert!(plain.chars().all(|c| RECOVERY_ALPHABET.contains(&(c as u8))));
+            assert!(plain
+                .chars()
+                .all(|c| RECOVERY_ALPHABET.contains(&(c as u8))));
         }
     }
 

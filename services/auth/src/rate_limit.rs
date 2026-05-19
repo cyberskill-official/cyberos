@@ -72,7 +72,11 @@ impl Default for RateLimiter {
 impl RateLimiter {
     /// Production constructor — 10/min per IP, 5/min per account.
     pub fn new() -> Self {
-        Self::with_config(PER_IP_LIMIT, PER_ACCOUNT_LIMIT, Duration::from_secs(WINDOW_SECS))
+        Self::with_config(
+            PER_IP_LIMIT,
+            PER_ACCOUNT_LIMIT,
+            Duration::from_secs(WINDOW_SECS),
+        )
     }
 
     /// Test constructor — explicit limits + window. Production code uses
@@ -164,9 +168,12 @@ mod tests {
     fn ip_bucket_fills_then_rejects() {
         let rl = RateLimiter::with_config(3, 100, Duration::from_secs(60));
         for i in 0..3 {
-            rl.check_ip("1.2.3.4").unwrap_or_else(|_| panic!("attempt {i} should succeed"));
+            rl.check_ip("1.2.3.4")
+                .unwrap_or_else(|_| panic!("attempt {i} should succeed"));
         }
-        let err = rl.check_ip("1.2.3.4").expect_err("4th attempt should reject");
+        let err = rl
+            .check_ip("1.2.3.4")
+            .expect_err("4th attempt should reject");
         assert!(
             err > 0 && err <= 60,
             "retry_after_seconds should be 1..=60; got {err}"
@@ -179,7 +186,9 @@ mod tests {
         // Account A — exhaust.
         rl.check_account("tenant-x", "alice").unwrap();
         rl.check_account("tenant-x", "alice").unwrap();
-        let _ = rl.check_account("tenant-x", "alice").expect_err("A exhausted");
+        let _ = rl
+            .check_account("tenant-x", "alice")
+            .expect_err("A exhausted");
         // Account B — independent counter.
         rl.check_account("tenant-x", "bob").unwrap();
         rl.check_account("tenant-x", "bob").unwrap();

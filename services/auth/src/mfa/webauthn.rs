@@ -11,7 +11,6 @@
 //!   * `POST /v1/auth/mfa/webauthn/verify/begin`
 //!   * `POST /v1/auth/mfa/webauthn/verify/finish`
 
-
 use uuid::Uuid;
 
 /// Row shape returned when loading a WebAuthn factor from `mfa_factors`.

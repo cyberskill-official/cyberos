@@ -37,8 +37,8 @@
 #![allow(clippy::double_ended_iterator_last)]
 #![allow(dead_code)]
 
-pub mod policy;
 pub mod memory_writer;
+pub mod policy;
 
 /// Service banner used by binaries on startup.
 pub const SERVICE_BANNER: &str = concat!(

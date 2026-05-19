@@ -29,7 +29,8 @@ pub async fn create_issue(
 ) -> IssueResult<CreateIssueResult> {
     // §1 #11 — cycle-engagement membership.
     if let Some(cycle_id) = req.cycle_id {
-        repo::validate_cycle_in_engagement(db, actor.tenant_id, cycle_id, req.engagement_id).await?;
+        repo::validate_cycle_in_engagement(db, actor.tenant_id, cycle_id, req.engagement_id)
+            .await?;
     }
     // §1 #10 — assignee tenant check.
     if let Some(assignee) = req.assignee_subject_id {
@@ -122,7 +123,10 @@ pub async fn patch_issue(
         }
     }
 
-    Ok(PatchIssueResult { issue: updated, audit_rows })
+    Ok(PatchIssueResult {
+        issue: updated,
+        audit_rows,
+    })
 }
 
 pub async fn get_issue(db: &PgPool, actor: Actor, id: Uuid) -> IssueResult<Issue> {

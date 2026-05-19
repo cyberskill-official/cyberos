@@ -17,7 +17,11 @@ fn rate_limiter_dual_path_smoke() {
     // brute force AND distributed credential stuffing. This smoke test
     // doesn't need Postgres; it exercises the RateLimiter directly to
     // pin the dual-path behaviour.
-    let rl = Arc::new(RateLimiter::with_config(3, 2, std::time::Duration::from_secs(60)));
+    let rl = Arc::new(RateLimiter::with_config(
+        3,
+        2,
+        std::time::Duration::from_secs(60),
+    ));
 
     // Scenario 1 — single IP burst (per-IP path).
     for _ in 0..3 {
@@ -29,7 +33,9 @@ fn rate_limiter_dual_path_smoke() {
     // Scenario 2 — distributed (different IPs, same account).
     rl.check_account("acme", "alice").unwrap();
     rl.check_account("acme", "alice").unwrap();
-    let err = rl.check_account("acme", "alice").expect_err("per-account 3rd must reject");
+    let err = rl
+        .check_account("acme", "alice")
+        .expect_err("per-account 3rd must reject");
     assert!(err > 0);
 
     // Different account on the same tenant — counter is independent.
@@ -41,18 +47,12 @@ fn rate_limiter_dual_path_smoke() {
 fn scope_map_intersection_smoke() {
     use cyberos_auth::scope_map;
     // G-008: tenant-admin asking for chat:read narrows to chat:read.
-    let got = scope_map::intersect(
-        &["chat:read".to_string()],
-        &["tenant-admin".to_string()],
-    );
+    let got = scope_map::intersect(&["chat:read".to_string()], &["tenant-admin".to_string()]);
     assert_eq!(got, vec!["chat:read".to_string()]);
 
     // G-008: tenant-member asking for proj:write gets nothing (member
     // doesn't have proj:* coverage).
-    let got = scope_map::intersect(
-        &["proj:write".to_string()],
-        &["tenant-member".to_string()],
-    );
+    let got = scope_map::intersect(&["proj:write".to_string()], &["tenant-member".to_string()]);
     assert!(got.is_empty(), "tenant-member must NOT widen to proj:write");
 }
 
@@ -68,7 +68,9 @@ fn source_ip_hash16_format_and_dedup() {
     assert_eq!(a.len(), 16);
     assert_ne!(a, c);
     // Must be lowercase hex.
-    assert!(a.chars().all(|c| c.is_ascii_hexdigit() && (!c.is_ascii_alphabetic() || c.is_ascii_lowercase())));
+    assert!(a
+        .chars()
+        .all(|c| c.is_ascii_hexdigit() && (!c.is_ascii_alphabetic() || c.is_ascii_lowercase())));
 }
 
 // The full end-to-end Postgres test (token request → 401 with constant

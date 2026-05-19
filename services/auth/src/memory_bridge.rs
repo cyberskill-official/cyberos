@@ -95,9 +95,7 @@ pub async fn emit_tenant_created(
 ) -> Result<i64, sqlx::Error> {
     let body = payload.to_body_string();
     let anchor = chain_anchor(None, &body); // genesis row for this tenant's chain
-    let ts_ns = chrono::Utc::now()
-        .timestamp_nanos_opt()
-        .unwrap_or(0);
+    let ts_ns = chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0);
 
     // path follows the convention `auth/tenant/<uuid>/created` so memory's
     // Layer-2 entity-extract can MERGE a Doc node + MENTIONS edge to the
@@ -697,7 +695,7 @@ pub async fn emit_token_failed(
          RETURNING seq",
     )
     .bind(tenant_id)
-    .bind(Uuid::nil())       // subject_id unknown on failure
+    .bind(Uuid::nil()) // subject_id unknown on failure
     .bind(&path)
     .bind(&body)
     .bind(&anchor)

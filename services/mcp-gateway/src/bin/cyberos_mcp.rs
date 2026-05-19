@@ -33,7 +33,12 @@ async fn main() {
     let state = AppState { registry };
     let app = build_router(state);
 
-    let listener = tokio::net::TcpListener::bind(&cli.listen).await.expect("bind");
-    println!("MCP Gateway listening on http://{} — POST /mcp · GET /mcp/healthz", cli.listen);
+    let listener = tokio::net::TcpListener::bind(&cli.listen)
+        .await
+        .expect("bind");
+    println!(
+        "MCP Gateway listening on http://{} — POST /mcp · GET /mcp/healthz",
+        cli.listen
+    );
     axum::serve(listener, app).await.expect("serve");
 }

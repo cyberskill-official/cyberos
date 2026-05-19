@@ -117,9 +117,8 @@ fn render_anthropic_frontmatter(fm: &SkillFrontmatter) -> String {
         }
     }
 
-    if let Some(serde_yaml::Value::Mapping(m)) = fm
-        .extras
-        .get(serde_yaml::Value::String("metadata".into()))
+    if let Some(serde_yaml::Value::Mapping(m)) =
+        fm.extras.get(serde_yaml::Value::String("metadata".into()))
     {
         if !m.is_empty() {
             out.push_str("metadata:\n");
@@ -217,9 +216,7 @@ This is the skill's instructions.
         assert_eq!(result.name, "synth-author");
         assert!(result.frontmatter_yaml.contains("name: synth-author"));
         assert!(result.frontmatter_yaml.contains("description: >-"));
-        assert!(result
-            .frontmatter_yaml
-            .contains("license: Apache-2.0"));
+        assert!(result.frontmatter_yaml.contains("license: Apache-2.0"));
         assert!(result
             .frontmatter_yaml
             .contains("allowed-tools: kb.read memory.search audit.append"));

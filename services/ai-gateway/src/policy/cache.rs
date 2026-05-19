@@ -20,7 +20,9 @@ pub struct PolicyCache {
 impl PolicyCache {
     /// Empty cache.
     pub fn new() -> Self {
-        Self { inner: ArcSwap::from_pointee(HashMap::new()) }
+        Self {
+            inner: ArcSwap::from_pointee(HashMap::new()),
+        }
     }
 
     /// Sub-microsecond hit on the read path.
@@ -71,8 +73,8 @@ impl Default for PolicyCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rust_decimal_macros::dec;
     use crate::policy::schema::{AiPolicy, Provider, Residency};
+    use rust_decimal_macros::dec;
 
     fn dummy_policy(id: &str) -> Arc<TenantPolicy> {
         Arc::new(TenantPolicy {
@@ -81,7 +83,9 @@ mod tests {
                 monthly_cap_usd: dec!(150),
                 warn_threshold: 0.8,
                 hard_stop: true,
-                primary_provider: Provider::Anthropic { model_alias_map: Default::default() },
+                primary_provider: Provider::Anthropic {
+                    model_alias_map: Default::default(),
+                },
                 fallback_chain: vec![],
                 call_timeout_seconds: 60,
                 residency: Residency::Sg1,
@@ -114,6 +118,9 @@ mod tests {
         cache.insert("org:c".into(), dummy_policy("org:c"));
         cache.insert("org:a".into(), dummy_policy("org:a"));
         cache.insert("org:b".into(), dummy_policy("org:b"));
-        assert_eq!(cache.loaded_tenants_sorted(), vec!["org:a", "org:b", "org:c"]);
+        assert_eq!(
+            cache.loaded_tenants_sorted(),
+            vec!["org:a", "org:b", "org:c"]
+        );
     }
 }

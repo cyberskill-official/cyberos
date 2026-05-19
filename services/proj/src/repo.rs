@@ -8,7 +8,10 @@ use uuid::Uuid;
 
 /// Set the per-request RLS tenant GUC. Must be called inside the
 /// connection-bound transaction so SET LOCAL scopes to that tx.
-pub async fn set_tenant(tx: &mut sqlx::Transaction<'_, sqlx::Postgres>, tenant_id: Uuid) -> IssueResult<()> {
+pub async fn set_tenant(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    tenant_id: Uuid,
+) -> IssueResult<()> {
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
         .execute(&mut **tx)
@@ -53,11 +56,10 @@ pub async fn validate_cycle_in_engagement(
 ) -> IssueResult<()> {
     let mut tx = db.begin().await?;
     set_tenant(&mut tx, tenant_id).await?;
-    let row: Option<(Uuid,)> =
-        sqlx::query_as("SELECT engagement_id FROM cycles WHERE id = $1")
-            .bind(cycle_id)
-            .fetch_optional(&mut *tx)
-            .await?;
+    let row: Option<(Uuid,)> = sqlx::query_as("SELECT engagement_id FROM cycles WHERE id = $1")
+        .bind(cycle_id)
+        .fetch_optional(&mut *tx)
+        .await?;
     tx.commit().await?;
     let (cycle_eng,) = row.ok_or(IssueError::CycleEngagementMismatch { cycle_id })?;
     if cycle_eng != engagement_id {

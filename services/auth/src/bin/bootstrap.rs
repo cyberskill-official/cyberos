@@ -42,7 +42,9 @@ async fn main() -> ExitCode {
         Err(msg) => {
             eprintln!("{msg}");
             eprintln!("\nUsage: cyberos-auth-bootstrap --email <addr> --password <pw>");
-            eprintln!("  or:  AUTH_BOOTSTRAP_EMAIL=… AUTH_BOOTSTRAP_PASSWORD=… cyberos-auth-bootstrap");
+            eprintln!(
+                "  or:  AUTH_BOOTSTRAP_EMAIL=… AUTH_BOOTSTRAP_PASSWORD=… cyberos-auth-bootstrap"
+            );
             return ExitCode::UsageError;
         }
     };
@@ -144,7 +146,8 @@ fn parse_args() -> Result<Args, String> {
     }
 
     let email = email.ok_or_else(|| "--email or AUTH_BOOTSTRAP_EMAIL required".to_string())?;
-    let password = password.ok_or_else(|| "--password or AUTH_BOOTSTRAP_PASSWORD required".to_string())?;
+    let password =
+        password.ok_or_else(|| "--password or AUTH_BOOTSTRAP_PASSWORD required".to_string())?;
     if password.len() < 12 {
         return Err("password MUST be ≥ 12 characters".into());
     }
@@ -154,12 +157,10 @@ fn parse_args() -> Result<Args, String> {
 async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapError> {
     // 1. Confirm root tenant exists. The 0001 migration seeded it; this check
     // exists so the operator gets a clean error if migrations haven't run.
-    let (exists,): (bool,) = sqlx::query_as(
-        "SELECT EXISTS(SELECT 1 FROM tenants WHERE id = $1)",
-    )
-    .bind(ROOT_TENANT)
-    .fetch_one(pool)
-    .await?;
+    let (exists,): (bool,) = sqlx::query_as("SELECT EXISTS(SELECT 1 FROM tenants WHERE id = $1)")
+        .bind(ROOT_TENANT)
+        .fetch_one(pool)
+        .await?;
     if !exists {
         return Err(BootstrapError::Other(
             "root tenant missing — apply services/auth/migrations/0001_tenants.sql first".into(),
@@ -186,7 +187,8 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
     //    (FR-AUTH-006 §1 #4). Both commit or both rollback.
     let mut tx = pool.begin().await?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await?;
+        .execute(&mut *tx)
+        .await?;
 
     let pw_hash = bcrypt::hash(&args.password, bcrypt::DEFAULT_COST)?;
     let res = sqlx::query(
@@ -246,7 +248,8 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
     if rbac_present {
         let mut tx = pool.begin().await?;
         sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-            .execute(&mut *tx).await?;
+            .execute(&mut *tx)
+            .await?;
         sqlx::query(
             "INSERT INTO subject_roles (tenant_id, subject_id, role, granted_by)
                   VALUES ($1, $2, 'root-admin', $2)
@@ -254,7 +257,8 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         )
         .bind(ROOT_TENANT)
         .bind(subject_id)
-        .execute(&mut *tx).await?;
+        .execute(&mut *tx)
+        .await?;
         tx.commit().await?;
         println!("✓ subject_roles entry for root-admin");
     } else {
@@ -302,6 +306,5 @@ async fn ensure_signing_key_in_tx(
     .await?;
     Ok(kid)
 }
-
 
 use sqlx::Row;

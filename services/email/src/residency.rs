@@ -17,9 +17,7 @@ pub async fn resolve(tenant_id: Uuid, db: &sqlx::PgPool) -> EmailResult<EmailSto
             .fetch_optional(db)
             .await?;
 
-    let residency = row
-        .ok_or(EmailError::NoResidencyForTenant(tenant_id))?
-        .0;
+    let residency = row.ok_or(EmailError::NoResidencyForTenant(tenant_id))?.0;
 
     binding_for_residency(&residency).map_err(|_| EmailError::UnknownResidency(residency))
 }
@@ -30,8 +28,8 @@ pub fn binding_for_residency(residency: &str) -> Result<EmailStorageBinding, &'s
     let (region, bucket_prefix) = match residency {
         "vn-1" => ("ap-southeast-1", "cyberos-email-vn-1-bodies"),
         "sg-1" => ("ap-southeast-1", "cyberos-email-sg-1-bodies"),
-        "eu-1" => ("eu-west-1",      "cyberos-email-eu-1-bodies"),
-        "us-1" => ("us-east-1",      "cyberos-email-us-1-bodies"),
+        "eu-1" => ("eu-west-1", "cyberos-email-eu-1-bodies"),
+        "us-1" => ("us-east-1", "cyberos-email-us-1-bodies"),
         _ => return Err("unknown_residency"),
     };
     Ok(EmailStorageBinding {
@@ -100,7 +98,11 @@ mod tests {
         // VN tenant's body must NOT land in eu-1 bucket.
         let err = assert_residency_match(tid, &vn, "cyberos-email-eu-1-bodies").unwrap_err();
         match err {
-            EmailError::ResidencyMismatch { tenant_id, expected, actual } => {
+            EmailError::ResidencyMismatch {
+                tenant_id,
+                expected,
+                actual,
+            } => {
                 assert_eq!(tenant_id, tid);
                 assert_eq!(expected, "cyberos-email-vn-1-bodies");
                 assert_eq!(actual, "cyberos-email-eu-1-bodies");

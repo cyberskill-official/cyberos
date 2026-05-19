@@ -10,9 +10,15 @@
 //!     cancels every ingest task; in-flight batches finish their current
 //!     transaction before exit.
 
-use axum::{extract::State, http::StatusCode, response::Json, routing::{get, post}, Router};
-use cyberos_memory::{layer2, search, state::AppState, VERSION};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::Json,
+    routing::{get, post},
+    Router,
+};
 use cyberos_cli_exit::ExitCode;
+use cyberos_memory::{layer2, search, state::AppState, VERSION};
 use cyberos_types::TenantId;
 use serde_json::{json, Value};
 use sqlx::PgPool;
@@ -127,14 +133,12 @@ async fn run_ingest_daemon(
         .and_then(|v| v.parse().ok())
         .unwrap_or(256);
 
-    info!(
-        ?poll_interval,
-        batch_size,
-        "ingest daemon starting"
-    );
+    info!(?poll_interval, batch_size, "ingest daemon starting");
 
     loop {
-        if shutting_down.load(Ordering::SeqCst) { break; }
+        if shutting_down.load(Ordering::SeqCst) {
+            break;
+        }
         // On each tick we re-discover tenants so newly-onboarded ones get
         // picked up without restart.
         let tenants = match discover_tenants(&pool).await {
@@ -147,7 +151,9 @@ async fn run_ingest_daemon(
         };
 
         for tenant in &tenants {
-            if shutting_down.load(Ordering::SeqCst) { break; }
+            if shutting_down.load(Ordering::SeqCst) {
+                break;
+            }
             match layer2::ingest::run_batch(&pool, *tenant, batch_size).await {
                 Ok(s) if s.rows_processed > 0 => {
                     info!(?tenant, rows = s.rows_processed, "ingest batch ok");
@@ -174,7 +180,9 @@ async fn discover_tenants(pool: &PgPool) -> Result<Vec<TenantId>, sqlx::Error> {
         let mut out = Vec::new();
         for s in raw.split(',') {
             let s = s.trim();
-            if s.is_empty() { continue; }
+            if s.is_empty() {
+                continue;
+            }
             if let Ok(uuid) = uuid::Uuid::parse_str(s) {
                 out.push(TenantId(uuid));
             }
@@ -206,7 +214,11 @@ async fn discover_tenants(pool: &PgPool) -> Result<Vec<TenantId>, sqlx::Error> {
 
 async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
     let pg_ok = sqlx::query("SELECT 1").fetch_one(&state.pg).await.is_ok();
-    let status = if pg_ok { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
+    let status = if pg_ok {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
     (
         status,
         Json(json!({
@@ -221,23 +233,28 @@ async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
 /// minimal Prometheus exposition: ingest cursor lag per tenant + row counts.
 /// FR-OBS-003 will swap this for the obs-sdk RED-metrics emitter once it lands.
 async fn metrics(State(state): State<AppState>) -> Result<String, (StatusCode, String)> {
-    let rows: Vec<(uuid::Uuid, i64, i64)> = sqlx::query_as(
-        "SELECT tenant_id, last_seq, last_lag_ms FROM l2_ingest_cursor",
-    )
-    .fetch_all(&state.pg)
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let rows: Vec<(uuid::Uuid, i64, i64)> =
+        sqlx::query_as("SELECT tenant_id, last_seq, last_lag_ms FROM l2_ingest_cursor")
+            .fetch_all(&state.pg)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let mut out = String::new();
     out.push_str("# HELP cyberos_memory_l2_cursor_seq Highest L1 seq materialised per tenant\n");
     out.push_str("# TYPE cyberos_memory_l2_cursor_seq counter\n");
     for (t, seq, _) in &rows {
-        out.push_str(&format!("cyberos_memory_l2_cursor_seq{{tenant=\"{t}\"}} {seq}\n"));
+        out.push_str(&format!(
+            "cyberos_memory_l2_cursor_seq{{tenant=\"{t}\"}} {seq}\n"
+        ));
     }
-    out.push_str("# HELP cyberos_memory_l2_last_batch_lag_ms Lag observed on the last ingest batch (ms)\n");
+    out.push_str(
+        "# HELP cyberos_memory_l2_last_batch_lag_ms Lag observed on the last ingest batch (ms)\n",
+    );
     out.push_str("# TYPE cyberos_memory_l2_last_batch_lag_ms gauge\n");
     for (t, _, lag) in &rows {
-        out.push_str(&format!("cyberos_memory_l2_last_batch_lag_ms{{tenant=\"{t}\"}} {lag}\n"));
+        out.push_str(&format!(
+            "cyberos_memory_l2_last_batch_lag_ms{{tenant=\"{t}\"}} {lag}\n"
+        ));
     }
     Ok(out)
 }

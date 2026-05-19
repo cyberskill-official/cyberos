@@ -88,7 +88,8 @@ pub async fn assess_login(
     if cidr_allowed(&policy.allowlist, ip) {
         let outcome = record_login_and_assess(
             deps.pool, deps.geoip, tenant_id, subject_id, flow, ip, user_agent,
-        ).await?;
+        )
+        .await?;
         // Even if the detector flagged it, override to Clear because the
         // CIDR is operator-allowlisted.
         let login_id = match outcome {
@@ -106,22 +107,40 @@ pub async fn assess_login(
         // Insert the login row so we have audit trail, then return Block.
         let outcome = record_login_and_assess(
             deps.pool, deps.geoip, tenant_id, subject_id, flow, ip, user_agent,
-        ).await?;
+        )
+        .await?;
         let (login_id, prev_login_id) = match outcome {
             TravelOutcome::Clear { login_id } => (login_id, None),
-            TravelOutcome::Challenge { login_id, prev_login_id, .. } => (login_id, Some(prev_login_id)),
-            TravelOutcome::Block { login_id, prev_login_id, .. } => (login_id, prev_login_id),
+            TravelOutcome::Challenge {
+                login_id,
+                prev_login_id,
+                ..
+            } => (login_id, Some(prev_login_id)),
+            TravelOutcome::Block {
+                login_id,
+                prev_login_id,
+                ..
+            } => (login_id, prev_login_id),
         };
-        return Ok(TravelOutcome::Block { login_id, kind: "anonymous_ip", prev_login_id });
+        return Ok(TravelOutcome::Block {
+            login_id,
+            kind: "anonymous_ip",
+            prev_login_id,
+        });
     }
 
     // 3. Sticky suppression — if the subject passed MFA from this /24 within
     //    the policy window, skip the detector chain entirely.
-    if deps.sticky_suppress.should_suppress(subject_id, &prefix24_str).await {
+    if deps
+        .sticky_suppress
+        .should_suppress(subject_id, &prefix24_str)
+        .await
+    {
         // Still record the login (audit completeness); return Clear.
         let outcome = record_login_and_assess(
             deps.pool, deps.geoip, tenant_id, subject_id, flow, ip, user_agent,
-        ).await?;
+        )
+        .await?;
         let login_id = match outcome {
             TravelOutcome::Clear { login_id }
             | TravelOutcome::Challenge { login_id, .. }
@@ -133,18 +152,31 @@ pub async fn assess_login(
     // 4. Run the detector chain.
     let outcome = record_login_and_assess(
         deps.pool, deps.geoip, tenant_id, subject_id, flow, ip, user_agent,
-    ).await?;
+    )
+    .await?;
 
     // 5. Apply policy action — if detector returned Challenge, the policy
     //    may upgrade it to Block or downgrade to warn-only.
     let outcome = match outcome {
-        TravelOutcome::Challenge { login_id, kind, prev_login_id, delta_seconds } => {
-            match policy.action {
-                PolicyAction::Challenge => TravelOutcome::Challenge { login_id, kind, prev_login_id, delta_seconds },
-                PolicyAction::Block => TravelOutcome::Block { login_id, kind, prev_login_id: Some(prev_login_id) },
-                PolicyAction::WarnOnly => TravelOutcome::Clear { login_id },
-            }
-        }
+        TravelOutcome::Challenge {
+            login_id,
+            kind,
+            prev_login_id,
+            delta_seconds,
+        } => match policy.action {
+            PolicyAction::Challenge => TravelOutcome::Challenge {
+                login_id,
+                kind,
+                prev_login_id,
+                delta_seconds,
+            },
+            PolicyAction::Block => TravelOutcome::Block {
+                login_id,
+                kind,
+                prev_login_id: Some(prev_login_id),
+            },
+            PolicyAction::WarnOnly => TravelOutcome::Clear { login_id },
+        },
         other => other,
     };
     Ok(outcome)
@@ -226,14 +258,15 @@ pub async fn record_login_and_assess(
     //    that's a static table — for slice 2 we just re-resolve the previous
     //    coordinates if both are populated, or fall back to country comparison).
     let outcome = match prev {
-        None => TravelOutcome::Clear { login_id: current_login_id },
+        None => TravelOutcome::Clear {
+            login_id: current_login_id,
+        },
         Some((prev_id, prev_prefix, prev_country, prev_lat, prev_lon, prev_ts)) => {
             let delta_secs = (now - prev_ts).num_seconds().max(0);
             let current_prefix = prefix24.to_string();
 
             // Detector 1 — same_network_burst (no GeoIP needed).
-            if delta_secs < SAME_NETWORK_BURST_WINDOW_SECS && current_prefix != prev_prefix
-            {
+            if delta_secs < SAME_NETWORK_BURST_WINDOW_SECS && current_prefix != prev_prefix {
                 emit_travel_audit(
                     pool,
                     tenant_id,
@@ -294,8 +327,7 @@ pub async fn record_login_and_assess(
 
             // Detector 3 — geo_velocity_exceeded. Requires both endpoints to
             // have lat+lon. Skipped when either side is NULL (degrades to no-op).
-            if let (Some(pl), Some(pn), Some(cl), Some(cn)) =
-                (prev_lat, prev_lon, geo.lat, geo.lon)
+            if let (Some(pl), Some(pn), Some(cl), Some(cn)) = (prev_lat, prev_lon, geo.lat, geo.lon)
             {
                 if delta_secs > 0 {
                     let km = haversine_km((pl, pn), (cl, cn));
@@ -327,7 +359,9 @@ pub async fn record_login_and_assess(
             }
 
             // No alarm.
-            TravelOutcome::Clear { login_id: current_login_id }
+            TravelOutcome::Clear {
+                login_id: current_login_id,
+            }
         }
     };
     Ok(outcome)
@@ -406,7 +440,9 @@ pub async fn record_mfa_passed_with_sticky(
     record_mfa_passed(pool, login_id).await?;
     let p = policy.get(pool, tenant_id).await;
     let prefix24 = ipv4_prefix24(login_ip).to_string();
-    sticky.record(subject_id, prefix24, p.sticky_suppress_min).await;
+    sticky
+        .record(subject_id, prefix24, p.sticky_suppress_min)
+        .await;
     Ok(())
 }
 

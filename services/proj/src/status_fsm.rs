@@ -83,7 +83,10 @@ mod tests {
             IssueStatus::Review,
             IssueStatus::Done,
         ] {
-            assert!(validate(s, s).is_ok(), "{s:?} → {s:?} should be allowed (no-op)");
+            assert!(
+                validate(s, s).is_ok(),
+                "{s:?} → {s:?} should be allowed (no-op)"
+            );
         }
     }
 

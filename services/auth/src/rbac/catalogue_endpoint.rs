@@ -50,12 +50,7 @@ pub async fn list_roles(State(state): State<AppState>) -> Response {
     });
 
     let etag = format!("W/\"rbac-v{version}\"");
-    (
-        StatusCode::OK,
-        [(header::ETAG, etag)],
-        Json(body),
-    )
-        .into_response()
+    (StatusCode::OK, [(header::ETAG, etag)], Json(body)).into_response()
 }
 
 /// 304 short-circuit when the client's If-None-Match matches the current rbac_v.
@@ -77,10 +72,5 @@ pub async fn list_roles_with_etag_check(
         "version": version,
         "roles": Role::ALL.iter().copied().map(RoleDescriptor::from).collect::<Vec<_>>(),
     });
-    (
-        StatusCode::OK,
-        [(header::ETAG, etag)],
-        Json(body),
-    )
-        .into_response()
+    (StatusCode::OK, [(header::ETAG, etag)], Json(body)).into_response()
 }

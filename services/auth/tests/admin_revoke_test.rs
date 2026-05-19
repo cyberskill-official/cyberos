@@ -38,7 +38,9 @@ async fn bootstrap_test_key(pool: &PgPool) {
     .fetch_one(pool)
     .await
     .expect("count keys");
-    if n > 0 { return; }
+    if n > 0 {
+        return;
+    }
     let key = keygen::generate_rsa_2048().expect("rsa");
     sqlx::query(
         "INSERT INTO auth_signing_keys (kid, algorithm, public_pem, private_pem, status, expires_at)
@@ -52,40 +54,56 @@ async fn bootstrap_test_key(pool: &PgPool) {
     .expect("insert key");
 }
 
-async fn issue_tenant_admin_token(pool: &PgPool, tenant_id: uuid::Uuid, subject_id: uuid::Uuid) -> String {
+async fn issue_tenant_admin_token(
+    pool: &PgPool,
+    tenant_id: uuid::Uuid,
+    subject_id: uuid::Uuid,
+) -> String {
     let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     svc.issue(
         cyberos_types::TenantId(tenant_id),
         cyberos_types::SubjectId(subject_id),
-        "ta@x.com", "human",
+        "ta@x.com",
+        "human",
         vec!["admin".to_string()],
         vec!["tenant-admin".to_string()],
-        Some(1), None, None,
-    ).await.unwrap().access_token
+        Some(1),
+        None,
+        None,
+    )
+    .await
+    .unwrap()
+    .access_token
 }
 
 // ECM-012 — revoke without Idempotency-Key → 400 missing_header
 #[tokio::test]
 #[ignore]
 async fn revoke_without_idempotency_key_returns_400() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     let tenant_id = uuid::Uuid::new_v4();
     let subj_id = uuid::Uuid::new_v4();
     let token = issue_tenant_admin_token(&pool, tenant_id, subj_id).await;
 
-    let target = uuid::Uuid::new_v4();  // doesn't have to exist — the header check fires first
+    let target = uuid::Uuid::new_v4(); // doesn't have to exist — the header check fires first
     let app = build_app().await;
-    let resp = app.oneshot(
-        Request::builder()
-            .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{target}/revoke"))
-            .header("Authorization", format!("Bearer {token}"))
-            .header("Content-Type", "application/json")
-            .body(axum::body::Body::from("{}"))
-            .unwrap(),
-    ).await.unwrap();
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri(format!("/v1/admin/subjects/{target}/revoke"))
+                .header("Authorization", format!("Bearer {token}"))
+                .header("Content-Type", "application/json")
+                .body(axum::body::Body::from("{}"))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
-    let body: Value = serde_json::from_slice(&to_bytes(resp.into_body(), 1024).await.unwrap()).unwrap();
+    let body: Value =
+        serde_json::from_slice(&to_bytes(resp.into_body(), 1024).await.unwrap()).unwrap();
     assert_eq!(body["error"], "missing_header");
     assert_eq!(body["field"], "Idempotency-Key");
 }
@@ -94,49 +112,70 @@ async fn revoke_without_idempotency_key_returns_400() {
 #[tokio::test]
 #[ignore]
 async fn revoke_idempotency_key_replay_is_no_op() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     // Build a tenant + subject to revoke.
     let tenant_id = uuid::Uuid::new_v4();
     let admin_id = uuid::Uuid::new_v4();
     let target_id = uuid::Uuid::new_v4();
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&pool).await.ok();
-    sqlx::query("INSERT INTO tenants(id, slug, display_name, country, plan_tier, residency)
-                 VALUES ($1, $2, 'Test', 'VN', 'free', 'sg-1')")
-        .bind(tenant_id).bind(format!("t-{}", &tenant_id.to_string()[..8]))
-        .execute(&pool).await.unwrap();
-    sqlx::query("INSERT INTO subjects(id, tenant_id, handle, email, kind, password_hash, roles)
-                 VALUES ($1, $2, 'target', 'target@x.com', 'human', 'h', ARRAY['tenant-member'])")
-        .bind(target_id).bind(tenant_id)
-        .execute(&pool).await.unwrap();
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query(
+        "INSERT INTO tenants(id, slug, display_name, country, plan_tier, residency)
+                 VALUES ($1, $2, 'Test', 'VN', 'free', 'sg-1')",
+    )
+    .bind(tenant_id)
+    .bind(format!("t-{}", &tenant_id.to_string()[..8]))
+    .execute(&pool)
+    .await
+    .unwrap();
+    sqlx::query(
+        "INSERT INTO subjects(id, tenant_id, handle, email, kind, password_hash, roles)
+                 VALUES ($1, $2, 'target', 'target@x.com', 'human', 'h', ARRAY['tenant-member'])",
+    )
+    .bind(target_id)
+    .bind(tenant_id)
+    .execute(&pool)
+    .await
+    .unwrap();
 
     let token = issue_tenant_admin_token(&pool, tenant_id, admin_id).await;
     let key = "idem-rev-001";
 
     let app = build_app().await;
-    let r1 = app.clone().oneshot(
-        Request::builder()
-            .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
-            .header("Authorization", format!("Bearer {token}"))
-            .header("Idempotency-Key", key)
-            .header("Content-Type", "application/json")
-            .body(axum::body::Body::from("{}"))
-            .unwrap(),
-    ).await.unwrap();
+    let r1 = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
+                .header("Authorization", format!("Bearer {token}"))
+                .header("Idempotency-Key", key)
+                .header("Content-Type", "application/json")
+                .body(axum::body::Body::from("{}"))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(r1.status(), StatusCode::NO_CONTENT);
 
     // Replay with same key → still 204 no-content (the idempotency cache hit).
-    let r2 = app.oneshot(
-        Request::builder()
-            .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
-            .header("Authorization", format!("Bearer {token}"))
-            .header("Idempotency-Key", key)
-            .header("Content-Type", "application/json")
-            .body(axum::body::Body::from("{}"))
-            .unwrap(),
-    ).await.unwrap();
+    let r2 = app
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
+                .header("Authorization", format!("Bearer {token}"))
+                .header("Idempotency-Key", key)
+                .header("Content-Type", "application/json")
+                .body(axum::body::Body::from("{}"))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(r2.status(), StatusCode::NO_CONTENT);
 
     // ECM-014 — exactly ONE memory audit row, not two.
@@ -145,7 +184,9 @@ async fn revoke_idempotency_key_replay_is_no_op() {
                           WHERE subject_id = $1 AND path LIKE 'auth/subject/%/revoked'",
     )
     .bind(admin_id)
-    .fetch_one(&pool).await.unwrap_or((0,));
+    .fetch_one(&pool)
+    .await
+    .unwrap_or((0,));
     // 0 or 1 is acceptable (depends on whether l1_audit_log migration is applied
     // in test DB); >1 fails because that means the replay didn't dedupe.
     assert!(n <= 1, "expected at most 1 revoked audit row; got {n}");
@@ -178,37 +219,54 @@ async fn unrevoke_does_not_clear_deny_list() {
 #[tokio::test]
 #[ignore]
 async fn revoke_cross_tenant_returns_404() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     let admin_tenant = uuid::Uuid::new_v4();
     let other_tenant = uuid::Uuid::new_v4();
     let admin_id = uuid::Uuid::new_v4();
     let target_id = uuid::Uuid::new_v4();
 
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&pool).await.ok();
+        .execute(&pool)
+        .await
+        .ok();
     for t in &[admin_tenant, other_tenant] {
-        sqlx::query("INSERT INTO tenants(id, slug, display_name, country, plan_tier, residency)
-                     VALUES ($1, $2, 'Test', 'VN', 'free', 'sg-1')")
-            .bind(t).bind(format!("t-{}", &t.to_string()[..8]))
-            .execute(&pool).await.ok();
+        sqlx::query(
+            "INSERT INTO tenants(id, slug, display_name, country, plan_tier, residency)
+                     VALUES ($1, $2, 'Test', 'VN', 'free', 'sg-1')",
+        )
+        .bind(t)
+        .bind(format!("t-{}", &t.to_string()[..8]))
+        .execute(&pool)
+        .await
+        .ok();
     }
     // Target lives in OTHER tenant.
-    sqlx::query("INSERT INTO subjects(id, tenant_id, handle, email, kind, password_hash, roles)
-                 VALUES ($1, $2, 'cross', 'c@x.com', 'human', 'h', ARRAY['tenant-member'])")
-        .bind(target_id).bind(other_tenant)
-        .execute(&pool).await.ok();
+    sqlx::query(
+        "INSERT INTO subjects(id, tenant_id, handle, email, kind, password_hash, roles)
+                 VALUES ($1, $2, 'cross', 'c@x.com', 'human', 'h', ARRAY['tenant-member'])",
+    )
+    .bind(target_id)
+    .bind(other_tenant)
+    .execute(&pool)
+    .await
+    .ok();
 
     let token = issue_tenant_admin_token(&pool, admin_tenant, admin_id).await;
     let app = build_app().await;
-    let resp = app.oneshot(
-        Request::builder()
-            .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
-            .header("Authorization", format!("Bearer {token}"))
-            .header("Idempotency-Key", "idem-cross-001")
-            .header("Content-Type", "application/json")
-            .body(axum::body::Body::from("{}"))
-            .unwrap(),
-    ).await.unwrap();
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .method(Method::POST)
+                .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
+                .header("Authorization", format!("Bearer {token}"))
+                .header("Idempotency-Key", "idem-cross-001")
+                .header("Content-Type", "application/json")
+                .body(axum::body::Body::from("{}"))
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::NOT_FOUND);
 }

@@ -19,9 +19,9 @@ fn vn_tenant_resolves_to_ap_southeast_1_bucket() {
 fn sg_tenant_distinct_from_vn() {
     let sg = binding_for_residency("sg-1").unwrap();
     let vn = binding_for_residency("vn-1").unwrap();
-    assert_eq!(sg.region, vn.region);            // both in ap-southeast-1
-    assert_ne!(sg.bucket, vn.bucket);            // distinct buckets
-    assert_ne!(sg.kms_key_id, vn.kms_key_id);    // distinct KMS aliases
+    assert_eq!(sg.region, vn.region); // both in ap-southeast-1
+    assert_ne!(sg.bucket, vn.bucket); // distinct buckets
+    assert_ne!(sg.kms_key_id, vn.kms_key_id); // distinct KMS aliases
 }
 
 #[test]

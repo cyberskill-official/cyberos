@@ -119,7 +119,10 @@ mod tests {
     #[test]
     fn unknown_role_silently_skipped() {
         let grants = for_roles(&s(&["nonexistent-role-name"]));
-        assert!(grants.is_empty(), "unknown role must contribute zero grants");
+        assert!(
+            grants.is_empty(),
+            "unknown role must contribute zero grants"
+        );
     }
 
     #[test]
@@ -154,7 +157,10 @@ mod tests {
 
     #[test]
     fn intersect_root_admin_accepts_anything() {
-        let got = intersect(&s(&["anything:goes", "whatever:please"]), &s(&["root-admin"]));
+        let got = intersect(
+            &s(&["anything:goes", "whatever:please"]),
+            &s(&["root-admin"]),
+        );
         assert_eq!(got.len(), 2);
     }
 }

@@ -57,7 +57,10 @@ pub async fn on_outbound(
     .await?;
 
     if active_key.is_none() {
-        return Err(EmailError::DkimKeyNotFound(req.tenant_id, req.dkim_selector));
+        return Err(EmailError::DkimKeyNotFound(
+            req.tenant_id,
+            req.dkim_selector,
+        ));
     }
 
     let body_sha256_hex = sha256_hex(&req.body_bytes);
@@ -71,8 +74,13 @@ pub async fn on_outbound(
         sha = body_sha256_hex
     );
     residency::assert_residency_match(req.tenant_id, &binding, &binding.bucket)?;
-    blob.put(&binding.bucket, &s3_key, &binding.kms_key_id, &req.body_bytes)
-        .await?;
+    blob.put(
+        &binding.bucket,
+        &s3_key,
+        &binding.kms_key_id,
+        &req.body_bytes,
+    )
+    .await?;
 
     let now: DateTime<Utc> = Utc::now();
 

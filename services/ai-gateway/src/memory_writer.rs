@@ -171,8 +171,8 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
     })?;
 
     // 2. Build canonical JSON payload.
-    let payload =
-        canonical::serialise(&req).map_err(|reason| MemoryWriterError::CanonicalisationFailed { reason })?;
+    let payload = canonical::serialise(&req)
+        .map_err(|reason| MemoryWriterError::CanonicalisationFailed { reason })?;
 
     // 3. Spawn Writer.
     let mut child = Command::new(WRITER_BIN)
@@ -182,7 +182,9 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
         .stderr(Stdio::piped())
         .kill_on_drop(true)
         .spawn()
-        .map_err(|e| MemoryWriterError::WriterUnreachable { reason: e.to_string() })?;
+        .map_err(|e| MemoryWriterError::WriterUnreachable {
+            reason: e.to_string(),
+        })?;
 
     let mut stdin = child.stdin.take().expect("piped");
     let stdout = child.stdout.take().expect("piped");
@@ -198,12 +200,8 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
 
     // 5. Wait for child + read stdout/stderr concurrently, with 5s timeout.
     let outcome = timeout(WRITER_TIMEOUT, async move {
-        let (write_res, stdout_buf, stderr_buf, exit_res) = tokio::join!(
-            write_task,
-            read_all(stdout),
-            read_all(stderr),
-            child.wait(),
-        );
+        let (write_res, stdout_buf, stderr_buf, exit_res) =
+            tokio::join!(write_task, read_all(stdout), read_all(stderr), child.wait(),);
         (write_res, stdout_buf, stderr_buf, exit_res)
     })
     .await;
@@ -219,15 +217,22 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
     };
 
     write_res
-        .map_err(|e| MemoryWriterError::WriterUnreachable { reason: format!("write join: {e}") })?
-        .map_err(|e| MemoryWriterError::WriterUnreachable { reason: format!("write io: {e}") })?;
+        .map_err(|e| MemoryWriterError::WriterUnreachable {
+            reason: format!("write join: {e}"),
+        })?
+        .map_err(|e| MemoryWriterError::WriterUnreachable {
+            reason: format!("write io: {e}"),
+        })?;
 
-    let exit = exit_res
-        .map_err(|e| MemoryWriterError::WriterUnreachable { reason: e.to_string() })?;
-    let stdout_bytes = stdout_buf
-        .map_err(|e| MemoryWriterError::WriterUnreachable { reason: format!("stdout: {e}") })?;
-    let stderr_bytes = stderr_buf
-        .map_err(|e| MemoryWriterError::WriterUnreachable { reason: format!("stderr: {e}") })?;
+    let exit = exit_res.map_err(|e| MemoryWriterError::WriterUnreachable {
+        reason: e.to_string(),
+    })?;
+    let stdout_bytes = stdout_buf.map_err(|e| MemoryWriterError::WriterUnreachable {
+        reason: format!("stdout: {e}"),
+    })?;
+    let stderr_bytes = stderr_buf.map_err(|e| MemoryWriterError::WriterUnreachable {
+        reason: format!("stderr: {e}"),
+    })?;
 
     if !exit.success() {
         return Err(MemoryWriterError::WriterFailed {
@@ -237,12 +242,11 @@ pub async fn emit(req: MemoryEmit) -> Result<EmittedRow, MemoryWriterError> {
     }
 
     // 6. Parse stdout → typed row.
-    let row: WriterStdout = serde_json::from_slice(&stdout_bytes).map_err(|e| {
-        MemoryWriterError::WriterFailed {
+    let row: WriterStdout =
+        serde_json::from_slice(&stdout_bytes).map_err(|e| MemoryWriterError::WriterFailed {
             exit_code: 0,
             stderr: format!("stdout parse: {e}"),
-        }
-    })?;
+        })?;
 
     // 7. Verify chain hash locally (FR-AI-003 §1 #7).
     let expected = compute_chain(&payload, &row.prev_chain);
@@ -276,7 +280,9 @@ pub async fn check_writer_available() -> Result<WriterVersion, MemoryWriterError
         .args(["-m", "cyberos.writer", "--version"])
         .output()
         .await
-        .map_err(|e| MemoryWriterError::WriterUnreachable { reason: e.to_string() })?;
+        .map_err(|e| MemoryWriterError::WriterUnreachable {
+            reason: e.to_string(),
+        })?;
     if !out.status.success() {
         return Err(MemoryWriterError::WriterUnreachable {
             reason: format!(
@@ -289,7 +295,11 @@ pub async fn check_writer_available() -> Result<WriterVersion, MemoryWriterError
     // Parse "cyberos.writer 0.1.0 sha=abc1234 schema=1" or JSON. Permissive parse.
     let line = String::from_utf8_lossy(&out.stdout).trim().to_string();
     let (semver, commit, schema_version) = parse_version_line(&line);
-    Ok(WriterVersion { semver, commit, schema_version })
+    Ok(WriterVersion {
+        semver,
+        commit,
+        schema_version,
+    })
 }
 
 // --- Internals --------------------------------------------------------------
@@ -329,7 +339,13 @@ fn parse_version_line(line: &str) -> (String, String, u32) {
             commit = c.to_string();
         } else if let Some(s) = token.strip_prefix("schema=") {
             schema_version = s.parse().unwrap_or(0);
-        } else if token.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) && token.contains('.') {
+        } else if token
+            .chars()
+            .next()
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
+            && token.contains('.')
+        {
             semver = token.to_string();
         }
     }
@@ -510,7 +526,10 @@ mod tests {
     fn ai_invocation_kind_tag_is_stable() {
         assert_eq!(AiInvocationKind::Precheck.tag(), "ai.precheck");
         assert_eq!(AiInvocationKind::Invocation.tag(), "ai.invocation");
-        assert_eq!(AiInvocationKind::InvocationFailed.tag(), "ai.invocation_failed");
+        assert_eq!(
+            AiInvocationKind::InvocationFailed.tag(),
+            "ai.invocation_failed"
+        );
         assert_eq!(AiInvocationKind::HoldExpired.tag(), "ai.hold_expired");
         assert_eq!(AiInvocationKind::PersonaLoaded.tag(), "ai.persona_loaded");
     }

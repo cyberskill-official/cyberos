@@ -55,18 +55,20 @@ pub async fn create_idp_config(
     JsonInput(body): JsonInput<CreateIdpConfigBody>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(internal)?;
-    let scopes = body.scopes.unwrap_or_else(|| vec![
-        "openid".into(),
-        "email".into(),
-        "profile".into(),
-    ]);
+    let scopes = body
+        .scopes
+        .unwrap_or_else(|| vec!["openid".into(), "email".into(), "profile".into()]);
     let auto = body.auto_provision.unwrap_or(true);
-    let default_roles = body.default_roles.unwrap_or_else(|| vec!["tenant-member".into()]);
+    let default_roles = body
+        .default_roles
+        .unwrap_or_else(|| vec!["tenant-member".into()]);
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
 
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO oidc_idp_configs
@@ -98,11 +100,14 @@ pub async fn create_idp_config(
     .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
-    Ok((StatusCode::CREATED, Json(json!({
-        "id": row.0,
-        "tenant_id": tenant_id,
-        "name": body.name,
-    }))))
+    Ok((
+        StatusCode::CREATED,
+        Json(json!({
+            "id": row.0,
+            "tenant_id": tenant_id,
+            "name": body.name,
+        })),
+    ))
 }
 
 #[derive(Debug, Deserialize)]
@@ -129,7 +134,9 @@ pub async fn initiate(
     // Look up the IdP config under root context.
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
 
     let row: Option<(Uuid, Uuid, String, String, String, Vec<String>)> = sqlx::query_as(
         "SELECT i.id, i.tenant_id, i.discovery_url, i.client_id, i.redirect_uri, i.scopes
@@ -144,17 +151,21 @@ pub async fn initiate(
     .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
-    let (idp_config_id, tenant_id, discovery_url, client_id, registered_redirect, scopes) =
-        row.ok_or_else(|| (
-            StatusCode::NOT_FOUND,
-            Json(json!({"error": "idp_not_found", "tenant_slug": q.tenant_slug, "idp": q.idp})),
-        ))?;
+    let (idp_config_id, tenant_id, discovery_url, client_id, registered_redirect, scopes) = row
+        .ok_or_else(|| {
+            (
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "idp_not_found", "tenant_slug": q.tenant_slug, "idp": q.idp})),
+            )
+        })?;
 
     // Discover authorization_endpoint.
-    let discovery = discover(&discovery_url).await.map_err(|e| (
-        StatusCode::BAD_GATEWAY,
-        Json(json!({"error": "discovery_failed", "detail": e.to_string()})),
-    ))?;
+    let discovery = discover(&discovery_url).await.map_err(|e| {
+        (
+            StatusCode::BAD_GATEWAY,
+            Json(json!({"error": "discovery_failed", "detail": e.to_string()})),
+        )
+    })?;
 
     // Generate state + PKCE.
     let state_token = random_b64(STATE_BYTES);
@@ -166,7 +177,9 @@ pub async fn initiate(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     sqlx::query(
         "INSERT INTO oidc_login_history
                 (tenant_id, idp_config_id, flow_state, state_token, code_verifier_hash, ts_ns)
@@ -177,7 +190,9 @@ pub async fn initiate(
     .bind(&state_token)
     .bind(&code_verifier_hash)
     .bind(chrono::Utc::now().timestamp_nanos_opt().unwrap_or(0))
-    .execute(&mut *tx).await.map_err(internal)?;
+    .execute(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
     // Compose the authorization URL.
@@ -198,22 +213,24 @@ pub async fn initiate(
     // (state_token → code_verifier mapping; in production this would be a
     // short-TTL cache. For slice 1 we re-derive by joining oidc_login_history
     // on state_token + tx-bound state.)
-    state
-        .oidc_pending
-        .write()
-        .await
-        .insert(state_token.clone(), PendingState {
+    state.oidc_pending.write().await.insert(
+        state_token.clone(),
+        PendingState {
             tenant_id,
             idp_config_id,
             redirect_uri,
             code_verifier,
             issued_at_secs: now_secs(),
-        });
+        },
+    );
 
-    Ok((StatusCode::OK, Json(InitiateResponse {
-        authorization_url: url,
-        state: state_token,
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(InitiateResponse {
+            authorization_url: url,
+            state: state_token,
+        }),
+    ))
 }
 
 #[derive(Debug, Deserialize)]
@@ -234,7 +251,10 @@ pub async fn callback(
     Query(q): Query<CallbackQuery>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let caller_ip = crate::handlers::caller_ip(&headers);
-    let user_agent = headers.get("user-agent").and_then(|h| h.to_str().ok()).map(|s| s.to_string());
+    let user_agent = headers
+        .get("user-agent")
+        .and_then(|h| h.to_str().ok())
+        .map(|s| s.to_string());
     if let Some(err) = q.error {
         return Err((
             StatusCode::BAD_REQUEST,
@@ -245,10 +265,12 @@ pub async fn callback(
             })),
         ));
     }
-    let code = q.code.ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "missing_code"})),
-    ))?;
+    let code = q.code.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "missing_code"})),
+        )
+    })?;
 
     // Recover the pending state.
     let pending = state
@@ -263,16 +285,20 @@ pub async fn callback(
     if now_secs() - pending.issued_at_secs > 600 {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(json!({"error": "state_expired", "detail": "state token is older than 10 minutes"})),
+            Json(
+                json!({"error": "state_expired", "detail": "state token is older than 10 minutes"}),
+            ),
         ));
     }
 
     // Fetch IdP config + discovery again.
     let idp = load_idp(&state, pending.idp_config_id).await?;
-    let discovery = discover(&idp.discovery_url).await.map_err(|e| (
-        StatusCode::BAD_GATEWAY,
-        Json(json!({"error": "discovery_failed", "detail": e.to_string()})),
-    ))?;
+    let discovery = discover(&idp.discovery_url).await.map_err(|e| {
+        (
+            StatusCode::BAD_GATEWAY,
+            Json(json!({"error": "discovery_failed", "detail": e.to_string()})),
+        )
+    })?;
 
     // Exchange code → tokens.
     let token_resp = exchange_code(
@@ -284,41 +310,51 @@ pub async fn callback(
         &pending.code_verifier,
     )
     .await
-    .map_err(|e| (
-        StatusCode::BAD_GATEWAY,
-        Json(json!({"error": "token_exchange_failed", "detail": e.to_string()})),
-    ))?;
+    .map_err(|e| {
+        (
+            StatusCode::BAD_GATEWAY,
+            Json(json!({"error": "token_exchange_failed", "detail": e.to_string()})),
+        )
+    })?;
 
     // Decode the ID token's payload (slice 1: we DO NOT verify the signature
     // against the IdP JWKS here; slice 2 wires that. Justified because we just
     // received it over TLS from the discovery-pinned token_endpoint and won't
     // accept it from any other source.)
-    let id_claims = decode_jwt_payload(&token_resp.id_token).map_err(|e| (
-        StatusCode::BAD_GATEWAY,
-        Json(json!({"error": "id_token_decode_failed", "detail": e.to_string()})),
-    ))?;
+    let id_claims = decode_jwt_payload(&token_resp.id_token).map_err(|e| {
+        (
+            StatusCode::BAD_GATEWAY,
+            Json(json!({"error": "id_token_decode_failed", "detail": e.to_string()})),
+        )
+    })?;
     let idp_sub: String = id_claims
         .get("sub")
         .and_then(|v| v.as_str())
-        .ok_or_else(|| (
-            StatusCode::BAD_GATEWAY,
-            Json(json!({"error": "id_token_missing_sub"})),
-        ))?
+        .ok_or_else(|| {
+            (
+                StatusCode::BAD_GATEWAY,
+                Json(json!({"error": "id_token_missing_sub"})),
+            )
+        })?
         .to_string();
-    let idp_email = id_claims.get("email").and_then(|v| v.as_str()).map(String::from);
+    let idp_email = id_claims
+        .get("email")
+        .and_then(|v| v.as_str())
+        .map(String::from);
 
     // Look up or JIT-create the subject.
     let subject_id = resolve_subject(&state, &idp, &idp_sub, idp_email.as_deref()).await?;
 
     // Mint a CyberOS JWT for the verified subject.
     let svc = crate::jwt::JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
-    let assigned_roles = crate::handlers::load_subject_roles_pub(&state, idp.tenant_id, subject_id, &[]).await;
+    let assigned_roles =
+        crate::handlers::load_subject_roles_pub(&state, idp.tenant_id, subject_id, &[]).await;
     let rbac_v = state.role_matrix.read().await.version();
     let tokens = svc
         .issue(
             cyberos_types::TenantId(idp.tenant_id),
             cyberos_types::SubjectId(subject_id),
-            idp_email.as_deref().unwrap_or(""),     // FR-AUTH-004 §1 #2 — OIDC userinfo carries the email
+            idp_email.as_deref().unwrap_or(""), // FR-AUTH-004 §1 #2 — OIDC userinfo carries the email
             "human",
             vec![],
             assigned_roles,
@@ -327,10 +363,12 @@ pub async fn callback(
             None,
         )
         .await
-        .map_err(|e| (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": format!("jwt issuance failed: {e}")})),
-        ))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("jwt issuance failed: {e}")})),
+            )
+        })?;
 
     // Audit the success.
     let _ = sqlx::query(
@@ -356,8 +394,15 @@ pub async fn callback(
         sticky_suppress: &state.sticky_suppress,
     };
     let outcome = crate::travel::assess_login(
-        &deps, idp.tenant_id, subject_id, "oidc", caller_ip, user_agent.as_deref(),
-    ).await.ok();
+        &deps,
+        idp.tenant_id,
+        subject_id,
+        "oidc",
+        caller_ip,
+        user_agent.as_deref(),
+    )
+    .await
+    .ok();
     match outcome {
         Some(crate::travel::TravelOutcome::Block { kind, .. }) => Err((
             StatusCode::FORBIDDEN,
@@ -399,7 +444,9 @@ struct LoadedIdp {
 async fn load_idp(state: &AppState, idp_id: Uuid) -> Result<LoadedIdp, (StatusCode, Json<Value>)> {
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let row: Option<(Uuid, String, String, String, bool, Vec<String>)> = sqlx::query_as(
         "SELECT tenant_id, discovery_url, client_id, client_secret, auto_provision, default_roles
              FROM oidc_idp_configs WHERE id = $1",
@@ -409,10 +456,12 @@ async fn load_idp(state: &AppState, idp_id: Uuid) -> Result<LoadedIdp, (StatusCo
     .await
     .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
-    let r = row.ok_or_else(|| (
-        StatusCode::NOT_FOUND,
-        Json(json!({"error": "idp_config_disappeared"})),
-    ))?;
+    let r = row.ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "idp_config_disappeared"})),
+        )
+    })?;
     Ok(LoadedIdp {
         tenant_id: r.0,
         discovery_url: r.1,
@@ -436,7 +485,13 @@ async fn discover(url: &str) -> Result<DiscoveryDoc, Box<dyn std::error::Error +
         .timeout(std::time::Duration::from_secs(5))
         .user_agent("cyberos-auth/0.1")
         .build()?;
-    Ok(client.get(url).send().await?.error_for_status()?.json().await?)
+    Ok(client
+        .get(url)
+        .send()
+        .await?
+        .error_for_status()?
+        .json()
+        .await?)
 }
 
 #[derive(Debug, Deserialize)]
@@ -497,7 +552,9 @@ async fn resolve_subject(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(idp.tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let existing: Option<(Uuid,)> = sqlx::query_as(
         "SELECT subject_id FROM oidc_subject_link
           WHERE idp_config_id = (SELECT id FROM oidc_idp_configs
@@ -516,7 +573,10 @@ async fn resolve_subject(
             "UPDATE oidc_subject_link SET last_login_at = NOW()
               WHERE subject_id = $1 AND idp_sub = $2",
         )
-        .bind(sid).bind(idp_sub).execute(&mut *tx).await;
+        .bind(sid)
+        .bind(idp_sub)
+        .execute(&mut *tx)
+        .await;
         tx.commit().await.map_err(internal)?;
         return Ok(sid);
     }
@@ -526,17 +586,26 @@ async fn resolve_subject(
     if !idp.auto_provision {
         return Err((
             StatusCode::FORBIDDEN,
-            Json(json!({"error": "subject_not_provisioned", "detail": "auto-provision disabled for this IdP"})),
+            Json(
+                json!({"error": "subject_not_provisioned", "detail": "auto-provision disabled for this IdP"}),
+            ),
         ));
     }
     let handle = match idp_email {
-        Some(e) => format!("@{}", e.split('@').next().unwrap_or(&idp_sub[..idp_sub.len().min(20)])),
+        Some(e) => format!(
+            "@{}",
+            e.split('@')
+                .next()
+                .unwrap_or(&idp_sub[..idp_sub.len().min(20)])
+        ),
         None => format!("@oidc-{}", &idp_sub[..idp_sub.len().min(12)]),
     };
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(idp.tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO subjects (tenant_id, handle, display_name, email, kind, status, roles)
               VALUES ($1, $2, $3, $4, 'human', 'active', $5)

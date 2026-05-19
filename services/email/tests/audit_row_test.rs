@@ -2,8 +2,8 @@
 
 use chrono::Utc;
 use cyberos_email::audit::email_events::{
-    dkim_key_rotated, hash16, message_bounced, message_quarantined, message_received,
-    message_sent, spam_band,
+    dkim_key_rotated, hash16, message_bounced, message_quarantined, message_received, message_sent,
+    spam_band,
 };
 use cyberos_email::types::{BounceKind, EmailMessage, MessageDirection, MessageStatus};
 use uuid::Uuid;
@@ -43,14 +43,23 @@ fn received_row_carries_pii_hashes_not_raw_addresses() {
     assert_eq!(row.kind, "email.message_received");
     assert_eq!(row.direction, Some("inbound"));
     // Borrow rather than move so `row` remains usable for serialisation below.
-    let from = row.from_hash16.as_ref().expect("from_hash16 set on received");
+    let from = row
+        .from_hash16
+        .as_ref()
+        .expect("from_hash16 set on received");
     let to = row.to_hash16.as_ref().expect("to_hash16 set on received");
     assert_eq!(from.len(), 16);
     assert_eq!(to.len(), 16);
     // Raw addresses MUST NOT appear anywhere on the row body.
     let json = serde_json::to_string(&row).unwrap();
-    assert!(!json.contains("alice@example.com"), "raw from leaked into row");
-    assert!(!json.contains("support@cyberskill.world"), "raw to leaked into row");
+    assert!(
+        !json.contains("alice@example.com"),
+        "raw from leaked into row"
+    );
+    assert!(
+        !json.contains("support@cyberskill.world"),
+        "raw to leaked into row"
+    );
 }
 
 #[test]
@@ -88,7 +97,14 @@ fn dkim_rotated_row_has_both_old_and_new_keys() {
     let tid = Uuid::new_v4();
     let old = Uuid::new_v4();
     let new = Uuid::new_v4();
-    let row = dkim_key_rotated(tid, Some(old), new, "cyberos", "rsa-2048", Some("admin@cyberos"));
+    let row = dkim_key_rotated(
+        tid,
+        Some(old),
+        new,
+        "cyberos",
+        "rsa-2048",
+        Some("admin@cyberos"),
+    );
     assert_eq!(row.kind, "email.dkim_key_rotated");
     assert_eq!(row.old_key_id, Some(old));
     assert_eq!(row.new_key_id, Some(new));

@@ -190,17 +190,23 @@ pub async fn list_factors(
         .await
         .map_err(internal)?;
 
-    let rows: Vec<(Uuid, String, String, String, chrono::DateTime<chrono::Utc>, Option<chrono::DateTime<chrono::Utc>>)> =
-        sqlx::query_as(
-            "SELECT id, factor_type, label, status, enrolled_at, last_used_at
+    let rows: Vec<(
+        Uuid,
+        String,
+        String,
+        String,
+        chrono::DateTime<chrono::Utc>,
+        Option<chrono::DateTime<chrono::Utc>>,
+    )> = sqlx::query_as(
+        "SELECT id, factor_type, label, status, enrolled_at, last_used_at
               FROM mfa_factors
              WHERE subject_id = $1
              ORDER BY enrolled_at",
-        )
-        .bind(subject_id)
-        .fetch_all(&mut *tx)
-        .await
-        .map_err(internal)?;
+    )
+    .bind(subject_id)
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
     Ok(rows

@@ -9,7 +9,9 @@ use cyberos_auth::geoip::{self, GeoIpResolver, NullResolver};
 use std::sync::Arc;
 
 fn skip_if_no_db() -> bool {
-    std::env::var("AUTH_GEOIP_DB").ok().is_none_or(|s| s.is_empty())
+    std::env::var("AUTH_GEOIP_DB")
+        .ok()
+        .is_none_or(|s| s.is_empty())
 }
 
 #[test]

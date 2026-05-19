@@ -130,8 +130,13 @@ pub async fn on_inbound(
     // The handler asserts the destination matches BEFORE the PUT so a
     // mis-configured binding fails closed without writing data.
     residency::assert_residency_match(evt.tenant_id, &binding, &binding.bucket)?;
-    blob.put(&binding.bucket, &s3_key, &binding.kms_key_id, &evt.body_bytes)
-        .await?;
+    blob.put(
+        &binding.bucket,
+        &s3_key,
+        &binding.kms_key_id,
+        &evt.body_bytes,
+    )
+    .await?;
 
     // §1 #18 — spam quarantine threshold = 5.0.
     let status = MessageStatus::from_spam_score(evt.spam_score);
@@ -216,9 +221,14 @@ mod tests {
     #[tokio::test]
     async fn memory_blob_store_round_trip() {
         let bs = MemoryBlobStore::new();
-        bs.put("test-bucket", "key/1", "alias/test", b"hi").await.unwrap();
+        bs.put("test-bucket", "key/1", "alias/test", b"hi")
+            .await
+            .unwrap();
         assert!(bs.head_object("test-bucket", "key/1").await);
         assert!(!bs.head_object("test-bucket", "key/2").await);
-        assert_eq!(bs.body_for("test-bucket", "key/1").await, Some(b"hi".to_vec()));
+        assert_eq!(
+            bs.body_for("test-bucket", "key/1").await,
+            Some(b"hi".to_vec())
+        );
     }
 }

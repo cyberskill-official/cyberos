@@ -78,7 +78,10 @@ impl MaxMindResolver {
     pub fn from_path(path: &str) -> Result<Self, GeoIpError> {
         let reader = maxminddb::Reader::open_readfile(path)
             .map_err(|e| GeoIpError::Open(format!("opening {path}: {e}")))?;
-        Ok(Self { reader, anon_reader: None })
+        Ok(Self {
+            reader,
+            anon_reader: None,
+        })
     }
 
     /// Attach the Anonymous-IP DB. Optional — when absent, `anon_lookup`
@@ -120,7 +123,13 @@ impl GeoIpResolver for MaxMindResolver {
                     .as_ref()
                     .map(|l| (l.latitude, l.longitude))
                     .unwrap_or((None, None));
-                GeoLookup { country_iso, region, lat, lon, continent }
+                GeoLookup {
+                    country_iso,
+                    region,
+                    lat,
+                    lon,
+                    continent,
+                }
             }
             Err(_) => GeoLookup::default(),
         }
@@ -193,7 +202,9 @@ pub fn from_env() -> Result<Arc<dyn GeoIpResolver>, GeoIpError> {
         }
         _ if required => Err(GeoIpError::Required),
         _ => {
-            tracing::info!("GeoIP enrichment disabled (AUTH_GEOIP_DB unset) — kind-2/3 detectors inactive");
+            tracing::info!(
+                "GeoIP enrichment disabled (AUTH_GEOIP_DB unset) — kind-2/3 detectors inactive"
+            );
             Ok(Arc::new(NullResolver))
         }
     }
@@ -211,8 +222,7 @@ pub fn haversine_km(a: (f64, f64), b: (f64, f64)) -> f64 {
     let (lat2, lon2) = (b.0.to_radians(), b.1.to_radians());
     let dlat = lat2 - lat1;
     let dlon = lon2 - lon1;
-    let h =
-        (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
+    let h = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
     2.0 * R_KM * h.sqrt().asin()
 }
 
@@ -252,7 +262,10 @@ mod tests {
         std::env::remove_var("AUTH_GEOIP_REQUIRED");
         let r = from_env().expect("should fall back to NullResolver");
         let g = r.lookup("203.0.113.42".parse().unwrap());
-        assert!(g.country_iso.is_none(), "NullResolver must return empty lookup");
+        assert!(
+            g.country_iso.is_none(),
+            "NullResolver must return empty lookup"
+        );
 
         // Case 2 — REQUIRED=1 + no DB → GeoIpError::Required.
         std::env::set_var("AUTH_GEOIP_REQUIRED", "1");

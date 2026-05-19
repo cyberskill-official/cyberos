@@ -38,7 +38,12 @@ async fn happy_path_ingests_two_rows_and_advances_cursor() {
     // Insert two rows directly into l1_audit_log.
     let r1 = fresh_row(tenant_uuid, None, "first row body", "memories/first.md");
     let r2_prev = r1.chain_anchor_hex.clone();
-    let r2 = fresh_row(tenant_uuid, Some(&r2_prev), "second row body", "memories/second.md");
+    let r2 = fresh_row(
+        tenant_uuid,
+        Some(&r2_prev),
+        "second row body",
+        "memories/second.md",
+    );
     binlog_tail::append(&pool, &r1).await.expect("append r1");
     binlog_tail::append(&pool, &r2).await.expect("append r2");
 
@@ -48,19 +53,40 @@ async fn happy_path_ingests_two_rows_and_advances_cursor() {
     assert!(summary.to_seq > summary.from_seq);
 
     // l2_memory should now have 2 rows for this tenant.
-    let (n,): (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
-        .bind(tenant_uuid)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let (n,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
+            .bind(tenant_uuid)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
     assert_eq!(n, 2, "expected 2 l2_memory rows materialised");
 
     // Cleanup
-    sqlx::query("DELETE FROM l2_memory WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l2_entity WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l2_ingest_cursor WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l2_ingest_cursor_history WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
+    sqlx::query("DELETE FROM l2_memory WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l2_entity WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l2_ingest_cursor WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l2_ingest_cursor_history WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
 }
 
 #[tokio::test]
@@ -90,7 +116,11 @@ async fn tampered_chain_anchor_fails_with_mismatch_error() {
         "expected ChainAnchorMismatch; got {res:?}"
     );
 
-    sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
+    sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
 }
 
 #[tokio::test]
@@ -106,20 +136,44 @@ async fn ingest_is_idempotent_under_replay() {
     let s1 = ingest::run_batch(&pool, tenant, 100).await.unwrap();
     let s2 = ingest::run_batch(&pool, tenant, 100).await.unwrap();
     assert_eq!(s1.rows_processed, 1);
-    assert_eq!(s2.rows_processed, 0, "second run must be no-op (cursor already past)");
+    assert_eq!(
+        s2.rows_processed, 0,
+        "second run must be no-op (cursor already past)"
+    );
 
-    let (n,): (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
-        .bind(tenant_uuid)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let (n,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
+            .bind(tenant_uuid)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
     assert_eq!(n, 1, "memory count must remain 1 after replay");
 
-    sqlx::query("DELETE FROM l2_memory WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l2_entity WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l2_ingest_cursor WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l2_ingest_cursor_history WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
-    sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1").bind(tenant_uuid).execute(&pool).await.ok();
+    sqlx::query("DELETE FROM l2_memory WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l2_entity WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l2_ingest_cursor WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l2_ingest_cursor_history WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1")
+        .bind(tenant_uuid)
+        .execute(&pool)
+        .await
+        .ok();
 }
 
 #[tokio::test]
@@ -136,22 +190,55 @@ async fn tenant_isolation_a_cannot_see_b_rows() {
     binlog_tail::append(&pool, &rb).await.unwrap();
 
     // Run ingest for A; B's row should NOT be touched.
-    let s = ingest::run_batch(&pool, TenantId(a_uuid), 100).await.unwrap();
+    let s = ingest::run_batch(&pool, TenantId(a_uuid), 100)
+        .await
+        .unwrap();
     assert_eq!(s.rows_processed, 1);
 
-    let (a_count,): (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
-        .bind(a_uuid).fetch_one(&pool).await.unwrap();
-    let (b_count,): (i64,) = sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
-        .bind(b_uuid).fetch_one(&pool).await.unwrap();
+    let (a_count,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
+            .bind(a_uuid)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+    let (b_count,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*)::bigint FROM l2_memory WHERE tenant_id = $1")
+            .bind(b_uuid)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
     assert_eq!(a_count, 1, "Alice's row must materialise");
-    assert_eq!(b_count, 0, "Bob's row must remain untouched until Bob's ingest runs");
+    assert_eq!(
+        b_count, 0,
+        "Bob's row must remain untouched until Bob's ingest runs"
+    );
 
     // Cleanup
     for t in [a_uuid, b_uuid] {
-        sqlx::query("DELETE FROM l2_memory WHERE tenant_id = $1").bind(t).execute(&pool).await.ok();
-        sqlx::query("DELETE FROM l2_entity WHERE tenant_id = $1").bind(t).execute(&pool).await.ok();
-        sqlx::query("DELETE FROM l2_ingest_cursor WHERE tenant_id = $1").bind(t).execute(&pool).await.ok();
-        sqlx::query("DELETE FROM l2_ingest_cursor_history WHERE tenant_id = $1").bind(t).execute(&pool).await.ok();
-        sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1").bind(t).execute(&pool).await.ok();
+        sqlx::query("DELETE FROM l2_memory WHERE tenant_id = $1")
+            .bind(t)
+            .execute(&pool)
+            .await
+            .ok();
+        sqlx::query("DELETE FROM l2_entity WHERE tenant_id = $1")
+            .bind(t)
+            .execute(&pool)
+            .await
+            .ok();
+        sqlx::query("DELETE FROM l2_ingest_cursor WHERE tenant_id = $1")
+            .bind(t)
+            .execute(&pool)
+            .await
+            .ok();
+        sqlx::query("DELETE FROM l2_ingest_cursor_history WHERE tenant_id = $1")
+            .bind(t)
+            .execute(&pool)
+            .await
+            .ok();
+        sqlx::query("DELETE FROM l1_audit_log WHERE tenant_id = $1")
+            .bind(t)
+            .execute(&pool)
+            .await
+            .ok();
     }
 }

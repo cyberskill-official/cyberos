@@ -186,7 +186,7 @@ pub struct PatchIssueRequest {
     pub body: Option<String>,
     pub status: Option<IssueStatus>,
     pub priority: Option<IssuePriority>,
-    pub assignee_subject_id: Option<Option<Uuid>>,    // double-Option: explicit-null clears
+    pub assignee_subject_id: Option<Option<Uuid>>, // double-Option: explicit-null clears
     pub estimate_hours: Option<Option<f64>>,
 }
 
@@ -220,7 +220,12 @@ mod tests {
     #[test]
     fn link_type_inverses_are_symmetric() {
         // For each symmetric type, inverse-of-inverse == original.
-        for lt in [LinkType::Blocks, LinkType::BlockedBy, LinkType::Duplicates, LinkType::DuplicatedBy] {
+        for lt in [
+            LinkType::Blocks,
+            LinkType::BlockedBy,
+            LinkType::Duplicates,
+            LinkType::DuplicatedBy,
+        ] {
             let inv = lt.inverse().unwrap();
             assert_eq!(inv.inverse().unwrap(), lt);
         }
@@ -241,8 +246,14 @@ mod tests {
     #[test]
     fn link_type_parse_round_trip() {
         for raw in [
-            "duplicates", "duplicated_by", "blocks", "blocked_by", "related",
-            "derived_from_email_thread", "derived_from_chat_thread", "derived_from_meeting_decision",
+            "duplicates",
+            "duplicated_by",
+            "blocks",
+            "blocked_by",
+            "related",
+            "derived_from_email_thread",
+            "derived_from_chat_thread",
+            "derived_from_meeting_decision",
         ] {
             let parsed = LinkType::parse(raw).unwrap();
             assert_eq!(parsed.as_str(), raw);

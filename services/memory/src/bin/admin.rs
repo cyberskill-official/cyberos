@@ -9,8 +9,8 @@
 //!     today. Reports mismatches. The 30-minute reconcile cadence is run
 //!     by an OBS-scheduled cron that shells out to this binary.
 
-use cyberos_memory::rebuild;
 use cyberos_cli_exit::ExitCode;
+use cyberos_memory::rebuild;
 use cyberos_types::TenantId;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -61,7 +61,10 @@ async fn main() -> ExitCode {
                     ExitCode::Generic
                 }
             },
-            Err(msg) => { eprintln!("{msg}"); ExitCode::UsageError }
+            Err(msg) => {
+                eprintln!("{msg}");
+                ExitCode::UsageError
+            }
         },
         "reconcile" => match parse_tenant(&args) {
             Ok(t) => {
@@ -72,25 +75,41 @@ async fn main() -> ExitCode {
                     .unwrap_or(100);
                 match rebuild::reconcile(&pool, t, sample).await {
                     Ok(s) => {
-                        println!("reconcile: {} of {} passed; {} failed; {} ms",
-                                 s.passed, s.sample_size, s.failed, s.duration_ms);
+                        println!(
+                            "reconcile: {} of {} passed; {} failed; {} ms",
+                            s.passed, s.sample_size, s.failed, s.duration_ms
+                        );
                         if s.failed > 0 {
                             eprintln!("\nFailures:");
                             for f in &s.failures {
-                                eprintln!("  seq={} path={} stored={} recomputed={}",
-                                          f.seq, f.path, &f.stored_anchor[..16], &f.recomputed_anchor[..16.min(f.recomputed_anchor.len())]);
+                                eprintln!(
+                                    "  seq={} path={} stored={} recomputed={}",
+                                    f.seq,
+                                    f.path,
+                                    &f.stored_anchor[..16],
+                                    &f.recomputed_anchor[..16.min(f.recomputed_anchor.len())]
+                                );
                             }
                             ExitCode::Generic
                         } else {
                             ExitCode::Ok
                         }
                     }
-                    Err(e) => { eprintln!("reconcile failed: {e}"); ExitCode::Generic }
+                    Err(e) => {
+                        eprintln!("reconcile failed: {e}");
+                        ExitCode::Generic
+                    }
                 }
             }
-            Err(msg) => { eprintln!("{msg}"); ExitCode::UsageError }
+            Err(msg) => {
+                eprintln!("{msg}");
+                ExitCode::UsageError
+            }
         },
-        "--help" | "-h" => { usage(); ExitCode::Ok }
+        "--help" | "-h" => {
+            usage();
+            ExitCode::Ok
+        }
         other => {
             eprintln!("unknown subcommand: {other}");
             usage();
@@ -105,7 +124,9 @@ fn parse_tenant(args: &[String]) -> Result<TenantId, String> {
         .find(|w| w[0] == "--tenant")
         .map(|w| &w[1])
         .ok_or_else(|| "--tenant <UUID> required".to_string())?;
-    let uuid: Uuid = raw.parse().map_err(|e: uuid::Error| format!("bad UUID: {e}"))?;
+    let uuid: Uuid = raw
+        .parse()
+        .map_err(|e: uuid::Error| format!("bad UUID: {e}"))?;
     Ok(TenantId(uuid))
 }
 

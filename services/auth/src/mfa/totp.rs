@@ -8,7 +8,8 @@ pub fn current_time_step() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
-        .unwrap_or(0) / TOTP_STEP_SECS
+        .unwrap_or(0)
+        / TOTP_STEP_SECS
 }
 
 pub fn verify_totp(secret: &[u8], code: &str, now_step: u64) -> bool {
@@ -33,7 +34,9 @@ fn hotp(secret: &[u8], counter: u64) -> Vec<u8> {
         h.update(&key);
         key = h.finalize().to_vec();
     }
-    if key.len() < block_size { key.resize(block_size, 0); }
+    if key.len() < block_size {
+        key.resize(block_size, 0);
+    }
     let ipad: Vec<u8> = key.iter().map(|b| b ^ 0x36).collect();
     let opad: Vec<u8> = key.iter().map(|b| b ^ 0x5c).collect();
 
@@ -58,9 +61,13 @@ fn hotp(secret: &[u8], counter: u64) -> Vec<u8> {
 }
 
 fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
-    if a.len() != b.len() { return false; }
+    if a.len() != b.len() {
+        return false;
+    }
     let mut diff: u8 = 0;
-    for (x, y) in a.iter().zip(b.iter()) { diff |= x ^ y; }
+    for (x, y) in a.iter().zip(b.iter()) {
+        diff |= x ^ y;
+    }
     diff == 0
 }
 
@@ -98,7 +105,9 @@ pub fn base32_decode(s: &str) -> Option<Vec<u8>> {
     let mut buf: u32 = 0;
     let mut bits = 0u32;
     for c in s.chars().filter(|c| !c.is_whitespace() && *c != '=') {
-        let v = B32_ALPHABET.iter().position(|&b| b == c.to_ascii_uppercase() as u8)? as u32;
+        let v = B32_ALPHABET
+            .iter()
+            .position(|&b| b == c.to_ascii_uppercase() as u8)? as u32;
         buf = (buf << 5) | v;
         bits += 5;
         if bits >= 8 {

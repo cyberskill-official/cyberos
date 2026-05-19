@@ -17,7 +17,11 @@ use clap::{Parser, Subcommand};
 use cyberos_obs_collector::{auth, config, SERVICE_BANNER};
 
 #[derive(Debug, Parser)]
-#[command(name = "cyberos-obs", version, about = "CyberOS observability supervisor")]
+#[command(
+    name = "cyberos-obs",
+    version,
+    about = "CyberOS observability supervisor"
+)]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
@@ -61,7 +65,11 @@ fn main() -> ExitCode {
         },
         Cmd::ValidateTokens { path } => match auth::TokenFile::load(&path) {
             Ok(tf) => {
-                println!("OK tokens loaded: {} entries from {}", tf.tokens.len(), path.display());
+                println!(
+                    "OK tokens loaded: {} entries from {}",
+                    tf.tokens.len(),
+                    path.display()
+                );
                 let mut services: Vec<_> = tf.tokens.keys().collect();
                 services.sort();
                 for s in services {

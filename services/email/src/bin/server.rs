@@ -16,7 +16,9 @@ use tracing_subscriber::EnvFilter;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with_env_filter(
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+        )
         .json()
         .init();
 
@@ -33,21 +35,27 @@ async fn main() -> anyhow::Result<()> {
     info!("cyberos-email listening on {bind}");
 
     let app = axum::Router::new()
-        .route("/v1/email/healthz", axum::routing::get({
-            let pool = pool.clone();
-            move || {
+        .route(
+            "/v1/email/healthz",
+            axum::routing::get({
                 let pool = pool.clone();
-                async move {
-                    let h = cyberos_email::handlers::healthz(&pool).await
-                        .map(axum::Json)
-                        .map_err(|e| (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()));
-                    match h {
-                        Ok(j) => j.into_response(),
-                        Err((c, s)) => (c, s).into_response(),
+                move || {
+                    let pool = pool.clone();
+                    async move {
+                        let h = cyberos_email::handlers::healthz(&pool)
+                            .await
+                            .map(axum::Json)
+                            .map_err(|e| {
+                                (axum::http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+                            });
+                        match h {
+                            Ok(j) => j.into_response(),
+                            Err((c, s)) => (c, s).into_response(),
+                        }
                     }
                 }
-            }
-        }))
+            }),
+        )
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind(bind).await?;

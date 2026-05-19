@@ -7,8 +7,8 @@
 use chrono::{DateTime, Duration, Utc};
 
 pub const MAX_FAILURES: i32 = 5;
-pub const WINDOW_SECS: i64 = 900;     // 15 minutes
-pub const LOCKOUT_SECS: i64 = 1800;   // 30 minutes
+pub const WINDOW_SECS: i64 = 900; // 15 minutes
+pub const LOCKOUT_SECS: i64 = 1800; // 30 minutes
 
 #[derive(Debug, Clone)]
 pub struct LockoutState {

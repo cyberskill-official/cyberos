@@ -11,13 +11,13 @@
 //!   * [`handlers`] — axum handler functions
 //!   * [`links`] — bidirectional symmetric-link writer
 
-pub mod types;
-pub mod status_fsm;
 pub mod audit;
 pub mod errors;
-pub mod repo;
 pub mod handlers;
 pub mod links;
+pub mod repo;
+pub mod status_fsm;
+pub mod types;
 
 pub use errors::IssueError;
 pub use types::*;

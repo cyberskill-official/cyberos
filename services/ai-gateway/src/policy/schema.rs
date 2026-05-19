@@ -140,10 +140,18 @@ pub struct EmergencyOverride {
     pub max_multiplier: f64,
 }
 
-fn default_warn_threshold() -> f64 { 0.80 }
-fn default_hard_stop() -> bool { true }
-fn default_call_timeout_seconds() -> u32 { 60 }
-fn default_override_multiplier() -> f64 { 1.0 }
+fn default_warn_threshold() -> f64 {
+    0.80
+}
+fn default_hard_stop() -> bool {
+    true
+}
+fn default_call_timeout_seconds() -> u32 {
+    60
+}
+fn default_override_multiplier() -> f64 {
+    1.0
+}
 
 #[cfg(test)]
 mod tests {

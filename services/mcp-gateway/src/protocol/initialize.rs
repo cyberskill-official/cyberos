@@ -43,7 +43,10 @@ pub struct InitializeResult {
 /// pinned by [`crate::MCP_PROTOCOL_VERSION`] (per DEC-260).
 pub fn build_response(params: &InitializeParams) -> Result<InitializeResult, RpcError> {
     if params.protocol_version != MCP_PROTOCOL_VERSION {
-        return Err(protocol_mismatch(&params.protocol_version, &[MCP_PROTOCOL_VERSION]));
+        return Err(protocol_mismatch(
+            &params.protocol_version,
+            &[MCP_PROTOCOL_VERSION],
+        ));
     }
     Ok(InitializeResult {
         protocol_version: MCP_PROTOCOL_VERSION.to_string(),

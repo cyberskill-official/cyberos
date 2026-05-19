@@ -44,20 +44,35 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/oidc/initiate", get(crate::oidc::initiate))
         .route("/v1/auth/oidc/callback", get(crate::oidc::callback))
         // FR-AUTH-105 Passkey — login is public (the whole point is no-password auth)
-        .route("/v1/auth/passkey/login/begin", post(crate::passkey::login_begin))
-        .route("/v1/auth/passkey/login/finish", post(crate::passkey::login_finish))
+        .route(
+            "/v1/auth/passkey/login/begin",
+            post(crate::passkey::login_begin),
+        )
+        .route(
+            "/v1/auth/passkey/login/finish",
+            post(crate::passkey::login_finish),
+        )
         // FR-AUTH-103 SAML — initiate + ACS + SP metadata are PUBLIC
         .route("/v1/auth/saml/initiate", get(crate::saml::initiate))
         .route("/v1/auth/saml/acs", post(crate::saml::acs))
-        .route("/v1/auth/saml/idp-configs/:id/sp-metadata", get(crate::saml::sp_metadata));
+        .route(
+            "/v1/auth/saml/idp-configs/:id/sp-metadata",
+            get(crate::saml::sp_metadata),
+        );
 
     let admin = Router::new()
         .route("/v1/admin/tenants", post(create_tenant).get(list_tenants))
-        .route("/v1/admin/subjects", post(create_subject).get(list_subjects))
+        .route(
+            "/v1/admin/subjects",
+            post(create_subject).get(list_subjects),
+        )
         .route("/v1/admin/subjects/:id/revoke", post(revoke_subject))
         .route("/v1/admin/subjects/:id/unrevoke", post(unrevoke_subject))
         // FR-AUTH-101 RBAC endpoints
-        .route("/v1/admin/roles", get(crate::rbac::catalogue_endpoint::list_roles_with_etag_check))
+        .route(
+            "/v1/admin/roles",
+            get(crate::rbac::catalogue_endpoint::list_roles_with_etag_check),
+        )
         .route(
             "/v1/admin/subjects/:id/roles",
             post(crate::rbac::assignment::assign_role),
@@ -69,24 +84,57 @@ pub fn router(state: AppState) -> Router {
         // FR-AUTH-102 MFA — TOTP enrolment + verify (auth'd; the password
         // grant is what eventually CALLS verify, but enrolment requires an
         // authenticated session).
-        .route("/v1/auth/mfa/factors/totp/enrol", post(crate::mfa::totp_enrol_start))
-        .route("/v1/auth/mfa/factors/totp/enrol/finish", post(crate::mfa::totp_enrol_finish))
+        .route(
+            "/v1/auth/mfa/factors/totp/enrol",
+            post(crate::mfa::totp_enrol_start),
+        )
+        .route(
+            "/v1/auth/mfa/factors/totp/enrol/finish",
+            post(crate::mfa::totp_enrol_finish),
+        )
         .route("/v1/auth/mfa/verify", post(crate::mfa::totp_verify))
         // FR-AUTH-102 — additional MFA endpoints (list, revoke, recovery)
         .route("/v1/auth/mfa/factors", get(crate::mfa::list_factors))
-        .route("/v1/auth/mfa/factors/:factor_id", axum::routing::delete(crate::mfa::revoke_factor))
-        .route("/v1/auth/mfa/recovery/generate", post(crate::mfa::generate_recovery_codes))
-        .route("/v1/auth/mfa/recovery/verify", post(crate::mfa::verify_recovery_code))
+        .route(
+            "/v1/auth/mfa/factors/:factor_id",
+            axum::routing::delete(crate::mfa::revoke_factor),
+        )
+        .route(
+            "/v1/auth/mfa/recovery/generate",
+            post(crate::mfa::generate_recovery_codes),
+        )
+        .route(
+            "/v1/auth/mfa/recovery/verify",
+            post(crate::mfa::verify_recovery_code),
+        )
         // FR-AUTH-104 OIDC admin — create/update IdP config (JWT-gated)
-        .route("/v1/admin/oidc/idp-configs", post(crate::oidc::create_idp_config))
+        .route(
+            "/v1/admin/oidc/idp-configs",
+            post(crate::oidc::create_idp_config),
+        )
         // FR-AUTH-105 Passkey enrol — requires authenticated session
-        .route("/v1/auth/passkey/enrol/begin", post(crate::passkey::enrol_begin))
-        .route("/v1/auth/passkey/enrol/finish", post(crate::passkey::enrol_finish))
+        .route(
+            "/v1/auth/passkey/enrol/begin",
+            post(crate::passkey::enrol_begin),
+        )
+        .route(
+            "/v1/auth/passkey/enrol/finish",
+            post(crate::passkey::enrol_finish),
+        )
         // FR-AUTH-103 SAML admin — create/update IdP config (JWT-gated)
-        .route("/v1/admin/saml/idp-configs", post(crate::saml::create_idp_config))
+        .route(
+            "/v1/admin/saml/idp-configs",
+            post(crate::saml::create_idp_config),
+        )
         // FR-AUTH-109 stub→full migration enforcer (root-admin only)
-        .route("/v1/admin/auth/migration/preview", get(crate::migration_state::preview))
-        .route("/v1/admin/auth/migration/extend-grace", post(crate::migration_state::extend_grace))
+        .route(
+            "/v1/admin/auth/migration/preview",
+            get(crate::migration_state::preview),
+        )
+        .route(
+            "/v1/admin/auth/migration/extend-grace",
+            post(crate::migration_state::extend_grace),
+        )
         // FR-AUTH-108 Lumi tenant-identity JWT — admin-gated issue/revoke
         .route("/v1/auth/lumi/issue", post(crate::lumi::issue))
         .route("/v1/auth/lumi/verify", get(crate::lumi::verify))
@@ -115,7 +163,11 @@ pub fn router(state: AppState) -> Router {
 
 async fn healthz(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
     let pg_ok = sqlx::query("SELECT 1").fetch_one(&state.pg).await.is_ok();
-    let status = if pg_ok { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
+    let status = if pg_ok {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
     (
         status,
         Json(json!({
@@ -192,21 +244,14 @@ async fn create_tenant(
     // Only the root tenant can create new tenants. The auth middleware
     // (FR-AUTH-004) will validate the JWT and set `app.current_tenant_id`.
     // Until then, this handler runs in the root context.
-    let mut tx = state
-        .pg
-        .begin()
-        .await
-        .map_err(db_err)?;
+    let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
         .execute(&mut *tx)
         .await
         .map_err(db_err)?;
 
     // Idempotency-Key is required on admin POSTs.
-    let key = match headers
-        .get("idempotency-key")
-        .and_then(|h| h.to_str().ok())
-    {
+    let key = match headers.get("idempotency-key").and_then(|h| h.to_str().ok()) {
         Some(k) => k,
         None => {
             span.record("outcome", "missing_header");
@@ -229,9 +274,16 @@ async fn create_tenant(
     {
         // Replay the prior response bit-for-bit.
         span.record("outcome", "idempotent_replay");
-        let tenant: Tenant = serde_json::from_value(body)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
-        return Ok((StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK), Json(tenant)));
+        let tenant: Tenant = serde_json::from_value(body).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
+        return Ok((
+            StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK),
+            Json(tenant),
+        ));
     }
 
     let new_id = TenantId::new();
@@ -263,19 +315,27 @@ async fn create_tenant(
             span.record("outcome", "error");
             return Err(internal_err(other));
         }
-        Ok((id, slug, display_name, country, plan_tier, status, residency, created_at, updated_at)) => {
-            Tenant {
-                id: TenantId(id),
-                slug,
-                display_name,
-                country,
-                plan_tier,
-                status,
-                residency,
-                created_at,
-                updated_at,
-            }
-        }
+        Ok((
+            id,
+            slug,
+            display_name,
+            country,
+            plan_tier,
+            status,
+            residency,
+            created_at,
+            updated_at,
+        )) => Tenant {
+            id: TenantId(id),
+            slug,
+            display_name,
+            country,
+            plan_tier,
+            status,
+            residency,
+            created_at,
+            updated_at,
+        },
     };
 
     // FR-AUTH-001 §1 #6 + §1 #12 — Emit `auth.tenant_created` memory audit row
@@ -283,11 +343,8 @@ async fn create_tenant(
     // before commit), the entire tx rolls back — both the tenant row and
     // the audit row are discarded together. The partial state of "tenant
     // exists but no audit trail" is forbidden by construction.
-    let caller_subject_id =
-        Uuid::parse_str(&claims.sub).unwrap_or_else(|_| Uuid::nil());
-    let request_id = headers
-        .get("x-request-id")
-        .and_then(|h| h.to_str().ok());
+    let caller_subject_id = Uuid::parse_str(&claims.sub).unwrap_or_else(|_| Uuid::nil());
+    let request_id = headers.get("x-request-id").and_then(|h| h.to_str().ok());
     let payload = crate::memory_bridge::TenantCreatedPayload {
         tenant_id: row.id.as_uuid(),
         slug: &row.slug,
@@ -308,10 +365,12 @@ async fn create_tenant(
         internal_err(e)
     })?;
 
-    let body = serde_json::to_value(&row).map_err(|e| (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({"error": e.to_string()})),
-    ))?;
+    let body = serde_json::to_value(&row).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": e.to_string()})),
+        )
+    })?;
     crate::idempotency::record(
         &state.pg,
         key,
@@ -374,8 +433,8 @@ async fn create_subject(
     // Per §1 #1: caller MUST have `tenant-admin` in claims.roles, OR be
     // root-admin in tenant 0 (the latter implies tenant-admin everywhere).
     let has_tenant_admin = claims.roles.iter().any(|r| r == "tenant-admin");
-    let is_root_admin_zero = tenant_id == Uuid::nil()
-        && claims.roles.iter().any(|r| r == "root-admin");
+    let is_root_admin_zero =
+        tenant_id == Uuid::nil() && claims.roles.iter().any(|r| r == "root-admin");
     if !has_tenant_admin && !is_root_admin_zero {
         span.record("outcome", "forbidden");
         return Err((
@@ -407,7 +466,10 @@ async fn create_subject(
             span.record("outcome", "invalid_input");
             return Err(e);
         }
-        span.record("email_hash16", crate::memory_bridge::email_hash16(email).as_str());
+        span.record(
+            "email_hash16",
+            crate::memory_bridge::email_hash16(email).as_str(),
+        );
     }
 
     // G-003 — Role allow-list (§1 #5). Closed allow-list for slice 1:
@@ -418,10 +480,7 @@ async fn create_subject(
     }
 
     // G-004 — Idempotency-Key honoured (§1 #6). Required on admin POSTs.
-    let idem_key = match headers
-        .get("idempotency-key")
-        .and_then(|h| h.to_str().ok())
-    {
+    let idem_key = match headers.get("idempotency-key").and_then(|h| h.to_str().ok()) {
         Some(k) => k,
         None => {
             span.record("outcome", "missing_header");
@@ -442,10 +501,12 @@ async fn create_subject(
     {
         // Replay prior response.
         span.record("outcome", "idempotent_replay");
-        let subject: Subject = serde_json::from_value(body).map_err(|e| (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": e.to_string()})),
-        ))?;
+        let subject: Subject = serde_json::from_value(body).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
         return Ok((
             StatusCode::from_u16(status as u16).unwrap_or(StatusCode::OK),
             Json(subject),
@@ -458,10 +519,8 @@ async fn create_subject(
     // The password is wrapped in `Zeroizing<String>` so the plaintext bytes
     // are overwritten on drop — even if a panic unwinds the stack mid-flow,
     // the wrapper's Drop runs.
-    let zeroized_password: Option<crate::password::ZeroizedString<String>> = req
-        .password
-        .as_deref()
-        .map(crate::password::wrap);
+    let zeroized_password: Option<crate::password::ZeroizedString<String>> =
+        req.password.as_deref().map(crate::password::wrap);
     if let (Some(z), "human") = (zeroized_password.as_deref(), req.kind.as_str()) {
         let email_local_part = req
             .email
@@ -515,10 +574,7 @@ async fn create_subject(
         }
         ("human", None) => {
             span.record("outcome", "invalid_input");
-            return Err(invalid_input(
-                "password",
-                "human subject requires password",
-            ));
+            return Err(invalid_input("password", "human subject requires password"));
         }
         _ => (None, None),
     };
@@ -576,7 +632,11 @@ async fn create_subject(
             span.record("outcome", "conflict");
             let constraint = db.constraint().unwrap_or("").to_string();
             let (error, field, value) = if constraint.contains("email") {
-                ("email_taken", "email", req.email.clone().unwrap_or_default())
+                (
+                    "email_taken",
+                    "email",
+                    req.email.clone().unwrap_or_default(),
+                )
             } else {
                 ("handle_taken", "handle", req.handle.clone())
             };
@@ -847,15 +907,13 @@ fn resolve_effective_tenant_id(
     headers: &HeaderMap,
 ) -> Result<Uuid, (StatusCode, Json<Value>)> {
     let caller_tenant = Uuid::parse_str(&claims.tenant_id).map_err(internal_err)?;
-    let header_val = headers
-        .get("x-switch-tenant")
-        .and_then(|h| h.to_str().ok());
+    let header_val = headers.get("x-switch-tenant").and_then(|h| h.to_str().ok());
     let Some(raw) = header_val else {
         return Ok(caller_tenant);
     };
     // Header is present → caller must be root-admin in tenant 0.
-    let is_root_admin_zero = caller_tenant == Uuid::nil()
-        && claims.roles.iter().any(|r| r == "root-admin");
+    let is_root_admin_zero =
+        caller_tenant == Uuid::nil() && claims.roles.iter().any(|r| r == "root-admin");
     if !is_root_admin_zero {
         return Err((
             StatusCode::FORBIDDEN,
@@ -866,10 +924,8 @@ fn resolve_effective_tenant_id(
         ));
     }
     // Caller is root-admin → validate the header's UUID form.
-    Uuid::parse_str(raw).map_err(|_| invalid_input(
-        "X-Switch-Tenant",
-        "header value must be a valid UUID",
-    ))
+    Uuid::parse_str(raw)
+        .map_err(|_| invalid_input("X-Switch-Tenant", "header value must be a valid UUID"))
 }
 
 /// Build a 400 BAD_REQUEST with structured `{error, field, reason}` body.
@@ -894,7 +950,10 @@ fn invalid_input(field: &str, reason: impl Into<String>) -> (StatusCode, Json<Va
 /// check produces a structured body instead of a generic 500 on constraint failure).
 fn validate_slug(slug: &str) -> Result<(), (StatusCode, Json<Value>)> {
     if slug.is_empty() {
-        return Err(invalid_input("slug", "slug is empty (1..=40 chars required)"));
+        return Err(invalid_input(
+            "slug",
+            "slug is empty (1..=40 chars required)",
+        ));
     }
     if slug.len() > 40 {
         return Err(invalid_input(
@@ -1108,7 +1167,10 @@ mod validate_tests {
         let claims = build_claims("11111111-1111-1111-1111-111111111111", vec!["tenant-admin"]);
         let h = HeaderMap::new();
         let id = resolve_effective_tenant_id(&claims, &h).unwrap();
-        assert_eq!(id, Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap());
+        assert_eq!(
+            id,
+            Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap()
+        );
     }
 
     #[test]
@@ -1116,7 +1178,10 @@ mod validate_tests {
         let claims = build_claims("00000000-0000-0000-0000-000000000000", vec!["root-admin"]);
         let h = headers_with("x-switch-tenant", "22222222-2222-2222-2222-222222222222");
         let id = resolve_effective_tenant_id(&claims, &h).unwrap();
-        assert_eq!(id, Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap());
+        assert_eq!(
+            id,
+            Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap()
+        );
     }
 
     #[test]
@@ -1153,9 +1218,9 @@ mod validate_tests {
 
     #[test]
     fn list_query_include_suspended_true_round_trips() {
-        let q: super::ListQuery = serde_json::from_value(
-            serde_json::json!({"include_suspended": true, "limit": 25}),
-        ).unwrap();
+        let q: super::ListQuery =
+            serde_json::from_value(serde_json::json!({"include_suspended": true, "limit": 25}))
+                .unwrap();
         assert!(q.include_suspended);
         assert_eq!(q.limit, Some(25));
     }
@@ -1347,7 +1412,9 @@ async fn list_tenants(
     // belt-and-braces in case the handler-level check is ever bypassed.
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(db_err)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
     // FR-AUTH-005 §1 #5 + #9 + G-005/G-009 — HMAC-signed cursors. The table
@@ -1375,16 +1442,30 @@ async fn list_tenants(
     .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
 
-    let next_cursor = rows.last().map(|r| crate::cursor::make_cursor(crate::cursor::CursorTable::Tenants, r.0));
-    let items: Vec<Tenant> = rows.into_iter().map(|r| Tenant {
-        id: TenantId(r.0), slug: r.1, display_name: r.2, country: r.3,
-        plan_tier: r.4, status: r.5, residency: r.6,
-        created_at: r.7, updated_at: r.8,
-    }).collect();
+    let next_cursor = rows
+        .last()
+        .map(|r| crate::cursor::make_cursor(crate::cursor::CursorTable::Tenants, r.0));
+    let items: Vec<Tenant> = rows
+        .into_iter()
+        .map(|r| Tenant {
+            id: TenantId(r.0),
+            slug: r.1,
+            display_name: r.2,
+            country: r.3,
+            plan_tier: r.4,
+            status: r.5,
+            residency: r.6,
+            created_at: r.7,
+            updated_at: r.8,
+        })
+        .collect();
 
     span.record("outcome", "ok");
     span.record("items_returned", items.len());
-    Ok((StatusCode::OK, Json(json!({"items": items, "next_cursor": next_cursor}))))
+    Ok((
+        StatusCode::OK,
+        Json(json!({"items": items, "next_cursor": next_cursor})),
+    ))
 }
 
 // FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`
@@ -1426,7 +1507,10 @@ async fn list_subjects(
     span.record("effective_tenant_id", tracing::field::display(tenant_id));
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
-        .bind(tenant_id.to_string()).execute(&mut *tx).await.map_err(db_err)?;
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
     // FR-AUTH-005 §1 #5 + #9 + G-005/G-009 — table tag binds cursor to
@@ -1460,15 +1544,30 @@ async fn list_subjects(
     .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
 
-    let next_cursor = rows.last().map(|r| crate::cursor::make_cursor(crate::cursor::CursorTable::Subjects, r.0));
-    let items: Vec<Subject> = rows.into_iter().map(|r| Subject {
-        id: SubjectId(r.0), tenant_id: TenantId(r.1), handle: r.2,
-        display_name: r.3, email: r.4, kind: r.5, status: r.6,
-        roles: r.7, created_at: r.8, updated_at: r.9,
-    }).collect();
+    let next_cursor = rows
+        .last()
+        .map(|r| crate::cursor::make_cursor(crate::cursor::CursorTable::Subjects, r.0));
+    let items: Vec<Subject> = rows
+        .into_iter()
+        .map(|r| Subject {
+            id: SubjectId(r.0),
+            tenant_id: TenantId(r.1),
+            handle: r.2,
+            display_name: r.3,
+            email: r.4,
+            kind: r.5,
+            status: r.6,
+            roles: r.7,
+            created_at: r.8,
+            updated_at: r.9,
+        })
+        .collect();
     span.record("outcome", "ok");
     span.record("items_returned", items.len());
-    Ok((StatusCode::OK, Json(json!({"items": items, "next_cursor": next_cursor}))))
+    Ok((
+        StatusCode::OK,
+        Json(json!({"items": items, "next_cursor": next_cursor})),
+    ))
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -1507,7 +1606,15 @@ async fn revoke_subject(
     headers: HeaderMap,
     body: Option<Json<RevokeBody>>,
 ) -> Result<StatusCode, (StatusCode, Json<Value>)> {
-    revoke_or_unrevoke(state, claims, id, headers, body.map(|j| j.0).unwrap_or_default(), true).await
+    revoke_or_unrevoke(
+        state,
+        claims,
+        id,
+        headers,
+        body.map(|j| j.0).unwrap_or_default(),
+        true,
+    )
+    .await
 }
 
 /// FR-AUTH-005 §1 #4 + #6 + #8 + #12 + G-004/G-006/G-008/G-012 — Unrevoke handler.
@@ -1553,10 +1660,7 @@ async fn revoke_or_unrevoke(
     };
 
     // FR-AUTH-005 §1 #8 + G-008 — Idempotency-Key required.
-    let idem_key = match headers
-        .get("idempotency-key")
-        .and_then(|h| h.to_str().ok())
-    {
+    let idem_key = match headers.get("idempotency-key").and_then(|h| h.to_str().ok()) {
         Some(k) => k,
         None => {
             return Err((
@@ -1581,9 +1685,7 @@ async fn revoke_or_unrevoke(
     }
 
     let new_status = if is_revoke { "revoked" } else { "active" };
-    let request_id = headers
-        .get("x-request-id")
-        .and_then(|h| h.to_str().ok());
+    let request_id = headers.get("x-request-id").and_then(|h| h.to_str().ok());
 
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
@@ -1617,7 +1719,9 @@ async fn revoke_or_unrevoke(
             // is monotonic and DateTime is calendar-absolute. Compute the
             // remaining lifetime from now and offset.
             let ttl_secs = (sess.expires_at - chrono::Utc::now()).num_seconds().max(0) as u64;
-            state.deny_list.deny_for(&sess.jti, std::time::Duration::from_secs(ttl_secs));
+            state
+                .deny_list
+                .deny_for(&sess.jti, std::time::Duration::from_secs(ttl_secs));
             denied_count += 1;
         }
     }
@@ -1706,7 +1810,10 @@ async fn issue_token(
         .and_then(|h| h.to_str().ok())
         .map(|s| s.to_string());
     let caller = caller_ip(&headers);
-    let ua = headers.get("user-agent").and_then(|h| h.to_str().ok()).map(String::from);
+    let ua = headers
+        .get("user-agent")
+        .and_then(|h| h.to_str().ok())
+        .map(String::from);
 
     match req.grant_type.as_str() {
         "password" => password_grant(&state, req, traceparent, caller, ua).await,
@@ -1727,18 +1834,24 @@ async fn password_grant(
     caller_ip: std::net::IpAddr,
     user_agent: Option<String>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
-    let tenant_slug = req.tenant_slug.as_deref().ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "password grant requires `tenant_slug`"}))
-    ))?;
-    let handle = req.handle.as_deref().ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "password grant requires `handle`"}))
-    ))?;
-    let password = req.password.as_deref().ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "password grant requires `password`"}))
-    ))?;
+    let tenant_slug = req.tenant_slug.as_deref().ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "password grant requires `tenant_slug`"})),
+        )
+    })?;
+    let handle = req.handle.as_deref().ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "password grant requires `handle`"})),
+        )
+    })?;
+    let password = req.password.as_deref().ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "password grant requires `password`"})),
+        )
+    })?;
 
     // FR-AUTH-004 §1 #5 — slice-1 audit-fix G-001: dual rate-limit BEFORE
     // any DB work. Both checks share the same window; either tripping returns
@@ -1753,7 +1866,9 @@ async fn password_grant(
     if let Err(retry) = state.rate_limit.check_account(tenant_slug, handle) {
         return Err((
             StatusCode::TOO_MANY_REQUESTS,
-            Json(json!({"error": "rate_limited", "scope": "account", "retry_after_seconds": retry})),
+            Json(
+                json!({"error": "rate_limited", "scope": "account", "retry_after_seconds": retry}),
+            ),
         ));
     }
 
@@ -1764,8 +1879,7 @@ async fn password_grant(
     //
     // Constant dummy hash: bcrypt of "constant-dummy-payload-for-timing-leak-defence"
     // at cost 12. Hash is stable so its verify-time matches the real path.
-    const DUMMY_BCRYPT_HASH: &str =
-        "$2b$12$abcdefghijklmnopqrstuOXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+    const DUMMY_BCRYPT_HASH: &str = "$2b$12$abcdefghijklmnopqrstuOXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
     // Request-id surfaces via the traceparent header for now. When FR-OBS-001
     // adds a dedicated x-request-id header, swap this for the value pulled
@@ -1777,9 +1891,19 @@ async fn password_grant(
     // Look up tenant + subject under root context.
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(db_err)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
 
-    let row: Option<(Uuid, Uuid, String, String, Option<String>, Vec<String>, Option<String>)> = sqlx::query_as(
+    let row: Option<(
+        Uuid,
+        Uuid,
+        String,
+        String,
+        Option<String>,
+        Vec<String>,
+        Option<String>,
+    )> = sqlx::query_as(
         "SELECT s.id, s.tenant_id, s.kind, s.status, s.password_hash, s.roles, s.email
              FROM subjects s
              JOIN tenants t ON t.id = s.tenant_id
@@ -1808,8 +1932,12 @@ async fn password_grant(
                     source_ip_hash16: &source_ip_hash,
                     request_id: traceparent.as_deref(),
                 },
-            ).await;
-            return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "invalid credentials"}))));
+            )
+            .await;
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"error": "invalid credentials"})),
+            ));
         }
     };
     if status != "active" {
@@ -1823,12 +1951,21 @@ async fn password_grant(
                 source_ip_hash16: &source_ip_hash,
                 request_id: traceparent.as_deref(),
             },
-        ).await;
-        return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "subject is not active"}))));
+        )
+        .await;
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(json!({"error": "subject is not active"})),
+        ));
     }
     let pw_hash = match pw_hash {
         Some(h) => h,
-        None => return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "agent/system subjects use a different grant"})))),
+        None => {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"error": "agent/system subjects use a different grant"})),
+            ))
+        }
     };
     let ok = bcrypt::verify(password, &pw_hash).map_err(|e| internal_err(e))?;
     if !ok {
@@ -1842,8 +1979,12 @@ async fn password_grant(
                 source_ip_hash16: &source_ip_hash,
                 request_id: traceparent.as_deref(),
             },
-        ).await;
-        return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "invalid credentials"}))));
+        )
+        .await;
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(json!({"error": "invalid credentials"})),
+        ));
     }
 
     let svc = JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
@@ -1865,20 +2006,25 @@ async fn password_grant(
     // lands in FR-AUTH-005; for now the default carries through.
     let agent_persona = Some("cuo-cpo@0.4.1".to_string());
 
-    let tokens = svc.issue(
-        TenantId(tenant_id),
-        SubjectId(sub_id),
-        &email_for_claim,
-        &kind,
-        granted.clone(),
-        assigned_roles.clone(),
-        Some(rbac_v),
-        agent_persona,
-        traceparent.clone(),
-    ).await.map_err(|e| (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({"error": format!("jwt issuance failed: {e}")})),
-    ))?;
+    let tokens = svc
+        .issue(
+            TenantId(tenant_id),
+            SubjectId(sub_id),
+            &email_for_claim,
+            &kind,
+            granted.clone(),
+            assigned_roles.clone(),
+            Some(rbac_v),
+            agent_persona,
+            traceparent.clone(),
+        )
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("jwt issuance failed: {e}")})),
+            )
+        })?;
 
     // FR-AUTH-004 §1 #6 — slice-1 audit-fix G-002: emit `auth.token_issued`
     // memory audit row. Best-effort; tracing::warn on failure but never
@@ -1925,8 +2071,12 @@ async fn password_grant(
                 tenant_id,
                 exp_dt,
                 &source_ip_hash,
-            ).await {
-                Ok(()) => { let _ = tx.commit().await; }
+            )
+            .await
+            {
+                Ok(()) => {
+                    let _ = tx.commit().await;
+                }
                 Err(e) => {
                     tracing::warn!(error = %e, jti = %jti_for_audit, "sessions insert failed");
                 }
@@ -2029,14 +2179,14 @@ async fn load_subject_roles(
     };
     let _ = sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await;
+        .execute(&mut *tx)
+        .await;
 
-    let res: Result<Vec<(String,)>, sqlx::Error> = sqlx::query_as(
-        "SELECT role FROM subject_roles WHERE subject_id = $1",
-    )
-    .bind(subject_id)
-    .fetch_all(&mut *tx)
-    .await;
+    let res: Result<Vec<(String,)>, sqlx::Error> =
+        sqlx::query_as("SELECT role FROM subject_roles WHERE subject_id = $1")
+            .bind(subject_id)
+            .fetch_all(&mut *tx)
+            .await;
     let _ = tx.commit().await;
 
     match res {
@@ -2058,16 +2208,20 @@ async fn refresh_grant(
     req: TokenRequest,
     traceparent: Option<String>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
-    let refresh = req.refresh_token.as_deref().ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "refresh_token grant requires `refresh_token`"}))
-    ))?;
+    let refresh = req.refresh_token.as_deref().ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "refresh_token grant requires `refresh_token`"})),
+        )
+    })?;
 
     let svc = JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
-    let claims = svc.verify(refresh).await.map_err(|e| (
-        StatusCode::UNAUTHORIZED,
-        Json(json!({"error": format!("invalid refresh token: {e}")})),
-    ))?;
+    let claims = svc.verify(refresh).await.map_err(|e| {
+        (
+            StatusCode::UNAUTHORIZED,
+            Json(json!({"error": format!("invalid refresh token: {e}")})),
+        )
+    })?;
 
     // Audience must include "refresh".
     if !claims.aud.iter().any(|a| a == "refresh") {
@@ -2084,23 +2238,32 @@ async fn refresh_grant(
     // crosses tenant scope checks).
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(db_err)?;
-    let status_row: Option<(String, String, Vec<String>)> = sqlx::query_as(
-        "SELECT status, kind, roles FROM subjects WHERE id = $1 AND tenant_id = $2",
-    )
-    .bind(sub_id)
-    .bind(tenant_id)
-    .fetch_optional(&mut *tx)
-    .await
-    .map_err(db_err)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
+    let status_row: Option<(String, String, Vec<String>)> =
+        sqlx::query_as("SELECT status, kind, roles FROM subjects WHERE id = $1 AND tenant_id = $2")
+            .bind(sub_id)
+            .bind(tenant_id)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
 
     let (status, kind, roles) = match status_row {
         Some(r) => r,
-        None => return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "subject no longer exists"})))),
+        None => {
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(json!({"error": "subject no longer exists"})),
+            ))
+        }
     };
     if status != "active" {
-        return Err((StatusCode::UNAUTHORIZED, Json(json!({"error": "subject is no longer active"}))));
+        return Err((
+            StatusCode::UNAUTHORIZED,
+            Json(json!({"error": "subject is no longer active"})),
+        ));
     }
 
     // Refresh re-issues with the previously-granted scopes by default, unless
@@ -2109,7 +2272,8 @@ async fn refresh_grant(
     let granted = if req.scope.is_empty() {
         prior
     } else {
-        req.scope.into_iter()
+        req.scope
+            .into_iter()
             .filter(|s| prior.iter().any(|p| s == p))
             .collect()
     };
@@ -2122,24 +2286,30 @@ async fn refresh_grant(
 
     // FR-AUTH-004 §1 #12 — agent_persona carries through from the prior
     // token; if the prior token didn't have one, default to "cuo-cpo@0.4.1".
-    let agent_persona = claims.agent_persona
+    let agent_persona = claims
+        .agent_persona
         .clone()
         .or_else(|| Some("cuo-cpo@0.4.1".to_string()));
 
-    let tokens = svc.issue(
-        TenantId(tenant_id),
-        SubjectId(sub_id),
-        &claims.email,
-        &kind,
-        granted,
-        fresh_roles,
-        Some(live_rbac_v),
-        agent_persona,
-        traceparent,
-    ).await.map_err(|e| (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({"error": format!("jwt issuance failed: {e}")})),
-    ))?;
+    let tokens = svc
+        .issue(
+            TenantId(tenant_id),
+            SubjectId(sub_id),
+            &claims.email,
+            &kind,
+            granted,
+            fresh_roles,
+            Some(live_rbac_v),
+            agent_persona,
+            traceparent,
+        )
+        .await
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("jwt issuance failed: {e}")})),
+            )
+        })?;
 
     // FR-AUTH-005 §1 #10 + G-010/G-017 — record the refreshed access-token
     // jti in sessions. Refresh tokens are tracked here too because the

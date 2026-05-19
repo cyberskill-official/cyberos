@@ -104,7 +104,8 @@ impl Inbound {
                 }
                 let mut reqs = Vec::with_capacity(arr.len());
                 for item in arr {
-                    let r: Request = serde_json::from_value(item).map_err(|e| format!("batch item: {e}"))?;
+                    let r: Request =
+                        serde_json::from_value(item).map_err(|e| format!("batch item: {e}"))?;
                     reqs.push(r);
                 }
                 Ok(Inbound::Batch(reqs))
@@ -151,7 +152,8 @@ mod tests {
 
     #[test]
     fn parse_batch_request() {
-        let raw = br#"[{"jsonrpc":"2.0","id":1,"method":"a"},{"jsonrpc":"2.0","id":2,"method":"b"}]"#;
+        let raw =
+            br#"[{"jsonrpc":"2.0","id":1,"method":"a"},{"jsonrpc":"2.0","id":2,"method":"b"}]"#;
         let inbound = Inbound::parse(raw).unwrap();
         match inbound {
             Inbound::Batch(reqs) => assert_eq!(reqs.len(), 2),

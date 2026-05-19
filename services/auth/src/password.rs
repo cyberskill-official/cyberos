@@ -98,9 +98,7 @@ pub fn validate_plaintext(
     // (case-insensitive). The most common weak-password footgun is
     // "<username>123" — the email local-part check catches the literal-username
     // variant; the suffix-with-digits problem is mitigated by rule 2 + 4.
-    if !email_local_part.is_empty()
-        && plaintext.eq_ignore_ascii_case(email_local_part)
-    {
+    if !email_local_part.is_empty() && plaintext.eq_ignore_ascii_case(email_local_part) {
         reasons.push("matches_email");
     }
 
@@ -274,14 +272,10 @@ mod tests {
     use axum::http::StatusCode;
 
     fn ok(p: &str) {
-        assert!(
-            validate_plaintext(p, "").is_ok(),
-            "expected pass: {p:?}"
-        );
+        assert!(validate_plaintext(p, "").is_ok(), "expected pass: {p:?}");
     }
     fn reasons(p: &str, email_local: &str) -> Vec<String> {
-        let (status, axum::response::Json(body)) =
-            validate_plaintext(p, email_local).unwrap_err();
+        let (status, axum::response::Json(body)) = validate_plaintext(p, email_local).unwrap_err();
         assert_eq!(status, StatusCode::BAD_REQUEST);
         body["reasons"]
             .as_array()

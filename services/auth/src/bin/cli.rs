@@ -165,9 +165,9 @@ async fn bootstrap_cmd(
     // `cyberos_auth::cli::bootstrap` helper. For slice-2 we keep slice-1 intact.
     // Simplest path: re-invoke the existing binary with the resolved args.
     use std::process::Command as ShellCommand;
-    let exe = std::env::current_exe().ok().and_then(|p| {
-        p.parent().map(|d| d.join("cyberos-auth-bootstrap"))
-    });
+    let exe = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join("cyberos-auth-bootstrap")));
     let bootstrap_exe = match exe {
         Some(p) if p.exists() => p,
         _ => {
@@ -179,8 +179,10 @@ async fn bootstrap_cmd(
         }
     };
     let status = match ShellCommand::new(&bootstrap_exe)
-        .arg("--email").arg(&email)
-        .arg("--password").arg(&password)
+        .arg("--email")
+        .arg(&email)
+        .arg("--password")
+        .arg(&password)
         .env("AUTH_BOOTSTRAP_EMAIL", &email)
         .env("AUTH_BOOTSTRAP_PASSWORD", &password)
         .status()
@@ -256,7 +258,12 @@ async fn rotate_keys_cmd(pool: &PgPool) -> ExitCode {
     let kid = format!(
         "auth-{}-{}",
         chrono::Utc::now().format("%Y-%m-%d"),
-        uuid::Uuid::new_v4().simple().to_string().chars().take(6).collect::<String>()
+        uuid::Uuid::new_v4()
+            .simple()
+            .to_string()
+            .chars()
+            .take(6)
+            .collect::<String>()
     );
     let expires = chrono::Utc::now() + chrono::Duration::days(90);
 
@@ -297,9 +304,11 @@ async fn sweepers_cmd(pool: &PgPool) -> ExitCode {
     let mut total_swept = 0i64;
 
     // 1. Old `admin_idempotency_keys` rows (>24h).
-    match sqlx::query("DELETE FROM admin_idempotency_keys WHERE created_at < NOW() - INTERVAL '24 hours'")
-        .execute(pool)
-        .await
+    match sqlx::query(
+        "DELETE FROM admin_idempotency_keys WHERE created_at < NOW() - INTERVAL '24 hours'",
+    )
+    .execute(pool)
+    .await
     {
         Ok(r) => {
             let n = r.rows_affected() as i64;

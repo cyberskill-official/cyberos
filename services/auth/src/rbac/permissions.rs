@@ -75,22 +75,43 @@ pub enum Resource {
 
 impl Resource {
     pub const ALL: [Resource; 40] = [
-        Resource::Subject, Resource::Tenant, Resource::RoleAssignment,
-        Resource::JwtJwks, Resource::AuditRow,
-        Resource::CrmAccount, Resource::CrmContact, Resource::CrmDeal,
-        Resource::ProjIssue, Resource::ProjEngagement, Resource::ProjRateCard, Resource::ProjTimeline,
-        Resource::TimeEntry, Resource::TimeExpense,
-        Resource::InvInvoice, Resource::InvPayment, Resource::InvHoaDon,
-        Resource::KbDocument, Resource::KbRunbook,
-        Resource::HrMember, Resource::HrContract, Resource::HrLeave, Resource::HrCccdPhoto,
-        Resource::RewPayslip, Resource::RewBpLedger,
-        Resource::EsopGrant, Resource::EsopValuation,
-        Resource::LearnSkill, Resource::LearnCertification,
-        Resource::OkrObjective, Resource::OkrKr,
+        Resource::Subject,
+        Resource::Tenant,
+        Resource::RoleAssignment,
+        Resource::JwtJwks,
+        Resource::AuditRow,
+        Resource::CrmAccount,
+        Resource::CrmContact,
+        Resource::CrmDeal,
+        Resource::ProjIssue,
+        Resource::ProjEngagement,
+        Resource::ProjRateCard,
+        Resource::ProjTimeline,
+        Resource::TimeEntry,
+        Resource::TimeExpense,
+        Resource::InvInvoice,
+        Resource::InvPayment,
+        Resource::InvHoaDon,
+        Resource::KbDocument,
+        Resource::KbRunbook,
+        Resource::HrMember,
+        Resource::HrContract,
+        Resource::HrLeave,
+        Resource::HrCccdPhoto,
+        Resource::RewPayslip,
+        Resource::RewBpLedger,
+        Resource::EsopGrant,
+        Resource::EsopValuation,
+        Resource::LearnSkill,
+        Resource::LearnCertification,
+        Resource::OkrObjective,
+        Resource::OkrKr,
         Resource::ResAllocation,
-        Resource::DocDocument, Resource::DocSignature,
+        Resource::DocDocument,
+        Resource::DocSignature,
         Resource::EmailThread,
-        Resource::ChatChannel, Resource::ChatMessage,
+        Resource::ChatChannel,
+        Resource::ChatMessage,
         Resource::CuoChain,
         Resource::MemoryMemory,
         Resource::ObsAlert,
@@ -143,11 +164,15 @@ impl Resource {
 }
 
 impl fmt::Display for Resource {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str(self.as_str()) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
 }
 
 impl From<Resource> for String {
-    fn from(r: Resource) -> String { r.as_str().to_string() }
+    fn from(r: Resource) -> String {
+        r.as_str().to_string()
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -158,14 +183,18 @@ impl FromStr for Resource {
     type Err = UnknownResource;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         for r in Resource::ALL {
-            if r.as_str() == s { return Ok(r); }
+            if r.as_str() == s {
+                return Ok(r);
+            }
         }
         Err(UnknownResource(s.to_string()))
     }
 }
 impl TryFrom<String> for Resource {
     type Error = UnknownResource;
-    fn try_from(s: String) -> Result<Self, Self::Error> { Resource::from_str(&s) }
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        Resource::from_str(&s)
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -189,7 +218,11 @@ pub enum Action {
 
 impl Action {
     pub const ALL: [Action; 5] = [
-        Action::Read, Action::Write, Action::Admin, Action::Approve, Action::Sign,
+        Action::Read,
+        Action::Write,
+        Action::Admin,
+        Action::Approve,
+        Action::Sign,
     ];
     pub const fn as_str(self) -> &'static str {
         match self {
@@ -203,10 +236,14 @@ impl Action {
 }
 
 impl fmt::Display for Action {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { f.write_str(self.as_str()) }
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.as_str())
+    }
 }
 impl From<Action> for String {
-    fn from(a: Action) -> String { a.as_str().to_string() }
+    fn from(a: Action) -> String {
+        a.as_str().to_string()
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -217,14 +254,18 @@ impl FromStr for Action {
     type Err = UnknownAction;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         for a in Action::ALL {
-            if a.as_str() == s { return Ok(a); }
+            if a.as_str() == s {
+                return Ok(a);
+            }
         }
         Err(UnknownAction(s.to_string()))
     }
 }
 impl TryFrom<String> for Action {
     type Error = UnknownAction;
-    fn try_from(s: String) -> Result<Self, Self::Error> { Action::from_str(&s) }
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        Action::from_str(&s)
+    }
 }
 
 #[cfg(test)]

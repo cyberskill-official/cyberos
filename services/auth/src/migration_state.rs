@@ -41,14 +41,19 @@ pub struct MigrationState {
 
 impl MigrationState {
     pub async fn load_from_db(pool: &PgPool) -> Result<Option<Self>, sqlx::Error> {
-        let row: Option<(DateTime<Utc>, i32, DateTime<Utc>, Option<Uuid>, Option<String>)> =
-            sqlx::query_as(
-                "SELECT fr_auth_101_shipped_at, grace_window_days, grace_closes_at,
+        let row: Option<(
+            DateTime<Utc>,
+            i32,
+            DateTime<Utc>,
+            Option<Uuid>,
+            Option<String>,
+        )> = sqlx::query_as(
+            "SELECT fr_auth_101_shipped_at, grace_window_days, grace_closes_at,
                         extended_by, extension_reason
                    FROM auth_migration_state WHERE id = 1",
-            )
-            .fetch_optional(pool)
-            .await?;
+        )
+        .fetch_optional(pool)
+        .await?;
         Ok(row.map(|(shipped, days, closes, ext_by, reason)| Self {
             fr_auth_101_shipped_at: shipped,
             grace_window_days: days,
@@ -87,15 +92,21 @@ pub async fn preview(
 ) -> Result<Json<PreviewResponse>, (StatusCode, Json<Value>)> {
     require_root_admin(&claims)?;
 
-    let ms = MigrationState::load_from_db(&state.pg).await.map_err(internal)?;
-    let ms = ms.ok_or_else(|| (
-        StatusCode::PRECONDITION_FAILED,
-        Json(json!({"error": "auth_migration_state row missing — migration 0015 not applied"})),
-    ))?;
+    let ms = MigrationState::load_from_db(&state.pg)
+        .await
+        .map_err(internal)?;
+    let ms = ms.ok_or_else(|| {
+        (
+            StatusCode::PRECONDITION_FAILED,
+            Json(json!({"error": "auth_migration_state row missing — migration 0015 not applied"})),
+        )
+    })?;
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
 
     let (subjects_without_rbac,): (i64,) = sqlx::query_as(
         "SELECT COUNT(*) FROM subjects s
@@ -153,7 +164,9 @@ pub async fn extend_grace(
     if body.reason.trim().is_empty() {
         return Err((
             StatusCode::BAD_REQUEST,
-            Json(json!({"error": "reason required — recorded in auth_migration_state.extension_reason"})),
+            Json(
+                json!({"error": "reason required — recorded in auth_migration_state.extension_reason"}),
+            ),
         ));
     }
 
@@ -176,12 +189,15 @@ pub async fn extend_grace(
     .await
     .map_err(internal)?;
 
-    Ok((StatusCode::OK, Json(json!({
-        "grace_closes_at": row.0,
-        "extended_by": extender,
-        "reason": body.reason,
-        "extended_days": body.days,
-    }))))
+    Ok((
+        StatusCode::OK,
+        Json(json!({
+            "grace_closes_at": row.0,
+            "extended_by": extender,
+            "reason": body.reason,
+            "extended_days": body.days,
+        })),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -189,10 +205,11 @@ pub async fn extend_grace(
 // ---------------------------------------------------------------------------
 
 fn require_root_admin(claims: &Claims) -> Result<(), (StatusCode, Json<Value>)> {
-    let is_root = claims
-        .roles
-        .iter()
-        .any(|s| Role::from_str(s).map(|r| r == Role::RootAdmin).unwrap_or(false));
+    let is_root = claims.roles.iter().any(|s| {
+        Role::from_str(s)
+            .map(|r| r == Role::RootAdmin)
+            .unwrap_or(false)
+    });
     if !is_root {
         return Err((
             StatusCode::FORBIDDEN,

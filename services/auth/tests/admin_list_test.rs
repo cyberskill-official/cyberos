@@ -5,8 +5,8 @@
 
 use axum::body::to_bytes;
 use axum::http::{Method, Request, StatusCode};
-use cyberos_auth::{handlers, jwt::JwtService, keygen, AppState};
 use cyberos_auth::cursor::{make_cursor, CursorTable};
+use cyberos_auth::{handlers, jwt::JwtService, keygen, AppState};
 use serde_json::Value;
 use sqlx::PgPool;
 use std::time::Instant;
@@ -40,7 +40,9 @@ async fn bootstrap_test_key(pool: &PgPool) {
     .fetch_one(pool)
     .await
     .expect("count keys");
-    if n > 0 { return; }
+    if n > 0 {
+        return;
+    }
     let key = keygen::generate_rsa_2048().expect("rsa");
     sqlx::query(
         "INSERT INTO auth_signing_keys (kid, algorithm, public_pem, private_pem, status, expires_at)
@@ -77,29 +79,42 @@ async fn issue_root_admin_token(pool: &PgPool) -> String {
 #[tokio::test]
 #[ignore]
 async fn list_tenants_as_tenant_admin_returns_403() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     bootstrap_test_key(&pool).await;
     let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
-    let token = svc.issue(
-        cyberos_types::TenantId(uuid::Uuid::new_v4()),  // non-zero tenant
-        cyberos_types::SubjectId(uuid::Uuid::new_v4()),
-        "ta@x.com", "human",
-        vec!["admin".to_string()],
-        vec!["tenant-admin".to_string()],
-        Some(1), None, None,
-    ).await.unwrap().access_token;
+    let token = svc
+        .issue(
+            cyberos_types::TenantId(uuid::Uuid::new_v4()), // non-zero tenant
+            cyberos_types::SubjectId(uuid::Uuid::new_v4()),
+            "ta@x.com",
+            "human",
+            vec!["admin".to_string()],
+            vec!["tenant-admin".to_string()],
+            Some(1),
+            None,
+            None,
+        )
+        .await
+        .unwrap()
+        .access_token;
 
     let app = build_app().await;
-    let resp = app.oneshot(
-        Request::builder()
-            .method(Method::GET)
-            .uri("/v1/admin/tenants")
-            .header("Authorization", format!("Bearer {token}"))
-            .body(axum::body::Body::empty())
-            .unwrap(),
-    ).await.unwrap();
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .method(Method::GET)
+                .uri("/v1/admin/tenants")
+                .header("Authorization", format!("Bearer {token}"))
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::FORBIDDEN);
-    let body: Value = serde_json::from_slice(&to_bytes(resp.into_body(), 1024).await.unwrap()).unwrap();
+    let body: Value =
+        serde_json::from_slice(&to_bytes(resp.into_body(), 1024).await.unwrap()).unwrap();
     assert_eq!(body["error"], "forbidden");
     assert!(body["needed"].as_str().unwrap().contains("root-admin"));
 }
@@ -108,17 +123,22 @@ async fn list_tenants_as_tenant_admin_returns_403() {
 #[tokio::test]
 #[ignore]
 async fn list_subjects_root_admin_no_switch_uses_tenant_zero() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     let token = issue_root_admin_token(&pool).await;
     let app = build_app().await;
-    let resp = app.oneshot(
-        Request::builder()
-            .method(Method::GET)
-            .uri("/v1/admin/subjects")
-            .header("Authorization", format!("Bearer {token}"))
-            .body(axum::body::Body::empty())
-            .unwrap(),
-    ).await.unwrap();
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .method(Method::GET)
+                .uri("/v1/admin/subjects")
+                .header("Authorization", format!("Bearer {token}"))
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
 }
 
@@ -126,7 +146,9 @@ async fn list_subjects_root_admin_no_switch_uses_tenant_zero() {
 #[tokio::test]
 #[ignore]
 async fn tampered_cursor_returns_400_invalid_cursor() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     let token = issue_root_admin_token(&pool).await;
     let good = make_cursor(CursorTable::Tenants, uuid::Uuid::new_v4());
     // Flip a byte by replacing the last char with something different.
@@ -135,16 +157,20 @@ async fn tampered_cursor_returns_400_invalid_cursor() {
     let bad = format!("{}{}", &good[..good.len() - 1], alt);
 
     let app = build_app().await;
-    let resp = app.oneshot(
-        Request::builder()
-            .method(Method::GET)
-            .uri(format!("/v1/admin/tenants?cursor={bad}"))
-            .header("Authorization", format!("Bearer {token}"))
-            .body(axum::body::Body::empty())
-            .unwrap(),
-    ).await.unwrap();
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .method(Method::GET)
+                .uri(format!("/v1/admin/tenants?cursor={bad}"))
+                .header("Authorization", format!("Bearer {token}"))
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
-    let body: Value = serde_json::from_slice(&to_bytes(resp.into_body(), 1024).await.unwrap()).unwrap();
+    let body: Value =
+        serde_json::from_slice(&to_bytes(resp.into_body(), 1024).await.unwrap()).unwrap();
     assert_eq!(body["error"], "invalid_cursor");
     assert_eq!(body["field"], "cursor");
 }
@@ -153,7 +179,9 @@ async fn tampered_cursor_returns_400_invalid_cursor() {
 #[tokio::test]
 #[ignore]
 async fn list_tenants_p95_under_100ms() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     let token = issue_root_admin_token(&pool).await;
 
     let mut samples_ms: Vec<u128> = Vec::with_capacity(100);
@@ -174,26 +202,35 @@ async fn list_tenants_p95_under_100ms() {
     }
     samples_ms.sort_unstable();
     let p95 = samples_ms[(100 * 95) / 100];
-    assert!(p95 < 100, "p95 list_tenants latency = {p95}ms (spec ≤ 100ms)");
+    assert!(
+        p95 < 100,
+        "p95 list_tenants latency = {p95}ms (spec ≤ 100ms)"
+    );
 }
 
 // ECM-013 — ?include_suspended=true returns suspended subjects too
 #[tokio::test]
 #[ignore]
 async fn include_suspended_flag_widens_filter() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     let token = issue_root_admin_token(&pool).await;
     let app = build_app().await;
-    let resp = app.oneshot(
-        Request::builder()
-            .method(Method::GET)
-            .uri("/v1/admin/subjects?include_suspended=true&limit=200")
-            .header("Authorization", format!("Bearer {token}"))
-            .body(axum::body::Body::empty())
-            .unwrap(),
-    ).await.unwrap();
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .method(Method::GET)
+                .uri("/v1/admin/subjects?include_suspended=true&limit=200")
+                .header("Authorization", format!("Bearer {token}"))
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
-    let body: Value = serde_json::from_slice(&to_bytes(resp.into_body(), 65536).await.unwrap()).unwrap();
+    let body: Value =
+        serde_json::from_slice(&to_bytes(resp.into_body(), 65536).await.unwrap()).unwrap();
     assert!(body["items"].is_array());
 }
 
@@ -201,16 +238,21 @@ async fn include_suspended_flag_widens_filter() {
 #[tokio::test]
 #[ignore]
 async fn limit_is_clamped_not_rejected() {
-    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
+    let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap())
+        .await
+        .unwrap();
     let token = issue_root_admin_token(&pool).await;
     let app = build_app().await;
-    let resp = app.oneshot(
-        Request::builder()
-            .method(Method::GET)
-            .uri("/v1/admin/tenants?limit=9999")
-            .header("Authorization", format!("Bearer {token}"))
-            .body(axum::body::Body::empty())
-            .unwrap(),
-    ).await.unwrap();
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .method(Method::GET)
+                .uri("/v1/admin/tenants?limit=9999")
+                .header("Authorization", format!("Bearer {token}"))
+                .body(axum::body::Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
 }

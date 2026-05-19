@@ -64,7 +64,17 @@ async fn admin_endpoint_accepts_valid_bearer() {
     let subject = SubjectId::new();
     let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let tokens = svc
-        .issue(tenant, subject, "", "human", vec!["admin".into()], vec!["tenant-admin".into()], Some(1), None, None)
+        .issue(
+            tenant,
+            subject,
+            "",
+            "human",
+            vec!["admin".into()],
+            vec!["tenant-admin".into()],
+            Some(1),
+            None,
+            None,
+        )
         .await
         .expect("issue");
 
@@ -132,7 +142,9 @@ async fn bootstrap_test_key(pool: &PgPool) {
     .fetch_one(pool)
     .await
     .unwrap();
-    if n > 0 { return; }
+    if n > 0 {
+        return;
+    }
     let k = keygen::generate_rsa_2048().expect("keygen");
     let kid = format!("test-mw-{}", uuid::Uuid::new_v4().simple());
     sqlx::query(

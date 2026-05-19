@@ -159,6 +159,9 @@ mod tests {
         }
         let snap = r.snapshot_sorted();
         let names: Vec<_> = snap.iter().map(|d| d.name.as_str()).collect();
-        assert_eq!(names, vec!["cyberos.test.a", "cyberos.test.b", "cyberos.test.c"]);
+        assert_eq!(
+            names,
+            vec!["cyberos.test.a", "cyberos.test.b", "cyberos.test.c"]
+        );
     }
 }

@@ -88,7 +88,7 @@ async fn tenant_admin_token(pool: &PgPool) -> (String, uuid::Uuid) {
         .issue(
             TenantId(tenant_uuid),
             SubjectId(uuid::Uuid::new_v4()),
-            "",     // FR-AUTH-004 §1 #2 — test token, no email needed
+            "", // FR-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-admin".into()],
@@ -153,7 +153,10 @@ async fn create_subject_happy_path_returns_201_with_clean_body() {
         serde_json::from_slice(&to_bytes(res.into_body(), 1 << 20).await.unwrap()).unwrap();
     // §1 #8 — response shape contract: NEVER password hash, NEVER plaintext password
     let body_str = body.to_string();
-    assert!(!body_str.to_lowercase().contains("password"), "response leaked password field");
+    assert!(
+        !body_str.to_lowercase().contains("password"),
+        "response leaked password field"
+    );
     assert!(!body_str.contains("$2"), "response leaked bcrypt hash");
     assert_eq!(body["handle"], handle);
     assert_eq!(body["email"], "alice@example.com");
@@ -266,7 +269,11 @@ async fn create_subject_idempotent_replay_returns_same_id() {
     let key = format!("idem-key-{}", uuid::Uuid::new_v4().simple());
     let body = happy_subject_body(&handle, &format!("{handle}@example.com"));
 
-    let r1 = app.clone().oneshot(post_subject(&token, &key, body.clone())).await.unwrap();
+    let r1 = app
+        .clone()
+        .oneshot(post_subject(&token, &key, body.clone()))
+        .await
+        .unwrap();
     assert_eq!(r1.status(), StatusCode::CREATED);
     let b1: Value =
         serde_json::from_slice(&to_bytes(r1.into_body(), 1 << 20).await.unwrap()).unwrap();
@@ -402,7 +409,7 @@ async fn create_subject_without_tenant_admin_role_returns_403() {
         .issue(
             TenantId(tenant_uuid),
             SubjectId(uuid::Uuid::new_v4()),
-            "",     // FR-AUTH-004 §1 #2 — test token, no email needed
+            "", // FR-AUTH-004 §1 #2 — test token, no email needed
             "human",
             vec!["admin".into()],
             vec!["tenant-member".into()],

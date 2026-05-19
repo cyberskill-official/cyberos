@@ -227,10 +227,7 @@ async fn with_check_rejects_wrong_tenant_insert_via_map_pg_error() {
             .await
             .unwrap();
         for (t, slug) in [(alice, "alice"), (bob, "bob")] {
-            let slug = format!(
-                "{slug}-{}",
-                &t.simple().to_string()[..6]
-            );
+            let slug = format!("{slug}-{}", &t.simple().to_string()[..6]);
             sqlx::query("INSERT INTO tenants (id, slug, display_name) VALUES ($1, $2, $3)")
                 .bind(t)
                 .bind(&slug)

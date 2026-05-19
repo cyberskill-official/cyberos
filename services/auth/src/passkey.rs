@@ -33,11 +33,14 @@ use crate::AppState;
 fn webauthn() -> &'static Webauthn {
     static W: OnceLock<Webauthn> = OnceLock::new();
     W.get_or_init(|| {
-        let rp_id = std::env::var("AUTH_WEBAUTHN_RP_ID").unwrap_or_else(|_| "localhost".to_string());
+        let rp_id =
+            std::env::var("AUTH_WEBAUTHN_RP_ID").unwrap_or_else(|_| "localhost".to_string());
         let rp_origin_str = std::env::var("AUTH_WEBAUTHN_RP_ORIGIN")
             .unwrap_or_else(|_| "https://localhost".to_string());
-        let rp_origin = Url::parse(&rp_origin_str).expect("AUTH_WEBAUTHN_RP_ORIGIN must be a valid URL");
-        let rp_name = std::env::var("AUTH_WEBAUTHN_RP_NAME").unwrap_or_else(|_| "CyberOS".to_string());
+        let rp_origin =
+            Url::parse(&rp_origin_str).expect("AUTH_WEBAUTHN_RP_ORIGIN must be a valid URL");
+        let rp_name =
+            std::env::var("AUTH_WEBAUTHN_RP_NAME").unwrap_or_else(|_| "CyberOS".to_string());
         WebauthnBuilder::new(&rp_id, &rp_origin)
             .expect("webauthn builder init")
             .rp_name(&rp_name)
@@ -88,7 +91,9 @@ pub async fn enrol_begin(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO passkey_enrolment_state (tenant_id, subject_id, flow, state_json, label)
               VALUES ($1, $2, 'enrol', $3, $4)
@@ -98,14 +103,19 @@ pub async fn enrol_begin(
     .bind(subject_id)
     .bind(serde_json::to_value(&reg_state).map_err(internal)?)
     .bind(&label)
-    .fetch_one(&mut *tx).await.map_err(internal)?;
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
     let creation_challenge = serde_json::to_value(&ccr).map_err(internal)?;
-    Ok((StatusCode::OK, Json(EnrolBeginResponse {
-        ceremony_id: row.0,
-        creation_challenge,
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(EnrolBeginResponse {
+            ceremony_id: row.0,
+            creation_challenge,
+        }),
+    ))
 }
 
 #[derive(Debug, Deserialize)]
@@ -126,7 +136,9 @@ pub async fn enrol_finish(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let row: Option<(Value, Option<String>)> = sqlx::query_as(
         "DELETE FROM passkey_enrolment_state
               WHERE ceremony_id = $1 AND subject_id = $2 AND flow = 'enrol'
@@ -135,11 +147,15 @@ pub async fn enrol_finish(
     )
     .bind(body.ceremony_id)
     .bind(subject_id)
-    .fetch_optional(&mut *tx).await.map_err(internal)?;
-    let (state_json, label) = row.ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "ceremony_not_found_or_expired"})),
-    ))?;
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(internal)?;
+    let (state_json, label) = row.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "ceremony_not_found_or_expired"})),
+        )
+    })?;
 
     let reg_state: PasskeyRegistration = serde_json::from_value(state_json).map_err(internal)?;
     let passkey = webauthn()
@@ -182,7 +198,9 @@ pub async fn login_begin(
     // Look up tenant + subject under root context.
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
 
     let subject_row: Option<(Option<Uuid>, Uuid)> = if let Some(handle) = &body.handle {
         sqlx::query_as(
@@ -191,28 +209,36 @@ pub async fn login_begin(
         )
         .bind(&body.tenant_slug)
         .bind(handle)
-        .fetch_optional(&mut *tx).await.map_err(internal)?
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(internal)?
     } else {
         // Discoverable-credential path: the browser picks the credential
         // without an identifier hint. We still need a tenant scope.
         sqlx::query_as("SELECT NULL::uuid, id FROM tenants WHERE slug = $1")
             .bind(&body.tenant_slug)
-            .fetch_optional(&mut *tx).await.map_err(internal)?
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(internal)?
     };
     tx.commit().await.map_err(internal)?;
 
-    let (subject_id_opt, tenant_id) = subject_row.ok_or_else(|| (
-        StatusCode::NOT_FOUND,
-        Json(json!({"error": "tenant_or_subject_not_found"})),
-    ))?;
+    let (subject_id_opt, tenant_id) = subject_row.ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "tenant_or_subject_not_found"})),
+        )
+    })?;
 
     // Gather every active passkey for the subject (or, if discoverable,
     // pass an empty list — webauthn-rs supports username-less auth via
     // start_discoverable_authentication, but for slice 1 we require a handle).
-    let subject_id = subject_id_opt.ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "username_less_passkey_deferred_to_slice_2"})),
-    ))?;
+    let subject_id = subject_id_opt.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "username_less_passkey_deferred_to_slice_2"})),
+        )
+    })?;
     let creds = load_subject_passkeys(&state, tenant_id, subject_id).await?;
     if creds.is_empty() {
         return Err((
@@ -228,7 +254,9 @@ pub async fn login_begin(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO passkey_enrolment_state (tenant_id, subject_id, flow, state_json)
               VALUES ($1, $2, 'login', $3)
@@ -237,13 +265,18 @@ pub async fn login_begin(
     .bind(tenant_id)
     .bind(subject_id)
     .bind(serde_json::to_value(&auth_state).map_err(internal)?)
-    .fetch_one(&mut *tx).await.map_err(internal)?;
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
-    Ok((StatusCode::OK, Json(LoginBeginResponse {
-        ceremony_id: row.0,
-        request_challenge: serde_json::to_value(&req).map_err(internal)?,
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(LoginBeginResponse {
+            ceremony_id: row.0,
+            request_challenge: serde_json::to_value(&req).map_err(internal)?,
+        }),
+    ))
 }
 
 #[derive(Debug, Deserialize)]
@@ -258,10 +291,15 @@ pub async fn login_finish(
     JsonInput(body): JsonInput<LoginFinishBody>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let caller_ip = crate::handlers::caller_ip(&headers);
-    let user_agent = headers.get("user-agent").and_then(|h| h.to_str().ok()).map(|s| s.to_string());
+    let user_agent = headers
+        .get("user-agent")
+        .and_then(|h| h.to_str().ok())
+        .map(|s| s.to_string());
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
 
     let row: Option<(Uuid, Uuid, Value)> = sqlx::query_as(
         "DELETE FROM passkey_enrolment_state
@@ -269,11 +307,15 @@ pub async fn login_finish(
           RETURNING tenant_id, subject_id, state_json",
     )
     .bind(body.ceremony_id)
-    .fetch_optional(&mut *tx).await.map_err(internal)?;
-    let (tenant_id, subject_id, state_json) = row.ok_or_else(|| (
-        StatusCode::BAD_REQUEST,
-        Json(json!({"error": "ceremony_not_found_or_expired"})),
-    ))?;
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(internal)?;
+    let (tenant_id, subject_id, state_json) = row.ok_or_else(|| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(json!({"error": "ceremony_not_found_or_expired"})),
+        )
+    })?;
 
     let auth_state: PasskeyAuthentication = serde_json::from_value(state_json).map_err(internal)?;
     let auth_result = webauthn()
@@ -288,7 +330,9 @@ pub async fn login_finish(
     .bind(auth_result.counter() as i64)
     .bind(subject_id)
     .bind(auth_result.cred_id().as_ref())
-    .execute(&mut *tx).await.map_err(internal)?;
+    .execute(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
     // Mint a CyberOS JWT for the verified subject.
@@ -299,7 +343,7 @@ pub async fn login_finish(
         .issue(
             cyberos_types::TenantId(tenant_id),
             cyberos_types::SubjectId(subject_id),
-            "",     // FR-AUTH-004 §1 #2 — passkey login doesn't carry plaintext email
+            "", // FR-AUTH-004 §1 #2 — passkey login doesn't carry plaintext email
             "human",
             vec![],
             roles,
@@ -308,10 +352,12 @@ pub async fn login_finish(
             None,
         )
         .await
-        .map_err(|e| (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": format!("jwt issuance failed: {e}")})),
-        ))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("jwt issuance failed: {e}")})),
+            )
+        })?;
 
     // FR-AUTH-106 slice-3 — apply policy-aware impossible-travel detection.
     // Passkey is intrinsically MFA-strength, but the policy still applies:
@@ -324,8 +370,15 @@ pub async fn login_finish(
         sticky_suppress: &state.sticky_suppress,
     };
     let outcome = crate::travel::assess_login(
-        &deps, tenant_id, subject_id, "passkey", caller_ip, user_agent.as_deref(),
-    ).await.ok();
+        &deps,
+        tenant_id,
+        subject_id,
+        "passkey",
+        caller_ip,
+        user_agent.as_deref(),
+    )
+    .await
+    .ok();
     let body = match outcome {
         Some(crate::travel::TravelOutcome::Block { kind, .. }) => {
             return Err((
@@ -366,7 +419,9 @@ async fn load_subject_passkeys(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let rows: Vec<(Vec<u8>,)> = sqlx::query_as(
         "SELECT public_key FROM mfa_factors
           WHERE tenant_id = $1 AND subject_id = $2
@@ -374,7 +429,9 @@ async fn load_subject_passkeys(
     )
     .bind(tenant_id)
     .bind(subject_id)
-    .fetch_all(&mut *tx).await.map_err(internal)?;
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
     let mut out = Vec::with_capacity(rows.len());

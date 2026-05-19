@@ -213,11 +213,7 @@ async fn vector_search(
 /// Reciprocal Rank Fusion. For each document, fused_score = Σ 1/(k + rank_i)
 /// across every retriever that returned it. Documents from only one retriever
 /// still contribute proportionally to their rank in that retriever.
-fn rrf_fuse(
-    lex: Vec<SearchHit>,
-    vec: Vec<SearchHit>,
-    limit: usize,
-) -> Vec<SearchHit> {
+fn rrf_fuse(lex: Vec<SearchHit>, vec: Vec<SearchHit>, limit: usize) -> Vec<SearchHit> {
     // Index by (seq, path) tuple. We keep the lexical hit object as the base
     // and merge the vector rank in (or vice-versa).
     let mut by_key: HashMap<(i64, String), SearchHit> = HashMap::new();
@@ -257,14 +253,16 @@ fn rrf_fuse(
             h
         })
         .collect();
-    hits.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    hits.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     hits.truncate(limit);
     hits
 }
 
-fn require_tenant(
-    headers: &HeaderMap,
-) -> Result<Uuid, (StatusCode, Json<serde_json::Value>)> {
+fn require_tenant(headers: &HeaderMap) -> Result<Uuid, (StatusCode, Json<serde_json::Value>)> {
     headers
         .get("x-tenant-id")
         .and_then(|h| h.to_str().ok())
@@ -318,7 +316,11 @@ mod tests {
 
     #[test]
     fn rrf_lexical_only_preserves_order() {
-        let lex = vec![hit(5, Some(1), None), hit(6, Some(2), None), hit(7, Some(3), None)];
+        let lex = vec![
+            hit(5, Some(1), None),
+            hit(6, Some(2), None),
+            hit(7, Some(3), None),
+        ];
         let out = rrf_fuse(lex, vec![], 3);
         assert_eq!(out.iter().map(|h| h.seq).collect::<Vec<_>>(), vec![5, 6, 7]);
     }

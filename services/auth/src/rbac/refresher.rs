@@ -60,7 +60,10 @@ pub fn spawn(
                             "RBAC matrix swapped — catalogue version changed"
                         );
                     } else if new_n != prev_n {
-                        info!(grants_delta = (new_n as i64 - prev_n as i64), "RBAC matrix swapped — grants changed");
+                        info!(
+                            grants_delta = (new_n as i64 - prev_n as i64),
+                            "RBAC matrix swapped — grants changed"
+                        );
                     }
                 }
                 Err(e) => {

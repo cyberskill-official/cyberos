@@ -39,10 +39,7 @@ pub async fn upsert_thread(
 /// Insert a metadata row. Append-only: each status transition writes a
 /// new row carrying `prior_message_id`.
 #[allow(clippy::too_many_arguments)]
-pub async fn insert_message(
-    db: &PgPool,
-    msg: &NewMessage<'_>,
-) -> EmailResult<EmailMessage> {
+pub async fn insert_message(db: &PgPool, msg: &NewMessage<'_>) -> EmailResult<EmailMessage> {
     let id = Uuid::new_v4();
     let now = Utc::now();
     let row: EmailMessage = sqlx::query_as(
@@ -158,21 +155,21 @@ pub fn normalise_subject(subject: Option<&str>) -> Option<String> {
     if matches!(lower.as_str(), "re:" | "fw:" | "fwd:") {
         return None;
     }
-    let collapsed: String = work
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
-    if collapsed.is_empty() { None } else { Some(collapsed) }
+    let collapsed: String = work.split_whitespace().collect::<Vec<_>>().join(" ");
+    if collapsed.is_empty() {
+        None
+    } else {
+        Some(collapsed)
+    }
 }
 
 /// Fetch a single thread row.
 pub async fn get_thread(db: &PgPool, thread_id: &str) -> EmailResult<Option<EmailThread>> {
-    let row = sqlx::query_as::<_, EmailThread>(
-        "SELECT * FROM thread_metadata WHERE thread_id = $1",
-    )
-    .bind(thread_id)
-    .fetch_optional(db)
-    .await?;
+    let row =
+        sqlx::query_as::<_, EmailThread>("SELECT * FROM thread_metadata WHERE thread_id = $1")
+            .bind(thread_id)
+            .fetch_optional(db)
+            .await?;
     Ok(row)
 }
 
@@ -190,7 +187,10 @@ mod tests {
 
     #[test]
     fn collapses_whitespace() {
-        assert_eq!(normalise_subject(Some("  foo    bar  ")).unwrap(), "foo bar");
+        assert_eq!(
+            normalise_subject(Some("  foo    bar  ")).unwrap(),
+            "foo bar"
+        );
     }
 
     #[test]

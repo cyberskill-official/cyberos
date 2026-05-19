@@ -264,7 +264,7 @@ mod tests {
     #[test]
     fn hash16_is_deterministic_and_16_chars() {
         let a = hash16("alice@example.com");
-        let b = hash16("ALICE@example.com  ");  // mixed case + trailing space
+        let b = hash16("ALICE@example.com  "); // mixed case + trailing space
         assert_eq!(a, b, "hash16 normalises case + trims");
         assert_eq!(a.len(), 16);
         assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
@@ -290,7 +290,14 @@ mod tests {
         let tid = Uuid::new_v4();
         let old = Uuid::new_v4();
         let new = Uuid::new_v4();
-        let row = dkim_key_rotated(tid, Some(old), new, "cyberos", "rsa-2048", Some("admin@cyberos"));
+        let row = dkim_key_rotated(
+            tid,
+            Some(old),
+            new,
+            "cyberos",
+            "rsa-2048",
+            Some("admin@cyberos"),
+        );
         assert_eq!(row.kind, "email.dkim_key_rotated");
         assert_eq!(row.old_key_id, Some(old));
         assert_eq!(row.new_key_id, Some(new));

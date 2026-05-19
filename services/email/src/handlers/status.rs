@@ -40,11 +40,11 @@ pub async fn healthz(db: &PgPool) -> EmailResult<HealthResponse> {
         .unwrap_or(0);
 
     Ok(HealthResponse {
-        stalwart_status: "external",      // wired at slice 2 via FR-EMAIL-002
+        stalwart_status: "external", // wired at slice 2 via FR-EMAIL-002
         last_message_received_at: last_received,
         last_message_sent_at: last_sent,
         postgres_status: if postgres_ok { "ok" } else { "degraded" },
-        s3_status: "external",            // wired by the deployment env
+        s3_status: "external", // wired by the deployment env
         registered_tenants: registered,
     })
 }

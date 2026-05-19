@@ -23,7 +23,10 @@ fn deny_list_propagation_is_synchronous_in_process() {
     let observed = d.is_denied("jti-prop");
     let elapsed = start.elapsed();
     assert!(observed);
-    assert!(elapsed < Duration::from_millis(10), "in-process propagation should be sub-ms; got {elapsed:?}");
+    assert!(
+        elapsed < Duration::from_millis(10),
+        "in-process propagation should be sub-ms; got {elapsed:?}"
+    );
 }
 
 #[test]
@@ -42,7 +45,10 @@ fn deny_list_expiry_self_evicts() {
     // 0 (post-GC). This is the natural cleanup path; no manual sweeper is
     // strictly required for correctness.
     let d = DenyList::new();
-    d.deny("jti-expired", std::time::Instant::now() - Duration::from_secs(1));
+    d.deny(
+        "jti-expired",
+        std::time::Instant::now() - Duration::from_secs(1),
+    );
     assert!(!d.is_denied("jti-expired"));
     assert_eq!(d.len(), 0);
 }

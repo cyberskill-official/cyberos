@@ -72,7 +72,11 @@ fn nfc_value(v: &Value) -> Value {
     match v {
         Value::String(s) => Value::String(s.nfc().collect()),
         Value::Array(a) => Value::Array(a.iter().map(nfc_value).collect()),
-        Value::Object(o) => Value::Object(o.iter().map(|(k, v)| (k.nfc().collect(), nfc_value(v))).collect()),
+        Value::Object(o) => Value::Object(
+            o.iter()
+                .map(|(k, v)| (k.nfc().collect(), nfc_value(v)))
+                .collect(),
+        ),
         _ => v.clone(),
     }
 }
@@ -168,7 +172,10 @@ mod tests {
         let s = n.as_str().unwrap();
         // After NFC, the é is U+00E9 (UTF-8: 0xC3 0xA9)
         let bytes = s.as_bytes();
-        assert!(bytes.windows(2).any(|w| w == [0xC3, 0xA9]), "expected pre-composed é");
+        assert!(
+            bytes.windows(2).any(|w| w == [0xC3, 0xA9]),
+            "expected pre-composed é"
+        );
         assert!(
             !bytes.windows(2).any(|w| w == [0xCC, 0x81]),
             "combining acute U+0301 should be normalised away"

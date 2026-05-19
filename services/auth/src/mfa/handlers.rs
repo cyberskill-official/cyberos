@@ -21,11 +21,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use uuid::Uuid;
 
+use super::recovery;
+use super::repo;
+use super::totp;
 use crate::jwt::Claims;
 use crate::AppState;
-use super::totp;
-use super::repo;
-use super::recovery;
 // lockout enforcement is consulted in the password-grant path (src/handlers.rs),
 // not directly in these MFA handlers.
 
@@ -71,7 +71,8 @@ pub async fn totp_enrol_start(
         secret = secret_b32,
     );
 
-    let factor_id = repo::insert_pending_totp(&state.pg, tenant_id, subject_id, &label, &secret_b32).await?;
+    let factor_id =
+        repo::insert_pending_totp(&state.pg, tenant_id, subject_id, &label, &secret_b32).await?;
 
     Ok((
         StatusCode::CREATED,
@@ -103,7 +104,8 @@ pub async fn totp_enrol_finish(
     let tenant_id = parse_uuid(&claims.tenant_id)?;
     let subject_id = parse_uuid(&claims.sub)?;
 
-    let factor = repo::load_totp_factor(&state.pg, tenant_id, subject_id, body.factor_id, "pending").await?;
+    let factor =
+        repo::load_totp_factor(&state.pg, tenant_id, subject_id, body.factor_id, "pending").await?;
     let secret = totp::base32_decode(&factor.totp_secret_b32).ok_or_else(|| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -134,7 +136,8 @@ pub async fn totp_verify(
     let tenant_id = parse_uuid(&claims.tenant_id)?;
     let subject_id = parse_uuid(&claims.sub)?;
 
-    let factor = repo::load_totp_factor(&state.pg, tenant_id, subject_id, body.factor_id, "active").await?;
+    let factor =
+        repo::load_totp_factor(&state.pg, tenant_id, subject_id, body.factor_id, "active").await?;
     let secret = totp::base32_decode(&factor.totp_secret_b32).ok_or_else(|| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -211,7 +214,9 @@ pub async fn generate_recovery_codes(
     if !has_factor {
         return Err((
             StatusCode::PRECONDITION_FAILED,
-            Json(json!({"error": "no active MFA factor enrolled; enrol a TOTP or WebAuthn factor first"})),
+            Json(
+                json!({"error": "no active MFA factor enrolled; enrol a TOTP or WebAuthn factor first"}),
+            ),
         ));
     }
 

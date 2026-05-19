@@ -36,7 +36,8 @@ impl KmsEncryptor for MockKmsEncryptor {
         &'a self,
         kms_key_id: &'a str,
         plaintext: &'a [u8],
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = EmailResult<Vec<u8>>> + Send + 'a>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = EmailResult<Vec<u8>>> + Send + 'a>>
+    {
         let kms_key_id = kms_key_id.to_owned();
         let plaintext = plaintext.to_vec();
         Box::pin(async move {
@@ -52,9 +53,9 @@ impl KmsEncryptor for MockKmsEncryptor {
 impl MockKmsEncryptor {
     /// Inspector for tests — recover the kms_key_id from a blob.
     pub fn key_id_from_blob(blob: &[u8]) -> Option<String> {
-        blob.iter().position(|b| *b == b'|').map(|pos| {
-            String::from_utf8_lossy(&blob[..pos]).into_owned()
-        })
+        blob.iter()
+            .position(|b| *b == b'|')
+            .map(|pos| String::from_utf8_lossy(&blob[..pos]).into_owned())
     }
 }
 
@@ -101,7 +102,10 @@ pub async fn provision_key(
     .await?;
 
     if existing.is_some() {
-        return Err(EmailError::DkimKeyAlreadyExists(tenant_id, selector.to_owned()));
+        return Err(EmailError::DkimKeyAlreadyExists(
+            tenant_id,
+            selector.to_owned(),
+        ));
     }
 
     let (public_pem, private_plaintext) = match algorithm {
@@ -212,7 +216,10 @@ mod tests {
     async fn mock_encryptor_round_trip_recovers_kms_id() {
         let enc = MockKmsEncryptor;
         let blob = enc.encrypt("alias/test", b"plaintext").await.unwrap();
-        assert_eq!(MockKmsEncryptor::key_id_from_blob(&blob), Some("alias/test".into()));
+        assert_eq!(
+            MockKmsEncryptor::key_id_from_blob(&blob),
+            Some("alias/test".into())
+        );
     }
 
     #[test]

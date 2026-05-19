@@ -100,11 +100,13 @@ pub async fn assign_role(
     // 5. Tenant scope from JWT.
     let tenant_id = match Uuid::parse_str(&claims.tenant_id) {
         Ok(t) => t,
-        Err(e) => return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": format!("bad tenant_id claim: {e}")})),
-        )
-            .into_response(),
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("bad tenant_id claim: {e}")})),
+            )
+                .into_response()
+        }
     };
 
     // 6. Persist.
@@ -117,7 +119,9 @@ pub async fn assign_role(
         .bind(tenant_id.to_string())
         .execute(&mut *tx)
         .await
-    { return internal(e); }
+    {
+        return internal(e);
+    }
 
     let res = sqlx::query(
         "INSERT INTO subject_roles (tenant_id, subject_id, role, granted_by)
@@ -132,7 +136,9 @@ pub async fn assign_role(
 
     match res {
         Ok(_) => {
-            if let Err(e) = tx.commit().await { return internal(e); }
+            if let Err(e) = tx.commit().await {
+                return internal(e);
+            }
             (
                 StatusCode::CREATED,
                 Json(json!({
@@ -166,22 +172,39 @@ pub async fn revoke_role(
         Action::Admin,
     );
     if !authorised {
-        return (StatusCode::FORBIDDEN, Json(json!({"error": "caller lacks role-assignment admin"}))).into_response();
+        return (
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "caller lacks role-assignment admin"})),
+        )
+            .into_response();
     }
     let role_typed = match Role::from_str(&role) {
         Ok(r) => r,
-        Err(_) => return (StatusCode::BAD_REQUEST, Json(json!({"error": "unknown_role", "role": role}))).into_response(),
+        Err(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"error": "unknown_role", "role": role})),
+            )
+                .into_response()
+        }
     };
     let tenant_id = Uuid::parse_str(&claims.tenant_id).unwrap_or(Uuid::nil());
-    let mut tx = match state.pg.begin().await { Ok(t) => t, Err(e) => return internal(e) };
+    let mut tx = match state.pg.begin().await {
+        Ok(t) => t,
+        Err(e) => return internal(e),
+    };
     let _ = sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await;
+        .execute(&mut *tx)
+        .await;
     let _ = sqlx::query("DELETE FROM subject_roles WHERE subject_id = $1 AND role = $2")
         .bind(subject_id)
         .bind(role_typed.as_str())
-        .execute(&mut *tx).await;
-    if let Err(e) = tx.commit().await { return internal(e); }
+        .execute(&mut *tx)
+        .await;
+    if let Err(e) = tx.commit().await {
+        return internal(e);
+    }
     StatusCode::NO_CONTENT.into_response()
 }
 
@@ -211,7 +234,11 @@ fn parse_caller_roles(claims: &Claims) -> Vec<Role> {
 }
 
 fn internal<E: std::fmt::Display>(e: E) -> Response {
-    (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))).into_response()
+    (
+        StatusCode::INTERNAL_SERVER_ERROR,
+        Json(json!({"error": e.to_string()})),
+    )
+        .into_response()
 }
 
 /// Returns true if `subject_id` has an active MFA factor of the requested

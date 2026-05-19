@@ -15,7 +15,6 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use once_cell::sync::OnceCell;
 use thiserror::Error;
 use tokio::sync::mpsc;
 use tracing::{error, info};
@@ -100,8 +99,11 @@ pub struct FileFailure {
 
 // --- Singleton state ---------------------------------------------------------
 
-static CACHE: OnceCell<PolicyCache> = OnceCell::new();
-static CONFIG_DIR: OnceCell<PathBuf> = OnceCell::new();
+use once_cell::sync::Lazy;
+use std::sync::RwLock;
+
+static CACHE: Lazy<RwLock<Option<Arc<PolicyCache>>>> = Lazy::new(|| RwLock::new(None));
+static CONFIG_DIR: Lazy<RwLock<Option<PathBuf>>> = Lazy::new(|| RwLock::new(None));
 
 // --- Loader handle ----------------------------------------------------------
 
@@ -125,16 +127,20 @@ impl Loader {
 /// file-watcher. Aggregates ALL failures into a single `LoaderInitError::Schema`.
 pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
     if !config_dir.exists() || !config_dir.is_dir() {
-        return Err(LoaderInitError::ConfigDirInvalid { path: config_dir.to_path_buf() });
+        return Err(LoaderInitError::ConfigDirInvalid {
+            path: config_dir.to_path_buf(),
+        });
     }
 
-    let cache = PolicyCache::new();
+    let cache = Arc::new(PolicyCache::new());
     let mut failures: Vec<FileFailure> = Vec::new();
 
     for entry in std::fs::read_dir(config_dir)? {
         let entry = entry?;
         let path = entry.path();
-        let Some(name) = path.file_name().and_then(|n| n.to_str()) else { continue };
+        let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
         if !is_loadable_filename(name) {
             continue;
         }
@@ -146,7 +152,10 @@ pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
                 info!(tenant_id = %tenant_id, path = %path.display(), "policy loaded");
             }
             Err(errors) => {
-                failures.push(FileFailure { path: path.clone(), errors });
+                failures.push(FileFailure {
+                    path: path.clone(),
+                    errors,
+                });
             }
         }
     }
@@ -155,14 +164,22 @@ pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
         return Err(LoaderInitError::Schema { failures });
     }
 
-    CACHE.set(cache).map_err(|_| LoaderInitError::AlreadyInitialised)?;
-    CONFIG_DIR
-        .set(config_dir.to_path_buf())
-        .map_err(|_| LoaderInitError::AlreadyInitialised)?;
+    {
+        let mut guard_cache = CACHE.write().unwrap();
+        let mut guard_dir = CONFIG_DIR.write().unwrap();
+        if guard_cache.is_some() {
+            return Err(LoaderInitError::AlreadyInitialised);
+        }
+        *guard_cache = Some(cache);
+        *guard_dir = Some(config_dir.to_path_buf());
+    }
 
     let watcher = spawn_watcher(config_dir)?;
 
-    let loaded = CACHE.get().expect("just set").loaded_tenants_sorted();
+    let loaded = {
+        let guard = CACHE.read().unwrap();
+        guard.as_ref().expect("just set").loaded_tenants_sorted()
+    };
     info!(count = loaded.len(), tenants = ?loaded, "ai-gateway policy loader initialised");
 
     Ok(Loader { _watcher: watcher })
@@ -173,7 +190,10 @@ pub async fn init_loader(config_dir: &Path) -> Result<Loader, LoaderInitError> {
 pub async fn load_for_tenant(tenant_id: &str) -> Result<Arc<TenantPolicy>, PolicyError> {
     validate_tenant_id(tenant_id)?;
 
-    let cache = CACHE.get().ok_or(PolicyError::NotInitialised)?;
+    let cache = {
+        let guard = CACHE.read().unwrap();
+        guard.as_ref().cloned().ok_or(PolicyError::NotInitialised)?
+    };
 
     if let Some(p) = cache.get(tenant_id) {
         return Ok(p);
@@ -181,12 +201,17 @@ pub async fn load_for_tenant(tenant_id: &str) -> Result<Arc<TenantPolicy>, Polic
 
     // Cache miss — fall through to disk. Rare path; only happens if a file appeared
     // between init and read but before the file-watch fired.
-    let dir = CONFIG_DIR.get().ok_or(PolicyError::NotInitialised)?;
+    let dir = {
+        let guard = CONFIG_DIR.read().unwrap();
+        guard.as_ref().cloned().ok_or(PolicyError::NotInitialised)?
+    };
     let file_name = format!("{}.yaml", tenant_id.replace(':', "-"));
     let path = dir.join(&file_name);
 
     if !path.exists() {
-        return Err(PolicyError::PolicyMissing { tenant_id: tenant_id.to_string() });
+        return Err(PolicyError::PolicyMissing {
+            tenant_id: tenant_id.to_string(),
+        });
     }
 
     let policy = load_file(&path).map_err(|errors| PolicyError::PolicyInvalid {
@@ -208,12 +233,10 @@ pub fn validate_yaml(yaml: &str) -> Result<TenantPolicy, Vec<String>> {
 
 /// Stop the file-watcher and clear cache. Idempotent.
 pub async fn shutdown_loader() {
-    // OnceCell can't be taken, so we drain the cache.
-    if let Some(cache) = CACHE.get() {
-        for id in cache.loaded_tenants_sorted() {
-            cache.remove(&id);
-        }
-    }
+    let mut guard_cache = CACHE.write().unwrap();
+    let mut guard_dir = CONFIG_DIR.write().unwrap();
+    *guard_cache = None;
+    *guard_dir = None;
 }
 
 // --- Internals ---------------------------------------------------------------
@@ -339,9 +362,17 @@ fn spawn_watcher(config_dir: &Path) -> Result<RecommendedWatcher, notify::Error>
 }
 
 async fn handle_event(config_dir: &Path, event: Event) {
-    let Some(cache) = CACHE.get() else { return };
+    let cache = {
+        let guard = CACHE.read().unwrap();
+        let Some(cache) = guard.as_ref().cloned() else {
+            return;
+        };
+        cache
+    };
     for path in event.paths {
-        let Some(name) = path.file_name().and_then(|n| n.to_str()) else { continue };
+        let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+            continue;
+        };
         if !is_loadable_filename(name) {
             continue;
         }

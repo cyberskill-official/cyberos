@@ -12,7 +12,11 @@ use clap::{Parser, Subcommand};
 use cyberos_ai_gateway::{policy, SERVICE_BANNER};
 
 #[derive(Debug, Parser)]
-#[command(name = "cyberos-ai", version, about = "CyberOS AI Gateway operator CLI")]
+#[command(
+    name = "cyberos-ai",
+    version,
+    about = "CyberOS AI Gateway operator CLI"
+)]
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
@@ -63,7 +67,10 @@ async fn main() -> ExitCode {
             PolicyOp::Validate { file } => match std::fs::read_to_string(&file) {
                 Ok(yaml) => match policy::validate_yaml(&yaml) {
                     Ok(p) => {
-                        println!("OK tenant_id={} (cap=${})", p.tenant_id, p.ai_policy.monthly_cap_usd);
+                        println!(
+                            "OK tenant_id={} (cap=${})",
+                            p.tenant_id, p.ai_policy.monthly_cap_usd
+                        );
                         ExitCode::SUCCESS
                     }
                     Err(errs) => {
@@ -83,9 +90,16 @@ async fn main() -> ExitCode {
                     println!("Loaded policies from {}:", config.display());
                     // Pull the cache's sorted snapshot via load_for_tenant on each known id.
                     // For now we just emit the path; FR-AI-021 adds a richer surface.
-                    for entry in std::fs::read_dir(&config).unwrap_or_else(|_| panic!("read_dir {}", config.display())) {
+                    for entry in std::fs::read_dir(&config)
+                        .unwrap_or_else(|_| panic!("read_dir {}", config.display()))
+                    {
                         let Ok(entry) = entry else { continue };
-                        if entry.path().extension().map(|e| e == "yaml").unwrap_or(false) {
+                        if entry
+                            .path()
+                            .extension()
+                            .map(|e| e == "yaml")
+                            .unwrap_or(false)
+                        {
                             println!("  {}", entry.path().display());
                         }
                     }

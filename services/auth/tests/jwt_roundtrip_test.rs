@@ -35,7 +35,17 @@ async fn issue_then_verify_round_trips_with_correct_claims() {
     let subject = SubjectId::new();
     let scopes = vec!["admin:tenants".to_string(), "admin:subjects".to_string()];
     let tokens = svc
-        .issue(tenant, subject, "alice@test.cyberos", "human", scopes.clone(), vec![], None, None, Some("00-traceparent-x-01".into()))
+        .issue(
+            tenant,
+            subject,
+            "alice@test.cyberos",
+            "human",
+            scopes.clone(),
+            vec![],
+            None,
+            None,
+            Some("00-traceparent-x-01".into()),
+        )
         .await
         .expect("issue");
 
@@ -43,7 +53,7 @@ async fn issue_then_verify_round_trips_with_correct_claims() {
     assert_eq!(claims.tenant_id, tenant.to_string());
     assert_eq!(claims.sub, subject.to_string());
     assert_eq!(claims.kind, "human");
-    assert_eq!(claims.email, "alice@test.cyberos");      // FR-AUTH-004 §1 #2 G-013
+    assert_eq!(claims.email, "alice@test.cyberos"); // FR-AUTH-004 §1 #2 G-013
     assert_eq!(claims.scope_grants, scopes);
     assert_eq!(claims.iss, "https://auth.test.cyberos");
     assert_eq!(claims.traceparent.as_deref(), Some("00-traceparent-x-01"));
@@ -83,7 +93,9 @@ async fn jwks_publishes_active_key() {
     let svc = JwtService::new(pool.clone(), "https://auth.test.cyberos".to_string());
     let doc = svc.jwks_for_publication().await.expect("jwks");
     assert!(
-        doc.keys.iter().any(|k| k.kid == kid && k.kty == "RSA" && k.alg == "RS256"),
+        doc.keys
+            .iter()
+            .any(|k| k.kid == kid && k.kty == "RSA" && k.alg == "RS256"),
         "jwks must publish the test key with RS256/RSA"
     );
 

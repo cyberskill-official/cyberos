@@ -51,7 +51,9 @@ pub async fn initiate(
 ) -> Result<Response, (StatusCode, Json<Value>)> {
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
 
     let row: Option<(Uuid, Uuid, String, String, String, String)> = sqlx::query_as(
         "SELECT i.id, i.tenant_id, i.sso_url, i.issuer, i.sp_entity_id, i.sp_acs_url
@@ -99,7 +101,9 @@ pub async fn initiate(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     sqlx::query(
         "INSERT INTO saml_authn_request_log (request_id, tenant_id, idp_config_id, relay_state)
               VALUES ($1, $2, $3, $4)",
@@ -108,7 +112,9 @@ pub async fn initiate(
     .bind(tenant_id)
     .bind(idp_id)
     .bind(q.relay_state.as_deref())
-    .execute(&mut *tx).await.map_err(internal)?;
+    .execute(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
     // Two binding options:
@@ -155,7 +161,10 @@ pub async fn acs(
     axum::Form(body): axum::Form<AcsBody>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let caller_ip = crate::handlers::caller_ip(&headers);
-    let user_agent = headers.get("user-agent").and_then(|h| h.to_str().ok()).map(|s| s.to_string());
+    let user_agent = headers
+        .get("user-agent")
+        .and_then(|h| h.to_str().ok())
+        .map(|s| s.to_string());
     // Decode the base64 SAMLResponse.
     let xml_bytes = STANDARD
         .decode(&body.saml_response)
@@ -165,8 +174,12 @@ pub async fn acs(
 
     // Extract the fields we care about with simple XML pattern matching.
     // Full XML c14n + signature verify is slice 2.
-    let request_id = extract_xml_attr(&xml, "InResponseTo")
-        .ok_or_else(|| bad_req("missing_inresponseto", "SAMLResponse must carry InResponseTo"))?;
+    let request_id = extract_xml_attr(&xml, "InResponseTo").ok_or_else(|| {
+        bad_req(
+            "missing_inresponseto",
+            "SAMLResponse must carry InResponseTo",
+        )
+    })?;
     let assertion_issuer = extract_xml_element(&xml, "saml:Issuer")
         .or_else(|| extract_xml_element(&xml, "Issuer"))
         .ok_or_else(|| bad_req("missing_issuer", "SAMLResponse must carry Issuer"))?;
@@ -180,7 +193,9 @@ pub async fn acs(
     // Look up the AuthnRequest we issued.
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let req_row: Option<(Uuid, Uuid, Option<chrono::DateTime<chrono::Utc>>)> = sqlx::query_as(
         "SELECT tenant_id, idp_config_id, consumed_at
              FROM saml_authn_request_log
@@ -191,10 +206,21 @@ pub async fn acs(
     .await
     .map_err(internal)?;
     let (tenant_id, idp_id, consumed_at) = req_row.ok_or_else(|| {
-        bad_req("unknown_or_expired_request_id", "no matching AuthnRequest within 10-min window")
+        bad_req(
+            "unknown_or_expired_request_id",
+            "no matching AuthnRequest within 10-min window",
+        )
     })?;
     if consumed_at.is_some() {
-        return Err(audit_failure(&state, tenant_id, idp_id, &request_id, "replay", "request_id consumed").await);
+        return Err(audit_failure(
+            &state,
+            tenant_id,
+            idp_id,
+            &request_id,
+            "replay",
+            "request_id consumed",
+        )
+        .await);
     }
 
     // Load IdP config for issuer + signature validation.
@@ -210,11 +236,19 @@ pub async fn acs(
     .fetch_one(&mut *tx)
     .await
     .map_err(internal)?;
-    let (idp_issuer, signing_cert_pem, sp_entity_id, auto_provision, default_roles, allow_unsigned) = idp_row;
+    let (idp_issuer, signing_cert_pem, sp_entity_id, auto_provision, default_roles, allow_unsigned) =
+        idp_row;
 
     if assertion_issuer != idp_issuer {
-        return Err(audit_failure(&state, tenant_id, idp_id, &request_id, "audience_mismatch",
-            &format!("assertion Issuer {assertion_issuer} ≠ IdP {idp_issuer}")).await);
+        return Err(audit_failure(
+            &state,
+            tenant_id,
+            idp_id,
+            &request_id,
+            "audience_mismatch",
+            &format!("assertion Issuer {assertion_issuer} ≠ IdP {idp_issuer}"),
+        )
+        .await);
     }
 
     // Audience check: the assertion's <AudienceRestriction>/<Audience> MUST match our sp_entity_id.
@@ -222,8 +256,15 @@ pub async fn acs(
         .or_else(|| extract_xml_element(&xml, "Audience"));
     if let Some(aud) = audience {
         if aud != sp_entity_id {
-            return Err(audit_failure(&state, tenant_id, idp_id, &request_id, "audience_mismatch",
-                &format!("Audience {aud} ≠ SP {sp_entity_id}")).await);
+            return Err(audit_failure(
+                &state,
+                tenant_id,
+                idp_id,
+                &request_id,
+                "audience_mismatch",
+                &format!("Audience {aud} ≠ SP {sp_entity_id}"),
+            )
+            .await);
         }
     }
 
@@ -240,9 +281,14 @@ pub async fn acs(
         Err(e) => {
             if !allow_unsigned {
                 return Err(audit_failure(
-                    &state, tenant_id, idp_id, &request_id, "sig_invalid",
+                    &state,
+                    tenant_id,
+                    idp_id,
+                    &request_id,
+                    "sig_invalid",
                     &format!("xml-sig verify failed: {e}"),
-                ).await);
+                )
+                .await);
             }
             tracing::warn!(
                 idp = %idp_id,
@@ -255,12 +301,20 @@ pub async fn acs(
     // Mark the AuthnRequest consumed.
     sqlx::query("UPDATE saml_authn_request_log SET consumed_at = NOW() WHERE request_id = $1")
         .bind(&request_id)
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
     // Resolve subject (existing link or JIT-provision).
     let subject_id = resolve_subject(
-        &state, tenant_id, idp_id, &name_id, email_attr.as_deref(), auto_provision, &default_roles,
+        &state,
+        tenant_id,
+        idp_id,
+        &name_id,
+        email_attr.as_deref(),
+        auto_provision,
+        &default_roles,
     )
     .await?;
 
@@ -273,7 +327,8 @@ pub async fn acs(
     .bind(idp_id)
     .bind(&request_id)
     .bind(subject_id)
-    .execute(&state.pg).await;
+    .execute(&state.pg)
+    .await;
 
     // Mint a CyberOS JWT.
     let svc = crate::jwt::JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
@@ -283,7 +338,7 @@ pub async fn acs(
         .issue(
             cyberos_types::TenantId(tenant_id),
             cyberos_types::SubjectId(subject_id),
-            "",     // FR-AUTH-004 §1 #2 — SAML callback doesn't pass plaintext email through
+            "", // FR-AUTH-004 §1 #2 — SAML callback doesn't pass plaintext email through
             "human",
             vec![],
             roles,
@@ -302,8 +357,15 @@ pub async fn acs(
         sticky_suppress: &state.sticky_suppress,
     };
     let outcome = crate::travel::assess_login(
-        &deps, tenant_id, subject_id, "saml", caller_ip, user_agent.as_deref(),
-    ).await.ok();
+        &deps,
+        tenant_id,
+        subject_id,
+        "saml",
+        caller_ip,
+        user_agent.as_deref(),
+    )
+    .await
+    .ok();
     match outcome {
         Some(crate::travel::TravelOutcome::Block { kind, .. }) => Err((
             StatusCode::FORBIDDEN,
@@ -341,17 +403,22 @@ pub async fn sp_metadata(
 ) -> Result<Response, (StatusCode, Json<Value>)> {
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
-        .execute(&mut *tx).await.map_err(internal)?;
-    let row: Option<(String, String)> = sqlx::query_as(
-        "SELECT sp_entity_id, sp_acs_url FROM saml_idp_configs WHERE id = $1",
-    )
-    .bind(idp_config_id)
-    .fetch_optional(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
+    let row: Option<(String, String)> =
+        sqlx::query_as("SELECT sp_entity_id, sp_acs_url FROM saml_idp_configs WHERE id = $1")
+            .bind(idp_config_id)
+            .fetch_optional(&mut *tx)
+            .await
+            .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
-    let (sp_entity_id, sp_acs_url) = row.ok_or_else(|| (
-        StatusCode::NOT_FOUND,
-        Json(json!({"error": "idp_config_not_found"})),
-    ))?;
+    let (sp_entity_id, sp_acs_url) = row.ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "idp_config_not_found"})),
+        )
+    })?;
 
     let metadata = format!(
         r#"<?xml version="1.0"?>
@@ -402,12 +469,16 @@ pub async fn create_idp_config(
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(internal)?;
     let auto = body.auto_provision.unwrap_or(true);
-    let default_roles = body.default_roles.unwrap_or_else(|| vec!["tenant-member".into()]);
+    let default_roles = body
+        .default_roles
+        .unwrap_or_else(|| vec!["tenant-member".into()]);
 
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
 
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO saml_idp_configs
@@ -441,11 +512,14 @@ pub async fn create_idp_config(
     .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
-    Ok((StatusCode::CREATED, Json(json!({
-        "id": row.0,
-        "tenant_id": tenant_id,
-        "name": body.name,
-    }))))
+    Ok((
+        StatusCode::CREATED,
+        Json(json!({
+            "id": row.0,
+            "tenant_id": tenant_id,
+            "name": body.name,
+        })),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -476,7 +550,8 @@ fn extract_saml_attribute(xml: &str, attr_name: &str) -> Option<String> {
     let marker = format!(r#"Name="{attr_name}""#);
     let i = xml.find(&marker)?;
     let rest = &xml[i..];
-    let av_open = rest.find("<saml:AttributeValue")
+    let av_open = rest
+        .find("<saml:AttributeValue")
         .or_else(|| rest.find("<AttributeValue"))?;
     let after_open = rest[av_open..].find('>')? + av_open + 1;
     let close = rest[after_open..].find("</")?;
@@ -507,20 +582,27 @@ async fn resolve_subject(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let existing: Option<(Uuid,)> = sqlx::query_as(
         "SELECT subject_id FROM saml_subject_link
           WHERE idp_config_id = $1 AND idp_name_id = $2",
     )
     .bind(idp_id)
     .bind(name_id)
-    .fetch_optional(&mut *tx).await.map_err(internal)?;
+    .fetch_optional(&mut *tx)
+    .await
+    .map_err(internal)?;
     if let Some((sid,)) = existing {
         let _ = sqlx::query(
             "UPDATE saml_subject_link SET last_login_at = NOW()
               WHERE idp_config_id = $1 AND idp_name_id = $2",
         )
-        .bind(idp_id).bind(name_id).execute(&mut *tx).await;
+        .bind(idp_id)
+        .bind(name_id)
+        .execute(&mut *tx)
+        .await;
         tx.commit().await.map_err(internal)?;
         return Ok(sid);
     }
@@ -534,13 +616,20 @@ async fn resolve_subject(
     }
 
     let handle = match email {
-        Some(e) => format!("@{}", e.split('@').next().unwrap_or(&name_id[..name_id.len().min(20)])),
+        Some(e) => format!(
+            "@{}",
+            e.split('@')
+                .next()
+                .unwrap_or(&name_id[..name_id.len().min(20)])
+        ),
         None => format!("@saml-{}", &name_id[..name_id.len().min(12)]),
     };
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let row: (Uuid,) = sqlx::query_as(
         "INSERT INTO subjects (tenant_id, handle, display_name, email, kind, status, roles)
               VALUES ($1, $2, $3, $4, 'human', 'active', $5)
@@ -554,7 +643,9 @@ async fn resolve_subject(
     .bind(email.unwrap_or(""))
     .bind(email)
     .bind(default_roles)
-    .fetch_one(&mut *tx).await.map_err(internal)?;
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(internal)?;
     let subject_id = row.0;
     sqlx::query(
         "INSERT INTO saml_subject_link (tenant_id, subject_id, idp_config_id, idp_name_id, idp_email)
@@ -588,7 +679,8 @@ async fn audit_failure(
     .bind(request_id)
     .bind(outcome)
     .bind(detail)
-    .execute(&state.pg).await;
+    .execute(&state.pg)
+    .await;
     bad_req(outcome, detail)
 }
 
@@ -613,7 +705,10 @@ mod tests {
     #[test]
     fn extract_xml_attr_finds_quoted_value() {
         let xml = r#"<root InResponseTo="_xyz-123" Foo="bar"/>"#;
-        assert_eq!(extract_xml_attr(xml, "InResponseTo"), Some("_xyz-123".to_string()));
+        assert_eq!(
+            extract_xml_attr(xml, "InResponseTo"),
+            Some("_xyz-123".to_string())
+        );
         assert_eq!(extract_xml_attr(xml, "Foo"), Some("bar".to_string()));
         assert_eq!(extract_xml_attr(xml, "Missing"), None);
     }
@@ -633,11 +728,17 @@ mod tests {
 <saml:Attribute Name="email">
   <saml:AttributeValue>alice@example.com</saml:AttributeValue>
 </saml:Attribute>"#;
-        assert_eq!(extract_saml_attribute(xml, "email"), Some("alice@example.com".to_string()));
+        assert_eq!(
+            extract_saml_attribute(xml, "email"),
+            Some("alice@example.com".to_string())
+        );
     }
 
     #[test]
     fn xml_escape_handles_specials() {
-        assert_eq!(xml_escape("a & b < c > d \" e"), "a &amp; b &lt; c &gt; d &quot; e");
+        assert_eq!(
+            xml_escape("a & b < c > d \" e"),
+            "a &amp; b &lt; c &gt; d &quot; e"
+        );
     }
 }

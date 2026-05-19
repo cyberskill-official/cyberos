@@ -47,7 +47,17 @@ pub async fn poll(
     after_seq: i64,
     batch_size: i32,
 ) -> Result<Vec<L1Row>, sqlx::Error> {
-    let rows: Vec<(i64, uuid::Uuid, Option<uuid::Uuid>, String, String, Option<String>, Option<String>, String, i64)> = sqlx::query_as(
+    let rows: Vec<(
+        i64,
+        uuid::Uuid,
+        Option<uuid::Uuid>,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+        i64,
+    )> = sqlx::query_as(
         "SELECT seq, tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns
              FROM l1_audit_log
             WHERE tenant_id = $1 AND seq > $2
@@ -60,25 +70,37 @@ pub async fn poll(
     .fetch_all(pool)
     .await?;
 
-    Ok(rows.into_iter().map(|(seq, tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns)| L1Row {
-        seq,
-        tenant_id,
-        subject_id,
-        op,
-        path,
-        body,
-        prev_hash_hex,
-        chain_anchor_hex,
-        ts_ns,
-    }).collect())
+    Ok(rows
+        .into_iter()
+        .map(
+            |(
+                seq,
+                tenant_id,
+                subject_id,
+                op,
+                path,
+                body,
+                prev_hash_hex,
+                chain_anchor_hex,
+                ts_ns,
+            )| L1Row {
+                seq,
+                tenant_id,
+                subject_id,
+                op,
+                path,
+                body,
+                prev_hash_hex,
+                chain_anchor_hex,
+                ts_ns,
+            },
+        )
+        .collect())
 }
 
 /// Append an L1 row (used by the memory-sync daemon when it lands in the
 /// Cloud-memory path, and by tests). Returns the assigned seq.
-pub async fn append(
-    pool: &PgPool,
-    row: &L1Row,
-) -> Result<i64, sqlx::Error> {
+pub async fn append(pool: &PgPool, row: &L1Row) -> Result<i64, sqlx::Error> {
     let (seq,): (i64,) = sqlx::query_as(
         "INSERT INTO l1_audit_log
                 (tenant_id, subject_id, op, path, body, prev_hash_hex, chain_anchor_hex, ts_ns)

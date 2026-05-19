@@ -63,9 +63,8 @@ pub async fn get_policy(
     .fetch_optional(&state.pg)
     .await
     .map_err(internal)?;
-    let (action, threshold_kmh, block_anon, sticky) = row.unwrap_or_else(|| {
-        ("challenge".to_string(), 1000.0, false, 30)
-    });
+    let (action, threshold_kmh, block_anon, sticky) =
+        row.unwrap_or_else(|| ("challenge".to_string(), 1000.0, false, 30));
     Ok(Json(PolicyView {
         action,
         threshold_kmh,
@@ -82,16 +81,28 @@ pub async fn put_policy(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     require_security_admin(&claims, tenant_id)?;
     if body.reason.trim().len() < 10 {
-        return Err(bad_req("reason_too_short", "reason must be >= 10 characters"));
+        return Err(bad_req(
+            "reason_too_short",
+            "reason must be >= 10 characters",
+        ));
     }
     if !["challenge", "block", "warn_only"].contains(&body.action.as_str()) {
-        return Err(bad_req("invalid_action", "action must be one of challenge|block|warn_only"));
+        return Err(bad_req(
+            "invalid_action",
+            "action must be one of challenge|block|warn_only",
+        ));
     }
     if !(200.0..=5000.0).contains(&body.threshold_kmh) {
-        return Err(bad_req("threshold_out_of_range", "threshold_kmh must be in [200, 5000]"));
+        return Err(bad_req(
+            "threshold_out_of_range",
+            "threshold_kmh must be in [200, 5000]",
+        ));
     }
     if !(0..=1440).contains(&body.sticky_suppress_min) {
-        return Err(bad_req("sticky_out_of_range", "sticky_suppress_min must be in [0, 1440]"));
+        return Err(bad_req(
+            "sticky_out_of_range",
+            "sticky_suppress_min must be in [0, 1440]",
+        ));
     }
 
     let actor_id = parse_actor(&claims)?;
@@ -118,7 +129,10 @@ pub async fn put_policy(
     .map_err(internal)?;
 
     write_audit(
-        &state, tenant_id, actor_id, "policy_updated",
+        &state,
+        tenant_id,
+        actor_id,
+        "policy_updated",
         json!({
             "action": body.action,
             "threshold_kmh": body.threshold_kmh,
@@ -126,7 +140,8 @@ pub async fn put_policy(
             "sticky_suppress_min": body.sticky_suppress_min,
         }),
         &body.reason,
-    ).await?;
+    )
+    .await?;
 
     // Invalidate the cache so the next assess_login picks up the new policy.
     state.travel_policy.invalidate(tenant_id).await;
@@ -149,14 +164,18 @@ pub async fn add_cidr(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     require_security_admin(&claims, tenant_id)?;
     if body.reason.trim().len() < 10 {
-        return Err(bad_req("reason_too_short", "reason must be >= 10 characters"));
+        return Err(bad_req(
+            "reason_too_short",
+            "reason must be >= 10 characters",
+        ));
     }
     if body.label.trim().is_empty() {
         return Err(bad_req("missing_label", "label is required"));
     }
-    let net: IpNetwork = body.cidr.parse().map_err(|e: ipnetwork::IpNetworkError| {
-        bad_req("invalid_cidr", &format!("{e}"))
-    })?;
+    let net: IpNetwork = body
+        .cidr
+        .parse()
+        .map_err(|e: ipnetwork::IpNetworkError| bad_req("invalid_cidr", &format!("{e}")))?;
 
     let actor_id = parse_actor(&claims)?;
     set_tenant(&state, tenant_id).await?;
@@ -188,10 +207,14 @@ pub async fn add_cidr(
     })?;
 
     write_audit(
-        &state, tenant_id, actor_id, "cidr_added",
+        &state,
+        tenant_id,
+        actor_id,
+        "cidr_added",
         json!({"cidr": net.to_string(), "label": body.label, "id": id}),
         &body.reason,
-    ).await?;
+    )
+    .await?;
     state.travel_policy.invalidate(tenant_id).await;
 
     Ok(Json(json!({"status": "ok", "id": id})))
@@ -241,7 +264,10 @@ pub async fn delete_cidr(
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     require_security_admin(&claims, tenant_id)?;
     if body.reason.trim().len() < 10 {
-        return Err(bad_req("reason_too_short", "reason must be >= 10 characters"));
+        return Err(bad_req(
+            "reason_too_short",
+            "reason must be >= 10 characters",
+        ));
     }
     let actor_id = parse_actor(&claims)?;
     set_tenant(&state, tenant_id).await?;
@@ -255,10 +281,12 @@ pub async fn delete_cidr(
     .fetch_optional(&state.pg)
     .await
     .map_err(internal)?;
-    let (cidr, label) = row.ok_or_else(|| (
-        StatusCode::NOT_FOUND,
-        Json(json!({"error": "cidr_not_found"})),
-    ))?;
+    let (cidr, label) = row.ok_or_else(|| {
+        (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "cidr_not_found"})),
+        )
+    })?;
 
     sqlx::query("DELETE FROM travel_cidr_allowlist WHERE tenant_id = $1 AND id = $2")
         .bind(tenant_id)
@@ -268,10 +296,14 @@ pub async fn delete_cidr(
         .map_err(internal)?;
 
     write_audit(
-        &state, tenant_id, actor_id, "cidr_removed",
+        &state,
+        tenant_id,
+        actor_id,
+        "cidr_removed",
         json!({"cidr": cidr, "label": label, "id": cidr_id}),
         &body.reason,
-    ).await?;
+    )
+    .await?;
     state.travel_policy.invalidate(tenant_id).await;
 
     Ok(Json(json!({"status": "ok"})))
@@ -286,7 +318,10 @@ fn require_security_admin(
     tenant_id: Uuid,
 ) -> Result<(), (StatusCode, Json<Value>)> {
     if claims.tenant_id != tenant_id.to_string() {
-        return Err((StatusCode::FORBIDDEN, Json(json!({"error": "wrong_tenant"}))));
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "wrong_tenant"})),
+        ));
     }
     if claims.roles.iter().any(|r| r == ROLE_SECURITY_ADMIN) {
         return Ok(());
@@ -297,14 +332,18 @@ fn require_security_admin(
     ))
 }
 
-fn require_tenant_admin(
-    claims: &Claims,
-    tenant_id: Uuid,
-) -> Result<(), (StatusCode, Json<Value>)> {
+fn require_tenant_admin(claims: &Claims, tenant_id: Uuid) -> Result<(), (StatusCode, Json<Value>)> {
     if claims.tenant_id != tenant_id.to_string() {
-        return Err((StatusCode::FORBIDDEN, Json(json!({"error": "wrong_tenant"}))));
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(json!({"error": "wrong_tenant"})),
+        ));
     }
-    if claims.roles.iter().any(|r| r == ROLE_TENANT_ADMIN || r == ROLE_SECURITY_ADMIN) {
+    if claims
+        .roles
+        .iter()
+        .any(|r| r == ROLE_TENANT_ADMIN || r == ROLE_SECURITY_ADMIN)
+    {
         return Ok(());
     }
     Err((
@@ -314,10 +353,12 @@ fn require_tenant_admin(
 }
 
 fn parse_actor(claims: &Claims) -> Result<Uuid, (StatusCode, Json<Value>)> {
-    Uuid::parse_str(&claims.sub).map_err(|e| (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        Json(json!({"error": format!("bad subject in JWT: {e}")})),
-    ))
+    Uuid::parse_str(&claims.sub).map_err(|e| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("bad subject in JWT: {e}")})),
+        )
+    })
 }
 
 async fn set_tenant(state: &AppState, tenant_id: Uuid) -> Result<(), (StatusCode, Json<Value>)> {

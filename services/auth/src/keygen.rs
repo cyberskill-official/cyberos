@@ -38,5 +38,8 @@ pub fn generate_rsa_2048() -> Result<GeneratedKey, KeygenError> {
     let public_pem = public
         .to_public_key_pem(LineEnding::LF)
         .map_err(|e| KeygenError(format!("encode public pem: {e}")))?;
-    Ok(GeneratedKey { public_pem, private_pem })
+    Ok(GeneratedKey {
+        public_pem,
+        private_pem,
+    })
 }

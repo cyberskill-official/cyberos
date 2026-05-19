@@ -189,8 +189,14 @@ mod tests {
     #[test]
     fn spam_threshold_is_5_0() {
         assert_eq!(MessageStatus::from_spam_score(4.9), MessageStatus::Received);
-        assert_eq!(MessageStatus::from_spam_score(5.0), MessageStatus::Quarantined);
-        assert_eq!(MessageStatus::from_spam_score(7.5), MessageStatus::Quarantined);
+        assert_eq!(
+            MessageStatus::from_spam_score(5.0),
+            MessageStatus::Quarantined
+        );
+        assert_eq!(
+            MessageStatus::from_spam_score(7.5),
+            MessageStatus::Quarantined
+        );
     }
 
     #[test]

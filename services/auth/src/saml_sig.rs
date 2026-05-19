@@ -93,33 +93,33 @@ pub fn verify(xml: &str, signing_cert_pem: &str) -> Result<VerifyOk, SamlSigErro
         locate_element(sig_xml, "SignedInfo").ok_or(SamlSigError::NoSignedInfo)?;
     let signed_info_xml = &sig_xml[signed_info_span.start..signed_info_span.end_inclusive];
 
-    let signature_value_text = locate_element_text(sig_xml, "SignatureValue")
-        .ok_or(SamlSigError::NoSignatureValue)?;
+    let signature_value_text =
+        locate_element_text(sig_xml, "SignatureValue").ok_or(SamlSigError::NoSignatureValue)?;
 
     // 4. Validate algorithms (be strict).
-    let signature_method_alg = locate_attr(signed_info_xml, "SignatureMethod", "Algorithm")
-        .unwrap_or_default();
+    let signature_method_alg =
+        locate_attr(signed_info_xml, "SignatureMethod", "Algorithm").unwrap_or_default();
     if signature_method_alg != ALG_RSA_SHA256 {
         return Err(SamlSigError::UnsupportedAlgorithm(signature_method_alg));
     }
-    let canon_method_alg = locate_attr(signed_info_xml, "CanonicalizationMethod", "Algorithm")
-        .unwrap_or_default();
+    let canon_method_alg =
+        locate_attr(signed_info_xml, "CanonicalizationMethod", "Algorithm").unwrap_or_default();
     if canon_method_alg != C14N_EXC {
         return Err(SamlSigError::UnsupportedAlgorithm(canon_method_alg));
     }
 
     // 5. Reference handling — uri="#id", transforms must include enveloped-signature,
     //    digest method must be SHA-256, decode the digest.
-    let reference_uri = locate_attr(signed_info_xml, "Reference", "URI")
-        .ok_or(SamlSigError::NoReference)?;
+    let reference_uri =
+        locate_attr(signed_info_xml, "Reference", "URI").ok_or(SamlSigError::NoReference)?;
     let reference_id = reference_uri.trim_start_matches('#').to_string();
-    let digest_method_alg = locate_attr(signed_info_xml, "DigestMethod", "Algorithm")
-        .unwrap_or_default();
+    let digest_method_alg =
+        locate_attr(signed_info_xml, "DigestMethod", "Algorithm").unwrap_or_default();
     if digest_method_alg != ALG_SHA256 {
         return Err(SamlSigError::UnsupportedAlgorithm(digest_method_alg));
     }
-    let digest_b64 = locate_element_text(signed_info_xml, "DigestValue")
-        .ok_or(SamlSigError::NoDigestValue)?;
+    let digest_b64 =
+        locate_element_text(signed_info_xml, "DigestValue").ok_or(SamlSigError::NoDigestValue)?;
     let want_digest = STANDARD
         .decode(strip_ws(&digest_b64))
         .map_err(|e| SamlSigError::Base64("DigestValue", e.to_string()))?;
@@ -160,7 +160,9 @@ pub fn verify(xml: &str, signing_cert_pem: &str) -> Result<VerifyOk, SamlSigErro
         .verify(canon_signed_info.as_bytes(), &sig)
         .map_err(|e| SamlSigError::SignatureMismatch(e.to_string()))?;
 
-    Ok(VerifyOk { signed_id: reference_id })
+    Ok(VerifyOk {
+        signed_id: reference_id,
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -192,24 +194,36 @@ fn locate_element(xml: &str, local: &str) -> Option<Span> {
         // Match optional `prefix:` + local name. We require a delimiter after
         // the local name (space, slash, or `>`) so we don't match prefixes.
         let after_prefix = match tail.find(':') {
-            Some(colon_pos) if colon_pos < 16 && tail[..colon_pos].chars().all(|c| c.is_ascii_alphanumeric()) => {
+            Some(colon_pos)
+                if colon_pos < 16
+                    && tail[..colon_pos].chars().all(|c| c.is_ascii_alphanumeric()) =>
+            {
                 &tail[colon_pos + 1..]
             }
             _ => tail,
         };
         if after_prefix.starts_with(local) {
             let after = &after_prefix.as_bytes()[local.len()..];
-            if matches!(after.first(), Some(b' ') | Some(b'/') | Some(b'>') | Some(b'\t') | Some(b'\n') | Some(b'\r')) {
+            if matches!(
+                after.first(),
+                Some(b' ') | Some(b'/') | Some(b'>') | Some(b'\t') | Some(b'\n') | Some(b'\r')
+            ) {
                 // Find the end of the open tag's `>` so we can scan for the matching close.
                 let gt_off = bytes[abs..].iter().position(|&b| b == b'>')?;
                 let open_close = abs + gt_off + 1;
                 // Self-closing `<X/>`?
                 if bytes[abs..open_close].ends_with(b"/>") {
-                    return Some(Span { start: abs, end_inclusive: open_close });
+                    return Some(Span {
+                        start: abs,
+                        end_inclusive: open_close,
+                    });
                 }
                 // Otherwise find `</...local>` ignoring prefix.
                 let close = find_matching_close(xml, open_close, local)?;
-                return Some(Span { start: abs, end_inclusive: close });
+                return Some(Span {
+                    start: abs,
+                    end_inclusive: close,
+                });
             }
         }
         idx = abs + 1;
@@ -247,10 +261,16 @@ fn locate_element_by_id(xml: &str, id: &str) -> Option<Span> {
     // Find the open tag's `>`.
     let gt = xml[start..].find('>')? + start + 1;
     if xml.as_bytes()[gt - 2] == b'/' {
-        return Some(Span { start, end_inclusive: gt });
+        return Some(Span {
+            start,
+            end_inclusive: gt,
+        });
     }
     let end = find_matching_close(xml, gt, local)?;
-    Some(Span { start, end_inclusive: end })
+    Some(Span {
+        start,
+        end_inclusive: end,
+    })
 }
 
 fn find_matching_close(xml: &str, after_open: usize, local: &str) -> Option<usize> {
@@ -267,13 +287,18 @@ fn find_matching_close(xml: &str, after_open: usize, local: &str) -> Option<usiz
             (false, tail)
         };
         let stripped = match after.find(':') {
-            Some(p) if p < 16 && after[..p].chars().all(|c| c.is_ascii_alphanumeric()) => &after[p + 1..],
+            Some(p) if p < 16 && after[..p].chars().all(|c| c.is_ascii_alphanumeric()) => {
+                &after[p + 1..]
+            }
             _ => after,
         };
         if stripped.starts_with(local) {
             let post = &stripped.as_bytes()[local.len()..];
             let delim = post.first().copied();
-            if matches!(delim, Some(b' ') | Some(b'/') | Some(b'>') | Some(b'\t') | Some(b'\n') | Some(b'\r')) {
+            if matches!(
+                delim,
+                Some(b' ') | Some(b'/') | Some(b'>') | Some(b'\t') | Some(b'\n') | Some(b'\r')
+            ) {
                 if is_close {
                     depth -= 1;
                     if depth == 0 {
@@ -640,8 +665,8 @@ fn extract_spki_from_x509(der: &[u8]) -> Option<Vec<u8>> {
     }
     // Next TLV is subjectPublicKeyInfo.
     let (_, _, _) = r.next()?; // SPKI body (we want the full TLV bytes)
-    // We need the *raw* TLV — re-extract from r's prior position. Simpler:
-    // re-do the walk and capture the TLV bytes for field index 7.
+                               // We need the *raw* TLV — re-extract from r's prior position. Simpler:
+                               // re-do the walk and capture the TLV bytes for field index 7.
     let mut r2 = TlvParser::new(tbs_body);
     let mut count = 0;
     while let Some(tlv) = r2.next_with_tlv() {
@@ -671,7 +696,9 @@ struct Tlv<'a> {
 }
 
 impl<'a> TlvParser<'a> {
-    fn new(buf: &'a [u8]) -> Self { Self { buf, pos: 0 } }
+    fn new(buf: &'a [u8]) -> Self {
+        Self { buf, pos: 0 }
+    }
 
     fn next(&mut self) -> Option<(u8, usize, &'a [u8])> {
         let t = self.next_with_tlv()?;
@@ -742,10 +769,7 @@ mod tests {
     #[test]
     fn exc_c14n_sorts_attributes_alphabetically() {
         let raw = r#"<elem zebra="1" alpha="2" middle="3"/>"#;
-        assert_eq!(
-            exc_c14n(raw),
-            r#"<elem alpha="2" middle="3" zebra="1"/>"#
-        );
+        assert_eq!(exc_c14n(raw), r#"<elem alpha="2" middle="3" zebra="1"/>"#);
     }
 
     #[test]
@@ -762,10 +786,7 @@ mod tests {
     fn exc_c14n_normalises_single_quoted_attrs_to_double() {
         let raw = r#"<elem name='value with " in it'/>"#;
         // Single quotes become doubles; embedded " escaped as &quot;
-        assert_eq!(
-            exc_c14n(raw),
-            r#"<elem name="value with &quot; in it"/>"#
-        );
+        assert_eq!(exc_c14n(raw), r#"<elem name="value with &quot; in it"/>"#);
     }
 
     #[test]
@@ -779,7 +800,8 @@ mod tests {
     fn parse_attrs_handles_mixed_quotes_and_whitespace() {
         let s = r#"  a="1"  b='2'  c="three words"  "#;
         let parsed = parse_attrs(s);
-        assert_eq!(parsed,
+        assert_eq!(
+            parsed,
             vec![
                 ("a".into(), "1".into()),
                 ("b".into(), "2".into()),

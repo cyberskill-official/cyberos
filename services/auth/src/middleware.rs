@@ -55,12 +55,10 @@ pub async fn verify_jwt(
     // means RLS that depends on role checks may deny a legitimate read.
     if let Ok(mut conn) = state.pg.acquire().await {
         let role_csv = claims.roles.join(",");
-        let _ = sqlx::query(&format!(
-            "SELECT set_config('app.roles', $1, false)"
-        ))
-        .bind(role_csv)
-        .execute(&mut *conn)
-        .await;
+        let _ = sqlx::query(&format!("SELECT set_config('app.roles', $1, false)"))
+            .bind(role_csv)
+            .execute(&mut *conn)
+            .await;
     }
 
     request.extensions_mut().insert(claims);
@@ -71,10 +69,13 @@ pub async fn verify_jwt(
 /// `verify_jwt` so `Claims` are already in extensions.
 ///
 /// Usage:
-/// ```ignore
+/// ```text
 /// .route_layer(middleware::from_fn(require_scope("admin")))
 /// ```
-pub fn require_scope(needed: &'static str) -> impl Fn(Request, Next) -> futures_util::future::BoxFuture<'static, Result<Response, Response>> + Clone {
+pub fn require_scope(
+    needed: &'static str,
+) -> impl Fn(Request, Next) -> futures_util::future::BoxFuture<'static, Result<Response, Response>> + Clone
+{
     move |request: Request, next: Next| {
         Box::pin(async move {
             let claims = request
@@ -82,7 +83,10 @@ pub fn require_scope(needed: &'static str) -> impl Fn(Request, Next) -> futures_
                 .get::<Claims>()
                 .ok_or_else(|| unauthorized("verify_jwt middleware must run first"))?;
 
-            let ok = claims.scope_grants.iter().any(|s| s == needed || s == "admin");
+            let ok = claims
+                .scope_grants
+                .iter()
+                .any(|s| s == needed || s == "admin");
             if !ok {
                 return Err(forbidden(&format!(
                     "missing required scope grant '{needed}' — present: {:?}",
@@ -102,19 +106,11 @@ fn extract_bearer(headers: &header::HeaderMap) -> Option<String> {
 }
 
 fn unauthorized(msg: &str) -> Response {
-    (
-        StatusCode::UNAUTHORIZED,
-        Json(json!({"error": msg})),
-    )
-        .into_response()
+    (StatusCode::UNAUTHORIZED, Json(json!({"error": msg}))).into_response()
 }
 
 fn forbidden(msg: &str) -> Response {
-    (
-        StatusCode::FORBIDDEN,
-        Json(json!({"error": msg})),
-    )
-        .into_response()
+    (StatusCode::FORBIDDEN, Json(json!({"error": msg}))).into_response()
 }
 
 #[cfg(test)]
@@ -125,14 +121,20 @@ mod tests {
     #[test]
     fn extracts_well_formed_bearer() {
         let mut h = HeaderMap::new();
-        h.insert("authorization", HeaderValue::from_static("Bearer abc.def.ghi"));
+        h.insert(
+            "authorization",
+            HeaderValue::from_static("Bearer abc.def.ghi"),
+        );
         assert_eq!(extract_bearer(&h).as_deref(), Some("abc.def.ghi"));
     }
 
     #[test]
     fn rejects_no_bearer_prefix() {
         let mut h = HeaderMap::new();
-        h.insert("authorization", HeaderValue::from_static("Basic Zm9vOmJhcg=="));
+        h.insert(
+            "authorization",
+            HeaderValue::from_static("Basic Zm9vOmJhcg=="),
+        );
         assert!(extract_bearer(&h).is_none());
     }
 

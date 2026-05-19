@@ -21,7 +21,10 @@ impl Default for Capabilities {
         Self {
             tools: ListChanged { list_changed: true },
             prompts: ListChanged { list_changed: true },
-            resources: ResourcesCap { list_changed: true, subscribe: true },
+            resources: ResourcesCap {
+                list_changed: true,
+                subscribe: true,
+            },
             logging: json!({}),
         }
     }

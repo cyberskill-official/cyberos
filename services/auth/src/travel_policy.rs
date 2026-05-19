@@ -98,7 +98,13 @@ impl PolicyCache {
             }
         };
         let mut w = self.inner.write().await;
-        w.insert(tenant_id, PolicyEntry { policy: policy.clone(), refreshed_at: Instant::now() });
+        w.insert(
+            tenant_id,
+            PolicyEntry {
+                policy: policy.clone(),
+                refreshed_at: Instant::now(),
+            },
+        );
         policy
     }
 
@@ -114,7 +120,8 @@ async fn load_policy(pool: &PgPool, tenant_id: Uuid) -> Result<TravelPolicy, sql
     let mut tx = pool.begin().await?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await?;
+        .execute(&mut *tx)
+        .await?;
 
     let row: Option<(String, f64, bool, i32)> = sqlx::query_as(
         "SELECT action, threshold_kmh, block_anonymous_ip, sticky_suppress_min
@@ -135,12 +142,11 @@ async fn load_policy(pool: &PgPool, tenant_id: Uuid) -> Result<TravelPolicy, sql
     // as TEXT and parse to IpNetwork on the Rust side. Malformed CIDRs in
     // the DB are dropped silently (they were already invalid before storage
     // per the CHECK constraint in 0018_travel_policy.sql).
-    let cidrs: Vec<(String,)> = sqlx::query_as(
-        "SELECT cidr::text FROM travel_cidr_allowlist WHERE tenant_id = $1",
-    )
-    .bind(tenant_id)
-    .fetch_all(&mut *tx)
-    .await?;
+    let cidrs: Vec<(String,)> =
+        sqlx::query_as("SELECT cidr::text FROM travel_cidr_allowlist WHERE tenant_id = $1")
+            .bind(tenant_id)
+            .fetch_all(&mut *tx)
+            .await?;
     tx.commit().await?;
 
     Ok(TravelPolicy {
@@ -185,12 +191,7 @@ impl StickySuppress {
 
     /// Record that `subject_id` passed an MFA challenge from `prefix24_str`
     /// at `now`, with sticky-suppression valid for `window_min` minutes.
-    pub async fn record(
-        &self,
-        subject_id: Uuid,
-        prefix24_str: String,
-        window_min: u32,
-    ) {
+    pub async fn record(&self, subject_id: Uuid, prefix24_str: String, window_min: u32) {
         if window_min == 0 {
             return;
         }
@@ -205,11 +206,7 @@ impl StickySuppress {
 
     /// True if `subject_id`'s recent MFA-pass for `prefix24_str` is still
     /// valid (within the sticky window).
-    pub async fn should_suppress(
-        &self,
-        subject_id: Uuid,
-        prefix24_str: &str,
-    ) -> bool {
+    pub async fn should_suppress(&self, subject_id: Uuid, prefix24_str: &str) -> bool {
         let key = (subject_id, prefix24_str.to_string());
         let mut m = self.map.lock().await;
         match m.get(&key) {

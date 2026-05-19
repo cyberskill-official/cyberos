@@ -46,7 +46,6 @@
 // helpers used only in slice-N+ code paths.
 #![allow(dead_code)]
 
-pub mod memory_bridge;
 pub mod cursor;
 pub mod deny_list;
 pub mod geoip;
@@ -56,6 +55,7 @@ pub mod idempotency;
 pub mod jwt;
 pub mod keygen;
 pub mod lumi;
+pub mod memory_bridge;
 pub mod mfa;
 pub mod middleware;
 pub mod migration_state;
@@ -64,11 +64,11 @@ pub mod oidc;
 pub mod passkey;
 pub mod password;
 pub mod rate_limit;
-pub mod rls;
 pub mod rbac;
-pub mod scope_map;
+pub mod rls;
 pub mod saml;
 pub mod saml_sig;
+pub mod scope_map;
 pub mod sessions;
 pub mod state;
 pub mod travel;

@@ -29,8 +29,8 @@ fn feature_request_author_validates() {
         eprintln!("skip: {path:?} not found");
         return;
     }
-    let (fm, _) = frontmatter::load_and_validate(&path)
-        .unwrap_or_else(|e| panic!("validate failed: {e}"));
+    let (fm, _) =
+        frontmatter::load_and_validate(&path).unwrap_or_else(|e| panic!("validate failed: {e}"));
     assert_eq!(fm.name, "feature-request-author");
     assert!(!fm.description.is_empty());
     assert!(fm.untrusted_inputs.is_some());
@@ -104,7 +104,10 @@ untrusted_inputs:
     .unwrap();
     let result = frontmatter::load_and_validate(tmp.path());
     assert!(
-        matches!(result, Err(frontmatter::FrontmatterError::DeprecatedXmlField { .. })),
+        matches!(
+            result,
+            Err(frontmatter::FrontmatterError::DeprecatedXmlField { .. })
+        ),
         "expected DeprecatedXmlField, got {:?}",
         result.err()
     );
@@ -129,7 +132,10 @@ untrusted_inputs:
     .unwrap();
     let result = frontmatter::load_and_validate(tmp.path());
     assert!(
-        matches!(result, Err(frontmatter::FrontmatterError::XmlBracketInFrontmatter { .. })),
+        matches!(
+            result,
+            Err(frontmatter::FrontmatterError::XmlBracketInFrontmatter { .. })
+        ),
         "expected XmlBracketInFrontmatter, got {:?}",
         result.err()
     );
@@ -171,7 +177,11 @@ fn transpile_feature_request_author_to_anthropic_form() {
     assert!(!fm.contains("depends_on_contracts:"));
     assert!(!fm.contains("wrap_in_marker:"));
     // Body MUST be preserved (non-empty)
-    assert!(skill.body.len() > 100, "body too small: {}", skill.body.len());
+    assert!(
+        skill.body.len() > 100,
+        "body too small: {}",
+        skill.body.len()
+    );
 }
 
 #[test]

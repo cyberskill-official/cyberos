@@ -10,10 +10,10 @@ pub struct Tenant {
     pub id: TenantId,
     pub slug: String,
     pub display_name: String,
-    pub country: String,         // ISO-3166-1 alpha-2
-    pub plan_tier: String,       // 'starter' | 'team' | 'enterprise' | 'sandbox'
-    pub status: String,          // 'active' | 'terminating' | 'terminated' | 'hostile'
-    pub residency: String,       // 'sg-1' | 'eu-1' | 'us-1' | 'vn-1'
+    pub country: String,   // ISO-3166-1 alpha-2
+    pub plan_tier: String, // 'starter' | 'team' | 'enterprise' | 'sandbox'
+    pub status: String,    // 'active' | 'terminating' | 'terminated' | 'hostile'
+    pub residency: String, // 'sg-1' | 'eu-1' | 'us-1' | 'vn-1'
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -30,9 +30,15 @@ pub struct CreateTenantRequest {
     pub residency: String,
 }
 
-fn default_country() -> String { "VN".into() }
-fn default_plan_tier() -> String { "starter".into() }
-fn default_residency() -> String { "sg-1".into() }
+fn default_country() -> String {
+    "VN".into()
+}
+fn default_plan_tier() -> String {
+    "starter".into()
+}
+fn default_residency() -> String {
+    "sg-1".into()
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Subject {
@@ -41,8 +47,8 @@ pub struct Subject {
     pub handle: String,
     pub display_name: Option<String>,
     pub email: Option<String>,
-    pub kind: String,            // 'human' | 'agent' | 'system'
-    pub status: String,          // 'active' | 'revoked' | 'pending'
+    pub kind: String,   // 'human' | 'agent' | 'system'
+    pub status: String, // 'active' | 'revoked' | 'pending'
     pub roles: Vec<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -61,4 +67,6 @@ pub struct CreateSubjectRequest {
     pub roles: Vec<String>,
 }
 
-fn default_kind() -> String { "human".into() }
+fn default_kind() -> String {
+    "human".into()
+}

@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 /// An extracted entity ready for upsert into l2_entity.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtractedEntity {
-    pub kind: String,         // 'person' | 'project' | 'decision' | 'doc'
+    pub kind: String, // 'person' | 'project' | 'decision' | 'doc'
     pub name: String,
     pub source_seq: i64,
     pub source_path: String,
@@ -85,21 +85,35 @@ mod tests {
     #[test]
     fn extracts_people_via_at_handle() {
         let ents = extract(1, "memo.md", "Met with @stephen and @lan-tran today.");
-        assert!(ents.iter().any(|e| e.kind == "person" && e.name == "stephen"));
-        assert!(ents.iter().any(|e| e.kind == "person" && e.name == "lan-tran"));
+        assert!(ents
+            .iter()
+            .any(|e| e.kind == "person" && e.name == "stephen"));
+        assert!(ents
+            .iter()
+            .any(|e| e.kind == "person" && e.name == "lan-tran"));
     }
 
     #[test]
     fn extracts_projects_and_decisions() {
-        let ents = extract(2, "log.md", "Working on #cyberos-wave1; locked #dec-070 today.");
-        assert!(ents.iter().any(|e| e.kind == "project" && e.name == "cyberos-wave1"));
-        assert!(ents.iter().any(|e| e.kind == "decision" && e.name == "dec-070"));
+        let ents = extract(
+            2,
+            "log.md",
+            "Working on #cyberos-wave1; locked #dec-070 today.",
+        );
+        assert!(ents
+            .iter()
+            .any(|e| e.kind == "project" && e.name == "cyberos-wave1"));
+        assert!(ents
+            .iter()
+            .any(|e| e.kind == "decision" && e.name == "dec-070"));
     }
 
     #[test]
     fn extracts_wiki_links_as_docs() {
         let ents = extract(3, "spec.md", "Per [[MEMORY_AUTOSYNC_DESIGN]] §3.");
-        assert!(ents.iter().any(|e| e.kind == "doc" && e.name == "MEMORY_AUTOSYNC_DESIGN"));
+        assert!(ents
+            .iter()
+            .any(|e| e.kind == "doc" && e.name == "MEMORY_AUTOSYNC_DESIGN"));
     }
 
     #[test]

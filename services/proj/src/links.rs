@@ -59,7 +59,13 @@ pub async fn create_link(
         false
     };
 
-    let _row = audit::issue_linked(actor.tenant_id, issue_id, linked_to_id, link_type, actor.subject_id);
+    let _row = audit::issue_linked(
+        actor.tenant_id,
+        issue_id,
+        linked_to_id,
+        link_type,
+        actor.subject_id,
+    );
     // memory write transport binds in the binary; here we surface the row
     // shape via a logged event for slice 1.
     tracing::info!(

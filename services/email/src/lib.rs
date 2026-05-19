@@ -66,14 +66,14 @@
 #![allow(clippy::double_ended_iterator_last)]
 #![allow(dead_code)]
 
-pub mod types;
+pub mod audit;
+pub mod dkim;
+pub mod errors;
+pub mod handlers;
+pub mod repo;
 pub mod residency;
 pub mod stalwart_adapter;
-pub mod dkim;
-pub mod repo;
-pub mod audit;
-pub mod handlers;
-pub mod errors;
+pub mod types;
 
 pub use errors::EmailError;
 pub use types::*;

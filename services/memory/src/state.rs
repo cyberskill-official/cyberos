@@ -17,9 +17,8 @@ impl AppState {
     /// Errors propagate up so the binary entry point can fail fast on
     /// boot — never silently start without a working DB connection.
     pub async fn connect_from_env() -> Result<Self, sqlx::Error> {
-        let url = std::env::var("DATABASE_URL").map_err(|_| {
-            sqlx::Error::Configuration("DATABASE_URL env var must be set".into())
-        })?;
+        let url = std::env::var("DATABASE_URL")
+            .map_err(|_| sqlx::Error::Configuration("DATABASE_URL env var must be set".into()))?;
 
         let pg = PgPoolOptions::new()
             .max_connections(8)

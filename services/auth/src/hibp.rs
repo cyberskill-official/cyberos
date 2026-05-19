@@ -67,7 +67,9 @@ pub async fn fetch_range(prefix: &str) -> Result<String, HibpError> {
     if !resp.status().is_success() {
         return Err(HibpError::BadStatus(resp.status().as_u16()));
     }
-    resp.text().await.map_err(|e| HibpError::Network(e.to_string()))
+    resp.text()
+        .await
+        .map_err(|e| HibpError::Network(e.to_string()))
 }
 
 /// Scan an HIBP range body for our suffix. Returns Some(count) if found.

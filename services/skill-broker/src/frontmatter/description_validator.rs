@@ -21,19 +21,15 @@ static VERB_STEMS: Lazy<Regex> = Lazy::new(|| {
 /// Bare `>` or `<` math operators (e.g. "tests_failed > 0") do NOT match,
 /// because Anthropic Reference B's injection concern is specifically about
 /// system-prompt-injecting tag shapes.
-static XML_TAG_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"</?[a-zA-Z][a-zA-Z0-9_-]*(?:\s+[^<>]*?)?\s*/?>").unwrap()
-});
+static XML_TAG_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"</?[a-zA-Z][a-zA-Z0-9_-]*(?:\s+[^<>]*?)?\s*/?>").unwrap());
 
 /// Quoted trigger phrase: `"<phrase>"` with 1-80 non-quote chars body.
-static QUOTED_TRIGGER: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r#""([^"]{1,80})""#).unwrap()
-});
+static QUOTED_TRIGGER: Lazy<Regex> = Lazy::new(|| Regex::new(r#""([^"]{1,80})""#).unwrap());
 
 /// Negative-trigger preamble: matches "Do NOT use for ..." prefix.
-static NEGATIVE_PREFIX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"(?i)\bdo\s+not\s+use\s+(for|when|with)\b").unwrap()
-});
+static NEGATIVE_PREFIX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)\bdo\s+not\s+use\s+(for|when|with)\b").unwrap());
 
 #[derive(Debug, PartialEq)]
 pub enum DescriptionViolation {
@@ -96,13 +92,19 @@ mod tests {
     #[test]
     fn too_short() {
         let d = r#"Generate FRs. Use "draft" or "audit"."#;
-        assert!(matches!(validate(d), Err(DescriptionViolation::TooShort { .. })));
+        assert!(matches!(
+            validate(d),
+            Err(DescriptionViolation::TooShort { .. })
+        ));
     }
 
     #[test]
     fn forbidden_brackets() {
         let d = r#"Generate <FR> markdowns. Use when user asks to "draft" or "audit". This is enough characters to clear the 80-char minimum length."#;
-        assert_eq!(validate(d).unwrap_err(), DescriptionViolation::ForbiddenBrackets);
+        assert_eq!(
+            validate(d).unwrap_err(),
+            DescriptionViolation::ForbiddenBrackets
+        );
     }
 
     #[test]
@@ -116,7 +118,10 @@ mod tests {
         let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR". Outputs versioned files in a structured backlog directory under output_dir for the team."#;
         assert!(matches!(
             validate(d),
-            Err(DescriptionViolation::InsufficientTriggers { found: 1, needed: 2 })
+            Err(DescriptionViolation::InsufficientTriggers {
+                found: 1,
+                needed: 2
+            })
         ));
     }
 
@@ -125,7 +130,10 @@ mod tests {
         let d = r#"Generate FRs from a PRD source. Use when user asks to "draft an FR". Do NOT use for "audit existing FRs". Outputs versioned FR-NNN-slug.md files."#;
         assert!(matches!(
             validate(d),
-            Err(DescriptionViolation::InsufficientTriggers { found: 1, needed: 2 })
+            Err(DescriptionViolation::InsufficientTriggers {
+                found: 1,
+                needed: 2
+            })
         ));
     }
 

@@ -224,7 +224,11 @@ mod tests {
     fn registry_has_no_duplicates() {
         use std::collections::HashSet;
         let set: HashSet<&&str> = TENANT_SCOPED_TABLES.iter().collect();
-        assert_eq!(set.len(), TENANT_SCOPED_TABLES.len(), "duplicate entry in registry");
+        assert_eq!(
+            set.len(),
+            TENANT_SCOPED_TABLES.len(),
+            "duplicate entry in registry"
+        );
     }
 
     #[test]

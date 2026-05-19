@@ -54,7 +54,11 @@ pub fn validate(path: &Path) -> Result<(), ConfigError> {
     // FR-OBS-001 §1 #11 — pii_scrub processor MUST be present on logs+traces pipelines.
     let pipelines = &cfg.service.pipelines;
     for (signal, p) in [("logs", &pipelines.logs), ("traces", &pipelines.traces)] {
-        if !p.processors.iter().any(|s: &String| s.contains("pii_scrub")) {
+        if !p
+            .processors
+            .iter()
+            .any(|s: &String| s.contains("pii_scrub"))
+        {
             return Err(ConfigError::Validation(format!(
                 "pipeline {signal}: missing pii_scrub processor (FR-OBS-001 §1 #11)"
             )));

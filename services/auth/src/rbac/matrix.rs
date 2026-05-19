@@ -48,7 +48,9 @@ impl RoleMatrix {
         resource: Resource,
         action: Action,
     ) -> bool {
-        roles.into_iter().any(|r| self.has_permission(r, resource, action))
+        roles
+            .into_iter()
+            .any(|r| self.has_permission(r, resource, action))
     }
 
     pub fn version(&self) -> i32 {
@@ -66,16 +68,16 @@ impl RoleMatrix {
     /// Load the matrix from Postgres. Joins `role_permissions` against the
     /// `role_catalogue_version` singleton to capture the live version.
     pub async fn load_from_db(pool: &PgPool) -> Result<Self, sqlx::Error> {
-        let rows: Vec<(String, String, String)> = sqlx::query_as(
-            "SELECT role, resource, action FROM role_permissions",
-        )
-        .fetch_all(pool)
-        .await?;
+        let rows: Vec<(String, String, String)> =
+            sqlx::query_as("SELECT role, resource, action FROM role_permissions")
+                .fetch_all(pool)
+                .await?;
 
-        let version: i32 = sqlx::query_scalar("SELECT version FROM role_catalogue_version WHERE id = 1")
-            .fetch_optional(pool)
-            .await?
-            .unwrap_or(1);
+        let version: i32 =
+            sqlx::query_scalar("SELECT version FROM role_catalogue_version WHERE id = 1")
+                .fetch_optional(pool)
+                .await?
+                .unwrap_or(1);
 
         let mut grants = HashSet::with_capacity(rows.len());
         for (r, res, a) in rows {
@@ -106,10 +108,7 @@ mod tests {
 
     #[test]
     fn explicit_grant_is_found() {
-        let m = RoleMatrix::from_grants(
-            vec![(Role::Cfo, Resource::InvInvoice, Action::Read)],
-            1,
-        );
+        let m = RoleMatrix::from_grants(vec![(Role::Cfo, Resource::InvInvoice, Action::Read)], 1);
         assert!(m.has_permission(Role::Cfo, Resource::InvInvoice, Action::Read));
         assert!(!m.has_permission(Role::Cfo, Resource::InvInvoice, Action::Write));
         assert!(!m.has_permission(Role::Cto, Resource::InvInvoice, Action::Read));

@@ -101,22 +101,27 @@ pub async fn issue(
         .issue(
             TenantId(tenant_id),
             SubjectId(body.subject_id),
-            "",              // FR-AUTH-004 §1 #2 — Lumi tokens are agent-scoped, no email
+            "", // FR-AUTH-004 §1 #2 — Lumi tokens are agent-scoped, no email
             &kind,
             scopes.clone(),
-            vec![],          // roles intentionally empty — Lumi token isn't a session JWT
-            None,            // rbac_v unused on Lumi tokens
+            vec![], // roles intentionally empty — Lumi token isn't a session JWT
+            None,   // rbac_v unused on Lumi tokens
             agent_persona,
             None,
         )
         .await
-        .map_err(|e| (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(json!({"error": format!("lumi jwt issuance failed: {e}")})),
-        ))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": format!("lumi jwt issuance failed: {e}")})),
+            )
+        })?;
 
     // Extract the `jti` we just minted by re-verifying our own token (round-trip).
-    let verified = svc.verify(&tokens.access_token).await.map_err(|e| internal(e))?;
+    let verified = svc
+        .verify(&tokens.access_token)
+        .await
+        .map_err(|e| internal(e))?;
     let jti = verified.jti.clone();
     let expires_at: DateTime<Utc> = DateTime::from_timestamp(verified.exp, 0)
         .unwrap_or_else(|| Utc::now() + Duration::seconds(ttl_secs));
@@ -125,7 +130,9 @@ pub async fn issue(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     sqlx::query(
         "INSERT INTO lumi_token_issuance_log
                 (tenant_id, subject_id, lumi_workspace_id,
@@ -139,16 +146,21 @@ pub async fn issue(
     .bind(expires_at)
     .bind(&tokens.kid)
     .bind(&jti)
-    .execute(&mut *tx).await.map_err(internal)?;
+    .execute(&mut *tx)
+    .await
+    .map_err(internal)?;
     tx.commit().await.map_err(internal)?;
 
-    Ok((StatusCode::CREATED, Json(IssueResponse {
-        access_token: tokens.access_token,
-        jti,
-        kid: tokens.kid,
-        expires_in: ttl_secs,
-        lumi_workspace_id: body.lumi_workspace_id,
-    })))
+    Ok((
+        StatusCode::CREATED,
+        Json(IssueResponse {
+            access_token: tokens.access_token,
+            jti,
+            kid: tokens.kid,
+            expires_in: ttl_secs,
+            lumi_workspace_id: body.lumi_workspace_id,
+        }),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -182,57 +194,65 @@ pub async fn verify(
     let claims = match svc.verify(&q.token).await {
         Ok(c) => c,
         Err(e) => {
-            return Ok((StatusCode::OK, Json(VerifyResponse {
-                valid: false,
-                jti: String::new(),
-                tenant_id: String::new(),
-                subject_id: String::new(),
-                lumi_workspace_id: None,
-                aud: vec![],
-                scope_grants: vec![],
-                expires_at: 0,
-                reason: Some(format!("signature/expiry check failed: {e}")),
-            })));
+            return Ok((
+                StatusCode::OK,
+                Json(VerifyResponse {
+                    valid: false,
+                    jti: String::new(),
+                    tenant_id: String::new(),
+                    subject_id: String::new(),
+                    lumi_workspace_id: None,
+                    aud: vec![],
+                    scope_grants: vec![],
+                    expires_at: 0,
+                    reason: Some(format!("signature/expiry check failed: {e}")),
+                }),
+            ));
         }
     };
 
     // Audience MUST include 'lumi' for this endpoint to consider it valid.
     if !claims.aud.iter().any(|a| a == "lumi") {
-        return Ok((StatusCode::OK, Json(VerifyResponse {
-            valid: false,
-            jti: claims.jti,
-            tenant_id: claims.tenant_id,
-            subject_id: claims.sub,
-            lumi_workspace_id: None,
-            aud: claims.aud,
-            scope_grants: claims.scope_grants,
-            expires_at: claims.exp,
-            reason: Some("token aud does not include 'lumi'".into()),
-        })));
+        return Ok((
+            StatusCode::OK,
+            Json(VerifyResponse {
+                valid: false,
+                jti: claims.jti,
+                tenant_id: claims.tenant_id,
+                subject_id: claims.sub,
+                lumi_workspace_id: None,
+                aud: claims.aud,
+                scope_grants: claims.scope_grants,
+                expires_at: claims.exp,
+                reason: Some("token aud does not include 'lumi'".into()),
+            }),
+        ));
     }
 
     // Revocation check.
-    let revoked: Option<(Option<DateTime<Utc>>,)> = sqlx::query_as(
-        "SELECT revoked_at FROM lumi_token_issuance_log WHERE jti = $1 LIMIT 1",
-    )
-    .bind(&claims.jti)
-    .fetch_optional(&state.pg)
-    .await
-    .map_err(internal)?;
+    let revoked: Option<(Option<DateTime<Utc>>,)> =
+        sqlx::query_as("SELECT revoked_at FROM lumi_token_issuance_log WHERE jti = $1 LIMIT 1")
+            .bind(&claims.jti)
+            .fetch_optional(&state.pg)
+            .await
+            .map_err(internal)?;
 
     let revoked = revoked.and_then(|(r,)| r);
     if revoked.is_some() {
-        return Ok((StatusCode::OK, Json(VerifyResponse {
-            valid: false,
-            jti: claims.jti,
-            tenant_id: claims.tenant_id,
-            subject_id: claims.sub,
-            lumi_workspace_id: None,
-            aud: claims.aud,
-            scope_grants: claims.scope_grants,
-            expires_at: claims.exp,
-            reason: Some("token was revoked".into()),
-        })));
+        return Ok((
+            StatusCode::OK,
+            Json(VerifyResponse {
+                valid: false,
+                jti: claims.jti,
+                tenant_id: claims.tenant_id,
+                subject_id: claims.sub,
+                lumi_workspace_id: None,
+                aud: claims.aud,
+                scope_grants: claims.scope_grants,
+                expires_at: claims.exp,
+                reason: Some("token was revoked".into()),
+            }),
+        ));
     }
 
     // Pull the workspace ID + persona from the agent_persona claim shape `lumi-bridge@<workspace>`.
@@ -242,17 +262,20 @@ pub async fn verify(
         .and_then(|s| s.strip_prefix("lumi-bridge@"))
         .map(String::from);
 
-    Ok((StatusCode::OK, Json(VerifyResponse {
-        valid: true,
-        jti: claims.jti,
-        tenant_id: claims.tenant_id,
-        subject_id: claims.sub,
-        lumi_workspace_id,
-        aud: claims.aud,
-        scope_grants: claims.scope_grants,
-        expires_at: claims.exp,
-        reason: None,
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(VerifyResponse {
+            valid: true,
+            jti: claims.jti,
+            tenant_id: claims.tenant_id,
+            subject_id: claims.sub,
+            lumi_workspace_id,
+            aud: claims.aud,
+            scope_grants: claims.scope_grants,
+            expires_at: claims.exp,
+            reason: None,
+        }),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -293,7 +316,9 @@ pub async fn revoke(
     let mut tx = state.pg.begin().await.map_err(internal)?;
     sqlx::query("SET LOCAL app.current_tenant_id = $1")
         .bind(tenant_id.to_string())
-        .execute(&mut *tx).await.map_err(internal)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(internal)?;
     let res = sqlx::query(
         "UPDATE lumi_token_issuance_log
             SET revoked_at = NOW(), revoked_by = $1, revoke_reason = $2
