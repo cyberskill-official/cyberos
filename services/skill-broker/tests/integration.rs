@@ -163,11 +163,13 @@ fn transpile_feature_request_author_to_anthropic_form() {
     assert!(md.starts_with("---\n"));
     assert!(md.contains("name: feature-request-author"));
     assert!(md.contains("description:"));
-    // CyberOS governance fields MUST be dropped on transpile
-    assert!(!md.contains("self_audit:"));
-    assert!(!md.contains("human_fine_tune:"));
-    assert!(!md.contains("depends_on_contracts:"));
-    assert!(!md.contains("wrap_in_marker:"));
+    // CyberOS governance fields MUST be dropped from the frontmatter.
+    // (The body may legitimately reference these field names as prose.)
+    let fm = &skill.frontmatter_yaml;
+    assert!(!fm.contains("self_audit:"));
+    assert!(!fm.contains("human_fine_tune:"));
+    assert!(!fm.contains("depends_on_contracts:"));
+    assert!(!fm.contains("wrap_in_marker:"));
     // Body MUST be preserved (non-empty)
     assert!(skill.body.len() > 100, "body too small: {}", skill.body.len());
 }
