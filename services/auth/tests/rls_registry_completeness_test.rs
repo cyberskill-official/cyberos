@@ -47,8 +47,8 @@ async fn every_registered_table_has_rls_with_both_using_and_check_clauses() {
             continue;
         };
 
-        // ---- 2. RLS on (auth_signing_keys is exempt — service-global) ----
-        if *table == "auth_signing_keys" {
+        // ---- 2. RLS on (auth_signing_keys and auth_migration_state are exempt — service-global) ----
+        if *table == "auth_signing_keys" || *table == "auth_migration_state" {
             continue;
         }
         if !rowsec {

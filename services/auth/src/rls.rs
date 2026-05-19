@@ -98,8 +98,8 @@ pub async fn verify_rls_at_boot(pool: &PgPool) -> Result<(), String> {
             continue;
         };
 
-        // auth_signing_keys is service-global; rest must have RLS on.
-        if *table == "auth_signing_keys" {
+        // auth_signing_keys and auth_migration_state are service-global; rest must have RLS on.
+        if *table == "auth_signing_keys" || *table == "auth_migration_state" {
             continue;
         }
         if !rls_on {

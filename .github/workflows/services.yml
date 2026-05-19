@@ -129,9 +129,7 @@ jobs:
         run: cd auth && sqlx migrate run
 
       - name: Apply migrations — memory
-        env:
-          DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
-        run: cd memory && sqlx migrate run
+        run: cat memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
 
       - name: cargo test (Postgres-required)
         env:
