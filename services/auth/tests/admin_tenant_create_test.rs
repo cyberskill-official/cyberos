@@ -39,6 +39,7 @@ async fn build_app() -> axum::Router {
         travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
+        deny_list: cyberos_auth::deny_list::DenyList::new(),
     })
 }
 
@@ -250,12 +251,12 @@ async fn create_tenant_rejects_non_root_tenant_caller() {
 }
 
 // ===========================================================================
-// G-005 — §1 #6 — BRAIN audit row emitted in transaction
+// G-005 — §1 #6 — memory audit row emitted in transaction
 // ===========================================================================
 
 #[tokio::test]
-#[ignore = "requires Postgres + brain migrations applied (0003_layer1_audit_log.sql)"]
-async fn create_tenant_emits_brain_audit_row_in_transaction() {
+#[ignore = "requires Postgres + memory migrations applied (0003_layer1_audit_log.sql)"]
+async fn create_tenant_emits_memory_audit_row_in_transaction() {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
     let pool = PgPool::connect(&url).await.unwrap();
     bootstrap_test_key(&pool).await;
@@ -277,7 +278,7 @@ async fn create_tenant_emits_brain_audit_row_in_transaction() {
     let tenant: Value = serde_json::from_slice(&body_bytes).unwrap();
     let tenant_id = tenant["id"].as_str().expect("id is string");
 
-    // Verify the BRAIN audit row exists in l1_audit_log with the right shape.
+    // Verify the memory audit row exists in l1_audit_log with the right shape.
     let (op, path, body): (String, String, String) = sqlx::query_as(
         "SELECT op, path, body FROM l1_audit_log
             WHERE tenant_id = $1::uuid AND op = 'put'
@@ -421,7 +422,7 @@ async fn idempotency_key_long_string_currently_accepted() {
 //     the current idempotency module returns the prior body (silent replay)
 //     instead of 409. Closing this gap is a small idempotency.rs change,
 //     scoped as a follow-up commit.
-//   * ECM-014 BRAIN unreachable rollback — requires injectable BRAIN bridge
-//     for deterministic failure. Deferred until brain_bridge moves behind
+//   * ECM-014 memory unreachable rollback — requires injectable memory bridge
+//     for deterministic failure. Deferred until memory_bridge moves behind
 //     a trait that the test can swap to a failing impl.
 // ===========================================================================

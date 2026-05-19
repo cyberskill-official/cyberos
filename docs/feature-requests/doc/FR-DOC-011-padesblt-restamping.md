@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-002, FR-DOC-003, FR-DOC-004, FR-DOC-001, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-002, FR-DOC-003, FR-DOC-004, FR-DOC-001, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-DOC-002]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1802 2026-05-17 — Closed enum `ltv_operation` = {extend_bt_to_blt, restamp_blt}; cardinality 2
   - DEC-1803 2026-05-17 — Closed enum `ltv_status` = {pending, completed, failed, deferred}; cardinality 4
   - DEC-1804 2026-05-17 — Re-stamping uses an active TS authority — must re-fetch fresh timestamp; original signature stays intact
-  - DEC-1805 2026-05-17 — BRAIN audit kinds: doc.ltv_extend_initiated, doc.ltv_extend_completed, doc.ltv_restamp_completed, doc.ltv_failed
+  - DEC-1805 2026-05-17 — memory audit kinds: doc.ltv_extend_initiated, doc.ltv_extend_completed, doc.ltv_restamp_completed, doc.ltv_failed
 
 build_envelope:
   language: rust 1.81
@@ -74,7 +74,7 @@ risk_if_skipped: "Without LTV extension, signatures become invalid when TS autho
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship LTV extension at `services/doc/src/ltv/` extending B-T signatures to B-LT format and re-stamping at year-9, embedding fresh validation data, immutable audit, 4 BRAIN audit kinds.
+The DOC service **MUST** ship LTV extension at `services/doc/src/ltv/` extending B-T signatures to B-LT format and re-stamping at year-9, embedding fresh validation data, immutable audit, 4 memory audit kinds.
 
 1. **MUST** validate `ltv_operation` against closed enum per DEC-1802.
 
@@ -125,7 +125,7 @@ The DOC service **MUST** ship LTV extension at `services/doc/src/ltv/` extending
    GET    /v1/doc/documents/{id}/ltv/operations
    ```
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-1805. PII per FR-BRAIN-111: validation data + TS token hashed.
+8. **MUST** emit 4 memory audit kinds per DEC-1805. PII per FR-MEMORY-111: validation data + TS token hashed.
 
 9. **MUST** thread trace_id from cron / manual → fetcher → writer → audit.
 
@@ -171,7 +171,7 @@ Sample operation:
 ---
 
 ## §4 — Acceptance criteria
-1. **B-T extended to B-LT correctly**. 2. **Year-9 cron scans all sigs**. 3. **OCSP/CRL responses embedded**. 4. **Cert chain embedded**. 5. **Fresh TS token added**. 6. **Original signature preserved (byte-identical)**. 7. **ltv_operation enum cardinality 2**. 8. **ltv_status enum cardinality 4**. 9. **PAdES VRI dictionary present after extend**. 10. **4 BRAIN audit kinds emitted**. 11. **PII scrubbed (validation data + TS token SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only operations table via REVOKE except status cols**. 15. **Failure → status=failed; retry**. 16. **TS authority down → status=deferred; retry next cron**. 17. **Idempotent (multiple extends OK; each adds layer)**. 18. **Verifiable in Adobe Reader after extend**. 19. **Composes with FR-DOC-002/003/004 sigs**. 20. **OCSP fetch fallback to CRL on failure**.
+1. **B-T extended to B-LT correctly**. 2. **Year-9 cron scans all sigs**. 3. **OCSP/CRL responses embedded**. 4. **Cert chain embedded**. 5. **Fresh TS token added**. 6. **Original signature preserved (byte-identical)**. 7. **ltv_operation enum cardinality 2**. 8. **ltv_status enum cardinality 4**. 9. **PAdES VRI dictionary present after extend**. 10. **4 memory audit kinds emitted**. 11. **PII scrubbed (validation data + TS token SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only operations table via REVOKE except status cols**. 15. **Failure → status=failed; retry**. 16. **TS authority down → status=deferred; retry next cron**. 17. **Idempotent (multiple extends OK; each adds layer)**. 18. **Verifiable in Adobe Reader after extend**. 19. **Composes with FR-DOC-002/003/004 sigs**. 20. **OCSP fetch fallback to CRL on failure**.
 
 ---
 
@@ -211,7 +211,7 @@ async fn year_9_cron_picks_up_aging_sigs() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-002.
-**Cross-module:** FR-DOC-003 (AATL composability), FR-DOC-004 (VN CA composability), FR-DOC-001 (PDF storage), FR-MCP-007 (cron), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-003 (AATL composability), FR-DOC-004 (VN CA composability), FR-DOC-001 (PDF storage), FR-MCP-007 (cron), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -231,7 +231,7 @@ async fn year_9_cron_picks_up_aging_sigs() {
 - §11.1 PAdES VRI = Validation Related Info dictionary; appended to PDF, indexed by signature SubFilter.
 - §11.2 OCSP fetch via signer cert AIA extension; CRL fetch via cert CDP extension; cache 24h.
 - §11.3 TS authority: rotate per partner (DigiCert, GlobalSign, FreeTSA fallback for non-tenant-bound).
-- §11.4 BRAIN audit body: doc_id, operation, signature_source, status; validation data SHA256.
+- §11.4 memory audit body: doc_id, operation, signature_source, status; validation data SHA256.
 - §11.5 Cron: monthly scan `SELECT doc_id WHERE last_ltv_op IS NULL OR last_ltv_op.created_at < now() - interval '9 years'`.
 
 ---

@@ -11,8 +11,8 @@ slice: 4
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-005, FR-MCP-006, FR-MCP-007, FR-MCP-008]
+memory_chain_hash: null
+related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-005, FR-MCP-006, FR-MCP-007, FR-MCP-008]
 depends_on: [FR-AUTH-004]
 blocks: [FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-006, FR-MCP-007, FR-MCP-008]
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-262 (federation strategy: gateway holds the public endpoint; per-module servers register via FR-MCP-002 and the gateway maintains the federated tool catalog in-memory)
   - DEC-263 (JSON-RPC 2.0 batch requests supported per spec; concurrent dispatch with per-tool isolation)
   - DEC-264 (tool annotations are part of `tools/list` response: `destructive`, `readOnly`, `idempotent`, `openWorld` per spec)
-  - DEC-265 (BRAIN audit row `mcp.tool_call_started` + `mcp.tool_call_completed` pair per invocation — operators tracing crashes need both bookends per AUTHORING.md rule 26)
+  - DEC-265 (memory audit row `mcp.tool_call_started` + `mcp.tool_call_completed` pair per invocation — operators tracing crashes need both bookends per AUTHORING.md rule 26)
   - DEC-266 (capabilities response declares: `tools` (with listChanged subscription), `prompts`, `resources`, `logging`; `sampling` deferred to slice 5; `roots` deferred)
   - DEC-267 (every `tools/call` invocation MUST validate caller scope per FR-AUTH-101 + tool's required scope; missing scope → JSON-RPC error code -32001 unauthorized)
   - DEC-268 (rate-limit per (tenant, tool) configurable; default 100 calls/min; soft burst 200; exceeded → JSON-RPC -32002 rate_limited)
@@ -54,7 +54,7 @@ new_files:
   - services/mcp-gateway/src/auth.rs                                   # JWT verification per FR-AUTH-004; scope_grants extraction
   - services/mcp-gateway/src/ratelimit.rs                              # per-(tenant, tool) sliding-window rate limiter
   - services/mcp-gateway/src/annotations.rs                            # ToolAnnotations struct: destructive | readOnly | idempotent | openWorld
-  - services/mcp-gateway/src/audit/mcp_events.rs                       # canonical mcp.tool_call_{started,completed} BRAIN row builders
+  - services/mcp-gateway/src/audit/mcp_events.rs                       # canonical mcp.tool_call_{started,completed} memory row builders
   - services/mcp-gateway/src/handlers/router.rs                        # axum router mounting /mcp endpoint
   - services/mcp-gateway/Cargo.toml                                    # +axum, +tokio, +serde, +serde_json, +futures, +tracing, +reqwest, +tower-http, +cyberos-cli-exit
   - services/mcp-gateway/tests/initialize_test.rs                      # initialize handshake; protocol version match + mismatch
@@ -102,7 +102,7 @@ sub_tasks:
   - "0.5h: auth.rs — JWT verification + scope extraction"
   - "0.5h: ratelimit.rs — sliding-window per (tenant, tool)"
   - "0.4h: annotations.rs — ToolAnnotations struct + serialisation"
-  - "0.5h: audit/mcp_events.rs — 2 row builders + chain to brain_writer"
+  - "0.5h: audit/mcp_events.rs — 2 row builders + chain to memory_writer"
   - "0.4h: handlers/router.rs — axum mount"
   - "2.4h: tests — 12 test files covering protocol handshake, batch, transport, errors, annotations, JWT, scope, rate limit, audit, federation, spec conformance"
 
@@ -153,11 +153,11 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
    {
      "tools": [
        {
-         "name": "cyberos.brain.search_memory",
-         "description": "Search BRAIN audit-chained memories by query string.",
+         "name": "cyberos.memory.search_memory",
+         "description": "Search memory audit-chained memories by query string.",
          "inputSchema": {"type":"object","properties":{"query":{"type":"string"}},"required":["query"]},
          "annotations": {
-           "title": "Search BRAIN",
+           "title": "Search memory",
            "readOnlyHint": true,
            "destructiveHint": false,
            "idempotentHint": true,
@@ -210,7 +210,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 12. **MUST** rate-limit per (tenant_id, tool_name) using a sliding window (per DEC-268). Default: 100 calls/min; soft burst: 200 in any 30-sec window. Exceeded → `-32002 rate_limited` with `data: {"retry_after_ms": <int>}`. Per-tenant override via tenant policy YAML (out of scope here; FR-MCP-2xx).
 
-13. **MUST** emit `mcp.tool_call_started` BRAIN audit row at the moment the gateway begins dispatch to the module server, AND `mcp.tool_call_completed` at completion (per DEC-265 + AUTHORING.md rule 26). Both rows carry: `{tenant_id, subject_id_hash16, tool_name, arguments_sha256, persona_version, request_id, trace_id, ts_ns}`. The completed row adds: `outcome` (success | tool_error | module_unreachable | timeout | rate_limited | unauthorized), `duration_ms`, `result_sha256` (SHA-256 of result JSON; for replay verification).
+13. **MUST** emit `mcp.tool_call_started` memory audit row at the moment the gateway begins dispatch to the module server, AND `mcp.tool_call_completed` at completion (per DEC-265 + AUTHORING.md rule 26). Both rows carry: `{tenant_id, subject_id_hash16, tool_name, arguments_sha256, persona_version, request_id, trace_id, ts_ns}`. The completed row adds: `outcome` (success | tool_error | module_unreachable | timeout | rate_limited | unauthorized), `duration_ms`, `result_sha256` (SHA-256 of result JSON; for replay verification).
 
 14. **MUST** propagate W3C `traceparent` header from inbound request to the outbound dispatch to the module server. If absent on inbound, generate fresh per AUTHORING.md rule 22.
 
@@ -218,7 +218,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 16. **MUST** dispatch `tools/call` to the owning module server via HTTP POST `https://<module>.internal.cyberos/mcp` with timeout 30s. The module's response is wrapped in the gateway's JSON-RPC response (the gateway is transparent — adds audit metadata, doesn't transform the result).
 
-17. **MUST** handle module-server timeouts with `-32004 module_unreachable` after 30s; the BRAIN row carries `outcome=timeout`.
+17. **MUST** handle module-server timeouts with `-32004 module_unreachable` after 30s; the memory row carries `outcome=timeout`.
 
 18. **MUST** maintain the federated tool catalog in-memory at the gateway. Modules register via `POST /v1/mcp/register` (FR-MCP-002 ships the handler; this FR ships the registry struct). The catalog is rebuilt at gateway start by polling each module's `/mcp/heartbeat` endpoint.
 
@@ -262,7 +262,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 **Why audit pair started+completed (§1 #13, DEC-265)?** Per AUTHORING.md rule 26 — operators tracing crashes need both bookends. Started without completed = crash; the operator gets `tool_name`, `tenant_id`, `arguments_sha256` to investigate. Completed-only would hide pre-execution crashes (panic in argument parsing, etc.).
 
-**Why `arguments_sha256` not full arguments in BRAIN row (§1 #13)?** Tool arguments may carry PII (search query, customer name). Storing them raw in the audit chain would create everywhere-PII. The hash is sufficient for "did this exact call happen?" replay; forensic operations join via tenant_id + tool_name + ts.
+**Why `arguments_sha256` not full arguments in memory row (§1 #13)?** Tool arguments may carry PII (search query, customer name). Storing them raw in the audit chain would create everywhere-PII. The hash is sufficient for "did this exact call happen?" replay; forensic operations join via tenant_id + tool_name + ts.
 
 **Why scope check enforced at gateway (§1 #11, DEC-267)?** Per defense in depth: the gateway IS the trust boundary for external agents. Even if the module server has its own auth, the gateway's check catches issues earlier (cheaper) and uniformly (one place to update scope rules). Tool-specific scope requirements are part of registration.
 
@@ -296,7 +296,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 **Why `mcp.tool_call_started/completed` not `mcp.tool_invoked`?** Per AUTHORING.md rule 26: pair-write history events. A single `tool_invoked` row would hide crashes — started without completed signals crash; both rows present = clean execution.
 
-**Why `result_sha256` on completed row (§1 #13)?** Replay verification: given a stored BRAIN row + the original arguments, re-running the tool should produce a result whose SHA-256 matches. Mismatch = the underlying tool changed; useful for EU AI Act Art. 12 replay claims.
+**Why `result_sha256` on completed row (§1 #13)?** Replay verification: given a stored memory row + the original arguments, re-running the tool should produce a result whose SHA-256 matches. Mismatch = the underlying tool changed; useful for EU AI Act Art. 12 replay claims.
 
 ---
 
@@ -647,7 +647,7 @@ pub async fn handle_tools_call(
 20. **tools/call module timeout** — module takes > 30s → -32004 with `reason: "timeout"`.
 21. **tools/call destructive without elicitation** → -32005 `elicitation_required`.
 22. **Rate limit hit** — 101st call in 1 min for (tenant, tool) → -32002 with `retry_after_ms`.
-23. **BRAIN audit pair emitted** — every tools/call writes both started + completed rows; started has `arguments_sha256`, completed has `outcome` + `duration_ms` + `result_sha256` (on success).
+23. **memory audit pair emitted** — every tools/call writes both started + completed rows; started has `arguments_sha256`, completed has `outcome` + `duration_ms` + `result_sha256` (on success).
 24. **W3C traceparent propagated** — outbound dispatch carries the same `traceparent` as inbound.
 25. **Mcp-Session-Id header set on initialize response** — UUID format.
 26. **Session re-init on expired Mcp-Session-Id** — gateway returns 404; client re-initialises.
@@ -712,12 +712,12 @@ async fn batch_request_returns_ordered_responses() {
 // services/mcp-gateway/tests/audit_emission_test.rs
 #[tokio::test]
 async fn tool_call_emits_started_and_completed_rows() {
-    let gw = TestGateway::with_module_mock("brain", "search_memory", json!({"hits": []})).await;
-    let resp = gw.tools_call("cyberos.brain.search_memory", json!({"query":"x"})).await;
-    let rows = gw.brain_audit_rows().await;
+    let gw = TestGateway::with_module_mock("memory", "search_memory", json!({"hits": []})).await;
+    let resp = gw.tools_call("cyberos.memory.search_memory", json!({"query":"x"})).await;
+    let rows = gw.memory_audit_rows().await;
     let started = rows.iter().find(|r| r["kind"] == "mcp.tool_call_started").unwrap();
     let completed = rows.iter().find(|r| r["kind"] == "mcp.tool_call_completed").unwrap();
-    assert_eq!(started["tool_name"], "cyberos.brain.search_memory");
+    assert_eq!(started["tool_name"], "cyberos.memory.search_memory");
     assert!(started["arguments_sha256"].is_string());
     assert_eq!(completed["outcome"], "success");
     assert!(completed["result_sha256"].is_string());
@@ -729,12 +729,12 @@ async fn tool_call_emits_started_and_completed_rows() {
 // services/mcp-gateway/tests/rate_limit_test.rs
 #[tokio::test]
 async fn 101st_call_returns_rate_limited() {
-    let gw = TestGateway::with_module_mock("brain", "search_memory", json!({"hits": []})).await;
+    let gw = TestGateway::with_module_mock("memory", "search_memory", json!({"hits": []})).await;
     for _ in 0..100 {
-        let resp = gw.tools_call("cyberos.brain.search_memory", json!({"query":"x"})).await;
+        let resp = gw.tools_call("cyberos.memory.search_memory", json!({"query":"x"})).await;
         assert!(resp["result"].is_object());
     }
-    let over = gw.tools_call("cyberos.brain.search_memory", json!({"query":"x"})).await;
+    let over = gw.tools_call("cyberos.memory.search_memory", json!({"query":"x"})).await;
     assert_eq!(over["error"]["code"], -32002);
     assert!(over["error"]["data"]["retry_after_ms"].as_u64().unwrap() > 0);
 }
@@ -762,7 +762,7 @@ async fn 101st_call_returns_rate_limited() {
 
 **Cross-module:**
 - **FR-AUTH-101** — RBAC; `Resource::McpTool + Action::Invoke` patterns; agent-persona role on every call.
-- **FR-AI-003** — BRAIN audit bridge; receives `mcp.tool_call_started` + `mcp.tool_call_completed`.
+- **FR-AI-003** — memory audit bridge; receives `mcp.tool_call_started` + `mcp.tool_call_completed`.
 - **FR-AI-022** — OTel trace emission; traceparent propagation.
 - **FR-MCP-004** — OAuth 2.1 PKCE (this FR consumes JWT shape; FR-MCP-004 ships the issuance flow).
 - **FR-MCP-005** — Protected Resource Metadata; published at /.well-known/oauth-protected-resource.
@@ -815,11 +815,11 @@ async fn 101st_call_returns_rate_limited() {
   "result": {
     "tools": [
       {
-        "name": "cyberos.brain.search_memory",
-        "description": "Search BRAIN audit-chained memories by query string.",
+        "name": "cyberos.memory.search_memory",
+        "description": "Search memory audit-chained memories by query string.",
         "inputSchema": {"type":"object","properties":{"query":{"type":"string"}},"required":["query"]},
         "annotations": {
-          "title": "Search BRAIN",
+          "title": "Search memory",
           "readOnlyHint": true,
           "destructiveHint": false,
           "idempotentHint": true,
@@ -840,7 +840,7 @@ async fn 101st_call_returns_rate_limited() {
   "method": "tools/call",
   "id": 3,
   "params": {
-    "name": "cyberos.brain.search_memory",
+    "name": "cyberos.memory.search_memory",
     "arguments": {"query": "FR-AUTH-101"}
   }
 }
@@ -862,14 +862,14 @@ async fn 101st_call_returns_rate_limited() {
 }
 ```
 
-### 8.6 — mcp.tool_call_started BRAIN row
+### 8.6 — mcp.tool_call_started memory row
 
 ```json
 {
   "kind": "mcp.tool_call_started",
   "tenant_id": "5e8f1d2a-...",
   "subject_id_hash16": "9b1deb4d3b7d4bad",
-  "tool_name": "cyberos.brain.search_memory",
+  "tool_name": "cyberos.memory.search_memory",
   "arguments_sha256": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
   "persona_version": "cuo-cpo@0.4.1",
   "request_id": "01HG7V8B0K8M4Z8Z8M8M8M8M8M",
@@ -878,14 +878,14 @@ async fn 101st_call_returns_rate_limited() {
 }
 ```
 
-### 8.7 — mcp.tool_call_completed BRAIN row
+### 8.7 — mcp.tool_call_completed memory row
 
 ```json
 {
   "kind": "mcp.tool_call_completed",
   "tenant_id": "5e8f1d2a-...",
   "subject_id_hash16": "9b1deb4d3b7d4bad",
-  "tool_name": "cyberos.brain.search_memory",
+  "tool_name": "cyberos.memory.search_memory",
   "outcome": "success",
   "duration_ms": 47,
   "result_sha256": "a47c8e0c5f8a8e8e8c5f8a8e8e8c5f8a8e8e8c5f8a8e8e8c5f8a8e8e8c5f8a8e",
@@ -932,7 +932,7 @@ All other questions resolved.
 | Module returns 5xx | HTTP response | -32004 with reason=module_error | None — designed |
 | Rate limit exceeded | sliding window | -32002 with retry_after_ms | Wait + retry |
 | Destructive tool without Elicitation-Confirmed | annotations + header check | -32005 elicitation_required | Use FR-MCP-006 flow |
-| Audit row commit fails | brain_writer error | 500 internal; tools/call fails | brain_writer health check |
+| Audit row commit fails | memory_writer error | 500 internal; tools/call fails | memory_writer health check |
 | Batch with empty array | parse | -32600 invalid_request | Send non-empty |
 | Notification dispatched twice | id-absence check | second invocation no-op | None — designed |
 | SSE stream disconnected | client close | server drops stream gracefully | Client re-opens |
@@ -963,7 +963,7 @@ All other questions resolved.
 - **`Mcp-Session-Id` UUID per session** — gateway-allocated; client preserves across requests; gateway expires after configurable TTL.
 - **JWT verified at gateway** — defense in depth even though module servers may have their own auth.
 - **Audit rows are PAIR** — `started` + `completed` per AUTHORING.md rule 26; operators tracing crashes need both.
-- **`arguments_sha256` not raw args in BRAIN** — PII protection; tool-side handlers can write the args if appropriate.
+- **`arguments_sha256` not raw args in memory** — PII protection; tool-side handlers can write the args if appropriate.
 - **`result_sha256` enables EU AI Act Art. 12 replay** — re-running with stored args should produce matching hash.
 - **`tools/list` cursor pagination** — opaque base64-encoded offset; gateway can change scheme without breaking clients.
 - **Per-(tenant, tool) rate limit sliding window** — Redis-backed in production (out of scope for slice 4; in-memory at slice 4 acceptable per spec scope).

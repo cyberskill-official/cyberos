@@ -3,7 +3,7 @@ id: FR-CHAT-011
 title: "Mobile push delivery — APNS + FCM with privacy-preserving payload (title + sender only; no body)"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-CHAT-003, FR-CHAT-005]
 depends_on: [FR-CHAT-003]
 blocks: []
@@ -52,7 +52,7 @@ sub_tasks:
   - "1.0h: payload builder (privacy: title=channel_name, body=`@<sender>`)"
   - "0.5h: MM plugin emits push trigger via webhook"
   - "0.5h: chat-push service consumes webhook → fan-out APNS + FCM"
-  - "0.5h: BRAIN audit 'chat.push_delivered' or 'chat.push_failed'"
+  - "0.5h: memory audit 'chat.push_delivered' or 'chat.push_failed'"
   - "0.5h: push_test.rs — payload assertion + delivery mock"
   - "0.5h: mute settings: per-user, per-channel; respect at push trigger"
 risk_if_skipped: "Mobile users miss messages; revert to slack. Without privacy-preserving payload, lock-screen exposes business content (PDPL violation). Without proper auth, APNS deprecates legacy certs in 2025. Without mute settings, every message wakes phones at 3am."
@@ -80,7 +80,7 @@ The mobile push service **MUST** deliver chat-message notifications to APNS + FC
    - APNS 429 (rate limit) → exp backoff + retry 3×.
    - FCM `UNREGISTERED` → soft-delete.
    - FCM `INVALID_ARGUMENT` → log; do NOT retry.
-9. **MUST** emit BRAIN audit `chat.push_delivered` or `chat.push_failed` per attempt with `{post_id, recipient_subject_id, platform, latency_ms, outcome, trace_id}`.
+9. **MUST** emit memory audit `chat.push_delivered` or `chat.push_failed` per attempt with `{post_id, recipient_subject_id, platform, latency_ms, outcome, trace_id}`.
 10. **MUST** respect user mute settings (Mattermost preferences API):
     - `notify_props.push = "none"` → no push.
     - `notify_props.push = "mention"` → push only if mentioned.
@@ -97,7 +97,7 @@ The mobile push service **MUST** deliver chat-message notifications to APNS + FC
 17. **MUST** support "silent" pushes for app state sync (e.g. badge update only) via `content-available: 1` on APNS / `data`-only on FCM. These do NOT show a banner but trigger background fetch.
 18. **MUST** sign per-tenant: APNS topic includes tenant suffix (`com.cyberskill.chat.<tenant-shortid>`) so push permissions are auditable per-tenant. FCM project per tenant (slice-4+ optimisation; current is shared project with tenant_id in data).
 19. **MUST** support per-user "push for mentions only" with mention detection: if `notify_props.push = "mention"` AND post body contains `@<recipient_username>` OR `@channel` OR `@here` → push fires; else suppressed.
-20. **MUST** include trace_id propagation: MM plugin trace → push webhook trace → APNS/FCM call (apns-id header on APNS) → BRAIN audit trace_id all match.
+20. **MUST** include trace_id propagation: MM plugin trace → push webhook trace → APNS/FCM call (apns-id header on APNS) → memory audit trace_id all match.
 21. **MUST** rate-limit per-recipient: max 60 push notifications per minute per (subject, tenant). Excess suppressed + `chat_push_rate_limited_total` counter; 61st triggers a "muted because of rate limit" silent push (slice-4+ enhancement; current MVP just suppresses).
 22. **MUST** support APNS production vs sandbox via `apns_environment` config (`production | sandbox`); APNS sandbox endpoint = `api.sandbox.push.apple.com`.
 23. **MUST** track last-successful-delivery per device: `push_devices.last_delivered_at`; devices not delivered to in 30 days are flagged as "stale" but not deleted (user may have reinstalled). Soft-deletion still happens on 410 / UNREGISTERED only.
@@ -241,7 +241,7 @@ pub async fn handle_push_webhook(req: WebhookReq) -> Result<(), PushError> {
         };
         match result {
             Ok(_) => {
-                emit_brain_row("chat.push_delivered", json!({
+                emit_memory_row("chat.push_delivered", json!({
                     "post_id": req.post_id, "recipient_subject_id": req.recipient_subject_id,
                     "platform": device.platform, "latency_ms": start.elapsed().as_millis() as i64,
                     "outcome": "ok", "trace_id": req.trace_id,
@@ -251,7 +251,7 @@ pub async fn handle_push_webhook(req: WebhookReq) -> Result<(), PushError> {
             }
             Err(PushError::DeviceUnregistered) => {
                 registry::soft_delete(&device.id).await?;
-                emit_brain_row("chat.push_failed", json!({
+                emit_memory_row("chat.push_failed", json!({
                     "post_id": req.post_id, "platform": device.platform,
                     "outcome": "device_unregistered", "trace_id": req.trace_id,
                 })).await;
@@ -261,7 +261,7 @@ pub async fn handle_push_webhook(req: WebhookReq) -> Result<(), PushError> {
                 // retry once; if still fails, log and continue
             }
             Err(e) => {
-                emit_brain_row("chat.push_failed", json!({
+                emit_memory_row("chat.push_failed", json!({
                     "post_id": req.post_id, "platform": device.platform,
                     "outcome": format!("{e:?}"), "trace_id": req.trace_id,
                 })).await;
@@ -455,8 +455,8 @@ pub mod suppress {
 12. **Mute = mention + mentioned → push**.
 13. **Channel-muted by user → no push**.
 14. **Fan-out p95 < 1s for 100 recipients**.
-15. **BRAIN audit chat.push_delivered on success**.
-16. **BRAIN audit chat.push_failed on error**.
+15. **memory audit chat.push_delivered on success**.
+16. **memory audit chat.push_failed on error**.
 17. **OTel counters increment per platform + outcome**.
 18. **RLS isolates per tenant**.
 19. **Dedup suppresses rapid pushes** — fixture: 5 messages to same (subject, channel) within 1s → 1 delivery + 4 suppressions; `chat_push_suppressed_total` increments by 4 (AC for §1 #13).
@@ -534,7 +534,7 @@ async fn ac7_apns_410_soft_deletes() {
     handle_push_webhook(test_webhook_for(device.subject_id)).await.unwrap();
     let row = env.db.fetch_device(device.id).await;
     assert!(row.deleted_at.is_some());
-    let audit = env.brain.last_of_kind("chat.push_failed").await.unwrap();
+    let audit = env.memory.last_of_kind("chat.push_failed").await.unwrap();
     assert_eq!(audit["payload"]["outcome"], "device_unregistered");
 }
 ```
@@ -1047,7 +1047,7 @@ All resolved. Deferred:
 | Same device registered twice (re-install) | UPSERT updates last_seen | None | None |
 | User logs out | client calls deregister | None | None |
 | Client deregister request fails (token still listed) | next push 410 → soft-delete | None | None |
-| BRAIN audit emit fails | push still delivered; audit lost | SEV-2 logged | Operator restores |
+| memory audit emit fails | push still delivered; audit lost | SEV-2 logged | Operator restores |
 | Concurrent push for same recipient (rapid messages) | suppress cache 1s window | only first delivers; suppressed counter | None |
 | Push payload exceeds platform limit (4KB APNS / 4KB FCM) | truncate title to fit | SEV-3 warning | None |
 | Tenant_id leak via payload | data field only (not visible to user) | safe | None |
@@ -1113,7 +1113,7 @@ All resolved. Deferred:
 - Per-tenant push title template defaults to `{channel}` for simplicity; operators of multi-tenant device users set `{tenant} · {channel}`.
 - The plugin filter for mute (channel-level, user-level) is at MM API; the push service trusts the plugin's filter. This avoids double-querying MM preferences from the push service.
 - The chat-push service is stateless except for in-process suppression cache and Redis rate-limit state; restart is safe (no in-flight pushes lost, only in-flight ack-pending).
-- For privacy auditability, we considered emitting BRAIN row containing the payload bytes; rejected as too verbose. Operators can re-derive the payload from `(post_id, recipient_subject_id)` + the build_payload function.
+- For privacy auditability, we considered emitting memory row containing the payload bytes; rejected as too verbose. Operators can re-derive the payload from `(post_id, recipient_subject_id)` + the build_payload function.
 - The `chat_push_registered_devices` gauge updates on register/deregister + nightly recount; provides operator visibility into device-base growth.
 
 ---

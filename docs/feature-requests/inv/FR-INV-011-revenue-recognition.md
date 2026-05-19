@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-001, FR-INV-002, FR-INV-009, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-INV-001, FR-INV-002, FR-INV-009, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-INV-001]
 blocks: []
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1562 2026-05-17 — Monthly rollforward job at end-of-month tenant_timezone — computes period revenue + deferred revenue change
   - DEC-1563 2026-05-17 — Journal entry pairs: Debit Deferred Revenue / Credit Revenue (recognition); Debit AR / Credit Deferred Revenue (invoice issuance)
   - DEC-1564 2026-05-17 — Per-engagement recognition_schedule table: monthly buckets with planned + recognized amounts; reconcile_status tracked
-  - DEC-1565 2026-05-17 — Recognition triggers BRAIN audit: inv.revenue_recognized, inv.revenue_deferred, inv.revenue_rollforward_completed, inv.revenue_rollforward_failed; PII scrubbed (amount → SHA256)
+  - DEC-1565 2026-05-17 — Recognition triggers memory audit: inv.revenue_recognized, inv.revenue_deferred, inv.revenue_rollforward_completed, inv.revenue_rollforward_failed; PII scrubbed (amount → SHA256)
   - DEC-1566 2026-05-17 — Snapshots: recognition rollforward at each EOM is IMMUTABLE — never re-computed (audit lineage); corrections via prior-period adjustment journal entry
 
 build_envelope:
@@ -80,7 +80,7 @@ risk_if_skipped: "Without revenue recognition, financial statements violate ASC 
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship revenue recognition at `services/invoicing/src/recognition/` supporting 4 methods, monthly EOM rollforward, journal entry pairs, immutable snapshots, 4 BRAIN audit kinds.
+The INV service **MUST** ship revenue recognition at `services/invoicing/src/recognition/` supporting 4 methods, monthly EOM rollforward, journal entry pairs, immutable snapshots, 4 memory audit kinds.
 
 1. **MUST** support 4 recognition methods per DEC-1560:
    - `time_based`: equal monthly amount over engagement.start_date → end_date
@@ -178,7 +178,7 @@ The INV service **MUST** ship revenue recognition at `services/invoicing/src/rec
 
 7. **MUST** make `recognition_snapshots` immutable per DEC-1566 — corrections via NEW `prior_period_adjustment` snapshot, never UPDATE.
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-1565. PII scrub per FR-BRAIN-111: amount/period_revenue SHA-256 hashed; engagement_id (uuid) ok.
+8. **MUST** emit 4 memory audit kinds per DEC-1565. PII scrub per FR-MEMORY-111: amount/period_revenue SHA-256 hashed; engagement_id (uuid) ok.
 
 9. **MUST** thread trace_id from EOM cron → rollforward → schedule update → journal → snapshot.
 
@@ -233,7 +233,7 @@ Sample journal pair on rollforward:
 ---
 
 ## §4 — Acceptance criteria
-1. **4 methods supported + cardinality test**. 2. **Schedule built at engagement creation**. 3. **EOM rollforward via FR-MCP-007 cron**. 4. **Journal entries balance (DR sum = CR sum)**. 5. **Snapshots immutable (no UPDATE/DELETE grant)**. 6. **Prior-period adjustment via new snapshot**. 7. **rust_decimal for amounts (no f64)**. 8. **4 BRAIN audit kinds**. 9. **PII scrubbed (amount SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Multi-currency: schedule in engagement currency; report base via FR-INV-002**. 13. **time_based: equal monthly split**. 14. **milestone_based: recognize on milestone complete event**. 15. **pct_completion: recompute on FR-TIME-002 entry change**. 16. **point_in_time: full on invoice send**. 17. **Manual rollforward CFO-only**. 18. **Idempotent (UNIQUE on tenant+engagement+period)**. 19. **Failure mid-rollforward → snapshot=failed + sev-1**. 20. **Reconcile_status auto-updates (pending→partial→complete)**.
+1. **4 methods supported + cardinality test**. 2. **Schedule built at engagement creation**. 3. **EOM rollforward via FR-MCP-007 cron**. 4. **Journal entries balance (DR sum = CR sum)**. 5. **Snapshots immutable (no UPDATE/DELETE grant)**. 6. **Prior-period adjustment via new snapshot**. 7. **rust_decimal for amounts (no f64)**. 8. **4 memory audit kinds**. 9. **PII scrubbed (amount SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Multi-currency: schedule in engagement currency; report base via FR-INV-002**. 13. **time_based: equal monthly split**. 14. **milestone_based: recognize on milestone complete event**. 15. **pct_completion: recompute on FR-TIME-002 entry change**. 16. **point_in_time: full on invoice send**. 17. **Manual rollforward CFO-only**. 18. **Idempotent (UNIQUE on tenant+engagement+period)**. 19. **Failure mid-rollforward → snapshot=failed + sev-1**. 20. **Reconcile_status auto-updates (pending→partial→complete)**.
 
 ---
 
@@ -298,7 +298,7 @@ pub async fn rollforward(period_end: NaiveDate, tenant: &Tenant, db: &Db) -> Res
 
 ## §7 — Dependencies
 **Upstream:** FR-INV-001.
-**Cross-module:** FR-MCP-007 (cron), FR-TIME-002 (hours for pct_completion), FR-PROJ-002 (milestones), FR-BRAIN-111 (PII), FR-AUTH-101 (CFO role).
+**Cross-module:** FR-MCP-007 (cron), FR-TIME-002 (hours for pct_completion), FR-PROJ-002 (milestones), FR-MEMORY-111 (PII), FR-AUTH-101 (CFO role).
 
 ## §8 — Sample payloads (see §3)
 
@@ -324,7 +324,7 @@ None blocking — ASC 606 + IFRS 15 patterns well-established.
 ## §11 — Implementation notes
 - §11.1 EOM tenant_timezone: midnight of first of next month; jitter ±30min to avoid thundering herd.
 - §11.2 pct_completion formula: `recognized = (hours_completed / hours_estimated) * total_contract`; cap at 100%.
-- §11.3 BRAIN audit body: engagement_id (uuid), period_end (date), period_revenue SHA256 hashed.
+- §11.3 memory audit body: engagement_id (uuid), period_end (date), period_revenue SHA256 hashed.
 - §11.4 Snapshots are reportable via FR-INV-009 + future financial-statements FR.
 - §11.5 Prior-period adjustment pattern: new snapshot with `description: 'PPA: <reason>'`; original snapshot unchanged.
 

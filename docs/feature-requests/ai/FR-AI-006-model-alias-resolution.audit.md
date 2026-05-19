@@ -92,7 +92,7 @@ mod metrics {
 - **status:** open
 
 #### Description
-§8 shows happy-path, fallback, override, unknown-alias error, ZDR error, BRAIN audit row, and OBS metric snapshot. Missing: residency-violation error payload. Operators triaging "why was my call refused?" benefit from seeing every error shape.
+§8 shows happy-path, fallback, override, unknown-alias error, ZDR error, memory audit row, and OBS metric snapshot. Missing: residency-violation error payload. Operators triaging "why was my call refused?" benefit from seeing every error shape.
 
 #### Suggested fix
 Add to §8:

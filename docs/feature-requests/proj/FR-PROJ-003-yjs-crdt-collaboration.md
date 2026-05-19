@@ -3,7 +3,7 @@ id: FR-PROJ-003
 title: "Yjs CRDT for issue description + comment-body fields; LWW for scalar metadata; reconnection state recovery; conflict-free multi-cursor editing"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-002, FR-PROJ-017, FR-AUTH-003, FR-AUTH-004]
 depends_on: [FR-PROJ-002]
 blocks: [FR-PROJ-017, FR-PROJ-011]
@@ -102,7 +102,7 @@ The collaborative-editing layer **MUST** use Yjs CRDT for rich-text fields and L
     - When WebSocket disconnected, accumulate updates in IndexedDB-backed Y.Doc.
     - On reconnect: send buffered updates first; server forwards; clients converge.
     - Buffer size capped at 5 MB per doc; overflow → emit `proj.yjs_buffer_overflow` audit row + UI banner ("editing offline; some changes may be lost on reconnect").
-9. **MUST** emit BRAIN audit rows for significant CRDT events:
+9. **MUST** emit memory audit rows for significant CRDT events:
     - `proj.issue_collab_session_started` on first client connection (when prior was 0).
     - `proj.issue_collab_session_ended` on last disconnect.
     - `proj.issue_snapshot_persisted` per snapshot, with `{doc_id, version, bytes_compressed, applies_since_last_snapshot}`.
@@ -132,7 +132,7 @@ The collaborative-editing layer **MUST** use Yjs CRDT for rich-text fields and L
 
 **Why snapshot every 60s (§1 #2, DEC-242)?** Linear scaling: snapshot every-edit = Postgres write storm; snapshot once-per-day = 24h replay on reconnect (slow). 60s is the calibrated balance: ~3 MB/day write volume per doc, < 1s replay budget.
 
-**Why scalar LWW with `_updated_at_ns` (§1 #6)?** Three properties: (a) DETERMINISTIC: same timestamps + same tie-breaker = same outcome on every replica; (b) STALE DETECTION: clients can refuse stale local writes against server's view; (c) AUDITABLE: companion column `_updated_by_subject_id` is the "who" — clear in BRAIN audit.
+**Why scalar LWW with `_updated_at_ns` (§1 #6)?** Three properties: (a) DETERMINISTIC: same timestamps + same tie-breaker = same outcome on every replica; (b) STALE DETECTION: clients can refuse stale local writes against server's view; (c) AUDITABLE: companion column `_updated_by_subject_id` is the "who" — clear in memory audit.
 
 **Why 30 Hz awareness throttle (§1 #7)?** Mouse-cursor at 60 Hz overwhelms WebSocket → bursty traffic. 30 Hz = ~33ms granularity; human eye perceives 30 Hz as smooth. Heartbeat at 30 Hz keeps presence "alive" without flooding.
 
@@ -140,7 +140,7 @@ The collaborative-editing layer **MUST** use Yjs CRDT for rich-text fields and L
 
 **Why audit start/end + snapshots (§1 #9)?** Operators investigating "who edited issue X last week" need a session trail. Snapshot rows give time-series of edit volume per issue (forensics + product analytics).
 
-**Why W3C trace_id in WebSocket (§1 #10)?** Operators tracing "user clicked Save → server processed → BRAIN row appeared" need correlation. WebSocket sessions are long-lived; without trace propagation, every CRDT operation is orphaned in OBS.
+**Why W3C trace_id in WebSocket (§1 #10)?** Operators tracing "user clicked Save → server processed → memory row appeared" need correlation. WebSocket sessions are long-lived; without trace propagation, every CRDT operation is orphaned in OBS.
 
 **Why Postgres-down degrades to memory buffer (§1 #12)?** Editing must not block on database availability. 100 MB in-memory cap covers ~5 minutes of typical edit volume across all active docs; longer outages emit sev-1.
 
@@ -307,7 +307,7 @@ pub async fn snapshot_loop(rooms: Arc<RoomRegistry>) {
 
             match res {
                 Ok(_) => {
-                    emit_brain_row("proj.issue_snapshot_persisted", serde_json::json!({
+                    emit_memory_row("proj.issue_snapshot_persisted", serde_json::json!({
                         "doc_id": room.doc_id,
                         "version": room.current_version().await,
                         "bytes_compressed": compressed.len(),
@@ -436,7 +436,7 @@ pub async fn patch_scalar(
     {
         // Stale write
         let current: serde_json::Value = fetch_current(&pool, issue_id, &field).await;
-        emit_brain_row("proj.scalar_stale_write_rejected", json!({
+        emit_memory_row("proj.scalar_stale_write_rejected", json!({
             "issue_id": issue_id, "field": field,
             "incoming_ts": req.updated_at_ns, "stored_ts": stored.0,
             "attempted_by": req.updated_by_subject_id,
@@ -475,10 +475,10 @@ pub async fn patch_scalar(
 13. **Awareness throttled at 30 Hz** — fixture sends 100 cursor updates in 1s; server forwards ≤ 30.
 14. **Offline edit + reconnect** — disconnect; edit description; reconnect → server applies the buffered updates; all clients converge.
 15. **Buffer overflow** — > 5 MB of offline edits → client emits `proj.yjs_buffer_overflow` on reconnect; UI banner shown.
-16. **BRAIN audit: session_started** — first client connects → `proj.issue_collab_session_started` row.
-17. **BRAIN audit: session_ended** — last client disconnects → `proj.issue_collab_session_ended` row.
-18. **BRAIN audit: snapshot_persisted** — snapshot fires → row with `bytes_compressed`, `applies_since_last_snapshot`.
-19. **BRAIN audit: scalar_stale_write_rejected** — LWW reject → row with `incoming_ts`, `stored_ts`.
+16. **memory audit: session_started** — first client connects → `proj.issue_collab_session_started` row.
+17. **memory audit: session_ended** — last client disconnects → `proj.issue_collab_session_ended` row.
+18. **memory audit: snapshot_persisted** — snapshot fires → row with `bytes_compressed`, `applies_since_last_snapshot`.
+19. **memory audit: scalar_stale_write_rejected** — LWW reject → row with `incoming_ts`, `stored_ts`.
 20. **OTel: messages_forwarded counter** — relay forwards 100 updates → counter at 100.
 21. **OTel: snapshot_bytes histogram** — large doc (50 KB) → snapshot recorded; alert at > 1 MB.
 22. **OTel: lww_conflicts_total per field** — frequent assignee conflicts → operator sees `field="assignee_id"` is the hottest.
@@ -599,7 +599,7 @@ test('stale scalar write returns 409', async () => {
 - **FR-PROJ-017 (downstream)** — Brief modal uses Yjs description binding.
 - **FR-AUTH-003** — RLS on `yjs_state_snapshots` + `yjs_update_log`.
 - **FR-AUTH-004** — JWT validation on WebSocket connect; tenant_id from claims.
-- **FR-BRAIN-101** — audit row emission.
+- **FR-MEMORY-101** — audit row emission.
 
 ---
 

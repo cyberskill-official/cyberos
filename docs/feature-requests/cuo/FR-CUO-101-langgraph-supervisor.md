@@ -1,6 +1,6 @@
 ---
 id: FR-CUO-101
-title: "CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware routing + BRAIN audit per decision"
+title: "CUO Phase 2 — LangGraph supervisor + LiteLLM cascade + confidence-band escalation + persona-aware routing + memory audit per decision"
 module: CUO
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CPO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-014, FR-AI-022, FR-AUTH-004, FR-AUTH-101, FR-BRAIN-101, FR-AI-003, FR-CUO-102, FR-CUO-103, FR-CUO-104, FR-CUO-105, FR-SKILL-112]
+memory_chain_hash: null
+related_frs: [FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-014, FR-AI-022, FR-AUTH-004, FR-AUTH-101, FR-MEMORY-101, FR-AI-003, FR-CUO-102, FR-CUO-103, FR-CUO-104, FR-CUO-105, FR-SKILL-112]
 depends_on: [FR-AI-008]
 blocks: [FR-CUO-102, FR-CUO-103, FR-CUO-104, FR-CRM-005, FR-CRM-006, FR-CRM-007, FR-DOC-009, FR-EMAIL-008, FR-INV-010, FR-KB-007, FR-OKR-006, FR-OKR-007, FR-PORTAL-005, FR-PROJ-011, FR-PROJ-012, FR-RES-004, FR-SKILL-112]   # 16 downstream consumers of CUO
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-162 (Phase 2 LLM cascade triggers when confidence ∈ [0.10, 0.50] AND top candidate ≥ 0.10; otherwise rule-based decision stands)
   - DEC-163 (Phase 2 LLM output is structured pick `{skill_name, arguments, rationale, confidence}` validated via Pydantic; freeform text rejected)
   - DEC-164 (defer-to-human matrix is intrinsic to the persona — never overridable by env / config; matches EU AI Act Art. 26 human-oversight guarantee)
-  - DEC-165 (every decision — rule path AND LLM path — emits a `cuo.routing_decision` BRAIN audit row; never silent)
+  - DEC-165 (every decision — rule path AND LLM path — emits a `cuo.routing_decision` memory audit row; never silent)
   - DEC-166 (persona JWT carries `agent_persona: cuo-<persona-key>@<semver>` per FR-AI-014; the supervisor validates it at every state entry)
   - DEC-167 (LangGraph state schema is versioned via `cuo_state_v` integer; backward-compatible state replay tolerated for 2 versions)
   - DEC-168 (router state machine has exactly 5 nodes: `parse → rule_score → branch{auto|ask|cascade|defer} → invoke → record`; no other transitions)
@@ -48,7 +48,7 @@ new_files:
   - cuo/cuo/supervisor/nodes/branch.py                # confidence-band branching (≥0.70 / 0.50-0.70 / 0.10-0.50 / <0.10)
   - cuo/cuo/supervisor/nodes/llm_cascade.py           # LLM cascade — LiteLLM call via AI Gateway FR-AI-008
   - cuo/cuo/supervisor/nodes/invoke.py                # invoke node — delegates to skill module CLI; capture stdout/stderr
-  - cuo/cuo/supervisor/nodes/record.py                # record node — emit cuo.routing_decision BRAIN row + persona stamp
+  - cuo/cuo/supervisor/nodes/record.py                # record node — emit cuo.routing_decision memory row + persona stamp
   - cuo/cuo/supervisor/litellm_proxy.py               # LiteLLM-shaped client that routes through FR-AI-008 (never direct provider call)
   - cuo/cuo/supervisor/persona.py                     # 11-persona catalogue (Genie + 10 C-level); defer-to-human matrix
   - cuo/cuo/supervisor/checkpointer.py                # Postgres checkpointer (in-memory at slice 2; Postgres ships in FR-CUO-102)
@@ -91,7 +91,7 @@ disallowed_tools:
   - call any LLM provider (Bedrock, Anthropic, OpenAI) directly from CUO; ALL provider calls MUST go through AI Gateway FR-AI-008 (per DEC-161)
   - introduce a 6th supervisor node (per DEC-168 — graph topology is closed; new nodes require a new FR)
   - allow operator to disable the defer-to-human matrix via env var or config (per DEC-164 + EU AI Act Art. 26)
-  - emit a routing decision without a `cuo.routing_decision` BRAIN audit row (per DEC-165 — never silent)
+  - emit a routing decision without a `cuo.routing_decision` memory audit row (per DEC-165 — never silent)
   - accept unstructured LLM responses (per DEC-163 — structured-pick only)
   - silently auto-invoke a destructive skill (per DEC-170 — capability broker FR-SKILL-104 enforces; supervisor refuses regardless)
 
@@ -105,7 +105,7 @@ sub_tasks:
   - "0.5h: nodes/branch.py — confidence-band branching with hard thresholds 0.10 / 0.50 / 0.70"
   - "1.5h: nodes/llm_cascade.py — LiteLLM call via litellm_proxy + Pydantic-validated structured pick + 3s timeout"
   - "1.0h: nodes/invoke.py — delegate to skill CLI; capture stdout/stderr; map to InvocationResult"
-  - "1.0h: nodes/record.py — build cuo.routing_decision row; chain via brain_writer FR-BRAIN-101 + FR-AI-003"
+  - "1.0h: nodes/record.py — build cuo.routing_decision row; chain via memory_writer FR-MEMORY-101 + FR-AI-003"
   - "0.5h: litellm_proxy.py — LiteLLM-shaped client that routes through AI Gateway FR-AI-008"
   - "0.5h: persona.py — 11-persona catalogue (Genie + 10 C-level) + defer-to-human matrix"
   - "0.5h: checkpointer.py — in-memory checkpointer scaffold (Postgres lands in FR-CUO-102)"
@@ -119,13 +119,13 @@ risk_if_skipped: "CUO's Phase 1 rule router handles unambiguous queries fine but
 
 ## §1 — Description (BCP-14 normative)
 
-The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM cascade on top of the Phase 1 rule router, with persona-aware routing, BRAIN audit per decision, and EU AI Act Art. 12/13/26 compliance. Each requirement:
+The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM cascade on top of the Phase 1 rule router, with persona-aware routing, memory audit per decision, and EU AI Act Art. 12/13/26 compliance. Each requirement:
 
 1. **MUST** implement the supervisor as a `langgraph.graph.StateGraph` over the `CuoState` TypedDict (defined in `state.py`) with exactly 5 nodes (per DEC-168): `parse`, `rule_score`, `branch`, `invoke`, `record`. The `branch` node is the conditional entry point that selects among four downstream paths: `auto`, `ask`, `cascade`, `defer`. The `cascade` path runs the LLM and re-enters `branch` with the LLM's confidence — no infinite loop because `cascade` is taken at most once per request (enforced by a `cascade_taken: bool` flag in state).
 
 2. **MUST** route every NL request through the supervisor when invoked via `cyberos-cuo supervisor route --query "<text>"`. The CLI is the canonical entry point; library users invoke `from cyberos.cuo.supervisor import run_supervisor`.
 
-3. **MUST** make the `parse` node the first step. It NFC-normalises the query (preserving diacritics for VN region scoring per existing Phase 1 behaviour), constructs the query envelope `{query, tenant_id, subject_id, persona_key, ts_ns, request_id}`, and validates `persona_key ∈ {genie, ceo, coo, cfo, cmo, cto, chro, cso, clo, cdo, cpo}`. Unknown persona → `BAD_REQUEST` (exit 65) and a `cuo.persona_unknown` BRAIN audit row.
+3. **MUST** make the `parse` node the first step. It NFC-normalises the query (preserving diacritics for VN region scoring per existing Phase 1 behaviour), constructs the query envelope `{query, tenant_id, subject_id, persona_key, ts_ns, request_id}`, and validates `persona_key ∈ {genie, ceo, coo, cfo, cmo, cto, chro, cso, clo, cdo, cpo}`. Unknown persona → `BAD_REQUEST` (exit 65) and a `cuo.persona_unknown` memory audit row.
 
 4. **MUST** make the `rule_score` node run the existing Phase 1 rule scorer (`cyberos.cuo.core.router.score_one_off`) unchanged. The result populates `state['rule_scores']: list[Candidate]` sorted by descending confidence. This guarantees backward-compatibility with the Phase 1 deterministic golden-fixture suite (15 rule-path fixtures still pass).
 
@@ -139,14 +139,14 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 6. **MUST** make the `llm_cascade` node call the LLM through the `litellm_proxy` (which routes through AI Gateway FR-AI-008, never direct provider call — per DEC-161). The cascade:
    - Sends a structured prompt containing the query envelope + the top 5 rule-scored candidates + the persona-specific system prompt.
    - Expects a **structured response** validated by Pydantic (per DEC-163): `LlmRoutingPick {skill_name: str, arguments: dict, rationale: str, confidence: float}`. Schema-conformance failure → fall through to `ask` (never silently invoke).
-   - Has a **hard 3-second budget** (per DEC-169). Timeout → fall through to `ask`; emit `cuo.llm_cascade_timeout` BRAIN audit row.
+   - Has a **hard 3-second budget** (per DEC-169). Timeout → fall through to `ask`; emit `cuo.llm_cascade_timeout` memory audit row.
    - Sets `cascade_taken = true` AND `state['llm_pick'] = LlmRoutingPick(...)` AND re-enters `branch` with the LLM-derived confidence.
 
 7. **MUST** make the `invoke` node delegate skill execution to the skill module's CLI per cuo/docs/AGENTS.md §0.5 (CUO does NOT implement skill execution). The node captures `stdout`, `stderr`, `exit_code`, `duration_ms` into `state['invocation_result']`. If the chosen skill is annotated `destructive: true` in the catalog, the capability broker (FR-SKILL-104) MUST gate via Elicitation flow; the supervisor refuses to bypass — even at confidence 1.0 (per DEC-170).
 
-8. **MUST** make the `record` node emit exactly one `cuo.routing_decision` BRAIN audit row per request, in EVERY path (auto, ask, cascade, defer). The row carries:
+8. **MUST** make the `record` node emit exactly one `cuo.routing_decision` memory audit row per request, in EVERY path (auto, ask, cascade, defer). The row carries:
     - `tenant_id`, `subject_id_hash16`, `persona_key`, `persona_version`, `agent_persona_jwt_iss` (from JWT).
-    - `query` (NFC-normalised; PII-scrubbed via FR-BRAIN-111 before commit if persona requires).
+    - `query` (NFC-normalised; PII-scrubbed via FR-MEMORY-111 before commit if persona requires).
     - `rule_scores` (top 3 with confidence values).
     - `path_taken` ∈ {`auto`, `ask`, `cascade`, `defer`, `cascade_then_ask`}.
     - `llm_pick` (present iff `path_taken` involved cascade).
@@ -180,12 +180,12 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 18. **MUST NOT** invoke a skill on the **defer path**. The decision returned has `routed: false`, `alternatives: [<top 3>]`, and the caller (CHAT, EMAIL, etc.) renders the alternatives for the operator to pick — never auto-invoking. This is the EU AI Act Art. 26 hard guarantee.
 
-19. **MUST** treat the **`defer_to_human_matrix`** as ROLE-INTRINSIC: even if the supervisor scores `vietnam-vat-invoice@1.2 + 0.95` for a CFO persona, if `cfo.defer_to_human_matrix` lists `invoice_emit`, the supervisor refuses to auto-invoke and returns `{routed: false, reason: "persona_defer_matrix", operation: "invoice_emit"}`. Emit `cuo.persona_defer_block` BRAIN audit row.
+19. **MUST** treat the **`defer_to_human_matrix`** as ROLE-INTRINSIC: even if the supervisor scores `vietnam-vat-invoice@1.2 + 0.95` for a CFO persona, if `cfo.defer_to_human_matrix` lists `invoice_emit`, the supervisor refuses to auto-invoke and returns `{routed: false, reason: "persona_defer_matrix", operation: "invoice_emit"}`. Emit `cuo.persona_defer_block` memory audit row.
 
 20. **MUST** support **two invocation modes** via CLI flags:
     - `--invoke` (default true): runs through to `invoke` node when path = `auto` or `cascade_then_auto`.
-    - `--record` (default true): runs through to `record` node and emits the BRAIN row.
-    Both flags MAY be `--no-invoke` / `--no-record` for dry-run analysis (e.g. "what would the supervisor do without actually invoking?"). Dry-run results are NOT recorded (no BRAIN row); they emit a `cuo.dry_run` OTel span with low sampling.
+    - `--record` (default true): runs through to `record` node and emits the memory row.
+    Both flags MAY be `--no-invoke` / `--no-record` for dry-run analysis (e.g. "what would the supervisor do without actually invoking?"). Dry-run results are NOT recorded (no memory row); they emit a `cuo.dry_run` OTel span with low sampling.
 
 21. **MUST** complete the **rule path (auto/ask/defer)** in ≤ 50 ms p95 measured at supervisor entry → return. The LLM cascade path is budgeted at ≤ 3500 ms p95 (3000 ms LLM + 500 ms supervisor overhead). Performance test `test_supervisor_perf_rule_path` asserts the rule path; cascade-path perf is asserted in integration tests via a mocked AI Gateway response.
 
@@ -193,7 +193,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 23. **MUST** validate the LLM cascade output against the `LlmRoutingPick` Pydantic schema. The schema requires `skill_name: str` (must match a known catalog skill), `arguments: dict` (must be JSON-serialisable), `rationale: str` (1–500 chars), `confidence: float` (0.0–1.0). Validation failure → re-emit prompt once with stricter instructions; second failure → fall through to `ask`. The retry counter is in state; max 1 retry.
 
-24. **MUST** PII-scrub the `query` field of the BRAIN audit row using `cyberos-brain-pii` rules per AUTHORING.md rule 18, BEFORE chain commit. The original query is retained in the supervisor's OTel span (transient, < 30-day retention via FR-OBS-006 tail sampling); the BRAIN row holds the scrubbed form for long-term storage.
+24. **MUST** PII-scrub the `query` field of the memory audit row using `cyberos-memory-pii` rules per AUTHORING.md rule 18, BEFORE chain commit. The original query is retained in the supervisor's OTel span (transient, < 30-day retention via FR-OBS-006 tail sampling); the memory row holds the scrubbed form for long-term storage.
 
 25. **MUST** support **multi-step chain entry stub**: the supervisor returns `{decision, next_step: null}` at slice 2. FR-CUO-104 (topological chain walk, slice 3+) consumes `next_step` to compose multi-skill flows. The slice-2 stub MUST set `next_step = null` unconditionally — never a stale value.
 
@@ -215,7 +215,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 **Why the defer-to-human matrix is intrinsic to the persona (§1 #19, DEC-164)?** The EU AI Act Art. 26 human-oversight guarantee says "operators retain the right to refuse AI-initiated actions on high-risk operations." Encoding the matrix in `persona.py` as data (`cfo.defer_to_human_matrix = ["invoice_emit", "wire_transfer", ...]`) and never letting config override is the difference between "we are compliant" and "we claim to be compliant but config can disable it." The principle: matrix is code, not configuration. The cost is one Python file edit per matrix change (ADR-required); the benefit is that the gate cannot be turned off via env vars or runtime knobs.
 
-**Why every decision emits a `cuo.routing_decision` BRAIN row (§1 #8, DEC-165)?** EU AI Act Art. 12 logging requires every AI decision retained 6 months minimum AND replayable. The BRAIN audit chain (Layer-1 memory per AGENTS.md §6) provides both: rows are append-only, chained via SHA-256 prev_chain, and PII-scrubbed before commit. Emitting on EVERY path (auto, ask, cascade, defer) — not just successful invocations — is the design assertion that "defer" is itself an AI decision worth auditing (the AI decided NOT to act). The row's `path_taken` enum lets analysts query "show me all decisions where cascade was triggered but fell through to ask."
+**Why every decision emits a `cuo.routing_decision` memory row (§1 #8, DEC-165)?** EU AI Act Art. 12 logging requires every AI decision retained 6 months minimum AND replayable. The memory audit chain (Layer-1 memory per AGENTS.md §6) provides both: rows are append-only, chained via SHA-256 prev_chain, and PII-scrubbed before commit. Emitting on EVERY path (auto, ask, cascade, defer) — not just successful invocations — is the design assertion that "defer" is itself an AI decision worth auditing (the AI decided NOT to act). The row's `path_taken` enum lets analysts query "show me all decisions where cascade was triggered but fell through to ask."
 
 **Why the 11-persona catalogue (§1 #9)?** Genie is the unspecialised entry point — the persona that handles general queries before a specialist takes over. The 10 C-level personas (CEO, COO, CFO, CMO, CTO, CHRO, CSO, CLO, CDO, CPO) match CyberSkill's organisational structure and the BACKLOG's role-RBAC catalogue. Each persona has its own keyword bank (CFO's bank includes "invoice", "VAT", "BHXH", "P1/P2/P3"; CTO's includes "deploy", "rollback", "incident") so the rule scorer can adjust weights per persona without bloating one giant keyword list. The catalogue is closed — adding an 11th specialist persona is an ADR, same discipline as RBAC.
 
@@ -223,7 +223,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 **Why slice-2 ships only the in-memory checkpointer (§1 #12)?** Splitting the Postgres-backed checkpointer to FR-CUO-102 keeps this FR focused on the supervisor topology + LLM cascade. The in-memory checkpointer is functionally complete for tests; production deployment of slice 2 runs without persistent checkpointing (state lost on supervisor restart — acceptable because each request is independent). FR-CUO-102 adds Postgres persistence for replay + EU AI Act Art. 12 full compliance.
 
-**Why `cuo_state_v` field in state and BRAIN row (§1 #12, DEC-167)?** Slice 3+ will add fields to the state (multi-step `next_step`, chain context, etc.). Embedded version lets the supervisor reject state replays from incompatible versions cleanly — and lets the BRAIN row's analyst tooling filter by state-schema version. ±2 version tolerance (current is 1; tolerate 1–3) allows rolling upgrades without breaking replay during deployment windows.
+**Why `cuo_state_v` field in state and memory row (§1 #12, DEC-167)?** Slice 3+ will add fields to the state (multi-step `next_step`, chain context, etc.). Embedded version lets the supervisor reject state replays from incompatible versions cleanly — and lets the memory row's analyst tooling filter by state-schema version. ±2 version tolerance (current is 1; tolerate 1–3) allows rolling upgrades without breaking replay during deployment windows.
 
 **Why 5 nodes exactly and no more (§1 #1, DEC-168)?** Graph topology is a contract. New nodes (e.g. "post-process LLM response" or "rate-limit check") add hidden state transitions that consumers can't reason about. Five nodes is the minimum complete set: parse → score → decide → act → record. Anything else is a refactor — and a refactor of the supervisor is a new FR, not a code change.
 
@@ -233,7 +233,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 **Why persona JWT validation at every state entry (§1 #10, DEC-166)?** The persona claim is the "who is acting" identity. Validating it at supervisor entry prevents a `genie` JWT from triggering a `cfo`-persona routing path — which would bypass the CFO's defer-to-human matrix. The check is at the parse node; missing/mismatched persona → fail fast at entry, never reach the scorer.
 
-**Why the LLM cascade emits a `cuo.llm_cascade_timeout` row on timeout (§1 #6)?** Timeouts are AI decisions ("AI failed to provide structured pick within budget"). The BRAIN row preserves the fact that an LLM was consulted and timed out; useful for SRE analysis ("which queries consistently timeout") and EU AI Act Art. 12 ("show me decisions where LLM was attempted but produced no usable output"). The cost of the row is ~700 bytes; the benefit is full audit reconstruction.
+**Why the LLM cascade emits a `cuo.llm_cascade_timeout` row on timeout (§1 #6)?** Timeouts are AI decisions ("AI failed to provide structured pick within budget"). The memory row preserves the fact that an LLM was consulted and timed out; useful for SRE analysis ("which queries consistently timeout") and EU AI Act Art. 12 ("show me decisions where LLM was attempted but produced no usable output"). The cost of the row is ~700 bytes; the benefit is full audit reconstruction.
 
 ---
 
@@ -537,11 +537,11 @@ import hashlib
 from cyberos.cuo.supervisor.state import CuoState
 
 def build_routing_decision_row(state: CuoState) -> dict:
-    """Build the canonical `cuo.routing_decision` BRAIN audit row.
+    """Build the canonical `cuo.routing_decision` memory audit row.
 
     Emitted by the `record` node on EVERY path (auto, ask, cascade, defer).
     """
-    pii_scrubbed_query = apply_brain_pii_rules(state["query"])  # FR-BRAIN-111
+    pii_scrubbed_query = apply_memory_pii_rules(state["query"])  # FR-MEMORY-111
     return {
         "kind": "cuo.routing_decision",
         "tenant_id": state["tenant_id"],
@@ -607,18 +607,18 @@ def route(query: str, persona: str, invoke: bool, record: bool, json_out: bool):
 5. **Defer path (< 0.10)** — query "asdfghjkl" → rule score 0.03 → `path_taken = "defer"` → exit 2.
 6. **Cascade fall-through to ask** — LLM returns confidence 0.40 → `path_taken = "cascade_then_ask"` → exit 1.
 7. **No cascade re-entry** — query in cascade band; first cascade returns 0.20; `cascade_taken = true` blocks re-entry → falls through to `ask`.
-8. **LLM timeout** — mocked AI Gateway delays 5s; supervisor falls through to `ask`; `cuo.llm_cascade_timeout` BRAIN row emitted.
+8. **LLM timeout** — mocked AI Gateway delays 5s; supervisor falls through to `ask`; `cuo.llm_cascade_timeout` memory row emitted.
 9. **LLM freeform rejected** — mocked AI Gateway returns "I think you should..." → Pydantic validation fails twice → fall through to `ask`.
 10. **LLM hallucinated skill rejected** — LLM returns `{skill_name: "make-up-skill"}` not in catalog → reject → retry → fall through to `ask`.
-11. **Persona matrix blocks auto-invoke** — query routes to `vietnam-vat-invoice@1.2` with cfo persona at confidence 0.95; cfo.defer_to_human_matrix contains `invoice_emit` → refuse auto, return `{routed: false, reason: "persona_defer_matrix"}`; `cuo.persona_defer_block` BRAIN row.
+11. **Persona matrix blocks auto-invoke** — query routes to `vietnam-vat-invoice@1.2` with cfo persona at confidence 0.95; cfo.defer_to_human_matrix contains `invoice_emit` → refuse auto, return `{routed: false, reason: "persona_defer_matrix"}`; `cuo.persona_defer_block` memory row.
 12. **Destructive skill bypass blocked** — skill annotated `destructive: true` at confidence 1.0 → capability broker FR-SKILL-104 gates via Elicitation; supervisor's invoke node refuses to override.
 13. **Persona JWT mismatch** — caller JWT has `agent_persona: cuo-cto@0.1.0` but requests `cfo` persona → 403 with `persona_mismatch`.
-14. **Unknown persona** — `--persona foo` → exit 65, `cuo.persona_unknown` BRAIN row.
+14. **Unknown persona** — `--persona foo` → exit 65, `cuo.persona_unknown` memory row.
 15. **Direct provider import forbidden** — `test_supervisor_litellm_routes_via_gateway` AST-walks `cuo/cuo/supervisor/` for `import boto3 | import anthropic | import openai | from openai`; finding any → test fails.
 16. **Cuo state version present** — state contains `cuo_state_v == 1`; replay with `cuo_state_v == 4` rejected with `state_version_unsupported`.
 17. **Audit row emitted every path** — assert exactly one `cuo.routing_decision` row after `route` for each of {auto, ask, cascade, defer}.
 18. **Audit row carries `next_step: null` explicitly** — JSON serialised row has `"next_step": null` (key present), not absent.
-19. **Audit row PII-scrubbed query** — query containing email/phone is scrubbed in the BRAIN row but preserved in OTel span (transient).
+19. **Audit row PII-scrubbed query** — query containing email/phone is scrubbed in the memory row but preserved in OTel span (transient).
 20. **Replay equivalence on rule path** — 15-golden-fixture suite: run twice on identical catalog → byte-identical decision JSONs.
 21. **Rule path < 50ms p95** — `test_supervisor_perf_rule_path` 1000 iterations; p95 < 50 ms.
 22. **Cascade path < 3500ms p95** — integration test with mocked AI Gateway returning at 2500 ms; p95 < 3500 ms.
@@ -627,9 +627,9 @@ def route(query: str, persona: str, invoke: bool, record: bool, json_out: bool):
 25. **Counter `cuo_supervisor_route_total{outcome=success, persona=cfo, path_taken=auto}` increments** — every successful route bumps it.
 26. **Counter `cuo_supervisor_persona_defer_blocks_total{persona=cfo, operation=invoice_emit}` increments** — every defer-matrix block bumps it.
 27. **CLI exit codes correct** — auto→0, ask→1, defer→2, unknown_persona→65, persona_mismatch→77, timeout→75.
-28. **Dry-run mode** — `--no-invoke --no-record` returns decision without invocation and without BRAIN row; OTel span `cuo.dry_run` emitted instead.
+28. **Dry-run mode** — `--no-invoke --no-record` returns decision without invocation and without memory row; OTel span `cuo.dry_run` emitted instead.
 29. **Transparency disclosure present** — every response includes `transparency: {skill_chosen, confidence, alternatives, path_taken, llm_used}`.
-30. **EU AI Act Art. 12 replay** — given a stored BRAIN row + catalog snapshot at the row's timestamp, running the supervisor produces an identical `path_taken` and `llm_pick`.
+30. **EU AI Act Art. 12 replay** — given a stored memory row + catalog snapshot at the row's timestamp, running the supervisor produces an identical `path_taken` and `llm_pick`.
 31. **Caller `traceparent` propagated to AI Gateway** — integration test: outbound request to gateway carries the same `traceparent` as the inbound caller request.
 
 ---
@@ -692,8 +692,8 @@ async def test_cfo_persona_blocks_invoice_emit_even_at_high_confidence(mock_cata
     assert result.routed is False
     assert result.reason == "persona_defer_matrix"
     assert result.operation == "invoice_emit"
-    # BRAIN row was emitted
-    rows = brain_audit_rows_for_request(result.request_id)
+    # memory row was emitted
+    rows = memory_audit_rows_for_request(result.request_id)
     assert any(r["kind"] == "cuo.persona_defer_block" for r in rows)
 ```
 
@@ -709,10 +709,10 @@ from cyberos.cuo.supervisor import run_supervisor
     ("asdfghjkl",                          "defer"),
 ])
 @pytest.mark.asyncio
-async def test_audit_row_emitted_on_every_path(query, expected_path, mock_catalog, brain_rows):
-    pre = len(brain_rows.by_kind("cuo.routing_decision"))
+async def test_audit_row_emitted_on_every_path(query, expected_path, mock_catalog, memory_rows):
+    pre = len(memory_rows.by_kind("cuo.routing_decision"))
     await run_supervisor(query=query, persona_key="genie")
-    post = brain_rows.by_kind("cuo.routing_decision")
+    post = memory_rows.by_kind("cuo.routing_decision")
     assert len(post) == pre + 1
     assert post[-1]["path_taken"] == expected_path
     assert "next_step" in post[-1] and post[-1]["next_step"] is None   # AC #18
@@ -786,9 +786,9 @@ async def test_rule_path_under_50ms_p95():
 **Cross-module (informational):**
 - **FR-AI-014** — persona-version stamping; `cuo-<persona-key>@<semver>` is validated at parse node.
 - **FR-AUTH-101** — RBAC catalogue; `agent-persona` role must be present in claims.
-- **FR-AI-003** — BRAIN audit bridge; receives `cuo.routing_decision`, `cuo.llm_cascade_timeout`, `cuo.persona_defer_block`, `cuo.dry_run`, `cuo.persona_unknown`.
+- **FR-AI-003** — memory audit bridge; receives `cuo.routing_decision`, `cuo.llm_cascade_timeout`, `cuo.persona_defer_block`, `cuo.dry_run`, `cuo.persona_unknown`.
 - **FR-SKILL-104** — capability broker; gates destructive-skill invocation regardless of supervisor decision.
-- **FR-BRAIN-111** — PII detection; applied to `query` field before chain commit.
+- **FR-MEMORY-111** — PII detection; applied to `query` field before chain commit.
 - **FR-AI-022** — OTel trace emission; supervisor spans correlate via `traceparent`.
 
 ---
@@ -869,7 +869,7 @@ $ cyberos-cuo supervisor route --query "asdfghjkl" --persona genie --json
 }
 ```
 
-### 8.4 — `cuo.routing_decision` BRAIN audit row
+### 8.4 — `cuo.routing_decision` memory audit row
 
 ```json
 {
@@ -959,8 +959,8 @@ All other questions resolved.
 | `cuo_state_v` mismatch on replay | checkpointer load | `state_version_unsupported` error | Manually upgrade state via migration tool |
 | Destructive skill picked at high confidence | `invoke` node checks `destructive: true` annotation | Capability broker FR-SKILL-104 gates via Elicitation | User confirms via Elicitation flow |
 | Persona defer-matrix blocks high-confidence pick | `branch` node consults persona.defer_to_human_matrix | Return `routed: false, reason: persona_defer_matrix` | Operator handles manually |
-| BRAIN audit row commit fails | brain_writer error | Supervisor returns 500 `audit_failed`; invocation rolled back if `auto` | OBS sev-1; brain_writer investigation |
-| Audit row contains unscrubbed PII | `cyberos-brain-pii` scrubber called pre-commit; CI test asserts | Pre-commit failure | Investigate; add PII rule |
+| memory audit row commit fails | memory_writer error | Supervisor returns 500 `audit_failed`; invocation rolled back if `auto` | OBS sev-1; memory_writer investigation |
+| Audit row contains unscrubbed PII | `cyberos-memory-pii` scrubber called pre-commit; CI test asserts | Pre-commit failure | Investigate; add PII rule |
 | Concurrent supervisors invoke same destructive skill | Capability broker idempotency check | Second invocation refused via Elicitation idempotency | None — designed |
 | Caller's `traceparent` malformed | parse-node validation | Generate fresh trace at trust boundary per AUTHORING.md rule 22 | None — designed |
 | Replay-equivalence broken on rule path | `test_supervisor_idempotency` | CI fails | Fix non-determinism (likely a dict iteration order or `time.now()` leak) |
@@ -968,16 +968,16 @@ All other questions resolved.
 | Cascade path latency > 3500ms p95 | Integration test with mocked gateway | CI fails | Verify timeout budget; reduce prompt size |
 | 11-persona catalogue divergence between docs + code | `test_persona_catalogue_matches_docs` (asserts 11 keys present) | CI fails | Sync persona.py with cuo.html §personas |
 | `defer_to_human_matrix` empty for persona | Persona schema requires ≥ 1 entry for C-level personas | Schema validation fails at module import | Fix persona definition |
-| `next_step` field absent (not null) in row | JSON-schema validation in brain_writer | Reject row | Fix audit.py builder |
+| `next_step` field absent (not null) in row | JSON-schema validation in memory_writer | Reject row | Fix audit.py builder |
 | OTel span attributes missing | `test_supervisor_otel_attributes` | CI fails | Add missing attribute to span builder |
 | Counter cardinality explosion (tenant_id label) | Cardinality budget alarm in OBS | sev-3 | Aggregate by tenant_id only at Grafana query layer |
-| Dry-run mode accidentally emits BRAIN row | `test_supervisor_dry_run_no_row` | CI fails | Fix conditional in record node |
+| Dry-run mode accidentally emits memory row | `test_supervisor_dry_run_no_row` | CI fails | Fix conditional in record node |
 | FR-CUO-102 ships Postgres checkpointer but state schema unchanged | Forward-compat by `cuo_state_v` tolerance ±2 | Works without changes | None — designed |
 | FR-CUO-104 ships chain walk; this FR's `next_step` always null | Forward-compat by always-null contract | FR-CUO-104 fills the field | None — designed |
 | Tenant residency policy denies LLM call | FR-AI-016 returns 451 at gateway | Cascade fails → fall through to `ask`; emit timeout-shaped row with `error=residency_denied` | Operator reviews residency policy |
 | Cost ledger insufficient budget | FR-AI-001 precheck rejects at gateway | Cascade fails → fall through to `ask`; emit row with `error=budget_exceeded` | Operator tops up budget or operator overrides |
 | Catalog snapshot hash mismatch between request + record | Catch in record node | sev-3 alarm; record row anyway with snapshot mismatch flagged | Investigate catalog reload race |
-| State serialisation fails (non-JSON value in arguments) | Pydantic dump | 500 `state_serialise_failed`; no BRAIN row | Fix arguments schema |
+| State serialisation fails (non-JSON value in arguments) | Pydantic dump | 500 `state_serialise_failed`; no memory row | Fix arguments schema |
 | `persona.py` missing a C-level persona | `test_persona_catalogue_complete` | CI fails | Add missing persona |
 | Cascade prompt exceeds context window | Pre-prompt token estimator | Truncate from oldest rule_score; warn in span | None — designed |
 | Replay across `cuo_state_v` ±3 attempted | `state_version_unsupported` raised | 500 error | Manual state migration tool |
@@ -1002,10 +1002,10 @@ All other questions resolved.
 - **W3C `traceparent` is generated at the trust boundary** when caller doesn't provide one (per AUTHORING.md rule 22). The supervisor entry is a trust boundary — chat/email/etc. may or may not propagate.
 - **`OTel sampling 1%` for steady-state spans, 100% for non-success** — the high-volume happy path is sampled to keep storage costs sane; the rare error path is always captured for debugging. Matches FR-OBS-006 tail-sampling pattern.
 - **`Counter cardinality`** — `persona` label has 11 values (closed catalogue); `path_taken` has 6 values; `outcome` has ~6 values. Combined cardinality: ~400. Adding `tenant_id` would explode this — explicitly NOT included in label set; aggregate at Grafana query time.
-- **`request_id` is ULID** — sortable by time, 26-char, unique across services. Generated at supervisor entry; embedded in BRAIN row + every child span.
+- **`request_id` is ULID** — sortable by time, 26-char, unique across services. Generated at supervisor entry; embedded in memory row + every child span.
 - **Persona JWT format `cuo-<persona-key>@<semver>`** — matches FR-AI-014; the version part lets us roll out persona prompt changes without breaking existing tokens (with grace window).
 - **`test_supervisor_litellm_routes_via_gateway` is an AST walker, not a runtime check** — runtime would only catch the import if the path were exercised; AST walker catches all imports at CI before any code runs.
-- **`apply_brain_pii_rules` is the FR-BRAIN-111 entry point** — same rules used by every BRAIN audit row builder; consistent PII scrubbing across modules.
+- **`apply_memory_pii_rules` is the FR-MEMORY-111 entry point** — same rules used by every memory audit row builder; consistent PII scrubbing across modules.
 - **`current_trace_id_hex` formats via `{}` not `{:?}`** — AUTHORING.md rule 24; Display, not Debug.
 - **The CLI's exit codes follow `cyberos-cli-exit`** — shared crate per AUTHORING.md rule 9; tests assert numeric values to catch drift if the shared crate's mapping changes.
 - **Per-persona defer matrix coverage** — `test_persona_catalogue_complete` asserts that every C-level persona's matrix has ≥ 1 entry (Genie's matrix is shorter — appropriate for the unspecialised entry point).

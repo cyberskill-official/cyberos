@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands client-initiated workflows bridging PORTAL submissions → CHAT threads with auto-routing + SLA monitoring + security-keyword auto-escalation. 730 lines, 20 §1 normative clauses, 20 ACs, 6 verification tests, 22 failure-mode rows, 10 implementation notes. 2 migrations, 6 endpoints, 6 BRAIN audit kinds.
+The spec lands client-initiated workflows bridging PORTAL submissions → CHAT threads with auto-routing + SLA monitoring + security-keyword auto-escalation. 730 lines, 20 §1 normative clauses, 20 ACs, 6 verification tests, 22 failure-mode rows, 10 implementation notes. 2 migrations, 6 endpoints, 6 memory audit kinds.
 
 6 issues resolved.
 
@@ -39,7 +39,7 @@ The spec lands client-initiated workflows bridging PORTAL submissions → CHAT t
 
 ### ISS-006 — Escalation reason free-text — PII risk
 
-§3 schema has `escalation_reason TEXT`. If it includes user-mentioned details, PII leaks to audit. Resolved: §11 — escalation_reason captured at sev-1 audit but hashed via FR-BRAIN-111 before chain commit; raw retained in DB only.
+§3 schema has `escalation_reason TEXT`. If it includes user-mentioned details, PII leaks to audit. Resolved: §11 — escalation_reason captured at sev-1 audit but hashed via FR-MEMORY-111 before chain commit; raw retained in DB only.
 
 ## §3 — Resolution
 

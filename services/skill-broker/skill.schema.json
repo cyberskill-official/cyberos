@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberskill.world/schemas/skill/v0.2.6/skill.schema.json",
+  "title": "CyberOS SKILL.md frontmatter",
+  "description": "Minimum-viable schema covering FR-SKILL-103 + FR-SKILL-111 + FR-SKILL-113 + FR-SKILL-115. Used by editor LSPs + CI gates + non-CyberOS validators. The Rust broker's `frontmatter::load_and_validate()` is the runtime source of truth; this schema mirrors the structural shape but cannot express the verb-stem + paraphrase-distinct + trigger-count rules.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["name", "description"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "kebab-case skill id; matches folder name.",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "description": {
+      "type": "string",
+      "description": "WHAT + WHEN (with ≥2 quoted trigger phrases) + KEY VALUE. Flattened length must be 80-1024 chars. No XML-tag patterns (`<foo>`). Per FR-SKILL-111 SKB-020..023. The verb-stem + ≥2-quoted-trigger checks are enforced by the Rust validator, not by this schema.",
+      "minLength": 80,
+      "maxLength": 1024,
+      "not": {
+        "pattern": "</?[a-zA-Z][a-zA-Z0-9_-]*(\\s+[^<>]*?)?\\s*/?>"
+      }
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license identifier (e.g. MIT, Apache-2.0)."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Flat key-value pairs. CyberOS conventions: version, module, stage, cyberos-template, cyberos-rubric-target.",
+      "additionalProperties": true
+    },
+    "allowed_memory_scopes": {
+      "type": "object",
+      "description": "memory read/write scope globs. Per AGENTS.md §15. Globs validated by globset@0.4 at the Rust layer.",
+      "properties": {
+        "read": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "write": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "allowed_mcp_tools": {
+      "type": "array",
+      "description": "Exhaustive list of MCP tool names this skill may invoke. The Rust broker's MCP gateway rejects unlisted tools at call time.",
+      "items": {"type": "string"}
+    },
+    "untrusted_inputs": {
+      "type": "object",
+      "description": "FR-SKILL-113 / SKB-040..042: declares the untrusted-content marker name + scan policy. Per registry v0.2.5+.",
+      "required": ["wrap_in_marker"],
+      "properties": {
+        "wrap_in_marker": {
+          "type": "string",
+          "description": "v1 marker namespace per FR-SKILL-113 §1 #2. String-form only (no XML brackets). Future markers (FR-SKILL-117): untrusted_content_strict, untrusted_pii_redacted.",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "enum": ["untrusted_content"]
+        },
+        "injection_scan": {
+          "type": "string",
+          "enum": ["required", "optional", "skip"]
+        },
+        "on_marker_hit": {
+          "type": "string",
+          "enum": ["surface_to_human", "halt", "log_only"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "skill_version": {
+      "type": "string",
+      "description": "SemVer. Bumped on every CHANGELOG entry.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9.-]+)?(?:\\+[A-Za-z0-9.-]+)?$"
+    },
+    "min_broker_version": {
+      "type": "string",
+      "description": "Broker SemVer floor — broker refuses to invoke if its version is lower.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9.-]+)?(?:\\+[A-Za-z0-9.-]+)?$"
+    },
+    "max_broker_version": {
+      "type": "string",
+      "description": "Broker SemVer ceiling.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9.-]+)?(?:\\+[A-Za-z0-9.-]+)?$"
+    },
+    "persona": {
+      "type": "string",
+      "description": "Owning persona slug per cuo/MODULE.md (e.g. chief-product-officer)."
+    },
+    "owner_role": {
+      "type": "string",
+      "description": "Role enum from cuo/MODULE.md §20.1. Used by manual-fine-tune commit-access matrix per FR-SKILL-103 §1 #16."
+    },
+    "escalation": {
+      "type": "object",
+      "description": "Escalation graph — to which persona/human if the skill hits a domain boundary.",
+      "properties": {
+        "to_persona_on_legal": {"type": ["string", "null"]},
+        "to_persona_on_security": {"type": ["string", "null"]},
+        "to_persona_on_compliance": {"type": ["string", "null"]},
+        "to_human_on_irreversible": {"type": "boolean"}
+      }
+    },
+    "invocation_modes": {
+      "type": "array",
+      "description": "Modes per FR-SKILL-091 (dual-mode + persona_routing_only).",
+      "items": {
+        "type": "string",
+        "enum": ["standalone", "chained", "persona_routing_only"]
+      }
+    },
+    "expects": {
+      "type": "object",
+      "description": "Input envelope contract.",
+      "properties": {
+        "schema_ref": {"type": "string"},
+        "required_fields": {"type": "array", "items": {"type": "string"}},
+        "optional_fields": {"type": "array", "items": {"type": "string"}},
+        "standalone_interview_ref": {"type": ["string", "null"]}
+      }
+    },
+    "produces": {
+      "type": "object",
+      "description": "Output envelope contract.",
+      "properties": {
+        "schema_ref": {"type": "string"},
+        "output_kind": {
+          "type": "string",
+          "enum": ["notify", "question", "review", "act", "artefact", "refinement_proposal"]
+        },
+        "human_summary_ref": {"type": ["string", "null"]}
+      }
+    },
+    "depends_on_contracts": {
+      "type": "array",
+      "description": "FR-SKILL-103 §1 #14 contract dependencies — pinned by version + pin_path.",
+      "items": {
+        "type": "object",
+        "required": ["id", "version", "purpose", "pin_path"],
+        "properties": {
+          "id": {"type": "string"},
+          "version": {"type": "string"},
+          "purpose": {"type": "string"},
+          "pin_path": {"type": "string"}
+        }
+      }
+    },
+    "exposable_as": {
+      "type": "object",
+      "description": "Per FR-SKILL-103 §1 #15 — surfaces this skill ships through.",
+      "properties": {
+        "internal": {"type": "boolean"},
+        "agent_plugin": {"type": "boolean"},
+        "mcp_tool": {"type": "boolean"},
+        "partner_connector": {"type": "boolean"}
+      }
+    },
+    "audit": {
+      "type": "object",
+      "description": "Per AGENTS.md §7 — audit-log row template emitted on every concrete output.",
+      "properties": {
+        "emit_to": {"type": "string"},
+        "row_kind": {"type": "string"},
+        "payload_hash_field": {"type": "string"},
+        "explanation_pane": {"type": "string"}
+      }
+    },
+    "confidence_band": {
+      "type": "object",
+      "description": "Trust calibration per PRD §6.4.",
+      "properties": {
+        "default": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "defer_below": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+        "cite_sources": {"type": "string", "enum": ["required", "optional", "skip"]}
+      }
+    },
+    "self_audit": {
+      "type": "object",
+      "description": "Per FR-SKILL-092 — invariants checked at runtime + anomaly signals.",
+      "additionalProperties": true
+    },
+    "human_fine_tune": {
+      "type": "object",
+      "description": "Per FR-SKILL-093 — manual fine-tune commit-access matrix + signals_to_initiate.",
+      "additionalProperties": true
+    },
+    "determinism": {
+      "type": "object",
+      "description": "Reproducibility envelope per AGENTS.md §11.2.",
+      "properties": {
+        "reproducible": {"type": "boolean"},
+        "fixity_notes": {"type": "string"}
+      }
+    },
+    "emitted_source_freshness_tier": {
+      "type": ["integer", "null"],
+      "description": "AGENTS.md §5.1 source-tier — declared on each output for downstream conflict resolution."
+    },
+    "gated_until_phase": {
+      "type": ["string", "null"],
+      "description": "Phase gate (P0|P1|P2|P3|P4) before which the supervisor refuses to invoke.",
+      "pattern": "^P[0-9]+$"
+    }
+  }
+}

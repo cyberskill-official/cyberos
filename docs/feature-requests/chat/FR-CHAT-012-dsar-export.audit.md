@@ -39,7 +39,7 @@ Re-share of URL = unauthorised access. Resolved: §1 #6 + AC #9 + sev-1 audit.
 PDPL/GDPR define "personal data" to include data ABOUT the subject, not just authored BY them. Original spec only included authored messages. Resolved: §1 #13 + `mentions.jsonl` + AC #17 + test body verify.
 
 ### ISS-008 — Channel memberships missing (strict-redo pass)
-Subject's channel join/leave history is personal data (reveals workplace activity). Resolved: §1 #14 + `channel_memberships.jsonl` sourced from FR-CHAT-005 BRAIN rows + AC #18.
+Subject's channel join/leave history is personal data (reveals workplace activity). Resolved: §1 #14 + `channel_memberships.jsonl` sourced from FR-CHAT-005 memory rows + AC #18.
 
 ### ISS-009 — Reactions in both directions missing (strict-redo pass)
 Subject's reactions to others (their behaviour) AND others' reactions to them (how they're perceived) both qualify as personal data. Resolved: §1 #15 + `reactions.jsonl` with direction flag + AC #19.

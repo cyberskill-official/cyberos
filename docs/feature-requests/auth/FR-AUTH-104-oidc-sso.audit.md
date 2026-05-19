@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-AUTH-104 ships standards-compliant OIDC SSO — RFC 8414 discovery + RFC 7517 JWKS rotation + PKCE Authorisation Code flow + per-tenant IdP config + JIT subject provisioning + claim → role mapping. Scope: 26 §1 normative clauses covering 3 tables (idp_configs + login_history append-only + subject_link), discovery with 1h TTL + PKCE-support validation, JWKS with 24h cache + kid rotation overlap, full PKCE auth code flow with state + nonce + 10-min TTL, id_token signature + iss + aud + exp + nbf verification with 60s skew, JIT subject provisioning calling FR-AUTH-002 internal helper, per-tenant claim_mapping_yaml validated against FR-AUTH-101 closed role enum, max 3 IdP configs per tenant, 6 BRAIN audit kinds with sev-2 on signature failures, RLS isolation, KMS-encrypted client_secret, locked redirect_uri, implicit + hybrid flow forbidden, per-(idp_id, sub) uniqueness with cross-IdP linking deferred to slice 3, append-only login_history at SQL grant. 19 rationale paragraphs. §3 contains: 3 migrations, discovery + JWKS modules, PKCE flow generator with code_challenge + state + nonce, id_token verifier with constant-time validation, claim mapper validating against AUTH-101 role enum. 27 ACs. 30 failure-mode rows. 21 implementation notes.
+FR-AUTH-104 ships standards-compliant OIDC SSO — RFC 8414 discovery + RFC 7517 JWKS rotation + PKCE Authorisation Code flow + per-tenant IdP config + JIT subject provisioning + claim → role mapping. Scope: 26 §1 normative clauses covering 3 tables (idp_configs + login_history append-only + subject_link), discovery with 1h TTL + PKCE-support validation, JWKS with 24h cache + kid rotation overlap, full PKCE auth code flow with state + nonce + 10-min TTL, id_token signature + iss + aud + exp + nbf verification with 60s skew, JIT subject provisioning calling FR-AUTH-002 internal helper, per-tenant claim_mapping_yaml validated against FR-AUTH-101 closed role enum, max 3 IdP configs per tenant, 6 memory audit kinds with sev-2 on signature failures, RLS isolation, KMS-encrypted client_secret, locked redirect_uri, implicit + hybrid flow forbidden, per-(idp_id, sub) uniqueness with cross-IdP linking deferred to slice 3, append-only login_history at SQL grant. 19 rationale paragraphs. §3 contains: 3 migrations, discovery + JWKS modules, PKCE flow generator with code_challenge + state + nonce, id_token verifier with constant-time validation, claim mapper validating against AUTH-101 role enum. 27 ACs. 30 failure-mode rows. 21 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -42,13 +42,13 @@ Resolved: §1 #2 + DEC-407 + `REVOKE UPDATE, DELETE FROM cyberos_app`; AC #21.
 First-pass had global sub uniqueness. Resolved: §1 #24 + DEC-410 + per-(idp_id, sub) uniqueness; cross-IdP linking deferred.
 
 ### ISS-009 — client_secret in API responses
-First-pass returned full secret. Resolved: §1 #25 + handler omits client_secret from all responses; `auth.oidc_idp_config_changed` BRAIN row excludes secret value.
+First-pass returned full secret. Resolved: §1 #25 + handler omits client_secret from all responses; `auth.oidc_idp_config_changed` memory row excludes secret value.
 
 ## §3 — Resolution
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (RFC 8414 discovery × RFC 7517 JWKS rotation × PKCE S256 × state + nonce × id_token signature × JIT provisioning × claim mapping × per-tenant IdP config × KMS-encrypted secret × locked redirect_uri × append-only history × 6 BRAIN audit kinds × sev-2 alarm), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (RFC 8414 discovery × RFC 7517 JWKS rotation × PKCE S256 × state + nonce × id_token signature × JIT provisioning × claim mapping × per-tenant IdP config × KMS-encrypted secret × locked redirect_uri × append-only history × 6 memory audit kinds × sev-2 alarm), not by line targets.
 
 ---
 

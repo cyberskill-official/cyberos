@@ -3,7 +3,7 @@ id: FR-PROJ-007
 title: "Three billing modes — Time & Materials, Fixed-Fee, Retainer — with mode-aware rollups and per-mode invoice generation hooks"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-005, FR-PROJ-006, FR-INV-001, FR-TIME-005, FR-TEN-203]
 depends_on: [FR-PROJ-005, FR-PROJ-006]
 blocks: []
@@ -49,7 +49,7 @@ sub_tasks:
   - "1.0h: rollup.rs — common interface: rollup_invoiceable(engagement, period) -> InvoiceLines"
   - "1.0h: fixed_fee.rs — milestone-based rollup; milestone completion (FR-PROJ-004 status=done) triggers line"
   - "1.5h: retainer.rs — monthly cap with rollover (3-month default); track consumed_minutes; emit overage line"
-  - "0.5h: BRAIN audit rows (mode_changed, milestone_invoiced, retainer_overage)"
+  - "0.5h: memory audit rows (mode_changed, milestone_invoiced, retainer_overage)"
   - "1.0h: billing_mode_test.rs — three mode rollups with golden fixtures"
 risk_if_skipped: "Without explicit billing modes, every invoice generation reinvents the rollup logic — drift between Kanban + Timeline + invoice batch jobs. Without milestone semantics for Fixed-Fee, project completion doesn't trigger billing → cash flow gaps. Without retainer overage tracking, clients silently consume more than contracted → margin erosion. Without mode-change audit, finance team has no trail for 'when did this engagement convert from T&M to retainer'."
 ---
@@ -64,7 +64,7 @@ The billing-mode layer **MUST** support exactly three modes per engagement with 
 4. **MUST** support `Retainer` mode with config `{monthly_cap_minutes: i32, currency, base_amount_minor: i64, overage_rate_minor_per_hour: i64, rollover_months: u8}`. Rollup = always invoice base_amount_minor per month; if `consumed_minutes_this_period > cap + rollover_credit`, emit overage line at `overage_rate_minor_per_hour × (excess_minutes / 60)`.
 5. **MUST** expose `rollup_invoiceable(engagement_id, period_start, period_end) -> InvoiceRollup` returning ordered list of `InvoiceLine { line_kind, description, quantity, unit_rate_minor, amount_minor, currency, source_refs }` where source_refs cross-references to time entries / milestone IDs.
 6. **MUST** record mode changes via supersession (new row + close prior `effective_to`). Mode-change DURING an open invoice period prorates: portion before change billed under old mode, portion after under new.
-7. **MUST** emit BRAIN audit rows:
+7. **MUST** emit memory audit rows:
     - `proj.billing_mode_set` on initial mode set.
     - `proj.billing_mode_changed` on supersession with `{old_mode, new_mode, effective_from, prorating_applied}`.
     - `proj.milestone_invoiced` per Fixed-Fee milestone rollup.
@@ -106,7 +106,7 @@ The billing-mode layer **MUST** support exactly three modes per engagement with 
 
 **Why mid-period proration (§1 #13)?** Engagements convert modes mid-month often (small T&M proves out, converts to Fixed-Fee). Charging full retainer for a 2-week period feels unfair; charging T&M rates for a Fixed-Fee period feels wrong. Proration splits the difference correctly.
 
-**Why milestone cancellation + add (§1 #14, #15)?** Real engagements scope-creep or descope. Cancellation refunds; addition extends. Both adjust total_amount_minor; both emit BRAIN audits for finance reconciliation.
+**Why milestone cancellation + add (§1 #14, #15)?** Real engagements scope-creep or descope. Cancellation refunds; addition extends. Both adjust total_amount_minor; both emit memory audits for finance reconciliation.
 
 **Why overage-streak tracking (§1 #16)?** A retainer that consistently overages is mispriced; the operator should renegotiate. 3-period streak is the empirical signal that "this is structural, not noise."
 
@@ -326,7 +326,7 @@ pub async fn compute_lines(
             amount_minor: overage_amount,
             source_refs: vec![SourceRef::Period { year_month: ym.clone() }],
         });
-        emit_brain_row("proj.retainer_overage_emitted", serde_json::json!({
+        emit_memory_row("proj.retainer_overage_emitted", serde_json::json!({
             "engagement_id": eng, "period": ym, "overage_minutes": overage_min,
             "overage_amount_minor": overage_amount,
         })).await;
@@ -349,9 +349,9 @@ pub async fn compute_lines(
 8. **Retainer rollover expires after N months** — unused credit > rollover_months old → drops.
 9. **Mode change at period midpoint prorates** — T&M Jan 1-15, FixedFee Jan 16-31 → 2 InvoiceRollups OR 1 with proration markers.
 10. **Two active modes forbidden** — second mode insert with overlapping effective dates → 409.
-11. **BRAIN audit on mode change** — POST new mode → `proj.billing_mode_changed` row.
-12. **BRAIN audit on milestone invoiced** — milestone done → `proj.milestone_invoiced` row.
-13. **BRAIN audit on retainer overage** — overage > 0 → `proj.retainer_overage_emitted`.
+11. **memory audit on mode change** — POST new mode → `proj.billing_mode_changed` row.
+12. **memory audit on milestone invoiced** — milestone done → `proj.milestone_invoiced` row.
+13. **memory audit on retainer overage** — overage > 0 → `proj.retainer_overage_emitted`.
 14. **InvoiceLine.source_refs traceable** — T&M line carries time_entry IDs; FixedFee carries milestone ID; Retainer carries period.
 15. **CLI set-mode idempotent** — same Idempotency-Key + same body → returns prior.
 16. **OTel metric `proj_retainer_overage_total`** — overage emitted → counter increments.
@@ -366,7 +366,7 @@ pub async fn compute_lines(
 25. **Mixed currency in T&M period** — entries in USD + VND → 2 InvoiceLines (one per currency) + SEV-2 `proj.billing_mixed_currency_period` (AC for §1 #20).
 26. **engagement_metadata populated** — rollup response includes client_name + billing_address + vat_number (AC for §1 #21).
 27. **CLI set-mode validates milestone sum** — bad config → CLI exits 1 with clear error (AC for §1 #8 + #15).
-28. **Audit `proj.billing_mode_set` on first mode** — initial mode → BRAIN row with mode + config (AC for §1 #7).
+28. **Audit `proj.billing_mode_set` on first mode** — initial mode → memory row with mode + config (AC for §1 #7).
 
 ---
 
@@ -489,7 +489,7 @@ All resolved. Deferred:
 | Overage rate = 0 with cap exceeded | overage_amount = 0; line still emitted | client sees "0 VND overage" | By design |
 | Retainer base = 0 | line emitted with amount 0 | client sees 0-amount line | Edge case for pro-bono retainer |
 | Mode change without proration | period straddles change | rollup uses mode-at-period-start | Slice 4+ proration |
-| BRAIN audit fails | rollup still returns; audit lost | sev-2 alarm | Operator restores |
+| memory audit fails | rollup still returns; audit lost | sev-2 alarm | Operator restores |
 | Concurrent rollup calls | retainer_state ON CONFLICT DO UPDATE | last writer wins for state; rollup result deterministic | None |
 | Invoice already generated for period | duplicate invoice attempt | caller's FR-INV-001 dedup catches | None at this FR |
 | RLS bypass | RLS policy | 0 rows | None |

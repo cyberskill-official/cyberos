@@ -3,7 +3,7 @@ id: FR-PROJ-004
 title: "Issue lifecycle FSM — backlog → todo → in-progress → in-review → done | cancelled with FR-PROJ-002 audit trail, validation, and forward-only enforcement"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PROJ-001, FR-PROJ-002, FR-PROJ-003, FR-PROJ-008, FR-BRAIN-101]
+memory_chain_hash: null
+related_frs: [FR-PROJ-001, FR-PROJ-002, FR-PROJ-003, FR-PROJ-008, FR-MEMORY-101]
 depends_on: [FR-PROJ-001, FR-PROJ-002]
 blocks: [FR-PROJ-008, FR-PROJ-012]
 
@@ -56,7 +56,7 @@ sub_tasks:
   - "0.5h: fsm.rs — allowed_transitions table; is_legal_transition(from, to) -> bool"
   - "1.0h: transitions.rs — apply_transition(issue, from, to, by, reason?) -> Result<TransitionApplied, FsmError>"
   - "0.5h: scalar_handlers.rs integration — status PATCH calls FSM validator before LWW write"
-  - "0.5h: BRAIN audit row 'proj.issue_status_changed' on every transition"
+  - "0.5h: memory audit row 'proj.issue_status_changed' on every transition"
   - "0.5h: TS allowed_transitions.ts mirror (generated from Rust via build.rs)"
   - "0.5h: StatusPicker.tsx — disables illegal options based on current status"
   - "0.5h: fsm_test.rs — every legal pair + every illegal pair (5×5 grid)"
@@ -99,7 +99,7 @@ The issue lifecycle **MUST** be a strict FSM with the following 5 states and 13 
     - `(issue_id, transition_seq, from_status, to_status, by_subject_id, reason, transitioned_at_ns)`.
     - `transition_seq` is monotonic per issue.
     - `reason` REQUIRED for re-open transitions (Done|Cancelled → InProgress); SHOULD-be-empty otherwise (operators MAY annotate non-re-open transitions for context).
-5. **MUST** emit `proj.issue_status_changed` BRAIN audit row per accepted transition with payload `{issue_id, from, to, by_subject_id, reason, transition_seq, transitioned_at_ns, trace_id}`.
+5. **MUST** emit `proj.issue_status_changed` memory audit row per accepted transition with payload `{issue_id, from, to, by_subject_id, reason, transition_seq, transitioned_at_ns, trace_id}`.
 6. **MUST** support `cyberos issue history <id>` CLI returning the full transition log for an issue (operator + auditor view).
 7. **MUST** expose REST endpoint `POST /api/proj/issues/:id/transition` with body `{to: IssueStatus, reason?: string}`. Returns 200 with `{transition_seq, applied_at_ns, current_status}` or 422 with FSM error.
 8. **MUST** share the FSM definition between Rust + TypeScript via build-time codegen:
@@ -305,7 +305,7 @@ pub async fn apply_transition(
     tx.commit().await.map_err(|e| FsmError::Db(e.to_string()))?;
 
     // 7. Emit audit rows
-    emit_brain_row("proj.issue_status_changed", serde_json::json!({
+    emit_memory_row("proj.issue_status_changed", serde_json::json!({
         "issue_id": issue_id, "from": from, "to": requested_to,
         "by_subject_id": by_subject_id, "reason": reason,
         "transition_seq": transition_seq,
@@ -313,7 +313,7 @@ pub async fn apply_transition(
         "trace_id": current_trace_id(),
     })).await;
     if from.is_terminal() && requested_to == IssueStatus::InProgress {
-        emit_brain_row("proj.issue_reopened", serde_json::json!({
+        emit_memory_row("proj.issue_reopened", serde_json::json!({
             "issue_id": issue_id, "from": from, "reason": reason,
             "by_subject_id": by_subject_id,
             "reopen_seq": transition_seq, "trace_id": current_trace_id(),
@@ -451,8 +451,8 @@ export function StatusPicker({ issueId, current, onChange }: Props) {
 5. **Re-open with empty reason rejected** — `reason: "   "` → 422 (trimmed empty).
 6. **history table populated** — after 5 transitions on issue X → 5 rows in `issue_status_history` with consecutive `transition_seq` 1..5.
 7. **Companion columns updated** — `status_updated_at_ns` + `status_updated_by_subject_id` match the transition row.
-8. **BRAIN audit row per transition** — every legal transition → `proj.issue_status_changed` row.
-9. **BRAIN audit `proj.issue_reopened` on re-open** — done → in_progress → both `status_changed` AND `issue_reopened` rows.
+8. **memory audit row per transition** — every legal transition → `proj.issue_status_changed` row.
+9. **memory audit `proj.issue_reopened` on re-open** — done → in_progress → both `status_changed` AND `issue_reopened` rows.
 10. **time_in_status metric recorded** — issue X transitions todo → in_progress at T+10s → histogram records 10s for `from_status="todo"`.
 11. **TS mirror matches Rust** — CI `ts-fsm-fresh` runs codegen + diffs; PR rejected if drift.
 12. **StatusPicker disables illegal options** — current=backlog → in_review button is disabled.
@@ -539,7 +539,7 @@ async fn re_open_with_reason_succeeds_and_emits_reopen_row() {
     let issue = env.create_issue_in_status(IssueStatus::Done).await;
     let res = apply_transition(&env.pool, issue, IssueStatus::InProgress, env.alice(), Some("scope creep".into())).await.unwrap();
     assert_eq!(res.current_status, IssueStatus::InProgress);
-    let reopen_row = env.brain.latest("proj.issue_reopened").await;
+    let reopen_row = env.memory.latest("proj.issue_reopened").await;
     assert_eq!(reopen_row["payload"]["reason"], "scope creep");
 }
 
@@ -567,9 +567,9 @@ async fn time_in_status_metric_recorded() {
 - **FR-PROJ-001** — `issues` table; we add `status_updated_at_ns` + `status_updated_by_subject_id` columns + new `issue_status_history` table.
 - **FR-PROJ-002** — WebSocket sync; transitions broadcast as scalar LWW updates per FR-PROJ-003.
 - **FR-PROJ-003** — LWW companion-column pattern.
-- **FR-PROJ-008 (downstream)** — BRAIN audit row pattern reused.
+- **FR-PROJ-008 (downstream)** — memory audit row pattern reused.
 - **FR-AUTH-003** — RLS on `issue_status_history`.
-- **FR-BRAIN-101** — audit emission.
+- **FR-MEMORY-101** — audit emission.
 
 ---
 
@@ -639,7 +639,7 @@ All resolved. Deferred:
 | Reason missing on re-open | trim check | 422 `reason_required` | Client prompts user |
 | Concurrent transition race | row-level lock + LWW | Second caller gets stale_write OR transition_seq collision (PK) | Client retries |
 | Postgres tx commit fails | sqlx Err | 500; no audit row | Operator restores DB; client retries |
-| Audit row emit fails | BrainWriter Err | Transition succeeded; audit lost; sev-2 alarm | Operator restores BRAIN |
+| Audit row emit fails | MemoryWriter Err | Transition succeeded; audit lost; sev-2 alarm | Operator restores memory |
 | Codegen drift (TS missing new state) | CI `ts-fsm-fresh` | PR blocked | Author re-runs `cargo build` |
 | Operator manually inserts row with skip | RLS doesn't prevent; FSM only checked at handler | Skips audit trail; out-of-band edit | Operator avoids manual SQL |
 | Issue deleted mid-transition | SELECT … FOR UPDATE returns 0 rows | sqlx Err → 500 | Client retries (will get 404) |

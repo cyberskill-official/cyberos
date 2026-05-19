@@ -58,7 +58,7 @@ def uuid7_monotonic(n: int = 50) -> bool:
     import time
     sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "outputs"))
     try:
-        from brain_writer import new_uuid7
+        from memory_writer import new_uuid7
     except ImportError:
         return True  # tool not importable; skip
     uuids = []

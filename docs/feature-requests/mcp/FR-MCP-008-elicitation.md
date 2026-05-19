@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-MCP-001, FR-MCP-004, FR-MCP-006, FR-MCP-007, FR-AUTH-004, FR-AI-003, FR-BRAIN-111, FR-CHAT-005, FR-OBS-005, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-MCP-001, FR-MCP-004, FR-MCP-006, FR-MCP-007, FR-AUTH-004, FR-AI-003, FR-MEMORY-111, FR-CHAT-005, FR-OBS-005, FR-OBS-007]
 depends_on: [FR-MCP-001, FR-MCP-004]
 blocks: []
 
@@ -31,7 +31,7 @@ source_decisions:
   - DEC-1146 2026-05-17 — Per-tool registration declares `supports_elicitation: bool`; tools without this flag MAY NOT emit elicitation requests (fail loudly if attempted)
   - DEC-1147 2026-05-17 — Elicitation in sync tool calls = anti-pattern (sync tools should return on missing args, not block waiting for user); ALLOWED for long-running tasks (FR-MCP-007) ONLY at slice 3
   - DEC-1148 2026-05-17 — Cancellation: caller can cancel pending elicitation via `POST /v1/mcp/elicitations/{id}/cancel`; tool resumes with `elicitation_cancelled` error
-  - DEC-1149 2026-05-17 — Per-elicitation BRAIN audit: emits `mcp.elicitation_requested`, `mcp.elicitation_responded`, `mcp.elicitation_timeout`, `mcp.elicitation_cancelled`, `mcp.elicitation_validation_failed`
+  - DEC-1149 2026-05-17 — Per-elicitation memory audit: emits `mcp.elicitation_requested`, `mcp.elicitation_responded`, `mcp.elicitation_timeout`, `mcp.elicitation_cancelled`, `mcp.elicitation_validation_failed`
   - DEC-1150 2026-05-17 — Response validation: invalid JSON → 400; schema validation failure → 422 + `validation_errors` array; tool MAY re-elicit (max 3 retries per logical prompt)
   - DEC-1151 2026-05-17 — FR-MCP-006 integration: destructive tool with `confirmation` elicitation_type satisfies the FR-MCP-006 confirm-mode requirement (`elicit` mode in policy)
   - DEC-1152 2026-05-17 — Confirmation elicitation MUST present clear action description; per DEC-1141 confirmation type has fixed schema `{ confirmed: boolean, reason?: string }`
@@ -39,7 +39,7 @@ source_decisions:
   - DEC-1154 2026-05-17 — Rate limit on elicitation creation: 100/min/task (one task shouldn't elicit 100+ times); over-limit → tool errors with `elicitation_rate_limited`
   - DEC-1155 2026-05-17 — UI integration: CHAT (FR-CHAT-005) surfaces elicitations as inline prompts in the conversation; outside-CHAT contexts (CLI, API) use polling
   - DEC-1156 2026-05-17 — Idempotency: re-submitting the same `elicitation_id` + `response_payload` returns cached response (avoids double-side-effect on tool resume)
-  - DEC-1157 2026-05-17 — Response payload PII-scrubbed: hash16 in BRAIN chain; full response in `mcp_elicitations` (RLS-scoped, 30-day retention)
+  - DEC-1157 2026-05-17 — Response payload PII-scrubbed: hash16 in memory chain; full response in `mcp_elicitations` (RLS-scoped, 30-day retention)
   - DEC-1158 2026-05-17 — Trace_id end-to-end: elicitation share trace_id with parent task; allows forensic reconstruction
   - DEC-1159 2026-05-17 — Cross-tenant elicitation read DENIED via RLS + explicit check; attempt = 403 + sev-1 audit
   - DEC-1160 2026-05-17 — Single-choice + multi-choice elicitation_type have fixed schema with `choices: [{value, label}]` array
@@ -58,7 +58,7 @@ build_envelope:
     - services/mcp/src/elicitation/validate.rs                        # JSON Schema response validation
     - services/mcp/src/elicitation/file_upload.rs                     # presigned S3 URL generation
     - services/mcp/src/elicitation/nats_push.rs                       # NATS publish for push transport
-    - services/mcp/src/audit/elicitation_events.rs                    # 5 BRAIN row builders
+    - services/mcp/src/audit/elicitation_events.rs                    # 5 memory row builders
     - services/mcp/src/handlers/elicitation_routes.rs                 # REST routes
     - services/mcp/tests/elicitation_request_response_test.rs
     - services/mcp/tests/elicitation_timeout_test.rs
@@ -114,7 +114,7 @@ risk_if_skipped: "Without Elicitation, tools requiring missing args at runtime m
 
 ## §1 — Description (BCP-14 normative)
 
-The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicitation/` per MCP 2025-11-25 spec — server-initiated structured prompts mid-tool-execution, response polling + cancellation + timeout, JSON Schema validation, 5 type-specific schemas, FR-MCP-006 confirmation integration, 5 BRAIN audit kinds.
+The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicitation/` per MCP 2025-11-25 spec — server-initiated structured prompts mid-tool-execution, response polling + cancellation + timeout, JSON Schema validation, 5 type-specific schemas, FR-MCP-006 confirmation integration, 5 memory audit kinds.
 
 1. **MUST** define the closed `elicitation_type` enum at migration `0012`: `('string_input','single_choice','multi_choice','confirmation','file_upload')` per DEC-1141. CI cardinality test asserts 5.
 
@@ -178,7 +178,7 @@ The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicita
 
 16. **MUST** scope elicitation to caller_subject_id per DEC-1159. Cross-caller-subject GET/POST returns 403 + `cross_caller_access_denied` + sev-1 audit.
 
-17. **MUST** emit 5 BRAIN audit row kinds per DEC-1149 (AUTHORING.md rule 6):
+17. **MUST** emit 5 memory audit row kinds per DEC-1149 (AUTHORING.md rule 6):
     - `mcp.elicitation_requested` (sev-3 — informational; can be high-volume)
     - `mcp.elicitation_responded` (sev-3)
     - `mcp.elicitation_timeout` (sev-3)
@@ -187,7 +187,7 @@ The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicita
 
 18. **MUST** preserve trace_id end-to-end per DEC-1158. Parent task trace_id propagates to elicitation row + caller poll responses + audit rows + NATS publishes.
 
-19. **MUST** PII-scrub per DEC-1157 + AUTHORING.md rule 18: `response_payload_sha256` only in BRAIN chain; raw payload in `mcp_elicitations.response_payload_kms_blob` (RLS-scoped, 30-day retention post-completion).
+19. **MUST** PII-scrub per DEC-1157 + AUTHORING.md rule 18: `response_payload_sha256` only in memory chain; raw payload in `mcp_elicitations.response_payload_kms_blob` (RLS-scoped, 30-day retention post-completion).
 
 20. **MUST** auto-clean responded elicitations at T+30 days post-completion. Daily job UPDATE `response_payload_kms_blob=NULL WHERE status IN ('responded','expired','cancelled','validation_failed') AND COALESCE(responded_at, expires_at) < now() - interval '30 days'`. Metadata retained for forensic.
 
@@ -348,7 +348,7 @@ async fn elicit<R: DeserializeOwned>(
 17. **Trace_id preserved** — single trace_id across tool's elicit() span + caller poll response + audit rows + NATS payload.
 18. **30-day retention pruning** — responded elicitation > 30d post-completion → `response_payload_kms_blob=NULL` after prune; metadata retained.
 19. **PII scrub** — audit row carries `response_payload_sha256` only; raw payload in DB only.
-20. **5 BRAIN audit kinds emitted** — full lifecycle covers requested + responded + timeout + cancelled + validation_failed.
+20. **5 memory audit kinds emitted** — full lifecycle covers requested + responded + timeout + cancelled + validation_failed.
 
 ---
 
@@ -493,7 +493,7 @@ async fn caller_b_cannot_access_caller_a_elicitation() {
     let r = ctx.as_caller("b").respond_to_elicitation(eid_a, json!({"value": "x"})).await;
     assert_eq!(r.status(), 403);
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "mcp.elicitation_validation_failed"
         || r.kind == "mcp.cross_caller_access_denied"));  // either security audit
 }
@@ -680,8 +680,8 @@ pub async fn respond(ctx: &AppCtx, elicit_id: Uuid, req: ElicitationRespondReq) 
 - **FR-MCP-006** Gating — confirmation elicitation satisfies MCP-006 `mode=elicit` policy; de-stubs MCP-006's 503 placeholder.
 - **FR-MCP-007** Tasks primitive — elicit() is exposed on TaskCtx; only callable from within a long-running task.
 - **FR-AUTH-004** JWT validate — caller_subject_id verification.
-- **FR-AI-003** BRAIN audit-row bridge — 5 new kinds.
-- **FR-BRAIN-111** PII scrubbing — response payload SHA only.
+- **FR-AI-003** memory audit-row bridge — 5 new kinds.
+- **FR-MEMORY-111** PII scrubbing — response payload SHA only.
 - **FR-CHAT-005** CHAT — surfaces elicitations inline in conversation; NATS push consumer.
 - **FR-OBS-005** Trace correlation — trace_id end-to-end.
 - **FR-OBS-007** Auto-runbook — sev-2 validation_failed alerts.
@@ -728,7 +728,7 @@ pub async fn respond(ctx: &AppCtx, elicit_id: Uuid, req: ElicitationRespondReq) 
 }
 ```
 
-### 8.3 `mcp.elicitation_requested` BRAIN row
+### 8.3 `mcp.elicitation_requested` memory row
 
 ```json
 {

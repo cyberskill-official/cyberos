@@ -3,7 +3,7 @@ id: FR-CHAT-004
 title: "PGroonga + custom Vietnamese bigram tokeniser — VN message search with ≥ 80% recall CI gate and dual-path (VN-bigram / EN-PGroonga) hybrid routing"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CHAT-003, FR-CHAT-005, FR-BRAIN-108]
+memory_chain_hash: null
+related_frs: [FR-CHAT-003, FR-CHAT-005, FR-MEMORY-108]
 depends_on: [FR-CHAT-003]
 blocks: []
 
@@ -97,7 +97,7 @@ The CHAT search layer **MUST** provide Vietnamese-aware full-text search via PGr
     - Recall ≥ 0.80 (true-positive / (true-positive + false-negative)).
     - False-positive rate ≤ 0.05 (false-positive / (false-positive + true-negative)).
     - Both thresholds enforced; either failure = CI red.
-12. **MUST** emit BRAIN audit row `chat.search_query` per non-trivial search (queries ≥ 3 chars) with payload `{user_id, team_id, query_hash, query_lang (vn|en), result_count, latency_ms, trace_id}`. Query hashed (not raw) for PII safety.
+12. **MUST** emit memory audit row `chat.search_query` per non-trivial search (queries ≥ 3 chars) with payload `{user_id, team_id, query_hash, query_lang (vn|en), result_count, latency_ms, trace_id}`. Query hashed (not raw) for PII safety.
 13. **MUST** emit OTel metrics:
     - `chat_search_queries_total{lang, outcome}` (counter; outcome ∈ ok | empty | error | rate_limited).
     - `chat_search_latency_seconds{lang}` (histogram, FR-OBS-003 standardised buckets).
@@ -263,7 +263,7 @@ func (p *SearchPlugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *ht
     }
 
     latencyMs := time.Since(start).Milliseconds()
-    p.emitBrainAudit(subjectID, tenantID, req, isVn, len(posts), latencyMs)
+    p.emitMemoryAudit(subjectID, tenantID, req, isVn, len(posts), latencyMs)
     p.recordMetric(isVn, "ok", latencyMs)
 
     json.NewEncoder(w).Encode(SearchResult{
@@ -476,7 +476,7 @@ jobs:
 17. **CI gate passes at recall ≥ 0.80** — measure-recall.py on shipped corpus → exit 0; printed recall ≥ 0.80.
 18. **CI gate fails at recall < 0.80** — fixture corpus with intentional regression → exit 1; PR blocked.
 19. **CI gate fails at fp_rate > 0.05** — fixture with over-eager matches → exit 1.
-20. **BRAIN audit `chat.search_query`** — non-trivial query → 1 row emitted; payload contains `query_hash` (not raw query).
+20. **memory audit `chat.search_query`** — non-trivial query → 1 row emitted; payload contains `query_hash` (not raw query).
 21. **OTel `chat_search_queries_total{lang=vn}` increments** — VN query → counter +1.
 22. **OTel `chat_search_latency_seconds{lang=vn}` records** — histogram populated.
 23. **Rate limit triggers 429** — 350 queries/min from one tenant → 429 after 300th.
@@ -603,10 +603,10 @@ func TestSearch_EnRoutesToPGroongaPath(t *testing.T) {
     assert.Equal(t, 1, p.pgroongaCallCount)
 }
 
-func TestSearch_BrainAuditEmitted(t *testing.T) {
+func TestSearch_MemoryAuditEmitted(t *testing.T) {
     p := setupPlugin(t)
     p.searchHTTP("cà phê")
-    row := p.brain.LastRow("chat.search_query")
+    row := p.memory.LastRow("chat.search_query")
     assert.NotEmpty(t, row.Payload["query_hash"])
     _, has := row.Payload["query"]
     assert.False(t, has, "raw query MUST NOT appear in audit row payload")
@@ -647,11 +647,11 @@ echo "✓ gate correctly exits 1 on low recall"
 ## §7 — Dependencies
 
 - **FR-CHAT-003 (upstream)** — RDS host; Terraform module enables PGroonga extension via parameter group.
-- **FR-CHAT-005 (related)** — BRAIN bridge picks up `chat.search_query` audit rows.
+- **FR-CHAT-005 (related)** — memory bridge picks up `chat.search_query` audit rows.
 - **FR-CHAT-001 (upstream)** — Mattermost fork patches load this plugin; `020-search-route.patch` routes search to plugin.
 - **FR-CHAT-002 (upstream)** — JWT auth + `tenant_id` propagation in session props.
 - **FR-AUTH-003** — RLS on `posts` table; this FR's queries inherit.
-- **FR-BRAIN-108** — sibling search surface (BRAIN vector + graph search); CHAT search is text-only.
+- **FR-MEMORY-108** — sibling search surface (memory vector + graph search); CHAT search is text-only.
 - **FR-OBS-003** — standardised histogram buckets reused.
 - **FR-OBS-007** — alerts when `chat_search_recall` gauge < 0.80.
 
@@ -689,7 +689,7 @@ echo "✓ gate correctly exits 1 on low recall"
 }
 ```
 
-### `chat.search_query` BRAIN audit row
+### `chat.search_query` memory audit row
 
 ```json
 {
@@ -722,7 +722,7 @@ counts   tp=2418 fn=755 fp=124 tn=2903
 All resolved. Deferred:
 - Trigram path for power users who want higher recall (slice 4+; opt-in via channel setting).
 - Stemming for English path (Porter stemmer) — slice 4+; current naïve match is acceptable.
-- Cross-channel search via vector embeddings (BRAIN search delegation per FR-BRAIN-108) — slice 4+; semantic queries cross over.
+- Cross-channel search via vector embeddings (memory search delegation per FR-MEMORY-108) — slice 4+; semantic queries cross over.
 - Mention-aware search ("@alice meeting") — slice 4+; requires Mattermost mention table join.
 - VN diacritic-stripping fallback (search "ca phe" should hit "cà phê") — slice 4+; ~5% recall improvement.
 
@@ -741,7 +741,7 @@ All resolved. Deferred:
 | RDS connection pool exhausted | `db.QueryContext` Err | 503 returned; sev-2 | Operator scales tier |
 | Rate-limit governor drops legit users | metric `outcome=rate_limited` spike | Sev-2 alarm | Operator tunes per-tenant limits |
 | Mixed-language query miscategorised | wrong path chosen | Lower recall for that query; metric records | Operator tunes 5% threshold |
-| Audit row emit fails | BRAIN socket down | Search still succeeds; audit lost; sev-2 | Operator restores FR-BRAIN-107 |
+| Audit row emit fails | memory socket down | Search still succeeds; audit lost; sev-2 | Operator restores FR-MEMORY-107 |
 | Query > 1KB | Mattermost API rejects upstream | 413 returned | Plugin truncates input |
 | SQL injection via query parameter | parameterised queries prevent | Safe | None |
 | Bigram table overlap returns 1M rows | `LIMIT` clause caps; latency budget catches | sev-2 latency alarm | Operator tunes pagination defaults |

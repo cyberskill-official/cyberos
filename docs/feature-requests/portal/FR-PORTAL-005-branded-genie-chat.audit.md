@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands the branded Genie chat for client-tenant portal on top of FR-PORTAL-003 (IdP-auth) + FR-CUO-101 (LangGraph supervisor). Final form: 1,090 lines, 23 §1 normative clauses (2 migrations, scope_grants JWT claim extension, query handler with SSE streaming, pre-flight + post-flight cross-tenant boundary checks, FR-PORTAL-002 brand inheritance, FR-PORTAL-004 SCIM cascade target, per-Engagement persona override, conversation history with 90-day retention, 5 BRAIN audit kinds), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 20 implementation notes.
+The spec lands the branded Genie chat for client-tenant portal on top of FR-PORTAL-003 (IdP-auth) + FR-CUO-101 (LangGraph supervisor). Final form: 1,090 lines, 23 §1 normative clauses (2 migrations, scope_grants JWT claim extension, query handler with SSE streaming, pre-flight + post-flight cross-tenant boundary checks, FR-PORTAL-002 brand inheritance, FR-PORTAL-004 SCIM cascade target, per-Engagement persona override, conversation history with 90-day retention, 5 memory audit kinds), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 20 implementation notes.
 
 6 issues caught by self-audit, all resolved.
 

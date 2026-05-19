@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-HR-004, FR-HR-005, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-HR-004, FR-HR-005, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-HR-001]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1812 2026-05-17 — Per-type rules: probation ≤ 60d for skilled / 30d unskilled (Art. 25); fixed_term ≤ 36 months (Art. 20); only 1 fixed_term renewal allowed before becoming indefinite (Art. 20.3)
   - DEC-1813 2026-05-17 — Per-type leave entitlement override: contractor=0 paid leave; part_time pro-rated; others = full
   - DEC-1814 2026-05-17 — Per-type SI participation: indefinite/fixed_term/part_time/probation = required; contractor = exempt (per Decree 152)
-  - DEC-1815 2026-05-17 — BRAIN audit kinds: hr.contract_type_set, hr.contract_renewal_attempted, hr.contract_violation_detected
+  - DEC-1815 2026-05-17 — memory audit kinds: hr.contract_type_set, hr.contract_renewal_attempted, hr.contract_violation_detected
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without contract type enforcement, illegal probation lengths +
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** extend member schema with contract types at `services/hr/src/contract/` enforcing VN Labour Code constraints + per-type leave/SI rules, 3 BRAIN audit kinds.
+The HR service **MUST** extend member schema with contract types at `services/hr/src/contract/` enforcing VN Labour Code constraints + per-type leave/SI rules, 3 memory audit kinds.
 
 1. **MUST** validate `contract_type` against closed enum per DEC-1811.
 
@@ -113,7 +113,7 @@ The HR service **MUST** extend member schema with contract types at `services/hr
    REVOKE UPDATE, DELETE ON hr_contract_history FROM cyberos_app;
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-1815. PII per FR-BRAIN-111: member_id (uuid) ok; type enum ok.
+7. **MUST** emit 3 memory audit kinds per DEC-1815. PII per FR-MEMORY-111: member_id (uuid) ok; type enum ok.
 
 8. **MUST** thread trace_id from set/renewal → enforcer → audit.
 
@@ -155,7 +155,7 @@ Sample contract assignment:
 ---
 
 ## §4 — Acceptance criteria
-1. **5-type enum + cardinality test**. 2. **Probation skilled ≤60d enforced**. 3. **Probation unskilled ≤30d enforced**. 4. **Fixed_term renewal limit 1 enforced**. 5. **2nd fixed_term → reject; require indefinite conversion**. 6. **Contractor → 0 leave entitlement**. 7. **Part_time → pro-rated leave by hours_per_week/48**. 8. **Contractor → SI=false**. 9. **Other types → SI=true**. 10. **3 BRAIN audit kinds emitted**. 11. **PII: member_id (uuid) ok**. 12. **RLS denies cross-tenant**. 13. **CHRO role only for write**. 14. **Trace_id preserved**. 15. **History append-only**. 16. **fixed_term ≤36 months enforced**. 17. **Type change creates new history row (no in-place update)**. 18. **End_date NULL allowed for indefinite/contractor**. 19. **Hours_per_week required for part_time (NULL rejected)**. 20. **Violation detection sev-2 audit**.
+1. **5-type enum + cardinality test**. 2. **Probation skilled ≤60d enforced**. 3. **Probation unskilled ≤30d enforced**. 4. **Fixed_term renewal limit 1 enforced**. 5. **2nd fixed_term → reject; require indefinite conversion**. 6. **Contractor → 0 leave entitlement**. 7. **Part_time → pro-rated leave by hours_per_week/48**. 8. **Contractor → SI=false**. 9. **Other types → SI=true**. 10. **3 memory audit kinds emitted**. 11. **PII: member_id (uuid) ok**. 12. **RLS denies cross-tenant**. 13. **CHRO role only for write**. 14. **Trace_id preserved**. 15. **History append-only**. 16. **fixed_term ≤36 months enforced**. 17. **Type change creates new history row (no in-place update)**. 18. **End_date NULL allowed for indefinite/contractor**. 19. **Hours_per_week required for part_time (NULL rejected)**. 20. **Violation detection sev-2 audit**.
 
 ---
 
@@ -199,7 +199,7 @@ async fn part_time_prorated_leave() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
-**Cross-module:** FR-HR-004 (leave types), FR-HR-005 (working hours), FR-REW-004 (SI), FR-BRAIN-111 (PII).
+**Cross-module:** FR-HR-004 (leave types), FR-HR-005 (working hours), FR-REW-004 (SI), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -220,7 +220,7 @@ async fn part_time_prorated_leave() {
 - §11.2 Leave entitlement computed at contract set; cached on member row; FR-HR-004 reads it.
 - §11.3 SI participation flag drives FR-REW-004 deduction logic.
 - §11.4 History row written on every contract type/dates change; full audit trail.
-- §11.5 BRAIN audit body: member_id, contract_type, dates; reason on violations.
+- §11.5 memory audit body: member_id, contract_type, dates; reason on violations.
 
 ---
 

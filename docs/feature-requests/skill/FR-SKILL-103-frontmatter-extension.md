@@ -1,9 +1,9 @@
 ---
 id: FR-SKILL-103
-title: "SKILL.md frontmatter extension — allowed_brain_scopes + allowed_tools + version + signature enforced by capability broker"
+title: "SKILL.md frontmatter extension — allowed_memory_scopes + allowed_tools + version + signature enforced by capability broker"
 module: SKILL
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-SKILL-101, FR-SKILL-102, FR-SKILL-104, FR-SKILL-105, FR-SKILL-111, FR-SKILL-112, FR-SKILL-113, FR-SKILL-114, FR-SKILL-115, FR-BRAIN-106, FR-AUTH-003]
+memory_chain_hash: null
+related_frs: [FR-SKILL-101, FR-SKILL-102, FR-SKILL-104, FR-SKILL-105, FR-SKILL-111, FR-SKILL-112, FR-SKILL-113, FR-SKILL-114, FR-SKILL-115, FR-MEMORY-106, FR-AUTH-003]
 depends_on: [FR-SKILL-101]
 blocks: [FR-SKILL-104, FR-SKILL-105, FR-SKILL-111, FR-SKILL-112, FR-SKILL-113, FR-SKILL-114, FR-SKILL-115]
 
@@ -20,7 +20,7 @@ source_pages:
   - website/docs/modules/skill.html#frontmatter
   - website/docs/runbooks/skill-author-runbook.html
 source_decisions:
-  - DEC-180 (every .skill bundle MUST declare its BRAIN scopes + tool requirements in frontmatter)
+  - DEC-180 (every .skill bundle MUST declare its memory scopes + tool requirements in frontmatter)
   - DEC-181 (broker enforces frontmatter at invoke time; missing/invalid frontmatter = refuse)
   - DEC-182 (frontmatter schema versioned; v1 frozen at this FR; v2+ via SemVer-style migration)
 
@@ -40,7 +40,7 @@ new_files:
 modified_files:
   - services/skill-broker/src/lib.rs                    # re-export frontmatter module
   - services/skill-broker/src/invoke.rs                 # call frontmatter::load_and_validate before dispatch
-  - cyberos/AGENTS.md                                   # add §17 note on SKILL.md schema (referenced by skills using BRAIN scopes)
+  - cyberos/AGENTS.md                                   # add §17 note on SKILL.md schema (referenced by skills using memory scopes)
 allowed_tools:
   - file_read: services/skill-broker/**, services/skill/**
   - file_write: services/skill-broker/{src,tests}/**
@@ -55,13 +55,13 @@ sub_tasks:
   - "0.5h: schema.rs — Rust types for SkillFrontmatter v1 (serde-derived)"
   - "0.5h: skill.schema.json — JSONSchema for external validators (e.g. CI gates, editor LSP)"
   - "1.0h: parser.rs — extract frontmatter block (between `---` fences) from SKILL.md; serde_yaml deserialize"
-  - "1.0h: validators.rs — each field: allowed_brain_scopes glob syntax, allowed_tools enum, version semver, signature hex format"
+  - "1.0h: validators.rs — each field: allowed_memory_scopes glob syntax, allowed_tools enum, version semver, signature hex format"
   - "1.0h: integration into invoke.rs — refuse with ExitCode::ValidationFailed (6) on parse/validate error"
-  - "0.5h: AGENTS.md §17 cross-reference (1 paragraph describing SKILL.md contract for skills that touch BRAIN)"
+  - "0.5h: AGENTS.md §17 cross-reference (1 paragraph describing SKILL.md contract for skills that touch memory)"
   - "1.5h: frontmatter_test.rs — happy + 5 negative fixtures + version-skew + signature-mismatch"
   - "0.5h: fixtures (valid + 3 invalid SKILL.md files)"
   - "0.5h: CI lint command `cyberos skill validate <bundle>` (prints structured report)"
-risk_if_skipped: "Without normative frontmatter, skill authors invent their own conventions; the broker can't enforce BRAIN-scope boundaries (a skill claims to need `meta/people/*` and silently reads `meta/finance/*`); allowed_tools enforcement (FR-SKILL-104 capability broker) has no data source. Authors burn hours on debug-friendly errors. Version skew (skill written for v1 broker, run on v0.9 broker) crashes at invoke time instead of at install time. Signature absence means a tampered .skill bundle runs without warning. v1 freeze (DEC-182) means downstream tools (LSP, CI gates, OCI registry) can rely on a stable shape — without it, every new field breaks everything."
+risk_if_skipped: "Without normative frontmatter, skill authors invent their own conventions; the broker can't enforce memory-scope boundaries (a skill claims to need `meta/people/*` and silently reads `meta/finance/*`); allowed_tools enforcement (FR-SKILL-104 capability broker) has no data source. Authors burn hours on debug-friendly errors. Version skew (skill written for v1 broker, run on v0.9 broker) crashes at invoke time instead of at install time. Signature absence means a tampered .skill bundle runs without warning. v1 freeze (DEC-182) means downstream tools (LSP, CI gates, OCI registry) can rely on a stable shape — without it, every new field breaks everything."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -73,14 +73,14 @@ Every `.skill` bundle's `SKILL.md` file **MUST** carry a YAML frontmatter block 
     - `id` (string): kebab-case slug `^[a-z][a-z0-9-]*$`; the canonical skill identifier; used in OCI registry path (FR-SKILL-102).
     - `version` (string): SemVer `^\d+\.\d+\.\d+(?:-[A-Za-z0-9.-]+)?$`.
     - `description` (string): 1–200 chars; the operator-facing one-line summary.
-    - `allowed_brain_scopes` (list of glob strings): which BRAIN paths the skill MAY read. Empty list `[]` = no BRAIN access. Each glob validated by `globset@0.4`; invalid glob → reject. Globs are evaluated against memory paths starting at `<memory-root>/` (e.g. `memories/projects/cyberos/**`).
-    - `allowed_tools` (list of strings): which broker-managed tools the skill MAY invoke. Each name MUST appear in the canonical tool enum (`Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `BrainRead`, `BrainSearch`, `HttpFetch`, custom MCP names per FR-SKILL-104). Unknown names → reject.
+    - `allowed_memory_scopes` (list of glob strings): which memory paths the skill MAY read. Empty list `[]` = no memory access. Each glob validated by `globset@0.4`; invalid glob → reject. Globs are evaluated against memory paths starting at `<memory-root>/` (e.g. `memories/projects/cyberos/**`).
+    - `allowed_tools` (list of strings): which broker-managed tools the skill MAY invoke. Each name MUST appear in the canonical tool enum (`Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `MemoryRead`, `MemorySearch`, `HttpFetch`, custom MCP names per FR-SKILL-104). Unknown names → reject.
 3. **MUST** support the following optional fields (validated when present):
     - `signature` (object): `{ algo: "ed25519", public_key_hex: <64-char hex>, signature_hex: <128-char hex> }`. Verifies that frontmatter content + body hash matches the signature. Absent signature = unsigned skill (allowed for local dev; rejected by FR-SKILL-102's OCI gate which requires signed).
     - `min_broker_version` (string): SemVer; broker refuses to invoke if its own version is lower than this. Default: `0.1.0`.
     - `max_broker_version` (string): SemVer; broker refuses if higher (forward-incompatible). Default: unbounded.
     - `disallowed_tools` (list of strings): explicit denylist (subset of canonical tool enum). Useful for skills that want to assert "I never need Edit" even if allowed_tools is broad.
-    - `sync_class` (enum: `private` | `shareable`): default `private`; controls whether the skill's emitted BRAIN rows are eligible for cross-device sync (per FR-BRAIN-106).
+    - `sync_class` (enum: `private` | `shareable`): default `private`; controls whether the skill's emitted memory rows are eligible for cross-device sync (per FR-MEMORY-106).
     - `tenant_scope` (enum: `any` | `pinned`): default `any`; if `pinned`, skill executes only under the tenant_id where it was installed.
     - `effort_minutes` (integer): suggested timeout cap; broker enforces SIGTERM after `effort_minutes * 60` seconds.
     - `tags` (list of strings): operator-facing categorisation; ≤ 10 tags; each tag ≤ 30 chars.
@@ -89,7 +89,7 @@ Every `.skill` bundle's `SKILL.md` file **MUST** carry a YAML frontmatter block 
     - Schema-required field missing.
     - `id` does not match the kebab-case regex.
     - `version` is not valid SemVer.
-    - Any `allowed_brain_scopes` glob fails `globset::Glob::new()`.
+    - Any `allowed_memory_scopes` glob fails `globset::Glob::new()`.
     - Any `allowed_tools` value is not in the canonical enum.
     - `signature` present and verification fails.
     - `min_broker_version > current_broker_version`.
@@ -109,11 +109,11 @@ Every `.skill` bundle's `SKILL.md` file **MUST** carry a YAML frontmatter block 
 
 **Why frontmatter at all (§1 #1)?** The body of SKILL.md is markdown — readable by humans, opaque to brokers. The frontmatter is the machine-readable contract: "I am skill X v1.2.3; I need scopes Y and Z; I use tools W." Without it, the broker has no idea what the skill needs until the skill *tries* something and either succeeds or trips a denial.
 
-**Why required-field strictness (§1 #2 + #5)?** Optional fields drift over time — early adopters skip them, later code assumes they exist, runtime panics. Required fields are validated at load; the skill either works on every broker or doesn't load at all. Five fields is the calibrated minimum: id (identity), version (compatibility), description (operator UX), allowed_brain_scopes (BRAIN authorisation), allowed_tools (tool authorisation).
+**Why required-field strictness (§1 #2 + #5)?** Optional fields drift over time — early adopters skip them, later code assumes they exist, runtime panics. Required fields are validated at load; the skill either works on every broker or doesn't load at all. Five fields is the calibrated minimum: id (identity), version (compatibility), description (operator UX), allowed_memory_scopes (memory authorisation), allowed_tools (tool authorisation).
 
-**Why allowed_brain_scopes as globs (§1 #2)?** A skill that touches "all my projects" needs `memories/projects/**`; a skill that touches "only Cyberos" needs `memories/projects/cyberos/**`. Globs are the right shape — granular, declarative, well-understood. `globset` is the canonical Rust glob crate; reusing it ensures consistency with FR-BRAIN-106's sync-class globs.
+**Why allowed_memory_scopes as globs (§1 #2)?** A skill that touches "all my projects" needs `memories/projects/**`; a skill that touches "only Cyberos" needs `memories/projects/cyberos/**`. Globs are the right shape — granular, declarative, well-understood. `globset` is the canonical Rust glob crate; reusing it ensures consistency with FR-MEMORY-106's sync-class globs.
 
-**Why allowed_tools as enum (§1 #2)?** If we accepted arbitrary strings, typos would creep in (`Bsah`, `brainread`). Enum tokens are validated; the canonical set is small (~10 native tools + MCP names via FR-SKILL-104). Adding a new tool means: enum variant + broker impl + version bump.
+**Why allowed_tools as enum (§1 #2)?** If we accepted arbitrary strings, typos would creep in (`Bsah`, `memoryread`). Enum tokens are validated; the canonical set is small (~10 native tools + MCP names via FR-SKILL-104). Adding a new tool means: enum variant + broker impl + version bump.
 
 **Why signature optional (§1 #3)?** Local dev needs to iterate fast — adding/checking signature on every change kills the flow. The OCI gate (FR-SKILL-102) enforces signature on registry-uploaded bundles; local dev runs unsigned. Two scopes: trust-local (loose) and trust-registry (strict).
 
@@ -146,7 +146,7 @@ pub struct SkillFrontmatter {
     pub id:                   String,
     pub version:              String,           // SemVer
     pub description:          String,
-    pub allowed_brain_scopes: Vec<String>,      // glob patterns
+    pub allowed_memory_scopes: Vec<String>,      // glob patterns
     pub allowed_tools:        Vec<ToolName>,
 
     // Optional
@@ -166,7 +166,7 @@ pub struct SkillFrontmatter {
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum ToolName {
     Bash, Read, Write, Edit, Glob, Grep,
-    BrainRead, BrainSearch, BrainEmit,
+    MemoryRead, MemorySearch, MemoryEmit,
     HttpFetch, HttpPost,
     // MCP tool names registered at broker startup per FR-SKILL-104
     #[serde(other)] McpTool,  // matches any registered MCP name; validated against MCP_TOOL_REGISTRY at validation time
@@ -205,7 +205,7 @@ pub enum FrontmatterError {
     #[error("id violates kebab-case: {0:?}")]                                    InvalidId(String),
     #[error("version is not valid SemVer: {0:?}")]                               InvalidVersion(String),
     #[error("description must be 1..=200 chars (was {0})")]                      InvalidDescription(usize),
-    #[error("allowed_brain_scopes[{idx}] is not a valid glob: {pat:?}")]        InvalidBrainScopeGlob { idx: usize, pat: String },
+    #[error("allowed_memory_scopes[{idx}] is not a valid glob: {pat:?}")]        InvalidMemoryScopeGlob { idx: usize, pat: String },
     #[error("allowed_tools[{idx}] is not a known tool: {name:?}")]              UnknownTool { idx: usize, name: String },
     #[error("signature verification failed (frontmatter + body hash mismatch)")] SignatureFailed,
     #[error("broker version {broker} below skill's min_broker_version {min}")]  BrokerTooOld { broker: String, min: String },
@@ -223,8 +223,8 @@ pub fn validate(fm: &SkillFrontmatter, body_canonical: &str, broker_version: &st
     let desc_len = fm.description.chars().count();
     if !(1..=200).contains(&desc_len) { return Err(FrontmatterError::InvalidDescription(desc_len)); }
 
-    for (i, pat) in fm.allowed_brain_scopes.iter().enumerate() {
-        globset::Glob::new(pat).map_err(|_| FrontmatterError::InvalidBrainScopeGlob { idx: i, pat: pat.clone() })?;
+    for (i, pat) in fm.allowed_memory_scopes.iter().enumerate() {
+        globset::Glob::new(pat).map_err(|_| FrontmatterError::InvalidMemoryScopeGlob { idx: i, pat: pat.clone() })?;
     }
 
     // ToolName enum already validated by serde; McpTool variant needs registry check
@@ -329,7 +329,7 @@ fn main() -> ExitCode {
                     "status": "ok",
                     "id": fm.id,
                     "version": fm.version,
-                    "allowed_brain_scopes": fm.allowed_brain_scopes,
+                    "allowed_memory_scopes": fm.allowed_memory_scopes,
                     "allowed_tools": fm.allowed_tools,
                 })).unwrap());
             } else {
@@ -353,20 +353,20 @@ fn main() -> ExitCode {
 
 ```markdown
 ---
-id: brain-capture
+id: memory-capture
 version: 1.0.0
-description: Canonical entry point for emitting BRAIN capture rows from arbitrary tools.
-allowed_brain_scopes:
+description: Canonical entry point for emitting memory capture rows from arbitrary tools.
+allowed_memory_scopes:
   - memories/projects/**
   - memories/people/*/notes/**
 allowed_tools:
   - Read
-  - BrainRead
-  - BrainEmit
+  - MemoryRead
+  - MemoryEmit
 sync_class: shareable
 tenant_scope: any
 effort_minutes: 5
-tags: [brain, capture, foundation]
+tags: [memory, capture, foundation]
 signature:
   algo: ed25519
   public_key_hex: "a4d8f2e1b9c7..."
@@ -374,7 +374,7 @@ signature:
 x-cyberos-author: "stephen@cyberskill.world"
 ---
 
-# brain-capture@1
+# memory-capture@1
 
 This skill is the canonical entry point ...
 ```
@@ -386,10 +386,10 @@ This skill is the canonical entry point ...
 1. **Valid SKILL.md parses** — fixture `skill-valid/SKILL.md` → `load_and_validate` returns `Ok(SkillFrontmatter, body)`.
 2. **Missing frontmatter rejected** — file without leading `---` → `Err(MissingFrontmatter)`.
 3. **Missing required field rejected** — fixture omits `id` → `Err(YamlParse)` (serde missing-field error wrapped).
-4. **Invalid id (camelCase) rejected** — `id: brainCapture` → `Err(InvalidId)`.
+4. **Invalid id (camelCase) rejected** — `id: memoryCapture` → `Err(InvalidId)`.
 5. **Invalid version rejected** — `version: 1.0` (not full SemVer) → `Err(InvalidVersion)`.
 6. **Description length bounds** — empty `description: ""` → `Err(InvalidDescription)`; 201-char description → same.
-7. **Bad glob rejected** — `allowed_brain_scopes: ["[unclosed"]` → `Err(InvalidBrainScopeGlob)`.
+7. **Bad glob rejected** — `allowed_memory_scopes: ["[unclosed"]` → `Err(InvalidMemoryScopeGlob)`.
 8. **Unknown tool rejected** — `allowed_tools: ["Bsah"]` → serde Err mapped to validation Err.
 9. **Unknown field without x- prefix rejected** — `random_field: 1` → `Err(UnknownField)`.
 10. **x-prefixed unknown field allowed** — `x-cyberos-author: alice` → loads OK; stored in `x_extensions`.
@@ -416,7 +416,7 @@ This skill is the canonical entry point ...
 fn valid_skill_loads() {
     let path = std::path::Path::new("tests/fixtures/skill-valid");
     let (fm, body) = frontmatter::load_and_validate(path, "1.0.0").unwrap();
-    assert_eq!(fm.id, "brain-capture");
+    assert_eq!(fm.id, "memory-capture");
     assert_eq!(fm.version, "1.0.0");
     assert!(!body.is_empty());
 }
@@ -444,7 +444,7 @@ fn bad_id_rejected() {
 fn bad_glob_rejected() {
     let path = std::path::Path::new("tests/fixtures/skill-invalid-bad-glob");
     let err = frontmatter::load_and_validate(path, "1.0.0").unwrap_err();
-    assert!(matches!(err, FrontmatterError::InvalidBrainScopeGlob { .. }));
+    assert!(matches!(err, FrontmatterError::InvalidMemoryScopeGlob { .. }));
 }
 
 #[test]
@@ -491,19 +491,19 @@ fn defaults_applied() {
 ```bash
 # CLI fixtures
 $ cyberos skill validate tests/fixtures/skill-valid
-✓ brain-capture v1.0.0 — valid
+✓ memory-capture v1.0.0 — valid
 
 $ cyberos skill validate tests/fixtures/skill-invalid-bad-glob
-ERROR: allowed_brain_scopes[0] is not a valid glob: "[unclosed"
+ERROR: allowed_memory_scopes[0] is not a valid glob: "[unclosed"
 # exit 6
 
 $ cyberos skill validate tests/fixtures/skill-valid --json
 {
   "status": "ok",
-  "id": "brain-capture",
+  "id": "memory-capture",
   "version": "1.0.0",
-  "allowed_brain_scopes": ["memories/projects/**", "memories/people/*/notes/**"],
-  "allowed_tools": ["Read", "BrainRead", "BrainEmit"]
+  "allowed_memory_scopes": ["memories/projects/**", "memories/people/*/notes/**"],
+  "allowed_tools": ["Read", "MemoryRead", "MemoryEmit"]
 }
 ```
 
@@ -520,9 +520,9 @@ $ cyberos skill validate tests/fixtures/skill-valid --json
 - **FR-SKILL-101 (upstream)** — defines the broker that consumes this frontmatter at invoke time.
 - **FR-SKILL-102 (related)** — OCI registry uploads MUST include a valid signature; this FR's signature schema is the format.
 - **FR-SKILL-104 (downstream)** — capability broker enforces `allowed_tools` at runtime; FR-SKILL-104 owns the MCP_TOOL_REGISTRY.
-- **FR-SKILL-105 (downstream)** — brain-sync@1 skill bundle is the first canonical user of `sync_class: shareable`.
-- **FR-BRAIN-106** — sync_class semantics are reused (same enum variants per AGENTS.md §15).
-- **FR-AUTH-003** — RLS for tenant_scope=pinned enforcement (broker injects tenant_id into BRAIN reads).
+- **FR-SKILL-105 (downstream)** — memory-sync@1 skill bundle is the first canonical user of `sync_class: shareable`.
+- **FR-MEMORY-106** — sync_class semantics are reused (same enum variants per AGENTS.md §15).
+- **FR-AUTH-003** — RLS for tenant_scope=pinned enforcement (broker injects tenant_id into memory reads).
 - **`cyberos-cli-exit`** — exit codes.
 
 ---
@@ -537,7 +537,7 @@ $ cyberos skill validate tests/fixtures/skill-valid --json
 {
   "status": "invalid",
   "errors": [
-    {"field": "allowed_brain_scopes[0]", "code": "InvalidBrainScopeGlob", "message": "not a valid glob: \"[unclosed\""}
+    {"field": "allowed_memory_scopes[0]", "code": "InvalidMemoryScopeGlob", "message": "not a valid glob: \"[unclosed\""}
   ]
 }
 ```
@@ -564,7 +564,7 @@ All resolved. Deferred:
 | `id` violates kebab-case | regex no-match | `Err(InvalidId)`; exit 6 | Author fixes |
 | Version not SemVer | parse fails | `Err(InvalidVersion)`; exit 6 | Author fixes |
 | Description too long | char count | `Err(InvalidDescription)`; exit 6 | Author shortens |
-| Bad glob | `globset::Glob::new` Err | `Err(InvalidBrainScopeGlob)`; exit 6 | Author fixes |
+| Bad glob | `globset::Glob::new` Err | `Err(InvalidMemoryScopeGlob)`; exit 6 | Author fixes |
 | Unknown tool | serde unknown-variant | mapped to YamlParse; exit 6 | Author uses canonical name |
 | Unknown field (no x- prefix) | x_extensions key check | `Err(UnknownField)`; exit 6 | Author renames or removes |
 | Signature missing public key | hex parse | `Err(SignatureFailed)`; exit 6 | Re-sign bundle |
@@ -576,7 +576,7 @@ All resolved. Deferred:
 | Signature algo unknown (e.g. `rsa`) | enum reject | `Err(YamlParse)`; exit 6 | Use ed25519 |
 | Public key wrong length (not 32 bytes) | hex decode + length check | `Err(SignatureFailed)`; exit 6 | Use correct key |
 | Empty `allowed_tools: []` | valid by schema (empty = no tools allowed) | OK; skill has no tool capabilities | By design |
-| Empty `allowed_brain_scopes: []` | valid (no BRAIN access) | OK | By design |
+| Empty `allowed_memory_scopes: []` | valid (no memory access) | OK | By design |
 
 ---
 

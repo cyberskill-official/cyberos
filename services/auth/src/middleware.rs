@@ -13,7 +13,6 @@
 //! `scope_grants` (e.g. `["admin"]` on `/v1/admin/*`).
 
 use axum::{
-    body::Body,
     extract::{Request, State},
     http::{header, StatusCode},
     middleware::Next,
@@ -39,6 +38,15 @@ pub async fn verify_jwt(
         .verify(&token)
         .await
         .map_err(|e| unauthorized(&format!("jwt verification failed: {e}")))?;
+
+    // FR-AUTH-005 §1 #3 + #11 + G-011/G-017 — deny-list check. If revoke
+    // pushed this jti into the deny-list, the JWT is no longer valid even
+    // though its signature + exp + iss verify. Returns 401 with explicit
+    // `token_revoked` so the client can distinguish from "expired" and
+    // trigger re-auth (not refresh).
+    if state.deny_list.is_denied(&claims.jti) {
+        return Err(unauthorized("token_revoked"));
+    }
 
     // FR-AUTH-101 §1 #10 — set the per-connection `app.roles` GUC so
     // RLS policies can call `auth.has_role(<role>)` directly. The GUC is

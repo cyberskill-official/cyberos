@@ -129,7 +129,7 @@
  <div class="fact-card"><div class="label">Currency</div><div class="value">VND + USD</div><div class="note">multi-currency at every layer</div></div>
  <div class="fact-card"><div class="label">Approval</div><div class="value">3 tiers</div><div class="note">Member → AM → CFO</div></div>
  <div class="fact-card"><div class="label">Receipt OCR</div><div class="value">VN hóa đơn</div><div class="note">MST + VAT split</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · PROJ</div><div class="note">+ AI · OBS · INV</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · PROJ</div><div class="note">+ AI · OBS · INV</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~7,500</div><div class="note">Rust + TS + OCR pipeline</div></div>
  </div>
  </div>
@@ -148,7 +148,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--time-dark)">Role 1 · Hours entry (3 modes)</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Timer · manual · auto-detect from PROJ</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Timer for in-flight work; manual entry for retroactive logging; auto-detect proposes entries from PROJ activity (issue status changes, comment patterns). Auto-detect is always a proposal, never a save — Member confirms. Approval flow: Member submits weekly → AM reviews → CFO has visibility. Each step is a BRAIN audit row.
+ Timer for in-flight work; manual entry for retroactive logging; auto-detect proposes entries from PROJ activity (issue status changes, comment patterns). Auto-detect is always a proposal, never a save — Member confirms. Approval flow: Member submits weekly → AM reviews → CFO has visibility. Each step is a memory audit row.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--time)">
@@ -178,7 +178,7 @@ flowchart LR
  CFO["📊 CFO<br>visibility + audit"]
  INV["🧾 INV<br>invoice line"]
  REW["💰 REW<br>compensation context"]
- BRAIN["🧠 BRAIN<br>chained audit · correction_to"]
+ memory["🧠 memory<br>chained audit · correction_to"]
  PROJ --> MEMBER
  MEMBER --> TIME
  TIME --> BR
@@ -187,13 +187,13 @@ flowchart LR
  AM --> CFO
  TIME -- "per-cycle rollup" --> INV
  TIME --> REW
- TIME --> BRAIN
+ TIME --> memory
  classDef hub fill:#ccfbf1,stroke:#115e59,stroke-width:3px,color:#134e4a
  classDef mod fill:#e0e7ff,stroke:#3730a3
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class TIME hub
  class PROJ,MEMBER,BR,AM,CFO,INV,REW mod
- class BRAIN brain
+ class memory memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -227,7 +227,7 @@ flowchart LR
  <div class="bbg-card p-5">
  <div class="text-2xl mb-2">📜</div>
  <div class="font-bold text-slate-900 mb-1">Append-only audit</div>
- <p class="text-sm text-slate-600">Every entry write produces a chained BRAIN row. Corrections write a new row with <code>correction_to</code>; the original is never edited. Invoice-grade integrity.</p>
+ <p class="text-sm text-slate-600">Every entry write produces a chained memory row. Corrections write a new row with <code>correction_to</code>; the original is never edited. Invoice-grade integrity.</p>
  </div>
  <div class="bbg-card p-5">
  <div class="text-2xl mb-2">📷</div>
@@ -255,7 +255,7 @@ flowchart LR
  <table class="kt">
  <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
  <tbody>
- <tr><td><strong>5W · What</strong></td><td>What is TIME?</td><td>Three sub-modules: time tracking (start/stop, retroactive, billable flag), leave management (annual, sick, sabbatical, unpaid, other), and expense capture (camera + OCR + categorise). All three share a Postgres canonical store, an append-only audit chain into BRAIN, and a weekly approval workflow.</td></tr>
+ <tr><td><strong>5W · What</strong></td><td>What is TIME?</td><td>Three sub-modules: time tracking (start/stop, retroactive, billable flag), leave management (annual, sick, sabbatical, unpaid, other), and expense capture (camera + OCR + categorise). All three share a Postgres canonical store, an append-only audit chain into memory, and a weekly approval workflow.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Members:</strong> log time + expense + leave daily; submit weekly. <strong>Account Managers:</strong> approve weekly per Engagement. <strong>CFO:</strong> view consolidated dashboards, approve overtime exceptions, sign off on reimbursement batches. <strong>CHRO:</strong> own leave policy + labour-law cap enforcement. <strong>Agents:</strong> CUO/COO-skill nudges Members who haven't logged time in 2 days ((FR pending)).</td></tr>
  <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: SPA timer, mobile capture. Weekly: batch approval cycle (Sunday 23:59 → Monday 09:00 AM review). Nightly: leave accrual recompute, overtime cap check, expense reimbursement batch. Monthly: hours summary to REW.</td></tr>
  <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (SG-1) with VN-residency S3 for receipt images. P3+: multi-region. The OCR pipeline runs as a Fargate task per OCR job; bursty workloads scale to 50 parallel tasks via SQS.</td></tr>
@@ -279,7 +279,7 @@ flowchart LR
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- TIME is a single axum service exposing four surfaces (GraphQL subgraph, REST admin, mobile-friendly REST, MCP). It writes to PostgreSQL canonical, drives an OCR pipeline via SQS + Fargate workers, and writes chained audit rows to BRAIN. Outputs flow downstream to INV (billable summary), REW (hours context), and Calendar (leave events).
+ TIME is a single axum service exposing four surfaces (GraphQL subgraph, REST admin, mobile-friendly REST, MCP). It writes to PostgreSQL canonical, drives an OCR pipeline via SQS + Fargate workers, and writes chained audit rows to memory. Outputs flow downstream to INV (billable summary), REW (hours context), and Calendar (leave events).
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -305,7 +305,7 @@ graph TB
  APPR["Approval workflow"]
  FX["FX rate snapshotter"]
  CAL_SYNC["Calendar sync<br>(Google / Outlook)"]
- AUDIT["BRAIN audit bridge"]
+ AUDIT["memory audit bridge"]
  end
 
  subgraph OCR ["OCR pipeline"]
@@ -323,7 +323,7 @@ graph TB
  end
 
  subgraph SINKS ["Sinks"]
- BRAIN["🧠 BRAIN<br>audit + summary"]
+ memory["🧠 memory<br>audit + summary"]
  INV["🧾 INV<br>billable summary"]
  REW["💎 REW<br>hours context"]
  OBS["👁 OBS"]
@@ -358,7 +358,7 @@ graph TB
  LR --> PG
  TE --> RED
  EX --> S3
- AUDIT --> BRAIN
+ AUDIT --> memory
  TE --> INV
  TE --> REW
  TE --> OBS
@@ -368,7 +368,7 @@ graph TB
  classDef sink fill:#f5ede6,stroke:#45210e
  class SPA,MOB,AGENT,GQL,REST,MCP,TE,EX,LR,LAW,APPR,FX,CAL_SYNC,AUDIT,SQS,OW,TX,VN,CAT planned
  class PG,RED,S3 store
- class BRAIN,INV,REW,OBS sink
+ class memory,INV,REW,OBS sink
  </div>
  </div>
 
@@ -470,7 +470,7 @@ erDiagram
  uuid correction_to FK "nullable; chain to superseded row"
  timestamp created_at
  timestamp submitted_at
- string brain_chain
+ string memory_chain
  }
  EXPENSE {
  uuid id PK
@@ -488,7 +488,7 @@ erDiagram
  string status "draft | submitted | approved | reimbursed | rejected"
  uuid correction_to FK "nullable"
  timestamp created_at
- string brain_chain
+ string memory_chain
  }
  LEAVE_REQUEST {
  uuid id PK
@@ -502,7 +502,7 @@ erDiagram
  string status "submitted | approved | rejected | cancelled"
  uuid approver_id FK
  timestamp decided_at
- string brain_chain
+ string memory_chain
  }
  APPROVAL {
  uuid id PK
@@ -556,7 +556,7 @@ erDiagram
  <div class="bbg-card p-5">
  <p class="text-sm text-slate-600 mb-3">A mutation never edits an existing row. The mutator inserts a new row with the new values and sets <code>correction_to</code> to the prior row's id. The prior row's <code>status</code> transitions to <code>corrected</code>. INV and downstream consumers read the latest row in a correction chain via <code>WHERE correction_to IS NULL</code> or by walking the chain forward from the original.</p>
  <table class="kt">
- <thead><tr><th>Step</th><th>Action</th><th>DB effect</th><th>BRAIN row</th></tr></thead>
+ <thead><tr><th>Step</th><th>Action</th><th>DB effect</th><th>memory row</th></tr></thead>
  <tbody>
  <tr><td>1</td><td>Original entry</td><td>INSERT row A (status=submitted)</td><td><code>time.entry_create</code></td></tr>
  <tr><td>2</td><td>Member discovers error, corrects duration</td><td>INSERT row B (correction_to=A); UPDATE A status=corrected</td><td><code>time.entry_correct</code></td></tr>
@@ -699,7 +699,7 @@ sequenceDiagram
  participant FX as FX snapshotter
  participant PG as PostgreSQL
  participant R as Redis (active timers)
- participant B as BRAIN audit
+ participant B as memory audit
 
  U->>API: POST /time/timer/start {engagement, project, issue}
  API->>LAW: check weekly cap (current + projected)
@@ -738,7 +738,7 @@ sequenceDiagram
  participant AM as Account Manager
  participant CFO as CFO dashboard
  participant N as Notify
- participant B as BRAIN audit
+ participant B as memory audit
 
  M->>API: submit week (Sunday 23:59 or earlier)
  API->>API: validate no overlapping entries · no above 12h continuous
@@ -778,7 +778,7 @@ sequenceDiagram
  participant VN as vietnam-mst-validate skill
  participant CAT as Categoriser (AI Gateway)
  participant PG as PostgreSQL
- participant B as BRAIN audit
+ participant B as memory audit
 
  U->>API: POST /time/expense/capture (image)
  API->>S3: PUT receipt.jpg (KMS-encrypted)
@@ -814,7 +814,7 @@ sequenceDiagram
  participant PG as PostgreSQL
  participant FX as FX rate
  participant INV as 🧾 INV
- participant B as BRAIN audit
+ participant B as memory audit
 
  CR->>API: build billable summary for week N
  API->>PG: SELECT time_entry WHERE billable AND status='approved' AND correction_to IS NULL
@@ -839,7 +839,7 @@ sequenceDiagram
  participant APPR as Approver (manager)
  participant CAL as Google / Outlook
  participant N as Notify
- participant B as BRAIN audit
+ participant B as memory audit
 
  M->>API: POST /time/leave {kind:annual, start, end, reason}
  API->>CHRO: check quota + blackout dates
@@ -888,7 +888,7 @@ stateDiagram-v2
  <h3 class="text-lg font-bold mb-3">Expense lifecycle (variant)</h3>
  <div class="bbg-card p-5">
  <table class="kt">
- <thead><tr><th>Status</th><th>Trigger</th><th>BRAIN row</th></tr></thead>
+ <thead><tr><th>Status</th><th>Trigger</th><th>memory row</th></tr></thead>
  <tbody>
  <tr><td><code>draft</code></td><td>capture (image uploaded)</td><td><code>time.expense_capture</code></td></tr>
  <tr><td><code>ocr_pending</code></td><td>queued to OCR worker</td><td>—</td></tr>
@@ -947,14 +947,14 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- TIME depends on AUTH, BRAIN, PROJ (for Engagement / Project / Issue references), AI (categoriser + OCR pipeline), MCP (CUO tools), and OBS. It is depended on by INV (billable summary), REW (hours context), HR (leave accruals), and PORTAL (Client-visible billable view at P2+).
+ TIME depends on AUTH, memory, PROJ (for Engagement / Project / Issue references), AI (categoriser + OCR pipeline), MCP (CUO tools), and OBS. It is depended on by INV (billable summary), REW (hours context), HR (leave accruals), and PORTAL (Client-visible billable view at P2+).
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["TIME depends on"]
  AUTH["🔐 AUTH"]
- BRAIN["🧠 BRAIN"]
+ memory["🧠 memory"]
  PROJ["📋 PROJ"]
  AI["⚡ AI Gateway"]
  OCR["AWS Textract<br>(or PaddleOCR)"]
@@ -970,7 +970,7 @@ graph LR
  PORTAL["Portal · P2"]
  end
  AUTH --> TIME
- BRAIN --> TIME
+ memory --> TIME
  PROJ --> TIME
  AI --> TIME
  OCR --> TIME
@@ -984,7 +984,7 @@ graph LR
 
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef planned fill:#fef6e0,stroke:#9c750a
- class BRAIN,VN shipped
+ class memory,VN shipped
  class TIME,AUTH,PROJ,AI,OCR,MCP,OBS,INV,REW,HR,PORTAL planned
  </div>
  </div>
@@ -1056,20 +1056,20 @@ graph LR
  <table class="kt">
  <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th></tr></thead>
  <tbody>
- <tr><td><strong>Weekly submission rate</strong></td><td>submitted / expected</td><td>BRAIN</td><td>≥ 95% by Friday EOB</td></tr>
- <tr><td><strong>Days-since-last-entry distribution</strong></td><td>histogram</td><td>BRAIN</td><td>median ≤ 1 day</td></tr>
+ <tr><td><strong>Weekly submission rate</strong></td><td>submitted / expected</td><td>memory</td><td>≥ 95% by Friday EOB</td></tr>
+ <tr><td><strong>Days-since-last-entry distribution</strong></td><td>histogram</td><td>memory</td><td>median ≤ 1 day</td></tr>
  <tr><td><strong>OCR field-level accuracy</strong></td><td>fields_correct / fields_total</td><td>quarterly eval</td><td>≥ 90%</td></tr>
  <tr><td><strong>OCR turn-around p95</strong></td><td>histogram</td><td>SQS + worker</td><td>≤ 8 s</td></tr>
- <tr><td><strong>Approval cycle time p50</strong></td><td>submit → approve, business hours</td><td>BRAIN</td><td>≤ 24 h</td></tr>
- <tr><td><strong>Self-approval attempts blocked</strong></td><td>count / month</td><td>BRAIN</td><td>tracked; expect 0</td></tr>
+ <tr><td><strong>Approval cycle time p50</strong></td><td>submit → approve, business hours</td><td>memory</td><td>≤ 24 h</td></tr>
+ <tr><td><strong>Self-approval attempts blocked</strong></td><td>count / month</td><td>memory</td><td>tracked; expect 0</td></tr>
  <tr><td><strong>Overtime cap violations</strong></td><td>count / month</td><td>law_caps</td><td>= 0</td></tr>
- <tr><td><strong>INV summary delivery</strong></td><td>delivered / weeks</td><td>BRAIN</td><td>100%</td></tr>
- <tr><td><strong>Correction-rate per Member</strong></td><td>corrections / entries</td><td>BRAIN</td><td>tracked; alert &gt; 10%</td></tr>
- <tr><td><strong>Billable cascade snapshot integrity</strong></td><td>cascade decisions on TimeEntry matching computed result at audit time</td><td>BRAIN audit replay</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>INV summary delivery</strong></td><td>delivered / weeks</td><td>memory</td><td>100%</td></tr>
+ <tr><td><strong>Correction-rate per Member</strong></td><td>corrections / entries</td><td>memory</td><td>tracked; alert &gt; 10%</td></tr>
+ <tr><td><strong>Billable cascade snapshot integrity</strong></td><td>cascade decisions on TimeEntry matching computed result at audit time</td><td>memory audit replay</td><td>= 1.0 (hard floor)</td></tr>
  <tr><td><strong>Auto-detect proposal acceptance</strong></td><td>accepted / proposed</td><td>SPA telemetry</td><td>tracked; expect 0.50–0.80</td></tr>
  <tr><td><strong>PROJ-TIME issue match rate</strong></td><td>entries with valid issue_id / total entries</td><td>cross-check PROJ</td><td>≥ 0.95 (unallocated should be rare)</td></tr>
  <tr><td><strong>Cycle-rollup completeness</strong></td><td>rollups with all expected Members submitted / total rollups</td><td>cycle-close events</td><td>≥ 0.95</td></tr>
- <tr><td><strong>VN Labour Code version coverage</strong></td><td>all TimeEntries with cap_version stamp / total entries</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>VN Labour Code version coverage</strong></td><td>all TimeEntries with cap_version stamp / total entries</td><td>memory audit</td><td>= 1.0 (hard floor)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1113,7 +1113,7 @@ graph LR
 [import] parsed 4,217 rows · 6 errors
 [import] creating entries (status=approved, source=migration)
 [import] ✓ 4,211 created · ✗ 6 in errors.csv
-[audit] brain seq=15203 chain=…</code></pre>
+[audit] memory seq=15203 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Weekly billable summary preview</h3>
 <pre><code>$ cyberos-time billable-summary --week-of 2026-08-04 --tenant cyberskill
@@ -1133,7 +1133,7 @@ total 194.5 381,000,000
 
 [push] 194.5 hours · 381 mil VND · 3 engagements
 [inv] batch_id: 01HZK5… created (status=draft on INV)
-[audit] brain seq=15211 chain=…</code></pre>
+[audit] memory seq=15211 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Overtime cap report</h3>
 <pre><code>$ cyberos-time overtime-report --year 2026
@@ -1150,7 +1150,7 @@ hai@cyberskill.world 287 300 95.7% ▼ critical → CHRO sign-off required</code
 [replay] parsed: vendor=Highlands Coffee, MST=0304556677, amount=178,000 VND, VAT=16,182 VND
 [replay] vietnam-mst-validate: ✓ matches GDT registry
 [replay] categoriser: T&E.meals (confidence=0.93)
-[audit] brain seq=15218 chain=…</code></pre>
+[audit] memory seq=15218 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. DSAR export for a Member</h3>
 <pre><code>$ cyberos-time dsar-export --subject linh@cyberskill.world --output linh-time.zip
@@ -1161,7 +1161,7 @@ hai@cyberskill.world 287 300 95.7% ▼ critical → CHRO sign-off required</code
 [dsar] leave_requests: 12
 [dsar] approvals: 842
 [dsar] written: linh-time.zip (62 MB)
-[audit] brain seq=15221 chain=…</code></pre>
+[audit] memory seq=15221 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. Calendar reconcile (re-sync drift)</h3>
 <pre><code>$ cyberos-time calendar reconcile --provider google --member linh@cyberskill.world
@@ -1222,12 +1222,12 @@ hai@cyberskill.world 287 300 95.7% ▼ critical → CHRO sign-off required</code
  <li><strong>Cross-module page links:</strong>
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
  <a href="inv.html" class="text-blue-700 underline">inv.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="rew.html" class="text-blue-700 underline">rew.html</a> ·
  <a href="hr.html" class="text-blue-700 underline">hr.html</a> ·
  <a href="obs.html" class="text-blue-700 underline">obs.html</a></li>
  <li><strong>Billable cascade rules:</strong> <a href="proj.html#engagement-economics" class="text-blue-700 underline">PROJ §2.6</a> — 4-step cascade definition.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — TimeEntry rows are BRAIN audit events.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — TimeEntry rows are memory audit events.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — TIME at P1 · exit (P1, after PROJ + CRM).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>Vietnam Labour Code (Law 45/2019/QH14)</strong> — Art. 105 (working hours), Art. 107 (overtime), Art. 113 (annual leave).</li>

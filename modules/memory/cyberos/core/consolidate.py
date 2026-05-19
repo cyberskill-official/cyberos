@@ -50,6 +50,13 @@ class ConsolidationReport:
     started_ns: int = 0
     finished_ns: int = 0
     errors: list[str] = field(default_factory=list)
+    # FR-MEMORY-116 SemanticDedup phase (optional, opt-in via flag).
+    # None when the phase did not run.
+    semantic_dedup_ran: bool = False
+    semantic_dedup_dry_run: bool = True
+    semantic_dedup_proposals_count: int = 0
+    semantic_dedup_applied_count: int = 0
+    semantic_dedup_dream_id: Optional[str] = None
 
     @property
     def ok(self) -> bool:
@@ -211,8 +218,17 @@ def run(
     *,
     dry_run: bool = False,
     compact_horizon_days: int = 90,
+    semantic_dedup: bool = False,
+    semantic_dedup_apply: bool = False,
+    semantic_dedup_threshold: float = 0.92,
+    semantic_dedup_scope: str = "",
 ) -> ConsolidationReport:
-    """Run the 4-phase consolidation.
+    """Run the 4-phase consolidation, optionally followed by SemanticDedup
+    (FR-MEMORY-116 §1 #1, §1 #2, §1 #3, §1 #6).
+
+    Phase ordering: ``Walk → Compact → Sign → Publish → SemanticDedup``
+    (the last is opt-in). A failure in any of the four legacy phases
+    aborts before SemanticDedup runs.
 
     Parameters
     ----------
@@ -220,10 +236,22 @@ def run(
         Store root path.
     dry_run:
         If True, run Walk only; print what would happen for the other
-        phases without writing.
+        phases without writing. Also forces ``semantic_dedup_apply=False``.
     compact_horizon_days:
         Segments with mtime older than this are eligible for zstd archival.
         Default 90 days — leaves recent ops live for fast tail-reading.
+    semantic_dedup:
+        FR-MEMORY-116 — when True, run the SemanticDedup phase after Publish.
+        Default False (back-compat: existing callers unchanged).
+    semantic_dedup_apply:
+        When True AND ``semantic_dedup`` is True, apply the duplicates
+        detector's proposals to the chain. Default False (dry-run; per
+        FR-MEMORY-116 §1 #2 the operator must explicitly opt in to writes).
+    semantic_dedup_threshold:
+        Cosine-style threshold for the duplicates detector. Default 0.92
+        per FR-MEMORY-116 §1 #4 (mirrors FR-MEMORY-115 default).
+    semantic_dedup_scope:
+        Limit SemanticDedup to a subtree (e.g. ``"memories/facts"``).
     """
     report = ConsolidationReport(store=store, started_ns=time.time_ns())
 
@@ -243,8 +271,81 @@ def run(
     _phase_sign(store, report)
     _phase_publish(store, report)
 
+    if semantic_dedup and not report.errors:
+        _phase_semantic_dedup(
+            store, report,
+            apply_proposals=semantic_dedup_apply,
+            threshold=semantic_dedup_threshold,
+            scope=semantic_dedup_scope,
+        )
+
     report.finished_ns = time.time_ns()
     return report
+
+
+def _phase_semantic_dedup(
+    store: Path,
+    report: ConsolidationReport,
+    *,
+    apply_proposals: bool,
+    threshold: float,
+    scope: str,
+) -> None:
+    """FR-MEMORY-116 — opt-in SemanticDedup phase.
+
+    Reuses FR-MEMORY-115's ``duplicates`` detector + ``apply`` to keep the
+    semantic-dedup logic in one place. The audit rows produced carry
+    ``extra.invocation = "consolidate"`` so FR-MEMORY-120 history can
+    distinguish dedup-from-consolidate vs dedup-from-explicit-dream-run.
+    """
+    from datetime import timedelta
+    from cyberos.core.dream.runner import run_sync
+    from cyberos.core.dream.applier import apply as dream_apply
+    from cyberos.core.writer import Writer, AuditRecord
+
+    with Writer(store) as writer:
+        try:
+            diff = run_sync(
+                writer,
+                since=timedelta(days=365),
+                scope=scope,
+                detector_names=("duplicates",),
+                duplicates_threshold=threshold,
+                dry_run=not apply_proposals,
+            )
+        except Exception as e:  # noqa: BLE001
+            report.errors.append(f"semantic_dedup: runner failed: {type(e).__name__}: {e}")
+            return
+
+        report.semantic_dedup_ran = True
+        report.semantic_dedup_dry_run = not apply_proposals
+        report.semantic_dedup_proposals_count = len(diff.proposals)
+        report.semantic_dedup_dream_id = diff.dream_id
+
+        if apply_proposals and diff.proposals:
+            try:
+                summary = dream_apply(writer, diff)
+                report.semantic_dedup_applied_count = int(summary.get("applied_count", 0))
+            except Exception as e:  # noqa: BLE001
+                report.errors.append(
+                    f"semantic_dedup: apply failed: {type(e).__name__}: {e}"
+                )
+                return
+
+            # Tag the dream rows from this run with invocation="consolidate".
+            # The applier already wrote them; we append a marker aux row so
+            # the history projection (FR-MEMORY-120) can scan for the tag.
+            writer.submit(AuditRecord(
+                op="dream.complete",
+                path="",
+                actor="consolidate",
+                extra={
+                    "dream_id": diff.dream_id,
+                    "invocation": "consolidate",
+                    "applied_count": report.semantic_dedup_applied_count,
+                    "proposals_count": report.semantic_dedup_proposals_count,
+                },
+            ))
 
 
 def format_report(report: ConsolidationReport, *, json_mode: bool = False) -> str:

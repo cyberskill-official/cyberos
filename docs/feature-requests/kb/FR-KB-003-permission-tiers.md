@@ -11,8 +11,8 @@ slice: 4
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-001, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-KB-001, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-KB-001]
 blocks: [FR-KB-004]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-1901 2026-05-17 — Closed enum `visibility_tier` = {public, org_only, role_restricted}; cardinality 3
   - DEC-1902 2026-05-17 — Share-link tokens: signed JWT with doc_id + expires_at + max_uses; 24h default expiry; CDO-configurable
   - DEC-1903 2026-05-17 — Public docs may be served to unauthenticated browsers; org_only requires session; role_restricted requires role match
-  - DEC-1904 2026-05-17 — BRAIN audit kinds: kb.permission_set, kb.share_link_created, kb.share_link_used, kb.access_denied
+  - DEC-1904 2026-05-17 — memory audit kinds: kb.permission_set, kb.share_link_created, kb.share_link_used, kb.access_denied
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without tier enforcement, internal docs leak to public. Withou
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship 3-tier permission system at `services/kb/src/permission/` with share-link tokens, 4 BRAIN audit kinds.
+The KB service **MUST** ship 3-tier permission system at `services/kb/src/permission/` with share-link tokens, 4 memory audit kinds.
 
 1. **MUST** validate `visibility_tier` against closed enum per DEC-1901.
 
@@ -127,7 +127,7 @@ The KB service **MUST** ship 3-tier permission system at `services/kb/src/permis
    GET    /v1/kb/docs/{id}?share_token=...    (share-link access path)
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-1904. PII per FR-BRAIN-111: tier+role enums ok; share_token only jti in chain.
+7. **MUST** emit 4 memory audit kinds per DEC-1904. PII per FR-MEMORY-111: tier+role enums ok; share_token only jti in chain.
 
 8. **MUST** thread trace_id from gate → audit.
 
@@ -181,7 +181,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **visibility_tier enum cardinality 3**. 2. **public served unauth**. 3. **org_only requires session**. 4. **role_restricted requires role match**. 5. **Share-link JWT signed + verified**. 6. **expires_at enforced**. 7. **max_uses enforced (0=unlimited)**. 8. **Revoke endpoint works**. 9. **used_count incremented atomically**. 10. **4 BRAIN audit kinds emitted**. 11. **Access denied → audit**. 12. **RLS denies cross-tenant**. 13. **CDO-only create + revoke**. 14. **Trace_id preserved**. 15. **Append-only share_links via REVOKE except used_count + revoked_at**. 16. **default tier = org_only on new doc**. 17. **Multiple share-links per doc supported**. 18. **Share-link survives doc version updates**. 19. **Revoked share-link cannot be undone**. 20. **token_jti UUID prevents collision**.
+1. **visibility_tier enum cardinality 3**. 2. **public served unauth**. 3. **org_only requires session**. 4. **role_restricted requires role match**. 5. **Share-link JWT signed + verified**. 6. **expires_at enforced**. 7. **max_uses enforced (0=unlimited)**. 8. **Revoke endpoint works**. 9. **used_count incremented atomically**. 10. **4 memory audit kinds emitted**. 11. **Access denied → audit**. 12. **RLS denies cross-tenant**. 13. **CDO-only create + revoke**. 14. **Trace_id preserved**. 15. **Append-only share_links via REVOKE except used_count + revoked_at**. 16. **default tier = org_only on new doc**. 17. **Multiple share-links per doc supported**. 18. **Share-link survives doc version updates**. 19. **Revoked share-link cannot be undone**. 20. **token_jti UUID prevents collision**.
 
 ---
 
@@ -225,7 +225,7 @@ async fn share_link_max_uses_enforced() {
 
 ## §7 — Dependencies
 **Upstream:** FR-KB-001.
-**Cross-module:** FR-AUTH-101 (role check), FR-BRAIN-111 (audit), FR-AUTH-105 (KMS for JWT signing key).
+**Cross-module:** FR-AUTH-101 (role check), FR-MEMORY-111 (audit), FR-AUTH-105 (KMS for JWT signing key).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -245,7 +245,7 @@ async fn share_link_max_uses_enforced() {
 - §11.1 JWT signed with tenant-specific key via FR-AUTH-105 KMS.
 - §11.2 Access gate is pure function: `(doc, user, token) → Allow | Deny(reason)`.
 - §11.3 used_count increment: `UPDATE ... SET used_count = used_count + 1 WHERE jti=$1 AND used_count < max_uses RETURNING used_count`.
-- §11.4 BRAIN audit body: doc_id, tier, decision; token jti only (no token value).
+- §11.4 memory audit body: doc_id, tier, decision; token jti only (no token value).
 - §11.5 Default tier on new doc = org_only (least-surprise for accidental publish risk).
 
 ---

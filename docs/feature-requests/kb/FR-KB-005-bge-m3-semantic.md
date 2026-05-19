@@ -1,6 +1,6 @@
 ---
 id: FR-KB-005
-title: "KB BGE-M3 semantic search — BRAIN Layer 2 vector ingest + dense embedding query with chunk-level retrieval"
+title: "KB BGE-M3 semantic search — memory Layer 2 vector ingest + dense embedding query with chunk-level retrieval"
 module: KB
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-002, FR-AI-019, FR-KB-006, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-KB-002, FR-AI-019, FR-KB-006, FR-MEMORY-111]
 depends_on: [FR-AI-019, FR-KB-001]
 blocks: [FR-KB-006]
 
@@ -21,12 +21,12 @@ source_pages:
   - https://huggingface.co/BAAI/bge-m3  # BGE-M3 multilingual embedding model
 
 source_decisions:
-  - DEC-1920 2026-05-17 — BGE-M3 multilingual dense embedding (1024-dim) — strong VN + English; ingested via FR-AI-019 BRAIN Layer 2
+  - DEC-1920 2026-05-17 — BGE-M3 multilingual dense embedding (1024-dim) — strong VN + English; ingested via FR-AI-019 memory Layer 2
   - DEC-1921 2026-05-17 — Closed enum `chunk_kind` = {paragraph, section_heading, code_block, list_item, table_row}; cardinality 5
   - DEC-1922 2026-05-17 — Chunk size 256-512 tokens; overlap 64 tokens; semantic boundary detection avoids mid-sentence splits
   - DEC-1923 2026-05-17 — Embedding cache keyed by (doc_id, version_id, chunk_id); invalidate on new version
   - DEC-1924 2026-05-17 — Top-K=20 retrieval; results passed to FR-KB-006 reranker for final ordering
-  - DEC-1925 2026-05-17 — BRAIN audit kinds: kb.semantic_ingest_started, kb.semantic_ingest_completed, kb.semantic_query_executed, kb.semantic_ingest_failed
+  - DEC-1925 2026-05-17 — memory audit kinds: kb.semantic_ingest_started, kb.semantic_ingest_completed, kb.semantic_query_executed, kb.semantic_ingest_failed
 
 build_envelope:
   language: rust 1.81
@@ -55,7 +55,7 @@ build_envelope:
     - bash: cd services/kb && cargo test semantic
 
   disallowed_tools:
-    - skip BRAIN Layer 2 ingest (per DEC-1920)
+    - skip memory Layer 2 ingest (per DEC-1920)
     - mid-sentence chunk splits (per DEC-1922)
 
 effort_hours: 6
@@ -75,7 +75,7 @@ risk_if_skipped: "Without semantic search, KB only finds exact-keyword matches �
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship BGE-M3 semantic search at `services/kb/src/semantic/` ingesting via FR-AI-019 Layer 2, chunked dense embedding, top-K retrieval, 4 BRAIN audit kinds.
+The KB service **MUST** ship BGE-M3 semantic search at `services/kb/src/semantic/` ingesting via FR-AI-019 Layer 2, chunked dense embedding, top-K retrieval, 4 memory audit kinds.
 
 1. **MUST** validate `chunk_kind` against closed enum per DEC-1921.
 
@@ -86,7 +86,7 @@ The KB service **MUST** ship BGE-M3 semantic search at `services/kb/src/semantic
 
 3. **MUST** embed via `bge_m3_client.rs::embed(text) → Vec<f32; 1024>` per DEC-1920.
 
-4. **MUST** ingest via FR-AI-019 BRAIN Layer 2 — call AI-019 ingest API with doc context + chunk embeddings.
+4. **MUST** ingest via FR-AI-019 memory Layer 2 — call AI-019 ingest API with doc context + chunk embeddings.
 
 5. **MUST** define table at migration `0005`:
    ```sql
@@ -126,11 +126,11 @@ The KB service **MUST** ship BGE-M3 semantic search at `services/kb/src/semantic
    POST /v1/kb/search/semantic   body: {query, top_k?: 20, filters?}
    ```
 
-9. **MUST** emit 4 BRAIN audit kinds per DEC-1925. PII per FR-BRAIN-111: query + chunk text SHA-256 hashed; embedding never in chain (binary).
+9. **MUST** emit 4 memory audit kinds per DEC-1925. PII per FR-MEMORY-111: query + chunk text SHA-256 hashed; embedding never in chain (binary).
 
 10. **MUST** thread trace_id from query → embed → search → audit.
 
-11. **MUST NOT** skip BRAIN Layer 2 ingest per DEC-1920.
+11. **MUST NOT** skip memory Layer 2 ingest per DEC-1920.
 
 12. **MUST NOT** split chunks mid-sentence per DEC-1922.
 
@@ -183,7 +183,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **chunk_kind enum cardinality 5**. 2. **BGE-M3 embedding 1024-dim**. 3. **Chunks 256-512 tokens**. 4. **Semantic boundary detection (no mid-sentence)**. 5. **Ingest via FR-AI-019**. 6. **pgvector ivfflat index**. 7. **Cosine similarity query**. 8. **Top-K=20 default**. 9. **Tier filter applied (RLS)**. 10. **Invalidation on new version (DELETE)**. 11. **4 BRAIN audit kinds emitted**. 12. **PII scrubbed (query+chunk SHA256; embedding never in chain)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **UNIQUE(doc, version, chunk_order)**. 16. **Append-only via REVOKE except DELETE**. 17. **Empty index returns empty array**. 18. **Query embedding cached 5min**. 19. **Bulk ingest async via FR-MCP-007 task**. 20. **Multilingual query (VN+EN mixed) supported**.
+1. **chunk_kind enum cardinality 5**. 2. **BGE-M3 embedding 1024-dim**. 3. **Chunks 256-512 tokens**. 4. **Semantic boundary detection (no mid-sentence)**. 5. **Ingest via FR-AI-019**. 6. **pgvector ivfflat index**. 7. **Cosine similarity query**. 8. **Top-K=20 default**. 9. **Tier filter applied (RLS)**. 10. **Invalidation on new version (DELETE)**. 11. **4 memory audit kinds emitted**. 12. **PII scrubbed (query+chunk SHA256; embedding never in chain)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **UNIQUE(doc, version, chunk_order)**. 16. **Append-only via REVOKE except DELETE**. 17. **Empty index returns empty array**. 18. **Query embedding cached 5min**. 19. **Bulk ingest async via FR-MCP-007 task**. 20. **Multilingual query (VN+EN mixed) supported**.
 
 ---
 
@@ -221,9 +221,9 @@ async fn top_k_returned() {
 ---
 
 ## §7 — Dependencies
-**Upstream:** FR-AI-019 (BRAIN Layer 2), FR-KB-001.
+**Upstream:** FR-AI-019 (memory Layer 2), FR-KB-001.
 **Downstream:** FR-KB-006 (rerank).
-**Cross-module:** FR-KB-002 (plaintext source), FR-MCP-007 (async ingest), FR-BRAIN-111 (PII).
+**Cross-module:** FR-KB-002 (plaintext source), FR-MCP-007 (async ingest), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -243,7 +243,7 @@ async fn top_k_returned() {
 - §11.1 BGE-M3 model hosted via FR-AI-019 inference endpoint; service-side caching of embeddings.
 - §11.2 Chunker uses tree-sitter for code-aware splits; falls back to paragraph for prose.
 - §11.3 ivfflat: lists=floor(sqrt(row_count)); rebuilt monthly via maintenance cron.
-- §11.4 BRAIN audit body: doc_id, version_id, chunk_count; query+text SHA256.
+- §11.4 memory audit body: doc_id, version_id, chunk_count; query+text SHA256.
 - §11.5 Bulk ingest: large doc → chunked → batched embed calls (10 chunks per batch).
 
 ---

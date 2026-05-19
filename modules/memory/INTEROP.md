@@ -48,7 +48,7 @@ Consumers MUST express every memory-state mutation as exactly one of:
 
 There is no `update`, no `overwrite`, no `append`. If you need to replace whole file contents, decompose: `delete` then `create` (or call the canonical CLI's `overwrite` helper, which emits the right row pair).
 
-Consumers MUST NOT touch `audit/`, `HEAD`, or `.lock` directly. To append to the audit, MUST go through the canonical writer (legacy: `runtime/lib/brain_writer.py`; v2: `python -m cyberos`).
+Consumers MUST NOT touch `audit/`, `HEAD`, or `.lock` directly. To append to the audit, MUST go through the canonical writer (legacy: `runtime/lib/memory_writer.py`; v2: `python -m cyberos`).
 
 ## §4  Path validation
 

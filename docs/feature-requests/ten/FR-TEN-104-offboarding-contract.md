@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CLO + CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-001, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-TEN-105, FR-TEN-106, FR-TEN-202, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-TEN-001, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-TEN-105, FR-TEN-106, FR-TEN-202, FR-OBS-007]
 depends_on: [FR-TEN-001]
 blocks: [FR-TEN-105, FR-TEN-106, FR-TEN-202]
 
@@ -25,14 +25,14 @@ source_decisions:
   - DEC-503 (scheduled job `ten_offboarding_advance` runs hourly — advances state machine based on day-pinned transitions; idempotent via WHERE status + scheduled_advance_at predicate)
   - DEC-504 (terminating_a: tenant data is READ-ONLY at app layer; new writes blocked at handler; existing writes via privileged operator override require ADR; tenant-admin can export signed bundles per FR-TEN-105)
   - DEC-505 (terminating_b: tenant data wiped to dead-letter S3 bucket with 60-day Object-Lock retention; only operator with CSO+CLO co-sign can restore via dedicated handler; per-tenant policy MAY shorten dead-letter window down to 30 days)
-  - DEC-506 (terminated transition requires CSO + CLO dual-signoff per FR-TEN-106; emits `ten.tenant_terminated` BRAIN row + permanent-delete attestation row; Object-Lock COMPLIANCE mode on the dead-letter S3 retention prevents accidental delete)
-  - DEC-507 (BRAIN audit kinds: ten.offboarding_initiated, ten.terminating_a_entered, ten.terminating_b_entered, ten.terminating_cancelled, ten.tenant_terminated, ten.offboarding_extended, ten.dead_letter_restored, ten.read_only_write_attempted)
+  - DEC-506 (terminated transition requires CSO + CLO dual-signoff per FR-TEN-106; emits `ten.tenant_terminated` memory row + permanent-delete attestation row; Object-Lock COMPLIANCE mode on the dead-letter S3 retention prevents accidental delete)
+  - DEC-507 (memory audit kinds: ten.offboarding_initiated, ten.terminating_a_entered, ten.terminating_b_entered, ten.terminating_cancelled, ten.tenant_terminated, ten.offboarding_extended, ten.dead_letter_restored, ten.read_only_write_attempted)
   - DEC-508 (REVOKE UPDATE, DELETE on tenant_offboarding_log from cyberos_app — append-only at SQL grant)
   - DEC-509 (read-only freeze enforced at FR-AUTH-004 JWT issuance: tokens for tenants in terminating_a have `scope_grants` filtered to read-only operations; write attempts return 423 `tenant_read_only` + emit `ten.read_only_write_attempted`)
   - DEC-510 (cancellation (terminating_a → active) requires same caller authority as initiation: root-admin OR tenant-admin with explicit confirmation step; emits `ten.terminating_cancelled` row)
   - DEC-511 (FR-TEN-202 hostile-termination fast-track bypasses 30-day terminating_a window — direct active → terminating_b with CEO+CLO+CSO sign-off; this FR ships the FSM that FR-TEN-202 consumes)
   - DEC-512 (per-tenant offboarding extension via `POST /v1/ten/offboarding/extend` — adds 1-30 days to current state; max 2 extensions per offboarding cycle; CLO role required)
-  - DEC-513 (dead-letter restore from terminating_b requires CSO + CLO dual-signoff + restore reason; emits `ten.dead_letter_restored` BRAIN row sev-1)
+  - DEC-513 (dead-letter restore from terminating_b requires CSO + CLO dual-signoff + restore reason; emits `ten.dead_letter_restored` memory row sev-1)
   - DEC-514 (FSM enforced at trigger AND handler — defense in depth; trigger uses ENUM transition matrix function)
   - DEC-515 (terminating_a + terminating_b durations are PINNED at FSM entry — `scheduled_advance_at` column captures the target transition time; extensions update this; the scheduled job consults this column)
   - GDPR Art. 17 (right to erasure — 90-day grace satisfies; legal-hold blocks per FR-DOC-001 §1 #13)
@@ -50,7 +50,7 @@ new_files:
   - services/ten/src/offboarding/read_only_gate.rs            # JWT issuance hook
   - services/ten/src/offboarding/dead_letter.rs               # S3 dead-letter writer + restorer
   - services/ten/src/offboarding/repo.rs                      # CRUD across state + log
-  - services/ten/src/offboarding/audit.rs                     # 8 BRAIN row builders
+  - services/ten/src/offboarding/audit.rs                     # 8 memory row builders
   - services/ten/src/handlers/offboarding.rs                  # initiate + cancel + extend + restore
   - services/ten/tests/offboarding_fsm_test.rs
   - services/ten/tests/offboarding_initiate_test.rs
@@ -120,29 +120,29 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 5. **MUST** ship the FSM at `services/ten/src/offboarding/fsm.rs` as a closed Rust function `validate_transition(from, to) -> Result<(), InvalidTransition>`. The trigger `enforce_offboarding_fsm` mirrors the matrix at DB level.
 
 6. **MUST** ship the scheduled advance job at `services/ten/src/offboarding/scheduler.rs` running hourly (per DEC-503). Query: `SELECT tenant_id, offboarding_state FROM tenant_offboarding_state WHERE scheduled_advance_at <= now() AND offboarding_state IN ('terminating_a','terminating_b')`. For each row:
-    - If `terminating_a` → transition to `terminating_b`; emit BRAIN row; wipe data to dead-letter bucket per §1 #12.
+    - If `terminating_a` → transition to `terminating_b`; emit memory row; wipe data to dead-letter bucket per §1 #12.
     - If `terminating_b` → DO NOT auto-advance; emit `ten.dual_signoff_required` notification to ops; manual transition only.
    Idempotent — re-running on already-advanced tenant is a no-op (trigger predicate enforces).
 
-7. **MUST** enforce read-only freeze in `terminating_a` (per DEC-509). The FR-AUTH-004 JWT issuer consults `read_only_gate::is_tenant_read_only(tenant_id)` — true → JWT's `scope_grants` filtered to read-only operations (read | list | view; write | create | update | delete excluded). Existing tokens issued pre-freeze are NOT invalidated; their writes fail at handler with 423 `tenant_read_only` + emit `ten.read_only_write_attempted` BRAIN row.
+7. **MUST** enforce read-only freeze in `terminating_a` (per DEC-509). The FR-AUTH-004 JWT issuer consults `read_only_gate::is_tenant_read_only(tenant_id)` — true → JWT's `scope_grants` filtered to read-only operations (read | list | view; write | create | update | delete excluded). Existing tokens issued pre-freeze are NOT invalidated; their writes fail at handler with 423 `tenant_read_only` + emit `ten.read_only_write_attempted` memory row.
 
 8. **MUST** ship `POST /v1/ten/offboarding/initiate` handler. Body: `{tenant_slug, reason, total_grace_days?}`. Caller MUST have role `root-admin` per FR-AUTH-101. Validates:
     - Tenant exists and is in `active` state.
     - reason 1–500 chars.
     - total_grace_days defaults to 90; if specified, must be 30-180.
-   On success: UPDATE state to `terminating_a`; set `terminating_a_started_at = now()`, `scheduled_advance_at = now() + INTERVAL '30 days'` (or proportional); emit `ten.offboarding_initiated` + `ten.terminating_a_entered` BRAIN rows.
+   On success: UPDATE state to `terminating_a`; set `terminating_a_started_at = now()`, `scheduled_advance_at = now() + INTERVAL '30 days'` (or proportional); emit `ten.offboarding_initiated` + `ten.terminating_a_entered` memory rows.
 
 9. **MUST** ship `POST /v1/ten/offboarding/cancel` (per DEC-510). Caller MUST have role `root-admin` OR `tenant-admin` for the target tenant. Body: `{tenant_slug, reason, confirmation: "I_UNDERSTAND_CANCELLATION"}`. Validates:
     - Tenant is in `terminating_a` state (NEVER allowed in terminating_b or terminated).
     - confirmation string matches exactly.
-   On success: UPDATE state to `active`; clear `terminating_a_started_at`, `scheduled_advance_at`; emit `ten.terminating_cancelled` BRAIN row.
+   On success: UPDATE state to `active`; clear `terminating_a_started_at`, `scheduled_advance_at`; emit `ten.terminating_cancelled` memory row.
 
 10. **MUST** ship `POST /v1/ten/offboarding/extend` (per DEC-512). Caller MUST have role `clo` (Chief Legal Officer) per FR-AUTH-101. Body: `{tenant_slug, additional_days, reason}`. Validates:
     - Tenant in `terminating_a` OR `terminating_b`.
     - additional_days in [1, 30].
     - reason non-empty.
     - extension_count < 2.
-   On success: UPDATE `scheduled_advance_at = scheduled_advance_at + additional_days`; UPDATE `extension_count = extension_count + 1`; UPDATE `total_grace_days += additional_days`; emit `ten.offboarding_extended` BRAIN row.
+   On success: UPDATE `scheduled_advance_at = scheduled_advance_at + additional_days`; UPDATE `extension_count = extension_count + 1`; UPDATE `total_grace_days += additional_days`; emit `ten.offboarding_extended` memory row.
 
 11. **MUST** ship `POST /v1/ten/offboarding/finalize-termination` (per DEC-506). Body: `{tenant_slug, signer1_subject_id, signer2_subject_id, reason, confirmation: "I_AUTHORISE_IRREVERSIBLE_DELETE"}`. Validates:
     - Tenant in `terminating_b`.
@@ -150,7 +150,7 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
     - `signer2` has role `clo`.
     - `signer1 != signer2`.
     - confirmation matches.
-   On success: UPDATE state to `terminated`; set `terminated_at = now()`; emit `ten.tenant_terminated` BRAIN row; trigger FR-TEN-106 attestation row.
+   On success: UPDATE state to `terminated`; set `terminated_at = now()`; emit `ten.tenant_terminated` memory row; trigger FR-TEN-106 attestation row.
 
 12. **MUST** wipe tenant data to dead-letter S3 bucket on `terminating_a → terminating_b` transition (per DEC-505). The dead-letter writer:
     - Streams Postgres tables tagged with the tenant_id to S3 (per-table CSV/JSONL export).
@@ -159,9 +159,9 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
     - Deletes the rows from production Postgres after S3 commit confirmation.
     - Emits `ten.dead_letter_written` row carrying `byte_count`, `table_count`, `kms_key_id`, `s3_bucket`, `retention_until`.
 
-13. **MUST** support `POST /v1/ten/offboarding/restore-from-dead-letter` (per DEC-513). Body: `{tenant_slug, signer1_subject_id, signer2_subject_id, reason, confirmation: "I_AUTHORISE_DEAD_LETTER_RESTORE"}`. Validates same shape as §1 #11 (CSO + CLO dual-signoff). Tenant must be in `terminating_b`. On success: restore rows from S3 dead-letter into production Postgres; UPDATE state to `terminating_a` (re-enter the 30-day grace); emit `ten.dead_letter_restored` BRAIN row sev-1.
+13. **MUST** support `POST /v1/ten/offboarding/restore-from-dead-letter` (per DEC-513). Body: `{tenant_slug, signer1_subject_id, signer2_subject_id, reason, confirmation: "I_AUTHORISE_DEAD_LETTER_RESTORE"}`. Validates same shape as §1 #11 (CSO + CLO dual-signoff). Tenant must be in `terminating_b`. On success: restore rows from S3 dead-letter into production Postgres; UPDATE state to `terminating_a` (re-enter the 30-day grace); emit `ten.dead_letter_restored` memory row sev-1.
 
-14. **MUST** emit 8 BRAIN audit row kinds (per DEC-507):
+14. **MUST** emit 8 memory audit row kinds (per DEC-507):
     - `ten.offboarding_initiated` — first initiation.
     - `ten.terminating_a_entered` — entry into read-only grace.
     - `ten.terminating_b_entered` — entry into dead-letter grace.
@@ -171,7 +171,7 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
     - `ten.dead_letter_restored` — restore from dead-letter; sev-1.
     - `ten.read_only_write_attempted` — write rejected during terminating_a.
 
-15. **MUST** PII-scrub `reason` and `initiated_reason` fields via FR-BRAIN-111 before chain commit.
+15. **MUST** PII-scrub `reason` and `initiated_reason` fields via FR-MEMORY-111 before chain commit.
 
 16. **MUST** ensure the FSM trigger (`enforce_offboarding_fsm`) covers ALL forbidden transitions (per DEC-514). Trigger raises specific error codes per illegal transition; tests assert each.
 
@@ -198,7 +198,7 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 
 25. **MUST** ship `GET /v1/ten/offboarding/state/{tenant_slug}` for operator visibility. Returns `{state, initiated_at, scheduled_advance_at, days_remaining_in_state, extension_count, can_cancel: bool, can_extend: bool, can_terminate: bool}`. Caller MUST be root-admin or tenant-admin for the target tenant.
 
-26. **MUST** support `POST /v1/ten/offboarding/force-advance` for emergency operator override — caller MUST be root-admin. Forces FSM transition with explicit reason. Emits BRAIN row at sev-1 (operator override is forensically critical). Used for `terminating_b → terminated` after dual-signoff handler when scheduled advance hasn't fired yet.
+26. **MUST** support `POST /v1/ten/offboarding/force-advance` for emergency operator override — caller MUST be root-admin. Forces FSM transition with explicit reason. Emits memory row at sev-1 (operator override is forensically critical). Used for `terminating_b → terminated` after dual-signoff handler when scheduled advance hasn't fired yet.
 
 ---
 
@@ -222,7 +222,7 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 
 **Why max 2 extensions per cycle (DEC-512, §1 #18)?** Extensions are escape valves for stuck client cleanups; not policy-as-extension. 2 × 30 days max = 60 days additional = total 150 days. Below 30 days minimum is too aggressive; > 180 days defeats the offboarding's intent.
 
-**Why dead-letter restore is sev-1 BRAIN row (DEC-513, §1 #14)?** Restore is a rare + consequential event (operator decided "we shouldn't have offboarded; restore"). Sev-1 ensures every restore is visible in OBS digests for root-cause analysis.
+**Why dead-letter restore is sev-1 memory row (DEC-513, §1 #14)?** Restore is a rare + consequential event (operator decided "we shouldn't have offboarded; restore"). Sev-1 ensures every restore is visible in OBS digests for root-cause analysis.
 
 **Why dead-letter Object-Lock COMPLIANCE (DEC-505, DEC-506)?** Compliance mode prevents even AWS root account from deleting before retention expires. Governance mode would allow root override; we want the irreversibility guarantee.
 
@@ -240,7 +240,7 @@ The TEN service **MUST** ship the 90-day offboarding contract — closed 4-state
 
 **Why tenant-admin can also cancel (§1 #9)?** Cancellation is "I changed my mind" — the tenant's own decision. tenant-admin (representing the tenant) has legitimate authority. root-admin (representing CyberSkill ops) can also cancel for operational reasons (e.g. payment received late).
 
-**Why read_only_write_attempted as a BRAIN row + alarm (§1 #14, §1 #24)?** Sustained write attempts during freeze (> 100/h) signal a stuck client that hasn't observed the read-only state — operator notification helps identify integrations needing attention before terminating_b wipe.
+**Why read_only_write_attempted as a memory row + alarm (§1 #14, §1 #24)?** Sustained write attempts during freeze (> 100/h) signal a stuck client that hasn't observed the read-only state — operator notification helps identify integrations needing attention before terminating_b wipe.
 
 **Why force-advance is sev-1 (§1 #26)?** Operator overrides of FSM are forensically critical — "operator advanced to terminated before scheduled time" is exactly the kind of event regulators want to see in audit chains. Sev-1 ensures unmissable.
 
@@ -657,7 +657,7 @@ pub async fn finalize_termination(
 23. **append-only via auth_provisioner role only** — cyberos_app blocked.
 24. **GET /offboarding/state returns days_remaining + can_cancel + can_extend + can_terminate**.
 25. **Force-advance by root-admin** → state advances + sev-1 audit row.
-26. **8 BRAIN audit kinds emit correctly** — one per lifecycle event.
+26. **8 memory audit kinds emit correctly** — one per lifecycle event.
 27. **OTel span emitted per handler** — outcome populated.
 28. **Counter `ten_offboarding_state_count{state}` reflects current counts**.
 
@@ -698,7 +698,7 @@ async fn write_attempt_returns_423_during_grace(ctx: TestCtx) {
     assert_eq!(resp.status(), 423);
     let body: serde_json::Value = resp.json().await.unwrap();
     assert_eq!(body["error"], "tenant_read_only");
-    let rows = ctx.brain_audit_rows("ten.read_only_write_attempted").await;
+    let rows = ctx.memory_audit_rows("ten.read_only_write_attempted").await;
     assert_eq!(rows.len(), 1);
 }
 
@@ -743,7 +743,7 @@ async fn restore_succeeds_with_proper_signers(ctx: TestCtx) {
     assert_eq!(resp.status(), 200);
     let updated = ctx.fetch_offboarding_state(tenant.id).await;
     assert_eq!(updated.offboarding_state, OffboardingState::TerminatingA);
-    let rows = ctx.brain_audit_rows("ten.dead_letter_restored").await;
+    let rows = ctx.memory_audit_rows("ten.dead_letter_restored").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["severity"], "sev-1");
 }
@@ -789,7 +789,7 @@ async fn terminated_at_mutation_rejected(pool: sqlx::PgPool) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 8 BRAIN row builders follow the canonical pattern; dead_letter wipe uses FR-DOC-001 S3+KMS pattern.)
+(API contract above is the skeleton; 8 memory row builders follow the canonical pattern; dead_letter wipe uses FR-DOC-001 S3+KMS pattern.)
 
 ---
 
@@ -805,8 +805,8 @@ async fn terminated_at_mutation_rejected(pool: sqlx::PgPool) {
 **Cross-module:**
 - **FR-AUTH-101** — RBAC; root-admin (initiate/force), tenant-admin (cancel own), CLO (extend), CSO (terminate-signer1), CLO (terminate-signer2).
 - **FR-AUTH-004** — JWT issuer hooks read_only_gate at issuance.
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrub reason fields.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrub reason fields.
 - **FR-OBS-007** — sev-3 alarm on > 100/h read-only-write attempts; sev-1 always on terminated + restore.
 - **FR-DOC-001** — S3 Object-Lock COMPLIANCE pattern for dead-letter bucket.
 - **FR-TEN-202** — hostile-termination fast-track (consumes active → terminating_b transition).
@@ -852,7 +852,7 @@ async fn terminated_at_mutation_rejected(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.4 — ten.tenant_terminated BRAIN row (sev-1)
+### 8.4 — ten.tenant_terminated memory row (sev-1)
 
 ```json
 {
@@ -866,7 +866,7 @@ async fn terminated_at_mutation_rejected(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.5 — ten.read_only_write_attempted BRAIN row
+### 8.5 — ten.read_only_write_attempted memory row
 
 ```json
 {
@@ -909,7 +909,7 @@ All other questions resolved.
 | Concurrent scheduler runs | FOR UPDATE SKIP LOCKED | One wins per tenant | Designed |
 | Dead-letter S3 write fail | error response | 500 + sev-1 | Retry; sev-1 alarm |
 | Object-Lock COMPLIANCE not applied | reconciliation check | sev-1 | Verify mode + reapply |
-| BRAIN audit fail mid-tx | rollback | 500 | brain_writer health |
+| memory audit fail mid-tx | rollback | 500 | memory_writer health |
 | Read-only gate cache stale | 60s TTL + invalidate | Brief delay | Designed |
 | Non-CLO extension | role check | 403 | Designed |
 | Non-root-admin initiate | role check | 403 | Designed |
@@ -952,7 +952,7 @@ All other questions resolved.
 - **tenant-admin can cancel own** — tenant's own decision.
 - **Read-only-write attempts emit + alarm** — stuck-client visibility.
 - **Force-advance sev-1** — operator override forensic-critical.
-- **8 BRAIN audit kinds** — selective operator queries.
+- **8 memory audit kinds** — selective operator queries.
 - **PII scrub reason** — chain holds scrubbed.
 
 ---

@@ -3,7 +3,7 @@ id: FR-PROJ-006
 title: "Billable cascade — Member-override → task-class → role-default → fallback; resolution snapshot at time-entry write"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-005, FR-PROJ-007, FR-TIME-005, FR-AUTH-003]
 depends_on: [FR-PROJ-005]
 blocks: [FR-PROJ-007, FR-TIME-005]
@@ -49,7 +49,7 @@ sub_tasks:
   - "0.5h: billable/mod.rs — BillableResolution struct {value, source, tier_consulted, snapshot_at}"
   - "1.5h: cascade.rs — resolve_billable(member_id, task_class, role, engagement_id, at_date) -> BillableResolution"
   - "0.5h: snapshot embedded in time entry row (already in FR-TIME-005)"
-  - "0.5h: BRAIN audit row 'proj.billable_resolved' per resolution"
+  - "0.5h: memory audit row 'proj.billable_resolved' per resolution"
   - "1.5h: billable_cascade_test.rs — all 4 tiers + tier-2 task_class override + member override + fallback"
 risk_if_skipped: "Without explicit cascade, every time-entry write reinvents 'is this billable?' — drift between codepaths means same task billed differently from kanban vs. timeline views. Without snapshot, raising a contractor's hourly rate retroactively re-bills past entries (illegal in many jurisdictions). Without 'never default-bill', accidentally-tracked work gets invoiced to the client (customer churn)."
 ---
@@ -68,7 +68,7 @@ The resolver:
 1. **MUST** return `BillableResolution { value: bool, source: Tier, tier_consulted: u8, snapshot_at: i64 }` — every resolution carries provenance.
 2. **MUST** stop at the FIRST applicable tier (no further consultation once a rule matches).
 3. **MUST** snapshot the resolved value AT WRITE TIME of the time-entry. Later changes to any tier do NOT retroactively modify existing entries.
-4. **MUST** emit `proj.billable_resolved` BRAIN audit row per call with payload `{time_entry_id, member_id, engagement_id, task_class, role, billable_value, source_tier, snapshot_at_ns, trace_id}`.
+4. **MUST** emit `proj.billable_resolved` memory audit row per call with payload `{time_entry_id, member_id, engagement_id, task_class, role, billable_value, source_tier, snapshot_at_ns, trace_id}`.
 5. **MUST** validate `member_id` belongs to the engagement (cross-engagement override invalid).
 6. **MUST** be deterministic per `(member_id, task_class, role, engagement_id, at_date)` snapshot at AT-DATE; cascade reads rate card via `FR-PROJ-005::lookup_at(at_date)` so the snapshot is reproducible.
 7. **MUST** emit OTel metrics:
@@ -78,14 +78,14 @@ The resolver:
 9. **MUST** expose admin CRUD for Tier-1 + Tier-2 overrides:
     - `POST/DELETE /api/proj/engagements/:eng/member-overrides/:member_id`
     - `POST/DELETE /api/proj/engagements/:eng/task-class/:class`
-10. **MUST** emit BRAIN audit on override CRUD: `proj.member_billable_override_set` / `proj.task_class_billable_set`.
+10. **MUST** emit memory audit on override CRUD: `proj.member_billable_override_set` / `proj.task_class_billable_set`.
 11. **MUST** RLS-enforce per tenant (FR-AUTH-003).
 12. **MUST** validate the resolver inputs at handler boundary: `member_id` exists in tenant; `engagement_id` exists in tenant; `at_date` is not more than 5 years in the past; `currency` is in the rate-card's enum. Invalid inputs → 400 with structured error.
 13. **MUST** support a "bulk-resolve" endpoint: `POST /api/proj/engagements/:eng/billable-cascade/bulk` with `[{member_id, task_class, role, at_date}]` array (max 1000 items) → returns array of resolutions in input order. Used by timesheet-import flows.
 14. **MUST** mark resolved billable values as IMMUTABLE on the time entry row: any PATCH attempting to change `billable_snapshot` is rejected with 405 (force re-resolution via separate time-entry-recompute admin endpoint, which itself is audit-trail-heavy).
 15. **MUST** support per-engagement DEFAULT TIER-2 task-class billable: `cyberos_proj_engagement_settings.default_task_class_billable = {feature_work: true, research: false, ...}` applied to engagement creation if no per-class override exists. Tenant-admin sets the default.
 16. **MUST** track `proj_billable_resolution_latency_ms` histogram per call; p95 budget < 20ms (cascade is in the time-entry hot path).
-17. **MUST** support querying historical resolutions: `GET /api/proj/engagements/:eng/billable-cascade/history?member=:id&from=&to=` returns BRAIN audit rows. Useful for auditing "why was this hour billed."
+17. **MUST** support querying historical resolutions: `GET /api/proj/engagements/:eng/billable-cascade/history?member=:id&from=&to=` returns memory audit rows. Useful for auditing "why was this hour billed."
 18. **MUST** include `effective_overrides_applied` field in `BillableResolution`: even if Tier 3 matched, the response carries metadata about which other tiers existed but didn't match (e.g. "rate card was used; member-override exists but matches the same value"). Operator transparency.
 19. **MUST** support a tenant-level "billable by default" policy override of the §1 Tier-4 fallback: `cyberos_proj_tenant_settings.cascade_fallback_billable = false` (default false). Tenants who explicitly want default-billable can set true (e.g. internal-billing tenants). The default remains conservative.
 20. **MUST** validate `engagement_id` is not archived: resolutions on archived engagements are forbidden (would create new time entries on closed engagements). 409 `engagement_archived`.
@@ -117,7 +117,7 @@ The resolver:
 
 **Why p95 < 20ms (§1 #16)?** Time-entry write is in the operator's UI critical path; >20ms feels laggy. Cascade is 4 SQL queries worst-case; budget is generous.
 
-**Why historical resolution query (§1 #17)?** Auditors investigating an invoice line item ask "why was this billable?" — answer requires the resolution that was made at write time. BRAIN audit query gives the trace.
+**Why historical resolution query (§1 #17)?** Auditors investigating an invoice line item ask "why was this billable?" — answer requires the resolution that was made at write time. memory audit query gives the trace.
 
 **Why effective_overrides_applied metadata (§1 #18)?** Operator transparency: "Tier 3 matched (rate card default = true); a member override exists but also returns true, so no change." Without this, operators can't tell if the result is from the priority tier or a deeper one happening to agree.
 
@@ -263,7 +263,7 @@ pub async fn resolve(
 18. **billable_snapshot PATCH rejected** — direct PATCH of time entry's billable_snapshot → 405 (AC for §1 #14).
 19. **Engagement-default task-class billable applied** — tenant default `feature_work: true`; new engagement → has tier-2 row matching default; resolve returns true via Tier 2 (AC for §1 #15).
 20. **Latency p95 < 20ms** — load test 1000 resolves → histogram p95 < 20ms (AC for §1 #16).
-21. **Historical query returns BRAIN rows** — GET /history → audit rows for member+time range (AC for §1 #17).
+21. **Historical query returns memory rows** — GET /history → audit rows for member+time range (AC for §1 #17).
 22. **effective_overrides_applied in response** — resolve where Tier 1 + Tier 3 both exist and agree → metadata shows both (AC for §1 #18).
 23. **Tenant fallback override honoured** — set `cascade_fallback_billable=true`; Tier 4 fallback → value=true (AC for §1 #19).
 24. **Archived engagement rejected** — resolve on archived eng → 409 `engagement_archived` (AC for §1 #20).
@@ -381,7 +381,7 @@ All resolved. Deferred:
 | Cross-engagement override | row scoped to (member, engagement) | Other engagements unaffected | None |
 | Race: resolve mid-override-update | each resolve uses current snapshot | Snapshot at resolve-time is consistent | None |
 | Tier 1 override deleted | next resolve falls to Tier 2 | New entries get new value | By design (snapshot protects historical) |
-| Audit emit fails | Resolved value still returned; audit lost | sev-2 | Operator restores BRAIN |
+| Audit emit fails | Resolved value still returned; audit lost | sev-2 | Operator restores memory |
 | Currency mismatch in rate-card lookup | lookup returns None → fallback to Tier 4 | False | Operator adds rate card |
 | Tenant isolation broken (RLS bug) | property test catches | CI blocked | Author fixes |
 | Idempotency-Key reuse with different body | handler check | 409 | Caller uses fresh key |
@@ -420,7 +420,7 @@ All resolved. Deferred:
 - The "force re-resolution" admin endpoint for §1 #14 is intentionally hidden in admin namespace because: re-resolution invalidates prior bill amounts; operator must explicitly choose.
 - Engagement-default task-class billable is an array of (task_class, billable) pairs in tenant settings; engagement creation iterates and inserts.
 - 20ms p95 budget breaks down: ~5ms per query × 4 queries worst-case + ~0ms response build = 20ms. Tier-1 hit is ~5ms total (single query).
-- Historical query uses the brain_outbox partial index `WHERE kind='proj.billable_resolved'` for fast retrieval.
+- Historical query uses the memory_outbox partial index `WHERE kind='proj.billable_resolved'` for fast retrieval.
 - `effective_overrides_applied` adds ~3 SQL queries (one per non-matching tier); we run them in parallel via `tokio::join!` to keep latency bounded.
 - The per-tenant fallback override defaults to `false` (conservative); only internal-billing tenants flip it.
 - Archived-engagement check is at the top of resolver (before any tier query) so we fail fast on the common error.

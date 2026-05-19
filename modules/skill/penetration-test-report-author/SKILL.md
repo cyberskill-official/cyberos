@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: penetration-test-report-author
-description: Authors a penetration-test engagement report (internal red-team or external third-party). Executive summary, scope + rules of engagement, methodology, findings ranked by CVSS with PoC + remediation, retest plan. Per OWASP Web Security Testing Guide v4.2 + PTES + NIST SP 800-115 + OWASP ASVS v5.0 + MITRE ATT&CK.
-  Author a PEN_TEST_REPORT markdown from source artefact(s). Generates a
-  versioned penetration-test-report@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  penetration-test-report-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Authors a penetration-test engagement report (internal red-team or external third-party). Executive summary, scope + rules of engagement, methodology, findings ranked by CVSS with PoC + remediation, retest plan. Per OWASP Web Security Testing Guide v4.2 + PTES + NIST SP 800-115 + OWASP ASVS v5.0 + MITRE ATT&CK. Author a PEN_TEST_REPORT markdown from source artefact(s). Generates a versioned penetration-test-report@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into penetration-test-report-audit by default. Refuses to author when upstream artefact is in non-pass state. Use when user asks to "draft a penetration test report" or "create the penetration test report". Do NOT use for "audit existing penetration test report" (use penetration-test-report-audit instead). Author a PEN_TEST_REPORT markdown from source artefact(s). Generates a versioned penetration-test-report@1 file under output_dir, with per-claim authority markers and provenance to the sour...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: pen-test-report_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

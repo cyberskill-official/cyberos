@@ -17,7 +17,7 @@ revised_at: 2026-05-16
 
 FR-AI-014 was expanded from 287 lines to ~860 lines matching FR-AI-001 / FR-AI-012 depth.
 
-The expansion added 9 §1 normative clauses (#2 handle-keyed registry with `<id>@<version>` format and filename-match check, #6 explicit canonical-builder reference, #8 source-hash canonicalisation rules, #9 expanded downstream-artefact list including response body badge for EU AI Act Art. 50, #11 explicit non-duplication of policy check, #12 250ms file-watch debounce, #13 LLM-hint merge order, #14 strict semver parse, #16 reload INFO log), 7 substantive §2 rationale paragraphs (handle-vs-id keying, hash-on-every-load justification, ArcSwap-vs-RwLock contention math, system-message-vs-concatenation alignment argument, canonicalisation cross-platform false-positive rationale, override-order Bayesian frame, semver-strict scope discipline), full Rust type definitions in §3 (PersonaId, PersonaHandle, Persona, PersonaError variants with thiserror, PersonaInitError variants, PersonaParseError variants), full parse_persona_md skeleton with canonicalisation function, full handler injection skeleton, expanded §4 from 10 to 20 acceptance criteria, full Rust test bodies in §5 (happy + cache + Arc::ptr_eq, unknown-handle sorted-available, semver strictness, filename-mismatch, forbidden-frontmatter, double-init, tamper with metric assertion, hot-reload polling, parse-error cache-hold, canonicalisation CRLF + BOM + NFC tests, 100-concurrent + 1000-cache-hit budget, hint-merge), full registry + watch + hash + brain_writer-canonical-builder skeletons in §6, expanded §7 with code/concept/operational dependency split, 7 example payloads in §8 (request, injection, headers, body badge, audit row, unknown-handle, tamper response), 21 failure modes in §10 (vs. 7 in first pass), 9 implementation notes in §11.
+The expansion added 9 §1 normative clauses (#2 handle-keyed registry with `<id>@<version>` format and filename-match check, #6 explicit canonical-builder reference, #8 source-hash canonicalisation rules, #9 expanded downstream-artefact list including response body badge for EU AI Act Art. 50, #11 explicit non-duplication of policy check, #12 250ms file-watch debounce, #13 LLM-hint merge order, #14 strict semver parse, #16 reload INFO log), 7 substantive §2 rationale paragraphs (handle-vs-id keying, hash-on-every-load justification, ArcSwap-vs-RwLock contention math, system-message-vs-concatenation alignment argument, canonicalisation cross-platform false-positive rationale, override-order Bayesian frame, semver-strict scope discipline), full Rust type definitions in §3 (PersonaId, PersonaHandle, Persona, PersonaError variants with thiserror, PersonaInitError variants, PersonaParseError variants), full parse_persona_md skeleton with canonicalisation function, full handler injection skeleton, expanded §4 from 10 to 20 acceptance criteria, full Rust test bodies in §5 (happy + cache + Arc::ptr_eq, unknown-handle sorted-available, semver strictness, filename-mismatch, forbidden-frontmatter, double-init, tamper with metric assertion, hot-reload polling, parse-error cache-hold, canonicalisation CRLF + BOM + NFC tests, 100-concurrent + 1000-cache-hit budget, hint-merge), full registry + watch + hash + memory_writer-canonical-builder skeletons in §6, expanded §7 with code/concept/operational dependency split, 7 example payloads in §8 (request, injection, headers, body badge, audit row, unknown-handle, tamper response), 21 failure modes in §10 (vs. 7 in first pass), 9 implementation notes in §11.
 
 Six residual issues prevented 10/10 at the post-expansion checkpoint; all six are mechanical and all six are resolved in this revision.
 
@@ -94,7 +94,7 @@ Add `canonicalise_body` in §3 + §6. Hash the canonicalised string, not the raw
 
 #### Description
 
-The first-pass §1 #6 said: *"emit one `ai.persona_loaded` BRAIN audit row per request (via FR-AI-003's `canonical::persona_loaded` builder)."* But (a) FR-AI-003 declares the row *kind* (`ai.persona_loaded`) without specifying the payload schema, and (b) this FR doesn't implement the builder.
+The first-pass §1 #6 said: *"emit one `ai.persona_loaded` memory audit row per request (via FR-AI-003's `canonical::persona_loaded` builder)."* But (a) FR-AI-003 declares the row *kind* (`ai.persona_loaded`) without specifying the payload schema, and (b) this FR doesn't implement the builder.
 
 A code-gen agent reading FR-AI-014 cannot tell what fields go in the row's payload. The available signal is "FR-AI-003 declares the kind" — but reading FR-AI-003 reveals only the kind name, not the payload. The builder has to live somewhere; in the absence of explicit ownership, it lives nowhere and the row never gets emitted.
 
@@ -121,7 +121,7 @@ pub mod canonical {
 }
 ```
 
-Add the builder file path (`src/brain_writer.rs`) to `modified_files`. Add §8 example payload showing the row's full structure.
+Add the builder file path (`src/memory_writer.rs`) to `modified_files`. Add §8 example payload showing the row's full structure.
 
 ### ISS-005 — Hot-reload + `OnceCell::set` race; double-init not handled
 
@@ -187,7 +187,7 @@ All 6 mechanical revisions applied (2026-05-16) within the FR itself:
 
 - **ISS-003 RESOLVED**: §1 #8 added with the 5-step canonicalisation (BOM strip, CRLF→LF, NFC, line-trim, terminating LF); `canonicalise_body` shown in §3 + §6; tests for CRLF tolerance and BOM+NFC equivalence added in §5; §11 note added explaining "not a security weakening."
 
-- **ISS-004 RESOLVED**: `canonical::persona_loaded` builder shown in §3 + §6 with full payload schema; `src/brain_writer.rs` listed in `modified_files`; §8 example payload shows the audit row's full JSON structure.
+- **ISS-004 RESOLVED**: `canonical::persona_loaded` builder shown in §3 + §6 with full payload schema; `src/memory_writer.rs` listed in `modified_files`; §8 example payload shows the audit row's full JSON structure.
 
 - **ISS-005 RESOLVED**: `PersonaInitError::AlreadyInitialised` documented; AC #20 asserts double-init returns Err; §10 row added; watcher defensively checks `REGISTRY.get()` before storing (otherwise WARN-and-skip).
 

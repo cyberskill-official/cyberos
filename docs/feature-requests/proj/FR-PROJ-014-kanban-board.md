@@ -3,7 +3,7 @@ id: FR-PROJ-014
 title: "Kanban Board view — drag/drop status transition + keyboard-first navigation + 60fps virtualised list rendering"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-002, FR-PROJ-003, FR-PROJ-004, FR-PROJ-017, FR-PROJ-018]
 depends_on: [FR-PROJ-002]
 blocks: [FR-PROJ-018]
@@ -80,7 +80,7 @@ The Kanban Board **MUST** present issues grouped by status with drag/drop transi
 5. **MUST** virtualise long columns via `react-window FixedSizeList` when > 200 items; 60fps maintained.
 6. **MUST** render IssueCard with: title (≤ 2 lines truncated), assignee avatar, estimate badge, priority indicator, blocker count badge (FR-PROJ-011), labels.
 7. **MUST** show real-time presence indicators (FR-PROJ-003 awareness): cursor + selection of other users editing the same issue (when in Brief Modal).
-8. **MUST** emit BRAIN audit row `proj.kanban_card_moved` per drag-induced transition; payload `{issue_id, from_status, to_status, by_subject_id, was_keyboard: bool, trace_id}`.
+8. **MUST** emit memory audit row `proj.kanban_card_moved` per drag-induced transition; payload `{issue_id, from_status, to_status, by_subject_id, was_keyboard: bool, trace_id}`.
 9. **MUST** emit OTel client-side metrics via `web-vitals`:
     - `proj_kanban_render_p95_ms` (LCP for board page).
     - `proj_kanban_drag_latency_ms` (drag start → drop reflected).
@@ -90,7 +90,7 @@ The Kanban Board **MUST** present issues grouped by status with drag/drop transi
 12. **MUST** support `?member=<uuid>` and `?label=<id>` URL query filters; updates URL on filter change for shareability.
 13. **MUST** support WIP (Work-In-Progress) limits per column when configured: `cyberos_proj_engagement_settings.wip_limits = {in_progress: 5, in_review: 3}`. Drag into a column at-or-above limit → warning banner + soft block (user can confirm to proceed; emit `proj.wip_limit_overridden` audit).
 14. **MUST** support card minification: at zoom level < 75% OR per-engagement preference, render compact cards (title only, no badges). Reduces visual noise on dense boards.
-15. **MUST** support bulk operations via multi-select: Shift-click selects range; Cmd/Ctrl-click toggles; bulk drag moves all selected. Bulk transitions emit one BRAIN row per issue (per FR-PROJ-002 §1 #16).
+15. **MUST** support bulk operations via multi-select: Shift-click selects range; Cmd/Ctrl-click toggles; bulk drag moves all selected. Bulk transitions emit one memory row per issue (per FR-PROJ-002 §1 #16).
 16. **MUST** support quick-add via keyboard: pressing `c` from column-focused state opens an inline issue creator at the top of that column with status=column's status. ESC cancels; Enter creates.
 17. **MUST** support swimlanes by assignee: optional view mode `?swimlanes=assignee` renders rows per assignee with status columns. Helps team standups.
 18. **MUST** maintain scroll position across re-renders (e.g. WebSocket update doesn't reset scroll). Test: scroll column to 50%, receive update, scroll position preserved.
@@ -175,7 +175,7 @@ export function Board({ cycleId }: { cycleId: string }) {
     try {
       const reason = requiresReason(issue.status, newStatus) ? await promptReason() : undefined;
       await postTransition(issueId, newStatus, reason);
-      emitBrain('proj.kanban_card_moved', { issueId, from: issue.status, to: newStatus,
+      emitMemory('proj.kanban_card_moved', { issueId, from: issue.status, to: newStatus,
                                               wasKeyboard: ev.activatorEvent instanceof KeyboardEvent });
     } catch (e) {
       rollbackMove(issueId);
@@ -237,7 +237,7 @@ function kbdCoordinateGetter(event: KeyboardEvent, args: any) {
 14. **Offline banner appears** — disconnect WebSocket → banner; drags queued.
 15. **URL filter sync** — filter by member → URL updates; reload preserves filter.
 16. **axe-core passes** — no critical/serious violations on board page.
-17. **BRAIN audit row per move** — every drag-induced transition → row.
+17. **memory audit row per move** — every drag-induced transition → row.
 18. **was_keyboard flag** — keyboard-triggered move → flag true; mouse → false.
 19. **Optimistic rollback metric** — server reject → counter `optimistic_rollback` increments.
 20. **LCP p95 < 2.5s** — empirical on 1000-issue board.

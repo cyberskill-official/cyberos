@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-001, FR-PROJ-005, FR-INV-002, FR-INV-011, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-001, FR-PROJ-005, FR-INV-002, FR-INV-011, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CRM-001, FR-PROJ-005]
 blocks: [FR-CRM-010]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1642 2026-05-17 — Closed enum `conversion_source` = {auto_deal_won, manual_create, ai_suggested}; cardinality 3
   - DEC-1643 2026-05-17 — Deal backlink: engagement.source_deal_id; deal.converted_engagement_id (bi-directional)
   - DEC-1644 2026-05-17 — Idempotency: deal can convert to engagement only ONCE; subsequent attempts return existing engagement_id
-  - DEC-1645 2026-05-17 — BRAIN audit kinds: crm.conversion_initiated, crm.engagement_created, crm.conversion_failed
+  - DEC-1645 2026-05-17 — memory audit kinds: crm.conversion_initiated, crm.engagement_created, crm.conversion_failed
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without auto-conversion, won deals stay in CRM without ops han
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship deal → engagement conversion at `services/crm/src/conversion/` triggered on deal.stage='won' or manual, creating FR-PROJ-005 engagement with rate card + recognition method + AM, bi-directional backlink, 3 BRAIN audit kinds.
+The CRM service **MUST** ship deal → engagement conversion at `services/crm/src/conversion/` triggered on deal.stage='won' or manual, creating FR-PROJ-005 engagement with rate card + recognition method + AM, bi-directional backlink, 3 memory audit kinds.
 
 1. **MUST** hook into deal stage transitions at `services/crm/src/deals.rs`. When `new_stage='won'` and no existing conversion: enqueue conversion task; CRO/CDO sees in conversion review queue.
 
@@ -117,7 +117,7 @@ The CRM service **MUST** ship deal → engagement conversion at `services/crm/sr
 
 8. **MUST** set bi-directional backlink per DEC-1643 — `deal.converted_engagement_id` + engagement has `source_deal_id` (FR-PROJ-005 column).
 
-9. **MUST** emit 3 BRAIN audit kinds per DEC-1645. PII per FR-BRAIN-111: deal_value SHA256 hashed; ids ok.
+9. **MUST** emit 3 memory audit kinds per DEC-1645. PII per FR-MEMORY-111: deal_value SHA256 hashed; ids ok.
 
 10. **MUST** thread trace_id from CRO action / deal-stage trigger → builder → FR-PROJ-005 call → audit.
 
@@ -166,7 +166,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **Deal stage=won queues conversion**. 2. **Manual POST creates conversion**. 3. **3-source enum + cardinality test**. 4. **Required fields enforced (rate_card + method + AM + start_date)**. 5. **Account/value/currency/contact auto-pop from deal**. 6. **Idempotent (UNIQUE on deal_id)**. 7. **Second call returns existing engagement_id**. 8. **Bi-directional backlink set**. 9. **3 BRAIN audit kinds emitted**. 10. **PII scrubbed (deal_value SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **FR-PROJ-005 create called**. 14. **CRO/CDO role only (FR-AUTH-101)**. 15. **Append-only conversion table**. 16. **Stage revert from won → no auto-unconvert (audit only)**. 17. **GET endpoint returns conversion status or 404**. 18. **AI-suggested mode: future FR-CRM-006 can call with conversion_source=ai_suggested**. 19. **Engagement creation failure → conversion=failed; deal stays won**. 20. **Conversion event broadcast for FR-CRM-002 activity feed**.
+1. **Deal stage=won queues conversion**. 2. **Manual POST creates conversion**. 3. **3-source enum + cardinality test**. 4. **Required fields enforced (rate_card + method + AM + start_date)**. 5. **Account/value/currency/contact auto-pop from deal**. 6. **Idempotent (UNIQUE on deal_id)**. 7. **Second call returns existing engagement_id**. 8. **Bi-directional backlink set**. 9. **3 memory audit kinds emitted**. 10. **PII scrubbed (deal_value SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **FR-PROJ-005 create called**. 14. **CRO/CDO role only (FR-AUTH-101)**. 15. **Append-only conversion table**. 16. **Stage revert from won → no auto-unconvert (audit only)**. 17. **GET endpoint returns conversion status or 404**. 18. **AI-suggested mode: future FR-CRM-006 can call with conversion_source=ai_suggested**. 19. **Engagement creation failure → conversion=failed; deal stays won**. 20. **Conversion event broadcast for FR-CRM-002 activity feed**.
 
 ---
 
@@ -205,7 +205,7 @@ async fn bidirectional_backlink() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CRM-001, FR-PROJ-005.
-**Cross-module:** FR-INV-011 (recognition_method enum), FR-AUTH-101 (CRO/CDO role), FR-CRM-002 (activity feed event), FR-BRAIN-111 (PII).
+**Cross-module:** FR-INV-011 (recognition_method enum), FR-AUTH-101 (CRO/CDO role), FR-CRM-002 (activity feed event), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

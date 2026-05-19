@@ -6,7 +6,7 @@ Per FR-CUO-106 §1.5 + DEC-2384. Affects 1 workflow today:
 The handler invokes the chain ONCE end-to-end. After completion, it reads
 `workflow.frontmatter.output_recipients` (list of `{recipient_id, format,
 delivery_method}`). For each recipient, it produces a per-recipient delivery
-artefact + emits a `cuo.multi_output_fanout` BRAIN row.
+artefact + emits a `cuo.multi_output_fanout` memory row.
 
 This handler does NOT re-render the chain's final output — fan-out is purely
 a delivery / packaging step. Each recipient gets the same source artefact but
@@ -87,7 +87,7 @@ class MultiOutputHandler(Handler):
         final = chain_result.step_results[-1]
         source_artefact = final.output_path
 
-        # 3. Fan out — write per-recipient envelope + emit one BRAIN row each
+        # 3. Fan out — write per-recipient envelope + emit one memory row each
         fanout_dir = output_dir / "fanout"
         fanout_dir.mkdir(parents=True, exist_ok=True)
         extra_audit: list[dict] = []

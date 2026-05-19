@@ -1,5 +1,5 @@
 """
-P6 cross-BRAIN import tests.
+P6 cross-memory import tests.
 
 Covers:
 * basic import — files copied, audit-row sandwich, manifest watermark.

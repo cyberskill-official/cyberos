@@ -545,7 +545,7 @@ def cmd_enable(store: Path, *, passphrase_mode: bool = True) -> int:
     # 2. Shamir 3-of-5 split
     print("\n=== Shamir 3-of-5 escrow ===")
     print("  Generating 5 fragments. ANY 3 reconstruct the master key.")
-    print("  Fragments NEVER stored in BRAIN — only fingerprints + holder labels.")
+    print("  Fragments NEVER stored in memory — only fingerprints + holder labels.")
     shares = shamir_split(master_key, SHAMIR_THRESHOLD, SHAMIR_TOTAL)
     fragment_records = []
     print()
@@ -626,7 +626,7 @@ def cmd_enable(store: Path, *, passphrase_mode: bool = True) -> int:
     print(f"   threshold:              {SHAMIR_THRESHOLD}")
     print()
     print("⚠ Security reminders:")
-    print("  - Don't store any fragment alongside the BRAIN")
+    print("  - Don't store any fragment alongside the memory")
     print("  - Recovery requires ≥3 distinct fragments")
     print("  - Rotate fragments via `cyberos-encrypt rotate-shamir` if any holder changes")
     return 0
@@ -1015,7 +1015,7 @@ def cmd_recover(store: Path) -> int:
     pinned = manifest.get("shamir_fragments", {}).get("master_key_fingerprint")
     if pinned and pinned != fingerprint:
         print(f"  ✘ FINGERPRINT MISMATCH — pinned: {pinned[:30]}...")
-        print(f"    Wrong fragments? Or BRAIN has been tampered with.")
+        print(f"    Wrong fragments? Or memory has been tampered with.")
         return 2
     print(f"  ✅ fingerprint matches pinned in manifest")
     print()

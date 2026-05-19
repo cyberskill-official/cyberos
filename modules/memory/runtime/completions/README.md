@@ -1,6 +1,6 @@
 # `runtime/completions/` — Shell tab-completion (Aspect 1.4)
 
-Static completion scripts for the `cyberos` umbrella binary. Loaded by your shell of choice; gives `<TAB>` completion for all 63+ subcommands, their flags, and (where applicable) live BRAIN values like memory IDs.
+Static completion scripts for the `cyberos` umbrella binary. Loaded by your shell of choice; gives `<TAB>` completion for all 63+ subcommands, their flags, and (where applicable) live memory values like memory IDs.
 
 ## Files
 

@@ -10,7 +10,7 @@ classifier_version: 3.0.0-a4
 
 - "Draft a test strategy for the auth slice"
 - "Outline the test plan for this feature"
-- "Design the testing approach for the BRAIN ingest pipeline"
+- "Design the testing approach for the memory ingest pipeline"
 - "Author the test-strategy document for v1.0 release"
 
 ## Negative triggers (MUST NOT route here)

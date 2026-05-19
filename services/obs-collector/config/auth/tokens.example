@@ -1,0 +1,14 @@
+# services/obs-collector/config/auth/tokens.example
+#
+# FR-OBS-001 §1 #2 + §3 — Per-service bearer-token file. otelcol bearertokenauth
+# extension reads this at startup. Format: <service-name>  <bearer-token>
+#
+# The real tokens.live (with actual secrets) MUST NOT be committed; provision it
+# from your secret store and mount it read-only into /etc/otelcol/auth.tokens.
+
+ai-gateway       REPLACE-ME-AI-GATEWAY-TOKEN
+auth             REPLACE-ME-AUTH-TOKEN
+mcp-gateway      REPLACE-ME-MCP-GATEWAY-TOKEN
+brain            REPLACE-ME-BRAIN-TOKEN
+chat             REPLACE-ME-CHAT-TOKEN
+proj             REPLACE-ME-PROJ-TOKEN

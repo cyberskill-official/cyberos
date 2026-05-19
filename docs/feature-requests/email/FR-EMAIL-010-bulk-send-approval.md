@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-009, FR-EMAIL-011, FR-AUTH-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-009, FR-EMAIL-011, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-009]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1493 2026-05-17 — Suppression filter applied at send-time per recipient (FR-EMAIL-009 suppression list); suppressed recipients silently skipped + counted
   - DEC-1494 2026-05-17 — Closed enum `bulk_status` = {drafting, pending_am_sign, pending_cfo_sign, ready_to_send, sending, completed, cancelled, failed}; cardinality 8
   - DEC-1495 2026-05-17 — Each recipient gets own outbound_message row (per FR-EMAIL-009) for tracking; bulk row aggregates status
-  - DEC-1496 2026-05-17 — BRAIN audit kinds: email.bulk_drafted, email.bulk_am_signed, email.bulk_cfo_signed, email.bulk_sending_started, email.bulk_completed, email.bulk_cancelled, email.bulk_recipient_suppressed_skipped
+  - DEC-1496 2026-05-17 — memory audit kinds: email.bulk_drafted, email.bulk_am_signed, email.bulk_cfo_signed, email.bulk_sending_started, email.bulk_completed, email.bulk_cancelled, email.bulk_recipient_suppressed_skipped
 
 build_envelope:
   language: rust 1.81
@@ -80,7 +80,7 @@ risk_if_skipped: "Without bulk approval, mass-send accidents (wrong template, wr
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship bulk send (≥10 recipients) at `services/email/src/bulk/` with AM+CFO dual-signature + 5000/hour rate-pacing + suppression filter + 8-status FSM + 7 BRAIN audit kinds.
+The EMAIL service **MUST** ship bulk send (≥10 recipients) at `services/email/src/bulk/` with AM+CFO dual-signature + 5000/hour rate-pacing + suppression filter + 8-status FSM + 7 memory audit kinds.
 
 1. **MUST** define closed `bulk_status` enum per DEC-1494. Cardinality 8.
 
@@ -104,7 +104,7 @@ The EMAIL service **MUST** ship bulk send (≥10 recipients) at `services/email/
 
 8. **MUST** rate-pace 5000/hour/tenant per DEC-1492. Pacer delays dispatch when exceeded.
 
-9. **MUST** emit 7 BRAIN audit kinds per DEC-1496.
+9. **MUST** emit 7 memory audit kinds per DEC-1496.
 
 10. **MUST NOT** allow same person AM+CFO sign (CHECK).
 
@@ -163,7 +163,7 @@ GRANT UPDATE (status, am_signer_subject_id, am_signed_at, cfo_signer_subject_id,
 ---
 
 ## §4 — Acceptance criteria
-1. **bulk_status cardinality 8**. 2. **< 10 recipients routes to FR-EMAIL-009 path**. 3. **Drafted status set**. 4. **AM sign transitions**. 5. **CFO sign requires distinct subject**. 6. **Same person AM+CFO blocked (CHECK)**. 7. **Dispatch filters suppression**. 8. **Rate-pacing at 5000/hour**. 9. **Cancel before send works**. 10. **Cancel during send blocked**. 11. **7 BRAIN audit kinds emitted**. 12. **Per-recipient FR-EMAIL-009 row created**. 13. **Sent/suppressed/failed counts accurate**. 14. **PII scrub** subject/body/recipients via FR-BRAIN-111. 15. **Trace_id end-to-end**. 16. **Cross-tenant RLS**. 17. **Marketing_admin role accepted for CFO slot**. 18. **Recipient_count CHECK ≥ 10 enforced**. 19. **Recipients KMS-encrypted at rest**. 20. **Audit on each transition**.
+1. **bulk_status cardinality 8**. 2. **< 10 recipients routes to FR-EMAIL-009 path**. 3. **Drafted status set**. 4. **AM sign transitions**. 5. **CFO sign requires distinct subject**. 6. **Same person AM+CFO blocked (CHECK)**. 7. **Dispatch filters suppression**. 8. **Rate-pacing at 5000/hour**. 9. **Cancel before send works**. 10. **Cancel during send blocked**. 11. **7 memory audit kinds emitted**. 12. **Per-recipient FR-EMAIL-009 row created**. 13. **Sent/suppressed/failed counts accurate**. 14. **PII scrub** subject/body/recipients via FR-MEMORY-111. 15. **Trace_id end-to-end**. 16. **Cross-tenant RLS**. 17. **Marketing_admin role accepted for CFO slot**. 18. **Recipient_count CHECK ≥ 10 enforced**. 19. **Recipients KMS-encrypted at rest**. 20. **Audit on each transition**.
 
 ---
 
@@ -210,7 +210,7 @@ async fn rate_pace_5000_per_hour() {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-009.
-**Cross-module:** FR-AUTH-101 (chief-financial-officer/marketing_admin roles), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-AUTH-101 (chief-financial-officer/marketing_admin roles), FR-AI-003, FR-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -231,7 +231,7 @@ async fn rate_pace_5000_per_hour() {
 - §11.1 Recipients KMS-encrypted at draft; decrypted at dispatch only.
 - §11.2 Pacing via tokio::time::sleep between batches.
 - §11.3 Per-recipient FR-EMAIL-009 spawned async with bounded concurrency (50).
-- §11.4 BRAIN row per recipient sampled 1% (else volume explodes).
+- §11.4 memory row per recipient sampled 1% (else volume explodes).
 - §11.5 Cancellation tokens propagate to in-flight dispatch tasks.
 
 ---

@@ -1,6 +1,6 @@
 # cyberos-starter
 
-Skeleton for bootstrapping a new project with a fresh `.cyberos-memory/` BRAIN. Drop-in template; replace placeholders, run `cyberos onboard`.
+Skeleton for bootstrapping a new project with a fresh `.cyberos-memory/` memory. Drop-in template; replace placeholders, run `cyberos onboard`.
 
 ## Layout
 

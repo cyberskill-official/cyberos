@@ -11,8 +11,8 @@ slice: 8
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-005, FR-RES-002, FR-TIME-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-005, FR-RES-002, FR-TIME-007, FR-MEMORY-111]
 depends_on: [FR-HR-005]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-2061 2026-05-17 — Closed enum `ot_cap_decision` = {allowed, blocked_weekly, blocked_annual, blocked_consent_missing}; cardinality 4
   - DEC-2062 2026-05-17 — Consent record required for >12h/wk per VN Labour Code Art. 107; CHRO confirms member's prior agreement
   - DEC-2063 2026-05-17 — Cap values read from FR-HR-005 policy version (replay determinism)
-  - DEC-2064 2026-05-17 — BRAIN audit kinds: res.ot_check_passed, res.ot_blocked_weekly, res.ot_blocked_annual, res.ot_blocked_consent
+  - DEC-2064 2026-05-17 — memory audit kinds: res.ot_check_passed, res.ot_blocked_weekly, res.ot_blocked_annual, res.ot_blocked_consent
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without hard-block, allocations breach Labour Code → Labour 
 
 ## §1 — Description (BCP-14 normative)
 
-The RES service **MUST** ship OT cap hard-block at `services/res/src/ot_cap/` enforcing Art. 107 weekly + annual + consent, 4 BRAIN audit kinds.
+The RES service **MUST** ship OT cap hard-block at `services/res/src/ot_cap/` enforcing Art. 107 weekly + annual + consent, 4 memory audit kinds.
 
 1. **MUST** validate `ot_cap_decision` against closed enum per DEC-2061.
 
@@ -113,7 +113,7 @@ The RES service **MUST** ship OT cap hard-block at `services/res/src/ot_cap/` en
    GET  /v1/res/members/{id}/ot-status   (current YTD + caps)
    ```
 
-6. **MUST** emit 4 BRAIN audit kinds per DEC-2064. PII per FR-BRAIN-111: hours SHA-256 hashed.
+6. **MUST** emit 4 memory audit kinds per DEC-2064. PII per FR-MEMORY-111: hours SHA-256 hashed.
 
 7. **MUST** thread trace_id from FR-RES-002 propose → checker → audit.
 
@@ -160,7 +160,7 @@ POST /v1/res/ot-consent
 ---
 
 ## §4 — Acceptance criteria
-1. **ot_cap_decision enum cardinality 4**. 2. **Weekly OT cap enforced (12h no consent)**. 3. **Consent cap enforced (30h with consent)**. 4. **Annual OT cap enforced (200h)**. 5. **Industry-specific 300h supported via policy**. 6. **Consent required for >12h/wk**. 7. **Caps read from FR-HR-005**. 8. **YTD computed from FR-TIME-007**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (hours SHA256)**. 11. **RLS denies cross-tenant**. 12. **CHRO-only consent record**. 13. **Trace_id preserved**. 14. **Consent immutable (append-only)**. 15. **Expired consent treated as missing**. 16. **Multiple consent rows per member allowed**. 17. **Cap exceeded → block with explanation**. 18. **rust_decimal precision**. 19. **Integration with FR-RES-002 validator tested**. 20. **YTD aggregation handles partial year**.
+1. **ot_cap_decision enum cardinality 4**. 2. **Weekly OT cap enforced (12h no consent)**. 3. **Consent cap enforced (30h with consent)**. 4. **Annual OT cap enforced (200h)**. 5. **Industry-specific 300h supported via policy**. 6. **Consent required for >12h/wk**. 7. **Caps read from FR-HR-005**. 8. **YTD computed from FR-TIME-007**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (hours SHA256)**. 11. **RLS denies cross-tenant**. 12. **CHRO-only consent record**. 13. **Trace_id preserved**. 14. **Consent immutable (append-only)**. 15. **Expired consent treated as missing**. 16. **Multiple consent rows per member allowed**. 17. **Cap exceeded → block with explanation**. 18. **rust_decimal precision**. 19. **Integration with FR-RES-002 validator tested**. 20. **YTD aggregation handles partial year**.
 
 ---
 
@@ -195,7 +195,7 @@ async fn annual_cap_blocks_at_201h() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-005.
-**Cross-module:** FR-RES-002 (validator integration), FR-TIME-007 (YTD), FR-DOC-001 (consent doc), FR-AUTH-101 (CHRO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-RES-002 (validator integration), FR-TIME-007 (YTD), FR-DOC-001 (consent doc), FR-AUTH-101 (CHRO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -215,7 +215,7 @@ async fn annual_cap_blocks_at_201h() {
 - §11.1 Checker pure function: `(member, week, proposed, ytd, policy) → Decision`.
 - §11.2 Cap values: regular_weekly_cap, consent_cap, annual_cap fetched via FR-HR-005 policy.
 - §11.3 Consent table immutable; new row per period rather than UPDATE.
-- §11.4 BRAIN audit body: member_id, week, decision; hours SHA256.
+- §11.4 memory audit body: member_id, week, decision; hours SHA256.
 - §11.5 Integration test simulates FR-RES-002 propose flow end-to-end.
 
 ---

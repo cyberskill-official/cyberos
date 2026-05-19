@@ -6,7 +6,7 @@ category: compliance
 priority: MUST
 verification: T
 phase: P0
-slo: "100% of messages where subject is author OR recipient are included; BRAIN chain proof attached"
+slo: "100% of messages where subject is author OR recipient are included; memory chain proof attached"
 owner: CSO
 created: 2026-05-18
 related_frs: [FR-CHAT-012]
@@ -16,8 +16,8 @@ related_frs: [FR-CHAT-012]
 
 1. A CHAT DSAR (Data Subject Access Request) export for subject `S` **MUST** include every message in the platform where `S` is either the author OR a member of the channel (recipient) at the time the message was posted.
 2. The export **MUST NOT** include messages from channels where `S` joined after the message — only messages `S` had access to at the time.
-3. The export **MUST** carry a BRAIN chain proof: a Merkle inclusion proof showing the exported messages are the complete set per the platform's audit chain (NFR-BRAIN-006 STH inclusion).
-4. The export bundle **MUST** be deterministic per NFR-BRAIN-005 semantics — two exports of the same subject's data on the same chain state produce byte-identical bundles.
+3. The export **MUST** carry a memory chain proof: a Merkle inclusion proof showing the exported messages are the complete set per the platform's audit chain (NFR-MEMORY-006 STH inclusion).
+4. The export bundle **MUST** be deterministic per NFR-MEMORY-005 semantics — two exports of the same subject's data on the same chain state produce byte-identical bundles.
 5. Export must complete within 24 hours of request per the platform's DSAR SLO (compliance NFR).
 
 ## §2 — Why this constraint
@@ -28,7 +28,7 @@ DSAR completeness is a GDPR Art. 15 / PDPL Art. 14 hard requirement — incomple
 
 - Counter `chat_dsar_exports_total{result}` per request.
 - Counter `chat_dsar_messages_exported_total` summed across requests.
-- BRAIN audit row `chat.dsar.exported` per export with `{subject_id, message_count, chain_root, completed_at}`.
+- memory audit row `chat.dsar.exported` per export with `{subject_id, message_count, chain_root, completed_at}`.
 - Sev-1 alarm on any export > 24h or any audit row missing chain_root.
 
 ## §4 — Verification

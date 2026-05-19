@@ -1,4 +1,4 @@
-"""FR-BRAIN-111 — Pre-ingest PII detection gate.
+"""FR-MEMORY-111 — Pre-ingest PII detection gate.
 
 EVERY memory row that's about to be written to Layer 1 passes through this
 gate first. The gate runs two detectors:
@@ -22,7 +22,7 @@ The gate produces a :class:`PiiReport` listing every hit. Policy:
 * When ``policy == "log"``: hits are returned but the body is unchanged
   (development / migration mode).
 
-The default policy is ``"block"`` per AGENTS.md §11 (PII never enters BRAIN
+The default policy is ``"block"`` per AGENTS.md §11 (PII never enters memory
 raw).
 """
 

@@ -1,7 +1,7 @@
 //! FR-AUTH-108 — Lumi tenant-identity JWT issuance + verify + revoke.
 //!
-//! Lumi is the cloud-hosted org BRAIN. Personal-BRAIN sync (FR-BRAIN-103)
-//! needs a JWT identifying which Lumi workspace this BRAIN's shareable
+//! Lumi is the cloud-hosted org memory. Personal-memory sync (FR-MEMORY-103)
+//! needs a JWT identifying which Lumi workspace this memory's shareable
 //! memories can push to. This module mints those tokens, logs every
 //! issuance, and provides a revoke endpoint for the operator.
 //!
@@ -11,7 +11,7 @@
 //!     against the revocation table.
 //!   * `POST /v1/admin/lumi/revoke/{jti}` — operator revoke.
 //!
-//! Token shape: standard CyberOS JWT with `aud: ["lumi", "brain-sync"]` and
+//! Token shape: standard CyberOS JWT with `aud: ["lumi", "memory-sync"]` and
 //! a new claim `lumi_workspace: <id>`. Verifier in slice 1 reuses the
 //! existing `JwtService::verify` then checks `lumi_token_issuance_log` for
 //! a matching `jti` with `revoked_at IS NULL`. Slice 2 will move the
@@ -46,7 +46,7 @@ pub struct IssueBody {
     pub lumi_workspace_id: String,
     /// Subject the token is FOR. Must belong to the caller's tenant.
     pub subject_id: Uuid,
-    /// Optional scope grants beyond the defaults (e.g. ["brain-sync:read", "brain-sync:write"]).
+    /// Optional scope grants beyond the defaults (e.g. ["memory-sync:read", "memory-sync:write"]).
     #[serde(default)]
     pub scope_grants: Vec<String>,
     /// Optional TTL override in seconds (capped at 30 days).
@@ -89,12 +89,12 @@ pub async fn issue(
     // Build the JWT via the existing issuer. The audience widens to include
     // 'lumi' so Lumi-side verifiers accept it.
     let svc = JwtService::new(state.pg.clone(), state.jwt_issuer.clone());
-    let kind = "agent".to_string(); // Lumi tokens represent the personal-BRAIN agent.
+    let kind = "agent".to_string(); // Lumi tokens represent the personal-memory agent.
     let agent_persona = Some(format!("lumi-bridge@{}", body.lumi_workspace_id));
 
     let mut scopes = body.scope_grants.clone();
-    if !scopes.iter().any(|s| s.starts_with("brain-sync")) {
-        scopes.push("brain-sync:push".to_string());
+    if !scopes.iter().any(|s| s.starts_with("memory-sync")) {
+        scopes.push("memory-sync:push".to_string());
     }
 
     let tokens = svc
@@ -130,7 +130,7 @@ pub async fn issue(
         "INSERT INTO lumi_token_issuance_log
                 (tenant_id, subject_id, lumi_workspace_id,
                  aud, scope_grants, expires_at, kid, jti, issued_via)
-         VALUES ($1, $2, $3, ARRAY['lumi','brain-sync','cyberos'], $4, $5, $6, $7, 'admin')",
+         VALUES ($1, $2, $3, ARRAY['lumi','memory-sync','cyberos'], $4, $5, $6, $7, 'admin')",
     )
     .bind(tenant_id)
     .bind(body.subject_id)

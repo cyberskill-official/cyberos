@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from cuo.core.brain_bridge import brain_is_available, emit_chain_result
+from cuo.core.memory_bridge import memory_is_available, emit_chain_result
 from cuo.core.catalog import discover_personas, discover_workflows
 from cuo.core.invoker import MockInvoker, SubprocessInvoker, select_invoker
 from cuo.core.llm_invoker import LLMInvoker
@@ -253,7 +253,7 @@ def test_execute_blocks_on_planned_skill(cuo_root: Path, skill_root: Path, tmp_p
 
 
 # ---------------------------------------------------------------------------
-# Phase 3 — LLMInvoker + BRAIN bridge
+# Phase 3 — LLMInvoker + memory bridge
 # ---------------------------------------------------------------------------
 
 
@@ -326,15 +326,15 @@ def test_execute_with_llm_invoker_walks_chain(cuo_root: Path, skill_root: Path, 
         assert s.output["step_invocation"] == "mock-llm"
 
 
-def test_brain_is_available_returns_bool(skill_root: Path) -> None:
-    """brain_is_available should not crash even when memory module missing."""
-    # The function tolerates missing memory module / missing BRAIN dir.
-    result = brain_is_available(skill_root)
+def test_memory_is_available_returns_bool(skill_root: Path) -> None:
+    """memory_is_available should not crash even when memory module missing."""
+    # The function tolerates missing memory module / missing memory dir.
+    result = memory_is_available(skill_root)
     assert isinstance(result, bool)
 
 
-def test_brain_emit_no_op_when_unavailable(cuo_root: Path, skill_root: Path, tmp_path: Path) -> None:
-    """emit_chain_result should return a graceful BrainEmitResult when memory unavailable."""
+def test_memory_emit_no_op_when_unavailable(cuo_root: Path, skill_root: Path, tmp_path: Path) -> None:
+    """emit_chain_result should return a graceful MemoryEmitResult when memory unavailable."""
     # First produce a ChainResult to emit.
     personas = discover_personas(cuo_root)
     cto = next(p for p in personas if p.slug == "chief-technology-officer")
@@ -342,12 +342,12 @@ def test_brain_emit_no_op_when_unavailable(cuo_root: Path, skill_root: Path, tmp
         persona=cto,
         workflow_slug="adr-quick-capture",
         skill_root=skill_root,
-        output_dir=tmp_path / "for-brain-emit",
+        output_dir=tmp_path / "for-memory-emit",
         invoker=MockInvoker(),
     )
 
-    # Force a non-existent brain_root to verify graceful skip.
-    br = emit_chain_result(chain_result, skill_root, brain_root=tmp_path / "no-such-brain")
+    # Force a non-existent memory_root to verify graceful skip.
+    br = emit_chain_result(chain_result, skill_root, memory_root=tmp_path / "no-such-memory")
     assert isinstance(br.emitted, bool)
     if not br.emitted:
         # Expected path in sandbox without memory module wired up.

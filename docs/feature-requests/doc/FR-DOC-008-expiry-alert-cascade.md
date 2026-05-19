@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-007, FR-EMAIL-009, FR-CHAT-005, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-007, FR-EMAIL-009, FR-CHAT-005, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-DOC-007]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1722 2026-05-17 — Dedup: one alert per (document_id, threshold) sent once; UNIQUE constraint enforces
   - DEC-1723 2026-05-17 — Notification channels: FR-EMAIL-009 (party emails) + FR-CHAT-005 (internal CLO)
   - DEC-1724 2026-05-17 — CLO can snooze alerts per-document (postpones all remaining thresholds until snooze expires)
-  - DEC-1725 2026-05-17 — BRAIN audit kinds: doc.expiry_alert_scheduled, doc.expiry_alert_sent, doc.expiry_alert_snoozed, doc.expiry_alert_failed
+  - DEC-1725 2026-05-17 — memory audit kinds: doc.expiry_alert_scheduled, doc.expiry_alert_sent, doc.expiry_alert_snoozed, doc.expiry_alert_failed
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without expiry alerts, contracts auto-expire unnoticed → ser
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship expiry alert cascade at `services/doc/src/expiry/` triggered daily, sending at 90/30/7-day thresholds via FR-EMAIL-009 + FR-CHAT-005, deduplicated, snooze-able, 4 BRAIN audit kinds.
+The DOC service **MUST** ship expiry alert cascade at `services/doc/src/expiry/` triggered daily, sending at 90/30/7-day thresholds via FR-EMAIL-009 + FR-CHAT-005, deduplicated, snooze-able, 4 memory audit kinds.
 
 1. **MUST** schedule daily scan at 06:00 tenant_tz per DEC-1720 via FR-MCP-007 cron.
 
@@ -130,7 +130,7 @@ The DOC service **MUST** ship expiry alert cascade at `services/doc/src/expiry/`
    DELETE /v1/doc/documents/{id}/snooze-alerts   (un-snooze)
    ```
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-1725. PII per FR-BRAIN-111: title hashed; threshold + counts ok.
+8. **MUST** emit 4 memory audit kinds per DEC-1725. PII per FR-MEMORY-111: title hashed; threshold + counts ok.
 
 9. **MUST** thread trace_id from cron → scanner → notifier → audit.
 
@@ -164,7 +164,7 @@ POST   /v1/doc/expiry-scan                    (CLO manual trigger)
 ---
 
 ## §4 — Acceptance criteria
-1. **Daily scan at 06:00 tenant_tz**. 2. **3-threshold enum + cardinality test**. 3. **Dedup via UNIQUE constraint**. 4. **Snooze suppresses all thresholds until snoozed_until**. 5. **Un-snooze (DELETE) re-enables**. 6. **Email to each party with email field**. 7. **Chat to tenant CLO**. 8. **4 BRAIN audit kinds emitted**. 9. **PII scrubbed (title SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Expired docs excluded from scan**. 13. **Terminated docs excluded from scan**. 14. **Boundary day exact match (90d = scan day matches)**. 15. **CLO manual trigger via POST**. 16. **Append-only alerts table**. 17. **Snooze can be re-set (UNIQUE on doc_id replaces)**. 18. **Failed send → status=failed; retry**. 19. **High-volume tenant (1000+ docs/day) handled**. 20. **No alert if expiry=null (legacy docs)**.
+1. **Daily scan at 06:00 tenant_tz**. 2. **3-threshold enum + cardinality test**. 3. **Dedup via UNIQUE constraint**. 4. **Snooze suppresses all thresholds until snoozed_until**. 5. **Un-snooze (DELETE) re-enables**. 6. **Email to each party with email field**. 7. **Chat to tenant CLO**. 8. **4 memory audit kinds emitted**. 9. **PII scrubbed (title SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Expired docs excluded from scan**. 13. **Terminated docs excluded from scan**. 14. **Boundary day exact match (90d = scan day matches)**. 15. **CLO manual trigger via POST**. 16. **Append-only alerts table**. 17. **Snooze can be re-set (UNIQUE on doc_id replaces)**. 18. **Failed send → status=failed; retry**. 19. **High-volume tenant (1000+ docs/day) handled**. 20. **No alert if expiry=null (legacy docs)**.
 
 ---
 
@@ -205,7 +205,7 @@ async fn snooze_suppresses_alerts() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-007.
-**Cross-module:** FR-EMAIL-009 (email send), FR-CHAT-005 (chat notify), FR-MCP-007 (cron), FR-AUTH-101 (CLO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-EMAIL-009 (email send), FR-CHAT-005 (chat notify), FR-MCP-007 (cron), FR-AUTH-101 (CLO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -225,7 +225,7 @@ async fn snooze_suppresses_alerts() {
 - §11.1 Cron via FR-MCP-007 `kind: 'doc.expiry_scan'`, daily 06:00.
 - §11.2 Threshold check: `(expiry_date - today) IN (90,30,7)` (exact match — runs daily so each day-X-from-expiry triggers once).
 - §11.3 Notifier batches per-doc: all parties get same email body in one call.
-- §11.4 BRAIN audit body: doc_id, threshold, recipients_count; title SHA256.
+- §11.4 memory audit body: doc_id, threshold, recipients_count; title SHA256.
 - §11.5 Snooze: stored row with snoozed_until; scanner filters where snooze IS NULL OR snoozed_until < now().
 
 ---

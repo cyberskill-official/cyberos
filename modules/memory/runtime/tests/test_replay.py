@@ -19,7 +19,7 @@ import json
 import sys
 from pathlib import Path
 
-def find_brain(start: Path = None) -> Path:
+def find_memory(start: Path = None) -> Path:
     cur = (start or Path.cwd()).resolve()
     while cur != cur.parent:
         if (cur / ".cyberos-memory").is_dir():
@@ -36,8 +36,8 @@ def canonical_row_bytes(row: dict) -> bytes:
     r = {k: v for k, v in row.items() if k not in ("chain", "prev_chain")}
     return rfc8785.dumps(r)
 
-def replay(brain: Path, verbose: bool) -> tuple[int, int, int]:
-    audit_dir = brain / "audit"
+def replay(memory: Path, verbose: bool) -> tuple[int, int, int]:
+    audit_dir = memory / "audit"
     if not audit_dir.exists():
         print("no audit dir; nothing to replay")
         return 0, 0, 0
@@ -88,8 +88,8 @@ def main():
     p.add_argument("-v", "--verbose", action="store_true")
     args = p.parse_args()
 
-    brain = find_brain()
-    total, link_breaks, hash_breaks = replay(brain, args.verbose)
+    memory = find_memory()
+    total, link_breaks, hash_breaks = replay(memory, args.verbose)
 
     print(f"\nreplay: {total} rows scanned")
     print(f"LINK breaks: {link_breaks}  (authoritative per Bundle D §7.2)")

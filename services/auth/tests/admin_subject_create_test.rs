@@ -38,6 +38,7 @@ async fn build_app() -> axum::Router {
         travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
+        deny_list: cyberos_auth::deny_list::DenyList::new(),
     })
 }
 
@@ -278,12 +279,12 @@ async fn create_subject_idempotent_replay_returns_same_id() {
 }
 
 // ===========================================================================
-// G-005 BRAIN audit row schema after success
+// G-005 memory audit row schema after success
 // ===========================================================================
 
 #[tokio::test]
-#[ignore = "requires Postgres + brain migrations applied"]
-async fn create_subject_emits_brain_audit_row() {
+#[ignore = "requires Postgres + memory migrations applied"]
+async fn create_subject_emits_memory_audit_row() {
     let url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
     let pool = PgPool::connect(&url).await.unwrap();
     bootstrap_test_key(&pool).await;
@@ -326,7 +327,7 @@ async fn create_subject_emits_brain_audit_row() {
     );
     assert!(!audit_body.to_lowercase().contains("\"password\""));
     // email_hash16 IS present (privacy-safe identifier)
-    let expected_hash = cyberos_auth::brain_bridge::email_hash16(&email);
+    let expected_hash = cyberos_auth::memory_bridge::email_hash16(&email);
     assert!(audit_body.contains(&expected_hash));
 }
 

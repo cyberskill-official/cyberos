@@ -3,7 +3,7 @@ id: FR-AUTH-003
 title: "RLS enforcement at every tenant-scoped table — USING + WITH CHECK + per-connection app.tenant_id + property test"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,10 +11,10 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-004, FR-AUTH-005, FR-AI-018]
 depends_on: [FR-AUTH-001]
-blocks: [FR-AUTH-004, FR-AUTH-005, FR-PROJ-001, FR-BRAIN-101, FR-HR-001, FR-TIME-001, FR-KB-001, FR-CRM-001, FR-OKR-001, FR-TEN-004]
+blocks: [FR-AUTH-004, FR-AUTH-005, FR-PROJ-001, FR-MEMORY-101, FR-HR-001, FR-TIME-001, FR-KB-001, FR-CRM-001, FR-OKR-001, FR-TEN-004]
 
 source_pages:
   - website/docs/modules/auth.html#rls
@@ -77,7 +77,7 @@ Every tenant-scoped Postgres table in the CyberOS schema **MUST** have RLS enabl
 2. **MUST** apply BOTH `USING (tenant_id = current_setting('app.tenant_id', true)::uuid)` AND `WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid)` clauses on every policy. USING filters reads; WITH CHECK filters writes. Policies with only USING permit silent wrong-tenant INSERTs (the row writes successfully but is invisible to subsequent SELECTs); WITH CHECK rejects the INSERT outright. Both clauses MUST exist on every policy.
 3. **MUST** set `app.tenant_id` per-transaction at session start via `SET LOCAL app.tenant_id = $1` with `$1` bound through sqlx's parameter binding (NEVER via `format!` string interpolation — that would be SQL injection). The `with_tenant` helper in `rls/with_tenant.rs` enforces this pattern; direct SQL writes must use the helper.
 4. **MUST** use a dedicated DB role `cyberos_app` (with `NOSUPERUSER`, `NOBYPASSRLS`) for all application queries. The `postgres` superuser is reserved for migrations only; application code connects as `cyberos_app` exclusively. The connection-string config enforces this — application boot fails if connecting as superuser.
-5. **MUST** define a separate `cyberos_ops` role (with `BYPASSRLS`) for operational queries that legitimately need cross-tenant reads (compliance reports, ops investigations). Use of `cyberos_ops` MUST be logged via PgAudit + emit a `auth.rls_bypass_used` BRAIN audit row per query; sev-2 alarm on increment beyond a baseline (any unexpected use is investigated).
+5. **MUST** define a separate `cyberos_ops` role (with `BYPASSRLS`) for operational queries that legitimately need cross-tenant reads (compliance reports, ops investigations). Use of `cyberos_ops` MUST be logged via PgAudit + emit a `auth.rls_bypass_used` memory audit row per query; sev-2 alarm on increment beyond a baseline (any unexpected use is investigated).
 6. **MUST** be tested via property-based test: 1000 random tenant pairs × 10K queries × ZERO cross-tenant reads. The test mirrors FR-AI-018's pattern but covers all tenant-scoped tables, not just the cache. Pattern: insert rows under tenant A; switch context to tenant B; assert queries return zero rows from A. Repeated 1000× with random tenant ids.
 7. **MUST** apply RLS to NEW tenants automatically via FR-AUTH-001's `rls::apply_for_tenant` hook. Adding a new tenant adds `tenant_<id>_<table>` policy entries on every registered table. The registry IS the contract; missing entries cause cross-tenant exposure on the new tenant's first call.
 8. **MUST** include WITH CHECK rejection in error responses — when a SQL INSERT violates the WITH CHECK clause, the application catches the postgres error code `42501` (insufficient privilege) and returns `403 FORBIDDEN` with `{"error":"rls_check_violation","table":"<table>","attempted_tenant":"<uuid>","actual_tenant":"<uuid>"}`. Without this surfacing, RLS rejections look like generic SQL errors.
@@ -98,7 +98,7 @@ Every tenant-scoped Postgres table in the CyberOS schema **MUST** have RLS enabl
 
 **Why dedicated `cyberos_app` role (§1 #4)?** Superuser bypasses RLS by Postgres design — RLS only applies to non-superuser roles. If the application connects as `postgres`, every query bypasses every policy. The dedicated `cyberos_app` role with `NOSUPERUSER NOBYPASSRLS` ensures RLS always applies. The boot-time check (refuse to start if connecting as superuser) prevents the misconfiguration class.
 
-**Why a separate `cyberos_ops` BYPASSRLS role (§1 #5)?** Some operations legitimately need cross-tenant reads — compliance reports ("show me all subjects across all tenants where..."), ops investigations ("which tenant has the runaway request?"), regulator audits. A separate role makes these legitimate uses explicit AND auditable: every query as `cyberos_ops` is logged via PgAudit + emits a BRAIN audit row. Without the separate role, the only options would be "use superuser" (no isolation between legitimate ops and emergency root) or "do without" (legitimate ops fail).
+**Why a separate `cyberos_ops` BYPASSRLS role (§1 #5)?** Some operations legitimately need cross-tenant reads — compliance reports ("show me all subjects across all tenants where..."), ops investigations ("which tenant has the runaway request?"), regulator audits. A separate role makes these legitimate uses explicit AND auditable: every query as `cyberos_ops` is logged via PgAudit + emits a memory audit row. Without the separate role, the only options would be "use superuser" (no isolation between legitimate ops and emergency root) or "do without" (legitimate ops fail).
 
 **Why `SET LOCAL` instead of `SET` (§1 #3)?** `SET` persists for the connection's lifetime; if the connection returns to the pool with `app.tenant_id = A` set, the next user of that connection (potentially tenant B's request) starts with A's context — catastrophic cross-tenant leak. `SET LOCAL` is transaction-scoped: it resets at COMMIT/ROLLBACK. Connection pools recycle connections without state contamination.
 
@@ -269,7 +269,7 @@ pub struct RlsCheckViolation { pub detail: String }
 13. `with_tenant` helper uses bound parameter (NEVER format!) — code-search lint asserts.
 14. `SET LOCAL` (not `SET`) used in helper — connection pool returned with no residual context.
 15. `cyberos_app` boot connection MUST be NOSUPERUSER + NOBYPASSRLS — boot fails if connected as superuser.
-16. Operator queries via `cyberos_ops` emit BRAIN audit rows + sev-2 alarm on >baseline rate.
+16. Operator queries via `cyberos_ops` emit memory audit rows + sev-2 alarm on >baseline rate.
 
 ---
 
@@ -387,7 +387,7 @@ async fn cyberos_ops_can_bypass_rls_and_emits_audit() {
     let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM subjects").fetch_one(&pool).await.unwrap();
     assert!(count >= 3, "ops role should see all tenants");
 
-    let audit_count = brain_test_helper::count_rows_since("auth.rls_bypass_used", recently()).await;
+    let audit_count = memory_test_helper::count_rows_since("auth.rls_bypass_used", recently()).await;
     assert!(audit_count >= 1, "ops bypass MUST emit audit row");
 }
 ```
@@ -534,7 +534,7 @@ All resolved. Deferred:
 | RLS policy missing on a new tenant-scoped table | boot-time check via `verify_rls_at_boot` | Gateway refuses to bind | Operator runs migration; redeploy |
 | Property test finds cross-leak | proptest panics in CI | PR blocked | Engineer fixes policy or query |
 | INSERT with wrong tenant_id under cyberos_app | WITH CHECK violation (postgres 42501) | 403 RLS_CHECK_VIOLATION | Caller fixes tenant_id |
-| `cyberos_ops` query without audit emit | integration test asserts | Test fails → PR blocked | Add brain_writer call |
+| `cyberos_ops` query without audit emit | integration test asserts | Test fails → PR blocked | Add memory_writer call |
 | Application connects as `postgres` (superuser) | boot check `is_superuser='on'` | Gateway refuses to bind | Operator fixes connection-string config |
 | `SET` used instead of `SET LOCAL` | code-grep lint | PR blocked | Use `with_tenant` helper exclusively |
 | `format!` interpolation in SET LOCAL | code-grep lint for `format!.*SET LOCAL` | PR blocked | Use bound parameter |

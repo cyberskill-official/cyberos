@@ -3,7 +3,7 @@ id: FR-PROJ-005
 title: "Rate-card schema per Engagement — (role × currency × hourly_rate × billable_default) with effective-date versioning and FR-AUTH-003 RLS"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PROJ-001, FR-PROJ-006, FR-PROJ-007, FR-AUTH-003, FR-BRAIN-101]
+memory_chain_hash: null
+related_frs: [FR-PROJ-001, FR-PROJ-006, FR-PROJ-007, FR-AUTH-003, FR-MEMORY-101]
 depends_on: [FR-PROJ-001]
 blocks: [FR-PROJ-006, FR-PROJ-007, FR-CRM-004]
 
@@ -50,7 +50,7 @@ sub_tasks:
   - "0.5h: rate_card/mod.rs — RateCard struct + DTOs"
   - "1.0h: handlers.rs — POST/GET/PATCH endpoints with idempotency + RLS"
   - "0.5h: effective.rs — lookup_at(engagement, role, currency, ts) returns effective rate at time"
-  - "0.5h: BRAIN audit row 'proj.rate_card_*' on create/supersede"
+  - "0.5h: memory audit row 'proj.rate_card_*' on create/supersede"
   - "1.0h: rate_card_test.rs — happy + supersession + effective-date lookup + RLS"
 risk_if_skipped: "Without rate cards, every billable engagement loses traceability (what was the hourly rate at the time of work X?). Without versioning, rate changes corrupt historical entries (raising rates → old timesheets retroactively repriced). Without per-engagement scoping, all-or-nothing pricing across the org. Without currency, cross-border engagements (SGD client paying USD contractor) impossible. FR-PROJ-006 cascade + FR-PROJ-007 billing modes both require this schema."
 ---
@@ -70,7 +70,7 @@ The rate-card layer **MUST** persist per-engagement billing rates with effective
     - `GET /api/proj/engagements/:eng/rate-cards?at=YYYY-MM-DD&role=engineer&currency=VND` — lookup.
     - `GET /api/proj/engagements/:eng/rate-cards/history` — full versioned history.
     - `PATCH /api/proj/engagements/:eng/rate-cards/:id` — ONLY `billable_default` mutable (rate fields immutable per #4); other PATCH fields rejected.
-8. **MUST** emit BRAIN audit rows:
+8. **MUST** emit memory audit rows:
     - `proj.rate_card_created` on new row.
     - `proj.rate_card_superseded` on supersession with payload `{old_card_id, new_card_id, old_rate_minor, new_rate_minor, currency, role, effective_from}`.
     - `proj.rate_card_billable_default_changed` on PATCH.
@@ -243,14 +243,14 @@ pub async fn create_or_supersede(
     tx.commit().await.map_err(|e| RateCardError::Db(e.to_string()))?;
 
     if let Some(p) = prior {
-        emit_brain_row("proj.rate_card_superseded", serde_json::json!({
+        emit_memory_row("proj.rate_card_superseded", serde_json::json!({
             "old_card_id": p.id, "new_card_id": new_card.id,
             "old_rate_minor": p.hourly_rate_minor, "new_rate_minor": new_card.hourly_rate_minor,
             "currency": req.currency, "role": req.role,
             "effective_from": req.effective_from,
         })).await;
     } else {
-        emit_brain_row("proj.rate_card_created", serde_json::json!({
+        emit_memory_row("proj.rate_card_created", serde_json::json!({
             "card_id": new_card.id, "engagement_id": engagement_id,
             "role": req.role, "currency": req.currency,
             "hourly_rate_minor": new_card.hourly_rate_minor,
@@ -291,9 +291,9 @@ pub async fn lookup_at(
 7. **PATCH rate fields rejected** — PATCH `hourly_rate_minor` → 422 `immutable_field`.
 8. **PATCH billable_default succeeds** — PATCH `billable_default: false` → 200; original other fields preserved.
 9. **History endpoint returns all versions** — 3 supersessions → 3 rows ordered by `effective_from` ASC.
-10. **BRAIN audit `rate_card_created`** — first create → row.
-11. **BRAIN audit `rate_card_superseded`** — supersede → row with old + new card IDs + delta.
-12. **BRAIN audit `rate_card_billable_default_changed`** — PATCH default → row.
+10. **memory audit `rate_card_created`** — first create → row.
+11. **memory audit `rate_card_superseded`** — supersede → row with old + new card IDs + delta.
+12. **memory audit `rate_card_billable_default_changed`** — PATCH default → row.
 13. **RLS isolates tenants** — tenant A cannot read tenant B's cards.
 14. **Multi-currency on same engagement** — eng X with VND + USD cards simultaneously → both active.
 15. **Idempotency-Key honoured** — same key + same body → returns prior outcome; same key + diff body → 409.
@@ -334,7 +334,7 @@ async fn create_and_supersede() {
     assert_eq!(card1_refreshed.effective_to, Some(chrono::NaiveDate::from_ymd_opt(2026, 4, 1).unwrap()));
     assert!(card2.effective_to.is_none());
 
-    let supersede_row = env.brain.latest("proj.rate_card_superseded").await;
+    let supersede_row = env.memory.latest("proj.rate_card_superseded").await;
     assert_eq!(supersede_row["payload"]["old_rate_minor"], 500_000);
     assert_eq!(supersede_row["payload"]["new_rate_minor"], 600_000);
 }
@@ -440,7 +440,7 @@ All resolved. Deferred:
 | Effective_from in past with active card | overlap check | 409 if overlap | Caller adjusts |
 | Active card without effective_to (orphan) | partial unique enforces ≤1 | None | None |
 | RLS bypass | RLS policy | 0 rows / 404 | None |
-| audit emit fails | BrainWriter Err | Card created; audit lost; sev-2 | Operator restores BRAIN |
+| audit emit fails | MemoryWriter Err | Card created; audit lost; sev-2 | Operator restores memory |
 | Lookup date is null | type system rejects | 422 | Caller provides date |
 | BIGINT overflow | i64 ≈ 9.2 quintillion minor | unrealistic | None |
 | ENG belongs to different tenant | RLS catches | 404 | Caller uses correct tenant context |

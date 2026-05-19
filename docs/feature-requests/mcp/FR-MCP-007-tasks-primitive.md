@@ -1,6 +1,6 @@
 ---
 id: FR-MCP-007
-title: "MCP Tasks primitive — long-running tool calls with status polling + resume-on-reconnect + cancellation + per-task BRAIN audit chain"
+title: "MCP Tasks primitive — long-running tool calls with status polling + resume-on-reconnect + cancellation + per-task memory audit chain"
 module: MCP
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-MCP-001, FR-MCP-002, FR-MCP-004, FR-MCP-005, FR-MCP-006, FR-MCP-008, FR-AUTH-004, FR-AI-003, FR-BRAIN-111, FR-OBS-005, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-MCP-001, FR-MCP-002, FR-MCP-004, FR-MCP-005, FR-MCP-006, FR-MCP-008, FR-AUTH-004, FR-AI-003, FR-MEMORY-111, FR-OBS-005, FR-OBS-007]
 depends_on: [FR-MCP-001, FR-MCP-004]
 blocks: []
 
@@ -31,7 +31,7 @@ source_decisions:
   - DEC-1106 2026-05-17 — Resume on reconnect: task_id is opaque + persistent in Postgres `mcp_tasks` table; client can poll from any session/device as long as JWT matches `caller_subject_id`
   - DEC-1107 2026-05-17 — Cancellation endpoint `POST /v1/mcp/tasks/{task_id}/cancel`; transitions task to `cancelling` (terminal-pending) then `cancelled`; per-tool registration declares whether cancellation is supported
   - DEC-1108 2026-05-17 — Tool execution runs in a dedicated Tokio worker pool with bounded concurrency per module (FR-MCP-002 registration declares `max_concurrent_tasks`); over-limit tasks queue with `status=pending`
-  - DEC-1109 2026-05-17 — Per-task BRAIN audit chain: each task emits `mcp.task_started`, `mcp.task_progress` (informational sampled), `mcp.task_completed | mcp.task_failed | mcp.task_cancelled | mcp.task_expired`; all rows carry `task_id` for forensic reconstruction
+  - DEC-1109 2026-05-17 — Per-task memory audit chain: each task emits `mcp.task_started`, `mcp.task_progress` (informational sampled), `mcp.task_completed | mcp.task_failed | mcp.task_cancelled | mcp.task_expired`; all rows carry `task_id` for forensic reconstruction
   - DEC-1110 2026-05-17 — Progress reporting via NATS subject `tenant.<slug>.mcp.tasks.<task_id>.progress`; clients MAY subscribe for push updates instead of polling; PUSH is OPTIONAL, POLL is REQUIRED (clients without NATS access still work)
   - DEC-1111 2026-05-17 — FR-MCP-006 gating integration: long-running tool with destructive_hint=true requires confirmation at task START; subsequent polls do NOT re-confirm; cancellation does not require confirmation
   - DEC-1112 2026-05-17 — Final result size cap 10 MiB; over-cap → status=failed + reason='result_too_large'; tools requiring larger outputs MUST stream via FR-DOC-001 S3 + return reference URL
@@ -46,8 +46,8 @@ source_decisions:
   - DEC-1121 2026-05-17 — Idempotency on task creation: client-supplied `idempotency_key` in `tools/call`; duplicate within 24h returns existing task_id instead of creating new
   - DEC-1122 2026-05-17 — Cancellation race: client may cancel a task between worker checkpoint + completion; worker MUST honour `is_cancelled()` check at every checkpoint boundary
   - DEC-1123 2026-05-17 — Per-task trace_id is the original tools/call trace_id; preserved across all status polls + audit rows
-  - DEC-1124 2026-05-17 — BRAIN audit kinds: mcp.task_started, mcp.task_progress, mcp.task_completed, mcp.task_failed, mcp.task_cancelled, mcp.task_expired, mcp.task_resumed_after_reconnect, mcp.task_checkpoint_persisted
-  - DEC-1125 2026-05-17 — PII scrub via FR-BRAIN-111: task input + result payload hashes only in chain; raw payloads in `mcp_tasks` table (RLS-scoped, 30-day retention post-completion)
+  - DEC-1124 2026-05-17 — memory audit kinds: mcp.task_started, mcp.task_progress, mcp.task_completed, mcp.task_failed, mcp.task_cancelled, mcp.task_expired, mcp.task_resumed_after_reconnect, mcp.task_checkpoint_persisted
+  - DEC-1125 2026-05-17 — PII scrub via FR-MEMORY-111: task input + result payload hashes only in chain; raw payloads in `mcp_tasks` table (RLS-scoped, 30-day retention post-completion)
 
 build_envelope:
   language: rust 1.81
@@ -66,7 +66,7 @@ build_envelope:
     - services/mcp/src/tasks/expiry_job.rs                             # daily TTL expiry sweep
     - services/mcp/src/tasks/progress.rs                               # progress NATS publish
     - services/mcp/src/tasks/idempotency.rs                            # task-creation idempotency cache
-    - services/mcp/src/audit/task_events.rs                            # 8 BRAIN row builders
+    - services/mcp/src/audit/task_events.rs                            # 8 memory row builders
     - services/mcp/tests/task_create_async_test.rs
     - services/mcp/tests/task_status_poll_test.rs
     - services/mcp/tests/task_resume_after_reconnect_test.rs
@@ -124,7 +124,7 @@ risk_if_skipped: "Without Tasks primitive, long-running MCP tools (data exports,
 
 ## §1 — Description (BCP-14 normative)
 
-The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per MCP 2025-11-25 spec — long-running tool calls return task_id immediately, expose status polling + cancellation + list endpoints, run in per-module bounded-concurrency worker pools, persist checkpoints for crash recovery, emit 8 BRAIN audit kinds.
+The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per MCP 2025-11-25 spec — long-running tool calls return task_id immediately, expose status polling + cancellation + list endpoints, run in per-module bounded-concurrency worker pools, persist checkpoints for crash recovery, emit 8 memory audit kinds.
 
 1. **MUST** define the closed `task_status` Postgres enum at migration `0009`: `('pending','running','completed','failed','cancelled','expired')` per DEC-1101. CI cardinality test asserts 6.
 
@@ -134,7 +134,7 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
 
 4. **MUST** define `mcp_task_checkpoints` table at migration `0010`: `(id BIGSERIAL PRIMARY KEY, task_id UUID NOT NULL REFERENCES mcp_tasks(task_id), seq INT NOT NULL, checkpoint_data_kms_blob BYTEA NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(task_id, seq))`. Per-task ordered checkpoints; append-only via REVOKE per AUTHORING.md rule 12.
 
-5. **MUST** define `mcp_task_progress_events` table at migration `0011`: `(id BIGSERIAL PRIMARY KEY, task_id UUID NOT NULL REFERENCES mcp_tasks(task_id), progress_value DOUBLE PRECISION NOT NULL, progress_unit task_progress_unit NOT NULL, message TEXT, emitted_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Progress event log; high-volume + sampled at 1% to BRAIN.
+5. **MUST** define `mcp_task_progress_events` table at migration `0011`: `(id BIGSERIAL PRIMARY KEY, task_id UUID NOT NULL REFERENCES mcp_tasks(task_id), progress_value DOUBLE PRECISION NOT NULL, progress_unit task_progress_unit NOT NULL, message TEXT, emitted_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Progress event log; high-volume + sampled at 1% to memory.
 
 6. **MUST** enforce RLS with both USING and WITH CHECK on all 3 tables: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
@@ -188,7 +188,7 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
     - INSERT `mcp_task_progress_events` row.
     - UPDATE `mcp_tasks.progress_*` columns (latest state for fast polling).
     - NATS publish `tenant.<slug>.mcp.tasks.<task_id>.progress` with payload.
-    - Sample 1% to BRAIN as `mcp.task_progress` (high-volume).
+    - Sample 1% to memory as `mcp.task_progress` (high-volume).
 
 15. **MUST** expire tasks via daily scheduled job per DEC-1103 + DEC-1113. The `tasks/expiry_job.rs::run_daily()`:
     - SELECT tasks WHERE status IN ('pending','running','completed','failed','cancelled') AND expires_at < now().
@@ -208,7 +208,7 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
 
 19. **MUST** preserve trace_id end-to-end per DEC-1123 + AUTHORING.md rule 22-24. Original tools/call trace_id stored in `mcp_tasks.trace_id`; emitted on every audit row + every progress event + every NATS publish.
 
-20. **MUST** emit 8 BRAIN audit row kinds per DEC-1124:
+20. **MUST** emit 8 memory audit row kinds per DEC-1124:
     - `mcp.task_started` (sev-2)
     - `mcp.task_progress` (sev-3 — high-volume; sampled at 1% via FR-OBS-006)
     - `mcp.task_completed` (sev-2)
@@ -421,9 +421,9 @@ GET    /v1/mcp/tasks                                  (list; tenant_admin filter
 15. **Per-tenant rate limit** — 101st task creation in 60s → 429 + Retry-After.
 16. **Cross-tenant access denied** — caller from tenant X polling tenant Y's task_id → 403 + `cross_tenant_task_access_denied` + sev-1 audit.
 17. **Cancellation on uncancellable tool** — tool with `supports_cancellation=false` → 405 + `cancellation_not_supported`.
-18. **Progress event sampling** — 100 progress events emitted → ~1 BRAIN audit row + 100 progress_events table rows.
+18. **Progress event sampling** — 100 progress events emitted → ~1 memory audit row + 100 progress_events table rows.
 19. **Trace_id end-to-end** — single trace_id across tools/call + status poll + cancel + audit rows.
-20. **8 BRAIN audit kinds emitted** — happy + failure paths cover started + completed + failed + cancelled + expired + resumed + progress + checkpoint.
+20. **8 memory audit kinds emitted** — happy + failure paths cover started + completed + failed + cancelled + expired + resumed + progress + checkpoint.
 
 ---
 
@@ -524,7 +524,7 @@ async fn expired_task_pruned() {
     assert_eq!(row.0, "expired");
     assert!(row.1.is_none());
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "mcp.task_expired"));
 }
 ```
@@ -591,7 +591,7 @@ async fn resume_after_simulated_worker_restart() {
 
     let s = ctx.poll_until(task_id, |s| s == "completed", Duration::from_secs(10)).await;
     assert_eq!(s, "completed");
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "mcp.task_resumed_after_reconnect"));
 }
 ```
@@ -717,8 +717,8 @@ impl TaskCtx {
 - **FR-MCP-006** Gating — destructive long-running tools confirm at start; FR-MCP-006 §1 #22 cross-FR contract honoured here.
 - **FR-MCP-008** Elicitation — long-running tools may emit elicitation requests mid-run (slice 3+).
 - **FR-AUTH-004** JWT validate — caller_subject_id verification on poll/cancel.
-- **FR-AI-003** BRAIN audit-row bridge — 8 new kinds.
-- **FR-BRAIN-111** PII scrubbing — payload SHA only in chain.
+- **FR-AI-003** memory audit-row bridge — 8 new kinds.
+- **FR-MEMORY-111** PII scrubbing — payload SHA only in chain.
 - **FR-OBS-005** Trace correlation — trace_id end-to-end.
 - **FR-OBS-007** Auto-runbook — sev-1 cross-tenant access + expiry-job failure alerts.
 
@@ -773,7 +773,7 @@ impl TaskCtx {
 }
 ```
 
-### 8.4 `mcp.task_started` BRAIN row
+### 8.4 `mcp.task_started` memory row
 
 ```json
 {

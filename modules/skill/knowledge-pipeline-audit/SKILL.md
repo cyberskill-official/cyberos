@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: knowledge-pipeline-audit
-description: Audits a knowledge-pipeline@1 artefact against knowledge_pipeline_rubric@1.0. Validates FM + SEC structure, candidate-harvest engagement-coverage, codification-queue owner/due-date completeness, published-asset metadata completeness, reuse-metric measurability, taxonomy alignment with knowledge-taxonomy@1. Per Nonaka SECI + ANSI Z39.19 + Davenport KM conventions.
-  Audit one or more existing knowledge-pipeline@1 markdowns against
-  knowledge-pipeline_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  knowledge-pipeline-author.
+description: >-
+  Audits a knowledge-pipeline@1 artefact against knowledge_pipeline_rubric@1.0. Validates FM + SEC structure, candidate-harvest engagement-coverage, codification-queue owner/due-date completeness, published-asset metadata completeness, reuse-metric measurability, taxonomy alignment with knowledge-taxonomy@1. Per Nonaka SECI + ANSI Z39.19 + Davenport KM conventions. Audit one or more existing knowledge-pipeline@1 markdowns against knowledge-pipeline_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after knowledge-pipeline-author. Use when user asks to "audit this knowledge pipeline" or "check the knowledge pipeline". Do NOT use for "draft a new knowledge pipeline" (use knowledge-pipeline-author instead). Audit one or more existing knowledge-pipeline@1 markdowns against knowledge-pipeline_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Hal...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: knowledge-pipeline_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

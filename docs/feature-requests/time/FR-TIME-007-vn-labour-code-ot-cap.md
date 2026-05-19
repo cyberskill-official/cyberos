@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-TIME-002, FR-TIME-003, FR-HR-001, FR-AUTH-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-TIME-002, FR-TIME-003, FR-HR-001, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-TIME-001]
 blocks: []
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1393 2026-05-17 — Per-Member `vn_ot_approval` flag = 'standard' (200h cap) or 'extended' (300h cap with regulator approval); HR-001 owns
   - DEC-1394 2026-05-17 — Applies ONLY to vn-1 residency Members (DEC-1390 is VN-specific); other residencies subject to their own labour-law FRs (future)
   - DEC-1395 2026-05-17 — Daily/weekly hard caps: 4h OT/day, 12h OT/week per Art. 107(2); breach blocks entry
-  - DEC-1396 2026-05-17 — BRAIN audit kinds: time.ot_warning_issued, time.ot_breach_blocked, time.ot_approval_changed
+  - DEC-1396 2026-05-17 — memory audit kinds: time.ot_warning_issued, time.ot_breach_blocked, time.ot_approval_changed
 
 build_envelope:
   language: rust 1.81
@@ -76,7 +76,7 @@ risk_if_skipped: "Without VN Labour Code Art. 107 enforcement, vn-1 tenants accu
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship VN Labour Code Art. 107 OT cap enforcement at `services/time/src/vn_labour/` with 4-tier hard-blocks (monthly + yearly + daily + weekly), per-Member approval tier flag, 80% soft warnings, vn-1-residency scoping, and 3 BRAIN audit kinds.
+The TIME service **MUST** ship VN Labour Code Art. 107 OT cap enforcement at `services/time/src/vn_labour/` with 4-tier hard-blocks (monthly + yearly + daily + weekly), per-Member approval tier flag, 80% soft warnings, vn-1-residency scoping, and 3 memory audit kinds.
 
 1. **MUST** define closed `ot_breach_kind` enum: `('monthly_40h_breach','yearly_200h_breach','yearly_300h_breach_no_approval','daily_4h_breach','weekly_12h_breach')` per DEC-1392. Cardinality 5.
 
@@ -106,7 +106,7 @@ The TIME service **MUST** ship VN Labour Code Art. 107 OT cap enforcement at `se
 
 9. **MUST** expose approval-change endpoint `POST /v1/admin/members/{member_id}/vn-ot-approval` body `{ tier, molisa_doc_ref, expires_at }`. Caller has `clo` role. Updates `hr_members.vn_ot_approval` + emits `time.ot_approval_changed` sev-1.
 
-10. **MUST** emit 3 BRAIN audit kinds per DEC-1396:
+10. **MUST** emit 3 memory audit kinds per DEC-1396:
     - `time.ot_warning_issued` (sev-3)
     - `time.ot_breach_blocked` (sev-2 — material entry rejection)
     - `time.ot_approval_changed` (sev-1 — compliance event)
@@ -185,7 +185,7 @@ GET    /v1/time/vn-ot/status?member_id=...                     (member own; or h
 13. **Trace_id end-to-end**.
 14. **PII scrub** — audit row carries Member hash only.
 15. **Aggregator transactional** — entry insert + tracking update atomic.
-16. **3 BRAIN audit kinds emitted** in full lifecycle.
+16. **3 memory audit kinds emitted** in full lifecycle.
 17. **RLS isolation** — cross-tenant tracking invisible.
 18. **Concurrent entries respect cap** — race-safe via SELECT FOR UPDATE on tracking row.
 19. **Week boundary correctly Monday** — entry on Sunday counts to that week.
@@ -228,7 +228,7 @@ async fn 80pct_warning_emitted() {
     ctx.seed_ot_for_month(ctx.member_id, 30 * 3600).await;  // 75% of 40h
     let r = ctx.create_entry_with_ot(ctx.member_id, 3 * 3600).await;  // pushes to 33h (82.5%)
     assert_eq!(r.status(), 201);
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "time.ot_warning_issued"));
 }
 
@@ -240,7 +240,7 @@ async fn 80pct_warning_emitted() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TIME-001 (entry write path).
-**Cross-module:** FR-HR-001 (vn_ot_approval flag), FR-TIME-002 (timer integration), FR-AUTH-101 (clo role), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-HR-001 (vn_ot_approval flag), FR-TIME-002 (timer integration), FR-AUTH-101 (clo role), FR-AI-003, FR-MEMORY-111.
 
 ---
 

@@ -12,7 +12,7 @@ template: nfr-spec@1
 
 ## §1 — Verdict summary
 
-NFR-SKILL-004 ("SKILL audit-chain coverage — every skill invocation MUST emit ≥ 1 BRAIN row") passes the nfr-spec@1 rubric on first author. The doc has:
+NFR-SKILL-004 ("SKILL audit-chain coverage — every skill invocation MUST emit ≥ 1 memory row") passes the nfr-spec@1 rubric on first author. The doc has:
 
 - A normative §1 with measurable SLO statement(s) (BCP-14 MUST/SHOULD language)
 - A §2 rationale tying the constraint to product/operational impact

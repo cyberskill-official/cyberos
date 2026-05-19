@@ -78,7 +78,7 @@ The frontmatter declares:
 - `skill_chain` — ordered list of `{step, skill, inputs_from, outputs_to}`.
 - `escalates_to` — other personas this workflow escalates to and when.
 - `consults` — other personas this workflow consults and when.
-- `audit_hooks` — what gets logged to the BRAIN audit chain.
+- `audit_hooks` — what gets logged to the memory audit chain.
 
 ### 3. Identify any planned skills
 

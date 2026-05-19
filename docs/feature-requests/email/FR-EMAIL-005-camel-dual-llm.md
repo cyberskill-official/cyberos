@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CISO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-001, FR-EMAIL-008, FR-AI-003, FR-MCP-006, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-001, FR-EMAIL-008, FR-AI-003, FR-MCP-006, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001, FR-AI-003]
 blocks: [FR-EMAIL-008]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1601 2026-05-17 — Q-LLM output is opaque "variables" — referenced by P-LLM via id, never inlined into P-LLM prompt
   - DEC-1602 2026-05-17 — Closed enum `camel_check_outcome` = {safe, suspicious_marked, hard_blocked, error}; cardinality 4
   - DEC-1603 2026-05-17 — Any email-derived data flowing into tool args MUST pass through Q-LLM extract; raw concatenation rejected
-  - DEC-1604 2026-05-17 — BRAIN audit kinds: email.camel_plan_built, email.camel_quarantined_extracted, email.camel_executed, email.camel_blocked, email.camel_failed
+  - DEC-1604 2026-05-17 — memory audit kinds: email.camel_plan_built, email.camel_quarantined_extracted, email.camel_executed, email.camel_blocked, email.camel_failed
   - DEC-1605 2026-05-17 — Tenant-configurable trust list: domain X may bypass Q-LLM for read-only ops; full bypass requires CISO sign-off
 
 build_envelope:
@@ -81,7 +81,7 @@ risk_if_skipped: "Without CaMeL, prompt injection in inbound emails can hijack G
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship CaMeL dual-LLM protection at `services/email/src/camel/` — P-LLM plans + invokes tools; Q-LLM extracts untrusted email content; variable-store mediates data flow; policy checker gates tool args; 5 BRAIN audit kinds.
+The EMAIL service **MUST** ship CaMeL dual-LLM protection at `services/email/src/camel/` — P-LLM plans + invokes tools; Q-LLM extracts untrusted email content; variable-store mediates data flow; policy checker gates tool args; 5 memory audit kinds.
 
 1. **MUST** wrap ANY LLM call that involves email content (inbound or thread context) — directly inline via FR-EMAIL-008 or indirectly via FR-AI-003.
 
@@ -125,7 +125,7 @@ The EMAIL service **MUST** ship CaMeL dual-LLM protection at `services/email/src
    -- No GRANT UPDATE — audit is immutable
    ```
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-1604. PII per FR-BRAIN-111: variable values SHA-256 hashed; ids ok.
+8. **MUST** emit 5 memory audit kinds per DEC-1604. PII per FR-MEMORY-111: variable values SHA-256 hashed; ids ok.
 
 9. **MUST** thread trace_id through plan → extract → check → execute → audit.
 
@@ -182,7 +182,7 @@ Sample audit-log row:
 ---
 
 ## §4 — Acceptance criteria
-1. **P-LLM never sees raw email content**. 2. **Q-LLM never sees tool list / cannot call tools**. 3. **Variables opaque (P-LLM gets var_id, not value)**. 4. **Policy checker runs before EVERY tool call**. 5. **Outcome enum 4 + cardinality test**. 6. **Known injection corpus blocked (≥95%)**. 7. **Trust list CISO-gated**. 8. **5 BRAIN audit kinds emitted**. 9. **PII scrubbed (variable values SHA256)**. 10. **RLS denies cross-tenant**. 11. **Audit log immutable (no UPDATE/DELETE)**. 12. **Trace_id preserved**. 13. **FR-EMAIL-008 integration uses camel::execute**. 14. **Hard-blocked tool call returns 403 with reason**. 15. **Suspicious-marked tool calls logged, executed**. 16. **Trust-list bypass produces CISO audit row**. 17. **Multiple variables in one plan handled**. 18. **Variable expiry: 24h TTL on variable_store**. 19. **Q-LLM extract schema-validated**. 20. **CISO can see blocked-event dashboard**.
+1. **P-LLM never sees raw email content**. 2. **Q-LLM never sees tool list / cannot call tools**. 3. **Variables opaque (P-LLM gets var_id, not value)**. 4. **Policy checker runs before EVERY tool call**. 5. **Outcome enum 4 + cardinality test**. 6. **Known injection corpus blocked (≥95%)**. 7. **Trust list CISO-gated**. 8. **5 memory audit kinds emitted**. 9. **PII scrubbed (variable values SHA256)**. 10. **RLS denies cross-tenant**. 11. **Audit log immutable (no UPDATE/DELETE)**. 12. **Trace_id preserved**. 13. **FR-EMAIL-008 integration uses camel::execute**. 14. **Hard-blocked tool call returns 403 with reason**. 15. **Suspicious-marked tool calls logged, executed**. 16. **Trust-list bypass produces CISO audit row**. 17. **Multiple variables in one plan handled**. 18. **Variable expiry: 24h TTL on variable_store**. 19. **Q-LLM extract schema-validated**. 20. **CISO can see blocked-event dashboard**.
 
 ---
 
@@ -262,7 +262,7 @@ pub async fn execute(req: ExecuteRequest, ctx: &Ctx) -> Result<ExecuteResult> {
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-001, FR-AI-003.
 **Downstream:** FR-EMAIL-008 (Genie wraps its AI calls).
-**Cross-module:** FR-MCP-006 (tool gating), FR-AUTH-101 (CISO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-MCP-006 (tool gating), FR-AUTH-101 (CISO role), FR-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 
@@ -288,7 +288,7 @@ None blocking — CaMeL paper is the reference.
 - §11.2 Variable schema enforced via JSON Schema; mismatch = extract failure.
 - §11.3 Policy checker is rule-based (not LLM) — deterministic outcome.
 - §11.4 Trust list stored per tenant: `{domain, op_scope: 'read_only'|'full', ciso_audit_id, expires_at}`.
-- §11.5 BRAIN audit body: plan_id, tool_name, outcome, var_ids referenced; variable values SHA256.
+- §11.5 memory audit body: plan_id, tool_name, outcome, var_ids referenced; variable values SHA256.
 - §11.6 Reference: CaMeL paper https://arxiv.org/abs/2503.18813.
 
 ---

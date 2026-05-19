@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-009, FR-ESOP-001, FR-ESOP-002, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-009, FR-ESOP-001, FR-ESOP-002, FR-MEMORY-111]
 depends_on: [FR-HR-009]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2291 2026-05-17 — Closed enum `leaver_outcome` = {good_leaver_full_vest, good_leaver_pro_rated, bad_leaver_unvested_forfeit, bad_leaver_full_forfeit, mutual_negotiated}; cardinality 5
   - DEC-2292 2026-05-17 — CFO+CEO dual-sign required to commit outcome (same-person rejected)
   - DEC-2293 2026-05-17 — Outcome IMMUTABLE post-committed; corrections require board sign + new outcome row
-  - DEC-2294 2026-05-17 — BRAIN audit kinds: esop.leaver_outcome_drafted, esop.leaver_outcome_signed, esop.leaver_outcome_committed, esop.leaver_forfeiture_applied, esop.leaver_failed
+  - DEC-2294 2026-05-17 — memory audit kinds: esop.leaver_outcome_drafted, esop.leaver_outcome_signed, esop.leaver_outcome_committed, esop.leaver_forfeiture_applied, esop.leaver_failed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without GL/BL branch, equity offboarding ad-hoc → legal expo
 
 ## §1 — Description (BCP-14 normative)
 
-The ESOP service **MUST** ship GL/BL branch at `services/esop/src/leaver/` triggered by FR-HR-009 with CFO+CEO dual-sign + forfeiture executor, 5 BRAIN audit kinds.
+The ESOP service **MUST** ship GL/BL branch at `services/esop/src/leaver/` triggered by FR-HR-009 with CFO+CEO dual-sign + forfeiture executor, 5 memory audit kinds.
 
 1. **MUST** validate `leaver_outcome` against closed enum per DEC-2291.
 
@@ -126,7 +126,7 @@ The ESOP service **MUST** ship GL/BL branch at `services/esop/src/leaver/` trigg
    GET  /v1/esop/leaver-outcomes/{id}              (status)
    ```
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-2294. PII per FR-BRAIN-111: share counts SHA256.
+7. **MUST** emit 5 memory audit kinds per DEC-2294. PII per FR-MEMORY-111: share counts SHA256.
 
 8. **MUST** thread trace_id from termination trigger → sign → commit → audit.
 
@@ -167,7 +167,7 @@ Sample outcome:
 ---
 
 ## §4 — Acceptance criteria
-1. **leaver_outcome enum cardinality 5**. 2. **Triggered by FR-HR-009**. 3. **CFO+CEO dual-sign**. 4. **Same-person rejected**. 5. **GL full → vesting halt at term**. 6. **BL unvested → vested retained**. 7. **BL full → all forfeited**. 8. **UNIQUE(termination_id, grant_id)**. 9. **5 BRAIN audit kinds emitted**. 10. **PII scrubbed (shares SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **bigint shares**. 15. **shares math: vested+forfeit+retained ≤ grant.total**. 16. **CFO/CEO-only sign**. 17. **Immutable post-commit**. 18. **Grant status → cancelled_unvested or fully_vested per outcome**. 19. **Notes field for mutual_negotiated**. 20. **Auto-draft on termination execute**.
+1. **leaver_outcome enum cardinality 5**. 2. **Triggered by FR-HR-009**. 3. **CFO+CEO dual-sign**. 4. **Same-person rejected**. 5. **GL full → vesting halt at term**. 6. **BL unvested → vested retained**. 7. **BL full → all forfeited**. 8. **UNIQUE(termination_id, grant_id)**. 9. **5 memory audit kinds emitted**. 10. **PII scrubbed (shares SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **bigint shares**. 15. **shares math: vested+forfeit+retained ≤ grant.total**. 16. **CFO/CEO-only sign**. 17. **Immutable post-commit**. 18. **Grant status → cancelled_unvested or fully_vested per outcome**. 19. **Notes field for mutual_negotiated**. 20. **Auto-draft on termination execute**.
 
 ---
 
@@ -213,7 +213,7 @@ async fn bl_full_forfeit() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-009.
-**Cross-module:** FR-ESOP-001 (grant), FR-ESOP-002 (vested calc), FR-AUTH-101 (CFO/CEO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-ESOP-001 (grant), FR-ESOP-002 (vested calc), FR-AUTH-101 (CFO/CEO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -232,7 +232,7 @@ async fn bl_full_forfeit() {
 ## §11 — Implementation notes
 - §11.1 Outcome trigger from FR-HR-009 termination.execute cascade (one outcome per grant per member).
 - §11.2 vested_at_term computed from FR-ESOP-002 accrual at term_date.
-- §11.3 BRAIN audit body: outcome_id, member_id, outcome enum, status; shares SHA256.
+- §11.3 memory audit body: outcome_id, member_id, outcome enum, status; shares SHA256.
 - §11.4 Grant status updated post-commit: bad_leaver_full_forfeit → cancelled_unvested; otherwise → fully_vested or remains active per residual shares.
 - §11.5 Cap negotiated outcomes via CFO+CEO notes field; future could add structured negotiation params.
 

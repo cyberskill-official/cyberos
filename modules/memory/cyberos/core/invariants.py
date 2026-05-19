@@ -85,7 +85,7 @@ class Report:
 
 _CANONICAL_TOP_LEVEL_DIRS = frozenset({
     # AGENTS.md v2 §2 canonical directories — clean v2 store, no legacy
-    # debris tolerated. If your BRAIN was migrated from v1, run
+    # debris tolerated. If your memory was migrated from v1, run
     # scripts/cleanup-v1.sh to remove stale directories.
     "memories", "meta", "company", "module", "member", "client",
     "project", "persona", "conflicts", "exports", "index", "audit",

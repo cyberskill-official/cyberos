@@ -3,7 +3,7 @@ id: FR-OBS-004
 title: "LangSmith integration for AI traces — self-hosted + per-tenant opt-in + redacted-prompts-only + W3C TraceContext correlation + async non-blocking"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-011, FR-AI-014, FR-AI-022, FR-OBS-001, FR-OBS-005]
 depends_on: [FR-AI-022, FR-OBS-001]
 blocks: [FR-OBS-005]
@@ -80,7 +80,7 @@ The AI Gateway **MUST** emit LangSmith traces for every LLM call, linked to the 
     - Trace_id (matches OTel).
     - Tenant_id (which tenant; auditable).
     - Tool calls (if any) with tool name + redacted args + tool result outcome.
-3. **MUST** respect per-tenant `policy.ai_policy.langsmith_export: bool`; default `false`. Only enable for tenants who explicitly opt in via `cyberos-ai policy set <tenant> --langsmith-export=true --confirm`. The opt-in is logged via FR-AI-021's CLI audit row + a separate `obs.langsmith_export_enabled` BRAIN row.
+3. **MUST** respect per-tenant `policy.ai_policy.langsmith_export: bool`; default `false`. Only enable for tenants who explicitly opt in via `cyberos-ai policy set <tenant> --langsmith-export=true --confirm`. The opt-in is logged via FR-AI-021's CLI audit row + a separate `obs.langsmith_export_enabled` memory row.
 4. **MUST** route to self-hosted LangSmith at `https://langsmith.cyberos.world` (per-region deployment for FR-AI-016 residency). The langchain.com SaaS endpoint is forbidden — it routes data to US infrastructure, violating PDPL/GDPR for VN/EU tenants. Per-region URL config in `deploy/obs/langsmith-config.yaml`.
 5. **MUST** assert at the export boundary that the prompt + response passed in are the REDACTED versions. The export function signature accepts `RedactedPrompt(String)` newtype (from FR-AI-011); raw `String` is a compile error. Defense-in-depth against accidental raw export.
 6. **MUST** be asynchronous (fire-and-forget via `tokio::spawn`); the gateway hot-path doesn't await the LangSmith POST. The export adds ≤ 1ms to per-request latency (just the spawn cost).
@@ -268,7 +268,7 @@ volumes: { langsmith-data:, postgres-langsmith-data: }
 13. **Tool calls included** — multi-step tool-using call produces `tool_calls` array with each tool's name + redacted args + outcome.
 14. **Metric ai_langsmith_queue_depth observable** — under load, queue depth metric increases.
 15. **Self-hosted (not langchain.com)** — outgoing URL points at `https://langsmith.cyberos.world`; integration test asserts.
-16. **Per-tenant opt-in audit row** — enabling `langsmith_export` via FR-AI-021 CLI emits `obs.langsmith_export_enabled` BRAIN row.
+16. **Per-tenant opt-in audit row** — enabling `langsmith_export` via FR-AI-021 CLI emits `obs.langsmith_export_enabled` memory row.
 17. **Cost field accurate** — exported `cost_usd` matches FR-AI-001 cost_ledger value.
 
 ---

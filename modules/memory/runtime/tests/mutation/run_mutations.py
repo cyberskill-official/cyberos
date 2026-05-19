@@ -88,13 +88,13 @@ MUTATIONS = [
 ]
 
 
-def find_validator(brain_root: Path) -> Path:
+def find_validator(memory_root: Path) -> Path:
     """Walk up from this file to locate runtime/tools/cyberos_validate.py."""
-    p = brain_root / "runtime" / "tools" / "cyberos_validate.py"
+    p = memory_root / "runtime" / "tools" / "cyberos_validate.py"
     return p
 
 
-def find_brain_root() -> Path:
+def find_memory_root() -> Path:
     cur = HERE
     for _ in range(6):
         if (cur / ".cyberos-memory").is_dir():
@@ -103,16 +103,16 @@ def find_brain_root() -> Path:
     return Path.cwd()
 
 
-def make_fake_brain(seed_memory: str, target_rel: str) -> Path:
+def make_fake_memory(seed_memory: str, target_rel: str) -> Path:
     """Make a temp dir containing minimal `.cyberos-memory/` + one memory."""
     tmp = Path(tempfile.mkdtemp(prefix="cyberos-mutation-"))
-    brain = tmp / ".cyberos-memory"
-    (brain / "audit").mkdir(parents=True, exist_ok=True)
-    target = brain / target_rel
+    memory = tmp / ".cyberos-memory"
+    (memory / "audit").mkdir(parents=True, exist_ok=True)
+    target = memory / target_rel
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(seed_memory, encoding="utf-8")
     # Minimal manifest so validator finds something
-    (brain / "manifest.json").write_text(json.dumps({
+    (memory / "manifest.json").write_text(json.dumps({
         "schema_version": 1,
         "project": {"id": "prj_mut", "name": "mutation-test"},
         "memory_count": 1,
@@ -120,15 +120,15 @@ def make_fake_brain(seed_memory: str, target_rel: str) -> Path:
         "protocol": {"sha256": "test"},
     }), encoding="utf-8")
     # Minimal empty ledger
-    (brain / "audit" / "2026-05.jsonl").write_text("")
+    (memory / "audit" / "2026-05.jsonl").write_text("")
     return tmp
 
 
-def run_validator(brain_root: Path, target_path: Path) -> dict:
-    """Run validator against the temp BRAIN, return parsed JSON findings."""
+def run_validator(memory_root: Path, target_path: Path) -> dict:
+    """Run validator against the temp memory, return parsed JSON findings."""
     tool = target_path
     out = subprocess.run(
-        ["python3", str(tool), "--format", "json", str(brain_root / ".cyberos-memory")],
+        ["python3", str(tool), "--format", "json", str(memory_root / ".cyberos-memory")],
         capture_output=True, text=True, timeout=20,
     )
     try:
@@ -147,8 +147,8 @@ def main():
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
-    brain_root = find_brain_root()
-    validator = find_validator(brain_root)
+    memory_root = find_memory_root()
+    validator = find_validator(memory_root)
     if not validator.exists():
         print(f"ERROR: validator not found at {validator}", file=sys.stderr)
         return 2
@@ -171,7 +171,7 @@ def main():
             if mutated == seed:
                 # Mutation no-op (e.g. seed already lacks the field) — skip
                 continue
-            tmp = make_fake_brain(mutated, "memories/facts/FACT-001-mutated.md")
+            tmp = make_fake_memory(mutated, "memories/facts/FACT-001-mutated.md")
             try:
                 report = run_validator(tmp, validator)
                 found_codes = codes_in(report)

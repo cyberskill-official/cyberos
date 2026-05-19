@@ -3,7 +3,7 @@
 contract_id: project-brief
 contract_version: v1
 template_literal: project_brief@1
-description: "Canonical project_brief@1 schema body — frontmatter contract + Markdown skeleton for the structured intake artefact emitted by `cuo/cpo/requirements-discovery`. The brief captures everything needed downstream by `product-requirements-document-author` (and any other consumer) — goals, audience, constraints, kill-criteria, regulatory context, BRAIN-derived background, stakeholder map, project_kind classification, target release, and a triage verdict (proceed / revise / reject)."
+description: "Canonical project_brief@1 schema body — frontmatter contract + Markdown skeleton for the structured intake artefact emitted by `cuo/cpo/requirements-discovery`. The brief captures everything needed downstream by `product-requirements-document-author` (and any other consumer) — goals, audience, constraints, kill-criteria, regulatory context, memory-derived background, stakeholder map, project_kind classification, target release, and a triage verdict (proceed / revise / reject)."
 contract_kind: artefact_schema
 locked_at: 2026-05-06
 
@@ -29,7 +29,7 @@ emitted_source_freshness_tier: 12   # high authority — the project brief IS th
 
 ## When to use this contract
 
-A project brief sits between "user has an idea" and "we have a PRD." It captures the structured output of the discovery interview — goals, audience, success metrics, constraints, kill criteria, regulatory context, BRAIN-derived background, stakeholder map, project_kind classification, target release, and a triage verdict. The PRD-author (or any downstream skill) consumes the brief instead of re-asking the user the same intake questions.
+A project brief sits between "user has an idea" and "we have a PRD." It captures the structured output of the discovery interview — goals, audience, success metrics, constraints, kill criteria, regulatory context, memory-derived background, stakeholder map, project_kind classification, target release, and a triage verdict. The PRD-author (or any downstream skill) consumes the brief instead of re-asking the user the same intake questions.
 
 ## Frontmatter contract
 
@@ -59,14 +59,14 @@ The frontmatter that every `project_brief@1` document MUST carry, with audit rul
 
 Every `project_brief@1` body MUST contain these H2 sections in this order:
 
-1. **`## Background`** — 2-5 paragraphs of context. WHY are we considering this? What signal triggered it? BRAIN-citations are encouraged but optional in v1.
+1. **`## Background`** — 2-5 paragraphs of context. WHY are we considering this? What signal triggered it? memory-citations are encouraged but optional in v1.
 2. **`## Goals`** — 1-5 numbered goals; each is a ≤2-sentence statement of an outcome (not an output) the project must achieve. Each goal carries an embedded `<!-- authority: human-edited|human-confirmed|llm-explicit|llm-implicit -->` marker per AGENTS.md §5.3.
 3. **`## Audience`** — who benefits? Internal users / external customers / specific personas / a specific client. Be specific; "users" is rejected by the rubric (when product-requirements-document-audit ships).
 4. **`## Success Metrics`** — at minimum 1 primary metric with baseline + target + deadline; up to 1 guardrail metric. Vanity metrics (signups without definition, views without engagement context) are rejected.
 5. **`## Constraints`** — what's NOT negotiable: timeline, budget, regulatory, technical platform, headcount. List each as a bullet.
 6. **`## Kill Criteria`** — under what observable conditions does the project STOP? "We'd kill this if [X observable signal]". Forces honesty about when to walk away.
 7. **`## Stakeholder Map`** — table or list of who decides / who reviews / who's informed. Required even if it's just "founder decides" — the seam between solo decisions and team decisions matters downstream.
-8. **`## Prior Art (BRAIN)`** — what does the BRAIN tell us we already tried, decided, or learned? Cite `memories/decisions/DEC-NNN-*.md`, `memories/projects/<project>.md`, `company/locked-decisions.md` paths. If nothing relevant, write "No relevant prior art found in BRAIN as of <ISO date>."
+8. **`## Prior Art (memory)`** — what does the memory tell us we already tried, decided, or learned? Cite `memories/decisions/DEC-NNN-*.md`, `memories/projects/<project>.md`, `company/locked-decisions.md` paths. If nothing relevant, write "No relevant prior art found in memory as of <ISO date>."
 9. **`## Open Questions`** — what couldn't be answered during discovery? Each question gets a `<!-- needs: <persona|human> -->` marker indicating who should answer. If empty, the brief carries an explicit statement ("No open questions — all required intake answered.").
 
 ## Chain profile (v0.2.8+)
@@ -92,11 +92,11 @@ Every `project_brief@1` body MUST contain these H2 sections in this order:
 
 ## How `requirements-discovery` produces this contract
 
-The discovery skill conducts a 15-20 question interview (per its `STANDALONE_INTERVIEW.md`), folds in a project-triage assessment (gating questions about strategic fit, capacity, runway, customer signal strength), reads BRAIN scopes for prior art, then synthesises the answers into this artefact. Iteration via amendment-batch protocol (mirroring feature-request-author's): the user reviews v1, batches amendments, and the skill applies them in v2. `discovery_iteration` increments; the same `project_brief@1.md` file is rewritten in place.
+The discovery skill conducts a 15-20 question interview (per its `STANDALONE_INTERVIEW.md`), folds in a project-triage assessment (gating questions about strategic fit, capacity, runway, customer signal strength), reads memory scopes for prior art, then synthesises the answers into this artefact. Iteration via amendment-batch protocol (mirroring feature-request-author's): the user reviews v1, batches amendments, and the skill applies them in v2. `discovery_iteration` increments; the same `project_brief@1.md` file is rewritten in place.
 
 ## How `product-requirements-document-author` consumes this contract
 
-`product-requirements-document-author` reads the brief as its primary input. It does NOT re-ask the user the intake questions — those are answered in the brief. It DOES read additional BRAIN scopes (specifically `module:*` for technical-context lookup) and conduct a smaller follow-up interview (3-5 questions) for PRD-specific decisions (e.g., feature-flag strategy, rollout plan, telemetry).
+`product-requirements-document-author` reads the brief as its primary input. It does NOT re-ask the user the intake questions — those are answered in the brief. It DOES read additional memory scopes (specifically `module:*` for technical-context lookup) and conduct a smaller follow-up interview (3-5 questions) for PRD-specific decisions (e.g., feature-flag strategy, rollout plan, telemetry).
 
 ## Citations
 

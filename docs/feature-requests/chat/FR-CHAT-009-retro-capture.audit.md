@@ -69,7 +69,7 @@ Lifecycle spans command post → picker → submit → memory + 3 audit rows; wi
 A capture of messages by Alice/Bob/Carol creates a memory referencing them; without ACL, downstream sharing might re-expose without their awareness. Resolved: §1 #21 + meta.acl includes all participants + AC #25.
 
 ### ISS-018 — Memory could exceed 1MB indexer threshold (strict-redo pass)
-Large captures (100 messages × 5KB each = 500KB; with context inclusion, 1MB+) would degrade BRAIN indexer. Resolved: §1 #22 + split_if_oversized helper + multi-part + index file + AC #26.
+Large captures (100 messages × 5KB each = 500KB; with context inclusion, 1MB+) would degrade memory indexer. Resolved: §1 #22 + split_if_oversized helper + multi-part + index file + AC #26.
 
 ### ISS-019 — No preview mode for high-stakes captures (strict-redo pass)
 Operators capturing from sensitive channels want preview-before-commit. Resolved: §1 #23 + --dry-run flag + commit button disabled + AC #27.

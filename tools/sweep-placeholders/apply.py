@@ -6,7 +6,7 @@ to the actual SKILL.md frontmatter files. Per FR-SKILL-115 §1 #4 + §1 #10:
 
 - Operator-attestation required for non-trivial substitutions.
 - The "stage → cross" default is high-confidence and can be auto-applied.
-- Description / allowed_brain_scopes placeholders need per-skill review.
+- Description / allowed_memory_scopes placeholders need per-skill review.
 
 Modes:
 - `--stage-only`: apply ONLY the high-confidence metadata.stage substitutions

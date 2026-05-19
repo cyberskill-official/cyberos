@@ -1,6 +1,6 @@
 ---
 id: FR-INV-003
-title: "INV Stripe webhook handler — Stripe-Signature verify + closed event-type allowlist + idempotent receipt insert + multi-currency + append-only ledger + BRAIN audit"
+title: "INV Stripe webhook handler — Stripe-Signature verify + closed event-type allowlist + idempotent receipt insert + multi-currency + append-only ledger + memory audit"
 module: INV
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-INV-005, FR-INV-006, FR-TEN-003, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-INV-005, FR-INV-006, FR-TEN-003, FR-OBS-007]
 depends_on: [FR-AUTH-101]
 blocks: [FR-INV-006, FR-TEN-003]
 
@@ -28,14 +28,14 @@ source_decisions:
   - DEC-464 (replay window 5 minutes per Stripe spec; outside → 401 + audit)
   - DEC-465 (per-tenant webhook URL routing — Stripe webhook endpoint per tenant: `https://api.cyberos.world/v1/inv/webhooks/stripe/<tenant_slug>`; secret per tenant)
   - DEC-466 (multi-currency support — Stripe sends amount + currency; stored as BIGINT minor + CHAR(3) currency per AUTHORING.md rule 11; supports USD, EUR, SGD, GBP at slice 1)
-  - DEC-467 (BRAIN audit kinds: inv.stripe_event_received, inv.stripe_event_rejected, inv.stripe_payment_received, inv.stripe_payment_refunded, inv.stripe_subscription_changed, inv.duplicate_stripe_event_received)
+  - DEC-467 (memory audit kinds: inv.stripe_event_received, inv.stripe_event_rejected, inv.stripe_payment_received, inv.stripe_payment_refunded, inv.stripe_subscription_changed, inv.duplicate_stripe_event_received)
   - DEC-468 (Stripe-Signature header format: `t=<unix_timestamp>,v1=<hex_signature>[,v0=<deprecated>]`; we accept v1 only; v0 deprecated by Stripe)
   - DEC-469 (per-tenant webhook secret stored in `stripe_webhook_secrets` table KMS-encrypted; rotation handler with 60s overlap window)
   - DEC-470 (alarm sev-2 on > 10 rejections/h per tenant — same threshold as VietQR FR-INV-005)
   - DEC-471 (Stripe Connect / multi-account scenarios deferred to FR-INV-2xx — slice 2 is platform-account only)
   - DEC-472 (`payment_intent.metadata` field contains `invoice_id` or `tenant_invoice_ref` — extracted into receipt's `invoice_id` column for FR-INV-006 cash app)
   - DEC-473 (PCI SAQ-A compliance — Stripe never sends raw card numbers to our webhook; PCI scope rests with Stripe)
-  - PDPL Art. 13 (data minimisation — customer email + name PII-scrubbed in BRAIN chain)
+  - PDPL Art. 13 (data minimisation — customer email + name PII-scrubbed in memory chain)
   - PCI DSS SAQ-A (Stripe-hosted card data — out-of-scope at our endpoint)
 
 language: rust 1.81 + sql
@@ -50,7 +50,7 @@ new_files:
   - services/inv/src/types.rs                                     # StripeEventKind enum (closed 8 values)
   - services/inv/src/repo/stripe_event_log.rs                     # append-only writer
   - services/inv/src/repo/stripe_secrets.rs                       # secret CRUD + rotation
-  - services/inv/src/audit/stripe_events.rs                       # 6 BRAIN row builders
+  - services/inv/src/audit/stripe_events.rs                       # 6 memory row builders
   - services/inv/tests/stripe_signature_test.rs
   - services/inv/tests/stripe_event_allowlist_test.rs
   - services/inv/tests/stripe_idempotent_test.rs
@@ -108,14 +108,14 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 5. **MUST** be **append-only** on `stripe_event_log` at SQL grant (per DEC-463 + AUTHORING.md rule 12). `REVOKE UPDATE, DELETE ON stripe_event_log FROM cyberos_app`.
 
-6. **MUST** expose `POST /v1/inv/webhooks/stripe/{tenant_slug}` (per DEC-465). Per-tenant URL routing. Unknown slug → 404 `tenant_unknown` + emit `inv.stripe_event_rejected` BRAIN row.
+6. **MUST** expose `POST /v1/inv/webhooks/stripe/{tenant_slug}` (per DEC-465). Per-tenant URL routing. Unknown slug → 404 `tenant_unknown` + emit `inv.stripe_event_rejected` memory row.
 
 7. **MUST** verify Stripe-Signature header per Stripe's v1 scheme (per DEC-460 + DEC-468):
    - Header format: `t=<unix_timestamp>,v1=<hex_signature>[,v0=<deprecated>]`.
    - Parse `t` + `v1` values (ignore v0).
    - Compute `expected_signature = HMAC-SHA256(secret, "{t}.{raw_body}")`.
    - Constant-time compare `v1` vs `expected_signature`.
-   - Mismatch → 401 `stripe_signature_invalid` + emit `inv.stripe_event_rejected` BRAIN row with `reason='signature_invalid'`.
+   - Mismatch → 401 `stripe_signature_invalid` + emit `inv.stripe_event_rejected` memory row with `reason='signature_invalid'`.
 
 8. **MUST** validate replay window (per DEC-464). `|server_now - t| ≤ 5 minutes`. Outside → 401 `stripe_replay_window_exceeded` + emit `inv.stripe_event_rejected` with `reason='replay_window_exceeded'`.
 
@@ -130,20 +130,20 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
     - `customer.subscription.deleted` — subscription cancelled.
    Unknown `event.type` → INSERT `stripe_event_log` row with `outcome='unknown_event_type'` + return 200 OK (Stripe expects 2xx ack for all received events; non-2xx triggers retry).
 
-10. **MUST** enforce idempotency on `event.id` (per DEC-462). Lookup `stripe_event_log WHERE tenant_id=$1 AND stripe_event_id=$2`. If exists → return 200 OK with existing log id; emit `inv.duplicate_stripe_event_received` BRAIN row (sev-3 informational). Never double-process.
+10. **MUST** enforce idempotency on `event.id` (per DEC-462). Lookup `stripe_event_log WHERE tenant_id=$1 AND stripe_event_id=$2`. If exists → return 200 OK with existing log id; emit `inv.duplicate_stripe_event_received` memory row (sev-3 informational). Never double-process.
 
 11. **MUST** route allowed events to per-type handlers (per DEC-461):
     - `payment_intent.succeeded` → INSERT `payment_receipts` row with `receipt_source='stripe'`, `bank_code='STRIPE'`, link to invoice via `payment_intent.metadata.invoice_id` (per DEC-472).
     - `payment_intent.payment_failed` → log only; emit `inv.stripe_event_rejected` with `reason='payment_failed'`.
-    - `charge.refunded` → INSERT compensating payment_receipts row with negative `amount_minor`; emit `inv.stripe_payment_refunded` BRAIN row.
+    - `charge.refunded` → INSERT compensating payment_receipts row with negative `amount_minor`; emit `inv.stripe_payment_refunded` memory row.
     - `invoice.payment_succeeded` → INSERT payment_receipts + match to FR-INV-001 invoice via `stripe_invoice.metadata.invoice_id`.
     - `invoice.payment_failed` → log; emit `inv.stripe_event_rejected`.
     - `invoice.finalized` → log only (slice 1; subscription state tracking ships in FR-TEN-003).
-    - `customer.subscription.{updated,deleted}` → emit `inv.stripe_subscription_changed` BRAIN row + log.
+    - `customer.subscription.{updated,deleted}` → emit `inv.stripe_subscription_changed` memory row + log.
 
 12. **MUST** support multi-currency (per DEC-466). Stripe sends `amount` (BIGINT minor units) + `currency` (3-letter ISO-4217 lowercase per Stripe — we uppercase). Supported at slice 1: USD, EUR, SGD, GBP. Unsupported currency → 400 `currency_unsupported` + emit `inv.stripe_event_rejected`.
 
-13. **MUST** PII-scrub `customer.email`, `customer.name`, `description` via FR-BRAIN-111 BEFORE chain commit. Raw values retained in tenant Postgres rows; BRAIN chain holds hashed forms (`customer_email_hash16`, `customer_name_hash16`).
+13. **MUST** PII-scrub `customer.email`, `customer.name`, `description` via FR-MEMORY-111 BEFORE chain commit. Raw values retained in tenant Postgres rows; memory chain holds hashed forms (`customer_email_hash16`, `customer_name_hash16`).
 
 14. **MUST** declare the closed `StripeEventKind` Rust enum with exactly 8 values mapping to the 8 allowed event_type strings (per §1 #9). Adding a 9th is an ADR.
 
@@ -155,7 +155,7 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 18. **MUST** support webhook secret rotation via `POST /v1/inv/stripe-secrets/rotate`. Caller MUST have role `cfo` per FR-AUTH-101. Rotation flow same shape as FR-INV-005 — generates new 32-byte secret, KMS-encrypts, INSERT new active + UPDATE prior to rotated; 60-second overlap window where both old + new accepted.
 
-19. **MUST** emit 6 BRAIN audit row kinds (per DEC-467):
+19. **MUST** emit 6 memory audit row kinds (per DEC-467):
     - `inv.stripe_event_received` — every successful processing.
     - `inv.stripe_event_rejected` — signature fail / replay / unsupported_currency / unknown_tenant.
     - `inv.stripe_payment_received` — payment_intent.succeeded or invoice.payment_succeeded.
@@ -216,7 +216,7 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 **Why default arm = log + 200 (§1 #24)?** Defense against future Stripe API additions. New event_types appear regularly; our handler doesn't 5xx on them. Operators see the unknown events in logs + decide whether to add to allowlist.
 
-**Why customer email + name PII-scrubbed in BRAIN chain (§1 #13)?** Customer PII is sensitive; BRAIN chain is queried broadly. Hashed forms suffice for forensic queries; raw retained in tenant-scoped Postgres rows under RLS.
+**Why customer email + name PII-scrubbed in memory chain (§1 #13)?** Customer PII is sensitive; memory chain is queried broadly. Hashed forms suffice for forensic queries; raw retained in tenant-scoped Postgres rows under RLS.
 
 **Why no Stripe Connect at slice 1 (DEC-471)?** Connect (Stripe's marketplace pattern with multiple Stripe accounts) adds substantial complexity (oauth flow, on-behalf-of headers, application_fee). Slice 1 = single platform Stripe account; Connect ships as FR-INV-2xx when marketplace use case arrives.
 
@@ -655,8 +655,8 @@ async fn handle_subscription_event(state: &crate::AppState, tenant_id: Uuid, evt
 1. **StripeEventKind closed at 8** — exact set per DEC-461.
 2. **bank_code enum extended with STRIPE** — receipt rows from Stripe carry `bank_code='STRIPE'`.
 3. **RLS isolates by tenant** — cross-tenant queries return 0 rows.
-4. **POST happy path payment_intent.succeeded** — valid sig + new event.id → 200 + log row + payment_receipts row + `inv.stripe_payment_received` BRAIN row.
-5. **Signature invalid** → 401 `signature_invalid` + `inv.stripe_event_rejected` BRAIN row.
+4. **POST happy path payment_intent.succeeded** — valid sig + new event.id → 200 + log row + payment_receipts row + `inv.stripe_payment_received` memory row.
+5. **Signature invalid** → 401 `signature_invalid` + `inv.stripe_event_rejected` memory row.
 6. **Signature header missing** → 401 `signature_header_missing`.
 7. **Replay window exceeded** (`t` > 5min off) → 401 + audit.
 8. **Idempotent on event.id** — duplicate POST → 200 + existing log_id + no duplicate row + `inv.duplicate_stripe_event_received` row.
@@ -674,11 +674,11 @@ async fn handle_subscription_event(state: &crate::AppState, tenant_id: Uuid, evt
 20. **OTel span `inv.webhook.stripe` emitted** with `outcome` attr.
 21. **Counter `inv_stripe_event_received_total{event_type=payment_intent.succeeded, outcome=success}` increments**.
 22. **Sev-2 alarm at > 10 rejections/h** — OBS rule.
-23. **PII-scrubbed customer email + name in BRAIN row**.
+23. **PII-scrubbed customer email + name in memory row**.
 24. **payload_sha256 stored** — matches SHA-256 of raw body.
 25. **Subscription events log only at slice 1** — `inv.stripe_subscription_changed` emitted; no state transition.
-26. **PCI SAQ-A scope** — no card numbers in any DB column or BRAIN row (test scans).
-27. **6 BRAIN audit kinds emit correctly** — one per path.
+26. **PCI SAQ-A scope** — no card numbers in any DB column or memory row (test scans).
+27. **6 memory audit kinds emit correctly** — one per path.
 
 ---
 
@@ -761,7 +761,7 @@ async fn payment_intent_succeeded_processed(ctx: TestCtx) {
     assert_eq!(receipts[0].receipt_source, "stripe");
     assert_eq!(receipts[0].amount_minor, 4999);
     assert_eq!(receipts[0].currency, "USD");
-    let rows = ctx.brain_audit_rows("inv.stripe_payment_received").await;
+    let rows = ctx.memory_audit_rows("inv.stripe_payment_received").await;
     assert_eq!(rows.len(), 1);
 }
 ```
@@ -777,7 +777,7 @@ async fn duplicate_event_id_returns_existing(ctx: TestCtx) {
     assert_eq!(r1.log_id, r2.log_id);
     assert!(!r1.duplicate);
     assert!(r2.duplicate);
-    let dup_rows = ctx.brain_audit_rows("inv.duplicate_stripe_event_received").await;
+    let dup_rows = ctx.memory_audit_rows("inv.duplicate_stripe_event_received").await;
     assert_eq!(dup_rows.len(), 1);
     let receipts = ctx.fetch_payment_receipts().await;
     assert_eq!(receipts.len(), 1, "no duplicate receipt row");
@@ -804,7 +804,7 @@ async fn unsupported_currency_rejected(ctx: TestCtx) {
     let sig = ctx.sign_body(&body).await;
     let resp = ctx.post_stripe_webhook(&body, &sig).await;
     assert_eq!(resp.status(), 400);
-    let rows = ctx.brain_audit_rows("inv.stripe_event_rejected").await;
+    let rows = ctx.memory_audit_rows("inv.stripe_event_rejected").await;
     assert!(rows.iter().any(|r| r["reason"] == "currency_unsupported"));
 }
 ```
@@ -825,7 +825,7 @@ async fn event_log_update_blocked(pool: sqlx::PgPool) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 6 BRAIN row builders follow the canonical pattern.)
+(API contract above is the skeleton; 6 memory row builders follow the canonical pattern.)
 
 ---
 
@@ -841,8 +841,8 @@ async fn event_log_update_blocked(pool: sqlx::PgPool) {
 **Cross-module:**
 - **FR-INV-001** — invoices table FK target for `invoice_id`.
 - **FR-INV-005** — shares the `payment_receipts` schema + `receipt_source` enum.
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing.
 - **FR-OBS-007** — sev-2 alarm rule.
 
 ---
@@ -876,7 +876,7 @@ async fn event_log_update_blocked(pool: sqlx::PgPool) {
 Stripe-Signature: t=1700000050,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56ff536d0ce8e108d8bd
 ```
 
-### 8.3 — inv.stripe_payment_received BRAIN row
+### 8.3 — inv.stripe_payment_received memory row
 
 ```json
 {
@@ -893,7 +893,7 @@ Stripe-Signature: t=1700000050,v1=5257a869e7ecebeda32affa62cdca3fa51cad7e77a0e56
 }
 ```
 
-### 8.4 — inv.stripe_event_rejected BRAIN row
+### 8.4 — inv.stripe_event_rejected memory row
 
 ```json
 {
@@ -952,7 +952,7 @@ All other questions resolved.
 | > 10 rejections/h | counter alarm | sev-2 | Operator investigation |
 | Invoice metadata missing | optional field | invoice_id=NULL | FR-INV-006 cash app |
 | Customer FK missing | optional field | customer column NULL | None |
-| BRAIN audit fail mid-tx | rollback | 500; Stripe retries | brain_writer health |
+| memory audit fail mid-tx | rollback | 500; Stripe retries | memory_writer health |
 | OTel span attribute missing | otel_test | CI fails | Fix |
 | Refund without original payment_intent | log + emit | Manual reconciliation | FR-INV-006 |
 | Cross-tenant FK | RLS | 0 rows | Designed |
@@ -985,7 +985,7 @@ All other questions resolved.
 - **metadata.invoice_id linking** — fast-path receipt-to-invoice match.
 - **Refunds as negative amount_minor** — preserves cause-effect in ledger.
 - **Subscription events log only at slice 1** — FR-TEN-003 consumes for state.
-- **6 BRAIN audit kinds** — received / rejected / payment_received / refunded / subscription_changed / duplicate.
+- **6 memory audit kinds** — received / rejected / payment_received / refunded / subscription_changed / duplicate.
 - **PII scrub customer.email + name** — chain holds hashed.
 - **Sev-2 at > 10 rejections/h** — matches VietQR threshold.
 - **PCI SAQ-A scope** — no card data anywhere; Stripe carries PCI scope.

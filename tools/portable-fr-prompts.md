@@ -235,13 +235,13 @@ REPORT AT END
 
 | Cyberos-specific thing | Replaced with |
 |---|---|
-| `cuo/chief-technology-officer/implement-backlog-frs` workflow file | The 6-step per-FR procedure inlined in Prompt 2 |
+| `cuo/chief-technology-officer/ship-feature-requests` workflow file | The 6-step per-FR procedure inlined in Prompt 2 |
 | `AUTHORING_DISCIPLINE.md` rubric file | The 10/10 rubric inlined in Prompt 1's PROCESS step 3 |
 | `feature-request-author` + `feature-request-audit` skill names | Generic "draft + self-audit until 10/10" loop |
-| `BRAIN audit chain` + `AGENTS.md §14` heartbeat | Atomic commits with structured messages; project's existing changelog |
+| `memory audit chain` + `AGENTS.md §14` heartbeat | Atomic commits with structured messages; project's existing changelog |
 | `memory feedback_fr_autonomous_march` reference | "March autonomously … do not ask between FRs unless real decision" |
 | `memory feedback_no_partial_ship_per_fr` reference | "NO partial-ship within an FR" stated directly in Prompt 2 |
-| `re_audit_complete` BRAIN row emission | Changelog row with prior/new score |
+| `re_audit_complete` memory row emission | Changelog row with prior/new score |
 | Hard-coded `/Users/stephencheng/.../cyberos` path | `{{REPO_ROOT}}` placeholder |
 
 The receiving agent never needs to know cyberos exists; the rigor is preserved

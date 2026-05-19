@@ -1,9 +1,9 @@
 ---
 id: FR-PROJ-010
-title: "Citation drift detector — nightly sweep flags stale BRAIN_LINKs (deleted target, superseded chain, broken memory_row_id) with operator notification"
+title: "Citation drift detector — nightly sweep flags stale MEMORY_LINKs (deleted target, superseded chain, broken memory_row_id) with operator notification"
 module: PROJ
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PROJ-009, FR-BRAIN-101, FR-BRAIN-108, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-PROJ-009, FR-MEMORY-101, FR-MEMORY-108, FR-OBS-007]
 depends_on: [FR-PROJ-009]
 blocks: []
 
@@ -33,7 +33,7 @@ modified_files:
   - services/proj-sync/src/main.rs                    # spawn nightly cron task
   - services/proj-sync/migrations/0010_drift_state.sql # last-sweep-at, last-known-target-version cache
 allowed_tools:
-  - file_read: services/proj-sync/**, services/brain/**
+  - file_read: services/proj-sync/**, services/memory/**
   - file_write: services/proj-sync/{src,tests,migrations}/**
   - bash: cd services/proj-sync && cargo test drift
 disallowed_tools:
@@ -44,24 +44,24 @@ effort_hours: 4
 sub_tasks:
   - "0.5h: 0010_drift_state.sql migration"
   - "0.5h: drift/mod.rs — DriftKind enum + report struct"
-  - "1.0h: sweep.rs — iterate active brain_links; check target existence + supersession chain"
+  - "1.0h: sweep.rs — iterate active memory_links; check target existence + supersession chain"
   - "0.5h: notification integration via FR-OBS-007 (sev-2 if > 10 stale; sev-3 otherwise)"
-  - "0.5h: BRAIN audit row 'proj.citation_drift_detected'"
+  - "0.5h: memory audit row 'proj.citation_drift_detected'"
   - "1.0h: drift_test.rs — synthetic drift fixtures + sweep correctness"
 risk_if_skipped: "Without drift detection, stale links accumulate silently — operators investigating 'why is this issue linked here?' find the linked memory deleted months ago. Without supersession-chain awareness, issues link to obsolete decisions while a fresher version exists. Without auto-notification, drift hides until a manual audit; by then links may number in thousands."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-The drift detector **MUST** run a nightly sweep over all active brain_links and flag stale ones. The contract:
+The drift detector **MUST** run a nightly sweep over all active memory_links and flag stale ones. The contract:
 
 1. **MUST** schedule a nightly cron task at 02:00 local time (configurable per `CYBEROS_DRIFT_SWEEP_CRON` env var; default `0 2 * * *`).
 2. **MUST** also support on-demand sweep via `cyberos drift sweep [--tenant-id <uuid>]` CLI.
 3. **MUST** detect three drift kinds:
-    - `TargetMissing`: linked memory_path no longer exists in BRAIN (deletion / unwatched folder).
+    - `TargetMissing`: linked memory_path no longer exists in memory (deletion / unwatched folder).
     - `TargetSuperseded`: linked memory has been superseded by a newer memory (FR-AGENTS §8 correction_to row); the link points at the older revision.
     - `ScopeRevoked`: the issue's tenant lost read scope to the memory (tenant permission change since link was created).
-4. **MUST** emit `proj.citation_drift_detected` BRAIN audit row PER detected drift with payload `{link_id, issue_id, memory_path, drift_kind, detected_at_ns, prior_check_at_ns, trace_id}`.
+4. **MUST** emit `proj.citation_drift_detected` memory audit row PER detected drift with payload `{link_id, issue_id, memory_path, drift_kind, detected_at_ns, prior_check_at_ns, trace_id}`.
 5. **MUST** record sweep state in `drift_state` table: per-tenant `last_sweep_at`, `last_total_links_checked`, `last_drift_count_by_kind`. Operators query for "when did the last sweep run."
 6. **MUST** notify via FR-OBS-007:
     - If `drift_count >= 10` in one sweep for one tenant → sev-2 alert.
@@ -72,15 +72,15 @@ The drift detector **MUST** run a nightly sweep over all active brain_links and 
     - `proj_drift_sweep_duration_seconds` (histogram).
     - `proj_drift_links_checked_total` (counter).
     - `proj_drift_detected_total{kind}` (counter).
-10. **MUST** be deterministic given fixed BRAIN state: same input = same drift report (no Date.now()-keyed randomness).
+10. **MUST** be deterministic given fixed memory state: same input = same drift report (no Date.now()-keyed randomness).
 11. **MUST** complete within 5 minutes for a tenant with ≤ 10K active links; exceeded → sev-2 latency alarm.
 12. **MUST** support delta sweeps: `cyberos drift sweep --since <timestamp>` only re-checks links touched after `<timestamp>`. Used by operators iterating fixes without re-checking everything.
-13. **MUST** track per-link drift status separately from the audit row: `brain_links.drift_status` column (`healthy | target_missing | target_superseded | scope_revoked | unchecked`) updated after each sweep. UI uses this to render "stale link" badges.
+13. **MUST** track per-link drift status separately from the audit row: `memory_links.drift_status` column (`healthy | target_missing | target_superseded | scope_revoked | unchecked`) updated after each sweep. UI uses this to render "stale link" badges.
 14. **MUST** notify assignees (not just admins) via FR-OBS-007: each drift event creates a per-assignee notification (queued via CUO triage per DEC-312). Assignee = current `assignee_subject_id` on the linked issue.
 15. **MUST** support "suppress" workflow: operators can suppress a known-stale drift (`POST /api/proj/drift/:link_id/suppress` with reason) so it doesn't re-alert. Suppression expires after 90 days unless renewed.
 16. **MUST** include a "drift severity hierarchy": within a sweep, `TargetMissing > ScopeRevoked > TargetSuperseded` (highest to lowest priority). Notifications group by severity; SEV-2 fires only on highest-severity counts.
 17. **MUST** support per-tenant config override: `cyberos_proj_tenant_settings.drift_sweep_cron` overrides the default cron; `drift_sev2_threshold` overrides the 10-drift threshold.
-18. **MUST** include suggested remediation in each drift event: for TargetSuperseded → suggest the successor memory_path; for TargetMissing → suggest similar memories via FR-BRAIN-108 fuzzy search; for ScopeRevoked → suggest contacting the memory owner.
+18. **MUST** include suggested remediation in each drift event: for TargetSuperseded → suggest the successor memory_path; for TargetMissing → suggest similar memories via FR-MEMORY-108 fuzzy search; for ScopeRevoked → suggest contacting the memory owner.
 19. **MUST** support a "dry-run" mode: `cyberos drift sweep --dry-run` performs the check but skips audit row emission + notifications. Used for operator preview before committing to a sweep.
 20. **MUST** include a `proj.drift_remediated` audit row when a stale link is removed OR retargeted; tracks remediation rate per tenant.
 21. **MUST** support drift-trend metric: `proj_drift_trend_total{tenant_id, kind, direction}` where direction ∈ `increasing | stable | decreasing` based on 7-day rolling comparison.
@@ -92,9 +92,9 @@ The drift detector **MUST** run a nightly sweep over all active brain_links and 
 
 **Why nightly + on-demand (DEC-310)?** Drift accumulates slowly (memories aren't deleted often). Nightly cadence catches the bulk; on-demand for "we just did a memory purge; please re-check now."
 
-**Why not inline (DEC-310)?** Inline drift checks on every link query would burn BRAIN-read budget for negligible benefit (drift detection at query-time finds the same drift drift sweep finds — but slower per-call). Async batch is the right model.
+**Why not inline (DEC-310)?** Inline drift checks on every link query would burn memory-read budget for negligible benefit (drift detection at query-time finds the same drift drift sweep finds — but slower per-call). Async batch is the right model.
 
-**Why flag-only (DEC-310, §1 #7)?** Auto-removing stale links is dangerous: a temporary BRAIN outage during sweep would mass-remove valid links. Flag-only = operator-controlled remediation.
+**Why flag-only (DEC-310, §1 #7)?** Auto-removing stale links is dangerous: a temporary memory outage during sweep would mass-remove valid links. Flag-only = operator-controlled remediation.
 
 **Why three drift kinds (DEC-311)?** `TargetMissing` is the obvious one. `TargetSuperseded` is value-add: the link is technically valid but stale; operator should retarget to the newer memory. `ScopeRevoked` catches the rare-but-meaningful case where a memory was demoted from shareable to private.
 
@@ -183,8 +183,8 @@ pub async fn sweep_tenant(
     sqlx::query("SELECT set_config('app.tenant_id', $1, true)")
         .bind(tenant_id.to_string()).execute(pool).await?;
 
-    let links: Vec<crate::brain_link::BrainLink> = sqlx::query_as(
-        "SELECT * FROM brain_links WHERE removed_at IS NULL"
+    let links: Vec<crate::memory_link::MemoryLink> = sqlx::query_as(
+        "SELECT * FROM memory_links WHERE removed_at IS NULL"
     ).fetch_all(pool).await?;
 
     let mut drifts = Vec::new();
@@ -196,7 +196,7 @@ pub async fn sweep_tenant(
                 memory_path: link.memory_path.clone(),
                 drift_kind: kind, detected_at_ns: swept_at_ns,
             };
-            emit_brain_row("proj.citation_drift_detected", serde_json::json!({
+            emit_memory_row("proj.citation_drift_detected", serde_json::json!({
                 "link_id": ev.link_id, "issue_id": ev.issue_id,
                 "memory_path": ev.memory_path, "drift_kind": ev.drift_kind,
                 "detected_at_ns": ev.detected_at_ns,
@@ -243,15 +243,15 @@ pub async fn sweep_tenant(
     Ok(DriftReport { tenant_id, swept_at_ns, links_checked: links.len() as i32, drifts, duration_ms })
 }
 
-async fn detect_drift_for_link(link: &crate::brain_link::BrainLink) -> Option<DriftKind> {
+async fn detect_drift_for_link(link: &crate::memory_link::MemoryLink) -> Option<DriftKind> {
     // 1. TargetMissing: memory doesn't exist
-    let memory = match brain_reader::find_memory(&link.memory_path).await {
+    let memory = match memory_reader::find_memory(&link.memory_path).await {
         Some(m) => m,
         None    => return Some(DriftKind::TargetMissing),
     };
 
     // 2. ScopeRevoked: memory's sync_class changed to private (was shareable when linked)
-    if memory.sync_class == brain::SyncClass::Private {
+    if memory.sync_class == memory::SyncClass::Private {
         // Compare to historical scope; if previously shareable and now private → drift
         if was_shareable_at_link_create(&memory, &link.created_at).await {
             return Some(DriftKind::ScopeRevoked);
@@ -259,7 +259,7 @@ async fn detect_drift_for_link(link: &crate::brain_link::BrainLink) -> Option<Dr
     }
 
     // 3. TargetSuperseded: a newer memory exists with `correction_to` pointing at this one
-    if brain_reader::has_successor(&memory.row_id).await {
+    if memory_reader::has_successor(&memory.row_id).await {
         return Some(DriftKind::TargetSuperseded);
     }
 
@@ -277,14 +277,14 @@ async fn detect_drift_for_link(link: &crate::brain_link::BrainLink) -> Option<Dr
 4. **Healthy links not flagged** — happy memory + healthy link → no drift events.
 5. **Sweep deterministic** — same DB state → same report on rerun.
 6. **drift_state row updated** — sweep completion → drift_state has row with counts.
-7. **BRAIN audit per drift** — N drifts → N `proj.citation_drift_detected` rows.
+7. **memory audit per drift** — N drifts → N `proj.citation_drift_detected` rows.
 8. **Sev-2 alert at ≥ 10** — fixture with 10 drifts → FR-OBS-007 sev-2 alert fired.
 9. **Sev-3 alert at < 10** — fixture with 3 drifts → sev-3 alert.
 10. **No alert on zero drifts** — happy sweep → no alert.
 11. **CLI works** — `cyberos drift sweep --tenant-id <uuid>` → exit 0 + report JSON.
 12. **REST GET filters by tenant** — tenant A's report invisible to tenant B.
 13. **RLS isolates drift_state** — tenant A cannot read tenant B's drift_state.
-14. **Auto-removal NOT performed** — sweep run + drift detected → brain_links row unchanged (still active).
+14. **Auto-removal NOT performed** — sweep run + drift detected → memory_links row unchanged (still active).
 15. **Sweep latency ≤ 5min for 10K links** — fixture; assert duration_ms < 300000.
 16. **OTel metrics emitted** — histogram + counters populated.
 17. **Delta sweep checks only recent links** — `--since <ts>` → only links touched after ts re-checked (AC for §1 #12).
@@ -341,7 +341,7 @@ async fn no_auto_remove() {
     let (link, _) = env.setup_drift().await;
     let _ = sweep_tenant(&env.pool, env.tenant_id()).await.unwrap();
     let still_active: bool = sqlx::query_scalar(
-        "SELECT removed_at IS NULL FROM brain_links WHERE id = $1"
+        "SELECT removed_at IS NULL FROM memory_links WHERE id = $1"
     ).bind(link).fetch_one(&env.pool).await.unwrap();
     assert!(still_active);
 }
@@ -367,9 +367,9 @@ async fn sev_2_alert_at_high_drift() {
 
 ## §7 — Dependencies
 
-- **FR-PROJ-009** — brain_links table consumed.
-- **FR-BRAIN-101** — BrainReader for find_memory + has_successor.
-- **FR-BRAIN-108** — search API.
+- **FR-PROJ-009** — memory_links table consumed.
+- **FR-MEMORY-101** — MemoryReader for find_memory + has_successor.
+- **FR-MEMORY-108** — search API.
 - **FR-OBS-007** — alert routing.
 
 ---
@@ -398,7 +398,7 @@ async fn sev_2_alert_at_high_drift() {
 All resolved. Deferred:
 - Periodic sub-tenant sweep (per-engagement) — slice 4+.
 - Drift remediation workflow (auto-retarget to successor) — slice 4+; risky.
-- Real-time drift detection via BRAIN chain hooks — slice 4+; more complex.
+- Real-time drift detection via memory chain hooks — slice 4+; more complex.
 
 ---
 
@@ -406,18 +406,18 @@ All resolved. Deferred:
 
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
-| BRAIN reader unavailable | find_memory Err | Sweep aborts; sev-1 alarm | Operator restores BRAIN |
+| memory reader unavailable | find_memory Err | Sweep aborts; sev-1 alarm | Operator restores memory |
 | Tenant has 100K+ links | sweep exceeds 5min | sev-2 latency alarm | Slice 4+ paginate sweep |
 | drift_state INSERT fails | sqlx Err | Sweep result lost; sev-2 | Operator investigates DB |
 | Concurrent sweep + new link write | RLS isolates per-tenant; race tolerable | Either link checked or skipped (consistent next sweep) | None |
-| BRAIN search transient error | retry 3× | Drift report unreliable for that link | Re-run sweep |
+| memory search transient error | retry 3× | Drift report unreliable for that link | Re-run sweep |
 | Massive supersession event (1000 memories) | drifts spike | sev-2 alert fires; ops notified | Operator reviews |
 | Sweep starts but server restart | partial state | drift_state shows old sweep; next sweep covers | None |
 | Drift detection itself bugged (false positives) | property tests catch | CI blocked | Author fixes |
 | Operator deletes drift_state | recreated on next sweep | Historical sweep info lost | Acceptable |
 | OBS alert exporter down | metric buffered | Notification delayed | Operator restores FR-OBS-001 |
 | RLS bypass | RLS policy | 0 rows | None |
-| Memory path encoding inconsistencies | normalise at FR-BRAIN-108 | Consistent | None |
+| Memory path encoding inconsistencies | normalise at FR-MEMORY-108 | Consistent | None |
 | Delta sweep with invalid `--since` | rejects | 400 | Caller |
 | drift_status column out of sync (race) | next sweep corrects | brief inconsistency | None |
 | Assignee subject_id stale (deleted user) | notification falls back to admin | None | None |
@@ -434,7 +434,7 @@ All resolved. Deferred:
 | Tenant deleted mid-sweep | sweep aborts gracefully | None | None |
 | Concurrent drift sweep + link create | new link unchecked this run | next sweep covers | None |
 | Drift on archived issue | still counted (issue closed but link active) | operator reviews | None |
-| BRAIN reader 5xx burst | exp backoff retry | sweep slower; eventually completes | Operator |
+| memory reader 5xx burst | exp backoff retry | sweep slower; eventually completes | Operator |
 | Suggested remediation with PII in path | should be redacted | event emit safe | None |
 | Operator suppresses then deletes link | suppression auto-cleared | None | None |
 
@@ -443,30 +443,30 @@ All resolved. Deferred:
 ## §11 — Implementation notes
 
 - Cron is implemented via tokio-cron-scheduler in the proj-sync main loop.
-- `was_shareable_at_link_create` queries BRAIN audit chain for `meta.sync_class` history at the link's `created_at` timestamp.
-- `has_successor` queries BRAIN for rows with `correction_to = <row_id>`.
-- The 5-minute latency budget for 10K links assumes BRAIN search latency p99 ≤ 30ms — borderline; slice 4+ may need pagination + parallel sweep.
-- Multi-tenant sweep iterates tenants serially to avoid BRAIN-side rate limits.
+- `was_shareable_at_link_create` queries memory audit chain for `meta.sync_class` history at the link's `created_at` timestamp.
+- `has_successor` queries memory for rows with `correction_to = <row_id>`.
+- The 5-minute latency budget for 10K links assumes memory search latency p99 ≤ 30ms — borderline; slice 4+ may need pagination + parallel sweep.
+- Multi-tenant sweep iterates tenants serially to avoid memory-side rate limits.
 - The `proj.citation_drift_detected` audit row's `prior_check_at_ns` field is the prior sweep's timestamp from drift_state; null if no prior sweep.
 - Drift remediation is intentionally manual; auto-remediation pattern reserved for slice 4+.
-- Delta sweep uses `brain_links.updated_at` (touched on any mutation including drift_status update); `--since` filters by that.
+- Delta sweep uses `memory_links.updated_at` (touched on any mutation including drift_status update); `--since` filters by that.
 - drift_status column materialises the latest sweep result; UI badge rendering reads it in O(1).
 - Assignee notification queues via FR-OBS-007's CUO triage; the notification appears in the assignee's daily digest.
-- Suppression rows live in `brain_link_drift_suppressions` table with link_id + suppressed_at + reason + expires_at; sweep joins this table.
+- Suppression rows live in `memory_link_drift_suppressions` table with link_id + suppressed_at + reason + expires_at; sweep joins this table.
 - Severity hierarchy is implemented in the alert-decision function; not a column.
 - Per-tenant config lives in `cyberos_proj_tenant_settings` (extended); cron validates at startup.
-- Suggested remediation for TargetMissing uses FR-BRAIN-108 `search(path_fragments)` with edit-distance scoring; returns top 3.
+- Suggested remediation for TargetMissing uses FR-MEMORY-108 `search(path_fragments)` with edit-distance scoring; returns top 3.
 - Dry-run is a CLI flag wired through to the sweep function; toggled before audit emit + alert.
 - `proj.drift_remediated` is emitted by the `remove_link` and (slice 4+) `retarget_link` handlers; carries `prior_drift_kind`.
 - Trend metric uses a 7-day rolling window stored in `drift_trend_state` table; comparison is rate-of-change.
 - Small-tenant fast path is selected based on `last_total_links_checked` at sweep start; threshold 1K.
 - Suppression auto-expiry runs in a separate cleanup task hourly.
-- We considered triggering sweep on every link deletion in BRAIN but rejected: link write rate is high; sweep on every event = O(N²) churn.
+- We considered triggering sweep on every link deletion in memory but rejected: link write rate is high; sweep on every event = O(N²) churn.
 - Drift detection ON_DEMAND CLI is intended for operators investigating an issue ("did this drift since last sweep?"); per-link granular check.
 - The drift_state row updates atomically with the sweep completion; no partial rows.
 - Assignee notification dedups within 24h: one drift event per (link, assignee) per day, no spam.
 - The remediation `suggested_paths` array is bounded at 3; UI shows them as quick-action buttons.
-- We rejected real-time drift detection via BRAIN chain hooks because: (a) added complexity; (b) batch sweep finds the same drift; (c) BRAIN event firehose would need filtering anyway.
+- We rejected real-time drift detection via memory chain hooks because: (a) added complexity; (b) batch sweep finds the same drift; (c) memory event firehose would need filtering anyway.
 
 ---
 

@@ -72,7 +72,7 @@ async fn main() -> ExitCode {
             println!("  • root tenant:        {}", summary.tenant_0_id);
             println!("  • root-admin subject: {}", summary.root_admin_subject_id);
             println!("  • signing key kid:    {}", summary.signing_key_kid);
-            println!("  • brain audit seq:    {}", summary.brain_audit_seq);
+            println!("  • memory audit seq:    {}", summary.memory_audit_seq);
             println!();
             println!(
                 "Next: POST /v1/auth/token with grant_type=password, \
@@ -121,7 +121,7 @@ struct BootstrapSummary {
     tenant_0_id: Uuid,
     root_admin_subject_id: Uuid,
     signing_key_kid: String,
-    brain_audit_seq: i64,
+    memory_audit_seq: i64,
 }
 
 struct Args {
@@ -182,7 +182,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         return Err(BootstrapError::AlreadyInitialised);
     }
 
-    // 3. Single tx wraps root-admin INSERT + BRAIN audit row INSERT
+    // 3. Single tx wraps root-admin INSERT + memory audit row INSERT
     //    (FR-AUTH-006 §1 #4). Both commit or both rollback.
     let mut tx = pool.begin().await?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
@@ -210,7 +210,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         .map_err(BootstrapError::Other)?;
     println!("✓ active RSA-2048 signing key present: {signing_key_kid}");
 
-    // 5. FR-AUTH-006 §1 #4 — Emit auth.bootstrap_completed BRAIN audit row
+    // 5. FR-AUTH-006 §1 #4 — Emit auth.bootstrap_completed memory audit row
     //    INSIDE the same tx. Failure → return Err → tx auto-rolls back the
     //    root-admin + signing key INSERTs together.
     let env_tier =
@@ -219,16 +219,16 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         .ok()
         .filter(|s| !s.is_empty())
         .unwrap_or_else(|| "interactive".into());
-    let payload = cyberos_auth::brain_bridge::BootstrapCompletedPayload {
+    let payload = cyberos_auth::memory_bridge::BootstrapCompletedPayload {
         tenant_0_id: ROOT_TENANT,
         root_admin_subject_id: subject_id,
         initial_signing_key_kid: &signing_key_kid,
         bootstrap_environment: &env_tier,
         bootstrapped_by: &bootstrapped_by,
     };
-    let brain_audit_seq =
-        cyberos_auth::brain_bridge::emit_bootstrap_completed(&mut tx, payload).await?;
-    println!("✓ BRAIN audit row emitted: seq={brain_audit_seq}");
+    let memory_audit_seq =
+        cyberos_auth::memory_bridge::emit_bootstrap_completed(&mut tx, payload).await?;
+    println!("✓ memory audit row emitted: seq={memory_audit_seq}");
 
     tx.commit().await?;
 
@@ -265,7 +265,7 @@ async fn run(pool: &PgPool, args: &Args) -> Result<BootstrapSummary, BootstrapEr
         tenant_0_id: ROOT_TENANT,
         root_admin_subject_id: subject_id,
         signing_key_kid,
-        brain_audit_seq,
+        memory_audit_seq,
     })
 }
 

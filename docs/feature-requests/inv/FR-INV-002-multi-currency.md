@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-001, FR-INV-011, FR-TEN-003, FR-TEN-102, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-INV-001, FR-INV-011, FR-TEN-003, FR-TEN-102, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-INV-001]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1512 2026-05-17 — Closed enum `fx_source` = {sbv_daily, ecb_daily, manual_override}; cardinality 3
   - DEC-1513 2026-05-17 — Cross-currency reporting: report at "as-of" date pulls FX from that day's snapshot (deterministic — same query same date = same result)
   - DEC-1514 2026-05-17 — Per-tenant base currency for financial reports (default = engagement's currency; tenant may set tenant-wide base)
-  - DEC-1515 2026-05-17 — BRAIN audit kinds: inv.fx_snapshot_recorded, inv.fx_snapshot_failed, inv.fx_manual_override, inv.report_currency_converted
+  - DEC-1515 2026-05-17 — memory audit kinds: inv.fx_snapshot_recorded, inv.fx_snapshot_failed, inv.fx_manual_override, inv.report_currency_converted
 
 build_envelope:
   language: rust 1.81
@@ -81,7 +81,7 @@ risk_if_skipped: "Without FX, multi-currency tenants (USD invoices + VND tenants
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship multi-currency FX support at `services/inv/src/fx/` with daily SBV+ECB snapshots, per-date deterministic conversion, CFO-gated manual override, and 4 BRAIN audit kinds.
+The INV service **MUST** ship multi-currency FX support at `services/inv/src/fx/` with daily SBV+ECB snapshots, per-date deterministic conversion, CFO-gated manual override, and 4 memory audit kinds.
 
 1. **MUST** define closed `fx_source` enum: `('sbv_daily','ecb_daily','manual_override')` per DEC-1512. Cardinality 3.
 
@@ -105,7 +105,7 @@ The INV service **MUST** ship multi-currency FX support at `services/inv/src/fx/
 
 7. **MUST** consume by INV-011 (revenue recognition) + reporting endpoints for cross-currency rollup.
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-1515.
+8. **MUST** emit 4 memory audit kinds per DEC-1515.
 
 9. **MUST** thread trace_id end-to-end.
 
@@ -156,7 +156,7 @@ GET    /v1/inv/fx/convert?amount=...&from=USD&to=VND&as_of=...
 ---
 
 ## §4 — Acceptance criteria
-1. **fx_source cardinality 3**. 2. **Daily SBV snapshot persists VND pairs**. 3. **ECB fallback for non-VND pairs**. 4. **As-of conversion deterministic** — same inputs same output. 5. **Direct pair preferred over via-VND**. 6. **Via-VND cross-rate computation** — USD→EUR via VND. 7. **Missing date → 412**. 8. **Manual override CFO-only**. 9. **Override reason required**. 10. **4 BRAIN audit kinds emitted**. 11. **Snapshot retry on failure**. 12. **Invoice currency immutable**. 13. **Trace_id end-to-end**. 14. **PII scrub override reason**. 15. **Concurrent snapshot race-safe** (PRIMARY KEY). 16. **Cross-currency report uses as-of correctly**. 17. **Rate CHECK > 0**. 18. **Weekend SBV gap handled** — falls forward to prior Friday rate. 19. **Per-tenant base currency for reports**. 20. **All 5 currencies supported** (VND/USD/SGD/EUR/GBP).
+1. **fx_source cardinality 3**. 2. **Daily SBV snapshot persists VND pairs**. 3. **ECB fallback for non-VND pairs**. 4. **As-of conversion deterministic** — same inputs same output. 5. **Direct pair preferred over via-VND**. 6. **Via-VND cross-rate computation** — USD→EUR via VND. 7. **Missing date → 412**. 8. **Manual override CFO-only**. 9. **Override reason required**. 10. **4 memory audit kinds emitted**. 11. **Snapshot retry on failure**. 12. **Invoice currency immutable**. 13. **Trace_id end-to-end**. 14. **PII scrub override reason**. 15. **Concurrent snapshot race-safe** (PRIMARY KEY). 16. **Cross-currency report uses as-of correctly**. 17. **Rate CHECK > 0**. 18. **Weekend SBV gap handled** — falls forward to prior Friday rate. 19. **Per-tenant base currency for reports**. 20. **All 5 currencies supported** (VND/USD/SGD/EUR/GBP).
 
 ---
 
@@ -196,7 +196,7 @@ async fn manual_override_cfo_only() {
 
 ## §7 — Dependencies
 **Upstream:** FR-INV-001.
-**Cross-module:** FR-AUTH-101 (cfo role), FR-AI-003, FR-BRAIN-111. **Consumed by:** FR-INV-011, FR-TEN-003, FR-TEN-102 reporting.
+**Cross-module:** FR-AUTH-101 (cfo role), FR-AI-003, FR-MEMORY-111. **Consumed by:** FR-INV-011, FR-TEN-003, FR-TEN-102 reporting.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -172,7 +172,7 @@ Pointers to Anthropic-maintained skills (PDF, DOCX, PPTX, XLSX, plus Asana / Atl
 | 33 | Anti-patterns catalogue | Part 18 of README has 12 anti-patterns (vs the guide's ~6); covers things the guide doesn't (don't write skills that call other skills directly, don't promote LLM-inferred to confidence: 1.0, don't auto-set EU AI Act risk class, don't change RUBRIC.md mid-batch) | **Aligned + extended** |
 | 34 | Body soft cap on size (5000 words) | Part 24 prescribes "≤500 lines, ideal ≤300" — tighter | **Aligned + stricter** |
 | 35 | 20-50 simultaneously enabled skills ceiling | Not a constraint in CyberOS: progressive disclosure + supervisor routing means only the matched skill loads | **Architecturally moot — not applicable** |
-| 36 | "Advanced technique: bundle scripts for critical validations" | `scripts/` folder convention with `generate_qr.py`, `brain_writer.py` etc.; not heavily emphasised in the template | **Aligned — could be emphasised more in `_template/author/SKILL.md`** |
+| 36 | "Advanced technique: bundle scripts for critical validations" | `scripts/` folder convention with `generate_qr.py`, `memory_writer.py` etc.; not heavily emphasised in the template | **Aligned — could be emphasised more in `_template/author/SKILL.md`** |
 | 37 | "Model laziness" — explicit `## Performance Notes` in user prompts | Not present in CyberOS; the equivalent is the CONTRACT_ECHO discipline (forces the model to declare phase + bounds before any action) | **Aligned via different mechanism** (CONTRACT_ECHO is arguably stronger) |
 | 38 | Quick checklist Reference A — before/during/before-upload/after-upload | Part 24.1 self-test checklist covers most "during development"; "before upload" + "after upload" partial — OBS handles "monitor for under/over-triggering" but not codified as a checklist | **Partial — minor doc gap** (see §6.6) |
 | 39 | Reference B YAML frontmatter — name, description, license, allowed-tools, metadata | 33-field v0.2.0 frontmatter (Part 2.1) is a strict superset | **Aligned + extended** |
@@ -201,7 +201,7 @@ Worth documenting because future fine-tunes are tempted to "simplify" toward Ant
 15. **CONTRACT_ECHO discipline** — every workflow body emits a fenced `CONTRACT_ECHO` block before any file action, declaring skill_id / version / phase / inputs. Forces the model to state intent. The guide has nothing equivalent (its "Performance Notes" trick is weaker).
 16. **HUMAN_SUMMARY.md template** for chat-mode rendering — chained mode rolls into parent summary, standalone mode renders separately. The guide doesn't address this duality.
 17. **PIPELINE.md** per skill documenting the chain edges in/out. The guide's chain pattern is prose, not a contract.
-18. **`emitted_source_freshness_tier`** field on every skill — declares the authority tier of what the skill produces (BRAIN conflict resolution). The guide has no concept of source tiering.
+18. **`emitted_source_freshness_tier`** field on every skill — declares the authority tier of what the skill produces (memory conflict resolution). The guide has no concept of source tiering.
 
 ---
 

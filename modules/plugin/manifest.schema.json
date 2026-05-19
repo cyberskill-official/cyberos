@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cyberskill.world/schemas/plugin/manifest@1.json",
+  "title": "CyberOS plugin manifest",
+  "description": "Canonical manifest for a CyberOS plugin bundle. Each per-runtime adapter (claude-code, cursor, cowork, codex-cli, ...) transforms this canonical form into the target's native install format. Authoritative version is in modules/plugin/manifest.schema.json; FR contract is FR-PLUGIN-001.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "name",
+    "description",
+    "authors",
+    "license",
+    "capabilities",
+    "tools",
+    "auth",
+    "audit",
+    "targets",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Manifest schema version. Bumps require an FR-PLUGIN-001 amendment."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,62}[a-z0-9]$",
+      "description": "Lowercase kebab-case plugin id (e.g. 'cyberos', 'cyberos-vn', 'cyberos-enterprise')."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
+      "description": "SemVer 2.0 version (e.g. '1.0.0', '1.0.0-beta.1', '1.0.0+sha.abc123')."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "Human-readable plugin name shown in host UIs."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 60,
+      "maxLength": 480,
+      "description": "One-paragraph plugin description. ≥60 chars to force meaningful copy."
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "url": { "type": "string", "format": "uri" }
+        }
+      },
+      "minItems": 1
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX license id (e.g. 'Apache-2.0', 'MIT', 'BUSL-1.1')."
+    },
+    "capabilities": {
+      "type": "object",
+      "description": "High-level declarations. Each capability implies a set of OAuth scopes the host MUST grant. Host MUST surface declared capabilities at install time.",
+      "additionalProperties": false,
+      "properties": {
+        "read_memory": { "type": "boolean", "default": false },
+        "write_memory": { "type": "boolean", "default": false },
+        "execute_workflow": { "type": "boolean", "default": false },
+        "list_skills": { "type": "boolean", "default": true },
+        "invoke_skill": { "type": "boolean", "default": false },
+        "publish_skill": { "type": "boolean", "default": false },
+        "route_natural_language": { "type": "boolean", "default": false }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "input_schema", "scopes"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^cyberos\\.[a-z][a-z0-9]*\\.[a-z][a-z0-9_]*$",
+            "description": "SEP-986 name: 'cyberos.{module}.{verb}_{noun}' (e.g. 'cyberos.cuo.execute_workflow'). Per FR-MCP-003."
+          },
+          "description": { "type": "string", "minLength": 30 },
+          "input_schema": { "type": "object", "description": "JSONSchema for tool inputs." },
+          "annotations": {
+            "type": "object",
+            "properties": {
+              "destructive": { "type": "boolean", "default": false },
+              "write": { "type": "boolean", "default": false },
+              "external_effect": { "type": "boolean", "default": false }
+            },
+            "description": "Per FR-MCP-006. Destructive / write / external-effect tools require explicit user confirm."
+          },
+          "scopes": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^cyberos:[a-z]+:[a-z]+$" },
+            "minItems": 1,
+            "description": "OAuth scopes required to call this tool (e.g. 'cyberos:memory:read')."
+          }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "description": "Slash-commands exposed to hosts that render them (Claude Code, Cowork).",
+      "items": {
+        "type": "object",
+        "required": ["name", "file"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^/[a-z][a-z0-9-]+$" },
+          "file": { "type": "string", "pattern": "^commands/[a-z0-9-]+\\.md$" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "description": "Skill playbooks (SKILL.md compatible) bundled with the plugin. Per FR-PLUGIN-004.",
+      "items": {
+        "type": "object",
+        "required": ["id", "path"],
+        "properties": {
+          "id": { "type": "string" },
+          "path": { "type": "string", "pattern": "^skills/[a-z0-9-]+/SKILL\\.md$" }
+        }
+      }
+    },
+    "auth": {
+      "type": "object",
+      "required": ["method", "authorize_url", "token_url", "scopes"],
+      "additionalProperties": false,
+      "properties": {
+        "method": { "const": "oauth-pkce", "description": "Per FR-PLUGIN-005, only oauth-pkce is allowed in v1." },
+        "authorize_url": { "type": "string", "format": "uri" },
+        "token_url": { "type": "string", "format": "uri" },
+        "scopes": { "type": "array", "items": { "type": "string", "pattern": "^cyberos:[a-z]+:[a-z]+$" }, "minItems": 1 },
+        "refresh_interval_seconds": { "type": "integer", "default": 86400, "minimum": 600 }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "required": ["endpoint", "kinds"],
+      "additionalProperties": false,
+      "properties": {
+        "endpoint": { "type": "string", "format": "uri", "description": "memory audit ingest endpoint." },
+        "kinds": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["plugin.installed", "plugin.updated", "plugin.uninstalled", "plugin.invoked", "plugin.auth_refreshed", "plugin.scope_denied"] },
+          "minItems": 4,
+          "description": "Audit kinds the plugin MUST emit. Per FR-PLUGIN-006, install/update/uninstall/invoked are minimum."
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "enum": ["claude-code", "cursor", "cowork", "codex-cli", "goose", "amp", "continue-dev"] },
+      "description": "Runtimes this manifest is intended for. Each value implies adapter execution. Per FR-PLUGIN-007."
+    },
+    "signature": {
+      "type": "object",
+      "required": ["sigstore_bundle", "rekor_uuid"],
+      "additionalProperties": false,
+      "properties": {
+        "sigstore_bundle": { "type": "string", "description": "Base64-encoded Sigstore bundle." },
+        "rekor_uuid": { "type": "string", "description": "Rekor transparency log entry UUID for this artefact." }
+      }
+    },
+    "marketplace": {
+      "type": "object",
+      "description": "Optional marketplace metadata. Per FR-PLUGIN-008.",
+      "additionalProperties": false,
+      "properties": {
+        "visibility": { "type": "string", "enum": ["public", "private", "enterprise"], "default": "private" },
+        "vetted_by_cyberskill": { "type": "boolean", "default": false },
+        "price_usd_per_month": { "type": "number", "minimum": 0 },
+        "revenue_share_percent": { "type": "integer", "default": 70, "minimum": 0, "maximum": 100 }
+      }
+    }
+  }
+}

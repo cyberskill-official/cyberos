@@ -59,6 +59,75 @@ class NotFound(FileNotFoundError):
     """The target memory file does not exist (or was tombstoned)."""
 
 
+class AclDenied(PermissionError):
+    """Per AGENTS.md §14.4 / FR-MEMORY-117 — the active actor isn't permitted
+    to write to this subtree under the governing STORE.yaml. Raised AFTER
+    the `memory.acl_denied` aux row is emitted so operators have an audit
+    trail of the attempt."""
+
+
+class _PutIfResultMixin:
+    """Lightweight namespace for the put_if result type — defined as a
+    plain dataclass below to avoid pyclass import overhead in cold-CLI.
+    """
+
+
+from dataclasses import dataclass as _dataclass
+
+
+@_dataclass(frozen=True)
+class PutIfResult:
+    """Result of a put_if op (FR-MEMORY-118 §1 #9, AGENTS.md §3.1.5).
+
+    Attributes
+    ----------
+    outcome
+        ``"written"`` on success; ``"rejected"`` on precondition mismatch
+        or ACL refusal.
+    reason
+        Populated only on rejection. One of ``"precondition_failed"`` or
+        ``"acl_denied"``.
+    expected
+        The precondition hash supplied by the caller (or ``None`` for the
+        create-only variant).
+    actual
+        The on-disk body hash at check time, or the literal string
+        ``"<absent>"`` when no file exists at the path.
+    committed_seq
+        The audit-row seq of the `put` row on success; ``None`` on rejection.
+    """
+
+    outcome: str  # "written" | "rejected"
+    reason: "str | None" = None
+    expected: "str | None" = None
+    actual: "str | None" = None
+    committed_seq: "int | None" = None
+
+
+def _acl_check(writer: Writer, rel_path: str, actor: str, attempt_kind: str) -> bool:
+    """Run the FR-MEMORY-117 ACL gate.
+
+    Emits a `memory.acl_denied` aux row on every refusal (and on WARN-ONLY
+    proceed-with-log). Returns True if the write may proceed; False on
+    hard refusal.
+    """
+    from cyberos.core.store_acl import check_write  # noqa: WPS433
+
+    res = check_write(writer.store, rel_path, actor)
+    # Emit aux row whenever the resolved mode isn't read-write OR when
+    # an explicit yaml file matched + denied (covers warn-only too).
+    if res.reason is not None:
+        writer.submit(
+            AuditRecord(
+                op="memory.acl_denied",
+                path=rel_path,
+                actor=actor,
+                extra=res.to_aux_payload(actor, rel_path, attempt_kind),
+            )
+        )
+    return res.allowed
+
+
 def _check_rel_path(rel_path: str) -> None:
     if not rel_path:
         raise PathTraversal("empty rel_path")
@@ -151,11 +220,21 @@ def put(
     Content-addressed: the on-disk effect is identical regardless of
     whether ``rel_path`` previously existed.
 
-    Audit row uses ``op="put"``.
+    Audit row uses ``op="put"``. Per AGENTS.md §14.4 / FR-MEMORY-117, the
+    write is also gated by the nearest `STORE.yaml` ACL — a denied write
+    emits a `memory.acl_denied` aux row and refuses the put (or, in
+    WARN-ONLY mode pre-§14.4-anchor, emits the row and proceeds).
     """
     _check_rel_path(rel_path)
     if len(body) > _MAX_BYTES:
         raise ContentTooLarge(f"{len(body)} > {_MAX_BYTES}")
+
+    # FR-MEMORY-117 ACL gate
+    if not _acl_check(writer, rel_path, actor, "put"):
+        # Denied + not warn-only → refuse the write; the aux row was
+        # already emitted by _acl_check.
+        raise AclDenied(f"ACL denies actor={actor!r} writing to {rel_path!r}")
+
     abs_path = writer.store / rel_path
     existed = abs_path.exists()
     before_sha = _sha256(abs_path.read_bytes()) if existed else None
@@ -177,6 +256,193 @@ def put(
     )
 
 
+def _has_section_3_1_put_if(store: Path) -> bool:
+    """Anchor check for the FR-MEMORY-118 protocol amendment (§3.1 extension).
+
+    Searches the same set of locations as the §7.7 and §14.4 checks. The
+    extension must include `put_if` somewhere in the §3.1 canonical-op
+    table — we look for the literal token in AGENTS.md.
+    """
+    import os
+    candidates: list[Path] = [store / "AGENTS.md"]
+    for parent in [store, *store.parents][:6]:
+        candidates.append(parent / "modules" / "memory" / "AGENTS.md")
+    for c in candidates:
+        if c.exists():
+            try:
+                body = c.read_text(encoding="utf-8", errors="ignore")
+            except Exception:
+                continue
+            if "put_if" in body and "§3.1" in body:
+                return True
+    return False
+
+
+_HEX_RE = __import__("re").compile(r"^[0-9a-f]{64}$")
+
+
+def put_if(
+    writer: Writer,
+    rel_path: str,
+    body: bytes,
+    *,
+    actor: str,
+    precondition_body_hash: "str | None",
+    kind: str = "unknown",
+    extra: dict | None = None,
+) -> PutIfResult:
+    """Canonical op — content-conditional put.
+
+    Per AGENTS.md §3.1 (extended by P21 / FR-MEMORY-118). The write
+    proceeds only when the current on-disk body's SHA-256 matches
+    ``precondition_body_hash`` (or, when the precondition is ``None``,
+    the target MUST NOT currently exist — the create-only variant).
+
+    Three rejection paths:
+
+    * ``precondition_body_hash`` shape invalid (not 64-char lowercase
+      hex, not ``None``) → ``ValueError``.
+    * Protocol amendment §3.1 extension not anchored in AGENTS.md →
+      ``ProtocolAmendmentMissing``.
+    * ACL gate (FR-MEMORY-117) refuses → ``PutIfResult(outcome="rejected",
+      reason="acl_denied")``.
+    * Body-hash mismatch → ``PutIfResult(outcome="rejected",
+      reason="precondition_failed", expected=..., actual=...)`` + a
+      ``memory.precondition_failed`` aux audit row.
+
+    On success the canonical row shape is identical to a regular ``put``
+    (op=``"put"``, not ``"put_if"``) per §3.1.6, so downstream consumers
+    (walker, doctor, dream, history) don't need to special-case the
+    origin.
+    """
+    _check_rel_path(rel_path)
+    if len(body) > _MAX_BYTES:
+        raise ContentTooLarge(f"{len(body)} > {_MAX_BYTES}")
+
+    # Shape check for precondition_body_hash
+    if precondition_body_hash is not None:
+        if not isinstance(precondition_body_hash, str):
+            raise ValueError(
+                f"precondition_body_hash must be 64-char lowercase hex or None; "
+                f"got {type(precondition_body_hash).__name__}"
+            )
+        if not _HEX_RE.match(precondition_body_hash):
+            raise ValueError(
+                f"precondition_body_hash must be 64-char lowercase hex or None; "
+                f"got {precondition_body_hash!r}"
+            )
+
+    # Protocol amendment anchor check (FR-MEMORY-118 §1 #12)
+    if not _has_section_3_1_put_if(writer.store):
+        from cyberos.core.dream.applier import ProtocolAmendmentMissing
+        raise ProtocolAmendmentMissing(
+            "AGENTS.md §3.1 extension (put_if) not anchored. Approve via:\n"
+            "  APPROVE protocol change P21 §3.1\n"
+            "and ensure modules/memory/AGENTS.md §3.1 includes `put_if` in the "
+            "canonical-op table."
+        )
+
+    # FR-MEMORY-117 ACL gate (runs BEFORE the precondition check per
+    # AGENTS.md §3.1.7 — policy is a stronger refusal than concurrency).
+    if not _acl_check(writer, rel_path, actor, "put_if"):
+        return PutIfResult(
+            outcome="rejected",
+            reason="acl_denied",
+        )
+
+    # Precondition check
+    abs_path = writer.store / rel_path
+    existed = abs_path.exists()
+    actual_hash = _sha256(abs_path.read_bytes()) if existed else None
+
+    if precondition_body_hash is None and existed:
+        # "must not exist" path; current file exists → rejected
+        _emit_precondition_failed(
+            writer, rel_path, actor,
+            expected=None, actual=actual_hash,
+        )
+        return PutIfResult(
+            outcome="rejected",
+            reason="precondition_failed",
+            expected=None,
+            actual=actual_hash,
+        )
+    if precondition_body_hash is not None and not existed:
+        _emit_precondition_failed(
+            writer, rel_path, actor,
+            expected=precondition_body_hash, actual="<absent>",
+        )
+        return PutIfResult(
+            outcome="rejected",
+            reason="precondition_failed",
+            expected=precondition_body_hash,
+            actual="<absent>",
+        )
+    if precondition_body_hash is not None and actual_hash != precondition_body_hash:
+        _emit_precondition_failed(
+            writer, rel_path, actor,
+            expected=precondition_body_hash, actual=actual_hash,
+        )
+        return PutIfResult(
+            outcome="rejected",
+            reason="precondition_failed",
+            expected=precondition_body_hash,
+            actual=actual_hash,
+        )
+
+    # All checks passed — proceed with the write. Emit a plain `put` row
+    # (per §3.1.6 — indistinguishable from a regular put).
+    before_sha = actual_hash  # same as before; reused for the `before_sha256` extra
+    _atomic_write(abs_path, body)
+
+    rec_extra: dict[str, object] = {"kind": kind}
+    if existed and before_sha is not None:
+        rec_extra["before_sha256"] = before_sha
+    if extra:
+        rec_extra.update(extra)
+    committed_seq = writer.submit(
+        AuditRecord(
+            op="put",
+            path=rel_path,
+            actor=actor,
+            content_sha256=_sha256(body),
+            extra=rec_extra,
+        )
+    )
+    return PutIfResult(
+        outcome="written",
+        committed_seq=committed_seq,
+    )
+
+
+def _emit_precondition_failed(
+    writer: Writer,
+    rel_path: str,
+    actor: str,
+    *,
+    expected: "str | None",
+    actual: "str | None",
+) -> None:
+    """Emit the AGENTS.md §3.1.5 / FR-MEMORY-118 §1 #7 aux row."""
+    import time as _time
+    from datetime import datetime, timezone
+
+    writer.submit(
+        AuditRecord(
+            op="memory.precondition_failed",
+            path=rel_path,
+            actor=actor,
+            extra={
+                "actor": actor,
+                "path": rel_path,
+                "expected": expected,
+                "actual": actual,
+                "attempt_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+    )
+
+
 def move(
     writer: Writer,
     src_rel: str,
@@ -194,6 +460,17 @@ def move(
     _check_rel_path(dst_rel)
     if src_rel == dst_rel:
         raise ValueError("src_rel and dst_rel are identical")
+
+    # FR-MEMORY-117 / AGENTS.md §14.4.5 — both src and dst must be writable
+    if not _acl_check(writer, src_rel, actor, "move"):
+        raise AclDenied(
+            f"ACL denies actor={actor!r} moving from {src_rel!r} (src side)"
+        )
+    if not _acl_check(writer, dst_rel, actor, "move"):
+        raise AclDenied(
+            f"ACL denies actor={actor!r} moving to {dst_rel!r} (dst side)"
+        )
+
     src = writer.store / src_rel
     dst = writer.store / dst_rel
     if not src.is_file():
@@ -234,6 +511,7 @@ def delete(
     mode: str = "tombstone",
     reason: str | None = None,
     approval_phrase: str | None = None,
+    extra: dict | None = None,
 ) -> int:
     """Delete a memory file. Two modes (AGENTS.md v2 §3.5–§3.6).
 
@@ -269,6 +547,10 @@ def delete(
     if mode not in ("tombstone", "purge"):
         raise ValueError(f"unknown delete mode: {mode!r}")
 
+    # FR-MEMORY-117 ACL gate
+    if not _acl_check(writer, rel_path, actor, "delete"):
+        raise AclDenied(f"ACL denies actor={actor!r} deleting {rel_path!r}")
+
     abs_path = writer.store / rel_path
     if not abs_path.is_file():
         raise NotFound(str(abs_path))
@@ -276,13 +558,16 @@ def delete(
     original_sha = _sha256(data)
 
     if mode == "tombstone":
+        rec_extra: dict = {"mode": "tombstone", "reason": reason or ""}
+        if extra:
+            rec_extra.update(extra)
         return writer.submit(
             AuditRecord(
                 op="delete",
                 path=rel_path,
                 actor=actor,
                 content_sha256=original_sha,
-                extra={"mode": "tombstone", "reason": reason or ""},
+                extra=rec_extra,
             )
         )
 

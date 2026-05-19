@@ -6,7 +6,7 @@
 //! Codes 0-7 are stable cross-CLI contract. Module-specific extensions start
 //! at the per-module reserved range:
 //!   - 200 = AUTH
-//!   - 300 = BRAIN
+//!   - 300 = memory
 //!   - 400 = OBS
 
 #![forbid(unsafe_code)]

@@ -8,10 +8,10 @@ client-side, and renders well on a 375-pixel-wide iPhone viewport.
 
 Design constraints:
 
-* one file (``brain.html``), no companion JS/CSS bundles;
+* one file (``memory.html``), no companion JS/CSS bundles;
 * mobile-first layout (single column under 720px, two-column above);
 * the JSON payload is the deterministic source of truth — we just inline
-  it via a `<script type="application/json" id="brain-data">` tag and
+  it via a `<script type="application/json" id="memory-data">` tag and
   let a tiny vanilla-JS app on the page filter, search, and render;
 * zero external requests — fonts inherit from system stack, no CDN, no
   embedded analytics, no service worker, no remote API;
@@ -184,7 +184,7 @@ _HTML_TEMPLATE = """\
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BRAIN — {fingerprint}</title>
+<title>memory — {fingerprint}</title>
 <meta name="generator" content="cyberos publish v1">
 <style>
 :root {{
@@ -239,7 +239,7 @@ main {{ padding: 16px 20px 40px; max-width: 880px; margin: 0 auto; }}
 </head>
 <body>
 <header>
-  <h1>BRAIN</h1>
+  <h1>memory</h1>
   <div class="meta">store {fingerprint} · {n_memories} memories · generated {generated_at}</div>
   <div class="controls">
     <input type="search" id="q" placeholder="Search bodies, ids, tags…">
@@ -251,13 +251,13 @@ main {{ padding: 16px 20px 40px; max-width: 880px; margin: 0 auto; }}
   <div class="summary" id="summary"></div>
   <div id="list"></div>
 </main>
-<script type="application/json" id="brain-data">{payload}</script>
+<script type="application/json" id="memory-data">{payload}</script>
 <script>
 (function() {{
-  var dataNode = document.getElementById('brain-data');
+  var dataNode = document.getElementById('memory-data');
   var data;
   try {{ data = JSON.parse(dataNode.textContent); }}
-  catch(e) {{ document.getElementById('list').innerHTML = '<p class="empty">Failed to parse embedded BRAIN data: ' + e.message + '</p>'; return; }}
+  catch(e) {{ document.getElementById('list').innerHTML = '<p class="empty">Failed to parse embedded memory data: ' + e.message + '</p>'; return; }}
 
   var q = document.getElementById('q');
   var kindSel = document.getElementById('kind');

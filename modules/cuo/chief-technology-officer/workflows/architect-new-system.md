@@ -40,7 +40,7 @@ consults:
   - { persona: cuo/chief-ai-officer,           when: "the system is AI-driven — verify EU AI Act risk-class + AI-specific test cases in test-strategy" }
 
 audit_hooks:
-  - each skill emits one artefact_write row to the BRAIN audit chain per its frontmatter audit.row_kind
+  - each skill emits one artefact_write row to the memory audit chain per its frontmatter audit.row_kind
   - workflow emits a single workflow_complete row at the end with the 5-artefact summary + per-artefact hash
   - HITL pauses (typically at step 1 PLAN approval, step 5 STRIDE-S boundary call, step 9 capacity-band approval) halt the chain
 ---

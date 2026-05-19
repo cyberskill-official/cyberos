@@ -346,8 +346,8 @@ flowchart TB
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">SDK choice</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><strong>TypeScript:</strong> official <code>@modelcontextprotocol/sdk</code> (1.20+) — used by 19 of 22 modules</li>
- <li><strong>Rust:</strong> CyberSkill-published <code>mcp-rs</code> — used by BRAIN, Skill (the two Rust-first modules)</li>
+ <li><strong>TypeScript:</strong> official <code>@modelcontextprotocol/sdk</code> (1.20+) — used by 19 of 23 modules</li>
+ <li><strong>Rust:</strong> CyberSkill-published <code>mcp-rs</code> — used by memory, Skill (the two Rust-first modules)</li>
  <li><strong>Tool registration</strong> — annotation-validated at startup; CI conformance test in module-template</li>
  </ul>
  </div>
@@ -410,7 +410,7 @@ flowchart TB
  <div class="bbg-card p-6 mb-5">
  <p class="text-slate-700 mb-3"><strong>Pick:</strong> TypeScript (GraphQL Yoga) or Rust (async-graphql) per subgraph, choice owned by module owner.</p>
  <p class="text-slate-600 text-sm leading-relaxed">
- Most subgraphs are TypeScript for developer ergonomics. The two performance-critical modules — BRAIN (memory writer hot path) and Skill (Wasmtime runtime, capability broker) — are Rust. Module owners pick per module; the contract (Apollo Federation SDL) is identical regardless.
+ Most subgraphs are TypeScript for developer ergonomics. The two performance-critical modules — memory (memory writer hot path) and Skill (Wasmtime runtime, capability broker) — are Rust. Module owners pick per module; the contract (Apollo Federation SDL) is identical regardless.
  </p>
  </div>
 
@@ -503,7 +503,7 @@ flowchart TB
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">NFR ceilings</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li>N(FR pending) — BRAIN search ≤ 250ms p95 on 1M chunks</li>
+ <li>N(FR pending) — memory search ≤ 250ms p95 on 1M chunks</li>
  <li>Embed p95 ≤ 80ms; rerank p95 ≤ 200ms</li>
  <li>End-to-end retrieve: embed + pgvector + rerank ≤ 250ms p95</li>
  </ul>
@@ -561,7 +561,7 @@ flowchart TB
  <div class="bbg-card p-4">
  <div class="h-eyebrow mb-1">Use cases</div>
  <div class="text-xl font-black text-rose-600">5+</div>
- <div class="text-xs text-slate-500 mt-1">BRAIN archival, OBS logs, INV PDFs, ESOP docs, DOC signed</div>
+ <div class="text-xs text-slate-500 mt-1">memory archival, OBS logs, INV PDFs, ESOP docs, DOC signed</div>
  </div>
  </div>
 </section>
@@ -588,7 +588,7 @@ flowchart TB
  <li><strong>KB</strong> — collaborative document editing (Yjs + Tiptap editor)</li>
  <li><strong>PROJ</strong> — task description rich-text + checklist (Yjs)</li>
  <li><strong>Desktop offline</strong> — Tauri-based offline edits sync via Automerge when reconnected</li>
- <li><strong>BRAIN cross-tenant import</strong> — CRDT-style merge for `cyberos import` (memory module §14.2)</li>
+ <li><strong>memory cross-tenant import</strong> — CRDT-style merge for `cyberos import` (memory module §14.2)</li>
  </ul>
  </div>
 </section>
@@ -604,7 +604,7 @@ flowchart TB
  <div class="bbg-card p-6 mb-5">
  <p class="text-slate-700 mb-3"><strong>Pick:</strong> Ed25519 signatures + scrypt key-wrap + Merkle Mountain Range (MMR) + Signed Tree Heads (STH).</p>
  <p class="text-slate-600 text-sm leading-relaxed">
- BRAIN's audit ledger uses MMR for additive inclusion proofs. Each consolidation cycle signs a Tree Head with Ed25519. Signing keys are passphrase-wrapped via scrypt (P2 Stage 2). Detailed in <a href="../modules/brain.html" class="text-rose-700 font-semibold">BRAIN module page</a>.
+ memory's audit ledger uses MMR for additive inclusion proofs. Each consolidation cycle signs a Tree Head with Ed25519. Signing keys are passphrase-wrapped via scrypt (P2 Stage 2). Detailed in <a href="../modules/memory.html" class="text-rose-700 font-semibold">memory module page</a>.
  </p>
  </div>
 
@@ -621,10 +621,10 @@ flowchart TB
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Where used</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><strong>BRAIN audit chain</strong> — every memory operation appends a leaf; STH signed per consolidation.</li>
+ <li><strong>memory audit chain</strong> — every memory operation appends a leaf; STH signed per consolidation.</li>
  <li><strong> AuditEvent</strong> — per-scope Merkle chain; prevHash chained.</li>
  <li><strong>DEC-019</strong> — Merkle-chained audit log invariant.</li>
- <li><strong>N(FR pending)</strong> — BRAIN signed-zip portability: Ed25519 sig + Merkle proof.</li>
+ <li><strong>N(FR pending)</strong> — memory signed-zip portability: Ed25519 sig + Merkle proof.</li>
  </ul>
  </div>
  </div>
@@ -711,7 +711,7 @@ flowchart TB
  <h2 class="h-1">Tier 16 — Typography &amp; design tokens</h2>
  </div>
  <div class="bbg-card p-6 mb-5">
- <p class="text-slate-700 mb-3"><strong>Pick:</strong> Be Vietnam Pro (UI) + JetBrains Mono (code) + CyberSkill Global Design System v1.0.0.</p>
+ <p class="text-slate-700 mb-3"><strong>Pick:</strong> Be Vietnam Pro (UI) + JetMemorys Mono (code) + CyberSkill Global Design System v1.0.0.</p>
  <p class="text-slate-600 text-sm leading-relaxed">
  Be Vietnam Pro is the diacritic-aware Vietnamese-first typeface; the Design System Part 5 specifies stack-fidelity (N(FR pending)). Tokens are exported in W3C DTCG format (2025.10) for cross-platform consumption (Style Dictionary, Tailwind via PostCSS plugin, iOS/Android, Figma).
  </p>
@@ -720,7 +720,7 @@ flowchart TB
  <h4 class="font-bold mb-2 text-slate-900">Token surface</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
  <li><strong>Anchors</strong> — Umber #45210E, Ochre #F4BA17, sub-brand accents</li>
- <li><strong>Typography</strong> — Be Vietnam Pro (UI), JetBrains Mono (code)</li>
+ <li><strong>Typography</strong> — Be Vietnam Pro (UI), JetMemorys Mono (code)</li>
  <li><strong>Spacing rhythm</strong> — 4px base; powers-of-two scale</li>
  <li><strong>Genie token set</strong> — dedicated panel/chip/mode-indicator tokens; versioned alongside CUO persona</li>
  </ul>

@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-DOC-001, FR-INV-001, FR-CRM-010, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-DOC-001, FR-INV-001, FR-CRM-010, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CRM-010]
 blocks: []
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1454 2026-05-17 — Per-engagement reimbursement policy: defines per-kind caps + approval thresholds + currency
   - DEC-1455 2026-05-17 — Async OCR via FR-MCP-007 Tasks pattern (typical 5-30s); status polling for client UI
   - DEC-1456 2026-05-17 — Hóa đơn extraction (VN tenants): MST (10-digit), total VND, issued_at, supplier_name, VAT amount; non-VN receipts: generic merchant/total/date
-  - DEC-1457 2026-05-17 — BRAIN audit kinds: time.expense_captured, time.expense_ocr_completed, time.expense_confirmed, time.expense_rejected, time.expense_invoiced, time.expense_ocr_failed
+  - DEC-1457 2026-05-17 — memory audit kinds: time.expense_captured, time.expense_ocr_completed, time.expense_confirmed, time.expense_rejected, time.expense_invoiced, time.expense_ocr_failed
 
 build_envelope:
   language: rust 1.81
@@ -90,7 +90,7 @@ risk_if_skipped: "Without expense capture, Members keep paper receipts → lost 
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship expense capture pipeline at `services/time/src/expense/` with photo upload → async OCR via FR-MCP-007 → hóa đơn or generic parsing → Member confirm → policy validation → optional invoice attach, 7-kind enum, 5-state status enum, and 6 BRAIN audit kinds.
+The TIME service **MUST** ship expense capture pipeline at `services/time/src/expense/` with photo upload → async OCR via FR-MCP-007 → hóa đơn or generic parsing → Member confirm → policy validation → optional invoice attach, 7-kind enum, 5-state status enum, and 6 memory audit kinds.
 
 1. **MUST** define closed `expense_kind` enum: `('meal','transport','accommodation','supplies','communication','other_billable','other_non_billable')` per DEC-1451. Cardinality 7.
 
@@ -140,7 +140,7 @@ The TIME service **MUST** ship expense capture pipeline at `services/time/src/ex
     - Transitions expense status='invoiced' + populates invoice_line_id.
     - Emits `time.expense_invoiced` sev-2.
 
-13. **MUST** emit 6 BRAIN audit kinds per DEC-1457. PII-scrub merchant/supplier name via FR-BRAIN-111 — hash only in chain.
+13. **MUST** emit 6 memory audit kinds per DEC-1457. PII-scrub merchant/supplier name via FR-MEMORY-111 — hash only in chain.
 
 14. **MUST** thread trace_id end-to-end.
 
@@ -252,7 +252,7 @@ POST   /v1/admin/engagements/{id}/expense-policy            (engagement_admin)
 9. **Above approval threshold** — requires_admin_approval=true; status stays pending.
 10. **Invoice attach creates line** — confirmed expense → invoice line via FR-INV-001.
 11. **Reject transitions** — Member rejects → status=rejected.
-12. **6 BRAIN audit kinds emitted**.
+12. **6 memory audit kinds emitted**.
 13. **PII scrub merchant** — name_hash16 in chain only.
 14. **Trace_id end-to-end**.
 15. **RLS Member-scoped (engagement_admin/cfo broader)**.
@@ -315,7 +315,7 @@ async fn policy_cap_blocks() {
 ## §7 — Dependencies
 
 **Upstream:** FR-CRM-010 (engagement context).
-**Cross-module:** FR-DOC-001 (S3 storage), FR-MCP-007 (async OCR task), FR-PORTAL-007 (push notification), FR-INV-001 (invoice attach), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-DOC-001 (S3 storage), FR-MCP-007 (async OCR task), FR-PORTAL-007 (push notification), FR-INV-001 (invoice attach), FR-AI-003, FR-MEMORY-111.
 
 ---
 

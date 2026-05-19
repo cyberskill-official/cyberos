@@ -60,7 +60,7 @@ fn scope_map_intersection_smoke() {
 fn source_ip_hash16_format_and_dedup() {
     // G-002: source_ip_hash16 is 16 hex chars, deterministic within a
     // session, differs across IPs.
-    use cyberos_auth::brain_bridge::source_ip_hash16;
+    use cyberos_auth::memory_bridge::source_ip_hash16;
     let a = source_ip_hash16("203.0.113.4");
     let b = source_ip_hash16("203.0.113.4");
     let c = source_ip_hash16("203.0.113.5");

@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands the MCP Elicitation primitive per MCP 2025-11-25 spec; closes FR-MCP-006's elicit-mode placeholder; exposes server-initiated structured prompts via tool-side `TaskCtx::elicit()` API. Final form: 1,090 lines, 25 §1 normative clauses (1 migration, 5 elicitation types with fixed per-type JSON Schemas, request/response/cancel endpoints, JSON Schema validation, NATS push + polling transports, file_upload via presigned S3, FR-MCP-006 confirmation integration, 5 BRAIN audit kinds + 1 cross-caller security audit kind, sync-tool ban), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 20 implementation notes.
+The spec lands the MCP Elicitation primitive per MCP 2025-11-25 spec; closes FR-MCP-006's elicit-mode placeholder; exposes server-initiated structured prompts via tool-side `TaskCtx::elicit()` API. Final form: 1,090 lines, 25 §1 normative clauses (1 migration, 5 elicitation types with fixed per-type JSON Schemas, request/response/cancel endpoints, JSON Schema validation, NATS push + polling transports, file_upload via presigned S3, FR-MCP-006 confirmation integration, 5 memory audit kinds + 1 cross-caller security audit kind, sync-tool ban), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 20 implementation notes.
 
 6 issues caught by self-audit, all resolved.
 

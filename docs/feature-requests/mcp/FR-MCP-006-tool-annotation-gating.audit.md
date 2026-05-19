@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands MCP tool-annotation gating at the gateway entry per MCP 2025-11-25 spec, with per-tenant policy + confirm-mode ack + elicit-mode placeholder (delegating to FR-MCP-008) + bypass-token + audit-only transition mode + nightly drift detection + 5 BRAIN audit kinds. Final form: 1,070 lines, 25 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 21 failure-mode rows, 19 implementation notes. 3 migrations, 4 REST endpoints (1 caller-facing + 3 admin), defense-in-depth gating at the single ingress point.
+The spec lands MCP tool-annotation gating at the gateway entry per MCP 2025-11-25 spec, with per-tenant policy + confirm-mode ack + elicit-mode placeholder (delegating to FR-MCP-008) + bypass-token + audit-only transition mode + nightly drift detection + 5 memory audit kinds. Final form: 1,070 lines, 25 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 21 failure-mode rows, 19 implementation notes. 3 migrations, 4 REST endpoints (1 caller-facing + 3 admin), defense-in-depth gating at the single ingress point.
 
 6 issues caught by self-audit, all resolved.
 
@@ -19,7 +19,7 @@ The spec lands MCP tool-annotation gating at the gateway entry per MCP 2025-11-2
 
 ### ISS-001 — Fail-open vs fail-closed on audit-row insert failure
 
-§10 row "Audit log row insert fails post-decision" said "decision proceeds (FAIL-OPEN on audit)". This is a deliberate choice but the rationale needed to be explicit. Resolved: §10 row now spells out the choice — FAIL-OPEN preferred because alternative (FAIL-CLOSED) denies all tool calls during Postgres incident, which is worse blast radius than missing one audit row. Sev-2 alert ensures the missed audit is forensically traceable via OBS even if BRAIN chain row is absent. AUTHORING.md §8.2d-style absence-claim applies — CI lint enforces the audit emit path.
+§10 row "Audit log row insert fails post-decision" said "decision proceeds (FAIL-OPEN on audit)". This is a deliberate choice but the rationale needed to be explicit. Resolved: §10 row now spells out the choice — FAIL-OPEN preferred because alternative (FAIL-CLOSED) denies all tool calls during Postgres incident, which is worse blast radius than missing one audit row. Sev-2 alert ensures the missed audit is forensically traceable via OBS even if memory chain row is absent. AUTHORING.md §8.2d-style absence-claim applies — CI lint enforces the audit emit path.
 
 ### ISS-002 — Bypass-scope provenance + revocation
 
@@ -45,7 +45,7 @@ A delete-by-id call is idempotent (delete twice = same outcome) AND destructive.
 
 All 6 mechanical concerns addressed. Fail-open audit semantic justified; bypass-scope hardening clear; idempotent hint semantics explicit; cross-FR contract with FR-MCP-007 declared; policy reload race-free via Arc-swap; platform-default fallback explicit.
 
-The 1,070-line length is justified by 3 migrations + 4 endpoints + 5 BRAIN kinds + 6 enum values + 20 ACs + drift detection sub-system. Density matches peer FRs.
+The 1,070-line length is justified by 3 migrations + 4 endpoints + 5 memory kinds + 6 enum values + 20 ACs + drift detection sub-system. Density matches peer FRs.
 
 **Score = 10/10.**
 

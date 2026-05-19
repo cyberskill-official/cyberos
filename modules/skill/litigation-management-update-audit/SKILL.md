@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: litigation-management-update-audit
-description: Audits a litigation-management-update@1 artefact against litigation_mgmt_update_rubric@1.0. Validates FM + SEC structure, per-matter exposure quantification, settlement-posture freshness, outside-counsel-cost benchmarking vs ACC Value Challenge, and reserve-recommendation consistency with accounting reserve.
-  Audit one or more existing litigation-management-update@1 markdowns against
-  litigation-mgmt-update_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  litigation-management-update-author.
+description: >-
+  Audits a litigation-management-update@1 artefact against litigation_mgmt_update_rubric@1.0. Validates FM + SEC structure, per-matter exposure quantification, settlement-posture freshness, outside-counsel-cost benchmarking vs ACC Value Challenge, and reserve-recommendation consistency with accounting reserve. Audit one or more existing litigation-management-update@1 markdowns against litigation-mgmt-update_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after litigation-management-update-author. Use when user asks to "audit this litigation management update" or "check the litigation management update". Do NOT use for "draft a new litigation management update" (use litigation-management-update-author instead). Audit one or more existing litigation-management-update@1 markdowns against litigation-mgmt-update_rubric@1.0. Produces a sibling .audit.md per artefact plus an AU...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: litigation-mgmt-update_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

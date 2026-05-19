@@ -3,7 +3,7 @@ id: FR-OBS-005
 title: "W3C TraceContext correlation across logs/metrics/traces/AI-traces — propagate, embed, exemplar, end-to-end CI test"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-002, FR-OBS-003, FR-OBS-004, FR-AI-022]
 depends_on: [FR-OBS-001, FR-OBS-003, FR-OBS-004]
 blocks: []
@@ -38,7 +38,7 @@ modified_files:
   - services/ai-gateway/**                                # use with_trace_context wrapper
   - services/auth/**
   - services/chat/**
-  - services/brain/**
+  - services/memory/**
   - crates/cyberos-obs-sdk/src/red.rs                     # exemplar emission
 allowed_tools:
   - file_read: services/**, crates/cyberos-obs-sdk/**
@@ -61,7 +61,7 @@ sub_tasks:
   - "0.5h: log_enrichment_test — every log line in test capture has trace_id + tenant_id"
   - "1.5h: end_to_end_correlation_test.rs — synthetic call → assert log + span + langsmith + metric all share trace_id"
   - "0.5h: obs-correlation-gate.yml CI workflow"
-  - "1.0h: Service integration — apply to every axum middleware in AI Gateway + AUTH + CHAT + BRAIN"
+  - "1.0h: Service integration — apply to every axum middleware in AI Gateway + AUTH + CHAT + memory"
 risk_if_skipped: "Investigation requires joining 4 tools (Loki + Prometheus + Tempo + LangSmith) by timestamp. 'Why was call X slow?' takes 30 minutes (search each tool, correlate by tenant + time window) instead of 30 seconds (paste trace_id everywhere). Without trace_id in logs, structured-log search by trace_id (the primary debug query) is impossible. Without exemplars, jumping from a Grafana latency spike to the offending trace requires manual time-window narrowing."
 ---
 
@@ -69,7 +69,7 @@ risk_if_skipped: "Investigation requires joining 4 tools (Loki + Prometheus + Te
 
 Every CyberOS service **MUST** propagate W3C TraceContext via HTTP headers AND embed `trace_id` + `span_id` into every structured log line + Prometheus histogram exemplar. Each piece:
 
-1. **MUST** parse incoming HTTP `traceparent` header per W3C spec at every service boundary; if absent or malformed, generate a new trace_id (NEVER reject the request — TraceContext is operational, not security). Edge services (CHAT, AUTH) typically generate; internal services (AI Gateway, BRAIN) typically receive.
+1. **MUST** parse incoming HTTP `traceparent` header per W3C spec at every service boundary; if absent or malformed, generate a new trace_id (NEVER reject the request — TraceContext is operational, not security). Edge services (CHAT, AUTH) typically generate; internal services (AI Gateway, memory) typically receive.
 2. **MUST** include `trace_id` + `span_id` + `tenant_id` fields in EVERY structured log line emitted by CyberOS services. Implementation: `tracing-subscriber` layer that pulls from current OTel context and adds the fields automatically. No manual `info!(trace_id = ..., ...)` boilerplate at call sites.
 3. **MUST** include `trace_id` as Prometheus exemplar on the `cyberos_duration_ms` histogram (FR-OBS-003). Exemplars let Grafana operators click a histogram bucket and jump directly to the offending trace in Tempo. The OTel SDK's `record` method supports exemplar injection natively.
 4. **MUST** forward `traceparent` (and `tracestate` + `baggage`) to downstream HTTP calls. The HTTP client wrapper auto-injects from the current span's context. Manual `req.headers_mut().insert("traceparent", ...)` at call sites is forbidden — use the wrapper.
@@ -77,7 +77,7 @@ Every CyberOS service **MUST** propagate W3C TraceContext via HTTP headers AND e
 6. **MUST** include `tenant_id` in every log line + every metric label (extracted from current request context). Without tenant_id, multi-tenant filtering at the OBS layer (FR-OBS-002) doesn't work.
 7. **MUST** be CI-gated by `obs-correlation-gate.yml`: the workflow runs `end_to_end_correlation_test.rs` which makes a synthetic AI call, waits for OTel batches to flush, then queries Loki + Tempo + LangSmith + Prometheus and asserts all 4 systems hold records for the same trace_id.
 8. **MUST** preserve trace_id through tokio tasks (e.g., async background work). The `tracing::Instrument` extension propagates the span across `tokio::spawn`; this FR requires its use throughout.
-9. **MUST** preserve trace_id through cross-process boundaries (subprocess spawns, e.g., brain_writer subprocess). The OTel context is serialised via env vars `OTEL_TRACE_ID` and `OTEL_SPAN_ID`; the subprocess restores at boot.
+9. **MUST** preserve trace_id through cross-process boundaries (subprocess spawns, e.g., memory_writer subprocess). The OTel context is serialised via env vars `OTEL_TRACE_ID` and `OTEL_SPAN_ID`; the subprocess restores at boot.
 10. **MUST** generate W3C-compliant trace_id (16 random bytes, hex-encoded as 32-char string) when no incoming header. The `opentelemetry::trace::TraceId::from_random()` produces this.
 11. **MUST** validate parsed `traceparent` strictly per W3C spec: `00-{32hex}-{16hex}-01` format. Malformed → generate new trace_id + log WARN with hash of bad value (NOT raw — bad values may be malicious).
 12. **SHOULD** emit OTel metrics:
@@ -103,7 +103,7 @@ Every CyberOS service **MUST** propagate W3C TraceContext via HTTP headers AND e
 
 **Why preserve trace_id through tokio::spawn (§1 #8)?** Async background work (e.g., audit-row emission) is part of the same logical request. Without `Instrument`, the spawned task creates its own trace — the chain is broken; debugging "did the audit row write?" requires manual correlation.
 
-**Why preserve through cross-process boundaries (§1 #9)?** brain_writer is a subprocess; without env-var propagation, the chain is broken at process boundaries. The serialisation via env vars is the standard pattern for OTel cross-process.
+**Why preserve through cross-process boundaries (§1 #9)?** memory_writer is a subprocess; without env-var propagation, the chain is broken at process boundaries. The serialisation via env vars is the standard pattern for OTel cross-process.
 
 **Why strict traceparent validation + WARN on malformed (§1 #11)?** Malformed traceparent could be: (a) buggy client, (b) attempt to inject specific trace_id (security concern). Logging the bad value's hash (not raw) gives forensic capability without leaking attacker-controlled bytes.
 
@@ -274,7 +274,7 @@ jobs:
 10. **LangSmith trace correlates** — FR-OBS-004 export uses same trace_id; test queries LangSmith for trace_id and finds the AI call.
 11. **End-to-end CI test passes** — `end_to_end_correlation_test.rs`: synthetic call → assert log + span + langsmith + metric all share trace_id.
 12. **tokio::spawn preserves trace_id** — Background task spawned within request scope: log lines from the task carry the same trace_id.
-13. **Subprocess preserves trace_id** — brain_writer subprocess invocation sets `OTEL_TRACE_ID` env var; subprocess logs carry the same trace_id.
+13. **Subprocess preserves trace_id** — memory_writer subprocess invocation sets `OTEL_TRACE_ID` env var; subprocess logs carry the same trace_id.
 14. **W3C-compliant generated trace_id** — `from_random()` produces 16 random bytes, 32 hex chars, all lowercase.
 15. **Strict W3C parser rejects bad formats** — `traceparent: 01-...-...-01` (wrong version) → malformed; `traceparent: 00-{31hex}-{16hex}-01` (wrong length) → malformed.
 16. **Hash16 of bad traceparent NOT raw** — WARN log contains 16-hex hash, not the raw value.
@@ -487,7 +487,7 @@ All resolved. Deferred:
 - Exemplar emission is automatic if the OTel-Prometheus exporter sees a trace_id in current context when `record` is called. The wrapper ensures the context is set.
 - The HTTP client wrapper (`InstrumentedClient`) is the only sanctioned way to make outgoing HTTP calls. Direct `reqwest::Client::post` calls would skip injection — code review enforces; future lint could check.
 - The end-to-end CI test is the structural enforcement of correlation. It runs the full OTel stack + LangSmith + a synthetic call, then verifies all 4 systems agree on the trace_id. Any propagation gap fails the test.
-- Subprocess propagation via env vars (`OTEL_TRACE_ID`, `OTEL_SPAN_ID`) is the standard pattern for OTel cross-process. brain_writer subprocess restores from env at boot.
+- Subprocess propagation via env vars (`OTEL_TRACE_ID`, `OTEL_SPAN_ID`) is the standard pattern for OTel cross-process. memory_writer subprocess restores from env at boot.
 - Malformed traceparent generates new trace_id (not honors malformed) — security-aware default. Honoring would let attackers poison correlation.
 - The `unknown` tenant_id fallback is the operational signal for "caller didn't set baggage." Sev-3 alarm if rate > 1% — investigate which caller is missing the upstream call.
 

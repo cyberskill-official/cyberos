@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-001, FR-EMAIL-003, FR-EMAIL-004, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-001, FR-EMAIL-003, FR-EMAIL-004, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001, FR-AUTH-004]
 blocks: []
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1463 2026-05-17 — Closed enum `auth_outcome` = {success, jwt_invalid, jwt_expired, jwt_wrong_audience, subject_revoked, mailbox_unauthorized}; cardinality 6
   - DEC-1464 2026-05-17 — Token caching: validated JWT cached 60s in Redis (avoid per-request JWT verify on IMAP idle); cache key = (jti, subject_id)
   - DEC-1465 2026-05-17 — FR-PORTAL-004 SCIM deprovision invalidates Redis cache + Stalwart connection rejected on next operation
-  - DEC-1466 2026-05-17 — BRAIN audit kinds: email.auth_success, email.auth_failed, email.mailbox_accessed, email.smtp_send_authorized
+  - DEC-1466 2026-05-17 — memory audit kinds: email.auth_success, email.auth_failed, email.mailbox_accessed, email.smtp_send_authorized
 
 build_envelope:
   language: rust 1.81
@@ -81,7 +81,7 @@ risk_if_skipped: "Without authbridge, Stalwart auth + CyberOS auth are separate 
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship Stalwart authbridge plugin at `services/email/src/authbridge/` validating FR-AUTH-004 JWTs against per-tenant mailbox scope, with 60s Redis cache, FR-PORTAL-004 SCIM revoke cascade, 6-outcome enum, and 4 BRAIN audit kinds.
+The EMAIL service **MUST** ship Stalwart authbridge plugin at `services/email/src/authbridge/` validating FR-AUTH-004 JWTs against per-tenant mailbox scope, with 60s Redis cache, FR-PORTAL-004 SCIM revoke cascade, 6-outcome enum, and 4 memory audit kinds.
 
 1. **MUST** define closed `auth_outcome` enum: `('success','jwt_invalid','jwt_expired','jwt_wrong_audience','subject_revoked','mailbox_unauthorized')` per DEC-1463. Cardinality 6.
 
@@ -101,7 +101,7 @@ The EMAIL service **MUST** ship Stalwart authbridge plugin at `services/email/sr
 
 6. **MUST** define `email_auth_log` at migration `0001`: `(id BIGSERIAL, tenant_id UUID, subject_id UUID, protocol TEXT, outcome auth_outcome, source_ip_hash16 TEXT, ts TIMESTAMPTZ DEFAULT now())`. Append-only.
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-1466. PII-scrub source_ip via FR-BRAIN-111.
+7. **MUST** emit 4 memory audit kinds per DEC-1466. PII-scrub source_ip via FR-MEMORY-111.
 
 8. **MUST** thread trace_id end-to-end.
 
@@ -159,7 +159,7 @@ Stalwart backend HTTP contract: `POST /v1/email/auth` returns `{ outcome, mailbo
 6. **60s cache hit** — second request within 60s returns cached.
 7. **Cache TTL respected** — at T+61s, re-validates.
 8. **SCIM revoke invalidates cache** — NATS event → next request 'subject_revoked'.
-9. **4 BRAIN audit kinds emitted**.
+9. **4 memory audit kinds emitted**.
 10. **Per-tenant mailbox path correct** — `subj@tenant.cyberos.world` format.
 11. **Cross-tenant attempt denied** — subject from tenant A trying tenant B mailbox → mailbox_unauthorized.
 12. **Source IP PII-scrubbed**.
@@ -218,7 +218,7 @@ async fn scim_revoke_invalidates() {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-001, FR-AUTH-004.
-**Cross-module:** FR-PORTAL-004 (SCIM cascade), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-PORTAL-004 (SCIM cascade), FR-AI-003, FR-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |

@@ -143,7 +143,7 @@ def build_schema() -> dict:
         "$id": "https://cyberos.world/schemas/memory.json",
         "title": "CyberOS Layer-1 Memory Protocol",
         "description": (
-            "Machine-validatable schema for the CyberOS BRAIN. Generated "
+            "Machine-validatable schema for the CyberOS memory. Generated "
             "from cyberos.core msgspec Structs by "
             "memory/tools/cyberos_generate_schema.py. Do not hand-edit. "
             "The protocol document (memory/docs/AGENTS.md) is the prose "

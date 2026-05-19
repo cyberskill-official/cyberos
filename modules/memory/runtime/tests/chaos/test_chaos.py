@@ -34,29 +34,29 @@ import time
 from pathlib import Path
 
 
-def setup_fake_brain() -> Path:
-    """Build a minimal BRAIN in a tmp dir."""
+def setup_fake_memory() -> Path:
+    """Build a minimal memory in a tmp dir."""
     tmp = Path(tempfile.mkdtemp(prefix="cyberos-chaos-"))
-    brain = tmp / ".cyberos-memory"
-    (brain / "audit").mkdir(parents=True)
-    (brain / "memories" / "facts").mkdir(parents=True)
-    (brain / "manifest.json").write_text(json.dumps({
+    memory = tmp / ".cyberos-memory"
+    (memory / "audit").mkdir(parents=True)
+    (memory / "memories" / "facts").mkdir(parents=True)
+    (memory / "manifest.json").write_text(json.dumps({
         "schema_version": 1,
         "project": {"id": "chaos", "name": "chaos-test"},
         "memory_count": 0,
         "audit_chain_head": "sha256:" + "0" * 64,
         "protocol": {"sha256": "x" * 64},
     }))
-    (brain / "audit" / "2026-05.jsonl").write_text("")
+    (memory / "audit" / "2026-05.jsonl").write_text("")
     return tmp
 
 
 def test_tmp_atomicity():
     """Chaos test 1: tmp+rename invariant — create a .tmp file, then crash."""
     print("\n  Test 1 — tmp+rename atomicity")
-    tmp_brain = setup_fake_brain()
+    tmp_memory = setup_fake_memory()
     # Simulate: writer creates .tmp.<file>.part, then dies before rename
-    target = tmp_brain / ".cyberos-memory" / "memories" / "facts" / "FACT-001-test.md"
+    target = tmp_memory / ".cyberos-memory" / "memories" / "facts" / "FACT-001-test.md"
     partial = target.with_name(f".tmp.{target.name}.part")
     partial.write_text("---\nmemory_id: mem_x\n---\nbody\n")
     # Simulate a recovery sweep: anything matching .tmp.*.part should be removed
@@ -65,9 +65,9 @@ def test_tmp_atomicity():
         p.unlink()
         cleaned += 1
     # Assert: no audit row mentions partial
-    audit = (tmp_brain / ".cyberos-memory" / "audit" / "2026-05.jsonl").read_text()
+    audit = (tmp_memory / ".cyberos-memory" / "audit" / "2026-05.jsonl").read_text()
     has_partial_ref = ".tmp." in audit
-    shutil.rmtree(tmp_brain)
+    shutil.rmtree(tmp_memory)
     ok = (cleaned == 1) and (not has_partial_ref)
     print(f"    {'✓' if ok else '✗'} cleaned={cleaned}, audit_clean={not has_partial_ref}")
     return ok
@@ -76,9 +76,9 @@ def test_tmp_atomicity():
 def test_enospc_simulation():
     """Chaos test 2: simulate disk full at the write step."""
     print("\n  Test 2 — ENOSPC during write")
-    tmp_brain = setup_fake_brain()
+    tmp_memory = setup_fake_memory()
     # Monkey-patch open() inside a subprocess that simulates ENOSPC
-    target = tmp_brain / ".cyberos-memory" / "memories" / "facts" / "FACT-002-enospc.md"
+    target = tmp_memory / ".cyberos-memory" / "memories" / "facts" / "FACT-002-enospc.md"
     # Try to write a 100MB file (should likely succeed in /tmp but simulate
     # failure by attempting an out-of-range fallocate that gets caught).
     try:
@@ -91,9 +91,9 @@ def test_enospc_simulation():
             handled_cleanly = False
     # Assert: nothing was written; no audit row
     target_exists = target.exists()
-    audit = (tmp_brain / ".cyberos-memory" / "audit" / "2026-05.jsonl").read_text()
+    audit = (tmp_memory / ".cyberos-memory" / "audit" / "2026-05.jsonl").read_text()
     audit_clean = audit.strip() == ""
-    shutil.rmtree(tmp_brain)
+    shutil.rmtree(tmp_memory)
     ok = handled_cleanly and not target_exists and audit_clean
     print(f"    {'✓' if ok else '✗'} handled_cleanly={handled_cleanly}, no_target={not target_exists}, audit_empty={audit_clean}")
     return ok
@@ -102,15 +102,15 @@ def test_enospc_simulation():
 def test_concurrent_writers():
     """Chaos test 3: simulate two writers; one should win via exclusive lock."""
     print("\n  Test 3 — concurrent writers (lock arbitration)")
-    tmp_brain = setup_fake_brain()
+    tmp_memory = setup_fake_memory()
     # Lock file
-    lock = tmp_brain / ".cyberos-memory" / ".lock.exclusive"
+    lock = tmp_memory / ".cyberos-memory" / ".lock.exclusive"
     lock.touch()
     try:
         import fcntl
     except ImportError:
         print("    SKIP (fcntl not available)")
-        shutil.rmtree(tmp_brain)
+        shutil.rmtree(tmp_memory)
         return True
     f1 = open(lock, "rb+")
     fcntl.flock(f1, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -123,7 +123,7 @@ def test_concurrent_writers():
         second_failed = True
     fcntl.flock(f1, fcntl.LOCK_UN)
     f1.close(); f2.close()
-    shutil.rmtree(tmp_brain)
+    shutil.rmtree(tmp_memory)
     print(f"    {'✓' if second_failed else '✗'} second writer correctly blocked")
     return second_failed
 

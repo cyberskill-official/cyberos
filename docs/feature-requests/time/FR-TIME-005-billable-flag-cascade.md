@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-PROJ-006, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-PROJ-006, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-TIME-001, FR-PROJ-006]
 blocks: [FR-TIME-009]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1412 2026-05-17 — Cascade order: entry.override > project.default > engagement.policy > tenant.default; first non-NULL wins
   - DEC-1413 2026-05-17 — Member CAN override per-entry (UI checkbox); engagement_admin can override project default; cfo can override engagement policy
   - DEC-1414 2026-05-17 — Snapshot principle: invoice-time queries use `entries.is_billable` directly; no live re-cascade; ensures invoice immutability
-  - DEC-1415 2026-05-17 — BRAIN audit kinds: time.billable_resolved, time.billable_overridden_at_entry, time.project_default_changed, time.engagement_policy_changed
+  - DEC-1415 2026-05-17 — memory audit kinds: time.billable_resolved, time.billable_overridden_at_entry, time.project_default_changed, time.engagement_policy_changed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without cascade, every TIME entry needs explicit billable flag
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship 4-step billable-flag cascade at `services/time/src/billable/` with closed source enum, snapshot at entry-write, override-at-each-level controls, and 4 BRAIN audit kinds.
+The TIME service **MUST** ship 4-step billable-flag cascade at `services/time/src/billable/` with closed source enum, snapshot at entry-write, override-at-each-level controls, and 4 memory audit kinds.
 
 1. **MUST** define closed `billable_source` enum: `('entry_override','project_default','engagement_policy','tenant_default')` per DEC-1411. Cardinality 4.
 
@@ -91,9 +91,9 @@ The TIME service **MUST** ship 4-step billable-flag cascade at `services/time/sr
    - engagement_admin: `PATCH /v1/projects/{id}` body `{ billable_default }` (project-level).
    - cfo: `PATCH /v1/engagements/{id}` body `{ billable_default }` (engagement-level).
    - cfo: `PATCH /v1/admin/tenants/{id}` body `{ billable_default }` (tenant-level).
-   - Each level change emits respective BRAIN audit row.
+   - Each level change emits respective memory audit row.
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-1415:
+7. **MUST** emit 4 memory audit kinds per DEC-1415:
    - `time.billable_resolved` (sev-3 — informational; sampled 1%)
    - `time.billable_overridden_at_entry` (sev-3 — when Member uses checkbox)
    - `time.project_default_changed` (sev-2)
@@ -150,7 +150,7 @@ PATCH  /v1/admin/tenants/{id}   { billable_default }     (cfo)
 4. **Project override** — project.billable_default=false (engagement=true) → entry billable=false; source=project_default.
 5. **Entry override** — Member sets billable_override=true (project=false) → entry billable=true; source=entry_override.
 6. **Snapshot immutable** — entry created billable=true; subsequent engagement policy change to false → entry remains billable=true.
-7. **4 BRAIN audit kinds emitted**.
+7. **4 memory audit kinds emitted**.
 8. **Tenant default required** — INSERT tenants without billable_default fails NOT NULL.
 9. **Engagement_admin updates project** — PATCH succeeds + audit.
 10. **CFO updates engagement** — PATCH succeeds + audit.
@@ -211,7 +211,7 @@ async fn snapshot_immutable() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TIME-001 (entry write), FR-PROJ-006 (project billable_default column).
-**Cross-module:** FR-AUTH-101 (engagement_admin + cfo roles), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-AUTH-101 (engagement_admin + cfo roles), FR-AI-003, FR-MEMORY-111.
 
 ---
 
@@ -278,7 +278,7 @@ Deferred:
 
 **§11.5** UI form pre-fetches cascade preview ("This will be billable based on engagement policy").
 
-**§11.6** Policy change endpoints emit BRAIN before commit (atomic).
+**§11.6** Policy change endpoints emit memory before commit (atomic).
 
 **§11.7** Tenant default defaults to TRUE on tenant create (most consultancies bill by default).
 

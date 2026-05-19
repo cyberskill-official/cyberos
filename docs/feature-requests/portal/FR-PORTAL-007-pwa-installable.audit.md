@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands PWA installable + service worker + Web Push on top of FR-PORTAL-001. 660 lines, 20 §1 normative clauses, 20 ACs, 5 verification tests, 16 failure-mode rows, 10 implementation notes. 2 migrations, 6 endpoints, 4 BRAIN audit kinds.
+The spec lands PWA installable + service worker + Web Push on top of FR-PORTAL-001. 660 lines, 20 §1 normative clauses, 20 ACs, 5 verification tests, 16 failure-mode rows, 10 implementation notes. 2 migrations, 6 endpoints, 4 memory audit kinds.
 
 6 issues resolved.
 

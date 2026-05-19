@@ -21,11 +21,11 @@
 use axum::{
     extract::{Json as JsonInput, Path, Query, State},
     http::{header, StatusCode},
-    response::{Html, IntoResponse, Json, Redirect, Response},
+    response::{Html, IntoResponse, Json, Response},
     Extension,
 };
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{json, Value};
 use uuid::Uuid;
 

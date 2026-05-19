@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CPO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PORTAL-001, FR-PORTAL-002, FR-PORTAL-003, FR-PORTAL-005, FR-PORTAL-006, FR-EMAIL-001, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-PORTAL-001, FR-PORTAL-002, FR-PORTAL-003, FR-PORTAL-005, FR-PORTAL-006, FR-EMAIL-001, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-PORTAL-001]
 blocks: []
 
@@ -33,7 +33,7 @@ source_decisions:
   - DEC-1267 2026-05-17 — User notification preferences stored in `portal_pwa_subscriptions` table; default all-enabled; user can opt out per kind
   - DEC-1268 2026-05-17 — Rate limit: 100 push notifications per user per day (prevent notification spam)
   - DEC-1269 2026-05-17 — Service worker version bumped on every deploy; cache invalidation triggered by version mismatch
-  - DEC-1270 2026-05-17 — BRAIN audit kinds: portal.pwa_subscription_created, portal.pwa_subscription_revoked, portal.pwa_notification_sent, portal.pwa_notification_delivery_failed
+  - DEC-1270 2026-05-17 — memory audit kinds: portal.pwa_subscription_created, portal.pwa_subscription_revoked, portal.pwa_notification_sent, portal.pwa_notification_delivery_failed
   - DEC-1271 2026-05-17 — Mobile-first responsive design via Tailwind breakpoints; minimum supported viewport 320×568 (iPhone SE); design targets 360×640 (Android baseline)
 
 build_envelope:
@@ -99,7 +99,7 @@ risk_if_skipped: "Without PWA, mobile clients use the standard web view — no i
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship Progressive Web App support at `services/portal/src/pwa/` with per-tenant manifest, service worker for offline-cached views + push notifications, VAPID-signed Web Push, user notification preferences, mobile-first responsive UI, and 4 BRAIN audit kinds.
+The PORTAL service **MUST** ship Progressive Web App support at `services/portal/src/pwa/` with per-tenant manifest, service worker for offline-cached views + push notifications, VAPID-signed Web Push, user notification preferences, mobile-first responsive UI, and 4 memory audit kinds.
 
 1. **MUST** define closed `pwa_notification_kind` enum: `('workflow_status_changed','dsar_ready','genie_mention','channel_mention','billing_alert')` per DEC-1266. Cardinality asserts 5.
 
@@ -151,7 +151,7 @@ The PORTAL service **MUST** ship Progressive Web App support at `services/portal
 
 15. **MUST** version service worker on every deploy per DEC-1269. Cache key includes deploy timestamp; old caches deleted on activation.
 
-16. **MUST** emit 4 BRAIN audit kinds per DEC-1270:
+16. **MUST** emit 4 memory audit kinds per DEC-1270:
    - `portal.pwa_subscription_created` (sev-3)
    - `portal.pwa_subscription_revoked` (sev-3)
    - `portal.pwa_notification_sent` (sev-3 — high-volume, sampled 1%)
@@ -268,7 +268,7 @@ GET    /v1/portal/pwa/subscriptions                   (caller — own subscripti
 15. **NATS event → push** — dispatcher subscribes to events; matching subscription gets push.
 16. **Subscription dedup per device** — same endpoint twice → second is no-op.
 17. **Failed delivery logged** — push provider 410 (gone) → marks subscription revoked + log failure.
-18. **4 BRAIN audit kinds emitted** — subscribe + revoke + sent + failed all emit.
+18. **4 memory audit kinds emitted** — subscribe + revoke + sent + failed all emit.
 19. **Trace_id threaded** — source event → dispatcher → push → log all share trace_id.
 20. **Cache invalidation on deploy** — new SW version triggers old-cache delete on activation.
 
@@ -313,7 +313,7 @@ async fn workflow_status_change_triggers_push() {
 ## §7 — Dependencies
 
 **Upstream:** FR-PORTAL-001 (views to cache offline).
-**Cross-module:** FR-PORTAL-002 (brand in manifest + notifications), FR-PORTAL-003 (auth for subscribe), FR-PORTAL-005 (genie_mention event source), FR-PORTAL-006 (workflow_status_changed event), FR-PORTAL-008 (dsar_ready event), FR-CHAT-005 (channel_mention), FR-INV-001 (billing_alert), FR-EMAIL-001 (fallback channel), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-PORTAL-002 (brand in manifest + notifications), FR-PORTAL-003 (auth for subscribe), FR-PORTAL-005 (genie_mention event source), FR-PORTAL-006 (workflow_status_changed event), FR-PORTAL-008 (dsar_ready event), FR-CHAT-005 (channel_mention), FR-INV-001 (billing_alert), FR-EMAIL-001 (fallback channel), FR-AI-003, FR-MEMORY-111.
 **Downstream:** None.
 
 ---

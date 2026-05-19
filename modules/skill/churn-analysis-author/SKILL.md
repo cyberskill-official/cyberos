@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: churn-analysis-author
-description: Authors a quarterly churn-analysis report — cohort identification, segmentation by reason / size / tenure / persona-fit, root-cause synthesis on verbatims + exit-interview data, win-back program design, leading indicators for at-risk accounts. Per Reichheld customer-economics + Gainsight + Catalyst customer-success benchmarks + TSIA churn-benchmarking + Bessemer Cloud Index SaaS benchmarks.
-  Author a CHURN_ANALYSIS markdown from source artefact(s). Generates a
-  versioned churn-analysis@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  churn-analysis-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Authors a quarterly churn-analysis report — cohort identification, segmentation by reason / size / tenure / persona-fit, root-cause synthesis on verbatims + exit-interview data, win-back program design, leading indicators for at-risk accounts. Per Reichheld customer-economics + Gainsight + Catalyst customer-success benchmarks + TSIA churn-benchmarking + Bessemer Cloud Index SaaS benchmarks. Author a CHURN_ANALYSIS markdown from source artefact(s). Generates a versioned churn-analysis@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into churn-analysis-audit by default. Refuses to author when upstream artefact is in non-pass state. Use when user asks to "draft a churn analysis" or "create the churn analysis". Do NOT use for "audit existing churn analysis" (use churn-analysis-audit instead). Author a CHURN_ANALYSIS markdown from source artefact(s). Generates a versioned churn-analysis@1 file under output_dir, with per-claim authority markers and proven...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: churn-analysis_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

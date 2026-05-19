@@ -1,7 +1,7 @@
 //! FR-AUTH-101 §1 #9 + DEC-126 — background `RoleMatrix` refresher.
 //!
 //! Spawns a tokio task that calls `RoleMatrix::load_from_db` every
-//! `BRAIN_RBAC_REFRESH_SECS` (default 60s) and atomically swaps the snapshot
+//! `MEMORY_RBAC_REFRESH_SECS` (default 60s) and atomically swaps the snapshot
 //! via the shared `Arc<RwLock<RoleMatrix>>`. Failures are logged but never
 //! kill the task — the previous snapshot keeps serving.
 //!

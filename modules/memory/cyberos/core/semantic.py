@@ -17,7 +17,7 @@ Design choices:
   since the last run.
 * Quantization: int8 vectors (~ 1/4 the disk vs float32) with per-vector
   scale; cosine similarity reconstructed at query time. 384*1 byte +
-  4-byte scale = 388 bytes per memory — a 10k-memory BRAIN is ~3.8 MB.
+  4-byte scale = 388 bytes per memory — a 10k-memory memory is ~3.8 MB.
 * Privacy: 100% local. The model is downloaded once into the user's HF
   cache. No network at query time.
 

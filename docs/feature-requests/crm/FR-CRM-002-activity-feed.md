@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-001, FR-EMAIL-006, FR-EMAIL-009, FR-CHAT-005, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-001, FR-EMAIL-006, FR-EMAIL-009, FR-CHAT-005, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CRM-001, FR-EMAIL-006]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1622 2026-05-17 — Closed enum `activity_kind` = {email_inbound, email_outbound, chat_mention, calendar_meeting, deal_stage_change, note_added, call_logged}; cardinality 7
   - DEC-1623 2026-05-17 — Source URLs preserved: each activity row has source_kind + source_id + deep_link for "open original"
   - DEC-1624 2026-05-17 — Cross-source dedup: same email_thread_id from inbound + convert-to-issue + reply does NOT produce 3 activities; one row per logical event
-  - DEC-1625 2026-05-17 — BRAIN audit kinds: crm.activity_logged, crm.activity_dedup_skipped, crm.activity_correction_added; PII scrub via FR-BRAIN-111
+  - DEC-1625 2026-05-17 — memory audit kinds: crm.activity_logged, crm.activity_dedup_skipped, crm.activity_correction_added; PII scrub via FR-MEMORY-111
 
 build_envelope:
   language: rust 1.81
@@ -76,7 +76,7 @@ risk_if_skipped: "Without activity feed, CRO sees CRM as static record — no te
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship activity feed at `services/crm/src/activity/` subscribing to EMAIL/CHAT/calendar/deal events, deduplicating cross-source, logging per-contact + per-account, 3 BRAIN audit kinds.
+The CRM service **MUST** ship activity feed at `services/crm/src/activity/` subscribing to EMAIL/CHAT/calendar/deal events, deduplicating cross-source, logging per-contact + per-account, 3 memory audit kinds.
 
 1. **MUST** subscribe to events via `event_subscribers.rs`:
    - `email.inbound_processed` (FR-EMAIL-006 fires after link) → `activity_kind=email_inbound`
@@ -134,7 +134,7 @@ The CRM service **MUST** ship activity feed at `services/crm/src/activity/` subs
    GET  /v1/crm/accounts/{id}/activities?limit=50
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-1625. PII: summary text SHA-256 hashed per FR-BRAIN-111.
+7. **MUST** emit 3 memory audit kinds per DEC-1625. PII: summary text SHA-256 hashed per FR-MEMORY-111.
 
 8. **MUST** thread trace_id from source event → subscriber → logger → audit.
 
@@ -177,7 +177,7 @@ Sample activity:
 ---
 
 ## §4 — Acceptance criteria
-1. **Email inbound logged**. 2. **Email outbound logged**. 3. **Chat mention logged**. 4. **Calendar meeting logged**. 5. **Deal stage change logged**. 6. **Manual note/call POST works**. 7. **Closed enum 7 + cardinality test**. 8. **Dedup skip within 60s window**. 9. **3 BRAIN audit kinds emitted**. 10. **PII scrubbed (summary SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Deep_link present + clickable**. 14. **Pagination (desc time)**. 15. **Per-contact filter**. 16. **Per-account filter (rolls up contacts)**. 17. **Correction_to chains**. 18. **Append-only (REVOKE UPDATE)**. 19. **Activity to nonexistent contact rejected**. 20. **Source_kind enum (open: email_thread/chat/calendar/manual/etc.)**.
+1. **Email inbound logged**. 2. **Email outbound logged**. 3. **Chat mention logged**. 4. **Calendar meeting logged**. 5. **Deal stage change logged**. 6. **Manual note/call POST works**. 7. **Closed enum 7 + cardinality test**. 8. **Dedup skip within 60s window**. 9. **3 memory audit kinds emitted**. 10. **PII scrubbed (summary SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Deep_link present + clickable**. 14. **Pagination (desc time)**. 15. **Per-contact filter**. 16. **Per-account filter (rolls up contacts)**. 17. **Correction_to chains**. 18. **Append-only (REVOKE UPDATE)**. 19. **Activity to nonexistent contact rejected**. 20. **Source_kind enum (open: email_thread/chat/calendar/manual/etc.)**.
 
 ---
 
@@ -217,7 +217,7 @@ async fn append_only_no_update() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CRM-001, FR-EMAIL-006.
-**Cross-module:** FR-EMAIL-009 (outbound event), FR-CHAT-005 (mention), FR-AUTH-101 (manual logger), FR-BRAIN-111 (PII).
+**Cross-module:** FR-EMAIL-009 (outbound event), FR-CHAT-005 (mention), FR-AUTH-101 (manual logger), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -234,10 +234,10 @@ async fn append_only_no_update() {
 | Correction chain too deep (>10) | sanity check | sev-3; allow | inherent |
 
 ## §11 — Implementation notes
-- §11.1 Subscribers via internal event bus or polling FR-BRAIN audit log; choose per-deployment.
+- §11.1 Subscribers via internal event bus or polling FR-memory audit log; choose per-deployment.
 - §11.2 Dedup window 60s — short enough to catch races, long enough to allow distinct re-sends.
 - §11.3 Summary auto-generated: kind-specific template (`"Email from {sender}: {subject_first_60_chars}"`).
-- §11.4 BRAIN audit body: kind, contact_id, source ids; summary SHA256.
+- §11.4 memory audit body: kind, contact_id, source ids; summary SHA256.
 - §11.5 UI timeline shows kind icons + deep_link + relative time.
 
 ---

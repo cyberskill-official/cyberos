@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-001, FR-DOC-006, FR-DOC-002, FR-DOC-003, FR-DOC-004, FR-EMAIL-009, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-001, FR-DOC-006, FR-DOC-002, FR-DOC-003, FR-DOC-004, FR-EMAIL-009, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-DOC-001, FR-DOC-006]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1753 2026-05-17 — Reminder cadence: 24h after invite + 72h + 7d; configurable per-tenant
   - DEC-1754 2026-05-17 — Per-signer FR-DOC-006 verification BEFORE signature applied; signature_status='signed' only after both verify+sign succeed
   - DEC-1755 2026-05-17 — Signing routes to CA per signer.region: VN → FR-DOC-004 (VnPay/Viettel-CA), EU → FR-DOC-002 (QTSP), other → FR-DOC-003 (AATL)
-  - DEC-1756 2026-05-17 — BRAIN audit kinds: doc.signing_workflow_started, doc.signer_invited, doc.signer_signed, doc.signer_declined, doc.signing_workflow_completed, doc.signing_workflow_failed
+  - DEC-1756 2026-05-17 — memory audit kinds: doc.signing_workflow_started, doc.signer_invited, doc.signer_signed, doc.signer_declined, doc.signing_workflow_completed, doc.signing_workflow_failed
 
 build_envelope:
   language: rust 1.81
@@ -85,7 +85,7 @@ risk_if_skipped: "Without multi-party workflow, contracts signed manually outsid
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship multi-party signing at `services/doc/src/signing/` supporting 3 workflow types, FR-DOC-006 verification per signer, FR-DOC-002/003/004 CA routing per region, reminder cron, 6 BRAIN audit kinds.
+The DOC service **MUST** ship multi-party signing at `services/doc/src/signing/` supporting 3 workflow types, FR-DOC-006 verification per signer, FR-DOC-002/003/004 CA routing per region, reminder cron, 6 memory audit kinds.
 
 1. **MUST** expose `POST /v1/doc/documents/{id}/signing-workflows` body `{ workflow_kind, signers: [{signer_id, region, required_assurance_level, position?}], expires_in_days?, reminder_cadence_override? }`.
 
@@ -165,7 +165,7 @@ The DOC service **MUST** ship multi-party signing at `services/doc/src/signing/`
 
 9. **MUST** handle decline per DEC-1752 — signer.status=declined → block workflow completion → workflow.status=failed.
 
-10. **MUST** emit 6 BRAIN audit kinds per DEC-1756. PII per FR-BRAIN-111: signer_id (uuid) ok; signature_payload hashed.
+10. **MUST** emit 6 memory audit kinds per DEC-1756. PII per FR-MEMORY-111: signer_id (uuid) ok; signature_payload hashed.
 
 11. **MUST** thread trace_id through workflow → invite → verify → sign → audit.
 
@@ -212,7 +212,7 @@ Sample workflow:
 ---
 
 ## §4 — Acceptance criteria
-1. **3-kind workflow enum + cardinality test**. 2. **6-status enum + cardinality test**. 3. **Ordered: signer N+1 invited only after N signs**. 4. **Parallel: all invited at start**. 5. **Counter_sign: position-0 signs then others invited**. 6. **Verification required before sign**. 7. **CA routed per region (vn/eu/other)**. 8. **Reminder cron 24h/72h/7d**. 9. **Reminder cadence configurable per tenant**. 10. **Decline → workflow=failed**. 11. **All signed → workflow=completed**. 12. **Expires at expires_at → workflow=expired + remaining signers=expired**. 13. **6 BRAIN audit kinds emitted**. 14. **PII scrubbed (signature payload SHA256)**. 15. **RLS denies cross-tenant**. 16. **Trace_id preserved**. 17. **Withdraw by initiator allowed**. 18. **Append-only via REVOKE UPDATE except status cols**. 19. **Verification level mismatch → cannot sign**. 20. **Multi-region workflow: each signer routes to correct CA**.
+1. **3-kind workflow enum + cardinality test**. 2. **6-status enum + cardinality test**. 3. **Ordered: signer N+1 invited only after N signs**. 4. **Parallel: all invited at start**. 5. **Counter_sign: position-0 signs then others invited**. 6. **Verification required before sign**. 7. **CA routed per region (vn/eu/other)**. 8. **Reminder cron 24h/72h/7d**. 9. **Reminder cadence configurable per tenant**. 10. **Decline → workflow=failed**. 11. **All signed → workflow=completed**. 12. **Expires at expires_at → workflow=expired + remaining signers=expired**. 13. **6 memory audit kinds emitted**. 14. **PII scrubbed (signature payload SHA256)**. 15. **RLS denies cross-tenant**. 16. **Trace_id preserved**. 17. **Withdraw by initiator allowed**. 18. **Append-only via REVOKE UPDATE except status cols**. 19. **Verification level mismatch → cannot sign**. 20. **Multi-region workflow: each signer routes to correct CA**.
 
 ---
 
@@ -265,7 +265,7 @@ async fn ca_routed_by_region() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-001, FR-DOC-006.
-**Cross-module:** FR-DOC-002/003/004 (CA per region), FR-EMAIL-009 (invite + reminder), FR-MCP-007 (reminder cron), FR-AUTH-101 (initiator role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-002/003/004 (CA per region), FR-EMAIL-009 (invite + reminder), FR-MCP-007 (reminder cron), FR-AUTH-101 (initiator role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -285,7 +285,7 @@ async fn ca_routed_by_region() {
 - §11.1 Sign link is signed token with workflow_id + signer_row_id; expires per workflow.
 - §11.2 Reminder cron: per workflow, computes elapsed since invited_at; sends if matches cadence_hours[i].
 - §11.3 Workflow engine state machine: in_progress → completed | failed | expired | withdrawn.
-- §11.4 BRAIN audit body: workflow_id, signer_id, kind; signature payload SHA256.
+- §11.4 memory audit body: workflow_id, signer_id, kind; signature payload SHA256.
 - §11.5 CA router maps region to FR-DOC-002/003/004 module; future regions extend the table.
 
 ---

@@ -236,7 +236,7 @@ def test_digest_text_format(running_server):
     status, body = _get(f"{base}/digest?window=24h&format=text",
                         token=token, want_json=False)
     assert status == 200
-    assert "BRAIN digest" in body
+    assert "memory digest" in body
 
 
 def test_digest_json_format(running_server):

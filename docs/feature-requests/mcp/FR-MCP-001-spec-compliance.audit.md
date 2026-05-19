@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-MCP-001 ships the MCP Gateway 2025-11-25 spec baseline — initialize + tools/list + tools/call + capabilities + Streamable HTTP transport + tool annotations + JSON-RPC 2.0 + audit pair + JWT verification + per-tenant-tool rate limiting. Scope: 27 §1 normative clauses covering protocol version pinning, JSON-RPC 2.0 wire shape, Streamable HTTP + SSE, session resumption via Mcp-Session-Id, initialize handshake, capabilities advertisement (tools+prompts+resources+logging), tools/list with cursor pagination, tools/call dispatch with destructive-op stub gate, federated catalog in-memory, JSON-RPC error mapping -32700..-32099, batch requests with concurrent dispatch, JWT verify (FR-AUTH-004) + scope enforcement, sliding-window rate limit, BRAIN audit pair (started+completed), W3C traceparent propagation, /healthz endpoint, graceful shutdown. 22 rationale paragraphs. §3 contains: JSON-RPC parser, initialize handler, capabilities struct, tools_list with cursor, tools_call with dispatch + audit. 34 ACs. 32 failure-mode rows. 25 implementation notes.
+FR-MCP-001 ships the MCP Gateway 2025-11-25 spec baseline — initialize + tools/list + tools/call + capabilities + Streamable HTTP transport + tool annotations + JSON-RPC 2.0 + audit pair + JWT verification + per-tenant-tool rate limiting. Scope: 27 §1 normative clauses covering protocol version pinning, JSON-RPC 2.0 wire shape, Streamable HTTP + SSE, session resumption via Mcp-Session-Id, initialize handshake, capabilities advertisement (tools+prompts+resources+logging), tools/list with cursor pagination, tools/call dispatch with destructive-op stub gate, federated catalog in-memory, JSON-RPC error mapping -32700..-32099, batch requests with concurrent dispatch, JWT verify (FR-AUTH-004) + scope enforcement, sliding-window rate limit, memory audit pair (started+completed), W3C traceparent propagation, /healthz endpoint, graceful shutdown. 22 rationale paragraphs. §3 contains: JSON-RPC parser, initialize handler, capabilities struct, tools_list with cursor, tools_call with dispatch + audit. 34 ACs. 32 failure-mode rows. 25 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -41,8 +41,8 @@ First-pass had no rate-limiting. Resolved: §1 #12 + DEC-268 + sliding-window pe
 ### ISS-008 — Cursor pagination missing on tools/list
 First-pass returned full catalog. Resolved: §1 #6 + #15 + opaque cursor + 100/page; AC #15.
 
-### ISS-009 — `arguments_sha256` not raw arguments in BRAIN row
-First-pass stored full arguments in BRAIN (PII risk). Resolved: §1 #13 + SHA-256 hash; PII concerns addressed.
+### ISS-009 — `arguments_sha256` not raw arguments in memory row
+First-pass stored full arguments in memory (PII risk). Resolved: §1 #13 + SHA-256 hash; PII concerns addressed.
 
 ### ISS-010 — Capabilities response over-advertised
 First-pass declared `sampling` and `roots`. Resolved: §1 #5 + DEC-266 + closed capabilities {tools, prompts, resources, logging}.

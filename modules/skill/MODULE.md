@@ -392,7 +392,7 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
 
 - `docs/Software Development Process.md` (project root) — the source document this catalog implements. §2 stages (a–m), §4 templates (4.1–4.10), §3 audit framework all map directly into the catalog.
 - `cuo/` — the router module that picks which skill to invoke for a natural-language request. CUO consumes this module's catalog via `cyberos-cuo catalog`.
-- `memory/` — the BRAIN. Skills declare `allowed_brain_scopes` in their SKILL.md frontmatter; the host's capability broker enforces them. AGENTS.md §0–§17 govern the memory protocol that constrains BRAIN writes.
+- `memory/` — the memory. Skills declare `allowed_memory_scopes` in their SKILL.md frontmatter; the host's capability broker enforces them. AGENTS.md §0–§17 govern the memory protocol that constrains memory writes.
 - `skill/contracts/` — artifact schemas (PRD, SRS, FR, task, impl-plan, project-brief, chain-manifest, nats-subjects). Skills import these via `depends_on_contracts:` rather than redefining schemas locally.
 - `skill/docs/SPEC.md` — the protocol contract every skill MUST satisfy.
 - `skill/docs/AUDIT_LOOP.md` — the 8-step audit algorithm every audit skill implements.
@@ -410,7 +410,7 @@ Each skill's `produces.next_skill_recommendation` field encodes its default down
 
 §6.4  **March autonomously on continue.** Per the FR-autonomous-march memory, when a user says "continue", drain the planned-skill frontier until a decision is needed or the catalog is complete — do not pause between skills.
 
-§6.5  **AGENTS.md §14 emission.** After every session that touches non-BRAIN files, emit the §14.1 / §14.2 block as the BRAIN heartbeat signal (memory: `feedback_section_14_emission.md`). The block summarises file ops, scopes touched, rejections, and token budget.
+§6.5  **AGENTS.md §14 emission.** After every session that touches non-memory files, emit the §14.1 / §14.2 block as the memory heartbeat signal (memory: `feedback_section_14_emission.md`). The block summarises file ops, scopes touched, rejections, and token budget.
 
 §6.6  **Project self-containment.** This module references the SDP document at `docs/Software Development Process.md` in the same project root. It does NOT reference other CyberSkill projects (sale-noti, landing-page, design-system, tamagochi, design-system-audit-framework). Per memory `feedback_project_self_containment.md`, deliverables stay inside their project.
 

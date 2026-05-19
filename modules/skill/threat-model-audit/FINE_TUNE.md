@@ -35,7 +35,7 @@ Each quarter, the CSecO (or designee) SHALL:
 
 The following rules touch regulator territory and require CLO co-review on any change:
 
-- **COMP-GDPR-001** (if EU residency) — must resolve to actual document path or BRAIN memory_id.
+- **COMP-GDPR-001** (if EU residency) — must resolve to actual document path or memory memory_id.
 - **COMP-VN-001** (if Vietnam residency) — Decree 13/2023 PDPD + Decree 53/2022 cybersecurity references.
 - **COMP-AI-001** — SDP §5 AI-use disclosure requirements.
 - **COND-009** (HIPAA-aligned controls) — when PHI is in scope.

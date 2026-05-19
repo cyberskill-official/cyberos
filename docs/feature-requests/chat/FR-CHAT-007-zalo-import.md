@@ -3,7 +3,7 @@ id: FR-CHAT-007
 title: "Zalo manual export importer — `cyberos-chat import zalo --bundle.zip` with VN-Unicode normalisation and Zalo-specific message kinds"
 module: CHAT
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-CHAT-005, FR-CHAT-006, FR-CHAT-010]
 depends_on: [FR-CHAT-006]
 blocks: [FR-CHAT-010]
@@ -51,7 +51,7 @@ sub_tasks:
   - "0.5h: media files (images, voice, video) → MM file upload"
   - "1.0h: zalo_test.rs — synthetic Zalo bundle + 30+ message variants"
   - "0.5h: same checkpoint table as FR-CHAT-006"
-  - "0.5h: BRAIN audit shared with import.rs"
+  - "0.5h: memory audit shared with import.rs"
 risk_if_skipped: "Vietnamese SMB users live on Zalo (90% market share); without import, they abandon years of business chat. Zalo HTML quirks (mixed encodings, emoji shortcodes) break naive parsers. Without checkpoints, large bundles fail mid-import."
 ---
 
@@ -71,7 +71,7 @@ The Zalo importer **MUST** parse a manual Zalo HTML export bundle and import int
 7. **MUST** handle Zalo users without email: synthesize MM email `zalo-user-<zalo_id>@imported.cyberos.local`; display_name from Zalo profile.
 8. **MUST** dedup at message level by `(channel_id, zalo_msg_id)` stored in MM post props.
 9. **MUST** reuse FR-CHAT-006's checkpoint table (`import_jobs` with `source='zalo'`).
-10. **MUST** emit BRAIN audit `chat.import_*` rows same as FR-CHAT-006.
+10. **MUST** emit memory audit `chat.import_*` rows same as FR-CHAT-006.
 11. **MUST** support `--dry-run` + `--resume` flags same as FR-CHAT-006.
 12. **MUST** RLS-enforce.
 13. **MUST** emit OTel metrics with label `source=zalo`.
@@ -86,9 +86,9 @@ The Zalo importer **MUST** parse a manual Zalo HTML export bundle and import int
 19. **MUST** handle Zalo stickers: each sticker is a PNG in `stickers/<sticker_id>.png`; mapped to MM custom emoji namespace `zalo-sticker-<id>`. Posts referencing the sticker use `:zalo-sticker-<id>:` in the body.
 20. **MUST** preserve Zalo's reply primitive (Zalo has "reply to message" arrows, like Slack thread replies). Mapped to MM `root_id` via `(channel_id, zalo_parent_msg_id)` lookup. Orphan replies handled per FR-CHAT-006 pattern (top-level with `props.zalo_reply_orphan = true`).
 21. **MUST** preserve Zalo's deleted-message tombstones: `<div class="msg deleted" data-msg-id="...">` MUST produce a MM post whose body is `[message recalled]` and `delete_at > 0` AND `props.zalo_was_recalled = true`. This preserves the audit trail without exposing recalled content.
-22. **MUST** PII-redact filenames (per Vietnamese conventions, filenames frequently embed full names — `CV_TrinhThaiAnh_2026.pdf`) before BRAIN audit emit; same pattern as FR-CHAT-006 §1 #17.
+22. **MUST** PII-redact filenames (per Vietnamese conventions, filenames frequently embed full names — `CV_TrinhThaiAnh_2026.pdf`) before memory audit emit; same pattern as FR-CHAT-006 §1 #17.
 23. **MUST** detect Zalo's mixed timestamp formats: bundles MAY contain `data-ts` as seconds (older) OR milliseconds (newer) OR ISO-8601 (rare). Heuristic: if value < 10^10 → seconds (× 1000); if 10^10 ≤ value < 10^14 → milliseconds; if string contains `T` → ISO-8601. Ambiguous → fail with SEV-2 `chat.import_timestamp_ambiguous`.
-24. **MUST** preserve Zalo's group-membership history events as MM channel-member events: `<div class="event" data-type="user_joined" data-user-id="..." data-ts="...">` → MM `chat.user_joined_channel` BRAIN row.
+24. **MUST** preserve Zalo's group-membership history events as MM channel-member events: `<div class="event" data-type="user_joined" data-user-id="..." data-ts="...">` → MM `chat.user_joined_channel` memory row.
 25. **MUST** support `--bundle-encoding` flag: Zalo's older exports use Windows-1258 for VN text in some fields; default decoder is UTF-8; flag overrides for legacy exports.
 26. **MUST** verify NFC-normalised output is a valid Unicode string (round-trip through `.chars().collect::<String>()`); invalid sequences → SEV-2 warning + best-effort replacement with `U+FFFD`.
 27. **MUST** distinguish 1-1 chats from MPIM by participant count in `metadata.json::conversations[].participants[]`: 2 → DM; 3+ → MPIM (group channel).
@@ -473,7 +473,7 @@ pub fn decode(bytes: &[u8], encoding: &str) -> anyhow::Result<String> {
 9. **Checkpoint reused (source=zalo row in import_jobs)**.
 10. **--dry-run no DB writes**.
 11. **--resume picks up from last step**.
-12. **BRAIN audit emits with source=zalo**.
+12. **memory audit emits with source=zalo**.
 13. **RLS tenant isolation**.
 14. **Synthetic test bundle imports end-to-end**.
 15. **Media files uploaded to MM file store**.
@@ -484,9 +484,9 @@ pub fn decode(bytes: &[u8], encoding: &str) -> anyhow::Result<String> {
 20. **Stickers mapped to custom emoji namespace** — fixture msg with sticker_id "100" → post body contains `:zalo-sticker-100:`.
 21. **Replies map to MM root_id** — fixture with parent + 2 replies → both replies have `root_id` = parent's MM id; no orphan props.
 22. **Recalled messages produce `[message recalled]` post** — fixture `<div class="msg deleted">` → MM post body `[message recalled]`, `delete_at > 0`, `props.zalo_was_recalled = true`.
-23. **Filenames PII-redacted in BRAIN audit** — file named `CV_TrinhThaiAnh_2026.pdf` → BRAIN payload shows `CV_<NAME>_2026.pdf`; MM FileInfo retains original.
+23. **Filenames PII-redacted in memory audit** — file named `CV_TrinhThaiAnh_2026.pdf` → memory payload shows `CV_<NAME>_2026.pdf`; MM FileInfo retains original.
 24. **Mixed timestamp formats handled** — fixture with `data-ts="1700000000"` (seconds), `data-ts="1700000000000"` (ms), `data-ts="2026-05-16T08:00:00Z"` (ISO); all three convert to correct ms.
-25. **Membership events imported** — fixture with `<div class="event" data-type="user_joined">` → BRAIN `chat.user_joined_channel` row.
+25. **Membership events imported** — fixture with `<div class="event" data-type="user_joined">` → memory `chat.user_joined_channel` row.
 26. **bundle_encoding flag honoured** — bundle with cp1258 + flag → VN characters render correctly; without flag → SEV-2 decoding warning logged.
 27. **NFC validity verified** — fixture with malformed Unicode → MM post body contains U+FFFD replacement; SEV-2 warning audit.
 28. **MPIM detected by participant count** — fixture conversation with 5 participants and `type: "1on1"` → SEV-2 warning + treated as MPIM (group channel); fixture with 2 participants and `type: "group"` → SEV-2 warning + treated as DM.
@@ -585,7 +585,7 @@ async fn ac16_unsupported_version_refused() {
     let env = TestEnv::new().await;
     let r = run_all(env.fixture("zalo-unsupported.zip"), env.tenant_id(), Opts::default()).await;
     assert!(r.is_err());
-    let row = env.brain.last_of_kind("chat.import_unsupported_zalo_version").await.unwrap();
+    let row = env.memory.last_of_kind("chat.import_unsupported_zalo_version").await.unwrap();
     assert_eq!(row["severity"], "SEV-1");
     assert!(row["payload"]["got_version"].as_str().unwrap() == "3.0");
 }
@@ -697,7 +697,7 @@ fn ac24_timestamp_out_of_range() {
 async fn ac25_membership_events_imported() {
     let env = TestEnv::new().await;
     run_all(env.fixture("zalo-membership.zip"), env.tenant_id(), Opts::default()).await.unwrap();
-    let row = env.brain.last_of_kind("chat.user_joined_channel").await.unwrap();
+    let row = env.memory.last_of_kind("chat.user_joined_channel").await.unwrap();
     assert!(row["payload"]["channel_id"].is_string());
     assert!(row["payload"]["user_id"].is_string());
 }
@@ -733,7 +733,7 @@ fn ac27_invalid_unicode_replaced() {
 async fn ac28_mpim_count_mismatch_warning() {
     let env = TestEnv::new().await;
     run_all(env.fixture("zalo-1on1-with-3-participants.zip"), env.tenant_id(), Opts::default()).await.unwrap();
-    let row = env.brain.last_of_kind("chat.import_warning").await.unwrap();
+    let row = env.memory.last_of_kind("chat.import_warning").await.unwrap();
     assert!(row["payload"]["reason"].as_str().unwrap().contains("participant_count_mismatch"));
 }
 
@@ -792,7 +792,7 @@ The Rust modules above are the skeleton. This section names the operational wiri
 The Zalo importer is a sibling of the Slack importer, sharing:
 - `import_jobs` table (with `source = 'zalo'`).
 - Checkpoint resume + abort + cleanup semantics.
-- BRAIN audit row kinds (`chat.import_started`, `chat.import_step_completed`, etc.; `payload.source = "zalo"`).
+- memory audit row kinds (`chat.import_started`, `chat.import_step_completed`, etc.; `payload.source = "zalo"`).
 - MM API client + rate-limiter.
 - Fargate process model.
 
@@ -840,7 +840,7 @@ Some compliance regimes require that recalled messages remain in the audit recor
 
 ### §6.8 — Filename PII redaction
 
-Zalo filenames carry PII more often than Slack filenames because Zalo's mobile-first UX encourages photo uploads with auto-generated names that include user identifiers. The redaction pipeline (FR-BRAIN-111 ruleset) handles VN-specific names that the Slack-tuned ruleset might miss.
+Zalo filenames carry PII more often than Slack filenames because Zalo's mobile-first UX encourages photo uploads with auto-generated names that include user identifiers. The redaction pipeline (FR-MEMORY-111 ruleset) handles VN-specific names that the Slack-tuned ruleset might miss.
 
 ### §6.9 — Membership event timing
 
@@ -1019,7 +1019,7 @@ All resolved. Deferred:
 - The Gen-1 vs Gen-2 split is a hard discontinuity: Zalo's Gen-2 export is semantic HTML with `<article>` tags; Gen-1 is `<div>` soup. A unified parser would be hairy; separate parsers are cleaner.
 - Sticker handling intentionally stops short of uploading PNGs as MM custom emoji — the namespace explosion would be unmanageable (Zalo has 10k+ stickers; uploading all of them is operator policy, not importer default).
 - `[message recalled]` placeholder text was chosen to match Zalo's own UX wording. We considered preserving the original content (some legal regimes allow this) but defaulted to redaction; an operator who needs the original content can scrape the source bundle (where the recalled message body MAY still be present, depending on Zalo's export behaviour).
-- VN-specific PII patterns (full names with diacritics, +84 phone numbers, ID-card numbers) are tuned in `cyberos-brain-pii::vn-rules`. The Slack importer also uses these rules but Zalo bundles hit them harder due to mobile-first usage patterns.
+- VN-specific PII patterns (full names with diacritics, +84 phone numbers, ID-card numbers) are tuned in `cyberos-memory-pii::vn-rules`. The Slack importer also uses these rules but Zalo bundles hit them harder due to mobile-first usage patterns.
 - We chose to put the Zalo importer in the same `chat-importer` crate as the Slack importer rather than separate crates because: (a) shared checkpoint + audit infrastructure, (b) operator runs same binary with subcommand, (c) avoids duplicating MM API client boilerplate.
 - The `--bundle-encoding` flag is the explicit escape hatch for legacy bundles; the auto-detection in §6.10 is a convenience that operators can override.
 - We considered making encoding detection automatic-only (no flag) but operators handling truly mixed bundles wanted explicit control. The flag is opt-in for safety.

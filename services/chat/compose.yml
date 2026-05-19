@@ -1,0 +1,63 @@
+# FR-CHAT-001 §1 #9 — local dev compose for the CHAT service.
+#
+# Brings up:
+#   - Postgres 16 with the mattermost database pre-created.
+#   - Redis 7 for session cache + websocket pub/sub.
+#   - The CyberOS-patched Mattermost build (image tag includes pinned SHA).
+#
+# Operators verifying the build:
+#   docker compose -f services/chat/compose.yml build
+#   docker compose -f services/chat/compose.yml up
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mattermost
+      POSTGRES_USER: mmuser
+      POSTGRES_PASSWORD: mmpass-local-dev-only
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mmuser -d mattermost"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  chat:
+    build:
+      context: .
+      args:
+        # The compose `up --build` flow does NOT re-execute the Makefile, so we
+        # leave these as required build-args. CI calls `make chat-build` which
+        # populates them from the PINNED_COMMIT / CYBEROS_PATCH_VERSION files.
+        PINNED_COMMIT: ${PINNED_COMMIT:-}
+        CYBEROS_PATCH_VERSION: ${CYBEROS_PATCH_VERSION:-0.1.0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      MM_SQLSETTINGS_DRIVERNAME: postgres
+      MM_SQLSETTINGS_DATASOURCE: "postgres://mmuser:mmpass-local-dev-only@postgres:5432/mattermost?sslmode=disable&connect_timeout=10"
+      MM_SERVICESETTINGS_SITEURL: "http://localhost:8065"
+      MM_CACHESETTINGS_CACHETYPE: "redis"
+      MM_CACHESETTINGS_REDISADDRESS: "redis:6379"
+    ports:
+      - "8065:8065"
+    restart: unless-stopped
+
+# Note: services/auth's docker-compose stays separate. The AUTH bridge
+# plugin (FR-CHAT-002) is what wires this stack to the AUTH JWT layer.
+# Slice 1 (this FR) uses Mattermost's native auth.

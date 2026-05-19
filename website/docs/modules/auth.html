@@ -5,7 +5,7 @@
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>AUTH — P0 · slice 2 stub → P3 full · Lumi tenant identity · Agent-equal · CyberOS</title>
- <meta name="description" content="AUTH — Authentication & Authorization. P0 · slice 2 magic-link+TOTP+stub-RBAC stub vs P3 full WebAuthn+per-tenant authz. Tenant identity for Lumi's BRAIN at Stage 3+. Agent-equal predicate evaluation. OAuth 2.1 + PKCE, OIDC SSO, RS256 JWT. The shared identity plane every module bolts onto.">
+ <meta name="description" content="AUTH — Authentication & Authorization. P0 · slice 2 magic-link+TOTP+stub-RBAC stub vs P3 full WebAuthn+per-tenant authz. Tenant identity for Lumi's memory at Stage 3+. Agent-equal predicate evaluation. OAuth 2.1 + PKCE, OIDC SSO, RS256 JWT. The shared identity plane every module bolts onto.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -45,10 +45,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CSO (vacant) → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- The shared identity plane. <strong>Wave 2 + slice-3 shipped 2026-05-18</strong> — JWT RS256 + JWKS + admin REST + bootstrap CLI + 22-role closed-enum RBAC + TOTP MFA + HIBP breach check + OIDC Authorization Code + PKCE + WebAuthn passkey enrolment/login + SAML 2.0 SP-initiated SSO with full XML-DSig verify (RSA-SHA256 + exclusive-c14n) + GeoIP impossible-travel detector (slice-2: MaxMind GeoLite2 + cross-continent + haversine 1000km/h) + per-tenant policy + CIDR allowlist + sticky-challenge suppression + admin REST for policy mutation. All four login flows (password, OIDC, SAML, Passkey) honour the policy via <code>assess_login</code>. Tenant identity for Lumi's BRAIN at Stage 3+.
+ The shared identity plane. <strong>Wave 2 + slice-3 shipped 2026-05-18</strong> — JWT RS256 + JWKS + admin REST + bootstrap CLI + 22-role closed-enum RBAC + TOTP MFA + HIBP breach check + OIDC Authorization Code + PKCE + WebAuthn passkey enrolment/login + SAML 2.0 SP-initiated SSO with full XML-DSig verify (RSA-SHA256 + exclusive-c14n) + GeoIP impossible-travel detector (slice-2: MaxMind GeoLite2 + cross-continent + haversine 1000km/h) + per-tenant policy + CIDR allowlist + sticky-challenge suppression + admin REST for policy mutation. All four login flows (password, OIDC, SAML, Passkey) honour the policy via <code>assess_login</code>. Tenant identity for Lumi's memory at Stage 3+.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- AUTH is the most sensitive single piece of CyberOS infrastructure — and per the 2026-05-14 research review (archived; see <code>cyberos/CHANGELOG.md</code> for that decision entry) it is <strong>not P0 #1</strong>. The reordered P0 build sequence is <strong>AI Gateway @ P0 · slice 1 → AUTH @ P0 · slice 2 → MCP Gateway @ P0 · slice 3 → OBS at P0 · start (parallel) → CHAT + CUO Phase 1 @ P0 · exit</strong>. AUTH at P0 · slice 2 is a <em>stub</em>: magic-link login + TOTP MFA + an RBAC predicate that hard-codes the 5 essential roles. The full 7,000 LoC build (WebAuthn L3 passkeys, per-tenant authz server, JWKS rotation, all 22 RBAC roles, KMS-wrapped signing keys, impossible-travel detection) is delivered across slices 2–5 in <a href="../../services/auth/RFC.md" class="text-blue-700 underline">services/auth/RFC.md</a>, landing fully at P3 (P3 · exit). The architecture below is the P3-full target; the §"P0 · slice 2 stub vs P3 full" section documents the staged delivery. AUTH owns the identity database, signs the JWTs every other module trusts, and applies the same predicate to a human and to an agent so the platform never has a "second-class" auth path. The agent-equal property is non-negotiable: a persona-versioned agent JWT is evaluated by the same code path as a human one. Lumi's BRAIN (the cloud-hosted org tenant per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md</a> Stage 3+) consumes AUTH's tenant-scoped JWT to enforce row-level isolation. <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">Sign-in UI mockup</a> implements the design system's Liquid Glass + Umber/Ochre brand.
+ AUTH is the most sensitive single piece of CyberOS infrastructure — and per the 2026-05-14 research review (archived; see <code>cyberos/CHANGELOG.md</code> for that decision entry) it is <strong>not P0 #1</strong>. The reordered P0 build sequence is <strong>AI Gateway @ P0 · slice 1 → AUTH @ P0 · slice 2 → MCP Gateway @ P0 · slice 3 → OBS at P0 · start (parallel) → CHAT + CUO Phase 1 @ P0 · exit</strong>. AUTH at P0 · slice 2 is a <em>stub</em>: magic-link login + TOTP MFA + an RBAC predicate that hard-codes the 5 essential roles. The full 7,000 LoC build (WebAuthn L3 passkeys, per-tenant authz server, JWKS rotation, all 22 RBAC roles, KMS-wrapped signing keys, impossible-travel detection) is delivered across slices 2–5 in <a href="../../services/auth/RFC.md" class="text-blue-700 underline">services/auth/RFC.md</a>, landing fully at P3 (P3 · exit). The architecture below is the P3-full target; the §"P0 · slice 2 stub vs P3 full" section documents the staged delivery. AUTH owns the identity database, signs the JWTs every other module trusts, and applies the same predicate to a human and to an agent so the platform never has a "second-class" auth path. The agent-equal property is non-negotiable: a persona-versioned agent JWT is evaluated by the same code path as a human one. Lumi's memory (the cloud-hosted org tenant per <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md</a> Stage 3+) consumes AUTH's tenant-scoped JWT to enforce row-level isolation. <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">Sign-in UI mockup</a> implements the design system's Liquid Glass + Umber/Ochre brand.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -77,7 +77,7 @@
  <li><a class="toc-link" href="#what">What it does · 5W1H2C5M</a></li>
  <li><a class="toc-link" href="#stub-vs-full">P0 · slice 2 stub vs P3 full</a></li>
  <li><a class="toc-link" href="#rbac-catalogue">22-role RBAC catalogue</a></li>
- <li><a class="toc-link" href="#lumi-integration">AUTH ↔ Lumi's BRAIN</a></li>
+ <li><a class="toc-link" href="#lumi-integration">AUTH ↔ Lumi's memory</a></li>
  <li><a class="toc-link" href="#open-questions">RFC open questions resolved</a></li>
  <li><a class="toc-link" href="#architecture">Architecture</a></li>
  <li><a class="toc-link" href="#data-model">Data model</a></li>
@@ -114,7 +114,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-future p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- AUTH is the <strong>identity and authorisation service</strong> for every actor inside CyberOS — humans (CEO, CFO, members, clients) and agents (CUO persona-versioned tokens, Skill bot accounts, scheduled tasks). It speaks OAuth 2.1 + PKCE to the world, OIDC for SSO federation, WebAuthn L3 for passkey enrolment, and TOTP / RFC 6238 for the soft-MFA fallback. Inside, it sits on PostgreSQL with row-level security keyed by <code>tenant_id</code>, a Redis hot-path session cache, and an HSM-resident RS256 signing key. Every authentication and authorisation decision lands as a chained audit row in BRAIN — so "did this agent really have permission to delete that record?" is never an interpretation, it is a replay.
+ AUTH is the <strong>identity and authorisation service</strong> for every actor inside CyberOS — humans (CEO, CFO, members, clients) and agents (CUO persona-versioned tokens, Skill bot accounts, scheduled tasks). It speaks OAuth 2.1 + PKCE to the world, OIDC for SSO federation, WebAuthn L3 for passkey enrolment, and TOTP / RFC 6238 for the soft-MFA fallback. Inside, it sits on PostgreSQL with row-level security keyed by <code>tenant_id</code>, a Redis hot-path session cache, and an HSM-resident RS256 signing key. Every authentication and authorisation decision lands as a chained audit row in memory — so "did this agent really have permission to delete that record?" is never an interpretation, it is a replay.
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">P0 · slice 2 stub status</div><div class="value">Designed · RFC drafted</div><div class="note">5 slices · 5 open Qs in RFC §6</div></div>
@@ -125,8 +125,8 @@
  <div class="fact-card"><div class="label">RBAC roles</div><div class="value">5 (stub) → 22 (full)</div><div class="note">closed catalogue · see §RBAC</div></div>
  <div class="fact-card"><div class="label">JWT</div><div class="value">RS256 · 15 min</div><div class="note">refresh: 30 d rotating · KMS at slice 5</div></div>
  <div class="fact-card"><div class="label">MFA</div><div class="value">TOTP (P0 · slice 2) → WebAuthn (P3)</div><div class="note">passkey mandatory at T2+ once full</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS · AI Gateway</div><div class="note">audit + telemetry sink + cost-of-everything</div></div>
- <div class="fact-card"><div class="label">Enables</div><div class="value">Lumi's BRAIN tenant isolation</div><div class="note">Stage 3 of universal protocol</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">memory · OBS · AI Gateway</div><div class="note">audit + telemetry sink + cost-of-everything</div></div>
+ <div class="fact-card"><div class="label">Enables</div><div class="value">Lumi's memory tenant isolation</div><div class="note">Stage 3 of universal protocol</div></div>
  </div>
  </div>
 </section>
@@ -137,7 +137,7 @@
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic moves</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- AUTH on this page is presented at <em>three time horizons simultaneously</em>: the P0 · slice 2 stub that unblocks the rest of P0, the P3 full identity platform, and the Lumi's BRAIN tenant identity that turns BRAIN's universal protocol into a multi-tenant cloud product. Holding all three lenses lets engineers reading the page cold understand both what ships first and what the end-state looks like — without conflating them.
+ AUTH on this page is presented at <em>three time horizons simultaneously</em>: the P0 · slice 2 stub that unblocks the rest of P0, the P3 full identity platform, and the Lumi's memory tenant identity that turns memory's universal protocol into a multi-tenant cloud product. Holding all three lenses lets engineers reading the page cold understand both what ships first and what the end-state looks like — without conflating them.
  </p>
 
  <div class="grid md:grid-cols-3 gap-4 my-6">
@@ -158,9 +158,9 @@
  <div class="bbg-card p-5" style="border-top:3px solid var(--umber-500)">
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--umber-700)">Move 3 · Lumi tenant identity</div>
  <div class="text-2xl mb-2">☁️</div>
- <div class="font-bold text-slate-900 mb-1">Multi-tenant Lumi's BRAIN</div>
- <p class="text-sm text-slate-600 mb-3">Issues tenant-scoped JWTs that Lumi's BRAIN (cloud-hosted org tenant) consumes for row-level isolation. Stage 3 of the universal BRAIN protocol depends on this. Per-tenant residency pinning (vn-hanoi-1 / sg-1 / eu-fra-1) flows through tenant config to AUTH session config to BRAIN read scoping.</p>
- <p class="text-xs" style="color:var(--text-mute)">Per BRAIN_AUTOSYNC_DESIGN.md §6 · enables Lumi's BRAIN deployment</p>
+ <div class="font-bold text-slate-900 mb-1">Multi-tenant Lumi's memory</div>
+ <p class="text-sm text-slate-600 mb-3">Issues tenant-scoped JWTs that Lumi's memory (cloud-hosted org tenant) consumes for row-level isolation. Stage 3 of the universal memory protocol depends on this. Per-tenant residency pinning (vn-hanoi-1 / sg-1 / eu-fra-1) flows through tenant config to AUTH session config to memory read scoping.</p>
+ <p class="text-xs" style="color:var(--text-mute)">Per MEMORY_AUTOSYNC_DESIGN.md §6 · enables Lumi's memory deployment</p>
  </div>
  </div>
 
@@ -172,7 +172,7 @@ gantt
  dateFormat YYYY-MM-DD
  axisFormat M+%w
  section Existing
- BRAIN (shipped) :done, brain, 2026-05-01, 1d
+ memory (shipped) :done, memory, 2026-05-01, 1d
  SKILL (shipped) :done, skill, 2026-05-01, 1d
  OBS instrumentation :active, obs, 2026-05-01, 90d
  section P0 · slice 1
@@ -187,11 +187,11 @@ gantt
  AUTH slices 2-4 (full) :auth_full, after chat, 180d
  section P3 phase
  AUTH slice 5 (KMS+OIDC) :auth5, after auth_full, 60d
- Lumi's BRAIN Stage 3 :crit, lumi, after auth5, 30d
+ Lumi's memory Stage 3 :crit, lumi, after auth5, 30d
  </div>
  </div>
  <p class="text-sm" style="color:var(--text-mute)">
- <strong>Why this order:</strong> AI Gateway is the cost-of-everything-else gate (every CHAT @genie, every CUO Phase 2, every BRAIN semantic search depends on it). AUTH at P0 · slice 2 is a stub because for the first 6 months CyberSkill has 10 Members and one tenant — full WebAuthn + 22-role RBAC at P0 · slice 1 is over-engineering. Per reviewer: "AUTH at P0 · slice 2 can be magic-link + TOTP with a stub RBAC. WebAuthn passkeys for the Founder and a per-tenant authz server can land at P0 · exit without blocking any other module."
+ <strong>Why this order:</strong> AI Gateway is the cost-of-everything-else gate (every CHAT @genie, every CUO Phase 2, every memory semantic search depends on it). AUTH at P0 · slice 2 is a stub because for the first 6 months CyberSkill has 10 Members and one tenant — full WebAuthn + 22-role RBAC at P0 · slice 1 is over-engineering. Per reviewer: "AUTH at P0 · slice 2 can be magic-link + TOTP with a stub RBAC. WebAuthn passkeys for the Founder and a per-tenant authz server can land at P0 · exit without blocking any other module."
  </p>
 </section>
 
@@ -217,11 +217,11 @@ gantt
  <div class="bbg-card p-5">
  <div class="text-2xl mb-2">📜</div>
  <div class="font-bold text-slate-900 mb-1">Every decision auditable</div>
- <p class="text-sm text-slate-600">Login, logout, MFA challenge, role grant, scope decision — each one writes a chained row to BRAIN. "Did Compliance permit this?" → grep <code>auth.decision</code>.</p>
+ <p class="text-sm text-slate-600">Login, logout, MFA challenge, role grant, scope decision — each one writes a chained row to memory. "Did Compliance permit this?" → grep <code>auth.decision</code>.</p>
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
- The bet is the same bet BRAIN makes about audit: pay the cost once at the infrastructure layer, and every module inherits the property for free. Without AUTH as a shared plane, every module re-implements login, every module ships its own MFA bug, and "who has access to what" is a vibes question. With AUTH as a shared plane, the answer is a row in <code>auth.decision</code> and a JWT claim — the regulator can read it, the auditor can verify it, the engineer can replay it.
+ The bet is the same bet memory makes about audit: pay the cost once at the infrastructure layer, and every module inherits the property for free. Without AUTH as a shared plane, every module re-implements login, every module ships its own MFA bug, and "who has access to what" is a vibes question. With AUTH as a shared plane, the answer is a row in <code>auth.decision</code> and a JWT claim — the regulator can read it, the auditor can verify it, the engineer can replay it.
  </p>
 </section>
 
@@ -247,7 +247,7 @@ gantt
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>OAuth 2.1 (not 2.0 — PKCE mandatory). RBAC + Scope Contract Grants (no ABAC complexity at P0). JWT RS256 (not HS256 — separates signer from verifier). Argon2id for password hashing. Refresh-token rotation with reuse detection (RFC 6749 §10.4). Row-level security on every identity table keyed by tenant_id.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P0). Multi-AZ Postgres RDS. Redis cluster mode at P3+. WebAuthn relying-party ID = the company root domain (P0: <code>cyberos.com</code>).</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.5 FTE today (covered by CEO). By P1: CSO seat owns 100% capacity + 24/7 on-call rotation with CTO.</td></tr>
- <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending)..012 — zero tenant-data leakage, zero compensation in BRAIN, mandatory mTLS, OWASP Gen AI Top-10 mitigations all green. Per-tenant auth-decision dashboard. Annual penetration test (P2+).</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending)..012 — zero tenant-data leakage, zero compensation in memory, mandatory mTLS, OWASP Gen AI Top-10 mitigations all green. Per-tenant auth-decision dashboard. Annual penetration test (P2+).</td></tr>
  </tbody>
  </table>
  </div>
@@ -271,12 +271,12 @@ gantt
  <tr><td><strong>RBAC catalogue</strong></td><td>5 hard-coded roles: <code>root-admin</code>, <code>tenant-admin</code>, <code>tenant-member</code>, <code>service-account</code>, <code>agent-persona</code></td><td>22-role closed catalogue (see §RBAC) · Scope Contract Grants · agent-equal predicate evaluation</td></tr>
  <tr><td><strong>JWT signing</strong></td><td>RS256 with dev keys on disk · 15 min access · 30 d refresh · rotating</td><td>RS256 via AWS KMS (key never touches disk) · JWKS rotation endpoint · per-tenant signing-key scope at slice 5</td></tr>
  <tr><td><strong>Tenant isolation</strong></td><td>Postgres RLS on every identity table keyed by <code>tenant_id</code> · admin REST scoped to caller's tenant</td><td>Same RLS · plus per-tenant residency pinning (vn-hanoi-1 / sg-1 / eu-fra-1) · per-tenant authz server endpoint (slice 4)</td></tr>
- <tr><td><strong>Audit-chain emission</strong></td><td>Every login, every RBAC decision, every session revocation appends a row to BRAIN via the canonical Writer (subprocess shim acceptable)</td><td>Same emission · PyO3 binding for &lt; 1ms p99 audit-bridge latency · streaming append at high decision rate</td></tr>
+ <tr><td><strong>Audit-chain emission</strong></td><td>Every login, every RBAC decision, every session revocation appends a row to memory via the canonical Writer (subprocess shim acceptable)</td><td>Same emission · PyO3 binding for &lt; 1ms p99 audit-bridge latency · streaming append at high decision rate</td></tr>
  <tr><td><strong>Admin surfaces</strong></td><td>REST: tenant CRUD · subject CRUD · role grant · session revoke</td><td>Same REST · plus gRPC RBAC.Check internal API · MCP tool catalogue (token-issue, RBAC-check) · CLI <code>cyberos-auth</code> 25 subcommands</td></tr>
  <tr><td><strong>Cost</strong></td><td>~$60/month (RDS t4g.small + ElastiCache cache.t4g.micro + 1 Fargate task)</td><td>~$220/month at 50 tenants (P3) · ~$1.2k/month at 500 tenants · KMS adds ~$10/month per active signing-key version</td></tr>
  <tr><td><strong>LoC</strong></td><td>~1,500 Rust</td><td>~7,000 Rust (cumulative over slices 1–5)</td></tr>
  <tr><td><strong>Tests</strong></td><td>15 (tenant + subject CRUD + RLS isolation)</td><td>120+ (OAuth 2.1 conformance + WebAuthn flow + RBAC predicate matrix + audit-chain integration)</td></tr>
- <tr><td><strong>Lumi's BRAIN integration</strong></td><td>JWT carries <code>tenant_id</code> claim; Lumi's BRAIN deployment (Stage 3) comes online in parallel</td><td>Tenant residency claim · agent-persona claim · Scope Contract Grant claim · all consumed by Lumi's BRAIN read scoping</td></tr>
+ <tr><td><strong>Lumi's memory integration</strong></td><td>JWT carries <code>tenant_id</code> claim; Lumi's memory deployment (Stage 3) comes online in parallel</td><td>Tenant residency claim · agent-persona claim · Scope Contract Grant claim · all consumed by Lumi's memory read scoping</td></tr>
  <tr><td><strong>SOC 2 / ISO 27001 evidence</strong></td><td>Not auditor-ready · stub mode is internal-only</td><td>P1 SOC 2 Type I evidence window opens at P0 · exit · P2 ISO 27001:2022 + Type II at P2 · exit · ISO 42001 AIMS at P3 · exit</td></tr>
  </tbody>
  </table>
@@ -319,7 +319,7 @@ gantt
  <tr><td>13</td><td><code>cso</code></td><td>CSO (Strategy) seat. OKR cascade · scenario modelling · competitive intel read.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>14</td><td><code>cseco</code></td><td>CSO (Security) seat. Security review · key rotation approval · vulnerability triage.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>15</td><td><code>clo</code></td><td>CLO (Compliance/Legal) seat. Contract redline · DSAR triage · regulatory drift signoff.</td><td>—</td><td>slice 4</td></tr>
- <tr><td>16</td><td><code>cdo</code></td><td>CDO (Data) seat. Data quality · lineage · residency review · BRAIN owner-of-record at P1+.</td><td>—</td><td>slice 4</td></tr>
+ <tr><td>16</td><td><code>cdo</code></td><td>CDO (Data) seat. Data quality · lineage · residency review · memory owner-of-record at P1+.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>17</td><td><code>dpo</code></td><td>Data Protection Officer. DSAR fulfilment · breach-notification authority · purge approval.</td><td>—</td><td>slice 4</td></tr>
  <tr><td>18</td><td><code>caio</code></td><td>Chief AI Officer (emerging P2+). AI Gateway budget owner · synthesis sub-skill review.</td><td>—</td><td>slice 5</td></tr>
  <tr><td>19</td><td><code>client-portal-user</code></td><td>External-facing tenant user (PORTAL module · P4). Read shareable scopes via PORTAL filter only.</td><td>—</td><td>slice 5 + PORTAL</td></tr>
@@ -339,9 +339,9 @@ gantt
 <!-- LUMI INTEGRATION -->
 <!-- ============================================================ -->
 <section id="lumi-integration" class="module-section">
- <header class="section-head"><span class="section-num">2.7</span><h2>AUTH ↔ Lumi's BRAIN — tenant identity for the universal protocol</h2></header>
+ <header class="section-head"><span class="section-num">2.7</span><h2>AUTH ↔ Lumi's memory — tenant identity for the universal protocol</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Per <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §6</a>, Lumi's BRAIN is the cloud-hosted org-tenant instance of the BRAIN protocol. It depends on AUTH for two non-negotiable properties: <strong>(1)</strong> a tenant-scoped JWT issued by AUTH that identifies which tenant a sync request belongs to, <strong>(2)</strong> a subject-scoped JWT with the agent-persona claim that identifies which user within that tenant is reading or writing. Without both, multi-tenant isolation is impossible.
+ Per <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §6</a>, Lumi's memory is the cloud-hosted org-tenant instance of the memory protocol. It depends on AUTH for two non-negotiable properties: <strong>(1)</strong> a tenant-scoped JWT issued by AUTH that identifies which tenant a sync request belongs to, <strong>(2)</strong> a subject-scoped JWT with the agent-persona claim that identifies which user within that tenant is reading or writing. Without both, multi-tenant isolation is impossible.
  </p>
 
  <h3 class="text-lg font-bold mb-3">The JWT claim shape</h3>
@@ -349,7 +349,7 @@ gantt
 <pre><code class="language-json">{
   "iss": "https://auth.cyberos.com",
   "sub": "user:stephen@cyberskill.world",
-  "aud": ["brain.cyberos.com"],
+  "aud": ["memory.cyberos.com"],
   "iat": 1778765128,
   "exp": 1778766028,                          // 15 min
   "jti": "<uuid>",
@@ -359,7 +359,7 @@ gantt
   "tenant_plan": "pro",                       // free | pro | enterprise
   // === Subject scope ===
   "role": ["tenant-member", "cpo"],
-  "rbac_grants": ["feature-request-author:execute", "kb:read", "brain:read:personal:*"],
+  "rbac_grants": ["feature-request-author:execute", "kb:read", "memory:read:personal:*"],
   // === Persona stamp (when agent-issued) ===
   "agent_persona": null,                      // or "cuo-cpo@0.4.1" for agent JWTs
   "agent_persona_version": null,
@@ -371,14 +371,14 @@ gantt
 }</code></pre>
  </div>
 
- <h3 class="text-lg font-bold mb-3">How Lumi's BRAIN enforces the JWT</h3>
+ <h3 class="text-lg font-bold mb-3">How Lumi's memory enforces the JWT</h3>
  <div class="bbg-card p-5 mb-5">
  <div class="mermaid">
 sequenceDiagram
  autonumber
  participant U as User (sync client)
  participant A as AUTH (auth.cyberos.com)
- participant L as Lumi's BRAIN (brain.cyberos.com)
+ participant L as Lumi's memory (memory.cyberos.com)
  participant P as Postgres (RLS-scoped)
  participant W as Writer
  U->>A: POST /oauth/token (refresh)
@@ -403,10 +403,10 @@ sequenceDiagram
  <h3 class="text-lg font-bold mb-3">What this contract requires from AUTH</h3>
  <ul class="text-sm leading-relaxed ml-5 mb-4" style="color:var(--text);list-style:disc">
  <li class="mb-2"><strong>tenant_id is non-removable.</strong> Every JWT — human, agent, service account — carries a tenant_id. Tenant-less JWTs are rejected at issuance.</li>
- <li class="mb-2"><strong>JWKS endpoint is reachable from Lumi's BRAIN cloud region.</strong> ~1 RTT cost on cold cache; cached for the JWT's lifetime.</li>
- <li class="mb-2"><strong>Refresh-token reuse detection is enforced at AUTH.</strong> A reused refresh token revokes the whole session (per AUTH RFC §3 slice 2). Lumi's BRAIN's pull queue must handle 401 by triggering re-auth, not by silently failing.</li>
- <li class="mb-2"><strong>Agent-persona claims survive the agent-equal property.</strong> When the CUO router issues a JWT on a user's behalf, the <code>agent_persona</code> claim is set; Lumi's BRAIN's read scope is then determined by the <em>intersection</em> of user RBAC + persona Scope Contract Grant.</li>
- <li><strong>Tenant residency pinning flows through.</strong> A <code>vn-hanoi-1</code>-pinned tenant's JWT is rejected at the <code>sg-1</code> Lumi's BRAIN shard. Cross-shard sync requires a special <code>cross-shard-migrate</code> claim (CDO + CLO approval).</li>
+ <li class="mb-2"><strong>JWKS endpoint is reachable from Lumi's memory cloud region.</strong> ~1 RTT cost on cold cache; cached for the JWT's lifetime.</li>
+ <li class="mb-2"><strong>Refresh-token reuse detection is enforced at AUTH.</strong> A reused refresh token revokes the whole session (per AUTH RFC §3 slice 2). Lumi's memory's pull queue must handle 401 by triggering re-auth, not by silently failing.</li>
+ <li class="mb-2"><strong>Agent-persona claims survive the agent-equal property.</strong> When the CUO router issues a JWT on a user's behalf, the <code>agent_persona</code> claim is set; Lumi's memory's read scope is then determined by the <em>intersection</em> of user RBAC + persona Scope Contract Grant.</li>
+ <li><strong>Tenant residency pinning flows through.</strong> A <code>vn-hanoi-1</code>-pinned tenant's JWT is rejected at the <code>sg-1</code> Lumi's memory shard. Cross-shard sync requires a special <code>cross-shard-migrate</code> claim (CDO + CLO approval).</li>
  </ul>
 </section>
 
@@ -416,7 +416,7 @@ sequenceDiagram
 <section id="open-questions" class="module-section">
  <header class="section-head"><span class="section-num">2.8</span><h2>RFC open questions — proposed defaults</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The <a href="../../services/auth/RFC.md" class="text-blue-700 underline">services/auth/RFC.md §6</a> lists 5 open decisions that block slice 1. The proposed defaults below were drafted from the research review §2 + the BRAIN_AUTOSYNC_DESIGN.md Stage 3 dependencies. They land as ADRs once Stephen signs off.
+ The <a href="../../services/auth/RFC.md" class="text-blue-700 underline">services/auth/RFC.md §6</a> lists 5 open decisions that block slice 1. The proposed defaults below were drafted from the research review §2 + the MEMORY_AUTOSYNC_DESIGN.md Stage 3 dependencies. They land as ADRs once Stephen signs off.
  </p>
 
  <div class="bbg-card p-5 mb-5 overflow-x-auto">
@@ -424,10 +424,10 @@ sequenceDiagram
  <thead><tr><th style="width:18%">RFC §6 question</th><th style="width:42%">Proposed default</th><th>Rationale</th></tr></thead>
  <tbody>
  <tr><td><strong>Q1 — Workspace membership</strong></td><td><strong>New repo-root Cargo workspace</strong> with <code>skill/</code> and <code>services/auth/</code> as members. Lift the workspace root to <code>cyberos/Cargo.toml</code>.</td><td>Skill module already has its own workspace at <code>cyberos/modules/skill/Cargo.toml</code>. Lifting to repo-root lets <code>services/*</code> share dependency resolution + dev-dep with skill (e.g. <code>tokio</code>, <code>tracing</code>, <code>sqlx</code>). Common-dependency drift gets caught at build time.</td></tr>
- <tr><td><strong>Q2 — Memory bridge timing</strong></td><td><strong>Subprocess shim at slice 4 → PyO3 at slice 5.</strong> Slice 4 (RBAC + audit-chain bridge) accepts <code>cyberos --store $BRAIN put …</code> via stdin; slice 5 evaluates PyO3 binding for &lt; 1ms p99.</td><td>Subprocess overhead acceptable at audit-chain write rate (≤ 100 writes/sec in P0). Mergeable in 1 week vs PyO3 binding's ~2 week effort. Defer the optimisation to when its absence is felt.</td></tr>
+ <tr><td><strong>Q2 — Memory bridge timing</strong></td><td><strong>Subprocess shim at slice 4 → PyO3 at slice 5.</strong> Slice 4 (RBAC + audit-chain bridge) accepts <code>cyberos --store $memory put …</code> via stdin; slice 5 evaluates PyO3 binding for &lt; 1ms p99.</td><td>Subprocess overhead acceptable at audit-chain write rate (≤ 100 writes/sec in P0). Mergeable in 1 week vs PyO3 binding's ~2 week effort. Defer the optimisation to when its absence is felt.</td></tr>
  <tr><td><strong>Q3 — Tenant-0 bootstrap</strong></td><td><strong><code>cyberos-auth bootstrap</code> CLI subcommand</strong> runs as root, seeds tenant 0 + the first <code>root-admin</code> subject with a one-time enrolment URL.</td><td>Avoids the chicken-and-egg "no admin to create the first admin" problem. Single-use URL with 1-hour expiry minimises bootstrap-credential risk window. CLI requires sudo + audit-emit.</td></tr>
  <tr><td><strong>Q4 — HIBP integration toggle</strong></td><td><strong>Enabled by default; per-tenant opt-out via <code>tenant.security_config.hibp_check = false</code>.</strong></td><td>Outbound HTTPS to <code>api.pwnedpasswords.com</code> is one extra dependency but k-anonymity-protected (only first 5 chars of password hash leave the host). For Vietnamese-residency-paranoid tenants (Decree 53), the opt-out exists. Default-on protects ≥ 95% of users at near-zero engineering cost.</td></tr>
- <tr><td><strong>Q5 — OBS deferral</strong></td><td><strong>Slice 1 emits structured tracing logs to stdout; slice 5 switches to OTLP once OBS lands.</strong></td><td>OBS at P0 · start (parallel to BRAIN) means OTLP is available by AUTH slice 5 at P3 · exit. Slice 1 stdout logs are sufficient for engineer-local development. Slice 5 single-config swap to OTLP doesn't change AUTH's design.</td></tr>
+ <tr><td><strong>Q5 — OBS deferral</strong></td><td><strong>Slice 1 emits structured tracing logs to stdout; slice 5 switches to OTLP once OBS lands.</strong></td><td>OBS at P0 · start (parallel to memory) means OTLP is available by AUTH slice 5 at P3 · exit. Slice 1 stdout logs are sufficient for engineer-local development. Slice 5 single-config swap to OTLP doesn't change AUTH's design.</td></tr>
  </tbody>
  </table>
  </div>
@@ -443,7 +443,7 @@ sequenceDiagram
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- AUTH is one Rust service with five surfaces (OIDC issuer, OAuth 2.1 token endpoint, WebAuthn endpoints, RBAC gRPC API, admin REST), three stores (Postgres for identity / role / session, Redis for hot-path session and RBAC cache, KMS for signing-key wrap), and a single audit sink (BRAIN). The diagram below shows the canonical request flow for a cross-module call.
+ AUTH is one Rust service with five surfaces (OIDC issuer, OAuth 2.1 token endpoint, WebAuthn endpoints, RBAC gRPC API, admin REST), three stores (Postgres for identity / role / session, Redis for hot-path session and RBAC cache, KMS for signing-key wrap), and a single audit sink (memory). The diagram below shows the canonical request flow for a cross-module call.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -477,7 +477,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit & telemetry"]
- BRAIN["🧠 BRAIN<br>auth.decision rows"]
+ memory["🧠 memory<br>auth.decision rows"]
  OBS["👁 OBS<br>traces + metrics"]
  end
 
@@ -496,8 +496,8 @@ graph TB
  SCOPE --> PG
  RBAC --> RED
  ADMIN --> PG
- OAUTH --> BRAIN
- RBAC --> BRAIN
+ OAUTH --> memory
+ RBAC --> memory
  AUTH --> OBS
 
  classDef planned fill:#cba88a,stroke:#4338ca
@@ -505,7 +505,7 @@ graph TB
  classDef sink fill:#f5ede6,stroke:#45210e
  class OIDC,OAUTH,WA,RBAC,SCOPE,ADMIN,AR,MCP planned
  class PG,RED,KMS store
- class BRAIN,OBS sink
+ class memory,OBS sink
  </div>
  </div>
 
@@ -519,14 +519,14 @@ graph TB
  <tr><td><code>webauthn.rs</code></td><td>services/auth/src/webauthn.rs</td><td>WebAuthn L3 — credential creation, assertion verification, attestation parsing. Wraps webauthn-rs.</td></tr>
  <tr><td><code>totp.rs</code></td><td>services/auth/src/totp.rs</td><td>RFC 6238 TOTP — enrollment QR generation, code verification, replay window enforcement.</td></tr>
  <tr><td><code>rbac.rs</code></td><td>services/auth/src/rbac.rs</td><td>RBAC predicate evaluator. Input: (subject, action, resource). Output: allow / deny + audit record. Hot-path cache in Redis.</td></tr>
- <tr><td><code>scope.rs</code></td><td>services/auth/src/scope.rs</td><td>Scope Contract Grant resolver. Reads agent-persona scope sheets from BRAIN; emits effective scope set per JWT.</td></tr>
+ <tr><td><code>scope.rs</code></td><td>services/auth/src/scope.rs</td><td>Scope Contract Grant resolver. Reads agent-persona scope sheets from memory; emits effective scope set per JWT.</td></tr>
  <tr><td><code>session.rs</code></td><td>services/auth/src/session.rs</td><td>Session manager — issue, validate, revoke. Device tracking + impossible-travel detection.</td></tr>
  <tr><td><code>jwt.rs</code></td><td>services/auth/src/jwt.rs</td><td>JWT issuance / verification. RS256 via KMS; key rotation; JWKS publication.</td></tr>
  <tr><td><code>impossible_travel.rs</code></td><td>services/auth/src/impossible_travel.rs</td><td>Geographic-velocity check on consecutive logins ((FR pending)); challenge if velocity &gt; 1,000 km/h.</td></tr>
  <tr><td><code>password.rs</code></td><td>services/auth/src/password.rs</td><td>Argon2id hashing, password-policy enforcement, breach-list check via HIBP k-anonymity API.</td></tr>
  <tr><td><code>device.rs</code></td><td>services/auth/src/device.rs</td><td>Device fingerprinting ((FR pending)), new-device email, force-logout endpoint.</td></tr>
  <tr><td><code>magic_link.rs</code></td><td>services/auth/src/magic_link.rs</td><td>Magic-link onboarding flow ((FR pending)) — single-use, time-bound, onboarding-only.</td></tr>
- <tr><td><code>audit_bridge.rs</code></td><td>services/auth/src/audit_bridge.rs</td><td>Writes every decision to BRAIN via the canonical writer. Includes <code>actor</code>, <code>action</code>, <code>resource</code>, <code>decision</code>, <code>reason</code>.</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/auth/src/audit_bridge.rs</td><td>Writes every decision to memory via the canonical writer. Includes <code>actor</code>, <code>action</code>, <code>resource</code>, <code>decision</code>, <code>reason</code>.</td></tr>
  <tr><td><code>admin.rs</code></td><td>services/auth/src/admin.rs</td><td>Admin REST — create tenant, assign role, revoke session, view audit. CSO + CEO scope only.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/auth/migrations/</td><td>sqlx migrations. Every table has RLS by <code>tenant_id</code>. Indices for hot-path queries.</td></tr>
  </tbody>
@@ -589,7 +589,7 @@ erDiagram
  string scope_level "platform or tenant or project"
  }
  PERMISSION {
- string code PK "rew.write_run or brain.put or other"
+ string code PK "rew.write_run or memory.put or other"
  string action "read or write or delete or invoke"
  string resource_class
  }
@@ -671,7 +671,7 @@ erDiagram
  string decision "allow or deny or challenge"
  string reason_code
  timestamp ts
- string brain_chain "linked audit row chain hash"
+ string memory_chain "linked audit row chain hash"
  }
  </div>
  </div>
@@ -686,13 +686,13 @@ erDiagram
  <tr><td><code>chro</code></td><td>Chief Human Resources Officer</td><td>tenant</td><td><code>hr.*</code>, <code>rew.write_run</code> (with CFO co-sign).</td></tr>
  <tr><td><code>cto</code></td><td>Chief Technology Officer</td><td>tenant</td><td><code>engineering.*</code>, <code>auth.admin</code>.</td></tr>
  <tr><td><code>cso</code></td><td>Chief Security Officer</td><td>tenant</td><td><code>auth.*</code>, <code>obs.audit_read</code>, key-rotation.</td></tr>
- <tr><td><code>clo</code></td><td>Chief Legal Officer</td><td>tenant</td><td><code>legal.*</code>, <code>brain.delete_purge_approve</code>.</td></tr>
- <tr><td><code>dpo</code></td><td>Data Protection Officer</td><td>tenant</td><td><code>brain.dsar_export</code>, <code>auth.audit_read</code>.</td></tr>
- <tr><td><code>cdo</code></td><td>Chief Data Officer</td><td>tenant</td><td><code>brain.admin</code>, <code>obs.read</code>.</td></tr>
+ <tr><td><code>clo</code></td><td>Chief Legal Officer</td><td>tenant</td><td><code>legal.*</code>, <code>memory.delete_purge_approve</code>.</td></tr>
+ <tr><td><code>dpo</code></td><td>Data Protection Officer</td><td>tenant</td><td><code>memory.dsar_export</code>, <code>auth.audit_read</code>.</td></tr>
+ <tr><td><code>cdo</code></td><td>Chief Data Officer</td><td>tenant</td><td><code>memory.admin</code>, <code>obs.read</code>.</td></tr>
  <tr><td><code>cpo</code></td><td>Chief Product Officer</td><td>tenant</td><td><code>product.*</code>, <code>kb.write</code>.</td></tr>
  <tr><td><code>cmo</code></td><td>Chief Marketing Officer</td><td>tenant</td><td><code>marketing.*</code>, <code>crm.read</code>.</td></tr>
  <tr><td><code>cco</code></td><td>Chief Customer Officer</td><td>tenant</td><td><code>support.*</code>, <code>crm.write</code>.</td></tr>
- <tr><td><code>member</code></td><td>Operating Member</td><td>tenant</td><td>Scope-narrowed per module; default <code>chat.*</code> + <code>brain.read_own</code>.</td></tr>
+ <tr><td><code>member</code></td><td>Operating Member</td><td>tenant</td><td>Scope-narrowed per module; default <code>chat.*</code> + <code>memory.read_own</code>.</td></tr>
  <tr><td><code>contributor</code></td><td>External Contributor</td><td>project</td><td>Project-scoped read + comment only.</td></tr>
  <tr><td><code>client</code></td><td>Client User</td><td>project</td><td>Per-project shared workspace; no cross-tenant access.</td></tr>
  <tr><td><code>service</code></td><td>Service Account</td><td>tenant</td><td><code>client_credentials</code> only; explicit audience.</td></tr>
@@ -764,7 +764,7 @@ type AuthDecision @key(fields: "id") @requiresScopes(scopes: [["auth.audit_read"
  decision: Decision!
  reasonCode: String!
  ts: DateTime!
- brainChain: String!
+ memoryChain: String!
 }
 
 enum SubjectKind { HUMAN AGENT SERVICE API_KEY }
@@ -840,7 +840,7 @@ message CheckRequest {
 message CheckResponse {
  bool allow = 1;
  string reason_code = 2;/ "policy.role.cfo_required" | "ok"
- string brain_chain = 3;/ audit row chain hash
+ string memory_chain = 3;/ audit row chain hash
 }</code></pre>
  </div>
 
@@ -878,7 +878,7 @@ sequenceDiagram
  participant W as AUTH /webauthn/*
  participant PG as PostgreSQL
  participant K as AWS KMS
- participant B as BRAIN audit
+ participant B as memory audit
 
  U->>SPA: open app
  SPA->>A: GET /oauth/authorize?client=cyberos-spa&PKCE_S256=…
@@ -915,7 +915,7 @@ sequenceDiagram
  participant P as AUTH /password
  participant T as AUTH /totp/verify
  participant K as KMS
- participant B as BRAIN
+ participant B as memory
 
  U->>SPA: open app
  SPA->>A: GET /oauth/authorize
@@ -948,9 +948,9 @@ sequenceDiagram
  participant CUO as CUO router
  participant A as AUTH /oauth/token
  participant SC as scope.rs (Scope Contract resolver)
- participant BR as 🧠 BRAIN read
+ participant BR as 🧠 memory read
  participant K as KMS
- participant B as BRAIN write
+ participant B as memory write
 
  Note over CUO: CUO needs to invoke a skill on behalf of stephen@…
  CUO->>A: POST /oauth/token<br>grant_type=urn:cyberos:agent-impersonation<br>actor_jwt=cuo-service-jwt<br>on_behalf_of=stephen@…<br>persona_version=cuo-v2.3.1
@@ -962,7 +962,7 @@ sequenceDiagram
  K-->>A: signed token
  A->>B: auth.decision {subject:cuo, action:"impersonate", on_behalf_of:stephen, allow}
  A-->>CUO: {access_token, ttl:15min}
- Note over CUO: every downstream call carries this persona-stamped JWT;<br>BRAIN audit rows capture both `actor` and `on_behalf_of`.
+ Note over CUO: every downstream call carries this persona-stamped JWT;<br>memory audit rows capture both `actor` and `on_behalf_of`.
  </div>
  <p class="text-xs text-slate-500 mt-3">The agent token's effective scope is the intersection of (a) what the user could do, (b) what the persona is granted, and (c) what AUTH's policy allows. Three-way narrowing means an agent can never exceed its user, nor its persona contract.</p>
  </div>
@@ -977,7 +977,7 @@ sequenceDiagram
  participant R as AUTH RBAC.Check (gRPC)
  participant RC as Redis cache
  participant PG as PostgreSQL
- participant B as BRAIN
+ participant B as memory
 
  M->>AR: GraphQL mutation rewriteRun(…)
  AR->>AR: verify JWT signature + audience
@@ -1011,13 +1011,13 @@ sequenceDiagram
  participant SVC as CHAT service
  participant A as AUTH /oauth/token
  participant K as KMS
- participant B as BRAIN
+ participant B as memory
 
- Note over SVC: CHAT needs to call BRAIN's put endpoint
- SVC->>A: POST /oauth/token<br>grant_type=client_credentials<br>client_id=chat-service<br>client_secret=…<br>scope=brain.put<br>audience=brain.cyberos.internal
+ Note over SVC: CHAT needs to call memory's put endpoint
+ SVC->>A: POST /oauth/token<br>grant_type=client_credentials<br>client_id=chat-service<br>client_secret=…<br>scope=memory.put<br>audience=memory.cyberos.internal
  A->>A: verify client secret (argon2id)
  A->>A: check audience ∈ allowed_audiences
- A->>K: sign JWT {sub:chat-service, aud:brain, scope:brain.put, exp:15m}
+ A->>K: sign JWT {sub:chat-service, aud:memory, scope:memory.put, exp:15m}
  K-->>A: token
  A->>B: auth.decision {subject:chat-service, action:"token_exchange"}
  A-->>SVC: {access_token, ttl:900}
@@ -1032,7 +1032,7 @@ sequenceDiagram
 <section id="lifecycle" class="module-section">
  <header class="section-head"><span class="section-num">7</span><h2>Session lifecycle</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- A session traverses six states from issuance to expiry, with three terminal states (revoked, expired, replaced). Every transition writes an <code>auth.decision</code> row to BRAIN.
+ A session traverses six states from issuance to expiry, with three terminal states (revoked, expired, replaced). Every transition writes an <code>auth.decision</code> row to memory.
  </p>
  <div class="bbg-card p-5 mb-5">
  <div class="mermaid">
@@ -1118,7 +1118,7 @@ stateDiagram-v2
  <tr><td><code>N(FR pending)</code></td><td>OAuth token endpoint p95</td><td>≤ 250 ms</td><td>k6 load test</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>WebAuthn assertion verify p95</td><td>≤ 50 ms</td><td>k6 load test</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>AUTH availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor (N(FR pending))</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Auth-decision durability</td><td>0 dropped rows under crash</td><td>chaos test + BRAIN ledger walk</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Auth-decision durability</td><td>0 dropped rows under crash</td><td>chaos test + memory ledger walk</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Refresh-token reuse detection rate</td><td>100% (zero false negatives)</td><td>property-based test</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Session revoke propagation</td><td>≤ 5 s end-to-end</td><td>(FR pending) test</td></tr>
  </tbody>
@@ -1132,13 +1132,13 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- AUTH depends on three primitives (BRAIN for audit, OBS for telemetry, KMS for the signing key) and is depended on by every module that does anything cross-tenant or cross-module — which is to say, all of them.
+ AUTH depends on three primitives (memory for audit, OBS for telemetry, KMS for the signing key) and is depended on by every module that does anything cross-tenant or cross-module — which is to say, all of them.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["AUTH depends on"]
- BRAIN["🧠 BRAIN<br>auth.decision rows"]
+ memory["🧠 memory<br>auth.decision rows"]
  OBS["👁 OBS<br>traces + alerts"]
  KMS["🔑 AWS KMS<br>RS256 signing key"]
  PG["🗄 PostgreSQL<br>identity store"]
@@ -1155,7 +1155,7 @@ graph LR
  CRM["🏢 CRM"]
  OTHERS["…16 more"]
  end
- BRAIN --> AUTH
+ memory --> AUTH
  OBS --> AUTH
  KMS --> AUTH
  PG --> AUTH
@@ -1171,7 +1171,7 @@ graph LR
 
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef planned fill:#fef6e0,stroke:#9c750a
- class BRAIN shipped
+ class memory shipped
  class AUTH,AR,MCP,AI,CHAT,REW,HR,CRM,OTHERS,OBS planned
  class KMS,PG,REDIS shipped
  </div>
@@ -1183,7 +1183,7 @@ graph LR
 <!-- ============================================================ -->
 <section id="compliance" class="module-section">
  <header class="section-head"><span class="section-num">11</span><h2>Compliance scope</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">AUTH is the regulator's first stop. The audit chain it produces — co-owned with BRAIN — answers every identity, access, and breach-notification question across PDPL, GDPR, ISO 27001, and SOC 2.</p>
+ <p class="text-slate-700 leading-relaxed mb-4">AUTH is the regulator's first stop. The audit chain it produces — co-owned with memory — answers every identity, access, and breach-notification question across PDPL, GDPR, ISO 27001, and SOC 2.</p>
  <div class="bbg-card p-5 overflow-x-auto">
  <table class="kt">
  <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>AUTH feature that satisfies it</th></tr></thead>
@@ -1231,8 +1231,8 @@ graph LR
  <tr><td colspan="6" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">Reordering + stub + Lumi integration risks (per research review)</td></tr>
  <tr><td><code>R-AUTH-011</code></td><td><strong>P0 · slice 2 stub stays in production past P3</strong> — the team relies on magic-link for too long, never adopts WebAuthn passkeys; SOC 2 evidence window opens with the stub still primary</td><td>High</td><td>Medium</td><td>CTO</td><td>SOC 2 readiness gate at P0 · exit explicitly requires WebAuthn enrolment for T2+ subjects. P1 exit blocked if &gt; 50% of T2+ subjects haven't enrolled a passkey. Stub-only paths retire at P1 · exit per migration discipline.</td></tr>
  <tr><td><code>R-AUTH-012</code></td><td><strong>AI-Gateway-before-AUTH reorder regret</strong> — early modules embed mock auth that becomes hard to replace at P0 · slice 2</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Mock-auth at P0 · slice 1 (during AI Gateway slice 1) MUST use a single shared "mock-AUTH" library that lives in <code>services/auth/mock/</code> with the SAME API as the real AUTH. At P0 · slice 2 slice 1, the mock library imports the real AUTH via feature flag; mock-only paths retire at P0 · exit.</td></tr>
- <tr><td><code>R-AUTH-013</code></td><td><strong>Lumi's BRAIN tenant-id claim spoofing</strong> — attacker steals an AUTH-issued JWT, modifies tenant_id, presents to Lumi's BRAIN</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>JWT is RS256-signed; modifying any claim invalidates signature. JWKS endpoint over HTTPS-only with certificate pinning. Lumi's BRAIN re-verifies signature on every request (cached JWKS for JWT-lifetime ≤ 15 min). Audit-chain emission on every Lumi push includes the verifying key's <code>kid</code>.</td></tr>
- <tr><td><code>R-AUTH-014</code></td><td><strong>Cross-shard JWT replay</strong> — a tenant pinned to <code>sg-1</code> has its JWT presented to the <code>eu-fra-1</code> Lumi's BRAIN shard</td><td>Medium</td><td>High</td><td>CTO</td><td>JWT carries <code>tenant_residency</code> claim. Each Lumi's BRAIN shard rejects JWTs whose <code>tenant_residency</code> doesn't match its own shard ID. Cross-shard migration requires explicit <code>cross-shard-migrate</code> claim (CDO + CLO co-signed, 1-hour TTL, one-time-use).</td></tr>
+ <tr><td><code>R-AUTH-013</code></td><td><strong>Lumi's memory tenant-id claim spoofing</strong> — attacker steals an AUTH-issued JWT, modifies tenant_id, presents to Lumi's memory</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>JWT is RS256-signed; modifying any claim invalidates signature. JWKS endpoint over HTTPS-only with certificate pinning. Lumi's memory re-verifies signature on every request (cached JWKS for JWT-lifetime ≤ 15 min). Audit-chain emission on every Lumi push includes the verifying key's <code>kid</code>.</td></tr>
+ <tr><td><code>R-AUTH-014</code></td><td><strong>Cross-shard JWT replay</strong> — a tenant pinned to <code>sg-1</code> has its JWT presented to the <code>eu-fra-1</code> Lumi's memory shard</td><td>Medium</td><td>High</td><td>CTO</td><td>JWT carries <code>tenant_residency</code> claim. Each Lumi's memory shard rejects JWTs whose <code>tenant_residency</code> doesn't match its own shard ID. Cross-shard migration requires explicit <code>cross-shard-migrate</code> claim (CDO + CLO co-signed, 1-hour TTL, one-time-use).</td></tr>
  <tr><td><code>R-AUTH-015</code></td><td><strong>Sub-process audit-bridge slow path</strong> — slice-4 subprocess shim becomes a bottleneck at &gt; 100 auth decisions/sec, audit-chain backlog grows</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Slice 5 PyO3 binding target &lt; 1ms p99. If slice 4 subprocess hits &gt; 60 s backlog at sustained load, AUTH refuses new logins (per R-AUTH-010). Bench at every slice ship; alert if p95 of subprocess invocation &gt; 50 ms.</td></tr>
  <tr><td><code>R-AUTH-016</code></td><td><strong>Tenant-0 bootstrap leak</strong> — the one-time enrolment URL for tenant 0's first root-admin is shared, intercepted, or leaks via logs</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>One-time URL has 1-hour expiry and single-use semantics. Bootstrap CLI requires sudo + audit-emit. URL is printed once to stdout (never logged to file). All bootstrap actions audit-chained with the originating shell session ID.</td></tr>
  <tr><td><code>R-AUTH-017</code></td><td><strong>PDPL Art. 38 SME grace lapse</strong> — tenant ages out of SME 5-year grace (post-2031-01-01) and AUTH hasn't gated the DPO-required workflows by then</td><td>High</td><td>Medium</td><td>CLO</td><td>AUTH tenant config has <code>pdpl_sme_grace_expires_at</code>. At 90 days before expiry, AUTH emits a "DPO required" advisory to the tenant-admin role. At expiry, AUTH refuses to issue tenant-admin login until a DPO subject is enrolled.</td></tr>
@@ -1257,14 +1257,14 @@ graph LR
  <tr><td><strong>Token endpoint p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 250 ms</td></tr>
  <tr><td><strong>Refresh-reuse detections</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; expect &lt; 5/month</td></tr>
  <tr><td><strong>Impossible-travel challenges</strong></td><td>count / 28 d</td><td>auth.decision</td><td>tracked; alert on &gt; 50/day</td></tr>
- <tr><td><strong>Auth-decision durability</strong></td><td><code>rows_in_brain / rows_emitted</code></td><td>chaos test</td><td>100%</td></tr>
+ <tr><td><strong>Auth-decision durability</strong></td><td><code>rows_in_memory / rows_emitted</code></td><td>chaos test</td><td>100%</td></tr>
  <tr><td><strong>Session revoke p95 (end-to-end)</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 s ((FR pending))</td></tr>
  <tr><td><strong>Penetration-test critical findings</strong></td><td>count</td><td>annual report</td><td>= 0 critical · ≤ 2 high</td></tr>
  <tr><td colspan="4" style="background:var(--ochre-50);font-weight:600;text-align:center;color:var(--umber-700)">P0 · slice 2-stub-vs-P3-full + Lumi-integration KPIs</td></tr>
  <tr><td><strong>Stub-to-full migration coverage</strong></td><td><code>subjects_with_webauthn / total_T2+_subjects</code></td><td>auth subjects table</td><td>≥ 50% by P1 · start · ≥ 95% by P1 · exit (P1 exit gate)</td></tr>
  <tr><td><strong>Mock-AUTH retirement</strong></td><td><code>days_since_module_X_consumed_mock_auth</code></td><td>module dependency graph + CI</td><td>0 modules consuming mock-AUTH by P0 · exit (all migrated to real AUTH)</td></tr>
- <tr><td><strong>Lumi tenant-id verification success rate</strong></td><td><code>verified_jwts / total_lumi_sync_requests</code></td><td>Lumi's BRAIN access logs</td><td>≥ 99.99% — non-verification means JWKS outage</td></tr>
- <tr><td><strong>Cross-shard rejection rate</strong></td><td><code>rejected_cross_shard / total</code></td><td>Lumi's BRAIN edge proxy</td><td>0% under steady state; spike means tenant residency misconfigured</td></tr>
+ <tr><td><strong>Lumi tenant-id verification success rate</strong></td><td><code>verified_jwts / total_lumi_sync_requests</code></td><td>Lumi's memory access logs</td><td>≥ 99.99% — non-verification means JWKS outage</td></tr>
+ <tr><td><strong>Cross-shard rejection rate</strong></td><td><code>rejected_cross_shard / total</code></td><td>Lumi's memory edge proxy</td><td>0% under steady state; spike means tenant residency misconfigured</td></tr>
  <tr><td><strong>Audit-bridge p99 latency</strong></td><td>subprocess shim or PyO3</td><td>OBS</td><td>slice 4: ≤ 50 ms · slice 5: ≤ 1 ms (PyO3 target)</td></tr>
  <tr><td><strong>SME-grace lapsed tenants</strong></td><td>count</td><td>auth tenant config</td><td>0 lapsed without DPO enrolled (R-AUTH-017 mitigation)</td></tr>
  <tr><td><strong>22-role catalogue stability</strong></td><td><code>ADR-validated role changes / total schema changes</code></td><td>git log + ADRs</td><td>100% — every role addition is an ADR</td></tr>
@@ -1316,7 +1316,7 @@ graph LR
  id: 01HZJ8R4M2K7QXP3F9D8YN7B2T
  slug: stephen-personal
  residency: vn-hanoi-1
- audit: brain seq=14823 chain=9f3e2a1b…8d4c</code></pre>
+ audit: memory seq=14823 chain=9f3e2a1b…8d4c</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Enrol a passkey (interactive)</h3>
 <pre><code>$ cyberos-auth webauthn enrol --subject stephen@cyberskill.com
@@ -1333,19 +1333,19 @@ graph LR
  --expires 2027-12-31T00:00:00Z
 
 [role granted] subject=acme-cfo@acme.com role=cfo expires=2027-12-31
-[audit] brain seq=14831 chain=b8d4…e3f7</code></pre>
+[audit] memory seq=14831 chain=b8d4…e3f7</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Revoke a session</h3>
 <pre><code>$ cyberos-auth session revoke --id 01HZJ8…JTC
 
 [revoke] session 01HZJ8…JTC → status=revoked
 [propagated] Redis cache invalidated; Apollo Router will reject within 5 s
-[audit] brain seq=14832 chain=c9e5…f4a8</code></pre>
+[audit] memory seq=14832 chain=c9e5…f4a8</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">5. Read auth decisions for a subject (DSAR-style)</h3>
 <pre><code>$ cyberos-auth decisions list --subject stephen@cyberskill.com --since 7d --format jsonl | head -3
 {"ts":"2026-05-13T09:21:08Z","action":"login","decision":"allow","reason":"webauthn.aal3","device":"MacBook Pro 16"}
-{"ts":"2026-05-13T09:21:09Z","action":"brain.put","decision":"allow","reason":"role.founder","resource":"memories/decisions/holdco-flip.md"}
+{"ts":"2026-05-13T09:21:09Z","action":"memory.put","decision":"allow","reason":"role.founder","resource":"memories/decisions/holdco-flip.md"}
 {"ts":"2026-05-13T11:04:32Z","action":"rew.write_run","decision":"deny","reason":"policy.cfo_co_sign_required","resource":"rew/run/2026-05"}</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Rotate the JWT signing key</h3>
@@ -1354,7 +1354,7 @@ graph LR
 [rotate] new key id: 2026-q2-sig
 [kms] old key id 2026-q1-sig retained for verification (30 d)
 [jwks] /.well-known/jwks.json updated; downstream propagation: ≤ 60 s
-[audit] brain seq=14841 chain=d1f3…a8c7</code></pre>
+[audit] memory seq=14841 chain=d1f3…a8c7</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. Export DSAR bundle</h3>
 <pre><code>$ cyberos-auth dsar-export --subject acme-contact@acme.com --output dsar.zip
@@ -1417,12 +1417,12 @@ graph LR
  <div class="bbg-card p-5">
  <ul class="space-y-2 text-sm">
  <li><strong>services/auth/RFC.md</strong> (drafted 2026-05-14) — <a href="../../services/auth/RFC.md" class="text-blue-700 underline">implementation RFC</a>: 5-slice ship plan · 5 open questions · audit-chain bridge design · DoD. The source-of-truth for everything P0 · slice 2 → P3.</li>
- <li><strong>services/auth/mockups/sign-in.html</strong> — <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">first AUTH UI mockup</a> — Liquid Glass + Umber/Ochre · Be Vietnam Pro · passkey-first flow · MFA chips · BRAIN audit-chain trust footnote. Implements design system Part 21.</li>
- <li><strong>BRAIN_AUTOSYNC_DESIGN.md</strong> §6 — <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">Lumi's BRAIN spec</a>. AUTH issues the tenant-scoped JWT that Lumi consumes for row-level isolation. AUTH is gated by AI Gateway + TEN per the reordered P0 sequence.</li>
+ <li><strong>services/auth/mockups/sign-in.html</strong> — <a href="../../services/auth/mockups/sign-in.html" class="text-blue-700 underline">first AUTH UI mockup</a> — Liquid Glass + Umber/Ochre · Be Vietnam Pro · passkey-first flow · MFA chips · memory audit-chain trust footnote. Implements design system Part 21.</li>
+ <li><strong>MEMORY_AUTOSYNC_DESIGN.md</strong> §6 — <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">Lumi's memory spec</a>. AUTH issues the tenant-scoped JWT that Lumi consumes for row-level isolation. AUTH is gated by AI Gateway + TEN per the reordered P0 sequence.</li>
  <li><strong>archive/2026-05-14/RESEARCH_REVIEW.md</strong> §2.4 — <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span>. The "AUTH not P0 #1" reorder rationale. Section 2.4 verbatim: "AUTH at P0 · slice 2 can be magic-link + TOTP with a stub RBAC. WebAuthn passkeys for the Founder and a per-tenant authz server can land at P0 · exit without blocking any other module."</li>
  <li><strong>archive/2026-05-14/AUDIT_AND_PLAN.md</strong> — <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span>. AUTH's 5-slice progression and slice ordering relative to AI Gateway / MCP Gateway / OBS / CHAT.</li>
  <li><strong>AUTHORING_DISCIPLINE.md</strong> — <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">FR authoring playbook (feature-request-author + audit pair)</a>. AUTH FRs land here; FR-AUTH-001 through FR-AUTH-005 all ship via this discipline.</li>
- <li><strong>AGENTS.md</strong> §3.6 + §11 — <a href="../../memory/docs/AGENTS.md" class="text-blue-700 underline">BRAIN protocol</a>. <code>allowed_brain_scopes</code> + trust model · the basis for AUTH's audit-chain bridge contract.</li>
+ <li><strong>AGENTS.md</strong> §3.6 + §11 — <a href="../../memory/docs/AGENTS.md" class="text-blue-700 underline">memory protocol</a>. <code>allowed_memory_scopes</code> + trust model · the basis for AUTH's audit-chain bridge contract.</li>
  <li><strong>Decree 53/2022/NĐ-CP (Vietnam)</strong> — Cybersecurity Law implementing decree; data-residency + breach notification.</li>
  <li><strong>Decree 13/2023/NĐ-CP (Vietnam)</strong> — Personal data processing protection.</li>
  <li><strong>Law 91/2025/QH15 (Vietnam PDPL)</strong> — Personal Data Protection Law.</li>
@@ -1466,7 +1466,7 @@ graph LR
    </ul>
   </div>
  </div>
- <p class="text-xs text-slate-500 mt-3">Every other CUO persona (42 of 47) consumes AUTH JWTs to read scope-limited BRAIN data per the Scope Contract Grant mechanism. See <a href="#rbac-catalogue" class="text-blue-700 underline">§ RBAC catalogue</a> above.</p>
+ <p class="text-xs text-slate-500 mt-3">Every other CUO persona (42 of 47) consumes AUTH JWTs to read scope-limited memory data per the Scope Contract Grant mechanism. See <a href="#rbac-catalogue" class="text-blue-700 underline">§ RBAC catalogue</a> above.</p>
 </section>
 
 <!-- ============================================================ -->

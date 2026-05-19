@@ -1,0 +1,12 @@
+tenant_id: org:test-a
+ai_policy:
+  monthly_cap_usd: "150"
+  warn_threshold: 0.80
+  hard_stop: true
+  primary_provider:
+    kind: anthropic
+    model_alias_map:
+      chat.smart: claude-3-5-sonnet-20241022
+  call_timeout_seconds: 60
+  residency: sg-1
+  zdr_required: true

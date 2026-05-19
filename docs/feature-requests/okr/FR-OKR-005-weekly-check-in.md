@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-OKR-001, FR-OKR-006, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-OKR-001, FR-OKR-006, FR-MEMORY-111]
 depends_on: [FR-OKR-001]
 blocks: [FR-OKR-006]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2001 2026-05-17 — Closed enum `confidence_trend` = {improving, steady, declining, unknown}; cardinality 4 (derived from 4-week rolling avg)
   - DEC-2002 2026-05-17 — Per-week immutable; corrections via new row with same ISO week (UNIQUE(kr_id, iso_week, version))
   - DEC-2003 2026-05-17 — Reminder cron Monday 09:00 tenant_tz; missing check-in = sev-3 alert to KR owner
-  - DEC-2004 2026-05-17 — BRAIN audit kinds: okr.checkin_submitted, okr.checkin_corrected, okr.checkin_missing_alert
+  - DEC-2004 2026-05-17 — memory audit kinds: okr.checkin_submitted, okr.checkin_corrected, okr.checkin_missing_alert
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without weekly check-ins, KR owners disengage → progress dri
 
 ## §1 — Description (BCP-14 normative)
 
-The OKR service **MUST** ship weekly check-in at `services/okr/src/checkin/` with 1-10 confidence + rationale + 4-week trend + Monday reminder, 3 BRAIN audit kinds.
+The OKR service **MUST** ship weekly check-in at `services/okr/src/checkin/` with 1-10 confidence + rationale + 4-week trend + Monday reminder, 3 memory audit kinds.
 
 1. **MUST** validate confidence in 1-10 per DEC-2000 (CHECK constraint).
 
@@ -119,7 +119,7 @@ The OKR service **MUST** ship weekly check-in at `services/okr/src/checkin/` wit
    GET  /v1/okr/krs/{id}/trend                 (derived from history)
    ```
 
-8. **MUST** emit 3 BRAIN audit kinds per DEC-2004. PII per FR-BRAIN-111: rationale SHA-256 hashed.
+8. **MUST** emit 3 memory audit kinds per DEC-2004. PII per FR-MEMORY-111: rationale SHA-256 hashed.
 
 9. **MUST** thread trace_id from submit → audit.
 
@@ -166,7 +166,7 @@ Response with trend:
 ---
 
 ## §4 — Acceptance criteria
-1. **Confidence 1-10 CHECK**. 2. **confidence_trend enum cardinality 4**. 3. **Rationale required**. 4. **Per-week immutable**. 5. **Correction via version+1**. 6. **UNIQUE(kr_id, iso_week, version)**. 7. **Trend calc from 4-week rolling**. 8. **<2 prior weeks → trend=unknown**. 9. **Monday reminder cron**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (rationale SHA256)**. 12. **RLS denies cross-tenant**. 13. **KR owner-only submit**. 14. **Trace_id preserved**. 15. **Append-only via REVOKE**. 16. **History query desc time**. 17. **Trend recompute on each new check-in**. 18. **Missing check-in alert sev-3**. 19. **ISO week format enforced**. 20. **Rationale length capped 2000 chars**.
+1. **Confidence 1-10 CHECK**. 2. **confidence_trend enum cardinality 4**. 3. **Rationale required**. 4. **Per-week immutable**. 5. **Correction via version+1**. 6. **UNIQUE(kr_id, iso_week, version)**. 7. **Trend calc from 4-week rolling**. 8. **<2 prior weeks → trend=unknown**. 9. **Monday reminder cron**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (rationale SHA256)**. 12. **RLS denies cross-tenant**. 13. **KR owner-only submit**. 14. **Trace_id preserved**. 15. **Append-only via REVOKE**. 16. **History query desc time**. 17. **Trend recompute on each new check-in**. 18. **Missing check-in alert sev-3**. 19. **ISO week format enforced**. 20. **Rationale length capped 2000 chars**.
 
 ---
 
@@ -206,7 +206,7 @@ async fn trend_improving_after_3w_climb() {
 ## §7 — Dependencies
 **Upstream:** FR-OKR-001.
 **Downstream:** FR-OKR-006 (Monday digest uses check-ins).
-**Cross-module:** FR-MCP-007 (reminder cron), FR-AUTH-101 (KR owner role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-MCP-007 (reminder cron), FR-AUTH-101 (KR owner role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -226,7 +226,7 @@ async fn trend_improving_after_3w_climb() {
 - §11.1 Trend calc pure function: `(history: Vec<(week, confidence)>, current) → Trend`.
 - §11.2 Reminder cron via FR-MCP-007 `kind: 'okr.checkin_reminder'`, Monday 09:00.
 - §11.3 ISO week computed via `chrono::IsoWeek`.
-- §11.4 BRAIN audit body: kr_id, iso_week, confidence; rationale SHA256.
+- §11.4 memory audit body: kr_id, iso_week, confidence; rationale SHA256.
 - §11.5 UI: shows 8-week sparkline + current confidence + trend arrow.
 
 ---

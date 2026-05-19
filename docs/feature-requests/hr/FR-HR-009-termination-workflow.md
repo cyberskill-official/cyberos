@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-AUTH-101, FR-ESOP-005, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-AUTH-101, FR-ESOP-005, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-HR-001]
 blocks: [FR-ESOP-005]
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1872 2026-05-17 — Closed enum `termination_stage` = {initiated, cfo_signed, ceo_signed, executed, dispute}; cardinality 5
   - DEC-1873 2026-05-17 — Dual sign-off: CFO + CEO required for execution; either rejection stops workflow
   - DEC-1874 2026-05-17 — On executed: cascade to FR-ESOP-005 (vesting halt), FR-AUTH-101 (deprovision), FR-PORTAL-008 (DSAR offer), FR-PROJ-013 (issue reassignment)
-  - DEC-1875 2026-05-17 — BRAIN audit kinds: hr.termination_initiated, hr.termination_signed, hr.termination_executed, hr.termination_disputed, hr.termination_failed
+  - DEC-1875 2026-05-17 — memory audit kinds: hr.termination_initiated, hr.termination_signed, hr.termination_executed, hr.termination_disputed, hr.termination_failed
 
 build_envelope:
   language: rust 1.81
@@ -74,7 +74,7 @@ risk_if_skipped: "Without GL/BL branch + dual-sign, terminations executed by sin
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** ship termination workflow at `services/hr/src/termination/` with GL/BL branch + CFO+CEO dual sign + cascade to ESOP/AUTH/PORTAL/PROJ, 5 BRAIN audit kinds.
+The HR service **MUST** ship termination workflow at `services/hr/src/termination/` with GL/BL branch + CFO+CEO dual sign + cascade to ESOP/AUTH/PORTAL/PROJ, 5 memory audit kinds.
 
 1. **MUST** validate `termination_kind` against closed enum per DEC-1871, `termination_stage` per DEC-1872.
 
@@ -133,7 +133,7 @@ The HR service **MUST** ship termination workflow at `services/hr/src/terminatio
    GET    /v1/hr/terminations/{id}             (status)
    ```
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-1875. PII per FR-BRAIN-111: reason+dispute_reason hashed; ids ok.
+7. **MUST** emit 5 memory audit kinds per DEC-1875. PII per FR-MEMORY-111: reason+dispute_reason hashed; ids ok.
 
 8. **MUST** thread trace_id from initiate → sign → execute → cascade → audit.
 
@@ -180,7 +180,7 @@ Sample termination:
 ---
 
 ## §4 — Acceptance criteria
-1. **kind enum cardinality 6**. 2. **stage enum cardinality 5**. 3. **CFO+CEO dual sign required**. 4. **Same person can't sign both**. 5. **GL → ESOP fully vested up to term_date**. 6. **BL → ESOP forfeiture per policy**. 7. **Cascade to ESOP-005 + AUTH-101 + PORTAL-008 + PROJ-013**. 8. **5 BRAIN audit kinds emitted**. 9. **PII scrubbed (reason SHA256)**. 10. **RLS denies cross-tenant**. 11. **CHRO initiate, CFO sign, CEO sign — role-gated**. 12. **Trace_id preserved**. 13. **UNIQUE on member_id (one termination per)**. 14. **Append-only via REVOKE except 7 cols**. 15. **Dispute halts execution**. 16. **AUTH deprovision verified post-execute**. 17. **DSAR offer email sent**. 18. **Open issues reassigned to manager**. 19. **Cascade failure → sev-1 + rollback termination**. 20. **No termination during probation without specific kind**.
+1. **kind enum cardinality 6**. 2. **stage enum cardinality 5**. 3. **CFO+CEO dual sign required**. 4. **Same person can't sign both**. 5. **GL → ESOP fully vested up to term_date**. 6. **BL → ESOP forfeiture per policy**. 7. **Cascade to ESOP-005 + AUTH-101 + PORTAL-008 + PROJ-013**. 8. **5 memory audit kinds emitted**. 9. **PII scrubbed (reason SHA256)**. 10. **RLS denies cross-tenant**. 11. **CHRO initiate, CFO sign, CEO sign — role-gated**. 12. **Trace_id preserved**. 13. **UNIQUE on member_id (one termination per)**. 14. **Append-only via REVOKE except 7 cols**. 15. **Dispute halts execution**. 16. **AUTH deprovision verified post-execute**. 17. **DSAR offer email sent**. 18. **Open issues reassigned to manager**. 19. **Cascade failure → sev-1 + rollback termination**. 20. **No termination during probation without specific kind**.
 
 ---
 
@@ -229,7 +229,7 @@ async fn good_leaver_full_vesting() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
-**Cross-module:** FR-AUTH-101 (CFO/CEO/CHRO roles + deprovision), FR-ESOP-005 (GL/BL branch), FR-PORTAL-008 (DSAR), FR-PROJ-013 (issue reassign), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-101 (CFO/CEO/CHRO roles + deprovision), FR-ESOP-005 (GL/BL branch), FR-PORTAL-008 (DSAR), FR-PROJ-013 (issue reassign), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -249,7 +249,7 @@ async fn good_leaver_full_vesting() {
 - §11.1 Cascade is transactional — all-or-nothing; rollback termination if any cascade step fails.
 - §11.2 BL ESOP forfeiture per board policy doc (stored in tenant config).
 - §11.3 Severance computation: GL = per VN Art. 46 (0.5mo per year); BL = none if cause.
-- §11.4 BRAIN audit body: termination_id, member_id, kind, stage; reasons SHA256.
+- §11.4 memory audit body: termination_id, member_id, kind, stage; reasons SHA256.
 - §11.5 Dispute opens 30-day window before execute; can convert to mutual_separation if resolved.
 
 ---

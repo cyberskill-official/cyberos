@@ -45,7 +45,7 @@
  <strong>The external-agent door.</strong> Claude / Cursor / Codex / Cline / any MCP-2025-11-25 client sees one server. Inside, 22 modules' tool catalogues are federated, capability-gated, persona-stamped, and audit-chained — without the external agent ever knowing about the federation.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- MCP Gateway plays three strategic roles simultaneously. <strong>Role 1 — external-client federation</strong>: 22 module-level MCP servers (<code>cyberos.brain</code>, <code>cyberos.skill</code>, <code>cyberos.proj</code>, …) collapse to a single discovery endpoint at <code>https://mcp.cyberos.com</code>; external agents see one server with one OAuth flow. <strong>Role 2 — capability broker</strong>: OAuth 2.1 + PKCE audience-bound tokens + AUTH scope_grants + tool annotations (destructive / readOnly / idempotent / openWorld) gate every invocation; destructive ops require human-confirm or Elicitation flow; persona-version is stamped on every call so "the AI did it" is replayable. <strong>Role 3 — tool-discovery surface</strong>: the registry external agents introspect — <code>tools/list</code> returns the SEP-986-named verbs, prompt templates land in <code>prompts/list</code>, long-running work is tracked via the Tasks primitive. Built on MCP spec 2025-11-25 (Streamable HTTP transport, OAuth 2.1 with PRM, Elicitation, Tasks). The planned implementation lives at <code>cyberos/services/mcp-gateway/</code>.
+ MCP Gateway plays three strategic roles simultaneously. <strong>Role 1 — external-client federation</strong>: 22 module-level MCP servers (<code>cyberos.memory</code>, <code>cyberos.skill</code>, <code>cyberos.proj</code>, …) collapse to a single discovery endpoint at <code>https://mcp.cyberos.com</code>; external agents see one server with one OAuth flow. <strong>Role 2 — capability broker</strong>: OAuth 2.1 + PKCE audience-bound tokens + AUTH scope_grants + tool annotations (destructive / readOnly / idempotent / openWorld) gate every invocation; destructive ops require human-confirm or Elicitation flow; persona-version is stamped on every call so "the AI did it" is replayable. <strong>Role 3 — tool-discovery surface</strong>: the registry external agents introspect — <code>tools/list</code> returns the SEP-986-named verbs, prompt templates land in <code>prompts/list</code>, long-running work is tracked via the Tasks primitive. Built on MCP spec 2025-11-25 (Streamable HTTP transport, OAuth 2.1 with PRM, Elicitation, Tasks). The planned implementation lives at <code>cyberos/services/mcp-gateway/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -104,7 +104,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card p-6 mb-6" style="border-top: 4px solid #06b6d4;">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- MCP Gateway is the <strong>tool federation layer</strong> that turns CyberOS's 22 modules into a single, coherent MCP server. Each module publishes a per-server (named <code>cyberos.brain</code>, <code>cyberos.skill</code>, <code>cyberos.crm</code>, …) that exposes its verbs as tools (<code>brain.put_memory</code>, <code>skill.invoke_skill</code>, <code>crm.update_account</code>, …); the gateway aggregates these into a federated surface that Claude / Codex / Cursor / Cline / any 2025-11-25-spec client sees as one server. OAuth 2.1 + PKCE (RFC 7636) gates every tool call; the audience claim pins the call to a specific module; the RBAC predicate from AUTH enforces who can do what; the persona-version stamp captures which agent authored the call. Tool annotations (destructive · readOnly · idempotent · openWorld) drive human-confirm gating. Tasks primitive handles long-running work; Elicitation reverses control mid-execution to ask the user a question.
+ MCP Gateway is the <strong>tool federation layer</strong> that turns CyberOS's 22 modules into a single, coherent MCP server. Each module publishes a per-server (named <code>cyberos.memory</code>, <code>cyberos.skill</code>, <code>cyberos.crm</code>, …) that exposes its verbs as tools (<code>memory.put_memory</code>, <code>skill.invoke_skill</code>, <code>crm.update_account</code>, …); the gateway aggregates these into a federated surface that Claude / Codex / Cursor / Cline / any 2025-11-25-spec client sees as one server. OAuth 2.1 + PKCE (RFC 7636) gates every tool call; the audience claim pins the call to a specific module; the RBAC predicate from AUTH enforces who can do what; the persona-version stamp captures which agent authored the call. Tool annotations (destructive · readOnly · idempotent · openWorld) drive human-confirm gating. Tasks primitive handles long-running work; Elicitation reverses control mid-execution to ask the user a question.
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Strategic role</div><div class="value">External-agent door</div><div class="note">22 modules → one MCP server</div></div>
@@ -113,11 +113,11 @@
  <div class="fact-card"><div class="label">External clients (target)</div><div class="value">Claude · Cursor · Codex · Cline</div><div class="note">all 2025-11-25 compliant clients</div></div>
  <div class="fact-card"><div class="label">Transports</div><div class="value">Streamable HTTP · SSE</div><div class="note">RFC 9112 chunked + EventSource</div></div>
  <div class="fact-card"><div class="label">Auth</div><div class="value">OAuth 2.1 PKCE</div><div class="note">RFC 7636 · audience-bound · PRM</div></div>
- <div class="fact-card"><div class="label">Tools at P0 (est.)</div><div class="value">~80</div><div class="note">BRAIN · Skill · AUTH · AI</div></div>
+ <div class="fact-card"><div class="label">Tools at P0 (est.)</div><div class="value">~80</div><div class="note">memory · Skill · AUTH · AI</div></div>
  <div class="fact-card"><div class="label">Tools at P3 (est.)</div><div class="value">~300+</div><div class="note">22 modules × ~15 verbs each</div></div>
  <div class="fact-card"><div class="label">Destructive-op gating</div><div class="value">Human-confirm</div><div class="note">via Elicitation or explicit token</div></div>
  <div class="fact-card"><div class="label">Persona stamp coverage</div><div class="value">100%</div><div class="note">on every audit row</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">+ AI Gateway (P0 · slice 1)</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · OBS</div><div class="note">+ AI Gateway (P0 · slice 1)</div></div>
  <div class="fact-card"><div class="label">Naming convention</div><div class="value">SEP-986</div><div class="note">cyberos.{module}.{verb}_{noun}</div></div>
  </div>
  </div>
@@ -138,7 +138,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#0e7490">Role 1 · External-client federation</div>
  <div class="font-bold text-slate-900 mb-2 text-base">22 modules → one MCP server</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Claude Code, Cursor, Codex, Cline, and any 2025-11-25 spec client hit a single discovery endpoint at <code>https://mcp.cyberos.com/.well-known/mcp</code>. The gateway aggregates per-module tool catalogues via SEP-986 naming (<code>cyberos.brain.put_memory</code>, <code>cyberos.proj.create_issue</code>, etc.) so external agents see one server. Per-module servers stay separate behind the edge; federation only happens at the surface. This means Members can use the AI tools they already trust without learning a new orchestrator.
+ Claude Code, Cursor, Codex, Cline, and any 2025-11-25 spec client hit a single discovery endpoint at <code>https://mcp.cyberos.com/.well-known/mcp</code>. The gateway aggregates per-module tool catalogues via SEP-986 naming (<code>cyberos.memory.put_memory</code>, <code>cyberos.proj.create_issue</code>, etc.) so external agents see one server. Per-module servers stay separate behind the edge; federation only happens at the surface. This means Members can use the AI tools they already trust without learning a new orchestrator.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid #06b6d4">
@@ -152,7 +152,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#0e7490">Role 3 · Tool-discovery surface</div>
  <div class="font-bold text-slate-900 mb-2 text-base">The registry external agents introspect</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- <code>tools/list</code> returns ~80 tools at P0 (~300+ at P3); <code>prompts/list</code> exposes module-specific prompt templates; <code>resources/list</code> exposes BRAIN paths the agent can read. Long-running work (KB ingestion, big migrations, bulk imports) is tracked via the Tasks primitive — the agent can start a task, poll status, get a streaming progress update, and resume on reconnect. Elicitation reverses control mid-execution to ask "should I proceed with the destructive step?".
+ <code>tools/list</code> returns ~80 tools at P0 (~300+ at P3); <code>prompts/list</code> exposes module-specific prompt templates; <code>resources/list</code> exposes memory paths the agent can read. Long-running work (KB ingestion, big migrations, bulk imports) is tracked via the Tasks primitive — the agent can start a task, poll status, get a streaming progress update, and resume on reconnect. Elicitation reverses control mid-execution to ask "should I proceed with the destructive step?".
  </p>
  </div>
  </div>
@@ -172,7 +172,7 @@ flowchart TB
  MCPGW["🔌 MCP Gateway<br>OAuth 2.1 · Streamable HTTP · Tasks · Elicitation"]
 
  subgraph perm["Per-module MCP servers (internal)"]
- BRSV["cyberos.brain"]
+ BRSV["cyberos.memory"]
  SKSV["cyberos.skill"]
  PRSV["cyberos.proj"]
  CRMSV["cyberos.crm"]
@@ -183,7 +183,7 @@ flowchart TB
  subgraph dep["Platform deps"]
  AUTH["🔐 AUTH<br>scope_grants check"]
  AIGW["⚡ AI Gateway<br>persona stamp resolution"]
- BRAIN["🧠 BRAIN<br>audit chain"]
+ memory["🧠 memory<br>audit chain"]
  OBS["👁 OBS<br>traces"]
  end
 
@@ -202,7 +202,7 @@ flowchart TB
  MCPGW --> KBSV
  MCPGW --> N
 
- MCPGW --> BRAIN
+ MCPGW --> memory
  MCPGW --> OBS
 
  classDef hub fill:#cffafe,stroke:#0e7490,stroke-width:3px,color:#164e63
@@ -212,7 +212,7 @@ flowchart TB
  class MCPGW hub
  class CC,CURSOR,CODEX,CLINE,OTHER client
  class BRSV,SKSV,PRSV,CRMSV,KBSV,N internal
- class AUTH,AIGW,BRAIN,OBS dep
+ class AUTH,AIGW,memory,OBS dep
  </div>
  <p class="text-xs text-slate-500 mt-3">External clients never reach per-module servers directly. The gateway is the only external surface; this is the protocol-level guarantee that auth + audit + persona-stamp are uniformly applied.</p>
  </div>
@@ -239,7 +239,7 @@ flowchart TB
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why MCP Gateway exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Per-module MCP servers create N integration points where every AI agent has to negotiate auth, discover tools, and handle errors. As N grows to 22, the agent's job becomes intractable. The gateway pattern collapses N into 1: agents see a single MCP server with one OAuth flow, one tool catalogue, one discovery endpoint. The 22 modules continue to publish their per-server tools; the gateway federates them. Naming (<code>cyberos.brain.put_memory</code>) preserves the module origin so audit + revocation remain per-module.
+ Per-module MCP servers create N integration points where every AI agent has to negotiate auth, discover tools, and handle errors. As N grows to 22, the agent's job becomes intractable. The gateway pattern collapses N into 1: agents see a single MCP server with one OAuth flow, one tool catalogue, one discovery endpoint. The 22 modules continue to publish their per-server tools; the gateway federates them. Naming (<code>cyberos.memory.put_memory</code>) preserves the module origin so audit + revocation remain per-module.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-5">
  <div class="bbg-card p-5">
@@ -294,7 +294,7 @@ flowchart TB
 <section id="client-federation" class="module-section">
  <header class="section-head"><span class="section-num">2.5</span><h2>External-client federation — 22 modules behind one surface</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- An external agent never knows it's talking to 22 modules. From the agent's perspective, <code>https://mcp.cyberos.com</code> is one MCP server with ~80 tools at P0 (~300+ at P3). The federation is at the edge — per-module servers (<code>cyberos.brain</code>, <code>cyberos.skill</code>, etc.) stay separate inside the cluster, but the gateway is the only thing external clients reach. This section locks the federation contract.
+ An external agent never knows it's talking to 22 modules. From the agent's perspective, <code>https://mcp.cyberos.com</code> is one MCP server with ~80 tools at P0 (~300+ at P3). The federation is at the edge — per-module servers (<code>cyberos.memory</code>, <code>cyberos.skill</code>, etc.) stay separate inside the cluster, but the gateway is the only thing external clients reach. This section locks the federation contract.
  </p>
 
  <h3 class="text-lg font-bold mt-4 mb-3">SEP-986 naming convention (per-module ownership preserved)</h3>
@@ -303,14 +303,14 @@ flowchart TB
  <table class="kt">
  <thead><tr><th>Pattern</th><th>Example</th><th>What it does</th><th>Owning module</th></tr></thead>
  <tbody>
- <tr><td><code>cyberos.{module}.put_*</code></td><td><code>cyberos.brain.put_memory</code></td><td>Create or replace a resource</td><td>BRAIN</td></tr>
- <tr><td><code>cyberos.{module}.get_*</code></td><td><code>cyberos.brain.get_memory</code></td><td>Read a resource</td><td>BRAIN</td></tr>
+ <tr><td><code>cyberos.{module}.put_*</code></td><td><code>cyberos.memory.put_memory</code></td><td>Create or replace a resource</td><td>memory</td></tr>
+ <tr><td><code>cyberos.{module}.get_*</code></td><td><code>cyberos.memory.get_memory</code></td><td>Read a resource</td><td>memory</td></tr>
  <tr><td><code>cyberos.{module}.list_*</code></td><td><code>cyberos.proj.list_issues</code></td><td>List resources (paginated)</td><td>PROJ</td></tr>
  <tr><td><code>cyberos.{module}.create_*</code></td><td><code>cyberos.proj.create_issue</code></td><td>Create a new entity</td><td>PROJ</td></tr>
  <tr><td><code>cyberos.{module}.update_*</code></td><td><code>cyberos.crm.update_account</code></td><td>Mutate an existing entity</td><td>CRM</td></tr>
  <tr><td><code>cyberos.{module}.invoke_*</code></td><td><code>cyberos.skill.invoke_skill</code></td><td>Trigger a skill / action</td><td>Skill</td></tr>
  <tr><td><code>cyberos.{module}.delete_*</code></td><td><code>cyberos.proj.delete_issue</code></td><td>Tombstone an entity (destructive)</td><td>PROJ</td></tr>
- <tr><td><code>cyberos.{module}.export_*</code></td><td><code>cyberos.brain.export_dsar</code></td><td>Export bulk data (destructive sensitivity)</td><td>BRAIN</td></tr>
+ <tr><td><code>cyberos.{module}.export_*</code></td><td><code>cyberos.memory.export_dsar</code></td><td>Export bulk data (destructive sensitivity)</td><td>memory</td></tr>
  </tbody>
  </table>
  </div>
@@ -321,11 +321,11 @@ flowchart TB
  <div class="mermaid">
 sequenceDiagram
  autonumber
- participant M as cyberos.brain (per-module server)
+ participant M as cyberos.memory (per-module server)
  participant G as MCP Gateway
  participant DB as Catalogue DB
  participant CL as Subscribed clients (Claude, Cursor)
- participant BR as 🧠 BRAIN audit
+ participant BR as 🧠 memory audit
 
  M->>G: register_module(name, tools[], prompts[], resources[], version)
  G->>DB: upsert module record + tool catalogue
@@ -369,11 +369,11 @@ sequenceDiagram
  <table class="kt">
  <thead><tr><th>Annotation</th><th>Meaning</th><th>Gating behaviour</th><th>Example tools</th></tr></thead>
  <tbody>
- <tr><td><code>readOnly: true</code></td><td>No state mutation. Idempotent always.</td><td>Auto-invoke if scope permits; no confirm needed</td><td><code>cyberos.brain.get_memory</code>, <code>cyberos.proj.list_issues</code>, <code>cyberos.kb.search</code></td></tr>
+ <tr><td><code>readOnly: true</code></td><td>No state mutation. Idempotent always.</td><td>Auto-invoke if scope permits; no confirm needed</td><td><code>cyberos.memory.get_memory</code>, <code>cyberos.proj.list_issues</code>, <code>cyberos.kb.search</code></td></tr>
  <tr><td><code>idempotent: true</code></td><td>Write that can be safely retried with same args + idempotency-key</td><td>Auto-invoke if scope permits; idempotency-key required</td><td><code>cyberos.proj.update_issue</code>, <code>cyberos.crm.upsert_account</code></td></tr>
- <tr><td><code>destructive: true</code></td><td>Irreversible: purge / delete / send-money / public-post</td><td><strong>Human confirmation required</strong> — explicit confirmation_token in args OR Elicitation flow</td><td><code>cyberos.brain.delete_memory{mode: purge}</code>, <code>cyberos.proj.delete_engagement</code>, <code>cyberos.email.send</code></td></tr>
+ <tr><td><code>destructive: true</code></td><td>Irreversible: purge / delete / send-money / public-post</td><td><strong>Human confirmation required</strong> — explicit confirmation_token in args OR Elicitation flow</td><td><code>cyberos.memory.delete_memory{mode: purge}</code>, <code>cyberos.proj.delete_engagement</code>, <code>cyberos.email.send</code></td></tr>
  <tr><td><code>openWorld: true</code></td><td>Reaches external systems (third-party APIs, web fetch)</td><td>Auto-invoke with additional rate limit + content filter</td><td><code>cyberos.web.fetch_url</code>, <code>cyberos.zoominfo.enrich_contact</code></td></tr>
- <tr><td><code>longRunning: true</code></td><td>Returns a task_id; agent polls for completion</td><td>Auto-start as Task; agent polls; timeout default 1 h</td><td><code>cyberos.kb.ingest_corpus</code>, <code>cyberos.brain.export_dsar</code></td></tr>
+ <tr><td><code>longRunning: true</code></td><td>Returns a task_id; agent polls for completion</td><td>Auto-start as Task; agent polls; timeout default 1 h</td><td><code>cyberos.kb.ingest_corpus</code>, <code>cyberos.memory.export_dsar</code></td></tr>
  <tr><td><code>elicits: true</code></td><td>Server may ask agent for additional input mid-call</td><td>Agent must support Elicitation; falls back to user prompt</td><td><code>cyberos.cuo.route_with_clarification</code>, <code>cyberos.crm.create_deal_interactive</code></td></tr>
  </tbody>
  </table>
@@ -390,7 +390,7 @@ sequenceDiagram
   "tenant_id": "org:cyberskill",
   "agent_persona": "claude-code@user-stephen",  // ← which external agent is calling
   "scope_grants": [
-    {"resource": "brain", "actions": ["read", "write"], "sync_class_max": "shareable"},
+    {"resource": "memory", "actions": ["read", "write"], "sync_class_max": "shareable"},
     {"resource": "proj",  "actions": ["read", "write"], "engagements": ["acme-q3"]},
     {"resource": "kb",    "actions": ["read"]}
   ],
@@ -404,7 +404,7 @@ sequenceDiagram
  <h3 class="text-lg font-bold mt-6 mb-3">Destructive-op confirmation flow (Elicitation example)</h3>
  <div class="bbg-card p-5">
 <pre><code class="language-json">// Agent calls a destructive tool
-→ {"method": "tools/call", "params": {"name": "cyberos.brain.delete_memory", "arguments": {"path": "…/draft.md", "mode": "purge"}}}
+→ {"method": "tools/call", "params": {"name": "cyberos.memory.delete_memory", "arguments": {"path": "…/draft.md", "mode": "purge"}}}
 
 // Gateway intercepts: annotation destructive=true, no confirmation_token in args
 ← {"method": "elicitation/create", "params": {
@@ -417,7 +417,7 @@ sequenceDiagram
 
 // Gateway forwards original call with confirmation context
 // Audit row records BOTH the elicitation prompt AND the user's response
-{"op": "put", "path": "meta/mcp-invocations/…", "extra": {"tool": "cyberos.brain.delete_memory", "elicitation": {"prompt": "…", "user_confirmed": true, "reason": "Outdated draft superseded by v2"}}}</code></pre>
+{"op": "put", "path": "meta/mcp-invocations/…", "extra": {"tool": "cyberos.memory.delete_memory", "elicitation": {"prompt": "…", "user_confirmed": true, "reason": "Outdated draft superseded by v2"}}}</code></pre>
  </div>
 </section>
 
@@ -439,15 +439,15 @@ sequenceDiagram
  <tr><td><code>capabilities</code></td><td>Supported MCP features (Tasks, Elicitation, sampling, etc.)</td><td>none</td><td>per-session init</td></tr>
  <tr><td><code>tools/list</code></td><td>Tools available to the calling token's scope_grants</td><td>filtered by JWT scope_grants</td><td>per-call + <code>list_changed</code> push</td></tr>
  <tr><td><code>prompts/list</code></td><td>Prompt templates for common workflows ("Find the right CUO persona", "Draft a cycle review")</td><td>filtered by scope</td><td>per-call</td></tr>
- <tr><td><code>resources/list</code></td><td>BRAIN paths / KB documents the calling token can read</td><td>filtered by sync_class + scope</td><td>per-call</td></tr>
- <tr><td><code>resources/templates/list</code></td><td>URI templates for resource lookup (e.g. <code>brain://memories/decisions/{slug}</code>)</td><td>filtered by scope</td><td>per-call</td></tr>
+ <tr><td><code>resources/list</code></td><td>memory paths / KB documents the calling token can read</td><td>filtered by sync_class + scope</td><td>per-call</td></tr>
+ <tr><td><code>resources/templates/list</code></td><td>URI templates for resource lookup (e.g. <code>memory://memories/decisions/{slug}</code>)</td><td>filtered by scope</td><td>per-call</td></tr>
  </tbody>
  </table>
  </div>
 
  <h3 class="text-lg font-bold mt-6 mb-3">Tasks primitive — long-running work</h3>
  <div class="bbg-card p-5 mb-5">
- <p class="text-sm text-slate-600 mb-3">For operations that take &gt; 30 s (KB corpus ingestion, BRAIN export, bulk migrations), MCP Gateway returns a Task immediately and lets the agent poll for status. The agent can disconnect and reconnect; the Task persists in Postgres.</p>
+ <p class="text-sm text-slate-600 mb-3">For operations that take &gt; 30 s (KB corpus ingestion, memory export, bulk migrations), MCP Gateway returns a Task immediately and lets the agent poll for status. The agent can disconnect and reconnect; the Task persists in Postgres.</p>
  <table class="kt">
  <thead><tr><th>Task field</th><th>Type</th><th>Purpose</th></tr></thead>
  <tbody>
@@ -458,7 +458,7 @@ sequenceDiagram
  <tr><td><code>result</code></td><td>JSON · null until completed</td><td>Final response; matches the tool's result schema</td></tr>
  <tr><td><code>error</code></td><td>{code, message, retriable}</td><td>If failed; agent decides retry behaviour</td></tr>
  <tr><td><code>created_at / updated_at / expires_at</code></td><td>timestamps</td><td>Tasks expire after 24 h default; per-tool override</td></tr>
- <tr><td><code>brain_chain</code></td><td>hash</td><td>References the audit row that recorded task start</td></tr>
+ <tr><td><code>memory_chain</code></td><td>hash</td><td>References the audit row that recorded task start</td></tr>
  </tbody>
  </table>
  </div>
@@ -469,11 +469,11 @@ sequenceDiagram
  <table class="kt">
  <thead><tr><th>Prompt name</th><th>Purpose</th><th>Bound tools</th></tr></thead>
  <tbody>
- <tr><td><code>cyberos.weekly_brief</code></td><td>Generate the user's weekly brief from BRAIN + PROJ + CAL</td><td>brain.list_recent · proj.list_my_issues · cal.list_events</td></tr>
- <tr><td><code>cyberos.decision_to_issues</code></td><td>Convert a BRAIN decision memory into parent + child issues</td><td>brain.get_memory · cuo.invoke_skill (cuo.cpo.decision-to-issues@1) · proj.create_issue</td></tr>
+ <tr><td><code>cyberos.weekly_brief</code></td><td>Generate the user's weekly brief from memory + PROJ + CAL</td><td>memory.list_recent · proj.list_my_issues · cal.list_events</td></tr>
+ <tr><td><code>cyberos.decision_to_issues</code></td><td>Convert a memory decision memory into parent + child issues</td><td>memory.get_memory · cuo.invoke_skill (cuo.cpo.decision-to-issues@1) · proj.create_issue</td></tr>
  <tr><td><code>cyberos.draft_cycle_review</code></td><td>Generate cycle review from issues + comments + history</td><td>proj.get_cycle · proj.list_cycle_issues · ai.chat_complete (with CUO/COO persona)</td></tr>
- <tr><td><code>cyberos.deal_to_engagement</code></td><td>Convert a won CRM deal to a PROJ Engagement with rate card</td><td>crm.get_deal · proj.create_engagement · brain.put_memory (audit decision)</td></tr>
- <tr><td><code>cyberos.find_brain_citations</code></td><td>Given an Issue, suggest BRAIN memories to cite</td><td>proj.get_issue · brain.semantic_search · proj.create_brain_link</td></tr>
+ <tr><td><code>cyberos.deal_to_engagement</code></td><td>Convert a won CRM deal to a PROJ Engagement with rate card</td><td>crm.get_deal · proj.create_engagement · memory.put_memory (audit decision)</td></tr>
+ <tr><td><code>cyberos.find_memory_citations</code></td><td>Given an Issue, suggest memory memories to cite</td><td>proj.get_issue · memory.semantic_search · proj.create_memory_link</td></tr>
  </tbody>
  </table>
  <p class="text-sm text-slate-600 mt-3">Each prompt is a versioned, audit-anchored workflow; the agent receives the prompt and the bound tool names; the gateway audits prompt invocations separately from individual tool calls.</p>
@@ -483,7 +483,7 @@ sequenceDiagram
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Three layers: an edge that speaks the MCP spec to agents, a federation router that fans tool calls out to per-module gRPC backends, and an audit + observability bridge. The 22 modules each run a per-server (e.g. <code>cyberos.brain</code>) that registers itself with the gateway at startup.
+ Three layers: an edge that speaks the MCP spec to agents, a federation router that fans tool calls out to per-module gRPC backends, and an audit + observability bridge. The 22 modules each run a per-server (e.g. <code>cyberos.memory</code>) that registers itself with the gateway at startup.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -505,11 +505,11 @@ graph TB
  GATE["gate.rs<br>RBAC + human-confirm + audience check"]
  TASKS["tasks.rs<br>long-running primitive"]
  ELI["elicitation.rs<br>mid-execution prompt proxy"]
- AUD["audit.rs<br>per-call BRAIN write"]
+ AUD["audit.rs<br>per-call memory write"]
  end
 
  subgraph BACKENDS ["Per-module MCP servers (mTLS gRPC)"]
- BR["cyberos.brain<br>put_memory · view · search · …"]
+ BR["cyberos.memory<br>put_memory · view · search · …"]
  SK["cyberos.skill<br>invoke_skill · list_skills · …"]
  AU["cyberos.auth<br>whoami · check_permission · …"]
  AI["cyberos.ai<br>complete · embed · usage_mtd"]
@@ -518,7 +518,7 @@ graph TB
 
  subgraph SINKS
  AUTHSVC["🔐 AUTH service<br>token issuance + RBAC.Check"]
- BRAIN["🧠 BRAIN<br>mcp.invocation rows"]
+ memory["🧠 memory<br>mcp.invocation rows"]
  OBS["👁 OBS<br>traces + metrics"]
  end
 
@@ -543,7 +543,7 @@ graph TB
  ROUT --> TASKS
  GATE --> ELI
  GATE --> AUD
- AUD --> BRAIN
+ AUD --> memory
  GATEWAY --> OBS
 
  classDef planned fill:#e0f2fe,stroke:#0369a1
@@ -551,7 +551,7 @@ graph TB
  classDef sink fill:#f5ede6,stroke:#45210e
  class WK,AUTH_E,DISC,ROUT,ANN,GATE,TASKS,ELI,AUD,CL_D,CL_C,CUR,CUO planned
  class BR,SK,AU,AI,CRM backend
- class AUTHSVC,BRAIN,OBS sink
+ class AUTHSVC,memory,OBS sink
  </div>
  </div>
 
@@ -563,7 +563,7 @@ graph TB
  <tr><td><code>well_known.rs</code></td><td>services/mcp-gateway/src/well_known.rs</td><td>Serves <code>/.well-known/mcp</code> discovery document + <code>/.well-known/oauth-protected-resource</code> (PRM, RFC 9728).</td></tr>
  <tr><td><code>oauth_edge.rs</code></td><td>services/mcp-gateway/src/oauth_edge.rs</td><td>Handles OAuth 2.1 + PKCE handshake with the agent client. Delegates issuance to AUTH service over gRPC.</td></tr>
  <tr><td><code>discovery.rs</code></td><td>services/mcp-gateway/src/discovery.rs</td><td>Aggregates <code>tools/list</code> across federated backends. Caches catalogue with 60 s TTL; invalidated on backend register.</td></tr>
- <tr><td><code>federation.rs</code></td><td>services/mcp-gateway/src/federation.rs</td><td>Routes a tool call (<code>cyberos.brain.put_memory</code>) to the right backend server via mTLS gRPC. Caches resolved endpoints in-memory.</td></tr>
+ <tr><td><code>federation.rs</code></td><td>services/mcp-gateway/src/federation.rs</td><td>Routes a tool call (<code>cyberos.memory.put_memory</code>) to the right backend server via mTLS gRPC. Caches resolved endpoints in-memory.</td></tr>
  <tr><td><code>annotations.rs</code></td><td>services/mcp-gateway/src/annotations.rs</td><td>Parses tool annotations from backend manifest. Enforces destructive → human-confirm; readOnly → fast-path RBAC; idempotent → safe-retry; openWorld → strict scope check.</td></tr>
  <tr><td><code>gate.rs</code></td><td>services/mcp-gateway/src/gate.rs</td><td>Composite gate — verifies audience claim, calls AUTH RBAC.Check, validates idempotency-key, applies rate-limit token bucket.</td></tr>
  <tr><td><code>tasks.rs</code></td><td>services/mcp-gateway/src/tasks.rs</td><td>Tasks primitive ((FR pending)) — long-running tool invocations get a task_id; clients poll for status / result; results streamed via SSE.</td></tr>
@@ -582,7 +582,7 @@ graph TB
 <section id="data-model" class="module-section">
  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The gateway is mostly stateless. Postgres holds the tool registry, Redis caches tool catalogues and Tasks status, BRAIN absorbs the audit rows.
+ The gateway is mostly stateless. Postgres holds the tool registry, Redis caches tool catalogues and Tasks status, memory absorbs the audit rows.
  </p>
 
  <div class="bbg-card p-5 mb-5">
@@ -598,20 +598,20 @@ erDiagram
  AGENT_CLIENT ||--o| OAUTH_REGISTRATION: "registered as"
 
  SERVER {
- string id PK "cyberos.brain"
+ string id PK "cyberos.memory"
  string display_name
- string endpoint "grpc:/brain.internal:8081"
+ string endpoint "grpc:/memory.internal:8081"
  string version
  string status "active | draining | offline"
  timestamp registered_at
  }
  TOOL_DEFINITION {
- string name PK "cyberos.brain.put_memory"
+ string name PK "cyberos.memory.put_memory"
  string server_id FK
  string description
  obj input_schema "JSON Schema"
  obj output_schema
- string scope_required "brain.put"
+ string scope_required "memory.put"
  }
  ANNOTATION {
  string tool_name FK
@@ -639,7 +639,7 @@ erDiagram
  string idempotency_key
  string outcome "ok | denied | error | task_created"
  int latency_ms
- string brain_chain
+ string memory_chain
  timestamp ts
  }
  TASK {
@@ -676,10 +676,10 @@ erDiagram
  <table class="kt">
  <thead><tr><th>Example tool name</th><th>Verb class</th><th>Annotations</th></tr></thead>
  <tbody>
- <tr><td><code>cyberos.brain.put_memory</code></td><td>write</td><td>destructive=false · idempotent=true · scope=brain.put</td></tr>
- <tr><td><code>cyberos.brain.view_memory</code></td><td>read</td><td>readOnly=true · idempotent=true · scope=brain.read</td></tr>
- <tr><td><code>cyberos.brain.delete_memory</code></td><td>delete</td><td>destructive=true · requiresConfirm=true · scope=brain.delete</td></tr>
- <tr><td><code>cyberos.brain.search_memory</code></td><td>query</td><td>readOnly=true · scope=brain.read</td></tr>
+ <tr><td><code>cyberos.memory.put_memory</code></td><td>write</td><td>destructive=false · idempotent=true · scope=memory.put</td></tr>
+ <tr><td><code>cyberos.memory.view_memory</code></td><td>read</td><td>readOnly=true · idempotent=true · scope=memory.read</td></tr>
+ <tr><td><code>cyberos.memory.delete_memory</code></td><td>delete</td><td>destructive=true · requiresConfirm=true · scope=memory.delete</td></tr>
+ <tr><td><code>cyberos.memory.search_memory</code></td><td>query</td><td>readOnly=true · scope=memory.read</td></tr>
  <tr><td><code>cyberos.skill.invoke_skill</code></td><td>execute</td><td>destructive=true · requiresConfirm=conditional · scope=skill.invoke</td></tr>
  <tr><td><code>cyberos.skill.list_skills</code></td><td>read</td><td>readOnly=true · scope=skill.read</td></tr>
  <tr><td><code>cyberos.auth.check_permission</code></td><td>query</td><td>readOnly=true · scope=auth.read</td></tr>
@@ -746,7 +746,7 @@ message RegisterRequest {
 }
 
 message ToolDefinition {
- string name = 1;/ "cyberos.brain.put_memory"
+ string name = 1;/ "cyberos.memory.put_memory"
  string description = 2;
  string input_schema = 3;/ JSON Schema
  string output_schema = 4;
@@ -792,7 +792,7 @@ sequenceDiagram
  participant A as Agent (Claude Desktop)
  participant G as MCP Gateway
  participant AS as AUTH service
- participant BR as cyberos.brain (backend)
+ participant BR as cyberos.memory (backend)
  participant SK as cyberos.skill
  participant Cache as Catalogue cache
 
@@ -815,7 +815,7 @@ sequenceDiagram
  SK-->>G: 8 tools
  G->>Cache: SET catalogue TTL=60s
  end
- G-->>A: {tools: [cyberos.brain.put_memory, cyberos.skill.invoke_skill, …]}
+ G-->>A: {tools: [cyberos.memory.put_memory, cyberos.skill.invoke_skill, …]}
  </div>
  <p class="text-xs text-slate-500 mt-3">The agent sees one server; under the hood, 22 modules contribute their tools. Caching keeps catalogue assembly &lt; 5 ms p95.</p>
  </div>
@@ -829,15 +829,15 @@ sequenceDiagram
  participant G as MCP Gateway
  participant GA as gate.rs
  participant AS as AUTH RBAC.Check
- participant BR as cyberos.brain
+ participant BR as cyberos.memory
  participant AUD as audit.rs
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
- A->>G: POST /mcp {method:"tools/call", name:"cyberos.brain.put_memory",<br>arguments:{path:"…", body:"…"}, idempotency_key:"…"}
+ A->>G: POST /mcp {method:"tools/call", name:"cyberos.memory.put_memory",<br>arguments:{path:"…", body:"…"}, idempotency_key:"…"}
  G->>GA: verify audience claim (mcp.cyberos.com)
- G->>GA: load annotations(destructive=false, scope_required=brain.put)
- GA->>AS: RBAC.Check(subject_jwt, action="brain.put", resource="memories/…")
- AS-->>GA: {allow:true, reason:"role.founder + scope.brain.put"}
+ G->>GA: load annotations(destructive=false, scope_required=memory.put)
+ GA->>AS: RBAC.Check(subject_jwt, action="memory.put", resource="memories/…")
+ AS-->>GA: {allow:true, reason:"role.founder + scope.memory.put"}
  GA->>BR: InvokeTool(args_json, persona_version, trace_id)
  BR-->>GA: stream {chunks, done:{seq, chain, body_hash}}
  GA-->>A: {content:[{type:"text", text:"…"}], isError:false}
@@ -863,7 +863,7 @@ sequenceDiagram
  G->>ANN: load annotations
  ANN-->>G: destructive=true, requiresConfirm=true
  G->>ELI: needs user confirmation
- ELI->>U: "Skill 'vietnam-vat-invoice' will create an invoice in BRAIN. Proceed?"
+ ELI->>U: "Skill 'vietnam-vat-invoice' will create an invoice in memory. Proceed?"
  alt user approves
  U-->>ELI: {approved:true}
  ELI-->>G: proceed
@@ -995,7 +995,7 @@ stateDiagram-v2
  <tr><td><code>N(FR pending)</code></td><td>tools/list discovery</td><td>≤ 100 ms p95 (cache hit)</td><td>internal bench</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Gateway availability (28-day)</td><td>≥ 99.95%</td><td>SLO monitor</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>MCP spec conformance</td><td>100% of conformance suite</td><td>CI gate</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Audit completeness</td><td>100% (no dropped invocations)</td><td>chaos test + BRAIN walk</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Audit completeness</td><td>100% (no dropped invocations)</td><td>chaos test + memory walk</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Destructive without confirm</td><td>= 0 events</td><td>CI regression + runtime check</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Tool name violations</td><td>= 0 (rejected at register)</td><td>registry validator</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Idempotency-key collision rate</td><td>= 0 false positives</td><td>property-based test</td></tr>
@@ -1014,14 +1014,14 @@ stateDiagram-v2
 graph LR
  subgraph upstream ["MCP Gateway depends on"]
  AUTH["🔐 AUTH<br>token + RBAC.Check"]
- BRAIN["🧠 BRAIN<br>mcp.invocation rows"]
+ memory["🧠 memory<br>mcp.invocation rows"]
  OBS["👁 OBS<br>traces + metrics"]
  PG["🗄 PostgreSQL<br>tool registry"]
  REDIS["⚡ Redis<br>catalogue + tasks cache"]
  end
  MCP["🔌 MCP Gateway"]
  subgraph backends ["Per-module servers"]
- BR["cyberos.brain"]
+ BR["cyberos.memory"]
  SK["cyberos.skill"]
  AU["cyberos.auth"]
  AI["cyberos.ai"]
@@ -1034,7 +1034,7 @@ graph LR
  INT["Internal agents"]
  end
  AUTH --> MCP
- BRAIN --> MCP
+ memory --> MCP
  OBS --> MCP
  PG --> MCP
  REDIS --> MCP
@@ -1050,7 +1050,7 @@ graph LR
 
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef planned fill:#fef6e0,stroke:#9c750a
- class BRAIN,SK,REDIS,PG shipped
+ class memory,SK,REDIS,PG shipped
  class MCP,AUTH,AI,AU,BR,OTH,OBS planned
  class CL,CC,CUR,INT shipped
  </div>
@@ -1121,12 +1121,12 @@ graph LR
  <tr><td><strong>Read-tool p95 latency</strong></td><td>histogram</td><td>OBS</td><td>≤ 500 ms</td></tr>
  <tr><td><strong>Write-tool p95 latency</strong></td><td>histogram</td><td>OBS</td><td>≤ 1 s</td></tr>
  <tr><td><strong>Gateway overhead p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 5 ms</td></tr>
- <tr><td><strong>Audit completeness</strong></td><td><code>rows_in_brain / invocations</code></td><td>chaos test</td><td>100%</td></tr>
+ <tr><td><strong>Audit completeness</strong></td><td><code>rows_in_memory / invocations</code></td><td>chaos test</td><td>100%</td></tr>
  <tr><td><strong>Destructive-without-confirm</strong></td><td>count / 28 d</td><td>mcp.invocation</td><td>= 0</td></tr>
  <tr><td><strong>Tool-name violations</strong></td><td>count</td><td>registry validator</td><td>= 0</td></tr>
  <tr><td><strong>Active tasks</strong></td><td>count of <code>status=running</code></td><td>tasks DB</td><td>tracked; alert on backlog &gt; 100</td></tr>
  <tr><td><strong>Backend health</strong></td><td>healthy / registered</td><td><code>/admin/servers</code></td><td>≥ 95% always</td></tr>
- <tr><td><strong>Persona-stamp coverage</strong></td><td>audit rows with persona stamp / total</td><td>BRAIN audit replay</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Persona-stamp coverage</strong></td><td>audit rows with persona stamp / total</td><td>memory audit replay</td><td>= 1.0 (hard floor)</td></tr>
  <tr><td><strong>Elicitation acceptance rate</strong></td><td>user-confirmed elicitations / total elicitations</td><td>mcp.invocation rows</td><td>tracked; sudden drop = UI confusion alarm</td></tr>
  <tr><td><strong>Tasks completion rate</strong></td><td>completed / created</td><td>tasks DB</td><td>≥ 95% (excluding user-cancelled)</td></tr>
  <tr><td><strong>Cross-tenant token-replay attempts</strong></td><td>count / 28 d</td><td>OAuth + audit cross-check</td><td>tracked; spike = active attack</td></tr>
@@ -1166,19 +1166,19 @@ graph LR
 <pre><code>$ cyberos-mcp servers list
 
 SERVER_ID STATUS VERSION TOOLS LAST_SEEN
-cyberos.brain active 2.0.0 12 2026-05-14T07:21Z
+cyberos.memory active 2.0.0 12 2026-05-14T07:21Z
 cyberos.skill active 1.4.0 8 2026-05-14T07:21Z
 cyberos.auth active 0.9.0 7 2026-05-14T07:20Z
 cyberos.ai active 0.8.0 5 2026-05-14T07:21Z
 cyberos.crm draining 0.3.0 11 2026-05-14T07:15Z</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Inspect a tool</h3>
-<pre><code>$ cyberos-mcp tool inspect cyberos.brain.delete_memory
+<pre><code>$ cyberos-mcp tool inspect cyberos.memory.delete_memory
 
-name: cyberos.brain.delete_memory
-server: cyberos.brain
+name: cyberos.memory.delete_memory
+server: cyberos.memory
 description: "Delete a memory file (tombstone by default; purge requires DSAR reason)"
-scope_required: brain.delete
+scope_required: memory.delete
 annotations:
  destructive: true
  readOnly: false
@@ -1191,7 +1191,7 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
 <pre><code>$ cyberos-mcp invocations replay --id inv_01HZJ…XK --dry-run
 
 [replay] invocation inv_01HZJ…XK
- tool: cyberos.brain.search_memory
+ tool: cyberos.memory.search_memory
  agent: Claude Desktop (claude-desktop-v1.0.45)
  args: {query: "Singapore HoldCo"}
  original_outcome: ok (12 hits)
@@ -1234,7 +1234,7 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
 [approve] CTO ✓ CSO ✓ (per CYB-1234)
 [register] cyberos.crm registered
 [catalog] cache invalidated
-[audit] brain seq=14856</code></pre>
+[audit] memory seq=14856</code></pre>
 </section>
 
 <section id="status" class="module-section">
@@ -1244,7 +1244,7 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
  <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P0 · design phase · P0 · slice 2</div></div>
  <div class="fact-card"><div class="label">Est. LoC (Rust)</div><div class="value">~5,500</div><div class="note">services/mcp-gateway</div></div>
  <div class="fact-card"><div class="label">Planned tests</div><div class="value">142 conformance + 60 unit</div><div class="note">MCP spec suite</div></div>
- <div class="fact-card"><div class="label">P0 tools (est.)</div><div class="value">~80</div><div class="note">BRAIN · Skill · AUTH · AI</div></div>
+ <div class="fact-card"><div class="label">P0 tools (est.)</div><div class="value">~80</div><div class="note">memory · Skill · AUTH · AI</div></div>
  <div class="fact-card"><div class="label">P3 tools (est.)</div><div class="value">~300+</div><div class="note">22 modules × ~15 verbs</div></div>
  <div class="fact-card"><div class="label">CLI commands</div><div class="value">~18 planned</div><div class="note"><code>cyberos-mcp</code></div></div>
  </div>
@@ -1284,7 +1284,7 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
  <li><strong>Cross-module page links:</strong>
  <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
  <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
  <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
  <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
@@ -1292,7 +1292,7 @@ input_schema: {path: string, mode: "tombstone"|"purge", reason: string?}</code><
  <a href="chat.html" class="text-blue-700 underline">chat.html</a></li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — MCP Gateway placed at P0 · slice 3 in the P0 sequence (after AI Gateway + AUTH stub).</li>
  <li><strong>Research review:</strong> <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — MCP Gateway rated "Strong" (9/10); reviewer flagged the elicitation-fatigue risk (R-MCP-013) and the older-protocol sunset as the two operational concerns.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — MCP tool invocations are one of four canonical capture surfaces for the local BRAIN (every tool call → audit row); §6 — Lumi exposes cross-tenant MCP federation at P3+ for org-tenant agents.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — MCP tool invocations are one of four canonical capture surfaces for the local memory (every tool call → audit row); §6 — Lumi exposes cross-tenant MCP federation at P3+ for org-tenant agents.</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a> — MCP Gateway FRs land via the <code>feature-request-author</code> Agent Skill.</li>
  <li><strong>MCP Specification 2025-11-25</strong> — <code>modelcontextprotocol.io/specification/2025-11-25</code>.</li>
  <li><strong>SEP-986</strong> — verbNoun.dotted tool naming convention.</li>

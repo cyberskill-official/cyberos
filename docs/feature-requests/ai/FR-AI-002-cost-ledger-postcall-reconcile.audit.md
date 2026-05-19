@@ -63,7 +63,7 @@ AUTHORING.md §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. 
 ### ISS-006 — AUTHORING.md §3.8 rule 25 (audit-before-action) for reconcile flow
 - **severity:** warning
 - **rule_id:** authoring-md-§3.8 (rule 25)
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #15 added: reconcile MUST emit `ai.reconcile_started` BEFORE applying the `UPDATE cost_ledger SET state='finalised', actual_cost_minor=..., reconciled_at=NOW()`; the Postgres transaction wraps both the BRAIN emit AND the UPDATE; rollback on either failure (atomicity). The `reconcile_completed` row is emitted post-commit. AC #15 asserts the row order via a captured-events test.
+- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #15 added: reconcile MUST emit `ai.reconcile_started` BEFORE applying the `UPDATE cost_ledger SET state='finalised', actual_cost_minor=..., reconciled_at=NOW()`; the Postgres transaction wraps both the memory emit AND the UPDATE; rollback on either failure (atomicity). The `reconcile_completed` row is emitted post-commit. AC #15 asserts the row order via a captured-events test.
 
 **Post-appendix score = 10/10** with 6 canonical ISSes plus 4 original §2 findings (10 total resolved, plus 5 historical pre-revision findings = 15).
 

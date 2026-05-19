@@ -1,0 +1,66 @@
+# FR-EMAIL-001 §3.1 — local-dev compose for the EMAIL service.
+#
+#   docker compose -f services/email/docker/compose.yml up
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: cyberos_email
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres-local
+    ports: ["5434:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cyberos_email"]
+      interval: 5s
+      retries: 12
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports: ["9000:9000", "9001:9001"]
+    environment:
+      MINIO_ROOT_USER: cyberos
+      MINIO_ROOT_PASSWORD: cyberos-local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      retries: 12
+
+  stalwart:
+    build:
+      context: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres-local
+      S3_REGION_DEFAULT: ap-southeast-1
+      S3_BUCKET_DEFAULT: cyberos-email-sg-1-bodies
+      KMS_KEY_DEFAULT: alias/cyberos-email-sg-1-bodies
+    ports:
+      - "25:25"
+      - "465:465"
+      - "587:587"
+      - "143:143"
+      - "993:993"
+      - "4190:4190"
+      - "8080:8080"
+    restart: unless-stopped
+
+  cyberos-email:
+    build:
+      context: ../../..
+      dockerfile: services/email/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgres://postgres:postgres-local@postgres:5432/cyberos_email?sslmode=disable"
+      EMAIL_BIND: "0.0.0.0:8085"
+    ports:
+      - "8085:8085"

@@ -3,7 +3,7 @@ id: FR-MCP-004
 title: "OAuth 2.1 PKCE authorization-code flow with audience-bound tokens for MCP servers"
 module: MCP
 priority: MUST
-status: accepted
+status: ready_to_implement
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -13,7 +13,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-004, FR-MCP-001, FR-MCP-005, FR-MCP-006, FR-MCP-007, FR-MCP-008]
 depends_on: [FR-AUTH-004, FR-MCP-001]
 blocks: [FR-MCP-005, FR-MCP-006, FR-MCP-007, FR-MCP-008]
@@ -36,7 +36,7 @@ source_decisions:
   - DEC-812 2026-05-16 — Authorization code one-time-use; replayed code marks the client + binding token family as compromised + emits sev-2 audit
   - DEC-813 2026-05-16 — Scopes defined via FR-MCP-001 `tools/list` registry; closed set per MCP server
   - DEC-814 2026-05-16 — JWT signed with FR-AUTH-004 JWKS rotating keys; aud + iss + sub + scope + nonce + iat + exp + jti claims
-  - DEC-815 2026-05-16 — All token issuance and refusal emit BRAIN audit rows with PII scrubbing via FR-BRAIN-111
+  - DEC-815 2026-05-16 — All token issuance and refusal emit memory audit rows with PII scrubbing via FR-MEMORY-111
   - DEC-816 2026-05-16 — Per-tenant `mcp_oauth_allowlist_redirect_hosts` cap on which redirect_uri hosts may be registered (defense-in-depth against open-redirect attack)
   - DEC-817 2026-05-16 — Token revocation endpoint RFC 7009; revocations propagate via FR-AUTH-004 JWKS short-lived signing keys
   - DEC-818 2026-05-16 — Introspection endpoint RFC 7662 for resource servers (closed-network only; not exposed to public clients)
@@ -95,7 +95,7 @@ sub_tasks:
   - "0.5h: discovery endpoint (GET /.well-known/oauth-authorization-server)"
   - "1.0h: audience-bound token verification at MCP resource server hot path"
   - "0.5h: per-tenant redirect_uri allowlist + DCR validation"
-  - "0.5h: BRAIN audit emission for 8 audit kinds + FR-BRAIN-111 scrubbing"
+  - "0.5h: memory audit emission for 8 audit kinds + FR-MEMORY-111 scrubbing"
   - "0.5h: closed enums + CI cardinality tests"
 risk_if_skipped: "Without OAuth 2.1 + PKCE, MCP clients can't authenticate to MCP servers per the 2025-11-25 protocol. Every MCP-005/006/007/008 implementation would have to re-invent auth. Without audience binding, an access token issued for `server-A` would be valid at `server-B` — full cross-server token replay. Both compliance and security are at stake."
 ---
@@ -134,11 +134,11 @@ The MCP Gateway service **MUST** implement OAuth 2.1 + PKCE per the MCP 2025-11-
    - Marks the presented row as `state = used`.
    - Issues a new refresh_token in the same family with `parent_token_hash` pointing to the just-used row.
    - Returns the new access + refresh pair.
-   If the presented refresh_token is found but `state = used` already, this is a REUSE — mark the entire family as `state = compromised`, invalidate all descendants, refuse issuance, emit a sev-1 BRAIN audit row `mcp.oauth_refresh_reuse_detected`.
+   If the presented refresh_token is found but `state = used` already, this is a REUSE — mark the entire family as `state = compromised`, invalidate all descendants, refuse issuance, emit a sev-1 memory audit row `mcp.oauth_refresh_reuse_detected`.
 
 10. **MUST** verify `redirect_uri` via exact-match comparison against the pre-registered URI (DEC-809). The authorization request's `redirect_uri` MUST match one of `oauth_clients.redirect_uris` entries character-for-character. No substring, no regex, no trailing-slash normalization. Mismatch returns `400 invalid_request` with `error_description: "redirect_uri_mismatch"`.
 
-11. **MUST** validate `redirect_uri` host on registration (DEC-816). The per-tenant policy `mcp_oauth_allowlist_redirect_hosts` (JSON array of hostnames or wildcards like `*.example.com`) restricts which hosts may appear in registered redirect URIs. Default policy: allow any HTTPS host (no host restriction). Tenants opt into stricter policies; tenant_admin role required for policy mutation + sev-2 BRAIN audit.
+11. **MUST** validate `redirect_uri` host on registration (DEC-816). The per-tenant policy `mcp_oauth_allowlist_redirect_hosts` (JSON array of hostnames or wildcards like `*.example.com`) restricts which hosts may appear in registered redirect URIs. Default policy: allow any HTTPS host (no host restriction). Tenants opt into stricter policies; tenant_admin role required for policy mutation + sev-2 memory audit.
 
 12. **MUST** require `https` scheme on all redirect URIs in production. The only exception is `http://localhost[:port]/...` and `http://127.0.0.1[:port]/...` for native CLI clients (OAuth 2.1 §10.3.3). HTTP redirect to a non-loopback host returns `400 invalid_request` at registration.
 
@@ -150,7 +150,7 @@ The MCP Gateway service **MUST** implement OAuth 2.1 + PKCE per the MCP 2025-11-
     - SELECTs the row FOR UPDATE.
     - Verifies `consumed_at IS NULL`.
     - UPDATEs `consumed_at = now()`.
-    - If `consumed_at IS NOT NULL` (replay), marks the client's most recent refresh family as compromised + emits sev-2 BRAIN audit `mcp.oauth_code_reuse_detected`.
+    - If `consumed_at IS NOT NULL` (replay), marks the client's most recent refresh family as compromised + emits sev-2 memory audit `mcp.oauth_code_reuse_detected`.
 
 16. **MUST** define a closed 3-value `oauth_code_state` enum (`active`, `consumed`, `expired`). CI cardinality test asserts exactly 3.
 
@@ -201,7 +201,7 @@ The MCP Gateway service **MUST** implement OAuth 2.1 + PKCE per the MCP 2025-11-
 
 24. **MUST** verify the JWT signature, exp, and revocation list on every request. Cache the revocation list in-process with 60s TTL; misses fetch from Postgres. Defense-in-depth: signature + exp + jti revocation check + audience check.
 
-25. **MUST** emit 8 closed BRAIN audit kinds:
+25. **MUST** emit 8 closed memory audit kinds:
     - `mcp.oauth_authorize_started` (sev-3, per /authorize redirect issued)
     - `mcp.oauth_token_issued` (sev-3, per access_token issued)
     - `mcp.oauth_token_refreshed` (sev-3, per refresh)
@@ -211,7 +211,7 @@ The MCP Gateway service **MUST** implement OAuth 2.1 + PKCE per the MCP 2025-11-
     - `mcp.oauth_audience_mismatch` (sev-2, per /tools/call rejection)
     - `mcp.oauth_client_registered` (sev-2, per DCR call)
 
-26. **MUST** route all reason-bearing audit text (error_description, client_name in registration audit) through FR-BRAIN-111 PII scrubbing.
+26. **MUST** route all reason-bearing audit text (error_description, client_name in registration audit) through FR-MEMORY-111 PII scrubbing.
 
 27. **MUST** persist authorization codes in the `oauth_codes` table with `(code, client_id, subject_id, redirect_uri, code_challenge, scope, nonce, state, issued_at, expires_at, consumed_at)`. The table is append-only via SQL grant + UPDATE limited to `consumed_at = now()` only via a privileged role `oauth_code_consumer`.
 
@@ -338,7 +338,7 @@ CREATE TABLE oauth_codes (
     issued_at           TIMESTAMPTZ NOT NULL DEFAULT now(),
     expires_at          TIMESTAMPTZ NOT NULL,
     consumed_at         TIMESTAMPTZ,
-    brain_chain_hash    CHAR(64) NOT NULL
+    memory_chain_hash    CHAR(64) NOT NULL
 );
 
 CREATE INDEX oauth_codes_expires ON oauth_codes (expires_at);
@@ -368,7 +368,7 @@ CREATE TABLE oauth_refresh_families (
     expires_at             TIMESTAMPTZ NOT NULL,
     state                  oauth_refresh_state NOT NULL DEFAULT 'active',
     state_changed_at       TIMESTAMPTZ,
-    brain_chain_hash       CHAR(64) NOT NULL
+    memory_chain_hash       CHAR(64) NOT NULL
 );
 
 CREATE UNIQUE INDEX oauth_refresh_token_hash ON oauth_refresh_families (token_hash);
@@ -459,7 +459,7 @@ async fn handle_authz_code(pool: &PgPool, client: &OAuthClient, body: TokenReque
     if code_row.consumed_at.is_some() {
         // §1 #15 REUSE detected — mark refresh family compromised
         mark_family_compromised(pool, &client.id, &code_row.subject_id, "code_reuse").await?;
-        emit_brain_audit(BrainKind::OauthCodeReuseDetected, ...).await?;
+        emit_memory_audit(MemoryKind::OauthCodeReuseDetected, ...).await?;
         return Err(OAuthError::InvalidGrant("code_already_used"));
     }
     if code_row.redirect_uri != body.redirect_uri {
@@ -484,7 +484,7 @@ async fn handle_authz_code(pool: &PgPool, client: &OAuthClient, body: TokenReque
     let refresh = issue_refresh(pool, &client.id, &code_row.subject_id, &code_row.tenant_id,
                                 &code_row.audience, &code_row.scope, None).await?;
 
-    emit_brain_audit(BrainKind::OauthTokenIssued, ...).await?;
+    emit_memory_audit(MemoryKind::OauthTokenIssued, ...).await?;
     tx.commit().await?;
 
     Ok(TokenResponse {
@@ -533,7 +533,7 @@ async fn handle_refresh(pool: &PgPool, client: &OAuthClient, body: TokenRequest)
                                           &row.audience, &row.scope).await?;
             let new_refresh = issue_refresh(pool, &client.id, &row.subject_id, &row.tenant_id,
                                            &row.audience, &row.scope, Some(&token_hash)).await?;
-            emit_brain_audit(BrainKind::OauthTokenRefreshed, ...).await?;
+            emit_memory_audit(MemoryKind::OauthTokenRefreshed, ...).await?;
             tx.commit().await?;
 
             Ok(TokenResponse {
@@ -552,7 +552,7 @@ async fn handle_refresh(pool: &PgPool, client: &OAuthClient, body: TokenRequest)
                       WHERE family_id = $1 AND state != 'compromised'"#,
                 row.family_id
             ).execute(&mut *tx).await?;
-            emit_brain_audit(BrainKind::OauthRefreshReuseDetected, ...).await?;
+            emit_memory_audit(MemoryKind::OauthRefreshReuseDetected, ...).await?;
             tx.commit().await?;
             Err(OAuthError::InvalidGrant("refresh_reuse_detected"))
         }
@@ -574,7 +574,7 @@ pub async fn tools_call(
 
     let expected_aud = std::env::var("MCP_RESOURCE_SERVER_URL")?;
     if claims.aud != expected_aud {
-        emit_brain_audit(BrainKind::OauthAudienceMismatch, &claims, &expected_aud).await?;
+        emit_memory_audit(MemoryKind::OauthAudienceMismatch, &claims, &expected_aud).await?;
         return Err(McpError::InvalidToken("audience_mismatch"));
     }
 
@@ -620,7 +620,7 @@ pub async fn tools_call(
 27. JWT signed with FR-AUTH-004 JWKS (RS256 or ES256); signature verified on every request.
 28. oauth_codes / oauth_refresh_families REVOKE UPDATE/DELETE from cyberos_app confirmed; only privileged roles can mutate specific columns.
 29. Per-tenant redirect_uri host allowlist enforced at registration; mutation requires tenant_admin + sev-2 audit.
-30. BRAIN audit row emitted per 8 closed kinds; all reason text scrubbed via FR-BRAIN-111.
+30. memory audit row emitted per 8 closed kinds; all reason text scrubbed via FR-MEMORY-111.
 31. Confidential client authentication: client_secret_basic AND private_key_jwt both supported.
 32. Cross-tenant client lookup returns 404 (tenant isolation at confidential client level).
 
@@ -685,7 +685,7 @@ services/mcp-gateway/
 │   │   ├── scope.rs        # scope validation against FR-MCP-001 registry
 │   │   ├── jwt.rs          # access JWT mint/verify (uses FR-AUTH-004 JWKS)
 │   │   ├── consent.rs      # consent screen handler + persisted record
-│   │   ├── audit.rs        # 8 BRAIN audit kinds
+│   │   ├── audit.rs        # 8 memory audit kinds
 │   │   └── error.rs        # OAuthError + RFC 6749 §5.2 mapping
 │   └── handlers/
 │       └── tools_call.rs   # MODIFIED: verify audience + revocation list

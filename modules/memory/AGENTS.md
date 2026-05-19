@@ -18,7 +18,7 @@ Frozen prior version: `AGENTS.v1.md` (1,241 lines, ~13–18k tokens). Retained v
 
 §0.4  `<memory-root>/` is the real local-filesystem path `.cyberos-memory/` at the project root, resolved through every symlink. Sandbox/ephemeral paths are listed in `memory.invariants.yaml` (`layout-no-sandbox-path`); a store on any such path SHALL be rejected unless `CYBEROS_HOST_MOUNT_PREFIX` exempts it.
 
-§0.5  **BRAIN** (case-sensitive, all-caps) is an alias for `<memory-root>/`. Lowercase "brain" is normal language. Where ambiguous, the agent SHOULD surface and ask.
+§0.5  **BRAIN** (case-sensitive, all-caps) is the conceptual / prompt-trigger alias for `<memory-root>/` — operators type "BRAIN" to invoke or refer to the memory store as a system. Lowercase "memory" is the engineering name used in code, file paths, identifiers, env vars, and audit row_kinds (`memory.precondition_failed`, `memory.acl_denied`, etc.). The two coexist by design: BRAIN is the noun a user speaks; memory is the noun an engineer writes. Where ambiguous, the agent SHOULD surface and ask.
 
 §0.6  An agent operating under this protocol is in exactly one of three states (§12). It MUST verify its state before any write operation.
 
@@ -64,15 +64,22 @@ Read-only operations MAY skip steps 3–4 if they accept stale-up-to-last- HEAD 
 
 ## §3  File operations
 
-§3.1  An agent operating on memory state MUST express every mutation as exactly one of three canonical operations:
+§3.1  An agent operating on memory state MUST express every mutation as exactly one of FOUR canonical operations (extended by P21 — approved 2026-05-19 per §0.2):
 
 | op | semantic |
 |---|---|
-| `put(path, body, meta)`  | create or replace a memory file. Idempotent given identical args. |
-| `move(src, dst)`         | rename within `<memory-root>/`. Preserves content hash. |
-| `delete(path, mode)`     | `mode ∈ {"tombstone", "purge"}`; default `"tombstone"`. |
+| `put(path, body, meta)`                       | create or replace a memory file. Idempotent given identical args. |
+| `move(src, dst)`                              | rename within `<memory-root>/`. Preserves content hash. |
+| `delete(path, mode)`                          | `mode ∈ {"tombstone", "purge"}`; default `"tombstone"`. |
+| `put_if(path, body, meta, precondition)`      | create or replace, GATED on the SHA-256 of the current body matching `precondition` (or `precondition=null` ≡ "must not exist"). Mismatch → reject + `memory.precondition_failed` aux row; success row indistinguishable from `put`. |
 
-§3.2  The canonical ops are `put`, `move`, `delete`, and (implicit) `view`. Historical binlog rows from earlier protocol generations may carry op names not in this set (e.g. `create`, `str_replace`, `insert`, `rename`); those rows remain readable as legacy data but MUST NOT be emitted by new writers. `view` is implicit on read and MAY emit an audit row but does not change state.
+§3.1.5  `put_if` MUST emit a `memory.precondition_failed` aux audit row on mismatch with payload `{actor, path, expected, actual, attempt_at}`. HEAD does NOT advance for the rejected `put` payload but DOES advance by 1 for the aux row. The applier receives a structured `PutIfResult{outcome="rejected", reason="precondition_failed", expected, actual}` so retry loops can re-read + recompute the precondition without inspecting the chain.
+
+§3.1.6  `put_if` on success emits the SAME audit row shape as `put` (`op="put"`, content_sha256 over the redacted body, `extra.kind` + caller-supplied extras). Downstream consumers (walker, doctor, `cyberos dream`, `cyberos history`) MUST NOT special-case `put_if`-origin `put` rows; that's the load-bearing simplification.
+
+§3.1.7  `put_if` honours the FR-MEMORY-117 store ACL gate IN ADDITION to the precondition check. ACL is checked FIRST — if denied, the operation returns `outcome="rejected", reason="acl_denied"` (no `memory.precondition_failed` row, just the ordinary `memory.acl_denied` row from §14.4).
+
+§3.2  The canonical ops are `put`, `move`, `delete`, `put_if`, and (implicit) `view`. Historical binlog rows from earlier protocol generations may carry op names not in this set (e.g. `create`, `str_replace`, `insert`, `rename`); those rows remain readable as legacy data but MUST NOT be emitted by new writers. `view` is implicit on read and MAY emit an audit row but does not change state.
 
 §3.3  Path validation. Every path argument MUST:
 
@@ -141,6 +148,24 @@ Read-only operations MAY skip steps 3–4 if they accept stale-up-to-last- HEAD 
 
 ---
 
+## §7.7  Dreaming (added by P19 — approved 2026-05-19 per §0.2)
+
+§7.7.1  Dreaming is the out-of-band batch reflection process specified in [`FR-MEMORY-115`](../../docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream.md). The dream-runner and dream-applier are distinct identities; they MUST NOT execute in-band with any agent session that mutates memory. Sessions and dream runs may overlap; the runner takes a snapshot of HEAD at start and operates against that snapshot.
+
+§7.7.2  Every audit row emitted by the dream-applier MUST carry both `extra.dream_id` (ULID matching the active `dream.start` row) and `extra.proposal_id` (matching the source `DreamProposal.proposal_id`). Walker invariant `dream-applied-row-has-provenance` enforces this.
+
+§7.7.3  Dream apply MUST validate body-hash preconditions before any writes. A precondition failure on any proposal in a batch aborts the batch; no half-applied state. The applier reads each affected memory file's current SHA-256 body hash and compares it against the `precondition_body_hashes` map recorded on the proposal at generation time.
+
+§7.7.4  Dream proposals are EITHER applied via `cyberos dream apply` (operator-gated) OR remain on disk as `dreams/<ts>/diff.json` artefacts until apply or retention-expiry. The protocol provides no auto-apply mechanism.
+
+§7.7.5  Dream produces audit rows in three new kinds — `dream.start`, `dream.complete`, `dream.proposal_applied` — and one new aux kind `dream.detector_failed` for in-run detector failures. All four are subject to the standard chain integrity rules (§6).
+
+§7.7.6  Dream operates only on a snapshot of the BRAIN at run start (HEAD seq captured in the `dream.start` row's payload). Concurrent writes from other processes proceed normally and are integrated on the next dream run.
+
+§7.7.7  The four built-in detector kinds are closed: `duplicates` (cosine ≥ threshold → `merge` proposal), `stale` (memory contradicted by later audit rows → `stale` proposal), `patterns` (recurring task/outcome combos across `episode.logged` rows → `new` proposal), `verify` (memory used + observed-still-true in recent sessions → `verify` proposal annotating `meta.last_verified_at`). Additional detectors land via slice-4+ `entry_points` plug-ins (FR-MEMORY-115 §1 #18).
+
+---
+
 ## §8  Conflict resolution
 
 §8.1  Source-tier ordering (highest authority first):
@@ -191,7 +216,7 @@ State is implicit, derived from `cyberos doctor` results.
 
 ## §13  End-of-response block
 
-At the end of any session that touched the BRAIN, the agent SHALL report:
+At the end of any session that touched the BRAIN (i.e. wrote to `<memory-root>/`), the agent SHALL report:
 
 * file ops performed (count + scope summary);
 * memories read (count);
@@ -204,9 +229,25 @@ At the end of any session that touched the BRAIN, the agent SHALL report:
 
 §14.1  A consumer that does not adopt the ledger MUST obey `INTEROP.md` (≤ 6,000 chars). It MUST NOT write to `audit/`, `HEAD`, or `.lock` directly. All chain-touching operations route through the canonical writer.
 
-§14.2  **Cross-BRAIN merge.** When two BRAINs co-exist (e.g. one per teammate, same project), memories MAY be moved between them via `cyberos import <source>`. The importer SHALL NOT merge the foreign chain directly. Each imported memory MUST become a fresh `put` row on the local chain whose `extra.imported_from` identifies the source store fingerprint and whose `extra.foreign_chain` records the source record's chain hash. The import block MUST be bracketed by a `session.start` and `session.end` audit row on the local chain. Idempotent re-import is RECOMMENDED via `manifest.imports.<fingerprint>.last_imported_seq`.
+§14.2  **Cross-BRAIN merge.** When two BRAINs co-exist (e.g. one per teammate, same project), memory files MAY be moved between them via `cyberos import <source>`. The importer SHALL NOT merge the foreign chain directly. Each imported memory MUST become a fresh `put` row on the local chain whose `extra.imported_from` identifies the source store fingerprint and whose `extra.foreign_chain` records the source record's chain hash. The import block MUST be bracketed by a `session.start` and `session.end` audit row on the local chain. Idempotent re-import is RECOMMENDED via `manifest.imports.<fingerprint>.last_imported_seq`.
 
 §14.3  Imports SHOULD respect `meta.sync_class`: only memories with `sync_class == "shareable"` (or, transitionally, the v1 values `publishable | shared | client-visible`) SHOULD be imported by default. Importers MAY override with explicit filter flags; doing so is the importer's responsibility, not the protocol's.
+
+§14.4  **Store-level ACL.** (Added by P20 — approved 2026-05-19 per §0.2; implementation in [`FR-MEMORY-117`](../../docs/feature-requests/memory/FR-MEMORY-117-per-store-acl.md).)
+
+§14.4.1  Each subtree of `<memory-root>/` MAY declare a `STORE.yaml` file at its root. The file's shape is normative in `memory.schema.json#/definitions/StoreAcl`. Subtrees without a `STORE.yaml` inherit the default permissive policy (`{actor: "*", mode: "read-write"}`) — back-compat with stores predating this section.
+
+§14.4.2  The canonical writer (`cyberos.core.writer.Writer`) MUST enforce ACLs on every `put` / `move` / `delete` operation. ACL is resolved by walking UP from the target path to the nearest `STORE.yaml`. First-match-wins on the `acl` list. Explicit `deny` always blocks regardless of subsequent allow patterns.
+
+§14.4.3  Reads are NOT subject to ACL enforcement at the protocol level. Read isolation is the operator's responsibility via OS filesystem permissions (the agent identity is a logical concept, not a unix uid).
+
+§14.4.4  Rejected writes MUST emit a `memory.acl_denied` aux audit row with payload `{actor, target_path, store_id, yaml_path, mode, matched_entry, attempt_kind: "put"|"move"|"delete"}`. The audit row is emitted EVEN in WARN-ONLY mode (the pre-amendment transition state where rejections are logged but writes proceed).
+
+§14.4.5  `move(src, dst)` MUST check ACL on BOTH `src` and `dst`. Either side failing blocks the operation. The error names the failing side.
+
+§14.4.6  The `INTEROP.md` consumer subset MUST honour `STORE.yaml` `acl` for writes; reads MAY ignore.
+
+§14.4.7  `STORE.yaml` shape MUST validate against `memory.schema.json#/definitions/StoreAcl`. Walker invariant `store-yaml-acl-valid` enforces this at `cyberos doctor` time.
 
 ---
 
@@ -240,6 +281,35 @@ The v1 four-tier `sync_class` (`local-only / publishable / shared / client-visib
 §17.2  PII handling: memory files SHOULD declare `meta.classification` from the enum in `memory.schema.json`. Encryption envelope (§5.4) is REQUIRED for `restricted` and RECOMMENDED for `confidential`.
 
 §17.3  Cross-border data: `meta.acl` MAY enumerate explicit jurisdictions. The canonical writer makes no jurisdictional claims; that is the user's responsibility.
+
+---
+
+## §18  Session transcript ledger (added by P22 — approved 2026-05-19 per §0.2)
+
+§18.1  Sessions are an OPTIONAL turn-level audit trail for agent-user conversations. Operators opt in per conversation via the lifecycle CLI; cyberos invocations without a session never produce transcript rows. Implementation lives in [`FR-MEMORY-119`](../../docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger.md). Note: the FR's spec'd CLI verb `cyberos session` collides with the existing P11 multi-agent coordination subcommand; the implementation namespaces the transcript ledger under `cyberos transcript {start,append,end,read,list,purge-expired}` instead.
+
+§18.2  Session bodies live at `<memory-root>/sessions/<YYYY-MM-DD>/<id>.binlog.zst` — date-partitioned at the session's START date (sessions spanning midnight stay in the start-date directory). The framed binlog format mirrors §6.2; turn frames carry msgspec canonical-JSON payloads.
+
+§18.3  Sessions MUST carry a `classification` of either `confidential` (default per Stephen's 2026-05-19 decision) or `restricted`. The classifications `public` and `internal` are NOT permitted on sessions — the dialogue content is sensitive by construction.
+
+§18.4  When `classification: restricted`, every `session.turn` payload's `content` field MUST be encrypted via the §5.4 envelope (`content_cipher` carries the envelope, `content` is absent). The meta-frame (role, ts, turn_seq) remains plaintext for fast filtering without decryption.
+
+§18.5  Sessions emit summary rows on the main audit chain:
+* `session.start` at lifecycle start
+* `session.end` at lifecycle end (or NEVER, when retention purges before a normal end)
+* `session.purged` when a session's body is dropped per retention
+
+§18.6  Retention is configured via `manifest.json:sessions.retention_days` (default 30). Purge replaces the session body with a tombstone manifest; the summary rows on the main chain remain intact. The fact of purge is itself a chain leaf and is not erasable (same invariant as §3.6).
+
+§18.7  Memory writes that occur during an active session MUST carry `extra.session_id` on the `put`/`move`/`delete` audit row. The active session is indicated by `<memory-root>/sessions/.active`; only one session may be active at a time per memory.
+
+§18.8  Lifecycle invariants enforced by the walker:
+* Every `session.start` has 0 or 1 `session.end` for the same session_id
+* Within a session's binlog, turn_seq is strictly monotonically increasing from 0
+* No `session.turn` precedes its `session.start` or follows its `session.end`
+* Two simultaneous `session.start` rows for the same id are rejected by the writer at the call site (cannot occur on-chain)
+
+§18.9  Per-store ACL (§14.4) applies to the `sessions/` subtree. Operators may set a `sessions/STORE.yaml` to restrict which actors can `start`/`append`/`end` sessions. Reads remain unrestricted at the protocol level (same DEC-232 as §14.4.3).
 
 ---
 

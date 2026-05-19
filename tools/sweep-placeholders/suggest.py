@@ -11,7 +11,7 @@ Heuristics per field:
   cross-cutting → `"cross"`.
 - `description`: read CONTRACT_ECHO template_version; substitute `<input>` →
   `{artefact} source`, `<artifact>` → `{artefact}`, `<ARTIFACT>` → upper.
-- `allowed_brain_scopes.write[*]`: replace bare placeholders like `<fr_id>`
+- `allowed_memory_scopes.write[*]`: replace bare placeholders like `<fr_id>`
   or `<run_id>` with `project:*` (broad write scope — operator narrows).
 
 Usage:
@@ -100,8 +100,8 @@ def suggest_description_substitution(skill_dir: Path, original: str) -> tuple[st
     return (new_value, f"derived artefact name '{artefact}' from template_version / prompt_revision / folder name")
 
 
-def suggest_brain_scope(token: str) -> tuple[str, str]:
-    """Propose a substitution for a BRAIN-scope glob placeholder."""
+def suggest_memory_scope(token: str) -> tuple[str, str]:
+    """Propose a substitution for a memory-scope glob placeholder."""
     # Common patterns from real CyberOS skills
     mapping = {
         "fr_id": "project:fr/*",
@@ -141,8 +141,8 @@ def suggest_for_skill(skill_dir: Path) -> list[Suggestion]:
         elif hit.field_path == "root.description":
             sug, why = suggest_description_substitution(skill_dir, hit.value)
             suggestions.append(Suggestion(hit.field_path, hit.value, sug, why))
-        elif hit.field_path.startswith("root.allowed_brain_scopes."):
-            sug, why = suggest_brain_scope(hit.token)
+        elif hit.field_path.startswith("root.allowed_memory_scopes."):
+            sug, why = suggest_memory_scope(hit.token)
             suggestions.append(Suggestion(hit.field_path, f"<{hit.token}>", sug, why))
         else:
             # Generic fallback

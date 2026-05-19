@@ -3,7 +3,7 @@ id: FR-AUTH-108
 title: "AUTH Lumi tenant-identity JWT shape — agent_persona + tenant_residency + lumi_org_tenant claims + persona-version stamping + cross-tenant sync identity"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P3
 milestone: P3 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AI-014, FR-AI-016, FR-AI-003, FR-BRAIN-101, FR-CUO-101, FR-AUTH-109]
+memory_chain_hash: null
+related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AI-014, FR-AI-016, FR-AI-003, FR-MEMORY-101, FR-CUO-101, FR-AUTH-109]
 depends_on: [FR-AUTH-101]
 blocks: []
 
@@ -27,13 +27,13 @@ source_decisions:
   - DEC-424 (`persona_version` claim is a semver string matching FR-AI-014's pinned version; verifiers may reject tokens with persona_version older than 2 minor versions behind current)
   - DEC-425 (`sync_class_allowed` claim is a closed-set array of strings from {private, shareable, publishable, shared, client-visible} per AGENTS.md §15; gates what a Lumi sync token may publish across tenants)
   - DEC-426 (Lumi tokens have a DISTINCT issuer `https://lumi.cyberos.world` separate from per-tenant `https://auth.<tenant>.cyberos.world`; verifiers MUST check issuer against tenant_id mapping)
-  - DEC-427 (Lumi tokens have audience `aud: https://brain.cyberos.world/sync` — bounded to BRAIN sync endpoints only; not a general-purpose tenant token)
-  - DEC-428 (BRAIN audit kinds: auth.lumi_token_issued, auth.lumi_token_verified, auth.lumi_token_rejected, auth.lumi_persona_version_stale)
+  - DEC-427 (Lumi tokens have audience `aud: https://memory.cyberos.world/sync` — bounded to memory sync endpoints only; not a general-purpose tenant token)
+  - DEC-428 (memory audit kinds: auth.lumi_token_issued, auth.lumi_token_verified, auth.lumi_token_rejected, auth.lumi_persona_version_stale)
   - DEC-429 (Lumi token TTL = 1 hour at slice 1; refresh via FR-AUTH-004 refresh path; rotation on persona_version bump invalidates prior tokens within 1 hour)
   - DEC-430 (REVOKE UPDATE, DELETE on lumi_token_issuance_log from cyberos_app — append-only at SQL grant)
   - DEC-431 (Lumi JWT alg pinned at RS256 per FR-AUTH-004 default; alg=none rejected always; alg=HS256 rejected always per JWT-confusion attack defense)
   - DEC-432 (only `cuo-*` agent_persona values may issue Lumi tokens at slice 1; human subjects with agent-persona role cannot impersonate Lumi without explicit FR-AUTH-2xx delegation flow)
-  - DEC-433 (cross-tenant chain anchor — Lumi tokens carry an `anchor_chain_hash` claim that the BRAIN sync endpoint validates against the source tenant's chain head; mismatch → 409 chain_diverged)
+  - DEC-433 (cross-tenant chain anchor — Lumi tokens carry an `anchor_chain_hash` claim that the memory sync endpoint validates against the source tenant's chain head; mismatch → 409 chain_diverged)
   - PDPL Art. 13 (data minimisation — JWT claims include only what's needed for sync gating)
   - EU AI Act Art. 13 (transparency — agent_persona stamp = explicit AI-actor identifier)
   - EU AI Act Art. 14 (human oversight — Lumi sync via agent persona is an AI-initiated action; sync operations subject to per-tenant deny-by-default policy)
@@ -49,7 +49,7 @@ new_files:
   - services/auth/src/lumi/persona_version.rs                  # version-stale-check (consumes FR-AI-014)
   - services/auth/src/lumi/sync_class.rs                       # SyncClass enum + closed-set validator
   - services/auth/src/lumi/repo.rs                             # issuance log writer
-  - services/auth/src/lumi/audit.rs                            # 4 BRAIN row builders
+  - services/auth/src/lumi/audit.rs                            # 4 memory row builders
   - services/auth/src/handlers/lumi.rs                         # POST /v1/auth/lumi/issue + GET /v1/auth/lumi/verify
   - services/auth/tests/lumi_claims_test.rs
   - services/auth/tests/lumi_issuer_test.rs
@@ -90,7 +90,7 @@ sub_tasks:
   - "0.4h: handlers/lumi.rs — REST surface"
   - "1.8h: tests — 10 test files"
 
-risk_if_skipped: "Lumi is the cross-tenant synthesis identity — the persona that owns BRAIN sync push, cross-team synthesis, and tenant-aware policy enforcement at P3+. Without DEC-420's distinct JWT shape, the same FR-AUTH-004 token would be used for both per-tenant operations AND cross-tenant Lumi sync — the distinction is forensically critical (which subject performed which class of operation?). Without DEC-426's distinct issuer, an attacker who compromises a per-tenant AUTH could forge Lumi tokens. Without DEC-431's alg-confusion defense, the classic JWT-alg-substitution attack succeeds (HS256 + JWKS public key = forged token). Without DEC-432's human-cannot-issue restriction, a tenant-admin could escalate to cross-tenant sync privileges. Without DEC-433's anchor_chain_hash, Lumi sync replays succeed (attacker captures + replays Lumi token to write at a stale chain head). The 6h effort lands the cross-tenant identity primitive with the security gates Lumi depends on."
+risk_if_skipped: "Lumi is the cross-tenant synthesis identity — the persona that owns memory sync push, cross-team synthesis, and tenant-aware policy enforcement at P3+. Without DEC-420's distinct JWT shape, the same FR-AUTH-004 token would be used for both per-tenant operations AND cross-tenant Lumi sync — the distinction is forensically critical (which subject performed which class of operation?). Without DEC-426's distinct issuer, an attacker who compromises a per-tenant AUTH could forge Lumi tokens. Without DEC-431's alg-confusion defense, the classic JWT-alg-substitution attack succeeds (HS256 + JWKS public key = forged token). Without DEC-432's human-cannot-issue restriction, a tenant-admin could escalate to cross-tenant sync privileges. Without DEC-433's anchor_chain_hash, Lumi sync replays succeed (attacker captures + replays Lumi token to write at a stale chain head). The 6h effort lands the cross-tenant identity primitive with the security gates Lumi depends on."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -105,37 +105,37 @@ The AUTH service **MUST** extend FR-AUTH-004 JWT shape with Lumi-specific claims
     - `sync_class_allowed: TEXT[]` — closed-set array per DEC-425.
    Existing FR-AUTH-004 claims (`sub`, `tid`, `iss`, `iat`, `exp`, `nbf`, `roles`, `rbac_v`) preserved unchanged.
 
-2. **MUST** issue Lumi tokens with distinct `iss: https://lumi.cyberos.world` and `aud: https://brain.cyberos.world/sync` (per DEC-426 + DEC-427). Per-tenant tokens (FR-AUTH-004) continue using `iss: https://auth.<tenant>.cyberos.world` and tenant-specific audiences. Mismatch on either → 401 + `auth.lumi_token_rejected` BRAIN row.
+2. **MUST** issue Lumi tokens with distinct `iss: https://lumi.cyberos.world` and `aud: https://memory.cyberos.world/sync` (per DEC-426 + DEC-427). Per-tenant tokens (FR-AUTH-004) continue using `iss: https://auth.<tenant>.cyberos.world` and tenant-specific audiences. Mismatch on either → 401 + `auth.lumi_token_rejected` memory row.
 
 3. **MUST** enforce that `agent_persona` claim's persona-key ∈ FR-AUTH-101 agent-persona-role-family enum (per DEC-421). Verifier parses prefix `cuo-` + key + `@` + semver; invalid format → 401 `agent_persona_malformed`; unknown persona-key → 401 `agent_persona_unknown`.
 
-4. **MUST** verify `persona_version` against the live version registry from FR-AI-014 (per DEC-424 + DEC-429). Verifier compares token's `persona_version` against `cuo-<persona-key>@<live-semver>` from the registry; if token's version is more than 2 minor versions behind → 401 `persona_version_stale` + emit `auth.lumi_persona_version_stale` BRAIN row (sev-2 — signals refresh-token reuse beyond rotation window).
+4. **MUST** verify `persona_version` against the live version registry from FR-AI-014 (per DEC-424 + DEC-429). Verifier compares token's `persona_version` against `cuo-<persona-key>@<live-semver>` from the registry; if token's version is more than 2 minor versions behind → 401 `persona_version_stale` + emit `auth.lumi_persona_version_stale` memory row (sev-2 — signals refresh-token reuse beyond rotation window).
 
 5. **MUST** enforce `sync_class_allowed` is a closed-set array (per DEC-425). Allowed values: `'private'`, `'shareable'`, `'publishable'`, `'shared'`, `'client-visible'`. Unknown values → 401 `sync_class_unknown`. Empty array → 401 `sync_class_empty` (token must permit at least one class).
 
-6. **MUST** verify `tenant_residency` claim matches the routing residency of the request (per DEC-422). The BRAIN sync endpoint's host determines the expected residency (e.g. `brain.vn-1.cyberos.world` expects `tenant_residency=vn-1`); mismatch → 451 `unavailable_for_legal_reasons` + emit `auth.lumi_token_rejected` BRAIN row with `reason='residency_mismatch'`.
+6. **MUST** verify `tenant_residency` claim matches the routing residency of the request (per DEC-422). The memory sync endpoint's host determines the expected residency (e.g. `memory.vn-1.cyberos.world` expects `tenant_residency=vn-1`); mismatch → 451 `unavailable_for_legal_reasons` + emit `auth.lumi_token_rejected` memory row with `reason='residency_mismatch'`.
 
 7. **MUST** pin Lumi JWT alg at RS256 (per DEC-431). Reject alg=none ALWAYS. Reject alg=HS256 ALWAYS (JWT-confusion attack: attacker uses JWKS public key as HS256 secret). Unknown alg → 401 `unsupported_alg`.
 
 8. **MUST** restrict Lumi token issuance to subjects whose `roles` claim contains `agent-persona` per FR-AUTH-101 (per DEC-432). Human subjects (those without `agent-persona` role) attempting issuance → 403 `human_cannot_issue_lumi`. Delegation flow (a human authorising a Lumi issuance on their behalf) deferred to FR-AUTH-2xx.
 
-9. **MUST** include `anchor_chain_hash: TEXT` claim (per DEC-433) — the source tenant's BRAIN chain head at token issuance time. The BRAIN sync endpoint validates this against the current chain head; if the source chain has diverged → 409 `chain_diverged` + emit `auth.lumi_token_rejected` with `reason='chain_diverged'`.
+9. **MUST** include `anchor_chain_hash: TEXT` claim (per DEC-433) — the source tenant's memory chain head at token issuance time. The memory sync endpoint validates this against the current chain head; if the source chain has diverged → 409 `chain_diverged` + emit `auth.lumi_token_rejected` with `reason='chain_diverged'`.
 
 10. **MUST** define `lumi_token_issuance_log` table: `(id BIGSERIAL PRIMARY KEY, issuer_subject_id UUID NOT NULL REFERENCES auth.subjects(id), agent_persona TEXT NOT NULL, persona_version TEXT NOT NULL, source_tenant_id UUID NOT NULL, lumi_org_tenant TEXT NOT NULL, residency TEXT NOT NULL, sync_class_allowed TEXT[] NOT NULL, anchor_chain_hash TEXT NOT NULL, ttl_seconds INT NOT NULL DEFAULT 3600, issued_at TIMESTAMPTZ NOT NULL DEFAULT now(), token_jti TEXT NOT NULL UNIQUE)`. `REVOKE UPDATE, DELETE FROM cyberos_app` (per DEC-430).
 
 11. **MUST** enforce RLS with both `USING` and `WITH CHECK` on `lumi_token_issuance_log`. Policy: `source_tenant_id = current_setting('auth.tenant_id')::uuid OR current_setting('auth.is_root_admin', true) = 'true'` (root-admin can see all for audit).
 
-12. **MUST** ship `POST /v1/auth/lumi/issue` handler. Body: `{agent_persona: "<key>", persona_version: "<semver>", lumi_org_tenant: "<slug>", sync_class_allowed: [...], anchor_chain_hash: "<hex>"}`. Caller MUST have role `agent-persona` per FR-AUTH-101. Validates all fields against closed sets + persona_version against registry. Returns `{token: "<jwt>", expires_at: <iso8601>}`. Emits `auth.lumi_token_issued` BRAIN row.
+12. **MUST** ship `POST /v1/auth/lumi/issue` handler. Body: `{agent_persona: "<key>", persona_version: "<semver>", lumi_org_tenant: "<slug>", sync_class_allowed: [...], anchor_chain_hash: "<hex>"}`. Caller MUST have role `agent-persona` per FR-AUTH-101. Validates all fields against closed sets + persona_version against registry. Returns `{token: "<jwt>", expires_at: <iso8601>}`. Emits `auth.lumi_token_issued` memory row.
 
-13. **MUST** ship `GET /v1/auth/lumi/verify` handler used by BRAIN sync + downstream consumers. Header: `Authorization: Bearer <token>`. Returns `{valid: bool, claims: <object>, reason: <text?>}`. Internal-use only (not exposed externally); the verifier library is the canonical path.
+13. **MUST** ship `GET /v1/auth/lumi/verify` handler used by memory sync + downstream consumers. Header: `Authorization: Bearer <token>`. Returns `{valid: bool, claims: <object>, reason: <text?>}`. Internal-use only (not exposed externally); the verifier library is the canonical path.
 
-14. **MUST** emit 4 BRAIN audit row kinds (per DEC-428):
+14. **MUST** emit 4 memory audit row kinds (per DEC-428):
     - `auth.lumi_token_issued` — every successful issuance; carries persona, version, residency, sync_class, ttl, jti.
     - `auth.lumi_token_verified` — sampled at 1% for cost reasons (high-volume); 100% on outcome != success.
     - `auth.lumi_token_rejected` — every verification failure; carries reason (residency_mismatch | chain_diverged | persona_version_stale | unsupported_alg | aud_mismatch | iss_mismatch | sync_class_unknown | agent_persona_unknown).
     - `auth.lumi_persona_version_stale` — sev-2 alarm trigger; emitted when verifier sees a persona_version > 2 minor versions behind.
 
-15. **MUST** PII-scrub `lumi_org_tenant` slug via FR-BRAIN-111 before chain commit (treated as PII at the cross-tenant boundary).
+15. **MUST** PII-scrub `lumi_org_tenant` slug via FR-MEMORY-111 before chain commit (treated as PII at the cross-tenant boundary).
 
 16. **MUST** complete Lumi token issuance in ≤ 100 ms p95 (signing key + JWKS already in process). Verification in ≤ 50 ms p95 (signature verify + claim parse + persona-version lookup from in-memory registry).
 
@@ -158,7 +158,7 @@ The AUTH service **MUST** extend FR-AUTH-004 JWT shape with Lumi-specific claims
 
 23. **MUST** support TTL configurable via env `LUMI_TOKEN_TTL_SECONDS` with default 3600 (per DEC-429). Operators MAY shorten for high-security tenants; values < 300 (5min) → reject env config at startup.
 
-24. **MUST** include `anchor_chain_hash` validation flow: the BRAIN sync endpoint (out of scope here, ships in FR-BRAIN-2xx) reads the claim + compares against the current chain head; this FR ships the claim emission + verifier-side parsing.
+24. **MUST** include `anchor_chain_hash` validation flow: the memory sync endpoint (out of scope here, ships in FR-MEMORY-2xx) reads the claim + compares against the current chain head; this FR ships the claim emission + verifier-side parsing.
 
 25. **MUST** validate `sync_class_allowed` ⊆ what the source tenant's policy permits. The per-tenant policy YAML (FR-AI-005) declares per-tenant `lumi_sync_max_classes`. If requested array exceeds policy → 403 `sync_class_exceeds_policy` + emit `auth.lumi_token_rejected` with reason.
 
@@ -168,7 +168,7 @@ The AUTH service **MUST** extend FR-AUTH-004 JWT shape with Lumi-specific claims
 
 **Why distinct iss for Lumi tokens (DEC-426)?** Per-tenant AUTH compromise should not let attackers forge cross-tenant Lumi tokens. Distinct iss means even if a tenant's AUTH cluster is breached, the attacker still needs to forge tokens with `iss=https://lumi.cyberos.world` — that's a separate trust anchor. Verifiers check iss + tenant_id mapping; mismatch fails closed.
 
-**Why distinct aud (DEC-427)?** Audience-bound tokens (RFC 7519 §4.1.3) prevent token misuse: a Lumi token meant for `brain.cyberos.world/sync` cannot be replayed against `api.cyberos.world/v1/...`. Bounding audience to sync endpoints contains the blast radius of any compromise.
+**Why distinct aud (DEC-427)?** Audience-bound tokens (RFC 7519 §4.1.3) prevent token misuse: a Lumi token meant for `memory.cyberos.world/sync` cannot be replayed against `api.cyberos.world/v1/...`. Bounding audience to sync endpoints contains the blast radius of any compromise.
 
 **Why alg=HS256 rejected (DEC-431, §1 #7)?** Classic JWT-confusion attack: attacker takes a JWKS public key, signs a token using HS256 with the public key as the HMAC secret, and the verifier (if it accepts HS256) validates because the "secret" matches. The defense is to pin alg=RS256 — rejecting HS256 always means the attack cannot succeed regardless of verifier bugs.
 
@@ -178,7 +178,7 @@ The AUTH service **MUST** extend FR-AUTH-004 JWT shape with Lumi-specific claims
 
 **Why sync_class_allowed closed enum (DEC-425, §1 #5)?** AGENTS.md §15 defines the closed sync-class set. Allowing arbitrary strings would let tokens claim privileges that don't exist (silently treated as "no privilege" or worse). Closed-set validation at issuance time catches typos at the boundary.
 
-**Why anchor_chain_hash claim (DEC-433, §1 #9)?** Lumi sync writes to BRAIN. If an attacker captures a Lumi token and replays it after the source tenant's chain has advanced (e.g. with newer rows), the replay would write at a stale head — silently corrupting the chain. The anchor_chain_hash binds the token to a specific chain state; mismatch rejects the replay.
+**Why anchor_chain_hash claim (DEC-433, §1 #9)?** Lumi sync writes to memory. If an attacker captures a Lumi token and replays it after the source tenant's chain has advanced (e.g. with newer rows), the replay would write at a stale head — silently corrupting the chain. The anchor_chain_hash binds the token to a specific chain state; mismatch rejects the replay.
 
 **Why same signing key as FR-AUTH-004 at slice 1 (§1 #19)?** Operationally simpler; one key rotation flow. Cryptographically the distinct iss + aud claims provide the security boundary (an attacker forging an FR-AUTH-004 token can't get the iss accepted by the Lumi verifier). Distinct key per identity-class is a slice 2 hardening.
 
@@ -190,11 +190,11 @@ The AUTH service **MUST** extend FR-AUTH-004 JWT shape with Lumi-specific claims
 
 **Why `lumi_org_tenant` is a separate claim from `tid` (DEC-423, §1 #1)?** `tid` is the regular tenant id of the issuing AUTH; `lumi_org_tenant` is the slug of the org-tenant this Lumi persona represents. These can differ: a Lumi sync from a customer tenant pushing to the CyberSkill org-tenant has `tid=<customer-uuid>` and `lumi_org_tenant=cyberskill`. Two-field design makes the cross-tenant relationship explicit.
 
-**Why `auth.lumi_token_verified` sampled at 1% (§1 #14)?** High-volume hot path; 100% sampling would flood BRAIN. 1% gives statistical coverage; 100% on `outcome != success` ensures every failure is captured for debugging.
+**Why `auth.lumi_token_verified` sampled at 1% (§1 #14)?** High-volume hot path; 100% sampling would flood memory. 1% gives statistical coverage; 100% on `outcome != success` ensures every failure is captured for debugging.
 
-**Why `sync_class_allowed` validated against per-tenant policy (§1 #25)?** A tenant may restrict their data's max sync class (e.g. "we never publish externally — sync_class cap = 'shared'"). The issuance handler enforces; tokens cannot grant more than policy permits. Defense in depth — the BRAIN sync endpoint also checks at write time, but rejecting at issuance time saves the round-trip.
+**Why `sync_class_allowed` validated against per-tenant policy (§1 #25)?** A tenant may restrict their data's max sync class (e.g. "we never publish externally — sync_class cap = 'shared'"). The issuance handler enforces; tokens cannot grant more than policy permits. Defense in depth — the memory sync endpoint also checks at write time, but rejecting at issuance time saves the round-trip.
 
-**Why slug pattern validation for `lumi_org_tenant` (§1 #22)?** Slug is used in cross-tenant routing + BRAIN audit paths; malformed values cause hard-to-debug failures downstream. Pattern validation at JWT issuance time + JWT verification time catches typos at the boundary.
+**Why slug pattern validation for `lumi_org_tenant` (§1 #22)?** Slug is used in cross-tenant routing + memory audit paths; malformed values cause hard-to-debug failures downstream. Pattern validation at JWT issuance time + JWT verification time catches typos at the boundary.
 
 **Why total 13 claims (§1 #21)?** Extending FR-AUTH-004's 8 with 5 Lumi-specific claims is the minimum complete set. Adding fewer would force consumers to infer; adding more bloats the token. The serialisation order preserves FR-AUTH-004-compatible read paths.
 
@@ -258,7 +258,7 @@ pub struct LumiClaims {
     pub sub: Uuid,
     pub tid: Uuid,
     pub iss: String,        // always "https://lumi.cyberos.world" for Lumi tokens
-    pub aud: String,        // always "https://brain.cyberos.world/sync"
+    pub aud: String,        // always "https://memory.cyberos.world/sync"
     pub iat: i64,
     pub exp: i64,
     pub nbf: i64,
@@ -280,7 +280,7 @@ impl LumiClaims {
         if self.iss != "https://lumi.cyberos.world" {
             return Err(LumiClaimError::IssMismatch);
         }
-        if self.aud != "https://brain.cyberos.world/sync" {
+        if self.aud != "https://memory.cyberos.world/sync" {
             return Err(LumiClaimError::AudMismatch);
         }
         crate::lumi::persona_version::validate_format(&self.agent_persona)?;
@@ -336,7 +336,7 @@ use crate::lumi::claims::LumiClaims;
 use crate::lumi::persona_version::PersonaVersionRegistry;
 
 const LUMI_ISS: &str = "https://lumi.cyberos.world";
-const LUMI_AUD: &str = "https://brain.cyberos.world/sync";
+const LUMI_AUD: &str = "https://memory.cyberos.world/sync";
 const PERSONA_VERSION_STALE_THRESHOLD: u32 = 2; // minor versions behind
 
 pub fn verify_lumi_token(
@@ -446,7 +446,7 @@ pub async fn issue_lumi_token(
     let lumi_claims = LumiClaims {
         sub: claims.subject_id(), tid: claims.tenant_id(),
         iss: "https://lumi.cyberos.world".into(),
-        aud: "https://brain.cyberos.world/sync".into(),
+        aud: "https://memory.cyberos.world/sync".into(),
         iat: chrono::Utc::now().timestamp(),
         exp: exp.timestamp(),
         nbf: chrono::Utc::now().timestamp(),
@@ -462,7 +462,7 @@ pub async fn issue_lumi_token(
     };
     let token = state.signer.sign_rs256(&lumi_claims).await?;
 
-    // (6) Persist to log + emit BRAIN audit
+    // (6) Persist to log + emit memory audit
     let mut tx = state.db.begin().await?;
     repo::insert_issuance_log(&mut tx, &lumi_claims, claims.subject_id(), &jti, ttl).await?;
     audit::emit_lumi_token_issued(&mut tx, &lumi_claims, claims.subject_id()).await?;
@@ -477,7 +477,7 @@ pub async fn issue_lumi_token(
 ## §4 — Acceptance criteria
 
 1. **iss locked at https://lumi.cyberos.world** — token with different iss → 401 iss_mismatch.
-2. **aud locked at https://brain.cyberos.world/sync** — different aud → 401 aud_mismatch.
+2. **aud locked at https://memory.cyberos.world/sync** — different aud → 401 aud_mismatch.
 3. **alg=RS256 enforced** — HS256 or none → 401 unsupported_alg.
 4. **agent_persona format `cuo-<key>@<semver>`** — malformed → 401 agent_persona_malformed.
 5. **agent_persona unknown key** → 401 agent_persona_unknown.
@@ -490,7 +490,7 @@ pub async fn issue_lumi_token(
 12. **Human cannot issue Lumi token** — caller without agent-persona role → 403 human_cannot_issue.
 13. **anchor_chain_hash 64-hex format** — malformed → 401 anchor_chain_hash_malformed.
 14. **lumi_org_tenant slug pattern** — malformed → 401 lumi_org_tenant_malformed.
-15. **POST issue happy path** — agent-persona role + valid request → 201 + token + log row + BRAIN row.
+15. **POST issue happy path** — agent-persona role + valid request → 201 + token + log row + memory row.
 16. **lumi_token_issuance_log append-only** — UPDATE/DELETE blocked from cyberos_app.
 17. **jti uniqueness enforced** — duplicate jti at insert → 23505.
 18. **TTL default 3600** — exp = iat + 3600.
@@ -501,8 +501,8 @@ pub async fn issue_lumi_token(
 23. **Counter `auth_lumi_issuance_total{outcome=success}` increments** per successful issuance.
 24. **Counter `auth_lumi_persona_version_stale_total` increments** on stale-version rejection.
 25. **Perf budget < 100ms p95 issue / 50ms p95 verify** — perf tests assert.
-26. **`auth.lumi_token_issued` BRAIN row carries jti + persona + version + residency + sync_class + ttl**.
-27. **`auth.lumi_token_rejected` BRAIN row carries reason** — for every failure path.
+26. **`auth.lumi_token_issued` memory row carries jti + persona + version + residency + sync_class + ttl**.
+27. **`auth.lumi_token_rejected` memory row carries reason** — for every failure path.
 
 ---
 
@@ -608,7 +608,7 @@ fn unknown_sync_class_rejected_at_deserialise() {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 4 BRAIN row builders follow the canonical pattern.)
+(API contract above is the skeleton; 4 memory row builders follow the canonical pattern.)
 
 ---
 
@@ -617,15 +617,15 @@ fn unknown_sync_class_rejected_at_deserialise() {
 **Upstream:**
 - **FR-AUTH-101** — RBAC catalogue (agent-persona role + role enum).
 
-**Downstream:** none at slice 1 (this FR provides the JWT shape that downstream BRAIN sync + FR-AUTH-2xx revocation consume).
+**Downstream:** none at slice 1 (this FR provides the JWT shape that downstream memory sync + FR-AUTH-2xx revocation consume).
 
 **Cross-module:**
 - **FR-AUTH-004** — JWT baseline + signing key + JWKS.
 - **FR-AI-014** — persona-version registry (consumed by staleness check).
 - **FR-AI-016** — residency policy.
 - **FR-AI-005** — per-tenant policy YAML (consumed for sync_class policy gate).
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing of lumi_org_tenant.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing of lumi_org_tenant.
 
 ---
 
@@ -660,7 +660,7 @@ fn unknown_sync_class_rejected_at_deserialise() {
   "sub": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
   "tid": "5e8f1d2a-...",
   "iss": "https://lumi.cyberos.world",
-  "aud": "https://brain.cyberos.world/sync",
+  "aud": "https://memory.cyberos.world/sync",
   "iat": 1747920731,
   "exp": 1747924331,
   "nbf": 1747920731,
@@ -676,7 +676,7 @@ fn unknown_sync_class_rejected_at_deserialise() {
 }
 ```
 
-### 8.4 — auth.lumi_token_issued BRAIN row
+### 8.4 — auth.lumi_token_issued memory row
 
 ```json
 {
@@ -694,7 +694,7 @@ fn unknown_sync_class_rejected_at_deserialise() {
 }
 ```
 
-### 8.5 — auth.lumi_persona_version_stale BRAIN row (sev-2)
+### 8.5 — auth.lumi_persona_version_stale memory row (sev-2)
 
 ```json
 {
@@ -717,7 +717,7 @@ Deferred:
 - **Lumi token revocation API + CRL endpoint** — FR-AUTH-2xx.
 - **Distinct kid for Lumi vs FR-AUTH-004** — slice 2.
 - **Human delegation flow (human authorises specific Lumi sync)** — slice 3 ADR.
-- **Cross-Lumi token chain (Lumi A → Lumi B)** — FR-BRAIN-2xx.
+- **Cross-Lumi token chain (Lumi A → Lumi B)** — FR-MEMORY-2xx.
 
 All other questions resolved.
 
@@ -757,7 +757,7 @@ All other questions resolved.
 | Policy YAML unreachable | tenant config | 500 + sev-3 | Restore config |
 | Subject deleted while log refs | FK RESTRICT | DELETE fails | Soft-delete subject first |
 | chain_hash regex too permissive | unit test | CI fails | Tighten regex |
-| sub_claim leaked in BRAIN | PII scrub | Pre-commit | Designed |
+| sub_claim leaked in memory | PII scrub | Pre-commit | Designed |
 
 ---
 
@@ -774,9 +774,9 @@ All other questions resolved.
 - **TTL 1h default, configurable 5min-24h** — short-lived; mitigates lack of revocation at slice 1.
 - **Human cannot issue at slice 1** — EU AI Act Art. 13 clean transparency.
 - **Residency check at verifier** — Decree 53 + GDPR + DORA enforcement.
-- **Per-tenant sync_class policy enforced at issuance** — defense in depth with BRAIN sync write-time check.
+- **Per-tenant sync_class policy enforced at issuance** — defense in depth with memory sync write-time check.
 - **Append-only log via SQL grant** — forensic record.
-- **4 BRAIN audit kinds** — issued / verified / rejected / version_stale.
+- **4 memory audit kinds** — issued / verified / rejected / version_stale.
 - **PII scrub lumi_org_tenant** — cross-tenant boundary.
 - **OTel sampling 1% verify** — high-volume hot path; 100% on non-success.
 - **Sev-2 alarm on stale-version > 5/h** — operator investigation prompt.

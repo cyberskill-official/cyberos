@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-PROJ-001, FR-TIME-001, FR-LEARN-001, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-PROJ-001, FR-TIME-001, FR-LEARN-001, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-HR-001, FR-PROJ-001, FR-TIME-001]
 blocks: [FR-RES-002, FR-RES-003]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2031 2026-05-17 — Capacity computed from member.hours_per_week (FR-HR-002) minus FR-LEARN training hours minus PTO; demand from FR-PROJ-013 estimate
   - DEC-2032 2026-05-17 — Closed enum `matrix_run_status` = {running, completed, partial, failed}; cardinality 4
   - DEC-2033 2026-05-17 — Idempotent per (tenant_id, run_date); UNIQUE constraint
-  - DEC-2034 2026-05-17 — BRAIN audit kinds: res.matrix_run_started, res.matrix_member_computed, res.matrix_run_completed, res.matrix_run_failed
+  - DEC-2034 2026-05-17 — memory audit kinds: res.matrix_run_started, res.matrix_member_computed, res.matrix_run_completed, res.matrix_run_failed
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without capacity matrix, allocation flies blind → over-alloc
 
 ## §1 — Description (BCP-14 normative)
 
-The RES service **MUST** ship capacity matrix at `services/res/src/matrix/` joining HR + PROJ + TIME + LEARN nightly, per-member-week grid, 4 BRAIN audit kinds.
+The RES service **MUST** ship capacity matrix at `services/res/src/matrix/` joining HR + PROJ + TIME + LEARN nightly, per-member-week grid, 4 memory audit kinds.
 
 1. **MUST** validate `matrix_run_status` against closed enum per DEC-2032.
 
@@ -141,7 +141,7 @@ The RES service **MUST** ship capacity matrix at `services/res/src/matrix/` join
    GET  /v1/res/members/{id}/capacity      (member capacity view)
    ```
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-2034. PII per FR-BRAIN-111: hours SHA-256 hashed.
+8. **MUST** emit 4 memory audit kinds per DEC-2034. PII per FR-MEMORY-111: hours SHA-256 hashed.
 
 9. **MUST** thread trace_id from cron → batch → per-member compute → audit.
 
@@ -188,7 +188,7 @@ Sample capacity view:
 ---
 
 ## §4 — Acceptance criteria
-1. **matrix_run_status enum cardinality 4**. 2. **Capacity = hours_per_week - PTO - LEARN**. 3. **Demand = sum PROJ-013 estimates**. 4. **Allocated = sum TIME entries**. 5. **Per-member 12-week forecast**. 6. **Per-project breakdown row + total row**. 7. **Nightly cron 04:00**. 8. **Idempotent via UNIQUE**. 9. **Per-member failure isolated**. 10. **4 BRAIN audit kinds emitted**. 11. **PII scrubbed (hours SHA256)**. 12. **RLS denies cross-tenant**. 13. **CHRO-only manual trigger**. 14. **Trace_id preserved**. 15. **Append-only matrix table**. 16. **rust_decimal precision**. 17. **Inactive member skipped**. 18. **Contract type override respected (FR-HR-002)**. 19. **Run status transitions correct**. 20. **Empty tenant skipped**.
+1. **matrix_run_status enum cardinality 4**. 2. **Capacity = hours_per_week - PTO - LEARN**. 3. **Demand = sum PROJ-013 estimates**. 4. **Allocated = sum TIME entries**. 5. **Per-member 12-week forecast**. 6. **Per-project breakdown row + total row**. 7. **Nightly cron 04:00**. 8. **Idempotent via UNIQUE**. 9. **Per-member failure isolated**. 10. **4 memory audit kinds emitted**. 11. **PII scrubbed (hours SHA256)**. 12. **RLS denies cross-tenant**. 13. **CHRO-only manual trigger**. 14. **Trace_id preserved**. 15. **Append-only matrix table**. 16. **rust_decimal precision**. 17. **Inactive member skipped**. 18. **Contract type override respected (FR-HR-002)**. 19. **Run status transitions correct**. 20. **Empty tenant skipped**.
 
 ---
 
@@ -230,7 +230,7 @@ async fn per_member_failure_isolated() {
 ## §7 — Dependencies
 **Upstream:** FR-HR-001, FR-PROJ-001, FR-TIME-001.
 **Downstream:** FR-RES-002 (Gantt UI), FR-RES-003 (over/under flags), FR-RES-005 (OT cap check).
-**Cross-module:** FR-HR-002 (contract type), FR-HR-004 (PTO), FR-LEARN-001 (training), FR-PROJ-013 (estimates), FR-MCP-007 (cron), FR-BRAIN-111 (PII).
+**Cross-module:** FR-HR-002 (contract type), FR-HR-004 (PTO), FR-LEARN-001 (training), FR-PROJ-013 (estimates), FR-MCP-007 (cron), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -249,7 +249,7 @@ async fn per_member_failure_isolated() {
 ## §11 — Implementation notes
 - §11.1 12-week forecast horizon balances visibility + churn (closer weeks more reliable).
 - §11.2 Run via FR-MCP-007 `kind: 'res.matrix_batch'`, daily 04:00.
-- §11.3 BRAIN audit body: tenant_id, run_id, member_id, week; hours SHA256.
+- §11.3 memory audit body: tenant_id, run_id, member_id, week; hours SHA256.
 - §11.4 Computer is pure function: `(member_data, week, hr_pto, learn_hours, proj_estimates, time_entries) → MatrixRow`.
 - §11.5 Per-project rows enable Gantt UI per FR-RES-002.
 

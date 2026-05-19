@@ -1,7 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: soc2-evidence-audit
-description: Audits a soc2-evidence@1 artefact against soc2_evidence_rubric@1.0. Validates FM + SEC, TSC coverage completeness, per-control evidence freshness vs audit window, gap-analysis honesty, auditor-readiness statement realism. Per AICPA TSC + ISAE 3000/3402 conventions.
+description: >-
+  Audits a soc2-evidence@1 artefact against soc2_evidence_rubric@1.0. Validates FM + SEC, TSC coverage completeness, per-control evidence freshness vs audit window, gap-analysis honesty, auditor-readiness statement realism. Per AICPA TSC + ISAE 3000/3402 conventions. Audit one or more existing soc2-evidence@1 markdowns against soc2-evidence_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after soc2-evidence-author. Use when user asks to "audit this soc2 evidence" or "check the soc2 evidence". Do NOT use for "draft a new soc2 evidence" (use soc2-evidence-author instead).
   Audit one or more existing soc2-evidence@1 markdowns against
   soc2-evidence_rubric@1.0. Produces a sibling .audit.md per artefact plus
   an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
@@ -16,7 +17,7 @@ metadata:
   cyberos-rubric-version: soc2-evidence_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +26,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

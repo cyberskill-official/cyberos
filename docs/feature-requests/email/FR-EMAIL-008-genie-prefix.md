@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-001, FR-PORTAL-005, FR-AI-003, FR-CUO-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-001, FR-PORTAL-005, FR-AI-003, FR-CUO-101, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001, FR-EMAIL-005, FR-PORTAL-005, FR-CUO-101]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1592 2026-05-17 — Closed enum `genie_action_kind` = {draft_reply, create_issue, summarize_thread, fetch_data, escalate_human, no_action}; cardinality 6
   - DEC-1593 2026-05-17 — Action proposals ALWAYS reviewed by user before execution — never auto-execute (matches FR-INV-010 dunning pattern)
   - DEC-1594 2026-05-17 — Genie context: tenant brand pack (FR-PORTAL-002), CRM context (FR-CRM-001), recent thread context (last 10 msgs), tenant tools (per FR-MCP-006 gating)
-  - DEC-1595 2026-05-17 — BRAIN audit kinds: email.genie_triggered, email.genie_action_proposed, email.genie_action_approved, email.genie_action_executed, email.genie_action_dismissed, email.genie_failed
+  - DEC-1595 2026-05-17 — memory audit kinds: email.genie_triggered, email.genie_action_proposed, email.genie_action_approved, email.genie_action_executed, email.genie_action_dismissed, email.genie_failed
 
 build_envelope:
   language: rust 1.81
@@ -75,7 +75,7 @@ risk_if_skipped: "Without Genie prefix routing, AM/CDO must manually use Branded
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship Genie-prefix routing at `services/email/src/genie/` matching subject prefix, calling FR-PORTAL-005 Branded Genie, proposing actions, queueing for user approval, 6 BRAIN audit kinds.
+The EMAIL service **MUST** ship Genie-prefix routing at `services/email/src/genie/` matching subject prefix, calling FR-PORTAL-005 Branded Genie, proposing actions, queueing for user approval, 6 memory audit kinds.
 
 1. **MUST** hook into `services/email/src/inbound_processor.rs` after message stored: call `genie::route(message)`.
 
@@ -135,7 +135,7 @@ The EMAIL service **MUST** ship Genie-prefix routing at `services/email/src/geni
    GRANT UPDATE (status, reviewed_by, reviewed_at, executed_at, result) ON genie_actions TO cyberos_app;
    ```
 
-8. **MUST** emit 6 BRAIN audit kinds per DEC-1595. PII per FR-BRAIN-111: message body + AI output SHA-256 hashed.
+8. **MUST** emit 6 memory audit kinds per DEC-1595. PII per FR-MEMORY-111: message body + AI output SHA-256 hashed.
 
 9. **MUST** thread trace_id from inbound → prefix match → Genie → action queue → user approve → execute.
 
@@ -201,7 +201,7 @@ Sample session detail:
 ---
 
 ## §4 — Acceptance criteria
-1. **Subject prefix triggers Genie**. 2. **Case-insensitive match**. 3. **Strips Re:/Fwd: before match**. 4. **Tenant prefix configurable**. 5. **Genie_enabled toggle respected (off → skip silently)**. 6. **Context loaded (brand + CRM + thread + tools)**. 7. **6 action kinds enum + cardinality test**. 8. **Actions queued, never auto-executed**. 9. **6 BRAIN audit kinds emitted**. 10. **PII scrubbed (body/AI output SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **fetch_data respects FR-MCP-006 gating**. 14. **Approve → execute (calls FR-EMAIL-009 send / FR-PROJ-001 create / etc.)**. 15. **Dismiss → status=dismissed (audit)**. 16. **AI failure → status=failed + sev-2**. 17. **Append-only sessions/actions tables**. 18. **Multiple actions per session executed in order**. 19. **Result of execution stored in actions.result**. 20. **Branded Genie call uses brand pack tone**.
+1. **Subject prefix triggers Genie**. 2. **Case-insensitive match**. 3. **Strips Re:/Fwd: before match**. 4. **Tenant prefix configurable**. 5. **Genie_enabled toggle respected (off → skip silently)**. 6. **Context loaded (brand + CRM + thread + tools)**. 7. **6 action kinds enum + cardinality test**. 8. **Actions queued, never auto-executed**. 9. **6 memory audit kinds emitted**. 10. **PII scrubbed (body/AI output SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **fetch_data respects FR-MCP-006 gating**. 14. **Approve → execute (calls FR-EMAIL-009 send / FR-PROJ-001 create / etc.)**. 15. **Dismiss → status=dismissed (audit)**. 16. **AI failure → status=failed + sev-2**. 17. **Append-only sessions/actions tables**. 18. **Multiple actions per session executed in order**. 19. **Result of execution stored in actions.result**. 20. **Branded Genie call uses brand pack tone**.
 
 ---
 
@@ -245,7 +245,7 @@ async fn case_insensitive_prefix() {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-001, FR-PORTAL-005, FR-CUO-101.
-**Cross-module:** FR-PORTAL-002 (brand pack), FR-CRM-001 (contact), FR-MCP-006 (tool gating), FR-AI-003 (LLM), FR-BRAIN-111 (PII).
+**Cross-module:** FR-PORTAL-002 (brand pack), FR-CRM-001 (contact), FR-MCP-006 (tool gating), FR-AI-003 (LLM), FR-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 
@@ -270,7 +270,7 @@ None blocking.
 - §11.1 Prefix match regex: `^(re:|fwd:)?\s*{escaped_prefix}\s*` case-insensitive.
 - §11.2 Action proposer prompt includes JSON schema for output validation.
 - §11.3 Result column stores execution outcome (e.g. sent_message_id, created_issue_id).
-- §11.4 BRAIN audit body: action kinds + counts; AI output SHA256.
+- §11.4 memory audit body: action kinds + counts; AI output SHA256.
 - §11.5 fetch_data executes via FR-MCP-006-gated MCP tools; tenant must have allowlisted them.
 
 ---

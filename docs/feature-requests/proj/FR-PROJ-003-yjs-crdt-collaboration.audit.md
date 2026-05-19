@@ -12,7 +12,7 @@ authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; 
 
 ## §1 — Verdict summary
 
-FR-PROJ-003 authored direct-to-10/10. ~920 lines. 13 §1 clauses (Y.Doc structure, snapshot semantics, restore, server-as-relay, JWT + RLS auth, scalar LWW with companion columns, awareness throttle, offline buffer, BRAIN audit rows, W3C trace propagation, OTel metrics, Postgres-down degradation, write-path lock-out). 11 §2 rationale paragraphs. Full SQL migration + Rust relay + snapshot scheduler + TypeScript client + LWW handler in §3. 25 ACs. 5 Rust integration tests + 2 TypeScript tests. 21 failure modes. 9 implementation notes.
+FR-PROJ-003 authored direct-to-10/10. ~920 lines. 13 §1 clauses (Y.Doc structure, snapshot semantics, restore, server-as-relay, JWT + RLS auth, scalar LWW with companion columns, awareness throttle, offline buffer, memory audit rows, W3C trace propagation, OTel metrics, Postgres-down degradation, write-path lock-out). 11 §2 rationale paragraphs. Full SQL migration + Rust relay + snapshot scheduler + TypeScript client + LWW handler in §3. 25 ACs. 5 Rust integration tests + 2 TypeScript tests. 21 failure modes. 9 implementation notes.
 
 ## §2 — Findings (all resolved during authoring)
 

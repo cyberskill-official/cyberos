@@ -1,22 +1,22 @@
-"""FR-BRAIN-107 — Filesystem watcher for the personal-BRAIN capture daemon.
+"""FR-MEMORY-107 — Filesystem watcher for the personal-memory capture daemon.
 
 Watches every opted-in folder (per AGENTS.md §11 watched-folder list) and
 emits :class:`FsEvent` rows when files are created, modified, moved, or
-deleted. The capture daemon (FR-BRAIN-110) subscribes to this stream and
-decides which events should produce BRAIN ``put`` / ``move`` / ``delete``
+deleted. The capture daemon (FR-MEMORY-110) subscribes to this stream and
+decides which events should produce memory ``put`` / ``move`` / ``delete``
 ops.
 
 Design choices (DEC-091 / DEC-092 from the FR spec):
 
 * **Polling vs native watcher.** Slice 1 ships a portable polling implementation
-  in pure stdlib so the personal-BRAIN runs on every platform without
+  in pure stdlib so the personal-memory runs on every platform without
   external deps. Slice 2 wires in native backends: ``fsevents`` on macOS,
   ``inotify`` on Linux, ``ReadDirectoryChangesW`` on Windows. The same
   :class:`FsEvent` surface is preserved so callers don't change.
 
 * **Coalescing.** Rapid bursts (file-save thrashing from IDEs) are coalesced
   inside a 250ms window — only the LAST event per (path, kind) tuple in the
-  window is emitted. Prevents N×M BRAIN writes for one logical save.
+  window is emitted. Prevents N×M memory writes for one logical save.
 
 * **Mount-aware.** Network mounts and removable media are scanned but
   flagged with ``volume='remote'`` / ``'removable'`` so the capture daemon
@@ -25,7 +25,7 @@ Design choices (DEC-091 / DEC-092 from the FR spec):
 
 This module ships the data types + scaffold loop; the polling implementation
 is intentionally minimal — the production watcher will live alongside the
-capture daemon in :mod:`cyberos.core.capture_daemon` (FR-BRAIN-110).
+capture daemon in :mod:`cyberos.core.capture_daemon` (FR-MEMORY-110).
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ EventKind = Literal["created", "modified", "moved", "deleted"]
 class FsEvent:
     """A single filesystem change observation.
 
-    The capture daemon decides whether to turn this into a BRAIN op. Events
+    The capture daemon decides whether to turn this into a memory op. Events
     are immutable so the coalescer can hash + dedupe within the 250ms window.
     """
 

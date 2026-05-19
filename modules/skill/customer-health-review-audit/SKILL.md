@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: customer-health-review-audit
-description: Audits a customer-health-review@1 artefact against customer_health_review_rubric@1.0. Validates FM + SEC structure, health-score-distribution arithmetic, at-risk-intervention specificity, expansion/advocacy candidate qualification rigor, CSM-utilization-vs-benchmark coherence. Per Gainsight + Catalyst + TSIA conventions.
-  Audit one or more existing customer-health-review@1 markdowns against
-  customer-health-review_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  customer-health-review-author.
+description: >-
+  Audits a customer-health-review@1 artefact against customer_health_review_rubric@1.0. Validates FM + SEC structure, health-score-distribution arithmetic, at-risk-intervention specificity, expansion/advocacy candidate qualification rigor, CSM-utilization-vs-benchmark coherence. Per Gainsight + Catalyst + TSIA conventions. Audit one or more existing customer-health-review@1 markdowns against customer-health-review_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after customer-health-review-author. Use when user asks to "audit this customer health review" or "check the customer health review". Do NOT use for "draft a new customer health review" (use customer-health-review-author instead). Audit one or more existing customer-health-review@1 markdowns against customer-health-review_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on n...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: customer-health-review_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

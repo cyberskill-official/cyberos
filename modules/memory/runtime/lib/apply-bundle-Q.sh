@@ -3,7 +3,7 @@
 # for Bundle Q (2026-05-11). Run this from your macOS terminal at the project
 # repo root, AFTER the AGENTS.md / CHANGELOG / README edits have been made.
 #
-# This script performs the BRAIN-touching steps that the cowork sandbox
+# This script performs the memory-touching steps that the cowork sandbox
 # could not perform (§0.1 forbids the writer from running under /sessions/):
 #
 #   1. session.start                                                        (op:session.start)
@@ -14,7 +14,7 @@
 #   6. §8.7 post-upgrade self-audit (auto per §0.5 step 4)                  (op:health_check)
 #   7. session.end + final manifest str_replace (audit_chain_head update)   (op:session.end + op:str_replace)
 #
-# Each step is idempotent within a single run via the BrainLock and the
+# Each step is idempotent within a single run via the MemoryLock and the
 # writer's own validators. If the script fails midway, the chain remains
 # consistent (no partial mutations); you can fix the cause and rerun.
 #
@@ -25,8 +25,8 @@
 # don't block.
 #
 # Verify after with:
-#   python3 runtime/lib/brain_writer.py status
-#   python3 runtime/lib/brain_writer.py verify --bit-perfect
+#   python3 runtime/lib/memory_writer.py status
+#   python3 runtime/lib/memory_writer.py verify --bit-perfect
 
 set -euo pipefail
 
@@ -35,7 +35,7 @@ OLD_SHA="sha256:617f5aef1a49c394f6d17be072c8b29dbeb84c3265b80f3de3cb00a0f1c07759
 NEW_SHA="sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688"
 ACTOR="subject:stephen-cheng"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-WRITER="$REPO_ROOT/runtime/lib/brain_writer.py"
+WRITER="$REPO_ROOT/runtime/lib/memory_writer.py"
 TPL_DIR="$REPO_ROOT/.cyberos-memory/refinements/2026-05-11-bundle-Q"
 ARCHIVE_PATH="meta/protocol-history/AGENTS-${OLD_SHA/:/-}.md"
 DEC_PATH="memories/decisions/DEC-109-implementation-files-in-source-tree.md"
@@ -137,12 +137,12 @@ if [ -z "$FOUND_REV" ]; then
     echo "  expected (manifest pin): $OLD_SHA" >&2
     echo "  walked HEAD..HEAD~10 — no canonical SHA match" >&2
     echo "Possible causes:" >&2
-    echo "  - the BRAIN's manifest pin doesn't reflect what was actually" >&2
+    echo "  - the memory's manifest pin doesn't reflect what was actually" >&2
     echo "    committed before Bundle Q (rare; chain corruption);" >&2
     echo "  - Bundle Q's commits are deeper than HEAD~10 (unlikely)." >&2
     echo "Manual recovery: find the commit pre-edit, run" >&2
     echo "  git show <commit>:docs/CyberOS-AGENTS.md > /tmp/prior.md" >&2
-    echo "  python3 runtime/lib/brain_writer.py write $ACTOR \\" >&2
+    echo "  python3 runtime/lib/memory_writer.py write $ACTOR \\" >&2
     echo "    meta/protocol-history/AGENTS-${OLD_SHA/:/-}.md /tmp/prior.md" >&2
     rm -f "$PRIOR_TMP"
     exit 2
@@ -212,7 +212,7 @@ python3 "$WRITER" write "$ACTOR" "$REF_PATH" "$REF_RENDERED"
 echo
 echo "── 5. protocol-upgrade — manifest.protocol pin ──"
 python3 "$WRITER" protocol-upgrade "$ACTOR" "$OLD_SHA" "$NEW_SHA" \
-    --reason "Approve protocol upgrade $OLD_SHA → $NEW_SHA per §0.5; approved by $ACTOR in chat (Bundle Q: §0.6 implementation-files clause, §4.7 post-terminator close exemption, §13.1 BRAIN-not-versioned warn, §15 relative-symlink rule)."
+    --reason "Approve protocol upgrade $OLD_SHA → $NEW_SHA per §0.5; approved by $ACTOR in chat (Bundle Q: §0.6 implementation-files clause, §4.7 post-terminator close exemption, §13.1 memory-not-versioned warn, §15 relative-symlink rule)."
 
 # ─── 6. §8.7 post-upgrade self-audit (§0.5 step 4 auto-trigger) ──────────
 echo

@@ -22,7 +22,7 @@ chain_profile: standard          # lean | standard | full — see CONTRACT.md §
 
 ## Background
 
-<!-- 2-5 paragraphs explaining WHY this project is being considered. What signal triggered it? Citations to BRAIN entries (memories/projects/*, memories/decisions/*) are encouraged. -->
+<!-- 2-5 paragraphs explaining WHY this project is being considered. What signal triggered it? Citations to memory entries (memories/projects/*, memories/decisions/*) are encouraged. -->
 
 ## Goals
 
@@ -56,9 +56,9 @@ chain_profile: standard          # lean | standard | full — see CONTRACT.md §
 | Reviewer | <name/handle> | reviews drafts, doesn't gate |
 | Informed | <name/handle> | needs to know, not asked to act |
 
-## Prior Art (BRAIN)
+## Prior Art (memory)
 
-<!-- What does the BRAIN tell us we already tried, decided, or learned? Cite memories/decisions/DEC-NNN-*.md, memories/projects/<project>.md, company/locked-decisions.md paths. If nothing relevant, write the explicit statement: "No relevant prior art found in BRAIN as of <ISO date>." -->
+<!-- What does the memory tell us we already tried, decided, or learned? Cite memories/decisions/DEC-NNN-*.md, memories/projects/<project>.md, company/locked-decisions.md paths. If nothing relevant, write the explicit statement: "No relevant prior art found in memory as of <ISO date>." -->
 
 ## Open Questions
 

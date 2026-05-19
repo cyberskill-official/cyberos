@@ -167,7 +167,9 @@ pub async fn add_cidr(
          RETURNING id",
     )
     .bind(tenant_id)
-    .bind(net)
+    // 2026-05-19 sqlx 0.8 + ipnetwork 0.20 Encode<Postgres> trait gap (see
+    // travel.rs:213 comment). Bind the textual CIDR; Postgres INET parses it.
+    .bind(net.to_string())
     .bind(&body.label)
     .bind(actor_id)
     .fetch_one(&state.pg)
@@ -209,8 +211,11 @@ pub async fn list_cidrs(
 ) -> Result<Json<Vec<CidrView>>, (StatusCode, Json<Value>)> {
     require_tenant_admin(&claims, tenant_id)?;
     set_tenant(&state, tenant_id).await?;
-    let rows: Vec<(Uuid, IpNetwork, String)> = sqlx::query_as(
-        "SELECT id, cidr, label FROM travel_cidr_allowlist WHERE tenant_id = $1 ORDER BY added_at DESC",
+    // 2026-05-19 sqlx 0.8 + ipnetwork 0.20 Decode<Postgres> gap — read CIDR
+    // as TEXT (Postgres casts INET → text on output) and keep the formatted
+    // form for the CidrView struct.
+    let rows: Vec<(Uuid, String, String)> = sqlx::query_as(
+        "SELECT id, cidr::text, label FROM travel_cidr_allowlist WHERE tenant_id = $1 ORDER BY added_at DESC",
     )
     .bind(tenant_id)
     .fetch_all(&state.pg)
@@ -218,7 +223,7 @@ pub async fn list_cidrs(
     .map_err(internal)?;
     Ok(Json(
         rows.into_iter()
-            .map(|(id, cidr, label)| CidrView { id, cidr: cidr.to_string(), label })
+            .map(|(id, cidr, label)| CidrView { id, cidr, label })
             .collect(),
     ))
 }
@@ -241,8 +246,8 @@ pub async fn delete_cidr(
     let actor_id = parse_actor(&claims)?;
     set_tenant(&state, tenant_id).await?;
 
-    let row: Option<(IpNetwork, String)> = sqlx::query_as(
-        "SELECT cidr, label FROM travel_cidr_allowlist
+    let row: Option<(String, String)> = sqlx::query_as(
+        "SELECT cidr::text, label FROM travel_cidr_allowlist
             WHERE tenant_id = $1 AND id = $2",
     )
     .bind(tenant_id)
@@ -264,7 +269,7 @@ pub async fn delete_cidr(
 
     write_audit(
         &state, tenant_id, actor_id, "cidr_removed",
-        json!({"cidr": cidr.to_string(), "label": label, "id": cidr_id}),
+        json!({"cidr": cidr, "label": label, "id": cidr_id}),
         &body.reason,
     ).await?;
     state.travel_policy.invalidate(tenant_id).await;

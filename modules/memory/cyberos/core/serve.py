@@ -5,7 +5,7 @@ The protocol stays local-first: ``cyberos serve`` binds to ``127.0.0.1``
 by default, requires a bearer token on every request, and refuses to
 serve write endpoints. Other tools on the same machine (companion apps,
 Raycast extensions, future iOS Shortcuts via ssh-tunnel) can query the
-BRAIN without each tool re-implementing the binlog parser.
+memory without each tool re-implementing the binlog parser.
 
 Endpoints (all GET unless noted):
 

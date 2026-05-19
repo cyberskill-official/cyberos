@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands scoped read-only views over PROJ/INV/DOC/CHAT for client-tenant portal users on top of FR-TEN-101. Final form: 1,090 lines, 24 §1 normative clauses (2 migrations including SQL view DDL, 5 view kinds with per-kind filters/fields, GraphQL-style projection, cursor pagination, full-text search, CSV/XLSX streaming export, ETag + Cache-Control, per-row redaction, 6 BRAIN audit kinds with mixed sampling), 20 ACs, 10 verification tests, 21 failure-mode rows, 15 implementation notes.
+The spec lands scoped read-only views over PROJ/INV/DOC/CHAT for client-tenant portal users on top of FR-TEN-101. Final form: 1,090 lines, 24 §1 normative clauses (2 migrations including SQL view DDL, 5 view kinds with per-kind filters/fields, GraphQL-style projection, cursor pagination, full-text search, CSV/XLSX streaming export, ETag + Cache-Control, per-row redaction, 6 memory audit kinds with mixed sampling), 20 ACs, 10 verification tests, 21 failure-mode rows, 15 implementation notes.
 
 6 issues caught by self-audit, all resolved.
 
@@ -19,7 +19,7 @@ The spec lands scoped read-only views over PROJ/INV/DOC/CHAT for client-tenant p
 
 ### ISS-001 — View definition assumes `sync_class` column exists on all 4 source tables
 
-§3.1 example references `p.sync_class` on `projects`. But source modules may not have this column at slice 1. Resolved: §10 row "Sync_class column missing on source table" covers — migration fails fast; source module adds column before PORTAL-001 ships. FR-BRAIN-106 dep in related_frs makes this explicit.
+§3.1 example references `p.sync_class` on `projects`. But source modules may not have this column at slice 1. Resolved: §10 row "Sync_class column missing on source table" covers — migration fails fast; source module adds column before PORTAL-001 ships. FR-MEMORY-106 dep in related_frs makes this explicit.
 
 ### ISS-002 — Cursor HMAC secret rotation policy
 
@@ -43,9 +43,9 @@ The spec lands scoped read-only views over PROJ/INV/DOC/CHAT for client-tenant p
 
 ## §3 — Resolution
 
-All 6 mechanical concerns addressed. SQL view dependency on sync_class column flagged via FR-BRAIN-106 cross-FR; cursor lifecycle bounded by rotation; sub-resource RLS filtering documented; partial-export audit completeness; default field-set design reasoned; ETag perf footprint scoped.
+All 6 mechanical concerns addressed. SQL view dependency on sync_class column flagged via FR-MEMORY-106 cross-FR; cursor lifecycle bounded by rotation; sub-resource RLS filtering documented; partial-export audit completeness; default field-set design reasoned; ETag perf footprint scoped.
 
-The 1,090-line length is justified by 5 view kinds × per-kind filters/fields + 4 endpoints (list/detail/search/export) + GraphQL projection + cursor pagination + CSV/XLSX export + per-row redaction + 6 BRAIN kinds with mixed sampling + 21 failure modes. Density matches peer FRs at similar scope.
+The 1,090-line length is justified by 5 view kinds × per-kind filters/fields + 4 endpoints (list/detail/search/export) + GraphQL projection + cursor pagination + CSV/XLSX export + per-row redaction + 6 memory kinds with mixed sampling + 21 failure modes. Density matches peer FRs at similar scope.
 
 **Score = 10/10.**
 

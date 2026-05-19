@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-101, FR-TEN-003, FR-TEN-103, FR-TEN-106, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TEN-101, FR-TEN-003, FR-TEN-103, FR-TEN-106, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-TEN-101]
 blocks: []
 
@@ -20,11 +20,11 @@ source_pages:
   - website/docs/modules/ten.html#admin-spa
 
 source_decisions:
-  - DEC-2390 2026-05-17 — Single-page admin app for ROOT-CFO showing seats + billing (FR-TEN-003) + audit (read-only BRAIN view) + residency (FR-TEN-103) + retention (FR-TEN-106) in unified UI
+  - DEC-2390 2026-05-17 — Single-page admin app for ROOT-CFO showing seats + billing (FR-TEN-003) + audit (read-only memory view) + residency (FR-TEN-103) + retention (FR-TEN-106) in unified UI
   - DEC-2391 2026-05-17 — Closed enum `admin_section` = {seats, billing, audit, residency, retention, danger_zone}; cardinality 6
   - DEC-2392 2026-05-17 — Read-only for most sections; write actions (cancel sub, change residency, delete tenant) require explicit confirm dialog + sev-1 audit
   - DEC-2393 2026-05-17 — All write actions thread through existing service endpoints (FR-TEN-003/103/106); SPA is presentation only
-  - DEC-2394 2026-05-17 — BRAIN audit kinds: ten.admin_section_viewed, ten.admin_write_action_confirmed, ten.admin_write_action_executed, ten.admin_access_denied
+  - DEC-2394 2026-05-17 — memory audit kinds: ten.admin_section_viewed, ten.admin_write_action_confirmed, ten.admin_write_action_executed, ten.admin_access_denied
 
 build_envelope:
   language: typescript / react + rust 1.81
@@ -62,7 +62,7 @@ sub_tasks:
   - "1.0h: AdminLayout.tsx"
   - "1.5h: SeatsSection.tsx"
   - "2.0h: BillingSection.tsx"
-  - "1.5h: AuditSection.tsx (BRAIN read-only view)"
+  - "1.5h: AuditSection.tsx (memory read-only view)"
   - "1.5h: ResidencySection.tsx"
   - "1.5h: RetentionSection.tsx"
   - "2.0h: DangerZoneSection.tsx"
@@ -77,14 +77,14 @@ risk_if_skipped: "Without admin SPA, ROOT-CFO uses scattered tools across TEN-00
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service + portal-web frontend **MUST** ship admin SPA at `services/portal-web/src/ten/admin/` with 6 sections + confirm dialog + presentation-only writes, 4 BRAIN audit kinds.
+The TEN service + portal-web frontend **MUST** ship admin SPA at `services/portal-web/src/ten/admin/` with 6 sections + confirm dialog + presentation-only writes, 4 memory audit kinds.
 
 1. **MUST** validate `admin_section` against closed enum per DEC-2391.
 
 2. **MUST** render 6 sections per DEC-2390:
    - seats: list members, manage active seats (read from FR-TEN-101)
    - billing: subscription status, invoices, payment method (FR-TEN-003)
-   - audit: BRAIN audit log filter view (read-only)
+   - audit: memory audit log filter view (read-only)
    - residency: current + change residency (FR-TEN-103)
    - retention: per-module retention policies (FR-TEN-106)
    - danger_zone: cancel subscription, delete tenant (FR-TEN-106 attestation)
@@ -101,10 +101,10 @@ The TEN service + portal-web frontend **MUST** ship admin SPA at `services/porta
 
 6. **MUST** expose backend endpoint for audit-section read:
    ```text
-   GET /v1/ten/admin/audit-events?since=...&kind=...   (paginated BRAIN read view)
+   GET /v1/ten/admin/audit-events?since=...&kind=...   (paginated memory read view)
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2394. PII per FR-BRAIN-111: section enum (public) ok; action-specific data hashed.
+7. **MUST** emit 4 memory audit kinds per DEC-2394. PII per FR-MEMORY-111: section enum (public) ok; action-specific data hashed.
 
 8. **MUST** thread trace_id from UI → backend → audit.
 
@@ -133,7 +133,7 @@ GET /v1/ten/admin/audit-events?since=2026-05-01&limit=50&kind=ten.subscription_c
 ---
 
 ## §4 — Acceptance criteria
-1. **admin_section enum cardinality 6**. 2. **6 sections rendered**. 3. **ROOT-CFO-only access**. 4. **Confirm dialog on write**. 5. **Type-to-confirm for destructive**. 6. **4 BRAIN audit kinds emitted**. 7. **PII scrubbed (action data SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **Writes delegate to existing endpoints**. 11. **No new business logic in SPA**. 12. **Audit section paginated**. 13. **section view audit on navigation**. 14. **Non-CFO access blocked + audit sev-2**. 15. **Append-only audit-events log (read-only here)**. 16. **Danger zone separated visually**. 17. **Mobile-responsive (CFO on phone)**. 18. **Loading states for async**. 19. **Error states UI**. 20. **Keyboard navigation**.
+1. **admin_section enum cardinality 6**. 2. **6 sections rendered**. 3. **ROOT-CFO-only access**. 4. **Confirm dialog on write**. 5. **Type-to-confirm for destructive**. 6. **4 memory audit kinds emitted**. 7. **PII scrubbed (action data SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **Writes delegate to existing endpoints**. 11. **No new business logic in SPA**. 12. **Audit section paginated**. 13. **section view audit on navigation**. 14. **Non-CFO access blocked + audit sev-2**. 15. **Append-only audit-events log (read-only here)**. 16. **Danger zone separated visually**. 17. **Mobile-responsive (CFO on phone)**. 18. **Loading states for async**. 19. **Error states UI**. 20. **Keyboard navigation**.
 
 ---
 
@@ -170,7 +170,7 @@ async fn non_cfo_blocked() {
 
 ## §7 — Dependencies
 **Upstream:** FR-TEN-101.
-**Cross-module:** FR-TEN-003, FR-TEN-103, FR-TEN-106, FR-AUTH-101, FR-BRAIN-111.
+**Cross-module:** FR-TEN-003, FR-TEN-103, FR-TEN-106, FR-AUTH-101, FR-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -181,7 +181,7 @@ async fn non_cfo_blocked() {
 | Audit pagination N/A page | inherent | empty | inherent |
 | Destructive action mid-fail | rollback | retry | inherent |
 | Concurrent admin sessions | inherent | each isolated | inherent |
-| BRAIN audit query slow | indexed | tune | inherent |
+| memory audit query slow | indexed | tune | inherent |
 | SPA crash | error boundary | reload | inherent |
 | Backend timeout | UI shows error | retry | inherent |
 | Mobile UI break | responsive tests | inherent | inherent |
@@ -189,8 +189,8 @@ async fn non_cfo_blocked() {
 ## §11 — Implementation notes
 - §11.1 SPA uses React + Tailwind; shadcn/ui components.
 - §11.2 Danger zone: red border + slow-typing confirm field (anti-muscle-memory).
-- §11.3 Audit section reads BRAIN via SQL through FR-BRAIN-108 query API; not direct table access.
-- §11.4 BRAIN audit body: section enum, action_kind; specific data SHA256.
+- §11.3 Audit section reads memory via SQL through FR-MEMORY-108 query API; not direct table access.
+- §11.4 memory audit body: section enum, action_kind; specific data SHA256.
 - §11.5 Mobile responsive via Tailwind breakpoints.
 
 ---

@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-REW-001, FR-REW-008, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-REW-001, FR-REW-008, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-REW-001]
 blocks: [FR-REW-008]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2211 2026-05-17 — Closed enum `bp_txn_kind` = {credit_p3_accrual, credit_special_award, credit_interest_accrual, debit_p3_distribution, debit_correction}; cardinality 5
   - DEC-2212 2026-05-17 — Interest accrued nightly at ACB (Asia Commercial Bank) rate; rate fetched via FR-HR-005 policy (interest_rate_bp)
   - DEC-2213 2026-05-17 — Ledger IMMUTABLE; corrections via debit_correction txn with explanatory reason
-  - DEC-2214 2026-05-17 — BRAIN audit kinds: rew.bp_credited, rew.bp_debited, rew.bp_interest_accrued, rew.bp_balance_query
+  - DEC-2214 2026-05-17 — memory audit kinds: rew.bp_credited, rew.bp_debited, rew.bp_interest_accrued, rew.bp_balance_query
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without BP ledger, P3 bonus pool unmanaged. Without DEC-2213 i
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship BP ledger at `services/rew/src/bp/` with credit/debit txn log + nightly interest cron + immutable history, 4 BRAIN audit kinds.
+The REW service **MUST** ship BP ledger at `services/rew/src/bp/` with credit/debit txn log + nightly interest cron + immutable history, 4 memory audit kinds.
 
 1. **MUST** validate `bp_txn_kind` against closed enum per DEC-2211.
 
@@ -117,7 +117,7 @@ The REW service **MUST** ship BP ledger at `services/rew/src/bp/` with credit/de
    POST /v1/rew/bp/interest-accrual/trigger  (CFO manual)
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2214. PII per FR-BRAIN-111: amounts SHA256.
+7. **MUST** emit 4 memory audit kinds per DEC-2214. PII per FR-MEMORY-111: amounts SHA256.
 
 8. **MUST** thread trace_id from credit/debit/accrual → audit.
 
@@ -162,7 +162,7 @@ Sample balance:
 ---
 
 ## §4 — Acceptance criteria
-1. **bp_txn_kind enum cardinality 5**. 2. **Nightly interest cron 03:30**. 3. **ACB rate from FR-HR-005**. 4. **Daily interest = balance * (rate/365)**. 5. **Immutable txn log**. 6. **Correction via debit_correction**. 7. **balance_after stored on each txn**. 8. **Balance query pure function**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (amounts SHA256)**. 11. **RLS denies cross-tenant**. 12. **CFO-only credit/debit**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **rust_decimal precision (15,4)**. 16. **As_of query**. 17. **0-balance members skipped in interest**. 18. **Cron idempotent per (member, date)**. 19. **Negative balance prevented (debit > balance rejected)**. 20. **Correction reason required**.
+1. **bp_txn_kind enum cardinality 5**. 2. **Nightly interest cron 03:30**. 3. **ACB rate from FR-HR-005**. 4. **Daily interest = balance * (rate/365)**. 5. **Immutable txn log**. 6. **Correction via debit_correction**. 7. **balance_after stored on each txn**. 8. **Balance query pure function**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (amounts SHA256)**. 11. **RLS denies cross-tenant**. 12. **CFO-only credit/debit**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **rust_decimal precision (15,4)**. 16. **As_of query**. 17. **0-balance members skipped in interest**. 18. **Cron idempotent per (member, date)**. 19. **Negative balance prevented (debit > balance rejected)**. 20. **Correction reason required**.
 
 ---
 
@@ -202,7 +202,7 @@ async fn debit_exceeds_balance_rejected() {
 ## §7 — Dependencies
 **Upstream:** FR-REW-001.
 **Downstream:** FR-REW-008 (P3 distribution debits from this).
-**Cross-module:** FR-HR-005 (ACB rate policy), FR-MCP-007 (cron), FR-AUTH-101 (CFO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-HR-005 (ACB rate policy), FR-MCP-007 (cron), FR-AUTH-101 (CFO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -221,7 +221,7 @@ async fn debit_exceeds_balance_rejected() {
 ## §11 — Implementation notes
 - §11.1 Cron via FR-MCP-007 `kind: 'rew.bp_interest_accrual'`, daily 03:30.
 - §11.2 Interest formula: `daily = balance * (annual_pct / 365)`; rust_decimal for precision.
-- §11.3 BRAIN audit body: member_id, txn_kind, balance_after; amount SHA256.
+- §11.3 memory audit body: member_id, txn_kind, balance_after; amount SHA256.
 - §11.4 ACB rate cited from VN central bank reference rates.
 - §11.5 Negative balance prevented via service check + future trigger.
 

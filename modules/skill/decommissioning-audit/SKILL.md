@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: decommissioning-audit
-description: |
-  Audit one or more existing decommissioning@1 markdowns against
-  decomm_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  decommissioning-author.
+description: >-
+  Audit one or more existing decommissioning@1 markdowns against decomm_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after decommissioning-author. Use when user asks to "audit this decommissioning" or "check the decommissioning". Do NOT use for "draft a new decommissioning" (use decommissioning-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: decomm_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

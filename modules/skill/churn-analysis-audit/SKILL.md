@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: churn-analysis-audit
-description: Audits a churn-analysis@1 artefact against churn_analysis_rubric@1.0. Validates FM + SEC structure, GRR/NRR/logo-churn arithmetic, reason-segmentation completeness, root-cause synthesis evidence (verbatim coding), win-back program feasibility, leading-indicator measurability. Per Reichheld + Gainsight + Catalyst + TSIA conventions.
-  Audit one or more existing churn-analysis@1 markdowns against
-  churn-analysis_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  churn-analysis-author.
+description: >-
+  Audits a churn-analysis@1 artefact against churn_analysis_rubric@1.0. Validates FM + SEC structure, GRR/NRR/logo-churn arithmetic, reason-segmentation completeness, root-cause synthesis evidence (verbatim coding), win-back program feasibility, leading-indicator measurability. Per Reichheld + Gainsight + Catalyst + TSIA conventions. Audit one or more existing churn-analysis@1 markdowns against churn-analysis_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after churn-analysis-author. Use when user asks to "audit this churn analysis" or "check the churn analysis". Do NOT use for "draft a new churn analysis" (use churn-analysis-author instead). Audit one or more existing churn-analysis@1 markdowns against churn-analysis_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standa...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: churn-analysis_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

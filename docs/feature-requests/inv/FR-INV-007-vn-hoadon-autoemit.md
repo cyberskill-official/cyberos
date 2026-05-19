@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-001, FR-INV-002, FR-INV-008, FR-TEN-102, FR-AI-003, FR-BRAIN-111, FR-SKILL-109]
+memory_chain_hash: null
+related_frs: [FR-INV-001, FR-INV-002, FR-INV-008, FR-TEN-102, FR-AI-003, FR-MEMORY-111, FR-SKILL-109]
 depends_on: [FR-INV-001]
 blocks: [FR-INV-008, FR-CRM-010]
 
@@ -28,7 +28,7 @@ source_decisions:
   - DEC-1523 2026-05-17 — Closed enum `hoadon_status` = {pending, signed, transmitted, accepted, rejected, cancelled}; cardinality 6
   - DEC-1524 2026-05-17 — GDT transmission via async FR-MCP-007 task — GDT can take 5min-2hr to issue verification code; retry on transient failure with exponential backoff
   - DEC-1525 2026-05-17 — Failure → invoice remains sent but hoadon_status=rejected; CFO sees notification + must resolve before VN tax filing deadline (monthly)
-  - DEC-1526 2026-05-17 — BRAIN audit kinds: inv.hoadon_emit_started, inv.hoadon_signed, inv.hoadon_transmitted, inv.hoadon_verification_received, inv.hoadon_emit_failed
+  - DEC-1526 2026-05-17 — memory audit kinds: inv.hoadon_emit_started, inv.hoadon_signed, inv.hoadon_transmitted, inv.hoadon_verification_received, inv.hoadon_emit_failed
   - DEC-1527 2026-05-17 — Per-tenant config: gdt_registration_id, signing_cert_kms_arn, gdt_environment (sandbox/prod); ROOT-CFO writes via separate FR-INV-013 admin endpoint
 
 build_envelope:
@@ -85,7 +85,7 @@ risk_if_skipped: "Without VN hóa đơn auto-emit, VN tenants must manually emit
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship VN hóa đơn auto-emit at `services/invoicing/src/hoadon/` triggered on first AM-send for VN tenants, XML-signed per Decree 123, transmitted to GDT via async task with verification-code polling, 5 BRAIN audit kinds.
+The INV service **MUST** ship VN hóa đơn auto-emit at `services/invoicing/src/hoadon/` triggered on first AM-send for VN tenants, XML-signed per Decree 123, transmitted to GDT via async task with verification-code polling, 5 memory audit kinds.
 
 1. **MUST** hook into `services/invoicing/src/handlers/invoice_send.rs` — on first send (AC: send_count → 1), if `tenant.residency='vn-1'` AND `invoice.currency='VND'`, enqueue hóa đơn emit task per DEC-1520. Non-VN tenants: skip silently.
 
@@ -128,7 +128,7 @@ The INV service **MUST** ship VN hóa đơn auto-emit at `services/invoicing/src
 
 7. **MUST** be idempotent per DEC-1522 — `UNIQUE(invoice_id)` constraint + ON CONFLICT DO NOTHING; duplicate emit attempt returns existing row.
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-1526. PII scrub per FR-BRAIN-111 — invoice amounts SHA-256 hashed, only hoadon_id + status in chain.
+8. **MUST** emit 5 memory audit kinds per DEC-1526. PII scrub per FR-MEMORY-111 — invoice amounts SHA-256 hashed, only hoadon_id + status in chain.
 
 9. **MUST** thread trace_id from AM-send through emit + sign + transmit + poll.
 
@@ -186,7 +186,7 @@ Sample XML (Decree 123 schema, abbreviated):
 ---
 
 ## §4 — Acceptance criteria
-1. **Auto-emit on first send (VN)**. 2. **No emit on non-VN tenants**. 3. **No emit on USD/SGD/EUR invoices**. 4. **XML schema valid per Decree 123**. 5. **Signed via tenant KMS cert**. 6. **Idempotent (duplicate request = same hoadon_id)**. 7. **Status enum 6 values**. 8. **GDT transmission via FR-MCP-007 task**. 9. **Verification code polled async**. 10. **Failure → status=rejected + CFO notification**. 11. **5 BRAIN audit kinds emitted**. 12. **PII scrubbed (amounts → SHA-256)**. 13. **RLS denies cross-tenant view**. 14. **KMS errors fail emit (not transmit)**. 15. **Retry on transient GDT 5xx**. 16. **Trace_id preserved**. 17. **Resubmit endpoint CFO-only**. 18. **24h poll timeout → pending+investigation**. 19. **GDT environment switchable per-tenant**. 20. **No duplicate UNIQUE invoice constraint**. 21. **Append-only (UPDATE on status only, no row delete)**. 22. **Hoadon_id stable across resubmits**.
+1. **Auto-emit on first send (VN)**. 2. **No emit on non-VN tenants**. 3. **No emit on USD/SGD/EUR invoices**. 4. **XML schema valid per Decree 123**. 5. **Signed via tenant KMS cert**. 6. **Idempotent (duplicate request = same hoadon_id)**. 7. **Status enum 6 values**. 8. **GDT transmission via FR-MCP-007 task**. 9. **Verification code polled async**. 10. **Failure → status=rejected + CFO notification**. 11. **5 memory audit kinds emitted**. 12. **PII scrubbed (amounts → SHA-256)**. 13. **RLS denies cross-tenant view**. 14. **KMS errors fail emit (not transmit)**. 15. **Retry on transient GDT 5xx**. 16. **Trace_id preserved**. 17. **Resubmit endpoint CFO-only**. 18. **24h poll timeout → pending+investigation**. 19. **GDT environment switchable per-tenant**. 20. **No duplicate UNIQUE invoice constraint**. 21. **Append-only (UPDATE on status only, no row delete)**. 22. **Hoadon_id stable across resubmits**.
 
 ---
 
@@ -248,7 +248,7 @@ pub async fn emit(invoice_id: Uuid, tenant: &Tenant, db: &Db) -> Result<HoadonId
 
 ## §7 — Dependencies
 **Upstream:** FR-INV-001.
-**Cross-module:** FR-MCP-007 (async task), FR-AUTH-101 (KMS), FR-BRAIN-111 (PII scrub), FR-INV-008 (cancellation flow).
+**Cross-module:** FR-MCP-007 (async task), FR-AUTH-101 (KMS), FR-MEMORY-111 (PII scrub), FR-INV-008 (cancellation flow).
 **Tenant config:** FR-SKILL-109 placeholder (signing_cert_kms_arn admin UI — created on first VN tenant signup).
 
 ## §8 — Sample payloads
@@ -282,14 +282,14 @@ None blocking — all per Decree 123 + GDT API docs.
 | GDT environment misconfig | wrong URL | rejected by sandbox/prod | CFO fixes tenant config |
 | Verification code already used | GDT 409 | mark cancelled+reissue | CFO escalation |
 | Tenant tax_id missing | XML build fail | status=pending; sev-2 | onboarding fix |
-| Audit chain pause | BRAIN unavailable | retry emit | per FR-BRAIN-111 |
+| Audit chain pause | memory unavailable | retry emit | per FR-MEMORY-111 |
 
 ## §11 — Implementation notes
 - §11.1 XML canonicalization per W3C Canonical XML 1.1 — required for valid XMLDSig.
 - §11.2 Signing cert held in AWS KMS as asymmetric RSA-2048 key; tenant's GDT registration ties public half.
 - §11.3 GDT environment URLs per tenant config — switchable test→prod without code deploy.
 - §11.4 Polling intervals tuned per GDT recommended pattern (5min × 12, then 15min × 92, total 24h).
-- §11.5 PII: amounts/customer info never in BRAIN — only hoadon_id, status, gdt_invoice_number (public).
+- §11.5 PII: amounts/customer info never in memory — only hoadon_id, status, gdt_invoice_number (public).
 - §11.6 Per Decree 123 Art. 19: hóa đơn must be transmitted within 60s of invoice issuance (async ok if reasonable effort).
 
 ---

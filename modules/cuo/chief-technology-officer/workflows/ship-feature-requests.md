@@ -1,0 +1,248 @@
+---
+workflow_id: chief-technology-officer/ship-feature-requests
+workflow_version: 2.0.0
+purpose: Drive each eligible FR in `docs/feature-requests/BACKLOG.md` end-to-end through the full lifecycle — from `ready_to_implement` through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Deep-maps the repo, generates the edge-case matrix, implements with 90 % coverage on touched files, injects observability, self-approves architectural deviations via ADRs, runs the multi-vector debugger with a 5-fail circuit breaker, runs the testing gate (`coverage-gate-author`/`-audit`), and physically updates BACKLOG.md status between every phase transition. Failure or blocker at any downstream phase routes the FR back to `ready_to_implement` (STATUS-REFERENCE §1.3) with `routed_back_count += 1`.
+persona: chief-technology-officer
+cadence: per-FR (loops continuously over BACKLOG.md)
+status: shipped   # CUO-workflow lifecycle: planned | shipped | retired (distinct from FR lifecycle in STATUS-REFERENCE.md)
+pattern: linear
+
+inputs:
+  - { name: backlog,                source: docs/feature-requests/BACKLOG.md,                                       format: markdown }
+  - { name: repo_root,              source: workflow-caller,                                                        format: absolute path }
+  - { name: stop_signal,            source: operator (Ctrl-C / workflow-stop event),                                format: bool }
+
+outputs:
+  - { name: updated_backlog,           format: markdown (BACKLOG.md with status mutations),         recipient: repo HEAD }
+  - { name: implementation_diff,       format: git diff (files added/modified),                    recipient: human-reviewer (commit + push manual) }
+  - { name: adr_records,               format: architecture-decision-record@1 (zero or more),      recipient: docs/adrs/ }
+  - { name: edge_case_matrix,          format: edge-case-matrix@1 (one per FR),                    recipient: memory audit chain }
+  - { name: coverage_report,           format: coverage-gate@1 (one per FR),                       recipient: memory audit chain }
+  - { name: debug_trace,               format: debug-trace@1 (one per failed FR attempt),          recipient: memory audit chain }
+  - { name: fr_audit_report,           format: feature-request-audit@2.0 (pre-flight, one per FR), recipient: memory audit chain + <FR>.audit.md §10 }
+  - { name: coverage_gate_report,      format: coverage-gate-audit@1 (one per FR),                 recipient: memory audit chain + <FR>.audit.md §10.4 }
+
+skill_chain:
+  # ── Phase: ready_to_implement → implementing (workflow start) ──
+  - { step: 1,  skill: repo-context-map-author,                    inputs_from: { repo_root: repo_root, fr_id: next_fr_id },              outputs_to: context_map_draft,                         phase: "ready_to_implement → implementing" }
+  - { step: 2,  skill: repo-context-map-audit,                     inputs_from: context_map_draft,                                        outputs_to: context_map }
+  - { step: 3,  skill: architecture-decision-record-author,        inputs_from: { context_map: context_map, fr: next_fr },                outputs_to: adr_draft,                                 condition: 'context_map.files_outside_immediate_domain > 3' }
+  - { step: 4,  skill: architecture-decision-record-audit,         inputs_from: adr_draft,                                                outputs_to: adr,                                       condition: "step 3 ran" }
+  - { step: 5,  skill: edge-case-matrix-author,                    inputs_from: { fr: next_fr, context_map: context_map },                outputs_to: edge_case_matrix_draft }
+  - { step: 6,  skill: edge-case-matrix-audit,                     inputs_from: edge_case_matrix_draft,                                   outputs_to: edge_case_matrix }
+  - { step: 7,  skill: mock-contract-test-author,                  inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix },      outputs_to: mock_contracts_draft,                      condition: "fr.has_external_dependency" }
+  - { step: 8,  skill: mock-contract-test-audit,                   inputs_from: mock_contracts_draft,                                     outputs_to: mock_contracts,                            condition: "step 7 ran" }
+  - { step: 9,  skill: implementation-plan-author,                 inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix, adr: adr },  outputs_to: impl_plan_draft }
+  - { step: 10, skill: implementation-plan-audit,                  inputs_from: impl_plan_draft,                                          outputs_to: impl_plan }
+  - { step: 11, skill: observability-injection-author,             inputs_from: { fr: next_fr, impl_plan: impl_plan },                    outputs_to: obs_injection_plan }
+  - { step: 12, skill: observability-injection-audit,              inputs_from: obs_injection_plan,                                       outputs_to: obs_injection }
+  # ── Phase transition: implementing → ready_to_review ──
+  - { step: 13, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "implementing → ready_to_review", outcome: steps_1_to_12 }, outputs_to: backlog_mutation_phase_1, phase: "implementing → ready_to_review" }
+  - { step: 14, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_1,                                 outputs_to: backlog_after_phase_1 }
+  # ── Phase: ready_to_review → reviewing → ready_to_test ──
+  - { step: 15, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "ready_to_review → reviewing", outcome: reviewer_claim }, outputs_to: backlog_mutation_phase_2 }
+  - { step: 16, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_2,                                 outputs_to: backlog_after_phase_2 }
+  - { step: 17, skill: code-review-author,                         inputs_from: { fr: next_fr, impl_diff: implementation_diff, adr: adr, edge_case_matrix: edge_case_matrix }, outputs_to: code_review_draft }
+  - { step: 18, skill: code-review-audit,                          inputs_from: code_review_draft,                                        outputs_to: code_review_report }
+  - { step: 19, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "reviewing → ready_to_test", outcome: code_review_report }, outputs_to: backlog_mutation_phase_3 }
+  - { step: 20, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_3,                                 outputs_to: backlog_after_phase_3 }
+  # ── Phase: ready_to_test → testing → done ──
+  - { step: 21, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "ready_to_test → testing", outcome: tester_claim }, outputs_to: backlog_mutation_phase_4 }
+  - { step: 22, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_4,                                 outputs_to: backlog_after_phase_4 }
+  - { step: 23, skill: coverage-gate-author,                       inputs_from: { fr: next_fr, edge_case_matrix: edge_case_matrix },      outputs_to: coverage_gate_draft }
+  - { step: 24, skill: coverage-gate-audit,                        inputs_from: coverage_gate_draft,                                      outputs_to: coverage_gate_report }
+  - { step: 25, skill: debugging-cycle-author,                     inputs_from: { fr: next_fr, coverage_report: coverage_gate_report },   outputs_to: debug_cycle_draft,                         condition: "coverage_gate_report.tests_failed > 0" }
+  - { step: 26, skill: debugging-cycle-audit,                      inputs_from: debug_cycle_draft,                                        outputs_to: debug_trace,                               condition: "step 25 ran" }
+  - { step: 27, skill: feature-request-audit,                      inputs_from: { fr: next_fr, coverage_report: coverage_gate_report },   outputs_to: fr_audit_report,                           description: "Post-implementation TRACE-004 closure — every §1 clause's cited test MUST be passed in coverage_gate_report. Pre-flight spec audit (`draft → ready_to_implement` transition) ran earlier, BEFORE this workflow; this is the closure check just before marking the FR done." }
+  - { step: 28, skill: backlog-state-update-author,                inputs_from: { fr: next_fr, transition: "testing → done", outcome: fr_audit_report }, outputs_to: backlog_mutation_phase_5 }
+  - { step: 29, skill: backlog-state-update-audit,                 inputs_from: backlog_mutation_phase_5,                                 outputs_to: updated_backlog }
+
+escalates_to:
+  - { persona: chief-information-security-officer,                 when: "step 6 edge-case-matrix flags a SECURITY-class entry above warning + no corresponding ADR exists yet" }
+  - { persona: chief-product-officer,                              when: "the FR's acceptance criteria are ambiguous — step 5 cannot enumerate the boundary cases without product input" }
+  - { persona: chief-financial-officer,                            when: "step 10 implementation-plan-audit total_estimate_pts > 25 % of the target-quarter capacity, OR cumulative session cost > $500 in compute" }
+
+consults:
+  - { persona: chief-privacy-officer,                              when: "the FR touches personal data — verify GDPR / Vietnam Decree 13/2023 coverage in the edge-case matrix" }
+  - { persona: chief-ai-officer,                                   when: "the FR is AI-driven — verify EU AI Act risk-class + AI-specific test cases in the edge-case matrix" }
+
+audit_hooks:
+  - each skill emits one artefact_write row to the memory audit chain per its frontmatter audit.row_kind
+  - between every phase transition (steps 13-14, 15-16, 19-20, 21-22, 28-29) backlog-state-update emits a `workflow_phase_complete` memory row
+  - on successful `testing → done` transition (step 28) backlog-state-update emits a `workflow_complete` memory row with the full artefact summary
+  - on circuit-breaker trip or any in-cycle failure → status reverts to `ready_to_implement` and the writer emits `fr_routed_back` with the rework reason
+  - HITL pauses (typically at step 4 ADR-self-approval boundary, step 24 coverage < 90 %, step 26 5-fail circuit-breaker trip) halt the chain
+
+circuit_breaker:
+  consecutive_test_failures_per_fr: 5
+  on_trip:
+    - revert files to pre-execution state (`git restore` on touched paths)
+    - mark FR `ready_to_implement` in BACKLOG.md (with `routed_back_count += 1`) via step 28's rework branch
+    - emit a `fr_routed_back` memory audit row with the last debug_trace + reason `"circuit_breaker_5_consecutive_test_failures"`
+    - proceed to the next eligible FR (do NOT halt the outer loop)
+---
+
+# Ship Feature Requests — `chief-technology-officer/ship-feature-requests`
+
+The canonical CTO workflow for **shipping** each `BACKLOG.md` FR end-to-end through the full lifecycle. Renamed from `implement-backlog-frs` (v1.x) in v2.0.0 because the workflow doesn't just implement — it drives the FR through `implementing → ready_to_review → reviewing → ready_to_test → testing → done` (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). The old name suggested the workflow stopped at code-write; the new name reflects that it covers the full ship.
+
+## 1. The state engine
+
+`docs/feature-requests/BACKLOG.md` is the **absolute** source of truth for FR state. The state engine reads BACKLOG.md before each iteration:
+
+- **Eligible FR** = first row whose status is `ready_to_implement` AND whose declared `depends_on` rows are all in `done` status.
+- **Skipped statuses**: `draft` (not yet audited — handled by the `draft → ready_to_implement` chain, not this workflow), `implementing`, `ready_to_review`, `reviewing`, `ready_to_test`, `testing` (in-flight under another invocation — possibly the previous session of this workflow; pick those up by re-entering at the matching phase), `done` (terminal success — no work to do), `on_hold` / `closed` (operator-decided off-ramps).
+- Pick the first eligible FR. Run all 29 steps end-to-end. Between every phase transition the workflow physically updates the BACKLOG.md status cell via `backlog-state-update-author/-audit`. The mutation is atomic — same write that emits the `workflow_phase_complete` (or `workflow_complete` for the final transition) memory row.
+
+### HITL — human-in-the-loop is OPTIONAL
+
+The workflow auto-flips status cells along the §1.1 lifecycle as each phase passes. **An operator can override any cell to any other cell at any time** (STATUS-REFERENCE.md §1.4) — there is no machine-enforced transition restriction. Common scenarios:
+
+- **Re-audit a shipped FR** (replaces the v1.2.0 `mode: re_audit`): operator flips `done → ready_to_review` directly via the BACKLOG editor; on next invocation, this workflow picks up at the `reviewing` phase and re-runs steps 15-29.
+- **Skip review** for a trivial FR: operator flips `ready_to_review → ready_to_test` directly; this workflow picks up at the `testing` phase.
+- **Park an in-flight FR**: operator flips `implementing → on_hold`; this workflow exits the loop on next iteration since `on_hold` is skipped.
+
+Every HITL override emits one `memory.status_overridden` aux row (written by the BACKLOG editor, not by this workflow) capturing `{actor, fr_id, prior_status, new_status, reason}`. This workflow detects operator overrides on resume by comparing the persisted state vs the previous step's expected outcome.
+
+### Failure / blocker semantics — route back to `ready_to_implement`
+
+Any failure in `implementing` (steps 1-12), `reviewing` (steps 17-18), or `testing` (steps 23-27) routes the FR back to `ready_to_implement` with `routed_back_count += 1`. The reason is recorded in:
+
+1. A `memory.fr_routed_back` aux audit row with the failure context (debug_trace, failing-test-name, or blocker reason).
+2. A comment cell on the BACKLOG row (`<!-- routed back: <reason> -->`).
+3. A future **Issue Request** artefact (TBD — see STATUS-REFERENCE §1.3) that will auto-spawn from the rework signal.
+
+There are NO terminal failure statuses any more. The previous `[FAILED: UNRESOLVABLE ERROR]` and `[BLOCKED: ...]` enums are gone — failures are routing decisions, not states. Operator can still send a doomed FR to `closed` manually via HITL.
+
+## 2. Deep context mapping (steps 1-2)
+
+Before any code is generated, the `repo-context-map` skill scans the repo for existing patterns for dependency injection, state management, error handling; database schemas + type interfaces in the FR's declared module; files outside the FR's immediate domain that the implementation would touch.
+
+If more than three "outside-domain" files are flagged, the workflow auto-triggers an ADR (steps 3-4) using the existing `architecture-decision-record-author` + `-audit` pair. The ADR audit must pass at 10/10 against `adr-rubric@1.0` before the chain proceeds.
+
+> **Spec audit was already done.** v2.0.0 drops the pre-flight `feature-request-audit` at step 3 (which was v1.1.0's safety net). The reason: spec correctness is the responsibility of the `draft → ready_to_implement` chain. By the time this workflow picks up an FR in `ready_to_implement`, the spec has already passed `audit_rubric@2.0` at 10/10. If the spec drifted afterwards (e.g. an AGENTS.md amendment broke a TRACE-001 citation), the operator either re-audits the spec via HITL (flip status back to `draft` so the spec chain re-runs) or runs `feature-request-audit` standalone. The post-impl audit at step 27 still enforces TRACE-004 (every clause's cited test is `passed`).
+
+## 3. Edge-case matrix (steps 5-6)
+
+The `edge-case-matrix` skill generates a structured matrix covering: null/empty inputs; extreme bounds (off-by-one, integer overflow, time-zone DST, leap second); malformed payloads (truncated, oversized, non-UTF8); concurrent race conditions (double-submit, double-acknowledge, cross-tenant); security-class entries (auth bypass, RLS escape, injection).
+
+The audit enforces the matrix is not vacuous — every category has ≥1 entry — and that SECURITY-class entries are paired to either an existing test or an ADR.
+
+## 4. Mocks + contract tests (steps 7-8)
+
+If `fr.has_external_dependency = true` (CAPTCHA / 2FA / paywall / missing API keys / future service), `mock-contract-test-author` defines the **exact** expected Request/Response shape of the missing service plus a Mock Service that **passes** the contract test. The FR's frontmatter gets `implementation_kind: mocked` (per STATUS-REFERENCE §3) so the mocked-against-real distinction is preserved without polluting the lifecycle status.
+
+The contract test stays in the suite forever — when the real dependency lands, swapping the mock out is a single import change and the contract guarantees behavioural parity.
+
+## 5. Implementation (steps 9-10)
+
+The `implementation-plan-author` + `-audit` pair drives the actual code. Inputs are the FR, the edge-case matrix, and the (optional) ADR. The audit enforces: (a) every edge-case row is addressed in the plan, (b) the plan respects the existing patterns identified in step 1, (c) capacity estimate is reasonable.
+
+## 6. Observability injection (steps 11-12)
+
+`observability-injection-author` walks the critical paths of the new code and emits: structured-log lines at every state transition (incl. `tenant_id`, `subject_id` when present); trace spans wrapping every external IO; counter increments for every error branch.
+
+The audit checks coverage: ≥80 % of branches have a log/metric/trace point.
+
+## 7. Phase transition: `implementing → ready_to_review` (steps 13-14)
+
+`backlog-state-update-author/-audit` flips the BACKLOG status cell from `implementing` to `ready_to_review` and emits a `workflow_phase_complete` memory row carrying the artefact bundle (context_map, adr?, edge_case_matrix, mock_contracts?, impl_plan, obs_injection).
+
+## 8. Review (steps 15-20)
+
+After the implementing artefacts are settled, status flips to `reviewing` (steps 15-16) and `code-review-author` reads the diff against the §1 clauses and the edge-case matrix, flagging gaps and naming the test cases that would prove each clause. The audit confirms every §1 clause has a named test reference and every edge-case-matrix row has either a test or an ADR justification.
+
+On approval, status flips to `ready_to_test` (steps 19-20). On rejection — review uncovers a missing clause or an unaddressed edge case — the FR routes back to `ready_to_implement` (see §1 failure semantics).
+
+> v1.x note — v2.0.0 introduces `code-review-author` and `code-review-audit` as new skills covering the explicit `reviewing` phase. Before v2.0.0 the review work was implicit in the post-impl `feature-request-audit` call; v2.0.0 separates them so the reviewer phase has its own audit row + handoff point. If those skill files don't exist yet in `modules/skill/`, they need to be authored before this workflow can run end-to-end — see the BACKLOG for `FR-SKILL-code-review-author` and `-audit` placeholders.
+
+## 9. Testing phase: coverage gate + post-impl FR audit (steps 21-27)
+
+Status flips to `testing` (steps 21-22). `coverage-gate-author` runs the test suite, computes coverage on touched files, and fails the gate if per-file coverage on files touched in this FR is < 90 %. The audit emits the raw terminal output of the coverage tool as the artefact.
+
+If any test fails, `debugging-cycle-author` runs the multi-vector pass (classify failure vector — state/network/memory/logic/flake; output hypothesis + targeted change; re-run; after 5 consecutive failures revert + trip circuit breaker). The audit emits the full hypothesis-and-attempt log.
+
+After coverage + debugging settle, `feature-request-audit` runs the post-impl pass at step 27 to enforce **TRACE-004** — every §1 clause's cited test MUST appear as `passed` in `coverage_gate_report`. A §1 clause may have an AC and a named test from the pre-flight pass, but if the actual test is failing or absent from the coverage report, the FR cannot ship `done`.
+
+## 10. Phase transition: `testing → done` (steps 28-29)
+
+The final phase transition. Outcomes derived by step 28:
+
+| Step 27 result + circuit breaker status | New status | Mutation |
+|---|---|---|
+| All TRACE-001..005 still passing + 0 failed tests | `done` | `workflow_complete` memory row, BACKLOG cell `testing → done` |
+| TRACE-004 fails (test exists per spec but isn't passing) | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "trace-004: <test_name> not in coverage_gate_report"` |
+| Circuit breaker tripped during steps 25-26 | `ready_to_implement` (rework) | `fr_routed_back` memory row with `reason: "circuit_breaker_5_consecutive_test_failures"` |
+
+The workflow commits the diff to the working tree (operator runs `git add . && git commit && git push` to publish).
+
+## 11. Outer loop
+
+The CUO supervisor invokes this workflow in a loop:
+
+```
+while ! stop_signal:
+    next_fr = read_backlog().next_eligible()
+    if next_fr is None: break        # backlog drained
+    invoke_workflow("chief-technology-officer/ship-feature-requests", { repo_root, next_fr })
+```
+
+The supervisor handles persistence (state survives across sessions because the truth is in BACKLOG.md + the memory chain), parallelism (multiple FRs may run in parallel when their dependency cones don't overlap), and observability (the per-phase `workflow_phase_complete` + the final `workflow_complete` rows are enough to reconstruct the run).
+
+## 12. No partial-ship-and-pause within an FR
+
+The workflow MUST drive **all phases of an FR to completion in one continuous session** (or route back to `ready_to_implement` cleanly). Pause only between FRs.
+
+**Rules:**
+
+1. Read the full gap list + slice plan BEFORE running any step.
+2. Don't ask between phases — continuation is implied by "drive this FR".
+3. Commit per phase for git-history hygiene; each phase = own conventional commit + verify gate.
+4. Only pause between FRs — that's a fresh priority decision.
+5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the .audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
+
+See `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` §9.1 for the full clause + grandfathered exceptions.
+
+## Cross-references
+
+- FR lifecycle: `docs/feature-requests/STATUS-REFERENCE.md` (10-state enum, transitions, HITL semantics).
+- Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
+- BACKLOG state engine: `docs/feature-requests/BACKLOG.md`.
+- Companion workflow: `chief-technology-officer/architect-new-system` — produces the FRs this workflow consumes.
+- No-partial-ship rule: `AUTHORING_DISCIPLINE.md` §9.1.
+- Pre-flight spec audit (separate chain): `feature-request-audit` skill — drives `draft → ready_to_implement`.
+- Test coverage audit: `coverage-gate-audit` skill — drives `testing → done`.
+
+## Changelog
+
+### v2.0.0 — 2026-05-19
+
+**Renamed from `implement-backlog-frs` to `ship-feature-requests`** and aligned with the 10-state lifecycle enum from `docs/feature-requests/STATUS-REFERENCE.md`.
+
+Major changes:
+
+- **Renamed**: `implement-backlog-frs` → `ship-feature-requests` because the workflow drives all four lifecycle phases (`implementing → reviewing → testing → done`), not just code-write.
+- **Phase-aware chain**: 29 steps (up from 20), now grouped into 4 explicit phases (implementing 1-12, review 15-20, testing 21-27, ship 28-29) with `backlog-state-update` invocations between every phase. Each phase transition is a separately auditable event.
+- **New skills introduced**: `code-review-author` + `code-review-audit` cover the explicit `reviewing` phase (placeholder — needs SKILL.md authoring as a follow-up FR).
+- **Dropped `mode: re_audit`**: HITL handles re-audits. Operator flips a `done` FR back to `ready_to_review` via the BACKLOG editor; on next invocation, this workflow picks up at the `reviewing` phase and re-runs steps 15-29.
+- **Dropped `target_fr_ids`**: only existed to bound the re_audit loop; no longer needed.
+- **Dropped pre-flight `feature-request-audit` at step 3**: spec correctness is the responsibility of the `draft → ready_to_implement` chain, not this one. Post-impl TRACE-004 closure stays (step 27).
+- **Failure semantics flip**: all in-cycle failures and blockers route back to `ready_to_implement` (with `routed_back_count += 1`) instead of becoming sticky terminal statuses. The previous `[FAILED: UNRESOLVABLE ERROR]` and `[BLOCKED: <reason>]` enums are retired (STATUS-REFERENCE §1.3).
+- **HITL semantics codified**: any-to-any override allowed; operator overrides emit `memory.status_overridden` aux row.
+- **Pattern**: still `linear` (4 phases in a fixed sequence; no parallelism within an FR).
+
+### v1.2.0 — 2026-05-19 (RETIRED — superseded by v2.0.0)
+
+[v1.2.0 was a transient version that introduced `mode: re_audit`. The functionality has been moved to HITL operator overrides in v2.0.0.]
+
+### v1.1.0 — 2026-05-19 (RETIRED — superseded by v2.0.0)
+
+[v1.1.0 added pre-flight `feature-request-audit` at step 3 and post-impl at step 18. v2.0.0 keeps the post-impl audit (now step 27) and moves the pre-flight audit out of this workflow into the dedicated `draft → ready_to_implement` chain.]
+
+### v1.0.0 — 2026-05-18 (RETIRED — superseded by v2.0.0)
+
+Initial release as `implement-backlog-frs`. 18-step skill chain absorbing the operator's "Zero-Touch Principal Engineer" prompt.
+
+---
+
+*End of `chief-technology-officer/ship-feature-requests.md` workflow.*

@@ -4,7 +4,7 @@ id: FR-AI-001
 title: "AI Gateway cost-ledger pre-call check"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T
@@ -14,7 +14,7 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-003, FR-AI-004, FR-AI-005]
 depends_on: [FR-AI-003, FR-AI-005, FR-AI-007]
 blocks: [FR-AI-002, FR-AI-004, FR-TEN-004]
@@ -44,7 +44,7 @@ allowed_tools:
   - file_write: services/ai-gateway/{src,tests,migrations}/**
   - bash: cargo test -p cyberos-ai-gateway
   - bash: cargo sqlx migrate run
-  - brain: write memories/decisions/ai-invocations/* via canonical Writer (NOT directly)
+  - memory: write memories/decisions/ai-invocations/* via canonical Writer (NOT directly)
 disallowed_tools:
   - touch services/auth/** (AUTH is downstream of AI Gateway at P0 · slice 1)
   - in-place edit of services/ai-gateway/src/lib.rs `lib::run()` signature
@@ -57,7 +57,7 @@ sub_tasks:
   - "1.0h: TenantPolicy YAML parser + load-from-config"
   - "2.0h: precheck() function with token-estimate + cap check"
   - "1.5h: hold creation + 60s TTL job"
-  - "1.5h: BRAIN audit row emission via Writer subprocess"
+  - "1.5h: memory audit row emission via Writer subprocess"
   - "1.5h: integration test (real Postgres container)"
 risk_if_skipped: "Every consumer module (CUO, KB, CHAT) will hit raw provider APIs with no cost cap. Tenant surprise-bill blast radius is unbounded. This is the protocol-level invariant the P0 · slice 1 reorder exists to enforce."
 ---
@@ -71,12 +71,12 @@ The AI Gateway service **MUST** expose a `cost_ledger::precheck(request)` functi
 3. **MUST** refuse with `402 PAYMENT_REQUIRED` if `estimated_cost + current_spent > monthly_cap_usd × 1.0` (the hard floor).
 4. **SHOULD** emit a `warn_threshold_crossed` event to OBS if `current_spent` crosses `monthly_cap_usd × warn_threshold` (default 0.80).
 5. **MUST** create a `cost_ledger_hold` row in Postgres with `estimated_usd`, `tenant_id`, `idempotency_key`, `expires_at = now() + 60s` before returning `allow`.
-6. **MUST** emit one `ai.precheck` audit row on the local BRAIN via the canonical Writer subprocess before returning `allow` (audit-before-action invariant).
+6. **MUST** emit one `ai.precheck` audit row on the local memory via the canonical Writer subprocess before returning `allow` (audit-before-action invariant).
 7. **MUST** return synchronously within 50ms p95 — the precheck is on the hot path of every chat call.
 8. **MUST** load the cost-rate table from `services/ai-gateway/config/cost_rates.yaml` at gateway startup (loader machinery from FR-AI-005 is reused). The hardcoded `const HashMap` is REMOVED for slice 1; cost rates live in YAML from day 1.
 9. **MUST** refuse with `503 POLICY_NOT_FOUND` when `policy::load_for_tenant()` returns `PolicyError::PolicyMissing`. No silent default policy. The error body MUST carry `{error: "tenant_policy_missing", tenant_id, contact: "ops@cyberos.world"}`.
 10. **MUST** validate the `idempotency_key` as a free-string of length 1..=64 ASCII printable characters. Longer or shorter MUST return `400 BAD_REQUEST` with `{error: "invalid_idempotency_key"}`. The Writer's canonical-JSON serialiser rejects non-printable characters by design.
-11. **MUST** emit the `ai.precheck` BRAIN audit row synchronously (subprocess fork; ~30ms latency). FR-AI-008 (slice 2 PyO3 spike) explores in-process PyO3 for the latency gain; until then, the audit-before-action invariant outweighs the latency cost.
+11. **MUST** emit the `ai.precheck` memory audit row synchronously (subprocess fork; ~30ms latency). FR-AI-008 (slice 2 PyO3 spike) explores in-process PyO3 for the latency gain; until then, the audit-before-action invariant outweighs the latency cost.
 12. **MUST** execute the cap-check and hold-creation inside a single Postgres `BEGIN ... COMMIT` block. The `SELECT … FOR UPDATE` on the `cost_ledger` row prevents two concurrent calls from both passing the cap-check when the sum of their estimated costs would exceed the cap. Without this serialisation, two near-simultaneous calls each see `current.spent_usd = $X` and each pass the check, then both insert holds — eventually exceeding cap.
 13. **MUST** check `policy.ai_policy.allowed_personas` (if non-null) against `req.agent_persona`; refuse with `403 FORBIDDEN` and `{error: "persona_not_allowed", allowed: [...]}` if not in the list. This enforces the per-tenant persona-pinning policy from FR-AI-005's schema.
 14. **SHOULD** emit OTel metrics: `ai_gateway_precheck_calls_total{outcome}` (counter; outcome ∈ allow/refuse/error), `ai_gateway_precheck_latency_ms` (histogram), `ai_gateway_holds_created_total` (counter), `ai_gateway_budget_warns_total{tenant_id}` (counter).
@@ -91,7 +91,7 @@ This is the cost-of-everything gate per the AI Gateway page §0 Role 1 and §2.5
 
 **The two-phase design** (precheck + post-reconcile, this FR + FR-AI-002) borrows from database transaction theory: estimate the cost first, hold it, then reconcile. Holds expire after 60s if the post-check never arrives — defensive. The pre-call cost overhead is ~5ms of Postgres I/O.
 
-**The hard-stop default at 1.0×** (not 1.1× or "soft warn") is deliberate. Soft caps in finance always become hard losses when the tenant disputes the overage. The override path exists (`policy.emergency_override: true`) but requires CFO sign-off recorded in BRAIN — *not* an automatic fallback.
+**The hard-stop default at 1.0×** (not 1.1× or "soft warn") is deliberate. Soft caps in finance always become hard losses when the tenant disputes the overage. The override path exists (`policy.emergency_override: true`) but requires CFO sign-off recorded in memory — *not* an automatic fallback.
 
 **Why this is FR-AI-001 specifically** (not FR-AUTH-001): per research review §2.4, AI Gateway ships at P0 · slice 1 *before* AUTH. The X-Tenant header (HMAC-signed by a deployment secret) substitutes for JWT auth in slice 1; once AUTH ships at P0 · slice 2, the tenant_id source switches to the AUTH JWT claim per AI Gateway page §2.5. This FR therefore uses the X-Tenant header path; FR-AI-006 (slice 2) replaces it with JWT extraction.
 
@@ -124,7 +124,7 @@ pub enum RefuseReason {
 
 pub enum PrecheckError {
     DbError(sqlx::Error),
-    BrainWriterFailed { stderr: String },
+    MemoryWriterFailed { stderr: String },
     PolicyLoadFailed,
     CostEstimateFailed { reason: String },
 }
@@ -191,7 +191,7 @@ ai_policy:
 2. **Refuse on over-budget** — Same tenant with `spent_usd: 98`, estimated cost $5, MUST return `Refuse { reason: BudgetCapExceeded }`; MUST NOT insert any hold row; the HTTP handler MUST return `402 PAYMENT_REQUIRED`.
 3. **Exact-cap edge** — Tenant with `spent_usd: 95`, estimated cost $5.00, MUST return `Allow` (boundary inclusive: spent + estimated == cap is permitted; only strictly-over refused).
 4. **Idempotent retry** — Calling `precheck` with the same `idempotency_key` twice MUST return the existing hold (same `hold_id`), MUST NOT insert a second row.
-5. **Audit row emitted** — Every `Allow` MUST be preceded by a BRAIN audit row at `memories/decisions/ai-invocations/<ts_ns>_<tenant>_<idempotency_key>.md` with kind `ai.precheck`, `extra.tenant_id`, `extra.estimated_usd`, `extra.resolved_provider`. If BRAIN Writer fails, the function MUST return `Err(BrainWriterFailed)` and MUST NOT return `Allow`.
+5. **Audit row emitted** — Every `Allow` MUST be preceded by a memory audit row at `memories/decisions/ai-invocations/<ts_ns>_<tenant>_<idempotency_key>.md` with kind `ai.precheck`, `extra.tenant_id`, `extra.estimated_usd`, `extra.resolved_provider`. If memory Writer fails, the function MUST return `Err(MemoryWriterFailed)` and MUST NOT return `Allow`.
 6. **Hold TTL** — A `cost_ledger_hold` row with `expires_at < NOW()` and `state='held'` MUST be transitioned to `state='expired'` by the cleanup job within 60s of expiry (cleanup job is FR-AI-004; this FR only writes the row correctly).
 7. **Provider cost-table missing** — If `policy.primary_provider` resolves to a model alias with no entry in the cost-table fixture, `precheck()` MUST return `Refuse { reason: ProviderUnavailable }`; MUST emit a `Provider-Unavailable` warn-level log to OBS.
 8. **Latency budget** — On a warm Postgres pool, `precheck()` MUST complete within 50ms p95 over a 1000-call integration test. Measured via `tokio::time::Instant`.
@@ -213,7 +213,7 @@ async fn precheck_allows_under_budget() {
 
     assert!(matches!(outcome, PrecheckOutcome::Allow { .. }));
     assert_eq!(env.count_holds("org:test-a").await, 1);
-    assert!(env.brain_has_row("ai.precheck", &req.idempotency_key).await);
+    assert!(env.memory_has_row("ai.precheck", &req.idempotency_key).await);
 }
 ```
 
@@ -306,19 +306,19 @@ pub async fn precheck(
     ).bind(&req.tenant_id).bind(&req.idempotency_key).bind(estimated_usd)
      .bind(&provider).bind(&model).fetch_one(&mut *tx).await?;
 
-    // 6. Emit BRAIN audit row BEFORE commit (audit-before-action invariant — if BRAIN fails,
+    // 6. Emit memory audit row BEFORE commit (audit-before-action invariant — if memory fails,
     //    we rollback the hold). The Writer subprocess holds <memory-root>/.lock for its own
     //    serialization; the Postgres tx holds the cost_ledger row lock. Two orthogonal locks.
-    brain_writer::emit(
+    memory_writer::emit(
         canonical::precheck(
             &req.tenant_id, &req.agent_persona, &req.model_alias,
             &provider, &model, estimated_usd, current.spent_usd,
             &req.idempotency_key,
         ),
     ).await.map_err(|e| {
-        // BRAIN failure rolls back the hold; precheck refuses the call
+        // memory failure rolls back the hold; precheck refuses the call
         // (tx will rollback when dropped at function end since commit didn't happen)
-        PrecheckError::BrainWriterFailed { stderr: e.to_string() }
+        PrecheckError::MemoryWriterFailed { stderr: e.to_string() }
     })?;
 
     // 7. Commit — the hold + ledger row lock are now durable
@@ -349,7 +349,7 @@ fn validate_idempotency_key(key: &str) -> Result<(), String> {
 ## §7 — Dependencies
 
 **Code dependencies (must exist before this FR can build):**
-- BRAIN module — shipped. The `cyberos.core.writer.Writer` subprocess CLI MUST be available at `cyberos memory put`. Used in step §6 of the skeleton.
+- memory module — shipped. The `cyberos.core.writer.Writer` subprocess CLI MUST be available at `cyberos memory put`. Used in step §6 of the skeleton.
 - `cyberos-ai-gateway` crate skeleton — created by FR-AI-000 (if needed) or as part of this FR's first commit. Cargo workspace member.
 
 **Concept dependencies (must be agreed before this FR can be audited):**
@@ -415,7 +415,7 @@ Content-Type: application/json
 }
 ```
 
-### BRAIN audit row written
+### memory audit row written
 
 ```json
 {
@@ -462,7 +462,7 @@ All resolved 2026-05-15. Promoted to §1 normative clauses:
 | Persona not allowed | `policy.allowed_personas` set + `req.agent_persona` not in list | `403 FORBIDDEN` (`persona_not_allowed`) | Operator updates policy or caller fixes agent_persona |
 | Invalid idempotency key | Length/charset check fails | `400 BAD_REQUEST` (`invalid_idempotency_key`) | Caller fixes; retry with valid key |
 | Tenant suspended (slice-2 future) | Policy carries `suspended: true` | `403 FORBIDDEN` (`tenant_suspended`) | Out of scope for slice 1; placeholder reserved |
-| BRAIN Writer subprocess fails | `brain_writer::emit` returns Err | `500 INTERNAL_SERVER_ERROR` (opaque request_id) | Operator investigates via OBS; precheck refuses the call (audit-before-action invariant) |
+| memory Writer subprocess fails | `memory_writer::emit` returns Err | `500 INTERNAL_SERVER_ERROR` (opaque request_id) | Operator investigates via OBS; precheck refuses the call (audit-before-action invariant) |
 | Postgres pool exhausted / unreachable | `sqlx::Error` from any query | `500 INTERNAL_SERVER_ERROR` (opaque request_id) | Operator investigates; failure surfaces in OBS |
 | Concurrent cap-race (two prechecks for same tenant) | Detected by `FOR UPDATE` row lock | One Allow, one Refuse | Postgres MVCC handles correctly; verified by AC #1 of the property-test |
 | Hold UNIQUE constraint hit on idempotency_key | Retry with same `idempotency_key` from caller | Returns existing hold | Idempotent by design (§1 #4 of FR-AI-001 — return the existing hold_id) |
@@ -471,9 +471,9 @@ All resolved 2026-05-15. Promoted to §1 normative clauses:
 
 ## §11 — Notes (informational, no normative force)
 
-- Slice 1 of AI Gateway is 5 FRs (FR-AI-001..005). This one is the gate; FR-AI-002 is the post-reconcile; FR-AI-003 is the BRAIN audit-bridge; FR-AI-004 is the hold-expiry cleanup job; FR-AI-005 is the tenant-policy loader.
+- Slice 1 of AI Gateway is 5 FRs (FR-AI-001..005). This one is the gate; FR-AI-002 is the post-reconcile; FR-AI-003 is the memory audit-bridge; FR-AI-004 is the hold-expiry cleanup job; FR-AI-005 is the tenant-policy loader.
 - After this FR ships, every other module (CUO, KB, CHAT, …) inherits the cost gate automatically by calling `ai_gateway::chat_complete()` instead of a raw provider SDK. The "no SDK in any other module" rule (AI Gateway page §0) is enforced architecturally, not by lint.
-- The 50ms p95 latency budget is tight but achievable: Postgres read (~5ms) + Postgres write (~10ms) + BRAIN Writer subprocess (~30ms). The subprocess is the bottleneck — see §9 Q4.
+- The 50ms p95 latency budget is tight but achievable: Postgres read (~5ms) + Postgres write (~10ms) + memory Writer subprocess (~30ms). The subprocess is the bottleneck — see §9 Q4.
 - This FR's verification test fixture should land in `services/ai-gateway/tests/fixtures/cost_ledger/` and become a reusable property-test seed for FR-AI-002 + FR-AI-004.
 
 ---

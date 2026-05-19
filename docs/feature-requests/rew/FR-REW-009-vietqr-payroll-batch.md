@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-REW-005, FR-INV-005, FR-CRM-009, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-REW-005, FR-INV-005, FR-CRM-009, FR-MEMORY-111]
 depends_on: [FR-INV-005]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2231 2026-05-17 — Closed enum `batch_status` = {generated, downloaded, cfo_confirmed_submitted, paid_acked, partial_failed, failed}; cardinality 6
   - DEC-2232 2026-05-17 — CFO confirms manually that bank submission succeeded; system updates payroll status accordingly
   - DEC-2233 2026-05-17 — Reconciliation: FR-INV-005 VietQR webhook acks individual member transfers; system matches by memo template
-  - DEC-2234 2026-05-17 — BRAIN audit kinds: rew.batch_generated, rew.batch_downloaded, rew.batch_cfo_confirmed, rew.batch_paid_acked, rew.batch_failed
+  - DEC-2234 2026-05-17 — memory audit kinds: rew.batch_generated, rew.batch_downloaded, rew.batch_cfo_confirmed, rew.batch_paid_acked, rew.batch_failed
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without batch file, CFO copies amounts manually → error. Wit
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship VietQR payroll batch at `services/rew/src/batch/` generating bulk transfer file + CFO manual confirm + FR-INV-005 reconciliation, 5 BRAIN audit kinds.
+The REW service **MUST** ship VietQR payroll batch at `services/rew/src/batch/` generating bulk transfer file + CFO manual confirm + FR-INV-005 reconciliation, 5 memory audit kinds.
 
 1. **MUST** validate `batch_status` against closed enum per DEC-2231.
 
@@ -139,7 +139,7 @@ The REW service **MUST** ship VietQR payroll batch at `services/rew/src/batch/` 
    GET  /v1/rew/payroll/batches/{id}           (status + acks)
    ```
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-2234. PII per FR-BRAIN-111: amounts SHA256.
+7. **MUST** emit 5 memory audit kinds per DEC-2234. PII per FR-MEMORY-111: amounts SHA256.
 
 8. **MUST** thread trace_id from generate → download → confirm → ack → audit.
 
@@ -183,7 +183,7 @@ Sample status:
 ---
 
 ## §4 — Acceptance criteria
-1. **batch_status enum cardinality 6**. 2. **Napas-spec file format**. 3. **Memo template per FR-CRM-009**. 4. **SHA256 file integrity**. 5. **FR-DOC-001 storage**. 6. **CFO-only download**. 7. **CFO-only confirm**. 8. **NEVER auto-submit**. 9. **5 BRAIN audit kinds emitted**. 10. **PII scrubbed (amounts SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **UNIQUE(payroll_run_id) — one batch per run**. 15. **Per-member ack tracking**. 16. **Partial failure → status=partial_failed**. 17. **All acked → status=paid_acked**. 18. **bigint VND**. 19. **FR-INV-005 reconciliation hooks**. 20. **Re-confirm idempotent**.
+1. **batch_status enum cardinality 6**. 2. **Napas-spec file format**. 3. **Memo template per FR-CRM-009**. 4. **SHA256 file integrity**. 5. **FR-DOC-001 storage**. 6. **CFO-only download**. 7. **CFO-only confirm**. 8. **NEVER auto-submit**. 9. **5 memory audit kinds emitted**. 10. **PII scrubbed (amounts SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **UNIQUE(payroll_run_id) — one batch per run**. 15. **Per-member ack tracking**. 16. **Partial failure → status=partial_failed**. 17. **All acked → status=paid_acked**. 18. **bigint VND**. 19. **FR-INV-005 reconciliation hooks**. 20. **Re-confirm idempotent**.
 
 ---
 
@@ -224,7 +224,7 @@ async fn reconciliation_matches_acks() {
 
 ## §7 — Dependencies
 **Upstream:** FR-INV-005.
-**Cross-module:** FR-REW-005 (payroll source), FR-CRM-009 (memo format), FR-DOC-001 (file storage), FR-AUTH-101 (CFO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-REW-005 (payroll source), FR-CRM-009 (memo format), FR-DOC-001 (file storage), FR-AUTH-101 (CFO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -243,7 +243,7 @@ async fn reconciliation_matches_acks() {
 ## §11 — Implementation notes
 - §11.1 File format: Napas bulk transfer XML or CSV per bank's accepted spec.
 - §11.2 Memo template: `REW-{period_yyyymm}-{member_id_8}` matches FR-INV-005 reconciliation regex.
-- §11.3 BRAIN audit body: batch_id, payroll_run_id, status, counts; amounts SHA256.
+- §11.3 memory audit body: batch_id, payroll_run_id, status, counts; amounts SHA256.
 - §11.4 Reconciliation cron via FR-MCP-007 polls every 15min during pay-day window.
 - §11.5 Future: bank API integration eliminates manual confirm step.
 

@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-OKR-001 ships the Objective × Key Result schema with Company → Team → Member cascade. Scope: 26 §1 normative clauses covering 5 closed Postgres enums (cycle_kind 3, cycle_status 4, okr_scope 3, objective_status 4, kr_type 3, kr_status 5), strict alignment-tree FSM trigger (cross-cascade forbidden), 3-5 KR count handler enforcement, append-only kr_progress_log + objective_status_history at SQL grant, face-saving terminology CI lint, tenant-local teams primitive, cascading delete Cycle→Objectives→KRs with RESTRICT on KR-with-progress-log, EU AI Act Art. 14 OpenAPI compliance note, 8 BRAIN audit kinds with PII scrubbing, RLS on all 6 tables, cross-cycle alignment forbidden, KR source provenance enum. 17 rationale paragraphs. §3 contains: 5 migrations (cycles + teams + objectives with alignment trigger + key_results + append-only progress log), face-saving terminology CI lint test, Rust types. 27 ACs. 33 failure-mode rows. 17 implementation notes.
+FR-OKR-001 ships the Objective × Key Result schema with Company → Team → Member cascade. Scope: 26 §1 normative clauses covering 5 closed Postgres enums (cycle_kind 3, cycle_status 4, okr_scope 3, objective_status 4, kr_type 3, kr_status 5), strict alignment-tree FSM trigger (cross-cascade forbidden), 3-5 KR count handler enforcement, append-only kr_progress_log + objective_status_history at SQL grant, face-saving terminology CI lint, tenant-local teams primitive, cascading delete Cycle→Objectives→KRs with RESTRICT on KR-with-progress-log, EU AI Act Art. 14 OpenAPI compliance note, 8 memory audit kinds with PII scrubbing, RLS on all 6 tables, cross-cycle alignment forbidden, KR source provenance enum. 17 rationale paragraphs. §3 contains: 5 migrations (cycles + teams + objectives with alignment trigger + key_results + append-only progress log), face-saving terminology CI lint test, Rust types. 27 ACs. 33 failure-mode rows. 17 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -45,7 +45,7 @@ First-pass had no specified behavior. Resolved: §1 #23 + DEC-371 + ON DELETE CA
 
 All 8 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (5 closed enums × strict alignment tree × 3-5 KR enforcement × append-only history × face-saving terminology CI lint × tenant-local teams × cascading delete × EU AI Act compliance × 8 BRAIN audit kinds), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (5 closed enums × strict alignment tree × 3-5 KR enforcement × append-only history × face-saving terminology CI lint × tenant-local teams × cascading delete × EU AI Act compliance × 8 memory audit kinds), not by line targets.
 
 ---
 

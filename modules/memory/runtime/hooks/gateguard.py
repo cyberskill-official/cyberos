@@ -34,8 +34,8 @@ Reads tool input from stdin (Claude Code hook JSON contract).
 Exit 0 = allow. Exit 2 + stderr message = deny with feedback.
 
 Detects cyberos memory-write attempts by inspecting command for:
-  - 'brain_writer.py' substring
-  - 'runtime/lib/brain_writer.py' substring
+  - 'memory_writer.py' substring
+  - 'runtime/lib/memory_writer.py' substring
   - 'cyberos add' substring
 
 Maintains state via /tmp/cyberos-gateguard-state-${SESSION_ID}.json so
@@ -71,14 +71,14 @@ def _save_state(state):
 
 def _is_memory_write(cmd: str) -> str | None:
     """Returns write-type or None. Detects:
-       - 'brain_writer.py write ...'
-       - 'brain_writer.py create ...'
+       - 'memory_writer.py write ...'
+       - 'memory_writer.py create ...'
        - 'cyberos add DEC|REF|FACT|PERSON|PROJECT|PREFERENCE ...'
     """
     if not cmd:
         return None
-    # brain_writer write/create
-    m = re.search(r"brain_writer\.py\s+(write|create)\b", cmd)
+    # memory_writer write/create
+    m = re.search(r"memory_writer\.py\s+(write|create)\b", cmd)
     if m:
         return m.group(1)
     # cyberos add

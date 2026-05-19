@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-001, FR-CRM-001, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-001, FR-CRM-001, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001, FR-CRM-001]
 blocks: [FR-CRM-002]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1572 2026-05-17 — Tracked domains stored per tenant in tracked_domains table: {tenant_id, domain, added_by, added_at}
   - DEC-1573 2026-05-17 — Closed enum `link_origin` = {auto_tracked_domain, manual, send_intent, crm_jit}; cardinality 4
   - DEC-1574 2026-05-17 — Auto-created contact: name from From: header display name; company from domain via FR-AI-003 lookup (cached)
-  - DEC-1575 2026-05-17 — BRAIN audit kinds: email.crm_link_auto_created, email.crm_link_existing_matched, email.crm_link_failed
+  - DEC-1575 2026-05-17 — memory audit kinds: email.crm_link_auto_created, email.crm_link_existing_matched, email.crm_link_failed
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without auto-link, CRO/AM must manually link every inbound —
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship CRM auto-link at `services/email/src/crm_link/` triggered on inbound, matched against tenant's tracked_domains, contact created/matched, thread linked, 3 BRAIN audit kinds.
+The EMAIL service **MUST** ship CRM auto-link at `services/email/src/crm_link/` triggered on inbound, matched against tenant's tracked_domains, contact created/matched, thread linked, 3 memory audit kinds.
 
 1. **MUST** hook into `services/email/src/inbound_processor.rs` after message stored: call `crm_link::process(message)`.
 
@@ -125,7 +125,7 @@ The EMAIL service **MUST** ship CRM auto-link at `services/email/src/crm_link/` 
    GRANT UPDATE (crm_contact_id, link_origin) ON messages TO cyberos_app;
    ```
 
-9. **MUST** emit 3 BRAIN audit kinds per DEC-1575. PII per FR-BRAIN-111: contact email/name SHA-256 hashed; domain (already public) ok.
+9. **MUST** emit 3 memory audit kinds per DEC-1575. PII per FR-MEMORY-111: contact email/name SHA-256 hashed; domain (already public) ok.
 
 10. **MUST** thread trace_id from inbound processor → matcher → CRM upsert → audit.
 
@@ -167,7 +167,7 @@ Sample message link result (after inbound process):
 ---
 
 ## §4 — Acceptance criteria
-1. **Inbound from tracked domain → linked**. 2. **Inbound from untracked domain → skipped**. 3. **Existing contact reused (no duplicate)**. 4. **New contact auto-created if missing**. 5. **Display name parsed from From: header**. 6. **Company inferred via FR-AI-003 lookup**. 7. **AI company lookup cached 24h**. 8. **link_origin enum 4 values + cardinality test**. 9. **3 BRAIN audit kinds emitted**. 10. **PII scrubbed (email/name SHA256)**. 11. **RLS denies cross-tenant**. 12. **CRO-only tracked-domain mgmt**. 13. **Trace_id preserved**. 14. **Outbound NOT touched**. 15. **Domain match case-insensitive**. 16. **Subdomain match optional (configurable per domain)**. 17. **REVOKE UPDATE on tracked_domains (immutable add, can DELETE)**. 18. **Multiple messages same contact → reuse single contact_id**. 19. **From: header malformed → skip with sev-3 audit**. 20. **CRM contact created → CRM-side FR-CRM-001 audit also fires**.
+1. **Inbound from tracked domain → linked**. 2. **Inbound from untracked domain → skipped**. 3. **Existing contact reused (no duplicate)**. 4. **New contact auto-created if missing**. 5. **Display name parsed from From: header**. 6. **Company inferred via FR-AI-003 lookup**. 7. **AI company lookup cached 24h**. 8. **link_origin enum 4 values + cardinality test**. 9. **3 memory audit kinds emitted**. 10. **PII scrubbed (email/name SHA256)**. 11. **RLS denies cross-tenant**. 12. **CRO-only tracked-domain mgmt**. 13. **Trace_id preserved**. 14. **Outbound NOT touched**. 15. **Domain match case-insensitive**. 16. **Subdomain match optional (configurable per domain)**. 17. **REVOKE UPDATE on tracked_domains (immutable add, can DELETE)**. 18. **Multiple messages same contact → reuse single contact_id**. 19. **From: header malformed → skip with sev-3 audit**. 20. **CRM contact created → CRM-side FR-CRM-001 audit also fires**.
 
 ---
 
@@ -210,7 +210,7 @@ async fn existing_contact_reused() {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-001, FR-CRM-001.
-**Cross-module:** FR-AI-003 (company lookup), FR-AUTH-101 (CRO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AI-003 (company lookup), FR-AUTH-101 (CRO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -231,7 +231,7 @@ async fn existing_contact_reused() {
 - §11.2 Display-name parse via `mailparse` crate.
 - §11.3 FR-AI-003 prompt: "What company owns the domain {domain}? Reply with name only, no commentary."
 - §11.4 Cache key: `company_for_domain:{domain}`, TTL 86400s.
-- §11.5 BRAIN audit: domain, link_origin, contact_created flag; email/name SHA256.
+- §11.5 memory audit: domain, link_origin, contact_created flag; email/name SHA256.
 
 ---
 

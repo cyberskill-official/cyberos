@@ -3,15 +3,15 @@ id: FR-PROJ-001
 title: "PROJ Issue + Cycle + Engagement schema — RLS + cross-module linkable + status FSM + audit + assignee validation"
 module: PROJ
 priority: MUST
-status: accepted
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (CPO)
 created: 2026-05-15
-shipped: null
-brain_chain_hash: null
+shipped: 2026-05-19
+memory_chain_hash: pending
 related_frs: [FR-PROJ-002, FR-PROJ-003, FR-AUTH-001, FR-AUTH-003, FR-AI-003]
 depends_on: [FR-AUTH-001, FR-AUTH-003]
 blocks: [FR-PROJ-002, FR-PROJ-004, FR-PROJ-005, FR-PROJ-008, FR-PROJ-009, FR-EMAIL-007, FR-RES-001]
@@ -53,7 +53,7 @@ allowed_tools:
 disallowed_tools:
   - allow custom statuses outside the 5-status FSM (per DEC-210)
   - allow orphan issues (no engagement) (per DEC-213)
-  - skip BRAIN audit on issue mutations (per §1 #6)
+  - skip memory audit on issue mutations (per §1 #6)
   - bypass RLS (per §1 #8)
 
 effort_hours: 12
@@ -72,7 +72,7 @@ sub_tasks:
   - "1.5h: Tests — happy + RLS + FSM transitions + invalid status + invalid cycle + cross-tenant assignee + bidirectional links"
   - "0.5h: OTel metrics emission"
   - "1.5h: Tests — link types + concurrent mutations + audit row payloads"
-risk_if_skipped: "PROJ has no model; downstream FRs (FR-PROJ-002 BRAIN anchoring, FR-PROJ-003 status mutations) have nothing to operate on. Without RLS, cross-tenant data exposure. Without status FSM, illegal transitions corrupt state. Without cross-module links, issues can't be derived from emails/chats — productivity loss."
+risk_if_skipped: "PROJ has no model; downstream FRs (FR-PROJ-002 memory anchoring, FR-PROJ-003 status mutations) have nothing to operate on. Without RLS, cross-tenant data exposure. Without status FSM, illegal transitions corrupt state. Without cross-module links, issues can't be derived from emails/chats — productivity loss."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -100,7 +100,7 @@ The PROJ service **MUST** model project work as Issues + Cycles + Engagements wi
     - `PATCH /v1/proj/issues/{id}` (update; status mutation goes through FSM)
     - `DELETE /v1/proj/issues/{id}` (soft-delete via `status: deleted` flag — reserved status outside the 5; only root-admin)
     - `POST /v1/proj/issues/{id}/links` (add link)
-6. **MUST** emit BRAIN audit rows:
+6. **MUST** emit memory audit rows:
     - `proj.issue_created` per POST.
     - `proj.issue_status_changed` per status mutation (payload: old_status, new_status, by_subject_id).
     - `proj.issue_assigned` per assignee change (payload: from_subject_id, to_subject_id).
@@ -429,7 +429,7 @@ async fn create_issue_emits_audit() {
         priority: Some(IssuePriority::Normal), ..Default::default()
     };
     let issue = create_issue(req, &claims.claims, &pool, "req").await.unwrap();
-    assert!(brain_test_helper::has_row("proj.issue_created", &issue.id.to_string()).is_some());
+    assert!(memory_test_helper::has_row("proj.issue_created", &issue.id.to_string()).is_some());
 }
 
 #[tokio::test]
@@ -529,8 +529,8 @@ See §3.
 
 - **FR-AUTH-001** — tenants exist before engagements created.
 - **FR-AUTH-003** — RLS pattern; add 4 PROJ tables to TENANT_SCOPED_TABLES.
-- **FR-AI-003** — brain_writer for audit row emission.
-- **FR-PROJ-002 (downstream)** — BRAIN decision anchoring uses these structures.
+- **FR-AI-003** — memory_writer for audit row emission.
+- **FR-PROJ-002 (downstream)** — memory decision anchoring uses these structures.
 - Crates: `axum`, `sqlx`, `tokio`, `serde`, `chrono`, `uuid`.
 
 ---
@@ -631,7 +631,7 @@ All resolved. Deferred:
 | Body > 50000 chars | DB CHECK | 400 | Caller shortens or attaches file |
 | Negative estimate_hours | DB CHECK | 400 | Caller fixes |
 | Soft-delete by non-root-admin | role check | 403 | Operator escalates |
-| Audit row emit fails | brain_writer error | tx rollback; 500 | Operator investigates BRAIN |
+| Audit row emit fails | memory_writer error | tx rollback; 500 | Operator investigates memory |
 | Self-link (issue_id == linked_to_id) | sanity check | 400 self_link | Caller fixes |
 | Reopen done issue | terminal status | 400; use reopen API | API to introduce in slice 3 |
 | Concurrent link insert (same triple) | UNIQUE | First wins; ON CONFLICT DO NOTHING | By design |

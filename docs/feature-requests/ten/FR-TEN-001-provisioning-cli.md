@@ -1,6 +1,6 @@
 ---
 id: FR-TEN-001
-title: "TEN tenant provisioning CLI — `cyberos-ten provision` ops-driven flow with schema namespace + NATS subject + S3 prefix + initial root-admin subject + BRAIN audit"
+title: "TEN tenant provisioning CLI — `cyberos-ten provision` ops-driven flow with schema namespace + NATS subject + S3 prefix + initial root-admin subject + memory audit"
 module: TEN
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-001, FR-AUTH-101, FR-AI-016, FR-AI-003, FR-BRAIN-101, FR-TEN-002, FR-TEN-104, FR-TEN-103]
+memory_chain_hash: null
+related_frs: [FR-AUTH-001, FR-AUTH-101, FR-AI-016, FR-AI-003, FR-MEMORY-101, FR-TEN-002, FR-TEN-104, FR-TEN-103]
 depends_on: [FR-AUTH-001]
 blocks: [FR-TEN-002, FR-TEN-004, FR-TEN-101, FR-TEN-103, FR-TEN-104]
 
@@ -28,12 +28,12 @@ source_decisions:
   - DEC-324 (default residency = vn-1 at slice 1; explicit `--residency <sg-1|eu-1|us-1|vn-1>` flag override; FR-TEN-103 ships full 4-residency provisioning)
   - DEC-325 (initial root-admin subject created with tenant-admin role via FR-AUTH-001's POST /v1/admin/tenants flow; password auto-generated + emitted to operator stdout once)
   - DEC-326 (tenant.status closed enum: provisioning, active, suspended, terminating, terminated — slice 1 ships all 5; transitions in FR-TEN-104)
-  - DEC-327 (BRAIN audit kinds: ten.tenant_provisioned, ten.tenant_suspended, ten.tenant_resumed, ten.tenant_terminating, ten.tenant_terminated, ten.tenant_branding_updated, ten.tenant_residency_changed — slice 1 emits ten.tenant_provisioned; others are FR-TEN-104)
+  - DEC-327 (memory audit kinds: ten.tenant_provisioned, ten.tenant_suspended, ten.tenant_resumed, ten.tenant_terminating, ten.tenant_terminated, ten.tenant_branding_updated, ten.tenant_residency_changed — slice 1 emits ten.tenant_provisioned; others are FR-TEN-104)
   - DEC-328 (REVOKE UPDATE, DELETE on tenant + tenant_status_history from cyberos_app — append-only enforced at SQL grant; status changes via FR-TEN-104)
   - DEC-329 (`cyberos-ten provision` is idempotent on slug — re-running with same slug returns existing tenant; collision on different residency or plan_tier → 409)
   - DEC-330 (exit codes follow cyberos-cli-exit shared crate per AUTHORING.md rule 9: 0 success, 1 already-exists-idempotent-match, 64 invalid-arg, 65 invalid-data, 73 cant-create, 75 temp-fail, 77 permission-denied)
   - DEC-331 (the initial root-admin password is printed ONCE to the operator's terminal + immediately scrubbed from CLI memory via zeroize; never logged, never persisted in plaintext)
-  - DEC-332 (provisioning generates a tenant-bootstrap audit-chain anchor — first chain row that bootstraps the tenant's BRAIN audit chain for FR-AI-003)
+  - DEC-332 (provisioning generates a tenant-bootstrap audit-chain anchor — first chain row that bootstraps the tenant's memory audit chain for FR-AI-003)
   - DEC-058 (tenant-as-degenerate-tenant: until FR-TEN-001 ships, system runs as single-tenant; this FR activates the second-and-beyond tenants)
   - PDPL Art. 4 (data minimisation — operator's name + email recorded as `provisioned_by_subject_id` but the tenant's customer-facing data is empty at creation)
 
@@ -52,14 +52,14 @@ new_files:
   - services/ten/src/provisioning/nats_namespace.rs                   # NATS subject namespace + permission ACL writer
   - services/ten/src/provisioning/s3_prefix.rs                        # S3 bucket prefix initialiser (creates tenant marker object)
   - services/ten/src/provisioning/auth_bootstrap.rs                   # delegates to FR-AUTH-001 POST /v1/admin/tenants + creates initial root-admin
-  - services/ten/src/audit/tenant_events.rs                           # canonical ten.tenant_* BRAIN row builders
+  - services/ten/src/audit/tenant_events.rs                           # canonical ten.tenant_* memory row builders
   - services/ten/src/cli/provision.rs                                 # cyberos-ten provision command
   - services/ten/src/cli/mod.rs                                       # CLI scaffold + subcommand registry
   - services/ten/Cargo.toml                                           # +sqlx, +uuid, +serde, +clap, +zeroize, +rand, +cyberos-cli-exit
   - services/ten/tests/provision_happy_test.rs                        # happy + idempotent + namespace creation
   - services/ten/tests/provision_slug_validation_test.rs              # invalid slugs rejected
   - services/ten/tests/provision_idempotency_test.rs                  # same slug + same residency → existing tenant; different residency → 409
-  - services/ten/tests/provision_brain_audit_test.rs                  # ten.tenant_provisioned BRAIN row emitted; carries tenant_id + slug + residency + provisioned_by
+  - services/ten/tests/provision_memory_audit_test.rs                  # ten.tenant_provisioned memory row emitted; carries tenant_id + slug + residency + provisioned_by
   - services/ten/tests/provision_root_admin_test.rs                   # root-admin subject created with tenant-admin role; password printed once
   - services/ten/tests/provision_namespace_isolation_test.rs          # provisioning produces distinct schema/NATS/S3 prefixes per tenant
   - services/ten/tests/provision_residency_default_test.rs            # default residency = vn-1; --residency flag overrides
@@ -77,7 +77,7 @@ allowed_tools:
   - bash: psql -f services/ten/migrations/0001_tenants.sql (local Postgres only)
 
 disallowed_tools:
-  - log the initial root-admin password to file or BRAIN audit (per DEC-331 — printed once + zeroised)
+  - log the initial root-admin password to file or memory audit (per DEC-331 — printed once + zeroised)
   - allow UPDATE on tenants or tenant_status_history (per DEC-328)
   - allow cross-tenant slug collision (per DEC-321 — UNIQUE constraint)
   - allow provisioning to proceed if any namespace allocator fails (transactional all-or-nothing)
@@ -97,7 +97,7 @@ sub_tasks:
   - "0.4h: provisioning/auth_bootstrap.rs — call FR-AUTH-001 + create root-admin"
   - "0.3h: audit/tenant_events.rs — 7 row builders (only ten.tenant_provisioned wired at slice 1)"
   - "0.5h: cli/provision.rs — clap subcommand + flag parsing + exit code mapping"
-  - "1.1h: tests — 9 test files covering happy path, slug validation, idempotency, BRAIN audit, root-admin, namespace isolation, residency default, append-only, exit codes"
+  - "1.1h: tests — 9 test files covering happy path, slug validation, idempotency, memory audit, root-admin, namespace isolation, residency default, append-only, exit codes"
 
 risk_if_skipped: "CyberOS is multi-tenant by construction (every table has `tenant_id`, every NATS subject is namespaced, every S3 bucket key is prefixed), but until FR-TEN-001 ships, the system runs as a degenerate single tenant (DEC-058). Every downstream TEN FR (FR-TEN-002 plan tiers, FR-TEN-003 Stripe billing, FR-TEN-004 metering, FR-TEN-101 self-serve signup, FR-TEN-103 4-residency provisioning, FR-TEN-104 90-day offboarding, FR-TEN-105 signed-bundle export) depends on the tenant lifecycle primitive. Without DEC-321's per-tenant schema namespace, RLS becomes the ONLY isolation layer — a single SQL bug leaks across tenants. Without DEC-322's NATS namespace, message subscriptions can leak across tenants. Without DEC-323's S3 prefix, body storage can race across tenants. Without DEC-331's password-printed-once policy, ops accidentally pastes root credentials into logs. The 5h effort lands the foundational ops-driven flow + creates the namespace invariants that every other module trusts."
 ---
@@ -131,16 +131,16 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
     - Step 5: write S3 bucket marker objects: `s3://cyberos-doc-<residency>-<scope>/<tenant_id>/.cyberos-tenant-marker` for each scope (per FR-DOC-001 + FR-EMAIL-001 bucket layout); marker contains tenant slug + provisioned_at + provisioned_by; existence of marker is the lookup contract.
     - Step 6: delegate to FR-AUTH-001 `POST /v1/admin/tenants` (internal helper) to register tenant in AUTH + create initial root-admin subject with `tenant-admin` role via FR-AUTH-002 + FR-AUTH-101.
     - Step 7: UPDATE tenant status `provisioning` → `active`; UPDATE `provisioned_at = now()`; INSERT a `tenant_status_history` row.
-    - Step 8: emit `ten.tenant_provisioned` BRAIN audit row with full provenance.
+    - Step 8: emit `ten.tenant_provisioned` memory audit row with full provenance.
    Any step failure rolls back the entire flow (Postgres transactions for steps 2/3/6/7; compensating actions for NATS + S3).
 
 7. **MUST** generate the initial root-admin **password server-side** using a cryptographically secure RNG (per DEC-331). Password shape: 32-char base62 (alphanumerics + safe symbols). The password is:
    - Hashed (bcrypt cost 12 per FR-AUTH-002) before persistence.
    - Printed ONCE to the operator's terminal (stdout, with a clear marker `=== ROOT ADMIN PASSWORD (RECORD IMMEDIATELY) ===`).
    - **Immediately zeroised** from CLI memory via the `zeroize` crate after print + hash.
-   - NEVER logged to any file, NEVER included in any BRAIN audit row.
+   - NEVER logged to any file, NEVER included in any memory audit row.
 
-8. **MUST** emit `ten.tenant_provisioned` BRAIN audit row at the end of successful provisioning. The row carries `{tenant_id, slug, display_name, status: 'active', plan_tier, residency, provisioned_by_subject_id_hash16, root_admin_subject_id_hash16, ts_ns}`. The row does NOT carry the root-admin password (per DEC-331) or the email (PII-scrubbed to hash16 per FR-BRAIN-111).
+8. **MUST** emit `ten.tenant_provisioned` memory audit row at the end of successful provisioning. The row carries `{tenant_id, slug, display_name, status: 'active', plan_tier, residency, provisioned_by_subject_id_hash16, root_admin_subject_id_hash16, ts_ns}`. The row does NOT carry the root-admin password (per DEC-331) or the email (PII-scrubbed to hash16 per FR-MEMORY-111).
 
 9. **MUST** enforce RLS on `tenants` AND `tenant_status_history` with the **superuser-only** policy: `USING (current_setting('auth.is_root_admin', true) = 'true')`. Tenant management is a CyberSkill-operator privilege, not a tenant-admin privilege. Tenant-admins read their own tenant via FR-TEN-107's SPA (slice 3+).
 
@@ -195,7 +195,7 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 
 19. **MUST** ship the `tenant_residency_map` table for downstream consumers: `(tenant_id UUID PRIMARY KEY REFERENCES tenants(id), residency residency_code NOT NULL, set_at TIMESTAMPTZ, set_by_subject_id UUID)`. FR-DOC-001's `residency::resolve()` + FR-EMAIL-001's `residency::resolve()` + FR-AI-016's residency policy all consume this table. Slice 1 ships the table; provisioning writes the initial row; FR-TEN-103 ships per-tenant residency change.
 
-20. **MUST** create the tenant's BRAIN audit-chain anchor (per DEC-332): emit a special chain-bootstrap row that becomes the genesis row for the tenant's audit chain. FR-AI-003's brain_writer initialises the chain head from this row; subsequent rows chain to it.
+20. **MUST** create the tenant's memory audit-chain anchor (per DEC-332): emit a special chain-bootstrap row that becomes the genesis row for the tenant's audit chain. FR-AI-003's memory_writer initialises the chain head from this row; subsequent rows chain to it.
 
 21. **MUST** create the AUTH side via FR-AUTH-001's internal helper `auth::admin::tenants::provision_tenant(slug, display_name, root_admin_email, root_admin_display_name, root_admin_password_hash, operator_subject_id)` returning `(tenant_id, root_admin_subject_id)`. This helper is exposed from FR-AUTH-001 specifically for FR-TEN-001's use; it is NOT exposed via REST (operator privilege only).
 
@@ -221,7 +221,7 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 
 **Why S3 per-tenant prefix (DEC-323)?** S3 bucket-level isolation is too coarse (would need a bucket per tenant — operationally painful). Prefix isolation (`<tenant_id>/`) lets all tenants share a bucket while bucket policies + IAM enforce per-prefix access. FR-DOC-001 + FR-EMAIL-001 use this prefix in their S3 keys; the marker object at `<tenant_id>/.cyberos-tenant-marker` is the prefix-creation evidence.
 
-**Why password printed once + zeroised (DEC-331, §1 #7)?** Ops staff need to deliver the root-admin password to the new tenant's admin (out-of-band; e.g. via in-person handoff or encrypted channel). Persisting the password anywhere (file, log, BRAIN audit) creates a leak surface. Printing once + immediate zeroise from CLI memory means the only persisted form is the bcrypt hash (per FR-AUTH-002).
+**Why password printed once + zeroised (DEC-331, §1 #7)?** Ops staff need to deliver the root-admin password to the new tenant's admin (out-of-band; e.g. via in-person handoff or encrypted channel). Persisting the password anywhere (file, log, memory audit) creates a leak surface. Printing once + immediate zeroise from CLI memory means the only persisted form is the bcrypt hash (per FR-AUTH-002).
 
 **Why operator role check at root-admin (§1 #14)?** Provisioning a tenant is a cross-tenant operation — the operator must be in tenant 0 (CyberSkill itself) with the `root-admin` role per FR-AUTH-101. Allowing any tenant-admin would let any tenant operator create new tenants — privilege escalation.
 
@@ -235,7 +235,7 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 
 **Why `cyberos_provisioner` SQL role distinct from `cyberos_app` (§1 #11)?** App code (the runtime) MUST NOT mutate tenants — that's a privileged operation. Splitting roles enforces: the provisioner role is granted only to the CLI's connection; the app role REVOKE's UPDATE/DELETE. A bug in app code can't accidentally suspend a tenant.
 
-**Why BRAIN chain anchor at provisioning (§1 #20, DEC-332)?** Every tenant has its own audit chain (per AGENTS.md §6 — chained rows with prev_chain). The genesis row is the bootstrap anchor that brain_writer initialises from. Without it, the first audit row for the tenant has no `prev_chain` value and chain validation fails.
+**Why memory chain anchor at provisioning (§1 #20, DEC-332)?** Every tenant has its own audit chain (per AGENTS.md §6 — chained rows with prev_chain). The genesis row is the bootstrap anchor that memory_writer initialises from. Without it, the first audit row for the tenant has no `prev_chain` value and chain validation fails.
 
 **Why dry-run mode (§1 #26)?** FR-TEN-101's self-serve signup form needs to validate inputs in real-time (before committing payment). Dry-run lets the form check everything without state mutation — fast feedback, clean separation.
 
@@ -521,7 +521,7 @@ pub async fn provision(req: ProvisionRequest, ctx: &Ctx) -> Result<ProvisionResu
     sqlx::query("INSERT INTO tenant_status_history (tenant_id, from_status, to_status, changed_by_subject_id, reason) VALUES ($1, 'provisioning'::tenant_status, 'active'::tenant_status, $2, 'provisioning complete')")
         .bind(tenant_id).bind(req.operator_subject_id).execute(&mut *tx2).await?;
 
-    // Step 9: emit BRAIN audit row
+    // Step 9: emit memory audit row
     crate::audit::tenant_events::emit_tenant_provisioned(
         &mut tx2, tenant_id, &req.slug, &req.display_name,
         req.plan_tier.clone(), req.residency, req.operator_subject_id, bootstrap.root_admin_subject_id,
@@ -641,8 +641,8 @@ pub async fn run(cmd: ProvisionCmd, ctx: AppCtx) -> ExitCode {
 
 1. **Tenant status enum closed at 5** — `TenantStatus::ALL.len() == 5`; Postgres enum has exactly 5 labels.
 2. **Residency code enum closed at 4** — same shape.
-3. **POST provision happy path** — valid input → exit 0; tenant row created with `status=active`; `tenant_<slug>` Postgres schema exists; NATS namespace registered; S3 marker objects written; root-admin subject created; `ten.tenant_provisioned` BRAIN row emitted; password printed once.
-4. **Idempotent on slug** — re-run with same slug + same residency + same plan_tier → exit 1; same tenant row returned; NO duplicate BRAIN row.
+3. **POST provision happy path** — valid input → exit 0; tenant row created with `status=active`; `tenant_<slug>` Postgres schema exists; NATS namespace registered; S3 marker objects written; root-admin subject created; `ten.tenant_provisioned` memory row emitted; password printed once.
+4. **Idempotent on slug** — re-run with same slug + same residency + same plan_tier → exit 1; same tenant row returned; NO duplicate memory row.
 5. **Slug collision different residency** → exit 65 with `slug_collision_different_attrs`.
 6. **Invalid slug regex** — slug with uppercase or trailing hyphen → exit 65.
 7. **Invalid email format** → exit 65.
@@ -655,7 +655,7 @@ pub async fn run(cmd: ProvisionCmd, ctx: AppCtx) -> ExitCode {
 14. **`cyberos-ten get` returns tenant detail** — exit 0; root_admin password NOT in output.
 15. **`cyberos-ten list` returns all tenants** — root-admin only.
 16. **Root admin password printed once + zeroised** — memory inspection after CLI exit (test harness) shows the password bytes overwritten.
-17. **Root admin password NOT in BRAIN row** — `ten.tenant_provisioned` row JSON contains no password-shaped field.
+17. **Root admin password NOT in memory row** — `ten.tenant_provisioned` row JSON contains no password-shaped field.
 18. **Default residency vn-1** — `--residency` omitted → tenant created with residency='vn-1'.
 19. **--residency flag overrides** — `--residency eu-1` → tenant created with residency='eu-1'.
 20. **--dry-run validates without writing** — exit 0; no tenant row created; no schema/NATS/S3 mutation.
@@ -710,8 +710,8 @@ async fn happy_path_creates_everything() {
     let auth_subject = ctx.auth.get_subject_by_email("root@acme.example").await.unwrap();
     assert!(auth_subject.roles.contains(&"tenant-admin".to_string()));
 
-    // Check BRAIN audit row
-    let rows = ctx.brain_audit_rows("ten.tenant_provisioned").await;
+    // Check memory audit row
+    let rows = ctx.memory_audit_rows("ten.tenant_provisioned").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["slug"], "acme-corp");
 }
@@ -722,8 +722,8 @@ async fn idempotent_match_returns_existing() {
     let _first = ctx.run_cli(&["provision", "--slug", "acme", "--display-name", "ACME", "--root-admin-email", "r@acme", "--root-admin-display-name", "R", "--residency", "vn-1"]).await;
     let second = ctx.run_cli(&["provision", "--slug", "acme", "--display-name", "ACME", "--root-admin-email", "r@acme", "--root-admin-display-name", "R", "--residency", "vn-1"]).await;
     assert_eq!(second.exit_code, 1);
-    let rows = ctx.brain_audit_rows("ten.tenant_provisioned").await;
-    assert_eq!(rows.len(), 1, "no duplicate BRAIN row on idempotent match");
+    let rows = ctx.memory_audit_rows("ten.tenant_provisioned").await;
+    assert_eq!(rows.len(), 1, "no duplicate memory row on idempotent match");
 }
 ```
 
@@ -740,10 +740,10 @@ async fn password_printed_once_and_zeroised() {
     let password_line = result.stdout.lines().find(|l| l.trim().len() == 32 && l.trim().chars().all(|c| c.is_alphanumeric())).unwrap();
     let password = password_line.trim().to_string();
 
-    // Password is NOT in BRAIN row
-    let rows = ctx.brain_audit_rows("ten.tenant_provisioned").await;
+    // Password is NOT in memory row
+    let rows = ctx.memory_audit_rows("ten.tenant_provisioned").await;
     let row_json = serde_json::to_string(&rows[0]).unwrap();
-    assert!(!row_json.contains(&password), "password leaked into BRAIN row");
+    assert!(!row_json.contains(&password), "password leaked into memory row");
 
     // Password is NOT in log files
     let logs = ctx.read_log_files().await;
@@ -814,7 +814,7 @@ async fn two_tenants_get_distinct_namespaces() {
 - **FR-AI-016** — residency policy (consumes `tenant_residency_map` table).
 - **FR-DOC-001** — document repository (consumes `tenant_residency_map` for body bucket lookup).
 - **FR-EMAIL-001** — Stalwart mail server (consumes `tenant_residency_map` for body bucket lookup).
-- **FR-AI-003** — BRAIN audit bridge (receives `ten.tenant_provisioned` row + chain anchor).
+- **FR-AI-003** — memory audit bridge (receives `ten.tenant_provisioned` row + chain anchor).
 
 ---
 
@@ -844,7 +844,7 @@ $ cyberos-ten provision \
   === END ===
 ```
 
-### 8.2 — ten.tenant_provisioned BRAIN row
+### 8.2 — ten.tenant_provisioned memory row
 
 ```json
 {
@@ -927,7 +927,7 @@ All other questions resolved.
 | S3 marker write fails | step 5 error | exit 73 + rollback Postgres + NATS | Check S3 perms + KMS |
 | AUTH bootstrap fails | step 6 error | exit 73 + full rollback | Investigate AUTH service health |
 | Status transition `provisioning → active` fails | step 7 tx | exit 73; tenant left in `provisioning` state | Operator runs cleanup script |
-| BRAIN audit emit fails | step 8 tx rollback | exit 73; full rollback | brain_writer diagnosis |
+| memory audit emit fails | step 8 tx rollback | exit 73; full rollback | memory_writer diagnosis |
 | Password generation fails | step 7 internal | exit 75 transient | Retry |
 | RNG entropy starvation | step 7 | exit 75 | Restart process |
 | Operator deletes the printed password before saving | None — operator responsibility | Tenant unusable; force password-reset via AUTH | FR-AUTH-2xx password reset flow |
@@ -961,7 +961,7 @@ All other questions resolved.
 - **Slug regex** — kebab-case, 4-42 chars, no trailing hyphen; safe for Postgres schema name + NATS subject + S3 prefix + URL.
 - **`auth.is_root_admin` GUC** — set by the AUTH JWT middleware when operator's JWT carries the root-admin role; RLS policy on `tenants` consults this.
 - **`tenant_residency_map` is the lookup contract** — FR-DOC-001 + FR-EMAIL-001 + FR-AI-016 all read from this table. Centralising prevents drift.
-- **BRAIN chain anchor at provisioning** — first audit row's `prev_chain` is the genesis hash; brain_writer initialises chain head from this.
+- **memory chain anchor at provisioning** — first audit row's `prev_chain` is the genesis hash; memory_writer initialises chain head from this.
 - **`--dry-run` mode** — validates everything, mutates nothing. Powers FR-TEN-101's signup-form preflight.
 - **Slug immutable post-provisioning** — schema name + NATS subject + S3 prefix all derive from slug; renaming requires coordinated multi-system mutation.
 - **`provisioned_by_subject_id` is the operator's UUID** — accountability without storing operator PII (PDPL Art. 4 satisfied).

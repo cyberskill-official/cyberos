@@ -3,7 +3,7 @@ id: FR-OBS-002
 title: "Tenant-aware Grafana proxy (Rust) — AST-injects tenant_id into PromQL/LogQL/TraceQL with anti-bypass + property test + audit log"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-007, FR-OBS-008, FR-OBS-009, FR-AUTH-004, FR-AUTH-108, FR-AI-018]
 depends_on: [FR-OBS-001, FR-AUTH-004]
 blocks: [FR-OBS-007, FR-OBS-008]
@@ -66,7 +66,7 @@ sub_tasks:
   - "1.0h: proxy.rs — backend detection + injection dispatch + forward + response stream"
   - "0.5h: anti-bypass: reject queries containing user-supplied tenant_id label"
   - "0.5h: cross-tenant attempt detection (caller_tenant != requested_tenant) = sev-1"
-  - "0.5h: audit.rs — log every query with (tenant_id, backend, query, outcome) to BRAIN"
+  - "0.5h: audit.rs — log every query with (tenant_id, backend, query, outcome) to memory"
   - "0.5h: OTel metrics + spans"
   - "1.0h: proxy_test.rs — happy + 401 + 400 + cross-tenant + audit-emit"
   - "1.5h: inject tests per backend (PromQL/LogQL/TraceQL) — happy + complex query + bypass attempts"
@@ -90,7 +90,7 @@ A Rust HTTP proxy **MUST** sit between Grafana and the 3 OBS backends (Loki, Pro
 6. **MUST** complete proxying in ≤ 5ms p95 overhead (parse + inject + serialise; backend latency excluded). The 5ms ceiling protects user experience — Grafana already round-trips multiple queries per dashboard refresh.
 7. **MUST** forward responses unchanged (the backends already namespace by tenant_id label; nothing to filter response-side).
 8. **MUST** detect cross-tenant attempts: if the caller's `tenant_id` claim differs from any explicit `tenant_id` in the query (caught by §1 #4) OR the JWT's tenant_id is the nil UUID (root-admin) — root-admin queries are special-cased per §1 #11.
-9. **MUST** emit a BRAIN audit row `obs.query_proxied` per query with payload: `tenant_id`, `caller_subject_id`, `backend` (loki|prometheus|tempo), `query_sha256`, `outcome` (proxied | rejected_user_supplied_tenant_id | rejected_unauthenticated | backend_error), `latency_ms`, `request_id`. Logging the SHA-256 of the query (not the raw query) preserves privacy if the query contains tenant-business semantics.
+9. **MUST** emit a memory audit row `obs.query_proxied` per query with payload: `tenant_id`, `caller_subject_id`, `backend` (loki|prometheus|tempo), `query_sha256`, `outcome` (proxied | rejected_user_supplied_tenant_id | rejected_unauthenticated | backend_error), `latency_ms`, `request_id`. Logging the SHA-256 of the query (not the raw query) preserves privacy if the query contains tenant-business semantics.
 10. **MUST** emit OTel metrics:
     - `obs_proxy_requests_total{tenant_id, backend, outcome}` (counter).
     - `obs_proxy_injection_latency_ms{backend}` (histogram; SLO p95 < 5ms).
@@ -115,13 +115,13 @@ A Rust HTTP proxy **MUST** sit between Grafana and the 3 OBS backends (Loki, Pro
 
 **Why per-language AST parsers (§1 #5)?** PromQL, LogQL, and TraceQL have different syntax. A unified parser would compromise on each. Per-language parsers (PromQL via official crate; LogQL/TraceQL hand-rolled subsets) handle each correctly. The hand-rolled parsers cover only the syntax actually used by Grafana — full grammar coverage isn't needed.
 
-**Why log query SHA-256 not raw query (§1 #9)?** Queries can contain tenant-business semantics (e.g., `kb_articles_total{kb="legal-hr-confidential"}`). Logging raw queries to BRAIN exposes those semantics to anyone with audit access. Hash preserves uniqueness for forensic correlation without leaking content. If forensic needs the raw query, ops re-runs against the proxy with the same tenant + observe what was sent.
+**Why log query SHA-256 not raw query (§1 #9)?** Queries can contain tenant-business semantics (e.g., `kb_articles_total{kb="legal-hr-confidential"}`). Logging raw queries to memory exposes those semantics to anyone with audit access. Hash preserves uniqueness for forensic correlation without leaking content. If forensic needs the raw query, ops re-runs against the proxy with the same tenant + observe what was sent.
 
 **Why root-admin gets unfiltered access (§1 #11)?** Root-admin's job includes cross-tenant ops queries (compliance reports, ops investigations). Forcing root-admin to use a different tool would split the workflow. The audit-row `outcome: root_admin_unfiltered` makes legitimate cross-tenant queries visible — compliance reviews can ask "who did cross-tenant queries last week?" and get a list.
 
 **Why 5ms p95 overhead (§1 #6)?** Grafana dashboards refresh every 5-30s; a typical refresh queries 10-50 panels. 5ms × 50 panels = 250ms per refresh — invisible to humans. Above 5ms, refreshes become sluggish.
 
-**Why audit-row logging for every query (§1 #9)?** Compliance audit answer: "show me what queries this operator ran during the period under review." Without per-query audit, the answer is "we don't know." With it, the answer is a SQL query. The cost is one BRAIN row per query (~10K queries/day at slice-1 scale = trivial storage).
+**Why audit-row logging for every query (§1 #9)?** Compliance audit answer: "show me what queries this operator ran during the period under review." Without per-query audit, the answer is "we don't know." With it, the answer is a SQL query. The cost is one memory row per query (~10K queries/day at slice-1 scale = trivial storage).
 
 **Why proxy IS the security boundary (§11 note in original)?** Grafana itself runs as a non-tenant-aware app — its built-in auth + RBAC don't enforce tenant isolation at query time. The proxy enforces tenant isolation by injecting labels at EVERY query. Without the proxy, any Grafana user (regardless of role) sees all tenants' data.
 
@@ -138,12 +138,12 @@ pub async fn proxy(req: Request<Body>, state: &State) -> Result<Response<Body>, 
     let original_query = extract_query(&body, backend)?;
 
     if has_user_supplied_tenant_id(&original_query, backend) {
-        audit::emit(brain::canonical::cross_tenant_query_attempt(&claims, &original_query)).await;
+        audit::emit(memory::canonical::cross_tenant_query_attempt(&claims, &original_query)).await;
         return Err(ProxyError::UserSuppliedTenantId);
     }
 
     let injected = if claims.tenant_id == Uuid::nil() && claims.roles.contains(&"root-admin".into()) {
-        audit::emit(brain::canonical::root_admin_unfiltered(&claims, &original_query)).await;
+        audit::emit(memory::canonical::root_admin_unfiltered(&claims, &original_query)).await;
         original_query   // root-admin: no injection
     } else {
         match backend {
@@ -154,7 +154,7 @@ pub async fn proxy(req: Request<Body>, state: &State) -> Result<Response<Body>, 
     };
 
     let resp = forward(backend, &injected, &state.http).await?;
-    audit::emit(brain::canonical::query_proxied(&claims, backend, &original_query, "proxied")).await;
+    audit::emit(memory::canonical::query_proxied(&claims, backend, &original_query, "proxied")).await;
     Ok(resp)
 }
 
@@ -233,7 +233,7 @@ pub fn add_label(query: &str, key: &str, value: &str) -> Result<String, ProxyErr
 7. **Missing JWT → 401**.
 8. **Invalid JWT signature → 401**.
 9. **Expired JWT → 401**.
-10. **Cross-tenant attempt logged** — `obs.cross_tenant_query_attempt` BRAIN row + sev-1 alarm.
+10. **Cross-tenant attempt logged** — `obs.cross_tenant_query_attempt` memory row + sev-1 alarm.
 11. **Audit row per query** — every successful proxy emits `obs.query_proxied` with SHA-256 of query.
 12. **Root-admin unfiltered query allowed** — caller with tenant_id=nil + role root-admin gets query forwarded WITHOUT injection; `obs.query_proxied` row carries `outcome: root_admin_unfiltered`; sev-2 informational.
 13. **Property test: 1000 random queries × 2 tenant pairs → zero cross-tenant data**.
@@ -308,7 +308,7 @@ async fn user_supplied_tenant_id_returns_400_and_audits() {
     let req = test_request_with_jwt("/api/v1/query?query=foo{tenant_id=\"other\"}", &test_jwt("T")).await;
     let err = proxy(req, &state).await.expect_err("expected UserSuppliedTenantId");
     assert!(matches!(err, ProxyError::UserSuppliedTenantId));
-    assert!(brain_test_helper::has_recent_row("obs.cross_tenant_query_attempt", "T"));
+    assert!(memory_test_helper::has_recent_row("obs.cross_tenant_query_attempt", "T"));
 }
 
 #[tokio::test]
@@ -319,7 +319,7 @@ async fn root_admin_query_unfiltered() {
     let _ = proxy(req, &state).await.unwrap();
     let last_query = mock_backend.last_query().await;
     assert!(!last_query.contains("tenant_id"));
-    assert!(brain_test_helper::has_recent_row("obs.query_proxied", "root_admin_unfiltered"));
+    assert!(memory_test_helper::has_recent_row("obs.query_proxied", "root_admin_unfiltered"));
 }
 ```
 
@@ -354,7 +354,7 @@ proptest! {
 async fn every_query_emits_audit_row() {
     let state = test_state().await;
     let _ = proxy(test_request_with_jwt("/api/v1/query?query=rate(foo[5m])", &test_jwt("T")).await, &state).await.unwrap();
-    let row = brain_test_helper::find_latest("obs.query_proxied").unwrap();
+    let row = memory_test_helper::find_latest("obs.query_proxied").unwrap();
     assert_eq!(row.payload["tenant_id"], "T");
     assert_eq!(row.payload["backend"], "prometheus");
     assert!(row.payload["query_sha256"].as_str().unwrap().len() == 64);
@@ -489,7 +489,7 @@ All resolved. Deferred:
 | User-supplied tenant_id label | has_label check | 400 + sev-1 audit | Investigate caller (likely malicious or buggy client) |
 | Cross-tenant data leak (regression) | property test fails in CI | PR blocked | Fix injection logic |
 | Slow injection (> 5ms p95) | OTel histogram | sev-3 alarm | Investigate query complexity OR parser |
-| Audit-row emit fails (BRAIN down) | brain_writer error | Query still proxied; sev-2 alarm | Operator investigates BRAIN |
+| Audit-row emit fails (memory down) | memory_writer error | Query still proxied; sev-2 alarm | Operator investigates memory |
 | Root-admin query without expected role claim | claims check | Treated as regular tenant; injection applies | Operator updates JWT minter |
 | LogQL parser doesn't handle new syntax | parse error | 400 | Update logql parser |
 | TraceQL parser doesn't handle new syntax | parse error | 400 | Update traceql parser |
@@ -499,7 +499,7 @@ All resolved. Deferred:
 | Promql-parser crate has a bug | parse fails or wrong AST | Investigate; possibly patch upstream | Upstream issue |
 | Memory exhaustion on huge query | parser allocates | Process restart | Set per-process memory limit |
 | Concurrent query bypass (race) | not possible — each request independent | N/A | By design |
-| Audit log too large (every query) | BRAIN storage growth | Retention policy on `obs.*` rows | 30-day retention |
+| Audit log too large (every query) | memory storage growth | Retention policy on `obs.*` rows | 30-day retention |
 
 ---
 

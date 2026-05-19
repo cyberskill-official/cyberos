@@ -4,7 +4,7 @@ id: FR-AI-017
 title: "Per-tenant Redis response cache keyed by (tenant × redacted-prompt × model × persona); ≥30% hit-rate P0 target"
 module: AI
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 4
@@ -12,7 +12,7 @@ slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-008, FR-AI-010, FR-AI-011, FR-AI-014, FR-AI-018]
 depends_on: [FR-AI-008]
 blocks: [FR-AI-018]
@@ -44,7 +44,7 @@ new_files:
 modified_files:
   - services/ai-gateway/src/handlers/chat.rs                         # check cache before router::call_provider
   - services/ai-gateway/src/cost_ledger.rs                           # precheck reads cache_state to decide audit-row payload
-  - services/ai-gateway/src/brain_writer.rs                          # canonical builders include cache_state field
+  - services/ai-gateway/src/memory_writer.rs                          # canonical builders include cache_state field
   - services/ai-gateway/Cargo.toml                                   # redis@0.24, hex@0.4
 allowed_tools:
   - file_read: services/ai-gateway/**
@@ -71,7 +71,7 @@ sub_tasks:
   - "0.5h: Maximum payload size (1MB per entry; over-size responses NOT cached, log WARN)"
   - "0.5h: Per-tenant size cap (100MB) + LRU eviction via Redis maxmemory + allkeys-lru"
   - "0.5h: Hit-rate metric per tenant + sev-3 alarm at <30% over 7-day rolling window"
-  - "0.5h: ai.invocation BRAIN row carries cache_state field (FR-AI-002 §3 declares it)"
+  - "0.5h: ai.invocation memory row carries cache_state field (FR-AI-002 §3 declares it)"
   - "0.5h: Cache warming hook at boot (no-op for slice 4; documented for future)"
   - "0.5h: Redis-unreachable graceful degradation (lookup returns None; insert silently drops)"
   - "0.5h: Tests: 16 ACs covering hit/miss/cross-tenant/TTL/streaming-skip/failure-skip/property-test/workload-sim"
@@ -98,7 +98,7 @@ The AI Gateway service **SHOULD** cache successful LLM responses in Redis keyed 
 7. **MUST NOT** cache failed responses (any non-200 from provider). A retry-after-failure path that hit cache would mask transient provider errors as deterministic answers. The handler only calls `cache::insert` on the success path.
 8. **MUST NOT** cache responses larger than 1MB serialised (1,048,576 bytes). Over-size payloads bypass `cache::insert` with a WARN log + metric `ai_cache_oversize_skipped_total{tenant_id}`. The 1MB cap protects against pathological responses (huge JSON arrays from rerank) chewing through the per-tenant 100MB budget on a few entries.
 9. **MUST** call `cost_ledger::precheck` (FR-AI-001) BEFORE consulting the cache. Cache hits are still cost-checked but cost zero; the audit row carries `estimated_usd: 0`, `cache_state: hit`, `cache_lookup_latency_ms: <n>`. The audit-before-action invariant from FR-AI-001 §1 #6 applies — every call (cache hit OR miss) emits exactly one `ai.precheck` row before the gateway returns to the client.
-10. **MUST** emit `cache_state` field in both `ai.precheck` (FR-AI-001 modified) and `ai.invocation` (FR-AI-002 §3 already declares it) BRAIN rows. Values: `hit | miss | skipped | error`. `skipped` covers streaming + chat.long + oversize. `error` covers Redis unreachable / serialisation mismatch.
+10. **MUST** emit `cache_state` field in both `ai.precheck` (FR-AI-001 modified) and `ai.invocation` (FR-AI-002 §3 already declares it) memory rows. Values: `hit | miss | skipped | error`. `skipped` covers streaming + chat.long + oversize. `error` covers Redis unreachable / serialisation mismatch.
 11. **MUST** target ≥30% hit rate measured per tenant over a 7-day rolling window. Hit rates below 30% trigger OBS sev-3 alarm `ai_cache_hit_rate_low{tenant_id}`. The 30% floor is the break-even point for the $4 → $2.80/user/month cost target; falling below means the cache is contributing less value than its operational cost.
 12. **MUST** size-cap per tenant at 100MB via Redis `maxmemory-policy allkeys-lru` with key-pattern selection. The LRU eviction is Redis-managed (no app-level sweeper); operator dashboards show eviction rate per tenant via `ai_cache_evictions_total{tenant_id, reason=lru}`.
 13. **MUST** include a cache schema version (`v1` in slice 4) in the Redis key prefix AND in the serialised payload's first 4 bytes. A schema-version mismatch on lookup MUST be treated as a miss (NOT a deserialisation error). This allows future schema migrations (e.g., adding a `model_version` field to `CachedResponse`) without flushing the cache — old entries simply expire.
@@ -121,7 +121,7 @@ The AI Gateway service **SHOULD** cache successful LLM responses in Redis keyed 
 
 **Why hash of REDACTED prompt (§1 #1)?** Caching the raw prompt would create a parallel PII repository inside Redis — defeating FR-AI-011's redaction work. The redacted prompt (`<VN_CCCD_1>`-style placeholders replacing identifiers) is the legitimate cache key: it's what the LLM actually sees, and it's what determines whether two requests are functionally equivalent. Two callers passing different real CCCDs that get redacted to the same placeholder pattern will hit the same cache entry — and that's correct, because the LLM's output for both is identical.
 
-**Why per-tenant isolation (§1 #2)?** Multiple reasons converge here. (1) Tenant policies differ: tenant A might require ZDR; tenant B might allow non-ZDR — caching across them would cross the compliance boundary. (2) Persona handles differ: tenant A's `cuo-cpo@0.4.1` may produce different outputs from tenant B's `cuo-cpo@0.4.1` if downstream tools differ. (3) Audit-trail integrity: every cache hit is attributed to a tenant in the BRAIN row; cross-tenant reads would corrupt the attribution. The per-tenant prefix in the Redis key is a structural enforcement (not a runtime check) — even a code bug that miscalculated the key would still produce keys starting with the wrong tenant prefix, never reading the wrong tenant's data.
+**Why per-tenant isolation (§1 #2)?** Multiple reasons converge here. (1) Tenant policies differ: tenant A might require ZDR; tenant B might allow non-ZDR — caching across them would cross the compliance boundary. (2) Persona handles differ: tenant A's `cuo-cpo@0.4.1` may produce different outputs from tenant B's `cuo-cpo@0.4.1` if downstream tools differ. (3) Audit-trail integrity: every cache hit is attributed to a tenant in the memory row; cross-tenant reads would corrupt the attribution. The per-tenant prefix in the Redis key is a structural enforcement (not a runtime check) — even a code bug that miscalculated the key would still produce keys starting with the wrong tenant prefix, never reading the wrong tenant's data.
 
 **Why include persona_handle in the key (§1 #3)?** A persona is a system-prompt modifier — different personas produce different outputs from the same user prompt. Caching across personas would serve `cuo-cfo@0.4.1`'s answer to a `cuo-cto@0.4.1` request. Including the handle makes this impossible by construction. The DEC-082 decision was explicit: persona-version changes auto-invalidate cache; no operational sweeper needed.
 
@@ -133,7 +133,7 @@ The AI Gateway service **SHOULD** cache successful LLM responses in Redis keyed 
 
 **Why a 1MB per-entry cap (§1 #8)?** Pathological responses (huge JSON arrays from rerank, full-document embeddings) can be megabytes. A few such responses chew through the per-tenant 100MB budget. The 1MB cap is conservative — typical chat responses are 1-10KB; the cap only fires on outliers. The metric `ai_cache_oversize_skipped_total` lets operators investigate unusually-large responses (often a sign of a bug — e.g., an unbounded list response).
 
-**Why precheck BEFORE cache lookup (§1 #9)?** The cost-of-everything invariant says EVERY call goes through the gate. A cache hit is technically free in dollars but the audit row + persona check + ZDR check still apply — these are the compliance primitives. Skipping precheck on cache hits would create an "untracked call" path; the BRAIN audit chain would show fewer rows than actual calls. The cost is one extra precheck per call (~50ms) but the row count is honest.
+**Why precheck BEFORE cache lookup (§1 #9)?** The cost-of-everything invariant says EVERY call goes through the gate. A cache hit is technically free in dollars but the audit row + persona check + ZDR check still apply — these are the compliance primitives. Skipping precheck on cache hits would create an "untracked call" path; the memory audit chain would show fewer rows than actual calls. The cost is one extra precheck per call (~50ms) but the row count is honest.
 
 **Why a cache schema version (§1 #13)?** Cache entries are serialised `CachedResponse` structs. If we add a field to that struct (e.g., `model_version: String` for FR-AI-022), old entries deserialise as missing-field errors. Without a schema-version prefix, the deserialisation error path is brittle (might panic, might log, might silently miss). With a `v1` prefix, the lookup function checks the version first and treats mismatches as misses — clean miss-then-refresh behaviour. The `v1` prefix is in BOTH the Redis key (for KEYS-pattern compatibility) AND the payload's first 4 bytes (for serialisation defence).
 
@@ -392,7 +392,7 @@ async fn handle_chat(req: ChatCompleteRequest) -> Result<ChatCompleteResponse, A
         match cache::lookup(&key).await {
             CacheLookupOutcome::Hit(cr, lookup_ms) => {
                 cost_ledger::reconcile_hit(&hold, lookup_ms).await?;
-                brain_writer::emit(canonical::invocation_cache_hit(&req, &cr, lookup_ms)).await?;
+                memory_writer::emit(canonical::invocation_cache_hit(&req, &cr, lookup_ms)).await?;
                 return Ok(build_response_from_cached(*cr));
             }
             CacheLookupOutcome::Miss
@@ -705,7 +705,7 @@ pub mod canonical {
 
 - **FR-AI-008** — `router::call_provider` returns the `ProviderResponse` shape consumed by `cache::insert`.
 - **FR-AI-001** — `cost_ledger::precheck` runs before cache lookup; `cost_ledger::reconcile_hit` zero-cost path.
-- **FR-AI-002** — `ai.invocation` BRAIN row schema declares `cache_state` field; this FR populates it.
+- **FR-AI-002** — `ai.invocation` memory row schema declares `cache_state` field; this FR populates it.
 - **FR-AI-011** — Redacted prompt is the cache-key input. The redaction MUST run BEFORE key derivation.
 - **FR-AI-014** — Persona handle (`<id>@<version>`) is part of the cache key. Persona changes auto-invalidate by key divergence.
 - **FR-AI-018 (downstream)** — Cross-tenant cache leak test; consumes this FR's per-tenant isolation invariant as its property under test.

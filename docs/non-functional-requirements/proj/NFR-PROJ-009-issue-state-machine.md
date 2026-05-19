@@ -16,7 +16,7 @@ related_frs: [FR-PROJ-004, FR-PROJ-001]
 
 1. Issue state transitions **MUST** conform to the FSM declared in `modules/proj/state-machine.yaml`: states + allowed transitions + required roles.
 2. Illegal transition attempts **MUST** return `E_ILLEGAL_TRANSITION` with `data.allowed_next_states = [...]`.
-3. Every state transition **MUST** emit a BRAIN audit row capturing `{from, to, actor_id, transition_at, reason?}`.
+3. Every state transition **MUST** emit a memory audit row capturing `{from, to, actor_id, transition_at, reason?}`.
 4. The FSM definition **MUST** be the source of truth; UI buttons + API endpoints derive their behaviour from it.
 5. FSM changes **MUST** be reviewed via PR; deployment requires migration plan for in-flight issues.
 

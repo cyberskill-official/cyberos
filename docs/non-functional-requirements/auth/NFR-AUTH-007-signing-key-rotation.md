@@ -16,7 +16,7 @@ related_frs: [FR-AUTH-004]
 
 1. The AUTH signing-key rotation procedure **MUST** ensure at least one key with `status=active` is present in JWKS at every moment during rotation — there is **never** a window where JWKS is empty or has no active key.
 2. The rotation procedure **MUST** mark the previous key `status=retired` (not deleted); retired keys remain in JWKS and are honored for verify (NFR-AUTH-003) for exactly 7 days post-rotation.
-3. After the 7-day window, the retired key **MUST** be hard-deleted from JWKS and from the database. The deletion **MUST** be audited as `auth.signing_key.deleted` in BRAIN.
+3. After the 7-day window, the retired key **MUST** be hard-deleted from JWKS and from the database. The deletion **MUST** be audited as `auth.signing_key.deleted` in memory.
 4. The rotation **MUST** be scriptable via `cyberos-auth rotate-signing-key` (the bootstrap CLI surface from FR-AUTH-006).
 5. Two simultaneous rotations within 7 days **MUST NOT** be permitted — the CLI rejects with "previous rotation still in 7-day grace window."
 
@@ -28,7 +28,7 @@ A key rotation that creates an empty-JWKS window breaks every active token (mass
 
 - Gauge `auth_signing_keys_active_count` — should always be ≥ 1. Sev-0 alarm on 0.
 - Gauge `auth_signing_keys_retired_count` — typically 0-1; sev-3 if > 2 (failed deletions piling up).
-- BRAIN audit query `view kind=auth.signing_key.{created,retired,deleted}` — every rotation produces a triple.
+- memory audit query `view kind=auth.signing_key.{created,retired,deleted}` — every rotation produces a triple.
 
 ## §4 — Verification
 

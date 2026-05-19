@@ -3,7 +3,7 @@ id: FR-AUTH-109
 title: "AUTH stub → full migration enforcer — 30-day grace window + cutover timestamp + rejection metric + per-tenant override"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P3
 milestone: P3 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AUTH-108, FR-AI-003, FR-BRAIN-101, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-AUTH-004, FR-AUTH-101, FR-AUTH-108, FR-AI-003, FR-MEMORY-101, FR-OBS-007]
 depends_on: [FR-AUTH-101]
 blocks: []
 
@@ -22,7 +22,7 @@ source_decisions:
   - DEC-440 (grace window 30 days from FR-AUTH-101 ship date; configurable per tenant via tenant policy override; minimum 7 days; maximum 90 days)
   - DEC-441 (stub-era tokens are FR-AUTH-004 tokens issued before FR-AUTH-101 ship — they lack the `rbac_v` claim entirely; presence of `rbac_v` claim = post-FR-AUTH-101 token)
   - DEC-442 (cutover_at timestamp is a global per-tenant config row in `auth_migration_state` table; UPDATE-able by root-admin only; immutable post-grace-expiry)
-  - DEC-443 (BRAIN audit kinds: auth.stub_token_accepted, auth.stub_token_rejected, auth.grace_window_extended, auth.cutover_completed)
+  - DEC-443 (memory audit kinds: auth.stub_token_accepted, auth.stub_token_rejected, auth.grace_window_extended, auth.cutover_completed)
   - DEC-444 (rejection metric `auth_stub_token_rejected_total{tenant_id}` — sev-2 alarm at sustained > 100/h indicates many users haven't refreshed)
   - DEC-445 (per-tenant override via `POST /v1/auth/migration/extend-grace` — caller MUST have root-admin role; extension up to 60 additional days; one extension per tenant; second extension → 409 already_extended)
   - DEC-446 (REVOKE UPDATE, DELETE on auth_migration_state from cyberos_app — append-only at SQL grant for cutover history; UPDATE allowed only via inv_provisioner role)
@@ -41,7 +41,7 @@ new_files:
   - services/auth/src/migration/grace_window.rs           # is_in_grace_window + days_remaining
   - services/auth/src/migration/verifier_hook.rs          # hook into FR-AUTH-004 verifier to reject post-grace stub tokens
   - services/auth/src/migration/refresh_hook.rs           # hook into FR-AUTH-004 refresh to inject rbac_v
-  - services/auth/src/migration/audit.rs                  # 4 BRAIN row builders
+  - services/auth/src/migration/audit.rs                  # 4 memory row builders
   - services/auth/src/handlers/migration.rs               # GET /preview + POST /extend-grace
   - services/auth/tests/migration_state_test.rs
   - services/auth/tests/grace_window_calc_test.rs
@@ -80,7 +80,7 @@ sub_tasks:
   - "0.4h: grace_window.rs — calc + days_remaining"
   - "0.5h: verifier_hook.rs — reject post-grace stubs"
   - "0.5h: refresh_hook.rs — inject rbac_v on refresh"
-  - "0.4h: audit.rs — 4 BRAIN row builders"
+  - "0.4h: audit.rs — 4 memory row builders"
   - "0.5h: handlers/migration.rs — preview + extend-grace"
   - "1.6h: tests — 10 test files"
 
@@ -102,8 +102,8 @@ The AUTH service **MUST** enforce the FR-AUTH-101 stub → full migration via th
 5. **MUST** ship the verifier hook (per DEC-442 + DEC-448). When FR-AUTH-004's verifier validates a JWT:
     - If token's `rbac_v` claim is present → continue normal verification.
     - If `rbac_v` is absent → look up `auth_migration_state` for the token's `tid` claim.
-    - If `cutover_at > now()` → accept; emit `auth.stub_token_accepted` BRAIN row (sampled 1%).
-    - If `cutover_at <= now()` → reject with 401 + body per DEC-448; emit `auth.stub_token_rejected` BRAIN row.
+    - If `cutover_at > now()` → accept; emit `auth.stub_token_accepted` memory row (sampled 1%).
+    - If `cutover_at <= now()` → reject with 401 + body per DEC-448; emit `auth.stub_token_rejected` memory row.
 
 6. **MUST** ship the refresh hook (per DEC-449). When FR-AUTH-004's refresh path issues a new access token:
     - If prior token lacked `rbac_v` → log the refresh in `auth_token_refresh_log` with `prior_rbac_v_present=false`; new token MUST include `rbac_v` at current value.
@@ -113,21 +113,21 @@ The AUTH service **MUST** enforce the FR-AUTH-101 stub → full migration via th
     - Tenant's current status is `grace_active` (extended → 409 already_extended).
     - additional_days in [1, 60].
     - reason non-empty.
-   On success: UPDATE `auth_migration_state` SET cutover_at = cutover_at + additional_days, status = `grace_extended`, grace_extended_at = now(), grace_extension_reason = reason, extension_count = 1. Emit `auth.grace_window_extended` BRAIN row.
+   On success: UPDATE `auth_migration_state` SET cutover_at = cutover_at + additional_days, status = `grace_extended`, grace_extended_at = now(), grace_extension_reason = reason, extension_count = 1. Emit `auth.grace_window_extended` memory row.
 
 8. **MUST** ship `GET /v1/auth/migration/preview` returning `{tenant_id, cutover_at, status, days_remaining, stub_tokens_accepted_count_24h, stub_tokens_rejected_count_24h, refreshed_count_24h, extension_count, can_extend: bool}`. Caller MUST have role `root-admin` per FR-AUTH-101 OR `tenant-admin` (can see their own tenant's preview).
 
 9. **MUST** ensure cutover_at is immutable post-grace-expiry (per DEC-442). A `BEFORE UPDATE` trigger on `auth_migration_state` rejects mutation of `cutover_at` when `status = 'cutover_completed'`. Cutover transition (grace_active → cutover_completed) happens automatically when verifier observes `cutover_at <= now()` on first request; the trigger UPDATEs status atomically.
 
-10. **MUST** transition status `grace_active` (or `grace_extended`) → `cutover_completed` exactly once per tenant — the first verifier request after `cutover_at <= now()`. Emit `auth.cutover_completed` BRAIN row.
+10. **MUST** transition status `grace_active` (or `grace_extended`) → `cutover_completed` exactly once per tenant — the first verifier request after `cutover_at <= now()`. Emit `auth.cutover_completed` memory row.
 
-11. **MUST** emit BRAIN audit rows for 4 kinds (per DEC-443):
+11. **MUST** emit memory audit rows for 4 kinds (per DEC-443):
     - `auth.stub_token_accepted` — sampled 1% during grace; 100% near grace end (last 24h).
     - `auth.stub_token_rejected` — every rejection; carries `tenant_id`, `subject_id_hash16`, `cutover_at`, `now`.
     - `auth.grace_window_extended` — every extension; carries `tenant_id`, `prior_cutover_at`, `new_cutover_at`, `additional_days`, `reason_scrubbed`, `extended_by_subject_id_hash16`.
     - `auth.cutover_completed` — single emission per tenant on transition; carries `tenant_id`, `final_cutover_at`, `total_stub_accepted`, `total_stub_rejected`.
 
-12. **MUST** PII-scrub `grace_extension_reason` via FR-BRAIN-111 before chain commit.
+12. **MUST** PII-scrub `grace_extension_reason` via FR-MEMORY-111 before chain commit.
 
 13. **MUST** complete the verifier hook in ≤ 5 ms p99 (in-memory state cache; DB read only on cache miss). The verifier hook is on the hot path of every JWT verification — must be fast.
 
@@ -195,7 +195,7 @@ The AUTH service **MUST** enforce the FR-AUTH-101 stub → full migration via th
 
 **Why `extension_count` bounded at 1 (DEC-445)?** SQL CHECK enforces; second extension attempt → 409. Hard cap.
 
-**Why PII-scrub `grace_extension_reason` (§1 #12)?** Operator-supplied text may mention specific clients or stuck-user identifiers. Scrubbed in BRAIN chain; raw in tenant-scoped Postgres.
+**Why PII-scrub `grace_extension_reason` (§1 #12)?** Operator-supplied text may mention specific clients or stuck-user identifiers. Scrubbed in memory chain; raw in tenant-scoped Postgres.
 
 **Why `auth.cutover_completed` once per tenant (§1 #22, §1 #10)?** Idempotent state transition. Trigger predicate `status != 'cutover_completed'` ensures single emission. Subsequent rejections continue to emit `auth.stub_token_rejected` for each event.
 
@@ -500,7 +500,7 @@ pub async fn extend_grace(
 1. **Migration state seeded on FR-AUTH-101 ship** — every existing tenant gets cutover_at = now+30d.
 2. **New tenants seeded on provisioning** — cutover_at = provision_time + 30d via FR-TEN-001 hook.
 3. **Stub token accepted during grace** — verifier returns OK; `auth.stub_token_accepted` row sampled 1%.
-4. **Stub token rejected post-grace** — 401 with body per DEC-448; `auth.stub_token_rejected` BRAIN row.
+4. **Stub token rejected post-grace** — 401 with body per DEC-448; `auth.stub_token_rejected` memory row.
 5. **rbac_v injected on refresh** — refreshed token includes rbac_v; refresh log row with `prior_rbac_v_present=false`.
 6. **Extension by root-admin** — 200; status → grace_extended; extension_count=1.
 7. **Extension by non-root-admin** → 403.
@@ -520,7 +520,7 @@ pub async fn extend_grace(
 21. **Verifier hook < 5ms p99** — perf test.
 22. **OTel span `auth.migration.verify_stub` emitted** with outcome.
 23. **Counter `auth_stub_token_rejected_total{tenant_id}` increments** on every rejection.
-24. **PII-scrubbed reason in BRAIN row**.
+24. **PII-scrubbed reason in memory row**.
 25. **Env-driven default grace days** — AUTH_MIGRATION_DEFAULT_GRACE_DAYS=14 → new tenants get 14d.
 26. **Env value < 7 or > 90 rejected at startup** — service refuses.
 27. **`GET /migration/refresh-events` returns log rows** — root-admin only.
@@ -537,9 +537,9 @@ async fn stub_token_accepted_with_5_days_remaining(ctx: TestCtx) {
     let stub_token = ctx.issue_stub_token_for(tenant).await;  // no rbac_v
     let resp = ctx.get("/v1/some/protected-endpoint").bearer(&stub_token).await;
     assert_eq!(resp.status(), 200);
-    let rows = ctx.brain_audit_rows("auth.stub_token_accepted").await;
+    let rows = ctx.memory_audit_rows("auth.stub_token_accepted").await;
     // 1% sampling — may or may not have the row; assert no rejection
-    let rejections = ctx.brain_audit_rows("auth.stub_token_rejected").await;
+    let rejections = ctx.memory_audit_rows("auth.stub_token_rejected").await;
     assert_eq!(rejections.len(), 0);
 }
 
@@ -550,7 +550,7 @@ async fn stub_token_accepted_100pct_in_last_24h(ctx: TestCtx) {
         let stub_token = ctx.issue_stub_token_for(tenant).await;
         let _ = ctx.get("/v1/some/protected-endpoint").bearer(&stub_token).await;
     }
-    let rows = ctx.brain_audit_rows("auth.stub_token_accepted").await;
+    let rows = ctx.memory_audit_rows("auth.stub_token_accepted").await;
     assert_eq!(rows.len(), 10);  // 100% sampling near end
 }
 ```
@@ -578,7 +578,7 @@ async fn first_post_grace_request_triggers_cutover(ctx: TestCtx) {
     tokio::time::sleep(Duration::from_millis(100)).await;  // async transition
     let state = ctx.fetch_migration_state(tenant).await;
     assert_eq!(state.status, "cutover_completed");
-    let rows = ctx.brain_audit_rows("auth.cutover_completed").await;
+    let rows = ctx.memory_audit_rows("auth.cutover_completed").await;
     assert_eq!(rows.len(), 1);
 }
 ```
@@ -653,7 +653,7 @@ async fn cutover_backward_forbidden(pool: sqlx::PgPool) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 4 BRAIN row builders follow the canonical pattern.)
+(API contract above is the skeleton; 4 memory row builders follow the canonical pattern.)
 
 ---
 
@@ -666,8 +666,8 @@ async fn cutover_backward_forbidden(pool: sqlx::PgPool) {
 
 **Cross-module:**
 - **FR-AUTH-004** — JWT verifier + refresh path (this FR hooks both).
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrub of grace_extension_reason.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrub of grace_extension_reason.
 - **FR-OBS-007** — sev-2 alarm on > 100/h rejections.
 - **FR-TEN-001** — provisioning hook that seeds per-tenant cutover_at.
 
@@ -711,7 +711,7 @@ async fn cutover_backward_forbidden(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.4 — auth.stub_token_rejected BRAIN row
+### 8.4 — auth.stub_token_rejected memory row
 
 ```json
 {
@@ -724,7 +724,7 @@ async fn cutover_backward_forbidden(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.5 — auth.grace_window_extended BRAIN row
+### 8.5 — auth.grace_window_extended memory row
 
 ```json
 {
@@ -739,7 +739,7 @@ async fn cutover_backward_forbidden(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.6 — auth.cutover_completed BRAIN row
+### 8.6 — auth.cutover_completed memory row
 
 ```json
 {
@@ -785,7 +785,7 @@ All other questions resolved.
 | Refresh log UPDATE/DELETE from app | SQL grant | permission denied | Designed |
 | Migration state UPDATE from app | SQL grant | permission denied | Designed |
 | Env grace days < 7 or > 90 | startup check | service refuses | Fix env |
-| BRAIN audit emit fails | tx rollback | 500; verifier retries | brain_writer health |
+| memory audit emit fails | tx rollback | 500; verifier retries | memory_writer health |
 | Preview can_extend wrong | unit test | CI fails | Fix logic |
 | Refresh hook fails to inject rbac_v | unit test | CI fails | Fix hook |
 | Cache invalidation race | next refresh observes | Brief stale | Designed |

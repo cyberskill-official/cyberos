@@ -3,7 +3,7 @@ id: FR-AUTH-006
 title: "cyberos-auth bootstrap CLI: tenant 0 + root-admin + initial signing key + sweepers + idempotency-table cleanup"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: D
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005]
 depends_on: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-004]
 blocks: []
@@ -44,7 +44,7 @@ allowed_tools:
 disallowed_tools:
   - allow `--reset` in production environment without `--force-prod-reset` (per §1 #11)
   - emit plaintext password in CLI output OR audit row (per §1 #5)
-  - skip BRAIN audit row on bootstrap success (per §1 #4)
+  - skip memory audit row on bootstrap success (per §1 #4)
   - skip initial signing key creation on bootstrap (per §1 #6 — without it, FR-AUTH-004 can't issue tokens)
 
 effort_hours: 6
@@ -55,7 +55,7 @@ sub_tasks:
   - "0.5h: rotate-keys subcommand (calls FR-AUTH-004's rotation::generate_new_signing_key)"
   - "1.0h: sweepers subcommand (deletes expired sessions + idempotency rows + retired keys)"
   - "0.5h: Password input via Zeroizing<String> + interactive password masking"
-  - "0.5h: canonical::bootstrap_completed BRAIN audit row"
+  - "0.5h: canonical::bootstrap_completed memory audit row"
   - "0.5h: Cron-friendly exit codes (0=ok, 1=user-error, 2=already-initialised, 3=destructive-without-confirm)"
   - "1.0h: Tests — fresh-bootstrap + idempotent-rerun + reset-with-confirm + reset-blocked-in-prod + sweepers + rotate-keys"
 risk_if_skipped: "Bootstrap is the chicken-and-egg solver: tenant 0 + root-admin must exist before any other tenant or subject can be created. Without this CLI, the only paths to bootstrap are manual SQL (error-prone, no audit, no signing key) OR a privileged web UI (security regression). FR-AUTH-004 needs the initial signing key to issue tokens; FR-AUTH-005 needs sweepers to prevent storage growth. All three sweep targets (sessions, idempotency, signing-keys) grow unbounded without periodic deletion."
@@ -68,8 +68,8 @@ The AUTH service **MUST** ship a `cyberos-auth` CLI binary providing bootstrap +
 1. **MUST** support `bootstrap` to initialise tenant 0 + root-admin subject + initial signing key in a single Postgres transaction. Tenant 0 has UUID `00000000-0000-0000-0000-000000000000` (nil UUID) and slug `"root"`.
 2. **MUST** prompt for root-admin email + password interactively OR accept via env vars `CYBEROS_BOOTSTRAP_EMAIL` and `CYBEROS_BOOTSTRAP_PASSWORD` (for CI / Terraform). Email must pass FR-AUTH-002 §1 #2 validation; password must pass §1 #4 complexity rules. Interactive password input is masked via `rpassword` crate.
 3. **MUST** use bcrypt cost 12 for password hashing (matches FR-AUTH-002 §1 #3).
-4. **MUST** emit BRAIN row `auth.bootstrap_completed` with payload: `tenant_0_id`, `root_admin_subject_id`, `initial_signing_key_kid`, `bootstrap_environment` (development | staging | production), `bootstrapped_by` (system user running CLI). The BRAIN write is in the same transaction; rollback rolls back both.
-5. **MUST NOT** echo plaintext password in CLI output, BRAIN row, OR any logs. The `Zeroizing<String>` discipline from FR-AUTH-002 applies; the password is hashed and dropped immediately.
+4. **MUST** emit memory row `auth.bootstrap_completed` with payload: `tenant_0_id`, `root_admin_subject_id`, `initial_signing_key_kid`, `bootstrap_environment` (development | staging | production), `bootstrapped_by` (system user running CLI). The memory write is in the same transaction; rollback rolls back both.
+5. **MUST NOT** echo plaintext password in CLI output, memory row, OR any logs. The `Zeroizing<String>` discipline from FR-AUTH-002 applies; the password is hashed and dropped immediately.
 6. **MUST** create the initial RSA-2048 signing key during bootstrap by invoking FR-AUTH-004's `rotation::generate_new_signing_key`. Without this, FR-AUTH-004's `/v1/auth/token` cannot issue tokens (no active key exists). The kid is recorded in the bootstrap audit row.
 7. **MUST** be idempotent: running `cyberos-auth bootstrap` after success exits with code 5 (`AlreadyInitialised`) and message `"Tenant 0 + root-admin + signing key already exist. Use --reset --confirm to recreate (destructive)."`. The check is `SELECT EXISTS FROM tenants WHERE id = nil_uuid`.
 8. **MUST** support `cyberos-auth rotate-keys` to manually trigger FR-AUTH-004's quarterly rotation (the same function that the cron runs). Useful for emergency rotation (suspected key compromise).
@@ -84,13 +84,13 @@ The AUTH service **MUST** ship a `cyberos-auth` CLI binary providing bootstrap +
     - `0` Ok
     - `1` UserError (bad args, validation failure)
     - `2` AuthFailed (reserved — not raised by bootstrap, which is pre-auth)
-    - `3` RemoteUnreachable (DB or BRAIN)
+    - `3` RemoteUnreachable (DB or memory)
     - `4` DestructiveWithoutConfirm OR ProductionResetBlocked
     - `5` AlreadyInitialised (bootstrap rerun — distinct from UserError so CI scripts can detect "already done, no action needed" vs "bad input, fix the call")
     - `6` SchemaViolation (password complexity, email format)
     - `7` InternalError
    These numerical values are a stable cross-CLI contract; any module-specific extensions begin at `200` (AUTH module range).
-13. **SHOULD** print summary to stdout on success: tenant 0 id, root-admin id (NOT email — privacy; operator knows what they typed), initial signing key kid, BRAIN audit row request_id.
+13. **SHOULD** print summary to stdout on success: tenant 0 id, root-admin id (NOT email — privacy; operator knows what they typed), initial signing key kid, memory audit row request_id.
 14. **SHOULD** emit OTel span `auth.cli.bootstrap` (and `auth.cli.sweepers`, `auth.cli.rotate_keys`) with attributes `subcommand`, `outcome`, `deployment_tier`, `operator_id` (if from env, else `"interactive"`).
 
 ---
@@ -195,7 +195,7 @@ pub async fn run(args: BootstrapArgs, pool: &PgPool) -> Result<BootstrapResult, 
 
     let request_id = format!("bootstrap_{}", ulid::Ulid::new());
     let bootstrapped_by = std::env::var("USER").unwrap_or_else(|_| "unknown".into());
-    brain::emit_in_tx(&mut tx, brain::canonical::bootstrap_completed(
+    memory::emit_in_tx(&mut tx, memory::canonical::bootstrap_completed(
         tenant_0_id, subject_id, &kid, &env_tier, &bootstrapped_by, &request_id,
     )).await?;
 
@@ -234,10 +234,10 @@ pub async fn run(pool: &PgPool) -> Result<String, anyhow::Error> {
 ## §4 — Acceptance criteria
 
 1. **Fresh DB: bootstrap succeeds** — Tenant 0 created with nil UUID + slug `"root"` + name `"Root Tenant"`; root-admin subject created with role `["root-admin"]`; initial signing key created with status `active`.
-2. **BRAIN row emitted** — `auth.bootstrap_completed` row in chain with all 6 payload fields populated.
+2. **memory row emitted** — `auth.bootstrap_completed` row in chain with all 6 payload fields populated.
 3. **Re-run after success: exit 5** — Output includes `"already initialised"`; no second tenant 0 created.
 4. **`--reset` without `--confirm` exit 4** — Output requires both flags.
-5. **`--reset --confirm` in non-prod recreates** — Drops + recreates tenant 0; new signing key kid; new BRAIN row.
+5. **`--reset --confirm` in non-prod recreates** — Drops + recreates tenant 0; new signing key kid; new memory row.
 6. **`--reset --confirm` in production WITHOUT `--force-prod-reset` exit 4** — Production-reset blocked.
 7. **`--reset --confirm --force-prod-reset` in production with interactive N exit 4** — User typed N at prompt.
 8. **`--reset --confirm --force-prod-reset` in production with interactive Y succeeds** — Resets + requires tty.
@@ -245,7 +245,7 @@ pub async fn run(pool: &PgPool) -> Result<String, anyhow::Error> {
 10. **Email from env var `CYBEROS_BOOTSTRAP_EMAIL`** — CI path works without prompting.
 11. **Password from env var `CYBEROS_BOOTSTRAP_PASSWORD` with `--password-from-env`** — CI path works.
 12. **Interactive password input is masked** — `rpassword` shows no characters.
-13. **Plaintext password NOT in stdout, BRAIN row, OR audit log**.
+13. **Plaintext password NOT in stdout, memory row, OR audit log**.
 14. **Initial signing key in JWKS** — After bootstrap, `/.well-known/jwks.json` returns the new kid.
 15. **`cyberos-auth rotate-keys` generates new active key** — Prior active becomes retiring; new key is active.
 16. **`cyberos-auth sweepers` deletes expired rows** — Reports `{sessions: N1, idempotency: N2, signing_keys: N3}`.
@@ -269,7 +269,7 @@ async fn fresh_bootstrap_creates_tenant_0_and_root_admin() {
     }, &pool).await.unwrap();
 
     assert_eq!(result.tenant_0_id, Uuid::nil());
-    assert!(brain_test_helper::has_row("auth.bootstrap_completed", &result.request_id).await);
+    assert!(memory_test_helper::has_row("auth.bootstrap_completed", &result.request_id).await);
 
     let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM signing_keys WHERE status='active'").fetch_one(&pool).await.unwrap();
     assert_eq!(count, 1);
@@ -324,7 +324,7 @@ async fn sweepers_deletes_expired() {
 async fn bootstrap_audit_row_has_no_password() {
     let pool = test_pool_blank().await;
     let result = bootstrap::run(default_args_env(), &pool).await.unwrap();
-    let row = brain_test_helper::find_row("auth.bootstrap_completed", &result.request_id).unwrap();
+    let row = memory_test_helper::find_row("auth.bootstrap_completed", &result.request_id).unwrap();
     let s = serde_json::to_string(&row.payload).unwrap();
     assert!(!s.contains("CorrectHorse"));   // the test password
 }
@@ -479,7 +479,7 @@ All resolved. Deferred:
 | --reset in production without --force-prod-reset | env tier check | Exit 4 | Op adds flag (deliberate) |
 | --reset in production with non-tty | tty check | Exit 4 | Op runs from interactive shell |
 | --reset in production interactive N | Y/N prompt | Exit 4 | Op confirmed cancellation |
-| BRAIN unavailable | brain_writer error | tx rollback; exit 3 | Op fixes BRAIN; rerun |
+| memory unavailable | memory_writer error | tx rollback; exit 3 | Op fixes memory; rerun |
 | DB constraint violation | sqlx error | tx rollback; exit 7 | Op investigates |
 | Password complexity fails | password.rs check | Exit 6 + reasons | Op picks stronger |
 | Email validation fails | regex | Exit 6 | Op fixes email |
@@ -489,7 +489,7 @@ All resolved. Deferred:
 | Sweepers find nothing | normal | Exit 0 with zeroes | By design |
 | Rotate-keys fails (DB error) | sqlx | Exit 7 | Op investigates |
 | Plaintext password in stdout (regression) | §5 grep test | PR blocked | By design |
-| Plaintext password in BRAIN row (regression) | §5 audit-row inspection | PR blocked | By design |
+| Plaintext password in memory row (regression) | §5 audit-row inspection | PR blocked | By design |
 
 ---
 

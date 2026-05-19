@@ -1,6 +1,6 @@
 ---
 id: FR-INV-005
-title: "INV VietQR / Napas247 webhook handler — HMAC-SHA256 signature + idempotent receipt insert + reference memo parsing + append-only ledger + BRAIN audit"
+title: "INV VietQR / Napas247 webhook handler — HMAC-SHA256 signature + idempotent receipt insert + reference memo parsing + append-only ledger + memory audit"
 module: INV
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-INV-001, FR-INV-006, FR-REW-009, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-INV-001, FR-INV-006, FR-REW-009, FR-OBS-007]
 depends_on: [FR-AUTH-101]
 blocks: [FR-INV-006, FR-TEN-102, FR-REW-009, FR-ESOP-004]
 
@@ -29,11 +29,11 @@ source_decisions:
   - DEC-385 (currency hard-coded to VND for this handler; multi-currency webhooks route to FR-INV-003 Stripe / FR-INV-004 Wise)
   - DEC-386 (amount stored as BIGINT đồng — VND has no minor unit so 1 đồng = 1 minor; FLOAT forbidden per AUTHORING.md rule 11)
   - DEC-387 (webhook URL is per-tenant — `https://api.cyberos.world/v1/inv/webhooks/vietqr/<tenant_slug>` so Napas247 routes correctly without cross-tenant body inspection)
-  - DEC-388 (BRAIN audit kinds: inv.payment_received, inv.webhook_rejected, inv.payment_matched_to_invoice, inv.payment_unmatched, inv.duplicate_webhook_received)
+  - DEC-388 (memory audit kinds: inv.payment_received, inv.webhook_rejected, inv.payment_matched_to_invoice, inv.payment_unmatched, inv.duplicate_webhook_received)
   - DEC-389 (replay window: HMAC payload includes `ts` field; reject webhooks with `ts` more than 5 minutes off server time — prevents replay attacks)
   - DEC-390 (acknowledgement to Napas247 within 5 seconds — webhook handler is fast-path; expensive matching happens async in FR-INV-006)
   - DEC-391 (sev-2 alarm on > 10 webhook rejections per tenant per hour — suggests HMAC secret rotation issue or attack)
-  - PDPL Art. 13 (data minimisation — sender_name/account is PII; scrubbed in BRAIN chain)
+  - PDPL Art. 13 (data minimisation — sender_name/account is PII; scrubbed in memory chain)
   - Decree 53/2022 (VN data localisation — VN-tenant payment data residency-pinned per FR-AI-016)
   - Napas247 webhook spec (proprietary; not publicly versioned)
 
@@ -48,9 +48,9 @@ new_files:
   - services/inv/src/parser/memo.rs                             # transfer_memo → invoice_id parser (regex)
   - services/inv/src/repo/payment_receipts.rs                   # append-only writer
   - services/inv/src/repo/webhook_secrets.rs                    # secret CRUD + rotation
-  - services/inv/src/audit/inv_events.rs                        # canonical inv.* BRAIN row builders (5 kinds for this FR)
+  - services/inv/src/audit/inv_events.rs                        # canonical inv.* memory row builders (5 kinds for this FR)
   - services/inv/src/types.rs                                   # PaymentReceipt, BankCode (15) enum, ReceiptSource enum
-  - services/inv/tests/vietqr_webhook_happy_test.rs             # valid HMAC + new TXN → 200 + payment_receipts row + BRAIN row
+  - services/inv/tests/vietqr_webhook_happy_test.rs             # valid HMAC + new TXN → 200 + payment_receipts row + memory row
   - services/inv/tests/vietqr_webhook_hmac_test.rs              # invalid signature → 401 + inv.webhook_rejected
   - services/inv/tests/vietqr_webhook_idempotent_test.rs        # duplicate TXN ref → 200 + no duplicate row
   - services/inv/tests/vietqr_webhook_replay_test.rs            # ts > 5min old → 401
@@ -60,7 +60,7 @@ new_files:
   - services/inv/tests/per_tenant_url_test.rs                   # wrong tenant_slug → 404
   - services/inv/tests/vnd_only_test.rs                         # non-VND currency → 400 currency_unsupported
   - services/inv/tests/webhook_perf_test.rs                     # ack within 5s p95
-  - services/inv/tests/audit_emission_test.rs                   # every path emits correct BRAIN kind
+  - services/inv/tests/audit_emission_test.rs                   # every path emits correct memory kind
 modified_files:
   - services/auth/src/rls/templates.rs                          # add payment_receipts + webhook_secrets to TENANT_SCOPED_TABLES
 
@@ -117,29 +117,29 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
     - Checks replay window per §1 #9.
     - Checks idempotency per §1 #10.
     - Parses transfer_memo for invoice reference per §1 #11.
-    - INSERT into payment_receipts (atomic with BRAIN audit emit).
+    - INSERT into payment_receipts (atomic with memory audit emit).
     - Returns 200 OK within 5s p95 (per DEC-390).
 
 8. **MUST** verify HMAC-SHA256 signature (per DEC-380). Signature in header `X-Napas-Signature: hex(HMAC-SHA256(secret, body))`. The handler:
     - Loads per-tenant active secret from `webhook_secrets` (KMS-decrypted).
     - Computes HMAC-SHA256 over the raw body bytes (NOT the parsed JSON — preserves byte-for-byte).
     - Compares constant-time via `subtle::ConstantTimeEq`.
-    - Mismatch → 401 `signature_invalid` + emit `inv.webhook_rejected` BRAIN row with `reason='signature_invalid'`.
+    - Mismatch → 401 `signature_invalid` + emit `inv.webhook_rejected` memory row with `reason='signature_invalid'`.
 
 9. **MUST** validate replay window (per DEC-389). The body MUST contain a `ts` field (ISO-8601 UTC). The handler checks `|server_now - ts| ≤ 5 minutes`. Outside window → 401 `webhook_expired` + emit `inv.webhook_rejected` with `reason='replay_window_exceeded'`.
 
-10. **MUST** enforce idempotency on `transaction_reference` (per DEC-381). Lookup `payment_receipts WHERE tenant_id=$1 AND transaction_reference=$2`. If exists → 200 OK with existing receipt id; NO new row; emit `inv.duplicate_webhook_received` BRAIN row (sev-3 informational). Never double-credit.
+10. **MUST** enforce idempotency on `transaction_reference` (per DEC-381). Lookup `payment_receipts WHERE tenant_id=$1 AND transaction_reference=$2`. If exists → 200 OK with existing receipt id; NO new row; emit `inv.duplicate_webhook_received` memory row (sev-3 informational). Never double-credit.
 
 11. **MUST** parse `transfer_memo` for invoice reference (per DEC-383). Regex: `^(HD|INV)(\d{6,12})\b`. Match → `invoice_id` looked up via `invoices WHERE tenant_id=$1 AND invoice_number=$2`; if invoice exists in tenant scope, set `invoice_id` column. No match OR invoice not found → `invoice_id = NULL` (FR-INV-006 cash application handles later).
 
-12. **MUST** emit BRAIN audit rows on every webhook outcome (per DEC-388):
+12. **MUST** emit memory audit rows on every webhook outcome (per DEC-388):
     - `inv.payment_received` — happy path; carries `{receipt_id, tenant_id, bank_code, amount_minor, currency, transaction_reference, transfer_memo_scrubbed, invoice_id, ts_ns}`.
     - `inv.webhook_rejected` — HMAC fail / replay window / parse error; carries `{tenant_id, reason, source_ip_hash16, payload_sha256, ts_ns}`.
     - `inv.payment_matched_to_invoice` — when memo parser matches an invoice; carries `{receipt_id, invoice_id, matched_via='memo_parser', ts_ns}`.
     - `inv.payment_unmatched` — when memo parser yields no invoice; carries `{receipt_id, transfer_memo_scrubbed, ts_ns}`.
     - `inv.duplicate_webhook_received` — idempotency hit; sev-3.
 
-13. **MUST** PII-scrub `sender_account`, `sender_name`, `transfer_memo` via FR-BRAIN-111 BEFORE chain commit. Raw values retained in tenant-scoped Postgres rows; chain holds scrubbed.
+13. **MUST** PII-scrub `sender_account`, `sender_name`, `transfer_memo` via FR-MEMORY-111 BEFORE chain commit. Raw values retained in tenant-scoped Postgres rows; chain holds scrubbed.
 
 14. **MUST** acknowledge to Napas247 within 5 seconds p95 (per DEC-390). The handler does minimal synchronous work — HMAC verify + idempotency check + INSERT + audit row. Expensive matching (multiple invoice candidates, fuzzy memo) is delegated to FR-INV-006's async cash applier.
 
@@ -178,7 +178,7 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
     - Cannot UPDATE other columns.
     - Cannot DELETE.
 
-25. **MUST** emit a `inv.webhook_rejected` BRAIN row with `reason='tenant_unknown'` even when the slug is invalid (logging-only path; no tenant_id; uses `tenant_id = nil-uuid` for the chain). This catches probing attacks against URL paths.
+25. **MUST** emit a `inv.webhook_rejected` memory row with `reason='tenant_unknown'` even when the slug is invalid (logging-only path; no tenant_id; uses `tenant_id = nil-uuid` for the chain). This catches probing attacks against URL paths.
 
 26. **MUST** ensure `received_at = NOW()` server-side at INSERT (not from Napas payload — Napas's `ts` is in `webhook_ts` column separately). This prevents memo-time spoofing.
 
@@ -210,9 +210,9 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
 
 **Why per-tenant HMAC secret with rotation (§1 #4, §1 #16)?** Shared secret across tenants means one tenant's leaked secret compromises all. Per-tenant + rotation gives compartmentalisation + recovery path. The 60-second overlap window during rotation handles the inevitable timing gap between rotating in our system and updating Napas247 portal.
 
-**Why sender_account + sender_name PII-scrubbed in audit (§1 #13)?** Account numbers + names are PII. BRAIN audit chain is more broadly queried than tenant Postgres; storing PII in chain creates PII-everywhere problem. Postgres rows retain raw for in-tenant queries; chain holds scrubbed forms.
+**Why sender_account + sender_name PII-scrubbed in audit (§1 #13)?** Account numbers + names are PII. memory audit chain is more broadly queried than tenant Postgres; storing PII in chain creates PII-everywhere problem. Postgres rows retain raw for in-tenant queries; chain holds scrubbed forms.
 
-**Why `inv.webhook_rejected` BRAIN row even on tenant_unknown (§1 #25)?** Probing attacks scan for valid URLs. Logging probes (with `tenant_id = nil-uuid` since we don't have a real tenant) lets us see attack patterns. Without this, probing would be invisible — the 404 returns silently.
+**Why `inv.webhook_rejected` memory row even on tenant_unknown (§1 #25)?** Probing attacks scan for valid URLs. Logging probes (with `tenant_id = nil-uuid` since we don't have a real tenant) lets us see attack patterns. Without this, probing would be invisible — the 404 returns silently.
 
 **Why memo parser regex `^(HD|INV)(\d{6,12})\b` (§1 #11)?** VN convention: invoice references prefixed `HD<n>` (hóa đơn) or `INV<n>`. 6-12 digits covers invoice number ranges; word boundary prevents false matches on longer strings. The regex is tight — false-positive matching is worse than missed parses (which fall to manual/fuzzy in FR-INV-006).
 
@@ -535,12 +535,12 @@ mod tests {
 1. **receipt_source enum closed at 3** — `vietqr_napas247`, `stripe`, `wise`.
 2. **bank_code enum closed at 15** — exact set per DEC-384.
 3. **RLS isolates by tenant** — cross-tenant queries return 0 rows.
-4. **POST webhook happy path** — valid HMAC + new TXN → 200 + payment_receipts row + `inv.payment_received` BRAIN row.
-5. **HMAC invalid** → 401 `signature_invalid` + `inv.webhook_rejected` BRAIN row.
+4. **POST webhook happy path** — valid HMAC + new TXN → 200 + payment_receipts row + `inv.payment_received` memory row.
+5. **HMAC invalid** → 401 `signature_invalid` + `inv.webhook_rejected` memory row.
 6. **HMAC missing header** → 401 `missing_signature`.
 7. **Replay window exceeded** (ts > 5min off) → 401 `webhook_expired`.
 8. **Idempotent on TXN ref** — duplicate POST → 200 + existing receipt_id + no duplicate row + `inv.duplicate_webhook_received` row.
-9. **Tenant unknown slug** → 404 + `inv.webhook_rejected` BRAIN row with `reason=tenant_unknown`.
+9. **Tenant unknown slug** → 404 + `inv.webhook_rejected` memory row with `reason=tenant_unknown`.
 10. **Memo HD123456** → matched_via=memo_parser; `invoice_id` set; `inv.payment_matched_to_invoice` row.
 11. **Memo unparseable** → invoice_id NULL; `inv.payment_unmatched` row.
 12. **Currency != VND** → 400 `currency_unsupported` + audit row.
@@ -572,7 +572,7 @@ async fn invalid_signature_returns_401(ctx: TestCtx) {
     let bad_sig = "0000000000000000000000000000000000000000000000000000000000000000";
     let resp = ctx.post_webhook(&body, bad_sig).await;
     assert_eq!(resp.status(), 401);
-    let rows = ctx.brain_audit_rows("inv.webhook_rejected").await;
+    let rows = ctx.memory_audit_rows("inv.webhook_rejected").await;
     assert!(rows.iter().any(|r| r["reason"] == "signature_invalid"));
 }
 
@@ -600,7 +600,7 @@ async fn duplicate_txnref_returns_existing(ctx: TestCtx) {
     assert!(r2.duplicate);
     let receipts = ctx.fetch_receipts().await;
     assert_eq!(receipts.len(), 1, "no duplicate row");
-    let dup_rows = ctx.brain_audit_rows("inv.duplicate_webhook_received").await;
+    let dup_rows = ctx.memory_audit_rows("inv.duplicate_webhook_received").await;
     assert_eq!(dup_rows.len(), 1);
 }
 ```
@@ -677,8 +677,8 @@ async fn cash_applier_cannot_update_other_columns(pool: sqlx::PgPool) {
 - **FR-REW-009** — VietQR payroll batch send; uses the same TXN reference shape.
 
 **Cross-module:**
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing.
 - **FR-INV-001** — invoices table provides FK target.
 - **FR-OBS-007** — sev-2 alarm on > 10 rejections/h.
 
@@ -711,7 +711,7 @@ X-Napas-Signature: a1b2c3d4e5f6...64hex chars total...
 { "status": "ok", "receipt_id": "01HG7V8B0K8M4Z8Z8M8M8M8M8M", "duplicate": false }
 ```
 
-### 8.3 — inv.payment_received BRAIN row
+### 8.3 — inv.payment_received memory row
 
 ```json
 {
@@ -729,7 +729,7 @@ X-Napas-Signature: a1b2c3d4e5f6...64hex chars total...
 }
 ```
 
-### 8.4 — inv.webhook_rejected BRAIN row
+### 8.4 — inv.webhook_rejected memory row
 
 ```json
 {
@@ -779,7 +779,7 @@ All other questions resolved.
 | Memo with multiple invoice refs | regex first-match | first ref wins | Designed (single-match heuristic) |
 | Invoice referenced doesn't exist in tenant | lookup fail | invoice_id NULL | FR-INV-006 |
 | Cross-tenant invoice FK | RLS | 0 rows; treated as no match | Designed |
-| BRAIN audit emit fails mid-tx | rollback | 500; webhook retries | brain_writer health |
+| memory audit emit fails mid-tx | rollback | 500; webhook retries | memory_writer health |
 | Cached secret stale (rotation just happened) | dual-secret check | Designed | None |
 | Two webhooks for same TXN concurrent | UNIQUE | One wins; second sees duplicate | Designed |
 | Cash applier role tries to UPDATE amount | SQL grant | permission denied | Designed |
@@ -809,7 +809,7 @@ All other questions resolved.
 - **Payload SHA-256 stored not body** — saves space; sufficient for "did this exact webhook arrive?" replay.
 - **Server-side `received_at`** — authoritative; `webhook_ts` separately captures Napas claim.
 - **Sev-2 alarm at > 10 rejections/h** — operator investigation prompt.
-- **5 BRAIN audit kinds covering all paths** — happy + rejected + matched + unmatched + duplicate.
+- **5 memory audit kinds covering all paths** — happy + rejected + matched + unmatched + duplicate.
 - **PII scrubbing on sender_account, sender_name, transfer_memo** — chain holds scrubbed.
 - **VND hard-coded** — multi-currency goes through Stripe/Wise.
 - **15 closed bank codes** — ADR for additions.

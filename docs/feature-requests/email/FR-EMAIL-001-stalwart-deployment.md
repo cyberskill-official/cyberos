@@ -3,16 +3,16 @@ id: FR-EMAIL-001
 title: "EMAIL Stalwart Rust mail server deployment — JMAP + IMAP + SMTP + ManageSieve + MTA-STS + DANE + per-tenant residency + S3+KMS body storage + Postgres metadata"
 module: EMAIL
 priority: MUST
-status: draft
+status: done
 verify: T
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng (interim CCO)
 created: 2026-05-16
-shipped: null
-brain_chain_hash: null
-related_frs: [FR-AI-016, FR-AI-003, FR-BRAIN-101, FR-OBS-001, FR-EMAIL-002, FR-EMAIL-003, FR-EMAIL-004, FR-EMAIL-005, FR-EMAIL-006, FR-EMAIL-007, FR-EMAIL-009, FR-EMAIL-011]
+shipped: 2026-05-19
+memory_chain_hash: pending
+related_frs: [FR-AI-016, FR-AI-003, FR-MEMORY-101, FR-OBS-001, FR-EMAIL-002, FR-EMAIL-003, FR-EMAIL-004, FR-EMAIL-005, FR-EMAIL-006, FR-EMAIL-007, FR-EMAIL-009, FR-EMAIL-011]
 depends_on: []
 blocks: [FR-EMAIL-002, FR-EMAIL-003, FR-EMAIL-004, FR-EMAIL-005, FR-EMAIL-006, FR-EMAIL-007, FR-EMAIL-008, FR-EMAIL-011]   # 8 downstream consumers of substrate
 
@@ -31,7 +31,7 @@ source_decisions:
   - DEC-307 (auth at slice 1 is Stalwart's internal user store — operators provisioned via `cyberos-email-cli`; FR-EMAIL-002 ships the JWT-bridge plugin to delegate to AUTH)
   - DEC-308 (spam triage via Stalwart's built-in SpamAssassin-equivalent + Rspamd-compatible filters; quarantined messages → Trash with 30-day retention)
   - DEC-309 (bounce + reputation handling: bounces go into `mail.bounce_log`; reputation per-tenant tracked via OTel; sev-3 alarm at sustained > 1% bounce rate)
-  - DEC-310 (BRAIN audit kinds: email.message_received, email.message_sent, email.message_bounced, email.message_quarantined, email.dkim_key_rotated)
+  - DEC-310 (memory audit kinds: email.message_received, email.message_sent, email.message_bounced, email.message_quarantined, email.dkim_key_rotated)
   - DEC-311 (message bodies are stored encrypted at rest in S3 with KMS keyspace separate from DOC + KB; messages cannot be exported plaintext without an audit row)
   - DEC-312 (deployment target: Stalwart runs as a separate container; the gateway/adapter layer at services/email/ talks JMAP from the SPA + REST internally for module integration)
   - DEC-313 (DSAR export at message level — FR-EMAIL-011 ships the per-subject export; this FR ships the queryable metadata that the export reads)
@@ -53,26 +53,26 @@ new_files:
   - services/email/src/lib.rs                                         # crate root
   - services/email/src/types.rs                                       # EmailMessage, EmailThread, BounceEvent, DkimKey, MessageStatus enum
   - services/email/src/stalwart_adapter/mod.rs                        # Stalwart HTTP API client; sync metadata into our Postgres
-  - services/email/src/stalwart_adapter/inbound.rs                    # consume Stalwart inbound events → write metadata + emit BRAIN row
+  - services/email/src/stalwart_adapter/inbound.rs                    # consume Stalwart inbound events → write metadata + emit memory row
   - services/email/src/stalwart_adapter/outbound.rs                   # outbound send via Stalwart SMTP queue; tracks delivery state
   - services/email/src/dkim/keystore.rs                               # per-tenant DKIM key generation + rotation + Stalwart sync
   - services/email/src/residency.rs                                   # per-tenant residency lookup (FR-AI-016 contract)
   - services/email/src/repo/messages.rs                               # message metadata CRUD + thread linkage
   - services/email/src/repo/bounce_log.rs                             # append-only bounce writer
-  - services/email/src/audit/email_events.rs                          # canonical email.* BRAIN row builders (5 kinds per DEC-310)
+  - services/email/src/audit/email_events.rs                          # canonical email.* memory row builders (5 kinds per DEC-310)
   - services/email/src/handlers/status.rs                             # GET /v1/email/healthz + GET /v1/email/messages/{id}/status
   - services/email/src/cli/provision.rs                               # cyberos-email-cli provision (slice-1 user provisioning until FR-EMAIL-002 ships)
   - services/email/Cargo.toml                                         # +tokio, +sqlx, +uuid, +serde, +reqwest, +aws-sdk-s3, +cyberos-cli-exit
-  - services/email/tests/stalwart_inbound_test.rs                     # mock Stalwart inbound; verify metadata + BRAIN row
+  - services/email/tests/stalwart_inbound_test.rs                     # mock Stalwart inbound; verify metadata + memory row
   - services/email/tests/stalwart_outbound_test.rs                    # mock SMTP queue; verify DKIM applied
   - services/email/tests/residency_pin_test.rs                        # VN tenant → vn-1 storage; EU → eu-1; assert no cross-region leakage
   - services/email/tests/dkim_per_tenant_test.rs                      # each tenant has its own key; rotation produces new key + new row
   - services/email/tests/bounce_log_append_only_test.rs               # UPDATE/DELETE rejected by SQL grant
-  - services/email/tests/spam_quarantine_test.rs                      # known-spam patterns → Trash; BRAIN row email.message_quarantined
+  - services/email/tests/spam_quarantine_test.rs                      # known-spam patterns → Trash; memory row email.message_quarantined
   - services/email/tests/protocol_endpoints_test.rs                   # SMTP 25/465/587 + IMAP 143/993 + JMAP 443 + ManageSieve 4190 all listening
   - services/email/tests/mta_sts_dane_test.rs                         # outbound peer with MTA-STS policy → enforces TLS; peer with DANE TLSA → uses certificate pin
   - services/email/tests/dsar_query_test.rs                           # per-subject message list returns all messages where subject was sender or recipient
-  - services/email/tests/audit_emission_test.rs                       # received + sent + bounced + quarantined each emit exactly one BRAIN row
+  - services/email/tests/audit_emission_test.rs                       # received + sent + bounced + quarantined each emit exactly one memory row
 modified_files:
   - services/auth/src/rls/templates.rs                                # add message_metadata, thread_metadata, bounce_log, dkim_keys to TENANT_SCOPED_TABLES
 
@@ -102,7 +102,7 @@ sub_tasks:
   - "0.4h: 0003_dkim_keys.sql — per-tenant keystore + rotation history"
   - "0.4h: 0004_residency_routing.sql — tenant residency → (bucket, kms_key, schema)"
   - "0.5h: types.rs — EmailMessage, EmailThread, BounceEvent, DkimKey, MessageStatus"
-  - "1.0h: stalwart_adapter/inbound.rs — consume Stalwart inbound webhook events; write metadata; emit BRAIN row"
+  - "1.0h: stalwart_adapter/inbound.rs — consume Stalwart inbound webhook events; write metadata; emit memory row"
   - "1.0h: stalwart_adapter/outbound.rs — send via Stalwart SMTP queue; track delivery"
   - "0.7h: dkim/keystore.rs — per-tenant key generation + rotation + Stalwart sync"
   - "0.5h: residency.rs — FR-AI-016 lookup"
@@ -158,13 +158,13 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
     - Records `s3_body_key` + `s3_body_kms_key_id` in `message_metadata`.
    Cross-residency leakage (e.g. VN tenant body accidentally written to eu-1 bucket) is **fail-closed**: the handler asserts residency match before write.
 
-13. **MUST** emit BRAIN audit row `email.message_received` on every inbound delivery; `email.message_sent` on every outbound; `email.message_bounced` on every bounce; `email.message_quarantined` on spam classification; `email.dkim_key_rotated` on key rotation (per DEC-310). All rows carry `{tenant_id, message_id, thread_id, direction, from_hash16, to_hash16, body_sha256_hex, status, ts_ns}`.
+13. **MUST** emit memory audit row `email.message_received` on every inbound delivery; `email.message_sent` on every outbound; `email.message_bounced` on every bounce; `email.message_quarantined` on spam classification; `email.dkim_key_rotated` on key rotation (per DEC-310). All rows carry `{tenant_id, message_id, thread_id, direction, from_hash16, to_hash16, body_sha256_hex, status, ts_ns}`.
 
-14. **MUST** PII-scrub sensitive headers + body summary via FR-BRAIN-111 BEFORE chain commit. The PostgreSQL row retains the raw values (tenant-scoped + RLS-protected); the BRAIN audit chain holds PII-stripped form. `from_hash16`/`to_hash16` = SHA-256[..16] of normalised email address.
+14. **MUST** PII-scrub sensitive headers + body summary via FR-MEMORY-111 BEFORE chain commit. The PostgreSQL row retains the raw values (tenant-scoped + RLS-protected); the memory audit chain holds PII-stripped form. `from_hash16`/`to_hash16` = SHA-256[..16] of normalised email address.
 
-15. **MUST** sign outbound messages with the tenant's active DKIM key (per DEC-304). Stalwart's signing keystore is synchronised from `dkim_keys` at start + on rotation event. Outbound message lacking DKIM signature → dropped + `email.message_dropped` BRAIN row + sev-2 alarm via FR-OBS-007.
+15. **MUST** sign outbound messages with the tenant's active DKIM key (per DEC-304). Stalwart's signing keystore is synchronised from `dkim_keys` at start + on rotation event. Outbound message lacking DKIM signature → dropped + `email.message_dropped` memory row + sev-2 alarm via FR-OBS-007.
 
-16. **MUST** ship `cyberos-email-cli provision --tenant-id <uuid> --local-part <name> --display-name <text>` as the slice-1 user-provisioning entry point. The CLI calls Stalwart's admin API to create the user, generates the per-tenant DKIM key if absent, and emits `email.user_provisioned` BRAIN row. FR-EMAIL-002 replaces this with the JWT bridge plugin.
+16. **MUST** ship `cyberos-email-cli provision --tenant-id <uuid> --local-part <name> --display-name <text>` as the slice-1 user-provisioning entry point. The CLI calls Stalwart's admin API to create the user, generates the per-tenant DKIM key if absent, and emits `email.user_provisioned` memory row. FR-EMAIL-002 replaces this with the JWT bridge plugin.
 
 17. **MUST** track bounces in `bounce_log` (per DEC-309). Schema: `id BIGSERIAL PRIMARY KEY, tenant_id UUID, message_id UUID REFERENCES message_metadata(id), bounce_kind TEXT (hard | soft | transient), bounce_reason TEXT, bounce_code TEXT (SMTP status), remote_peer TEXT, ts TIMESTAMPTZ`. Bounce rate > 1% per tenant over rolling 24h → sev-3 alarm.
 
@@ -175,7 +175,7 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
     - `GET /v1/email/messages/{id}/status` — returns delivery status, DKIM/SPF/DMARC pass flags, bounce events.
     - `GET /v1/email/messages?tenant_id=<>&subject_id=<>&from=<ts>&to=<ts>` — list with cursor pagination (used by FR-EMAIL-003 + FR-EMAIL-011).
 
-20. **MUST** complete inbound metadata write + BRAIN audit emit in ≤ 200 ms p95 (excluding body upload to S3, which is async). `inbound_perf_test` asserts.
+20. **MUST** complete inbound metadata write + memory audit emit in ≤ 200 ms p95 (excluding body upload to S3, which is async). `inbound_perf_test` asserts.
 
 21. **MUST** complete `cyberos-email-cli provision` in ≤ 5 seconds (includes DKIM key generation if needed; RSA-2048 generation typically 1-2s).
 
@@ -231,7 +231,7 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 
 **Why no DELETE on metadata or bounce_log (§1 #11)?** Both are forensic records. DELETE would let operators "make a mistake go away"; legal/compliance reviews of mail flows need the complete history. Retention policies are S3-side (lifecycle rules); metadata persists until explicit GDPR/PDPL erasure (FR-EMAIL-2xx ships handler that anonymises rather than deletes).
 
-**Why hashed addresses in BRAIN audit (§1 #14)?** Email addresses are PII. BRAIN audit chain is forensically queryable but kept lean; embedding raw addresses would create everywhere-PII. SHA-256[..16] is collision-safe at our scale (~10⁹) + lets forensic queries join.
+**Why hashed addresses in memory audit (§1 #14)?** Email addresses are PII. memory audit chain is forensically queryable but kept lean; embedding raw addresses would create everywhere-PII. SHA-256[..16] is collision-safe at our scale (~10⁹) + lets forensic queries join.
 
 **Why ManageSieve port 4190 (§1 #4)?** Sieve is the standard mail-filter language; ManageSieve is the protocol for clients to upload/manage filter rules. Members may set per-mailbox auto-filters (e.g. "label as project-alpha if from:client-x@example.com"); the standard port is 4190 per RFC 5804.
 
@@ -587,17 +587,17 @@ pub async fn on_inbound(
 2. **All protocol ports listen** — 25, 465, 587 (SMTP), 143, 993 (IMAP), 4190 (ManageSieve), 8080 (JMAP); `protocol_endpoints_test` asserts.
 3. **Stalwart uses Postgres backend** — `[storage.data].type == "pg"`; rocksdb forbidden via env check.
 4. **Stalwart uses S3 blob store** — `[storage.blob].type == "s3"`; per-tenant bucket override applied via residency resolver.
-5. **Inbound mail creates message_metadata row** — mock Stalwart event → 1 row in `message_metadata` + 1 in `thread_metadata` (or message_count += 1) + 1 BRAIN `email.message_received` row.
+5. **Inbound mail creates message_metadata row** — mock Stalwart event → 1 row in `message_metadata` + 1 in `thread_metadata` (or message_count += 1) + 1 memory `email.message_received` row.
 6. **Outbound mail signed with tenant DKIM** — mock outbound → message DKIM-Signature header carries tenant's `cyberos` selector.
 7. **Per-tenant DKIM keys distinct** — two tenants get distinct keys; `dkim_per_tenant_test` asserts.
-8. **DKIM key rotation creates new row** — `cyberos-email-cli rotate-dkim --tenant <uuid>` → new `dkim_keys` row with `status=active`; prior row → `status=rotated`; BRAIN `email.dkim_key_rotated` row emitted.
+8. **DKIM key rotation creates new row** — `cyberos-email-cli rotate-dkim --tenant <uuid>` → new `dkim_keys` row with `status=active`; prior row → `status=rotated`; memory `email.dkim_key_rotated` row emitted.
 9. **Residency pinning: VN tenant → vn-1 bucket** — body written to `cyberos-email-vn-1-bodies`; metadata records `s3_body_kms_key_id = alias/cyberos-email-vn-1-bodies`.
 10. **Cross-residency leak prevented** — handler refuses to write body to wrong-region bucket; returns SMTP 421 transient failure.
 11. **Append-only metadata** — `UPDATE message_metadata SET status='delivered' WHERE id=$1` as cyberos_app → permission denied.
 12. **Append-only bounce log** — same.
 13. **Spam quarantined at score ≥ 5.0** — mock event with `spam_score=5.5` → `status=quarantined`; `email.message_quarantined` row.
 14. **DSAR query returns all messages for subject** — `GET /v1/email/messages?subject_id=<uuid>` returns all messages where subject is sender or in to/cc.
-15. **MTA-STS policy enforcement** — outbound to peer with `mode=enforce` MTA-STS + TLS handshake failure → message dropped + `email.message_dropped` BRAIN row.
+15. **MTA-STS policy enforcement** — outbound to peer with `mode=enforce` MTA-STS + TLS handshake failure → message dropped + `email.message_dropped` memory row.
 16. **DANE TLSA pinning** — peer with DANE TLSA + matching certificate → delivered; mismatch → dropped.
 17. **Bcc not in to_addresses/cc_addresses** — incoming message with Bcc → metadata has Bcc in separate `bcc_addresses` column.
 18. **Body integrity verified at write** — `body_sha256_hex` matches actual S3 ETag.
@@ -706,8 +706,8 @@ async fn metadata_delete_blocked(pool: sqlx::PgPool) {
 
 **Cross-module:**
 - **FR-AI-016** — residency policy; consumed by `residency::resolve()`.
-- **FR-AI-003** — BRAIN audit bridge; receives 5 `email.*` audit row kinds.
-- **FR-BRAIN-111** — PII scrubbing on `from_address`, `to_addresses`, `subject` before chain commit.
+- **FR-AI-003** — memory audit bridge; receives 5 `email.*` audit row kinds.
+- **FR-MEMORY-111** — PII scrubbing on `from_address`, `to_addresses`, `subject` before chain commit.
 
 ---
 
@@ -735,7 +735,7 @@ async fn metadata_delete_blocked(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.2 — email.message_received BRAIN row
+### 8.2 — email.message_received memory row
 
 ```json
 {
@@ -757,7 +757,7 @@ async fn metadata_delete_blocked(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.3 — email.message_quarantined BRAIN row
+### 8.3 — email.message_quarantined memory row
 
 ```json
 {
@@ -772,7 +772,7 @@ async fn metadata_delete_blocked(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.4 — email.dkim_key_rotated BRAIN row
+### 8.4 — email.dkim_key_rotated memory row
 
 ```json
 {
@@ -796,7 +796,7 @@ $ cyberos-email-cli provision \
     --display-name "Support Team"
 ✓ Stalwart user created: support@cyberskill.world
 ✓ DKIM key generated (RSA-2048, selector=cyberos)
-✓ BRAIN audit row email.user_provisioned written
+✓ memory audit row email.user_provisioned written
 ```
 
 ---
@@ -833,14 +833,14 @@ All other questions resolved.
 | DANE TLSA mismatch | TLS verify fail | Outbound dropped + sev-3 alarm | Investigate peer cert change |
 | DKIM signing key missing for tenant | outbound handler check | Outbound dropped + sev-2 alarm | Provision key via CLI |
 | DKIM private-key KMS decrypt fail | aws-sdk error | Outbound dropped + sev-2 | KMS investigation |
-| Spam score above threshold | Stalwart classifier | Quarantined to Trash; BRAIN row | None — designed |
+| Spam score above threshold | Stalwart classifier | Quarantined to Trash; memory row | None — designed |
 | Hard bounce | bounce report → bounce_log | Tracked; reputation gauge update | None — designed |
 | Sustained > 1% bounce rate | OTel alarm | sev-3 | Investigate sender reputation |
 | Thread merge race (two messages same thread_id) | UPSERT idempotent | None | Designed |
 | Cross-tenant FK | RLS | 0 rows | Designed |
 | RLS bypass attempt | `USING` predicate | 0 rows | Designed |
 | Bcc accidentally exposed in to_addresses | handler test | CI fails | Fix adapter |
-| Audit row commit fails | tx rollback | metadata not persisted; SMTP 421 | brain_writer diagnosis |
+| Audit row commit fails | tx rollback | metadata not persisted; SMTP 421 | memory_writer diagnosis |
 | body_sha256 mismatch S3 ETag | reconciliation job (FR-EMAIL-2xx) | sev-2 alarm | Investigate; possible corruption |
 | Stalwart admin API unauthorised | CLI errors out | Service unavailable | Re-credential per docker secret |
 | ManageSieve port blocked at firewall | client cannot upload filters | Filters not updated | Operator opens port |

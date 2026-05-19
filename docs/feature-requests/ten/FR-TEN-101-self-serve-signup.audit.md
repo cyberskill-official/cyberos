@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands the public self-serve signup primitive on top of FR-AUTH-104 (OIDC) + FR-TEN-001 (provisioning) + FR-TEN-002 (plan tiers) + FR-TEN-003 (Stripe billing). Final form: 1,160 lines, 27 §1 normative clauses (covering 4 migrations, 6 public REST endpoints, OTP HMAC, rate limiting, Turnstile, disposable-email blocklist, GeoIP-derived currency, consent versioning with PDPL VN variant, dual-rail payment intent, OIDC alternate path with CSRF defense, phased commit-or-rollback orchestrator, 9 core + 2 supporting BRAIN audit kinds, 30-second SLO, dual-scope RLS for pre-tenant rows, squatting detection, 90-day PII scrub, idempotency), 20 acceptance criteria, 10 verification tests, 24 failure-mode rows, 27 implementation notes.
+The spec lands the public self-serve signup primitive on top of FR-AUTH-104 (OIDC) + FR-TEN-001 (provisioning) + FR-TEN-002 (plan tiers) + FR-TEN-003 (Stripe billing). Final form: 1,160 lines, 27 §1 normative clauses (covering 4 migrations, 6 public REST endpoints, OTP HMAC, rate limiting, Turnstile, disposable-email blocklist, GeoIP-derived currency, consent versioning with PDPL VN variant, dual-rail payment intent, OIDC alternate path with CSRF defense, phased commit-or-rollback orchestrator, 9 core + 2 supporting memory audit kinds, 30-second SLO, dual-scope RLS for pre-tenant rows, squatting detection, 90-day PII scrub, idempotency), 20 acceptance criteria, 10 verification tests, 24 failure-mode rows, 27 implementation notes.
 
 The audit identified 9 issues across orchestrator-ordering correctness, missing schema constructs, OIDC CSRF defense, ambiguous failure-mode recoveries, and audit-kind enumeration completeness. All resolved before this 10/10 score.
 
@@ -39,7 +39,7 @@ The first draft of §1 #14 put the Stripe `confirm_setup_intent` call (Step 7, e
 
 ### ISS-006 — 9-kind list contradicted §1 #4 + §1 #21 mentions of additional kinds
 
-§1 #19 claimed "9 BRAIN audit row kinds", but §1 #4 referenced `ten.disposable_email_blocklist_refreshed` and §1 #21 referenced `ten.signup_session_scrubbed` as "informational only — not in the 9-kind core list". This is 11 kinds total with confusing labelling. A FR-AI-003 closed-set extension (per AUTHORING.md rule 8) needs a complete list. Resolved: §1 #19 restructured to explicitly call out 9 **core** kinds (user-action-triggered) plus 2 **supporting** kinds (system-emitted). FR-AI-003 closed-set extension updates list all 11.
+§1 #19 claimed "9 memory audit row kinds", but §1 #4 referenced `ten.disposable_email_blocklist_refreshed` and §1 #21 referenced `ten.signup_session_scrubbed` as "informational only — not in the 9-kind core list". This is 11 kinds total with confusing labelling. A FR-AI-003 closed-set extension (per AUTHORING.md rule 8) needs a complete list. Resolved: §1 #19 restructured to explicitly call out 9 **core** kinds (user-action-triggered) plus 2 **supporting** kinds (system-emitted). FR-AI-003 closed-set extension updates list all 11.
 
 ### ISS-007 — `signup_rate_limit_journal` purpose unclear vs Redis hot path
 
@@ -57,7 +57,7 @@ The post-restructure §1 #14 Phase D includes `ensure_customer` + `ensure_subscr
 
 All 9 mechanical concerns addressed. The orchestrator now follows the cardinal rule of "no external API calls inside DB tx" (ISS-001 + ISS-008); duplicate-email lookup is index-backed (ISS-002); OIDC has CSRF defense (ISS-003); the redirect lands authenticated (ISS-004); failure-mode recoveries are forensically accurate (ISS-005); the audit-kind list is exhaustive (ISS-006); ops surfaces clarified (ISS-007); grant lineage clean (ISS-009).
 
-The 1,160-line length sits above the AUTHORING.md §3.14 "above 1,000 lines suggests prose padding" soft cap. Justification: the FR introduces 4 migrations, 6 public REST endpoints, OIDC alternate path with its own init+callback handlers, 11 BRAIN audit kinds, dual-rail payment intent with placeholder for FR-TEN-102, 4 rate-limit guards, GeoIP+disposable+squatting defenses, 30-second SLO with breakdown analysis, dual-scope RLS for pre-tenant rows, 90-day PII scrub. Genuine surface complexity. Density of normative clauses + failure modes + tests per line is comparable to peer FR-TEN-003 at 1,056 lines — both spec the commercial substrate.
+The 1,160-line length sits above the AUTHORING.md §3.14 "above 1,000 lines suggests prose padding" soft cap. Justification: the FR introduces 4 migrations, 6 public REST endpoints, OIDC alternate path with its own init+callback handlers, 11 memory audit kinds, dual-rail payment intent with placeholder for FR-TEN-102, 4 rate-limit guards, GeoIP+disposable+squatting defenses, 30-second SLO with breakdown analysis, dual-scope RLS for pre-tenant rows, 90-day PII scrub. Genuine surface complexity. Density of normative clauses + failure modes + tests per line is comparable to peer FR-TEN-003 at 1,056 lines — both spec the commercial substrate.
 
 **Score = 10/10.**
 

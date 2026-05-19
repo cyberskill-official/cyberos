@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: edge-case-matrix-audit
-description: |
-  Audit an edge-case-matrix@1 against edge_case_matrix_rubric@1.0:
-  enforces ≥1 row per category, SECURITY rows pointing at real test
-  paths, DEGRADATION rows specifying detection + recovery, and
-  `total_rows ≥ 8` for MUST-priority FRs. Emits a `score / 10` verdict
-  + an itemised findings list; refuses to pass the chain on <10/10.
+description: >-
+  Audit an edge-case-matrix@1 against edge_case_matrix_rubric@1.0: enforces ≥1 row per category, SECURITY rows pointing at real test paths, DEGRADATION rows specifying detection + recovery, and `total_rows ≥ 8` for MUST-priority FRs. Emits a `score / 10` verdict + an itemised findings list; refuses to pass the chain on <10/10. Use when user asks to "audit this edge case matrix" or "check the edge case matrix". Do NOT use for "draft a new edge case matrix" (use edge-case-matrix-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -15,7 +11,7 @@ metadata:
   cyberos-template: edge-case-matrix-audit@1
   cyberos-rubric-target: edge_case_matrix_rubric@1.0
 
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
   write:

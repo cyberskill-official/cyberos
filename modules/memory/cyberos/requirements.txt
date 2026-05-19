@@ -3,17 +3,20 @@
 # Install:
 #   pip install -r cyberos/requirements.txt --break-system-packages
 #
+# Versions floored to latest-stable as of 2026 Q2. Run `pip install -U` to
+# pick up patch releases.
+#
 # Required:
-msgspec>=0.18.0
+msgspec>=0.18.6
 # Optional but strongly recommended for production — SSE 4.2 / ARM CRC32
 # hardware-accelerated CRC-32C. Without it the writer falls back to
 # zlib.crc32 which is plain CRC-32 (different polynomial) — still
 # detects truncation but doesn't match the on-disk format documented
 # in cyberos/core/writer.py.
-crc32c>=2.4
+crc32c>=2.7
 # Optional — only needed by the migration preflight's RFC 8785 ↔ msgspec
 # equivalence fuzz, and by anyone re-verifying legacy chains.
 rfc8785>=0.1.4
 # Optional — only needed during the migration window when legacy YAML
 # frontmatter must still be read. Loaded lazily.
-PyYAML>=6.0
+PyYAML>=6.0.2

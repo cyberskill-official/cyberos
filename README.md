@@ -6,10 +6,11 @@ CyberSkill's AI-native internal operations platform. Three production modules + 
 
 ```
 cyberos/
-├── modules/                ← all three production modules
+├── modules/                ← all production modules
 │   ├── cuo/                ← persona-aware orchestration (47 personas + 194 workflows)
 │   ├── skill/              ← agent Skills catalog (104 author+audit pairs)
-│   └── memory/             ← the BRAIN protocol + reference implementation
+│   ├── memory/             ← the memory protocol + reference implementation
+│   └── plugin/             ← packaging + distribution to Claude Code / Cursor / Cowork / Codex CLI (new 2026-05-19)
 │
 ├── docs/                   ← canonical project docs
 │   ├── README.md
@@ -17,14 +18,14 @@ cyberos/
 │   ├── The C-Suite Reference.md          ← 48-persona atlas (normative)
 │   └── feature-requests/   ← FR catalog across 26 domains (~556 FRs)
 │
-├── tours/                  ← CodeTour walkthroughs (incident response, BRAIN repair, security audit)
+├── tours/                  ← CodeTour walkthroughs (incident response, memory repair, security audit)
 ├── strategy/               ← strategic positioning + ecosystem playbook
 ├── website/                ← multi-page documentation site (Liquid Glass, Pagefind)
 ├── docs/sessions/         ← per-session log archives (new — see docs/sessions/2026-05-18-wave-1-2.md)
 ├── services/               ← service descriptors
 ├── pagefind/               ← static search index for website
 │
-├── .cyberos-memory/        ← BRAIN store (gitignored)
+├── .cyberos-memory/        ← memory store (gitignored)
 ├── .github/                ← CI workflows
 ├── README.md               ← THIS FILE
 ├── CHANGELOG.md            ← repo-level umbrella changelog
@@ -51,7 +52,7 @@ Two top-level homes for code, with **different semantics**:
 
 Concretely:
 
-- `modules/memory/` = the BRAIN protocol spec + Python reference writer (`AGENTS.md` + `memory.schema.json` + `memory.invariants.yaml` + `cyberos/` package). `services/brain/` = the Rust production BRAIN service that implements that protocol.
+- `modules/memory/` = the memory protocol spec + Python reference writer (`AGENTS.md` + `memory.schema.json` + `memory.invariants.yaml` + `cyberos/` package). `services/memory/` = the Rust production memory service that implements that protocol.
 - `modules/skill/` = the SKILL catalog (markdown bundles, RUBRIC, AUTHORING discipline). The future Rust skill-broker will live in `services/skill-broker/` when FR-SKILL-103 ships.
 - `modules/cuo/` = the CUO Python supervisor; no Rust port planned (it stays Python).
 - `services/auth/` = the Rust AUTH service; **has no `modules/auth/`** because AUTH has no spec/Python-reference-impl split. Its spec lives in `docs/feature-requests/auth/` directly.
@@ -61,7 +62,7 @@ Concretely:
 ## Quick start
 
 ```bash
-# Memory module — the BRAIN
+# Memory module — the memory
 cd modules/memory
 pip install -e .
 cyberos --store ../../.cyberos-memory doctor          # → READY ✓ 15/15 invariants
@@ -74,7 +75,7 @@ cyberos-cuo route "Architect a new payment system"     # → chief-technology-of
 cyberos-cuo execute chief-technology-officer/adr-quick-capture \
     --output-dir /tmp/run-1 \
     --invoker mock \
-    --brain-emit \
+    --memory-emit \
     --actor stephen
 
 # Skill module — agentic Skills catalog
@@ -90,22 +91,23 @@ Each module's `README.md` has full install / audit / fine-tune / deploy instruct
 
 | Module | Role | Status | Read |
 |---|---|---|---|
-| [`modules/memory/`](modules/memory/) | BRAIN — append-only audit-chained personal memory store | 255 green tests; all 12 audit proposals shipped | [README](modules/memory/README.md) · [AGENTS](modules/memory/AGENTS.md) |
+| [`modules/memory/`](modules/memory/) | memory — append-only audit-chained personal memory store | 255 green tests; all 12 audit proposals shipped | [README](modules/memory/README.md) · [AGENTS](modules/memory/AGENTS.md) |
 | [`modules/skill/`](modules/skill/) | Agent Skills catalog + Rust host + Bun toolchain | 104 author+audit pairs (208 bundles); 108 contracts; catalog-complete post-Session H | [README](modules/skill/README.md) |
 | [`modules/cuo/`](modules/cuo/) | Persona-aware orchestration (Chief Universal Officer) | 47 personas + 194 workflows; supervisor Phase 1–3 shipped (21/22 tests pass) | [README](modules/cuo/README.md) |
+| [`modules/plugin/`](modules/plugin/) | Packaging + distribution — exposes CUO + memory + SKILL as installable `.plugin` artefacts for Claude Code / Cursor / Cowork / Codex CLI | scaffold + 8 FRs at 10/10 (FR-PLUGIN-001..008); runtime at `services/plugin-host/` planned | [README](modules/plugin/README.md) · [INTEROP](modules/plugin/INTEROP.md) |
 
 ## Status
 
 | Layer | Status |
 |---|---|
-| BRAIN protocol (Layer-1) + reference implementation | shipped — 255 tests, 30 CLI commands, P2 Stage 3 |
+| memory protocol (Layer-1) + reference implementation | shipped — 255 tests, 30 CLI commands, P2 Stage 3 |
 | SKILL catalog | 104 pairs / 208 bundles / 108 contracts; zero `planned:` gaps after Session H |
 | CUO catalog | 47 active personas + 194 workflows; zero gaps after Session N |
-| CUO supervisor (Python) | Phase 1 (catalog + router + dry-run), Phase 2 (Invoker + execute_chain), Phase 3 (LLMInvoker + BRAIN emission) — all shipped 2026-05-18 |
+| CUO supervisor (Python) | Phase 1 (catalog + router + dry-run), Phase 2 (Invoker + execute_chain), Phase 3 (LLMInvoker + memory emission) — all shipped 2026-05-18 |
 | Docs site (`website/`) | 32 pages, 226 diagrams, 341 FRs, 100 NFRs, Pagefind search |
 | Design system (sibling repo `../design-system/`) | Liquid Glass v1.1.0 — L3 enterprise tier |
 
-**Roadmap:** CUO Phase 4 (5 special-case workflow handlers); CUO depth additions (per-persona workflow expansion 4 → 8–12); 19 remaining modules (AUTH, AI, MCP, OBS, CHAT, EMAIL, PROJ, TIME, CRM, KB, HR, REW, LEARN, INV, ESOP, RES, OKR, DOC, PORTAL, TEN) — scaffolded in docs, not built.
+**Roadmap:** CUO Phase 4 (5 special-case workflow handlers); CUO depth additions (per-persona workflow expansion 4 → 8–12); PLUGIN module runtime build-out (`services/plugin-host/` per FR-PLUGIN-001..008 — manifest packer, MCP bridge, OAuth-PKCE, memory audit emission, multi-runtime adapters, marketplace publish); 19 remaining modules (AUTH, AI, MCP, OBS, CHAT, EMAIL, PROJ, TIME, CRM, KB, HR, REW, LEARN, INV, ESOP, RES, OKR, DOC, PORTAL, TEN) — scaffolded in docs, not built.
 
 ## Sibling projects (separate git repos)
 
@@ -126,14 +128,14 @@ This section is the canonical runbook for taking the first three modules to prod
 
 | Component | Version | Why |
 |---|---|---|
-| PostgreSQL | 16.x | base store for AUTH (RLS) + BRAIN (Layer-2 ingest + audit chain) |
-| PostgreSQL extensions | `pgvector` 0.7+, `apache_age` 1.5+ | embeddings + graph (BRAIN Layer-2) |
+| PostgreSQL | 16.x | base store for AUTH (RLS) + memory (Layer-2 ingest + audit chain) |
+| PostgreSQL extensions | `pgvector` 0.7+, `apache_age` 1.5+ | embeddings + graph (memory Layer-2) |
 | Redis | 7.x | rate-limit + session cache (AUTH) + event-bus draft (will become NATS at scale) |
-| Rust toolchain | 1.81 stable | matches `services/Cargo.toml` `rust-version` |
+| Rust toolchain | 1.88 stable | matches `services/Cargo.toml` `rust-version` (bumped 1.83→1.88 on 2026-05-19 — webauthn-rs/time/icu/base64urlsafedata transitively require ≥1.86/1.88) |
 | Python | 3.10+ | `modules/memory/` reference impl + `modules/cuo/` supervisor + sidecars |
 | sqlx-cli | 0.8 | `cargo install sqlx-cli --no-default-features --features rustls,postgres` |
 | AWS account | — | Fargate (services) + ECR (images) + RDS (Postgres) + ElastiCache (Redis) |
-| Domain + DNS | — | `cyberos.cyberskill.world` (wiki) · `auth.cyberskill.world` (AUTH endpoint) · `brain.cyberskill.world` (BRAIN endpoint) |
+| Domain + DNS | — | `cyberos.cyberskill.world` (wiki) · `auth.cyberskill.world` (AUTH endpoint) · `memory.cyberskill.world` (memory endpoint) |
 
 ### §2 — Bootstrap order (deploy roadmap)
 
@@ -142,7 +144,7 @@ Per [`docs/feature-requests/BACKLOG.md` §0.6](docs/feature-requests/BACKLOG.md)
 ```
   ┌──────────┐    ┌────────┐    ┌────────┐    ┌─────────┐    ┌──────────────┐
   │  MEMORY  │ ─▶ │  AUTH  │ ─▶ │  CHAT  │ ─▶ │ PROJECT │ ─▶ │  CUO + SKILL │
-  │ (BRAIN)  │    │        │    │        │    │ (PROJ)  │    │              │
+  │ (memory)  │    │        │    │        │    │ (PROJ)  │    │              │
   └──────────┘    └────────┘    └────────┘    └─────────┘    └──────────────┘
         wave 1         wave 2         wave 3         wave 4         wave 5
 ```
@@ -151,30 +153,30 @@ Wave 1 (this runbook) covers MEMORY + AUTH + SKILL. The next sections walk each.
 
 ### §3 — MEMORY deploy
 
-**What ships:** Layer-1 protocol (file-only BRAIN per [`modules/memory/AGENTS.md`](modules/memory/AGENTS.md)) PLUS Layer-2 Rust service ([`services/brain/`](services/brain/)) for ingest + AGE graph + search REST.
+**What ships:** Layer-1 protocol (file-only memory per [`modules/memory/AGENTS.md`](modules/memory/AGENTS.md)) PLUS Layer-2 Rust service ([`services/memory/`](services/memory/)) for ingest + AGE graph + search REST.
 
 ```bash
-# 3.1 — Build the Rust BRAIN service binary
+# 3.1 — Build the Rust memory service binary
 cd services
-cargo build --release -p cyberos-brain
-ls -lh target/release/cyberos-brain   # → single statically-linked binary
+cargo build --release -p cyberos-memory
+ls -lh target/release/cyberos-memory   # → single statically-linked binary
 
 # 3.2 — Apply migrations to the production database
 export DATABASE_URL="postgres://cyberos_admin:$PG_PASSWORD@prod-postgres.cyberskill.world:5432/cyberos"
-sqlx migrate run --source services/brain/migrations
+sqlx migrate run --source services/memory/migrations
 
 # 3.3 — Seed the AGE graph
-psql "$DATABASE_URL" -f services/brain/seed/age_init.sql
+psql "$DATABASE_URL" -f services/memory/seed/age_init.sql
 
-# 3.4 — Initialise the local Layer-1 BRAIN (the protocol root)
+# 3.4 — Initialise the local Layer-1 memory (the protocol root)
 cd ../modules/memory
 pip install -e .
 cyberos --store /var/lib/cyberos-memory doctor       # expect: READY ✓ 15/15 invariants
 cyberos --store /var/lib/cyberos-memory bootstrap    # writes HEAD=00 + audit segment + index
 
-# 3.5 — Boot the BRAIN HTTP server
+# 3.5 — Boot the memory HTTP server
 cd ../../services
-./target/release/cyberos-brain serve \
+./target/release/cyberos-memory serve \
     --listen 0.0.0.0:8081 \
     --database-url "$DATABASE_URL" \
     --layer-1-store /var/lib/cyberos-memory \
@@ -185,21 +187,21 @@ curl -fsS http://localhost:8081/healthz                          # → {"status"
 curl -fsS http://localhost:8081/v1/audit/chain | jq '.head_seq'  # → 0 (or current head)
 cyberos --store /var/lib/cyberos-memory invariants               # → 15/15 PASS
 
-# 3.7 — Deploy to Fargate (per docs/feature-requests/brain/FR-BRAIN-104)
+# 3.7 — Deploy to Fargate (per docs/feature-requests/memory/FR-MEMORY-104)
 aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin <ecr-id>.dkr.ecr.ap-southeast-1.amazonaws.com
-docker build -t cyberos-brain:$(git rev-parse --short HEAD) services/brain/
-docker tag cyberos-brain:$(git rev-parse --short HEAD) <ecr-id>.dkr.ecr.ap-southeast-1.amazonaws.com/cyberos-brain:latest
-docker push <ecr-id>.dkr.ecr.ap-southeast-1.amazonaws.com/cyberos-brain:latest
-aws ecs update-service --cluster cyberos-prod --service brain --force-new-deployment
+docker build -t cyberos-memory:$(git rev-parse --short HEAD) services/memory/
+docker tag cyberos-memory:$(git rev-parse --short HEAD) <ecr-id>.dkr.ecr.ap-southeast-1.amazonaws.com/cyberos-memory:latest
+docker push <ecr-id>.dkr.ecr.ap-southeast-1.amazonaws.com/cyberos-memory:latest
+aws ecs update-service --cluster cyberos-prod --service memory --force-new-deployment
 ```
 
 **Health endpoints:** `/healthz` (ready/not-ready), `/v1/audit/chain` (current head + tip hash), `/metrics` (Prometheus exposition).
 
-**Rollback:** `aws ecs update-service --cluster cyberos-prod --service brain --task-definition cyberos-brain:N-1 --force-new-deployment` (replace `N-1` with the previous task-def revision).
+**Rollback:** `aws ecs update-service --cluster cyberos-prod --service memory --task-definition cyberos-memory:N-1 --force-new-deployment` (replace `N-1` with the previous task-def revision).
 
-**Observability:** Grafana dashboard `cyberos-brain` (panels for HEAD lag, audit-row rate, AGE query p95, embedding sidecar latency). Datadog tag `service:cyberos-brain`.
+**Observability:** Grafana dashboard `cyberos-memory` (panels for HEAD lag, audit-row rate, AGE query p95, embedding sidecar latency). Datadog tag `service:cyberos-memory`.
 
-**Secrets:** Postgres password lives in AWS Secrets Manager at `arn:aws:secretsmanager:ap-southeast-1:<acct>:secret:cyberos/prod/brain/db-password`. OTel collector token at `…/otel-token`.
+**Secrets:** Postgres password lives in AWS Secrets Manager at `arn:aws:secretsmanager:ap-southeast-1:<acct>:secret:cyberos/prod/memory/db-password`. OTel collector token at `…/otel-token`.
 
 ### §4 — AUTH deploy
 
@@ -238,7 +240,7 @@ psql "$DATABASE_URL" -c "SELECT version, description FROM _sqlx_migrations ORDER
     --database-url "$DATABASE_URL" \
     --redis-url "redis://prod-redis.cyberskill.world:6379/0" \
     --jwk-path /var/lib/cyberos/keys/auth-prod-2026-05-1.jwk \
-    --brain-base-url http://brain.cyberskill.world \
+    --memory-base-url http://memory.cyberskill.world \
     --otel-endpoint http://otel-collector.cyberskill.world:4317
 
 # 4.6 — Smoke tests
@@ -260,7 +262,7 @@ aws ecs update-service --cluster cyberos-prod --service auth --force-new-deploym
 
 **Health endpoints:** `/healthz`, `/.well-known/jwks.json`, `/.well-known/openid-configuration`, `/metrics`.
 
-**Rollback:** ECS task-def rollback (same pattern as BRAIN). **Critical:** rolling back ACROSS a migration requires `sqlx migrate revert` against the database FIRST — migrations are forward-only by default.
+**Rollback:** ECS task-def rollback (same pattern as memory). **Critical:** rolling back ACROSS a migration requires `sqlx migrate revert` against the database FIRST — migrations are forward-only by default.
 
 **Observability:** Grafana dashboard `cyberos-auth` (login success/failure rate, MFA challenge rate, JWT issuance latency, RLS rejection rate per tenant).
 
@@ -320,33 +322,33 @@ After §3-§5 succeed independently, prove the three modules talk to each other:
 TOKEN=$(curl -fsS -X POST http://auth.cyberskill.world/v1/auth/token \
     -d "grant_type=password&username=stephen@cyberskill.world&password=$PW&totp=$(oathtool --totp --base32 $TOTP_SECRET)" | jq -r .access_token)
 
-# Write a BRAIN audit row via BRAIN service (AUTH-stamped)
-curl -fsS -X POST http://brain.cyberskill.world/v1/audit/append \
+# Write a memory audit row via memory service (AUTH-stamped)
+curl -fsS -X POST http://memory.cyberskill.world/v1/audit/append \
     -H "Authorization: Bearer $TOKEN" \
     -H "Content-Type: application/json" \
     -d '{"kind":"put","path":"memories/projects/cyberos/smoke-test.md","body":"hello"}' \
     | jq '.audit_id'
 
-# Route a query through CUO that touches both AUTH (for identity) + BRAIN (for memory read)
+# Route a query through CUO that touches both AUTH (for identity) + memory (for memory read)
 python3 -m cuo.core.supervisor execute \
     --actor "human:stephen-cheng" \
     --query "Audit FR-AUTH-003 for completeness" \
-    --brain-emit \
+    --memory-emit \
     --output-dir /tmp/e2e-smoke
 ls /tmp/e2e-smoke/                                     # → step output JSONs
-curl -fsS http://brain.cyberskill.world/v1/audit/chain | jq '.head_seq'  # incremented by N
+curl -fsS http://memory.cyberskill.world/v1/audit/chain | jq '.head_seq'  # incremented by N
 ```
 
-**Pass criteria:** AUTH issues token, BRAIN accepts authenticated audit-append, CUO routes correctly, BRAIN chain head advances. If any step fails, the rollback for that service per §3.6/§4.8 fires.
+**Pass criteria:** AUTH issues token, memory accepts authenticated audit-append, CUO routes correctly, memory chain head advances. If any step fails, the rollback for that service per §3.6/§4.8 fires.
 
 ### §7 — Day-2 operations
 
 | Concern | Where it lives |
 |---|---|
-| Health monitoring | Grafana dashboards `cyberos-brain` + `cyberos-auth` (live via [Datadog](https://app.datadoghq.eu/) when configured) |
+| Health monitoring | Grafana dashboards `cyberos-memory` + `cyberos-auth` (live via [Datadog](https://app.datadoghq.eu/) when configured) |
 | Alerting | PagerDuty service `cyberos-prod-on-call`; routes via Alertmanager per FR-OBS-007 |
 | Backup (Postgres) | RDS automated snapshots — 7-day retention. Cross-region replication to ap-southeast-2 (per FR-AUTH-005 compliance) |
-| Backup (BRAIN local store) | `cyberos export <tenant_id> --target s3://cyberos-backups/<env>/<date>.zip` runs nightly via Lambda |
+| Backup (memory local store) | `cyberos export <tenant_id> --target s3://cyberos-backups/<env>/<date>.zip` runs nightly via Lambda |
 | Audit ledger integrity | Tamper detector per AGENTS.md §10 + SRS §10.4.6 runs continuously; alerts on chain breaks |
 | Cost | AWS Cost Explorer tag `Project=cyberos` + budget alarm at 80% of $535/mo envelope (per `docs/feature-requests/BACKLOG.md` §architecture/tech-stack) |
 

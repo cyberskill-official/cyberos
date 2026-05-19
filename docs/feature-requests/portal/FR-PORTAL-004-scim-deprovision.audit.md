@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands SCIM 2.0 DELETE deprovision with 30s end-to-end session-invalidation SLO on top of FR-PORTAL-003. Final form: 1,090 lines, 24 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 23 failure-mode rows, 21 implementation notes. 3 migrations, 4 REST endpoints, 7 + 1 BRAIN audit kinds, dual-channel kill (JWT blacklist via Redis sorted-set + WebSocket close frame 4001), cascade revocation across 4 targets, 5-min grace period + tenant_admin restore, nightly reconciliation, per-Engagement isolation.
+The spec lands SCIM 2.0 DELETE deprovision with 30s end-to-end session-invalidation SLO on top of FR-PORTAL-003. Final form: 1,090 lines, 24 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 23 failure-mode rows, 21 implementation notes. 3 migrations, 4 REST endpoints, 7 + 1 memory audit kinds, dual-channel kill (JWT blacklist via Redis sorted-set + WebSocket close frame 4001), cascade revocation across 4 targets, 5-min grace period + tenant_admin restore, nightly reconciliation, per-Engagement isolation.
 
 7 issues caught by self-audit, all resolved.
 
@@ -49,7 +49,7 @@ The spec lands SCIM 2.0 DELETE deprovision with 30s end-to-end session-invalidat
 
 All 7 mechanical concerns addressed. SCIM idiom correct (204); dual-channel ordering sound; reconciliation dedup logic explicit; concurrent grace/restore race acceptable; Redis-failure fallback path documented; hard-purge query param scoped to CyberOS extension; per-Engagement scoping validated end-to-end.
 
-The 1,090-line length is justified by 3 migrations + 4 endpoints + 7 BRAIN kinds + dual-channel kill mechanism + 4 cascade targets + reconciliation job + grace period + admin restore + per-Engagement isolation + 23 failure modes covering distributed-system pitfalls. Density matches peer FRs at similar scope.
+The 1,090-line length is justified by 3 migrations + 4 endpoints + 7 memory kinds + dual-channel kill mechanism + 4 cascade targets + reconciliation job + grace period + admin restore + per-Engagement isolation + 23 failure modes covering distributed-system pitfalls. Density matches peer FRs at similar scope.
 
 **Score = 10/10.**
 

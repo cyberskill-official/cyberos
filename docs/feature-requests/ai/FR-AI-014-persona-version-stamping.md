@@ -1,10 +1,10 @@
 ---
 # ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-014
-title: "Persona-version system-prompt injection from BRAIN memories/personas/<handle>.md"
+title: "Persona-version system-prompt injection from memory memories/personas/<handle>.md"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -12,7 +12,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-003, FR-AI-005, FR-AI-008, FR-AI-022]
 depends_on: [FR-AI-003]
 blocks: []
@@ -24,7 +24,7 @@ source_pages:
 source_decisions:
   - EU AI Act Art. 50 transparency (persona-version stamp on every output that emerged from a CyberOS persona)
   - DEC-046 (CUO single-Genie identity with persona overlay)
-  - DEC-051 (persona files MUST live in BRAIN, not config; full revision history is auditable)
+  - DEC-051 (persona files MUST live in memory, not config; full revision history is auditable)
   - archive/2026-05-14/RESEARCH_REVIEW.md §3.7 (tamper-detect personas at injection time)
 
 # ───── Build envelope ─────
@@ -46,16 +46,16 @@ new_files:
 modified_files:
   - services/ai-gateway/src/handlers/chat.rs           # persona injection at message[0] system role
   - services/ai-gateway/src/lib.rs                     # boot order: init_persona_registry before bind
-  - services/ai-gateway/src/brain_writer.rs            # add canonical::persona_loaded builder (FR-AI-003 §3 declared kind)
+  - services/ai-gateway/src/memory_writer.rs            # add canonical::persona_loaded builder (FR-AI-003 §3 declared kind)
   - services/ai-gateway/Cargo.toml                     # arc_swap, notify, sha2, semver, once_cell
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests}/**
-  - brain: read memories/personas/* via brain_writer query (NOT direct fs read; protocol §0.7)
-  - brain: write personas via canonical Writer ONLY (no fs::write to memories/personas/)
+  - memory: read memories/personas/* via memory_writer query (NOT direct fs read; protocol §0.7)
+  - memory: write personas via canonical Writer ONLY (no fs::write to memories/personas/)
   - bash: cargo test -p cyberos-ai-gateway persona
 disallowed_tools:
-  - hardcode persona content inline in src/persona/* (must load from BRAIN)
+  - hardcode persona content inline in src/persona/* (must load from memory)
   - write to memories/personas/* outside the canonical Writer (§0.3 immutability invariant)
   - skip tamper verification on cache-hit path (cheap check; security-load-bearing)
   - cache persona by id alone (must key by full handle `<id>@<version>` per §1 #4)
@@ -67,10 +67,10 @@ sub_tasks:
   - "0.5h: Persona schema types (PersonaHandle, PersonaId, Version newtypes with parse validation)"
   - "0.5h: parse_persona_md (YAML frontmatter + body extraction; allowed-field whitelist)"
   - "0.5h: Source-hash canonicalisation (LF-normalised, NFC, no BOM, trim trailing whitespace)"
-  - "1.0h: persona::load(handle) with ArcSwap registry; init from brain_writer::list_path"
-  - "1.0h: BRAIN file-watch (notify crate) with 250ms debounce; reparse on event; ArcSwap::store the new map"
+  - "1.0h: persona::load(handle) with ArcSwap registry; init from memory_writer::list_path"
+  - "1.0h: memory file-watch (notify crate) with 250ms debounce; reparse on event; ArcSwap::store the new map"
   - "1.0h: Injection at chat.rs handler: prepend system message; preserve caller's system message at index 1"
-  - "0.5h: canonical::persona_loaded builder + brain_writer subprocess invocation"
+  - "0.5h: canonical::persona_loaded builder + memory_writer subprocess invocation"
   - "0.5h: Response header injection (`X-CyberOS-Persona-Handle`) + EU AI Act Art. 50 badge metadata"
   - "0.5h: OTel metrics emission (loads_total, cache_hits_total, tampered_total, reload_total)"
   - "0.5h: persona_test.rs — happy load + cache hit + Arc::ptr_eq"
@@ -90,16 +90,16 @@ The AI Gateway service **MUST** load persona definitions from `<memory-root>/mem
 3. **MUST** cache parsed personas via `ArcSwap<HashMap<PersonaHandle, Arc<Persona>>>`. Reader path: `registry.load().get(&handle).cloned()`. Writer path: `registry.store(Arc::new(new_map))` on hot-reload — an atomic pointer swap; no torn reads. RwLock is NOT acceptable (blocks readers during reload).
 4. **MUST** reject requests where `req.agent_persona` doesn't resolve to a registered handle — return `400 BAD_REQUEST` with body `{"error":"unknown_persona","agent_persona":"<handle>","available_handles":["..."]}`. The available list is the registry keys at request time; it is sorted lexicographically for stable test fixtures.
 5. **MUST** inject the persona's body (canonical `system_prompt`) as `messages[0]` with role `system` BEFORE any caller-supplied system message. A caller's system message becomes `messages[1]` (also role `system`). The handler MUST NOT silently overwrite a caller's system message and MUST NOT concatenate the persona prompt with the caller's system message.
-6. **MUST** emit exactly one `ai.persona_loaded` BRAIN audit row per request, BEFORE the LLM call begins, via the canonical builder `canonical::persona_loaded(&persona, &request_id)` (declared as a row kind in FR-AI-003 §3; this FR adds the builder function). The row carries `persona_id`, `persona_version`, `persona_handle`, `source_path`, `source_hash`, `request_id`. The audit-before-action invariant from FR-AI-001 §1 #6 applies — the row MUST be durable on the chain before the call leaves the gateway.
+6. **MUST** emit exactly one `ai.persona_loaded` memory audit row per request, BEFORE the LLM call begins, via the canonical builder `canonical::persona_loaded(&persona, &request_id)` (declared as a row kind in FR-AI-003 §3; this FR adds the builder function). The row carries `persona_id`, `persona_version`, `persona_handle`, `source_path`, `source_hash`, `request_id`. The audit-before-action invariant from FR-AI-001 §1 #6 applies — the row MUST be durable on the chain before the call leaves the gateway.
 7. **MUST** verify `source_hash` matches the cached body before injection on EVERY load (cache-hit AND cache-miss path). The check is cheap (~5µs SHA-256 of body bytes). On mismatch: return `Err(PersonaError::Tampered { handle, expected_hash, actual_hash })`; emit a sev-1 OBS event `ai_persona_tampered{handle}`; refuse the call with `503 PERSONA_TAMPERED`. Tamper detection MUST NOT be skipped via a "trust cache" flag — this is the boundary check that catches on-disk modification after init.
 8. **MUST** canonicalise the body BEFORE hashing AND before injection: (a) normalise line endings CRLF → LF, (b) strip a leading BOM if present, (c) apply Unicode NFC normalisation, (d) right-trim trailing whitespace on each line, (e) ensure exactly one terminating LF. This canonicalisation is the source-hash domain; without it, a benign LF↔CRLF flip on a Windows checkout would false-positive as tampering.
 9. **MUST** include the persona handle in EVERY downstream artefact:
-   - `ai.precheck` BRAIN row (FR-AI-001 already carries `agent_persona`; this FR ensures the value is a full handle, not bare id).
+   - `ai.precheck` memory row (FR-AI-001 already carries `agent_persona`; this FR ensures the value is a full handle, not bare id).
    - `ai.invocation` row (FR-AI-002).
    - Response header `X-CyberOS-Persona-Handle: <id>@<version>` on every HTTP 200.
    - Response header `X-CyberOS-Persona-Source-Hash: <hex16>` (first 16 hex of SHA-256) for client-side tamper-correlation.
    - User-facing badge metadata field `{"made_by_genie":{"id":"<id>","version":"<version>"}}` in the response JSON body (EU AI Act Art. 50 transparency requirement; UI surfaces render the badge from this field).
-10. **MUST** complete `persona::load(handle)` in ≤ 100µs on cache hit (registry HashMap lookup + hash verify) and ≤ 50ms on cache miss (first init + brain_writer disk read). After warm-up, cache miss is rare; the 50ms is a budget for the boot-time `init_persona_registry` per-persona cost.
+10. **MUST** complete `persona::load(handle)` in ≤ 100µs on cache hit (registry HashMap lookup + hash verify) and ≤ 50ms on cache miss (first init + memory_writer disk read). After warm-up, cache miss is rare; the 50ms is a budget for the boot-time `init_persona_registry` per-persona cost.
 11. **MUST** integrate with `policy.ai_policy.allowed_personas` from FR-AI-005 — if the tenant policy declares an allow-list, FR-AI-001 §1 #13 already enforces it. This FR DOES NOT replicate the check; it only loads. A request that passes FR-AI-001's persona-allow check and arrives at the injection point MUST always succeed (or fail tamper/missing-handle). No silent policy re-check at injection.
 12. **MUST** debounce file-watch events on `<memory-root>/memories/personas/` with a 250ms window: rapid bursts (editor save sequences write 3-5 events) collapse to one reparse. The watcher uses the `notify` crate's `RecommendedWatcher` with `RecursiveMode::Recursive`. On debounce-flush, the watcher re-runs `init_persona_registry`'s parsing pass against the current disk state and `ArcSwap::store`s the new map atomically.
 13. **MUST** keep the LLM-hints (`temperature`, `max_tokens`, `stop_sequences`) from the persona as the per-request DEFAULT — caller-supplied values in the request body OVERRIDE the persona hint. This rule is documented in §2; the merge order is `request.body.llm_hints` > `persona.llm_hints` > provider default.
@@ -116,7 +116,7 @@ The AI Gateway service **MUST** load persona definitions from `<memory-root>/mem
 
 ## §2 — Why this design (rationale for humans)
 
-**Why store personas in BRAIN, not config files?** Personas evolve through user edits and CUO refinement loops. Every edit produces a chain leaf (the BRAIN's append-only audit log captures who edited what and when). Storing in a YAML config file would create a parallel source of truth with no audit trail — exactly the failure mode the BRAIN exists to prevent. Personas are *operational artefacts* (often-edited, frequently-versioned, audit-required), not infrastructure config.
+**Why store personas in memory, not config files?** Personas evolve through user edits and CUO refinement loops. Every edit produces a chain leaf (the memory's append-only audit log captures who edited what and when). Storing in a YAML config file would create a parallel source of truth with no audit trail — exactly the failure mode the memory exists to prevent. Personas are *operational artefacts* (often-edited, frequently-versioned, audit-required), not infrastructure config.
 
 **Why key the registry by full handle, not id?** Two reasons. (1) Multiple versions of the same persona coexist during a rollout — `cuo-cpo@0.4.1` and `cuo-cpo@0.4.2` are both valid for a brief window while traffic shifts. Indexing by id alone forces a choose-one moment; indexing by handle lets both serve. (2) The handle is the EU AI Act Art. 50 attribution unit — a regulator asking "which persona produced this output" wants the handle, not the id. The handle-keyed registry IS the answer to the regulator's question.
 
@@ -176,7 +176,7 @@ pub struct Persona {
     pub allowed_tools: Vec<String>,            // e.g. ["search_kb", "draft_email"]
     pub traits: Vec<String>,                   // e.g. ["concise", "VN-aware", "founder-voice"]
     pub llm_hints: LlmHints,                   // temperature, max_tokens, stop_sequences
-    pub source_path: String,                   // BRAIN-relative path; e.g. "memories/personas/cuo-cpo@0.4.1.md"
+    pub source_path: String,                   // memory-relative path; e.g. "memories/personas/cuo-cpo@0.4.1.md"
     pub source_hash: [u8; 32],                 // SHA-256 of canonicalised body
 }
 
@@ -200,8 +200,8 @@ pub enum PersonaError {
         expected_hash: [u8; 32],
         actual_hash: [u8; 32],
     },
-    #[error("brain read failed: {0}")]
-    BrainReadFailed(String),
+    #[error("memory read failed: {0}")]
+    MemoryReadFailed(String),
     #[error("registry not initialised")]
     RegistryNotInitialised,
 }
@@ -216,8 +216,8 @@ pub enum PersonaInitError {
     ForbiddenFrontmatterField { path: String },
     #[error("registry already initialised; init_persona_registry called twice")]
     AlreadyInitialised,
-    #[error("brain read failed at init: {0}")]
-    BrainReadFailed(String),
+    #[error("memory read failed at init: {0}")]
+    MemoryReadFailed(String),
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -342,7 +342,7 @@ async fn handle_chat(req: ChatCompleteRequest) -> Result<ChatCompleteResponse, A
     let persona = persona::load(&handle).map_err(map_persona_err)?;
 
     // §1 #6: audit row BEFORE LLM call.
-    brain_writer::emit(canonical::persona_loaded(&persona, &req.request_id)).await?;
+    memory_writer::emit(canonical::persona_loaded(&persona, &req.request_id)).await?;
 
     // §1 #5: prepend persona body as messages[0].
     let mut messages = Vec::with_capacity(req.messages.len() + 1);
@@ -381,7 +381,7 @@ async fn handle_chat(req: ChatCompleteRequest) -> Result<ChatCompleteResponse, A
 5. **Tamper detection** — Mutate the on-disk file's body via `fs::write` (bypassing the canonical Writer); call `persona::load(&handle)`. The first call after the mutation returns `Err(Tampered { handle, expected_hash, actual_hash })`; a sev-1 OBS event is emitted with metric `ai_persona_tampered_total{handle}` incremented by 1.
 6. **System prompt injection** — `req.messages = [User("hi")]` + `agent_persona = "cuo-cpo@0.4.1"`. After handler injection, the request sent to the provider has `messages = [System(persona.body), User("hi")]`.
 7. **Caller system message preserved** — `req.messages = [System("call-specific"), User("hi")]`. After injection, the provider sees `messages = [System(persona.body), System("call-specific"), User("hi")]` — the caller's system message is at index 1, NOT overwritten.
-8. **Audit row emitted** — Every request with persona resolves emits exactly one `ai.persona_loaded` BRAIN row before the LLM call. The row's `source_hash` matches `persona.source_hash`.
+8. **Audit row emitted** — Every request with persona resolves emits exactly one `ai.persona_loaded` memory row before the LLM call. The row's `source_hash` matches `persona.source_hash`.
 9. **Response header includes persona handle** — Every HTTP 200 response carries `X-CyberOS-Persona-Handle: cuo-cpo@0.4.1` AND `X-CyberOS-Persona-Source-Hash: <hex16>`.
 10. **Response body badge** — Every HTTP 200 response body contains `made_by_genie: {"id":"cuo-cpo","version":"0.4.1"}`.
 11. **Latency budget (cache hit)** — 1000 cache-hit `persona::load` calls complete in < 100ms total (≤ 100µs each per §1 #10).
@@ -406,7 +406,7 @@ async fn handle_chat(req: ChatCompleteRequest) -> Result<ChatCompleteResponse, A
 use cyberos_ai_gateway::persona::{self, PersonaHandle};
 
 #[tokio::test]
-async fn loads_persona_from_brain_and_caches() {
+async fn loads_persona_from_memory_and_caches() {
     persona::init_persona_registry().await.unwrap();
     let handle = PersonaHandle::parse("cuo-cpo@0.4.1").unwrap();
 
@@ -665,21 +665,21 @@ pub async fn init_persona_registry() -> Result<(), PersonaInitError> {
         return Err(PersonaInitError::AlreadyInitialised);
     }
 
-    let entries = brain_writer::list_path("memories/personas/").await
-        .map_err(|e| PersonaInitError::BrainReadFailed(e.to_string()))?;
+    let entries = memory_writer::list_path("memories/personas/").await
+        .map_err(|e| PersonaInitError::MemoryReadFailed(e.to_string()))?;
 
     let mut map: HashMap<PersonaHandle, Arc<Persona>> = HashMap::new();
     for entry_path in entries {
         if !entry_path.ends_with(".md") { continue; }
-        let raw = brain_writer::read_path(&entry_path).await
-            .map_err(|e| PersonaInitError::BrainReadFailed(e.to_string()))?;
+        let raw = memory_writer::read_path(&entry_path).await
+            .map_err(|e| PersonaInitError::MemoryReadFailed(e.to_string()))?;
         let persona = parse::parse_persona_md(&entry_path, &raw)?;
         map.insert(persona.handle.clone(), Arc::new(persona));
     }
 
     REGISTRY.set(ArcSwap::from_pointee(map))
         .map_err(|_| PersonaInitError::AlreadyInitialised)?;
-    watch::spawn_brain_watcher();
+    watch::spawn_memory_watcher();
     Ok(())
 }
 
@@ -702,7 +702,7 @@ pub fn load(handle: &PersonaHandle) -> Result<Arc<Persona>, PersonaError> {
 ```rust
 // services/ai-gateway/src/persona/watch.rs
 
-pub fn spawn_brain_watcher() {
+pub fn spawn_memory_watcher() {
     use notify::{Watcher, RecursiveMode, EventKind};
     use std::sync::mpsc;
     let (tx, rx) = mpsc::channel();
@@ -731,11 +731,11 @@ pub fn spawn_brain_watcher() {
 fn reload_registry() {
     let tokio_runtime = tokio::runtime::Handle::current();
     let result = tokio_runtime.block_on(async {
-        let entries = brain_writer::list_path("memories/personas/").await?;
+        let entries = memory_writer::list_path("memories/personas/").await?;
         let mut new_map: HashMap<PersonaHandle, Arc<Persona>> = HashMap::new();
         for path in entries {
             if !path.ends_with(".md") { continue; }
-            let raw = brain_writer::read_path(&path).await?;
+            let raw = memory_writer::read_path(&path).await?;
             let persona = parse::parse_persona_md(&path, &raw)?;
             new_map.insert(persona.handle.clone(), Arc::new(persona));
         }
@@ -791,7 +791,7 @@ pub fn hex16(h: &[u8; 32]) -> String {
 ```
 
 ```rust
-// services/ai-gateway/src/brain_writer.rs (additions)
+// services/ai-gateway/src/memory_writer.rs (additions)
 
 pub mod canonical {
     pub fn persona_loaded(persona: &Persona, request_id: &str) -> AuditRow {
@@ -817,14 +817,14 @@ pub mod canonical {
 
 ### Code dependencies (other FRs/modules)
 
-- **FR-AI-003** — BRAIN audit-row bridge. Declares the `ai.persona_loaded` row kind in §3; this FR adds the `canonical::persona_loaded` builder function. The Writer subprocess pattern from FR-AI-003 §1 is reused unchanged.
-- **FR-AI-005** — Tenant policy loader. `policy.ai_policy.allowed_personas` is enforced in FR-AI-001 §1 #13; this FR does not duplicate the check. The persona schema (id, version, allowed_tools, traits, llm_hints) is the source-of-truth this FR loads from BRAIN.
+- **FR-AI-003** — memory audit-row bridge. Declares the `ai.persona_loaded` row kind in §3; this FR adds the `canonical::persona_loaded` builder function. The Writer subprocess pattern from FR-AI-003 §1 is reused unchanged.
+- **FR-AI-005** — Tenant policy loader. `policy.ai_policy.allowed_personas` is enforced in FR-AI-001 §1 #13; this FR does not duplicate the check. The persona schema (id, version, allowed_tools, traits, llm_hints) is the source-of-truth this FR loads from memory.
 - **FR-AI-001** — Cost ledger precheck. Already carries `agent_persona`; this FR ensures the value is a full handle (`<id>@<version>`). FR-AI-001 §1 #13 (persona-allow check) runs BEFORE persona loading; an unauthorised persona request is refused before this FR's code runs.
 - **FR-AI-022 (downstream)** — OTel trace emission. Will consume `ai_persona_loads_total` and friends as the canonical metric set for persona observability.
 
 ### Concept dependencies (shared types)
 
-- `PersonaHandle = "{id}@{version}"` is the shared identity primitive used by `ai.precheck`, `ai.invocation`, `ai.persona_loaded` BRAIN rows AND the `X-CyberOS-Persona-Handle` response header. Format is fixed: kebab-case id, semver version, `@` separator.
+- `PersonaHandle = "{id}@{version}"` is the shared identity primitive used by `ai.precheck`, `ai.invocation`, `ai.persona_loaded` memory rows AND the `X-CyberOS-Persona-Handle` response header. Format is fixed: kebab-case id, semver version, `@` separator.
 - `LlmHints` (temperature, max_tokens, stop_sequences) is the shared default-override surface. Merge order: `request.body` > `persona.llm_hints` > `provider default`.
 - `source_hash` (SHA-256 of canonicalised body) is the tamper-detection primitive AND the audit-correlation primitive (audit row carries it; response header `X-CyberOS-Persona-Source-Hash` carries the 16-hex prefix).
 - The `made_by_genie` JSON field in response bodies is the EU AI Act Art. 50 attribution surface used by all CyberOS UIs.
@@ -832,7 +832,7 @@ pub mod canonical {
 ### Operational / external
 
 - Rust crates: `arc-swap@1`, `notify@6`, `sha2@0.10`, `semver@1`, `once_cell@1`, `serde_yaml@0.9`, `unicode-normalization@0.1`, `thiserror@1`.
-- BRAIN module: must allow reads from `memories/personas/` via `brain_writer::list_path` and `brain_writer::read_path`. Writes via canonical Writer only (protocol §0.3 immutability).
+- memory module: must allow reads from `memories/personas/` via `memory_writer::list_path` and `memory_writer::read_path`. Writes via canonical Writer only (protocol §0.3 immutability).
 - Seed personas: `cuo-cpo@0.4.1`, `cuo-cfo@0.4.1`, `cuo-cto@0.4.1` ship with this FR; further personas are operator-curated through CUO refinement loops.
 
 ---
@@ -930,7 +930,7 @@ HTTP/1.1 503 Service Unavailable
 }
 ```
 
-(Body never echoes `expected_hash`/`actual_hash` — those are written to the sev-1 OBS event and BRAIN, never to the client.)
+(Body never echoes `expected_hash`/`actual_hash` — those are written to the sev-1 OBS event and memory, never to the client.)
 
 ---
 
@@ -952,7 +952,7 @@ All resolved at authoring time. Items deferred to later FRs:
 |---|---|---|---|
 | Persona handle not in registry | HashMap miss in `persona::load` | `Err(UnknownPersona)` → `400 BAD_REQUEST` | Caller fixes `agent_persona`; or operator adds the persona file |
 | On-disk tamper between loads (post-init `fs::write`) | `verify_persona` hash mismatch | `Err(Tampered)` → sev-1 OBS → `503 PERSONA_TAMPERED` | Operator investigates (likely git revert); incident review |
-| BRAIN read failure at init | `brain_writer::read_path` error | `PersonaInitError::BrainReadFailed` → init fails → gateway refuses to bind | Operator investigates BRAIN (FR-AI-003 §10 covers); restart gateway after BRAIN recovery |
+| memory read failure at init | `memory_writer::read_path` error | `PersonaInitError::MemoryReadFailed` → init fails → gateway refuses to bind | Operator investigates memory (FR-AI-003 §10 covers); restart gateway after memory recovery |
 | Malformed persona YAML at init | `serde_yaml::from_str` error | `PersonaInitError::Schema` → init fails → gateway refuses to bind | Operator fixes file; redeploy |
 | Hot-reload of malformed file | Parser fails in watcher loop | Cache unchanged; `persona_reload_total{outcome=parse_error}` counter incremented; INFO log "reload failed" | Operator fixes file; next file-watch event triggers retry |
 | Filename ≠ frontmatter handle | `parse_persona_md` filename-match check | `PersonaInitError::FilenameMismatch` → init OR reload fails | Operator renames file OR fixes frontmatter |

@@ -1,17 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: edge-case-matrix-author
-description: |
-  Generate a structured edge-case-matrix@1 for an FR before implementation.
-  Enumerates: null/empty inputs, extreme bounds (off-by-one, integer
-  overflow, time-zone DST, leap second, Unicode normalisation), malformed
-  payloads (truncated, oversized, non-UTF-8, type-confused), concurrent
-  race conditions (double-submit, double-acknowledge, cross-tenant
-  cross-talk, RLS escape), security-class entries (auth bypass, injection,
-  token replay), and degradation modes (downstream slow, downstream
-  unreachable, partial write). One matrix row per category-and-trigger
-  with a pointer to the test that will cover it. Used by
-  chief-technology-officer/implement-backlog-frs as step 5.
+description: >-
+  Generate a structured edge-case-matrix@1 for an FR before implementation. Enumerates: null/empty inputs, extreme bounds (off-by-one, integer overflow, time-zone DST, leap second, Unicode normalisation), malformed payloads (truncated, oversized, non-UTF-8, type-confused), concurrent race conditions (double-submit, double-acknowledge, cross-tenant cross-talk, RLS escape), security-class entries (auth bypass, injection, token replay), and degradation modes (downstream slow, downstream unreachable, partial write). One matrix row per category-and-trigger with a pointer to the test that will cover it. Used by chief-technology-officer/ship-feature-requests as step 5. Use when user asks to "draft a edge case matrix" or "create the edge case matrix". Do NOT use for "audit existing edge case matrix" (use edge-case-matrix-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -21,7 +12,7 @@ metadata:
   cyberos-rubric-target: edge_case_matrix_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -41,7 +32,7 @@ outputs:
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
   - any FR moving from `accepted` → `building`
-  - workflow `chief-technology-officer/implement-backlog-frs` step 5
+  - workflow `chief-technology-officer/ship-feature-requests` step 5
 blockers:
   - "FR acceptance criteria are ambiguous — escalate to chief-product-officer"
   - "no test framework declared in repo — must be resolved first"

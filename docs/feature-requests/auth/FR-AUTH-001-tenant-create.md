@@ -4,7 +4,7 @@ id: FR-AUTH-001
 title: "Tenant create — root-admin in tenant 0 calls POST /v1/admin/tenants with idempotency + RLS provisioning"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -12,7 +12,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006]
 depends_on: []
 blocks: [FR-AUTH-002, FR-AUTH-003, FR-AUTH-005, FR-AUTH-006, FR-PROJ-001, FR-TEN-001]
@@ -38,7 +38,7 @@ new_files:
   - services/auth/src/admin/idempotency.rs
   - services/auth/src/rls/mod.rs
   - services/auth/src/rls/templates.rs
-  - services/auth/src/brain.rs
+  - services/auth/src/memory.rs
   - services/auth/migrations/0001_tenants.sql
   - services/auth/migrations/0002_admin_idempotency.sql
   - services/auth/tests/admin_tenant_create_test.rs
@@ -54,7 +54,7 @@ disallowed_tools:
   - create tenant 0 via this endpoint (bootstrap is FR-AUTH-006 CLI per §1 #14)
   - allow non-root-admin to create tenants (per §1 #1)
   - skip RLS policy application on success path (per §1 #7)
-  - skip BRAIN audit row emission (audit-before-commit per §1 #6)
+  - skip memory audit row emission (audit-before-commit per §1 #6)
   - bypass slug regex validation in API layer (defence in depth with DB CHECK)
 
 # ───── Estimated work ─────
@@ -64,10 +64,10 @@ sub_tasks:
   - "0.5h: 0001_tenants.sql migration (table + UNIQUE + CHECK)"
   - "0.5h: 0002_admin_idempotency.sql migration (idempotency_keys table)"
   - "1.0h: validate_slug + validate_name (regex + length checks; same as DB CHECK)"
-  - "1.5h: create_tenant transaction (idempotency lookup → insert → RLS provisioning → BRAIN row → commit)"
+  - "1.5h: create_tenant transaction (idempotency lookup → insert → RLS provisioning → memory row → commit)"
   - "1.0h: rls/templates.rs — RLS policy SQL templates (per-table USING expression)"
   - "0.5h: rls::apply_for_tenant(tenant_id) iterates registered tables and applies policies"
-  - "0.5h: canonical::tenant_created BRAIN audit row builder"
+  - "0.5h: canonical::tenant_created memory audit row builder"
   - "0.5h: Authorisation middleware (tenant_id == Uuid::nil() + role contains root-admin)"
   - "0.5h: Idempotency-Key header parsing + 24h dedup window"
   - "1.5h: Tests — happy + 401 + 403 + 409 + 400 + idempotent-replay + RLS-applied + audit-emitted + p95 latency"
@@ -83,9 +83,9 @@ The AUTH service **MUST** expose `POST /v1/admin/tenants` for creating new tenan
 3. **MUST** create a row in the `tenants` table with auto-generated UUID id, returning `{ "id": <uuid>, "slug": ..., "name": ..., "created_at": <ISO8601>, "suspended": false }`.
 4. **MUST** return `409 CONFLICT` with body `{"error":"slug_taken","slug":<slug>}` if `slug` already exists (UNIQUE constraint violation). The 409 is returned EXCEPT when the request carries an `Idempotency-Key` header matching a prior successful create within 24 hours (per §1 #5) — in which case the prior tenant body is returned with the SAME id.
 5. **MUST** support idempotency via `Idempotency-Key` header (UUID or arbitrary string ≤ 64 chars). The handler stores `(idempotency_key, request_body_hash, response_body, created_at)` in `admin_idempotency_keys` table with 24h TTL. Repeat POST with the same key + same body returns the prior response with the same id; same key + different body returns `409 CONFLICT` with `{"error":"idempotency_key_reuse","prior_request_hash":<hex16>}`.
-6. **MUST** emit exactly one `auth.tenant_created` BRAIN audit row per new tenant (NOT per idempotent replay). The row carries `tenant_id`, `slug`, `name`, `created_by_subject_id` (from JWT), `idempotency_key` (if present), `request_id`. The row is written WITHIN the same Postgres transaction as the tenants insert; transaction rollback rolls back both.
+6. **MUST** emit exactly one `auth.tenant_created` memory audit row per new tenant (NOT per idempotent replay). The row carries `tenant_id`, `slug`, `name`, `created_by_subject_id` (from JWT), `idempotency_key` (if present), `request_id`. The row is written WITHIN the same Postgres transaction as the tenants insert; transaction rollback rolls back both.
 7. **MUST** initialise RLS for the new tenant: every tenant-scoped table registered in `rls/templates.rs` SHALL have the new tenant's RLS policy applied automatically. The applied policy is the standard `USING (tenant_id = current_setting('app.tenant_id')::uuid)` template; tables that need different filters extend the template registry.
-8. **MUST** complete in ≤ 100ms p95 (insert + RLS apply + BRAIN row emit + commit). Latency budget asserted by `admin_tenant_create_test.rs` against a live test database.
+8. **MUST** complete in ≤ 100ms p95 (insert + RLS apply + memory row emit + commit). Latency budget asserted by `admin_tenant_create_test.rs` against a live test database.
 9. **MUST** return `401 UNAUTHORIZED` if the caller is unauthenticated (no JWT, expired JWT, invalid signature). The 401 body is `{"error":"unauthenticated","reason":"<missing|expired|invalid_sig>"}`.
 10. **MUST** return `403 FORBIDDEN` if the caller is authenticated but does NOT meet the root-admin-in-tenant-0 requirement. The 403 body is `{"error":"forbidden","needed":"root-admin in tenant 0"}` — explicit about WHAT permission is missing so operators can grant it correctly.
 11. **MUST** return `400 BAD_REQUEST` for malformed slug (uppercase, special chars, starts with digit) OR malformed name (length out of bounds, contains null bytes). The 400 body identifies which field failed and why: `{"error":"invalid_input","field":"slug","reason":"must match /^[a-z][a-z0-9-]*$/, got 'Foo Bar'"}`.
@@ -111,13 +111,13 @@ The AUTH service **MUST** expose `POST /v1/admin/tenants` for creating new tenan
 
 **Why explicit error bodies with `field` and `reason` (§1 #11)?** Generic 400 errors force the client to inspect logs. Explicit error bodies let the client display "the slug must contain only lowercase letters, digits, and hyphens" directly to the user — better UX, fewer support tickets. The error structure is consistent across endpoints (FR-AUTH-002+ inherit the pattern).
 
-**Why explicit `needed` field on 403 (§1 #10)?** "Forbidden" without context forces ops to grep code or read source to understand WHY. `"needed":"root-admin in tenant 0"` tells the operator exactly what role/tenant combination would have succeeded — actionable feedback. The pattern surfaces in the BRAIN audit too, so post-mortem investigations of access denials have full context.
+**Why explicit `needed` field on 403 (§1 #10)?** "Forbidden" without context forces ops to grep code or read source to understand WHY. `"needed":"root-admin in tenant 0"` tells the operator exactly what role/tenant combination would have succeeded — actionable feedback. The pattern surfaces in the memory audit too, so post-mortem investigations of access denials have full context.
 
 **Why 100ms p95 budget (§1 #8)?** Tenant creation isn't user-facing (operators run it during onboarding); but slow creates indicate a bottleneck — likely the RLS-policy-apply loop. The 100ms ceiling forces the implementation to apply policies efficiently (single SQL statement per table, not multiple). At 50 tables × 1ms per policy = 50ms, the budget is comfortable for slice-2 scope and tightens as we add tables.
 
 **Why explicit reject of `slug == "root"` (§1 #14)?** Even though tenant 0 is bootstrapped via CLI, an operator running `POST /v1/admin/tenants {"slug":"root"}` would create a SECOND tenant with that slug (the slug is unique per row, but "root" is conventionally tenant 0). The defence-in-depth rejection prevents the confusing-state scenario.
 
-**Why audit-row-in-transaction (§1 #6)?** The same audit-before-action principle that AI Gateway uses: the audit IS the truth of "did this happen." If we commit the tenant but the audit row write fails (BRAIN unavailable), we have a tenant nobody can prove was created. Including the audit emit in the transaction ensures the chain has the row IF AND ONLY IF the tenant exists.
+**Why audit-row-in-transaction (§1 #6)?** The same audit-before-action principle that AI Gateway uses: the audit IS the truth of "did this happen." If we commit the tenant but the audit row write fails (memory unavailable), we have a tenant nobody can prove was created. Including the audit emit in the transaction ensures the chain has the row IF AND ONLY IF the tenant exists.
 
 ---
 
@@ -160,8 +160,8 @@ pub enum TenantError {
     IdempotencyKeyReuse { prior_hash: String },
     #[error("rls provisioning failed: {0}")]
     RlsFailed(String),
-    #[error("brain emit failed: {0}")]
-    BrainFailed(String),
+    #[error("memory emit failed: {0}")]
+    MemoryFailed(String),
     #[error("db error: {0}")]
     Db(#[from] sqlx::Error),
 }
@@ -286,9 +286,9 @@ pub async fn create_tenant(
         .map_err(|e| TenantError::RlsFailed(e.to_string()))?;
 
     // §1 #6 audit row (within transaction)
-    brain::emit_in_tx(&mut tx, brain::canonical::tenant_created(
+    memory::emit_in_tx(&mut tx, memory::canonical::tenant_created(
         row.id, &req.slug, &req.name, claims.subject_id, idempotency_key.as_deref(), request_id,
-    )).await.map_err(|e| TenantError::BrainFailed(e.to_string()))?;
+    )).await.map_err(|e| TenantError::MemoryFailed(e.to_string()))?;
 
     // §1 #5 idempotency record
     if let Some(key) = &idempotency_key {
@@ -343,12 +343,12 @@ fn validate_name(name: &str) -> Result<(), TenantError> {
 9. **Name > 80 chars returns 400** — `name: <81 chars>` → `400` with `field: name`.
 10. **Name with null byte returns 400** — `name: "Test\0Co"` → `400`.
 11. **Reserved slug 'root' returns 400** — `slug: "root"` → `400` with `reason` mentioning reserved.
-12. **BRAIN audit row emitted** — Successful create produces exactly one `auth.tenant_created` row in BRAIN with all required fields populated.
-13. **Idempotent replay returns prior body** — Two POSTs with same `Idempotency-Key` + same body → second returns the SAME id, no duplicate tenant in DB, no second BRAIN row.
+12. **memory audit row emitted** — Successful create produces exactly one `auth.tenant_created` row in memory with all required fields populated.
+13. **Idempotent replay returns prior body** — Two POSTs with same `Idempotency-Key` + same body → second returns the SAME id, no duplicate tenant in DB, no second memory row.
 14. **Idempotency-Key reuse with different body returns 409** — Same key + different body → `409` with `idempotency_key_reuse`.
 15. **RLS policies created for new tenant** — After successful create, every table in `TENANT_SCOPED_TABLES` has a policy named `tenant_<id>_<table>`.
 16. **Latency p95 < 100ms** — 1000 sequential creates; `percentile(latencies, 0.95) < 100`.
-17. **Atomic transaction: RLS failure rolls back** — Inject an RLS apply failure; assert no tenant row exists AND no BRAIN audit row written.
+17. **Atomic transaction: RLS failure rolls back** — Inject an RLS apply failure; assert no tenant row exists AND no memory audit row written.
 18. **OTel span emitted** — `auth.create_tenant` span with `outcome` attribute set per result.
 
 ---
@@ -369,7 +369,7 @@ async fn root_admin_creates_tenant() {
     ).await.unwrap();
     assert_eq!(resp.slug, "test-co");
     assert!(!resp.suspended);
-    assert!(brain_test_helper::has_row("auth.tenant_created", &resp.id.to_string()).await);
+    assert!(memory_test_helper::has_row("auth.tenant_created", &resp.id.to_string()).await);
 }
 
 #[tokio::test]
@@ -423,7 +423,7 @@ async fn idempotent_replay_returns_same_id() {
         .fetch_one(&pool).await.unwrap();
     assert_eq!(count, 1);
 
-    let audit_count = brain_test_helper::count_rows("auth.tenant_created", "idem").await;
+    let audit_count = memory_test_helper::count_rows("auth.tenant_created", "idem").await;
     assert_eq!(audit_count, 1);
 }
 
@@ -469,7 +469,7 @@ async fn rls_failure_rolls_back_transaction() {
     let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM tenants WHERE slug = 'roll'")
         .fetch_one(&pool).await.unwrap();
     assert_eq!(count, 0, "tenant must not exist after RLS failure");
-    assert!(!brain_test_helper::has_row("auth.tenant_created", "roll").await);
+    assert!(!memory_test_helper::has_row("auth.tenant_created", "roll").await);
 }
 
 #[tokio::test]
@@ -529,10 +529,10 @@ pub async fn insert<T: Serialize>(
 }
 ```
 
-BRAIN canonical builder:
+memory canonical builder:
 
 ```rust
-// services/auth/src/brain.rs
+// services/auth/src/memory.rs
 pub mod canonical {
     pub fn tenant_created(
         id: Uuid, slug: &str, name: &str, created_by: Uuid,
@@ -551,12 +551,12 @@ pub mod canonical {
     }
 }
 
-pub async fn emit_in_tx(tx: &mut PgConnection, row: AuditRow) -> Result<(), brain_writer::Error> {
-    // Writes to a Postgres outbox table; brain_writer subprocess polls + emits to BRAIN ledger.
+pub async fn emit_in_tx(tx: &mut PgConnection, row: AuditRow) -> Result<(), memory_writer::Error> {
+    // Writes to a Postgres outbox table; memory_writer subprocess polls + emits to memory ledger.
     sqlx::query(
-        "INSERT INTO brain_outbox (kind, payload_json, created_at) VALUES ($1, $2, NOW())",
+        "INSERT INTO memory_outbox (kind, payload_json, created_at) VALUES ($1, $2, NOW())",
     ).bind(&row.kind).bind(&row.payload).execute(tx).await
-     .map_err(brain_writer::Error::OutboxInsertFailed)?;
+     .map_err(memory_writer::Error::OutboxInsertFailed)?;
     Ok(())
 }
 ```
@@ -586,7 +586,7 @@ pub async fn emit_in_tx(tx: &mut PgConnection, row: AuditRow) -> Result<(), brai
 
 - Rust crates: `axum@0.7`, `sqlx@0.7` (postgres + chrono + uuid features), `jsonwebtoken@9`, `uuid@1`, `chrono@0.4`, `serde@1`, `serde_json@1`, `regex@1`, `sha2@0.10`, `hex@0.4`, `thiserror@1`, `once_cell@1`, `tracing@0.1`.
 - Postgres 16+ (RLS + JSONB + UUID extension).
-- BRAIN module reachable via outbox table (FR-AUTH-006 sets up the brain_writer subprocess).
+- memory module reachable via outbox table (FR-AUTH-006 sets up the memory_writer subprocess).
 
 ---
 
@@ -704,7 +704,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Idempotency-Key reuse with different body | hash mismatch | 409 with `idempotency_key_reuse` + prior_hash16 | Caller uses different key |
 | Postgres unreachable | sqlx connect error | 503 with `db_unreachable` | Operator investigates DB |
 | RLS apply fails (e.g., table doesn't exist) | SQL error in transaction | Transaction rolls back; tenant NOT created; 500 with `rls_failed` | Operator fixes table; re-attempt |
-| BRAIN outbox insert fails | sqlx error in transaction | Transaction rolls back; 500 with `brain_failed` | Operator investigates outbox table |
+| memory outbox insert fails | sqlx error in transaction | Transaction rolls back; 500 with `memory_failed` | Operator investigates outbox table |
 | Unauthenticated request | JWT middleware rejects | 401 with `reason` | Caller obtains valid JWT |
 | Expired JWT | JWT validation | 401 with `reason: expired` | Caller refreshes JWT |
 | Invalid JWT signature | JWT validation | 401 with `reason: invalid_sig` | Caller obtains JWT from correct issuer |
@@ -729,7 +729,7 @@ All resolved at authoring time. Items deferred to later FRs:
 - The `TENANT_SCOPED_TABLES` registry in `rls/templates.rs` is operationally critical. Every PR adding a new tenant-scoped table MUST extend the registry; a CI lint (`auth_rls_registry_complete_test`) ensures registry entries match table schemas.
 - Idempotency key TTL of 24h matches Stripe's default. Shorter (1h) risks legitimate retries failing; longer (7d) bloats storage.
 - The `suspended` column exists for future tenant suspension workflows (e.g., "tenant didn't pay; suspend without delete") but no endpoint mutates it at slice 1. Setting `suspended: true` requires manual SQL until a slice-4 admin endpoint ships.
-- The BRAIN audit row is written to a Postgres `brain_outbox` table within the same transaction as the tenant insert. The brain_writer subprocess polls the outbox and emits to the BRAIN ledger asynchronously; the in-transaction outbox insert ensures the audit row is durable iff the tenant is durable.
+- The memory audit row is written to a Postgres `memory_outbox` table within the same transaction as the tenant insert. The memory_writer subprocess polls the outbox and emits to the memory ledger asynchronously; the in-transaction outbox insert ensures the audit row is durable iff the tenant is durable.
 - The 100ms p95 latency budget includes RLS apply (~50ms for 50 tables) + outbox insert (~5ms) + Postgres commit (~20ms). The remaining ~25ms is for validation + query plans.
 - Future tenant deletion (slice 5+) is non-trivial: cascading the tenant_id removal across every tenant-scoped table requires careful FK ordering. The current model is "tenants are immutable + suspendable, never deleted at P0."
 

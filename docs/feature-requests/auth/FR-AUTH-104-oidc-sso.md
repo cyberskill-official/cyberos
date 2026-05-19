@@ -3,7 +3,7 @@ id: FR-AUTH-104
 title: "AUTH OIDC SSO — RFC 8414 discovery + RFC 7517 JWKS rotation + per-tenant IdP config + PKCE + JIT subject provisioning + claim → role mapping"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P3
 milestone: P3 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-AUTH-103, FR-TEN-101, FR-PORTAL-003]
+memory_chain_hash: null
+related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-AUTH-103, FR-TEN-101, FR-PORTAL-003]
 depends_on: [FR-AUTH-004, FR-AUTH-101]
 blocks: [FR-TEN-101, FR-PORTAL-003]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-403 (JIT (Just-In-Time) subject provisioning — first OIDC login auto-creates AUTH subject via FR-AUTH-002; claim → role mapping per per-tenant config)
   - DEC-404 (closed claim-mapping ruleset: `groups | roles | role | scope` claim names supported; mapping rules per-tenant YAML; unknown claim → log + ignore)
   - DEC-405 (per-tenant IdP config stored in `auth_oidc_idp_configs` table; secrets KMS-encrypted)
-  - DEC-406 (BRAIN audit kinds: auth.oidc_login_succeeded, auth.oidc_login_failed, auth.oidc_jit_provisioned, auth.oidc_jwks_rotated, auth.oidc_idp_config_changed, auth.oidc_signature_invalid)
+  - DEC-406 (memory audit kinds: auth.oidc_login_succeeded, auth.oidc_login_failed, auth.oidc_jit_provisioned, auth.oidc_jwks_rotated, auth.oidc_idp_config_changed, auth.oidc_signature_invalid)
   - DEC-407 (REVOKE UPDATE, DELETE on auth_oidc_login_history from cyberos_app — append-only at SQL grant)
   - DEC-408 (state + nonce verification mandatory — replay attacks rejected; state TTL 10 minutes)
   - DEC-409 (login flow timeout 5 minutes total — initiation → callback; expired → reject with `oidc_flow_expired`)
@@ -33,7 +33,7 @@ source_decisions:
   - DEC-411 (id_token signature MUST validate against JWKS; aud + iss + exp + nbf all checked; clock skew tolerance 60s)
   - DEC-412 (per-tenant max 3 active IdP configs at slice 1; ADR required to raise — keeps the consent + discovery UX manageable)
   - RFC 6749 (OAuth 2.0); RFC 7636 (PKCE); RFC 7515/7517/7518 (JWT/JWS/JWA + JWKS); RFC 8414 (OAuth metadata); OIDC Core 1.0 spec
-  - PDPL Art. 13 (data minimisation — claim payload PII-scrubbed in BRAIN chain)
+  - PDPL Art. 13 (data minimisation — claim payload PII-scrubbed in memory chain)
 
 language: rust 1.81 + sql
 service: cyberos/services/auth/
@@ -50,7 +50,7 @@ new_files:
   - services/auth/src/oidc/claim_mapper.rs                  # claim → AUTH role mapping per tenant config
   - services/auth/src/oidc/jit_provision.rs                 # first-login JIT subject creation
   - services/auth/src/oidc/repo.rs                          # idp_configs + login_history + subject_link CRUD
-  - services/auth/src/oidc/audit.rs                         # 6 BRAIN row builders
+  - services/auth/src/oidc/audit.rs                         # 6 memory row builders
   - services/auth/src/oidc/errors.rs                        # closed error enum
   - services/auth/src/handlers/oidc.rs                      # GET /v1/auth/oidc/initiate + GET /v1/auth/oidc/callback + POST /v1/auth/oidc/idp-configs
   - services/auth/tests/oidc_discovery_test.rs
@@ -129,13 +129,13 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
     - `exp` claim MUST be in the future (60s skew tolerance).
     - `nbf` claim MUST be in the past (60s skew).
     - `nonce` claim MUST match the stored nonce.
-    - Any fail → 401 + emit `auth.oidc_login_failed` + `auth.oidc_signature_invalid` BRAIN rows.
+    - Any fail → 401 + emit `auth.oidc_login_failed` + `auth.oidc_signature_invalid` memory rows.
 
 8. **MUST** JIT-provision a subject on first login (per DEC-403). If `auth_oidc_subject_link WHERE idp_id=$1 AND sub_claim=$2` returns nothing:
     - Extract `email` claim (fall back to `preferred_username` if email absent).
     - Call `FR-AUTH-002`'s `create_subject` internal helper with `email`, JIT-generated password (zeroised; subject MUST set password reset on first session OR rely on SSO subsequently), default role per claim mapping (§1 #10).
     - INSERT `auth_oidc_subject_link` row.
-    - Emit `auth.oidc_jit_provisioned` BRAIN row.
+    - Emit `auth.oidc_jit_provisioned` memory row.
 
 9. **MUST** apply per-tenant claim → role mapping (per DEC-404). The IdP config's `claim_mapping_yaml` is a closed-shape YAML:
    ```yaml
@@ -154,11 +154,11 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
 
 11. **MUST** support state + nonce replay protection (per DEC-408). Redis stores each `state` with 10-minute TTL; reuse → 401 `oidc_state_reused`; expired → 401 `oidc_flow_expired`. Nonce checked against id_token.
 
-12. **MUST** rotate JWKS via 24-hour key-cache overlap (per DEC-402). On id_token with unknown `kid`, refetch JWKS once; emit `auth.oidc_jwks_rotated` BRAIN row when new kid first observed.
+12. **MUST** rotate JWKS via 24-hour key-cache overlap (per DEC-402). On id_token with unknown `kid`, refetch JWKS once; emit `auth.oidc_jwks_rotated` memory row when new kid first observed.
 
 13. **MUST** enforce a per-tenant max of 3 active IdP configs (per DEC-412). Attempt to create a 4th → 409 `idp_config_limit_exceeded`. ADR required to raise the cap.
 
-14. **MUST** emit BRAIN audit rows for 6 kinds (per DEC-406):
+14. **MUST** emit memory audit rows for 6 kinds (per DEC-406):
     - `auth.oidc_login_succeeded` (full login flow → AUTH JWT issued).
     - `auth.oidc_login_failed` (any callback failure).
     - `auth.oidc_jit_provisioned` (new subject created on first login).
@@ -166,7 +166,7 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
     - `auth.oidc_idp_config_changed` (POST/PATCH/DELETE on idp_configs).
     - `auth.oidc_signature_invalid` (id_token verification failed; sev-2 — may signal attack).
 
-15. **MUST** PII-scrub `sub_claim`, `email`, `failure_reason` via FR-BRAIN-111 before chain commit.
+15. **MUST** PII-scrub `sub_claim`, `email`, `failure_reason` via FR-MEMORY-111 before chain commit.
 
 16. **MUST** complete the OIDC callback handler in ≤ 500 ms p95 (most latency is IdP token endpoint + JWKS fetch; PKCE + claim validation < 50 ms server-side). `oidc_perf_test`.
 
@@ -191,7 +191,7 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
 
 24. **MUST** validate sub_claim uniqueness per (idp_id, tenant_id) (per DEC-410). Same sub appearing twice for different subject_id values → 409 `oidc_sub_already_linked`. Cross-IdP same sub → distinct subjects (DEC-410).
 
-25. **MUST** emit `auth.oidc_idp_config_changed` BRAIN row with the diff (which fields changed) BUT NOT the new client_secret value (PII-grade secret).
+25. **MUST** emit `auth.oidc_idp_config_changed` memory row with the diff (which fields changed) BUT NOT the new client_secret value (PII-grade secret).
 
 26. **MUST** alarm at sev-2 on sustained signature failures > 5/h per tenant (per §1 #18 metric) — suggests IdP key rotation issue OR attack attempt.
 
@@ -223,7 +223,7 @@ The AUTH service **MUST** ship OIDC SSO with RFC 8414 discovery + RFC 7517 JWKS 
 
 **Why 60s clock skew tolerance (DEC-411, §1 #22)?** NTP drift between IdP + our server is typically < 1s but can spike to ~10-30s on misconfigured systems. 60s is generous + below replay window. Tighter would false-reject legitimate tokens.
 
-**Why sub_claim PII-scrubbed in BRAIN chain (§1 #15)?** sub is typically an opaque IdP-assigned id (e.g. UUID), but some IdPs use email-derived subs. Scrubbing prevents inadvertent PII in audit chain.
+**Why sub_claim PII-scrubbed in memory chain (§1 #15)?** sub is typically an opaque IdP-assigned id (e.g. UUID), but some IdPs use email-derived subs. Scrubbing prevents inadvertent PII in audit chain.
 
 **Why client_secret KMS-encrypted (§1 #1)?** Client secret authenticates the AUTH service to the IdP. Plaintext at rest = compromise on DB dump. KMS encryption requires KMS key permissions for decrypt — meaningful additional barrier.
 
@@ -609,13 +609,13 @@ pub fn resolve_role(cfg: &ClaimMappingConfig, claims: &super::id_token::IdTokenC
 6. **State + nonce stored 10-min TTL** — Redis lookup recovers code_verifier within window.
 7. **Expired state rejected** — past TTL → 401 `oidc_flow_expired`.
 8. **Reused state rejected** — second callback with same state → 401 `oidc_state_reused`.
-9. **id_token signature verified** — happy path: 200; invalid sig: 401 + `auth.oidc_signature_invalid` BRAIN row.
+9. **id_token signature verified** — happy path: 200; invalid sig: 401 + `auth.oidc_signature_invalid` memory row.
 10. **Unknown kid triggers JWKS refetch** — JWKS cache updates; `auth.oidc_jwks_rotated` row emitted.
 11. **iss mismatch rejected** — 401 `oidc_iss_mismatch`.
 12. **aud mismatch rejected** — 401 `oidc_aud_mismatch`.
 13. **nonce mismatch rejected** — 401 `oidc_nonce_mismatch`.
 14. **exp expired (past + 60s skew)** → 401 `oidc_expired`.
-15. **JIT provisioning on first login** — new sub → subject created + link row; `auth.oidc_jit_provisioned` BRAIN row.
+15. **JIT provisioning on first login** — new sub → subject created + link row; `auth.oidc_jit_provisioned` memory row.
 16. **JIT skipped on repeat login** — existing link → subject reused.
 17. **Claim mapping grants role** — groups: ["Engineering"] → tenant-admin per config.
 18. **Default role used on no match** — claim mapping has no rule matching → default_role applied.
@@ -652,7 +652,7 @@ async fn pkce_full_flow(ctx: TestCtx) {
     // 3. Subject created (JIT)
     let subjects = ctx.list_subjects().await;
     assert_eq!(subjects.len(), 1);
-    let rows = ctx.brain_audit_rows("auth.oidc_jit_provisioned").await;
+    let rows = ctx.memory_audit_rows("auth.oidc_jit_provisioned").await;
     assert_eq!(rows.len(), 1);
 }
 ```
@@ -710,7 +710,7 @@ async fn unknown_kid_triggers_jwks_refetch(ctx: TestCtx) {
     assert_eq!(resp.status(), 302);
     let cached_kids_after = ctx.jwks_cache_kids(idp.id).await;
     assert!(cached_kids_after.contains(&"new-kid-001".to_string()));
-    let rotation_rows = ctx.brain_audit_rows("auth.oidc_jwks_rotated").await;
+    let rotation_rows = ctx.memory_audit_rows("auth.oidc_jwks_rotated").await;
     assert_eq!(rotation_rows.len(), 1);
 }
 ```
@@ -719,7 +719,7 @@ async fn unknown_kid_triggers_jwks_refetch(ctx: TestCtx) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 6 BRAIN row builders follow the canonical pattern.)
+(API contract above is the skeleton; 6 memory row builders follow the canonical pattern.)
 
 ---
 
@@ -735,8 +735,8 @@ async fn unknown_kid_triggers_jwks_refetch(ctx: TestCtx) {
 
 **Cross-module:**
 - **FR-AUTH-002** — subject create (JIT provisioning calls internal helper).
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing for sub_claim + email.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing for sub_claim + email.
 - **FR-OBS-007** — sev-2 alarm on signature failures > 5/h.
 
 ---
@@ -756,7 +756,7 @@ async fn unknown_kid_triggers_jwks_refetch(ctx: TestCtx) {
 }
 ```
 
-### 8.2 — auth.oidc_login_succeeded BRAIN row
+### 8.2 — auth.oidc_login_succeeded memory row
 
 ```json
 {
@@ -770,7 +770,7 @@ async fn unknown_kid_triggers_jwks_refetch(ctx: TestCtx) {
 }
 ```
 
-### 8.3 — auth.oidc_jit_provisioned BRAIN row
+### 8.3 — auth.oidc_jit_provisioned memory row
 
 ```json
 {
@@ -785,7 +785,7 @@ async fn unknown_kid_triggers_jwks_refetch(ctx: TestCtx) {
 }
 ```
 
-### 8.4 — auth.oidc_signature_invalid BRAIN row (sev-2)
+### 8.4 — auth.oidc_signature_invalid memory row (sev-2)
 
 ```json
 {
@@ -866,7 +866,7 @@ All other questions resolved.
 - **Append-only login_history at SQL grant** — forensic record.
 - **client_secret KMS-encrypted** — secret-at-rest hardening.
 - **redirect_uri locked in config** — open-redirect defense.
-- **6 BRAIN audit kinds** — succeeded/failed/jit/jwks-rotated/config-changed/signature-invalid.
+- **6 memory audit kinds** — succeeded/failed/jit/jwks-rotated/config-changed/signature-invalid.
 - **PII scrubbing of sub + email** — chain holds hashed forms.
 - **Sev-2 alarm on > 5/h signature failures** — operator investigation prompt.
 - **claim_mapping_yaml validates roles at save** — closed FR-AUTH-101 enum.

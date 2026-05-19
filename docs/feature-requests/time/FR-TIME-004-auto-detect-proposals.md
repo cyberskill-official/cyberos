@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CPO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-TIME-002, FR-PROJ-002, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-TIME-002, FR-PROJ-002, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-PROJ-002]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1443 2026-05-17 — Suggestions expire 7 days after creation if Member doesn't act
   - DEC-1444 2026-05-17 — Confidence score 0-100; > 80 = high (auto-fill form); 50-80 = medium (show suggestion); < 50 = filtered out
   - DEC-1445 2026-05-17 — Member always confirms — NEVER auto-creates TIME entry (per AUTHORING.md §8 — destructive auto-action forbidden)
-  - DEC-1446 2026-05-17 — BRAIN audit kinds: time.proposal_generated, time.proposal_accepted, time.proposal_rejected, time.proposal_expired
+  - DEC-1446 2026-05-17 — memory audit kinds: time.proposal_generated, time.proposal_accepted, time.proposal_rejected, time.proposal_expired
 
 build_envelope:
   language: rust 1.81
@@ -81,7 +81,7 @@ risk_if_skipped: "Without auto-detect, Members manually start timers + remember 
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship auto-detect proposal engine at `services/time/src/proposals/` watching PROJ activity, proposing TIME entries with confidence scores, requiring Member confirmation (no auto-create), 7-day expiry, and 4 BRAIN audit kinds.
+The TIME service **MUST** ship auto-detect proposal engine at `services/time/src/proposals/` watching PROJ activity, proposing TIME entries with confidence scores, requiring Member confirmation (no auto-create), 7-day expiry, and 4 memory audit kinds.
 
 1. **MUST** define closed `proposal_source` enum: `('proj_status_change','proj_comment_burst','proj_attachment_added','git_commit','calendar_event')` per DEC-1441. Cardinality 5. Slice 2 active: proj_* (3 of 5); git_commit + calendar_event slice 3.
 
@@ -118,7 +118,7 @@ The TIME service **MUST** ship auto-detect proposal engine at `services/time/src
 
 11. **MUST** expose `GET /v1/time/proposals?state=pending` for Member's pending list.
 
-12. **MUST** emit 4 BRAIN audit kinds per DEC-1446. PII-scrub description via FR-BRAIN-111.
+12. **MUST** emit 4 memory audit kinds per DEC-1446. PII-scrub description via FR-MEMORY-111.
 
 13. **MUST** thread trace_id from PROJ event through proposal creation.
 
@@ -201,7 +201,7 @@ POST   /v1/time/proposals/{id}/reject
 8. **No auto-create** — proposal exists but no TIME entry until accept.
 9. **< 50 confidence filtered** — heuristic produces 40 → no row persisted.
 10. **Accept respects override** — duration_seconds_override applied to TIME entry.
-11. **4 BRAIN audit kinds emitted**.
+11. **4 memory audit kinds emitted**.
 12. **RLS Member-scoped**.
 13. **PII scrub description**.
 14. **Trace_id from PROJ event preserved**.
@@ -267,7 +267,7 @@ async fn expire_after_7d() {
 ## §7 — Dependencies
 
 **Upstream:** FR-PROJ-002 (NATS events to subscribe).
-**Cross-module:** FR-TIME-001 (entry create), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-TIME-001 (entry create), FR-AI-003, FR-MEMORY-111.
 
 ---
 
@@ -317,7 +317,7 @@ Deferred:
 | Expired proposal accept attempt | state check | 409 + expired | Inherent |
 | Proposal for non-existent issue | FK soft | Created; FK check at accept | Inherent |
 | Member rejected then status revives | new proposal generated | Treated independently | Inherent |
-| Proposal description PII not scrubbed | FR-BRAIN-111 | Audit dropped; sev-3 | Inherent |
+| Proposal description PII not scrubbed | FR-MEMORY-111 | Audit dropped; sev-3 | Inherent |
 | Confidence > 100 from heuristic bug | CHECK constraint | INSERT fails | Bug fix |
 | Multi-source proposals overlap timewise | each independent | Member chooses which to accept | Inherent |
 | Pending list grows unbounded | expire job | Daily cleanup | Inherent |
@@ -339,7 +339,7 @@ Deferred:
 
 **§11.5** Accept handler creates entry via FR-TIME-001 standard path — same caps + validations.
 
-**§11.6** Proposal description hashed via FR-BRAIN-111 in audit.
+**§11.6** Proposal description hashed via FR-MEMORY-111 in audit.
 
 **§11.7** Multi-signal aggregation uses time-window join (1h).
 

@@ -1,6 +1,6 @@
 # `runtime/tests/` — Integration tests + skill fixtures
 
-End-to-end tests that exercise the umbrella binary, the BRAIN-mutation API, and individual skill runners. Unit-test scope is small (most logic is integration-shaped).
+End-to-end tests that exercise the umbrella binary, the memory-mutation API, and individual skill runners. Unit-test scope is small (most logic is integration-shaped).
 
 ## Layout
 

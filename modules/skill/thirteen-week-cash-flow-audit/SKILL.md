@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: thirteen-week-cash-flow-audit
-description: |
-  Audit one or more existing thirteen-week-cash-flow@1 markdowns against
-  13-week-cash-flow_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  thirteen-week-cash-flow-author.
+description: >-
+  Audit one or more existing thirteen-week-cash-flow@1 markdowns against 13-week-cash-flow_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after thirteen-week-cash-flow-author. Use when user asks to "audit this thirteen week cash flow" or "check the thirteen week cash flow". Do NOT use for "draft a new thirteen week cash flow" (use thirteen-week-cash-flow-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: 13-week-cash-flow_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

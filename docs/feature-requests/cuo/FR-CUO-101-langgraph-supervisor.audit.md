@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0; al
 
 ## §1 — Verdict summary
 
-FR-CUO-101 ships the CUO Phase 2 LangGraph supervisor on top of the Phase 1 rule router. Scope: 26 §1 normative clauses covering the 5-node graph topology, confidence-band branching, LLM cascade via LiteLLM-shaped proxy routed through AI Gateway FR-AI-008, 11-persona catalogue with intrinsic defer-to-human matrix, structured Pydantic LLM output, 3-second cascade budget, BRAIN audit row per decision in every path, EU AI Act Art. 12/13/26 compliance, OTel instrumentation, CLI subcommand, dry-run mode, replay-equivalence guarantee, state versioning, forward-compat `next_step: null` stub. 17 rationale paragraphs. §3 contains: CuoState TypedDict with versioning, StateGraph construction with conditional edges, branch-node logic with the four-band decision tree, LLM cascade node with timeout + retry + hallucination rejection, LiteLLM proxy module asserting no direct provider imports, persona catalogue with defer matrix, audit row builder, CLI entry point. 31 ACs. §10 has 32 failure-mode rows. §11 has 24 implementation notes.
+FR-CUO-101 ships the CUO Phase 2 LangGraph supervisor on top of the Phase 1 rule router. Scope: 26 §1 normative clauses covering the 5-node graph topology, confidence-band branching, LLM cascade via LiteLLM-shaped proxy routed through AI Gateway FR-AI-008, 11-persona catalogue with intrinsic defer-to-human matrix, structured Pydantic LLM output, 3-second cascade budget, memory audit row per decision in every path, EU AI Act Art. 12/13/26 compliance, OTel instrumentation, CLI subcommand, dry-run mode, replay-equivalence guarantee, state versioning, forward-compat `next_step: null` stub. 17 rationale paragraphs. §3 contains: CuoState TypedDict with versioning, StateGraph construction with conditional edges, branch-node logic with the four-band decision tree, LLM cascade node with timeout + retry + hallucination rejection, LiteLLM proxy module asserting no direct provider imports, persona catalogue with defer matrix, audit row builder, CLI entry point. 31 ACs. §10 has 32 failure-mode rows. §11 has 24 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -50,8 +50,8 @@ First-pass omitted the field at slice 2; FR-CUO-104 would have to handle both sh
 ### ISS-011 — Persona JWT not validated at supervisor entry
 First-pass trusted the request envelope; a `genie` JWT could trigger `cfo` routing. Resolved: §1 #10 + DEC-166 + parse-node validation; AC #13.
 
-### ISS-012 — PII in BRAIN row query field
-First-pass stored raw query. Resolved: §1 #24 + `apply_brain_pii_rules` per FR-BRAIN-111; AC #19. Raw query retained transient in OTel span.
+### ISS-012 — PII in memory row query field
+First-pass stored raw query. Resolved: §1 #24 + `apply_memory_pii_rules` per FR-MEMORY-111; AC #19. Raw query retained transient in OTel span.
 
 ### ISS-013 — Replay equivalence not enforced
 First-pass had no CI test for determinism. Resolved: §1 #17 + 15-golden-fixture suite + `test_supervisor_idempotency`; AC #20.
@@ -63,7 +63,7 @@ First-pass would build the prompt against a possibly-stale catalog snapshot. Res
 
 All 14 mechanical concerns addressed in the first revision pass. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (LangGraph × 5-node closed topology × confidence-band routing × LiteLLM gateway routing × 11-persona catalogue × defer-to-human matrix × structured Pydantic LLM output × 3-second budget × hallucination rejection × destructive-skill capability-broker gate × BRAIN audit per path × state versioning × replay equivalence × forward-compat `next_step` stub × persona JWT validation × PII scrubbing × OTel instrumentation × CLI + dry-run), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (LangGraph × 5-node closed topology × confidence-band routing × LiteLLM gateway routing × 11-persona catalogue × defer-to-human matrix × structured Pydantic LLM output × 3-second budget × hallucination rejection × destructive-skill capability-broker gate × memory audit per path × state versioning × replay equivalence × forward-compat `next_step` stub × persona JWT validation × PII scrubbing × OTel instrumentation × CLI + dry-run), not by line targets.
 
 ---
 

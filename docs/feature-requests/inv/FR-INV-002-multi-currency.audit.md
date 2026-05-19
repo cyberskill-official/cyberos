@@ -9,6 +9,6 @@ issues_resolved: 7
 template: engineering-spec@1
 ---
 
-INV multi-currency with daily SBV/ECB FX snapshot + per-invoice currency lock + cross-currency reporting. 440 lines, 11 §1 clauses, 22 ACs, 3 tests, 13 failure modes, 6 notes. 7 issues resolved (SBV scrape failure → ECB fallback, manual override CFO-gated with 7-day TTL, snapshot idempotency via UNIQUE(snapshot_date, currency_pair), invoice currency immutability after issue, FX missing date → nearest-prior with sev-2 audit, report determinism via as-of date locking, BRAIN-111 PII scrub on amounts). **Score = 10/10.**
+INV multi-currency with daily SBV/ECB FX snapshot + per-invoice currency lock + cross-currency reporting. 440 lines, 11 §1 clauses, 22 ACs, 3 tests, 13 failure modes, 6 notes. 7 issues resolved (SBV scrape failure → ECB fallback, manual override CFO-gated with 7-day TTL, snapshot idempotency via UNIQUE(snapshot_date, currency_pair), invoice currency immutability after issue, FX missing date → nearest-prior with sev-2 audit, report determinism via as-of date locking, memory-111 PII scrub on amounts). **Score = 10/10.**
 
 *End of FR-INV-002 audit.*

@@ -1,11 +1,11 @@
-"""FR-BRAIN-109 — Claude Code hook capture.
+"""FR-MEMORY-109 — Claude Code hook capture.
 
 Claude Code's hook system fires JSON events on stdin at named lifecycle
 points: ``PreToolUse``, ``PostToolUse``, ``SubagentStop``, ``SessionEnd``,
-``UserPromptSubmit``, etc. This module converts those events into BRAIN
+``UserPromptSubmit``, etc. This module converts those events into memory
 ``put`` rows under a canonical path layout so every Claude Code session
 on every machine the user runs leaves a permanent audit trail in the
-personal BRAIN.
+personal memory.
 
 Path layout (DEC-095):
 
@@ -87,7 +87,7 @@ class HookCapture:
             "ts_ns": self.ts_ns,
             "sync_class": "private",
             "pii_policy": "redact",
-            "source": "fr-brain-109",
+            "source": "fr-memory-109",
         }
         if self.tool is not None:
             fm["tool"] = self.tool
@@ -153,13 +153,13 @@ def capture_from_stdin(event_kind: str, stdin: Any = None) -> HookCapture:
     return parse_event(event_kind, payload)
 
 
-def write_to_brain(
+def write_to_memory(
     capture: HookCapture,
     *,
     store_root: Path,
     writer: Any = None,
 ) -> Path:
-    """Persist a hook capture as a BRAIN ``put`` row.
+    """Persist a hook capture as a memory ``put`` row.
 
     `writer` is the application-supplied ``cyberos.core.writer.Writer`` (or
     a test double). The function returns the absolute path of the row file.

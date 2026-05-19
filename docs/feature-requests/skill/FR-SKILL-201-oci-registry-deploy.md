@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-SKILL-102, FR-AUTH-105, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-SKILL-102, FR-AUTH-105, FR-MEMORY-111]
 depends_on: [FR-SKILL-102]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-2422 2026-05-17 — Bundles signed via cosign with tenant-specific key from FR-AUTH-105 KMS; signature verified at pull time
   - DEC-2423 2026-05-17 — Tag IMMUTABLE post-push (cannot overwrite); new version = new tag (semver); yanked status hides from default search but preserves availability
   - DEC-2424 2026-05-17 — Tenant-scoped pulls: bundle visibility per `tenant_acl` jsonb; pulls verify ACL match
-  - DEC-2425 2026-05-17 — BRAIN audit kinds: skill.bundle_pushed, skill.bundle_signed, skill.bundle_pulled, skill.bundle_yanked, skill.bundle_signature_failed
+  - DEC-2425 2026-05-17 — memory audit kinds: skill.bundle_pushed, skill.bundle_signed, skill.bundle_pulled, skill.bundle_yanked, skill.bundle_signature_failed
 
 build_envelope:
   language: rust 1.81
@@ -78,7 +78,7 @@ risk_if_skipped: "Without OCI registry, .skill distribution ad-hoc (file shares,
 
 ## §1 — Description (BCP-14 normative)
 
-The SKILL service **MUST** ship OCI registry deploy at `services/skill/src/oci/` with push/pull + cosign signing + tag immutability + tenant ACL, 5 BRAIN audit kinds.
+The SKILL service **MUST** ship OCI registry deploy at `services/skill/src/oci/` with push/pull + cosign signing + tag immutability + tenant ACL, 5 memory audit kinds.
 
 1. **MUST** validate `bundle_status` against closed enum per DEC-2421.
 
@@ -132,7 +132,7 @@ The SKILL service **MUST** ship OCI registry deploy at `services/skill/src/oci/`
    GET  /v1/skill/oci/bundles       (list with ACL filter)
    ```
 
-9. **MUST** emit 5 BRAIN audit kinds per DEC-2425. PII per FR-BRAIN-111: digest + signature_bytes SHA256.
+9. **MUST** emit 5 memory audit kinds per DEC-2425. PII per FR-MEMORY-111: digest + signature_bytes SHA256.
 
 10. **MUST** thread trace_id from push/pull → audit.
 
@@ -172,7 +172,7 @@ POST /v1/skill/oci/push
 ---
 
 ## §4 — Acceptance criteria
-1. **bundle_status enum cardinality 6**. 2. **Push to OCI works**. 3. **Cosign signature applied**. 4. **Tag overwrite rejected (UNIQUE)**. 5. **Pull verifies signature**. 6. **Bad signature → sev-1 + reject**. 7. **ACL enforced on pull**. 8. **Yank sets status, doesn't delete**. 9. **5 BRAIN audit kinds emitted**. 10. **PII scrubbed (digest+sig SHA256)**. 11. **RLS denies cross-tenant**. 12. **CTO-only push**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except status cols**. 15. **Cosign key from FR-AUTH-105**. 16. **public:true bundles pullable by anyone**. 17. **public:false requires ACL match**. 18. **List endpoint filters by ACL**. 19. **OCI spec compliance**. 20. **Bundle validation pre-push**.
+1. **bundle_status enum cardinality 6**. 2. **Push to OCI works**. 3. **Cosign signature applied**. 4. **Tag overwrite rejected (UNIQUE)**. 5. **Pull verifies signature**. 6. **Bad signature → sev-1 + reject**. 7. **ACL enforced on pull**. 8. **Yank sets status, doesn't delete**. 9. **5 memory audit kinds emitted**. 10. **PII scrubbed (digest+sig SHA256)**. 11. **RLS denies cross-tenant**. 12. **CTO-only push**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except status cols**. 15. **Cosign key from FR-AUTH-105**. 16. **public:true bundles pullable by anyone**. 17. **public:false requires ACL match**. 18. **List endpoint filters by ACL**. 19. **OCI spec compliance**. 20. **Bundle validation pre-push**.
 
 ---
 
@@ -210,7 +210,7 @@ async fn acl_blocks_cross_tenant() {
 
 ## §7 — Dependencies
 **Upstream:** FR-SKILL-102.
-**Cross-module:** FR-AUTH-105 (KMS for cosign), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-105 (KMS for cosign), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -229,7 +229,7 @@ async fn acl_blocks_cross_tenant() {
 ## §11 — Implementation notes
 - §11.1 OCI client: `oci-distribution` Rust crate; supports GHCR + ECR + Quay.
 - §11.2 Cosign integration: shell out to `cosign` binary or use `cosign-rs` crate.
-- §11.3 BRAIN audit body: bundle_id, registry, tag; digest + signature SHA256.
+- §11.3 memory audit body: bundle_id, registry, tag; digest + signature SHA256.
 - §11.4 Tenant ACL stored as JSONB; tomorrow extensible to org-scoped + role-scoped.
 - §11.5 Yank semantics: status=yanked + warning on pull; bundle still retrievable for replay.
 

@@ -137,7 +137,7 @@
  <div class="fact-card"><div class="label">Default vesting</div><div class="value">4 years</div><div class="note">12-mo cliff + monthly</div></div>
  <div class="fact-card"><div class="label">Put windows</div><div class="value">Year 3+</div><div class="note">capped per Member per year</div></div>
  <div class="fact-card"><div class="label">Pool replenishment</div><div class="value">% of profit</div><div class="note">GL / BL branch split</div></div>
- <div class="fact-card"><div class="label">BRAIN ingestion</div><div class="value">= 0</div><div class="note">DEC-036 · ESOP value-private</div></div>
+ <div class="fact-card"><div class="label">memory ingestion</div><div class="value">= 0</div><div class="note">DEC-036 · ESOP value-private</div></div>
  <div class="fact-card"><div class="label">HoldCo flip</div><div class="value">@ ARR $1.5M</div><div class="note">VN phantom → SG real share</div></div>
  </div>
  </div>
@@ -149,7 +149,7 @@
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- ESOP is the retention moat. The "Phantom Stock" design routes around Vietnamese securities regulation while preserving the economic outcome of real ESOP. ESOP is heavily entangled with REW (BP fund + comp), HR (Good vs Bad Leaver branch), and AUTH (cap-table-as-subject). Like REW, ESOP value is structurally excluded from BRAIN per DEC-036.
+ ESOP is the retention moat. The "Phantom Stock" design routes around Vietnamese securities regulation while preserving the economic outcome of real ESOP. ESOP is heavily entangled with REW (BP fund + comp), HR (Good vs Bad Leaver branch), and AUTH (cap-table-as-subject). Like REW, ESOP value is structurally excluded from memory per DEC-036.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-6">
  <div class="bbg-card p-5" style="border-top:4px solid var(--esop)">
@@ -185,7 +185,7 @@ flowchart TB
  CFO["📈 CFO<br>base valuation input"]
  LEAVER["🚪 Good/Bad Leaver branch<br>CFO + CEO co-sign"]
  HOLDCO["🇸🇬 Singapore HoldCo<br>flip at ARR ≥ $1.5M"]
- BRAIN["🚫 BRAIN<br>structurally excluded · DEC-036"]
+ memory["🚫 memory<br>structurally excluded · DEC-036"]
  HR -- "active → vest accrual" --> ESOP
  HR -- "terminating" --> LEAVER
  LEAVER --> ESOP
@@ -193,13 +193,13 @@ flowchart TB
  BOARD --> ESOP
  REW <-- "BP fund retention context" --> ESOP
  ESOP --> HOLDCO
- ESOP -. "structural exclusion" .x BRAIN
+ ESOP -. "structural exclusion" .x memory
  classDef hub fill:#bfdbfe,stroke:#1e3a8a,stroke-width:3px,color:#172554
  classDef mod fill:#e0e7ff,stroke:#3730a3
  classDef forbidden fill:#fee2e2,stroke:#b91c1c,stroke-width:3px,color:#7f1d1d
  class ESOP hub
  class HR,REW,BOARD,CFO,LEAVER,HOLDCO mod
- class BRAIN forbidden
+ class memory forbidden
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -215,7 +215,7 @@ flowchart TB
  <tr><td>Cancellation (forfeiture)</td><td><strong>Manual</strong> Board sign-off</td><td>Cancelling unvested portion happens on Bad Leaver or termination.</td></tr>
  <tr><td>M&amp;A acceleration trigger</td><td><strong>Manual</strong> Board declaration</td><td>Acceleration clauses fire on Board-declared change of control.</td></tr>
  <tr><td>HoldCo flip designation</td><td><strong>Manual</strong> CEO + Board sign-off</td><td>Singapore conversion is a one-way operation; deliberate.</td></tr>
- <tr><td>BRAIN ingestion of ESOP value</td><td><strong>BLOCKED</strong></td><td>DEC-036; CI gate verifies absence.</td></tr>
+ <tr><td>memory ingestion of ESOP value</td><td><strong>BLOCKED</strong></td><td>DEC-036; CI gate verifies absence.</td></tr>
  <tr><td>Member ESOP dashboard view</td><td><strong>Auto</strong> personal view only</td><td>Member sees own grants; cross-Member view requires CFO sign-off audit row.</td></tr>
  </tbody>
  </table>
@@ -265,11 +265,11 @@ flowchart TB
  <tr><td><strong>5W · What</strong></td><td>What is ESOP?</td><td>A Phantom Stock ledger — grants (founding, milestone, retention), vesting schedules (4-year default), annual valuations (CFO + Board signed), put options (Year 3+), Good/Bad Leaver branches, pool balance + replenishment, optional HoldCo flip to real Singapore shares.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who is touched?</td><td><strong>Grantees:</strong> Members with at least one grant. <strong>Approvers:</strong> CEO + CFO + Board chair for every grant; CFO + Board + auditor for every valuation. <strong>Read-only:</strong> Members see own vesting + put schedule; never aggregate cap table.</td></tr>
  <tr><td><strong>5W · When</strong></td><td>When does ESOP act?</td><td>(a) Hire — founding grant (if applicable). (b) Milestone — performance / promotion grant. (c) Monthly — vesting compute (idempotent). (d) Annual — valuation cycle (Q4). (e) July annually — put-option exercise window. (f) M&amp;A — acceleration clause fires. (g) Termination — Good/Bad Leaver branch chosen.</td></tr>
- <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P2: single region (SG-1) backed by AWS RDS Postgres with ESOP-specific KMS key (separate from REW, HR, BRAIN). PDFs at rest with retention lock = 10 years.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P2: single region (SG-1) backed by AWS RDS Postgres with ESOP-specific KMS key (separate from REW, HR, memory). PDFs at rest with retention lock = 10 years.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because grant + valuation history is sensitive board-level data that must be append-only and dual-signed. Co-mingling with HR or REW would weaken the audit posture and risk leakage.</td></tr>
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Append-only grant + vesting_event + valuation rows in Postgres. Vesting compute is a deterministic function of (grant, today, valuation). Put-option exercise schedules a wire transfer via Wise (multi-currency) or VietQR (VND). HoldCo flip is a one-way migration — phantom row → real_share row with full audit trail.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P2: ~$25/month (small RDS schema + Fargate share + S3 retention). 50-tenant: ~$80/month. Per-grant cost negligible.</td></tr>
- <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Dual sign-off mandatory on grants + valuations ((FR pending)). (b) Append-only ((FR pending)). (c) Zero BRAIN ingestion ((FR pending) + DEC-036). (d) 10-year retention. (e) M&amp;A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Dual sign-off mandatory on grants + valuations ((FR pending)). (b) Append-only ((FR pending)). (c) Zero memory ingestion ((FR pending) + DEC-036). (d) 10-year retention. (e) M&amp;A acceleration is Board-only. (f) HoldCo flip is CEO-only designation.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · tectonic for grant + valuation PDFs · ring for SHA-256 · cyberskill-vn skills (vietnam-bank-transfer for put-option wires) · AWS S3 with retention lock · KMS.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with supersession. Deterministic vesting compute (pure fn). Dual sign-off enforced at AUTH cosign predicate. Annual valuation is a versioned row analogous to REW parameter versioning.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate in SG-1 (P2). Multi-AZ Postgres RDS. S3 retention 10 years.</td></tr>
@@ -286,7 +286,7 @@ flowchart TB
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- ESOP is one Rust service with three surfaces (GraphQL read-mostly for Member portals, REST admin for grant + valuation flows with multi-sign predicates, MCP narrator-only tools), a strict isolation policy from BRAIN (zero numeric ingestion), and a HoldCo migration path that wires through DOC for Singapore shareholder paperwork.
+ ESOP is one Rust service with three surfaces (GraphQL read-mostly for Member portals, REST admin for grant + valuation flows with multi-sign predicates, MCP narrator-only tools), a strict isolation policy from memory (zero numeric ingestion), and a HoldCo migration path that wires through DOC for Singapore shareholder paperwork.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -323,7 +323,7 @@ graph TB
  subgraph STORES ["Stores (isolated)"]
  PG[("PostgreSQL<br>grant · vesting_event<br>valuation · put_exercise<br>ESOP-specific KMS key")]
  S3[("AWS S3<br>grant PDFs · valuation reports<br>10-year object-lock")]
- KMS[("AWS KMS<br>esop-key<br>distinct from REW + HR + BRAIN")]
+ KMS[("AWS KMS<br>esop-key<br>distinct from REW + HR + memory")]
  end
 
  subgraph BRIDGES ["External bridges"]
@@ -334,7 +334,7 @@ graph TB
  end
 
  subgraph BOUNDARIES ["Compliance boundaries"]
- BRAIN["🧠 BRAIN<br>opaque event refs ONLY<br>(no ESOP numbers)"]
+ memory["🧠 memory<br>opaque event refs ONLY<br>(no ESOP numbers)"]
  OBS["👁 OBS<br>timing only"]
  AUTH["🔐 AUTH"]
  end
@@ -368,7 +368,7 @@ graph TB
  S3 --> KMS
  GRANT --> S3
  VAL --> S3
- REST -.opaque ref.-> BRAIN
+ REST -.opaque ref.-> memory
  ESOP --> OBS
 
  classDef planned fill:#bfdbfe,stroke:#45210e
@@ -377,7 +377,7 @@ graph TB
  classDef extern fill:#f5ede6,stroke:#45210e
  class GQL,REST,MCP,GRANT,VEST,VAL,PUT,LEAVE,POOL,MA,HOLDCO,NARR planned
  class PG,S3,KMS store
- class BRAIN,OBS boundary
+ class memory,OBS boundary
  class BANK,WISE,DOC,HRMOD,AUTH extern
  </div>
  </div>
@@ -398,9 +398,9 @@ graph TB
  <tr><td><code>holdco_flip.rs</code></td><td>services/esop/src/holdco_flip.rs</td><td>HoldCo flip — one-way migration. Phantom row → real_share row in Singapore HoldCo schema. CEO-only designation; DOC handles paperwork.</td></tr>
  <tr><td><code>cosign_guard.rs</code></td><td>services/esop/src/cosign_guard.rs</td><td>Predicate at boundary. Grants: CEO + CFO + Board. Valuations: CFO + Board + auditor.</td></tr>
  <tr><td><code>narrator.rs</code></td><td>services/esop/src/narrator.rs</td><td>Read-only narrator — explains a Member's vesting curve + put schedule + valuation history. Never reveals aggregate cap table.</td></tr>
- <tr><td><code>brain_bridge.rs</code></td><td>services/esop/src/brain_bridge.rs</td><td>Writes opaque event refs to BRAIN (e.g. <code>esop.grant.issued:opaque_id</code>). Never writes numeric values. CI gate inspects.</td></tr>
+ <tr><td><code>memory_bridge.rs</code></td><td>services/esop/src/memory_bridge.rs</td><td>Writes opaque event refs to memory (e.g. <code>esop.grant.issued:opaque_id</code>). Never writes numeric values. CI gate inspects.</td></tr>
  <tr><td><code>pdf_renderer.rs</code></td><td>services/esop/src/pdf_renderer.rs</td><td>Deterministic grant + valuation PDFs via tectonic. SHA-256 stored.</td></tr>
- <tr><td><code>migrations/</code></td><td>services/esop/migrations/</td><td>sqlx migrations. Append-only constraints. Separate KMS key from HR + REW + BRAIN.</td></tr>
+ <tr><td><code>migrations/</code></td><td>services/esop/migrations/</td><td>sqlx migrations. Append-only constraints. Separate KMS key from HR + REW + memory.</td></tr>
  </tbody>
  </table>
  </div>
@@ -676,7 +676,7 @@ sequenceDiagram
  participant P as PDF render
  participant S3 as AWS S3 (object-lock)
  participant K as KMS
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CEO->>E: POST /admin/grants<br>{member_id, kind:"founding", sp_count:5000, schedule:"4y-12mo"}
  E->>E: validate pool.available_sp ≥ 5000
@@ -696,7 +696,7 @@ sequenceDiagram
  E->>E: update pool_balance.issued_sp += 5000
  E->>B: opaque ref "esop.grant.issued:&lt;opaque_id&gt;"
  E-->>CEO: grant issued
- Note over E,B: BRAIN row contains NO sp_count, NO valuation.<br>Only an opaque pointer to ESOP DB.
+ Note over E,B: memory row contains NO sp_count, NO valuation.<br>Only an opaque pointer to ESOP DB.
  </div>
  </div>
 
@@ -711,7 +711,7 @@ sequenceDiagram
  participant V as ESOP /admin/valuations
  participant POOL as pool.rs
  participant S3 as AWS S3
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CFO->>V: POST /admin/valuations<br>{period:"2026", base_value_vnd:50e9, industry_multiplier:8.0}
  V->>POOL: read total_outstanding_sp
@@ -742,7 +742,7 @@ sequenceDiagram
  participant VC as vesting_cron.rs
  participant V as vesting.rs (pure fn)
  participant PG as PostgreSQL
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CRON->>VC: trigger end-of-month
  VC->>PG: SELECT all grants status="active"
@@ -769,7 +769,7 @@ sequenceDiagram
  participant V as latest valuation
  participant CFO as CFO (approver)
  participant BANK as 🛠 vietnam-bank-transfer / Wise
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  Note over M: July annual window opens for Year-3+ Members.
  M->>E: requestPutExercise {grant_id, sp_count:500}
@@ -788,7 +788,7 @@ sequenceDiagram
  P->>P: grant.sp_count_remaining -= 500
  E->>B: opaque ref "esop.put.settled:&lt;opaque_id&gt;"
  E-->>M: notification "put exercise settled"
- Note over E,B: ESOP value not in BRAIN; only opaque event ref.
+ Note over E,B: ESOP value not in memory; only opaque event ref.
  </div>
  </div>
 
@@ -804,7 +804,7 @@ sequenceDiagram
  participant DOC as 📄 DOC e-sign
  participant SGREG as Singapore HoldCo registry
  participant M as Member
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  Note over CEO: ARR reached $1.5M; CEO designates flip.
  CEO->>E: POST /admin/holdco-flip/designate
@@ -833,7 +833,7 @@ sequenceDiagram
 <section id="lifecycle" class="module-section">
  <header class="section-head"><span class="section-num">7</span><h2>Grant lifecycle</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- A grant traverses up to seven terminal states. Each transition writes an opaque BRAIN row + a DB audit trail.
+ A grant traverses up to seven terminal states. Each transition writes an opaque memory row + a DB audit trail.
  </p>
  <div class="bbg-card p-5 mb-5">
  <div class="mermaid">
@@ -897,7 +897,7 @@ stateDiagram-v2
  <tbody>
  <tr><td><code>N(FR pending)</code></td><td>Grant row UPDATE attempted</td><td>= 0 — DB role lacks UPDATE</td><td>DB role inspection in CI</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Valuation row UPDATE attempted</td><td>= 0 — DB role lacks UPDATE</td><td>DB role inspection in CI</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>BRAIN row containing ESOP numeric value</td><td>= 0 — sev-0</td><td>CI: brain_bridge emit JSON inspected against numeric blocklist</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>memory row containing ESOP numeric value</td><td>= 0 — sev-0</td><td>CI: memory_bridge emit JSON inspected against numeric blocklist</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Single-signer grant or valuation</td><td>= 0 — cosign_guard blocks</td><td>integration test injects single-sign attempt</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>KMS key isolation (esop-key distinct)</td><td>1 distinct key handle</td><td>KMS policy inspection</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Vesting determinism — replay equality</td><td>100% (property test)</td><td>proptest: vest at past dates → identical output</td></tr>
@@ -918,7 +918,7 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- ESOP reads roster from HR (for terminations) and writes opaque references to BRAIN. Put-option wires go through vietnam-bank-transfer (VND) or Wise (SGD). HoldCo flip goes through DOC for Singapore paperwork.
+ ESOP reads roster from HR (for terminations) and writes opaque references to memory. Put-option wires go through vietnam-bank-transfer (VND) or Wise (SGD). HoldCo flip goes through DOC for Singapore paperwork.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
@@ -926,7 +926,7 @@ graph LR
  subgraph upstream ["ESOP depends on"]
  AUTH["🔐 AUTH<br>multi-sign predicate"]
  HRMOD["👥 HR<br>roster + termination"]
- BRAIN["🧠 BRAIN<br>opaque refs only"]
+ memory["🧠 memory<br>opaque refs only"]
  OBS["👁 OBS"]
  KMS["🔑 esop-key (distinct)"]
  S3["🗂 S3 (10y object-lock)"]
@@ -946,7 +946,7 @@ graph LR
  end
  AUTH --> ESOP
  HRMOD --> ESOP
- BRAIN --> ESOP
+ memory --> ESOP
  OBS --> ESOP
  KMS --> ESOP
  S3 --> ESOP
@@ -964,7 +964,7 @@ graph LR
  classDef ext fill:#fef6e0,stroke:#9c750a
  class ESOP planned
  class AUTH,HRMOD,MEM,CUO,CEO,DPO,DOC,OBS planned
- class BRAIN,KMS,S3,BANK shipped
+ class memory,KMS,S3,BANK shipped
  class WISE,ACRA ext
  </div>
  </div>
@@ -1014,7 +1014,7 @@ graph LR
  <tr><td><code>R-ESOP-004</code></td><td>Bad Leaver classification disputed (legal exposure)</td><td>Medium</td><td>High</td><td>CLO</td><td>BL decision is human-only (CEO + CFO co-sign), with documented reason; appeal path via Board chair.</td></tr>
  <tr><td><code>R-ESOP-005</code></td><td>Put-option wire fails or delays past 10-day SLO</td><td>Medium</td><td>Low</td><td>CFO</td><td>vietnam-bank-transfer / Wise integration with retry + alert; manual fallback workflow.</td></tr>
  <tr><td><code>R-ESOP-006</code></td><td>External auditor unavailable for annual valuation</td><td>Low</td><td>Medium</td><td>CFO</td><td>Engaged auditor on retainer + secondary auditor relationship for continuity.</td></tr>
- <tr><td><code>R-ESOP-007</code></td><td>ESOP value leaks via BRAIN audit row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>brain_bridge inspects emit JSON; CI gate rejects numeric values in ESOP rows; opaque refs only.</td></tr>
+ <tr><td><code>R-ESOP-007</code></td><td>ESOP value leaks via memory audit row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>memory_bridge inspects emit JSON; CI gate rejects numeric values in ESOP rows; opaque refs only.</td></tr>
  <tr><td><code>R-ESOP-008</code></td><td>HoldCo flip fails — Singapore filing rejected</td><td>Medium</td><td>High</td><td>CEO + CLO</td><td>DOC integration with ACRA tested in P4 sandbox; flip executed Member-by-Member with rollback path.</td></tr>
  <tr><td><code>R-ESOP-009</code></td><td>Pool over-allocation (issued_sp &gt; total_pool_sp)</td><td>Low</td><td>High</td><td>CFO</td><td>DB CHECK constraint on pool_balance; INSERT grant validates pool.available_sp ≥ requested.</td></tr>
  <tr><td><code>R-ESOP-010</code></td><td>Vietnamese securities-law re-classification (phantom deemed real)</td><td>Low</td><td>High</td><td>CLO</td><td>Annual legal review; CLO sign-off on Phantom Stock structure; ready-to-flip path if regulatory landscape changes.</td></tr>
@@ -1043,12 +1043,12 @@ graph LR
  <tr><td><strong>Vesting determinism replay pass</strong></td><td>replay passes / runs</td><td>CI</td><td>= 100%</td></tr>
  <tr><td><strong>Put-option SLO (exercise → wire)</strong></td><td>p95 days</td><td>OBS</td><td>≤ 10 working days</td></tr>
  <tr><td><strong>Single-signer attempts blocked</strong></td><td>cosign_guard rejections</td><td>OBS</td><td>tracked; alert on prod &gt; 0</td></tr>
- <tr><td><strong>ESOP-value-in-BRAIN incidents</strong></td><td>CI gate failures</td><td>CI</td><td>= 0</td></tr>
+ <tr><td><strong>ESOP-value-in-memory incidents</strong></td><td>CI gate failures</td><td>CI</td><td>= 0</td></tr>
  <tr><td><strong>Retention rate (Members with active grants)</strong></td><td>active_grant_holders / member_count</td><td>HR + ESOP</td><td>tracked; target ≥ 80%</td></tr>
  <tr><td><strong>Bad-Leaver appeal rate</strong></td><td>appeals / BL classifications</td><td>ESOP DB</td><td>tracked</td></tr>
  <tr><td><strong>Pool over-allocation incidents</strong></td><td>CHECK constraint failures</td><td>DB</td><td>= 0</td></tr>
  <tr><td><strong>Annual valuation on-time</strong></td><td>year_end + Q1 completion</td><td>ESOP DB</td><td>≤ Mar 31 each year</td></tr>
- <tr><td><strong>Good/Bad Leaver co-sign integrity</strong></td><td>branch decisions with CFO + CEO tokens / total</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Good/Bad Leaver co-sign integrity</strong></td><td>branch decisions with CFO + CEO tokens / total</td><td>memory audit</td><td>= 1.0 (hard floor)</td></tr>
  <tr><td><strong>Vesting accrual statutory-leave correctness</strong></td><td>maternity/paternity periods correctly accrue / total such periods</td><td>quarterly audit</td><td>= 1.0</td></tr>
  <tr><td><strong>M&amp;A acceleration notification SLA</strong></td><td>p95 (Board declare → Member notice)</td><td>OBS</td><td>≤ 5 business days</td></tr>
  <tr><td><strong>HoldCo flip cohort success rate</strong></td><td>cohorts fully migrated / total flip cohorts</td><td>ACRA logs + ESOP DB</td><td>= 1.0 (rollback on partial)</td></tr>
@@ -1107,7 +1107,7 @@ graph LR
 [grant] 01HZJ8…F9D issued
 [pdf] rendered · SHA-256 = 9f3e…
 [s3] grants/mai/01HZJ8.pdf (10y object-lock)
-[audit] brain seq=17001 (opaque "esop.grant.issued")</code></pre>
+[audit] memory seq=17001 (opaque "esop.grant.issued")</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Publish annual valuation</h3>
 <pre><code>$ cyberos-esop valuation publish \
@@ -1123,7 +1123,7 @@ graph LR
 [publish] valuation 2026 status=published
 [supersede] valuation 2025 effective_to = 2025-12-31
 [s3] valuations/2026.pdf (10y object-lock)
-[audit] brain seq=17012 (opaque)</code></pre>
+[audit] memory seq=17012 (opaque)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Read your vesting curve</h3>
 <pre><code>$ cyberos-esop my-vesting
@@ -1160,7 +1160,7 @@ $ cyberos-esop put approve --id put-01HZK0…
 
 [wire] sent · transfer_id BIDV-9F3E2A1B
 [status] wired → settled (T+0 via Napas247)
-[audit] brain seq=17034 (opaque "esop.put.settled")</code></pre>
+[audit] memory seq=17034 (opaque "esop.put.settled")</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">5. Terminate (Good Leaver)</h3>
 <pre><code>$ cyberos-esop terminate \
@@ -1175,7 +1175,7 @@ $ cyberos-esop put approve --id put-01HZK0…
 [forfeit] 3,850 SP unvested forfeited (returned to pool)
 [put] rights preserved · next window 2028-07
 [pool] available_sp: 75,000 → 78,850 after forfeiture
-[audit] brain seq=17041 (opaque)</code></pre>
+[audit] memory seq=17041 (opaque)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Cap-table read (CEO/CFO/Board scope)</h3>
 <pre><code>$ cyberos-esop cap-table
@@ -1204,7 +1204,7 @@ pool total: 100,000 100%
 [doc] routing 24 Members for SG share issuance paperwork via DOC
 [acra] Form 24 templates generated
 [status] flip period OPEN — Members can sign in DOC
-[audit] brain seq=17051 (opaque "esop.holdco.designated")</code></pre>
+[audit] memory seq=17051 (opaque "esop.holdco.designated")</code></pre>
 </section>
 
 <!-- ============================================================ -->
@@ -1256,7 +1256,7 @@ pool total: 100,000 100%
  <ul class="space-y-2 text-sm">
  <li><strong>FR catalogue</strong> — ESOP module FRs ((FR pending) through (FR pending)).</li>
  <li><strong>Architecture spec</strong> — ESOP architecture posture, Phantom Stock framing.</li>
- <li><strong>NFR catalogue</strong> — Security NFRs (zero ESOP in BRAIN, dual sign-off).</li>
+ <li><strong>NFR catalogue</strong> — Security NFRs (zero ESOP in memory, dual sign-off).</li>
  <li><strong>FR mapping</strong> — Formal (FR pending) through (FR pending) with verification methods.</li>
  <li><strong>Total Rewards &amp; Career Path Appendix</strong> — ESOP allocation, BL discount %, vesting defaults.</li>
  <li><strong>Vietnam Law on Enterprises (Law 59/2020/QH14)</strong> — Art. 114 share issuance (which Phantom Stock avoids).</li>
@@ -1269,10 +1269,10 @@ pool total: 100,000 100%
  <li><strong>Cross-module page links:</strong>
  <a href="hr.html" class="text-blue-700 underline">hr.html</a> ·
  <a href="rew.html" class="text-blue-700 underline">rew.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
  <a href="doc.html" class="text-blue-700 underline">doc.html</a></li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — ESOP value structurally excluded from BRAIN.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — ESOP value structurally excluded from memory.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — ESOP at P2 · exit (P2).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>Singapore Companies Act (Cap. 50)</strong> — S 67 share issuance, applicable post-HoldCo-flip.</li>

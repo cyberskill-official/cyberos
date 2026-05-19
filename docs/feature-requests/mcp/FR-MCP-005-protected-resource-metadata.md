@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-MCP-001, FR-MCP-004, FR-MCP-006, FR-MCP-007, FR-AUTH-004, FR-AUTH-104, FR-AI-003, FR-BRAIN-101, FR-OBS-005]
+memory_chain_hash: null
+related_frs: [FR-MCP-001, FR-MCP-004, FR-MCP-006, FR-MCP-007, FR-AUTH-004, FR-AUTH-104, FR-AI-003, FR-MEMORY-101, FR-OBS-005]
 depends_on: [FR-MCP-004]
 blocks: []
 
@@ -34,7 +34,7 @@ source_decisions:
   - DEC-903 2026-05-17 — PRM responses cached client-side per RFC 9728 §3.4 with `Cache-Control: max-age=3600`; server-side hot-reload of upstream config invalidates the cached PRM via `ETag`
   - DEC-904 2026-05-17 — Content-Type MUST be `application/json` per RFC 9728 §3.1; charset UTF-8
   - DEC-905 2026-05-17 — `scopes_supported` is OMITTED at slice 2 (gateway-wide); per-module PRMs include `scopes_supported` enumerating the module's tool-level scopes per FR-MCP-006
-  - DEC-906 2026-05-17 — BRAIN audit kinds: mcp.prm_served, mcp.prm_unknown_module_requested (sev-3 informational); mcp.prm_aggregate_drift (sev-2 — detected when per-module PRMs disagree with gateway-aggregate)
+  - DEC-906 2026-05-17 — memory audit kinds: mcp.prm_served, mcp.prm_unknown_module_requested (sev-3 informational); mcp.prm_aggregate_drift (sev-2 — detected when per-module PRMs disagree with gateway-aggregate)
   - DEC-907 2026-05-17 — Per-module PRMs are GENERATED from FR-MCP-002 module-registration metadata; no per-module hand-written PRM allowed (single source of truth = registration record)
   - DEC-908 2026-05-17 — Rate limit: 600 req/min/IP on PRM endpoints (clients should cache; high-rate signals misbehaving client)
   - DEC-909 2026-05-17 — PRM endpoint MUST respond < 50 ms p95 (static content + cache); alarm sev-3 if p95 > 200 ms sustained 5 min
@@ -49,7 +49,7 @@ build_envelope:
     - services/mcp/src/prm/per_module.rs                              # per-module PRM builder
     - services/mcp/src/prm/cache.rs                                   # ETag + Cache-Control
     - services/mcp/src/handlers/prm_routes.rs                         # public route registration
-    - services/mcp/src/audit/prm_events.rs                            # 3 BRAIN row builders
+    - services/mcp/src/audit/prm_events.rs                            # 3 memory row builders
     - services/mcp/tests/prm_gateway_test.rs
     - services/mcp/tests/prm_per_module_test.rs
     - services/mcp/tests/prm_etag_cache_test.rs
@@ -92,7 +92,7 @@ risk_if_skipped: "Without PRM, federated MCP clients (Claude Desktop, ChatGPT, t
 
 ## §1 — Description (BCP-14 normative)
 
-The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-known/oauth-protected-resource` (gateway-aggregate) and `/.well-known/oauth-protected-resource/cyberos.{module}` (per-module), generated from the FR-MCP-002 registration record, with ETag-based caching, rate limiting, and 3 BRAIN audit kinds.
+The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-known/oauth-protected-resource` (gateway-aggregate) and `/.well-known/oauth-protected-resource/cyberos.{module}` (per-module), generated from the FR-MCP-002 registration record, with ETag-based caching, rate limiting, and 3 memory audit kinds.
 
 1. **MUST** expose `GET /.well-known/oauth-protected-resource` returning the gateway-aggregate PRM as `application/json; charset=utf-8` per RFC 9728 §3.1. Unauthenticated per DEC-896.
 
@@ -116,7 +116,7 @@ The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-
 
 7. **MUST** include `Cache-Control: max-age=3600` per DEC-903 (RFC 9728 §3.4 recommends caching but does not pin a value; 1h matches our hot-reload SLA for upstream config changes).
 
-8. **MUST** detect drift between gateway-aggregate and per-module PRMs per DEC-906. The drift detector runs on every PRM serve: if the aggregate's `authorization_servers` or `resource_signing_alg_values_supported` differs from any per-module's (which should never happen — derived from same registry), emit `mcp.prm_aggregate_drift` sev-2 BRAIN row + log to `prm_drift_log` table.
+8. **MUST** detect drift between gateway-aggregate and per-module PRMs per DEC-906. The drift detector runs on every PRM serve: if the aggregate's `authorization_servers` or `resource_signing_alg_values_supported` differs from any per-module's (which should never happen — derived from same registry), emit `mcp.prm_aggregate_drift` sev-2 memory row + log to `prm_drift_log` table.
 
 9. **MUST** define `prm_drift_log` table at migration `0005`: `(id BIGSERIAL PRIMARY KEY, detected_at TIMESTAMPTZ NOT NULL DEFAULT now(), aggregate_sha256 CHAR(64) NOT NULL, module_name TEXT NOT NULL, module_sha256 CHAR(64) NOT NULL, drift_fields TEXT[] NOT NULL)`. Append-only via REVOKE per AUTHORING.md rule 12. RLS not required (system-tenant scope only — drift is global, not per-tenant).
 
@@ -124,7 +124,7 @@ The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-
 
 11. **MUST** complete PRM response in < 50 ms p95 per DEC-909. The PRM bodies are small (<2 KB) and built from in-memory registry data; sub-50ms is straightforward. OTel histogram `mcp_prm_serve_duration_seconds`; alarm sev-3 if p95 > 200 ms sustained 5 min.
 
-12. **MUST** emit 3 BRAIN audit row kinds (DEC-906 + AUTHORING.md rule 6 namespace pattern):
+12. **MUST** emit 3 memory audit row kinds (DEC-906 + AUTHORING.md rule 6 namespace pattern):
     - `mcp.prm_served` (sev-3 — high-volume; sampled at 1% per AUTHORING.md tail-sampling pattern via FR-OBS-006)
     - `mcp.prm_unknown_module_requested` (sev-3 — informational; could indicate client misconfig or scanner)
     - `mcp.prm_aggregate_drift` (sev-2 — should never happen; indicates registry corruption)
@@ -313,7 +313,7 @@ async fn unknown_module_404_audited() {
     let ctx = TestContext::new().await;
     let r = ctx.get("/.well-known/oauth-protected-resource/cyberos.bogus").send().await.unwrap();
     assert_eq!(r.status(), 404);
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "mcp.prm_unknown_module_requested"));
 }
 ```
@@ -327,7 +327,7 @@ async fn drift_emits_sev2_alert() {
     ctx.register_module("projects", vec!["projects.read"]).await;
     ctx.inject_per_module_signing_alg_drift("projects", vec!["HS256"]).await;  // bad: HS256
     let _ = ctx.get("/.well-known/oauth-protected-resource/cyberos.projects").send().await.unwrap();
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     let drift = audit.iter().find(|r| r.kind == "mcp.prm_aggregate_drift").unwrap();
     assert_eq!(drift.severity, 2);
     assert!(drift.payload["drift_fields"].as_array().unwrap()
@@ -378,7 +378,7 @@ async fn prm_served_sampled_at_1_percent() {
     for _ in 0..10 {
         ctx.get("/.well-known/oauth-protected-resource").send().await.unwrap();
     }
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert_eq!(audit.iter().filter(|r| r.kind == "mcp.prm_served").count(), 10);
 }
 ```
@@ -432,7 +432,7 @@ pub async fn build_per_module_prm(ctx: &AppCtx, module: &str) -> Option<PrmDocum
 - **FR-MCP-007** Tasks primitive — tasks tools' scopes appear in per-module PRM.
 - **FR-AUTH-004** JWT mint — `authorization_servers` list matches FR-AUTH-004 residency issuers.
 - **FR-AUTH-104** OIDC SSO — IdP discovery follows analogous well-known pattern.
-- **FR-AI-003** BRAIN audit-row bridge — 3 new kinds register.
+- **FR-AI-003** memory audit-row bridge — 3 new kinds register.
 - **FR-OBS-005** Trace correlation — `mcp.prm_served` sampled via OBS tail-sampling.
 
 **Downstream (blocks):** None at this slice. Future per-tool authz hooks (FR-MCP-2xx) may consume PRM.
@@ -487,7 +487,7 @@ ETag: "9c4e7a8b6d2f1e3a"
 }
 ```
 
-### 8.3 `mcp.prm_aggregate_drift` BRAIN row
+### 8.3 `mcp.prm_aggregate_drift` memory row
 
 ```json
 {
@@ -573,7 +573,7 @@ All resolved. Deferred:
 
 **§11.11** Server registration records (`ModuleRegistration`) extended with `exposed_scopes: Vec<String>`; FR-MCP-002 modified_files lists the type update.
 
-**§11.12** Tail-sampling of `mcp.prm_served` rows (1% per AUTHORING.md / FR-OBS-006) keeps the BRAIN chain manageable at high request volume. The two other kinds are always emitted (low volume by design).
+**§11.12** Tail-sampling of `mcp.prm_served` rows (1% per AUTHORING.md / FR-OBS-006) keeps the memory chain manageable at high request volume. The two other kinds are always emitted (low volume by design).
 
 **§11.13** The `X-Robots-Tag: noindex` header also includes `, nofollow, nosnippet` per Google's documented best-practice for metadata endpoints.
 

@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-104, FR-TEN-105, FR-AUTH-101, FR-AUTH-002, FR-BRAIN-101, FR-AI-003, FR-BRAIN-111, FR-OBS-007, FR-OBS-009]
+memory_chain_hash: null
+related_frs: [FR-TEN-104, FR-TEN-105, FR-AUTH-101, FR-AUTH-002, FR-MEMORY-101, FR-AI-003, FR-MEMORY-111, FR-OBS-007, FR-OBS-009]
 depends_on: [FR-TEN-104, FR-TEN-105]
 blocks: []
 
@@ -25,13 +25,13 @@ source_decisions:
   - DEC-1341 2026-05-17 — Pre-conditions: tenant.status='terminating'; recent bundle export within 90d (FR-TEN-105 §1 #14); 30-day cool-off since tenant.status flipped to terminating
   - DEC-1342 2026-05-17 — CSO + CLO dual-signature (distinct subjects per CHECK constraint mirror of FR-PORTAL-008 DEC denial pattern)
   - DEC-1343 2026-05-17 — Cascade hard-purge across: tenant Postgres schema (DROP CASCADE), tenant S3 prefix (recursive delete + lifecycle policy), KMS keys (schedule deletion 30d), NATS subject namespace (purge JetStream), audit chain (TOMBSTONE entries — chain integrity preserved)
-  - DEC-1344 2026-05-17 — Chain integrity: audit rows for the deleted tenant remain in BRAIN chain (cannot be deleted — chain integrity property); replaced with tombstone records containing only `(tenant_id, deleted_at, attestation_id)` — original content scrubbed
+  - DEC-1344 2026-05-17 — Chain integrity: audit rows for the deleted tenant remain in memory chain (cannot be deleted — chain integrity property); replaced with tombstone records containing only `(tenant_id, deleted_at, attestation_id)` — original content scrubbed
   - DEC-1345 2026-05-17 — Closed enum `attestation_status` = {pending_cso_sign, pending_clo_sign, ready_to_execute, executing, completed, cancelled}; CI cardinality asserts 6
   - DEC-1346 2026-05-17 — Verification: post-purge, attestation row remains forever (chain-anchored); verification endpoint shows: timestamps, signatures, bundle reference, executed cascade summary
   - DEC-1347 2026-05-17 — Cancel allowed before status='executing'; after that, irreversible
   - DEC-1348 2026-05-17 — Closed enum `cascade_target` = {postgres_schema, s3_prefix, kms_keys, nats_subjects, audit_chain_tombstone}; cardinality 5
   - DEC-1349 2026-05-17 — Per-target execution log persisted in `permanent_delete_cascade_log` with status (pending|executing|completed|failed); CSO can re-trigger failed targets
-  - DEC-1350 2026-05-17 — BRAIN audit kinds: ten.permanent_delete_attestation_initiated, ten.permanent_delete_cso_signed, ten.permanent_delete_clo_signed, ten.permanent_delete_executing, ten.permanent_delete_completed, ten.permanent_delete_cancelled, ten.permanent_delete_cascade_failed
+  - DEC-1350 2026-05-17 — memory audit kinds: ten.permanent_delete_attestation_initiated, ten.permanent_delete_cso_signed, ten.permanent_delete_clo_signed, ten.permanent_delete_executing, ten.permanent_delete_completed, ten.permanent_delete_cancelled, ten.permanent_delete_cascade_failed
 
 build_envelope:
   language: rust 1.81
@@ -63,7 +63,7 @@ build_envelope:
     - services/ten/src/lib.rs
 
   allowed_tools:
-    - file_read: services/{ten,auth,brain}/**
+    - file_read: services/{ten,auth,memory}/**
     - file_write: services/ten/{src,tests,migrations}/**
     - bash: cd services/ten && cargo test permanent_delete
 
@@ -92,7 +92,7 @@ risk_if_skipped: "Without permanent-delete attestation, GDPR Art. 17 erasure (PO
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship permanent-delete attestation at `services/ten/src/permanent_delete/` requiring CSO + CLO dual-signature + 30-day cool-off + recent bundle existence (FR-TEN-105 §1 #14 gate), then cascade hard-purge across 5 targets with audit-chain tombstone preservation, and 7 BRAIN audit kinds.
+The TEN service **MUST** ship permanent-delete attestation at `services/ten/src/permanent_delete/` requiring CSO + CLO dual-signature + 30-day cool-off + recent bundle existence (FR-TEN-105 §1 #14 gate), then cascade hard-purge across 5 targets with audit-chain tombstone preservation, and 7 memory audit kinds.
 
 1. **MUST** define closed `attestation_status` enum: `('pending_cso_sign','pending_clo_sign','ready_to_execute','executing','completed','cancelled')` per DEC-1345. Cardinality 6.
 
@@ -145,9 +145,9 @@ The TEN service **MUST** ship permanent-delete attestation at `services/ten/src/
 
 13. **MUST** expose verification endpoint `GET /v1/admin/permanent-delete/{attestation_id}/verify` per DEC-1346 — returns signed timestamps, signatures, bundle reference, executed cascade summary. Accessible by `cso`, `clo`, OR external auditors via signed-URL.
 
-14. **MUST** emit 7 BRAIN audit kinds per DEC-1350. ALL sev-1 (regulatory-critical) — initiation, CSO sign, CLO sign, executing, completed, cancelled, cascade_failed.
+14. **MUST** emit 7 memory audit kinds per DEC-1350. ALL sev-1 (regulatory-critical) — initiation, CSO sign, CLO sign, executing, completed, cancelled, cascade_failed.
 
-15. **MUST** PII-scrub `reason` + `cancellation_reason` via FR-BRAIN-111 — hashed in chain, raw in DB.
+15. **MUST** PII-scrub `reason` + `cancellation_reason` via FR-MEMORY-111 — hashed in chain, raw in DB.
 
 16. **MUST** thread trace_id across initiate → sign → execute → cascade audit.
 
@@ -258,7 +258,7 @@ GET    /v1/admin/permanent-delete/{id}/verify                       (public via 
 15. **Cancellation before execute** — status='ready_to_execute' → cancel succeeds.
 16. **Cancellation after execute rejected** — status='executing' → cancel 409.
 17. **Cascade target retry** — failed target can be retried.
-18. **7 BRAIN audit kinds emitted** — full lifecycle.
+18. **7 memory audit kinds emitted** — full lifecycle.
 19. **Trace_id end-to-end**.
 20. **Verification endpoint** — returns signatures + cascade summary.
 
@@ -322,11 +322,11 @@ async fn audit_chain_tombstoned_but_integrity_preserved() {
     ctx.execute_perm_delete(att).await;
 
     let rows: Vec<serde_json::Value> = sqlx::query_scalar(
-        "SELECT payload FROM brain_audit_rows WHERE tenant_id=$1 ORDER BY id"
+        "SELECT payload FROM memory_audit_rows WHERE tenant_id=$1 ORDER BY id"
     ).bind(ctx.tenant_id).fetch_all(&ctx.pool).await.unwrap();
     assert!(rows.iter().all(|r| r["tombstoned"] == true));
 
-    let chain_ok = ctx.verify_brain_chain_integrity(ctx.tenant_id).await;
+    let chain_ok = ctx.verify_memory_chain_integrity(ctx.tenant_id).await;
     assert!(chain_ok);
 }
 
@@ -353,7 +353,7 @@ async fn cancel_before_execute_succeeds() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TEN-104 (terminating status), FR-TEN-105 (bundle precondition).
-**Cross-module:** FR-AUTH-101 (cso + clo + tenant_admin roles), FR-AUTH-002 (subject hard-purge), FR-BRAIN-101 (chain integrity), FR-AI-003, FR-BRAIN-111, FR-OBS-007, FR-OBS-009 (chain-of-custody anchor).
+**Cross-module:** FR-AUTH-101 (cso + clo + tenant_admin roles), FR-AUTH-002 (subject hard-purge), FR-MEMORY-101 (chain integrity), FR-AI-003, FR-MEMORY-111, FR-OBS-007, FR-OBS-009 (chain-of-custody anchor).
 **Downstream:** None.
 
 ---
@@ -440,7 +440,7 @@ Deferred:
 
 **§11.9** CHECK constraint on dual-sign prevents one of the most catastrophic failure modes (insider attack) at schema level.
 
-**§11.10** Reason + cancellation_reason hashed via FR-BRAIN-111 before BRAIN row write; raw text retained in DB for forensic.
+**§11.10** Reason + cancellation_reason hashed via FR-MEMORY-111 before memory row write; raw text retained in DB for forensic.
 
 ---
 

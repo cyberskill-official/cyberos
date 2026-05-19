@@ -1,9 +1,9 @@
 ---
 id: FR-SKILL-109
-title: "vietnam-bank-transfer@1 skill — VietQR + Napas247 transfer-code generator with bank-prefix validation, BRAIN audit, and per-transfer idempotency"
+title: "vietnam-bank-transfer@1 skill — VietQR + Napas247 transfer-code generator with bank-prefix validation, memory audit, and per-transfer idempotency"
 module: SKILL
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-SKILL-103, FR-SKILL-104, FR-SKILL-105, FR-SKILL-108, FR-SKILL-110, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-SKILL-103, FR-SKILL-104, FR-SKILL-105, FR-SKILL-108, FR-SKILL-110, FR-MEMORY-111]
 depends_on: [FR-SKILL-104, FR-SKILL-108]
 blocks: [FR-SKILL-110]
 
@@ -21,7 +21,7 @@ source_pages:
   - website/docs/legal/vn-payments.html
 source_decisions:
   - DEC-220 (VietQR is the canonical inter-bank QR format; Napas247 backbone)
-  - DEC-221 (every QR generation MUST emit BRAIN audit row for reconciliation)
+  - DEC-221 (every QR generation MUST emit memory audit row for reconciliation)
   - DEC-222 (bank-prefix table maintained in skill; quarterly refresh via NAPAS public registry)
   - DEC-223 (idempotency key required for repeat-safe QR generation per transaction)
 
@@ -47,7 +47,7 @@ disallowed_tools:
 
 effort_hours: 7
 sub_tasks:
-  - "0.5h: SKILL.md frontmatter (allowed_tools=[BrainEmit]; no HttpFetch — skill is pure-local)"
+  - "0.5h: SKILL.md frontmatter (allowed_tools=[MemoryEmit]; no HttpFetch — skill is pure-local)"
   - "0.5h: Cargo.toml + main.rs (broker subprocess entry)"
   - "1.0h: banks.rs — NAPAS bank-bin registry (40+ banks: 970403=Sacombank, 970415=Vietinbank, 970418=BIDV, 970422=MBBank, 970432=VPBank, ...)"
   - "1.5h: vietqr.rs — TLV (Tag-Length-Value) encoding per EMVCo Merchant QR spec; payload composition (00–63 fields)"
@@ -56,8 +56,8 @@ sub_tasks:
   - "0.5h: Idempotency key support (caller-provided UUID; same key + same body = same QR string deterministically)"
   - "1.0h: vietqr_test.rs — 20+ fixture transfers (cross-validated against Sacombank/Techcombank/VietQR.io test vectors)"
   - "0.5h: banks_test.rs — bank-prefix lookup + invalid-bin rejection"
-  - "0.5h: BRAIN audit row emission (vn.qr_generated kind with amount, receiver_bank, idempotency_key)"
-risk_if_skipped: "Without authoritative VietQR generation, every payment-collecting feature (FR-INV invoice, FR-CRM deal-won, FR-CHAT escrow) reinvents the wheel. Without CRC16 checksum, generated QR codes are silently rejected by banks (banks compute CRC themselves; mismatch = no transfer). Without bank-bin validation, transfers go to non-existent banks (typed BIN like 970999 = no such bank; user sees 'transfer pending' forever). Without idempotency, retry-on-error duplicates payment requests; double-charged customers churn. Without BRAIN audit, reconciliation (matching incoming bank statement entry to outgoing QR) is impossible at scale."
+  - "0.5h: memory audit row emission (vn.qr_generated kind with amount, receiver_bank, idempotency_key)"
+risk_if_skipped: "Without authoritative VietQR generation, every payment-collecting feature (FR-INV invoice, FR-CRM deal-won, FR-CHAT escrow) reinvents the wheel. Without CRC16 checksum, generated QR codes are silently rejected by banks (banks compute CRC themselves; mismatch = no transfer). Without bank-bin validation, transfers go to non-existent banks (typed BIN like 970999 = no such bank; user sees 'transfer pending' forever). Without idempotency, retry-on-error duplicates payment requests; double-charged customers churn. Without memory audit, reconciliation (matching incoming bank statement entry to outgoing QR) is impossible at scale."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -83,13 +83,13 @@ The `vietnam-bank-transfer@1` skill **MUST** generate VietQR strings conforming 
     - Tag `62` — Additional Data (nested): `08` = memo (if provided).
     - Tag `63` — CRC16-CCITT-FALSE checksum of the entire prior payload (4 uppercase hex chars).
 5. **MUST** compute CRC16-CCITT-FALSE (polynomial `0x1021`, init `0xFFFF`, no reflection, no final XOR). The CRC is computed over all bytes from the start of the payload through the `6304` (tag 63 + length 04) literal. The 4-hex-char checksum is appended.
-6. **MUST** be deterministic — same `TransferRequest` (including same idempotency_key) produces byte-identical VietQR string. Idempotency_key is ignored in the QR payload itself (banks don't see it); it's only used in the BRAIN audit row + dedup cache.
+6. **MUST** be deterministic — same `TransferRequest` (including same idempotency_key) produces byte-identical VietQR string. Idempotency_key is ignored in the QR payload itself (banks don't see it); it's only used in the memory audit row + dedup cache.
 7. **MUST** support short-form output as well: `generate_vietqr_image_url(req)` returns a URL pointing to a free QR rendering service (e.g. `https://img.vietqr.io/image/<bin>-<account>-<style>.png?amount=<n>&addInfo=<memo>&accountName=<name>`) for callers who want a PNG directly instead of rendering the QR themselves.
 8. **MUST** transliterate non-ASCII receiver_name + memo per Vietnamese conventions:
     - `Nguyễn Văn A` → `NGUYEN VAN A`.
     - `Trịnh Thái Anh` → `TRINH THAI ANH`.
     - Truncate to 25 chars after transliteration; if truncation occurs, append `~` indicator.
-9. **MUST** emit BRAIN audit row `vn.qr_generated` per generation with payload `{idempotency_key, receiver_bank_bin, receiver_bank_name, receiver_account_redacted, amount_vnd, memo_hash, qr_string_hash, generated_at_ns, trace_id}`. `receiver_account_redacted` is `****<last_4>`; full account NOT stored (PDPL).
+9. **MUST** emit memory audit row `vn.qr_generated` per generation with payload `{idempotency_key, receiver_bank_bin, receiver_bank_name, receiver_account_redacted, amount_vnd, memo_hash, qr_string_hash, generated_at_ns, trace_id}`. `receiver_account_redacted` is `****<last_4>`; full account NOT stored (PDPL).
 10. **MUST** support `generate_napas247_transfer_code(req)` as an alternative that produces a 16-char human-typed transfer code (for callers without a camera; mostly legacy). Code format: `<bin:3><account_last_8:8><amount_compressed:5>` with check digit; algorithm per NAPAS Doc 24.
 11. **MUST** emit OTel span `skill.vn_bank_transfer.generate` with attributes `bank_bin`, `bank_name`, `has_amount`, `qr_length_bytes`, `duration_ms`.
 12. **MUST** emit OTel metrics:
@@ -316,8 +316,8 @@ pub fn ccitt_false(bytes: &[u8]) -> u16 {
 12. **Memo too long rejected** — 30-char ASCII memo → `Err(MemoTooLong(30))`.
 13. **CRC matches reference vector** — known-good fixture from VietQR.io: `00020101021238540010A000000727012400069704220110123456780208QRIBFTTA53037045802VN62080804test6304XXXX` → CRC matches.
 14. **Deterministic output** — same request twice → byte-identical qr_string.
-15. **Idempotency key in BRAIN row but not QR** — qr_string MUST NOT contain idempotency_key; audit row payload MUST contain it.
-16. **BRAIN audit row emitted** — `vn.qr_generated` row appears in BRAIN with payload schema per §1 #9.
+15. **Idempotency key in memory row but not QR** — qr_string MUST NOT contain idempotency_key; audit row payload MUST contain it.
+16. **memory audit row emitted** — `vn.qr_generated` row appears in memory with payload schema per §1 #9.
 17. **receiver_account redacted in audit** — payload `receiver_account_redacted` = "****7890" for account `1234567890`.
 18. **qr_image_url constructed** — output contains `https://img.vietqr.io/image/VPBank-1234567890-...`.
 19. **OTel span emitted** — span `skill.vn_bank_transfer.generate` with attrs.
@@ -388,7 +388,7 @@ fn crc_against_reference_vector() {
 fn audit_row_emitted() {
     let req = test_request();
     let _ = generate_vietqr(req.clone()).unwrap();
-    let row = brain_test_helper::latest("vn.qr_generated");
+    let row = memory_test_helper::latest("vn.qr_generated");
     assert_eq!(row["payload"]["receiver_bank_bin"], "970422");
     assert_eq!(row["payload"]["receiver_account_redacted"], "****5678");
     assert!(!row["payload"].as_object().unwrap().contains_key("receiver_account"));  // raw account NOT stored
@@ -407,11 +407,11 @@ fn audit_row_emitted() {
 ## §7 — Dependencies
 
 - **FR-SKILL-103** — frontmatter schema.
-- **FR-SKILL-104** — broker enforces `allowed_tools: [BrainEmit]`; verifies skill cannot call HttpFetch.
-- **FR-SKILL-105** — brain-capture SDK used internally for audit emit.
+- **FR-SKILL-104** — broker enforces `allowed_tools: [MemoryEmit]`; verifies skill cannot call HttpFetch.
+- **FR-SKILL-105** — memory-capture SDK used internally for audit emit.
 - **FR-SKILL-108** — vietnam-mst-validate is a sibling VN-pack skill; both depend on shared `transliterate()` + `redact()` helpers (in `cyberos-vn-common` crate).
 - **FR-SKILL-110** — vietnam-vat-invoice depends on this skill for embedding QR in hóa đơn.
-- **FR-BRAIN-111** — PII detection ruleset includes `VnBankAccount` tag.
+- **FR-MEMORY-111** — PII detection ruleset includes `VnBankAccount` tag.
 
 ---
 
@@ -470,7 +470,7 @@ All resolved. Deferred:
 | 13-bit VND amount overflows i64 | impossible (i64 covers all VND amounts) | n/a | n/a |
 | Amount has decimals | i64 type rejects | type error | Caller passes integer VND |
 | QR image URL service down | qr_image_url still returned; CDN unavailable | Caller renders locally via qr_string | Operator switches CDN |
-| Audit row write fails | BrainEmit Err | QR still returned to caller; audit lost; sev-2 alarm | Operator restores BRAIN |
+| Audit row write fails | MemoryEmit Err | QR still returned to caller; audit lost; sev-2 alarm | Operator restores memory |
 | Two callers same idempotency_key + different bodies | deterministic but diff content → diff qr_string | Both succeed; both emit audit rows | By design (no cross-caller dedup) |
 | Unicode normalisation in receiver_name | NFC normalised before translit | Consistent output | None |
 | Account starts with 0 (legacy banks) | digit check passes | QR includes leading 0 | Correct |

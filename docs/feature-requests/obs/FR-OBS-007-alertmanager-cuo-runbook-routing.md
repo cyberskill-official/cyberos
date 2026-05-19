@@ -3,7 +3,7 @@ id: FR-OBS-007
 title: "obs-router: Alertmanager → CUO obs.triage-alert@1 skill → CHAT (≥0.70 conf) OR PagerDuty + sev-1 always pages + ack-button + audit"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-003, FR-OBS-005, FR-CUO-101, FR-KB-008]
 depends_on: [FR-OBS-002, FR-OBS-003]
 blocks: [FR-KB-008]
@@ -51,7 +51,7 @@ allowed_tools:
 disallowed_tools:
   - auto-resolve a sev-1 alert without human confirmation (per §1 #5)
   - bypass PagerDuty fallback on CUO failure (per §1 #11)
-  - skip BRAIN audit row (per §1 #6)
+  - skip memory audit row (per §1 #6)
   - silent-drop alert (per §1 #11 — every alert MUST route somewhere)
 
 effort_hours: 10
@@ -65,7 +65,7 @@ sub_tasks:
   - "1.0h: route decision logic (sev-1 → both; conf >= 0.70 → CHAT; else PD)"
   - "0.5h: ack_handler.rs — accept ack from CHAT button; close PagerDuty if dual-routed"
   - "0.5h: trace_id preservation from alert labels"
-  - "0.5h: BRAIN audit row + OTel metrics"
+  - "0.5h: memory audit row + OTel metrics"
   - "1.0h: skills/obs.triage-alert/SKILL.md (markdown skill with RAG over runbooks)"
   - "1.5h: Tests — high-conf-CHAT + low-conf-PD + sev-1-both + CUO-failure-fallback + ack"
 risk_if_skipped: "Every alert pages a human regardless of severity. On-call gets noise overload (typical SaaS at 50 tenants generates ~20 alerts/day; without triage, that's 20 pages/day). The cost-of-everything gate's whole point — let CUO triage low-stakes alerts — is lost. Without sev-1-always-pages, an over-confident triage might silence a real incident. Without ack-button, ops correlation between CHAT discussion + alert state breaks."
@@ -90,11 +90,11 @@ A Rust HTTP service `obs-router` **MUST** accept Alertmanager webhook fires and 
     - Ack button (sends POST to `obs-router:7777/ack/<alert_id>`).
     - Escalate-to-PagerDuty button (sends POST to escalate).
 5. **MUST** route sev-1 alerts to BOTH CHAT and PagerDuty (no triage trust at sev-1 — DEC-171).
-6. **MUST** emit BRAIN audit row `obs.alert_triaged` per alert with payload: `alert_name`, `severity`, `cuo_confidence`, `route` (chat | pagerduty | both), `suggested_runbook`, `trace_id`, `request_id`.
+6. **MUST** emit memory audit row `obs.alert_triaged` per alert with payload: `alert_name`, `severity`, `cuo_confidence`, `route` (chat | pagerduty | both), `suggested_runbook`, `trace_id`, `request_id`.
 7. **MUST** preserve `trace_id` from alert labels (`trace_id` exemplar from FR-OBS-005). The CHAT post + audit row carry the trace_id; investigators click → jump to Tempo.
 8. **MUST** complete triage + route within 10s p95. Slow triage means the alert is invisible to ops during the lag.
 9. **MUST** handle CUO skill timeout (5s budget): on timeout, route as if confidence == 0 (PagerDuty fallback). The metric `obs_router_cuo_timeouts_total` increments; sev-2 alarm if rate > 5%.
-10. **MUST** handle ack from CHAT: when operator clicks ack-button, POST to `/ack/<alert_id>` MUST (a) update the CHAT post to show "acked by @user at <time>", (b) close the PagerDuty incident if dual-routed (sev-1), (c) emit `obs.alert_acked` BRAIN row.
+10. **MUST** handle ack from CHAT: when operator clicks ack-button, POST to `/ack/<alert_id>` MUST (a) update the CHAT post to show "acked by @user at <time>", (b) close the PagerDuty incident if dual-routed (sev-1), (c) emit `obs.alert_acked` memory row.
 11. **MUST NOT** silent-drop any alert. Every alert MUST route somewhere — CUO failure → PagerDuty fallback; CHAT failure → PagerDuty fallback; PagerDuty failure → log sev-1 + try CHAT as last resort.
 12. **MUST** support deduplication: alerts with identical `alert_fingerprint` arriving within 5 minutes are deduplicated to a single CHAT post (with a counter "fired N times in last 5m"). PagerDuty has its own dedup; we don't double-up.
 13. **MUST** authenticate Alertmanager via shared secret (`X-CyberOS-Webhook-Secret` header). Unauthenticated webhooks → 401.
@@ -238,7 +238,7 @@ pub async fn handle_alert(payload: AlertmanagerWebhook) -> Result<(), RouterErro
         let _ = chat_post::post_emergency(alert).await;
     }
 
-    brain::emit(canonical::alert_triaged(alert, severity, triage.confidence, route)).await?;
+    memory::emit(canonical::alert_triaged(alert, severity, triage.confidence, route)).await?;
     metrics::routed(route, severity, result.is_ok());
     Ok(())
 }
@@ -278,7 +278,7 @@ pub async fn post(alert: &Alert, triage: &TriageResult, severity: Severity) -> R
 7. CUO failure (non-timeout) → confidence 0 → PagerDuty.
 8. CHAT failure → fallback to PagerDuty.
 9. PagerDuty failure → emergency CHAT post; sev-1 log.
-10. BRAIN audit row `obs.alert_triaged` emitted per alert.
+10. memory audit row `obs.alert_triaged` emitted per alert.
 11. Trace_id preserved end-to-end (CHAT link works).
 12. Ack button: clicked → CHAT post updates "acked by @user at <ts>"; PagerDuty incident closed if dual-routed; `obs.alert_acked` row emitted.
 13. Escalate button: clicked → PagerDuty triggered post-hoc; row carries `escalated_from_chat: true`.
@@ -297,7 +297,7 @@ async fn high_confidence_p2_routes_to_chat_only() {
     let mock_cuo = MockCuo::returning_confidence(0.85);
     let mock_chat = MockChat::start();
     let mock_pd = MockPagerDuty::start();
-    let _ = handle_alert(test_webhook(P2, "BrainSearchLatencyHigh")).await.unwrap();
+    let _ = handle_alert(test_webhook(P2, "MemorySearchLatencyHigh")).await.unwrap();
     assert_eq!(mock_chat.posts().len(), 1);
     assert_eq!(mock_pd.incidents().len(), 0);
 }
@@ -340,7 +340,7 @@ async fn ack_button_closes_pagerduty_for_sev1() {
     let mock_pd = MockPagerDuty::singleton();
     let last_action = mock_pd.last_action(alert_id).await;
     assert_eq!(last_action, "resolved");
-    assert!(brain_test_helper::has_row("obs.alert_acked", alert_id));
+    assert!(memory_test_helper::has_row("obs.alert_acked", alert_id));
 }
 
 #[tokio::test]
@@ -416,8 +416,8 @@ JSON object per `output_schema`.
   "status": "firing",
   "alerts": [{
     "status": "firing",
-    "labels": { "alertname": "BrainSearchLatencyHigh", "severity": "P2", "tenant_id": "550e...", "trace_id": "0af7651916cd43dd8448eb211c80319c" },
-    "annotations": { "summary": "p99 > 500ms", "runbook_url": "https://kb.cyberos.world/runbooks/brain-latency" },
+    "labels": { "alertname": "MemorySearchLatencyHigh", "severity": "P2", "tenant_id": "550e...", "trace_id": "0af7651916cd43dd8448eb211c80319c" },
+    "annotations": { "summary": "p99 > 500ms", "runbook_url": "https://kb.cyberos.world/runbooks/memory-latency" },
     "starts_at": "2026-05-15T14:00:00Z",
     "fingerprint": "abc123"
   }]
@@ -427,13 +427,13 @@ JSON object per `output_schema`.
 ### CHAT post (high-confidence triage)
 
 ```text
-[P2] BrainSearchLatencyHigh
+[P2] MemorySearchLatencyHigh
 
 CUO triage (confidence 0.85): Recent surge in queries against tenant org:cyberskill's KB.
-Index size has grown 30% in past hour. p99 spike correlates with FR-BRAIN-101 ingest job.
+Index size has grown 30% in past hour. p99 spike correlates with FR-MEMORY-101 ingest job.
 
 Suspected cause: index-rebalancing during ingest
-Runbook: <https://kb.cyberos.world/runbooks/brain-ingest-pause|Pause ingest temporarily>
+Runbook: <https://kb.cyberos.world/runbooks/memory-ingest-pause|Pause ingest temporarily>
 Trace: <https://grafana.cyberos.world/trace/0af7651...|view in Tempo>
 
 [Ack] [Escalate to PD]
@@ -445,11 +445,11 @@ Trace: <https://grafana.cyberos.world/trace/0af7651...|view in Tempo>
 {
   "kind": "obs.alert_triaged",
   "payload": {
-    "alert_name": "BrainSearchLatencyHigh",
+    "alert_name": "MemorySearchLatencyHigh",
     "severity": "P2",
     "cuo_confidence": 0.85,
     "route": "chat",
-    "suggested_runbook": "kb.cyberos.world/runbooks/brain-ingest-pause",
+    "suggested_runbook": "kb.cyberos.world/runbooks/memory-ingest-pause",
     "trace_id": "0af7651916cd43dd8448eb211c80319c",
     "request_id": "obs_router_..."
   }
@@ -482,7 +482,7 @@ All resolved. Deferred:
 | Dedup window too short (legitimate re-fire missed) | metric anomaly | Investigate; tune window | Config |
 | Ack button URL unreachable | callback fails | CHAT post stays "unacked" | Operator manually acks via PagerDuty |
 | Escalate button → already-PD-routed alert | dedup check | No-op | By design |
-| BRAIN audit emit fails | brain_writer error | Sev-1 log; route still completes | Operator investigates BRAIN |
+| memory audit emit fails | memory_writer error | Sev-1 log; route still completes | Operator investigates memory |
 | CUO returns confidence > 1.0 (skill bug) | clamp at parse | Treat as 1.0 | Investigate skill |
 | Alertmanager webhook payload schema change | parse fails | Sev-1; Alertmanager retries | Update parser to handle new schema |
 | Multiple alerts in one webhook | iterate per alert | Each routed independently | By design |

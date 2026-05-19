@@ -309,7 +309,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit & event"]
- BRAIN["🧠 BRAIN<br>learn.lifecycle rows"]
+ memory["🧠 memory<br>learn.lifecycle rows"]
  OBS["👁 OBS"]
  NATS["📡 NATS<br>learn.vp.changed · learn.cert.expiring"]
  end
@@ -341,7 +341,7 @@ graph TB
  PROMO --> PG_PUB
  CERT --> S3
  EXPIRY --> NATS
- REST --> BRAIN
+ REST --> memory
  LEARN --> OBS
  VP --> REW
  PROMO --> HRMOD
@@ -355,7 +355,7 @@ graph TB
  class GQL,REST,MCP,SK,MAST,VP,COUNCIL,PROMO,CERT,EXPIRY planned
  class PG_PUB,S3 store
  class PG_VAULT vault
- class BRAIN,OBS,NATS sink
+ class memory,OBS,NATS sink
  class REW,HRMOD,KB down
  </div>
  </div>
@@ -378,7 +378,7 @@ graph TB
  <tr><td><code>training_record.rs</code></td><td>services/learn/src/training_record.rs</td><td>Internal & external courses; external cert PDFs stored in S3 with member-uploaded metadata.</td></tr>
  <tr><td><code>parameter_version.rs</code></td><td>services/learn/src/parameter_version.rs</td><td>Anti-retroactive parameter store (mirrors REW pattern). Promotion gate criteria, VP weights, mastery thresholds — all versioned.</td></tr>
  <tr><td><code>narrator.rs</code></td><td>services/learn/src/narrator.rs</td><td>Read-only MCP narrator — explains promotion criteria, career-path gaps, certification readiness. NEVER reveals per-judge data.</td></tr>
- <tr><td><code>audit_bridge.rs</code></td><td>services/learn/src/audit_bridge.rs</td><td>Writes lifecycle rows to BRAIN. Per-judge data is structurally absent.</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/learn/src/audit_bridge.rs</td><td>Writes lifecycle rows to memory. Per-judge data is structurally absent.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/learn/migrations/</td><td>sqlx migrations. Vault schema with stricter RLS — only LEARN admin can read per-judge.</td></tr>
  </tbody>
  </table>
@@ -682,7 +682,7 @@ sequenceDiagram
  participant SK as skill_catalogue.rs
  participant MAST as mastery.rs
  participant PG as PostgreSQL
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  M->>L: claimMastery(skill="react", level=3, evidenceRef="proj:/e-commerce-app")
  L->>SK: verify skill="react" in catalogue
@@ -705,7 +705,7 @@ sequenceDiagram
  participant P as Peer (endorser)
  participant L as LEARN
  participant MAST as mastery.rs
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  M->>L: claim level=4 for react (current=3)
  L-->>M: claim created · status="claimed"
@@ -736,7 +736,7 @@ sequenceDiagram
  participant V as Council Vault (private DB)
  participant CEO as CEO
  participant REW as 💎 REW
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  M->>L: submitPromotionCase(target="L3")
  L->>L: status="submitted"<br>parameter_version snapshot taken
@@ -915,7 +915,7 @@ graph LR
  PROJ["🗂 PROJ<br>contributions (VP input)"]
  TIME["⏱ TIME<br>presence (VP input)"]
  KB["📚 KB<br>authorship (VP input)"]
- BRAIN["🧠 BRAIN<br>audit"]
+ memory["🧠 memory<br>audit"]
  OBS["👁 OBS"]
  end
  LEARN["📈 LEARN"]
@@ -930,7 +930,7 @@ graph LR
  PROJ --> LEARN
  TIME --> LEARN
  KB --> LEARN
- BRAIN --> LEARN
+ memory --> LEARN
  OBS --> LEARN
  LEARN --> REW
  LEARN --> HRMOD2
@@ -941,7 +941,7 @@ graph LR
  classDef shipped fill:#f5ede6,stroke:#45210e
  class LEARN planned
  class AUTH,HRMOD,HRMOD2,PROJ,TIME,KB,REW,ESOP,CUO,OBS planned
- class BRAIN shipped
+ class memory shipped
  </div>
  </div>
 </section>
@@ -995,7 +995,7 @@ graph LR
  <tr><td><code>R-LEARN-011</code></td><td>Per-judge score leaks to HR via misconfigured export</td><td>Low</td><td>Critical</td><td>CSO</td><td>Hard schema boundary at LEARN-HR export; CI gate on schema-diff bot; export fixture-test asserts per-judge fields absent.</td></tr>
  <tr><td><code>R-LEARN-012</code></td><td>VP signal weaponised — REW BP distribution skews to PROJ-dominant Members</td><td>Medium</td><td>Medium</td><td>CHRO</td><td>VP weights span 3 dimensions (PROJ + TIME + KB); cross-Member variance audited quarterly; annual fairness review across role/team/tenure.</td></tr>
  <tr><td><code>R-LEARN-013</code></td><td>Lumi-promoted skill catalogue update conflicts with tenant-specific role bands</td><td>Medium</td><td>Low</td><td>CHRO</td><td>Skill catalogue version pinned per tenant; Lumi pushes are candidate version; tenant opts in explicitly.</td></tr>
- <tr><td><code>R-LEARN-014</code></td><td>BRAIN ingestion of Council deliberation transcripts violates psychological safety</td><td>Low</td><td>High</td><td>DPO</td><td>Council deliberations have sync_class=private (DEC-036 extension); never ingested to BRAIN; transcripts retained 30 days post-decision then purged.</td></tr>
+ <tr><td><code>R-LEARN-014</code></td><td>memory ingestion of Council deliberation transcripts violates psychological safety</td><td>Low</td><td>High</td><td>DPO</td><td>Council deliberations have sync_class=private (DEC-036 extension); never ingested to memory; transcripts retained 30 days post-decision then purged.</td></tr>
  <tr><td><code>R-LEARN-015</code></td><td>Skill self-claim spam (Member claims every skill to inflate VP)</td><td>Medium</td><td>Low</td><td>HR/Ops</td><td>Claim requires evidence ref (PROJ issue, KB doc, cert); unclaimed-evidence claims dropped from VP; manager endorsement required for level &gt; 3.</td></tr>
  </tbody>
  </table>
@@ -1072,7 +1072,7 @@ graph LR
  skill: react (engineering)
  level: 4 (current 3)
  status: claimed (awaiting endorsements ≥ 2)
-[audit] brain seq=15201</code></pre>
+[audit] memory seq=15201</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Endorse a peer</h3>
 <pre><code>$ cyberos-learn endorse \
@@ -1086,7 +1086,7 @@ graph LR
  endorsee: mai@cyberskill.com
  skill: react @ level 4
 [claim] status moved: claimed → endorsed (2 endorsements at target level)
-[audit] brain seq=15211</code></pre>
+[audit] memory seq=15211</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Read your career path</h3>
 <pre><code>$ cyberos-learn career-path --target L3
@@ -1111,7 +1111,7 @@ graph LR
  parameter_version: 2026.04 (snapshotted)
  status: submitted
  HR notified for panel assignment.
-[audit] brain seq=15221</code></pre>
+[audit] memory seq=15221</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">5. Assign a council panel (HR/Ops)</h3>
 <pre><code>$ cyberos-learn council assign \
@@ -1121,7 +1121,7 @@ graph LR
 
 [panel assigned] 5 judges + chair
 [diversity check] 3 teams, 2 genders, 2 levels — heuristic ✓
-[audit] brain seq=15231</code></pre>
+[audit] memory seq=15231</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Read promotion outcome (outcome-only · no per-judge)</h3>
 <pre><code>$ cyberos-learn promotion outcome --case 01HZJ9…
@@ -1149,7 +1149,7 @@ graph LR
  vp_by_biz: 10.0
 [params] version 2026.04
 [snapshot] vp_snapshot row written
-[audit] brain seq=15241</code></pre>
+[audit] memory seq=15241</code></pre>
 </section>
 
 <!-- ============================================================ -->
@@ -1206,8 +1206,8 @@ graph LR
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
  <a href="time.html" class="text-blue-700 underline">time.html</a> ·
  <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a></li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — LEARN deliberations sync_class=private; never ingested.</li>
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a></li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — LEARN deliberations sync_class=private; never ingested.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — LEARN at P2 · start (P1).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>FR catalogue</strong> — LEARN module FRs ((FR pending) through (FR pending)).</li>

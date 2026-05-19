@@ -1,8 +1,8 @@
 """
-cyberos.core.import_ — cross-BRAIN import (PROPOSAL.md P6).
+cyberos.core.import_ — cross-memory import (PROPOSAL.md P6).
 
 Implements AGENTS.md v2 §14 "cross-agent interop" for the team-merge
-workflow: pull memory files from someone else's BRAIN into your own,
+workflow: pull memory files from someone else's memory into your own,
 preserving provenance, honouring privacy classes, and recording the
 import boundary in your local audit chain.
 

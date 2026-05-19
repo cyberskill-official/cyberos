@@ -1,17 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: repo-context-map-author
-description: |
-  Deep-scan the repo before any code is generated for a given FR, and
-  emit a `repo-context-map@1` capturing: (a) existing patterns the new
-  code must follow (DI containers, error type, state-management style,
-  logging convention), (b) database schemas + type interfaces in the
-  FR's declared module, (c) files outside the FR's immediate domain
-  that the implementation would touch, (d) the FR's blast-radius
-  estimate (file count + module count + cross-module edges), and (e)
-  a flag if the FR appears to belong in a different module than its
-  catalogue placement. Used by chief-technology-officer/implement-backlog-frs
-  as step 1.
+description: >-
+  Deep-scan the repo before any code is generated for a given FR, and emit a `repo-context-map@1` capturing: (a) existing patterns the new code must follow (DI containers, error type, state-management style, logging convention), (b) database schemas + type interfaces in the FR's declared module, (c) files outside the FR's immediate domain that the implementation would touch, (d) the FR's blast-radius estimate (file count + module count + cross-module edges), and (e) a flag if the FR appears to belong in a different module than its catalogue placement. Used by chief-technology-officer/ship-feature-requests as step 1. Use when user asks to "draft a repo context map" or "create the repo context map". Do NOT use for "audit existing repo context map" (use repo-context-map-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -21,7 +12,7 @@ metadata:
   cyberos-rubric-target: repo_context_map_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -41,7 +32,7 @@ outputs:
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
   - any FR moving from `accepted` → `building`
-  - workflow `chief-technology-officer/implement-backlog-frs` step 1
+  - workflow `chief-technology-officer/ship-feature-requests` step 1
 blockers:
   - "repo has uncommitted divergent state — must be resolved first"
   - "FR's declared module does not exist on disk — escalate to chief-product-officer"

@@ -4,7 +4,7 @@ id: FR-AI-012
 title: "VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account)"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -12,10 +12,10 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-005, FR-AI-008, FR-AI-011, FR-AI-013]
 depends_on: [FR-AI-011]
-blocks: [FR-AI-013, FR-BRAIN-111]
+blocks: [FR-AI-013, FR-MEMORY-111]
 
 # ───── Source contracts ─────
 source_pages:
@@ -24,7 +24,7 @@ source_pages:
 source_decisions:
   - PDPL Art. 7 (Vietnam personal-data-sale ban; CCCD government-ID handling)
   - PDPL Art. 6 (data minimisation principle; mirror of GDPR Art. 5(1)(c))
-  - DEC-053 (CCCD treated as Class-A government ID — never persists in BRAIN raw)
+  - DEC-053 (CCCD treated as Class-A government ID — never persists in memory raw)
   - archive/2026-05-14/RESEARCH_REVIEW.md §4.2 (custom recognizers vs Presidio EN baseline gap analysis)
 
 # ───── Build envelope ─────
@@ -92,7 +92,7 @@ The Presidio sidecar (FR-AI-011) **MUST** register 6 Vietnamese-specific PII rec
 13. **MUST** emit `recognizer_registration_failed` on sidecar startup if any of the 6 recognizers fails to register (e.g., regex compile error, validation method missing). The sidecar MUST refuse to start — partial registration would silently miss PII types.
 14. **MUST** publish recognizer-version metadata via `GET /recognizers/version` returning `{ "VN_CCCD": "1.0.0", "VN_MST": "1.0.0", ... }`. FR-AI-013's recall test asserts the version is the expected one for the fixture set; mismatched versions fail the CI gate.
 15. **SHOULD** log each registered recognizer's name + pattern count at INFO level on sidecar startup so operators can verify the expected 6 recognizers loaded. Logging the patterns themselves is OK (regex strings, not PII).
-16. **MUST** produce per-type redacted display forms for downstream audit-row emission per AUTHORING.md §3.6 rule 20. The Rust gateway-side helper `cyberos_pii::vn::redact_for_audit::<T>(value: &str) -> String` provides these formatters: `VN_MST` → `<first-2>******<last-2>` (e.g. `03******78` for 0312345678); `VN_CCCD` → `<first-3>******<last-3>` (e.g. `031******678`); `VN_PHONE` → `<first-2>***<last-4>` (e.g. `09***1234`); `VN_BANK_ACCOUNT` → `***<last-4>` (e.g. `***6789`). The FR-AI-003 BRAIN-emit path MUST call them when serialising `extra.{mst,cccd,phone,bank_account}_redacted`. AC #18 verifies via a round-trip test that no audit row written during a VN-PII detection contains any digit sequence longer than 4 consecutive digits of the original.
+16. **MUST** produce per-type redacted display forms for downstream audit-row emission per AUTHORING.md §3.6 rule 20. The Rust gateway-side helper `cyberos_pii::vn::redact_for_audit::<T>(value: &str) -> String` provides these formatters: `VN_MST` → `<first-2>******<last-2>` (e.g. `03******78` for 0312345678); `VN_CCCD` → `<first-3>******<last-3>` (e.g. `031******678`); `VN_PHONE` → `<first-2>***<last-4>` (e.g. `09***1234`); `VN_BANK_ACCOUNT` → `***<last-4>` (e.g. `***6789`). The FR-AI-003 memory-emit path MUST call them when serialising `extra.{mst,cccd,phone,bank_account}_redacted`. AC #18 verifies via a round-trip test that no audit row written during a VN-PII detection contains any digit sequence longer than 4 consecutive digits of the original.
 17. **MUST** consult `policy.ai_policy.pii_allowlist: Vec<String>` (compiled to `Vec<Regex>` at policy-load time per FR-AI-005) per AUTHORING.md §3.6 rule 21. Before emitting any `RecognizerResult` for an entity type ∈ `VN_MST | VN_CCCD | VN_PHONE | VN_BANK_ACCOUNT`, the recognizer pipeline MUST check whether the matched text matches ANY allowlist regex for the active tenant. If yes, suppress the result (no redaction; PII flows to LLM). The audit-row `extra.pii_allowlist_hit_count: u32` records how many suppressions happened per call so operators can audit allowlist usage. Use case: KYC vendor tenant where MST IS the subject matter, not collateral PII.
 
 ---
@@ -408,7 +408,7 @@ def recognizer_versions():
 15. **Sidecar refuses to start on registration failure** — Inject a regex compile error into `VnAddressRecognizer.PATTERNS`; sidecar startup raises `RuntimeError("recognizer_registration_failed: ...")`; HTTP server never binds.
 16. **Version endpoint returns 6 entries** — `GET /recognizers/version` returns JSON with keys `VN_CCCD`, `VN_MST`, `VN_PHONE`, `VN_NDD`, `VN_ADDRESS`, `VN_BANK_ACCOUNT`; values are semver strings.
 17. **Determinism** — Calling `analyze()` twice on the same input produces identical (entity_type, start, end, score) tuples.
-18. **Audit-row redacted forms (AUTHORING.md §3.6 rule 20)** — Round-trip test: detect `"MST 0312345678 CCCD 079123456789 phone 0901234567 bank 1234567890"`. Emit BRAIN row via FR-AI-003. Assert `row.extra.mst_redacted == "03******78"` AND `row.extra.cccd_redacted == "079******789"` AND `row.extra.phone_redacted == "09***4567"` AND `row.extra.bank_account_redacted == "***7890"`. Also assert `row.extra` JSON contains NO digit-substring of length > 4 from the original.
+18. **Audit-row redacted forms (AUTHORING.md §3.6 rule 20)** — Round-trip test: detect `"MST 0312345678 CCCD 079123456789 phone 0901234567 bank 1234567890"`. Emit memory row via FR-AI-003. Assert `row.extra.mst_redacted == "03******78"` AND `row.extra.cccd_redacted == "079******789"` AND `row.extra.phone_redacted == "09***4567"` AND `row.extra.bank_account_redacted == "***7890"`. Also assert `row.extra` JSON contains NO digit-substring of length > 4 from the original.
 19. **PII allowlist suppression (AUTHORING.md §3.6 rule 21)** — Test fixture `policy_with_allowlist.yaml` sets `pii_allowlist: ["^03\\d{8}$"]`. Analyze text containing `"MST 0312345678"` and `"MST 0412345678"`. First match is suppressed (no `<VN_MST_N>` placeholder; raw value flows through); second match is redacted normally. `extra.pii_allowlist_hit_count == 1`.
 
 ---

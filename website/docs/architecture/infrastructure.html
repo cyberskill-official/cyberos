@@ -105,7 +105,7 @@ flowchart TB
  end
 
  subgraph MODS ["22 functional modules — subgraph + MCP + UI remote"]
- BRAIN["🧠 BRAIN"]
+ memory["🧠 memory"]
  CHAT["💬 CHAT"]
  PROJ["📋 PROJ"]
  OTHERS["…19 more"]
@@ -119,29 +119,29 @@ flowchart TB
  USER --> GQL
  AGENT --> MCPGW
  GQL -- "auth context" --> AUTH
- GQL --> BRAIN
+ GQL --> memory
  GQL --> CHAT
  GQL --> PROJ
  GQL --> OTHERS
 
- MCPGW --> BRAIN
+ MCPGW --> memory
  MCPGW --> CHAT
  MCPGW --> PROJ
 
- BRAIN --> AIGW
+ memory --> AIGW
  CHAT --> AIGW
  PROJ --> AIGW
 
- BRAIN --> PG
+ memory --> PG
  CHAT --> PG
  PROJ --> PG
- BRAIN --> S3
+ memory --> S3
 
- BRAIN -. "emits".-> NATS_BUS
+ memory -. "emits".-> NATS_BUS
  CHAT -. "emits".-> NATS_BUS
  PROJ -. "emits".-> NATS_BUS
 
- BRAIN -. "traces".-> OBS
+ memory -. "traces".-> OBS
  CHAT -. "traces".-> OBS
  PROJ -. "traces".-> OBS
  AIGW -. "traces".-> OBS
@@ -154,7 +154,7 @@ flowchart TB
  classDef data fill:#cba88a,stroke:#45210e
 
  class AUTH,AIGW,MCPGW,OBS,GQL,NATS_BUS plane
- class BRAIN,CHAT,PROJ,OTHERS mod
+ class memory,CHAT,PROJ,OTHERS mod
  class USER,AGENT ext
  class PG,S3 data
  </div>
@@ -413,7 +413,7 @@ cyberos.auth.audit_login # readOnly=true (own sessions only)</code></pre></div>
  <!-- Why -->
  <div class="bbg-card p-6 mb-6">
  <h3 class="h-2 mb-3">Why a separate layer</h3>
- <p class="text-slate-600 leading-relaxed mb-3">The temptation in a 22-module platform is to let each module call the LLM SDK directly — "just <code>import anthropic</code> in the subgraph." That fails three ways. First, <strong>cost</strong>: without one place to set per-tenant budgets, the bill is unobservable until the credit-card statement arrives. Second, <strong>residency</strong>: a Vietnam-resident tenant must hit the Bedrock Singapore endpoint, never the US; the rule is too easy to bypass when 22 subgraphs each make their own choice. Third, <strong>safety</strong>: PII redaction, persona-version stamping, and the OWASP Gen-AI Top-10 mitigations cannot be 22-times-correct; they need one chokepoint.</p>
+ <p class="text-slate-600 leading-relaxed mb-3">The temptation in a 23-module platform is to let each module call the LLM SDK directly — "just <code>import anthropic</code> in the subgraph." That fails three ways. First, <strong>cost</strong>: without one place to set per-tenant budgets, the bill is unobservable until the credit-card statement arrives. Second, <strong>residency</strong>: a Vietnam-resident tenant must hit the Bedrock Singapore endpoint, never the US; the rule is too easy to bypass when 23 subgraphs each make their own choice. Third, <strong>safety</strong>: PII redaction, persona-version stamping, and the OWASP Gen-AI Top-10 mitigations cannot be 23-times-correct; they need one chokepoint.</p>
  <p class="text-slate-600 leading-relaxed"> makes the gateway non-optional: every LLM call from every module flows through it. The cost target — <strong>≤ $150/mo internal, ≤ $4/active user/mo at 50-tenant scale</strong> — only works because we can see and cap every token at the gateway.</p>
  </div>
 
@@ -551,7 +551,7 @@ X-Cyberos-Persona-Version: cfo-v3.2.1</code></pre></div>
  <tr><td>Chat completion (Sonnet)</td><td>&lt; 1.5 s</td><td>&lt; 3.0 s</td><td>CUO answers; complex reasoning</td></tr>
  <tr><td>Embedding (BGE-M3)</td><td>&lt; 30 ms</td><td>&lt; 80 ms</td><td>self-hosted; batch of 32</td></tr>
  <tr><td>Reranker (BGE-rerank-v2-m3)</td><td>&lt; 80 ms</td><td>&lt; 200 ms</td><td>self-hosted; top-150 → top-20</td></tr>
- <tr><td>BRAIN search end-to-end</td><td>&lt; 120 ms</td><td>&lt; 250 ms</td><td>embed + retrieve + rerank</td></tr>
+ <tr><td>memory search end-to-end</td><td>&lt; 120 ms</td><td>&lt; 250 ms</td><td>embed + retrieve + rerank</td></tr>
  <tr><td>MCP tool call (read-only)</td><td>&lt; 200 ms</td><td>&lt; 500 ms</td><td>via Apollo Router; cached</td></tr>
  <tr><td>MCP tool call (write)</td><td>&lt; 400 ms</td><td>&lt; 1.0 s</td><td>includes audit + NATS emit</td></tr>
  </tbody>
@@ -624,7 +624,7 @@ X-Cyberos-Persona-Version: cfo-v3.2.1</code></pre></div>
  <div class="bbg-card p-6 mb-6">
  <h3 class="h-2 mb-3">Why a separate layer</h3>
  <p class="text-slate-600 leading-relaxed mb-3">The MCP "gateway" is not a single monolithic server — it is a <strong>federation router</strong>. Each module owns its own MCP server, runs side-by-side with its subgraph, shares the database connection pool, and uses the same RBAC predicates. The gateway's job is two things: (1) one discovery endpoint at <code>/.well-known/mcp</code> so a Claude Desktop or Cursor session can auto-detect the catalog, and (2) cross-cutting policy enforcement — tool annotations (destructive / readOnly / idempotent / openWorld), OAuth audience binding, audit row emission.</p>
- <p class="text-slate-600 leading-relaxed">Naming convention is the moat against tool-name collisions: <code>cyberos.{module}.{verb}_{noun}</code>. Examples: <code>cyberos.proj.create_task</code>, <code>cyberos.brain.search</code>, <code>cyberos.rew.payslip_explain</code> (read-only narrative; never compute). Collisions are rejected at registration time.</p>
+ <p class="text-slate-600 leading-relaxed">Naming convention is the moat against tool-name collisions: <code>cyberos.{module}.{verb}_{noun}</code>. Examples: <code>cyberos.proj.create_task</code>, <code>cyberos.memory.search</code>, <code>cyberos.rew.payslip_explain</code> (read-only narrative; never compute). Collisions are rejected at registration time.</p>
  </div>
 
  <!-- 2025-11-25 spec features -->
@@ -689,13 +689,13 @@ flowchart TB
  HITL -- "no" --> DISPATCH["dispatch to module server"]
  CONFIRM --> DISPATCH
 
- DISPATCH --> BRAIN_MCP["BRAIN MCP server<br>cyberos.brain.*"]
+ DISPATCH --> MEMORY_MCP["memory MCP server<br>cyberos.memory.*"]
  DISPATCH --> CHAT_MCP["CHAT MCP server<br>cyberos.chat.*"]
  DISPATCH --> PROJ_MCP["PROJ MCP server<br>cyberos.proj.*"]
  DISPATCH --> REW_MCP["REW MCP server<br>cyberos.rew.* (read-only)"]
  DISPATCH --> OTHER["…19 more"]
 
- BRAIN_MCP --> AUDITNATS["NATS audit row"]
+ MEMORY_MCP --> AUDITNATS["NATS audit row"]
  CHAT_MCP --> AUDITNATS
  PROJ_MCP --> AUDITNATS
 
@@ -704,7 +704,7 @@ flowchart TB
  classDef ext fill:#f9c64f,stroke:#9c750a
  classDef block fill:#fecaca,stroke:#b91c1c
  class DISCOVERY,PRM,ROUTER,REGISTRY,DISPATCH,CONFIRM gw
- class BRAIN_MCP,CHAT_MCP,PROJ_MCP,REW_MCP,OTHER mod
+ class MEMORY_MCP,CHAT_MCP,PROJ_MCP,REW_MCP,OTHER mod
  class CLIENT,AUTHSRV,AUDITNATS ext
  class HITL block
  </div>
@@ -755,7 +755,7 @@ sequenceDiagram
  ],
  "scopes_supported": [
  "cyberos.read", "cyberos.write",
- "cyberos.brain.read", "cyberos.brain.write",
+ "cyberos.memory.read", "cyberos.memory.write",
  "cyberos.proj.read", "cyberos.proj.write",
  "cyberos.chat.read", "cyberos.chat.write",
  "cyberos.rew.read"
@@ -816,7 +816,7 @@ sequenceDiagram
  <!-- Why -->
  <div class="bbg-card p-6 mb-6">
  <h3 class="h-2 mb-3">Why a separate layer</h3>
- <p class="text-slate-600 leading-relaxed mb-3">In a 22-module platform with agent traffic on top of human traffic, you cannot answer "why is REW slow?" without tying together: a Member's request through Apollo Router, the REW subgraph's DB query, a call out to the AI Gateway for a payslip narrative, an audit row to NATS, and a downstream LEARN subscription. OBS is the single trace tree that makes that legible.</p>
+ <p class="text-slate-600 leading-relaxed mb-3">In a 23-module platform with agent traffic on top of human traffic, you cannot answer "why is REW slow?" without tying together: a Member's request through Apollo Router, the REW subgraph's DB query, a call out to the AI Gateway for a payslip narrative, an audit row to NATS, and a downstream LEARN subscription. OBS is the single trace tree that makes that legible.</p>
  <p class="text-slate-600 leading-relaxed">OBS also feeds CUO's CTO skill: weekly OBS dashboard digests, security advisory pipelines, and model registry summaries all read from OBS ( AI matrix).</p>
  </div>
 
@@ -838,9 +838,9 @@ sequenceDiagram
  <div class="bbg-card p-5">
  <h4 class="font-bold mb-2 text-slate-900">Why these picks</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><strong>LGTM, not Datadog</strong> · cost predictability is the founder's first constraint; Datadog at 22-module ingest scales linearly with bill.</li>
+ <li><strong>LGTM, not Datadog</strong> · cost predictability is the founder's first constraint; Datadog at 23-module ingest scales linearly with bill.</li>
  <li><strong>OTel-native</strong> · every subgraph + gateway speaks one wire format; trade providers later without rewriting instrumentation.</li>
- <li><strong>S3 backend</strong> · Loki/Tempo/Mimir all store on the same R2/MinIO bucket as BRAIN's archival layer; one cost model.</li>
+ <li><strong>S3 backend</strong> · Loki/Tempo/Mimir all store on the same R2/MinIO bucket as memory's archival layer; one cost model.</li>
  <li><strong>LangSmith for agent runs</strong> · CUO's persona-version stamps, tool calls, and HITL gates need agent-aware UX; LangSmith is the lowest-friction tool.</li>
  </ul>
  </div>
@@ -982,13 +982,13 @@ flowchart TB
  COMPOSITION -- "miss" --> REJECT[/"400 unregistered"/]
  COMPOSITION -- "hit" --> PLAN["Query plan<br>parallel subgraph fanout"]
 
- PLAN --> SG_BRAIN["BRAIN subgraph"]
+ PLAN --> SG_memory["memory subgraph"]
  PLAN --> SG_CHAT["CHAT subgraph"]
  PLAN --> SG_PROJ["PROJ subgraph"]
  PLAN --> SG_AUTH["AUTH subgraph"]
  PLAN --> SG_DOTS["…18 more"]
 
- SG_BRAIN --> PG_BRAIN[("BRAIN schema<br>RLS-enforced")]
+ SG_memory --> PG_memory[("memory schema<br>RLS-enforced")]
  SG_CHAT --> PG_CHAT[("CHAT schema<br>RLS-enforced")]
  SG_PROJ --> PG_PROJ[("PROJ schema<br>RLS-enforced")]
  SG_AUTH --> PG_AUTH[("AUTH schema")]
@@ -999,10 +999,10 @@ flowchart TB
  classDef block fill:#fecaca,stroke:#b91c1c
  classDef db fill:#fde7b3,stroke:#9c750a
  class ROUTER,PLAN gw
- class SG_BRAIN,SG_CHAT,SG_PROJ,SG_AUTH,SG_DOTS mod
+ class SG_memory,SG_CHAT,SG_PROJ,SG_AUTH,SG_DOTS mod
  class HOST ext
  class COMPOSITION block
- class PG_BRAIN,PG_CHAT,PG_PROJ,PG_AUTH db
+ class PG_memory,PG_CHAT,PG_PROJ,PG_AUTH db
  </div>
  </div>
 
@@ -1019,7 +1019,7 @@ sequenceDiagram
  participant PROJ as PROJ subgraph
  participant CRM as CRM subgraph
  participant REW as REW subgraph
- participant BR as BRAIN subgraph
+ participant BR as memory subgraph
 
  M->>H: open /home
  H->>R: POST /graphql { hash: "0xabc...", vars }
@@ -1034,13 +1034,13 @@ sequenceDiagram
  and
  R->>REW: { myPayslipStub }
  and
- R->>BR: { brainSearch(query:"today") }
+ R->>BR: { memorySearch(query:"today") }
  end
  CHAT-->>R: { unreadCount: 3 }
  PROJ-->>R: { myTasks: [...] }
  CRM-->>R: { myDeals: [...] }
  REW-->>R: { myPayslipStub: {...} }
- BR-->>R: { brainSearch: {...} }
+ BR-->>R: { memorySearch: {...} }
  R-->>H: { data: {...merged} }
  H->>M: render
  </div>
@@ -1077,7 +1077,7 @@ sequenceDiagram
  <p class="text-sm text-slate-600 mb-2"><span class="phase-chip phase-p0 mr-2">P0</span> planned · P0 · start → P0 · slice 1</p>
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
  <li>Apollo Router scaffold + composition CI live at P0 · start</li>
- <li>BRAIN, AUTH subgraphs first to integrate at P0 · slice 1</li>
+ <li>memory, AUTH subgraphs first to integrate at P0 · slice 1</li>
  <li>Persisted query registration auto-bound to host-shell build</li>
  <li>Schema deprecation policy in CONTRIBUTING.md</li>
  </ul>
@@ -1108,7 +1108,7 @@ sequenceDiagram
  <!-- Why -->
  <div class="bbg-card p-6 mb-6">
  <h3 class="h-2 mb-3">Why a separate layer</h3>
- <p class="text-slate-600 leading-relaxed mb-3">A 22-module platform needs to decouple write paths from downstream effects. When REW publishes a payslip, six things need to happen: BRAIN ingests the narrative, LEARN updates the career-level snapshot, OBS emits a metric, CUO queues a "review your payslip" Notify, the Compliance audit row is hashed, and the Member's mobile gets a push. All six are <em>events</em> on the canonical subject <code>cyberos.acme.rew.payslip.published</code>.</p>
+ <p class="text-slate-600 leading-relaxed mb-3">A 23-module platform needs to decouple write paths from downstream effects. When REW publishes a payslip, six things need to happen: memory ingests the narrative, LEARN updates the career-level snapshot, OBS emits a metric, CUO queues a "review your payslip" Notify, the Compliance audit row is hashed, and the Member's mobile gets a push. All six are <em>events</em> on the canonical subject <code>cyberos.acme.rew.payslip.published</code>.</p>
  <p class="text-slate-600 leading-relaxed"> locks the convention: <code>cyberos.{tenant}.{module}.{entity}.{verb}</code>. Subjects are tenant-scoped so subscribers cannot accidentally cross tenant boundaries. Streams retain 30 days by default, 90 days for compensation/ESOP. CUO's ambient-trigger consumers subscribe through durable consumers so a restart never loses pending nudges.</p>
  </div>
 
@@ -1121,7 +1121,7 @@ sequenceDiagram
  <li><strong>Client libs</strong><code>nats.go</code>, <code>@nats-io/nats.js</code>, <code>async-nats</code> (Rust)</li>
  <li><strong>Schemas</strong> · CloudEvents 1.0 envelope + JSON Schema body per subject</li>
  <li><strong>Schema registry</strong> · self-hosted; refs in subgraph CI</li>
- <li><strong>Durable consumers</strong> · CUO ambient-trigger, OBS rollups, BRAIN ingestion</li>
+ <li><strong>Durable consumers</strong> · CUO ambient-trigger, OBS rollups, memory ingestion</li>
  <li><strong>Replication</strong> · 3-node JetStream cluster per region</li>
  <li><strong>DLQ</strong> · failed messages routed to <code>cyberos.{tenant}.dlq.{module}.{entity}.{verb}</code></li>
  </ul>
@@ -1150,8 +1150,8 @@ cyberos.acme.proj.task.assigned
 cyberos.acme.proj.task.completed
 cyberos.acme.rew.payslip.published # 90-day retention
 cyberos.acme.rew.bp_balance.updated
-cyberos.acme.brain.fact.added
-cyberos.acme.brain.fact.conflict_detected
+cyberos.acme.memory.fact.added
+cyberos.acme.memory.fact.conflict_detected
 cyberos.acme.crm.deal.stage_changed
 cyberos.acme.chat.message.posted
 cyberos.acme.audit.event.recorded # Merkle-chained; 7y retention
@@ -1160,7 +1160,7 @@ cyberos.acme.mcp.tool.invoked
 
 # Durable consumers
 - cuo-ambient → subscribes to *.task.* + *.deal.* + *.payslip.*
-- brain-ingest → subscribes to all non-compensation events
+- memory-ingest → subscribes to all non-compensation events
 - obs-rollup → subscribes to *.>
 - compliance-audit → subscribes to *.audit.>
 - learn-snapshot → subscribes to rew.payslip.* + hr.level.*</code></pre></div>
@@ -1176,7 +1176,7 @@ sequenceDiagram
  participant REW as REW subgraph
  participant DB as REW Postgres
  participant NA as NATS JetStream
- participant BR as BRAIN ingest
+ participant BR as memory ingest
  participant LE as LEARN snapshot
  participant CO as Compliance audit
  participant CUO as CUO ambient
@@ -1271,7 +1271,7 @@ sequenceDiagram
  participant CUO as CUO supervisor
  participant MCP as MCP Gateway
  participant PROJ as PROJ MCP server
- participant BR as BRAIN MCP server
+ participant BR as memory MCP server
  participant AI as AI Gateway
  participant LL as LiteLLM → Bedrock
  participant NA as NATS
@@ -1285,7 +1285,7 @@ sequenceDiagram
  CUO->>OB: span "cuo.session.start"
 
  CUO->>MCP: tools/list (refresh registry)
- MCP-->>CUO: { proj.list_my_tasks, brain.search,... }
+ MCP-->>CUO: { proj.list_my_tasks, memory.search,... }
 
  par retrieve context
  CUO->>MCP: cyberos.proj.list_my_tasks(member=trinh, due_today=true)
@@ -1293,7 +1293,7 @@ sequenceDiagram
  PROJ-->>MCP: 4 tasks
  MCP-->>CUO: [4 tasks]
  and
- CUO->>MCP: cyberos.brain.search("today priorities trinh")
+ CUO->>MCP: cyberos.memory.search("today priorities trinh")
  MCP->>BR: forward
  BR->>AI: POST /v1/embeddings { input }
  AI->>LL: BGE-M3 embed (self-hosted)

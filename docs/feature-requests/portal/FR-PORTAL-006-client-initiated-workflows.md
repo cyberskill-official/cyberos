@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PORTAL-001, FR-PORTAL-003, FR-PORTAL-005, FR-CHAT-005, FR-PROJ-001, FR-INV-001, FR-AUTH-101, FR-EMAIL-001, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-PORTAL-001, FR-PORTAL-003, FR-PORTAL-005, FR-CHAT-005, FR-PROJ-001, FR-INV-001, FR-AUTH-101, FR-EMAIL-001, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-CHAT-005]
 blocks: []
 
@@ -28,7 +28,7 @@ source_decisions:
   - DEC-1245 2026-05-17 — Submitter sees status only — never sees internal CHAT messages; replies via portal UI flow back to the CHAT thread as `client_reply` type messages
   - DEC-1246 2026-05-17 — File attachments on submission via FR-DOC-001 presigned S3 URL (max 25 MiB per file, 5 files per workflow)
   - DEC-1247 2026-05-17 — Auto-prioritisation: support_ticket with keywords {down, outage, breach, urgent, security} → escalated status + sev-1 alert to engagement_admin
-  - DEC-1248 2026-05-17 — BRAIN audit kinds: portal.workflow_submitted, portal.workflow_routed, portal.workflow_status_changed, portal.workflow_resolved, portal.workflow_sla_breach, portal.workflow_client_reply
+  - DEC-1248 2026-05-17 — memory audit kinds: portal.workflow_submitted, portal.workflow_routed, portal.workflow_status_changed, portal.workflow_resolved, portal.workflow_sla_breach, portal.workflow_client_reply
   - DEC-1249 2026-05-17 — Rate limit 10 submissions per workflow_kind per hour per caller; over-limit → 429
   - DEC-1250 2026-05-17 — Per-workflow conversation persisted in CHAT (FR-CHAT-005); workflow row is the metadata + routing record + status mirror
   - DEC-1251 2026-05-17 — Reopening closed workflow within 30 days returns workflow to `awaiting_client`; beyond 30 days requires new submission
@@ -103,7 +103,7 @@ risk_if_skipped: "Without client-initiated workflows, clients have no way to req
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship client-initiated workflows at `services/portal/src/workflows/` with 5 closed-enum workflow kinds, auto-routing to assignees via per-tenant rules, CHAT-thread bridging, SLA monitoring, auto-prioritisation on security keywords, file attachments via FR-DOC-001, internal/external message separation, and 6 BRAIN audit kinds.
+The PORTAL service **MUST** ship client-initiated workflows at `services/portal/src/workflows/` with 5 closed-enum workflow kinds, auto-routing to assignees via per-tenant rules, CHAT-thread bridging, SLA monitoring, auto-prioritisation on security keywords, file attachments via FR-DOC-001, internal/external message separation, and 6 memory audit kinds.
 
 1. **MUST** define closed `client_workflow_kind` enum: `('new_project_request','billing_inquiry','support_ticket','feature_request','general_question')` per DEC-1240. Cardinality test asserts 5.
 
@@ -170,7 +170,7 @@ The PORTAL service **MUST** ship client-initiated workflows at `services/portal/
 
 15. **MUST** send email on status change per DEC-1252 via FR-EMAIL-001. Per-tenant template overrides apply.
 
-16. **MUST** emit 6 BRAIN audit kinds per DEC-1248: submitted (sev-2), routed (sev-3), status_changed (sev-2), resolved (sev-2), sla_breach (sev-1), client_reply (sev-3).
+16. **MUST** emit 6 memory audit kinds per DEC-1248: submitted (sev-2), routed (sev-3), status_changed (sev-2), resolved (sev-2), sla_breach (sev-1), client_reply (sev-3).
 
 17. **MUST** PII-scrub: title + body SHA256 only in chain; raw in DB.
 
@@ -298,7 +298,7 @@ POST   /v1/admin/tenants/{tid}/workflow-routes     (tenant_admin: configure rule
 13. **Reopen beyond 30 days** — 31 days later → 400.
 14. **Email on status change** — status transition triggers FR-EMAIL-001 send.
 15. **Rate limit 10/hr/kind/caller** — 11th submission of same kind → 429.
-16. **6 BRAIN audit kinds emitted** — full lifecycle covers all 6.
+16. **6 memory audit kinds emitted** — full lifecycle covers all 6.
 17. **PII scrubbed** — title/body SHA256 only in chain.
 18. **Trace_id threaded** — submit → route → chat-create → audit all share trace_id.
 19. **RLS — engagement_admin sees engagement-wide** — engagement_admin lists shows all workflows in their Engagement.
@@ -333,7 +333,7 @@ async fn breach_keyword_escalates() {
     let body: serde_json::Value = r.json().await.unwrap();
     assert_eq!(body["status"], "escalated");
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.workflow_status_changed"
         && r.payload["new_status"] == "escalated"));
 }
@@ -344,7 +344,7 @@ async fn sla_breach_emits_sev1() {
     let ctx = TestContext::new().await;
     let wid = ctx.create_workflow_with_past_sla().await;
     ctx.run_sla_monitor_job().await;
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.workflow_sla_breach" && r.severity == 1));
 }
 
@@ -383,7 +383,7 @@ async fn reopen_within_window() {
 ## §7 — Dependencies
 
 **Upstream:** FR-CHAT-005 (thread + message primitive).
-**Cross-module:** FR-PORTAL-001 (workflow shown in PORTAL list), FR-PORTAL-003 (IdP subject), FR-PORTAL-005 (Genie may surface workflow state), FR-PROJ-001 (new_project_request creates PROJ entity), FR-INV-001 (billing_inquiry may reference invoices), FR-AUTH-101 (engagement_admin role), FR-EMAIL-001 (notification + template overrides), FR-AI-003 (audit), FR-BRAIN-111 (PII scrub), FR-OBS-007 (sev-1 escalation routing).
+**Cross-module:** FR-PORTAL-001 (workflow shown in PORTAL list), FR-PORTAL-003 (IdP subject), FR-PORTAL-005 (Genie may surface workflow state), FR-PROJ-001 (new_project_request creates PROJ entity), FR-INV-001 (billing_inquiry may reference invoices), FR-AUTH-101 (engagement_admin role), FR-EMAIL-001 (notification + template overrides), FR-AI-003 (audit), FR-MEMORY-111 (PII scrub), FR-OBS-007 (sev-1 escalation routing).
 **Downstream:** None.
 
 ---

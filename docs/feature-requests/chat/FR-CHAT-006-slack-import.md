@@ -3,7 +3,7 @@ id: FR-CHAT-006
 title: "Slack import — `cyberos-chat import slack` with 8-step idempotent checkpoint-driven workflow"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-CHAT-005, FR-CHAT-007, FR-CHAT-010]
 depends_on: [FR-CHAT-005]
 blocks: [FR-CHAT-010, FR-CHAT-007]
@@ -41,7 +41,7 @@ allowed_tools:
   - bash: cd services/chat-importer && cargo test slack
 disallowed_tools:
   - skip checkpoint persistence (per DEC-470 — resume capability required)
-  - write Slack files into BRAIN directly (per DEC-470 — round-trip through chat → bridge)
+  - write Slack files into memory directly (per DEC-470 — round-trip through chat → bridge)
 
 effort_hours: 12
 sub_tasks:
@@ -53,7 +53,7 @@ sub_tasks:
   - "1.0h: checkpoint.rs — atomic step completion writes to import_jobs row"
   - "1.0h: resume logic — read last_step_completed; skip ahead"
   - "1.5h: dedup keys (slack_user_id → MM user; slack_channel_id → MM channel)"
-  - "0.5h: BRAIN audit row 'chat.import_started', 'chat.import_step_completed', 'chat.import_finished'"
+  - "0.5h: memory audit row 'chat.import_started', 'chat.import_step_completed', 'chat.import_finished'"
   - "1.5h: slack_test.rs — happy import + resume from step 4 + duplicate import = noop"
   - "0.5h: progress reporting via stderr (step N/8: <message>)"
   - "0.5h: --dry-run mode (no DB writes; report what would happen)"
@@ -81,7 +81,7 @@ The Slack importer **MUST** ingest a Slack export zip via an 8-step idempotent c
     - Users: lookup `users WHERE props.slack_user_id = <id>`; reuse if exists.
     - Channels: lookup by `props.slack_channel_id`.
     - Messages: dedup by `(channel_id, ts)` — Slack timestamps are unique per channel.
-7. **MUST** emit BRAIN audit rows:
+7. **MUST** emit memory audit rows:
     - `chat.import_started` at step 1.
     - `chat.import_step_completed` per step (payload: step N, message_count, duration_ms).
     - `chat.import_finished` at step 8 (payload: total_messages, total_users, total_channels, duration_total_ms).
@@ -97,7 +97,7 @@ The Slack importer **MUST** ingest a Slack export zip via an 8-step idempotent c
 14. **MUST** preserve original message timestamps: Mattermost `posts.create_at = floor(slack_ts × 1000)` (Slack uses float seconds; MM uses integer milliseconds). Insert in chronological order per channel so MM indexes remain efficient.
 15. **MUST** preserve thread structure: a Slack reply has `thread_ts` pointing to the parent's `ts`. Step 6 resolves these into Mattermost `root_id` references after step 5 has populated the post table. Replies whose parent is missing (export gap) are logged + emitted as top-level posts with `props.slack_thread_orphan = true`.
 16. **MUST** dedup file attachments by Slack `file.id`: two posts referencing the same `file.id` MUST point at one MM `FileInfo` row. The dedup is by `(slack_workspace_id, slack_file_id)` because Slack file IDs are workspace-scoped.
-17. **MUST** redact PII from file metadata before upload: filenames + comments + initial_comment in the Slack file payload are routed through FR-BRAIN-111 redaction. Original content is preserved in the MM FileInfo blob; redacted form goes into the BRAIN audit trail.
+17. **MUST** redact PII from file metadata before upload: filenames + comments + initial_comment in the Slack file payload are routed through FR-MEMORY-111 redaction. Original content is preserved in the MM FileInfo blob; redacted form goes into the memory audit trail.
 18. **MUST** map Slack channel types to Mattermost types:
     - Slack `is_general=true` → MM `channel_type=O` named `town-square` (or `general` if `town-square` taken).
     - Slack `is_private=true` → MM `channel_type=P`.
@@ -106,8 +106,8 @@ The Slack importer **MUST** ingest a Slack export zip via an 8-step idempotent c
     - Slack `is_archived=true` → MM channel created then `delete_at` set.
 19. **MUST** map Slack reactions to Mattermost reactions: `reactions[].users[]` enumerated; each becomes one MM `reactions` row. Emoji name carries over verbatim; custom emoji that don't exist in MM map to `:question:` with `props.original_emoji_name`.
 20. **MUST** preserve pinned messages: Slack `pinned_to:[channel_id, ...]` → MM `posts.is_pinned = true`.
-21. **MUST** preserve edited messages: Slack message edit history is opaque in export (only final text shipped). Insert final text as the only version; emit BRAIN audit `chat.import_warning` with `reason="edit_history_unavailable"` for each edited message.
-22. **MUST** mark imported posts: every imported post carries `props.cyberos_imported = true` and `props.cyberos_source = "slack"` and `props.slack_ts = "<original>"` and `props.slack_workspace_id = "<id>"`. Downstream (FR-CHAT-005 bridge) preserves these in BRAIN payload.
+21. **MUST** preserve edited messages: Slack message edit history is opaque in export (only final text shipped). Insert final text as the only version; emit memory audit `chat.import_warning` with `reason="edit_history_unavailable"` for each edited message.
+22. **MUST** mark imported posts: every imported post carries `props.cyberos_imported = true` and `props.cyberos_source = "slack"` and `props.slack_ts = "<original>"` and `props.slack_workspace_id = "<id>"`. Downstream (FR-CHAT-005 bridge) preserves these in memory payload.
 23. **MUST** cap parallelism per step:
     - Step 5 (messages): 1 worker (sequential to preserve order).
     - Step 7 (files): 10 parallel downloads, configurable via `--file-parallelism`.
@@ -142,13 +142,13 @@ The Slack importer **MUST** ingest a Slack export zip via an 8-step idempotent c
 
 **Why dedup files by (workspace, file_id) (§1 #16)?** Slack file_ids are workspace-scoped — two Slack workspaces can both have a file `F0ABC`. Without the workspace qualifier, importing two workspaces into one tenant would collide.
 
-**Why redact file metadata (§1 #17)?** Filenames often contain PII (`Resume - Trinh Thai Anh.pdf`, `Salary letter for Alice.pdf`). The MM file blob preserves originals (operator-recoverable); the BRAIN audit trail gets the redacted form so downstream consumers don't see raw PII.
+**Why redact file metadata (§1 #17)?** Filenames often contain PII (`Resume - Trinh Thai Anh.pdf`, `Salary letter for Alice.pdf`). The MM file blob preserves originals (operator-recoverable); the memory audit trail gets the redacted form so downstream consumers don't see raw PII.
 
 **Why explicit channel-type mapping (§1 #18)?** Slack and MM use different identifiers (`is_general` vs `town-square` naming); a naive name-match would silently misclassify private channels as public. Explicit mapping makes the contract auditable.
 
 **Why preserve reactions (§1 #19)?** Reactions are first-class data for analysts ("which messages got 👍 from leadership?"). The `:question:` fallback for unmapped custom emoji preserves the existence of the reaction without lying about the emoji.
 
-**Why mark imported posts with `cyberos_imported = true` (§1 #22)?** Downstream FRs (FR-CHAT-008 mentions, FR-CHAT-005 bridge BRAIN payload) MUST distinguish "this post is from history" vs "this post is live." Live posts get push notifications; historical posts do not.
+**Why mark imported posts with `cyberos_imported = true` (§1 #22)?** Downstream FRs (FR-CHAT-008 mentions, FR-CHAT-005 bridge memory payload) MUST distinguish "this post is from history" vs "this post is live." Live posts get push notifications; historical posts do not.
 
 **Why per-step parallelism caps (§1 #23)?** Messages MUST be inserted sequentially per channel because MM's `create_at` ordering is rebuilt from insertion order under tie. Files can be parallelised (idempotent uploads). API calls to MM have a 4-parallelism sweet spot before MM rate-limits.
 
@@ -556,7 +556,7 @@ pub async fn run_all(zip_path: &Path, tenant_id: uuid::Uuid, opts: Opts) -> anyh
         return Ok(());
     }
 
-    emit_brain_row("chat.import_started", serde_json::json!({
+    emit_memory_row("chat.import_started", serde_json::json!({
         "job_id": job.id, "tenant_id": tenant_id, "zip_sha256": zip_sha,
         "workspace_id": opts.workspace_id,
     })).await;
@@ -587,7 +587,7 @@ pub async fn run_all(zip_path: &Path, tenant_id: uuid::Uuid, opts: Opts) -> anyh
         checkpoint::complete_step(&pool, job.id, step.n, serde_json::json!({
             step.name.to_string(): {"count": count, "duration_ms": dur.as_millis()}
         })).await?;
-        emit_brain_row("chat.import_step_completed", serde_json::json!({
+        emit_memory_row("chat.import_step_completed", serde_json::json!({
             "job_id": job.id, "step": step.n, "name": step.name,
             "count": count, "duration_ms": dur.as_millis(),
         })).await;
@@ -596,7 +596,7 @@ pub async fn run_all(zip_path: &Path, tenant_id: uuid::Uuid, opts: Opts) -> anyh
     let sample_sha = sample_and_verify(&pool, &mut zip, tenant_id, 100).await?;
     let counts = checkpoint::aggregate_counts(&pool, job.id).await?;
     checkpoint::finish(&pool, job.id, counts, &sample_sha).await?;
-    emit_brain_row("chat.import_finished", serde_json::json!({
+    emit_memory_row("chat.import_finished", serde_json::json!({
         "job_id": job.id, "counts": counts, "verification_sha": sample_sha,
     })).await;
     Ok(())
@@ -676,14 +676,14 @@ pub async fn run_all(zip_path: &Path, tenant_id: uuid::Uuid, resume: bool, dry_r
         let count = fn_(&mut zip, tenant_id).await?;
         let dur = start.elapsed();
         checkpoint::complete_step(&job.id, n).await?;
-        emit_brain_row("chat.import_step_completed", serde_json::json!({
+        emit_memory_row("chat.import_step_completed", serde_json::json!({
             "job_id": job.id, "step": n, "name": name,
             "count": count, "duration_ms": dur.as_millis(),
         })).await;
     }
 
     checkpoint::finish(&job.id).await?;
-    emit_brain_row("chat.import_finished", serde_json::json!({
+    emit_memory_row("chat.import_finished", serde_json::json!({
         "job_id": job.id, "total_messages": job.total_messages_imported,
     })).await;
     Ok(())
@@ -703,7 +703,7 @@ pub async fn run_all(zip_path: &Path, tenant_id: uuid::Uuid, resume: bool, dry_r
 7. **Message dedup by (channel, ts)** — same.
 8. **Progress reports every 1000 messages** — stderr shows count.
 9. **CLI --tenant required** — missing flag → exit 1.
-10. **BRAIN audit chat.import_started + finished** — both emit.
+10. **memory audit chat.import_started + finished** — both emit.
 11. **OTel metric chat_import_messages_total** — sums to actual.
 12. **Permanent error fails fast** — corrupt zip → exit 1 with sev-1 alarm.
 13. **Transient retry** — Mattermost API rate-limit → backoff + retry.
@@ -713,14 +713,14 @@ pub async fn run_all(zip_path: &Path, tenant_id: uuid::Uuid, resume: bool, dry_r
 17. **Threads reconnected via thread_ts → root_id** — fixture with a parent + 3 replies; observe all replies have `root_id` = parent's MM id (AC for §1 #15).
 18. **Orphan thread reply imported as top-level** — fixture with a reply whose thread_ts has no matching parent in the export; observe MM post with `props.slack_thread_orphan = true` and `root_id = null` (AC for §1 #15).
 19. **File dedup by (workspace, file_id)** — fixture with same file_id referenced from 5 messages; observe ONE MM `FileInfo` row with 5 message references (AC for §1 #16).
-20. **File metadata PII redacted in BRAIN audit** — fixture with file named `Resume - Trinh Thai Anh.pdf`; observe MM FileInfo retains original name AND the `chat.import_step_completed` BRAIN payload uses `<NAME>` redaction (AC for §1 #17).
+20. **File metadata PII redacted in memory audit** — fixture with file named `Resume - Trinh Thai Anh.pdf`; observe MM FileInfo retains original name AND the `chat.import_step_completed` memory payload uses `<NAME>` redaction (AC for §1 #17).
 21. **Slack is_general → MM town-square** — fixture with channel `general` (is_general=true); observe MM channel named `town-square` with type `O` (AC for §1 #18).
 22. **Slack is_im → MM direct channel** — fixture with DM channel; observe MM channel type=D (AC for §1 #18).
 23. **Slack is_mpim → MM group channel** — fixture with multi-person IM; observe MM channel type=G (AC for §1 #18).
 24. **Reactions imported one row per user** — fixture with reaction `{name:"thumbsup", users:["U1","U2"]}`; observe two MM reaction rows (AC for §1 #19).
 25. **Custom emoji falls back to :question:** — fixture with `name:"company_logo"` (not in MM); observe MM reaction with emoji `question` and `props.original_emoji_name="company_logo"` (AC for §1 #19).
 26. **Pinned messages preserved** — fixture with `pinned_to:[channel_id]`; observe MM post with `is_pinned=true` (AC for §1 #20).
-27. **Edited messages emit warning** — fixture with `edited:{...}` block; observe `chat.import_warning` BRAIN row with `reason="edit_history_unavailable"` (AC for §1 #21).
+27. **Edited messages emit warning** — fixture with `edited:{...}` block; observe `chat.import_warning` memory row with `reason="edit_history_unavailable"` (AC for §1 #21).
 28. **Imported posts carry props markers** — observe every imported post has `props.cyberos_imported = true`, `props.cyberos_source = "slack"`, `props.slack_ts = "<original>"`, `props.slack_workspace_id = "<id>"` (AC for §1 #22).
 29. **Messages step parallelism = 1 per channel** — instrument step 5; observe no two `mm_create_post` calls for the same channel are in flight (AC for §1 #23).
 30. **Files step parallelism cap respected** — instrument step 7; observe at most 10 (default) concurrent downloads (AC for §1 #23).
@@ -760,7 +760,7 @@ async fn ac1_happy_small_import() {
     assert_eq!(job.status, "completed");
     assert_eq!(job.last_step_completed, 8);
     assert!(job.total_messages_imported >= 10);
-    let kinds = env.brain.kinds_collected().await;
+    let kinds = env.memory.kinds_collected().await;
     assert!(kinds.contains(&"chat.import_started".to_string()));
     assert_eq!(kinds.iter().filter(|&k| k == "chat.import_step_completed").count(), 8);
     assert!(kinds.contains(&"chat.import_finished".to_string()));
@@ -783,7 +783,7 @@ async fn ac2_resume_from_step_5() {
     assert_eq!(post.last_step_completed, 8);
     assert_eq!(post.status, "completed");
 
-    let n = env.brain.count_rows("chat.import_step_completed").await;
+    let n = env.memory.count_rows("chat.import_step_completed").await;
     assert_eq!(n, 8); // 4 from crashed + 4 from resume
 }
 ```
@@ -883,7 +883,7 @@ async fn ac20_file_metadata_pii_redacted_in_audit() {
     let env = TestEnv::new().await;
     run_all(env.fixture("with_files.zip"), env.tenant_id(),
             Opts { workspace_id: Some("T".into()), ..Opts::default() }).await.unwrap();
-    let row = env.brain.last_of_kind("chat.import_step_completed").await.unwrap();
+    let row = env.memory.last_of_kind("chat.import_step_completed").await.unwrap();
     let body = serde_json::to_string(&row).unwrap();
     assert!(!body.contains("Trinh Thai Anh"));
     assert!(body.contains("<NAME>"));
@@ -1052,7 +1052,7 @@ async fn ac38_sampling_detects_corruption() {
     env.mid_run_corrupt_one_message().await;
     let r = run_all(env.fixture("small.zip"), env.tenant_id(), Opts::default()).await;
     assert!(r.is_err() || env.fetch_status().await == "verification_failed");
-    let row = env.brain.last_of_kind("chat.import_verification_failed").await.unwrap();
+    let row = env.memory.last_of_kind("chat.import_verification_failed").await.unwrap();
     assert_eq!(row["severity"], "SEV-1");
 }
 ```
@@ -1132,7 +1132,7 @@ If any pair mismatches, `chat.import_verification_failed` fires with the specifi
 
 ### §6.11 — `import_job_id` props propagation
 
-Every imported entity carries `props.import_job_id = <uuid>`. This is the linkage for `--cleanup`. It also lets FR-CHAT-005 bridge omit `import_job_id` from BRAIN payloads (we don't want every BRAIN row tagged with an internal import id — those are operational, not user-visible state).
+Every imported entity carries `props.import_job_id = <uuid>`. This is the linkage for `--cleanup`. It also lets FR-CHAT-005 bridge omit `import_job_id` from memory payloads (we don't want every memory row tagged with an internal import id — those are operational, not user-visible state).
 
 ### §6.12 — Failure routing matrix
 
@@ -1151,7 +1151,7 @@ Every imported entity carries `props.import_job_id = <uuid>`. This is the linkag
 
 ## §7 — Dependencies
 
-- **FR-CHAT-005** — bridge picks up imported posts and emits to BRAIN.
+- **FR-CHAT-005** — bridge picks up imported posts and emits to memory.
 - **FR-CHAT-007** — Zalo importer sibling pattern.
 - **FR-CHAT-010** — decommission signal uses imported count.
 
@@ -1339,14 +1339,14 @@ All resolved. Deferred:
 | Pinned message references missing post | step 5 inserts; pin set at step 5 itself | If post doesn't exist, warning | None |
 | Slack ts collision within channel (theoretical) | dedup key duplicate | second dropped; SEV-2 | Re-export |
 | Workspace ID inference fails | no team_id + no flag | exit 1; operator must provide `--workspace-id` | Operator |
-| `--cleanup` race with bridge (FR-CHAT-005) | bridge sees DELETE events | bridge emits chat.message_deleted to BRAIN | None — desired behaviour |
+| `--cleanup` race with bridge (FR-CHAT-005) | bridge sees DELETE events | bridge emits chat.message_deleted to memory | None — desired behaviour |
 | `--cleanup` race with active user (someone messaging mid-cleanup) | mixed DELETEs | partial cleanup; aborted job state | Operator re-runs cleanup |
 | `--abort` while step 7 has 50 file downloads in flight | semaphore allows completion of in-flight | up to 50 files still uploaded post-abort | None — accepted |
 | Network partition mid-step 5 | tx fails | exit 1; resume from current step | None |
 | Memory pressure (large channel file) | OOM | task killed | Operator bumps Fargate memory; resume |
 | Verification sample mismatch | step 8 SHA compare | SEV-1 `chat.import_verification_failed`; status=verification_failed | Operator runs `--cleanup` + re-import |
 | Sample fetch returns 404 (post deleted between import + verify) | rare; ignored as long as <5% sample failures | None | None |
-| BRAIN audit emit fails mid-import | logged; metric increments | importer continues | Operator backfills audit rows manually |
+| memory audit emit fails mid-import | logged; metric increments | importer continues | Operator backfills audit rows manually |
 | Operator runs `--cleanup --yes-i-know=false` | safety prompt | refused | None — by design |
 | zip_sha256 collision (cryptographic; impossible) | None | None | None |
 | Slack export contains workspace bot users (BotID) | imported as MM bot user | None | None |
@@ -1385,7 +1385,7 @@ All resolved. Deferred:
 - The `verification_sha256_sample` field lets a separate auditor re-run the sample independently and arrive at the same hash. This is a determinism-via-deterministic-sample design — picking the same 100 post_ids on re-run.
 - We use UUID-v7 for `import_jobs.id` so that operator listings sort chronologically without needing a separate `started_at` index.
 - `step_metrics` JSONB is bounded at 8 entries by design; we could've used a separate `import_step_results` table but the per-step record is so small (count + duration) that a JSONB column on the parent row is simpler and cheaper.
-- The cleanup-during-active-bridge case (FR-CHAT-005 sees DELETEs and emits `chat.message_deleted`) is the intended behaviour: BRAIN's view of "what happened" should be eventually consistent with chat. A subsequent re-import re-creates the posts and the bridge emits `chat.message` again.
+- The cleanup-during-active-bridge case (FR-CHAT-005 sees DELETEs and emits `chat.message_deleted`) is the intended behaviour: memory's view of "what happened" should be eventually consistent with chat. A subsequent re-import re-creates the posts and the bridge emits `chat.message` again.
 - We chose CLI over an HTTP endpoint because import is an operator workflow, not a user workflow. CLI is easier to ssh-into-fargate-task + watch + restart than HTTP.
 - The CLI prints structured progress to stderr and structured JSON-lines to stdout (one line per audit row). Operators wanting machine-readable progress pipe stdout to `jq`.
 - `--dry-run` is implemented by short-circuiting step entry points; the analysis (counts) is computed by step 1's zip parse, so dry-run is fast (~1s for any zip size).

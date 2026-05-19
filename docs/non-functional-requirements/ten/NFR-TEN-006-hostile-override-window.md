@@ -15,7 +15,7 @@ related_frs: [FR-TEN-202]
 ## §1 — Statement (BCP-14 normative)
 
 1. Hostile termination (FR-TEN-202) — used when a tenant is committing abuse and the normal 90-day FSM is too slow — **MUST** require both CEO and CLO-Legal signatures within a 24-hour window.
-2. The override **MUST** be timestamped + sealed; immediately persists to BRAIN with `kind=tenant.hostile_override`.
+2. The override **MUST** be timestamped + sealed; immediately persists to memory with `kind=tenant.hostile_override`.
 3. Single-signer override is forbidden — no exceptions, including for the founder.
 4. The override action **MUST** include a written rationale (≥ 100 words) explaining the abuse and the legal basis for accelerated termination.
 5. Quarterly review by external counsel of all hostile overrides in the period — proportionality and process audit.

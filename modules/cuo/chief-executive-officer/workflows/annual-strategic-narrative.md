@@ -8,7 +8,7 @@ status: shipped
 
 inputs:
   - { name: brief, source: persona-specific operator input (drive doc, calendar event, ticket), format: markdown }
-  - { name: prior_artefact, source: BRAIN search for prior `annual-strategic-narrative` outputs, format: markdown }
+  - { name: prior_artefact, source: memory search for prior `annual-strategic-narrative` outputs, format: markdown }
 
 outputs:
   - { name: annual_strategic_narrative_artefact, format: ad-hoc-md, recipient: persona owner + downstream consumers }
@@ -22,7 +22,7 @@ escalates_to: []
 consults: []
 
 audit_hooks:
-  - each step's output is logged to BRAIN audit chain via memory module (per modules/memory/AGENTS.md §6)
+  - each step's output is logged to memory audit chain via memory module (per modules/memory/AGENTS.md §6)
   - workflow completion emits a single `workflow_complete` row with the full chain summary
   - HITL pauses halt the chain; resumption requires the operator's reply to be parsed and applied
 ---
@@ -45,7 +45,7 @@ CUO routes here when the user says things like:
 cyberos-cuo execute chief-executive-officer/annual-strategic-narrative \
     --output-dir <dir> \
     --invoker llm \
-    --brain-emit
+    --memory-emit
 ```
 
 ## Expected duration
@@ -71,11 +71,11 @@ cyberos-cuo execute chief-executive-officer/annual-strategic-narrative \
 ## Operator-side decisions
 
 - **Approve the audit verdict before downstream consumption.** Audit `pass` does NOT mean operator-accepted; it means rubric-satisfied.
-- **Reuse last quarter's prior_artefact** unless context has materially changed; the BRAIN search input handles this automatically when present.
-- **Tag the BRAIN row** with explicit business context if this is a one-off vs the recurring cadence.
+- **Reuse last quarter's prior_artefact** unless context has materially changed; the memory search input handles this automatically when present.
+- **Tag the memory row** with explicit business context if this is a one-off vs the recurring cadence.
 
 ## Cross-references
 
 - Skill chain anchors: see `modules/skill/strategy-document-author/` + `modules/skill/strategy-document-audit/`
 - Persona spec: see `modules/cuo/chief-executive-officer/README.md` (9-block schema, §8 Audit criteria)
-- BRAIN protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)
+- memory protocol: see `modules/memory/AGENTS.md` §6 (audit chain semantics)

@@ -18,7 +18,7 @@ related_frs: [FR-AUTH-104]
 2. Each state value **MUST** be single-use — after the callback consumes it, the same value cannot be replayed. Replay attempts return HTTP 400 `state_already_consumed`.
 3. State **MUST** be bound to the originating session (CSRF protection): the callback verifies the cookie's session_id matches the session_id encoded in the state's MAC.
 4. State values **MUST** be ≥ 32 bytes of cryptographic randomness, encoded base64url; the MAC uses HMAC-SHA256 over `{session_id, nonce, issued_at}`.
-5. Every state consumption (success or fail) **MUST** emit a BRAIN audit row `auth.oidc.state_consumed` with `{session_id, result, time_since_issuance_seconds}`.
+5. Every state consumption (success or fail) **MUST** emit a memory audit row `auth.oidc.state_consumed` with `{session_id, result, time_since_issuance_seconds}`.
 
 ## §2 — Why this constraint
 

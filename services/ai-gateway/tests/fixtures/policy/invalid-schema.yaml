@@ -1,0 +1,8 @@
+tenant_id: org:bad
+ai_policy:
+  monthly_cap_usd: "not-a-number"
+  warn_threshold: 0.80
+  primary_provider:
+    kind: anthropic
+    model_alias_map: {}
+  residency: sg-1

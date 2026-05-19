@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: product-metrics-review-author
-description: Authors a quarterly product OKR + metrics review — DAU/WAU/MAU + stickiness, retention cohorts (Day-1/7/30), feature-adoption funnels, north-star metric movement, per-OKR attainment, top wins/losses, next-quarter focus. Per Amplitude Product Analytics Playbook + Mixpanel North Star Framework + Pendo Product Engagement + Reforge Product Strategy + Sequoia PLG Playbook + Hooked (Nir Eyal) habit-loop framework.
-  Author a PRODUCT_METRICS_REVIEW markdown from source artefact(s). Generates a
-  versioned product-metrics-review@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  product-metrics-review-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Authors a quarterly product OKR + metrics review — DAU/WAU/MAU + stickiness, retention cohorts (Day-1/7/30), feature-adoption funnels, north-star metric movement, per-OKR attainment, top wins/losses, next-quarter focus. Per Amplitude Product Analytics Playbook + Mixpanel North Star Framework + Pendo Product Engagement + Reforge Product Strategy + Sequoia PLG Playbook + Hooked (Nir Eyal) habit-loop framework. Author a PRODUCT_METRICS_REVIEW markdown from source artefact(s). Generates a versioned product-metrics-review@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into product-metrics-review-audit by default. Use when user asks to "draft a product metrics review" or "create the product metrics review". Do NOT use for "audit existing product metrics review" (use product-metrics-review-audit instead). Author a PRODUCT_METRICS_REVIEW markdown from source artefact(s). Generates a versioned product-metrics-review@1 file under output_dir, with per-claim a...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: product-metrics-review_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

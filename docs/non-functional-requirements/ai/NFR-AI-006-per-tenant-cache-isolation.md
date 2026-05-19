@@ -22,7 +22,7 @@ related_frs: [FR-AI-017, FR-AI-018]
 
 ## §2 — Why this constraint
 
-Per-tenant isolation is the platform's load-bearing claim. A single cross-tenant cache leak is sufficient to break SOC 2 and PDPL multi-tenancy assertions — even if the prompt contains no PII, the **fact** that tenant A asked a specific question is itself private (e.g., M&A diligence). Indexing the cache by `(tenant_id, ...)` rather than `prompt_hash` makes the cross-leak case **architecturally impossible**, not merely unlikely. The 10k random-pair property test gives statistical confidence; the BRAIN trace event gives detective controls if a future code change breaks the invariant.
+Per-tenant isolation is the platform's load-bearing claim. A single cross-tenant cache leak is sufficient to break SOC 2 and PDPL multi-tenancy assertions — even if the prompt contains no PII, the **fact** that tenant A asked a specific question is itself private (e.g., M&A diligence). Indexing the cache by `(tenant_id, ...)` rather than `prompt_hash` makes the cross-leak case **architecturally impossible**, not merely unlikely. The 10k random-pair property test gives statistical confidence; the memory trace event gives detective controls if a future code change breaks the invariant.
 
 ## §3 — Measurement
 
@@ -39,7 +39,7 @@ Per-tenant isolation is the platform's load-bearing claim. A single cross-tenant
 
 - Counter `cache_cross_tenant_attempt_total > 0` → sev-0; immediately disable cache reads (gateway falls through to live provider call); page CTO + CSO; halt new tenant onboarding until root cause identified.
 - Property test fails in CI → block PR; investigation must complete before any other change merges to that branch.
-- BRAIN trace shows `cache.hit` with mismatched JWT tenant_id → sev-0; same response as counter alarm.
+- memory trace shows `cache.hit` with mismatched JWT tenant_id → sev-0; same response as counter alarm.
 
 ---
 

@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-001, FR-CRM-002, FR-CUO-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-001, FR-CRM-002, FR-CUO-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CRM-001, FR-CUO-101]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1652 2026-05-17 — Suggestions grounded in: deal age, last activity (FR-CRM-002), contact engagement signals, account history, similar deal patterns
   - DEC-1653 2026-05-17 — Each suggestion includes: kind, summary, rationale (1-2 sentences), confidence_score (0-1), deep_link to relevant CRM record
   - DEC-1654 2026-05-17 — Per-user rate limit: 100 calls/day to prevent runaway AI cost
-  - DEC-1655 2026-05-17 — BRAIN audit kinds: crm.next_action_suggested, crm.next_action_executed, crm.next_action_dismissed
+  - DEC-1655 2026-05-17 — memory audit kinds: crm.next_action_suggested, crm.next_action_executed, crm.next_action_dismissed
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without next-action ranking, CDO scans CRM manually — open d
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship `crm.next-action@1` skill at `services/crm/src/next_action/` returning top-3 AI-ranked actions per deal, grounded in deal context, rate-limited, 3 BRAIN audit kinds.
+The CRM service **MUST** ship `crm.next-action@1` skill at `services/crm/src/next_action/` returning top-3 AI-ranked actions per deal, grounded in deal context, rate-limited, 3 memory audit kinds.
 
 1. **MUST** register skill at CUO via `skill_handler.rs::register()` per DEC-1650 — invoked via CUO `crm.next-action@1`.
 
@@ -118,7 +118,7 @@ The CRM service **MUST** ship `crm.next-action@1` skill at `services/crm/src/nex
 
 7. **MUST** auto-expire pending suggestions after 7 days (cron via FR-MCP-007).
 
-8. **MUST** emit 3 BRAIN audit kinds per DEC-1655. PII per FR-BRAIN-111: rationale text SHA-256 hashed.
+8. **MUST** emit 3 memory audit kinds per DEC-1655. PII per FR-MEMORY-111: rationale text SHA-256 hashed.
 
 9. **MUST** thread trace_id from CUO call → context → AI → audit.
 
@@ -182,7 +182,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **CUO skill registered as crm.next-action@1**. 2. **Returns exactly 3 suggestions (or fewer if AI can't fill)**. 3. **Enum 7 + cardinality test**. 4. **Each suggestion has all 5 fields**. 5. **Rationale 1-2 sentences**. 6. **Confidence_score 0-1**. 7. **Deep_link non-empty**. 8. **Context built from FR-CRM-002 activities**. 9. **Rate limit 100/user/day**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (rationale SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Execute records executed_kind**. 15. **Dismiss → status=dismissed**. 16. **7-day expiry via cron**. 17. **Append-only suggestions table**. 18. **AI returns invalid JSON → sev-2 + retry once**. 19. **No deal_id (closed deal) → 404**. 20. **CDO/CRO role required**.
+1. **CUO skill registered as crm.next-action@1**. 2. **Returns exactly 3 suggestions (or fewer if AI can't fill)**. 3. **Enum 7 + cardinality test**. 4. **Each suggestion has all 5 fields**. 5. **Rationale 1-2 sentences**. 6. **Confidence_score 0-1**. 7. **Deep_link non-empty**. 8. **Context built from FR-CRM-002 activities**. 9. **Rate limit 100/user/day**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (rationale SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Execute records executed_kind**. 15. **Dismiss → status=dismissed**. 16. **7-day expiry via cron**. 17. **Append-only suggestions table**. 18. **AI returns invalid JSON → sev-2 + retry once**. 19. **No deal_id (closed deal) → 404**. 20. **CDO/CRO role required**.
 
 ---
 
@@ -226,7 +226,7 @@ async fn execute_records_kind() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CRM-001, FR-CUO-101.
-**Cross-module:** FR-CRM-002 (activity context), FR-AI-003 (LLM), FR-MCP-007 (expiry cron), FR-AUTH-101 (role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-CRM-002 (activity context), FR-AI-003 (LLM), FR-MCP-007 (expiry cron), FR-AUTH-101 (role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -245,7 +245,7 @@ async fn execute_records_kind() {
 ## §11 — Implementation notes
 - §11.1 AI prompt: includes deal context as structured JSON, asks for `[{kind, summary, rationale, confidence_score, deep_link}]`.
 - §11.2 Rate limit via Redis sliding-window: 100 ops per 24h per user.
-- §11.3 BRAIN audit body: deal_id, kinds[]; rationale SHA256.
+- §11.3 memory audit body: deal_id, kinds[]; rationale SHA256.
 - §11.4 Expiry cron at 02:00 tenant_tz: `UPDATE suggestions SET status='expired' WHERE status='pending' AND created_at < now() - interval '7 days'`.
 - §11.5 Deep_link templates per kind: send_email → /email/compose?to=..., schedule_call → /calendar/new?contact=..., etc.
 

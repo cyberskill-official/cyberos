@@ -200,7 +200,7 @@ def test_format_text_includes_section_headers(tmp_path):
         put(w, "memories/decisions/d1.md", b"a", actor="stephen", kind="decision")
     d = digest_mod.build(store)
     rendered = digest_mod.format_text(d)
-    assert "BRAIN digest" in rendered
+    assert "memory digest" in rendered
     assert "by op:" in rendered
     assert "by actor:" in rendered
     assert "by area:" in rendered
@@ -220,7 +220,7 @@ def test_format_markdown_includes_tables(tmp_path):
         put(w, "memories/decisions/d1.md", b"a", actor="stephen", kind="decision")
     d = digest_mod.build(store)
     md = digest_mod.format_markdown(d)
-    assert md.startswith("# BRAIN digest")
+    assert md.startswith("# memory digest")
     assert "| op | count |" in md
     assert "| actor | count |" in md
 

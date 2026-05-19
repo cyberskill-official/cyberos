@@ -95,7 +95,7 @@ Authority hierarchy:
 
 - `human-edited` — founder / product owner literally typed it OR explicitly approved during interview.
 - `human-confirmed` — subject (e.g. a CSM) self-disclosed during interview; LLM transcribed verbatim.
-- `llm-explicit` — LLM synthesised it from cited input documents / BRAIN entries; cited refs in surrounding HTML comment.
+- `llm-explicit` — LLM synthesised it from cited input documents / memory entries; cited refs in surrounding HTML comment.
 - `llm-implicit` — LLM inferred it without a specific citable source.
 
 `product-requirements-document-audit` (registry v0.2.5) will REJECT any PRD with `llm-implicit` authority on a `## Goals` claim — goals MUST be at least `llm-explicit`. Lower-authority claims are flagged for human review at PRD-approval time.
@@ -104,7 +104,7 @@ Authority hierarchy:
 
 `product-requirements-document-author` follows feature-request-author's amendment-batch protocol (per Q5 of registry v0.2.4 design):
 
-1. v1 of the PRD is authored from the brief + targeted BRAIN reads.
+1. v1 of the PRD is authored from the brief + targeted memory reads.
 2. User reviews, batches amendments via the standard PLAN_AMENDMENT_REQUEST format.
 3. `product-requirements-document-author` applies the batch, increments `prd_iteration`, rewrites the same `<title>.prd.md` file in place.
 4. Goes to v3 etc. until `prd_status` flips to `in_review` and an audit pass is triggered.

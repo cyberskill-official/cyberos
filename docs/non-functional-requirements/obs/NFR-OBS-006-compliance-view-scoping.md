@@ -28,7 +28,7 @@ Cross-tenant data visibility in OBS is the same compliance breach as cross-tenan
 
 - Counter `obs_proxy_unscoped_query_total{role}` — should be zero for any role lacking `tenant_scope=global`.
 - Sev-0 alarm on `unscoped_query_total > 0` for any non-global role.
-- BRAIN view `view kind=obs.proxy.query_rewrite` — audit-able stream.
+- memory view `view kind=obs.proxy.query_rewrite` — audit-able stream.
 
 ## §4 — Verification
 

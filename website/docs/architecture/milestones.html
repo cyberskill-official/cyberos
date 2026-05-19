@@ -4,7 +4,7 @@
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>Milestones — CyberOS</title>
- <meta name="description" content="The phased milestone arc. Five phases (P0 → P4), 22 modules, compliance gates that flip every quarter.">
+ <meta name="description" content="The phased milestone arc. Five phases (P0 → P4), 23 modules, compliance gates that flip every quarter.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -32,7 +32,7 @@
  <span class="phase-chip phase-p0"> + §12.4</span>
  </div>
  <h1 class="h-display mb-4">The phased milestone arc</h1>
- <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Five gated phases (P0 → P4). 22 modules. 10 → 20 Members. Compliance gates that flip every quarter.</p>
+ <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">Five gated phases (P0 → P4). 23 modules. 10 → 20 Members. Compliance gates that flip every quarter.</p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
  CyberOS ships in five gated phases over P0 → P4, anchored on dogfooding signal and compliance gates. The founder's commitment is captured in the headcount column: <strong>scale only when CyberOS itself absorbs the new operational load</strong>. Per, internal productivity (P1) is the moat — external SaaS is P4 only. This page enumerates each phase's modules, headcount budget, compliance gate, success criteria, and risks; ends with module dependency graph + headcount trajectory + KPI dashboard.
  </p>
@@ -118,7 +118,7 @@
  <div class="grid grid-cols-5 gap-3 text-xs">
  <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
  <div class="font-bold text-blue-900 mb-1">P0 exit · P0 · exit</div>
- <div class="text-slate-600 mb-2"><strong>7 modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
+ <div class="text-slate-600 mb-2"><strong>7 modules:</strong> AUTH · AI · MCP · OBS · CHAT · memory · GENIE/CUO</div>
  <div class="text-slate-600 mb-1"><strong>Headcount:</strong> 10</div>
  <div class="text-blue-700 font-bold text-[11px]">Gate: T1 Floor</div>
  <div class="text-slate-500 text-[10px]">A05 DPIA · DPO · Trust Center · Stripe SAQ-A · VPAT 2.5</div>
@@ -206,7 +206,7 @@ gantt
  MCP Gateway:done, p0c, 2026-06, 60d
  OBS:done, p0d, 2026-07, 60d
  CHAT:done, p0e, 2026-07, 60d
- BRAIN:done, p0f, 2026-06, 90d
+ memory:done, p0f, 2026-06, 90d
  GENIE / CUO:done, p0g, 2026-07, 60d
 
  section P1 Productivity
@@ -247,14 +247,14 @@ gantt
  <h2 class="h-1">Foundations · P0 phase</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
- The infrastructure plane plus the substrate (BRAIN), the catalog (SKILL — already shipped) and the orchestrator (CUO). At P0 exit, Slack and Zalo are decommissioned; CyberSkill's 10 Members work inside CyberOS-only.
+ The infrastructure plane plus the substrate (memory), the catalog (SKILL — already shipped) and the orchestrator (CUO). At P0 exit, Slack and Zalo are decommissioned; CyberSkill's 10 Members work inside CyberOS-only.
  </p>
 
  <div class="grid md:grid-cols-2 gap-5 mb-5">
  <div class="bbg-card p-5 tint-memory">
  <h4 class="font-bold mb-2">Modules added (7 of 22)</h4>
  <ul class="text-sm text-slate-600 space-y-1.5">
- <li><strong>BRAIN</strong> — universal memory · 3-layer · already shipped</li>
+ <li><strong>memory</strong> — universal memory · 3-layer · already shipped</li>
  <li><strong>GENIE/CUO</strong> — orchestrator · 5 of 47 C-suite persona workflows live (221 workflows total)</li>
  <li><strong>AUTH</strong> — OAuth 2.1 + JWT + per-tenant authz server</li>
  <li><strong>AI Gateway</strong> — LiteLLM + Bedrock + redaction + cost ledger</li>
@@ -283,8 +283,8 @@ gantt
  <li>All 10 internal Members on CyberOS for chat + memory by P0 · exit</li>
  <li>Slack + Zalo billing terminated by P0 · exit</li>
  <li>CUO answers ≥ 50 questions/week with ≥ 98% citation rate (N(FR pending))</li>
- <li>BRAIN search p95 ≤ 250ms on 50k-chunk corpus</li>
- <li>Zero compensation/equity facts ingested into BRAIN (denylist DEC-036)</li>
+ <li>memory search p95 ≤ 250ms on 50k-chunk corpus</li>
+ <li>Zero compensation/equity facts ingested into memory (denylist DEC-036)</li>
  <li>p95 GraphQL ≤ 400ms across all subgraphs (N(FR pending))</li>
  </ul>
  </div>
@@ -303,9 +303,9 @@ gantt
  <h4 class="font-bold mb-2">Key milestones within P0</h4>
  <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
  <li><strong>P0 · start:</strong> module template + Federation router + design tokens repo live</li>
- <li><strong>P0 · slice 1:</strong> AUTH + AI Gateway in beta; BRAIN + SKILL already shipped baseline</li>
+ <li><strong>P0 · slice 1:</strong> AUTH + AI Gateway in beta; memory + SKILL already shipped baseline</li>
  <li><strong>P0 · slice 2:</strong> MCP Gateway live; CUO router-only mode</li>
- <li><strong>P0 · exit:</strong> CHAT live; OBS LGTM stack live; 7/22 modules ready; Trust Center launched</li>
+ <li><strong>P0 · exit:</strong> CHAT live; OBS LGTM stack live; 7/23 modules ready; Trust Center launched; PLUGIN scaffold + 8 FRs at 10/10 (cross-runtime distribution to Claude Code / Cursor / Cowork / Codex CLI)</li>
  </ul>
  </div>
 </section>
@@ -344,7 +344,7 @@ gantt
  <ol class="list-decimal pl-6 text-sm text-slate-700 space-y-1 mb-2">
  <li>Founder + CTO + CHRO run the 4-question scorecard within 7 days of P0 · exit.</li>
  <li>If any Red: descope 1 module per Red, in the order above.</li>
- <li>Descope decision MUST be recorded as a BRAIN audit row at <code>memories/decisions/p0-p1-descope-<timestamp>.md</code>.</li>
+ <li>Descope decision MUST be recorded as a memory audit row at <code>memories/decisions/p0-p1-descope-<timestamp>.md</code>.</li>
  <li>Descoped modules carry status <code>deferred</code> with the new target phase; reappear in BACKLOG.md at the new position.</li>
  <li>Re-engaging a descoped module requires explicit phase-entry re-evaluation; it doesn't drift back into P1 silently.</li>
  </ol>
@@ -410,7 +410,7 @@ gantt
  <li>First promotion review through Hội đồng Chuyên môn</li>
  <li>P1 base salary invariant verified: zero system-reductions (N(FR pending))</li>
  <li>BP balance tracked with anti-inflation interest at ACB rate</li>
- <li>EMAIL daily summary in BRAIN for every Member</li>
+ <li>EMAIL daily summary in memory for every Member</li>
  <li>CRM activities auto-logged from EMAIL outgoing (CaMeL safe extraction)</li>
  </ul>
  </div>
@@ -630,7 +630,7 @@ gantt
  <h2 class="h-1">Module dependency graph</h2>
  </div>
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-6">
- Every module depends on the P0 infrastructure plane (AUTH, AI, MCP, OBS) and on BRAIN for memory + audit. P1 modules dogfeed each other (TIME → REW; CRM → EMAIL); P2 modules close revenue + equity loops; P3 modules read from everything; P4 modules sit at the edge.
+ Every module depends on the P0 infrastructure plane (AUTH, AI, MCP, OBS) and on memory for memory + audit. P1 modules dogfeed each other (TIME → REW; CRM → EMAIL); P2 modules close revenue + equity loops; P3 modules read from everything; P4 modules sit at the edge.
  </p>
 
  <div class="bbg-card p-4">
@@ -641,7 +641,7 @@ flowchart LR
  AI(("AI"))
  MCP(("MCP"))
  OBS(("OBS"))
- BRAIN(("BRAIN"))
+ memory(("memory"))
  CUO(("CUO"))
  CHAT(("CHAT"))
  end
@@ -674,19 +674,19 @@ flowchart LR
  end
 
  AUTH --> CHAT & PROJ & TIME & CRM & KB & HR & EMAIL & REW & LEARN & INV & ESOP & RES & OKR & DOC & PORTAL & TEN
- AI --> CUO & BRAIN
+ AI --> CUO & memory
  MCP --> CUO
  OBS -. observes.-> CHAT & PROJ & CRM & REW & ESOP & RES & OKR
 
- CUO --> CHAT & BRAIN
- BRAIN --> CUO
+ CUO --> CHAT & memory
+ memory --> CUO
 
  TIME --> REW
  PROJ --> TIME
  CRM --> EMAIL
  CRM --> INV
- EMAIL --> BRAIN
- KB --> BRAIN
+ EMAIL --> memory
+ KB --> memory
  HR --> REW
  REW --> LEARN
  REW --> ESOP
@@ -708,7 +708,7 @@ flowchart LR
  classDef p3 fill:#f9c64f,stroke:#9c750a
  classDef p4 fill:#f0eee9,stroke:#475569
 
- class AUTH,AI,MCP,OBS,BRAIN,CUO,CHAT p0
+ class AUTH,AI,MCP,OBS,memory,CUO,CHAT p0
  class PROJ,TIME,CRM,KB,HR,EMAIL,REW,LEARN p1
  class INV,ESOP p2
  class RES,OKR p3
@@ -716,7 +716,7 @@ flowchart LR
  </div>
  </div>
 
- <p class="text-sm text-slate-500 mt-3">Cycle-free by construction. The only "circular" arrow (BRAIN ⇄ CUO) is the legitimate read/write split: CUO writes inquiry context, BRAIN returns search hits.</p>
+ <p class="text-sm text-slate-500 mt-3">Cycle-free by construction. The only "circular" arrow (memory ⇄ CUO) is the legitimate read/write split: CUO writes inquiry context, memory returns search hits.</p>
 </section>
 
 <!-- ============================================================ -->
@@ -806,8 +806,8 @@ xychart-beta
  <td><strong class="text-blue-700">P0</strong></td>
  <td>Slack + Zalo decommissioned · 100% Members on CHAT</td>
  <td>CUO citation rate ≥ 98%</td>
- <td>BRAIN search p95 ≤ 250ms</td>
- <td>Zero compensation in BRAIN (denylist)</td>
+ <td>memory search p95 ≤ 250ms</td>
+ <td>Zero compensation in memory (denylist)</td>
  </tr>
  <tr>
  <td><strong class="text-emerald-700">P1</strong></td>
@@ -847,7 +847,7 @@ xychart-beta
  <h4 class="font-bold mb-2 text-slate-900">Continuous (cross-phase) NFRs</h4>
  <ul class="text-sm text-slate-600 space-y-1.5 list-disc list-inside">
  <li>N(FR pending) GraphQL p95 ≤ 400ms</li>
- <li>N(FR pending) BRAIN search p95 ≤ 250ms on 1M chunks</li>
+ <li>N(FR pending) memory search p95 ≤ 250ms on 1M chunks</li>
  <li>N(FR pending) Platform availability ≥ 99.5%</li>
  <li>N(FR pending) CHAT availability ≥ 99.9%</li>
  <li>N(FR pending) Tenant data leakage = 0</li>
@@ -860,7 +860,7 @@ xychart-beta
  <li>CUO auto-acts on irreversible op without confirm</li>
  <li>P1 base salary system-reductions</li>
  <li>Parameter version retroactive mutations</li>
- <li>Compensation/equity facts in BRAIN</li>
+ <li>Compensation/equity facts in memory</li>
  <li>CUO answers without citation when source exists</li>
  <li>Prompt-injection exfiltration via email/document</li>
  </ul>
@@ -884,7 +884,7 @@ xychart-beta
  <li>The phased milestone arc</li>
  <li>OKRs by phase exit</li>
  <li>Guardrail (anti-)metrics</li>
- <li>All 22 modules catalogued</li>
+ <li>All 23 modules catalogued</li>
  <li>Foundational locked decisions</li>
  <li>Non-Functional Requirements</li>
  <li>Compliance tier model per phase</li>
@@ -898,7 +898,7 @@ xychart-beta
  <li><a href="infrastructure.html" class="text-amber-700 font-semibold">Infrastructure plane (six P0 pillars)</a></li>
  <li><a href="compliance.html" class="text-amber-700 font-semibold">Compliance plan (three rings)</a></li>
  <li><a href="tech-stack.html" class="text-amber-700 font-semibold">Tech stack (8 tiers)</a></li>
- <li><a href="../modules/brain.html" class="text-amber-700 font-semibold">BRAIN module</a></li>
+ <li><a href="../modules/memory.html" class="text-amber-700 font-semibold">memory module</a></li>
  <li><a href="../modules/cuo.html" class="text-amber-700 font-semibold">CUO module</a></li>
  <li><a href="../modules/skill.html" class="text-amber-700 font-semibold">Skill module</a></li>
  <li><a href="../reference/nfr-catalog.html" class="text-amber-700 font-semibold">NFR Catalog (full table)</a></li>

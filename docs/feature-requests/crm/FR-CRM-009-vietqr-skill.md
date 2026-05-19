@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-001, FR-SKILL-108, FR-INV-005, FR-TEN-102, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-001, FR-SKILL-108, FR-INV-005, FR-TEN-102, FR-MEMORY-111]
 depends_on: [FR-CRM-001]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1692 2026-05-17 — VietQR spec: bank_bin + account_number + amount + memo (alphanumeric, max 100 chars)
   - DEC-1693 2026-05-17 — Per-tenant bank config: bank_bin, account_number, account_holder_name; CFO-only writes via FR-AUTH-101
   - DEC-1694 2026-05-17 — Memo template: `{tenant_short}-{deal_id_8char}` — unique per QR; matches FR-INV-005 reconciliation pattern
-  - DEC-1695 2026-05-17 — BRAIN audit kinds: crm.vietqr_generated, crm.vietqr_config_set, crm.vietqr_failed
+  - DEC-1695 2026-05-17 — memory audit kinds: crm.vietqr_generated, crm.vietqr_config_set, crm.vietqr_failed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without VietQR generation, CFO sends bank details as text — 
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship vietnam-bank-transfer@1 skill at `services/crm/src/vn/vietqr_skill.rs` generating VietQR PNG with embedded payment metadata, per-tenant bank config, 3 BRAIN audit kinds.
+The CRM service **MUST** ship vietnam-bank-transfer@1 skill at `services/crm/src/vn/vietqr_skill.rs` generating VietQR PNG with embedded payment metadata, per-tenant bank config, 3 memory audit kinds.
 
 1. **MUST** register skill `vietnam-bank-transfer@1` per DEC-1690.
 
@@ -107,7 +107,7 @@ The CRM service **MUST** ship vietnam-bank-transfer@1 skill at `services/crm/src
 
 8. **MUST** validate amount_vnd > 0 and ≤ 1B VND (Napas max single transfer).
 
-9. **MUST** emit 3 BRAIN audit kinds per DEC-1695. PII per FR-BRAIN-111: account_number SHA-256 hashed; amount SHA256 in chain.
+9. **MUST** emit 3 memory audit kinds per DEC-1695. PII per FR-MEMORY-111: account_number SHA-256 hashed; amount SHA256 in chain.
 
 10. **MUST** thread trace_id from skill call → generator → audit.
 
@@ -160,7 +160,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **Skill registered as vietnam-bank-transfer@1**. 2. **Bank config required (412 if not set)**. 3. **CFO-only bank config (403 for others)**. 4. **PNG generated with VietQR payload**. 5. **Memo template applied (tenant_short + deal_id_8)**. 6. **Memo override accepted (optional)**. 7. **qr_purpose enum 3 + cardinality test**. 8. **Amount > 0 enforced**. 9. **Amount ≤ 1B VND enforced**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (account_number+amount SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Memo matches FR-INV-005 regex**. 15. **PNG render deterministic for same input**. 16. **Bank config update increments updated_at**. 17. **bank_bin format 6-digit numeric**. 18. **account_number max 20 chars**. 19. **account_holder_name required**. 20. **No QR for non-VN tenant amounts (currency=VND only)**.
+1. **Skill registered as vietnam-bank-transfer@1**. 2. **Bank config required (412 if not set)**. 3. **CFO-only bank config (403 for others)**. 4. **PNG generated with VietQR payload**. 5. **Memo template applied (tenant_short + deal_id_8)**. 6. **Memo override accepted (optional)**. 7. **qr_purpose enum 3 + cardinality test**. 8. **Amount > 0 enforced**. 9. **Amount ≤ 1B VND enforced**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (account_number+amount SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Memo matches FR-INV-005 regex**. 15. **PNG render deterministic for same input**. 16. **Bank config update increments updated_at**. 17. **bank_bin format 6-digit numeric**. 18. **account_number max 20 chars**. 19. **account_holder_name required**. 20. **No QR for non-VN tenant amounts (currency=VND only)**.
 
 ---
 
@@ -197,7 +197,7 @@ async fn non_cfo_rejected_on_config_write() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CRM-001.
-**Cross-module:** FR-SKILL-108 (skill registry), FR-AUTH-101 (CFO role), FR-INV-005 (reconciliation memo regex), FR-TEN-102 (>1B rail), FR-BRAIN-111 (PII).
+**Cross-module:** FR-SKILL-108 (skill registry), FR-AUTH-101 (CFO role), FR-INV-005 (reconciliation memo regex), FR-TEN-102 (>1B rail), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -216,7 +216,7 @@ async fn non_cfo_rejected_on_config_write() {
 ## §11 — Implementation notes
 - §11.1 PNG via `qrcode` Rust crate; resolution 512x512 default; deterministic for same input.
 - §11.2 Memo: `tenant_short` from `tenant.short_code` (3-char), `deal_id_8` = first 8 chars of UUID.
-- §11.3 BRAIN audit body: qr_purpose, deal_id; account_number + amount SHA256.
+- §11.3 memory audit body: qr_purpose, deal_id; account_number + amount SHA256.
 - §11.4 FR-INV-005 regex: `^[A-Z]{3}-[a-z0-9]{8}$` — memo template must match.
 - §11.5 Napas bank_bin reference: https://api.vietqr.io/v2/banks (look-up table).
 

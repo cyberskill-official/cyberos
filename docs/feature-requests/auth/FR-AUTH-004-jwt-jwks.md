@@ -3,7 +3,7 @@ id: FR-AUTH-004
 title: "JWT issuance + JWKS endpoint (RS256) with tenant_id + agent_persona + scope_grants + dual-rate-limit + jti dedup"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-005, FR-AUTH-006, FR-AUTH-007, FR-MCP-004, FR-AI-001, FR-AI-006]
 depends_on: [FR-AUTH-002, FR-AUTH-003]
 blocks: [FR-AUTH-005, FR-AI-006, FR-MCP-004, FR-AUTH-006, FR-OBS-002, FR-CHAT-002, FR-MCP-001, FR-AUTH-104, FR-AUTH-103, FR-EMAIL-002]
@@ -65,7 +65,7 @@ sub_tasks:
   - "0.5h: Suspended subject check (refuse token issuance with auth.token_failed audit)"
   - "0.5h: jti generation (ULID format) + emission in claims"
   - "0.5h: Constant-time email lookup (bcrypt-verify even on missing-email to prevent enumeration timing)"
-  - "0.5h: canonical::token_issued + canonical::token_failed BRAIN audit row builders"
+  - "0.5h: canonical::token_issued + canonical::token_failed memory audit row builders"
   - "0.5h: Quarterly rotation cron (FR-AUTH-006 schedules; this FR provides the function)"
   - "1.5h: Tests — happy + invalid pwd + suspended + rate-limit IP + rate-limit account + JWKS rotation + verify + replay"
   - "0.5h: OTel spans + metrics"
@@ -95,7 +95,7 @@ The AUTH service **MUST** issue RS256-signed JWTs containing tenant context, per
     - Per-IP: 10 attempts per minute per source IP (via `X-Forwarded-For` first hop).
     - Per-account: 5 attempts per minute per `(tenant_slug, email)` regardless of source IP.
    Either limit triggering returns `429 TOO_MANY_REQUESTS` with body `{"error":"rate_limited","retry_after_seconds":<n>}`. Distributed credential stuffing (different IPs, same account) is caught by the per-account limit; single-IP brute force is caught by the per-IP limit.
-6. **MUST** emit BRAIN audit rows:
+6. **MUST** emit memory audit rows:
     - `auth.token_issued` per success — payload: `subject_id`, `tenant_id`, `jti`, `roles`, `scope_grants_count`, `expires_at`, `request_id`, `source_ip_hash16`.
     - `auth.token_failed` per failed login — payload: `tenant_slug`, `email_hash16`, `reason` (invalid_credentials | suspended | rate_limited), `request_id`, `source_ip_hash16`. Note `email_hash16` not plaintext (matches FR-AUTH-002 §1 #7 discipline).
 7. **MUST** validate JWT signature, `exp`, `nbf`, `iss` on every consuming service (FR-AI-006, FR-MCP-004, FR-AUTH-005). Verification reads JWKS, picks the key matching the JWT's `kid` header, validates signature; failures return `401 UNAUTHORIZED` with `{"error":"invalid_jwt","reason":"<bad_sig|expired|nbf|wrong_iss|unknown_kid>"}`.
@@ -234,7 +234,7 @@ pub async fn issue_token(
         None    => { let _ = bcrypt::verify(&req.password, dummy_hash); false }
     };
     if !valid {
-        brain::emit(canonical::token_failed(
+        memory::emit(canonical::token_failed(
             &req.tenant_slug, &req.email, "invalid_credentials", source_ip, request_id,
         )).await?;
         return Err(AuthTokenError::InvalidCredentials);
@@ -243,7 +243,7 @@ pub async fn issue_token(
 
     // §1 #14
     if subject.suspended {
-        brain::emit(canonical::token_failed(
+        memory::emit(canonical::token_failed(
             &req.tenant_slug, &req.email, "suspended", source_ip, request_id,
         )).await?;
         return Err(AuthTokenError::SubjectSuspended);
@@ -266,7 +266,7 @@ pub async fn issue_token(
         &jsonwebtoken::EncodingKey::from_rsa_pem(signing_key.private_pem.as_bytes()).unwrap(),
     ).map_err(|e| AuthTokenError::Signing(e.to_string()))?;
 
-    brain::emit(canonical::token_issued(
+    memory::emit(canonical::token_issued(
         subject.id, subject.tenant_id, &jti, &subject.roles, claims.scope_grants.len(),
         claims.exp, source_ip, request_id,
     )).await?;
@@ -368,7 +368,7 @@ async fn valid_credentials_returns_jwt() {
         &jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256)).unwrap();
     assert_eq!(token.claims.email, "alice@x.com");
     assert!(token.claims.roles.contains(&"tenant-member".to_string()));
-    assert!(brain_test_helper::has_row("auth.token_issued", &token.claims.jti).await);
+    assert!(memory_test_helper::has_row("auth.token_issued", &token.claims.jti).await);
 }
 
 #[tokio::test]
@@ -383,7 +383,7 @@ async fn invalid_password_returns_401_and_emits_failed_row() {
         &pool, &redis, &active_key().await, "1.2.3.4", "req",
     ).await.expect_err("expected InvalidCredentials");
     assert!(matches!(err, AuthTokenError::InvalidCredentials));
-    assert!(brain_test_helper::find_recent("auth.token_failed", "invalid_credentials").is_some());
+    assert!(memory_test_helper::find_recent("auth.token_failed", "invalid_credentials").is_some());
 }
 
 #[tokio::test]

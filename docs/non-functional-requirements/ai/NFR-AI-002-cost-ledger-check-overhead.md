@@ -37,7 +37,7 @@ Histogram metric `ai_gateway_cost_ledger_admit_seconds` emitted by `services/ai-
 
 - p99 > 10ms for 5 minutes → sev-3 alert; on-call inspects cache refresh task health.
 - Background refresh task fails 3 consecutive cycles → sev-2 alert (the in-memory snapshot is going stale; budget enforcement may approve over-budget requests).
-- DB read timeout > 30ms on cache-miss → fail-closed (deny the request with HTTP 503, log row to BRAIN); fail-open is never permitted on the cost path (CFO contract).
+- DB read timeout > 30ms on cache-miss → fail-closed (deny the request with HTTP 503, log row to memory); fail-open is never permitted on the cost path (CFO contract).
 
 ---
 

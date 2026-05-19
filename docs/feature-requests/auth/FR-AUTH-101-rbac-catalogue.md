@@ -3,7 +3,7 @@ id: FR-AUTH-101
 title: "AUTH 22-role RBAC catalogue — closed enum + permission matrix + role-assignment REST + JWT claims + ADR gate + stub→full migration"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P3
 milestone: P3 · slice 1
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-HR-001, FR-KB-001, FR-REW-001, FR-DOC-001, FR-OKR-001]
 depends_on: [FR-AUTH-005]
 blocks: [FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-DOC-001, FR-HR-001, FR-KB-001, FR-OKR-001, FR-REW-001, FR-TIME-001, FR-INV-005, FR-AUTH-104, FR-INV-003, FR-INV-004]
@@ -97,7 +97,7 @@ sub_tasks:
   - "0.5h: migrate.rs — stub→full helper used by FR-AUTH-109 + grace-window validator"
   - "1.0h: adr.rs — CI-callable validator: any migration touching roles/permissions tables requires a matching ADR-NNN.md"
   - "1.0h: roles_rest.rs — POST /v1/admin/subjects/{id}/roles + DELETE /v1/admin/subjects/{id}/roles/{role} + GET /v1/admin/roles"
-  - "0.5h: role_events.rs — canonical auth.role_assigned / auth.role_revoked / auth.role_catalogue_changed BRAIN builders"
+  - "0.5h: role_events.rs — canonical auth.role_assigned / auth.role_revoked / auth.role_catalogue_changed memory builders"
   - "0.5h: jwt.rs update — emit roles array + rbac_v integer claim"
   - "0.5h: subjects.rs + rls/templates.rs — switch role allow-list to RoleMatrix; RLS consults membership for sensitive tables"
   - "2.5h: Tests — 11 test files (catalogue / matrix / check / assignment / jwt-claim / stub-migration / adr-gate / scope-grant / founder-webauthn / reserved-role-self-assign / perf)"
@@ -111,7 +111,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 1. **MUST** define exactly 22 roles in a closed Rust `enum Role` at `services/auth/src/rbac/catalogue.rs`. The variants are (in catalogue order, matching `website/docs/modules/auth.html#rbac-catalogue` and DEC-121): `RootAdmin`, `TenantAdmin`, `TenantMember`, `ServiceAccount`, `AgentPersona`, `Founder`, `Cfo`, `Cto`, `Coo`, `Chro`, `Cmo`, `Cpo`, `Cso`, `Cseco`, `Clo`, `Cdo`, `Dpo`, `Caio`, `ClientPortalUser`, `Auditor`, `Regulator`, `BillingSystem`. The string form is kebab-case (e.g. `tenant-admin`, `client-portal-user`). The enum **MUST NOT** carry a `_Other(String)` variant — unknown strings parse to `RoleParseError::UnknownRole(input)` and are rejected at every API boundary.
 
-2. **MUST** define exactly **40 resources** in a closed `enum Resource` (one per cross-module surface: `subject`, `tenant`, `role_assignment`, `jwt_jwks`, `audit_row`, `crm_account`, `crm_contact`, `crm_deal`, `proj_issue`, `proj_engagement`, `proj_rate_card`, `proj_timeline`, `time_entry`, `time_expense`, `inv_invoice`, `inv_payment`, `inv_hoa_don`, `kb_document`, `kb_runbook`, `hr_member`, `hr_contract`, `hr_leave`, `hr_cccd_photo`, `rew_payslip`, `rew_bp_ledger`, `esop_grant`, `esop_valuation`, `learn_skill`, `learn_certification`, `okr_objective`, `okr_kr`, `res_allocation`, `doc_document`, `doc_signature`, `email_thread`, `chat_channel`, `chat_message`, `cuo_chain`, `brain_memory`, `obs_alert`). Adding a 41st resource is an ADR.
+2. **MUST** define exactly **40 resources** in a closed `enum Resource` (one per cross-module surface: `subject`, `tenant`, `role_assignment`, `jwt_jwks`, `audit_row`, `crm_account`, `crm_contact`, `crm_deal`, `proj_issue`, `proj_engagement`, `proj_rate_card`, `proj_timeline`, `time_entry`, `time_expense`, `inv_invoice`, `inv_payment`, `inv_hoa_don`, `kb_document`, `kb_runbook`, `hr_member`, `hr_contract`, `hr_leave`, `hr_cccd_photo`, `rew_payslip`, `rew_bp_ledger`, `esop_grant`, `esop_valuation`, `learn_skill`, `learn_certification`, `okr_objective`, `okr_kr`, `res_allocation`, `doc_document`, `doc_signature`, `email_thread`, `chat_channel`, `chat_message`, `cuo_chain`, `memory_memory`, `obs_alert`). Adding a 41st resource is an ADR.
 
 3. **MUST** define exactly 5 actions in a closed `enum Action`: `Read`, `Write`, `Admin`, `Approve`, `Sign`. `Approve` is reserved for dual-signoff workflows (CFO+CEO co-sign, etc.); `Sign` is reserved for e-signature on DOC + hóa đơn emissions. Adding a 6th action is an ADR.
 
@@ -123,12 +123,12 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
    - Refuses self-assignment of reserved roles (per §1 #11). Reserved-role assignment requires a dedicated elevated-privilege endpoint (out of scope for slice 1; see §9).
    - Refuses `founder` assignment to a subject without a registered WebAuthn factor (per DEC-128 + FR-AUTH-105). Missing factor → `409 CONFLICT {"error":"webauthn_required","role":"founder"}`.
    - Inserts into `subject_roles` (tenant-scoped; RLS-protected) with `(subject_id, role, granted_by, granted_at)`. Duplicate grant → `409 CONFLICT {"error":"already_granted"}` (idempotent on the (subject_id, role) PK).
-   - Emits exactly one `auth.role_assigned` BRAIN audit row before commit (audit-before-action per AUTHORING.md rule 25).
+   - Emits exactly one `auth.role_assigned` memory audit row before commit (audit-before-action per AUTHORING.md rule 25).
    - Returns `201 CREATED` with `{"subject_id", "role", "granted_by", "granted_at"}`.
 
 6. **MUST** expose `DELETE /v1/admin/subjects/{subject_id}/roles/{role}` with the same caller-permission gate. Deletion:
    - Is hard-delete (no soft-delete; the audit row is the record).
-   - Emits exactly one `auth.role_revoked` BRAIN audit row before commit.
+   - Emits exactly one `auth.role_revoked` memory audit row before commit.
    - Returns `204 NO CONTENT`. Already-absent → `204` (idempotent — `DELETE` matches REST semantics).
 
 7. **MUST** expose `GET /v1/admin/roles` returning the catalogue: `{"version": <rbac_v>, "roles": [{"name":"<kebab>","display":"<Human>","reserved":<bool>,"requires_webauthn":<bool>,"scope_summary":"<one-line>"}, ...]}`. The handler reads from the in-memory `RoleMatrix`; never hits the DB. RBAC-version-aware caching: ETag is `W/"rbac-v<n>"`.
@@ -147,7 +147,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 13. **MUST** reject any JWT whose `roles` claim contains a string that does not parse to a `Role` variant. The verifier (used by every consuming service per FR-AUTH-004 §1 #7) treats this as a tampered token: `401 UNAUTHORIZED {"error":"invalid_token","reason":"unknown_role_in_claim"}`. The check is at the verifier, not downstream — failing closed.
 
-14. **MUST** emit exactly one `auth.role_catalogue_changed` BRAIN audit row whenever the catalogue version bumps (via the trigger on `role_catalogue_version`). The row carries `{old_version, new_version, changed_at, migration_id, adr_id}`. Catalogue version bumps without a recorded `adr_id` (e.g. ad-hoc INSERT in a manual psql session) fail the audit row's `NOT NULL adr_id` constraint and roll back the change.
+14. **MUST** emit exactly one `auth.role_catalogue_changed` memory audit row whenever the catalogue version bumps (via the trigger on `role_catalogue_version`). The row carries `{old_version, new_version, changed_at, migration_id, adr_id}`. Catalogue version bumps without a recorded `adr_id` (e.g. ad-hoc INSERT in a manual psql session) fail the audit row's `NOT NULL adr_id` constraint and roll back the change.
 
 15. **MUST** ship migration `0005_roles_permissions.sql` that creates:
     - `roles(name TEXT PRIMARY KEY, display TEXT NOT NULL, reserved BOOLEAN NOT NULL, requires_webauthn BOOLEAN NOT NULL, scope_summary TEXT NOT NULL, lands_in_slice INT NOT NULL)` — 22 seeded rows matching the closed enum.
@@ -159,7 +159,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 16. **MUST** ship migration `0006_role_catalogue_version.sql` that creates:
     - `role_catalogue_version(id INT PRIMARY KEY CHECK (id = 1), version INT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now(), adr_id TEXT NOT NULL)` — singleton (id=1).
-    - AFTER INSERT/UPDATE/DELETE trigger on `roles` + `role_permissions` that bumps `version` and inserts an `auth.role_catalogue_changed` BRAIN audit row via the brain_writer bridge (FR-AI-003).
+    - AFTER INSERT/UPDATE/DELETE trigger on `roles` + `role_permissions` that bumps `version` and inserts an `auth.role_catalogue_changed` memory audit row via the memory_writer bridge (FR-AI-003).
 
 17. **MUST** ship the ADR gate at `services/auth/src/rbac/adr.rs` as a CI-callable validator. Invoked as `cargo test rbac_adr_gate_test`, it:
     - Parses each migration file under `services/auth/migrations/` for changes to `roles` or `role_permissions`.
@@ -185,7 +185,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 24. **MUST** include `roles` and `rbac_v` claims in every JWT issued by FR-AUTH-004 after this FR ships. The JWT header `typ` MUST remain `JWT`; the claim shape change is additive only (no breaking changes to existing claim names). FR-AUTH-004's verifier is updated to surface both claims via `Claims::roles()` and `Claims::rbac_v()`.
 
-25. **MUST** ship the ADR file `services/auth/adr/ADR-101-rbac-22-role-catalogue.md` as part of this FR. The ADR documents: business rationale (closed catalogue prevents ABAC slide), scope-creep risk assessment (each new role costs 1 ADR + DPO + CSEC review), deprecation policy (90-day shadow-monitoring window), audit-trail implications (every assignment + revocation chained into BRAIN), and the explicit DPO + CSEC sign-off block.
+25. **MUST** ship the ADR file `services/auth/adr/ADR-101-rbac-22-role-catalogue.md` as part of this FR. The ADR documents: business rationale (closed catalogue prevents ABAC slide), scope-creep risk assessment (each new role costs 1 ADR + DPO + CSEC review), deprecation policy (90-day shadow-monitoring window), audit-trail implications (every assignment + revocation chained into memory), and the explicit DPO + CSEC sign-off block.
 
 ---
 
@@ -215,7 +215,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
 
 **Why `auth.has_role()` as a SQL function for RLS (§1 #10)?** RLS policies need to evaluate at the database layer, not the application layer — application-layer checks can be bypassed by a SQL-injection or a misrouted query. The SQL function reads the per-session GUC (set by the JWT middleware at connection acquisition); RLS policies invoke it inline. This makes "tenant-admin or above can read audit rows" express as `USING (tenant_id = current_setting('auth.tenant_id')::uuid AND auth.has_role('tenant-admin'))` — the role check is in the policy, not behind it.
 
-**Why hard-delete role assignments instead of soft-delete (§1 #6)?** The `auth.role_revoked` BRAIN audit row IS the record. Soft-delete would create two records of truth (the row's `revoked_at` field plus the audit row) and invite "is this revoked?" ambiguity in queries. The audit row is unerasable (per AGENTS.md §6.5); soft-delete adds nothing the audit chain doesn't already provide.
+**Why hard-delete role assignments instead of soft-delete (§1 #6)?** The `auth.role_revoked` memory audit row IS the record. Soft-delete would create two records of truth (the row's `revoked_at` field plus the audit row) and invite "is this revoked?" ambiguity in queries. The audit row is unerasable (per AGENTS.md §6.5); soft-delete adds nothing the audit chain doesn't already provide.
 
 **Why a 30-day grace window for stub-era tokens (§1 #18, DEC-125)?** Typical access-token lifetime in the FR-AUTH-004 design is 1 hour; refresh tokens 7 days. A 30-day grace covers every refresh-token cycle plus a safety margin — no production user is surprised by a forced re-auth. The grace-window enforcer (FR-AUTH-109) flips on `30d after this FR ships`; until then, missing-`rbac_v` tokens are accepted. After flip, missing-claim tokens are rejected — and the rejection metric `auth_rbac_check_total{outcome=stub_token_rejected}` tells operations how many tokens are still missing the claim.
 
@@ -363,7 +363,7 @@ pub enum Resource {
     ResAllocation,
     DocDocument, DocSignature,
     EmailThread, ChatChannel, ChatMessage,
-    CuoChain, BrainMemory, ObsAlert,
+    CuoChain, MemoryMemory, ObsAlert,
 }
 
 impl Resource {
@@ -548,7 +548,7 @@ INSERT INTO roles (name, display, reserved, requires_webauthn, scope_summary, la
   ('cso',                'CSO (Strategy)',     FALSE, FALSE, 'OKR cascade + scenarios + competitive intel read',      4),
   ('cseco',              'CSO (Security)',     FALSE, FALSE, 'Security review + key rotation + vuln triage',          4),
   ('clo',                'CLO',                FALSE, FALSE, 'Contract redline + DSAR triage + regulatory signoff',   4),
-  ('cdo',                'CDO',                FALSE, FALSE, 'Data quality + lineage + residency + BRAIN owner',      4),
+  ('cdo',                'CDO',                FALSE, FALSE, 'Data quality + lineage + residency + memory owner',      4),
   ('dpo',                'DPO',                FALSE, FALSE, 'DSAR fulfilment + breach notification + purge approval',4),
   ('caio',               'CAIO',               FALSE, FALSE, 'AI Gateway budget + synthesis sub-skill review',        5),
   ('client-portal-user', 'Client Portal User', TRUE,  FALSE, 'External tenant user (PORTAL filter only)',             5),
@@ -640,7 +640,7 @@ INSERT INTO role_catalogue_version (id, version, adr_id) VALUES (1, 2, 'ADR-101'
 CREATE OR REPLACE FUNCTION bump_catalogue_version() RETURNS TRIGGER AS $$
 BEGIN
     UPDATE role_catalogue_version SET version = version + 1, updated_at = now() WHERE id = 1;
-    -- BRAIN audit row emission via brain_writer bridge (FR-AI-003) is handled at the migration commit hook.
+    -- memory audit row emission via memory_writer bridge (FR-AI-003) is handled at the migration commit hook.
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
@@ -824,7 +824,7 @@ Reserved-role assignment (root-admin, auditor, regulator, billing-system, client
 20. **RLS consults role** — query as a `tenant-member` subject against `audit_row` returns 0 rows; same query as `tenant-admin` returns all tenant-scoped rows. (`auth.has_role` SQL function in policy.)
 21. **Stub compatibility** — every (stub_role, resource, action) tuple from the pre-FR-AUTH-101 matrix is present in the new matrix; no removed tuples (additive only).
 22. **ADR gate** — migration adding a 23rd role without ADR-NNN comment → `cargo test rbac_adr_gate_test` fails.
-23. **Catalogue-changed audit** — INSERT into `roles` (via test migration with ADR) bumps `role_catalogue_version.version`; emits exactly one `auth.role_catalogue_changed` BRAIN audit row with old/new version + adr_id.
+23. **Catalogue-changed audit** — INSERT into `roles` (via test migration with ADR) bumps `role_catalogue_version.version`; emits exactly one `auth.role_catalogue_changed` memory audit row with old/new version + adr_id.
 24. **Scope-grant narrowing** — `cfo` role + scope-grant `(inv_invoice, invoice-A, Read, expires=future)` → caller may read invoice-A; revoke grant → 403 on next request after 60s cache TTL.
 25. **Perf budget** — `rbac_perf_test`: 1k checks against 22-role × 40-resource × 5-action matrix complete in < 50 µs p99 (in-process, no network).
 26. **OTel span emission** — every check emits `auth.rbac_check` span with `outcome` attribute; deny + error outcomes always sampled.
@@ -910,7 +910,7 @@ async fn assign_role_emits_audit_row() {
     let target_id = ctx.create_subject().await;
     let resp = ctx.post(&format!("/v1/admin/subjects/{}/roles", target_id), json!({"role":"cfo"})).await;
     assert_eq!(resp.status(), 201);
-    let rows = ctx.brain_audit_rows("auth.role_assigned").await;
+    let rows = ctx.memory_audit_rows("auth.role_assigned").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["subject_id"], target_id.to_string());
     assert_eq!(rows[0]["role"], "chief-financial-officer");
@@ -992,7 +992,7 @@ async fn stub_role_permissions_strictly_additive() {
 - **FR-AUTH-005** — admin REST router; this FR adds `/v1/admin/subjects/{id}/roles` and `/v1/admin/roles` to it.
 - **FR-AUTH-004** — JWT issuance; this FR extends the claim shape.
 - **FR-AUTH-003** — RLS enforcement; this FR adds role-aware policies on sensitive tables.
-- **FR-AI-003** — brain-audit bridge; receives `auth.role_assigned / .role_revoked / .role_catalogue_changed` rows.
+- **FR-AI-003** — memory-audit bridge; receives `auth.role_assigned / .role_revoked / .role_catalogue_changed` rows.
 
 **Downstream (this FR blocks):**
 - **FR-AUTH-108** — Lumi tenant-identity JWT shape (needs agent-persona role in production catalogue).
@@ -1026,7 +1026,7 @@ async fn stub_role_permissions_strictly_additive() {
 }
 ```
 
-### 8.3 — auth.role_assigned BRAIN audit row
+### 8.3 — auth.role_assigned memory audit row
 
 ```json
 {
@@ -1070,7 +1070,7 @@ async fn stub_role_permissions_strictly_additive() {
 }
 ```
 
-### 8.6 — auth.role_catalogue_changed BRAIN audit row
+### 8.6 — auth.role_catalogue_changed memory audit row
 
 ```json
 {
@@ -1116,7 +1116,7 @@ All other questions resolved.
 | POST founder for subject without passkey | Handler `webauthn::has_factor` check | 409 `webauthn_required` | Enrol passkey first (FR-AUTH-105) |
 | POST role duplicate (race-condition double-click) | Postgres PK violation (23505) | 409 `already_granted` (idempotent on subject_id+role PK) | No action; request is no-op |
 | DELETE absent role | Handler returns 204 anyway | 204 NO CONTENT (REST idempotency) | No action |
-| Audit row emission fails inside grant tx | Postgres transaction rolls back | 500 `audit_failed`; subject_roles INSERT also reverts | Operator inspects brain_writer health |
+| Audit row emission fails inside grant tx | Postgres transaction rolls back | 500 `audit_failed`; subject_roles INSERT also reverts | Operator inspects memory_writer health |
 | Matrix `auth.has_role` SQL function evaluates wrong (RLS bypass risk) | Negative test `rls_audit_row_member_zero_rows` | Test fails | Fix function or policy |
 | Two services see different matrix versions briefly | Expected — 60s eventual consistency | `rbac_v` claim catches stale token verification | Refresher catches up; OTel `auth_rbac_catalogue_version` gauge shows version per service |
 | Migration adds 23rd role with no ADR file | `rbac_adr_gate_test` CI gate | Build fails | Either write ADR or revert migration |
@@ -1130,7 +1130,7 @@ All other questions resolved.
 | In-memory matrix grows unbounded (large tenant) | Matrix size = roles × resources × actions = 4400 rows max | Bounded by closed enums | None — bound by design |
 | Subject's role-cache out of sync briefly after grant | Expected 60s window; OTel `auth_rbac_subject_role_count` gauge | Caller waits one refresh cycle | Acceptable per DEC-126 |
 | Concurrent grant + revoke on same (subject_id, role) | Postgres serialisation | Either grant-then-revoke (clean) OR revoke-on-nothing (204) | None — serialisable transactions handle it |
-| Audit row chain head drift across services | Per-row `prev_chain` validates at brain_writer | Bridge rejects out-of-order rows | Operator runs `cyberos doctor --repair` |
+| Audit row chain head drift across services | Per-row `prev_chain` validates at memory_writer | Bridge rejects out-of-order rows | Operator runs `cyberos doctor --repair` |
 | Test fixtures call `Role::Other(s)` | Compile error (variant doesn't exist) | Build fails | Fix test to use valid Role |
 | RBAC service started without role-catalogue table | Migration not applied | Service refuses to start (config validation) | Apply migrations |
 
@@ -1145,7 +1145,7 @@ All other questions resolved.
 - **`auth.has_role()` SQL function reads session GUC**: the JWT middleware sets `auth.roles` GUC on connection acquisition via `SET LOCAL auth.roles = $1`. RLS policies invoke `auth.has_role('tenant-admin')`. The GUC is per-transaction; never leaks across connections.
 - **`rbac_v` design rationale**: comparing token-issued version vs live version is a soft-reject (2-version tolerance) rather than a hard match. Strict-match would force re-auth every time any role's matrix tweaked; tolerance preserves UX while catching meaningful drift.
 - **Founder-WebAuthn check is intrinsic to the role**: not "configured as required" — preventing operator from accidentally turning the gate off via env var. The cost is one extra match arm in `requires_webauthn()`; the safety is "this is the kind of mistake that won't happen."
-- **Reserved-role routing**: standard endpoint refuses; dedicated endpoints (out of scope) handle reserved-role assignment with their own elevated-privilege gates. Until those FRs ship, reserved roles can only be assigned via direct SQL (operator action); the BRAIN audit row carries `granted_by` to attribute the action.
+- **Reserved-role routing**: standard endpoint refuses; dedicated endpoints (out of scope) handle reserved-role assignment with their own elevated-privilege gates. Until those FRs ship, reserved roles can only be assigned via direct SQL (operator action); the memory audit row carries `granted_by` to attribute the action.
 - **30-day grace window**: longer than 7-day refresh-token max (FR-AUTH-004) plus 23-day safety margin. After grace, missing-claim tokens are rejected and the rejection metric tells ops whether to push a re-auth notice.
 - **Matrix-version mismatch tolerance** (2 versions): tolerates one missed refresh cycle (60s × 2 minutes) on a single auth-server instance during catalogue change; rejects tokens issued 3+ versions ago (typically > 1 day stale).
 - **ADR validator scope**: only checks migrations that *modify* `roles` or `role_permissions` tables; pure DDL on unrelated tables doesn't require ADR. Detection regex: `(INSERT|UPDATE|DELETE).*(roles|role_permissions)`. Bypasses include schema-only changes (column comments, etc.) — see `services/auth/src/rbac/adr.rs` heuristic.

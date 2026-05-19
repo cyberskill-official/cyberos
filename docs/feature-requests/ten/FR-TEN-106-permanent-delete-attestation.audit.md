@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands permanent-delete attestation with CSO+CLO dual-signature + 30-day cool-off + bundle precondition + 5-target cascade hard-purge. 720 lines, 20 §1 clauses, 20 ACs, 6 tests, 14 failure modes, 10 notes. 2 migrations, 7 endpoints, 7 BRAIN audit kinds (all sev-1).
+The spec lands permanent-delete attestation with CSO+CLO dual-signature + 30-day cool-off + bundle precondition + 5-target cascade hard-purge. 720 lines, 20 §1 clauses, 20 ACs, 6 tests, 14 failure modes, 10 notes. 2 migrations, 7 endpoints, 7 memory audit kinds (all sev-1).
 
 6 issues resolved.
 

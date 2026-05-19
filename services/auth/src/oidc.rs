@@ -16,7 +16,7 @@
 use axum::{
     extract::{Json as JsonInput, Query, State},
     http::StatusCode,
-    response::{Json, Redirect},
+    response::Json,
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use rand::RngCore;

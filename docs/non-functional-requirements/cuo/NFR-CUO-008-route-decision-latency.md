@@ -18,7 +18,7 @@ related_frs: [FR-CUO-101]
 2. The router **MUST** return a structured decision: `{persona, workflow, confidence, fallback_used}`. Even on low confidence, a decision is returned with `fallback_used: domain-language`.
 3. When LLM-backed routing is enabled (Phase-3 `LLMInvoker`), the p95 budget loosens to 5s.
 4. Router **MUST NOT** call the executor — it answers "what would run?" without running anything.
-5. Routing decisions **MUST** be logged (not necessarily emitted to BRAIN) for offline analysis of router-quality drift.
+5. Routing decisions **MUST** be logged (not necessarily emitted to memory) for offline analysis of router-quality drift.
 
 ## §2 — Why this constraint
 

@@ -11,9 +11,9 @@ slice: 5
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-006, FR-CUO-101, FR-AI-003, FR-BRAIN-108, FR-BRAIN-111]
-depends_on: [FR-KB-001, FR-KB-006, FR-CUO-101, FR-BRAIN-108]
+memory_chain_hash: null
+related_frs: [FR-KB-006, FR-CUO-101, FR-AI-003, FR-MEMORY-108, FR-MEMORY-111]
+depends_on: [FR-KB-001, FR-KB-006, FR-CUO-101, FR-MEMORY-108]
 blocks: []
 
 source_pages:
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1942 2026-05-17 — Every claim cited with span-level reference (doc_id + chunk_id + char_range); UI highlights source on hover
   - DEC-1943 2026-05-17 — Confidence threshold 0.7 → answer; below → decline; user sees "Not enough evidence in this page + linked docs"
   - DEC-1944 2026-05-17 — Rate limit: 50 questions/user/day per FR-CUO-101 standard
-  - DEC-1945 2026-05-17 — BRAIN audit kinds: kb.qa_asked, kb.qa_answered, kb.qa_declined, kb.qa_failed
+  - DEC-1945 2026-05-17 — memory audit kinds: kb.qa_asked, kb.qa_answered, kb.qa_declined, kb.qa_failed
 
 build_envelope:
   language: rust 1.81
@@ -76,13 +76,13 @@ risk_if_skipped: "Without Q&A, users scroll long docs hoping for answer (UX fric
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship Q&A at `services/kb/src/qa/` grounded in current page + 1-hop links, span-cited, decline-on-low-confidence, 4 BRAIN audit kinds.
+The KB service **MUST** ship Q&A at `services/kb/src/qa/` grounded in current page + 1-hop links, span-cited, decline-on-low-confidence, 4 memory audit kinds.
 
 1. **MUST** validate `qa_answer_kind` against closed enum per DEC-1941.
 
 2. **MUST** assemble context at `context_assembler.rs::assemble(doc_id, question)` per DEC-1940:
    - Current doc chunks (all)
-   - 1-hop linked docs (via FR-BRAIN-108 inbound/outbound links) → their top-3 most relevant chunks via FR-KB-006 rerank
+   - 1-hop linked docs (via FR-MEMORY-108 inbound/outbound links) → their top-3 most relevant chunks via FR-KB-006 rerank
    - Capped at 50k tokens total
 
 3. **MUST** generate answer at `answer_generator.rs::generate(context, question)` per DEC-1940 with FR-AI-003 prompt:
@@ -130,7 +130,7 @@ The KB service **MUST** ship Q&A at `services/kb/src/qa/` grounded in current pa
    POST /v1/kb/docs/{id}/ask    body: {question}
    ```
 
-9. **MUST** emit 4 BRAIN audit kinds per DEC-1945. PII per FR-BRAIN-111: question + answer text SHA-256 hashed; citation ids ok.
+9. **MUST** emit 4 memory audit kinds per DEC-1945. PII per FR-MEMORY-111: question + answer text SHA-256 hashed; citation ids ok.
 
 10. **MUST** thread trace_id from ask → assemble → generate → cite → audit.
 
@@ -198,7 +198,7 @@ Sample response (decline):
 ---
 
 ## §4 — Acceptance criteria
-1. **answer_kind enum cardinality 4**. 2. **Context = current doc + 1-hop linked**. 3. **No open-world search**. 4. **Every claim cited with chunk + char range**. 5. **Confidence ≥0.7 → confident or partial**. 6. **<0.7 → decline_low_confidence**. 7. **0 citations → decline_no_evidence**. 8. **Rate limit 50/user/day**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (question + answer SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Context capped 50k tokens**. 14. **Append-only via REVOKE**. 15. **UI span highlight from citations**. 16. **Decline messages user-friendly**. 17. **History queryable per user**. 18. **Failure → decline_low_confidence + sev-2**. 19. **Linked docs respect FR-KB-003 visibility**. 20. **Question length capped 1000 chars**.
+1. **answer_kind enum cardinality 4**. 2. **Context = current doc + 1-hop linked**. 3. **No open-world search**. 4. **Every claim cited with chunk + char range**. 5. **Confidence ≥0.7 → confident or partial**. 6. **<0.7 → decline_low_confidence**. 7. **0 citations → decline_no_evidence**. 8. **Rate limit 50/user/day**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (question + answer SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Context capped 50k tokens**. 14. **Append-only via REVOKE**. 15. **UI span highlight from citations**. 16. **Decline messages user-friendly**. 17. **History queryable per user**. 18. **Failure → decline_low_confidence + sev-2**. 19. **Linked docs respect FR-KB-003 visibility**. 20. **Question length capped 1000 chars**.
 
 ---
 
@@ -239,7 +239,7 @@ async fn rate_limit_50_per_day() {
 
 ## §7 — Dependencies
 **Upstream:** FR-KB-006, FR-CUO-101.
-**Cross-module:** FR-AI-003 (LLM), FR-BRAIN-108 (link graph for 1-hop), FR-KB-003 (linked doc visibility), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AI-003 (LLM), FR-MEMORY-108 (link graph for 1-hop), FR-KB-003 (linked doc visibility), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -257,9 +257,9 @@ async fn rate_limit_50_per_day() {
 
 ## §11 — Implementation notes
 - §11.1 AI prompt: "Answer ONLY from provided context. Cite every claim with chunk_id + char range. If insufficient evidence, return decline."
-- §11.2 1-hop link query: `FR-BRAIN-108 link_graph WHERE source=$doc_id OR target=$doc_id`.
+- §11.2 1-hop link query: `FR-MEMORY-108 link_graph WHERE source=$doc_id OR target=$doc_id`.
 - §11.3 Rate limit via Redis sliding window: 50 ops per 24h per (tenant, user).
-- §11.4 BRAIN audit body: doc_id, asked_by, answer_kind, confidence; question+answer SHA256.
+- §11.4 memory audit body: doc_id, asked_by, answer_kind, confidence; question+answer SHA256.
 - §11.5 UI span highlight: citation char_start/end maps to rendered HTML offset.
 
 ---

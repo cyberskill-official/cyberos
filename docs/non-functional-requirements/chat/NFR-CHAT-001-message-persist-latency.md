@@ -28,7 +28,7 @@ related_frs: [FR-CHAT-001, FR-CHAT-003]
 
 - Histogram `chat_message_persist_seconds{channel_type, has_attachments}` per POST.
 - p95 alarm at > 100ms; p99 alarm at > 250ms.
-- The OBS dashboard `chat-message-flow` plots persist + fanout + brain-bridge stacked.
+- The OBS dashboard `chat-message-flow` plots persist + fanout + memory-bridge stacked.
 
 ## §4 — Verification
 

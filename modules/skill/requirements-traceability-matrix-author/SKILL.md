@@ -1,14 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: requirements-traceability-matrix-author
-description: |
-  Author a Requirements Traceability Matrix (rtm@1) per Software
-  Development Process.md Template §4.4. Auto-generates the RTM from
-  REQ-IDs in the linked SRS/PRD/FRs, mapped through design IDs (ADRs +
-  SDD components) → code/PR refs (commits + merged PRs) → test cases
-  → release. Cross-cutting; regenerated continuously. Audits surface
-  orphan requirements and untested requirements. Chains naturally
-  into requirements-traceability-matrix-audit.
+description: >-
+  Author a Requirements Traceability Matrix (rtm@1) per Software Development Process.md Template §4.4. Auto-generates the RTM from REQ-IDs in the linked SRS/PRD/FRs, mapped through design IDs (ADRs + SDD components) → code/PR refs (commits + merged PRs) → test cases → release. Cross-cutting; regenerated continuously. Audits surface orphan requirements and untested requirements. Chains naturally into requirements-traceability-matrix-audit. Use when user asks to "draft a requirements traceability matrix" or "create the requirements traceability matrix". Do NOT use for "audit existing requirements traceability matrix" (use requirements-traceability-matrix-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -18,7 +12,7 @@ metadata:
   cyberos-rubric-target: rtm_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -32,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -293,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

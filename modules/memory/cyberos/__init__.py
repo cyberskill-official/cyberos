@@ -1,5 +1,5 @@
 """
-cyberos — the Layer-1 implementation of the CyberOS BRAIN protocol.
+cyberos — the Layer-1 implementation of the CyberOS memory protocol.
 
 Public surface is intentionally tiny:
 

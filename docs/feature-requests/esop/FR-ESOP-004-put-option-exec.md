@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-ESOP-003, FR-ESOP-002, FR-INV-005, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-ESOP-003, FR-ESOP-002, FR-INV-005, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-ESOP-003, FR-INV-005]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2281 2026-05-17 — Closed enum `put_status` = {requested, cfo_pending, cfo_approved, cfo_rejected, wire_initiated, paid, failed}; cardinality 7
   - DEC-2282 2026-05-17 — Exec price = vested_shares_exercised × FR-ESOP-003 committed_share_price (current year)
   - DEC-2283 2026-05-17 — Cap enforced: sum(exercised in calendar year) ≤ cap_pct * vested_at_year_start
-  - DEC-2284 2026-05-17 — BRAIN audit kinds: esop.put_requested, esop.put_cfo_approved, esop.put_cfo_rejected, esop.put_wire_initiated, esop.put_paid, esop.put_failed
+  - DEC-2284 2026-05-17 — memory audit kinds: esop.put_requested, esop.put_cfo_approved, esop.put_cfo_rejected, esop.put_wire_initiated, esop.put_paid, esop.put_failed
 
 build_envelope:
   language: rust 1.81
@@ -75,7 +75,7 @@ risk_if_skipped: "Without put-option, vested members illiquid → retention dama
 
 ## §1 — Description (BCP-14 normative)
 
-The ESOP service **MUST** ship put-option exec at `services/esop/src/put/` with Year 3 eligibility + annual cap + CFO approve + FR-INV-005 wire, 6 BRAIN audit kinds.
+The ESOP service **MUST** ship put-option exec at `services/esop/src/put/` with Year 3 eligibility + annual cap + CFO approve + FR-INV-005 wire, 6 memory audit kinds.
 
 1. **MUST** validate `put_status` against closed enum per DEC-2281.
 
@@ -135,7 +135,7 @@ The ESOP service **MUST** ship put-option exec at `services/esop/src/put/` with 
    GET  /v1/esop/members/{id}/puts          (history; member-self or CFO)
    ```
 
-9. **MUST** emit 6 BRAIN audit kinds per DEC-2284. PII per FR-BRAIN-111: amount + shares SHA256.
+9. **MUST** emit 6 memory audit kinds per DEC-2284. PII per FR-MEMORY-111: amount + shares SHA256.
 
 10. **MUST** thread trace_id from request → approve → wire → audit.
 
@@ -179,7 +179,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **put_status enum cardinality 7**. 2. **Year 3+ eligibility enforced**. 3. **Cap 25% annual default**. 4. **Cap configurable per tenant**. 5. **Price from FR-ESOP-003 committed**. 6. **CFO approve required**. 7. **FR-INV-005 wire integration**. 8. **6 BRAIN audit kinds emitted**. 9. **PII scrubbed (shares + amount SHA256)**. 10. **RLS denies cross-tenant**. 11. **Member-self request only**. 12. **CFO-only approve/reject**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except status cols**. 15. **bigint VND + shares**. 16. **shares_requested > 0**. 17. **Rejection reason logged**. 18. **Cap considers prior YTD exercises**. 19. **vested_at_year_start from FR-ESOP-002 Jan 1 accrual**. 20. **Wire failure → status=failed + sev-1**.
+1. **put_status enum cardinality 7**. 2. **Year 3+ eligibility enforced**. 3. **Cap 25% annual default**. 4. **Cap configurable per tenant**. 5. **Price from FR-ESOP-003 committed**. 6. **CFO approve required**. 7. **FR-INV-005 wire integration**. 8. **6 memory audit kinds emitted**. 9. **PII scrubbed (shares + amount SHA256)**. 10. **RLS denies cross-tenant**. 11. **Member-self request only**. 12. **CFO-only approve/reject**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except status cols**. 15. **bigint VND + shares**. 16. **shares_requested > 0**. 17. **Rejection reason logged**. 18. **Cap considers prior YTD exercises**. 19. **vested_at_year_start from FR-ESOP-002 Jan 1 accrual**. 20. **Wire failure → status=failed + sev-1**.
 
 ---
 
@@ -217,7 +217,7 @@ async fn wire_initiated_via_inv_005() {
 
 ## §7 — Dependencies
 **Upstream:** FR-ESOP-003, FR-INV-005.
-**Cross-module:** FR-ESOP-002 (vested at Jan 1), FR-AUTH-101 (CFO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-ESOP-002 (vested at Jan 1), FR-AUTH-101 (CFO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -236,7 +236,7 @@ async fn wire_initiated_via_inv_005() {
 ## §11 — Implementation notes
 - §11.1 Cap_pct stored per tenant config; default 0.25.
 - §11.2 vested_at_year_start = FR-ESOP-002 accrual for Jan 1 of current year.
-- §11.3 BRAIN audit body: put_id, member_id, grant_id, status; shares + amount SHA256.
+- §11.3 memory audit body: put_id, member_id, grant_id, status; shares + amount SHA256.
 - §11.4 Wire via FR-INV-005 with memo: `ESOP-PUT-{put_id_8}` for reconciliation.
 - §11.5 Future: extend to fractional liquidity rounds (multiple-CFO approval).
 

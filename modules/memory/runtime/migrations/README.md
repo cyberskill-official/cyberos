@@ -1,6 +1,6 @@
-# `runtime/migrations/` — BRAIN schema migration scripts
+# `runtime/migrations/` — memory schema migration scripts
 
-Numbered migrations that mutate the BRAIN's schema or contents when the AGENTS protocol bumps a MAJOR version. Each migration is idempotent — re-running on an already-migrated BRAIN is a no-op.
+Numbered migrations that mutate the memory's schema or contents when the AGENTS protocol bumps a MAJOR version. Each migration is idempotent — re-running on an already-migrated memory is a no-op.
 
 ## File naming
 
@@ -15,10 +15,10 @@ NNN-<kebab-case-description>.py
 A migration file MUST define:
 
 ```python
-SCHEMA_VERSION_BEFORE = "<version>"   # required: BRAIN schema before this migration runs
-SCHEMA_VERSION_AFTER  = "<version>"   # required: BRAIN schema after success
+SCHEMA_VERSION_BEFORE = "<version>"   # required: memory schema before this migration runs
+SCHEMA_VERSION_AFTER  = "<version>"   # required: memory schema after success
 
-def migrate(brain_root: Path, dry_run: bool = False) -> dict:
+def migrate(memory_root: Path, dry_run: bool = False) -> dict:
     """Apply this migration. Returns {'status': 'ok'|'skipped'|'error', 'changes': int}."""
     ...
 ```

@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-009, FR-EMAIL-009, FR-CUO-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-INV-009, FR-EMAIL-009, FR-CUO-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-INV-009, FR-EMAIL-009, FR-CUO-101]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1552 2026-05-17 — Draft generation via FR-AI-003 with CFO-defined template per tenant (default templates ship); tenant-customizable
   - DEC-1553 2026-05-17 — Drafts NEVER auto-send — always CFO approval required (legal-warning + emotional risk)
   - DEC-1554 2026-05-17 — Daily scan triggered at 09:00 tenant_timezone; generates drafts for new transitions only (idempotent: skip if draft exists for same invoice+bucket)
-  - DEC-1555 2026-05-17 — BRAIN audit kinds: inv.dunning_draft_generated, inv.dunning_draft_approved, inv.dunning_draft_dismissed, inv.dunning_email_sent
+  - DEC-1555 2026-05-17 — memory audit kinds: inv.dunning_draft_generated, inv.dunning_draft_approved, inv.dunning_draft_dismissed, inv.dunning_email_sent
 
 build_envelope:
   language: rust 1.81
@@ -80,7 +80,7 @@ risk_if_skipped: "Without auto dunning drafts, CFO writes each manually — coll
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship dunning draft generation at `services/invoicing/src/dunning/` triggered daily, tone-scaled to aging bucket, drafts queued for CFO approval (never auto-send), send via FR-EMAIL-009, 4 BRAIN audit kinds.
+The INV service **MUST** ship dunning draft generation at `services/invoicing/src/dunning/` triggered daily, tone-scaled to aging bucket, drafts queued for CFO approval (never auto-send), send via FR-EMAIL-009, 4 memory audit kinds.
 
 1. **MUST** schedule daily scanner at 09:00 tenant_timezone per DEC-1554 via FR-MCP-007 task or cron. `scanner.rs::scan(tenant)` calls FR-INV-009 `aging.generate({as_of_date: today, group_by: 'engagement'})`.
 
@@ -129,7 +129,7 @@ The INV service **MUST** ship dunning draft generation at `services/invoicing/sr
    GRANT UPDATE (status, reviewed_by, reviewed_at, email_message_id) ON dunning_drafts TO cyberos_app;
    ```
 
-9. **MUST** emit 4 BRAIN audit kinds per DEC-1555. PII: draft_body customer-name/amounts scrubbed via FR-BRAIN-111 SHA256 hash.
+9. **MUST** emit 4 memory audit kinds per DEC-1555. PII: draft_body customer-name/amounts scrubbed via FR-MEMORY-111 SHA256 hash.
 
 10. **MUST** thread trace_id from cron/scanner → generator → CFO review → email send.
 
@@ -178,7 +178,7 @@ Sample draft response:
 ---
 
 ## §4 — Acceptance criteria
-1. **Daily scan at 09:00 tenant_timezone**. 2. **Bucket→tone mapping correct**. 3. **Closed enum 4 values + cardinality test**. 4. **Idempotent (UNIQUE on tenant+invoice+tone)**. 5. **FR-AI-003 generates draft**. 6. **Drafts queued for CFO review (never auto-send)**. 7. **Approve → FR-EMAIL-009 send**. 8. **Dismiss → status=dismissed (not deleted)**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (customer/amount → SHA256)**. 11. **RLS denies cross-tenant**. 12. **Legal_warning has red-banner UX flag**. 13. **Trace_id preserved**. 14. **Template customization per tenant**. 15. **Manual scan trigger CFO-only**. 16. **Sent draft status=sent + email_message_id linked**. 17. **Failed send → status=failed_send + retry**. 18. **Append-only (REVOKE UPDATE except status/review)**. 19. **Aging bucket re-classified on re-scan (e.g. 60→90)**. 20. **Multiple invoices same customer → one draft each (per invoice, not aggregate)**.
+1. **Daily scan at 09:00 tenant_timezone**. 2. **Bucket→tone mapping correct**. 3. **Closed enum 4 values + cardinality test**. 4. **Idempotent (UNIQUE on tenant+invoice+tone)**. 5. **FR-AI-003 generates draft**. 6. **Drafts queued for CFO review (never auto-send)**. 7. **Approve → FR-EMAIL-009 send**. 8. **Dismiss → status=dismissed (not deleted)**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (customer/amount → SHA256)**. 11. **RLS denies cross-tenant**. 12. **Legal_warning has red-banner UX flag**. 13. **Trace_id preserved**. 14. **Template customization per tenant**. 15. **Manual scan trigger CFO-only**. 16. **Sent draft status=sent + email_message_id linked**. 17. **Failed send → status=failed_send + retry**. 18. **Append-only (REVOKE UPDATE except status/review)**. 19. **Aging bucket re-classified on re-scan (e.g. 60→90)**. 20. **Multiple invoices same customer → one draft each (per invoice, not aggregate)**.
 
 ---
 
@@ -271,7 +271,7 @@ None blocking — CFO can iterate templates after launch.
 ## §11 — Implementation notes
 - §11.1 Templates use `{customer_name} {invoice_ref} {outstanding_balance} {days_overdue}` placeholders.
 - §11.2 FR-AI-003 prompt: "Write a {tone} payment reminder using this template..." — model fills placeholders + softens/firms tone.
-- §11.3 BRAIN audit body: customer_id (uuid OK), tone, bucket; draft_body SHA256 hashed.
+- §11.3 memory audit body: customer_id (uuid OK), tone, bucket; draft_body SHA256 hashed.
 - §11.4 Cron via FR-MCP-007 with `kind: 'inv.dunning_daily_scan'`, tenant_id arg.
 - §11.5 Legal warning template includes "this is not legal advice" disclaimer + link to legal team contact.
 

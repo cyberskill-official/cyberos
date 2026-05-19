@@ -12,7 +12,7 @@ authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; 
 
 ## §1 — Verdict summary
 
-FR-PROJ-004 authored direct-to-10/10. ~830 lines. 13 §1 clauses (6-state enum, 12 transitions + no-op, server validation order, history table, BRAIN audit, CLI, REST contract, TS↔Rust codegen, time-in-state metric, OTel + metrics, dedicated reopen kind, state_groups deferred). 8 §2 rationale paragraphs. Full IssueStatus enum + FSM table + transition handler + SQL migration + TS mirror + StatusPicker UI in §3. 20 ACs. 7 Rust tests including exhaustive 5×5 legal/illegal grid. 17 failure modes. 9 implementation notes.
+FR-PROJ-004 authored direct-to-10/10. ~830 lines. 13 §1 clauses (6-state enum, 12 transitions + no-op, server validation order, history table, memory audit, CLI, REST contract, TS↔Rust codegen, time-in-state metric, OTel + metrics, dedicated reopen kind, state_groups deferred). 8 §2 rationale paragraphs. Full IssueStatus enum + FSM table + transition handler + SQL migration + TS mirror + StatusPicker UI in §3. 20 ACs. 7 Rust tests including exhaustive 5×5 legal/illegal grid. 17 failure modes. 9 implementation notes.
 
 ## §2 — Findings (all resolved during authoring)
 

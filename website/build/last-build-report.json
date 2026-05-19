@@ -5,7 +5,7 @@
   "modules": [
     "AI",
     "AUTH",
-    "BRAIN",
+    "memory",
     "CHAT",
     "DOCS",
     "OBS",

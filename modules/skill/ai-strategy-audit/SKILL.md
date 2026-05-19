@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: ai-strategy-audit
-description: Audits an ai-strategy@1 artefact against ai_strategy_rubric@1.0. Validates FM + SEC structure, EU AI Act risk-classification per use case, NIST AI RMF coverage, MLOps maturity self-assessment honesty, ethics-posture-vs-use-cases internal consistency. Per NIST AI RMF + EU AI Act + ISO/IEC 42001 conventions.
-  Audit one or more existing ai-strategy@1 markdowns against
-  ai-strategy_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  ai-strategy-author.
+description: >-
+  Audits an ai-strategy@1 artefact against ai_strategy_rubric@1.0. Validates FM + SEC structure, EU AI Act risk-classification per use case, NIST AI RMF coverage, MLOps maturity self-assessment honesty, ethics-posture-vs-use-cases internal consistency. Per NIST AI RMF + EU AI Act + ISO/IEC 42001 conventions. Audit one or more existing ai-strategy@1 markdowns against ai-strategy_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after ai-strategy-author. Use when user asks to "audit this ai strategy" or "check the ai strategy". Do NOT use for "draft a new ai strategy" (use ai-strategy-author instead). Audit one or more existing ai-strategy@1 markdowns against ai-strategy_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after ai-strategy-au...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: ai-strategy_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

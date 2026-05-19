@@ -22,7 +22,7 @@ related_frs: [FR-OBS-005, FR-OBS-001]
 
 ## §2 — Why this constraint
 
-A trace that breaks mid-flight is worse than no trace — it lies about where work happened. Without enforced propagation, services drop the header silently and incidents become unrunbookable ("the call vanished between auth and brain"). The 2-hop minimum is the test the CI enforces; in practice production traces routinely have 5-8 hops (host shell → graphql → auth → brain → ai-gateway → upstream). The SDK auto-injection is the implementation control; the CI test is the verification control.
+A trace that breaks mid-flight is worse than no trace — it lies about where work happened. Without enforced propagation, services drop the header silently and incidents become unrunbookable ("the call vanished between auth and memory"). The 2-hop minimum is the test the CI enforces; in practice production traces routinely have 5-8 hops (host shell → graphql → auth → memory → ai-gateway → upstream). The SDK auto-injection is the implementation control; the CI test is the verification control.
 
 ## §3 — Measurement
 

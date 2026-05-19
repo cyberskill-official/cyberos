@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-TEN-104 ships the 90-day offboarding contract — closed 4-state FSM + scheduled hourly advance + read-only freeze + dead-letter recovery + CSO+CLO dual-signoff irreversible wipe. Scope: 26 §1 normative clauses covering closed `offboarding_state` enum (active, terminating_a, terminating_b, terminated), FSM transition matrix with 6 valid transitions (5 forbidden), hourly scheduled advance job with SKIP LOCKED concurrency + DOES-NOT-auto-terminate-B-to-Terminated invariant, read-only freeze via FR-AUTH-004 JWT issuer hook + handler-side 423 with `ten.read_only_write_attempted` BRAIN row, dead-letter wipe to S3 Object-Lock COMPLIANCE bucket (30-90 day per-tenant override), CSO+CLO dual-signoff with self-co-sign rejection + confirmation string match for terminate + dead-letter-restore, max 2 extensions per cycle via DB CHECK + CLO-only handler, FR-TEN-202 hostile fast-track support via active → terminating_b direct transition, terminated_at immutability via trigger, force-advance sev-1 audit for operator override, append-only log at SQL grant, 8 BRAIN audit kinds with PII scrubbing, per-tenant total_grace_days [30,180] + dead_letter_retention_days [30,90], 60s cache on read-only gate matching FR-AUTH-109 pattern. 20 rationale paragraphs. §3 contains: 2 migrations (state with FSM trigger + provisioner grants + seed, log append-only), FSM validator with closed transition matrix, scheduler with SKIP LOCKED + dead-letter trigger, read-only gate with 60s TTL cache, initiate handler with grace-proportion split, finalize-termination handler with full dual-signoff + confirmation flow. 28 ACs. 31 failure-mode rows. 21 implementation notes.
+FR-TEN-104 ships the 90-day offboarding contract — closed 4-state FSM + scheduled hourly advance + read-only freeze + dead-letter recovery + CSO+CLO dual-signoff irreversible wipe. Scope: 26 §1 normative clauses covering closed `offboarding_state` enum (active, terminating_a, terminating_b, terminated), FSM transition matrix with 6 valid transitions (5 forbidden), hourly scheduled advance job with SKIP LOCKED concurrency + DOES-NOT-auto-terminate-B-to-Terminated invariant, read-only freeze via FR-AUTH-004 JWT issuer hook + handler-side 423 with `ten.read_only_write_attempted` memory row, dead-letter wipe to S3 Object-Lock COMPLIANCE bucket (30-90 day per-tenant override), CSO+CLO dual-signoff with self-co-sign rejection + confirmation string match for terminate + dead-letter-restore, max 2 extensions per cycle via DB CHECK + CLO-only handler, FR-TEN-202 hostile fast-track support via active → terminating_b direct transition, terminated_at immutability via trigger, force-advance sev-1 audit for operator override, append-only log at SQL grant, 8 memory audit kinds with PII scrubbing, per-tenant total_grace_days [30,180] + dead_letter_retention_days [30,90], 60s cache on read-only gate matching FR-AUTH-109 pattern. 20 rationale paragraphs. §3 contains: 2 migrations (state with FSM trigger + provisioner grants + seed, log append-only), FSM validator with closed transition matrix, scheduler with SKIP LOCKED + dead-letter trigger, read-only gate with 60s TTL cache, initiate handler with grace-proportion split, finalize-termination handler with full dual-signoff + confirmation flow. 28 ACs. 31 failure-mode rows. 21 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -24,7 +24,7 @@ First-pass had scheduled job auto-firing terminated transition. Resolved: §1 #6
 First-pass had no dual-signoff. Resolved: §1 #11 + DEC-506 + CSO+CLO + self-co-sign rejection + confirmation string; AC #10-#13.
 
 ### ISS-003 — Read-only freeze not enforced
-First-pass had no JWT-issuance hook. Resolved: §1 #7 + DEC-509 + read_only_gate cache + 423 + BRAIN row; AC #17 + #18.
+First-pass had no JWT-issuance hook. Resolved: §1 #7 + DEC-509 + read_only_gate cache + 423 + memory row; AC #17 + #18.
 
 ### ISS-004 — Cancellation in terminating_b silently succeeded
 Resolved: §1 #9 + DEC-502 + handler state check + AC #5 + #6.
@@ -48,7 +48,7 @@ First-pass had no dual-signoff on restore. Resolved: §1 #13 + DEC-513 + same CS
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (closed 4-state FSM × scheduled advance never-auto-terminate × CSO+CLO dual-signoff × read-only freeze via JWT issuer hook × dead-letter Object-Lock COMPLIANCE × per-tenant grace + retention overrides × extension cap via DB CHECK × terminated_at immutability × force-advance sev-1 × 8 BRAIN audit kinds × append-only via SQL grant), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (closed 4-state FSM × scheduled advance never-auto-terminate × CSO+CLO dual-signoff × read-only freeze via JWT issuer hook × dead-letter Object-Lock COMPLIANCE × per-tenant grace + retention overrides × extension cap via DB CHECK × terminated_at immutability × force-advance sev-1 × 8 memory audit kinds × append-only via SQL grant), not by line targets.
 
 ---
 

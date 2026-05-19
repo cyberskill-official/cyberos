@@ -108,7 +108,7 @@
 
 | rule_id | Check | Severity |
 | ------- | ----- | -------- |
-| `COMP-GDPR-001` | If `COND-007` fires, the GDPR addendum reference resolves to an actual document path in this engagement folder OR to a versioned BRAIN memory_id | error |
+| `COMP-GDPR-001` | If `COND-007` fires, the GDPR addendum reference resolves to an actual document path in this engagement folder OR to a versioned memory memory_id | error |
 | `COMP-VN-001` | If `COND-008` fires, the Vietnam compliance block names both Decree 13/2023 PDPD and Decree 53/2022 cybersecurity | error |
 | `COMP-AI-001` | The §10 AI-use disclosure paragraph specifies (a) permitted tools, (b) data-perimeter rules, (c) AI-assisted PR labelling commitment per SDP §5 | error |
 

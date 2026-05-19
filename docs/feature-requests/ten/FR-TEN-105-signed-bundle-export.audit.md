@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands signed-bundle export for tenant offboarding (FR-TEN-104) with deterministic ZIP + Ed25519 signature + BRAIN chain anchor. 750 lines, 22 §1 clauses, 20 ACs, 5 tests, 16 failure modes, 10 implementation notes. 2 migrations, 4 endpoints, 6 BRAIN audit kinds. Per-tenant signing keys generated at provisioning (modification to FR-TEN-001).
+The spec lands signed-bundle export for tenant offboarding (FR-TEN-104) with deterministic ZIP + Ed25519 signature + memory chain anchor. 750 lines, 22 §1 clauses, 20 ACs, 5 tests, 16 failure modes, 10 implementation notes. 2 migrations, 4 endpoints, 6 memory audit kinds. Per-tenant signing keys generated at provisioning (modification to FR-TEN-001).
 
 6 issues resolved.
 

@@ -1,13 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: repo-context-map-audit
-description: |
-  Audit a repo-context-map@1 against repo_context_map_rubric@1.0:
-  enforces presence of the three baseline patterns (error_type, logging,
-  test_framework), `pinned_in` references that resolve to real files,
-  schemas present when the FR declares migrations, and the
-  module-placement warning either null or escalated. Emits a `score / 10`
-  verdict; refuses to pass on <10/10.
+description: >-
+  Audit a repo-context-map@1 against repo_context_map_rubric@1.0: enforces presence of the three baseline patterns (error_type, logging, test_framework), `pinned_in` references that resolve to real files, schemas present when the FR declares migrations, and the module-placement warning either null or escalated. Emits a `score / 10` verdict; refuses to pass on <10/10. Use when user asks to "audit this repo context map" or "check the repo context map". Do NOT use for "draft a new repo context map" (use repo-context-map-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +11,7 @@ metadata:
   cyberos-template: repo-context-map-audit@1
   cyberos-rubric-target: repo_context_map_rubric@1.0
 
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
   write:

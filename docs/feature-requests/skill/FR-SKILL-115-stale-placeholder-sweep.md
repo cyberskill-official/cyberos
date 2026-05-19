@@ -1,6 +1,6 @@
 ---
 id: FR-SKILL-115
-title: "Sweep stale `<placeholder>` syntax in 134 production SKILL.md files (metadata.stage + description + allowed_brain_scopes)"
+title: "Sweep stale `<placeholder>` syntax in 134 production SKILL.md files (metadata.stage + description + allowed_memory_scopes)"
 module: SKILL
 priority: SHOULD
 status: draft
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-19
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-SKILL-111, FR-SKILL-112, FR-SKILL-113, FR-SKILL-114]
 depends_on: [FR-SKILL-113]
 blocks: []
@@ -64,7 +64,7 @@ risk_if_skipped: "The 134 production SKILL.md files inherited template-syntax `<
 This FR catalogues, classifies, and substitutes the stale `<placeholder>` syntax that survives in 134 production SKILL.md frontmatter fields across `modules/skill/`. These placeholders were inherited from earlier scaffold runs (pre-2026-05-19 template work) and never substituted with real values. They block Anthropic-host portability (Phase B transpilers fail on Reference B's bracket prohibition) and degrade operator UX in audit + runtime error messages.
 
 1. The detection script `tools/sweep-placeholders/detect.py` **MUST** walk every `SKILL.md` under `modules/skill/`, parse the YAML frontmatter, and identify every field whose value contains a literal `<word>` pattern that is **NOT** the now-corrected `wrap_in_marker:` (per FR-SKILL-113). Output: a structured JSON dump grouped by skill_path, field_path, and placeholder_token.
-2. Known stale-placeholder fields (from the 2026-05-19 sweep audit) **MUST** be covered: `metadata.stage` (134 hits — `<SDP §2 stage letter or "cross">`), `description` (28 hits — `<input>`, `<artifact>` etc.), `allowed_brain_scopes.write[*]` (16 hits — `<scope-glob>`), `name` (2 hits — `<artifact>-author`/`<artifact>-audit` in `_template/*` scaffolds only), and `depends_on_contracts[*].{id, pin_path}` (4 hits — `<artifact>`).
+2. Known stale-placeholder fields (from the 2026-05-19 sweep audit) **MUST** be covered: `metadata.stage` (134 hits — `<SDP §2 stage letter or "cross">`), `description` (28 hits — `<input>`, `<artifact>` etc.), `allowed_memory_scopes.write[*]` (16 hits — `<scope-glob>`), `name` (2 hits — `<artifact>-author`/`<artifact>-audit` in `_template/*` scaffolds only), and `depends_on_contracts[*].{id, pin_path}` (4 hits — `<artifact>`).
 3. The substitution engine `tools/sweep-placeholders/suggest.py` **MUST** propose a concrete substitution per placeholder by reading: (a) the skill's `SKILL.md` body's CONTRACT_ECHO block (which often names the real artefact type), (b) `STANDALONE_INTERVIEW.md` (which lists real input field names), (c) `references/MANIFEST_SCHEMA.md` (which carries the real artefact id), (d) the persona's `MODULE.md` entry (which lists the SDP stage letter). Suggestions are advisory; operator review is mandatory.
 4. The substitution engine **MUST NOT** auto-apply suggestions. The right substitute depends on operator domain knowledge that the engine can approximate but not guarantee. The engine emits a single `tools/sweep-placeholders/report.md` listing every skill + every placeholder + the recommended fix; operator reviews + edits the report; the sweep step then applies the operator-approved values.
 5. The auditor rule **MUST** be `SKB-030 placeholder-free-frontmatter` (added to `SKILL_BUNDLE_RUBRIC.md`) with severity `warning` for `status: draft` skills and severity `error` for `status: accepted` or higher. Auto-fix: never (operator-attestation required).

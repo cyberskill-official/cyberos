@@ -3,7 +3,7 @@ id: FR-AUTH-005
 title: "Admin REST: list tenants + list subjects + revoke subject + unrevoke + cursor pagination + jti deny-list"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-006]
 depends_on: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-004]
 blocks: [FR-AUTH-101, FR-AUTH-107]
@@ -46,7 +46,7 @@ allowed_tools:
 disallowed_tools:
   - allow tenant-admin to list/revoke OUT-OF-tenant subjects (per §1 #2 + #3 — RLS blocks too)
   - allow offset-based pagination (per DEC-125 — cursor only; offset bleeds duplicates on concurrent insert)
-  - skip BRAIN audit row on revoke OR unrevoke (per §1 #5 — both are auditable mutations)
+  - skip memory audit row on revoke OR unrevoke (per §1 #5 — both are auditable mutations)
   - return password_hash in subject list responses (per §1 #2 — never expose hash)
 
 effort_hours: 8
@@ -73,7 +73,7 @@ The AUTH service **MUST** expose three admin REST endpoints for tenant + subject
 3. **MUST** `POST /v1/admin/subjects/{id}/revoke` — tenant-admin (same tenant) or root-admin; sets `subjects.suspended = true` AND populates the jti deny-list with all currently-active jtis for that subject. Subsequent JWT verifications check the deny-list and reject revoked jtis with `401 token_revoked`.
 4. **MUST** `POST /v1/admin/subjects/{id}/unrevoke` — tenant-admin (same tenant) or root-admin; sets `subjects.suspended = false`. Does NOT remove jtis from the deny-list (existing tokens stay revoked; new logins issue fresh jtis).
 5. **MUST** include cursor-based pagination via opaque base64-encoded cursor. The cursor encodes `(table, last_id, hmac_signature)`. Limit defaults to 50; max 200. Offset-based paging is forbidden (cursor only) because concurrent inserts during paging would produce duplicates or skips.
-6. **MUST** emit BRAIN audit rows:
+6. **MUST** emit memory audit rows:
     - `auth.subject_revoked` per revoke — payload: `subject_id`, `tenant_id`, `revoked_by_subject_id`, `reason` (optional caller-supplied), `revoked_jti_count`, `request_id`.
     - `auth.subject_unrevoked` per unrevoke — payload: `subject_id`, `tenant_id`, `unrevoked_by_subject_id`, `request_id`.
 7. **MUST** complete each endpoint in ≤ 100ms p95 (list ops bounded by limit; revoke bounded by deny-list inserts ~1ms each).
@@ -220,7 +220,7 @@ pub async fn revoke_subject(
         deny_list::publish(redis, jti).await?;
     }
 
-    brain::emit_in_tx(&mut tx, brain::canonical::subject_revoked(
+    memory::emit_in_tx(&mut tx, memory::canonical::subject_revoked(
         subject_id, subject.tenant_id, claims.subject_id, active_jtis.len() as u32, request_id,
     )).await?;
 
@@ -238,7 +238,7 @@ pub async fn unrevoke_subject(
     let mut tx = pool.begin().await?;
     sqlx::query("UPDATE subjects SET suspended = FALSE WHERE id = $1").bind(subject_id).execute(&mut *tx).await?;
     // §1 #12: deny-list NOT cleared
-    brain::emit_in_tx(&mut tx, brain::canonical::subject_unrevoked(
+    memory::emit_in_tx(&mut tx, memory::canonical::subject_unrevoked(
         subject_id, subject.tenant_id, claims.subject_id, request_id,
     )).await?;
     tx.commit().await?;

@@ -3,7 +3,7 @@ id: FR-PROJ-013
 title: "Estimate calibration snapshot — per-member per-task-class nightly batch with Bayesian update and operator-visible accuracy trend"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PROJ-001, FR-PROJ-002, FR-PROJ-004, FR-TIME-001, FR-BRAIN-101]
+memory_chain_hash: null
+related_frs: [FR-PROJ-001, FR-PROJ-002, FR-PROJ-004, FR-TIME-001, FR-MEMORY-101]
 depends_on: [FR-PROJ-002]
 blocks: [FR-HR-008, FR-LEARN-003]
 
@@ -47,7 +47,7 @@ sub_tasks:
   - "0.5h: mod.rs — CalibrationSnapshot struct"
   - "1.5h: bayes.rs — posterior mean + std-dev of (actual_hours / estimate); exp-decay weight by recency"
   - "1.0h: nightly.rs — sweep completed issues since last snapshot; group by (member, task_class); compute"
-  - "0.5h: BRAIN audit row 'proj.estimate_calibration_computed'"
+  - "0.5h: memory audit row 'proj.estimate_calibration_computed'"
   - "0.5h: REST endpoint GET /api/proj/calibration/:member_id/:task_class → latest snapshot"
   - "1.5h: calibration_test.rs — synthetic dataset; assert Bayesian update converges"
 risk_if_skipped: "Estimates without calibration drift indefinitely — a member who consistently underestimates by 30% will keep doing so. With calibration, the operator sees 'Alice's bug-fix estimates are 28% optimistic over 90 days; consider × 1.3'. Without per-member, team aggregates mask individual biases. Without per-task-class, code-review estimates muddy bug-fix accuracy. Without exp-decay, old data dominates years later."
@@ -69,7 +69,7 @@ The calibration layer **MUST** compute nightly snapshots of estimate accuracy pe
     - Recommended multiplier = posterior mean (rounded to 2 decimals).
 4. **MUST** require minimum `effective_sample_size >= 3` for a cell to publish a snapshot; below threshold → no row written (insufficient data; UI shows "not enough data yet").
 5. **MUST** persist snapshots APPEND-ONLY. Multiple snapshots per cell across days form a trend.
-6. **MUST** emit `proj.estimate_calibration_computed` BRAIN audit row per published snapshot.
+6. **MUST** emit `proj.estimate_calibration_computed` memory audit row per published snapshot.
 7. **MUST** expose REST endpoints:
     - `GET /api/proj/calibration/:member_id/:task_class` — latest snapshot.
     - `GET /api/proj/calibration/:member_id/:task_class/history?since=YYYY-MM-DD` — trend.
@@ -234,7 +234,7 @@ pub async fn run_nightly(pool: &sqlx::PgPool, tenant_id: uuid::Uuid) -> anyhow::
             .bind((post.mean * 100.0).round() / 100.0)
             .execute(pool).await?;
 
-            emit_brain_row("proj.estimate_calibration_computed", serde_json::json!({
+            emit_memory_row("proj.estimate_calibration_computed", serde_json::json!({
                 "member_id": member_id, "task_class": task_class,
                 "snapshot_date": today, "posterior_mean": post.mean,
                 "sample_size": post.sample_size,
@@ -260,7 +260,7 @@ pub async fn run_nightly(pool: &sqlx::PgPool, tenant_id: uuid::Uuid) -> anyhow::
 3. **Threshold of 3 enforced** — only 2 issues completed → no snapshot written.
 4. **Snapshot append-only** — second nightly run same day → ON CONFLICT DO NOTHING; no row added.
 5. **History endpoint returns trend** — 10 days of snapshots → 10 rows ASC by snapshot_date.
-6. **BRAIN audit per published snapshot** — `proj.estimate_calibration_computed` row appears.
+6. **memory audit per published snapshot** — `proj.estimate_calibration_computed` row appears.
 7. **Recommended multiplier ≈ posterior mean** — rounded to 2 decimals.
 8. **Per-cell isolation** — Alice + bug-fix has its own row distinct from Alice + feature-work.
 9. **No auto-apply to estimates** — UI surfaces multiplier; issue.estimate field unchanged.
@@ -361,7 +361,7 @@ async fn idempotent_same_day() {
 - **FR-PROJ-001** — issues schema (estimate, task_class, assignee).
 - **FR-PROJ-004** — status FSM (Done detection).
 - **FR-TIME-001** — billable hours source.
-- **FR-BRAIN-101** — audit emission.
+- **FR-MEMORY-101** — audit emission.
 
 ---
 
@@ -403,12 +403,12 @@ All resolved. Deferred:
 | Daylight-saving day-counting | days_ago uses UTC | Consistent | None |
 | Extreme outlier (ratio = 100) | included but std reflects | UI shows wide CI | Operator considers excluding |
 | Member changes role | calibration carries on; new task_class cell starts fresh | Trend shows change | None |
-| BRAIN emit fails | snapshot stored; audit lost; sev-2 | None | Operator restores BRAIN |
+| memory emit fails | snapshot stored; audit lost; sev-2 | None | Operator restores memory |
 | RLS bypass | RLS policy | 0 rows | None |
 | Aggregate query slow at 100K issues | nightly batch acceptable | None | Slice 4+ optimise |
 | Issue without `estimate` field | filtered out | Doesn't affect computation | None |
 | Multiple time entries same issue (split work) | sum gives true actual | Correct | None |
-| BRAIN-PII concerns (member name in audit) | member_id is UUID, not name | Safe | None |
+| memory-PII concerns (member name in audit) | member_id is UUID, not name | Safe | None |
 | Tenant offboarding | their cell snapshots persist | Audit trail retained per legal | None until cleanup script |
 | Outlier threshold misconfigured (negative) | startup validation | use default | Operator |
 | CI computation produces NaN (zero variance) | guard: return CI = mean ± 0 | None | None |

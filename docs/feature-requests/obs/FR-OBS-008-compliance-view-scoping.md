@@ -1,9 +1,9 @@
 ---
 id: FR-OBS-008
-title: "obs-compliance-view: pre-built read-only views (EU AI Act / PDPL / SOC 2 / ISO 27001) over BRAIN audit chain with Ed25519 chain-proof + tenant-scoped + PDF/JSON export"
+title: "obs-compliance-view: pre-built read-only views (EU AI Act / PDPL / SOC 2 / ISO 27001) over memory audit chain with Ed25519 chain-proof + tenant-scoped + PDF/JSON export"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-002, FR-OBS-009, FR-AI-022, FR-AUTH-004]
 depends_on: [FR-OBS-002]
 blocks: [FR-OBS-009]
@@ -72,7 +72,7 @@ sub_tasks:
   - "0.5h: time-range validation (max 365 days)"
   - "0.5h: tenant scoping at query layer (ALL queries WHERE tenant_id = $1)"
   - "0.5h: PII placeholder enforcement (rows with raw PII should not exist; defence-in-depth)"
-  - "0.5h: BRAIN audit row obs.compliance_view_accessed per query"
+  - "0.5h: memory audit row obs.compliance_view_accessed per query"
   - "1.5h: Tests — 4 views per regulation + tenant-scoped + chain-proof verify + 30s p95 + PDF render"
   - "0.5h: Grafana dashboard JSON template (embeds the views)"
 risk_if_skipped: "External auditors (SOC 2, ISO 27001, EU AI Act Art. 12) require pre-built views over the audit chain. Without them, every audit becomes a multi-week SQL bake-off. The hash-chain proof is the differentiator vs SaaS observability — provably immutable, auditor-verifiable. Without tenant-scoping, an auditor for tenant A could see tenant B's data — catastrophic for the auditor's tenant + their own engagement."
@@ -80,18 +80,18 @@ risk_if_skipped: "External auditors (SOC 2, ISO 27001, EU AI Act Art. 12) requir
 
 ## §1 — Description (BCP-14 normative)
 
-A read-only HTTP service `obs-compliance-view` **MUST** expose pre-built compliance views over the BRAIN audit chain. Each view:
+A read-only HTTP service `obs-compliance-view` **MUST** expose pre-built compliance views over the memory audit chain. Each view:
 
 1. **MUST** be one of 4 endpoints: `GET /eu-ai-act/`, `GET /pdpl/`, `GET /soc2/`, `GET /iso27001/`. Each scoped to that regulation's audit requirements (per-view rows defined in §1 #11 below).
 2. **MUST** require `role: external_auditor` in the JWT for access. Operators access via Grafana (which uses the same backend). Tenant-admin role does NOT grant compliance-view access — auditor is a distinct role provisioned per engagement.
-3. **MUST** be tenant-scoped: every query carries `tenant_id` from the JWT; auditor sees ONLY their assigned tenant's rows. RLS at the BRAIN query layer is the enforcement. Cross-tenant `?tenant_id=` query parameter is rejected with 403.
-4. **MUST** query the BRAIN audit chain (binlog rows) READ-ONLY; never mutate. The query API is the existing `brain::query(tenant_id, kinds, since, until)`.
+3. **MUST** be tenant-scoped: every query carries `tenant_id` from the JWT; auditor sees ONLY their assigned tenant's rows. RLS at the memory query layer is the enforcement. Cross-tenant `?tenant_id=` query parameter is rejected with 403.
+4. **MUST** query the memory audit chain (binlog rows) READ-ONLY; never mutate. The query API is the existing `memory::query(tenant_id, kinds, since, until)`.
 5. **MUST** emit Ed25519 hash-chain proof on every view's response footer. The proof signs the response contents (canonical JSON of rows + summary) using the deployment's signing key (loaded from secret store). Auditors can independently verify the signature against the published public key.
 6. **MUST** support time-range filtering via `?since=<ISO8601>&until=<ISO8601>` query parameters. Window > 365 days is rejected with 400 (auditor must paginate).
 7. **MUST** export to PDF + JSON formats via `?format=pdf|json` (default json).
 8. **MUST** complete view rendering within 30s p95 for 90-day windows. Above 30s, response is `429 TOO_LARGE` with suggestion to reduce window.
 9. **MUST** include a summary block per view (counts, key metrics) + the row list. Auditors typically read the summary first; rows are evidence.
-10. **MUST** emit BRAIN audit row `obs.compliance_view_accessed` per query (auditor self-audit) with payload: `auditor_subject_id`, `tenant_id`, `view`, `time_range_days`, `request_id`.
+10. **MUST** emit memory audit row `obs.compliance_view_accessed` per query (auditor self-audit) with payload: `auditor_subject_id`, `tenant_id`, `view`, `time_range_days`, `request_id`.
 11. **Per-view content (slice-3 scope):**
     - **EU AI Act** (Art. 12 record-keeping):
       - `ai.invocation`, `ai.persona_loaded`, `ai.zdr_violation`, `ai.residency_violation` rows.
@@ -139,7 +139,7 @@ A read-only HTTP service `obs-compliance-view` **MUST** expose pre-built complia
 
 **Why PII-placeholder defence-in-depth (§1 #12)?** Audit chain SHOULD contain only placeholders (FR-AUTH-002 + FR-AUTH-004 + FR-AI-014 enforce). But regression-bugs could leak. Regex scan at response time catches the regression before the auditor sees raw PII.
 
-**Why BRAIN audit row of view access (§1 #10)?** The auditor's own access is auditable. Compliance reviews of the auditor (yes, this happens) need to know "what did auditor X look at during their engagement?"
+**Why memory audit row of view access (§1 #10)?** The auditor's own access is auditable. Compliance reviews of the auditor (yes, this happens) need to know "what did auditor X look at during their engagement?"
 
 ---
 
@@ -183,7 +183,7 @@ pub struct ViewResponse {
 pub struct ChainProof {
     pub algorithm: String,        // "Ed25519"
     pub public_key_id: String,    // identifier for verifier
-    pub sth_at_query_time: String, // signed tree head from BRAIN
+    pub sth_at_query_time: String, // signed tree head from memory
     pub signature: String,        // base64-encoded over canonical(response_minus_chain_proof)
 }
 
@@ -201,8 +201,8 @@ pub enum ViewError {
     QueryTimeout,
     #[error("pii leak attempted in response (sev-1)")]
     PiiLeakAttempt,
-    #[error("brain query failed: {0}")]
-    BrainQueryFailed(String),
+    #[error("memory query failed: {0}")]
+    MemoryQueryFailed(String),
 }
 ```
 
@@ -212,7 +212,7 @@ pub async fn handle(query: ViewQuery, claims: Claims) -> Result<ViewResponse, Vi
     auth::require_auditor_role(&claims)?;
     validate_time_range(query.since, query.until)?;
 
-    let rows = brain::query(claims.tenant_id, EU_AI_ACT_KINDS, query.since, query.until).await?;
+    let rows = memory::query(claims.tenant_id, EU_AI_ACT_KINDS, query.since, query.until).await?;
     pii_scrub::reject_if_raw_pii(&rows)?;
 
     let summary = serde_json::json!({
@@ -231,7 +231,7 @@ pub async fn handle(query: ViewQuery, claims: Claims) -> Result<ViewResponse, Vi
         rows, summary, chain_proof,
     };
 
-    brain::emit(canonical::compliance_view_accessed(
+    memory::emit(canonical::compliance_view_accessed(
         claims.subject_id, claims.tenant_id, "eu-ai-act",
         (query.until - query.since).num_days(), &claims.request_id,
     )).await?;
@@ -242,7 +242,7 @@ pub async fn handle(query: ViewQuery, claims: Claims) -> Result<ViewResponse, Vi
 const EU_AI_ACT_KINDS: &[&str] = &[
     "ai.invocation", "ai.persona_loaded",
     "ai.zdr_violation", "ai.residency_violation",
-    "ai.cli_policy_updated", "ai.cli_failover_drill", "ai.cli_brain_emitted",
+    "ai.cli_policy_updated", "ai.cli_failover_drill", "ai.cli_memory_emitted",
 ];
 ```
 
@@ -254,7 +254,7 @@ pub async fn sign_response(rows: &[AuditRow], summary: &serde_json::Value) -> Re
     let key = load_signing_key().await?;
     let canonical_bytes = canonicalise(rows, summary)?;
     let sig = key.sign(&canonical_bytes);
-    let sth = brain::current_signed_tree_head().await?;
+    let sth = memory::current_signed_tree_head().await?;
     Ok(ChainProof {
         algorithm: "Ed25519".into(),
         public_key_id: key.verifying_key().to_bytes()[..8].iter().map(|b| format!("{:02x}", b)).collect(),
@@ -274,7 +274,7 @@ fn canonicalise(rows: &[AuditRow], summary: &serde_json::Value) -> Result<Vec<u8
 // services/obs-compliance-view/src/export/pdf.rs
 pub async fn render_pdf(view: &ViewResponse) -> Result<Vec<u8>, ViewError> {
     let html = render_html_template(view)?;
-    let pdf = wkhtmltopdf::convert(&html).map_err(|e| ViewError::BrainQueryFailed(e.to_string()))?;
+    let pdf = wkhtmltopdf::convert(&html).map_err(|e| ViewError::MemoryQueryFailed(e.to_string()))?;
     Ok(pdf)
 }
 ```
@@ -296,7 +296,7 @@ pub async fn render_pdf(view: &ViewResponse) -> Result<Vec<u8>, ViewError> {
 11. >365-day query → 400 with `TimeRangeTooLarge`.
 12. JWT without `external_auditor` role → 403.
 13. JWT missing → 401.
-14. BRAIN audit row `obs.compliance_view_accessed` emitted per query.
+14. memory audit row `obs.compliance_view_accessed` emitted per query.
 15. Raw PII in response → 500 + sev-1 metric increment.
 16. Summary block populated correctly per view.
 17. Per-engagement JWT TTL (30-day) supported.
@@ -376,7 +376,7 @@ async fn pdf_export_includes_all_rows() {
 async fn audit_row_per_query() {
     let claims = auditor_claims_for("t1");
     let _ = views::eu_ai_act::handle(test_query_30d(), claims).await.unwrap();
-    let row = brain_test_helper::find_latest("obs.compliance_view_accessed").unwrap();
+    let row = memory_test_helper::find_latest("obs.compliance_view_accessed").unwrap();
     assert_eq!(row.payload["view"], "eu-ai-act");
     assert_eq!(row.payload["tenant_id"], "t1");
 }
@@ -407,7 +407,7 @@ See §3.
 - **FR-OBS-002** — Tenant-aware query proxy (this FR's tenant scoping inherits the pattern).
 - **FR-AUTH-004** — JWT verification.
 - **FR-OBS-009** — chain-of-custody manifest (FR-OBS-008 surfaces backup attestations from this FR).
-- BRAIN module's `query` API + `current_signed_tree_head` API.
+- memory module's `query` API + `current_signed_tree_head` API.
 - Crates: `axum`, `ed25519-dalek@2`, `wkhtmltopdf` (or `weasyprint` Python binding), `serde`, `chrono`, `base64`, `hex`.
 
 ---
@@ -489,7 +489,7 @@ All resolved. Deferred:
 
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
-| BRAIN unavailable | brain query error | 503 | Self-resolves |
+| memory unavailable | memory query error | 503 | Self-resolves |
 | Time range too large (>365d) | size check | 400 TimeRangeTooLarge | Auditor paginates |
 | Signature key missing | load fails | 500 + sev-1 | Operator restores key |
 | Auditor JWT invalid | JWT verify fails | 401 | Refresh per-engagement JWT |
@@ -501,9 +501,9 @@ All resolved. Deferred:
 | Ed25519 verify fails (operator-side) | signature verify | Auditor flags | Investigate chain integrity |
 | Per-engagement JWT not rotated | TTL expiry alert | Operator rotates | Standard cadence |
 | Auditor accesses outside engagement window | row carries timestamp; manual review | Compliance review | Standard process |
-| BRAIN sth missing (no signed tree head) | `current_signed_tree_head` returns None | 500 + sev-1 | Operator investigates BRAIN |
+| memory sth missing (no signed tree head) | `current_signed_tree_head` returns None | 500 + sev-1 | Operator investigates memory |
 | Compliance row schema drift | view tests fail | PR blocked | Update view per new schema |
-| `obs.compliance_view_accessed` emit fails | brain_writer error | View still served; sev-1 for missing audit | Operator investigates BRAIN |
+| `obs.compliance_view_accessed` emit fails | memory_writer error | View still served; sev-1 for missing audit | Operator investigates memory |
 | Auditor JWT leaked | unknown access | sev-1; rotate JWT | Standard incident response |
 | Wrong audit row included in view | view test asserts | PR blocked | Update view filter |
 | Wrong audit row excluded from view | manual auditor review | Update view to include | Standard fix |

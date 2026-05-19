@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-ESOP-001, FR-ESOP-006, FR-TEN-103, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-ESOP-001, FR-ESOP-006, FR-TEN-103, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-ESOP-001]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-2401 2026-05-17 — Closed enum `holdco_flip_step` = {pending, sg_entity_formed, acra_filings_prepared, shareholder_agreements_drafted, esop_reissued, residency_migrated, completed, failed}; cardinality 8
   - DEC-2402 2026-05-17 — Each step IMMUTABLE; corrections via new flip (rare); checkpoint per step enables resume
   - DEC-2403 2026-05-17 — Requires CEO + CFO + CLO triple-sign at flip initiation; ACRA + shareholder docs need wet-signature (out of band, status tracked)
-  - DEC-2404 2026-05-17 — BRAIN audit kinds: ten.holdco_flip_initiated, ten.holdco_flip_step_completed, ten.holdco_flip_step_failed, ten.holdco_flip_completed
+  - DEC-2404 2026-05-17 — memory audit kinds: ten.holdco_flip_initiated, ten.holdco_flip_step_completed, ten.holdco_flip_step_failed, ten.holdco_flip_completed
 
 build_envelope:
   language: rust 1.81 + cli
@@ -82,7 +82,7 @@ risk_if_skipped: "Without HoldCo flip orchestration, VN→SG restructure is besp
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship HoldCo flip CLI at `services/ten/src/holdco/` + `services/ten/src/cli/holdco_flip.rs` orchestrating 6-step restructure with triple-sign + immutable checkpoints, 4 BRAIN audit kinds.
+The TEN service **MUST** ship HoldCo flip CLI at `services/ten/src/holdco/` + `services/ten/src/cli/holdco_flip.rs` orchestrating 6-step restructure with triple-sign + immutable checkpoints, 4 memory audit kinds.
 
 1. **MUST** validate `holdco_flip_step` against closed enum per DEC-2401.
 
@@ -156,7 +156,7 @@ The TEN service **MUST** ship HoldCo flip CLI at `services/ten/src/holdco/` + `s
    cyberos-ten holdco-flip status --flip-id <id>
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2404. PII per FR-BRAIN-111: output_jsonb SHA256.
+7. **MUST** emit 4 memory audit kinds per DEC-2404. PII per FR-MEMORY-111: output_jsonb SHA256.
 
 8. **MUST** thread trace_id from CLI → orchestrator → step → audit.
 
@@ -204,7 +204,7 @@ Step: residency_migrated ⏸ pending
 ---
 
 ## §4 — Acceptance criteria
-1. **holdco_flip_step enum cardinality 8**. 2. **CEO+CFO+CLO triple-sign required**. 3. **Same-person across slots rejected**. 4. **CLI commands (init/resume/status)**. 5. **6-step orchestration**. 6. **Resumable from last completed**. 7. **UNIQUE(tenant_id) — one flip per tenant**. 8. **4 BRAIN audit kinds emitted**. 9. **PII scrubbed (output SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE except status cols**. 13. **Per-step checkpoint**. 14. **ACRA Form 24 generated**. 15. **ESOP re-issue under SG entity**. 16. **FR-TEN-103 residency → sg-1 on completion**. 17. **Failed step → flip status=failed; resumable**. 18. **CLI exits non-zero on failure**. 19. **Wet-signature docs tracked out-of-band**. 20. **CLO role required for legal sign**.
+1. **holdco_flip_step enum cardinality 8**. 2. **CEO+CFO+CLO triple-sign required**. 3. **Same-person across slots rejected**. 4. **CLI commands (init/resume/status)**. 5. **6-step orchestration**. 6. **Resumable from last completed**. 7. **UNIQUE(tenant_id) — one flip per tenant**. 8. **4 memory audit kinds emitted**. 9. **PII scrubbed (output SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE except status cols**. 13. **Per-step checkpoint**. 14. **ACRA Form 24 generated**. 15. **ESOP re-issue under SG entity**. 16. **FR-TEN-103 residency → sg-1 on completion**. 17. **Failed step → flip status=failed; resumable**. 18. **CLI exits non-zero on failure**. 19. **Wet-signature docs tracked out-of-band**. 20. **CLO role required for legal sign**.
 
 ---
 
@@ -244,7 +244,7 @@ async fn esop_reissue_under_sg() {
 
 ## §7 — Dependencies
 **Upstream:** FR-ESOP-001.
-**Cross-module:** FR-ESOP-006 (acceleration triggers may overlap), FR-TEN-103 (residency migration), FR-AUTH-101 (CEO+CFO+CLO roles), FR-BRAIN-111 (PII).
+**Cross-module:** FR-ESOP-006 (acceleration triggers may overlap), FR-TEN-103 (residency migration), FR-AUTH-101 (CEO+CFO+CLO roles), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -264,7 +264,7 @@ async fn esop_reissue_under_sg() {
 - §11.1 BizFile API integration via Singapore gov OAuth; CTO obtains credentials.
 - §11.2 ACRA Form 24 template version-pinned; updates via FR-DOC-001 templates.
 - §11.3 ESOP re-issue creates new FR-ESOP-001 grants under SG entity with same vesting terms.
-- §11.4 BRAIN audit body: flip_id, step_name, status; output SHA256.
+- §11.4 memory audit body: flip_id, step_name, status; output SHA256.
 - §11.5 Triple-sign: CLI prompts for each signer's session token; backend verifies.
 
 ---

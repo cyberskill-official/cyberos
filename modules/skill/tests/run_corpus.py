@@ -30,7 +30,7 @@ import tempfile
 from pathlib import Path
 
 
-def find_brain(start: Path = None) -> Path:
+def find_memory(start: Path = None) -> Path:
     cur = (start or Path.cwd()).resolve()
     while cur != cur.parent:
         if (cur / ".cyberos-memory").is_dir():
@@ -48,8 +48,8 @@ def main():
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
-    brain_root = find_brain()
-    fixtures_dir = brain_root / "runtime" / "tests" / "skills" / args.skill_id / "fixtures"
+    memory_root = find_memory()
+    fixtures_dir = memory_root / "runtime" / "tests" / "skills" / args.skill_id / "fixtures"
     if not fixtures_dir.exists():
         print(f"  ✗ no fixtures at {fixtures_dir}", file=sys.stderr); return 2
 
@@ -62,18 +62,18 @@ def main():
     if not fixtures:
         print(f"  ✗ no .yaml fixtures in {fixtures_dir}", file=sys.stderr); return 2
 
-    sys.path.insert(0, str(brain_root / "runtime" / "skill_runners"))
+    sys.path.insert(0, str(memory_root / "runtime" / "skill_runners"))
     try:
         from base import load_runner, SkillCache  # type: ignore
     except ImportError as e:
         print(f"  ✗ couldn't load runner base: {e}", file=sys.stderr); return 3
 
     skill_id = args.skill_id if "/" in args.skill_id else f"cuo/cpo/{args.skill_id}"
-    runner = load_runner(skill_id, brain_root)
+    runner = load_runner(skill_id, memory_root)
     if runner is None:
         # Try CTO path
         skill_id = args.skill_id if "/" in args.skill_id else f"cuo/chief-technology-officer/{args.skill_id}"
-        runner = load_runner(skill_id, brain_root)
+        runner = load_runner(skill_id, memory_root)
     if runner is None:
         print(f"  ✗ no runner found for {args.skill_id}", file=sys.stderr); return 2
 

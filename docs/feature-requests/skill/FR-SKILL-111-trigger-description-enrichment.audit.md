@@ -46,7 +46,7 @@ All 8 mechanical concerns addressed during authoring. **Score = 10/10.** Ready t
 
 Cross-FR sanity check:
 - `depends_on: [FR-SKILL-103]` is reciprocal — FR-SKILL-103's `blocks:` will be updated to include FR-SKILL-111 in a follow-up housekeeping commit (per AUTHORING_DISCIPLINE.md §3.1 rule 2). Operator note: this reciprocity sweep can be batched with FR-SKILL-112's similar dependency.
-- `related_frs:` enumerates FR-SKILL-101 (BRAIN integration — orthogonal), FR-SKILL-103 (parent frontmatter spec — depended on), FR-SKILL-112 (complementary — trigger-tests), FR-SKILL-113 (sketch only — XML-free frontmatter). All four exist as draft or accepted FRs in the index.
+- `related_frs:` enumerates FR-SKILL-101 (memory integration — orthogonal), FR-SKILL-103 (parent frontmatter spec — depended on), FR-SKILL-112 (complementary — trigger-tests), FR-SKILL-113 (sketch only — XML-free frontmatter). All four exist as draft or accepted FRs in the index.
 
 ## §4 — Implementation discoveries (2026-05-19 partial impl)
 

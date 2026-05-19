@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-CRM-001 ships the Account/Contact/Deal Postgres schema with custom pipelines + closed FSM. Scope: 26 §1 normative clauses covering 3 closed Postgres enums (deal_status 4, pipeline_shape 4, account_type stub 1), many-to-many contact_account_membership, append-only deal_status_history + deal_stage_history at SQL grant, deal status FSM trigger with stage-gate (open→won requires is_won stage), 4-default-pipeline seed function for FR-TEN-001 hook, BIGINT-minor money storage, RLS isolation across 8 tables, 8 BRAIN audit kinds with PII scrubbing of email/phone/full_name, contact-membership-≥1 invariant, expected_close future-date enforcement, REST surface (15 handlers), OTel emission, mutual-exclusion stage classification (is_open xor is_won xor is_lost), default-pipeline-uniqueness via partial index, probability override semantics. 19 rationale paragraphs. §3 contains: 6 migrations (accounts + contacts + pipelines/stages + deals with FSM trigger + history + seed function), Rust types, FSM validator. 27 ACs. 30 failure-mode rows. 23 implementation notes.
+FR-CRM-001 ships the Account/Contact/Deal Postgres schema with custom pipelines + closed FSM. Scope: 26 §1 normative clauses covering 3 closed Postgres enums (deal_status 4, pipeline_shape 4, account_type stub 1), many-to-many contact_account_membership, append-only deal_status_history + deal_stage_history at SQL grant, deal status FSM trigger with stage-gate (open→won requires is_won stage), 4-default-pipeline seed function for FR-TEN-001 hook, BIGINT-minor money storage, RLS isolation across 8 tables, 8 memory audit kinds with PII scrubbing of email/phone/full_name, contact-membership-≥1 invariant, expected_close future-date enforcement, REST surface (15 handlers), OTel emission, mutual-exclusion stage classification (is_open xor is_won xor is_lost), default-pipeline-uniqueness via partial index, probability override semantics. 19 rationale paragraphs. §3 contains: 6 migrations (accounts + contacts + pipelines/stages + deals with FSM trigger + history + seed function), Rust types, FSM validator. 27 ACs. 30 failure-mode rows. 23 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -38,8 +38,8 @@ First-pass had no DB-side check; direct SQL bypassed. Resolved: §1 #9 + `enforc
 ### ISS-007 — Default-pipeline seed function deferred
 First-pass left "operator creates pipelines manually". Resolved: §1 #14 + seed_default_pipelines SQL function + FR-TEN-001 hook integration; AC #23.
 
-### ISS-008 — PII in BRAIN audit (raw email, phone, full_name)
-First-pass logged contact email in audit chain. Resolved: §1 #18 + FR-BRAIN-111 scrubbing; hashed forms only in chain.
+### ISS-008 — PII in memory audit (raw email, phone, full_name)
+First-pass logged contact email in audit chain. Resolved: §1 #18 + FR-MEMORY-111 scrubbing; hashed forms only in chain.
 
 ### ISS-009 — Append-only history not enforced
 First-pass relied on handler discipline. Resolved: §1 #10 + #11 + DEC-346 + `REVOKE UPDATE, DELETE FROM cyberos_app` on both history tables; AC #19 + #20.
@@ -48,7 +48,7 @@ First-pass relied on handler discipline. Resolved: §1 #10 + #11 + DEC-346 + `RE
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (3 closed enums × many-to-many contacts × append-only history × FSM with stage-gate × default-pipeline seed × BIGINT-minor money × RLS isolation × 8 BRAIN audit kinds × probability override × expected-close future-date × mutual-exclusion stage classification), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (3 closed enums × many-to-many contacts × append-only history × FSM with stage-gate × default-pipeline seed × BIGINT-minor money × RLS isolation × 8 memory audit kinds × probability override × expected-close future-date × mutual-exclusion stage classification), not by line targets.
 
 ---
 

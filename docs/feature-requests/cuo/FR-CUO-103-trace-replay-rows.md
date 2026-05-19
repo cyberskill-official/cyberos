@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CUO-102, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CUO-102, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CUO-101, FR-CUO-102]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2331 2026-05-17 — Closed enum `trace_call_kind` = {router_decision, tool_call, response_generation, validation_check}; cardinality 4
   - DEC-2332 2026-05-17 — Per-call row IMMUTABLE; correction = new row with `correction_of` link
   - DEC-2333 2026-05-17 — Replay test: re-run with same seed + prompt; expect identical output (caveat: vendor model may drift; mark drift as sev-2)
-  - DEC-2334 2026-05-17 — BRAIN audit kinds: cuo.trace_row_added, cuo.trace_replay_match, cuo.trace_replay_drift, cuo.trace_replay_failed
+  - DEC-2334 2026-05-17 — memory audit kinds: cuo.trace_row_added, cuo.trace_replay_match, cuo.trace_replay_drift, cuo.trace_replay_failed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without replay capability, AI bugs unreproducible. Without DEC
 
 ## §1 — Description (BCP-14 normative)
 
-The CUO service **MUST** ship trace replay rows at `services/cuo/src/trace/` capturing prompt+model+temp+seed per AI call + replay test, 4 BRAIN audit kinds.
+The CUO service **MUST** ship trace replay rows at `services/cuo/src/trace/` capturing prompt+model+temp+seed per AI call + replay test, 4 memory audit kinds.
 
 1. **MUST** validate `trace_call_kind` against closed enum per DEC-2331.
 
@@ -118,7 +118,7 @@ The CUO service **MUST** ship trace replay rows at `services/cuo/src/trace/` cap
    GET  /v1/cuo/runs/{run_id}/trace   (list trace rows)
    ```
 
-6. **MUST** emit 4 BRAIN audit kinds per DEC-2334. PII per FR-BRAIN-111: prompt + response SHA-256 hashed.
+6. **MUST** emit 4 memory audit kinds per DEC-2334. PII per FR-MEMORY-111: prompt + response SHA-256 hashed.
 
 7. **MUST** thread trace_id from supervisor → AI call → writer → audit.
 
@@ -157,7 +157,7 @@ Sample trace row:
 ---
 
 ## §4 — Acceptance criteria
-1. **trace_call_kind enum cardinality 4**. 2. **prompt + model + temp + seed captured**. 3. **Immutable rows**. 4. **Replay test exists**. 5. **Match → audit emitted**. 6. **Drift → sev-2 audit**. 7. **4 BRAIN audit kinds emitted**. 8. **PII scrubbed (prompt + response SHA256)**. 9. **RLS denies cross-tenant**. 10. **Trace_id preserved**. 11. **Append-only via REVOKE**. 12. **Monthly partitioning**. 13. **Replay async (LLM call expensive)**. 14. **rust_decimal for temperature**. 15. **bigint for seed**. 16. **NULL seed allowed (vendor-dependent)**. 17. **Correction_of for re-recorded traces**. 18. **CDO-only replay trigger**. 19. **Run-scoped query indexed**. 20. **Partition retention same as FR-CUO-102 (7 years)**.
+1. **trace_call_kind enum cardinality 4**. 2. **prompt + model + temp + seed captured**. 3. **Immutable rows**. 4. **Replay test exists**. 5. **Match → audit emitted**. 6. **Drift → sev-2 audit**. 7. **4 memory audit kinds emitted**. 8. **PII scrubbed (prompt + response SHA256)**. 9. **RLS denies cross-tenant**. 10. **Trace_id preserved**. 11. **Append-only via REVOKE**. 12. **Monthly partitioning**. 13. **Replay async (LLM call expensive)**. 14. **rust_decimal for temperature**. 15. **bigint for seed**. 16. **NULL seed allowed (vendor-dependent)**. 17. **Correction_of for re-recorded traces**. 18. **CDO-only replay trigger**. 19. **Run-scoped query indexed**. 20. **Partition retention same as FR-CUO-102 (7 years)**.
 
 ---
 
@@ -177,7 +177,7 @@ async fn drift_detected_when_response_differs() {
     ctx.mock_ai_returns_different_response().await;
     let r = ctx.replay(ctx.trace_id).await;
     assert_eq!(r.status, "drift");
-    let audits = ctx.fetch_brain_audits("cuo.trace_replay_drift").await;
+    let audits = ctx.fetch_memory_audits("cuo.trace_replay_drift").await;
     assert!(!audits.is_empty());
 }
 
@@ -195,7 +195,7 @@ async fn immutable_no_update() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CUO-102.
-**Cross-module:** FR-AI-003 (LLM calls captured), FR-AUTH-101 (CDO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AI-003 (LLM calls captured), FR-AUTH-101 (CDO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -214,7 +214,7 @@ async fn immutable_no_update() {
 ## §11 — Implementation notes
 - §11.1 Seed defaults to 0 if vendor supports; null if not (e.g. older Claude models).
 - §11.2 Replay is async — LLM call latency; result populated when complete.
-- §11.3 BRAIN audit body: trace_id, run_id, kind; prompt + response SHA256.
+- §11.3 memory audit body: trace_id, run_id, kind; prompt + response SHA256.
 - §11.4 Drift alert via FR-CHAT-005 to CDO with link to trace + replay diff.
 - §11.5 Partition same as FR-CUO-102 — monthly, 7-year retention.
 

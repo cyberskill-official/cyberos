@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-004, FR-INV-001, FR-INV-007, FR-SKILL-109, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-004, FR-INV-001, FR-INV-007, FR-SKILL-109, FR-MEMORY-111]
 depends_on: [FR-INV-007, FR-CRM-004]
 blocks: [FR-TIME-008]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1701 2026-05-17 — Closed enum `vat_invoice_trigger` = {deal_won_auto, manual_emit, retry_on_failure}; cardinality 3
   - DEC-1702 2026-05-17 — Idempotency: one hóa đơn per deal; UNIQUE(deal_id) on emission table
   - DEC-1703 2026-05-17 — Delegates to FR-INV-007 for actual GDT emit — this skill orchestrates: create invoice → set vn-residency → trigger emit → return status
-  - DEC-1704 2026-05-17 — BRAIN audit kinds: crm.vat_invoice_skill_invoked, crm.vat_invoice_invoice_created, crm.vat_invoice_emit_delegated, crm.vat_invoice_failed
+  - DEC-1704 2026-05-17 — memory audit kinds: crm.vat_invoice_skill_invoked, crm.vat_invoice_invoice_created, crm.vat_invoice_emit_delegated, crm.vat_invoice_failed
 
 build_envelope:
   language: rust 1.81
@@ -68,7 +68,7 @@ risk_if_skipped: "Without CRM-side trigger, CFO must manually create invoice + e
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship vietnam-vat-invoice@1 skill at `services/crm/src/vn/vat_invoice_skill.rs` triggered on deal.stage=won for VN tenants, creating invoice via FR-INV-001 + delegating emit to FR-INV-007, idempotent, 4 BRAIN audit kinds.
+The CRM service **MUST** ship vietnam-vat-invoice@1 skill at `services/crm/src/vn/vat_invoice_skill.rs` triggered on deal.stage=won for VN tenants, creating invoice via FR-INV-001 + delegating emit to FR-INV-007, idempotent, 4 memory audit kinds.
 
 1. **MUST** register skill `vietnam-vat-invoice@1` per DEC-1700.
 
@@ -114,7 +114,7 @@ The CRM service **MUST** ship vietnam-vat-invoice@1 skill at `services/crm/src/v
    GET    /v1/crm/skill/vietnam-vat-invoice/emissions/{deal_id}
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-1704. PII per FR-BRAIN-111: deal_value SHA-256 hashed; ids ok.
+7. **MUST** emit 4 memory audit kinds per DEC-1704. PII per FR-MEMORY-111: deal_value SHA-256 hashed; ids ok.
 
 8. **MUST** thread trace_id from deal-hook / manual call → orchestrator → FR-INV-001 → FR-INV-007 → audit.
 
@@ -169,7 +169,7 @@ Sample emission status:
 ---
 
 ## §4 — Acceptance criteria
-1. **Auto-trigger on stage=won for VN tenant**. 2. **Non-VN tenant → silent skip**. 3. **Account missing vn_account_type → skip + sev-3 audit**. 4. **3-trigger enum + cardinality test**. 5. **Idempotent (UNIQUE deal_id)**. 6. **FR-INV-001 invoice created with deal context**. 7. **FR-INV-007 emit delegated**. 8. **4 BRAIN audit kinds emitted**. 9. **PII scrubbed (deal_value SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Status transitions tracked (pending→invoice_created→emit_delegated→accepted)**. 13. **FR-INV-007 failure → status=failed; CFO sees**. 14. **Manual trigger CFO-only**. 15. **Append-only via REVOKE UPDATE except status cols**. 16. **GET endpoint returns emission status**. 17. **Stage revert won→negotiating → no auto-cancel hóa đơn (CFO uses FR-INV-008)**. 18. **Retry trigger re-invokes FR-INV-007 (uses existing invoice_id)**. 19. **Hoadon_id stable across retries**. 20. **Deal value 0 → still emits (Decree 123 allows zero-value)**.
+1. **Auto-trigger on stage=won for VN tenant**. 2. **Non-VN tenant → silent skip**. 3. **Account missing vn_account_type → skip + sev-3 audit**. 4. **3-trigger enum + cardinality test**. 5. **Idempotent (UNIQUE deal_id)**. 6. **FR-INV-001 invoice created with deal context**. 7. **FR-INV-007 emit delegated**. 8. **4 memory audit kinds emitted**. 9. **PII scrubbed (deal_value SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Status transitions tracked (pending→invoice_created→emit_delegated→accepted)**. 13. **FR-INV-007 failure → status=failed; CFO sees**. 14. **Manual trigger CFO-only**. 15. **Append-only via REVOKE UPDATE except status cols**. 16. **GET endpoint returns emission status**. 17. **Stage revert won→negotiating → no auto-cancel hóa đơn (CFO uses FR-INV-008)**. 18. **Retry trigger re-invokes FR-INV-007 (uses existing invoice_id)**. 19. **Hoadon_id stable across retries**. 20. **Deal value 0 → still emits (Decree 123 allows zero-value)**.
 
 ---
 
@@ -211,7 +211,7 @@ async fn skips_non_vn_tenant() {
 
 ## §7 — Dependencies
 **Upstream:** FR-INV-007, FR-CRM-004.
-**Cross-module:** FR-INV-001 (invoice create), FR-SKILL-109 (registry), FR-AUTH-101 (CFO role for manual), FR-BRAIN-111 (PII).
+**Cross-module:** FR-INV-001 (invoice create), FR-SKILL-109 (registry), FR-AUTH-101 (CFO role for manual), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -231,7 +231,7 @@ async fn skips_non_vn_tenant() {
 ## §11 — Implementation notes
 - §11.1 Orchestrator first creates invoice (FR-INV-001), then calls FR-INV-007 emit; status reflects which step we're at.
 - §11.2 Invoice line items derived from deal.proposed_items (CRM stores proposal line items per deal).
-- §11.3 BRAIN audit body: deal_id, trigger, invoice_id, hoadon_id; amounts SHA256.
+- §11.3 memory audit body: deal_id, trigger, invoice_id, hoadon_id; amounts SHA256.
 - §11.4 Manual retry path: looks up existing invoice_id, calls FR-INV-007 emit (which is itself idempotent).
 - §11.5 No auto-cancel on stage revert — CFO must explicitly use FR-INV-008 cancellation flow (Decree 123 Art. 19 requirements).
 

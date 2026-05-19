@@ -4,7 +4,7 @@ id: FR-AI-019
 title: "Self-hosted BGE-M3 embeddings (single L4 GPU sidecar) + ONNX-CPU fallback + adaptive batching"
 module: AI
 priority: SHOULD
-status: shipped
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 4
@@ -12,15 +12,15 @@ slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: 2026-05-18
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-009, FR-AI-016, FR-AI-020]
 depends_on: []
-blocks: [FR-AI-020, FR-BRAIN-101, FR-KB-005]
+blocks: [FR-AI-020, FR-MEMORY-101, FR-KB-005]
 
 # ───── Source contracts ─────
 source_pages:
   - website/docs/modules/ai.html#embeddings
-  - website/docs/modules/brain.html#layer-2-vector-index
+  - website/docs/modules/memory.html#layer-2-vector-index
 source_decisions:
   - DEC-091 (self-hosted multilingual embeddings; license-permissive AND VN-aware)
   - Cost ceiling: at 50 tenants × 1M chunks × 100 tok/chunk = 5B tok/mo; managed = $1500/mo, self-host = $360/mo (L4)
@@ -81,7 +81,7 @@ sub_tasks:
   - "0.5h: Sidecar/model version in response (model_name, model_sha256, sidecar_version)"
   - "1.5h: Tests — single embed, batch, GPU/CPU latency, fallback, fairness, max-length-rejection, version-reporting"
   - "0.5h: OTel metrics emission"
-risk_if_skipped: "Embeddings cost ~$0.00002–$0.0001/1k tokens via managed APIs (OpenAI text-embedding-3-small / Cohere embed-multilingual-v3). At BRAIN Layer 2 ingest scale (50 tenants × 1M chunks × 100 tok avg = 5B tokens/month), that's $100/mo per tenant of pure embeddings spend — eating ~25% of the $4/user/month target. Self-host with L4 GPU = $360/mo total fixed cost; per-tenant marginal cost = $0; break-even at ~3 active tenants. Without this FR, FR-AI-020 (BGE rerank, also self-hosted) has no shared infrastructure — adding 2x the operational burden."
+risk_if_skipped: "Embeddings cost ~$0.00002–$0.0001/1k tokens via managed APIs (OpenAI text-embedding-3-small / Cohere embed-multilingual-v3). At memory Layer 2 ingest scale (50 tenants × 1M chunks × 100 tok avg = 5B tokens/month), that's $100/mo per tenant of pure embeddings spend — eating ~25% of the $4/user/month target. Self-host with L4 GPU = $360/mo total fixed cost; per-tenant marginal cost = $0; break-even at ~3 active tenants. Without this FR, FR-AI-020 (BGE rerank, also self-hosted) has no shared infrastructure — adding 2x the operational burden."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -100,7 +100,7 @@ The AI Gateway service **SHOULD** offer a self-hosted BGE-M3 embeddings provider
 10. **MUST** complete an embedding request within **50ms p95** for batches ≤ 32 texts on an L4 GPU; CPU-fallback budget widens to **300ms p95**. SLO assertions live in `bge_test.rs` with 1000-sample latency measurements.
 11. **MUST** verify the BGE-M3 model SHA-256 checksum at sidecar startup against `embeddings/checksums/bge-m3.sha256`. Mismatch (corrupted download, supply-chain tamper) → sidecar refuses to start with `ChecksumMismatch` exit code; gateway refuses to bind. The checksum is pinned per FR amendment; model-version updates require both file replacement AND checksum file update in the same PR.
 12. **MUST** validate input text length ≤ 8192 tokens (BGE-M3's hard limit) BEFORE embedding. Over-length inputs return HTTP 413 PAYLOAD_TOO_LARGE with body `{"error":"input_too_long","max_tokens":8192,"actual_tokens":<n>,"text_index":<i>}` identifying which input in the batch exceeded. The sidecar uses the model's tokeniser for the count; no upstream chunking happens here.
-13. **MUST** report `model_name` (`"bge-m3"`), `model_sha256` (first 16 hex of model checksum), `sidecar_version` (semver from `pyproject.toml`), and `device` (`"cuda" | "cpu"`) in every response. Downstream consumers (BRAIN Layer 2) record these for index-version pinning.
+13. **MUST** report `model_name` (`"bge-m3"`), `model_sha256` (first 16 hex of model checksum), `sidecar_version` (semver from `pyproject.toml`), and `device` (`"cuda" | "cpu"`) in every response. Downstream consumers (memory Layer 2) record these for index-version pinning.
 14. **MUST** read the sidecar URL from `services/ai-gateway/config/embeddings.yaml`:
     ```yaml
     bge_sidecars:
@@ -123,7 +123,7 @@ The AI Gateway service **SHOULD** offer a self-hosted BGE-M3 embeddings provider
 
 ## §2 — Why this design (rationale for humans)
 
-**Why self-host BGE-M3 specifically?** Three converging reasons. (1) Multilingual support — BGE-M3 handles Vietnamese natively; English-only models (text-embedding-3-small, text-embedding-3-large) underperform on VN content by ~10% on MTEB Vietnamese benchmarks. (2) License — MIT-licensed; safe to self-host commercially. (3) Performance — top-3 on MTEB-multilingual at 1024 dimensions, which is the right grain for HNSW indexing in BRAIN Layer 2 (768 too coarse, 1536 too memory-heavy). The alternatives (OpenAI text-embedding-3-small at $0.00002/1k, Cohere embed-multilingual-v3 at $0.0001/1k) cost $20–$100/month per active tenant at our ingest volume.
+**Why self-host BGE-M3 specifically?** Three converging reasons. (1) Multilingual support — BGE-M3 handles Vietnamese natively; English-only models (text-embedding-3-small, text-embedding-3-large) underperform on VN content by ~10% on MTEB Vietnamese benchmarks. (2) License — MIT-licensed; safe to self-host commercially. (3) Performance — top-3 on MTEB-multilingual at 1024 dimensions, which is the right grain for HNSW indexing in memory Layer 2 (768 too coarse, 1536 too memory-heavy). The alternatives (OpenAI text-embedding-3-small at $0.00002/1k, Cohere embed-multilingual-v3 at $0.0001/1k) cost $20–$100/month per active tenant at our ingest volume.
 
 **Why batch (§1 #4)?** GPU inference latency is dominated by warmup overhead (kernel launch, model dispatch). For BGE-M3 on L4: a single-text request is ~30ms (almost all warmup); a 32-text batch is ~40ms total. Batching gives ~25× throughput per dollar of GPU time. The 50ms buffer ceiling is the user-facing ceiling — long enough to accumulate batches in production, short enough to be invisible to humans.
 
@@ -135,7 +135,7 @@ The AI Gateway service **SHOULD** offer a self-hosted BGE-M3 embeddings provider
 
 **Why model checksum verification (§1 #11)?** Models are downloaded artefacts (typically from HuggingFace). Supply-chain attack surface: a compromised HuggingFace mirror could swap a model for one that produces consistently-biased embeddings (steering retrieval to attacker-favoured content). The SHA-256 pin ensures the running model is byte-identical to the version we audited. Any drift (corrupted download, attempted swap) fails the startup check loud-and-early.
 
-**Why expose `model_name` + `model_sha256` in every response (§1 #13)?** BRAIN Layer 2 stores embeddings in a vector index. If we silently switch from `bge-m3@1.0` to `bge-m3@1.1`, old embeddings in the index are now in a different vector space — retrieval quality silently degrades. Embedding the model identity in every response gives downstream consumers the signal to invalidate / re-embed. This is the same lock-step versioning principle as FR-AI-014's persona handle and FR-AI-017's cache schema version.
+**Why expose `model_name` + `model_sha256` in every response (§1 #13)?** memory Layer 2 stores embeddings in a vector index. If we silently switch from `bge-m3@1.0` to `bge-m3@1.1`, old embeddings in the index are now in a different vector space — retrieval quality silently degrades. Embedding the model identity in every response gives downstream consumers the signal to invalidate / re-embed. This is the same lock-step versioning principle as FR-AI-014's persona handle and FR-AI-017's cache schema version.
 
 **Why max-input-length validation (§1 #12)?** BGE-M3's tokeniser silently truncates inputs > 8192 tokens — producing embeddings for "the first 8192 tokens of your text" rather than "your text." A user embedding a 50-page document would get a partial-document vector with no error indication. Validating BEFORE embedding and returning HTTP 413 makes the failure loud; the caller can decide to chunk or reject.
 
@@ -607,7 +607,7 @@ services:
 
 ### Concept dependencies (shared types)
 
-- `EmbedRequest`/`EmbedResponse` are the canonical embed-API shapes consumed by BRAIN Layer 2.
+- `EmbedRequest`/`EmbedResponse` are the canonical embed-API shapes consumed by memory Layer 2.
 - `EmbedTask::{Passage, Code}` is the prompt-template selector (passage = default; code = `"Code: "` prefix).
 - `model_sha256` 16-hex is the embedding-version pin.
 
@@ -661,7 +661,7 @@ sev-1  ai_bge_checksum_failed  expected=4b8c...  actual=9d6e...
 All resolved at authoring time. Items deferred to later FRs:
 
 - Multi-GPU sidecar (use 4×L4 with tensor parallelism) — slice 5+ when scale demands.
-- Model swap to BGE-M4 (when released) — handled by FR amendment + checksum bump + fixture refresh in BRAIN Layer 2.
+- Model swap to BGE-M4 (when released) — handled by FR amendment + checksum bump + fixture refresh in memory Layer 2.
 - Streaming embeddings (incremental embedding of long docs) — out of scope; chunking happens upstream.
 - Per-tenant model variants (one tenant wants a fine-tuned BGE) — slice 5+; current sidecar serves one model per instance.
 - Cross-region sidecar load-balancing during regional outage — FR-AI-016 area; current model is strict per-region pinning.
@@ -685,19 +685,19 @@ All resolved at authoring time. Items deferred to later FRs:
 | HuggingFace download fails at sidecar build | Dockerfile build fails | Image not produced; CI blocked | Operator investigates HuggingFace availability OR uses cached artefact |
 | ONNX runtime mismatch (CPU sidecar) | Sidecar startup error | Sidecar fails; gateway falls back to managed | Pin `optimum`/`onnxruntime` versions in requirements.txt |
 | Mock-sidecar test flaky | CI intermittent | Test rerun | Replace mock with deterministic stub |
-| Output dimension drift (model-version mismatch) | `EmbedResponse.embeddings[0].len() != 1024` | sev-1 alert; downstream BRAIN refuses | Operator confirms model checkpoint; re-pin checksum |
+| Output dimension drift (model-version mismatch) | `EmbedResponse.embeddings[0].len() != 1024` | sev-1 alert; downstream memory refuses | Operator confirms model checkpoint; re-pin checksum |
 | Tokenizer mismatch (sidecar uses different tokeniser) | Token count for same text differs across sidecars | Inconsistent 413 behaviour | Pin tokeniser version in sidecar |
 | Sidecar version drift (different sidecars in different regions) | `EmbedResponse.sidecar_version` mismatch across regions | sev-2 OBS event; consumers correlate | Operator harmonises deployments |
 | Network partition between gateway and sidecar | reqwest timeout > deadline | `BgeError::Timeout`; circuit breaker counts | Standard network-failure recovery |
 | Concurrent submit + breaker-open transition | Submit during transition window | Either breaker fast-fail OR successful (race-acceptable) | By design |
-| BRAIN Layer 2 stores embeddings; sidecar checksum changes (new model) | `model_sha256` in stored vectors differs from current sidecar's | Operator triggers re-embed pass | Standard schema-bump procedure |
+| memory Layer 2 stores embeddings; sidecar checksum changes (new model) | `model_sha256` in stored vectors differs from current sidecar's | Operator triggers re-embed pass | Standard schema-bump procedure |
 | Tenant policy `embedding_model: "openai-text-embedding-3-small"` | Router does NOT route to BGE for that tenant | Managed provider used | By design (tenant choice) |
 
 ---
 
 ## §11 — Notes
 
-- L4 GPU on AWS g6.xlarge at ~$0.50/hr × 720hr = $360/mo. Break-even vs managed (OpenAI text-embedding-3-small at $0.00002/1k tokens) at ~18M tokens/mo — well under a single active tenant's BRAIN ingest. Two active tenants amortise the GPU within their first month.
+- L4 GPU on AWS g6.xlarge at ~$0.50/hr × 720hr = $360/mo. Break-even vs managed (OpenAI text-embedding-3-small at $0.00002/1k tokens) at ~18M tokens/mo — well under a single active tenant's memory ingest. Two active tenants amortise the GPU within their first month.
 - BGE-M3 multilingual support is the load-bearing reason for choosing it over English-only models. CyberSkill's home market is Vietnam; embedding quality on VN content is the primary KPI.
 - ONNX-quantised CPU model is `bge-m3-onnx` (variant of the base model); 6× slower but fully compatible. Used for dev workflows and as a runtime fallback when GPU memory pressure forces CPU.
 - The cost-ledger reports zero per-call (§1 #6) because the marginal cost IS zero. Amortised infra accounting is a SEPARATE ledger surfaced in FR-AI-022's dashboards. Conflating them would either over-charge per-call (if amortised) or under-report infra (if zeroed).
@@ -706,7 +706,7 @@ All resolved at authoring time. Items deferred to later FRs:
 - The 50ms batch buffer ceiling (§1 #4) is the user-visible-latency budget; the 32-text floor maximises GPU efficiency. Tuning is empirical: batch sizes < 8 underutilise the GPU; > 64 hit OOM on long inputs.
 - Per-tenant fairness in the batch buffer (§1 #5) is the multi-tenancy correctness primitive. Without it, a single tenant's bursty workload can starve all other tenants — measurable as p99 latency spikes on the OBS dashboard.
 - Mid-run GPU failover detection (§1 #15) is a small but valuable observability feature. PyTorch's silent GPU→CPU fallback is convenient for availability but invisible to operators; the device-field check makes it loud.
-- BRAIN Layer 2 (vector index) MUST record `model_sha256` alongside every stored embedding. A future FR (FR-BRAIN-014, placeholder) handles re-embedding when the sidecar's model_sha256 changes — current consumers should be defensive about this signal.
+- memory Layer 2 (vector index) MUST record `model_sha256` alongside every stored embedding. A future FR (FR-MEMORY-014, placeholder) handles re-embedding when the sidecar's model_sha256 changes — current consumers should be defensive about this signal.
 
 ---
 

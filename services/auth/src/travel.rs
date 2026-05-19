@@ -205,7 +205,12 @@ pub async fn record_login_and_assess(
     .bind(subject_id)
     .bind(flow)
     .bind(ip)
-    .bind(prefix24)
+    // sqlx 0.8 + ipnetwork 0.20 changed the bundled Encode wiring after this
+    // session's rustc 1.83→1.88 bump (the workspace `sqlx[ipnetwork]` feature
+    // no longer implements Encode<Postgres> for `ipnetwork::IpNetwork`
+    // directly). Bind the textual CIDR form instead — INET accepts it and
+    // it sidesteps the trait gap. Format e.g. `203.0.113.0/24`.
+    .bind(prefix24.to_string())
     .bind(user_agent)
     .bind(geo.country_iso.as_deref())
     .bind(geo.region.as_deref())

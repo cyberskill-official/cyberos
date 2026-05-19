@@ -1,12 +1,7 @@
 ---
 name: vietnam-bank-transfer
 description: >-
-  Generate VietQR / Napas247 QR-code payload strings for Vietnamese
-  bank transfers, parse incoming VietQR strings, and look up Napas
-  bank BIN codes. Use when the user needs a payable QR code for a
-  Vietnamese bank account, wants to decode a VietQR they received,
-  or asks about bank routing codes (BIN). Do NOT use for international
-  SWIFT transfers — VietQR is Napas247-domestic only.
+  Generate VietQR / Napas247 QR-code payload strings for Vietnamese bank transfers, parse incoming VietQR strings, and look up Napas bank BIN codes. Use when the user needs a payable QR code for a Vietnamese bank account, wants to decode a VietQR they received, or asks about bank routing codes (BIN). Do NOT use for international SWIFT transfers — VietQR is Napas247-domestic only. Use when user asks to "reference vietnam bank transfer" or "look up vietnam bank transfer".
 license: Apache-2.0
 compatibility: >-
   Fully offline. No network access required. Python 3.11+ for the

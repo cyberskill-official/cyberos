@@ -127,7 +127,7 @@
  <div class="fact-card"><div class="label">Archive</div><div class="value">S3 Object-Lock</div><div class="note">Compliance mode + residency pin</div></div>
  <div class="fact-card"><div class="label">Migration</div><div class="value">3 sources</div><div class="note">DocuSign · Adobe Sign · HelloSign</div></div>
  <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">+ regional certs</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · QTSP partner</div><div class="note">+ CRM · HR · INV consumers</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · QTSP partner</div><div class="note">+ CRM · HR · INV consumers</div></div>
  </div>
  </div>
 </section>
@@ -173,7 +173,7 @@ flowchart LR
  SIGN_US["🇺🇸 AATL CA<br>(US residency)"]
  SIGN_VN["🇻🇳 VNeID + VN CA<br>(VN residency)"]
  ARCHIVE["📦 S3 Object-Lock<br>Compliance · 10yr"]
- BRAIN["🧠 BRAIN<br>contract event audit"]
+ memory["🧠 memory<br>contract event audit"]
  LIFECYCLE["⏰ Lifecycle<br>expiry · renewal · alerts"]
  SOURCE --> DOC
  DOC -- "EU tenant" --> SIGN_EU
@@ -184,15 +184,15 @@ flowchart LR
  SIGN_VN --> ARCHIVE
  ARCHIVE --> LIFECYCLE
  LIFECYCLE --> SOURCE
- DOC --> BRAIN
+ DOC --> memory
  classDef hub fill:#fde68a,stroke:#451a03,stroke-width:3px,color:#451a03
  classDef mod fill:#e0e7ff,stroke:#3730a3
  classDef partner fill:#fef2f2,stroke:#b91c1c
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class DOC hub
  class SOURCE,ARCHIVE,LIFECYCLE mod
  class SIGN_EU,SIGN_US,SIGN_VN partner
- class BRAIN brain
+ class memory memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -221,7 +221,7 @@ flowchart LR
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why DOC exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Consultancies sign documents all day: MSAs, SOWs, employment contracts, NDAs, change orders, supplier agreements, COIs, retention letters. They send them through DocuSign or Adobe Sign at $30–$50 per seat per month, and the resulting signed PDFs land in someone's email or shared drive — never in the same audit chain as the workflow that produced them, never re-discoverable by the AI surface, never bound to the CRM record. DOC fixes this by making "sign this document" a first-class CyberOS workflow: the template is defined in DOC, the signer field auto-pulls from CRM, the QTSP partner does the actual crypto, and the resulting PDF + cert chain + audit log lands back in DOC, citable from BRAIN, and visible to the AM in CHAT. The cost saving (no per-seat DocuSign) is incidental; the integration is the value.
+ Consultancies sign documents all day: MSAs, SOWs, employment contracts, NDAs, change orders, supplier agreements, COIs, retention letters. They send them through DocuSign or Adobe Sign at $30–$50 per seat per month, and the resulting signed PDFs land in someone's email or shared drive — never in the same audit chain as the workflow that produced them, never re-discoverable by the AI surface, never bound to the CRM record. DOC fixes this by making "sign this document" a first-class CyberOS workflow: the template is defined in DOC, the signer field auto-pulls from CRM, the QTSP partner does the actual crypto, and the resulting PDF + cert chain + audit log lands back in DOC, citable from memory, and visible to the AM in CHAT. The cost saving (no per-seat DocuSign) is incidental; the integration is the value.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-5">
  <div class="bbg-card p-5">
@@ -264,7 +264,7 @@ flowchart LR
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P4: QTSP partner cost ~$0.50–$2.00 per signature (passes through). Infra ~$80 / month (Fargate + S3 storage + Object-Lock + KMS).</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) eIDAS conformity required for QES — partner-only. (b) VN Decree 130/2018 — signature must use VN-licenced CA for legal effect in VN. (c) 10-year minimum retention. (d) PDPL Art. 14 DSAR — export support for signers' own data. (e) GDPR Art. 17 — purge with archival exemption for legal docs.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · S3 (Object-Lock Compliance) · KMS · pdfium for PDF manipulation · CAdES + PAdES formats · OpenTelemetry. QTSP partners: GlobalSign (EU), DigiCert (US-AATL), VnPay (VN), MK Group (VN), Viettel-CA (VN).</td></tr>
- <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>PAdES-B-LT (long-term) format for archived PDFs — includes cert chain + revocation info + LTV. Per-document hash-chained audit log mirrors BRAIN chain semantics. Multi-signer workflows are state machines.</td></tr>
+ <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>PAdES-B-LT (long-term) format for archived PDFs — includes cert chain + revocation info + LTV. Per-document hash-chained audit log mirrors memory chain semantics. Multi-signer workflows are state machines.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate tasks (workflow), separate task for archival jobs. S3 Object-Lock buckets per residency. KMS-wrapped encryption for at-rest documents.</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.3 FTE at P4; legal counsel reviews QTSP partner contracts annually; security review of cert-chain handling annually.</td></tr>
  <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>N(FR pending) (signature non-repudiation — cosign verifies any archive byte-for-byte), N(FR pending) (zero archive loss over 10 years), KPI signature-time p95 (≤ 5 min including human-confirm).</td></tr>
@@ -325,7 +325,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit"]
- BRAIN["🧠 BRAIN<br>doc.* rows"]
+ memory["🧠 memory<br>doc.* rows"]
  OBS["👁 OBS"]
  end
 
@@ -351,8 +351,8 @@ graph TB
  BROKER --> VTL
  BROKER --> ARCHIVE
  ARCHIVE --> S3
- ARCHIVE --> BRAIN
- SESSION --> BRAIN
+ ARCHIVE --> memory
+ SESSION --> memory
  DOC --> OBS
  MIGRATE --> S3
  MIGRATE --> PG
@@ -363,7 +363,7 @@ graph TB
  classDef partner fill:#fef2f2,stroke:#7f1d1d
  class SPA,TPL,INBOX,DCRUD,TPL_S,SESSION,SIGNER,IDV,BROKER,ARCHIVE,MIGRATE,PDF planned
  class PG,S3,KMS store
- class BRAIN,OBS sink
+ class memory,OBS sink
  class GS,DG,VNPAY,MKG,VTL,WA,VNEID,SMS,EMAIL partner
  </div>
  </div>
@@ -393,7 +393,7 @@ graph TB
 
  <div class="invariant-box mt-5">
  <div class="label">DOC-INV-001 · Signed-document integrity is byte-for-byte verifiable</div>
- <p class="text-sm text-slate-700 mt-2 mb-0">Every archived PDF MUST cosign-verify against (a) its SHA-256 stored at archive time, (b) its cert chain stored with the document, and (c) its BRAIN audit-chain leaf. The verification path is implemented in <code>cyberos-doc verify --archive-id …</code> and is exercised quarterly by an automated chaos job that randomly picks 1% of archived docs and verifies them. Failure halts retention purges until investigation completes.</p>
+ <p class="text-sm text-slate-700 mt-2 mb-0">Every archived PDF MUST cosign-verify against (a) its SHA-256 stored at archive time, (b) its cert chain stored with the document, and (c) its memory audit-chain leaf. The verification path is implemented in <code>cyberos-doc verify --archive-id …</code> and is exercised quarterly by an automated chaos job that randomly picks 1% of archived docs and verifies them. Failure halts retention purges until investigation completes.</p>
  </div>
 </section>
 
@@ -464,7 +464,7 @@ erDiagram
  string mode "sequential | parallel"
  timestamp deadline
  string status "open | completed | expired | cancelled"
- string brain_chain
+ string memory_chain
  }
  SIGNER {
  uuid id PK
@@ -488,7 +488,7 @@ erDiagram
  bytea signature_blob "CAdES detached or PAdES embedded"
  string sha256_signed_pdf
  timestamp signed_at
- string brain_chain
+ string memory_chain
  }
  AUDIT_EVENT {
  uuid id PK
@@ -515,7 +515,7 @@ erDiagram
  </div>
  </div>
 
- <h3 class="text-lg font-bold mb-3">Per-document audit chain (mirrors BRAIN semantics)</h3>
+ <h3 class="text-lg font-bold mb-3">Per-document audit chain (mirrors memory semantics)</h3>
  <div class="bbg-card p-5">
 <pre><code class="language-text">/ each audit_event row carries:
 / prev_chain_hash = previous event's chain hash for this doc
@@ -704,7 +704,7 @@ sequenceDiagram
  participant CRM as 🏢 CRM
  participant KMS as AWS KMS
  participant S3 as S3 (residency-pinned)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  AM->>SPA: upload "Acme MSA.pdf" + select template "MSA-EU-v3"
  SPA->>D: POST /doc/upload (multipart, sha256)
@@ -732,7 +732,7 @@ sequenceDiagram
  participant I as idv.rs
  participant BK as broker.rs
  participant QTSP as eIDAS QTSP (GlobalSign)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  AM->>S: createSession(mode=sequential, signers=[A, B], deadline=14d)
  S->>B: append session.created row
@@ -772,7 +772,7 @@ sequenceDiagram
  participant VNEID as 🇻🇳 VNeID API
  participant BK as broker.rs
  participant VNCA as VN CA (e.g., VnPay)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  S->>SPA: open signing page
  SPA->>I: getIdvChallenge(country=VN, risk=high)
@@ -804,7 +804,7 @@ sequenceDiagram
  participant KMS as AWS KMS
  participant S3 as S3 Object-Lock Compliance
  participant TSA as RFC 3161 TSA
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  S->>P: assemble PAdES-B-LT
  P->>P: embed cert chain (all signers)
@@ -832,7 +832,7 @@ sequenceDiagram
  participant DS as DocuSign API
  participant A as archive.rs
  participant S3 as S3 Object-Lock
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CLO->>M: cyberos-doc migrate-docusign --since 2020-01-01
  M->>DS: list envelopes (paged)
@@ -950,14 +950,14 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- DOC depends on AUTH (WebAuthn), BRAIN (audit), KMS + S3 (archival), and at least one QTSP partner per jurisdiction. Consumed by CRM (deal contracts), HR (employment contracts), INV (signed POs), and PORTAL (client signing).
+ DOC depends on AUTH (WebAuthn), memory (audit), KMS + S3 (archival), and at least one QTSP partner per jurisdiction. Consumed by CRM (deal contracts), HR (employment contracts), INV (signed POs), and PORTAL (client signing).
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["DOC depends on"]
  AUTH["🔐 AUTH<br>WebAuthn + RBAC"]
- BRAIN["🧠 BRAIN<br>audit chain"]
+ memory["🧠 memory<br>audit chain"]
  OBS["👁 OBS"]
  KMS["🔑 AWS KMS"]
  S3["🗄 S3 Object-Lock"]
@@ -973,10 +973,10 @@ graph LR
  HR_D["👥 HR<br>employment contracts"]
  INV_D["💰 INV<br>signed POs"]
  PORTAL["🌐 PORTAL<br>client signing"]
- BRAIN_D["🧠 BRAIN<br>doc citations"]
+ MEMORY_D["🧠 memory<br>doc citations"]
  end
  AUTH --> DOC
- BRAIN --> DOC
+ memory --> DOC
  OBS --> DOC
  KMS --> DOC
  S3 --> DOC
@@ -989,11 +989,11 @@ graph LR
  DOC --> HR_D
  DOC --> INV_D
  DOC --> PORTAL
- DOC --> BRAIN_D
+ DOC --> MEMORY_D
 
  classDef planned fill:#fde68a,stroke:#78350f
  classDef partner fill:#fef2f2,stroke:#7f1d1d
- class AUTH,BRAIN,OBS,KMS,S3,CRM,HR_UP,DOC,CRM_D,HR_D,INV_D,PORTAL,BRAIN_D planned
+ class AUTH,memory,OBS,KMS,S3,CRM,HR_UP,DOC,CRM_D,HR_D,INV_D,PORTAL,MEMORY_D planned
  class VNEID,QTSP,TSA partner
  </div>
  </div>
@@ -1078,7 +1078,7 @@ graph LR
  <tr><td><strong>Fraud-detection alerts / month</strong></td><td>count</td><td>fraud.rs</td><td>tracked</td></tr>
  <tr><td><strong>Migration trust-external flag rate</strong></td><td><code>external / total</code></td><td>doc.document</td><td>declining trend</td></tr>
  <tr><td><strong>Cross-module trigger validation rate</strong></td><td>cross-module-triggered docs with source record validated / total</td><td>OBS</td><td>= 1.0 (hard floor)</td></tr>
- <tr><td><strong>Renewal proposal terms-stamp coverage</strong></td><td>proposals with active terms-version stamped / total</td><td>BRAIN audit</td><td>= 1.0</td></tr>
+ <tr><td><strong>Renewal proposal terms-stamp coverage</strong></td><td>proposals with active terms-version stamped / total</td><td>memory audit</td><td>= 1.0</td></tr>
  <tr><td><strong>Expiry cascade completeness</strong></td><td>contracts hit by all 3 cascade steps (90/30/7) / total expiring</td><td>nightly batch</td><td>= 1.0</td></tr>
  <tr><td><strong>Multi-jurisdiction cert-chain declaration rate</strong></td><td>multi-juris contracts with explicit cert-chain declared / total</td><td>contract metadata</td><td>= 1.0</td></tr>
  <tr><td><strong>LTV re-validation pass rate (year 9)</strong></td><td>migrated trails passing LTV at year 9 / total imports</td><td>quarterly audit</td><td>≥ 0.95 (escalate failures)</td></tr>
@@ -1117,14 +1117,14 @@ graph LR
 <!-- ============================================================ -->
 <section id="cli-usage" class="module-section">
  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-doc</code>. Every destructive action writes a chained BRAIN audit row.</p>
+ <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-doc</code>. Every destructive action writes a chained memory audit row.</p>
 
  <h3 class="text-lg font-bold mb-2">1. Upload + apply template</h3>
 <pre><code>$ cyberos-doc upload "Acme MSA.pdf" --template MSA-EU-v3 --deal deal-2026-0912
 
 [uploaded] doc_id=DOC-018824 sha256=… bytes=412_223
 [template] MSA-EU-v3 applied; 4 fields auto-filled from CRM
-[audit] brain seq=21884 chain=…</code></pre>
+[audit] memory seq=21884 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Create a multi-party signing session</h3>
 <pre><code>$ cyberos-doc session create \
@@ -1175,14 +1175,14 @@ graph LR
 [scan] 324 envelopes since 2020-01-01
 [import] 324 imported · 0 failures
 [trust] all flagged trust=external
-[audit] brain seq=21899 chain=…</code></pre>
+[audit] memory seq=21899 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. Apply legal hold</h3>
 <pre><code>$ cyberos-doc legal-hold --doc DOC-018824 --on --reason "Acme litigation 2026-104"
 
 [hold applied] DOC-018824 protected beyond retention window
 [next purge] blocked — legal_hold=true
-[audit] brain seq=21902 chain=… (CLO co-sign required: stephen@cyberskill.com confirmed)</code></pre>
+[audit] memory seq=21902 chain=… (CLO co-sign required: stephen@cyberskill.com confirmed)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">8. DSAR export for a signer</h3>
 <pre><code>$ cyberos-doc dsar-export --subject alice@acme.com --output dsar.zip
@@ -1261,7 +1261,7 @@ graph LR
  <li><strong>HR module</strong> — <a href="hr.html" class="text-blue-700 underline">hr.html</a> · upstream for employment-contract auto-fill.</li>
  <li><strong>AUTH module</strong> — <a href="auth.html" class="text-blue-700 underline">auth.html</a> · WebAuthn for elevated-signer IDV.</li>
  <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + partner-routed signing Mermaid + 10-row auto-vs-human matrix.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — every contract event (sign, expire, renew) becomes a BRAIN audit row.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — every contract event (sign, expire, renew) becomes a memory audit row.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — DOC at P4 · early (P4) due to QTSP partner integration timeline.</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  </ul>

@@ -81,6 +81,7 @@ async fn admin_endpoint_accepts_valid_bearer() {
         travel_policy: cyberos_auth::travel_policy::PolicyCache::new(),
         sticky_suppress: cyberos_auth::travel_policy::StickySuppress::new(),
         rate_limit: std::sync::Arc::new(cyberos_auth::rate_limit::RateLimiter::new()),
+        deny_list: cyberos_auth::deny_list::DenyList::new(),
     });
 
     let res = app

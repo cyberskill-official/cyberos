@@ -1,4 +1,4 @@
-"""Tests for FR-BRAIN-109 Claude Code hook capture."""
+"""Tests for FR-MEMORY-109 Claude Code hook capture."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from cyberos.core.claude_code_hook import (
     HookCapture,
     capture_from_stdin,
     parse_event,
-    write_to_brain,
+    write_to_memory,
 )
 
 
@@ -79,7 +79,7 @@ def test_frontmatter_carries_required_fields() -> None:
     assert fm["tool"] == "Read"
     assert fm["sync_class"] == "private"
     assert fm["pii_policy"] == "redact"
-    assert fm["source"] == "fr-brain-109"
+    assert fm["source"] == "fr-memory-109"
 
 
 def test_body_includes_payload_json() -> None:
@@ -109,9 +109,9 @@ def test_capture_from_stdin_rejects_invalid_json() -> None:
         capture_from_stdin("SessionEnd", stdin=stdin)
 
 
-def test_write_to_brain_writes_yaml_frontmatter(tmp_path: Path) -> None:
+def test_write_to_memory_writes_yaml_frontmatter(tmp_path: Path) -> None:
     cap = parse_event("SessionEnd", {"session_id": "wt", "cwd": "/t"})
-    path = write_to_brain(cap, store_root=tmp_path)
+    path = write_to_memory(cap, store_root=tmp_path)
     assert path.exists()
     text = path.read_text()
     assert text.startswith("---\n")
@@ -120,7 +120,7 @@ def test_write_to_brain_writes_yaml_frontmatter(tmp_path: Path) -> None:
     assert "Claude Code · SessionEnd" in text
 
 
-def test_write_to_brain_via_writer_double(tmp_path: Path) -> None:
+def test_write_to_memory_via_writer_double(tmp_path: Path) -> None:
     captured = {}
 
     class FakeWriter:
@@ -131,7 +131,7 @@ def test_write_to_brain_via_writer_double(tmp_path: Path) -> None:
             return tmp_path / "fake-rooted" / path
 
     cap = parse_event("PostToolUse", {"session_id": "fw", "cwd": "/x", "tool_name": "Bash"})
-    out = write_to_brain(cap, store_root=tmp_path, writer=FakeWriter())
+    out = write_to_memory(cap, store_root=tmp_path, writer=FakeWriter())
     assert captured["path"].startswith("memories/claude-code/")
     assert "kind" in captured["fm_keys"]
     assert "tool" in captured["fm_keys"]

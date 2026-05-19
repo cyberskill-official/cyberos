@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-LEARN-001, FR-DOC-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-LEARN-001, FR-DOC-001, FR-MEMORY-111]
 depends_on: [FR-LEARN-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2091 2026-05-17 — Closed enum `evidence_kind` = {degree, certification, course_completion, license, award}; cardinality 5
   - DEC-2092 2026-05-17 — Evidence linked to skill_id (FR-LEARN-001); upload scan/photo via FR-DOC-001
   - DEC-2093 2026-05-17 — Expiry monitoring: nightly batch flags expired/expiring (30d) certifications; CHRO notification
-  - DEC-2094 2026-05-17 — BRAIN audit kinds: learn.evidence_added, learn.evidence_verified, learn.evidence_expired, learn.evidence_renewed
+  - DEC-2094 2026-05-17 — memory audit kinds: learn.evidence_added, learn.evidence_verified, learn.evidence_expired, learn.evidence_renewed
 
 build_envelope:
   language: rust 1.81
@@ -68,7 +68,7 @@ risk_if_skipped: "Without evidence records, mastery claims unverifiable. Without
 
 ## §1 — Description (BCP-14 normative)
 
-The LEARN service **MUST** ship evidence at `services/learn/src/evidence/` with 5-kind closed enum + skill link + FR-DOC-001 scan ref + expiry cron, 4 BRAIN audit kinds.
+The LEARN service **MUST** ship evidence at `services/learn/src/evidence/` with 5-kind closed enum + skill link + FR-DOC-001 scan ref + expiry cron, 4 memory audit kinds.
 
 1. **MUST** validate `evidence_kind` against closed enum per DEC-2091.
 
@@ -111,7 +111,7 @@ The LEARN service **MUST** ship evidence at `services/learn/src/evidence/` with 
    GET  /v1/learn/members/{id}/evidence       (list)
    ```
 
-5. **MUST** emit 4 BRAIN audit kinds per DEC-2094. PII per FR-BRAIN-111: name + issuer text SHA256.
+5. **MUST** emit 4 memory audit kinds per DEC-2094. PII per FR-MEMORY-111: name + issuer text SHA256.
 
 6. **MUST** thread trace_id from add → audit.
 
@@ -148,7 +148,7 @@ Sample evidence:
 ---
 
 ## §4 — Acceptance criteria
-1. **evidence_kind enum cardinality 5**. 2. **Issuer required**. 3. **Issued_date required**. 4. **expires_at optional**. 5. **doc_id optional FR-DOC-001 ref**. 6. **skill_id optional FR-LEARN-001 link**. 7. **Verification flag CHRO-only set**. 8. **Expiry cron 02:00 daily**. 9. **30d-expiring flagged + CHAT notification**. 10. **4 BRAIN audit kinds emitted**. 11. **PII scrubbed (name+issuer SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except verify cols**. 15. **expiry_idx for fast cron**. 16. **member_idx for profile view**. 17. **Verification_url stored as URL string**. 18. **FK to doc_id allows NULL**. 19. **FK to skill_id allows NULL**. 20. **Renewal = new evidence row (preserves history)**.
+1. **evidence_kind enum cardinality 5**. 2. **Issuer required**. 3. **Issued_date required**. 4. **expires_at optional**. 5. **doc_id optional FR-DOC-001 ref**. 6. **skill_id optional FR-LEARN-001 link**. 7. **Verification flag CHRO-only set**. 8. **Expiry cron 02:00 daily**. 9. **30d-expiring flagged + CHAT notification**. 10. **4 memory audit kinds emitted**. 11. **PII scrubbed (name+issuer SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except verify cols**. 15. **expiry_idx for fast cron**. 16. **member_idx for profile view**. 17. **Verification_url stored as URL string**. 18. **FK to doc_id allows NULL**. 19. **FK to skill_id allows NULL**. 20. **Renewal = new evidence row (preserves history)**.
 
 ---
 
@@ -165,7 +165,7 @@ async fn evidence_kind_enum_enforced() {
 async fn expiry_30d_flagged() {
     let ctx = TestContext::with_cert_expiring_in_25d().await;
     ctx.run_expiry_cron().await;
-    let audits = ctx.fetch_brain_audits("learn.evidence_expired").await;
+    let audits = ctx.fetch_memory_audits("learn.evidence_expired").await;
     assert!(!audits.is_empty() || ctx.check_expiring_alert_sent().await);
 }
 
@@ -183,7 +183,7 @@ async fn append_only_no_update() {
 
 ## §7 — Dependencies
 **Upstream:** FR-LEARN-001.
-**Cross-module:** FR-DOC-001 (scans), FR-MCP-007 (cron), FR-CHAT-005 (notification), FR-AUTH-101 (CHRO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-001 (scans), FR-MCP-007 (cron), FR-CHAT-005 (notification), FR-AUTH-101 (CHRO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -202,7 +202,7 @@ async fn append_only_no_update() {
 ## §11 — Implementation notes
 - §11.1 Expiry cron via FR-MCP-007 `kind: 'learn.evidence_expiry'`, daily 02:00.
 - §11.2 Renewal flow: new evidence row with updated dates; UI links to prior for chain.
-- §11.3 BRAIN audit body: member_id, evidence_id, kind; name+issuer SHA256.
+- §11.3 memory audit body: member_id, evidence_id, kind; name+issuer SHA256.
 - §11.4 Verification process: CHRO manual, optional FR-AI-003 auto-verify via verification_url scrape.
 - §11.5 PDPL: evidence may contain PII; covered by tenant data scope.
 

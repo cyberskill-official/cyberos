@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands the MCP Tasks primitive per MCP 2025-11-25 spec on top of FR-MCP-001. Final form: 1,135 lines, 25 §1 normative clauses (3 migrations, async task creation, per-module bounded worker pool, checkpoints, status polling + cancellation + list + idempotency endpoints, 30-day post-completion retention, 8 BRAIN audit kinds, FR-MCP-006 gating integration, FR-MCP-008 elicitation future-proofing), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 20 implementation notes.
+The spec lands the MCP Tasks primitive per MCP 2025-11-25 spec on top of FR-MCP-001. Final form: 1,135 lines, 25 §1 normative clauses (3 migrations, async task creation, per-module bounded worker pool, checkpoints, status polling + cancellation + list + idempotency endpoints, 30-day post-completion retention, 8 memory audit kinds, FR-MCP-006 gating integration, FR-MCP-008 elicitation future-proofing), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 20 implementation notes.
 
 6 issues caught by self-audit, all resolved.
 
@@ -59,7 +59,7 @@ Actually for slice 3, the subquery is acceptable performance-wise (checkpoint fr
 
 All 6 mechanical concerns addressed. Sub-task cancel cascade scoped to slice 4; worker heartbeat improvement scoped to slice 4 (slice 3 uses conservative TTL-based re-pickup); FR-MCP-005 cross-reference clarified; idempotency-key partial-index simplified; worker-pool dual-mechanism rationalised; checkpoint RLS performance noted as slice-4 optimisation target.
 
-The 1,135-line length is justified by 3 migrations + 4 endpoints + 8 BRAIN kinds + bounded-concurrency worker pool + checkpoint mechanism + cross-FR integration with MCP-001/002/006/008 + 22 failure modes covering distributed-system pitfalls. Density matches peer MCP FRs.
+The 1,135-line length is justified by 3 migrations + 4 endpoints + 8 memory kinds + bounded-concurrency worker pool + checkpoint mechanism + cross-FR integration with MCP-001/002/006/008 + 22 failure modes covering distributed-system pitfalls. Density matches peer MCP FRs.
 
 **Score = 10/10.**
 

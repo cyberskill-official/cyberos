@@ -4,7 +4,7 @@ id: FR-AI-022
 title: "OpenTelemetry trace + span emission for every call (caller → router → provider → response) with W3C TraceContext + PII-safe attributes"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 5
@@ -12,7 +12,7 @@ slice: 5
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-008, FR-AI-009, FR-AI-010, FR-AI-014, FR-AI-017, FR-AI-019, FR-AI-021, FR-OBS-001, FR-OBS-004, FR-OBS-005, FR-OBS-006]
 depends_on: [FR-AI-008, FR-AI-003, FR-OBS-001]
 blocks: [FR-OBS-004]
@@ -675,7 +675,7 @@ pub async fn call_provider_attempt(req: &ChatCompleteRequest, provider: Provider
 - **FR-AI-014** — `persona_load` span carries `agent_persona` from FR-AI-014's handle.
 - **FR-AI-017** — `cache_lookup` span carries `cache_state` (hit/miss/skipped/error).
 - **FR-AI-019/020** — Embedding/rerank sidecar HTTP calls carry traceparent.
-- **FR-AI-021** — CLI mutations emit BRAIN audit rows; this FR adds spans for the CLI commands themselves (separate concern).
+- **FR-AI-021** — CLI mutations emit memory audit rows; this FR adds spans for the CLI commands themselves (separate concern).
 - **FR-OBS-001** — Deploys the OTel collector at localhost:4317.
 - **FR-OBS-004** — LangSmith integration consumes propagated trace context to correlate LLM-side traces.
 - **FR-OBS-005** — Cross-pillar correlation depends on W3C TraceContext propagation.
@@ -847,7 +847,7 @@ All resolved at authoring time. Items deferred to later FRs:
 - Trace export to Jaeger/Tempo/Honeycomb via OTLP is standard; FR-OBS-001 owns the collector configuration. The gateway is collector-agnostic — it speaks OTLP and lets the collector route.
 - Token counts in span attributes (not full prompts) preserve privacy while keeping debug utility. An investigator can correlate "this span has 5000 prompt tokens, latency 5s" → "this is a long-context request" without seeing the prompt content.
 - The PII lint (§1 #15) is the structural defence. Reactive scrubbing at the collector is a fallback; preventing the leak at the call site is the primary control. The lint runs in CI on every PR; new attributes require explicit allowlist addition with rationale.
-- W3C TraceContext propagation is the cross-pillar correlation primitive. CyberOS's other pillars (KB, OBS, BRAIN) all consume the same `traceparent`; the AI Gateway is the trace-context EMITTER for AI calls but a propagator for upstream callers (e.g., a CUO request that flows through AI then KB).
+- W3C TraceContext propagation is the cross-pillar correlation primitive. CyberOS's other pillars (KB, OBS, memory) all consume the same `traceparent`; the AI Gateway is the trace-context EMITTER for AI calls but a propagator for upstream callers (e.g., a CUO request that flows through AI then KB).
 - The failover-vs-retry distinction in span structure (§1 #5 + #8) matters operationally. An investigator looking at a slow trace sees "3 retries on bedrock, 1 successful on anthropic" as ONE provider_call span with retry events PLUS one fresh provider_call span — the visual contrast IS the diagnostic.
 - The 100% sampling on errors + tail-based reduction at collector (§1 #10) is the "have your cake and eat it" pattern. Errors are always investigatable; happy-path volume is manageable.
 - The OTel SDK's batch export is asynchronous; spans accumulate in a queue and export every 5s OR at batch-size-512 fill. The 30s `export_timeout` is the upper bound; sustained collector failures cause queue eviction (oldest spans dropped). The `spans_dropped_total` metric is the visibility primitive.

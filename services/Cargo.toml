@@ -1,23 +1,36 @@
 [workspace]
 resolver = "2"
 members = [
-    "brain",
+    "memory",
     "auth",
     "skill-broker",
+    "ai-gateway",
+    "obs-collector",
+    "mcp-gateway",
+    "email",
+    "proj",
     "shared/cyberos-cli-exit",
     "shared/cyberos-types",
 ]
 
 [workspace.package]
 edition = "2021"
-rust-version = "1.81"
+# Versions floored to latest-stable as of 2026 Q2. `cargo update` picks up
+# patch releases without touching this manifest.
+#
+# 2026-05-19 bump 1.83 → 1.88 — webauthn-rs 0.5.5, time 0.3.47, icu_* 2.2.0,
+# base64urlsafedata 0.5.5, home 0.5.12 all require rustc ≥ 1.86/1.88 since
+# their last patch. The transitive set is wide enough that pinning each via
+# `cargo update --precise` is more brittle than bumping the floor.
+# `rustup toolchain install 1.88.0` is a one-time operator step.
+rust-version = "1.88"
 license = "Apache-2.0"
 authors = ["CyberSkill Team <eng@cyberskill.world>"]
 repository = "https://github.com/cyberskill/cyberos"
 
 [workspace.dependencies]
 # Async runtime
-tokio       = { version = "1.41", features = ["full"] }
+tokio       = { version = "1.42", features = ["full"] }
 axum        = { version = "0.7", features = ["macros"] }
 tower       = "0.5"
 tower-http  = { version = "0.6", features = ["trace", "cors"] }
@@ -41,12 +54,12 @@ uuid        = { version = "1.11", features = ["v4", "serde"] }
 chrono      = { version = "0.4", features = ["serde"] }
 
 # CLI
-clap        = { version = "4", features = ["derive"] }
+clap        = { version = "4.5", features = ["derive"] }
 
 # Crypto
 sha2        = { version = "0.10", features = ["oid"] }
 bcrypt      = "0.16"
-jsonwebtoken = "9"
+jsonwebtoken = "9.3"
 
 # Test helpers
 tokio-test          = "0.4"

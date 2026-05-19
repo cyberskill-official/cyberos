@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-001, FR-KB-002, FR-KB-003, FR-KB-006, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-KB-001, FR-KB-002, FR-KB-003, FR-KB-006, FR-MEMORY-111]
 depends_on: [FR-KB-001, FR-KB-003]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1912 2026-05-17 — VN bigram tokenisation enabled by default for VN tenants; English stemming via Snowball for global
   - DEC-1913 2026-05-17 — Index updates synchronously on doc version commit; eventual consistency window ≤ 1s
   - DEC-1914 2026-05-17 — Search results filtered by FR-KB-003 visibility tier at query time (RLS handles tenant + tier)
-  - DEC-1915 2026-05-17 — BRAIN audit kinds: kb.lexical_query_executed, kb.index_updated, kb.search_failed
+  - DEC-1915 2026-05-17 — memory audit kinds: kb.lexical_query_executed, kb.index_updated, kb.search_failed
 
 build_envelope:
   language: rust 1.81
@@ -74,7 +74,7 @@ risk_if_skipped: "Without lexical search, KB un-searchable beyond title scan. Wi
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship lexical search at `services/kb/src/search/lexical.rs` with PGroonga primary + FTS5 fallback + VN bigram + tier filter, 3 BRAIN audit kinds.
+The KB service **MUST** ship lexical search at `services/kb/src/search/lexical.rs` with PGroonga primary + FTS5 fallback + VN bigram + tier filter, 3 memory audit kinds.
 
 1. **MUST** validate `lexical_engine` against closed enum per DEC-1911.
 
@@ -106,7 +106,7 @@ The KB service **MUST** ship lexical search at `services/kb/src/search/lexical.r
    POST /v1/kb/search/lexical    body: {query, engine?, limit?, filters?}
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-1915. PII per FR-BRAIN-111: query text SHA-256 hashed.
+7. **MUST** emit 3 memory audit kinds per DEC-1915. PII per FR-MEMORY-111: query text SHA-256 hashed.
 
 8. **MUST** thread trace_id from query → engine → audit.
 
@@ -163,7 +163,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **lexical_engine enum cardinality 2**. 2. **PGroonga primary**. 3. **FTS5 fallback on PGroonga error**. 4. **VN bigram for VN tenant**. 5. **English stemming for global tenant**. 6. **Tier filter applied (RLS + visibility_tier)**. 7. **Synchronous index update via trigger**. 8. **3 BRAIN audit kinds emitted**. 9. **PII scrubbed (query text SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Snippet highlighting**. 13. **Result rank score returned**. 14. **Pagination support**. 15. **filters parameter supported**. 16. **Empty result returns empty array (not 404)**. 17. **Eventual consistency ≤ 1s post-write**. 18. **Search performance < 100ms p95**. 19. **Query length capped 500 chars**. 20. **Cross-language search per locale**.
+1. **lexical_engine enum cardinality 2**. 2. **PGroonga primary**. 3. **FTS5 fallback on PGroonga error**. 4. **VN bigram for VN tenant**. 5. **English stemming for global tenant**. 6. **Tier filter applied (RLS + visibility_tier)**. 7. **Synchronous index update via trigger**. 8. **3 memory audit kinds emitted**. 9. **PII scrubbed (query text SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Snippet highlighting**. 13. **Result rank score returned**. 14. **Pagination support**. 15. **filters parameter supported**. 16. **Empty result returns empty array (not 404)**. 17. **Eventual consistency ≤ 1s post-write**. 18. **Search performance < 100ms p95**. 19. **Query length capped 500 chars**. 20. **Cross-language search per locale**.
 
 ---
 
@@ -200,7 +200,7 @@ async fn tier_filter_excludes_role_restricted() {
 ## §7 — Dependencies
 **Upstream:** FR-KB-001, FR-KB-003.
 **Downstream:** FR-KB-006 (rerank consumes lexical results).
-**Cross-module:** FR-BRAIN-111 (PII).
+**Cross-module:** FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -220,7 +220,7 @@ async fn tier_filter_excludes_role_restricted() {
 - §11.1 PGroonga TokenBigramSplitSymbolAlphaDigit handles VN + English mixed.
 - §11.2 Trigger on kb_documents INSERT/UPDATE refreshes tsvector + reindex row.
 - §11.3 Result snippet via PGroonga's snippet_html() function with <b> highlight.
-- §11.4 BRAIN audit body: tenant_id, engine, result_count; query SHA256.
+- §11.4 memory audit body: tenant_id, engine, result_count; query SHA256.
 - §11.5 Pagination via OFFSET/LIMIT; cursor-based for >1k results.
 
 ---

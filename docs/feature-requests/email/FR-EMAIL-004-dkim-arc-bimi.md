@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-001, FR-EMAIL-002, FR-EMAIL-009, FR-PORTAL-002, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-001, FR-EMAIL-002, FR-EMAIL-009, FR-PORTAL-002, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001]
 blocks: [FR-EMAIL-009]
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1472 2026-05-17 — BIMI 1.0: per-tenant brand indicator pointing at SVG-tinified logo + VMC (Verified Mark Certificate); requires DMARC enforcement at p=quarantine or stricter
   - DEC-1473 2026-05-17 — Closed enum `dkim_outcome` = {signed_ed25519, signed_rsa, sign_failed_no_key, sign_failed_kms}; cardinality 4
   - DEC-1474 2026-05-17 — DNS setup wizard: tenant_admin guided through DKIM/SPF/DMARC/BIMI TXT records at signup or per-CNAME setup
-  - DEC-1475 2026-05-17 — BRAIN audit kinds: email.dkim_signed, email.arc_chain_extended, email.bimi_indicator_attached, email.dns_verification_passed, email.dns_verification_failed
+  - DEC-1475 2026-05-17 — memory audit kinds: email.dkim_signed, email.arc_chain_extended, email.bimi_indicator_attached, email.dns_verification_passed, email.dns_verification_failed
 
 build_envelope:
   language: rust 1.81
@@ -91,7 +91,7 @@ risk_if_skipped: "Without DKIM, outbound emails fail SPF/DKIM checks → relegat
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship DKIM signing + ARC chain forward + BIMI brand indicator at `services/email/src/{dkim,arc,bimi,dns}/`, per-tenant Ed25519 keypair generated at provisioning, DNS setup wizard, RFC-conformant signing, and 5 BRAIN audit kinds.
+The EMAIL service **MUST** ship DKIM signing + ARC chain forward + BIMI brand indicator at `services/email/src/{dkim,arc,bimi,dns}/`, per-tenant Ed25519 keypair generated at provisioning, DNS setup wizard, RFC-conformant signing, and 5 memory audit kinds.
 
 1. **MUST** define closed `dkim_outcome` enum: `('signed_ed25519','signed_rsa','sign_failed_no_key','sign_failed_kms')` per DEC-1473. Cardinality 4.
 
@@ -109,7 +109,7 @@ The EMAIL service **MUST** ship DKIM signing + ARC chain forward + BIMI brand in
    - Computes canonical body hash.
    - Signs over headers + hash.
    - Emits `DKIM-Signature` header.
-   - Emits BRAIN row `email.dkim_signed` with outcome.
+   - Emits memory row `email.dkim_signed` with outcome.
 
 5. **MUST** support ARC chain forward per DEC-1471 + RFC 8617 via `arc/chain_forward.rs`. For forwarded inbound mail:
    - Verifies existing ARC chain (cv= verdict).
@@ -132,7 +132,7 @@ The EMAIL service **MUST** ship DKIM signing + ARC chain forward + BIMI brand in
    - Mismatch → emit `email.dns_verification_failed` sev-2.
    - Success → `email.dns_verification_passed` sev-3.
 
-10. **MUST** emit 5 BRAIN audit kinds per DEC-1475.
+10. **MUST** emit 5 memory audit kinds per DEC-1475.
 
 11. **MUST** thread trace_id end-to-end.
 
@@ -220,7 +220,7 @@ POST   /v1/admin/tenants/{tid}/email/bimi-enable      (tenant_admin)
 7. **ARC chain extended** — forwarded message has ARC-Seal added.
 8. **BIMI requires DMARC** — bimi-enable without DMARC=quarantine → 412.
 9. **SVG tinify** — uploaded SVG processed to BIMI-compliant Tiny PS.
-10. **5 BRAIN audit kinds emitted**.
+10. **5 memory audit kinds emitted**.
 11. **KMS unavailable** → sign_failed_kms outcome + sev-1 audit.
 12. **Key missing for tenant** → sign_failed_no_key.
 13. **DNS verification failure persisted** — failures counter increments.
@@ -281,7 +281,7 @@ async fn provisioning_generates_keys() {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-001.
-**Cross-module:** FR-TEN-001 (keygen at provisioning), FR-PORTAL-002 (BIMI logo), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-TEN-001 (keygen at provisioning), FR-PORTAL-002 (BIMI logo), FR-AI-003, FR-MEMORY-111.
 **Downstream:** FR-EMAIL-009 (outbound send).
 
 ## §10 — Failure modes

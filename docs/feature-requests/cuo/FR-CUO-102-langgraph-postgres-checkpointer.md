@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CUO-101, FR-CUO-103, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CUO-101, FR-CUO-103, FR-MEMORY-111]
 depends_on: [FR-CUO-101]
 blocks: [FR-CUO-103]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-2321 2026-05-17 — Closed enum `checkpoint_kind` = {node_entered, node_completed, edge_traversed, run_started, run_completed, run_failed}; cardinality 6
   - DEC-2322 2026-05-17 — Checkpointer interface implements LangGraph's `BaseCheckpointer`; persists full state JSON per checkpoint
   - DEC-2323 2026-05-17 — Append-only; 7-year retention per Art. 12; archive partition monthly
-  - DEC-2324 2026-05-17 — BRAIN audit kinds: cuo.checkpoint_written, cuo.checkpoint_replayed, cuo.checkpoint_archive_failed
+  - DEC-2324 2026-05-17 — memory audit kinds: cuo.checkpoint_written, cuo.checkpoint_replayed, cuo.checkpoint_archive_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without checkpointer, supervisor state lost on crash → resta
 
 ## §1 — Description (BCP-14 normative)
 
-The CUO service **MUST** ship Postgres checkpointer at `services/cuo/src/checkpointer/` implementing LangGraph BaseCheckpointer + immutable persistence + EU AI Act Art. 12 logging, 3 BRAIN audit kinds.
+The CUO service **MUST** ship Postgres checkpointer at `services/cuo/src/checkpointer/` implementing LangGraph BaseCheckpointer + immutable persistence + EU AI Act Art. 12 logging, 3 memory audit kinds.
 
 1. **MUST** validate `checkpoint_kind` against closed enum per DEC-2321.
 
@@ -109,7 +109,7 @@ The CUO service **MUST** ship Postgres checkpointer at `services/cuo/src/checkpo
    GET /v1/cuo/runs/{run_id}/checkpoints   (FR-CUO-103 replay reads these)
    ```
 
-6. **MUST** emit 3 BRAIN audit kinds per DEC-2324. PII per FR-BRAIN-111: state_json hashed; ids ok.
+6. **MUST** emit 3 memory audit kinds per DEC-2324. PII per FR-MEMORY-111: state_json hashed; ids ok.
 
 7. **MUST** thread trace_id from supervisor → writer → audit.
 
@@ -146,7 +146,7 @@ Sample checkpoint:
 ---
 
 ## §4 — Acceptance criteria
-1. **checkpoint_kind enum cardinality 6**. 2. **LangGraph BaseCheckpointer interface implemented**. 3. **Per-node + per-edge persistence**. 4. **State JSON serialized**. 5. **trace_id captured**. 6. **3 BRAIN audit kinds emitted**. 7. **PII scrubbed (state_json SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **Append-only via REVOKE UPDATE/DELETE**. 11. **Monthly partitioning**. 12. **7-year retention**. 13. **Archive cron via DROP PARTITION**. 14. **Replay roundtrip OK**. 15. **Performance < 5ms per checkpoint**. 16. **Run-scoped query indexed**. 17. **Parent_checkpoint_id forms DAG**. 18. **EU AI Act Art. 12 documented**. 19. **Concurrent checkpoint OK**. 20. **State size capped 5MB per checkpoint**.
+1. **checkpoint_kind enum cardinality 6**. 2. **LangGraph BaseCheckpointer interface implemented**. 3. **Per-node + per-edge persistence**. 4. **State JSON serialized**. 5. **trace_id captured**. 6. **3 memory audit kinds emitted**. 7. **PII scrubbed (state_json SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **Append-only via REVOKE UPDATE/DELETE**. 11. **Monthly partitioning**. 12. **7-year retention**. 13. **Archive cron via DROP PARTITION**. 14. **Replay roundtrip OK**. 15. **Performance < 5ms per checkpoint**. 16. **Run-scoped query indexed**. 17. **Parent_checkpoint_id forms DAG**. 18. **EU AI Act Art. 12 documented**. 19. **Concurrent checkpoint OK**. 20. **State size capped 5MB per checkpoint**.
 
 ---
 
@@ -183,7 +183,7 @@ async fn per_node_checkpoint_count() {
 ## §7 — Dependencies
 **Upstream:** FR-CUO-101.
 **Downstream:** FR-CUO-103 (replay uses checkpoints).
-**Cross-module:** FR-BRAIN-111 (PII), FR-MCP-007 (archive cron).
+**Cross-module:** FR-MEMORY-111 (PII), FR-MCP-007 (archive cron).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -202,7 +202,7 @@ async fn per_node_checkpoint_count() {
 ## §11 — Implementation notes
 - §11.1 BaseCheckpointer trait per LangGraph spec: `aput()`, `aget_tuple()`, `alist()`.
 - §11.2 Partition strategy: monthly RANGE on created_at; drop > 84 months old (7 years).
-- §11.3 BRAIN audit body: run_id, node_name, kind; state_json SHA256.
+- §11.3 memory audit body: run_id, node_name, kind; state_json SHA256.
 - §11.4 Archive cron via FR-MCP-007 monthly; DROP PARTITION for oldest.
 - §11.5 EU AI Act Art. 12: high-risk AI systems must keep automatic logs; this satisfies it.
 

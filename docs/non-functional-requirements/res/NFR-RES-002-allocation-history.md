@@ -14,7 +14,7 @@ related_frs: [FR-RES-002]
 
 ## §1 — Statement (BCP-14 normative)
 
-1. Every change to a member's allocation (create, update, deactivate) **MUST** emit a BRAIN audit row carrying `{member_id, project_id, before_pct, after_pct, actor_id, reason?, changed_at}`.
+1. Every change to a member's allocation (create, update, deactivate) **MUST** emit a memory audit row carrying `{member_id, project_id, before_pct, after_pct, actor_id, reason?, changed_at}`.
 2. Allocation rows themselves are append-only; corrections take the form of a new period overriding the prior.
 3. Bulk allocation changes (e.g., team rebalance) **MUST** emit one row per affected member; bulk operations are not allowed to collapse into a single audit row.
 4. Allocation history **MUST** be retrievable as a per-member timeline.

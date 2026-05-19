@@ -3,7 +3,7 @@ id: FR-PROJ-011
 title: "Blocker detector from comment stream — `blocked by` parser + dwell-time monitor + CUO Notify on stale blockers"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PROJ-003, FR-PROJ-004, FR-CUO-101, FR-OBS-007, FR-BRAIN-101]
+memory_chain_hash: null
+related_frs: [FR-PROJ-003, FR-PROJ-004, FR-CUO-101, FR-OBS-007, FR-MEMORY-101]
 depends_on: [FR-PROJ-003, FR-CUO-101]
 blocks: []
 
@@ -48,7 +48,7 @@ sub_tasks:
   - "1.5h: parser.rs — regex `(?i)\\bblock(?:ed|s|ing)\\s+by[:\\s]+([^\\n,;.]+)` + #issue-ref extractor"
   - "1.0h: dwell.rs — hourly scan; business-day computation (skip Sat/Sun + VN holidays)"
   - "0.5h: CUO Notify integration (placeholder webhook to FR-CUO-101)"
-  - "0.5h: BRAIN audit row 'proj.blocker_detected', 'proj.blocker_resolved', 'proj.blocker_stale'"
+  - "0.5h: memory audit row 'proj.blocker_detected', 'proj.blocker_resolved', 'proj.blocker_stale'"
   - "1.5h: blocker_test.rs — regex coverage + dwell + resolution"
 risk_if_skipped: "Blocker tracking is the highest-leverage signal in PROJ: a stale blocker means someone is stuck. Without detection, issues sit indefinitely. Without dwell-time semantics, even fresh blockers get pinged repeatedly. Without CUO routing, notifications flood Slack channels. Manual blocker tracking via labels is friction users skip."
 ---
@@ -60,7 +60,7 @@ The blocker detector **MUST** parse Issue comments for "blocked by" patterns and
 1. **MUST** parse comments on insert/edit (FR-PROJ-003 CRDT events) for the regex `(?i)\b(block(?:ed|s|ing))\s+by[:\s]+([^\n,;.]+)`. Captures: keyword (blocked|blocks|blocking) + target reference.
 2. **MUST** classify target as:
     - `IssueMention`: matches `#<uuid>` or `#<readable-id>`; resolved via FR-PROJ-001 issue table.
-    - `MemoryPath`: matches `memories/...`; resolved via FR-BRAIN-101.
+    - `MemoryPath`: matches `memories/...`; resolved via FR-MEMORY-101.
     - `FreeText`: anything else; stored verbatim ("waiting on customer", "needs design review").
 3. **MUST** record blockers in `blocker_state` table: `(issue_id, comment_id, blocker_kind, target_ref, detected_at, detected_by, resolved_at, resolved_by_comment_id, tenant_id)`. Active = `resolved_at IS NULL`.
 4. **MUST** auto-resolve a blocker when:
@@ -68,7 +68,7 @@ The blocker detector **MUST** parse Issue comments for "blocked by" patterns and
     - A subsequent comment on the blocking issue matches `(?i)\bunblocked\b` or `(?i)\bresolved\b`.
     - The issue itself transitions to Done | Cancelled (block becomes moot).
 5. **MUST** compute `dwell_business_days` since `detected_at`, excluding Sat/Sun and configured VN public holidays (`CYBEROS_HOLIDAYS_VN` env: comma-separated YYYY-MM-DD). ≥ 3 business days → mark stale.
-6. **MUST** emit BRAIN audit rows:
+6. **MUST** emit memory audit rows:
     - `proj.blocker_detected` on new blocker.
     - `proj.blocker_resolved` on auto-resolution (carries reason).
     - `proj.blocker_stale` once dwell ≥ 3 business days (idempotent — once per blocker).
@@ -80,7 +80,7 @@ The blocker detector **MUST** parse Issue comments for "blocked by" patterns and
     - `proj_blockers_detected_total{kind}` (counter).
     - `proj_blockers_resolved_total{auto_reason}` (counter).
     - `proj_blockers_stale_total` (counter).
-11. **MUST** redact PII from `target_ref` (especially FreeText kind) before BRAIN audit emit via FR-BRAIN-111 ruleset.
+11. **MUST** redact PII from `target_ref` (especially FreeText kind) before memory audit emit via FR-MEMORY-111 ruleset.
 12. **MUST** support manual operator override: `POST /api/proj/blockers/:id/resolve` with reason; emits `proj.blocker_resolved` with `auto_reason="manual"`.
 13. **MUST** support manual creation: `POST /api/proj/issues/:id/blockers` for cases where parser missed (e.g. blocker discussed verbally). Tracks `detected_by_subject_id` as the operator.
 14. **MUST** track escalation: after `stale_notified_at + 7 business days` without resolution, emit `proj.blocker_escalated` SEV-2 + notify tenant admin (in addition to assignee).
@@ -99,7 +99,7 @@ The blocker detector **MUST** parse Issue comments for "blocked by" patterns and
 
 **Why comment-stream parsing (DEC-320)?** Operators already write "blocked by X" in comments; structured-label workflows (drag to "Blocked" column) are friction. Parsing existing prose = zero friction adoption.
 
-**Why three target classes (§1 #2)?** IssueMention is the strongest signal (machine-resolvable). MemoryPath catches BRAIN-anchored decisions. FreeText handles human context ("blocked by customer's response") — can't auto-resolve but still timed.
+**Why three target classes (§1 #2)?** IssueMention is the strongest signal (machine-resolvable). MemoryPath catches memory-anchored decisions. FreeText handles human context ("blocked by customer's response") — can't auto-resolve but still timed.
 
 **Why business days not calendar (§1 #5)?** A blocker filed Friday afternoon shouldn't ping Monday morning as "3 days stale." Business-day math + VN holidays = culturally-correct.
 
@@ -243,7 +243,7 @@ pub async fn scan_stale(pool: &sqlx::PgPool, tenant_id: uuid::Uuid) -> anyhow::R
             sqlx::query("UPDATE blocker_state SET stale_notified_at = NOW() WHERE id = $1")
                 .bind(id).execute(pool).await?;
             cuo_notify(tenant_id, issue_id, id, &target_ref, dwell).await?;
-            emit_brain_row("proj.blocker_stale", serde_json::json!({
+            emit_memory_row("proj.blocker_stale", serde_json::json!({
                 "blocker_id": id, "issue_id": issue_id,
                 "target_ref": target_ref, "dwell_business_days": dwell,
             })).await;
@@ -293,7 +293,7 @@ fn parse_vn_holidays_env() -> std::collections::HashSet<chrono::NaiveDate> {
 11. **Weekend doesn't count** — Fri detected → Mon = dwell 1 (not 3).
 12. **VN holiday env honoured** — config holiday 2026-09-02; Tue–Wed straddles it → dwell skips that day.
 13. **Stale notification idempotent** — second scan after notification → no duplicate webhook; metric unchanged.
-14. **BRAIN audit on detect/resolve/stale** — all 3 kinds emitted at correct events.
+14. **memory audit on detect/resolve/stale** — all 3 kinds emitted at correct events.
 15. **CUO Notify webhook payload schema** — payload matches §1 #7 spec.
 16. **RLS tenant isolation** — tenant A's blockers invisible to tenant B.
 17. **Gauge `proj_blockers_active`** — accurate count of unresolved blockers per tenant.
@@ -430,8 +430,8 @@ All resolved. Deferred:
 | 10K active blockers in one tenant | scan slow | sev-2 latency alarm | Slice 4+ paginate |
 | RLS bypass | RLS policy | 0 rows | None |
 | Concurrent unblocked comment + Done transition | both resolve | Idempotent UPDATE | None |
-| BrainEmit fails | row created; audit lost | sev-2 | Operator restores |
-| Free-text blocker with secrets | redacted via FR-BRAIN-111 at audit emit | Safe | None |
+| MemoryEmit fails | row created; audit lost | sev-2 | Operator restores |
+| Free-text blocker with secrets | redacted via FR-MEMORY-111 at audit emit | Safe | None |
 | Manual resolve without reason | 400 | None | Caller |
 | Manual create with invalid target | falls back to FreeText | None | None |
 | Escalation fires before assignee fixes (race) | dedup at OBS | None | None |
@@ -476,7 +476,7 @@ All resolved. Deferred:
 - The `proj.blocker_escalated` SEV-2 notification is routed to tenant admin via FR-OBS-007 + the assignee via CUO.
 - Snooze max 14 days because: anything longer = blocker isn't really tracked; operator should remove or escalate.
 - The blocker comment that triggered detection is the canonical reference; comment edits don't re-trigger detection (slice 4+ feature).
-- Manual create + manual resolve emit BRAIN audit rows with `auto_reason="manual"` so analytics can distinguish from automated detection.
+- Manual create + manual resolve emit memory audit rows with `auto_reason="manual"` so analytics can distinguish from automated detection.
 - The mentioned_users extraction handles Vietnamese username conventions (with diacritics stripped for resolution).
 
 ---

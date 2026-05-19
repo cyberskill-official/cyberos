@@ -1,10 +1,10 @@
 ---
 # ───── Machine-readable frontmatter (parsed by feature-request-audit + future fr-catalog renderer) ─────
 id: FR-AI-021
-title: "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · brain) with --confirm + --json + audit"
+title: "cyberos-ai operator CLI (usage · models · policy · failover · invoice · breaker · expiry · memory) with --confirm + --json + audit"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 5
@@ -12,7 +12,7 @@ slice: 5
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-003, FR-AI-004, FR-AI-005, FR-AI-007, FR-AI-008, FR-AI-009, FR-AI-014, FR-AI-015, FR-AI-022]
 depends_on: [FR-AI-005, FR-AI-008, FR-AI-002, FR-AI-004, FR-AI-009]
 blocks: []
@@ -41,7 +41,7 @@ new_files:
   - services/ai-gateway/src/cli/invoice.rs
   - services/ai-gateway/src/cli/breaker.rs
   - services/ai-gateway/src/cli/expiry.rs
-  - services/ai-gateway/src/cli/brain.rs
+  - services/ai-gateway/src/cli/memory.rs
   - services/ai-gateway/src/cli/exit_codes.rs
   - services/ai-gateway/src/cli/json_schemas.rs
   - services/ai-gateway/tests/cli_test.rs
@@ -51,14 +51,14 @@ new_files:
   - services/ai-gateway/docs/cli-reference.md
 modified_files:
   - services/ai-gateway/Cargo.toml                                # clap@4, comfy-table@7, jsonschema@0.18
-  - services/ai-gateway/src/brain_writer.rs                       # add canonical::cli_* row builders
+  - services/ai-gateway/src/memory_writer.rs                       # add canonical::cli_* row builders
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,docs}/**
   - bash: cargo build --bin cyberos-ai --release
   - bash: cargo test -p cyberos-ai-gateway cli
 disallowed_tools:
-  - skip BRAIN audit row when CLI mutates tenant policy or breaker state (per §1 #4)
+  - skip memory audit row when CLI mutates tenant policy or breaker state (per §1 #4)
   - allow destructive operations without `--confirm` (per §1 #5)
   - emit unstable JSON shape (per §1 #8 — JSON schema is a versioned contract)
   - bypass operator authentication (per §1 #6 — every mutating call requires `CYBEROS_AI_OPERATOR_TOKEN`)
@@ -80,33 +80,33 @@ sub_tasks:
   - "1.0h: `invoice export <tenant> --period YYYY-MM --format csv|json|pdf` (PDF via wkhtmltopdf)"
   - "0.5h: `breaker status` + `breaker reset <provider:model> --confirm`"
   - "0.5h: `expiry status` + `expiry repair --confirm` (FR-AI-004 dedupe)"
-  - "0.5h: `brain emit --dry-run <yaml>` + `brain emit --confirm <yaml>` (canonical-row builder + emit)"
-  - "0.5h: `brain audit-trail <tenant> --since <iso8601>` (search + filter ai.* rows)"
-  - "0.5h: BRAIN audit row builders for every mutating command (canonical::cli_policy_updated, etc.)"
+  - "0.5h: `memory emit --dry-run <yaml>` + `memory emit --confirm <yaml>` (canonical-row builder + emit)"
+  - "0.5h: `memory audit-trail <tenant> --since <iso8601>` (search + filter ai.* rows)"
+  - "0.5h: memory audit row builders for every mutating command (canonical::cli_policy_updated, etc.)"
   - "1.0h: cli_test.rs — smoke tests per subcommand"
   - "1.0h: cli_audit_test.rs — every mutating command emits the expected audit row"
   - "0.5h: cli_failover_drill_safety_test.rs — refuses without `--prod-confirmed-aware` flag in production env"
   - "0.5h: cli_json_schema_test.rs — every --json output validates against the documented schema"
   - "0.5h: cli-reference.md generation (clap-derived help → markdown)"
   - "0.5h: Shell completions (bash, zsh, fish) via clap_complete"
-risk_if_skipped: "Ops tasks (cap adjustments, failover testing, invoice exports, hold dedupe, breaker reset) require direct Postgres + BRAIN access. Founder bandwidth bottleneck (RSK-09 from research review). FR-AI-004's crash-recovery path explicitly DEPENDS on this CLI's `expiry repair` command for dedup. Without the CLI, every ops question becomes a code-change PR — a 30-minute ticket becomes a 3-hour deploy. Worse: routine mutations (cap bumps for new tenants) become founder-only operations, blocking onboarding throughput at the slowest possible bottleneck."
+risk_if_skipped: "Ops tasks (cap adjustments, failover testing, invoice exports, hold dedupe, breaker reset) require direct Postgres + memory access. Founder bandwidth bottleneck (RSK-09 from research review). FR-AI-004's crash-recovery path explicitly DEPENDS on this CLI's `expiry repair` command for dedup. Without the CLI, every ops question becomes a code-change PR — a 30-minute ticket becomes a 3-hour deploy. Worse: routine mutations (cap bumps for new tenants) become founder-only operations, blocking onboarding throughput at the slowest possible bottleneck."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
 The AI Gateway service **MUST** ship a `cyberos-ai` operator CLI binary providing ops-level commands. Each subcommand obeys the following:
 
-1. **MUST** be deterministic: same inputs (CLI args + Postgres + BRAIN state) → same outputs. Idempotency is required for read commands; mutating commands must emit the same audit row regardless of repeat invocation.
+1. **MUST** be deterministic: same inputs (CLI args + Postgres + memory state) → same outputs. Idempotency is required for read commands; mutating commands must emit the same audit row regardless of repeat invocation.
 2. **MUST** print human-readable output by default using `comfy-table` for tabular data; the `--json` flag produces machine-readable output validated against a JSON schema versioned per command (per §1 #8).
 3. **MUST** support `--tenant <id>` filtering on every relevant subcommand (usage, policy, invoice, audit-trail). Without `--tenant`, the command operates across all tenants (admin-token required per §1 #6).
-4. **MUST** emit a BRAIN audit row for ANY mutating operation (policy set, breaker reset, failover drill, expiry repair, brain emit) via the dedicated `canonical::cli_*` builders. The row carries `command`, `args`, `operator_id` (from token), `request_id`, `outcome`, AND a SHA-256 of the full command line for replay identification. Audit-before-action invariant from FR-AI-001 §1 #6 applies.
+4. **MUST** emit a memory audit row for ANY mutating operation (policy set, breaker reset, failover drill, expiry repair, memory emit) via the dedicated `canonical::cli_*` builders. The row carries `command`, `args`, `operator_id` (from token), `request_id`, `outcome`, AND a SHA-256 of the full command line for replay identification. Audit-before-action invariant from FR-AI-001 §1 #6 applies.
 5. **MUST** refuse mutating operations without an explicit `--confirm` flag. Without `--confirm`, the command prints a DIFF (current state → proposed state) and exits with code 4 (`DESTRUCTIVE_WITHOUT_CONFIRM`). The diff is human-readable AND parseable (operators can pipe to `tee` to log review evidence).
 6. **MUST** authenticate the operator via `CYBEROS_AI_OPERATOR_TOKEN` environment variable (short-lived JWT signed by the deployment secret). The token carries `operator_id` (kebab-case email) and `roles` (`read | mutate | admin`). Read-only commands accept any role; mutating commands require `mutate` or `admin`; the `failover drill` and `expiry repair` commands require `admin`. Missing or invalid token exits with code 2 (`AUTH_FAILED`); insufficient role exits with code 2 with a clear message.
 7. **MUST** emit standardised exit codes per the shared `cyberos-cli-exit::ExitCode` re-export (cross-CLI contract; see also FR-AUTH-006):
     - `0` — success
     - `1` — user error (invalid args, validation failure, no such tenant)
     - `2` — auth failed OR insufficient role
-    - `3` — remote unreachable (Postgres, BRAIN, gateway)
+    - `3` — remote unreachable (Postgres, memory, gateway)
     - `4` — destructive operation without `--confirm`
     - `5` — already initialised (reserved — bootstrap-only path; not raised by operator CLI commands but value is reserved cluster-wide)
     - `6` — schema violation (input YAML invalid)
@@ -130,9 +130,9 @@ The AI Gateway service **MUST** ship a `cyberos-ai` operator CLI binary providin
    | `cyberos-ai breaker reset <provider:model> --confirm` | Force breaker to Closed | Yes | mutate | `ai.cli_breaker_reset` |
    | `cyberos-ai expiry status` | Hold-expiry job health | No | read | — |
    | `cyberos-ai expiry repair --confirm` | Dedupe duplicate `ai.hold_expired` rows (FR-AI-004) | Yes | admin | `ai.cli_expiry_repaired` |
-   | `cyberos-ai brain emit --dry-run <yaml>` | Validate canonical-row payload | No | read | — |
-   | `cyberos-ai brain emit --confirm <yaml>` | Emit a manual canonical row | Yes | admin | `ai.cli_brain_emitted` |
-   | `cyberos-ai brain audit-trail <tenant> --since <iso8601>` | Search BRAIN ai.* rows | No | read | — |
+   | `cyberos-ai memory emit --dry-run <yaml>` | Validate canonical-row payload | No | read | — |
+   | `cyberos-ai memory emit --confirm <yaml>` | Emit a manual canonical row | Yes | admin | `ai.cli_memory_emitted` |
+   | `cyberos-ai memory audit-trail <tenant> --since <iso8601>` | Search memory ai.* rows | No | read | — |
 
 10. **MUST** support `policy set` taking multiple `--field=value` flags in one invocation: `policy set org:cyberskill --cap-usd=200 --zdr-required=true --residency=eu-1 --confirm`. The diff (printed without `--confirm` AND echoed with `--confirm`) shows BEFORE/AFTER for every changed field. Atomicity: either all fields apply OR none (single Postgres transaction).
 11. **MUST** apply a safety guard to `failover drill`: in a production environment (env var `CYBEROS_DEPLOYMENT_TIER=production`), the command additionally requires `--prod-confirmed-aware` flag AND prompts for an interactive Y/N confirmation with the deployment tier displayed. Drills in `production` are not forbidden (they're sometimes necessary) but must be deliberate.
@@ -153,7 +153,7 @@ The AI Gateway service **MUST** ship a `cyberos-ai` operator CLI binary providin
 
 **Why JSON output mode (§1 #2)?** Future scripts + dashboards consume CLI output. Without `--json`, parsing the human-readable output is fragile (table layout changes, columns reordered, Unicode in cell values). JSON output is a stable contract. Versioning the schema (§1 #8) lets us evolve fields without breaking existing consumers. The split (human default + JSON opt-in) means interactive ops sessions are pleasant AND scripts are robust.
 
-**Why audit rows on mutating operations (§1 #4)?** The same audit-before-action invariant that the gateway itself enforces. Operator mutations are part of the system's history; "who reset the breaker last Tuesday" must be answerable from the BRAIN chain. Without CLI audit rows, mutations become invisible (the gateway records the EFFECT but not the OPERATOR). The SHA-256 of the command line in the audit row is a small but useful detail — it lets a forensic replay reconstruct the exact invocation.
+**Why audit rows on mutating operations (§1 #4)?** The same audit-before-action invariant that the gateway itself enforces. Operator mutations are part of the system's history; "who reset the breaker last Tuesday" must be answerable from the memory chain. Without CLI audit rows, mutations become invisible (the gateway records the EFFECT but not the OPERATOR). The SHA-256 of the command line in the audit row is a small but useful detail — it lets a forensic replay reconstruct the exact invocation.
 
 **Why `--confirm` requirement (§1 #5)?** A keystroke error like `cyberos-ai policy set org:cyberskill --cap-usd 0 --confirm` (intended `200`) instantly zeros a tenant's budget. Two-step confirmation (run-first-without-confirm-to-see-diff, then run-with-confirm) prevents the worst class of operator errors. The diff is the safety net; the operator visually verifies the change before re-running. Exit code 4 is distinct from "user error" (exit 1) so scripts can detect "operator forgot --confirm" specifically.
 
@@ -171,7 +171,7 @@ The AI Gateway service **MUST** ship a `cyberos-ai` operator CLI binary providin
 
 **Why is this MUST priority (vs the COULD on FR-AI-020)?** Ops tasks aren't optional. FR-AI-004's crash-recovery path explicitly REQUIRES `expiry repair` to clean up duplicate hold-expired rows after a crash. Without the CLI, the dedupe is manual SQL — error-prone, no audit trail, founder-only. FR-AI-021 is in the critical path for Slice 5 ops.
 
-**Why `brain emit --dry-run` (§1 #9)?** Manual canonical-row emission is rare but necessary (e.g., backfilling rows missed during an outage). `--dry-run` validates the YAML payload against the row's schema without writing — operators can construct + validate before emitting. Same precedence as `policy validate`.
+**Why `memory emit --dry-run` (§1 #9)?** Manual canonical-row emission is rare but necessary (e.g., backfilling rows missed during an outage). `--dry-run` validates the YAML payload against the row's schema without writing — operators can construct + validate before emitting. Same precedence as `policy validate`.
 
 ---
 
@@ -201,7 +201,7 @@ pub enum Command {
     Invoice(InvoiceArgs),
     Breaker(BreakerArgs),
     Expiry(ExpiryArgs),
-    Brain(BrainArgs),
+    Memory(MemoryArgs),
     Completions(CompletionsArgs),
 }
 
@@ -241,7 +241,7 @@ pub enum FailoverAction {
     },
 }
 
-// ... similar Args structs for Invoice, Breaker, Expiry, Brain ...
+// ... similar Args structs for Invoice, Breaker, Expiry, Memory ...
 ```
 
 ### Exit codes
@@ -266,7 +266,7 @@ pub enum ExitCode {
 pub use cyberos_cli_exit::ExitCode;
 ```
 
-> **Note on numeric stability:** values 0–7 are normative across all CyberOS CLIs.  Module-specific codes start at `100` (AI), `200` (AUTH), `300` (BRAIN), `400` (OBS) — any per-module extension must avoid collision with the shared range above.
+> **Note on numeric stability:** values 0–7 are normative across all CyberOS CLIs.  Module-specific codes start at `100` (AI), `200` (AUTH), `300` (memory), `400` (OBS) — any per-module extension must avoid collision with the shared range above.
 
 ### Authentication
 
@@ -317,7 +317,7 @@ pub fn validate_output<T: Serialize>(command: &str, version: &str, value: &T) ->
 ### Audit row builders
 
 ```rust
-// services/ai-gateway/src/brain_writer.rs (additions)
+// services/ai-gateway/src/memory_writer.rs (additions)
 pub mod canonical {
     pub fn cli_policy_updated(
         operator_id: &str, tenant: &str, changes: &[FieldChange],
@@ -359,9 +359,9 @@ pub mod canonical {
         }), ..Default::default() }
     }
 
-    pub fn cli_brain_emitted(operator_id: &str, emitted_kind: &str,
+    pub fn cli_memory_emitted(operator_id: &str, emitted_kind: &str,
                              command_sha256: &str, request_id: &str) -> AuditRow {
-        AuditRow { kind: "ai.cli_brain_emitted".into(), payload: serde_json::json!({
+        AuditRow { kind: "ai.cli_memory_emitted".into(), payload: serde_json::json!({
             "operator_id": operator_id, "emitted_kind": emitted_kind,
             "command_sha256": command_sha256, "request_id": request_id,
         }), ..Default::default() }
@@ -377,7 +377,7 @@ pub mod canonical {
 2. **`cyberos-ai usage --tenant org:test`** prints MTD spend, call count, top 5 models. Exit 0.
 3. **`cyberos-ai usage ... --json`** returns JSON validating against `usage.v1.json` schema.
 4. **`cyberos-ai policy set <t> --cap-usd 200`** without `--confirm` prints diff + exits with code 4.
-5. **`cyberos-ai policy set <t> --cap-usd 200 --confirm`** updates Postgres + emits `ai.cli_policy_updated` BRAIN row.
+5. **`cyberos-ai policy set <t> --cap-usd 200 --confirm`** updates Postgres + emits `ai.cli_policy_updated` memory row.
 6. **Multi-field policy set atomic** — `policy set <t> --cap-usd=200 --zdr-required=true --confirm` updates BOTH fields in a single transaction; partial failure rolls back.
 7. **`cyberos-ai breaker status`** shows current breaker state for every (provider, model) registered.
 8. **`cyberos-ai breaker reset bedrock:claude-3-5-sonnet --confirm`** transitions Open→Closed + emits `ai.cli_breaker_reset`.
@@ -433,7 +433,7 @@ fn policy_set_with_confirm_updates_and_emits_audit() {
     let mut cmd = Command::cargo_bin("cyberos-ai").unwrap();
     cmd.args(&["policy", "set", "org:test", "--cap-usd", "200", "--confirm"])
         .assert().success();
-    let row = brain_test_helper::find_latest_row("ai.cli_policy_updated").unwrap();
+    let row = memory_test_helper::find_latest_row("ai.cli_policy_updated").unwrap();
     assert_eq!(row.payload["tenant"], "org:test");
     assert_eq!(row.payload["changes"][0]["field"], "cap_usd");
     assert_eq!(row.payload["changes"][0]["before"], 150.0);
@@ -476,7 +476,7 @@ fn breaker_reset_with_confirm_emits_audit() {
     cmd.args(&["breaker", "reset", "bedrock:claude-3-5-sonnet", "--confirm"])
         .assert().success();
     assert_eq!(breaker::state("bedrock:claude-3-5-sonnet"), BreakerState::Closed);
-    let row = brain_test_helper::find_latest_row("ai.cli_breaker_reset").unwrap();
+    let row = memory_test_helper::find_latest_row("ai.cli_breaker_reset").unwrap();
     assert_eq!(row.payload["target"], "bedrock:claude-3-5-sonnet");
 }
 
@@ -488,7 +488,7 @@ fn expiry_repair_dedupes_duplicate_rows() {
     cmd.args(&["expiry", "repair", "--confirm"])
         .assert().success()
         .stdout(predicates::str::contains("deduped: 5"));
-    let row = brain_test_helper::find_latest_row("ai.cli_expiry_repaired").unwrap();
+    let row = memory_test_helper::find_latest_row("ai.cli_expiry_repaired").unwrap();
     assert_eq!(row.payload["deduped_count"], 5);
 }
 
@@ -558,7 +558,7 @@ async fn main() {
         Command::Invoice(args)      => cli::invoice::run(args, &cli, &claims, &pool).await,
         Command::Breaker(args)      => cli::breaker::run(args, &cli, &claims, &pool).await,
         Command::Expiry(args)       => cli::expiry::run(args, &cli, &claims, &pool).await,
-        Command::Brain(args)        => cli::brain::run(args, &cli, &claims, &pool).await,
+        Command::Memory(args)        => cli::memory::run(args, &cli, &claims, &pool).await,
         Command::Completions(args)  => cli::completions::run(args).await,
     };
     match result {
@@ -581,7 +581,7 @@ async fn main() {
 - **FR-AI-008** — `breaker::status_all()` + `breaker::reset(target)`; the breaker module exposes admin entry-points.
 - **FR-AI-001** — Cost-ledger Postgres tables for `usage` + `invoice` aggregations.
 - **FR-AI-002** — `ai.invocation` rows are the source for invoice export.
-- **FR-AI-003** — BRAIN audit-row bridge; this FR adds `canonical::cli_*` builders.
+- **FR-AI-003** — memory audit-row bridge; this FR adds `canonical::cli_*` builders.
 - **FR-AI-004** — `expiry_repair` directly closes FR-AI-004's slice-1 dedup limitation (AC #9).
 - **FR-AI-007** — `cost_table::lookup()` for `models pricing`.
 - **FR-AI-014** — Persona-handle parsing for `policy set --allowed-personas`.
@@ -600,7 +600,7 @@ async fn main() {
 - Rust crates: `clap@4` (with `derive` feature), `clap_complete@4` (shell completions), `comfy-table@7`, `tokio`, `sqlx`, `anyhow`, `jsonwebtoken`, `jsonschema@0.18`, `serde`, `serde_json`, `serde_yaml`, `chrono`, `predicates` (test-only), `assert_cmd` (test-only).
 - Internal SSO that issues operator tokens (out of scope; assumed available).
 - `wkhtmltopdf` (or `weasyprint`) on the operator's machine for `invoice export --format pdf`.
-- Postgres + BRAIN reachability from the operator's host (typically via bastion / VPN).
+- Postgres + memory reachability from the operator's host (typically via bastion / VPN).
 
 ---
 
@@ -744,7 +744,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
 | Postgres unreachable | sqlx connect error | CLI exits 3 (RemoteUnreachable) with clear message | Operator investigates DB connectivity |
-| BRAIN unreachable | brain_writer error | Mutating commands fail (exit 3); read-only succeed (degraded) | Operator investigates BRAIN |
+| memory unreachable | memory_writer error | Mutating commands fail (exit 3); read-only succeed (degraded) | Operator investigates memory |
 | Invalid YAML in `policy validate` | parse error | Print errors line-by-line; exit 5 (SchemaViolation) | Operator fixes file |
 | Missing `--confirm` on destructive | clap arg check | Print diff + exit 4 | Operator re-runs with `--confirm` |
 | Output format mismatch (`--json` requested but error path uses text) | Always-JSON-on-error rule | Errors emit JSON when `--json` set | By design |
@@ -754,7 +754,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | `failover drill` in production without safety flags | env-aware safety guard | Exit 4 with affected-tenants + affected-aliases displayed | Operator adds `--prod-confirmed-aware` AND confirms interactively |
 | `policy set` partial failure (one field invalid) | atomic transaction rolls back | Exit 5 (SchemaViolation); no fields applied | Operator fixes the bad field; re-runs |
 | `expiry repair` finds zero duplicates | informational | Exit 0 with `deduped: 0` | By design |
-| `brain emit --confirm` row schema invalid | canonical-row validator | Exit 5 (SchemaViolation) | Operator fixes YAML payload |
+| `memory emit --confirm` row schema invalid | canonical-row validator | Exit 5 (SchemaViolation) | Operator fixes YAML payload |
 | JSON output schema drift | `cli_json_schema_test` fails in CI | PR blocked | Bump schema version OR fix output |
 | Secret leaks in CLI output | `cli_secret_redaction_test` asserts `<REDACTED>` | Test fails → PR blocked | Add field to redaction list |
 | Operator token compromised | Audit chain shows mutations from unexpected operator_id | Sev-1 incident | Rotate token; investigate |
@@ -763,7 +763,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Shell completion script malformed | `cyberos-ai completions bash` test asserts validity | Test fails | Fix clap_complete generation |
 | Stale Postgres connection (long-lived CLI session) | sqlx pool reconnect | Self-resolves | By design |
 | `failover drill` interactive prompt skipped via piped input | tty check | If non-tty AND production, exit 4 unconditionally | Operator runs from interactive shell |
-| Audit row emit failure during destructive operation | brain_writer error AFTER mutation | Sev-1 alert: "mutation succeeded but audit row failed" | Operator manually emits via `brain emit` |
+| Audit row emit failure during destructive operation | memory_writer error AFTER mutation | Sev-1 alert: "mutation succeeded but audit row failed" | Operator manually emits via `memory emit` |
 
 ---
 

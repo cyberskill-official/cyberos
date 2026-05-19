@@ -1,7 +1,7 @@
-"""FR-BRAIN-110 — Capture-daemon health + auto-restart supervisor.
+"""FR-MEMORY-110 — Capture-daemon health + auto-restart supervisor.
 
-The capture daemon (FR-BRAIN-110 production target) runs as a background
-process that watches the file system + writes BRAIN rows. It MUST survive:
+The capture daemon (FR-MEMORY-110 production target) runs as a background
+process that watches the file system + writes memory rows. It MUST survive:
 
 * Crashes (segfault on a malformed file, OOM, etc.) → exponential-backoff
   auto-restart up to 5 attempts, then a hard-fail with a desktop notification.

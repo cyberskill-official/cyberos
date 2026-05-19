@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-AUTH-108 ships the Lumi tenant-identity JWT shape — extension of FR-AUTH-004 with 5 Lumi-specific claims (agent_persona, tenant_residency, lumi_org_tenant, persona_version, sync_class_allowed, anchor_chain_hash, jti). Scope: 25 §1 normative clauses covering distinct iss `https://lumi.cyberos.world` + aud `https://brain.cyberos.world/sync` for cross-tenant security boundary, alg=RS256 pinned (HS256 + none rejected for JWT-confusion defense), persona-version staleness check with 2-minor-version tolerance, sync_class closed enum (5 values per AGENTS.md §15), tenant_residency enforcement (Decree 53 + GDPR + DORA compliance), human-cannot-issue restriction (EU AI Act Art. 13), anchor_chain_hash for replay defense, per-tenant sync_class policy gate, append-only issuance log at SQL grant, 4 BRAIN audit kinds with sev-2 staleness alarm, RLS with root-admin escape clause, RFC 7519 jti for future revocation lookup, TTL 1h default (5min-24h configurable), slug regex validation. 19 rationale paragraphs. §3 contains: migration 0013 (lumi_token_issuance_log with append-only + RLS), LumiClaims struct with full shape validation, SyncClass closed enum, verifier with RS256-pinned signature + iss/aud/exp/nbf + residency + persona-version staleness checks, issuer handler with role gate + policy gate. 27 ACs. 32 failure-mode rows. 19 implementation notes.
+FR-AUTH-108 ships the Lumi tenant-identity JWT shape — extension of FR-AUTH-004 with 5 Lumi-specific claims (agent_persona, tenant_residency, lumi_org_tenant, persona_version, sync_class_allowed, anchor_chain_hash, jti). Scope: 25 §1 normative clauses covering distinct iss `https://lumi.cyberos.world` + aud `https://memory.cyberos.world/sync` for cross-tenant security boundary, alg=RS256 pinned (HS256 + none rejected for JWT-confusion defense), persona-version staleness check with 2-minor-version tolerance, sync_class closed enum (5 values per AGENTS.md §15), tenant_residency enforcement (Decree 53 + GDPR + DORA compliance), human-cannot-issue restriction (EU AI Act Art. 13), anchor_chain_hash for replay defense, per-tenant sync_class policy gate, append-only issuance log at SQL grant, 4 memory audit kinds with sev-2 staleness alarm, RLS with root-admin escape clause, RFC 7519 jti for future revocation lookup, TTL 1h default (5min-24h configurable), slug regex validation. 19 rationale paragraphs. §3 contains: migration 0013 (lumi_token_issuance_log with append-only + RLS), LumiClaims struct with full shape validation, SyncClass closed enum, verifier with RS256-pinned signature + iss/aud/exp/nbf + residency + persona-version staleness checks, issuer handler with role gate + policy gate. 27 ACs. 32 failure-mode rows. 19 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -36,7 +36,7 @@ First-pass had no role gate. Resolved: §1 #8 + DEC-432 + agent-persona role req
 First-pass accepted any string. Resolved: §1 #5 + DEC-425 + closed enum (5 values per AGENTS.md §15) + empty array rejected; AC #8 + #9.
 
 ### ISS-007 — Replay attack against stale chain head
-First-pass omitted anchor_chain_hash. Resolved: §1 #9 + DEC-433 + 64-hex required claim + BRAIN sync validates against current head.
+First-pass omitted anchor_chain_hash. Resolved: §1 #9 + DEC-433 + 64-hex required claim + memory sync validates against current head.
 
 ### ISS-008 — Token revocation impossible (no jti)
 First-pass omitted jti. Resolved: §1 #20 + RFC 7519 jti + UNIQUE constraint + FR-AUTH-2xx revocation API consumes.
@@ -48,7 +48,7 @@ First-pass had no policy gate. Resolved: §1 #25 + per-tenant policy check at is
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (distinct iss + aud × alg-pinned RS256 × persona-version staleness × residency enforcement × human-issuance restriction × sync_class closed enum × anchor_chain_hash replay defense × per-tenant policy gate × jti + UNIQUE × 4 BRAIN audit kinds × append-only log × RLS with root-admin escape), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (distinct iss + aud × alg-pinned RS256 × persona-version staleness × residency enforcement × human-issuance restriction × sync_class closed enum × anchor_chain_hash replay defense × per-tenant policy gate × jti + UNIQUE × 4 memory audit kinds × append-only log × RLS with root-admin escape), not by line targets.
 
 ---
 

@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CUO-101, FR-CUO-102, FR-CUO-105, FR-SKILL-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CUO-101, FR-CUO-102, FR-CUO-105, FR-SKILL-001, FR-MEMORY-111]
 depends_on: [FR-CUO-101]
 blocks: [FR-CUO-105]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2341 2026-05-17 — Closed enum `chain_status` = {planning, executing, completed, failed, partial_rolled_back}; cardinality 5
   - DEC-2342 2026-05-17 — Cycle detection at plan time; reject chain if cycle found
   - DEC-2343 2026-05-17 — Sub-row immutable; chain composite row updated only via status transitions
-  - DEC-2344 2026-05-17 — BRAIN audit kinds: cuo.chain_planned, cuo.chain_step_started, cuo.chain_step_completed, cuo.chain_step_failed, cuo.chain_completed, cuo.chain_failed
+  - DEC-2344 2026-05-17 — memory audit kinds: cuo.chain_planned, cuo.chain_step_started, cuo.chain_step_completed, cuo.chain_step_failed, cuo.chain_completed, cuo.chain_failed
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without chain walker, complex multi-skill flows manual orchest
 
 ## §1 — Description (BCP-14 normative)
 
-The CUO service **MUST** ship chain walker at `services/cuo/src/chain/` with topo sort + cycle detect + composite audit + sub-rows per step, 6 BRAIN audit kinds.
+The CUO service **MUST** ship chain walker at `services/cuo/src/chain/` with topo sort + cycle detect + composite audit + sub-rows per step, 6 memory audit kinds.
 
 1. **MUST** validate `chain_status` against closed enum per DEC-2341.
 
@@ -139,7 +139,7 @@ The CUO service **MUST** ship chain walker at `services/cuo/src/chain/` with top
    GET  /v1/cuo/chains/{id}         (status + steps)
    ```
 
-7. **MUST** emit 6 BRAIN audit kinds per DEC-2344. PII per FR-BRAIN-111: result_jsonb SHA256.
+7. **MUST** emit 6 memory audit kinds per DEC-2344. PII per FR-MEMORY-111: result_jsonb SHA256.
 
 8. **MUST** thread trace_id from plan → step → composite → audit.
 
@@ -189,7 +189,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **chain_status enum cardinality 5**. 2. **Topo sort correct order**. 3. **Cycle detection rejects**. 4. **Per-step sub-row**. 5. **Composite audit row**. 6. **6 BRAIN audit kinds emitted**. 7. **PII scrubbed (result SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **Append-only via REVOKE except status cols**. 11. **UNIQUE(chain_id, step_order)**. 12. **Step failure → chain status updated**. 13. **Step status enum cardinality 5**. 14. **CDO-only chain submit**. 15. **Subsequent steps skipped on failure (no rollback yet — FR-CUO-105)**. 16. **Plan JSON validated**. 17. **Empty skills list → 400**. 18. **Cycle test catches A→B→A**. 19. **Multiple paths handled (diamond DAG)**. 20. **Per-step skill_id from FR-SKILL-001 registry**.
+1. **chain_status enum cardinality 5**. 2. **Topo sort correct order**. 3. **Cycle detection rejects**. 4. **Per-step sub-row**. 5. **Composite audit row**. 6. **6 memory audit kinds emitted**. 7. **PII scrubbed (result SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **Append-only via REVOKE except status cols**. 11. **UNIQUE(chain_id, step_order)**. 12. **Step failure → chain status updated**. 13. **Step status enum cardinality 5**. 14. **CDO-only chain submit**. 15. **Subsequent steps skipped on failure (no rollback yet — FR-CUO-105)**. 16. **Plan JSON validated**. 17. **Empty skills list → 400**. 18. **Cycle test catches A→B→A**. 19. **Multiple paths handled (diamond DAG)**. 20. **Per-step skill_id from FR-SKILL-001 registry**.
 
 ---
 
@@ -236,7 +236,7 @@ async fn step_failure_updates_chain() {
 ## §7 — Dependencies
 **Upstream:** FR-CUO-101.
 **Downstream:** FR-CUO-105 (rollback on failure).
-**Cross-module:** FR-CUO-102 (checkpoint integration), FR-SKILL-001 (skill registry), FR-BRAIN-111 (PII).
+**Cross-module:** FR-CUO-102 (checkpoint integration), FR-SKILL-001 (skill registry), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -255,7 +255,7 @@ async fn step_failure_updates_chain() {
 ## §11 — Implementation notes
 - §11.1 Topo sort via Kahn's algorithm; cycle detection via in-degree check.
 - §11.2 Walker runs steps sequentially v1; parallel walks (independent branches) future enhancement.
-- §11.3 BRAIN audit body: chain_id, step_order, skill_id, status; result SHA256.
+- §11.3 memory audit body: chain_id, step_order, skill_id, status; result SHA256.
 - §11.4 Step failure → no further steps; FR-CUO-105 handles rollback in next FR.
 - §11.5 Plan JSONB stored verbatim for replay.
 

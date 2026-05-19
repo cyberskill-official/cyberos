@@ -3,7 +3,7 @@ id: FR-SKILL-108
 title: "vietnam-mst-validate@1 skill — Vietnamese Tax ID (MST) validation against General Department of Taxation (GDT) public registry"
 module: SKILL
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-SKILL-103, FR-SKILL-104, FR-SKILL-105, FR-SKILL-109, FR-SKILL-110, FR-BRAIN-111, FR-AI-016]
+memory_chain_hash: null
+related_frs: [FR-SKILL-103, FR-SKILL-104, FR-SKILL-105, FR-SKILL-109, FR-SKILL-110, FR-MEMORY-111, FR-AI-016]
 depends_on: [FR-SKILL-104]
 blocks: [FR-SKILL-109, FR-SKILL-110]
 
@@ -21,7 +21,7 @@ source_pages:
   - website/docs/legal/vn-pdpl-compliance.html#mst
 source_decisions:
   - DEC-210 (MST validation MUST be authoritative — local checksum + remote GDT lookup; both required)
-  - DEC-211 (every validation emits a BRAIN audit row for KYC/AML trail)
+  - DEC-211 (every validation emits a memory audit row for KYC/AML trail)
   - DEC-212 (cache GDT responses 24h; stale-cache acceptable in offline mode)
   - DEC-213 (PDPL 2025: MST is PII; redact in logs; never persist raw outside the audit row)
 
@@ -49,7 +49,7 @@ disallowed_tools:
 
 effort_hours: 7
 sub_tasks:
-  - "0.5h: SKILL.md — id=vietnam-mst-validate, version=1.0.0, allowed_tools=[BrainEmit, HttpFetch], allowed_brain_scopes=memories/compliance/mst/**"
+  - "0.5h: SKILL.md — id=vietnam-mst-validate, version=1.0.0, allowed_tools=[MemoryEmit, HttpFetch], allowed_memory_scopes=memories/compliance/mst/**"
   - "1.0h: checksum.rs — 10-digit GDT checksum (weight vector [31,29,23,19,17,13,7,5,3,1]); 13-digit branch (prefix-3 + dash + 10-digit)"
   - "1.5h: gdt_client.rs — POST to https://gdtapi.gdt.gov.vn/Service.asmx; parse SOAP XML response; map to canonical struct"
   - "0.5h: cache.rs — sled-backed local cache; 24h TTL; key = MST, value = ValidationOutcome"
@@ -57,7 +57,7 @@ sub_tasks:
   - "0.5h: main.rs — skill subprocess entrypoint; broker JSON-RPC parser; calls lib.rs"
   - "1.5h: checksum_test.rs — 50+ vector test (10-digit + 13-digit; valid + invalid; province prefixes)"
   - "1.0h: integration_test.rs — mock GDT server; verify XML parsing, cache hits, retry logic"
-risk_if_skipped: "Without authoritative MST validation, customer-onboarded MSTs may be invalid (typo, expired, suspended). Hóa đơn (VAT invoice) emission against an invalid MST is a regulatory violation (Decree 123 Art. 9.4). Without the local checksum, every validation requires a network call → onboarding latency spikes 200-500ms. Without 24h cache, repeat validations during the same business day flood GDT with redundant requests → rate-limited. Without BRAIN audit row, KYC compliance review has no trail (PDPL Art. 23 requires retention of identity-verification records 5 years)."
+risk_if_skipped: "Without authoritative MST validation, customer-onboarded MSTs may be invalid (typo, expired, suspended). Hóa đơn (VAT invoice) emission against an invalid MST is a regulatory violation (Decree 123 Art. 9.4). Without the local checksum, every validation requires a network call → onboarding latency spikes 200-500ms. Without 24h cache, repeat validations during the same business day flood GDT with redundant requests → rate-limited. Without memory audit row, KYC compliance review has no trail (PDPL Art. 23 requires retention of identity-verification records 5 years)."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -84,7 +84,7 @@ The `vietnam-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) us
 7. **MUST** support `force_refresh: true` flag to bypass cache (operator-controlled; e.g. when re-validating after a known status change).
 8. **MUST** retry GDT calls on transient failure with exp backoff: 3 retries at 500ms, 2s, 8s. Total max wait ~10s. Permanent failure → `MstError::GdtUnreachable`.
 9. **MUST** rate-limit GDT calls to 100 req/min globally (per GDT's published cap). Implemented via governor token bucket; over-limit returns `MstError::RateLimited` immediately (don't burn budget on already-rate-limited calls).
-10. **MUST** emit BRAIN audit row `compliance.mst_validated` on EVERY validation (cache hit or fresh) with payload `{mst_redacted, valid, status, business_name, validated_at_ns, cache_hit, gdt_round_trip_ms, trace_id}`. `mst_redacted` is `XXXXXX{last_4}` (last 4 digits visible per PDPL).
+10. **MUST** emit memory audit row `compliance.mst_validated` on EVERY validation (cache hit or fresh) with payload `{mst_redacted, valid, status, business_name, validated_at_ns, cache_hit, gdt_round_trip_ms, trace_id}`. `mst_redacted` is `XXXXXX{last_4}` (last 4 digits visible per PDPL).
 11. **MUST** log MSTs as redacted (`{first_2}*****{last_2}`) — never plain text.
 12. **MUST** offline-mode fallback: if `CYBEROS_OFFLINE=true` OR network unreachable, return last cached outcome (regardless of TTL) with `stale: true` flag. Caller decides whether to accept stale data.
 13. **MUST** emit OTel span `skill.vn_mst.validate` with attributes `mst_redacted`, `valid`, `cache_hit`, `gdt_round_trip_ms`, `duration_ms`.
@@ -120,10 +120,10 @@ The `vietnam-mst-validate@1` skill **MUST** validate Vietnamese Tax IDs (MST) us
 id: vietnam-mst-validate
 version: 1.0.0
 description: Validate Vietnamese Tax ID (MST) via GDT public API + local checksum.
-allowed_brain_scopes:
+allowed_memory_scopes:
   - memories/compliance/mst/**
 allowed_tools:
-  - BrainEmit
+  - MemoryEmit
   - HttpFetch
 sync_class: private    # MST data is PDPL-restricted; never sync
 tenant_scope: any
@@ -215,7 +215,7 @@ pub async fn validate_mst(mst: &str, opts: ValidateOptions) -> Result<Validation
     // Cache the result
     cache::put(&normalised, &outcome).await;
 
-    // Emit BRAIN audit row
+    // Emit memory audit row
     emit_audit_row(&outcome).await;
 
     Ok(outcome)
@@ -371,13 +371,13 @@ struct GdtResponse {
 13. **Force refresh bypasses cache** — call once; `ValidateOptions { force_refresh: true }` → cache_hit: false; fresh GDT call.
 14. **Offline mode returns stale cache** — `CYBEROS_OFFLINE=true` → returns last cached outcome with `stale: true`.
 15. **Offline + no cache → GdtUnreachable** — `CYBEROS_OFFLINE=true` + cache empty → `Err(GdtUnreachable)`.
-16. **BRAIN audit row emitted** — every successful validation → `compliance.mst_validated` row in BRAIN; `mst_redacted` field redacts to `XX******1234` format.
-17. **BRAIN audit row on cache hit** — cache hits also emit audit row (with `cache_hit: true`) for KYC trail.
+16. **memory audit row emitted** — every successful validation → `compliance.mst_validated` row in memory; `mst_redacted` field redacts to `XX******1234` format.
+17. **memory audit row on cache hit** — cache hits also emit audit row (with `cache_hit: true`) for KYC trail.
 18. **Logs redact MST** — `tracing::info!(mst, ...)` in source → grep log file → no plain MST appears; redacted form (`03********78`) appears instead.
 19. **OTel span emitted** — `skill.vn_mst.validate` span per call with `mst_redacted`, `valid`, `cache_hit`, `gdt_round_trip_ms` attrs.
 20. **Metrics increment** — `skill_vn_mst_validations_total{outcome="valid"}` non-zero after happy calls; `outcome="checksum_failed"` non-zero after #2.
 21. **SOAP XML parser robust to whitespace** — varied whitespace in real GDT responses → parser succeeds.
-22. **broker enforces allowed_tools** — skill calls only BrainEmit + HttpFetch; trying Bash within skill → broker denial (verified via fixture).
+22. **broker enforces allowed_tools** — skill calls only MemoryEmit + HttpFetch; trying Bash within skill → broker denial (verified via fixture).
 23. **domain enforcement** — HttpFetch to non-`gdtapi.gdt.gov.vn` → broker denial.
 
 ---
@@ -455,10 +455,10 @@ async fn rate_limit_triggers_error() {
 ## §7 — Dependencies
 
 - **FR-SKILL-103** — frontmatter schema.
-- **FR-SKILL-104** — capability broker enforces `allowed_tools: [BrainEmit, HttpFetch]` + domain allowlist.
-- **FR-SKILL-105** — brain-capture SDK (used internally for audit emit).
+- **FR-SKILL-104** — capability broker enforces `allowed_tools: [MemoryEmit, HttpFetch]` + domain allowlist.
+- **FR-SKILL-105** — memory-capture SDK (used internally for audit emit).
 - **FR-SKILL-109, 110** — VAT invoice + bank transfer skills depend on validated MST.
-- **FR-BRAIN-111** — PII detection; MST is a recognised PII tag (`VnMst`).
+- **FR-MEMORY-111** — PII detection; MST is a recognised PII tag (`VnMst`).
 - **FR-AI-016** — residency pinning; GDT API call MUST originate from VN region (sg-1 fallback acceptable for slice-3).
 
 ---
@@ -515,7 +515,7 @@ All resolved. Deferred:
 | Cache file size grows | sled compaction; capped at 100 MB | Old entries evicted | None |
 | `force_refresh` racing with another caller | last writer wins | Slight inefficiency | None |
 | MST normalisation strips letters | `normalise_mst` filters non-digit/dash | Invalid input flagged as InvalidLength | Caller passes correct format |
-| Audit row write fails | BrainEmit Err | Validation still succeeds; audit lost; sev-2 alarm | Operator restores BRAIN |
+| Audit row write fails | MemoryEmit Err | Validation still succeeds; audit lost; sev-2 alarm | Operator restores memory |
 | OTel span buffered then dropped | exporter unavailable | Logged WARN | Operator restores collector |
 | Tracing inadvertently logs raw MST | `tracing::info!(mst, ...)` instead of redacted | PII leak | Author uses `redact(mst)` helper |
 | Concurrent rate_limiter().check() race | governor handles | Either accept or reject; deterministic per call | None |
@@ -525,7 +525,7 @@ All resolved. Deferred:
 ## §11 — Implementation notes
 
 - `quick-xml` (with serde feature) is the canonical SOAP parser; `xmlrs` was rejected for being heavier with no benefit on small responses.
-- The sled cache file lives at `~/.cyberos/cache/vn-mst.sled` (user-scope) or `/var/lib/cyberos/cache/vn-mst.sled` (system-scope); FR-BRAIN-110 sweeper doesn't touch it.
+- The sled cache file lives at `~/.cyberos/cache/vn-mst.sled` (user-scope) or `/var/lib/cyberos/cache/vn-mst.sled` (system-scope); FR-MEMORY-110 sweeper doesn't touch it.
 - `governor` rate limiter is process-local. Multiple cyberos instances on the same host could exceed global GDT rate; slice-3+ may add Redis-backed shared limit.
 - The `redact()` function is used everywhere except the audit row and the returned `ValidationOutcome.mst`; both intentional (audit needs the full thing; caller holds the original).
 - SOAP namespace `xmlns="http://tempuri.org/"` is the actual GDT convention (legacy ASP.NET service); not a typo.

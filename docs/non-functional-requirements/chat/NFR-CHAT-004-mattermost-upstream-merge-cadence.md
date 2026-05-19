@@ -17,7 +17,7 @@ related_frs: [FR-CHAT-001]
 1. The CyberOS Mattermost fork **MUST** be rebased onto upstream minor releases at least monthly (the first business day after the upstream minor ships).
 2. Major version rebases **MUST** be performed at least quarterly. The platform commits to never being more than one major version behind upstream.
 3. Security CVEs in upstream **MUST** be merged within 14 days of CVE publication, regardless of regular rebase cadence.
-4. Each rebase **MUST** be verified by the full CHAT integration test suite passing; merge-conflict resolution requires CTO sign-off if it touches the BRAIN bridge or AUTH integration plugins.
+4. Each rebase **MUST** be verified by the full CHAT integration test suite passing; merge-conflict resolution requires CTO sign-off if it touches the memory bridge or AUTH integration plugins.
 5. The fork **MUST** maintain a `MATTERMOST_UPSTREAM_VERSION.md` file at repo root noting current upstream alignment and next planned rebase date.
 
 ## §2 — Why this constraint

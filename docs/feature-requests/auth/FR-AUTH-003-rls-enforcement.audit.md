@@ -42,7 +42,7 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 ## §10 — Implementation audit (code-vs-spec)
 
-> Added 2026-05-19 (session 22) by `chief-technology-officer/implement-backlog-frs` workflow. Driven end-to-end in one continuous session per `AUTHORING_DISCIPLINE.md §9.1` (no-partial-ship rule).
+> Added 2026-05-19 (session 22) by `chief-technology-officer/ship-feature-requests` workflow. Driven end-to-end in one continuous session per `AUTHORING_DISCIPLINE.md §9.1` (no-partial-ship rule).
 
 ### §10.1 — Verdict
 

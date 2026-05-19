@@ -1,12 +1,17 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: knowledge-pipeline-author
-description: Authors the quarterly knowledge-asset codification pipeline — engagement-by-engagement candidate harvest, codification queue with per-asset owner + due-date + stage, published-this-period asset list, reuse metrics (downloads / cites / engagement-use-count), taxonomy + tagging hygiene, backlog + next-quarter priorities. Critical for consulting firms where IP/asset codification is the moat. Per Nonaka SECI knowledge-conversion + Wenger Communities of Practice + Davenport Working Knowledge + ANSI Z39.19 controlled-vocabulary guidelines + McKinsey Knowledge Management practice (internal model).
-  Author a KNOWLEDGE_PIPELINE markdown from source artefact(s). Generates a
-  versioned knowledge-pipeline@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  knowledge-pipeline-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Authors the quarterly knowledge-asset codification pipeline —
+  engagement-by-engagement candidate harvest, codification queue with owner +
+  due-date + stage, published-this-period asset list, reuse metrics, taxonomy
+  hygiene, next-quarter priorities. Critical for consulting firms where IP
+  codification is the moat. Per Nonaka SECI + Wenger Communities of Practice
+  + Davenport Working Knowledge + ANSI Z39.19. Generates knowledge-pipeline@1
+  markdown; chains into knowledge-pipeline-audit. Use when user asks to
+  "draft the knowledge pipeline" or "codify this quarter's engagement
+  assets". Do NOT use for "audit the existing knowledge pipeline" (use
+  knowledge-pipeline-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +21,7 @@ metadata:
   cyberos-rubric-target: knowledge-pipeline_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +35,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +296,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

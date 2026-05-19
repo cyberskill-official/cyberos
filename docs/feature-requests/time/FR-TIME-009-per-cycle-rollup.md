@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-TIME-005, FR-TIME-006, FR-INV-001, FR-AUTH-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-TIME-005, FR-TIME-006, FR-INV-001, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-TIME-001, FR-TIME-005]
 blocks: [FR-INV-001]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-1431 2026-05-17 — Idempotent on (engagement_id, cycle_end_date); duplicate rollup invocations return cached result
   - DEC-1432 2026-05-17 — Only `is_billable=true` AND timesheet status='locked' entries included; reject otherwise
   - DEC-1433 2026-05-17 — Rate-card applied at rollup time; snapshot stored in result for FR-INV-001 to copy
-  - DEC-1434 2026-05-17 — BRAIN audit kinds: time.rollup_started, time.rollup_completed, time.rollup_failed, time.rollup_idempotent_hit
+  - DEC-1434 2026-05-17 — memory audit kinds: time.rollup_started, time.rollup_completed, time.rollup_failed, time.rollup_idempotent_hit
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without rollup, FR-INV-001 has no way to convert TIME entries 
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship per-cycle billable rollup at `services/time/src/rollup/` producing per-Member × role × project × task aggregations consumed by FR-INV-001, with idempotency cache, rate-card snapshot, status/billable filtering, and 4 BRAIN audit kinds.
+The TIME service **MUST** ship per-cycle billable rollup at `services/time/src/rollup/` producing per-Member × role × project × task aggregations consumed by FR-INV-001, with idempotency cache, rate-card snapshot, status/billable filtering, and 4 memory audit kinds.
 
 1. **MUST** expose `POST /v1/time/rollup` body `{ engagement_id, cycle_start_date, cycle_end_date }`. Caller has `cfo` OR `engagement_admin` role. Handler:
    - Check cache by `(engagement_id, cycle_end_date)`; hit → return cached + emit `time.rollup_idempotent_hit`.
@@ -116,7 +116,7 @@ The TIME service **MUST** ship per-cycle billable rollup at `services/time/src/r
    }
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-1434.
+7. **MUST** emit 4 memory audit kinds per DEC-1434.
 
 8. **MUST** thread trace_id end-to-end.
 
@@ -170,7 +170,7 @@ Endpoint: `POST /v1/time/rollup`.
 4. **Excludes unlocked** — `timesheets.status≠'locked'` entries omitted.
 5. **Rate-card snapshot returned** — `result.rate_card_snapshot` present.
 6. **Amount = seconds/3600 × unit_price** — math correct.
-7. **4 BRAIN audit kinds emitted**.
+7. **4 memory audit kinds emitted**.
 8. **CFO or engagement_admin only** — other roles 403.
 9. **Trace_id end-to-end**.
 10. **RLS cross-tenant denied**.
@@ -210,7 +210,7 @@ async fn rollup_idempotent() {
     let b1: serde_json::Value = r1.json().await.unwrap();
     let b2: serde_json::Value = r2.json().await.unwrap();
     assert_eq!(b1, b2);
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "time.rollup_idempotent_hit"));
 }
 
@@ -234,7 +234,7 @@ async fn rollup_excludes_non_billable_and_unlocked() {
 
 **Upstream:** FR-TIME-005 (billable flag); transitively FR-TIME-001 + FR-TIME-006 (locked status).
 **Downstream:** FR-INV-001 (consumes rollup result).
-**Cross-module:** FR-AUTH-101 (role gates), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-AUTH-101 (role gates), FR-AI-003, FR-MEMORY-111.
 
 ---
 

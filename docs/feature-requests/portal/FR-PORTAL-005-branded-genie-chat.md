@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PORTAL-001, FR-PORTAL-002, FR-PORTAL-003, FR-PORTAL-004, FR-CUO-101, FR-AUTH-004, FR-AUTH-101, FR-CHAT-005, FR-AI-003, FR-BRAIN-111, FR-OBS-005]
+memory_chain_hash: null
+related_frs: [FR-PORTAL-001, FR-PORTAL-002, FR-PORTAL-003, FR-PORTAL-004, FR-CUO-101, FR-AUTH-004, FR-AUTH-101, FR-CHAT-005, FR-AI-003, FR-MEMORY-111, FR-OBS-005]
 depends_on: [FR-PORTAL-003, FR-CUO-101]
 blocks: [FR-EMAIL-008]
 
@@ -31,7 +31,7 @@ source_decisions:
   - DEC-1177 2026-05-17 — Per-Engagement Genie persona override: tenant_admin can set per-Engagement persona (e.g. "FormalLegal" vs "FriendlyOnboarding") via tenant config
   - DEC-1178 2026-05-17 — Conversation history per `(engagement_id, caller_subject_id)`; persisted in `portal_genie_sessions` table; default retention 90 days
   - DEC-1179 2026-05-17 — Rate limit: 60 messages/min/caller; sustained spikes trigger sev-2 alert (potential bot)
-  - DEC-1180 2026-05-17 — BRAIN audit kinds: portal.genie_query_issued, portal.genie_answer_emitted, portal.genie_boundary_violation_detected, portal.genie_session_created, portal.genie_session_archived
+  - DEC-1180 2026-05-17 — memory audit kinds: portal.genie_query_issued, portal.genie_answer_emitted, portal.genie_boundary_violation_detected, portal.genie_session_created, portal.genie_session_archived
   - DEC-1181 2026-05-17 — Streaming responses via SSE (Server-Sent Events) so client UI sees tokens as they generate; falls back to JSON-once on non-SSE clients
   - DEC-1182 2026-05-17 — Cross-tenant boundary: CUO MUST refuse to retrieve from tenants other than the JWT's tenant_id; verified by FR-CUO-101's doctor invariant `cuo.boundary_test` (mentioned in DEC-RESEARCH-REVIEW-RESPONSE.md §2.2)
   - DEC-1183 2026-05-17 — Audit-row PII: query + answer SHA256 hashes only in chain; raw text in `portal_genie_messages` (RLS-scoped, 90-day retention)
@@ -50,7 +50,7 @@ build_envelope:
     - services/portal/src/genie/sse_stream.rs                          # SSE response streaming
     - services/portal/src/genie/session.rs                             # session create/archive
     - services/portal/src/genie/persona.rs                             # per-Engagement persona resolver
-    - services/portal/src/audit/genie_events.rs                        # 5 BRAIN row builders
+    - services/portal/src/audit/genie_events.rs                        # 5 memory row builders
     - services/portal/src/handlers/genie_routes.rs
     - services/portal/tests/genie_query_happy_test.rs
     - services/portal/tests/genie_scope_narrowing_test.rs
@@ -82,7 +82,7 @@ build_envelope:
   disallowed_tools:
     - bypass scope_grants check on CUO invocation (per DEC-1173)
     - allow cross-tenant retrieval (per DEC-1182)
-    - store raw query/answer in BRAIN chain (per DEC-1183 — SHA only)
+    - store raw query/answer in memory chain (per DEC-1183 — SHA only)
     - allow non-tenant_admin to set per-Engagement persona (per DEC-1177)
     - skip rate-limit check (per DEC-1179)
     - serve Genie without brand pack lookup (per DEC-1175 — default-pack ok, but lookup required)
@@ -109,7 +109,7 @@ risk_if_skipped: "Without Branded Genie, client users in PORTAL see CyberSkill-b
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship branded Genie chat at `services/portal/src/genie/` integrating FR-CUO-101 with PORTAL's IdP-auth subjects, scope_grants narrowing per JWT, FR-PORTAL-002 brand application, cross-tenant boundary enforcement, SCIM-cascade revocation per FR-PORTAL-004, SSE streaming, 5 BRAIN audit kinds.
+The PORTAL service **MUST** ship branded Genie chat at `services/portal/src/genie/` integrating FR-CUO-101 with PORTAL's IdP-auth subjects, scope_grants narrowing per JWT, FR-PORTAL-002 brand application, cross-tenant boundary enforcement, SCIM-cascade revocation per FR-PORTAL-004, SSE streaming, 5 memory audit kinds.
 
 1. **MUST** define the closed `cuo_scope_resource_type` enum at migration `0012`: `('project','document','invoice','channel','engagement')` per DEC-1172. CI cardinality test asserts 5.
 
@@ -160,14 +160,14 @@ The PORTAL service **MUST** ship branded Genie chat at `services/portal/src/geni
 
 14. **MUST** persist conversation history per DEC-1178. Messages stored with role (user/assistant/system), KMS-encrypted content, scope_grants snapshot (audit forensic — what permissions did the caller have when this answer was generated). Default 90-day retention via daily prune job.
 
-15. **MUST** emit 5 BRAIN audit row kinds per DEC-1180:
+15. **MUST** emit 5 memory audit row kinds per DEC-1180:
     - `portal.genie_query_issued` (sev-3 — high-volume; sampled at 1% via FR-OBS-006)
     - `portal.genie_answer_emitted` (sev-3 — sampled)
     - `portal.genie_boundary_violation_detected` (sev-1 — security-critical, ALWAYS emitted not sampled)
     - `portal.genie_session_created` (sev-3)
     - `portal.genie_session_archived` (sev-3)
 
-16. **MUST** PII-scrub per DEC-1183. Query + answer SHA256 hashes only in BRAIN chain; raw text in `portal_genie_messages.content_kms_blob` (RLS-scoped, 90-day retention).
+16. **MUST** PII-scrub per DEC-1183. Query + answer SHA256 hashes only in memory chain; raw text in `portal_genie_messages.content_kms_blob` (RLS-scoped, 90-day retention).
 
 17. **MUST** enforce cross-tenant boundary at CUO invocation per DEC-1182. CUO orchestrator receives `scope_grants` context + `tenant_id` from JWT; CUO MUST NOT retrieve from any other tenant_id. Verified by `cuo.boundary_test` doctor invariant (FR-CUO-101 derivative). Violation = `boundary_violation_detected` audit row + caller sees safe error.
 
@@ -329,7 +329,7 @@ POST   /v1/portal/genie/sessions/{id}/archive                (caller-owned)
 14. **Session archive** — POST archive → `archived_at` set + no longer in default list.
 15. **Idle session auto-archive** — fixture session with `last_activity_at` 31 days ago → daily job archives.
 16. **Trace_id threaded** — single trace_id across query + CUO invocation + audit rows + SSE events.
-17. **5 BRAIN audit kinds emitted** — happy path covers query_issued + answer_emitted + session_created; failure paths cover boundary_violation + session_archived.
+17. **5 memory audit kinds emitted** — happy path covers query_issued + answer_emitted + session_created; failure paths cover boundary_violation + session_archived.
 18. **PII scrub** — audit row carries `content_sha256` only; raw text in DB.
 19. **scope_grants in JWT** — minted JWT contains scope_grants claim; validator passes through to handler.
 20. **90-day retention prune** — fixture message > 90d old → daily prune sets content_kms_blob=NULL.
@@ -381,7 +381,7 @@ async fn boundary_violation_replaces_response() {
     let full = msgs.join("");
     assert!(full.contains("I can only see resources in this engagement"));
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.genie_boundary_violation_detected" && r.severity == 1));
 }
 ```
@@ -609,8 +609,8 @@ pub fn post_flight(ctx: &AppCtx, jwt: &JwtClaims, sources: &[RetrievalSource]) -
 - **FR-AUTH-004** JWT mint — scope_grants claim extension here.
 - **FR-AUTH-101** RBAC — scope_grants derived from RBAC + Engagement membership.
 - **FR-CHAT-005** CHAT — Genie may surface inline in chat.
-- **FR-AI-003** BRAIN audit-row bridge — 5 new kinds.
-- **FR-BRAIN-111** PII scrubbing — content SHA only.
+- **FR-AI-003** memory audit-row bridge — 5 new kinds.
+- **FR-MEMORY-111** PII scrubbing — content SHA only.
 - **FR-OBS-005** Trace correlation — trace_id end-to-end.
 
 **Downstream (blocks):** None.
@@ -645,7 +645,7 @@ event: message
 data: {"done": true, "message_id": 12345, "final_text": "Based on the 3 documents in your scope..."}
 ```
 
-### 8.3 `portal.genie_boundary_violation_detected` BRAIN row
+### 8.3 `portal.genie_boundary_violation_detected` memory row
 
 ```json
 {

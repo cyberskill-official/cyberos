@@ -45,10 +45,10 @@
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: Stephen Cheng (CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
- <strong>The agent orchestrator.</strong> Genie is the face; the 47-persona workflow catalog are the muscle; the BRAIN-anchored audit chain is the receipt. At org scale, the same orchestrator becomes <strong>Lumi</strong> — the tenant persona that owns BRAIN sync + cross-team synthesis.
+ <strong>The agent orchestrator.</strong> Genie is the face; the 47-persona workflow catalog are the muscle; the memory-anchored audit chain is the receipt. At org scale, the same orchestrator becomes <strong>Lumi</strong> — the tenant persona that owns memory sync + cross-team synthesis.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- CUO plays three strategic roles simultaneously. <strong>Role 1 — skill-routing brain</strong>: every natural-language request to CyberOS that is not a direct CRUD on a known entity flows through CUO; CUO parses, scores against the Skill catalog, invokes the winner through the Skill host's capability broker, and records the decision in BRAIN. <strong>Role 2 — persona catalogue</strong>: agent-equal members modelled as C-level specialists (CEO · COO · CFO · CMO · CTO · CHRO · CSO · CLO · CDO · CPO + emerging sub-personas), each with its own keyword bank, persona prompt, and defer-to-human matrix. <strong>Role 3 — Lumi tenant identity</strong>: at P3+, CUO is the local-tenant face of Lumi — the org-tenant persona whose JWT (<code>agent_persona: cuo-cpo@0.4.1</code>) is verified by AUTH, whose audit rows feed Lumi's BRAIN, and whose cross-tenant synthesis is the compounding moat. Phases 1–4 all shipped (2026-05-18): Phase 1 — deterministic rule router with two-stage routing (persona → workflow → skill chain) plus domain-language fallback. Phase 2 — pluggable Invoker (`MockInvoker` / `SubprocessInvoker` / `LLMInvoker`) + `execute_chain()` filesystem hand-off. Phase 3 — real Anthropic Messages API integration + `BRAIN audit-chain` emission per step + workflow summary. Phase 4 — 5 special-case Handler subclasses dispatched by workflow `pattern:` (Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair). 49/50 tests pass (1 skip = catalog-completeness invariant). The CLI auto-dispatches handlers via `cyberos-cuo execute` with optional `--explain` and `--no-handler-dispatch` flags. The BCP-14 protocol is at <code>cuo/docs/AGENTS.md</code>; the implementation is at <code>cuo/cuo/core/</code>.
+ CUO plays three strategic roles simultaneously. <strong>Role 1 — skill-routing memory</strong>: every natural-language request to CyberOS that is not a direct CRUD on a known entity flows through CUO; CUO parses, scores against the Skill catalog, invokes the winner through the Skill host's capability broker, and records the decision in memory. <strong>Role 2 — persona catalogue</strong>: agent-equal members modelled as C-level specialists (CEO · COO · CFO · CMO · CTO · CHRO · CSO · CLO · CDO · CPO + emerging sub-personas), each with its own keyword bank, persona prompt, and defer-to-human matrix. <strong>Role 3 — Lumi tenant identity</strong>: at P3+, CUO is the local-tenant face of Lumi — the org-tenant persona whose JWT (<code>agent_persona: cuo-cpo@0.4.1</code>) is verified by AUTH, whose audit rows feed Lumi's memory, and whose cross-tenant synthesis is the compounding moat. Phases 1–4 all shipped (2026-05-18): Phase 1 — deterministic rule router with two-stage routing (persona → workflow → skill chain) plus domain-language fallback. Phase 2 — pluggable Invoker (`MockInvoker` / `SubprocessInvoker` / `LLMInvoker`) + `execute_chain()` filesystem hand-off. Phase 3 — real Anthropic Messages API integration + `memory audit-chain` emission per step + workflow summary. Phase 4 — 5 special-case Handler subclasses dispatched by workflow `pattern:` (Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair). 49/50 tests pass (1 skip = catalog-completeness invariant). The CLI auto-dispatches handlers via `cyberos-cuo execute` with optional `--explain` and `--no-handler-dispatch` flags. The BCP-14 protocol is at <code>cuo/docs/AGENTS.md</code>; the implementation is at <code>cuo/cuo/core/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#personas" class="btn btn-primary">Meet the 47 personas
@@ -126,7 +126,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-cuo p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- <strong>CUO is one persona</strong> — Genie — backed by <strong>the 47-persona workflow catalog</strong> that load on demand. It is deliberately minimal: parse the query, score candidates, pick one, invoke through the Skill host, write the decision row to BRAIN. The router is rule-based today (deterministic, sub-millisecond) and will layer in an LLM cascade at Phase 2 (the trade is latency for ambiguous queries). Every decision is itself an audit-chained memory, so every routing choice CUO ever made is replayable from disk.
+ <strong>CUO is one persona</strong> — Genie — backed by <strong>the 47-persona workflow catalog</strong> that load on demand. It is deliberately minimal: parse the query, score candidates, pick one, invoke through the Skill host, write the decision row to memory. The router is rule-based today (deterministic, sub-millisecond) and will layer in an LLM cascade at Phase 2 (the trade is latency for ambiguous queries). Every decision is itself an audit-chained memory, so every routing choice CUO ever made is replayable from disk.
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Strategic role</div><div class="value">Agent orchestrator</div><div class="note">Genie · 47 persona workflows · Lumi at P3+</div></div>
@@ -138,8 +138,8 @@
  <div class="fact-card"><div class="label">Lumi readiness</div><div class="value">P3 unlock</div><div class="note">tenant JWT + sync orchestrator</div></div>
  <div class="fact-card"><div class="label">Routing latency p95</div><div class="value">~ 0.4 ms</div><div class="note">in-process · catalog cached</div></div>
  <div class="fact-card"><div class="label">Confidence threshold</div><div class="value">≥ 0.30</div><div class="note">below → defer-to-human</div></div>
- <div class="fact-card"><div class="label">Audit-chain coverage</div><div class="value">100%</div><div class="note">every decision → BRAIN row</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · SKILL</div><div class="note">+ AI · MCP · AUTH (P2+)</div></div>
+ <div class="fact-card"><div class="label">Audit-chain coverage</div><div class="value">100%</div><div class="note">every decision → memory row</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">memory · SKILL</div><div class="note">+ AI · MCP · AUTH (P2+)</div></div>
  <div class="fact-card"><div class="label">Used by</div><div class="value">All user-facing modules</div><div class="note">CHAT · EMAIL · PROJ · …</div></div>
  </div>
  </div>
@@ -159,7 +159,7 @@
    <strong>48 persona folders, 47 with shipped workflows (chief-metaverse-officer EXTINCT) = 221 workflows live as of 2026-05-18</strong> (post Tier-C1 depth additions across 14 priority personas). Persona first-coverage was closed Sessions D–N; Tier-C1 added 27 depth workflows across ceo/cfo/cto/chro/cso-sales/coo/cmo/ciso/cdo-data/cpo-product/chief-of-staff/cro-revenue/caio/cpo-privacy. Acronym collisions resolved by full <code>chief-{role}-officer</code> slug normalisation (2026-05-18).
   </p>
   <p class="text-sm text-amber-900 leading-relaxed mt-2">
-   <strong>Chief Technology Officer is the canonical reference persona</strong> with fully-wired workflows: <code>architect-new-system</code> (10-step SRS→ADR→threat-model→SDD→impl-plan chain) · <code>adr-quick-capture</code> · <code>post-incident-review</code> · <code>deploy-readiness-review</code> · <code>threat-model-refresh</code>. Tests: <strong>49/50 green</strong> (one skip is the catalog-completeness invariant). The supervisor CLI has <code>list-personas · list-workflows · route · dry-run · execute</code> with flags <code>--explain · --no-handler-dispatch · --invoker {mock,subprocess,llm} · --brain-emit · --actor</code>.
+   <strong>Chief Technology Officer is the canonical reference persona</strong> with fully-wired workflows: <code>architect-new-system</code> (10-step SRS→ADR→threat-model→SDD→impl-plan chain) · <code>adr-quick-capture</code> · <code>post-incident-review</code> · <code>deploy-readiness-review</code> · <code>threat-model-refresh</code>. Tests: <strong>49/50 green</strong> (one skip is the catalog-completeness invariant). The supervisor CLI has <code>list-personas · list-workflows · route · dry-run · execute</code> with flags <code>--explain · --no-handler-dispatch · --invoker {mock,subprocess,llm} · --memory-emit · --actor</code>.
   </p>
   <p class="text-sm text-amber-900 leading-relaxed mt-2">
    <strong>Catalog steady-state.</strong> <code>modules/cuo/docs/NEEDED_SKILLS.md</code> initially identified 66 author+audit pairs across Tiers 1-3. Sessions A-C shipped them. Sessions D-H surfaced 17 more across Tiers 4-7. All 83 skills shipped at 10/10. Sessions I-N shipped 124 niche-persona workflows with zero new skills — validating steady-state. Tier-C1 added depth workflows through the same stable catalog. Current SKILL catalog: <strong>104 author+audit pairs / 208 bundles / 108 contracts</strong>; 221 workflows across 47/48 personas.
@@ -171,7 +171,7 @@
 </section>
 
 <!-- ============================================================ -->
-<!-- §0 — THE BIGGER PICTURE (longer-form framing of Personal/Lumi BRAIN) -->
+<!-- §0 — THE BIGGER PICTURE (longer-form framing of Personal/Lumi memory) -->
 <!-- ============================================================ -->
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
@@ -182,24 +182,24 @@
 
  <div class="grid md:grid-cols-3 gap-4 my-6">
  <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
- <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 1 · Skill-routing brain</div>
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 1 · Skill-routing memory</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Natural-language in, audit-chained skill out</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Every NL request to CyberOS that isn't a direct CRUD on a known entity passes through CUO. Parse (NFC-normalise) → score against the Skill catalog (rule-based today, LLM cascade at P2) → invoke the winner through the Skill host's capability broker → write the decision row to BRAIN. Phase 1 is deterministic: same query + same catalog → same decision. The replay-equivalence rate is 100%.
+ Every NL request to CyberOS that isn't a direct CRUD on a known entity passes through CUO. Parse (NFC-normalise) → score against the Skill catalog (rule-based today, LLM cascade at P2) → invoke the winner through the Skill host's capability broker → write the decision row to memory. Phase 1 is deterministic: same query + same catalog → same decision. The replay-equivalence rate is 100%.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 2 · Persona catalogue</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Genie + 47 C-suite persona workflows, agent-equal</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- The user sees one face — Genie — but the routing layer hands off to one of the 47 C-suite persona workflows (CEO, COO, CFO, CMO, CTO, CHRO, CRO-Revenue/CRO-Risk/CRO-Restructuring, CDO-Data/CDO-Digital/CDO-Diversity, CSO-Strategy/CSO-Sales/CSO-Security/CSO-Sustainability, CLO-Legal/CLO-Learning, CCO-Customer/CCO-Communications/CCO-Compliance/CCO-Commercial, CPO-People/CPO-Product/CPO-Privacy/CPO-Procurement, plus Chief-of-Staff, Chief-Architect, Chief-Ethics, Chief-Trust, Chief-Innovation, Chief-Knowledge, Chief-Automation, Chief-ESG, Chief-Brand, Chief-Transformation, Chief-Digital, CAO-Admin/CAO-Accounting, CIO-Information/CIO-Investment, CAIO, CISO, CGO, CXO, Chief-Medical, Chief-Remote, Chief-Happiness). Each persona carries its own keyword bank, voice contract, and defer-to-human matrix. Personas are <em>agent-equal members</em>: same AUTH subject shape as human Members, same RBAC scope checks, same BRAIN sync_class rules. The persona is a contract, not a chatbot skin.
+ The user sees one face — Genie — but the routing layer hands off to one of the 47 C-suite persona workflows (CEO, COO, CFO, CMO, CTO, CHRO, CRO-Revenue/CRO-Risk/CRO-Restructuring, CDO-Data/CDO-Digital/CDO-Diversity, CSO-Strategy/CSO-Sales/CSO-Security/CSO-Sustainability, CLO-Legal/CLO-Learning, CCO-Customer/CCO-Communications/CCO-Compliance/CCO-Commercial, CPO-People/CPO-Product/CPO-Privacy/CPO-Procurement, plus Chief-of-Staff, Chief-Architect, Chief-Ethics, Chief-Trust, Chief-Innovation, Chief-Knowledge, Chief-Automation, Chief-ESG, Chief-Brand, Chief-Transformation, Chief-Digital, CAO-Admin/CAO-Accounting, CIO-Information/CIO-Investment, CAIO, CISO, CGO, CXO, Chief-Medical, Chief-Remote, Chief-Happiness). Each persona carries its own keyword bank, voice contract, and defer-to-human matrix. Personas are <em>agent-equal members</em>: same AUTH subject shape as human Members, same RBAC scope checks, same memory sync_class rules. The persona is a contract, not a chatbot skin.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--cuo)">
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--cuo-dark)">Role 3 · Lumi tenant identity</div>
- <div class="font-bold text-slate-900 mb-2 text-base">The org-tenant face that owns Lumi's BRAIN sync</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">The org-tenant face that owns Lumi's memory sync</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- At P3+, every tenant's CUO instance is the local face of <strong>Lumi</strong> — the org-tenant persona that owns sync to Lumi's BRAIN, cross-team synthesis, and tenant-aware policy enforcement. The AUTH JWT carries <code>agent_persona: cuo-cpo@0.4.1</code> + <code>tenant_id: org:&lt;slug&gt;</code>; Lumi's BRAIN verifies and writes a chained audit row per sync push. The compounding moat is here: as more tenants feed Lumi, the cross-tenant synthesis improves the personas everyone uses.
+ At P3+, every tenant's CUO instance is the local face of <strong>Lumi</strong> — the org-tenant persona that owns sync to Lumi's memory, cross-team synthesis, and tenant-aware policy enforcement. The AUTH JWT carries <code>agent_persona: cuo-cpo@0.4.1</code> + <code>tenant_id: org:&lt;slug&gt;</code>; Lumi's memory verifies and writes a chained audit row per sync push. The compounding moat is here: as more tenants feed Lumi, the cross-tenant synthesis improves the personas everyone uses.
  </p>
  </div>
  </div>
@@ -223,9 +223,9 @@ flowchart TB
  subgraph dnstream["Downstream"]
  SKILL["🛠 Skill host<br>(capability broker)"]
  AIGW["⚡ AI Gateway<br>(LLM cascade P2+)"]
- BRAIN["🧠 BRAIN<br>(audit chain · sync_class gate)"]
+ memory["🧠 memory<br>(audit chain · sync_class gate)"]
  AUTH["🔐 AUTH<br>(subject · scope_grants)"]
- LUMI["☁ Lumi's BRAIN<br>(P3+ cross-tenant)"]
+ LUMI["☁ Lumi's memory<br>(P3+ cross-tenant)"]
  end
 
  CHAT --> CUO
@@ -239,18 +239,18 @@ flowchart TB
  CUO --> SKILL
  CUO -. "ambiguous tail (≤ 0.50)".-> AIGW
  AIGW -. "ranked pick".-> CUO
- CUO --> BRAIN
+ CUO --> memory
  CUO -. "JWT verify".-> AUTH
- BRAIN -. "P3+ sync_class=shareable".-> LUMI
+ memory -. "P3+ sync_class=shareable".-> LUMI
 
  classDef hub fill:#fef6e0,stroke:#9c750a,stroke-width:3px,color:#45210e
  classDef user fill:#e0e7ff,stroke:#3730a3
  classDef ds fill:#f5ede6,stroke:#45210e
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class CUO hub
  class CHAT,EMAIL,PROJ,CRM,KB,TIME,PORTAL user
  class SKILL,AIGW,AUTH ds
- class BRAIN,LUMI brain
+ class memory,LUMI memory
  </div>
  <p class="text-xs text-slate-500 mt-3">CUO sits between every user surface and every downstream system. The router is the single audit-emission point for "what did the AI decide on behalf of this Member?".</p>
  </div>
@@ -265,7 +265,7 @@ flowchart TB
  <tr><td>Destructive invocation (purge / send-money / public post)</td><td><strong>Human confirm always</strong></td><td>EU AI Act Art. 14 oversight + Anthropic-style human-in-loop policy on irreversible operations.</td></tr>
  <tr><td>Defer-to-human (low confidence)</td><td><strong>Auto-defer</strong> when conf &lt; 0.30 (Phase 1 binary) — show top 3 candidates so user can pick</td><td>The user picks; the pick becomes a training signal for future LLM cascade tuning. Phase 2 replaces this binary with a 4-tier cascade — see Flow 3 (≥ 0.70 auto · 0.50–0.70 ask · 0.10–0.50 LLM cascade · &lt; 0.10 defer).</td></tr>
  <tr><td>Persona switch (Genie → CPO/COO)</td><td><strong>Auto-elide</strong> in user-facing UI; <strong>recorded</strong> in audit row</td><td>The user shouldn't context-switch; the audit chain records which persona answered.</td></tr>
- <tr><td>BRAIN audit row emission</td><td><strong>Auto</strong> on every decision</td><td>100% audit coverage is a protocol invariant; opt-out is at sync_class level, not per-decision.</td></tr>
+ <tr><td>memory audit row emission</td><td><strong>Auto</strong> on every decision</td><td>100% audit coverage is a protocol invariant; opt-out is at sync_class level, not per-decision.</td></tr>
  <tr><td>Lumi sync (P3+)</td><td><strong>Auto</strong> when memory.sync_class ∈ {shareable, team-public, org-only}</td><td>Privacy floor is the sync_class; never auto-elevate from private/personal.</td></tr>
  <tr><td>Cross-persona handoff (multi-skill chain)</td><td><strong>Auto-chain</strong> when <code>depends_on</code> is satisfied (P3+)</td><td>Topological walk through dependency DAG; each step emits its own audit row.</td></tr>
  </tbody>
@@ -279,7 +279,7 @@ flowchart TB
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why CUO exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Internal operations is full of <em>obvious</em> requests that should resolve in one round trip: "validate this MST", "generate a VAT invoice for ACME", "draft a 1:1 prep doc for Thursday with Hanh". Without an orchestrator, every such request goes through a 200ms LLM call, every catalog lookup costs another 200ms, and every audit fact has to be re-implemented in the calling skill. CUO is the single layer that absorbs that pattern: <strong>rule-based fast path for unambiguous queries, LLM cascade for the ambiguous tail, BRAIN-anchored audit for every decision</strong>.
+ Internal operations is full of <em>obvious</em> requests that should resolve in one round trip: "validate this MST", "generate a VAT invoice for ACME", "draft a 1:1 prep doc for Thursday with Hanh". Without an orchestrator, every such request goes through a 200ms LLM call, every catalog lookup costs another 200ms, and every audit fact has to be re-implemented in the calling skill. CUO is the single layer that absorbs that pattern: <strong>rule-based fast path for unambiguous queries, LLM cascade for the ambiguous tail, memory-anchored audit for every decision</strong>.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-5">
  <div class="bbg-card p-5">
@@ -315,12 +315,12 @@ flowchart TB
  <tr><td><strong>5W · What</strong></td><td>What is CUO?</td><td>An agentic orchestrator. Parses NL → scores catalog skills → invokes top match → records decision. The orchestrator state is <em>per-request</em>; CUO itself is stateless between requests.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who interacts?</td><td><strong>Users:</strong> every CyberSkill member via the Genie chat box. <strong>Agents:</strong> external Claude / Codex / Cursor sessions that hand off to CUO when they hit a CyberOS surface. <strong>Owner:</strong> CEO seat today; CXO seat at P3+.</td></tr>
  <tr><td><strong>5W · When</strong></td><td>When is it invoked?</td><td>On every NL request to the platform that is not a direct CRUD on a known entity. Phase 1 is request-scoped; Phase 3 introduces multi-step chains that re-enter routing for each step.</td></tr>
- <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Co-located with the user (Tauri / CLI / IDE). LLM cascade calls the AI Gateway (LiteLLM). All decisions land in the same BRAIN as the user's other memories.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Co-located with the user (Tauri / CLI / IDE). LLM cascade calls the AI Gateway (LiteLLM). All decisions land in the same memory as the user's other memories.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why this design?</td><td>Because the alternative is asking the user to know which skill to call, or shipping an enormous monolithic prompt that re-derives the catalog every turn. CUO is the cheapest layer that gives Genie a real, replayable decision policy.</td></tr>
  <tr><td><strong>1H · How</strong></td><td>How does it route?</td><td>Score per candidate = <code>5.0 if skill_name in query else 0 + 3.0 × keyword_hits + 2.0 if VN-diacritic AND skill.region=VN else 0</code>. Top scorer wins if score &gt; 3.0 (confidence ≥ 0.30); otherwise emit <code>routed:false</code>.</td></tr>
- <tr><td><strong>2C · Cost</strong></td><td>Cost per decision?</td><td>Phase 1 ≈ 0.4 ms per route (in-process). Phase 2 LLM cascade: only when ≤ 0.50 confidence AND ≥ 0.10 candidate exists; typical 150 ms. Memory: 1 row per decision in BRAIN, ~700 bytes.</td></tr>
+ <tr><td><strong>2C · Cost</strong></td><td>Cost per decision?</td><td>Phase 1 ≈ 0.4 ms per route (in-process). Phase 2 LLM cascade: only when ≤ 0.50 confidence AND ≥ 0.10 candidate exists; typical 150 ms. Memory: 1 row per decision in memory, ~700 bytes.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Phase 1 MUST be deterministic — same query + same catalog → same decision. (b) Below threshold MUST defer-to-human; no auto-invoke. (c) Skill capabilities MUST be respected via Skill host's broker; CUO cannot bypass.</td></tr>
- <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>The Skill catalog (read from disk in sorted-path order), a per-skill keyword bank in <code>cuo/core/router.py</code>, optional BRAIN context for Phase 2 LLM cascade, and the AI Gateway for inference.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>What does it use?</td><td>The Skill catalog (read from disk in sorted-path order), a per-skill keyword bank in <code>cuo/core/router.py</code>, optional memory context for Phase 2 LLM cascade, and the AI Gateway for inference.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Rule-based scoring (Phase 1), LLM cascade (Phase 2 LangGraph + LiteLLM), topological chain walking (Phase 3), per-persona keyword bank (Phase 4). Each layered on top of the previous, none replacing it.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Where does it run?</td><td>Locally with the user (Tauri host) for the rule-based path; AI Gateway for LLM calls. Postgres checkpointer for LangGraph state (Phase 2+) — required for EU AI Act Art. 12 logging.</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>1 IC owner today. By P1 exit the CPO and CTO co-own the keyword bank + persona definitions. At P3 the dedicated CXO seat appears.</td></tr>
@@ -354,13 +354,13 @@ graph TB
  EXTRACT["arg extractors<br>(per-skill, pure)"]
  INVOKER["invoker.py<br>shell out to Skill"]
  TRACE["trace.py<br>structured row"]
- BRIDGE["memory_bridge.py<br>write to BRAIN"]
+ BRIDGE["memory_bridge.py<br>write to memory"]
  end
 
  subgraph DOWNSTREAM ["Downstream"]
  SKILL["🛠 Skill host<br>(Rust cyberos-skill-cli)"]
  AI["⚡ AI Gateway<br>(Phase 2 LLM cascade)"]
- BRAIN["🧠 BRAIN<br>(audit chain)"]
+ memory["🧠 memory<br>(audit chain)"]
  end
 
  USER --> PARSE
@@ -375,11 +375,11 @@ graph TB
  SKILL -. "stdout / stderr / exit".-> INVOKER
  INVOKER --> TRACE
  TRACE --> BRIDGE
- BRIDGE --> BRAIN
+ BRIDGE --> memory
 
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef planned fill:#fef6e0,stroke:#9c750a
- class PARSE,CATALOG,ROUTER,EXTRACT,INVOKER,TRACE,BRIDGE,SKILL,BRAIN shipped
+ class PARSE,CATALOG,ROUTER,EXTRACT,INVOKER,TRACE,BRIDGE,SKILL,memory shipped
  class AI planned
  </div>
  </div>
@@ -393,7 +393,7 @@ graph TB
  <tr><td><code>router.py</code></td><td>core/router.py</td><td>Phase 1 rule-based scorer. Per-skill <code>_KEYWORD_BANK</code> + <code>ARG_EXTRACTORS</code>. Returns <code>(decision, alternatives)</code>.</td></tr>
  <tr><td><code>invoker.py</code></td><td>core/invoker.py</td><td>Shell out to <code>cyberos-skill-cli run &lt;skill&gt;</code>. Capture stdout / stderr / exit-code. No in-process skill execution.</td></tr>
  <tr><td><code>trace.py</code></td><td>core/trace.py</td><td>Render structured trace row: query, decision, alternatives, result, timestamps.</td></tr>
- <tr><td><code>memory_bridge.py</code></td><td>core/memory_bridge.py</td><td>Write trace row to BRAIN. Phase 1: flat file under <code>meta/cuo-decisions/&lt;ts_ns&gt;.md</code>. Phase 2: through canonical Writer.</td></tr>
+ <tr><td><code>memory_bridge.py</code></td><td>core/memory_bridge.py</td><td>Write trace row to memory. Phase 1: flat file under <code>meta/cuo-decisions/&lt;ts_ns&gt;.md</code>. Phase 2: through canonical Writer.</td></tr>
  </tbody>
  </table>
  </div>
@@ -403,10 +403,10 @@ graph TB
  <table class="kt">
  <thead><tr><th>Phase</th><th>What changes</th><th>Why</th><th>Status</th></tr></thead>
  <tbody>
- <tr><td><strong>Phase 1</strong></td><td>Filesystem catalog scanner · two-stage route (persona → workflow) · BRAIN dry-run</td><td>Markdown-driven, deterministic; no LLM dependency for routing</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td><strong>Phase 1</strong></td><td>Filesystem catalog scanner · two-stage route (persona → workflow) · memory dry-run</td><td>Markdown-driven, deterministic; no LLM dependency for routing</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td><strong>Phase 2</strong></td><td>Pluggable Invoker (Mock / Subprocess) · <code>execute_chain()</code> walks workflow with filesystem hand-off</td><td>End-to-end chain execution against SKILL CLI subprocess</td><td><span class="pill pill-shipped">shipped</span></td></tr>
- <tr><td><strong>Phase 3</strong></td><td>LLMInvoker (mock-llm + Anthropic Messages API) · BRAIN audit-chain emission per step + per chain</td><td>LLM-driven authoring with full audit trail through Writer</td><td><span class="pill pill-shipped">shipped</span></td></tr>
- <tr><td><strong>Phase 4</strong></td><td>6 Handler subclasses dispatched by workflow <code>pattern:</code> frontmatter (Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair) · 8 new BRAIN audit kinds</td><td>Heterogeneous workflow types — incidents, breach response, per-customer loops, multi-output writes, approval gates, cross-persona handoffs</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td><strong>Phase 3</strong></td><td>LLMInvoker (mock-llm + Anthropic Messages API) · memory audit-chain emission per step + per chain</td><td>LLM-driven authoring with full audit trail through Writer</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td><strong>Phase 4</strong></td><td>6 Handler subclasses dispatched by workflow <code>pattern:</code> frontmatter (Linear · TimeCritical · PerInstance · MultiOutput · SequentialApproval · PersonaPair) · 8 new memory audit kinds</td><td>Heterogeneous workflow types — incidents, breach response, per-customer loops, multi-output writes, approval gates, cross-persona handoffs</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  </tbody>
  </table>
  </div>
@@ -418,7 +418,7 @@ graph TB
 <section id="lumi-identity" class="module-section">
  <header class="section-head"><span class="section-num">3.5</span><h2>Lumi identity wrapper — local CUO ↔ org-tenant persona</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- At P3+, every tenant's local CUO instance is the face of <strong>Lumi</strong> — the org-tenant persona whose JWT is verified by AUTH, whose audit rows feed Lumi's BRAIN, and whose cross-tenant synthesis is the long-game compounding moat. This section locks the contract between local CUO (a stateless Python orchestrator) and Lumi (the org-tenant identity it acts under).
+ At P3+, every tenant's local CUO instance is the face of <strong>Lumi</strong> — the org-tenant persona whose JWT is verified by AUTH, whose audit rows feed Lumi's memory, and whose cross-tenant synthesis is the long-game compounding moat. This section locks the contract between local CUO (a stateless Python orchestrator) and Lumi (the org-tenant identity it acts under).
  </p>
 
  <h3 class="text-lg font-bold mt-4 mb-3">Lumi vs Genie vs local CUO — the three names</h3>
@@ -427,8 +427,8 @@ graph TB
  <thead><tr><th style="width:18%">Name</th><th>Scope</th><th>Who sees it</th><th>What it signs / writes</th></tr></thead>
  <tbody>
  <tr><td><strong>Genie</strong></td><td>The user-facing mascot. One face.</td><td>Members in the SPA, chat box, IDE plugin.</td><td>Nothing directly — Genie is the UX skin. Behind Genie sits CUO + persona.</td></tr>
- <tr><td><strong>Local CUO</strong></td><td>The in-process Python orchestrator on the user's machine / tenant Fargate task.</td><td>Engineers, audit consumers.</td><td>BRAIN rows under <code>meta/cuo-decisions/&lt;ts_ns&gt;.md</code>; signed locally; never escapes the local store.</td></tr>
- <tr><td><strong>Lumi</strong></td><td>The org-tenant persona at P3+ — the identity under which CUO acts when the work crosses team boundaries or syncs to the cloud BRAIN.</td><td>Other tenants (cross-team synthesis), Anthropic-style transparency reports, compliance auditors.</td><td>BRAIN sync push to Lumi's BRAIN; the AUTH JWT carries <code>agent_persona</code> + <code>tenant_id</code> + <code>scope_grants</code>; Lumi's BRAIN writes a chained audit row per sync push.</td></tr>
+ <tr><td><strong>Local CUO</strong></td><td>The in-process Python orchestrator on the user's machine / tenant Fargate task.</td><td>Engineers, audit consumers.</td><td>memory rows under <code>meta/cuo-decisions/&lt;ts_ns&gt;.md</code>; signed locally; never escapes the local store.</td></tr>
+ <tr><td><strong>Lumi</strong></td><td>The org-tenant persona at P3+ — the identity under which CUO acts when the work crosses team boundaries or syncs to the cloud memory.</td><td>Other tenants (cross-team synthesis), Anthropic-style transparency reports, compliance auditors.</td><td>memory sync push to Lumi's memory; the AUTH JWT carries <code>agent_persona</code> + <code>tenant_id</code> + <code>scope_grants</code>; Lumi's memory writes a chained audit row per sync push.</td></tr>
  </tbody>
  </table>
  <p class="text-xs text-slate-500 mt-3">The same Python process is "local CUO" on disk and "Lumi" over the wire. The naming is intentional: Genie is for the user, CUO is for the engineer, Lumi is for the audit chain that crosses tenant boundaries.</p>
@@ -439,25 +439,25 @@ graph TB
 <pre><code class="language-json">{
   "iss": "https://auth.cyberos.io/&lt;tenant&gt;",
   "sub": "agent:cuo@cyberskill.world",
-  "aud": "lumi-brain.cyberos.io",
+  "aud": "lumi-memory.cyberos.io",
   "iat": 1763112131,
   "exp": 1763115731,
   "tenant_id": "org:cyberskill",
   "tenant_residency": "sg-1",
   "agent_persona": "cuo-cpo@0.4.1",
   "scope_grants": [
-    {"resource": "brain", "actions": ["read", "write"], "sync_class_max": "shareable"},
+    {"resource": "memory", "actions": ["read", "write"], "sync_class_max": "shareable"},
     {"resource": "skill",  "actions": ["invoke"], "skills": ["product-requirements-document-author@0.4.1", "vietnam-mst-validate@0.2.0"]},
     {"resource": "proj",   "actions": ["read", "write"], "engagements": ["acme-q3-platform-build"]}
   ],
   "jti": "01HZK…"
 }</code></pre>
- <p class="text-sm text-slate-600 mt-3">The <code>agent_persona</code> claim is the cryptographic anchor: every audit row Lumi writes to BRAIN can be verified back to this exact JWT (and its issuer key in JWKS).</p>
+ <p class="text-sm text-slate-600 mt-3">The <code>agent_persona</code> claim is the cryptographic anchor: every audit row Lumi writes to memory can be verified back to this exact JWT (and its issuer key in JWKS).</p>
  </div>
 
  <h3 class="text-lg font-bold mt-6 mb-3">Cross-tenant synthesis — what Lumi actually <em>does</em> at P3+</h3>
  <p class="text-slate-700 leading-relaxed mb-3">
- Lumi runs on Lumi's BRAIN (the cloud-hosted org-tenant store). Per tenant, it ingests <code>sync_class ∈ {shareable, team-public, org-only}</code> memories from each Member's personal BRAIN and from CUO's decision rows. The compounding moat comes from one fact: <strong>the cross-team synthesis improves the personas everyone uses</strong>. When the CPO persona gets better at product-brief authoring because Lumi has seen 200 product briefs across 50 tenants, every tenant's CPO improves. The synthesis is bounded by sync_class — never private/personal — and by jurisdictional residency (Lumi's BRAIN shards by region).
+ Lumi runs on Lumi's memory (the cloud-hosted org-tenant store). Per tenant, it ingests <code>sync_class ∈ {shareable, team-public, org-only}</code> memories from each Member's personal memory and from CUO's decision rows. The compounding moat comes from one fact: <strong>the cross-team synthesis improves the personas everyone uses</strong>. When the CPO persona gets better at product-brief authoring because Lumi has seen 200 product briefs across 50 tenants, every tenant's CPO improves. The synthesis is bounded by sync_class — never private/personal — and by jurisdictional residency (Lumi's memory shards by region).
  </p>
  <div class="bbg-card p-5">
  <table class="kt">
@@ -491,9 +491,9 @@ sequenceDiagram
  participant CAT as Catalog
  participant BR as 🛠 Skill broker
  participant AU as 🔐 AUTH (scope check)
- participant BA as 🧠 BRAIN audit pre-write
+ participant BA as 🧠 memory audit pre-write
  participant SK as Skill executable
- participant BP as 🧠 BRAIN audit post-write
+ participant BP as 🧠 memory audit post-write
 
  U->>C: NL query
  C->>CAT: load skill catalog (sorted)
@@ -509,7 +509,7 @@ sequenceDiagram
  BR-->>C: result
  C-->>U: rendered response (Genie skin)
  </div>
- <p class="text-xs text-slate-500 mt-3">Steps 7 + 11 are the dual audit rows that make every CUO invocation cryptographically reconstructible: pre-row proves intent, post-row proves outcome, both chain back to the user's BRAIN.</p>
+ <p class="text-xs text-slate-500 mt-3">Steps 7 + 11 are the dual audit rows that make every CUO invocation cryptographically reconstructible: pre-row proves intent, post-row proves outcome, both chain back to the user's memory.</p>
  </div>
 
  <h3 class="text-lg font-bold mt-6 mb-3">CUO ↔ Skill broker contract (locked)</h3>
@@ -521,7 +521,7 @@ sequenceDiagram
  <tr><td>Subject's scope_grants must include this skill</td><td>AUTH (in-broker check)</td><td>Permission denied → broker rejects · audit row emitted with <code>denied:true reason:scope</code>.</td></tr>
  <tr><td>Skill's <code>allowed_tools</code> must be respected</td><td>Skill broker subprocess sandbox</td><td>Skill tries to call a non-allowed tool → broker kills subprocess · escalation to CSO.</td></tr>
  <tr><td>Destructive op (purge, send-money, public-post) requires explicit human confirm</td><td>Broker + CUO defer-to-human matrix</td><td>Skill flagged <code>destructive=true</code> + no confirm token → broker rejects.</td></tr>
- <tr><td>Pre + post audit rows on every invocation</td><td>Skill broker (BRAIN Writer)</td><td>BRAIN write fails → broker rejects invocation start; never partial-invoke.</td></tr>
+ <tr><td>Pre + post audit rows on every invocation</td><td>Skill broker (memory Writer)</td><td>memory write fails → broker rejects invocation start; never partial-invoke.</td></tr>
  <tr><td>Tenant isolation (subject.tenant_id matches skill scope)</td><td>AUTH + RLS</td><td>Cross-tenant invocation attempt → broker rejects · CSO alert.</td></tr>
  <tr><td>Skill version pinning (no auto-upgrade mid-decision)</td><td>CUO catalog fingerprint includes version hash</td><td>Skill upgraded after route, before invoke → catalog fingerprint mismatch → re-route required.</td></tr>
  </tbody>
@@ -609,7 +609,7 @@ erDiagram
  ROUTING_DECISION ||--o{ ALTERNATIVE_CANDIDATE: "ranks"
  ROUTING_DECISION ||--o| INVOCATION_RESULT: "invokes (optional)"
  INVOCATION_RESULT ||--|| TRACE_ROW: "emits"
- TRACE_ROW ||--|| BRAIN_AUDIT_ROW: "persisted as"
+ TRACE_ROW ||--|| MEMORY_AUDIT_ROW: "persisted as"
  ROUTING_DECISION ||--o{ CHAIN_STEP: "Phase 3: chained calls"
 
  CATALOG {
@@ -669,7 +669,7 @@ erDiagram
  obj result
  obj chain "Phase 3: list of CHAIN_STEP"
  }
- BRAIN_AUDIT_ROW {
+ MEMORY_AUDIT_ROW {
  int64 seq PK
  string path "meta/cuo-decisions/&lt;ts_ns&gt;.md"
  string body_hash
@@ -760,10 +760,10 @@ type RoutingPreview {
  <tr><td><code>list-workflows</code></td><td>Enumerate all 221 workflows (filter by persona)</td><td><code>cyberos-cuo list-workflows --persona chief-technology-officer</code></td></tr>
  <tr><td><code>route</code></td><td>Two-stage route a natural-language query (persona → workflow)</td><td><code>cyberos-cuo route "validate MST 0123456789"</code></td></tr>
  <tr><td><code>dry-run</code></td><td>Walk a workflow's skill chain without executing</td><td><code>cyberos-cuo dry-run chief-technology-officer/architect-new-system</code></td></tr>
- <tr><td><code>execute</code></td><td>Execute a workflow chain through the selected invoker; optionally emit a BRAIN audit row per step</td><td><code>cyberos-cuo execute chief-technology-officer/adr-quick-capture --invoker llm --brain-emit --actor stephen@cyberskill</code></td></tr>
+ <tr><td><code>execute</code></td><td>Execute a workflow chain through the selected invoker; optionally emit a memory audit row per step</td><td><code>cyberos-cuo execute chief-technology-officer/adr-quick-capture --invoker llm --memory-emit --actor stephen@cyberskill</code></td></tr>
  </tbody>
  </table>
- <p class="text-sm text-slate-600 mt-3">Flags: <code>--explain</code> (print handler dispatch reasoning), <code>--no-handler-dispatch</code> (force linear walk), <code>--invoker {mock,subprocess,llm}</code>, <code>--brain-emit</code>, <code>--actor &lt;subject&gt;</code>, <code>--output-dir &lt;path&gt;</code>.</p>
+ <p class="text-sm text-slate-600 mt-3">Flags: <code>--explain</code> (print handler dispatch reasoning), <code>--no-handler-dispatch</code> (force linear walk), <code>--invoker {mock,subprocess,llm}</code>, <code>--memory-emit</code>, <code>--actor &lt;subject&gt;</code>, <code>--output-dir &lt;path&gt;</code>.</p>
  </div>
 </section>
 
@@ -800,7 +800,7 @@ sequenceDiagram
  SkillHost-->>C: {exit:0, stdout:Invoice XML 'fpt-2024-001'}
  end
  alt --record
- C->>B: write trace to BRAIN
+ C->>B: write trace to memory
  B-->>C: {seq:14935, chain:"e3f7..."}
  end
  C-->>U: {routed:true, decision, result?, recorded_at?}
@@ -830,7 +830,7 @@ sequenceDiagram
  C-->>U: chain aborted at step N · reason · partial trace
  end
  end
- C->>BRAIN: composite audit row (root) + N sub-rows
+ C->>memory: composite audit row (root) + N sub-rows
  C-->>U: {chain_status:ok, steps:[...], total_elapsed_ms:N}
  </div>
  </div>
@@ -848,7 +848,7 @@ flowchart TB
  P2 --&gt; P2SCORE{LLM confidence?}
  P2SCORE -- "0.70+" --&gt; INV
  P2SCORE -- "below 0.70" --&gt; CLAR
- INV --&gt; REC[Record decision + result in BRAIN]
+ INV --&gt; REC[Record decision + result in memory]
  CLAR --&gt; REC
  DEFER --&gt; REC
 
@@ -876,7 +876,7 @@ sequenceDiagram
  PR-->>C: persona=CEO (strategic intent)
  C->>CEO: route within CEO skill subset
  CEO-->>C: pick okr-cascade-draft (conf 0.83)
- C->>BRAIN: audit row with persona-version stamp
+ C->>memory: audit row with persona-version stamp
  alt followup: "what's the test coverage on the auth module?"
  U->>C: new query, same session
  C->>PR: classify_persona
@@ -907,9 +907,9 @@ stateDiagram-v2
  Picked --> Recorded: invoke flag false - decision only
  Invoking --> Succeeded: exit code 0
  Invoking --> Failed: exit code non-zero
- Succeeded --> Recorded: trace plus result to BRAIN
- Failed --> Recorded: trace plus error to BRAIN
- Deferred --> Recorded: routed false row to BRAIN
+ Succeeded --> Recorded: trace plus result to memory
+ Failed --> Recorded: trace plus error to memory
+ Deferred --> Recorded: routed false row to memory
  Recorded --> [*]
  </div>
  </div>
@@ -981,7 +981,7 @@ stateDiagram-v2
     <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-data-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-data-officer</a></td><td>Owns the data estate: governance, quality, lineage, data products, customer-360, regulator data-subject responses.</td><td class="text-center">6</td><td><code class="text-xs">quarterly-data-governance-review</code></td></tr>
     <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-ai-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-ai-officer</a></td><td>Owns AI strategy &amp; portfolio; model cards, bias audits; partners w/ CTO on infra and Ethics on governance.</td><td class="text-center">6</td><td><code class="text-xs">quarterly-ai-portfolio-review</code></td></tr>
     <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-customer-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-customer-officer</a></td><td>Owns post-sale value: customer health, CAB, churn analysis (w/ CRO), expansion plays, success engagement.</td><td class="text-center">4</td><td><code class="text-xs">quarterly-customer-health-review</code></td></tr>
-    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-knowledge-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-knowledge-officer</a></td><td>Owns the org's collective know-how: knowledge taxonomy, codification pipeline, knowledge graph (BRAIN governance partner).</td><td class="text-center">4</td><td><code class="text-xs">quarterly-knowledge-pipeline</code></td></tr>
+    <tr><td><a href="https://github.com/cyberskill/cyberos/tree/main/modules/cuo/chief-knowledge-officer" target="_blank" rel="noopener" class="font-mono text-xs font-bold text-blue-700">chief-knowledge-officer</a></td><td>Owns the org's collective know-how: knowledge taxonomy, codification pipeline, knowledge graph (memory governance partner).</td><td class="text-center">4</td><td><code class="text-xs">quarterly-knowledge-pipeline</code></td></tr>
    </tbody>
   </table>
  </div>
@@ -1149,9 +1149,9 @@ stateDiagram-v2
  <!-- CDO -->
  <article id="persona-cdo" class="persona-card">
  <h3><span class="emoji">📊</span>CDO · Data <span class="role-tag">P2+ emerging</span></h3>
- <p class="text-sm text-slate-600">Data quality, lineage, residency reviews, schema governance, retention policy, BRAIN integrity oversight. Owner of "is our data trustworthy".</p>
+ <p class="text-sm text-slate-600">Data quality, lineage, residency reviews, schema governance, retention policy, memory integrity oversight. Owner of "is our data trustworthy".</p>
  <div class="label">Auto OK</div>
- <div><span class="auto-ok">audit BRAIN doctor</span><span class="auto-ok">data quality report</span><span class="auto-ok">retention policy review</span><span class="auto-ok">lineage diagram</span></div>
+ <div><span class="auto-ok">audit memory doctor</span><span class="auto-ok">data quality report</span><span class="auto-ok">retention policy review</span><span class="auto-ok">lineage diagram</span></div>
  <div class="label">Defers to human</div>
  <div><span class="defers">purge data</span><span class="defers">change retention period</span><span class="defers">approve cross-border export</span><span class="defers">disable encryption</span></div>
  </article>
@@ -1198,8 +1198,8 @@ stateDiagram-v2
  <tr><td><code>N(FR pending)</code></td><td>Phase-2 LLM cascade p95</td><td>≤ 800 ms incl. network</td><td>AI Gateway latency budget</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Catalog refresh p95</td><td>≤ 50 ms over 100 skills</td><td>catalog.scan benchmark</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Phase-1 determinism</td><td>100% (same query+catalog → same decision)</td><td>15 routing fixtures, golden tests</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Escalation rate to LLM</td><td>≤ 10% of queries (after warm-up)</td><td>BRAIN audit replay · weekly KPI</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>Defer-to-human rate</td><td>≤ 5% of queries</td><td>BRAIN audit replay</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Escalation rate to LLM</td><td>≤ 10% of queries (after warm-up)</td><td>memory audit replay · weekly KPI</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Defer-to-human rate</td><td>≤ 5% of queries</td><td>memory audit replay</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Test coverage of router.py</td><td>≥ 90% line · 100% branch</td><td>coverage.py</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Availability (in-process)</td><td>same as caller</td><td>n/a — co-located</td></tr>
  </tbody>
@@ -1212,7 +1212,7 @@ stateDiagram-v2
 <!-- ============================================================ -->
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">11</span><h2>Dependencies</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">CUO is the most-connected module. It consumes BRAIN (records), Skill (invokes), AI Gateway (Phase 2), MCP Gateway (tool surface), AUTH (actor identity). It is consumed by every user-facing module.</p>
+ <p class="text-slate-700 leading-relaxed mb-4">CUO is the most-connected module. It consumes memory (records), Skill (invokes), AI Gateway (Phase 2), MCP Gateway (tool surface), AUTH (actor identity). It is consumed by every user-facing module.</p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
@@ -1220,7 +1220,7 @@ graph LR
  AUTH["🔐 AUTH"]
  AI["⚡ AI Gateway"]
  MCP["🔌 MCP Gateway"]
- BRAIN["🧠 BRAIN"]
+ memory["🧠 memory"]
  SKILL["🛠 SKILL"]
  end
  CUO_M["🎯 CUO"]
@@ -1236,7 +1236,7 @@ graph LR
  AUTH --> CUO_M
  AI --> CUO_M
  MCP --> CUO_M
- BRAIN --> CUO_M
+ memory --> CUO_M
  SKILL --> CUO_M
  CUO_M --> CHAT
  CUO_M --> EMAIL
@@ -1248,7 +1248,7 @@ graph LR
 
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef planned fill:#fef6e0,stroke:#9c750a
- class CUO_M,BRAIN,SKILL shipped
+ class CUO_M,memory,SKILL shipped
  class AUTH,AI,MCP,CHAT,EMAIL,PROJ,CRM,HR,KB,OTHERS planned
  </div>
  </div>
@@ -1263,7 +1263,7 @@ graph LR
  <table class="kt">
  <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>CUO feature that satisfies it</th></tr></thead>
  <tbody>
- <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging</td><td>Every decision recorded in BRAIN via memory_bridge · Postgres checkpointer at P2 retains LLM prompts.</td></tr>
+ <tr><td>EU AI Act (Reg. 2024/1689)</td><td>Art. 12 — Logging</td><td>Every decision recorded in memory via memory_bridge · Postgres checkpointer at P2 retains LLM prompts.</td></tr>
  <tr><td>EU AI Act</td><td>Art. 13 — Transparency</td><td>End-of-response transparency: skill chosen + confidence + alternatives are surfaced to the user.</td></tr>
  <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>Below-threshold queries defer to human; CUO never auto-invokes irreversible operations.</td></tr>
  <tr><td>EU AI Act</td><td>Art. 26 — Operator obligations</td><td>Defer-to-human matrix per persona (auto-OK vs defers) is normative.</td></tr>
@@ -1291,16 +1291,16 @@ graph LR
  <tr><td><code>R-CUO-005</code></td><td>Persona switching whiplash (user feels Genie isn't "one" anymore at Phase 4)</td><td>Medium</td><td>Low</td><td>CXO (emerging)</td><td>Persona-version stamp on every decision · same conversational style enforced via brand-voice skill.</td></tr>
  <tr><td><code>R-CUO-006</code></td><td>Skill catalog explosion drops routing accuracy</td><td>Low (today)</td><td>Medium</td><td>CPO</td><td>Phase 4 persona-router triages first · Phase 2 LLM cascade handles the long tail.</td></tr>
  <tr><td><code>R-CUO-007</code></td><td>Capability bypass (CUO grants tools the skill didn't request)</td><td>Low</td><td>High</td><td>CSO</td><td>§6.1–§6.2: CUO MUST respect the skill's <code>allowed-tools</code>. Defence in depth: Skill broker enforces independently.</td></tr>
- <tr><td><code>R-CUO-008</code></td><td><strong>Lumi tenant-id spoofing</strong> — a malicious skill or compromised JWT claims a different tenant_id and writes to the wrong tenant's BRAIN</td><td>Low</td><td>Critical</td><td>CSO</td><td>Per AUTH §2.7: <code>tenant_id</code> JWT claim is non-removable; Lumi's BRAIN verifies via JWKS reachability before accepting any sync push; cross-tenant write at storage layer is a CI-tested impossibility.</td></tr>
+ <tr><td><code>R-CUO-008</code></td><td><strong>Lumi tenant-id spoofing</strong> — a malicious skill or compromised JWT claims a different tenant_id and writes to the wrong tenant's memory</td><td>Low</td><td>Critical</td><td>CSO</td><td>Per AUTH §2.7: <code>tenant_id</code> JWT claim is non-removable; Lumi's memory verifies via JWKS reachability before accepting any sync push; cross-tenant write at storage layer is a CI-tested impossibility.</td></tr>
  <tr><td><code>R-CUO-009</code></td><td>Destructive operation auto-invoked despite defer-to-human matrix</td><td>Low</td><td>Critical</td><td>CSO</td><td>Defer-to-human matrix (§3.6) is normative + machine-checked; CI test fails if any persona's auto-OK column contains a flag <code>destructive=true</code> skill.</td></tr>
  <tr><td><code>R-CUO-010</code></td><td>Catalog drift between route-time and invoke-time creates audit chain that doesn't match disk state</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Catalog fingerprint embedded in pre-invocation audit row + version-pinning at invoke; on mismatch broker rejects + emits <code>catalog_drift</code> trace.</td></tr>
  <tr><td><code>R-CUO-011</code></td><td>Cross-surface latency budget miss (PROJ inline genie &gt; 800 ms p95 → Members lose flow)</td><td>Medium</td><td>Medium</td><td>CPO</td><td>Per-surface latency budgets in §3.7 enforced at OBS; alert page CPO + CTO if p95 exceeds; fall back to "Genie is thinking…" indicator gracefully.</td></tr>
  <tr><td><code>R-CUO-012</code></td><td>Lumi cross-tenant synthesis leaks private memory across tenants</td><td>Low</td><td>Critical</td><td>DPO</td><td>Synthesis input strictly filtered by <code>sync_class ∈ {shareable, team-public, org-only}</code>; private/personal never enters Lumi; quarterly red-team check on synthesis outputs.</td></tr>
  <tr><td><code>R-CUO-013</code></td><td>Persona prompt drift via Lumi-pushed updates breaks tenant-pinned behaviour</td><td>Medium</td><td>Medium</td><td>CPO</td><td>Persona version stamp in audit row; tenants can pin persona versions; Lumi-pushed updates require tenant opt-in at the version-pin level.</td></tr>
- <tr><td><code>R-CUO-014</code></td><td>EU AI Act Art. 12 logging gap (Phase 1 flat-file BRAIN bridge missed some fields needed for audit)</td><td>Medium</td><td>High</td><td>CLO</td><td>Phase 2 migration to Postgres checkpointer required by P0 · exit for tenants subject to EU AI Act; per-row schema covers prompt + model + temperature + seed + result hash + alternatives.</td></tr>
+ <tr><td><code>R-CUO-014</code></td><td>EU AI Act Art. 12 logging gap (Phase 1 flat-file memory bridge missed some fields needed for audit)</td><td>Medium</td><td>High</td><td>CLO</td><td>Phase 2 migration to Postgres checkpointer required by P0 · exit for tenants subject to EU AI Act; per-row schema covers prompt + model + temperature + seed + result hash + alternatives.</td></tr>
  <tr><td><code>R-CUO-015</code></td><td>@lumi rate-limit abuse (one Member spams @lumi → AI Gateway cost overrun)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-Member @lumi rate limit (≤ 30/hour default) at AI Gateway; per-tenant monthly @lumi budget surfaced in CUO dashboard.</td></tr>
  <tr><td><code>R-CUO-016</code></td><td>Phase 2 LLM cascade goes down → ambiguous queries lose the cascade fallback</td><td>Low</td><td>Medium</td><td>CTO</td><td>Cascade is degradable: when AI Gateway unreachable, CUO falls back to "show top 3 candidates + ask user to pick" (the defer-to-human path); never blocks the request.</td></tr>
- <tr><td><code>R-CUO-017</code></td><td>Genie answers confidently from training-cutoff knowledge on company-specific topics</td><td>High</td><td>Medium</td><td>CPO</td><td>RAG over BRAIN + KB enforced before LLM call; system prompt forbids speculation on company-specific facts without source; CDO + CPO maintain "must-cite-source" classifier in CI.</td></tr>
+ <tr><td><code>R-CUO-017</code></td><td>Genie answers confidently from training-cutoff knowledge on company-specific topics</td><td>High</td><td>Medium</td><td>CPO</td><td>RAG over memory + KB enforced before LLM call; system prompt forbids speculation on company-specific facts without source; CDO + CPO maintain "must-cite-source" classifier in CI.</td></tr>
  </tbody>
  </table>
  </div>
@@ -1315,19 +1315,19 @@ graph LR
  <table class="kt">
  <thead><tr><th>KPI</th><th>Formula</th><th>Source</th><th>Target</th><th>Current</th></tr></thead>
  <tbody>
- <tr><td><strong>Routing confidence distribution</strong></td><td>histogram of <code>conf</code></td><td>BRAIN audit replay</td><td>mean ≥ 0.6 · p10 ≥ 0.3</td><td>0.7 / 0.4 (15-fixture eval)</td></tr>
- <tr><td><strong>Escalation rate</strong></td><td>queries with 0.10 ≤ conf ≤ 0.50</td><td>BRAIN audit replay</td><td>≤ 10%</td><td>n/a — Phase 2 pending</td></tr>
- <tr><td><strong>Defer rate</strong></td><td>queries with conf &lt; 0.10</td><td>BRAIN audit replay</td><td>≤ 5%</td><td>0% (fixtures)</td></tr>
+ <tr><td><strong>Routing confidence distribution</strong></td><td>histogram of <code>conf</code></td><td>memory audit replay</td><td>mean ≥ 0.6 · p10 ≥ 0.3</td><td>0.7 / 0.4 (15-fixture eval)</td></tr>
+ <tr><td><strong>Escalation rate</strong></td><td>queries with 0.10 ≤ conf ≤ 0.50</td><td>memory audit replay</td><td>≤ 10%</td><td>n/a — Phase 2 pending</td></tr>
+ <tr><td><strong>Defer rate</strong></td><td>queries with conf &lt; 0.10</td><td>memory audit replay</td><td>≤ 5%</td><td>0% (fixtures)</td></tr>
  <tr><td><strong>Decision latency p95</strong></td><td>route wall clock</td><td>per-request timing</td><td>≤ 5 ms (Phase 1)</td><td>~ 0.4 ms</td></tr>
  <tr><td><strong>Replay equivalence rate</strong></td><td>identical decision on second run</td><td>fixture re-evaluation</td><td>100% (Phase 1)</td><td>100%</td></tr>
- <tr><td><strong>Invocation success rate</strong></td><td>exit_code 0 / total invocations</td><td>BRAIN audit replay</td><td>≥ 95%</td><td>100% (15 fixtures)</td></tr>
+ <tr><td><strong>Invocation success rate</strong></td><td>exit_code 0 / total invocations</td><td>memory audit replay</td><td>≥ 95%</td><td>100% (15 fixtures)</td></tr>
  <tr><td><strong>Trust calibration error</strong></td><td>|confidence − actual_correct_rate|</td><td>weekly human review</td><td>≤ 0.10</td><td>0.05 (fixture eval)</td></tr>
  <tr><td><strong>Per-surface response p95 (PROJ inline)</strong></td><td>histogram on PROJ inline genie</td><td>OBS span on <code>cuo.invoke{surface=proj.inline}</code></td><td>≤ 800 ms</td><td>n/a — surface pending</td></tr>
  <tr><td><strong>Per-surface response p95 (CHAT @lumi)</strong></td><td>histogram on CHAT @lumi</td><td>OBS span on <code>cuo.invoke{surface=chat.lumi}</code></td><td>≤ 4 s incl. LLM</td><td>n/a — CHAT pending</td></tr>
- <tr><td><strong>Destructive-op auto-invoke rate</strong></td><td>count(destructive ops auto-invoked) / total destructive ops</td><td>BRAIN audit replay</td><td>= 0 (hard zero)</td><td>0 (fixtures)</td></tr>
- <tr><td><strong>Lumi sync push success rate</strong></td><td>successful sync pushes / total attempts</td><td>Lumi's BRAIN ingest log</td><td>≥ 0.99 over 28-day window (P3+)</td><td>n/a — P3 pending</td></tr>
+ <tr><td><strong>Destructive-op auto-invoke rate</strong></td><td>count(destructive ops auto-invoked) / total destructive ops</td><td>memory audit replay</td><td>= 0 (hard zero)</td><td>0 (fixtures)</td></tr>
+ <tr><td><strong>Lumi sync push success rate</strong></td><td>successful sync pushes / total attempts</td><td>Lumi's memory ingest log</td><td>≥ 0.99 over 28-day window (P3+)</td><td>n/a — P3 pending</td></tr>
  <tr><td><strong>Cross-tenant sync_class violation rate</strong></td><td>memories with private/personal that reached Lumi / total sync attempts</td><td>Lumi pre-write classifier</td><td>= 0 (hard zero)</td><td>n/a — P3 pending</td></tr>
- <tr><td><strong>Persona-version stability</strong></td><td>persona version changes per quarter</td><td>BRAIN audit by persona</td><td>≤ 2 per persona per quarter</td><td>0 (P1)</td></tr>
+ <tr><td><strong>Persona-version stability</strong></td><td>persona version changes per quarter</td><td>memory audit by persona</td><td>≤ 2 per persona per quarter</td><td>0 (P1)</td></tr>
  <tr><td><strong>@lumi cost per active Member (monthly)</strong></td><td>AI Gateway cost / DAU</td><td>AI Gateway billing</td><td>≤ $5 / DAU / month</td><td>n/a — Phase 2 pending</td></tr>
  <tr><td><strong>Must-cite-source compliance</strong></td><td>Genie answers that cite a source / answers about company-specific facts</td><td>CI classifier on production samples</td><td>≥ 0.95</td><td>n/a — Phase 2 pending</td></tr>
  <tr><td><strong>Dogfooding rate (internal Members)</strong></td><td>distinct internal Members using Genie ≥ 5x/day</td><td>CUO decision events filtered to <code>tenant_id=org:cyberskill</code></td><td>100% of full-time team by P0 · exit</td><td>tracking begins P0 · start</td></tr>
@@ -1393,13 +1393,13 @@ alternatives:
 
 (not invoked — pass --invoke to dispatch through the Skill host)</code></pre>
 
- <h3 class="text-lg font-bold mb-2 mt-5">3. Route, invoke, and record in BRAIN</h3>
+ <h3 class="text-lg font-bold mb-2 mt-5">3. Route, invoke, and record in memory</h3>
 <pre><code>$ cyberos-cuo route "validate MST 0123456789" --invoke --record
 
 decision: vietnam-mst-validate (conf=0.7)
 invocation: exit=0 elapsed_ms=24
 stdout: {"ok": true, "format": "10-digit"}
-recorded: brain:/meta/cuo-decisions/1747200611_8c4e.md
+recorded: memory:/meta/cuo-decisions/1747200611_8c4e.md
  seq=14941 chain=a3c7...2b9f</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Inspect a past decision (audit replay)</h3>
@@ -1443,7 +1443,7 @@ allowed_tools: [read_file, write_file]</code></pre>
  <div class="grid md:grid-cols-3 gap-4 mb-6">
  <div class="fact-card"><div class="label">Total LoC (Python)</div><div class="value">~1,600</div><div class="note">supervisor · handlers · cli · tests/</div></div>
  <div class="fact-card"><div class="label">Test count</div><div class="value">49/50 green</div><div class="note">1 skip = catalog-completeness invariant</div></div>
- <div class="fact-card"><div class="label">Core modules</div><div class="value">8</div><div class="note">catalog · validator · router · supervisor · handlers · invoker · brain_bridge · cli</div></div>
+ <div class="fact-card"><div class="label">Core modules</div><div class="value">8</div><div class="note">catalog · validator · router · supervisor · handlers · invoker · memory_bridge · cli</div></div>
  <div class="fact-card"><div class="label">Personas with workflows</div><div class="value">47 / 48</div><div class="note">chief-metaverse-officer EXTINCT</div></div>
  <div class="fact-card"><div class="label">Workflows live</div><div class="value">221</div><div class="note">post Tier-C1 depth additions</div></div>
  <div class="fact-card"><div class="label">Routing latency p95</div><div class="value">~ 0.4 ms</div><div class="note">in-process, catalog cached</div></div>
@@ -1453,10 +1453,10 @@ allowed_tools: [read_file, write_file]</code></pre>
  <table class="kt">
  <thead><tr><th>Phase / capability</th><th>Status</th></tr></thead>
  <tbody>
- <tr><td>Phase 1 — filesystem catalog scanner · two-stage router · BRAIN dry-run</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 1 — filesystem catalog scanner · two-stage router · memory dry-run</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td>Phase 2 — pluggable Invoker (Mock + Subprocess) · <code>execute_chain()</code></td><td><span class="pill pill-shipped">shipped</span></td></tr>
- <tr><td>Phase 3 — LLMInvoker (mock-llm + Anthropic) · BRAIN audit-chain emission</td><td><span class="pill pill-shipped">shipped</span></td></tr>
- <tr><td>Phase 4 — 6 Handler subclasses · auto-dispatch by <code>pattern:</code> frontmatter · 8 new BRAIN audit kinds</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 3 — LLMInvoker (mock-llm + Anthropic) · memory audit-chain emission</td><td><span class="pill pill-shipped">shipped</span></td></tr>
+ <tr><td>Phase 4 — 6 Handler subclasses · auto-dispatch by <code>pattern:</code> frontmatter · 8 new memory audit kinds</td><td><span class="pill pill-shipped">shipped</span></td></tr>
  <tr><td>Postgres checkpointer (EU AI Act Art. 12)</td><td><span class="pill pill-planned">planned · P0 · exit</span></td></tr>
  <tr><td>Ambient nudge modes (Notify · Question · Review)</td><td><span class="pill pill-planned">planned</span></td></tr>
  <tr><td>GraphQL subgraph</td><td><span class="pill pill-planned">planned · P0+</span></td></tr>
@@ -1477,7 +1477,7 @@ allowed_tools: [read_file, write_file]</code></pre>
  <li><strong>Skill broker contract (§3.6 above):</strong> 7-step broker sequence + 7-row CUO↔broker contract + 10-row defer-to-human matrix.</li>
  <li><strong>Cross-module surfaces (§3.7 above):</strong> 9-row canonical surface table + per-surface latency budgets.</li>
  <li><strong>Cross-module page links:</strong>
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
  <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
  <a href="chat.html" class="text-blue-700 underline">chat.html</a> ·
@@ -1485,9 +1485,9 @@ allowed_tools: [read_file, write_file]</code></pre>
  <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
  <a href="mcp.html" class="text-blue-700 underline">mcp.html</a> ·
  <a href="obs.html" class="text-blue-700 underline">obs.html</a></li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CUO decisions are one of four canonical capture inputs to the local BRAIN; §6 (Lumi cross-tenant synthesis).</li>
- <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a> — CUO FRs land via the <code>feature-request-author</code> Agent Skill (CUO already-shipped: the first 50 FRs are CUO + BRAIN + Skill).</li>
- <li><strong>Phase rollout history:</strong> All four supervisor phases (rule-based routing → pluggable invoker → LLM invoker + BRAIN audit emission → 6-Handler dispatch) shipped 2026-05-18. See <code>cyberos/CHANGELOG.md</code> entries tagged <code>[CUO]</code> for per-phase details.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5 (capture surfaces)</a> — CUO decisions are one of four canonical capture inputs to the local memory; §6 (Lumi cross-tenant synthesis).</li>
+ <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a> — CUO FRs land via the <code>feature-request-author</code> Agent Skill (CUO already-shipped: the first 50 FRs are CUO + memory + Skill).</li>
+ <li><strong>Phase rollout history:</strong> All four supervisor phases (rule-based routing → pluggable invoker → LLM invoker + memory audit emission → 6-Handler dispatch) shipped 2026-05-18. See <code>cyberos/CHANGELOG.md</code> entries tagged <code>[CUO]</code> for per-phase details.</li>
  <li><strong>AGENTS.md</strong> (normative) — <code>cyberos/modules/cuo/AGENTS.md</code>.</li>
  <li><strong>SPEC.md</strong> — contract summary — <code>cyberos/modules/cuo/README.md §10 (Data shapes)</code>.</li>
  <li><strong>ROUTING.md</strong> — keyword-bank rationale + Phase 2 LLM design — <code>cyberos/modules/cuo/README.md §9 (Routing algorithm)</code>.</li>
@@ -1503,7 +1503,7 @@ allowed_tools: [read_file, write_file]</code></pre>
 <!-- PREV / NEXT NAV -->
 <!-- ============================================================ -->
 <nav class="module-nav-footer mt-12">
- <a href="brain.html" class="text-purple-700 font-semibold no-underline hover:underline">← Previous: BRAIN</a>
+ <a href="memory.html" class="text-purple-700 font-semibold no-underline hover:underline">← Previous: memory</a>
  <a href="skill.html" class="text-purple-700 font-semibold no-underline hover:underline">Next module: SKILL →</a>
 </nav>
 

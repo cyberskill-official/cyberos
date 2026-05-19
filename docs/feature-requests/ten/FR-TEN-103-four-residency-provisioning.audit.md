@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands 4-residency provisioning (sg-1 / eu-1 / us-1 / vn-1) with no-shared-infra per residency, defense-in-depth cross-residency trip-wires (pool router + trigger + no FDW), atomic-at-residency provisioning, per-residency BRAIN chain partitioning, per-residency KMS/Stripe/AUTH issuer separation, and a 6-component residency-health CLI. Final form: 1,205 lines, 25 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 21 failure-mode rows, 22 implementation notes. Net-new Terraform infrastructure across 4 residencies + 5 services modified for residency-router consumption + 1 migration that loops over `information_schema.columns` to attach trip-wire triggers to every tenant-scoped table.
+The spec lands 4-residency provisioning (sg-1 / eu-1 / us-1 / vn-1) with no-shared-infra per residency, defense-in-depth cross-residency trip-wires (pool router + trigger + no FDW), atomic-at-residency provisioning, per-residency memory chain partitioning, per-residency KMS/Stripe/AUTH issuer separation, and a 6-component residency-health CLI. Final form: 1,205 lines, 25 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 21 failure-mode rows, 22 implementation notes. Net-new Terraform infrastructure across 4 residencies + 5 services modified for residency-router consumption + 1 migration that loops over `information_schema.columns` to attach trip-wire triggers to every tenant-scoped table.
 
 8 issues identified by self-audit, all resolved.
 
@@ -29,9 +29,9 @@ The trip-wire trigger says `IF NEW.tenant_id IS NULL THEN RETURN NEW; END IF;` t
 
 §1 #24 + §11.4 said "high nibble of byte 6" encodes residency. But UUIDv7's byte 6 high nibble is the VERSION field (0111 for v7) per RFC 9562 §5.7. Using it for residency would corrupt the UUID. Resolved: §11.4 updated to reserve the high nibble of BYTE 7 instead (compatible with RFC 9562 extension space — byte 7 high nibble is the variant field but only bits 0xC0 are spec-reserved; bits 0x30 are free for application use). §1 #24 wording matched.
 
-### ISS-004 — Per-residency BRAIN chain partitioning's reconciliation surface unclear
+### ISS-004 — Per-residency memory chain partitioning's reconciliation surface unclear
 
-§1 #11 said "cross-residency BRAIN events are FORBIDDEN" + "reconciliation via per-residency exports for global compliance reports" but the "reconciliation" mechanism wasn't elaborated. A reviewer would wonder how a compliance officer producing a global audit report stitches 4 chains. Resolved: clarified that each residency produces its own deterministic export (FR-AGENTS §10 portability pattern); compliance officer concatenates 4 exports in the report. The chains are independent — no global Merkle root. Documented in §11.12.
+§1 #11 said "cross-residency memory events are FORBIDDEN" + "reconciliation via per-residency exports for global compliance reports" but the "reconciliation" mechanism wasn't elaborated. A reviewer would wonder how a compliance officer producing a global audit report stitches 4 chains. Resolved: clarified that each residency produces its own deterministic export (FR-AGENTS §10 portability pattern); compliance officer concatenates 4 exports in the report. The chains are independent — no global Merkle root. Documented in §11.12.
 
 ### ISS-005 — vn-1 → ap-southeast-1 placement reference is forensically critical but only DEC-mentioned
 
@@ -51,7 +51,7 @@ The trip-wire trigger says `IF NEW.tenant_id IS NULL THEN RETURN NEW; END IF;` t
 
 ## §3 — Resolution
 
-All 8 mechanical concerns addressed. Defense-in-depth posture is now spec-complete (trip-wire + CI inventory check + IAM-layer scope); UUIDv7 residency encoding is RFC-compliant; BRAIN chain reconciliation pattern documented; vn-1 placement disclosure traced to consumer-facing surface; transitional JWT claim handling has explicit toggle.
+All 8 mechanical concerns addressed. Defense-in-depth posture is now spec-complete (trip-wire + CI inventory check + IAM-layer scope); UUIDv7 residency encoding is RFC-compliant; memory chain reconciliation pattern documented; vn-1 placement disclosure traced to consumer-facing surface; transitional JWT claim handling has explicit toggle.
 
 The 1,205-line length is over the 1,000-line soft cap but justified by genuine surface complexity: 4 residencies × 5 infrastructure components × per-residency wiring across 5 modified services + Terraform across 4 dirs + 21 failure modes. Density comparable to peer FR-TEN-101 (1,160). The trip-wire trigger SQL (§3.1) is one of the largest single SQL blocks in the FR set — the cursor loop is critical security infrastructure that warrants explicit illustration.
 

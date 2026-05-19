@@ -5,7 +5,7 @@
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>OBS — Observability spine · Auto-runbook router · Compliance evidence surface · CyberOS</title>
- <meta name="description" content="OBS — the observability spine every module emits to. Three strategic roles: (1) three-pillars unified pane (logs+metrics+traces+events correlated by trace_id across all 22 modules), (2) auto-runbook router (alerts → CUO triage skill → runbook suggestion → BRAIN audit), (3) compliance evidence surface (read-only audit-log view for regulators; EU AI Act Art. 12; PDPL Art. 14). LGTM + LangSmith stack, tenant-scoped queries, SLO dashboards.">
+ <meta name="description" content="OBS — the observability spine every module emits to. Three strategic roles: (1) three-pillars unified pane (logs+metrics+traces+events correlated by trace_id across all 22 modules), (2) auto-runbook router (alerts → CUO triage skill → runbook suggestion → memory audit), (3) compliance evidence surface (read-only audit-log view for regulators; EU AI Act Art. 12; PDPL Art. 14). LGTM + LangSmith stack, tenant-scoped queries, SLO dashboards.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -38,14 +38,14 @@
  <span class="text-5xl">👁</span>
  <h1 class="h-display">OBS</h1>
  <span class="phase-chip phase-p0">P0 · Foundation</span>
- <span class="pill pill-planned">Planned · 9 FRs at 10/10 audit · ships parallel with BRAIN/AUTH waves</span>
+ <span class="pill pill-planned">Planned · 9 FRs at 10/10 audit · ships parallel with memory/AUTH waves</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
  <strong>The observability spine.</strong> Every module emits through here. The question "is CyberOS healthy?" has exactly one answer source — and so does "what did the AI just decide on behalf of this tenant?".
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- OBS plays three strategic roles simultaneously. <strong>Role 1 — three-pillars unified pane</strong>: every of the 22 modules emits OpenTelemetry; logs (Loki), metrics (Prometheus), traces (Tempo), and AI traces (LangSmith) all correlate by <code>trace_id</code> and <code>tenant_id</code>; one dashboard answers "what happened" across the full request path from external MCP client to Postgres write. <strong>Role 2 — auto-runbook router</strong>: alerts don't page people, they trigger a CUO triage skill that consults the runbook catalogue, suggests the first step, and creates a BRAIN audit row; only un-runbookable alerts page on-call — the rest become self-service tickets in CHAT. <strong>Role 3 — compliance evidence surface</strong>: a read-only view of the BRAIN audit chain, scoped per-regulator, satisfies EU AI Act Art. 12 (decision logging), PDPL Art. 14 (DSAR transparency), and SOC 2 CC7.2 (monitoring) without exposing the underlying operational data. The planned implementation lives at <code>cyberos/services/obs/</code>; the P0 · slice 1 build sequence puts OBS alongside AI Gateway as one of the first two P0 modules to ship.
+ OBS plays three strategic roles simultaneously. <strong>Role 1 — three-pillars unified pane</strong>: every of the 22 modules emits OpenTelemetry; logs (Loki), metrics (Prometheus), traces (Tempo), and AI traces (LangSmith) all correlate by <code>trace_id</code> and <code>tenant_id</code>; one dashboard answers "what happened" across the full request path from external MCP client to Postgres write. <strong>Role 2 — auto-runbook router</strong>: alerts don't page people, they trigger a CUO triage skill that consults the runbook catalogue, suggests the first step, and creates a memory audit row; only un-runbookable alerts page on-call — the rest become self-service tickets in CHAT. <strong>Role 3 — compliance evidence surface</strong>: a read-only view of the memory audit chain, scoped per-regulator, satisfies EU AI Act Art. 12 (decision logging), PDPL Art. 14 (DSAR transparency), and SOC 2 CC7.2 (monitoring) without exposing the underlying operational data. The planned implementation lives at <code>cyberos/services/obs/</code>; the P0 · slice 1 build sequence puts OBS alongside AI Gateway as one of the first two P0 modules to ship.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -104,7 +104,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card p-6 mb-6" style="border-top: 4px solid #7c3aed;">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- OBS is the <strong>shared telemetry plane</strong>: logs, metrics, traces, and AI-trace observability for every CyberOS module. Operationally, OpenTelemetry SDKs in every service ship to a single OTel collector that fans out — logs to Loki, metrics to Prometheus, traces to Tempo. Grafana renders dashboards (per-module SLO, per-tenant cost, per-region health). LangSmith captures full LLM call traces independently from the operational pipeline so AI debugging doesn't require correlating across three tools. Alert Manager fans critical alerts to PagerDuty, mid alerts to <code>#cyberos-alerts</code>, low signals into the CUO morning digest. The audit chain — owned by BRAIN — is exposed via a separate read-only OBS surface for regulators (PDPL Art. 14, EU AI Act Art. 12). Tenant scoping is enforced at the query proxy so a member of tenant A cannot see tenant B's logs.
+ OBS is the <strong>shared telemetry plane</strong>: logs, metrics, traces, and AI-trace observability for every CyberOS module. Operationally, OpenTelemetry SDKs in every service ship to a single OTel collector that fans out — logs to Loki, metrics to Prometheus, traces to Tempo. Grafana renders dashboards (per-module SLO, per-tenant cost, per-region health). LangSmith captures full LLM call traces independently from the operational pipeline so AI debugging doesn't require correlating across three tools. Alert Manager fans critical alerts to PagerDuty, mid alerts to <code>#cyberos-alerts</code>, low signals into the CUO morning digest. The audit chain — owned by memory — is exposed via a separate read-only OBS surface for regulators (PDPL Art. 14, EU AI Act Art. 12). Tenant scoping is enforced at the query proxy so a member of tenant A cannot see tenant B's logs.
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Strategic role</div><div class="value">Observability spine</div><div class="note">3 pillars + AI traces + audit</div></div>
@@ -117,7 +117,7 @@
  <div class="fact-card"><div class="label">SLO targets</div><div class="value">≥ 99.5%</div><div class="note">platform composite SLO</div></div>
  <div class="fact-card"><div class="label">Auto-runbook coverage</div><div class="value">≥ 60% by P1</div><div class="note">alerts → CUO triage skill</div></div>
  <div class="fact-card"><div class="label">Compliance surfaces</div><div class="value">EU AI Act · PDPL · SOC 2</div><div class="note">read-only regulator views</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN</div><div class="note">+ AUTH (P0 · slice 2) · AI Gateway (P0 · slice 1)</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">memory</div><div class="note">+ AUTH (P0 · slice 2) · AI Gateway (P0 · slice 1)</div></div>
  <div class="fact-card"><div class="label">Used by</div><div class="value">All 22 modules</div><div class="note">every service emits OTel</div></div>
  </div>
  </div>
@@ -138,7 +138,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#5b21b6">Role 1 · Three-pillars unified pane</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Logs + metrics + traces + AI traces, one trace_id</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Every module emits OpenTelemetry. The collector fans out to Loki (logs), Prometheus (metrics), Tempo (operational traces), LangSmith (AI traces). All four are correlated by W3C TraceContext <code>trace_id</code> + <code>tenant_id</code>. One click in Grafana takes you from a slow API trace to the LLM call inside it to the BRAIN audit row that recorded the decision. No more "the AI did something weird, but I can only see the HTTP request."
+ Every module emits OpenTelemetry. The collector fans out to Loki (logs), Prometheus (metrics), Tempo (operational traces), LangSmith (AI traces). All four are correlated by W3C TraceContext <code>trace_id</code> + <code>tenant_id</code>. One click in Grafana takes you from a slow API trace to the LLM call inside it to the memory audit row that recorded the decision. No more "the AI did something weird, but I can only see the HTTP request."
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid #7c3aed">
@@ -150,7 +150,7 @@
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid #7c3aed">
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#5b21b6">Role 3 · Compliance evidence surface</div>
- <div class="font-bold text-slate-900 mb-2 text-base">Read-only regulator view of the BRAIN audit chain</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Read-only regulator view of the memory audit chain</div>
  <p class="text-sm text-slate-600 leading-relaxed">
  Auditors don't need access to Postgres. They need a scoped, time-bounded, exportable view of the audit chain that proves "the AI made this decision at this time under this persona, and a human confirmed it before it executed." OBS surfaces this via the <code>/compliance/{regulator}</code> read-only endpoint per regulator (EU AI Act / PDPL / SOC 2 / ISO 27001). Each regulator sees only the chained audit rows + retention metadata they're entitled to.
  </p>
@@ -163,7 +163,7 @@
 flowchart TB
  subgraph emitters["Emitters (all 22 modules)"]
  CUO["🎯 CUO"]
- BRAIN["🧠 BRAIN"]
+ memory["🧠 memory"]
  SKILL["🛠 Skill"]
  AI["⚡ AI Gateway"]
  AUTH["🔐 AUTH"]
@@ -193,7 +193,7 @@ flowchart TB
  end
 
  CUO --> COLLECT
- BRAIN --> COLLECT
+ memory --> COLLECT
  SKILL --> COLLECT
  AI --> COLLECT
  AUTH --> COLLECT
@@ -219,7 +219,7 @@ flowchart TB
  classDef store fill:#f5ede6,stroke:#45210e
  classDef consumer fill:#fef6e0,stroke:#9c750a
  class OBS,COLLECT hub
- class CUO,BRAIN,SKILL,AI,AUTH,MCP,PROJ,N mod
+ class CUO,memory,SKILL,AI,AUTH,MCP,PROJ,N mod
  class LOKI,PROM,TEMPO,LS store
  class GRAF,ALERT,CUO_TRIAGE,PAGER,CHAT,COMP consumer
  </div>
@@ -281,9 +281,9 @@ flowchart TB
  <tr><td><strong>5W · What</strong></td><td>What is OBS?</td><td>A self-hosted LGTM stack (Loki, Grafana, Tempo, Prometheus) plus LangSmith for AI-trace observability, plus a small Rust query proxy that enforces tenant scoping on every read, plus Alert Manager for routing.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who reads it?</td><td><strong>Operators:</strong> CTO + on-call engineers (dashboards, alerts). <strong>Module owners:</strong> for their SLO dashboards. <strong>Tenant admins:</strong> for their own tenant's cost + usage dashboards. <strong>Compliance:</strong> read-only audit surface. <strong>Auditors:</strong> per-engagement scope.</td></tr>
  <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>24/7. OTel collector receives spans/logs/metrics in real time; alert evaluation every 30 s; dashboards refresh on user request or 30 s auto-refresh.</td></tr>
- <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Self-hosted on AWS in SG-1 (P0). LangSmith is a managed SaaS (zero-retention contract); audit-log view is served from BRAIN reads via the query proxy.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Self-hosted on AWS in SG-1 (P0). LangSmith is a managed SaaS (zero-retention contract); audit-log view is served from memory reads via the query proxy.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why a separate plane?</td><td>So no module has to think about "where do my logs go?" — they emit OTel, the plane handles fan-out, retention, query, and alerting.</td></tr>
- <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Services emit OTel; collector splits by signal type; Loki / Tempo / Prometheus ingest; Grafana queries via the tenant-aware proxy; LangSmith ingests AI traces over its own SDK; Alert Manager evaluates rules and routes; audit-log surface reads BRAIN binlog.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Services emit OTel; collector splits by signal type; Loki / Tempo / Prometheus ingest; Grafana queries via the tenant-aware proxy; LangSmith ingests AI traces over its own SDK; Alert Manager evaluates rules and routes; audit-log surface reads memory binlog.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>P0: ~$130/month (S3 hot-tier storage + Fargate for query proxy + LangSmith starter). 50-tenant: ~$700/month including S3 cold tier + Grafana Enterprise (optional).</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) PII redaction before log shipping (≥ 99.5% recall). (b) Tenant queries cannot bypass scope. (c) EU AI Act Art. 12 decision logs retained ≥ 6 months. (d) Audit-log surface is read-only for everyone.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>OpenTelemetry SDK (Rust + Python) · OTel Collector · Loki 3.x · Tempo 2.x · Prometheus 2.x · Grafana 11.x · LangSmith · Alert Manager · S3 (Loki / Tempo backing).</td></tr>
@@ -314,7 +314,7 @@ flowchart TB
  <tr><td><strong>Metrics</strong></td><td>Prometheus + Mimir (P1+)</td><td>RED metrics (rate/errors/duration) per service · USE metrics (utilisation/saturation/errors) per host · business KPIs</td><td>1M active series/tenant; LIMIT_EXCEEDED at 1.5M</td><td>15d local Prom · 1y Mimir</td></tr>
  <tr><td><strong>Traces (operational)</strong></td><td>Tempo</td><td>OpenTelemetry spans · cross-service HTTP/gRPC propagation</td><td>10% head sampling default; per-tenant adjustable; 100% on errors</td><td>14d hot · 90d S3 warm</td></tr>
  <tr><td><strong>AI traces</strong></td><td>LangSmith</td><td>LLM prompt + completion + tool calls + decision rationale; tied to operational trace_id</td><td>100% sampling for AI calls (volume is low); cost-bounded by AI Gateway budget</td><td>90d hot · 1y cold (compliance)</td></tr>
- <tr><td><strong>Events (BRAIN audit)</strong></td><td>BRAIN binlog</td><td>Decision audit rows · chained · signed</td><td>uncapped (append-only)</td><td>indefinite (compliance)</td></tr>
+ <tr><td><strong>Events (memory audit)</strong></td><td>memory binlog</td><td>Decision audit rows · chained · signed</td><td>uncapped (append-only)</td><td>indefinite (compliance)</td></tr>
  </tbody>
  </table>
  </div>
@@ -327,7 +327,7 @@ flowchart TB
  <li><strong>Trace</strong> (Tempo): pick a slow trace from the spike window → see the request hit MCP Gateway, then CUO, then AI Gateway → AI Gateway took 7.4s of the 8.2s.</li>
  <li><strong>AI trace</strong> (LangSmith): click the AI Gateway span → see the LLM call → primary provider returned 429 (rate limit), failover added 6.8s.</li>
  <li><strong>Log</strong> (Loki): same trace_id → see the structured log <code>{level: warn, msg: "provider rate limit", provider: bedrock, retry_after_s: 6}</code>.</li>
- <li><strong>BRAIN audit row</strong>: same trace_id → confirm the <code>ai.invocation</code> audit row carries <code>failover_path: fallback</code>; root cause identified, runbook says "increase Bedrock quota for this tenant".</li>
+ <li><strong>memory audit row</strong>: same trace_id → confirm the <code>ai.invocation</code> audit row carries <code>failover_path: fallback</code>; root cause identified, runbook says "increase Bedrock quota for this tenant".</li>
  </ol>
  <p class="text-sm text-slate-600 mt-3">5 minutes from "p95 alert" to "open the quota-increase ticket." Without correlation, the same investigation takes hours across separate tool consoles.</p>
  </div>
@@ -366,7 +366,7 @@ sequenceDiagram
  participant KB as 📚 KB runbook catalogue
  participant CH as 💬 CHAT (#cyberos-alerts)
  participant PD as PagerDuty
- participant B as 🧠 BRAIN audit
+ participant B as 🧠 memory audit
 
  P->>AM: alert fires (severity, labels, value)
  AM->>C: invoke triage skill (alert payload + trace_id)
@@ -389,7 +389,7 @@ sequenceDiagram
  <table class="kt">
  <thead><tr><th>Severity</th><th>Default routing</th><th>Override</th><th>Examples</th></tr></thead>
  <tbody>
- <tr><td><strong>P0 (down)</strong></td><td>Always PagerDuty + CHAT</td><td>Cannot suppress</td><td>Platform unreachable · BRAIN write down · tenant data loss</td></tr>
+ <tr><td><strong>P0 (down)</strong></td><td>Always PagerDuty + CHAT</td><td>Cannot suppress</td><td>Platform unreachable · memory write down · tenant data loss</td></tr>
  <tr><td><strong>P1 (impaired)</strong></td><td>PagerDuty with runbook attached</td><td>Confidence ≥ 0.90 → CHAT-only with on-call notified</td><td>p95 latency &gt; 3× target · provider down · auth degraded</td></tr>
  <tr><td><strong>P2 (warn)</strong></td><td>CUO triage → CHAT or PagerDuty</td><td>Conf ≥ 0.70 → CHAT self-service</td><td>SLO budget burn rate &gt; 2× · cost cap approaching 80% · cache hit rate dropping</td></tr>
  <tr><td><strong>P3 (info)</strong></td><td>Daily CUO digest in CHAT</td><td>Conf ≥ 0.50 → bundled in digest</td><td>Slow query trend · persona-version drift &lt; 0.30 · stale memory citations</td></tr>
@@ -417,7 +417,7 @@ sequenceDiagram
 <section id="compliance-surface" class="module-section">
  <header class="section-head"><span class="section-num">2.7</span><h2>Compliance evidence surface — read-only regulator views</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The standard pattern when an auditor arrives is "let me give you a Postgres readonly account and good luck." It's a security incident waiting to happen. OBS exposes per-regulator scoped read-only views over the BRAIN audit chain so auditors see exactly what they need — chained, exportable, tamper-evident — without touching the underlying operational data.
+ The standard pattern when an auditor arrives is "let me give you a Postgres readonly account and good luck." It's a security incident waiting to happen. OBS exposes per-regulator scoped read-only views over the memory audit chain so auditors see exactly what they need — chained, exportable, tamper-evident — without touching the underlying operational data.
  </p>
 
  <h3 class="text-lg font-bold mt-4 mb-3">Regulator view × audit scope matrix</h3>
@@ -465,12 +465,12 @@ sequenceDiagram
 
  <h3 class="text-lg font-bold mt-6 mb-3">Chain-of-custody manifest</h3>
  <div class="bbg-card p-5">
- <p class="text-sm text-slate-600 mb-3">Every regulator export includes a manifest that proves the export is a faithful slice of the BRAIN chain. The manifest contains:</p>
+ <p class="text-sm text-slate-600 mb-3">Every regulator export includes a manifest that proves the export is a faithful slice of the memory chain. The manifest contains:</p>
  <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
  <li><strong>Time window:</strong> ISO 8601 range; rows outside the window are excluded.</li>
  <li><strong>Filter predicates:</strong> the exact compliance-view filter that was applied.</li>
  <li><strong>Row count:</strong> N rows exported, sequence numbers N_min..N_max.</li>
- <li><strong>Chain anchors:</strong> the BRAIN chain hash at the start and end of the window (proves no rows were inserted or removed between those points).</li>
+ <li><strong>Chain anchors:</strong> the memory chain hash at the start and end of the window (proves no rows were inserted or removed between those points).</li>
  <li><strong>Export signer:</strong> Ed25519 signature by OBS with the export request audit row hash.</li>
  <li><strong>Auditor identity:</strong> JWT subject of the auditor requesting the export.</li>
  </ul>
@@ -526,7 +526,7 @@ graph TB
  end
 
  subgraph AUDIT ["Audit surface"]
- BR["🧠 BRAIN<br>binlog"]
+ BR["🧠 memory<br>binlog"]
  AS["audit_view.rs<br>read-only · auditor-scoped"]
  end
 
@@ -578,11 +578,11 @@ graph TB
  <tr><td><code>Tempo</code></td><td>backend</td><td>Trace storage. S3-backed. 7d hot · 30d warm.</td></tr>
  <tr><td><code>Prometheus</code></td><td>backend</td><td>Metrics. Local 15d. Mimir for 1y at P1+.</td></tr>
  <tr><td><code>tenant_query_proxy.rs</code></td><td>services/obs/query-proxy/</td><td>Rust axum service. Every query (from Grafana or API) is intercepted; tenant_id from JWT injected as label filter; cross-tenant queries rejected with 403.</td></tr>
- <tr><td><code>Grafana</code></td><td>frontend</td><td>11.x. Per-module SLO dashboards + per-tenant cost dashboards + read-only audit-log view (datasource: BRAIN).</td></tr>
+ <tr><td><code>Grafana</code></td><td>frontend</td><td>11.x. Per-module SLO dashboards + per-tenant cost dashboards + read-only audit-log view (datasource: memory).</td></tr>
  <tr><td><code>Alert Manager</code></td><td>backend</td><td>Routes alerts by severity. PagerDuty + CHAT + CUO digest integrations.</td></tr>
  <tr><td><code>SLO engine</code></td><td>services/obs/slo/</td><td>Sloth-based. SLO definitions in YAML committed to repo. Burn-rate alerts generated automatically.</td></tr>
  <tr><td><code>cost_pipeline.py</code></td><td>services/obs/cost/</td><td>Daily cost roll-up from AWS Cost Explorer + AI Gateway DuckDB + storage metrics. Per-tenant breakdown.</td></tr>
- <tr><td><code>audit_view.rs</code></td><td>services/obs/audit/</td><td>Read-only audit-log API; consumes BRAIN binlog; exposes Grafana datasource so compliance can query in the same UI as operations.</td></tr>
+ <tr><td><code>audit_view.rs</code></td><td>services/obs/audit/</td><td>Read-only audit-log API; consumes memory binlog; exposes Grafana datasource so compliance can query in the same UI as operations.</td></tr>
  <tr><td><code>LangSmith client</code></td><td>integrated in AI Gateway</td><td>Sends prompt/completion/tool-call traces directly to LangSmith. Zero-retention contract in place.</td></tr>
  </tbody>
  </table>
@@ -713,7 +713,7 @@ erDiagram
  <tr><td><code>actor.id</code></td><td>string</td><td>YES</td><td>Subject (user / agent / service).</td></tr>
  <tr><td><code>actor.kind</code></td><td>"human"|"agent"|"service"</td><td>YES</td><td>Authentication shape.</td></tr>
  <tr><td><code>persona.version</code></td><td>string</td><td>if agent</td><td>e.g. <code>cuo-v2.3.1</code>.</td></tr>
- <tr><td><code>module</code></td><td>string</td><td>YES</td><td>e.g. <code>brain</code>, <code>auth</code>, <code>chat</code>.</td></tr>
+ <tr><td><code>module</code></td><td>string</td><td>YES</td><td>e.g. <code>memory</code>, <code>auth</code>, <code>chat</code>.</td></tr>
  <tr><td><code>service.name</code></td><td>string</td><td>YES</td><td>OTel standard.</td></tr>
  <tr><td><code>service.version</code></td><td>string</td><td>YES</td><td>OTel standard.</td></tr>
  <tr><td><code>deployment.environment</code></td><td>"dev"|"staging"|"prod"</td><td>YES</td><td>OTel standard.</td></tr>
@@ -739,7 +739,7 @@ erDiagram
  <tr><td>POST</td><td><code>/api/v1/prom/query_range</code></td><td>Range PromQL.</td></tr>
  <tr><td>POST</td><td><code>/api/v1/tempo/api/search</code></td><td>Tempo trace search.</td></tr>
  <tr><td>GET</td><td><code>/api/v1/tempo/api/traces/{id}</code></td><td>Get full trace by id.</td></tr>
- <tr><td>POST</td><td><code>/api/v1/audit/query</code></td><td>BRAIN audit-log query (read-only).</td></tr>
+ <tr><td>POST</td><td><code>/api/v1/audit/query</code></td><td>memory audit-log query (read-only).</td></tr>
  <tr><td>GET</td><td><code>/api/v1/slo</code></td><td>List SLO targets for tenant.</td></tr>
  <tr><td>GET</td><td><code>/api/v1/slo/{id}/burn</code></td><td>Burn-rate for a specific SLO.</td></tr>
  <tr><td>GET</td><td><code>/api/v1/cost/mtd</code></td><td>MTD cost breakdown for tenant.</td></tr>
@@ -882,7 +882,7 @@ sequenceDiagram
  participant AUTH as AUTH RBAC
  participant CHAT as CHAT service
  participant AI as AI Gateway
- participant BR as BRAIN
+ participant BR as memory
  participant TEMPO as Tempo
 
  U->>AR: POST /graphql (mutation sendMessage)
@@ -947,7 +947,7 @@ sequenceDiagram
  participant QP as query_proxy
  participant AUTH as AUTH RBAC
  participant AV as audit_view.rs
- participant BR as 🧠 BRAIN binlog
+ participant BR as 🧠 memory binlog
 
  AUD->>G: open "Audit · 2026-Q1" dashboard
  G->>QP: GET /api/v1/audit/query?since=2026-01-01&actor=stephen@…
@@ -994,7 +994,7 @@ stateDiagram-v2
  <tbody>
  <tr><td>Platform (aggregate)</td><td>availability</td><td>≥ 99.5%</td><td>28d rolling</td><td>CTO</td></tr>
  <tr><td>CHAT</td><td>availability</td><td>≥ 99.9%</td><td>28d</td><td>CTO</td></tr>
- <tr><td>BRAIN search</td><td>availability</td><td>≥ 99.5%</td><td>28d</td><td>CDO</td></tr>
+ <tr><td>memory search</td><td>availability</td><td>≥ 99.5%</td><td>28d</td><td>CDO</td></tr>
  <tr><td>AUTH</td><td>availability</td><td>≥ 99.95%</td><td>28d</td><td>CSO</td></tr>
  <tr><td>AI Gateway</td><td>availability</td><td>≥ 99.9%</td><td>28d</td><td>CTO</td></tr>
  <tr><td>AI Gateway</td><td>latency p95</td><td>≤ 2 s</td><td>28d</td><td>CTO</td></tr>
@@ -1027,7 +1027,7 @@ stateDiagram-v2
  <tbody>
  <tr><td><code>N(FR pending)</code></td><td>Platform availability (28-day rolling)</td><td>≥ 99.5%</td><td>SLO target · burn-rate alerts</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>CHAT availability</td><td>≥ 99.9%</td><td>SLO</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>BRAIN search availability</td><td>≥ 99.5%</td><td>SLO</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>memory search availability</td><td>≥ 99.5%</td><td>SLO</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Backup RPO</td><td>≤ 1 h</td><td>scheduled backup audit</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Backup RTO</td><td>≤ 4 h</td><td>quarterly restore drill</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Cross-region failover (P3)</td><td>≤ 24 h</td><td>annual DR drill</td></tr>
@@ -1052,7 +1052,7 @@ stateDiagram-v2
 graph LR
  subgraph upstream ["OBS depends on"]
  AUTH["🔐 AUTH<br>tenant + scope verification"]
- BRAIN["🧠 BRAIN<br>audit-log surface"]
+ memory["🧠 memory<br>audit-log surface"]
  S3["☁️ S3<br>Loki/Tempo storage"]
  LANGSMITH["LangSmith SaaS<br>AI traces"]
  end
@@ -1062,7 +1062,7 @@ graph LR
  AI["AI"]
  MCP["MCP"]
  CHAT["CHAT"]
- BR2["BRAIN"]
+ BR2["memory"]
  SK["Skill"]
  OTH["…all 22"]
  end
@@ -1073,7 +1073,7 @@ graph LR
  CEO["CEO morning digest"]
  end
  AUTH --> OBS
- BRAIN --> OBS
+ memory --> OBS
  S3 --> OBS
  LANGSMITH --> OBS
  AUTH2 --> OBS
@@ -1090,7 +1090,7 @@ graph LR
 
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef planned fill:#fef6e0,stroke:#7c3aed
- class BRAIN,SK shipped
+ class memory,SK shipped
  class OBS,AUTH,AI,MCP,CHAT,AUTH2,BR2,OTH planned
  class S3,LANGSMITH planned
  </div>
@@ -1108,10 +1108,10 @@ graph LR
  <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>Per-tenant alerting flags anomalous agent behaviour.</td></tr>
  <tr><td>Vietnam PDPL</td><td>Art. 14 — DSAR</td><td>Per-subject log + decision export via audit-log surface.</td></tr>
  <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Processing log</td><td>Audit-log surface materialises the processing log for the regulator.</td></tr>
- <tr><td>GDPR</td><td>Art. 30 — Records of processing</td><td>BRAIN audit chain + OBS audit-view = records of processing.</td></tr>
+ <tr><td>GDPR</td><td>Art. 30 — Records of processing</td><td>memory audit chain + OBS audit-view = records of processing.</td></tr>
  <tr><td>GDPR</td><td>Art. 32 — Security of processing</td><td>PII redaction on logs; tenant-scoped queries; mTLS to collectors.</td></tr>
  <tr><td>GDPR</td><td>Art. 33 — Breach notification</td><td>Alert routing surfaces breaches; OBS provides forensic timeline.</td></tr>
- <tr><td>ISO/IEC 27001:2022</td><td>A.8.15 — Logging</td><td>Centralised structured logs; integrity via BRAIN chain.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.8.15 — Logging</td><td>Centralised structured logs; integrity via memory chain.</td></tr>
  <tr><td>ISO/IEC 27001:2022</td><td>A.8.16 — Monitoring activities</td><td>Per-module SLO + alert pipeline.</td></tr>
  <tr><td>ISO/IEC 42001 (AIMS)</td><td>§ 9.1 — Performance evaluation</td><td>LangSmith + AI Gateway metrics ≡ AI system performance KPIs.</td></tr>
  <tr><td>SOC 2 Type II</td><td>CC7.2 — Monitoring controls</td><td>SLO dashboards · alert routing · audit-log retention.</td></tr>
@@ -1209,7 +1209,7 @@ graph LR
 
 2026-05-14T07:19:02Z INFO auth login_attempt subject=[REDACTED:email] trace=t_3ab9
 2026-05-14T07:19:02Z INFO auth login_success aal=aal3 trace=t_3ab9
-2026-05-14T07:19:03Z INFO rbac check action=brain.put decision=allow trace=t_3ab9
+2026-05-14T07:19:03Z INFO rbac check action=memory.put decision=allow trace=t_3ab9
 …</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. SLO status</h3>
@@ -1220,7 +1220,7 @@ platform availability 99.5% 99.94% 99% 0.06× (28d)
 chat availability 99.9% 99.97% 71% 1.2× (warning)
 auth availability 99.95% 100% 100% 0×
 ai-gateway latency p95 2 s 1.4 s ok —
-brain-search availability 99.5% 99.99% 99% 0×
+memory-search availability 99.5% 99.99% 99% 0×
 mcp-gateway write p95 1 s 0.42 s ok —
 graphql-router latency p95 400 ms 280 ms ok —</code></pre>
 
@@ -1258,7 +1258,7 @@ spans:
  apollo-router sendMessage(graphql) 412 ms
  ├─ auth RBAC.Check 8 ms
  ├─ chat CreateMessage 286 ms
- │ ├─ brain put_message 12 ms
+ │ ├─ memory put_message 12 ms
  │ └─ ai-gateway summariseSync 260 ms
  │ ├─ tenant_policy 3 ms
  │ ├─ redactor 2 ms
@@ -1266,9 +1266,9 @@ spans:
  └─ chat FanoutMentions 14 ms</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Audit-log query (compliance)</h3>
-<pre><code>$ cyberos-obs audit query --since 2026-04-01 --action 'brain.delete' --format jsonl
-{"seq":12031,"action":"brain.delete","actor":"stephen@…","mode":"tombstone","path":"memories/…","ts":"…"}
-{"seq":12102,"action":"brain.delete","actor":"dpo@…","mode":"purge","reason":"DSAR-2026-014","path":"memories/…","ts":"…"}
+<pre><code>$ cyberos-obs audit query --since 2026-04-01 --action 'memory.delete' --format jsonl
+{"seq":12031,"action":"memory.delete","actor":"stephen@…","mode":"tombstone","path":"memories/…","ts":"…"}
+{"seq":12102,"action":"memory.delete","actor":"dpo@…","mode":"purge","reason":"DSAR-2026-014","path":"memories/…","ts":"…"}
 …
 [query] 47 rows · chain integrity verified</code></pre>
 
@@ -1334,7 +1334,7 @@ slo:
  <li><strong>Auto-runbook router (§2.6 above):</strong> 6-step routing sequence + severity × routing matrix + runbook-catalogue growth loop.</li>
  <li><strong>Compliance evidence surface (§2.7 above):</strong> regulator view × audit scope matrix + per-view scoping YAML + chain-of-custody manifest.</li>
  <li><strong>Cross-module page links:</strong>
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
  <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
  <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
@@ -1344,7 +1344,7 @@ slo:
  <a href="proj.html" class="text-blue-700 underline">proj.html</a></li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — OBS placed at P0 · slice 1 alongside AI Gateway as the two earliest P0 modules.</li>
  <li><strong>Research review:</strong> <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — OBS rated "Strong" (9/10); auto-runbook-router framing flagged as the most differentiated operational play.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §8</a> — OBS reads from BRAIN's audit chain for compliance exports; never writes back (BRAIN is upstream).</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §8</a> — OBS reads from memory's audit chain for compliance exports; never writes back (memory is upstream).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 logging, Art. 13 transparency, Art. 14 human oversight, Art. 26 deployer obligations.</li>
  <li><strong>ISO/IEC 27001:2022</strong> — A.8.15 logging, A.8.16 monitoring activities.</li>

@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-001, FR-KB-007, FR-OBS-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-KB-001, FR-KB-007, FR-OBS-007, FR-MEMORY-111]
 depends_on: [FR-KB-001, FR-OBS-007]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1952 2026-05-17 — Closed enum `runbook_region` = {global, sg-1, eu-1, us-1, vn-1}; cardinality 5
   - DEC-1953 2026-05-17 — Closed enum `runbook_severity` = {sev1_critical, sev2_high, sev3_medium, sev4_low}; cardinality 4
   - DEC-1954 2026-05-17 — Multi-tag match: OBS-007 surfaces runbooks matching incident's provider AND region AND severity (or ANY for global tag)
-  - DEC-1955 2026-05-17 — BRAIN audit kinds: kb.runbook_tagged, kb.runbook_matched_for_incident
+  - DEC-1955 2026-05-17 — memory audit kinds: kb.runbook_tagged, kb.runbook_matched_for_incident
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without runbook tags, OBS incidents trigger but engineers manu
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship runbook tagging at `services/kb/src/runbook/` with 3-dim tags (provider/region/severity), OBS triage match, 2 BRAIN audit kinds.
+The KB service **MUST** ship runbook tagging at `services/kb/src/runbook/` with 3-dim tags (provider/region/severity), OBS triage match, 2 memory audit kinds.
 
 1. **MUST** validate enums per DEC-1951/1952/1953.
 
@@ -104,7 +104,7 @@ The KB service **MUST** ship runbook tagging at `services/kb/src/runbook/` with 
    GET    /v1/kb/runbooks/match?provider=aws&region=sg-1&severity=sev1_critical
    ```
 
-5. **MUST** emit 2 BRAIN audit kinds per DEC-1955. PII per FR-BRAIN-111: tag enums + counts ok.
+5. **MUST** emit 2 memory audit kinds per DEC-1955. PII per FR-MEMORY-111: tag enums + counts ok.
 
 6. **MUST** thread trace_id from OBS-007 incident → matcher → audit.
 
@@ -150,7 +150,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **provider enum cardinality 6**. 2. **region enum cardinality 5**. 3. **severity enum cardinality 4**. 4. **CHECK constraints enforce enum values**. 5. **Multi-tag match (provider AND region AND severity)**. 6. **Global tag matches any incident region**. 7. **Custom provider catches non-cloud-vendor incidents**. 8. **GIN indexes on each tag array**. 9. **Specificity ranking**. 10. **2 BRAIN audit kinds emitted**. 11. **PII: tag enums (public) ok**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **CTO-only tag write**. 15. **FR-OBS-007 integration tested**. 16. **Non-runbook docs not indexed (WHERE is_runbook)**. 17. **Empty tag arrays = no match (not all match)**. 18. **Append-only via REVOKE except 4 tag cols**. 19. **Multiple incident tags supported**. 20. **Severity escalation (higher sev runbooks shown for sev1)**.
+1. **provider enum cardinality 6**. 2. **region enum cardinality 5**. 3. **severity enum cardinality 4**. 4. **CHECK constraints enforce enum values**. 5. **Multi-tag match (provider AND region AND severity)**. 6. **Global tag matches any incident region**. 7. **Custom provider catches non-cloud-vendor incidents**. 8. **GIN indexes on each tag array**. 9. **Specificity ranking**. 10. **2 memory audit kinds emitted**. 11. **PII: tag enums (public) ok**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **CTO-only tag write**. 15. **FR-OBS-007 integration tested**. 16. **Non-runbook docs not indexed (WHERE is_runbook)**. 17. **Empty tag arrays = no match (not all match)**. 18. **Append-only via REVOKE except 4 tag cols**. 19. **Multiple incident tags supported**. 20. **Severity escalation (higher sev runbooks shown for sev1)**.
 
 ---
 
@@ -184,7 +184,7 @@ async fn invalid_enum_rejected() {
 
 ## §7 — Dependencies
 **Upstream:** FR-KB-001, FR-OBS-007.
-**Cross-module:** FR-BRAIN-111 (audit).
+**Cross-module:** FR-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -203,7 +203,7 @@ async fn invalid_enum_rejected() {
 ## §11 — Implementation notes
 - §11.1 GIN array index: `WHERE is_runbook = true` reduces index size 100x for non-runbook-heavy KBs.
 - §11.2 Specificity score: 3 for triple match, 2 for double, 1 for single (global).
-- §11.3 BRAIN audit body: doc_id, tags; incident match audit includes incident_id from OBS-007.
+- §11.3 memory audit body: doc_id, tags; incident match audit includes incident_id from OBS-007.
 - §11.4 Tag updates surface in FR-KB-007 Q&A (runbook context for incident questions).
 - §11.5 Auto-suggest tags via FR-AI-003 on doc save — CTO confirms.
 

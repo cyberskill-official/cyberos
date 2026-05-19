@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cyberos.world/schemas/memory.json",
   "title": "CyberOS Layer-1 Memory Protocol",
-  "description": "Machine-validatable schema for the CyberOS BRAIN. Generated from cyberos.core msgspec Structs by memory/tools/cyberos_generate_schema.py. Do not hand-edit. The protocol document (memory/docs/AGENTS.md) is the prose companion; this file is the contract. The protocol is unversioned: there is no schema_version field.",
+  "description": "Machine-validatable schema for the CyberOS memory. Generated from cyberos.core msgspec Structs by memory/tools/cyberos_generate_schema.py. Do not hand-edit. The protocol document (memory/docs/AGENTS.md) is the prose companion; this file is the contract. The protocol is unversioned: there is no schema_version field.",
   "definitions": {
     "MemoryPath": {
       "type": "string",
@@ -81,8 +81,10 @@
             "preference",
             "drift",
             "refinement",
+            "episode",
             "unknown"
-          ]
+          ],
+          "description": "Closed memory kind. 'episode' (FR-MEMORY-112) is an event-shaped memory: the agent's record of one completed task. Episode-specific fields (task, approach, outcome, duration_ms, token_cost, quality_score, notes, error) live under `extra` and are validated by cyberos.core.episode.validate_episode_extras()."
         },
         "ts_ns": {
           "type": "integer"
@@ -173,6 +175,45 @@
         }
       },
       "additionalProperties": true
+    },
+    "StoreAclMode": {
+      "type": "string",
+      "enum": ["read", "read-write", "deny"],
+      "description": "Per-FR-MEMORY-117 (AGENTS.md \u00a714.4). Closed enum. Reads are NOT subject to ACL enforcement at protocol level; `read` here means \"writes denied, body still readable via OS filesystem permissions\"."
+    },
+    "StoreAclEntry": {
+      "type": "object",
+      "required": ["actor", "mode"],
+      "properties": {
+        "actor": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Glob pattern matching against the active actor identity. `*` is the wildcard. Built-in literals include `dream-runner`, `dream-applier`, `scheduled-importer`, `claude-code-hook`."
+        },
+        "mode": {"$ref": "#/definitions/StoreAclMode"}
+      },
+      "additionalProperties": false
+    },
+    "StoreAcl": {
+      "type": "object",
+      "required": ["store_id", "acl"],
+      "properties": {
+        "store_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "description": "Stable store identifier; matches `^[a-z][a-z0-9_-]{0,63}$`."
+        },
+        "default_mode": {
+          "$ref": "#/definitions/StoreAclMode",
+          "description": "Applied when no `acl` entry matches the active actor. Default `read-write`."
+        },
+        "acl": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/StoreAclEntry"},
+          "description": "Ordered list of (actor-pattern, mode) entries. First-match-wins. Explicit `deny` overrides subsequent allows."
+        }
+      },
+      "additionalProperties": false
     },
     "Envelope": {
       "type": "object",

@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands the invoice substrate on top of FR-TIME-009. 870 lines, 27 §1 clauses, 20 ACs, 7 tests, 20 failure modes, 10 implementation notes. 5 migrations, 8 endpoints, 9 BRAIN audit kinds. Anchors INV-002 through INV-011 + PORTAL-001 invoice view + PORTAL-006 billing workflows + TEN-003/102 cross-rail references.
+The spec lands the invoice substrate on top of FR-TIME-009. 870 lines, 27 §1 clauses, 20 ACs, 7 tests, 20 failure modes, 10 implementation notes. 5 migrations, 8 endpoints, 9 memory audit kinds. Anchors INV-002 through INV-011 + PORTAL-001 invoice view + PORTAL-006 billing workflows + TEN-003/102 cross-rail references.
 
 6 issues resolved.
 

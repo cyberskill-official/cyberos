@@ -4,7 +4,7 @@ id: FR-AI-013
 title: "VN-PII recall ≥ 99% per-recognizer CI gate on 200-sample fixture"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -12,7 +12,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-011, FR-AI-012, FR-AI-022]
 depends_on: [FR-AI-012, FR-AI-011]
 blocks: []
@@ -25,7 +25,7 @@ source_decisions:
   - FR-AI-012 §1 #1 (recall ≥ 99% per-recognizer AND aggregate floor)
   - FR-AI-012 §1 #14 (recognizer-version endpoint exists; this FR pins fixture to it)
   - PDPL Art. 7 (Vietnam personal-data-sale ban; CCCD government-ID handling)
-  - DEC-053 (CCCD treated as Class-A government ID — never persists in BRAIN raw)
+  - DEC-053 (CCCD treated as Class-A government ID — never persists in memory raw)
   - archive/2026-05-14/RESEARCH_REVIEW.md §4.2 (recall gate is the compliance assertion)
 
 # ───── Build envelope ─────
@@ -899,7 +899,7 @@ if __name__ == "__main__":
 - spaCy: `vi_core_news_lg` (Vietnamese model) — downloaded in the CI step.
 - GitHub Actions: `ubuntu-22.04` runner; `actions/checkout@v4`, `actions/setup-python@v4`, `actions/upload-artifact@v4`, `actions/github-script@v7`.
 - `pre-commit` framework (https://pre-commit.com) installed locally for developers.
-- An encrypted-at-rest internal `pii_patterns.enc` table mounted at `/opt/cyberos/pii_patterns.enc` on the CI runner (decrypted by a prior CI step from a GitHub Actions secret). The table lives in `meta:` directory of BRAIN; rotation is owned by ops.
+- An encrypted-at-rest internal `pii_patterns.enc` table mounted at `/opt/cyberos/pii_patterns.enc` on the CI runner (decrypted by a prior CI step from a GitHub Actions secret). The table lives in `meta:` directory of memory; rotation is owned by ops.
 
 ---
 

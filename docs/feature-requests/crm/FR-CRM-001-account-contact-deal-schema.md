@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-CRM-002, FR-CRM-003, FR-CRM-004, FR-CRM-005, FR-PROJ-005, FR-HR-001]
+memory_chain_hash: null
+related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-CRM-002, FR-CRM-003, FR-CRM-004, FR-CRM-005, FR-PROJ-005, FR-HR-001]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
 blocks: [FR-CRM-002, FR-CRM-003, FR-CRM-004, FR-CRM-005, FR-CRM-006, FR-CRM-007, FR-CRM-009, FR-EMAIL-006, FR-RES-004]
 
@@ -30,12 +30,12 @@ source_decisions:
   - DEC-346 (REVOKE UPDATE, DELETE on deal_status_history from cyberos_app — append-only enforced by SQL grant)
   - DEC-347 (deal status transitions FSM: open → won | open → lost | open → cancelled | won → cancelled (rare; refund) — no transitions out of lost; cancelled is terminal)
   - DEC-348 (Contact is a JOIN entity — many-to-many between contacts table and accounts via contact_account_membership; a contact may belong to multiple accounts; the contact_account_membership row carries the role (decision-maker, technical, billing, etc.))
-  - DEC-349 (BRAIN audit kinds: crm.account_created, crm.account_updated, crm.contact_created, crm.deal_created, crm.deal_stage_changed, crm.deal_won, crm.deal_lost, crm.deal_cancelled)
-  - DEC-350 (Deal owner is `owner_subject_id` referring to auth.subjects; ownership transfer is handler-supported + emits BRAIN row; orphaned deals (owner suspended) revert to tenant default-owner per per-tenant config out of scope here)
+  - DEC-349 (memory audit kinds: crm.account_created, crm.account_updated, crm.contact_created, crm.deal_created, crm.deal_stage_changed, crm.deal_won, crm.deal_lost, crm.deal_cancelled)
+  - DEC-350 (Deal owner is `owner_subject_id` referring to auth.subjects; ownership transfer is handler-supported + emits memory row; orphaned deals (owner suspended) revert to tenant default-owner per per-tenant config out of scope here)
   - DEC-351 (probability is an INT 0-100 stored separately from stage's default — operators may override per deal; stage default is the suggestion)
   - DEC-352 (expected_close_date is required on stage move into `is_open` stages; defaulted to +30 days from today; required field for forecast accuracy)
-  - DEC-353 (deal-stage transitions emit BRAIN row before commit per AUTHORING.md rule 25 audit-before-action)
-  - PDPL Art. 13 (data minimisation — contact emails + phone numbers are PII; scrubbed in BRAIN audit chain via FR-BRAIN-111)
+  - DEC-353 (deal-stage transitions emit memory row before commit per AUTHORING.md rule 25 audit-before-action)
+  - PDPL Art. 13 (data minimisation — contact emails + phone numbers are PII; scrubbed in memory audit chain via FR-MEMORY-111)
   - ISO 27001:2022 A.5.16 (data classification — CRM data classified as "internal commercial")
 
 language: rust 1.81 + sql
@@ -54,7 +54,7 @@ new_files:
   - services/crm/src/repo/contacts.rs                          # CRUD + membership management
   - services/crm/src/repo/deals.rs                             # CRUD + stage transition + status transition
   - services/crm/src/repo/pipelines.rs                         # pipeline + stage CRUD
-  - services/crm/src/audit/crm_events.rs                       # canonical crm.* BRAIN row builders (8 kinds)
+  - services/crm/src/audit/crm_events.rs                       # canonical crm.* memory row builders (8 kinds)
   - services/crm/src/handlers/accounts.rs                      # POST/GET/PATCH /v1/crm/accounts
   - services/crm/src/handlers/contacts.rs                      # POST/GET/PATCH /v1/crm/contacts + membership endpoints
   - services/crm/src/handlers/deals.rs                         # POST/GET/PATCH /v1/crm/deals + transition handlers
@@ -171,7 +171,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 
 16. **MUST** validate that **contact has ≥1 membership** at handler boundary. POST `/contacts` with empty `initial_memberships` → 400 `contact_must_have_membership`. DELETE last membership → 409 `cannot_remove_last_membership` (suggest delete contact instead).
 
-17. **MUST** emit BRAIN audit rows for the 8 kinds (per DEC-349):
+17. **MUST** emit memory audit rows for the 8 kinds (per DEC-349):
     - `crm.account_created`, `crm.account_updated` on account writes.
     - `crm.contact_created` on contact creation.
     - `crm.deal_created` on deal creation.
@@ -181,7 +181,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
     - `crm.deal_cancelled` on status → cancelled.
    All audit-before-action per AUTHORING.md rule 25 (emitted within the same transaction as the DB write).
 
-18. **MUST** PII-scrub `email`, `phone`, `full_name` via FR-BRAIN-111 BEFORE chain commit. The PostgreSQL rows retain raw values (tenant-scoped + RLS-protected); BRAIN audit chain holds only `subject_id_hash16` + `email_hash16` + redacted forms.
+18. **MUST** PII-scrub `email`, `phone`, `full_name` via FR-MEMORY-111 BEFORE chain commit. The PostgreSQL rows retain raw values (tenant-scoped + RLS-protected); memory audit chain holds only `subject_id_hash16` + `email_hash16` + redacted forms.
 
 19. **MUST** require `expected_close_date >= CURRENT_DATE` at deal creation AND on transitions into `is_open` stages (per DEC-352). Past-dated expected_close → 400 `expected_close_in_past`.
 
@@ -248,7 +248,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 
 **Why `is_open/is_won/is_lost` mutually exclusive (§1 #6)?** A stage is exactly one of the three classifications. Allowing multiple (e.g. is_open + is_won) makes the deal_status FSM ambiguous. DB CHECK enforces.
 
-**Why no PATCH for `current_stage_id` (§1 #15)?** Stage changes have side effects (probability update, history row, BRAIN audit). PATCH would have to duplicate the orchestration; dedicated handler `POST /deals/{id}/stage` is the contract.
+**Why no PATCH for `current_stage_id` (§1 #15)?** Stage changes have side effects (probability update, history row, memory audit). PATCH would have to duplicate the orchestration; dedicated handler `POST /deals/{id}/stage` is the contract.
 
 **Why one default pipeline per (tenant, shape) but not strict (§1 #5)?** Most tenants use one pipeline per shape; allowing multiples (partial unique index) supports edge cases (e.g. "Sales-EU" vs "Sales-US" pipelines). The `is_default` flag picks the canonical one for `vn-create-deal` skill auto-pipeline selection.
 
@@ -721,18 +721,18 @@ pub fn validate_transition(from: DealStatus, to: DealStatus) -> Result<(), Inval
 1. **DealStatus enum closed at 4** — `DealStatus::ALL.len() == 4`; Postgres enum has exactly 4 labels.
 2. **PipelineShape enum closed at 4** — same.
 3. **RLS isolates by tenant** — query as tenant-A returns 0 rows of tenant-B.
-4. **POST account happy path** — 201 + `crm.account_created` BRAIN row.
+4. **POST account happy path** — 201 + `crm.account_created` memory row.
 5. **POST contact with ≥1 membership** — 201 + `crm.contact_created` row.
 6. **POST contact with 0 memberships** → 400 `contact_must_have_membership`.
 7. **DELETE last membership** → 409 `cannot_remove_last_membership`.
 8. **POST deal happy path** — 201 + `crm.deal_created` row; default probability matches stage.
 9. **POST deal past expected_close_date** → 400 `expected_close_in_past`.
-10. **Stage transition emits deal_stage_history row** + `crm.deal_stage_changed` BRAIN row.
+10. **Stage transition emits deal_stage_history row** + `crm.deal_stage_changed` memory row.
 11. **Status open → won at non-won stage** → 400 `cannot_mark_won_from_non_won_stage`.
-12. **Status open → won at won-stage** → 200; `won_at` set; `actual_close_date` set; `crm.deal_won` BRAIN row.
+12. **Status open → won at won-stage** → 200; `won_at` set; `actual_close_date` set; `crm.deal_won` memory row.
 13. **Status open → lost without reason** → 400 `lost_reason_required`.
-14. **Status open → lost with reason** → 200; `crm.deal_lost` BRAIN row carries reason.
-15. **Status open → cancelled with reason** → 200; `crm.deal_cancelled` BRAIN row.
+14. **Status open → lost with reason** → 200; `crm.deal_lost` memory row carries reason.
+15. **Status open → cancelled with reason** → 200; `crm.deal_cancelled` memory row.
 16. **Status lost → won rejected** — invalid_deal_status_transition.
 17. **Status won → cancelled allowed** (clawback scenario).
 18. **Money stored as BIGINT minor** — 1500000 stored; rendered as 1.5M VND via Currency helper.
@@ -812,11 +812,11 @@ async fn deal_won_at_lost_stage_rejected(ctx: TestCtx) {
 }
 
 #[tokio::test]
-async fn deal_won_emits_brain_row(ctx: TestCtx) {
+async fn deal_won_emits_memory_row(ctx: TestCtx) {
     let stage = ctx.create_won_stage().await;
     let deal = ctx.create_deal_at_stage(stage.id).await;
     ctx.transition_status(deal.id, json!({"to": "won"})).await;
-    let rows = ctx.brain_audit_rows("crm.deal_won").await;
+    let rows = ctx.memory_audit_rows("crm.deal_won").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["deal_id"], deal.id.to_string());
 }
@@ -826,7 +826,7 @@ async fn deal_won_emits_brain_row(ctx: TestCtx) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 8 BRAIN row builders follow the canonical pattern.)
+(API contract above is the skeleton; 8 memory row builders follow the canonical pattern.)
 
 ---
 
@@ -842,8 +842,8 @@ async fn deal_won_emits_brain_row(ctx: TestCtx) {
 - **FR-CRM-004** — Convert-to-Engagement workflow (consumes deals + emits to PROJ-005).
 
 **Cross-module:**
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing for email, phone, full_name.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing for email, phone, full_name.
 - **FR-TEN-001** — seeds default pipelines via the seed_default_pipelines function during tenant provisioning.
 
 ---
@@ -865,7 +865,7 @@ async fn deal_won_emits_brain_row(ctx: TestCtx) {
 }
 ```
 
-### 8.2 — crm.deal_created BRAIN row
+### 8.2 — crm.deal_created memory row
 
 ```json
 {
@@ -889,7 +889,7 @@ async fn deal_won_emits_brain_row(ctx: TestCtx) {
 { "to": "won", "reason": "Customer signed MSA; kickoff Monday" }
 ```
 
-### 8.4 — crm.deal_won BRAIN row
+### 8.4 — crm.deal_won memory row
 
 ```json
 {
@@ -942,8 +942,8 @@ All other questions resolved.
 | Pipeline stage position > 50 | DB CHECK | INSERT fails | Use ≤ 50 |
 | Amount_minor negative | DB CHECK | INSERT/UPDATE fails | Use ≥ 0 |
 | Currency not ISO-4217 | DB CHECK | INSERT/UPDATE fails | Use valid 3-letter code |
-| BRAIN row commit fails mid-tx | rollback | 500 audit_failed | brain_writer health |
-| Audit row contains unscrubbed PII | FR-BRAIN-111 + pre-commit test | CI fails | Add PII rule |
+| memory row commit fails mid-tx | rollback | 500 audit_failed | memory_writer health |
+| Audit row contains unscrubbed PII | FR-MEMORY-111 + pre-commit test | CI fails | Add PII rule |
 | Duplicate stage position in same pipeline | UNIQUE | INSERT fails | Adjust positions |
 | Duplicate stage name in same pipeline | UNIQUE | INSERT fails | Use different name |
 | Deal account deleted while deal exists | FK RESTRICT | DELETE fails | Cancel deal first |
@@ -975,7 +975,7 @@ All other questions resolved.
 - **expected_close_date required + future on `is_open` stages** — forecast hygiene.
 - **won_at + actual_close_date automatic via trigger** — operator doesn't need to remember.
 - **language_code reused from FR-KB-001** — consistency across modules for VN/EN.
-- **PII scrubbing applies to email + phone + full_name** — BRAIN audit chain holds hashed forms only.
+- **PII scrubbing applies to email + phone + full_name** — memory audit chain holds hashed forms only.
 - **seed_default_pipelines invoked by FR-TEN-001's hook** — every tenant gets 4 default pipelines on provisioning.
 - **3 separate audit kinds for close (won/lost/cancelled)** — selectivity benefits at query time.
 - **owner_subject_id required on deal + account** — forecast attribution depends on it.

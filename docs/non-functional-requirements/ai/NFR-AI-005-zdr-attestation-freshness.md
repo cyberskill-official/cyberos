@@ -18,7 +18,7 @@ related_frs: [FR-AI-015, FR-AI-016]
 2. The attestation **MUST** be re-verified at least **weekly** (every 7 days, calendar-rolling) by an automated check that fetches the provider's current ZDR statement endpoint OR verified manually by CSO with a sign-off entry committed to `docs/compliance/zdr-attestations/verification-log.md`.
 3. The gateway's provider registry (`services/ai-gateway/src/providers/registry.toml`) **MUST** carry a `zdr_attestation_last_verified_at` ISO-8601 timestamp per provider, refreshed on each verification.
 4. A provider whose `zdr_attestation_last_verified_at` is older than 8 days (24h grace beyond the weekly window) **MUST** be auto-removed from active routing — the gateway returns HTTP 503 for any route targeting that provider until re-verification.
-5. Every verification (success or failure) **MUST** emit a BRAIN audit row `compliance.zdr_verification` with `{provider, verified_at, verifier, attestation_hash, source_url}`.
+5. Every verification (success or failure) **MUST** emit a memory audit row `compliance.zdr_verification` with `{provider, verified_at, verifier, attestation_hash, source_url}`.
 
 ## §2 — Why this constraint
 
@@ -28,7 +28,7 @@ ZDR is the platform's load-bearing contractual claim for enterprise tenants — 
 
 - Cron job `deploy/compliance/zdr-attestation-check.sh` runs nightly; for each provider it fetches the current ZDR URL, computes SHA-256, compares to the on-file attestation hash, and updates `zdr_attestation_last_verified_at` if the hash matches.
 - Gauge `compliance_zdr_attestation_age_seconds{provider}` exposed to OBS; alert fires at > 7d (sev-3 warning) and > 8d (sev-2 auto-remove).
-- BRAIN query `view kind=compliance.zdr_verification` returns the full verification log; sortable by provider.
+- memory query `view kind=compliance.zdr_verification` returns the full verification log; sortable by provider.
 
 ## §4 — Verification
 

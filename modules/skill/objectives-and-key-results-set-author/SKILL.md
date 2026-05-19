@@ -1,8 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: objectives-and-key-results-set-author
-description: |
-  Author a quarterly OKR set (company / function / team cascade) for the CEO or Chief of Staff. Renders objectives + key results with owner, cadence, measurement source, and parent/child cascade links. Validated by objectives-and-key-results-set-audit.
+description: >-
+  Author a quarterly OKR set (company / function / team cascade) for the CEO or Chief of Staff. Renders objectives + key results with owner, cadence, measurement source, and parent/child cascade links. Validated by objectives-and-key-results-set-audit. Use when user asks to "draft a objectives and key results set" or "create the objectives and key results set". Do NOT use for "audit existing objectives and key results set" (use objectives-and-key-results-set-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -12,7 +12,7 @@ metadata:
   cyberos-rubric-target: okr-set_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -26,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -287,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

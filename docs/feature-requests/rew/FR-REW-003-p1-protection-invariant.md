@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-REW-001, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-REW-001, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-REW-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2171 2026-05-17 — Closed enum `p1_change_kind` = {raise, role_change_upward, role_change_lateral_same_p1, role_change_demotion_requires_consent}; cardinality 4
   - DEC-2172 2026-05-17 — Demotion (only path that could reduce P1) requires member written consent + CEO+CFO co-sign per VN Labour Code Art. 35
   - DEC-2173 2026-05-17 — Trigger function checks new_amount >= old_amount on INSERT of new comp record for same member+p1_base; rejects if violated
-  - DEC-2174 2026-05-17 — BRAIN audit kinds: rew.p1_raise_committed, rew.p1_change_attempted_violation, rew.p1_demotion_consent_recorded
+  - DEC-2174 2026-05-17 — memory audit kinds: rew.p1_raise_committed, rew.p1_change_attempted_violation, rew.p1_demotion_consent_recorded
 
 build_envelope:
   language: rust 1.81
@@ -68,7 +68,7 @@ risk_if_skipped: "Without invariant, accidental P1 reduction breaks member trust
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship P1 protection at `services/rew/src/p1_guard/` with DB trigger + service guard + demotion consent flow, 3 BRAIN audit kinds.
+The REW service **MUST** ship P1 protection at `services/rew/src/p1_guard/` with DB trigger + service guard + demotion consent flow, 3 memory audit kinds.
 
 1. **MUST** validate `p1_change_kind` against closed enum per DEC-2171.
 
@@ -145,7 +145,7 @@ The REW service **MUST** ship P1 protection at `services/rew/src/p1_guard/` with
    POST /v1/rew/p1-demotion-consents/{id}/cfo-sign
    ```
 
-6. **MUST** emit 3 BRAIN audit kinds per DEC-2174. PII per FR-BRAIN-111: amounts SHA-256 hashed.
+6. **MUST** emit 3 memory audit kinds per DEC-2174. PII per FR-MEMORY-111: amounts SHA-256 hashed.
 
 7. **MUST** thread trace_id from violation/consent → audit.
 
@@ -183,7 +183,7 @@ POST /v1/rew/p1-demotion-consents
 ---
 
 ## §4 — Acceptance criteria
-1. **p1_change_kind enum cardinality 4**. 2. **DB trigger rejects P1 reduction without consent**. 3. **Service validator rejects pre-DB**. 4. **Consent table requires member doc upload**. 5. **CEO + CFO dual-sign required**. 6. **Same-person dual-sign rejected**. 7. **Once fully_signed → trigger allows**. 8. **3 BRAIN audit kinds emitted**. 9. **PII scrubbed (amounts SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Append-only consent table**. 13. **CHECK new_p1 < old_p1 on consent**. 14. **CHECK new_p1 != old_p1 (no-op rejected)**. 15. **First P1 (no prior) allowed**. 16. **P2/P3 changes unaffected**. 17. **Trigger fires BEFORE INSERT**. 18. **Consent links to FR-DOC-001 doc**. 19. **CFO role required on consent record**. 20. **Trigger violation produces specific error message**.
+1. **p1_change_kind enum cardinality 4**. 2. **DB trigger rejects P1 reduction without consent**. 3. **Service validator rejects pre-DB**. 4. **Consent table requires member doc upload**. 5. **CEO + CFO dual-sign required**. 6. **Same-person dual-sign rejected**. 7. **Once fully_signed → trigger allows**. 8. **3 memory audit kinds emitted**. 9. **PII scrubbed (amounts SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Append-only consent table**. 13. **CHECK new_p1 < old_p1 on consent**. 14. **CHECK new_p1 != old_p1 (no-op rejected)**. 15. **First P1 (no prior) allowed**. 16. **P2/P3 changes unaffected**. 17. **Trigger fires BEFORE INSERT**. 18. **Consent links to FR-DOC-001 doc**. 19. **CFO role required on consent record**. 20. **Trigger violation produces specific error message**.
 
 ---
 
@@ -222,7 +222,7 @@ async fn demotion_with_full_consent_allowed() {
 
 ## §7 — Dependencies
 **Upstream:** FR-REW-001.
-**Cross-module:** FR-AUTH-101 (CEO/CFO roles), FR-DOC-001 (consent doc), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-101 (CEO/CFO roles), FR-DOC-001 (consent doc), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -242,7 +242,7 @@ async fn demotion_with_full_consent_allowed() {
 - §11.1 Trigger uses helper function `decrypt_amount()` — security-definer or call-out to KMS via FDW.
 - §11.2 Service validator pre-rejects for UX; trigger is final guarantee.
 - §11.3 Demotion consent doc per VN Labour Code Art. 35 — written agreement scanned + FR-DOC-001.
-- §11.4 BRAIN audit body: member_id, change kind, attempted_violation flag; amounts SHA256.
+- §11.4 memory audit body: member_id, change kind, attempted_violation flag; amounts SHA256.
 - §11.5 P2/P3 reductions allowed (variable pay) — invariant scope is P1 only.
 
 ---

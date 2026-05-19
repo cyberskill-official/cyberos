@@ -117,7 +117,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-okr p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- OKR is the <strong>quarterly strategy operating loop</strong>. Cycles, Objectives, Key Results, and Confidence Check-ins are first-class data primitives; alignments tie Member OKRs up through Team OKRs to a Company OKR; progress sources are queries that auto-update KRs from elsewhere in CyberOS, so the dashboard is read-canonical rather than self-reported. The CUO digest on Monday morning summarises confidence drops and surfaces blockers in CHAT. End-of-quarter retros are framed as "what would change our minds next quarter?" prompts; every retro entry is itself a BRAIN memory under <code>module/okr/</code> for future cycle reference. Vietnamese cultural adaptation: failed KRs are described as "learning achieved" / "đã học được"; the term "miss" does not appear in any UI string. EU AI Act Art. 14 — OKR-driven employment decisions (promotion, performance review) always have an explicit human approval gate.
+ OKR is the <strong>quarterly strategy operating loop</strong>. Cycles, Objectives, Key Results, and Confidence Check-ins are first-class data primitives; alignments tie Member OKRs up through Team OKRs to a Company OKR; progress sources are queries that auto-update KRs from elsewhere in CyberOS, so the dashboard is read-canonical rather than self-reported. The CUO digest on Monday morning summarises confidence drops and surfaces blockers in CHAT. End-of-quarter retros are framed as "what would change our minds next quarter?" prompts; every retro entry is itself a memory memory under <code>module/okr/</code> for future cycle reference. Vietnamese cultural adaptation: failed KRs are described as "learning achieved" / "đã học được"; the term "miss" does not appear in any UI string. EU AI Act Art. 14 — OKR-driven employment decisions (promotion, performance review) always have an explicit human approval gate.
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P3 · design phase</div></div>
@@ -127,7 +127,7 @@
  <div class="fact-card"><div class="label">Confidence scale</div><div class="value">1–10</div><div class="note">weekly check-in</div></div>
  <div class="fact-card"><div class="label">Progress sources</div><div class="value">5 modules</div><div class="note">PROJ · TIME · INV · HR · LEARN</div></div>
  <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">face-saving language</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · 5 sources</div><div class="note">+ CUO · AI · OBS</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · 5 sources</div><div class="note">+ CUO · AI · OBS</div></div>
  </div>
  </div>
 </section>
@@ -159,7 +159,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--okr-dark)">Role 3 · Face-saving retro engine</div>
  <div class="font-bold text-slate-900 mb-2 text-base">"What did we learn?" not "what did you miss?"</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Quarterly retros reframe failed KRs in Vietnamese cultural-fit language. Missed KR ("đạt 0.4 / 1.0") → prompt = "Điều gì đã thay đổi giữa khi đặt mục tiêu và bây giờ?" (What changed between target-setting and now?). CUO drafts the retro narrative; Member edits; manager reviews. Output becomes a BRAIN memory citable by future OKR cycles.
+ Quarterly retros reframe failed KRs in Vietnamese cultural-fit language. Missed KR ("đạt 0.4 / 1.0") → prompt = "Điều gì đã thay đổi giữa khi đặt mục tiêu và bây giờ?" (What changed between target-setting and now?). CUO drafts the retro narrative; Member edits; manager reviews. Output becomes a memory memory citable by future OKR cycles.
  </p>
  </div>
  </div>
@@ -174,7 +174,7 @@ flowchart LR
  HR["👥 HR events"]
  LEARN["📈 LEARN mastery"]
  CUO["🎯 CUO digest"]
- BRAIN["🧠 BRAIN<br>retro memories"]
+ memory["🧠 memory<br>retro memories"]
  CEO --> OKR
  PROJ -- "progress_source" --> OKR
  INV --> OKR
@@ -182,14 +182,14 @@ flowchart LR
  LEARN --> OKR
  OKR --> CUO
  CUO -- "Monday digest" --> CEO
- OKR --> BRAIN
- BRAIN -. "citable by next cycle" .-> OKR
+ OKR --> memory
+ memory -. "citable by next cycle" .-> OKR
  classDef hub fill:#e0e7ff,stroke:#4338ca,stroke-width:3px,color:#312e81
  classDef mod fill:#e0e7ff,stroke:#3730a3
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class OKR hub
  class CEO,PROJ,INV,HR,LEARN,CUO mod
- class BRAIN brain
+ class memory memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -204,7 +204,7 @@ flowchart LR
  <tr><td>CUO Monday digest</td><td><strong>Auto</strong> from check-ins + auto-progress</td><td>Founder reads consolidated summary; never replaces 1:1.</td></tr>
  <tr><td>Quarterly retro draft</td><td><strong>Auto</strong> CUO; <strong>manual</strong> Member edit + manager review</td><td>Face-saving framing required; Member owns narrative.</td></tr>
  <tr><td>Failed-KR consequence (REW/promotion)</td><td><strong>Human-in-loop</strong> per EU AI Act Art. 14</td><td>Employment decision; OKR is input, never algorithm.</td></tr>
- <tr><td>OKR archival</td><td><strong>Auto</strong> at quarter close</td><td>Frozen + chained as BRAIN memory.</td></tr>
+ <tr><td>OKR archival</td><td><strong>Auto</strong> at quarter close</td><td>Frozen + chained as memory memory.</td></tr>
  </tbody>
  </table>
  </div>
@@ -216,7 +216,7 @@ flowchart LR
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why OKR exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Strategy operating-systems fail at three points: (1) the cascade is built once and goes stale; (2) progress is self-reported and therefore self-inflated; (3) the retrospective is performative because the team is graded on whether they hit, not on what they learned. OKR addresses all three. The cascade is a graph stored in the database; it is read every check-in and rebuilt every cycle. Progress is computed, not typed — every KR declares a progress source (a query against another module) and the value moves on its own. Retrospectives are framed in face-saving Vietnamese language and stored as BRAIN memories, so the lesson outlives the quarter that produced it. The Founder gets a Monday-morning CUO digest of confidence-band drops; if four KRs in a row drop two points this week, that is a signal that surfaces automatically.
+ Strategy operating-systems fail at three points: (1) the cascade is built once and goes stale; (2) progress is self-reported and therefore self-inflated; (3) the retrospective is performative because the team is graded on whether they hit, not on what they learned. OKR addresses all three. The cascade is a graph stored in the database; it is read every check-in and rebuilt every cycle. Progress is computed, not typed — every KR declares a progress source (a query against another module) and the value moves on its own. Retrospectives are framed in face-saving Vietnamese language and stored as memory memories, so the lesson outlives the quarter that produced it. The Founder gets a Monday-morning CUO digest of confidence-band drops; if four KRs in a row drop two points this week, that is a signal that surfaces automatically.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-5">
  <div class="bbg-card p-5">
@@ -232,11 +232,11 @@ flowchart LR
  <div class="bbg-card p-5">
  <div class="text-2xl mb-2">📚</div>
  <div class="font-bold text-slate-900 mb-1">Retros are memories</div>
- <p class="text-sm text-slate-600">Every retro entry lands in BRAIN under <code>module/okr/retros/</code>. Next quarter's planning prompts read these aloud. The lesson persists.</p>
+ <p class="text-sm text-slate-600">Every retro entry lands in memory under <code>module/okr/retros/</code>. Next quarter's planning prompts read these aloud. The lesson persists.</p>
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
- The bet is that an OKR system that <em>cannot</em> be gamed (because progress is computed) and that <em>actively learns</em> from each quarter (because retros are persisted, citable memories) compounds over years. A 12-quarter-old company has 12 BRAIN-archived retros; planning quarter 13 starts by reading them. That is a fundamentally different artefact than 12 forgotten Notion pages.
+ The bet is that an OKR system that <em>cannot</em> be gamed (because progress is computed) and that <em>actively learns</em> from each quarter (because retros are persisted, citable memories) compounds over years. A 12-quarter-old company has 12 memory-archived retros; planning quarter 13 starts by reading them. That is a fundamentally different artefact than 12 forgotten Notion pages.
  </p>
 </section>
 
@@ -255,7 +255,7 @@ flowchart LR
  <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Quarterly cycle (default Q1 / Q2 / Q3 / Q4 anchored to Jan-1). Weekly confidence-band check-ins (every Friday 17:00 ICT). Mid-quarter pulse (week 6). Quarter-close retrospective. Continuous auto-progress refresh (hourly per progress source).</td></tr>
  <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P3: SG-1 region with VN-residency partition. Read-heavy workload behind PgBouncer; OKR graph queried via federated GraphQL into PROJ/HR/INV.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because the cascade graph is referenced by REW (P3 performance pool depends on team-objective achievement), by HR (promotion review reads Member-OKR history), by CRM (revenue KRs feed pipeline forecast), and by the Founder daily flow. Owning it once means every consumer reads the same source-of-truth.</td></tr>
- <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>OKR primitives stored in <code>okr.*</code> tables. Alignments are FK edges in <code>okr.alignment</code> with type ∈ {contributes_to, supports, depends_on}. Confidence check-ins append to <code>okr.check_in</code>. Auto-progress: each KR declares <code>progress_source</code> (a small DSL) and a refresh job materialises the current value. Retros land in BRAIN under <code>module/okr/cycle-YYYY-Qn/</code>.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>OKR primitives stored in <code>okr.*</code> tables. Alignments are FK edges in <code>okr.alignment</code> with type ∈ {contributes_to, supports, depends_on}. Confidence check-ins append to <code>okr.check_in</code>. Auto-progress: each KR declares <code>progress_source</code> (a small DSL) and a refresh job materialises the current value. Retros land in memory under <code>module/okr/cycle-YYYY-Qn/</code>.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P3: ~$25 / month (PG read replica + small Fargate + nightly refresh job). Low data volume — Cycle × Objective × KR cardinality is bounded.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) EU AI Act Art. 14 — OKR-driven employment decisions require human approval. (b) GDPR Art. 22 — same. (c) Vietnamese cultural fit: face-saving language; no "missed" / "failed" without "learned". (d) Append-only history — modifications post-cycle-end create supersession entries, never overwrites ((FR pending)).</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 · React + visx for cascade tree · DSL parser (nom) for progress-source expressions · OpenTelemetry.</td></tr>
@@ -274,7 +274,7 @@ flowchart LR
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- OKR is a Rust service with a TS cascade-tree SPA. It owns the OKR graph + check-in history; reads auto-progress from five upstream modules through GraphQL federation; writes summaries to BRAIN; emits Notify cards to CUO. The progress-source DSL is parsed at KR creation time and stored as an AST; refresh is a scheduled job that walks each KR's AST and executes the query against the appropriate module's federated subgraph.
+ OKR is a Rust service with a TS cascade-tree SPA. It owns the OKR graph + check-in history; reads auto-progress from five upstream modules through GraphQL federation; writes summaries to memory; emits Notify cards to CUO. The progress-source DSL is parsed at KR creation time and stored as an AST; refresh is a scheduled job that walks each KR's AST and executes the query against the appropriate module's federated subgraph.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -310,7 +310,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit + AI"]
- BRAIN["🧠 BRAIN<br>okr.* rows<br>retros under module/okr/"]
+ memory["🧠 memory<br>okr.* rows<br>retros under module/okr/"]
  CUO["🧠 CUO<br>Monday digest"]
  OBS["👁 OBS<br>traces + metrics"]
  end
@@ -330,13 +330,13 @@ graph TB
  PROGRESS --> HR
  PROGRESS --> LEARN
  CHECKIN_S --> PG
- CHECKIN_S --> BRAIN
- RETRO_S --> BRAIN
+ CHECKIN_S --> memory
+ RETRO_S --> memory
  DIGEST --> CHECKIN_S
  DIGEST --> CUO
  GQL --> PG
- AUTHOR --> BRAIN
- CASCADE --> BRAIN
+ AUTHOR --> memory
+ CASCADE --> memory
  OKR --> OBS
 
  classDef planned fill:#cba88a,stroke:#4338ca
@@ -344,7 +344,7 @@ graph TB
  classDef sink fill:#f5ede6,stroke:#45210e
  class SPA,CHECKIN,RETRO,AUTHOR,CASCADE,PROGRESS,DSL,CHECKIN_S,RETRO_S,DIGEST,GQL,PROJ,TIME,INV,HR,LEARN planned
  class PG store
- class BRAIN,CUO,OBS sink
+ class memory,CUO,OBS sink
  </div>
  </div>
 
@@ -358,13 +358,13 @@ graph TB
  <tr><td><code>dsl.rs</code></td><td>services/okr/src/dsl.rs</td><td>Nom-based parser for progress-source expressions. Grammar: <code>source(query) [filter expr] [aggregate fn]</code>.</td></tr>
  <tr><td><code>progress.rs</code></td><td>services/okr/src/progress.rs</td><td>Scheduled auto-progress refresh. Walks each KR's AST, federates to source module, updates current_value with audit trail.</td></tr>
  <tr><td><code>checkin.rs</code></td><td>services/okr/src/checkin.rs</td><td>Weekly check-in collector. Confidence 1-10 + rationale per KR. Computes 4-week trend; flags 2+ point drops as risk.</td></tr>
- <tr><td><code>retro.rs</code></td><td>services/okr/src/retro.rs</td><td>End-of-cycle retrospective. CSV-prompt-driven. CUO drafts summary; human edits; final lands as BRAIN memory under <code>module/okr/cycle-YYYY-Qn/retro.md</code>.</td></tr>
+ <tr><td><code>retro.rs</code></td><td>services/okr/src/retro.rs</td><td>End-of-cycle retrospective. CSV-prompt-driven. CUO drafts summary; human edits; final lands as memory memory under <code>module/okr/cycle-YYYY-Qn/retro.md</code>.</td></tr>
  <tr><td><code>digest.rs</code></td><td>services/okr/src/digest.rs</td><td>Monday-morning CUO digest. Confidence drops, KRs off-track, suggested founder questions.</td></tr>
  <tr><td><code>blocker.rs</code></td><td>services/okr/src/blocker.rs</td><td>Blocker detection: monitors CHAT for KR-related "blocked by" mentions and surfaces to digest.</td></tr>
  <tr><td><code>cascade_check.rs</code></td><td>services/okr/src/cascade_check.rs</td><td>Cascade-coherence check: every Member OKR must align to a Team OKR; every Team OKR must align to a Company OKR (configurable strict / soft mode).</td></tr>
  <tr><td><code>supersession.rs</code></td><td>services/okr/src/supersession.rs</td><td>Append-only history. Mid-cycle KR target changes create supersession rows; originals remain visible ((FR pending)).</td></tr>
  <tr><td><code>i18n.rs</code></td><td>services/okr/src/i18n.rs</td><td>Vietnamese face-saving language pack. Maps internal status codes to UI strings: "miss"→"đã học được"/"learning achieved"; never "fail".</td></tr>
- <tr><td><code>audit_bridge.rs</code></td><td>services/okr/src/audit_bridge.rs</td><td>Writes every OKR + check-in event to BRAIN canonical writer.</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/okr/src/audit_bridge.rs</td><td>Writes every OKR + check-in event to memory canonical writer.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/okr/migrations/</td><td>sqlx migrations. RLS by <code>tenant_id</code>. Indices on (cycle_id, objective_id) and (subject_id, cycle_id).</td></tr>
  </tbody>
  </table>
@@ -372,7 +372,7 @@ graph TB
 
  <div class="invariant-box mt-5">
  <div class="label">OKR-INV-001 · Post-cycle history is append-only</div>
- <p class="text-sm text-slate-700 mt-2 mb-0">After a Cycle reaches <code>execution</code> phase, KR target modifications are <strong>supersession entries</strong>, not overwrites. The original target value remains visible in the timeline; the new target carries <code>superseded_by</code> linkage. Verification: (FR pending) — attempt to modify in-place is rejected with <code>code: "OKR-IMMUTABLE-POST-CYCLE"</code>; the supersession path produces a chained BRAIN audit row.</p>
+ <p class="text-sm text-slate-700 mt-2 mb-0">After a Cycle reaches <code>execution</code> phase, KR target modifications are <strong>supersession entries</strong>, not overwrites. The original target value remains visible in the timeline; the new target carries <code>superseded_by</code> linkage. Verification: (FR pending) — attempt to modify in-place is rejected with <code>code: "OKR-IMMUTABLE-POST-CYCLE"</code>; the supersession path produces a chained memory audit row.</p>
  </div>
 </section>
 
@@ -382,7 +382,7 @@ graph TB
 <section id="data-model" class="module-section">
  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The OKR graph is six tables: Cycle (calendar), Objective (qualitative goal), KeyResult (quantitative outcome), Alignment (cascade edges), CheckIn (weekly confidence), ProgressSource (DSL-typed auto-pull config). Retrospective is a BRAIN memory, not a Postgres row.
+ The OKR graph is six tables: Cycle (calendar), Objective (qualitative goal), KeyResult (quantitative outcome), Alignment (cascade edges), CheckIn (weekly confidence), ProgressSource (DSL-typed auto-pull config). Retrospective is a memory memory, not a Postgres row.
  </p>
 
  <div class="bbg-card p-5 mb-5">
@@ -464,7 +464,7 @@ erDiagram
  string rationale
  decimal value_at_checkin
  timestamp ts
- string brain_chain
+ string memory_chain
  }
  KR_HISTORY {
  uuid id PK
@@ -474,13 +474,13 @@ erDiagram
  string new_value
  uuid changed_by FK
  timestamp ts
- string brain_chain
+ string memory_chain
  }
  RETROSPECTIVE {
  uuid id PK
  uuid cycle_id FK
- string brain_path "memories/module/okr/cycle-2026-Q2/retro.md"
- string brain_chain
+ string memory_path "memories/module/okr/cycle-2026-Q2/retro.md"
+ string memory_chain
  timestamp completed_at
  }
  </div>
@@ -613,7 +613,7 @@ type Mutation {
  @requiresScopes(scopes: [["okr.write"]])
  submitCheckIn(input: CheckInInput!): CheckIn!
  @requiresScopes(scopes: [["okr.checkin"]])
- closeRetrospective(cycleCode: String!, brainPath: String!): Cycle!
+ closeRetrospective(cycleCode: String!, memoryPath: String!): Cycle!
  @requiresScopes(scopes: [["okr.close_cycle"]])
 }</code></pre>
  </div>
@@ -647,7 +647,7 @@ type Mutation {
  <tr><td><code>cyberos.okr.find_orphans</code></td><td>cycle_code</td><td>Objective</td><td>readonly</td></tr>
  <tr><td><code>cyberos.okr.weekly_digest</code></td><td>cycle_code</td><td>Markdown digest</td><td>readonly</td></tr>
  <tr><td><code>cyberos.okr.draft_retro</code></td><td>cycle_code</td><td>Retro draft</td><td>readonly · CSO-confirm before persist</td></tr>
- <tr><td><code>cyberos.okr.close_cycle</code></td><td>cycle_code, retro_brain_path</td><td>{cycle}</td><td>destructive · scope=okr.close_cycle · founder-confirm</td></tr>
+ <tr><td><code>cyberos.okr.close_cycle</code></td><td>cycle_code, retro_memory_path</td><td>{cycle}</td><td>destructive · scope=okr.close_cycle · founder-confirm</td></tr>
  </tbody>
  </table>
  </div>
@@ -669,7 +669,7 @@ sequenceDiagram
  participant M as Members
  participant O as OKR service
  participant AI as 🧠 AI gateway
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
  participant CUO as 🧠 CUO
 
  Note over CEO: Phase 1 · Planning (week -2 to 0)
@@ -712,7 +712,7 @@ sequenceDiagram
  participant SPA as Check-in modal
  participant C as checkin.rs
  participant PG as PostgreSQL
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
  participant CUO as 🧠 CUO
 
  CR->>O: notify all Members with active KRs
@@ -744,7 +744,7 @@ sequenceDiagram
  participant C as cascade.rs
  participant CK as cascade_check.rs
  participant PG as PostgreSQL
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  TL->>SPA: drag Team OKR onto Company OKR
  SPA->>AR: mutation alignObjectives(parent=co-obj, child=team-obj, kind=CONTRIBUTES_TO)
@@ -776,7 +776,7 @@ sequenceDiagram
  participant PROJ as 📋 PROJ federated subgraph
  participant LRN as 📚 LEARN federated subgraph
  participant PG as PostgreSQL
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CR->>P: enumerate KRs with refresh_cadence in (hourly, daily-due)
  loop per KR
@@ -811,7 +811,7 @@ sequenceDiagram
  participant AI as 🧠 AI gateway
  participant CUO as 🧠 CUO
  participant CEO as CEO (CHAT)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CR->>D: assemble weekly digest
  D->>CH: pull confidence drops (≥ 2 pts over 2 wks)
@@ -862,7 +862,7 @@ stateDiagram-v2
  <tr><td>Execution</td><td>10 weeks (quarter)</td><td>KR target modifications require supersession ((FR pending)). Auto-progress refresh hourly. Weekly check-ins enforced.</td></tr>
  <tr><td>CheckIns (sub-state)</td><td>weekly Fri 17:00</td><td>All Members with active KRs receive prompts; missing check-ins flagged in next-week digest.</td></tr>
  <tr><td>MidQuarter (sub-state)</td><td>week 6</td><td>Mandatory CEO + Team Lead review. Confidence-band review; off-track KRs get rationale entry.</td></tr>
- <tr><td>Retro</td><td>1 week</td><td>CUO drafts retro summary; team reviews; final lands in BRAIN under <code>module/okr/cycle-YYYY-Qn/retro.md</code>.</td></tr>
+ <tr><td>Retro</td><td>1 week</td><td>CUO drafts retro summary; team reviews; final lands in memory under <code>module/okr/cycle-YYYY-Qn/retro.md</code>.</td></tr>
  <tr><td>Closed</td><td>terminal</td><td>All KRs reach final state (achieved | learning). Read-only. Audit chain preserved.</td></tr>
  <tr><td>Cancelled</td><td>terminal</td><td>Cycle invalidated. Audit chain preserved with reason.</td></tr>
  </tbody>
@@ -913,14 +913,14 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- OKR depends on AUTH for RBAC, BRAIN for retros + audit, AI for phrasing + summarisation, and federated subgraphs from five progress-source modules. It is consumed by REW (performance pool reads team-objective achievement), HR (promotion review reads Member OKR history), and the CUO daily flow.
+ OKR depends on AUTH for RBAC, memory for retros + audit, AI for phrasing + summarisation, and federated subgraphs from five progress-source modules. It is consumed by REW (performance pool reads team-objective achievement), HR (promotion review reads Member OKR history), and the CUO daily flow.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["OKR depends on"]
  AUTH["🔐 AUTH<br>RBAC + scope"]
- BRAIN["🧠 BRAIN<br>audit + retros"]
+ memory["🧠 memory<br>audit + retros"]
  AI["🧠 AI Gateway<br>phrasing + summarisation"]
  OBS["👁 OBS"]
  PROJ["📋 PROJ<br>auto-progress"]
@@ -939,7 +939,7 @@ graph LR
  DASH["📊 OBS dashboards"]
  end
  AUTH --> OKR
- BRAIN --> OKR
+ memory --> OKR
  AI --> OKR
  OBS --> OKR
  PROJ --> OKR
@@ -956,7 +956,7 @@ graph LR
 
  classDef planned fill:#cba88a,stroke:#4338ca
  classDef shipped fill:#f5ede6,stroke:#45210e
- class AUTH,BRAIN,AI,OBS,PROJ,TIME,INV,HR,LEARN,CRM,OKR,REW,HR_D,CUO,RES,DASH planned
+ class AUTH,memory,AI,OBS,PROJ,TIME,INV,HR,LEARN,CRM,OKR,REW,HR_D,CUO,RES,DASH planned
  </div>
  </div>
 </section>
@@ -1003,7 +1003,7 @@ graph LR
  <tr><td><code>R-OKR-006</code></td><td>Face-saving language pack drift (English "miss" leaks through)</td><td>Medium</td><td>Low</td><td>CPO</td><td>i18n.rs central mapping; lint rule on all UI strings; manual QA per release.</td></tr>
  <tr><td><code>R-OKR-007</code></td><td>Check-in burnout (Members ignore Friday prompts)</td><td>High</td><td>Medium</td><td>CHRO</td><td>Friction-minimal modal (≤ 60s typical); skip-this-week available; participation tracked as KPI.</td></tr>
  <tr><td><code>R-OKR-008</code></td><td>DSL injection via progress_source field</td><td>Low</td><td>High</td><td>CSO</td><td>DSL parser is nom-based with whitelisted source names; no eval / no SQL passthrough.</td></tr>
- <tr><td><code>R-OKR-009</code></td><td>Retro memory tampering post-close</td><td>Low</td><td>High</td><td>CSO</td><td>BRAIN canonical write; tombstone-only modification; chain integrity verified on read.</td></tr>
+ <tr><td><code>R-OKR-009</code></td><td>Retro memory tampering post-close</td><td>Low</td><td>High</td><td>CSO</td><td>memory canonical write; tombstone-only modification; chain integrity verified on read.</td></tr>
  <tr><td><code>R-OKR-010</code></td><td>Auto-progress source drift — KR queries return stale data after schema change in PROJ/INV/HR</td><td>Medium</td><td>Medium</td><td>CDO</td><td>progress_source query carries schema version; nightly batch alerts on version mismatch; KR flagged "data stale" until query rebuilt.</td></tr>
  <tr><td><code>R-OKR-011</code></td><td>Face-saving framing weaponised — frames hide consistent under-performance</td><td>Medium</td><td>Medium</td><td>CHRO</td><td>Retro narratives are inputs to manager review; aggregated patterns (3+ "we learned" framings on same KR class) surface for explicit discussion.</td></tr>
  <tr><td><code>R-OKR-012</code></td><td>CUO Monday digest hallucinates progress from incomplete data</td><td>Medium</td><td>Low</td><td>CPO</td><td>Digest grounded in auto-progress + check-in rows only; missing data shown explicitly as "no data"; never extrapolated.</td></tr>
@@ -1032,12 +1032,12 @@ graph LR
  <tr><td><strong>Auto-progress refresh success rate</strong></td><td><code>successful / attempted</code></td><td>OBS</td><td>≥ 99.5%</td></tr>
  <tr><td><strong>Orphan-OKR count</strong></td><td><code>count(no upward alignment)</code></td><td>okr.objective</td><td>≤ 5% of total</td></tr>
  <tr><td><strong>Founder digest engagement rate</strong></td><td><code>digests_with_reply / total</code></td><td>OBS</td><td>≥ 50%</td></tr>
- <tr><td><strong>Retro-memory citation rate next cycle</strong></td><td><code>citations / total_retros</code></td><td>BRAIN</td><td>≥ 1 / retro / next-cycle planning</td></tr>
+ <tr><td><strong>Retro-memory citation rate next cycle</strong></td><td><code>citations / total_retros</code></td><td>memory</td><td>≥ 1 / retro / next-cycle planning</td></tr>
  <tr><td><strong>Progress source schema drift</strong></td><td>flagged KRs / total KRs after upstream schema change</td><td>nightly batch</td><td>≤ 0.05 (rebuild within 7 days)</td></tr>
  <tr><td><strong>Face-saving pattern detection signal</strong></td><td>recurring same-class "we learned" framings / total retros</td><td>quarterly CHRO review</td><td>flagged; not auto-acted</td></tr>
  <tr><td><strong>Digest hallucination rate</strong></td><td>digests with unsupported claims / total</td><td>weekly red-team sample</td><td>≤ 0.01</td></tr>
  <tr><td><strong>OKR-share-of-VP correctness</strong></td><td>VP computations where OKR signal ≤ 30%</td><td>LEARN audit</td><td>= 1.0 (hard floor)</td></tr>
- <tr><td><strong>Retro sync_class default compliance</strong></td><td>retros with sync_class=team-public default / total</td><td>BRAIN audit</td><td>= 1.0 (cross-tenant share is explicit)</td></tr>
+ <tr><td><strong>Retro sync_class default compliance</strong></td><td>retros with sync_class=team-public default / total</td><td>memory audit</td><td>= 1.0 (cross-tenant share is explicit)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1072,7 +1072,7 @@ graph LR
 <!-- ============================================================ -->
 <section id="cli-usage" class="module-section">
  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-okr</code>. Every destructive action writes a chained BRAIN audit row before exit.</p>
+ <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-okr</code>. Every destructive action writes a chained memory audit row before exit.</p>
 
  <h3 class="text-lg font-bold mb-2">1. Open a new quarterly cycle</h3>
 <pre><code>$ cyberos-okr cycle open --code 2026-Q3 --starts 2026-07-01 --ends 2026-09-30
@@ -1081,7 +1081,7 @@ graph LR
  code: 2026-Q3
  phase: planning
  ends: 2026-09-30
- audit: brain seq=11204 chain=…</code></pre>
+ audit: memory seq=11204 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Create an Objective with progress source</h3>
 <pre><code>$ cyberos-okr objective create \
@@ -1108,7 +1108,7 @@ $ cyberos-okr kr add \
  --rationale "MRR run-rate $89k; need 3 deals to close in Aug"
 
 [check-in submitted] iso_week=2026-W30 confidence=7 (trend ↓1 from W29)
-[audit] brain seq=11283 chain=…</code></pre>
+[audit] memory seq=11283 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. View cascade</h3>
 <pre><code>$ cyberos-okr cascade --cycle 2026-Q3
@@ -1143,17 +1143,17 @@ $ cyberos-okr kr add \
  1. "What would help unblock the 3 stalled August deals?"
  2. "Should we move someone temporarily to outbound?"
 
- [audit] brain seq=11401 chain=…</code></pre>
+ [audit] memory seq=11401 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Close cycle with retrospective</h3>
 <pre><code>$ cyberos-okr cycle close --code 2026-Q3 --retro-from retro-draft.md
 
 [retro accepted]
  cycle: 2026-Q3
- brain path: memories/module/okr/cycle-2026-Q3/retro.md
+ memory path: memories/module/okr/cycle-2026-Q3/retro.md
  final scores: achieved=14 learning=8 superseded=2
  duration: 90d
- audit: brain seq=11502 chain=…</code></pre>
+ audit: memory seq=11502 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. DSAR export for a Member</h3>
 <pre><code>$ cyberos-okr dsar-export --subject linh@cyberskill.com --output dsar.zip
@@ -1161,7 +1161,7 @@ $ cyberos-okr kr add \
 [dsar] objectives: 12 rows (4 cycles)
 [dsar] key_results: 38 rows
 [dsar] check_ins: 148 rows
-[dsar] retros: 4 brain memories
+[dsar] retros: 4 memory memories
 [dsar] written: dsar.zip (88 KB)</code></pre>
 </section>
 
@@ -1190,7 +1190,7 @@ $ cyberos-okr kr add \
  <tr><td>Auto-progress DSL + scheduled refresh</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
  <tr><td>KR phrasing assistant (AI gateway)</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
  <tr><td>Monday CUO digest</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
- <tr><td>Retrospective composer + BRAIN persistence</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
+ <tr><td>Retrospective composer + memory persistence</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
  <tr><td>Append-only supersession ((FR pending))</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
  <tr><td>Vietnamese face-saving language pack</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
  <tr><td>Cascade cycle-detection</td><td><span class="pill pill-planned">planned · P3</span></td></tr>
@@ -1224,7 +1224,7 @@ $ cyberos-okr kr add \
  <li><strong>LEARN module</strong> — <a href="learn.html" class="text-blue-700 underline">learn.html</a> · auto-progress source for skill-mastery KRs.</li>
  <li><strong>REW module</strong> — <a href="rew.html" class="text-blue-700 underline">rew.html</a> · downstream consumer for P3 performance pool computation.</li>
  <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + auto-progress data-flow Mermaid + 8-row auto-vs-human matrix.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — quarterly retros are citable BRAIN memories for next-cycle planning.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — quarterly retros are citable memory memories for next-cycle planning.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — OKR at P3 · exit (P3, after the spine modules ship).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  </ul>

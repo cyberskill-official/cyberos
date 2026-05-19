@@ -4,7 +4,7 @@ id: FR-AI-004
 title: "Cost-hold expiry cleanup job — refund unsettled holds + emit audit"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 accepted_at: 2026-05-15
 accepted_by: Stephen Cheng
 verify: T
@@ -14,7 +14,7 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-003]
 depends_on: [FR-AI-001, FR-AI-003]
 blocks: [FR-AI-021]
@@ -45,7 +45,7 @@ allowed_tools:
   - bash: cargo build --bin cost_hold_expiry --release
 disallowed_tools:
   - in-place edit of cost_ledger_hold schema (FR-AI-001/002 own it)
-  - bypass brain_writer when emitting ai.hold_expired rows
+  - bypass memory_writer when emitting ai.hold_expired rows
   - touch services/ai-gateway/src/cost_ledger.rs (this FR adds a sibling, not a fork)
 
 # ───── Estimated work ─────
@@ -53,7 +53,7 @@ effort_hours: 3
 sub_tasks:
   - "0.5h: scan_expired_holds() query with FOR UPDATE SKIP LOCKED"
   - "0.5h: per-hold expiry transition (held → expired) inside transaction"
-  - "0.5h: BRAIN ai.hold_expired audit row emission via brain_writer (FR-AI-003)"
+  - "0.5h: memory ai.hold_expired audit row emission via memory_writer (FR-AI-003)"
   - "0.5h: standalone tokio binary loop (every 30s, with graceful SIGTERM)"
   - "0.5h: systemd unit + Cargo.toml binary target"
   - "0.5h: integration test (seed N expired holds, run one tick, verify state)"
@@ -62,25 +62,25 @@ risk_if_skipped: "Expired holds remain in 'held' state forever. The hold count g
 
 ## §1 — Description (BCP-14 normative)
 
-The AI Gateway service **MUST** ship a standalone Rust binary `cost_hold_expiry` that runs as a long-lived process and, on a 30-second tick, scans `cost_ledger_hold` for rows whose `state = 'held' AND expires_at < NOW()` and transitions each to `state = 'expired'` with a chained BRAIN audit row per row.
+The AI Gateway service **MUST** ship a standalone Rust binary `cost_hold_expiry` that runs as a long-lived process and, on a 30-second tick, scans `cost_ledger_hold` for rows whose `state = 'held' AND expires_at < NOW()` and transitions each to `state = 'expired'` with a chained memory audit row per row.
 
 The cleanup tick:
 
 1. **MUST** select expired holds with `FOR UPDATE SKIP LOCKED LIMIT 500` — bounded per tick to prevent a million-row spike from monopolising the database.
 2. **MUST** process each hold inside its own Postgres transaction; one hold's failure MUST NOT roll back the others. Per-hold atomicity replaces per-batch atomicity.
-3. **MUST** emit one `ai.hold_expired` BRAIN audit row per expired hold via `brain_writer::emit()` (FR-AI-003) before committing the row's state transition.
+3. **MUST** emit one `ai.hold_expired` memory audit row per expired hold via `memory_writer::emit()` (FR-AI-003) before committing the row's state transition.
 4. **MUST** leave `cost_ledger.spent_usd` UNCHANGED — an expired hold is functionally a refund (the call never settled, so no value was delivered to the tenant).
 5. **MUST** sleep 30 seconds between ticks via `tokio::time::sleep`; the tick interval is configurable via the `CYBEROS_AI_EXPIRY_TICK_SECONDS` env var (default 30, min 5, max 300).
 6. **MUST** handle SIGTERM gracefully — finish the current tick (or current hold inside the tick), emit a `process_shutdown` log line, exit 0 within 5 seconds of receiving SIGTERM.
 7. **MUST** handle Postgres connection drops by reconnecting with exponential backoff (1s, 2s, 4s, 8s, capped at 30s). Connection failures MUST NOT crash the binary; the process is expected to outlive transient DB outages.
 8. **MUST** emit OTel metrics: `ai_expiry_holds_processed_total` (counter), `ai_expiry_tick_duration_seconds` (histogram), `ai_expiry_consecutive_failures_total` (counter, resets on success).
 9. **SHOULD** emit a sev-2 OBS alert when `ai_expiry_consecutive_failures_total ≥ 10` (5 minutes of total failure). FR-OBS-007 routes this when it lands; until then, structured `tracing::error!` lines suffice.
-10. **MUST** be idempotent under crash — if the binary crashes mid-tick after emitting some BRAIN rows but before committing some hold transitions, the next tick MUST re-scan and either complete the transitions or surface a chain inconsistency. The `FOR UPDATE SKIP LOCKED` semantics ensure no double-emission *within a single binary instance*; cross-restart crash recovery is the slice-1 documented limitation per AC #9.
+10. **MUST** be idempotent under crash — if the binary crashes mid-tick after emitting some memory rows but before committing some hold transitions, the next tick MUST re-scan and either complete the transitions or surface a chain inconsistency. The `FOR UPDATE SKIP LOCKED` semantics ensure no double-emission *within a single binary instance*; cross-restart crash recovery is the slice-1 documented limitation per AC #9.
 11. **MUST** allocate one `tick_id` (ULID-26) per tick at tick start. Every `ai.hold_expired` audit row emitted during the tick MUST carry `extra.tick_id`. This enables OBS correlation: "show all expirations from tick X".
 12. **MUST** emit OTel metrics on every tick: `ai_expiry_ticks_total` (counter), `ai_expiry_tick_duration_seconds` (histogram), `ai_expiry_holds_processed_total` (counter), `ai_expiry_holds_succeeded_total` (counter), `ai_expiry_holds_failed_total` (counter), `ai_expiry_consecutive_failures` (gauge; resets to 0 on success).
 13. **MUST NOT** implement leader election for multi-instance deployments. One instance is sufficient at any P0/P1 scale. If two are deployed by accident, Postgres `FOR UPDATE SKIP LOCKED` keeps them safe — one will simply do no work per tick. FR-AI-021 (operator CLI) surfaces a warning if `ps -ef \| grep cost_hold_expiry \| wc -l > 1`.
 14. **MUST** emit OBS metrics enumerated above (#12) on every tick AND publish the per-tick `cleanup_holds_pending_gauge` as a Prometheus gauge that operators can dashboard. Long-lived `pending` backlog (>30 minutes) is the canary signal for a stuck cleanup loop or a Postgres lock conflict.
-15. **MUST** emit `ai.hold_expired_started` BEFORE applying `UPDATE cost_ledger SET state='expired'` for each batched hold per AUTHORING.md §3.8 rule 25 (audit-before-action). The Postgres transaction wraps both the BRAIN-emit AND the UPDATE in one atomic unit; rollback on either failure. `ai.hold_expired_completed` follows post-commit per AUTHORING.md §3.8 rule 26 (pair-write). The OBS lint flags any standalone `ai.hold_expired_started` over a 5-minute window. AC #15 added with captured-events ordering test.
+15. **MUST** emit `ai.hold_expired_started` BEFORE applying `UPDATE cost_ledger SET state='expired'` for each batched hold per AUTHORING.md §3.8 rule 25 (audit-before-action). The Postgres transaction wraps both the memory-emit AND the UPDATE in one atomic unit; rollback on either failure. `ai.hold_expired_completed` follows post-commit per AUTHORING.md §3.8 rule 26 (pair-write). The OBS lint flags any standalone `ai.hold_expired_started` over a 5-minute window. AC #15 added with captured-events ordering test.
 16. **MUST** order the per-sweep `SELECT ... FOR UPDATE SKIP LOCKED LIMIT 1000` by `ORDER BY hold_id ASC` per AUTHORING.md §3.9 rule 27 (determinism), so two runs on the same backlog produce byte-identical expire-order. The per-sweep `ai.cleanup_run_completed` audit row's `extra.expired_hold_ids: Vec<Uuid>` MUST be recorded in the same sorted order; operator diffing across runs is reliable. AC #16 added with deterministic-order test.
 
 A single instance of this binary services the AI Gateway deployment. Running multiple instances is safe (Postgres row-level locking ensures correctness) but provides no throughput benefit at slice-1 scale; FR-AI-021 (operator CLI) adds the multi-instance leader-election story if it's ever needed.
@@ -97,7 +97,7 @@ A single instance of this binary services the AI Gateway deployment. Running mul
 
 **Why per-hold transactions and not per-batch?** Per-batch atomicity feels safer ("all 500 or none"), but it amplifies blast radius — one bad row (e.g., a hold pointing to a deleted tenant) rolls back all 500. Per-hold atomicity isolates the failure. The cost is N transaction commits per tick instead of 1, but with `synchronous_commit = on` and a local Postgres, that's ~5ms × 500 = 2.5s of commit overhead — well inside the 30s tick budget.
 
-**Why emit `ai.hold_expired` and not just delete the row?** Three reasons. (1) Compliance: the EU AI Act Art. 12 audit trail wants evidence of every cost-gate decision, including the ones where the gate held money that never got spent. (2) Debugging: when a tenant reports "I got charged for a call that never returned", the `ai.hold_expired` row is the canonical proof that we *didn't* charge them. (3) BRAIN's audit-before-action invariant says state transitions must hit the chain; this is no exception.
+**Why emit `ai.hold_expired` and not just delete the row?** Three reasons. (1) Compliance: the EU AI Act Art. 12 audit trail wants evidence of every cost-gate decision, including the ones where the gate held money that never got spent. (2) Debugging: when a tenant reports "I got charged for a call that never returned", the `ai.hold_expired` row is the canonical proof that we *didn't* charge them. (3) memory's audit-before-action invariant says state transitions must hit the chain; this is no exception.
 
 **Why is `cost_ledger.spent_usd` unchanged on expiry?** An expired hold means the provider call never completed (or completed so late that the reconcile path was abandoned). The tenant got no value. Charging the budget would be a soft fraud. The few cases where the provider *did* complete but the gateway lost track are explicit data-quality bugs to fix in the gateway, not silent leaks to swallow.
 
@@ -183,7 +183,7 @@ BEGIN;
     FOR UPDATE SKIP LOCKED
     LIMIT 1;
 
-  -- (in Rust: per row, emit BRAIN ai.hold_expired before this update)
+  -- (in Rust: per row, emit memory ai.hold_expired before this update)
 
   UPDATE cost_ledger_hold
     SET state = 'expired', refunded_at = NOW(), refund_reason = 'tick_expired'
@@ -191,7 +191,7 @@ BEGIN;
 COMMIT;
 ```
 
-The outer Rust loop fetches up to 500 hold IDs in one query (`LIMIT 500`), then processes each in its own transaction. The per-row transaction holds the row lock for only the duration of one BRAIN emission + one UPDATE (~50ms).
+The outer Rust loop fetches up to 500 hold IDs in one query (`LIMIT 500`), then processes each in its own transaction. The per-row transaction holds the row lock for only the duration of one memory emission + one UPDATE (~50ms).
 
 ### Systemd unit
 
@@ -223,15 +223,15 @@ WantedBy=multi-user.target
 
 ## §4 — Acceptance criteria
 
-1. **Happy path** — Seed Postgres with 3 holds whose `expires_at = NOW() - INTERVAL '10 seconds'` and `state = 'held'`. Call `run_tick()`. MUST return `TickReport { holds_processed: 3, holds_succeeded: 3, holds_failed: 0 }`. All 3 holds MUST transition to `state = 'expired'`. Exactly 3 `ai.hold_expired` BRAIN rows MUST exist on the chain, each chained to the previous.
+1. **Happy path** — Seed Postgres with 3 holds whose `expires_at = NOW() - INTERVAL '10 seconds'` and `state = 'held'`. Call `run_tick()`. MUST return `TickReport { holds_processed: 3, holds_succeeded: 3, holds_failed: 0 }`. All 3 holds MUST transition to `state = 'expired'`. Exactly 3 `ai.hold_expired` memory rows MUST exist on the chain, each chained to the previous.
 2. **Non-expired holds skipped** — Seed 5 holds, 2 expired and 3 not. `run_tick()` MUST process only the 2 expired ones; the 3 non-expired MUST remain `state = 'held'` untouched.
 3. **Already-reconciled holds skipped** — Seed a hold with `state = 'reconciled'` but `expires_at < NOW()` (an edge case where reconcile happened just before tick). `run_tick()` MUST NOT touch it (state filter is `state = 'held'`).
 4. **`FOR UPDATE SKIP LOCKED` works** — Spawn a separate transaction that holds `SELECT ... FOR UPDATE` on hold A; call `run_tick()` against the same pool. Tick MUST skip hold A and process the other expired holds normally. Hold A MUST be processed in the next tick after the blocking transaction commits.
-5. **BRAIN failure rolls back row transition** — Inject a `brain_writer` failure for one specific hold. The transaction for that hold MUST roll back (state stays `'held'`); the other holds in the tick MUST process normally; `TickReport.holds_failed = 1`.
+5. **memory failure rolls back row transition** — Inject a `memory_writer` failure for one specific hold. The transaction for that hold MUST roll back (state stays `'held'`); the other holds in the tick MUST process normally; `TickReport.holds_failed = 1`.
 6. **Bounded batch size** — Seed 5,000 expired holds. `run_tick()` MUST process at most 500 (the LIMIT). The remaining 4,500 MUST be picked up on subsequent ticks.
 7. **Graceful shutdown** — Send SIGTERM to the running binary mid-tick. The current hold's transaction MUST complete (commit or roll back); the binary MUST exit 0 within 5 seconds; no partial state visible on the next process start.
 8. **Reconnect on DB drop** — Kill the Postgres container mid-binary-run. Wait 10 seconds, restart Postgres. The binary MUST reconnect (visible via the `consecutive_failures` counter resetting to 0 on next successful tick); MUST NOT crash.
-9. **Crash recovery (weakened for slice 1)** — Run `run_tick()`, kill the process mid-iteration (between BRAIN emit and UPDATE commit) via SIGKILL. On restart, the next tick MUST handle the un-transitioned hold by emitting a *second* `ai.hold_expired` BRAIN row (slice 1 lacks dedup_key per FR-AI-008 deferral) and then transitioning the hold. Both BRAIN rows MUST chain correctly. The operator MUST run `cyberos-ai expiry repair` (FR-AI-021) to dedupe after large crash events. This is a documented slice-1 limitation; FR-AI-008 (slice 2 PyO3 spike) adds `dedup_key` to fix it natively.
+9. **Crash recovery (weakened for slice 1)** — Run `run_tick()`, kill the process mid-iteration (between memory emit and UPDATE commit) via SIGKILL. On restart, the next tick MUST handle the un-transitioned hold by emitting a *second* `ai.hold_expired` memory row (slice 1 lacks dedup_key per FR-AI-008 deferral) and then transitioning the hold. Both memory rows MUST chain correctly. The operator MUST run `cyberos-ai expiry repair` (FR-AI-021) to dedupe after large crash events. This is a documented slice-1 limitation; FR-AI-008 (slice 2 PyO3 spike) adds `dedup_key` to fix it natively.
 10. **Metrics emitted** — After 3 successful ticks processing 10 holds total, `ai_expiry_holds_processed_total` MUST equal 10, `ai_expiry_tick_duration_seconds` histogram MUST have 3 observations, `ai_expiry_consecutive_failures_total` MUST equal 0.
 
 ---
@@ -265,7 +265,7 @@ async fn tick_processes_expired_holds() {
     let ledger = env.read_ledger("org:test-a").await;
     assert_eq!(ledger.spent_usd, dec!(50));  // unchanged on expiry
 
-    let chain_rows = env.brain_count_rows_by_kind("ai.hold_expired").await;
+    let chain_rows = env.memory_count_rows_by_kind("ai.hold_expired").await;
     assert_eq!(chain_rows, 3);
     assert!(env.verify_chain_from_genesis().await);
 }
@@ -409,15 +409,15 @@ async fn process_one_hold(pool: &PgPool, hold_id: Uuid) -> Result<HoldDispositio
         None => return Ok(HoldDisposition::AlreadyTransitioned),
     };
 
-    // Emit BRAIN audit row INSIDE the transaction's lifetime
-    brain_writer::emit(canonical::hold_expired(
+    // Emit memory audit row INSIDE the transaction's lifetime
+    memory_writer::emit(canonical::hold_expired(
         &hold.tenant_id,
         hold.id,
         hold.expires_at,
         hold.estimated_usd,
     ))
     .await
-    .map_err(|e| HoldError::BrainEmitFailed(e))?;
+    .map_err(|e| HoldError::MemoryEmitFailed(e))?;
 
     // Transition the hold
     sqlx::query(
@@ -443,7 +443,7 @@ async fn process_one_hold(pool: &PgPool, hold_id: Uuid) -> Result<HoldDispositio
 **Code dependencies:**
 - FR-AI-001 — `cost_ledger_hold` table exists.
 - FR-AI-002 — `cost_ledger_hold.refunded_at` + `refund_reason` columns exist.
-- FR-AI-003 — `brain_writer::emit()` + `canonical::hold_expired()` are available.
+- FR-AI-003 — `memory_writer::emit()` + `canonical::hold_expired()` are available.
 
 **Concept dependencies:**
 - The state machine for `cost_ledger_hold.state`: `held → reconciled | refunded | expired`. This FR is the only path that creates `'expired'` rows.
@@ -489,7 +489,7 @@ TickReport {
 | 01HZK9R8M3X5 | org:test-a     | held     | 2026-05-15 09:31:30+00    | NULL                  | NULL           |
 ```
 
-### BRAIN row written (per expired hold)
+### memory row written (per expired hold)
 
 ```json
 {
@@ -522,7 +522,7 @@ TickReport {
 
 All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses or deferred with explicit owner:
 
-1. **~~Idempotent BRAIN re-emit on crash recovery~~** → deferred to FR-AI-008 + FR-AI-021 (cleanup CLI). AC #9 weakened with explicit note. Was Q1.
+1. **~~Idempotent memory re-emit on crash recovery~~** → deferred to FR-AI-008 + FR-AI-021 (cleanup CLI). AC #9 weakened with explicit note. Was Q1.
 2. **~~DB pool sizing~~** → pool size 2 (one bulk-fetch, one per-hold tx); revisit if profiling shows contention. Was Q2.
 3. **~~Empty hold-table tick~~** → no-op SELECT, ~5ms overhead, no harm; do nothing. Was Q3.
 4. **~~Leader election~~** → §1 #13 (NOT implemented; SKIP LOCKED makes multi-instance safe). Was Q4.
@@ -540,12 +540,12 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses or deferred
 |---|---|---|---|
 | Postgres unreachable | sqlx::Error on initial connect | Reconnect with exponential backoff (1s, 2s, 4s, 8s, capped 30s) | Self-healing; `ai_expiry_consecutive_failures_total` counter tracks |
 | Postgres connection drops mid-tick | sqlx::Error on per-hold transaction | Per-hold failure incremented; tick continues with next hold | Self-healing; no per-tick rollback needed |
-| BRAIN Writer fails for a specific hold | `brain_writer::emit` returns Err | Hold transaction rolls back (state stays `'held'`); `holds_failed++` | Hold gets processed next tick (likely succeeds); if persistent, OBS sev-2 |
-| BRAIN Writer hangs > 5s | Writer's own timeout | Same as above (Writer's timeout becomes our error) | Tick continues |
+| memory Writer fails for a specific hold | `memory_writer::emit` returns Err | Hold transaction rolls back (state stays `'held'`); `holds_failed++` | Hold gets processed next tick (likely succeeds); if persistent, OBS sev-2 |
+| memory Writer hangs > 5s | Writer's own timeout | Same as above (Writer's timeout becomes our error) | Tick continues |
 | Bulk-fetch query returns 0 expired holds | Normal | Tick exits the inner loop; sleeps 30s | Normal idle state |
 | Bulk-fetch returns 500+ holds | Normal under load | Process 500; remaining picked up next tick | Normal; consider lowering precheck TTL if persistent |
 | Hold lock contention (another process holding the row) | `FOR UPDATE SKIP LOCKED` returns None | Skip the row; process the next | Normal; row processed next tick when lock releases |
-| Crash mid-tick after BRAIN emit but before UPDATE commit | Process dies | Next tick may emit a duplicate BRAIN row + complete transition | Slice-1 limitation; FR-AI-021 `cyberos-ai expiry repair` dedupes |
+| Crash mid-tick after memory emit but before UPDATE commit | Process dies | Next tick may emit a duplicate memory row + complete transition | Slice-1 limitation; FR-AI-021 `cyberos-ai expiry repair` dedupes |
 | SIGTERM during tick | tokio::select catches it | Finish current hold's transaction; exit 0 within 5s | Clean shutdown |
 | Consecutive failure count exceeds 10 (5 minutes total failure) | counter check at end of each failed tick | Sev-2 log; FR-OBS-007 routes alarm (when shipped) | Operator investigates |
 
@@ -557,7 +557,7 @@ All resolved 2026-05-15 (round 2). Promoted to §1 normative clauses or deferred
 - The systemd unit lives in `deploy/systemd/` not `services/ai-gateway/deploy/`; that path convention is set by the platform team (deploy assets centralised, code repos clean).
 - The `ai_expiry_consecutive_failures_total` counter resets on each successful tick — its purpose is to drive an alert when cleanup is *completely* broken, not to count cumulative lifetime failures. The latter is provided by `ai_expiry_holds_processed_total` minus the lifetime `holds_succeeded` rollup in the OBS dashboard.
 - Once FR-AI-021 (operator CLI) ships, the `cyberos-ai expiry-status` subcommand will surface the binary's live tick state without needing OBS — useful for low-environment debugging.
-- Future enhancement (FR-AI-104, post-P0): when the same tenant has many expired holds in a window, fold them into a single batch BRAIN row (`ai.hold_expired_batch`) to reduce chain noise. Deferred until production traffic justifies the optimisation.
+- Future enhancement (FR-AI-104, post-P0): when the same tenant has many expired holds in a window, fold them into a single batch memory row (`ai.hold_expired_batch`) to reduce chain noise. Deferred until production traffic justifies the optimisation.
 
 ---
 

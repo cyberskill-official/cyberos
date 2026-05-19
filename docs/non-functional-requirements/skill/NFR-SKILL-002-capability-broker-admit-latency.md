@@ -18,11 +18,11 @@ related_frs: [FR-SKILL-104, FR-SKILL-101]
 2. The hot path **MUST NOT** emit a database call — policy decisions are served from an in-memory `Arc<RwLock<PolicyMatrix>>` refreshed every 30s by a background task.
 3. On policy cache miss (capability or tenant not yet loaded) the broker **MUST** fall back to a DB lookup but the resulting record **MUST** be cached in-process for the configured TTL.
 4. Decision results (admit/deny + reason code) **MUST** be emitted to the audit log asynchronously — the admit response itself **MUST NOT** wait for log durability.
-5. Audit log loss **MUST NOT** exceed 1 row per 1M decisions (best-effort durability tier; full BRAIN sync via FR-SKILL-101 batches separately).
+5. Audit log loss **MUST NOT** exceed 1 row per 1M decisions (best-effort durability tier; full memory sync via FR-SKILL-101 batches separately).
 
 ## §2 — Why this constraint
 
-The broker sits on the inner loop of every skill invocation. A 100ms broker round-trip adds 100ms × N skills to every CUO workflow — turning the system from "instant" to "stuttering." The 25ms ceiling preserves the perception that capability gating is free. The async audit decoupling is the explicit trade-off: we accept 1-row-per-million audit loss to avoid coupling the hot path to log durability — full reconciliation is handled by BRAIN's Layer-1→Layer-2 ingest with its own (looser) latency budget.
+The broker sits on the inner loop of every skill invocation. A 100ms broker round-trip adds 100ms × N skills to every CUO workflow — turning the system from "instant" to "stuttering." The 25ms ceiling preserves the perception that capability gating is free. The async audit decoupling is the explicit trade-off: we accept 1-row-per-million audit loss to avoid coupling the hot path to log durability — full reconciliation is handled by memory's Layer-1→Layer-2 ingest with its own (looser) latency budget.
 
 ## §3 — Measurement
 

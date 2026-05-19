@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-AUTH-101, FR-AI-003, FR-BRAIN-111, FR-EMAIL-001]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-AUTH-101, FR-AI-003, FR-MEMORY-111, FR-EMAIL-001]
 depends_on: [FR-TIME-001]
 blocks: []
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1424 2026-05-17 — Diff view on resubmission: AM sees what Member changed since prior submission
   - DEC-1425 2026-05-17 — Auto-lock 14 days post-week-end if no submission (with sev-2 audit + email warning)
   - DEC-1426 2026-05-17 — Email notifications: Submit reminder Monday AM; AM review reminder Wednesday AM; rejection notifies Member
-  - DEC-1427 2026-05-17 — BRAIN audit kinds: time.timesheet_submitted, time.timesheet_approved, time.timesheet_rejected, time.timesheet_auto_locked, time.timesheet_bulk_approved
+  - DEC-1427 2026-05-17 — memory audit kinds: time.timesheet_submitted, time.timesheet_approved, time.timesheet_rejected, time.timesheet_auto_locked, time.timesheet_bulk_approved
 
 build_envelope:
   language: rust 1.81
@@ -87,7 +87,7 @@ risk_if_skipped: "Without approval flow, no governance layer between Member time
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship weekly approval flow at `services/time/src/timesheet/` with 5-state status FSM, AM review + reject, bulk approval, 14-day auto-lock, diff view on resubmission, email notifications, and 5 BRAIN audit kinds.
+The TIME service **MUST** ship weekly approval flow at `services/time/src/timesheet/` with 5-state status FSM, AM review + reject, bulk approval, 14-day auto-lock, diff view on resubmission, email notifications, and 5 memory audit kinds.
 
 1. **MUST** define closed `timesheet_status` enum: `('open','submitted','approved','rejected','locked')` per DEC-1421. Cardinality 5.
 
@@ -118,7 +118,7 @@ The TIME service **MUST** ship weekly approval flow at `services/time/src/timesh
    - Triggers email to Member with reason.
    - Emits `time.timesheet_rejected` sev-1.
 
-8. **MUST** expose bulk approve `POST /v1/time/timesheets/bulk-approve` body `{ engagement_id, week_start_date }` per DEC-1423. AM scope. Approves all submitted timesheets matching filter; one BRAIN row + per-timesheet audit. Emits `time.timesheet_bulk_approved` sev-2 + N individual `time.timesheet_approved`.
+8. **MUST** expose bulk approve `POST /v1/time/timesheets/bulk-approve` body `{ engagement_id, week_start_date }` per DEC-1423. AM scope. Approves all submitted timesheets matching filter; one memory row + per-timesheet audit. Emits `time.timesheet_bulk_approved` sev-2 + N individual `time.timesheet_approved`.
 
 9. **MUST** expose diff view `GET /v1/time/timesheets/{id}/diff?since=<submission_n>` per DEC-1424. Returns added/removed/modified entries since prior submission for resubmission review.
 
@@ -136,7 +136,7 @@ The TIME service **MUST** ship weekly approval flow at `services/time/src/timesh
     - On rejection: Member notified with reason.
     - On auto-lock: Member + AM notified.
 
-13. **MUST** emit 5 BRAIN audit kinds per DEC-1427. PII-scrub reason via FR-BRAIN-111.
+13. **MUST** emit 5 memory audit kinds per DEC-1427. PII-scrub reason via FR-MEMORY-111.
 
 14. **MUST** thread trace_id end-to-end.
 
@@ -234,7 +234,7 @@ GET    /v1/time/timesheets/mine                       (member)
 7. **Auto-lock 14d** — week_end+14d + status=open → locked.
 8. **Locked entries blocked** — entry write for locked week → 412.
 9. **AM-only approval** — Member tries to approve own → 403.
-10. **5 BRAIN audit kinds emitted**.
+10. **5 memory audit kinds emitted**.
 11. **Email cadence Monday/Wednesday** — scheduled jobs verified.
 12. **CFO read-only** — CFO can view but POST approve → 403.
 13. **Trace_id end-to-end**.
@@ -293,7 +293,7 @@ async fn locked_week_blocks_entry_write() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TIME-001 (entries to aggregate).
-**Cross-module:** FR-AUTH-101 (engagement_admin role), FR-EMAIL-001 (notifications), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-AUTH-101 (engagement_admin role), FR-EMAIL-001 (notifications), FR-AI-003, FR-MEMORY-111.
 
 ---
 

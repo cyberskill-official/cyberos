@@ -52,7 +52,7 @@ source_freshness_tier: 25
 - [ ] Other: [explain]
 
 ## What would change the decision
-[Conditions under which this should be reconsidered. E.g., "reconsider if pattern recurs ≥10 times in next 90 days", or "reconsider once BRAIN module P1 ships and multi-machine becomes real".]
+[Conditions under which this should be reconsidered. E.g., "reconsider if pattern recurs ≥10 times in next 90 days", or "reconsider once memory module P1 ships and multi-machine becomes real".]
 
 ## Related
 - Pattern memory: [DRIFT-NNN if auto-detected]

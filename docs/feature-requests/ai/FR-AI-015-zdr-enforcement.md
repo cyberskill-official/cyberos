@@ -4,7 +4,7 @@ id: FR-AI-015
 title: "ZDR (Zero Data Retention) attestation table + enforcement when tenant policy requires"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -12,7 +12,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-005, FR-AI-006, FR-AI-008, FR-AI-016]
 depends_on: [FR-AI-006]
 blocks: []
@@ -44,8 +44,8 @@ new_files:
   - .github/workflows/zdr-staleness-check.yml                 # weekly cron: warn if attestations >90d old
 modified_files:
   - services/ai-gateway/src/alias.rs                          # FR-AI-006 §1 #6 invokes zdr::is_zdr
-  - services/ai-gateway/src/handlers/chat.rs                  # emit ai.zdr_violation BRAIN row on refusal
-  - services/ai-gateway/src/brain_writer.rs                   # add canonical::zdr_violation builder
+  - services/ai-gateway/src/handlers/chat.rs                  # emit ai.zdr_violation memory row on refusal
+  - services/ai-gateway/src/memory_writer.rs                   # add canonical::zdr_violation builder
   - services/ai-gateway/Cargo.toml                            # url crate for source_url validation
 allowed_tools:
   - file_read: services/ai-gateway/**
@@ -67,7 +67,7 @@ sub_tasks:
   - "0.5h: Hot-reload via notify with revocation detection (true → false logs WARN; emits sev-2 metric)"
   - "0.5h: Staleness check (verified_at > 90 days → CI warn; > 365 days → fail-closed override)"
   - "0.5h: alias::resolve integration (FR-AI-006 §1 #6 wiring)"
-  - "0.5h: ai.zdr_violation BRAIN audit row builder + handler emission on refusal"
+  - "0.5h: ai.zdr_violation memory audit row builder + handler emission on refusal"
   - "0.5h: OTel metrics (lookups_total, violations_total, attestations_revoked_total, attestations_stale_total)"
   - "0.5h: tests — happy lookup, fail-closed, alias integration, revocation warn, staleness, URL validation"
   - "0.5h: zdr-staleness-check.yml weekly cron workflow"
@@ -84,7 +84,7 @@ The AI Gateway service **MUST** maintain an authoritative ZDR (Zero Data Retenti
 3. **MUST** default `is_zdr` to `false` for any (provider, model) NOT in the table — fail closed. The lookup must never return `true` based on a missing entry, a parse fallback, or a "trust the provider" heuristic. A non-attested call when policy requires ZDR is a refusal, not an unknown.
 4. **MUST** require every YAML entry to carry `is_zdr` (bool), `verified_at` (ISO date), `source_url` (HTTPS URL — HTTP rejected at parse), and `attested_by` (kebab-case email or username). `notes` is optional. An entry missing any required field MUST fail `init_zdr_table` with `LoaderInitError::Schema { reason }`. ZDR claims without source = audit failure; the parser blocks them at boot.
 5. **MUST** be consulted by `alias::resolve` (FR-AI-006 §1 #6 invokes this FR) BEFORE returning a resolved (provider, model). When `policy.ai_policy.zdr_required == true` AND `zdr::is_zdr(&resolved_provider, &resolved_model) == false`, `alias::resolve` MUST return `Err(AliasError::ZdrViolation { resolved_provider, resolved_model, attestation: <option> })`. The `attestation` field surfaces the documented status (e.g., a known-non-ZDR provider returns the entry with `is_zdr: false`; a missing entry returns `None`) so the operator can distinguish "we know this isn't ZDR" from "we have no record."
-6. **MUST** emit an `ai.zdr_violation` BRAIN audit row when a request is refused due to ZDR. The row carries `tenant_id`, `agent_persona`, `requested_alias`, `resolved_provider`, `resolved_model`, `policy_requires_zdr: true`, `attestation_present: bool`, `request_id`. The audit-before-refusal invariant from FR-AI-001 §1 #6 applies.
+6. **MUST** emit an `ai.zdr_violation` memory audit row when a request is refused due to ZDR. The row carries `tenant_id`, `agent_persona`, `requested_alias`, `resolved_provider`, `resolved_model`, `policy_requires_zdr: true`, `attestation_present: bool`, `request_id`. The audit-before-refusal invariant from FR-AI-001 §1 #6 applies.
 7. **MUST** be hot-reloadable via the `notify` crate's file-watch with a 250ms debounce (same machinery as FR-AI-005, FR-AI-007, FR-AI-014). On reload-success, the new attestations replace the cache via `ArcSwap::store`.
 8. **MUST** detect ZDR-status revocations on hot-reload: for every (provider, model) where the previous cache entry had `is_zdr == true` AND the new entry has `is_zdr == false`, emit `tracing::warn!` AND increment `ai_zdr_attestations_revoked_total{provider, model}`. Operators MUST be alerted (the metric is a sev-2 alarm trigger).
 9. **MUST** implement staleness handling at two thresholds. (a) **Soft stale** at `verified_at + 90 days`: weekly CI cron (`.github/workflows/zdr-staleness-check.yml`) flags the entry; PR-time validation logs WARN; metric `ai_zdr_attestations_stale_total{provider, model}` increments. (b) **Hard stale** at `verified_at + 365 days`: `is_zdr` MUST return `false` regardless of the table's recorded value (defensive override; an attestation no one has reverified for a year is no longer trustworthy). The hard-stale path also logs `tracing::error!` and increments `ai_zdr_attestations_expired_total`.
@@ -110,7 +110,7 @@ The AI Gateway service **MUST** maintain an authoritative ZDR (Zero Data Retenti
 **Why fail closed (default false, §1 #3)?** Same reasoning as FR-AI-001 §1 #9 (policy-missing fails closed): silent defaults bury compliance failures. Missing entry = treat as non-ZDR = refuse if policy demands ZDR. The alternative — defaulting to `true` for "providers we trust" — is exactly the failure mode that produces a "we promised ZDR and didn't enforce it" headline.
 
 **Why does each row carry `verified_at` + `source_url` + `attested_by` (§1 #4)?** When an auditor asks "prove you only sent PDPL-protected data to ZDR-attested providers," the chain of evidence is:
-1. Tenant policy says `zdr_required: true` (BRAIN row + YAML).
+1. Tenant policy says `zdr_required: true` (memory row + YAML).
 2. Request was routed to (provider, model).
 3. `zdr_attestations.yaml` shows that (provider, model) had `is_zdr: true` at the time of the request, citing a published source URL.
 4. The attestor (`attested_by`) is identifiable; if questioned, they can produce the source they read.
@@ -127,7 +127,7 @@ Each piece of provenance is load-bearing; an attestation without `source_url` is
 
 **Why is the enforcement at `alias::resolve` time, not at the precheck (FR-AI-001) time?** The precheck has the alias name (`chat.smart`), not the resolved (provider, model). Resolution happens later; that's where the (provider, model) is known. Enforcing at resolution means the gate fires at the right point with the right data, AND we get exactly one enforcement site (no duplication, no risk of one path checking and another not). The cost is one extra error class (`ZdrViolation`) propagating from `alias::resolve` to the handler — small.
 
-**Why a separate BRAIN audit row (`ai.zdr_violation`, §1 #6)?** A regulator's audit of "did we ever send PDPL data to a non-ZDR provider" needs a search target. Without the dedicated row, the evidence is "absence of evidence" (no request went through to the non-ZDR provider, but how do we prove we didn't try?). The dedicated row converts the question to "show me all `ai.zdr_violation` rows for tenant X" — a positive answer, not an absence. The row is the proof we *did* refuse.
+**Why a separate memory audit row (`ai.zdr_violation`, §1 #6)?** A regulator's audit of "did we ever send PDPL data to a non-ZDR provider" needs a search target. Without the dedicated row, the evidence is "absence of evidence" (no request went through to the non-ZDR provider, but how do we prove we didn't try?). The dedicated row converts the question to "show me all `ai.zdr_violation` rows for tenant X" — a positive answer, not an absence. The row is the proof we *did* refuse.
 
 **Why doesn't `LoaderInitError::Schema` fail-closed-on-init?** It does (`Result<(), LoaderInitError>` propagates up through the boot path; the gateway refuses to bind). The §10 inventory makes this explicit. Inability to load the ZDR table is treated as severe as inability to load the cost table — both are compliance-load-bearing primitives.
 
@@ -426,7 +426,7 @@ jobs:
 4. **FR-AI-006 integration: refusal when policy requires** — Tenant policy `zdr_required: true`; alias resolves to `openai:gpt-4o`; `alias::resolve` returns `Err(AliasError::ZdrViolation { attestation: Some(att_with_is_zdr_false), .. })`.
 5. **FR-AI-006 integration: refusal when entry missing** — Tenant policy `zdr_required: true`; alias resolves to a (provider, model) not in the table; `alias::resolve` returns `Err(AliasError::ZdrViolation { attestation: None, .. })`.
 6. **HTTP 403 ZDR_VIOLATION on refusal** — Handler converts the AliasError to a `403` response with the documented body shape; `notes` field NOT echoed in response body.
-7. **Audit row emitted** — Every `ZdrViolation` refusal emits exactly one `ai.zdr_violation` BRAIN row carrying tenant_id, resolved_provider, resolved_model, policy_requires_zdr, attestation_present, request_id.
+7. **Audit row emitted** — Every `ZdrViolation` refusal emits exactly one `ai.zdr_violation` memory row carrying tenant_id, resolved_provider, resolved_model, policy_requires_zdr, attestation_present, request_id.
 8. **Hot reload picks up new attestation** — Adding a new entry to YAML; within 500ms `is_zdr` returns the new value.
 9. **Revocation warns and metricises** — Changing an entry from `is_zdr: true` to `is_zdr: false` triggers `tracing::warn!` AND increments `ai_zdr_attestations_revoked_total{provider, model}`.
 10. **Soft staleness flagged in CI** — `verified_at = today - 91 days`; `cargo run --bin zdr-staleness-check` exits non-zero with the entry listed; weekly cron opens an issue.
@@ -481,7 +481,7 @@ async fn audit_row_emitted_on_zdr_refusal() {
     let request_id = "req_test_zdr_001";
     let tenant_id = "tenant_alpha";
     let _ = handlers::chat::handle(test_request(tenant_id, request_id, "chat.smart-non-zdr")).await;
-    let rows = brain_test_helper::find_rows("ai.zdr_violation", request_id);
+    let rows = memory_test_helper::find_rows("ai.zdr_violation", request_id);
     assert_eq!(rows.len(), 1);
     let p = &rows[0].payload;
     assert_eq!(p["tenant_id"], tenant_id);
@@ -659,7 +659,7 @@ fn reload_with_diff(path: &Path) -> Result<(usize, Vec<((ProviderKind, String), 
 }
 ```
 
-`canonical::zdr_violation` builder (added to FR-AI-003's BRAIN bridge):
+`canonical::zdr_violation` builder (added to FR-AI-003's memory bridge):
 
 ```rust
 pub mod canonical {
@@ -695,7 +695,7 @@ pub mod canonical {
 - **FR-AI-006** — `alias::resolve` invokes `zdr::is_zdr` (declared in FR-AI-006 §1 #6); this FR provides the implementation. The `AliasError::ZdrViolation` variant is added to FR-AI-006's enum.
 - **FR-AI-001** — Cost ledger precheck routes the request; `ZdrViolation` errors propagate through the precheck path to the handler.
 - **FR-AI-005** — Tenant policy schema declares `policy.ai_policy.zdr_required`; this FR consumes it via the request context.
-- **FR-AI-003** — BRAIN audit-row bridge. This FR adds the `canonical::zdr_violation` builder for the `ai.zdr_violation` row kind (declared in FR-AI-003 §3).
+- **FR-AI-003** — memory audit-row bridge. This FR adds the `canonical::zdr_violation` builder for the `ai.zdr_violation` row kind (declared in FR-AI-003 §3).
 - **FR-AI-016 (downstream)** — Residency pinning is the natural pair of ZDR; both gates live behind tenant policy. FR-AI-016 may extend this FR's table with regional-attestation columns.
 - **FR-AI-022 (downstream)** — OTel trace emission consumes `ai_zdr_*` metrics.
 
@@ -844,7 +844,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Hard-stale entry (>365d) | `is_hard_stale` check in `is_zdr` | `is_zdr` forced to false regardless of recorded value; ERROR log + metric `attestations_expired_total` | Operator reverifies attestation immediately; if confirmed still ZDR, bumps verified_at |
 | Tenant policy `zdr_required` missing | FR-AI-005 schema default | Defaults to false (no enforcement for that tenant) | Operator updates tenant policy YAML if ZDR is required |
 | Alias resolves to provider not in table | `is_zdr` returns false; `attestation_for` returns None | `ZdrViolation { attestation: None }` | Operator adds attestation OR removes the alias mapping |
-| Audit row emit fails (BRAIN bridge down) | `brain_writer::emit` returns Err | Refusal still proceeds; sev-1 log ("ZDR refused but audit row failed") | Operator investigates BRAIN; FR-AI-003 §10 covers |
+| Audit row emit fails (memory bridge down) | `memory_writer::emit` returns Err | Refusal still proceeds; sev-1 log ("ZDR refused but audit row failed") | Operator investigates memory; FR-AI-003 §10 covers |
 | Revocation notification missed (operator absent) | OTel alarm on `attestations_revoked_total` | Alarm pages on-call | Standard incident response |
 | `notes` field accidentally echoed in 403 response body | Integration test asserts `notes` absent | Test fails → PR blocked | Handler MUST scrub `notes` before serialising response |
 | New provider added without entry | `is_zdr` returns false → calls refused if policy requires ZDR | New-provider rollout PR includes attestation entry | Standard PR process |

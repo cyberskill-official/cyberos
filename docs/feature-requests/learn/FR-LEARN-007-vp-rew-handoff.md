@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-LEARN-003, FR-REW-008, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-LEARN-003, FR-REW-008, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-LEARN-003]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2141 2026-05-17 — Closed enum `handoff_status` = {pending, computed, emitted, acknowledged_by_rew, failed}; cardinality 5
   - DEC-2142 2026-05-17 — Aggregate is share-of-total (member_vp / total_vp), not absolute; REW uses share to split fund
   - DEC-2143 2026-05-17 — Deterministic + idempotent per (tenant, quarter); UNIQUE constraint
-  - DEC-2144 2026-05-17 — BRAIN audit kinds: learn.vp_rew_handoff_started, learn.vp_rew_handoff_emitted, learn.vp_rew_handoff_acked, learn.vp_rew_handoff_failed
+  - DEC-2144 2026-05-17 — memory audit kinds: learn.vp_rew_handoff_started, learn.vp_rew_handoff_emitted, learn.vp_rew_handoff_acked, learn.vp_rew_handoff_failed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without handoff, REW BP distribution disconnects from VP contr
 
 ## §1 — Description (BCP-14 normative)
 
-The LEARN service **MUST** ship VP → REW handoff at `services/learn/src/handoff/` quarterly aggregate + share calc + REW emit, 4 BRAIN audit kinds.
+The LEARN service **MUST** ship VP → REW handoff at `services/learn/src/handoff/` quarterly aggregate + share calc + REW emit, 4 memory audit kinds.
 
 1. **MUST** validate `handoff_status` against closed enum per DEC-2141.
 
@@ -128,7 +128,7 @@ The LEARN service **MUST** ship VP → REW handoff at `services/learn/src/handof
    GET  /v1/learn/vp-rew/handoffs   (list)
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2144. PII per FR-BRAIN-111: vp values SHA-256; member_id + shares ok.
+7. **MUST** emit 4 memory audit kinds per DEC-2144. PII per FR-MEMORY-111: vp values SHA-256; member_id + shares ok.
 
 8. **MUST** thread trace_id from cron → aggregate → REW emit → ack → audit.
 
@@ -170,7 +170,7 @@ Sample handoff:
 ---
 
 ## §4 — Acceptance criteria
-1. **handoff_status enum cardinality 5**. 2. **Quarter-close cron**. 3. **Aggregate per-member share**. 4. **Shares sum to 1.0 ±1e-6**. 5. **Emit to FR-REW-008**. 6. **UNIQUE(tenant, quarter) idempotency**. 7. **4 BRAIN audit kinds emitted**. 8. **PII scrubbed (vp values SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only manual trigger**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE**. 13. **REW ack → status=acknowledged_by_rew**. 14. **Failure → status=failed + sev-1**. 15. **0 active members → skip + sev-3**. 16. **rust_decimal precision**. 17. **Share precision (10,9)**. 18. **vp_share CHECK 0-1**. 19. **history queryable**. 20. **Quarter format 'YYYY-Qx' enforced**.
+1. **handoff_status enum cardinality 5**. 2. **Quarter-close cron**. 3. **Aggregate per-member share**. 4. **Shares sum to 1.0 ±1e-6**. 5. **Emit to FR-REW-008**. 6. **UNIQUE(tenant, quarter) idempotency**. 7. **4 memory audit kinds emitted**. 8. **PII scrubbed (vp values SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only manual trigger**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE**. 13. **REW ack → status=acknowledged_by_rew**. 14. **Failure → status=failed + sev-1**. 15. **0 active members → skip + sev-3**. 16. **rust_decimal precision**. 17. **Share precision (10,9)**. 18. **vp_share CHECK 0-1**. 19. **history queryable**. 20. **Quarter format 'YYYY-Qx' enforced**.
 
 ---
 
@@ -210,7 +210,7 @@ async fn rew_emit_and_ack() {
 
 ## §7 — Dependencies
 **Upstream:** FR-LEARN-003.
-**Cross-module:** FR-REW-008 (BP fund consumer), FR-MCP-007 (cron), FR-AUTH-101 (CEO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-REW-008 (BP fund consumer), FR-MCP-007 (cron), FR-AUTH-101 (CEO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -230,7 +230,7 @@ async fn rew_emit_and_ack() {
 - §11.1 Cron via FR-MCP-007 `kind: 'learn.vp_rew_handoff'`, Q-end+1d at 04:00.
 - §11.2 Aggregator pure function: `(member_vp_snapshots, total_vp) → shares`.
 - §11.3 REW emit via HTTP POST to FR-REW-008 endpoint with retry+ack.
-- §11.4 BRAIN audit body: handoff_id, quarter, members_count; total_vp SHA256.
+- §11.4 memory audit body: handoff_id, quarter, members_count; total_vp SHA256.
 - §11.5 Member with 0 VP for quarter → vp_share=0 (still included in shares list for transparency).
 
 ---

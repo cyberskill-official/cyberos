@@ -1,6 +1,6 @@
 ---
 id: FR-INV-006
-title: "INV cash application — closed 4-step matching cascade (exact-ref → amount+date → fuzzy-fraction → manual) + atomic ledger reconciliation + partial allocation + over-allocation block + BRAIN audit per match"
+title: "INV cash application — closed 4-step matching cascade (exact-ref → amount+date → fuzzy-fraction → manual) + atomic ledger reconciliation + partial allocation + over-allocation block + memory audit per match"
 module: INV
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-INV-001, FR-INV-003, FR-INV-005, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-INV-001, FR-INV-003, FR-INV-005, FR-OBS-007]
 depends_on: [FR-INV-003, FR-INV-005]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-562 (partial allocation supported — one receipt MAY allocate across multiple invoices via `payment_allocations` table; one invoice MAY receive multiple receipts; sum constraint: SUM(allocations) ≤ receipt.amount_minor AND SUM(allocations) ≤ invoice.amount_minor_outstanding)
   - DEC-563 (over-allocation blocked at DB trigger — `SUM(allocations_for_invoice) > invoice.amount_minor_outstanding` raises P0100 over_allocation_blocked; mirrors FR-INV-001's outstanding-amount invariant)
   - DEC-564 (REVOKE UPDATE, DELETE on payment_allocations from cyberos_app — append-only at SQL grant; corrections via reversal row pattern same as FR-TIME-001 correction_to)
-  - DEC-565 (BRAIN audit kinds: inv.cash_app_match_attempted, inv.cash_app_matched_step1, inv.cash_app_matched_step2, inv.cash_app_matched_step3, inv.cash_app_matched_manual, inv.cash_app_no_match, inv.cash_app_over_allocation_blocked, inv.cash_app_partial_allocated, inv.cash_app_allocation_reversed)
+  - DEC-565 (memory audit kinds: inv.cash_app_match_attempted, inv.cash_app_matched_step1, inv.cash_app_matched_step2, inv.cash_app_matched_step3, inv.cash_app_matched_manual, inv.cash_app_no_match, inv.cash_app_over_allocation_blocked, inv.cash_app_partial_allocated, inv.cash_app_allocation_reversed)
   - DEC-566 (closed 5-value allocation_source enum: memo_parser · amount_date · fuzzy · manual · reversal — tied to which cascade step performed the match; downstream analytics depends on this)
   - DEC-567 (fuzzy step3 tolerance = 5% — most underpayments fall within this window; > 5% mismatch routes to manual review; ADR to raise/lower threshold)
   - DEC-568 (manual handler requires CFO role per FR-AUTH-101 — accountant can SUGGEST but CFO commits; emits sev-2 audit row since manual ledger touches are forensically critical)
@@ -34,7 +34,7 @@ source_decisions:
   - DEC-572 (invoice's `amount_minor_outstanding` is a generated column = amount_minor - SUM(allocations) — kept consistent via the over-allocation trigger; invoice auto-marked `paid` when outstanding = 0)
   - DEC-573 (`inv.cash_app_no_match` after all 4 steps emit at sev-3 — accumulates an actionable backlog for CFO review; > 10 unmatched at hour 24 → sev-2 escalation)
   - DEC-574 (cash app uses the privileged `inv_cash_applier` SQL role from FR-INV-005 — column-level UPDATE on payment_receipts.invoice_id; mirrors that pattern for payment_allocations)
-  - PDPL Art. 13 (data minimisation — invoice memo + payment reference scrubbed in BRAIN chain)
+  - PDPL Art. 13 (data minimisation — invoice memo + payment reference scrubbed in memory chain)
   - SOC 2 CC6.1 (data integrity — ledger reconciliation must be deterministic + auditable)
   - ISO 27001 A.12.4 (audit logging — all matching decisions logged)
 
@@ -52,7 +52,7 @@ new_files:
   - services/inv/src/cash_app/allocator.rs                     # atomic allocation writer + over-allocation check
   - services/inv/src/cash_app/scheduler.rs                     # 5-min job
   - services/inv/src/cash_app/repo.rs
-  - services/inv/src/cash_app/audit.rs                         # 9 BRAIN row builders
+  - services/inv/src/cash_app/audit.rs                         # 9 memory row builders
   - services/inv/src/handlers/cash_app.rs                      # POST /allocate-manual + POST /reverse + GET /unmatched
   - services/inv/tests/cash_app_cascade_test.rs
   - services/inv/tests/cash_app_step1_exact_ref_test.rs
@@ -94,7 +94,7 @@ sub_tasks:
   - "0.8h: allocator.rs — atomic write + over-allocation check + reversal"
   - "0.5h: scheduler.rs — 5-min job + advisory lock"
   - "0.4h: repo.rs"
-  - "0.5h: audit.rs — 9 BRAIN row builders"
+  - "0.5h: audit.rs — 9 memory row builders"
   - "0.6h: handlers/cash_app.rs"
   - "1.6h: tests — 12 test files"
 
@@ -123,8 +123,8 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
     - Query: `SELECT id, amount_minor, currency, transfer_memo FROM payment_receipts WHERE invoice_id IS NULL AND received_at > now() - interval '90 days' FOR UPDATE SKIP LOCKED`.
     - For each receipt: invoke `cascade::try_match(receipt)` running steps 1 → 2 → 3 sequentially; step 4 is operator-driven (never auto-run).
     - Each step returns `Match { invoice_id, amount_minor_allocated, source }` or `NoMatch`.
-    - On Match: INSERT `payment_allocations` row + UPDATE `payment_receipts.invoice_id` + emit step-specific BRAIN row.
-    - On NoMatch after step 3: emit `inv.cash_app_no_match` BRAIN row sev-3.
+    - On Match: INSERT `payment_allocations` row + UPDATE `payment_receipts.invoice_id` + emit step-specific memory row.
+    - On NoMatch after step 3: emit `inv.cash_app_no_match` memory row sev-3.
 
 7. **MUST** implement **step 1 — exact memo reference match** (per DEC-560). Reuses FR-INV-005's `extract_invoice_id` parser on `transfer_memo`. Match → INSERT allocation with full receipt amount; `allocation_source='memo_parser'`. Already handled at webhook time for ~80% of cases; this step catches receipts where memo parser deferred (e.g. when `payment_intent.metadata.invoice_id` was absent on Stripe path).
 
@@ -137,7 +137,7 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
     - Body: `{receipt_id, invoice_id, amount_minor, notes}`.
     - Validates `amount_minor > 0 AND <= receipt.amount_minor_remaining AND <= invoice.amount_minor_outstanding`.
     - INSERT allocation with `allocation_source='manual'`.
-    - Emit `inv.cash_app_matched_manual` BRAIN row sev-2 (every manual ledger touch is forensically critical).
+    - Emit `inv.cash_app_matched_manual` memory row sev-2 (every manual ledger touch is forensically critical).
 
 11. **MUST** support **partial allocation** (per DEC-562). One receipt MAY split across N invoices; one invoice MAY receive M receipts. Constraint enforced at trigger:
     - SUM(allocations.amount_minor WHERE receipt_id = R) ≤ receipt.amount_minor.
@@ -149,7 +149,7 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
     - Body: `{allocation_id, reason}`.
     - INSERT new row with `amount_minor = -original.amount_minor`, `reverses_allocation_id = original.id`, `allocation_source='reversal'`, `notes = reason`.
     - Constraint trigger handles — net sums adjust.
-    - Emit `inv.cash_app_allocation_reversed` BRAIN row sev-2.
+    - Emit `inv.cash_app_allocation_reversed` memory row sev-2.
 
 13. **MUST** ship `invoice_outstanding_view` SQL view (per DEC-572):
     ```sql
@@ -167,7 +167,7 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
 
 15. **MUST** ship `GET /v1/inv/cash-app/unmatched?from=<ts>&to=<ts>` handler (per DEC-573). Returns unmatched receipts (`invoice_id IS NULL` after step 3 ran). Caller MUST have role `cfo`. Body: `[{receipt_id, amount_minor, currency, transfer_memo, received_at, suggested_matches: [...top 3 fuzzy candidates...]}]`.
 
-16. **MUST** emit 9 BRAIN audit row kinds (per DEC-565):
+16. **MUST** emit 9 memory audit row kinds (per DEC-565):
     - `inv.cash_app_match_attempted` — every job-run on a receipt (sampled 10%).
     - `inv.cash_app_matched_step1` — memo_parser hit during scheduled job.
     - `inv.cash_app_matched_step2` — amount_date hit.
@@ -178,7 +178,7 @@ The INV service **MUST** ship cash application as a closed 4-step matching casca
     - `inv.cash_app_partial_allocated` — receipt split across multiple invoices.
     - `inv.cash_app_allocation_reversed` — reversal recorded (sev-2).
 
-17. **MUST** PII-scrub `notes` + `transfer_memo` via FR-BRAIN-111 before chain commit.
+17. **MUST** PII-scrub `notes` + `transfer_memo` via FR-MEMORY-111 before chain commit.
 
 18. **MUST** sev-2 escalate when receipts remain unmatched > 24h (per DEC-573). OBS rule: `inv.cash_app_no_match` count over last hour > 10 → sev-2 alarm to CFO Slack channel.
 
@@ -692,7 +692,7 @@ pub async fn allocate_manual(
 29. **OTel span `inv.cash_app.cascade` emitted** — outcome attribute.
 30. **Counter `inv_cash_app_match_total{source=memo_parser, outcome=matched}` increments**.
 31. **Counter `inv_cash_app_over_allocation_blocked_total` sev-1 alarm always**.
-32. **9 BRAIN audit kinds emit correctly** — one per scenario.
+32. **9 memory audit kinds emit correctly** — one per scenario.
 
 ---
 
@@ -794,7 +794,7 @@ async fn manual_match_by_cfo_succeeds(ctx: TestCtx) {
         "notes": "Verified payment by phone confirmation 2026-05-15"
     })).await.unwrap();
     assert_eq!(resp.status(), 201);
-    let rows = ctx.brain_audit_rows("inv.cash_app_matched_manual").await;
+    let rows = ctx.memory_audit_rows("inv.cash_app_matched_manual").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["severity"], "sev-2");
 }
@@ -814,7 +814,7 @@ async fn manual_match_by_non_cfo_rejected(ctx: TestCtx) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 9 BRAIN row builders follow canonical pattern.)
+(API contract above is the skeleton; 9 memory row builders follow canonical pattern.)
 
 ---
 
@@ -829,8 +829,8 @@ async fn manual_match_by_non_cfo_rejected(ctx: TestCtx) {
 **Cross-module:**
 - **FR-INV-001** — invoices table (FK target + currency + amount_minor).
 - **FR-AUTH-101** — CFO role gate.
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing.
 - **FR-OBS-007** — sev-1 alarm on over-allocation + sev-2 on no-match > 24h.
 - **FR-AI-005** — per-tenant fuzzy threshold policy.
 
@@ -887,7 +887,7 @@ Response:
 }
 ```
 
-### 8.4 — inv.cash_app_matched_step3 BRAIN row
+### 8.4 — inv.cash_app_matched_step3 memory row
 
 ```json
 {
@@ -902,7 +902,7 @@ Response:
 }
 ```
 
-### 8.5 — inv.cash_app_over_allocation_blocked BRAIN row (sev-1)
+### 8.5 — inv.cash_app_over_allocation_blocked memory row (sev-1)
 
 ```json
 {
@@ -917,7 +917,7 @@ Response:
 }
 ```
 
-### 8.6 — inv.cash_app_allocation_reversed BRAIN row (sev-2)
+### 8.6 — inv.cash_app_allocation_reversed memory row (sev-2)
 
 ```json
 {
@@ -966,7 +966,7 @@ All other questions resolved.
 | Currency-mismatch at step 2 | query filter | Skip to step 3 | Designed |
 | Currency-mismatch at step 3 | query filter | NoMatch | Designed |
 | Invoice auto-mark paid race | UPDATE WHERE status != 'paid' | Idempotent | Designed |
-| BRAIN audit emit fail mid-tx | rollback | 500 + retry | brain_writer health |
+| memory audit emit fail mid-tx | rollback | 500 + retry | memory_writer health |
 | OTel span attribute missing | otel_test | CI fails | Fix |
 | > 10 unmatched at 24h | OBS rule | sev-2 alarm | Operator review |
 | Reversal of already-reversed | sum trigger | OK (net zero is fine; sum stays bounded) | Designed |
@@ -996,7 +996,7 @@ All other questions resolved.
 - **CFO-only manual** — segregation of duties.
 - **5% fuzzy default** — industry standard.
 - **Per-tenant fuzzy override [1,20]%** — flexibility with bounds.
-- **9 BRAIN audit kinds** — granular operator queries.
+- **9 memory audit kinds** — granular operator queries.
 - **Sev-1 alarm on over-allocation** — ledger-corruption signal.
 - **Sev-2 escalation on > 10 no-match at 24h** — actionable backlog.
 - **Auto-mark `paid` via trigger** — invoice status stays consistent.

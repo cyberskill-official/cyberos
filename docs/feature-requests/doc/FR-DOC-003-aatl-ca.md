@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-001, FR-DOC-005, FR-DOC-006, FR-DOC-011, FR-AUTH-105, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-001, FR-DOC-005, FR-DOC-006, FR-DOC-011, FR-AUTH-105, FR-MEMORY-111]
 depends_on: [FR-DOC-001]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1782 2026-05-17 — Closed enum `aatl_request_kind` = {certificate_enroll, signature_request, validation_check, certificate_revoke}; cardinality 4
   - DEC-1783 2026-05-17 — Per-tenant AATL creds in KMS (CISO-only); tenant selects partner at first US/non-EU signing
   - DEC-1784 2026-05-17 — Returns PAdES-B-T signatures (similar to QTSP but US Adobe-trust chain); composes with FR-DOC-011 LTV
-  - DEC-1785 2026-05-17 — BRAIN audit kinds: doc.aatl_signature_requested, doc.aatl_signature_received, doc.aatl_cert_validated, doc.aatl_failed
+  - DEC-1785 2026-05-17 — memory audit kinds: doc.aatl_signature_requested, doc.aatl_signature_received, doc.aatl_cert_validated, doc.aatl_failed
 
 build_envelope:
   language: rust 1.81
@@ -79,7 +79,7 @@ risk_if_skipped: "Without AATL CA, US/global contracts can't get Adobe-trusted s
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship AATL CA integration at `services/doc/src/aatl/` with 3 partners + abstraction, AATL root validation, PAdES-B-T signatures, 4 BRAIN audit kinds.
+The DOC service **MUST** ship AATL CA integration at `services/doc/src/aatl/` with 3 partners + abstraction, AATL root validation, PAdES-B-T signatures, 4 memory audit kinds.
 
 1. **MUST** support 3 partners per DEC-1780 — DigiCert, Entrust, IdenTrust; abstraction at `abstraction.rs::dispatcher(partner)`.
 
@@ -143,7 +143,7 @@ The DOC service **MUST** ship AATL CA integration at `services/doc/src/aatl/` wi
    GET    /v1/doc/aatl/signatures/{doc_id}
    ```
 
-10. **MUST** emit 4 BRAIN audit kinds per DEC-1785. PII per FR-BRAIN-111: signature + cert chain SHA-256 hashed.
+10. **MUST** emit 4 memory audit kinds per DEC-1785. PII per FR-MEMORY-111: signature + cert chain SHA-256 hashed.
 
 11. **MUST** thread trace_id end-to-end.
 
@@ -172,7 +172,7 @@ See §1.9 for endpoints. Same payload shape as FR-DOC-002.
 ---
 
 ## §4 — Acceptance criteria
-1. **3 partners + cardinality test**. 2. **DigiCert client works**. 3. **Entrust client works**. 4. **IdenTrust client works**. 5. **AATL root validation enforced**. 6. **PAdES-B-T returned**. 7. **Timestamp included**. 8. **4-request-kind enum + cardinality**. 9. **CISO-only creds**. 10. **Creds in KMS**. 11. **4 BRAIN audit kinds emitted**. 12. **PII scrubbed (sig+chain SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **FR-DOC-005 integration**. 16. **Append-only sigs via REVOKE except status**. 17. **Non-AATL chain rejected**. 18. **Sandbox + prod env per partner**. 19. **Cert revoke path**. 20. **Composes with FR-DOC-011 for LTV**.
+1. **3 partners + cardinality test**. 2. **DigiCert client works**. 3. **Entrust client works**. 4. **IdenTrust client works**. 5. **AATL root validation enforced**. 6. **PAdES-B-T returned**. 7. **Timestamp included**. 8. **4-request-kind enum + cardinality**. 9. **CISO-only creds**. 10. **Creds in KMS**. 11. **4 memory audit kinds emitted**. 12. **PII scrubbed (sig+chain SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **FR-DOC-005 integration**. 16. **Append-only sigs via REVOKE except status**. 17. **Non-AATL chain rejected**. 18. **Sandbox + prod env per partner**. 19. **Cert revoke path**. 20. **Composes with FR-DOC-011 for LTV**.
 
 ---
 
@@ -209,7 +209,7 @@ async fn padesblt_via_doc_011_after_aatl() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-001.
-**Cross-module:** FR-DOC-005 (caller), FR-DOC-006 (verify gate), FR-DOC-011 (LTV re-stamp), FR-AUTH-105 (KMS), FR-AUTH-101 (CISO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-005 (caller), FR-DOC-006 (verify gate), FR-DOC-011 (LTV re-stamp), FR-AUTH-105 (KMS), FR-AUTH-101 (CISO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes (mirror DOC-002)
 Same shape — partner down, cert expired, AATL list lag, etc.
@@ -218,7 +218,7 @@ Same shape — partner down, cert expired, AATL list lag, etc.
 - §11.1 Each partner has REST API; auth via API key + (sometimes) mTLS.
 - §11.2 AATL root list refreshed quarterly from Adobe; cached in service.
 - §11.3 PAdES-B-T includes signature timestamp; FR-DOC-011 extends to B-LT.
-- §11.4 BRAIN audit body: doc_id, signer_id, partner, aatl_root_validated; signatures SHA256.
+- §11.4 memory audit body: doc_id, signer_id, partner, aatl_root_validated; signatures SHA256.
 - §11.5 Same abstraction pattern as DOC-002; allows future partner additions.
 
 ---

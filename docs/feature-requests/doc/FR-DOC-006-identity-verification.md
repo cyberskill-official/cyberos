@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CISO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-001, FR-AUTH-105, FR-DOC-005, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-001, FR-AUTH-105, FR-DOC-005, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-AUTH-105]
 blocks: [FR-DOC-005]
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1742 2026-05-17 — Closed enum `verification_result` = {verified, failed_invalid, failed_expired, failed_no_match}; cardinality 4
   - DEC-1743 2026-05-17 — eIDAS Level mapping: webauthn=high, vneid=substantial, sms_otp+email_link=low; document signing per FR-DOC-005 enforces minimum level
   - DEC-1744 2026-05-17 — Verification audit (immutable): method + result + assurance_level + signer_id + verification_at
-  - DEC-1745 2026-05-17 — BRAIN audit kinds: doc.verification_initiated, doc.verification_succeeded, doc.verification_failed, doc.verification_expired
+  - DEC-1745 2026-05-17 — memory audit kinds: doc.verification_initiated, doc.verification_succeeded, doc.verification_failed, doc.verification_expired
 
 build_envelope:
   language: rust 1.81
@@ -79,7 +79,7 @@ risk_if_skipped: "Without verification, signatures lack signer identity proof �
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship identity verification at `services/doc/src/verification/` supporting 4 methods with eIDAS level mapping, immutable audit, 4 BRAIN audit kinds.
+The DOC service **MUST** ship identity verification at `services/doc/src/verification/` supporting 4 methods with eIDAS level mapping, immutable audit, 4 memory audit kinds.
 
 1. **MUST** support 4 methods per DEC-1740 — webauthn / vneid / sms_otp / email_link.
 
@@ -111,7 +111,7 @@ The DOC service **MUST** ship identity verification at `services/doc/src/verific
      challenge_id TEXT,
      verified_at TIMESTAMPTZ,
      failure_reason TEXT,
-     ip_address TEXT,  -- hashed per FR-BRAIN-111
+     ip_address TEXT,  -- hashed per FR-MEMORY-111
      user_agent TEXT,
      trace_id CHAR(32),
      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -132,7 +132,7 @@ The DOC service **MUST** ship identity verification at `services/doc/src/verific
    GET    /v1/doc/documents/{id}/verifications      (signer-scoped list)
    ```
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-1745. PII per FR-BRAIN-111: ip_address SHA-256 hashed; signer_id (uuid) ok.
+8. **MUST** emit 4 memory audit kinds per DEC-1745. PII per FR-MEMORY-111: ip_address SHA-256 hashed; signer_id (uuid) ok.
 
 9. **MUST** thread trace_id from start → complete → audit.
 
@@ -184,7 +184,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **4 methods enum + cardinality test**. 2. **4 results enum + cardinality test**. 3. **Assurance levels mapped correctly**. 4. **Min level enforced per document**. 5. **WebAuthn FIDO2 flow works**. 6. **VNeID OAuth callback works**. 7. **SMS OTP 6-digit format**. 8. **Email magic-link token**. 9. **Challenge expiry enforced (5/10/24min/h)**. 10. **4 BRAIN audit kinds emitted**. 11. **PII scrubbed (IP SHA256)**. 12. **RLS denies cross-tenant**. 13. **Audit immutable (no UPDATE/DELETE grant)**. 14. **Trace_id preserved**. 15. **Multiple verifications per signer allowed (retry on fail)**. 16. **Multiple signers per doc**. 17. **Verification status visible to AM**. 18. **Failed reasons categorized (invalid/expired/no_match)**. 19. **Challenge_id one-time use**. 20. **eIDAS level downgrade attempt rejected**.
+1. **4 methods enum + cardinality test**. 2. **4 results enum + cardinality test**. 3. **Assurance levels mapped correctly**. 4. **Min level enforced per document**. 5. **WebAuthn FIDO2 flow works**. 6. **VNeID OAuth callback works**. 7. **SMS OTP 6-digit format**. 8. **Email magic-link token**. 9. **Challenge expiry enforced (5/10/24min/h)**. 10. **4 memory audit kinds emitted**. 11. **PII scrubbed (IP SHA256)**. 12. **RLS denies cross-tenant**. 13. **Audit immutable (no UPDATE/DELETE grant)**. 14. **Trace_id preserved**. 15. **Multiple verifications per signer allowed (retry on fail)**. 16. **Multiple signers per doc**. 17. **Verification status visible to AM**. 18. **Failed reasons categorized (invalid/expired/no_match)**. 19. **Challenge_id one-time use**. 20. **eIDAS level downgrade attempt rejected**.
 
 ---
 
@@ -230,7 +230,7 @@ async fn challenge_expiry() {
 ## §7 — Dependencies
 **Upstream:** FR-AUTH-105.
 **Downstream:** FR-DOC-005 (multi-party signing uses this).
-**Cross-module:** FR-BRAIN-111 (PII), FR-DOC-001 (document RLS context).
+**Cross-module:** FR-MEMORY-111 (PII), FR-DOC-001 (document RLS context).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -251,7 +251,7 @@ async fn challenge_expiry() {
 - §11.2 VNeID: integrate via official VN gov OAuth (placeholder until contracted).
 - §11.3 OTP: 6-digit; Twilio for global, VN provider (Esms.vn) for VN tenants.
 - §11.4 Email-link: signed token; 24h expiry; one-time-use.
-- §11.5 BRAIN audit body: doc_id, signer_id, method, result, assurance_level; IP SHA256.
+- §11.5 memory audit body: doc_id, signer_id, method, result, assurance_level; IP SHA256.
 
 ---
 

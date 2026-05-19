@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-001, FR-DOC-005, FR-DOC-006, FR-DOC-011, FR-AUTH-105, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-001, FR-DOC-005, FR-DOC-006, FR-DOC-011, FR-AUTH-105, FR-MEMORY-111]
 depends_on: [FR-DOC-001]
 blocks: [FR-DOC-011]
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1772 2026-05-17 — Closed enum `qtsp_request_kind` = {certificate_request, signature_request, validation_request, revocation_check}; cardinality 4
   - DEC-1773 2026-05-17 — Per-tenant QTSP creds in KMS (CISO-only write); tenant chooses partner at residency=eu-1 setup
   - DEC-1774 2026-05-17 — Returns PAdES-B-LT signature with full LTV chain (cert + OCSP/CRL + timestamp); composes with FR-DOC-011
-  - DEC-1775 2026-05-17 — BRAIN audit kinds: doc.qtsp_signature_requested, doc.qtsp_signature_received, doc.qtsp_cert_validated, doc.qtsp_failed
+  - DEC-1775 2026-05-17 — memory audit kinds: doc.qtsp_signature_requested, doc.qtsp_signature_received, doc.qtsp_cert_validated, doc.qtsp_failed
 
 build_envelope:
   language: rust 1.81
@@ -78,7 +78,7 @@ risk_if_skipped: "Without eIDAS QTSP, EU contracts lack qualified signature → 
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship eIDAS QTSP integration at `services/doc/src/qtsp/` with partner abstraction, cert chain validation, PAdES-B-LT signatures, 4 BRAIN audit kinds.
+The DOC service **MUST** ship eIDAS QTSP integration at `services/doc/src/qtsp/` with partner abstraction, cert chain validation, PAdES-B-LT signatures, 4 memory audit kinds.
 
 1. **MUST** support 2 partners per DEC-1770 — GlobalSign + Cryptomathic; abstraction at `abstraction.rs::dispatcher(partner)`.
 
@@ -147,7 +147,7 @@ The DOC service **MUST** ship eIDAS QTSP integration at `services/doc/src/qtsp/`
    GET    /v1/doc/qtsp/signatures/{doc_id}    (audit query)
    ```
 
-10. **MUST** emit 4 BRAIN audit kinds per DEC-1775. PII per FR-BRAIN-111: signature_value + cert_chain hashed; ids ok.
+10. **MUST** emit 4 memory audit kinds per DEC-1775. PII per FR-MEMORY-111: signature_value + cert_chain hashed; ids ok.
 
 11. **MUST** thread trace_id from FR-DOC-005 request → partner call → cert validation → audit.
 
@@ -201,7 +201,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **2 partners + enum cardinality test**. 2. **GlobalSign DSS REST works**. 3. **Cryptomathic Signer API works**. 4. **Cert chain validated to EU Trust List root**. 5. **OCSP/CRL revocation checked**. 6. **PAdES-B-LT format returned**. 7. **Timestamp authority signed**. 8. **request_kind enum cardinality 4**. 9. **CISO-only creds (403 for others)**. 10. **Creds in KMS only**. 11. **4 BRAIN audit kinds emitted**. 12. **PII scrubbed (signature value + cert chain SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **FR-DOC-005 integration works**. 16. **Append-only sigs table via REVOKE except status cols**. 17. **Revoked cert detection → status=revoked**. 18. **Partner failover (if A down, manual switch to B)**. 19. **Composes with FR-DOC-011 for LTV re-stamping**. 20. **Sandbox + prod environments per partner**.
+1. **2 partners + enum cardinality test**. 2. **GlobalSign DSS REST works**. 3. **Cryptomathic Signer API works**. 4. **Cert chain validated to EU Trust List root**. 5. **OCSP/CRL revocation checked**. 6. **PAdES-B-LT format returned**. 7. **Timestamp authority signed**. 8. **request_kind enum cardinality 4**. 9. **CISO-only creds (403 for others)**. 10. **Creds in KMS only**. 11. **4 memory audit kinds emitted**. 12. **PII scrubbed (signature value + cert chain SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **FR-DOC-005 integration works**. 16. **Append-only sigs table via REVOKE except status cols**. 17. **Revoked cert detection → status=revoked**. 18. **Partner failover (if A down, manual switch to B)**. 19. **Composes with FR-DOC-011 for LTV re-stamping**. 20. **Sandbox + prod environments per partner**.
 
 ---
 
@@ -241,7 +241,7 @@ async fn padesblt_format_returned() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-001.
-**Cross-module:** FR-DOC-005 (caller), FR-DOC-006 (verification gate), FR-DOC-011 (LTV re-stamping), FR-AUTH-105 (KMS), FR-AUTH-101 (CISO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-005 (caller), FR-DOC-006 (verification gate), FR-DOC-011 (LTV re-stamping), FR-AUTH-105 (KMS), FR-AUTH-101 (CISO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -261,7 +261,7 @@ async fn padesblt_format_returned() {
 - §11.1 GlobalSign DSS: REST endpoint per partner docs; signs PDF hash, returns CMS.
 - §11.2 Cryptomathic: similar DSS shape; both return PAdES-compatible CMS structure.
 - §11.3 Cert chain validator uses `x509-parser` + `oid-registry`; root list from EU Trust List XML.
-- §11.4 BRAIN audit body: doc_id, signer_id, partner, status; signature_value + cert_chain SHA256.
+- §11.4 memory audit body: doc_id, signer_id, partner, status; signature_value + cert_chain SHA256.
 - §11.5 Future partners: add new enum value + new client file; abstraction is the seam.
 
 ---

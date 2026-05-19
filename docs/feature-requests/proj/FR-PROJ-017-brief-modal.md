@@ -3,7 +3,7 @@ id: FR-PROJ-017
 title: "Brief Modal — issue deep-view with Yjs description editor + threaded comments + LWW meta sidebar + presence cursors"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-002, FR-PROJ-003, FR-PROJ-004, FR-PROJ-008, FR-PROJ-014, FR-PROJ-018]
 depends_on: [FR-PROJ-003]
 blocks: []
@@ -94,7 +94,7 @@ The Brief Modal **MUST** be a unified deep-view for one issue with collaborative
     - C focuses new-comment composer.
     - H toggles history drawer.
     - Cmd+S explicit save (no-op visual feedback; "auto-saved" indicator).
-9. **MUST** emit BRAIN audit `proj.brief_modal_opened` per open with `{issue_id, by_subject_id, opened_from, trace_id}` where opened_from ∈ kanban | timeline | gantt | url | search.
+9. **MUST** emit memory audit `proj.brief_modal_opened` per open with `{issue_id, by_subject_id, opened_from, trace_id}` where opened_from ∈ kanban | timeline | gantt | url | search.
 10. **MUST** RLS-enforce (issue + comments + history).
 11. **MUST** pass axe-core (focus-trap inside modal; restore focus on close; aria-modal=true).
 12. **MUST** emit OTel:
@@ -106,7 +106,7 @@ The Brief Modal **MUST** be a unified deep-view for one issue with collaborative
 15. **MUST** support attachments on comments: file upload via FR-FILES (max 25MB per file, 5 files per comment); previewable images/PDFs inline.
 16. **MUST** support reactions on comments: emoji picker; each comment shows reaction tallies; clicking re-toggles user's reaction.
 17. **MUST** support `@lumi` invocation in comments: routes to FR-CHAT-008 sibling handler scoped to issue context (description + recent comments).
-18. **MUST** support "link" actions in sidebar: quick-add issue dependencies (FR-PROJ-016) + brain-links (FR-PROJ-009) without leaving modal.
+18. **MUST** support "link" actions in sidebar: quick-add issue dependencies (FR-PROJ-016) + memory-links (FR-PROJ-009) without leaving modal.
 19. **MUST** support draft comment auto-save: composer text persists per-issue per-user in `localStorage`; on next modal open, restored.
 20. **MUST** support keyboard navigation through comments: J/K moves comment focus; Reply opens reply composer threaded under that comment.
 21. **MUST** show "X is typing..." indicator below comment composer when another user has the composer open; throttled per Yjs awareness.
@@ -143,7 +143,7 @@ The Brief Modal **MUST** be a unified deep-view for one issue with collaborative
 
 **Why @lumi in comments (§1 #17)?** LLM-assisted clarification inline; doesn't require leaving the modal.
 
-**Why link actions in sidebar (§1 #18)?** Adding dependencies/brain-links is workflow-adjacent; in-modal action eliminates context switch.
+**Why link actions in sidebar (§1 #18)?** Adding dependencies/memory-links is workflow-adjacent; in-modal action eliminates context switch.
 
 **Why draft auto-save (§1 #19)?** Operator drafting long comment + modal accidentally closes = lost text. localStorage = survives session.
 
@@ -167,7 +167,7 @@ export function BriefModal({ issueId, openedFrom }: { issueId: string; openedFro
   const isMobile = useMediaQuery('(max-width: 1023px)');
 
   useEffect(() => {
-    emitBrain('proj.brief_modal_opened', { issue_id: issueId, opened_from: openedFrom });
+    emitMemory('proj.brief_modal_opened', { issue_id: issueId, opened_from: openedFrom });
     history.pushState({}, '', `/proj/issues/${issueId}/brief`);
     return () => {
       // Restore prior URL on close
@@ -292,7 +292,7 @@ export function HistoryDrawer({ issueId }: { issueId: string }) {
 16. **Cmd+S shows auto-saved toast** — no-op but feedback.
 17. **Focus trap** — Tab cycles within modal; doesn't escape to background.
 18. **Focus restore on close** — modal close → focus returns to opening element.
-19. **BRAIN audit modal_opened** — per open → row with opened_from.
+19. **memory audit modal_opened** — per open → row with opened_from.
 20. **OTel modal_opens_total counter** — per open → counter increments.
 21. **axe-core passes** — aria-modal + focus-trap + labels correct.
 22. **RLS isolates** — tenant A's issue invisible to tenant B's modal request → 404.
@@ -470,7 +470,7 @@ All resolved. Deferred:
 - Comment threading depth ≤ 5 calibrated against UX studies; deeper = unreadable.
 - Mention notifications respect notify_props (FR-CHAT-011-style); user can disable mentions per-engagement.
 - The "@lumi in comment" feature is opt-in per engagement (per-tenant Lumi settings inherited).
-- Sidebar quick-links emit BRAIN audit per action (link added/removed).
+- Sidebar quick-links emit memory audit per action (link added/removed).
 - Draft auto-save is cleared on successful comment submit OR explicit "discard draft" button.
 - Reactions don't notify; they're lightweight feedback. Operators wanting notify use mentions.
 - Markdown shortcuts work in description editor AND comment composer; consistent UX.

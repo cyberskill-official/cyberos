@@ -18,7 +18,7 @@ related_frs: [FR-CUO-106, FR-CUO-104]
 2. Workflows missing `pattern:` **MUST** be rejected by catalog validation at scan time; running such workflows is impossible by construction.
 3. Pattern → handler mapping **MUST** be declared in a single canonical table (`modules/cuo/cuo/supervisor/dispatcher.py`); the table is the contract.
 4. New patterns **MUST NOT** be added at runtime — adding a pattern requires editing the dispatch table + adding the Handler class + extending the test matrix.
-5. The handler dispatch decision **MUST** be auditable in the per-chain BRAIN row (`pattern` + `handler_class` fields).
+5. The handler dispatch decision **MUST** be auditable in the per-chain memory row (`pattern` + `handler_class` fields).
 
 ## §2 — Why this constraint
 

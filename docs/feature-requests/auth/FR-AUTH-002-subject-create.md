@@ -3,7 +3,7 @@ id: FR-AUTH-002
 title: "Subject create — POST /v1/admin/subjects with bcrypt + role allow-list + idempotency + RLS-enforced cross-tenant blocking"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-101]
 depends_on: [FR-AUTH-001]
 blocks: [FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-102, FR-AUTH-106, FR-AUTH-107]
@@ -55,7 +55,7 @@ sub_tasks:
   - "0.5h: password.rs (validate complexity + bcrypt cost-12 hash + verify helper)"
   - "1.0h: create_subject handler with role-gate + RLS context + transaction"
   - "0.5h: Idempotency-Key handling (mirrors FR-AUTH-001 §1 #5)"
-  - "0.5h: canonical::subject_created BRAIN audit row builder (NO password fields)"
+  - "0.5h: canonical::subject_created memory audit row builder (NO password fields)"
   - "0.5h: TLS-required check (refuse if request not over HTTPS in non-test env)"
   - "1.5h: Tests — happy + 401 + 403 cross-tenant + 409 dupe + 400 invalid email/role/password + idempotent + p95 + audit-row-no-password + bcrypt-verify"
 risk_if_skipped: "AUTH has no users beyond bootstrap operator. Every downstream module (FR-AI-006 JWT extraction, FR-AUTH-004 JWT issuance, FR-AUTH-005 admin REST) has nothing to authenticate. Multi-tenancy works structurally (FR-AUTH-001) but no humans can log in. Without bcrypt-cost discipline + role allow-list, password security degrades to 'whatever the developer felt like that week.'"
@@ -76,7 +76,7 @@ The AUTH service **MUST** expose `POST /v1/admin/subjects` for creating new auth
    Failures return `400 BAD_REQUEST` with body `{"error":"weak_password","reasons":["too_short","no_digit"]}` — multiple reasons reported in one response.
 5. **MUST** restrict assignable roles to a closed allow-list defined in `roles.rs`. Slice 1: `{"tenant-admin", "tenant-member"}`. Unknown role returns `400 BAD_REQUEST` with `{"error":"unknown_role","role":"<name>","allowed":[...]}`. The allow-list expands in FR-AUTH-101 to 22 roles.
 6. **MUST** support idempotency via `Idempotency-Key` header (same semantics as FR-AUTH-001 §1 #5). Repeat POST with same key + same body → return prior subject (same id); same key + different body → `409` with `idempotency_key_reuse`.
-7. **MUST** emit exactly one `auth.subject_created` BRAIN audit row per new subject. The row carries `subject_id`, `tenant_id`, `email_hash16` (SHA-256[..16] of email — privacy-preserving identifier), `roles`, `created_by_subject_id`, `request_id`. The row MUST NOT contain plaintext password, password hash, OR the full email — `email_hash16` is the privacy-safe identifier.
+7. **MUST** emit exactly one `auth.subject_created` memory audit row per new subject. The row carries `subject_id`, `tenant_id`, `email_hash16` (SHA-256[..16] of email — privacy-preserving identifier), `roles`, `created_by_subject_id`, `request_id`. The row MUST NOT contain plaintext password, password hash, OR the full email — `email_hash16` is the privacy-safe identifier.
 8. **MUST** return `{ "id": <uuid>, "tenant_id": <uuid>, "email": <string>, "roles": [...], "suspended": false, "created_at": <ISO8601> }` — NEVER the password hash, NEVER the plaintext password.
 9. **MUST** return `409 CONFLICT` with `{"error":"email_taken","tenant_id":<uuid>,"email":"<email>"}` if the (tenant_id, email) pair already exists. UNIQUE constraint on `(tenant_id, email)` enforces at DB layer.
 10. **MUST** complete in ≤ 200ms p95 (bcrypt cost 12 ≈ 150ms; remaining 50ms for DB + validation + audit). If bcrypt latency degrades the budget, switch to cost 10 ONLY via FR amendment.
@@ -236,7 +236,7 @@ pub fn hash_password(password: &str) -> Result<String, SubjectError> {
 11. **HTTP (no X-Forwarded-Proto: https) in non-test env returns 400** with `https_required`.
 12. **Password stored as bcrypt cost 12 hash** — `bcrypt::verify(plaintext, stored_hash)` returns true; hash starts with `$2b$12$`.
 13. **Response NEVER contains password or password_hash** — JSON output assertion.
-14. **BRAIN audit row emitted** with `email_hash16` (NOT plaintext email) and NO password fields.
+14. **memory audit row emitted** with `email_hash16` (NOT plaintext email) and NO password fields.
 15. **Idempotent replay returns same subject id** with same key + body.
 16. **Latency p95 < 200ms** including bcrypt hash.
 17. **Cross-tenant blocked at RLS layer** — even if API check is bypassed, `subjects.tenant_id != current_setting('app.tenant_id')::uuid` filters out.
@@ -258,7 +258,7 @@ async fn tenant_admin_creates_subject() {
         }, None, &pool, &claims, "req",
     ).await.unwrap();
     assert_eq!(resp.email, "alice@cyberos.world");
-    assert!(brain_test_helper::has_row("auth.subject_created", &resp.id.to_string()).await);
+    assert!(memory_test_helper::has_row("auth.subject_created", &resp.id.to_string()).await);
 
     // Verify response doesn't contain password fields
     let json = serde_json::to_value(&resp).unwrap();
@@ -338,7 +338,7 @@ async fn password_stored_as_bcrypt_cost_12() {
 #[tokio::test]
 async fn audit_row_has_no_password_or_email() {
     let resp = ...; // create as above
-    let row = brain_test_helper::find_latest_row("auth.subject_created").unwrap();
+    let row = memory_test_helper::find_latest_row("auth.subject_created").unwrap();
     let payload_json = serde_json::to_string(&row.payload).unwrap();
     assert!(!payload_json.contains("CorrectHorseBatteryStaple9!"));
     assert!(!payload_json.contains("alice@cyberos.world"));
@@ -423,7 +423,7 @@ pub async fn create_subject(
      } else { SubjectError::Db(e) })?;
 
     let email_hash16 = hex::encode(&sha256(req.email.as_bytes())[..8]);
-    brain::emit_in_tx(&mut tx, brain::canonical::subject_created(
+    memory::emit_in_tx(&mut tx, memory::canonical::subject_created(
         row.id, row.tenant_id, &email_hash16, &row.roles, claims.subject_id, request_id,
     )).await?;
 
@@ -520,7 +520,7 @@ All resolved. Deferred:
 | Unknown role | allow-list check | 400 unknown_role | Caller uses allowed role |
 | HTTPS missing | header check | 400 https_required | Caller uses HTTPS |
 | bcrypt failure | bcrypt::hash error | 500 bcrypt | Operator investigates (rare) |
-| BRAIN outbox insert fails | sqlx error | tx rollback; 500 brain_failed | Operator investigates outbox |
+| memory outbox insert fails | sqlx error | tx rollback; 500 memory_failed | Operator investigates outbox |
 | RLS blocks INSERT (tenant_id mismatch) | postgres error | 403 forbidden | Caller correct tenant_id |
 | Latency > 200ms | OTel histogram | sev-3 alarm | Operator investigates bcrypt cost OR DB |
 | Idempotent replay | idempotency lookup | 201 with prior id | By design |

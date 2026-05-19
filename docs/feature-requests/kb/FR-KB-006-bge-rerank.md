@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-004, FR-KB-005, FR-KB-007, FR-AI-020, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-KB-004, FR-KB-005, FR-KB-007, FR-AI-020, FR-MEMORY-111]
 depends_on: [FR-AI-020, FR-KB-005]
 blocks: [FR-KB-007]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1931 2026-05-17 — Closed enum `rerank_source` = {lexical_only, semantic_only, hybrid_lexical_semantic, manual_curation}; cardinality 4
   - DEC-1932 2026-05-17 — Hybrid mode: lexical top-20 + semantic top-20 → dedup → rerank top-40 → return top-10
   - DEC-1933 2026-05-17 — Per-tenant rerank query cache (5min TTL) — same query+source → cached
-  - DEC-1934 2026-05-17 — BRAIN audit kinds: kb.rerank_executed, kb.rerank_cache_hit, kb.rerank_failed
+  - DEC-1934 2026-05-17 — memory audit kinds: kb.rerank_executed, kb.rerank_cache_hit, kb.rerank_failed
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without reranker, lexical+semantic results stay rough — top-
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship reranker at `services/kb/src/rerank/` using BGE-rerank-v2-m3 cross-encoder over FR-KB-004/005 candidates, hybrid merge, 5min cache, 3 BRAIN audit kinds.
+The KB service **MUST** ship reranker at `services/kb/src/rerank/` using BGE-rerank-v2-m3 cross-encoder over FR-KB-004/005 candidates, hybrid merge, 5min cache, 3 memory audit kinds.
 
 1. **MUST** validate `rerank_source` against closed enum per DEC-1931.
 
@@ -108,7 +108,7 @@ The KB service **MUST** ship reranker at `services/kb/src/rerank/` using BGE-rer
    POST /v1/kb/search/rerank   body: {query, source: hybrid_lexical_semantic|lexical_only|semantic_only}
    ```
 
-6. **MUST** emit 3 BRAIN audit kinds per DEC-1934. PII per FR-BRAIN-111: query SHA256 in chain; results count ok.
+6. **MUST** emit 3 memory audit kinds per DEC-1934. PII per FR-MEMORY-111: query SHA256 in chain; results count ok.
 
 7. **MUST** thread trace_id from query → rerank → cache → audit.
 
@@ -167,7 +167,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **rerank_source enum cardinality 4**. 2. **BGE-rerank-v2-m3 cross-encoder**. 3. **Hybrid: lexical+semantic top-20 each, rerank top-40, return top-10**. 4. **Lexical-only mode**. 5. **Semantic-only mode**. 6. **Manual curation passthrough**. 7. **5min cache TTL**. 8. **Cache hit returns from_cache=true**. 9. **3 BRAIN audit kinds emitted**. 10. **PII scrubbed (query SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Cache expiry cron**. 14. **UNIQUE(tenant_id, query_hash, source)**. 15. **Append-only via REVOKE except DELETE**. 16. **Rerank duration < 300ms p95**. 17. **Dedup by chunk_id + doc_id**. 18. **Empty candidates returns empty**. 19. **AI-020 service down → fallback to candidate order + sev-2 audit**. 20. **Score in 0-1 range**.
+1. **rerank_source enum cardinality 4**. 2. **BGE-rerank-v2-m3 cross-encoder**. 3. **Hybrid: lexical+semantic top-20 each, rerank top-40, return top-10**. 4. **Lexical-only mode**. 5. **Semantic-only mode**. 6. **Manual curation passthrough**. 7. **5min cache TTL**. 8. **Cache hit returns from_cache=true**. 9. **3 memory audit kinds emitted**. 10. **PII scrubbed (query SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Cache expiry cron**. 14. **UNIQUE(tenant_id, query_hash, source)**. 15. **Append-only via REVOKE except DELETE**. 16. **Rerank duration < 300ms p95**. 17. **Dedup by chunk_id + doc_id**. 18. **Empty candidates returns empty**. 19. **AI-020 service down → fallback to candidate order + sev-2 audit**. 20. **Score in 0-1 range**.
 
 ---
 
@@ -206,7 +206,7 @@ async fn dedup_across_sources() {
 ## §7 — Dependencies
 **Upstream:** FR-AI-020 (BGE-rerank-v2-m3 service), FR-KB-005.
 **Downstream:** FR-KB-007 (Ask this page Q&A).
-**Cross-module:** FR-KB-004 (lexical input), FR-MCP-007 (cache eviction cron), FR-BRAIN-111 (PII).
+**Cross-module:** FR-KB-004 (lexical input), FR-MCP-007 (cache eviction cron), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -226,7 +226,7 @@ async fn dedup_across_sources() {
 - §11.1 BGE-rerank model hosted via FR-AI-020 inference service.
 - §11.2 Hybrid merge: round-robin interleave lexical[0], semantic[0], lexical[1], semantic[1]... then dedup.
 - §11.3 Cache key: SHA256(query) + source enum; per-tenant scope.
-- §11.4 BRAIN audit body: tenant_id, source, candidate_count, returned_count; query SHA256.
+- §11.4 memory audit body: tenant_id, source, candidate_count, returned_count; query SHA256.
 - §11.5 Cache eviction cron: hourly DELETE WHERE expires_at < now().
 
 ---

@@ -54,7 +54,7 @@ TargetMissing >> TargetSuperseded in severity; flat threshold mis-prioritises. R
 Tenants have different cadence/threshold needs. Resolved: §1 #17 + per-tenant overrides + AC #22.
 
 ### ISS-013 — Operators triage without guidance (strict-redo pass)
-"Memory missing — what should I do?" had no actionable answer. Resolved: §1 #18 + suggested_paths via FR-BRAIN-108 fuzzy + AC #23.
+"Memory missing — what should I do?" had no actionable answer. Resolved: §1 #18 + suggested_paths via FR-MEMORY-108 fuzzy + AC #23.
 
 ### ISS-014 — No safe-preview sweep (strict-redo pass)
 Operator running ad-hoc sweep generated alerts + audit spam. Resolved: §1 #19 + dry-run + AC #24.

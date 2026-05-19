@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-ESOP-001, FR-ESOP-004, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-ESOP-001, FR-ESOP-004, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-ESOP-001]
 blocks: [FR-ESOP-004]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2271 2026-05-17 — Closed enum `valuation_status` = {drafted, cfo_proposed, board_approved, dismissed}; cardinality 4
   - DEC-2272 2026-05-17 — Board approval requires ≥3 board member sign-offs (configurable per tenant; default 3 of 5)
   - DEC-2273 2026-05-17 — UNIQUE per (tenant, year); corrections via new valuation row with explicit "correction_of" link
-  - DEC-2274 2026-05-17 — BRAIN audit kinds: esop.valuation_proposed, esop.valuation_board_signed, esop.valuation_committed, esop.valuation_dismissed, esop.valuation_failed
+  - DEC-2274 2026-05-17 — memory audit kinds: esop.valuation_proposed, esop.valuation_board_signed, esop.valuation_committed, esop.valuation_dismissed, esop.valuation_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without annual valuation, put-option exec price arbitrary. Wit
 
 ## §1 — Description (BCP-14 normative)
 
-The ESOP service **MUST** ship annual valuation at `services/esop/src/valuation/` with CFO propose + Board ≥3-sign + immutable per-year, 5 BRAIN audit kinds.
+The ESOP service **MUST** ship annual valuation at `services/esop/src/valuation/` with CFO propose + Board ≥3-sign + immutable per-year, 5 memory audit kinds.
 
 1. **MUST** validate `valuation_status` against closed enum per DEC-2271.
 
@@ -129,7 +129,7 @@ The ESOP service **MUST** ship annual valuation at `services/esop/src/valuation/
    GET  /v1/esop/valuations/{year}                (current committed)
    ```
 
-6. **MUST** emit 5 BRAIN audit kinds per DEC-2274. PII per FR-BRAIN-111: share price SHA256.
+6. **MUST** emit 5 memory audit kinds per DEC-2274. PII per FR-MEMORY-111: share price SHA256.
 
 7. **MUST** thread trace_id from propose → sign → commit → audit.
 
@@ -177,7 +177,7 @@ Sample committed:
 ---
 
 ## §4 — Acceptance criteria
-1. **valuation_status enum cardinality 4**. 2. **CFO propose required first**. 3. **Board ≥3 signs (configurable)**. 4. **Threshold reached → auto-commit**. 5. **base_share_price_vnd ≥ 0**. 6. **board_multiplier > 0**. 7. **committed = base × multiplier**. 8. **UNIQUE(tenant, year, correction_of)**. 9. **5 BRAIN audit kinds emitted**. 10. **PII scrubbed (share price SHA256)**. 11. **RLS denies cross-tenant**. 12. **CFO-only propose**. 13. **Board member-only sign**. 14. **Trace_id preserved**. 15. **Append-only via REVOKE except status cols**. 16. **Correction via new row**. 17. **Dismiss pre-approval only**. 18. **bigint VND**. 19. **NUMERIC(7,4) multiplier**. 20. **Board threshold config per tenant**.
+1. **valuation_status enum cardinality 4**. 2. **CFO propose required first**. 3. **Board ≥3 signs (configurable)**. 4. **Threshold reached → auto-commit**. 5. **base_share_price_vnd ≥ 0**. 6. **board_multiplier > 0**. 7. **committed = base × multiplier**. 8. **UNIQUE(tenant, year, correction_of)**. 9. **5 memory audit kinds emitted**. 10. **PII scrubbed (share price SHA256)**. 11. **RLS denies cross-tenant**. 12. **CFO-only propose**. 13. **Board member-only sign**. 14. **Trace_id preserved**. 15. **Append-only via REVOKE except status cols**. 16. **Correction via new row**. 17. **Dismiss pre-approval only**. 18. **bigint VND**. 19. **NUMERIC(7,4) multiplier**. 20. **Board threshold config per tenant**.
 
 ---
 
@@ -220,7 +220,7 @@ async fn duplicate_year_blocked() {
 ## §7 — Dependencies
 **Upstream:** FR-ESOP-001.
 **Downstream:** FR-ESOP-004 (put-option uses committed price).
-**Cross-module:** FR-AUTH-101 (CFO + board roles), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-101 (CFO + board roles), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -239,7 +239,7 @@ async fn duplicate_year_blocked() {
 ## §11 — Implementation notes
 - §11.1 Board threshold stored per tenant config (default 3 of 5).
 - §11.2 Commit happens automatically on threshold reach — no separate "commit" endpoint.
-- §11.3 BRAIN audit body: valuation_id, year, status, signs_count; price SHA256.
+- §11.3 memory audit body: valuation_id, year, status, signs_count; price SHA256.
 - §11.4 committed_share_price computed at commit: base × multiplier; stored to avoid recompute.
 - §11.5 Correction creates new row with correction_of link; UNIQUE allows multiple per year via this distinction.
 

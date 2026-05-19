@@ -1,0 +1,118 @@
+# FR-EMAIL-001 §3.1 — Stalwart server config baked into the CyberOS image.
+# Pin: stalwartlabs/mail-server:0.10
+#
+# Env vars resolved at container start:
+#   POSTGRES_HOST, POSTGRES_USER, POSTGRES_PASSWORD
+#   S3_REGION_DEFAULT, S3_BUCKET_DEFAULT, KMS_KEY_DEFAULT
+#
+# Per-tenant residency routing overrides the default S3 bucket via the
+# Stalwart directory-tag mechanism; the FR-EMAIL-001 adapter layer
+# (cyberos-email-cli + the gateway) sets tenant.{id, residency,
+# primary_domain} on user records.
+
+# ============================================================================
+# Storage backends per DEC-301 + DEC-302
+# ============================================================================
+
+[storage]
+data = "pg"
+blob = "s3"
+fts  = "pg"
+
+[storage.data]
+type     = "pg"
+host     = "${POSTGRES_HOST}"
+port     = 5432
+database = "stalwart_metadata"
+user     = "${POSTGRES_USER}"
+password = "${POSTGRES_PASSWORD}"
+
+[storage.blob]
+type        = "s3"
+region      = "${S3_REGION_DEFAULT}"
+bucket      = "${S3_BUCKET_DEFAULT}"
+kms-key-arn = "${KMS_KEY_DEFAULT}"
+sse         = "aws:kms"
+
+# ============================================================================
+# Protocol listeners per DEC-303 + §1 #4
+# ============================================================================
+
+[server.listener."smtp.relay-in"]
+bind         = ["[::]:25"]
+protocol     = "smtp"
+tls.implicit = false
+
+[server.listener."smtp.submission-implicit"]
+bind         = ["[::]:465"]
+protocol     = "smtp"
+tls.implicit = true
+
+[server.listener."smtp.submission-starttls"]
+bind         = ["[::]:587"]
+protocol     = "smtp"
+tls.implicit = false
+
+[server.listener."imap.starttls"]
+bind         = ["[::]:143"]
+protocol     = "imap"
+tls.implicit = false
+
+[server.listener."imap.implicit"]
+bind         = ["[::]:993"]
+protocol     = "imap"
+tls.implicit = true
+
+[server.listener."managesieve"]
+bind         = ["[::]:4190"]
+protocol     = "managesieve"
+
+# JMAP is reverse-proxied at the application HTTPS endpoint; the listener
+# below is the internal port the proxy forwards to.
+[server.listener."jmap"]
+bind         = ["[::]:8080"]
+protocol     = "jmap"
+
+# ============================================================================
+# DKIM signing per DEC-304 + §1 #5
+# ============================================================================
+# The CyberOS adapter syncs from `dkim_keys` (Postgres) to the on-disk
+# keystore at /etc/stalwart/keys/<tenant_id>/cyberos.pem at boot + on
+# rotation events. Stalwart's signing engine resolves at submission time
+# via the directive below.
+
+[signature."default"]
+type        = "dkim"
+domain      = "%{tenant.primary_domain}%"
+selector    = "cyberos"
+algorithm   = "rsa-sha256"
+private-key = "file:///etc/stalwart/keys/%{tenant.id}%/cyberos.pem"
+
+# ============================================================================
+# MTA-STS + DANE per DEC-305 + §1 #6
+# ============================================================================
+[security.tls.outbound]
+mta-sts   = "enforce"          # honor remote-domain MTA-STS policy
+dane      = "opportunistic"    # use DANE TLSA when peer publishes
+fallback  = "starttls"         # legacy peers: opportunistic STARTTLS
+
+# ============================================================================
+# Spam classifier per DEC-308 + §1 #18
+# ============================================================================
+# Threshold 5.0 routes the message to the per-user Trash folder with
+# 30-day retention. The CyberOS adapter mirrors the classification into
+# `message_metadata.status = quarantined`.
+[spam.scoring]
+threshold-quarantine = 5.0
+quarantine-folder    = "Trash"
+quarantine-retention-days = 30
+
+# ============================================================================
+# Operations
+# ============================================================================
+[shutdown]
+budget-seconds = 30            # §1 #24 — 30s drain on SIGTERM
+
+[logging]
+level  = "info"
+format = "json"

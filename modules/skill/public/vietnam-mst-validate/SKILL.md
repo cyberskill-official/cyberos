@@ -1,13 +1,7 @@
 ---
 name: vietnam-mst-validate
 description: >-
-  Validate Vietnamese tax codes (Mã số thuế / MST). Returns whether a given
-  string is a structurally valid MST — 10 digits for a legal entity or
-  10 digits + '-' + 3 digits for a branch / dependent unit, per General
-  Department of Taxation regulations. Use when the user provides a
-  Vietnamese tax code (MST), an invoice with `mst_nguoi_ban` /
-  `mst_nguoi_mua` fields, or asks "is this a valid Vietnamese MST?". Do
-  NOT use for non-Vietnamese tax IDs — see other locale skills.
+  Validate Vietnamese tax codes (Mã số thuế / MST). Returns whether a given string is a structurally valid MST — 10 digits for a legal entity or 10 digits + '-' + 3 digits for a branch / dependent unit, per General Department of Taxation regulations. Use when the user provides a Vietnamese tax code (MST), an invoice with `mst_nguoi_ban` / `mst_nguoi_mua` fields, or asks "is this a valid Vietnamese MST?". Do NOT use for non-Vietnamese tax IDs — see other locale skills. Use when user asks to "reference vietnam mst validate" or "look up vietnam mst validate".
 license: Apache-2.0
 compatibility: >-
   Fully offline. No network access. Python 3.11+ for scripts/validate_mst.py.

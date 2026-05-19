@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: soc2-evidence-author
-description: Assembles the SOC 2 Type I or Type II evidence package. Control inventory mapped to AICPA Trust Services Criteria, per-control evidence with collection date + period, auditor-facing index, gap analysis, remediation plan. Per AICPA TSC 2017 (with 2022 points-of-focus) + ISAE 3000/3402.
-  Author a SOC2_EVIDENCE markdown from source artefact(s). Generates a
-  versioned soc2-evidence@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  soc2-evidence-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Assembles the SOC 2 Type I or Type II evidence package. Control inventory mapped to AICPA Trust Services Criteria, per-control evidence with collection date + period, auditor-facing index, gap analysis, remediation plan. Per AICPA TSC 2017 (with 2022 points-of-focus) + ISAE 3000/3402. Author a SOC2_EVIDENCE markdown from source artefact(s). Generates a versioned soc2-evidence@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into soc2-evidence-audit by default. Refuses to author when upstream artefact is in non-pass state. Use when user asks to "draft a soc2 evidence" or "create the soc2 evidence". Do NOT use for "audit existing soc2 evidence" (use soc2-evidence-audit instead). Author a SOC2_EVIDENCE markdown from source artefact(s). Generates a versioned soc2-evidence@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into soc2-evidence-audit by default. Refuses to author when upstream artefact is...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: soc2-evidence_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

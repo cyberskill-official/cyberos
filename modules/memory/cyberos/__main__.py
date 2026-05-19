@@ -35,7 +35,7 @@ from pathlib import Path
 
 
 def _store(args: argparse.Namespace) -> Path:
-    """Resolve the BRAIN root.
+    """Resolve the memory root.
 
     Resolution order:
 
@@ -44,7 +44,7 @@ def _store(args: argparse.Namespace) -> Path:
     2. Otherwise auto-discover by walking up from CWD looking for a
        ``.cyberos-memory/`` directory. This lets you run ``cyberos doctor``
        from any subdir of the project — `memory/`, `memory/cyberos/`,
-       repo root — and the CLI finds the BRAIN automatically.
+       repo root — and the CLI finds the memory automatically.
     3. Fall back to ``./.cyberos-memory`` (the historical default) if
        neither of the above pans out.
     """
@@ -87,11 +87,81 @@ def _cmd_view(args: argparse.Namespace) -> int:
 
 
 def _cmd_put(args: argparse.Namespace) -> int:
-    """Canonical v2 op — create or replace a memory file."""
+    """Canonical v2 op — create or replace a memory file.
+
+    Per FR-MEMORY-114 §1 #1 / #2, the ``--score-importance`` flag opts in
+    to write-time LLM scoring; ``--importance <float>`` is the explicit
+    operator override (wins over scoring). With neither flag the default
+    `put` path is unchanged.
+    """
     from cyberos.core.ops import put
     from cyberos.core.writer import Writer
 
     body = Path(args.body_file).read_bytes()
+
+    # Resolve importance per FR-MEMORY-114 §1 #1 / #2 priority chain:
+    #   1. --importance <float>  → operator-pinned, no LLM call
+    #   2. --score-importance     → invoke LLM (with cache); record outcome
+    #   3. neither                → no importance metadata written
+    importance_value: float | None = None
+    importance_aux_rows: list[tuple[str, dict]] = []  # collected, emitted post-write
+
+    if getattr(args, "importance", None) is not None:
+        if not (0.0 <= args.importance <= 1.0):
+            sys.stderr.write(
+                f"error: --importance must be in [0.0, 1.0]; got {args.importance}\n"
+            )
+            return 2
+        importance_value = float(args.importance)
+    elif getattr(args, "score_importance", False):
+        # Synchronous scoring path — the CLI is not async.
+        from cyberos.core.importance import (
+            ImportanceCache,
+            score_sync,
+            select_invoker,
+        )
+
+        invoker_name = getattr(args, "invoker", None)
+        try:
+            invoker = select_invoker(invoker_name)
+        except (ValueError, RuntimeError) as exc:
+            sys.stderr.write(f"error: {exc}\n")
+            return 2
+
+        cache_path = _store(args) / "index" / "importance_cache.db"
+        cache = ImportanceCache(cache_path)
+
+        def _capture_aux(kind: str, payload: dict) -> None:
+            importance_aux_rows.append((kind, payload))
+
+        try:
+            result = score_sync(
+                # Score on the body bytes the operator is about to write
+                body.decode("utf-8", errors="replace"),
+                invoker,
+                cache,
+                aux_emitter=_capture_aux,
+                path=args.path,
+            )
+        finally:
+            cache.close()
+        importance_value = float(result.score)
+        if args.dry_run:
+            print(
+                f"DRY-RUN: would write {args.path} with importance={importance_value:.3f} "
+                f"(model={result.model} outcome={result.outcome} latency_ms={result.latency_ms})"
+            )
+            return 0
+
+    extra: dict[str, object] = {}
+    if importance_value is not None:
+        extra["importance"] = importance_value
+
+    if getattr(args, "dry_run", False):
+        # No-write dry-run path (operator inspecting --score-importance output)
+        print(f"DRY-RUN: would write {args.path}; extra={extra}")
+        return 0
+
     with Writer(_store(args)) as writer:
         seq = put(
             writer,
@@ -99,7 +169,17 @@ def _cmd_put(args: argparse.Namespace) -> int:
             body,
             actor=_actor(args),
             kind=args.kind or "unknown",
+            extra=extra or None,
         )
+        # Emit captured aux rows AFTER the put (so they trail the put row in seq)
+        for kind, payload in importance_aux_rows:
+            from cyberos.core.writer import AuditRecord
+            writer.submit(AuditRecord(
+                op=kind,
+                path=args.path,
+                actor=_actor(args),
+                extra=payload,
+            ))
     print(f"seq={seq}")
     return 0
 
@@ -228,9 +308,14 @@ def _cmd_search(args: argparse.Namespace) -> int:
                 print(f"{h.score:.3f}\t{h.rel_path}\t{h.snippet}")
             return 0
 
-    from cyberos.core.index import open_index, search_memories  # noqa: WPS433
+    from cyberos.core.index import (  # noqa: WPS433
+        open_index, replay_from_binlog, search_memories,
+    )
     fingerprint = hashlib.sha256(str(store).encode("utf-8")).hexdigest()[:16]
     conn = open_index(fingerprint)
+    # Lazy-sync the index from the audit binlog before querying. Replay is
+    # idempotent (uses last_applied_seq) so this is a no-op when up-to-date.
+    replay_from_binlog(conn, store)
     for rel_path, snippet in search_memories(conn, args.query, limit=args.limit):
         print(f"{rel_path}\t{snippet}")
     return 0
@@ -390,7 +475,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
 
 
 def _cmd_import(args: argparse.Namespace) -> int:
-    """Pull memories from another BRAIN into this one (PROPOSAL.md P6)."""
+    """Pull memories from another memory into this one (PROPOSAL.md P6)."""
     from cyberos.core.import_ import format_report, run  # noqa: WPS433
 
     map_actor: dict[str, str] | None = None
@@ -698,15 +783,31 @@ def _cmd_state(args: argparse.Namespace) -> int:
 
 
 def _cmd_consolidate(args: argparse.Namespace) -> int:
-    """Run Walk → Compact → Sign → Publish (AGENTS.md v2 §7)."""
+    """Run Walk → Compact → Sign → Publish [→ SemanticDedup] (AGENTS.md v2 §7).
+
+    Per FR-MEMORY-116, ``--semantic-dedup`` adds a fifth phase that reuses
+    FR-MEMORY-115's duplicates detector. ``--semantic-dedup-apply``
+    promotes the dry-run dedup pass into actual writes.
+    """
     from cyberos.core.consolidate import format_report, run  # noqa: WPS433
 
     report = run(
         _store(args),
         dry_run=args.dry_run,
         compact_horizon_days=args.compact_horizon_days,
+        semantic_dedup=getattr(args, "semantic_dedup", False),
+        semantic_dedup_apply=getattr(args, "semantic_dedup_apply", False),
+        semantic_dedup_threshold=getattr(args, "semantic_dedup_threshold", 0.92),
+        semantic_dedup_scope=getattr(args, "semantic_dedup_scope", "") or "",
     )
     print(format_report(report, json_mode=args.json))
+    if getattr(args, "semantic_dedup", False) and not args.json:
+        print(f"semantic_dedup_ran:               {report.semantic_dedup_ran}")
+        print(f"semantic_dedup_proposals_count:   {report.semantic_dedup_proposals_count}")
+        print(f"semantic_dedup_applied_count:     {report.semantic_dedup_applied_count}")
+        print(f"semantic_dedup_dream_id:          {report.semantic_dedup_dream_id}")
+        if report.semantic_dedup_dry_run:
+            print("(dry-run: pass --semantic-dedup-apply to merge proposals)")
     return 0 if report.ok else 1
 
 
@@ -1011,6 +1112,529 @@ def _cmd_resolve_conflict(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_episode_log(args: argparse.Namespace) -> int:
+    """Append an Episode to the memory (FR-MEMORY-112 §1 #8).
+
+    Constructs an ``Episode`` from CLI flags, routes through
+    ``cyberos.core.episode.log`` → ``cyberos.core.ops.put``. Emits one
+    ``op="put"`` audit row whose ``extra.kind="episode"`` so FR-MEMORY-115
+    dream + FR-MEMORY-120 history can project the rich shape without
+    re-parsing bodies.
+    """
+    from cyberos.core.episode import Episode, log as episode_log
+    from cyberos.core.writer import Writer
+
+    try:
+        ep = Episode(
+            task=args.task,
+            approach=args.approach,
+            outcome=args.outcome,
+            duration_ms=args.duration_ms,
+            token_cost=args.token_cost,
+            quality_score=args.quality_score,
+            notes=args.notes or "",
+            error=args.error,
+        )
+    except ValueError as exc:
+        sys.stderr.write(f"error: {exc}\n")
+        return 2
+
+    with Writer(_store(args)) as writer:
+        seq, rel_path = episode_log(writer, ep, actor=_actor(args))
+
+    if args.json:
+        import json
+        print(json.dumps({"seq": seq, "path": rel_path}, indent=2))
+    else:
+        print(f"seq={seq} path={rel_path}")
+    return 0
+
+
+def _cmd_recall_similar(args: argparse.Namespace) -> int:
+    """Find episodes similar to ``task`` (FR-MEMORY-112 §1 #9).
+
+    Filters semantic / FTS5 hits to ``kind="episode"``, ranks by combined
+    score per FR-MEMORY-113. Returns JSON to stdout for scripting, or a
+    human table by default.
+    """
+    from cyberos.core.episode import recall_similar
+
+    backend = "fts5" if args.fts5 else ("semantic" if args.semantic else "auto")
+    result = recall_similar(
+        _store(args),
+        args.task,
+        k=args.k,
+        min_relevance=args.min_relevance,
+        backend=backend,
+    )
+
+    if args.json:
+        import json
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+
+    if not result["matches"]:
+        print(f"No similar episodes found (reason: {result['reason']}).")
+        return 0
+
+    print(f"Backend: {result['backend']}  ·  {len(result['matches'])} match(es)")
+    print()
+    for m in result["matches"]:
+        qs = m.get("quality_score")
+        qs_s = f"qs={qs:.2f}" if qs is not None else "qs=—"
+        print(
+            f"  [{m['combined_score']:.3f}] rel={m['relevance']:.2f} {qs_s} "
+            f"outcome={m['outcome']}  {m['path']}"
+        )
+        print(f"             task: {m['task'][:120]}")
+        print(f"             approach: {m['approach'][:120]}")
+    return 0
+
+
+def _cmd_dream(args: argparse.Namespace) -> int:
+    """Run one dream pass (FR-MEMORY-115 §1 #1, §1 #8).
+
+    Always produces a ``dreams/<ts>/diff.json`` artefact. The diff is
+    advisory until ``cyberos dream apply <id>`` is invoked.
+    """
+    from datetime import timedelta
+    from cyberos.core.dream.runner import run_sync
+    from cyberos.core.writer import Writer
+
+    # Parse --since "24h" / "7d" / "30d" / ISO timestamp
+    since_str: str = args.since or "24h"
+    if since_str.endswith("h"):
+        since = timedelta(hours=int(since_str[:-1]))
+    elif since_str.endswith("d"):
+        since = timedelta(days=int(since_str[:-1]))
+    else:
+        from datetime import datetime, timezone
+        dt = datetime.fromisoformat(since_str.replace("Z", "+00:00"))
+        since = datetime.now(timezone.utc) - dt
+
+    detectors = args.detectors.split(",") if args.detectors else ("duplicates", "stale", "patterns", "verify")
+
+    with Writer(_store(args)) as writer:
+        diff = run_sync(
+            writer,
+            since=since,
+            scope=args.scope or "",
+            detector_names=tuple(detectors),
+            invoker_name=args.invoker,
+            dry_run=args.dry_run,
+            duplicates_threshold=args.threshold,
+        )
+
+    if args.json:
+        import json
+        print(json.dumps(diff.to_dict(), indent=2, sort_keys=True))
+    else:
+        kinds = diff.metrics.get("proposals_count_by_kind", {})
+        print(f"dream_id: {diff.dream_id}")
+        print(f"scope:    {diff.scope}")
+        print(f"since:    {diff.since}")
+        print(f"snapshot_head: {diff.metrics.get('snapshot_head')}")
+        print(f"duration_ms:   {diff.metrics.get('duration_ms')}")
+        print(f"proposals:     {len(diff.proposals)} total "
+              f"(merge={kinds.get('merge', 0)} stale={kinds.get('stale', 0)} "
+              f"new={kinds.get('new', 0)} verify={kinds.get('verify', 0)})")
+        if args.dry_run:
+            print("(dry-run: no apply rows emitted; diff persisted to disk)")
+        else:
+            print(f"Apply with: cyberos dream apply {diff.dream_id}")
+    return 0
+
+
+def _cmd_dream_apply(args: argparse.Namespace) -> int:
+    """Apply selected proposals from a previous dream run
+    (FR-MEMORY-115 §1 #4, §1 #11, §1 #14)."""
+    import json
+    from pathlib import Path
+    from cyberos.core.dream.proposals import DreamDiff
+    from cyberos.core.dream.applier import (
+        apply, PreconditionFailed, ProtocolAmendmentMissing,
+    )
+    from cyberos.core.writer import Writer
+
+    # Locate the diff file by dream_id (search dreams/*/diff.json)
+    dreams_root = _store(args) / "dreams"
+    target_diff: Path | None = None
+    if dreams_root.is_dir():
+        for diff_path in dreams_root.glob("*/diff.json"):
+            try:
+                data = json.loads(diff_path.read_text())
+                if data.get("dream_id") == args.dream_id:
+                    target_diff = diff_path
+                    break
+            except Exception:
+                continue
+    if target_diff is None:
+        sys.stderr.write(
+            f"error: no diff.json found with dream_id={args.dream_id!r} "
+            f"under {dreams_root}\n"
+        )
+        return 2
+
+    diff = DreamDiff.from_dict(json.loads(target_diff.read_text()))
+    proposal_ids = set(args.proposal_ids.split(",")) if args.proposal_ids else None
+
+    try:
+        with Writer(_store(args)) as writer:
+            summary = apply(
+                writer, diff,
+                proposal_ids=proposal_ids,
+                actor=_actor(args) if args.actor else "dream-applier",
+                enforce_section_7_7=not args.no_check_protocol,
+            )
+    except ProtocolAmendmentMissing as exc:
+        sys.stderr.write(f"error: {exc}\n")
+        return 3
+    except PreconditionFailed as exc:
+        sys.stderr.write(f"error: {exc}\n")
+        return 4
+
+    if args.json:
+        print(json.dumps(summary, indent=2, default=str))
+    else:
+        print(f"dream_id: {summary['dream_id']}")
+        print(f"applied:  {summary['applied_count']}")
+        print(f"rejected: {summary['rejected']}")
+        if summary["errors"]:
+            print("errors:")
+            for e in summary["errors"]:
+                print(f"  - {e}")
+    return 0
+
+
+def _cmd_history(args: argparse.Namespace) -> int:
+    """`cyberos history <path>` — per-path version + attribution view
+    (FR-MEMORY-120). Pure read-only projection over the audit chain.
+    """
+    from datetime import datetime, timedelta, timezone
+    from cyberos.core.history import walk, render_human
+
+    # Parse --since: 24h | 7d | ISO
+    since_dt: "datetime | None" = None
+    if args.since:
+        s = args.since
+        if s.endswith("h"):
+            since_dt = datetime.now(timezone.utc) - timedelta(hours=int(s[:-1]))
+        elif s.endswith("d"):
+            since_dt = datetime.now(timezone.utc) - timedelta(days=int(s[:-1]))
+        else:
+            try:
+                since_dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+            except ValueError:
+                sys.stderr.write(f"error: --since must be Nh, Nd, or ISO; got {s!r}\n")
+                return 2
+
+    entries = walk(
+        _store(args),
+        args.path,
+        follow_moves=not args.no_follow_moves,
+        since=since_dt,
+        limit=args.limit,
+        show_body=args.show_body,
+    )
+    if args.chronological:
+        entries.reverse()
+
+    if args.json:
+        import json
+        print(json.dumps([e.to_dict() for e in entries], indent=2, default=str))
+        return 0
+
+    if not entries:
+        print(f"No history for {args.path!r}.")
+        return 0
+    for e in entries:
+        print(render_human(e, show_body=args.show_body))
+    return 0
+
+
+def _cmd_transcript(args: argparse.Namespace) -> int:
+    """`cyberos transcript {start|append|end|read|list|purge-expired}` per FR-MEMORY-119.
+
+    Namespaced under ``transcript`` (not ``session``) because the existing
+    P11 ``cyberos session`` subcommand covers multi-agent coordination —
+    a different product with the same verb in the spec.
+    """
+    from cyberos.core.transcript import (
+        ProtocolAmendmentMissing, TranscriptError,
+        active_session_id, append, end, list_sessions,
+        purge_expired, read, start,
+    )
+    from cyberos.core.writer import Writer
+    from datetime import timedelta
+    import json
+
+    action = args.transcript_action
+    store = _store(args)
+
+    if action == "start":
+        try:
+            with Writer(store) as w:
+                s = start(
+                    w,
+                    session_id=args.id,
+                    classification=args.classification,
+                    retention_days=args.retention_days,
+                    actor=_actor(args),
+                )
+        except ProtocolAmendmentMissing as e:
+            sys.stderr.write(f"error: {e}\n")
+            return 3
+        except (ValueError, TranscriptError) as e:
+            sys.stderr.write(f"error: {e}\n")
+            return 2
+        if args.json:
+            print(json.dumps({
+                "id": s.id,
+                "started_at": s.started_at.isoformat(),
+                "classification": s.classification,
+                "retention_days": s.retention_days,
+                "binlog_path": str(s.binlog_path),
+            }, indent=2))
+        else:
+            print(f"session_id:     {s.id}")
+            print(f"started_at:     {s.started_at.isoformat()}")
+            print(f"classification: {s.classification}")
+            print(f"binlog_path:    {s.binlog_path.relative_to(store) if s.binlog_path else '(unknown)'}")
+        return 0
+
+    if action == "append":
+        try:
+            with Writer(store) as w:
+                seq = append(
+                    w,
+                    session_id=args.id,
+                    role=args.role,
+                    content=args.content,
+                    redactions_applied=args.redactions_applied,
+                )
+        except (ValueError, TranscriptError) as e:
+            sys.stderr.write(f"error: {e}\n")
+            return 2
+        if args.json:
+            print(json.dumps({"turn_seq": seq}))
+        else:
+            print(f"turn_seq: {seq}")
+        return 0
+
+    if action == "end":
+        try:
+            with Writer(store) as w:
+                s = end(
+                    w,
+                    session_id=args.id,
+                    reason=args.reason,
+                    seal_binlog=not args.no_seal,
+                )
+        except TranscriptError as e:
+            sys.stderr.write(f"error: {e}\n")
+            return 2
+        if args.json:
+            print(json.dumps({
+                "id": s.id,
+                "ended_at": s.ended_at.isoformat() if s.ended_at else None,
+                "ended_reason": s.ended_reason,
+                "binlog_path": str(s.binlog_path) if s.binlog_path else None,
+            }, indent=2))
+        else:
+            print(f"session_id: {s.id}")
+            print(f"ended_at:   {s.ended_at.isoformat() if s.ended_at else '(unknown)'}")
+            print(f"binlog_at:  {s.binlog_path.relative_to(store) if s.binlog_path else '(unknown)'}")
+        return 0
+
+    if action == "read":
+        turns = read(store, args.id, decrypt=args.decrypt)
+        if args.json:
+            print(json.dumps(turns, indent=2, default=str))
+        else:
+            if not turns:
+                print(f"(no turns for session {args.id!r})")
+                return 0
+            for t in turns:
+                if t.get("tombstone"):
+                    print(f"[TOMBSTONE] purged_at={t.get('purged_at')}")
+                    continue
+                print(f"[{t.get('turn_seq', '?')}] {t.get('ts','?')} {t.get('role','?')}: "
+                      f"{t.get('content','(encrypted)')[:200]}")
+        return 0
+
+    if action == "list":
+        since = None
+        if args.since:
+            if args.since.endswith("h"):
+                since = timedelta(hours=int(args.since[:-1]))
+            elif args.since.endswith("d"):
+                since = timedelta(days=int(args.since[:-1]))
+        sessions = list_sessions(store, since=since)
+        if args.json:
+            print(json.dumps(sessions, indent=2, default=str))
+        else:
+            if not sessions:
+                print("(no sessions)")
+                return 0
+            for s in sessions:
+                print(f"  {s['session_id']:<32} {s['started_date']}  {s['state']:<8}  {s['binlog_path']}")
+        # Indicate active session
+        active = active_session_id(store)
+        if active and not args.json:
+            print(f"\nActive: {active}")
+        return 0
+
+    if action == "purge-expired":
+        with Writer(store) as w:
+            result = purge_expired(
+                w,
+                retention_days=args.retention_days,
+                dry_run=args.dry_run,
+            )
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            print(f"purged_count: {result['purged_count']}")
+            if result["dry_run"]:
+                print("(dry-run: nothing actually purged)")
+            for p in result["purged"]:
+                print(f"  - {p['session_id']:<32} {p['date']} (age {p['age_days']}d)")
+        return 0
+
+    sys.stderr.write(f"error: unknown transcript action {action!r}\n")
+    return 2
+
+
+def _cmd_put_if(args: argparse.Namespace) -> int:
+    """`cyberos put-if <path> <body_file> --precondition <hex|none>`.
+
+    Per FR-MEMORY-118 §1 #8. Atomic content-conditional write.
+    """
+    from cyberos.core.ops import put_if
+    from cyberos.core.writer import Writer
+
+    body = Path(args.body_file).read_bytes()
+
+    # Resolve the precondition argument
+    precondition: str | None
+    raw = args.precondition.strip()
+    if raw.lower() == "none":
+        precondition = None
+    elif args.precondition_from_file:
+        precondition = Path(args.precondition_from_file).read_text().strip()
+    else:
+        precondition = raw
+
+    try:
+        with Writer(_store(args)) as writer:
+            result = put_if(
+                writer,
+                args.path,
+                body,
+                actor=_actor(args),
+                precondition_body_hash=precondition,
+                kind=args.kind or "unknown",
+            )
+    except ValueError as exc:
+        sys.stderr.write(f"error: {exc}\n")
+        return 2
+    except Exception as exc:
+        # ProtocolAmendmentMissing or other infra error
+        if "ProtocolAmendmentMissing" in type(exc).__name__:
+            sys.stderr.write(f"error: {exc}\n")
+            return 3
+        raise
+
+    if args.json:
+        import json
+        print(json.dumps({
+            "outcome": result.outcome,
+            "reason": result.reason,
+            "expected": result.expected,
+            "actual": result.actual,
+            "committed_seq": result.committed_seq,
+        }, indent=2))
+    else:
+        print(f"outcome: {result.outcome}")
+        if result.reason:
+            print(f"reason:  {result.reason}")
+        if result.expected is not None:
+            print(f"expected: {result.expected[:16]}…")
+        if result.actual is not None:
+            actual_disp = result.actual if result.actual.startswith("<") else f"{result.actual[:16]}…"
+            print(f"actual:   {actual_disp}")
+        if result.committed_seq is not None:
+            print(f"seq:      {result.committed_seq}")
+
+    return 0 if result.outcome == "written" else 1
+
+
+def _cmd_acl(args: argparse.Namespace) -> int:
+    """`cyberos acl {show|validate|explain}` — FR-MEMORY-117 §1 #12."""
+    import json
+    from cyberos.core.store_acl import StoreAcl, check_write, explain
+
+    store = _store(args)
+    action = args.acl_action
+
+    if action == "show":
+        yaml_paths = sorted(store.rglob("STORE.yaml"))
+        if not yaml_paths:
+            print("(no STORE.yaml files in store)")
+            return 0
+        for yml in yaml_paths:
+            try:
+                acl = StoreAcl.from_yaml(yml)
+            except ValueError as e:
+                print(f"{yml.relative_to(store)}: INVALID ({e})")
+                continue
+            print(f"{yml.relative_to(store)}:")
+            print(f"  store_id:     {acl.store_id}")
+            print(f"  default_mode: {acl.default_mode}")
+            print(f"  acl:")
+            for actor, mode in acl.acl:
+                print(f"    - {actor:<24} → {mode}")
+        return 0
+
+    if action == "validate":
+        yaml_paths = sorted(store.rglob("STORE.yaml"))
+        errors = 0
+        for yml in yaml_paths:
+            try:
+                StoreAcl.from_yaml(yml)
+                print(f"  OK    {yml.relative_to(store)}")
+            except ValueError as e:
+                print(f"  FAIL  {yml.relative_to(store)}: {e}")
+                errors += 1
+        if errors:
+            print(f"\n{errors} STORE.yaml file(s) failed validation")
+        return 1 if errors else 0
+
+    if action == "explain":
+        if not args.path:
+            sys.stderr.write("error: `cyberos acl explain <path>` requires a memory path\n")
+            return 2
+        actor = args.actor or _actor(args)
+        result = explain(store, args.path, actor)
+        if args.json:
+            print(json.dumps(result, indent=2, default=str))
+        else:
+            print(f"Path:           {result['path']}")
+            print(f"Actor:          {result['actor']}")
+            print(f"Governing YAML: {result['yaml_path'] or '(none — permissive default)'}")
+            print(f"Store ID:       {result['store_id']}")
+            print(f"Effective mode: {result['effective_mode']}")
+            print(f"Matched entry:  {result['matched_entry']}")
+            print(f"Allow write:    {result['allowed_write']}")
+            print(f"WARN-ONLY mode: {result['warn_only_active']}")
+            if result["reason"]:
+                print(f"Reason:         {result['reason']}")
+        return 0
+
+    sys.stderr.write(f"error: unknown acl action: {action}\n")
+    return 2
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     """Run the self-audit walker.
 
@@ -1068,6 +1692,26 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("path")
     sp.add_argument("body_file")
     sp.add_argument("--kind", default=None)
+    # FR-MEMORY-114 write-time importance scoring (opt-in)
+    sp.add_argument(
+        "--score-importance", action="store_true",
+        dest="score_importance",
+        help="invoke configured LLM to rate importance ∈ [0, 1] (FR-MEMORY-114; opt-in)",
+    )
+    sp.add_argument(
+        "--importance", type=float, default=None,
+        help="explicit operator-pinned importance ∈ [0, 1]; wins over --score-importance",
+    )
+    sp.add_argument(
+        "--invoker", default=None, choices=["mock", "anthropic"],
+        help="(with --score-importance) invoker selection: mock | anthropic. "
+             "Defaults to env CYBEROS_IMPORTANCE_INVOKER or anthropic-if-API-key-else-mock",
+    )
+    sp.add_argument(
+        "--dry-run", action="store_true",
+        dest="dry_run",
+        help="(with --score-importance) print the would-be importance + extras; no write",
+    )
     sp.set_defaults(fn=_cmd_put)
 
     sp = sub.add_parser("move", help="canonical op: rename within the store")
@@ -1115,7 +1759,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(fn=_cmd_checkpoint)
 
     sp = sub.add_parser("import",
-                        help="import memories from another BRAIN (PROPOSAL.md P6)")
+                        help="import memories from another memory (PROPOSAL.md P6)")
     sp.add_argument("source",
                     help="path to another .cyberos-memory/ or a cyberos export zip")
     sp.add_argument("--filter", action="append", default=None,
@@ -1183,14 +1827,36 @@ def build_parser() -> argparse.ArgumentParser:
                     help="emit JSON instead of human-readable")
     sp.set_defaults(fn=_cmd_state)
 
-    sp = sub.add_parser("consolidate",
-                        help="run the 4-phase Walk → Compact → Sign → Publish consolidation")
+    sp = sub.add_parser(
+        "consolidate",
+        help="run the 4-phase Walk → Compact → Sign → Publish consolidation "
+             "(optionally followed by SemanticDedup per FR-MEMORY-116)",
+    )
     sp.add_argument("--dry-run", action="store_true",
                     help="Walk only; do not compact/sign/publish")
     sp.add_argument("--json", action="store_true",
                     help="emit JSON instead of human-readable")
     sp.add_argument("--compact-horizon-days", type=int, default=90,
                     help="archive sealed segments older than this (default 90)")
+    # FR-MEMORY-116 SemanticDedup phase
+    sp.add_argument(
+        "--semantic-dedup", action="store_true", dest="semantic_dedup",
+        help="add the SemanticDedup phase after Publish (FR-MEMORY-116; opt-in)",
+    )
+    sp.add_argument(
+        "--semantic-dedup-apply", action="store_true",
+        dest="semantic_dedup_apply",
+        help="(with --semantic-dedup) actually merge proposals; default is dry-run",
+    )
+    sp.add_argument(
+        "--semantic-dedup-threshold", type=float, default=0.92,
+        dest="semantic_dedup_threshold",
+        help="duplicates similarity cutoff for SemanticDedup (default 0.92)",
+    )
+    sp.add_argument(
+        "--semantic-dedup-scope", default="", dest="semantic_dedup_scope",
+        help="limit SemanticDedup to a subtree (e.g. memories/facts)",
+    )
     sp.set_defaults(fn=_cmd_consolidate)
 
     sp = sub.add_parser("doctor", help="run the self-audit walker over the store")
@@ -1298,6 +1964,191 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("paths", nargs="+",
                     help="memory file paths relative to the store root")
     sp.set_defaults(fn=_cmd_validate)
+
+    # --- FR-MEMORY-120 cyberos history ---
+    sp = sub.add_parser(
+        "history",
+        help="per-path version + attribution from the audit chain "
+             "(FR-MEMORY-120; read-only)",
+    )
+    sp.add_argument("path", help="memory path under <memory-root>/")
+    sp.add_argument("--limit", type=int, default=10,
+                    help="cap entries (most-recent first; default 10)")
+    sp.add_argument("--chronological", action="store_true",
+                    help="oldest-first instead of most-recent-first")
+    sp.add_argument("--no-follow-moves", action="store_true",
+                    dest="no_follow_moves",
+                    help="stop the walk at move boundaries")
+    sp.add_argument("--show-body", action="store_true",
+                    dest="show_body",
+                    help="include body diffs when available")
+    sp.add_argument("--since", default=None,
+                    help="24h | 7d | ISO timestamp")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON instead of human view")
+    sp.set_defaults(fn=_cmd_history)
+
+    # --- FR-MEMORY-119 session transcript ledger ---
+    sp = sub.add_parser(
+        "transcript",
+        help="session transcript ledger (FR-MEMORY-119) — "
+             "start / append / end / read / list / purge-expired",
+    )
+    sp.add_argument(
+        "transcript_action",
+        choices=["start", "append", "end", "read", "list", "purge-expired"],
+    )
+    sp.add_argument("--id", default=None,
+                    help="session id (required for start/append/end/read)")
+    sp.add_argument("--classification", default="confidential",
+                    choices=["confidential", "restricted"],
+                    help="(start) default classification per Stephen 2026-05-19")
+    sp.add_argument("--retention-days", type=int, default=30,
+                    dest="retention_days",
+                    help="(start/purge-expired) retention horizon")
+    sp.add_argument("--role", choices=["user", "assistant", "system", "tool"],
+                    default=None, help="(append) turn role")
+    sp.add_argument("--content", default=None,
+                    help="(append) turn content")
+    sp.add_argument("--redactions-applied", type=lambda s: s.lower() == "true",
+                    default=None, dest="redactions_applied",
+                    help="(append) record that FR-MEMORY-111 PII redaction ran")
+    sp.add_argument("--reason", default=None,
+                    help="(end) free-form reason")
+    sp.add_argument("--no-seal", action="store_true",
+                    help="(end) skip zstd compression of binlog")
+    sp.add_argument("--decrypt", action="store_true",
+                    help="(read) decrypt content_cipher payloads")
+    sp.add_argument("--since", default=None,
+                    help="(list) restrict to sessions in the last N hours/days")
+    sp.add_argument("--dry-run", action="store_true",
+                    help="(purge-expired) report what would be purged")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON output")
+    sp.set_defaults(fn=_cmd_transcript)
+
+    # --- FR-MEMORY-118 put_if (optimistic-concurrency) ---
+    sp = sub.add_parser(
+        "put-if",
+        help="content-conditional put: writes only when current body matches "
+             "the supplied SHA-256 (FR-MEMORY-118)",
+    )
+    sp.add_argument("path", help="target memory path")
+    sp.add_argument("body_file", help="path to file containing new body bytes")
+    sp.add_argument(
+        "--precondition", required=True,
+        help='64-char lowercase hex SHA-256 OR "none" for create-only',
+    )
+    sp.add_argument(
+        "--precondition-from-file", default=None,
+        dest="precondition_from_file",
+        help="alternative: read hex from this file's first line",
+    )
+    sp.add_argument("--kind", default=None,
+                    help="memory kind tag for the audit row (default 'unknown')")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON result")
+    sp.set_defaults(fn=_cmd_put_if)
+
+    # --- FR-MEMORY-117 per-store ACL ---
+    sp = sub.add_parser(
+        "acl",
+        help="manage per-store ACL (FR-MEMORY-117) — show / validate / explain",
+    )
+    sp.add_argument("acl_action", choices=["show", "validate", "explain"],
+                    help="show: list STORE.yaml content; validate: check shapes; "
+                         "explain: resolve effective mode for a path+actor")
+    sp.add_argument("path", nargs="?", default=None,
+                    help="(for explain) memory path to resolve")
+    sp.add_argument("--json", action="store_true",
+                    help="(for explain) JSON output")
+    sp.set_defaults(fn=_cmd_acl)
+
+    # --- FR-MEMORY-115 dreaming ---
+    sp = sub.add_parser(
+        "dream",
+        help="run one out-of-band batch reflection pass (FR-MEMORY-115)",
+    )
+    sp.add_argument("--since", default="24h",
+                    help="time window: 24h | 7d | 30d | ISO timestamp (default 24h)")
+    sp.add_argument("--scope", default="",
+                    help="limit detectors to memories under this path prefix")
+    sp.add_argument("--detectors", default=None,
+                    help="comma-separated subset of duplicates,stale,patterns,verify "
+                         "(default: all four)")
+    sp.add_argument("--invoker", default=None, choices=["mock", "anthropic"],
+                    help="LLM invoker selection for detectors that use one")
+    sp.add_argument("--threshold", type=float, default=0.92,
+                    help="duplicates detector similarity cutoff (default 0.92)")
+    sp.add_argument("--dry-run", action="store_true", dest="dry_run",
+                    help="produce the diff but tag dream.complete with dry_run=True")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON diff to stdout")
+    sp.set_defaults(fn=_cmd_dream)
+
+    sp = sub.add_parser(
+        "dream-apply",
+        help="apply selected proposals from a prior `cyberos dream` run",
+    )
+    sp.add_argument("dream_id", help="ULID from a prior dream.start row")
+    sp.add_argument("--proposal-ids", default=None, dest="proposal_ids",
+                    help="comma-separated subset of proposal_ids; absent ⇒ apply all")
+    sp.add_argument("--actor", default=None,
+                    help="override the actor recorded on apply rows "
+                         "(default: dream-applier)")
+    sp.add_argument("--no-check-protocol", action="store_true",
+                    dest="no_check_protocol",
+                    help="skip AGENTS.md §7.7 anchor check (DEV ONLY)")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON summary")
+    sp.set_defaults(fn=_cmd_dream_apply)
+
+    # --- FR-MEMORY-112 episodic memory ---
+    sp = sub.add_parser(
+        "episode",
+        help="episodic memory (FR-MEMORY-112) — `cyberos episode log ...`",
+    )
+    ep_sub = sp.add_subparsers(dest="episode_cmd", required=True)
+    ep_log = ep_sub.add_parser("log", help="append an Episode to the memory")
+    ep_log.add_argument("--task", required=True,
+                        help="what task the agent did (free-form, ≥ 1 char)")
+    ep_log.add_argument("--approach", required=True,
+                        help="how the agent approached the task (one line)")
+    ep_log.add_argument("--outcome", required=True,
+                        choices=["success", "partial", "failure"],
+                        help="closed enum outcome")
+    ep_log.add_argument("--duration-ms", type=int, required=True,
+                        dest="duration_ms", help="wall-clock duration in ms (≥ 0)")
+    ep_log.add_argument("--token-cost", type=int, default=None,
+                        dest="token_cost", help="input+output tokens combined (optional)")
+    ep_log.add_argument("--quality-score", type=float, default=None,
+                        dest="quality_score",
+                        help="0.0–1.0; absent ≡ 0.5 in ranking maths (DEC-181)")
+    ep_log.add_argument("--notes", default="",
+                        help="free-form observations (included in searchable doc)")
+    ep_log.add_argument("--error", default=None,
+                        help="required when outcome is partial or failure")
+    ep_log.add_argument("--json", action="store_true",
+                        help="emit JSON output instead of seq=N path=...")
+    ep_log.set_defaults(fn=_cmd_episode_log)
+
+    sp = sub.add_parser(
+        "recall-similar",
+        help="find episodes similar to a task (FR-MEMORY-112 §1 #9)",
+    )
+    sp.add_argument("task", help="task description to find similar episodes for")
+    sp.add_argument("--k", type=int, default=3,
+                    help="top-K results (default 3)")
+    sp.add_argument("--min-relevance", type=float, default=0.65,
+                    dest="min_relevance",
+                    help="reject hits below this relevance (default 0.65)")
+    sp.add_argument("--semantic", action="store_true",
+                    help="force semantic backend (requires sentence-transformers)")
+    sp.add_argument("--fts5", action="store_true",
+                    help="force FTS5 backend (skip semantic even if available)")
+    sp.add_argument("--json", action="store_true",
+                    help="emit JSON output instead of human table")
+    sp.set_defaults(fn=_cmd_recall_similar)
 
     return p
 

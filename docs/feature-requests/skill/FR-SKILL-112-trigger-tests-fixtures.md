@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-19
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-SKILL-111, FR-CUO-101, FR-CUO-103, FR-SKILL-103]
 depends_on: [FR-SKILL-103, FR-CUO-101]
 blocks: []
@@ -24,7 +24,7 @@ source_pages:
 source_decisions:
   - DEC-055 (acceptance auto-pause at <40% over 7 days)
   - DEC-091 (host-portability — CCSM is source of truth)
-  - DEC-180 (frontmatter declares BRAIN scopes + tool requirements)
+  - DEC-180 (frontmatter declares memory scopes + tool requirements)
 
 language: yaml + markdown + python (CUO supervisor) + rust (broker validator)
 service: modules/cuo/cuo/ (router smoke test) + modules/skill/feature-request-audit/ (RUBRIC entry) + modules/skill/_template/ (scaffold)

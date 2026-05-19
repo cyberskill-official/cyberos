@@ -30,7 +30,7 @@ MM requires; Zalo has none. Resolved: §1 #7 placeholder.
 Separate table = drift. Resolved: §1 #9 reuse FR-CHAT-006.
 
 ### ISS-005 — Emoji codes
-Without table, weird codes in BRAIN. Resolved: §1 #5 + normalize.rs.
+Without table, weird codes in memory. Resolved: §1 #5 + normalize.rs.
 
 ### ISS-006 — Group vs DM mapping
 Naive impl loses semantic. Resolved: §1 #6 explicit.

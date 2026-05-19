@@ -1,12 +1,7 @@
 ---
 name: vietnam-vat-invoice
 description: >-
-  Generate Vietnamese VAT-compliant electronic invoices (hoá đơn GTGT điện tử)
-  from a structured JSON line-item list. Produces XML in the General Department
-  of Taxation schema v3.0 (Mẫu hoá đơn điện tử). Use when the user provides
-  line items + buyer MST + seller MST and asks for a Vietnamese VAT invoice,
-  e-invoice, hoá đơn GTGT, hoá đơn điện tử. Do NOT use for non-Vietnamese
-  invoice formats — use locale-specific skills instead.
+  Generate Vietnamese VAT-compliant electronic invoices (hoá đơn GTGT điện tử) from a structured JSON line-item list. Produces XML in the General Department of Taxation schema v3.0 (Mẫu hoá đơn điện tử). Use when the user provides line items + buyer MST + seller MST and asks for a Vietnamese VAT invoice, e-invoice, hoá đơn GTGT, hoá đơn điện tử. Do NOT use for non-Vietnamese invoice formats — use locale-specific skills instead. Use when user asks to "reference vietnam vat invoice" or "look up vietnam vat invoice".
 license: Apache-2.0
 compatibility: >-
   Fully offline. No network access required. Python 3.11+ for the bundled

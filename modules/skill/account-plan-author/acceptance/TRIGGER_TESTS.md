@@ -1,0 +1,31 @@
+        ---
+        skill_id: account-plan-author
+        min_confidence: 0.7
+        classifier_version: 3.0.0-a4
+        ---
+
+        # TRIGGER_TESTS for account-plan-author
+
+        > Authored via heuristic backfill per FR-SKILL-115 lazy-backfill discipline.
+        > Refine these triggers during the next natural fine-tune cycle with real
+        > OBS-observed phrasings.
+
+        ## Positive triggers (MUST route here)
+
+        - "Draft a account plan"
+- "Create the account plan"
+- "Author a new account plan"
+- "Generate the account plan"
+
+        ## Negative triggers (MUST NOT route here)
+
+        - "Audit this account plan" → account-plan-audit
+- "Check the account plan for completeness" → account-plan-audit
+- "What is our company holiday schedule" → none
+
+        ## Authoring notes
+
+        - Triggers derived from skill name + role (author/audit) via the heuristic
+          backfill script. They are conservative — refine with OBS-observed real
+          user phrasings during the next natural fine-tune cycle.
+        - Re-author when classifier_version MAJOR-bumps.

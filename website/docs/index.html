@@ -38,14 +38,14 @@
  AI-native internal operations platform — turning <em class="text-slate-900 font-bold">will</em> into <em class="text-slate-900 font-bold">real</em>.
  </p>
  <p class="text-base text-slate-600 max-w-2xl mb-8 leading-relaxed">
- Built by <strong>CyberSkill</strong> — a 10-person Vietnam-based software consultancy. CyberOS is the AI-native operating system for the company: <strong>22 federated modules</strong> across <strong>five phased rollouts</strong> (P0&nbsp;→&nbsp;P4), unified by a <strong>three-layer BRAIN</strong>, a persona-aware <strong>CUO orchestrator</strong> covering <strong>47 C-roles</strong> with <strong>221 workflows</strong> chaining <strong>104 author+audit skill pairs</strong>, six cross-cutting infrastructure pillars (AUTH · AI Gateway · MCP Gateway · OBS · GraphQL Federation · NATS), and a Vietnamese-market wedge of localised skills. Shipped today: memory Layer 1 (233/235 tests), skill catalogue (104 pairs · 108 contracts · 5 Vietnamese public bundles), CUO supervisor Phases 1–4 (49/50 tests · 6 Handler subclasses), BRAIN service Wave 1 (ingest pipeline + AGE graph mirror + search API live), and AUTH service Wave 2 (11 migrations + JWT/JWKS + admin REST + bootstrap CLI + 22-role RBAC + TOTP MFA + HIBP + OIDC SSO live — only Passkey enrolment open). The remaining 17 modules land between P0 · exit and P4 · GA.
+ Built by <strong>CyberSkill</strong> — a 10-person Vietnam-based software consultancy. CyberOS is the AI-native operating system for the company: <strong>23 federated modules</strong> across <strong>five phased rollouts</strong> (P0&nbsp;→&nbsp;P4), unified by a <strong>three-layer memory</strong>, a persona-aware <strong>CUO orchestrator</strong> covering <strong>47 C-roles</strong> with <strong>221 workflows</strong> chaining <strong>104 author+audit skill pairs</strong>, seven cross-cutting infrastructure pillars (AUTH · AI Gateway · MCP Gateway · PLUGIN · OBS · GraphQL Federation · NATS), and a Vietnamese-market wedge of localised skills. Shipped today: memory Layer 1 (233/235 tests), skill catalogue (104 pairs · 108 contracts · 5 Vietnamese public bundles), CUO supervisor Phases 1–4 (49/50 tests · 6 Handler subclasses), memory service Wave 1 (ingest pipeline + AGE graph mirror + search API live), AUTH service Wave 2 (11 migrations + JWT/JWKS + admin REST + bootstrap CLI + 22-role RBAC + TOTP MFA + HIBP + OIDC SSO live — only Passkey enrolment open), and PLUGIN module specced 2026-05-19 (8 FRs at 10/10 for cross-runtime distribution to Claude Code / Cursor / Cowork / Codex CLI). The remaining 17 modules land between P0 · exit and P4 · GA.
  </p>
  <div class="flex flex-wrap gap-3">
  <a href="#what-is-cyberos" class="btn btn-primary">
  What is CyberOS
  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
  </a>
- <a href="#catalog" class="btn btn-secondary">All 22 modules</a>
+ <a href="#catalog" class="btn btn-secondary">All 23 modules</a>
  <a href="architecture/milestones.html" class="btn btn-secondary">phased roadmap</a>
  </div>
  </div>
@@ -94,7 +94,7 @@
  <text x="130" y="328" text-anchor="middle" font-size="10" fill="#45210e">Rust host · Bun toolchain</text>
  </g>
  </a>
- <a href="modules/brain.html">
+ <a href="modules/memory.html">
  <g filter="url(#shadow)">
  <rect x="280" y="265" width="180" height="80" rx="14" fill="#e8d4c2" stroke="#45210e" stroke-width="2.5"/>
  <text x="370" y="293" text-anchor="middle" font-size="20" font-weight="800" fill="#45210e">MEMORY</text>
@@ -125,7 +125,7 @@
  <text x="50" y="442" text-anchor="middle" font-size="9" font-weight="700" fill="#45210e">P0</text>
  <text x="50" y="455" text-anchor="middle" font-size="8" font-weight="600" fill="#2a1208">Foundation</text>
  <text x="105" y="442" text-anchor="middle" font-size="10" fill="#2a1208">CHAT</text>
- <text x="160" y="442" text-anchor="middle" font-size="10" fill="#2a1208">BRAIN</text>
+ <text x="160" y="442" text-anchor="middle" font-size="10" fill="#2a1208">memory</text>
  <text x="215" y="442" text-anchor="middle" font-size="10" fill="#2a1208">SKILL</text>
  <text x="270" y="442" text-anchor="middle" font-size="10" fill="#2a1208">GENIE/CUO</text>
  <text x="345" y="442" text-anchor="middle" font-size="9" fill="#2a1208">(+ 6 infra)</text>
@@ -172,7 +172,7 @@
  <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mt-12">
  <div class="bbg-card p-5"><div class="stat-num" style="color:var(--ochre-700)">22</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">modules total</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">7 at P0 → 22 at P4</div></div>
  <div class="bbg-card p-5"><div class="stat-num" style="color:var(--umber-700)">47</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">C-roles in CUO catalog</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">221 workflows · Tier-C1 depth</div></div>
- <div class="bbg-card p-5"><div class="stat-num" style="color:var(--umber-700)">3</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">BRAIN memory layers</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">FS · Vector+Graph · Archival</div></div>
+ <div class="bbg-card p-5"><div class="stat-num" style="color:var(--umber-700)">3</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">memory memory layers</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">FS · Vector+Graph · Archival</div></div>
  <div class="bbg-card p-5"><div class="stat-num" style="color:var(--umber-700)">12+</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">AI clients</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">all Agent Skills + MCP-compatible</div></div>
  <div class="bbg-card p-5"><div class="stat-num" style="color:var(--ochre-700)">5</div><div class="text-sm font-medium mt-1" style="color:var(--text-mute)">VN-market skills shipped</div><div class="text-xs mt-0.5" style="color:var(--text-mute)">MST · CCCD · VietQR · VAT · legal</div></div>
  </div>
@@ -189,14 +189,14 @@
    <div class="bg-white rounded p-3 border border-slate-200"><div class="text-2xl font-bold text-cuo-dark">5</div><div class="text-xs font-bold text-slate-700 mt-1">Tier waves</div><div class="text-xs text-slate-500 mt-0.5">Now · Series-A · Scale-up · Enterprise · Niche</div></div>
   </div>
   <p class="text-sm text-slate-600 leading-relaxed">
-   The CUO supervisor (Phases 1-4 shipped 2026-05-18, <strong>49/50 tests green</strong>) routes natural-language queries through two stages — first to a persona, then to one of that persona's workflows — and auto-dispatches one of 6 Handler subclasses per workflow <code>pattern:</code>. Each workflow chains shipped author+audit skill pairs from the SKILL module's <strong>104-pair catalog</strong>; every step emits a BRAIN audit row, every chain emits a session-end summary. The catalog reached steady-state after Session H — Sessions I-N added <strong>124 niche workflows with zero new skills surfaced</strong>, validating that a stable ~100-skill catalog serves the long tail of C-suite orchestration.
+   The CUO supervisor (Phases 1-4 shipped 2026-05-18, <strong>49/50 tests green</strong>) routes natural-language queries through two stages — first to a persona, then to one of that persona's workflows — and auto-dispatches one of 6 Handler subclasses per workflow <code>pattern:</code>. Each workflow chains shipped author+audit skill pairs from the SKILL module's <strong>104-pair catalog</strong>; every step emits a memory audit row, every chain emits a session-end summary. The catalog reached steady-state after Session H — Sessions I-N added <strong>124 niche workflows with zero new skills surfaced</strong>, validating that a stable ~100-skill catalog serves the long tail of C-suite orchestration.
   </p>
  </div>
  </div>
 </section>
 
 <!-- ============================================================ -->
-<!-- WHAT IS CYBEROS — three cards (BRAIN / Skill / CUO) -->
+<!-- WHAT IS CYBEROS — three cards (memory / Skill / CUO) -->
 <!-- ============================================================ -->
 <section id="what-is-cyberos" class="bg-white border-t border-slate-200">
  <div class="container py-16">
@@ -207,16 +207,16 @@
  <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CyberOS is built on three shipped modules that compose to form an AI-native operating system. Every other module in the catalog plugs into this triangle.</p>
 
  <div class="grid md:grid-cols-3 gap-5">
- <!-- BRAIN -->
- <a href="modules/brain.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
+ <!-- memory -->
+ <a href="modules/memory.html" class="bbg-card lift-strong p-6 block no-underline" style="text-decoration:none;color:inherit;border-top:3px solid var(--umber-500)">
  <div class="flex items-center justify-between mb-3">
  <div class="text-4xl">🧠</div>
  <span class="phase-chip phase-p0">P0 · Shipped</span>
  </div>
- <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">BRAIN — the substrate</h3>
+ <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">memory — the substrate</h3>
  <p class="text-xs uppercase tracking-wider font-semibold mb-3" style="color:var(--umber-700)">Append-only audit ledger</p>
  <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">Local-first, audit-chained memory. Three layers: FS at the edge (<code>.cyberos-memory/</code>), pgvector + Apache AGE in the middle, archival corpus at the cold tier. MMR inclusion proofs, Ed25519-signed tree heads, deterministic export, GDPR purge.</p>
- <div class="text-sm font-bold" style="color:var(--umber-700)">Read full BRAIN spec →</div>
+ <div class="text-sm font-bold" style="color:var(--umber-700)">Read full memory spec →</div>
  </a>
 
  <!-- Skill -->
@@ -254,8 +254,8 @@
  <div class="flex items-center gap-4 mb-2">
  <span class="section-badge" style="background:var(--cuo-tint);color:var(--cuo-dark)">The catalog</span>
  </div>
- <h2 class="h-1 mb-3">All 22 modules · all 5 phases</h2>
- <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-2">CyberOS ships as 22 modules — each owned end-to-end by one role, each independently deployable as an Apollo Federation v2 subgraph and a Module-Federation frontend remote. Click any cell to open its dedicated module page.</p>
+ <h2 class="h-1 mb-3">All 23 modules · all 5 phases</h2>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-2">CyberOS ships as 23 modules — each owned end-to-end by one role, each independently deployable as an Apollo Federation v2 subgraph and a Module-Federation frontend remote. Click any cell to open its dedicated module page.</p>
  <p class="text-sm text-slate-500 max-w-3xl leading-relaxed mb-8">Phase ordering reflects the bet that <strong>internal productivity (P1) is the moat</strong>; external SaaS is P4 only.</p>
 
  <!-- P0 row -->
@@ -265,7 +265,7 @@
  <span class="text-sm text-slate-500">P0 phase · 7 modules · gateway + 3 shipped</span>
  </div>
  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
- <a href="modules/brain.html" class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">🧠</div><div class="code">BRAIN</div><div class="title">Universal Memory</div></a>
+ <a href="modules/memory.html" class="module-cell" style="border-top:3px solid var(--memory)"><div class="icon">🧠</div><div class="code">memory</div><div class="title">Universal Memory</div></a>
  <a href="modules/cuo.html" class="module-cell" style="border-top:3px solid var(--cuo)"><div class="icon">🎯</div><div class="code">CUO</div><div class="title">Genie / Router</div></a>
  <a href="modules/skill.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">🛠</div><div class="code">SKILL</div><div class="title">Agent skills</div></a>
  <a href="modules/auth.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">🔐</div><div class="code">AUTH</div><div class="title">Authn/Authz</div></a>
@@ -280,7 +280,7 @@
  <div class="mb-6">
  <div class="flex items-center gap-3 mb-3">
  <span class="phase-chip phase-p1">P1 · Productivity</span>
- <span class="text-sm text-slate-500">P1 phase · 8 modules · the moat</span>
+ <span class="text-sm text-slate-500">P1 phase · 9 modules · the moat (+ PLUGIN: cross-runtime distribution)</span>
  </div>
  <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
  <a href="modules/email.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">✉️</div><div class="code">EMAIL</div><div class="title">Mail + Inbox</div></a>
@@ -291,6 +291,7 @@
  <a href="modules/hr.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">👥</div><div class="code">HR</div><div class="title">Human Resources</div></a>
  <a href="modules/rew.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">💎</div><div class="code">REW</div><div class="title">Total Rewards</div></a>
  <a href="modules/learn.html" class="module-cell" style="border-top:3px solid var(--skill)"><div class="icon">📈</div><div class="code">LEARN</div><div class="title">Learning · Promotion</div></a>
+ <a href="modules/plugin.html" class="module-cell" style="border-top:3px solid var(--infra)"><div class="icon">📦</div><div class="code">PLUGIN</div><div class="title">Cross-runtime distribution</div></a>
  </div>
  </div>
 
@@ -393,10 +394,10 @@
  <!-- P0 — Ochre tint (current phase) -->
  <div class="p-3 rounded-lg" style="background:var(--ochre-50);border:1px solid var(--ochre-100)">
  <div class="font-bold mb-1" style="color:var(--umber-900)">P0 exit · P0 · exit</div>
- <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Modules:</strong> AUTH · AI · MCP · OBS · CHAT · BRAIN · GENIE/CUO</div>
+ <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Modules:</strong> AUTH · AI · MCP · OBS · CHAT · memory · GENIE/CUO</div>
  <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Headcount:</strong> 10 Members</div>
  <div class="mb-2" style="color:var(--text-mute)"><strong style="color:var(--text)">Outcome:</strong> Slack + Zalo decommissioned</div>
- <div class="font-bold" style="color:var(--ochre-700)">7 of 22 modules ready</div>
+ <div class="font-bold" style="color:var(--ochre-700)">7 of 23 modules ready</div>
  </div>
  <!-- P1 — Umber-50 -->
  <div class="p-3 rounded-lg" style="background:var(--umber-50);border:1px solid var(--umber-100)">
@@ -449,7 +450,7 @@
  <span class="section-badge" style="background:var(--cuo-tint);color:var(--cuo-dark)">The C-suite</span>
  </div>
  <h2 class="h-1 mb-3">CUO is one persona — <span style="color:var(--ochre-700)">47 specialists</span> behind it</h2>
- <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CUO presents as one Genie. Internally, 47 C-suite persona workflows load on demand via the open <strong>Anthropic Agent Skills</strong> format. The user sees Genie; Genie routes to whichever skill best fits the request. Same BRAIN, same persona-version stamp, same audit chain. Click any role to jump to its detail on the CUO page.</p>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">CUO presents as one Genie. Internally, 47 C-suite persona workflows load on demand via the open <strong>Anthropic Agent Skills</strong> format. The user sees Genie; Genie routes to whichever skill best fits the request. Same memory, same persona-version stamp, same audit chain. Click any role to jump to its detail on the CUO page.</p>
 
  <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
  <a href="modules/cuo.html#persona-ceo" class="bbg-card p-4 block no-underline" style="text-decoration:none;color:inherit">
@@ -631,7 +632,7 @@ flowchart TB
  <span class="section-badge">Navigate the docs</span>
  </div>
  <h2 class="h-1 mb-3">Where to next</h2>
- <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Four entry points into the rest of the documentation site. Each module page mirrors the same 5W1H structure used on the BRAIN / Skill / CUO pages — the architecture pages cross-cut by concern; the reference pages flatten everything into one searchable list.</p>
+ <p class="text-lg text-slate-600 max-w-3xl leading-relaxed mb-10">Four entry points into the rest of the documentation site. Each module page mirrors the same 5W1H structure used on the memory / Skill / CUO pages — the architecture pages cross-cut by concern; the reference pages flatten everything into one searchable list.</p>
 
  <div class="grid md:grid-cols-2 gap-5">
  <!-- Module pages — Umber border accent -->
@@ -641,9 +642,9 @@ flowchart TB
  <span class="text-xs px-2 py-1 rounded-full font-bold" style="background:var(--umber-50);color:var(--umber-700)">22 pages</span>
  </div>
  <h3 class="text-xl font-bold mb-1.5" style="color:var(--text)">Module pages</h3>
- <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">One dedicated page per module with full 5W1H, dependencies, tech stack, status, FR/NFR mapping, sequence diagrams. Three shipped (BRAIN, Skill, CUO) have the deepest treatment.</p>
+ <p class="text-sm leading-relaxed mb-4" style="color:var(--text-mute)">One dedicated page per module with full 5W1H, dependencies, tech stack, status, FR/NFR mapping, sequence diagrams. Three shipped (memory, Skill, CUO) have the deepest treatment.</p>
  <div class="grid grid-cols-3 gap-1.5 mt-4 text-[11px]">
- <a href="modules/brain.html" class="ds-modpill">BRAIN</a>
+ <a href="modules/memory.html" class="ds-modpill">memory</a>
  <a href="modules/cuo.html" class="ds-modpill">CUO</a>
  <a href="modules/skill.html" class="ds-modpill">SKILL</a>
  <a href="modules/auth.html" class="ds-modpill">AUTH</a>
@@ -712,7 +713,7 @@ flowchart TB
  <ul class="text-sm space-y-1.5">
  <li><a href="https://github.com/cyberskill/cyberos" target="_blank" rel="noopener" class="font-semibold hover:underline" style="color:var(--umber-700)" rel="noopener" target="_blank">github.com/cyberskill/cyberos</a> <span style="color:var(--text-mute)">(placeholder)</span></li>
  <li><a href="https://cyberskill.io" target="_blank" rel="noopener" class="font-semibold hover:underline" style="color:var(--umber-700)" rel="noopener" target="_blank">cyberskill.io</a> <span style="color:var(--text-mute)">(public landing)</span></li>
- <li><a href="modules/brain.html#interop" class="font-semibold hover:underline" style="color:var(--umber-700)">BRAIN interop subset (INTEROP.md)</a></li>
+ <li><a href="modules/memory.html#interop" class="font-semibold hover:underline" style="color:var(--umber-700)">memory interop subset (INTEROP.md)</a></li>
  </ul>
  </div>
  </div>

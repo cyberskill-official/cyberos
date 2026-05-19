@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CEO/interim HR Lead)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-HR-002, FR-HR-003, FR-HR-004, FR-HR-005, FR-HR-007, FR-HR-009, FR-LEARN-001, FR-REW-001, FR-ESOP-001]
+memory_chain_hash: null
+related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-HR-002, FR-HR-003, FR-HR-004, FR-HR-005, FR-HR-007, FR-HR-009, FR-LEARN-001, FR-REW-001, FR-ESOP-001]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
 blocks: [FR-HR-002, FR-HR-003, FR-HR-004, FR-HR-005, FR-HR-007, FR-HR-009, FR-LEARN-001, FR-REW-001, FR-ESOP-001, FR-RES-001]   # all 10 entries are placeholders — not yet specified (downstream consumers)
 
@@ -29,7 +29,7 @@ source_decisions:
   - DEC-205 (member status changes are append-only history rows; the live `status` column is a fast lookup, the history is the source of truth)
   - DEC-206 (level enum closed at 7 values: trainee · associate · senior · lead · principal · director · executive; per VN-1 progression model — adding L8 is an ADR)
   - DEC-207 (start_date is immutable post-active; transition to active locks it; ADR required to amend)
-  - DEC-208 (BRAIN audit kinds: hr.member_created, hr.member_updated, hr.member_status_changed, hr.member_cccd_accessed — sev-1 audit per CCCD access)
+  - DEC-208 (memory audit kinds: hr.member_created, hr.member_updated, hr.member_status_changed, hr.member_cccd_accessed — sev-1 audit per CCCD access)
   - DEC-209 (member.subject_id is 1:1 with auth.subjects.id — same UUID; HR owns the member-fact, AUTH owns the credential)
   - DEC-210 (anniversary_date is computed from start_date — never stored; used for leave-accrual + sabbatical-eligibility calculation)
   - PDPL Art. 14 (sensitive-data handling — CCCD photo + CCCD id are PDPL-sensitive; KMS keyspace + access audit required)
@@ -52,7 +52,7 @@ new_files:
   - services/hr/src/sabbatical.rs                                   # accrual calculator — years_of_service → eligible_days (max 30)
   - services/hr/src/anniversary.rs                                  # immutable computation from start_date
   - services/hr/src/comp_exclusion.rs                               # runtime + CI guard ensuring forbidden columns never appear
-  - services/hr/src/audit/member_events.rs                          # canonical hr.member_* BRAIN row builders (created/updated/status_changed/cccd_accessed)
+  - services/hr/src/audit/member_events.rs                          # canonical hr.member_* memory row builders (created/updated/status_changed/cccd_accessed)
   - services/hr/src/handlers/admin_members.rs                       # POST/GET/PATCH /v1/admin/members (tenant-scoped)
   - services/hr/Cargo.toml                                          # +sqlx, +uuid, +serde, +chrono, +async-trait, +cyberos-cli-exit
   - services/hr/tests/members_test.rs                               # create + get + list + RLS isolation + idempotency
@@ -61,7 +61,7 @@ new_files:
   - services/hr/tests/comp_exclusion_test.rs                        # CI gate — table DDL never contains comp-named columns
   - services/hr/tests/anniversary_test.rs                           # immutable post-active; mutating raises error
   - services/hr/tests/rls_isolation_test.rs                         # tenant-A cannot read tenant-B members
-  - services/hr/tests/audit_row_test.rs                             # every create/update/status-change emits exactly one BRAIN row
+  - services/hr/tests/audit_row_test.rs                             # every create/update/status-change emits exactly one memory row
   - services/hr/tests/level_enum_closed_test.rs                     # adding L8 in code without ADR fails CI
   - services/hr/tests/cccd_field_encrypted_test.rs                  # cccd_encrypted column type is BYTEA, raw cccd_id column never present
   - services/hr/tests/leave_balance_readonly_test.rs                # direct UPDATE to leave_balance is forbidden (materialised view rule)
@@ -145,7 +145,7 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 
 6. **MUST** record every status transition as an append-only row in `member_status_history(member_id, tenant_id, from_status, to_status, changed_at, changed_by_subject_id, reason TEXT)`. The table has `REVOKE UPDATE, DELETE FROM cyberos_app` per AUTHORING.md rule 12; history rows are append-only by SQL grant, not by handler discipline.
 
-7. **MUST** trigger emission of exactly one `hr.member_status_changed` BRAIN audit row per status transition (per DEC-208), atomically with the DB write (audit-before-action per AUTHORING.md rule 25). The row carries `{member_id, tenant_id, from_status, to_status, changed_by_subject_id_hash16, reason, trace_id, ts_ns}`.
+7. **MUST** trigger emission of exactly one `hr.member_status_changed` memory audit row per status transition (per DEC-208), atomically with the DB write (audit-before-action per AUTHORING.md rule 25). The row carries `{member_id, tenant_id, from_status, to_status, changed_by_subject_id_hash16, reason, trace_id, ts_ns}`.
 
 8. **MUST** treat `start_date` as immutable post-transition-to-`active` (per DEC-207). A `BEFORE UPDATE` trigger on `members` rejects any UPDATE that changes `start_date` when the prior `status` was in `('active','on_leave','suspended','terminated')`. Returns `cannot_modify_locked_start_date` to the handler.
 
@@ -159,13 +159,13 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 
 12. **MUST** declare `cccd_encrypted BYTEA` (nullable) as the only CCCD-related column on this table (per DEC-202). Raw `cccd_id` or `cccd_photo_url` MUST NOT exist; encryption + photo storage is owned by FR-HR-003 which writes to a separate `member_cccd` table with its own KMS keyspace.
 
-13. **MUST** emit `hr.member_cccd_accessed` BRAIN audit row at sev-1 priority whenever any handler reads the `cccd_encrypted` column (per DEC-208 + PDPL Art. 14). Access without justification triggers OBS sev-1 alarm via FR-OBS-007.
+13. **MUST** emit `hr.member_cccd_accessed` memory audit row at sev-1 priority whenever any handler reads the `cccd_encrypted` column (per DEC-208 + PDPL Art. 14). Access without justification triggers OBS sev-1 alarm via FR-OBS-007.
 
 14. **MUST** expose REST handlers:
     - `POST /v1/admin/members` (caller MUST have `Resource::HrMember + Action::Admin` per FR-AUTH-101) — creates a Member with `status='candidate'` initially.
     - `GET /v1/admin/members/{subject_id}` (caller MUST have `Resource::HrMember + Action::Read`) — returns the member record (omits `cccd_encrypted` field unless caller has `Action::Admin`).
     - `PATCH /v1/admin/members/{subject_id}` (Admin) — partial update; rejects forbidden field sets (leave_balance_days, comp fields, locked start_date).
-    - `POST /v1/admin/members/{subject_id}/transition` (Admin) — body `{"to_status":"active","reason":"<text>"}`; validates against FSM; emits status-history row + BRAIN audit row in one transaction.
+    - `POST /v1/admin/members/{subject_id}/transition` (Admin) — body `{"to_status":"active","reason":"<text>"}`; validates against FSM; emits status-history row + memory audit row in one transaction.
     - `GET /v1/admin/members` (caller `Action::Read`) — list with cursor pagination; default filter `status IN ('probation','active','on_leave')`.
 
 15. **MUST** ensure 1:1 mapping with `auth.subjects` (per DEC-209): `member.subject_id` is FOREIGN KEY REFERENCES `auth.subjects(id)`. Cascading semantics: ON DELETE RESTRICT (a Member record cannot be removed while the Auth subject exists; offboarding goes through the terminated state, not deletion).
@@ -189,9 +189,9 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 
 22. **MUST** validate that `level` is appropriate for the contract type (per FR-HR-002 once that lands): contract_type='contractor' rejects level='executive' (contractors are not on executive band). This FR ships the column; the cross-validation rule lands in FR-HR-002 (forward-compatible — the validator stub returns OK for all combinations at slice 1).
 
-23. **MUST** anchor a `hr.member_created` BRAIN row at member creation containing `{member_id, tenant_id, subject_id_hash16, level, contract_type, status, created_by_subject_id_hash16}`. The row is PII-scrubbed of `full_name` and `email` via FR-BRAIN-111 before chain commit (only `subject_id_hash16` is privacy-safe in the audit chain).
+23. **MUST** anchor a `hr.member_created` memory row at member creation containing `{member_id, tenant_id, subject_id_hash16, level, contract_type, status, created_by_subject_id_hash16}`. The row is PII-scrubbed of `full_name` and `email` via FR-MEMORY-111 before chain commit (only `subject_id_hash16` is privacy-safe in the audit chain).
 
-24. **MUST** anchor a `hr.member_updated` BRAIN row at every PATCH carrying `{member_id, fields_changed: [...]}` (NO old/new values — those are PDPL-sensitive; the field-change list is enough for compliance trace). The full diff is captured in the OTel span (transient, < 30-day retention).
+24. **MUST** anchor a `hr.member_updated` memory row at every PATCH carrying `{member_id, fields_changed: [...]}` (NO old/new values — those are PDPL-sensitive; the field-change list is enough for compliance trace). The full diff is captured in the OTel span (transient, < 30-day retention).
 
 25. **MUST** support **AUTH-bound trigger**: when an Auth subject is created with claim `hr_employee: true` (set by tenant-admin during onboarding), AUTH calls HR's `POST /v1/admin/members` automatically with `status='candidate'`, `level='trainee'` (operator amends later). Slice 1 ships a manual handler; the auto-trigger is enabled at the AUTH side via the modified `services/auth/src/admin/subjects.rs` patch listed in `modified_files`.
 
@@ -229,11 +229,11 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 
 **Why level NOT enforced against contract type at slice 1 (§1 #22)?** The cross-field validation rule (contract_type='contractor' rejects level='executive') is FR-HR-002's responsibility — FR-HR-002 ships the contract-type enum and lifecycle. Slice 1 keeps the levels orthogonal to enable the schema landing standalone; the constraint plugs in at FR-HR-002 commit without breaking changes.
 
-**Why `subject_id_hash16` instead of full subject_id in BRAIN rows (§1 #23, §1 #24)?** Same pattern as FR-AUTH-002 — privacy-preserving identifier. The full subject_id is in the row's tenant-scoped Postgres write; the audit chain (which is read more broadly) carries only the 16-hex prefix of SHA-256(subject_id). Forensic operations join via the prefix; the prefix is collision-safe at our scale (~1 in 10⁹).
+**Why `subject_id_hash16` instead of full subject_id in memory rows (§1 #23, §1 #24)?** Same pattern as FR-AUTH-002 — privacy-preserving identifier. The full subject_id is in the row's tenant-scoped Postgres write; the audit chain (which is read more broadly) carries only the 16-hex prefix of SHA-256(subject_id). Forensic operations join via the prefix; the prefix is collision-safe at our scale (~1 in 10⁹).
 
 **Why declare the `hr.member_cccd_accessed` event at sev-1 (§1 #13)?** CCCD is the highest-sensitivity field; access to it is rare and operational (e.g. ID verification at a bank visit). Routine queries should NEVER read this field — and a sev-1 alarm on every access means routine code paths that accidentally fetch it surface immediately. Acceptable noise: a few legitimate weekly accesses per tenant. The alarm noise pays for catching policy violations early.
 
-**Why a separate transition handler (§1 #14) instead of PATCH `status`?** Status transitions have side effects (audit row, history row, BRAIN audit, status-FSM validation, OTel metric increment). Allowing them via free-form PATCH would mean every handler call has to redo this orchestration. The dedicated handler `POST /v1/admin/members/{id}/transition` is the contract — and PATCH explicitly rejects `status` field changes (`field_not_patchable`).
+**Why a separate transition handler (§1 #14) instead of PATCH `status`?** Status transitions have side effects (audit row, history row, memory audit, status-FSM validation, OTel metric increment). Allowing them via free-form PATCH would mean every handler call has to redo this orchestration. The dedicated handler `POST /v1/admin/members/{id}/transition` is the contract — and PATCH explicitly rejects `status` field changes (`field_not_patchable`).
 
 ---
 
@@ -355,7 +355,7 @@ CREATE TABLE member_status_history (
     changed_at               TIMESTAMPTZ  NOT NULL DEFAULT now(),
     changed_by_subject_id    UUID         NOT NULL,
     reason                   TEXT         NOT NULL CHECK (length(reason) BETWEEN 1 AND 1000),
-    audit_chain_hash         TEXT         NOT NULL                 -- chained to BRAIN row hash for replay-equivalence
+    audit_chain_hash         TEXT         NOT NULL                 -- chained to memory row hash for replay-equivalence
 );
 
 CREATE INDEX member_status_history_member_idx ON member_status_history (member_id, changed_at DESC);
@@ -600,18 +600,18 @@ pub async fn transition_status(
 1. **Status enum closed at 6 values** — `MemberStatus::ALL.len() == 6`; Postgres enum `member_status` has exactly 6 labels.
 2. **Level enum closed at 7 values** — same shape.
 3. **RLS isolates by tenant** — query as tenant-A returns 0 members of tenant-B.
-4. **POST member happy path** — tenant-admin caller, valid body → 201 with `Member` JSON; `subject_id_hash16` in BRAIN `hr.member_created` row.
+4. **POST member happy path** — tenant-admin caller, valid body → 201 with `Member` JSON; `subject_id_hash16` in memory `hr.member_created` row.
 5. **POST member with comp field in body** — handler rejects with 400 `comp_field_not_allowed` (covered also by schema; handler-side guard is belt-and-braces).
 6. **PATCH leave_balance_days rejected** — handler omits the field from allowed-fields list; direct SQL UPDATE rejected by `leave_balance_is_materialised` trigger.
 7. **PATCH start_date after active rejected** — member at status=active → PATCH `{start_date: ...}` → trigger raises `cannot_modify_locked_start_date`.
 8. **Status FSM rejects invalid transition** — `terminated → active` → handler returns 400 `invalid_status_transition`.
-9. **Status FSM accepts valid transition** — `candidate → probation` → 200; new row in `member_status_history`; one BRAIN `hr.member_status_changed` row.
+9. **Status FSM accepts valid transition** — `candidate → probation` → 200; new row in `member_status_history`; one memory `hr.member_status_changed` row.
 10. **Status history append-only** — `DELETE FROM member_status_history WHERE id = 1` as `cyberos_app` user → permission denied.
 11. **Sabbatical accrual at year < 5** — `sabbatical_accrued_days(start_date - INTERVAL '4 years')` returns 0.
 12. **Sabbatical accrual at year 5** — returns 1.
 13. **Sabbatical accrual at year 30** — returns 30 (capped).
 14. **Sabbatical view filters correctly** — Member at status=active with start_date 6 years ago appears in `sabbatical_eligible_view`; Member at status=probation does not.
-15. **CCCD field access emits sev-1 audit** — GET /v1/admin/members/{id} that returns `cccd_encrypted` → one `hr.member_cccd_accessed` BRAIN row.
+15. **CCCD field access emits sev-1 audit** — GET /v1/admin/members/{id} that returns `cccd_encrypted` → one `hr.member_cccd_accessed` memory row.
 16. **CCCD field default-omitted from JSON** — GET without `Action::Admin` returns `Member` without `cccd_encrypted` (column dropped from response).
 17. **comp_exclusion_test (CI gate)** — DDL with `base_salary` column → test fails.
 18. **comp_exclusion_test passes on shipping migration** — current 0001 has no forbidden columns → green.
@@ -708,7 +708,7 @@ async fn sabbatical_accrual_curve(pool: sqlx::PgPool) {
 async fn cccd_read_emits_sev1_audit(ctx: TestCtx) {
     let member = ctx.create_member_with_cccd().await;
     let _resp = ctx.get_as_admin(&format!("/v1/admin/members/{}?fields=cccd_encrypted", member.subject_id)).await;
-    let rows = ctx.brain_audit_rows("hr.member_cccd_accessed").await;
+    let rows = ctx.memory_audit_rows("hr.member_cccd_accessed").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["member_id"], member.subject_id.to_string());
     assert_eq!(rows[0]["severity"], "sev-1");
@@ -730,7 +730,7 @@ async fn direct_update_to_leave_balance_blocked(pool: sqlx::PgPool) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton. The 4 remaining BRAIN row builders in `audit/member_events.rs` follow the canonical pattern: tenant-aware, PII-scrubbed via FR-BRAIN-111, chained per AGENTS.md §6.)
+(API contract above is the skeleton. The 4 remaining memory row builders in `audit/member_events.rs` follow the canonical pattern: tenant-aware, PII-scrubbed via FR-MEMORY-111, chained per AGENTS.md §6.)
 
 ---
 
@@ -753,8 +753,8 @@ async fn direct_update_to_leave_balance_blocked(pool: sqlx::PgPool) {
 
 **Cross-module:**
 - **FR-AUTH-101** — RBAC; `Resource::HrMember` + `Action::Admin/Read` are in the matrix.
-- **FR-AI-003** — BRAIN audit bridge; receives `hr.member_created`, `hr.member_updated`, `hr.member_status_changed`, `hr.member_cccd_accessed`.
-- **FR-BRAIN-111** — PII detection; applied to `full_name` + `email` before chain commit.
+- **FR-AI-003** — memory audit bridge; receives `hr.member_created`, `hr.member_updated`, `hr.member_status_changed`, `hr.member_cccd_accessed`.
+- **FR-MEMORY-111** — PII detection; applied to `full_name` + `email` before chain commit.
 
 ---
 
@@ -794,7 +794,7 @@ async fn direct_update_to_leave_balance_blocked(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.3 — hr.member_created BRAIN row
+### 8.3 — hr.member_created memory row
 
 ```json
 {
@@ -816,7 +816,7 @@ async fn direct_update_to_leave_balance_blocked(pool: sqlx::PgPool) {
 { "to_status": "active", "reason": "probation passed; HR confirmation 2026-08-16" }
 ```
 
-### 8.5 — hr.member_status_changed BRAIN row
+### 8.5 — hr.member_status_changed memory row
 
 ```json
 {
@@ -831,7 +831,7 @@ async fn direct_update_to_leave_balance_blocked(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.6 — hr.member_cccd_accessed BRAIN row (sev-1)
+### 8.6 — hr.member_cccd_accessed memory row (sev-1)
 
 ```json
 {
@@ -875,7 +875,7 @@ All other questions resolved.
 | `member_active_view` filter drift (e.g. someone adds `'candidate'` to view definition) | `member_active_view_predicate_test` asserts exact set | CI fails | Restore canonical predicate |
 | Sabbatical accrual computed wrong (drift) | `sabbatical_test` calibration curve | CI fails | Restore formula |
 | CCCD field read without audit | Test `cccd_read_emits_sev1_audit` | CI fails | Ensure audit emission wraps every cccd_encrypted read path |
-| BRAIN row commit fails mid-transaction | Outer tx rolls back; nothing persisted | 500 `audit_failed` | Brain_writer diagnosis |
+| memory row commit fails mid-transaction | Outer tx rolls back; nothing persisted | 500 `audit_failed` | Memory_writer diagnosis |
 | Member row contains full_name with PII not scrubbed | PII test in audit row builder | Pre-commit failure | Fix PII rule |
 | Duplicate (tenant_id, email) | UNIQUE constraint | 409 `email_taken` | Use different email |
 | FSM lookup table drift (e.g. `is_valid_transition` adds a case) | `status_fsm_test::valid_transitions_accepted` asserts exact set | CI fails | Either restore or ADR + test update |
@@ -888,7 +888,7 @@ All other questions resolved.
 | Cross-tenant member create attempt | RLS WITH CHECK denies | 403 `permission_denied` | Switch tenant context |
 | `subject_id_hash16` collision | 16-hex prefix = 64 bits; collision-safe ~10⁹ | Acceptable per design | None |
 | Concurrent member_status_history insert + member update | Postgres serialisable transaction | Either both succeed or both retry | None — designed |
-| `member_status_history.audit_chain_hash` invalid (replay broken) | Brain writer chain validator | Sev-3 | Manual recompute + repair |
+| `member_status_history.audit_chain_hash` invalid (replay broken) | Memory writer chain validator | Sev-3 | Manual recompute + repair |
 | Generated column `sabbatical_eligible_at` recomputed on every SELECT | Postgres treats as STORED | Single computation on write | None |
 | Idempotency-Key reused with different body | Idempotency layer returns 409 | None — designed | Use a new key |
 | Performance regression > 100 ms p95 | `members_perf_test` | CI fails | Profile + optimise |
@@ -905,9 +905,9 @@ All other questions resolved.
 - **The 6-state FSM is the contract** — adding states is an ADR. Each state has a downstream module assumption (REW: payroll filter; ESOP: grant eligibility; RES: allocation gate). State drift causes silent module-by-module breakage.
 - **Generated column for `sabbatical_eligible_at` is STORED, not VIRTUAL** — STORED columns are indexed-friendly and stable across schema version updates. VIRTUAL recomputes on read.
 - **`leave_balance_days` is `NUMERIC(5,1)`** — supports half-days (e.g. 12.5 days). The maximum is 999.9 days; that's ~3 years' accrual — well above any realistic value.
-- **`subject_id_hash16` is the privacy-preserving join key** in BRAIN rows. Forensic lookups join via subject_id_hash16 against the tenant-scoped members table; the hash is a one-way pseudo-id.
+- **`subject_id_hash16` is the privacy-preserving join key** in memory rows. Forensic lookups join via subject_id_hash16 against the tenant-scoped members table; the hash is a one-way pseudo-id.
 - **The comp-exclusion guard is intentionally redundant**: DB CHECK + CI gate + handler-side allow-list + disallowed_tools enumeration. The cost is < 0.5h to maintain; the benefit is "salary doesn't leak via HR queries."
-- **The `audit_chain_hash` field on `member_status_history` chains the history row to the BRAIN audit row** — so the BRAIN chain can be replayed to verify the history row is authentic. Mismatch = tampering detected.
+- **The `audit_chain_hash` field on `member_status_history` chains the history row to the memory audit row** — so the memory chain can be replayed to verify the history row is authentic. Mismatch = tampering detected.
 - **The `bypass_leave_balance_check` GUC** is a deliberate escape hatch for FR-HR-004's recompute trigger; it's set within the trigger's transaction and never accessible from regular handlers. Don't use it elsewhere.
 - **`level` and `contract_type` are NOT cross-validated at slice 1** — FR-HR-002 ships the constraint. This FR's tests assert the columns are orthogonal at slice 1; slice 2 tests assert the constraint plugs in cleanly.
 - **`member_active_view` is the join target for most cross-module queries** — REW payroll, RES capacity matrix, LEARN skill rollup. Querying `members` directly without the status filter is an anti-pattern; tests should call out the view.
@@ -920,7 +920,7 @@ All other questions resolved.
 - **`hr.member_cccd_accessed` at sev-1** means OBS will page on the very first access; this is intentional alarm volume. Acceptable noise: ~10/month per tenant.
 - **The closed contract_type enum (5 values) is owned by FR-HR-002** — this FR declares the enum so the column type exists, but FR-HR-002 ships the lifecycle rules (probation auto-expires at 60 days, etc.).
 - **`subject_id` (UUID) NOT `member_id` (UUID)** — same physical column, semantic clarification. Member is a FACT about a SUBJECT; the SUBJECT is the credential identity. PK reuse is intentional.
-- **`reason` field PII concerns** — operators may write "PII: Person A had a panic attack in Q3" into the reason. The audit row scrubs `reason` via FR-BRAIN-111 PII rules before chain commit; status_history table is RLS-protected and the audit chain is the long-term record.
+- **`reason` field PII concerns** — operators may write "PII: Person A had a panic attack in Q3" into the reason. The audit row scrubs `reason` via FR-MEMORY-111 PII rules before chain commit; status_history table is RLS-protected and the audit chain is the long-term record.
 - **`anniversary_date` is computed**, not stored — it's `start_date + INTERVAL '<n>' year`. Avoids an extra column that could drift.
 - **`level::executive` is the ceiling** — `founder` is the AUTH RBAC role, distinct from the HR level. Founders are typically `level=executive` Members PLUS hold the `founder` role per FR-AUTH-101.
 - **The 7-level enum follows VN-1 progression conventions** — trainee/associate/senior/lead/principal/director/executive. ABAC-style level fields (e.g. "L4.5") are explicitly forbidden; promotion is integer ladder steps.

@@ -65,3 +65,100 @@ def test_legacy_yaml_dispatches() -> None:
 def test_looks_like_yaml_for_json_is_false() -> None:
     raw = _build({"id": "x", "kind": "fact", "ts_ns": 1, "actor": "a"})
     assert looks_like_yaml(raw) is False
+
+
+def test_legacy_yaml_v0_workbench_alias() -> None:
+    """v0 workbench frontmatter (memory_id / scope / created_by / created_at)
+    must alias cleanly onto the v1 (id / kind / actor / ts_ns) schema so the
+    708 memories imported on 2026-05-19 are readable via cyberos view.
+
+    v0 scope=meta is not in the v1 kind enum, so kind="unknown" + the original
+    scope is preserved in extra.v0_scope (see _V0_SCOPE_TO_V1_KIND).
+    """
+    pytest.importorskip("yaml")
+    raw = (
+        b"---\n"
+        b"memory_id: mem_019df384-4d80-74a9-a613-4b841e911a29\n"
+        b"scope: meta\n"
+        b"classification: operational\n"
+        b"created_at: 2026-05-04T22:03:47+07:00\n"
+        b"created_by: agent:claude-opus-4-7\n"
+        b"---\n"
+        b"# REF-001 body\n"
+    )
+    fm, body = parse_legacy_yaml(raw)
+    assert fm.id == "mem_019df384-4d80-74a9-a613-4b841e911a29"
+    assert fm.kind == "unknown"  # v0 scope=meta → v1 kind=unknown
+    assert fm.extra.get("v0_scope") == "meta"
+    assert fm.actor == "agent:claude-opus-4-7"
+    # ts_ns derived from created_at via ISO 8601 → epoch nanoseconds
+    from datetime import datetime
+    expected_ts_ns = int(
+        datetime.fromisoformat("2026-05-04T22:03:47+07:00").timestamp() * 1_000_000_000
+    )
+    assert fm.ts_ns == expected_ts_ns
+    assert body == b"# REF-001 body\n"
+
+
+def test_legacy_yaml_v1_wins_over_v0_aliases() -> None:
+    """If both v0 and v1 names are present, v1 wins (alias never clobbers)."""
+    pytest.importorskip("yaml")
+    raw = (
+        b"---\n"
+        b"id: DEC-EXPLICIT\n"
+        b"kind: decision\n"
+        b"ts_ns: 42\n"
+        b"actor: stephen\n"
+        b"memory_id: mem_should_be_ignored\n"
+        b"scope: should_be_ignored\n"
+        b"created_by: should_be_ignored\n"
+        b"created_at: 2026-01-01T00:00:00+00:00\n"
+        b"---\n"
+        b"body\n"
+    )
+    fm, _ = parse_legacy_yaml(raw)
+    assert fm.id == "DEC-EXPLICIT"
+    assert fm.kind == "decision"
+    assert fm.actor == "stephen"
+    assert fm.ts_ns == 42
+
+
+def test_legacy_yaml_v0_scope_meta_maps_to_unknown() -> None:
+    """v0 scope=meta has no v1 kind equivalent → kind="unknown" + extra.v0_scope.
+
+    Without this remap, `cyberos validate` rejects v0-imported files because
+    'meta' is not in the v1 kind enum.
+    """
+    pytest.importorskip("yaml")
+    raw = (
+        b"---\n"
+        b"memory_id: mem_x\n"
+        b"scope: meta\n"
+        b"created_at: 2026-05-04T22:03:47+07:00\n"
+        b"created_by: stephen\n"
+        b"---\n"
+        b"body\n"
+    )
+    fm, _ = parse_legacy_yaml(raw)
+    assert fm.kind == "unknown"
+    assert fm.extra.get("v0_scope") == "meta"
+    # original v0 metadata preserved
+    assert fm.extra.get("v0_memory_id") == "mem_x"
+    assert fm.extra.get("v0_created_by") == "stephen"
+
+
+def test_legacy_yaml_v0_scope_decision_passes_through() -> None:
+    """v0 scope=decision (a value that IS in v1 kind enum) maps cleanly."""
+    pytest.importorskip("yaml")
+    raw = (
+        b"---\n"
+        b"memory_id: DEC-100\n"
+        b"scope: decision\n"
+        b"created_at: 2026-01-01T00:00:00+00:00\n"
+        b"created_by: stephen\n"
+        b"---\n"
+        b"body\n"
+    )
+    fm, _ = parse_legacy_yaml(raw)
+    assert fm.kind == "decision"
+    assert fm.extra.get("v0_scope") == "decision"

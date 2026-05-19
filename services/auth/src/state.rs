@@ -37,6 +37,10 @@ pub struct AppState {
     /// (per-IP 10/min + per-account 5/min). In-memory; multi-instance prod
     /// will swap to Redis when FR-OBS-002 ships.
     pub rate_limit: Arc<RateLimiter>,
+    /// FR-AUTH-005 §1 #3 + #11 + G-011 — JWT jti deny-list consulted by
+    /// `verify_jwt`. Populated by revoke handler with the subject's active
+    /// jtis. In-memory per DEC-DENY-LIST-001 slice-1 (Redis lift is FR-AUTH-110).
+    pub deny_list: crate::deny_list::DenyList,
 }
 
 impl AppState {
@@ -113,6 +117,7 @@ impl AppState {
             travel_policy: PolicyCache::new(),
             sticky_suppress: StickySuppress::new(),
             rate_limit: Arc::new(RateLimiter::new()),
+            deny_list: crate::deny_list::DenyList::new(),
         })
     }
 

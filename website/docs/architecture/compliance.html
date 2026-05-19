@@ -231,8 +231,8 @@
  <li><strong>vn-shard Postgres</strong> with RLS for all Vietnamese-origin PD; Singapore region default, Vietnam-resident shard available from P2.</li>
  <li><strong>DPIA template</strong> as KB artifact; DPO (Founder until P3) signs before any new data category is ingested.</li>
  <li><strong>A05 cross-border-transfer impact assessment</strong> in the Compliance subgraph; PDPL Art. 20 60-day post-audit submission auto-generated; one original copy per transfer activity.</li>
- <li><strong>Sensitive-tagged facts</strong> in BRAIN Layer 2 are encrypted-at-rest with per-tenant KMS; never written to Layer 3 without explicit consent.</li>
- <li><strong>BRAIN ingestion denylist (DEC-036)</strong> structurally excludes compensation, equity, government IDs, bank accounts, and health data.</li>
+ <li><strong>Sensitive-tagged facts</strong> in memory Layer 2 are encrypted-at-rest with per-tenant KMS; never written to Layer 3 without explicit consent.</li>
+ <li><strong>memory ingestion denylist (DEC-036)</strong> structurally excludes compensation, equity, government IDs, bank accounts, and health data.</li>
  </ul>
  </article>
 
@@ -355,7 +355,7 @@
  <tr><td>Law 91/2025 + Decree 356</td><td>National-law DPO, fines 5% revenue</td><td>CP · HR (DPO role)</td><td>(FR pending)</td><td>P2</td></tr>
  <tr><td>Law 91/2025 right-to-explanation</td><td>CUO output explainability</td><td>AI + CUO</td><td>DEC-055</td><td>P0</td></tr>
  <tr><td>Penal Code §288</td><td>Criminal liability prevention</td><td>(Infra) · audit chain</td><td>N(FR pending)</td><td>P0</td></tr>
- <tr><td>Law on Accounting Art. 41</td><td>10-year retention</td><td>INV + BRAIN archival</td><td>DEC-020</td><td>P2</td></tr>
+ <tr><td>Law on Accounting Art. 41</td><td>10-year retention</td><td>INV + memory archival</td><td>DEC-020</td><td>P2</td></tr>
  <tr><td>NQ 142/2024 + TT 80/2021</td><td>e-invoice, MST, monthly VAT filing</td><td>INV + Skill (3 VN skills)</td><td>(FR pending)..050</td><td>P2</td></tr>
  <tr><td>Labour Code 2019</td><td>SI/PIT remittance, payslip retention</td><td>REW</td><td>(FR pending)..080</td><td>P1</td></tr>
  </tbody>
@@ -403,7 +403,7 @@
  <ul class="text-sm text-slate-600 space-y-1 list-disc list-inside">
  <li>eu-shard via AWS Frankfurt at P3</li>
  <li>DSAR surface via CP module</li>
- <li>Right-to-erasure propagates: BRAIN UPDATE → DELETE through Layer 2, timestamped tombstone in Layer 3</li>
+ <li>Right-to-erasure propagates: memory UPDATE → DELETE through Layer 2, timestamped tombstone in Layer 3</li>
  <li>72-h breach timer wired to OBS</li>
  <li>DPA template auto-attached to every tenant contract</li>
  </ul>
@@ -572,7 +572,7 @@
  <h3 class="h-2">AI-CAIQ — "Valid-AI-ted" extension</h3>
  <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-bold">target · P1 exit (P1 · exit)</span>
  </div>
- <p class="text-slate-600 leading-relaxed mb-3">CSA's AI-extended CAIQ — adds AI-specific control questions (training data provenance, model bias monitoring, prompt safety, persona versioning). Completed alongside L1. The persona-version stamp (DEC-035), model registry, and BRAIN ingestion denylist (DEC-036) cover most of the AI-CAIQ surface by construction.</p>
+ <p class="text-slate-600 leading-relaxed mb-3">CSA's AI-extended CAIQ — adds AI-specific control questions (training data provenance, model bias monitoring, prompt safety, persona versioning). Completed alongside L1. The persona-version stamp (DEC-035), model registry, and memory ingestion denylist (DEC-036) cover most of the AI-CAIQ surface by construction.</p>
  </article>
 </section>
 
@@ -854,14 +854,14 @@ sequenceDiagram
  <div class="text-sm font-semibold text-slate-700 mb-2 text-center">Flow · DPIA workflow (PDPL Art. 24 + GDPR Art. 35)</div>
  <div class="mermaid">
 flowchart TB
- TRIGGER[("New module / new data category<br>going into BRAIN")] --> CHECK{"Sensitive PD?<br>Health · biometric · financial · employment-decision"}
+ TRIGGER[("New module / new data category<br>going into memory")] --> CHECK{"Sensitive PD?<br>Health · biometric · financial · employment-decision"}
  CHECK -- "no" --> SKIP[/"No DPIA · log assessment"/]
  CHECK -- "yes" --> TEMPLATE["Open DPIA template<br>(KB module · auto-prefilled)"]
  TEMPLATE --> FILL["DPO drafts<br>1. processing description<br>2. lawful basis<br>3. minimisation<br>4. retention<br>5. sharing chain<br>6. risk × severity<br>7. mitigations<br>8. residual risk"]
  FILL --> COUNCIL{"DPO + Founder sign-off"}
  COUNCIL -- "reject" --> TEMPLATE
  COUNCIL -- "approve" --> A05["Cross-border? File A05 form"]
- A05 --> BR_GATE["Update BRAIN ingest denylist<br>per DPIA categorisation"]
+ A05 --> BR_GATE["Update memory ingest denylist<br>per DPIA categorisation"]
  BR_GATE --> AUDIT["Append to compliance audit chain"]
  AUDIT --> LIVE[("Processing may begin")]
 
@@ -884,7 +884,7 @@ sequenceDiagram
  participant TC as Trust Center · DSAR form
  participant AU as AUTH · identity proof
  participant CP as CP subgraph
- participant BR as BRAIN
+ participant BR as memory
  participant DB as Per-module Postgres
  participant FILES as R2 signed exports
 
@@ -896,7 +896,7 @@ sequenceDiagram
  par data discovery
  CP->>DB: SELECT all rows with subject_id (RLS-aware)
  and
- CP->>BR: brainSearch + brainFacts(subject_id)
+ CP->>BR: memorySearch + memoryFacts(subject_id)
  end
 
  DB-->>CP: rows · JSON export
@@ -906,7 +906,7 @@ sequenceDiagram
 
  alt erasure request
  S->>CP: also request erasure (Art. 17)
- CP->>BR: brainForget(scope=subject_id)
+ CP->>BR: memoryForget(scope=subject_id)
  CP->>DB: redact / nullify retained-fields
  CP->>S: erasure confirmation with retention rationale
  end

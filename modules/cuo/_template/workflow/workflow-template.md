@@ -25,7 +25,7 @@ consults:
   - { persona: cuo/<persona-slug>, when: "<trigger condition>" }
 
 audit_hooks:
-  - each step's output is logged to BRAIN audit chain via memory module (per memory/docs/AGENTS.md §6)
+  - each step's output is logged to memory audit chain via memory module (per memory/docs/AGENTS.md §6)
   - workflow completion emits a single `workflow_complete` row with the full chain summary
   - HITL pauses halt the chain; resumption requires the operator's reply to be parsed and applied
 ---

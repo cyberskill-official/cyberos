@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-003, FR-SKILL-107, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-003, FR-SKILL-107, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CRM-003]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1682 2026-05-17 — Confirmation requires: MST format pass (FR-CRM-003) + GDT registered entity name match (Levenshtein distance ≤3)
   - DEC-1683 2026-05-17 — Non-blocking: validation result stored; account write proceeds (CRO can fix later)
   - DEC-1684 2026-05-17 — Cache: GDT lookup cached 30 days (TIN data rarely changes); per-tenant cache namespace
-  - DEC-1685 2026-05-17 — BRAIN audit kinds: crm.mst_validation_invoked, crm.mst_validation_confirmed, crm.mst_validation_failed
+  - DEC-1685 2026-05-17 — memory audit kinds: crm.mst_validation_invoked, crm.mst_validation_confirmed, crm.mst_validation_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without validation, invalid MSTs persist → FR-INV-007 hóa �
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship vietnam-mst-validate@1 skill at `services/crm/src/vn/mst_validate_skill.rs` calling GDT TIN lookup on VN account writes, non-blocking result, 30d cache, 3 BRAIN audit kinds.
+The CRM service **MUST** ship vietnam-mst-validate@1 skill at `services/crm/src/vn/mst_validate_skill.rs` calling GDT TIN lookup on VN account writes, non-blocking result, 30d cache, 3 memory audit kinds.
 
 1. **MUST** register skill name `vietnam-mst-validate@1` per DEC-1680.
 
@@ -108,7 +108,7 @@ The CRM service **MUST** ship vietnam-mst-validate@1 skill at `services/crm/src/
    -- Append-only
    ```
 
-9. **MUST** emit 3 BRAIN audit kinds per DEC-1685. PII per FR-BRAIN-111: MST + names SHA256 hashed.
+9. **MUST** emit 3 memory audit kinds per DEC-1685. PII per FR-MEMORY-111: MST + names SHA256 hashed.
 
 10. **MUST** thread trace_id from account hook → skill → GDT call → audit.
 
@@ -152,7 +152,7 @@ Sample result:
 ---
 
 ## §4 — Acceptance criteria
-1. **Skill registered as vietnam-mst-validate@1**. 2. **Hook on account create+update when vn-1 + mst set**. 3. **Non-blocking (account save succeeds even if GDT down)**. 4. **GDT API called for new MST**. 5. **Cache hit on repeat call within 30d**. 6. **Levenshtein ≤3 → confirmed**. 7. **>3 → name_mismatch**. 8. **404 from GDT → mst_not_found**. 9. **GDT 5xx → gdt_unavailable**. 10. **Format invalid → format_invalid (before HTTP)**. 11. **5-result enum + cardinality test**. 12. **3 BRAIN audit kinds emitted**. 13. **PII scrubbed (MST+names SHA256)**. 14. **RLS denies cross-tenant**. 15. **Trace_id preserved**. 16. **Result row append-only**. 17. **Manual revalidate via POST**. 18. **History queryable (latest in GET)**. 19. **Account update doesn't block on pending validation**. 20. **GDT cache namespaced per-tenant**.
+1. **Skill registered as vietnam-mst-validate@1**. 2. **Hook on account create+update when vn-1 + mst set**. 3. **Non-blocking (account save succeeds even if GDT down)**. 4. **GDT API called for new MST**. 5. **Cache hit on repeat call within 30d**. 6. **Levenshtein ≤3 → confirmed**. 7. **>3 → name_mismatch**. 8. **404 from GDT → mst_not_found**. 9. **GDT 5xx → gdt_unavailable**. 10. **Format invalid → format_invalid (before HTTP)**. 11. **5-result enum + cardinality test**. 12. **3 memory audit kinds emitted**. 13. **PII scrubbed (MST+names SHA256)**. 14. **RLS denies cross-tenant**. 15. **Trace_id preserved**. 16. **Result row append-only**. 17. **Manual revalidate via POST**. 18. **History queryable (latest in GET)**. 19. **Account update doesn't block on pending validation**. 20. **GDT cache namespaced per-tenant**.
 
 ---
 
@@ -195,7 +195,7 @@ async fn non_blocking_on_gdt_down() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CRM-003.
-**Cross-module:** FR-SKILL-107 (skill registry), FR-BRAIN-111 (PII), FR-MCP-007 (async).
+**Cross-module:** FR-SKILL-107 (skill registry), FR-MEMORY-111 (PII), FR-MCP-007 (async).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -215,7 +215,7 @@ async fn non_blocking_on_gdt_down() {
 - §11.1 GDT API: `GET https://hoadondientu.gdt.gov.vn/api/tin-lookup/{mst}` (placeholder URL — confirm at integration).
 - §11.2 Cache via Redis: `mst:lookup:{tenant_id}:{mst}` TTL 2592000s.
 - §11.3 Levenshtein via `strsim` crate; normalize case + strip company suffixes ("Corp"/"Inc"/"TNHH") before compare.
-- §11.4 BRAIN audit body: account_id, result enum; MST + names SHA256.
+- §11.4 memory audit body: account_id, result enum; MST + names SHA256.
 - §11.5 Manual revalidate ignores cache (force fresh GDT call).
 
 ---

@@ -1,14 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: coverage-gate-author
-description: |
-  Run the project's test suite + measure coverage on the files touched
-  by the current FR (per the `git diff` since the FR's "building"
-  status was set). Emits a coverage-gate@1 artefact: raw terminal
-  output of the coverage tool, per-file coverage %, list of files
-  below 90 %, list of edge-case-matrix rows without a corresponding
-  test. Used by chief-technology-officer/implement-backlog-frs as
-  step 13.
+description: >-
+  Test coverage gate (testing → done) — run the project's test suite + measure coverage on the files touched by the current FR (per the `git diff` since the FR's `implementing` status was set). Emits a coverage-gate@1 artefact: raw terminal output of the coverage tool, per-file coverage %, list of files below 90 %, list of edge-case-matrix rows without a corresponding test. Used by `chief-technology-officer/ship-feature-requests` during the `testing` phase to gate the `testing → done` transition (per `docs/feature-requests/STATUS-REFERENCE.md` §1.1). Use when user asks to "draft a coverage gate" or "create the coverage gate". Do NOT use for "audit existing coverage gate" (use coverage-gate-audit instead). Do NOT use for spec correctness — that is `feature-request-audit`'s job, run during the `draft → ready_to_implement` transition; the two gates are deliberately separated so spec correctness can be verified before any implementation work begins.
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -17,7 +11,7 @@ metadata:
   cyberos-template: coverage-gate@1
   cyberos-rubric-target: coverage_gate_rubric@1.0
 
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -34,7 +28,7 @@ outputs:
   - { name: report, format: coverage-gate@1 }
 
 triggers:
-  - workflow `chief-technology-officer/implement-backlog-frs` step 13
+  - workflow `chief-technology-officer/ship-feature-requests` testing phase (step 23 — first author call; step 24 audit)
 blockers:
   - "no coverage tool configured in repo — must be resolved first"
   - "test framework is broken — diagnose before running this skill"

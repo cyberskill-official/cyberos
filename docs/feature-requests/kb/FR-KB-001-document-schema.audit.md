@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-KB-001 ships the KB Document schema — slug + markdown body + YAML frontmatter + closed category enum + 3-tier ACL + immutable versions + translation_of. Scope: 27 §1 normative clauses covering 4 closed Postgres enums (category 5, permission 3, language 2, status 3), append-only versions via SQL grant, per-tenant per-language slug uniqueness, translation_of cross-language enforcement, role_restricted role validation against FR-AUTH-101, frontmatter YAML schema with deny_unknown_fields, server-computed body_sha256, monotonic version_number trigger, REST surface (create/get/list/version/archive/patch), 4 BRAIN audit kinds with sev-2 ACL events, two SQL views + version chain walker, owner FK, performance budget. 18 rationale paragraphs. §3 contains: migration 0001 (2 tables + 4 enums + 4 triggers + RLS + REVOKE), migration 0002 (views + walker), Rust types, frontmatter validator, REST handler. 30 ACs. 33 failure-mode rows. 23 implementation notes.
+FR-KB-001 ships the KB Document schema — slug + markdown body + YAML frontmatter + closed category enum + 3-tier ACL + immutable versions + translation_of. Scope: 27 §1 normative clauses covering 4 closed Postgres enums (category 5, permission 3, language 2, status 3), append-only versions via SQL grant, per-tenant per-language slug uniqueness, translation_of cross-language enforcement, role_restricted role validation against FR-AUTH-101, frontmatter YAML schema with deny_unknown_fields, server-computed body_sha256, monotonic version_number trigger, REST surface (create/get/list/version/archive/patch), 4 memory audit kinds with sev-2 ACL events, two SQL views + version chain walker, owner FK, performance budget. 18 rationale paragraphs. §3 contains: migration 0001 (2 tables + 4 enums + 4 triggers + RLS + REVOKE), migration 0002 (views + walker), Rust types, frontmatter validator, REST handler. 30 ACs. 33 failure-mode rows. 23 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -48,7 +48,7 @@ First-pass emitted only `kb.document_versioned`. Resolved: §1 #16 + DEC-249 + d
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (4 closed enums × RLS × append-only versions × monotonic version numbering × translation pair enforcement × role-restricted validation × frontmatter schema × server-side hashing × atomic INSERT-and-update-pointer × 4 BRAIN audit kinds × 2 SQL views + walker × REST + idempotency × OTel × archive workflow), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (4 closed enums × RLS × append-only versions × monotonic version numbering × translation pair enforcement × role-restricted validation × frontmatter schema × server-side hashing × atomic INSERT-and-update-pointer × 4 memory audit kinds × 2 SQL views + walker × REST + idempotency × OTel × archive workflow), not by line targets.
 
 ---
 

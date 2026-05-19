@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AI-016, FR-AI-006, FR-AUTH-105, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-AI-016, FR-AI-006, FR-AUTH-105, FR-MEMORY-111]
 depends_on: [FR-AI-016]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-2381 2026-05-17 — Closed enum `vn_provider` = {viettel_cloud, fpt_cloud}; cardinality 2 (extensible)
   - DEC-2382 2026-05-17 — Per-tenant provider creds in KMS (CTO-only writes); contract negotiation handled outside system
   - DEC-2383 2026-05-17 — Failover: if primary (Viettel) down, fall back to FPT; both down → return Vn1 refusal per FR-AI-016 contract
-  - DEC-2384 2026-05-17 — BRAIN audit kinds: ai.vn_provider_invoked, ai.vn_provider_failover, ai.vn_provider_both_down, ai.vn_provider_creds_set
+  - DEC-2384 2026-05-17 — memory audit kinds: ai.vn_provider_invoked, ai.vn_provider_failover, ai.vn_provider_both_down, ai.vn_provider_creds_set
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without VN providers, Vn1 tenants stuck (FR-AI-016 refuses). W
 
 ## §1 — Description (BCP-14 normative)
 
-The AI service **MUST** ship VN provider integration at `services/ai/src/providers/vn/` adding Viettel + FPT to FR-AI-016 region set, failover, 4 BRAIN audit kinds.
+The AI service **MUST** ship VN provider integration at `services/ai/src/providers/vn/` adding Viettel + FPT to FR-AI-016 region set, failover, 4 memory audit kinds.
 
 1. **MUST** validate `vn_provider` against closed enum per DEC-2381.
 
@@ -110,7 +110,7 @@ The AI service **MUST** ship VN provider integration at `services/ai/src/provide
    GET /v1/ai/vn-providers/health                 (per-provider status)
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2384. PII per FR-BRAIN-111: prompts hashed at FR-AI-006 layer (not duplicated here).
+7. **MUST** emit 4 memory audit kinds per DEC-2384. PII per FR-MEMORY-111: prompts hashed at FR-AI-006 layer (not duplicated here).
 
 8. **MUST** thread trace_id from request → dispatcher → audit.
 
@@ -147,7 +147,7 @@ Sample provider health:
 ---
 
 ## §4 — Acceptance criteria
-1. **vn_provider enum cardinality 2**. 2. **FR-AI-016 region set extended**. 3. **Viettel primary**. 4. **FPT failover on Viettel 5xx**. 5. **Both down → refusal (not silent reroute)**. 6. **Refusal code `vn1_provider_outage` distinct from `vn1_no_provider_yet`**. 7. **CTO-only creds**. 8. **Creds in KMS**. 9. **4 BRAIN audit kinds emitted**. 10. **PII via FR-AI-006**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Per-provider active flag**. 14. **Health endpoint shows status**. 15. **Append-only via REVOKE except status cols**. 16. **Failover latency < 500ms**. 17. **Both-provider creds optional (single OK if other unavailable)**. 18. **Contract terms documented per provider**. 19. **Inactive provider skipped in dispatch**. 20. **Cross-tenant cred isolation**.
+1. **vn_provider enum cardinality 2**. 2. **FR-AI-016 region set extended**. 3. **Viettel primary**. 4. **FPT failover on Viettel 5xx**. 5. **Both down → refusal (not silent reroute)**. 6. **Refusal code `vn1_provider_outage` distinct from `vn1_no_provider_yet`**. 7. **CTO-only creds**. 8. **Creds in KMS**. 9. **4 memory audit kinds emitted**. 10. **PII via FR-AI-006**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Per-provider active flag**. 14. **Health endpoint shows status**. 15. **Append-only via REVOKE except status cols**. 16. **Failover latency < 500ms**. 17. **Both-provider creds optional (single OK if other unavailable)**. 18. **Contract terms documented per provider**. 19. **Inactive provider skipped in dispatch**. 20. **Cross-tenant cred isolation**.
 
 ---
 
@@ -167,7 +167,7 @@ async fn fpt_failover_on_viettel_5xx() {
     ctx.mock_viettel_500().await;
     let r = ctx.invoke("hello", "vn-1").await;
     assert!(r.dispatched_to == "fpt_cloud");
-    let audits = ctx.fetch_brain_audits("ai.vn_provider_failover").await;
+    let audits = ctx.fetch_memory_audits("ai.vn_provider_failover").await;
     assert!(!audits.is_empty());
 }
 
@@ -188,7 +188,7 @@ async fn both_down_refusal() {
 
 ## §7 — Dependencies
 **Upstream:** FR-AI-016.
-**Cross-module:** FR-AI-006 (provider abstraction), FR-AUTH-105 (KMS), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AI-006 (provider abstraction), FR-AUTH-105 (KMS), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -207,7 +207,7 @@ async fn both_down_refusal() {
 ## §11 — Implementation notes
 - §11.1 Viettel + FPT REST APIs; auth via API key + tenant-scoped quota.
 - §11.2 Failover threshold: 1 attempt at primary (no retry); immediate fall to secondary.
-- §11.3 BRAIN audit body: tenant_id, provider, status; prompts hashed via FR-AI-006.
+- §11.3 memory audit body: tenant_id, provider, status; prompts hashed via FR-AI-006.
 - §11.4 Future: add VNG Cloud or other VN providers via enum extension.
 - §11.5 Per-tenant active flags allow CTO to disable a provider without removing creds.
 

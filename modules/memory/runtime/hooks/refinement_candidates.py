@@ -11,7 +11,7 @@ Patterns detected (when count ≥ THRESHOLD over rolling 30-day window):
   3. op:drift_candidate rows (sources changing → drift cadence high)
   4. op:shallow_candidate rows (digest coverage <0.80 → tighten ingestion)
   5. Multiple op:create rows with overlapping tags within 1h (duplication)
-  6. Chat-history phrases "did you actually check", "is your BRAIN saved",
+  6. Chat-history phrases "did you actually check", "is your memory saved",
      "you missed", "are you sure" (user-completeness-challenge signal)
 
 For each pattern ≥ THRESHOLD, emit:
@@ -47,7 +47,7 @@ THRESHOLD = int(os.environ.get("CYBEROS_REFINEMENT_THRESHOLD", "3"))
 WINDOW_DAYS = int(os.environ.get("CYBEROS_REFINEMENT_WINDOW_DAYS", "30"))
 ICT = timezone(timedelta(hours=7))
 
-def find_brain(start: Path = None) -> Path | None:
+def find_memory(start: Path = None) -> Path | None:
     cur = (start or Path.cwd()).resolve()
     while cur != cur.parent:
         if (cur / ".cyberos-memory").is_dir():
@@ -55,9 +55,9 @@ def find_brain(start: Path = None) -> Path | None:
         cur = cur.parent
     return None
 
-def scan_audit(brain: Path, cutoff: datetime) -> dict:
+def scan_audit(memory: Path, cutoff: datetime) -> dict:
     """Walk audit/*.jsonl ledger files, return counts by pattern."""
-    audit = brain / "audit"
+    audit = memory / "audit"
     if not audit.exists():
         return {}
 
@@ -189,11 +189,11 @@ def detect_patterns(counts: dict) -> list[dict]:
 
     return candidates
 
-def emit_candidates(brain: Path, candidates: list[dict]):
+def emit_candidates(memory: Path, candidates: list[dict]):
     """Write each candidate as a memories/drift/<date>-candidate-*.md (informational only)."""
     if not candidates:
         return
-    drift = brain / "memories" / "drift"
+    drift = memory / "memories" / "drift"
     drift.mkdir(parents=True, exist_ok=True)
     today = datetime.now(ICT).strftime("%Y-%m-%d")
     for c in candidates:
@@ -240,17 +240,17 @@ This file does NOT enable any new behavior. It's informational only.
 The protocol amendment cycle (propose → adopt → record) still requires
 explicit chat-turn approval per §0.5.
 """)
-        print(f"refinement_candidate: {path.relative_to(brain.parent)}", file=sys.stderr)
+        print(f"refinement_candidate: {path.relative_to(memory.parent)}", file=sys.stderr)
 
 def main():
-    brain = find_brain()
-    if not brain:
-        sys.exit(0)  # no BRAIN here, silent exit
+    memory = find_memory()
+    if not memory:
+        sys.exit(0)  # no memory here, silent exit
 
     cutoff = datetime.now(ICT) - timedelta(days=WINDOW_DAYS)
-    counts = scan_audit(brain, cutoff)
+    counts = scan_audit(memory, cutoff)
     candidates = detect_patterns(counts)
-    emit_candidates(brain, candidates)
+    emit_candidates(memory, candidates)
 
     if candidates:
         # Surface to stderr (Claude Code will display)

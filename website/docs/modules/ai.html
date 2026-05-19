@@ -38,7 +38,7 @@
  <span class="text-5xl">🧠</span>
  <h1 class="h-display">AI</h1>
  <span class="phase-chip phase-p0">P0 · Foundation</span>
- <span class="pill pill-planned">Planned · 22 FRs at 10/10 audit · build queued behind BRAIN Wave 1 + AUTH Wave 2</span>
+ <span class="pill pill-planned">Planned · 22 FRs at 10/10 audit · build queued behind memory Wave 1 + AUTH Wave 2</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CTO seat → interim CEO</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
@@ -117,7 +117,7 @@
  <div class="fact-card"><div class="label">Cache hit rate</div><div class="value">≥ 30% (P0)</div><div class="note">≥ 60% (P2+) · tenant-keyed</div></div>
  <div class="fact-card"><div class="label">Cost-cap enforcement</div><div class="value">Hard-stop</div><div class="note">tenant cannot exceed monthly cap</div></div>
  <div class="fact-card"><div class="label">ZDR (zero retention)</div><div class="value">Required</div><div class="note">P0 provider contracts</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">BRAIN · OBS</div><div class="note">+ AUTH (P0 · slice 2) · TEN (P2+)</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">memory · OBS</div><div class="note">+ AUTH (P0 · slice 2) · TEN (P2+)</div></div>
  <div class="fact-card"><div class="label">Used by</div><div class="value">CUO · Skill · KB · CHAT · …</div><div class="note">every LLM-calling module</div></div>
  </div>
  </div>
@@ -152,7 +152,7 @@
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--infra-dark)">Role 3 · Compliance plane</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Single PII chokepoint + persona stamp + audit row</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Presidio + a VN-specific PII recogniser run on every prompt before bytes leave the cluster. Persona-version is stamped on every call so the audit row records which agent identity (cuo-cpo@0.4.1, genie@1.0.2) was talking. EU AI Act Art. 12 logging satisfied via the <code>ai.invocation</code> chained BRAIN audit row. ZDR contracts with providers required at P0 — if a provider cannot offer zero retention, AI Gateway refuses to route to them.
+ Presidio + a VN-specific PII recogniser run on every prompt before bytes leave the cluster. Persona-version is stamped on every call so the audit row records which agent identity (cuo-cpo@0.4.1, genie@1.0.2) was talking. EU AI Act Art. 12 logging satisfied via the <code>ai.invocation</code> chained memory audit row. ZDR contracts with providers required at P0 — if a provider cannot offer zero retention, AI Gateway refuses to route to them.
  </p>
  </div>
  </div>
@@ -181,7 +181,7 @@ flowchart TB
  end
 
  subgraph platform["Platform deps"]
- BRAIN["🧠 BRAIN audit chain"]
+ memory["🧠 memory audit chain"]
  OBS2["👁 OBS metrics + traces"]
  AUTH["🔐 AUTH (P0 · slice 2 onward)"]
  TEN["🏢 TEN tenant config (P2+)"]
@@ -200,7 +200,7 @@ flowchart TB
  AIGW -.->|"P1+"| VERTEX
  AIGW -->|"embed / rerank"| LOCAL
 
- AIGW --> BRAIN
+ AIGW --> memory
  AIGW --> OBS2
  AIGW -. "JWT verify (P0 · slice 2+)".-> AUTH
  AIGW -. "tenant policy".-> TEN
@@ -212,7 +212,7 @@ flowchart TB
  class AIGW hub
  class CUO,KB,CHAT,PROJ,SKILL,OBS caller
  class BEDROCK,ANTHROPIC,OPENAI,VERTEX,LOCAL prov
- class BRAIN,OBS2,AUTH,TEN dep
+ class memory,OBS2,AUTH,TEN dep
  </div>
  <p class="text-xs text-slate-500 mt-3">AI Gateway is the protocol-level chokepoint. Removing it from the architecture means every consumer reimplements cost accounting, PII scrubbing, and provider failover — and the implementations disagree.</p>
  </div>
@@ -223,10 +223,10 @@ flowchart TB
  <thead><tr><th style="width:32%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
  <tbody>
  <tr><td>Provider failover (primary → secondary)</td><td><strong>Auto</strong> within 30 s on consecutive 5xx / timeout</td><td>Latency-critical; humans can't react in 30 s. Audit row records the failover event for retro analysis.</td></tr>
- <tr><td>Persona prompt injection</td><td><strong>Auto</strong> based on caller's <code>agent_persona</code> JWT claim</td><td>Single source of truth in BRAIN; consumers never inject system prompts; eliminates persona drift.</td></tr>
+ <tr><td>Persona prompt injection</td><td><strong>Auto</strong> based on caller's <code>agent_persona</code> JWT claim</td><td>Single source of truth in memory; consumers never inject system prompts; eliminates persona drift.</td></tr>
  <tr><td>PII scrubbing</td><td><strong>Auto</strong> on every prompt (Presidio + VN-PII recogniser)</td><td>Recall ≥ 99% is the CI gate; nothing leaves the cluster without scrubbing.</td></tr>
  <tr><td>Tenant cost-cap enforcement</td><td><strong>Auto</strong> hard-stop at 100% of monthly cap; warn at 80%</td><td>Soft cap = surprise bill. Hard-stop must be configurable per tenant for emergency overrides — gated by CFO approval.</td></tr>
- <tr><td>Cost-cap override (emergency)</td><td><strong>Human approval</strong> — CFO sign-off recorded in BRAIN</td><td>Override exists for legit production incidents; defaults to denied; every override is an audit row.</td></tr>
+ <tr><td>Cost-cap override (emergency)</td><td><strong>Human approval</strong> — CFO sign-off recorded in memory</td><td>Override exists for legit production incidents; defaults to denied; every override is an audit row.</td></tr>
  <tr><td>ZDR-non-compliant provider routing</td><td><strong>Refused</strong> — no auto, no override</td><td>A non-ZDR provider is a compliance breach in flight; the only correct behaviour is refuse.</td></tr>
  <tr><td>Cache hit serving</td><td><strong>Auto</strong> when idempotency-key + tenant_id matches</td><td>Cache key strictly tenant-scoped; cross-tenant hit is a property-test failure (hard zero).</td></tr>
  <tr><td>Model alias resolution</td><td><strong>Auto</strong> per tenant policy</td><td>Tenant pins primary + fallback in their policy; gateway resolves alias at call time; no consumer-side choice.</td></tr>
@@ -259,7 +259,7 @@ flowchart TB
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
- The bet is the same bet AUTH and BRAIN make: pay the cost once at the substrate. Without AI Gateway, each module re-implements PII redaction (and at least one of them gets it wrong), each module embeds its own SDK (and the OpenAI Python client and the Anthropic Python client disagree on streaming chunks), and the regulator's "show me every prompt that touched personal data" question becomes a forensic project. With AI Gateway, that question is a SQL query.
+ The bet is the same bet AUTH and memory make: pay the cost once at the substrate. Without AI Gateway, each module re-implements PII redaction (and at least one of them gets it wrong), each module embeds its own SDK (and the OpenAI Python client and the Anthropic Python client disagree on streaming chunks), and the regulator's "show me every prompt that touched personal data" question becomes a forensic project. With AI Gateway, that question is a SQL query.
  </p>
 </section>
 
@@ -275,7 +275,7 @@ flowchart TB
  <tr><td><strong>5W · When</strong></td><td>When does call happen?</td><td>Synchronously per user request (chat completion); asynchronously for batch jobs (KB ingest, daily digest). Cache lookup happens first; only cache-miss requests hit a provider.</td></tr>
  <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>Fargate task in SG-1 (P0); read-only embedder/reranker GPU node (shared with KB). Multi-region active-active at P3+.</td></tr>
  <tr><td><strong>5W · Why</strong></td><td>Why a separate layer?</td><td>Because per-module SDK adoption creates cost untraceability, PII drift, and failover ratchets. One gateway eliminates all three.</td></tr>
- <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Receive gRPC call → resolve tenant policy from BRAIN (cached) → look up cache → on miss, redact PII → inject persona-version system prompt → call primary provider with 2 retries → on continued failure within 30 s, fail over to secondary → stream response back via SSE → store redacted prompt + response in cache → emit <code>ai.invocation</code> audit row → return.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Receive gRPC call → resolve tenant policy from memory (cached) → look up cache → on miss, redact PII → inject persona-version system prompt → call primary provider with 2 retries → on continued failure within 30 s, fail over to secondary → stream response back via SSE → store redacted prompt + response in cache → emit <code>ai.invocation</code> audit row → return.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost?</td><td>P0 budget: ≤ $150 / month LLM (N(FR pending)). 50-tenant budget: ≤ $4 / active user / month LLM. Cache hit rate is the dominant lever.</td></tr>
  <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) Zero cross-tenant cache. (b) PII recall ≥ 99% measured against a public VN+EN test set. (c) Provider must be on ZDR (Zero-Data-Retention) attested endpoint for sensitive routes. (d) Per-tenant monthly USD cap hard-enforced.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Python 3.13 · LiteLLM (vendored) · grpc-py · Presidio · regex-based VN PII rules · Redis (cache) · DuckDB (usage roll-up) · OpenTelemetry · self-hosted BGE-M3 embedder + BGE-rerank on a shared L4 GPU.</td></tr>
@@ -333,7 +333,7 @@ sequenceDiagram
  participant G as AI Gateway
  participant L as Cost ledger (Postgres)
  participant P as LLM provider
- participant B as 🧠 BRAIN audit
+ participant B as 🧠 memory audit
  participant I as 🧾 INV (P2+)
 
  C->>G: chat.complete (model, messages, tenant, persona)
@@ -390,8 +390,8 @@ sequenceDiagram
  <tr><td><code>chat.smart</code></td><td><code>bedrock:claude-3.5-sonnet</code></td><td><code>anthropic:claude-sonnet-4.5</code></td><td>CUO ambiguous tail, KB Q&amp;A, CHAT @lumi</td></tr>
  <tr><td><code>chat.fast</code></td><td><code>bedrock:claude-3-haiku</code></td><td><code>anthropic:claude-haiku-4.5</code></td><td>PROJ inline genie, CRM next-action, OBS triage</td></tr>
  <tr><td><code>chat.reason</code></td><td><code>openai:o1-mini</code></td><td><code>anthropic:claude-opus-4.6</code></td><td>CUO CPO skill (spec auditing), CLO contract review</td></tr>
- <tr><td><code>embed.standard</code></td><td><code>self-hosted:bge-m3</code></td><td><code>openai:text-embedding-3-large</code></td><td>KB ingest, BRAIN semantic search, CHAT context window</td></tr>
- <tr><td><code>rerank.standard</code></td><td><code>self-hosted:bge-rerank-v2-m3</code></td><td><code>cohere:rerank-multilingual-v3</code></td><td>KB Q&amp;A, BRAIN retrieval</td></tr>
+ <tr><td><code>embed.standard</code></td><td><code>self-hosted:bge-m3</code></td><td><code>openai:text-embedding-3-large</code></td><td>KB ingest, memory semantic search, CHAT context window</td></tr>
+ <tr><td><code>rerank.standard</code></td><td><code>self-hosted:bge-rerank-v2-m3</code></td><td><code>cohere:rerank-multilingual-v3</code></td><td>KB Q&amp;A, memory retrieval</td></tr>
  <tr><td><code>image.standard</code></td><td><code>openai:gpt-image-1</code> (P2+)</td><td><code>local:stable-diffusion-xl</code></td><td>Marketing skill, design suggestions (P2+)</td></tr>
  </tbody>
  </table>
@@ -444,9 +444,9 @@ sequenceDiagram
  <thead><tr><th>Link</th><th>Responsibility</th><th>Recall / strictness target</th><th>Failure behaviour</th></tr></thead>
  <tbody>
  <tr><td><strong>1. PII redaction</strong></td><td>Presidio (EN-base) + custom VN-PII recogniser (CCCD, MST, phone, NĐD, địa chỉ)</td><td>Recall ≥ 99% · precision ≥ 95% on CI test set</td><td>Below recall threshold → CI gate fails; release blocked. Runtime PII detection failure → call refused with <code>403_PII_REDACTION_FAILED</code>.</td></tr>
- <tr><td><strong>2. Persona-version stamp</strong></td><td>System-prompt injection from BRAIN <code>memories/personas/&lt;version&gt;.md</code></td><td>100% of calls carry a persona stamp; no consumer can override</td><td>Missing stamp → call refused; the consumer used the LLM SDK directly (forbidden).</td></tr>
+ <tr><td><strong>2. Persona-version stamp</strong></td><td>System-prompt injection from memory <code>memories/personas/&lt;version&gt;.md</code></td><td>100% of calls carry a persona stamp; no consumer can override</td><td>Missing stamp → call refused; the consumer used the LLM SDK directly (forbidden).</td></tr>
  <tr><td><strong>3. ZDR check</strong></td><td>Provider DPA + ZDR contract validation against tenant policy <code>require_zdr: true</code></td><td>100% of calls routed only to ZDR-compliant providers when tenant requires it</td><td>Non-ZDR provider attempted → call refused; CTO + DPO alerted; no fallback to non-ZDR.</td></tr>
- <tr><td><strong>4. Audit row emission</strong></td><td>BRAIN <code>ai.invocation</code> chained row · 14 fields (see schema below)</td><td>100% emission; chain hash verifiable</td><td>BRAIN write fails → call NOT made; better to refuse than make a call we cannot audit.</td></tr>
+ <tr><td><strong>4. Audit row emission</strong></td><td>memory <code>ai.invocation</code> chained row · 14 fields (see schema below)</td><td>100% emission; chain hash verifiable</td><td>memory write fails → call NOT made; better to refuse than make a call we cannot audit.</td></tr>
  </tbody>
  </table>
  </div>
@@ -480,7 +480,7 @@ sequenceDiagram
   "prev_chain": "69e6…488a",
   "chain": "8d2c…5a91"
 }</code></pre>
- <p class="text-sm text-slate-600 mt-3">The row does not contain the prompt or response text — only hashes — to keep BRAIN size bounded. The hashes prove integrity; the actual content is in the (encrypted, short-lived) cache row that the hash addresses.</p>
+ <p class="text-sm text-slate-600 mt-3">The row does not contain the prompt or response text — only hashes — to keep memory size bounded. The hashes prove integrity; the actual content is in the (encrypted, short-lived) cache row that the hash addresses.</p>
  </div>
 
  <h3 class="text-lg font-bold mt-6 mb-3">Vietnamese PII recogniser — what extends Presidio</h3>
@@ -543,7 +543,7 @@ graph TB
  end
 
  subgraph SINKS
- BRAIN["🧠 BRAIN<br>ai.invocation rows"]
+ memory["🧠 memory<br>ai.invocation rows"]
  OBS["👁 OBS<br>traces + cost dashboard"]
  end
 
@@ -569,9 +569,9 @@ graph TB
  CACHE --> REDIS
  ROUT --> EMB
  ROUT --> RER
- ING --> BRAIN
+ ING --> memory
  ING --> OBS
- ACC --> BRAIN
+ ACC --> memory
 
  classDef planned fill:#fef6e0,stroke:#9c750a
  classDef provider fill:#cba88a,stroke:#4338ca
@@ -580,7 +580,7 @@ graph TB
  class ING,TPR,PER,RED,CACHE,ROUT,STR,ACC,EMB,RER planned
  class BED,ANTH,OAI,VTX provider
  class REDIS,DUCK store
- class BRAIN,OBS sink
+ class memory,OBS sink
  </div>
  </div>
 
@@ -590,8 +590,8 @@ graph TB
  <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
  <tbody>
  <tr><td><code>edge_proxy.rs</code></td><td>services/ai-gateway/edge/</td><td>Rust mTLS proxy. Verifies caller JWT (AUTH), unwraps tenant_id, forwards to Python core over Unix socket.</td></tr>
- <tr><td><code>tenant_policy.py</code></td><td>services/ai-gateway/core/policy.py</td><td>Resolves per-tenant provider preference, cost cap, ZDR-attestation requirement. Caches from BRAIN reads.</td></tr>
- <tr><td><code>persona.py</code></td><td>services/ai-gateway/core/persona.py</td><td>Injects persona-version system prompt at the gateway ((FR pending)). Reads <code>meta/persona/<id>/<version>/prompt.md</code> from BRAIN.</td></tr>
+ <tr><td><code>tenant_policy.py</code></td><td>services/ai-gateway/core/policy.py</td><td>Resolves per-tenant provider preference, cost cap, ZDR-attestation requirement. Caches from memory reads.</td></tr>
+ <tr><td><code>persona.py</code></td><td>services/ai-gateway/core/persona.py</td><td>Injects persona-version system prompt at the gateway ((FR pending)). Reads <code>meta/persona/<id>/<version>/prompt.md</code> from memory.</td></tr>
  <tr><td><code>redactor.py</code></td><td>services/ai-gateway/core/redactor.py</td><td>Presidio + custom VN rule pack. Detects CCCD, MST, bank acct, address, phone, email, name. Replaces with token sentinels; un-redact on response for trusted classes.</td></tr>
  <tr><td><code>cache.py</code></td><td>services/ai-gateway/core/cache.py</td><td>Hash-keyed response cache. Key = SHA-256(canonical(prompt) || model || params || tenant_id). NEVER cross-tenant — tenant_id in key is the load-bearing fact.</td></tr>
  <tr><td><code>router.py</code></td><td>services/ai-gateway/core/router.py</td><td>LiteLLM-derived. Selects provider by tenant policy + route class. 2 retries with exponential backoff. Circuit-breaker on per-provider error rate. Fails over to secondary within 30 s.</td></tr>
@@ -612,7 +612,7 @@ graph TB
 <section id="data-model" class="module-section">
  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- AI Gateway is mostly stateless — its source of truth is BRAIN (provider config, tenant policy, persona prompts) and Redis (cache, idempotency keys). DuckDB holds the cost-roll-up for fast dashboard queries. The entities below show the read + write surfaces.
+ AI Gateway is mostly stateless — its source of truth is memory (provider config, tenant policy, persona prompts) and Redis (cache, idempotency keys). DuckDB holds the cost-roll-up for fast dashboard queries. The entities below show the read + write surfaces.
  </p>
 
  <div class="bbg-card p-5 mb-5">
@@ -697,7 +697,7 @@ erDiagram
  string cache_state "miss or hit or bypass"
  bool redaction_applied
  string fallover_path "primary or secondary or primary-to-secondary"
- string brain_chain
+ string memory_chain
  timestamp ts
  }
  REDACTION_RULE {
@@ -785,7 +785,7 @@ message Usage {
  double usd_cost = 5;
  bool redaction_applied = 6;
  string persona_version = 7;
- string brain_chain = 8;
+ string memory_chain = 8;
 }
 
 message EmbedRequest {
@@ -888,7 +888,7 @@ sequenceDiagram
  participant BED as AWS Bedrock
  participant STR as SSE stream
  participant ACC as accountant
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CUO->>AI: ChatComplete(messages, persona="cuo", stream=true)
  AI->>TP: get_policy(tenant_id)
@@ -928,7 +928,7 @@ sequenceDiagram
  participant CACHE as Redis cache
  participant STR as SSE stream
  participant ACC as accountant
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CHAT->>AI: ChatCompleteSync(messages, persona="genie")
  AI->>TP: policy(tenant)
@@ -954,7 +954,7 @@ sequenceDiagram
  participant CB as circuit_breaker
  participant BED as AWS Bedrock (primary)
  participant ANTH as Anthropic API (fallback)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  K->>AI: Embed(inputs, model="bge-m3")
  Note over AI,BED: bge-m3 is self-hosted; example uses chat
@@ -989,7 +989,7 @@ sequenceDiagram
  participant ACC as accountant
  participant TPR as tenant_policy
  participant ALERT as CHAT alert bot
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  U->>AI: ChatComplete(…)
  AI->>ACC: pre-check cap
@@ -1021,7 +1021,7 @@ sequenceDiagram
  participant VPI as vn_pii_rules
  participant ROUT as router
  participant BED as Bedrock
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  U->>AI: ChatComplete("Verify CCCD 037201234567 for Le Van A")
  AI->>RED: redact(messages)
@@ -1062,7 +1062,7 @@ stateDiagram-v2
  Routing --> Failover: primary errored twice and 30s elapsed
  Failover --> Streaming: secondary producing chunks
  Streaming --> Accounted: tokens + USD totalled
- Accounted --> Audited: ai.invocation row to BRAIN
+ Accounted --> Audited: ai.invocation row to memory
  Audited --> [*]
  Blocked --> [*]: 429 returned, audit row written
  </div>
@@ -1132,7 +1132,7 @@ stateDiagram-v2
 graph LR
  subgraph upstream ["AI Gateway depends on"]
  AUTH["🔐 AUTH<br>tenant resolution"]
- BRAIN["🧠 BRAIN<br>tenant_policy + persona prompts<br>+ ai.invocation rows"]
+ memory["🧠 memory<br>tenant_policy + persona prompts<br>+ ai.invocation rows"]
  OBS["👁 OBS<br>traces + metrics"]
  REDIS["⚡ Redis<br>cache + idempotency"]
  BED["AWS Bedrock"]
@@ -1152,7 +1152,7 @@ graph LR
  OTH["…all LLM-using modules"]
  end
  AUTH --> AI
- BRAIN --> AI
+ memory --> AI
  OBS --> AI
  REDIS --> AI
  BED --> AI
@@ -1172,7 +1172,7 @@ graph LR
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef ext fill:#cba88a,stroke:#4338ca
  class AI,AUTH,OBS,CUO,SKILL,CHAT,KB,GENIE,PROJ,EMAIL,OTH planned
- class BRAIN,REDIS shipped
+ class memory,REDIS shipped
  class BED,ANTH,OAI,GPU ext
  </div>
  </div>
@@ -1215,7 +1215,7 @@ graph LR
  <tr><td><code>R-AI-002</code></td><td>PII recall regression below 99%</td><td>Medium</td><td>High</td><td>CDO</td><td>Test-set CI gate; release blocked if recall &lt; 99%; quarterly red-team adds adversarial samples.</td></tr>
  <tr><td><code>R-AI-003</code></td><td>Tenant cost overrun (cap-bypass bug)</td><td>Low</td><td>High</td><td>CFO</td><td>Pre-call check; post-call check; daily cost-reconciliation against provider bill.</td></tr>
  <tr><td><code>R-AI-004</code></td><td>Primary provider extended outage (&gt; 4 h)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>30s failover + per-tenant fallback override; multi-provider posture documented in DR runbook.</td></tr>
- <tr><td><code>R-AI-005</code></td><td>Persona prompt drift between gateway + module</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Single source of truth in BRAIN; gateway-only injection ((FR pending)); CI test on each persona-version change.</td></tr>
+ <tr><td><code>R-AI-005</code></td><td>Persona prompt drift between gateway + module</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Single source of truth in memory; gateway-only injection ((FR pending)); CI test on each persona-version change.</td></tr>
  <tr><td><code>R-AI-006</code></td><td>Prompt-injection bypasses gateway redaction</td><td>Medium</td><td>High</td><td>CSO</td><td>CaMeL-style enforcement; sentinel scheme cannot be guessed by upstream caller; red-team quarterly.</td></tr>
  <tr><td><code>R-AI-007</code></td><td>Provider rate-limit cascade (one tenant starves the rest)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-tenant token-bucket on gateway; global circuit-breaker prevents pile-up.</td></tr>
  <tr><td><code>R-AI-008</code></td><td>Cache poisoning via adversarial canonical prompt</td><td>Low</td><td>High</td><td>CSO</td><td>Cache key includes tenant_id + idempotency-key; provider response hash compared to in-flight verification on critical routes.</td></tr>
@@ -1226,7 +1226,7 @@ graph LR
  <tr><td><code>R-AI-013</code></td><td>Provider DPA cancellation (Anthropic / OpenAI changes ZDR terms mid-quarter)</td><td>Low</td><td>High</td><td>CLO</td><td>Legal monitor on provider DPAs; tenant policy <code>require_zdr</code> rejects non-compliant providers; emergency model-alias re-resolution within 1 hour.</td></tr>
  <tr><td><code>R-AI-014</code></td><td>Cost ledger hold leak (60 s expiry never fires → false debits accumulate)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Hold rows have hard TTL via Postgres scheduled job; nightly reconciliation against provider bill; spot-test alarms on cumulative drift &gt; 5%.</td></tr>
  <tr><td><code>R-AI-015</code></td><td>Streaming SSE buffer leak (long-running stream pins memory)</td><td>Medium</td><td>Medium</td><td>CTO</td><td>Per-stream max duration (5 min) + max bytes (16 MB); hard-close on exceed; backpressure surfaced to caller via SSE event.</td></tr>
- <tr><td><code>R-AI-016</code></td><td>Embedding model upgrade (BGE-M3 → next-gen) breaks BRAIN semantic search retrieval</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Embedding model version is part of the BRAIN_LINK record; recall regression CI test on every model swap; allow per-tenant pinning.</td></tr>
+ <tr><td><code>R-AI-016</code></td><td>Embedding model upgrade (BGE-M3 → next-gen) breaks memory semantic search retrieval</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Embedding model version is part of the MEMORY_LINK record; recall regression CI test on every model swap; allow per-tenant pinning.</td></tr>
  <tr><td><code>R-AI-017</code></td><td>Image-generation route at P2+ floods budget (image calls are 100× chat cost)</td><td>Medium</td><td>High</td><td>CFO</td><td>Image route default-off; per-tenant explicit opt-in; per-image cap; watermark for EU AI Act Art. 50; cache by prompt hash with extended TTL.</td></tr>
  <tr><td><code>R-AI-018</code></td><td>Geographic residency violation (EU tenant routed via US provider during failover)</td><td>Low</td><td>Critical</td><td>DPO</td><td>Residency pinning at router level; failover providers filtered by tenant residency; refuse + alert if no compliant fallback available.</td></tr>
  <tr><td><code>R-AI-019</code></td><td>VN-PII recogniser regression on production (new VN spelling/format misses CCCD)</td><td>Medium</td><td>High</td><td>CDO</td><td>200-sample CI test set; quarterly red-team adds adversarial VN samples; release blocked on recall &lt; 99% for VN-PII subset.</td></tr>
@@ -1252,7 +1252,7 @@ graph LR
  <tr><td><strong>Tenant cost overrun events</strong></td><td>count / 28 d</td><td>accountant</td><td>= 0 (hard-stop ensures)</td></tr>
  <tr><td><strong>Cross-tenant cache leakage</strong></td><td>property-test count</td><td>CI</td><td>= 0</td></tr>
  <tr><td><strong>USD spent vs. budget (MTD)</strong></td><td><code>spent / cap</code> per tenant</td><td>dashboard</td><td>&lt; 100% (warn at 80%)</td></tr>
- <tr><td><strong>Per-persona cost share</strong></td><td>cost grouped by <code>agent_persona</code></td><td>BRAIN audit replay</td><td>tracked per persona; alert on &gt; 50% concentration to single persona</td></tr>
+ <tr><td><strong>Per-persona cost share</strong></td><td>cost grouped by <code>agent_persona</code></td><td>memory audit replay</td><td>tracked per persona; alert on &gt; 50% concentration to single persona</td></tr>
  <tr><td><strong>Cache savings rate</strong></td><td>(cache_hits × estimated_cost) / total_billed_cost</td><td>cost ledger</td><td>≥ 0.15 (15% savings) by P1 exit</td></tr>
  <tr><td><strong>Hold-to-actual drift</strong></td><td>SUM(held - actual) / SUM(actual)</td><td>cost ledger nightly reconcile</td><td>≤ 0.05 (≤ 5% drift); alarm on &gt; 0.05</td></tr>
  <tr><td><strong>Residency-violation refusal rate</strong></td><td>refusals_due_to_residency / total_attempts</td><td><code>ai.invocation_refused</code> audit rows</td><td>tracked; spike = misconfigured tenant policy</td></tr>
@@ -1335,7 +1335,7 @@ By cache state:
  fallback: anthropic
  zdr: required
  cap: $500/month
-[audit] brain seq=14841</code></pre>
+[audit] memory seq=14841</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Operator — list models</h3>
 <pre><code>$ cyberos-ai models list
@@ -1410,7 +1410,7 @@ self-hosted:bge-rerank-v2-m3 rerank — free</code></pre>
  <li><strong>Compliance plane (§2.7 above):</strong> 4-link chain (PII → persona → ZDR → audit) + <code>ai.invocation</code> 14-field schema + VN-PII recogniser table.</li>
  <li><strong>Cross-module page links:</strong>
  <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
  <a href="kb.html" class="text-blue-700 underline">kb.html</a> ·
  <a href="chat.html" class="text-blue-700 underline">chat.html</a> ·
@@ -1419,7 +1419,7 @@ self-hosted:bge-rerank-v2-m3 rerank — free</code></pre>
  <a href="ten.html" class="text-blue-700 underline">ten.html</a></li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — AI Gateway placed at P0 · slice 1 (P0 #1), the cost-of-everything gate before AUTH.</li>
  <li><strong>Research review:</strong> <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — explicit "Reorder AI Gateway before AUTH" recommendation; AI Gateway flagged as the highest-leverage cost-control module.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §7</a> — every <code>ai.invocation</code> audit row is a BRAIN capture event; Lumi cross-tenant synthesis depends on aggregate cost + persona signals at P3+.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §7</a> — every <code>ai.invocation</code> audit row is a memory capture event; Lumi cross-tenant synthesis depends on aggregate cost + persona signals at P3+.</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a> — AI Gateway FRs land via the <code>feature-request-author</code> Agent Skill; "(FR pending)" markers are intentional placeholders.</li>
  <li><strong>EU AI Act</strong> (Reg. 2024/1689) — Art. 12 (logging via audit chain), Art. 13 (transparency — persona stamp), Art. 14 (human oversight — CFO cost-override), Art. 15 (accuracy + robustness — failover SLA), Art. 26 (operator obligations), Art. 50 (transparency — watermark for image gen at P2+).</li>
  <li><strong>OWASP Gen AI Top-10 (2025):</strong> LLM01 prompt injection · LLM06 sensitive disclosure · LLM08 supply-chain · LLM10 model theft — gateway-level mitigations.</li>

@@ -3,7 +3,7 @@ id: FR-AUTH-106
 title: "Impossible-travel detection + adaptive MFA challenge"
 module: AUTH
 priority: SHOULD
-status: building
+status: implementing
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -13,8 +13,8 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-002, FR-AUTH-005, FR-AUTH-102, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-AUTH-002, FR-AUTH-005, FR-AUTH-102, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-AUTH-002, FR-AUTH-102]
 blocks: []
 
@@ -32,10 +32,10 @@ source_decisions:
   - DEC-748 2026-05-16 — Cache per-subject last-login table in Postgres with prior_login(latitude, longitude, occurred_at, ip_country, ip_asn)
   - DEC-749 2026-05-16 — Same-country same-ASN within 24h bypass (carrier IP roaming false-positive guard)
   - DEC-750 2026-05-16 — VPN / Tor exit-node detection via MaxMind anonymous-IP DB — VPN flagged separately, not auto-blocked
-  - DEC-751 2026-05-16 — MaxMind DB refresh weekly via CI; stale DB > 30 days emits sev-2 BRAIN audit
+  - DEC-751 2026-05-16 — MaxMind DB refresh weekly via CI; stale DB > 30 days emits sev-2 memory audit
   - DEC-752 2026-05-16 — Login itself is never blocked on impossible-travel — the auth handler returns `challenge_required` and the client re-submits with MFA token
   - DEC-753 2026-05-16 — Adaptive challenge is sticky for 30min — re-challenging within 30min from same subject + same IP is suppressed (sev-3 audit)
-  - DEC-754 2026-05-16 — 6 BRAIN audit kinds + each carries scrubbed reason via FR-BRAIN-111
+  - DEC-754 2026-05-16 — 6 memory audit kinds + each carries scrubbed reason via FR-MEMORY-111
   - DEC-755 2026-05-16 — IP allowlist per-tenant bypasses impossible-travel for office IPs (CIDR list, validated at policy save)
 
 build_envelope:
@@ -98,7 +98,7 @@ The AUTH service **MUST** evaluate every successful credential verification agai
 6. **MUST** apply the per-tenant `impossible_travel_action` policy (DEC-746):
    - `challenge`: return `200 OK { result: "challenge_required", challenge_id, methods: [...] }` (mfa challenge linkage); the session JWT is NOT issued until challenge-completion endpoint succeeds (FR-AUTH-102 challenge flow).
    - `block`: return `403 FORBIDDEN { error: "impossible_travel_blocked", prior_country, current_country, speed_kmh, threshold_kmh }`. The session JWT is NOT issued; the subject must contact ops.
-   - `warn_only`: issue the session JWT but emit a sev-2 BRAIN audit row `auth.travel_warn_only`. No user friction.
+   - `warn_only`: issue the session JWT but emit a sev-2 memory audit row `auth.travel_warn_only`. No user friction.
 
 7. **MUST** bypass the impossible-travel check when the same-subject's prior login was within 24h AND same ISO country AND same ASN (DEC-749). This guards against carrier-IP roaming false positives (e.g., a Vietnamese subject's mobile session switches from Viettel cell tower at HCMC to one near the Cambodian border — different geo by 100km, same country same ASN, well under 24h, real human movement).
 
@@ -112,23 +112,23 @@ The AUTH service **MUST** evaluate every successful credential verification agai
 
 12. **MUST** maintain a 24-hour sliding window for prior-login lookup (DEC-747). The query: `SELECT latitude, longitude, occurred_at, country_iso2, asn FROM login_history_geo WHERE subject_id = $1 AND travel_decision IN ('allowed', 'allowed_after_challenge') AND occurred_at > now() - INTERVAL '24 hours' ORDER BY occurred_at DESC LIMIT 1`. Older entries are not considered (a login 25h ago from Paris doesn't trigger when the next login is from New York 24h+1min later — but new-subject + sparse-login users are normal and should not be flagged).
 
-13. **MUST** detect anonymous IP networks (VPN, Tor exit, proxy) via the MaxMind anonymous-IP database (DEC-750). When `is_anonymous_proxy = true`, the evaluator emits a sev-2 BRAIN audit row `auth.travel_anonymous_ip` regardless of speed. By default, anonymous-IP logins ARE allowed (we don't auto-block — some users legitimately use VPNs). The per-tenant policy `block_anonymous_ip` (boolean, default false) can flip the default to block.
+13. **MUST** detect anonymous IP networks (VPN, Tor exit, proxy) via the MaxMind anonymous-IP database (DEC-750). When `is_anonymous_proxy = true`, the evaluator emits a sev-2 memory audit row `auth.travel_anonymous_ip` regardless of speed. By default, anonymous-IP logins ARE allowed (we don't auto-block — some users legitimately use VPNs). The per-tenant policy `block_anonymous_ip` (boolean, default false) can flip the default to block.
 
-14. **MUST** validate the MaxMind DB freshness at process startup. If `mmdb.metadata().build_timestamp` is more than 30 days old, emit a sev-2 BRAIN audit row `auth.travel_geoip_stale` (DEC-751). The service still starts and uses the stale DB — the staleness audit is the operational signal, not a hard block.
+14. **MUST** validate the MaxMind DB freshness at process startup. If `mmdb.metadata().build_timestamp` is more than 30 days old, emit a sev-2 memory audit row `auth.travel_geoip_stale` (DEC-751). The service still starts and uses the stale DB — the staleness audit is the operational signal, not a hard block.
 
 15. **MUST** route the adaptive challenge through FR-AUTH-102 (the existing MFA challenge issuer). The travel-evaluator creates a challenge with `kind = "impossible_travel"`, returns the challenge_id to the client. The client submits MFA proof via `POST /v1/auth/mfa/challenge/{id}/verify` per FR-AUTH-102. On verify-success, the AUTH session JWT is finally issued and a `login_history_geo` row is recorded with `travel_decision = 'allowed_after_challenge'`.
 
 16. **MUST** suppress repeat challenges within 30 minutes from the same subject + same IP (DEC-753). This avoids friction for a user who completes an impossible-travel challenge from a coffee-shop wifi then immediately re-authenticates after a session timeout. The 30-min window emits a sev-3 audit `auth.travel_challenge_suppressed_repeat`.
 
-17. **MUST** restrict policy mutation (`impossible_travel_speed_kmh`, `impossible_travel_action`, `block_anonymous_ip`, `impossible_travel_ip_allowlist_cidrs`) to the `security_admin` role per FR-AUTH-101 + a sev-2 BRAIN audit row with reason ≥10 chars.
+17. **MUST** restrict policy mutation (`impossible_travel_speed_kmh`, `impossible_travel_action`, `block_anonymous_ip`, `impossible_travel_ip_allowlist_cidrs`) to the `security_admin` role per FR-AUTH-101 + a sev-2 memory audit row with reason ≥10 chars.
 
 18. **MUST** validate per-tenant `impossible_travel_speed_kmh` at policy write time. Range [200, 5000]. Out-of-range returns `400 BAD_REQUEST` with `{error: "speed_threshold_out_of_range", min: 200, max: 5000}`.
 
 19. **MUST** validate per-tenant `impossible_travel_ip_allowlist_cidrs` at policy write time. Each CIDR parses via Rust `ipnetwork::IpNet`; invalid entries return `400`. List length ≤ 64. Per-entry max-prefix-length: IPv4 /0 forbidden, /8 forbidden (too broad); IPv6 /0 forbidden, /16 forbidden. Tightest acceptable prefix is /9 for IPv4 and /17 for IPv6.
 
-20. **MUST** scrub all reason-bearing audit text (policy reason, block error message extensions) via FR-BRAIN-111 before BRAIN chain emission. Geo coordinates + country + ASN are operational metadata, not PII; they pass through.
+20. **MUST** scrub all reason-bearing audit text (policy reason, block error message extensions) via FR-MEMORY-111 before memory chain emission. Geo coordinates + country + ASN are operational metadata, not PII; they pass through.
 
-21. **MUST** emit 6 closed BRAIN audit kinds (DEC-754):
+21. **MUST** emit 6 closed memory audit kinds (DEC-754):
     - `auth.travel_allowed` (sev-3, every login under threshold)
     - `auth.travel_challenged` (sev-2, every login over threshold that triggered challenge)
     - `auth.travel_allowed_after_challenge` (sev-2, challenge-completion success)
@@ -148,7 +148,7 @@ The AUTH service **MUST** evaluate every successful credential verification agai
 
 25. **MUST** treat any IP that fails geolocation (private network, reserved space, unallocated v6) as `travel_decision = 'allowed'` with a sev-3 audit row `auth.travel_geoip_unresolvable`. This avoids false positives for development environments + reserved corporate networks.
 
-26. **MUST** emit the prior-login geo coordinates in the BRAIN audit chain row (not in the user-facing API response). The chain row carries `{subject_id, current_lat, current_lon, current_country, current_asn, prior_lat, prior_lon, prior_country, prior_asn, hours_delta, distance_km, speed_kmh, threshold_kmh, decision}`. The user-facing response on `block` includes only `{current_country, prior_country, speed_kmh, threshold_kmh}` — not the exact coordinates (the user knows where they are; the operator gets the precise geo in the chain).
+26. **MUST** emit the prior-login geo coordinates in the memory audit chain row (not in the user-facing API response). The chain row carries `{subject_id, current_lat, current_lon, current_country, current_asn, prior_lat, prior_lon, prior_country, prior_asn, hours_delta, distance_km, speed_kmh, threshold_kmh, decision}`. The user-facing response on `block` includes only `{current_country, prior_country, speed_kmh, threshold_kmh}` — not the exact coordinates (the user knows where they are; the operator gets the precise geo in the chain).
 
 27. **MUST** define a stale-cache invalidation pathway: when a security_admin updates the per-tenant policy, the in-process cache for that tenant's subjects is NOT flushed (the cache holds last-login geo, which is not policy-dependent). Policy changes take effect on the next login per subject. This is intentional: re-evaluating historical decisions under new policy is out of scope (it would require replaying every login row, an expensive operation we accept as future work).
 
@@ -226,7 +226,7 @@ CREATE TABLE login_history_geo (
     travel_decision     travel_decision NOT NULL,
     speed_kmh_vs_prior  DOUBLE PRECISION,  -- nullable when no prior login
     challenge_id        UUID REFERENCES mfa_challenges(id),
-    brain_chain_hash    CHAR(64) NOT NULL CHECK (brain_chain_hash ~ '^[0-9a-f]{64}$')
+    memory_chain_hash    CHAR(64) NOT NULL CHECK (memory_chain_hash ~ '^[0-9a-f]{64}$')
 );
 
 CREATE INDEX login_geo_subject_time ON login_history_geo (subject_id, occurred_at DESC);
@@ -264,7 +264,7 @@ CREATE TABLE travel_policy_audit (
     old_config      JSONB NOT NULL,
     new_config      JSONB NOT NULL,
     reason          TEXT NOT NULL CHECK (length(reason) >= 10 AND length(reason) <= 1000),
-    brain_chain_hash CHAR(64) NOT NULL
+    memory_chain_hash CHAR(64) NOT NULL
 );
 
 REVOKE UPDATE, DELETE ON travel_policy_audit FROM cyberos_app;
@@ -408,7 +408,7 @@ fn haversine_km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
 18. CIDR list with invalid CIDR string returns `400`.
 19. Login never blocked outright on impossible-travel under default `challenge` action.
 20. User-facing block response includes only country + speed; never lat/lon.
-21. BRAIN audit chain row includes full geo coordinates + ASN + country for both prior and current.
+21. memory audit chain row includes full geo coordinates + ASN + country for both prior and current.
 22. Postgres `login_history_geo` REVOKE UPDATE/DELETE confirmed at `\dp`.
 23. RLS prevents cross-tenant SELECT on `login_history_geo`.
 24. Per-subject in-process cache reduces Postgres SELECTs (verified by query log count = 1 for 10 consecutive logins of same subject).
@@ -443,7 +443,7 @@ fn haversine_km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
 - `policy_cidr_validation_test` — invalid CIDR strings → 400; /0 + /8 IPv4 → 400.
 - `policy_cidr_count_test` — 65-entry list → 400.
 - `block_response_redaction_test` — assert response body has no `latitude`/`longitude` fields.
-- `chain_audit_full_geo_test` — assert BRAIN chain row carries prior + current lat/lon.
+- `chain_audit_full_geo_test` — assert memory chain row carries prior + current lat/lon.
 - `rls_isolation_test` — two tenants, cross-query empty.
 - `cache_invalidation_test` — login → cache hit on next; insert direct → next login sees the inserted row.
 - `mixed_stack_test` — IPv4 then IPv6 from same client; same evaluator behavior.
@@ -468,7 +468,7 @@ services/auth/
 │   │   ├── asn_bypass.rs   # same-country+ASN check
 │   │   ├── anonymous_ip.rs # VPN/Tor flagging
 │   │   ├── cache.rs        # per-subject LRU
-│   │   ├── audit.rs        # BRAIN audit emission for 10 kinds
+│   │   ├── audit.rs        # memory audit emission for 10 kinds
 │   │   └── error.rs
 │   └── handlers/
 │       ├── login.rs              # MODIFIED: invoke travel::evaluate after credential check
@@ -616,7 +616,7 @@ PUT /v1/admin/tenants/{id}/travel-policy?dry_run=true
 | 19 | CIDR invalid string | ipnetwork parse | 3 | 400 |
 | 20 | Reason for mutation < 10 chars | CHECK | 3 | 400 |
 | 21 | login_history_geo INSERT permission denied | GRANT misconfig | 1 | Login rejected; sev-1 audit |
-| 22 | brain_chain_hash regex fails | CHECK constraint | 1 | Login rejected; sev-1 audit |
+| 22 | memory_chain_hash regex fails | CHECK constraint | 1 | Login rejected; sev-1 audit |
 | 23 | Cache invalidation race (two concurrent logins) | LRU put serialization | 3 | Later-write-wins; bounded |
 | 24 | Travel evaluator invoked before credential check | ordering test | 2 | CI blocks |
 | 25 | Block response includes lat/lon | redaction test | 1 | CI blocks |

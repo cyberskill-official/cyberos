@@ -15,7 +15,7 @@ related_frs: [FR-AUTH-107]
 ## §1 — Statement (BCP-14 normative)
 
 1. The HaveIBeenPwned (HIBP) k-anonymity API call **MUST** be wrapped in a 2s hard timeout. If HIBP doesn't respond in 2s, the call is aborted.
-2. On HIBP timeout, AUTH **MUST** fail-open — the signup or password rotation proceeds without breach check — but an audit row `auth.hibp.timeout` is emitted to BRAIN with `{subject_id, route, attempt_n}` for retroactive review.
+2. On HIBP timeout, AUTH **MUST** fail-open — the signup or password rotation proceeds without breach check — but an audit row `auth.hibp.timeout` is emitted to memory with `{subject_id, route, attempt_n}` for retroactive review.
 3. AUTH **MUST NOT** retry HIBP on timeout within the same caller request — one attempt only. A retry would amplify the latency penalty.
 4. HIBP API key (the User-Agent header per HIBP ToS) **MUST** be loaded from environment variable `HIBP_USER_AGENT`; never hard-coded.
 5. The HIBP module **MUST** be locally bypassable in dev mode via `AUTH_HIBP_MODE=skip` env var — production deployments must set `AUTH_HIBP_MODE=enforce`.
@@ -28,7 +28,7 @@ HIBP is a third-party API outside the platform's control. Without a hard timeout
 
 - Counter `auth_hibp_timeout_total` — incremented on every 2s abort. Sev-3 alarm at > 10/hour.
 - Counter `auth_hibp_check_total{result}` where result ∈ {`clean`, `breached`, `timeout`, `error`}.
-- BRAIN audit query `view kind=auth.hibp.timeout` — weekly review by security.
+- memory audit query `view kind=auth.hibp.timeout` — weekly review by security.
 
 ## §4 — Verification
 

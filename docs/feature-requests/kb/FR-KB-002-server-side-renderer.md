@@ -1,6 +1,6 @@
 ---
 id: FR-KB-002
-title: "KB server-side renderer — markdown → sanitised HTML (ammonia) + sanitised plaintext for BRAIN ingest"
+title: "KB server-side renderer — markdown → sanitised HTML (ammonia) + sanitised plaintext for memory ingest"
 module: KB
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 4
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-001, FR-KB-005, FR-AI-019, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-KB-001, FR-KB-005, FR-AI-019, FR-MEMORY-111]
 depends_on: [FR-KB-001]
 blocks: []
 
@@ -21,10 +21,10 @@ source_pages:
 
 source_decisions:
   - DEC-1890 2026-05-17 — Render markdown → HTML server-side via ammonia (Rust XSS-safe whitelist HTML sanitiser); never trust client-rendered for security
-  - DEC-1891 2026-05-17 — Plaintext extraction strips formatting + sanitises for FR-AI-019 BRAIN Layer 2 vector ingest
+  - DEC-1891 2026-05-17 — Plaintext extraction strips formatting + sanitises for FR-AI-019 memory Layer 2 vector ingest
   - DEC-1892 2026-05-17 — Closed enum `render_target` = {html_full, html_excerpt, plaintext, json_ast}; cardinality 4
   - DEC-1893 2026-05-17 — Render cache keyed by (doc_id, version_id) — invalidated on new version per FR-KB-001 immutability
-  - DEC-1894 2026-05-17 — BRAIN audit kinds: kb.doc_rendered, kb.render_failed, kb.render_cache_invalidated
+  - DEC-1894 2026-05-17 — memory audit kinds: kb.doc_rendered, kb.render_failed, kb.render_cache_invalidated
 
 build_envelope:
   language: rust 1.81
@@ -66,12 +66,12 @@ sub_tasks:
   - "2.2h: tests — 6 test files"
   - "0.5h: docs"
 
-risk_if_skipped: "Without server-side render, clients render markdown directly → XSS attack surface. Without DEC-1891 sanitised plaintext, BRAIN ingest carries HTML noise + breaks vector quality. Without DEC-1890 ammonia, raw user-input HTML reaches readers."
+risk_if_skipped: "Without server-side render, clients render markdown directly → XSS attack surface. Without DEC-1891 sanitised plaintext, memory ingest carries HTML noise + breaks vector quality. Without DEC-1890 ammonia, raw user-input HTML reaches readers."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship server-side renderer at `services/kb/src/renderer/` producing sanitised HTML + plaintext + cached, 3 BRAIN audit kinds.
+The KB service **MUST** ship server-side renderer at `services/kb/src/renderer/` producing sanitised HTML + plaintext + cached, 3 memory audit kinds.
 
 1. **MUST** validate `render_target` against closed enum per DEC-1892.
 
@@ -110,7 +110,7 @@ The KB service **MUST** ship server-side renderer at `services/kb/src/renderer/`
    POST   /v1/kb/docs/{id}/render                     (force re-render, CDO)
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-1894. PII per FR-BRAIN-111: rendered_content text SHA-256 hashed.
+7. **MUST** emit 3 memory audit kinds per DEC-1894. PII per FR-MEMORY-111: rendered_content text SHA-256 hashed.
 
 8. **MUST** thread trace_id from render request → renderer → cache → audit.
 
@@ -126,7 +126,7 @@ The KB service **MUST** ship server-side renderer at `services/kb/src/renderer/`
 
 **Why server-side (DEC-1890)?** Client trust = XSS risk; always sanitise before serving.
 
-**Why plaintext for BRAIN (DEC-1891)?** Vector quality depends on clean text; HTML tags poison embeddings.
+**Why plaintext for memory (DEC-1891)?** Vector quality depends on clean text; HTML tags poison embeddings.
 
 **Why cache (DEC-1893)?** Markdown render is non-trivial; cache 100x speedup on repeat reads.
 
@@ -153,7 +153,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **render_target enum cardinality 4**. 2. **Markdown → HTML works**. 3. **HTML sanitised (no script/event handlers)**. 4. **Plaintext extraction removes tags**. 5. **XSS payload blocked**. 6. **Excerpt 200 words capped**. 7. **JSON AST returned correctly**. 8. **Cache hit on repeat**. 9. **Cache invalidated on new version**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (rendered_content SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Force re-render CDO-only**. 15. **UNIQUE(doc, version, target) constraint**. 16. **Append-only via REVOKE UPDATE (only DELETE on invalidation)**. 17. **Ammonia whitelist documented**. 18. **Render performance < 50ms for 10k-char doc**. 19. **Large doc (>1MB) supported with timeout**. 20. **AT-rules (style) sanitised**.
+1. **render_target enum cardinality 4**. 2. **Markdown → HTML works**. 3. **HTML sanitised (no script/event handlers)**. 4. **Plaintext extraction removes tags**. 5. **XSS payload blocked**. 6. **Excerpt 200 words capped**. 7. **JSON AST returned correctly**. 8. **Cache hit on repeat**. 9. **Cache invalidated on new version**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (rendered_content SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Force re-render CDO-only**. 15. **UNIQUE(doc, version, target) constraint**. 16. **Append-only via REVOKE UPDATE (only DELETE on invalidation)**. 17. **Ammonia whitelist documented**. 18. **Render performance < 50ms for 10k-char doc**. 19. **Large doc (>1MB) supported with timeout**. 20. **AT-rules (style) sanitised**.
 
 ---
 
@@ -195,7 +195,7 @@ async fn cache_invalidated_on_new_version() {
 ## §7 — Dependencies
 **Upstream:** FR-KB-001.
 **Downstream:** FR-KB-005 (semantic ingest uses plaintext).
-**Cross-module:** FR-AI-019 (BRAIN Layer 2 ingest), FR-AUTH-101 (CDO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AI-019 (memory Layer 2 ingest), FR-AUTH-101 (CDO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -215,7 +215,7 @@ async fn cache_invalidated_on_new_version() {
 - §11.1 Ammonia config: allow basic HTML tags + safe attributes (href, src, alt, title); no event handlers; HTTP/HTTPS only.
 - §11.2 Plaintext: ammonia first → strip remaining tags → normalise whitespace.
 - §11.3 Cache TTL: indefinite; invalidated only on new doc version.
-- §11.4 BRAIN audit body: doc_id, version_id, target; rendered_content SHA256.
+- §11.4 memory audit body: doc_id, version_id, target; rendered_content SHA256.
 - §11.5 Force re-render: bypasses cache lookup; useful for ammonia config updates.
 
 ---

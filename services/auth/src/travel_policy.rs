@@ -131,8 +131,12 @@ async fn load_policy(pool: &PgPool, tenant_id: Uuid) -> Result<TravelPolicy, sql
         None => ("challenge".to_string(), 1000.0, false, 30),
     };
 
-    let cidrs: Vec<(IpNetwork,)> = sqlx::query_as(
-        "SELECT cidr FROM travel_cidr_allowlist WHERE tenant_id = $1",
+    // 2026-05-19 sqlx 0.8 + ipnetwork 0.20 Decode<Postgres> gap — read CIDR
+    // as TEXT and parse to IpNetwork on the Rust side. Malformed CIDRs in
+    // the DB are dropped silently (they were already invalid before storage
+    // per the CHECK constraint in 0018_travel_policy.sql).
+    let cidrs: Vec<(String,)> = sqlx::query_as(
+        "SELECT cidr::text FROM travel_cidr_allowlist WHERE tenant_id = $1",
     )
     .bind(tenant_id)
     .fetch_all(&mut *tx)
@@ -144,7 +148,10 @@ async fn load_policy(pool: &PgPool, tenant_id: Uuid) -> Result<TravelPolicy, sql
         threshold_kmh,
         block_anonymous_ip: block_anon,
         sticky_suppress_min: sticky.max(0) as u32,
-        allowlist: cidrs.into_iter().map(|(c,)| c).collect(),
+        allowlist: cidrs
+            .into_iter()
+            .filter_map(|(c,)| c.parse::<IpNetwork>().ok())
+            .collect(),
     })
 }
 

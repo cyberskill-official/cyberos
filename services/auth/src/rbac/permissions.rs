@@ -67,8 +67,8 @@ pub enum Resource {
     ChatMessage,
     // CUO
     CuoChain,
-    // BRAIN
-    BrainMemory,
+    // memory
+    MemoryMemory,
     // OBS
     ObsAlert,
 }
@@ -92,7 +92,7 @@ impl Resource {
         Resource::EmailThread,
         Resource::ChatChannel, Resource::ChatMessage,
         Resource::CuoChain,
-        Resource::BrainMemory,
+        Resource::MemoryMemory,
         Resource::ObsAlert,
     ];
 
@@ -136,7 +136,7 @@ impl Resource {
             Resource::ChatChannel => "chat-channel",
             Resource::ChatMessage => "chat-message",
             Resource::CuoChain => "cuo-chain",
-            Resource::BrainMemory => "brain-memory",
+            Resource::MemoryMemory => "memory-memory",
             Resource::ObsAlert => "obs-alert",
         }
     }

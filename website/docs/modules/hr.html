@@ -126,7 +126,7 @@
  <div class="fact-card"><div class="label">Leave types</div><div class="value">8</div><div class="note">annual · sick · maternity · paternity · sabbatical · unpaid · bereavement · public-holiday</div></div>
  <div class="fact-card"><div class="label">Contract types</div><div class="value">5</div><div class="note">indefinite · fixed-term · probation · part-time · contractor</div></div>
  <div class="fact-card"><div class="label">PII keyspace</div><div class="value">separate KMS</div><div class="note">CCCD photo column distinct from comp keys</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">+ DOC for e-sign</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · OBS</div><div class="note">+ DOC for e-sign</div></div>
  <div class="fact-card"><div class="label">Used by</div><div class="value">REW · LEARN · ESOP · TIME · CHAT</div><div class="note">Member-id is the cross-module spine</div></div>
  </div>
  </div>
@@ -176,7 +176,7 @@ flowchart LR
  KB["📚 KB<br>access scope"]
  PROJ["📋 PROJ<br>calibration signals"]
  CHAT["💬 CHAT<br>workspace add"]
- BRAIN["🧠 BRAIN<br>lifecycle audit"]
+ memory["🧠 memory<br>lifecycle audit"]
  HR --> AUTH
  HR --> TIME
  HR -- "pay band → ref only" --> REW
@@ -187,13 +187,13 @@ flowchart LR
  PROJ -- "calibration · blocker rate" --> HR
  TIME -- "hour discipline" --> HR
  LEARN -- "completion" --> HR
- HR --> BRAIN
+ HR --> memory
  classDef hub fill:#fce7f3,stroke:#9d174d,stroke-width:3px,color:#500724
  classDef mod fill:#e0e7ff,stroke:#3730a3
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class HR hub
  class AUTH,TIME,REW,ESOP,LEARN,KB,PROJ,CHAT mod
- class BRAIN brain
+ class memory memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -242,7 +242,7 @@ flowchart LR
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
- The bet is the same bet AUTH makes about identity: pay the cost once at the canonical layer, and every module inherits the property for free. Without HR as the canonical Member directory, "who can take leave?" becomes a search across mailing lists, Slack channels, and Excel files. With HR as the canonical Member directory, the answer is a JOIN against <code>member</code> and <code>leave_balance</code>, scoped by <code>tenant_id</code>, audited in BRAIN, and provable to a Decree 13/2023 auditor.
+ The bet is the same bet AUTH makes about identity: pay the cost once at the canonical layer, and every module inherits the property for free. Without HR as the canonical Member directory, "who can take leave?" becomes a search across mailing lists, Slack channels, and Excel files. With HR as the canonical Member directory, the answer is a JOIN against <code>member</code> and <code>leave_balance</code>, scoped by <code>tenant_id</code>, audited in memory, and provable to a Decree 13/2023 auditor.
  </p>
 </section>
 
@@ -280,7 +280,7 @@ flowchart LR
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- HR is one Rust service with four surfaces (GraphQL subgraph, REST admin, NATS event publisher, MCP tool catalogue), three stores (Postgres for relational state, S3 for contract PDFs + CCCD images, KMS for per-column encryption keys), and an audit sink to BRAIN. The diagram below shows the canonical request flow for the onboarding orchestrator.
+ HR is one Rust service with four surfaces (GraphQL subgraph, REST admin, NATS event publisher, MCP tool catalogue), three stores (Postgres for relational state, S3 for contract PDFs + CCCD images, KMS for per-column encryption keys), and an audit sink to memory. The diagram below shows the canonical request flow for the onboarding orchestrator.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -325,7 +325,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit & telemetry"]
- BRAIN["🧠 BRAIN<br>hr.lifecycle rows"]
+ memory["🧠 memory<br>hr.lifecycle rows"]
  OBS["👁 OBS<br>traces + metrics"]
  NATS["📡 NATS JetStream<br>hr.* events"]
  end
@@ -355,8 +355,8 @@ graph TB
  CON --> S3
  S3 --> KMS
  PG --> KMS
- GQL --> BRAIN
- REST --> BRAIN
+ GQL --> memory
+ REST --> memory
  OB --> NATS
  OFF --> NATS
  LV --> NATS
@@ -368,7 +368,7 @@ graph TB
  classDef down fill:#fef6e0,stroke:#9c750a
  class GQL,REST,MCP,OB,OFF,LV,CON,SAB,DOC planned
  class PG,S3,KMS store
- class BRAIN,OBS,NATS sink
+ class memory,OBS,NATS sink
  class AUTH,REW,ESOP,LEARN,TIME,CHAT,DOCM down
  </div>
  </div>
@@ -391,7 +391,7 @@ graph TB
  <tr><td><code>cccd.rs</code></td><td>services/hr/src/cccd.rs</td><td>CCCD (Vietnamese citizen ID) photo handler — separate KMS keyspace, sev-1 access audit, never embedded in API responses.</td></tr>
  <tr><td><code>org_chart.rs</code></td><td>services/hr/src/org_chart.rs</td><td>Auto-rendered org chart from <code>manager_id</code> self-references. Returns adjacency list + Mermaid string for SPA.</td></tr>
  <tr><td><code>review_hook.rs</code></td><td>services/hr/src/review_hook.rs</td><td>Performance-review hook to LEARN. HR initiates a review cycle; LEARN owns the peer-review workflow; outcome summary lands back as a non-comp HR field.</td></tr>
- <tr><td><code>audit_bridge.rs</code></td><td>services/hr/src/audit_bridge.rs</td><td>Writes every lifecycle transition to BRAIN. CCCD reads are sev-1 ((FR pending)).</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/hr/src/audit_bridge.rs</td><td>Writes every lifecycle transition to memory. CCCD reads are sev-1 ((FR pending)).</td></tr>
  <tr><td><code>migrations/</code></td><td>services/hr/migrations/</td><td>sqlx migrations. RLS by <code>tenant_id</code>. Separate column-level KMS for CCCD vs contracts vs comp-shadow fields.</td></tr>
  </tbody>
  </table>
@@ -698,7 +698,7 @@ sequenceDiagram
  participant CH as 💬 CHAT
  participant L as 📈 LEARN
  participant N as 📡 NATS
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  HR->>H: POST /admin/members<br>{name, role, level, start_date, manager_id}
  H->>H: create member row
@@ -734,7 +734,7 @@ sequenceDiagram
  participant BAL as leave_balance row
  participant MGR as Manager (notif)
  participant T as ⏱ TIME (calendar)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  M->>H: requestLeave(kind=annual, start, end)
  H->>BAL: check sufficient balance
@@ -767,7 +767,7 @@ sequenceDiagram
  participant K as AWS KMS
  participant D as 📄 DOC e-sign
  participant M as Member
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  HR->>H: POST /admin/contracts<br>{member_id, kind, effective_from, terms}
  H->>TPL: render PDF (Vietnamese + English)
@@ -797,13 +797,13 @@ sequenceDiagram
  participant L as 📈 LEARN
  participant J as Peer judges (3-5)
  participant CHR as CHRO (or CEO)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  HR->>H: open review cycle for Q2-2026
  H->>L: POST /learn/review-cycles {period, member_ids}
  L->>L: open per-Member peer review (Hội đồng Chuyên môn)
  L->>J: invite (5 judges per case)
- J-->>L: submit scores (individual rows; not ingested into BRAIN)
+ J-->>L: submit scores (individual rows; not ingested into memory)
  L->>L: compute aggregate (median; no per-judge exposure)
  L->>CHR: present aggregate + recommendation
  CHR-->>L: confirm outcome
@@ -826,7 +826,7 @@ sequenceDiagram
  participant R as 💎 REW (final pay)
  participant E as 📊 ESOP (GL/BL)
  participant ASSET as Asset return checklist
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  HR->>OFF: POST /admin/members/&lt;id&gt;/terminate {kind=resignation|dismissal}
  OFF->>CEO: request co-sign (mandatory for Bad Leaver)
@@ -851,7 +851,7 @@ sequenceDiagram
 <section id="lifecycle" class="module-section">
  <header class="section-head"><span class="section-num">7</span><h2>Member lifecycle</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- A Member traverses five states from offer to terminated, with three special branches (probation pass/fail, leave-of-absence, sabbatical). Every transition writes a BRAIN audit row and emits a NATS event.
+ A Member traverses five states from offer to terminated, with three special branches (probation pass/fail, leave-of-absence, sabbatical). Every transition writes a memory audit row and emits a NATS event.
  </p>
  <div class="bbg-card p-5 mb-5">
  <div class="mermaid">
@@ -930,14 +930,14 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- HR is the Member-directory primitive that every comp/learn/equity module reads from. It depends on AUTH for identity, BRAIN for audit, OBS for telemetry, and (P4) DOC for WebAuthn e-sign.
+ HR is the Member-directory primitive that every comp/learn/equity module reads from. It depends on AUTH for identity, memory for audit, OBS for telemetry, and (P4) DOC for WebAuthn e-sign.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["HR depends on"]
  AUTH["🔐 AUTH<br>identity · RBAC"]
- BRAIN["🧠 BRAIN<br>audit chain"]
+ memory["🧠 memory<br>audit chain"]
  OBS["👁 OBS<br>traces + metrics"]
  KMS["🔑 AWS KMS<br>per-column key"]
  S3["🗂 AWS S3<br>contract PDFs · CCCD"]
@@ -955,7 +955,7 @@ graph LR
  CRM["🏢 CRM<br>contact owner mapping"]
  end
  AUTH --> HR
- BRAIN --> HR
+ memory --> HR
  OBS --> HR
  KMS --> HR
  S3 --> HR
@@ -973,7 +973,7 @@ graph LR
  classDef shipped fill:#f5ede6,stroke:#45210e
  class HR planned
  class AUTH,REW,LEARN,ESOP,TIME,CHAT,INV,OKR,CRM,DOC,OBS planned
- class BRAIN,KMS,S3 shipped
+ class memory,KMS,S3 shipped
  </div>
  </div>
 </section>
@@ -993,7 +993,7 @@ graph LR
  <tr><td>Decree 145/2020/NĐ-CP</td><td>Art. 60 — Overtime cap</td><td>(FR pending) enforces ≤ 200h/year overtime per Member; check at TIME submission.</td></tr>
  <tr><td>Decree 152/2020/NĐ-CP</td><td>Art. 26 — Sick leave allowance</td><td>BHXH sick allowance days tiered by service period.</td></tr>
  <tr><td>Decree 152/2020/NĐ-CP</td><td>Art. 5 — SI contribution rates</td><td>BHXH 8%/17.5%, BHYT 1.5%/3%, BHTN 1%/1% as versioned parameters; comp owned by REW.</td></tr>
- <tr><td>Decree 13/2023/NĐ-CP</td><td>Art. 17 — Personal data processing log</td><td>Every Member read / write writes an HR audit row to BRAIN.</td></tr>
+ <tr><td>Decree 13/2023/NĐ-CP</td><td>Art. 17 — Personal data processing log</td><td>Every Member read / write writes an HR audit row to memory.</td></tr>
  <tr><td>Decree 53/2022/NĐ-CP</td><td>Art. 26 — Data localisation</td><td>P3: VN tenants pin <code>data_residency = "vn-hanoi-1"</code>; HR Postgres replica in-country.</td></tr>
  <tr><td>Law 91/2025/QH15 (PDPL)</td><td>Art. 14 — DSAR</td><td>(FR pending) — <code>cyberos-hr dsar-export</code> bundles Member-scoped data within 30 days.</td></tr>
  <tr><td>Law 91/2025/QH15 (PDPL)</td><td>Art. 7 — Sensitive personal data</td><td>CCCD photo classified <code>restricted</code>; separate KMS key; sev-1 audit on read.</td></tr>
@@ -1050,13 +1050,13 @@ graph LR
  <tr><td><strong>Onboarding completion (median days)</strong></td><td>median(<code>onboarding_task.completed_at - member.start_date</code>)</td><td>HR DB</td><td>≤ 5 working days</td></tr>
  <tr><td><strong>Leave request approval p95</strong></td><td>p95(<code>approved_at - submitted_at</code>)</td><td>HR DB</td><td>≤ 2 business days</td></tr>
  <tr><td><strong>Org-chart drift</strong></td><td><code>members_without_manager_id / total_members</code></td><td>HR DB</td><td>= 0%</td></tr>
- <tr><td><strong>CCCD access audit coverage</strong></td><td><code>cccd_reads / audit_rows_with_class=restricted</code></td><td>BRAIN</td><td>= 100%</td></tr>
+ <tr><td><strong>CCCD access audit coverage</strong></td><td><code>cccd_reads / audit_rows_with_class=restricted</code></td><td>memory</td><td>= 100%</td></tr>
  <tr><td><strong>Contract renewal lead time</strong></td><td>median(days between expiry warning and renewal)</td><td>HR DB</td><td>≥ 30 days</td></tr>
  <tr><td><strong>Sabbatical-tick correctness</strong></td><td>property-test pass rate</td><td>CI</td><td>100%</td></tr>
  <tr><td><strong>DSAR fulfilment p95</strong></td><td>p95(<code>exported_at - requested_at</code>)</td><td>HR DB</td><td>≤ 14 days (well under 30d PDPL cap)</td></tr>
  <tr><td><strong>Onboarding orchestrator partial-failure rate</strong></td><td>(orchestrations with retry) / total</td><td>OBS</td><td>≤ 1%</td></tr>
  <tr><td><strong>Comp-field-in-HR incidents</strong></td><td>CI gate failures</td><td>CI</td><td>= 0</td></tr>
- <tr><td><strong>Signal-only comp decision rate</strong></td><td>comp recs where REW/CHRO/CFO sign-off recorded / total recs</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Signal-only comp decision rate</strong></td><td>comp recs where REW/CHRO/CFO sign-off recorded / total recs</td><td>memory audit</td><td>= 1.0 (hard floor)</td></tr>
  <tr><td><strong>Onboarding playbook saga p95</strong></td><td>histogram (member.start_date → all tasks fired)</td><td>OBS</td><td>≤ 5 min</td></tr>
  <tr><td><strong>Labour-law version stamp coverage</strong></td><td>contracts/leave records with cap_version stamped / total</td><td>HR DB</td><td>= 1.0</td></tr>
  <tr><td><strong>HR-to-REW handoff p95</strong></td><td>histogram (member.active → REW comp record created)</td><td>OBS</td><td>≤ 1 min</td></tr>
@@ -1115,7 +1115,7 @@ graph LR
 [fanout] chat.workspace.provision → ack
 [fanout] time.timesheet.enrol → ack
 [fanout] learn.profile.seed → ack
-[audit] brain seq=14843 chain=a1c4…b8e2</code></pre>
+[audit] memory seq=14843 chain=a1c4…b8e2</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Submit a leave request (Member-self)</h3>
 <pre><code>$ cyberos-hr leave request \
@@ -1128,7 +1128,7 @@ graph LR
  days: 5
  status: submitted
  approver: stephen@cyberskill.com (manager)
-[audit] brain seq=14844 chain=b2d5…c9f3</code></pre>
+[audit] memory seq=14844 chain=b2d5…c9f3</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Issue a contract</h3>
 <pre><code>$ cyberos-hr contract issue \
@@ -1142,7 +1142,7 @@ graph LR
 [s3] contracts/<member>/<id>.pdf (KMS contract-key)
 [doc] sent for WebAuthn e-sign → notification dispatched
 [status] pending_signature
-[audit] brain seq=14851 chain=d4e7…f1a9</code></pre>
+[audit] memory seq=14851 chain=d4e7…f1a9</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Render the org chart</h3>
 <pre><code>$ cyberos-hr org-chart --format mermaid --root stephen@cyberskill.com
@@ -1181,7 +1181,7 @@ graph TD
 [asset] opened: laptop, badge, github SSH (3 tasks)
 [contract] superseded; effective_to = 2026-05-14
 [retention] 10-year hold remains
-[audit] brain seq=14862 chain=e7f1…a8b4</code></pre>
+[audit] memory seq=14862 chain=e7f1…a8b4</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. DSAR export</h3>
 <pre><code>$ cyberos-hr dsar-export --member mai@cyberskill.com --output dsar.zip
@@ -1194,7 +1194,7 @@ graph TD
 [dsar] cccd: 1 (sev-1 audit added)
 [dsar] comp: — (REW DSAR separate)
 [dsar] written: dsar.zip (1.8 MB, KMS-encrypted)
-[audit] brain seq=14871 chain=f8a2…c4d6</code></pre>
+[audit] memory seq=14871 chain=f8a2…c4d6</code></pre>
 </section>
 
 <!-- ============================================================ -->
@@ -1260,8 +1260,8 @@ graph TD
  <a href="learn.html" class="text-blue-700 underline">learn.html</a> ·
  <a href="time.html" class="text-blue-700 underline">time.html</a> ·
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a></li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — HR lifecycle events become BRAIN audit rows; CCCD photo never enters BRAIN.</li>
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a></li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — HR lifecycle events become memory audit rows; CCCD photo never enters memory.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — HR at P1 · mid (P1, alongside PROJ).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>Decree 53/2022/NĐ-CP</strong> — Cybersecurity Law implementation; data localisation.</li>

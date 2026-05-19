@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-OKR-001, FR-OKR-003, FR-OKR-004, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-OKR-001, FR-OKR-003, FR-OKR-004, FR-MEMORY-111]
 depends_on: [FR-OKR-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-1971 2026-05-17 — Closed enum `kr_type` = {hit_target, improvement, milestone}; cardinality 3
   - DEC-1972 2026-05-17 — Progress calc per type: hit_target → 0 or 100; improvement → (current - start) / (target - start); milestone → completed / total checkpoints
   - DEC-1973 2026-05-17 — Per-type validation: hit_target requires target_value; improvement requires start/target; milestone requires checkpoint array
-  - DEC-1974 2026-05-17 — BRAIN audit kinds: okr.kr_type_set, okr.kr_progress_calculated, okr.kr_validation_failed
+  - DEC-1974 2026-05-17 — memory audit kinds: okr.kr_type_set, okr.kr_progress_calculated, okr.kr_validation_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without type-specific calc, all KRs use ad-hoc formulas → pr
 
 ## §1 — Description (BCP-14 normative)
 
-The OKR service **MUST** extend KR schema with 3 types at `services/okr/src/kr_type/` enforcing per-type validation + deterministic progress, 3 BRAIN audit kinds.
+The OKR service **MUST** extend KR schema with 3 types at `services/okr/src/kr_type/` enforcing per-type validation + deterministic progress, 3 memory audit kinds.
 
 1. **MUST** validate `kr_type` against closed enum per DEC-1971.
 
@@ -99,7 +99,7 @@ The OKR service **MUST** extend KR schema with 3 types at `services/okr/src/kr_t
 
 5. **MUST** be deterministic per DEC-1972 — pure function, same inputs → same output.
 
-6. **MUST** emit 3 BRAIN audit kinds per DEC-1974. PII per FR-BRAIN-111: KR text hashed; type + progress ok.
+6. **MUST** emit 3 memory audit kinds per DEC-1974. PII per FR-MEMORY-111: KR text hashed; type + progress ok.
 
 7. **MUST** thread trace_id from set/compute → audit.
 
@@ -152,7 +152,7 @@ Sample milestone KR:
 ---
 
 ## §4 — Acceptance criteria
-1. **kr_type enum cardinality 3**. 2. **hit_target requires target_value**. 3. **improvement requires start+target**. 4. **milestone requires checkpoints**. 5. **Wrong-type fields rejected (sev-3 audit)**. 6. **hit_target progress 0 or 100**. 7. **improvement progress capped 0-100**. 8. **milestone progress = completed/total ratio**. 9. **3 BRAIN audit kinds emitted**. 10. **PII scrubbed (KR text SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Deterministic (pure function)**. 14. **rust_decimal precision**. 15. **CHECK constraint on progress 0-100**. 16. **Append-only via REVOKE except 6 cols**. 17. **Type change requires new KR (immutable type)**. 18. **Empty checkpoints array → progress=0**. 19. **Start = Target rejected (improvement)**. 20. **Negative progress impossible (clamp)**.
+1. **kr_type enum cardinality 3**. 2. **hit_target requires target_value**. 3. **improvement requires start+target**. 4. **milestone requires checkpoints**. 5. **Wrong-type fields rejected (sev-3 audit)**. 6. **hit_target progress 0 or 100**. 7. **improvement progress capped 0-100**. 8. **milestone progress = completed/total ratio**. 9. **3 memory audit kinds emitted**. 10. **PII scrubbed (KR text SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Deterministic (pure function)**. 14. **rust_decimal precision**. 15. **CHECK constraint on progress 0-100**. 16. **Append-only via REVOKE except 6 cols**. 17. **Type change requires new KR (immutable type)**. 18. **Empty checkpoints array → progress=0**. 19. **Start = Target rejected (improvement)**. 20. **Negative progress impossible (clamp)**.
 
 ---
 
@@ -187,7 +187,7 @@ async fn milestone_validation_requires_checkpoints() {
 ## §7 — Dependencies
 **Upstream:** FR-OKR-001.
 **Downstream:** FR-OKR-003 (auto-progress reads computed_progress_pct).
-**Cross-module:** FR-BRAIN-111 (PII).
+**Cross-module:** FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -206,7 +206,7 @@ async fn milestone_validation_requires_checkpoints() {
 ## §11 — Implementation notes
 - §11.1 progress_calc pure: `(kr_type, fields) → Decimal`.
 - §11.2 Computed_progress_pct cached on row; updated on current_value change.
-- §11.3 BRAIN audit body: kr_id, kr_type, progress; title SHA256.
+- §11.3 memory audit body: kr_id, kr_type, progress; title SHA256.
 - §11.4 Milestone JSONB schema: `[{name: str, completed: bool, completed_at?: timestamp}]`.
 - §11.5 Future kr types via enum addition (e.g. "burndown") + new calc branch.
 

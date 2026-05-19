@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-ESOP-001, FR-ESOP-002, FR-EMAIL-009, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-ESOP-001, FR-ESOP-002, FR-EMAIL-009, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-ESOP-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2301 2026-05-17 — Closed enum `ma_event_status` = {declared, accelerating, members_notified, completed, dismissed}; cardinality 5
   - DEC-2302 2026-05-17 — Board threshold for declaration: ≥3 board signs (per FR-ESOP-003 board threshold)
   - DEC-2303 2026-05-17 — Acceleration cron processes all active grants → marks status=accelerated + sets shares_vested = total_shares
-  - DEC-2304 2026-05-17 — BRAIN audit kinds: esop.ma_event_declared, esop.ma_event_signed, esop.ma_event_accelerating, esop.ma_event_member_notified, esop.ma_event_completed
+  - DEC-2304 2026-05-17 — memory audit kinds: esop.ma_event_declared, esop.ma_event_signed, esop.ma_event_accelerating, esop.ma_event_member_notified, esop.ma_event_completed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without M&A acceleration, change-of-control breaks member expe
 
 ## §1 — Description (BCP-14 normative)
 
-The ESOP service **MUST** ship M&A acceleration at `services/esop/src/ma/` with Board declaration + acceleration cron + 5-business-day member notice, 5 BRAIN audit kinds.
+The ESOP service **MUST** ship M&A acceleration at `services/esop/src/ma/` with Board declaration + acceleration cron + 5-business-day member notice, 5 memory audit kinds.
 
 1. **MUST** validate `ma_event_status` against closed enum per DEC-2301.
 
@@ -148,7 +148,7 @@ The ESOP service **MUST** ship M&A acceleration at `services/esop/src/ma/` with 
    GET  /v1/esop/ma-events/{id}                  (status)
    ```
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-2304. PII per FR-BRAIN-111: descriptions SHA256.
+7. **MUST** emit 5 memory audit kinds per DEC-2304. PII per FR-MEMORY-111: descriptions SHA256.
 
 8. **MUST** thread trace_id from declare → sign → accelerate → notify → audit.
 
@@ -192,7 +192,7 @@ Sample status:
 ---
 
 ## §4 — Acceptance criteria
-1. **ma_event_status enum cardinality 5**. 2. **Board threshold (≥3 default)**. 3. **All active grants accelerated**. 4. **vested = total_shares set**. 5. **5-business-day notice tracked**. 6. **Per-member notice via FR-EMAIL-009**. 7. **5 BRAIN audit kinds emitted**. 8. **PII scrubbed (desc SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only declare**. 11. **Board member sign-only**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **UNIQUE on (ma_event_id, board_member_id)**. 15. **UNIQUE on (ma_event_id, member_id) for notices**. 16. **status workflow enforced**. 17. **Per-member notice failure isolated**. 18. **Cancelled grants excluded**. 19. **bigint shares**. 20. **Dismiss allowed pre-acceleration**.
+1. **ma_event_status enum cardinality 5**. 2. **Board threshold (≥3 default)**. 3. **All active grants accelerated**. 4. **vested = total_shares set**. 5. **5-business-day notice tracked**. 6. **Per-member notice via FR-EMAIL-009**. 7. **5 memory audit kinds emitted**. 8. **PII scrubbed (desc SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only declare**. 11. **Board member sign-only**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **UNIQUE on (ma_event_id, board_member_id)**. 15. **UNIQUE on (ma_event_id, member_id) for notices**. 16. **status workflow enforced**. 17. **Per-member notice failure isolated**. 18. **Cancelled grants excluded**. 19. **bigint shares**. 20. **Dismiss allowed pre-acceleration**.
 
 ---
 
@@ -239,7 +239,7 @@ async fn members_notified_in_5_bd() {
 
 ## §7 — Dependencies
 **Upstream:** FR-ESOP-001.
-**Cross-module:** FR-ESOP-002 (accrual rows), FR-EMAIL-009 (notice), FR-MCP-007 (deadline cron), FR-AUTH-101 (CEO + board), FR-BRAIN-111 (PII).
+**Cross-module:** FR-ESOP-002 (accrual rows), FR-EMAIL-009 (notice), FR-MCP-007 (deadline cron), FR-AUTH-101 (CEO + board), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -258,7 +258,7 @@ async fn members_notified_in_5_bd() {
 ## §11 — Implementation notes
 - §11.1 Cron via FR-MCP-007 for 5-business-day countdown; sev-1 alert if deadline approaches with pending notices.
 - §11.2 Acceleration creates FR-ESOP-002 accrual row with kind='ma_acceleration'.
-- §11.3 BRAIN audit body: ma_event_id, status, counts; description SHA256.
+- §11.3 memory audit body: ma_event_id, status, counts; description SHA256.
 - §11.4 Per-member notice via FR-EMAIL-009; email template includes vested shares + next steps.
 - §11.5 Business-day calc: VN public holidays from FR-HR-005 policy.
 

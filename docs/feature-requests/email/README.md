@@ -16,7 +16,7 @@ _Generated 2026-05-17 — 11 FRs, 85 engineering-hours total._
 | [FR-EMAIL-008](FR-EMAIL-008-genie-prefix.md) | SHOULD | 2 | 8 | EMAIL Genie prefix — inbound subject prefix routes message to Genie (Branded AI) for automated draft |
 | [FR-EMAIL-009](FR-EMAIL-009-outbound-1to1-send.md) | MUST | 1 | 4 | EMAIL outbound 1:1 send — DKIM-signed via FR-EMAIL-004 + AM confirm-before-send + queue + bounce han |
 | [FR-EMAIL-010](FR-EMAIL-010-bulk-send-approval.md) | MUST | 1 | 5 | EMAIL bulk send (≥ 10 recipients) — AM + CFO/marketing dual-approval token + suppression-list filter |
-| [FR-EMAIL-011](FR-EMAIL-011-dsar-message-export.md) | MUST | 2 | 5 | EMAIL DSAR message export — every message a subject authored or received + chained BRAIN audit hashe |
+| [FR-EMAIL-011](FR-EMAIL-011-dsar-message-export.md) | MUST | 2 | 5 | EMAIL DSAR message export — every message a subject authored or received + chained memory audit hashe |
 
 ## Cross-module dependencies
 

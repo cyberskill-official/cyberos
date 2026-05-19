@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-AUTH-101, FR-TIME-001, FR-LEARN-001, FR-KB-001, FR-CHAT-005, FR-REW-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-AUTH-101, FR-TIME-001, FR-LEARN-001, FR-KB-001, FR-CHAT-005, FR-REW-001, FR-MEMORY-111]
 depends_on: [FR-HR-001]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1882 2026-05-17 — Closed enum `saga_status` = {pending, in_progress, completed, failed, compensating, compensated}; cardinality 6
   - DEC-1883 2026-05-17 — Trigger: member.active transition (from probation/inactive); FR-HR-002 contract type must be set
   - DEC-1884 2026-05-17 — Compensation: each step has reverse op (auth_deprovision, etc.); compensation runs in REVERSE order on failure
-  - DEC-1885 2026-05-17 — BRAIN audit kinds: hr.onboarding_saga_started, hr.onboarding_step_completed, hr.onboarding_step_failed, hr.onboarding_compensation_started, hr.onboarding_saga_completed, hr.onboarding_saga_failed
+  - DEC-1885 2026-05-17 — memory audit kinds: hr.onboarding_saga_started, hr.onboarding_step_completed, hr.onboarding_step_failed, hr.onboarding_compensation_started, hr.onboarding_saga_completed, hr.onboarding_saga_failed
 
 build_envelope:
   language: rust 1.81
@@ -75,7 +75,7 @@ risk_if_skipped: "Without onboarding saga, manual setup misses steps (member can
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** ship onboarding saga at `services/hr/src/onboarding/` orchestrating 6 module provisions in order with compensating rollback, immutable saga state, 6 BRAIN audit kinds.
+The HR service **MUST** ship onboarding saga at `services/hr/src/onboarding/` orchestrating 6 module provisions in order with compensating rollback, immutable saga state, 6 memory audit kinds.
 
 1. **MUST** trigger on `member.status` transition to 'active' per DEC-1883 — hook at `services/hr/src/members.rs`.
 
@@ -132,7 +132,7 @@ The HR service **MUST** ship onboarding saga at `services/hr/src/onboarding/` or
    GET    /v1/hr/onboarding/sagas/{id}            (status)
    ```
 
-8. **MUST** emit 6 BRAIN audit kinds per DEC-1885. PII per FR-BRAIN-111: member_id (uuid) ok; failure_reason hashed.
+8. **MUST** emit 6 memory audit kinds per DEC-1885. PII per FR-MEMORY-111: member_id (uuid) ok; failure_reason hashed.
 
 9. **MUST** thread trace_id across all 6 steps + compensation; visible in each module's audit chain.
 
@@ -186,7 +186,7 @@ Failure state:
 ---
 
 ## §4 — Acceptance criteria
-1. **6-step enum + cardinality test**. 2. **6-status enum + cardinality test**. 3. **Triggered on member.status → active**. 4. **Steps execute in order**. 5. **Idempotent steps**. 6. **Compensation on failure (reverse order)**. 7. **UNIQUE on member_id**. 8. **6 BRAIN audit kinds emitted**. 9. **PII scrubbed (failure_reason SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved across modules**. 12. **CHRO-only manual trigger/retry/compensate**. 13. **Append-only via REVOKE except status cols**. 14. **Retry resumes from failed step**. 15. **Compensation log JSONB tracks each reverse op**. 16. **Saga state queryable**. 17. **Contract type required (else error)**. 18. **Saga timeout 30min (sev-1 + compensate)**. 19. **Concurrent triggers UNIQUE-rejected**. 20. **All 6 modules return success on completion**.
+1. **6-step enum + cardinality test**. 2. **6-status enum + cardinality test**. 3. **Triggered on member.status → active**. 4. **Steps execute in order**. 5. **Idempotent steps**. 6. **Compensation on failure (reverse order)**. 7. **UNIQUE on member_id**. 8. **6 memory audit kinds emitted**. 9. **PII scrubbed (failure_reason SHA256)**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved across modules**. 12. **CHRO-only manual trigger/retry/compensate**. 13. **Append-only via REVOKE except status cols**. 14. **Retry resumes from failed step**. 15. **Compensation log JSONB tracks each reverse op**. 16. **Saga state queryable**. 17. **Contract type required (else error)**. 18. **Saga timeout 30min (sev-1 + compensate)**. 19. **Concurrent triggers UNIQUE-rejected**. 20. **All 6 modules return success on completion**.
 
 ---
 
@@ -225,7 +225,7 @@ async fn trace_id_propagated() {
     let ctx = TestContext::with_traceable_activation().await;
     ctx.activate_member(ctx.member_id).await;
     let saga = ctx.wait_complete(ctx.member_id).await;
-    let auth_audit = ctx.fetch_brain_audit("auth.user_created", saga.member_id).await;
+    let auth_audit = ctx.fetch_memory_audit("auth.user_created", saga.member_id).await;
     assert_eq!(auth_audit.trace_id, saga.trace_id);
 }
 
@@ -236,7 +236,7 @@ async fn trace_id_propagated() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
-**Cross-module:** FR-AUTH-101 (provision), FR-TIME-001 (init), FR-LEARN-001 (starter pack), FR-KB-001 (scope grant), FR-CHAT-005 (channel), FR-REW-001 (comp baseline), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-101 (provision), FR-TIME-001 (init), FR-LEARN-001 (starter pack), FR-KB-001 (scope grant), FR-CHAT-005 (channel), FR-REW-001 (comp baseline), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -257,7 +257,7 @@ async fn trace_id_propagated() {
 - §11.2 Orchestrator state machine: pending → in_progress → (completed | failed → compensating → compensated).
 - §11.3 Trace_id from saga propagates to each module's audit row (cross-module observability).
 - §11.4 Saga timeout cron checks for status='in_progress' AND started_at < now() - 30min.
-- §11.5 BRAIN audit body: saga_id, member_id, step, completed_count; failure_reason SHA256.
+- §11.5 memory audit body: saga_id, member_id, step, completed_count; failure_reason SHA256.
 
 ---
 

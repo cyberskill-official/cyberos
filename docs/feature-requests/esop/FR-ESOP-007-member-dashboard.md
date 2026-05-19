@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-ESOP-001, FR-ESOP-002, FR-ESOP-003, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-ESOP-001, FR-ESOP-002, FR-ESOP-003, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-ESOP-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2311 2026-05-17 — Closed enum `dashboard_access_kind` = {self_view, cfo_audit_view, ceo_audit_view, denied}; cardinality 4
   - DEC-2312 2026-05-17 — Estimated current value computed: vested_shares × FR-ESOP-003 committed price (latest)
   - DEC-2313 2026-05-17 — Cross-Member access logged with audit reason + accessor + accessed_member; sev-2 audit
-  - DEC-2314 2026-05-17 — BRAIN audit kinds: esop.dashboard_self_view, esop.dashboard_cfo_audit_view, esop.dashboard_access_denied, esop.dashboard_estimated_value_computed
+  - DEC-2314 2026-05-17 — memory audit kinds: esop.dashboard_self_view, esop.dashboard_cfo_audit_view, esop.dashboard_access_denied, esop.dashboard_estimated_value_computed
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without dashboard, members can't see their equity → trust da
 
 ## §1 — Description (BCP-14 normative)
 
-The ESOP service **MUST** ship Member dashboard at `services/esop/src/dashboard/` with self-only default + CFO-audited cross-member access + estimated value, 4 BRAIN audit kinds.
+The ESOP service **MUST** ship Member dashboard at `services/esop/src/dashboard/` with self-only default + CFO-audited cross-member access + estimated value, 4 memory audit kinds.
 
 1. **MUST** validate `dashboard_access_kind` against closed enum per DEC-2311.
 
@@ -113,13 +113,13 @@ The ESOP service **MUST** ship Member dashboard at `services/esop/src/dashboard/
    GET /v1/esop/members/{id}/dashboard     (self → always OK; cross → requires audit_reason header)
    ```
 
-6. **MUST** emit 4 BRAIN audit kinds per DEC-2314. PII per FR-BRAIN-111: estimated_value SHA256.
+6. **MUST** emit 4 memory audit kinds per DEC-2314. PII per FR-MEMORY-111: estimated_value SHA256.
 
 7. **MUST** thread trace_id from request → gate → audit.
 
 8. **MUST NOT** allow cross-member view without audit reason per DEC-2310.
 
-9. **MUST NOT** silently log cross-member view per DEC-2313 (sev-2 BRAIN audit always).
+9. **MUST NOT** silently log cross-member view per DEC-2313 (sev-2 memory audit always).
 
 ---
 
@@ -166,7 +166,7 @@ Cross-member denied:
 ---
 
 ## §4 — Acceptance criteria
-1. **dashboard_access_kind enum cardinality 4**. 2. **Self-view always allowed**. 3. **Cross-member denied for non-CFO/CEO**. 4. **CFO with audit_reason allowed + logged**. 5. **CEO with audit_reason allowed + logged**. 6. **Estimated value = vested × latest committed price**. 7. **Per-grant breakdown**. 8. **Next vest date computed**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (value SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only access log**. 14. **IP hashed**. 15. **denied audits sev-2**. 16. **Audit reason required for cross**. 17. **Self-view doesn't require reason**. 18. **Audit log queryable by CISO**. 19. **bigint VND**. 20. **No FR-ESOP-003 valuation → estimated_value=null + sev-3**.
+1. **dashboard_access_kind enum cardinality 4**. 2. **Self-view always allowed**. 3. **Cross-member denied for non-CFO/CEO**. 4. **CFO with audit_reason allowed + logged**. 5. **CEO with audit_reason allowed + logged**. 6. **Estimated value = vested × latest committed price**. 7. **Per-grant breakdown**. 8. **Next vest date computed**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (value SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only access log**. 14. **IP hashed**. 15. **denied audits sev-2**. 16. **Audit reason required for cross**. 17. **Self-view doesn't require reason**. 18. **Audit log queryable by CISO**. 19. **bigint VND**. 20. **No FR-ESOP-003 valuation → estimated_value=null + sev-3**.
 
 ---
 
@@ -186,7 +186,7 @@ async fn cross_member_denied_for_engineer() {
     let ctx = TestContext::with_engineer_role().await;
     let r = ctx.try_fetch_dashboard_as(ctx.engineer, ctx.other_member).await;
     assert_eq!(r.status_code, 403);
-    let audits = ctx.fetch_brain_audits("esop.dashboard_access_denied").await;
+    let audits = ctx.fetch_memory_audits("esop.dashboard_access_denied").await;
     assert!(!audits.is_empty());
 }
 
@@ -207,7 +207,7 @@ async fn cfo_with_reason_logged() {
 
 ## §7 — Dependencies
 **Upstream:** FR-ESOP-001.
-**Cross-module:** FR-ESOP-002 (vested), FR-ESOP-003 (valuation), FR-AUTH-101 (roles), FR-BRAIN-111 (PII).
+**Cross-module:** FR-ESOP-002 (vested), FR-ESOP-003 (valuation), FR-AUTH-101 (roles), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -226,7 +226,7 @@ async fn cfo_with_reason_logged() {
 ## §11 — Implementation notes
 - §11.1 Self-view: requester_id == path member_id; no audit_reason needed.
 - §11.2 Cross-view: requester has CFO/CEO role; audit_reason in X-Audit-Reason header.
-- §11.3 BRAIN audit body: requester, viewed_member, access_kind; IP SHA256; values SHA256.
+- §11.3 memory audit body: requester, viewed_member, access_kind; IP SHA256; values SHA256.
 - §11.4 Next vest date computed from grant + FR-ESOP-002 schedule.
 - §11.5 CISO dashboard for periodic review of cfo_audit_view + ceo_audit_view rows.
 

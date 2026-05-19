@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-LEARN-001, FR-LEARN-005, FR-LEARN-006, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-LEARN-001, FR-LEARN-005, FR-LEARN-006, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-LEARN-001]
 blocks: [FR-LEARN-005, FR-LEARN-006]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-2112 2026-05-17 — Closed enum `council_status` = {convened, scoring, completed, dismissed}; cardinality 4
   - DEC-2113 2026-05-17 — Per-judge scores ONLY visible to council members during scoring; FR-LEARN-005 enforces post-completion isolation
   - DEC-2114 2026-05-17 — Aggregate output: median per-dimension + overall recommendation (promote / hold / decline)
-  - DEC-2115 2026-05-17 — BRAIN audit kinds: learn.council_convened, learn.judge_assigned, learn.score_submitted, learn.council_completed, learn.council_dismissed
+  - DEC-2115 2026-05-17 — memory audit kinds: learn.council_convened, learn.judge_assigned, learn.score_submitted, learn.council_completed, learn.council_dismissed
 
 build_envelope:
   language: rust 1.81
@@ -74,7 +74,7 @@ risk_if_skipped: "Without council, mastery + promotion decisions ad-hoc. Without
 
 ## §1 — Description (BCP-14 normative)
 
-The LEARN service **MUST** ship Hội đồng Chuyên môn at `services/learn/src/council/` with 3-5 judges + 5-dim scoring + median aggregation, 5 BRAIN audit kinds.
+The LEARN service **MUST** ship Hội đồng Chuyên môn at `services/learn/src/council/` with 3-5 judges + 5-dim scoring + median aggregation, 5 memory audit kinds.
 
 1. **MUST** validate `score_dimension` against closed enum per DEC-2111, `council_status` per DEC-2112.
 
@@ -150,7 +150,7 @@ The LEARN service **MUST** ship Hội đồng Chuyên môn at `services/learn/sr
    POST /v1/learn/councils/{id}/dismiss
    ```
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-2115. PII per FR-BRAIN-111: rationale SHA256; scores ok (small integers).
+7. **MUST** emit 5 memory audit kinds per DEC-2115. PII per FR-MEMORY-111: rationale SHA256; scores ok (small integers).
 
 8. **MUST** thread trace_id from convene → scoring → complete → audit.
 
@@ -216,7 +216,7 @@ Aggregate (when completed):
 ---
 
 ## §4 — Acceptance criteria
-1. **score_dimension enum cardinality 5**. 2. **council_status enum cardinality 4**. 3. **3-5 judges enforced**. 4. **Score CHECK 1-5**. 5. **UNIQUE(council, judge, dimension)**. 6. **Median aggregation**. 7. **Completed when all judges × all dims submitted**. 8. **5 BRAIN audit kinds emitted**. 9. **PII scrubbed (rationale SHA256)**. 10. **RLS denies cross-tenant**. 11. **CHRO-only convene**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **Dismiss endpoint allowed**. 15. **Judge cannot self-score (member ≠ judge)**. 16. **Same-tenant judges only**. 17. **promotion_target_level optional (general assessment OK)**. 18. **Aggregate hidden until completed**. 19. **History queryable per candidate**. 20. **Overall recommendation logic per spec**.
+1. **score_dimension enum cardinality 5**. 2. **council_status enum cardinality 4**. 3. **3-5 judges enforced**. 4. **Score CHECK 1-5**. 5. **UNIQUE(council, judge, dimension)**. 6. **Median aggregation**. 7. **Completed when all judges × all dims submitted**. 8. **5 memory audit kinds emitted**. 9. **PII scrubbed (rationale SHA256)**. 10. **RLS denies cross-tenant**. 11. **CHRO-only convene**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **Dismiss endpoint allowed**. 15. **Judge cannot self-score (member ≠ judge)**. 16. **Same-tenant judges only**. 17. **promotion_target_level optional (general assessment OK)**. 18. **Aggregate hidden until completed**. 19. **History queryable per candidate**. 20. **Overall recommendation logic per spec**.
 
 ---
 
@@ -259,7 +259,7 @@ async fn double_score_rejected() {
 ## §7 — Dependencies
 **Upstream:** FR-LEARN-001.
 **Downstream:** FR-LEARN-005 (isolation), FR-LEARN-006 (promotion approval).
-**Cross-module:** FR-AUTH-101 (CHRO + judge roles), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-101 (CHRO + judge roles), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -278,7 +278,7 @@ async fn double_score_rejected() {
 ## §11 — Implementation notes
 - §11.1 Median: even-count handled by floor(avg) for stability.
 - §11.2 Overall recommendation matrix configurable in future; v1 hardcoded.
-- §11.3 BRAIN audit body: council_id, judge_id, dimension, score; rationale SHA256.
+- §11.3 memory audit body: council_id, judge_id, dimension, score; rationale SHA256.
 - §11.4 Judge UI shows other judges' status (submitted/pending) but NOT their scores.
 - §11.5 FR-LEARN-005 enforces post-completion data isolation outside council.
 

@@ -3,7 +3,7 @@ id: FR-AUTH-107
 title: "HIBP password breach check (k-anonymity) on signup + rotation"
 module: AUTH
 priority: SHOULD
-status: building
+status: implementing
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -13,8 +13,8 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-002, FR-AUTH-005, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-AUTH-002, FR-AUTH-005, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-AUTH-002, FR-AUTH-005]
 blocks: []
 
@@ -88,25 +88,25 @@ The AUTH service **MUST** check every new or rotated password against the Have I
    - At rotation: `422 UNPROCESSABLE_ENTITY` with the same body (DEC-729 enables UI prompt).
    - At admin-set: `422 UNPROCESSABLE_ENTITY` with the same body; the admin gets to choose a different password for the subject.
 
-5. **MUST** emit one BRAIN audit row per breach-check call. The row carries `{prefix, count, decision: "allowed" | "rejected" | "unreachable", tenant_id, subject_id, code_path: "signup" | "rotation" | "admin_set"}`. The row never carries the full SHA-1 or the plaintext (DEC-727). The sev tier is sev-3 for `allowed`, sev-2 for `rejected`, sev-2 for `unreachable` when fail-closed, sev-3 for `unreachable` when fail-open.
+5. **MUST** emit one memory audit row per breach-check call. The row carries `{prefix, count, decision: "allowed" | "rejected" | "unreachable", tenant_id, subject_id, code_path: "signup" | "rotation" | "admin_set"}`. The row never carries the full SHA-1 or the plaintext (DEC-727). The sev tier is sev-3 for `allowed`, sev-2 for `rejected`, sev-2 for `unreachable` when fail-closed, sev-3 for `unreachable` when fail-open.
 
 6. **MUST** maintain an in-process LRU cache keyed on the 5-prefix, value = (HIBP response body parsed as `Map<suffix, count>`, fetched_at). TTL = 1 hour, max entries = 10000 (DEC-724). On cache hit, no HTTP request is made; the suffix lookup happens in-memory. Cache is per-process; restart loses it. A single prefix-fetch returns approximately 500 suffix-count pairs (HIBP averages ≈500 per prefix), so 10000 prefixes ≈ 5M entries ≈ 60 MiB RSS. The cache is bounded.
 
 7. **MUST** enforce a 2000ms timeout on each HIBP HTTP request (DEC-730). On connect failure, retry once. On any non-2xx response (4xx, 5xx) or timeout-after-retry, the request is treated as unreachable. Network-level retries beyond 1 are forbidden because (a) the timeout already cost 2s, and (b) password-set is interactive — a 4s+ delay degrades UX.
 
-8. **MUST** resolve the unreachable case per the per-tenant `hibp_unreachable_policy` (DEC-726). Default `fail_open`: the password passes the breach-check but a sev-3 BRAIN audit row records `decision = "unreachable"`. Alternative `fail_closed`: return `503 SERVICE_UNAVAILABLE` with `{error: "hibp_unreachable", retry_after_seconds: 60}` and sev-2 audit. The CFO/security role mutates the policy with a sev-2 audit row + reason ≥10 chars.
+8. **MUST** resolve the unreachable case per the per-tenant `hibp_unreachable_policy` (DEC-726). Default `fail_open`: the password passes the breach-check but a sev-3 memory audit row records `decision = "unreachable"`. Alternative `fail_closed`: return `503 SERVICE_UNAVAILABLE` with `{error: "hibp_unreachable", retry_after_seconds: 60}` and sev-2 audit. The CFO/security role mutates the policy with a sev-2 audit row + reason ≥10 chars.
 
 9. **MUST** support a local k-anon dump fallback (DEC-723). When env `CYBEROS_HIBP_LOCAL_DUMP_PATH` is set, the AUTH service skips the network request entirely and looks up the prefix in a local file (HIBP's downloadable dump split by 5-char prefix). The local dump is used by air-gapped deployments. The dump file format is one prefix per file: `<dump_root>/<prefix>.txt` with the same line-per-suffix:count format. Mode is determined at process start by env presence; runtime switching is not supported.
 
-10. **MUST** validate per-tenant `hibp_block_threshold` at policy write time. Range [1, 10000]. Out-of-range mutation returns `400 BAD_REQUEST` with `{error: "hibp_threshold_out_of_range", min: 1, max: 10000}`. Policy mutation requires the `security_admin` role per FR-AUTH-101 + a sev-2 BRAIN audit row + reason ≥10 chars.
+10. **MUST** validate per-tenant `hibp_block_threshold` at policy write time. Range [1, 10000]. Out-of-range mutation returns `400 BAD_REQUEST` with `{error: "hibp_threshold_out_of_range", min: 1, max: 10000}`. Policy mutation requires the `security_admin` role per FR-AUTH-101 + a sev-2 memory audit row + reason ≥10 chars.
 
 11. **MUST** define a closed 3-value `hibp_decision` Postgres enum (`allowed`, `rejected`, `unreachable`). The CI cardinality test asserts exactly 3 values.
 
-12. **MUST** record every breach-check call in the `hibp_audit_log` append-only table — REVOKE UPDATE, DELETE FROM cyberos_app. The row carries `(id, tenant_id, subject_id_at_call_time, prefix, count, decision, code_path, occurred_at, brain_chain_hash)`. The brain_chain_hash cross-links the Postgres row to the BRAIN audit row.
+12. **MUST** record every breach-check call in the `hibp_audit_log` append-only table — REVOKE UPDATE, DELETE FROM cyberos_app. The row carries `(id, tenant_id, subject_id_at_call_time, prefix, count, decision, code_path, occurred_at, memory_chain_hash)`. The memory_chain_hash cross-links the Postgres row to the memory audit row.
 
 13. **MUST** route the breach-check call BEFORE the Argon2 hash computation. Argon2 is intentionally slow (~100ms per call); calling HIBP first means a rejected password short-circuits the Argon2 cost. The order: input validation → HIBP check → (if allowed) Argon2 hash → persist.
 
-14. **MUST** scrub the prefix from any structured log lines that escape the process. Even though the prefix is k-anonymous (≈100k passwords share a prefix), structured logs that get exported (e.g., to a SIEM) could be cross-referenced with HIBP downloads to materially shrink the candidate set for a specific user. Audit emissions (clause #5) are an exception — they go through FR-BRAIN-111 PII scrubbing, which knows the prefix is operational metadata and lets it through.
+14. **MUST** scrub the prefix from any structured log lines that escape the process. Even though the prefix is k-anonymous (≈100k passwords share a prefix), structured logs that get exported (e.g., to a SIEM) could be cross-referenced with HIBP downloads to materially shrink the candidate set for a specific user. Audit emissions (clause #5) are an exception — they go through FR-MEMORY-111 PII scrubbing, which knows the prefix is operational metadata and lets it through.
 
 15. **MUST** treat the User-Agent header as `cyberos-auth/<service-version>` per HIBP's required-UA contract. Requests without a UA may be rate-limited or rejected by HIBP. The version string is the same string emitted by `auth --version`.
 
@@ -122,13 +122,13 @@ The AUTH service **MUST** check every new or rotated password against the Have I
 
 21. **MUST** apply rate-limit awareness: HIBP's free tier is 1 request per ~1.5s per IP. The in-process cache (clause #6) handles repeated checks of the same prefix; for unique prefixes flooding in faster than the rate limit, the AUTH service tokens via a semaphore (10 concurrent requests max). At semaphore saturation, requests queue up to 5 seconds; longer waits return as unreachable per DEC-730.
 
-22. **MUST** treat 429 (HIBP rate limit) as unreachable + emit a sev-2 `hibp.rate_limited` BRAIN audit row. Repeated 429s in a 5-minute window MUST escalate to sev-1 (signals our deployment is exceeding the free-tier budget — operations decision needed).
+22. **MUST** treat 429 (HIBP rate limit) as unreachable + emit a sev-2 `hibp.rate_limited` memory audit row. Repeated 429s in a 5-minute window MUST escalate to sev-1 (signals our deployment is exceeding the free-tier budget — operations decision needed).
 
-23. **MUST** allow per-tenant whitelist of well-known development passwords ONLY in development environments. The `CYBEROS_HIBP_DEV_WHITELIST` env (`"password,admin,test,changeme"`) bypasses the breach check for those plaintexts. The env is honored ONLY when `CYBEROS_ENV=development`; in `staging` or `production` it is silently ignored AND a sev-1 BRAIN audit row records the attempted bypass at startup. This prevents accidental shipment of dev whitelists to prod.
+23. **MUST** allow per-tenant whitelist of well-known development passwords ONLY in development environments. The `CYBEROS_HIBP_DEV_WHITELIST` env (`"password,admin,test,changeme"`) bypasses the breach check for those plaintexts. The env is honored ONLY when `CYBEROS_ENV=development`; in `staging` or `production` it is silently ignored AND a sev-1 memory audit row records the attempted bypass at startup. This prevents accidental shipment of dev whitelists to prod.
 
-24. **MUST** support a `dry_run` mode on the policy update endpoint where the caller previews what would change without persisting. The `dry_run=true` query param returns the proposed effective config + a list of currently-active sessions that would be affected on next password rotation. No DB mutation, no BRAIN audit emitted.
+24. **MUST** support a `dry_run` mode on the policy update endpoint where the caller previews what would change without persisting. The `dry_run=true` query param returns the proposed effective config + a list of currently-active sessions that would be affected on next password rotation. No DB mutation, no memory audit emitted.
 
-25. **MUST** emit 6 closed BRAIN audit kinds:
+25. **MUST** emit 6 closed memory audit kinds:
     - `auth.hibp_check_passed` (sev-3, on count < threshold)
     - `auth.hibp_check_rejected` (sev-2, on count >= threshold)
     - `auth.hibp_unreachable_fail_open` (sev-3, network down + tenant fail_open)
@@ -206,7 +206,7 @@ CREATE TABLE hibp_audit_log (
     decision         hibp_decision NOT NULL,
     code_path        hibp_code_path NOT NULL,
     occurred_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    brain_chain_hash CHAR(64) NOT NULL CHECK (brain_chain_hash ~ '^[0-9a-f]{64}$')
+    memory_chain_hash CHAR(64) NOT NULL CHECK (memory_chain_hash ~ '^[0-9a-f]{64}$')
 );
 
 CREATE INDEX hibp_audit_tenant_time ON hibp_audit_log (tenant_id, occurred_at DESC);
@@ -448,7 +448,7 @@ services/auth/
 │   │   ├── cache.rs        # LRU cache wrapper
 │   │   ├── local_dump.rs   # air-gapped fallback
 │   │   ├── policy.rs       # per-tenant policy load + mutation
-│   │   ├── audit.rs        # BRAIN audit emission
+│   │   ├── audit.rs        # memory audit emission
 │   │   └── error.rs        # CheckError + HibpUnreachable enums
 │   └── handlers/
 │       ├── signup.rs              # MODIFIED: invoke hibp::check before Argon2
@@ -590,7 +590,7 @@ PUT /v1/admin/tenants/{id}/hibp-policy?dry_run=true
 | 18 | Live-canary CI test fails | CI run | 2 | Deploy blocked; investigate HIBP API change |
 | 19 | Semaphore saturation > 5s wait | wait timeout | 3 | Treat as unreachable |
 | 20 | Argon2 invoked before HIBP | code review + ordering test | 2 | Test fails; CI blocks |
-| 21 | Audit row missing brain_chain_hash | CHECK constraint | 1 | DB rejects insert |
+| 21 | Audit row missing memory_chain_hash | CHECK constraint | 1 | DB rejects insert |
 | 22 | RLS cross-tenant leak | rls_isolation_test | 1 | CI blocks |
 | 23 | Network capture shows full SHA-1 | network_capture_test | 1 | CI blocks |
 | 24 | Cache invalidation on policy change | policy mutation handler | 3 | Cache flushed on threshold or policy change |
@@ -637,17 +637,17 @@ PUT /v1/admin/tenants/{id}/hibp-policy?dry_run=true
 
 **§11.15** The audit_log table's `subject_id` is nullable because at signup the subject doesn't yet exist (the breach-check runs before subject_create). After signup, the row's subject_id can be filled by a post-create trigger if needed; today it stays NULL for signup rows and is set for rotation/admin/reset rows.
 
-**§11.16** The 429-escalation logic (3 in 5min → sev-1) is implemented as a sliding window counter per AUTH process. Cross-process visibility happens via the BRAIN audit chain itself — operators see 429s across the fleet by aggregating chain rows.
+**§11.16** The 429-escalation logic (3 in 5min → sev-1) is implemented as a sliding window counter per AUTH process. Cross-process visibility happens via the memory audit chain itself — operators see 429s across the fleet by aggregating chain rows.
 
 **§11.17** The `prefix` column on `hibp_audit_log` is `CHAR(5)` with a regex CHECK to ensure exactly 5 uppercase hex chars. This prevents log analyzers from accidentally treating it as variable text.
 
-**§11.18** The `brain_chain_hash` cross-link to the BRAIN row enables ledger walks: given an audit row, jump to BRAIN chain hash; given a chain hash, query back to Postgres row. Mirrors the FR-TEN-004 dual-write pattern.
+**§11.18** The `memory_chain_hash` cross-link to the memory row enables ledger walks: given an audit row, jump to memory chain hash; given a chain hash, query back to Postgres row. Mirrors the FR-TEN-004 dual-write pattern.
 
 **§11.19** Tests use `wiremock` for HTTP mock + `sqlx::testcontainers` for Postgres. The live-canary test uses an actual HTTP call against api.pwnedpasswords.com — gated by `#[cfg(feature = "live_canary")]` to keep it out of unit-test runs.
 
 **§11.20** The cache invalidation on policy change flushes the entire cache (not just the affected prefix) because threshold changes affect every check decision, not just specific prefixes.
 
-**§11.21** The PII scrubber (FR-BRAIN-111) is configured with `hibp.*` as a structured-payload allowlist — the prefix, count, decision are operational metadata, not user PII.
+**§11.21** The PII scrubber (FR-MEMORY-111) is configured with `hibp.*` as a structured-payload allowlist — the prefix, count, decision are operational metadata, not user PII.
 
 **§11.22** The fail-loud startup behavior for empty local-dump (clause #19) is implemented as a single `glob("<root>/*.txt") | count == 0` check at process start. The error message is unambiguous so operators know exactly what to fix.
 

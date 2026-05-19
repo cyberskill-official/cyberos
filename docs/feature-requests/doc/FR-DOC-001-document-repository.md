@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CLO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-AI-016, FR-BRAIN-101, FR-DOC-002, FR-DOC-003, FR-DOC-004, FR-DOC-005, FR-DOC-007, FR-DOC-010, FR-DOC-011]
+memory_chain_hash: null
+related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-AI-016, FR-MEMORY-101, FR-DOC-002, FR-DOC-003, FR-DOC-004, FR-DOC-005, FR-DOC-007, FR-DOC-010, FR-DOC-011]
 depends_on: [FR-AUTH-101]
 blocks: [FR-DOC-002, FR-DOC-003, FR-DOC-004, FR-DOC-005, FR-DOC-007, FR-DOC-010]   # all 6 entries are placeholders — not yet specified (downstream consumers)
 
@@ -30,7 +30,7 @@ source_decisions:
   - DEC-286 (REVOKE UPDATE, DELETE on document_metadata + document_versions from cyberos_app — append-only enforced at SQL grant + S3 Object-Lock)
   - DEC-287 (retention period configurable per bucket-scope but ≥ 10 years; HR contracts default 50 years per VN labour law; ESOP grants 75 years per US ERISA-equivalent)
   - DEC-288 (signed-document state machine: draft → in_signing → fully_signed → archived; only fully_signed → archived applies Object-Lock retention; drafts can be deleted)
-  - DEC-289 (BRAIN audit kinds: doc.uploaded, doc.versioned, doc.acl_changed, doc.signed, doc.archived, doc.legal_hold_applied, doc.legal_hold_released, doc.access_audited)
+  - DEC-289 (memory audit kinds: doc.uploaded, doc.versioned, doc.acl_changed, doc.signed, doc.archived, doc.legal_hold_applied, doc.legal_hold_released, doc.access_audited)
   - DEC-290 (access to documents emits doc.access_audited at sev-2 — every read is a forensically-relevant event)
   - DEC-291 (S3 server-side encryption with KMS keys — separate KMS keyspace per bucket-scope; HR contracts use the same keyspace as FR-HR-003's CCCD photos, distinct from generic)
   - DEC-292 (cross-bucket-scope moves forbidden — a doc uploaded to hr-contracts cannot be moved to generic; the keyspace + retention policy is locked at upload)
@@ -55,7 +55,7 @@ new_files:
   - services/doc/src/repo/documents.rs                           # metadata CRUD; uses S3 client for storage path
   - services/doc/src/repo/versions.rs                            # append-only version writer
   - services/doc/src/repo/audit_log.rs                           # hash-chained per-document log writer
-  - services/doc/src/audit/doc_events.rs                         # canonical doc.* BRAIN row builders (8 kinds per DEC-289)
+  - services/doc/src/audit/doc_events.rs                         # canonical doc.* memory row builders (8 kinds per DEC-289)
   - services/doc/src/legal_hold.rs                               # apply + release with CLO+CSO co-sign gate
   - services/doc/src/handlers/documents.rs                       # POST/GET/PATCH /v1/doc/documents + POST /upload + POST /sign-stub
   - services/doc/Cargo.toml                                      # +sqlx, +uuid, +serde, +chrono, +aws-sdk-s3, +sha2, +cyberos-cli-exit
@@ -143,12 +143,12 @@ The DOC service **MUST** ship the document repository as the foundational storag
     - A new row in `document_versions` with monotonic `version_number`.
     - A new S3 object stored at `<s3_key>?versionId=<aws-version-id>` (S3 Versioning enabled on the bucket).
     - An update to `document_metadata.current_version_id` pointing at the new version.
-    - A `doc.versioned` BRAIN audit row.
+    - A `doc.versioned` memory audit row.
    All within one transaction.
 
 10. **MUST** ship the **hash-chained per-document audit log** at `document_audit_log` table (per DEC-283). Schema: `id BIGSERIAL PRIMARY KEY`, `document_id UUID NOT NULL REFERENCES document_metadata(id)`, `tenant_id UUID NOT NULL`, `event_kind TEXT NOT NULL`, `event_payload JSONB NOT NULL`, `prev_hash CHAR(64)`, `chain_hash CHAR(64) NOT NULL`, `ts TIMESTAMPTZ NOT NULL DEFAULT now()`, `actor_subject_id UUID NOT NULL`. The `chain_hash` is `SHA-256(canonical(prev_hash || event_kind || event_payload || ts || actor_subject_id))`. A `BEFORE INSERT` trigger validates `prev_hash` matches the prior row's `chain_hash`; tampered chain → reject. The log is queryable via `document_audit_chain(doc_id) RETURNS SETOF document_audit_log ORDER BY id ASC`.
 
-11. **MUST** emit the following 8 BRAIN audit row kinds (per DEC-289):
+11. **MUST** emit the following 8 memory audit row kinds (per DEC-289):
     - `doc.uploaded` — first upload (status=draft → version 1 written).
     - `doc.versioned` — new version of existing doc.
     - `doc.acl_changed` — bucket_scope or RBAC scope change.
@@ -200,7 +200,7 @@ The DOC service **MUST** ship the document repository as the foundational storag
     - `doc_bytes_stored{tenant_id, bucket_scope}` (gauge — periodic compute via S3 inventory; eventual consistency).
     - `doc_count{tenant_id, bucket_scope, status}` (gauge).
 
-23. **MUST** ensure access (GET /download) emits a `doc.access_audited` BRAIN row at sev-2 per access (per DEC-290). The row carries `{document_id, accessed_by_subject_id_hash16, purpose, requesting_ip_hash16, ts_ns}`. `purpose` is supplied by the caller as a required field (`?purpose=<text>` query param, 1-200 chars); absent → 400.
+23. **MUST** ensure access (GET /download) emits a `doc.access_audited` memory row at sev-2 per access (per DEC-290). The row carries `{document_id, accessed_by_subject_id_hash16, purpose, requesting_ip_hash16, ts_ns}`. `purpose` is supplied by the caller as a required field (`?purpose=<text>` query param, 1-200 chars); absent → 400.
 
 24. **MUST** ship `bucket_retention_policy(scope bucket_scope) RETURNS INT` SQL function returning the retention years per scope (50 for hr_contracts, 75 for esop_grants, 10 for others). Deterministic; same input → same output.
 
@@ -224,7 +224,7 @@ The DOC service **MUST** ship the document repository as the foundational storag
 
 **Why retention varies by scope (DEC-287, §1 #7)?** Different document types have different legal retention floors. VN Labour Code Art. 161 requires 50-year retention for employment contracts. US ERISA-equivalent practices retain ESOP records for 75 years. Generic + most commercial contracts: 10 years (eIDAS + ESIGN floor). The bucket_retention_policy function encodes the lookup; the migration's CHECK constraint enforces `retention_until >= now() + bucket_retention_policy(scope) years`.
 
-**Why dual-signoff for legal hold (DEC-285, §1 #12)?** Legal hold is "this document cannot be deleted, even if retention expires, because litigation is anticipated". Misuse (operator applies hold to suppress a document indefinitely) is a real risk. Dual-signoff (CLO + CSO) creates a "two trusted operators agree" gate; the BRAIN audit row at sev-1 alerts other operators. No auto-apply; never single-signer.
+**Why dual-signoff for legal hold (DEC-285, §1 #12)?** Legal hold is "this document cannot be deleted, even if retention expires, because litigation is anticipated". Misuse (operator applies hold to suppress a document indefinitely) is a real risk. Dual-signoff (CLO + CSO) creates a "two trusted operators agree" gate; the memory audit row at sev-1 alerts other operators. No auto-apply; never single-signer.
 
 **Why GDPR/PDPL erasure blocked under hold (§1 #13)?** Legal hold supersedes erasure rights under most jurisdictions — if there's ongoing litigation requiring document preservation, the regulator wouldn't honour erasure. The predicate `is_erasure_blocked` returns true when `legal_hold=true`; the erasure handler refuses with a reason that makes it visible (so the data subject knows why their request was deferred).
 
@@ -648,7 +648,7 @@ pub async fn legal_hold(
 1. **BucketScope enum closed at 7** — `BucketScope::ALL.len() == 7`; Postgres enum has exactly 7 labels.
 2. **DocumentStatus enum closed at 4** — same shape.
 3. **RLS isolates by tenant** — query as tenant-A returns 0 docs of tenant-B.
-4. **POST + finalize creates document + version 1** — happy path returns metadata + version row; `doc.uploaded` BRAIN row emitted.
+4. **POST + finalize creates document + version 1** — happy path returns metadata + version row; `doc.uploaded` memory row emitted.
 5. **Cross-scope move rejected** — `UPDATE document_metadata SET bucket_scope = 'generic' WHERE id = $1` (originally hr_contracts) → trigger `cross_scope_move_forbidden`.
 6. **UPDATE document_versions blocked** — `UPDATE document_versions ...` as cyberos_app → permission denied.
 7. **DELETE document_versions blocked** — same.
@@ -662,7 +662,7 @@ pub async fn legal_hold(
 15. **Legal hold dual-signoff** — CLO + CSO co-sign → 200; CLO alone → 403 `signer_role_mismatch`.
 16. **Legal hold self-co-sign rejected** — primary_signer == secondary_signer → 400 `self_co_sign`.
 17. **GDPR erasure blocked under hold** — `is_erasure_blocked(doc_id)` returns true; erasure handler refuses with `legal_hold_active`.
-18. **doc.access_audited emitted on GET /download** — sev-2 BRAIN row with purpose; missing purpose → 400.
+18. **doc.access_audited emitted on GET /download** — sev-2 memory row with purpose; missing purpose → 400.
 19. **Audit log chain integrity** — INSERT with mismatched `prev_hash` → trigger `audit_chain_break`.
 20. **Audit log replay end-to-end** — `document_audit_chain(doc_id)` returns rows in order; SHA-256 chain verified end-to-end.
 21. **Idempotent create** — same Idempotency-Key + same body → same document.
@@ -743,7 +743,7 @@ async fn clo_plus_cseco_accepted(ctx: TestCtx) {
         "case_reference":"CASE-2026-Q3-001"
     })).await.unwrap();
     assert_eq!(resp.status(), 200);
-    let rows = ctx.brain_audit_rows("doc.legal_hold_applied").await;
+    let rows = ctx.memory_audit_rows("doc.legal_hold_applied").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["severity"], "sev-1");
 }
@@ -780,7 +780,7 @@ async fn chain_integrity_enforced(pool: sqlx::PgPool) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton. The 8 BRAIN row builders in `audit/doc_events.rs` follow the canonical pattern.)
+(API contract above is the skeleton. The 8 memory row builders in `audit/doc_events.rs` follow the canonical pattern.)
 
 ---
 
@@ -799,9 +799,9 @@ async fn chain_integrity_enforced(pool: sqlx::PgPool) {
 
 **Cross-module:**
 - **FR-AUTH-003** — RLS enforcement.
-- **FR-AI-003** — BRAIN audit bridge; receives the 8 `doc.*` audit row kinds.
+- **FR-AI-003** — memory audit bridge; receives the 8 `doc.*` audit row kinds.
 - **FR-AI-016** — residency policy; this FR consumes the per-tenant residency tag.
-- **FR-BRAIN-111** — PII scrubbing on `event_payload` fields containing PII (e.g. names in reason).
+- **FR-MEMORY-111** — PII scrubbing on `event_payload` fields containing PII (e.g. names in reason).
 
 ---
 
@@ -831,7 +831,7 @@ async fn chain_integrity_enforced(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.3 — doc.uploaded BRAIN row
+### 8.3 — doc.uploaded memory row
 
 ```json
 {
@@ -861,7 +861,7 @@ async fn chain_integrity_enforced(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.5 — doc.legal_hold_applied BRAIN row (sev-1)
+### 8.5 — doc.legal_hold_applied memory row (sev-1)
 
 ```json
 {
@@ -877,7 +877,7 @@ async fn chain_integrity_enforced(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.6 — doc.archived BRAIN row
+### 8.6 — doc.archived memory row
 
 ```json
 {
@@ -928,7 +928,7 @@ All other questions resolved.
 | Legal hold self-co-sign | handler check | 400 `self_co_sign` | Use distinct signers |
 | Case reference too short | handler validation | 400 `case_reference_invalid` | Provide 5–200 char ref |
 | Audit chain break (tampered prev_hash) | trigger `audit_chain_break` | 500 | Investigate tamper; chain must be repaired manually + sev-1 alarm |
-| BRAIN row commit fails | transaction rolls back | 500 `audit_failed` | brain_writer diagnosis |
+| memory row commit fails | transaction rolls back | 500 `audit_failed` | memory_writer diagnosis |
 | Missing purpose on GET /download | handler | 400 `purpose_required` | Add purpose query param |
 | Cross-tenant FK violation | RLS | 0 rows / permission_denied | None — designed |
 | Subject deleted while metadata references created_by | FK RESTRICT | DELETE auth.subjects fails | Designed |
@@ -970,8 +970,8 @@ All other questions resolved.
 - **`alias/<bucket-name>`** is the KMS alias convention — operations on the alias resolve to the current key version (supports rotation without app changes).
 - **`PutObjectRetention` pins to a specific version_id** — locks the bytes of `current_version_id` only; future versions get their own retention via their own archive transitions.
 - **`document_audit_chain(doc_id)` SQL function** — single replay query; useful for forensic + audit-replay tooling.
-- **8 BRAIN audit kinds** — recorded, versioned, acl_changed, signed, archived, legal_hold_applied, legal_hold_released, access_audited. Sev assignments: signed/archived = sev-3 (informational); acl_changed/access_audited = sev-2 (operator review); legal_hold_applied/released = sev-1 (high attention).
-- **`reason` field PII-scrubbed in BRAIN row** — operators may write sensitive case details; FR-BRAIN-111 strips before chain commit.
+- **8 memory audit kinds** — recorded, versioned, acl_changed, signed, archived, legal_hold_applied, legal_hold_released, access_audited. Sev assignments: signed/archived = sev-3 (informational); acl_changed/access_audited = sev-2 (operator review); legal_hold_applied/released = sev-1 (high attention).
+- **`reason` field PII-scrubbed in memory row** — operators may write sensitive case details; FR-MEMORY-111 strips before chain commit.
 - **`case_reference` 5–200 chars** — long enough for internal case numbers, short enough to discourage prose narrative.
 - **`OBS sev-1 alarm on PutObjectRetention failure`** — Object-Lock-Compliance is critical; failure to apply is a sev-1 (the doc was supposed to be locked).
 - **`Mode=COMPLIANCE` is the only valid mode** — Governance mode is forbidden by spec; if a future migration changes it, the CI gate should fail.

@@ -9,7 +9,7 @@
 ### Changed
 
 - Moved from `cyberos/docs/skills/cuo/_shared/feature-request-template/` to `cyberos/docs/contracts/feature-request/` per registry v0.2.0 + DEC-090. Body of `template.md` is byte-identical to v1.0.0.
-- Renamed `SKILL.md` → `CONTRACT.md`. Frontmatter contract changed: drops skill-only fields (`allowed_brain_scopes`, `allowed_mcp_tools`, `expects/produces`, `audit`, `confidence_band`, `untrusted_inputs`, `gated_until_phase`); gains contract-only fields (`contract_id`, `contract_version`, `contract_kind`, `template_literal`, `steward_persona`, `escalation_on_breach`, `moved_from`).
+- Renamed `SKILL.md` → `CONTRACT.md`. Frontmatter contract changed: drops skill-only fields (`allowed_memory_scopes`, `allowed_mcp_tools`, `expects/produces`, `audit`, `confidence_band`, `untrusted_inputs`, `gated_until_phase`); gains contract-only fields (`contract_id`, `contract_version`, `contract_kind`, `template_literal`, `steward_persona`, `escalation_on_breach`, `moved_from`).
 
 ### Driver
 
@@ -37,7 +37,7 @@ DEC-090: a contract is not a skill. The previous "schema living as a skill" mode
 1. This contract's `contract_version` to v2.
 2. `cuo/cpo/feature-request-audit/RUBRIC.md` (audit rubric) to `audit_rubric@3.0`.
 3. Every consumer skill's `depends_on_contracts:` pin to update (`feature-request@v1` → `feature-request@v2`), with a MAJOR `skill_version` bump.
-4. A `MIGRATE_FORWARD` audit row appended to BRAIN noting the schema advance for any in-flight `fr-manifest@2` instance.
+4. A `MIGRATE_FORWARD` audit row appended to memory noting the schema advance for any in-flight `fr-manifest@2` instance.
 
 ### Backwards compatibility
 

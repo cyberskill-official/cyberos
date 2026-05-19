@@ -1,8 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: automation-roadmap-author
-description: |
-  Author the quarterly automation roadmap (opportunity portfolio + per-opportunity tech choice + ROI tracking + governance + risk register). UiPath / Automation Anywhere / Power Automate vendor patterns. Chief Automation Officer authored.
+description: >-
+  Author the quarterly automation roadmap (opportunity portfolio + per-opportunity tech choice + ROI tracking + governance + risk register). UiPath / Automation Anywhere / Power Automate vendor patterns. Chief Automation Officer authored. Use when user asks to "draft a automation roadmap" or "create the automation roadmap". Do NOT use for "audit existing automation roadmap" (use automation-roadmap-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -12,7 +12,7 @@ metadata:
   cyberos-rubric-target: automation-roadmap_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -26,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -287,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

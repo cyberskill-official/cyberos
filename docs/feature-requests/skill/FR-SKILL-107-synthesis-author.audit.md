@@ -29,7 +29,7 @@ Same as 106. Resolved: §1 #4 + AC #2.
 P1 → P3 transition needs marker. Resolved: §3 payload + §11 note.
 
 ### ISS-005 — Tool scope
-Synthesis needs BrainRead + Search for compose chains. Resolved: §1 #1 declared upfront.
+Synthesis needs MemoryRead + Search for compose chains. Resolved: §1 #1 declared upfront.
 
 ### ISS-006 — Broker enforcement
 Narrow tool list per design. Resolved: §1 + AC #7.

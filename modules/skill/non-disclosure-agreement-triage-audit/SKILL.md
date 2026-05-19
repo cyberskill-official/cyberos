@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: non-disclosure-agreement-triage-audit
-description: Audits an non-disclosure-agreement-triage@1 artefact against nda_triage_rubric@1.0. Validates FM + SEC structure, screening-checklist completeness (mutuality / term / carveouts / non-compete / non-solicit / residuals / governing-law), and triage-decision consistency with the screening outcomes.
-  Audit one or more existing non-disclosure-agreement-triage@1 markdowns against
-  nda-triage_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  non-disclosure-agreement-triage-author.
+description: >-
+  Audits an non-disclosure-agreement-triage@1 artefact against nda_triage_rubric@1.0. Validates FM + SEC structure, screening-checklist completeness (mutuality / term / carveouts / non-compete / non-solicit / residuals / governing-law), and triage-decision consistency with the screening outcomes. Audit one or more existing non-disclosure-agreement-triage@1 markdowns against nda-triage_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after non-disclosure-agreement-triage-author. Use when user asks to "audit this non disclosure agreement triage" or "check the non disclosure agreement triage". Do NOT use for "draft a new non disclosure agreement triage" (use non-disclosure-agreement-triage-author instead). Audit one or more existing non-disclosure-agreement-triage@1 markdowns against nda-triage_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: nda-triage_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

@@ -67,7 +67,7 @@ jobs:
               --check \
               --out docs/memory.schema.json
 
-  validate-brain:
+  validate-memory:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

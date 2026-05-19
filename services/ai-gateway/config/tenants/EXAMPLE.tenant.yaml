@@ -1,0 +1,56 @@
+# services/ai-gateway/config/tenants/EXAMPLE.tenant.yaml
+#
+# Copy this file to <tenant-id>.yaml (lowercase, kebab-case, `:` → `-` in
+# filename only), edit, and the AI Gateway hot-reloads it within ~500ms on
+# local fs (~35s on NFS / Docker bind-mounts).
+#
+# This file is NOT loaded by the gateway — the `EXAMPLE.` prefix is filtered
+# out by `is_loadable_filename()` (FR-AI-005 §3). It exists as the
+# documented schema reference.
+
+tenant_id: org:cyberskill
+
+ai_policy:
+  # Hard cap on monthly USD spend across all providers. Range [0.01, 1_000_000].
+  monthly_cap_usd: "150"
+
+  # Fraction of cap at which to emit a warn event. Range [0.5, 0.95].
+  warn_threshold: 0.80
+
+  # If true, precheck refuses calls at cap; if false, allows over-spend (audit only).
+  hard_stop: true
+
+  # Primary provider for routing (FR-AI-006/008 consumes this).
+  primary_provider:
+    kind: bedrock
+    region: ap-southeast-1
+    model_alias_map:
+      chat.smart: anthropic.claude-3-5-sonnet-20241022-v2:0
+      chat.fast:  anthropic.claude-3-haiku-20240307-v1:0
+
+  # Fallback chain (in order; empty = no fallback).
+  fallback_chain:
+    - kind: anthropic
+      model_alias_map:
+        chat.smart: claude-3-5-sonnet-20241022
+        chat.fast:  claude-3-haiku-20240307
+
+  # Per-call timeout (precheck + provider + reconcile combined). Seconds. Range [1, 600].
+  call_timeout_seconds: 60
+
+  # Residency pin — FR-AI-016 enforces this at provider selection time.
+  # Values: sg-1 (Singapore) · eu-1 (Frankfurt) · us-1 (us-east-1) · vn-1 (Vietnam).
+  residency: sg-1
+
+  # Require ZDR (Zero Data Retention) — FR-AI-015 refuses non-ZDR providers when true.
+  zdr_required: true
+
+  # Emergency override (CFO-signed) to allow over-cap calls.
+  emergency_override:
+    enabled: true
+    requires: ["cfo_signoff", "audit_row"]
+    max_multiplier: 1.5
+
+  # Persona pinning — restrict calls to this exact agent_persona version.
+  # Empty / null = any registered persona allowed.
+  allowed_personas: null

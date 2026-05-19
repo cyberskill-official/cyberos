@@ -127,7 +127,7 @@
  <div class="fact-card"><div class="label">AI assistant</div><div class="value">branded CUO</div><div class="note">project history context</div></div>
  <div class="fact-card"><div class="label">i18n</div><div class="value">vi + en</div><div class="note">multi-currency display</div></div>
  <div class="fact-card"><div class="label">PWA</div><div class="value">install supported</div><div class="note">mobile-first</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · 4 modules</div><div class="note">+ CDN · TLS · S3</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · 4 modules</div><div class="note">+ CDN · TLS · S3</div></div>
  </div>
  </div>
 </section>
@@ -175,7 +175,7 @@ flowchart LR
  INV["🧾 INV (filtered)"]
  DOC["✍ DOC (filtered)"]
  CHAT["💬 CHAT (filtered)"]
- BRAIN["🧠 BRAIN<br>sync_class=client-visible only"]
+ memory["🧠 memory<br>sync_class=client-visible only"]
  CLIENT --> IDP
  IDP --> PORTAL
  PORTAL --> PROJ
@@ -186,15 +186,15 @@ flowchart LR
  INV --> AGENCY
  DOC --> AGENCY
  CHAT --> AGENCY
- PORTAL -. "client-visible only" .-> BRAIN
+ PORTAL -. "client-visible only" .-> memory
  classDef hub fill:#ffe4e6,stroke:#9f1239,stroke-width:3px,color:#500724
  classDef mod fill:#e0e7ff,stroke:#3730a3
  classDef ext fill:#fee2e2,stroke:#b91c1c
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class PORTAL hub
  class AGENCY,PROJ,INV,DOC,CHAT mod
  class CLIENT,IDP ext
- class BRAIN brain
+ class memory memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -264,7 +264,7 @@ flowchart LR
  <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Because the auth surface, the brand-theme system, the data-lens narrowing, and the client AI assistant differ enough from internal CyberOS that compositing them into the main app would muddy both. PORTAL is a focused product for a focused audience.</td></tr>
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>SSO at edge resolves ClientMember → Subject row → scope contract grants narrowed to <code>client_account_id</code>. Federated GraphQL queries are predicate-narrowed by Apollo Router at request time. Branded SPA reads a tenant.branding config; custom CNAME terminates at edge.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P4: edge-served static SPA ($5/mo CloudFront); per-tenant ACM cert ($0). API: ~$20 / month per active client account at low traffic. Branded email templates pass through SES.</td></tr>
- <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) zero cross-tenant data leakage — three-layer enforcement. (b) ClientMember access is read-only on tenant data; write only on their own consents / requests ((FR pending)). (c) Every portal action audited to BRAIN ((FR pending)). (d) PDPL Art. 14 + GDPR Art. 15 DSAR for ClientMembers. (e) Vietnamese-localised UI.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) zero cross-tenant data leakage — three-layer enforcement. (b) ClientMember access is read-only on tenant data; write only on their own consents / requests ((FR pending)). (c) Every portal action audited to memory ((FR pending)). (d) PDPL Art. 14 + GDPR Art. 15 DSAR for ClientMembers. (e) Vietnamese-localised UI.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum (API) · Next.js + React + Tailwind (SPA) · CloudFront / Vercel edge · ACM for per-tenant TLS · S3 for theme assets · SAML / OIDC libraries · OpenTelemetry.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Predicate-narrowing at Apollo Router (every field has @requiresScopes + tenant + client_account predicate). JIT user provisioning at SSO callback. Branded CUO is a thin wrapper on the main CUO with persona-stamped scope.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Edge SPA + multi-region API. Per-tenant ACM cert auto-issued and renewed on CNAME claim. PWA service worker for offline-tolerant read views.</td></tr>
@@ -325,7 +325,7 @@ graph TB
  subgraph AGENCY ["Agency side"]
  CHAT_A["💬 CHAT<br>incoming thread"]
  CUO_A["🧠 CUO<br>route to AM"]
- BRAIN["🧠 BRAIN<br>portal.* rows"]
+ memory["🧠 memory<br>portal.* rows"]
  OBS["👁 OBS"]
  end
 
@@ -348,9 +348,9 @@ graph TB
  AI_PROXY --> CUO_A
  WF --> CHAT_A
  CHAT_A --> CUO_A
- CUO_A --> BRAIN
+ CUO_A --> memory
  PORTAL --> AUDIT
- AUDIT --> BRAIN
+ AUDIT --> memory
  PORTAL --> OBS
 
  classDef planned fill:#ffe4e6,stroke:#9f1239
@@ -358,7 +358,7 @@ graph TB
  classDef sink fill:#f5ede6,stroke:#45210e
  class CDN,ACM,ROUTER,SSO_S,PROVISION,LENS,BRAND,AI_PROXY,WF,AUDIT,PROJ_L,INV_L,DOC_L,CHAT_L,CHAT_A,CUO_A planned
  class PG,S3,KMS store
- class BRAIN,OBS sink
+ class memory,OBS sink
  </div>
  </div>
 
@@ -379,7 +379,7 @@ graph TB
  <tr><td><code>email.rs</code></td><td>services/portal/src/email.rs</td><td>Branded transactional email. Per-tenant template overrides; SES via tenant FROM with SPF/DKIM.</td></tr>
  <tr><td><code>consent.rs</code></td><td>services/portal/src/consent.rs</td><td>Client consents (data-processing, marketing, AI usage). Write-allowed for the ClientMember on their own row only.</td></tr>
  <tr><td><code>dsar.rs</code></td><td>services/portal/src/dsar.rs</td><td>DSAR / right-to-erasure surface for the ClientMember's own data; 30-day grace before destructive delete.</td></tr>
- <tr><td><code>audit_bridge.rs</code></td><td>services/portal/src/audit_bridge.rs</td><td>BRAIN canonical writer. Every portal action: login, view, request, consent, dsar.</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/portal/src/audit_bridge.rs</td><td>memory canonical writer. Every portal action: login, view, request, consent, dsar.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/portal/migrations/</td><td>sqlx migrations. RLS by (tenant_id, client_account_id). Per-tenant brand config schema.</td></tr>
  </tbody>
  </table>
@@ -467,7 +467,7 @@ erDiagram
  bool granted
  string version "consent doc version hash"
  timestamp granted_at
- string brain_chain
+ string memory_chain
  }
  SCOPED_REQUEST {
  uuid id PK
@@ -678,7 +678,7 @@ sequenceDiagram
  participant P as provision.rs
  participant AUTH as 🔐 AUTH
  participant PG as PostgreSQL
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  U->>CDN: GET portal.acmecorp.com
  CDN-->>U: branded SPA (theme: acme)
@@ -744,7 +744,7 @@ sequenceDiagram
  participant CHAT as 💬 CHAT (agency)
  participant CUO as 🧠 CUO router
  participant AM as Account Manager
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  U->>SPA: "New support ticket → My SOW is missing milestone 3"
  SPA->>W: submitRequest(kind=support_ticket, title, body)
@@ -773,7 +773,7 @@ sequenceDiagram
  participant LENS as lens.rs (read context only Acme data)
  participant PROJ as 📋 PROJ
  participant INV as 💰 INV
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  U->>SPA: "What's our SOW spend so far this quarter?"
  SPA->>A: prompt + ClientMember context
@@ -804,7 +804,7 @@ sequenceDiagram
  participant DNS as customer DNS
  participant ACM as AWS ACM
  participant CDN as CloudFront / Vercel
- participant BR as 🧠 BRAIN
+ participant BR as 🧠 memory
 
  CCO->>SPA: enter desired CNAME "portal.acmecorp.com"
  SPA->>B_S: claim CNAME for client_account=acme
@@ -909,14 +909,14 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- PORTAL depends on AUTH, BRAIN, and federated subgraphs from PROJ, INV, DOC, CHAT, CRM. AWS ACM + CloudFront for edge TLS + CNAME.
+ PORTAL depends on AUTH, memory, and federated subgraphs from PROJ, INV, DOC, CHAT, CRM. AWS ACM + CloudFront for edge TLS + CNAME.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["PORTAL depends on"]
  AUTH["🔐 AUTH<br>SSO + scope"]
- BRAIN["🧠 BRAIN<br>audit chain"]
+ memory["🧠 memory<br>audit chain"]
  OBS["👁 OBS"]
  PROJ["📋 PROJ subgraph"]
  INV["💰 INV subgraph"]
@@ -935,7 +935,7 @@ graph LR
  DASH["📊 OBS dashboards"]
  end
  AUTH --> PORTAL
- BRAIN --> PORTAL
+ memory --> PORTAL
  OBS --> PORTAL
  PROJ --> PORTAL
  INV --> PORTAL
@@ -951,7 +951,7 @@ graph LR
  PORTAL --> DASH
 
  classDef planned fill:#ffe4e6,stroke:#9f1239
- class AUTH,BRAIN,OBS,PROJ,INV,DOC,CHAT,CRM,AI,PORTAL,CM,AM,DASH,ACM,CDN,S3_T planned
+ class AUTH,memory,OBS,PROJ,INV,DOC,CHAT,CRM,AI,PORTAL,CM,AM,DASH,ACM,CDN,S3_T planned
  </div>
  </div>
 </section>
@@ -1211,7 +1211,7 @@ SR-009447 2026-05-13 billing_inquiry "Q1 invoice variance" open</code></pre>
  <li><strong>CHAT module</strong> — <a href="chat.html" class="text-blue-700 underline">chat.html</a> · request routing target.</li>
  <li><strong>TEN module</strong> — <a href="ten.html" class="text-blue-700 underline">ten.html</a> · the SaaS-tenant layer above PORTAL.</li>
  <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + multi-tenant-within-multi-tenant Mermaid + 10-row auto-vs-human matrix.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — PORTAL retrievals strictly filtered to sync_class=client-visible.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — PORTAL retrievals strictly filtered to sync_class=client-visible.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — PORTAL at P3 · start (P2+).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  </ul>

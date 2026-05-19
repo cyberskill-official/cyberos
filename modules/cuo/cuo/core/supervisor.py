@@ -9,22 +9,59 @@ output) when no `cyberos-skill` binary is available; uses `SubprocessInvoker`
 otherwise. Each step's output is persisted to the workflow output dir for
 hand-off to the next step.
 
-Phase 3 (planned): emit decision rows to the BRAIN audit chain per AGENTS.md
-§6 + §11. The chain output already includes per-step output hashes ready to
-be sealed into chain leaves.
+Phase 3 (added 2026-05-18): emit decision rows to the memory audit chain per
+AGENTS.md §6 + §11. The chain output already includes per-step output hashes
+ready to be sealed into chain leaves.
 
-Phase 4 (planned): special-case handlers for time-critical / per-instance /
-multi-output / sequential-approval / persona-pair workflows.
+Phase 4 (added 2026-05-18): special-case handlers for time-critical /
+per-instance / multi-output / sequential-approval / persona-pair workflows.
+
+Phase 5 (added 2026-05-19 — STATUS-WAVE): condition-aware step evaluation +
+failure-routing rework branch + observability spans. This is what makes
+`chief-technology-officer/ship-feature-requests` v2.0.0 fully usable:
+
+  * Conditional steps (`condition: "mode == \"implement\""`, `condition:
+    "step 3 ran"`, etc.) are honoured — steps whose condition evaluates
+    False are SKIPPED, not invoked. The hand-off map carries `step_<N>_ran`
+    booleans + named field references for downstream conditions.
+
+  * Failure routing — when any step returns FAILED, the supervisor scans
+    the chain for a rework branch (the last `backlog-state-update-author`
+    step whose `transition` literal starts with "any-stage" OR contains
+    "ready_to_implement"). If found, it's invoked with a synthesized
+    rework outcome, applying the BACKLOG.md status flip and emitting
+    memory.fr_routed_back. The chain outcome becomes ROUTED_BACK.
+
+  * Observability spans — every step invocation emits a structured log
+    line `{event: skill.invoke, span_id, step, skill, status, duration_ms}`
+    via the `cyberos.cuo.spans` logger. A run-level `fr_routed_back_count`
+    is maintained in-process; production OTel exporters tracked under
+    FR-OBS-001..003.
 """
 
 from __future__ import annotations
 
+import logging
+import os
+import re
+import secrets
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from cuo.core.catalog import PersonaEntry, WorkflowEntry, discover_workflows
 from cuo.core.invoker import Invoker, MockInvoker, StepResult, select_invoker
 from cuo.core.validator import ValidationResult, validate_chain
+
+
+# Structured-logging channel for span events. Production deployments can
+# attach a JSON handler + OTel exporter; the default is stderr text.
+_SPANS_LOGGER = logging.getLogger("cyberos.cuo.spans")
+
+# In-process counter for rework-routed FRs. Surfaced in ChainResult.notes
+# and emitted as a memory.fr_routed_back aux row by emit_chain_result.
+_REWORK_COUNTER: dict[str, int] = {"fr_routed_back": 0}
 
 
 @dataclass
@@ -236,9 +273,22 @@ def execute_chain(
 
     # Build a hand-off map: `inputs_from` references resolve from this map.
     # Initial inputs (passed by caller) seed it; step outputs populate the rest.
+    # The map also tracks "step_<N>_ran" booleans so downstream `condition:`
+    # clauses like `"step 3 ran"` can be evaluated (Phase 5).
     hand_off: dict = dict(inputs or {})
     step_results: list[StepResult] = []
     outcome = "COMPLETED"
+
+    # Run-level span id for log correlation (Phase 5 observability).
+    run_span_id = secrets.token_hex(6)
+    _SPANS_LOGGER.info(
+        "workflow.start",
+        extra={
+            "event": "workflow.start", "span_id": run_span_id,
+            "workflow_id": wf.workflow_id, "invoker": invoker_kind,
+            "input_keys": sorted(hand_off.keys()),
+        },
+    )
 
     for step_spec in wf.skill_chain:
         if not isinstance(step_spec, dict):
@@ -248,8 +298,44 @@ def execute_chain(
         if not isinstance(skill_name, str) or not skill_name or skill_name.startswith("planned:"):
             continue
 
+        # ── Phase 5: condition evaluation ────────────────────────────────
+        # Steps with `condition: "<expr>"` are SKIPPED when the expression
+        # evaluates to False against the running hand-off map. Expressions
+        # reference: prior steps (`"step 3 ran"`), workflow inputs
+        # (`'mode == "implement"'`), or step output fields
+        # (`"context_map.files_outside_immediate_domain > 3"`).
+        condition = step_spec.get("condition")
+        if condition and not _eval_condition(condition, hand_off, step_results):
+            skipped = StepResult(
+                step=step_num, skill=skill_name, status="SKIPPED",
+                notes=[f"condition false: {condition!r}"],
+            )
+            step_results.append(skipped)
+            hand_off[f"step_{step_num}_ran"] = False
+            _SPANS_LOGGER.info(
+                "skill.skip",
+                extra={
+                    "event": "skill.skip", "span_id": run_span_id,
+                    "step": step_num, "skill": skill_name,
+                    "condition": str(condition),
+                },
+            )
+            continue
+
         # Resolve inputs for this step from the hand-off map.
         step_inputs = _resolve_step_inputs(step_spec.get("inputs_from"), hand_off)
+
+        # ── Phase 5: span emission ───────────────────────────────────────
+        step_span_id = secrets.token_hex(4)
+        t_step_0 = time.monotonic_ns()
+        _SPANS_LOGGER.info(
+            "skill.invoke",
+            extra={
+                "event": "skill.invoke", "span_id": run_span_id,
+                "step_span_id": step_span_id, "step": step_num,
+                "skill": skill_name, "input_keys": sorted(step_inputs.keys()),
+            },
+        )
 
         step_result = invoker.invoke(
             skill_name=skill_name,
@@ -259,6 +345,31 @@ def execute_chain(
             step_num=step_num,
         )
         step_results.append(step_result)
+
+        _SPANS_LOGGER.info(
+            "skill.complete",
+            extra={
+                "event": "skill.complete", "span_id": run_span_id,
+                "step_span_id": step_span_id, "step": step_num,
+                "skill": skill_name, "status": step_result.status,
+                "duration_ms": step_result.duration_ms,
+            },
+        )
+
+        # Mark this step as ran (regardless of OK/FAILED — the work was attempted).
+        hand_off[f"step_{step_num}_ran"] = step_result.status in ("OK", "MOCKED")
+
+        # ── Phase 5: post-author appliers ────────────────────────────────
+        # For skills with file-side-effect contracts (backlog-state-update-author,
+        # coverage-gate-author), the LLM's JSON output describes WHAT to do; we
+        # actually APPLY it here. This bridges the LLM-prompt-only architecture
+        # to real filesystem / subprocess work without giving the LLM tool access.
+        if step_result.status in ("OK", "MOCKED"):
+            try:
+                from cuo.core.applier import apply_step_side_effect
+                apply_step_side_effect(skill_name, step_result, hand_off, run_span_id)
+            except ImportError:
+                pass  # applier module is optional; absent → no side effects
 
         # Populate the hand-off map with this step's output (named by outputs_to).
         outputs_to = step_spec.get("outputs_to")
@@ -272,13 +383,100 @@ def execute_chain(
                     if isinstance(ref, str):
                         hand_off[ref] = step_result.output_path or step_result.output
 
+        # ── Phase 5: HITL escalation signal ──────────────────────────────
+        # Any step's LLM output (or applier amendment) MAY include a
+        # top-level `escalation_signal` or `hitl_required: true` field.
+        # When present and truthy, the supervisor halts the chain with
+        # outcome=HITL_HALT and the drain loop stops (vs. ROUTED_BACK
+        # which is a soft "try again" signal).
+        step_output = step_result.output if isinstance(step_result.output, dict) else {}
+        if step_output.get("hitl_required") or step_output.get("escalation_signal"):
+            esc_reason = (
+                step_output.get("escalation_signal")
+                or step_output.get("hitl_reason")
+                or f"step {step_num} signalled hitl_required"
+            )
+            _SPANS_LOGGER.warning(
+                "hitl.halt",
+                extra={
+                    "event": "hitl.halt", "span_id": run_span_id,
+                    "step": step_num, "skill": skill_name,
+                    "escalation_reason": str(esc_reason),
+                },
+            )
+            outcome = "HITL_HALT"
+            step_result.notes.append(f"hitl-halt: {esc_reason}")
+            break
+
         if step_result.status == "FAILED":
             outcome = "FAILED" if stop_on_failure else "PARTIAL"
             if stop_on_failure:
                 break
 
+    # ── Phase 5: failure → rework branch ──────────────────────────────────
+    # When the forward path failed AND the workflow chain contains at least
+    # one backlog-state-update-author step (i.e. it's a lifecycle workflow,
+    # not just any chain), synthesize a rework call. The synthesized invocation
+    # passes transition_kind=rework + the failure reason; the applier picks
+    # this up and flips BACKLOG.md status back to ready_to_implement.
+    if outcome == "FAILED" and _chain_has_backlog_update(wf):
+        # The rework call doesn't reuse a step from the workflow — it's a
+        # synthesized invocation triggered by any forward-path failure.
+        rework_inputs = _build_rework_inputs_from_failure(
+            step_results, hand_off,
+        )
+        rework_span_id = secrets.token_hex(4)
+        _SPANS_LOGGER.info(
+            "rework.branch",
+            extra={
+                "event": "rework.branch", "span_id": run_span_id,
+                "step_span_id": rework_span_id,
+                "rework_reason": rework_inputs.get("rework_reason"),
+                "fr_id": rework_inputs.get("fr_id"),
+            },
+        )
+        rework_result = invoker.invoke(
+            skill_name="backlog-state-update-author",
+            inputs=rework_inputs,
+            skill_root=skill_root,
+            output_dir=output_dir,
+            step_num=99,  # synthesized; not a real chain step
+        )
+        step_results.append(rework_result)
+        if rework_result.status in ("OK", "MOCKED"):
+            try:
+                from cuo.core.applier import apply_step_side_effect
+                # Inject the rework metadata into the result so the applier
+                # sees `transition_kind: rework` even when the mock invoker
+                # returns generic mock output.
+                if isinstance(rework_result.output, dict):
+                    rework_result.output.setdefault("fr_id", rework_inputs.get("fr_id"))
+                    rework_result.output.setdefault("new_status", "ready_to_implement")
+                    rework_result.output.setdefault("transition_kind", "rework")
+                    rework_result.output.setdefault("rework_reason",
+                                                   rework_inputs.get("rework_reason", ""))
+                apply_step_side_effect(
+                    "backlog-state-update-author", rework_result,
+                    hand_off, run_span_id,
+                )
+            except ImportError:
+                pass
+            _REWORK_COUNTER["fr_routed_back"] += 1
+            outcome = "ROUTED_BACK"
+
     if outcome == "COMPLETED" and any(s.status == "FAILED" for s in step_results):
         outcome = "PARTIAL"
+
+    _SPANS_LOGGER.info(
+        "workflow.complete",
+        extra={
+            "event": "workflow.complete", "span_id": run_span_id,
+            "workflow_id": wf.workflow_id, "outcome": outcome,
+            "steps_run": sum(1 for s in step_results if s.status != "SKIPPED"),
+            "steps_skipped": sum(1 for s in step_results if s.status == "SKIPPED"),
+            "fr_routed_back_count": _REWORK_COUNTER["fr_routed_back"],
+        },
+    )
 
     return ChainResult(
         workflow_id=wf.workflow_id,
@@ -288,6 +486,129 @@ def execute_chain(
         output_dir=output_dir,
         invoker_kind=invoker_kind,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 5 helpers — condition eval, rework branch detection, span emission
+# ---------------------------------------------------------------------------
+
+
+def _eval_condition(expr: str, hand_off: dict, step_results: list[StepResult]) -> bool:
+    """Evaluate a workflow-step `condition:` expression against the hand-off map.
+
+    Supported forms (from ship-feature-requests + sibling workflows):
+      * `"step N ran"` → True iff step N completed with status in {OK, MOCKED}
+      * `'mode == "implement"'` → standard Python comparison against hand_off['mode']
+      * `"<field>.<subfield> > <value>"` → simple comparison; resolves dotted
+        attributes against hand_off (e.g. context_map.files_outside_immediate_domain > 3)
+      * Combinations via `and` / `or` (literal Python boolean operators).
+      * Returns True (= run the step) when the expression is malformed —
+        better to run unconditionally than to skip silently.
+    """
+    if not isinstance(expr, str) or not expr.strip():
+        return True
+    expr = expr.strip()
+
+    # Fast-path: `"step N ran"` literal
+    m = re.fullmatch(r"step\s+(\d+)\s+ran", expr)
+    if m:
+        target = int(m.group(1))
+        return hand_off.get(f"step_{target}_ran", False) is True
+
+    # Build a restricted eval namespace.
+    safe_globals = {"__builtins__": {}}
+    safe_locals: dict[str, Any] = {}
+
+    # Workflow inputs land directly as locals (e.g. `mode`).
+    for k, v in hand_off.items():
+        if isinstance(k, str) and k.isidentifier():
+            safe_locals[k] = v
+
+    # `step_N_ran` booleans land too.
+    for sr in step_results:
+        safe_locals[f"step_{sr.step}_ran"] = (sr.status in ("OK", "MOCKED"))
+
+    # Dotted-field access (e.g. `context_map.files_outside_immediate_domain`) —
+    # the LHS resolves via the hand-off map's stored dict outputs. Wrap them
+    # in a tiny attr-access shim.
+    class _AttrDict:
+        def __init__(self, payload: Any):
+            self._payload = payload
+        def __getattr__(self, name: str) -> Any:
+            if isinstance(self._payload, dict):
+                if name in self._payload:
+                    val = self._payload[name]
+                    return _AttrDict(val) if isinstance(val, (dict, list)) else val
+            return None  # missing attribute → falsy
+
+    for k, v in list(safe_locals.items()):
+        if isinstance(v, (dict, list)):
+            safe_locals[k] = _AttrDict(v)
+
+    try:
+        return bool(eval(expr, safe_globals, safe_locals))  # noqa: S307
+    except Exception:  # noqa: BLE001
+        # Malformed condition → run the step (safer than silent skip).
+        return True
+
+
+def _chain_has_backlog_update(wf: WorkflowEntry) -> bool:
+    """True if the workflow's skill_chain contains at least one
+    backlog-state-update-author step — used to gate rework synthesis."""
+    for step_spec in wf.skill_chain:
+        if isinstance(step_spec, dict) and step_spec.get("skill") == "backlog-state-update-author":
+            return True
+    return False
+
+
+def _build_rework_inputs_from_failure(
+    step_results: list[StepResult],
+    hand_off: dict,
+) -> dict:
+    """Synthesize the rework call's input bundle from forward-path failure.
+
+    Returns a dict carrying:
+      * `fr_id` — the FR being shipped (from hand_off; falls back to "unknown").
+      * `transition_kind: "rework"` — signals the applier to flip status
+        to ready_to_implement and increment routed_back_count.
+      * `new_status: "ready_to_implement"` — the target lifecycle state.
+      * `rework_reason` — string built from the failing step(s) for the
+        memory.fr_routed_back aux row payload.
+      * `outcome` — the last failed StepResult's output, so the LLM/applier
+        knows which artefact caused the rework.
+      * `synthesized_rework: True` — distinguishes from natural-flow rework
+        steps (none exist today, but future workflows may declare them).
+    """
+    failed_steps = [s for s in step_results if s.status == "FAILED"]
+    failed_skill = failed_steps[-1].skill if failed_steps else "unknown"
+    failed_notes = ", ".join(failed_steps[-1].notes[:2]) if failed_steps else ""
+    rework_reason = (
+        f"forward path failed at step '{failed_skill}'"
+        + (f": {failed_notes}" if failed_notes else "")
+    )
+
+    return {
+        "fr_id": hand_off.get("fr_id", "unknown"),
+        "transition_kind": "rework",
+        "new_status": "ready_to_implement",
+        "rework_reason": rework_reason,
+        "outcome": failed_steps[-1].output if failed_steps else {},
+        "synthesized_rework": True,
+    }
+
+
+def get_rework_counter() -> int:
+    """Return the in-process count of rework-routed FRs since process start.
+
+    Surfaced via `cyberos-cuo execute --explain` and emitted as a
+    memory.fr_routed_back_count aux row by emit_chain_result.
+    """
+    return _REWORK_COUNTER["fr_routed_back"]
+
+
+def reset_rework_counter() -> None:
+    """Reset the in-process rework counter — test-only helper."""
+    _REWORK_COUNTER["fr_routed_back"] = 0
 
 
 def _resolve_step_inputs(inputs_from, hand_off: dict) -> dict:

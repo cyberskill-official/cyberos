@@ -3,7 +3,7 @@ id: FR-AUTH-103
 title: "AUTH SAML 2.0 SSO — SP-initiated flow + per-tenant IdP config + XML signature verification + assertion validation + JIT provisioning + attribute → role mapping + replay defense"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P3
 milestone: P3 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-AUTH-104, FR-PORTAL-003]
+memory_chain_hash: null
+related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-AUTH-104, FR-PORTAL-003]
 depends_on: [FR-AUTH-004]
 blocks: [FR-PORTAL-003]
 
@@ -30,7 +30,7 @@ source_decisions:
   - DEC-526 (assertion `NotBefore` + `NotOnOrAfter` validation with 60s clock skew tolerance per OASIS recommendation; SubjectConfirmation `Recipient` MUST match SP ACS URL)
   - DEC-527 (per-tenant IdP config stored in `auth_saml_idp_configs` with X.509 cert in PEM; private SP signing key KMS-encrypted)
   - DEC-528 (JIT subject provisioning via FR-AUTH-002 internal helper; attribute-statement → role mapping per per-tenant YAML same shape as FR-AUTH-104 OIDC claim mapping)
-  - DEC-529 (BRAIN audit kinds: auth.saml_login_succeeded, auth.saml_login_failed, auth.saml_jit_provisioned, auth.saml_metadata_refreshed, auth.saml_idp_config_changed, auth.saml_signature_invalid, auth.saml_assertion_replay_attempted)
+  - DEC-529 (memory audit kinds: auth.saml_login_succeeded, auth.saml_login_failed, auth.saml_jit_provisioned, auth.saml_metadata_refreshed, auth.saml_idp_config_changed, auth.saml_signature_invalid, auth.saml_assertion_replay_attempted)
   - DEC-530 (REVOKE UPDATE, DELETE on auth_saml_login_history from cyberos_app — append-only at SQL grant)
   - DEC-531 (XML canonicalisation — Exclusive Canonicalization (exc-c14n) per W3C; transforms enveloped + exc-c14n only; other transforms rejected per XSW (XML Signature Wrapping) attack defense)
   - DEC-532 (XML signature algorithm RSA-SHA256 minimum; SHA1 rejected per NIST guidance + recent collision research; ECDSA-SHA256/384 accepted)
@@ -41,7 +41,7 @@ source_decisions:
   - OASIS SAML 2.0 Core + Bindings + Profiles (Mar 2005)
   - W3C XML Signature Syntax and Processing (2008)
   - NIST SP 800-63B (federated identity assurance)
-  - PDPL Art. 13 + GDPR Art. 5 (data minimisation — SAML attributes scrubbed in BRAIN chain)
+  - PDPL Art. 13 + GDPR Art. 5 (data minimisation — SAML attributes scrubbed in memory chain)
 
 language: rust 1.81 + sql
 service: cyberos/services/auth/
@@ -58,7 +58,7 @@ new_files:
   - services/auth/src/saml/attribute_mapper.rs               # AttributeStatement → role mapping (reuses FR-AUTH-104 YAML shape)
   - services/auth/src/saml/jit_provision.rs                  # first-login JIT subject creation
   - services/auth/src/saml/repo.rs                           # CRUD across 4 SAML tables
-  - services/auth/src/saml/audit.rs                          # 7 BRAIN row builders
+  - services/auth/src/saml/audit.rs                          # 7 memory row builders
   - services/auth/src/handlers/saml.rs                       # GET /v1/auth/saml/initiate + POST /v1/auth/saml/acs + POST /v1/auth/saml/idp-configs
   - services/auth/tests/saml_metadata_fetch_test.rs
   - services/auth/tests/saml_sp_initiated_flow_test.rs
@@ -107,7 +107,7 @@ sub_tasks:
   - "0.6h: attribute_mapper.rs — reuse FR-AUTH-104 YAML mapping shape"
   - "0.7h: jit_provision.rs"
   - "0.5h: repo.rs"
-  - "0.5h: audit.rs — 7 BRAIN builders"
+  - "0.5h: audit.rs — 7 memory builders"
   - "0.8h: handlers/saml.rs — initiate + acs + idp_config CRUD"
   - "2.7h: tests — 16 test files including XSW attack defense + signature variants"
 
@@ -135,14 +135,14 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
 
 7. **MUST** fetch IdP metadata at config save time (per DEC-523). Parse `EntityDescriptor` → extract `SingleSignOnService` URL + `X509Certificate`. Cache 24h with kid-style overlap on cert rotation (new cert accepted immediately; old cert accepted for 24h after observed rotation).
 
-8. **MUST** require BOTH `WantAssertionsSigned=true` AND `AuthnRequestsSigned=true` (per DEC-522). Response-only-signature (Microsoft Azure AD default config) → reject with `assertion_signature_required` + emit `auth.saml_signature_invalid` BRAIN row.
+8. **MUST** require BOTH `WantAssertionsSigned=true` AND `AuthnRequestsSigned=true` (per DEC-522). Response-only-signature (Microsoft Azure AD default config) → reject with `assertion_signature_required` + emit `auth.saml_signature_invalid` memory row.
 
 9. **MUST** enforce closed NameIDFormat (per DEC-524). Accepted formats: `urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress` + `urn:oasis:names:tc:SAML:2.0:nameid-format:persistent`. Others (transient, unspecified, x509SubjectName, etc.) → 401 `nameid_format_unsupported`.
 
 10. **MUST** implement replay defense via InResponseTo (per DEC-525):
     - AuthnRequest's ID stored in `auth_saml_authn_request_log` with 10-min TTL.
     - SAMLResponse's `InResponseTo` attribute MUST match a known unconsumed row.
-    - Missing/unknown/expired/consumed → 401 `saml_replay_or_expired` + emit `auth.saml_assertion_replay_attempted` (sev-2) BRAIN row.
+    - Missing/unknown/expired/consumed → 401 `saml_replay_or_expired` + emit `auth.saml_assertion_replay_attempted` (sev-2) memory row.
     - On success, mark consumed.
 
 11. **MUST** validate assertion conditions (per DEC-526):
@@ -163,11 +163,11 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
     - `http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha384` ✓
    SHA-1 (`http://www.w3.org/2000/09/xmldsig#rsa-sha1`) → 401 `weak_signature_algorithm`.
 
-14. **MUST** PII-scrub `nameid`, `failure_reason`, and the `AttributeStatement` value contents via FR-BRAIN-111 before chain commit.
+14. **MUST** PII-scrub `nameid`, `failure_reason`, and the `AttributeStatement` value contents via FR-MEMORY-111 before chain commit.
 
 15. **MUST** JIT-provision subject on first login (per DEC-528). Same shape as FR-AUTH-104:
     - Lookup `auth_saml_subject_link WHERE idp_id=$1 AND nameid=$2` — found → use linked subject_id.
-    - Not found → call FR-AUTH-002 internal helper with `email` from nameid (if emailAddress format) or AttributeStatement's `email` claim; assign role per attribute_mapping_yaml; INSERT link row; emit `auth.saml_jit_provisioned` BRAIN row.
+    - Not found → call FR-AUTH-002 internal helper with `email` from nameid (if emailAddress format) or AttributeStatement's `email` claim; assign role per attribute_mapping_yaml; INSERT link row; emit `auth.saml_jit_provisioned` memory row.
 
 16. **MUST** apply per-tenant attribute → role mapping (per DEC-528). Reuses FR-AUTH-104 YAML shape but with SAML AttributeStatement claim names:
    ```yaml
@@ -191,7 +191,7 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
     - SP signing key generated (RSA-2048) + KMS-encrypted.
     - Returns SP metadata for IdP-side configuration (entity_id, ACS URL, signing certificate).
 
-19. **MUST** emit 7 BRAIN audit row kinds (per DEC-529):
+19. **MUST** emit 7 memory audit row kinds (per DEC-529):
     - `auth.saml_login_succeeded` — full flow → AUTH JWT issued.
     - `auth.saml_login_failed` — any failure with reason.
     - `auth.saml_jit_provisioned` — new subject on first login.
@@ -256,7 +256,7 @@ The AUTH service **MUST** ship SAML 2.0 SP-initiated SSO with per-tenant IdP con
 
 **Why min RequestedAuthnContext = PasswordProtectedTransport (§1 #26)?** Baseline: IdP must authenticate user with at least password + TLS transport. Lower (e.g. `PreviousSession`) = relying on browser session — phishable. Tenants requiring MFA at IdP override via config; our slice 1 ships baseline + MFA-via-FR-AUTH-102 at SP side.
 
-**Why 7 BRAIN audit kinds (DEC-529)?** Different operator queries: "show me all successful SAML logins this week" → `auth.saml_login_succeeded`. "Show me signature failures" → `auth.saml_signature_invalid`. "Show me replay attempts" → `auth.saml_assertion_replay_attempted`. Selectivity benefits at query time.
+**Why 7 memory audit kinds (DEC-529)?** Different operator queries: "show me all successful SAML logins this week" → `auth.saml_login_succeeded`. "Show me signature failures" → `auth.saml_signature_invalid`. "Show me replay attempts" → `auth.saml_assertion_replay_attempted`. Selectivity benefits at query time.
 
 **Why metadata 24h cache + cert rotation overlap (§1 #7, DEC-523)?** IdPs rotate signing certs periodically. 24h cache avoids hot-path metadata refetch. Overlap (old cert + new cert both valid) prevents flap during rotation. Mirrors FR-AUTH-104 JWKS pattern.
 
@@ -762,7 +762,7 @@ async fn reused_in_response_to_rejected(ctx: TestCtx) {
     ctx.acs_callback(&response).await.unwrap();   // first use OK
     let err = ctx.acs_callback(&response).await.unwrap_err();
     assert!(format!("{err:?}").contains("SamlReplayOrExpired"));
-    let rows = ctx.brain_audit_rows("auth.saml_assertion_replay_attempted").await;
+    let rows = ctx.memory_audit_rows("auth.saml_assertion_replay_attempted").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["severity"], "sev-2");
 }
@@ -793,7 +793,7 @@ fn email_address_format_accepted() {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; samael crate handles XML signature plumbing; 7 BRAIN row builders follow canonical pattern.)
+(API contract above is the skeleton; samael crate handles XML signature plumbing; 7 memory row builders follow canonical pattern.)
 
 ---
 
@@ -808,8 +808,8 @@ fn email_address_format_accepted() {
 **Cross-module:**
 - **FR-AUTH-002** — subject create (JIT helper).
 - **FR-AUTH-101** — RBAC; attribute_mapping_yaml validates against closed Role enum.
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing.
 - **FR-OBS-007** — sev-2 alarm on signature failures + replay attempts.
 
 ---
@@ -829,7 +829,7 @@ fn email_address_format_accepted() {
 }
 ```
 
-### 8.2 — auth.saml_login_succeeded BRAIN row
+### 8.2 — auth.saml_login_succeeded memory row
 
 ```json
 {
@@ -845,7 +845,7 @@ fn email_address_format_accepted() {
 }
 ```
 
-### 8.3 — auth.saml_signature_invalid BRAIN row (sev-2)
+### 8.3 — auth.saml_signature_invalid memory row (sev-2)
 
 ```json
 {
@@ -859,7 +859,7 @@ fn email_address_format_accepted() {
 }
 ```
 
-### 8.4 — auth.saml_assertion_replay_attempted BRAIN row (sev-2)
+### 8.4 — auth.saml_assertion_replay_attempted memory row (sev-2)
 
 ```json
 {
@@ -914,7 +914,7 @@ All other questions resolved.
 | append-only log UPDATE from app | SQL grant | permission denied | Designed |
 | RLS bypass | USING | 0 rows | Designed |
 | OTel span attribute missing | otel_test | CI fails | Fix |
-| BRAIN audit emit fails | tx rollback | 500 | brain_writer health |
+| memory audit emit fails | tx rollback | 500 | memory_writer health |
 | Malformed XML | parse error | 400 | Designed |
 | Cert rotation: old + new cache overlap | 24h window | Designed | None |
 | Signature verifies but XSW substituted element | samael's hardened verifier | None (defense in depth via Audience + Recipient + transform restrictions) | None |
@@ -943,7 +943,7 @@ All other questions resolved.
 - **SP signing key KMS-encrypted** — secret-at-rest hardening.
 - **24h metadata cache + rotation overlap** — matches FR-AUTH-104 JWKS pattern.
 - **PII scrub nameid + attributes** — chain holds hashed.
-- **7 BRAIN audit kinds** — selective queries.
+- **7 memory audit kinds** — selective queries.
 - **sev-2 alarms on signature failure + replay** — attack signal.
 - **SP metadata download endpoint** — IdP operator setup.
 - **RequestedAuthnContext PasswordProtectedTransport** — baseline assurance.

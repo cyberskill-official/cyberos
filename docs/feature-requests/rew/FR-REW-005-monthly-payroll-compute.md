@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-REW-001, FR-REW-002, FR-REW-004, FR-REW-006, FR-REW-009, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-REW-001, FR-REW-002, FR-REW-004, FR-REW-006, FR-REW-009, FR-MEMORY-111]
 depends_on: [FR-REW-001]
 blocks: [FR-REW-006]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2191 2026-05-17 — Closed enum `payroll_status` = {drafting, computed, cfo_signed, chro_signed, committed, paid, failed}; cardinality 7
   - DEC-2192 2026-05-17 — Commit (= ready-to-send to bank) requires CFO + CHRO dual-sign; same-person rejected
   - DEC-2193 2026-05-17 — Compute IMMUTABLE after committed; corrections via new payroll run (prior-period adjustment)
-  - DEC-2194 2026-05-17 — BRAIN audit kinds: rew.payroll_drafted, rew.payroll_computed, rew.payroll_signed, rew.payroll_committed, rew.payroll_paid, rew.payroll_failed
+  - DEC-2194 2026-05-17 — memory audit kinds: rew.payroll_drafted, rew.payroll_computed, rew.payroll_signed, rew.payroll_committed, rew.payroll_paid, rew.payroll_failed
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without orchestrator, payroll error-prone manual. Without DEC-
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship monthly payroll compute at `services/rew/src/payroll/` with 3P orchestration + dual-sign commit + immutable post-commit, 6 BRAIN audit kinds.
+The REW service **MUST** ship monthly payroll compute at `services/rew/src/payroll/` with 3P orchestration + dual-sign commit + immutable post-commit, 6 memory audit kinds.
 
 1. **MUST** validate `payroll_status` against closed enum per DEC-2191.
 
@@ -146,7 +146,7 @@ The REW service **MUST** ship monthly payroll compute at `services/rew/src/payro
    GET  /v1/rew/payroll/runs/{id}             (status + summary)
    ```
 
-7. **MUST** emit 6 BRAIN audit kinds per DEC-2194. PII per FR-BRAIN-111: amounts SHA256.
+7. **MUST** emit 6 memory audit kinds per DEC-2194. PII per FR-MEMORY-111: amounts SHA256.
 
 8. **MUST** thread trace_id from draft → compute → sign → commit → audit.
 
@@ -187,7 +187,7 @@ Sample payroll run:
 ---
 
 ## §4 — Acceptance criteria
-1. **payroll_status enum cardinality 7**. 2. **Compute orchestrates 3P + deductions**. 3. **Net = gross - deductions**. 4. **CFO + CHRO dual-sign required for commit**. 5. **Same person rejected**. 6. **UNIQUE(tenant, period_yyyymm)**. 7. **6 BRAIN audit kinds emitted**. 8. **PII scrubbed (amounts SHA256)**. 9. **RLS denies cross-tenant**. 10. **Trace_id preserved**. 11. **Append-only via REVOKE except status cols**. 12. **Immutable post-commit (status can advance only)**. 13. **Bigint VND**. 14. **Deterministic replay**. 15. **Per-member payslip row stored**. 16. **Deductions JSONB + income_components JSONB cached**. 17. **CFO-only draft + compute**. 18. **Status workflow enforced**. 19. **Failed compute → status=failed; reason logged**. 20. **Correction via new run (prior-period adjustment pattern)**.
+1. **payroll_status enum cardinality 7**. 2. **Compute orchestrates 3P + deductions**. 3. **Net = gross - deductions**. 4. **CFO + CHRO dual-sign required for commit**. 5. **Same person rejected**. 6. **UNIQUE(tenant, period_yyyymm)**. 7. **6 memory audit kinds emitted**. 8. **PII scrubbed (amounts SHA256)**. 9. **RLS denies cross-tenant**. 10. **Trace_id preserved**. 11. **Append-only via REVOKE except status cols**. 12. **Immutable post-commit (status can advance only)**. 13. **Bigint VND**. 14. **Deterministic replay**. 15. **Per-member payslip row stored**. 16. **Deductions JSONB + income_components JSONB cached**. 17. **CFO-only draft + compute**. 18. **Status workflow enforced**. 19. **Failed compute → status=failed; reason logged**. 20. **Correction via new run (prior-period adjustment pattern)**.
 
 ---
 
@@ -230,7 +230,7 @@ async fn deterministic_replay() {
 
 ## §7 — Dependencies
 **Upstream:** FR-REW-001.
-**Cross-module:** FR-REW-002 (versioning), FR-REW-004 (deductions), FR-REW-006 (PDF render), FR-REW-009 (bank send), FR-AUTH-101 (CFO/CHRO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-REW-002 (versioning), FR-REW-004 (deductions), FR-REW-006 (PDF render), FR-REW-009 (bank send), FR-AUTH-101 (CFO/CHRO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -249,7 +249,7 @@ async fn deterministic_replay() {
 ## §11 — Implementation notes
 - §11.1 Compute reads encrypted comp via FR-REW-001 decrypt (CFO-only context); uses session-scoped key.
 - §11.2 Net calc: gross - sum(deductions); validate sum matches.
-- §11.3 BRAIN audit body: run_id, period, status, members_count; amounts SHA256.
+- §11.3 memory audit body: run_id, period, status, members_count; amounts SHA256.
 - §11.4 Prior-period adjustment: new run with kind='correction' + reference to prior; negative entries allowed.
 - §11.5 FR-REW-006 PDF generates per payslip_row post-commit.
 

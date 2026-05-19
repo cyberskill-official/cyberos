@@ -146,3 +146,48 @@ fn missing_frontmatter_rejected() {
         Err(frontmatter::FrontmatterError::MissingFrontmatter)
     ));
 }
+
+#[test]
+fn transpile_feature_request_author_to_anthropic_form() {
+    let path = skill_dir("feature-request-author");
+    if !path.exists() {
+        eprintln!("skip: {path:?} not found");
+        return;
+    }
+    let result = cyberos_skill_broker::transpile_anthropic(&path);
+    assert!(result.is_ok(), "transpile failed: {:?}", result.err());
+    let skill = result.unwrap();
+    assert_eq!(skill.name, "feature-request-author");
+    let md = skill.to_skill_md();
+    // Required shape per Anthropic Reference B
+    assert!(md.starts_with("---\n"));
+    assert!(md.contains("name: feature-request-author"));
+    assert!(md.contains("description:"));
+    // CyberOS governance fields MUST be dropped on transpile
+    assert!(!md.contains("self_audit:"));
+    assert!(!md.contains("human_fine_tune:"));
+    assert!(!md.contains("depends_on_contracts:"));
+    assert!(!md.contains("wrap_in_marker:"));
+    // Body MUST be preserved (non-empty)
+    assert!(skill.body.len() > 100, "body too small: {}", skill.body.len());
+}
+
+#[test]
+fn transpile_all_three_exemplars_succeed() {
+    for skill in &[
+        "feature-request-author",
+        "feature-request-audit",
+        "product-requirements-document-author",
+    ] {
+        let path = skill_dir(skill);
+        if !path.exists() {
+            continue;
+        }
+        let result = cyberos_skill_broker::transpile_anthropic(&path);
+        assert!(
+            result.is_ok(),
+            "transpile {skill} failed: {:?}",
+            result.err()
+        );
+    }
+}

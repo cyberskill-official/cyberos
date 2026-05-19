@@ -12,7 +12,7 @@ authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; 
 
 ## §1 — Verdict summary
 
-FR-SKILL-104 authored direct-to-10/10. ~900 lines. 15 §1 clauses (Unix socket IPC, JSON-RPC framing, frontmatter enforcement, subprocess sandbox, BRAIN scope check, timeout, audit rows, trace propagation, tool registry, OTel, metrics, CLI status/tail/replay, rate-limit placeholder). 12 §2 rationale paragraphs. Full enforcer + dispatcher + subprocess spawn + timeout enforcement in §3. 24 ACs. 6 Rust unit + e2e tests. 21 failure modes. 9 implementation notes.
+FR-SKILL-104 authored direct-to-10/10. ~900 lines. 15 §1 clauses (Unix socket IPC, JSON-RPC framing, frontmatter enforcement, subprocess sandbox, memory scope check, timeout, audit rows, trace propagation, tool registry, OTel, metrics, CLI status/tail/replay, rate-limit placeholder). 12 §2 rationale paragraphs. Full enforcer + dispatcher + subprocess spawn + timeout enforcement in §3. 24 ACs. 6 Rust unit + e2e tests. 21 failure modes. 9 implementation notes.
 
 ## §2 — Findings (all resolved during authoring)
 
@@ -23,7 +23,7 @@ A naive author would check `allowed_tools` once at boot. Resolved: §1 #3 + #5 p
 Without specifics, sandbox = "spawn the process." Resolved: §1 #4 enumerates 4 mechanisms (close_fds, env_clear, unshare, setrlimit); AC #8 #9 #10 #11 verify each.
 
 ### ISS-003 — File + domain enforcement missing from v1 frontmatter
-FR-SKILL-103 covers BRAIN scopes but not files/domains. Resolved: §1 #3 + #5 + §3 `x-allowed-files` + `x-allowed-domains` extensions; AC #6 #7.
+FR-SKILL-103 covers memory scopes but not files/domains. Resolved: §1 #3 + #5 + §3 `x-allowed-files` + `x-allowed-domains` extensions; AC #6 #7.
 
 ### ISS-004 — Timeout semantics (sharp vs graceful)
 SIGKILL only = data loss; SIGTERM only = stuck processes. Resolved: §1 #6 90% SIGTERM + 100% SIGKILL with 10s grace; AC #12 #13 + §5 timeout_test.

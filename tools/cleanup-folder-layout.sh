@@ -7,10 +7,10 @@
 #      Rationale: runtime/ is Python operational tooling that operates on
 #      .cyberos-memory/ — strictly the memory module's domain.
 #
-#   2. apps/brain/              → services/brain/desktop/
-#      Rationale: apps/brain/ is the Tauri desktop client for the BRAIN
-#      service. Co-locating with services/brain/ keeps the build chain
-#      (Rust service + Tauri shell) together. Updates FR-BRAIN-104 + tours
+#   2. apps/memory/              → services/memory/desktop/
+#      Rationale: apps/memory/ is the Tauri desktop client for the memory
+#      service. Co-locating with services/memory/ keeps the build chain
+#      (Rust service + Tauri shell) together. Updates FR-MEMORY-104 + tours
 #      reference paths.
 #
 #   3. outputs/portable-fr-prompts.md → tools/portable-fr-prompts.md
@@ -27,8 +27,8 @@
 #   bash tools/cleanup-folder-layout.sh --apply      # do it
 #
 # After --apply, the script runs sed across affected files to update path
-# references (runtime/ → modules/memory/runtime/, apps/brain/ → services/
-# brain/desktop/). Review the diff before committing.
+# references (runtime/ → modules/memory/runtime/, apps/memory/ → services/
+# memory/desktop/). Review the diff before committing.
 
 # Note: NOT using `set -e` because we want each step to attempt independently
 # even if a prior step hits a recoverable issue (e.g. one folder already moved,
@@ -117,20 +117,20 @@ else
 fi
 echo ""
 
-# ── 2. apps/brain/ → services/brain/desktop/ ───────────────────────────────────
-echo "Step 2: apps/brain/ → services/brain/desktop/"
-if [ -d apps/brain ]; then
+# ── 2. apps/memory/ → services/memory/desktop/ ───────────────────────────────────
+echo "Step 2: apps/memory/ → services/memory/desktop/"
+if [ -d apps/memory ]; then
   if [ "$MODE" = "--apply" ]; then
-    mkdir -p services/brain
-    git mv apps/brain services/brain/desktop
+    mkdir -p services/memory
+    git mv apps/memory services/memory/desktop
     rmdir apps 2>/dev/null || true
-    echo "  done: apps/brain/ → services/brain/desktop/ (apps/ removed if empty)"
+    echo "  done: apps/memory/ → services/memory/desktop/ (apps/ removed if empty)"
   else
-    echo "  would: git mv apps/brain services/brain/desktop && rmdir apps"
+    echo "  would: git mv apps/memory services/memory/desktop && rmdir apps"
   fi
-  update_refs "apps/brain/" "services/brain/desktop/"
+  update_refs "apps/memory/" "services/memory/desktop/"
 else
-  echo "  SKIP — apps/brain/ does not exist (already moved?)"
+  echo "  SKIP — apps/memory/ does not exist (already moved?)"
 fi
 echo ""
 

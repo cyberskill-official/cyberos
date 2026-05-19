@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-PROJ-013, FR-TIME-001, FR-LEARN-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-PROJ-013, FR-TIME-001, FR-LEARN-001, FR-MEMORY-111]
 depends_on: [FR-PROJ-013, FR-TIME-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-1861 2026-05-17 — Closed enum `perf_signal_kind` = {proj_issue_velocity, time_utilization_pct, learn_completion_rate, project_satisfaction_avg, ot_burnout_flag}; cardinality 5
   - DEC-1862 2026-05-17 — Monthly snapshot at month-end; per-signal current value + delta vs prior month
   - DEC-1863 2026-05-17 — Snapshots IMMUTABLE; corrections via prior-period adjustment row
-  - DEC-1864 2026-05-17 — BRAIN audit kinds: hr.perf_snapshot_taken, hr.perf_snapshot_failed (PII scrubbed)
+  - DEC-1864 2026-05-17 — memory audit kinds: hr.perf_snapshot_taken, hr.perf_snapshot_failed (PII scrubbed)
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without performance signals, CHRO has no quantitative view of 
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** ship performance signal aggregator at `services/hr/src/perf/` reading PROJ + TIME + LEARN, monthly snapshots, immutable, 2 BRAIN audit kinds.
+The HR service **MUST** ship performance signal aggregator at `services/hr/src/perf/` reading PROJ + TIME + LEARN, monthly snapshots, immutable, 2 memory audit kinds.
 
 1. **MUST** be read-only per DEC-1860 — only SELECT against source modules; allowed_tools disallows file_write to non-HR services.
 
@@ -113,7 +113,7 @@ The HR service **MUST** ship performance signal aggregator at `services/hr/src/p
    GET    /v1/hr/members/{id}/perf-history  (snapshot list desc time)
    ```
 
-7. **MUST** emit 2 BRAIN audit kinds per DEC-1864. PII per FR-BRAIN-111: signal values hashed; member_id (uuid) ok.
+7. **MUST** emit 2 memory audit kinds per DEC-1864. PII per FR-MEMORY-111: signal values hashed; member_id (uuid) ok.
 
 8. **MUST** thread trace_id from cron → aggregator → audit.
 
@@ -163,7 +163,7 @@ Sample snapshot:
 ---
 
 ## §4 — Acceptance criteria
-1. **5-signal enum + cardinality test**. 2. **Monthly EOM cron**. 3. **Read-only against PROJ/TIME/LEARN**. 4. **Snapshots immutable (no UPDATE/DELETE)**. 5. **UNIQUE on (member, period_end)**. 6. **Prior-period deltas computed**. 7. **2 BRAIN audit kinds emitted**. 8. **PII scrubbed (signal values SHA256)**. 9. **RLS denies cross-tenant**. 10. **CHRO-only manual trigger**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE**. 13. **Missing source data → null signal + sev-2 audit**. 14. **Inactive member skipped**. 15. **ot_burnout_flag computed from 3-month rolling**. 16. **History query desc time**. 17. **CHRO-only GET**. 18. **Performance review UI consumes this**. 19. **Cron skip if 0 active members**. 20. **JSONB schema validated per signal kind**.
+1. **5-signal enum + cardinality test**. 2. **Monthly EOM cron**. 3. **Read-only against PROJ/TIME/LEARN**. 4. **Snapshots immutable (no UPDATE/DELETE)**. 5. **UNIQUE on (member, period_end)**. 6. **Prior-period deltas computed**. 7. **2 memory audit kinds emitted**. 8. **PII scrubbed (signal values SHA256)**. 9. **RLS denies cross-tenant**. 10. **CHRO-only manual trigger**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE**. 13. **Missing source data → null signal + sev-2 audit**. 14. **Inactive member skipped**. 15. **ot_burnout_flag computed from 3-month rolling**. 16. **History query desc time**. 17. **CHRO-only GET**. 18. **Performance review UI consumes this**. 19. **Cron skip if 0 active members**. 20. **JSONB schema validated per signal kind**.
 
 ---
 
@@ -202,7 +202,7 @@ async fn read_only_against_sources() {
 
 ## §7 — Dependencies
 **Upstream:** FR-PROJ-013, FR-TIME-001.
-**Cross-module:** FR-LEARN-001 (completion data), FR-TIME-007 (OT for burnout flag), FR-MCP-007 (cron), FR-AUTH-101 (CHRO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-LEARN-001 (completion data), FR-TIME-007 (OT for burnout flag), FR-MCP-007 (cron), FR-AUTH-101 (CHRO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -222,7 +222,7 @@ async fn read_only_against_sources() {
 - §11.1 Aggregator calls each source module's read API; no SQL joins across modules.
 - §11.2 Burnout flag: `SELECT OT hours last 3 months / cap; flag if avg > 0.8`.
 - §11.3 Prior-period deltas computed at snapshot time (lookup previous snapshot).
-- §11.4 BRAIN audit body: member_id, period_end, signal_count; signal values SHA256.
+- §11.4 memory audit body: member_id, period_end, signal_count; signal values SHA256.
 - §11.5 Performance review UI: read snapshots + deltas; manager + CHRO see trajectory.
 
 ---

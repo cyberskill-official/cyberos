@@ -6,7 +6,7 @@ This folder holds CyberOS's canonical specifications (SDP + C-Suite Reference) a
 |---|---|---|
 | [`Software Development Process.md`](Software%20Development%20Process.md) | **Normative.** The 13-stage SDP (SOW → SRS → FRs → ADR → SDD → impl → review → test → deploy → release → runbook → retro → decomm). Every skill chains a sub-set of these stages | — |
 | [`The C-Suite Reference.md`](The%20C-Suite%20Reference.md) | **Normative.** 48-persona atlas (47 active + 1 EXTINCT cautionary tale). Source for every `modules/cuo/<persona-slug>/README.md`. Sections §2 (acronym matrix), §4 (9-block schema), §5 (per-persona profiles), §7 (CyberSkill priority order), §8 (commercial baselines) | — |
-| [`feature-requests/`](feature-requests/) | **Living.** ~556 FRs organised across 26 domains (ai, auth, brain, chat, crm, cuo, doc, docs, email, esop, hr, inv, kb, learn, mcp, obs, okr, portal, proj, res, rew, skill, ten, time). Each FR authored via the `feature-request-author` skill | [`feature-requests/BACKLOG.md`](feature-requests/BACKLOG.md) (index) + [`../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md`](../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) (discipline — moved 2026-05-18 to live with the `feature-request-audit` skill) |
+| [`feature-requests/`](feature-requests/) | **Living.** ~556 FRs organised across 26 domains (ai, auth, memory, chat, crm, cuo, doc, docs, email, esop, hr, inv, kb, learn, mcp, obs, okr, portal, proj, res, rew, skill, ten, time). Each FR authored via the `feature-request-author` skill | [`feature-requests/BACKLOG.md`](feature-requests/BACKLOG.md) (index) + [`../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md`](../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) (discipline — moved 2026-05-18 to live with the `feature-request-audit` skill) |
 | [`Makefile`](Makefile) | pandoc round-trip utility for any md ↔ docx work | — |
 
 ### What's gone (deleted 2026-05-18)
@@ -24,7 +24,7 @@ Each module has a single comprehensive `README.md` at module root with sections 
 
 | Module | Read |
 |---|---|
-| BRAIN protocol + reference impl | [`../modules/memory/README.md`](../modules/memory/README.md) + [`../modules/memory/AGENTS.md`](../modules/memory/AGENTS.md) (Layer-1 spec) + [`../modules/memory/INTEROP.md`](../modules/memory/INTEROP.md) (non-ledger subset) |
+| memory protocol + reference impl | [`../modules/memory/README.md`](../modules/memory/README.md) + [`../modules/memory/AGENTS.md`](../modules/memory/AGENTS.md) (Layer-1 spec) + [`../modules/memory/INTEROP.md`](../modules/memory/INTEROP.md) (non-ledger subset) |
 | Agent Skills catalog | [`../modules/skill/README.md`](../modules/skill/README.md) (single 4,100-line guide consolidating AUDIT, AUDIT_LOOP, FINE_TUNE, RUBRIC_FORMAT, PUBLISH, SPEC, Phase-5/7 runbooks) |
 | Persona-aware orchestration | [`../modules/cuo/README.md`](../modules/cuo/README.md) + [`../modules/cuo/MODULE.md`](../modules/cuo/MODULE.md) (persona catalog) |
 
@@ -34,7 +34,7 @@ Each module has a single comprehensive `README.md` at module root with sections 
 SDP ── normative ──▶ FRs ── authority ──▶ Skill catalog ── compose ──▶ CUO workflows
                                                                             │
                                                                             ▼
-                                                                      BRAIN (memory module)
+                                                                      memory (memory module)
                                                                             │
                                                                             ▼
                                                                    Implementation modules
@@ -46,7 +46,7 @@ SDP ── normative ──▶ FRs ── authority ──▶ Skill catalog ─�
 - **FRs** (`feature-requests/`) capture every concrete change request, tagged by phase + module.
 - **Skill catalog** (`modules/skill/`) ships 104 author+audit pairs that materialise SDP stages into agentic Skills.
 - **CUO workflows** (`modules/cuo/`) chain Skills into persona-owned deliverables (194 workflows live).
-- **BRAIN** (`modules/memory/`) records every chain decision in an append-only audit chain.
+- **memory** (`modules/memory/`) records every chain decision in an append-only audit chain.
 - **Implementation modules** (planned in FRs) are the runtime services (services/auth, services/ai-gateway, etc.) that satisfy the FRs.
 
 ## Naming convention
@@ -54,7 +54,7 @@ SDP ── normative ──▶ FRs ── authority ──▶ Skill catalog ─�
 | Convention | Filename | Purpose |
 |---|---|---|
 | Top-level folder index | `README.md` | What's in this folder |
-| Module spec (Layer-1) | `AGENTS.md` | Normative protocol — currently only the BRAIN module has one |
+| Module spec (Layer-1) | `AGENTS.md` | Normative protocol — currently only the memory module has one |
 | Skill manifest | `SKILL.md` | Skill body + frontmatter (Anthropic Agent Skills standard) |
 | Audit rubric | `RUBRIC.md` | Per-skill rubric for the audit-loop |
 | Contract schema | `CONTRACT.md` | Versioned artefact schema (e.g. `feature_request@1`) |

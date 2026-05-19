@@ -11,7 +11,7 @@ description: |
 skill_version: 1.0.1
 persona: shared
 owner_role: _shared
-allowed_brain_scopes:
+allowed_memory_scopes:
   read: []
   write: []
 allowed_mcp_tools:
@@ -32,7 +32,7 @@ produces:
   schema_ref: ./envelopes/output.json
   output_kind: report
 audit:
-  emit_to: brain.action_log
+  emit_to: memory.action_log
   row_kind: cleanup_report
   payload_hash_field: report_sha256
   explanation_pane: required
@@ -162,7 +162,7 @@ Report written to: <path>/CLEANUP_REPORT_<timestamp>.md
 - **Never** delete files under `.git/`, `node_modules/`, `target/`, `dist/`, build artifacts — these are out of scope.
 - **Never** absorb a doc into a parent without explicit operator approval per fragment.
 - **Never** modify any file outside the project root (path traversal guard).
-- **Never** modify files in tracked-but-not-this-project paths (per `allowed_brain_scopes` discipline — this skill writes only its report).
+- **Never** modify files in tracked-but-not-this-project paths (per `allowed_memory_scopes` discipline — this skill writes only its report).
 
 ## Why this skill exists
 

@@ -1,14 +1,14 @@
-"""FR-BRAIN-106 — sync_class enforcement.
+"""FR-MEMORY-106 — sync_class enforcement.
 
 The sync_class frontmatter field controls whether a memory crosses the
-personal-BRAIN ↔ Lumi sync boundary:
+personal-memory ↔ Lumi sync boundary:
 
-  * ``private`` — never leaves this device. The brain-sync daemon MUST
+  * ``private`` — never leaves this device. The memory-sync daemon MUST
     filter it out of every outbound push. Reads stay local. This is the
     default for new memories.
 
-  * ``shareable`` — replicates to Cloud BRAIN. Anyone with sync access to
-    that BRAIN can read it.
+  * ``shareable`` — replicates to Cloud memory. Anyone with sync access to
+    that memory can read it.
 
   * ``team`` (P3+) — visible to a named team scope; routed through Lumi.
 
@@ -16,7 +16,7 @@ This module provides:
 
   * :func:`classify` — pure function: given a memory's frontmatter dict,
     return the canonical sync_class value (defaulting to ``private``).
-  * :func:`filter_shareable` — used by the future brain-sync daemon to
+  * :func:`filter_shareable` — used by the future memory-sync daemon to
     drop private rows from a push payload.
   * :func:`assert_enum_value` — doctor invariant: every shipped memory
     must carry a sync_class value from the closed enum.
@@ -29,7 +29,7 @@ from typing import Iterable, Mapping, MutableMapping
 SYNC_CLASS_DEFAULT: str = "private"
 
 # Closed enum — additions require an ADR + matching update to the
-# personal-BRAIN sync daemon (FR-BRAIN-103) and the Cloud-BRAIN admit policy.
+# personal-memory sync daemon (FR-MEMORY-103) and the Cloud-memory admit policy.
 SYNC_CLASS_ENUM: frozenset[str] = frozenset({"private", "shareable", "team"})
 
 
@@ -68,7 +68,7 @@ def filter_shareable(
 ) -> list[Mapping[str, object]]:
     """Drop every row whose sync_class is not ``shareable`` (or ``team`` for P3+).
 
-    Used by the brain-sync daemon (FR-BRAIN-103) to enforce DEC-070's
+    Used by the memory-sync daemon (FR-MEMORY-103) to enforce DEC-070's
     "Layer 1 is the source of truth; what crosses the device boundary is
     operator-chosen" invariant.
     """

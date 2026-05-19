@@ -56,6 +56,9 @@ pub const TENANT_SCOPED_TABLES: &[&str] = &[
     "oidc_idp_configs",
     "passkey_enrolment_state",
     "saml_idp_configs",
+    // FR-AUTH-005 §1 #13 + G-013 — sessions tracks active jtis tenant-scoped;
+    // RLS prevents tenant-admin from enumerating other tenants' active jtis.
+    "sessions",
     "subject_roles",
     "subjects",
     "travel_cidr_allowlist",

@@ -1,6 +1,6 @@
 # services/ developer shortcuts. Run from this directory.
 
-.PHONY: fmt clippy build test ci-mirror
+.PHONY: fmt clippy build test ci-mirror chat-build chat-license-check chat-test chat-verify
 
 # Auto-format every crate in the workspace.
 fmt:
@@ -22,3 +22,23 @@ test:
 # Run this before pushing to catch issues locally.
 ci-mirror: fmt clippy build test
 	@echo "✓ ci-mirror green — push when ready"
+
+# ----------------------------------------------------------------------------
+# FR-CHAT-001 — CHAT module shortcuts (delegate to services/chat/Makefile).
+# ----------------------------------------------------------------------------
+
+# Build the Mattermost fork image from the pinned commit + patch series.
+chat-build:
+	$(MAKE) -C chat chat-build
+
+# Run the license-drift watcher locally (requires GH_TOKEN).
+chat-license-check:
+	$(MAKE) -C chat chat-license-check
+
+# Run the FR-CHAT-001 bash-level test suite.
+chat-test:
+	$(MAKE) -C chat chat-test
+
+# Verify the layout invariants of services/chat/ (no Docker needed).
+chat-verify:
+	$(MAKE) -C chat chat-verify

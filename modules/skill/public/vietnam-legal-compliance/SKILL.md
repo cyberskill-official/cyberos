@@ -1,12 +1,7 @@
 ---
 name: vietnam-legal-compliance
 description: >-
-  Procedural knowledge for Vietnamese legal compliance: Personal Data
-  Protection Decree (Nghị định 13/2023/NĐ-CP), Cybersecurity Decree
-  (Nghị định 53/2022/NĐ-CP), data-localisation rules, breach-notification
-  windows, DPO requirements. Use when the user asks about Vietnamese
-  data protection law, cybersecurity compliance, MoIC/MoPS notifications,
-  or how to structure a privacy policy for Vietnamese users.
+  Procedural knowledge for Vietnamese legal compliance: Personal Data Protection Decree (Nghị định 13/2023/NĐ-CP), Cybersecurity Decree (Nghị định 53/2022/NĐ-CP), data-localisation rules, breach-notification windows, DPO requirements. Use when the user asks about Vietnamese data protection law, cybersecurity compliance, MoIC/MoPS notifications, or how to structure a privacy policy for Vietnamese users. Use when user asks to "reference vietnam legal compliance" or "look up vietnam legal compliance".
 license: Apache-2.0
 compatibility: Fully offline — pure reference documentation. No scripts.
 metadata:

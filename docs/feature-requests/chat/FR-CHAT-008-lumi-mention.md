@@ -1,9 +1,9 @@
 ---
 id: FR-CHAT-008
-title: "@lumi mention parser — message mentions trigger CUO routing + BRAIN capture row + reply"
+title: "@lumi mention parser — message mentions trigger CUO routing + memory capture row + reply"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CHAT-005, FR-CHAT-009, FR-AI-014, FR-CUO-101, FR-BRAIN-101]
+memory_chain_hash: null
+related_frs: [FR-CHAT-005, FR-CHAT-009, FR-AI-014, FR-CUO-101, FR-MEMORY-101]
 depends_on: [FR-CHAT-005]
 blocks: [FR-CHAT-009]
 
@@ -21,7 +21,7 @@ source_pages:
 source_decisions:
   - DEC-490 (@lumi is the canonical assistant mention; case-insensitive; works in channel + DM)
   - DEC-491 (mention extracted from message body via regex; routed to FR-CUO-101 supervisor)
-  - DEC-492 (CUO emits BRAIN capture row 'chat.lumi_invoked' AND posts reply back into chat)
+  - DEC-492 (CUO emits memory capture row 'chat.lumi_invoked' AND posts reply back into chat)
 
 language: rust 1.81 + go (Mattermost plugin)
 service: cyberos/services/chat-lumi/
@@ -40,7 +40,7 @@ allowed_tools:
   - bash: cd services/chat-lumi && cargo test
 disallowed_tools:
   - send LLM call from chat process (per §1 — Lumi service handles)
-  - reply without BRAIN audit (per DEC-492)
+  - reply without memory audit (per DEC-492)
 
 effort_hours: 6
 sub_tasks:
@@ -49,7 +49,7 @@ sub_tasks:
   - "1.0h: chat-lumi service — receives webhook; routes to CUO supervisor (FR-CUO-101)"
   - "1.0h: cuo_route.rs — CUO call with persona=lumi (slice-3 stub: returns 'I'll get back to you')"
   - "0.5h: reply.rs — post CUO response back into chat channel via MM API"
-  - "0.5h: BRAIN audit row 'chat.lumi_invoked' with body_redacted + cuo_response_hash"
+  - "0.5h: memory audit row 'chat.lumi_invoked' with body_redacted + cuo_response_hash"
   - "1.0h: lumi_test.rs — regex coverage + routing happy path"
   - "0.5h: latency budget: < 2s to first response (CUO ack)"
 risk_if_skipped: "Lumi (the assistant) is the brand surface for AI-augmented chat. Without mention parser, users have no in-chat invocation. Without CUO routing, every mention burns AI Gateway directly = cost. Without reply, mentioning lumi feels broken. Without audit, conversations with lumi invisible to ops."
@@ -71,10 +71,10 @@ The @lumi mention layer **MUST** intercept chat messages, parse mentions, route 
    - Reply as user "Lumi" (system user provisioned at install).
    - Reply threaded to the mention post (`root_id` set).
    - Include CUO outcome footer: `_(via Lumi · trace ...)`.
-5. **MUST** emit BRAIN audit `chat.lumi_invoked` per mention with payload `{post_id, channel_id, user_id, body_redacted, context_hash, cuo_outcome, response_hash, latency_ms, trace_id}`.
-6. **MUST** PII-redact body before BRAIN write (FR-BRAIN-111).
+5. **MUST** emit memory audit `chat.lumi_invoked` per mention with payload `{post_id, channel_id, user_id, body_redacted, context_hash, cuo_outcome, response_hash, latency_ms, trace_id}`.
+6. **MUST** PII-redact body before memory write (FR-MEMORY-111).
 7. **MUST** dedup: same `(post_id)` mentioned multiple times by edits → only first mention triggers.
-8. **MUST** respect channel privacy: in private channel, reply has `sync_class: private` per FR-BRAIN-106; public → shareable.
+8. **MUST** respect channel privacy: in private channel, reply has `sync_class: private` per FR-MEMORY-106; public → shareable.
 9. **MUST** complete first response (CUO ack OR Resolved) within 2 seconds; longer responses post "thinking..." placeholder then update.
 10. **MUST** emit OTel metrics:
     - `chat_lumi_mentions_total{outcome}` (outcome ∈ resolved | routed | refused | error).
@@ -82,18 +82,18 @@ The @lumi mention layer **MUST** intercept chat messages, parse mentions, route 
 11. **MUST NOT** trigger on imported posts: posts whose `props.cyberos_imported = true` (from FR-CHAT-006/007) MUST be skipped, even if their body contains `@lumi`. Historical mentions must not generate live LLM calls.
 12. **MUST NOT** trigger on Lumi's own replies: posts authored by the Lumi system user are filtered before regex eval. Prevents infinite reply loops.
 13. **MUST** rate-limit per-user mentions: 30 mentions per user per minute, sliding window. Excess returns Refused with `reason: "rate_limited"`. Counters live in Redis.
-14. **MUST** support per-tenant Lumi enable/disable: when `cyberos_chat_tenant_settings.lumi_enabled = false`, mentions are detected but produce no CUO call AND no reply AND emit BRAIN audit `chat.lumi_skipped` with `reason: "disabled"`.
+14. **MUST** support per-tenant Lumi enable/disable: when `cyberos_chat_tenant_settings.lumi_enabled = false`, mentions are detected but produce no CUO call AND no reply AND emit memory audit `chat.lumi_skipped` with `reason: "disabled"`.
 15. **MUST** handle long CUO responses with a "thinking" placeholder that's updated when CUO resolves: if CUO ack does not arrive in 2s, post `_(Lumi is thinking…)_` as the threaded reply; when CUO resolves later (≤ 60s), edit the placeholder to the actual reply via MM API edit.
-16. **MUST** preserve trace_id across MM plugin → chat-lumi service → CUO supervisor → MM reply: every hop carries the W3C traceparent header; BRAIN audit row records the same trace_id.
+16. **MUST** preserve trace_id across MM plugin → chat-lumi service → CUO supervisor → MM reply: every hop carries the W3C traceparent header; memory audit row records the same trace_id.
 17. **MUST** include channel membership of the mentioner in CUO context: CUO receives `{user_channels_count, user_is_admin, channel_member_count}` so personas can adapt (e.g. admin-only commands).
 18. **MUST** support `@lumi help` as a built-in command that responds with the persona's capability list WITHOUT consuming an LLM call. Hard-coded reply rendered from a static template; sub-100ms latency.
 19. **MUST** support `@lumi cancel` to cancel an in-flight Routed-mode CUO job initiated by the same user in the same channel: looks up the most recent unresolved CUO job, marks cancelled, posts "Cancelled." threaded.
-20. **MUST** support multiple @lumi mentions in a single message body as a single CUO invocation (de-duped); the BRAIN audit records `mention_count` in payload.
-21. **MUST** preserve message author context in BRAIN payload: not just `user_id` but `{user_id, display_name_redacted, role, joined_at}` so downstream consumers can answer "who asked Lumi for X" without an extra MM API call.
-22. **MUST** redact CUO response before BRAIN audit emit, separately from request redaction. The redaction ruleset is the same FR-BRAIN-111 ruleset; responses can leak data the model echoed from the prompt.
-23. **MUST** emit BRAIN audit `chat.lumi_error` for any failure path (CUO timeout, MM API failure, redaction crash) with `{post_id, channel_id, user_id, error_class, error_message_redacted, trace_id}`. SEV-2 if rate > 1/min.
+20. **MUST** support multiple @lumi mentions in a single message body as a single CUO invocation (de-duped); the memory audit records `mention_count` in payload.
+21. **MUST** preserve message author context in memory payload: not just `user_id` but `{user_id, display_name_redacted, role, joined_at}` so downstream consumers can answer "who asked Lumi for X" without an extra MM API call.
+22. **MUST** redact CUO response before memory audit emit, separately from request redaction. The redaction ruleset is the same FR-MEMORY-111 ruleset; responses can leak data the model echoed from the prompt.
+23. **MUST** emit memory audit `chat.lumi_error` for any failure path (CUO timeout, MM API failure, redaction crash) with `{post_id, channel_id, user_id, error_class, error_message_redacted, trace_id}`. SEV-2 if rate > 1/min.
 24. **MUST** require `cyberos_chat_tenant_settings.lumi_enabled` to be `true` AND a feature-flag check (`tenant_features.lumi = true`) before processing. Both must be true; either false → skip. This is the two-key-launch pattern used elsewhere in the platform.
-25. **MUST** record the CUO budget consumed per invocation in BRAIN payload (`budget_tokens_used`, `budget_dollars_estimate`); FR-AI-014 surfaces these for billing.
+25. **MUST** record the CUO budget consumed per invocation in memory payload (`budget_tokens_used`, `budget_dollars_estimate`); FR-AI-014 surfaces these for billing.
 
 ---
 
@@ -107,7 +107,7 @@ The @lumi mention layer **MUST** intercept chat messages, parse mentions, route 
 
 **Why 2s budget (§1 #9)?** Beyond 2s users assume broken. "Thinking..." placeholder buys time for longer LLM calls.
 
-**Why redaction before BRAIN (§1 #6)?** Users may @lumi with sensitive info; FR-BRAIN-111 ruleset scrubs.
+**Why redaction before memory (§1 #6)?** Users may @lumi with sensitive info; FR-MEMORY-111 ruleset scrubs.
 
 **Why skip imported posts (§1 #11)?** Importing 100k historical Slack/Zalo messages would trigger 100k LLM calls if Lumi processed historical mentions — $$$ and wrong (the original conversation already happened; replying now is anachronistic). The `cyberos_imported` props marker from FR-CHAT-006/007 carries through; we check it explicitly.
 
@@ -172,7 +172,7 @@ async fn handle_webhook(req: WebhookReq) -> Result<(), LumiError> {
 
     // §1 #14 + #24: tenant-level enable + feature-flag check.
     if !tenant_settings::lumi_enabled(req.tenant_id).await? {
-        emit_brain_row("chat.lumi_skipped", serde_json::json!({
+        emit_memory_row("chat.lumi_skipped", serde_json::json!({
             "post_id": req.post_id, "reason": "disabled",
         })).await;
         return Ok(());
@@ -245,7 +245,7 @@ async fn handle_webhook(req: WebhookReq) -> Result<(), LumiError> {
     let reply_redacted = pii::scan_and_redact(&reply_text, &[]).await?.redacted_body;
 
     let latency = start.elapsed();
-    emit_brain_row("chat.lumi_invoked", serde_json::json!({
+    emit_memory_row("chat.lumi_invoked", serde_json::json!({
         "post_id":       req.post_id,
         "channel_id":    req.channel_id,
         "user_id":       req.user_id,
@@ -265,7 +265,7 @@ async fn handle_webhook(req: WebhookReq) -> Result<(), LumiError> {
     })).await;
 
     if let Some(cls) = error_class {
-        emit_brain_row("chat.lumi_error", serde_json::json!({
+        emit_memory_row("chat.lumi_error", serde_json::json!({
             "post_id": req.post_id, "error_class": cls,
             "trace_id": req.trace_id,
         })).await;
@@ -439,7 +439,7 @@ CREATE TABLE IF NOT EXISTS cyberos_tenant_features (
 6. **Resolved reply posted threaded** — root_id = mention post id.
 7. **Routed reply with ETA** — CUO returns Routed → "I'll get back in ~Xs".
 8. **Refused reply with reason** — CUO returns Refused → user sees reason.
-9. **BRAIN audit chat.lumi_invoked** — row emitted with redacted body.
+9. **memory audit chat.lumi_invoked** — row emitted with redacted body.
 10. **PII redacted** — body with email → audit row redacted.
 11. **Dedup on edit** — message edited keeping @lumi → no second route.
 12. **Latency p95 < 2s for Resolved** — measured via histogram.
@@ -449,15 +449,15 @@ CREATE TABLE IF NOT EXISTS cyberos_tenant_features (
 16. **Imported post @lumi mention ignored** — fixture post with `props.cyberos_imported=true` and body `@lumi help` → NO CUO call, NO reply (AC for §1 #11).
 17. **Lumi's own posts don't re-trigger** — fixture: Lumi posts containing `@lumi` echo → NO recursion (AC for §1 #12).
 18. **Rate limit enforced at 30/min** — fixture: 31 mentions from one user in one minute → 31st gets "Rate limit hit" reply; no CUO call (AC for §1 #13).
-19. **Tenant disabled → skip + audit** — set `lumi_enabled=false`; mention → `chat.lumi_skipped` BRAIN row; NO reply (AC for §1 #14).
+19. **Tenant disabled → skip + audit** — set `lumi_enabled=false`; mention → `chat.lumi_skipped` memory row; NO reply (AC for §1 #14).
 20. **Feature flag disabled → skip silently** — set `tenant_features.lumi=false`; mention → NO action (AC for §1 #24).
 21. **Placeholder fires at 2s** — fixture: CUO sleeps 5s; observe `_(Lumi is thinking…)_` post at t≈2s, then edit at t≈5s (AC for §1 #15).
-22. **Trace id preserved** — fixture: inject `traceparent` header; observe same trace_id in BRAIN audit, CUO call, reply post props (AC for §1 #16).
+22. **Trace id preserved** — fixture: inject `traceparent` header; observe same trace_id in memory audit, CUO call, reply post props (AC for §1 #16).
 23. **Channel context in CUO request** — observe CUO call receives `channel_member_count` + `user_is_admin` (AC for §1 #17).
 24. **`@lumi help` is hard-coded** — fixture: body `@lumi help`; observe no CUO call AND latency <100ms (AC for §1 #18).
 25. **`@lumi cancel` cancels routed job** — start a Routed job; same user same channel sends `@lumi cancel`; observe `cuo::cancel_latest_for` called; reply `Cancelled.` (AC for §1 #19).
-26. **Multiple @lumi → single invocation** — body with `@lumi do A and @lumi do B`; observe ONE CUO call; BRAIN audit `mention_count = 2` (AC for §1 #20).
-27. **BRAIN payload carries user_display + role** — observe audit row has `user_display` (redacted) + `user_role` (AC for §1 #21).
+26. **Multiple @lumi → single invocation** — body with `@lumi do A and @lumi do B`; observe ONE CUO call; memory audit `mention_count = 2` (AC for §1 #20).
+27. **memory payload carries user_display + role** — observe audit row has `user_display` (redacted) + `user_role` (AC for §1 #21).
 28. **Response redacted in audit** — CUO returns body containing email; observe `response_redacted` field in audit has `<EMAIL>`; `response_hash` is unredacted hash (AC for §1 #22).
 29. **chat.lumi_error fires on CUO timeout** — fixture: CUO timeout; observe `chat.lumi_error` row with `error_class="cuo_timeout"` + SEV-2 routing (AC for §1 #23).
 30. **Budget recorded in audit** — observe `budget_tokens_used > 0` + `budget_dollars_estimate > 0` in audit payload for Resolved outcomes (AC for §1 #25).
@@ -591,7 +591,7 @@ async fn ac19_tenant_disabled_emits_skipped_audit() {
     env.set_tenant_lumi_enabled(false).await;
     let req = test_webhook("@lumi help");
     handle_webhook(req).await.unwrap();
-    let row = env.brain.last_of_kind("chat.lumi_skipped").await.unwrap();
+    let row = env.memory.last_of_kind("chat.lumi_skipped").await.unwrap();
     assert_eq!(row["payload"]["reason"], "disabled");
     assert_eq!(env.mm.reply_count(), 0);
 }
@@ -628,7 +628,7 @@ async fn ac22_trace_id_propagated() {
     let trace = "4bf92f3577b34da6a3ce929d0e0e4736";
     let req = WebhookReq { trace_id: trace.into(), ..test_webhook("@lumi help") };
     handle_webhook(req).await.unwrap();
-    let row = env.brain.last_of_kind("chat.lumi_invoked").await.unwrap();
+    let row = env.memory.last_of_kind("chat.lumi_invoked").await.unwrap();
     assert_eq!(row["payload"]["trace_id"], trace);
     let cuo_call = env.cuo.last_request().await;
     assert_eq!(cuo_call.trace_id, trace);
@@ -678,7 +678,7 @@ async fn ac26_multiple_mentions_single_invocation() {
     env.cuo.mock_resolved("ok").await;
     handle_webhook(test_webhook("@lumi do A and @lumi do B")).await.unwrap();
     assert_eq!(env.cuo.call_count(), 1);
-    let row = env.brain.last_of_kind("chat.lumi_invoked").await.unwrap();
+    let row = env.memory.last_of_kind("chat.lumi_invoked").await.unwrap();
     assert_eq!(row["payload"]["mention_count"], 2);
 }
 ```
@@ -691,7 +691,7 @@ async fn ac28_response_redacted_in_audit() {
     let env = TestEnv::new().await;
     env.cuo.mock_resolved("Email alice@cyberskill.world for follow-up.").await;
     handle_webhook(test_webhook("@lumi who do I email")).await.unwrap();
-    let row = env.brain.last_of_kind("chat.lumi_invoked").await.unwrap();
+    let row = env.memory.last_of_kind("chat.lumi_invoked").await.unwrap();
     let resp_red = row["payload"]["response_redacted"].as_str().unwrap();
     assert!(!resp_red.contains("alice@cyberskill.world"));
     assert!(resp_red.contains("<EMAIL>"));
@@ -708,7 +708,7 @@ async fn ac29_lumi_error_audit_on_cuo_timeout() {
     let env = TestEnv::new().await;
     env.cuo.mock_timeout().await;
     handle_webhook(test_webhook("@lumi help")).await.unwrap();
-    let row = env.brain.last_of_kind("chat.lumi_error").await.unwrap();
+    let row = env.memory.last_of_kind("chat.lumi_error").await.unwrap();
     assert_eq!(row["payload"]["error_class"], "cuo_timeout");
     let reply = env.mm.last_reply().await;
     assert!(reply.message.contains("trouble"));
@@ -723,7 +723,7 @@ async fn ac30_budget_recorded_in_audit() {
     let env = TestEnv::new().await;
     env.cuo.mock_resolved_with_budget("ok", 1500, 0.012).await;
     handle_webhook(test_webhook("@lumi help")).await.unwrap();
-    let row = env.brain.last_of_kind("chat.lumi_invoked").await.unwrap();
+    let row = env.memory.last_of_kind("chat.lumi_invoked").await.unwrap();
     assert_eq!(row["payload"]["budget_tokens_used"], 1500);
     assert!((row["payload"]["budget_dollars_estimate"].as_f64().unwrap() - 0.012).abs() < 1e-9);
 }
@@ -785,7 +785,7 @@ The plugin install step (FR-CHAT-002 install workflow) creates a MM user `Lumi` 
 - Plugin POSTs to chat-lumi service with `traceparent` header.
 - Service passes through to CUO call as `traceparent`.
 - Service passes back to MM reply post as `props.trace_id` AND in the footer (truncated to 8 chars for human readability).
-- BRAIN audit `trace_id` is the full 32-char form.
+- memory audit `trace_id` is the full 32-char form.
 
 ### §6.10 — chat.lumi_error severity routing
 
@@ -796,7 +796,7 @@ Single errors are SEV-3 (logged, counter incremented). Sustained errors (>1/min)
 Test fixtures live in `services/chat-lumi/tests/fixtures/`:
 - `mock_cuo.rs` — programmable CUO stub for unit tests.
 - `mock_mm.rs` — in-process MM API mock that records posts/edits/patches.
-- `mock_brain.rs` — in-memory BRAIN audit sink.
+- `mock_memory.rs` — in-memory memory audit sink.
 - `mock_redis.rs` — Redis-in-process for rate limiter tests.
 
 ### §6.12 — Failure routing matrix
@@ -819,7 +819,7 @@ Test fixtures live in `services/chat-lumi/tests/fixtures/`:
 - **FR-CHAT-009** — retro-capture is sibling flow.
 - **FR-CUO-101 (placeholder)** — supervisor.
 - **FR-AI-014** — persona-stamped LLM via CUO.
-- **FR-BRAIN-111** — PII redaction.
+- **FR-MEMORY-111** — PII redaction.
 
 ---
 
@@ -1000,7 +1000,7 @@ All resolved. Deferred:
 | CUO budget unavailable in response | FR-AI-014 older version | audit row has budget_tokens_used=null + SEV-3 | Upgrade CUO |
 | Webhook payload too large (>1MB) | http 413 from chat-lumi | mention dropped; SEV-3 | Investigate message size |
 | Concurrent @lumi cancel from same user | both succeed; second is no-op | None | None |
-| BRAIN audit emit fails | logged + counter | mention not auditable | Operator restores BRAIN |
+| memory audit emit fails | logged + counter | mention not auditable | Operator restores memory |
 | OBS metrics collector down | metrics dropped | None visible | None |
 | MM hot-reload causes plugin re-init | plugin lifecycle | mention queue drained; no loss | None |
 | LLM hallucination in reply | n/a; not detectable | user sees wrong answer | Operator improves persona/safety rules |
@@ -1035,10 +1035,10 @@ All resolved. Deferred:
 - The CUO call timeout (60s) is calibrated against FR-CUO-101's stated SLA. Longer would block the placeholder forever; shorter would prematurely fail.
 - We emit `chat.lumi_skipped` (not an error) for tenant-disabled because it's an expected operational state, not a fault.
 - Why redact response separately (§1 #22): the model may emit data it inferred from training, not just what was in the prompt. Re-redacting the response catches these.
-- `mention_count` in the BRAIN payload is informational; we don't use it for billing (one CUO call = one billable unit regardless of mentions).
+- `mention_count` in the memory payload is informational; we don't use it for billing (one CUO call = one billable unit regardless of mentions).
 - We chose Lumi over other persona names because: (a) it's a single short syllable (easy to type in chat); (b) doesn't conflict with common usernames; (c) operator brand-recognition. Documented in DEC-490.
-- Channel context (`channel_member_count`, `user_is_admin`) is sent in CUO request but NOT stored in BRAIN audit (per FR-BRAIN-111 minimal-data principle). CUO uses it for one decision then discards.
-- The reply footer's trace hash (8 chars) is not cryptographically meaningful; it's a debugging hint. Operators correlating logs use the full 32-char form from BRAIN.
+- Channel context (`channel_member_count`, `user_is_admin`) is sent in CUO request but NOT stored in memory audit (per FR-MEMORY-111 minimal-data principle). CUO uses it for one decision then discards.
+- The reply footer's trace hash (8 chars) is not cryptographically meaningful; it's a debugging hint. Operators correlating logs use the full 32-char form from memory.
 - `is_imported` propagation from plugin → service is critical; without it, the service would not have access to the post's props field directly. We pass it pre-computed.
 - Builtin command parsing (`@lumi help`, `@lumi cancel`) is regex-anchored to `^\s*@lumi\s+<cmd>\s*$` so it doesn't match mid-sentence (`I asked @lumi help with X` is a regular question, not a help command).
 

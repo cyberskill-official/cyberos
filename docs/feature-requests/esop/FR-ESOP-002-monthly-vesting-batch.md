@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-ESOP-001, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-ESOP-001, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-ESOP-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2261 2026-05-17 — Closed enum `accrual_status` = {running, completed, partial, failed}; cardinality 4
   - DEC-2262 2026-05-17 — Deterministic per (grant, year_month); UNIQUE constraint enforces idempotency
   - DEC-2263 2026-05-17 — Status auto-advance: if vested_shares >= total_shares, mark FR-ESOP-001 grant.status = fully_vested
-  - DEC-2264 2026-05-17 — BRAIN audit kinds: esop.accrual_batch_started, esop.accrual_row_created, esop.accrual_grant_fully_vested, esop.accrual_batch_completed, esop.accrual_batch_failed
+  - DEC-2264 2026-05-17 — memory audit kinds: esop.accrual_batch_started, esop.accrual_row_created, esop.accrual_grant_fully_vested, esop.accrual_batch_completed, esop.accrual_batch_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without monthly batch, vesting tracking manual → error-prone
 
 ## §1 — Description (BCP-14 normative)
 
-The ESOP service **MUST** ship monthly vesting batch at `services/esop/src/vesting/` running EOM cron, deterministic calc, immutable accrual rows, 5 BRAIN audit kinds.
+The ESOP service **MUST** ship monthly vesting batch at `services/esop/src/vesting/` running EOM cron, deterministic calc, immutable accrual rows, 5 memory audit kinds.
 
 1. **MUST** validate `accrual_status` against closed enum per DEC-2261.
 
@@ -133,7 +133,7 @@ The ESOP service **MUST** ship monthly vesting batch at `services/esop/src/vesti
    GET  /v1/esop/grants/{id}/accruals (history per grant)
    ```
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-2264. PII per FR-BRAIN-111: vested_cumulative SHA256.
+8. **MUST** emit 5 memory audit kinds per DEC-2264. PII per FR-MEMORY-111: vested_cumulative SHA256.
 
 9. **MUST** thread trace_id from cron → calc → audit.
 
@@ -170,7 +170,7 @@ Sample accrual:
 ---
 
 ## §4 — Acceptance criteria
-1. **accrual_status enum cardinality 4**. 2. **Pre-cliff → vested=0**. 3. **Post-cliff linear**. 4. **At vest_months → vested=total**. 5. **Idempotent UNIQUE(grant, month)**. 6. **EOM cron 04:30**. 7. **Auto-fully_vested transition**. 8. **5 BRAIN audit kinds emitted**. 9. **PII scrubbed (counts SHA256)**. 10. **RLS denies cross-tenant**. 11. **CFO-only manual trigger**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE**. 14. **Deterministic (no now)**. 15. **Per-grant failure isolated**. 16. **Bigint shares**. 17. **Cancelled grants skipped**. 18. **Accelerated grants handled separately (FR-ESOP-005)**. 19. **History per grant queryable**. 20. **vest_start_date used (not grant_date)**.
+1. **accrual_status enum cardinality 4**. 2. **Pre-cliff → vested=0**. 3. **Post-cliff linear**. 4. **At vest_months → vested=total**. 5. **Idempotent UNIQUE(grant, month)**. 6. **EOM cron 04:30**. 7. **Auto-fully_vested transition**. 8. **5 memory audit kinds emitted**. 9. **PII scrubbed (counts SHA256)**. 10. **RLS denies cross-tenant**. 11. **CFO-only manual trigger**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE**. 14. **Deterministic (no now)**. 15. **Per-grant failure isolated**. 16. **Bigint shares**. 17. **Cancelled grants skipped**. 18. **Accelerated grants handled separately (FR-ESOP-005)**. 19. **History per grant queryable**. 20. **vest_start_date used (not grant_date)**.
 
 ---
 
@@ -209,7 +209,7 @@ async fn idempotent_double_run() {
 
 ## §7 — Dependencies
 **Upstream:** FR-ESOP-001.
-**Cross-module:** FR-MCP-007 (cron), FR-AUTH-101 (CFO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-MCP-007 (cron), FR-AUTH-101 (CFO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -229,7 +229,7 @@ async fn idempotent_double_run() {
 - §11.1 Calculator pure function: `(grant, as_of) → AccrualNumbers`.
 - §11.2 Cron via FR-MCP-007 `kind: 'esop.monthly_vesting'`, last day of month at 04:30.
 - §11.3 Auto-transition: post-accrual, UPDATE FR-ESOP-001 grants SET status='fully_vested' WHERE vested >= total.
-- §11.4 BRAIN audit body: grant_id, year_month, status; vested counts SHA256.
+- §11.4 memory audit body: grant_id, year_month, status; vested counts SHA256.
 - §11.5 Backfill: CFO can trigger via year_month param to catch up missed months.
 
 ---

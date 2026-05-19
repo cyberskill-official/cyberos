@@ -4,7 +4,7 @@ id: FR-AI-010
 title: "Streaming SSE end-to-end (token-by-token to client)"
 module: AI
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -12,7 +12,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-009]
 depends_on: [FR-AI-008, FR-AI-002]
 blocks: []

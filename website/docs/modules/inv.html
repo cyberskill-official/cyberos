@@ -127,7 +127,7 @@
  <div class="fact-card"><div class="label">Payment rails</div><div class="value">Stripe · Wise · VietQR · manual</div><div class="note">+ MoMo/ZaloPay/VNPay (P3)</div></div>
  <div class="fact-card"><div class="label">VN e-invoice</div><div class="value">Decree 123</div><div class="note">via vietnam-vat-invoice skill</div></div>
  <div class="fact-card"><div class="label">Depends on</div><div class="value">TIME · CRM · AUTH</div><div class="note">+ skills · S3 · NATS</div></div>
- <div class="fact-card"><div class="label">Feeds</div><div class="value">CRM · GL · BRAIN audit</div><div class="note">payment status events</div></div>
+ <div class="fact-card"><div class="label">Feeds</div><div class="value">CRM · GL · memory audit</div><div class="note">payment status events</div></div>
  </div>
  </div>
 </section>
@@ -173,7 +173,7 @@ flowchart LR
  GDT["🇻🇳 GDT API<br>e-invoice receipt"]
  PSP["💳 Payment rails<br>Stripe · Wise · VietQR · bank"]
  CUO["🎯 CUO<br>inv.dunning-draft@1"]
- BRAIN["🧠 BRAIN audit"]
+ memory["🧠 memory audit"]
  CRM["🤝 CRM<br>account context"]
  GL["📊 GL<br>revenue recognition"]
  PROJ --> TIME
@@ -186,15 +186,15 @@ flowchart LR
  INV -- "overdue ≥ 30d" --> CUO
  CUO -- "draft email" --> INV
  INV --> GL
- INV --> BRAIN
+ INV --> memory
  classDef hub fill:#a7f3d0,stroke:#064e3b,stroke-width:3px,color:#022c22
  classDef mod fill:#e0e7ff,stroke:#3730a3
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  classDef ext fill:#fef2f2,stroke:#b91c1c
  class INV hub
  class PROJ,TIME,CUO,CRM,GL mod
  class GDT,PSP ext
- class BRAIN brain
+ class memory memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -332,7 +332,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit + events"]
- BRAIN["🧠 BRAIN<br>inv.* lifecycle"]
+ memory["🧠 memory<br>inv.* lifecycle"]
  NATS["📡 NATS<br>inv.invoice.sent · inv.payment.received"]
  CRM["🏢 CRM<br>payment-status sync"]
  OBS["👁 OBS"]
@@ -363,7 +363,7 @@ graph TB
  PDF --> S3
  AGING --> PG
  DUN --> SEND
- REST --> BRAIN
+ REST --> memory
  REST --> NATS
  NATS --> CRM
  INV --> OBS
@@ -375,7 +375,7 @@ graph TB
  class GQL,REST,MCP,DRAFT,PDF,SEND,WEBHOOK,CASH,AGING,DUN,FX,VAT,MST,BANK planned
  class PG,S3 store
  class STR,WISE,VQR,GDT,SBV ext
- class BRAIN,NATS,CRM,OBS sink
+ class memory,NATS,CRM,OBS sink
  </div>
  </div>
 
@@ -398,7 +398,7 @@ graph TB
  <tr><td><code>vn_vat_bridge.rs</code></td><td>services/inv/src/vn_vat_bridge.rs</td><td>Bridge to <code>vietnam-vat-invoice</code> skill — Mẫu 01/GTGT generation + GDT submission.</td></tr>
  <tr><td><code>mst_bridge.rs</code></td><td>services/inv/src/mst_bridge.rs</td><td>Bridge to <code>vietnam-mst-validate</code> skill — customer + tenant MST validation before send.</td></tr>
  <tr><td><code>bank_bridge.rs</code></td><td>services/inv/src/bank_bridge.rs</td><td>Bridge to <code>vietnam-bank-transfer</code> skill — VietQR generator.</td></tr>
- <tr><td><code>audit_bridge.rs</code></td><td>services/inv/src/audit_bridge.rs</td><td>Lifecycle rows to BRAIN.</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/inv/src/audit_bridge.rs</td><td>Lifecycle rows to memory.</td></tr>
  <tr><td><code>nats_bridge.rs</code></td><td>services/inv/src/nats_bridge.rs</td><td>Event publisher — sent/paid/overdue events for CRM + KPI dashboards.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/inv/migrations/</td><td>sqlx migrations. UNIQUE on external_event_id; append-only on invoice after status=sent.</td></tr>
  </tbody>
@@ -726,7 +726,7 @@ sequenceDiagram
  participant S3 as AWS S3 (immutable)
  participant EM as Email service
  participant C as Customer
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
  participant N as 📡 NATS
 
  PM->>I: sendInvoice {id}
@@ -935,7 +935,7 @@ graph LR
  AUTH["🔐 AUTH"]
  TIME["⏱ TIME<br>entries · billable"]
  CRM["🏢 CRM<br>customer records"]
- BRAIN["🧠 BRAIN"]
+ memory["🧠 memory"]
  OBS["👁 OBS"]
  NATS["📡 NATS"]
  S3["🗂 S3 (immutable)"]
@@ -956,13 +956,13 @@ graph LR
  subgraph downstream ["INV feeds"]
  CRM2["🏢 CRM<br>payment status"]
  GL["📊 GL<br>revenue recognition"]
- BRAIN2["🧠 BRAIN<br>audit"]
+ MEMORY2["🧠 memory<br>audit"]
  CUO["🤖 CUO/CFO-skill"]
  end
  AUTH --> INV
  TIME --> INV
  CRM --> INV
- BRAIN --> INV
+ memory --> INV
  OBS --> INV
  NATS --> INV
  S3 --> INV
@@ -976,7 +976,7 @@ graph LR
  SBV --> INV
  INV --> CRM2
  INV --> GL
- INV --> BRAIN2
+ INV --> MEMORY2
  INV --> CUO
 
  classDef planned fill:#a7f3d0,stroke:#064e3b
@@ -984,7 +984,7 @@ graph LR
  classDef ext fill:#fef6e0,stroke:#9c750a
  class INV planned
  class AUTH,TIME,CRM,CRM2,GL,CUO,OBS,NATS planned
- class BRAIN,BRAIN2,S3,VAT,MST,BANK shipped
+ class memory,MEMORY2,S3,VAT,MST,BANK shipped
  class STR,WISE,VQR,GDT,SBV ext
  </div>
  </div>
@@ -1069,9 +1069,9 @@ graph LR
  <tr><td><strong>Invoice number gap incidents</strong></td><td>detected gaps / period</td><td>cron gap-check</td><td>= 0 unexplained</td></tr>
  <tr><td><strong>TIME rollup → INV bridge p95</strong></td><td>histogram (cycle close → draft ready)</td><td>OBS</td><td>≤ 60 s</td></tr>
  <tr><td><strong>Missing-Member draft rate</strong></td><td>drafts flagged missing-Member / total drafts</td><td>INV events</td><td>≤ 5% (after 24h grace)</td></tr>
- <tr><td><strong>Rate-card snapshot integrity</strong></td><td>line items where amount = snapshot × hours / total line items</td><td>BRAIN audit replay</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Rate-card snapshot integrity</strong></td><td>line items where amount = snapshot × hours / total line items</td><td>memory audit replay</td><td>= 1.0 (hard floor)</td></tr>
  <tr><td><strong>Dunning auto-send false-positive</strong></td><td>sends without approval token</td><td>OBS</td><td>= 0 (hard floor; CI gate)</td></tr>
- <tr><td><strong>Hóa đơn dual-approval rate</strong></td><td>cancellations with both AM + CFO tokens / total cancellations</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Hóa đơn dual-approval rate</strong></td><td>cancellations with both AM + CFO tokens / total cancellations</td><td>memory audit</td><td>= 1.0 (hard floor)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1121,7 +1121,7 @@ graph LR
 [draft] vat: $0.00 (USD invoice · no VN VAT)
 [draft] total: $25,200.00
 [invoice] INV-2026-04-001 · status=draft
-[audit] brain seq=16001</code></pre>
+[audit] memory seq=16001</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Send an invoice (VN tenant · e-invoice)</h3>
 <pre><code>$ cyberos-inv invoice send --id INV-2026-04-005
@@ -1136,7 +1136,7 @@ graph LR
 [email] sent to ke-toan@acme.vn
 [nats] inv.invoice.sent published
 [status] sent
-[audit] brain seq=16011</code></pre>
+[audit] memory seq=16011</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Generate VietQR for an invoice</h3>
 <pre><code>$ cyberos-inv vietqr --invoice INV-2026-04-005
@@ -1181,7 +1181,7 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
 
 [approved] cfo: hoa@cyberskill.com ✓
 [sent] email delivered to ar@acme.com
-[audit] brain seq=16031</code></pre>
+[audit] memory seq=16031</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Manual cash application</h3>
 <pre><code>$ cyberos-inv cash-app match \
@@ -1193,7 +1193,7 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
 [update] invoice.outstanding 45M VND → 0
 [update] invoice.status sent → paid
 [nats] inv.payment.received published
-[audit] brain seq=16041</code></pre>
+[audit] memory seq=16041</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. Issue credit note</h3>
 <pre><code>$ cyberos-inv credit-note issue \
@@ -1204,7 +1204,7 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
 
 [credit-note] CN-2026-04-001 issued
 [invoice] INV-2026-04-001 outstanding: $25,200 → $24,000
-[audit] brain seq=16051</code></pre>
+[audit] memory seq=16051</code></pre>
 </section>
 
 <!-- ============================================================ -->
@@ -1260,12 +1260,12 @@ $ cyberos-inv dunning approve --reminder R-001 --cfo-sign
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
  <a href="time.html" class="text-blue-700 underline">time.html</a> ·
  <a href="crm.html" class="text-blue-700 underline">crm.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
  <a href="ten.html" class="text-blue-700 underline">ten.html</a></li>
  <li><strong>Billable cascade rules:</strong> <a href="proj.html#engagement-economics" class="text-blue-700 underline">PROJ §2.6</a> — Engagement billing modes (T&amp;M / fixed-fee / retainer) + rate-card YAML.</li>
  <li><strong>TIME rollup contract:</strong> <a href="time.html#bigger-picture" class="text-blue-700 underline">TIME §0</a> — per-cycle billable rollup that INV consumes.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — invoice sent + paid events become BRAIN audit rows; revenue recognition traceable to chain hash.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — invoice sent + paid events become memory audit rows; revenue recognition traceable to chain hash.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — INV at P2 · start (P2, after TIME).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>Decree 123/2020/NĐ-CP</strong> — Vietnamese e-invoice mandate.</li>

@@ -4,7 +4,7 @@ id: FR-AI-009
 title: "Circuit breaker per (provider, model) with half-open recovery probing"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -12,7 +12,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-006, FR-AI-007, FR-AI-008, FR-AI-021]
 depends_on: [FR-AI-008, FR-AI-006]
 blocks: [FR-AI-021]
@@ -297,7 +297,7 @@ impl Clock for MockClock {
 13. **Status snapshot non-disturbing** — `status_all()` called 100 times in parallel during heavy `record_outcome` traffic does NOT slow `is_open` (verified by comparing latency histograms with/without status_all in flight).
 14. **Operator reset force-closes** — Open the breaker, then call `reset(&Bedrock, "model-x")`. Returns `true` (was open). Subsequent `is_open()` returns `false`. State == Closed. Counter == 0.
 15. **Probe pairing enforced (AUTHORING.md §3.8 rule 26)** — Emit a `probe_started` audit row, then either crash the test process OR let the probe call timeout silently. The OBS Grafana lint MUST detect the unpaired `probe_started` within 5 minutes and emit a `probe_unpaired` alert routed to oncall.
-16. **Transition sequence deterministic across runs (AUTHORING.md §3.9 rule 27)** — Two test runs feeding `[Failure, Failure, Failure, Failure, Failure, Success]` to the same `(Bedrock, "model-x")` breaker with the same `MockClock` MUST produce byte-identical sequences of `BrainRow` emissions (sorted by `ts_ns` then `extra.provider` then `extra.model`). `test_transitions_deterministic_across_runs` asserts `assert_eq!` on the captured `BrainRow` Vec.
+16. **Transition sequence deterministic across runs (AUTHORING.md §3.9 rule 27)** — Two test runs feeding `[Failure, Failure, Failure, Failure, Failure, Success]` to the same `(Bedrock, "model-x")` breaker with the same `MockClock` MUST produce byte-identical sequences of `MemoryRow` emissions (sorted by `ts_ns` then `extra.provider` then `extra.model`). `test_transitions_deterministic_across_runs` asserts `assert_eq!` on the captured `MemoryRow` Vec.
 
 ---
 

@@ -1,7 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: customer-360-audit
-description: Audits a customer-360@1 artefact against customer_360_rubric@1.0. Validates FM + SEC structure, identity-match-rate methodology, entity-model normalization, consent-posture jurisdiction completeness, data-quality scorecard arithmetic. Per CDP Institute + DAMA-DMBOK MDM conventions.
+description: >-
+  Audits a customer-360@1 artefact against customer_360_rubric@1.0. Validates FM + SEC structure, identity-match-rate methodology, entity-model normalization, consent-posture jurisdiction completeness, data-quality scorecard arithmetic. Per CDP Institute + DAMA-DMBOK MDM conventions. Audit one or more existing customer-360@1 markdowns against customer-360_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after customer-360-author. Use when user asks to "audit this customer 360" or "check the customer 360". Do NOT use for "draft a new customer 360" (use customer-360-author instead).
   Audit one or more existing customer-360@1 markdowns against
   customer-360_rubric@1.0. Produces a sibling .audit.md per artefact plus
   an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
@@ -16,7 +17,7 @@ metadata:
   cyberos-rubric-version: customer-360_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +26,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

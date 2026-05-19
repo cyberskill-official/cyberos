@@ -39,7 +39,7 @@ The CUO (Chief Universal Officer) is the universal persona. All other personas a
 1. **Identifies the persona.** Which C-role is best suited to drive this work? The router uses keyword matching, the funding-stage matrix (§3), the disambiguation matrix (§2), and the request's domain language.
 2. **Selects a workflow.** Within that persona's `workflows/` folder, which workflow's purpose matches the request?
 3. **Walks the chain.** The workflow declares a skill chain. The CUO invokes skills in declared order via the SKILL module's CLI (`cyberos-skill run <name>`), passing each step's output as the next step's input.
-4. **Records the chain decision** in the BRAIN audit chain per the memory module protocol (AGENTS.md §6, §11).
+4. **Records the chain decision** in the memory audit chain per the memory module protocol (AGENTS.md §6, §11).
 
 §1.2  When no persona scores above the confidence threshold, the CUO escalates to the operator with the top-3 candidate personas + their applicability rationales.
 
@@ -197,7 +197,7 @@ escalates_to:
 consults:
   - { persona: cuo/<persona-slug>, when: <condition> }
 audit_hooks:
-  - <e.g. "each step's output is logged to BRAIN audit chain via memory module">
+  - <e.g. "each step's output is logged to memory audit chain via memory module">
 ---
 ```
 
@@ -226,7 +226,7 @@ audit_hooks:
 
 - `docs/The C-Suite Reference.md` (project root) — the source document this catalog implements. §2 acronym matrix, §3 stage matrix, §4 persona template, §5 role profiles, §6 audit framework, §7 CyberSkill-specific, §8 commercial heuristics.
 - `skill/` — the source-of-truth for the skills that workflows chain. `skill/MODULE.md` §3 lists all 46 currently-shipped bundles.
-- `memory/` — the BRAIN. Every CUO routing decision + workflow invocation lands in the audit chain per `memory/docs/AGENTS.md` §6.
+- `memory/` — the memory. Every CUO routing decision + workflow invocation lands in the audit chain per `memory/docs/AGENTS.md` §6.
 - `cuo/docs/AGENTS.md` — protocol normativity (replaces the legacy CUO AGENTS.md after v2.0.0 rebuild).
 - `cuo/docs/SPEC.md` — contract summary.
 - `cuo/docs/ROUTING.md` — persona → workflow → skill-chain selection algorithm.

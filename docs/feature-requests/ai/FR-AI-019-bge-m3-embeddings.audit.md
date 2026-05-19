@@ -128,7 +128,7 @@ In a multi-tenant SaaS, this is unacceptable — single noisy tenants degrade UX
 
 BGE-M3's max sequence length is 8192 tokens. The `sentence-transformers` library SILENTLY truncates inputs longer than this — producing embeddings for "the first 8192 tokens of your text" rather than "your text."
 
-A user embedding a 50-page document would get a partial-document vector with no error indication. The downstream BRAIN Layer 2 retrieval would silently return based on the truncated portion. The retrieval failure is then attributed to "model quality" rather than "input was too long."
+A user embedding a 50-page document would get a partial-document vector with no error indication. The downstream memory Layer 2 retrieval would silently return based on the truncated portion. The retrieval failure is then attributed to "model quality" rather than "input was too long."
 
 #### Suggested fix
 
@@ -168,9 +168,9 @@ But PyTorch can fall back to CPU at runtime (driver crash, GPU memory pressure, 
 - §1 #6 + §2 cleanly separate marginal cost (per-call $0) from amortised infra cost (tracked elsewhere). Future engineers reading the spec understand WHY the cost ledger reports zero rather than wondering if it's a bug.
 - §1 #11 + checksum file is the supply-chain defence; the PR-discipline (model file + checksum file change in one PR) makes tampering a multi-step attack instead of a one-step.
 - §1 #5 + per-tenant round-robin dispatch is the multi-tenancy fairness primitive. Without it, the cache + breaker + retry chain can produce per-tenant tail-latency that's invisible to aggregate metrics.
-- §1 #12 + 413 response converts "silently wrong embedding" into "loud HTTP error." The downstream BRAIN consumer can choose to chunk OR reject; it doesn't unknowingly retrieve from a truncated vector.
+- §1 #12 + 413 response converts "silently wrong embedding" into "loud HTTP error." The downstream memory consumer can choose to chunk OR reject; it doesn't unknowingly retrieve from a truncated vector.
 - §1 #15 + GPU-failover detection is the observability primitive that converts "silent latency degradation" into "operator-actionable sev-2 event." Standard PyTorch behaviour is invisible; we make it visible.
-- §10 inventory grew from 5 rows to 19 — including the checksum-mismatch path, the per-tenant-starvation path, the model-version drift between regions path, the BRAIN-stored-vector-version-mismatch path, and the tokenizer-mismatch path. Each row has an unambiguous detection mechanism.
+- §10 inventory grew from 5 rows to 19 — including the checksum-mismatch path, the per-tenant-starvation path, the model-version drift between regions path, the memory-stored-vector-version-mismatch path, and the tokenizer-mismatch path. Each row has an unambiguous detection mechanism.
 - §11 documents the L4 break-even economics ($360/mo amortises within 2 active tenants), the BGE-M3-vs-alternatives evaluation rationale (multilingual MTEB scores, MIT license, dimension grain), and the slice-4 deployment scope (ONNX CPU fallback for dev workflows).
 
 ## §4 — Resolution

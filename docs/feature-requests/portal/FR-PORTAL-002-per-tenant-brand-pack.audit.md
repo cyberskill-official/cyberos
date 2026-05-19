@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands per-tenant brand pack (palette + logo + email overrides) and custom CNAME with ACME-issued TLS on top of FR-TEN-101 (tenant exists). Final form: 1,148 lines, 27 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 21 failure-mode rows, 20 implementation notes. 4 Postgres migrations, 6 REST endpoints + 1 CDN-public, 8 BRAIN audit kinds, ACME via instant-acme, WCAG 2.1 AA contrast at save-time, magic-bytes asset validation, Tera-sandbox email overrides, deterministic export, immutable versioning + activation pointer + rollback.
+The spec lands per-tenant brand pack (palette + logo + email overrides) and custom CNAME with ACME-issued TLS on top of FR-TEN-101 (tenant exists). Final form: 1,148 lines, 27 §1 normative clauses, 20 acceptance criteria, 10 verification tests, 21 failure-mode rows, 20 implementation notes. 4 Postgres migrations, 6 REST endpoints + 1 CDN-public, 8 memory audit kinds, ACME via instant-acme, WCAG 2.1 AA contrast at save-time, magic-bytes asset validation, Tera-sandbox email overrides, deterministic export, immutable versioning + activation pointer + rollback.
 
 6 issues caught by self-audit, all resolved.
 
@@ -45,7 +45,7 @@ The spec lands per-tenant brand pack (palette + logo + email overrides) and cust
 
 All 6 mechanical concerns addressed. SVG XSS mitigated by Content-Disposition at slice 1; ACME lifecycle acknowledged; rollback semantics clarified; CDN staleness window made explicit; renewal job race-safe; cross-table FK design rationalised.
 
-The 1,148-line length is justified by 4 migrations + 6 REST endpoints + ACME integration + image pipeline + WCAG validation + Tera sandbox + deterministic export + 8 BRAIN kinds; density comparable to peer FRs. Single largest sub-surface is the ACME flow (RFC 8555 compliance is non-trivial).
+The 1,148-line length is justified by 4 migrations + 6 REST endpoints + ACME integration + image pipeline + WCAG validation + Tera sandbox + deterministic export + 8 memory kinds; density comparable to peer FRs. Single largest sub-surface is the ACME flow (RFC 8555 compliance is non-trivial).
 
 **Score = 10/10.**
 

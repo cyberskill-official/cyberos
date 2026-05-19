@@ -11,8 +11,8 @@ slice: 8
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-RES-001, FR-CUO-101, FR-CRM-001, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-RES-001, FR-CUO-101, FR-CRM-001, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CUO-101, FR-CRM-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2071 2026-05-17 — Closed enum `hire_recommendation` = {hire_immediate, hire_q_plus_1, defer_pipeline_uncertain, reject_no_business_case}; cardinality 4
   - DEC-2072 2026-05-17 — Memo includes: skill gap analysis, pipeline correlation, cost projection (FR-HR-002 contract + FR-REW-004 deductions), 6-month ROI estimate
   - DEC-2073 2026-05-17 — Dual sign-off CEO + CFO required to convert memo to hiring action; FR-RES-002 marks role as "approved-hire" — slot reserved in capacity matrix
-  - DEC-2074 2026-05-17 — BRAIN audit kinds: res.hiring_memo_drafted, res.hiring_memo_signed, res.hiring_memo_dismissed, res.hiring_memo_approved_for_action
+  - DEC-2074 2026-05-17 — memory audit kinds: res.hiring_memo_drafted, res.hiring_memo_signed, res.hiring_memo_dismissed, res.hiring_memo_approved_for_action
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without hiring trigger, persistent over-allocation persists �
 
 ## §1 — Description (BCP-14 normative)
 
-The RES service **MUST** ship hiring memo at `services/res/src/hiring/` triggered by skill-gap + pipeline + cost projection + CEO+CFO dual-sign, 4 BRAIN audit kinds.
+The RES service **MUST** ship hiring memo at `services/res/src/hiring/` triggered by skill-gap + pipeline + cost projection + CEO+CFO dual-sign, 4 memory audit kinds.
 
 1. **MUST** validate `hire_recommendation` against closed enum per DEC-2071.
 
@@ -136,7 +136,7 @@ The RES service **MUST** ship hiring memo at `services/res/src/hiring/` triggere
    GET  /v1/res/hiring-memos                   (list)
    ```
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-2074. PII per FR-BRAIN-111: cost projections SHA-256 hashed.
+8. **MUST** emit 4 memory audit kinds per DEC-2074. PII per FR-MEMORY-111: cost projections SHA-256 hashed.
 
 9. **MUST** thread trace_id from trigger → projector → memo → sign → audit.
 
@@ -186,7 +186,7 @@ Sample memo:
 ---
 
 ## §4 — Acceptance criteria
-1. **hire_recommendation enum cardinality 4**. 2. **Auto-trigger at 4w over-allocation + pipeline velocity**. 3. **Manual trigger CEO/CHRO**. 4. **Cost projection includes statutory**. 5. **CEO + CFO dual-sign required**. 6. **Same-person rejected**. 7. **approved_for_action requires both signs**. 8. **hire_slot_reserved set on approval (capacity matrix marker)**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (cost SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **AI failure → minimal memo + sev-2**. 15. **Dismiss allowed at any pre-action stage**. 16. **Status workflow enforced**. 17. **Auto-trigger idempotent per tenant per week**. 18. **Memo body JSONB schema validated**. 19. **Region required (drives cost projection)**. 20. **List endpoint paginated**.
+1. **hire_recommendation enum cardinality 4**. 2. **Auto-trigger at 4w over-allocation + pipeline velocity**. 3. **Manual trigger CEO/CHRO**. 4. **Cost projection includes statutory**. 5. **CEO + CFO dual-sign required**. 6. **Same-person rejected**. 7. **approved_for_action requires both signs**. 8. **hire_slot_reserved set on approval (capacity matrix marker)**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (cost SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except status cols**. 14. **AI failure → minimal memo + sev-2**. 15. **Dismiss allowed at any pre-action stage**. 16. **Status workflow enforced**. 17. **Auto-trigger idempotent per tenant per week**. 18. **Memo body JSONB schema validated**. 19. **Region required (drives cost projection)**. 20. **List endpoint paginated**.
 
 ---
 
@@ -228,7 +228,7 @@ async fn same_person_both_roles_rejected() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CUO-101, FR-CRM-001.
-**Cross-module:** FR-RES-001 (over-allocation signal), FR-RES-002 (slot reserved), FR-HR-002 (contract type), FR-REW-004 (statutory deductions), FR-AI-003 (LLM), FR-AUTH-101 (CEO/CFO roles), FR-BRAIN-111 (PII).
+**Cross-module:** FR-RES-001 (over-allocation signal), FR-RES-002 (slot reserved), FR-HR-002 (contract type), FR-REW-004 (statutory deductions), FR-AI-003 (LLM), FR-AUTH-101 (CEO/CFO roles), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -249,7 +249,7 @@ async fn same_person_both_roles_rejected() {
 - §11.2 Cost projector uses FR-REW-004 SI rate formulas + FR-HR-005 minimum_wage policy.
 - §11.3 AI prompt: structured "Given gap + pipeline + costs, recommend one of: hire_immediate / hire_q+1 / defer / reject. Explain reasoning."
 - §11.4 hire_slot_reserved column drives FR-RES-002 Gantt to show pending hire row.
-- §11.5 BRAIN audit body: memo_id, role, region, recommendation; cost SHA256.
+- §11.5 memory audit body: memo_id, role, region, recommendation; cost SHA256.
 
 ---
 

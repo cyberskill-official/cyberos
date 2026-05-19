@@ -4,7 +4,7 @@ id: FR-AI-020
 title: "BGE-reranker-v2-m3 cross-encoder for KB reranking (per-region sidecar; CPU fallback)"
 module: AI
 priority: COULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 4
@@ -12,7 +12,7 @@ slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-006, FR-AI-008, FR-AI-009, FR-AI-016, FR-AI-019]
 depends_on: [FR-AI-019]
 blocks: [FR-KB-006]
@@ -20,7 +20,7 @@ blocks: [FR-KB-006]
 # ───── Source contracts ─────
 source_pages:
   - website/docs/modules/ai.html#rerank
-  - website/docs/modules/brain.html#kb-retrieval
+  - website/docs/modules/memory.html#kb-retrieval
 source_decisions:
   - DEC-094 (rerank lift +15-25% precision-at-10 on multilingual KB benchmarks)
   - Cost ceiling: rerank-via-Cohere $0.001/search; at 10K searches/tenant/mo × 50 tenants = $500/mo
@@ -45,7 +45,7 @@ modified_files:
   - services/ai-gateway/src/router/provider.rs                    # add call_rerank to trait
   - services/ai-gateway/config/cost_rates.yaml                    # bge-reranker-v2-m3 input=0 output=0
   - services/ai-gateway/config/embeddings.yaml                    # add rerank sidecar URLs per region
-  - services/ai-gateway/src/brain_writer.rs                       # canonical::invocation_rerank builder
+  - services/ai-gateway/src/memory_writer.rs                       # canonical::invocation_rerank builder
 allowed_tools:
   - file_read: services/ai-gateway/**
   - file_write: services/ai-gateway/{src,tests,embeddings}/**
@@ -71,11 +71,11 @@ sub_tasks:
   - "0.5h: Token-budget validation (query + sum(candidate tokens) ≤ 8192 × 100; reject 413)"
   - "0.5h: Mid-run GPU failover detection (mirrors FR-AI-019 §1 #15)"
   - "0.5h: Score normalisation (sigmoid → [0,1]) AND raw-logit reporting (caller can choose)"
-  - "0.5h: ai.invocation BRAIN row builder for rerank (canonical::invocation_rerank)"
+  - "0.5h: ai.invocation memory row builder for rerank (canonical::invocation_rerank)"
   - "0.5h: Skipped-rerank signalling (when sidecar unavailable, KB caller MUST know rerank was skipped)"
   - "0.5h: Tests — single rerank, batch, quality (known-relevance fixtures), fallback, GPU/CPU latency, token-budget rejection, fairness"
   - "0.5h: OTel metrics + alarms"
-risk_if_skipped: "KB retrieval relies on raw embedding similarity (cosine) without rerank lift. Top-10 KB results include embedding-similar-but-actually-irrelevant noise; auto-runbook quality (FR-OBS-007) and KB Q&A precision both degrade by ~15-25%. Mitigation: priority is COULD — KB module functions without rerank, just at lower precision. Descope-friendly under FR-AI-016 if BRAIN/KB ships behind schedule. Cost of NOT shipping: KB precision floor degrades; managed-rerank fallback (Cohere ~$0.001/search × 50 tenants × 10K searches/mo = $500/mo) becomes the operational alternative."
+risk_if_skipped: "KB retrieval relies on raw embedding similarity (cosine) without rerank lift. Top-10 KB results include embedding-similar-but-actually-irrelevant noise; auto-runbook quality (FR-OBS-007) and KB Q&A precision both degrade by ~15-25%. Mitigation: priority is COULD — KB module functions without rerank, just at lower precision. Descope-friendly under FR-AI-016 if memory/KB ships behind schedule. Cost of NOT shipping: KB precision floor degrades; managed-rerank fallback (Cohere ~$0.001/search × 50 tenants × 10K searches/mo = $500/mo) becomes the operational alternative."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -86,7 +86,7 @@ The AI Gateway service **MAY** offer a BGE-reranker-v2-m3 cross-encoder service 
 2. **MUST** accept a `(query, candidates)` request where `candidates` is a list of up to **100 documents** (hard cap per §1 #6). Returns scored pairs: `Vec<(original_index, score)>` sorted descending by score, with the original-index preservation so callers can map back to their source list.
 3. **MUST** complete a batch of (query × 50 candidates) within **100ms p95** on GPU; CPU fallback budget widens to **600ms p95**. SLO assertions in `rerank_test.rs` with 1000-sample latency measurements.
 4. **MUST** report `cost: 0.0` to the cost-ledger per call (self-hosted = no marginal cost; amortised infra tracked separately per FR-AI-019 §1 #6 pattern).
-5. **MUST** emit one `ai.invocation` BRAIN audit row per call, via the `canonical::invocation_rerank` builder added to FR-AI-003's BRAIN bridge. Row payload: `tenant_id`, `agent_persona`, `model: "bge-reranker-v2-m3"`, `model_sha256`, `actual_usd: 0.0`, `latency_ms`, `query_token_count`, `candidate_count`, `total_token_count`, `device`, `request_id`. Mirrors FR-AI-002's invocation-row schema with rerank-specific fields.
+5. **MUST** emit one `ai.invocation` memory audit row per call, via the `canonical::invocation_rerank` builder added to FR-AI-003's memory bridge. Row payload: `tenant_id`, `agent_persona`, `model: "bge-reranker-v2-m3"`, `model_sha256`, `actual_usd: 0.0`, `latency_ms`, `query_token_count`, `candidate_count`, `total_token_count`, `device`, `request_id`. Mirrors FR-AI-002's invocation-row schema with rerank-specific fields.
 6. **MUST** validate the candidate list size: more than 100 candidates returns HTTP 413 PAYLOAD_TOO_LARGE with body `{"error":"too_many_candidates","max":100,"actual":<n>}`. The KB module is responsible for pre-filtering to ≤ 100 before invoking rerank; this gate makes the contract explicit rather than silently truncating.
 7. **MUST** validate the total token budget: `query_tokens + sum(candidate_tokens) <= 8192 × 100 = 819,200` (the cross-encoder's per-pair input is `(query, candidate)` with each pair limited to ~512 tokens; total budget is the practical limit). Over-budget → HTTP 413 with breakdown of `query_tokens`, `total_candidate_tokens`, `max_total`. Caller must trim or chunk.
 8. **MUST** be deployed **per-region** matching the FR-AI-019 sidecar pattern. URL config lives in `services/ai-gateway/config/embeddings.yaml` under `bge_rerank_sidecars`. Per-region deployment satisfies FR-AI-016 residency pinning by construction; absence of a sidecar in the required region surfaces as `RouterError::NoSidecarForRegion` (handled by FR-AI-016 §1 #6).
@@ -379,7 +379,7 @@ Content-Type: application/json
 5. **GPU latency p95 ≤ 100ms** — 1000 calls of `(query × 50 candidates)`; `percentile(latencies, 0.95) <= 100`.
 6. **CPU fallback latency p95 ≤ 600ms** — 1000 calls; `<= 600`.
 7. **Cost ledger reports zero** — `RerankProvider::cost_for_rerank(any, any) == 0.0`.
-8. **Audit row emitted** — Every rerank call emits exactly one `ai.invocation` BRAIN row with rerank-specific fields populated.
+8. **Audit row emitted** — Every rerank call emits exactly one `ai.invocation` memory row with rerank-specific fields populated.
 9. **Too many candidates returns 413** — `RerankRequest` with 150 candidates → `RerankError::TooManyCandidates { max: 100, actual: 150 }`.
 10. **Token budget exceeded returns 413** — `RerankRequest` with query × candidates totaling > 819,200 tokens → `RerankError::TokenBudgetExceeded`.
 11. **Per-region sidecar selection** — Request with `region=Eu1` selects `http://bge-rerank-eu-1:5070`; absence of EU sidecar → `NoSidecarForRegion`.
@@ -458,7 +458,7 @@ async fn cost_for_rerank_returns_zero() {
 async fn audit_row_emitted_on_rerank() {
     let request_id = "req_test_rerank_001";
     let _ = handlers::rerank::handle(test_rerank_request(request_id)).await;
-    let rows = brain_test_helper::find_rows("ai.invocation", request_id);
+    let rows = memory_test_helper::find_rows("ai.invocation", request_id);
     assert_eq!(rows.len(), 1);
     let p = &rows[0].payload;
     assert_eq!(p["model"], "bge-reranker-v2-m3");

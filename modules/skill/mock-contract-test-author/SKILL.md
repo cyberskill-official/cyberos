@@ -1,18 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: mock-contract-test-author
-description: |
-  When an FR declares an external dependency that does not yet exist
-  (missing API key, future service, paywall, 2FA challenge, CAPTCHA,
-  third-party that needs procurement), author a `mock-contract-test@1`
-  artefact: (a) the exact expected Request/Response shape of the
-  missing service, (b) a Mock Service implementation that satisfies
-  the contract, (c) the contract-test suite (one test per shape) that
-  the Mock passes today and the Real service will pass tomorrow with
-  a one-line import swap, (d) a `shipped + mocked-dependency` BACKLOG
-  status tag with sunset criteria. Used by
-  chief-technology-officer/implement-backlog-frs as step 7, conditional
-  on `fr.has_external_dependency == true`.
+description: >-
+  When an FR declares an external dependency that does not yet exist (missing API key, future service, paywall, 2FA challenge, CAPTCHA, third-party that needs procurement), author a `mock-contract-test@1` artefact: (a) the exact expected Request/Response shape of the missing service, (b) a Mock Service implementation that satisfies the contract, (c) the contract-test suite (one test per shape) that the Mock passes today and the Real service will pass tomorrow with a one-line import swap, (d) a `shipped + mocked-dependency` BACKLOG status tag with sunset criteria. Used by chief-technology-officer/ship-feature-requests as step 7, conditional on `fr.has_external_dependency == true`. Use when user asks to "draft a mock contract test" or "create the mock contract test". Do NOT use for "audit existing mock contract test" (use mock-contract-test-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -22,7 +12,7 @@ metadata:
   cyberos-rubric-target: mock_contract_test_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -41,7 +31,7 @@ outputs:
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - workflow `chief-technology-officer/implement-backlog-frs` step 7 when fr.has_external_dependency is true
+  - workflow `chief-technology-officer/ship-feature-requests` step 7 when fr.has_external_dependency is true
 blockers:
   - "FR's external dependency is undeclared — author must list the dependency before this skill runs"
   - "downstream service is being actively built in parallel — mock is wasted effort; pause this FR"

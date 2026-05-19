@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-AUTH-105, FR-REW-002, FR-REW-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-AUTH-105, FR-REW-002, FR-REW-003, FR-MEMORY-111]
 depends_on: [FR-HR-001, FR-AUTH-101]
 blocks: [FR-REW-002, FR-REW-003, FR-REW-005, FR-REW-007, FR-REW-010]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2151 2026-05-17 — Closed enum `income_kind` = {p1_base, p2_allowance_housing, p2_allowance_transport, p2_allowance_meal, p2_allowance_other, p3_bonus_quarterly, p3_commission, p3_spot_award}; cardinality 8
   - DEC-2152 2026-05-17 — Comp data encrypted in separate KMS keyspace (rew-{tenant_id}) — distinct from HR keyspace; ROOT-CFO only can decrypt
   - DEC-2153 2026-05-17 — Per-Member comp records IMMUTABLE; changes via new row + valid_from/valid_to
-  - DEC-2154 2026-05-17 — BRAIN audit kinds: rew.comp_set, rew.comp_corrected, rew.comp_decrypted, rew.comp_encryption_failed
+  - DEC-2154 2026-05-17 — memory audit kinds: rew.comp_set, rew.comp_corrected, rew.comp_decrypted, rew.comp_encryption_failed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without 3P schema, comp scattered → governance impossible. W
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship 3P income schema at `services/rew/src/comp/` with 8-kind enum + separate KMS keyspace + CFO-only decrypt + immutable rows, 4 BRAIN audit kinds.
+The REW service **MUST** ship 3P income schema at `services/rew/src/comp/` with 8-kind enum + separate KMS keyspace + CFO-only decrypt + immutable rows, 4 memory audit kinds.
 
 1. **MUST** validate `income_kind` against closed enum per DEC-2151.
 
@@ -130,7 +130,7 @@ The REW service **MUST** ship 3P income schema at `services/rew/src/comp/` with 
    GET  /v1/rew/members/{id}/comp-history  (CFO sees encrypted refs)
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2154. PII per FR-BRAIN-111: encrypted_amount never in BRAIN chain; income_kind enum ok; member_id (uuid) ok.
+7. **MUST** emit 4 memory audit kinds per DEC-2154. PII per FR-MEMORY-111: encrypted_amount never in memory chain; income_kind enum ok; member_id (uuid) ok.
 
 8. **MUST** thread trace_id from set / decrypt → audit.
 
@@ -180,7 +180,7 @@ Sample decrypt response (CFO-only):
 ---
 
 ## §4 — Acceptance criteria
-1. **income_kind enum cardinality 8**. 2. **CFO-only decrypt**. 3. **Non-CFO 403 + sev-1 audit**. 4. **Separate KMS keyspace (rew-{tenant})**. 5. **Immutable rows**. 6. **Correction via correction_of**. 7. **4 BRAIN audit kinds emitted**. 8. **encrypted_amount never in BRAIN chain**. 9. **RLS denies cross-tenant**. 10. **Trace_id preserved**. 11. **Access log append-only**. 12. **Member-week comp query indexable**. 13. **valid_from + valid_to range**. 14. **Currency CHAR(3) default VND**. 15. **set_by audit-traceable**. 16. **Tenant comp KMS key created at provisioning**. 17. **Cross-tenant KMS rejection**. 18. **CFO email notification on decrypt (sev-1)**. 19. **Append-only via REVOKE UPDATE/DELETE**. 20. **3P composition: P1 + P2 + P3 = total comp**.
+1. **income_kind enum cardinality 8**. 2. **CFO-only decrypt**. 3. **Non-CFO 403 + sev-1 audit**. 4. **Separate KMS keyspace (rew-{tenant})**. 5. **Immutable rows**. 6. **Correction via correction_of**. 7. **4 memory audit kinds emitted**. 8. **encrypted_amount never in memory chain**. 9. **RLS denies cross-tenant**. 10. **Trace_id preserved**. 11. **Access log append-only**. 12. **Member-week comp query indexable**. 13. **valid_from + valid_to range**. 14. **Currency CHAR(3) default VND**. 15. **set_by audit-traceable**. 16. **Tenant comp KMS key created at provisioning**. 17. **Cross-tenant KMS rejection**. 18. **CFO email notification on decrypt (sev-1)**. 19. **Append-only via REVOKE UPDATE/DELETE**. 20. **3P composition: P1 + P2 + P3 = total comp**.
 
 ---
 
@@ -224,8 +224,8 @@ async fn immutable_append_only() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
-**Downstream:** FR-REW-002 (versioning), FR-REW-003 (P1 invariant), FR-REW-005 (payroll), FR-REW-007 (BP), FR-REW-010 (BRAIN exclusion).
-**Cross-module:** FR-AUTH-105 (KMS), FR-AUTH-101 (CFO role), FR-BRAIN-111 (PII).
+**Downstream:** FR-REW-002 (versioning), FR-REW-003 (P1 invariant), FR-REW-005 (payroll), FR-REW-007 (BP), FR-REW-010 (memory exclusion).
+**Cross-module:** FR-AUTH-105 (KMS), FR-AUTH-101 (CFO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -246,7 +246,7 @@ async fn immutable_append_only() {
 - §11.2 Amount stored encrypted at row level; decryption per-row via KMS.
 - §11.3 Encryption envelope: amount_vnd → JSON → encrypt → BYTEA.
 - §11.4 CFO email notification on decrypt via FR-EMAIL-009 (sev-1 path).
-- §11.5 BRAIN audit body: comp_id, member_id, income_kind, access_kind; amount NEVER in chain.
+- §11.5 memory audit body: comp_id, member_id, income_kind, access_kind; amount NEVER in chain.
 
 ---
 

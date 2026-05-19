@@ -217,7 +217,7 @@ def _fmt_ts(ns: int) -> str:
 
 def format_text(d: Digest) -> str:
     lines: list[str] = []
-    lines.append(f"BRAIN digest — {d.store}")
+    lines.append(f"memory digest — {d.store}")
     lines.append(f"  window : {_fmt_ts(d.window_start_ns)} → {_fmt_ts(d.window_end_ns)}")
     lines.append(f"  rows   : {d.total_rows}")
     lines.append("")
@@ -267,7 +267,7 @@ def format_markdown(d: Digest) -> str:
     title_window = (
         f"{_fmt_ts(d.window_start_ns).split()[0]} → {_fmt_ts(d.window_end_ns).split()[0]}"
     )
-    lines.append(f"# BRAIN digest — {title_window}")
+    lines.append(f"# memory digest — {title_window}")
     lines.append("")
     lines.append(f"Store: `{d.store}`  ·  rows in window: **{d.total_rows}**")
     lines.append("")

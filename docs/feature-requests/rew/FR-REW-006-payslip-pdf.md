@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-REW-005, FR-DOC-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-REW-005, FR-DOC-001, FR-MEMORY-111]
 depends_on: [FR-REW-005]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2201 2026-05-17 — Closed enum `pdf_render_status` = {queued, rendering, rendered, verification_failed, failed}; cardinality 5
   - DEC-2202 2026-05-17 — Stored PDF blob in FR-DOC-001 with sha256 metadata; member can download via portal
   - DEC-2203 2026-05-17 — Verification: post-render, recompute sha256; expected matches deterministic-replay value
-  - DEC-2204 2026-05-17 — BRAIN audit kinds: rew.payslip_pdf_rendered, rew.payslip_pdf_verified, rew.payslip_pdf_verification_failed
+  - DEC-2204 2026-05-17 — memory audit kinds: rew.payslip_pdf_rendered, rew.payslip_pdf_verified, rew.payslip_pdf_verification_failed
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without deterministic render, member challenge 'this is wrong'
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship payslip PDF render at `services/rew/src/pdf/` deterministic via Tectonic + pinned fonts + sha256 verification, 3 BRAIN audit kinds.
+The REW service **MUST** ship payslip PDF render at `services/rew/src/pdf/` deterministic via Tectonic + pinned fonts + sha256 verification, 3 memory audit kinds.
 
 1. **MUST** validate `pdf_render_status` against closed enum per DEC-2201.
 
@@ -119,7 +119,7 @@ The REW service **MUST** ship payslip PDF render at `services/rew/src/pdf/` dete
    POST /v1/rew/payslips/{id}/verify          (CFO re-verify)
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-2204. PII per FR-BRAIN-111: sha256 in chain (not PII); content never in chain.
+7. **MUST** emit 3 memory audit kinds per DEC-2204. PII per FR-MEMORY-111: sha256 in chain (not PII); content never in chain.
 
 8. **MUST** thread trace_id from render → verify → audit.
 
@@ -160,7 +160,7 @@ Sample status:
 ---
 
 ## §4 — Acceptance criteria
-1. **pdf_render_status enum cardinality 5**. 2. **Tectonic deterministic**. 3. **Fonts pinned in template**. 4. **SHA256 verified post-render**. 5. **Mismatch → sev-1 + status=verification_failed**. 6. **FR-DOC-001 storage**. 7. **3 BRAIN audit kinds emitted**. 8. **PII: content never in chain; sha256 ok**. 9. **RLS denies cross-tenant**. 10. **CFO-only render trigger**. 11. **Member can download own payslip**. 12. **Trace_id preserved**. 13. **UNIQUE(payslip_id)**. 14. **Append-only via REVOKE except status cols**. 15. **Replay produces byte-identical**. 16. **Template versioned**. 17. **Render perf < 5s per payslip**. 18. **Bulk render parallel**. 19. **Render failure → status=failed + sev-2**. 20. **Multilingual support (vi/en)**.
+1. **pdf_render_status enum cardinality 5**. 2. **Tectonic deterministic**. 3. **Fonts pinned in template**. 4. **SHA256 verified post-render**. 5. **Mismatch → sev-1 + status=verification_failed**. 6. **FR-DOC-001 storage**. 7. **3 memory audit kinds emitted**. 8. **PII: content never in chain; sha256 ok**. 9. **RLS denies cross-tenant**. 10. **CFO-only render trigger**. 11. **Member can download own payslip**. 12. **Trace_id preserved**. 13. **UNIQUE(payslip_id)**. 14. **Append-only via REVOKE except status cols**. 15. **Replay produces byte-identical**. 16. **Template versioned**. 17. **Render perf < 5s per payslip**. 18. **Bulk render parallel**. 19. **Render failure → status=failed + sev-2**. 20. **Multilingual support (vi/en)**.
 
 ---
 
@@ -197,7 +197,7 @@ async fn pinned_fonts_in_template() {
 
 ## §7 — Dependencies
 **Upstream:** FR-REW-005.
-**Cross-module:** FR-DOC-001 (storage), FR-AUTH-101 (CFO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-001 (storage), FR-AUTH-101 (CFO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -216,7 +216,7 @@ async fn pinned_fonts_in_template() {
 ## §11 — Implementation notes
 - §11.1 Tectonic Rust crate `tectonic = "0.15"`; compiles deterministically when fonts + packages pinned.
 - §11.2 Fonts: pin to system path or bundle in image.
-- §11.3 BRAIN audit body: payslip_id, sha256, status; content never in chain.
+- §11.3 memory audit body: payslip_id, sha256, status; content never in chain.
 - §11.4 Bulk render: tokio parallel with bounded concurrency (4 at a time).
 - §11.5 Member portal access via FR-PORTAL-001 scoped view.
 

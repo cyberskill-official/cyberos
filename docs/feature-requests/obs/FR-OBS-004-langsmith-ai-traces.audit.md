@@ -29,7 +29,7 @@ First-pass §10 said "drop export silently" on first failure. Transient blips lo
 First-pass §1 #4 used a single URL `https://langsmith.cyberos.world`. Sg1 + Eu1 + Vn1 tenants need per-region. Resolved: §1 #4 per-region URLs; deploy/obs/langsmith-config.yaml; AC #10.
 
 ### ISS-005 — Per-tenant opt-in audit row not specified
-First-pass mentioned `langsmith_export: bool` policy field but no audit row when toggled. Privacy decision should be auditable. Resolved: §1 #3 enabled-via-FR-AI-021 CLI emits `obs.langsmith_export_enabled` BRAIN row; AC #16.
+First-pass mentioned `langsmith_export: bool` policy field but no audit row when toggled. Privacy decision should be auditable. Resolved: §1 #3 enabled-via-FR-AI-021 CLI emits `obs.langsmith_export_enabled` memory row; AC #16.
 
 ### ISS-006 — Payload size limit unspecified
 First-pass had no truncation. Huge payloads (RAG context) crash LangSmith UI. Resolved: §1 #12 100KB cap with marker; AC #11 + §5 test.

@@ -3,7 +3,7 @@ id: FR-OBS-006
 title: "Tail-based sampling at OTel collector — 100% errors/5xx/slow/flagged + 10% normal + decision_wait + flagged-tenants config"
 module: OBS
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-005, FR-AI-022, FR-AI-021]
 depends_on: [FR-OBS-001]
 blocks: []
@@ -181,7 +181,7 @@ pub async fn flag_tenant(tenant_id: Uuid, confirm: bool) -> Result<(), CliError>
     current.push(tenant_id.to_string());
     std::fs::write(path, serde_yaml::to_string(&current)?)?;
     // Collector picks up via file-watch within 30s
-    brain::emit(canonical::tenant_flagged_for_sampling(tenant_id, claims.subject_id, request_id)).await?;
+    memory::emit(canonical::tenant_flagged_for_sampling(tenant_id, claims.subject_id, request_id)).await?;
     Ok(())
 }
 ```
@@ -335,7 +335,7 @@ All resolved. Deferred:
 - Flagged-tenants is the operational primitive for "investigate this tenant deeply." Flag → wait → un-flag pattern.
 - num_traces 100K caps memory at ~1GB at slice-2 load. Higher would over-provision; lower would drop traces during bursts.
 - Per-route latency budgets recognise that "slow" is route-specific. ai-gateway 5s is normal; auth 5s is incident.
-- The CLI `cyberos-ai flag-tenant` is the operator surface; emits BRAIN audit row; 24h auto-unflag is FR-AI-021 enhancement (slice 4+).
+- The CLI `cyberos-ai flag-tenant` is the operator surface; emits memory audit row; 24h auto-unflag is FR-AI-021 enhancement (slice 4+).
 
 ---
 

@@ -14,7 +14,7 @@ docs/non-functional-requirements/
 │   ├── NFR-AI-001-provider-failover-budget.md
 │   └── …
 ├── auth/                                        # AUTH NFRs
-├── brain/                                       # BRAIN (memory) NFRs
+├── memory/                                       # memory (memory) NFRs
 ├── chat/                                        # CHAT NFRs
 ├── obs/                                         # Observability NFRs
 └── …                                            # one folder per module
@@ -43,7 +43,7 @@ The required frontmatter keys are:
 ```yaml
 id: NFR-<MODULE>-<NUMBER>
 title: "<one-line, ≤80 chars>"
-module: <AI | AUTH | BRAIN | CHAT | OBS | …>
+module: <AI | AUTH | memory | CHAT | OBS | …>
 category: <performance | reliability | security | privacy | scalability | observability | maintainability | usability | compliance>
 priority: <MUST | SHOULD | COULD>
 verification: <T | I | A | D>
@@ -65,7 +65,7 @@ related_frs: [FR-…, FR-…]
 
 ## Batch authoring history
 
-- **Batch 1 (2026-05-18)** — 42 NFRs across AI/OBS/AUTH/BRAIN/CHAT.
+- **Batch 1 (2026-05-18)** — 42 NFRs across AI/OBS/AUTH/memory/CHAT.
   Resolves ~50 of the `(FR pending)` placeholders in the rendered catalog.
 - Subsequent batches will cover SKILL, CUO, MCP, GraphQL, REW, CP, TEN, KMS,
   EMAIL, KB, NATS, and the remaining cross-cutting modules.

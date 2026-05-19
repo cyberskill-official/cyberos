@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-002, FR-INV-003, FR-INV-005, FR-INV-006, FR-INV-007, FR-TIME-009, FR-TEN-003, FR-TEN-102, FR-PORTAL-001, FR-PORTAL-006, FR-CRM-001, FR-AUTH-101, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-INV-002, FR-INV-003, FR-INV-005, FR-INV-006, FR-INV-007, FR-TIME-009, FR-TEN-003, FR-TEN-102, FR-PORTAL-001, FR-PORTAL-006, FR-CRM-001, FR-AUTH-101, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-TIME-009]   # FR-TIME-009 placeholder — not yet specified
 blocks: [FR-INV-002, FR-INV-007, FR-INV-009, FR-INV-011]   # INV-009/011 use INV-001 invoice substrate; INV-003/005/006 already shipped + depend on AUTH-101 instead of this FR
 
@@ -35,7 +35,7 @@ source_decisions:
   - DEC-1371 2026-05-17 — Write-off requires CFO + reason; preserves audit trail; surfaces in financial reports per FR-INV-2xx
   - DEC-1372 2026-05-17 — VAT handling at slice 1: per-line VAT rate (decimal 0-100%), defaults to engagement-configured rate; line.amount_minor is pre-tax; totals computed at render time
   - DEC-1373 2026-05-17 — Multi-currency support deferred to FR-INV-002; slice 1 = engagement.billing_currency only (single-currency per invoice per DEC-1368 derivative)
-  - DEC-1374 2026-05-17 — BRAIN audit kinds: inv.draft_created, inv.lines_added, inv.status_transitioned, inv.approved, inv.sent, inv.paid, inv.void, inv.written_off, inv.correction_added
+  - DEC-1374 2026-05-17 — memory audit kinds: inv.draft_created, inv.lines_added, inv.status_transitioned, inv.approved, inv.sent, inv.paid, inv.void, inv.written_off, inv.correction_added
 
 build_envelope:
   language: rust 1.81
@@ -110,7 +110,7 @@ risk_if_skipped: "Without invoice substrate, the entire billing → revenue → 
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 migrations, 8-state status FSM, append-only line corrections, rate-card snapshot, per-engagement scoping, gap-free per-tenant numbering, CFO-gated write-off, and 9 BRAIN audit kinds. Anchors all downstream INV FRs (002-011) and cross-module invoice references.
+The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 migrations, 8-state status FSM, append-only line corrections, rate-card snapshot, per-engagement scoping, gap-free per-tenant numbering, CFO-gated write-off, and 9 memory audit kinds. Anchors all downstream INV FRs (002-011) and cross-module invoice references.
 
 1. **MUST** define closed `invoice_status` enum: `('draft','ready_for_review','approved','sent','partially_paid','paid','void','written_off')` per DEC-1361. Cardinality 8.
 
@@ -183,7 +183,7 @@ The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 mi
 
 21. **MUST** mark TIME entries `invoiced_at` to prevent double-billing per DEC-1369 derivative. FR-TIME-009 rollup filter excludes entries with non-NULL `invoiced_at`.
 
-22. **MUST** emit 9 BRAIN audit kinds per DEC-1374:
+22. **MUST** emit 9 memory audit kinds per DEC-1374:
     - `inv.draft_created` (sev-2)
     - `inv.lines_added` (sev-3)
     - `inv.status_transitioned` (sev-2)
@@ -194,7 +194,7 @@ The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 mi
     - `inv.written_off` (sev-1)
     - `inv.correction_added` (sev-2)
 
-23. **MUST** PII-scrub description + reason via FR-BRAIN-111 — SHA256 in chain.
+23. **MUST** PII-scrub description + reason via FR-MEMORY-111 — SHA256 in chain.
 
 24. **MUST** thread trace_id end-to-end.
 
@@ -375,7 +375,7 @@ GET    /v1/inv/invoices?engagement_id=...&status=...              (engagement_ad
 14. **Per-engagement scope** — invoice has exactly one engagement_id.
 15. **TIME entries not double-billed** — second draft generation on same period → 0 lines (all entries invoiced_at).
 16. **Status history append-only** — every transition recorded; UPDATE on history → permission-denied.
-17. **9 BRAIN audit kinds emitted** — full lifecycle.
+17. **9 memory audit kinds emitted** — full lifecycle.
 18. **Trace_id end-to-end**.
 19. **BIGINT minor amounts** — schema validation; never FLOAT.
 20. **RLS cross-tenant denied** — tenant A invoice invisible to tenant B.
@@ -474,7 +474,7 @@ async fn invoice_number_gap_free() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TIME-009 (per-cycle rollup source).
-**Cross-module:** FR-INV-002 (multi-currency), FR-INV-003 (Stripe payment), FR-INV-005 (VietQR), FR-INV-006 (cash app), FR-INV-007 (VN hóa đơn), FR-TEN-003 (Stripe ref), FR-TEN-102 (VND ref), FR-PORTAL-001 (invoices view), FR-PORTAL-006 (billing_inquiry workflows), FR-CRM-001 (client subject), FR-AUTH-101 (cfo + engagement_admin roles), FR-AI-003, FR-BRAIN-111, FR-OBS-007.
+**Cross-module:** FR-INV-002 (multi-currency), FR-INV-003 (Stripe payment), FR-INV-005 (VietQR), FR-INV-006 (cash app), FR-INV-007 (VN hóa đơn), FR-TEN-003 (Stripe ref), FR-TEN-102 (VND ref), FR-PORTAL-001 (invoices view), FR-PORTAL-006 (billing_inquiry workflows), FR-CRM-001 (client subject), FR-AUTH-101 (cfo + engagement_admin roles), FR-AI-003, FR-MEMORY-111, FR-OBS-007.
 **Downstream:** FR-INV-002 through FR-INV-011.
 
 ---

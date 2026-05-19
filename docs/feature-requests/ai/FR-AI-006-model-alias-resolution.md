@@ -4,7 +4,7 @@ id: FR-AI-006
 title: "Model-alias resolution (chat.smart → bedrock:claude-3.5-sonnet) with per-tenant override"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -12,7 +12,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-005, FR-AI-007, FR-AI-008, FR-AI-015, FR-AI-016, FR-AI-022]
 depends_on: [FR-AI-005, FR-AI-007, FR-AUTH-004]
 blocks: [FR-AI-008, FR-AI-009, FR-AI-015, FR-AI-016]
@@ -99,13 +99,13 @@ This FR provides the abstraction layer that every consumer module (CUO Phase 2, 
 
 **Why does this FR enforce ZDR + residency?** Both are tenant-policy invariants. Violating either is a contract breach with regulatory consequences (PDPL Art. 6, Decree 53/2022, GDPR Art. 5(1)(f)). Catching the violation at alias resolution (before the provider call) is much cheaper than catching it after the bytes are in flight — the precheck is the hot path; the provider call is 100-1000x more expensive. FR-AI-015 and FR-AI-016 add the *attestation surface* (which providers/models are ZDR, which regions count as sg-1); this FR is the *enforcement point* that consumes those attestations.
 
-**Why expose `fallback_position` in the result?** Three reasons. (1) BRAIN audit row includes it (DEC-072 — every AI call's provenance is auditable; "this call used fallback #2 because primary was open" is part of the chain). (2) OBS dashboards filter by "calls that used a fallback" to detect primary-provider degradation before the SLA alarm fires. (3) FR-AI-008's circuit breaker uses `fallback_position` to skip the open breakers — if `fallback_position: 0` is open, resolve picks 1.
+**Why expose `fallback_position` in the result?** Three reasons. (1) memory audit row includes it (DEC-072 — every AI call's provenance is auditable; "this call used fallback #2 because primary was open" is part of the chain). (2) OBS dashboards filter by "calls that used a fallback" to detect primary-provider degradation before the SLA alarm fires. (3) FR-AI-008's circuit breaker uses `fallback_position` to skip the open breakers — if `fallback_position: 0` is open, resolve picks 1.
 
 **Why expose `latency_class` and not raw latency budgets?** Different providers have different latency profiles for the same logical alias. `chat.smart` on Bedrock-Claude-3.5-Sonnet is ~2-4s p95; on Anthropic-native-Claude-3.5-Sonnet it's ~1.5-3s; on a future fast-path provider it might be ~800ms. The downstream caller (FR-AI-008 router, FR-AI-010 streaming) needs to know what latency budget to set for the call, but doesn't need the exact number — `Standard | Fast | Slow` is enough resolution. The mapping from latency class to actual budget is config (`policy.ai_policy.call_timeout_seconds` from FR-AI-005), not hard-coded here.
 
 **Why not just use LiteLLM's model registry?** LiteLLM is Python and stateful; we're Rust and the alias registry is part of a deterministic policy snapshot. LiteLLM's model registry is also unversioned — a `pip install --upgrade litellm` could silently change which model `gpt-4` resolves to. Our closed set with explicit version pins (e.g., `anthropic.claude-3-5-sonnet-20241022-v2:0`) makes the contract explicit and version-locked. We've borrowed the *idea* of LiteLLM's alias→model mapping; we've not borrowed its implementation.
 
-**Why is the alias-resolution decision auditable?** Every `ai.precheck` BRAIN row (FR-AI-001 §1 #6) includes the resolved provider + model. A future auditor asking "what model did the gateway use for tenant X's call at 14:32 yesterday?" gets the answer from the chain. Without aliasing, the answer is "whatever the caller wrote in the request payload" — which a malicious caller could spoof. With aliasing, the gateway is the authority.
+**Why is the alias-resolution decision auditable?** Every `ai.precheck` memory row (FR-AI-001 §1 #6) includes the resolved provider + model. A future auditor asking "what model did the gateway use for tenant X's call at 14:32 yesterday?" gets the answer from the chain. Without aliasing, the answer is "whatever the caller wrote in the request payload" — which a malicious caller could spoof. With aliasing, the gateway is the authority.
 
 ---
 
@@ -209,7 +209,7 @@ impl LatencyClass {
 | `chat.smart` | Default chat / Genie / orchestrator (CUO Phase 2 LLM) | Standard | 8k in + 4k out |
 | `chat.fast` | Ambient digests, low-stakes summaries, OBS triage | Fast | 4k in + 1k out |
 | `chat.long` | Document Q&A, 100k+ context, legal/contract review | Slow | 100k in + 8k out |
-| `embed.standard` | KB ingest, BRAIN Layer 2 vectors, persona-keyword updates | Fast | 8k tokens per batch |
+| `embed.standard` | KB ingest, memory Layer 2 vectors, persona-keyword updates | Fast | 8k tokens per batch |
 | `embed.code` | KB-code embeddings, code-search corpus | Fast | 4k tokens per batch |
 | `rerank.fast` | BGE-rerank cross-encoder; KB top-K refinement | Fast | (query, candidate[≤50]) |
 
@@ -735,7 +735,7 @@ Err(AliasError::ResolvedModelMissingCostEntry {
 })
 ```
 
-### BRAIN audit row carrying resolved metadata (via FR-AI-001 precheck row)
+### memory audit row carrying resolved metadata (via FR-AI-001 precheck row)
 
 ```json
 {

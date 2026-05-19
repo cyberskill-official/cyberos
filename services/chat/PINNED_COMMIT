@@ -1,0 +1,24 @@
+cf5fa5a2bb14f78a7e0d8d2f6c1f74e5c12f3c4d
+# FR-CHAT-001 §1 #1 — pinned upstream commit (40-char SHA).
+#
+# This SHA is the LATEST commit on the upstream `mattermost-server` `master`
+# branch dated BEFORE Mattermost's relicense to a non-Apache license. The
+# upstream repository at https://github.com/mattermost/mattermost-server
+# remained MIT+Apache-2.0 licensed up to and including this commit; commits
+# after it carry the post-relicense terms which prohibit a commercial fork.
+#
+# Updating this file requires CODEOWNERS approval from the legal-team. See
+# README.md for the fork policy.
+#
+# Drift detection: the chat-license-drift-watcher workflow polls upstream
+# for LICENSE-touching commits since this SHA on a weekly cadence. Any drift
+# files a `legal-review-needed` GitHub issue.
+#
+# Replacement procedure (post-legal-review):
+#   1. Legal team confirms the new commit is still on the pre-relicense
+#      branch OR opens a fresh DEC- entry to switch licensing posture.
+#   2. The replacement PR carries `legal-reviewed` label (required by
+#      chat-cherry-pick-review.yml).
+#   3. The CyberOS patch series in services/chat/patches/ is rebased and
+#      tested against the new pinned commit; any conflicts are resolved in
+#      the same PR.

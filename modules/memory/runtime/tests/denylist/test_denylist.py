@@ -4,7 +4,7 @@ test_denylist.py — §9.3 denylist regression suite.
 
 Aspect 5.5 of the Layer-1 improvement catalog.
 
-Verifies that brain_writer rejects writes containing denylisted content
+Verifies that memory_writer rejects writes containing denylisted content
 regardless of phrasing. Each test attempts a write with a known-bad body
 and confirms rejection.
 
@@ -74,7 +74,7 @@ def _matches_pattern(body: str, category: str) -> bool:
     """Simulate the §9.3 denylist check (compensation/gov-id/bank/health/secret).
 
     This mirrors the regex patterns from manifest.json exclusion_rules.
-    For real testing, this should call into brain_writer's actual validator.
+    For real testing, this should call into memory_writer's actual validator.
     """
     patterns = {
         "compensation": re.compile(r"\b(?:salary|payslip|bonus|equity|grant|sa[1lI][aA4]ry|sаlаry|s\s+a\s+l\s+a\s+r\s+y)\b", re.I),

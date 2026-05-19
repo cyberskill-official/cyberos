@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-103, FR-AUTH-104, FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-PORTAL-001, FR-PORTAL-002, FR-PORTAL-004, FR-PORTAL-005, FR-TEN-101, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-AUTH-103, FR-AUTH-104, FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-PORTAL-001, FR-PORTAL-002, FR-PORTAL-004, FR-PORTAL-005, FR-TEN-101, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-AUTH-103, FR-AUTH-104]
 blocks: [FR-PORTAL-004, FR-PORTAL-005]
 
@@ -39,7 +39,7 @@ source_decisions:
   - DEC-870 2026-05-17 — SAML response replay window = 5 min; OIDC ID token `iat` skew tolerance = 60 s (industry standard)
   - DEC-871 2026-05-17 — Per-Engagement IdP config has `enforcement: optional | required` — `required` means email/password sign-in is DISABLED for that Engagement (SSO-only)
   - DEC-872 2026-05-17 — JIT-provisioned subjects carry `auth_method='external_idp'` + `idp_config_id` + `last_sso_at`; differentiated from internal-tenant subjects at every audit row
-  - DEC-873 2026-05-17 — BRAIN audit kinds: portal.idp_sign_in, portal.idp_sign_in_failed, portal.scim_user_created, portal.scim_user_updated, portal.idp_config_created, portal.idp_config_rotated, portal.signed_attr_trust_violation
+  - DEC-873 2026-05-17 — memory audit kinds: portal.idp_sign_in, portal.idp_sign_in_failed, portal.scim_user_created, portal.scim_user_updated, portal.idp_config_created, portal.idp_config_rotated, portal.signed_attr_trust_violation
   - DEC-874 2026-05-17 — SAML SP (Service Provider) metadata published at `/saml/v2/{engagement_slug}/metadata` for IdP self-service config
   - DEC-875 2026-05-17 — OIDC RP (Relying Party) discovery via standard JSON at `/oidc/v1/{engagement_slug}/.well-known/openid-configuration`
   - DEC-876 2026-05-17 — Idempotency on SCIM CREATE keyed by `externalId` claim (IdP's stable user identifier); duplicate externalId returns 409 with existing user
@@ -52,7 +52,7 @@ source_decisions:
   - DEC-883 2026-05-17 — Force re-auth at JWT mint when `last_sso_at > 8h ago`; expired SSO session → redirect to IdP
   - DEC-884 2026-05-17 — SCIM token rotation: quarterly mandatory + 60s overlap window; old token accepted during overlap, both emit `portal.scim_token_rotation` informational row
   - DEC-885 2026-05-17 — Group-to-role mapping is many-to-one: multiple IdP groups can map to one CyberOS role; one IdP group cannot map to multiple roles
-  - DEC-886 2026-05-17 — Audit-row PII: SAML AttributeStatement claims + OIDC ID-token claims PII-scrubbed via FR-BRAIN-111 (email → email_hash16; name → name_hash16; raw retained only in subject row, RLS-scoped)
+  - DEC-886 2026-05-17 — Audit-row PII: SAML AttributeStatement claims + OIDC ID-token claims PII-scrubbed via FR-MEMORY-111 (email → email_hash16; name → name_hash16; raw retained only in subject row, RLS-scoped)
   - eIDAS Reg. 910/2014 (QES baseline — external IdP must be eIDAS-conformant for EU regulated tenants; placeholder enforcement at slice 1 — full QES integration FR-AUTH-2xx)
   - PDPL Law 91/2025 Art. 5 (data minimisation — only claims explicitly mapped to roles are persisted; unrecognised claims discarded at JIT)
   - GDPR Art. 28 (data processor — IdP acts as DPA-bound processor; PORTAL signs DPA template at IdP config time)
@@ -83,7 +83,7 @@ build_envelope:
     - services/portal/src/handlers/sp_metadata.rs                      # /saml/v2/{eng}/metadata
     - services/portal/src/handlers/rp_discovery.rs                     # /oidc/v1/{eng}/.well-known/openid-configuration
     - services/portal/src/handlers/idp_config_admin.rs                 # POST /v1/admin/engagements/{id}/idp + rotation
-    - services/portal/src/audit/portal_events.rs                       # 7 BRAIN row builders
+    - services/portal/src/audit/portal_events.rs                       # 7 memory row builders
     - services/portal/tests/saml_happy_test.rs
     - services/portal/tests/saml_replay_window_test.rs
     - services/portal/tests/saml_unsigned_attr_dropped_test.rs
@@ -143,7 +143,7 @@ risk_if_skipped: "Without external IdP support, every client-tenant user creates
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) sign-in for client-tenant users with SCIM 2.0 JIT provisioning, claim → role mapping, signed-attribute trust chain, per-Engagement isolation, and 7 BRAIN audit kinds.
+The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) sign-in for client-tenant users with SCIM 2.0 JIT provisioning, claim → role mapping, signed-attribute trust chain, per-Engagement isolation, and 7 memory audit kinds.
 
 1. **MUST** define the `portal_idp_configs` table at migration `0001`: `(id UUID PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, idp_kind portal_idp_kind NOT NULL, idp_name TEXT NOT NULL, idp_entity_id TEXT NOT NULL, idp_metadata_url TEXT, idp_signing_cert_kms_blob BYTEA NOT NULL, idp_signing_cert_thumbprint TEXT NOT NULL, idp_kms_key_id TEXT NOT NULL, enforcement TEXT NOT NULL CHECK (enforcement IN ('optional','required')) DEFAULT 'optional', email_domain_hint TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), rotated_at TIMESTAMPTZ, status TEXT NOT NULL CHECK (status IN ('active','rotated','revoked')) DEFAULT 'active')`. Partial unique `(tenant_id, engagement_id) WHERE status='active'` enforces one active IdP per Engagement.
 
@@ -203,7 +203,7 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
 
 14. **MUST** enforce SCIM idempotency on `externalId` claim per DEC-876. Duplicate create with same externalId returns 409 + body `{ "detail": "User with this externalId already exists", "existing_id": "<id>" }`. RFC 7644 §3.3 conformant.
 
-15. **MUST** drop unsigned AttributeStatement claims per DEC-864 + #8. The signed_attr.rs module walks the XML tree, identifies the enclosing `<ds:Signature>` for each `<saml:AttributeStatement>`, verifies the signature against the configured cert thumbprint, and includes ONLY signed attributes in the JIT claim set. Any unsigned attribute encountered emits a `portal.signed_attr_trust_violation` sev-2 BRAIN row with `(engagement_id, attribute_name, idp_entity_id)`.
+15. **MUST** drop unsigned AttributeStatement claims per DEC-864 + #8. The signed_attr.rs module walks the XML tree, identifies the enclosing `<ds:Signature>` for each `<saml:AttributeStatement>`, verifies the signature against the configured cert thumbprint, and includes ONLY signed attributes in the JIT claim set. Any unsigned attribute encountered emits a `portal.signed_attr_trust_violation` sev-2 memory row with `(engagement_id, attribute_name, idp_entity_id)`.
 
 16. **MUST** support per-Engagement `enforcement: required` per DEC-871. When `required`, the standard email/password login endpoint (FR-AUTH-004) returns `403 + { error: "sso_required", idp_redirect_url: "https://portal.cyberos.world/sso/<engagement_slug>" }` for any user whose `auth_method='external_idp'` OR who belongs to a `required`-enforcement Engagement. The check is at JWT mint, before password verification.
 
@@ -213,7 +213,7 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
 
 19. **MUST** rotate SCIM tokens quarterly per DEC-884. The `POST /v1/admin/engagements/{id}/scim-token/rotate` endpoint generates a new 32-byte token (base64url-encoded), SHA-256-hashes for storage, marks the old token as `rotated`, sets a 60-second overlap window during which BOTH tokens are accepted. Old token cleanup after overlap. Emits `portal.scim_token_rotation` informational row (not in core 7-kind list per DEC-873).
 
-20. **MUST** emit 7 BRAIN audit row kinds per DEC-873 (AUTHORING.md rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
+20. **MUST** emit 7 memory audit row kinds per DEC-873 (AUTHORING.md rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
     - `portal.idp_sign_in` (sev-2)
     - `portal.idp_sign_in_failed` (sev-2 — security signal)
     - `portal.scim_user_created` (sev-2)
@@ -222,11 +222,11 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
     - `portal.idp_config_rotated` (sev-1)
     - `portal.signed_attr_trust_violation` (sev-1)
 
-    Plus 1 supporting kind: `portal.scim_token_rotation` (sev-3 — informational). PII-scrubbed via FR-BRAIN-111 per DEC-886.
+    Plus 1 supporting kind: `portal.scim_token_rotation` (sev-3 — informational). PII-scrubbed via FR-MEMORY-111 per DEC-886.
 
 21. **MUST** support SP-initiated AND IdP-initiated SAML flows per DEC-881. IdP-initiated POSTs lacking `InResponseTo` are accepted ONLY when `portal_idp_configs.allow_idp_initiated=true` (defaults false; explicit opt-in due to CSRF risk). OIDC supports SP-initiated only per OAuth 2.1 PKCE requirement.
 
-22. **MUST** PII-scrub all audit rows per DEC-886 + AUTHORING.md rule 18. The 7 BRAIN row kinds carry `email_hash16`, `name_hash16`, `external_id_hash16` — raw values retained in `subjects` (RLS-scoped to tenant) only.
+22. **MUST** PII-scrub all audit rows per DEC-886 + AUTHORING.md rule 18. The 7 memory row kinds carry `email_hash16`, `name_hash16`, `external_id_hash16` — raw values retained in `subjects` (RLS-scoped to tenant) only.
 
 23. **MUST** thread W3C `traceparent` across SAML/OIDC roundtrip + JIT provisioning + SCIM operations (AUTHORING.md rule 22 + 23 + 24). Trace_id persisted in `portal_scim_audit_log.trace_id` column (added via 0002 migration).
 
@@ -423,7 +423,7 @@ POST   /v1/admin/engagements/{id}/idp/groups-map     (configure claim → role)
 
 ## §4 — Acceptance criteria
 
-1. **SAML happy path** — POST signed SAML Response → JIT subject created with claim-derived role → JWT minted with 8h TTL → `portal.idp_sign_in` BRAIN row emitted.
+1. **SAML happy path** — POST signed SAML Response → JIT subject created with claim-derived role → JWT minted with 8h TTL → `portal.idp_sign_in` memory row emitted.
 2. **OIDC happy path** — OIDC callback with valid ID token → JIT subject created → role from `groups` claim → 8h JWT.
 3. **SAML replay window** — Response with `NotOnOrAfter` 6 min ago → 401 + `portal.idp_sign_in_failed` with reason='replay_window_exceeded'.
 4. **OIDC iat skew** — ID token with `iat` 70 s in future → 401 + reason='iat_skew_exceeded'.
@@ -439,7 +439,7 @@ POST   /v1/admin/engagements/{id}/idp/groups-map     (configure claim → role)
 14. **Unrecognised group ignored** — IdP claim group `Random` not in `portal_idp_groups_map` → default `client_viewer` role assigned (no elevation).
 15. **tenant_admin role gate on IdP config** — engagement_admin POSTing `/v1/admin/engagements/{id}/idp` → 403; tenant_admin → 201.
 16. **PII scrubbed in audit rows** — `portal.idp_sign_in` row carries `email_hash16` not raw email.
-17. **W3C trace_id threaded** — single trace_id present in SAML ACS span → JIT span → SCIM audit log row → BRAIN row.
+17. **W3C trace_id threaded** — single trace_id present in SAML ACS span → JIT span → SCIM audit log row → memory row.
 18. **IdP-initiated SAML allowed only when opted in** — Response lacking InResponseTo with `allow_idp_initiated=false` → 401; with `true` → accepted.
 19. **SCIM token in URL rejected** — `?token=xxx` query param ignored; Authorization header required.
 20. **IdP signing cert KMS-wrapped** — `portal_idp_configs.idp_signing_cert_kms_blob` decryptable only via the configured KMS key; raw cert never written to disk.
@@ -463,7 +463,7 @@ async fn saml_signed_response_jit_provisions_subject() {
     assert_eq!(subj.auth_method, "external_idp");
     assert_eq!(subj.role, "client_viewer");  // default; no group mapping yet
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.idp_sign_in"));
     assert!(audit.iter().any(|r| r.kind == "portal.scim_user_created"));
 }
@@ -485,7 +485,7 @@ async fn unsigned_attribute_dropped_and_audited() {
     let subj = ctx.repo.subjects.find_by_external_id(ctx.tenant_id, "alice@acme.com").await.unwrap();
     assert_eq!(subj.role, "client_viewer");  // role_override IGNORED
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     let violation = audit.iter().find(|r| r.kind == "portal.signed_attr_trust_violation").unwrap();
     assert_eq!(violation.payload["attribute_name"], "role_override");
 }
@@ -713,8 +713,8 @@ pub async fn scim_bearer_auth<B>(
 - **FR-PORTAL-004** SCIM deprovision — full session-invalidation on SCIM DELETE.
 - **FR-PORTAL-005** Branded Genie chat — uses external-IdP scope_grants.
 - **FR-TEN-101** Self-serve signup — root-admin can configure IdP post-signup.
-- **FR-AI-003** BRAIN audit-row bridge — 7 + 1 supporting kinds register.
-- **FR-BRAIN-111** PII scrubbing — email/name/external_id hashes.
+- **FR-AI-003** memory audit-row bridge — 7 + 1 supporting kinds register.
+- **FR-MEMORY-111** PII scrubbing — email/name/external_id hashes.
 - **FR-OBS-007** Auto-runbook — sev-1 IdP-config events trigger CHAT alerts.
 
 **Downstream (blocks):**
@@ -725,7 +725,7 @@ pub async fn scim_bearer_auth<B>(
 
 ## §8 — Example payloads
 
-### 8.1 `portal.idp_sign_in` BRAIN row
+### 8.1 `portal.idp_sign_in` memory row
 
 ```json
 {
@@ -789,7 +789,7 @@ pub async fn scim_bearer_auth<B>(
 }
 ```
 
-### 8.4 `portal.signed_attr_trust_violation` BRAIN row
+### 8.4 `portal.signed_attr_trust_violation` memory row
 
 ```json
 {
@@ -899,9 +899,9 @@ All resolved for slice 1. Deferred:
 
 **§11.21** Per-Engagement test fixtures use `wiremock` to simulate IdP endpoints; integration tests against real Okta/Azure dev tenants run nightly (not on every PR) to validate protocol-level conformance.
 
-**§11.22** The 7-kind core list (§1 #20) + 1 supporting (`portal.scim_token_rotation`) totals 8 BRAIN audit kinds; FR-AI-003 closed-set extension adds all 8.
+**§11.22** The 7-kind core list (§1 #20) + 1 supporting (`portal.scim_token_rotation`) totals 8 memory audit kinds; FR-AI-003 closed-set extension adds all 8.
 
-**§11.23** Trace_id in BRAIN rows uses the OTel TraceId Display form (32-char lower-hex) per AUTHORING.md rule 24; never Debug form.
+**§11.23** Trace_id in memory rows uses the OTel TraceId Display form (32-char lower-hex) per AUTHORING.md rule 24; never Debug form.
 
 **§11.24** Slice-2 enhancement: emit OTel histogram per-IdP `portal_idp_sign_in_duration_seconds_by_idp_entity_id` for per-customer latency analysis.
 

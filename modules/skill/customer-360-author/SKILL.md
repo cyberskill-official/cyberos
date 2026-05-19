@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: customer-360-author
-description: Audits the customer-360 / CDP (Customer Data Platform) state and proposes the next-quarter architecture refinement. Inventory of customer-data sources, identity resolution match-rate, master entity model, activation surfaces, consent + governance posture, data-quality scorecards, gap analysis. Per CDP Institute reference architecture + Segment / RudderStack / mParticle CDP patterns + IAB GVL/TCF + ISO/IEC 19944 + DAMA-DMBOK MDM chapter.
-  Author a CUSTOMER_360 markdown from source artefact(s). Generates a
-  versioned customer-360@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  customer-360-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Audits the customer-360 / CDP (Customer Data Platform) state and proposes the next-quarter architecture refinement. Inventory of customer-data sources, identity resolution match-rate, master entity model, activation surfaces, consent + governance posture, data-quality scorecards, gap analysis. Per CDP Institute reference architecture + Segment / RudderStack / mParticle CDP patterns + IAB GVL/TCF + ISO/IEC 19944 + DAMA-DMBOK MDM chapter. Author a CUSTOMER_360 markdown from source artefact(s). Generates a versioned customer-360@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into customer-360-audit by default. Use when user asks to "draft a customer 360" or "create the customer 360". Do NOT use for "audit existing customer 360" (use customer-360-audit instead). Author a CUSTOMER_360 markdown from source artefact(s). Generates a versioned customer-360@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains natural...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: customer-360_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

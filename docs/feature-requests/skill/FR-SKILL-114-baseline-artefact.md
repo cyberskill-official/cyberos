@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-19
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-SKILL-103, FR-SKILL-111, FR-SKILL-112, FR-SKILL-113]
 depends_on: [FR-SKILL-103]
 blocks: []

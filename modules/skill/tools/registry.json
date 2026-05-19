@@ -9,7 +9,7 @@
       "invocation_modes": ["standalone", "pre-commit", "ci"],
       "depends_on": [],
       "sections": ["§4.7", "§5.1", "§7", "§8.7", "§12.1"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "validate"
     },
     {
@@ -19,7 +19,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": ["verify"],
       "sections": ["§4.4", "§7", "§13"],
-      "mutates_brain": true,
+      "mutates_memory": true,
       "verb": "repair",
       "sev_0_ops": ["rebuild-chain", "manual-rollback", "resolve-conflict"]
     },
@@ -30,7 +30,7 @@
       "invocation_modes": ["standalone", "daemon"],
       "depends_on": [],
       "sections": ["§11.2", "§11.3"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "snapshot"
     },
     {
@@ -40,7 +40,7 @@
       "invocation_modes": ["interactive", "non-interactive", "dry-run"],
       "depends_on": ["verify"],
       "sections": ["§4.1", "§4.4", "§5.1", "§5.2", "§9.3"],
-      "mutates_brain": true,
+      "mutates_memory": true,
       "verb": "create-memory"
     },
     {
@@ -50,7 +50,7 @@
       "invocation_modes": ["opt-in"],
       "depends_on": [],
       "sections": ["§0.4", "§3 (Aspect 3.3)"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "synthesize"
     },
     {
@@ -60,17 +60,17 @@
       "invocation_modes": ["standalone", "dry-run"],
       "depends_on": [],
       "sections": ["§3", "§11.2", "§17"],
-      "mutates_brain": "import-only",
+      "mutates_memory": "import-only",
       "verb": "transfer"
     },
     {
       "name": "mcp",
-      "tool": "runtime/mcp/cyberos_brain_server.py",
+      "tool": "runtime/mcp/cyberos_memory_server.py",
       "umbrella_alias": "cyberos mcp",
       "invocation_modes": ["stdio-server"],
       "depends_on": [],
       "sections": ["§0.1", "§17"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "expose-read-only"
     },
     {
@@ -80,7 +80,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["§5.1 (relationships)"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "explore"
     },
     {
@@ -90,7 +90,7 @@
       "invocation_modes": ["standalone", "interactive"],
       "depends_on": [],
       "sections": ["§8.6", "§9 (supersedes)"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "surface"
     },
     {
@@ -100,7 +100,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["§13 (Aspect 5.1)"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "configure"
     },
     {
@@ -110,7 +110,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["§0.4", "§3.1", "§3.3", "§3.4"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "list"
     },
     {
@@ -120,7 +120,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["(documentation)"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "explain"
     },
     {
@@ -130,7 +130,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["§7.7"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "report"
     },
     {
@@ -140,7 +140,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["§7.7", "§11.2"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "archive"
     },
     {
@@ -150,7 +150,7 @@
       "invocation_modes": ["library", "standalone"],
       "depends_on": [],
       "sections": ["Aspect 5.7"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "coordinate"
     },
     {
@@ -160,7 +160,7 @@
       "invocation_modes": ["library"],
       "depends_on": [],
       "sections": ["Aspect 9.1"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "load"
     },
     {
@@ -170,7 +170,7 @@
       "invocation_modes": ["post-write", "stop-hook"],
       "depends_on": [],
       "sections": ["Aspect 9.2"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "refresh-index"
     },
     {
@@ -180,7 +180,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": ["verify"],
       "sections": ["Aspect 10.4"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "test"
     },
     {
@@ -190,7 +190,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["Aspect 9.6"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "detect"
     },
     {
@@ -200,7 +200,7 @@
       "invocation_modes": ["standalone", "pre-commit"],
       "depends_on": [],
       "sections": ["Aspect 7.1", "Aspect 7.2"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "lint"
     },
     {
@@ -210,7 +210,7 @@
       "invocation_modes": ["interactive"],
       "depends_on": ["verify"],
       "sections": ["Aspect 8.1"],
-      "mutates_brain": true,
+      "mutates_memory": true,
       "verb": "bootstrap"
     },
     {
@@ -220,7 +220,7 @@
       "invocation_modes": ["standalone"],
       "depends_on": [],
       "sections": ["Aspect 11.1", "Aspect 11.2", "Aspect 11.5"],
-      "mutates_brain": false,
+      "mutates_memory": false,
       "verb": "log"
     }
   ]

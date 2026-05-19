@@ -4,7 +4,7 @@ id: FR-AI-008
 title: "LiteLLM-derived multi-provider router with retry + 30s failover SLA"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -12,7 +12,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-001, FR-AI-002, FR-AI-006, FR-AI-007, FR-AI-009, FR-AI-010, FR-AI-015, FR-AI-021]
 depends_on: [FR-AI-006, FR-AI-007, FR-AI-002]
 blocks: [FR-AI-009, FR-AI-010, FR-AI-021, FR-AI-011, FR-AI-017, FR-AI-022, FR-CUO-101]
@@ -85,7 +85,7 @@ The AI Gateway service **MUST** expose `router::call_provider(req, resolved, dea
 9. **MUST** treat HTTP `404` (model not found) as terminal — no retry, no failover. A 404 means the resolved model name doesn't exist at the provider; failover would mask the configuration error. The cost-table loader (FR-AI-007) and alias resolver (FR-AI-006) are supposed to prevent this; if a 404 reaches the router, the alias resolver has a bug.
 10. **MUST** honour the provider's `Retry-After` response header on `429` responses if present and parsable as an integer number of seconds (RFC 9110 §10.2.3). If `Retry-After` exceeds the remaining failover budget, the router MUST fail over immediately rather than sleep past the budget.
 11. **MUST** normalize all three providers' response shapes into one `ProviderResponse { id, usage, choices, finish_reason, latency_ms, cache_state, attempts }`. Downstream code (FR-AI-002 reconcile) sees a single struct. The normalization MUST live in `src/router/normalize.rs` and MUST be exhaustive over each provider's documented shape — unknown fields are dropped silently, missing required fields produce `Err(InvalidResponse)`.
-12. **MUST** record per-attempt metadata for FR-AI-002's `ai.invocation` audit row: which provider was called, which attempt number (1..=3), retry reason (`5xx`/`429`/`timeout`/`conn_reset`), total elapsed time per attempt, and the `fallback_position` (mirrors `ResolvedModel.fallback_position`). The `ProviderResponse` carries this in `attempts: Vec<AttemptRecord>` that the BRAIN row reads.
+12. **MUST** record per-attempt metadata for FR-AI-002's `ai.invocation` audit row: which provider was called, which attempt number (1..=3), retry reason (`5xx`/`429`/`timeout`/`conn_reset`), total elapsed time per attempt, and the `fallback_position` (mirrors `ResolvedModel.fallback_position`). The `ProviderResponse` carries this in `attempts: Vec<AttemptRecord>` that the memory row reads.
 13. **MUST** cap `attempts` at 16 records. With 5 providers × 3 attempts = 15 max under normal flow; 16 is the safety margin. If the cap is exceeded the router MUST return `Err(InvalidResponse { reason: "attempts cap exceeded; programmer error in failover loop" })` — this catches infinite-loop bugs in the chain construction.
 14. **MUST** emit the following OTel metrics (label sets are closed and rename-safe):
     - `ai_router_calls_total{provider,model,outcome}` — counter, emitted **once per terminal call decision** (success or final failure). Outcome label set is exactly `succeeded` / `terminal_4xx` / `auth_error` / `all_failed` (4 values). The `retried` and `failed_over` events are NOT emitted on this counter — they live on the per-event counters below to keep `CALLS` "one row per call".
@@ -122,7 +122,7 @@ The AI Gateway service **MUST** expose `router::call_provider(req, resolved, dea
 
 **Why is HTTP 404 terminal?** A 404 means the resolved model name doesn't exist at the provider. This can only happen if the cost-table loader (FR-AI-007) and the alias resolver (FR-AI-006) disagree about what models are valid. Failing over would mask the bug. Returning 404 to the caller (which becomes `ProviderError` in FR-AI-002) and triggering a sev-2 log lets operators catch the configuration drift before it spreads.
 
-**Why is the attempts vec capped at 16?** Defence in depth. In normal operation, max attempts = 5 providers × 3 attempts = 15. The cap of 16 leaves one slot of margin AND fails-loud if a future code change introduces an infinite-loop bug in the chain construction. Without the cap, a bad refactor could produce 10,000-element attempts vecs that bloat the audit row and OOM the BRAIN.
+**Why is the attempts vec capped at 16?** Defence in depth. In normal operation, max attempts = 5 providers × 3 attempts = 15. The cap of 16 leaves one slot of margin AND fails-loud if a future code change introduces an infinite-loop bug in the chain construction. Without the cap, a bad refactor could produce 10,000-element attempts vecs that bloat the audit row and OOM the memory.
 
 **Why does the deadline propagate through `tokio::time::timeout`?** Without deadline propagation, a retry could fire ~5s after the original call started, the provider takes 25s, and the caller times out before the response arrives. The caller has already returned `503` to the tenant by then; the eventual provider response is wasted compute that we still pay for. Deadline propagation guarantees the caller's timeout is respected even across retries — if we have 4s left of caller deadline AND 22s of failover budget, we use 4s.
 

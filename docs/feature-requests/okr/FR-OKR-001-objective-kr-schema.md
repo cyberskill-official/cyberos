@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CEO + CSO seat)
 created: 2026-05-16
 shipped: now()
-brain_chain_hash: null
-related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-OKR-002, FR-OKR-003, FR-OKR-004, FR-OKR-005, FR-OKR-006, FR-OKR-007, FR-HR-001]
+memory_chain_hash: null
+related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-OKR-002, FR-OKR-003, FR-OKR-004, FR-OKR-005, FR-OKR-006, FR-OKR-007, FR-HR-001]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
 blocks: [FR-OKR-002, FR-OKR-003, FR-OKR-005, FR-OKR-007]   # 4 downstream consumers
 
@@ -28,12 +28,12 @@ source_decisions:
   - DEC-365 (alignment FSM: Company OKRs have no parent; Team OKRs have exactly 1 Company parent; Member OKRs have exactly 1 Team parent — strict tree, no cross-cascade)
   - DEC-366 (closed cycle_status enum at 4 values: planning · active · closing · closed — transitions are unidirectional)
   - DEC-367 (REVOKE UPDATE, DELETE on kr_progress_log, objective_status_history from cyberos_app — append-only at SQL grant)
-  - DEC-368 (BRAIN audit kinds: okr.cycle_opened, okr.cycle_closed, okr.objective_created, okr.objective_updated, okr.kr_progress_recorded, okr.kr_status_changed, okr.alignment_created, okr.cycle_retro_recorded)
+  - DEC-368 (memory audit kinds: okr.cycle_opened, okr.cycle_closed, okr.objective_created, okr.objective_updated, okr.kr_progress_recorded, okr.kr_status_changed, okr.alignment_created, okr.cycle_retro_recorded)
   - DEC-369 (EU AI Act Art. 14 — OKR-driven employment decisions REQUIRE explicit human approval; this FR ships the data model that downstream HR/REW/LEARN consumes; the human-in-loop gate is in those FRs)
   - DEC-370 (KR `progress_value_numeric` is BIGINT for hit_target + improvement; for milestone, the value is a boolean (achieved = 1 | not = 0); FR-OKR-002 ships full per-type validation)
   - DEC-371 (cascading delete: Cycle delete CASCADES to objectives; Objective delete CASCADES to KRs; KR delete RESTRICTs if progress_log exists — preserves audit history)
   - DEC-372 (Member OKRs reference HR Member by subject_id 1:1 with auth.subjects; team OKRs reference a Team entity declared in this FR (tenant-local) since HR doesn't ship a Team primitive)
-  - PDPL Art. 13 (data minimisation — KR rationale + progress comments PII-scrubbed in BRAIN chain)
+  - PDPL Art. 13 (data minimisation — KR rationale + progress comments PII-scrubbed in memory chain)
   - ISO 27001:2022 A.5.16 (information classification — OKR data classified as "internal strategy")
   - EU AI Act Art. 14 Annex III §4 (high-risk-adjacent: OKR-driven employment decisions)
 
@@ -56,7 +56,7 @@ new_files:
   - services/okr/src/repo/objectives.rs
   - services/okr/src/repo/key_results.rs
   - services/okr/src/repo/progress_log.rs
-  - services/okr/src/audit/okr_events.rs                         # 8 BRAIN row builders
+  - services/okr/src/audit/okr_events.rs                         # 8 memory row builders
   - services/okr/src/handlers/cycles.rs
   - services/okr/src/handlers/teams.rs
   - services/okr/src/handlers/objectives.rs
@@ -167,7 +167,7 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
     - `DELETE /v1/okr/objectives/{id}/key_results/{kr_id}` — remove KR (must stay ≥ 3).
     - `GET /v1/okr/objectives?cycle_id=<>&scope=<>` — list with filters.
 
-18. **MUST** emit BRAIN audit rows for the 8 kinds (per DEC-368):
+18. **MUST** emit memory audit rows for the 8 kinds (per DEC-368):
     - `okr.cycle_opened` (cycle status → active).
     - `okr.cycle_closed` (cycle status → closed).
     - `okr.objective_created` (POST /objectives).
@@ -177,7 +177,7 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
     - `okr.alignment_created` (Team or Member objective with parent set).
     - `okr.cycle_retro_recorded` (FR-OKR-007 retro entries; placeholder kind at slice 1).
 
-19. **MUST** PII-scrub `description`, `rationale`, and `name` fields via FR-BRAIN-111 before chain commit. Tenant-scoped Postgres rows retain raw; BRAIN chain holds scrubbed.
+19. **MUST** PII-scrub `description`, `rationale`, and `name` fields via FR-MEMORY-111 before chain commit. Tenant-scoped Postgres rows retain raw; memory chain holds scrubbed.
 
 20. **MUST** complete handlers in ≤ 100 ms p95. `okr_perf_test` asserts.
 
@@ -193,7 +193,7 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 
 23. **MUST** ship cascading delete: deleting a `cycles` row CASCADES to objectives + key_results + history rows (per DEC-371). Deleting a `key_results` row with progress_log entries is RESTRICTED — preserve audit history. Cycles older than 5 years MAY be archived (not deleted) via a separate handler (out of scope for slice 1).
 
-24. **MUST** record an `okr.alignment_created` BRAIN row on every Team/Member objective creation, carrying `{objective_id, parent_objective_id, scope, alignment_depth}` where depth is 1 (team→company) or 2 (member→team→company).
+24. **MUST** record an `okr.alignment_created` memory row on every Team/Member objective creation, carrying `{objective_id, parent_objective_id, scope, alignment_depth}` where depth is 1 (team→company) or 2 (member→team→company).
 
 25. **MUST** include an EU AI Act Art. 14 acknowledgement in the OpenAPI spec for endpoints that downstream HR/REW/LEARN modules will consume for employment decisions: every response includes a `_compliance_note` field stating "OKR data is informational only; employment decisions require human approval per EU AI Act Art. 14 + Annex III §4".
 
@@ -225,7 +225,7 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 
 **Why face-saving terminology CI lint (§1 #15, DEC-364)?** Well-meaning developers writing error messages like "missed deadline" reintroduce the cultural anti-pattern. The CI lint catches at build time before merge. Enforces the design assertion mechanically rather than via review vigilance.
 
-**Why 8 BRAIN audit kinds split by lifecycle event (DEC-368, §1 #18)?** Operators query specific events: "show me all cycle closes this year" vs "show me all KR progress recordings this week". Split kinds give selectivity benefits at query time.
+**Why 8 memory audit kinds split by lifecycle event (DEC-368, §1 #18)?** Operators query specific events: "show me all cycle closes this year" vs "show me all KR progress recordings this week". Split kinds give selectivity benefits at query time.
 
 **Why EU AI Act Art. 14 acknowledgement in OpenAPI (§1 #25, DEC-369)?** OKR data drives employment decisions (promotion, performance review) downstream in HR/REW. The Act requires human-in-loop for high-risk decisions. Embedding the compliance note in every response ensures consumers can't claim they didn't know — the gate is explicit at the API contract level.
 
@@ -235,7 +235,7 @@ The OKR service **MUST** ship the Cycle + Team + Objective + KeyResult schema as
 
 **Why cascading delete Cycle → Objectives → KRs but RESTRICT on KR if progress_log exists (DEC-371, §1 #23)?** Cycle deletion is an operator-explicit destructive action; cascading to dependent rows is expected. But KR progress_log is forensic — if you've recorded KR progress, the KR row must persist for the log to make sense. RESTRICT forces operators to either keep the KR or explicitly clear the log first (which itself requires elevated permission).
 
-**Why `description`, `rationale`, `name` PII-scrubbed (§1 #19)?** Objective descriptions may contain employee names ("Improve Alice's onboarding time"); KR rationale during weekly check-ins may carry personal context. FR-BRAIN-111 scrubs before BRAIN chain commit; Postgres retains raw for in-tenant queries.
+**Why `description`, `rationale`, `name` PII-scrubbed (§1 #19)?** Objective descriptions may contain employee names ("Improve Alice's onboarding time"); KR rationale during weekly check-ins may carry personal context. FR-MEMORY-111 scrubs before memory chain commit; Postgres retains raw for in-tenant queries.
 
 **Why slice 1 ships only the schema + handlers, not the progress DSL or check-in flow?** Split: FR-OKR-001 = data model; FR-OKR-003 = progress source DSL (substantial — queries against PROJ/INV/HR/LEARN); FR-OKR-005 = weekly check-in handler. Splitting keeps this FR focused on the foundational schema.
 
@@ -635,7 +635,7 @@ fn no_forbidden_terminology_in_module() {
 18. **Face-saving terminology CI lint** — adding "missed" anywhere in src/migrations/tests → CI fails.
 19. **kr_progress_log append-only** — UPDATE/DELETE blocked from cyberos_app.
 20. **objective_status_history append-only** — same.
-21. **POST progress emits `okr.kr_progress_recorded` BRAIN row**.
+21. **POST progress emits `okr.kr_progress_recorded` memory row**.
 22. **Cycle delete cascades** — deleting cycle deletes all child objectives + KRs.
 23. **KR delete with progress_log entries** → RESTRICT.
 24. **OTel span `okr.objective.create` emitted** — outcome=success.
@@ -725,7 +725,7 @@ async fn progress_log_immutable_from_app(pool: sqlx::PgPool) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 8 BRAIN row builders follow the canonical pattern.)
+(API contract above is the skeleton; 8 memory row builders follow the canonical pattern.)
 
 ---
 
@@ -741,8 +741,8 @@ async fn progress_log_immutable_from_app(pool: sqlx::PgPool) {
 - **FR-OKR-005** — weekly check-in handler (writes to kr_progress_log with source='check_in').
 
 **Cross-module:**
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing.
 - **FR-HR-001** — Member subject_id referenced by Member-scope objectives.
 
 ---
@@ -778,7 +778,7 @@ async fn progress_log_immutable_from_app(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.3 — okr.objective_created BRAIN row
+### 8.3 — okr.objective_created memory row
 
 ```json
 {
@@ -846,8 +846,8 @@ All other questions resolved.
 | Duplicate cycle name | UNIQUE | INSERT fails | Use different name |
 | Duplicate team name | UNIQUE | INSERT fails | Use different name |
 | end_date <= start_date | DB CHECK | INSERT fails | Use correct dates |
-| BRAIN audit fail mid-tx | rollback | 500 audit_failed | brain_writer health |
-| PII not scrubbed | FR-BRAIN-111 + CI test | Pre-commit failure | Add rule |
+| memory audit fail mid-tx | rollback | 500 audit_failed | memory_writer health |
+| PII not scrubbed | FR-MEMORY-111 + CI test | Pre-commit failure | Add rule |
 | Parent objective deleted while children exist | FK RESTRICT | DELETE fails | Reassign children first |
 | Team deleted while objectives reference | FK RESTRICT | DELETE fails | Reassign |
 | Owner subject deleted while objectives reference | FK RESTRICT | DELETE fails | Reassign owner |
@@ -877,7 +877,7 @@ All other questions resolved.
 - **3 closed kr_type enum** — hit_target / improvement / milestone (Doerr canonical).
 - **5 closed kr_status face-saving values** — on_track / at_risk / learned / achieved / cycled_forward.
 - **Cycle status unidirectional** — forward only.
-- **8 BRAIN audit kinds split by lifecycle event** — selectivity at query time.
+- **8 memory audit kinds split by lifecycle event** — selectivity at query time.
 - **Forbidden terminology list bilingual** — Vietnamese equivalents covered.
 - **OpenAPI `_compliance_note` mandatory** — embedded in every response for AI Act discoverability.
 

@@ -3,7 +3,7 @@ id: FR-PROJ-015
 title: "Timeline view — cycle window × assignee swimlane with day-grid layout, drag-resize for date changes, and milestone markers"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-002, FR-PROJ-003, FR-PROJ-007, FR-PROJ-014, FR-PROJ-018]
 depends_on: [FR-PROJ-002]
 blocks: []
@@ -75,7 +75,7 @@ The Timeline view **MUST** render issues as horizontal bars on a day-grid × ass
     - Shift+Cmd+→/← move bar by 1 day.
     - Enter opens Brief Modal.
 10. **MUST** lazy-render swimlanes off-screen via IntersectionObserver; ≥ 60fps with 50+ swimlanes.
-11. **MUST** emit BRAIN audit `proj.timeline_bar_moved` per resize/move with `{issue_id, field, before, after, was_keyboard, trace_id}`.
+11. **MUST** emit memory audit `proj.timeline_bar_moved` per resize/move with `{issue_id, field, before, after, was_keyboard, trace_id}`.
 12. **MUST** emit OTel client metrics:
     - `proj_timeline_render_p95_ms`.
     - `proj_timeline_resize_latency_ms`.
@@ -183,7 +183,7 @@ export function IssueBar({ issue, zoom }: { issue: Issue; zoom: Zoom }) {
     setDraftDates(d => ({ ...d, starts_at: newDate }));
     const res = await writeScalarLWW(issue.id, 'starts_at', newDate.toISOString(), jwt);
     if (!res.accepted) { rollbackDates(); toast('Stale write; refreshed'); }
-    emitBrain('proj.timeline_bar_moved', { issue_id: issue.id, field: 'starts_at',
+    emitMemory('proj.timeline_bar_moved', { issue_id: issue.id, field: 'starts_at',
                                             before: issue.starts_at, after: newDate,
                                             was_keyboard: false });
   }
@@ -216,7 +216,7 @@ export function IssueBar({ issue, zoom }: { issue: Issue; zoom: Zoom }) {
 11. **Kbd: Cmd+Shift+→ moves bar 1 day forward** — both dates +1.
 12. **Lazy swimlane render** — 50 swimlanes; ~10 visible → only those rendered.
 13. **LWW reject on stale** — concurrent edit detected → rollback + toast.
-14. **BRAIN audit per move** — `proj.timeline_bar_moved` row.
+14. **memory audit per move** — `proj.timeline_bar_moved` row.
 15. **OTel resize latency metric** — drag completion → histogram populated.
 16. **axe-core passes** — no critical/serious violations.
 17. **Hover milestone tooltip** — hover gold line → tooltip with name + amount_minor formatted.
@@ -382,7 +382,7 @@ All resolved. Deferred:
 - Dependency arrows have a max length; cross-swimlane arrows render with arched paths to avoid overlap chaos.
 - Per-assignee filter shows the assignee's avatar prominently + their cumulative hours from time entries (FR-TIME-005).
 - The 1-day minimum bar applies even during keyboard resize (Shift+Left past 1 day → no-op + flash).
-- Cycle goal banner text is editable inline by tenant admin; emits BRAIN `proj.cycle_goal_updated` audit.
+- Cycle goal banner text is editable inline by tenant admin; emits memory `proj.cycle_goal_updated` audit.
 - We don't show milestones in the swimlane area (only on date axis); they're date-based, not assignee-based.
 - The today-indicator pulse animation is reduced to subtle if `prefers-reduced-motion` is set.
 - Day-zoom > 90 days OR week-zoom > 2 years triggers a UX warning suggesting different zoom.

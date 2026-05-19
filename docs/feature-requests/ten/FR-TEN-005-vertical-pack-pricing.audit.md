@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands per-pack add-on pricing for the vertical-pack marketplace on top of FR-TEN-002 plan tiers + FR-SKILL-107 pack registry. 690 lines, 20 §1 normative clauses, 20 ACs, 4 verification tests, 16 failure-mode rows, 10 implementation notes. 3 migrations, 6 endpoints, 5 BRAIN audit kinds.
+The spec lands per-pack add-on pricing for the vertical-pack marketplace on top of FR-TEN-002 plan tiers + FR-SKILL-107 pack registry. 690 lines, 20 §1 normative clauses, 20 ACs, 4 verification tests, 16 failure-mode rows, 10 implementation notes. 3 migrations, 6 endpoints, 5 memory audit kinds.
 
 6 issues resolved.
 

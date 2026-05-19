@@ -1,8 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: privacy-impact-assessment-author
-description: |
-  Author a per-feature Privacy Impact Assessment (feature description + data flow + data classes + legal basis + DPIA risk assessment + mitigations + DPO sign-off). Mandatory per GDPR Article 35 + Vietnam Decree 13/2023. CPO-Privacy authored.
+description: >-
+  Author a per-feature Privacy Impact Assessment (feature description + data flow + data classes + legal basis + DPIA risk assessment + mitigations + DPO sign-off). Mandatory per GDPR Article 35 + Vietnam Decree 13/2023. CPO-Privacy authored. Use when user asks to "draft a privacy impact assessment" or "create the privacy impact assessment". Do NOT use for "audit existing privacy impact assessment" (use privacy-impact-assessment-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -12,7 +12,7 @@ metadata:
   cyberos-rubric-target: pia_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -26,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -287,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

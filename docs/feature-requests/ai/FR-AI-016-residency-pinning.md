@@ -4,7 +4,7 @@ id: FR-AI-016
 title: "Tenant residency pinning (sg-1 / eu-1 / us-1 / vn-1) propagating to provider region selection"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 4
@@ -12,7 +12,7 @@ slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-005, FR-AI-006, FR-AI-008, FR-AI-015, FR-AI-022]
 depends_on: [FR-AI-006]
 blocks: [FR-TEN-103, FR-AI-104]   # FR-AI-104 placeholder — not yet specified
@@ -42,8 +42,8 @@ new_files:
   - services/ai-gateway/tests/residency_integration_test.rs
 modified_files:
   - services/ai-gateway/src/alias.rs                         # FR-AI-006 §1 #7 invokes residency::matches
-  - services/ai-gateway/src/handlers/chat.rs                 # emit ai.residency_violation BRAIN row on refusal
-  - services/ai-gateway/src/brain_writer.rs                  # add canonical::residency_violation builder
+  - services/ai-gateway/src/handlers/chat.rs                 # emit ai.residency_violation memory row on refusal
+  - services/ai-gateway/src/memory_writer.rs                  # add canonical::residency_violation builder
   - services/ai-gateway/src/policy.rs                        # parse `residency` field from FR-AI-005 schema
   - services/ai-gateway/Cargo.toml                           # proptest@1, regex@1 (for region-string validation)
 allowed_tools:
@@ -66,7 +66,7 @@ sub_tasks:
   - "0.5h: residency::parse_residency(&str) -> Result<Residency, ResidencyParseError>"
   - "0.5h: AZ-suffix stripping — `ap-southeast-1a` → `ap-southeast-1` (provider returns AZ; we match region)"
   - "1.0h: Integration into FR-AI-006's alias resolution (matches AFTER ZDR check; documented precedence)"
-  - "0.5h: ai.residency_violation BRAIN audit row builder + handler emission"
+  - "0.5h: ai.residency_violation memory audit row builder + handler emission"
   - "0.5h: HTTP 403 RESIDENCY_VIOLATION response shape"
   - "0.5h: OTel metrics (mismatches_total, vn_fallback_refused_total)"
   - "1.0h: Property test (1000 random Residency × Region pairs; assert no cross-residency leak)"
@@ -90,7 +90,7 @@ The AI Gateway service **MUST** enforce tenant residency at alias-resolution tim
 4. **MUST** treat tenants with a missing `policy.ai_policy.residency` field as fail-closed for PDPL-pinned tenants (any tenant with `policy.tenant_jurisdiction == "VN"`); for other tenants the missing-field default is `Sg1` (Asia-Pacific consensus default for the CyberSkill home region). The default is documented in FR-AI-005's schema; this FR consumes the parsed value.
 5. **MUST** strip AZ suffix from the provider-returned region string before matching: `"ap-southeast-1a"` → `"ap-southeast-1"`. The matcher operates on AWS region strings (no AZ); AZ-aware policies are out of scope at slice 4. The strip rule is `^(?P<region>[a-z]{2}-[a-z]+-\d+)[a-z]?$` — stripping a single trailing alpha character if present.
 6. **MUST** return `false` for `Vn1` against ANY provider region in slice 4 (no VN provider integrated). Tenants pinning `vn-1` MUST be refused at resolve time; the refusal carries a distinct error message `vn1_no_provider_yet` so the operator dashboard can distinguish "no VN provider" from "wrong region" failures. FR-AI-104 (placeholder) will integrate Viettel Cloud + FPT Cloud and add their region strings to the `Vn1` set.
-7. **MUST** emit an `ai.residency_violation` BRAIN audit row when a request is refused due to residency. The row carries `tenant_id`, `agent_persona`, `requested_alias`, `policy_residency`, `resolved_region`, `request_id`, AND a `vn1_no_provider` boolean (true when residency is Vn1 and the failure is due to absence of a VN provider rather than wrong region).
+7. **MUST** emit an `ai.residency_violation` memory audit row when a request is refused due to residency. The row carries `tenant_id`, `agent_persona`, `requested_alias`, `policy_residency`, `resolved_region`, `request_id`, AND a `vn1_no_provider` boolean (true when residency is Vn1 and the failure is due to absence of a VN provider rather than wrong region).
 8. **MUST** propagate `ResidencyViolation` errors as HTTP `403 RESIDENCY_VIOLATION` with body `{"error":"residency_violation","policy_residency":"<r>","resolved_region":"<reg>","contact":"ops@cyberos.world"}`. For Vn1 failures, the error code is `residency_violation` AND the body includes `"reason":"no_vn_provider_yet"` so client UIs can render an informative message.
 9. **MUST** be deterministic: same `(Residency, Region)` pair always returns the same boolean. The `region_table.rs` mapping is a `LazyLock<HashMap<Residency, HashSet<&'static str>>>`; no I/O, no time-dependent state, no env-var lookup.
 10. **MUST** integrate with FR-AI-015 (ZDR enforcement) such that the precedence is: **ZDR check first, then residency**. A request that fails ZDR is refused with `ZdrViolation`; a request that passes ZDR but fails residency is refused with `ResidencyViolation`. Both checks run in `alias::resolve`; the order is fixed (ZDR before residency) and documented in FR-AI-006's resolve function.
@@ -298,7 +298,7 @@ ai_policy:
 10. **FR-AI-006 integration: success on match** — Tenant policy `residency: sg-1`, alias resolves to bedrock `ap-southeast-1` → `alias::resolve` returns `Ok((Bedrock, "claude-3-...", Region("ap-southeast-1")))`.
 11. **Vn1 refusal carries vn1_no_provider flag** — Tenant policy `residency: vn-1`; any alias resolution returns `Err(AliasError::ResidencyViolation { vn1_no_provider: true, .. })`; OTel `ai_residency_vn1_refused_total{tenant_id}` increments.
 12. **HTTP 403 RESIDENCY_VIOLATION on refusal** — Handler converts AliasError to a `403` response with the documented body shape; Vn1 case includes `"reason":"no_vn_provider_yet"`.
-13. **Audit row emitted** — Every refusal emits exactly one `ai.residency_violation` BRAIN row with all required fields populated.
+13. **Audit row emitted** — Every refusal emits exactly one `ai.residency_violation` memory row with all required fields populated.
 14. **Missing residency field defaults to Sg1 (non-PDPL tenant)** — Tenant policy without `residency` field; FR-AI-005 schema parser defaults to `Sg1`; `alias::resolve` enforces against `Sg1`.
 15. **Missing residency field for PDPL tenant fails closed** — Tenant with `tenant_jurisdiction: VN` but no `residency` field; FR-AI-005 returns `PolicyError::MissingResidencyForPdplTenant`; HTTP `503 POLICY_INVALID`.
 16. **Per-alias override applies before tenant default** — Policy `residency: sg-1` + `residency_override: { "chat.eu-customer-*": eu-1 }`; resolving `chat.eu-customer-summary` enforces against `Eu1`, not `Sg1`.
@@ -460,7 +460,7 @@ async fn audit_row_emitted_on_residency_refusal() {
     let _ = handlers::chat::handle(test_request_with_residency(
         Residency::Sg1, request_id, "chat.us-only-alias",
     )).await;
-    let rows = brain_test_helper::find_rows("ai.residency_violation", request_id);
+    let rows = memory_test_helper::find_rows("ai.residency_violation", request_id);
     assert_eq!(rows.len(), 1);
     let p = &rows[0].payload;
     assert_eq!(p["policy_residency"], "sg-1");
@@ -588,7 +588,7 @@ Handler refusal path:
 // services/ai-gateway/src/handlers/chat.rs (modified)
 match alias::resolve(&req.alias, &policy).await {
     Err(AliasError::ResidencyViolation { policy_residency, resolved_region, vn1_no_provider, attempted_alias }) => {
-        brain_writer::emit(canonical::residency_violation(
+        memory_writer::emit(canonical::residency_violation(
             &policy.tenant_id, &req.agent_persona, &attempted_alias,
             policy_residency, &resolved_region, vn1_no_provider, &req.request_id,
         )).await?;
@@ -620,7 +620,7 @@ match alias::resolve(&req.alias, &policy).await {
 - **FR-AI-006** — `alias::resolve` consumes `residency::matches`. The `AliasError::ResidencyViolation` variant is added to FR-AI-006's enum.
 - **FR-AI-005** — Tenant policy schema declares `policy.ai_policy.residency` (Residency enum) and `policy.ai_policy.residency_override` (map of glob → Residency). FR-AI-005's parser delegates to `residency::parse_residency` for the value.
 - **FR-AI-015** — ZDR enforcement runs BEFORE residency in `alias::resolve` (precedence in §1 #10). Both errors are surfaced via the same handler path.
-- **FR-AI-003** — BRAIN audit-row bridge. This FR adds the `canonical::residency_violation` builder for the `ai.residency_violation` row kind.
+- **FR-AI-003** — memory audit-row bridge. This FR adds the `canonical::residency_violation` builder for the `ai.residency_violation` row kind.
 - **FR-AI-104 (downstream placeholder)** — VN provider integration (Viettel Cloud + FPT Cloud). Will extend `REGIONS_BY_RESIDENCY[Vn1]` from empty set to a populated set; this FR's `Vn1 → false` rule reverts at that point.
 
 ### Concept dependencies (shared types)
@@ -752,7 +752,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | Per-alias override glob matches multiple aliases ambiguously | `resolve_override` → `OverrideAmbiguous` | `PolicyError::AmbiguousResidencyOverride` → 503 at policy load | Operator narrows glob patterns |
 | Per-alias override glob has invalid syntax | `Glob::new` parse error | `PolicyError::InvalidOverrideGlob` → 503 at policy load | Operator fixes glob pattern |
 | ZDR + residency both fail | Precedence: ZDR fires first (§1 #10) | `Err(ZdrViolation)` returned; residency check never runs | By design; operator sees ZDR error first |
-| Audit row emit fails (BRAIN bridge down) | `brain_writer::emit` returns Err | Refusal still proceeds; sev-1 log "residency refused but audit row failed" | Operator investigates BRAIN; FR-AI-003 §10 covers |
+| Audit row emit fails (memory bridge down) | `memory_writer::emit` returns Err | Refusal still proceeds; sev-1 log "residency refused but audit row failed" | Operator investigates memory; FR-AI-003 §10 covers |
 | Concurrent `matches()` calls | LazyLock + immutable HashSet | All readers see same result | By design (§1 #9 deterministic) |
 | Region table mutation attempted at runtime | LazyLock prevents writes | Compile error if attempted | By design |
 | FR-AI-104 lands but `Vn1` set still empty | Test `test_vn1_set_populated_after_fr_ai_104` fails | CI blocked on FR-AI-104 PR | FR-AI-104 must extend the table as part of its acceptance |

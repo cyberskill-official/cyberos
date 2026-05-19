@@ -9,6 +9,13 @@ repository.workspace = true
 description = "CyberOS SKILL bundle frontmatter validator + broker (FR-SKILL-103 + FR-SKILL-111 + FR-SKILL-113)"
 
 [dependencies]
+# Versions floored to latest-stable as of 2026 Q2.
+# NOTE: `serde_yaml` is DEPRECATED upstream (last release Mar 2024). Slice-4
+# work tracks migration to the maintained fork `serde_yml`; for now we stay
+# on the deprecated crate because the on-disk YAML format is fixed by
+# AGENTS.md and the deprecated crate still parses correctly. See
+# https://github.com/dtolnay/serde-yaml#readme for context.
+
 # Serialization
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -39,6 +46,10 @@ path = "src/lib.rs"
 [[bin]]
 name = "cyberos-skill-validate"
 path = "src/bin/validate.rs"
+
+[[bin]]
+name = "cyberos-skill-transpile-anthropic"
+path = "src/bin/transpile_anthropic.rs"
 
 [dev-dependencies]
 tempfile = "3"

@@ -126,7 +126,7 @@
  <div class="fact-card"><div class="label">OT cap (VN)</div><div class="value">200h / year</div><div class="note">300h with MoLISA registration</div></div>
  <div class="fact-card"><div class="label">Over-alloc flag</div><div class="value">&gt; 110%</div><div class="note">(FR pending)</div></div>
  <div class="fact-card"><div class="label">Under-alloc flag</div><div class="value">&lt; 60%</div><div class="note">(FR pending)</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">HR · PROJ · TIME · LEARN</div><div class="note">+ AUTH · BRAIN · OKR (P3) · OBS</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">HR · PROJ · TIME · LEARN</div><div class="note">+ AUTH · memory · OKR (P3) · OBS</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~8,500</div><div class="note">Rust + TS Gantt SPA</div></div>
  </div>
  </div>
@@ -176,7 +176,7 @@ flowchart LR
  CUO["🎯 CUO<br>cso/coo skill"]
  HRPLAN["📝 Hiring memo<br>(when gap detected)"]
  ALLOC["📋 Rebalance proposal<br>(AM/COO confirms)"]
- BRAIN["🧠 BRAIN audit"]
+ memory["🧠 memory audit"]
  HR --> RES
  PROJ --> RES
  TIME --> RES
@@ -185,13 +185,13 @@ flowchart LR
  RES --> CUO
  CUO --> HRPLAN
  CUO --> ALLOC
- RES --> BRAIN
+ RES --> memory
  classDef hub fill:#cffafe,stroke:#155e75,stroke-width:3px,color:#083344
  classDef mod fill:#e0e7ff,stroke:#3730a3
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class RES hub
  class HR,PROJ,TIME,LEARN,CRM,CUO,HRPLAN,ALLOC mod
- class BRAIN brain
+ class memory memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -276,7 +276,7 @@ flowchart LR
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- RES is a Rust service that consumes events from four upstream modules, maintains a materialised-view-backed allocation matrix, and exposes both a federated GraphQL subgraph and a thin gRPC API for the COO-skill. The Gantt UI is a TypeScript SPA with Yjs CRDT for multi-user drag-drop. Every write to <code>res.allocation</code> emits an audit row to BRAIN and triggers downstream materialised-view refresh.
+ RES is a Rust service that consumes events from four upstream modules, maintains a materialised-view-backed allocation matrix, and exposes both a federated GraphQL subgraph and a thin gRPC API for the COO-skill. The Gantt UI is a TypeScript SPA with Yjs CRDT for multi-user drag-drop. Every write to <code>res.allocation</code> emits an audit row to memory and triggers downstream materialised-view refresh.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -316,7 +316,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit"]
- BRAIN["🧠 BRAIN<br>allocation.* rows"]
+ memory["🧠 memory<br>allocation.* rows"]
  OBS["👁 OBS<br>traces + metrics"]
  end
 
@@ -341,7 +341,7 @@ graph TB
  AGENT --> CHRO_SK
  GQL --> OKR_M
  GQL --> DASH
- MATRIX --> BRAIN
+ MATRIX --> memory
  RES --> OBS
 
  classDef planned fill:#cffafe,stroke:#155e75
@@ -349,7 +349,7 @@ graph TB
  classDef sink fill:#f5ede6,stroke:#45210e
  class INGEST,MATRIX,FORECAST,HIRING,GAP,OT,GQL,AGENT,SPA,COO_SK,CHRO_SK,OKR_M,DASH planned
  class PG,DUCK,NATS store
- class BRAIN,OBS sink
+ class memory,OBS sink
  </div>
  </div>
 
@@ -368,7 +368,7 @@ graph TB
  <tr><td><code>conflict.rs</code></td><td>services/res/src/conflict.rs</td><td>Detect over-allocation (&gt; 110% per (FR pending)) and under-allocation (&lt; 60% sustained &gt; 2 weeks). Emits ConflictRecord rows.</td></tr>
  <tr><td><code>gql_subgraph.rs</code></td><td>services/res/src/gql_subgraph.rs</td><td>Apollo federation subgraph. Types: Allocation, Capacity, ForecastedNeed, SkillGap, HiringPlan, ConflictRecord.</td></tr>
  <tr><td><code>agent_bridge.rs</code></td><td>services/res/src/agent_bridge.rs</td><td>RPC surface for COO-skill / CHRO-skill — returns ranked recommendations with deterministic ordering for replay.</td></tr>
- <tr><td><code>audit_bridge.rs</code></td><td>services/res/src/audit_bridge.rs</td><td>Write every allocation / conflict / reallocation event to BRAIN canonical writer.</td></tr>
+ <tr><td><code>audit_bridge.rs</code></td><td>services/res/src/audit_bridge.rs</td><td>Write every allocation / conflict / reallocation event to memory canonical writer.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/res/migrations/</td><td>sqlx migrations. RLS by <code>tenant_id</code> on every table. Composite indexes on (member_id, week_start) and (project_id, week_start).</td></tr>
  </tbody>
  </table>
@@ -434,7 +434,7 @@ erDiagram
  string allocation_type "billable | non_billable | training | leave"
  uuid created_by FK
  timestamp ts
- string brain_chain
+ string memory_chain
  }
  CAPACITY {
  uuid id PK
@@ -708,7 +708,7 @@ sequenceDiagram
  participant OT as overtime_guard.rs
  participant PG as PostgreSQL
  participant NATS as NATS JetStream
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  U->>SPA: drag Linh's row to "Project Atlas · week 2026-W23 · 18h"
  SPA->>SPA: optimistic local mutation; Yjs broadcast
@@ -746,7 +746,7 @@ sequenceDiagram
  participant C as conflict.rs
  participant CH as 🤖 CHRO-skill
  participant G as 💬 Genie / Notify
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  Note over E: PROJ emits issue.estimated_hours changed
  E->>M: refresh matrix window (member_id, week_start..week_end)
@@ -775,7 +775,7 @@ sequenceDiagram
  participant LP as HiGHS LP solver
  participant PG as PostgreSQL
  participant CO as 🤖 COO-skill
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CR->>F: refresh 26-week forecast
  F->>PG: pull PROJ.issue × CRM.deal_probability × LEARN.mastery
@@ -836,7 +836,7 @@ sequenceDiagram
  participant LP as HiGHS LP solver
  participant U as COO
  participant SPA as Gantt SPA
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CEO->>CHAT: "Project Atlas became P0 — reshuffle to ship in 4 wks"
  CHAT->>CUO: route
@@ -862,7 +862,7 @@ sequenceDiagram
 <section id="lifecycle" class="module-section">
  <header class="section-head"><span class="section-num">7</span><h2>Allocation lifecycle</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- An allocation row traverses six states from draft to completed; conflict states branch off at any point. Every transition writes a chained audit row to BRAIN.
+ An allocation row traverses six states from draft to completed; conflict states branch off at any point. Every transition writes a chained audit row to memory.
  </p>
  <div class="bbg-card p-5 mb-5">
  <div class="mermaid">
@@ -889,13 +889,13 @@ stateDiagram-v2
  <thead><tr><th>State</th><th>Trigger</th><th>Side-effects</th></tr></thead>
  <tbody>
  <tr><td>Draft</td><td>Yjs local-write on Gantt</td><td>Optimistic UI; no audit yet.</td></tr>
- <tr><td>Proposed</td><td>Server upsert succeeds; OT-cap clears</td><td>BRAIN <code>allocation.proposed</code>; Member notified.</td></tr>
- <tr><td>Confirmed</td><td>Member acknowledges, OR week_start - 7d auto-confirm</td><td>BRAIN <code>allocation.confirmed</code>; TIME pre-fills the timesheet template.</td></tr>
+ <tr><td>Proposed</td><td>Server upsert succeeds; OT-cap clears</td><td>memory <code>allocation.proposed</code>; Member notified.</td></tr>
+ <tr><td>Confirmed</td><td>Member acknowledges, OR week_start - 7d auto-confirm</td><td>memory <code>allocation.confirmed</code>; TIME pre-fills the timesheet template.</td></tr>
  <tr><td>Active</td><td>week_start reached</td><td>Materialised view shows in "current week" column.</td></tr>
  <tr><td>Completed</td><td>week_end reached + TIME entries posted</td><td>Variance computed; estimate-calibration feedback to PROJ.</td></tr>
  <tr><td>Reallocated</td><td>COO approves reshuffle</td><td>New row created with link to old (audit chain preserves history).</td></tr>
- <tr><td>Cancelled</td><td>Project closed OR Member departed</td><td>BRAIN <code>allocation.cancelled</code>; downstream invoices recalculated.</td></tr>
- <tr><td>Rejected</td><td>OT-cap breach OR skill-mismatch (severity=block)</td><td>BRAIN <code>allocation.rejected</code> with reason; UI red-flash.</td></tr>
+ <tr><td>Cancelled</td><td>Project closed OR Member departed</td><td>memory <code>allocation.cancelled</code>; downstream invoices recalculated.</td></tr>
+ <tr><td>Rejected</td><td>OT-cap breach OR skill-mismatch (severity=block)</td><td>memory <code>allocation.rejected</code> with reason; UI red-flash.</td></tr>
  </tbody>
  </table>
  </div>
@@ -951,7 +951,7 @@ stateDiagram-v2
 graph LR
  subgraph upstream ["RES depends on"]
  AUTH["🔐 AUTH<br>RBAC + scope"]
- BRAIN["🧠 BRAIN<br>audit rows"]
+ memory["🧠 memory<br>audit rows"]
  OBS["👁 OBS<br>traces + metrics"]
  HR["👥 HR<br>Member roster + contract"]
  PROJ["📋 PROJ<br>project + issue estimates"]
@@ -970,7 +970,7 @@ graph LR
  DASH["📊 OBS dashboards"]
  end
  AUTH --> RES
- BRAIN --> RES
+ memory --> RES
  OBS --> RES
  HR --> NATS
  PROJ --> NATS
@@ -987,7 +987,7 @@ graph LR
 
  classDef planned fill:#cffafe,stroke:#155e75
  classDef shipped fill:#f5ede6,stroke:#45210e
- class AUTH,BRAIN,OBS,HR,PROJ,TIME,LEARN,CRM,NATS,RES,OKR,COO,CHRO,PROJ_D,CUO,DASH planned
+ class AUTH,memory,OBS,HR,PROJ,TIME,LEARN,CRM,NATS,RES,OKR,COO,CHRO,PROJ_D,CUO,DASH planned
  </div>
  </div>
 </section>
@@ -1010,7 +1010,7 @@ graph LR
  <tr><td>EU AI Act</td><td>Art. 14 — Human oversight</td><td>COO-skill suggestions are Notify cards; mutation requires explicit COO action.</td></tr>
  <tr><td>EU AI Act</td><td>Art. 22 — No automated decision-making</td><td>Reallocation never auto-applied; explicit approval predicate.</td></tr>
  <tr><td>GDPR (EU 2016/679)</td><td>Art. 22 — Automated decision-making</td><td>Same as EU AI Act; explicit human approval before any allocation write.</td></tr>
- <tr><td>ISO/IEC 27001:2022</td><td>A.8.24 — Use of cryptography</td><td>Allocation chain hashed in BRAIN; tamper detection on replay.</td></tr>
+ <tr><td>ISO/IEC 27001:2022</td><td>A.8.24 — Use of cryptography</td><td>Allocation chain hashed in memory; tamper detection on replay.</td></tr>
  <tr><td>SOC 2 Type II</td><td>CC7.2 — System monitoring</td><td>Conflict-detection events emit OBS metrics; over-alloc rate is a dashboard KPI.</td></tr>
  </tbody>
  </table>
@@ -1059,7 +1059,7 @@ graph LR
  <tr><td><strong>Average utilisation (org-wide)</strong></td><td><code>Σ planned / Σ capacity</code></td><td>allocation_matrix</td><td>70–85% (sweet-spot band)</td></tr>
  <tr><td><strong>Over-allocation incidents / week</strong></td><td><code>count(util &gt; 110%)</code></td><td>conflict_record</td><td>≤ 3 / 50 Members</td></tr>
  <tr><td><strong>Under-allocation incidents / week</strong></td><td><code>count(util &lt; 60% for 2+ wks)</code></td><td>conflict_record</td><td>≤ 2 / 50 Members</td></tr>
- <tr><td><strong>OT-cap-rejected writes / week</strong></td><td><code>count(allocation.rejected reason=ot_cap)</code></td><td>BRAIN</td><td>tracked; expect &lt; 1 / week</td></tr>
+ <tr><td><strong>OT-cap-rejected writes / week</strong></td><td><code>count(allocation.rejected reason=ot_cap)</code></td><td>memory</td><td>tracked; expect &lt; 1 / week</td></tr>
  <tr><td><strong>Hiring-forecast MAE (days)</strong></td><td>monthly backtest</td><td>res.hiring_plan</td><td>≤ 14 d</td></tr>
  <tr><td><strong>Skills-gap remediation lead time</strong></td><td><code>median(filled - opened)</code></td><td>hiring_plan</td><td>≤ 90 d</td></tr>
  <tr><td><strong>Forecast accuracy (estimated vs actual hrs)</strong></td><td><code>1 - MAPE</code></td><td>matrix vs TIME</td><td>≥ 80%</td></tr>
@@ -1070,7 +1070,7 @@ graph LR
  <tr><td><strong>Member-preference override rate</strong></td><td>overrides with Member acknowledgment / total overrides</td><td>RES audit</td><td>= 1.0 (hard floor)</td></tr>
  <tr><td><strong>Cross-Engagement rate-card alignment</strong></td><td>reallocations flagged for rate variance &gt; 20%</td><td>RES + PROJ</td><td>tracked; flag = AM confirms</td></tr>
  <tr><td><strong>Cap version stamp coverage</strong></td><td>allocations stamped with cap_version / total</td><td>RES audit</td><td>= 1.0</td></tr>
- <tr><td><strong>Lumi cross-tenant RES sync requests</strong></td><td>requests with explicit DPO sign-off / total</td><td>BRAIN audit</td><td>= 1.0 (cross-tenant share always explicit)</td></tr>
+ <tr><td><strong>Lumi cross-tenant RES sync requests</strong></td><td>requests with explicit DPO sign-off / total</td><td>memory audit</td><td>= 1.0 (cross-tenant share always explicit)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1105,7 +1105,7 @@ graph LR
 <!-- ============================================================ -->
 <section id="cli-usage" class="module-section">
  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-res</code> for COO / CHRO seat operators. Every destructive command writes a chained BRAIN audit row before exit.</p>
+ <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-res</code> for COO / CHRO seat operators. Every destructive command writes a chained memory audit row before exit.</p>
 
  <h3 class="text-lg font-bold mb-2">1. Show capacity vs forecast for the next 12 weeks</h3>
 <pre><code>$ cyberos-res matrix --from 2026-W21 --weeks 12 --format table
@@ -1142,7 +1142,7 @@ W22 Linh 40h 38h 30h — 95%
  design: forecast 36h/wk by 2026-W39; supply 18h/wk; gap opens 2026-W37
  → target 2026-09-15
 
-[audit] brain seq=88412 chain=a3f2…9d8e</code></pre>
+[audit] memory seq=88412 chain=a3f2…9d8e</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Suggest reallocation for a conflict</h3>
 <pre><code>$ cyberos-res reallocate --conflict CR-001834
@@ -1239,7 +1239,7 @@ WEEK PLANNED ACTUAL PROJECTS STATUS
  <li><strong>LEARN module</strong> — <a href="learn.html" class="text-blue-700 underline">learn.html</a> · supplies skill mastery levels.</li>
  <li><strong>OKR module</strong> — <a href="okr.html" class="text-blue-700 underline">okr.html</a> · consumes hiring-plan progress for the hiring objective.</li>
  <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + integration-model Mermaid + 10-row auto-vs-human matrix.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> — RES allocation decisions become BRAIN audit rows; capacity-vs-forecast is integrator, not source.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> — RES allocation decisions become memory audit rows; capacity-vs-forecast is integrator, not source.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — RES at P3 · mid (P3, after the upstream modules ship).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  </ul>

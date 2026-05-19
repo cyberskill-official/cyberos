@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PORTAL-001, FR-PORTAL-003, FR-PORTAL-005, FR-TEN-101, FR-TEN-103, FR-AUTH-101, FR-EMAIL-001, FR-DOC-001, FR-AI-003, FR-BRAIN-111, FR-OBS-005]
+memory_chain_hash: null
+related_frs: [FR-PORTAL-001, FR-PORTAL-003, FR-PORTAL-005, FR-TEN-101, FR-TEN-103, FR-AUTH-101, FR-EMAIL-001, FR-DOC-001, FR-AI-003, FR-MEMORY-111, FR-OBS-005]
 depends_on: [FR-TEN-101]
 blocks: []
 
@@ -40,7 +40,7 @@ source_decisions:
   - DEC-1014 2026-05-17 — RLS scoped to `tenant_id = current_setting('auth.tenant_id')::uuid` on all 3 PORTAL brand tables
   - DEC-1015 2026-05-17 — Asset upload size cap: 1 MiB per asset; total brand pack < 5 MiB (5 assets × 1 MiB); rejected uploads return 413 PAYLOAD_TOO_LARGE
   - DEC-1016 2026-05-17 — Email template override syntax: Tera fragments with a fixed allowed-tag list (no script execution, no file_read, no env access) — sandboxed Tera context per CyberOS template guidelines
-  - DEC-1017 2026-05-17 — BRAIN audit kinds: portal.brand_pack_created, portal.brand_pack_activated, portal.brand_pack_rolled_back, portal.cname_dns_verified, portal.cname_tls_issued, portal.cname_tls_renewed, portal.cname_tls_renewal_failed, portal.brand_pack_validation_rejected
+  - DEC-1017 2026-05-17 — memory audit kinds: portal.brand_pack_created, portal.brand_pack_activated, portal.brand_pack_rolled_back, portal.cname_dns_verified, portal.cname_tls_issued, portal.cname_tls_renewed, portal.cname_tls_renewal_failed, portal.brand_pack_validation_rejected
   - DEC-1018 2026-05-17 — Per-tenant brand-pack edit limited to 10 saves per day (rate limit) to prevent storage exhaustion via rapid re-saves
   - DEC-1019 2026-05-17 — Image content-type validation via magic-bytes (not Content-Type header) — defends against spoofed uploads (e.g. executable disguised as PNG)
   - DEC-1020 2026-05-17 — Tenant-set custom favicon overrides browser default for `<slug>.cyberos.world` AND custom CNAME if active
@@ -69,7 +69,7 @@ build_envelope:
     - services/portal/src/handlers/brand_asset_serve.rs                 # public CDN-origin asset serve
     - services/portal/src/handlers/cname_admin.rs                       # POST CNAME / verify / activate
     - services/portal/src/cli/cname_renewal_job.rs                      # daily ACME renewal
-    - services/portal/src/audit/brand_events.rs                         # 8 BRAIN row builders
+    - services/portal/src/audit/brand_events.rs                         # 8 memory row builders
     - services/portal/tests/brand_pack_create_test.rs
     - services/portal/tests/brand_pack_version_test.rs
     - services/portal/tests/brand_pack_rollback_test.rs
@@ -128,7 +128,7 @@ risk_if_skipped: "Without per-tenant brand pack, every PORTAL surface looks like
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + email overrides) and custom CNAME with ACME-issued TLS at `services/portal/src/brand/` + `services/portal/src/cname/`, with versioning + rollback, WCAG 2.1 AA contrast enforcement, magic-bytes asset validation, daily auto-renewal, and 8 BRAIN audit kinds.
+The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + email overrides) and custom CNAME with ACME-issued TLS at `services/portal/src/brand/` + `services/portal/src/cname/`, with versioning + rollback, WCAG 2.1 AA contrast enforcement, magic-bytes asset validation, daily auto-renewal, and 8 memory audit kinds.
 
 1. **MUST** define `portal_brand_packs` (versioned, immutable rows) at migration `0005`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, version INT NOT NULL, palette JSONB NOT NULL, email_overrides JSONB NOT NULL DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_by_subject_id UUID NOT NULL, asset_set_id BIGINT NOT NULL REFERENCES portal_brand_assets(asset_set_id))`. Per-tenant version is monotonic. REVOKE UPDATE, DELETE per AUTHORING.md rule 12 (rollback = pointer change, not row mutation).
 
@@ -218,7 +218,7 @@ The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + 
     2. `services/email/templates/<template>.tera` (CyberSkill default).
     Missing override silently falls through to default; no error.
 
-23. **MUST** emit 8 BRAIN audit row kinds per DEC-1017 (AUTHORING.md rule 6 namespace):
+23. **MUST** emit 8 memory audit row kinds per DEC-1017 (AUTHORING.md rule 6 namespace):
     - `portal.brand_pack_created` (sev-2)
     - `portal.brand_pack_activated` (sev-2)
     - `portal.brand_pack_rolled_back` (sev-2)
@@ -421,7 +421,7 @@ GET    https://cdn.cyberos.world/brand/{tenant_slug}/{kind}.{ext}?v={sha16}  (pu
 17. **CNAME global uniqueness** — second tenant claiming the same `cname` → 409 + `cname_taken`.
 18. **Rate-limit 10/day** — 11th brand-pack save in 24h → 429.
 19. **Renewal failure escalation** — 3 consecutive failures → sev-1 alert; row's `tls_renewal_failures=3`.
-20. **8 BRAIN audit kinds emitted** — full lifecycle (create + activate + rollback + cname_verify + tls_issued + tls_renewed + tls_renewal_failed + validation_rejected) covered.
+20. **8 memory audit kinds emitted** — full lifecycle (create + activate + rollback + cname_verify + tls_issued + tls_renewed + tls_renewal_failed + validation_rejected) covered.
 
 ---
 
@@ -509,7 +509,7 @@ async fn dns_verified_triggers_acme_issuance() {
     assert_eq!(row.0, "active");
     assert!(row.1.is_some());
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.cname_dns_verified"));
     assert!(audit.iter().any(|r| r.kind == "portal.cname_tls_issued"));
 }
@@ -689,8 +689,8 @@ pub async fn issue_cert(ctx: &AppCtx, cname: &str) -> Result<IssuedCert, AcmeErr
 - **FR-AUTH-101** RBAC — `tenant_admin` role gate.
 - **FR-EMAIL-001** Transactional email — consumes fallback chain for tenant overrides.
 - **FR-DOC-001** Documents — brand pack may apply to PDF export headers.
-- **FR-AI-003** BRAIN audit-row bridge — 8 new kinds.
-- **FR-BRAIN-111** PII scrubbing — validation that no PII enters assets.
+- **FR-AI-003** memory audit-row bridge — 8 new kinds.
+- **FR-MEMORY-111** PII scrubbing — validation that no PII enters assets.
 
 **Downstream (blocks):** None.
 
@@ -719,7 +719,7 @@ pub async fn issue_cert(ctx: &AppCtx, cname: &str) -> Result<IssuedCert, AcmeErr
 }
 ```
 
-### 8.2 `portal.brand_pack_activated` BRAIN row
+### 8.2 `portal.brand_pack_activated` memory row
 
 ```json
 {
@@ -797,7 +797,7 @@ All resolved for slice 1. Deferred:
 | CDN cache invalidation NATS publish fails | NATS error | Cache staleness up to 5min (TTL); sev-3 informational | Inherent — TTL eventual consistency |
 | Image pipeline (vips) crash | vips returns error | 500 + sev-2 alert; asset NOT persisted | Operator investigates; libvips upgrade may be needed |
 | Rollback to non-existent pack_id | FK constraint fails | 404 + `target_pack_not_found` | Tenant chooses valid pack from list |
-| Multiple concurrent activations (race) | UPSERT on portal_brand_pack_active is atomic | Last writer wins; previous activation BRAIN row still exists for audit | Inherent — last-write-wins acceptable |
+| Multiple concurrent activations (race) | UPSERT on portal_brand_pack_active is atomic | Last writer wins; previous activation memory row still exists for audit | Inherent — last-write-wins acceptable |
 | Tenant uploads SVG with embedded `<script>` | slice 1 accepts as-is | XSS risk if SVG served inline | Slice 2 adds SVG sanitization; slice 1 mitigates by serving SVG with `Content-Disposition: attachment` for now (downloaded, not inline) |
 | Email override `{% include %}` outside per-tenant path | sandbox path constraint | 400 + `tera_include_path_violation` | Tenant uses relative path |
 | Renewal job runs on revoked cert | status check | Skip + log informational; no audit row | Inherent — guard at job entry |

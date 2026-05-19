@@ -71,7 +71,7 @@ jobs:
   # ---------------------------------------------------------------------------
   # Integration gate — boots Postgres + Apache AGE + Redis via docker-compose
   # and runs the `--ignored` tests (FR-AUTH-003 RLS isolation + FR-AUTH-004
-  # JWT roundtrip + FR-BRAIN-101 chain-anchor against real DB).
+  # JWT roundtrip + FR-MEMORY-101 chain-anchor against real DB).
   # ---------------------------------------------------------------------------
   integration:
     name: integration (Postgres + Redis)
@@ -128,10 +128,10 @@ jobs:
           DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
         run: cd auth && sqlx migrate run
 
-      - name: Apply migrations — brain
+      - name: Apply migrations — memory
         env:
           DATABASE_URL: postgres://cyberos:cyberos@localhost:5432/cyberos
-        run: cd brain && sqlx migrate run
+        run: cd memory && sqlx migrate run
 
       - name: cargo test (Postgres-required)
         env:

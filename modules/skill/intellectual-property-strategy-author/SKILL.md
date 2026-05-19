@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: intellectual-property-strategy-author
-description: Authors the annual (or per-event) IP portfolio strategy — patent filings, trademark portfolio, trade-secret protection plan, defensive vs offensive posture, FTO (freedom-to-operate) opinions. Per WIPO IP strategy framework + USPTO MPEP + Madrid Protocol (trademarks) + UTSA/DTSA (trade secrets) + PCT for international filings.
-  Author a IP_STRATEGY markdown from source artefact(s). Generates a
-  versioned intellectual-property-strategy@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  intellectual-property-strategy-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Authors the annual (or per-event) IP portfolio strategy — patent filings, trademark portfolio, trade-secret protection plan, defensive vs offensive posture, FTO (freedom-to-operate) opinions. Per WIPO IP strategy framework + USPTO MPEP + Madrid Protocol (trademarks) + UTSA/DTSA (trade secrets) + PCT for international filings. Author a IP_STRATEGY markdown from source artefact(s). Generates a versioned intellectual-property-strategy@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into intellectual-property-strategy-audit by default. Refuses to author when upstream artefact is in non-pass state. Use when user asks to "draft a intellectual property strategy" or "create the intellectual property strategy". Do NOT use for "audit existing intellectual property strategy" (use intellectual-property-strategy-audit instead). Author a IP_STRATEGY markdown from source artefact(s). Generates a versioned intellectual-property-strategy@1 file under output_dir, wit...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: ip-strategy_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

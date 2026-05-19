@@ -3,7 +3,7 @@ id: FR-SKILL-102
 title: "Self-hosted OCI registry for .skill bundles — cosign signing + tenant-scoped + immutable tags + 100MB cap + audit"
 module: SKILL
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-SKILL-101, FR-AUTH-004, FR-AUTH-003]
 depends_on: [FR-SKILL-101]
 blocks: [FR-SKILL-201]   # placeholder — OCI registry deploy FR (R3 stage), not yet specified
@@ -53,7 +53,7 @@ disallowed_tools:
   - allow push without cosign signature (per §1 #2)
   - allow tag overwrite (per §1 #5 immutable)
   - cross-tenant push/pull (per §1 #4)
-  - skip BRAIN audit on push or pull (per §1 #3)
+  - skip memory audit on push or pull (per §1 #3)
   - bypass 100MB bundle size cap (per §1 #11)
 
 effort_hours: 10
@@ -63,7 +63,7 @@ sub_tasks:
   - "1.0h: cosign_verify.rs — Ed25519 signature verification using sigstore library"
   - "0.5h: auth.rs — JWT verification + tenant_id extraction"
   - "0.5h: tenant_scope.rs — namespace per tenant; cross-tenant rejected"
-  - "0.5h: audit.rs — skill.published + skill.pulled BRAIN rows"
+  - "0.5h: audit.rs — skill.published + skill.pulled memory rows"
   - "0.5h: storage.rs — zot backend integration (or filesystem at slice 1)"
   - "0.5h: Immutability check (existing tag → 409)"
   - "0.5h: 100MB bundle size cap"
@@ -82,7 +82,7 @@ A self-hosted OCI-compliant registry **MUST** host `.skill` bundles. Each intera
 
 1. **MUST** speak OCI Distribution v1.1 — standard `/v2/<name>/manifests/<reference>` + `/v2/<name>/blobs/<digest>` endpoints. Backend: zot (recommended; OCI-native + small footprint).
 2. **MUST** require cosign signature on every push. Cosign uses Ed25519; per-publisher keypair (private key in publisher's secret store). Publisher signs bundle bytes; registry verifies before storing. Unsigned push → 401 with `signature_required`.
-3. **MUST** emit BRAIN rows:
+3. **MUST** emit memory rows:
     - `skill.published` on successful push: `tenant_id`, `skill_id`, `version`, `digest`, `publisher_subject_id`, `signature_pubkey_id`, `bundle_size_bytes`, `request_id`.
     - `skill.pulled` on successful pull: `tenant_id`, `skill_id`, `version`, `digest`, `puller_subject_id`, `request_id`.
 4. **MUST** scope namespace by `tenant_id`: registry path is `/v2/<tenant_id>/<skill_id>/manifests/<version>`. Pulls require valid JWT (FR-AUTH-004) AND `claims.tenant_id == namespace tenant_id`. Cross-tenant attempts → 403 with `cross_tenant_blocked`.
@@ -162,7 +162,7 @@ HEAD /v2/<tenant_id>/<skill_id>/manifests/<version>    # check exists (immutabil
 pub async fn push_manifest(
     tenant_id: Uuid, skill_id: &str, version: &str,
     body: Bytes, claims: &Claims, idempotency_key: Option<String>,
-    storage: &Storage, brain: &BrainBridge,
+    storage: &Storage, memory: &MemoryBridge,
 ) -> Result<PushResponse, RegistryError> {
     // §1 #4 tenant scope
     if claims.tenant_id != tenant_id { return Err(RegistryError::CrossTenantBlocked); }
@@ -211,7 +211,7 @@ pub async fn push_manifest(
     storage.put_manifest(tenant_id, skill_id, version, &body).await?;
 
     let request_id = format!("registry_{}", ulid::Ulid::new());
-    brain.emit(canonical::skill_published(
+    memory.emit(canonical::skill_published(
         tenant_id, skill_id, version, &body_hash, claims.subject_id,
         &pubkey_id, total_size, &request_id,
     )).await?;
@@ -230,7 +230,7 @@ pub async fn push_manifest(
 ```rust
 pub async fn pull_manifest(
     tenant_id: Uuid, skill_id: &str, version: &str, claims: &Claims,
-    storage: &Storage, brain: &BrainBridge,
+    storage: &Storage, memory: &MemoryBridge,
 ) -> Result<Bytes, RegistryError> {
     if claims.tenant_id != tenant_id { return Err(RegistryError::CrossTenantBlocked); }
     if !claims.scope_grants.iter().any(|g| g == "skill:pull" || g == "*") {
@@ -249,7 +249,7 @@ pub async fn pull_manifest(
         .map_err(|e| { metrics::signature_failure("pull"); RegistryError::SignatureInvalid(e.to_string()) })?;
 
     let request_id = format!("registry_{}", ulid::Ulid::new());
-    brain.emit(canonical::skill_pulled(
+    memory.emit(canonical::skill_pulled(
         tenant_id, skill_id, version, hex::encode(sha256(&body)), claims.subject_id, &request_id,
     )).await?;
 
@@ -306,7 +306,7 @@ async fn main() -> anyhow::Result<()> {
 7. Cross-tenant push → 403.
 8. JWT lacks `skill:publish` → 403.
 9. JWT lacks `skill:pull` → 403.
-10. BRAIN rows emitted on push (skill.published) and pull (skill.pulled).
+10. memory rows emitted on push (skill.published) and pull (skill.pulled).
 11. Bundle > 100MB → 413 `bundle_too_large`.
 12. Tenant over 10GB quota → 507 `quota_exceeded`.
 13. Idempotent push (same key + same content) → returns prior manifest.
@@ -328,16 +328,16 @@ async fn push_with_valid_signature_succeeds() {
     let sig = cosign::sign(&bundle, &test_keypair());
     let resp = push_manifest(test_tenant(), "obs.triage-alert", "1.0.0",
                               build_manifest(&bundle, &sig), &test_publisher_claims(), None,
-                              &test_storage(), &test_brain()).await.unwrap();
+                              &test_storage(), &test_memory()).await.unwrap();
     assert_eq!(resp.status, 201);
-    assert!(brain_test_helper::has_row("skill.published", "1.0.0").is_some());
+    assert!(memory_test_helper::has_row("skill.published", "1.0.0").is_some());
 }
 
 #[tokio::test]
 async fn push_without_signature_returns_401() {
     let bundle = test_helper::build_bundle("x");
     let manifest = build_manifest_unsigned(&bundle);
-    let err = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), None, &test_storage(), &test_brain()).await.expect_err("expected SignatureRequired");
+    let err = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), None, &test_storage(), &test_memory()).await.expect_err("expected SignatureRequired");
     assert!(matches!(err, RegistryError::SignatureRequired));
 }
 
@@ -346,7 +346,7 @@ async fn push_with_invalid_signature_returns_401() {
     let bundle = test_helper::build_bundle("x");
     let sig = "TAMPERED_SIGNATURE_BASE64";
     let manifest = build_manifest(&bundle, sig);
-    let err = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), None, &test_storage(), &test_brain()).await.expect_err("expected SignatureInvalid");
+    let err = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), None, &test_storage(), &test_memory()).await.expect_err("expected SignatureInvalid");
     assert!(matches!(err, RegistryError::SignatureInvalid(_)));
 }
 
@@ -364,15 +364,15 @@ async fn cross_tenant_pull_returns_403() {
     let _ = push_with_tenant(tenant_a, "x", "1.0.0").await.unwrap();
 
     let claims_b = claims_for(tenant_b);
-    let err = pull_manifest(tenant_a, "x", "1.0.0", &claims_b, &test_storage(), &test_brain()).await.expect_err("expected CrossTenantBlocked");
+    let err = pull_manifest(tenant_a, "x", "1.0.0", &claims_b, &test_storage(), &test_memory()).await.expect_err("expected CrossTenantBlocked");
     assert!(matches!(err, RegistryError::CrossTenantBlocked));
 }
 
 #[tokio::test]
 async fn pull_emits_skill_pulled_audit_row() {
     let _ = push_test_manifest("x", "1.0.0").await.unwrap();
-    let _ = pull_manifest(test_tenant(), "x", "1.0.0", &test_puller_claims(), &test_storage(), &test_brain()).await.unwrap();
-    let row = brain_test_helper::find_latest("skill.pulled").unwrap();
+    let _ = pull_manifest(test_tenant(), "x", "1.0.0", &test_puller_claims(), &test_storage(), &test_memory()).await.unwrap();
+    let row = memory_test_helper::find_latest("skill.pulled").unwrap();
     assert_eq!(row.payload["skill_id"], "x");
     assert_eq!(row.payload["version"], "1.0.0");
 }
@@ -381,7 +381,7 @@ async fn pull_emits_skill_pulled_audit_row() {
 async fn bundle_over_100mb_returns_413() {
     let huge = vec![0u8; 110 * 1024 * 1024];
     let manifest = build_manifest_with_layer_size(&huge, 110 * 1024 * 1024);
-    let err = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), None, &test_storage(), &test_brain()).await.expect_err("expected BundleTooLarge");
+    let err = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), None, &test_storage(), &test_memory()).await.expect_err("expected BundleTooLarge");
     assert!(matches!(err, RegistryError::BundleTooLarge { .. }));
 }
 
@@ -389,7 +389,7 @@ async fn bundle_over_100mb_returns_413() {
 async fn tampered_storage_pull_fails_signature_verify() {
     let _ = push_test_manifest("x", "1.0.0").await.unwrap();
     test_helper::tamper_storage_byte(test_tenant(), "x", "1.0.0", 100, 0xff).await;
-    let err = pull_manifest(test_tenant(), "x", "1.0.0", &test_puller_claims(), &test_storage(), &test_brain()).await.expect_err("expected SignatureInvalid");
+    let err = pull_manifest(test_tenant(), "x", "1.0.0", &test_puller_claims(), &test_storage(), &test_memory()).await.expect_err("expected SignatureInvalid");
     assert!(matches!(err, RegistryError::SignatureInvalid(_)));
 }
 
@@ -397,8 +397,8 @@ async fn tampered_storage_pull_fails_signature_verify() {
 async fn idempotent_push_returns_prior_manifest() {
     let key = "idem-001".to_string();
     let manifest = test_manifest("x", "1.0.0");
-    let r1 = push_manifest(test_tenant(), "x", "1.0.0", manifest.clone(), &test_publisher_claims(), Some(key.clone()), &test_storage(), &test_brain()).await.unwrap();
-    let r2 = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), Some(key), &test_storage(), &test_brain()).await.unwrap();
+    let r1 = push_manifest(test_tenant(), "x", "1.0.0", manifest.clone(), &test_publisher_claims(), Some(key.clone()), &test_storage(), &test_memory()).await.unwrap();
+    let r2 = push_manifest(test_tenant(), "x", "1.0.0", manifest, &test_publisher_claims(), Some(key), &test_storage(), &test_memory()).await.unwrap();
     assert_eq!(r1.manifest_digest, r2.manifest_digest);
 }
 ```
@@ -421,7 +421,7 @@ services:
   skill-registry:
     build: ../../services/skill-registry
     ports: ["7878:7878"]
-    environment: { ZOT_URL: http://zot:5000, BRAIN_URL: http://brain:8080 }
+    environment: { ZOT_URL: http://zot:5000, MEMORY_URL: http://memory:8080 }
     depends_on: [zot]
 volumes: { zot-data: }
 ```
@@ -442,7 +442,7 @@ volumes: { zot-data: }
 - **FR-SKILL-101** — audit row pattern.
 - **FR-AUTH-004** — JWT with scope_grants.
 - **FR-AUTH-003** — RLS pattern (tenant scoping).
-- **FR-AI-003** — brain_writer for audit emission.
+- **FR-AI-003** — memory_writer for audit emission.
 - Crates: `axum`, `reqwest`, `tonic` (zot client), `sigstore@0.10` (cosign), `clap@4`, `serde`, `tokio`.
 - zot OCI registry binary.
 - cosign CLI for publisher-side signing.
@@ -528,7 +528,7 @@ All resolved. Deferred:
 | Idempotent replay (same key + same content) | lookup | 201 with prior digest | By design |
 | Idempotency reuse (same key + different content) | hash mismatch | 409 idempotency_key_reuse | Caller uses different key |
 | Tampered storage (post-push) | pull-time verify catches | 401 signature_invalid | Investigate storage integrity |
-| BRAIN audit emit fails | brain_writer error | Push succeeds; sev-1 log | Operator investigates |
+| memory audit emit fails | memory_writer error | Push succeeds; sev-1 log | Operator investigates |
 | zot down | http error | 503 | Restart zot |
 | Publisher key revoked | signature still verifies (key cached) | Future pushes fail | Update key allow-list |
 | Bundle integrity corruption (during transfer) | digest mismatch | 400 | Caller retries |

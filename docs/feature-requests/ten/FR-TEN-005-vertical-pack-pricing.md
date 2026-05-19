@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-002, FR-TEN-003, FR-TEN-102, FR-TEN-004, FR-SKILL-107, FR-INV-001, FR-AUTH-101, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-TEN-002, FR-TEN-003, FR-TEN-102, FR-TEN-004, FR-SKILL-107, FR-INV-001, FR-AUTH-101, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-TEN-002, FR-SKILL-107]
 blocks: []
 
@@ -29,7 +29,7 @@ source_decisions:
   - DEC-1305 2026-05-17 — Pack uninstall is 14-day soft (data + skill access retained, can re-install without re-onboarding); after 14d hard-removed (skill bundle deactivated, data flagged for retention per tenant policy)
   - DEC-1306 2026-05-17 — Tier gating: per-pack `min_tier` constraint (e.g. compliance packs Team+ only); install attempt on lower tier → 403 `tier_upgrade_required`
   - DEC-1307 2026-05-17 — Per-tenant install limit: 50 packs/tenant (Enterprise can request override); prevent skill-bundle bloat
-  - DEC-1308 2026-05-17 — BRAIN audit kinds: ten.pack_installed, ten.pack_uninstalled, ten.pack_billing_failed, ten.pack_price_overridden, ten.pack_tier_blocked
+  - DEC-1308 2026-05-17 — memory audit kinds: ten.pack_installed, ten.pack_uninstalled, ten.pack_billing_failed, ten.pack_price_overridden, ten.pack_tier_blocked
   - DEC-1309 2026-05-17 — Pack price changes by publisher (CyberSkill) apply at next billing period; existing tenants grandfathered for 90 days
 
 build_envelope:
@@ -93,7 +93,7 @@ risk_if_skipped: "Without per-pack pricing, the SKILL marketplace (FR-SKILL-107)
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship vertical-pack pricing add-on at `services/ten/src/packs/` with flat per-pack-per-month pricing, multi-currency catalog, per-tenant override, tier-gating, 14-day soft uninstall, install limit, prorated billing via FR-TEN-003/102, and 5 BRAIN audit kinds.
+The TEN service **MUST** ship vertical-pack pricing add-on at `services/ten/src/packs/` with flat per-pack-per-month pricing, multi-currency catalog, per-tenant override, tier-gating, 14-day soft uninstall, install limit, prorated billing via FR-TEN-003/102, and 5 memory audit kinds.
 
 1. **MUST** define closed `pack_install_status` enum: `('pending','active','uninstalled','suspended_billing_failed','blocked_tier')` per DEC-1304. Cardinality asserts 5.
 
@@ -145,7 +145,7 @@ The TEN service **MUST** ship vertical-pack pricing add-on at `services/ten/src/
     - At T+90d: next billing uses new price + emit `ten.pack_price_changed` (informational not in 5-core).
     - New installs immediately use new price.
 
-15. **MUST** emit 5 BRAIN audit kinds per DEC-1308:
+15. **MUST** emit 5 memory audit kinds per DEC-1308:
     - `ten.pack_installed` (sev-2)
     - `ten.pack_uninstalled` (sev-2)
     - `ten.pack_billing_failed` (sev-1)
@@ -275,7 +275,7 @@ GET    /v1/admin/packs/catalog                              (public-read)
 14. **USD tenant uses Stripe rail**.
 15. **Cross-rail rejected** — VND tenant cannot install pack priced only in USD → 400.
 16. **Per-seat attempt rejected** — API endpoint has no seat_count field; pricing is flat.
-17. **5 BRAIN audit kinds emitted** — full lifecycle.
+17. **5 memory audit kinds emitted** — full lifecycle.
 18. **Cfo-only override** — non-cfo override attempt → 403.
 19. **RLS isolation** — tenant A's installs invisible to tenant B.
 20. **PII scrub** — justification_sha256 in chain only.
@@ -302,7 +302,7 @@ async fn tier_gate_blocks_starter() {
     ctx.seed_pack_catalog("enterprise-pack", BillingCurrency::Usd, PlanTier::Enterprise, 99900).await;
     let r = ctx.install_pack(ctx.tenant_id, "enterprise-pack").await;
     assert_eq!(r.status(), 403);
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "ten.pack_tier_blocked"));
 }
 
@@ -346,7 +346,7 @@ async fn grandfathered_for_90d() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TEN-002 (plan tiers — min_tier semantics), FR-SKILL-107 (pack registry — pack_id source).
-**Cross-module:** FR-TEN-003 (stripe rail), FR-TEN-102 (vnd rail), FR-TEN-004 (metering integration), FR-INV-001 (invoice line items), FR-AUTH-101 (cfo role), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-TEN-003 (stripe rail), FR-TEN-102 (vnd rail), FR-TEN-004 (metering integration), FR-INV-001 (invoice line items), FR-AUTH-101 (cfo role), FR-AI-003, FR-MEMORY-111.
 **Downstream:** None.
 
 ---

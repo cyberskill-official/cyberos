@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-004, FR-EMAIL-010, FR-EMAIL-011, FR-AUTH-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-004, FR-EMAIL-010, FR-EMAIL-011, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-EMAIL-004]
 blocks: [FR-EMAIL-010, FR-EMAIL-003, FR-INV-010]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-1481 2026-05-17 — Closed enum `send_status` = {drafting, queued, sent, bounced_hard, bounced_soft, complaint, suppressed}; cardinality 7
   - DEC-1482 2026-05-17 — Pre-send confirmation: client UI shows summary; backend requires `confirm_token` (generated at compose-start, valid 5min)
   - DEC-1483 2026-05-17 — Suppression list per-tenant: hard bounces + complaints + manual suppressions; outbound to suppressed → 412
-  - DEC-1484 2026-05-17 — BRAIN audit kinds: email.send_queued, email.send_delivered, email.send_bounced, email.send_complaint, email.send_suppressed
+  - DEC-1484 2026-05-17 — memory audit kinds: email.send_queued, email.send_delivered, email.send_bounced, email.send_complaint, email.send_suppressed
   - DEC-1485 2026-05-17 — Rate limit 100 sends/hour/Member (anti-abuse + spam-source prevention)
 
 build_envelope:
@@ -81,7 +81,7 @@ risk_if_skipped: "Without outbound send, EMAIL module receive-only — clients c
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship outbound 1:1 send at `services/email/src/outbound/` with confirm-token gate, FR-EMAIL-004 DKIM signing, bounce + complaint handling, per-tenant suppression, rate limit, and 5 BRAIN audit kinds.
+The EMAIL service **MUST** ship outbound 1:1 send at `services/email/src/outbound/` with confirm-token gate, FR-EMAIL-004 DKIM signing, bounce + complaint handling, per-tenant suppression, rate limit, and 5 memory audit kinds.
 
 1. **MUST** define closed `send_status` enum: `('drafting','queued','sent','bounced_hard','bounced_soft','complaint','suppressed')` per DEC-1481. Cardinality 7.
 
@@ -109,7 +109,7 @@ The EMAIL service **MUST** ship outbound 1:1 send at `services/email/src/outboun
 
 7. **MUST** rate-limit 100 sends/hour/Member per DEC-1485 via Redis sliding-window. Excess → 429.
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-1484.
+8. **MUST** emit 5 memory audit kinds per DEC-1484.
 
 9. **MUST** thread trace_id end-to-end.
 
@@ -205,7 +205,7 @@ GET    /v1/email/outbound?status=...               (sender or admin)
 9. **Suppressed recipient blocked** — compose to suppressed → 412.
 10. **Rate limit 100/hour** — 101st → 429.
 11. **Manual unsuppress** — engagement_admin can re-enable + audit.
-12. **5 BRAIN audit kinds emitted**.
+12. **5 memory audit kinds emitted**.
 13. **Trace_id end-to-end**.
 14. **PII scrub** — subject + body sha256 in chain; recipient hash; raw KMS.
 15. **Cross-tenant RLS denied**.
@@ -263,7 +263,7 @@ async fn rate_limit_100_per_hour() {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-004.
-**Cross-module:** FR-AUTH-101 (engagement_admin), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-AUTH-101 (engagement_admin), FR-AI-003, FR-MEMORY-111.
 **Downstream:** FR-EMAIL-010, FR-EMAIL-011.
 
 ## §10 — Failure modes

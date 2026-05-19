@@ -1,14 +1,7 @@
 ---
 name: vietnam-vneid-integration
 description: >-
-  Validate Vietnamese citizen IDs (CCCD), extract province / gender /
-  year-of-birth from their structure, and build VNeID API request payloads
-  for identity verification, e-sign sessions, and profile lookup. Use when
-  the user provides a 12-digit CCCD, needs to construct a VNeID API call,
-  or asks about Vietnamese national ID format. Network access to the VNeID
-  endpoint is NOT performed by this skill — it builds the request payload;
-  your host calls the API. Do NOT use for old 9-digit CMND (chứng minh
-  nhân dân) — those are a legacy format being phased out.
+  Validate Vietnamese citizen IDs (CCCD), extract province / gender / year-of-birth from their structure, and build VNeID API request payloads for identity verification, e-sign sessions, and profile lookup. Use when the user provides a 12-digit CCCD, needs to construct a VNeID API call, or asks about Vietnamese national ID format. Network access to the VNeID endpoint is NOT performed by this skill — it builds the request payload; your host calls the API. Do NOT use for old 9-digit CMND (chứng minh nhân dân) — those are a legacy format being phased out. Use when user asks to "reference vietnam vneid integration" or "look up vietnam vneid integration".
 license: Apache-2.0
 compatibility: >-
   Fully offline for validation + request building. Network access to

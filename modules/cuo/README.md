@@ -1,6 +1,6 @@
 # CUO — Chief Universal Officer
 
-> **Persona-aware orchestration layer above CyberOS.** Routes natural-language requests through a two-stage `persona → workflow → skill_chain` model, walks the chain via pluggable invokers (mock / subprocess / LLM), and seals every decision into the BRAIN audit chain.
+> **Persona-aware orchestration layer above CyberOS.** Routes natural-language requests through a two-stage `persona → workflow → skill_chain` model, walks the chain via pluggable invokers (mock / subprocess / LLM), and seals every decision into the memory audit chain.
 
 | | |
 |---|---|
@@ -41,7 +41,7 @@ CyberOS has three core modules:
 
 | Module | Role | Lives at |
 |---|---|---|
-| [`memory/`](../memory/) | The BRAIN — append-only audit-chained personal memory store | `.cyberos-memory/` per project |
+| [`memory/`](../memory/) | The memory — append-only audit-chained personal memory store | `.cyberos-memory/` per project |
 | [`skill/`](../skill/) | Catalog of agentic Skills + Rust host + Bun toolchain | `modules/skill/<name>/` flat layout |
 | **`cuo/`** | **This module.** Persona-aware orchestration layer above SKILL. | `modules/cuo/<persona-slug>/` flat layout |
 
@@ -49,7 +49,7 @@ The CUO does three things:
 
 1. **Catalogs** every C-role (47 personas plus 1 EXTINCT cautionary-tale `chief-metaverse-officer`) with a 9-block-schema README and a `workflows/` directory of `skill_chain` declarations.
 2. **Routes** natural-language requests through a two-stage match: persona → workflow. When the query has no persona name, falls back to scoring workflows across all personas (domain-language fallback).
-3. **Executes** the matched workflow's skill chain via a pluggable `Invoker` (`MockInvoker` for dry-run, `SubprocessInvoker` for the Rust SKILL host, `LLMInvoker` for prompt-only skills via the Anthropic API). Optionally seals every step + the chain summary into the BRAIN audit chain.
+3. **Executes** the matched workflow's skill chain via a pluggable `Invoker` (`MockInvoker` for dry-run, `SubprocessInvoker` for the Rust SKILL host, `LLMInvoker` for prompt-only skills via the Anthropic API). Optionally seals every step + the chain summary into the memory audit chain.
 
 CyberSkill anchors the catalog to [`../../docs/The C-Suite Reference.md`](../../docs/The%20C-Suite%20Reference.md) — one persona per C-role in §5, one folder per persona, one workflow per produced artefact.
 
@@ -80,9 +80,9 @@ cyberos-cuo dry-run chief-technology-officer/architect-new-system      # → val
 cyberos-cuo execute chief-technology-officer/adr-quick-capture \
     --output-dir /tmp/run-1 \
     --invoker mock \
-    --brain-emit \
+    --memory-emit \
     --actor stephen
-# → walks chain, writes per-step output JSON, seals view+session.end rows into the BRAIN
+# → walks chain, writes per-step output JSON, seals view+session.end rows into the memory
 ```
 
 ---
@@ -95,7 +95,7 @@ modules/cuo/
 ├── MODULE.md              ← canonical persona catalog (47 personas — referenced by supervisor)
 ├── CHANGELOG.md           ← release history
 ├── pyproject.toml         ← Python package (cyberos-cuo CLI)
-├── cuo/                   ← Python package (catalog, validator, router, supervisor, invoker, brain_bridge)
+├── cuo/                   ← Python package (catalog, validator, router, supervisor, invoker, memory_bridge)
 │   ├── __init__.py
 │   ├── cli.py
 │   └── core/
@@ -105,7 +105,7 @@ modules/cuo/
 │       ├── supervisor.py     ← dry_run_chain, execute_chain
 │       ├── invoker.py        ← Invoker ABC + MockInvoker + SubprocessInvoker
 │       ├── llm_invoker.py    ← LLMInvoker (mock-llm + Anthropic API modes)
-│       └── brain_bridge.py   ← emit_chain_result wrapping cyberos.core.writer.Writer
+│       └── memory_bridge.py   ← emit_chain_result wrapping cyberos.core.writer.Writer
 ├── tests/
 │   └── test_smoke.py      ← 22 tests, 21 pass + 1 expected skip (catalog-completeness invariant)
 ├── _template/
@@ -136,7 +136,7 @@ modules/cuo/
 - Python ≥ 3.10
 - (Optional) `anthropic` SDK + `ANTHROPIC_API_KEY` env var for real LLM execution
 - (Optional) `cyberos-skill` binary on PATH for `SubprocessInvoker` (otherwise auto-falls-back to `MockInvoker`)
-- (Optional) `msgspec` package for BRAIN emission (`pip install msgspec`)
+- (Optional) `msgspec` package for memory emission (`pip install msgspec`)
 
 ### Install
 
@@ -186,9 +186,9 @@ cyberos-cuo execute <persona>/<workflow> [options]
     --invoker auto|mock|subprocess|llm   (default: auto)
     --output-dir <path>                  step output JSON destination
     --input KEY=VALUE                    chain inputs (repeatable)
-    --brain-emit                         seal per-step + summary rows into BRAIN
-    --no-brain-emit                      (default — opt-in emission)
-    --actor <name>                       attached to every BRAIN row (default: cuo-supervisor)
+    --memory-emit                         seal per-step + summary rows into memory
+    --no-memory-emit                      (default — opt-in emission)
+    --actor <name>                       attached to every memory row (default: cuo-supervisor)
     --continue-on-failure                don't stop on first step failure
 ```
 
@@ -196,16 +196,16 @@ cyberos-cuo execute <persona>/<workflow> [options]
 
 ## 6. Audit (mock invoker)
 
-Use `MockInvoker` to validate a workflow's chain structure without executing real skills. The mock parrots each skill's contract-template H2 headings as `fields_from_template`, persists step output JSON to `--output-dir`, and produces a `ChainResult` that the BRAIN emitter accepts.
+Use `MockInvoker` to validate a workflow's chain structure without executing real skills. The mock parrots each skill's contract-template H2 headings as `fields_from_template`, persists step output JSON to `--output-dir`, and produces a `ChainResult` that the memory emitter accepts.
 
 ```bash
 cyberos-cuo execute chief-technology-officer/adr-quick-capture \
     --output-dir /tmp/audit-run \
     --invoker mock \
-    --brain-emit
+    --memory-emit
 # → walks the 2-step chain (architecture-decision-record-author → architecture-decision-record-audit)
 # → writes step-1.json, step-2.json under /tmp/audit-run
-# → emits 2 view rows + 1 session.end row to the BRAIN
+# → emits 2 view rows + 1 session.end row to the memory
 # → HEAD seq counter advances from N → N+2
 ```
 
@@ -240,7 +240,7 @@ $EDITOR modules/skill/statement-of-work-author/SKILL.md
 cyberos-cuo execute chief-of-staff/exec-onboarding \
     --output-dir /tmp/llm-run \
     --invoker llm \
-    --brain-emit
+    --memory-emit
 
 # 3. No Python redeploys needed — the supervisor reads SKILL.md fresh each invocation
 ```
@@ -266,7 +266,7 @@ The supervisor has three deployment shapes:
 ### 8.1 Local-dev (this is what `pip install -e .` gives you)
 
 - All invokers available; defaults to `mock` if `cyberos-skill` binary missing
-- BRAIN emission is opt-in (`--brain-emit`)
+- memory emission is opt-in (`--memory-emit`)
 - Uses the project's `.cyberos-memory/` next to `modules/`
 
 ### 8.2 Container
@@ -284,21 +284,21 @@ ENV ANTHROPIC_API_KEY=__set_at_runtime__
 ENTRYPOINT ["cyberos-cuo"]
 ```
 
-- `cyberos-cuo execute <persona>/<workflow> --invoker llm --brain-emit` runs end-to-end
+- `cyberos-cuo execute <persona>/<workflow> --invoker llm --memory-emit` runs end-to-end
 - Mount `.cyberos-memory/` from a persistent volume so audit chain survives container restarts
-- The supervisor walks up from `modules/skill/<skill>/` looking for `modules/memory/` (sibling) → that's how `brain_bridge` discovers the writer
+- The supervisor walks up from `modules/skill/<skill>/` looking for `modules/memory/` (sibling) → that's how `memory_bridge` discovers the writer
 
 ### 8.3 Production (planned, Phase 5)
 
 - The Rust SKILL host (`modules/skill/crates/host/`) becomes the actual execution surface; `SubprocessInvoker` shells out to its `cyberos-skill` binary
-- BRAIN emission becomes always-on (not opt-in)
+- memory emission becomes always-on (not opt-in)
 - Multi-tenant: separate `.cyberos-memory/` per organisation
 - Workflows are HTTP-callable via a thin FastAPI wrapper around `execute_chain`
 
 ### Key operational invariants (all deployments)
 
-1. **BRAIN emission is opt-in until Phase 5.** Once a row is committed it's not unwound (per [memory module §6](../memory/AGENTS.md)). Dev/test mistakes should not pollute the chain.
-2. **The supervisor never writes to `audit/`, `HEAD`, or `.lock` directly.** All BRAIN writes go through `cyberos.core.writer.Writer`.
+1. **memory emission is opt-in until Phase 5.** Once a row is committed it's not unwound (per [memory module §6](../memory/AGENTS.md)). Dev/test mistakes should not pollute the chain.
+2. **The supervisor never writes to `audit/`, `HEAD`, or `.lock` directly.** All memory writes go through `cyberos.core.writer.Writer`.
 3. **Chain steps execute in declared order.** Hand-offs are by `inputs_from:` / `outputs_to:` filesystem paths; no in-memory state shared between steps.
 4. **Resumable chains** (Phase 4): the supervisor must support `last_completed_step` scanning so HITL pauses can resume without re-executing prior steps.
 5. **Persona scoring is deterministic** given the query + persona catalog snapshot. Workflow scoring is deterministic given the same plus the matched persona's workflows snapshot.
@@ -384,7 +384,7 @@ When a workflow's `escalates_to[]` fires mid-chain (e.g. CTO's `architect-new-sy
 4. Output threads back into parent
 5. Parent resumes at the next step
 
-Escalation breadcrumbs are logged in the BRAIN with full persona/workflow trail.
+Escalation breadcrumbs are logged in the memory with full persona/workflow trail.
 
 ---
 
@@ -449,7 +449,7 @@ class ChainResult:
     invoker_kind: str          # MockInvoker | SubprocessInvoker | LLMInvoker
 
 @dataclass
-class BrainEmitResult:
+class MemoryEmitResult:
     emitted: bool
     rows_written: int
     chain_head_after: str | None
@@ -521,7 +521,7 @@ Most personas have 4 workflows. Full coverage may want 8–12 each — ~250–45
 ### Phase 5 — production runtime (designed, not built)
 
 - Rust SKILL host becomes the actual execution surface
-- BRAIN emission always-on
+- memory emission always-on
 - Multi-tenant `.cyberos-memory/` per organisation
 - HTTP-callable via FastAPI wrapper
 
@@ -585,7 +585,7 @@ The CUO SHALL execute the routing flow as documented in §9 above. Normative ord
 4. Chain validation (refuse if MISSING or PLANNED)
 5. Argument extraction
 6. Invoke chain (only after operator approval or in non-interactive mode)
-7. Record (BRAIN emit, opt-in until Phase 5)
+7. Record (memory emit, opt-in until Phase 5)
 8. Respond
 
 ### §A.4 State model
@@ -597,7 +597,7 @@ The CUO SHALL execute the routing flow as documented in §9 above. Normative ord
 | `CHAIN_VALIDATING` | Verifying every chain step resolves to a shipped skill |
 | `CHAIN_INVOKING` | Walking the skill chain |
 | `PERSONA_ESCALATING` | A workflow's `escalates_to:` triggered; re-routing the sub-step |
-| `RECORDING` | Appending routing decision + results to the BRAIN audit chain |
+| `RECORDING` | Appending routing decision + results to the memory audit chain |
 | `FAILED` | No candidate passed threshold OR a chain step failed OR a `planned:` skill blocked the chain |
 | `COMPLETED` | Chain executed end-to-end; recorded; result returned |
 
@@ -611,9 +611,9 @@ The CUO SHALL execute the routing flow as documented in §9 above. Normative ord
 
 ### §A.6 Memory bridge
 
-§A.6.1 Every routing decision that is invoked SHOULD be recorded in the BRAIN. The recording row MUST include: query / persona-match / workflow-match / validated chain / per-step results / timestamp.
+§A.6.1 Every routing decision that is invoked SHOULD be recorded in the memory. The recording row MUST include: query / persona-match / workflow-match / validated chain / per-step results / timestamp.
 
-§A.6.2 Per-step skill invocations emit their own `view` audit rows (Phase 3 emission via `brain_bridge.emit_chain_result`). The CUO's own `session.end` row is the chain-level rollup.
+§A.6.2 Per-step skill invocations emit their own `view` audit rows (Phase 3 emission via `memory_bridge.emit_chain_result`). The CUO's own `session.end` row is the chain-level rollup.
 
 §A.6.3 Multi-step chains MAY span hours or days due to HITL pauses. The CUO MUST support resumption from `last_completed_step` and MUST NOT re-execute completed steps.
 
@@ -633,7 +633,7 @@ The CUO SHALL execute the routing flow as documented in §9 above. Normative ord
 
 §A.8.2 Workflows MAY also declare `delegates_to[]` (Phase 4): a full sub-workflow delegation.
 
-§A.8.3 Cross-persona escalations + delegations are logged with full breadcrumbs in the BRAIN audit chain.
+§A.8.3 Cross-persona escalations + delegations are logged with full breadcrumbs in the memory audit chain.
 
 ### §A.9 Catalog evolution
 
@@ -651,7 +651,7 @@ The CUO SHALL execute the routing flow as documented in §9 above. Normative ord
 
 §A.10.2 Every persona's README §8 Audit-criteria block declares the persona-specific quantitative gates + qualitative rubric + role-specific failure modes.
 
-§A.10.3 Meta-audit results are logged to the BRAIN audit chain as a separate `meta_audit` row kind.
+§A.10.3 Meta-audit results are logged to the memory audit chain as a separate `meta_audit` row kind.
 
 ### §A.11 Untrusted-content discipline
 
@@ -665,7 +665,7 @@ The CUO SHALL execute the routing flow as documented in §9 above. Normative ord
 
 The CUO MUST NEVER:
 
-- Write directly to the BRAIN audit chain bypassing `cyberos.core.writer.Writer`
+- Write directly to the memory audit chain bypassing `cyberos.core.writer.Writer`
 - Mutate a workflow's `skill_chain[]` at runtime (chains are declarative)
 - Re-execute a completed chain step on resumption
 - Invent a persona, workflow, or skill that doesn't exist in the catalog
@@ -688,7 +688,7 @@ At the end of any session that invoked workflows, the CUO SHALL report: workflow
 | Sessions D–N — 194 workflows across 47 personas | 2026-05-17 → 2026-05-18 | Now / Series-A / Scale-up / Enterprise / niche tiers |
 | v3.0.0-a1 supervisor Phase 1 — catalog scan + validator + router + dry-run | 2026-05-18 | shipped, 9/9 tests pass |
 | v3.0.0-a2 supervisor Phase 2 — Invoker ABC + MockInvoker + SubprocessInvoker + execute_chain | 2026-05-18 | shipped, 14/15 tests pass |
-| v3.0.0-a3 supervisor Phase 3 — LLMInvoker + BRAIN emission | 2026-05-18 | shipped, 21/22 tests pass |
+| v3.0.0-a3 supervisor Phase 3 — LLMInvoker + memory emission | 2026-05-18 | shipped, 21/22 tests pass |
 | Module relocated to `modules/cuo/` and docs consolidated into this README | 2026-05-18 | repo-structure refactor (this commit) |
 
 ### §A.15 Self-amendment
@@ -706,7 +706,7 @@ At the end of any session that invoked workflows, the CUO SHALL report: workflow
 - [`MODULE.md`](MODULE.md) — canonical persona catalog (48 personas)
 - [`CHANGELOG.md`](CHANGELOG.md) — release history
 - [`../skill/README.md`](../skill/README.md) — source of skills referenced in `skill_chain[]`
-- [`../memory/README.md`](../memory/README.md) and [`../memory/AGENTS.md`](../memory/AGENTS.md) — BRAIN protocol
+- [`../memory/README.md`](../memory/README.md) and [`../memory/AGENTS.md`](../memory/AGENTS.md) — memory protocol
 - [`../../docs/The C-Suite Reference.md`](../../docs/The%20C-Suite%20Reference.md) — source atlas
 - [`../../docs/Software Development Process.md`](../../docs/Software%20Development%20Process.md) — SDP 13 stages
 - [`../../tours/`](../../tours/) — operational CodeTour walkthroughs

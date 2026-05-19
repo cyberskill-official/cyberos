@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
 
 ## §1 — Verdict summary
 
-FR-DOC-001 ships the DOC document repository — S3 Object-Lock Compliance + per-tenant residency pinning + versioned + ACL'd + hash-chained audit + 10-year+ retention. Scope: 26 §1 normative clauses covering 2 closed Postgres enums (bucket_scope 7, document_status 4), append-only versions, RLS, S3 Object-Lock Compliance mode application on archive, residency-pinned bucket selection (FR-AI-016), hash-chained per-document audit log with chain-integrity trigger, dual-signoff legal hold (CLO + CSO), GDPR/PDPL erasure block under hold, cross-scope move forbidden, retention immutable post-archive, REST surface with presigned upload URLs + finalize step + SHA-256 integrity check, 8 BRAIN audit row kinds with sev assignments, OTel emission, scope-based retention periods (HR 50y, ESOP 75y, others 10y), explicit `purpose` parameter on access. 22 rationale paragraphs. §3 contains: migration 0001 (metadata + versions + 2 enums + 2 triggers + RLS + REVOKE + retention policy function), migration 0002 (audit log + chain integrity trigger + replayer), Rust types, residency resolver, S3 Object-Lock application, legal-hold REST handler. 28 ACs. 33 failure-mode rows. 24 implementation notes.
+FR-DOC-001 ships the DOC document repository — S3 Object-Lock Compliance + per-tenant residency pinning + versioned + ACL'd + hash-chained audit + 10-year+ retention. Scope: 26 §1 normative clauses covering 2 closed Postgres enums (bucket_scope 7, document_status 4), append-only versions, RLS, S3 Object-Lock Compliance mode application on archive, residency-pinned bucket selection (FR-AI-016), hash-chained per-document audit log with chain-integrity trigger, dual-signoff legal hold (CLO + CSO), GDPR/PDPL erasure block under hold, cross-scope move forbidden, retention immutable post-archive, REST surface with presigned upload URLs + finalize step + SHA-256 integrity check, 8 memory audit row kinds with sev assignments, OTel emission, scope-based retention periods (HR 50y, ESOP 75y, others 10y), explicit `purpose` parameter on access. 22 rationale paragraphs. §3 contains: migration 0001 (metadata + versions + 2 enums + 2 triggers + RLS + REVOKE + retention policy function), migration 0002 (audit log + chain integrity trigger + replayer), Rust types, residency resolver, S3 Object-Lock application, legal-hold REST handler. 28 ACs. 33 failure-mode rows. 24 implementation notes.
 
 ## §2 — Findings (all resolved)
 
@@ -54,7 +54,7 @@ First-pass trusted client-supplied hash. Resolved: §1 #17 + finalize step valid
 
 All 11 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (2 closed enums × RLS × append-only versions × Object-Lock Compliance × per-tenant residency × hash-chained audit × dual-signoff legal hold × erasure block × cross-scope forbidden × retention immutability × presigned upload + finalize integrity check × 8 BRAIN audit kinds × OTel), not by line targets.
+Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (2 closed enums × RLS × append-only versions × Object-Lock Compliance × per-tenant residency × hash-chained audit × dual-signoff legal hold × erasure block × cross-scope forbidden × retention immutability × presigned upload + finalize integrity check × 8 memory audit kinds × OTel), not by line targets.
 
 ---
 

@@ -16,7 +16,7 @@ related_frs: [FR-CUO-102]
 
 1. LangGraph state checkpoints **MUST** be written to Postgres with `synchronous_commit = on`; checkpoint writes that return success are durable.
 2. On supervisor crash, the next start **MUST** resume from the last successfully-committed checkpoint — no chain is re-executed from scratch if it was mid-flight.
-3. Checkpoint table schema **MUST** include `thread_id, checkpoint_id, parent_id, state, committed_at` plus `chain_id` to link to BRAIN audit rows.
+3. Checkpoint table schema **MUST** include `thread_id, checkpoint_id, parent_id, state, committed_at` plus `chain_id` to link to memory audit rows.
 4. Checkpoints **MUST** be retained for a minimum of 30 days post-chain-end; older checkpoints can be archived/dropped.
 5. Checkpoint write latency **MUST NOT** exceed 100ms p95 — beyond this, throughput collapses.
 

@@ -11,8 +11,8 @@ slice: 8
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-RES-001, FR-RES-002, FR-CHAT-005, FR-EMAIL-009, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-RES-001, FR-RES-002, FR-CHAT-005, FR-EMAIL-009, FR-MEMORY-111]
 depends_on: [FR-RES-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2051 2026-05-17 — Closed enum `allocation_flag` = {over_allocated, healthy, under_utilized}; cardinality 3
   - DEC-2052 2026-05-17 — Computed at FR-RES-001 batch + on FR-RES-002 commit; cached on matrix row
   - DEC-2053 2026-05-17 — Weekly digest Friday 16:00 CHRO summarizes flag counts + flagged members
-  - DEC-2054 2026-05-17 — BRAIN audit kinds: res.flag_changed, res.weekly_digest_sent
+  - DEC-2054 2026-05-17 — memory audit kinds: res.flag_changed, res.weekly_digest_sent
 
 build_envelope:
   language: rust 1.81
@@ -66,7 +66,7 @@ risk_if_skipped: "Without flags, CHRO scans entire matrix manually → over-allo
 
 ## §1 — Description (BCP-14 normative)
 
-The RES service **MUST** ship flag computation + weekly digest at `services/res/src/flags/` with 110/60 thresholds + Friday CHRO digest, 2 BRAIN audit kinds.
+The RES service **MUST** ship flag computation + weekly digest at `services/res/src/flags/` with 110/60 thresholds + Friday CHRO digest, 2 memory audit kinds.
 
 1. **MUST** validate `allocation_flag` against closed enum per DEC-2051.
 
@@ -115,7 +115,7 @@ The RES service **MUST** ship flag computation + weekly digest at `services/res/
    GET /v1/res/weekly-digests              (list)
    ```
 
-7. **MUST** emit 2 BRAIN audit kinds per DEC-2054. PII per FR-BRAIN-111: flag enums (public) ok; counts ok.
+7. **MUST** emit 2 memory audit kinds per DEC-2054. PII per FR-MEMORY-111: flag enums (public) ok; counts ok.
 
 8. **MUST** thread trace_id from compute / cron → digest → audit.
 
@@ -151,7 +151,7 @@ Sample summary:
 ---
 
 ## §4 — Acceptance criteria
-1. **allocation_flag enum cardinality 3**. 2. **>=110% → over_allocated**. 3. **<60% → under_utilized**. 4. **Threshold boundaries exact (110 and 60 inclusive of healthy edge)**. 5. **Flag cached on matrix row**. 6. **Weekly digest Friday 16:00**. 7. **Digest sent via email + chat**. 8. **UNIQUE(tenant_id, iso_week) idempotency**. 9. **2 BRAIN audit kinds emitted**. 10. **PII: flag enums + counts ok**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except sent_at**. 14. **0-capacity member → flag=null + sev-3**. 15. **Recompute on FR-RES-002 commit**. 16. **Recompute on FR-RES-001 batch**. 17. **Digest skip if 0 members**. 18. **rust_decimal precision for utilization**. 19. **CHRO-only digest config**. 20. **flag_computed_at populated**.
+1. **allocation_flag enum cardinality 3**. 2. **>=110% → over_allocated**. 3. **<60% → under_utilized**. 4. **Threshold boundaries exact (110 and 60 inclusive of healthy edge)**. 5. **Flag cached on matrix row**. 6. **Weekly digest Friday 16:00**. 7. **Digest sent via email + chat**. 8. **UNIQUE(tenant_id, iso_week) idempotency**. 9. **2 memory audit kinds emitted**. 10. **PII: flag enums + counts ok**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE except sent_at**. 14. **0-capacity member → flag=null + sev-3**. 15. **Recompute on FR-RES-002 commit**. 16. **Recompute on FR-RES-001 batch**. 17. **Digest skip if 0 members**. 18. **rust_decimal precision for utilization**. 19. **CHRO-only digest config**. 20. **flag_computed_at populated**.
 
 ---
 
@@ -188,7 +188,7 @@ async fn weekly_digest_sent_friday() {
 
 ## §7 — Dependencies
 **Upstream:** FR-RES-001.
-**Cross-module:** FR-RES-002 (UI hook to recompute), FR-EMAIL-009, FR-CHAT-005, FR-MCP-007, FR-AUTH-101, FR-BRAIN-111.
+**Cross-module:** FR-RES-002 (UI hook to recompute), FR-EMAIL-009, FR-CHAT-005, FR-MCP-007, FR-AUTH-101, FR-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -207,7 +207,7 @@ async fn weekly_digest_sent_friday() {
 ## §11 — Implementation notes
 - §11.1 Flag computer pure function: `(capacity, allocated) → Flag`.
 - §11.2 Digest cron via FR-MCP-007 `kind: 'res.weekly_flags_digest'`, Friday 16:00.
-- §11.3 BRAIN audit body: tenant_id, week, counts; member uuids included for flagged.
+- §11.3 memory audit body: tenant_id, week, counts; member uuids included for flagged.
 - §11.4 Future: per-tenant threshold override table for industries with different norms.
 - §11.5 Digest excludes contractors (per FR-HR-002 type override).
 

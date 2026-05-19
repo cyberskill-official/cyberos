@@ -44,19 +44,20 @@ uuid.workspace = true
 chrono.workspace = true
 bcrypt.workspace = true
 jsonwebtoken.workspace = true
+# Versions floored to latest-stable as of 2026 Q2.
 base64 = "0.22"
 rsa = { version = "0.9", features = ["pem"] }
 rand = "0.8"
 futures-util = "0.3"
 sha1 = "0.10"
-reqwest = { version = "0.12", features = ["rustls-tls", "json"], default-features = false }
+reqwest = { version = "0.12.9", features = ["rustls-tls", "json"], default-features = false }
 webauthn-rs = { version = "0.5", features = ["danger-allow-state-serialisation"] }
-ipnetwork = "0.20"
+ipnetwork = "0.21"
 maxminddb = "0.24"
 sha2 = { workspace = true }
 linked-hash-map = "0.5"
 clap = { workspace = true }
-zeroize = { version = "1", features = ["zeroize_derive"] }
+zeroize = { version = "1.8", features = ["zeroize_derive"] }
 
 cyberos-cli-exit.workspace = true
 cyberos-types.workspace = true

@@ -1,11 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: debugging-cycle-audit
-description: |
-  Audit a debug-trace@1 against debugging_cycle_rubric@1.0: enforces
-  budget compliance, non-vacuous hypotheses, resolvable file:line
-  references, correct circuit-breaker arithmetic, and a defined
-  resolution. Emits a `score / 10` verdict; refuses to pass on <10/10.
+description: >-
+  Audit a debug-trace@1 against debugging_cycle_rubric@1.0: enforces budget compliance, non-vacuous hypotheses, resolvable file:line references, correct circuit-breaker arithmetic, and a defined resolution. Emits a `score / 10` verdict; refuses to pass on <10/10. Use when user asks to "audit this debugging cycle" or "check the debugging cycle". Do NOT use for "draft a new debugging cycle" (use debugging-cycle-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -14,7 +11,7 @@ metadata:
   cyberos-template: debug-trace-audit@1
   cyberos-rubric-target: debugging_cycle_rubric@1.0
 
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
   write:

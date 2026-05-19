@@ -11,8 +11,8 @@ slice: 8
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-RES-001, FR-RES-003, FR-RES-005, FR-PROJ-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-RES-001, FR-RES-003, FR-RES-005, FR-PROJ-001, FR-MEMORY-111]
 depends_on: [FR-RES-001]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-2042 2026-05-17 — Optimistic concurrency: each matrix row has version; UI changes verify version on commit
   - DEC-2043 2026-05-17 — Pre-commit validation: FR-RES-005 OT cap check; FR-RES-003 over-allocation flag; reject if violations
   - DEC-2044 2026-05-17 — Changes append to allocation_changes table; matrix row updated atomically; immutable history
-  - DEC-2045 2026-05-17 — BRAIN audit kinds: res.allocation_proposed, res.allocation_committed, res.allocation_rejected, res.allocation_conflicted
+  - DEC-2045 2026-05-17 — memory audit kinds: res.allocation_proposed, res.allocation_committed, res.allocation_rejected, res.allocation_conflicted
 
 build_envelope:
   language: typescript / react + rust 1.81
@@ -80,7 +80,7 @@ risk_if_skipped: "Without Gantt UI, allocation in spreadsheets → drift from ma
 
 ## §1 — Description (BCP-14 normative)
 
-The RES service + portal-web frontend **MUST** ship allocation Gantt at `services/res/src/allocation/` with drag-rebalance + optimistic concurrency + pre-commit validation, 4 BRAIN audit kinds.
+The RES service + portal-web frontend **MUST** ship allocation Gantt at `services/res/src/allocation/` with drag-rebalance + optimistic concurrency + pre-commit validation, 4 memory audit kinds.
 
 1. **MUST** validate `allocation_change_status` against closed enum per DEC-2041.
 
@@ -134,7 +134,7 @@ The RES service + portal-web frontend **MUST** ship allocation Gantt at `service
    GET  /v1/res/allocations/changes?member_id=...&iso_week=...
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2045. PII per FR-BRAIN-111: hours SHA-256 hashed.
+7. **MUST** emit 4 memory audit kinds per DEC-2045. PII per FR-MEMORY-111: hours SHA-256 hashed.
 
 8. **MUST** thread trace_id from UI action → propose → validate → commit → audit.
 
@@ -192,7 +192,7 @@ Response (rejected):
 ---
 
 ## §4 — Acceptance criteria
-1. **allocation_change_status enum cardinality 5**. 2. **Drag UI updates state**. 3. **Pre-commit validation enforced**. 4. **OT cap rejection (FR-RES-005)**. 5. **Over-threshold warning (FR-RES-003 110%)**. 6. **Optimistic concurrency via version check**. 7. **Version mismatch → status=conflicted**. 8. **Transactional commit (all-or-nothing)**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (hours SHA256)**. 11. **RLS denies cross-tenant**. 12. **CHRO/PM role only**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **rust_decimal precision**. 16. **History query desc time**. 17. **Drag UI disables locked rows**. 18. **Commit dialog confirms changes**. 19. **WebSocket update broadcasts to other CHRO clients**. 20. **Undo via new compensating change**.
+1. **allocation_change_status enum cardinality 5**. 2. **Drag UI updates state**. 3. **Pre-commit validation enforced**. 4. **OT cap rejection (FR-RES-005)**. 5. **Over-threshold warning (FR-RES-003 110%)**. 6. **Optimistic concurrency via version check**. 7. **Version mismatch → status=conflicted**. 8. **Transactional commit (all-or-nothing)**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (hours SHA256)**. 11. **RLS denies cross-tenant**. 12. **CHRO/PM role only**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **rust_decimal precision**. 16. **History query desc time**. 17. **Drag UI disables locked rows**. 18. **Commit dialog confirms changes**. 19. **WebSocket update broadcasts to other CHRO clients**. 20. **Undo via new compensating change**.
 
 ---
 
@@ -233,7 +233,7 @@ async fn commit_atomic() {
 
 ## §7 — Dependencies
 **Upstream:** FR-RES-001.
-**Cross-module:** FR-RES-003 (threshold flags), FR-RES-005 (OT cap), FR-PROJ-001 (project context), FR-AUTH-101 (CHRO/PM role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-RES-003 (threshold flags), FR-RES-005 (OT cap), FR-PROJ-001 (project context), FR-AUTH-101 (CHRO/PM role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -253,7 +253,7 @@ async fn commit_atomic() {
 - §11.1 Gantt UI built with d3 or recharts; drag handler emits debounced state.
 - §11.2 Version increment via `UPDATE ... SET version = version + 1 WHERE version = $expected RETURNING version`.
 - §11.3 Validation parallelizes OT + threshold checks for sub-100ms response.
-- §11.4 BRAIN audit body: member_id, week, project_id, old/new hours SHA256.
+- §11.4 memory audit body: member_id, week, project_id, old/new hours SHA256.
 - §11.5 WebSocket broadcasts on commit; other UIs invalidate cache.
 
 ---

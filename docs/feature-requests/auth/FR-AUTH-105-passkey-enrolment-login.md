@@ -1,9 +1,9 @@
 ---
 id: FR-AUTH-105
-title: "AUTH Passkey enrolment + login — discoverable credentials (resident keys) + autofill UI + cross-platform sync + closed enrolment FSM + downgrade-resistance + BRAIN audit per lifecycle event"
+title: "AUTH Passkey enrolment + login — discoverable credentials (resident keys) + autofill UI + cross-platform sync + closed enrolment FSM + downgrade-resistance + memory audit per lifecycle event"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P3
 milestone: P3 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AUTH-102, FR-AI-003, FR-BRAIN-101, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AUTH-102, FR-AI-003, FR-MEMORY-101, FR-OBS-007]
 depends_on: [FR-AUTH-102]
 blocks: [FR-DOC-006]
 
@@ -27,11 +27,11 @@ source_decisions:
   - DEC-543 (downgrade-resistance — once a subject enrols a passkey, password-only login for that subject is rejected with `passkey_required`; explicit per-subject opt-out flag exists but defaults FALSE)
   - DEC-544 (per-subject max 5 active passkeys — typical user has phone + laptop + work-laptop + recovery key + one spare; ADR required to raise)
   - DEC-545 (passkey enrolment FSM: requested → confirmed (first use) | abandoned (24h timeout) — only confirmed passkeys count toward login + downgrade-resistance)
-  - DEC-546 (BRAIN audit kinds: auth.passkey_enrolment_requested, auth.passkey_enrolment_confirmed, auth.passkey_enrolment_abandoned, auth.passkey_login_succeeded, auth.passkey_login_failed, auth.passkey_removed, auth.passkey_downgrade_blocked, auth.passkey_autofill_used)
+  - DEC-546 (memory audit kinds: auth.passkey_enrolment_requested, auth.passkey_enrolment_confirmed, auth.passkey_enrolment_abandoned, auth.passkey_login_succeeded, auth.passkey_login_failed, auth.passkey_removed, auth.passkey_downgrade_blocked, auth.passkey_autofill_used)
   - DEC-547 (REVOKE UPDATE, DELETE on passkey_lifecycle_log from cyberos_app — append-only at SQL grant)
   - DEC-548 (cross-platform key recovery — if subject loses ALL synced passkeys + cross-platform keys, FR-AUTH-102 recovery codes are the only recovery path; passkey-only subjects without recovery codes risk lockout; UI MUST warn during enrolment)
   - DEC-549 (per-tenant `passkey_required_for_roles: [<role>...]` policy in tenant_policy YAML — when subject's roles intersect, password login is blocked; founder always per FR-AUTH-101 DEC-128)
-  - DEC-550 (downgrade-blocked attempts emit sev-2 BRAIN row — repeated attempts may signal phishing-via-password trying to bypass passkey)
+  - DEC-550 (downgrade-blocked attempts emit sev-2 memory row — repeated attempts may signal phishing-via-password trying to bypass passkey)
   - DEC-551 (autofill `mediation: "conditional"` requires `user_verification: "required"` per W3C spec — biometric + autofill = phishing-resistant)
   - DEC-552 (passkey removal requires re-authentication with another passkey or fresh full MFA flow — prevents session-hijack passkey wipe)
   - W3C WebAuthn Level 3 (2024); FIDO2 / CTAP2.1; passkeys.dev best practices
@@ -48,7 +48,7 @@ new_files:
   - services/auth/src/passkey/autofill.rs                        # conditional-mediation flow
   - services/auth/src/passkey/downgrade_gate.rs                  # password-login block when passkey enrolled
   - services/auth/src/passkey/origin.rs                          # passkey_origin enum + AAGUID lookup
-  - services/auth/src/passkey/audit.rs                           # 8 BRAIN row builders
+  - services/auth/src/passkey/audit.rs                           # 8 memory row builders
   - services/auth/src/passkey/repo.rs                            # CRUD
   - services/auth/src/handlers/passkey.rs                        # enrol/login/list/remove + autofill
   - services/auth/tests/passkey_enrolment_fsm_test.rs
@@ -88,7 +88,7 @@ sub_tasks:
   - "0.6h: autofill.rs — conditional mediation params + UV-required enforcement"
   - "0.6h: downgrade_gate.rs — password-login block when passkey enrolled"
   - "0.4h: origin.rs — passkey_origin enum + common AAGUID map for platform_synced detection"
-  - "0.5h: audit.rs — 8 BRAIN builders"
+  - "0.5h: audit.rs — 8 memory builders"
   - "0.4h: repo.rs"
   - "0.7h: handlers/passkey.rs — full REST surface"
   - "0.3h: jwt/issuer.rs downgrade-gate integration"
@@ -115,7 +115,7 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
     - Generates WebAuthn creation challenge with `residentKey=required + userVerification=required + attestation=none`.
     - INSERT `passkey_enrolment_state` row with `state='requested'`, `expires_at = now() + 24 hours`.
     - Returns `PublicKeyCredentialCreationOptions` for browser to invoke `navigator.credentials.create()`.
-    - Emit `auth.passkey_enrolment_requested` BRAIN row.
+    - Emit `auth.passkey_enrolment_requested` memory row.
 
 7. **MUST** ship `POST /v1/auth/passkey/enrol/finish` handler (per DEC-545):
     - Receives `PublicKeyCredential` from browser.
@@ -123,10 +123,10 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
     - Detects `passkey_origin` from AAGUID lookup (per origin.rs map).
     - Creates `mfa_factors` row with `factor_kind = webauthn_platform` or `webauthn_cross_platform` per FR-AUTH-102.
     - UPDATE `passkey_enrolment_state` to `state='confirmed', confirmed_at=now()`.
-    - Emit `auth.passkey_enrolment_confirmed` BRAIN row.
+    - Emit `auth.passkey_enrolment_confirmed` memory row.
     - If subject has zero recovery codes → return WARNING in response body suggesting recovery-code generation (per DEC-548).
 
-8. **MUST** ship background job to mark abandoned enrolments. Hourly: `UPDATE passkey_enrolment_state SET state='abandoned', abandoned_at=now() WHERE state='requested' AND expires_at < now()`. Per row, emit `auth.passkey_enrolment_abandoned` BRAIN row (sev-3 informational).
+8. **MUST** ship background job to mark abandoned enrolments. Hourly: `UPDATE passkey_enrolment_state SET state='abandoned', abandoned_at=now() WHERE state='requested' AND expires_at < now()`. Per row, emit `auth.passkey_enrolment_abandoned` memory row (sev-3 informational).
 
 9. **MUST** ship `POST /v1/auth/passkey/login/begin` handler (per DEC-540):
     - Generates WebAuthn assertion challenge with `allowCredentials: []` (empty — discoverable credential mode).
@@ -144,12 +144,12 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
 11. **MUST** support **autofill conditional mediation** (per DEC-542 + DEC-551):
     - `POST /v1/auth/passkey/autofill-options` returns options with `mediation: "conditional"` for browsers supporting WebAuthn autofill (Chrome 108+, Safari 16+).
     - `user_verification: "required"` is mandatory for conditional mediation per W3C spec — enforced at handler.
-    - On successful autofill login, emit `auth.passkey_autofill_used` BRAIN row (informational; useful for adoption metrics).
+    - On successful autofill login, emit `auth.passkey_autofill_used` memory row (informational; useful for adoption metrics).
 
 12. **MUST** enforce **downgrade-resistance** (per DEC-543 + DEC-550). When subject attempts password-only login:
     - JWT issuer (FR-AUTH-004) consults `downgrade_gate::is_passkey_required(subject_id)`.
     - Predicate: subject has ≥ 1 confirmed passkey AND per-tenant policy doesn't have a per-subject opt-out flag set.
-    - True → 401 `passkey_required` + emit `auth.passkey_downgrade_blocked` BRAIN row (sev-2 per DEC-550).
+    - True → 401 `passkey_required` + emit `auth.passkey_downgrade_blocked` memory row (sev-2 per DEC-550).
     - Repeated attempts: alarm sev-2 at > 5 within 1 hour for a subject (phishing signal).
 
 13. **MUST** enforce max 5 active passkeys per subject (per DEC-544). 6th enrolment attempt → 409 `passkey_limit_exceeded` with body listing existing passkey display_names. Removal of an existing passkey first → enrolment proceeds.
@@ -157,7 +157,7 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
 14. **MUST** ship `DELETE /v1/auth/passkey/factors/{id}` handler (per DEC-552):
     - Caller MUST present a fresh MFA proof in the request (header `X-MFA-Challenge-Token: <recently-verified-challenge-id>`). Challenge must be < 5 minutes old AND must have been verified for THIS subject.
     - Missing/stale proof → 401 `recent_mfa_required`.
-    - On success: soft-delete passkey (mfa_factors.status → 'removed'); emit `auth.passkey_removed` BRAIN row; if this was the last passkey for the subject + per-tenant policy requires passkey → emit warning to operator.
+    - On success: soft-delete passkey (mfa_factors.status → 'removed'); emit `auth.passkey_removed` memory row; if this was the last passkey for the subject + per-tenant policy requires passkey → emit warning to operator.
 
 15. **MUST** detect passkey_origin via AAGUID lookup (per DEC-541). The origin.rs module ships a map of well-known AAGUIDs → origin:
     - Apple iCloud Keychain AAGUID → `platform_synced`.
@@ -169,7 +169,7 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
 
 16. **MUST** consult per-tenant `passkey_required_for_roles: [<role>...]` policy from tenant_policy YAML (per DEC-549). If subject's roles intersect this set AND subject has zero passkeys → JWT issuance returns 401 `passkey_enrolment_required` with hint to call enrol/begin. Founder role always per FR-AUTH-101 DEC-128.
 
-17. **MUST** emit 8 BRAIN audit row kinds (per DEC-546):
+17. **MUST** emit 8 memory audit row kinds (per DEC-546):
     - `auth.passkey_enrolment_requested` — enrol/begin.
     - `auth.passkey_enrolment_confirmed` — enrol/finish success.
     - `auth.passkey_enrolment_abandoned` — sev-3 informational.
@@ -199,7 +199,7 @@ The AUTH service **MUST** ship passkey enrolment + login via WebAuthn discoverab
 
 24. **MUST** warn during enrolment if subject has zero MFA recovery codes (per DEC-548 + §1 #7). Response body includes `recovery_warning: true, recommended_action: "POST /v1/auth/mfa/recovery-codes/regen"`. Frontend SHOULD display warning prominently.
 
-25. **MUST** support **per-subject opt-out flag** (`mfa_factors.passkey_downgrade_optout BOOLEAN DEFAULT false`). Setting requires root-admin role + sev-2 BRAIN row + reason. Used for exceptional cases (e.g. legacy integration that cannot WebAuthn).
+25. **MUST** support **per-subject opt-out flag** (`mfa_factors.passkey_downgrade_optout BOOLEAN DEFAULT false`). Setting requires root-admin role + sev-2 memory row + reason. Used for exceptional cases (e.g. legacy integration that cannot WebAuthn).
 
 26. **MUST** ship `POST /v1/auth/passkey/downgrade-optout` for root-admin to set the flag. Body `{subject_id, enabled, reason}`. Validates reason (1–500 chars); emit `auth.passkey_downgrade_optout_changed` audit row.
 
@@ -582,7 +582,7 @@ pub async fn login_finish(
 14. **Per-subject opt-out requires root-admin + reason** → 403 if non-root-admin.
 15. **Opt-out emits sev-2 audit row**.
 16. **Conditional mediation requires UV=required** — handler rejects without UV.
-17. **Conditional mediation autofill_used emits BRAIN row**.
+17. **Conditional mediation autofill_used emits memory row**.
 18. **Per-tenant passkey_required_for_roles enforced** — subject with role in policy + no passkey → 401 passkey_enrolment_required.
 19. **Founder role always requires passkey** (DEC-128).
 20. **Removal requires X-MFA-Challenge-Token < 5min old** → 401 recent_mfa_required if absent.
@@ -612,7 +612,7 @@ async fn password_login_blocked_after_passkey_enrol(ctx: TestCtx) {
     // Now password login must fail
     let r2 = ctx.password_login(&subject.email, "test_password").await;
     assert!(matches!(r2, Err(e) if format!("{e:?}").contains("passkey_required")));
-    let rows = ctx.brain_audit_rows("auth.passkey_downgrade_blocked").await;
+    let rows = ctx.memory_audit_rows("auth.passkey_downgrade_blocked").await;
     assert!(!rows.is_empty());
     assert_eq!(rows[0]["severity"], "sev-2");
 }
@@ -656,7 +656,7 @@ async fn remove_with_recent_mfa_succeeds(ctx: TestCtx) {
     let mfa_token = ctx.verify_mfa_get_challenge_token(subject.id).await;
     let r = ctx.delete_passkey(&subject.passkey_id, &token, Some(&mfa_token)).await;
     assert!(r.is_ok());
-    let rows = ctx.brain_audit_rows("auth.passkey_removed").await;
+    let rows = ctx.memory_audit_rows("auth.passkey_removed").await;
     assert!(!rows.is_empty());
 }
 ```
@@ -672,7 +672,7 @@ async fn enrolment_abandoned_after_24h(ctx: TestCtx) {
     assert_eq!(abandoned, 1);
     let state = ctx.fetch_enrolment_state(enrolment_id).await;
     assert_eq!(state.state, "abandoned");
-    let rows = ctx.brain_audit_rows("auth.passkey_enrolment_abandoned").await;
+    let rows = ctx.memory_audit_rows("auth.passkey_enrolment_abandoned").await;
     assert!(!rows.is_empty());
 }
 ```
@@ -697,7 +697,7 @@ fn unknown_aaguid_defaults_cross_platform() {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 8 BRAIN row builders follow canonical pattern; webauthn-rs handles cryptographic plumbing via FR-AUTH-102.)
+(API contract above is the skeleton; 8 memory row builders follow canonical pattern; webauthn-rs handles cryptographic plumbing via FR-AUTH-102.)
 
 ---
 
@@ -712,8 +712,8 @@ fn unknown_aaguid_defaults_cross_platform() {
 - **FR-AUTH-002** — subject (PRIMARY KEY for factor + enrolment rows).
 - **FR-AUTH-004** — JWT issuer (downgrade-gate hook).
 - **FR-AUTH-101** — RBAC (founder = passkey-required; root-admin for opt-out + force-remove).
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing (display_name).
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing (display_name).
 - **FR-AI-005** — per-tenant policy YAML (passkey_required_for_roles).
 - **FR-OBS-007** — sev-2 alarm rules.
 
@@ -744,7 +744,7 @@ fn unknown_aaguid_defaults_cross_platform() {
 }
 ```
 
-### 8.2 — auth.passkey_enrolment_confirmed BRAIN row
+### 8.2 — auth.passkey_enrolment_confirmed memory row
 
 ```json
 {
@@ -757,7 +757,7 @@ fn unknown_aaguid_defaults_cross_platform() {
 }
 ```
 
-### 8.3 — auth.passkey_downgrade_blocked BRAIN row (sev-2)
+### 8.3 — auth.passkey_downgrade_blocked memory row (sev-2)
 
 ```json
 {
@@ -780,7 +780,7 @@ fn unknown_aaguid_defaults_cross_platform() {
 }
 ```
 
-### 8.5 — auth.passkey_autofill_used BRAIN row
+### 8.5 — auth.passkey_autofill_used memory row
 
 ```json
 {
@@ -829,7 +829,7 @@ All other questions resolved.
 | RLS bypass | USING | 0 rows | Designed |
 | Cross-tenant passkey | credential_id UNIQUE per subject | 409 if reused | Designed |
 | user_handle mismatch in login | handler check | 401 | Designed |
-| BRAIN audit fail mid-tx | rollback | 500 | brain_writer health |
+| memory audit fail mid-tx | rollback | 500 | memory_writer health |
 | Cache stale during opt-out toggle | 60s TTL + invalidate | Brief delay | Designed |
 | > 5/h downgrade-blocked sustained | OBS rule | sev-2 | Investigate phishing |
 | Lost all devices + no recovery codes | None (designed risk) | Permanent lockout | Recovery codes mandatory in enrol warning |
@@ -856,7 +856,7 @@ All other questions resolved.
 - **Per-tenant `passkey_required_for_roles` YAML** — flexibility; founder hard-coded.
 - **opt-out flag + root-admin + audit** — explicit exception path.
 - **Append-only lifecycle log** — forensic.
-- **8 BRAIN audit kinds** — selective operator queries.
+- **8 memory audit kinds** — selective operator queries.
 - **Sev-2 alarm on > 5/h downgrade-blocked** — phishing signal.
 - **Conditional mediation requires UV=required** — W3C spec compliance.
 - **userHandle = subject_id** — resident-key login resolves subject without username input.

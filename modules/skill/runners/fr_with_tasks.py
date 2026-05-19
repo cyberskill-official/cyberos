@@ -37,9 +37,9 @@ class FrWithTasksRunner(BaseSkillRunner):
 
     def build_prompt(self, inputs: dict, prior_artefacts=None) -> str:
         """Compose the Claude prompt — pulls SKILL.md + task@1 contract template."""
-        skill_md = (self.brain_root / "docs" / "skills" / self.skill_id / "SKILL.md").read_text(encoding="utf-8")
+        skill_md = (self.memory_root / "docs" / "skills" / self.skill_id / "SKILL.md").read_text(encoding="utf-8")
         task_template = ""
-        task_contract = self.brain_root / "docs" / "contracts" / "task" / "template.md"
+        task_contract = self.memory_root / "docs" / "contracts" / "task" / "template.md"
         if task_contract.exists():
             task_template = task_contract.read_text(encoding="utf-8")
 
@@ -273,14 +273,14 @@ if __name__ == "__main__":
     p.add_argument("--no-cache", action="store_true")
     args = p.parse_args()
 
-    # Find brain root
+    # Find memory root
     cur = Path.cwd().resolve()
-    brain_root = None
+    memory_root = None
     while cur != cur.parent:
         if (cur / ".cyberos-memory").is_dir():
-            brain_root = cur; break
+            memory_root = cur; break
         cur = cur.parent
-    if not brain_root:
+    if not memory_root:
         sys.exit("no .cyberos-memory/ found")
 
     inputs = {"pitch": args.pitch}
@@ -289,7 +289,7 @@ if __name__ == "__main__":
 
     from base import SkillCache
     cache = None if args.no_cache else SkillCache()
-    runner = FrWithTasksRunner(brain_root)
+    runner = FrWithTasksRunner(memory_root)
     result = runner.run(inputs, Path(args.output_dir), max_iterations=args.max_iterations, cache=cache)
     print(json.dumps({
         "status": result.status,

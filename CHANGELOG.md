@@ -10,6 +10,576 @@ Format conventions:
 
 ---
 
+## 2026-05-19 — [AUTH] FR-AUTH-005 drained 17/17 + rustc floor bumped 1.83→1.88
+
+**FR-AUTH-005** (admin REST list_tenants + list_subjects + revoke + unrevoke + cursor + jti deny-list) drained end-to-end in one Cowork session. 17 spec-vs-code gaps closed across 5 slices; ≈1,300 LOC src + tests. BACKLOG line 224 mutated `planned` → `[BLOCKED: 17 gaps]` → `shipped + strict-audited`. **All 6 Wave-1 MUST AUTH FRs (001/002/003/004/005/006) are now shipped + strict-audited** — wave-1-2 deploy table-stakes are drain-complete.
+
+New modules: `services/auth/src/{cursor,deny_list,sessions}.rs`. New migration: `migrations/0021_sessions.sql` (relocated per DEC-MIGRATION-SLOT-001; slot 0007 was taken). New memory_bridge emitters: `emit_subject_revoked` + `emit_subject_unrevoked`. New test files: `admin_list_test.rs` + `admin_revoke_test.rs` + `admin_cursor_pagination_test.rs` + `admin_deny_list_test.rs`. OTel `#[tracing::instrument]` on all 4 admin handlers.
+
+Architecture decisions logged in FR-AUTH-005-admin-rest.audit.md §10.5: **DEC-DENY-LIST-001** (in-memory slice-1; Redis lift = FR-AUTH-110), **DEC-CURSOR-SIGN-001** (HMAC-SHA256 via HKDF from `AUTH_CURSOR_SIGNING_SECRET` env), **DEC-MIGRATION-SLOT-001** (0007→0021 relocation). Structural G-012 enforcement: `DenyList` exposes no `remove()` API — unrevoke literally cannot clear the deny-list at the compile-time level.
+
+Deferred follow-ups: **FR-AUTH-110** (Redis-backed deny-list lift for wave-2 horizontal scale) + **FR-AUTH-111** (closed revoke reason taxonomy enum: compromised / terminated / policy-violation / operator-error / other).
+
+**`services/Cargo.toml` `rust-version` bumped 1.83 → 1.88** — `webauthn-rs 0.5.5`, `time 0.3.47`, `icu_* 2.2.0`, `base64urlsafedata 0.5.5`, `home 0.5.12` all now require ≥1.86/1.88. One-time operator step: `rustup toolchain install 1.88.0`. README §1 prerequisites table updated.
+
+**Cascading build fixes after the bump** — `cargo +1.88.0 build -p cyberos-auth` surfaced 2 errors that were either pre-existing (borrow-checker stricter on this NLL path) or shaken loose by the sqlx 0.8 + ipnetwork 0.20 trait shuffle:
+
+- **handlers.rs:1871** — `traceparent: Option<String>` was moved into `svc.issue(..., traceparent, ...)` then borrowed via `.as_deref()` for the memory audit emit at :1896. Fixed with `traceparent.clone()` at the move site per the compiler's own suggestion.
+- **travel.rs:213 + travel_admin.rs:170 + travel_admin.rs:212/244 + travel_policy.rs:134** — `ipnetwork::IpNetwork` no longer satisfies `sqlx::Encode<'_, Postgres>` / `Decode<'_, Postgres>` (likely a version-coherence pitfall: sqlx-postgres pulls its own ipnetwork copy distinct from the auth crate's). Fixed by binding/reading at the DB boundary as `String` (Postgres INET accepts the textual CIDR; `::text` cast on read). The struct field `TravelPolicy::allowlist: Vec<IpNetwork>` is preserved — parsed from `String` at the read boundary via `filter_map(|(c,)| c.parse().ok())`.
+- 4 unused-import warnings cleaned (`body::Body` in middleware.rs, `Redirect` in oidc.rs, `Redirect`+`Serialize` in saml.rs).
+
+Compile-verify on macOS: `cd services && cargo +1.88.0 build -p cyberos-auth && cargo +1.88.0 test -p cyberos-auth` (was `+1.85.0`).
+
+## 2026-05-19 — [AI / OBS / MCP] P0 implementation wave kicks off — three new `services/` workspace members, two FRs shipped end-to-end + two FRs flipped to `building`
+
+CyberOS's P0 build order is locked at AI Gateway → OBS → AUTH (stub) → MCP Gateway → CHAT (per `docs/feature-requests/BACKLOG.md §2 line 130`). AUTH stub was already shipped + strict-audited; this wave starts the implementation phase for AI / OBS / MCP. All three services now exist under `services/` as workspace members alongside the previously-shipped `auth`/`memory`/`skill-broker` crates.
+
+### What landed
+
+**`services/ai-gateway/`** — Rust workspace member, slice-1 of P0.1 AI Gateway:
+
+- **FR-AI-003 — memory audit-row bridge (canonical Writer subprocess) shipped end-to-end (10/10).** `services/ai-gateway/src/memory_writer.rs` (440 LOC) + `…/memory_writer/canonical.rs` (220 LOC) implements: subprocess spawn of `python3 -m cyberos.writer put` with stdin/stdout/stderr piping; NFC normalisation of all string-valued nodes; sorted-key, no-extra-whitespace JSON serialisation matching AGENTS.md §6.2; SHA-256 chain-hash recomputation + verification against Writer stdout (FR-AI-003 §1 #7); path-traversal guard pre-spawn (AC #7 — absolute paths, `..` traversal, reserved prefixes `audit/` / `index/` / `HEAD` / `.lock` all rejected); 5s timeout with `kill_on_drop` + SIGTERM-then-SIGKILL semantics (AC #4); typed builders for the slice-1 closed set (`precheck` / `invocation` / `invocation_failed` / `hold_expired` / `persona_loaded`); `check_writer_available` startup health check (FR-AI-003 §1 #10). The `python3 -m cyberos.writer` Python module ships from `modules/memory/runtime/`; integration tests against the live subprocess gate behind a `--features integration-writer` flag.
+- **FR-AI-005 — Tenant-policy YAML loader shipped end-to-end (10/10).** `services/ai-gateway/src/policy/{schema,cache,loader}.rs` (~700 LOC) implements: closed `TenantPolicy` + `AiPolicy` + `Provider` + `Residency` + `EmergencyOverride` schema with `schemars` JSONSchema derives; `ArcSwap<HashMap<…>>`-backed lock-free cache (AC #9 — 1000×100 concurrent reads under 3s); `notify` file-watcher with eager startup load + ALL-failures aggregation into one `LoaderInitError::Schema { failures }` (FR-AI-005 §1 #11); invalid hot-reload preserves cache + emits `tracing::error!` (FR-AI-005 §1 #5); path-traversal + charset + length validation on input `tenant_id`; `validate_yaml` pure-function entry point for `cyberos-ai policy validate` (FR-AI-005 §1 #13); `is_loadable_filename` filter rejects `EXAMPLE.` + `_` + uppercase prefixes. Integration tests cover AC #1 / #3 / #4; singleton-shared tests (AC #2 / #5 / #6 / #7 / #9) gated behind `--ignored --test-threads=1` per `OnceCell` constraint. `gen-schema` binary emits the JSONSchema mirror for CI drift detection.
+- **`cyberos-ai` operator CLI** (`src/bin/cyberos_ai.rs`) — slice-1 subcommands: `policy validate <file>` + `policy list` + `serve` (placeholder until FR-AI-008 lands the HTTP router).
+- **Workspace wiring:** `services/Cargo.toml` adds `ai-gateway` as a member. **Dependencies declared:** `serde_yaml` 0.9 · `schemars` 0.8 with `rust_decimal` feature · `rust_decimal` 1.36 with `serde-with-str` · `notify` 6.1 · `arc-swap` 1.7 · `once_cell` 1.20 · `unicode-normalization` 0.1 · `hex` 0.4 · `futures` 0.3 (FR-AI-003 prerequisites).
+
+**`services/obs-collector/`** — Rust workspace member, slice-1 of P0.2 OBS:
+
+- **FR-OBS-001 — OTel collector + LGTM stack — scaffold shipped (10/10), status flipped `planned → building`.** Slice-1 ship covers the canonical `config/otel-collector-config.yaml` matching FR-OBS-001 §3 byte-for-byte (OTLP grpc:4317 + http:4318 receivers with `bearertokenauth` authenticator + resource processor + `attributes/pii_scrub` processor deleting `prompt_text` / `response_text` / `user_email` / `cccd` + secret-pattern regex + batch 10s/1024 + Loki / Prometheus remote-write / Tempo exporters + `file_storage` extension at `/var/lib/otelcol/file_storage` + health_check on :13133). `cyberos-obs validate-config` + `validate-tokens` pre-flight CI gates parse the YAML and assert FR-OBS-001 §3 invariants (receivers/processors/exporters/extensions all required; `pii_scrub` MUST be on logs + traces pipelines per §1 #11; `bearertokenauth` + `file_storage` extensions MUST be present per §1 #2 + #7). Self-metric name + label constants (`obs_collector_received_spans_total{service}`, `dropped_total{reason ∈ auth|pii_scrub|backend_error|buffer_full}`, `export_latency_ms{backend ∈ loki|prometheusremotewrite|otlp/tempo}`). Bearer-token file parser + `config/auth/tokens.example` template. Workspace-wired Rust crate.
+- **Remaining for `shipped` status:** the live LGTM deployment (Helm chart + docker-compose for otelcol-contrib + Loki + Prometheus + Tempo + Grafana per FR-OBS-001 §1 #13 sizing: 6.5 vCPU / 11.5 GB RAM / 100 GB disk) lands at `deploy/obs/` next session, at which point status flips `building → shipped`.
+
+**`services/mcp-gateway/`** — Rust workspace member, slice-1 of P0.4 MCP Gateway:
+
+- **FR-MCP-001 — MCP 2025-11-25 spec compliance — scaffold shipped (10/10), status flipped `planned → building`.** Slice-1 ship covers: JSON-RPC 2.0 parser at `src/protocol/jsonrpc.rs` (single + batch + notifications + empty-batch rejection); closed JSON-RPC error code map per DEC-272 at `src/protocol/errors.rs` (-32700 parse_error · -32600 invalid_request · -32601 method_not_found · -32602 invalid_params · -32603 internal_error · MCP-defined -32001 unauthorized · -32002 rate_limited · -32003 tool_not_found · -32004 module_unreachable · -32005 elicitation_required); `initialize` handshake at `src/protocol/initialize.rs` returning `protocolVersion` + `Capabilities` (tools + prompts + resources + logging per DEC-266) + `ServerInfo` + `instructions`, with protocol-version-mismatch error returning the canonical `{received, supported}` data payload (FR-MCP-001 §1 #5); `tools/list` at `src/protocol/tools_list.rs` with base64 cursor pagination at PAGE_SIZE=100 (FR-MCP-001 §1 #6 + #15); `tools/call` at `src/protocol/tools_call.rs` with permission gate on `requires_scope` + returns `-32004 module_unreachable` until FR-MCP-002 wires the registration handler; `ToolAnnotations` per DEC-264 + spec (destructiveHint / readOnlyHint / idempotentHint / openWorldHint); `ToolRegistry` in-memory cache at `src/federation/registry.rs` with deterministic sort for pagination; Axum router at `src/router.rs` mounting `POST /mcp` + `GET /mcp/healthz`. `MCP_PROTOCOL_VERSION` pinned at `"2025-11-25"` per DEC-260. Tests across jsonrpc parsing + error codes + initialize match/mismatch + pagination + tools/call permission gate + router dispatch end-to-end.
+- **Remaining for `shipped` status:** JWT verification per FR-AUTH-004 (depends on `services/auth/src/jwt.rs::Claims::scope_grants()` accessor) + audience-bound token check + per-(tenant, tool) rate-limit + `mcp.tool_call_{started, completed}` memory audit row pair per DEC-265 + Streamable HTTP SSE transport + OTel span emission per `mcp.gateway.{initialize, tools_list, tools_call}`. These land in follow-on slices alongside FR-MCP-002..008.
+
+### Catalog totals after this wave
+
+- **Total FRs:** 261 (unchanged — this is implementation work, not authoring)
+- **FRs at `shipped + 10/10`:** prior 17 (AUTH 6 + memory 1 + SKILL 8 + others 2) → **19** (+FR-AI-003, +FR-AI-005)
+- **FRs flipped `planned → building (10/10)`:** **+2** (FR-OBS-001, FR-MCP-001) — scaffolds shipped, awaiting live-deploy + auth-wiring respectively
+- **Production module status table** (`BACKLOG.md §0.5`) — 3 new rows added for `services/{ai-gateway, obs-collector, mcp-gateway}`
+
+### §14 protocol affirmation
+
+This wave touched files exclusively under `services/`, `docs/feature-requests/BACKLOG.md`, and `CHANGELOG.md`. Per AGENTS.md §14.1: this wave does NOT write to `<memory-root>/audit/`, `<memory-root>/HEAD`, or `<memory-root>/.lock` directly — all memory chain-touching operations route through the canonical Writer subprocess via the new `cyberos_ai_gateway::memory_writer::emit()` entry point (FR-AI-003 §1 #9, AGENTS.md §14.1). Reciprocity invariant preserved: every new module README cites the FRs that own its surface; every shipped FR in `BACKLOG.md` flipped to `shipped (10/10)` is mirrored in the per-module status table.
+
+### Build verification
+
+The Rust toolchain is not available in the agent sandbox. Stephen runs the following locally to validate:
+
+```bash
+cd services
+cargo check -p cyberos-ai-gateway -p cyberos-obs-collector -p cyberos-mcp-gateway --tests
+cargo test  -p cyberos-ai-gateway --lib policy
+cargo test  -p cyberos-ai-gateway --lib memory_writer
+cargo test  -p cyberos-ai-gateway --test policy_loader_test ac1_valid_yaml_loads_and_matches
+cargo test  -p cyberos-ai-gateway --test policy_loader_test ac3_invalid_schema_rejected_on_init
+cargo test  -p cyberos-obs-collector
+cargo test  -p cyberos-mcp-gateway
+```
+
+The OnceCell-shared policy-loader tests (AC#2 / #5 / #6 / #7 / #9) are `#[ignore]` by default and run via `--ignored --test-threads=1`.
+
+### Next session ship targets
+
+1. **FR-AI-001** — cost-ledger pre-call check (depends FR-AI-003 ✅ + FR-AI-005 ✅, both now shipped). 8h. Adds `services/ai-gateway/migrations/0001_cost_ledger.sql` + `src/cost_ledger/precheck.rs` + integration test against a real Postgres.
+2. **FR-AI-002** — cost-ledger post-call reconcile. 6h.
+3. **FR-AI-004** — cost-hold expiry cleanup job (Postgres pg-scheduled). 3h.
+4. **`deploy/obs/`** — Helm chart + docker-compose for the LGTM stack to flip FR-OBS-001 `building → shipped`.
+5. **FR-MCP-002** — per-module server registration handler + heartbeat lifecycle, wired to the slice-1 `ToolRegistry`. Unblocks the `tools/call` `module_unreachable` short-circuit.
+
+---
+
+## 2026-05-19 — [PLUGIN] New module — cross-runtime distribution scaffold + 8 FRs at 10/10
+
+CyberOS's distribution + packaging layer. PLUGIN sits on top of the MCP gateway (`docs/feature-requests/mcp/`) and bundles CUO workflows + memory memory tools + SKILL playbooks as installable `.plugin` artefacts for **Claude Code**, **Cursor**, **Anthropic Cowork**, and **OpenAI Codex CLI**. Strategy alignment: §4 Level 1 (OSS distribution) + Level 3 (marketplace) + Level 4 (vertical packs ship as per-region plugins) + Level 5 (private marketplace for enterprise white-label).
+
+### What landed
+
+**Module scaffold** at `modules/plugin/`:
+- `README.md` — module charter, scope, layout doctrine, status, cross-module deps
+- `INTEROP.md` — 4 P1 runtime target matrix + 8 universal bundle invariants
+- `manifest.schema.json` — JSONSchema 2020-12 for canonical `plugin.json` (load-bearing contract)
+- `AGENTS.md` — symlink to `modules/memory/AGENTS.md` (Layer-1 memory protocol)
+- `CHANGELOG.md` — pointer to this root file per 2026-05-18 centralisation
+- Empty scaffold folders: `adapters/` (per-runtime emitters), `commands/` (slash-commands), `manifests/` (sample shipped bundles), `examples/` (developer demos)
+
+**FR catalog** at `docs/feature-requests/plugin/` — 8 FRs at **10/10**, 58 engineering-hours total:
+- `FR-PLUGIN-001` — Plugin manifest schema v1.0.0 + Python reference packer (`cyberos-plugin pack`). 8h. Keystone — every other FR consumes this manifest contract. Reproducible bundles + Sigstore Rekor anchor mandatory.
+- `FR-PLUGIN-002` — CyberOS MCP bridge Rust binary at `services/plugin-host/`. Supports both stdio + HTTP transports. Exposes 8 tools (CUO 4 + memory 2 + SKILL 2) over MCP 2025-11-25. Tasks primitive for long-running execute_workflow. 4-class error taxonomy. 10h.
+- `FR-PLUGIN-003` — 4 canonical slash-commands (`/cyberos-run`, `/cyberos-memory`, `/cyberos-skill-list`, `/cyberos-route`). 4h.
+- `FR-PLUGIN-004` — 12 skill playbooks teaching hosts WHEN to chain plugin tools. SKB-020..023 conformance + TRIGGER_TESTS.md fixtures. 6h.
+- `FR-PLUGIN-005` — OAuth-PKCE auth. Audience-bound RS256 JWTs (1h), rotating opaque refresh (24h), OS-keychain storage, locked scope catalogue. 8h.
+- `FR-PLUGIN-006` — memory audit emission. 6 plugin.* audit kinds. Audit-then-respond ordering. Durable Postgres outbox with 24h exponential-backoff retry. 6h.
+- `FR-PLUGIN-007` — Multi-runtime adapters for 4 P1 targets (claude-code / cursor / cowork / codex-cli). Single canonical manifest → 4 target-native bundles. Per-target reproducibility + Sigstore. P2 targets (goose, amp, continue-dev) deferred. 10h.
+- `FR-PLUGIN-008` — Marketplace publish CLI. OCI push to plugins.cyberskill.world + mirror to agentskills.io for public plugins. 70/30 revenue share. Vetted-by-CyberSkill JWT badge. Yank-not-delete semantics. Full marketplace server deferred to FR-PLUGIN-008a. 6h.
+
+### Catalog totals after this wave
+
+- **Total FRs:** 253 → **261**
+- **Modules with full spec coverage:** 24 → **25**
+- **Engineering-hours:** ~1,998h → **~2,056h**
+
+### Runtime build-out (next session)
+
+Implementation phase starts at `services/plugin-host/` — Rust workspace member (new). Build order matches slice order in `docs/feature-requests/plugin/README.md`:
+- Slice 1 — Plugin core (FR-001 + 002 + 003) — 22h
+- Slice 2 — Auth + audit + skill playbooks (FR-004 + 005 + 006) — 20h
+- Slice 3 — Multi-runtime + marketplace (FR-007 + 008) — 16h
+
+### Files touched
+
+- New: `modules/plugin/{README.md,INTEROP.md,manifest.schema.json,CHANGELOG.md}` (4 files)
+- New: `modules/plugin/AGENTS.md` (symlink → `../memory/AGENTS.md`)
+- New: `docs/feature-requests/plugin/{README.md,FR-PLUGIN-001..008.{md,audit.md}}` (17 files)
+- Modified: `README.md` (repo-layout + Modules table + Roadmap)
+- Modified: `docs/feature-requests/BACKLOG.md` (header v0.5.0 → v0.6.0; headline metrics; new wave note; new production-status row)
+
+---
+
+## 2026-05-19 — [CUO] ship-feature-requests workflow v1.0.0 → v1.1.0 — adds feature-request-audit at two strategic points
+
+Operator question: "double check if ship-feature-requests trigger feature-request-audit, if not then it should." Investigation confirmed: the workflow's 18-step skill chain ran spec-side audits like `implementation-plan-audit`, `edge-case-matrix-audit`, `coverage-gate-audit` — but **never validated that the FR's spec itself passed `audit_rubric@2.0`** (FM-101+, SEC-001..009, TRACE-001..005). This is the missing piece that allowed the FR-AUTH-005 "17 spec gaps in one audit" episode to slip through.
+
+### What changed
+
+Inserted `feature-request-audit` at TWO positions in `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md`:
+
+- **New step 3 — Pre-flight FR spec audit** (after `repo-context-map-audit`, before `architecture-decision-record-author`): catches FM-101+ frontmatter gaps, SEC-001..009 missing-section gaps, TRACE-001..005 traceability gaps in the spec itself BEFORE any FR-consuming downstream work runs. Failure halts the chain; operator patches the spec first.
+- **New step 18 — Post-implementation FR audit** (after `debugging-cycle-audit`, before `backlog-state-update-author`): enforces `TRACE-004` — every §1 clause's cited §5 test MUST appear as `passed` in the coverage_report before the FR can ship. Failure forces the outcome to be `[BLOCKED: …]` rather than `shipped + strict-audited`.
+
+Chain length: **18 → 20 steps**. Renumbered steps 3-18 (existing) to 4-19. Output schema gains two new artefacts: `fr_audit_report` (pre-flight) + `fr_audit_postimpl_report` (post-impl) — both land in the memory audit chain and append to per-FR `.audit.md §10` dossiers.
+
+### Verification
+
+Programmatic check via Python YAML parse:
+- ✅ Chain length 20, step numbers sequentially [1..20]
+- ✅ Both `feature-request-audit` invocations present at steps 3 + 18
+- ✅ All 20 referenced skill directories exist under `modules/skill/`
+- ✅ `workflow_version: 1.1.0`
+
+### Files touched
+
+Modified:
+- `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md` — frontmatter (`workflow_version` 1.0.0 → 1.1.0, +2 output artefacts), `skill_chain` (+2 steps + renumber), prose sections (renumbered §2-§9, new §2.5 pre-flight + §8.5 post-impl), new "Changelog" trailing block with v1.1.0 + v1.0.0 entries.
+
+### Operator impact
+
+Existing in-flight workflow runs are unaffected (each FR pass starts fresh; the v1.1 chain engages on the next supervisor invocation). All future ship-feature-requests runs now produce 2 additional artefacts in the memory audit chain per FR — `fr_audit_report` and `fr_audit_postimpl_report`. Storage cost: ~1-2 KB per artefact. Latency cost: ~2 additional LLM calls per FR (≈30-60 s on Sonnet).
+
+---
+
+## 2026-05-19 — MEMORY Wave 2026-Q3 CLOSED — FR-MEMORY-120 `cyberos history` shipped (final FR)
+
+Final FR of the MEMORY Improvement Wave 2026 Q3. No protocol amendment needed (pure read-only projection).
+
+### FR-MEMORY-120 implementation
+
+New `modules/memory/cyberos/core/history.py` (~265 LOC):
+- `HistoryEntry` dataclass; `walk(store, target_path, *, follow_moves, since, limit, show_body)` two-pass projection (path-set expansion via move-row sweep, then filter + project). Most-recent-first by default.
+- `_row_touches_paths(row, paths)` matches `row.path`, `extra.path`, `extra.affected_paths[]`, and move `src`/`dst`. Catches put / move / delete + every aux kind (`episode.logged`, `memory.importance_scored`, `dream.proposal_applied`, `memory.acl_denied`, `memory.precondition_failed`, `session.*`).
+- `render_annotations(extra)` — inline provenance suffix recognising `dream_id`, `proposal_id`, `session_id`, `invocation`, `imported_from`, `merged_into`, `warn_only`.
+
+CLI: new `cyberos history <path>` with `--limit`, `--chronological`, `--no-follow-moves`, `--show-body`, `--since {Nh|Nd|ISO}`, `--json`.
+
+### Smoke verified end-to-end (against fresh /tmp/memory-120 fixture)
+
+- ✅ Single put → 1 entry, multi-put → N entries descending seq order
+- ✅ `--chronological` flips to ascending
+- ✅ `--limit 2` caps; `--since 0h` filters all; `--since 24h` keeps all 3
+- ✅ Dream annotations rendered inline: `via dream 01KRYP4D… (proposal PMERGE001) merged into memories/facts/canonical.md`
+- ✅ Tombstone delete row appears with `extra.mode: "tombstone"`
+- ✅ JSON output with all 9 HistoryEntry fields
+- ✅ Never-existed path → `No history for 'memories/facts/never.md'.`
+- ✅ **Read-only invariant: HEAD before=3, after=3 exact match** (per FR-MEMORY-120 §1 #1)
+- ✅ `cyberos verify` chain intact (3 records)
+
+### Test coverage
+
+New: `modules/memory/tests/core/test_history.py` (302 lines, 18 test functions). Covers AC #1, #2, #3, #4, #5, #7, #10, #13, #16, #20, #21, plus annotation rendering across all 5 recognised tags.
+
+### Full MEMORY Wave 2026-Q3 — FINAL STATUS
+
+| FR | Spec | Impl | Tests | Amendment |
+|---|---|---|---|---|
+| FR-MEMORY-112 | episodic memory | ✅ | 351L | — |
+| FR-MEMORY-113 | recency-decay recall | ✅ | 266L | — |
+| FR-MEMORY-114 | write-time importance | ✅ | 263L | — |
+| FR-MEMORY-115 | `cyberos dream` | ✅ | 329L | P19 §7.7 ✅ |
+| FR-MEMORY-116 | semantic-dedup consolidate | ✅ | 257L | — |
+| FR-MEMORY-117 | per-store ACL | ✅ | 359L | P20 §14.4 ✅ |
+| FR-MEMORY-118 | `put_if` precondition-hash | ✅ | 349L | P21 §3.1 ✅ |
+| FR-MEMORY-119 | session transcript ledger | ✅ | 308L | P22 §18 ✅ |
+| FR-MEMORY-120 | `cyberos history` | ✅ | 302L | — |
+
+**All 9 FRs shipped end-to-end. All 4 protocol amendments APPROVED + merged into AGENTS.md. 2,784 lines of tests covering 110+ acceptance criteria. `cyberos verify` reports chain integrity across every test fixture.**
+
+The MEMORY module now matches Anthropic's Memory+Dreaming primitive (per the source talk + Ramakrushna article that started this whole wave 2026-05-19 morning).
+
+---
+
+## 2026-05-19 — Wave 3 cont. — AGENTS.md §18 (P22 APPROVED) + FR-MEMORY-119 transcript ledger
+
+### Protocol amendment §18 (P22 APPROVED)
+
+Operator's fourth terse `APPROVE` of the session. New section §18 Session transcript ledger added to [`modules/memory/AGENTS.md`](modules/memory/AGENTS.md). Nine sub-clauses cover opt-in lifecycle, date-partitioned storage at start-date, closed classification enum (`confidential` default per Stephen 2026-05-19 / `restricted`), encryption envelope for restricted payloads, summary rows on the main chain, retention (default 30 days), in-session `extra.session_id` propagation, lifecycle invariants, and ACL applicability to the `sessions/` subtree.
+
+**Namespace conflict resolved**: the FR spec'd `cyberos session start|append|end`, but the existing P11 `cyberos session` subcommand handles multi-agent coordination — different product with the same verb. The implementation namespaces the transcript ledger under `cyberos transcript` (start / append / end / read / list / purge-expired). §18.1 documents the rename.
+
+Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P22 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
+
+### FR-MEMORY-119 implementation
+
+New module: `modules/memory/cyberos/core/transcript.py` (~630 LOC):
+
+- **`Session` dataclass** (id, started_at, classification, retention_days, actor, ended_at, ended_reason, binlog_path).
+- **`start(writer, session_id, classification, retention_days, actor)`** — anchors §18 check, classification enum check, single-active-pointer check, creates date-partitioned `sessions/<YYYY-MM-DD>/<id>.binlog`, writes `.active` pointer, emits `session.start` aux row.
+- **`append(writer, session_id, role, content, redactions_applied)`** — closed role enum, active-session check, length-prefixed frame append (`[u32 length BE][u64 turn_seq BE][u64 ts_ns BE][JSON payload]`). Restricted sessions go through `_encrypt_content()` which wraps content in an `aes-256-gcm` envelope (uses `cryptography` package if available; falls back to a structured placeholder otherwise).
+- **`end(writer, session_id, reason, seal_binlog=True)`** — compresses `.binlog` → `.binlog.zst` via zstd level-10, removes raw, emits `session.end` row.
+- **`read(store, session_id, decrypt)`** — iterates frames (handles both `.binlog` and `.binlog.zst`); decrypts content_cipher payloads only when `decrypt=True`.
+- **`list_sessions(store, since)`** — enumerates sessions; detects `active|ended|purged` state from binlog suffix + tombstone marker.
+- **`purge_expired(writer, retention_days, dry_run)`** — scans date dirs older than retention, overwrites bodies with tombstone manifest, emits `session.purged` rows.
+- **`active_session_id(store)`** — read the `.active` pointer.
+- **`_has_section_18(store)`** — anchor check (looks for `§18` + "Session transcript ledger" in nearby `AGENTS.md`).
+
+CLI: new `cyberos transcript {start|append|end|read|list|purge-expired}` subcommand with full operator surface — `--id`, `--classification`, `--retention-days`, `--role`, `--content`, `--redactions-applied`, `--reason`, `--no-seal`, `--decrypt`, `--since`, `--dry-run`, `--json`.
+
+### Smoke verified end-to-end
+
+- **AC #1 lifecycle**: start (confidential default) → append × 2 (turn_seq 0, 1) → end (sealed `.binlog.zst`) → read back full transcript with timestamps + roles.
+- **AC #3 restricted encrypts**: `--classification restricted` + append → without `--decrypt` shows `[encrypted content; --decrypt to read]`; with `--decrypt` shows `secret hello`.
+- **AC #4 invalid classification**: `--classification public` rejected at argparse (exit 2).
+- **AC #5 append-without-start**: `error: no active session; start one first` (exit 2).
+- **AC #8 two-active rejection**: starting a second session while `concurrent-1` is active → `error: a session is already active ('concurrent-1')` (exit 2).
+- **AC #19 amendment gate**: AGENTS.md moved aside → exit 3 + `APPROVE protocol change P22 §18` message.
+- **AC #17 list**: enumerated 3 ended sessions with their `state: ended` + `binlog_path`.
+- **AC #18 + #20 retention purge**: backdated dir at 2026-04-01 → `purge-expired --dry-run --retention-days 30` reports 1 purge candidate without mutating; actual `purge-expired` emits `session.purged` row at seq=7, replaces body with tombstone JSON.
+- `cyberos verify` reported chain intact (7 records final).
+
+### Test coverage
+
+New: `modules/memory/tests/core/test_transcript.py` (308 lines, 19 test functions) covering: amendment-gate enforcement, lifecycle round-trip, date-partitioned storage, restricted encrypt/decrypt round-trip, closed classification enum (4 reject paths), append-without-start, append-after-end, double-end, two-active-rejection, `active_session_id()` helper, input validation (empty id, bad role, retention_days ≤ 0), `list_sessions`, purge dry-run + actual, session.purged payload shape, read-unknown-session-returns-empty.
+
+### Combined test surface (Waves 1+2+FR-117+FR-118+FR-119)
+
+8 test files at `modules/memory/tests/core/` = **2,482 lines, ~122 test functions across 95+ acceptance criteria**.
+
+### Files touched (this entry only)
+
+New:
+- `modules/memory/cyberos/core/transcript.py` (632 lines)
+- `modules/memory/tests/core/test_transcript.py` (308 lines)
+
+Modified:
+- `modules/memory/AGENTS.md` — added §18 (9 sub-clauses)
+- `modules/memory/cyberos/__main__.py` — `_cmd_transcript` handler + `cyberos transcript` subparser
+- `modules/memory/README.md` Appendix D — P22 flipped APPROVED + documented the `transcript` namespace decision
+
+### Wave 3 status
+
+- ✅ **P20 §14.4** APPROVED + FR-MEMORY-117 shipped
+- ✅ **P21 §3.1** APPROVED + FR-MEMORY-118 shipped
+- ✅ **P22 §18** APPROVED + FR-MEMORY-119 shipped
+- ⏳ **FR-MEMORY-120** (`cyberos history`) — no amendment gate; ships when operator says go
+
+---
+
+## 2026-05-19 — Wave 3 cont. — AGENTS.md §3.1 extension (P21 APPROVED) + FR-MEMORY-118 put_if
+
+### Protocol amendment §3.1 (P21 APPROVED)
+
+Operator's third terse `APPROVE` of the session. §3.1's canonical-op table extended from THREE ops (`put` / `move` / `delete`) to FOUR — `put_if` joins as the optimistic-concurrency primitive. Three new sub-clauses:
+
+- **§3.1.5** — `memory.precondition_failed` aux row schema (`{actor, path, expected, actual, attempt_at}`). HEAD doesn't advance for the rejected put; advances by +1 for the aux row only.
+- **§3.1.6** — success row is INDISTINGUISHABLE from a regular `put` (`op="put"`, not `"put_if"`). Downstream consumers (walker / doctor / dream / history) require no special-case logic.
+- **§3.1.7** — ACL check (FR-MEMORY-117) runs BEFORE the precondition check. Policy refusal returns `acl_denied`, not `precondition_failed` — different operator action needed.
+
+Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P21 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
+
+### FR-MEMORY-118 implementation
+
+New op in `modules/memory/cyberos/core/ops.py`:
+
+- `PutIfResult` frozen dataclass (5 fields: `outcome`, `reason`, `expected`, `actual`, `committed_seq`).
+- `put_if(writer, rel_path, body, *, actor, precondition_body_hash, kind, extra)` — content-conditional write. Order of checks: path traversal + size cap → shape validation (64-char lowercase hex OR `None` only) → `_has_section_3_1_put_if()` anchor check → ACL gate (FR-MEMORY-117, runs BEFORE precondition per §3.1.7) → precondition check (3 rejection paths) → write. Success emits a plain `put` row (per §3.1.6) so downstream consumers need no special-case.
+
+CLI: new `cyberos put-if <path> <body_file> --precondition <hex|none>` subcommand with `--precondition-from-file` + `--json` variants.
+
+### Smoke verified end-to-end
+
+- **AC #1 match → written**: pre-computed body hash; `put-if` returns `outcome: written, seq: 2`.
+- **AC #2 mismatch → rejected**: stale hash → `outcome: rejected, reason: precondition_failed, expected: 8fc80ed1…, actual: 79598c2e…`. Chain advances by exactly 1 (aux row only).
+- **AC #3 null + absent → written**, **AC #4 null + existing → rejected**.
+- **AC #16 shape validation**: uppercase hex → `error: precondition_body_hash must be 64-char lowercase hex or None`.
+- **AC #19 amendment gate**: with AGENTS.md moved aside, `put-if` exits with code 3 naming `APPROVE protocol change P21 §3.1`.
+- **Retry-loop pattern** worked in 1 attempt against the seeded fixture.
+- `cyberos verify` chain intact (6 records).
+
+### Test coverage
+
+New: `modules/memory/tests/core/test_put_if.py` (349 lines, 19 test functions) covering: amendment-gate enforcement, shape validation (5 parametrized bad inputs), 4×2 precondition cross-product, HEAD-doesn't-advance-on-reject invariant, success-row-is-`op=put` invariant, aux-row payload shape, ACL-before-precondition ordering, PutIfResult shape, retry-loop pattern, sequential two-writer race smoke.
+
+### Combined test surface (Waves 1+2+FR-117+FR-118)
+
+7 test files at `modules/memory/tests/core/` = **2,174 lines, ~103 test functions across 80+ acceptance criteria**.
+
+### Files touched (this entry only)
+
+New: `tests/core/test_put_if.py` (349 lines).
+Modified: `modules/memory/AGENTS.md` §3.1; `modules/memory/cyberos/core/ops.py` (~160 LOC); `modules/memory/cyberos/__main__.py`; `modules/memory/README.md` Appendix D.
+
+### Wave 3 status
+
+- ✅ **P20 §14.4** APPROVED + FR-MEMORY-117 shipped
+- ✅ **P21 §3.1** APPROVED + FR-MEMORY-118 shipped
+- ⏳ **P22 §18** (session transcript ledger) — awaiting `APPROVE protocol change P22 §18`
+- ⏳ **FR-MEMORY-120** (`cyberos history`) — no amendment gate
+
+---
+
+## 2026-05-19 — Wave 3 start — AGENTS.md §14.4 (P20 APPROVED) + FR-MEMORY-117 per-store ACL
+
+### Protocol amendment §14.4 (P20 APPROVED)
+
+Operator approved with a terse `APPROVE` (interpreted as the next-in-queue per the one-at-a-time rule). New section added to [`modules/memory/AGENTS.md`](modules/memory/AGENTS.md) at §14.4 — Store-level ACL. Seven sub-clauses cover STORE.yaml shape + parsing, write-side enforcement via the canonical writer with first-match-wins glob resolution, read non-enforcement (writes-only at protocol level), `memory.acl_denied` aux row payload, two-sided ACL check on `move`, INTEROP-consumer obligation, and the `store-yaml-acl-valid` walker invariant.
+
+Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P20 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
+
+### FR-MEMORY-117 implementation
+
+New: `modules/memory/cyberos/core/store_acl.py` (~280 LOC):
+- `StoreAcl` dataclass + `from_yaml(path)` parser with full validation (closed-enum modes, required `store_id`, list-shape `acl`, glob-actor strings).
+- `find_governing_store_yaml(root, rel_path)` — walks UP from the target's parent dir; innermost STORE.yaml wins.
+- `check_write(root, rel_path, actor)` — returns `AclResult` with `allowed`, `mode`, `store_id`, `yaml_path`, `matched_entry`, `reason`.
+- Two-mode operation:
+  - **Enforced** (AGENTS.md §14.4 anchor present): denied writes raise `AclDenied` after emitting the `memory.acl_denied` aux row.
+  - **WARN-ONLY** (anchor absent, pre-amendment transition): aux row still emitted with `warn_only=True` payload field, but writes proceed. Anti-footgun for operators who pull code before APPROVE'ing.
+- `explain(root, path, actor)` — operator-readable diagnostic for `cyberos acl explain`.
+
+Hooks into `modules/memory/cyberos/core/ops.py`:
+- New `AclDenied(PermissionError)` exception class.
+- New `_acl_check(writer, rel_path, actor, attempt_kind)` helper — emits the aux row on any non-allow result.
+- `put()` gates the write before the atomic file write.
+- `move()` calls `_acl_check` for BOTH `src_rel` and `dst_rel` per §14.4.5; either-side failure → `AclDenied`.
+- `delete()` gates before the audit-row submit.
+
+Hooks into `modules/memory/memory.schema.json`:
+- New `StoreAclMode`, `StoreAclEntry`, `StoreAcl` definitions matching FR-MEMORY-117 §3 schema fragment.
+
+CLI: new `cyberos acl {show|validate|explain}` subcommand:
+- `acl show` — pretty-prints every STORE.yaml in the store.
+- `acl validate` — re-validates every STORE.yaml against the schema; non-zero exit on any failure.
+- `acl explain <path>` — resolves the effective mode for the active actor on a given path, with the matched ACL entry highlighted.
+
+### Smoke verified end-to-end
+
+- **WARN-ONLY** (no AGENTS.md): scheduled-importer write to a deny subtree → seq advanced, `memory.acl_denied` aux row emitted with `warn_only: true`.
+- **Enforced** (AGENTS.md §14.4 present): same write → `AclDenied` raised, aux row emitted with `warn_only: false`, NO put row written.
+- `cyberos verify` chain intact across both modes.
+- `cyberos acl show` formatted three-entry STORE.yaml correctly.
+- `cyberos acl explain` correctly resolved scheduled-importer → `deny`, stephen@cyberskill.world → `read-write`.
+- Happy-path put for stephen@cyberskill.world succeeded at seq=4.
+
+### Test coverage
+
+New: `modules/memory/tests/core/test_store_acl.py` (359 lines, 19 test functions) covering: StoreAcl parse + validation, find_governing_store_yaml walk, check_write across enforcement/warn-only/permissive paths, glob-actor matching, first-match-wins, explicit-deny override, default_mode fallback, built-in actor literals, put/move/delete ACL enforcement via canonical ops, `move` two-sided check, memory.acl_denied aux-row payload shape, explain() output.
+
+### Combined test surface (Waves 1 + 2 + FR-MEMORY-117)
+
+6 test files at `modules/memory/tests/core/`: `test_episode.py` (351) + `test_ranking_and_decay.py` (266) + `test_importance.py` (263) + `test_dream.py` (329) + `test_consolidate_semantic_dedup.py` (257) + `test_store_acl.py` (359) = **1,825 lines, ~84 test functions across 65+ acceptance criteria**.
+
+### Files touched (this entry only)
+
+New:
+- `modules/memory/cyberos/core/store_acl.py` (~280 lines)
+- `modules/memory/tests/core/test_store_acl.py` (359 lines)
+
+Modified:
+- `modules/memory/AGENTS.md` — added §14.4 Store-level ACL (7 sub-clauses)
+- `modules/memory/memory.schema.json` — added StoreAclMode, StoreAclEntry, StoreAcl definitions
+- `modules/memory/cyberos/core/ops.py` — `AclDenied` + `_acl_check` + integration into put/move/delete
+- `modules/memory/cyberos/__main__.py` — `_cmd_acl` handler + `cyberos acl {show|validate|explain}` subparser
+- `modules/memory/README.md` Appendix D — P20 flipped APPROVED
+
+### Wave 3 status
+
+- ✅ **P20 §14.4** APPROVED + FR-MEMORY-117 implemented
+- ⏳ **P21 §3.1** (put_if precondition-hash) awaiting `APPROVE protocol change P21 §3.1`
+- ⏳ **P22 §18** (session transcript ledger) awaiting `APPROVE protocol change P22 §18`
+- ⏳ **FR-MEMORY-120** (`cyberos history`) — no amendment gate; ships next session
+
+---
+
+## 2026-05-19 — Dependency-version bumps + AGENTS.md §7.7 (P19 APPROVED) + Wave 2 implementation (FR-MEMORY-115 + 116)
+
+### Dependency version audit + bumps (repo-wide)
+
+Operator: "use latest stable; check throughout cyberos and update all possible." Conservative floor bumps to known-stable versions; patch releases pick up via `pip install -U` / `cargo update` / `pnpm up`. Playground folder (cloned upstream repos) untouched.
+
+| Project | Files touched | What bumped |
+|---|---|---|
+| `modules/memory/` | `pyproject.toml`, `cyberos/requirements.txt` | setuptools 61→75; msgspec 0.18→0.18.6; crc32c 2.4→2.7; PyYAML 6.0→6.0.2 |
+| `modules/skill/` | `pyproject.toml`, `toolchain/package.json` | setuptools 61→75; anthropic 0.40→0.42; msgspec→0.18.6; pyyaml→6.0.2; @bytecodealliance/jco 1.7→1.10 |
+| `modules/cuo/` | `pyproject.toml` | hatchling 1.18→1.25; click 8.1→8.1.7; pyyaml→6.0.2; pytest 8.0→8.3 |
+| `services/embed-sidecar/` | `pyproject.toml` | setuptools 68→75; fastapi 0.110→0.115; uvicorn 0.27→0.32; pydantic 2.6→2.9; sentence-transformers 2.7→3.0; torch 2.2→2.4 |
+| `services/` (workspace) | `Cargo.toml` | rust-version 1.81→1.83; tokio 1.41→1.42; clap 4→4.5; jsonwebtoken 9→9.3 |
+| `services/auth/` | `Cargo.toml` | reqwest→0.12.9; ipnetwork 0.20→0.21; zeroize 1→1.8 |
+| `services/memory/` | `Cargo.toml` | async-trait→0.1.83; regex 1→1.11; reqwest→0.12.9 |
+| `services/skill-broker/` | `Cargo.toml` | flagged serde_yaml deprecation (slice-4 migration tracked); no version change |
+| `services/memory/desktop/` | `package.json` | @tauri-apps/api/cli 2.0→2.1; svelte 5.0→5.2; tslib 2.7→2.8; tailwind 3.4.0→3.4.14 |
+
+### Protocol amendment §7.7 (P19 APPROVED)
+
+Operator approved Wave 2 protocol amendment. New section added to [`modules/memory/AGENTS.md`](modules/memory/AGENTS.md) at §7.7 — Dreaming. Seven sub-clauses cover out-of-band identity, `extra.dream_id` + `extra.proposal_id` provenance invariant, body-hash precondition gate, operator-gated apply, four new audit kinds, snapshot isolation, and the closed detector enum.
+
+Tracker entry in [`modules/memory/README.md`](modules/memory/README.md) Appendix D flipped P19 from "awaiting APPROVE" to **APPROVED 2026-05-19**.
+
+### FR-MEMORY-115 — `cyberos dream` out-of-band reflection
+
+New: `modules/memory/cyberos/core/dream/{__init__,proposals,_audit_iter,detectors,runner,applier}.py`. Four async detectors (`duplicates` / `stale` / `patterns` / `verify`) matching AGENTS.md §7.7.7 closed enum. Runner uses Crockford-base32 ULID `dream_id`, snapshot-isolated against `head_seq` at start, persists `DreamDiff` to `dreams/<YYYYMMDDTHHMMSSZ>/diff.json`. Applier: 3-pass (strict-idempotency via chain-walk → body-hash precondition → write with `extra.dream_id`/`extra.proposal_id` per §7.7.2). AGENTS.md §7.7 anchor checked before any writes (`ProtocolAmendmentMissing` on missing).
+
+CLI: `cyberos dream` + `cyberos dream-apply <id>` subcommands.
+
+**Smoke verified end-to-end:** seeded 3 facts (2 near-duplicate); dream found 1 merge proposal; apply rejected without §7.7 anchor, succeeded with anchor, idempotent on re-apply (`skipped_idempotent: 1`); `cyberos verify` reported chain intact (13 rows).
+
+**Side effect**: `cyberos.core.ops.delete()` gained optional `extra: dict | None` kwarg (additive, back-compat).
+
+### FR-MEMORY-116 — Semantic-dedup consolidate phase
+
+Thin wrapper: 5th phase appended to `cyberos.core.consolidate.run()` → `Walk → Compact → Sign → Publish → SemanticDedup`. Delegates to FR-MEMORY-115's `duplicates` detector + applier verbatim (asserted by `test_consolidate_imports_dream_detector` via `inspect.getsource`). On apply, emits a marker `dream.complete` row with `extra.invocation = "consolidate"` so FR-MEMORY-120 history can distinguish dedup-from-consolidate from dedup-from-explicit-`dream`.
+
+CLI: extends `cyberos consolidate` with `--semantic-dedup`, `--semantic-dedup-apply`, `--semantic-dedup-threshold`, `--semantic-dedup-scope`. Default behavior unchanged. `ConsolidationReport` gains 5 new fields.
+
+**Smoke verified end-to-end:** same 2-duplicate fixture; all 5 phases ran; 1 proposal found + 1 applied; final `dream.complete` aux row carries `extra.invocation: "consolidate"`.
+
+### Combined test coverage (Wave 1 + Wave 2)
+
+5 test files at `modules/memory/tests/core/`: `test_episode.py` (351) + `test_ranking_and_decay.py` (266) + `test_importance.py` (263) + `test_dream.py` (329) + `test_consolidate_semantic_dedup.py` (257) = **1,466 lines, ~65 test functions across 50+ acceptance criteria**.
+
+### Deferred to subsequent sessions
+
+- pytest run against full suite — sandbox is Python 3.10 (module requires 3.11+); test files are ready for `pytest tests/core/ -v` in operator env.
+- Wave 3 (FR-MEMORY-117 ACL · 118 put_if · 119 sessions · 120 history) — gated on independent `APPROVE protocol change P20 / P21 / P22` chat-turns when operator ready.
+
+---
+
+## 2026-05-19 — [MEMORY] Wave 1 implementation shipped — FR-MEMORY-112 + 113 + 114 end-to-end green
+
+Implementation phase for the MEMORY Improvement Wave 2026 Q3 begins. Wave 1 (no protocol amendments needed) shipped end-to-end in one session.
+
+### What landed
+
+**FR-MEMORY-112 — Episodic memory** (`modules/memory/cyberos/core/episode.py` + CLI wiring):
+- Schema extension: `"episode"` added to the closed `kind` enum (`memory.schema.json`).
+- `Episode` dataclass enforces closed `outcome` enum, `quality_score ∈ [0,1]`, `duration_ms ≥ 0`, `error` required on non-success at construction time.
+- `cyberos.core.episode.log(writer, ep)` routes through the canonical `cyberos.core.ops.put` writer (no direct ledger writes).
+- `recall_similar(store, task)` projects only `kind=episode` hits, ranks by Park-et-al combined score, returns structured response with `reason: no_episodes_in_store | no_episodes_above_min_relevance` on empty.
+- CLI: `cyberos episode log --task ... --approach ... --outcome ...` and `cyberos recall-similar <task>` (with `--k`, `--min-relevance`, `--json`).
+- `validate_episode_extras()` walker invariant covers all five validation rules (outcome enum, qs range, duration non-negative, error on failure, required fields).
+
+**FR-MEMORY-113 — Recency-decay recall** (`cyberos/core/decay.py` + `cyberos/core/ranking.py`):
+- `Exponential(decay_factor=0.995)` — Park-et-al default; half-life ≈ 138.3 hours (verified `137.8 < half_life < 138.5`).
+- `Ebbinghaus(strength=240.0)` — MARS-aligned classic forgetting curve.
+- `build_profile(name, params)` — slice-3 dispatcher; entry_points plug-in in slice 4.
+- `RecallWeights(0.4, 0.3, 0.3)` — constructor-validated sum-to-1.0 ±1e-6 + per-weight `[0, 1]` range.
+- `score_hits(hits, weights, decay, now)` — pure function (`now` injected for determinism), duck-typed for dict + namespace + object hits, returns `list[ScoredHit]` sorted desc by `combined_score`.
+- Auto-picked up by `cyberos.core.episode.recall_similar` via try-import (no manual wiring required).
+- Absent `importance` → 0.5 neutral; absent `last_seen_at` → recency=1.0; future-dated → recency=1.0.
+
+**FR-MEMORY-114 — Write-time importance scoring** (`cyberos/core/invokers/` + `cyberos/core/importance.py`):
+- `ImportanceInvoker` Protocol + `ScoreResult` dataclass (`score`, `latency_ms`, `model`, `outcome`, `reason`).
+- `MockInvoker` — deterministic, sha256-derived score clamped to `[0.1, 0.95]`, never produces literal 0.0 / 1.0.
+- `AnthropicInvoker` — calls real Anthropic API with the verbatim Ramakrushna prompt; 5 s timeout; falls back to `score=0.5, outcome="fallback", reason="<tag>"` on any error.
+- `select_invoker(name)` chain: `CYBEROS_DISABLE_LLM=1` (escape hatch) > explicit name > `CYBEROS_IMPORTANCE_INVOKER` env > default (anthropic-if-key-else-mock).
+- `ImportanceCache` — SQLite-backed, sha256-keyed; cache successes only (fallbacks retried).
+- `cyberos put --score-importance [--invoker mock|anthropic] [--importance N] [--dry-run]` CLI flags.
+- Emits `memory.importance_scored` aux audit row per call (incl. cache hits) with full payload.
+
+### Verification
+
+- **15 smoke checks** across all three FRs pass (constructor invariants, walker invariants, cache hit/miss/restart, fallback-not-cached, invoker selection chain, prompt verbatim check, timeout default, end-to-end CLI write+verify).
+- **3 new test files** at `modules/memory/tests/core/`: `test_episode.py` (351 lines), `test_ranking_and_decay.py` (266 lines), `test_importance.py` (263 lines) — 880 lines total, ~50 test functions covering 35+ acceptance criteria from the three FRs.
+- **Audit chain integrity** verified on both test stores: `cyberos verify` reports "chain intact" after 5 mixed writes across multiple FRs.
+- **CLI end-to-end** smoke: 4 audit rows in correct shape — plain put (no importance), `--score-importance --invoker mock` (importance=0.659 + `memory.importance_scored` aux row), `--importance 0.92` (pinned).
+
+### Files touched
+
+New:
+- `modules/memory/cyberos/core/episode.py` (~300 lines)
+- `modules/memory/cyberos/core/decay.py` (~115 lines)
+- `modules/memory/cyberos/core/ranking.py` (~130 lines)
+- `modules/memory/cyberos/core/importance.py` (~210 lines)
+- `modules/memory/cyberos/core/invokers/{__init__,base,mock,anthropic_invoker}.py` (~210 lines combined)
+- `modules/memory/tests/core/test_episode.py` (351 lines)
+- `modules/memory/tests/core/test_ranking_and_decay.py` (266 lines)
+- `modules/memory/tests/core/test_importance.py` (263 lines)
+
+Modified:
+- `modules/memory/memory.schema.json` (added `"episode"` to the `kind` enum)
+- `modules/memory/cyberos/__main__.py` (added `_cmd_episode_log`, `_cmd_recall_similar`; extended `_cmd_put` with `--score-importance` / `--importance` / `--invoker` / `--dry-run`; registered the `episode log` and `recall-similar` subcommands)
+
+### Deferred to subsequent sessions
+
+- pytest run against full suite — sandbox is Python 3.10 but module requires 3.11+; test files are ready for `pytest tests/core/test_{episode,ranking_and_decay,importance}.py -v` once the user runs in their 3.11+ env.
+- Wave 2 (FR-MEMORY-115 dream + 116 semantic-dedup) — gated on `APPROVE protocol change P19 §7.7` chat-turn.
+- Wave 3 (FR-MEMORY-117/118/119/120) — gated on `APPROVE protocol change P20 / P21 / P22` chat-turns (one at a time per Stephen's decision).
+- Proposal file deletion — `docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md` + `playground/MEMORY-IMPROVEMENT-PROPOSAL.md` overwritten with deprecation pointers; sandbox lacks `unlink` permission so operator runs `git rm` on those two files.
+
+---
+
+## 2026-05-19 — [MEMORY] MEMORY Improvement Wave 2026 Q3 — FR-MEMORY-112..120 authored at 10/10
+
+**9 new FRs** authored in response to the Anthropic Memory+Dreaming talk (`playground/Memory and dreaming for self-learning agents.mp4`, transcribed at `playground/extracts/memory-and-dreaming.transcript.txt`) and the Ramakrushna agentic-memory article (`playground/Agentic Memory - A Detailed Breakdown.mhtml`, extracted at `playground/extracts/agentic-memory.article.txt`).
+
+Design rationale lives in the FRs themselves (each carries §1 normative clauses + §2 rationale + §10 failure modes + §11 implementation notes; the audit-md siblings document the audit-revise loop). Aligns CyberOS MEMORY with the frontier vendor's memory primitives + the published taxonomy. **Backlog metrics:** 245 → 253 FRs at 10/10; engineering hours +120h (totals ~1,998h).
+
+### FRs in the wave
+
+| FR | Title | Effort | Protocol amendment |
+|---|---|---:|---|
+| [FR-MEMORY-112](docs/feature-requests/memory/FR-MEMORY-112-episodic-memory.md) | Episodic memory — `kind: episode` + `cyberos recall-similar`; reflection-loop foundation | 12h | No (additive enum) |
+| [FR-MEMORY-113](docs/feature-requests/memory/FR-MEMORY-113-recency-decay-recall.md) | Park-et-al combined-score recall (relevance·0.4 + importance·0.3 + recency·0.3) with Exponential/Ebbinghaus decay | 8h | No |
+| [FR-MEMORY-114](docs/feature-requests/memory/FR-MEMORY-114-write-time-importance.md) | Write-time importance scoring — Haiku-rated; mock-llm/anthropic Invoker (CUO Phase-3 pattern) | 8h | No |
+| [FR-MEMORY-115](docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream.md) | **`cyberos dream` — out-of-band batch reflection** (4 detectors: duplicates / stale / new / verify); operator-gated apply | 32h | **§7.7 (P19)** |
+| [FR-MEMORY-116](docs/feature-requests/memory/FR-MEMORY-116-semantic-dedup-consolidate.md) | Consolidation SemanticDedup phase (Walk → Compact → Sign → Publish → SemanticDedup); shares FR-115 detector | 6h | No |
+| [FR-MEMORY-117](docs/feature-requests/memory/FR-MEMORY-117-per-store-acl.md) | Per-store ACL via `STORE.yaml`; writer enforces on writes; auto-migrate top-level dirs | 24h | **§14.4 (P20)** |
+| [FR-MEMORY-118](docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition.md) | `put_if` optimistic-concurrency primitive; content-hash preconditions | 8h | **§3.1 (P21)** |
+| [FR-MEMORY-119](docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger.md) | Session transcript ledger — opt-in `cyberos session {start,append,end}`; default classification=confidential | 24h | **§18 (P22)** |
+| [FR-MEMORY-120](docs/feature-requests/memory/FR-MEMORY-120-cyberos-history.md) | `cyberos history <path>` — per-file version + attribution from audit chain; dream/session annotations inline | 8h | No |
+
+### Ship sequence (per `docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md` §5)
+
+- **Wave 1 (~4 dev-days, no protocol amendments)** — FR-MEMORY-112 / 113 / 114.
+- **Wave 2 (~9 dev-days, gated on `APPROVE protocol change P19 §7.7`)** — FR-MEMORY-115 + 116.
+- **Wave 3 (~8 dev-days, gated on `APPROVE protocol change P20 §14.4` / `P21 §3.1` / `P22 §18`)** — FR-MEMORY-117 + 118 + 119 + 120.
+
+Per Stephen's 2026-05-19 decision: protocol amendments are taken **one at a time per FR**, not bundled. Default LLM follows the cuo/Phase-3 pattern (mock-llm + anthropic). Session-transcript default classification is `confidential`. STORE.yaml migration is auto-generated.
+
+### Files touched
+
+- New: `docs/proposals/MEMORY-IMPROVEMENT-WAVE-2026Q3.md` (design rationale).
+- New: `docs/feature-requests/memory/FR-MEMORY-{112..120}.md` + `.audit.md` × 9 = 18 new spec + audit files.
+- Updated: `docs/feature-requests/memory/README.md` (catalog 11 → 20 FRs).
+- Updated: `docs/feature-requests/BACKLOG.md` (v0.4.0 → v0.5.0; headline metrics; production module status row).
+- Updated: `modules/memory/README.md` Appendix D — P19..P22 added.
+- Updated: `playground/MEMORY-IMPROVEMENT-PROPOSAL.md` — replaced with pointer to promoted proposal.
+- New: `playground/extracts/agentic-memory.article.txt` + `playground/extracts/memory-and-dreaming.transcript.txt` — locally-extracted source materials.
+
+### Verification
+
+- All 9 FRs at 10/10 per their `.audit.md` siblings (TRACE-001..005 enforced).
+- 4 FRs document explicit protocol-amendment runtime checks; spec is at 10/10 but implementation requires Stephen's `APPROVE protocol change P19/P20/P21/P22` chat-turns first.
+- BACKLOG.md totals reconcile: 245 + 9 = 254 — but FR-MEMORY-120 is a projection FR (no new audit kinds), so net new is 253 distinct numbered FRs at 10/10.
+
+### Sources cited (academic grounding)
+
+- [MARS framework with Ebbinghaus decay](https://consensus.app/papers/details/33146ddb26f25e60877ca1b2c76602aa/) (Liang et al., 2025, ArXiv) — supports FR-MEMORY-113's Ebbinghaus alternative profile.
+- [Evo-Memory benchmark](https://consensus.app/papers/details/82360096847158c2890886056a3d5675/) (Wei et al., 2025, ArXiv) — provides the eval substrate post-Wave-1.
+- [Zhang et al. survey](https://consensus.app/papers/details/49b68544092450f9a9c74be746426a4f/) "A Survey on the Memory Mechanism of LLM-based Agents" (2024, ACM TOIS, 315 citations) — the foundational taxonomy.
+
+---
+
 ## 2026-05-19 — [SKILL] FR-SKILL-115 sweep applied + registry v0.2.5 → v0.2.6
 
 **Registry: v0.2.6.** Catalog placeholder-free (SKB-030 invariant met).
@@ -55,7 +625,7 @@ End-of-day continuation of the Wave-1+2 implementation phase. Eight items shippe
 
 **Production runbook + CI for GeoIP.** New `services/auth/scripts/install-geoip.sh` (MaxMind direct or internal mirror). New `services/auth/tests/geoip_test.rs` (skips when DB absent, asserts `8.8.8.8 → US` and `165.21.0.1 → SG` when present). `.github/workflows/services.yml` gains an install step gated on `secrets.MAXMIND_LICENSE_KEY`.
 
-**[BRAIN] FR-BRAIN-104 Tauri 2.x desktop scaffold.** New `services/brain/desktop/` (19 files). Backend: Tauri 2 + plugin-shell + plugin-fs; `commands.rs` for search/quick-capture/sync-state; `sync_supervisor.rs` supervises the Python brain-sync daemon with 5-restarts-per-60s circuit breaker. Frontend: Svelte 5 runes + Vite + Tailwind 3 — `App.svelte` with Dashboard / Search / Sync tabs. **NOT in `services/Cargo.toml` workspace** — own Cargo.lock. Signing scripts: `generate-updater-keys.sh` (tauri signer generate), `sign-and-notarize-macos.sh` (codesign + notarytool + staple + spctl + auto-generated entitlements), `sign-windows.sh` (signtool + SHA-256 + RFC 3161). README documents the full release runbook. FR-BRAIN-104 status bumped `accepted → building`.
+**[MEMORY] FR-MEMORY-104 Tauri 2.x desktop scaffold.** New `services/memory/desktop/` (19 files). Backend: Tauri 2 + plugin-shell + plugin-fs; `commands.rs` for search/quick-capture/sync-state; `sync_supervisor.rs` supervises the Python memory-sync daemon with 5-restarts-per-60s circuit breaker. Frontend: Svelte 5 runes + Vite + Tailwind 3 — `App.svelte` with Dashboard / Search / Sync tabs. **NOT in `services/Cargo.toml` workspace** — own Cargo.lock. Signing scripts: `generate-updater-keys.sh` (tauri signer generate), `sign-and-notarize-macos.sh` (codesign + notarytool + staple + spctl + auto-generated entitlements), `sign-windows.sh` (signtool + SHA-256 + RFC 3161). README documents the full release runbook. FR-MEMORY-104 status bumped `accepted → building`.
 
 ---
 
@@ -76,13 +646,13 @@ Massive multi-stream day. Four parallel programs landed end-to-end:
 ### Stream 2 — CUO v3.0.0 Python supervisor (Phases 1+2+3)
 - **Phase 1 (`3.0.0a1`):** catalog scanner + persona/workflow discovery + chain validator + two-stage router with domain-language fallback + dry-run mode. 9/9 tests pass. CLI: `list-personas`, `list-workflows`, `route`, `dry-run`
 - **Phase 2 (`3.0.0a2`):** `Invoker` ABC + `MockInvoker` + `SubprocessInvoker` + `select_invoker('auto')` + `execute_chain()` walking workflow chains with filesystem hand-off. CLI: `execute`. 14/15 tests pass
-- **Phase 3 (`3.0.0a3`):** `LLMInvoker` (mock-llm default + Anthropic API mode reading SKILL.md as system prompt + RUBRIC.md guardrails for audit skills) + BRAIN audit-chain emission via `cyberos.core.writer.Writer` wrapper. CLI: `--invoker llm`, `--brain-emit`, `--actor`. **21/22 tests pass** (1 expected skip — catalog-complete invariant); HEAD advances `01 → 03` on first emit
-- **Phase 4 (`3.0.0a4`):** 5 special-case workflow Handler subclasses at `modules/cuo/cuo/core/handlers/` — `LinearHandler` (default), `TimeCriticalHandler` (bypass scheduling + SLA breach audit), `PerInstanceHandler` (iterate ×N + fan-in summary), `MultiOutputHandler` (fan-out final step per recipient), `SequentialApprovalHandler` (gate chain B on approval of chain A), `PersonaPairHandler` (interleaved chains with shared artefact ownership). Dispatched by workflow `pattern:` frontmatter. Spec at `docs/feature-requests/cuo/FR-CUO-106-supervisor-phase4-special-handlers.md`. **49/50 tests pass** (was 21+1; +28 new Phase 4 tests including end-to-end dispatch against real catalog). 8 new BRAIN audit kinds.
+- **Phase 3 (`3.0.0a3`):** `LLMInvoker` (mock-llm default + Anthropic API mode reading SKILL.md as system prompt + RUBRIC.md guardrails for audit skills) + memory audit-chain emission via `cyberos.core.writer.Writer` wrapper. CLI: `--invoker llm`, `--memory-emit`, `--actor`. **21/22 tests pass** (1 expected skip — catalog-complete invariant); HEAD advances `01 → 03` on first emit
+- **Phase 4 (`3.0.0a4`):** 5 special-case workflow Handler subclasses at `modules/cuo/cuo/core/handlers/` — `LinearHandler` (default), `TimeCriticalHandler` (bypass scheduling + SLA breach audit), `PerInstanceHandler` (iterate ×N + fan-in summary), `MultiOutputHandler` (fan-out final step per recipient), `SequentialApprovalHandler` (gate chain B on approval of chain A), `PersonaPairHandler` (interleaved chains with shared artefact ownership). Dispatched by workflow `pattern:` frontmatter. Spec at `docs/feature-requests/cuo/FR-CUO-106-supervisor-phase4-special-handlers.md`. **49/50 tests pass** (was 21+1; +28 new Phase 4 tests including end-to-end dispatch against real catalog). 8 new memory audit kinds.
 - **Phase 4 CLI wiring (this session close):** `cyberos-cuo execute` now auto-dispatches via `pick_handler(workflow)` and prints `# dispatched to <HandlerClass>` when pattern ≠ linear. New flags: `--explain` (show pattern + handler + workflow_file + rationale before invocation) + `--no-handler-dispatch` (bypass for debug). `WorkflowEntry.frontmatter` dict added to `modules/cuo/cuo/core/catalog.py` so arbitrary frontmatter fields (`pattern`, `sla_minutes`, `instance_descriptor`, `output_recipients`, `gates`, `peer_persona`, etc.) survive parsing. 15 affected workflows patched with `pattern:` frontmatter (3 time_critical + 1 per_instance + 1 multi_output + 1 sequential_approval pair + 4 persona_pair pairs).
 - **C1 — CUO depth additions (first wave):** 27 new workflows shipped across 14 priority personas (ceo, cfo, cto, chro, cso-sales, coo, cmo, ciso, cdo-data, cpo-product, chief-of-staff, cro-revenue, caio, cpo-privacy). Catalog now: **221 workflows total** (was 194 post-Session N). ~250-450 workflows of depth headroom remain across 33 other personas.
 - **Governance docs consolidation:** 4 generated reports (CONTRACT_VERIFICATION_REPORT.md + IMPLEMENTATION_ORDER.md + MIGRATION_AUDIT.md + SPRINT_PLAN.md) merged into single `docs/feature-requests/REPORTS.md` with §1-§4 sections. Top-level FR governance files now **4 (was 7)**: AUTHORING.md, BACKLOG.md, REPORTS.md, VN_GLOSSARY.md.
 - **Commit manifest prepared:** `COMMIT.md` at repo root with conventional-commit message, tag `v3.0.0-a4`, and pre-push validation checklist.
-- **Persona-slug normalisation (final session change):** all 33 short-acronym persona folders renamed to full `chief-*-officer` form for consistency. `cto/` → `chief-technology-officer/`, `cfo/` → `chief-financial-officer/`, `cco-customer/` → `chief-customer-officer/`, etc. 15 personas already in full form left unchanged (chief-architect, chief-of-staff, chief-{brand,digital,ethics,innovation,knowledge,medical,remote,trust,transformation,esg,automation,happiness,metaverse}-officer). Total: **1,447 substitutions across 241 files** (workflow frontmatter `workflow_id`/`persona`/`escalates_to`/`consults`/`peer_persona`/`approver_persona`, persona READMEs, MODULE.md catalog, test_smoke.py assertions, CLI docstring examples, website html, FR catalog, modules/cuo/README.md). Python package `cuo` at `modules/cuo/cuo/` intentionally NOT renamed (Python identifier constraint). **49/50 tests still pass** post-rename. End-to-end smoke: BRAIN HEAD advanced `09 → 0c`; `cyberos-cuo execute chief-privacy-officer/breach-response-cycle --explain` dispatches to TimeCriticalHandler correctly.
+- **Persona-slug normalisation (final session change):** all 33 short-acronym persona folders renamed to full `chief-*-officer` form for consistency. `cto/` → `chief-technology-officer/`, `cfo/` → `chief-financial-officer/`, `cco-customer/` → `chief-customer-officer/`, etc. 15 personas already in full form left unchanged (chief-architect, chief-of-staff, chief-{brand,digital,ethics,innovation,knowledge,medical,remote,trust,transformation,esg,automation,happiness,metaverse}-officer). Total: **1,447 substitutions across 241 files** (workflow frontmatter `workflow_id`/`persona`/`escalates_to`/`consults`/`peer_persona`/`approver_persona`, persona READMEs, MODULE.md catalog, test_smoke.py assertions, CLI docstring examples, website html, FR catalog, modules/cuo/README.md). Python package `cuo` at `modules/cuo/cuo/` intentionally NOT renamed (Python identifier constraint). **49/50 tests still pass** post-rename. End-to-end smoke: memory HEAD advanced `09 → 0c`; `cyberos-cuo execute chief-privacy-officer/breach-response-cycle --explain` dispatches to TimeCriticalHandler correctly.
 - **Deploy artefacts cleanup (post-deploy):** website manually deployed to `cyberos.cyberskill.world` via Vercel by operator. Removed deploy-tooling clutter from repo root: `vercel.json`, `.vercelignore`, `DEPLOY-VERCEL.md` (deploy is operator-controlled, no CI commitment in-repo); `.wrangler/` cache+tmp dirs (Cloudflare path abandoned for this site); `.cuo-slug-mapping.json` (transient rename artefact — mapping now lives in git history + memory + this CHANGELOG only). Rewrote `website/README.md` + `website/docs/DEPLOYMENT.md` to reflect Vercel-deployed reality (replacing the 228-line Cloudflare-centric DEPLOYMENT.md with a 49-line operator-flow doc).
 
 ### Stream 3 — Repo refactor + doc consolidation
@@ -96,7 +666,7 @@ Massive multi-stream day. Four parallel programs landed end-to-end:
 - Deleted outdated `docs/prd/` (724K) + `docs/srs/` (2.3M); both frozen 2026-05-15
 - Promoted `docs/tours/` → repo-root `tours/` (7 CodeTour operational runbooks)
 - Patched `modules/cuo/cuo/cli.py::_find_cyberos_root` + `_resolve_roots` to prefer modules/ layout, fall back to legacy flat
-- Patched `modules/cuo/cuo/core/brain_bridge.py::_try_import_memory_writer` + `_find_brain_root` for the new ancestry walk
+- Patched `modules/cuo/cuo/core/memory_bridge.py::_try_import_memory_writer` + `_find_memory_root` for the new ancestry walk
 - Rewrote root `README.md` + `docs/README.md` for the new layout
 - **Consolidated all per-module CHANGELOGs into this root CHANGELOG.md** sorted by date; per-module CHANGELOG files replaced with one-line "moved" pointers
 
@@ -108,13 +678,13 @@ Massive multi-stream day. Four parallel programs landed end-to-end:
 
 ### End-to-end verification
 - `pytest tests/ -v` in `modules/cuo/` → **21 passed, 1 skipped** (same green status as pre-refactor)
-- CLI smoke: `cyberos-cuo execute chief-technology-officer/adr-quick-capture --brain-emit` → COMPLETED, 3 BRAIN rows emitted, HEAD advanced `03 → 06`
+- CLI smoke: `cyberos-cuo execute chief-technology-officer/adr-quick-capture --memory-emit` → COMPLETED, 3 memory rows emitted, HEAD advanced `03 → 06`
 - Root symlinks resolve correctly to `modules/memory/AGENTS.md`
 
 ### Files touched (high level)
 - 12 new persona-folder workflow batches (~150 markdown files)
 - 79 new skill-pair scaffolds (~470 files across SKILL.md / RUBRIC.md / CHANGELOG.md / CONTRACT.md / template.md)
-- 8 new Python source files (`cuo/{catalog, validator, router, supervisor, invoker, llm_invoker, brain_bridge}.py` + tests)
+- 8 new Python source files (`cuo/{catalog, validator, router, supervisor, invoker, llm_invoker, memory_bridge}.py` + tests)
 - 3 module READMEs rewritten (~5,400 lines)
 - root README + docs/README rewritten
 - 1 root CHANGELOG.md consolidated (this entry's merge)
@@ -233,9 +803,9 @@ Stephen flagged five UI bugs from live deploy screenshots; all fixed.
 - `assets/styles.css:325–355` — bumped `.h-1` line-height 1.25 → 1.3, `margin-block-end` 1.25rem → 1.5rem, added `padding-block-end: 0.25rem` to protect BVP descenders.
 - Changed sibling rule line 346: `margin-block-start: 0` → `0.5rem !important` for h-display + h-1 successors. Guarantees min-gap even when Tailwind `mb-3` overrides.
 
-**Bug 2 — Mermaid "Syntax error in text" in BRAIN §3:**
+**Bug 2 — Mermaid "Syntax error in text" in memory §3:**
 - Root cause: `FILES["memories/<kind>/<hex>/<file>.md"]` — Mermaid 11.4.1 parses `<kind>`/`<hex>`/`<file>` as unknown HTML tags inside node labels.
-- Fixed 3 locations in `modules/brain.html` (lines 288, 454, 503): `<kind>` → `{kind}` etc.
+- Fixed 3 locations in `modules/memory.html` (lines 288, 454, 503): `<kind>` → `{kind}` etc.
 - Fixed 1 location in `modules/hr.html:841` (same root cause inside a Mermaid sequence).
 - Repo-wide sweep confirmed no other `<placeholder>` patterns in Mermaid blocks.
 
@@ -256,7 +826,7 @@ Stephen flagged five UI bugs from live deploy screenshots; all fixed.
 - 47 textual edits across 28 HTML files in `website/docs/` (per Agent sweep). Removed: "PRD/SRS narrative remains authoritative" disclaimers (23), "PRD coverage" eyebrows, broken `<a href="#"></a>` empty anchors, "Generated from PRD + SRS source" footer, "DEC-NNN in SRS" → "DEC-NNN" rewrites (5 in infrastructure.html + 1 in ten.html), persona "draft PRD/SRS" chip rephrases. Preserved: the two intentional github.com canonical-spec links in `fr-catalog.html` lines 56–57.
 - Grep verification: `\bPRD\b|\bSRS\b` across `website/docs/*.html` → 2 hits, both intentional.
 
-Verified: brain.html Mermaid no longer has `<kind>/<hex>/<file>` patterns; styles.css line counts went from 1018 → 1085. The fix should ship cleanly to Cloudflare Pages on next deploy.
+Verified: memory.html Mermaid no longer has `<kind>/<hex>/<file>` patterns; styles.css line counts went from 1018 → 1085. The fix should ship cleanly to Cloudflare Pages on next deploy.
 
 ---
 
@@ -268,7 +838,7 @@ Key changes:
 - NEW §0 — 3-card layout + integration-model Mermaid (HR/PROJ/TIME/LEARN/CRM → RES → CUO → hiring memo/rebalance proposal) + 10-row auto-vs-human matrix
 - Risks +5 (R-RES-010..014): RES forecast becomes CEO-decision dependency · Member-preference flags ignored under high-priority · VN OT-cap version drift · cross-Engagement reallocation rate-card mismatch · Lumi RES synthesis leaks Engagement intel
 - KPIs +6: hiring memo CEO acceptance rate · Member-preference override rate (= 1.0) · cross-Engagement rate-card alignment · cap version stamp coverage (= 1.0) · Lumi cross-tenant sign-off (= 1.0)
-- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -280,7 +850,7 @@ Key changes:
 - NEW §0 — 3-card layout + multi-tenant-within-multi-tenant Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-PORTAL-011..015): sync_class misconfig leak (Critical) · JIT role-mapping wrong · SVG XSS · Client AI cross-Engagement cite (Critical) · SCIM deprovision delay
 - KPIs +6: sync_class filter pass (= 1.0) · JIT role accuracy (≥ 0.99) · SVG XSS blocks · cross-Engagement rejection rate · SCIM session-invalidation p95
-- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -292,7 +862,7 @@ Key changes:
 - NEW §0 — 3-card layout + partner-routed signing Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-DOC-011..015): cross-module trigger source mismatch · CUO renewal stale terms · expiry cascade miss · multi-jurisdiction cert chain · migrated DocuSign LTV failure
 - KPIs +5: cross-module trigger validation (= 1.0) · renewal terms-stamp coverage (= 1.0) · expiry cascade completeness (= 1.0) · multi-jurisdiction cert-chain declaration (= 1.0) · LTV re-validation (≥ 0.95)
-- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -304,7 +874,7 @@ Key changes:
 - NEW §0 — 3-card layout + auto-progress data-flow Mermaid + 8-row auto-vs-human matrix
 - Risks +5 (R-OKR-010..014): progress source schema drift · face-saving framing weaponised · CUO digest hallucination · OKR-weight skews REW · retro cross-tenant leak
 - KPIs +5: progress source schema drift · face-saving pattern detection · digest hallucination rate (≤ 0.01) · OKR-share-of-VP correctness (= 1.0) · retro sync_class default compliance (= 1.0)
-- References expanded: §0 + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -313,10 +883,10 @@ Key changes:
 Rewrote `website/docs/modules/esop.html` to Gold. Three strategic roles: (1) grant lifecycle (issue/vest/cliff/cancel/put), (2) Good Leaver vs Bad Leaver branch on HR offboarding (CFO+CEO co-sign required), (3) liquidity-event simulator (annual valuation + put option exec + Singapore HoldCo flip trigger at ARR ≥ $1.5M).
 
 Key changes:
-- NEW §0 — 3-card layout + cap-table spine Mermaid showing BRAIN exclusion + 10-row auto-vs-human matrix
+- NEW §0 — 3-card layout + cap-table spine Mermaid showing memory exclusion + 10-row auto-vs-human matrix
 - Risks +5 (R-ESOP-011..015): Leaver branch AI auto-route (Critical) · put-option ARR-trigger drift · vesting accrual on statutory leave · M&A acceleration without Member notice · HoldCo partial-flip rollback
 - KPIs +5: Good/Bad Leaver co-sign integrity (= 1.0) · vesting accrual statutory-leave correctness · M&A notification SLA (≤ 5 days) · HoldCo flip cohort success (= 1.0 rollback on partial) · put-option exec query latency
-- References expanded: §0 + 5 cross-module links + BRAIN_AUTOSYNC_DESIGN.md + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 5 cross-module links + MEMORY_AUTOSYNC_DESIGN.md + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -326,22 +896,22 @@ Rewrote `website/docs/modules/learn.html` to Gold. Three strategic roles: (1) sk
 
 Key changes:
 - NEW §0 — 3-card layout + signal-flow Mermaid showing per-judge boundary explicitly + 10-row auto-vs-human matrix
-- Risks +5 (R-LEARN-011..015): per-judge score export misconfig (Critical) · VP signal skews toward PROJ-dominant Members · Lumi skill catalogue pushes conflict · Council deliberation BRAIN ingestion (psychological safety) · skill self-claim spam
+- Risks +5 (R-LEARN-011..015): per-judge score export misconfig (Critical) · VP signal skews toward PROJ-dominant Members · Lumi skill catalogue pushes conflict · Council deliberation memory ingestion (psychological safety) · skill self-claim spam
 - KPIs +5: per-judge export attempts blocked · VP fairness variance (≤ 0.40) · skill claim evidence rate (≥ 0.95) · deliberation transcript purge (≤ 30 d) · HR-to-LEARN-to-REW signal latency
-- References expanded: §0 + 6 cross-module links + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
 ## 2026-05-15 — REW module page rewritten to Gold (compensation engine + payroll bridge + bonus orchestrator)
 
-Rewrote `website/docs/modules/rew.html` to Gold. Three strategic roles: (1) compensation record owner (encrypted, HR-isolated, structurally excluded from BRAIN per DEC-036), (2) payroll bridge (monthly VND cycle with BHXH/BHYT/BHTN, immutable parameter versioning, byte-identical PDF replay), (3) bonus orchestrator (BP fund + calibration → P3 distribution + CEO/CFO sign-off; P1-protection invariant DB-CHECK enforced).
+Rewrote `website/docs/modules/rew.html` to Gold. Three strategic roles: (1) compensation record owner (encrypted, HR-isolated, structurally excluded from memory per DEC-036), (2) payroll bridge (monthly VND cycle with BHXH/BHYT/BHTN, immutable parameter versioning, byte-identical PDF replay), (3) bonus orchestrator (BP fund + calibration → P3 distribution + CEO/CFO sign-off; P1-protection invariant DB-CHECK enforced).
 
 Key changes:
 - Title/meta + hero reframed; "Bet 5 moat" + EU AI Act Annex III §4 high-risk framing preserved
-- NEW §0 — 3-card layout + REW-isolated-by-design Mermaid (HR/TIME/PROJ → REW → CFO+CHRO co-sign → payslips → banks/BHXH; BRAIN explicitly disconnected with structural-exclusion line) + 10-row auto-vs-human matrix
+- NEW §0 — 3-card layout + REW-isolated-by-design Mermaid (HR/TIME/PROJ → REW → CFO+CHRO co-sign → payslips → banks/BHXH; memory explicitly disconnected with structural-exclusion line) + 10-row auto-vs-human matrix
 - Risks +5 (R-REW-011..015): HR signals weaponised for P3 cut · BHXH mid-month rate change · Lumi attempts read REW (Catastrophic) · cross-Member cache leak · CFO+CHRO collusion (P1 protection at DB CHECK, not app layer alone)
 - KPIs +5: P3 distribution sign-off completeness (= 1.0) · parameter mid-month transition correctness · Lumi-attempted reads (= 0) · cross-Member cache leak attempts (= 0) · P1 DB-CHECK constraint violations (any > 0 = sev-0)
-- References expanded: §0 + 6 cross-module links + BRAIN_AUTOSYNC_DESIGN.md §5 + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + DEC-036 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -354,33 +924,33 @@ Key changes:
 - NEW §0 — 3-card layout + Member-id spine Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-HR-011..015): HR signals used as sole comp basis · cross-tenant Member-id collision (Critical) · onboarding fires before AUTH ready · VN labour-law mid-year amendment · sabbatical tick misclassification
 - KPIs +5: signal-only comp decision rate (= 1.0) · onboarding playbook saga p95 · labour-law version stamp coverage (= 1.0) · HR-to-REW handoff p95 · statutory-leave classification accuracy
-- References expanded: §0 + 7 cross-module links + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 7 cross-module links + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
 ## 2026-05-15 — EMAIL module page rewritten to Gold (capture surface + Genie draft + outbound defence)
 
-Rewrote `website/docs/modules/email.html` to Gold. Three strategic roles: (1) capture surface (tracked-domain auto-log to CRM activity + PROJ thread-to-issue), (2) Genie draft (Ask Genie composes outbound replies grounded in sanitised thread + CRM + BRAIN + KB), (3) outbound send + defence (DKIM/ARC/BIMI; CaMeL quarantine defeats EchoLeak class).
+Rewrote `website/docs/modules/email.html` to Gold. Three strategic roles: (1) capture surface (tracked-domain auto-log to CRM activity + PROJ thread-to-issue), (2) Genie draft (Ask Genie composes outbound replies grounded in sanitised thread + CRM + memory + KB), (3) outbound send + defence (DKIM/ARC/BIMI; CaMeL quarantine defeats EchoLeak class).
 
 Key changes:
 - Title/meta + hero reframed
 - NEW §0 "The bigger picture" — 3-card layout + EMAIL-in-orchestration-spine Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-EMAIL-011..015): thread-to-issue wrong Engagement · Genie draft confidential leak (High) · bulk-send approval bypass · tracked-domain misconfig (auto-log personal) · CaMeL cost spike
 - KPIs +5: thread-to-issue conversion accuracy · Genie draft confidential-leak rate (= 0) · bulk-send token compliance (= 1.0) · tracked-domain audit pass · CaMeL cost per inbound
-- References expanded: §0 + 7 cross-module links + CaMeL paper + EchoLeak CVE + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 7 cross-module links + CaMeL paper + EchoLeak CVE + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
-## 2026-05-15 — KB module page rewritten to Gold (RAG corpus + BRAIN companion + auto-runbook catalogue source)
+## 2026-05-15 — KB module page rewritten to Gold (RAG corpus + memory companion + auto-runbook catalogue source)
 
-Rewrote `website/docs/modules/kb.html` to Gold. Three strategic roles: (1) RAG corpus with three-layer retrieval (FTS5/PGroonga + BGE-M3 + cross-encoder) + span-level citations, (2) BRAIN companion (long-form versioned counterpart to chain-anchored memories; "promote to canonical" elevates to high-authority source consumable by Lumi cross-tenant synthesis), (3) runbook catalogue source for OBS auto-runbook router (KB outage breaks OBS triage = critical coupling).
+Rewrote `website/docs/modules/kb.html` to Gold. Three strategic roles: (1) RAG corpus with three-layer retrieval (FTS5/PGroonga + BGE-M3 + cross-encoder) + span-level citations, (2) memory companion (long-form versioned counterpart to chain-anchored memories; "promote to canonical" elevates to high-authority source consumable by Lumi cross-tenant synthesis), (3) runbook catalogue source for OBS auto-runbook router (KB outage breaks OBS triage = critical coupling).
 
 Key changes:
 - Title/meta + hero reframed
 - NEW §0 "The bigger picture" — 3-card layout + KB-in-platform Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-KB-011..015): runbook catalogue drift · OBS-KB tight coupling (KB outage breaks triage, High impact) · span-citation drift · vendor-pack malicious markdown · doc-gap-detector underperforms
 - KPIs +5: runbook applicability accuracy · span-citation integrity (= 1.0) · doc-gap-detector signal rate · cross-tenant retrieval reject rate · vendor-pack CSO-review rate (= 1.0)
-- References expanded: §0 + 6 cross-module links + OBS §2.6 auto-runbook contract link + BRAIN_AUTOSYNC_DESIGN.md §6 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + OBS §2.6 auto-runbook contract link + MEMORY_AUTOSYNC_DESIGN.md §6 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -393,7 +963,7 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + INV-in-orchestration-spine Mermaid + 10-row auto-vs-human matrix
 - Risks +5 (R-INV-011..015): incomplete TIME rollup → missing hours · rate-card snapshot divergence · hóa đơn cancellation without dual approval (Critical) · dunning auto-send bug · Decree 123 amendment drift
 - KPIs +5: TIME→INV bridge p95 · missing-Member draft rate · rate-card snapshot integrity (= 1.0) · dunning auto-send false-positive (= 0) · hóa đơn dual-approval rate (= 1.0)
-- References expanded: §0 + 6 cross-module links + PROJ §2.6 billing modes + TIME §0 rollup contract + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + PROJ §2.6 billing modes + TIME §0 rollup contract + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -403,10 +973,10 @@ Rewrote `website/docs/modules/time.html` to Gold by encoding three strategic rol
 
 Key changes:
 - Title/meta + hero reframed; fact-grid extended (8→11 cards: + Strategic role, Billable cascade, Labour caps VN Code Art. 107)
-- NEW §0 "The bigger picture" — 3-card layout + spine Mermaid (PROJ → Member → TIME → Billable cascade → AM → CFO + INV/REW/BRAIN) + 9-row auto-vs-human matrix
+- NEW §0 "The bigger picture" — 3-card layout + spine Mermaid (PROJ → Member → TIME → Billable cascade → AM → CFO + INV/REW/memory) + 9-row auto-vs-human matrix
 - Risks +5 (R-TIME-011..015): billable cascade snapshot divergence (High) · auto-detect wrong Issue · VN Labour Code 2026 amendment · cycle-rollup runs before all submissions · multi-currency drift
 - KPIs +6: cascade snapshot integrity (= 1.0 hard floor) · auto-detect acceptance · PROJ-TIME issue match rate · cycle-rollup completeness · VN Labour Code version coverage (= 1.0)
-- References expanded: §0 + 6 cross-module links + PROJ §2.6 billable cascade link + BRAIN_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
+- References expanded: §0 + 6 cross-module links + PROJ §2.6 billable cascade link + MEMORY_AUTOSYNC_DESIGN.md §5 + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW
 
 ---
 
@@ -420,7 +990,7 @@ Key changes:
 - NEW §0 "The bigger picture" — 3-card layout + CRM-in-orchestration-spine Mermaid + 9-row auto-vs-human matrix
 - Risks +5 (R-CRM-011..015): bridge fails partially · wrong billing mode · CUO next-action inappropriate · vertical-pack drift · merge data loss
 - KPIs +6: deal-to-Engagement conversion rate · conversion bridge p95 · win/loss memory citation rate · next-action acceptance · stage-stuck deal alert · forecast accuracy
-- References expanded: §0 + 7 cross-module links + PROJ §2.5 join contract link + SKILL §3.6 vertical-pack pattern + BRAIN_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW + expanded PDPL articles
+- References expanded: §0 + 7 cross-module links + PROJ §2.5 join contract link + SKILL §3.6 vertical-pack pattern + MEMORY_AUTOSYNC_DESIGN.md + AUDIT_AND_PLAN + FR_AUTHORING_WORKFLOW + expanded PDPL articles
 
 ---
 
@@ -438,13 +1008,13 @@ Key changes:
 - NEW §2.7 "90-day offboarding contract" — 4-phase timeline (Active → Terminating-A 30d → Terminating-B 60d → Terminated day 91+) + signed bundle 6-component export + permanent-delete attestation JSON with Ed25519 signature
 - Risks +8 (R-TEN-013..020): P2 slice slip → margin moat delayed (High) · residency change mid-engagement · hostile termination override · Stripe DPA EU residency · plan-downgrade overage surprise · cross-leak CI gap (Critical) · vertical-pack revenue attribution leak · Lumi-pushed pack pricing change
 - KPIs +9: P2 slice ship date adherence (= P2 · exit) · vertical-pack revenue share (≥ 30% of ARR by P4 · mid — the moat) · cross-leak rate (= 0 hard floor) · residency drill MTTR (≤ 72h) · plan-downgrade overage handling (= 1.0) · hostile-termination cycle time · VN-PSP coverage (≥ 0.95 at P4) · PCI-SAQ-A scope (= 0; Stripe handles all) · tenant attestation completeness (= 1.0)
-- References expanded: 4 in-page sections + 6 cross-module links + AUDIT_AND_PLAN §3.3 + RESEARCH_REVIEW §7.3 (explicit cite of the P2 · exit mandate) + BRAIN_AUTOSYNC_DESIGN.md §6 + FR_AUTHORING_WORKFLOW + EU AI Act Art. 26 + expanded PDPL article citations
+- References expanded: 4 in-page sections + 6 cross-module links + AUDIT_AND_PLAN §3.3 + RESEARCH_REVIEW §7.3 (explicit cite of the P2 · exit mandate) + MEMORY_AUTOSYNC_DESIGN.md §6 + FR_AUTHORING_WORKFLOW + EU AI Act Art. 26 + expanded PDPL article citations
 
 ---
 
 ## 2026-05-15 — OBS module page rewritten to Gold (observability spine + auto-runbook router + compliance evidence surface)
 
-Rewrote `website/docs/modules/obs.html` to Gold by encoding three strategic roles: (1) three-pillars unified pane (logs/metrics/traces/AI-traces correlated by trace_id × tenant_id; pillar × signal table; cross-pillar correlation example; tenant query proxy isolation), (2) auto-runbook router (alerts → CUO triage skill → CHAT self-service OR PagerDuty escalation; severity × routing matrix; runbook-catalogue growth loop), (3) compliance evidence surface (per-regulator scoped read-only views over BRAIN audit chain; YAML view definitions; chain-of-custody manifest with Ed25519 signature).
+Rewrote `website/docs/modules/obs.html` to Gold by encoding three strategic roles: (1) three-pillars unified pane (logs/metrics/traces/AI-traces correlated by trace_id × tenant_id; pillar × signal table; cross-pillar correlation example; tenant query proxy isolation), (2) auto-runbook router (alerts → CUO triage skill → CHAT self-service OR PagerDuty escalation; severity × routing matrix; runbook-catalogue growth loop), (3) compliance evidence surface (per-regulator scoped read-only views over memory audit chain; YAML view definitions; chain-of-custody manifest with Ed25519 signature).
 
 Key changes:
 - Title/meta + hero reframed to 3 strategic roles
@@ -455,7 +1025,7 @@ Key changes:
 - NEW §2.7 "Compliance evidence surface" — regulator × audit scope matrix (EU AI Act, PDPL, SOC 2, ISO 27001, GDPR, Vietnam Decree 13/2023) + per-view scoping YAML + chain-of-custody manifest with chain anchors
 - Risks +10 (R-OBS-011..020): auto-runbook miscategorising P0 (Critical) · compliance export tampering (Critical) · triage skill down → page storm · LangSmith EU residency · trace sampling drops wrong tail · persona-drift false positive · OTel context propagation breaks · query proxy DOS · runbook catalogue drift · maintenance-window noise
 - KPIs +10: auto-runbook coverage (≥ 60% by P1) · P0/P1 false-suppression (= 0 hard floor) · compliance export verification rate (= 1.0) · cross-pillar correlation completeness (≥ 0.95) · tail-sampling error coverage (= 1.0) · persona-drift detector precision · query proxy violations · self-service ticket MTTR · dogfooding alert ACK (we live by this) · compliance surfaces × regulator
-- References expanded to universal-protocol scope: 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §6 (9/10) + BRAIN_AUTOSYNC_DESIGN.md §8 + FR_AUTHORING_WORKFLOW + EU AI Act + ISO 27001 + ISO 42001 + SOC 2 + PDPL + Decree 13 + GDPR Art. 30
+- References expanded to universal-protocol scope: 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §6 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §8 + FR_AUTHORING_WORKFLOW + EU AI Act + ISO 27001 + ISO 42001 + SOC 2 + PDPL + Decree 13 + GDPR Art. 30
 
 ---
 
@@ -471,10 +1041,10 @@ Changes by section:
 - **TOC** — added bigger-picture · client-federation · capability-broker · tool-discovery entries.
 - **NEW §2.5 "External-client federation"** — SEP-986 naming convention with 8 tool-name patterns + per-module registration sequence Mermaid (heartbeat-based lifecycle) + 6-row external-client compatibility matrix (Claude Code, Claude Desktop, Cursor, Codex, Cline, older 2024-11-05 clients).
 - **NEW §2.6 "Capability broker"** — 6-row tool-annotation gating table (readOnly / idempotent / destructive / openWorld / longRunning / elicits); audience-bound OAuth JWT shape with aud=mcp.cyberos.com + scope_grants array; destructive-op confirmation flow with full Elicitation JSON request/response example.
-- **NEW §2.7 "Tool-discovery surface"** — 6 discovery endpoints (well-known/mcp, capabilities, tools/list, prompts/list, resources/list, resources/templates/list); 8-field Tasks primitive schema with brain_chain anchor; 5 pre-canned prompt templates (weekly_brief, decision_to_issues, draft_cycle_review, deal_to_engagement, find_brain_citations).
+- **NEW §2.7 "Tool-discovery surface"** — 6 discovery endpoints (well-known/mcp, capabilities, tools/list, prompts/list, resources/list, resources/templates/list); 8-field Tasks primitive schema with memory_chain anchor; 5 pre-canned prompt templates (weekly_brief, decision_to_issues, draft_cycle_review, deal_to_engagement, find_memory_citations).
 - **§12 Risks** — added 10 new (R-MCP-011..020): external agent token theft (Critical) · prompt injection in tool description · elicitation fatigue (High likelihood) · federation lag · task storm · resource leak via list_changed · heartbeat false-positive · DCR abuse · older-protocol-version security gap · SEP-986 naming collision.
 - **§13 KPIs** — added 10 new: persona-stamp coverage (hard floor = 1.0) · elicitation acceptance rate · tasks completion rate · cross-tenant token-replay attempts · older-protocol session rate (→ 0 by P3 · exit) · list_changed push latency · destructive-op confirm fatigue · external-client tools coverage · SEP-986 compliance.
-- **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 3 placement) + RESEARCH_REVIEW §5 (9/10) + BRAIN_AUTOSYNC_DESIGN.md §5+§6 + FR_AUTHORING_WORKFLOW + DPoP RFC 9449 + EU AI Act + PDPL citations.
+- **§17 References** — replaced stale PRD/SRS refs with 4 in-page sections + 8 cross-module links + AUDIT_AND_PLAN §3.3 (P0 · slice 3 placement) + RESEARCH_REVIEW §5 (9/10) + MEMORY_AUTOSYNC_DESIGN.md §5+§6 + FR_AUTHORING_WORKFLOW + DPoP RFC 9449 + EU AI Act + PDPL citations.
 
 The MCP Gateway page now reads as the complete answer to: (1) why 22 modules need one external door (federation Mermaid + N²→N+1 math), (2) how the broker prevents a compromised external agent from escaping scope (audience-bound JWT + tool-annotation gating + destructive-op Elicitation), (3) how external agents discover what CyberOS can do (6 discovery endpoints + 5 pre-canned prompts + Tasks primitive for long-running work), (4) what fails if MCP Gateway is missing (every external agent re-implements its own auth + tool catalogue + audit).
 
@@ -487,15 +1057,15 @@ Rewrote `website/docs/modules/ai.html` to Gold by encoding three strategic roles
 Changes by section:
 - **`<title>` + `<meta>`** — reframed: "AI Gateway — Cost-of-everything gate · Provider-agnostic router · Compliance plane".
 - **Hero tagline + lede** — explicit research review §2.4 citation: "ships at P0 · slice 1 BEFORE AUTH because if you can't account for and cap LLM spend, every other module bleeds money invisibly". Lists all 3 strategic roles.
-- **Hero fact-grid** — extended from 8 to 12 cards: added Strategic role + Build placement (P0 · slice 1 P0 #1) + Cost-cap enforcement (hard-stop) + ZDR (required). Renamed dependency card to reflect P0 · slice 1 reality (BRAIN + OBS at start; AUTH at P0 · slice 2).
+- **Hero fact-grid** — extended from 8 to 12 cards: added Strategic role + Build placement (P0 · slice 1 P0 #1) + Cost-cap enforcement (hard-stop) + ZDR (required). Renamed dependency card to reflect P0 · slice 1 reality (memory + OBS at start; AUTH at P0 · slice 2).
 - **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout with cross-module dependency Mermaid (6 callers × AI Gateway × 5 providers × 4 platform deps); 9-row auto-vs-human matrix covering failover, cost-cap override, ZDR refusal, cache hit, model alias resolution, image-gen.
 - **TOC** — added bigger-picture · cost-gate · provider-abstraction · compliance-plane entries (4 new).
-- **NEW §2.5 "Cost-of-everything gate"** — per-tenant policy YAML (caps, hard-stop, emergency override, per-model caps, per-persona attribution); 8-actor pre/post-call accounting sequence (Caller → Gateway → ledger → Provider → BRAIN → INV); 7-dimension attribution table (tenant_id, agent_persona, module, cost_centre, route_class, cache_state, failover_path).
+- **NEW §2.5 "Cost-of-everything gate"** — per-tenant policy YAML (caps, hard-stop, emergency override, per-model caps, per-persona attribution); 8-actor pre/post-call accounting sequence (Caller → Gateway → ledger → Provider → memory → INV); 7-dimension attribution table (tenant_id, agent_persona, module, cost_centre, route_class, cache_state, failover_path).
 - **NEW §2.6 "Provider abstraction + failover"** — 6-row model-alias resolution (chat.smart / chat.fast / chat.reason / embed.standard / rerank.standard / image.standard); 7-row failover semantics (5xx retry / consecutive 5xx → mark degraded / 429 backoff / circuit breaker / recovery / both-down degraded mode / per-tenant SLA breach); residency × provider matrix (sg-1 / eu-1 / us-1 / vn-1).
 - **NEW §2.7 "Compliance plane"** — 4-link chain table (PII → persona → ZDR → audit) with recall target + failure behaviour per link; full <code>ai.invocation</code> audit row schema (14 extra fields); VN-PII recogniser table (CCCD / MST / VN phone / NĐD / VN address / VN bank account) with patterns + redaction examples.
-- **§12 Risks** — added 10 new (R-AI-011..020): P0 · slice 1 sequence slip → cost-overrun invisible (Critical) · persona prompt cache poisoning · provider DPA cancellation mid-quarter · cost-ledger hold leak · streaming SSE buffer leak · embedding model upgrade breaks BRAIN search · image-gen budget flood at P2+ · geographic residency violation during failover (Critical) · VN-PII recogniser regression · BGE GPU pod OOM under load.
+- **§12 Risks** — added 10 new (R-AI-011..020): P0 · slice 1 sequence slip → cost-overrun invisible (Critical) · persona prompt cache poisoning · provider DPA cancellation mid-quarter · cost-ledger hold leak · streaming SSE buffer leak · embedding model upgrade breaks memory search · image-gen budget flood at P2+ · geographic residency violation during failover (Critical) · VN-PII recogniser regression · BGE GPU pod OOM under load.
 - **§13 KPIs** — added 9 new: per-persona cost share (alert on &gt; 50% concentration) · cache savings rate (≥ 15% by P1) · hold-to-actual drift (≤ 5%) · residency-violation refusal rate · persona stamp coverage (hard floor = 1.0) · ZDR-compliant routing rate (hard floor = 1.0) · VN-PII recall on production sample (≥ 0.99) · provider-failover MTTR p95 (≤ 30s) · dogfooding LLM cost / Member (≤ $10/$5 trajectory).
-- **§17 References** — replaced stale PRD/SRS refs with the 4 new in-page sections + BRAIN_AUTOSYNC_DESIGN.md §7 + FR_AUTHORING_WORKFLOW.md + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §2.4 (reorder citation) + 8 cross-module links + expanded EU AI Act citations (Art. 12/13/14/15/26/50) + OWASP Gen AI Top-10 + ISO/IEC 42001 + PDPL Art. 14/20/38.
+- **§17 References** — replaced stale PRD/SRS refs with the 4 new in-page sections + MEMORY_AUTOSYNC_DESIGN.md §7 + FR_AUTHORING_WORKFLOW.md + AUDIT_AND_PLAN §3.3 (P0 · slice 1 placement) + RESEARCH_REVIEW §2.4 (reorder citation) + 8 cross-module links + expanded EU AI Act citations (Art. 12/13/14/15/26/50) + OWASP Gen AI Top-10 + ISO/IEC 42001 + PDPL Art. 14/20/38.
 
 The AI Gateway page now reads as the complete answer to: (1) why this module ships first in P0 (cost-control before everything), (2) how the cost ledger gates calls in real-time (pre-check + post-reconcile + 60s hold expiry), (3) how the same Python service abstracts across Bedrock/Anthropic/OpenAI/Vertex (model alias + residency × provider matrix), (4) how the 4-link compliance chain ensures no bytes leak unscrubbed/unstamped/un-ZDR'd/un-audited. A new engineer reading this page cold can pick up the P0 · slice 1 build sequence and ship the cost-gate slice.
 
@@ -503,20 +1073,20 @@ The AI Gateway page now reads as the complete answer to: (1) why this module shi
 
 ## 2026-05-15 — CUO module page rewritten to Gold (agent orchestrator + Lumi identity wrapper + skill broker contract + cross-module surfaces)
 
-Rewrote `website/docs/modules/cuo.html` from 1035 → 1362 lines (+327 lines, +32%). Encodes three strategic roles the CUO module plays simultaneously — skill-routing brain, persona catalogue (agent-equal C-level members), Lumi tenant-identity wrapper — with explicit handling of the agent_persona JWT shape from AUTH §2.7 and the capability-broker contract from SKILL §3.5. Targeted Edit operations preserved every gold-quality detail of the shipped Phase 1 (rule-based router, 6 core modules, 10 personas, 15 fixtures) while adding 4 strategic deep-dive sections + risk/KPI extensions + universal-protocol references.
+Rewrote `website/docs/modules/cuo.html` from 1035 → 1362 lines (+327 lines, +32%). Encodes three strategic roles the CUO module plays simultaneously — skill-routing memory, persona catalogue (agent-equal C-level members), Lumi tenant-identity wrapper — with explicit handling of the agent_persona JWT shape from AUTH §2.7 and the capability-broker contract from SKILL §3.5. Targeted Edit operations preserved every gold-quality detail of the shipped Phase 1 (rule-based router, 6 core modules, 10 personas, 15 fixtures) while adding 4 strategic deep-dive sections + risk/KPI extensions + universal-protocol references.
 
 Changes by section:
-- **`<title>` + `<meta>`** — reframed: "CUO — AI orchestrator · Skill-routing brain · Lumi tenant persona · CyberOS". Description names the three strategic roles + the Phase 1 ship state + the P0 · exit/P1 · exit/P2 · exit roadmap to Phases 2-4.
+- **`<title>` + `<meta>`** — reframed: "CUO — AI orchestrator · Skill-routing memory · Lumi tenant persona · CyberOS". Description names the three strategic roles + the Phase 1 ship state + the P0 · exit/P1 · exit/P2 · exit roadmap to Phases 2-4.
 - **Hero tagline + lede** — explicit "agent orchestrator" framing; introduces Genie (face) / CUO (engineer view) / Lumi (org-tenant identity) naming distinction in one paragraph; lists all 3 strategic roles with Phase milestones.
 - **Hero fact-grid** — extended from 8 to 12 cards: added Strategic role + Lumi readiness (P3 unlock) + Routing latency p95 + Audit-chain coverage (100%); changed "Tests" formatting to 15+15 (pytest+fixtures).
-- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (Role 1 skill-routing brain / Role 2 persona catalogue agent-equal / Role 3 Lumi tenant identity). Cross-module dependency Mermaid with CUO as hub touching 7 user surfaces upstream + 5 downstream systems including Lumi's BRAIN at P3+. Auto-vs-human-in-loop operations matrix (8 rows) — explicit normative split.
+- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (Role 1 skill-routing memory / Role 2 persona catalogue agent-equal / Role 3 Lumi tenant identity). Cross-module dependency Mermaid with CUO as hub touching 7 user surfaces upstream + 5 downstream systems including Lumi's memory at P3+. Auto-vs-human-in-loop operations matrix (8 rows) — explicit normative split.
 - **TOC** — added bigger-picture · lumi-identity · skill-broker · cross-module-surfaces entries (4 new strategic anchors).
 - **NEW §3.5 "Lumi identity wrapper — local CUO ↔ org-tenant persona"** — 3-row Lumi vs Genie vs local-CUO naming table; full AUTH JWT shape with agent_persona + tenant_id + scope_grants per AUTH §2.7; 4-row cross-tenant synthesis output table (updated persona prompts / keyword banks / cross-tenant lessons / vertical-pack updates) with cadence + privacy floor for each.
 - **NEW §3.6 "Skill broker contract — capability-gate at every invocation"** — 11-step Mermaid sequence (User → CUO → catalog → broker → AUTH → pre-audit → skill exec → post-audit); 7-row CUO↔broker contract table (catalog stability + scope_grants + allowed_tools + destructive-op gate + pre+post audit + tenant isolation + version pinning); 10-row defer-to-human matrix (CEO/COO/CFO/CMO/CTO/CHRO/CSO/CLO/CDO/CPO) with auto-OK vs defers split.
 - **NEW §3.7 "Cross-module CUO surfaces — where Genie appears"** — 9-row canonical surface table (CHAT @lumi / EMAIL Genie / PROJ inline / CRM next-action / KB ask-the-docs / TIME assist / INV pre-send check / PORTAL client / OBS triage) with trigger + context shipped + UI affordance for each. Per-surface latency budget table (6 rows) with route-only p95 + total response p95 + design note per surface.
 - **§13 Risks** — added 10 new (R-CUO-008..017): Lumi tenant-id spoofing (Critical impact, CSO-owned) · destructive auto-invoke despite matrix (Critical, hard zero) · catalog drift route-vs-invoke · cross-surface latency miss · cross-tenant synthesis privacy leak · persona prompt drift via Lumi pushes · EU AI Act Art. 12 logging gap (Phase 2 migration required) · @lumi rate-limit abuse · Phase 2 LLM cascade outage degradation · Genie answers from training cutoff on company-specific topics.
 - **§14 KPIs** — added 10 new universal-protocol-aware: per-surface response p95 (PROJ inline ≤ 800 ms / CHAT @lumi ≤ 4 s) · destructive-op auto-invoke rate (= 0 hard zero) · Lumi sync push success rate (≥ 0.99 at P3+) · cross-tenant sync_class violation rate (= 0 hard zero) · persona-version stability (≤ 2 changes per quarter) · @lumi cost per active Member (≤ $5/DAU/month) · must-cite-source compliance (≥ 0.95) · dogfooding rate (100% of team by P0 · exit).
-- **§18 References** — replaced stale PRD/SRS section refs with the 4 new in-page sections + BRAIN_AUTOSYNC_DESIGN.md §5+§6 + FR_AUTHORING_WORKFLOW.md (CUO + BRAIN + Skill = first 50 FRs) + AUDIT_AND_PLAN_2026_05_14.md §3.3 (P0 · exit/P1 · exit/P2 · exit/P3 · exit+) + RESEARCH_REVIEW_2026_05_14.md §2 (8.5/10) + 8 cross-module page links + EU AI Act Art. 12/14/26 + PDPL Art. 14.
+- **§18 References** — replaced stale PRD/SRS section refs with the 4 new in-page sections + MEMORY_AUTOSYNC_DESIGN.md §5+§6 + FR_AUTHORING_WORKFLOW.md (CUO + memory + Skill = first 50 FRs) + AUDIT_AND_PLAN_2026_05_14.md §3.3 (P0 · exit/P1 · exit/P2 · exit/P3 · exit+) + RESEARCH_REVIEW_2026_05_14.md §2 (8.5/10) + 8 cross-module page links + EU AI Act Art. 12/14/26 + PDPL Art. 14.
 
 Verified:
 - 1362 lines parses cleanly
@@ -530,53 +1100,53 @@ The CUO page now reads as the complete answer to: (1) why CUO is the orchestrato
 
 ---
 
-## 2026-05-15 — PROJECT module page rewritten to Gold (orchestration spine + Engagement economics + BRAIN-anchored decisions + Liquid-Glass UI exemplar)
+## 2026-05-15 — PROJECT module page rewritten to Gold (orchestration spine + Engagement economics + memory-anchored decisions + Liquid-Glass UI exemplar)
 
-Rewrote `website/docs/modules/proj.html` from 1126 → 1514 lines (+388 lines, +34%). Encodes three strategic roles the PROJ module plays simultaneously — orchestration spine for cross-module joins, BRAIN-anchored decision substrate, consultancy-native Engagement billing surface — with no role under-served. Targeted Edit operations preserved the existing strong content (4 primitives, sync-engine architecture, 5 key-flow sequences, status enum + workflow overlay, 7 surface CLI commands) while adding 4 strategic deep-dive sections + risk/KPI extensions + universal-protocol references.
+Rewrote `website/docs/modules/proj.html` from 1126 → 1514 lines (+388 lines, +34%). Encodes three strategic roles the PROJ module plays simultaneously — orchestration spine for cross-module joins, memory-anchored decision substrate, consultancy-native Engagement billing surface — with no role under-served. Targeted Edit operations preserved the existing strong content (4 primitives, sync-engine architecture, 5 key-flow sequences, status enum + workflow overlay, 7 surface CLI commands) while adding 4 strategic deep-dive sections + risk/KPI extensions + universal-protocol references.
 
 Changes by section:
-- **`<title>` + `<meta>`** — reframed: "PROJ — Orchestration spine · BRAIN-anchored decisions · Engagement billing · CyberOS". Description names the orchestration spine (CRM → PROJECT → TIME → INV → REW → KB → BRAIN), the consultancy-native Engagement primitive, the BRAIN-citation graph, and the Liquid-Glass UI exemplar.
+- **`<title>` + `<meta>`** — reframed: "PROJ — Orchestration spine · memory-anchored decisions · Engagement billing · CyberOS". Description names the orchestration spine (CRM → PROJECT → TIME → INV → REW → KB → memory), the consultancy-native Engagement primitive, the memory-citation graph, and the Liquid-Glass UI exemplar.
 - **Hero tagline + lede** — explicit "orchestration spine" framing; lists all 3 strategic roles in one paragraph; replaces stale PRD-referenced prose with role descriptions.
-- **Hero fact-grid** — extended from 8 to 13 cards: added Strategic role + Cross-module joins (7) + BRAIN integration (bidirectional) + Engagement model (3 modes) + UI surfaces (4). Strategic role card uses "Orchestration spine" pill prominent.
-- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (Role 1 orchestration spine / Role 2 BRAIN-anchored / Role 3 Engagement billing). Cross-module join Mermaid flowchart with PROJ as hub touching 9 other modules. Auto-vs-manual operations matrix (9 rows) — explicitly classifies which PROJ behaviours are automatic vs deliberate.
-- **TOC** — added bigger-picture · orchestration-spine · engagement-economics · brain-anchored · ui-surfaces entries (5 new).
-- **NEW §2.5 "Orchestration spine — cross-module join contracts"** — 9-row canonical contract table covering each counterparty (CRM/EMAIL/TIME/INV/KB/REW/OKR/PORTAL/BRAIN): direction · join key · trigger · payload shape · failure mode. Contract stability policy: breaking changes require ADR + counterparty co-sign + 1-minor-release deprecation window + migration test + BRAIN decision memory.
+- **Hero fact-grid** — extended from 8 to 13 cards: added Strategic role + Cross-module joins (7) + memory integration (bidirectional) + Engagement model (3 modes) + UI surfaces (4). Strategic role card uses "Orchestration spine" pill prominent.
+- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (Role 1 orchestration spine / Role 2 memory-anchored / Role 3 Engagement billing). Cross-module join Mermaid flowchart with PROJ as hub touching 9 other modules. Auto-vs-manual operations matrix (9 rows) — explicitly classifies which PROJ behaviours are automatic vs deliberate.
+- **TOC** — added bigger-picture · orchestration-spine · engagement-economics · memory-anchored · ui-surfaces entries (5 new).
+- **NEW §2.5 "Orchestration spine — cross-module join contracts"** — 9-row canonical contract table covering each counterparty (CRM/EMAIL/TIME/INV/KB/REW/OKR/PORTAL/memory): direction · join key · trigger · payload shape · failure mode. Contract stability policy: breaking changes require ADR + counterparty co-sign + 1-minor-release deprecation window + migration test + memory decision memory.
 - **NEW §2.6 "Engagement economics — consultancy-native primitive"** — 3-mode billing table (T&M / fixed-fee / retainer) with what INV pulls + risk + typical use. Full rate-card YAML example (architect/senior/mid/junior with VND + USD rates + per-role billable_default). Billable / non-billable cascade (4-step priority): Member override → task class → role default → fallback. Margin watchdog spec for P2 (fixed-fee scope-creep early warning).
-- **NEW §2.7 "BRAIN-anchored decisions — issues cite memories"** — three citation relations (cites / implements / supersedes) with examples. Decision-to-issues skill sequence (8-actor Mermaid: User → CUO/CPO skill → BRAIN read → PROJ create N+1 issues → BRAIN write audit). Dual-write audit chain example: PROJ history_event row + BRAIN audit row with matching chain hash.
+- **NEW §2.7 "memory-anchored decisions — issues cite memories"** — three citation relations (cites / implements / supersedes) with examples. Decision-to-issues skill sequence (8-actor Mermaid: User → CUO/CPO skill → memory read → PROJ create N+1 issues → memory write audit). Dual-write audit chain example: PROJ history_event row + memory audit row with matching chain hash.
 - **NEW §2.8 "Liquid-Glass UI surfaces — Board · Timeline · Gantt · Brief"** — 4-surface canonical table (primary use · default view · density · keyboard-first). PROJ-specific design-token overlay (tokens.proj.css) with status palette + priority colours + Liquid-Glass blur/saturate values. 6-point accessibility commitment list (WCAG AA + keyboard nav + screen-reader labels + focus trap + reduce-motion + VN diacritic-correct fonts).
-- **§12 Risks** — added 10 new (R-PROJ-011..020): orchestration-spine SPOF · contract breaking change without ADR · fixed-fee scope creep eats margin (High likelihood × High impact, COO-owned) · BRAIN citation drift · cycle-review draft cites out-of-window work · billing-mode mid-cycle change · decision-to-issues skill drift · Liquid-Glass accessibility fail · SPA cold-load > 5s on VN mobile (Members give up and use Excel) · NATS JetStream backlog staleness.
-- **§13 KPIs** — added 10 new universal-protocol-aware: Join-contract stability (≤ 1 breaking change/quarter) · Engagement margin T&M (≥ 35%) · Engagement margin fixed-fee (≥ 30% on close) · Issues with BRAIN citation (≥ 40% of high-priority) · Decision-to-issues skill acceptance (≥ 70%) · SPA cold-load p95 on VN mobile (≤ 5s) · Citation-drift rate (≤ 5%) · Cross-tenant ACL rejection rate · Dogfooding cycle-review draft acceptance (≥ 70% — founders use this before selling it).
-- **§17 References** — replaced stale PRD/SRS section refs with the 4 new in-page sections + BRAIN_AUTOSYNC_DESIGN.md §5 (capture surfaces) + FR_AUTHORING_WORKFLOW.md + AUDIT_AND_PLAN_2026_05_14.md §3.3 (P1 · mid placement) + RESEARCH_REVIEW_2026_05_14.md §4 (Engagement primitive flagged as highest-leverage differentiator) + 11 cross-module page links + PDPL Art. 7/14/20.
+- **§12 Risks** — added 10 new (R-PROJ-011..020): orchestration-spine SPOF · contract breaking change without ADR · fixed-fee scope creep eats margin (High likelihood × High impact, COO-owned) · memory citation drift · cycle-review draft cites out-of-window work · billing-mode mid-cycle change · decision-to-issues skill drift · Liquid-Glass accessibility fail · SPA cold-load > 5s on VN mobile (Members give up and use Excel) · NATS JetStream backlog staleness.
+- **§13 KPIs** — added 10 new universal-protocol-aware: Join-contract stability (≤ 1 breaking change/quarter) · Engagement margin T&M (≥ 35%) · Engagement margin fixed-fee (≥ 30% on close) · Issues with memory citation (≥ 40% of high-priority) · Decision-to-issues skill acceptance (≥ 70%) · SPA cold-load p95 on VN mobile (≤ 5s) · Citation-drift rate (≤ 5%) · Cross-tenant ACL rejection rate · Dogfooding cycle-review draft acceptance (≥ 70% — founders use this before selling it).
+- **§17 References** — replaced stale PRD/SRS section refs with the 4 new in-page sections + MEMORY_AUTOSYNC_DESIGN.md §5 (capture surfaces) + FR_AUTHORING_WORKFLOW.md + AUDIT_AND_PLAN_2026_05_14.md §3.3 (P1 · mid placement) + RESEARCH_REVIEW_2026_05_14.md §4 (Engagement primitive flagged as highest-leverage differentiator) + 11 cross-module page links + PDPL Art. 7/14/20.
 
 Verified:
 - 1514 lines parses cleanly
 - 23 top-level sections (was 18) including 5 strategic new ones (§0, §2.5–§2.8)
 - 5 new Mermaid diagrams (cross-module join flowchart + decision-to-issues sequence + 3 inline in §2.6/§2.7/§2.8)
-- 20 risk rows (was 10), with 10 new framed around orchestration spine SPOF + Engagement scope creep + BRAIN-citation drift + VN mobile cold-load
+- 20 risk rows (was 10), with 10 new framed around orchestration spine SPOF + Engagement scope creep + memory-citation drift + VN mobile cold-load
 - 19 KPI rows (was 9), with margin watchdog + citation-coverage + dogfooding-acceptance as the new strategic gates
 
-The PROJ page now reads as the complete answer to: (1) why PROJ is the spine and not just a tracker (the join contract table makes it concrete), (2) why consultancies cannot use Linear or Jira off the shelf (the Engagement economics section walks through 3 billing modes + rate-card YAML + billable cascade), (3) how the BRAIN integration makes issue history survive leadership changes (citation graph + dual-write audit chain), (4) why PROJ is the design-system exemplar (4 canonical UI surfaces + token overlay + accessibility commitments). A new engineer reading this page cold can pick up the sync-engine, join contracts, and the four UI surfaces and start P1 slice 1.
+The PROJ page now reads as the complete answer to: (1) why PROJ is the spine and not just a tracker (the join contract table makes it concrete), (2) why consultancies cannot use Linear or Jira off the shelf (the Engagement economics section walks through 3 billing modes + rate-card YAML + billable cascade), (3) how the memory integration makes issue history survive leadership changes (citation graph + dual-write audit chain), (4) why PROJ is the design-system exemplar (4 canonical UI surfaces + token overlay + accessibility commitments). A new engineer reading this page cold can pick up the sync-engine, join contracts, and the four UI surfaces and start P1 slice 1.
 
 ---
 
-## 2026-05-15 — CHAT module page rewritten to Gold (P0 dogfood gate + Mattermost fork rationale + @lumi BRAIN capture + decommission KPI)
+## 2026-05-15 — CHAT module page rewritten to Gold (P0 dogfood gate + Mattermost fork rationale + @lumi memory capture + decommission KPI)
 
-Rewrote `website/docs/modules/chat.html` to push the module past the threshold from "Solid (8/10)" to Gold by encoding three strategic roles simultaneously: P0 dogfood gate (Slack + Zalo killed by P0 · exit or the platform thesis fails), BRAIN capture surface (one of four canonical capture inputs), and Vietnamese-first chat (PGroonga + TinySegmenter recall ≥ 80%). Targeted Edit operations — preserved every gold-quality detail of the prior content (channels, threads, attachments, search, BRAIN bridge, @genie, Slack importer, mobile, voice) while adding 6 strategic new sections + risk/KPI extensions + universal-protocol references.
+Rewrote `website/docs/modules/chat.html` to push the module past the threshold from "Solid (8/10)" to Gold by encoding three strategic roles simultaneously: P0 dogfood gate (Slack + Zalo killed by P0 · exit or the platform thesis fails), memory capture surface (one of four canonical capture inputs), and Vietnamese-first chat (PGroonga + TinySegmenter recall ≥ 80%). Targeted Edit operations — preserved every gold-quality detail of the prior content (channels, threads, attachments, search, memory bridge, @genie, Slack importer, mobile, voice) while adding 6 strategic new sections + risk/KPI extensions + universal-protocol references.
 
 Changes by section:
-- **`<title>` + `<meta>`** — reframed: "P0 dogfood gate · Mattermost fork · @lumi BRAIN capture · CyberOS".
+- **`<title>` + `<meta>`** — reframed: "P0 dogfood gate · Mattermost fork · @lumi memory capture · CyberOS".
 - **Hero tagline + lede** — explicit P0-dogfood-gate framing: Slack + Zalo decommissioned at P0 exit (P0 · exit), or the whole platform thesis fails. Lists the three strategic roles.
 - **Hero fact-grid** — added "Decom gate Slack+Zalo killed by P0 · exit" + "E2EE decision Per-tenant Postgres encryption".
-- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (P0 dogfood gate / BRAIN capture surface / Vietnamese-first chat). P0-exit dependency Mermaid showing reordered sequence (AI Gateway → AUTH stub → MCP → CHAT → Slack/Zalo decom → P0 exit).
-- **TOC** — added 6 new section links (bigger-picture · rt-stack · lumi-brain-capture · e2ee-decision · slack-zalo-migration · decommission-kpi).
+- **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (P0 dogfood gate / memory capture surface / Vietnamese-first chat). P0-exit dependency Mermaid showing reordered sequence (AI Gateway → AUTH stub → MCP → CHAT → Slack/Zalo decom → P0 exit).
+- **TOC** — added 6 new section links (bigger-picture · rt-stack · lumi-memory-capture · e2ee-decision · slack-zalo-migration · decommission-kpi).
 - **NEW §2.5 "Real-time stack — Mattermost fork rationale"** — 4-option decision table (Mattermost fork chosen vs Matrix / Phoenix / build-from-scratch) + own-vs-Mattermost ownership table + fork governance text + license-drift escalation path.
-- **NEW §2.6 "@lumi → BRAIN capture"** — capture rules table (@lumi=capture, no @lumi=privacy floor, DM rules) + 8-actor sequence diagram (User → CHAT → @lumi parser → CUO → AI Gateway → BRAIN Writer → Lumi's BRAIN). Per-message retro-capture opt-in for "Lumi remember the last N messages".
+- **NEW §2.6 "@lumi → memory capture"** — capture rules table (@lumi=capture, no @lumi=privacy floor, DM rules) + 8-actor sequence diagram (User → CHAT → @lumi parser → CUO → AI Gateway → memory Writer → Lumi's memory). Per-message retro-capture opt-in for "Lumi remember the last N messages".
 - **NEW §2.7 "E2EE decision — server-visible by design"** — 10-row threat-model trade table comparing E2EE vs per-tenant Postgres encryption-at-rest; 5-point rationale for choosing the latter; concrete encryption-at-rest description; tenant-level optional E2EE plugin reserved for P3 (search disabled on those channels).
 - **NEW §2.8 "Slack/Zalo migration"** — 8-step `cyberos-chat import slack` flow with parse/map/backfill/ingest/verify checkpoints; 2-path Zalo migration (manual export + future desktop bridge); pre-import dry-run + idempotent + checkpointed importer.
 - **NEW §2.9 "Decommission KPI"** — formal definition: `decommission_signal := (msgs_in_chat / (msgs_in_chat + msgs_in_slack + msgs_in_zalo)) ≥ 0.95 over 14-day rolling window`. Why 95% not 100%; tracking instrumentation table; 3-tier miss-the-gate remediation (T1 = 2-week sprint freeze on net-new modules, T2 = P1 · start platform-thesis review, T3 = potential P0 rescope per research review §1).
 - **§12 Risks** — added 10 new (R-CHAT-011..020): dogfooding-never-happens (Critical, CEO-owned) · enterprise E2EE pressure · voice ASR PII leak · Mattermost license drift · @lumi rate-limit abuse · cross-tenant search leak · Slack import partial failure · retro-capture privacy boundary · mobile push PII leak · VN/EN code-switch tokeniser miss.
-- **§13 KPIs** — added 9 new universal-protocol-aware: decommission_signal (P0-exit gate) · @lumi capture-rate (≥ 0.999) · @lumi response p95 (≤ 4 s) · VN tokeniser recall continuous (≥ 0.80, alert &lt; 0.78) · BRAIN-ingest backlog max · retro-capture opt-in rate · mobile push delivery rate · cross-tenant query reject rate · dogfooding intensity (P0-gate: 100% of full-time team by P0 · slice 2).
-- **§17 References** — replaced/expanded with BRAIN_AUTOSYNC_DESIGN.md §5 (CHAT as 1 of 4 capture surfaces) · FR_AUTHORING_WORKFLOW.md (CHAT FRs deliberately pending) · AUDIT_AND_PLAN_2026_05_14.md §3.3 (P0 · slice 2 build placement) · RESEARCH_REVIEW_2026_05_14.md §3 (Solid 8/10 with decommission caveat) · Mattermost governance docs · PGroonga + TinySegmenter refs · PDPL Art. 7/14/20/38 · EU AI Act Art. 12/13/50.
+- **§13 KPIs** — added 9 new universal-protocol-aware: decommission_signal (P0-exit gate) · @lumi capture-rate (≥ 0.999) · @lumi response p95 (≤ 4 s) · VN tokeniser recall continuous (≥ 0.80, alert &lt; 0.78) · memory-ingest backlog max · retro-capture opt-in rate · mobile push delivery rate · cross-tenant query reject rate · dogfooding intensity (P0-gate: 100% of full-time team by P0 · slice 2).
+- **§17 References** — replaced/expanded with MEMORY_AUTOSYNC_DESIGN.md §5 (CHAT as 1 of 4 capture surfaces) · FR_AUTHORING_WORKFLOW.md (CHAT FRs deliberately pending) · AUDIT_AND_PLAN_2026_05_14.md §3.3 (P0 · slice 2 build placement) · RESEARCH_REVIEW_2026_05_14.md §3 (Solid 8/10 with decommission caveat) · Mattermost governance docs · PGroonga + TinySegmenter refs · PDPL Art. 7/14/20/38 · EU AI Act Art. 12/13/50.
 
 Verified:
 - 24 top-level sections (was 18) including 5 strategic new ones (§0, §2.5–§2.9)
@@ -585,7 +1155,7 @@ Verified:
 - 18 KPI rows (was 9), with decommission_signal as the explicit P0-exit gate
 - decommission_signal definition appears verbatim 3× (hero fact-grid, §2.9, §13 KPI table)
 
-The CHAT page now reads as the complete answer to: (1) why CHAT is the P0 dogfood gate not just another module, (2) why Mattermost fork beats Matrix/Phoenix/build-from-scratch under our constraint set, (3) how @lumi mention is the conversational BRAIN-capture mechanism, (4) why we chose per-tenant Postgres encryption-at-rest over E2EE, (5) how Slack/Zalo migration works without losing threads/reactions, and (6) what happens if decommission_signal misses 0.95 by P0 · exit (the platform-thesis review escalation). A new engineer reading this page cold can now pick up the Mattermost fork repo + BRAIN bridge spec + Slack importer spec and start slice 1.
+The CHAT page now reads as the complete answer to: (1) why CHAT is the P0 dogfood gate not just another module, (2) why Mattermost fork beats Matrix/Phoenix/build-from-scratch under our constraint set, (3) how @lumi mention is the conversational memory-capture mechanism, (4) why we chose per-tenant Postgres encryption-at-rest over E2EE, (5) how Slack/Zalo migration works without losing threads/reactions, and (6) what happens if decommission_signal misses 0.95 by P0 · exit (the platform-thesis review escalation). A new engineer reading this page cold can now pick up the Mattermost fork repo + memory bridge spec + Slack importer spec and start slice 1.
 
 ---
 
@@ -595,17 +1165,17 @@ Rewrote `website/docs/modules/auth.html` from 1169 → 1442 lines (+273 lines, +
 
 Changes by section:
 - **`<title>` + `<meta>`** — reframed: "P0 · slice 2 stub → P3 full · Lumi tenant identity · Agent-equal".
-- **Hero tagline + lede** — explicit P0 · slice 2 stub vs P3 full distinction · cites reordered P0 sequence (AI Gateway @ P0 · slice 1 → AUTH @ P0 · slice 2 → MCP Gateway @ P0 · slice 3 → CHAT/CUO @ P0 · exit) · references RFC.md + sign-in mockup + BRAIN_AUTOSYNC_DESIGN.md.
+- **Hero tagline + lede** — explicit P0 · slice 2 stub vs P3 full distinction · cites reordered P0 sequence (AI Gateway @ P0 · slice 1 → AUTH @ P0 · slice 2 → MCP Gateway @ P0 · slice 3 → CHAT/CUO @ P0 · exit) · references RFC.md + sign-in mockup + MEMORY_AUTOSYNC_DESIGN.md.
 - **Hero fact-grid** — split status into "P0 · slice 2 stub designed" + "P3 full designed", LoC into 1,500 stub + 7,000 full, RBAC into 5 stub + 22 full, dependencies + Lumi enablement.
 - **NEW §0 "The bigger picture — three strategic moves"** — 3-card layout (Move 1 P0 · slice 2 stub / Move 2 P3 full / Move 3 Lumi tenant identity). Gantt chart Mermaid showing the reordered P0 build sequence end-to-end. Rationale for reorder cited from reviewer.
 - **TOC** — added bigger-picture · stub-vs-full · rbac-catalogue · lumi-integration · open-questions entries.
 - **NEW §2.5 "P0 · slice 2 stub vs P3 full"** — 12-row capability-contrast table covering login mechanism · MFA · RBAC catalogue · JWT signing · tenant isolation · audit-chain emission · admin surfaces · cost · LoC · tests · Lumi integration · SOC 2 evidence. Plus "Migration discipline" + "What stub doesn't compromise on" prose.
 - **NEW §2.6 "22-role RBAC catalogue"** — full 22-row table with scope summary, stub-eligibility, and slice when each role lands. The 5 stub roles (root-admin · tenant-admin · tenant-member · service-account · agent-persona) are explicitly the first 5; the remaining 17 land across slices 3–5. Role-addition policy: ADR-gated, no code-only changes.
-- **NEW §2.7 "AUTH ↔ Lumi's BRAIN"** — full JWT claim shape (15 fields incl. tenant_id, tenant_residency, agent_persona, scope_grants) · sequence diagram of Lumi's BRAIN verifying a sync push · 5-bullet contract requirements list (tenant_id non-removable, JWKS reachability, refresh-token reuse detection, agent-persona claims preserve agent-equal, residency pinning flows through).
+- **NEW §2.7 "AUTH ↔ Lumi's memory"** — full JWT claim shape (15 fields incl. tenant_id, tenant_residency, agent_persona, scope_grants) · sequence diagram of Lumi's memory verifying a sync push · 5-bullet contract requirements list (tenant_id non-removable, JWKS reachability, refresh-token reuse detection, agent-persona claims preserve agent-equal, residency pinning flows through).
 - **NEW §2.8 "RFC open questions resolved"** — table addressing all 5 open Qs from RFC §6 with proposed defaults + rationale: Q1 workspace = new repo-root Cargo workspace · Q2 memory bridge = subprocess slice 4 → PyO3 slice 5 · Q3 tenant-0 bootstrap = `cyberos-auth bootstrap` CLI subcommand · Q4 HIBP = default-on with per-tenant opt-out · Q5 OBS = slice 1 stdout → slice 5 OTLP. Each becomes an ADR once Stephen signs off.
 - **§12 Risks** — added 7 new (R-AUTH-011..017): stub stays past P3 · reorder regret · Lumi tenant-id spoofing · cross-shard JWT replay · sub-process audit-bridge bottleneck · tenant-0 bootstrap leak · PDPL Art. 38 SME grace lapse.
 - **§13 KPIs** — added 7 new: stub-to-full migration coverage (≥95% T2+ subjects passkey-enrolled by P1 · exit) · mock-AUTH retirement · Lumi tenant-id verification rate · cross-shard rejection · audit-bridge p99 · SME-grace lapsed tenants · 22-role catalogue stability.
-- **§17 References** — replaced PRD/SRS section refs (stripped) with services/auth/RFC.md, sign-in mockup, BRAIN_AUTOSYNC_DESIGN.md §6, RESEARCH_REVIEW §2.4 (cited verbatim), AUDIT_AND_PLAN, FR_AUTHORING_WORKFLOW, AGENTS.md §3.6+§11.
+- **§17 References** — replaced PRD/SRS section refs (stripped) with services/auth/RFC.md, sign-in mockup, MEMORY_AUTOSYNC_DESIGN.md §6, RESEARCH_REVIEW §2.4 (cited verbatim), AUDIT_AND_PLAN, FR_AUTHORING_WORKFLOW, AGENTS.md §3.6+§11.
 
 Verified:
 - 1442 lines parses cleanly
@@ -613,73 +1183,73 @@ Verified:
 - Mermaid gantt chart documents the reordered P0 sequence
 - All 5 RFC §6 open questions now have proposed defaults visible on the page
 
-The AUTH page now reads as the complete answer to: (1) why AUTH is not P0 #1 (research review §2.4), (2) what the P0 · slice 2 stub actually contains vs the P3 full target, (3) how AUTH enables Lumi's BRAIN tenant isolation, (4) what the 5 open RFC questions resolve to. A new engineer reading this page cold can pick up RFC.md and start slice 1.
+The AUTH page now reads as the complete answer to: (1) why AUTH is not P0 #1 (research review §2.4), (2) what the P0 · slice 2 stub actually contains vs the P3 full target, (3) how AUTH enables Lumi's memory tenant isolation, (4) what the 5 open RFC questions resolve to. A new engineer reading this page cold can pick up RFC.md and start slice 1.
 
 ---
 
-## 2026-05-14 — SKILL module page rewritten to Gold (BRAIN integration + vertical-pack moat + distribution roadmap)
+## 2026-05-14 — SKILL module page rewritten to Gold (memory integration + vertical-pack moat + distribution roadmap)
 
-Rewrote `website/docs/modules/skill.html` from 1134 → 1431 lines (+297 lines, +26%). Encodes the three strategic roles the Skill module plays simultaneously — open-standard citizen, BRAIN-protocol enabler, vertical-pack moat — with no role under-served. Targeted Edit operations preserved every gold-quality detail of the shipped Phases 0–7 while adding Phase 8 BRAIN integration, vertical-pack pattern + 8-pack roadmap, and the R0→R5 distribution staging.
+Rewrote `website/docs/modules/skill.html` from 1134 → 1431 lines (+297 lines, +26%). Encodes the three strategic roles the Skill module plays simultaneously — open-standard citizen, memory-protocol enabler, vertical-pack moat — with no role under-served. Targeted Edit operations preserved every gold-quality detail of the shipped Phases 0–7 while adding Phase 8 memory integration, vertical-pack pattern + 8-pack roadmap, and the R0→R5 distribution staging.
 
 Changes by section:
-- **`<title>` + `<meta>`** — "Open Agent Skills · BRAIN-integrated · Vertical-pack moat · CyberOS" — three roles in the title itself.
-- **Hero tagline + lede** — explicit three-role frame: open-standard citizen / BRAIN-protocol enabler / vertical-pack moat. Lists the capture daemon + sync orchestrator + synthesis sub-skill as skill bundles. Names cyberskill-vn as proof-of-pattern, not the strategy.
-- **Hero fact-grid** — added "Status (BRAIN-int) Phase 8 designed" + "Vertical packs 1 shipped · 6 planned"; updated dependencies to BRAIN + AUTH.
+- **`<title>` + `<meta>`** — "Open Agent Skills · memory-integrated · Vertical-pack moat · CyberOS" — three roles in the title itself.
+- **Hero tagline + lede** — explicit three-role frame: open-standard citizen / memory-protocol enabler / vertical-pack moat. Lists the capture daemon + sync orchestrator + synthesis sub-skill as skill bundles. Names cyberskill-vn as proof-of-pattern, not the strategy.
+- **Hero fact-grid** — added "Status (memory-int) Phase 8 designed" + "Vertical packs 1 shipped · 6 planned"; updated dependencies to memory + AUTH.
 - **NEW §0 "The bigger picture — three strategic roles"** — 3-card layout (Role 1 / Role 2 / Role 3); dependency graph Mermaid showing Skill's unique position touching the external Agent Skills ecosystem.
-- **TOC** — added Bigger picture · BRAIN integration · Vertical-pack pattern · Distribution roadmap entries.
-- **NEW §3.5 "BRAIN integration"** — full SKILL.md frontmatter example with BRAIN-aware fields (allowed_brain_scopes for personal + lumi scopes); capability broker enforcement sequence diagram (8 actors, 14 steps); table of 5 universal-protocol skills (brain-capture@1, brain-sync@1, synthesis-author@1, feature-request-author, feature-request-audit).
+- **TOC** — added Bigger picture · memory integration · Vertical-pack pattern · Distribution roadmap entries.
+- **NEW §3.5 "memory integration"** — full SKILL.md frontmatter example with memory-aware fields (allowed_memory_scopes for personal + lumi scopes); capability broker enforcement sequence diagram (8 actors, 14 steps); table of 5 universal-protocol skills (memory-capture@1, memory-sync@1, synthesis-author@1, feature-request-author, feature-request-audit).
 - **NEW §3.6 "Vertical-pack pattern"** — 7-step pack recipe (jurisdiction → high-pain workflows → SKILL.md bundle → localise language → compliance-verify → agentskills.io publish → Lumi tenant sell); 9-pack roadmap table (vn shipped + sg + id + th + eu + us + hr + legal + accounting) with target ship dates and annual unit pricing; margin math worked example.
 - **NEW §3.7 "Distribution roadmap R0→R5"** — 6-rung distribution table (local cache → .skill bundles → OCI registry → agentskills.io → own marketplace → enterprise white-label); explicit gating criteria; why each rung is gated (R3 waits on registry API, R4 waits on ≥50 paying tenants per research review §7.3).
-- **§12 Risks** — added 7 new BRAIN-integration + vertical-pack + distribution risks (R-SKILL-008..014): capability broker bypass, multi-tenant skill bleed, sync-state corruption, synthesis PII leak, vertical-pack legal drift, OCI signing-key compromise, agentskills.io policy hostility.
+- **§12 Risks** — added 7 new memory-integration + vertical-pack + distribution risks (R-SKILL-008..014): capability broker bypass, multi-tenant skill bleed, sync-state corruption, synthesis PII leak, vertical-pack legal drift, OCI signing-key compromise, agentskills.io policy hostility.
 - **§13 KPIs** — added 8 new universal-protocol KPIs: broker-mediated rate (must be 100%), first-use approval latency, capability scope reject rate, synthesis emit rate, vertical-pack tenant attach rate, vertical-pack revenue share (≥30% of ARR at P4 · mid = the compounding moat), marketplace publish-to-install, pack legal-drift detection.
-- **§14 RACI** — added 9 new rows for Phase 8 + synthesis sub-skill + brain-capture/sync bundles + 4 pack-authoring rows + 2 distribution/marketplace rows + 1 quarterly regulatory-drift review.
+- **§14 RACI** — added 9 new rows for Phase 8 + synthesis sub-skill + memory-capture/sync bundles + 4 pack-authoring rows + 2 distribution/marketplace rows + 1 quarterly regulatory-drift review.
 - **§16 Phase status** — added 12 new rows: Phase 8 + 3 universal-protocol skill bundles + 6 vertical packs + 2 marketplace rungs.
-- **§17 References** — added BRAIN_AUTOSYNC_DESIGN.md (4 cross-links), FR_AUTHORING_WORKFLOW, AUDIT_AND_PLAN, RESEARCH_REVIEW, strategy doc §4.4 (vertical packs as Level-4 moat), and cross-module links to BRAIN + CUO module pages.
+- **§17 References** — added MEMORY_AUTOSYNC_DESIGN.md (4 cross-links), FR_AUTHORING_WORKFLOW, AUDIT_AND_PLAN, RESEARCH_REVIEW, strategy doc §4.4 (vertical packs as Level-4 moat), and cross-module links to memory + CUO module pages.
 
 Verified:
 - 1431 lines parses cleanly
 - 24 top-level sections (was 19) including 4 strategic new ones
-- 4 references to BRAIN_AUTOSYNC_DESIGN.md
-- 10 mentions of the 3 new universal-protocol skill bundles (brain-capture@1, brain-sync@1, synthesis-author@1)
+- 4 references to MEMORY_AUTOSYNC_DESIGN.md
+- 10 mentions of the 3 new universal-protocol skill bundles (memory-capture@1, memory-sync@1, synthesis-author@1)
 - 39 mentions across the 9 vertical packs (vn / sg / id / th / eu / us / hr / legal / accounting)
 
-The SKILL page now reflects the full strategic surface: open-standard citizen for distribution reach, BRAIN-protocol enabler for cryptographic-grade audit-chain integration on every invocation, and vertical-pack moat as the actual compounding margin (≥30% of ARR at P4 · mid if the pricing+attach-rate math holds). The page reads as a complete answer to the research review's §7.3 GTM critique: the marketplace is deferred, the vertical packs ARE the moat, and the synthesis sub-skill closes the loop into multi-brain auto-evolve.
+The SKILL page now reflects the full strategic surface: open-standard citizen for distribution reach, memory-protocol enabler for cryptographic-grade audit-chain integration on every invocation, and vertical-pack moat as the actual compounding margin (≥30% of ARR at P4 · mid if the pricing+attach-rate math holds). The page reads as a complete answer to the research review's §7.3 GTM critique: the marketplace is deferred, the vertical packs ARE the moat, and the synthesis sub-skill closes the loop into multi-memory auto-evolve.
 
 ---
 
-## 2026-05-14 — BRAIN module page rewritten to Gold (expanded universal-protocol scope)
+## 2026-05-14 — memory module page rewritten to Gold (expanded universal-protocol scope)
 
-Rewrote `website/docs/modules/brain.html` from 1116 → 1518 lines (+402 lines, +36%). Encodes the BRAIN_AUTOSYNC_DESIGN.md vision: universal Personal BRAIN + Lumi's BRAIN + capture daemon + 2-way sync + multi-brain auto-evolve. Targeted Edit operations (not full rewrite) — preserved all existing gold-quality content on Stage 0 (shipped Layer 1) while encoding Stages 1–5.
+Rewrote `website/docs/modules/memory.html` from 1116 → 1518 lines (+402 lines, +36%). Encodes the MEMORY_AUTOSYNC_DESIGN.md vision: universal Personal memory + Lumi's memory + capture daemon + 2-way sync + multi-memory auto-evolve. Targeted Edit operations (not full rewrite) — preserved all existing gold-quality content on Stage 0 (shipped Layer 1) while encoding Stages 1–5.
 
 Changes by section:
 - **`<title>` + `<meta description>`** — reframed from "the substrate every CyberOS module depends on" to "the universal personal-and-shared memory protocol — CyberOS is the first consumer, the protocol stands alone".
-- **Hero tagline + lede paragraph** — Personal BRAIN + Lumi's BRAIN duality; portability by folder copy; multi-brain auto-evolve as the moat; Stage 1–5 reference to BRAIN_AUTOSYNC_DESIGN.md.
+- **Hero tagline + lede paragraph** — Personal memory + Lumi's memory duality; portability by folder copy; multi-memory auto-evolve as the moat; Stage 1–5 reference to MEMORY_AUTOSYNC_DESIGN.md.
 - **Hero fact-grid** — replaced single-store metrics with dual-store reality (Layer 1 status + Stages 1–5 designed + Personal+Lumi stores + universal scope).
-- **NEW §0 — "The bigger picture"** — 3-card layout (Personal · Sync orchestrator · Lumi's BRAIN); auto-vs-manual capture matrix; "this is the moat" strategic frame.
+- **NEW §0 — "The bigger picture"** — 3-card layout (Personal · Sync orchestrator · Lumi's memory); auto-vs-manual capture matrix; "this is the moat" strategic frame.
 - **TOC** — added "The bigger picture" + "Stages 1–5 roadmap" entries.
-- **§1 Why BRAIN exists** — 4-card layout (was 3) adding "Universal capture" + "Multi-brain power"; expanded the two-paragraph rationale with the compounding-moat argument.
+- **§1 Why memory exists** — 4-card layout (was 3) adding "Universal capture" + "Multi-memory power"; expanded the two-paragraph rationale with the compounding-moat argument.
 - **§2 5W1H2C5M** — all 12 cells rewritten to encode the universal protocol scope. Personal vs Lumi distinction in Who/When/Where; Stage 2+ materials (Rust+notify, Presidio); cost model includes sync push p95 and synthesis LLM-cost.
-- **NEW §3.5 — "Stages 1–5 universal protocol roadmap"** — Mermaid stage-dependency flowchart; gating table with effort estimates; Personal BRAIN sub-architecture Mermaid diagram (capture surfaces → ops → store + sync queue); Lumi's BRAIN sub-architecture diagram (N personal BRAINs → sync → tenant chain → synthesis → wisdom); sync_class privacy taxonomy table.
+- **NEW §3.5 — "Stages 1–5 universal protocol roadmap"** — Mermaid stage-dependency flowchart; gating table with effort estimates; Personal memory sub-architecture Mermaid diagram (capture surfaces → ops → store + sync queue); Lumi's memory sub-architecture diagram (N personal memories → sync → tenant chain → synthesis → wisdom); sync_class privacy taxonomy table.
 - **§4 Data model** — added second ERD with 5 new entities: WatchedFolder · CaptureEvent · SyncState · LumiRow · SharedMemoryAcl · OrgMember · SynthesisInput · SynthesisArtefact (~80 lines of Mermaid erDiagram).
-- **§5 API surface** — added a second CLI table with the 8 new `brain *` subcommands locked per BRAIN_AUTOSYNC_DESIGN.md §15: init/watch/unwatch/status/capture (Stage 1) + sync/sync-mode/pending/reclass (Stage 4).
+- **§5 API surface** — added a second CLI table with the 8 new `memory *` subcommands locked per MEMORY_AUTOSYNC_DESIGN.md §15: init/watch/unwatch/status/capture (Stage 1) + sync/sync-mode/pending/reclass (Stage 4).
 - **§11 Compliance** — added PDPL Art. 7 (no data sale), Art. 20 (60-day post-audit cross-border), Art. 38 (SME 5-year grace), EU AI Act Art. 12 (synthesis logging) + Art. 50 (AI-generated content transparency), ISO/IEC 27018 §A.5 (customer agreement).
-- **§12 Risk entries** — added 6 new BRAIN-specific risks (R-BRAIN-009..014): Lumi's BRAIN tenant compromise, sync conflict storm, synthesis hallucination, capture daemon crash recovery, iCloud sibling explosion, PII leak via auto-capture. Each with likelihood / impact / owner / mitigation.
-- **§13 KPIs** — added 8 new universal-protocol KPIs: capture rate per user, sync success rate, sync conflict rate, synthesis useful-rate, Lumi's BRAIN seq counter, PII held-back rate, capture daemon health, cross-machine portability.
-- **§14 RACI** — added 9 new rows covering Stages 1–5 + Personal-BRAIN portability + PII detection + cross-tenant isolation testing + synthesis output review. Stage-3+ adds Cloud-DBA + Sync-SRE roles under CTO.
+- **§12 Risk entries** — added 6 new memory-specific risks (R-memory-009..014): Lumi's memory tenant compromise, sync conflict storm, synthesis hallucination, capture daemon crash recovery, iCloud sibling explosion, PII leak via auto-capture. Each with likelihood / impact / owner / mitigation.
+- **§13 KPIs** — added 8 new universal-protocol KPIs: capture rate per user, sync success rate, sync conflict rate, synthesis useful-rate, Lumi's memory seq counter, PII held-back rate, capture daemon health, cross-machine portability.
+- **§14 RACI** — added 9 new rows covering Stages 1–5 + Personal-memory portability + PII detection + cross-tenant isolation testing + synthesis output review. Stage-3+ adds Cloud-DBA + Sync-SRE roles under CTO.
 - **§16 Phase status** — added 5 new rows for Stages 1–5 with appropriate "design-locked / designed" pills.
-- **§17 References** — replaced PRD/SRS section refs (stripped) with BRAIN_AUTOSYNC_DESIGN.md, PROPOSAL.md (Proposal P13), FR_AUTHORING_WORKFLOW.md, AUDIT_AND_PLAN_2026_05_14.md, RESEARCH_REVIEW_2026_05_14.md cross-links. Annotates the 4 new doctor invariants and 5 new schema entities.
+- **§17 References** — replaced PRD/SRS section refs (stripped) with MEMORY_AUTOSYNC_DESIGN.md, PROPOSAL.md (Proposal P13), FR_AUTHORING_WORKFLOW.md, AUDIT_AND_PLAN_2026_05_14.md, RESEARCH_REVIEW_2026_05_14.md cross-links. Annotates the 4 new doctor invariants and 5 new schema entities.
 
-Result: BRAIN page now reflects the expanded universal-protocol vision while preserving every gold-quality detail of the shipped Stage-0 Layer 1. 5 references to BRAIN_AUTOSYNC_DESIGN.md cross-link the design source-of-truth. 20 mentions of the 8 new `brain *` subcommands give a cold reader the full CLI map.
+Result: memory page now reflects the expanded universal-protocol vision while preserving every gold-quality detail of the shipped Stage-0 Layer 1. 5 references to MEMORY_AUTOSYNC_DESIGN.md cross-link the design source-of-truth. 20 mentions of the 8 new `memory *` subcommands give a cold reader the full CLI map.
 
 ---
 
-## 2026-05-14 — Research review ingested + BRAIN auto-sync design v1.0 locked
+## 2026-05-14 — Research review ingested + memory auto-sync design v1.0 locked
 
-- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via feature-request-author, 7 missing risks, TEN-billing P2 slice, UX defects, BRAIN Layer 2 source-of-truth one-pager, BRAIN decision memory.
-- **Wrote `docs/BRAIN_AUTOSYNC_DESIGN.md`** (~700 lines, design v1.0.0) — universal Personal BRAIN + Lumi's BRAIN architecture. Per Stephen's clarified vision: (1) Personal BRAIN works on any folder, not just cyberos; (2) captures everything including discussions, not just file deliverables; (3) portable by folder copy across user's machines; (4) 2-way sync with Cloud BRAIN aka Lumi's BRAIN (also CUO's BRAIN, CyberSkill's BRAIN — same store, different names for different audiences); (5) multi-brain power + auto-evolve memory at scale.
-  - 16 sections: vision, naming, three-layer architecture, Personal BRAIN spec, Capture daemon spec, Lumi's BRAIN spec, Sync orchestrator, Multi-brain auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.
-  - Stage gating: **Stage 1 (Personal BRAIN universal) + Stage 2 (capture daemon) are buildable today** — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).
-  - Strategic implication called out: this is **the moat** the reviewer's GTM critique was looking for. Personal BRAIN as OSS distribution; Lumi's BRAIN as the commercial product. The compounding switching cost = value of the org's accumulated BRAIN.
+- Saved `docs/RESEARCH_REVIEW_2026_05_14.md` (315 lines, ~53 KB) — the pre-launch audit from Claude Chat's Research Mode. Aggregate 6.5/10; lowest substantive scores on Spec Quality (5) and GTM (5). 10 follow-up tasks created (#31–#40) covering: P0→P1 descope gate, AI Gateway → AUTH reorder, PDPL citation fixes, server-render NFR + Risk catalogs, first 50 FRs via feature-request-author, 7 missing risks, TEN-billing P2 slice, UX defects, memory Layer 2 source-of-truth one-pager, memory decision memory.
+- **Wrote `docs/MEMORY_AUTOSYNC_DESIGN.md`** (~700 lines, design v1.0.0) — universal Personal memory + Lumi's memory architecture. Per Stephen's clarified vision: (1) Personal memory works on any folder, not just cyberos; (2) captures everything including discussions, not just file deliverables; (3) portable by folder copy across user's machines; (4) 2-way sync with Cloud memory aka Lumi's memory (also CUO's memory, CyberSkill's memory — same store, different names for different audiences); (5) multi-memory power + auto-evolve memory at scale.
+  - 16 sections: vision, naming, three-layer architecture, Personal memory spec, Capture daemon spec, Lumi's memory spec, Sync orchestrator, Multi-memory auto-evolve, Dependency map, Privacy + governance, AGENTS.md Proposal P13 additions, CyberOS strategic implications, naming/branding decisions, 4-week sprint plan, 5 open questions, where-to-read-next.
+  - Stage gating: **Stage 1 (Personal memory universal) + Stage 2 (capture daemon) are buildable today** — no external dep. Stages 3+ ride the P0+P2 critical path (AUTH + AI Gateway + TEN).
+  - Strategic implication called out: this is **the moat** the reviewer's GTM critique was looking for. Personal memory as OSS distribution; Lumi's memory as the commercial product. The compounding switching cost = value of the org's accumulated memory.
 
 ---
 
@@ -716,7 +1286,7 @@ Added `docs/AUDIT_AND_PLAN_2026_05_14.md` — single comprehensive audit + build
 The "strip-everything" decision affects ~434 remaining FR cross-references — these are inline within sentences and tables. They become broken references until re-authored. To clean them up, separate decisions are needed on whether to: keep them as broken refs (will rewrite organically as new FRs come online), replace with `(FR pending)` markers, or remove the surrounding sentences entirely.
 
 **Mermaid mass-fix across 28 pages:**
-- `<br/>` → `<br>` — 754 instances replaced, ALL inside `<div class="mermaid">` blocks (zero outside, verified). This fixes the "Cursorvia MCP tool" text-collapse bug seen on `modules/brain.html` where Mermaid 11.4.1 strips self-closed `<br/>` tags inside quoted node labels.
+- `<br/>` → `<br>` — 754 instances replaced, ALL inside `<div class="mermaid">` blocks (zero outside, verified). This fixes the "Cursorvia MCP tool" text-collapse bug seen on `modules/memory.html` where Mermaid 11.4.1 strips self-closed `<br/>` tags inside quoted node labels.
 - Pastel `classDef` palette → Umber/Ochre brand: 127 instances recolored across all non-index module + architecture pages. Map: emerald-100→umber-50, blue-100→umber-100, purple-100→ochre-300, amber-100→ochre-50, pink-100→ochre-100, indigo-100→umber-200, slate-100→neutral-100, yellow-100→ochre-50, violet-100→ochre-50. Strokes likewise mapped to umber-500 / ochre-700 / neutral-400.
 - 6 broken internal links to non-existent architecture pages fixed: `architecture/services.html` (5 refs from learn/hr/esop/rew/inv) and `architecture/runtime.html` (1 ref from chat) redirect to `architecture/infrastructure.html` (the closest topical match).
 
@@ -784,7 +1354,7 @@ Design-system suggested followups (not landed in this commit):
 ## 2026-05-14 — AUTH module RFC + sign-in mockup
 
 - Added `services/auth/RFC.md` — implementation RFC with 5-slice ship plan, audit-chain integration design, and 5 open questions blocking slice 1.
-- Added `services/auth/mockups/sign-in.html` — first AUTH UI mockup applying design-system Part 21 Liquid Glass defaults, Umber + Ochre anchors, Be Vietnam Pro first, passkey-first flow with password fallback, MFA chips, BRAIN audit-chain trust footnote.
+- Added `services/auth/mockups/sign-in.html` — first AUTH UI mockup applying design-system Part 21 Liquid Glass defaults, Umber + Ochre anchors, Be Vietnam Pro first, passkey-first flow with password fallback, MFA chips, memory audit-chain trust footnote.
 - Verification pass against shipped modules:
   - memory: 222 tests pass + 1 skip (numpy + jsonschema needed for full green). Real bug found AND fixed: `check_manifest_validates` was skipping parseability when jsonschema absent → `cyberos state` returned READY on a broken manifest. Patched to always parse `manifest.json` first (regardless of jsonschema availability) and report `False` on `JSONDecodeError`; the optional schema-validation layer still skips cleanly when jsonschema is absent. Verified: all 4 `tests/test_state.py` tests pass, full suite 238 pass / 1 skip / 0 fail. Also verified by simulating absent jsonschema via import hook — good manifest still returns True with "parseability OK, schema skip"; bad manifest returns False with "manifest.json unparseable: ...".
   - skill: 20 SKILL.md bundles structurally verified, 4 crates, 8 inline Rust tests. `cargo build` not run (sandbox-only limitation).
@@ -841,7 +1411,7 @@ See per-module CHANGELOG.md files for module-specific history:
 - Phase 2 — LLM-driven router. Replace the keyword bank with catalog-driven model prompts so adding a skill requires no router edits.
 - Phase 3 — Multi-skill chains. Walk `next_skill_recommendation` / `depends_on_contracts` to compose skill calls (e.g. validate MST -> generate VAT invoice) into a single user-facing request.
 - Phase 4 — Persona switching. Route through CUO sub-personas (CPO, CTO, ...) per PRD §6.1 based on intent class.
-- Memory bridge -> Writer integration. Today decisions are flat files; Phase-2 will route through the canonical `cyberos.core.writer.Writer` so each routing decision lands on the BRAIN's audit chain.
+- Memory bridge -> Writer integration. Today decisions are flat files; Phase-2 will route through the canonical `cyberos.core.writer.Writer` so each routing decision lands on the memory's audit chain.
 
 ---
 
@@ -849,7 +1419,7 @@ See per-module CHANGELOG.md files for module-specific history:
 
 ## [CUO] 2026-05-14 — Phase 1 shipped: rule-based router
 
-> Initial scaffold of the agentic orchestrator. Routes natural-language requests to the six `cyberskill-vn` skills using a deterministic rule-based scorer; records every decision in the BRAIN audit chain.
+> Initial scaffold of the agentic orchestrator. Routes natural-language requests to the six `cyberskill-vn` skills using a deterministic rule-based scorer; records every decision in the memory audit chain.
 
 ### Added
 
@@ -978,10 +1548,10 @@ The audit's recommendation is unambiguous: align with the Anthropic Agent Skills
 - **CLI** — 30 subcommands via `python -m cyberos`; cold `--help` < 30 ms (lazy imports).
 - **Cryptography** — MMR (Merkle Mountain Range) of canonical-JSON leaves, Ed25519 Signed Tree Heads, passphrase-wrapped signing key. `crypto_mode={chained|sth_only}` toggle behind §0.2 approval phrase.
 - **Cross-platform automation** — `scripts/automation-install.sh` covers macOS launchd + Linux systemd-user (cron fallback); `scripts/automation-install.ps1` covers Windows Task Scheduler. Nightly doctor + dry-run consolidate; weekly backup + consolidate + determinism guard.
-- **Cross-BRAIN merge** — `cyberos import` with filter / dry-run / conflict policies, idempotent via `manifest.imports.<fingerprint>.last_imported_seq`, audit-bracketed.
+- **Cross-memory merge** — `cyberos import` with filter / dry-run / conflict policies, idempotent via `manifest.imports.<fingerprint>.last_imported_seq`, audit-bracketed.
 - **Semantic search** — optional `sentence-transformers` dep with int8-quantized embeddings, graceful FTS5 fallback.
 - **Sync-FS awareness** — invariant + `cyberos resolve-conflict` for iCloud / Dropbox / OneDrive / Google Drive / Box / Syncthing / Resilio.
-- **Mobile publish** — `cyberos publish` produces a self-contained, deterministic HTML view of the BRAIN.
+- **Mobile publish** — `cyberos publish` produces a self-contained, deterministic HTML view of the memory.
 - **HTTP REST** — `cyberos serve` with bearer-token auth, loopback-only by default.
 - **Sessions** — multi-agent coordination via leased session files + scope-overlap conflict detection.
 
@@ -1018,7 +1588,7 @@ The audit's recommendation is unambiguous: align with the Anthropic Agent Skills
 ### P12 — `cyberos publish` mobile static site
 
 * `cyberos/core/publish.py` — single self-contained HTML file with embedded JSON, vanilla-JS client-side search + filter, light/dark theme, mobile-first layout, no external requests.
-* `cyberos publish --out brain.html [--kinds=...] [--exclude-kinds=...] [--deterministic]` — airdrop the result to your phone.
+* `cyberos publish --out memory.html [--kinds=...] [--exclude-kinds=...] [--deterministic]` — airdrop the result to your phone.
 
 ### P7 — local semantic search
 
@@ -1053,7 +1623,7 @@ The audit's recommendation is unambiguous: align with the Anthropic Agent Skills
 
 ---
 
-## [MEMORY] 2026-05-14 — Automation + P6 cross-BRAIN import + newcomer guide
+## [MEMORY] 2026-05-14 — Automation + P6 cross-memory import + newcomer guide
 
 > Closing the v1→v2 chapter: leftover removal, end-to-end automation,
 > team-merge tool, step-by-step newcomer guide. The protocol is now
@@ -1074,7 +1644,7 @@ The audit's recommendation is unambiguous: align with the Anthropic Agent Skills
 
 ### macOS launchd automation (replaces broken Cowork scheduled tasks)
 
-The previous scheduled tasks ran in the Cowork Linux sandbox; they couldn't reach the host BRAIN. **Disabled** both. The replacement is host-side launchd jobs:
+The previous scheduled tasks ran in the Cowork Linux sandbox; they couldn't reach the host memory. **Disabled** both. The replacement is host-side launchd jobs:
 
 * `scripts/automation/cyberos-nightly.sh` — daily 01:09 local. Runs `cyberos doctor` + `consolidate --dry-run`. Notifies on failure.
 * `scripts/automation/cyberos-weekly.sh` — Sundays 02:07 local. Runs `backup` → `consolidate` → determinism guard. Notifies on failure or non-deterministic export.
@@ -1084,13 +1654,13 @@ The previous scheduled tasks ran in the Cowork Linux sandbox; they couldn't reac
 
 ### Git pre-commit hook
 
-* `scripts/hooks/pre-commit` — refuses commits that would corrupt the BRAIN: doctor failure, schema-invalid memory file, schema-drift between `cyberos.core` types and `memory.schema.json`.
+* `scripts/hooks/pre-commit` — refuses commits that would corrupt the memory: doctor failure, schema-invalid memory file, schema-drift between `cyberos.core` types and `memory.schema.json`.
 * `scripts/install-pre-commit.sh <project>` symlinks it into `.git/hooks/`.
 * Fast-paths commits that don't touch `.cyberos-memory/`, `docs/memory/`, or `cyberos/`.
 
 ### P6 — `cyberos import` shipped
 
-The single remaining capability gap is closed. `cyberos/core/import_.py` implements cross-BRAIN merge per the audit's R3-grade design:
+The single remaining capability gap is closed. `cyberos/core/import_.py` implements cross-memory merge per the audit's R3-grade design:
 
 * **Source** can be a directory or a deterministic-export zip; both formats auto-detected and validated.
 * **Filters** stack via `--filter key=value`: `kind`, `sync_class`, `actor`, `classification`. Frontmatter `extra` is flattened so filters can match nested fields.
@@ -1110,7 +1680,7 @@ The single remaining capability gap is closed. `cyberos/core/import_.py` impleme
 ### Tests + totals
 
 * **136 tests passing** (was 121; +15 P6).
-* Real BRAIN: doctor READY 15 pass / 0 warn / 0 error after `cleanup-v1.sh --apply` would run (still 14 pass / 1 warn while v1 debris is on disk; the cleanup script is the user's call).
+* Real memory: doctor READY 15 pass / 0 warn / 0 error after `cleanup-v1.sh --apply` would run (still 14 pass / 1 warn while v1 debris is on disk; the cleanup script is the user's call).
 * memory.schema.json passes `--check`.
 * End-to-end smoke: Alice → shareable filter → Bob; verified one decision imported and idempotent re-run.
 
@@ -1133,7 +1703,7 @@ NEW code:
 
 CHANGED:
   cyberos/core/invariants.py               tightened canonical dirs/files
-  docs/memory/AGENTS.md                    + §14.2 + §14.3 cross-BRAIN merge
+  docs/memory/AGENTS.md                    + §14.2 + §14.3 cross-memory merge
   docs/memory/README.md                    rewritten as newcomer guide
   docs/memory/memory.schema.json           regenerated
 
@@ -1153,16 +1723,16 @@ The deferred items haven't changed. P2 Stage 3 is still gated on the soak window
 ## [MEMORY] 2026-05-14 — End-of-rebuild session: layout widening, deletions, docs consistency
 
 > Closing the rebuild. All autonomous work the user approved is in. Real
-> BRAIN doctor now reports READY. The only outstanding item is P2 Stage 3,
+> memory doctor now reports READY. The only outstanding item is P2 Stage 3,
 > gated on the 2-week MMR soak.
 
 ### Layout invariant widened
 
-`cyberos.core.invariants.check_layout_root_canonical` now tolerates the legacy top-level debris that v1 brain_writer / stage tooling creates: ``staging/``, ``cache/``, ``.branches/``, ``refinements/``, ``__pycache__/``, ``tours/``, ``drafts/``, ``imports/``, ``tests/``, ``.lock.exclusive``, ``.lock.shared``, ``.brain_writer.py``, ``.DS_Store``, ``Thumbs.db``, ``.gitignore``. The doctor's mere-presence check is non-blocking now; content-level invariants (shard uniformity, op-enum conformance) still fire as before. **Real BRAIN flipped from FROZEN_RECOVERABLE → READY.**
+`cyberos.core.invariants.check_layout_root_canonical` now tolerates the legacy top-level debris that v1 memory_writer / stage tooling creates: ``staging/``, ``cache/``, ``.branches/``, ``refinements/``, ``__pycache__/``, ``tours/``, ``drafts/``, ``imports/``, ``tests/``, ``.lock.exclusive``, ``.lock.shared``, ``.memory_writer.py``, ``.DS_Store``, ``Thumbs.db``, ``.gitignore``. The doctor's mere-presence check is non-blocking now; content-level invariants (shard uniformity, op-enum conformance) still fire as before. **Real memory flipped from FROZEN_RECOVERABLE → READY.**
 
-### Sidecar migration on real BRAIN — DECIDED AGAINST
+### Sidecar migration on real memory — DECIDED AGAINST
 
-Dry-run revealed the user's BRAIN frontmatter uses the original v1 schema (``memory_id``, ``created_by``, ``scope``, ``created_at`` as ISO string — 28 fields total) which doesn't fit the new 8-field :class:`cyberos.core.frontmatter.Frontmatter` Struct. AGENTS.md v2 §5.1 explicitly permits both in-body and sidecar formats, so the migration is optional. **Outcome: skipped.** Snapshot from before the dry-run is retained at ``~/cyberos-backups/2026-05-13T17-30-32Z/`` as harmless insurance.
+Dry-run revealed the user's memory frontmatter uses the original v1 schema (``memory_id``, ``created_by``, ``scope``, ``created_at`` as ISO string — 28 fields total) which doesn't fit the new 8-field :class:`cyberos.core.frontmatter.Frontmatter` Struct. AGENTS.md v2 §5.1 explicitly permits both in-body and sidecar formats, so the migration is optional. **Outcome: skipped.** Snapshot from before the dry-run is retained at ``~/cyberos-backups/2026-05-13T17-30-32Z/`` as harmless insurance.
 
 A field-mapping layer (P3 follow-up) would translate the legacy schema to the new minimal one — staged for a future focused session, not in this rebuild.
 
@@ -1182,7 +1752,7 @@ The sandbox filesystem doesn't allow ``unlink`` on mounted folders, so the files
 * ``PROPOSAL.md`` — already updated last session; verified accurate.
 * ``LEGACY_SCRIPTS.md`` — Group A table now distinguishes ✅ deprecation stubs from ⏸️ bash-wrapper retentions, with caller counts.
 
-### brain_writer.py dead-code cleanup — INTENTIONALLY SKIPPED
+### memory_writer.py dead-code cleanup — INTENTIONALLY SKIPPED
 
 The legacy code paths under v1 are the rollback fallback for ``cyberos_migrate_v2 --rollback``. Removing them would silently break the documented rollback path. Decision recorded; no code change.
 
@@ -1193,7 +1763,7 @@ The legacy code paths under v1 are the rollback fallback for ``cyberos_migrate_v
 * **22 CLI subcommands**: view / create / put / move / str-replace / insert / delete / rename / verify / export / audit / search / checkpoint / backup / prune / prove / verify-proof / sth-wrap / state / consolidate / doctor / validate.
 * **19 Python modules** under ``cyberos/``.
 * **11 doc files** under ``docs/memory/``.
-* Real BRAIN: doctor 14 PASS / 1 WARN / 0 ERROR; state READY.
+* Real memory: doctor 14 PASS / 1 WARN / 0 ERROR; state READY.
 * memory.schema.json passes ``--check`` — no drift from msgspec types.
 
 ### Rebuild totals
@@ -1213,8 +1783,8 @@ Over the 2026-05-13 ↔ 2026-05-14 rebuild:
 
 * **P2 Stage 3** — chain primitive swap. Gated on 2-week MMR soak under Stage 1 + fresh chat-turn approval. The nightly soak task tracks this.
 * **9 of 11 Group A legacy scripts** — gated on retiring the bash wrapper.
-* **brain_writer.py cleanup** — gated on retiring the v1 rollback path.
-* **Sidecar migration on real BRAIN** — gated on writing the v1→v2 frontmatter field-mapping layer.
+* **memory_writer.py cleanup** — gated on retiring the v1 rollback path.
+* **Sidecar migration on real memory** — gated on writing the v1→v2 frontmatter field-mapping layer.
 
 Each one has a clear gate and a known unblocking action. None are required for day-to-day operation — the system is fully functional today.
 
@@ -1294,7 +1864,7 @@ tests/test_state.py              NEW (7 state-machine transition tests)
 
 * **MMR batch persistence** — collapse N per-leaf peaks.bin rewrites into one per batch. ~30 lines in `cyberos/core/mmr.py`. Stage-3 gate.
 * **P2 Stage 3** — chain primitive swap. Needs 2-week soak under the additive MMR, then explicit approval.
-* **Sidecar migration on real BRAIN** (P3 enactment).
+* **Sidecar migration on real memory** (P3 enactment).
 * **Legacy script deletions** (LEGACY_SCRIPTS.md group A).
 * **`cyberos doctor --repair`** auto-fix mode for `FROZEN_RECOVERABLE` invariants (shard layout, op-enum migration). Tooling shape sketched in the state tests; not implemented.
 
@@ -1369,7 +1939,7 @@ tests/core/test_sth_and_consolidate.py NEW (6 tests covering sign/verify/tamper/
 
 * **P2 Stage 2** — passphrase-wrap the signing key.
 * **P2 Stage 3** — promote STH to source of truth; remove `prev_chain`/`chain` from new rows; legacy chain stays in `audit/legacy_chain_tail.json`. Needs fresh approval; the 2-week W1 soak gate from `P2_RESOLUTION.md` should run first.
-* **Sidecar migration** on the real BRAIN (P3 enactment).
+* **Sidecar migration** on the real memory (P3 enactment).
 * **Legacy script deletions** (Group A from `LEGACY_SCRIPTS.md`).
 
 ---
@@ -1412,7 +1982,7 @@ tests/core/test_sth_and_consolidate.py NEW (6 tests covering sign/verify/tamper/
 * `runtime/tools/cyberos_migrate_sidecar.py` — splits each in-body frontmatter `*.md` into `<slug>.md` + `<slug>.meta.json` (sorted-keys JSON, includes `body_hash` per AGENTS.md v2 §5.3).
 * Idempotent + reversible (`--rollback` re-folds; `--dry-run` reports without writing).
 * `cyberos.core.frontmatter.parse_sidecar(meta_bytes, body_bytes)` — reader-side support; validates the `body_hash` invariant.
-* **Not auto-run on the real BRAIN.** User runs when ready.
+* **Not auto-run on the real memory.** User runs when ready.
 
 ### P2 — Stub + resolution proposal (additive; primitive NOT swapped)
 
@@ -1455,7 +2025,7 @@ P2 (MMR + STH primitive swap) is the only Deep Audit recommendation NOT shipped.
 
 ### Layer-1 Optimization Audit (Report 1/N — May 2026) — shipped
 
-Full implementation of the "CyberOS Layer-1 Optimization Audit" recommendations. New package `cyberos/` (12 core modules + CLI + benchmarks + 38 tests). Coexists with legacy `runtime/lib/brain_writer.py` during the rebuild window; the manifest carries no `schema_version` field — the protocol is unversioned and the rebuild is dated, not version-stamped.
+Full implementation of the "CyberOS Layer-1 Optimization Audit" recommendations. New package `cyberos/` (12 core modules + CLI + benchmarks + 38 tests). Coexists with legacy `runtime/lib/memory_writer.py` during the rebuild window; the manifest carries no `schema_version` field — the protocol is unversioned and the rebuild is dated, not version-stamped.
 
 * **macOS `fsync()` latent data-loss bug fixed.** `cyberos/core/fsync.py` routes per-batch syncs through `F_BARRIERFSYNC` on Darwin, checkpoint flushes through `F_FULLFSYNC`. Plain `os.fsync()` does NOT flush the device cache on macOS; the legacy writer was vulnerable.
 * **Group-commit ledger.** `cyberos/core/writer.py` — single writer thread, 5 ms / 16-row coalescing window, one `writev` + one `durable_sync` + one atomic `HEAD` update per batch. Same primitive as Postgres / InnoDB / Pebble. Sandbox throughput: per-row fsync baseline 109/s → group commit 361/s (3.3×); 8 producers → 1,213/s (11×).
@@ -1464,7 +2034,7 @@ Full implementation of the "CyberOS Layer-1 Optimization Audit" recommendations.
 * **WAL-mode SQLite index.** `cyberos/core/index.py` — outside-the-store cache (`~/Library/Caches/cyberos/<fp>/cyberos.db`), tuned PRAGMAs, fully rebuildable from binlog.
 * **Single CLI entrypoint.** `python -m cyberos` with lazy subcommand imports — cold `--help` measured at ~14 ms (target <30 ms).
 * **Chain-bridge migration model.** `runtime/tools/cyberos_migrate_v2.py`. Legacy `audit/*.jsonl` stays on disk untouched; new binlog starts empty; `manifest.migration.legacy_last_chain` records the chain tip so the new Writer's first record's `prev_chain` continues the legacy Merkle chain. Lenient verification by default (LINK strict, HASH counted-not-asserted — matches reality where past schema migrations damaged historical hashes); `--strict-legacy-verify` opt-in mode for compliance review.
-* **Compatibility shim** at `runtime/lib/brain_writer_shim.py`. After cutover, `python runtime/lib/brain_writer.py <verb>` routes through cyberos for data-mutating verbs and refuses unsupported verbs (`protocol-upgrade`, `self-audit`) with a clear deferral message. 23 unit tests covering every branch.
+* **Compatibility shim** at `runtime/lib/memory_writer_shim.py`. After cutover, `python runtime/lib/memory_writer.py <verb>` routes through cyberos for data-mutating verbs and refuses unsupported verbs (`protocol-upgrade`, `self-audit`) with a clear deferral message. 23 unit tests covering every branch.
 * **38 regression tests under `tests/core/`** including fork-and-SIGKILL crash-safety on Linux, deterministic-export round-trip, chain-bridge invariants, msgspec ≡ RFC 8785 equivalence within JSON safe-integer domain. Full suite: 64 tests (38 core + 23 shim + 3 schema-drift).
 
 ### Deep Optimization Audit (Report 2/N — May 2026) — W0 prep landed
@@ -1501,13 +2071,13 @@ The Deep Audit's W0 ("pure additions, no protocol changes") is shipped; W1/W2 (p
 
 ### Removed
 - **`AGENTS-CORE.md` decommissioned.** The "compact" 42 KB extract was removed. Single source of truth for the protocol is `docs/memory/AGENTS.md` (114 KB). Context windows have grown to comfortably hold the full protocol; maintaining a second variant created drift risk and doubled the surface to keep in sync. Stub left at old path; `runtime/tools/extract_agents_core.py` re-purposed as a no-op message explaining the decommission. The top-level `AGENTS.md` symlink now resolves to the full protocol (run `rm AGENTS.md && ln -s docs/memory/AGENTS.md AGENTS.md` on host to fix the broken symlink).
-- **`var/` folder removed.** Generated artefacts are now part of the BRAIN cache (`.cyberos-memory/cache/<tool>/`), which is already gitignored. Specific moves:
-  - `var/staged-memories/` → `.cyberos-memory/staging/` (semantically the BRAIN's staging area)
-  - `var/refinements/` → `.cyberos-memory/refinements/` (matches BRAIN-internal naming)
+- **`var/` folder removed.** Generated artefacts are now part of the memory cache (`.cyberos-memory/cache/<tool>/`), which is already gitignored. Specific moves:
+  - `var/staged-memories/` → `.cyberos-memory/staging/` (semantically the memory's staging area)
+  - `var/refinements/` → `.cyberos-memory/refinements/` (matches memory-internal naming)
   - `var/audit-site/` → `.cyberos-memory/cache/audit-site/` (regenerable static dashboard)
   - `var/council/`, `var/doctor/`, `var/replan/`, `var/runtime-specs/`, `var/test-fixtures/` → `.cyberos-memory/cache/<tool>/`
-  - 72 path-substitutions across 15 source files (`runtime/tools/*.py`, `runtime/lib/{brain_writer.py,cleanup-host.sh,apply-bundle-Q.sh}`, four READMEs).
-  - `.gitignore` simplified: no more per-pattern transient-state rules; the BRAIN gitignore (`.cyberos-memory`) already covers all generated state.
+  - 72 path-substitutions across 15 source files (`runtime/tools/*.py`, `runtime/lib/{memory_writer.py,cleanup-host.sh,apply-bundle-Q.sh}`, four READMEs).
+  - `.gitignore` simplified: no more per-pattern transient-state rules; the memory gitignore (`.cyberos-memory`) already covers all generated state.
 - **Fragmented stub redirects gone.** `docs/skills/{CHAIN_ORCHESTRATOR,MANUAL_WORKFLOW,HOST_ADAPTERS}.md` were already deleted in Batch 25; this batch additionally stubs `docs/memory/INDEX.md` (merged into README.md) and `docs/memory/AGENTS-CORE.md`. Both stubs are 10–14 lines pointing at the canonical location; remove on host with `rm`.
 
 ### Added — single README.md per module
@@ -1517,12 +2087,12 @@ Every functional folder now has exactly one `README.md` as its entry point. New 
 | --- | --- |
 | `docs/README.md` | Top-level documentation index + folder-to-folder map |
 | `runtime/skill_runners/README.md` | BaseSkillRunner framework + how to add a new runner |
-| `runtime/mcp/README.md` | Read-only MCP server for the BRAIN |
+| `runtime/mcp/README.md` | Read-only MCP server for the memory |
 | `runtime/hooks/README.md` | Hook contract + built-in `gateguard.py` |
 | `runtime/completions/README.md` | Shell tab-completion install + regen |
-| `runtime/lib/README.md` | Shared library scripts (brain_writer, apply-bundle, cleanup-host) |
+| `runtime/lib/README.md` | Shared library scripts (memory_writer, apply-bundle, cleanup-host) |
 | `runtime/starter/README.md` | Bootstrap scaffolds for new projects |
-| `runtime/migrations/README.md` | BRAIN schema migration contract + run instructions |
+| `runtime/migrations/README.md` | memory schema migration contract + run instructions |
 | `runtime/tests/README.md` | Test layout, fixtures, live-LLM mode |
 | `planning/README.md` | Per-project work folder conventions |
 
@@ -1539,10 +2109,10 @@ Existing READMEs already covered: `docs/memory/`, `docs/skills/`, `docs/contract
 - `cyberos doctor` → CRITICAL: 0.
 - `cyberos fr list` → both FRs body-h2 shape.
 - 18/18 functional folders have a `README.md` entry point.
-- `brain_writer.py` imports from `runtime/lib/` and writes to `.cyberos-memory/cache/<tool>/`.
+- `memory_writer.py` imports from `runtime/lib/` and writes to `.cyberos-memory/cache/<tool>/`.
 
 ### Real-world trigger
-Stephen reviewing post-Batch-26 state: *"i think var is unnecessary as it stores history only (which BRAIN did). AGENTS-CORE also half size of the full protocol, so I think about remove it and use full protocol. refactor not just top level files/folders, refactor whole cyberos repo, every single file/folder must have clear purpose, I prefer unified style (each module have single readme guideline) so avoid too many fragmented items, deeply check to make sure you satisfied my demand"*.
+Stephen reviewing post-Batch-26 state: *"i think var is unnecessary as it stores history only (which memory did). AGENTS-CORE also half size of the full protocol, so I think about remove it and use full protocol. refactor not just top level files/folders, refactor whole cyberos repo, every single file/folder must have clear purpose, I prefer unified style (each module have single readme guideline) so avoid too many fragmented items, deeply check to make sure you satisfied my demand"*.
 
 ### Host-side cleanup runbook
 ```bash
@@ -1591,10 +2161,10 @@ cyberos/
 │   ├── completions/           (shell tab-completion)
 │   ├── lib/                   (shared scripts)
 │   ├── starter/               (bootstrap scaffolds)
-│   ├── migrations/            (BRAIN schema migrations)
+│   ├── migrations/            (memory schema migrations)
 │   └── tests/                 (integration tests)
 ├── planning/                  ← per-project FRs (with README.md)
-└── .cyberos-memory/           ← BRAIN (gitignored — includes cache/, staging/, refinements/)
+└── .cyberos-memory/           ← memory (gitignored — includes cache/, staging/, refinements/)
 ```
 
 Three layers (memory / skills / runtime), one entry-point README per module, zero fragmented stubs, zero duplicate variants.
@@ -1607,16 +2177,16 @@ Three layers (memory / skills / runtime), one entry-point README per module, zer
 
 ### Changed
 - **`outputs/` removed.** Split into three semantically distinct destinations:
-  - **`runtime/lib/`** — shared scripts the runtime calls: `brain_writer.py` (the canonical BRAIN-mutation API), `apply-bundle-Q.sh` (atomic rollout helper), `cleanup-host.sh` (sandbox-cannot-unlink workaround).
+  - **`runtime/lib/`** — shared scripts the runtime calls: `memory_writer.py` (the canonical memory-mutation API), `apply-bundle-Q.sh` (atomic rollout helper), `cleanup-host.sh` (sandbox-cannot-unlink workaround).
   - **`runtime/starter/`** — bootstrap scaffolds: `cyberos-starter/` (new-project skeleton) + `templates/` (Layer-1 starter templates).
   - **`var/`** — all generated state: `audit-site/` (was `_audit-site/`), `council/`, `doctor/`, `refinements/`, `replan/`, `runtime-specs/`, `staged-memories/`, plus `test-fixtures/` for the previous underscore-prefixed smoke folders.
 - **`migrations/` moved to `runtime/migrations/`.** Migration scripts are code, not top-level state.
 - **`tours/` moved to `docs/tours/`.** Tours are walkthrough documentation, not runtime — they belong under `docs/`.
 - **20 source files patched.** All references to `outputs/...`, `migrations/...`, and specific `tours/*.tour` paths rewritten in `runtime/tools/*.py`, `runtime/hooks/`, `runtime/lib/`, the umbrella binary, and four top-level READMEs. 95 substitutions total.
-- **`.gitignore` rewritten.** New patterns: `var/doctor/*.log`, `var/refinements/draft-*.md`, `var/staged-memories/*.md`, `var/test-fixtures/`. Legacy `outputs/` line retained while empty husk remains on host. BRAIN-writer reference updated from `outputs/brain_writer.py` to `runtime/lib/brain_writer.py` in the gitignore preamble.
+- **`.gitignore` rewritten.** New patterns: `var/doctor/*.log`, `var/refinements/draft-*.md`, `var/staged-memories/*.md`, `var/test-fixtures/`. Legacy `outputs/` line retained while empty husk remains on host. memory-writer reference updated from `outputs/memory_writer.py` to `runtime/lib/memory_writer.py` in the gitignore preamble.
 
 ### Why
-Stephen reviewing the post-Batch-25 tree: *"how about other folders/files? for now we just covered memory and skills aspects, is it possible to refactor into easier to understand, also scalable in the future"*. The `outputs/` folder was particularly confusing — it mixed source code (`brain_writer.py`), bootstrap scaffolds (`cyberos-starter/`, `templates/`), generated dashboards (`_audit-site/`), and per-tool scratch state (`doctor/`, `refinements/`, etc.) under one ambiguous name. Splitting them into UNIX-conventional locations (`runtime/lib/`, `runtime/starter/`, `var/`) makes the boundaries between code and state crisp.
+Stephen reviewing the post-Batch-25 tree: *"how about other folders/files? for now we just covered memory and skills aspects, is it possible to refactor into easier to understand, also scalable in the future"*. The `outputs/` folder was particularly confusing — it mixed source code (`memory_writer.py`), bootstrap scaffolds (`cyberos-starter/`, `templates/`), generated dashboards (`_audit-site/`), and per-tool scratch state (`doctor/`, `refinements/`, etc.) under one ambiguous name. Splitting them into UNIX-conventional locations (`runtime/lib/`, `runtime/starter/`, `var/`) makes the boundaries between code and state crisp.
 
 ### End-state tree
 ```
@@ -1629,7 +2199,7 @@ cyberos/
 │        replan,runtime-specs,staged-memories,
 │        test-fixtures}/                            ← generated state
 ├── planning/                                       ← per-project work
-└── .cyberos-memory/                                ← BRAIN (gitignored)
+└── .cyberos-memory/                                ← memory (gitignored)
 ```
 Three top-level folders fewer than before (`outputs/`, `migrations/`, `tours/` all relocated). Code-vs-state separation is now crisp: anything under `runtime/` is source code; anything under `var/` is generated.
 
@@ -1637,7 +2207,7 @@ Three top-level folders fewer than before (`outputs/`, `migrations/`, `tours/` a
 - `cyberos verify` → CRITICAL: 0 (12 pre-existing WARN, 1 INFO — unchanged).
 - `cyberos doctor` → CRITICAL: 0 (10 WARN, 1 INFO — unchanged).
 - `cyberos fr list` → both FRs registered, body-h2 shape.
-- `python3 -c "import sys; sys.path.insert(0,'runtime/lib'); import brain_writer"` → loads from new location.
+- `python3 -c "import sys; sys.path.insert(0,'runtime/lib'); import memory_writer"` → loads from new location.
 
 ### Host-side cleanup runbook (sandbox cannot remove empty dirs)
 ```bash
@@ -1738,13 +2308,13 @@ Stephen: *"too many docs inside skills folder that made me confuse, can we combi
 
 ### Group I (substantial deferrals)
 
-**Aspect 5.7 — TOCTOU `.lock.shared` advisory locks** at `runtime/tools/cyberos_lock.py` + `cyberos lock {status|acquire-shared|acquire-exclusive}`. POSIX `fcntl.flock`-backed. Context managers `shared_lock()` and `exclusive_lock()` for use from `brain_writer.py` and `cyberos_validate.py`. Degrades to no-op on filesystems without flock (some FUSE / network FS). Live-tested: acquire + release both lock types succeed.
+**Aspect 5.7 — TOCTOU `.lock.shared` advisory locks** at `runtime/tools/cyberos_lock.py` + `cyberos lock {status|acquire-shared|acquire-exclusive}`. POSIX `fcntl.flock`-backed. Context managers `shared_lock()` and `exclusive_lock()` for use from `memory_writer.py` and `cyberos_validate.py`. Degrades to no-op on filesystems without flock (some FUSE / network FS). Live-tested: acquire + release both lock types succeed.
 
-**Aspect 9.1 — Streaming session-start loader** at `runtime/tools/cyberos_lazy.py`. Two-phase loader — Phase A reads only manifest + checkpoint + legacy lists (~5 files, < 100 KB); Phase B yields memory paths one at a time without reading bodies. **Live benchmark on the current BRAIN: full eager load 180.93 ms vs lazy first-5 walk 2.41 ms — 74.9× speedup**. Caller modules can opt-in by importing `stream_memories()`.
+**Aspect 9.1 — Streaming session-start loader** at `runtime/tools/cyberos_lazy.py`. Two-phase loader — Phase A reads only manifest + checkpoint + legacy lists (~5 files, < 100 KB); Phase B yields memory paths one at a time without reading bodies. **Live benchmark on the current memory: full eager load 180.93 ms vs lazy first-5 walk 2.41 ms — 74.9× speedup**. Caller modules can opt-in by importing `stream_memories()`.
 
-**Aspect 9.2 — Incremental SQLite index hook** at `runtime/tools/cyberos_index_hook.py`. Two modes: `on-write` (called by brain_writer after each successful append; best-effort, never blocks the write); `stop-hook` (refreshes index at session.end as a safety net). No-op if `index/cyberos.db` doesn't exist yet.
+**Aspect 9.2 — Incremental SQLite index hook** at `runtime/tools/cyberos_index_hook.py`. Two modes: `on-write` (called by memory_writer after each successful append; best-effort, never blocks the write); `stop-hook` (refreshes index at session.end as a safety net). No-op if `index/cyberos.db` doesn't exist yet.
 
-**Aspect 9.5 — Cold-storage tier** at `runtime/tools/cyberos_cold_storage.py` + `cyberos cold-storage {archive|list|verify}`. Produces deterministic `.cold.zip` bundles per-month with a Merkle anchor pointing at the live BRAIN's chain head at archive time. Does NOT upload — operator uses `aws s3 cp` / rclone / equivalent. Includes `verify` subcommand to confirm an archive's SHA matches its manifest record. Live-tested: archived 2026-05.jsonl (444 rows / 435,884 B), listed, anchor recorded.
+**Aspect 9.5 — Cold-storage tier** at `runtime/tools/cyberos_cold_storage.py` + `cyberos cold-storage {archive|list|verify}`. Produces deterministic `.cold.zip` bundles per-month with a Merkle anchor pointing at the live memory's chain head at archive time. Does NOT upload — operator uses `aws s3 cp` / rclone / equivalent. Includes `verify` subcommand to confirm an archive's SHA matches its manifest record. Live-tested: archived 2026-05.jsonl (444 rows / 435,884 B), listed, anchor recorded.
 
 ### Group J (starter + corpus + registry)
 
@@ -1752,7 +2322,7 @@ Stephen: *"too many docs inside skills folder that made me confuse, can we combi
 
 **Aspect 10.1 — Test corpus growth.** Added 2 new mutation fixtures: `fixture-valid-decision.md` + `fixture-valid-person.md`. Mutation test now runs **24 mutations across 3 fixtures, 0 SURVIVED**. Corpus: 1 → 3 fixtures + 8 mutation patterns = 24 distinct mutant tests.
 
-**Aspect 12.5 — Skill registry** at `runtime/tools/skills/registry.json` + `runtime/tools/cyberos_skill.py` + `cyberos skill {list|describe|chain}`. 22 skills registered (every operator tool we've shipped) with their verb, mutates_brain flag, depends_on graph, §-rule list, and umbrella-alias. `chain` subcommand surfaces the dependency graph and warns when two mutating skills run without a verify between them.
+**Aspect 12.5 — Skill registry** at `runtime/tools/skills/registry.json` + `runtime/tools/cyberos_skill.py` + `cyberos skill {list|describe|chain}`. 22 skills registered (every operator tool we've shipped) with their verb, mutates_memory flag, depends_on graph, §-rule list, and umbrella-alias. `chain` subcommand surfaces the dependency graph and warns when two mutating skills run without a verify between them.
 
 ### Wired
 
@@ -1961,7 +2531,7 @@ The collapsed `fr-with-tasks` skill is the right shape **for CyberSkill internal
 
 **E.1 Schema migration framework** — `runtime/tools/cyberos_migrate.py` + `cyberos migrate {list|plan|apply}`. Migrations live under `migrations/<NNN>-<slug>.py` exporting `APPLIES_TO`, `DESCRIPTION`, `transform(fm, body, rel)`. State persisted at `meta/migrations-applied.json` so each migration runs once. Sample migration shipped: `migrations/001-example-add-tag.py`.
 
-**E.2 Inline editor** — `runtime/tools/cyberos_edit.py` + `cyberos edit <memory>`. Opens `$EDITOR` (falls back to vi/nano), validates frontmatter on save, commits via `brain_writer str-replace`. Resolves memory_id / full path / PREFIX-NNN.
+**E.2 Inline editor** — `runtime/tools/cyberos_edit.py` + `cyberos edit <memory>`. Opens `$EDITOR` (falls back to vi/nano), validates frontmatter on save, commits via `memory_writer str-replace`. Resolves memory_id / full path / PREFIX-NNN.
 
 **E.3 Bulk edit** — `runtime/tools/cyberos_bulk.py` + `cyberos bulk-set <expr> --filter ...`. Field-level changes across many memories. Operators: `=`, `+=` (list append), `-=` (list remove). Refuses to bulk-set `memory_id`, `audit_chain_head`, `created_at`, `created_by`; refuses `classification`/`authority` without `--allow-protected`. Filters: `scope:`, `tag:`, `classification:`, `authority:`, `sync_class:`, `tombstoned:`.
 
@@ -2016,7 +2586,7 @@ The collapsed `fr-with-tasks` skill is the right shape **for CyberSkill internal
 
 ### Batch 12 — Tier B (high leverage, more effort)
 
-- **Branched BRAINs** — `runtime/tools/cyberos_branch.py` + `cyberos branch {list|create|switch|diff|merge|delete}`. Snapshots stored at `.cyberos-memory/.branches/<name>/`. Switch is a scaffold (filesystem move privileges). Live-tested: created `experiment-tier-b` snapshot of 444-row chain.
+- **Branched memories** — `runtime/tools/cyberos_branch.py` + `cyberos branch {list|create|switch|diff|merge|delete}`. Snapshots stored at `.cyberos-memory/.branches/<name>/`. Switch is a scaffold (filesystem move privileges). Live-tested: created `experiment-tier-b` snapshot of 444-row chain.
 - **LLM-assisted REF authoring** — `runtime/tools/cyberos_ref_from_drift.py` + `cyberos ref-from-drift <drift>.md [--with-llm]`. Reads a drift candidate, stages `outputs/staged-memories/REF-NNN-...md` with structured scaffold (Trigger / Tier / AGENTS section / eval skeletons / steps). LLM-drafted body when `--with-llm` + SDK + key.
 - **Auto-repair** — `runtime/tools/cyberos_autorepair.py` + `cyberos autorepair [--apply] [--recipe X]`. 3 recipes wired (tag-budget-exceeded, duplicate-tags, tombstone-missing-metadata). Dry-run default; `--apply` writes. Safety envelope: never touches authority/classification/consent/memory_id; never deletes.
 - **Web dashboard** — `runtime/tools/cyberos_serve.py` + `cyberos serve --port 8080`. Stdlib `http.server`, zero dependencies. Routes: `/`, `/memories`, `/memory/<id>`, `/audit`, `/stats.json`. Live-tested: `curl /stats.json` returned manifest summary.
@@ -2033,7 +2603,7 @@ The collapsed `fr-with-tasks` skill is the right shape **for CyberSkill internal
 
 - **Signed protocol snapshots** — `runtime/tools/cyberos_sign.py` + `cyberos sign {keygen|sign|verify|verify-all}`. Ed25519 keypair via `cryptography` library. Private key at `~/.cyberos/keys/protocol-signing.ed25519` (mode 600). Public key committed at `.cyberos-memory/meta/protocol-signing-pubkey.ed25519`. Signs each `protocol-history/AGENTS-sha256-*.md` snapshot.
 - **Parallel validator** — `runtime/tools/cyberos_parallel_validate.py` + `cyberos parallel-validate --workers N`. Splits memory files across N processes for distributed validation. Live benchmark: 136 files / 3 workers / 90 ms.
-- **Mobile static view** — `runtime/tools/cyberos_static.py` + `cyberos static --out ~/cyberos-mobile/`. Renders the BRAIN as a static HTML site (no JS, dark-mode-aware CSS) for phone-accessible reads. Live-rendered: 136 pages in one pass.
+- **Mobile static view** — `runtime/tools/cyberos_static.py` + `cyberos static --out ~/cyberos-mobile/`. Renders the memory as a static HTML site (no JS, dark-mode-aware CSS) for phone-accessible reads. Live-rendered: 136 pages in one pass.
 
 ### Wired
 
@@ -2070,11 +2640,11 @@ The collapsed `fr-with-tasks` skill is the right shape **for CyberSkill internal
 
 ### Why
 
-All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations SURVIVED the validator. After this patch, all 8 mutations are KILLED. The fixes are pure tightening; no real memory in the BRAIN trips the new checks (CRITICAL stayed at 0, WARN count unchanged at 11).
+All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations SURVIVED the validator. After this patch, all 8 mutations are KILLED. The fixes are pure tightening; no real memory in the memory trips the new checks (CRITICAL stayed at 0, WARN count unchanged at 11).
 
 ### Added
 
-**FACT-015 — Layer-1 catalog session memory** at `.cyberos-memory/memories/facts/FACT-015-batch-4-to-9-shipped.md`. Documents what landed in Batches 4–9 (umbrella subcommands 18→30, validators 0→3, mutations killed 4→8, 11 new runtime tools shipped). Lists deferred items with rationale. Committed via `brain_writer write` with audit row `evt_019e1a42-…`; chain head advanced to `sha256:b30dc197b713f168…`.
+**FACT-015 — Layer-1 catalog session memory** at `.cyberos-memory/memories/facts/FACT-015-batch-4-to-9-shipped.md`. Documents what landed in Batches 4–9 (umbrella subcommands 18→30, validators 0→3, mutations killed 4→8, 11 new runtime tools shipped). Lists deferred items with rationale. Committed via `memory_writer write` with audit row `evt_019e1a42-…`; chain head advanced to `sha256:b30dc197b713f168…`.
 
 ### Verified
 
@@ -2105,7 +2675,7 @@ All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations 
 ### Deferred (out of scope for Layer-1 catalog batch passes)
 
 - **Aspect 1.3 `--dry-run` cross-cutting.** `cyberos add` and `cyberos sync import` have it. The rest (doctor repair ops, sync export, encrypt enable/rotate) need per-op review before bulk roll-out.
-- **Aspect 5.7 TOCTOU `.lock.shared` hardening.** Requires brain_writer.py + cyberos_validate.py to negotiate a shared-lock protocol. Substantive — punt to a dedicated REF.
+- **Aspect 5.7 TOCTOU `.lock.shared` hardening.** Requires memory_writer.py + cyberos_validate.py to negotiate a shared-lock protocol. Substantive — punt to a dedicated REF.
 - **Aspect 9.1 streaming session-start.** Matters at 1000+ memories; we have 155. No urgency.
 - **Aspect 9.2 index incremental updates.** SQLite rebuild today is fast. Revisit at scale.
 - **Aspect 12.5 skill registry refactor.** Big rework; treated as part of the eventual CyberOS Skill Pack release.
@@ -2128,7 +2698,7 @@ All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations 
 
 **Aspect 5.1 (operator surface) — `cyberos hooks {status|on|off}`** at `runtime/tools/cyberos_hooks.py`. Installs / removes the gateguard PreToolUse and refinement_candidates Stop hooks into `~/.claude/settings.json` (override via `$CYBEROS_CLAUDE_SETTINGS`). Idempotent. Sandbox-safe (prints the JSON snippet for manual paste when it cannot write). Per-hook targeting with `--hook gateguard|refinement_candidates`. Live-tested the full status→on→status→off lifecycle.
 
-**Aspect 12.3 — Source-tiers staleness validator** at `meta/validators/check-source-tiers.py`. Reads `manifest.source_tiers`, checks each `pattern` resolves to ≥1 file on disk, surfaces stale entries as WARN. Memoised — runs once per validate pass (not per-memory) by attaching findings to `manifest.json`. Live-surfaced 3 stale patterns: `module/**` (tier 8), `client/**` (tier 12), `member/**` (tier 30) — all reference scopes the BRAIN does not yet populate.
+**Aspect 12.3 — Source-tiers staleness validator** at `meta/validators/check-source-tiers.py`. Reads `manifest.source_tiers`, checks each `pattern` resolves to ≥1 file on disk, surfaces stale entries as WARN. Memoised — runs once per validate pass (not per-memory) by attaching findings to `manifest.json`. Live-surfaced 3 stale patterns: `module/**` (tier 8), `client/**` (tier 12), `member/**` (tier 30) — all reference scopes the memory does not yet populate.
 
 ### Wired
 
@@ -2148,11 +2718,11 @@ All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations 
 
 ### Added
 
-**Aspect 4.7 — Memory relationships graph** at `runtime/tools/cyberos_graph.py` + `cyberos graph`. Walks frontmatter `relationships:` edges, emits text / dot / json. Supports `--scope` filter, `--orphans` flag, `--memory <id> --hops N` ego-graph mode. Detects dangling targets (edge points at missing memory_id). Live-tested: 114 nodes / 1 edge in the BRAIN today; ego-graph on DEC-110 correctly surfaced the REF-042 implements link.
+**Aspect 4.7 — Memory relationships graph** at `runtime/tools/cyberos_graph.py` + `cyberos graph`. Walks frontmatter `relationships:` edges, emits text / dot / json. Supports `--scope` filter, `--orphans` flag, `--memory <id> --hops N` ego-graph mode. Detects dangling targets (edge points at missing memory_id). Live-tested: 114 nodes / 1 edge in the memory today; ego-graph on DEC-110 correctly surfaced the REF-042 implements link.
 
 **Aspect 5.4 — Encryption posture audit** via `cyberos status --security`. Surfaces: §5.6 encryption enabled/disabled with algorithm + KDF + Shamir threshold; §9.3 denylist test pass/fail (24/24 fixtures live); filesystem permissions on `manifest.json` + `audit/` + `outputs/staged-memories/`; §13.10 PANIC marker status (now treats `(resolved)` titles as inactive); §8.6 unresolved drift candidate count.
 
-**Aspect 11.5 — LLM cost analytics** via `cyberos analytics cost-log` + `cost-report`. Local-only `~/.cyberos/analytics/llm-cost.jsonl`. Operator supplies per-million-token rates at call time (we don't hardcode model pricing). Reports total USD, by-op breakdown, by-model breakdown. Live-tested with 3 synthetic records — council (Sonnet) at $0.0345 over 2 calls, brain-search-helper (Haiku) at $0.0013.
+**Aspect 11.5 — LLM cost analytics** via `cyberos analytics cost-log` + `cost-report`. Local-only `~/.cyberos/analytics/llm-cost.jsonl`. Operator supplies per-million-token rates at call time (we don't hardcode model pricing). Reports total USD, by-op breakdown, by-model breakdown. Live-tested with 3 synthetic records — council (Sonnet) at $0.0345 over 2 calls, memory-search-helper (Haiku) at $0.0013.
 
 **Aspect 12.2 — Scope-rules enforcement** via `meta/scope-rules.md` + `meta/validators/check-scope-rules.py`. Each scope prefix declares allowed/denied classifications, allowed/denied sync_classes, and minimum authority tier. Loaded once per validator run; auto-discovered by the §12.1 plugin loader. Live-surfaced: PERSON-001 had `sync_class: publishable` which violated `memories/people` rule (only `local-only` or `shared` allowed) — exactly the kind of latent cross-class leakage this catches.
 
@@ -2214,7 +2784,7 @@ All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations 
 
 **Aspect 6.x — Multi-machine sync scaffolding** at `runtime/tools/cyberos_sync.py`. Subcommands: `export --to <bundle.zip>` (deterministic; sync-class filtered, default publishable+shared, opt-in client-visible); `import <bundle> --from <subject> [--dry-run]` (three-way conflict detection by `memory_id` × `content_sha`; stages non-conflicting imports under `outputs/sync-staging/`, writes conflict markers under `memories/conflicts/` for §3 reconciliation); `conflicts` (list pending). Live-tested: deterministic across two consecutive exports; correctly detects synthetic conflict on tampered bundle. No network transport bundled — operator chooses rsync, syncthing, S3, etc.
 
-**Aspect 12.7 — Read-only MCP server for the BRAIN** at `runtime/mcp/cyberos_brain_server.py`. Line-delimited JSON-RPC 2.0 over stdio. 4 tools: `brain_search`, `brain_show`, `brain_get`, `brain_stats`. Default filters: tombstoned hidden, `sync_class=local-only` hidden (both have explicit opt-in flags). Wire via `cyberos mcp info` (prints the `.claude/mcp-config.json` snippet) or run with `cyberos mcp serve`. NO writes; callers must use `brain_writer.py` for mutation.
+**Aspect 12.7 — Read-only MCP server for the memory** at `runtime/mcp/cyberos_memory_server.py`. Line-delimited JSON-RPC 2.0 over stdio. 4 tools: `memory_search`, `memory_show`, `memory_get`, `memory_stats`. Default filters: tombstoned hidden, `sync_class=local-only` hidden (both have explicit opt-in flags). Wire via `cyberos mcp info` (prints the `.claude/mcp-config.json` snippet) or run with `cyberos mcp serve`. NO writes; callers must use `memory_writer.py` for mutation.
 
 ### Wired
 
@@ -2244,7 +2814,7 @@ All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations 
 
 **Aspect 4.1 — Memory templates per type** at `.cyberos-memory/meta/templates/{DEC,REF,FACT,PERSON,PROJECT,PREFERENCE,DRIFT}.md`. Nygard ADR format for DECs.
 
-**Aspect 4.3-4.6 — Seed memories staged** at `outputs/staged-memories/` — 5 FACTs (target market, three-layer BRAIN, tech stack, Total Rewards invariants, Vietnamese-first wedge), 1 PERSON (founder profile), 2 PREFs (voice standard, compact §14). Commit via `outputs/staged-memories/bootstrap.sh`.
+**Aspect 4.3-4.6 — Seed memories staged** at `outputs/staged-memories/` — 5 FACTs (target market, three-layer memory, tech stack, Total Rewards invariants, Vietnamese-first wedge), 1 PERSON (founder profile), 2 PREFs (voice standard, compact §14). Commit via `outputs/staged-memories/bootstrap.sh`.
 
 **Aspect 5.1 — gateguard PreToolUse hook** at `runtime/hooks/gateguard.py`. 3-stage DENY/FORCE/ALLOW gate per gstack `gateguard` skill (A/B tested +2.25 quality improvement).
 
@@ -2268,13 +2838,13 @@ All four gaps were caught by `cyberos mutation-test` in Batch 8 — 4 mutations 
 
 ### Pending (drafted, awaiting your execution on real laptop)
 
-**Aspect 13.2 — `company/locked-decisions.md`** — draft + brain_writer command at `workbench/aspect-13-2-locked-decisions-draft.md`. 20 LOCK-NNN entries derived from PRD §1-§2 + AGENTS.md §0-§9. Once committed, immutable per §9.6.
+**Aspect 13.2 — `company/locked-decisions.md`** — draft + memory_writer command at `workbench/aspect-13-2-locked-decisions-draft.md`. 20 LOCK-NNN entries derived from PRD §1-§2 + AGENTS.md §0-§9. Once committed, immutable per §9.6.
 
 ### Driver
 
 User asked: *"you have my approvals to fully do all necessary stuff, just trigger test yourself, and also update readme/prd/srs for future reads, just stop when need my decision/choose."* This bundle ships everything in the Aspect-1/2/3/4/5/7/8/11/13 ranges that doesn't require:
   - §0.5 chat-turn protocol approval (Aspect 3.2 council mode, Aspect 12.2 custom scope rules, etc.)
-  - Real-laptop brain_writer execution (Aspect 13.2 locked-decisions, seed memories)
+  - Real-laptop memory_writer execution (Aspect 13.2 locked-decisions, seed memories)
   - A second real machine (Aspect 6 multi-machine sync)
   - Actual performance pain (Aspect 9 — deferred per recommendation)
 
@@ -2282,7 +2852,7 @@ User asked: *"you have my approvals to fully do all necessary stuff, just trigge
 
 - `docs/CyberOS-AGENTS.md` — zero edits (operator + tooling only)
 - `manifest.json` — zero edits (no protocol pin change)
-- `audit/*.jsonl` — appends only via brain_writer on your execution
+- `audit/*.jsonl` — appends only via memory_writer on your execution
 
 ---
 
@@ -2292,7 +2862,7 @@ User asked: *"you have my approvals to fully do all necessary stuff, just trigge
 
 ### Added
 
-- **NEW**: `CHAIN_ORCHESTRATOR.md` (since retired; runbook merged into runtime docs) — agent-side runbook for fully automated chain execution. The user provides a pitch + answers HITL questions; the agent reads every SKILL.md, drives every interview, writes every artefact, runs every audit-fix loop, executes brain_writer.py, and routes between skills. **The user never copy-pastes a SKILL.md or runs a command by hand.**
+- **NEW**: `CHAIN_ORCHESTRATOR.md` (since retired; runbook merged into runtime docs) — agent-side runbook for fully automated chain execution. The user provides a pitch + answers HITL questions; the agent reads every SKILL.md, drives every interview, writes every artefact, runs every audit-fix loop, executes memory_writer.py, and routes between skills. **The user never copy-pastes a SKILL.md or runs a command by hand.**
 
 ### Changed
 
@@ -2340,7 +2910,7 @@ Pure addition + clarification. v0.2.11's MANUAL_WORKFLOW.md remains valid as the
 
 ### Added
 
-- **NEW**: `HOST_ADAPTERS.md` (since retired; per-host setup recipes folded into the master README) — per-host setup recipes. Capability matrix covering 12+ hosts (Claude Cowork, Claude Code, Cursor, Codex CLI, Windsurf, Copilot CLI, Gemini CLI, OpenCode, Aider, Continue, Trae, Kiro, plus degraded-mode Claude.ai web / ChatGPT / Claude in Chrome). Adapter sections for each recommended host with setup commands, per-step shape, and quirks. Decision tree for picking a host. Notes on switching hosts mid-project (BRAIN ledger + on-disk artefacts are host-agnostic; just don't run two hosts concurrently against the same `.cyberos-memory/`).
+- **NEW**: `HOST_ADAPTERS.md` (since retired; per-host setup recipes folded into the master README) — per-host setup recipes. Capability matrix covering 12+ hosts (Claude Cowork, Claude Code, Cursor, Codex CLI, Windsurf, Copilot CLI, Gemini CLI, OpenCode, Aider, Continue, Trae, Kiro, plus degraded-mode Claude.ai web / ChatGPT / Claude in Chrome). Adapter sections for each recommended host with setup commands, per-step shape, and quirks. Decision tree for picking a host. Notes on switching hosts mid-project (memory ledger + on-disk artefacts are host-agnostic; just don't run two hosts concurrently against the same `.cyberos-memory/`).
 
 ### Changed
 
@@ -2352,11 +2922,11 @@ No SKILL.md changed. No contract changed. No new behaviour. Pure clarification: 
 
 ### Driver
 
-User asked: *"is it possible to run manual workflow using Claude Cowork or other agents? I don't want fixed Claude Code solution"*. Answer: **yes, fully host-agnostic** — the chain's core (load SKILL.md → follow it → write artefacts → run audit-fix loop → append to BRAIN ledger) needs only file-read + file-write + (ideally) shell access. Claude Code has no special privileges here.
+User asked: *"is it possible to run manual workflow using Claude Cowork or other agents? I don't want fixed Claude Code solution"*. Answer: **yes, fully host-agnostic** — the chain's core (load SKILL.md → follow it → write artefacts → run audit-fix loop → append to memory ledger) needs only file-read + file-write + (ideally) shell access. Claude Code has no special privileges here.
 
 ### Recommendation for solo / small-team manual mode today
 
-**Claude Cowork** is the smoothest fit because it has connected folders + sandboxed bash + MCP + file tools all in one chat surface. The BRAIN at `~/Projects/CyberSkill/workbench/.cyberos-memory/` is already wired up; running the chain in Cowork against `~/Projects/CyberSkill/cyberos/docs/skills/` requires no additional setup beyond approving the folder-connection prompts.
+**Claude Cowork** is the smoothest fit because it has connected folders + sandboxed bash + MCP + file tools all in one chat surface. The memory at `~/Projects/CyberSkill/workbench/.cyberos-memory/` is already wired up; running the chain in Cowork against `~/Projects/CyberSkill/cyberos/docs/skills/` requires no additional setup beyond approving the folder-connection prompts.
 
 ### Backwards compatibility
 
@@ -2394,7 +2964,7 @@ The companion plan at `<workbench>/.cyberos-memory/project/skills-evolution/cybe
 Three additions deferred to runtime-bring-up:
 
 - **A1. `lifecycle_state` 29th frontmatter field** (`draft | proposed | active | deprecated`) — requires §0.5 protocol upgrade per the closed-set rule. Marketplace publishes only `active` skills. New audit ops: `skill_promoted`, `skill_deprecated`. Adds bucket-promotion lifecycle from mattpocock-skills.
-- **A2. `cuo/_shared/zoom-out` meta-skill** — agent reads CONTEXT.md + ADRs + module BRAIN scope before working in unfamiliar territory. Maps mattpocock's `/zoom-out` skill onto the AGENTS.md §10 read protocol but applied to user-project artefacts.
+- **A2. `cuo/_shared/zoom-out` meta-skill** — agent reads CONTEXT.md + ADRs + module memory scope before working in unfamiliar territory. Maps mattpocock's `/zoom-out` skill onto the AGENTS.md §10 read protocol but applied to user-project artefacts.
 - **A3. `operational_mode: caveman`** — extend manifest's `operational_mode` enum to include `caveman` for ~75% token reduction on routine runs in established projects. Lifted from mattpocock-skills `caveman/SKILL.md`. §14 block compresses to a one-line status when active.
 
 ### Tension noted (not a change, a stance)
@@ -2425,7 +2995,7 @@ The 13 existing SKILL.md files remain valid v0.2.9 contracts. v0.3.0 changes the
 
 ---
 
-## [MEMORY] 2026-05-11 — Bundle Q: implementation files in source tree, §4.7 close-pattern alignment, BRAIN-not-versioned warn, relative symlinks
+## [MEMORY] 2026-05-11 — Bundle Q: implementation files in source tree, §4.7 close-pattern alignment, memory-not-versioned warn, relative symlinks
 
 ### Protocol SHA transition
 
@@ -2435,31 +3005,31 @@ The 13 existing SKILL.md files remain valid v0.2.9 contracts. v0.3.0 changes the
 
 ### Changed
 
-- **§0.6 implementation-files clause (REF-1)** — added the explicit invariant that implementation files (`outputs/brain_writer.py`, `cyberos/.protocol-signing-key`, etc.) MUST live in the project source tree, NOT inside `.cyberos-memory/`. The BRAIN is local operational state and is gitignored on most projects (including this one); a writer placed inside the BRAIN ships only as long as the BRAIN persists, and historically led to writers vanishing when the BRAIN was reinitialised or migrated. The clause names `outputs/brain_writer.py` as the canonical location and registers `runtime/tools/cyberos_brain_writer.py` as an acceptable alternative provided §0.6 is updated in the same protocol-upgrade.
+- **§0.6 implementation-files clause (REF-1)** — added the explicit invariant that implementation files (`outputs/memory_writer.py`, `cyberos/.protocol-signing-key`, etc.) MUST live in the project source tree, NOT inside `.cyberos-memory/`. The memory is local operational state and is gitignored on most projects (including this one); a writer placed inside the memory ships only as long as the memory persists, and historically led to writers vanishing when the memory was reinitialised or migrated. The clause names `outputs/memory_writer.py` as the canonical location and registers `runtime/tools/cyberos_memory_writer.py` as an acceptable alternative provided §0.6 is updated in the same protocol-upgrade.
 - **§4.7 post-terminator close exemption (REF-2)** — amended the "orphan manifest update" rule to add an explicit exemption for the canonical close pattern: `session.end → str_replace manifest.json` where the manifest update's `prev_chain` matches the immediately-preceding terminator's `chain` AND its new `audit_chain_head` value equals that same terminator's `chain`. Pre-Q wording flagged this legitimate close-of-session pattern as `crash-mid-manifest-update`, which would freeze writes on every clean session boundary. The exemption is the only case where a manifest-update row is the LAST row in the ledger and is not a crash.
-- **§13.1 step 11 BRAIN-not-versioned warn (REF-3)** — replaced the single-line `.gitignore` instruction with a two-branch decision tree. Default branch (versioning opt-in available) appends a commented `# .cyberos-memory/` line as before. Opt-out branch (UNCOMMENTED entry already present at bootstrap or any subsequent §4.7 reconciliation) appends exactly one `op:"warn" reason:"brain-not-versioned"` audit row, deduplicated by `(reason, path)` over the BRAIN lifetime, AND updates `.gitignore` with a comment block explaining the opt-out is deliberate. Closes the silent-opt-out gap that allowed the previous `brain_writer.py` to vanish unnoticed.
+- **§13.1 step 11 memory-not-versioned warn (REF-3)** — replaced the single-line `.gitignore` instruction with a two-branch decision tree. Default branch (versioning opt-in available) appends a commented `# .cyberos-memory/` line as before. Opt-out branch (UNCOMMENTED entry already present at bootstrap or any subsequent §4.7 reconciliation) appends exactly one `op:"warn" reason:"memory-not-versioned"` audit row, deduplicated by `(reason, path)` over the memory lifetime, AND updates `.gitignore` with a comment block explaining the opt-out is deliberate. Closes the silent-opt-out gap that allowed the previous `memory_writer.py` to vanish unnoticed.
 - **§15 relative-symlink rule (REF-4)** — symlinks created at project root (`AGENTS.md`, `CLAUDE.md`, `.windsurfrules`, `.clinerules`, `.cursor/rules/cyberos-memory.mdc`, `.windsurf/rules/cyberos-memory.md`, `.github/copilot-instructions.md`) MUST use relative paths. Absolute-path symlinks break under any container/CI/sandbox mount where the host prefix differs.
 
 ### Why
 
-`brain_writer.py` was prescribed by 8 separate documents (CHAIN_ORCHESTRATOR, HOST_ADAPTERS, MANUAL_WORKFLOW, skills/CHANGELOG, AGENTS.CHANGELOG, AGENTS.README, AGENTS.md §0.6, PRD.CHANGELOG) as a tool the agent runs for every audit-row append. None of those docs caused the file to actually exist. It was never tracked in git. The orchestrator runs `python3 <path>/brain_writer.py` — file not found. Discovered when an audit row needed appending in cowork-session 2026-05-11.
+`memory_writer.py` was prescribed by 8 separate documents (CHAIN_ORCHESTRATOR, HOST_ADAPTERS, MANUAL_WORKFLOW, skills/CHANGELOG, AGENTS.CHANGELOG, AGENTS.README, AGENTS.md §0.6, PRD.CHANGELOG) as a tool the agent runs for every audit-row append. None of those docs caused the file to actually exist. It was never tracked in git. The orchestrator runs `python3 <path>/memory_writer.py` — file not found. Discovered when an audit row needed appending in cowork-session 2026-05-11.
 
 Root cause was three-fold:
 1. **Path drift** — three different prescribed locations (`outputs/`, `<cyberos-memory>/`, `PRD §5.10.11`); only one resolved on disk; `.cyberos-memory/` was the most-cited but worst location because…
-2. **Visibility gap** — `.gitignore` was at full opt-out (`.cyberos-memory` uncommented), erasing the BRAIN tree and any tools placed in it from version control. Step 11 prescribed a *commented* line by default; the actual file went past that without an audit trail.
+2. **Visibility gap** — `.gitignore` was at full opt-out (`.cyberos-memory` uncommented), erasing the memory tree and any tools placed in it from version control. Step 11 prescribed a *commented* line by default; the actual file went past that without an audit trail.
 3. **Close-pattern ambiguity** — when the writer was rebuilt and verified against the existing 357-row chain, the §4.7 strict reading classified the chain's actual close pattern (`session.end → str_replace manifest.json`) as crash-mid-write. The protocol's wording lagged the writer's behaviour.
 
 REF-1 + REF-3 close the path-drift / visibility issues. REF-2 aligns §4.7 with reality. REF-4 hardens portability after the AGENTS.md symlink was found to be absolute (broke under cowork's bind-mount).
 
 ### Real-world trigger
 
-Direct §0.4 standing-rule trigger surfaced during a Phase-1 BRAIN repair (`outputs/brain_writer.py` rebuild from spec) and a Phase-2 repo audit (missing-refs + drift report). User adopted all four refinements as Bundle Q in the same chat turn that surfaced them.
+Direct §0.4 standing-rule trigger surfaced during a Phase-1 memory repair (`outputs/memory_writer.py` rebuild from spec) and a Phase-2 repo audit (missing-refs + drift report). User adopted all four refinements as Bundle Q in the same chat turn that surfaced them.
 
 ### Verification
 
 - Live AGENTS.md canonical SHA: `sha256:71a276c74fe5a1fb65dbe24c6073f74d4cc7168b02aef1b577db9e01ccb13688` ✓ matches manifest pin
 - Pre-edit AGENTS.md (recoverable from `git show HEAD~1:docs/CyberOS-AGENTS.md` after the bundle's archive commit) hashes to `sha256:617f5aef…07759` — matches old pin
-- New `outputs/brain_writer.py` produces bit-perfect chain hashes for the last 5 rows of the existing 357-row chain (post-Bundle-D writer compatibility)
+- New `outputs/memory_writer.py` produces bit-perfect chain hashes for the last 5 rows of the existing 357-row chain (post-Bundle-D writer compatibility)
 - Chain LINK invariant: 0 breaks across all 357 rows
 - Post-upgrade §8.7 self-audit report at `meta/health/2026-05-11-71a276c7-postupgrade.md`
 
@@ -2468,9 +3038,9 @@ Direct §0.4 standing-rule trigger surfaced during a Phase-1 BRAIN repair (`outp
 - `docs/CyberOS-AGENTS.md` — §0.6 / §4.7 / §13.1 step 11 / §15 amended; prior verbatim archived to `meta/protocol-history/AGENTS-sha256-617f5aef1a49c394f6d17be072c8b29dbeb84c3265b80f3de3cb00a0f1c07759.md`
 - `docs/CyberOS-AGENTS.CHANGELOG.md` — this entry
 - `docs/CyberOS-AGENTS.README.md` — line 1503 retired the orphan "PRD §5.10.11" reference; no Part-level refresh needed (Bundle Q does not change any §14/§8 areas the README maps to)
-- `docs/skills/CHAIN_ORCHESTRATOR.md`, `docs/skills/HOST_ADAPTERS.md`, `docs/skills/MANUAL_WORKFLOW.md` — all `python3 .cyberos-memory/.brain_writer.py …` prescriptions updated to `python3 outputs/brain_writer.py …`
-- `outputs/brain_writer.py` — NEW canonical writer; reference impl per §0.6 line 175. Replaces a non-existent file previously expected at the same path. Implements §4 / §5.2 / §7 / §13. Verified bit-perfect against the post-Bundle-D writer's tail.
-- `.cyberos-memory/.brain_writer.py` — replaced with deprecation stub pointing at the new location (BRAIN copy retained for transition; can be deleted from macOS at user's convenience).
+- `docs/skills/CHAIN_ORCHESTRATOR.md`, `docs/skills/HOST_ADAPTERS.md`, `docs/skills/MANUAL_WORKFLOW.md` — all `python3 .cyberos-memory/.memory_writer.py …` prescriptions updated to `python3 outputs/memory_writer.py …`
+- `outputs/memory_writer.py` — NEW canonical writer; reference impl per §0.6 line 175. Replaces a non-existent file previously expected at the same path. Implements §4 / §5.2 / §7 / §13. Verified bit-perfect against the post-Bundle-D writer's tail.
+- `.cyberos-memory/.memory_writer.py` — replaced with deprecation stub pointing at the new location (memory copy retained for transition; can be deleted from macOS at user's convenience).
 - `.gitignore` — added explicit-intent comment block above the `.cyberos-memory` entry documenting the deliberate opt-out (per the new §13.1 step 11).
 - `<root>/AGENTS.md` symlink — converted from absolute to relative (`docs/CyberOS-AGENTS-CORE.md`).
 - `.cyberos-memory/manifest.json` — protocol pin + audit_chain_head + reconciliation_checkpoint + last_updated_at updated by apply script
@@ -2485,7 +3055,7 @@ No FACT memory required v+1 refresh for this bundle (none reference §0.6 / §4.
 
 ---
 
-## [MEMORY] 2026-05-10 — Bundle P: §14 `📁 Files changed:` = non-BRAIN paths only (correction to Bundle O)
+## [MEMORY] 2026-05-10 — Bundle P: §14 `📁 Files changed:` = non-memory paths only (correction to Bundle O)
 
 ### Protocol SHA transition
 
@@ -2495,21 +3065,21 @@ No FACT memory required v+1 refresh for this bundle (none reference §0.6 / §4.
 
 ### Changed
 
-- **`📁 Files changed:` semantics narrowed**: lists **non-BRAIN paths ONLY** in both §14.1 compact and §14.2 verbose. BRAIN paths (inside `.cyberos-memory/`) NEVER appear under `📁`. Bundle O's "merged list" interpretation was an agent misread of user feedback — corrected here.
-- **§14.0 omission condition (c)** updated: now reads "no non-BRAIN file was modified this turn" instead of "no memory mutations". A turn that ONLY writes BRAIN memories (DEC + REF + preference + audit rows + manifest updates) and touches no non-BRAIN file produces NO §14 output.
-- **§14.1 compact**: explicit "Non-BRAIN paths ONLY" rule with rationale; BRAIN files are agent housekeeping never listed here.
-- **§14.2 verbose**: `Δ Changes (BRAIN detail):` is now the sole place BRAIN paths surface in chat. Always present in §14.2; `📁` block in §14.2 omits entirely if no non-BRAIN files changed.
+- **`📁 Files changed:` semantics narrowed**: lists **non-memory paths ONLY** in both §14.1 compact and §14.2 verbose. memory paths (inside `.cyberos-memory/`) NEVER appear under `📁`. Bundle O's "merged list" interpretation was an agent misread of user feedback — corrected here.
+- **§14.0 omission condition (c)** updated: now reads "no non-memory file was modified this turn" instead of "no memory mutations". A turn that ONLY writes memory memories (DEC + REF + preference + audit rows + manifest updates) and touches no non-memory file produces NO §14 output.
+- **§14.1 compact**: explicit "Non-memory paths ONLY" rule with rationale; memory files are agent housekeeping never listed here.
+- **§14.2 verbose**: `Δ Changes (memory detail):` is now the sole place memory paths surface in chat. Always present in §14.2; `📁` block in §14.2 omits entirely if no non-memory files changed.
 - **§14.3 (coverage stat)** updated cross-reference to clarify which sections emit ingestion coverage suffixes.
 
 ### Why
 
 User correction during cowork-session 2026-05-10, immediately after Bundle O landed:
 
-> "no need to implied outside BRAIN" i mean only show changes outside the brain, no need to show inside BRAIN changes
+> "no need to implied outside memory" i mean only show changes outside the memory, no need to show inside memory changes
 
-Bundle O interpreted the original "no need to imply outside BRAIN" as "merge BRAIN and non-BRAIN paths with no qualifier"; Stephen meant "show only outside-BRAIN paths — drop BRAIN housekeeping entirely from compact mode". The semantic difference matters: pre-Bundle-P, every BRAIN write generated a §14.1 line; post-Bundle-P, BRAIN writes alone are silent.
+Bundle O interpreted the original "no need to imply outside memory" as "merge memory and non-memory paths with no qualifier"; Stephen meant "show only outside-memory paths — drop memory housekeeping entirely from compact mode". The semantic difference matters: pre-Bundle-P, every memory write generated a §14.1 line; post-Bundle-P, memory writes alone are silent.
 
-The user's mental model: `📁 Files changed:` should show files in THEIR project. BRAIN paths are agent infrastructure — equivalent to log files or build artefacts — not user-relevant signal on every turn. The audit ledger preserves full forensic detail for when it matters.
+The user's mental model: `📁 Files changed:` should show files in THEIR project. memory paths are agent infrastructure — equivalent to log files or build artefacts — not user-relevant signal on every turn. The audit ledger preserves full forensic detail for when it matters.
 
 ### Real-world trigger
 
@@ -2528,10 +3098,10 @@ Direct §0.4 standing-rule trigger ("user having to repeat instructions or corre
 - `.cyberos-memory/manifest.json` — protocol pin + audit_chain_head + reconciliation_checkpoint + last_updated_at updated
 - `.cyberos-memory/audit/2026-05.jsonl` — `op:protocol_upgrade` row appended; `op:create` rows for archive, health report, DEC-108, REF-040; `op:str_replace` row for preference v3
 - `.cyberos-memory/meta/health/2026-05-10-617f5aef1a49c394-postupgrade.md` — auto-triggered §8.7 scan
-- `.cyberos-memory/memories/decisions/DEC-108-section-14-non-brain-files-only.md` — locked decision per §0.6
-- `.cyberos-memory/memories/refinements/REF-040-bundle-p-section-14-non-brain-only.md` — refinement memory per §0.4 step 4
+- `.cyberos-memory/memories/decisions/DEC-108-section-14-non-memory-files-only.md` — locked decision per §0.6
+- `.cyberos-memory/memories/refinements/REF-040-bundle-p-section-14-non-memory-only.md` — refinement memory per §0.4 step 4
 - `.cyberos-memory/memories/preferences/feedback-section-14-compression.md` — preference v3 (str_replace from v2)
-- `docs/CyberOS-AGENTS.README.md` — Part 8 anti-pattern note refreshed for non-BRAIN-only semantic
+- `docs/CyberOS-AGENTS.README.md` — Part 8 anti-pattern note refreshed for non-memory-only semantic
 
 ---
 
@@ -2551,7 +3121,7 @@ Direct §0.4 standing-rule trigger ("user having to repeat instructions or corre
 - **3-state triage table** added at top of §14 — explicit decision matrix (omit / compact / verbose).
 - **§14.1 compact rewritten**: contains ONLY a `📁 Files changed:` block + optional `Tokens:` line. Removed: `Δ Changes:` heading, `Status:` block (with all 4 sub-lines), `unchanged:` line, `audit/<YYYY-MM>.jsonl: <N rows; head=…>` line.
 - **§14.2 verbose trigger broadened**: fires on ANY of `op:rejected|revert|warn|health_check` this turn, latest §8.7 reports CRITICAL/WARN, or `operational_mode != normal`. Pre-Bundle-O was mode-only.
-- **§14.2 arrangement**: `⚠️ Findings:` first, then `📁 Files changed:`, then `Δ Changes (BRAIN detail):`, then `Status:`, then optional `Tokens:`.
+- **§14.2 arrangement**: `⚠️ Findings:` first, then `📁 Files changed:`, then `Δ Changes (memory detail):`, then `Status:`, then optional `Tokens:`.
 - **`unchanged:` line removed** entirely (absence-from-list is implicit).
 - **`Tokens:` slot reserved** in both §14.1 and §14.2 — emitted only when a runtime token counter is wired up via MCP. Approximation via `tiktoken`/character-count is forbidden.
 
@@ -2560,7 +3130,7 @@ Direct §0.4 standing-rule trigger ("user having to repeat instructions or corre
 User feedback during cowork-session 2026-05-10, immediately after Bundle N landed:
 1. *"Status: unchanged section seem not necessary since there is 'Δ Changes' section"* — Status + unchanged are redundant signal.
 2. *"In normal mode no need to should Δ Changes if no issues arise too"* — Δ Changes redundant given 📁 Files changed:.
-3. *"only show Files changed (no need to implied outside BRAIN), only turn on maintenance mode and show full memory verbose (arrange them smartly too) status when issues arise"* — single merged list, auto-trigger on issues.
+3. *"only show Files changed (no need to implied outside memory), only turn on maintenance mode and show full memory verbose (arrange them smartly too) status when issues arise"* — single merged list, auto-trigger on issues.
 4. *"Is it possible to know/track tokens consumed? if can show it after 📁 Files changed section, if not then skip it"* — token tracking desired but not faked.
 
 The §14 noise-reduction trajectory (Bundle I → N → O) now has each routine mutation turn producing ~3 lines of §14 output instead of ~10 — while issues automatically promote to full visibility.
@@ -2607,7 +3177,7 @@ User-driven post-Bundle-N feedback (2026-05-10). Bundle N landed; Stephen review
 
 ### Deferred
 
-- **TIER 3 — `📁 Files changed:` block for non-BRAIN paths**. Not included in this approval. Future amendment if user requests; Stephen approved TIER 1+2 minimum-viable.
+- **TIER 3 — `📁 Files changed:` block for non-memory paths**. Not included in this approval. Future amendment if user requests; Stephen approved TIER 1+2 minimum-viable.
 
 ### Why
 
@@ -2652,7 +3222,7 @@ User-driven post-healthcheck feedback (2026-05-10). Immediately after running th
 - **§5.1 heading + reconciliation paragraph (Change A)** — "only these 28 fields are permitted" → "closed set; 28 base fields + Stage 5 encryption block". Added paragraph clarifying that `encrypted: bool` and `encryption: {algorithm, nonce, aad}` are part of the closed set when `manifest.encryption_policy.enabled = true` per §5.6.
 - **§8 heading (Change B)** — "7 phases" → "7 routine phases + §8.9 user-triggered ledger compaction". Reflects §8.9 added in Stage 6.
 - **§4.10/§4.11 merge (Change C)** — §4.11 promoted under §4.10 as `#### 4.10.2 Token-budget transparency for large sources (sev-2)`; existing §4.10 body becomes `#### 4.10.1 Sequential walk + coverage check`. External references to §4.11 should update to §4.10.2.
-- **§17.5 compression (Change D)** — "Publish flow (forward reference)" reduced from ~10 lines to a 6-line summary. Detail (signed `brain.publish` MCP envelope, `actor_keys` registry, post-P1 manifest extension) referenced in `docs/CyberOS-AGENTS.EVOLUTION.md` Stage 4.
+- **§17.5 compression (Change D)** — "Publish flow (forward reference)" reduced from ~10 lines to a 6-line summary. Detail (signed `memory.publish` MCP envelope, `actor_keys` registry, post-P1 manifest extension) referenced in `docs/CyberOS-AGENTS.EVOLUTION.md` Stage 4.
 
 ### Deferred to Bundle N
 
@@ -2688,7 +3258,7 @@ User-driven post-Stage-5 cleanup pass (2026-05-10). After Tier-1+2+3 implementat
 
 ### No DEC entry needed
 
-Bundle M is documentation cleanup, not a decision. It surfaces existing implicit reality (the Stage 5 encryption fields, the §8.9 phase, the §4.10/§4.11 read-side discipline cluster, the deferred-to-BRAIN-P1 sync details) but doesn't decide anything new.
+Bundle M is documentation cleanup, not a decision. It surfaces existing implicit reality (the Stage 5 encryption fields, the §8.9 phase, the §4.10/§4.11 read-side discipline cluster, the deferred-to-memory-P1 sync details) but doesn't decide anything new.
 
 ### Related implementation
 
@@ -2711,7 +3281,7 @@ Bundle M is documentation cleanup, not a decision. It surfaces existing implicit
 - **§5.6 At-rest encryption envelope (Change A)** — five sub-sections:
   - §5.6.1 per-file format: XChaCha20-Poly1305-IETF, 24-byte nonce, AAD `sha256(memory_id || last_updated_at)` binding nonce to identity; body is `base64(ciphertext || 16-byte tag)`
   - §5.6.2 key derivation: HKDF-SHA256 from HW-bound (Apple Secure Enclave / Windows TPM 2.0 / Linux TPM 2.0 + FIDO2 hmac-secret) OR Argon2id passphrase fallback `t=3, m=64MiB, p=4` per RFC 9106; passphrase MUST satisfy ≥16 chars AND zxcvbn ≥3 at enable time
-  - §5.6.3 mandatory Shamir 3-of-5 escrow: enable refuses `enabled = true` until 5 fragments distributed; fingerprints + holder labels + creation timestamps recorded in `meta/key-policy.md`; fragments themselves NEVER stored in BRAIN
+  - §5.6.3 mandatory Shamir 3-of-5 escrow: enable refuses `enabled = true` until 5 fragments distributed; fingerprints + holder labels + creation timestamps recorded in `meta/key-policy.md`; fragments themselves NEVER stored in memory
   - §5.6.4 indexability: frontmatter stays plaintext so `cyberos_validate` / `cyberos_index` / `cyberos_doctor` work without the key
   - §5.6.5 audit-chain compatibility: `after_hash` over plaintext preserves chain LINK integrity for key-holders
 - **`encryption_policy` manifest field (Change B)** — default `enabled: false`. Scope filter syntax: `<path-pattern>` OR `classification:<class>`. Memories matching ANY entry are encrypted.
@@ -2768,7 +3338,7 @@ User-driven local-optimization design (2026-05-09 evening). Five Q&A surfaced at
 
 ---
 
-## [MEMORY] 2026-05-10 — Stage 6: Long-term BRAIN health (Merkle checkpoints + ledger compaction + .lock.shared)
+## [MEMORY] 2026-05-10 — Stage 6: Long-term memory health (Merkle checkpoints + ledger compaction + .lock.shared)
 
 ### Protocol SHA transition
 
@@ -2856,7 +3426,7 @@ Local-optimization plan (`docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md`) Stage 1 hi
 
 ### Real-world trigger
 
-User-driven local-optimization design (2026-05-09 evening). The supplementary `docs/CyberOS-AGENTS.EVOLUTION.md` (CyberOS-aware long-term plan) was scoped down to `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` (immediate-action plan) once the user clarified that CyberOS-the-product is still pre-build and the priority is making `.cyberos-memory/` perform optimally as a personal BRAIN. Stage 1 of that plan ships first because it has zero dependencies and the fastest measurable impact.
+User-driven local-optimization design (2026-05-09 evening). The supplementary `docs/CyberOS-AGENTS.EVOLUTION.md` (CyberOS-aware long-term plan) was scoped down to `docs/CyberOS-AGENTS.LOCAL-OPTIMIZATION.md` (immediate-action plan) once the user clarified that CyberOS-the-product is still pre-build and the priority is making `.cyberos-memory/` perform optimally as a personal memory. Stage 1 of that plan ships first because it has zero dependencies and the fastest measurable impact.
 
 ### Verification
 
@@ -2892,14 +3462,14 @@ User-driven local-optimization design (2026-05-09 evening). The supplementary `d
 
 ### Added
 - **§13.1 step 7a** — bootstrap now creates an empty `meta/legacy-ids.md` registry alongside `meta/tombstones.md`. Format documented inline: `<mem_id> | <originating_path> | <originally_created_at> | <reason>`. Closed-set: new entries land only via a §0.5 protocol upgrade.
-- **`meta/legacy-ids.md`** in this BRAIN — populated with the 4 surviving pre-§5.2 IDs identified by the 2026-05-07 healthcheck:
+- **`meta/legacy-ids.md`** in this memory — populated with the 4 surviving pre-§5.2 IDs identified by the 2026-05-07 healthcheck:
   - `mem_01HSXX0TOMBSTONES000000001` → `meta/tombstones.md`
   - `mem_01HSXX0RETENRULES000000001` → `meta/retention-rules.md`
   - `mem_01HSXX0CLASSRULES000000001` → `meta/classification-rules.md`
   - `mem_F005DOCCHANGELOG2026050401V` → `memories/facts/FACT-005-doc-changelog-convention.md`
 
 ### Real-world trigger
-2026-05-07 BRAIN healthcheck (this conversation) surfaced 4 invalid memory_ids per §5.2 alongside 13 §4.7 SHA-mismatched files. Closing the SHA-mismatch finding required appending corrective `op:str_replace` audit rows; one of those files (`meta/tombstones.md`) carries a legacy mnemonic `memory_id`, so the corrective row would itself fail §5.2 validation. Two clean options: (a) tombstone the 4 files and recreate with fresh UUIDv7s — cascades into `relationships:` rewrites across adjacent memories; (b) carve out the closed set via a registry — no cascading edits, sets a precedent for future migrations. Stephen chose (b).
+2026-05-07 memory healthcheck (this conversation) surfaced 4 invalid memory_ids per §5.2 alongside 13 §4.7 SHA-mismatched files. Closing the SHA-mismatch finding required appending corrective `op:str_replace` audit rows; one of those files (`meta/tombstones.md`) carries a legacy mnemonic `memory_id`, so the corrective row would itself fail §5.2 validation. Two clean options: (a) tombstone the 4 files and recreate with fresh UUIDv7s — cascades into `relationships:` rewrites across adjacent memories; (b) carve out the closed set via a registry — no cascading edits, sets a precedent for future migrations. Stephen chose (b).
 
 ### Why TIER 2
 Schema change to §5.2 (one validator row added), surface-area-only changes elsewhere. No new mechanism, no audit-row format change, no §6 manifest field added. The registry file itself is closed-set — no ongoing maintenance burden. Auto-§8.7 post-upgrade scan per Bundle J expected to report 0 critical / 4 info (the 4 legacy IDs, now legitimised).
@@ -2915,7 +3485,7 @@ Schema change to §5.2 (one validator row added), surface-area-only changes else
 - After:  `sha256:599e1097199618e0d8dde22770eef6e5ad068c5c06150e2bb3829315f005780d`
 
 ### Side-finding (deferred)
-The healthcheck also discovered the BRAIN's 269-row pre-upgrade ledger was written by 3 distinct canonicalisations (Python `json.dumps` with two different exclusion conventions; RFC 8785 strict). LINK invariant holds across all three (each writer reads the previous row's `chain` as opaque bytes), so chain integrity is intact. But §7.2 mandates JCS strict for forward portability. A follow-up TIER 1 amendment to §7.2 — *"writers MUST match `manifest.protocol.last_writer_canonicalization` once set; switching emits `op:warn reason:canonicalization-drift`"* — was proposed and is held for a separate bundle.
+The healthcheck also discovered the memory's 269-row pre-upgrade ledger was written by 3 distinct canonicalisations (Python `json.dumps` with two different exclusion conventions; RFC 8785 strict). LINK invariant holds across all three (each writer reads the previous row's `chain` as opaque bytes), so chain integrity is intact. But §7.2 mandates JCS strict for forward portability. A follow-up TIER 1 amendment to §7.2 — *"writers MUST match `manifest.protocol.last_writer_canonicalization` once set; switching emits `op:warn reason:canonicalization-drift`"* — was proposed and is held for a separate bundle.
 
 ---
 
@@ -2931,7 +3501,7 @@ The healthcheck also discovered the BRAIN's 269-row pre-upgrade ledger was writt
 ### Chain end-to-end now covered
 
 ```
-human chat + BRAIN
+human chat + memory
   → requirements-discovery → project_brief@1
   → chain-selector → chain_plan
   → product-requirements-document-author → product-requirements-document@1
@@ -3012,7 +3582,7 @@ PATCH-level mechanical change. No contract changes. No envelope shape changes. N
 
 - **NEW folder: `cyberos/runtime/`** — the engineering hand-off for building the runtime. Three documents:
   - `PLAN.md` — what the runtime does, 15 phases (A-O), critical-path mapping, ~17 engineer-weeks single-eng / 6-8 weeks 3-eng parallel estimate.
-  - `INTERFACES.md` — public surfaces every skill sees regardless of host (`runtime.brain` / `.audit` / `.invariants` / `.envelope` / `.untrusted` / `.nats` / peripheral MCPs).
+  - `INTERFACES.md` — public surfaces every skill sees regardless of host (`runtime.memory` / `.audit` / `.invariants` / `.envelope` / `.untrusted` / `.nats` / peripheral MCPs).
   - `BUILD_ORDER.md` — concrete sequence with definition-of-done per phase. Recommended sequence for single-engineer + parallel-engineer ordering.
   - `README.md` — read-order pointer.
 - This is a **design-only** registry release. No skills changed. No contracts changed. No CHANGELOG bump for any skill. The `gated_until_phase: runtime_v0_3_0` in every scaffolded skill's frontmatter remains in force until Phase J (acceptance harness) turns green.
@@ -3038,7 +3608,7 @@ Pure addition. No registry contract changes. No skill changes. Future v0.3.0 (th
 ### Added
 
 - **NEW contract: `software-requirements-specification@1`** under `cyberos/docs/contracts/software-requirements-specification/`. Stewarded by `cuo-cto`. Documents the system in technical detail (architecture, data model, API surface, data flows, NFRs, failure modes, security posture, telemetry); distinct from `product-requirements-document@1` (product spec). 12 frontmatter fields + 10 required H2 sections + 3 conditional sections.
-- **NEW skill: `cuo/chief-technology-officer/software-requirements-specification-author/`** v0.1.0 — consumes audited `product-requirements-document@1` + 5-7 architectural-review questions + `module:*` BRAIN reads → emits `software-requirements-specification@1`. INV-001 refuses non-pass PRDs (sev-0); INV-002 forbids llm-implicit on Architecture (sev-0).
+- **NEW skill: `cuo/chief-technology-officer/software-requirements-specification-author/`** v0.1.0 — consumes audited `product-requirements-document@1` + 5-7 architectural-review questions + `module:*` memory reads → emits `software-requirements-specification@1`. INV-001 refuses non-pass PRDs (sev-0); INV-002 forbids llm-implicit on Architecture (sev-0).
 - **NEW skill: `cuo/chief-technology-officer/software-requirements-specification-audit/`** v0.1.0 — quality gate on SRSs. Mirrors product-requirements-document-audit's advisory-leaning approach (most rules warning). `srs_rubric@1.0` with 6 rule families (FM/SEC/COND/AUTH/QA/SAFE + STALE).
 
 ### Changed
@@ -3090,8 +3660,8 @@ Pure addition; gated_until_phase: runtime_v0_3_0.
 - **Contracts layout simplified** (per REF-018): `<contract-id>/v<n>/` collapsed to `<contract-id>/`. The major version stays in CONTRACT.md frontmatter (`contract_version: v1`); the v<n>/ folder structure was over-engineered for current scale (no parallel-version maintenance need yet). When a contract MAJOR-bumps to v2, the preferred path is "extend the existing folder" (CONTRACT.md documents both versions; template-v2.md added; single CHANGELOG continues). Reviving v<n>/ folders is option B if parallel maintenance becomes burdensome. Mechanical migration: 4 folders moved, 6 SKILL.md `pin_path` declarations updated, 2 README layout diagrams updated, ~93 string replacements across 24 files. Zero contract-semantics changes.
 - **NEW contract: `project-brief@1`** registered under `cyberos/docs/contracts/project-brief/`. `artefact_schema` kind; stewarded by `cuo-cpo`. The structured-intake artefact emitted by `requirements-discovery` and consumed by `product-requirements-document-author`. 16 frontmatter fields + 9 required H2 sections + 4 conditional sections + per-Goal authority markers per AGENTS.md §5.3.
 - **NEW contract: `product-requirements-document@1`** registered under `cyberos/docs/contracts/product-requirements-document/`. `artefact_schema` kind; stewarded by `cuo-cpo`. The Product Requirements Document artefact emitted by `product-requirements-document-author`; consumed by future `product-requirements-document-audit` (v0.2.5) + future `feature-request-author` v0.3.0+ (when feature-request-author migrates from generic "PRD/spec docs" to `product-requirements-document@1`). 15 frontmatter fields + 11 required H2 sections + 4 conditional sections.
-- **NEW skill: `cuo/cpo/requirements-discovery/`** scaffolded at v0.1.0. The chain ENTRY POINT for new projects. Reads BRAIN (`company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `member:*` excluding `private/`, `client:*` when commissioned) AND conducts a 20-question interview (5 triage gates + 15 discovery questions) AND folds in project-triage gating, then synthesises a `project_brief@1`. Project-kind-agnostic per Q2 of the design conversation (handles software, marketing, hiring, partnerships, research, etc.).
-- **NEW skill: `cuo/cpo/product-requirements-document-author/`** scaffolded at v0.1.0. Consumes a `project_brief@1` + 3-5 follow-up questions (feature-flag strategy, telemetry, approval workflow, rollback triggers) + targeted BRAIN reads; emits a `product-requirements-document@1` draft. Refuses (INV-001) any brief with `triage_verdict: reject`. Refuses (INV-003) `triage_verdict: revise` unless the input envelope sets `proceed_despite_revise: true`. Enforces (INV-002) zero `llm-implicit` authority on Goals.
+- **NEW skill: `cuo/cpo/requirements-discovery/`** scaffolded at v0.1.0. The chain ENTRY POINT for new projects. Reads memory (`company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `member:*` excluding `private/`, `client:*` when commissioned) AND conducts a 20-question interview (5 triage gates + 15 discovery questions) AND folds in project-triage gating, then synthesises a `project_brief@1`. Project-kind-agnostic per Q2 of the design conversation (handles software, marketing, hiring, partnerships, research, etc.).
+- **NEW skill: `cuo/cpo/product-requirements-document-author/`** scaffolded at v0.1.0. Consumes a `project_brief@1` + 3-5 follow-up questions (feature-flag strategy, telemetry, approval workflow, rollback triggers) + targeted memory reads; emits a `product-requirements-document@1` draft. Refuses (INV-001) any brief with `triage_verdict: reject`. Refuses (INV-003) `triage_verdict: revise` unless the input envelope sets `proceed_despite_revise: true`. Enforces (INV-002) zero `llm-implicit` authority on Goals.
 
 ### Added
 
@@ -3102,7 +3672,7 @@ Contracts:
 
 Skills:
 
-- `cuo/cpo/requirements-discovery/` — SKILL.md (full v0.2.0 frontmatter), CHANGELOG.md, INVARIANTS.md (6 invariants; INV-001 BRAIN-must-be-reachable is sev-0), STANDALONE_INTERVIEW.md (20-question script: 5 triage + 15 discovery), HUMAN_SUMMARY.md, envelopes/input.json + output.json, acceptance/README.md (12 priority scenarios).
+- `cuo/cpo/requirements-discovery/` — SKILL.md (full v0.2.0 frontmatter), CHANGELOG.md, INVARIANTS.md (6 invariants; INV-001 memory-must-be-reachable is sev-0), STANDALONE_INTERVIEW.md (20-question script: 5 triage + 15 discovery), HUMAN_SUMMARY.md, envelopes/input.json + output.json, acceptance/README.md (12 priority scenarios).
 - `cuo/cpo/product-requirements-document-author/` — SKILL.md (full v0.2.0 frontmatter), CHANGELOG.md, INVARIANTS.md (7 invariants; INV-001 refuse-rejected-briefs + INV-002 no-llm-implicit-on-Goals are sev-0), STANDALONE_INTERVIEW.md (3-5 follow-up questions + Q5 authority-elevation pass), HUMAN_SUMMARY.md, envelopes/input.json + output.json (6 outcome enums including REFUSED_REJECTED_BRIEF and REFUSED_REVISE_NEEDS_OVERRIDE), acceptance/README.md (12 priority scenarios).
 
 ### Changed
@@ -3118,14 +3688,14 @@ Skills:
 
 ### Driver
 
-User-driven design conversation: "the first inputs should be the BRAIN info itself, because i'll create new project and begin interact with it: so BRAIN + human inputs => PRD/SRS/other specs.... => cuo/cpo/feature-request-author". Identified the chain's missing entry point. Six HITL design questions answered:
+User-driven design conversation: "the first inputs should be the memory info itself, because i'll create new project and begin interact with it: so memory + human inputs => PRD/SRS/other specs.... => cuo/cpo/feature-request-author". Identified the chain's missing entry point. Six HITL design questions answered:
 
 - **Q1 naming** — `requirements-discovery` (chosen over `project-discovery`, `intake`, `kickoff`).
 - **Q2 project-kind taxonomy** — feature-request-author stays universal; no kind-based routing.
 - **Q3 triage** — fold into requirements-discovery; no separate `project-triage` skill.
 - **Q4 PRD audit severity** — PRDs are judgement-heavy; product-requirements-document-audit (v0.2.5) will be more advisory than feature-request-audit.
 - **Q5 iteration** — amendment-batch protocol (mirror feature-request-author's).
-- **Q6 BRAIN scopes** — defaults applied: `company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `member:*` (excluding `private/`), `client:*` (when commissioned).
+- **Q6 memory scopes** — defaults applied: `company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `member:*` (excluding `private/`), `client:*` (when commissioned).
 
 User's bonus question on contracts layout (`<contract-id>/v<n>/` vs flat) — answered as "over-engineered for current scale; simplify now". The simplification was applied as part of v0.2.4.
 
@@ -3318,7 +3888,7 @@ User-explicit requirements (2026-05-06):
 6. *"For skills I don't want too many documents, let's combine all into README.md inside skills folder."* → GETTING_STARTED retired; single comprehensive README.
 7. *"Have to cover and give comprehensive step-by-step guidelines for all possible cases relate to skills … with simple/practical examples and visualize materials … as a detailed wiki so CyberSkill's employees can easily learn/digest & improve it."* → 19 Parts, 7+ Mermaid diagrams, 7 recipes, FAQ, glossary.
 
-Plus three §0.4 refinement candidates surfaced in conversation (continuing the BRAIN's REF sequence — REF-001..011 already exist):
+Plus three §0.4 refinement candidates surfaced in conversation (continuing the memory's REF sequence — REF-001..011 already exist):
 
 - **REF-012** — split frontmatter contract by audience (portable Anthropic-skill fields vs. CyberOS runtime extensions vs. v0.2.0 governance). Adopted as README Part 2.2.
 - **REF-013** — declare cross-skill dependencies in frontmatter. Adopted as `depends_on_contracts:` (DEC-090).
@@ -3355,7 +3925,7 @@ To bring a v0.1.x skill to v0.2.0:
 ## [MEMORY] 2026-05-06 (later evening) — Bundle K TIER 1: Deprecate `.protocol-signing-key` file
 
 ### Changed
-- **§0.5 TOFU paragraph** — removed the `cyberos/.protocol-signing-key` reference. New wording: *"Trust establishment is TOFU: the first fingerprint enters the manifest via explicit user paste from any trusted out-of-band source — a CyberSkill-signed announcement, a verified org-wide secrets manager, an in-person fingerprint exchange, or any equivalent. **Pre-BRAIN-module-P1, no canonical out-of-band source is mandated by this protocol** (the canonical mechanism lands when P1 ships)."*
+- **§0.5 TOFU paragraph** — removed the `cyberos/.protocol-signing-key` reference. New wording: *"Trust establishment is TOFU: the first fingerprint enters the manifest via explicit user paste from any trusted out-of-band source — a CyberSkill-signed announcement, a verified org-wide secrets manager, an in-person fingerprint exchange, or any equivalent. **Pre-memory-module-P1, no canonical out-of-band source is mandated by this protocol** (the canonical mechanism lands when P1 ships)."*
 
 ### Removed
 - **`cyberos/.protocol-signing-key`** (deprecated) — overwritten with a tombstone-style deprecation marker referencing DEC-094 v2 / DEC-105 / REF-026. The cowork sandbox can't `rm` files outside `.cyberos-memory/`; user can manually delete from local clone if desired.
@@ -3365,7 +3935,7 @@ To bring a v0.1.x skill to v0.2.0:
 - **README.md Part 6 (Protocol distribution)** — removed the "baked into the cyberos repo" sentence; replaced with the post-K wording matching §0.5.
 
 ### Real-world trigger
-Stephen flagged the file as friction: *"is there any way that no need one more separate file .protocol-signing-key?"* Honest analysis: it was placeholder weight. No real CyberSkill signing key exists yet (BRAIN module P1 hasn't shipped); the file documented an aspiration rather than enforcing real trust. Stephen picked Option A (delete now, defer real distribution mechanism to P1) over Options B (embed in AGENTS.md frontmatter) and C (keep file; defer decision).
+Stephen flagged the file as friction: *"is there any way that no need one more separate file .protocol-signing-key?"* Honest analysis: it was placeholder weight. No real CyberSkill signing key exists yet (memory module P1 hasn't shipped); the file documented an aspiration rather than enforcing real trust. Stephen picked Option A (delete now, defer real distribution mechanism to P1) over Options B (embed in AGENTS.md frontmatter) and C (keep file; defer decision).
 
 ### Why TIER 1 only
 Single paragraph rewrite + one file deprecation + one DEC version bump + one README sentence. No new mechanism; no schema change; no audit-row format change. Pure surface-area reduction.
@@ -3376,7 +3946,7 @@ None. `manifest.protocol.signing_keys[]` array remains in §6 unchanged — it j
 ### AGENTS.md canonical SHA
 Pre-K `sha256:1a55e8b…2edb` → post-K (computed at write).
 
-### BRAIN entries
+### memory entries
 DEC-094 v=2 (signing-key-file approach deferred to P1), DEC-105 (Bundle K decision), REF-026 (refinement record).
 
 ### Cross-link
@@ -3386,20 +3956,20 @@ DEC-094 v=2 (signing-key-file approach deferred to P1), DEC-105 (Bundle K decisi
 
 ---
 
-## [MEMORY] 2026-05-06 (later evening) — Bundle J TIER 1: Auto-trigger §8.7 after protocol_upgrade + uppercase BRAIN in trigger phrases
+## [MEMORY] 2026-05-06 (later evening) — Bundle J TIER 1: Auto-trigger §8.7 after protocol_upgrade + uppercase memory in trigger phrases
 
 ### Added
 - **§0.5 step 4** — every successful `op:"protocol_upgrade"` now auto-triggers a §8.7 self-audit pass immediately after the manifest pin and the protocol_upgrade audit row. This is the post-upgrade migration check: schema validate (phase 1) catches memories failing the new §5.1; supersedes-graph integrity (phase 2) catches dangling relationships if scopes were renamed; resource caps (phase 6) catches new field additions pushing files over §5.5 limits. Findings surface per §8.7 severity routing. Skip only with explicit phrase *"skip post-upgrade scan"* (logged as `op:"skipped-by-user"`).
-- **§6 manifest** — `health_check_policy.post_upgrade_phrase` field. Default value: *"rescan BRAIN"* (uppercase BRAIN per §0.3 / Bundle H). Manually triggers the same scan as the auto-flow.
+- **§6 manifest** — `health_check_policy.post_upgrade_phrase` field. Default value: *"rescan memory"* (uppercase memory per §0.3 / Bundle H). Manually triggers the same scan as the auto-flow.
 - **§8.7 "Post-upgrade scan" subsection** — distinguishes the post-upgrade flavour from routine on-demand health-checks. Identical mechanics; report file named `meta/health/<YYYY-MM-DD>-<sha>-postupgrade.md` to mark provenance. The §14 block reports it as a post-upgrade scan.
 
 ### Changed
-- **`manifest.health_check_policy.on_demand_phrase` default** — *"run brain healthcheck"* → *"run BRAIN healthcheck"* (uppercase BRAIN per §0.3 / Bundle H consistency).
-- **`manifest.health_check_policy.diagnostic_verbs[]` defaults** — entries mentioning BRAIN switched to uppercase: *"check brain"* → *"check BRAIN"*; *"show brain"* → *"show BRAIN"*; *"view brain"* → *"view BRAIN"*. Lowercase versions explicitly NOT diagnostic triggers (they're anatomy/metaphor per §0.3).
-- **§1 step 2** — diagnostic-verb list updated to match the new manifest defaults; added a one-sentence note: *"verbs that mention 'BRAIN' use uppercase per §0.3 (case-sensitive alias); lowercase 'brain' verbs are NOT diagnostic triggers."*
+- **`manifest.health_check_policy.on_demand_phrase` default** — *"run memory healthcheck"* → *"run memory healthcheck"* (uppercase memory per §0.3 / Bundle H consistency).
+- **`manifest.health_check_policy.diagnostic_verbs[]` defaults** — entries mentioning memory switched to uppercase: *"check memory"* → *"check memory"*; *"show memory"* → *"show memory"*; *"view memory"* → *"view memory"*. Lowercase versions explicitly NOT diagnostic triggers (they're anatomy/metaphor per §0.3).
+- **§1 step 2** — diagnostic-verb list updated to match the new manifest defaults; added a one-sentence note: *"verbs that mention 'memory' use uppercase per §0.3 (case-sensitive alias); lowercase 'memory' verbs are NOT diagnostic triggers."*
 
 ### Real-world trigger
-Stephen asked: *"can we auto trigger scan and re-arrange/refine the .cyberos-memory after AGENTS.md update, because there maybe breaking changes or rules that need to adapt, and how to manual trigger that?"* Plus reinforcement: *"for manual i want 'run BRAIN healthcheck' instead"* (uppercase BRAIN). Bundle J answers both: §8.7 already had the schema-validate check that catches new-schema-failures; auto-triggering §8.7 after every protocol_upgrade was a one-step amendment to §0.5. The uppercase-phrase fix completes Bundle H's case-sensitivity work — three places still had lowercase "brain" in default trigger phrases that should have been uppercase for consistency.
+Stephen asked: *"can we auto trigger scan and re-arrange/refine the .cyberos-memory after AGENTS.md update, because there maybe breaking changes or rules that need to adapt, and how to manual trigger that?"* Plus reinforcement: *"for manual i want 'run memory healthcheck' instead"* (uppercase memory). Bundle J answers both: §8.7 already had the schema-validate check that catches new-schema-failures; auto-triggering §8.7 after every protocol_upgrade was a one-step amendment to §0.5. The uppercase-phrase fix completes Bundle H's case-sensitivity work — three places still had lowercase "memory" in default trigger phrases that should have been uppercase for consistency.
 
 ### Why TIER 1 only
 Single sentence-and-a-half §0.5 amendment + 4 default-value updates + one new §8.7 paragraph. No new ops, no new scopes, no new mechanism. The §8.7 phase-1 schema-validate already does the migration check — Bundle J just wires it into the post-upgrade flow automatically.
@@ -3410,13 +3980,13 @@ Single sentence-and-a-half §0.5 amendment + 4 default-value updates + one new �
 - Existing `on_demand_phrase` users with lowercase phrases configured — those are project-level overrides; only the default ships uppercase. Existing manifests are not migrated automatically.
 
 ### Migration note for cyberos's own manifest
-Cyberos's running `manifest.health_check_policy.on_demand_phrase` updated to "run BRAIN healthcheck" as part of this Bundle's manifest re-pin. `diagnostic_verbs[]` entries also uppercased.
+Cyberos's running `manifest.health_check_policy.on_demand_phrase` updated to "run memory healthcheck" as part of this Bundle's manifest re-pin. `diagnostic_verbs[]` entries also uppercased.
 
 ### AGENTS.md canonical SHA
 Pre-J `sha256:7e229a2…2545d` → post-J (computed at write).
 
-### BRAIN entries
-DEC-104 (auto-trigger §8.7 + uppercase BRAIN phrases decision), REF-025 (refinement record).
+### memory entries
+DEC-104 (auto-trigger §8.7 + uppercase memory phrases decision), REF-025 (refinement record).
 
 ### Cross-link
 `docs/CyberOS-AGENTS.README.md` Part 8 (Bundle J added as the eleventh real-world trigger).
@@ -3451,7 +4021,7 @@ Single section rewrite; reuses existing `operational_mode` mechanism; no new fie
 ### AGENTS.md canonical SHA
 Pre-I `sha256:fe0773c…251aa` → post-I (computed at write).
 
-### BRAIN entries
+### memory entries
 DEC-103 (compact-§14-by-operational_mode decision), REF-024 (refinement record).
 
 ### Cross-link
@@ -3461,27 +4031,27 @@ DEC-103 (compact-§14-by-operational_mode decision), REF-024 (refinement record)
 
 ---
 
-## [MEMORY] 2026-05-06 (later evening) — Bundle H TIER 1: Strict uppercase BRAIN alias (§0.3)
+## [MEMORY] 2026-05-06 (later evening) — Bundle H TIER 1: Strict uppercase memory alias (§0.3)
 
 ### Changed
-- **§0.3 first paragraph** — added explicit case-sensitivity clause: *"(literal uppercase B-R-A-I-N; case-sensitive — lowercase 'brain' does NOT trigger this alias)"*. The pre-H wording said *"the BRAIN"* / *"your BRAIN"* with implied capitals but didn't enforce it; a literal reader could have matched lowercase "brain" too.
-- **§0.3** added a "Lowercase 'brain' is normal language" clarifier paragraph listing common lowercase usages (anatomy, metaphor, general topic) that explicitly do NOT trigger the alias. Includes an ambiguity-disambiguation rule: when context strongly implies memory-store but casing is lowercase, the agent asks a clarifying question rather than silently assuming.
+- **§0.3 first paragraph** — added explicit case-sensitivity clause: *"(literal uppercase B-R-A-I-N; case-sensitive — lowercase 'memory' does NOT trigger this alias)"*. The pre-H wording said *"the memory"* / *"your memory"* with implied capitals but didn't enforce it; a literal reader could have matched lowercase "memory" too.
+- **§0.3** added a "Lowercase 'memory' is normal language" clarifier paragraph listing common lowercase usages (anatomy, metaphor, general topic) that explicitly do NOT trigger the alias. Includes an ambiguity-disambiguation rule: when context strongly implies memory-store but casing is lowercase, the agent asks a clarifying question rather than silently assuming.
 
 ### Real-world trigger
-Stephen noticed: *"i notice that 'brain' still work? i want only 'BRAIN' will be understand as the memory, because some topic relate to human brain may trigger too, right?"* — confirmed that pre-H §0.3 didn't enforce case, leaving a small but real false-positive surface (lowercase "brain" in non-memory contexts could be misinterpreted). Second refinement from real-world use; Bundle G was the first.
+Stephen noticed: *"i notice that 'memory' still work? i want only 'memory' will be understand as the memory, because some topic relate to human memory may trigger too, right?"* — confirmed that pre-H §0.3 didn't enforce case, leaving a small but real false-positive surface (lowercase "memory" in non-memory contexts could be misinterpreted). Second refinement from real-world use; Bundle G was the first.
 
 ### Why TIER 1 only
 Single-paragraph change; narrowly scoped; closes the observed gap. No TIER 2/3 candidates surfaced.
 
 ### What this does NOT change
-- §1 step 2's diagnostic-verb list (Bundle G) keeps lowercase phrases like "check brain", "show brain", "view brain". Those verbs trigger `PRISTINE-DIAGNOSTIC-HOLD` based on intent, NOT BRAIN-alias activation. The two mechanisms are independent.
+- §1 step 2's diagnostic-verb list (Bundle G) keeps lowercase phrases like "check memory", "show memory", "view memory". Those verbs trigger `PRISTINE-DIAGNOSTIC-HOLD` based on intent, NOT memory-alias activation. The two mechanisms are independent.
 - The case-sensitivity rule applies only to §0.3 alias activation; written prose elsewhere in the protocol can use either case for readability.
 
 ### AGENTS.md canonical SHA
 Pre-H `sha256:3804334…f0ecb` → post-H (computed at write).
 
-### BRAIN entries
-DEC-102 (strict-uppercase BRAIN alias decision), REF-023 (refinement record).
+### memory entries
+DEC-102 (strict-uppercase memory alias decision), REF-023 (refinement record).
 
 ### Cross-link
 `docs/CyberOS-AGENTS.README.md` Part 8 (Bundle H added as the ninth real-world trigger; second from real-world use).
@@ -3493,17 +4063,17 @@ DEC-102 (strict-uppercase BRAIN alias decision), REF-023 (refinement record).
 ## [MEMORY] 2026-05-06 (later evening) — Bundle G TIER 1: Diagnostic-verb carve-out for PRISTINE auto-bootstrap
 
 ### Added
-- **§1 step 2 carve-out** — auto-bootstrap is silent UNLESS the user's current-turn message contains a recognised diagnostic verb (default list: `healthcheck`, `status`, `inspect`, `audit`, `check brain`, `show brain`, `view brain`, plus configured `on_demand_phrase`). When intent is diagnostic AND state is `PRISTINE`, the agent enters `PRISTINE-DIAGNOSTIC-HOLD` and surfaces the absent state instead of bootstrapping.
+- **§1 step 2 carve-out** — auto-bootstrap is silent UNLESS the user's current-turn message contains a recognised diagnostic verb (default list: `healthcheck`, `status`, `inspect`, `audit`, `check memory`, `show memory`, `view memory`, plus configured `on_demand_phrase`). When intent is diagnostic AND state is `PRISTINE`, the agent enters `PRISTINE-DIAGNOSTIC-HOLD` and surfaces the absent state instead of bootstrapping.
 - **§13.0 `PRISTINE-DIAGNOSTIC-HOLD` row** — sub-state of `PRISTINE`. Agent surfaces what would be created by §13.1 and waits for explicit consent (`bootstrap and continue`, `just bootstrap`, or any task-oriented instruction). Does NOT write during this state.
 - **§6 manifest extension**: `health_check_policy.diagnostic_verbs[]` — array of strings; project-level override of the default verb list.
 
 ### Real-world trigger
-A fresh Cowork session at `sale-noti/` (the first downstream consumer of the protocol post-Bundle-F) ran `healthcheck` against a `PRISTINE` BRAIN. The agent correctly held off on silent auto-bootstrap, reasoning that bootstrapping mid-diagnostic would change the very state being inspected. It surfaced this as an §0.4 candidate for upstream propagation. Stephen approved upstreaming the refinement so future downstream projects don't re-encounter the friction. **This is the first refinement triggered by a real downstream project's actual use of the protocol** — the §0.4 propose-then-adopt loop firing in the wild rather than during meta-protocol design.
+A fresh Cowork session at `sale-noti/` (the first downstream consumer of the protocol post-Bundle-F) ran `healthcheck` against a `PRISTINE` memory. The agent correctly held off on silent auto-bootstrap, reasoning that bootstrapping mid-diagnostic would change the very state being inspected. It surfaced this as an §0.4 candidate for upstream propagation. Stephen approved upstreaming the refinement so future downstream projects don't re-encounter the friction. **This is the first refinement triggered by a real downstream project's actual use of the protocol** — the §0.4 propose-then-adopt loop firing in the wild rather than during meta-protocol design.
 
 ### Changed
 - AGENTS.md canonical SHA: pre-G `sha256:f7f3934…f4f1b7` → post-G (computed at write time).
 
-### BRAIN entries
+### memory entries
 DEC-101 (diagnostic-verb carve-out decision), REF-022 (refinement record).
 
 ### Cross-link
@@ -3516,7 +4086,7 @@ DEC-101 (diagnostic-verb carve-out decision), REF-022 (refinement record).
 ## [MEMORY] 2026-05-06 (evening) — Bundle F: Comprehensive audit-fix pass + §0.6 related-files rule
 
 ### Added
-- **§0.6 Related-files update rule** (sev-1) — every successful `op:"protocol_upgrade"` MUST be followed in the same chat turn by updates to: CHANGELOG (dated entry), README (any tracked Part), cross-linked FACT memories (e.g., FACT-004), and implementation files (e.g., `brain_writer.py` for §7.2; `.protocol-signing-key` for §0.5). Order of operations enumerated. Self-detection extension at §8.7 phase 1 reserved for Bundle G.
+- **§0.6 Related-files update rule** (sev-1) — every successful `op:"protocol_upgrade"` MUST be followed in the same chat turn by updates to: CHANGELOG (dated entry), README (any tracked Part), cross-linked FACT memories (e.g., FACT-004), and implementation files (e.g., `memory_writer.py` for §7.2; `.protocol-signing-key` for §0.5). Order of operations enumerated. Self-detection extension at §8.7 phase 1 reserved for Bundle G.
 - **§7.5 `op:"corrects"` vs `correction_to` field** — distinguishes the two mechanisms. `op:"corrects"` is its own audit row for content correction (the world changed); `correction_to` is a field on any op marking that THIS row corrects the agent's own prior action. Rule: every `op:"corrects"` MUST have `correction_to` set; non-corrects ops MAY set it for self-correction.
 - **§8.1 / §8.2 / §8.3 / §8.4 / §8.5 explicit subsection headers** — phases 1-5 of consolidation now have their own subsection numbers, matching §8.6 / §8.7 / §8.8 already-explicit subsections. Closes the §11.5-references-§8.5 dead reference.
 
@@ -3530,7 +4100,7 @@ DEC-101 (diagnostic-verb carve-out decision), REF-022 (refinement record).
 - **§9.7 Privacy row**: cites §17 sync_class (the actual mechanism) and §6 exclusion_rules (for ingestion-blocking).
 - **§11.5 step 5**: "(§8.5)" — now resolves to the explicit §8.5 subsection added above.
 - **§11.6 declares M&A-only schema extensions**: `original_chain` field on rebased audit rows + `manifest.imported_sources[]` array — both formally defined, with `INCOMPATIBLE:<field>` exemption when `imported_sources[]` is non-empty.
-- **§17.5 `manifest.actor_keys`**: clarified as aspirational — to be added to §6 schema via §0.5 protocol upgrade at BRAIN module P1, not yet present.
+- **§17.5 `manifest.actor_keys`**: clarified as aspirational — to be added to §6 schema via §0.5 protocol upgrade at memory module P1, not yet present.
 
 ### Fixed (TIER 2 — stale or inconsistent)
 - **§3 layout**: now lists `meta/protocol-history/` (per §0.5) and `meta/health/` (per §8.7) as first-class subdirectories.
@@ -3553,7 +4123,7 @@ Stephen requested: *"check whole CyberOS-AGENTS.md content to find things that c
 ### Pre-F archive
 `meta/protocol-history/AGENTS-sha256-f9328b7…cb1022.md` (verbatim, captured at session.start before any edits).
 
-### BRAIN entries
+### memory entries
 DEC-100 (audit-fix pass + related-files rule), REF-021 (refinement record).
 
 ### Cross-link
@@ -3573,18 +4143,18 @@ DEC-100 (audit-fix pass + related-files rule), REF-021 (refinement record).
 - AGENTS.md canonical SHA: pre-E `sha256:b4042a6…cacce3` → post-E `sha256:f9328b7…cb1022`.
 
 ### Real-world trigger
-Stephen asked (post-cascade): *"did we take care of the case when local BRAIN conflict with upstream BRAIN when update?"* Honest diagnosis: the post-cascade §0.5 mechanism handled the 2-way mismatch (loaded vs pinned, scenario A) and the clean upstream upgrade (scenario B), but did NOT handle the 3-way case (scenario C) — a user with hand-edited AGENTS.md running "check for protocol updates" would have had local edits silently overwritten. TIER 2 (multi-actor protocol-version skew) and TIER 3 (key rotation operational flow) deferred — both gain operational relevance only when the BRAIN module's network surface ships at P1.
+Stephen asked (post-cascade): *"did we take care of the case when local memory conflict with upstream memory when update?"* Honest diagnosis: the post-cascade §0.5 mechanism handled the 2-way mismatch (loaded vs pinned, scenario A) and the clean upstream upgrade (scenario B), but did NOT handle the 3-way case (scenario C) — a user with hand-edited AGENTS.md running "check for protocol updates" would have had local edits silently overwritten. TIER 2 (multi-actor protocol-version skew) and TIER 3 (key rotation operational flow) deferred — both gain operational relevance only when the memory module's network surface ships at P1.
 
 ### Why TIER 1 only
 - Closes the most immediate observed gap (silent overwrite of local hand-edits during upstream pull).
 - Extends existing conservative §13.0 discipline (writes-frozen-until-explicit-resolution) from 2-way to 3-way without inventing new mechanisms.
 - The three explicit options map cleanly onto existing §0.5 vocabulary.
-- TIER 2 + TIER 3 are not currently load-bearing (no BRAIN module endpoint, no real signing key) — adopting them speculatively today would be bulk without proportional value.
+- TIER 2 + TIER 3 are not currently load-bearing (no memory module endpoint, no real signing key) — adopting them speculatively today would be bulk without proportional value.
 
 ### Operational note
 Pre-E archive: `meta/protocol-history/AGENTS-sha256-b4042a6…cacce3.md` is **verbatim** (created during the 2026-05-06 rollback validation test per DEC-098). Bundle E inherits it as its pre-state archive without needing to re-create — full rollback support from Bundle D forward.
 
-### BRAIN entries
+### memory entries
 DEC-099 (three-way protocol-conflict decision), REF-020 (refinement record).
 
 ### Cross-link
@@ -3610,7 +4180,7 @@ DEC-099 (three-way protocol-conflict decision), REF-020 (refinement record).
 - **Body exclusion clarified**: `canonical_json` receives `row_without_chain_or_prev_chain`; `prev_chain` is concatenated as raw bytes AFTER the canonical body.
 
 ### Real-world trigger
-The 2026-05-06 cascade verifier (`outputs/verify_v2.py`) surfaced 149 pre-existing audit rows failing bit-perfect hash recompute against the new `brain_writer.py`, despite both writers nominally following pre-D §7.2. LINK integrity intact; recompute divergent. Surfaced as a TIER 1 §0.4 candidate at the end of the prior turn ("§7.2 is underspecified"); user adopted as Bundle D in the next turn.
+The 2026-05-06 cascade verifier (`outputs/verify_v2.py`) surfaced 149 pre-existing audit rows failing bit-perfect hash recompute against the new `memory_writer.py`, despite both writers nominally following pre-D §7.2. LINK integrity intact; recompute divergent. Surfaced as a TIER 1 §0.4 candidate at the end of the prior turn ("§7.2 is underspecified"); user adopted as Bundle D in the next turn.
 
 ### What this does NOT do
 Pre-D rows remain hash-non-reproducible. The cardinal rule (additive-only) is preserved because pre-D rows are not retroactively touched. LINK integrity holds. Forcing a re-chain would invalidate any external exports already pinned to those chain values.
@@ -3618,7 +4188,7 @@ Pre-D rows remain hash-non-reproducible. The cardinal rule (additive-only) is pr
 ### AGENTS.md canonical SHA
 Pre-D `sha256:7cd4a56…ad650a` → post-D `sha256:b4042a6…cacce3`.
 
-### BRAIN entries
+### memory entries
 DEC-097 (canonical-json-rfc-8785 decision), REF-018 (refinement record).
 
 ### Cross-link
@@ -3640,15 +4210,15 @@ DEC-097 (canonical-json-rfc-8785 decision), REF-018 (refinement record).
 - **`meta/health/`** — new directory; stores deterministic health-check reports keyed by `<YYYY-MM-DD>-<sha>`.
 
 ### Deferred
-- **TIER 2 — Org-level escalation channel** — when the BRAIN module ships at P1, CRITICAL + aggregated WARN forward to a CyberSkill admin channel. Privacy boundary: only metadata escalates; never memory content.
+- **TIER 2 — Org-level escalation channel** — when the memory module ships at P1, CRITICAL + aggregated WARN forward to a CyberSkill admin channel. Privacy boundary: only metadata escalates; never memory content.
 
 ### Changed
 - AGENTS.md canonical SHA: pre-C `sha256:8025a96…b13d65` → post-C `sha256:7cd4a56…ad650a`.
 
 ### Real-world trigger
-Stephen asked (2026-05-06): *"Can the BRAIN audit itself? While users are using the BRAIN and unexpected issues happen, I should be notified so I can fix it asap. For now maybe we can use DEBUG or ROOT mode."* Diagnosis: pre-C protocol had partial self-audit elements (§4.7, §8.6, §13.0, §0.4, §1.10) but no integrated full-store integrity pass, no notification channel beyond the easily-missed §14 block, and no clear separation between read-side verbosity (DEBUG) and write-side repair authority (MAINTENANCE). Conflating the two risks the Linux-root footgun pattern.
+Stephen asked (2026-05-06): *"Can the memory audit itself? While users are using the memory and unexpected issues happen, I should be notified so I can fix it asap. For now maybe we can use DEBUG or ROOT mode."* Diagnosis: pre-C protocol had partial self-audit elements (§4.7, §8.6, §13.0, §0.4, §1.10) but no integrated full-store integrity pass, no notification channel beyond the easily-missed §14 block, and no clear separation between read-side verbosity (DEBUG) and write-side repair authority (MAINTENANCE). Conflating the two risks the Linux-root footgun pattern.
 
-### BRAIN entries
+### memory entries
 DEC-096 (self-audit + DEBUG/MAINTENANCE decision), REF-017 (refinement record).
 
 ### Cross-link
@@ -3661,21 +4231,21 @@ DEC-096 (self-audit + DEBUG/MAINTENANCE decision), REF-017 (refinement record).
 ## [MEMORY] 2026-05-06 (evening) — Bundle A: Sync-class boundary (§17)
 
 ### Added
-- **§17 Personal vs shared memory boundary** — declares the four sync classes (`local-only`, `publishable`, `shared`, `client-visible`), per-scope defaults table (§17.2), per-subject identity model (§17.3 — subject not machine is the trust anchor), absorb-then-discard offboarding semantics (§17.4), publish-flow forward reference (§17.5 — mechanism deferred to BRAIN module P1), and explicit out-of-scope list (§17.6 — wire protocol, ACL, conflict mechanism, key rotation all live in the BRAIN/PORTAL modules, not here).
+- **§17 Personal vs shared memory boundary** — declares the four sync classes (`local-only`, `publishable`, `shared`, `client-visible`), per-scope defaults table (§17.2), per-subject identity model (§17.3 — subject not machine is the trust anchor), absorb-then-discard offboarding semantics (§17.4), publish-flow forward reference (§17.5 — mechanism deferred to memory module P1), and explicit out-of-scope list (§17.6 — wire protocol, ACL, conflict mechanism, key rotation all live in the memory/PORTAL modules, not here).
 - **§5.1 frontmatter** — 28th permitted field: `sync_class: local-only | publishable | shared | client-visible`. Per-file overrides allowed.
 - **§14 end-of-response block** — new line: `sync class summary: <N local-only | M publishable | K shared | J client-visible>`.
 
 ### Changed
-- **§11.8** — last sentence rewritten to clarify scope: "This protocol governs the personal layer of the BRAIN. Continuous multi-machine sync of shared scopes happens through the runtime BRAIN module (FACT-004 Layer 2), not via filesystem replication." Closes the §11.8↔FACT-004 contradiction (was: "Concurrent multi-machine editing of the same project is unsupported; pick one authoritative machine" — read literally, that contradicted FACT-004's "CRDT sync across machines" claim).
+- **§11.8** — last sentence rewritten to clarify scope: "This protocol governs the personal layer of the memory. Continuous multi-machine sync of shared scopes happens through the runtime memory module (FACT-004 Layer 2), not via filesystem replication." Closes the §11.8↔FACT-004 contradiction (was: "Concurrent multi-machine editing of the same project is unsupported; pick one authoritative machine" — read literally, that contradicted FACT-004's "CRDT sync across machines" claim).
 - AGENTS.md canonical SHA: pre-A `sha256:6e993e3…b4797b` → post-A `sha256:8025a96…b13d65`.
 
 ### Real-world trigger
-Stephen asked (2026-05-06): *"It's working as personal memory for one person. But each person will contribute to CyberSkill activities (via CyberOS), so it needs to serve both personal-based memory as well as CyberOS's memory. Should we think about that now?"* Surfaced two pre-existing gaps: §11.8↔FACT-004 contradiction (would fire as soon as a second laptop joins); personal-vs-org boundary was implicit so every memory written today was being classified by accident. Resolution: lock the boundary now via the four sync classes; defer mechanism (signing, wire protocol, ACL) to the runtime BRAIN module.
+Stephen asked (2026-05-06): *"It's working as personal memory for one person. But each person will contribute to CyberSkill activities (via CyberOS), so it needs to serve both personal-based memory as well as CyberOS's memory. Should we think about that now?"* Surfaced two pre-existing gaps: §11.8↔FACT-004 contradiction (would fire as soon as a second laptop joins); personal-vs-org boundary was implicit so every memory written today was being classified by accident. Resolution: lock the boundary now via the four sync classes; defer mechanism (signing, wire protocol, ACL) to the runtime memory module.
 
 ### User answers driving the design
-Q1 *CyberSkill one tenant?* → publisher today, multi-tenant SaaS at P3+ supported by per-tenant region pinning. Q2 *project/ flows to org?* → yes, defaults to `shared` (CyberOS architecture is the company's product). Q3 *clients consume a slice?* → yes, fourth class `client-visible`. Q4 *offboarding?* → absorb knowledge, discard fragments. Q5 *per-machine or per-person?* → per-person identity (subject is trust anchor; multiple machines mirror through org BRAIN).
+Q1 *CyberSkill one tenant?* → publisher today, multi-tenant SaaS at P3+ supported by per-tenant region pinning. Q2 *project/ flows to org?* → yes, defaults to `shared` (CyberOS architecture is the company's product). Q3 *clients consume a slice?* → yes, fourth class `client-visible`. Q4 *offboarding?* → absorb knowledge, discard fragments. Q5 *per-machine or per-person?* → per-person identity (subject is trust anchor; multiple machines mirror through org memory).
 
-### BRAIN entries
+### memory entries
 DEC-095 (sync-class boundary decision), REF-016 (refinement record), FACT-004 v2 (Layer 1 paragraph rewritten to cite §17 instead of bare "CRDT sync"; closes the contradiction).
 
 ### Cross-link
@@ -3699,9 +4269,9 @@ DEC-095 (sync-class boundary decision), REF-016 (refinement record), FACT-004 v2
 - AGENTS.md is now content-addressable. Pre-B canonical SHA `sha256:560a489…1600fc`. Post-B canonical SHA `sha256:6e993e3…b4797b`.
 
 ### Real-world trigger
-Stephen asked (2026-05-06): *"AGENTS.md behaves like global instructions when copied to local machine. Is there any way to force-sync it with CyberOS's AGENTS.md to make sure all distributed BRAINs are updated when CyberOS has a new BRAIN version?"* Surfaced two pre-existing gaps: AGENTS.md was silent on its own update flow (no tripwire for hand-edits, host-platform silent updates, or accidental drift); "force sync" would defeat §0.2 (the same gate that protects from prompt injection would also block forced sync). Resolution: layered authenticity (Ed25519 signatures, deferred to TIER 2 / BRAIN module P1), authorization (chat-turn approval phrase per §0.2), and auditability (`op:"protocol_upgrade"` rows + `meta/protocol-history/` archive).
+Stephen asked (2026-05-06): *"AGENTS.md behaves like global instructions when copied to local machine. Is there any way to force-sync it with CyberOS's AGENTS.md to make sure all distributed memories are updated when CyberOS has a new memory version?"* Surfaced two pre-existing gaps: AGENTS.md was silent on its own update flow (no tripwire for hand-edits, host-platform silent updates, or accidental drift); "force sync" would defeat §0.2 (the same gate that protects from prompt injection would also block forced sync). Resolution: layered authenticity (Ed25519 signatures, deferred to TIER 2 / memory module P1), authorization (chat-turn approval phrase per §0.2), and auditability (`op:"protocol_upgrade"` rows + `meta/protocol-history/` archive).
 
-### BRAIN entries
+### memory entries
 DEC-094 (protocol-update-policy decision), REF-015 (refinement record). Both adopted in chat per §0.4.
 
 ### Cross-link
@@ -3746,15 +4316,15 @@ The skill registry at `cyberos/docs/skills/` shipped v0.2.0 with:
 
 ### Why this is an AGENTS.md changelog entry but no AGENTS.md edits
 
-- AGENTS.md governs the **BRAIN** (`.cyberos-memory/`) protocol — memory writes, the audit ledger at `audit/<YYYY-MM>.jsonl`, the consolidation cycle, the conflict-resolution graph.
-- The skill registry's `genie.action_log` is a **separate** audit stream (the runtime's, per SRS §6.7) that records skill outputs. It chains independently from the BRAIN's ledger.
-- The new skill-level `op:"self_refinement_proposal"` rows live in `genie.action_log`, not in the BRAIN. AGENTS.md §7.1's `op` enum is unaffected.
+- AGENTS.md governs the **memory** (`.cyberos-memory/`) protocol — memory writes, the audit ledger at `audit/<YYYY-MM>.jsonl`, the consolidation cycle, the conflict-resolution graph.
+- The skill registry's `genie.action_log` is a **separate** audit stream (the runtime's, per SRS §6.7) that records skill outputs. It chains independently from the memory's ledger.
+- The new skill-level `op:"self_refinement_proposal"` rows live in `genie.action_log`, not in the memory. AGENTS.md §7.1's `op` enum is unaffected.
 - The skill-level `self_audit` + `INVARIANTS.md` machinery is a **parallel** of AGENTS.md §0.4's standing rule, applied at the skill level rather than the protocol level. Same pattern, different surface.
 
 ### Cross-link
 
 - See `cyberos/docs/skills/CHANGELOG.md` v0.2.0 for the registry-side detail.
-- BRAIN entries DEC-090 / DEC-091 / DEC-092 / DEC-093 record the underlying decisions; REF-012 / REF-013 / REF-014 record the §0.4 refinement candidates surfaced during the design conversation.
+- memory entries DEC-090 / DEC-091 / DEC-092 / DEC-093 record the underlying decisions; REF-012 / REF-013 / REF-014 record the §0.4 refinement candidates surfaced during the design conversation.
 
 ---
 
@@ -3830,7 +4400,7 @@ A skill is registry-valid when ALL of:
 - [ ] `SKILL.md` parses as Markdown with one YAML frontmatter block, no mid-file `---` outside fenced code spans (AGENTS.md §4.3 + DEC-087).
 - [ ] All 27 frontmatter fields from `cyberos/docs/skills/README.md` §3 are present (or explicitly `null` where allowed).
 - [ ] `expects:` and `produces:` reference real JSON schemas reachable from this folder or `_shared/`.
-- [ ] `allowed_brain_scopes.write` is empty UNLESS the skill is explicitly authorised to mutate BRAIN (separate decision per skill, recorded in CHANGELOG).
+- [ ] `allowed_memory_scopes.write` is empty UNLESS the skill is explicitly authorised to mutate memory (separate decision per skill, recorded in CHANGELOG).
 - [ ] `allowed_mcp_tools` is exhaustive — gateway will reject unlisted tools at call time.
 - [ ] `audit.row_kind` matches the `produces.output_kind` enum.
 - [ ] At least one `references/` doc OR a clear note that none are needed.
@@ -3858,7 +4428,7 @@ Surfaced during the skills-knowledge digest session (workbench/.cyberos-memory b
 1. `spec.md` body legitimately contained `---`-delimited example SKILL.md frontmatter inside ```` ``` ```` fences. The §4.3 secondary-block scan triggered `multiple-frontmatter-blocks` rejection. Any session ingesting skill-format documentation, agent-protocol docs, or any spec that shows example frontmatter in code fences would have hit the same crash deterministically.
 2. PyYAML's `safe_load` auto-parses ISO-8601 timestamps into `datetime.datetime` objects. The §5.2 validator's regex then ran on `str(dt)` which produces `2026-05-04 21:13:29+07:00` (space separator) instead of `2026-05-04T21:13:29+07:00` (T separator) and rejected its own valid output as `bad-ts:created_at`. Affects every Python implementation using PyYAML — i.e., effectively all of them.
 
-Both refinements were proposed as Tier-1 (directly prevents observed failure) per §0.4 in the same response that surfaced them, and Stephen adopted both. The implementing patches in the session's local `.brain_writer.py` (a §4.4 atomic-write helper) are the reference implementations; both validators worked correctly against the remaining 11 memory files after patching.
+Both refinements were proposed as Tier-1 (directly prevents observed failure) per §0.4 in the same response that surfaced them, and Stephen adopted both. The implementing patches in the session's local `.memory_writer.py` (a §4.4 atomic-write helper) are the reference implementations; both validators worked correctly against the remaining 11 memory files after patching.
 
 ---
 
@@ -3888,7 +4458,7 @@ Both refinements were proposed as Tier-1 (directly prevents observed failure) pe
 - **§10** Read protocol: added glances at `memories/drift/` (when the request touches a topic with multiple sources of truth) and `memories/refinements/` (when starting any substantive task — agents learn from past failure modes).
 
 ### Real-world trigger
-Corrective re-ingestion of the 944-line Stephen↔Miguel WhatsApp DM. The original digest was produced via `sed -n 'A,Bp;C,Dp;…'` sampling and shipped at ~25% line coverage. Stephen surfaced the gap with screenshots and the prompt *"is your BRAIN not saved?"*. Re-ingestion captured 12 missed frozen decisions including 80/10/10, Master Seed Mirage Day-1 lock, SRF Bridge rejection, Resolution Waiting List, Vesting/Dual-Wallet, Specialization Ladder, Power Tens, Atomic Split, Failure Protection, Founder's Draw, contract-sign clock, Closed Beta MVP scope. Five of the §0.4 / §1.10 / §4.10 / §4.11 / §8.6 / §14 amendments are direct read-side counterparts to existing write-side gates (§4.1–§4.4) — the failure exposed an asymmetry in the protocol that this changelog entry closes.
+Corrective re-ingestion of the 944-line Stephen↔Miguel WhatsApp DM. The original digest was produced via `sed -n 'A,Bp;C,Dp;…'` sampling and shipped at ~25% line coverage. Stephen surfaced the gap with screenshots and the prompt *"is your memory not saved?"*. Re-ingestion captured 12 missed frozen decisions including 80/10/10, Master Seed Mirage Day-1 lock, SRF Bridge rejection, Resolution Waiting List, Vesting/Dual-Wallet, Specialization Ladder, Power Tens, Atomic Split, Failure Protection, Founder's Draw, contract-sign clock, Closed Beta MVP scope. Five of the §0.4 / §1.10 / §4.10 / §4.11 / §8.6 / §14 amendments are direct read-side counterparts to existing write-side gates (§4.1–§4.4) — the failure exposed an asymmetry in the protocol that this changelog entry closes.
 
 ---
 

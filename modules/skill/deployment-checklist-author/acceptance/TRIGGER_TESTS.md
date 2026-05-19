@@ -10,7 +10,7 @@ classifier_version: 3.0.0-a4
 
 - "Draft a deploy checklist for the AUTH rollout"
 - "Create the production deploy plan for v0.2.6"
-- "Outline the rollout for the BRAIN service"
+- "Outline the rollout for the memory service"
 - "Author the deployment checklist for next Tuesday's deploy"
 
 ## Negative triggers (MUST NOT route here)

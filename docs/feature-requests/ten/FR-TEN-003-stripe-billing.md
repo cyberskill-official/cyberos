@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-001, FR-TEN-002, FR-TEN-004, FR-TEN-101, FR-TEN-102, FR-TEN-103, FR-TEN-104, FR-INV-003, FR-INV-006, FR-AUTH-101, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-TEN-001, FR-TEN-002, FR-TEN-004, FR-TEN-101, FR-TEN-102, FR-TEN-103, FR-TEN-104, FR-INV-003, FR-INV-006, FR-AUTH-101, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-INV-003, FR-TEN-002, FR-TEN-004]
 blocks: [FR-TEN-102, FR-TEN-101]
 
@@ -36,29 +36,29 @@ source_decisions:
   - DEC-788 2026-05-17 — Subscription billing cycle anchored to `tenant.provisioned_at` calendar-day (e.g., provisioned 2026-05-17 → billing day 17 each month); leap-day edge: 29/30/31 falls back to last day of month
   - DEC-789 2026-05-17 — Overage charges modeled as Stripe Subscription Items with `usage_type=metered`; reported via Usage Records API at billing-period close (FR-TEN-004 period_close hook)
   - DEC-790 2026-05-17 — Failed payment dunning — Stripe retries per `smart_retries` schedule (3 attempts over 14 days); after final failure, TEN sets `tenant.dunning_state=suspended` + FR-TEN-104 status transition to `suspended`
-  - DEC-791 2026-05-17 — Refunds via Stripe API only (no in-app refund button); requires `cfo` role per FR-AUTH-101; sev-1 BRAIN audit; max refund amount = original invoice (no over-refund)
+  - DEC-791 2026-05-17 — Refunds via Stripe API only (no in-app refund button); requires `cfo` role per FR-AUTH-101; sev-1 memory audit; max refund amount = original invoice (no over-refund)
   - DEC-792 2026-05-17 — Price catalog as compile-time Rust constants per (currency × tier) matrix; CI cardinality test asserts 3 tiers × 4 currencies = 12 entries; Stripe Price IDs synced at deploy time via `cyberos-ten stripe-sync-prices`
   - DEC-793 2026-05-17 — Stripe webhook events from FR-INV-003 dispatch into TEN handlers via NATS subject `tenant.<slug>.ten.stripe.<event_type>`; INV layer is rail-agnostic, TEN consumes domain events
   - DEC-794 2026-05-17 — Idempotency_key on every Stripe write API call; format `ten.<tenant_id>.<operation>.<resource_ref_or_period_ts>`; max 255 chars (Stripe limit)
-  - DEC-795 2026-05-17 — Stripe API errors with `Retry-After` honoured; 5xx → exponential backoff (1s, 2s, 4s, 8s, 16s) to 5 min cap; persistent 5xx → BRAIN audit + alert sev-2
+  - DEC-795 2026-05-17 — Stripe API errors with `Retry-After` honoured; 5xx → exponential backoff (1s, 2s, 4s, 8s, 16s) to 5 min cap; persistent 5xx → memory audit + alert sev-2
   - DEC-796 2026-05-17 — `tenants.stripe_customer_id` UNIQUE NOT NULL when populated; nullable until first Stripe interaction; partial unique index `WHERE stripe_customer_id IS NOT NULL`
   - DEC-797 2026-05-17 — Plan downgrade defers Stripe subscription update to next billing period via Stripe Subscription Schedule (consistent with FR-TEN-002 DEC-773)
   - DEC-798 2026-05-17 — Multi-currency conversion not handled — tenant locked to billing_currency at provisioning; currency change = new tenant + manual migration (out-of-scope, deferred to FR-TEN-2xx)
   - DEC-799 2026-05-17 — Tax handling deferred to FR-TEN-1xx — Stripe Tax integration not in slice 2; invoices ship `tax_behavior=exclusive` + manual tax_rate=0 in P2; tax-inclusive pricing for EU VAT lands at P3
   - DEC-800 2026-05-17 — Plan upgrade prorates via Stripe `proration_behavior=create_prorations`; downgrade uses `proration_behavior=none` (deferred per DEC-797)
   - DEC-801 2026-05-17 — Stripe API key per residency (us-1 uses Stripe US account; eu-1 uses Stripe EU; sg-1 uses Stripe Singapore); FR-TEN-103 wires the residency→API-key map; this FR consumes that map and never short-circuits
-  - DEC-802 2026-05-17 — Stripe Customer email = the tenant's `billing_contact_email`; PII-scrubbed in BRAIN chain via FR-BRAIN-111 (hash16 form retained for forensic match)
+  - DEC-802 2026-05-17 — Stripe Customer email = the tenant's `billing_contact_email`; PII-scrubbed in memory chain via FR-MEMORY-111 (hash16 form retained for forensic match)
   - DEC-803 2026-05-17 — Subscription cancellation is non-destructive — set `cancel_at_period_end=true`; tenant retains access until period boundary; hard cancel via FR-TEN-104 termination flow only
-  - DEC-804 2026-05-17 — Stripe webhook `invoice.payment_succeeded` → emit `ten.stripe_invoice_paid` BRAIN row + clear `dunning_state` + un-suspend tenant if previously suspended via dunning
+  - DEC-804 2026-05-17 — Stripe webhook `invoice.payment_succeeded` → emit `ten.stripe_invoice_paid` memory row + clear `dunning_state` + un-suspend tenant if previously suspended via dunning
   - DEC-805 2026-05-17 — Founder tenant (FR-TEN-002 DEC-777) skips Stripe billing entirely — `tenant.is_founder_tenant=true` short-circuits all Stripe API calls; founder tenant carries `billing_rail='internal'` synthetic value
   - DEC-806 2026-05-17 — Per-tenant `stripe_subscription_id` UNIQUE NOT NULL when populated; partial unique index `WHERE stripe_subscription_id IS NOT NULL`
   - DEC-807 2026-05-17 — Idempotency cache for outbound Stripe API calls stored in `stripe_api_calls` table; entries pruned at 7 days (Stripe accepts idempotency keys for 24h, we keep 7d for forensic replay)
   - DEC-808 2026-05-17 — Stripe Webhook → TEN dispatcher MUST be at-least-once safe; every consumer is idempotent via `(tenant_id, stripe_event_id)` UNIQUE in `stripe_event_dispatch_log`
   - DEC-809 2026-05-17 — Invoice currency MUST match tenant.billing_currency; mismatch from webhook = sev-1 alert + reject + manual reconciliation
   - DEC-810 2026-05-17 — Overage push window: at most 1 hour after period_close completes; if push fails, retry up to 24 h then alert sev-1 (lost overage revenue = recoverable but visible)
-  - PDPL Art. 13 (data minimisation — billing_contact_email PII-scrubbed in BRAIN chain via FR-BRAIN-111)
+  - PDPL Art. 13 (data minimisation — billing_contact_email PII-scrubbed in memory chain via FR-MEMORY-111)
   - PCI DSS SAQ-A (Stripe-hosted card data — no PAN at our endpoint)
-  - EU AI Act Art. 12 (audit trail — every Stripe state change emits a BRAIN row with chain hash)
+  - EU AI Act Art. 12 (audit trail — every Stripe state change emits a memory row with chain hash)
   - GDPR Art. 7 (consent — billing_contact_email collected at provisioning with explicit consent acknowledgement; not used for marketing without separate opt-in)
 
 build_envelope:
@@ -84,7 +84,7 @@ build_envelope:
     - services/ten/src/repo/stripe_customers.rs                        # tenant.stripe_customer_id CRUD (partial-unique guarded)
     - services/ten/src/repo/stripe_api_calls.rs                        # idempotency cache repo
     - services/ten/src/repo/stripe_event_dispatch_log.rs               # inbound dispatch idempotency repo
-    - services/ten/src/audit/stripe_events.rs                          # 11 BRAIN row builders
+    - services/ten/src/audit/stripe_events.rs                          # 11 memory row builders
     - services/ten/src/cli/stripe_sync_prices.rs                       # cyberos-ten stripe-sync-prices (deploy-time price sync)
     - services/ten/src/handlers/billing_refund.rs                      # POST /v1/admin/tenants/{id}/billing/refund (CFO-only)
     - services/ten/src/handlers/billing_show.rs                        # GET /v1/admin/tenants/{id}/billing (subscription state + dunning + history)
@@ -149,12 +149,12 @@ sub_tasks:
   - "0.3h: wire-up — plan_change.rs push hook, period_close.rs overage hook, inv dispatch NATS-publish"
   - "0.5h: integration smoke against Stripe test mode + sandbox tenant"
 
-risk_if_skipped: "Without Stripe billing, every international tenant payment becomes a manual Stripe Dashboard entry — non-scalable past ~10 tenants, error-prone, no audit linkage to FR-TEN-002 plan changes or FR-TEN-004 overages. Tenants on sg-1/eu-1/us-1 residencies (the entire international market) cannot be billed at all without this FR. Without DEC-787's idempotent customer creation, a transient failure during plan_change spawns duplicate Stripe Customers (one tenant → many customers = billing chaos + revenue recognition errors). Without DEC-789's metered Subscription Items, overage charges from FR-TEN-004 metering are stranded in BRAIN chain with no downstream rail to bill them. Without DEC-790's dunning state machine, failed payments leak revenue indefinitely (Stripe retries 3x then gives up; we must respond). Without DEC-805's founder-skip, the founder tenant gets charged for its own product (accounting noise + circular invoicing). Without DEC-798's currency lock, a tenant could be in two Stripe Customers (one USD, one EUR), making revenue split unanswerable. Without DEC-794's idempotency keys, network retries double-charge. FR-TEN-101 self-serve signup cannot ship without an automated billing rail. FR-TEN-102 VND domestic rail is a parallel rail; without TEN-003 first, the rail abstraction doesn't exist. The 8h effort lands the international billing primitive that unlocks the entire P3 commercial rollout."
+risk_if_skipped: "Without Stripe billing, every international tenant payment becomes a manual Stripe Dashboard entry — non-scalable past ~10 tenants, error-prone, no audit linkage to FR-TEN-002 plan changes or FR-TEN-004 overages. Tenants on sg-1/eu-1/us-1 residencies (the entire international market) cannot be billed at all without this FR. Without DEC-787's idempotent customer creation, a transient failure during plan_change spawns duplicate Stripe Customers (one tenant → many customers = billing chaos + revenue recognition errors). Without DEC-789's metered Subscription Items, overage charges from FR-TEN-004 metering are stranded in memory chain with no downstream rail to bill them. Without DEC-790's dunning state machine, failed payments leak revenue indefinitely (Stripe retries 3x then gives up; we must respond). Without DEC-805's founder-skip, the founder tenant gets charged for its own product (accounting noise + circular invoicing). Without DEC-798's currency lock, a tenant could be in two Stripe Customers (one USD, one EUR), making revenue split unanswerable. Without DEC-794's idempotency keys, network retries double-charge. FR-TEN-101 self-serve signup cannot ship without an automated billing rail. FR-TEN-102 VND domestic rail is a parallel rail; without TEN-003 first, the rail abstraction doesn't exist. The 8h effort lands the international billing primitive that unlocks the entire P3 commercial rollout."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billing/stripe/` — Customer/Subscription/Usage-Record lifecycle for tenants whose `billing_currency ∈ {USD, EUR, SGD, GBP}`, plan-change push from FR-TEN-002, overage push from FR-TEN-004, dispatcher for FR-INV-003 webhook events, dunning state machine, refund flow, and 11 BRAIN audit row kinds.
+The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billing/stripe/` — Customer/Subscription/Usage-Record lifecycle for tenants whose `billing_currency ∈ {USD, EUR, SGD, GBP}`, plan-change push from FR-TEN-002, overage push from FR-TEN-004, dispatcher for FR-INV-003 webhook events, dunning state machine, refund flow, and 11 memory audit row kinds.
 
 1. **MUST** add columns to `tenants` via migration `0006_stripe_billing.sql`:
    - `billing_currency billing_currency_enum NOT NULL DEFAULT 'VND'` — closed enum from migration `0009`.
@@ -171,7 +171,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
 3. **MUST** derive `billing_rail` from `billing_currency` at tenant provisioning (FR-TEN-001 handler):
    - `VND` → `vietqr_momo_zalo` (FR-TEN-102 path).
    - `USD | EUR | SGD | GBP` → `stripe` (this FR's path).
-   - Founder tenant (`is_founder_tenant=true`) → `internal` (DEC-805) regardless of currency; Stripe API calls short-circuit with a no-op + sev-3 BRAIN row `ten.stripe_founder_skip`.
+   - Founder tenant (`is_founder_tenant=true`) → `internal` (DEC-805) regardless of currency; Stripe API calls short-circuit with a no-op + sev-3 memory row `ten.stripe_founder_skip`.
 
 4. **MUST** lock `billing_currency` at provisioning — `UPDATE tenants SET billing_currency = ...` is REJECTED by a row-level trigger (DEC-798). Changing currency = create new tenant + manual data migration (out-of-scope, FR-TEN-2xx).
 
@@ -190,7 +190,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
    - Lookup `tenants.stripe_customer_id`. If non-NULL → return.
    - Else: call Stripe `POST /v1/customers` with `Idempotency-Key: ten.<tenant_id>.customer_create.v1` and body `{ email: <billing_contact_email>, name: <display_name>, metadata: { cyberos_tenant_id: <tenant_id>, cyberos_residency: <residency>, cyberos_billing_currency: <currency> } }`.
    - On success: `UPDATE tenants SET stripe_customer_id = $1 WHERE id = $2` (partial-unique-guarded; concurrent attempts on same tenant race-safe via SELECT FOR UPDATE).
-   - Emit BRAIN row `ten.stripe_customer_created` with `(tenant_id, stripe_customer_id, currency, residency)`.
+   - Emit memory row `ten.stripe_customer_created` with `(tenant_id, stripe_customer_id, currency, residency)`.
 
 7. **MUST** create the Stripe Subscription at the first non-Starter plan_change OR at provisioning when `--seed-subscription` flag is set (default: subscription created lazily on plan_change → Team/Enterprise; Starter tenants get subscriptions too since Starter is paid per FR-TEN-002 DEC-778). Path: `services/ten/src/billing/stripe/subscription.rs::ensure_subscription(tenant_id, plan_tier)`:
    - Ensure customer exists (per §1 #6).
@@ -209,7 +209,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
    - Compute `overage = actual - tier_cap`.
    - Call Stripe `POST /v1/subscription_items/{item_id}/usage_records` with `{ quantity: <overage>, timestamp: <period_end_unix>, action: "set" }` and `Idempotency-Key: ten.<tenant_id>.overage_push.<axis>.<period_end_unix>`.
    - Emit `ten.stripe_overage_pushed` with `(axis, overage_quantity, period_end, stripe_usage_record_id)`.
-   - **Push window:** must complete within 1 hour of period_close (DEC-810). On failure → exponential backoff retry up to 24 h; persistent failure → sev-1 alert + BRAIN row `ten.stripe_overage_push_failed`.
+   - **Push window:** must complete within 1 hour of period_close (DEC-810). On failure → exponential backoff retry up to 24 h; persistent failure → sev-1 alert + memory row `ten.stripe_overage_push_failed`.
 
 10. **MUST** dispatch FR-INV-003 Stripe webhook events into TEN-side handlers via NATS subject `tenant.<slug>.ten.stripe.<event_type>` (DEC-793 + DEC-808). The consumer (`services/ten/src/billing/stripe/dispatch.rs`) is idempotent via `(tenant_id, stripe_event_id) UNIQUE` in `stripe_event_dispatch_log`. The relevant events:
     - `invoice.finalized` → audit only (`ten.stripe_invoice_finalized`).
@@ -224,7 +224,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
     - `retry_2 → retry_3` on third.
     - `retry_3 → suspended` on fourth → trigger FR-TEN-104 `tenant_suspended` status transition + emit `ten.tenant_billing_suspended` + `ten.stripe_dunning_advanced` with `(prior_state, new_state)`.
     - Any state + `invoice.payment_succeeded` → `ok` + un-suspend if suspended.
-    - State transitions are OBSERVED via `stripe_event_dispatch_log` rows joined with `tenants.dunning_state` point-in-time snapshots; the canonical history is the immutable inbound webhook log + the BRAIN chain row emitted on each advance (DEC-808 derivative). No separate `tenant_dunning_history` table is created — the existing event log + BRAIN chain row carry the same information without schema duplication.
+    - State transitions are OBSERVED via `stripe_event_dispatch_log` rows joined with `tenants.dunning_state` point-in-time snapshots; the canonical history is the immutable inbound webhook log + the memory chain row emitted on each advance (DEC-808 derivative). No separate `tenant_dunning_history` table is created — the existing event log + memory chain row carry the same information without schema duplication.
 
 12. **MUST** expose `POST /v1/admin/tenants/{id}/billing/refund` for refunds (`services/ten/src/handlers/billing_refund.rs`). Caller MUST have role `cfo` per FR-AUTH-101 (DEC-791). Body: `{ stripe_charge_id, amount_minor, currency, reason }`. Validations:
     - `amount_minor ≤ original_charge_amount` (DEC-791 — no over-refund). Lookup original charge amount via Stripe `GET /v1/charges/{id}`.
@@ -245,7 +245,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
 
 14. **MUST** thread `Idempotency-Key` on every outbound Stripe write API call (DEC-794 + AUTHORING.md rule 12 derivative for external systems). Key format `ten.<tenant_id>.<operation>.<resource_ref_or_period_ts>`. Max 255 chars. Persisted in `stripe_api_calls` table with columns `(idempotency_key TEXT PRIMARY KEY, tenant_id UUID, operation TEXT, request_sha256 CHAR(64), response_status INT, response_body_sha256 CHAR(64), created_at TIMESTAMPTZ, ttl_until TIMESTAMPTZ DEFAULT now() + INTERVAL '7 days')`. A scheduled job prunes entries past `ttl_until` daily.
 
-15. **MUST** honour Stripe API `Retry-After` header on rate-limit (429) responses (DEC-795). For 5xx responses without `Retry-After`, apply exponential backoff: `1s, 2s, 4s, 8s, 16s` capped at 5 min (max 5 retries). After exhaustion: BRAIN audit `ten.stripe_api_call_failed` at sev-2 + return `502 BAD_GATEWAY` to caller with `{ error: "stripe_unavailable", retry_after_seconds: <next_retry> }`.
+15. **MUST** honour Stripe API `Retry-After` header on rate-limit (429) responses (DEC-795). For 5xx responses without `Retry-After`, apply exponential backoff: `1s, 2s, 4s, 8s, 16s` capped at 5 min (max 5 retries). After exhaustion: memory audit `ten.stripe_api_call_failed` at sev-2 + return `502 BAD_GATEWAY` to caller with `{ error: "stripe_unavailable", retry_after_seconds: <next_retry> }`.
 
 16. **MUST** route Stripe API calls through the per-residency Stripe API key (DEC-801). The api_client constructor takes `residency: Residency` and resolves `STRIPE_API_KEY_<RESIDENCY>` from KMS-encrypted secrets store. Wrong residency → wrong Stripe account → forensically catastrophic; CI test `stripe_residency_apikey_routing_test` asserts correct routing per residency.
 
@@ -253,7 +253,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
 
 18. **MUST** REVOKE UPDATE, DELETE on `stripe_api_calls`, `stripe_event_dispatch_log`, and `stripe_price_map` from `cyberos_app` role (AUTHORING.md rule 12). Pruning of `stripe_api_calls` past TTL uses a separate `cyberos_pruner` role with DELETE grant only on past-TTL rows.
 
-19. **MUST** emit 11 BRAIN audit row kinds (DEC-784 expansion + AUTHORING.md rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
+19. **MUST** emit 11 memory audit row kinds (DEC-784 expansion + AUTHORING.md rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
     - `ten.stripe_customer_created` (sev-2)
     - `ten.stripe_subscription_created` (sev-2)
     - `ten.stripe_subscription_updated` (sev-2)
@@ -266,7 +266,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
     - `ten.stripe_refund_issued` (sev-1)
     - `ten.stripe_overage_pushed` (sev-3)
 
-    Each row carries `trace_id` (32-char W3C hex per AUTHORING.md rule 23 + 24) and is PII-scrubbed via FR-BRAIN-111 BEFORE chain commit (AUTHORING.md rule 18). `billing_contact_email` is hashed (`billing_contact_email_hash16`) in chain; full value retained only in tenant Postgres.
+    Each row carries `trace_id` (32-char W3C hex per AUTHORING.md rule 23 + 24) and is PII-scrubbed via FR-MEMORY-111 BEFORE chain commit (AUTHORING.md rule 18). `billing_contact_email` is hashed (`billing_contact_email_hash16`) in chain; full value retained only in tenant Postgres.
 
 20. **MUST** ship the `cyberos-ten stripe-sync-prices` deploy-time CLI (`services/ten/src/cli/stripe_sync_prices.rs`). Behaviour:
     - `--dry-run` (default): list every `(residency, currency, tier, axis)` permutation in `PRICE_CATALOG × AXES` (12 base + 48 overage = 60 per residency) and the Stripe Price ID it would create/lookup.
@@ -277,11 +277,11 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
 
 21. **MUST** support concurrent plan_change events safely. The plan_change handler acquires `SELECT ... FOR UPDATE` on the tenant row before computing the Stripe push; second concurrent plan_change blocks until first commits. Combined with the FR-TEN-002 24h rate limit, plan_change concurrency is bounded.
 
-22. **MUST NOT** call any Stripe write API for a tenant with `is_founder_tenant=true` (DEC-805). Guard at `services/ten/src/billing/stripe/api_client.rs::call()` entry — if `tenant.billing_rail = 'internal'`, return synthetic success with `Stripe-API-Bypass: founder` header for trace correlation + emit sev-3 BRAIN row `ten.stripe_founder_skip` (informational; not in the 11 main kinds because founder is rare).
+22. **MUST NOT** call any Stripe write API for a tenant with `is_founder_tenant=true` (DEC-805). Guard at `services/ten/src/billing/stripe/api_client.rs::call()` entry — if `tenant.billing_rail = 'internal'`, return synthetic success with `Stripe-API-Bypass: founder` header for trace correlation + emit sev-3 memory row `ten.stripe_founder_skip` (informational; not in the 11 main kinds because founder is rare).
 
 23. **MUST NOT** call any Stripe write API for a tenant with `billing_currency = 'VND'` (DEC-784). Guard at api_client entry — VND tenant routes through FR-TEN-102 only. Cross-rail attempts return `400 BAD_REQUEST` with `{ error: "wrong_billing_rail", expected: "vietqr_momo_zalo", got: "stripe" }`.
 
-24. **MUST** PII-scrub `billing_contact_email` and any reason text in refund/dunning audit rows via FR-BRAIN-111 BEFORE chain commit (AUTHORING.md rule 18). Raw values retained in tenant Postgres (RLS-scoped); BRAIN chain holds `billing_contact_email_hash16` and scrubbed reason.
+24. **MUST** PII-scrub `billing_contact_email` and any reason text in refund/dunning audit rows via FR-MEMORY-111 BEFORE chain commit (AUTHORING.md rule 18). Raw values retained in tenant Postgres (RLS-scoped); memory chain holds `billing_contact_email_hash16` and scrubbed reason.
 
 25. **SHOULD** observe Stripe API latency p95 via OTel span `stripe.api.<operation>` (AUTHORING.md rule 22 + 24). Alarm sev-3 if p95 > 2 s sustained 5 min; sev-2 if p95 > 5 s.
 
@@ -471,7 +471,7 @@ impl StripeClient {
         // Check idempotency cache; if hit, return cached response_body
         // Otherwise: POST with Idempotency-Key header, persist to stripe_api_calls
         // Honour Retry-After on 429; exponential backoff on 5xx (1,2,4,8,16s)
-        // After 5 retries: BRAIN audit `ten.stripe_api_call_failed` + return Err
+        // After 5 retries: memory audit `ten.stripe_api_call_failed` + return Err
     }
 }
 
@@ -533,16 +533,16 @@ cyberos-ten stripe-sync-prices [--dry-run | --apply] [--residency sg-1|eu-1|us-1
 7. **Dispatcher idempotent on duplicate webhook** — same `(tenant_id, stripe_event_id)` arriving twice via NATS produces one dispatch + one `dispatch_status='duplicate'` log row + no double-side-effect.
 8. **Dunning state machine** — three `invoice.payment_failed` events advance `dunning_state` ok→retry_1→retry_2→retry_3; fourth advances to `suspended` + triggers FR-TEN-104 suspend transition.
 9. **Un-suspend on payment_succeeded** — tenant in `suspended` state + `invoice.payment_succeeded` event → `dunning_state='ok'` + FR-TEN-104 resume transition.
-10. **Refund CFO-only** — POST refund with non-cfo subject returns 403 `forbidden`; with cfo subject returns 201 + emits sev-1 BRAIN row `ten.stripe_refund_issued`.
+10. **Refund CFO-only** — POST refund with non-cfo subject returns 403 `forbidden`; with cfo subject returns 201 + emits sev-1 memory row `ten.stripe_refund_issued`.
 11. **Refund amount cap** — POST refund with `amount_minor > original_charge_amount` returns 400 `refund_exceeds_charge`.
-12. **Founder skip** — founder tenant plan_change → no Stripe API call invoked; sev-3 BRAIN row `ten.stripe_founder_skip` emitted.
+12. **Founder skip** — founder tenant plan_change → no Stripe API call invoked; sev-3 memory row `ten.stripe_founder_skip` emitted.
 13. **VND tenant cross-rail rejection** — VND tenant invoking Stripe rail returns 400 `wrong_billing_rail` + no Stripe API call.
 14. **API client retry on 5xx** — Stripe 503 response triggers backoff 1s, 2s, 4s, 8s, 16s; sixth attempt fails permanently + emits `ten.stripe_api_call_failed` sev-2.
 15. **API client honours Retry-After on 429** — Stripe 429 + `Retry-After: 30` causes client to sleep 30s before retry.
 16. **Price catalog cardinality** — `stripe_price_catalog_cardinality_test` asserts `PRICE_CATALOG.len() == 12` and every entry has unique `(currency, tier)`.
 17. **Residency API key routing** — sg-1 tenant Stripe call uses `STRIPE_API_KEY_SG`; eu-1 uses `STRIPE_API_KEY_EU`; us-1 uses `STRIPE_API_KEY_US`; mis-route detected by sentinel-test calling against per-residency Stripe test accounts.
 18. **Idempotency cache hit returns cached response** — invoking same `Idempotency-Key` twice within 7d returns cached `response_body_sha256` without re-calling Stripe.
-19. **PII scrubbing in BRAIN chain** — refund audit row carries `billing_contact_email_hash16` not raw email; reason field scrubbed via FR-BRAIN-111.
+19. **PII scrubbing in memory chain** — refund audit row carries `billing_contact_email_hash16` not raw email; reason field scrubbed via FR-MEMORY-111.
 20. **W3C trace_id propagated** — every Stripe audit row carries 32-char hex `trace_id` matching the upstream caller's traceparent header.
 
 ---
@@ -606,7 +606,7 @@ async fn dunning_advances_then_suspends() {
         .bind(tenant_id).fetch_one(&ctx.pool).await.unwrap();
     assert_eq!(status, "suspended");
 
-    let audit_rows = load_brain_rows_for_tenant(&ctx, tenant_id).await;
+    let audit_rows = load_memory_rows_for_tenant(&ctx, tenant_id).await;
     assert!(audit_rows.iter().any(|r| r.kind == "ten.tenant_billing_suspended"));
 }
 ```
@@ -623,7 +623,7 @@ async fn founder_tenant_never_calls_stripe() {
     change_plan(&ctx, founder, PlanTier::Team).await.unwrap();
     assert_eq!(stripe_mock.calls(), 0);
 
-    let audit = load_brain_rows_for_tenant(&ctx, founder).await;
+    let audit = load_memory_rows_for_tenant(&ctx, founder).await;
     assert!(audit.iter().any(|r| r.kind == "ten.stripe_founder_skip"));
 }
 ```
@@ -654,7 +654,7 @@ async fn six_consecutive_5xx_emits_sev2() {
 
     let res = client.call_subscription_create(/* ... */).await;
     assert!(matches!(res, Err(StripeError::Unavailable { .. })));
-    let audit = load_brain_rows(&ctx).await;
+    let audit = load_memory_rows(&ctx).await;
     assert!(audit.iter().any(|r| r.kind == "ten.stripe_api_call_failed" && r.severity == 2));
 }
 ```
@@ -694,7 +694,7 @@ async fn refund_requires_cfo_role() {
     let cfo_token = mint_jwt(&ctx, tenant, "chief-financial-officer");
     let res = post_refund(&ctx, tenant, &cfo_token, 1900).await;
     assert_eq!(res.status(), 201);
-    let audit = load_brain_rows_for_tenant(&ctx, tenant).await;
+    let audit = load_memory_rows_for_tenant(&ctx, tenant).await;
     assert!(audit.iter().any(|r| r.kind == "ten.stripe_refund_issued" && r.severity == 1));
 }
 
@@ -842,8 +842,8 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 - **FR-TEN-104** Tenant lifecycle (suspended/terminating) — dunning advances trigger FR-TEN-104 status transitions.
 - **FR-INV-006** Cash application — reconciles Stripe receipts against TEN subscription invoices.
 - **FR-AUTH-101** RBAC catalogue — `cfo` and `tenant_admin` role gates.
-- **FR-AI-003** BRAIN audit-row bridge — 11 new kinds register here.
-- **FR-BRAIN-111** PII scrubbing ruleset — billing_contact_email + reason text.
+- **FR-AI-003** memory audit-row bridge — 11 new kinds register here.
+- **FR-MEMORY-111** PII scrubbing ruleset — billing_contact_email + reason text.
 - **FR-OBS-007** Auto-runbook — sev-1/sev-2 dunning + API-failure alerts route to CHAT/PagerDuty.
 
 **Downstream (blocks):**
@@ -854,7 +854,7 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 
 ## §8 — Example payloads
 
-### 8.1 `ten.stripe_customer_created` BRAIN row
+### 8.1 `ten.stripe_customer_created` memory row
 
 ```json
 {
@@ -896,7 +896,7 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 }
 ```
 
-### 8.4 `ten.stripe_overage_pushed` BRAIN row
+### 8.4 `ten.stripe_overage_pushed` memory row
 
 ```json
 {
@@ -977,7 +977,7 @@ All resolved for slice 2. Deferred to later slices:
 
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
-| Stripe API 5xx persistent (> 5 retries) | api_client error counter; OTel span error rate | Operation returns 502 to caller; sev-2 BRAIN row `ten.stripe_api_call_failed` | Manual retry via `cyberos-ten stripe-retry-failed --since <ts>` (operator CLI in slice 3); for slice 2, CFO re-invokes the operation from Stripe Dashboard manually |
+| Stripe API 5xx persistent (> 5 retries) | api_client error counter; OTel span error rate | Operation returns 502 to caller; sev-2 memory row `ten.stripe_api_call_failed` | Manual retry via `cyberos-ten stripe-retry-failed --since <ts>` (operator CLI in slice 3); for slice 2, CFO re-invokes the operation from Stripe Dashboard manually |
 | Stripe webhook arrives before TEN customer record exists | dispatcher lookup `tenants WHERE stripe_customer_id=$1` returns 0 rows | sev-2 alert `ten.stripe_orphan_webhook`; dispatch_status='failed' with reason='no_matching_tenant'; webhook ack'd to Stripe (200) so no retry storm | Operator investigates via Stripe Dashboard; may indicate test-mode webhook hit prod or customer manually deleted |
 | Duplicate Stripe Customer for one tenant (race lost) | partial unique index `uniq_stripe_customer` rejects second INSERT | Second concurrent call sees Postgres unique violation; api_client retries the SELECT path; returns existing customer_id | Inherent race-safety — partial unique index + SELECT FOR UPDATE pattern prevents persistent duplicates |
 | billing_currency mismatch between webhook invoice and tenant record | dispatch handler checks `event.currency == tenant.billing_currency` | sev-1 alert `ten.stripe_currency_drift`; webhook ack'd; dispatch_status='failed' | Manual reconciliation; likely indicates wrong-residency Stripe key used at customer creation — operator audit |
@@ -986,15 +986,15 @@ All resolved for slice 2. Deferred to later slices:
 | Subscription Schedule downgrade conflicts with later upgrade | plan_change handler check for existing Subscription Schedule | New plan_change cancels prior Subscription Schedule via Stripe API; emits sev-2 `ten.stripe_schedule_cancelled` | Operator informed; if upgrade after pending downgrade, the upgrade takes effect immediately + downgrade cancelled |
 | Overage push failure after period_close (1h window exhausted) | overage push retry loop hits 24h deadline | sev-1 alert `ten.stripe_overage_push_failed`; period_close marked as `overage_push_pending` | CFO manually pushes via Stripe Dashboard usage_records API; subsequent period_close reconciles |
 | NATS dispatcher fails to consume (crash, network) | NATS lag metric; OBS dashboard | Backlog grows; webhooks ack'd to Stripe but not actioned in TEN | NATS replay from durable subject (slice 2 uses NATS JetStream with 7d retention); dispatcher resumes from last acked offset |
-| Stripe Price ID drift (rev'd in Stripe Dashboard without sync) | next subscription_create sees mismatch between catalog amount and Stripe price.unit_amount | sev-2 alert `ten.stripe_price_drift`; operation proceeds with Stripe's value (Stripe is source of truth at API call time); BRAIN row notes drift | CFO re-runs `cyberos-ten stripe-sync-prices --apply` to align catalog → Stripe; never the other direction |
-| KMS unavailable when api_client constructor runs | KMS client timeout 5s | Constructor returns Err; calling handler returns 503; sev-2 BRAIN row `ten.stripe_kms_unavailable` | Inherent KMS retry on next request; if persistent, AWS KMS incident — page on-call |
+| Stripe Price ID drift (rev'd in Stripe Dashboard without sync) | next subscription_create sees mismatch between catalog amount and Stripe price.unit_amount | sev-2 alert `ten.stripe_price_drift`; operation proceeds with Stripe's value (Stripe is source of truth at API call time); memory row notes drift | CFO re-runs `cyberos-ten stripe-sync-prices --apply` to align catalog → Stripe; never the other direction |
+| KMS unavailable when api_client constructor runs | KMS client timeout 5s | Constructor returns Err; calling handler returns 503; sev-2 memory row `ten.stripe_kms_unavailable` | Inherent KMS retry on next request; if persistent, AWS KMS incident — page on-call |
 | Tenant terminated mid-period (FR-TEN-104) with active Stripe subscription | FR-TEN-104 termination handler calls `services/ten/src/billing/stripe/subscription.rs::cancel(tenant_id)` | Stripe subscription cancelled immediately (NOT cancel_at_period_end — termination is hard); pro-rata credit calculated by Stripe; emits `ten.stripe_subscription_cancelled` sev-1 | FR-TEN-104 termination flow handles refund decision (refund unused period vs. forfeit per ToS) |
 | Webhook secret rotation mid-flight (FR-INV-003 60s overlap) | Stripe sends event during overlap; FR-INV-003 accepts both | Both old and new secret valid; no impact on TEN dispatcher (sees signed events either way) | Inherent overlap window |
-| Founder tenant accidentally flipped to non-internal rail | guard at api_client checks `tenant.billing_rail` | api_client returns Err `founder_cannot_stripe`; sev-1 BRAIN row | Manual SQL fix + DEC entry explaining how the flip happened; trigger added in slice 3 to prevent UPDATE on is_founder_tenant |
+| Founder tenant accidentally flipped to non-internal rail | guard at api_client checks `tenant.billing_rail` | api_client returns Err `founder_cannot_stripe`; sev-1 memory row | Manual SQL fix + DEC entry explaining how the flip happened; trigger added in slice 3 to prevent UPDATE on is_founder_tenant |
 | VND tenant configured stripe_customer_id by mistake | API client guard checks `billing_currency != VND` | Returns 400 `wrong_billing_rail`; no Stripe call | Manual SQL cleanup + DEC entry; trigger added in slice 3 to prevent stripe_customer_id population on VND tenants |
 | Dunning state machine drift (Stripe state ≠ our state) | reconciliation job (slice 3) compares Stripe subscription.status with tenants.dunning_state | sev-2 alert `ten.stripe_state_drift`; manual reconciliation required | CFO consults Stripe Dashboard + invokes `cyberos-ten dunning-reconcile <tenant>` (slice 3) |
 | Refund attempted on already-refunded charge | Stripe returns 400 `charge_already_refunded` | api_client returns Err; refund handler returns 400 `refund_failed` with Stripe error | CFO consults Stripe Dashboard; possibly attempting partial refund on already-fully-refunded — Stripe is source of truth |
-| Stripe customer email mismatch on update (PII drift) | dispatcher detects `customer.updated` with email change | sev-3 BRAIN row `ten.stripe_customer_email_changed`; tenants.billing_contact_email NOT auto-updated | Operator review; manual UPDATE if intentional |
+| Stripe customer email mismatch on update (PII drift) | dispatcher detects `customer.updated` with email change | sev-3 memory row `ten.stripe_customer_email_changed`; tenants.billing_contact_email NOT auto-updated | Operator review; manual UPDATE if intentional |
 | Subscription items list drift (extra metered items in Stripe) | reconciliation comparing our PRICE_CATALOG against Stripe subscription.items | sev-2 alert `ten.stripe_items_drift` | Operator runs `cyberos-ten stripe-rebuild-subscription <tenant>` (slice 3) to align items |
 
 ---
@@ -1049,7 +1049,7 @@ All resolved for slice 2. Deferred to later slices:
 
 **§11.24** The `is_downgrade` check in plan_change (§1 #8) compares tier ordinals: `enterprise > team > starter`. Same-tier plan_change is rejected upstream at FR-TEN-002 #13 (`no_change` 409), so this FR doesn't need to handle same-tier.
 
-**§11.25** Reason text in refund + dunning audit rows is free-text; FR-BRAIN-111 PII scrubbing applies the standard ruleset. CFO provides reason at refund time; system generates reason for dunning (`payment_failed_retry_<n>`).
+**§11.25** Reason text in refund + dunning audit rows is free-text; FR-MEMORY-111 PII scrubbing applies the standard ruleset. CFO provides reason at refund time; system generates reason for dunning (`payment_failed_retry_<n>`).
 
 ---
 

@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-007, FR-DOC-008, FR-CUO-101, FR-EMAIL-009, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-007, FR-DOC-008, FR-CUO-101, FR-EMAIL-009, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-DOC-007, FR-CUO-101]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1732 2026-05-17 — Closed enum `renewal_recommendation` = {auto_renew_as_is, renew_with_price_adj, renew_with_scope_change, do_not_renew}; cardinality 4
   - DEC-1733 2026-05-17 — AM review required before send to customer (NEVER auto-send per FR-EMAIL-010 dunning pattern)
   - DEC-1734 2026-05-17 — On approval: creates new doc with parent_contract_id pointing to original; status='draft' until signed
-  - DEC-1735 2026-05-17 — BRAIN audit kinds: doc.renewal_draft_created, doc.renewal_approved, doc.renewal_dismissed, doc.renewal_sent
+  - DEC-1735 2026-05-17 — memory audit kinds: doc.renewal_draft_created, doc.renewal_approved, doc.renewal_dismissed, doc.renewal_sent
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without renewal drafts, CLO manually drafts each renewal at d9
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship renewal proposal generation at `services/doc/src/renewal/` triggered at FR-DOC-008 d90 alert or manual, draft via FR-AI-003, AM review required, creates child doc with parent link, 4 BRAIN audit kinds.
+The DOC service **MUST** ship renewal proposal generation at `services/doc/src/renewal/` triggered at FR-DOC-008 d90 alert or manual, draft via FR-AI-003, AM review required, creates child doc with parent link, 4 memory audit kinds.
 
 1. **MUST** trigger at d90 alert via FR-DOC-008 hook OR manual `POST /v1/doc/documents/{id}/draft-renewal` per DEC-1730. Auto-trigger ONLY if `renewal_terms.auto_renew = true`.
 
@@ -126,7 +126,7 @@ The DOC service **MUST** ship renewal proposal generation at `services/doc/src/r
    POST   /v1/doc/renewal-drafts/{id}/send       (FR-EMAIL-009 send after approval)
    ```
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-1735. PII per FR-BRAIN-111: terms+rationale SHA-256 hashed; ids ok.
+8. **MUST** emit 4 memory audit kinds per DEC-1735. PII per FR-MEMORY-111: terms+rationale SHA-256 hashed; ids ok.
 
 9. **MUST** thread trace_id from trigger → AI → AM review → child create → send → audit.
 
@@ -172,7 +172,7 @@ Sample draft:
 ---
 
 ## §4 — Acceptance criteria
-1. **Auto-trigger at d90 with auto_renew=true**. 2. **Manual trigger via POST**. 3. **No trigger when auto_renew=false (manual only)**. 4. **AM review required (no auto-send)**. 5. **Approve creates child doc with parent link**. 6. **Status enum 4 + cardinality test**. 7. **CPI adjustment computed**. 8. **4 BRAIN audit kinds emitted**. 9. **PII scrubbed (terms+rationale SHA256)**. 10. **RLS denies cross-tenant**. 11. **AM/CLO role only**. 12. **Trace_id preserved**. 13. **UNIQUE on parent_document_id (one active draft)**. 14. **Send endpoint requires status=approved**. 15. **Append-only via REVOKE except 4 cols**. 16. **Dismiss → status=dismissed**. 17. **Recommendation enum 4 values**. 18. **AI failure → status=failed + sev-2 + retry**. 19. **Child doc inherits parties (with refresh prompt)**. 20. **Send via FR-EMAIL-009 with renewal template**.
+1. **Auto-trigger at d90 with auto_renew=true**. 2. **Manual trigger via POST**. 3. **No trigger when auto_renew=false (manual only)**. 4. **AM review required (no auto-send)**. 5. **Approve creates child doc with parent link**. 6. **Status enum 4 + cardinality test**. 7. **CPI adjustment computed**. 8. **4 memory audit kinds emitted**. 9. **PII scrubbed (terms+rationale SHA256)**. 10. **RLS denies cross-tenant**. 11. **AM/CLO role only**. 12. **Trace_id preserved**. 13. **UNIQUE on parent_document_id (one active draft)**. 14. **Send endpoint requires status=approved**. 15. **Append-only via REVOKE except 4 cols**. 16. **Dismiss → status=dismissed**. 17. **Recommendation enum 4 values**. 18. **AI failure → status=failed + sev-2 + retry**. 19. **Child doc inherits parties (with refresh prompt)**. 20. **Send via FR-EMAIL-009 with renewal template**.
 
 ---
 
@@ -213,7 +213,7 @@ async fn approve_creates_child_doc() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-007, FR-CUO-101.
-**Cross-module:** FR-DOC-008 (d90 trigger), FR-EMAIL-009 (send), FR-AI-003 (draft+rationale), FR-AUTH-101 (AM/CLO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-008 (d90 trigger), FR-EMAIL-009 (send), FR-AI-003 (draft+rationale), FR-AUTH-101 (AM/CLO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -233,7 +233,7 @@ async fn approve_creates_child_doc() {
 - §11.1 CPI: per-residency lookup table (vn-1: VN CPI, sg-1: SG CPI, eu-1: EU HICP, us-1: US CPI-U).
 - §11.2 AI rationale prompt: "Summarize this renewal proposal (scope/price changes) in 2-3 sentences."
 - §11.3 Child doc inherits parties array; AM prompted to confirm/update before send.
-- §11.4 BRAIN audit body: parent_doc_id, recommendation; draft_terms SHA256.
+- §11.4 memory audit body: parent_doc_id, recommendation; draft_terms SHA256.
 - §11.5 Send templates: branded per tenant (FR-PORTAL-002 brand pack).
 
 ---

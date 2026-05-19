@@ -148,6 +148,15 @@ def parse_legacy_yaml(raw: bytes) -> Tuple[Frontmatter, bytes]:
     correct behaviour and the migration script handles it by surfacing
     such files for human review rather than silently coercing.
 
+    Also accepts the **workbench-era v0 frontmatter shape** that was
+    in use prior to the v1 ``id``/``kind``/``ts_ns``/``actor`` quartet.
+    The v0 names ``memory_id`` / ``scope`` / ``created_by`` /
+    ``created_at`` are aliased onto the v1 schema only when their v1
+    counterparts are missing — explicit v1 values always win. This is the
+    minimum compat shim needed so ``cyberos view`` succeeds on the 708
+    memories imported from the workbench memory on 2026-05-19 (see
+    ``playground/CONSUMED-FROM-WORKBENCH.md``).
+
     NOT round-trip stable. Migration always re-emits via :func:`serialize`.
     """
     import yaml  # noqa: WPS433 — lazy; PyYAML cold-imports ~30ms
@@ -156,9 +165,91 @@ def parse_legacy_yaml(raw: bytes) -> Tuple[Frontmatter, bytes]:
     if not match:
         raise ValueError("no YAML frontmatter block found")
     data = yaml.safe_load(match.group(1).decode("utf-8")) or {}
+    if isinstance(data, dict):
+        _alias_v0_to_v1(data)
     fm = msgspec.convert(data, Frontmatter, strict=False)
     body = raw[match.end():]
     return fm, body
+
+
+# Mapping from v0 ``scope`` values to v1 ``kind`` enum.
+# Anything not in this map falls back to ``"unknown"`` (which IS in the v1
+# enum) and the original v0 scope is preserved in ``extra.v0_scope`` for
+# retrieval. This keeps cyberos validate happy without lying about content
+# semantics — kind=unknown is the honest answer when the v0 scope doesn't
+# fit a v1 kind cleanly.
+_V0_SCOPE_TO_V1_KIND: Final[dict[str, str]] = {
+    "decision": "decision",
+    "fact": "fact",
+    "person": "person",
+    "project": "project",
+    "preference": "preference",
+    "drift": "drift",
+    "refinement": "refinement",
+    "episode": "episode",
+    # v0-only scopes that don't map cleanly → unknown + extra.v0_scope
+    "meta": "unknown",
+    "module": "unknown",
+    "memories": "unknown",
+    "company": "unknown",
+    "client": "unknown",
+    "member": "unknown",
+    "persona": "unknown",
+}
+
+# v0 fields that carry useful metadata and should be preserved into ``extra``
+# rather than dropped silently by msgspec.convert(strict=False).
+_V0_PRESERVE_KEYS: Final[tuple[str, ...]] = (
+    "memory_id", "scope", "classification", "authority", "version",
+    "created_at", "created_by", "last_updated_at", "updated_by",
+    "supersedes", "superseded_by", "expires_at", "provenance", "consent",
+)
+
+
+def _alias_v0_to_v1(data: dict) -> None:
+    """In-place alias workbench-era v0 frontmatter fields onto the v1 schema.
+
+    Only fills missing v1 fields; never clobbers explicit v1 values.
+    Original v0 metadata (scope, classification, authority, version,
+    provenance, etc.) is stashed in ``extra`` so it survives the
+    msgspec.convert(strict=False) pass — that pass drops unknown top-level
+    keys, which would otherwise silently lose the v0 context.
+    """
+    if "id" not in data and "memory_id" in data:
+        data["id"] = data["memory_id"]
+    if "kind" not in data and "scope" in data:
+        v0_scope = data["scope"]
+        if isinstance(v0_scope, str):
+            data["kind"] = _V0_SCOPE_TO_V1_KIND.get(v0_scope, "unknown")
+    if "actor" not in data and "created_by" in data:
+        data["actor"] = data["created_by"]
+    if "ts_ns" not in data and "created_at" in data:
+        from datetime import datetime  # noqa: WPS433 — lazy
+        ts = data["created_at"]
+        dt = None
+        if isinstance(ts, datetime):
+            dt = ts
+        elif isinstance(ts, str):
+            try:
+                dt = datetime.fromisoformat(ts)
+            except ValueError:
+                dt = None
+        if dt is not None:
+            data["ts_ns"] = int(dt.timestamp() * 1_000_000_000)
+
+    # Stash v0-only fields into extra so they survive strict=False drop.
+    # Never overwrite a key that's already in extra (round-trip safety).
+    extra = data.setdefault("extra", {})
+    if isinstance(extra, dict):
+        for key in _V0_PRESERVE_KEYS:
+            if key in data and f"v0_{key}" not in extra:
+                value = data[key]
+                # Coerce non-JSON-serialisable types (datetime, etc.) to str.
+                # extra is dict[str, Any] but msgspec.json.Encoder requires
+                # JSON-compatible types at serialisation time.
+                if hasattr(value, "isoformat"):  # datetime, date
+                    value = value.isoformat()
+                extra[f"v0_{key}"] = value
 
 
 def parse_sidecar(meta_bytes: bytes, body_bytes: bytes) -> Tuple[Frontmatter, bytes]:

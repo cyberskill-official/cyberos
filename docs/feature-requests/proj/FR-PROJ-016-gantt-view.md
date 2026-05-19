@@ -3,7 +3,7 @@ id: FR-PROJ-016
 title: "Gantt view with dependency arrows — issue-to-issue precedence + critical path highlighting + roll-up to parent issue"
 module: PROJ
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-001, FR-PROJ-002, FR-PROJ-015, FR-PROJ-018]
 depends_on: [FR-PROJ-002]
 blocks: []
@@ -56,7 +56,7 @@ sub_tasks:
   - "1.0h: kbd shortcut D to add dependency (focused bar prompts for target)"
   - "1.0h: gantt_test.tsx — render + cycle detection + critical path"
   - "1.5h: dependencies_test.rs — DAG operations + cycle prevention + perf"
-  - "0.5h: BRAIN audit 'proj.dependency_*'"
+  - "0.5h: memory audit 'proj.dependency_*'"
 risk_if_skipped: "Gantt is a planning artifact; without dependency arrows, scheduling overlap-aware sequencing is manual. Without critical-path highlight, slack analysis hidden. Without cycle prevention, dependency graph corrupts (X→Y→X loop). Without parent-roll-up, hierarchical epics don't render their child progress. Marked SHOULD (not MUST) because Timeline + manual ordering suffices for slice 3."
 ---
 
@@ -73,7 +73,7 @@ The Gantt view **MUST** extend the FR-PROJ-015 Timeline with directed dependenci
     - `POST /api/proj/issues/:id/dependencies` body `{predecessor_id, kind}` → 201 or 422 (cycle | duplicate).
     - `DELETE /api/proj/issues/:id/dependencies/:predecessor_id` → 204.
     - `GET /api/proj/cycles/:id/dependencies` → list of edges + computed critical-path subset.
-7. **MUST** emit BRAIN audit rows:
+7. **MUST** emit memory audit rows:
     - `proj.dependency_added` on POST.
     - `proj.dependency_removed` on DELETE.
     - `proj.critical_path_recomputed` with hash of new path on change.
@@ -193,7 +193,7 @@ pub async fn add_dependency(
          DepError::AlreadyExists
      } else { DepError::Db(e.to_string()) })?;
 
-    emit_brain_row("proj.dependency_added", serde_json::json!({
+    emit_memory_row("proj.dependency_added", serde_json::json!({
         "predecessor_id": predecessor, "successor_id": successor,
         "by_subject_id": subject,
     })).await;
@@ -282,8 +282,8 @@ export function computeCriticalPath(issues: Issue[], edges: Edge[]): string[] {
 10. **Memoised** — re-render without dependency change → no recompute.
 11. **Recompute on estimate change** — issue estimate change → new critical path; row `critical_path_recomputed`.
 12. **Parent roll-up renders** — parent issue with 3 children → parent bar = min/max of children.
-13. **BRAIN audit dependency_added** — POST → row.
-14. **BRAIN audit dependency_removed** — DELETE → row.
+13. **memory audit dependency_added** — POST → row.
+14. **memory audit dependency_removed** — DELETE → row.
 15. **Kbd D opens dialog** — focused bar + D → dependency picker.
 16. **RLS isolates** — tenant A's edges invisible to tenant B.
 17. **axe-core passes** — SVG decorative; nav via dialog.

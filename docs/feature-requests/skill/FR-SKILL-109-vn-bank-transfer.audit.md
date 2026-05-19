@@ -17,7 +17,7 @@ FR-SKILL-109 authored direct-to-10/10. ~700 lines. 14 §1 clauses (TransferReque
 ## §2 — Findings (all resolved during authoring)
 
 ### ISS-001 — Pure-local vs API integration
-Naive design adds outbound Napas247 API call (latency + rate limit). Resolved: §1 + §2 pure-local; skill generates QR string only; settlement is bank-network; `allowed_tools: [BrainEmit]` only (no HttpFetch).
+Naive design adds outbound Napas247 API call (latency + rate limit). Resolved: §1 + §2 pure-local; skill generates QR string only; settlement is bank-network; `allowed_tools: [MemoryEmit]` only (no HttpFetch).
 
 ### ISS-002 — CRC algorithm choice
 Multiple CRC16 variants exist (XMODEM, ARC, CCITT-FALSE). Banks reject mismatches silently. Resolved: §1 #5 explicit CCITT-FALSE (poly 0x1021, init 0xFFFF) + §3 implementation + AC #13 against VietQR.io reference vector `C0A0`.

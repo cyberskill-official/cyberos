@@ -4,7 +4,7 @@ id: FR-AI-011
 title: "Presidio EN-base PII redaction in-flight (every prompt)"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -12,7 +12,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-002, FR-AI-005, FR-AI-008, FR-AI-012, FR-AI-013, FR-AI-021]
 depends_on: [FR-AI-008]
 blocks: [FR-AI-012, FR-AI-013]
@@ -54,7 +54,7 @@ disallowed_tools:
   - run a non-localhost presidio (sidecar MUST be loopback only — no network egress)
   - skip redaction on any chat path (every chat call MUST go through redact())
   - log raw prompt text after redaction (logs MUST contain only the redacted form)
-  - persist RestorationMap to disk, Postgres, or BRAIN (memory-only by §1 #4)
+  - persist RestorationMap to disk, Postgres, or memory (memory-only by §1 #4)
   - format!("{:?}", PiiType) for OBS labels (use as_metric_label() per FR-AI-007 ISS-003 pattern)
   - include prompt fragments in RedactError variants (error messages MUST NOT leak input)
 
@@ -68,7 +68,7 @@ sub_tasks:
   - "1.0h: Restoration module (UUID-tagged placeholders, idempotent placeholder generation, Drop-clears-map invariant)"
   - "0.5h: Integration with chat handler (call redact between precheck and router::call_provider)"
   - "1.0h: Tests (12 cases — credit card, SSN, email, phone, name, date, address, IP, no-PII, mixed, idempotency, no-leak-in-logs)"
-risk_if_skipped: "Sensitive PII (CCCD, credit card, SSN, etc.) leaks to every LLM provider on every call. GDPR Art. 5(1)(c) + PDPL Art. 7 + Singapore PDPA s.18 data-minimisation violated by every call. Audit trail (BRAIN ai.invocation row) contains raw PII forever — not GDPR-erasable in practice. Catastrophic compliance failure on first auditor review; vacate all enterprise contracts that require DPA compliance; brand damage. The other PII work (FR-AI-012 VN layer, FR-AI-013 recall-floor CI) layers ON TOP of this baseline."
+risk_if_skipped: "Sensitive PII (CCCD, credit card, SSN, etc.) leaks to every LLM provider on every call. GDPR Art. 5(1)(c) + PDPL Art. 7 + Singapore PDPA s.18 data-minimisation violated by every call. Audit trail (memory ai.invocation row) contains raw PII forever — not GDPR-erasable in practice. Catastrophic compliance failure on first auditor review; vacate all enterprise contracts that require DPA compliance; brand damage. The other PII work (FR-AI-012 VN layer, FR-AI-013 recall-floor CI) layers ON TOP of this baseline."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -78,11 +78,11 @@ The AI Gateway service **MUST** redact English-base PII from every prompt before
 1. **MUST** run a Presidio sidecar (localhost-only, no network egress) — Python 3.11 + presidio-analyzer 2.2.x + presidio-anonymizer 2.2.x in a separate container/process. The sidecar's HTTP server MUST bind to `127.0.0.1:5050` exclusively; binding to `0.0.0.0` is a deploy-time validation failure.
 2. **MUST** redact the following PII types by default: `CREDIT_CARD`, `US_SSN`, `EMAIL_ADDRESS`, `PHONE_NUMBER`, `PERSON`, `LOCATION`, `IP_ADDRESS`, `IBAN_CODE`, `US_BANK_NUMBER`, `MEDICAL_LICENSE`. The default set is a closed enum (`PiiType`) and CANNOT be reduced by tenant policy in slice 3 — only EXTENDED via `pii_redaction_extra` (FR-AI-012's VN types). Each replacement preserves a typed placeholder (`<EMAIL_1>`, `<PERSON_2>`, etc.) where the integer suffix is monotonic per (PiiType, request).
 3. **MUST** produce a restoration map (`{ "<EMAIL_1>": "user@example.com" }`) returned alongside the redacted prompt. The handler retains the map for the duration of the request; the LLM never sees the raw values.
-4. **MUST NOT** persist the restoration map to disk, Postgres, BRAIN, OBS metrics, error messages, or any structured log field. The map exists for the request lifetime only and is dropped via `RestorationMap`'s `Drop` impl (which `zeroize`s the underlying memory).
+4. **MUST NOT** persist the restoration map to disk, Postgres, memory, OBS metrics, error messages, or any structured log field. The map exists for the request lifetime only and is dropped via `RestorationMap`'s `Drop` impl (which `zeroize`s the underlying memory).
 5. **MUST** restore typed placeholders in the LLM response BEFORE returning to the caller IF AND ONLY IF the placeholders appear in tool-call argument fields (e.g., a function call with `to: "<EMAIL_1>"` becomes `to: "user@example.com"`). For text-only response fields, placeholders MUST stay as-is in the response — the LLM was instructed (via system prompt) to not output unredacted PII; if a placeholder appears in plain text, returning it to the caller is the safe default.
 6. **MUST** complete redaction within **30ms p95** for prompts ≤ 8KB. Larger prompts scale linearly with content size; the latency budget is `30ms + 4ms/KB` for prompts ≤ 64KB. Prompts >64KB are rejected at the request-validation layer (FR-API-002) and never reach `redact()`.
 7. **MUST** fail closed: if the Presidio sidecar is unreachable, returns a non-2xx, or times out (>2s), the gateway MUST refuse the call with `503 SERVICE_UNAVAILABLE` (`pii_redaction_unavailable`). Calls do NOT proceed unredacted under any circumstance — there is no `bypass_redaction` policy flag.
-8. **MUST** carry the PII-type counts to BRAIN audit row (FR-AI-002's `ai.invocation`): `extra.pii_redactions = { "credit_card": 1, "email_address": 3, ... }`. Counts only, NEVER values. The keys MUST come from `PiiType::as_metric_label()` for stability across refactors.
+8. **MUST** carry the PII-type counts to memory audit row (FR-AI-002's `ai.invocation`): `extra.pii_redactions = { "credit_card": 1, "email_address": 3, ... }`. Counts only, NEVER values. The keys MUST come from `PiiType::as_metric_label()` for stability across refactors.
 9. **MUST** emit OTel metrics with stable label values: `ai_redact_calls_total{outcome}` (counter; outcome ∈ `ok`/`sidecar_unreachable`/`sidecar_timeout`/`sidecar_error`/`invalid_prompt`), `ai_redact_latency_ms{outcome}` (histogram), `ai_redact_pii_types_total{type}` (counter; type from `PiiType::as_metric_label()`), `ai_redact_prompt_size_bytes` (histogram). All labels MUST be sourced from `as_metric_label()` methods — never `format!("{:?}", ...)`.
 10. **SHOULD** support tenant-level PII-type extensions via `policy.ai_policy.pii_redaction_extra: ["VN_CCCD", "VN_MST"]` — but English-base 10 types are always on (no opt-out at slice 3). FR-AI-012 wires the VN types into the sidecar's recognizer registry.
 11. **MUST** be idempotent — calling `redact(prompt, policy)` twice with the same `(prompt, policy_snapshot)` MUST produce restoration maps with the SAME placeholder names mapped to the SAME values. Within a single process, the placeholder counter resets per request; across processes, identical `(prompt, policy)` produces identical redacted output. This is enforced by the deterministic ordering of Presidio analyzer results (sorted by `start` offset).
@@ -90,7 +90,7 @@ The AI Gateway service **MUST** redact English-base PII from every prompt before
 13. **MUST NOT** log the raw prompt text at any tracing level (including DEBUG and TRACE) inside the redact module or downstream. The `tracing::info!`/`debug!` calls MUST log only the redacted form, the latency, and the counts. A dedicated test (`redact_no_log_test.rs`) inspects emitted log records and asserts no raw PII appears.
 14. **MUST** emit a sev-1 alarm when `ai_redact_calls_total{outcome="sidecar_unreachable"}` exceeds 5 events in 60 seconds. A persistent sidecar-down state stops every chat call; operators MUST be paged immediately.
 15. **MUST** validate the sidecar binds to `127.0.0.1` only at deploy time. The compose/k8s manifests use `network_mode: "host"` with explicit `extra_hosts` (or k8s `hostNetwork: false` with localhost-only service); a startup integration test confirms the sidecar refuses connections from non-loopback addresses.
-16. **MUST** ensure the original (un-redacted) text NEVER reaches the BRAIN audit-row emit path per AUTHORING.md §3.6 rule 18. The call sequence is `redact::redact(text) → RedactionResult { redacted_text, map } → cost_ledger::precheck(.., redacted_text) → BRAIN row.extra.prompt_snippet = first 256 chars of redacted_text`. The `RestorationMap` is held in a separate `Zeroizing<HashMap<...>>` that is NEVER serialised into any chain or log row. AC #17 verifies via a `tracing-test` capture that no chain row written during a redaction-round-trip test contains any of the original PII values.
+16. **MUST** ensure the original (un-redacted) text NEVER reaches the memory audit-row emit path per AUTHORING.md §3.6 rule 18. The call sequence is `redact::redact(text) → RedactionResult { redacted_text, map } → cost_ledger::precheck(.., redacted_text) → memory row.extra.prompt_snippet = first 256 chars of redacted_text`. The `RestorationMap` is held in a separate `Zeroizing<HashMap<...>>` that is NEVER serialised into any chain or log row. AC #17 verifies via a `tracing-test` capture that no chain row written during a redaction-round-trip test contains any of the original PII values.
 17. **MUST** use the `cyberos_pii::redact_for_log(text, &policy)` helper in every log statement that takes a text field per AUTHORING.md §3.6 rule 19. Direct `tracing::info!(?text)` / `tracing::debug!(prompt = %prompt)` / etc. with raw text are spec violations. The codebase enforces this via `#[deny(clippy::disallowed_methods)]` registered in `clippy.toml`. The `redact_for_log` helper applies a fast-path regex redaction (email/phone/MST) without a sidecar round-trip — it's the right balance for log latency.
 
 This is the EN baseline. FR-AI-012 adds the Vietnamese-specific layer (CCCD, MST, VN phone formats); FR-AI-013 adds the recall-floor CI gate (≥ 99% precision on a curated 200-sample test set).
@@ -103,7 +103,7 @@ This is the EN baseline. FR-AI-012 adds the Vietnamese-specific layer (CCCD, MST
 
 **Why a sidecar (Python) instead of an in-process Rust library?** Presidio is Python and slow to load — the spaCy NER models alone take ~3 seconds to initialise. Running it as a sidecar with a warm process pool gives us 5-15ms redaction latency per request vs 3+ seconds cold-start. The sidecar is localhost-only — bound to `127.0.0.1:5050` — so there's no network egress, no compliance exposure, no DDoS surface. PyO3 (Rust calling Python) was considered and rejected: Presidio's transitive deps (spaCy + transformers + NLTK) make in-process embedding hostile to Rust's static-linking ergonomics, and the Python GIL limits concurrency to one redaction at a time per process.
 
-**Why fail closed on sidecar unreachable?** If we proceeded unredacted, every prompt with PII would leak to the LLM AND get persisted in the BRAIN audit row — a compliance breach for every affected request. The cost of refusing the call (operator sees `503`, retries) is tiny compared to the cost of a single PII leak (which could trigger a regulator notification, a public disclosure, brand damage, contract loss). The "open the door if the metal detector breaks" alternative is unconscionable for a compliance gate.
+**Why fail closed on sidecar unreachable?** If we proceeded unredacted, every prompt with PII would leak to the LLM AND get persisted in the memory audit row — a compliance breach for every affected request. The cost of refusing the call (operator sees `503`, retries) is tiny compared to the cost of a single PII leak (which could trigger a regulator notification, a public disclosure, brand damage, contract loss). The "open the door if the metal detector breaks" alternative is unconscionable for a compliance gate.
 
 **Why typed placeholders (`<EMAIL_1>`) instead of generic `[REDACTED]`?** Two reasons. (1) The LLM can still reason about the structure of the prompt — "send an email to <EMAIL_1>" is parseable as an instruction; "send an email to [REDACTED]" is ambiguous (was that originally a name? an email?). (2) Tool-call restoration becomes mechanical — when the LLM responds with a tool call `{"to": "<EMAIL_1>"}`, the gateway re-injects the real email by literal-string lookup. Generic placeholders would require fuzzy matching, which is fragile.
 
@@ -111,7 +111,7 @@ This is the EN baseline. FR-AI-012 adds the Vietnamese-specific layer (CCCD, MST
 
 **Why restore in tool-call args but NOT in text response fields?** Asymmetric trust. Tool-call args are structured: the LLM has produced a literal `<EMAIL_1>` token because it wants the system to send to that email. Restoration is mechanical and the result feeds an automated action (sending email, calling API). Text response fields are free-form: if the LLM produces "I sent the email to <EMAIL_1>", restoring would leak the email back to a possibly-untrusted UI. The conservative default is "restore only what the gateway will use to act; never leak in human-visible text". Tenants who want full restoration can explicitly request it via the `restore_in_text: true` policy field (slice 5).
 
-**Why does idempotency matter?** Two angles. (1) Tenant DX: a developer testing the same prompt twice should see the same placeholders ("did my code change the redaction?"). (2) Audit: the BRAIN row's `pii_redactions` count must match between dry-run and real calls; idempotency ensures comparing two runs is deterministic. Idempotency is achieved by sorting Presidio's analyzer results by `start` offset and assigning placeholder indices in order — the same input prompt produces the same numeric suffixes.
+**Why does idempotency matter?** Two angles. (1) Tenant DX: a developer testing the same prompt twice should see the same placeholders ("did my code change the redaction?"). (2) Audit: the memory row's `pii_redactions` count must match between dry-run and real calls; idempotency ensures comparing two runs is deterministic. Idempotency is achieved by sorting Presidio's analyzer results by `start` offset and assigning placeholder indices in order — the same input prompt produces the same numeric suffixes.
 
 **Why do `RedactError` variants forbid prompt fragments?** A common bug pattern: the error message includes the input as context for debugging ("failed to redact prompt: '<first 100 chars>'"). This leaks the very PII we just refused to send. The `RedactError::SidecarError` variant's `message` MUST be the sidecar's GENERIC textual error code (e.g., `"recognizer_init_failed"`, `"analyzer_timeout"`), NEVER an echo of the request. A dedicated CI lint (`grep`-based) flags any `format!` in the redact module that interpolates a prompt-derived value into an error.
 
@@ -327,7 +327,7 @@ Total p95:                       ~30ms (8KB prompt budget)
 6. **30ms p95 latency** — 1000 random prompts (1-8KB each); p95 ≤ 30ms, measured by Criterion benchmark.
 7. **Restoration round-trip** — `restore(LLM_response_with_placeholders, map)` correctly substitutes typed placeholders back to original values.
 8. **Restoration only for tool-call args** — A plain-text response that says "I sent the email to <EMAIL_1>" is RETURNED AS-IS to the caller (no restoration in text); only tool-call argument fields restore. AC test asserts text-field placeholders survive verbatim.
-9. **Audit row carries counts only** — BRAIN `ai.invocation` row's `extra.pii_redactions = {"email_address": 2, ...}`; no original PII values appear anywhere in the chain. Test inspects the audit row JSON and asserts no email/phone/SSN regex matches.
+9. **Audit row carries counts only** — memory `ai.invocation` row's `extra.pii_redactions = {"email_address": 2, ...}`; no original PII values appear anywhere in the chain. Test inspects the audit row JSON and asserts no email/phone/SSN regex matches.
 10. **Concurrent redactions isolated** — 100 concurrent redactions; each gets its own restoration map; no cross-request bleeding. Verified by giving each request a unique sentinel email and asserting each result map contains only its own.
 11. **Idempotency** — `redact(P, policy)` called twice with the same `(P, policy)` produces identical `redacted_text` and identical `map` keys/values. The placeholder counter is per-request (resets each call); the deterministic sort guarantees same-input → same-output.
 12. **No PII in error variants** — `RedactError::SidecarError { message }` MUST NOT contain any character sequence matching common PII regex (email, SSN, credit-card). Test inspects the error from a contrived sidecar that returns "your prompt was: foo@bar.com" (which the sidecar SHOULD NOT do per §1 #12) and asserts the Rust error variant has filtered/replaced the message.
@@ -335,7 +335,7 @@ Total p95:                       ~30ms (8KB prompt budget)
 14. **Sev-1 alarm on persistent sidecar-down** — Configure 6 sidecar-down events in 60s; assert the OBS alarm fires (verifiable via metrics-test scaffold).
 15. **Sidecar localhost-only bind** — Deploy-time integration test attempts to connect to the sidecar from a non-loopback IP; assertion: connection refused. Verifies §1 #15.
 16. **Sidecar timeout (>2s)** — Sidecar returns response after 3s; `RedactError::SidecarTimeout { waited_ms: 2000 }`; gateway returns 503.
-17. **Original PII never in BRAIN chain (AUTHORING.md §3.6 rule 18)** — Round-trip test: redact `"email a@b.com mst 0312345678"`, then run `cost_ledger::precheck` which emits a BRAIN row. Read back the row via `BrainStore::read_last_row()` and assert `row.extra.prompt_snippet.contains("a@b.com") == false` AND `row.extra.prompt_snippet.contains("0312345678") == false`. The redacted form `<EMAIL_ADDRESS_1>` / `<VN_MST_1>` MUST be the only form present.
+17. **Original PII never in memory chain (AUTHORING.md §3.6 rule 18)** — Round-trip test: redact `"email a@b.com mst 0312345678"`, then run `cost_ledger::precheck` which emits a memory row. Read back the row via `MemoryStore::read_last_row()` and assert `row.extra.prompt_snippet.contains("a@b.com") == false` AND `row.extra.prompt_snippet.contains("0312345678") == false`. The redacted form `<EMAIL_ADDRESS_1>` / `<VN_MST_1>` MUST be the only form present.
 18. **`redact_for_log` lint enforced (AUTHORING.md §3.6 rule 19)** — A `cargo clippy --all-targets --all-features -- -D clippy::disallowed_methods` run on a synthetic file containing `tracing::info!(?prompt)` MUST exit non-zero. The lint config in `clippy.toml` lists the disallowed direct log methods.
 
 ---
@@ -814,7 +814,7 @@ pub fn restore(text: &str, map: &RestorationMap) -> String {
 
 ### Code dependencies (other FRs/modules)
 
-- **FR-AI-001 / FR-AI-002** — `cost_ledger::precheck` runs BEFORE `redact()`; `cost_ledger::reconcile` runs AFTER `router::call_provider` returns; the BRAIN `ai.invocation` row's `extra.pii_redactions` field is populated from `RedactionResult.counts`.
+- **FR-AI-001 / FR-AI-002** — `cost_ledger::precheck` runs BEFORE `redact()`; `cost_ledger::reconcile` runs AFTER `router::call_provider` returns; the memory `ai.invocation` row's `extra.pii_redactions` field is populated from `RedactionResult.counts`.
 - **FR-AI-005** — `TenantPolicy.ai_policy.pii_redaction_extra` lives in the policy schema.
 - **FR-AI-008** — `router::call_provider` is invoked AFTER redact returns; the redacted prompt is what reaches the LLM.
 - **FR-AI-012 (downstream)** — Adds VN-specific recognizers (CCCD, MST, VN_PHONE, VN_ADDRESS) to the sidecar's analyzer registry. The Rust enum already includes the variants.
@@ -885,7 +885,7 @@ RedactionResult {
 { "tool": "send_email", "args": { "to": "john@cyberos.world", "body": "Thank you for closing!" } }
 ```
 
-### BRAIN audit row excerpt
+### memory audit row excerpt
 
 ```yaml
 extra:
@@ -926,7 +926,7 @@ All resolved at authoring time. Items deferred to later FRs:
 | FastAPI default 422 body echo on malformed request | Custom `RequestValidationError` handler in sidecar | Returns `{"detail": "validation_error"}`; allowlist sanitizer in Rust catches anything missed | ISS-003 fix |
 | Presidio reports an entity type with no `PiiType` variant | `from_presidio` returns None | Item dropped + `tracing::warn!` + `ai_redact_unknown_entity_dropped_total{entity}` increments | CI test `every_presidio_entity_has_pii_type_variant` fails on next PR — ISS-004 fix |
 | `tracing::debug!` called with raw prompt | `redact_no_log_test.rs` CI gate | Test fails on every PR that introduces this | PR rework |
-| RestorationMap accidentally serialized to BRAIN | grep-based CI lint on src/cost_ledger/ | Lint fails on PR | PR rework |
+| RestorationMap accidentally serialized to memory | grep-based CI lint on src/cost_ledger/ | Lint fails on PR | PR rework |
 | Persistent sidecar-down (>5 events / 60s) | OBS alarm rule | Sev-1 page to operator | Operator action |
 | spaCy model corrupted on disk | sidecar startup error | Sidecar refuses to bind; gateway sees connection-refused; cascades to sev-1 | Operator re-pulls sidecar image |
 | PiiType enum out of sync with sidecar registry | unknown `entity` in sidecar response → `from_presidio` None | Item dropped; potential PII passthrough | CI test asserts every Presidio entity has a PiiType variant |

@@ -26,7 +26,7 @@ consults:
   - { persona: cuo/chief-product-officer, when: "product OKRs need refinement against current PRDs" }
 
 audit_hooks:
-  - each step emits artefact_write to BRAIN audit chain
+  - each step emits artefact_write to memory audit chain
   - workflow_complete row on PASS with company_okrs hash + per-function KR count
   - HITL pause at step 2 if objectives-and-key-results-set-audit fires on overlapping KRs across functions
 ---

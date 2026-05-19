@@ -93,8 +93,8 @@ These rules ship with FR-SKILL-103 (already accepted; this rubric is the post-10
 |---|---|---|---|
 | `SKB-100` | `name:` matches kebab-case + matches folder name | error | FR-SKILL-103 §1 #2 |
 | `SKB-101` | `description:` ≤1024 chars (raised by FR-SKILL-111 from prior 200-char baseline) | error | FR-SKILL-103 §1 #2 + FR-SKILL-111 §1 #2 |
-| `SKB-102` | `allowed_brain_scopes:` globs validate via `globset@0.4` | error | FR-SKILL-103 §1 #2 |
-| `SKB-103` | `allowed_mcp_tools:` values are in canonical tool enum (Bash, Read, Write, Edit, Glob, Grep, BrainRead, BrainSearch, HttpFetch + MCP names from FR-SKILL-104 registry) | error | FR-SKILL-103 §1 #2 |
+| `SKB-102` | `allowed_memory_scopes:` globs validate via `globset@0.4` | error | FR-SKILL-103 §1 #2 |
+| `SKB-103` | `allowed_mcp_tools:` values are in canonical tool enum (Bash, Read, Write, Edit, Glob, Grep, MemoryRead, MemorySearch, HttpFetch + MCP names from FR-SKILL-104 registry) | error | FR-SKILL-103 §1 #2 |
 | `SKB-104` | `version:` is valid SemVer | error | FR-SKILL-103 §1 #2 |
 | `SKB-105` | `signature:` (when present) verifies ed25519 over `SHA-256(frontmatter_yaml_canonical) \|\| SHA-256(body_markdown_canonical)` | error | FR-SKILL-103 §1 #7 |
 | `SKB-106` | `min_broker_version` / `max_broker_version` SemVer-compatible with current broker | error | FR-SKILL-103 §1 #3 |

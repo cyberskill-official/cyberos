@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CDO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-KB-002, FR-KB-003, FR-KB-004, FR-KB-005, FR-KB-007, FR-KB-008, FR-KB-009]
+memory_chain_hash: null
+related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-KB-002, FR-KB-003, FR-KB-004, FR-KB-005, FR-KB-007, FR-KB-008, FR-KB-009]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
 blocks: [FR-KB-002, FR-KB-003, FR-KB-004, FR-KB-005, FR-KB-007, FR-KB-008, FR-KB-009]   # all 7 entries are placeholders — not yet specified (downstream consumers)
 
@@ -30,11 +30,11 @@ source_decisions:
   - DEC-246 (markdown body 1–500_000 chars; frontmatter YAML-validated against schema; oversize is an FR-KB-2xx import problem, not a slice-1 case)
   - DEC-247 (REVOKE UPDATE, DELETE on document_versions from cyberos_app — append-only enforced at SQL grant)
   - DEC-248 (frontmatter required keys: title, category, language, permission; optional: tags, owner_subject_id, translation_of, summary, applicability_tags for runbooks)
-  - DEC-249 (BRAIN audit kinds: kb.document_created, kb.document_versioned, kb.document_acl_changed, kb.document_archived)
+  - DEC-249 (memory audit kinds: kb.document_created, kb.document_versioned, kb.document_acl_changed, kb.document_archived)
   - DEC-250 (role_restricted tier requires non-empty allowed_role_codes array referencing FR-AUTH-101 closed role enum; unknown roles rejected at handler)
   - DEC-251 (archived documents: status='archived' marks the doc as no longer current; existing versions remain queryable but FR-KB-002's search defaults to active-only; rendering still works)
   - DEC-252 (frontmatter `category` MUST match the closed enum; mismatch → 400 unknown_category at the API boundary; ADR to add a 6th category)
-  - PDPL Art. 13 (data minimisation — KB docs storing PII subject to scrubbing per FR-BRAIN-111 before BRAIN ingest)
+  - PDPL Art. 13 (data minimisation — KB docs storing PII subject to scrubbing per FR-MEMORY-111 before memory ingest)
   - ISO 27001:2022 A.5.13 (information classification — KB's 3 permission tiers map to the standard's classify-and-protect requirement)
 
 language: rust 1.81 + sql
@@ -47,7 +47,7 @@ new_files:
   - services/kb/src/frontmatter.rs                                    # YAML schema validator (serde_yaml + custom validation)
   - services/kb/src/repo/documents.rs                                 # CRUD: create + get + list + new_version + archive
   - services/kb/src/repo/versions.rs                                  # append-only version writer
-  - services/kb/src/audit/doc_events.rs                               # canonical kb.document_* BRAIN row builders
+  - services/kb/src/audit/doc_events.rs                               # canonical kb.document_* memory row builders
   - services/kb/src/handlers/documents.rs                             # POST/GET/PATCH/DELETE /v1/kb/documents + POST /versions
   - services/kb/Cargo.toml                                            # +sqlx, +uuid, +serde, +serde_yaml, +chrono, +async-trait, +cyberos-cli-exit
   - services/kb/tests/documents_crud_test.rs                          # happy + invalid + RLS + idempotent
@@ -125,7 +125,7 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
 
 13. **MUST** compute `body_sha256` server-side on every version write: `SHA-256(markdown_body)` as 64-char lowercase hex. Used by FR-KB-002's render-cache invalidation and by ingestion replay. Identical body in successive saves → still a new version row (the operator wanted to record a change for some reason — maybe metadata-only changes).
 
-14. **MUST** emit BRAIN audit row `kb.document_created` on document creation (first version). The row carries `{document_id, tenant_id, slug, language, category, permission, owner_subject_id_hash16, created_by_subject_id_hash16, body_sha256, version_number, ts_ns}`.
+14. **MUST** emit memory audit row `kb.document_created` on document creation (first version). The row carries `{document_id, tenant_id, slug, language, category, permission, owner_subject_id_hash16, created_by_subject_id_hash16, body_sha256, version_number, ts_ns}`.
 
 15. **MUST** emit `kb.document_versioned` on every subsequent version write. Same shape as `kb.document_created` plus `prev_version_id` and `change_summary`.
 
@@ -168,7 +168,7 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
 
 ## §2 — Why this design (rationale for humans)
 
-**Why immutable versions instead of UPDATE-in-place (DEC-243, DEC-247)?** Every AI answer that cites a KB doc cites a *version* — "according to runbook X version 7, the remediation is…". If the doc is silently edited, the citation becomes false. Immutable versions preserve the citation forever; the audit chain (BRAIN) records every save. The cost is one new row per save (small); the benefit is "Q&A answers are always defensibly grounded."
+**Why immutable versions instead of UPDATE-in-place (DEC-243, DEC-247)?** Every AI answer that cites a KB doc cites a *version* — "according to runbook X version 7, the remediation is…". If the doc is silently edited, the citation becomes false. Immutable versions preserve the citation forever; the audit chain (memory) records every save. The cost is one new row per save (small); the benefit is "Q&A answers are always defensibly grounded."
 
 **Why closed category enum (DEC-240)?** Categories drive downstream behaviour: FR-KB-008's runbook router filters `category='runbook'`; FR-KB-007's "Ask this page" weights by category; OBS auto-triage prefers runbook + reference. Free-form categories would mean each consumer needs its own normalisation (drift); the closed 5-value enum is the contract. Adding a 6th is an ADR — forces consideration of cross-consumer impact.
 
@@ -186,7 +186,7 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
 
 **Why identical body still creates a new version (§1 #13)?** Operators may "re-publish" a doc to bump the timestamp (e.g. confirming a policy is still current). The cost of an extra row is trivial; preventing it would force operators to make trivial edits (whitespace change) just to trigger the version. The change_summary field captures the WHY.
 
-**Why ACL change is a sev-2 BRAIN row (§1 #16, DEC-249)?** Permission tier transitions affect data exposure. Moving a doc from `org_only` to `public` is a Trust Center publication event — operator should review. Moving from `role_restricted` to `org_only` widens visibility — same. Sev-2 emission ensures FR-OBS-007 surfaces ACL changes in operator digests. Routine creates/edits are sev-3 (informational only).
+**Why ACL change is a sev-2 memory row (§1 #16, DEC-249)?** Permission tier transitions affect data exposure. Moving a doc from `org_only` to `public` is a Trust Center publication event — operator should review. Moving from `role_restricted` to `org_only` widens visibility — same. Sev-2 emission ensures FR-OBS-007 surfaces ACL changes in operator digests. Routine creates/edits are sev-3 (informational only).
 
 **Why `status='draft' | 'active' | 'archived'` and not boolean (§1 #6)?** Draft is the create-state when the doc isn't ready to be findable (FR-KB-004 search excludes drafts). Archived is "no longer current but rendering preserved" — old policies referenced by historical citations stay accessible. Boolean active/inactive collapses these to one bit and loses the draft/archived distinction.
 
@@ -200,11 +200,11 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
 
 **Why role_restricted validates against FR-AUTH-101 enum (§1 #11, DEC-250)?** Free-form role strings drift; an `"allowed_role_codes": ["devops"]` row that AUTH doesn't recognise is silent over-permission. Validating against the AUTH closed enum at write time catches typos at the boundary.
 
-**Why archive requires a reason (§1 #19)?** Archiving is consequential — the doc disappears from search; readers who relied on it discover the gap later. Requiring a reason captures the WHY (superseded by doc-X, no longer applicable, decision reversed). The BRAIN audit row preserves it permanently.
+**Why archive requires a reason (§1 #19)?** Archiving is consequential — the doc disappears from search; readers who relied on it discover the gap later. Requiring a reason captures the WHY (superseded by doc-X, no longer applicable, decision reversed). The memory audit row preserves it permanently.
 
 **Why body bounds 1–500,000 chars (§1 #2)?** Below 1 = empty doc (caller should DELETE the row, not save an empty version). Above 500K = pathological copy-paste from a foreign source; FR-KB-002's renderer would OOM on >MB markdown. 500K is ~100 pages of dense prose — well beyond any reasonable single doc.
 
-**Why no slug-rename handler (§1 #19)?** Slug is the URL identity; renaming would break every external link, every BRAIN citation. The operator wanting to rename creates a new doc + redirect (slice 2+). Slug is effectively immutable post-create.
+**Why no slug-rename handler (§1 #19)?** Slug is the URL identity; renaming would break every external link, every memory citation. The operator wanting to rename creates a new doc + redirect (slice 2+). Slug is effectively immutable post-create.
 
 **Why PATCH excludes markdown_body (§1 #19)?** Body changes go through versions, not PATCH. Allowing PATCH to mutate body would either silently create a new version (confusing) or UPDATE the version row (violates immutability). Separating endpoints clarifies semantics.
 
@@ -591,7 +591,7 @@ pub async fn create_document(
 3. **Language closed at 2** — same shape.
 4. **Status closed at 3** — same shape.
 5. **RLS isolates by tenant** — query as tenant-A returns 0 documents of tenant-B.
-6. **Create document happy path** — 201 with Document JSON; 1 row in documents + 1 in document_versions; `kb.document_created` BRAIN row emitted.
+6. **Create document happy path** — 201 with Document JSON; 1 row in documents + 1 in document_versions; `kb.document_created` memory row emitted.
 7. **Slug uniqueness per (tenant, language)** — second create with same (tenant, language, slug) → 409 `slug_taken`.
 8. **Same slug different language allowed** — create with `language=vi` then `language=en` same slug → both succeed.
 9. **translation_of self-link rejected** — set `translation_of = self.id` → 400 `translation_self_link`.
@@ -608,8 +608,8 @@ pub async fn create_document(
 20. **Markdown body > 500_000 chars** → 400 `body_too_large` (DB CHECK fires).
 21. **Frontmatter unknown key rejected** — YAML with `xyz: abc` → 400 `unknown_frontmatter_key`.
 22. **Frontmatter applicability_tags on non-runbook rejected** — category=policy with applicability_tags → 400.
-23. **Archive emits BRAIN row** — POST /archive → status=archived; `kb.document_archived` row with reason.
-24. **ACL change emits sev-2 BRAIN row** — PATCH permission tier → `kb.document_acl_changed` row.
+23. **Archive emits memory row** — POST /archive → status=archived; `kb.document_archived` row with reason.
+24. **ACL change emits sev-2 memory row** — PATCH permission tier → `kb.document_acl_changed` row.
 25. **active_documents_view excludes draft + archived** — query returns only status='active' docs.
 26. **document_version_chain returns oldest-first** — chain of 3 versions → 3 rows in order [1, 2, 3].
 27. **Perf budget < 100 ms p95** — `documents_perf_test` 1000 iterations.
@@ -687,7 +687,7 @@ async fn version_numbers_monotonic(ctx: TestCtx) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton. The 4 BRAIN row builders in `audit/doc_events.rs` follow the canonical pattern.)
+(API contract above is the skeleton. The 4 memory row builders in `audit/doc_events.rs` follow the canonical pattern.)
 
 ---
 
@@ -701,14 +701,14 @@ async fn version_numbers_monotonic(ctx: TestCtx) {
 - **FR-KB-002** — server-side renderer (markdown → HTML); consumes `markdown_body` + `body_sha256` for cache.
 - **FR-KB-003** — three permission tiers + share-link tokens; consumes `permission` + `allowed_role_codes`.
 - **FR-KB-004** — FTS5 + PGroonga lexical search; indexes `active_documents_view`.
-- **FR-KB-005** — BGE-M3 semantic search via BRAIN Layer 2 ingest; consumes versioned bodies.
+- **FR-KB-005** — BGE-M3 semantic search via memory Layer 2 ingest; consumes versioned bodies.
 - **FR-KB-007** — "Ask this page" Q&A with span citations; consumes documents + linked translation_of.
 - **FR-KB-008** — runbook category with applicability tags for OBS triage.
 - **FR-KB-009** — dual-language `translation_of` link + locale-aware reader display.
 
 **Cross-module:**
-- **FR-AI-003** — BRAIN audit bridge; receives `kb.document_created`, `kb.document_versioned`, `kb.document_acl_changed`, `kb.document_archived`.
-- **FR-BRAIN-111** — PII scrubbing for body before BRAIN Layer 2 ingest (FR-KB-005 path).
+- **FR-AI-003** — memory audit bridge; receives `kb.document_created`, `kb.document_versioned`, `kb.document_acl_changed`, `kb.document_archived`.
+- **FR-MEMORY-111** — PII scrubbing for body before memory Layer 2 ingest (FR-KB-005 path).
 
 ---
 
@@ -751,7 +751,7 @@ async fn version_numbers_monotonic(ctx: TestCtx) {
 }
 ```
 
-### 8.3 — kb.document_created BRAIN row
+### 8.3 — kb.document_created memory row
 
 ```json
 {
@@ -770,7 +770,7 @@ async fn version_numbers_monotonic(ctx: TestCtx) {
 }
 ```
 
-### 8.4 — kb.document_acl_changed BRAIN row (sev-2)
+### 8.4 — kb.document_acl_changed memory row (sev-2)
 
 ```json
 {
@@ -787,7 +787,7 @@ async fn version_numbers_monotonic(ctx: TestCtx) {
 }
 ```
 
-### 8.5 — kb.document_archived BRAIN row
+### 8.5 — kb.document_archived memory row
 
 ```json
 {
@@ -849,7 +849,7 @@ All other questions resolved.
 | Slug too short (< 2 chars) | DB CHECK | INSERT fails | Use longer slug |
 | change_summary > 500 chars | DB CHECK | INSERT fails | Shorten |
 | Concurrent translation_of pair creation (A→B + B→A) | Each insert sees a stable target | Both succeed — pair is symmetric in intent but FK is one-directional | None — operator may set both directions deliberately |
-| PII in markdown_body not scrubbed for BRAIN ingest | FR-BRAIN-111 in FR-KB-005's path | Out of scope here | FR-KB-005 |
+| PII in markdown_body not scrubbed for memory ingest | FR-MEMORY-111 in FR-KB-005's path | Out of scope here | FR-KB-005 |
 | Document deleted while versions exist | FK ON DELETE RESTRICT | DELETE fails | Archive instead |
 | Subject deleted while documents reference owner_subject_id | FK on owner without RESTRICT; SET NULL acceptable | None | Designed (owner is optional) |
 | Subject deleted while versions reference created_by | FK RESTRICT | DELETE fails | Designed |

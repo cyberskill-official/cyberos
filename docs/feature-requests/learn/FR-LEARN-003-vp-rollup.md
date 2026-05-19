@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-LEARN-001, FR-PROJ-013, FR-TIME-001, FR-KB-001, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-LEARN-001, FR-PROJ-013, FR-TIME-001, FR-KB-001, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-PROJ-013, FR-TIME-001]
 blocks: [FR-LEARN-007]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2101 2026-05-17 — Closed enum `vp_component` = {proj_contribution, time_billable, kb_authorship}; cardinality 3
   - DEC-2102 2026-05-17 — Per-Member VP snapshot IMMUTABLE per rollup period (week); corrections via new snapshot with `correction_of` link
   - DEC-2103 2026-05-17 — Deterministic — same inputs + same weights → same VP; weights versioned (CEO-configurable)
-  - DEC-2104 2026-05-17 — BRAIN audit kinds: learn.vp_rollup_started, learn.vp_snapshot_created, learn.vp_rollup_completed, learn.vp_rollup_failed
+  - DEC-2104 2026-05-17 — memory audit kinds: learn.vp_rollup_started, learn.vp_snapshot_created, learn.vp_rollup_completed, learn.vp_rollup_failed
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without VP rollup, contribution recognition subjective. Withou
 
 ## §1 — Description (BCP-14 normative)
 
-The LEARN service **MUST** ship VP rollup at `services/learn/src/vp/` aggregating PROJ + TIME + KB nightly, immutable per-week snapshots, versioned weights, 4 BRAIN audit kinds.
+The LEARN service **MUST** ship VP rollup at `services/learn/src/vp/` aggregating PROJ + TIME + KB nightly, immutable per-week snapshots, versioned weights, 4 memory audit kinds.
 
 1. **MUST** validate `vp_component` against closed enum per DEC-2101.
 
@@ -136,7 +136,7 @@ The LEARN service **MUST** ship VP rollup at `services/learn/src/vp/` aggregatin
    POST /v1/learn/vp/rollup/trigger  (CEO manual)
    ```
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2104. PII per FR-BRAIN-111: scores SHA256.
+7. **MUST** emit 4 memory audit kinds per DEC-2104. PII per FR-MEMORY-111: scores SHA256.
 
 8. **MUST** thread trace_id from cron → aggregator → audit.
 
@@ -176,7 +176,7 @@ Sample VP snapshot:
 ---
 
 ## §4 — Acceptance criteria
-1. **vp_component enum cardinality 3**. 2. **Deterministic (same input → same output)**. 3. **Snapshots immutable**. 4. **Weights versioned**. 5. **Nightly cron 03:30**. 6. **UNIQUE(tenant, member, week, weights_version) idempotency**. 7. **4 BRAIN audit kinds emitted**. 8. **PII scrubbed (scores SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only weights + manual trigger**. 11. **Trace_id preserved**. 12. **rust_decimal precision (10,4)**. 13. **Correction via new snapshot with correction_of link**. 14. **Append-only via REVOKE**. 15. **Inactive member skipped**. 16. **0 active members skipped**. 17. **Weights version pinning enforced**. 18. **Backfill via manual trigger with iso_week**. 19. **History query desc time**. 20. **Per-component score visible**.
+1. **vp_component enum cardinality 3**. 2. **Deterministic (same input → same output)**. 3. **Snapshots immutable**. 4. **Weights versioned**. 5. **Nightly cron 03:30**. 6. **UNIQUE(tenant, member, week, weights_version) idempotency**. 7. **4 memory audit kinds emitted**. 8. **PII scrubbed (scores SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only weights + manual trigger**. 11. **Trace_id preserved**. 12. **rust_decimal precision (10,4)**. 13. **Correction via new snapshot with correction_of link**. 14. **Append-only via REVOKE**. 15. **Inactive member skipped**. 16. **0 active members skipped**. 17. **Weights version pinning enforced**. 18. **Backfill via manual trigger with iso_week**. 19. **History query desc time**. 20. **Per-component score visible**.
 
 ---
 
@@ -216,7 +216,7 @@ async fn correction_via_new_row() {
 
 ## §7 — Dependencies
 **Upstream:** FR-PROJ-013, FR-TIME-001.
-**Cross-module:** FR-LEARN-001 (member context), FR-KB-001 (doc authorship), FR-MCP-007 (cron), FR-AUTH-101 (CEO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-LEARN-001 (member context), FR-KB-001 (doc authorship), FR-MCP-007 (cron), FR-AUTH-101 (CEO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -236,7 +236,7 @@ async fn correction_via_new_row() {
 - §11.1 Cron via FR-MCP-007 `kind: 'learn.vp_rollup'`, daily 03:30.
 - §11.2 Aggregator pure: `(member_data, weights) → VpScores`.
 - §11.3 Snapshots stored per (member, week, weights_version) — weights change creates new snapshot.
-- §11.4 BRAIN audit body: member_id, week, weights_version; scores SHA256.
+- §11.4 memory audit body: member_id, week, weights_version; scores SHA256.
 - §11.5 Manual trigger backfills via iso_week parameter; uses weights effective on week's Monday.
 
 ---

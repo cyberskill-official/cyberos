@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-TIME-007, FR-REW-004, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-TIME-007, FR-REW-004, FR-MEMORY-111]
 depends_on: [FR-HR-001]
 blocks: [FR-RES-005, FR-REW-004]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1841 2026-05-17 — Closed enum `policy_kind` = {working_hour_cap, si_rate_bhxh, si_rate_bhyt, si_rate_bhtn, pit_bracket, minimum_wage}; cardinality 6
   - DEC-1842 2026-05-17 — Per-version snapshot — immutable; effective_from + effective_to dates; replay determinism critical
   - DEC-1843 2026-05-17 — Tenant override allowed for non-statutory (working hours below cap OK); statutory rates immutable per tenant
-  - DEC-1844 2026-05-17 — BRAIN audit kinds: hr.policy_version_added, hr.policy_lookup_executed, hr.tenant_override_set
+  - DEC-1844 2026-05-17 — memory audit kinds: hr.policy_version_added, hr.policy_lookup_executed, hr.tenant_override_set
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without version-pinned policy, FR-TIME-007 OT enforcement + FR
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** ship policy constants at `services/hr/src/policy/` with version-pinned snapshots (Decree 145 + 152), per-version immutability, tenant override for non-statutory, 3 BRAIN audit kinds.
+The HR service **MUST** ship policy constants at `services/hr/src/policy/` with version-pinned snapshots (Decree 145 + 152), per-version immutability, tenant override for non-statutory, 3 memory audit kinds.
 
 1. **MUST** validate `policy_kind` against closed enum per DEC-1841.
 
@@ -121,7 +121,7 @@ The HR service **MUST** ship policy constants at `services/hr/src/policy/` with 
    PUT    /v1/hr/tenant-policy-override   (CHRO only; non-statutory only)
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-1844. PII: none (policy values public).
+7. **MUST** emit 3 memory audit kinds per DEC-1844. PII: none (policy values public).
 
 8. **MUST** thread trace_id from lookup → loader → audit.
 
@@ -164,7 +164,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **6-kind enum + cardinality test**. 2. **Initial seed populated**. 3. **Version pinning correct (effective_at lookup)**. 4. **Immutability enforced (REVOKE UPDATE/DELETE)**. 5. **Tenant override gated to non-statutory (CHECK)**. 6. **Statutory override attempt rejected (400)**. 7. **3 BRAIN audit kinds emitted**. 8. **Replay determinism**. 9. **Annual refresh adds new version row**. 10. **Source law reference required**. 11. **RLS on tenant_overrides**. 12. **Sys-admin only for global**. 13. **CHRO only for tenant override**. 14. **Trace_id preserved**. 15. **Lookup performance < 5ms (index)**. 16. **FR-TIME-007 reads OT caps from this**. 17. **FR-REW-004 reads SI rates from this**. 18. **JSONB schema validated per kind**. 19. **Effective_to NULL means current**. 20. **Annual seed runbook documented**.
+1. **6-kind enum + cardinality test**. 2. **Initial seed populated**. 3. **Version pinning correct (effective_at lookup)**. 4. **Immutability enforced (REVOKE UPDATE/DELETE)**. 5. **Tenant override gated to non-statutory (CHECK)**. 6. **Statutory override attempt rejected (400)**. 7. **3 memory audit kinds emitted**. 8. **Replay determinism**. 9. **Annual refresh adds new version row**. 10. **Source law reference required**. 11. **RLS on tenant_overrides**. 12. **Sys-admin only for global**. 13. **CHRO only for tenant override**. 14. **Trace_id preserved**. 15. **Lookup performance < 5ms (index)**. 16. **FR-TIME-007 reads OT caps from this**. 17. **FR-REW-004 reads SI rates from this**. 18. **JSONB schema validated per kind**. 19. **Effective_to NULL means current**. 20. **Annual seed runbook documented**.
 
 ---
 
@@ -208,7 +208,7 @@ async fn statutory_override_rejected() {
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
 **Downstream:** FR-TIME-007 (OT caps), FR-REW-004 (SI rates).
-**Cross-module:** FR-AUTH-101 (CHRO + sys-admin roles), FR-BRAIN-111.
+**Cross-module:** FR-AUTH-101 (CHRO + sys-admin roles), FR-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -228,7 +228,7 @@ async fn statutory_override_rejected() {
 - §11.1 Seed values: Decree 145 working_hour_cap = {regular_per_week:48, ot_per_week_max:12, ot_per_year_max:200}; Decree 152 SI rates = {bhxh:17.5%, bhyt:4.5%, bhtn:2%}.
 - §11.2 Loader chooses effective version: `WHERE effective_from <= $date AND (effective_to IS NULL OR effective_to > $date)`.
 - §11.3 Tenant override merged at lookup: if tenant override exists for kind+effective, return override; else global.
-- §11.4 BRAIN audit body: kind, version_id, lookup date; no PII.
+- §11.4 memory audit body: kind, version_id, lookup date; no PII.
 - §11.5 Annual refresh runbook: review VN gov gazette in December; add new version row with effective_from=Jan 1 next year.
 
 ---

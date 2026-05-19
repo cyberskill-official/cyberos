@@ -55,7 +55,7 @@
  <strong>The SaaS-ification module.</strong> Per research review §7.3, a TEN-billing thin slice ships at P2 (P2 · exit, not P4 · mid) — because vertical-pack pricing requires usage metering + Stripe + plan tiers <em>before</em> the marketplace launch. Full SaaS comes at P4.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- TEN is the module that takes CyberOS from an internal CyberSkill OS to an external multi-tenant SaaS. Until TEN lands, CyberOS is a single-tenant system operating under the <em>tenant-as-degenerate-tenant</em> decision (DEC-058) — every multi-tenant invariant is already in place but the tenant population is one. TEN turns that population into N. It owns: self-serve signup with residency choice + plan selection ((FR pending)); Stripe (international) and Vietnamese PSP (domestic) billing ((FR pending)); plan tiers Starter (≤ 10 seats) / Team (≤ 50) / Enterprise (custom) ((FR pending)); per-tenant brand pack overriding the @cyberskill/tokens layer ((FR pending)); a tenant-admin UI surface for billing, seats, audit, residency, and retention overrides ((FR pending)); a signed bundle export of all tenant data — BRAIN + module data — for portability and DSAR ((FR pending)); and 90-day offboarding with irreversible delete + attestation ((FR pending)). It also owns usage metering — API calls, AI tokens, storage, seats — surfaced as both a tenant-admin dashboard and a revenue-ops feed. Tenant data isolation is the central invariant: every Postgres table has tenant_id RLS, every NATS subject is tenant-scoped, every S3 bucket prefix is tenant-scoped. The SOC 2 CC6.6 and ISO 27017 controls live here. and lock the FRs; this page documents the planned implementation at <code>cyberos/services/ten/</code>.
+ TEN is the module that takes CyberOS from an internal CyberSkill OS to an external multi-tenant SaaS. Until TEN lands, CyberOS is a single-tenant system operating under the <em>tenant-as-degenerate-tenant</em> decision (DEC-058) — every multi-tenant invariant is already in place but the tenant population is one. TEN turns that population into N. It owns: self-serve signup with residency choice + plan selection ((FR pending)); Stripe (international) and Vietnamese PSP (domestic) billing ((FR pending)); plan tiers Starter (≤ 10 seats) / Team (≤ 50) / Enterprise (custom) ((FR pending)); per-tenant brand pack overriding the @cyberskill/tokens layer ((FR pending)); a tenant-admin UI surface for billing, seats, audit, residency, and retention overrides ((FR pending)); a signed bundle export of all tenant data — memory + module data — for portability and DSAR ((FR pending)); and 90-day offboarding with irreversible delete + attestation ((FR pending)). It also owns usage metering — API calls, AI tokens, storage, seats — surfaced as both a tenant-admin dashboard and a revenue-ops feed. Tenant data isolation is the central invariant: every Postgres table has tenant_id RLS, every NATS subject is tenant-scoped, every S3 bucket prefix is tenant-scoped. The SOC 2 CC6.6 and ISO 27017 controls live here. and lock the FRs; this page documents the planned implementation at <code>cyberos/services/ten/</code>.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -134,7 +134,7 @@
  <div class="fact-card"><div class="label">Residency options</div><div class="value">4</div><div class="note">sg-1 · eu-1 · us-1 · vn-1</div></div>
  <div class="fact-card"><div class="label">Offboarding</div><div class="value">90 d grace</div><div class="note">30d read-only + 60d recover</div></div>
  <div class="fact-card"><div class="label">Cross-leak target</div><div class="value">0</div><div class="note">hard floor · CI gate</div></div>
- <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · BRAIN · OBS</div><div class="note">+ Stripe · VnPay · Momo</div></div>
+ <div class="fact-card"><div class="label">Depends on</div><div class="value">AUTH · memory · OBS</div><div class="note">+ Stripe · VnPay · Momo</div></div>
  </div>
  </div>
 </section>
@@ -190,13 +190,13 @@ flowchart TB
  subgraph internal["Modules that obey TEN policy"]
  AUTH["🔐 AUTH<br>tenant_id JWT claim · seat limit"]
  AI["⚡ AI Gateway<br>cost cap · residency × provider"]
- BRAIN["🧠 BRAIN<br>per-tenant store · sync_class"]
+ memory["🧠 memory<br>per-tenant store · sync_class"]
  OBS["👁 OBS<br>retention tier · regulator views"]
  PROJ["📋 PROJ + 17 modules<br>per-tenant RLS"]
  end
 
  subgraph audit["Audit + compliance"]
- BRAUDIT["🧠 BRAIN audit chain"]
+ BRAUDIT["🧠 memory audit chain"]
  CFO["📊 CFO dashboard<br>ARR · NDR · churn"]
  end
 
@@ -207,7 +207,7 @@ flowchart TB
 
  TEN -->|"plan + seat policy"| AUTH
  TEN -->|"cost cap + residency"| AI
- TEN -->|"per-tenant store provisioning"| BRAIN
+ TEN -->|"per-tenant store provisioning"| memory
  TEN -->|"retention tier"| OBS
  TEN -->|"tenant_id + RLS init"| PROJ
 
@@ -220,7 +220,7 @@ flowchart TB
  classDef audit fill:#f5ede6,stroke:#45210e
  class TEN hub
  class STRIPE,VNPAY,MOMO billing
- class AUTH,AI,BRAIN,OBS,PROJ mod
+ class AUTH,AI,memory,OBS,PROJ mod
  class BRAUDIT,CFO audit
  </div>
  </div>
@@ -235,7 +235,7 @@ flowchart TB
  <tr><td>Plan upgrade</td><td><strong>Auto</strong> via in-app + Stripe portal</td><td>Pro-rata + invoice update; effective immediately for seat increases; takes effect next billing cycle for plan-tier change.</td></tr>
  <tr><td>Plan downgrade with quota violation</td><td><strong>Human-confirm</strong> — show data overage + 30-day grace before suspension</td><td>Forcing immediate data deletion violates user trust; grace period gives time to clean up.</td></tr>
  <tr><td>Suspension (non-payment)</td><td><strong>Auto</strong> after 14 d past-due + 3 notices</td><td>Standard SaaS dunning; suspension = read-only, not deletion.</td></tr>
- <tr><td>Termination (suspension &gt; 90 d)</td><td><strong>Auto-trigger</strong>, <strong>human-confirm</strong> attestation</td><td>The trigger is automatic; the actual irreversible delete requires CSO + CLO sign-off + BRAIN audit row.</td></tr>
+ <tr><td>Termination (suspension &gt; 90 d)</td><td><strong>Auto-trigger</strong>, <strong>human-confirm</strong> attestation</td><td>The trigger is automatic; the actual irreversible delete requires CSO + CLO sign-off + memory audit row.</td></tr>
  <tr><td>Residency change request</td><td><strong>Human-driven</strong> migration job</td><td>Cross-region data move is a multi-day operation; never auto-triggered.</td></tr>
  <tr><td>Cross-leak detection (CI gate)</td><td><strong>Auto-block</strong> at PR merge</td><td>Property-based test runs on every PR touching tenant code paths; cross-leak = release blocked.</td></tr>
  <tr><td>DSAR export request</td><td><strong>Auto</strong> bundle generation; <strong>human delivery</strong> to subject</td><td>Bundle is auto; DPO confirms delivery method per the subject's preference.</td></tr>
@@ -351,11 +351,11 @@ flowchart TB
  <div class="bbg-card p-5 mb-5">
  <p class="text-sm text-slate-600 mb-3">The export bundle contains:</p>
  <ul class="text-sm text-slate-600 space-y-2 list-disc list-inside">
- <li><strong>BRAIN snapshot</strong>: every memory file + audit chain segments, deterministic zip per BRAIN §10.</li>
+ <li><strong>memory snapshot</strong>: every memory file + audit chain segments, deterministic zip per memory §10.</li>
  <li><strong>Module data dumps</strong>: per-module Postgres pg_dump SQL files (PROJ, CRM, KB, etc.).</li>
  <li><strong>S3 attachments</strong>: zip of all binary attachments referenced by module data.</li>
  <li><strong>Tenant config</strong>: plan history, residency pinning, persona overrides, billing history.</li>
- <li><strong>Audit log slice</strong>: full BRAIN audit chain for the tenant + chain-of-custody manifest.</li>
+ <li><strong>Audit log slice</strong>: full memory audit chain for the tenant + chain-of-custody manifest.</li>
  <li><strong>Manifest with Ed25519 signature</strong>: proves the bundle is unmodified since export.</li>
  </ul>
  <p class="text-sm text-slate-600 mt-3">Bundle is portable — another deployment of CyberOS could import it as a new tenant. This is GDPR Art. 20 (data portability) satisfied architecturally.</p>
@@ -372,7 +372,7 @@ flowchart TB
     "tenant_residency": "sg-1",
     "terminate_initiated_at": "2026-05-15T00:00:00Z",
     "permanent_delete_at": "2026-08-15T00:00:00Z",
-    "rows_deleted": { "brain_memories": 14820, "proj_issues": 4217, "crm_contacts": 942, "s3_objects": 1024, "...": "..." },
+    "rows_deleted": { "memory_memories": 14820, "proj_issues": 4217, "crm_contacts": 942, "s3_objects": 1024, "...": "..." },
     "delete_method": "crypto_shred_at_storage_layer + 7_pass_overwrite",
     "attested_by": ["cso@cyberskill.world", "clo@cyberskill.world"],
     "audit_chain_anchor_before": "8d2c…5a91",
@@ -411,7 +411,7 @@ flowchart TB
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
- The bet is that the value of CyberOS unlocks at N&gt;1 tenants — the BRAIN compounding, the audit chain, the agent surface — and TEN is the on-ramp. Pricing is plan-tier-anchored at Starter / Team / Enterprise; usage metering is informational at P4 (no per-API overage) but feeds future revenue-ops at P4+. The 90-day offboarding grace is partly a customer-experience commitment and partly a GDPR Art. 20 (portability) + Art. 17 (erasure) compliance posture.
+ The bet is that the value of CyberOS unlocks at N&gt;1 tenants — the memory compounding, the audit chain, the agent surface — and TEN is the on-ramp. Pricing is plan-tier-anchored at Starter / Team / Enterprise; usage metering is informational at P4 (no per-API overage) but feeds future revenue-ops at P4+. The 90-day offboarding grace is partly a customer-experience commitment and partly a GDPR Art. 20 (portability) + Art. 17 (erasure) compliance posture.
  </p>
 </section>
 
@@ -449,7 +449,7 @@ flowchart TB
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- TEN is a Rust control-plane service plus a tenant-admin SPA, integrated with Stripe + VN PSPs and a per-tenant usage-metering pipeline. Tenant provisioning is implemented as a saga across AUTH (create tenant + first Subject), BRAIN (initialise audit chain), all module DBs (create schema-scoped rows), and S3 (create bucket prefix). Offboarding is the inverse saga with a 90-day grace window.
+ TEN is a Rust control-plane service plus a tenant-admin SPA, integrated with Stripe + VN PSPs and a per-tenant usage-metering pipeline. Tenant provisioning is implemented as a saga across AUTH (create tenant + first Subject), memory (initialise audit chain), all module DBs (create schema-scoped rows), and S3 (create bucket prefix). Offboarding is the inverse saga with a 90-day grace window.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -483,7 +483,7 @@ graph TB
 
  subgraph DOWNSTREAM ["Module orchestration"]
  AUTH_M["🔐 AUTH<br>tenant + founder Subject"]
- BRAIN_M["🧠 BRAIN<br>chain init"]
+ MEMORY_M["🧠 memory<br>chain init"]
  ALL_M["all 21 modules<br>schema namespace"]
  S3_M["S3 prefix"]
  NATS_M["NATS subject"]
@@ -497,7 +497,7 @@ graph TB
  end
 
  subgraph SINKS ["Audit + ops"]
- BRAIN["🧠 BRAIN<br>tenant.* rows"]
+ memory["🧠 memory<br>tenant.* rows"]
  OBS["👁 OBS"]
  CFO["💰 CFO dashboard<br>ARR / NDR / churn"]
  end
@@ -509,7 +509,7 @@ graph TB
  BILL --> PLAN
  SU --> PROV
  PROV --> AUTH_M
- PROV --> BRAIN_M
+ PROV --> MEMORY_M
  PROV --> ALL_M
  PROV --> S3_M
  PROV --> NATS_M
@@ -526,16 +526,16 @@ graph TB
  OFFBOARD --> ALL_M
  EXPORT --> S3_M
  ARR --> CFO
- TEN --> BRAIN
+ TEN --> memory
  TEN --> OBS
 
  classDef planned fill:#e2e8f0,stroke:#1e293b
  classDef store fill:#f5f3ff,stroke:#7c3aed
  classDef sink fill:#f5ede6,stroke:#45210e
  classDef partner fill:#fef2f2,stroke:#7f1d1d
- class SIGN,ADMIN,BILL,SU,PROV,PLAN,SEAT,BRAND_S,METER,ISO,OFFBOARD,EXPORT,ARR,AUTH_M,BRAIN_M,ALL_M,S3_M,NATS_M,AI_M planned
+ class SIGN,ADMIN,BILL,SU,PROV,PLAN,SEAT,BRAND_S,METER,ISO,OFFBOARD,EXPORT,ARR,AUTH_M,MEMORY_M,ALL_M,S3_M,NATS_M,AI_M planned
  class PG,REDIS,NATS_USAGE store
- class BRAIN,OBS,CFO sink
+ class memory,OBS,CFO sink
  class STRIPE,VNPAY,MOMO,ZALO partner
  </div>
  </div>
@@ -546,7 +546,7 @@ graph TB
  <thead><tr><th>Component</th><th>Path (planned)</th><th>Responsibility</th></tr></thead>
  <tbody>
  <tr><td><code>signup.rs</code></td><td>services/ten/src/signup.rs</td><td>Self-serve signup flow. Captures org name, residency choice, plan tier, founder email, payment method.</td></tr>
- <tr><td><code>provisioner.rs</code></td><td>services/ten/src/provisioner.rs</td><td>Tenant provisioning saga. Idempotent + atomic across AUTH / BRAIN / module DBs / S3 / NATS / AI. Compensating actions on partial failure.</td></tr>
+ <tr><td><code>provisioner.rs</code></td><td>services/ten/src/provisioner.rs</td><td>Tenant provisioning saga. Idempotent + atomic across AUTH / memory / module DBs / S3 / NATS / AI. Compensating actions on partial failure.</td></tr>
  <tr><td><code>plan.rs</code></td><td>services/ten/src/plan.rs</td><td>Plan CRUD. Subscription lifecycle. Feature flags per tier (e.g., LEARN locked at Starter, available at Team+).</td></tr>
  <tr><td><code>seat.rs</code></td><td>services/ten/src/seat.rs</td><td>Seat add / remove / invite. Enforces plan-tier seat caps.</td></tr>
  <tr><td><code>branding.rs</code></td><td>services/ten/src/branding.rs</td><td>Per-tenant brand pack — @cyberskill/tokens override layer. Logo, colour anchors, email templates, custom-domain integration with PORTAL.</td></tr>
@@ -555,7 +555,7 @@ graph TB
  <tr><td><code>vnpsp.rs</code></td><td>services/ten/src/vnpsp.rs</td><td>VnPay / Momo / ZaloPay adapters. Single trait, multiple impls. VND-denominated.</td></tr>
  <tr><td><code>isolation.rs</code></td><td>services/ten/src/isolation.rs</td><td>Cross-tenant verification harness. 100k probes against PG RLS, NATS subject ACL, S3 prefix IAM on every release.</td></tr>
  <tr><td><code>offboard.rs</code></td><td>services/ten/src/offboard.rs</td><td>90-day offboarding flow: 30d read-only → 60d recoverable → wipe. Pre-generates export bundle.</td></tr>
- <tr><td><code>export.rs</code></td><td>services/ten/src/export.rs</td><td>Signed-bundle exporter. Full tenant data dump: BRAIN deterministic zip + per-module data + manifest with SHA-256 + Ed25519 signature.</td></tr>
+ <tr><td><code>export.rs</code></td><td>services/ten/src/export.rs</td><td>Signed-bundle exporter. Full tenant data dump: memory deterministic zip + per-module data + manifest with SHA-256 + Ed25519 signature.</td></tr>
  <tr><td><code>retention.rs</code></td><td>services/ten/src/retention.rs</td><td>Per-tenant retention policy override. Defaults: 30 days (logs), 365 days (audit), forever (legal docs).</td></tr>
  <tr><td><code>arr.rs</code></td><td>services/ten/src/arr.rs</td><td>Revenue rollup: ARR / MRR / NDR / GRR / churn / CAC. Daily snapshot, monthly review.</td></tr>
  <tr><td><code>migrations/</code></td><td>services/ten/migrations/</td><td>sqlx migrations. Tenant rows in control plane; RLS on every row by tenant_id.</td></tr>
@@ -570,7 +570,7 @@ graph TB
 
  <div class="invariant-box mt-3">
  <div class="label">TEN-INV-002 · Tenant provisioning is atomic + idempotent</div>
- <p class="text-sm text-slate-700 mt-2 mb-0">The provisioner saga has explicit compensating actions for partial failure at any of the ~8 steps (AUTH tenant, AUTH Subject, BRAIN init, module DB schemas, S3 prefix, NATS subject, AI quota, billing customer). Idempotent on replay via deterministic tenant slug. Property-tested with crash injection at every step.</p>
+ <p class="text-sm text-slate-700 mt-2 mb-0">The provisioner saga has explicit compensating actions for partial failure at any of the ~8 steps (AUTH tenant, AUTH Subject, memory init, module DB schemas, S3 prefix, NATS subject, AI quota, billing customer). Idempotent on replay via deterministic tenant slug. Property-tested with crash injection at every step.</p>
  </div>
 </section>
 
@@ -580,7 +580,7 @@ graph TB
 <section id="data-model" class="module-section">
  <header class="section-head"><span class="section-num">4</span><h2>Data model</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Seven primitives: Tenant (the org), Plan (catalogue), Subscription (the active plan + billing state), Seat (paid headcount slot), BrandingConfig, UsageMeter (per-axis counter), RetentionPolicy. Audit lives in BRAIN.
+ Seven primitives: Tenant (the org), Plan (catalogue), Subscription (the active plan + billing state), Seat (paid headcount slot), BrandingConfig, UsageMeter (per-axis counter), RetentionPolicy. Audit lives in memory.
  </p>
 
  <div class="bbg-card p-5 mb-5">
@@ -662,7 +662,7 @@ erDiagram
  int log_retention_days "default 30"
  int audit_retention_days "default 365"
  bool legal_doc_forever "default true"
- int brain_retention_days "default -1 (forever, tombstone only)"
+ int memory_retention_days "default -1 (forever, tombstone only)"
  }
  INVOICE {
  uuid id PK
@@ -772,7 +772,7 @@ type RetentionPolicy {
  logRetentionDays: Int!
  auditRetentionDays: Int!
  legalDocForever: Boolean!
- brainRetentionDays: Int!
+ memoryRetentionDays: Int!
 }
 
 type Invoice {
@@ -867,7 +867,7 @@ sequenceDiagram
  participant ST as Stripe (or VnPay)
  participant P as provisioner.rs (saga)
  participant AUTH as 🔐 AUTH
- participant BRAIN as 🧠 BRAIN
+ participant memory as 🧠 memory
  participant ALL as all 21 modules (schema init)
  participant S3 as S3 prefix
  participant NATS as NATS subject ACL
@@ -885,13 +885,13 @@ sequenceDiagram
  S->>P: run provisioning saga
  par tenant saga (atomic)
  P->>AUTH: createTenant + founder Subject + roles
- P->>BRAIN: init audit chain for tenant
+ P->>memory: init audit chain for tenant
  P->>ALL: provision schema for each module
  P->>S3: create bucket prefix s3:/…/{tenant_id}/
  P->>NATS: create subject ACL tenant.{id}.*
  P->>AI: register tenant + AI-token quota
  end
- P->>BRAIN: append tenant.provisioned root row
+ P->>memory: append tenant.provisioned root row
  P-->>S: ready
  S->>U: 302 redirect to first-login (magic link emailed to founder)
  Note over P: total elapsed ≤ 30s p95
@@ -909,7 +909,7 @@ sequenceDiagram
  participant PL as plan.rs
  participant ST as Stripe
  participant FF as feature_flag service
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  F->>ADMIN: choose Enterprise → confirm
  ADMIN->>PL: changePlan(plan=enterprise)
@@ -935,16 +935,16 @@ sequenceDiagram
  participant PL as plan.rs
  participant CR as cron (daily sweep)
  participant ALL as all module DBs
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  F->>ADMIN: initiateOffboarding(reason)
  ADMIN->>O: confirm-twice flow (typed slug)
  O->>PL: cancel subscription at period_end
  O->>E: pre-generate export bundle
  E->>ALL: dump per-tenant data (RLS-scoped)
- E->>BRAIN: BRAIN deterministic zip
+ E->>memory: memory deterministic zip
  E->>O: bundle ready (s3:/…/exports/{tenant}/bundle.zip + sig)
- O->>BRAIN: append tenant.offboarding_started row
+ O->>memory: append tenant.offboarding_started row
  O-->>ADMIN: grace_until = now + 30d
  Note over CR: day 1–30: read-only access; export downloadable
  Note over CR: day 31–90: tenant suspended; bundle still downloadable
@@ -952,7 +952,7 @@ sequenceDiagram
  O->>ALL: wipe tenant_id rows (cascading delete)
  O->>S3: wipe prefix
  O->>NATS: revoke subject ACL
- O->>BRAIN: append tenant.wiped row (audit fact survives)
+ O->>memory: append tenant.wiped row (audit fact survives)
  O->>F: email "Attestation: tenant X fully erased on YYYY-MM-DD"
  </div>
  </div>
@@ -968,7 +968,7 @@ sequenceDiagram
  participant PORTAL as 🌐 PORTAL service
  participant S3 as S3 (logo asset)
  participant ACM as AWS ACM
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  F->>ADMIN: upload logo + pick accent color
  ADMIN->>S3: upload logo asset
@@ -998,7 +998,7 @@ sequenceDiagram
  participant CR as cron (nightly)
  participant ARR as arr.rs
  participant CFO as CFO dashboard
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  loop continuous
  MODS->>NATS: publish tenant.{id}.usage.api_call (or.ai_token,.storage_gb)
@@ -1054,7 +1054,7 @@ stateDiagram-v2
  <tr><td>Offboarding</td><td>Founder confirm-twice OR auto from suspended</td><td>Subscription cancelled at period_end; export bundle pre-generated; emails sent.</td></tr>
  <tr><td>Grace (day 1–30 read-only)</td><td>Day 1 of grace</td><td>Read-only access; banner; founder can cancel offboard.</td></tr>
  <tr><td>Grace (day 31–90 recoverable)</td><td>Day 31</td><td>Login refused; bundle still downloadable; admin can re-instate via support.</td></tr>
- <tr><td>Closed</td><td>Day 91</td><td>Per-tenant rows wiped across modules; S3 prefix wiped; NATS ACL revoked; attestation emailed; <code>tenant.wiped</code> audit row remains in BRAIN (forever).</td></tr>
+ <tr><td>Closed</td><td>Day 91</td><td>Per-tenant rows wiped across modules; S3 prefix wiped; NATS ACL revoked; attestation emailed; <code>tenant.wiped</code> audit row remains in memory (forever).</td></tr>
  </tbody>
  </table>
  </div>
@@ -1104,14 +1104,14 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- TEN depends on AUTH (tenant Subject), BRAIN (audit chain), Stripe + VN PSPs, and all 21 other modules (for schema provisioning + offboarding wipe). It is consumed by every CyberOS user-facing surface — every API call traverses TEN's plan / feature-flag / quota check.
+ TEN depends on AUTH (tenant Subject), memory (audit chain), Stripe + VN PSPs, and all 21 other modules (for schema provisioning + offboarding wipe). It is consumed by every CyberOS user-facing surface — every API call traverses TEN's plan / feature-flag / quota check.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["TEN depends on"]
  AUTH["🔐 AUTH"]
- BRAIN["🧠 BRAIN"]
+ memory["🧠 memory"]
  OBS["👁 OBS"]
  AI["🧠 AI gateway"]
  NATS["📡 NATS JetStream"]
@@ -1134,7 +1134,7 @@ graph LR
  PORTAL["🌐 PORTAL"]
  end
  AUTH --> TEN
- BRAIN --> TEN
+ memory --> TEN
  OBS --> TEN
  AI --> TEN
  NATS --> TEN
@@ -1153,7 +1153,7 @@ graph LR
 
  classDef planned fill:#e2e8f0,stroke:#1e293b
  classDef partner fill:#fef2f2,stroke:#7f1d1d
- class AUTH,BRAIN,OBS,AI,NATS,S3,TEN,PROV,BILL,METER,ISO,OFF,CFO_D,ADMIN,EDGE,PORTAL planned
+ class AUTH,memory,OBS,AI,NATS,S3,TEN,PROV,BILL,METER,ISO,OFF,CFO_D,ADMIN,EDGE,PORTAL planned
  class STRIPE,VNPSP partner
  </div>
  </div>
@@ -1216,7 +1216,7 @@ graph LR
  <tr><td><code>R-TEN-016</code></td><td>Stripe DPA insufficient for EU residency → customer rejection</td><td>Medium</td><td>Medium</td><td>CLO</td><td>EU tenants use Stripe Europe entity + EU-DPA; reviewed quarterly; backup plan: Mollie for EU-only customers if Stripe insufficient.</td></tr>
  <tr><td><code>R-TEN-017</code></td><td>Plan downgrade with usage above new tier creates invoice surprise</td><td>Medium</td><td>Medium</td><td>CFO</td><td>Downgrade enforces 30-day grace + overage visible in admin UI; final pro-rated invoice shows overage; never silent surprise.</td></tr>
  <tr><td><code>R-TEN-018</code></td><td>Cross-leak CI gate has gap (new cross-tenant code path lands without harness coverage)</td><td>Low</td><td>Critical</td><td>CSO</td><td>PR template requires "tenant-aware ✓"; static analyzer flags new tenant_id-using code paths; manual review by CSO before merge.</td></tr>
- <tr><td><code>R-TEN-019</code></td><td>Vertical-pack revenue attribution leaks via per-pack metering bug</td><td>Medium</td><td>Medium</td><td>CFO</td><td>Per-pack invocation rows in BRAIN audit; nightly reconciliation against Stripe line items; alarm on &gt; 1% drift.</td></tr>
+ <tr><td><code>R-TEN-019</code></td><td>Vertical-pack revenue attribution leaks via per-pack metering bug</td><td>Medium</td><td>Medium</td><td>CFO</td><td>Per-pack invocation rows in memory audit; nightly reconciliation against Stripe line items; alarm on &gt; 1% drift.</td></tr>
  <tr><td><code>R-TEN-020</code></td><td>Lumi-pushed update for a vertical pack changes pricing without tenant consent</td><td>Low</td><td>High</td><td>CFO</td><td>Pack pricing pinned per tenant at subscription start; Lumi updates ship as candidate version; tenant must opt-in to new pricing; default-stay on old version.</td></tr>
  </tbody>
  </table>
@@ -1252,7 +1252,7 @@ graph LR
  <tr><td><strong>Hostile-termination cycle time</strong></td><td>(legal trigger → permanent delete) days</td><td>termination audit</td><td>tracked; legal-min &lt; case &lt; 90 d</td></tr>
  <tr><td><strong>VN-PSP coverage rate</strong></td><td>VND transactions via PSP / total VND attempts</td><td>billing logs</td><td>≥ 0.95 (P4)</td></tr>
  <tr><td><strong>PCI-SAQ-A scope items count</strong></td><td>card-data systems in scope</td><td>annual audit</td><td>= 0 (Stripe handles all PCI scope)</td></tr>
- <tr><td><strong>Tenant attestation completeness</strong></td><td>terminations with full attestation row / total terminations</td><td>BRAIN audit chain</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>Tenant attestation completeness</strong></td><td>terminations with full attestation row / total terminations</td><td>memory audit chain</td><td>= 1.0 (hard floor)</td></tr>
  </tbody>
  </table>
  </div>
@@ -1288,7 +1288,7 @@ graph LR
 <!-- ============================================================ -->
 <section id="cli-usage" class="module-section">
  <header class="section-head"><span class="section-num">15</span><h2>Planned CLI surface</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-ten</code> for CyberSkill operators. Every destructive action writes a chained BRAIN audit row.</p>
+ <p class="text-slate-700 leading-relaxed mb-4">Admin CLI <code>cyberos-ten</code> for CyberSkill operators. Every destructive action writes a chained memory audit row.</p>
 
  <h3 class="text-lg font-bold mb-2">1. Provision a tenant (admin force-create)</h3>
 <pre><code>$ cyberos-ten tenant create \
@@ -1299,7 +1299,7 @@ graph LR
 
 [saga running]
  step 1/8 auth.tenant + founder Subject ✓
- step 2/8 brain init chain ✓
+ step 2/8 memory init chain ✓
  step 3/8 module schemas (21) ✓
  step 4/8 s3 prefix ✓
  step 5/8 nats subject ACL ✓
@@ -1307,7 +1307,7 @@ graph LR
  step 7/8 branding default theme ✓
  step 8/8 billing customer (VnPay) ✓
 [provisioned] tenant_id=01HZ8K9N7… elapsed=21s
-[audit] brain seq=42118 chain=…</code></pre>
+[audit] memory seq=42118 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Change a plan</h3>
 <pre><code>$ cyberos-ten plan change --tenant 01HZ8K9N7… --to enterprise
@@ -1317,7 +1317,7 @@ graph LR
  to: enterprise-vn (custom)
  proration: 12,400,000₫ debited at period end
  features: DOC + PORTAL + ESOP unlocked
-[audit] brain seq=42127 chain=…</code></pre>
+[audit] memory seq=42127 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Initiate offboarding</h3>
 <pre><code>$ cyberos-ten tenant offboard --tenant 01HZ8K9N7… --reason "engagement ended"
@@ -1330,7 +1330,7 @@ Type the tenant slug AGAIN to confirm: acme-corp
  recover_until: 2026-08-13 (day 90)
  export ready: s3:/…/exports/01HZ8K9N7…/bundle.zip
 [founders notified] 2 founders emailed
-[audit] brain seq=42148 chain=…</code></pre>
+[audit] memory seq=42148 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Run isolation harness</h3>
 <pre><code>$ cyberos-ten isolation probe --probes 100_000
@@ -1355,11 +1355,11 @@ Type the tenant slug AGAIN to confirm: acme-corp
  <h3 class="text-lg font-bold mb-2 mt-5">6. Export tenant bundle</h3>
 <pre><code>$ cyberos-ten export --tenant 01HZ8K9N7… --output bundle.zip
 
-[exporting] brain · auth · proj · time · crm · … (21 modules)
+[exporting] memory · auth · proj · time · crm · … (21 modules)
 [bundle] bundle.zip (62 MB)
 [sha256] 9f3a2c1b…
 [signature] Ed25519 ok (signer cyberos-ten-prod-2026-q2)
-[audit] brain seq=42163 chain=…</code></pre>
+[audit] memory seq=42163 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. Usage report</h3>
 <pre><code>$ cyberos-ten usage --tenant 01HZ8K9N7… --period 2026-05
@@ -1379,7 +1379,7 @@ Type the tenant slug AGAIN to confirm: acme-corp
  audit_retention_days: 365 → 730
  legal_doc_forever: true
 [clo approval required] if reducing — current change is INCREASE: auto-approved
-[audit] brain seq=42199 chain=…</code></pre>
+[audit] memory seq=42199 chain=…</code></pre>
 </section>
 
 <!-- ============================================================ -->
@@ -1434,14 +1434,14 @@ Type the tenant slug AGAIN to confirm: acme-corp
  <li><strong>90-day offboarding contract (§2.7 above):</strong> 4-phase timeline + 6-item signed-bundle export + permanent-delete attestation JSON.</li>
  <li><strong>Cross-module page links:</strong>
  <a href="auth.html" class="text-blue-700 underline">auth.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
  <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
  <a href="skill.html" class="text-blue-700 underline">skill.html</a> ·
  <a href="portal.html" class="text-blue-700 underline">portal.html</a></li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — TEN-billing thin slice at P2 · exit; full SaaS at P4 · mid+.</li>
  <li><strong>Research review:</strong> <code>archive/2026-05-14/RESEARCH_REVIEW.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — explicit recommendation: TEN-billing thin slice at P2 (not P4) to enable vertical-pack pricing.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §6</a> — Lumi cross-tenant synthesis depends on TEN's tenant identity + residency pinning.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §6</a> — Lumi cross-tenant synthesis depends on TEN's tenant identity + residency pinning.</li>
  <li><strong>SOC 2 Type II</strong> — Trust Service Criteria CC6.1, CC6.6, CC7.2.</li>
  <li><strong>ISO/IEC 27017:2015</strong> — Cloud-services security controls.</li>
  <li><strong>ISO/IEC 27018:2019</strong> — Public-cloud PII processor controls.</li>

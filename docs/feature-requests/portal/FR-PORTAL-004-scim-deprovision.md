@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PORTAL-003, FR-PORTAL-001, FR-PORTAL-005, FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-TEN-104, FR-CHAT-005, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-PORTAL-003, FR-PORTAL-001, FR-PORTAL-005, FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-TEN-104, FR-CHAT-005, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-PORTAL-003]
 blocks: []
 
@@ -32,9 +32,9 @@ source_decisions:
   - DEC-1085 2026-05-17 — JWT blacklist storage: Redis sorted set keyed by `(jti)` with score=expiration timestamp; auto-trimmed past expiration (no eternal-blacklist accumulation); 30s propagation SLO end-to-end
   - DEC-1086 2026-05-17 — Per-Engagement isolation: SCIM DELETE invalidates ONLY sessions scoped to that Engagement (per FR-PORTAL-003); user with multi-Engagement membership keeps sessions in other Engagements
   - DEC-1087 2026-05-17 — Idempotent on SCIM DELETE: re-DELETEing an already-tombstoned subject returns 204 No Content (no error); re-DELETEing a hard-purged subject returns 404
-  - DEC-1088 2026-05-17 — BRAIN audit kinds: portal.scim_user_deprovisioned, portal.scim_user_restored, portal.scim_cascade_revocation, portal.jwt_blacklist_propagated, portal.websocket_force_closed, portal.scim_grace_period_expired, portal.scim_deprovision_sla_breach
+  - DEC-1088 2026-05-17 — memory audit kinds: portal.scim_user_deprovisioned, portal.scim_user_restored, portal.scim_cascade_revocation, portal.jwt_blacklist_propagated, portal.websocket_force_closed, portal.scim_grace_period_expired, portal.scim_deprovision_sla_breach
   - DEC-1089 2026-05-17 — 30s SLO measured from SCIM DELETE accepted (HTTP 204 returned) to last-revoked-session timestamp; alarm sev-1 if p99 > 30s sustained 5 min
-  - DEC-1090 2026-05-17 — Audit-row PII: subject_id retained in chain (anti-correlation needed for forensic); email PII-scrubbed via FR-BRAIN-111
+  - DEC-1090 2026-05-17 — Audit-row PII: subject_id retained in chain (anti-correlation needed for forensic); email PII-scrubbed via FR-MEMORY-111
   - DEC-1091 2026-05-17 — Rate limit: 1000 SCIM DELETEs/min/Engagement (bulk-deprovision scenarios — org-wide IdP cleanup); above → 429 with Retry-After
   - DEC-1092 2026-05-17 — Restore endpoint at `POST /v1/admin/engagements/{eng_id}/subjects/{subject_id}/restore` requires `tenant_admin` role (engagement_admin too tight — restore reaches across Engagement boundary)
   - DEC-1093 2026-05-17 — Session-store cleanup: tombstoned subject's session rows in `auth_sessions` table marked `revoked_at=now()`; not deleted (audit forensic retention)
@@ -60,7 +60,7 @@ build_envelope:
     - services/portal/src/deprovision/restore.rs                        # admin restore handler
     - services/portal/src/deprovision/reconciliation.rs                 # nightly orphan-session scan
     - services/portal/src/scim/user_delete.rs                           # extends scim/users.rs from FR-PORTAL-003
-    - services/portal/src/audit/deprovision_events.rs                   # 7 BRAIN row builders
+    - services/portal/src/audit/deprovision_events.rs                   # 7 memory row builders
     - services/portal/src/handlers/admin_restore.rs                     # POST restore endpoint
     - services/portal/tests/scim_delete_invalidates_jwt_test.rs
     - services/portal/tests/scim_delete_closes_websocket_test.rs
@@ -121,7 +121,7 @@ risk_if_skipped: "Without SCIM deprovision, terminated employees retain access t
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src/scim/user_delete.rs` extending FR-PORTAL-003's SCIM endpoint with session invalidation ≤ 30s p99, dual-channel session kill (JWT blacklist + WebSocket close), cascade revocation across PORTAL-005 + PORTAL-001 + CHAT-005 + MCP-006, 5-min grace period + admin restore, idempotency, per-Engagement isolation, nightly reconciliation, and 7 BRAIN audit kinds.
+The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src/scim/user_delete.rs` extending FR-PORTAL-003's SCIM endpoint with session invalidation ≤ 30s p99, dual-channel session kill (JWT blacklist + WebSocket close), cascade revocation across PORTAL-005 + PORTAL-001 + CHAT-005 + MCP-006, 5-min grace period + admin restore, idempotency, per-Engagement isolation, nightly reconciliation, and 7 memory audit kinds.
 
 1. **MUST** extend the SCIM endpoint at `DELETE /scim/v2/{engagement_slug}/Users/{id}` per RFC 7644 §3.6. Handler:
     - Authenticated via per-Engagement SCIM bearer token (FR-PORTAL-003 §1 #13).
@@ -137,7 +137,7 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
     - SELECT all active JWT jtis for the subject from `auth_sessions WHERE subject_id=$1 AND revoked_at IS NULL`.
     - For each jti: INSERT into `portal_jwt_blacklist` (Postgres) + ZADD into Redis sorted-set `jwt_blacklist:<tenant>` with score=expiration_unix.
     - PUBLISH on Redis pub/sub channel `jwt_blacklist_update` so all gateway nodes update their in-memory caches within ~50ms.
-    - Emit `portal.scim_user_deprovisioned` BRAIN row.
+    - Emit `portal.scim_user_deprovisioned` memory row.
 
 4. **MUST** complete the async phase within 30 seconds end-to-end per DEC-1089. The `deprovision/async_phase.rs::execute(subject_id, engagement_id)`:
     - In parallel, invoke each of the 4 cascade targets per DEC-1084 + §1 #6.
@@ -149,7 +149,7 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
 5. **MUST** force-close active WebSocket connections per DEC-1081 + DEC-1095. The `deprovision/websocket_killer.rs::close_for_subject(subject_id, engagement_id)`:
     - Iterates `chat_active_connections` + `genie_active_connections` registries (in-memory + Redis-backed for multi-node).
     - For each connection matching `(subject_id, engagement_id)`: send WebSocket close frame with code `4001` + reason `"scim_deprovision"`.
-    - Emit `portal.websocket_force_closed` BRAIN row per closed connection (informational; sev-3; sampled at 10% for high-volume scenarios via FR-OBS-006).
+    - Emit `portal.websocket_force_closed` memory row per closed connection (informational; sev-3; sampled at 10% for high-volume scenarios via FR-OBS-006).
 
 6. **MUST** cascade revoke 4 downstream resources per DEC-1084. The `deprovision/cascade.rs::run_all(subject_id, engagement_id)` invokes in parallel:
     - **FR-PORTAL-005 Genie sessions**: `portal_genie_sessions` table — UPDATE `revoked_at=now()` WHERE subject_id + engagement_id; emit `portal.scim_cascade_revocation` with `target='genie_sessions'`.
@@ -198,7 +198,7 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
     - Any active session for a tombstoned subject = sev-1 `portal.scim_orphan_session_detected` (not in 7-kind core list per DEC-1088; informational+forensic).
     - Auto-revoke the orphan + audit; emit one row per orphan.
 
-17. **MUST** emit 7 BRAIN audit row kinds per DEC-1088:
+17. **MUST** emit 7 memory audit row kinds per DEC-1088:
     - `portal.scim_user_deprovisioned` (sev-1 — material identity event)
     - `portal.scim_user_restored` (sev-1 — counter-event)
     - `portal.scim_cascade_revocation` (sev-2 — one per cascade target)
@@ -207,7 +207,7 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
     - `portal.scim_grace_period_expired` (sev-3 — informational)
     - `portal.scim_deprovision_sla_breach` (sev-1 — SLO miss)
 
-18. **MUST** PII-scrub audit rows per DEC-1090 + AUTHORING.md rule 18. `subject_id` UUID retained (forensic anti-correlation needed); `email` PII-scrubbed via FR-BRAIN-111 → `email_hash16`.
+18. **MUST** PII-scrub audit rows per DEC-1090 + AUTHORING.md rule 18. `subject_id` UUID retained (forensic anti-correlation needed); `email` PII-scrubbed via FR-MEMORY-111 → `email_hash16`.
 
 19. **MUST** thread W3C `traceparent` across SCIM DELETE → sync phase → async phase → cascade targets → reconciliation (AUTHORING.md rule 22-24). Single trace_id per deprovision operation.
 
@@ -363,7 +363,7 @@ GET    /v1/admin/tenants/{tenant_id}/deprovision-log                (tenant_admi
 14. **JWT blacklist propagation < 50ms p95** — multi-node test: blacklist add on node A is visible to node B within 50ms.
 15. **30s SLO breach alerted** — fixture-injected delay > 30s triggers `portal.scim_deprovision_sla_breach` sev-1.
 16. **Nightly reconciliation catches orphans** — fixture-tombstoned subject with active session → reconciliation auto-revokes + emits sev-1 orphan row.
-17. **7 BRAIN audit kinds emitted** — full lifecycle covers all 7 (deprovisioned + restored + cascade × 4 targets + propagated + force_closed + grace_expired + sla_breach).
+17. **7 memory audit kinds emitted** — full lifecycle covers all 7 (deprovisioned + restored + cascade × 4 targets + propagated + force_closed + grace_expired + sla_breach).
 18. **PII scrub** — audit row carries `email_hash16` not raw email; `subject_id` UUID retained.
 19. **Hard purge returns 501 at slice 2** — `?action=hard_purge` query param returns 501 `not_implemented`.
 20. **Trace_id end-to-end** — single trace_id across SCIM DELETE + sync phase + async phase + cascade row + reconciliation row.
@@ -477,7 +477,7 @@ async fn put_within_grace_reactivates() {
         .bind(ctx.subject_id).fetch_one(&ctx.pool).await.unwrap();
     assert_eq!(status, "active");
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.scim_user_restored"
         && r.payload["restored_via"] == "scim_put_within_grace"));
 }
@@ -549,7 +549,7 @@ async fn nightly_reconciliation_catches_orphan_session() {
     ctx.travel_clock_forward(Duration::from_days(1)).await;
     ctx.run_reconciliation_job().await;
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.scim_orphan_session_detected" && r.severity == 1));
     let session_revoked: Option<DateTime<Utc>> = sqlx::query_scalar(
         "SELECT revoked_at FROM auth_sessions WHERE subject_id=$1"
@@ -596,7 +596,7 @@ async fn full_lifecycle_emits_7_kinds() {
     let _ = ctx.scim_put_user(ctx.subject_id, json!({"userName":"alice"})).await;  // grace expired
     ctx.admin_restore(ctx.subject_id).await;
 
-    let kinds: Vec<&str> = ctx.brain_rows().await.iter().map(|r| r.kind.as_str()).collect();
+    let kinds: Vec<&str> = ctx.memory_rows().await.iter().map(|r| r.kind.as_str()).collect();
     for expected in &[
         "portal.scim_user_deprovisioned", "portal.scim_user_restored",
         "portal.scim_cascade_revocation", "portal.jwt_blacklist_propagated",
@@ -725,8 +725,8 @@ pub async fn close_for_subject(ctx: &AppCtx, subject_id: Uuid, engagement_id: Uu
 - **FR-AUTH-101** RBAC — role gates.
 - **FR-TEN-104** Lifecycle — deprovision may trigger if last admin lost.
 - **FR-CHAT-005** CHAT membership — cascade target.
-- **FR-AI-003** BRAIN audit-row bridge — 7 new kinds.
-- **FR-BRAIN-111** PII scrubbing — email hash in chain.
+- **FR-AI-003** memory audit-row bridge — 7 new kinds.
+- **FR-MEMORY-111** PII scrubbing — email hash in chain.
 - **FR-OBS-007** Auto-runbook — sev-1 SLA-breach + orphan-session alerts route to CHAT.
 
 **Downstream (blocks):** None.
@@ -735,7 +735,7 @@ pub async fn close_for_subject(ctx: &AppCtx, subject_id: Uuid, engagement_id: Uu
 
 ## §8 — Example payloads
 
-### 8.1 `portal.scim_user_deprovisioned` BRAIN row
+### 8.1 `portal.scim_user_deprovisioned` memory row
 
 ```json
 {
@@ -759,7 +759,7 @@ pub async fn close_for_subject(ctx: &AppCtx, subject_id: Uuid, engagement_id: Uu
 }
 ```
 
-### 8.2 `portal.scim_deprovision_sla_breach` BRAIN row
+### 8.2 `portal.scim_deprovision_sla_breach` memory row
 
 ```json
 {
@@ -886,7 +886,7 @@ All resolved for slice 2. Deferred:
 
 **§11.19** Trace_id propagation: SCIM DELETE handler generates trace_id; passes via `tracing::instrument` context into sync phase + async spawn + cascade targets; all audit rows carry the same trace_id.
 
-**§11.20** The 7-kind core list (§1 #17) plus `portal.scim_orphan_session_detected` (§1 #16) totals 8 BRAIN audit kinds for this FR; FR-AI-003 closed-set extension covers all 8.
+**§11.20** The 7-kind core list (§1 #17) plus `portal.scim_orphan_session_detected` (§1 #16) totals 8 memory audit kinds for this FR; FR-AI-003 closed-set extension covers all 8.
 
 **§11.21** Per-PSP-like multi-tenant abstraction not needed here — SCIM is the single canonical channel; webhook-based deprovision deferred per DEC-1098.
 

@@ -1,15 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: postmortem-author
-description: |
-  Author a blameless post-mortem (postmortem@1) after an incident,
-  from incident timeline + pager logs + Slack threads + customer
-  impact records. Captures: incident summary, timeline (per-minute
-  resolution), contributing factors (Five-Whys style), what went
-  well / what went wrong / where we got lucky, action items with
-  owner + due date, MTTR vs SLO. Strictly blameless tone. Covers
-  Software Development Process.md §2(j) Operations — incidents.
-  Chains naturally into postmortem-audit.
+description: >-
+  Author a blameless post-mortem (postmortem@1) after an incident, from incident timeline + pager logs + Slack threads + customer impact records. Captures: incident summary, timeline (per-minute resolution), contributing factors (Five-Whys style), what went well / what went wrong / where we got lucky, action items with owner + due date, MTTR vs SLO. Strictly blameless tone. Covers Software Development Process.md §2(j) Operations — incidents. Chains naturally into postmortem-audit. Use when user asks to "draft a postmortem" or "create the postmortem". Do NOT use for "audit existing postmortem" (use postmortem-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -19,7 +12,7 @@ metadata:
   cyberos-rubric-target: postmortem_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -33,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -294,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

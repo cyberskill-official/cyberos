@@ -2,7 +2,7 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: runbook-author
 description: >-
-  Author a production operational runbook (runbook@1) for a specific failure mode or recurring task from incident history + observability dashboards + on-call notes. Use when user asks to "draft a runbook for high BRAIN ingest lag", "create the on-call runbook for AUTH 5xx spikes", or "document the recovery procedure". Captures preconditions, detection signals, decision tree, step-by-step recovery, rollback, post-incident handover. Covers SDP §4(d) Operational readiness. Chains naturally into runbook-audit. Do NOT use for "audit an existing runbook" (use runbook-audit instead).
+  Author a production operational runbook (runbook@1) for a specific failure mode or recurring task from incident history + observability dashboards + on-call notes. Use when user asks to "draft a runbook for high memory ingest lag", "create the on-call runbook for AUTH 5xx spikes", or "document the recovery procedure". Captures preconditions, detection signals, decision tree, step-by-step recovery, rollback, post-incident handover. Covers SDP §4(d) Operational readiness. Chains naturally into runbook-audit. Do NOT use for "audit an existing runbook" (use runbook-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -12,7 +12,7 @@ metadata:
   cyberos-rubric-target: runbook_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -26,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -287,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

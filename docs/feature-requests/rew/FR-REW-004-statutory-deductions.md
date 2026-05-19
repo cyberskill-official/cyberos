@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-005, FR-REW-002, FR-REW-005, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-005, FR-REW-002, FR-REW-005, FR-MEMORY-111]
 depends_on: [FR-HR-005]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-2181 2026-05-17 — Closed enum `deduction_kind` = {bhxh, bhyt, bhtn, pit, union_due, voluntary}; cardinality 6
   - DEC-2182 2026-05-17 — Rate lookups via FR-HR-005 + FR-REW-002 versioned policy; deterministic per period
   - DEC-2183 2026-05-17 — Contractor (per FR-HR-002 contract_type) exempt from BHXH/BHYT/BHTN; still subject to PIT
-  - DEC-2184 2026-05-17 — BRAIN audit kinds: rew.deduction_computed, rew.deduction_skipped_contractor, rew.deduction_compute_failed
+  - DEC-2184 2026-05-17 — memory audit kinds: rew.deduction_computed, rew.deduction_skipped_contractor, rew.deduction_compute_failed
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without statutory deductions, payroll non-compliant → tax au
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship statutory deductions at `services/rew/src/deductions/` computing BHXH + BHYT + BHTN + PIT per Decree 152/2020 with versioned rates, 3 BRAIN audit kinds.
+The REW service **MUST** ship statutory deductions at `services/rew/src/deductions/` computing BHXH + BHYT + BHTN + PIT per Decree 152/2020 with versioned rates, 3 memory audit kinds.
 
 1. **MUST** validate `deduction_kind` against closed enum per DEC-2181.
 
@@ -108,7 +108,7 @@ The REW service **MUST** ship statutory deductions at `services/rew/src/deductio
    REVOKE UPDATE, DELETE ON rew_deductions FROM cyberos_app;
    ```
 
-6. **MUST** emit 3 BRAIN audit kinds per DEC-2184. PII per FR-BRAIN-111: amounts SHA-256 hashed.
+6. **MUST** emit 3 memory audit kinds per DEC-2184. PII per FR-MEMORY-111: amounts SHA-256 hashed.
 
 7. **MUST** thread trace_id from FR-REW-005 compute → deductions → audit.
 
@@ -147,7 +147,7 @@ Sample deduction list (in payroll context):
 ---
 
 ## §4 — Acceptance criteria
-1. **deduction_kind enum cardinality 6**. 2. **BHXH 8% (employee-side, not 17.5%)**. 3. **BHYT 1.5%**. 4. **BHTN 1%**. 5. **PIT progressive brackets**. 6. **Contractor SI-exempt**. 7. **Contractor still PIT'd**. 8. **Versioned policy lookup**. 9. **Deterministic**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (amounts SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **Bigint VND (no float)**. 16. **Rate precision (7,6)**. 17. **Bracket edge handling per Decree 152 Art. 7**. 18. **Policy version_id stored per deduction**. 19. **Multiple deductions per member per run**. 20. **Total = sum(deducted_amount_vnd) matches**. 
+1. **deduction_kind enum cardinality 6**. 2. **BHXH 8% (employee-side, not 17.5%)**. 3. **BHYT 1.5%**. 4. **BHTN 1%**. 5. **PIT progressive brackets**. 6. **Contractor SI-exempt**. 7. **Contractor still PIT'd**. 8. **Versioned policy lookup**. 9. **Deterministic**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (amounts SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE**. 15. **Bigint VND (no float)**. 16. **Rate precision (7,6)**. 17. **Bracket edge handling per Decree 152 Art. 7**. 18. **Policy version_id stored per deduction**. 19. **Multiple deductions per member per run**. 20. **Total = sum(deducted_amount_vnd) matches**. 
 
 ---
 
@@ -190,7 +190,7 @@ async fn pit_progressive_brackets() {
 ## §7 — Dependencies
 **Upstream:** FR-HR-005.
 **Downstream:** FR-REW-005 (payroll compute uses this).
-**Cross-module:** FR-REW-002 (versioning), FR-HR-002 (contract type), FR-BRAIN-111 (PII).
+**Cross-module:** FR-REW-002 (versioning), FR-HR-002 (contract type), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -210,7 +210,7 @@ async fn pit_progressive_brackets() {
 - §11.1 Brackets stored as JSONB in FR-REW-002 param_versions; computer reads + applies.
 - §11.2 PIT computer iterates brackets; per-bracket: taxable_in_bracket × rate.
 - §11.3 Rate (7,6) = up to 99.9999%; comfortably handles all SI/PIT scenarios.
-- §11.4 BRAIN audit body: payroll_run_id, member_id, kind; amounts SHA256.
+- §11.4 memory audit body: payroll_run_id, member_id, kind; amounts SHA256.
 - §11.5 union_due + voluntary = optional kinds for future use.
 
 ---

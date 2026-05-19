@@ -3,7 +3,7 @@
 # scripts/automation/cyberos-nightly.sh — nightly soak run.
 #
 # Wired by ``scripts/automation-install.sh`` as a macOS LaunchAgent.
-# Runs on the host (not in any agent sandbox), against the real BRAIN.
+# Runs on the host (not in any agent sandbox), against the real memory.
 #
 # Steps:
 #   1. cyberos doctor — must return overall OK

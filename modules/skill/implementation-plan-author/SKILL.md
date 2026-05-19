@@ -1,15 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: implementation-plan-author
-description: |
-  Translate an FR + SDD (or just an audited FR for lean profile) into
-  an impl_plan@1 markdown — a shadow record of engineering tickets
-  that can drive Linear / Jira / GitHub Projects creation. Conducts a
-  2-3 question sprint-planning interview (which sprint? who reviews?
-  proj backend?), reads member:* BRAIN scopes for capacity awareness,
-  and emits the impl-plan + optionally the ticket payloads. Refuses if
-  upstream artefact is in non-pass state. Covers Software Development
-  Process.md §2(f) Implementation prep.
+description: >-
+  Translate an FR + SDD (or just an audited FR for lean profile) into an impl_plan@1 markdown — a shadow record of engineering tickets that can drive Linear / Jira / GitHub Projects creation. Conducts a 2-3 question sprint-planning interview (which sprint? who reviews? proj backend?), reads member:* memory scopes for capacity awareness, and emits the impl-plan + optionally the ticket payloads. Refuses if upstream artefact is in non-pass state. Covers Software Development Process.md §2(f) Implementation prep. Use when user asks to "draft a implementation plan" or "create the implementation plan". Do NOT use for "audit existing implementation plan" (use implementation-plan-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -19,7 +12,7 @@ metadata:
   cyberos-rubric-target: impl_plan_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -33,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -294,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

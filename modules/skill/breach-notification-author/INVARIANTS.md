@@ -22,7 +22,7 @@ These invariants are checked at every node boundary, every 25 audit rows, and on
 | `confidence_low_streak` | 3 claims below `defer_below` within a 10-claim window | model is uncertain in this domain; surface for fine-tune |
 | `user_correction_streak` | 2 user corrections within 5 turns | user disagrees with model output; recalibrate |
 | `denylist_near_miss_streak` | 2 near-misses of the content denylist within 20 turns | content gate is too loose or too tight |
-| `scope_rejection_streak` | 1 BRAIN scope rejection | the skill is requesting BRAIN data it shouldn't |
+| `scope_rejection_streak` | 1 memory scope rejection | the skill is requesting memory data it shouldn't |
 | `citation_missing_streak` | 2 claims without `source_ref` within 10 claims | anti-fabrication discipline slipping |
 
 A breach of any signal emits a `refinement_proposal` and pauses the pipeline pending operator review.

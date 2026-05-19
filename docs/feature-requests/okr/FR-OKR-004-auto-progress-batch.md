@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-OKR-003, FR-OKR-002, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-OKR-003, FR-OKR-002, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-OKR-003]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-1991 2026-05-17 — Closed enum `batch_run_status` = {running, completed, partial, failed}; cardinality 4
   - DEC-1992 2026-05-17 — Drift alert: if current_value changes >10% in one run, emit sev-2 audit (likely upstream data issue)
   - DEC-1993 2026-05-17 — Per-KR failure isolated — one failure doesn't halt batch
-  - DEC-1994 2026-05-17 — BRAIN audit kinds: okr.batch_started, okr.batch_kr_resolved, okr.batch_kr_drift_alert, okr.batch_kr_failed, okr.batch_completed
+  - DEC-1994 2026-05-17 — memory audit kinds: okr.batch_started, okr.batch_kr_resolved, okr.batch_kr_drift_alert, okr.batch_kr_failed, okr.batch_completed
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without nightly batch, KRs stale → Monday check-ins use last
 
 ## §1 — Description (BCP-14 normative)
 
-The OKR service **MUST** ship auto-progress batch at `services/okr/src/auto_progress/` running nightly via FR-MCP-007 cron, resolving DSL per KR, drift detection, 5 BRAIN audit kinds.
+The OKR service **MUST** ship auto-progress batch at `services/okr/src/auto_progress/` running nightly via FR-MCP-007 cron, resolving DSL per KR, drift detection, 5 memory audit kinds.
 
 1. **MUST** schedule daily batch at 03:00 tenant_tz per DEC-1990.
 
@@ -120,7 +120,7 @@ The OKR service **MUST** ship auto-progress batch at `services/okr/src/auto_prog
    GET  /v1/okr/auto-progress/runs/{id}  (detail per KR)
    ```
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-1994. PII per FR-BRAIN-111: value diffs SHA-256 hashed; counts ok.
+8. **MUST** emit 5 memory audit kinds per DEC-1994. PII per FR-MEMORY-111: value diffs SHA-256 hashed; counts ok.
 
 9. **MUST** thread trace_id from cron → batch → resolver → audit.
 
@@ -161,7 +161,7 @@ Sample run status:
 ---
 
 ## §4 — Acceptance criteria
-1. **Nightly 03:00 tenant_tz**. 2. **batch_run_status enum cardinality 4**. 3. **All active KRs with progress_source resolved**. 4. **Per-KR failure isolated**. 5. **Drift alert at >10% delta**. 6. **Idempotent (UNIQUE run_date)**. 7. **5 BRAIN audit kinds emitted**. 8. **PII scrubbed (value diffs SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only manual trigger**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE except status cols**. 13. **status=completed when 100% success**. 14. **status=partial when any failure**. 15. **status=failed when 100% failure**. 16. **Cron skip if 0 active KRs**. 17. **Backfill via CEO trigger with run_date**. 18. **Run history queryable**. 19. **Concurrent run blocked (UNIQUE)**. 20. **First-run no drift alert (no prior value)**.
+1. **Nightly 03:00 tenant_tz**. 2. **batch_run_status enum cardinality 4**. 3. **All active KRs with progress_source resolved**. 4. **Per-KR failure isolated**. 5. **Drift alert at >10% delta**. 6. **Idempotent (UNIQUE run_date)**. 7. **5 memory audit kinds emitted**. 8. **PII scrubbed (value diffs SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only manual trigger**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE except status cols**. 13. **status=completed when 100% success**. 14. **status=partial when any failure**. 15. **status=failed when 100% failure**. 16. **Cron skip if 0 active KRs**. 17. **Backfill via CEO trigger with run_date**. 18. **Run history queryable**. 19. **Concurrent run blocked (UNIQUE)**. 20. **First-run no drift alert (no prior value)**.
 
 ---
 
@@ -192,7 +192,7 @@ async fn drift_alert_at_15pct() {
     let ctx = TestContext::with_kr_current_100().await;
     ctx.mock_resolver_returns(115).await;
     ctx.run_batch(today()).await;
-    let audits = ctx.fetch_brain_audits("okr.batch_kr_drift_alert").await;
+    let audits = ctx.fetch_memory_audits("okr.batch_kr_drift_alert").await;
     assert!(!audits.is_empty());
 }
 
@@ -203,7 +203,7 @@ async fn drift_alert_at_15pct() {
 
 ## §7 — Dependencies
 **Upstream:** FR-OKR-003.
-**Cross-module:** FR-MCP-007 (cron), FR-AUTH-101 (CEO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-MCP-007 (cron), FR-AUTH-101 (CEO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -223,7 +223,7 @@ async fn drift_alert_at_15pct() {
 - §11.1 Cron via FR-MCP-007 `kind: 'okr.auto_progress_batch'`, daily 03:00.
 - §11.2 Drift threshold 10% per DEC-1992; configurable per tenant in future.
 - §11.3 Per-KR resolution timeout 30s; longer triggers fail-and-continue.
-- §11.4 BRAIN audit body: run_id, kr_id, old/new value SHA256, drift_pct.
+- §11.4 memory audit body: run_id, kr_id, old/new value SHA256, drift_pct.
 - §11.5 Backfill mode: CEO POST with explicit run_date; uses that date's data context.
 
 ---

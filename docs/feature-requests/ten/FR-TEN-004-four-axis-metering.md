@@ -1,9 +1,9 @@
 ---
 id: FR-TEN-004
-title: "4-axis metering — seats · API · AI tokens · storage (BRAIN audit per metric event)"
+title: "4-axis metering — seats · API · AI tokens · storage (memory audit per metric event)"
 module: TEN
 priority: MUST
-status: accepted
+status: ready_to_implement
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -13,16 +13,16 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AI-001, FR-TEN-001, FR-TEN-002, FR-TEN-003, FR-DOC-001, FR-BRAIN-111]
-depends_on: [FR-AI-001, FR-TEN-001, FR-AUTH-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-AI-001, FR-TEN-001, FR-TEN-002, FR-TEN-003, FR-DOC-001, FR-MEMORY-111]
+depends_on: [FR-AI-001, FR-TEN-001, FR-AUTH-003, FR-MEMORY-111]
 blocks: [FR-TEN-003]
 
 source_pages:
   - website/docs/modules/ten.html#metering
 source_decisions:
   - DEC-700 2026-05-16 — 4 axes locked (no per-message, no per-event; bill on what costs us money)
-  - DEC-701 2026-05-16 — BRAIN audit emitted per metric event (not aggregated) so disputes resolve to a row
+  - DEC-701 2026-05-16 — memory audit emitted per metric event (not aggregated) so disputes resolve to a row
   - DEC-702 2026-05-16 — Per-event row is append-only via SQL grant (REVOKE UPDATE/DELETE)
   - DEC-703 2026-05-16 — Aggregation runs at end-of-billing-period only; intra-period queries hit materialized view
   - DEC-704 2026-05-16 — Closed 4-value axis enum; new axis requires schema migration + DEC-XXX entry
@@ -33,9 +33,9 @@ source_decisions:
   - DEC-709 2026-05-16 — Backpressure on metering write failure — falls back to local WAL queue + retry with bounded buffer
   - DEC-710 2026-05-16 — Per-tenant `metering_overage_policy` (block | warn | allow) with CFO-only mutation gate
   - DEC-711 2026-05-16 — Refund pathway via correction_to (FR-TIME-001 pattern) — never UPDATE/DELETE
-  - DEC-712 2026-05-16 — Dual-write to Postgres + BRAIN audit chain — Postgres row is authoritative for billing, BRAIN is tamper-evident
+  - DEC-712 2026-05-16 — Dual-write to Postgres + memory audit chain — Postgres row is authoritative for billing, memory is tamper-evident
   - DEC-713 2026-05-16 — Real-time view via `metering_current_period` materialized view refreshed every 5 minutes
-  - DEC-714 2026-05-16 — PII-free metric rows (only counts + ids); BRAIN audit chain through FR-BRAIN-111 scrubs reason text
+  - DEC-714 2026-05-16 — PII-free metric rows (only counts + ids); memory audit chain through FR-MEMORY-111 scrubs reason text
   - DEC-715 2026-05-16 — Idempotent metric_event via `idempotency_key` UNIQUE constraint (24h retention)
 
 build_envelope:
@@ -71,11 +71,11 @@ build_envelope:
     - file_write: services/metering/{src,tests,migrations}/**
     - bash: cargo test -p cyberos-metering
     - bash: cargo sqlx migrate run
-    - brain: write memories/decisions/metering-events/* via canonical Writer (NOT directly)
+    - memory: write memories/decisions/metering-events/* via canonical Writer (NOT directly)
   disallowed_tools:
     - direct INSERT to metering_events from outside metering service
     - UPDATE/DELETE of any metering_events row (append-only via SQL grant)
-    - skip BRAIN audit emission (defense-in-depth pairing)
+    - skip memory audit emission (defense-in-depth pairing)
 
 effort_hours: 8
 sub_tasks:
@@ -93,17 +93,17 @@ risk_if_skipped: "Without per-event metering, billing reconciles to provider inv
 
 ## §1 — Description (BCP-14 normative)
 
-The Metering service **MUST** emit one append-only `metering_events` row per quantifiable resource consumption event along exactly four closed axes — **seats, api_calls, ai_tokens, storage_bytes** — and **MUST** simultaneously emit one BRAIN audit chain row per event for tamper-evident reconciliation.
+The Metering service **MUST** emit one append-only `metering_events` row per quantifiable resource consumption event along exactly four closed axes — **seats, api_calls, ai_tokens, storage_bytes** — and **MUST** simultaneously emit one memory audit chain row per event for tamper-evident reconciliation.
 
 1. **MUST** define the closed 4-value Postgres enum `metering_axis = ('seats', 'api_calls', 'ai_tokens', 'storage_bytes')` with a CI cardinality test (`SELECT count(*) FROM pg_enum WHERE enumtypid = 'metering_axis'::regtype` equals 4). Adding a new axis requires a schema migration + a DEC-XXX decision entry (DEC-704).
 
 2. **MUST** persist every metric event to the `metering_events` Postgres table as an append-only row. The table is created with `REVOKE UPDATE, DELETE FROM cyberos_app`. Only the privileged `metering_writer` role holds INSERT privilege; only `metering_reader` holds SELECT. The reversal pathway for refunds is via the FR-TIME-001 `correction_to` self-FK pattern — never an UPDATE/DELETE (DEC-702 + DEC-711).
 
-3. **MUST** enforce idempotent recording via a `UNIQUE (tenant_id, axis, idempotency_key)` constraint on `metering_events`. The 24-hour retention window for idempotency keys is enforced by a partial index. Duplicate inserts MUST return success (idempotent semantics) without emitting a second BRAIN audit row (DEC-715).
+3. **MUST** enforce idempotent recording via a `UNIQUE (tenant_id, axis, idempotency_key)` constraint on `metering_events`. The 24-hour retention window for idempotency keys is enforced by a partial index. Duplicate inserts MUST return success (idempotent semantics) without emitting a second memory audit row (DEC-715).
 
-4. **MUST** emit exactly one BRAIN audit chain row per metric event before the Postgres COMMIT. The audit row carries `{axis, tenant_id, quantity, unit, idempotency_key, occurred_at, source_service, postgres_event_id}` — no free-text descriptions, no PII. The Postgres row id and the BRAIN chain hash MUST be cross-linked (event row stores `brain_chain_hash`, BRAIN row stores `postgres_event_id`). Mismatch detected at close-period reconciliation triggers a sev-1 audit row (DEC-712 + DEC-714).
+4. **MUST** emit exactly one memory audit chain row per metric event before the Postgres COMMIT. The audit row carries `{axis, tenant_id, quantity, unit, idempotency_key, occurred_at, source_service, postgres_event_id}` — no free-text descriptions, no PII. The Postgres row id and the memory chain hash MUST be cross-linked (event row stores `memory_chain_hash`, memory row stores `postgres_event_id`). Mismatch detected at close-period reconciliation triggers a sev-1 audit row (DEC-712 + DEC-714).
 
-5. **MUST** route every BRAIN audit row through the FR-BRAIN-111 pre-ingest PII detection layer. The metering payload is structured (no free text), so the detector returns "clean" 100% of the time in steady state; any non-clean result MUST be treated as a sev-1 ingest defect (the metering writer is the source of "clean payloads only" — if it emits PII, that is a code bug).
+5. **MUST** route every memory audit row through the FR-MEMORY-111 pre-ingest PII detection layer. The metering payload is structured (no free text), so the detector returns "clean" 100% of the time in steady state; any non-clean result MUST be treated as a sev-1 ingest defect (the metering writer is the source of "clean payloads only" — if it emits PII, that is a code bug).
 
 6. **MUST** integrate API-call metering at the auth middleware hot path (FR-AUTH-003 RLS-aware request scope). Every successful RLS-scoped HTTP request emits one `api_calls` event with `quantity = 1` and `unit = "request"`. Failed-auth requests do NOT emit (rejected at auth, not billed). The middleware writes via the WAL queue (§1 #14) on the response path — never on the request path — so a metering writer outage cannot impact request latency (≤ 200µs p99 overhead budget).
 
@@ -116,14 +116,14 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
    - **Postgres bytes**: queries `pg_total_relation_size` summed across the tenant's RLS-scoped tables. The query joins `pg_class` to `cyberos.tenants` to derive size per tenant.
    - Emits ONE `storage_bytes` event with `quantity = s3_bytes + postgres_bytes`, `unit = "byte"`.
 
-10. **MUST** define a closed 3-value `metering_overage_policy` enum (`block`, `warn`, `allow`). The per-tenant policy lives in `tenants.metering_overage_policy_yaml` and defaults to `warn`. Mutation requires `cfo` role per FR-AUTH-101 + a sev-2 BRAIN audit row with a non-empty reason (DEC-710). The CI cardinality test asserts exactly 3 enum values.
+10. **MUST** define a closed 3-value `metering_overage_policy` enum (`block`, `warn`, `allow`). The per-tenant policy lives in `tenants.metering_overage_policy_yaml` and defaults to `warn`. Mutation requires `cfo` role per FR-AUTH-101 + a sev-2 memory audit row with a non-empty reason (DEC-710). The CI cardinality test asserts exactly 3 enum values.
 
 11. **MUST** enforce overage policy at the API-call middleware:
     - `block`: when `current_period_api_calls + 1 > monthly_cap`, return `402 PAYMENT_REQUIRED` with body `{error: "overage_blocked", axis: "api_calls", current, cap}`. No `metering_events` row is emitted (the call is rejected upstream).
-    - `warn`: when crossing `monthly_cap × warn_threshold` (default 0.80), emit a `metering.warn_threshold_crossed` BRAIN audit row at sev-2. The metric event proceeds normally.
+    - `warn`: when crossing `monthly_cap × warn_threshold` (default 0.80), emit a `metering.warn_threshold_crossed` memory audit row at sev-2. The metric event proceeds normally.
     - `allow`: no enforcement; metric event proceeds; CFO reviews at period close.
 
-12. **MUST** define a `metering_holds` table parallel to FR-AI-001's `cost_ledger_holds` for high-value operations (e.g., a bulk API ingest claims a 10,000-call hold before issuing). The hold uses the same 60s TTL + idempotency contract as the cost-ledger hold and emits a `metering.hold_claimed` BRAIN audit row.
+12. **MUST** define a `metering_holds` table parallel to FR-AI-001's `cost_ledger_holds` for high-value operations (e.g., a bulk API ingest claims a 10,000-call hold before issuing). The hold uses the same 60s TTL + idempotency contract as the cost-ledger hold and emits a `metering.hold_claimed` memory audit row.
 
 13. **MUST** expose a `GET /v1/usage` REST endpoint that returns the current billing period's usage along all four axes for the caller's tenant. The handler hits the `metering_current_period` materialized view (refreshed every 5 minutes per DEC-713), not the raw `metering_events` table. Response shape:
     ```json
@@ -140,13 +140,13 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
     }
     ```
 
-14. **MUST** route every metering write through a bounded WAL queue (DEC-709) — 100,000-event in-memory ring buffer per writer. On Postgres outage, events queue in memory; on memory pressure (queue > 90%), the writer logs a sev-1 BRAIN audit row and rejects new events (back-pressure to caller). On Postgres recovery, the queue drains FIFO. The WAL queue is NOT persistent across writer process restart — restart loses queued events. This is acceptable because Postgres outages affect all of CyberOS, not just metering, and the missing events are derivable from the source-of-truth services (auth middleware logs, cost_ledger holds) within the period-close window.
+14. **MUST** route every metering write through a bounded WAL queue (DEC-709) — 100,000-event in-memory ring buffer per writer. On Postgres outage, events queue in memory; on memory pressure (queue > 90%), the writer logs a sev-1 memory audit row and rejects new events (back-pressure to caller). On Postgres recovery, the queue drains FIFO. The WAL queue is NOT persistent across writer process restart — restart loses queued events. This is acceptable because Postgres outages affect all of CyberOS, not just metering, and the missing events are derivable from the source-of-truth services (auth middleware logs, cost_ledger holds) within the period-close window.
 
-15. **MUST** route every BRAIN audit emission through the same WAL queue. Postgres COMMIT and BRAIN audit emission are dual-write — both succeed or the WAL replay retries. Until both succeed, the metering event is NOT durable. The reconciliation job at period close compares Postgres row IDs against BRAIN chain rows and surfaces any divergence as a sev-1 audit row.
+15. **MUST** route every memory audit emission through the same WAL queue. Postgres COMMIT and memory audit emission are dual-write — both succeed or the WAL replay retries. Until both succeed, the metering event is NOT durable. The reconciliation job at period close compares Postgres row IDs against memory chain rows and surfaces any divergence as a sev-1 audit row.
 
 16. **MUST** refuse any cross-tenant metering query. The `metering_events` table is RLS-scoped on `tenant_id` per FR-AUTH-003; the materialized view inherits RLS via SECURITY DEFINER + tenant-context check. Cross-tenant aggregation is reserved for CyberOS-internal `bookkeeper` role (used by the billing service alone).
 
-17. **MUST** expose `POST /v1/usage/correction` for the CFO role (FR-AUTH-101) to issue a refund-style correction. The handler INSERTs a new `metering_events` row with `quantity = -N` and `correction_to = <original_event_id>`. The original row is never UPDATED or DELETED (DEC-711). Reason is required (≥ 10 chars) and surfaces in a sev-2 BRAIN audit row.
+17. **MUST** expose `POST /v1/usage/correction` for the CFO role (FR-AUTH-101) to issue a refund-style correction. The handler INSERTs a new `metering_events` row with `quantity = -N` and `correction_to = <original_event_id>`. The original row is never UPDATED or DELETED (DEC-711). Reason is required (≥ 10 chars) and surfaces in a sev-2 memory audit row.
 
 18. **MUST** define a closed 3-value `metering_event_state` enum (`active`, `corrected`, `superseded`). On insertion, state = `active`. A correction_to event flips the parent to `superseded` via a trigger. A double-correction (correction of a correction) sets state = `corrected` on the intermediate row. Aggregation views filter on `state = 'active'` only.
 
@@ -159,7 +159,7 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 
 20. **MUST** define a `metering_current_period` materialized view that aggregates `SUM(quantity) FILTER (WHERE state = 'active')` by `(tenant_id, axis, period_start, period_end)`. Refresh schedule: every 5 minutes via pg_cron. The refresh is `CONCURRENTLY` to avoid blocking read queries. The view carries a `last_refreshed_at` column for staleness detection (DEC-713).
 
-21. **MUST** emit one of 7 closed BRAIN audit kinds per metering event:
+21. **MUST** emit one of 7 closed memory audit kinds per metering event:
     - `metering.event_recorded` (sev-3, per metric event)
     - `metering.warn_threshold_crossed` (sev-2, per crossing)
     - `metering.overage_blocked` (sev-2, per blocked request)
@@ -168,7 +168,7 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
     - `metering.reconciliation_divergence` (sev-1, per close-job divergence)
     - `metering.wal_queue_overflow` (sev-1, per queue-full event)
 
-22. **MUST** expose `POST /v1/metering/period/close` as an ops-only handler (no tenant access; `bookkeeper` role only). The handler runs the seats + storage snapshot jobs for one tenant + emits the final aggregate BRAIN audit row + freezes the period (writes to `metering_periods.frozen_at`). After freeze, no `metering_events` row may carry a timestamp inside the frozen period — the recorder rejects with `409 PERIOD_FROZEN`. Frozen periods are reopened only via a sev-1 ops manual action (no API path).
+22. **MUST** expose `POST /v1/metering/period/close` as an ops-only handler (no tenant access; `bookkeeper` role only). The handler runs the seats + storage snapshot jobs for one tenant + emits the final aggregate memory audit row + freezes the period (writes to `metering_periods.frozen_at`). After freeze, no `metering_events` row may carry a timestamp inside the frozen period — the recorder rejects with `409 PERIOD_FROZEN`. Frozen periods are reopened only via a sev-1 ops manual action (no API path).
 
 23. **MUST** validate `tenant_id` against the active tenant set on every recorder API call. A metering event for a terminated tenant (FR-TEN-104 terminal state) MUST be rejected with `404 TENANT_NOT_FOUND`. The recorder caches the active-tenant set with a 60s TTL (mirrors FR-AUTH-109 + FR-AUTH-105 pattern) to keep hot-path overhead bounded.
 
@@ -176,7 +176,7 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 
 25. **MUST** define a `metering_event_dispute_log` append-only table for billing-team-driven dispute investigation. Each row links to one or more `metering_events.id` + carries a `resolution_notes` text field (≤ 4 KiB) + a closed `resolution_status` enum (`pending`, `confirmed_correct`, `corrected_via_refund`, `wontfix`). Only the `billing_disputes` role can INSERT (per FR-AUTH-101). Disputes are never deleted — closed disputes remain queryable for the 10-year retention window (FR-DOC-001 alignment).
 
-26. **MUST** scrub all reason-bearing audit text through FR-BRAIN-111 pre-ingest PII detection (refund reason, dispute resolution notes, policy-change reason). Postgres holds the raw text (RLS-scoped); the BRAIN chain holds the scrubbed version. Mismatch between Postgres raw and chain scrubbed is acceptable and expected — this is the FR-BRAIN-111 contract.
+26. **MUST** scrub all reason-bearing audit text through FR-MEMORY-111 pre-ingest PII detection (refund reason, dispute resolution notes, policy-change reason). Postgres holds the raw text (RLS-scoped); the memory chain holds the scrubbed version. Mismatch between Postgres raw and chain scrubbed is acceptable and expected — this is the FR-MEMORY-111 contract.
 
 27. **MUST** support a closed `unit` enum per axis (`seat`, `request`, `token`, `byte`) with a CHECK constraint enforcing the `(axis, unit)` pair (seats×seat, api_calls×request, ai_tokens×token, storage_bytes×byte). Mismatched pair MUST reject with `400` at recorder. The closed pairing makes downstream billing math unambiguous — no need for per-unit conversion at aggregation time.
 
@@ -188,9 +188,9 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 
 **§2.2  Why append-only and not UPDATE.** DEC-702 makes `metering_events` append-only at SQL grant. The argument against UPDATE: a billing dispute that lands six months later cannot be resolved if intermediate rows have been "cleaned up". The argument for append-only: forensic accounting works on append-only ledgers; non-append-only ledgers collapse under audit pressure. The refund pathway via `correction_to` (DEC-711) preserves the original event row + records the negation as a fresh row; the parent flips to `superseded` via trigger (clause #18) but is never deleted. This is the same pattern as FR-TIME-001 timesheet corrections — once a pattern is correct, replicate it.
 
-**§2.3  Why BRAIN audit per event, not per period.** DEC-701: per-event BRAIN audit is the dispute-resolution mechanism. When a tenant says "you charged us for 5M API calls but we only made 4M", we need to point at a chain row per disputed call (or batch of calls), not a single rolled-up period total. The 7M extra calls might be a Stripe webhook retry storm we didn't bill them for; might be a legitimate bot we didn't realize was theirs; might be a CyberOS-side bug. A per-event chain row turns the question into "show us the rows you dispute" — operational, resolvable. A per-period chain row collapses to "trust our aggregator". We chose operational over compact.
+**§2.3  Why memory audit per event, not per period.** DEC-701: per-event memory audit is the dispute-resolution mechanism. When a tenant says "you charged us for 5M API calls but we only made 4M", we need to point at a chain row per disputed call (or batch of calls), not a single rolled-up period total. The 7M extra calls might be a Stripe webhook retry storm we didn't bill them for; might be a legitimate bot we didn't realize was theirs; might be a CyberOS-side bug. A per-event chain row turns the question into "show us the rows you dispute" — operational, resolvable. A per-period chain row collapses to "trust our aggregator". We chose operational over compact.
 
-**§2.4  Why dual-write to Postgres + BRAIN and not BRAIN-only.** Postgres is the authoritative source for billing math because (a) Stripe + our billing service speak SQL, not chain hashes; (b) Postgres + RLS gives us tenant isolation at query time without re-implementing it in chain-walking code; (c) materialized views give us sub-second `GET /v1/usage` latency. BRAIN-only would have made every usage query a chain-walk — slow and complex. DEC-712 makes Postgres authoritative for billing + BRAIN tamper-evident for reconciliation. The reconciliation job at period close cross-checks them; divergence is a sev-1 incident.
+**§2.4  Why dual-write to Postgres + memory and not memory-only.** Postgres is the authoritative source for billing math because (a) Stripe + our billing service speak SQL, not chain hashes; (b) Postgres + RLS gives us tenant isolation at query time without re-implementing it in chain-walking code; (c) materialized views give us sub-second `GET /v1/usage` latency. memory-only would have made every usage query a chain-walk — slow and complex. DEC-712 makes Postgres authoritative for billing + memory tamper-evident for reconciliation. The reconciliation job at period close cross-checks them; divergence is a sev-1 incident.
 
 **§2.5  Why the API-call hot-path is response-side, not request-side.** Clause #6: the metering middleware fires after the response status is known. Two reasons. First, failed-auth requests should NOT be billed — they were rejected before the tenant got any service. Second, request-side metering puts the WAL-queue write on the request critical path; response-side puts it on the response path, where 200µs of extra latency is invisible. The cost is that a 5xx server error after auth-success still gets billed (we did spend compute on it); we accept that — it's a tiny fraction of traffic and the tenant can dispute via §1 #25.
 
@@ -200,7 +200,7 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 
 **§2.8  Why the WAL queue is in-memory and bounded.** Clause #14 + DEC-709. Persistent (on-disk) WAL would add a fsync per event — at 10k events/sec, the disk I/O alone consumes the latency budget. In-memory WAL costs the events between writer-restart and Postgres-recovery, but at our scale (≤ 50k events/sec per writer) the restart-loss is rare and recoverable from source services. The 90% threshold for back-pressure prevents the queue from collapsing the writer process; the sev-1 audit row at overflow makes the rare loss observable.
 
-**§2.9  Why per-tenant overage policy and not a global one.** DEC-710. Different tenants have different risk tolerances: enterprise customers want `block` (compliance — no surprise spend); startups want `allow` (don't break my product). A global policy forces one shape on all; per-tenant lets the customer choose at signup. The CFO-only gate on policy mutation prevents a malicious operator from flipping a high-risk tenant from `block` to `allow` and racking up overage; the sev-2 BRAIN audit row makes policy changes investigatable.
+**§2.9  Why per-tenant overage policy and not a global one.** DEC-710. Different tenants have different risk tolerances: enterprise customers want `block` (compliance — no surprise spend); startups want `allow` (don't break my product). A global policy forces one shape on all; per-tenant lets the customer choose at signup. The CFO-only gate on policy mutation prevents a malicious operator from flipping a high-risk tenant from `block` to `allow` and racking up overage; the sev-2 memory audit row makes policy changes investigatable.
 
 **§2.10  Why the period-close handler is ops-only.** Clause #22. A tenant cannot freeze their own period — that would let them stop billing mid-period. A tenant cannot reopen a frozen period — that would let them rewrite history. Both directions are ops-only. The freeze is per-tenant per-period (not global), so one tenant's billing failures don't block another's close.
 
@@ -210,7 +210,7 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 
 **§2.13  Why dispute logs are append-only too.** Clause #25. A closed dispute that gets reopened in 18 months (rare but possible — regulator inquiry, internal audit) needs the full history of how it was investigated + resolved. Append-only preserves that. The closed `resolution_status` enum forces dispute outcomes into 4 well-defined buckets, making aggregation across many disputes meaningful (e.g., "what's our dispute-confirmation rate?").
 
-**§2.14  Why PII-free metric rows.** DEC-714 + clause #4. Metering rows are structured: integers + ids + timestamps. There's no place for free-text PII. The PII detection (FR-BRAIN-111) is applied to the reason-bearing fields (refund reason, dispute resolution notes, policy-change reason) — clause #26. Keeping metric rows themselves PII-free means we can replicate them to billing systems (Stripe metadata, internal dashboards) without re-running PII detection.
+**§2.14  Why PII-free metric rows.** DEC-714 + clause #4. Metering rows are structured: integers + ids + timestamps. There's no place for free-text PII. The PII detection (FR-MEMORY-111) is applied to the reason-bearing fields (refund reason, dispute resolution notes, policy-change reason) — clause #26. Keeping metric rows themselves PII-free means we can replicate them to billing systems (Stripe metadata, internal dashboards) without re-running PII detection.
 
 **§2.15  Why idempotency keys at 24h retention.** Clause #3 + DEC-715. The 24h window covers reasonable retry windows from upstream consumers (provider webhooks, AI-gateway retries, scheduled-job retries) without bloating the unique index forever. After 24h, the idempotency key can be reused (the upstream caller's retry budget is exhausted by then; if it still retries, the duplicate is intentional and we should re-bill). The partial index keeps the index size bounded — about 30M entries at our top-end traffic.
 
@@ -226,7 +226,7 @@ The Metering service **MUST** emit one append-only `metering_events` row per qua
 
 **§2.21  Why the dispute resolution_notes is capped at 4 KiB.** Clause #25. Dispute notes are operational reading; they need to fit on a CFO's screen + be queryable in dashboards. 4 KiB is roughly two screens of single-spaced text — enough for "here's what we found, here's the resolution" + the original tenant complaint. Longer notes can be linked to a document in FR-DOC-001 (the document repository); the dispute log carries the document_id, not the full text.
 
-**§2.22  Why metering events for terminated tenants are rejected at recorder.** Clause #23. A terminated tenant (FR-TEN-104) should produce no new charges. If a stray service emits a metering event for a terminated tenant after termination (race condition, cache lag), the recorder MUST drop it — not silently, but with a 404 and a sev-2 BRAIN audit row at the recorder. The 60s active-tenant cache mirrors the pattern from FR-AUTH-109 + FR-AUTH-105 — bounded hot-path overhead, fast eventual consistency.
+**§2.22  Why metering events for terminated tenants are rejected at recorder.** Clause #23. A terminated tenant (FR-TEN-104) should produce no new charges. If a stray service emits a metering event for a terminated tenant after termination (race condition, cache lag), the recorder MUST drop it — not silently, but with a 404 and a sev-2 memory audit row at the recorder. The 60s active-tenant cache mirrors the pattern from FR-AUTH-109 + FR-AUTH-105 — bounded hot-path overhead, fast eventual consistency.
 
 ---
 
@@ -255,7 +255,7 @@ CREATE TABLE metering_events (
     state           metering_event_state NOT NULL DEFAULT 'active',
     correction_to   UUID REFERENCES metering_events(id),
     source_service  TEXT NOT NULL CHECK (length(source_service) BETWEEN 1 AND 64),
-    brain_chain_hash TEXT NOT NULL CHECK (length(brain_chain_hash) = 64),  -- hex SHA-256
+    memory_chain_hash TEXT NOT NULL CHECK (length(memory_chain_hash) = 64),  -- hex SHA-256
     extra           JSONB NOT NULL DEFAULT '{}'::jsonb,
     seq             BIGSERIAL NOT NULL,
     CONSTRAINT axis_unit_pair CHECK (
@@ -364,7 +364,7 @@ CREATE TABLE metering_periods (
     period_end          TIMESTAMPTZ NOT NULL,
     frozen_at           TIMESTAMPTZ,
     final_quantity      BIGINT,
-    final_brain_hash    TEXT,
+    final_memory_hash    TEXT,
     last_aggregated_seq BIGINT NOT NULL DEFAULT 0,
     PRIMARY KEY (tenant_id, axis, period_start, period_end)
 );
@@ -502,16 +502,16 @@ pub async fn close_period(
     ).fetch_one(&mut *tx).await?.unwrap_or(0);
 
     // Freeze
-    let brain_hash = emit_final_brain(tenant_id, axis, final_qty, period_start, period_end).await?;
+    let memory_hash = emit_final_memory(tenant_id, axis, final_qty, period_start, period_end).await?;
     sqlx::query!(
         r#"UPDATE metering_periods
-              SET frozen_at = now(), final_quantity = $5, final_brain_hash = $6
+              SET frozen_at = now(), final_quantity = $5, final_memory_hash = $6
               WHERE tenant_id = $1 AND axis = $2 AND period_start = $3 AND period_end = $4"#,
-        tenant_id, axis as _, period_start, period_end, final_qty, &brain_hash
+        tenant_id, axis as _, period_start, period_end, final_qty, &memory_hash
     ).execute(&mut *tx).await?;
 
     tx.commit().await?;
-    Ok(PeriodCloseReceipt { tenant_id, axis, final_quantity: final_qty, brain_chain_hash: brain_hash })
+    Ok(PeriodCloseReceipt { tenant_id, axis, final_quantity: final_qty, memory_chain_hash: memory_hash })
 }
 ```
 
@@ -526,15 +526,15 @@ pub async fn close_period(
 5. Inserting an event with `axis = api_calls, unit = token` fails with `axis_unit_pair` CHECK violation.
 6. Inserting an event with `axis = seats, quantity = 200000` fails with `quantity_range` CHECK violation.
 7. RLS prevents cross-tenant SELECT on `metering_events`.
-8. BRAIN audit row emitted per metering event with cross-link `postgres_event_id` ↔ `brain_chain_hash`.
+8. memory audit row emitted per metering event with cross-link `postgres_event_id` ↔ `memory_chain_hash`.
 9. API-call middleware emits `api_calls` event with `quantity = 1` per successful auth-scoped request.
 10. Failed-auth request emits no metering event.
 11. AI gateway `postcall_reconcile()` emits `ai_tokens` event with `quantity = input + output`.
 12. Seats snapshot job emits ONE `seats` event per tenant per period at close boundary.
 13. Storage snapshot job emits ONE `storage_bytes` event combining S3 + Postgres bytes.
-14. Per-tenant overage policy mutation requires `cfo` role + reason ≥ 10 chars; sev-2 BRAIN audit emitted.
+14. Per-tenant overage policy mutation requires `cfo` role + reason ≥ 10 chars; sev-2 memory audit emitted.
 15. Overage `block` policy returns `402 PAYMENT_REQUIRED` when cap exceeded; no metering event emitted.
-16. Overage `warn` policy emits sev-2 BRAIN audit at threshold-crossing; metric event proceeds.
+16. Overage `warn` policy emits sev-2 memory audit at threshold-crossing; metric event proceeds.
 17. Overage `allow` policy: no enforcement; metric event proceeds.
 18. `GET /v1/usage` returns 4-axis usage from `metering_current_period` view.
 19. Materialized view refreshes every 5 minutes via pg_cron; `last_refreshed_at` advances.
@@ -543,12 +543,12 @@ pub async fn close_period(
 22. `POST /v1/usage/correction` requires `cfo` role + reason ≥ 10 chars; emits `correction_to` row.
 23. Correction trigger flips parent row to `state = 'superseded'`; double-correction flips intermediate to `corrected`.
 24. Correction with same-sign `quantity` fails with `metering_correction_sign_must_oppose` (P0202).
-25. WAL queue at 90% utilization emits `metering.wal_queue_overflow` sev-1 BRAIN audit + rejects new events.
+25. WAL queue at 90% utilization emits `metering.wal_queue_overflow` sev-1 memory audit + rejects new events.
 26. Metering event for a terminated tenant (FR-TEN-104) returns `404 TENANT_NOT_FOUND` at recorder.
 27. Active-tenant cache refresh interval is 60s; staleness causes one extra DB query, not stale-data acceptance.
 28. Dispute log INSERT requires `billing_disputes` role; resolution_notes ≤ 4 KiB enforced.
 29. Cross-tenant aggregation query via `bookkeeper` role bypasses RLS (SECURITY DEFINER); never via `cyberos_app`.
-30. All reason-bearing audit text (refund reason, policy reason, dispute notes) scrubbed via FR-BRAIN-111 before BRAIN chain emission.
+30. All reason-bearing audit text (refund reason, policy reason, dispute notes) scrubbed via FR-MEMORY-111 before memory chain emission.
 
 ---
 
@@ -594,7 +594,7 @@ services/metering/
 │   ├── aggregator.rs           # MV refresh + close-period orchestration
 │   ├── wal_queue.rs            # bounded in-memory WAL + replay
 │   ├── policy.rs               # overage policy enforcement
-│   ├── brain_audit.rs          # 7-kind audit emission
+│   ├── memory_audit.rs          # 7-kind audit emission
 │   ├── axes/
 │   │   ├── seats.rs            # end-of-period snapshot job
 │   │   ├── api_calls.rs        # middleware integration glue
@@ -621,7 +621,7 @@ services/metering/
 
 ## §7 — Dependencies & blast-radius
 
-**Depends on**: FR-AI-001 (cost_ledger postcall hook for AI tokens), FR-TEN-001 (tenants table + provisioning), FR-AUTH-003 (RLS scope for middleware), FR-BRAIN-111 (PII scrubbing for reason fields).
+**Depends on**: FR-AI-001 (cost_ledger postcall hook for AI tokens), FR-TEN-001 (tenants table + provisioning), FR-AUTH-003 (RLS scope for middleware), FR-MEMORY-111 (PII scrubbing for reason fields).
 
 **Blocks**: FR-TEN-003 (Stripe billing — billing service consumes `metering_current_period` + period-close finals as the per-axis charge basis).
 
@@ -629,7 +629,7 @@ services/metering/
 - **Under-bill**: missing events → tenant pays less than the platform spends. Cumulative loss at scale.
 - **Over-bill**: phantom events or correction failures → disputes + refunds + reputational damage.
 - **Cross-tenant leak**: RLS misconfiguration would surface another tenant's usage. Compliance-critical.
-- **Chain divergence**: Postgres-BRAIN drift caught at period close but acted on at sev-1 reconciliation incident.
+- **Chain divergence**: Postgres-memory drift caught at period close but acted on at sev-1 reconciliation incident.
 
 ---
 
@@ -653,7 +653,7 @@ Authorization: Bearer <service-token-with-metering_writer-role>
 200 OK
 {
   "event_id": "01J2C9X3K7M4N5...",
-  "brain_chain_hash": "7a3f9c2e1d5b8...",
+  "memory_chain_hash": "7a3f9c2e1d5b8...",
   "duplicate": false
 }
 ```
@@ -691,7 +691,7 @@ Authorization: Bearer <cfo-token>
 {
   "correction_event_id": "01J2CAB9F3...",
   "parent_state": "superseded",
-  "brain_chain_hash": "4f8e2a..."
+  "memory_chain_hash": "4f8e2a..."
 }
 ```
 
@@ -733,7 +733,7 @@ Authorization: Bearer <tenant-admin>
 | # | Failure | Detection | Sev | Handler |
 |---|---------|-----------|-----|---------|
 | 1 | Postgres outage during recorder write | sqlx error | 1 | WAL queue absorbs; back-pressure at 90% |
-| 2 | BRAIN audit subprocess hang | timeout 5s | 1 | Mark event WAL-pending; retry on replay |
+| 2 | memory audit subprocess hang | timeout 5s | 1 | Mark event WAL-pending; retry on replay |
 | 3 | WAL queue overflow (>90%) | metering.wal_queue_overflow sev-1 | 1 | Reject new events; ops alarm |
 | 4 | Materialized view refresh job dies | pg_cron heartbeat absent | 1 | Sev-1 alarm; usage queries fall back to raw COUNT |
 | 5 | Active-tenant cache stale (terminated tenant still in cache) | 60s TTL bounded staleness | 3 | Period-close reconciliation flags & corrects |
@@ -752,7 +752,7 @@ Authorization: Bearer <tenant-admin>
 | 18 | resolution_notes > 4 KiB | CHECK constraint | 3 | Reject 400 |
 | 19 | source_service > 64 chars | CHECK constraint | 3 | Reject 400 |
 | 20 | idempotency_key length out of [1,64] | CHECK constraint | 3 | Reject 400 |
-| 21 | BRAIN chain divergence at period close | reconciliation diff | 1 | Sev-1; ops manual investigation |
+| 21 | memory chain divergence at period close | reconciliation diff | 1 | Sev-1; ops manual investigation |
 | 22 | S3 inventory CSV missing | snapshot job error | 2 | Retry up to 6h; if still missing, sev-2; skip storage event |
 | 23 | pg_total_relation_size returns 0 (DB outage) | snapshot job sanity | 2 | Retry; if still 0, sev-2; manual review |
 | 24 | Two writers race on same idempotency_key | UNIQUE constraint wins | 3 | First-writer-wins; second sees duplicate |
@@ -771,7 +771,7 @@ Authorization: Bearer <tenant-admin>
 
 **§11.1** Append-only is enforced at SQL grant + at the application layer (Recorder API has no UPDATE/DELETE methods). Defense-in-depth: a code bug that issued an UPDATE would still be rejected by Postgres.
 
-**§11.2** The WAL queue is implemented as `tokio::sync::mpsc::channel(100_000)`. Send returns `Err` when buffer full; the recorder service converts that to a 503 + sev-1 BRAIN audit.
+**§11.2** The WAL queue is implemented as `tokio::sync::mpsc::channel(100_000)`. Send returns `Err` when buffer full; the recorder service converts that to a 503 + sev-1 memory audit.
 
 **§11.3** The materialized view is `REFRESH MATERIALIZED VIEW CONCURRENTLY` — readers see the previous version until the refresh completes. The 5-min cadence is chosen to keep the refresh under 30s for ≤100k events per period per tenant.
 
@@ -789,11 +789,11 @@ Authorization: Bearer <tenant-admin>
 
 **§11.10** Per-tenant caps live in `tenants.metering_caps_yaml` validated against a schema at load. Examples: `seats: 100`, `api_calls: 1000000`, `ai_tokens: 10000000`, `storage_bytes: 100000000000`. Unspecified axes use platform defaults from `config/default_caps.yaml`.
 
-**§11.11** The `bookkeeper` role used by the billing service runs cross-tenant queries via SECURITY DEFINER functions that set `cyberos.tenant_id` to a sentinel `00000000-0000-0000-0000-000000000000` value that bypasses RLS. The function emits a sev-3 BRAIN audit per call.
+**§11.11** The `bookkeeper` role used by the billing service runs cross-tenant queries via SECURITY DEFINER functions that set `cyberos.tenant_id` to a sentinel `00000000-0000-0000-0000-000000000000` value that bypasses RLS. The function emits a sev-3 memory audit per call.
 
 **§11.12** Tests use a real Postgres via `sqlx::testcontainers` — no mocked DB. Migrations run on every test fixture setup; the test container is reused per file (`#[tokio::test]` with shared pool).
 
-**§11.13** The `metering_events.brain_chain_hash` is the BRAIN row's chain hash from the canonical Writer. The bridge is via subprocess fork (mirrors FR-AI-001 audit emission); PyO3 is a future optimization.
+**§11.13** The `metering_events.memory_chain_hash` is the memory row's chain hash from the canonical Writer. The bridge is via subprocess fork (mirrors FR-AI-001 audit emission); PyO3 is a future optimization.
 
 **§11.14** Refunds via `correction_to` flow through the same recorder API as primary events — the API is generic over insertion. The CFO-only authorization is at the HTTP handler layer, not the recorder.
 

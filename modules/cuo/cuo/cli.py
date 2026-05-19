@@ -7,7 +7,7 @@ Subcommands (Phase 1):
     dry-run <persona>/<wf>     plan the skill chain (validate + step-plan; no invoke)
 
 Subcommands deferred to Phase 2:
-    run <persona>/<wf>         actually walk the chain via cyberos-skill run + BRAIN audit
+    run <persona>/<wf>         actually walk the chain via cyberos-skill run + memory audit
 
 Resolves the cuo/ + skill/ roots either from --cuo-root/--skill-root flags or by
 walking up from the current working directory looking for cuo/MODULE.md + skill/MODULE.md.
@@ -16,12 +16,13 @@ walking up from the current working directory looking for cuo/MODULE.md + skill/
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import click
 
 from cuo import __version__
-from cuo.core.brain_bridge import brain_is_available, emit_chain_result
+from cuo.core.memory_bridge import memory_is_available, emit_chain_result
 from cuo.core.catalog import discover_personas, discover_workflows
 from cuo.core.invoker import SubprocessInvoker, select_invoker
 from cuo.core.llm_invoker import LLMInvoker
@@ -222,14 +223,14 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
 )
 @click.option("--continue-on-failure", is_flag=True, default=False)
 @click.option(
-    "--brain-emit/--no-brain-emit",
+    "--memory-emit/--no-memory-emit",
     default=False,
-    help="Emit per-step + workflow_complete rows to the BRAIN audit chain (Phase 3).",
+    help="Emit per-step + workflow_complete rows to the memory audit chain (Phase 3).",
 )
 @click.option(
     "--actor",
     default="cuo-supervisor",
-    help="Actor name attached to BRAIN audit rows (only used with --brain-emit).",
+    help="Actor name attached to memory audit rows (only used with --memory-emit).",
 )
 @click.option(
     "--explain",
@@ -243,6 +244,20 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
     default=False,
     help="Bypass Phase 4 handler dispatch; always use linear execute_chain (debug).",
 )
+@click.option(
+    "--fr-id",
+    default=None,
+    help="Force a specific FR (e.g. FR-MEMORY-117). Shorthand for `--input fr_id=<value>`. "
+         "Used by ship-feature-requests to target one FR rather than picking from BACKLOG.",
+)
+@click.option(
+    "--auto-claim/--no-auto-claim",
+    default=True,
+    help="Auto-claim phase transitions for zero-touch flows (default true). When false, the "
+         "workflow halts between phases and waits for an explicit `cyberos-cuo claim` event "
+         "(HITL pickup). Currently every phase auto-runs; flag is forward-compatible for "
+         "when reviewer/tester claim semantics are wired in.",
+)
 @click.pass_context
 def cmd_execute(
     ctx: click.Context,
@@ -251,10 +266,12 @@ def cmd_execute(
     invoker: str,
     raw_inputs: tuple,
     continue_on_failure: bool,
-    brain_emit: bool,
+    memory_emit: bool,
     actor: str,
     explain: bool,
     no_handler_dispatch: bool,
+    fr_id: str | None,
+    auto_claim: bool,
 ) -> None:
     """Execute a workflow chain (Phase 2 — actual invocation, not dry-run).
 
@@ -283,6 +300,13 @@ def cmd_execute(
             sys.exit(2)
         k, v = raw.split("=", 1)
         parsed_inputs[k.strip()] = v.strip()
+
+    # --fr-id is a typed shorthand for --input fr_id=<value>.
+    if fr_id is not None:
+        parsed_inputs["fr_id"] = fr_id
+    # --auto-claim flag flows into the workflow's input bundle so phase
+    # transitions can read it from the hand-off map.
+    parsed_inputs["auto_claim"] = auto_claim
 
     if invoker == "llm":
         inv = LLMInvoker()
@@ -382,12 +406,12 @@ def cmd_execute(
         for a in extra_audit:
             click.echo(f"  - {a.get('kind', '<unknown>')}: {dict((k, v) for k, v in a.items() if k != 'kind')}")
 
-    # Phase 3: BRAIN audit emission (opt-in).
-    if brain_emit:
+    # Phase 3: memory audit emission (opt-in).
+    if memory_emit:
         click.echo("")
-        click.echo("# BRAIN emission")
-        if not brain_is_available(ctx.obj["skill_root"]):
-            click.echo("  SKIPPED — BRAIN not reachable (memory module not importable OR .cyberos-memory missing)")
+        click.echo("# memory emission")
+        if not memory_is_available(ctx.obj["skill_root"]):
+            click.echo("  SKIPPED — memory not reachable (memory module not importable OR .cyberos-memory missing)")
         else:
             br = emit_chain_result(result, ctx.obj["skill_root"], actor=actor)
             if br.emitted:
@@ -400,6 +424,386 @@ def cmd_execute(
                 click.echo(f"  note: {n}")
 
     sys.exit(0 if result.outcome in ("COMPLETED", "COMPLETED_BATCH") else 1)
+
+
+@main.command("drain")
+@click.argument("persona_workflow")
+@click.option(
+    "--output-dir",
+    type=click.Path(file_okay=False, path_type=Path),
+    required=True,
+    help="Directory where per-FR run artefacts are written. One subdir per FR.",
+)
+@click.option(
+    "--module",
+    "module_filter",
+    default=None,
+    help="Filter FRs by module (e.g. 'memory'). Only FRs whose ID matches "
+         "FR-<MODULE>-<NNN> with matching module slug are picked.",
+)
+@click.option(
+    "--backlog",
+    "backlog_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Path to BACKLOG.md. Defaults to <cyberos_root>/docs/feature-requests/BACKLOG.md.",
+)
+@click.option(
+    "--max-frs",
+    type=int,
+    default=0,
+    help="Max FRs to drain in this run. 0 = unbounded (until empty or HITL halt).",
+)
+@click.option(
+    "--invoker",
+    type=click.Choice(["auto", "mock", "subprocess", "llm"]),
+    default="auto",
+)
+@click.option("--memory-emit/--no-memory-emit", default=True)
+@click.option("--actor", default="cuo-drain")
+@click.option(
+    "--halt-on-repeat-rework",
+    type=int,
+    default=2,
+    help="Halt the drain loop when an FR routes back this many times "
+         "(default 2). Set 0 to disable.",
+)
+@click.pass_context
+def cmd_drain(
+    ctx: click.Context,
+    persona_workflow: str,
+    output_dir: Path,
+    module_filter: str | None,
+    backlog_path: Path | None,
+    max_frs: int,
+    invoker: str,
+    memory_emit: bool,
+    actor: str,
+    halt_on_repeat_rework: int,
+) -> None:
+    """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible FR.
+
+    Designed for the "ship next eligible FR until empty or HITL needed" prompt
+    pattern. The loop:
+
+      1. Reads BACKLOG.md
+      2. Finds the next FR in ready_to_implement with all deps done
+        (optionally filtered to a single module via --module).
+      3. Runs PERSONA_WORKFLOW with --fr-id=<id> and auto-claim on.
+      4. On COMPLETED → next iteration.
+      5. On ROUTED_BACK → check routed_back_count; if >= --halt-on-repeat-rework,
+        write a halt-reason file and stop. Otherwise, continue.
+      6. On HITL_HALT (escalation match, circuit-breaker trip): write halt
+        reason, stop the loop.
+      7. On BACKLOG drained (no more eligible FRs): clean exit.
+
+    This is the high-level zero-touch entry point. Use plain `execute` for
+    single-FR runs.
+    """
+    from cuo.core.backlog_reader import (
+        parse_backlog, next_eligible, routed_back_count,
+    )
+
+    if "/" not in persona_workflow:
+        click.echo("error: PERSONA_WORKFLOW must be <persona-slug>/<workflow-slug>", err=True)
+        sys.exit(2)
+    persona_slug, workflow_slug = persona_workflow.split("/", 1)
+
+    personas = discover_personas(ctx.obj["cuo_root"])
+    persona = next((p for p in personas if p.slug == persona_slug), None)
+    if persona is None:
+        click.echo(f"error: persona {persona_slug!r} not found", err=True)
+        sys.exit(2)
+
+    # Resolve BACKLOG path
+    if backlog_path is None:
+        cyberos_root = ctx.obj["cuo_root"].parent.parent  # modules/cuo → cyberos
+        backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
+    if not backlog_path.is_file():
+        click.echo(f"error: BACKLOG.md not found at {backlog_path}", err=True)
+        sys.exit(2)
+
+    audit_dir = ctx.obj["cuo_root"].parent.parent / ".cyberos-memory" / "audit"
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    halt_reason_path = output_dir / "DRAIN_HALT.md"
+
+    if invoker == "llm":
+        inv = LLMInvoker()
+        inv_kind = f"LLMInvoker(mode={inv.mode})"
+    else:
+        inv = select_invoker(invoker)
+        inv_kind = type(inv).__name__
+
+    click.echo(f"# drain {persona_workflow}")
+    click.echo(f"  module filter:  {module_filter or '(none — all modules)'}")
+    click.echo(f"  invoker:        {inv_kind}")
+    click.echo(f"  memory emit:    {memory_emit}")
+    click.echo(f"  halt on repeat rework count: {halt_on_repeat_rework}")
+    click.echo("")
+
+    frs_run = 0
+    completed = 0
+    routed_back = 0
+    while True:
+        if max_frs and frs_run >= max_frs:
+            click.echo(f"# drain halted: --max-frs={max_frs} reached")
+            break
+        rows = parse_backlog(backlog_path)
+        eligible = next_eligible(rows, module=module_filter)
+        if eligible is None:
+            click.echo(f"# drain complete: no more eligible FRs"
+                       f"{' in module=' + module_filter if module_filter else ''}")
+            break
+
+        fr_output_dir = output_dir / eligible.fr_id
+        fr_output_dir.mkdir(parents=True, exist_ok=True)
+        click.echo(f"## [{frs_run + 1}] {eligible.fr_id} — {eligible.title[:60]}")
+
+        from cuo.core.supervisor import execute_chain
+        result = execute_chain(
+            persona=persona,
+            workflow_slug=workflow_slug,
+            skill_root=ctx.obj["skill_root"],
+            output_dir=fr_output_dir,
+            inputs={"fr_id": eligible.fr_id, "auto_claim": True,
+                    "module": module_filter or eligible.module},
+            invoker=inv,
+            stop_on_failure=True,
+        )
+        frs_run += 1
+        click.echo(f"   outcome: {result.outcome}  ({len(result.step_results)} steps, "
+                   f"{result.total_duration_ms} ms)")
+
+        if memory_emit:
+            from cuo.core.memory_bridge import memory_is_available, emit_chain_result
+            if memory_is_available(ctx.obj["skill_root"]):
+                emit_chain_result(result, ctx.obj["skill_root"], actor=actor)
+
+        if result.outcome == "COMPLETED":
+            completed += 1
+        elif result.outcome == "ROUTED_BACK":
+            routed_back += 1
+            rbc = routed_back_count(eligible.fr_id, audit_dir)
+            click.echo(f"   routed_back_count for {eligible.fr_id}: {rbc}")
+            if halt_on_repeat_rework and rbc >= halt_on_repeat_rework:
+                click.echo(f"# drain HALTED: {eligible.fr_id} routed back "
+                           f"{rbc} times (>= --halt-on-repeat-rework={halt_on_repeat_rework})")
+                halt_reason_path.write_text(
+                    f"# DRAIN HALT\n\n"
+                    f"FR `{eligible.fr_id}` has been rework-routed {rbc} times — "
+                    f"likely a real spec issue. HITL inspection required.\n\n"
+                    f"## Last attempt\n\n"
+                    f"- outcome: {result.outcome}\n"
+                    f"- notes: {result.notes}\n"
+                    f"- output dir: {fr_output_dir}\n\n"
+                    f"## Next action\n\n"
+                    f"Review the FR spec + last debug trace. Either patch the spec, "
+                    f"flip status to on_hold/closed, or override routed_back_count.\n",
+                    encoding="utf-8",
+                )
+                sys.exit(2)
+        elif result.outcome in ("FAILED", "HITL_HALT"):
+            click.echo(f"# drain HALTED: {eligible.fr_id} hit {result.outcome}")
+            halt_reason_path.write_text(
+                f"# DRAIN HALT\n\n"
+                f"FR `{eligible.fr_id}` outcome: **{result.outcome}**.\n\n"
+                f"- notes: {result.notes}\n"
+                f"- step results:\n"
+                + "\n".join(f"  - step {s.step} [{s.status}] {s.skill}: "
+                            f"{', '.join(s.notes[:2])}"
+                            for s in result.step_results)
+                + f"\n\n## Next action\n\nReview the failure, decide whether to "
+                  f"patch + retry or mark on_hold.\n",
+                encoding="utf-8",
+            )
+            sys.exit(2)
+
+    click.echo("")
+    click.echo(f"# drain summary: {frs_run} FRs run, {completed} completed, "
+               f"{routed_back} routed back")
+    sys.exit(0 if frs_run > 0 else 0)
+
+
+@main.group("harness")
+@click.pass_context
+def cmd_harness(ctx: click.Context) -> None:
+    """Continuous-improvement harness (FR-CUO-200..203)."""
+    pass
+
+
+@cmd_harness.command("report")
+@click.option("--since", default="7d", help="Time window: 24h, 7d, 30d, 4w.")
+@click.option("--skill", "skill_filter", default=None,
+              help="Limit to one skill (slug).")
+@click.option("--workflow", "workflow_filter", default=None,
+              help="Limit workflow section to one id.")
+@click.option(
+    "--out",
+    "out_path",
+    type=click.Path(dir_okay=False, path_type=Path),
+    default=None,
+    help="Output markdown path. Defaults to docs/harness/harness-report-<date>.md.",
+)
+@click.option(
+    "--memory-root",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=None,
+    help="Path to .cyberos-memory/ for audit-row emission. "
+         "If unset, the report is written but no audit row is emitted.",
+)
+@click.option("--watch", is_flag=True, default=False,
+              help="Re-emit the report every N seconds (default 300).")
+@click.option("--watch-interval", type=int, default=300,
+              help="Watch interval in seconds (default 300).")
+@click.pass_context
+def cmd_harness_report(
+    ctx: click.Context,
+    since: str,
+    skill_filter: str | None,
+    workflow_filter: str | None,
+    out_path: Path | None,
+    memory_root: Path | None,
+    watch: bool,
+    watch_interval: int,
+) -> None:
+    """Build the FR-CUO-200 daily report and write it to disk."""
+    from cuo.core.harness import compute_report, emit_report, parse_window
+    import time as _time
+
+    window = parse_window(since)
+    cyberos_root = ctx.obj["cuo_root"].parent.parent  # modules/cuo → cyberos
+    if out_path is None:
+        out_path = (cyberos_root / "docs" / "harness"
+                    / f"harness-report-{__import__('datetime').date.today().isoformat()}.md")
+    if memory_root is None:
+        candidate = cyberos_root / ".cyberos-memory"
+        if (candidate / "manifest.json").is_file():
+            memory_root = candidate
+
+    audit_dir = memory_root / "audit" if memory_root else None
+    skill_root = ctx.obj["skill_root"]
+
+    def _emit_once() -> None:
+        report = compute_report(
+            audit_dir=audit_dir, skill_root=skill_root, window=window,
+            skill_filter=skill_filter, workflow_filter=workflow_filter,
+        )
+        written = emit_report(report, out_path, memory_root=memory_root)
+        click.echo(f"# harness report → {written}")
+        click.echo(f"  window:           {since}")
+        click.echo(f"  rows walked:      {report.total_rows_walked}")
+        click.echo(f"  skills inspected: {report.skills_inspected}")
+        click.echo(f"  breaches:         {len(report.breaches)}")
+        click.echo(f"  workflows:        {len(report.workflow_metrics)}")
+        for b in report.breaches[:5]:
+            click.echo(f"    ⚠ {b.skill_name}::{b.signal_id}  "
+                       f"value={b.value:.3f} thr={b.threshold:.3f}")
+
+    _emit_once()
+    if watch:
+        click.echo(f"\n# watching (interval={watch_interval}s) — Ctrl-C to stop")
+        while True:
+            try:
+                _time.sleep(watch_interval)
+            except KeyboardInterrupt:
+                click.echo("\n# watch interrupted")
+                break
+            _emit_once()
+
+
+@main.group("proposal")
+@click.pass_context
+def cmd_proposal(ctx: click.Context) -> None:
+    """Refinement-proposal operator workflow (FR-CUO-201)."""
+    pass
+
+
+def _proposals_root(ctx: click.Context) -> Path:
+    """Locate docs/proposals/ under the cyberos root."""
+    cyberos_root = ctx.obj["cuo_root"].parent.parent
+    return cyberos_root / "docs" / "proposals"
+
+
+@cmd_proposal.command("list")
+@click.option("--status",
+              type=click.Choice(["all", "open", "applied", "rejected", "pending_approval"]),
+              default="all")
+@click.pass_context
+def cmd_proposal_list(ctx: click.Context, status: str) -> None:
+    """List refinement proposals by status (FR-CUO-201 AC #6)."""
+    from cuo.core.refinement_proposal import list_proposals
+    listing = list_proposals(_proposals_root(ctx))
+    statuses = (["open", "pending_approval", "applied", "rejected"]
+                if status == "all" else [status])
+    total = 0
+    for st in statuses:
+        files = listing.get(st, [])
+        click.echo(f"# {st}: {len(files)}")
+        for f in files:
+            stripe = f.stem.rsplit("-", 1)[0]
+            mtime = datetime.fromtimestamp(f.stat().st_mtime, tz=timezone.utc)
+            click.echo(f"  {stripe}    {mtime.isoformat()}    {f.name}")
+        total += len(files)
+    click.echo(f"\n# total: {total}")
+
+
+@cmd_proposal.command("show")
+@click.argument("stripe_id")
+@click.pass_context
+def cmd_proposal_show(ctx: click.Context, stripe_id: str) -> None:
+    """Print a proposal's markdown to stdout."""
+    root = _proposals_root(ctx)
+    for sub in ("open", "pending_approval", "applied", "rejected"):
+        d = root / sub
+        if not d.is_dir():
+            continue
+        matches = sorted(d.glob(f"{stripe_id}*.md"))
+        if matches:
+            click.echo(matches[0].read_text(encoding="utf-8"))
+            return
+    click.echo(f"error: no proposal matching {stripe_id!r}", err=True)
+    sys.exit(2)
+
+
+@cmd_proposal.command("apply")
+@click.argument("stripe_id")
+@click.pass_context
+def cmd_proposal_apply(ctx: click.Context, stripe_id: str) -> None:
+    """Move an open proposal to applied/ (lifecycle only; FR-CUO-202 wires diff)."""
+    from cuo.core.refinement_proposal import apply_proposal_lifecycle
+    applied = apply_proposal_lifecycle(_proposals_root(ctx), stripe_id)
+    if applied is None:
+        click.echo(f"error: no open proposal matching {stripe_id!r}", err=True)
+        sys.exit(2)
+    click.echo(f"# applied {stripe_id} → {applied}")
+
+
+@cmd_proposal.command("reject")
+@click.argument("stripe_id")
+@click.option("--reason", required=True, help="Why this proposal is rejected.")
+@click.pass_context
+def cmd_proposal_reject(ctx: click.Context, stripe_id: str, reason: str) -> None:
+    """Reject an open proposal — append rationale + move to rejected/."""
+    from cuo.core.refinement_proposal import reject_proposal
+    rejected = reject_proposal(_proposals_root(ctx), stripe_id, reason)
+    if rejected is None:
+        click.echo(f"error: no open proposal matching {stripe_id!r}", err=True)
+        sys.exit(2)
+    click.echo(f"# rejected {stripe_id} → {rejected}")
+
+
+@cmd_proposal.command("approve")
+@click.argument("stripe_id")
+@click.pass_context
+def cmd_proposal_approve(ctx: click.Context, stripe_id: str) -> None:
+    """Move a pending_approval proposal to applied/ (gated HITL step)."""
+    from cuo.core.refinement_proposal import approve_proposal
+    applied = approve_proposal(_proposals_root(ctx), stripe_id)
+    if applied is None:
+        click.echo(f"error: no pending_approval proposal matching {stripe_id!r}", err=True)
+        sys.exit(2)
+    click.echo(f"# approved {stripe_id} → {applied}")
 
 
 if __name__ == "__main__":

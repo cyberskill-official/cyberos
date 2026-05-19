@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-001, FR-CRM-002, FR-CUO-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-001, FR-CRM-002, FR-CUO-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CRM-001, FR-CUO-101]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1662 2026-05-17 — Signals: title seniority, engagement count last 30d, response rate, account tier match, deal-history similarity
   - DEC-1663 2026-05-17 — Score immutable snapshot per period — current_score + scored_at; history preserved in score_snapshots
   - DEC-1664 2026-05-17 — Per-tenant scoring weights configurable; default ships proven defaults
-  - DEC-1665 2026-05-17 — BRAIN audit kinds: crm.lead_scored_initial, crm.lead_score_refreshed, crm.lead_score_failed
+  - DEC-1665 2026-05-17 — memory audit kinds: crm.lead_scored_initial, crm.lead_score_refreshed, crm.lead_score_failed
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without lead scoring, CDO prioritizes randomly — high-value 
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** ship lead scoring at `services/crm/src/scoring/` computing 0-100 score + tier on contact-create + nightly refresh, immutable snapshots, 3 BRAIN audit kinds.
+The CRM service **MUST** ship lead scoring at `services/crm/src/scoring/` computing 0-100 score + tier on contact-create + nightly refresh, immutable snapshots, 3 memory audit kinds.
 
 1. **MUST** hook into contact creation (`services/crm/src/contacts.rs`): on insert, call `scoring::score_initial(contact_id)` asynchronously per DEC-1660.
 
@@ -133,7 +133,7 @@ The CRM service **MUST** ship lead scoring at `services/crm/src/scoring/` comput
 
 7. **MUST** support per-tenant weight override via PUT endpoint (CDO/CRO only); default weights ship in code.
 
-8. **MUST** emit 3 BRAIN audit kinds per DEC-1665. PII per FR-BRAIN-111: signals JSONB hashed (may contain title text); ids ok.
+8. **MUST** emit 3 memory audit kinds per DEC-1665. PII per FR-MEMORY-111: signals JSONB hashed (may contain title text); ids ok.
 
 9. **MUST** thread trace_id from create/cron → builder → scorer → audit.
 
@@ -184,7 +184,7 @@ Sample score:
 ---
 
 ## §4 — Acceptance criteria
-1. **Initial score on contact create**. 2. **Nightly refresh via cron 02:00**. 3. **Score 0-100 range enforced (CHECK)**. 4. **Tier enum 4 + cardinality test**. 5. **Tier thresholds applied (0-24=cold, 25-49=warm, 50-74=hot, 75+=qualified)**. 6. **All signals present required**. 7. **Snapshot immutable (no UPDATE/DELETE grant)**. 8. **Per-tenant weights respected**. 9. **Default weights ship in code**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (signals JSON hashed)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Manual rescore via POST**. 15. **History GET returns desc time**. 16. **Append-only snapshots**. 17. **Weight update increments version field**. 18. **Cron skip when tenant has 0 active contacts**. 19. **Score 100 cap (not 101)**. 20. **Signal missing → score=null + sev-2 audit (don't lie)**.
+1. **Initial score on contact create**. 2. **Nightly refresh via cron 02:00**. 3. **Score 0-100 range enforced (CHECK)**. 4. **Tier enum 4 + cardinality test**. 5. **Tier thresholds applied (0-24=cold, 25-49=warm, 50-74=hot, 75+=qualified)**. 6. **All signals present required**. 7. **Snapshot immutable (no UPDATE/DELETE grant)**. 8. **Per-tenant weights respected**. 9. **Default weights ship in code**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (signals JSON hashed)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Manual rescore via POST**. 15. **History GET returns desc time**. 16. **Append-only snapshots**. 17. **Weight update increments version field**. 18. **Cron skip when tenant has 0 active contacts**. 19. **Score 100 cap (not 101)**. 20. **Signal missing → score=null + sev-2 audit (don't lie)**.
 
 ---
 
@@ -227,7 +227,7 @@ async fn nightly_refresh_updates_all() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CRM-001, FR-CUO-101.
-**Cross-module:** FR-CRM-002 (signals), FR-AI-003 (LLM scoring), FR-MCP-007 (cron), FR-BRAIN-111 (PII).
+**Cross-module:** FR-CRM-002 (signals), FR-AI-003 (LLM scoring), FR-MCP-007 (cron), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -247,7 +247,7 @@ async fn nightly_refresh_updates_all() {
 - §11.1 Scorer uses FR-AI-003 with structured prompt: "Score this contact 0-100 based on signals. Output JSON {score, tier, rationale}."
 - §11.2 Default weights: title 30%, engagement 25%, response_rate 20%, account_tier 15%, deal_similarity 10%.
 - §11.3 Snapshots persisted per refresh; useful for trend analysis.
-- §11.4 BRAIN audit body: contact_id, score, tier; signals SHA256.
+- §11.4 memory audit body: contact_id, score, tier; signals SHA256.
 - §11.5 Nightly cron via FR-MCP-007 `kind: 'crm.lead_scoring_refresh'`, per-tenant fanout.
 
 ---

@@ -107,12 +107,12 @@ echo
 # ---------------------------------------------------------------------- 4. .cyberos-memory skeleton
 
 echo "→ step 4/6: initialise .cyberos-memory/"
-BRAIN="$TARGET/.cyberos-memory"
-if [[ -d "$BRAIN" && "$FORCE" != "1" ]]; then
-    echo "  – $BRAIN already exists; skipping (use --force to re-init)"
+memory="$TARGET/.cyberos-memory"
+if [[ -d "$memory" && "$FORCE" != "1" ]]; then
+    echo "  – $memory already exists; skipping (use --force to re-init)"
 else
-    mkdir -p "$BRAIN"/{audit,memories/decisions,memories/facts,memories/people,memories/projects,memories/preferences,memories/drift,memories/refinements,meta,company,module,member,client,project,persona,conflicts,exports,index}
-    cat > "$BRAIN/manifest.json" <<EOF
+    mkdir -p "$memory"/{audit,memories/decisions,memories/facts,memories/people,memories/projects,memories/preferences,memories/drift,memories/refinements,meta,company,module,member,client,project,persona,conflicts,exports,index}
+    cat > "$memory/manifest.json" <<EOF
 {
   "schema_version": 2,
   "project": {
@@ -121,7 +121,7 @@ else
   "created_at_ns": $(date +%s)000000000
 }
 EOF
-    echo "  ✓ $BRAIN/manifest.json (schema_version=2)"
+    echo "  ✓ $memory/manifest.json (schema_version=2)"
 fi
 echo
 
@@ -187,7 +187,7 @@ echo
 echo "next steps:"
 echo "  1. open the project in your agent (Claude Code / Cursor / Cowork)"
 echo "  2. AGENTS.md is loaded automatically via the symlink"
-echo "  3. the agent will start building $BRAIN/memories/ as you work"
+echo "  3. the agent will start building $memory/memories/ as you work"
 echo
 echo "verify anytime with:"
 echo "  cd $TARGET"

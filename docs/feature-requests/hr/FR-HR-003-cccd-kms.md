@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CISO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-AUTH-105, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-AUTH-105, FR-MEMORY-111]
 depends_on: [FR-HR-001]
 blocks: []
 
@@ -23,9 +23,9 @@ source_pages:
 source_decisions:
   - DEC-1820 2026-05-17 — CCCD photo encrypted with separate KMS key per-tenant; key access ROOT-CHRO only; no system service has decrypt grant
   - DEC-1821 2026-05-17 — Closed enum `cccd_access_kind` = {upload, decrypt_view, rotate_key, delete}; cardinality 4
-  - DEC-1822 2026-05-17 — Every access (especially decrypt) emits sev-1 BRAIN audit + CHRO email notification
+  - DEC-1822 2026-05-17 — Every access (especially decrypt) emits sev-1 memory audit + CHRO email notification
   - DEC-1823 2026-05-17 — PDPL Law 91/2025 Art. 23 compliance: CCCD = sensitive personal data; requires explicit consent at upload
-  - DEC-1824 2026-05-17 — BRAIN audit kinds: hr.cccd_uploaded, hr.cccd_decrypted, hr.cccd_access_denied, hr.cccd_key_rotated, hr.cccd_deleted
+  - DEC-1824 2026-05-17 — memory audit kinds: hr.cccd_uploaded, hr.cccd_decrypted, hr.cccd_access_denied, hr.cccd_key_rotated, hr.cccd_deleted
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without separate KMS keyspace, single key compromise leaks all
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** ship CCCD photo encryption at `services/hr/src/cccd/` with separate KMS keyspace per tenant, ROOT-CHRO-only decrypt, sev-1 audit per access, consent gate, 5 BRAIN audit kinds.
+The HR service **MUST** ship CCCD photo encryption at `services/hr/src/cccd/` with separate KMS keyspace per tenant, ROOT-CHRO-only decrypt, sev-1 audit per access, consent gate, 5 memory audit kinds.
 
 1. **MUST** validate `cccd_access_kind` against closed enum per DEC-1821.
 
@@ -138,7 +138,7 @@ The HR service **MUST** ship CCCD photo encryption at `services/hr/src/cccd/` wi
    DELETE /v1/hr/members/{id}/cccd-photo          (member-self via DSAR or CHRO)
    ```
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-1824. PII per FR-BRAIN-111: encrypted_photo not in chain; access_kind + role ok.
+8. **MUST** emit 5 memory audit kinds per DEC-1824. PII per FR-MEMORY-111: encrypted_photo not in chain; access_kind + role ok.
 
 9. **MUST** thread trace_id through all access paths.
 
@@ -173,7 +173,7 @@ Returns `consent_token` UUID for use in upload.
 ---
 
 ## §4 — Acceptance criteria
-1. **CCCD encrypted with separate KMS keyspace**. 2. **ROOT-CHRO-only decrypt**. 3. **Non-CHRO decrypt → 403 + access_denied sev-1 audit**. 4. **Sev-1 audit on every successful decrypt**. 5. **CHRO email notification on decrypt**. 6. **Consent token required for upload**. 7. **access_kind enum cardinality 4**. 8. **Per-tenant key alias**. 9. **Key rotation re-encrypts**. 10. **5 BRAIN audit kinds emitted**. 11. **PII: encrypted_photo never in chain**. 12. **RLS denies cross-tenant**. 13. **IP address SHA256 hashed**. 14. **Trace_id preserved**. 15. **Access log immutable (no UPDATE/DELETE grant)**. 16. **One CCCD per member (UNIQUE)**. 17. **Delete via DSAR or CHRO action**. 18. **Member-self can upload + delete own**. 19. **Failed access logged with succeeded=false**. 20. **Key creation idempotent at tenant provisioning**.
+1. **CCCD encrypted with separate KMS keyspace**. 2. **ROOT-CHRO-only decrypt**. 3. **Non-CHRO decrypt → 403 + access_denied sev-1 audit**. 4. **Sev-1 audit on every successful decrypt**. 5. **CHRO email notification on decrypt**. 6. **Consent token required for upload**. 7. **access_kind enum cardinality 4**. 8. **Per-tenant key alias**. 9. **Key rotation re-encrypts**. 10. **5 memory audit kinds emitted**. 11. **PII: encrypted_photo never in chain**. 12. **RLS denies cross-tenant**. 13. **IP address SHA256 hashed**. 14. **Trace_id preserved**. 15. **Access log immutable (no UPDATE/DELETE grant)**. 16. **One CCCD per member (UNIQUE)**. 17. **Delete via DSAR or CHRO action**. 18. **Member-self can upload + delete own**. 19. **Failed access logged with succeeded=false**. 20. **Key creation idempotent at tenant provisioning**.
 
 ---
 
@@ -194,7 +194,7 @@ async fn chro_decrypt_emits_sev1() {
     let ctx = TestContext::with_uploaded_cccd_as_chro().await;
     let r = ctx.decrypt_as(ctx.chro_user, ctx.member_id).await;
     assert!(r.is_ok());
-    let audits = ctx.fetch_brain_audits("hr.cccd_decrypted").await;
+    let audits = ctx.fetch_memory_audits("hr.cccd_decrypted").await;
     assert!(audits.iter().any(|a| a.severity == 1));
 }
 
@@ -212,7 +212,7 @@ async fn upload_without_consent_rejected() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
-**Cross-module:** FR-AUTH-105 (ROOT-CHRO role), FR-BRAIN-111 (audit chain), FR-AUTH-101 (RBAC).
+**Cross-module:** FR-AUTH-105 (ROOT-CHRO role), FR-MEMORY-111 (audit chain), FR-AUTH-101 (RBAC).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -232,7 +232,7 @@ async fn upload_without_consent_rejected() {
 - §11.1 KMS key created at tenant provisioning via FR-AUTH-105 KMS module.
 - §11.2 Photo stored as encrypted bytes in S3 (FR-DOC-001 path) + reference in DB.
 - §11.3 CHRO email notification: separate FR-EMAIL-009 send with subject "CCCD decrypted: {member_name}".
-- §11.4 BRAIN audit body: member_id, accessor_id, access_kind, succeeded; IP SHA256.
+- §11.4 memory audit body: member_id, accessor_id, access_kind, succeeded; IP SHA256.
 - §11.5 Consent token: signed JWT, 24h expiry, single-use; binds member_id + consent_purpose.
 
 ---

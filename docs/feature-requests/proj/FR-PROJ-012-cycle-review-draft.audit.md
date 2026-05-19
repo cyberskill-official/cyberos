@@ -13,7 +13,7 @@ strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per AUTHORING.md §0; I
 
 ## §1 — Verdict summary
 
-FR-PROJ-012 expanded 2026-05-16 P.M. via strict-redo no-line-cap pass. Current scope: 22 §1 clauses (scheduler, stats, COO persona prompt, BRAIN draft path, audit, no-auto-accept, PII redact, force-regen, LLM failure stub, RLS, metrics, locale-aware drafts, estimate-vs-actual ratio, top-5 longest-in-status, blocker recap by category, per-engagement persona override, iteration audit, all-revisions-preserved, comparison-to-prior-cycle, LLM response redaction, skip-cycle annotation, running learnings inclusion). 18 §2 rationale paragraphs. §3 contains: CycleStats struct, stats computation with multi-aggregate SQL, COO compose with prompt template, save_draft with frontmatter. 28 ACs. §10 lists 28 failure rows. §11 lists 25 implementation notes covering locale prompt mechanics, ratio interpretation, top-N tie-breaking, blocker recap fuzzy matching, persona registry fallback, revision linearity, skip mechanism, learnings concatenation.
+FR-PROJ-012 expanded 2026-05-16 P.M. via strict-redo no-line-cap pass. Current scope: 22 §1 clauses (scheduler, stats, COO persona prompt, memory draft path, audit, no-auto-accept, PII redact, force-regen, LLM failure stub, RLS, metrics, locale-aware drafts, estimate-vs-actual ratio, top-5 longest-in-status, blocker recap by category, per-engagement persona override, iteration audit, all-revisions-preserved, comparison-to-prior-cycle, LLM response redaction, skip-cycle annotation, running learnings inclusion). 18 §2 rationale paragraphs. §3 contains: CycleStats struct, stats computation with multi-aggregate SQL, COO compose with prompt template, save_draft with frontmatter. 28 ACs. §10 lists 28 failure rows. §11 lists 25 implementation notes covering locale prompt mechanics, ratio interpretation, top-N tie-breaking, blocker recap fuzzy matching, persona registry fallback, revision linearity, skip mechanism, learnings concatenation.
 
 ## §2 — Findings (all resolved)
 
@@ -24,10 +24,10 @@ Auto-accept = quality drift. Resolved: §1 #6 + DEC-331 never; AC #8.
 Network outage during cycle close blocks reviews. Resolved: §1 #9 stats-only stub + sev-3 alarm; AC #13.
 
 ### ISS-003 — PII in LLM prompt
-External LLM sees customer data. Resolved: §1 #7 FR-BRAIN-111 redact pre-call; AC #10.
+External LLM sees customer data. Resolved: §1 #7 FR-MEMORY-111 redact pre-call; AC #10.
 
 ### ISS-004 — Force-regenerate semantics
-Without spec, naive impl overwrites or duplicates. Resolved: §1 #8 BRAIN memory revisions preserved; AC #11.
+Without spec, naive impl overwrites or duplicates. Resolved: §1 #8 memory memory revisions preserved; AC #11.
 
 ### ISS-005 — Acceptance tracking
 Without metric, drafts pile up unaccepted. Resolved: §1 #11 acceptance-minutes histogram visible in ops dashboards.

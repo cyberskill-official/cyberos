@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands RFC 9728 Protected Resource Metadata for the MCP gateway + per-module servers on top of FR-MCP-004 (OAuth 2.1 PKCE). Final form: 880 lines, 20 §1 normative clauses (gateway + per-module endpoints, registry-derived per-module PRMs, ETag + Cache-Control, CORS, HEAD support, rate limiting, drift detection, 3 BRAIN audit kinds, NATS-driven cache invalidation), 20 acceptance criteria, 8 verification tests, 13 failure-mode rows, 15 implementation notes. Compact relative to FR-TEN-003/TEN-101/PORTAL-003 because the surface is genuinely small (a discovery document), but every contract surface — RFC 9728 conformance, audience binding to FR-MCP-004 tokens, per-residency issuer list, drift guard against registry corruption — is fully specified.
+The spec lands RFC 9728 Protected Resource Metadata for the MCP gateway + per-module servers on top of FR-MCP-004 (OAuth 2.1 PKCE). Final form: 880 lines, 20 §1 normative clauses (gateway + per-module endpoints, registry-derived per-module PRMs, ETag + Cache-Control, CORS, HEAD support, rate limiting, drift detection, 3 memory audit kinds, NATS-driven cache invalidation), 20 acceptance criteria, 8 verification tests, 13 failure-mode rows, 15 implementation notes. Compact relative to FR-TEN-003/TEN-101/PORTAL-003 because the surface is genuinely small (a discovery document), but every contract surface — RFC 9728 conformance, audience binding to FR-MCP-004 tokens, per-residency issuer list, drift guard against registry corruption — is fully specified.
 
 6 issues identified by self-audit, all resolved.
 

@@ -3,7 +3,7 @@ id: FR-PROJ-018
 title: "Liquid-Glass design tokens (tokens.proj.css) + axe-core CI accessibility gate + Storybook visual regression"
 module: PROJ
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-PROJ-014, FR-PROJ-015, FR-PROJ-016, FR-PROJ-017]
 depends_on: [FR-PROJ-014]
 blocks: []
@@ -195,7 +195,7 @@ The PROJ design-tokens + a11y CI layer **MUST** provide a single source of truth
 
   /* — Typography — */
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-family-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-family-mono: 'JetMemorys Mono', ui-monospace, monospace;
   --font-size-xs: 0.75rem;     --font-size-sm: 0.875rem;
   --font-size-base: 1rem;      --font-size-lg: 1.125rem;
   --font-size-xl: 1.25rem;     --font-size-2xl: 1.5rem;

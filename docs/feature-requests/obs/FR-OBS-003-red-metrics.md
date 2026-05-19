@@ -3,7 +3,7 @@ id: FR-OBS-003
 title: "Per-service RED metrics (rate/errors/duration) via cyberos-obs-sdk shared crate with macro + CI lint + standardised buckets"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-001, FR-OBS-002, FR-OBS-007, FR-AI-022]
 depends_on: [FR-OBS-001]
 blocks: [FR-OBS-007, FR-OBS-005]
@@ -40,11 +40,11 @@ modified_files:
   - services/ai-gateway/src/handlers/*.rs                 # apply #[red_instrument]
   - services/auth/src/admin/*.rs
   - services/chat/src/*
-  - services/brain/src/*
+  - services/memory/src/*
   - services/ai-gateway/Cargo.toml                        # add cyberos-obs-sdk dep
   - services/auth/Cargo.toml
   - services/chat/Cargo.toml
-  - services/brain/Cargo.toml
+  - services/memory/Cargo.toml
 allowed_tools:
   - file_read: services/**, crates/cyberos-obs-sdk/**
   - file_write: crates/cyberos-obs-sdk/**, services/**
@@ -64,7 +64,7 @@ sub_tasks:
   - "1.0h: cardinality_guard.rs — refuse to register metrics with > 1000 unique label combos"
   - "0.5h: Custom-dimension support (per-service `extra_labels`)"
   - "0.5h: OTel SDK init wiring (services call `obs_sdk::init` at boot)"
-  - "1.0h: Apply `#[red_instrument]` to every handler in AI Gateway + AUTH + CHAT + BRAIN"
+  - "1.0h: Apply `#[red_instrument]` to every handler in AI Gateway + AUTH + CHAT + memory"
   - "0.5h: instrument_completeness_test — CI lint asserts every axum handler has the macro"
   - "1.0h: Tests — record + status-class + histogram-buckets + cardinality-guard + macro behaviour"
 risk_if_skipped: "FR-OBS-007 (auto-runbook router) has no signal to trigger on. SLO compliance can't be measured. Performance regressions invisible. Without standardised buckets, cross-service p95 aggregation is impossible (different bucket boundaries → no comparable percentiles). Without the macro + CI lint, services drift away from instrumentation discipline — by slice 4 most handlers are uninstrumented and the OBS pillar's value is gone."
@@ -336,7 +336,7 @@ async fn concurrent_record_thread_safe() {
 fn every_axum_handler_has_red_instrument() {
     use std::path::Path;
     use syn::visit::Visit;
-    let services = ["services/ai-gateway", "services/auth", "services/chat", "services/brain"];
+    let services = ["services/ai-gateway", "services/auth", "services/chat", "services/memory"];
     let mut missing = vec![];
     for service in services {
         for entry in walkdir::WalkDir::new(format!("{service}/src/handlers")) {

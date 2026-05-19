@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-001, FR-DOC-008, FR-DOC-009, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-001, FR-DOC-008, FR-DOC-009, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-DOC-001]
 blocks: [FR-DOC-008, FR-DOC-009]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1712 2026-05-17 — Auto-status computation: now < effective_date → draft; effective ≤ now < expiry-90d → active; expiry-90d ≤ now < expiry → expiring; now >= expiry → expired
   - DEC-1713 2026-05-17 — Parties stored as JSONB array: `[{party_id, party_type, role}]`; party_type enum closed
   - DEC-1714 2026-05-17 — Parent contract chain: amendments point to parent via parent_contract_id; UI shows tree
-  - DEC-1715 2026-05-17 — BRAIN audit kinds: doc.lifecycle_set, doc.lifecycle_status_computed, doc.parent_link_added
+  - DEC-1715 2026-05-17 — memory audit kinds: doc.lifecycle_set, doc.lifecycle_status_computed, doc.parent_link_added
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without lifecycle metadata, contracts can't be queried by stat
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** extend FR-DOC-001 documents with lifecycle metadata at `services/doc/src/lifecycle/` — parties, dates, renewal terms, parent chain, auto-status, 3 BRAIN audit kinds.
+The DOC service **MUST** extend FR-DOC-001 documents with lifecycle metadata at `services/doc/src/lifecycle/` — parties, dates, renewal terms, parent chain, auto-status, 3 memory audit kinds.
 
 1. **MUST** define table extension at migration `0002`:
    ```sql
@@ -108,7 +108,7 @@ The DOC service **MUST** extend FR-DOC-001 documents with lifecycle metadata at 
    GET    /v1/doc/documents/{id}/parent-chain   (returns ancestor tree)
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-1715. PII per FR-BRAIN-111: parties JSON hashed; dates and status enum ok.
+7. **MUST** emit 3 memory audit kinds per DEC-1715. PII per FR-MEMORY-111: parties JSON hashed; dates and status enum ok.
 
 8. **MUST** thread trace_id from set → compute → audit.
 
@@ -161,7 +161,7 @@ Parent chain:
 ---
 
 ## §4 — Acceptance criteria
-1. **All lifecycle fields settable**. 2. **6-status enum + cardinality test**. 3. **Auto-status compute on field change**. 4. **Nightly cron refresh**. 5. **Parties JSONB structure validated**. 6. **Party type enum (5: tenant/customer/vendor/employee/authority)**. 7. **Parent chain query returns ancestors**. 8. **Indexed on expiry_date for FR-DOC-008**. 9. **Indexed on parent_contract_id for tree query**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (parties JSONB SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Status thresholds correct (90d = expiring)**. 15. **Terminated status manual-only (CLO action)**. 16. **Renewed status set on renewal contract creation**. 17. **Append-only via REVOKE UPDATE except 7 cols**. 18. **NULL allowed for legacy docs**. 19. **Self-referential FK enforced**. 20. **Status compute idempotent (same input → same result)**.
+1. **All lifecycle fields settable**. 2. **6-status enum + cardinality test**. 3. **Auto-status compute on field change**. 4. **Nightly cron refresh**. 5. **Parties JSONB structure validated**. 6. **Party type enum (5: tenant/customer/vendor/employee/authority)**. 7. **Parent chain query returns ancestors**. 8. **Indexed on expiry_date for FR-DOC-008**. 9. **Indexed on parent_contract_id for tree query**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (parties JSONB SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Status thresholds correct (90d = expiring)**. 15. **Terminated status manual-only (CLO action)**. 16. **Renewed status set on renewal contract creation**. 17. **Append-only via REVOKE UPDATE except 7 cols**. 18. **NULL allowed for legacy docs**. 19. **Self-referential FK enforced**. 20. **Status compute idempotent (same input → same result)**.
 
 ---
 
@@ -199,7 +199,7 @@ async fn parent_chain_returns_ancestors() {
 ## §7 — Dependencies
 **Upstream:** FR-DOC-001.
 **Downstream:** FR-DOC-008 (expiry alerts), FR-DOC-009 (renewal proposals).
-**Cross-module:** FR-MCP-007 (cron), FR-AI-003 (parties extraction skill — future), FR-BRAIN-111 (PII).
+**Cross-module:** FR-MCP-007 (cron), FR-AI-003 (parties extraction skill — future), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -219,7 +219,7 @@ async fn parent_chain_returns_ancestors() {
 - §11.1 Status computer pure function: `(effective, expiry, now) → status`.
 - §11.2 Nightly cron runs at 03:00 tenant_tz, recomputes all docs with expiry_date set.
 - §11.3 Parent chain query recursive CTE: `WITH RECURSIVE chain AS (...)`.
-- §11.4 BRAIN audit body: doc_id, status, status_computed_at; parties JSONB hashed.
+- §11.4 memory audit body: doc_id, status, status_computed_at; parties JSONB hashed.
 - §11.5 Future FR can ingest contract PDFs and auto-extract parties via FR-AI-003 — this FR provides the schema.
 
 ---

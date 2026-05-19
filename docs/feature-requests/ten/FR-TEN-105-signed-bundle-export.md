@@ -1,6 +1,6 @@
 ---
 id: FR-TEN-105
-title: "TEN signed-bundle export — deterministic zip + Ed25519 signature + BRAIN audit anchor + chain-of-custody manifest for tenant offboarding"
+title: "TEN signed-bundle export — deterministic zip + Ed25519 signature + memory audit anchor + chain-of-custody manifest for tenant offboarding"
 module: TEN
 priority: MUST
 status: draft
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CSO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-104, FR-TEN-106, FR-AUTH-101, FR-BRAIN-101, FR-DOC-001, FR-AI-003, FR-BRAIN-111, FR-OBS-007, FR-OBS-009]
+memory_chain_hash: null
+related_frs: [FR-TEN-104, FR-TEN-106, FR-AUTH-101, FR-MEMORY-101, FR-DOC-001, FR-AI-003, FR-MEMORY-111, FR-OBS-007, FR-OBS-009]
 depends_on: [FR-TEN-104]
 blocks: [FR-TEN-106]
 
@@ -27,14 +27,14 @@ source_decisions:
   - DEC-1322 2026-05-17 — Per-tenant Ed25519 signing key generated at tenant provisioning; private key KMS-wrapped; public key published with bundle for verification
   - DEC-1323 2026-05-17 — Bundle contents: per-source JSON + CSV (PROJ, INV, DOC, CHAT, AUDIT_CHAIN, METERING, USERS) + signed-manifest.json + public-key.pem + README.md (verification instructions)
   - DEC-1324 2026-05-17 — Chain-of-custody manifest signed by Ed25519: covers SHA-256 of every file + bundle metadata (tenant_id, export_timestamp, total_size, file_count); operator countersignature optional
-  - DEC-1325 2026-05-17 — BRAIN chain anchor: bundle export emits `ten.bundle_exported` row containing manifest_sha256 + bundle_size; subsequent FR-TEN-106 permanent-delete attestation includes the same hash for chain-linked evidence
+  - DEC-1325 2026-05-17 — memory chain anchor: bundle export emits `ten.bundle_exported` row containing manifest_sha256 + bundle_size; subsequent FR-TEN-106 permanent-delete attestation includes the same hash for chain-linked evidence
   - DEC-1326 2026-05-17 — Closed enum `bundle_status` = {pending, building, ready, delivered, expired, failed}; CI cardinality asserts 6
   - DEC-1327 2026-05-17 — Bundle delivery: signed S3 URL with 30-day TTL (longer than DSAR's 7d because offboarding bundles are legal-evidence + may need multiple downloads); passphrase optional
   - DEC-1328 2026-05-17 — Async build via FR-MCP-007 Tasks (long-running); typical 5min-1h for active tenants; progress via NATS
   - DEC-1329 2026-05-17 — Rate limit: 3 bundle requests per tenant per year (legal evidence + storage cost; not for routine exports)
   - DEC-1330 2026-05-17 — Pre-deletion gate: FR-TEN-106 permanent-delete attestation MUST cite a successful bundle export within last 90 days; CHECK at attestation insert
-  - DEC-1331 2026-05-17 — Bundle includes BRAIN audit chain segment for the tenant (full history; not redacted) — this IS the legal evidence
-  - DEC-1332 2026-05-17 — BRAIN audit kinds: ten.bundle_export_initiated, ten.bundle_built, ten.bundle_delivered, ten.bundle_failed, ten.bundle_expired, ten.bundle_signature_generated
+  - DEC-1331 2026-05-17 — Bundle includes memory audit chain segment for the tenant (full history; not redacted) — this IS the legal evidence
+  - DEC-1332 2026-05-17 — memory audit kinds: ten.bundle_export_initiated, ten.bundle_built, ten.bundle_delivered, ten.bundle_failed, ten.bundle_expired, ten.bundle_signature_generated
   - DEC-1333 2026-05-17 — Bundle SHA-256 anchored at FR-OBS-009 chain-of-custody system for cross-system evidence; manifest signature verifiable years later via published Ed25519 public key
 
 build_envelope:
@@ -69,7 +69,7 @@ build_envelope:
     - services/ten/Cargo.toml                                          # +ed25519-dalek + zip + age
 
   allowed_tools:
-    - file_read: services/{ten,proj,inv,doc,chat,auth,brain}/**
+    - file_read: services/{ten,proj,inv,doc,chat,auth,memory}/**
     - file_write: services/ten/{src,tests,migrations}/**
     - bash: cd services/ten && cargo test bundle
 
@@ -100,7 +100,7 @@ risk_if_skipped: "Without signed-bundle export, tenant offboarding (FR-TEN-104) 
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/` per tenant offboarding (FR-TEN-104 termination) producing deterministic ZIP + Ed25519-signed manifest + BRAIN chain anchor, with 30-day signed URL delivery, async build via FR-MCP-007 Tasks, 3-per-year rate limit, pre-deletion gate dependency, and 6 BRAIN audit kinds.
+The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/` per tenant offboarding (FR-TEN-104 termination) producing deterministic ZIP + Ed25519-signed manifest + memory chain anchor, with 30-day signed URL delivery, async build via FR-MCP-007 Tasks, 3-per-year rate limit, pre-deletion gate dependency, and 6 memory audit kinds.
 
 1. **MUST** define closed `bundle_status` enum: `('pending','building','ready','delivered','expired','failed')` per DEC-1326. Cardinality asserts 6.
 
@@ -117,7 +117,7 @@ The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/`
    - Emit `ten.bundle_export_initiated` sev-1.
 
 6. **MUST** build bundle per DEC-1323 via `bundle/builder.rs`:
-   - Per-source JSON: PROJ (all projects + sub-resources), INV (invoices + lines), DOC (metadata + S3 refs), CHAT (channels + messages), AUDIT_CHAIN (full BRAIN segment for tenant), METERING (FR-TEN-004 history), USERS (FR-AUTH-002 subjects).
+   - Per-source JSON: PROJ (all projects + sub-resources), INV (invoices + lines), DOC (metadata + S3 refs), CHAT (channels + messages), AUDIT_CHAIN (full memory segment for tenant), METERING (FR-TEN-004 history), USERS (FR-AUTH-002 subjects).
    - Per-source CSV (human-readable; same data).
    - signed-manifest.json (Ed25519-signed file inventory).
    - public-key.pem (verifier reference).
@@ -125,7 +125,7 @@ The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/`
    - Deterministic ZIP per §1 #8.
    - Computes SHA-256, file count, total size.
 
-7. **MUST** include full BRAIN audit chain segment per DEC-1331. Chain segment = all rows where tenant_id matches; chain hashes intact; verifier can replay locally.
+7. **MUST** include full memory audit chain segment per DEC-1331. Chain segment = all rows where tenant_id matches; chain hashes intact; verifier can replay locally.
 
 8. **MUST** produce deterministic ZIP per DEC-1321 + AUTHORING.md rule 27-28:
    - Sorted entries (alphabetic by path).
@@ -142,8 +142,8 @@ The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/`
    - Persists `manifest_signature_kms_blob` on bundle row.
    - Emits `ten.bundle_signature_generated`.
 
-10. **MUST** anchor in BRAIN per DEC-1325. After build completes:
-    - INSERT BRAIN row `ten.bundle_built` with payload containing `bundle_sha256` + `manifest_sha256` + `tenant_id` + `file_count`.
+10. **MUST** anchor in memory per DEC-1325. After build completes:
+    - INSERT memory row `ten.bundle_built` with payload containing `bundle_sha256` + `manifest_sha256` + `tenant_id` + `file_count`.
     - This row's chain hash becomes the anchor for FR-OBS-009 chain-of-custody per DEC-1333.
 
 11. **MUST** upload to S3 with 30-day signed URL per DEC-1327. Handler:
@@ -164,9 +164,9 @@ The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/`
     - status='expired' + bundle s3 deleted + signed URL invalid.
     - Emit `ten.bundle_expired`.
 
-16. **MUST** emit 6 BRAIN audit kinds per DEC-1332: export_initiated (sev-1), built (sev-1), delivered (sev-1), failed (sev-1), expired (sev-2), signature_generated (sev-2). All sev-1 except expired (sev-2 ops event) + signature_generated (sev-2 internal).
+16. **MUST** emit 6 memory audit kinds per DEC-1332: export_initiated (sev-1), built (sev-1), delivered (sev-1), failed (sev-1), expired (sev-2), signature_generated (sev-2). All sev-1 except expired (sev-2 ops event) + signature_generated (sev-2 internal).
 
-17. **MUST** PII-scrub via FR-BRAIN-111 — `reason` text hashed; tenant_id retained for chain correlation.
+17. **MUST** PII-scrub via FR-MEMORY-111 — `reason` text hashed; tenant_id retained for chain correlation.
 
 18. **MUST** thread trace_id across request → task → build → S3 upload → audit.
 
@@ -186,7 +186,7 @@ The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/`
 
 **Why deterministic ZIP (§1 #8, DEC-1321)?** Auditor reproducibility — "did the bundle change between my download and yours?" Deterministic = answer is yes (different hash) or no (same hash) with certainty.
 
-**Why include BRAIN chain segment (§1 #7, DEC-1331)?** The audit chain IS the legal evidence. Customer departing on bad terms → CyberSkill needs to prove every action. Chain segment with signed bundle = unforgeable.
+**Why include memory chain segment (§1 #7, DEC-1331)?** The audit chain IS the legal evidence. Customer departing on bad terms → CyberSkill needs to prove every action. Chain segment with signed bundle = unforgeable.
 
 **Why 3-per-year rate limit (§1 #13, DEC-1329)?** Bundle building is expensive (cross-source aggregation, S3 upload, GBs of data). Operationally tenant requests bundle once at termination + maybe annual compliance archive + once-in-a-while audit support = 3.
 
@@ -263,7 +263,7 @@ GET    /v1/admin/tenants/{tid}/bundle/{bundle_id}/verify      (public key + sign
 3. **Bundle build async** — request returns 202 + bundle_id; task processes; status transitions pending→building→ready.
 4. **Deterministic zip** — two builds of same source data → byte-identical ZIP.
 5. **Manifest signed** — Ed25519 signature on manifest_sha256; verifies with public key.
-6. **BRAIN chain anchor** — `ten.bundle_built` row contains bundle_sha256 + manifest_sha256.
+6. **memory chain anchor** — `ten.bundle_built` row contains bundle_sha256 + manifest_sha256.
 7. **30-day signed URL** — URL valid for 30d; T+31d → 403.
 8. **Pre-deletion gate** — FR-TEN-106 attestation without recent bundle → 412.
 9. **3-per-year rate limit** — 4th request in 12 months → 429.
@@ -271,7 +271,7 @@ GET    /v1/admin/tenants/{tid}/bundle/{bundle_id}/verify      (public key + sign
 11. **Per-source files present** — bundle contains projects.json, invoices.json, documents.json, chat.json, audit_chain.json, metering.json, users.json + .csv variants.
 12. **Manifest verification endpoint** — returns public_key_pem + signature.
 13. **Bundle expiry T+30d** — scheduled job marks expired + deletes S3 object.
-14. **6 BRAIN audit kinds emitted** — full lifecycle.
+14. **6 memory audit kinds emitted** — full lifecycle.
 15. **Signed manifest matches files** — recompute SHA-256 of each file → matches manifest entries.
 16. **Cross-tenant bundle invisible** — RLS prevents tenant A from seeing tenant B's bundles.
 17. **Per-tenant private key not exfiltrable** — KMS-encrypted; raw private key never in DB.
@@ -334,10 +334,10 @@ async fn three_per_year_rate_limit() {
 }
 
 #[tokio::test]
-async fn brain_chain_anchored() {
+async fn memory_chain_anchored() {
     let ctx = TestContext::with_seeded_tenant().await;
     let b = ctx.request_and_wait_bundle().await;
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     let built = audit.iter().find(|r| r.kind == "ten.bundle_built").unwrap();
     assert!(built.payload["bundle_sha256"].is_string());
     assert!(built.payload["manifest_sha256"].is_string());
@@ -355,7 +355,7 @@ async fn brain_chain_anchored() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TEN-104 (lifecycle — bundle as part of termination flow).
-**Cross-module:** FR-TEN-106 (pre-deletion gate), FR-AUTH-101 (cso + tenant_admin roles), FR-BRAIN-101 (audit chain source), FR-DOC-001 (S3 storage), FR-MCP-007 (async build via Tasks), FR-AI-003 (audit kinds), FR-BRAIN-111 (PII scrub), FR-OBS-007 (sev-1 routing), FR-OBS-009 (chain-of-custody anchor).
+**Cross-module:** FR-TEN-106 (pre-deletion gate), FR-AUTH-101 (cso + tenant_admin roles), FR-MEMORY-101 (audit chain source), FR-DOC-001 (S3 storage), FR-MCP-007 (async build via Tasks), FR-AI-003 (audit kinds), FR-MEMORY-111 (PII scrub), FR-OBS-007 (sev-1 routing), FR-OBS-009 (chain-of-custody anchor).
 **Downstream:** None.
 
 ---

@@ -27,7 +27,7 @@ _Generated 2026-05-17 — 15 FRs, 127 engineering-hours total._
 **This module is depended on by:**
 
 - **AI**: FR-AI-006→FR-AUTH-004
-- **BRAIN**: FR-BRAIN-101→FR-AUTH-003
+- **memory**: FR-MEMORY-101→FR-AUTH-003
 - **CHAT**: FR-CHAT-002→FR-AUTH-004
 - **CRM**: FR-CRM-001→FR-AUTH-003, FR-CRM-001→FR-AUTH-101
 - **DOC**: FR-DOC-001→FR-AUTH-101, FR-DOC-006→FR-AUTH-105

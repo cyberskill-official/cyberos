@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: retrospective-author
-description: |
-  Author a sprint or project retrospective (retro@1) per Software
-  Development Process.md Template §4.8 (Start/Stop/Continue + DORA
-  Review). Captures team mood, DORA metric trends for the iteration,
-  3 keep-doings / 3 stop-doings, and top 1-2 actions with owners +
-  due dates. Chains naturally into retrospective-audit.
+description: >-
+  Author a sprint or project retrospective (retro@1) per Software Development Process.md Template §4.8 (Start/Stop/Continue + DORA Review). Captures team mood, DORA metric trends for the iteration, 3 keep-doings / 3 stop-doings, and top 1-2 actions with owners + due dates. Chains naturally into retrospective-audit. Use when user asks to "draft a retrospective" or "create the retrospective". Do NOT use for "audit existing retrospective" (use retrospective-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: retro_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

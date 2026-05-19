@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-MCP-001, FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-005, FR-MCP-007, FR-MCP-008, FR-AUTH-004, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-MCP-001, FR-MCP-002, FR-MCP-003, FR-MCP-004, FR-MCP-005, FR-MCP-007, FR-MCP-008, FR-AUTH-004, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-MCP-001, FR-MCP-004]
 blocks: []
 
@@ -29,12 +29,12 @@ source_decisions:
   - DEC-1043 2026-05-17 — Gating modes: `auto-confirm` (always proceed; for trusted callers), `confirm` (server-side ack required), `elicit` (server initiates Elicitation request to caller via FR-MCP-008)
   - DEC-1044 2026-05-17 — Per-tenant gating policy: tenant_admin configures `mcp_gating_policy_yaml` declaring per-tool / per-annotation gating mode; default per DEC-1041
   - DEC-1045 2026-05-17 — Bypass token: trusted internal callers (per FR-AUTH-004 JWT carrying `mcp_gating_bypass=true` scope claim) skip gating entirely; restricted to system-tenant callers only
-  - DEC-1046 2026-05-17 — Gating decision logged in BRAIN audit as `mcp.tool_gating_decision` — every gated call produces a row (decision + reason + confirmation_method + actor_id)
+  - DEC-1046 2026-05-17 — Gating decision logged in memory audit as `mcp.tool_gating_decision` — every gated call produces a row (decision + reason + confirmation_method + actor_id)
   - DEC-1047 2026-05-17 — Confirmation TTL: confirm-mode acks expire after 5 min if not consumed by the tool call; expired ack = `confirm_required` reload
   - DEC-1048 2026-05-17 — Tool annotations from FR-MCP-002 registration are STORED as part of the module-registration row; annotation drift between registry + tool schema is forensic event sev-1
   - DEC-1049 2026-05-17 — Closed enum `mcp_gating_decision` = {auto_allowed, confirmed, elicited, bypassed, rejected_no_confirmation, rejected_expired_ack}; CI cardinality test asserts 6
   - DEC-1050 2026-05-17 — Per-tenant audit-only mode: a tenant can set `mcp_gating_audit_only=true` for a transition period — gating decisions emitted but tools always proceed (used during policy bootstrap; sev-2 audit row marks audit-only events)
-  - DEC-1051 2026-05-17 — BRAIN audit kinds: mcp.tool_gating_decision, mcp.tool_gating_policy_updated, mcp.tool_gating_annotation_drift, mcp.tool_gating_bypass_used, mcp.tool_gating_audit_only_mode_set
+  - DEC-1051 2026-05-17 — memory audit kinds: mcp.tool_gating_decision, mcp.tool_gating_policy_updated, mcp.tool_gating_annotation_drift, mcp.tool_gating_bypass_used, mcp.tool_gating_audit_only_mode_set
   - DEC-1052 2026-05-17 — Gating is enforced AT THE MCP GATEWAY ENTRY (before tools/call dispatches to the per-module server) — single ingress point; per-module server never bypasses
   - DEC-1053 2026-05-17 — Annotation precedence at gating decision (most restrictive wins): destructiveHint=true OR openWorldHint=true → REQUIRES confirmation; readOnlyHint=true AND no destructive/openWorld → BYPASS; idempotentHint informational only
   - DEC-1054 2026-05-17 — Confirmation acks stored in `mcp_pending_confirmations` table keyed by (caller_id, tool_id, request_payload_sha256, expires_at); per DEC-1047 single-use + TTL
@@ -43,7 +43,7 @@ source_decisions:
   - DEC-1057 2026-05-17 — Bypass-token usage emits sev-2 row `mcp.tool_gating_bypass_used` for every invocation (forensic visibility — bypass is rare-by-design)
   - DEC-1058 2026-05-17 — Policy update requires `tenant_admin` role; emits sev-1 `mcp.tool_gating_policy_updated` (security-relevant config change)
   - DEC-1059 2026-05-17 — Annotation drift detection runs nightly: compares registered annotations vs current tool-schema declared annotations; mismatch = sev-1 `mcp.tool_gating_annotation_drift`
-  - DEC-1060 2026-05-17 — Audit-row payload PII-scrubbed via FR-BRAIN-111: request_payload_sha256 only (raw payload retained in MCP gateway logs with RLS-scope, 7-day retention)
+  - DEC-1060 2026-05-17 — Audit-row payload PII-scrubbed via FR-MEMORY-111: request_payload_sha256 only (raw payload retained in MCP gateway logs with RLS-scope, 7-day retention)
 
 build_envelope:
   language: rust 1.81
@@ -61,7 +61,7 @@ build_envelope:
     - services/mcp/src/gating/drift_detector.rs                         # nightly annotation drift job
     - services/mcp/src/handlers/tool_confirm.rs                         # POST /v1/mcp/tools/{tool_id}/confirm
     - services/mcp/src/handlers/gating_policy_admin.rs                  # tenant_admin policy CRUD
-    - services/mcp/src/audit/gating_events.rs                           # 5 BRAIN row builders
+    - services/mcp/src/audit/gating_events.rs                           # 5 memory row builders
     - services/mcp/tests/gating_annotation_precedence_test.rs
     - services/mcp/tests/gating_destructive_requires_confirm_test.rs
     - services/mcp/tests/gating_readonly_fast_path_test.rs
@@ -112,7 +112,7 @@ risk_if_skipped: "Without tool-annotation gating, every MCP tool call dispatches
 
 ## §1 — Description (BCP-14 normative)
 
-The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating/` enforcing MCP 2025-11-25 spec hint semantics (`readOnlyHint` / `destructiveHint` / `idempotentHint` / `openWorldHint`) at gateway entry, with per-tenant policy override, confirm-mode ack store, elicit-mode delegation to FR-MCP-008, bypass-token path, audit-only transition mode, nightly annotation drift detection, and 5 BRAIN audit kinds.
+The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating/` enforcing MCP 2025-11-25 spec hint semantics (`readOnlyHint` / `destructiveHint` / `idempotentHint` / `openWorldHint`) at gateway entry, with per-tenant policy override, confirm-mode ack store, elicit-mode delegation to FR-MCP-008, bypass-token path, audit-only transition mode, nightly annotation drift detection, and 5 memory audit kinds.
 
 1. **MUST** define the closed `mcp_gating_mode` enum at migration `0006`: `('auto_confirm','confirm','elicit')` per DEC-1043. CI cardinality test asserts 3.
 
@@ -181,11 +181,11 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
 
 17. **MUST** rate-limit confirmation requests at 100 confirm-mode requests/min/caller per DEC-1056. Excess returns `429 + Retry-After`.
 
-18. **MUST** PII-scrub audit rows per DEC-1060 + AUTHORING.md rule 18. `request_payload_sha256` only in BRAIN chain; raw payload in MCP gateway logs (RLS-scoped, 7-day retention).
+18. **MUST** PII-scrub audit rows per DEC-1060 + AUTHORING.md rule 18. `request_payload_sha256` only in memory chain; raw payload in MCP gateway logs (RLS-scoped, 7-day retention).
 
 19. **MUST** thread W3C `traceparent` across `tools/call` → gating decision → confirm-ack → dispatch → response (AUTHORING.md rule 22-24).
 
-20. **MUST** emit 5 BRAIN audit row kinds per DEC-1051:
+20. **MUST** emit 5 memory audit row kinds per DEC-1051:
     - `mcp.tool_gating_decision` (sev-3 high-volume; sampled at 1% via FR-OBS-006 tail-sampling)
     - `mcp.tool_gating_policy_updated` (sev-1)
     - `mcp.tool_gating_annotation_drift` (sev-1)
@@ -384,19 +384,19 @@ GET    /v1/admin/tenants/{tenant_id}/mcp/gating-decisions          (tenant_admin
 3. **Destructive requires confirm** — tool with `destructiveHint=true` invoked without prior ack → 403 + `confirm_required` + endpoint URL.
 4. **Confirm ack consumed atomically** — same confirm token used twice → second invocation 403 `rejected_expired_ack`.
 5. **Confirm TTL** — confirm with `expires_at=now() - 1min` (expired) → 403 + `rejected_expired_ack`.
-6. **Bypass token** — caller with `mcp_gating_bypass` scope → `bypassed` decision; sev-2 BRAIN row emitted.
+6. **Bypass token** — caller with `mcp_gating_bypass` scope → `bypassed` decision; sev-2 memory row emitted.
 7. **Bypass for non-system tenant rejected at mint** — JWT mint with `mcp_gating_bypass` for non-system tenant → mint rejected `invalid_scope_for_tenant`.
 8. **Audit-only mode** — `audit_only=true` policy + destructive tool → call proceeds; audit row `decision='audit_only_allowed'` + `mcp.tool_gating_audit_only_mode_set` emitted on policy save.
 9. **mcp_gating_decision enum cardinality** — 6 values exactly: `{auto_allowed, confirmed, elicited, bypassed, rejected_no_confirmation, rejected_expired_ack}`.
 10. **mcp_gating_mode enum cardinality** — 3 values exactly: `{auto_confirm, confirm, elicit}`.
-11. **Policy update tenant_admin only** — engagement_admin POST → 403; tenant_admin → 201 + sev-1 BRAIN row.
+11. **Policy update tenant_admin only** — engagement_admin POST → 403; tenant_admin → 201 + sev-1 memory row.
 12. **Elicit mode 503 placeholder** — policy with `mode: elicit` on a destructive tool → 503 `elicitation_not_yet_supported`.
 13. **Rate limit on confirm endpoint** — 101st confirm in 60s → 429.
 14. **Annotation drift detection** — registry says `readOnlyHint=true` but live tools/list says `destructiveHint=true` → drift row + sev-1 audit.
 15. **JSON-RPC error shape** — 403 response body conforms to MCP JSON-RPC error shape with `confirm_endpoint` in `data`.
 16. **Per-tenant policy isolation** — tenant A's policy doesn't affect tenant B's gating decisions.
 17. **Bypass audit always emitted** — every bypass invocation → exactly one `mcp.tool_gating_bypass_used` row (no batching).
-18. **PII scrub** — audit row carries `request_payload_sha256` only; raw payload not in BRAIN chain.
+18. **PII scrub** — audit row carries `request_payload_sha256` only; raw payload not in memory chain.
 19. **Trace_id threaded** — single trace_id present in tools/call span + gating decision row + downstream dispatch.
 20. **Idempotent hint informational** — tool with `idempotentHint=true, destructiveHint=true` still requires confirm; idempotent hint surfaces in audit `annotations` JSONB but doesn't relax gating.
 
@@ -431,7 +431,7 @@ async fn readonly_tool_bypasses_confirmation() {
     }).await;
     let r = ctx.invoke_tool("cyberos.projects.list", json!({})).await;
     assert_eq!(r.status(), 200);
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "mcp.tool_gating_decision"
         && r.payload["decision"] == "auto_allowed"));
 }
@@ -498,7 +498,7 @@ async fn bypass_scope_skips_gating_and_audits() {
     let r = ctx.invoke_tool("cyberos.docs.delete", json!({"doc_id": "x"})).await;
     assert_eq!(r.status(), 200);
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "mcp.tool_gating_bypass_used" && r.severity == 2));
 }
 
@@ -520,7 +520,7 @@ async fn audit_only_mode_allows_destructive_but_logs() {
     let r = ctx.invoke_tool("cyberos.docs.delete", json!({"doc_id": "x"})).await;
     assert_eq!(r.status(), 200);
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     let dec = audit.iter().find(|r| r.kind == "mcp.tool_gating_decision").unwrap();
     assert_eq!(dec.payload["audit_only"], true);
 }
@@ -553,7 +553,7 @@ async fn drift_between_registry_and_live_detected() {
     ctx.set_live_tool_annotations("cyberos.docs.weird", destructive_annotations()).await;
     ctx.run_drift_detector().await;
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     let drift = audit.iter().find(|r| r.kind == "mcp.tool_gating_annotation_drift").unwrap();
     assert_eq!(drift.severity, 1);
     assert!(drift.payload["diff_fields"].as_array().unwrap()
@@ -586,7 +586,7 @@ async fn full_lifecycle_emits_5_kinds() {
     ctx.set_live_tool_annotations("cyberos.docs.weird", destructive_annotations()).await;
     ctx.run_drift_detector().await;                              // annotation_drift
     ctx.invoke_tool_with_bypass("cyberos.docs.weird").await;     // bypass_used + decision
-    let kinds: Vec<&str> = ctx.brain_rows().await.iter().map(|r| r.kind.as_str()).collect();
+    let kinds: Vec<&str> = ctx.memory_rows().await.iter().map(|r| r.kind.as_str()).collect();
     assert!(kinds.contains(&"mcp.tool_gating_policy_updated"));
     assert!(kinds.contains(&"mcp.tool_gating_audit_only_mode_set"));
     assert!(kinds.contains(&"mcp.tool_gating_annotation_drift"));
@@ -678,8 +678,8 @@ pub async fn detect_drift(ctx: &AppCtx) -> Result<Vec<DriftEvent>, DriftError> {
 - **FR-MCP-007** Tasks primitive — destructive tasks confirm at start; subsequent polls don't re-confirm.
 - **FR-MCP-008** Elicitation — `elicit` mode delegates here (slice-2 placeholder).
 - **FR-AUTH-004** JWT mint — bypass-scope guard at mint.
-- **FR-AI-003** BRAIN audit-row bridge — 5 new kinds.
-- **FR-BRAIN-111** PII scrubbing — payload SHA only in chain.
+- **FR-AI-003** memory audit-row bridge — 5 new kinds.
+- **FR-MEMORY-111** PII scrubbing — payload SHA only in chain.
 - **FR-OBS-007** Auto-runbook — sev-1 drift + policy events route to CHAT.
 
 **Downstream (blocks):** None at this slice.
@@ -688,7 +688,7 @@ pub async fn detect_drift(ctx: &AppCtx) -> Result<Vec<DriftEvent>, DriftError> {
 
 ## §8 — Example payloads
 
-### 8.1 `mcp.tool_gating_decision` BRAIN row (rejected)
+### 8.1 `mcp.tool_gating_decision` memory row (rejected)
 
 ```json
 {
@@ -746,7 +746,7 @@ overrides:
     mode: elicit
 ```
 
-### 8.4 `mcp.tool_gating_annotation_drift` BRAIN row
+### 8.4 `mcp.tool_gating_annotation_drift` memory row
 
 ```json
 {

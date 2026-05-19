@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-REW-001, FR-REW-005, FR-HR-005, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-REW-001, FR-REW-005, FR-HR-005, FR-MEMORY-111]
 depends_on: [FR-REW-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2161 2026-05-17 — Closed enum `param_kind` = {tax_bracket, si_rate, overtime_multiplier, allowance_cap, bonus_formula}; cardinality 5
   - DEC-2162 2026-05-17 — Per-version snapshot IMMUTABLE; effective_from + effective_to dates; payslip records version_id at compute time
   - DEC-2163 2026-05-17 — Replay-equivalence test: monthly CI job replays last 12 months of payslips with current params; expect 100% match for prior periods (using their version), 0% match if forced to current
-  - DEC-2164 2026-05-17 — BRAIN audit kinds: rew.param_version_added, rew.param_lookup_executed, rew.replay_test_passed, rew.replay_test_failed
+  - DEC-2164 2026-05-17 — memory audit kinds: rew.param_version_added, rew.param_lookup_executed, rew.replay_test_passed, rew.replay_test_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without versioning, FR-REW-005 payroll varies by run time → 
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship parameter versioning at `services/rew/src/params/` with immutable snapshots + version-pinned payslip computation + monthly replay-equivalence CI, 4 BRAIN audit kinds.
+The REW service **MUST** ship parameter versioning at `services/rew/src/params/` with immutable snapshots + version-pinned payslip computation + monthly replay-equivalence CI, 4 memory audit kinds.
 
 1. **MUST** validate `param_kind` against closed enum per DEC-2161.
 
@@ -111,7 +111,7 @@ The REW service **MUST** ship parameter versioning at `services/rew/src/params/`
    POST /v1/rew/replay-test/trigger  (CFO manual)
    ```
 
-6. **MUST** emit 4 BRAIN audit kinds per DEC-2164. PII per FR-BRAIN-111: param values (mostly rates/brackets) ok in BRAIN as they're public; member-specific compute hashes only.
+6. **MUST** emit 4 memory audit kinds per DEC-2164. PII per FR-MEMORY-111: param values (mostly rates/brackets) ok in memory as they're public; member-specific compute hashes only.
 
 7. **MUST** thread trace_id from lookup → audit.
 
@@ -152,7 +152,7 @@ GET /v1/rew/params/tax_bracket?at=2026-06-01
 ---
 
 ## §4 — Acceptance criteria
-1. **param_kind enum cardinality 5**. 2. **Immutable rows (REVOKE)**. 3. **Lookup by effective_at**. 4. **Replay test monthly via cron**. 5. **100% match for prior periods**. 6. **Failure → sev-1 + CI block**. 7. **4 BRAIN audit kinds emitted**. 8. **PII: param values public; compute hashed**. 9. **RLS denies cross-tenant**. 10. **CFO-only write**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE**. 13. **JSONB schema validated per kind**. 14. **Source law reference recommended**. 15. **Effective_to NULL = current**. 16. **Index on (kind, effective_from)**. 17. **Lookup performance < 5ms**. 18. **Annual refresh runbook**. 19. **Replay test produces diff report on failure**. 20. **Deterministic (no now/random)**.
+1. **param_kind enum cardinality 5**. 2. **Immutable rows (REVOKE)**. 3. **Lookup by effective_at**. 4. **Replay test monthly via cron**. 5. **100% match for prior periods**. 6. **Failure → sev-1 + CI block**. 7. **4 memory audit kinds emitted**. 8. **PII: param values public; compute hashed**. 9. **RLS denies cross-tenant**. 10. **CFO-only write**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE**. 13. **JSONB schema validated per kind**. 14. **Source law reference recommended**. 15. **Effective_to NULL = current**. 16. **Index on (kind, effective_from)**. 17. **Lookup performance < 5ms**. 18. **Annual refresh runbook**. 19. **Replay test produces diff report on failure**. 20. **Deterministic (no now/random)**.
 
 ---
 
@@ -189,7 +189,7 @@ async fn replay_equivalence_100pct() {
 ## §7 — Dependencies
 **Upstream:** FR-REW-001.
 **Downstream:** FR-REW-005 (payroll compute uses versioned params).
-**Cross-module:** FR-HR-005 (compares versioning approach), FR-MCP-007 (replay cron), FR-BRAIN-111 (audit).
+**Cross-module:** FR-HR-005 (compares versioning approach), FR-MCP-007 (replay cron), FR-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -209,7 +209,7 @@ async fn replay_equivalence_100pct() {
 - §11.1 Replay test reruns FR-REW-005 compute with member context at original period; compares to stored payslip blob hash.
 - §11.2 Cron via FR-MCP-007 `kind: 'rew.replay_equivalence_test'`, monthly 1st at 02:00.
 - §11.3 Failure produces diff report uploaded to FR-DOC-001 for CFO review.
-- §11.4 BRAIN audit body: tenant_id, kind, version_id; param values ok (not PII).
+- §11.4 memory audit body: tenant_id, kind, version_id; param values ok (not PII).
 - §11.5 JSONB schema per kind documented in code constants + tested.
 
 ---

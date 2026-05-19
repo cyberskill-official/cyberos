@@ -1,6 +1,6 @@
 # cyberos — Layer-1 audit ledger & writer
 
-Optimized implementation of the CyberOS BRAIN protocol's Layer-1 (filesystem store, audit chain, six file ops). The legacy v1 entrypoint and migration shim have been retired; `python -m cyberos` is now the only writer.
+Optimized implementation of the CyberOS memory protocol's Layer-1 (filesystem store, audit chain, six file ops). The legacy v1 entrypoint and migration shim have been retired; `python -m cyberos` is now the only writer.
 
 ## Quick start
 

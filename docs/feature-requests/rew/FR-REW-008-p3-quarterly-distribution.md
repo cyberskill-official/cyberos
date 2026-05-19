@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-REW-007, FR-LEARN-007, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-REW-007, FR-LEARN-007, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-REW-007]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2221 2026-05-17 — Closed enum `distribution_status` = {drafted, ceo_signed, cfo_signed, executed, paid, dismissed}; cardinality 6
   - DEC-2222 2026-05-17 — Dual-sign CEO + CFO required for execute; same-person rejected
   - DEC-2223 2026-05-17 — Idempotent per (tenant, quarter); UNIQUE
-  - DEC-2224 2026-05-17 — BRAIN audit kinds: rew.p3_distribution_drafted, rew.p3_distribution_signed, rew.p3_distribution_executed, rew.p3_distribution_paid, rew.p3_distribution_failed
+  - DEC-2224 2026-05-17 — memory audit kinds: rew.p3_distribution_drafted, rew.p3_distribution_signed, rew.p3_distribution_executed, rew.p3_distribution_paid, rew.p3_distribution_failed
 
 build_envelope:
   language: rust 1.81
@@ -71,7 +71,7 @@ risk_if_skipped: "Without P3 distribution, BP balances persist unredeemed → de
 
 ## §1 — Description (BCP-14 normative)
 
-The REW service **MUST** ship quarterly P3 distribution at `services/rew/src/p3/` consuming FR-LEARN-007 VP shares + dual-sign + BP debit + P3 add to next payroll, 5 BRAIN audit kinds.
+The REW service **MUST** ship quarterly P3 distribution at `services/rew/src/p3/` consuming FR-LEARN-007 VP shares + dual-sign + BP debit + P3 add to next payroll, 5 memory audit kinds.
 
 1. **MUST** validate `distribution_status` against closed enum per DEC-2221.
 
@@ -138,7 +138,7 @@ The REW service **MUST** ship quarterly P3 distribution at `services/rew/src/p3/
    GET  /v1/rew/p3-distributions/{id}             (status + payouts)
    ```
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-2224. PII per FR-BRAIN-111: payout amounts SHA256.
+8. **MUST** emit 5 memory audit kinds per DEC-2224. PII per FR-MEMORY-111: payout amounts SHA256.
 
 9. **MUST** thread trace_id from draft → sign → execute → audit.
 
@@ -186,7 +186,7 @@ Sample executed status:
 ---
 
 ## §4 — Acceptance criteria
-1. **distribution_status enum cardinality 6**. 2. **fund_vnd > 0 CHECK**. 3. **VP shares from FR-LEARN-007**. 4. **CEO+CFO dual-sign required**. 5. **Same-person rejected**. 6. **UNIQUE(tenant, quarter)**. 7. **5 BRAIN audit kinds emitted**. 8. **PII scrubbed (amounts SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only draft**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE except status cols**. 13. **bigint VND**. 14. **vp_share NUMERIC(10,9)**. 15. **Per-member payout row**. 16. **Execute debits BP ledger**. 17. **P3 added to next payroll**. 18. **Status workflow enforced**. 19. **Dismiss allowed pre-execute**. 20. **Sum of payouts ≈ fund_vnd (±1 VND tolerance)**.
+1. **distribution_status enum cardinality 6**. 2. **fund_vnd > 0 CHECK**. 3. **VP shares from FR-LEARN-007**. 4. **CEO+CFO dual-sign required**. 5. **Same-person rejected**. 6. **UNIQUE(tenant, quarter)**. 7. **5 memory audit kinds emitted**. 8. **PII scrubbed (amounts SHA256)**. 9. **RLS denies cross-tenant**. 10. **CEO-only draft**. 11. **Trace_id preserved**. 12. **Append-only via REVOKE except status cols**. 13. **bigint VND**. 14. **vp_share NUMERIC(10,9)**. 15. **Per-member payout row**. 16. **Execute debits BP ledger**. 17. **P3 added to next payroll**. 18. **Status workflow enforced**. 19. **Dismiss allowed pre-execute**. 20. **Sum of payouts ≈ fund_vnd (±1 VND tolerance)**.
 
 ---
 
@@ -226,7 +226,7 @@ async fn idempotent_quarter() {
 
 ## §7 — Dependencies
 **Upstream:** FR-REW-007.
-**Cross-module:** FR-LEARN-007 (VP shares), FR-REW-005 (payroll injection), FR-AUTH-101 (CEO/CFO), FR-MCP-007 (trigger cron), FR-BRAIN-111 (PII).
+**Cross-module:** FR-LEARN-007 (VP shares), FR-REW-005 (payroll injection), FR-AUTH-101 (CEO/CFO), FR-MCP-007 (trigger cron), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -245,7 +245,7 @@ async fn idempotent_quarter() {
 ## §11 — Implementation notes
 - §11.1 Calculator: per_member_vnd = fund_vnd * vp_share; round to nearest VND; allocate residual to highest-share member to ensure sum matches.
 - §11.2 BP debit converts VND to BP-equiv via FR-HR-005 policy `bp_vnd_rate`.
-- §11.3 BRAIN audit body: distribution_id, quarter, members_count; amounts SHA256.
+- §11.3 memory audit body: distribution_id, quarter, members_count; amounts SHA256.
 - §11.4 Cron trigger: quarter+1d via FR-MCP-007 reminding CEO to draft.
 - §11.5 Drafted state allows CEO to revise fund_vnd before signing.
 

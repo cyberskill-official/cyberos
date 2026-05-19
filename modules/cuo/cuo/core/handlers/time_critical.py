@@ -7,7 +7,7 @@ Per FR-CUO-106 §1.3 + DEC-2382. Affects 3 workflows:
 
 The handler invokes the chain synchronously (no scheduling/batching/work-stealing).
 It tracks total_duration_ms and, if it exceeds the declared SLA, emits a
-breach event in `extra_audit_kinds` for the BRAIN bridge to record.
+breach event in `extra_audit_kinds` for the memory bridge to record.
 """
 
 from __future__ import annotations

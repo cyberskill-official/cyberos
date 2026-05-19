@@ -23,7 +23,7 @@ First-pass §1 #4 said "forward traceparent to downstream HTTP calls" without me
 Async background work (audit-row emit, etc.) loses trace_id without `Instrument`. Resolved: §1 #8 + §11 note about `tracing::Instrument`; AC #12.
 
 ### ISS-003 — Subprocess loses trace_id
-brain_writer is a subprocess; without env-var propagation, chain breaks. Resolved: §1 #9 OTEL_TRACE_ID env var; AC #13.
+memory_writer is a subprocess; without env-var propagation, chain breaks. Resolved: §1 #9 OTEL_TRACE_ID env var; AC #13.
 
 ### ISS-004 — Malformed traceparent handling unspecified
 First-pass §10 said "Generate new trace_id" but didn't specify WARN log or attacker-poisoning concern. Resolved: §1 #11 strict parser + WARN with hash16; §2 rationale paragraph on attacker poisoning; AC #15 + #16.

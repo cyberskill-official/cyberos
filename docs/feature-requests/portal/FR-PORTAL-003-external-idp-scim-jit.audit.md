@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands per-Engagement external IdP (SAML 2.0 + OIDC) with SCIM 2.0 JIT provisioning on top of FR-AUTH-103 (SAML primitives) + FR-AUTH-104 (OIDC primitives). Final form: 1,030 lines, 27 §1 normative clauses (covering 4 migrations, 2 protocol stacks, SCIM CRUD endpoints, claim → role mapping with many-to-one semantics, signed-attribute trust chain defending against attribute injection, per-Engagement isolation via RLS, required-enforcement SSO-only mode, 8h JWT TTL + re-auth trigger, email-domain discovery hint, SCIM token rotation with 60s overlap, 7 + 1 BRAIN audit kinds), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 26 implementation notes. Net-new `cyberos/services/portal/` crate.
+The spec lands per-Engagement external IdP (SAML 2.0 + OIDC) with SCIM 2.0 JIT provisioning on top of FR-AUTH-103 (SAML primitives) + FR-AUTH-104 (OIDC primitives). Final form: 1,030 lines, 27 §1 normative clauses (covering 4 migrations, 2 protocol stacks, SCIM CRUD endpoints, claim → role mapping with many-to-one semantics, signed-attribute trust chain defending against attribute injection, per-Engagement isolation via RLS, required-enforcement SSO-only mode, 8h JWT TTL + re-auth trigger, email-domain discovery hint, SCIM token rotation with 60s overlap, 7 + 1 memory audit kinds), 20 acceptance criteria, 10 verification tests, 22 failure-mode rows, 26 implementation notes. Net-new `cyberos/services/portal/` crate.
 
 The audit caught 7 issues across the security-critical signed-attribute path, SCIM token storage hygiene, RLS scope precision, role-resolution determinism, and a missing migration ref. All resolved before 10/10.
 
@@ -43,7 +43,7 @@ First-draft `REVOKE UPDATE, DELETE FROM cyberos_app` was followed by no GRANT, b
 
 ### ISS-007 — Audit `scim_operation` enum missing `token_rotated`
 
-§3.1 originally had 6 SCIM operations (user/group × create/update/delete); §1 #19 + DEC-884 reference `portal.scim_token_rotation` BRAIN row + a `token_rotated` operation. Without the `token_rotated` enum member, the rotation handler's INSERT into the audit log would fail. Resolved: §3.1 CHECK constraint extended to include `'token_rotated'` (7 enum members).
+§3.1 originally had 6 SCIM operations (user/group × create/update/delete); §1 #19 + DEC-884 reference `portal.scim_token_rotation` memory row + a `token_rotated` operation. Without the `token_rotated` enum member, the rotation handler's INSERT into the audit log would fail. Resolved: §3.1 CHECK constraint extended to include `'token_rotated'` (7 enum members).
 
 ## §3 — Resolution
 

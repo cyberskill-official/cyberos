@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PORTAL-002, FR-PORTAL-003, FR-PORTAL-004, FR-PORTAL-005, FR-PORTAL-006, FR-PORTAL-008, FR-TEN-101, FR-AUTH-004, FR-AUTH-101, FR-PROJ-001, FR-INV-001, FR-DOC-001, FR-CHAT-005, FR-AI-003, FR-BRAIN-111, FR-BRAIN-106, FR-OBS-005]
+memory_chain_hash: null
+related_frs: [FR-PORTAL-002, FR-PORTAL-003, FR-PORTAL-004, FR-PORTAL-005, FR-PORTAL-006, FR-PORTAL-008, FR-TEN-101, FR-AUTH-004, FR-AUTH-101, FR-PROJ-001, FR-INV-001, FR-DOC-001, FR-CHAT-005, FR-AI-003, FR-MEMORY-111, FR-MEMORY-106, FR-OBS-005]
 depends_on: [FR-TEN-101]
 blocks: [FR-PORTAL-007, FR-PORTAL-008]
 
@@ -22,7 +22,7 @@ source_pages:
   - https://datatracker.ietf.org/doc/html/rfc7235  # HTTP auth framework
 
 source_decisions:
-  - DEC-1200 2026-05-17 — Client tenants see read-only projection of 4 module surfaces (PROJ, INV, DOC, CHAT) filtered by Engagement membership AND sync_class='client-visible' per FR-BRAIN-106; never write through PORTAL views (writes go through dedicated FR-PORTAL-006 workflows)
+  - DEC-1200 2026-05-17 — Client tenants see read-only projection of 4 module surfaces (PROJ, INV, DOC, CHAT) filtered by Engagement membership AND sync_class='client-visible' per FR-MEMORY-106; never write through PORTAL views (writes go through dedicated FR-PORTAL-006 workflows)
   - DEC-1201 2026-05-17 — Closed enum `portal_view_kind` = {projects, invoices, documents, channels, calendar}; CI cardinality test asserts 5
   - DEC-1202 2026-05-17 — View materialisation: live SQL views with RLS predicate joining `engagement_memberships` + per-row `sync_class` check; NO denormalised cache (correctness > performance at slice 1; cache at slice 2)
   - DEC-1203 2026-05-17 — Per-row field redaction: rows of class `client-visible-redacted` return with internal fields (notes, internal_status, assignee_internal) blanked
@@ -36,7 +36,7 @@ source_decisions:
   - DEC-1211 2026-05-17 — Per-view kind-specific filters: `projects` supports status/assignee/date_range; `invoices` supports status/date_range/amount_range; `documents` supports tag/type/date_range; `channels` supports tag/last_message_date
   - DEC-1212 2026-05-17 — Stale-read tolerance: views read against the canonical Postgres tables (no eventual consistency); reads MAY observe in-flight writes that haven't yet emitted audit (rare; documented)
   - DEC-1213 2026-05-17 — Exported view (CSV/Excel) via `GET /v1/portal/views/{view_kind}/export?format=csv|xlsx` per FR-PORTAL-008-derivative streaming; ≤ 10k rows per export; over-limit → use DSAR
-  - DEC-1214 2026-05-17 — BRAIN audit kinds: portal.view_read, portal.view_detail_read, portal.view_search_executed, portal.view_export_initiated, portal.view_export_completed, portal.view_redaction_applied
+  - DEC-1214 2026-05-17 — memory audit kinds: portal.view_read, portal.view_detail_read, portal.view_search_executed, portal.view_export_initiated, portal.view_export_completed, portal.view_redaction_applied
   - DEC-1215 2026-05-17 — Per-row redaction is field-set-replacement (NOT row-omission); redacted rows STILL appear in list but with masked fields per DEC-1203
   - DEC-1216 2026-05-17 — Tenant default sync_class for new rows: 'private' (default); promotion to 'client-visible' is explicit user action in each source module
   - DEC-1217 2026-05-17 — Cache-Control: response carries `Cache-Control: private, max-age=30` (30-sec client cache OK; per-user RLS makes shared cache impossible)
@@ -60,7 +60,7 @@ build_envelope:
     - services/portal/src/views/search.rs                              # tsvector search
     - services/portal/src/views/pagination.rs                          # cursor encode/decode
     - services/portal/src/views/export.rs                              # CSV + XLSX export
-    - services/portal/src/audit/view_events.rs                         # 6 BRAIN row builders
+    - services/portal/src/audit/view_events.rs                         # 6 memory row builders
     - services/portal/src/handlers/view_routes.rs                      # REST routes
     - services/portal/tests/view_projects_list_test.rs
     - services/portal/tests/view_projects_filtered_by_sync_class_test.rs
@@ -121,7 +121,7 @@ risk_if_skipped: "Without scoped views, PORTAL is a brand pack + SSO + Genie cha
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/views/` over the PROJ/INV/DOC/CHAT modules, filtered by Engagement membership AND sync_class='client-visible' per FR-BRAIN-106, with per-row redaction, field projection, cursor pagination, full-text search, CSV/XLSX export, and 6 BRAIN audit kinds.
+The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/views/` over the PROJ/INV/DOC/CHAT modules, filtered by Engagement membership AND sync_class='client-visible' per FR-MEMORY-106, with per-row redaction, field projection, cursor pagination, full-text search, CSV/XLSX export, and 6 memory audit kinds.
 
 1. **MUST** define the closed `portal_view_kind` enum at migration `0014`: `('projects','invoices','documents','channels','calendar')` per DEC-1201. CI cardinality test asserts 5. The `calendar` view is a slice-2 stub returning 501.
 
@@ -197,7 +197,7 @@ The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/
 
 14. **MUST** rate-limit at 600 reads/min/caller per DEC-1210 + AUTHORING.md §8.2d derivative. Exceeded → 429 + Retry-After.
 
-15. **MUST** emit 6 BRAIN audit row kinds per DEC-1214:
+15. **MUST** emit 6 memory audit row kinds per DEC-1214:
     - `portal.view_read` (sev-3 — high-volume; sampled 1%)
     - `portal.view_detail_read` (sev-2 — material; always emitted)
     - `portal.view_search_executed` (sev-3 — sampled 5%)
@@ -213,13 +213,13 @@ The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/
 
 19. **MUST** enforce read-only — view endpoints never accept POST/PUT/PATCH/DELETE (returns 405). Writes route through FR-PORTAL-006 workflows.
 
-20. **MUST** validate `sync_class` filter is enforced at the SQL view level per DEC-1202 + FR-BRAIN-106. Handler does NOT trust client-supplied sync_class filter; the view's predicate is the gate.
+20. **MUST** validate `sync_class` filter is enforced at the SQL view level per DEC-1202 + FR-MEMORY-106. Handler does NOT trust client-supplied sync_class filter; the view's predicate is the gate.
 
 21. **MUST NOT** auto-aggregate across Engagements per DEC-1209. Each request scoped to one engagement_id.
 
 22. **MUST NOT** allow shared HTTP cache (proxies, CDNs) per DEC-1217. `Cache-Control: private` mandatory; CDN edges MUST NOT cache.
 
-23. **MUST NOT** return rows with `sync_class IN ('private','team-internal')` per FR-BRAIN-106. View definition enforces; handler-side check defense-in-depth.
+23. **MUST NOT** return rows with `sync_class IN ('private','team-internal')` per FR-MEMORY-106. View definition enforces; handler-side check defense-in-depth.
 
 24. **SHOULD** observe per-Engagement read volume via OTel histogram `portal_view_read_total{engagement_id, view_kind}`.
 
@@ -332,7 +332,7 @@ All require `engagement_id` query param.
 16. **Rate limit 600/min** — 601st read → 429.
 17. **Read-only** — POST/PUT/DELETE on view endpoint → 405.
 18. **Calendar slice-2 stub** — `/v1/portal/views/calendar` → 501.
-19. **6 BRAIN audit kinds emitted** — full browse + detail + search + export + redaction lifecycle covers all 6.
+19. **6 memory audit kinds emitted** — full browse + detail + search + export + redaction lifecycle covers all 6.
 20. **Filter hash in audit** — filter_hash16 = SHA256-16 of canonical filter JSON; raw filter NOT in chain.
 
 ---
@@ -384,7 +384,7 @@ async fn redacted_rows_have_internal_fields_nulled() {
     assert!(row["internal_notes"].is_null());
     assert_eq!(row["title"], "redacted-proj");
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.view_redaction_applied"));
 }
 ```
@@ -474,7 +474,7 @@ async fn detail_includes_tasks_and_comments() {
     assert_eq!(body["tasks"].as_array().unwrap().len(), 1);
     assert_eq!(body["comments"].as_array().unwrap().len(), 1);
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "portal.view_detail_read" && r.severity == 2));
 }
 ```
@@ -575,9 +575,9 @@ pub async fn list_handler(ctx: AppCtx, jwt: JwtClaims, view_kind: PortalViewKind
 - **FR-DOC-001** Documents — source schema.
 - **FR-CHAT-005** Channels — source schema; messages too.
 - **FR-AUTH-101** RBAC — engagement_memberships table consumed.
-- **FR-BRAIN-106** sync_class enforcement — view definitions consume.
-- **FR-AI-003** BRAIN audit — 6 new kinds.
-- **FR-BRAIN-111** PII scrubbing — filter hash only in chain.
+- **FR-MEMORY-106** sync_class enforcement — view definitions consume.
+- **FR-AI-003** memory audit — 6 new kinds.
+- **FR-MEMORY-111** PII scrubbing — filter hash only in chain.
 
 **Downstream (blocks):**
 - **FR-PORTAL-007** PWA — needs views to display.
@@ -600,7 +600,7 @@ pub async fn list_handler(ctx: AppCtx, jwt: JwtClaims, view_kind: PortalViewKind
 }
 ```
 
-### 8.2 `portal.view_detail_read` BRAIN row
+### 8.2 `portal.view_detail_read` memory row
 
 ```json
 {

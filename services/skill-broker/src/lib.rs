@@ -12,8 +12,10 @@
 //! lands when FR-SKILL-104 (capability broker) ships.
 
 pub mod frontmatter;
+pub mod transpilers;
 
 pub use frontmatter::{
     FrontmatterError, SkillFrontmatter, MarkerName,
     load_and_validate, validate_description, validate_marker,
 };
+pub use transpilers::{transpile_anthropic, AnthropicSkill};

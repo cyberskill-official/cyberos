@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CISO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-LEARN-004, FR-LEARN-006, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-LEARN-004, FR-LEARN-006, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-LEARN-004]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2121 2026-05-17 — Closed enum `external_disclosure` = {none, aggregate_only, recommendation_only, judge_identities_only}; cardinality 4
   - DEC-2122 2026-05-17 — Cross-service read via FR-LEARN-005 export endpoint applies disclosure filter automatically; raw scores rejected
   - DEC-2123 2026-05-17 — HR + REW consumers receive aggregate_only; CEO/CHRO receive recommendation_only; CISO can audit who saw what
-  - DEC-2124 2026-05-17 — BRAIN audit kinds: learn.external_disclosure_requested, learn.disclosure_filtered, learn.disclosure_denied, learn.unauthorized_raw_access_attempt
+  - DEC-2124 2026-05-17 — memory audit kinds: learn.external_disclosure_requested, learn.disclosure_filtered, learn.disclosure_denied, learn.unauthorized_raw_access_attempt
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without isolation, HR managers see raw judge scores → counci
 
 ## §1 — Description (BCP-14 normative)
 
-The LEARN service **MUST** ship per-judge score isolation at `services/learn/src/disclosure/` enforcing disclosure filter on all cross-service reads, 4 BRAIN audit kinds.
+The LEARN service **MUST** ship per-judge score isolation at `services/learn/src/disclosure/` enforcing disclosure filter on all cross-service reads, 4 memory audit kinds.
 
 1. **MUST** validate `external_disclosure` against closed enum per DEC-2121.
 
@@ -117,7 +117,7 @@ The LEARN service **MUST** ship per-judge score isolation at `services/learn/src
 
 6. **MUST** internal council scoring endpoints (FR-LEARN-004) marked `internal_only` — direct cross-service raw access blocked.
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-2124. PII per FR-BRAIN-111: scores never in BRAIN chain.
+7. **MUST** emit 4 memory audit kinds per DEC-2124. PII per FR-MEMORY-111: scores never in memory chain.
 
 8. **MUST** thread trace_id from request → gate → filter → audit.
 
@@ -173,7 +173,7 @@ Sample 403 attempt:
 ---
 
 ## §4 — Acceptance criteria
-1. **external_disclosure enum cardinality 4**. 2. **HR gets aggregate_only**. 3. **REW gets aggregate_only**. 4. **CEO+CHRO get recommendation_only**. 5. **CISO gets full (logged)**. 6. **Other roles 403**. 7. **Raw scores never exposed externally**. 8. **4 BRAIN audit kinds emitted**. 9. **PII scrubbed (scores never in chain)**. 10. **RLS denies cross-tenant**. 11. **Disclosure log per access**. 12. **Trace_id preserved**. 13. **Append-only log via REVOKE**. 14. **Internal endpoint marker prevents external use**. 15. **CISO audit dashboard accessible**. 16. **Unauthorized attempt → sev-2 audit**. 17. **Filter pure function**. 18. **Cross-tenant attempt rejected**. 19. **Per-council disclosure history queryable**. 20. **Aggregate_only excludes per-judge breakdown**.
+1. **external_disclosure enum cardinality 4**. 2. **HR gets aggregate_only**. 3. **REW gets aggregate_only**. 4. **CEO+CHRO get recommendation_only**. 5. **CISO gets full (logged)**. 6. **Other roles 403**. 7. **Raw scores never exposed externally**. 8. **4 memory audit kinds emitted**. 9. **PII scrubbed (scores never in chain)**. 10. **RLS denies cross-tenant**. 11. **Disclosure log per access**. 12. **Trace_id preserved**. 13. **Append-only log via REVOKE**. 14. **Internal endpoint marker prevents external use**. 15. **CISO audit dashboard accessible**. 16. **Unauthorized attempt → sev-2 audit**. 17. **Filter pure function**. 18. **Cross-tenant attempt rejected**. 19. **Per-council disclosure history queryable**. 20. **Aggregate_only excludes per-judge breakdown**.
 
 ---
 
@@ -201,7 +201,7 @@ async fn hr_gets_aggregate_only() {
 async fn unauthorized_attempt_audited() {
     let ctx = TestContext::with_engineer_role().await;
     ctx.try_read_disclosure(ctx.council_id).await;
-    let audits = ctx.fetch_brain_audits("learn.disclosure_denied").await;
+    let audits = ctx.fetch_memory_audits("learn.disclosure_denied").await;
     assert!(!audits.is_empty());
 }
 
@@ -213,7 +213,7 @@ async fn unauthorized_attempt_audited() {
 ## §7 — Dependencies
 **Upstream:** FR-LEARN-004.
 **Downstream:** FR-LEARN-006 (promotion uses recommendation_only).
-**Cross-module:** FR-AUTH-101 (role check), FR-HR-008 (HR consumer), FR-REW (REW consumer), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-101 (role check), FR-HR-008 (HR consumer), FR-REW (REW consumer), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -232,7 +232,7 @@ async fn unauthorized_attempt_audited() {
 ## §11 — Implementation notes
 - §11.1 Filter is pure function: `(council_full, disclosure_kind) → filtered_view`.
 - §11.2 Internal endpoint marker: `#[router(internal_only)]` macro; gateway rejects external requests.
-- §11.3 BRAIN audit body: council_id, requester_role, disclosure_kind, succeeded; no score data.
+- §11.3 memory audit body: council_id, requester_role, disclosure_kind, succeeded; no score data.
 - §11.4 CISO dashboard: SELECT * FROM disclosure_log ORDER BY created_at DESC LIMIT 100.
 - §11.5 Unauthorized attempts trigger sev-2 alert to CISO via FR-CHAT-005.
 

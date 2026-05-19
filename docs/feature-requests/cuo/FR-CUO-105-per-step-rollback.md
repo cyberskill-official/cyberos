@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CUO-104, FR-SKILL-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CUO-104, FR-SKILL-001, FR-MEMORY-111]
 depends_on: [FR-CUO-104]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2371 2026-05-17 — Closed enum `rollback_step_status` = {pending, compensating, compensated, no_compensation_registered, compensation_failed}; cardinality 5
   - DEC-2372 2026-05-17 — Skill registers optional compensating action at registration time (FR-SKILL-001); if missing, step preserved + audit notes "no rollback path"
   - DEC-2373 2026-05-17 — Per-step compensation IMMUTABLE; chain composite gets partial_rolled_back status post-rollback completion
-  - DEC-2374 2026-05-17 — BRAIN audit kinds: cuo.rollback_initiated, cuo.rollback_step_started, cuo.rollback_step_compensated, cuo.rollback_step_no_compensation, cuo.rollback_completed, cuo.rollback_failed
+  - DEC-2374 2026-05-17 — memory audit kinds: cuo.rollback_initiated, cuo.rollback_step_started, cuo.rollback_step_compensated, cuo.rollback_step_no_compensation, cuo.rollback_completed, cuo.rollback_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without rollback, FR-CUO-104 partial executions leave systems 
 
 ## §1 — Description (BCP-14 normative)
 
-The CUO service **MUST** ship per-step rollback at `services/cuo/src/rollback/` triggered by FR-CUO-104 step failure, compensations in reverse order, immutable audit, 6 BRAIN audit kinds.
+The CUO service **MUST** ship per-step rollback at `services/cuo/src/rollback/` triggered by FR-CUO-104 step failure, compensations in reverse order, immutable audit, 6 memory audit kinds.
 
 1. **MUST** validate `rollback_step_status` against closed enum per DEC-2371.
 
@@ -117,7 +117,7 @@ The CUO service **MUST** ship per-step rollback at `services/cuo/src/rollback/` 
    GET  /v1/cuo/chains/{id}/rollback-status  (per-step status)
    ```
 
-8. **MUST** emit 6 BRAIN audit kinds per DEC-2374. PII per FR-BRAIN-111: failure_reason SHA256.
+8. **MUST** emit 6 memory audit kinds per DEC-2374. PII per FR-MEMORY-111: failure_reason SHA256.
 
 9. **MUST** thread trace_id from chain failure → rollback → audit.
 
@@ -155,7 +155,7 @@ Sample rollback status:
 ---
 
 ## §4 — Acceptance criteria
-1. **rollback_step_status enum cardinality 5**. 2. **Triggered on FR-CUO-104 step failure**. 3. **Reverse order execution**. 4. **Compensation looked up from FR-SKILL-001 registry**. 5. **Missing compensation preserved with audit (not failure)**. 6. **6 BRAIN audit kinds emitted**. 7. **PII scrubbed (failure_reason SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **UNIQUE(chain_id, step_id)**. 11. **Chain status → partial_rolled_back post**. 12. **Append-only via REVOKE except status cols**. 13. **CDO manual trigger allowed**. 14. **Per-step compensation isolated (one failure doesn't halt rollback)**. 15. **compensation_failed audited sev-2**. 16. **Idempotent (re-trigger uses existing rollback_id per step)**. 17. **Rollback of failed step itself skipped (not completed)**. 18. **Skipped steps (FR-CUO-104) also no-rollback**. 19. **Order matches inverse of step_order**. 20. **Rollback timeout per step 30s**.
+1. **rollback_step_status enum cardinality 5**. 2. **Triggered on FR-CUO-104 step failure**. 3. **Reverse order execution**. 4. **Compensation looked up from FR-SKILL-001 registry**. 5. **Missing compensation preserved with audit (not failure)**. 6. **6 memory audit kinds emitted**. 7. **PII scrubbed (failure_reason SHA256)**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **UNIQUE(chain_id, step_id)**. 11. **Chain status → partial_rolled_back post**. 12. **Append-only via REVOKE except status cols**. 13. **CDO manual trigger allowed**. 14. **Per-step compensation isolated (one failure doesn't halt rollback)**. 15. **compensation_failed audited sev-2**. 16. **Idempotent (re-trigger uses existing rollback_id per step)**. 17. **Rollback of failed step itself skipped (not completed)**. 18. **Skipped steps (FR-CUO-104) also no-rollback**. 19. **Order matches inverse of step_order**. 20. **Rollback timeout per step 30s**.
 
 ---
 
@@ -196,7 +196,7 @@ async fn compensation_failure_isolated() {
 
 ## §7 — Dependencies
 **Upstream:** FR-CUO-104.
-**Cross-module:** FR-SKILL-001 (compensation registry), FR-BRAIN-111 (PII).
+**Cross-module:** FR-SKILL-001 (compensation registry), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -215,7 +215,7 @@ async fn compensation_failure_isolated() {
 ## §11 — Implementation notes
 - §11.1 Compensation registered at FR-SKILL-001 via optional `compensating_skill` field.
 - §11.2 Walker invokes rollback via async task; allows main chain to mark failed quickly.
-- §11.3 BRAIN audit body: chain_id, step_id, status; reason SHA256.
+- §11.3 memory audit body: chain_id, step_id, status; reason SHA256.
 - §11.4 Per-step timeout 30s; longer → mark compensation_failed.
 - §11.5 Idempotency: re-trigger checks existing rollback row; only retries failed compensations.
 

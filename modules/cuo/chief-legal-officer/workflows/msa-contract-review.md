@@ -27,7 +27,7 @@ consults:
   - { persona: cuo/chief-information-security-officer,           when: "contract has security-controls schedule" }
 
 audit_hooks:
-  - each step emits artefact_write to BRAIN audit chain
+  - each step emits artefact_write to memory audit chain
   - workflow_complete row on PASS with contract_review hash + classification (GREEN/YELLOW/RED) + cycle-time
   - HITL pause at step 2 if QA-PLAYBOOK-001 fires (deviation not mapped to a playbook position)
 ---

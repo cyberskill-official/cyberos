@@ -3,7 +3,7 @@ id: FR-INV-004
 title: "Wise webhook handler for multi-currency receipts (USD / EUR / GBP / SGD / JPY)"
 module: INV
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -13,8 +13,8 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-001, FR-INV-002, FR-INV-003, FR-INV-005, FR-INV-006, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-INV-001, FR-INV-002, FR-INV-003, FR-INV-005, FR-INV-006, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-AUTH-101]
 blocks: []
 
@@ -30,7 +30,7 @@ source_decisions:
   - DEC-846 2026-05-16 — Multi-currency match: receipt currency MUST equal invoice currency; never auto-convert at receipt time (FX is FR-INV-002 SBV daily snapshot)
   - DEC-847 2026-05-16 — Per-tenant `wise_profile_id` configured at provisioning (FR-TEN-001); one profile per tenant
   - DEC-848 2026-05-16 — Wise public key rotated yearly per Wise policy; on rotation, fetch new key + verify signature against both old and new for 24h overlap window
-  - DEC-849 2026-05-16 — 7 BRAIN audit kinds with FR-BRAIN-111 PII scrubbing
+  - DEC-849 2026-05-16 — 7 memory audit kinds with FR-MEMORY-111 PII scrubbing
   - DEC-850 2026-05-16 — Webhook endpoint returns 200 + empty body within 5 seconds (Wise SLA); processing offloaded to background job via WAL queue
   - DEC-851 2026-05-16 — Dead-letter queue for events that fail processing 3 times; ops sev-1 alarm + manual restore path
   - DEC-852 2026-05-16 — Currency-mismatch receipt (e.g., USD wire to a VND-denominated invoice) is held in `unmatched_receipts` table for CFO review, NOT auto-matched
@@ -75,7 +75,7 @@ sub_tasks:
   - "1.0h: handler — fast 200 response + WAL push to background processor"
   - "1.0h: background processor — idempotency check + invoice match (delegates to FR-INV-006) + currency-mismatch hold"
   - "0.5h: dead-letter queue + restore handler"
-  - "0.5h: 7 BRAIN audit kinds emission + FR-BRAIN-111 scrubbing"
+  - "0.5h: 7 memory audit kinds emission + FR-MEMORY-111 scrubbing"
   - "0.5h: integration tests with fixture events"
 risk_if_skipped: "Without Wise support, international tenants paying in USD/EUR/GBP must rely on manual reconciliation; we lose the automated cash-application loop for foreign-currency receipts. FR-INV-006 cash-app cascade is incomplete without Wise as a receipt source for international transfers."
 ---
@@ -84,7 +84,7 @@ risk_if_skipped: "Without Wise support, international tenants paying in USD/EUR/
 
 The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{profile_id}`, verify the RSA-SHA256 signature against the per-profile public key, decode the event body, persist append-only, and dispatch to FR-INV-006 cash application or hold for CFO review on mismatch.
 
-1. **MUST** verify the `X-Signature-SHA256` header on every incoming webhook before any processing (DEC-840). Wise signs the request body with RSA-SHA256 using a per-profile private key; the public key is fetched from `/v1/profiles/{profile_id}/webhook-subscriptions/{subscription_id}/public-key` and cached. Verification failure returns `401 invalid_signature` + sev-2 BRAIN audit `inv.wise_signature_invalid` (NEVER tells Wise it was invalid — return 401 generically).
+1. **MUST** verify the `X-Signature-SHA256` header on every incoming webhook before any processing (DEC-840). Wise signs the request body with RSA-SHA256 using a per-profile private key; the public key is fetched from `/v1/profiles/{profile_id}/webhook-subscriptions/{subscription_id}/public-key` and cached. Verification failure returns `401 invalid_signature` + sev-2 memory audit `inv.wise_signature_invalid` (NEVER tells Wise it was invalid — return 401 generically).
 
 2. **MUST** fetch + cache the Wise public key in-process for 24 hours (DEC-841). On the first webhook for a profile, the handler fetches the key and stores `(profile_id, pem_key, fetched_at, expires_at)` in process memory. Subsequent webhooks reuse the cache.
 
@@ -92,13 +92,13 @@ The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{
 
 4. **MUST** define a closed 3-value `wise_event_type` enum (`transfers_state_change`, `balances_credit`, `balances_update`) per DEC-842. Event types outside this enum are persisted to dead-letter queue with reason `unknown_event_type` + sev-2 audit. CI cardinality test asserts exactly 3.
 
-5. **MUST** enforce idempotency via UNIQUE constraint on `(profile_id, event_id)` (DEC-843). The Wise `event_id` is a 36-char UUID. Duplicate event MUST return success without re-processing AND without emitting a duplicate BRAIN audit row.
+5. **MUST** enforce idempotency via UNIQUE constraint on `(profile_id, event_id)` (DEC-843). The Wise `event_id` is a 36-char UUID. Duplicate event MUST return success without re-processing AND without emitting a duplicate memory audit row.
 
 6. **MUST** reject events with `data.occurred_at` more than 5 days in the past (DEC-844). Wise's retry window is 5 days; older events are presumed stale. Stale event returns `200 OK` (Wise's retry stops) + sev-2 audit `inv.wise_stale_event`. The body is logged for forensic but no processing happens.
 
 7. **MUST** persist every received event (valid + invalid) to the append-only `wise_webhook_events` table (DEC-845). The table has REVOKE UPDATE, DELETE FROM cyberos_app; only `inv_wise_writer` role holds INSERT.
 
-8. **MUST** return `200 OK` with empty body within 5 seconds (DEC-850 + Wise SLA). The handler performs signature verification + persistence + WAL-queue push, then returns. Heavy processing (invoice matching, BRAIN emission) happens in a background processor reading from the WAL queue.
+8. **MUST** return `200 OK` with empty body within 5 seconds (DEC-850 + Wise SLA). The handler performs signature verification + persistence + WAL-queue push, then returns. Heavy processing (invoice matching, memory emission) happens in a background processor reading from the WAL queue.
 
 9. **MUST** define a closed 5-value `wise_receipt_state` enum (`received`, `matched`, `currency_mismatch`, `dead_lettered`, `manually_resolved`) per DEC-853. CI cardinality test asserts exactly 5.
 
@@ -108,9 +108,9 @@ The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{
 
 12. **MUST** route failed-3-times events to the dead-letter queue (DEC-851). The processor tracks retry count per event; on 3rd failure, the event moves to `dead_lettered` state + sev-1 audit `inv.wise_dead_lettered` + ops alarm. Manual restore is available via `POST /v1/admin/wise-events/{id}/restore` for CFO role.
 
-13. **MUST** scrub all Wise event body fields containing customer names, account numbers, or bank references through FR-BRAIN-111 before BRAIN audit emission (DEC-849). Postgres holds raw (RLS-scoped); chain holds scrubbed.
+13. **MUST** scrub all Wise event body fields containing customer names, account numbers, or bank references through FR-MEMORY-111 before memory audit emission (DEC-849). Postgres holds raw (RLS-scoped); chain holds scrubbed.
 
-14. **MUST** emit 7 closed BRAIN audit kinds:
+14. **MUST** emit 7 closed memory audit kinds:
     - `inv.wise_received` (sev-3, per valid event)
     - `inv.wise_matched` (sev-3, on successful cash-app match)
     - `inv.wise_signature_invalid` (sev-2, per verification fail)
@@ -128,7 +128,7 @@ The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{
 
 18. **MUST** expose `GET /v1/admin/wise-events` for CFO role to list events with filters (state, tenant_id, date range). RLS-scoped to caller's tenant unless CyberSkill founder.
 
-19. **MUST** expose `GET /v1/admin/wise-events/{id}` for CFO to inspect a single event including raw body (Postgres-side, RLS-scoped). The handler scrubs the body through FR-BRAIN-111 only for chain-bound audit rows; the API response shows the raw row content to the authorized CFO.
+19. **MUST** expose `GET /v1/admin/wise-events/{id}` for CFO to inspect a single event including raw body (Postgres-side, RLS-scoped). The handler scrubs the body through FR-MEMORY-111 only for chain-bound audit rows; the API response shows the raw row content to the authorized CFO.
 
 20. **MUST** record currency-mismatch events in `unmatched_receipts (id, tenant_id, source, source_event_id, currency, amount_minor, occurred_at, notes, resolved_at, resolved_by)`. The CFO has a `POST /v1/admin/unmatched-receipts/{id}/resolve` endpoint to mark resolution + record a note (≥ 10 chars).
 
@@ -176,9 +176,9 @@ The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{
 
 **§2.15  Why we don't auto-convert FX at receipt time.** DEC-846 + clause #10. FX timing matters for revenue recognition. Receiving USD on day 1, posting against a VND invoice on day 5: which day's FX rate? Auto-conversion forces an answer; CFO review lets the answer match the company's policy (FR-INV-002 SBV daily snapshot, contract terms, or spot-at-receipt).
 
-**§2.16  Why we never log full event body at any level.** Build-envelope `disallowed_tools`. Wise event bodies contain customer names, bank reference, sometimes invoice references. Bulk logging would create a PII-rich log corpus we don't want. Postgres-side raw storage is RLS-scoped; FR-BRAIN-111 scrubs before chain emission; the API response surface for raw body is CFO-gated.
+**§2.16  Why we never log full event body at any level.** Build-envelope `disallowed_tools`. Wise event bodies contain customer names, bank reference, sometimes invoice references. Bulk logging would create a PII-rich log corpus we don't want. Postgres-side raw storage is RLS-scoped; FR-MEMORY-111 scrubs before chain emission; the API response surface for raw body is CFO-gated.
 
-**§2.17  Why webhook returns 401 generically on signature failure.** Clause #1. Returning a more specific error ("signature mismatch", "expired key", "wrong profile") would give probing attackers feedback. Generic 401 + sev-2 BRAIN audit (operator-visible) is the right split.
+**§2.17  Why webhook returns 401 generically on signature failure.** Clause #1. Returning a more specific error ("signature mismatch", "expired key", "wrong profile") would give probing attackers feedback. Generic 401 + sev-2 memory audit (operator-visible) is the right split.
 
 **§2.18  Why we don't share-credential authenticate (basic-auth, etc).** Wise's signed-webhook contract is sufficient; layering basic-auth would be redundant and complicate Wise's configuration. The signed body already proves origin + integrity.
 
@@ -188,7 +188,7 @@ The INV service **MUST** accept Wise webhook events at `POST /v1/webhooks/wise/{
 
 **§2.21  Why TLS 1.3 minimum.** Clause #23. TLS 1.2 is acceptable for many integrations but 1.3 is faster + has fewer cipher suite vulnerabilities. Wise supports 1.3; mandating it costs us nothing.
 
-**§2.22  Why we don't store the raw body indefinitely.** The `wise_webhook_events.body` column carries the full event body in JSONB. Retention policy: 2 years (matches typical financial-record retention). After 2 years, a periodic job purges body to NULL while preserving the audit metadata (profile_id, event_id, event_type, occurred_at, state). The BRAIN chain row stays forever — the chain is the long-term forensic record.
+**§2.22  Why we don't store the raw body indefinitely.** The `wise_webhook_events.body` column carries the full event body in JSONB. Retention policy: 2 years (matches typical financial-record retention). After 2 years, a periodic job purges body to NULL while preserving the audit metadata (profile_id, event_id, event_type, occurred_at, state). The memory chain row stays forever — the chain is the long-term forensic record.
 
 ---
 
@@ -218,7 +218,7 @@ CREATE TABLE wise_webhook_events (
     matched_invoice_id    UUID,
     matched_allocation_id UUID,
     error_reason          TEXT,
-    brain_chain_hash      CHAR(64) NOT NULL CHECK (brain_chain_hash ~ '^[0-9a-f]{64}$'),
+    memory_chain_hash      CHAR(64) NOT NULL CHECK (memory_chain_hash ~ '^[0-9a-f]{64}$'),
     CONSTRAINT idempotent UNIQUE (profile_id, event_id)
 );
 
@@ -259,7 +259,7 @@ CREATE TABLE unmatched_receipts (
     resolved_at     TIMESTAMPTZ,
     resolved_by     UUID REFERENCES subjects(id),
     resolution_notes TEXT CHECK (resolution_notes IS NULL OR length(resolution_notes) >= 10),
-    brain_chain_hash CHAR(64) NOT NULL
+    memory_chain_hash CHAR(64) NOT NULL
 );
 
 CREATE INDEX unmatched_receipts_tenant ON unmatched_receipts (tenant_id, resolved_at) WHERE resolved_at IS NULL;
@@ -311,29 +311,29 @@ pub async fn handle_wise_webhook(
     if let Err(_) = signature::verify_signature(&public_key, &body, sig_header) {
         let refreshed = state.wise_keys.force_refresh(profile_id).await?;
         if signature::verify_signature(&refreshed, &body, sig_header).is_err() {
-            emit_brain_audit(BrainKind::WiseSignatureInvalid, profile_id).await;
+            emit_memory_audit(MemoryKind::WiseSignatureInvalid, profile_id).await;
             return StatusCode::UNAUTHORIZED;
         }
-        emit_brain_audit(BrainKind::WiseKeyRotated, profile_id).await;
+        emit_memory_audit(MemoryKind::WiseKeyRotated, profile_id).await;
     }
 
     // Parse + idempotency-check at INSERT
     let event: WiseEvent = match serde_json::from_slice(&body) {
         Ok(e) => e,
         Err(_) => {
-            emit_brain_audit(BrainKind::WiseSchemaInvalid, profile_id).await;
+            emit_memory_audit(MemoryKind::WiseSchemaInvalid, profile_id).await;
             return StatusCode::BAD_REQUEST;
         }
     };
     // §1 #6 staleness check
     if (Utc::now() - event.data.occurred_at).num_days() > 5 {
-        emit_brain_audit(BrainKind::WiseStaleEvent, profile_id).await;
+        emit_memory_audit(MemoryKind::WiseStaleEvent, profile_id).await;
         return StatusCode::OK;
     }
     // §1 #22 URL-vs-body profile_id cross-check
     if let Some(body_profile_id) = event.data.resource.profile_id {
         if body_profile_id != profile_id {
-            emit_brain_audit(BrainKind::WiseProfileMismatch, profile_id).await;
+            emit_memory_audit(MemoryKind::WiseProfileMismatch, profile_id).await;
             return StatusCode::BAD_REQUEST;
         }
     }
@@ -342,10 +342,10 @@ pub async fn handle_wise_webhook(
     let tenant_id = state.pool.tenant_for_profile(profile_id).await?;
     let insert_result = sqlx::query!(
         r#"INSERT INTO wise_webhook_events
-              (profile_id, event_id, event_type, tenant_id, occurred_at, signature, body, brain_chain_hash)
+              (profile_id, event_id, event_type, tenant_id, occurred_at, signature, body, memory_chain_hash)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
            ON CONFLICT (profile_id, event_id) DO NOTHING"#,
-        profile_id as i64, &event.id, event.event_type as _, tenant_id, event.data.occurred_at, sig_header, body_as_jsonb(&body), &brain_hash
+        profile_id as i64, &event.id, event.event_type as _, tenant_id, event.data.occurred_at, sig_header, body_as_jsonb(&body), &memory_hash
     ).execute(&state.pool).await;
 
     // §1 #8 WAL push then fast 200
@@ -388,8 +388,8 @@ pub async fn handle_wise_webhook(
 24. TLS 1.3 enforced; TLS 1.2 client gets connection refused.
 25. CFO can read raw event body via `GET /v1/admin/wise-events/{id}` (RLS-scoped); other roles cannot.
 26. `unmatched_receipts.resolution_notes` ≥ 10 chars enforced; resolve handler requires CFO role.
-27. BRAIN audit row emitted per 8 closed kinds.
-28. All scrubbable text routed through FR-BRAIN-111 before chain emission.
+27. memory audit row emitted per 8 closed kinds.
+28. All scrubbable text routed through FR-MEMORY-111 before chain emission.
 29. Webhook latency p99 < 4s (signature verify + DB insert + WAL push).
 30. Body retention 2 years; cleanup job NULLs body column while preserving metadata.
 
@@ -437,7 +437,7 @@ services/inv/
 │   │   ├── public_key.rs       # fetch + cache + rotation
 │   │   ├── processor.rs        # background WAL consumer + match delegate
 │   │   ├── unmatched.rs        # unmatched_receipts persistence
-│   │   ├── audit.rs            # 8 BRAIN kinds
+│   │   ├── audit.rs            # 8 memory kinds
 │   │   └── error.rs            # SignatureError + ProcessError
 │   └── admin/
 │       ├── wise_list.rs        # GET /v1/admin/wise-events
@@ -570,7 +570,7 @@ Authorization: Bearer <cfo>
 | 16 | TLS 1.2 client | TLS handshake | 3 | Connection refused |
 | 17 | Rate limit exceeded (>100/s/profile) | rate limiter | 3 | 429 + Retry-After |
 | 18 | DB outage during INSERT | sqlx error | 1 | 500; Wise retries within 5d |
-| 19 | BRAIN audit subprocess fails | timeout | 1 | WAL retry; sev-1 if exhausted |
+| 19 | memory audit subprocess fails | timeout | 1 | WAL retry; sev-1 if exhausted |
 | 20 | Background processor lock contention | pg_advisory_xact_lock | 3 | Skip + retry next tick |
 | 21 | Restore by non-CFO role | RBAC | 2 | 403 + sev-2 |
 | 22 | Restore with no pending event | application check | 3 | 404 |
@@ -580,7 +580,7 @@ Authorization: Bearer <cfo>
 | 26 | wise_profile_deprecated_at expired | timestamp + middleware | 3 | 410 GONE |
 | 27 | Duplicate UNIQUE INSERT race | ON CONFLICT DO NOTHING | 3 | Treated as duplicate; no error |
 | 28 | Background processor dies mid-event | WAL replay on restart | 2 | Resume from advisory lock release |
-| 29 | brain_chain_hash regex fails | CHECK | 1 | INSERT rejected |
+| 29 | memory_chain_hash regex fails | CHECK | 1 | INSERT rejected |
 | 30 | Public-key cache size unbounded | LRU max 10000 | 3 | Eviction |
 | 31 | Body > 1 MiB (Wise unlikely but defensive) | request body limit | 3 | 413 Payload Too Large |
 | 32 | Resolved unmatched receipt re-resolved | resolved_at check | 3 | 409 already_resolved |

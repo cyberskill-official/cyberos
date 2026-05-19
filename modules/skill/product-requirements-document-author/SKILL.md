@@ -7,7 +7,7 @@ description: >-
   "draft a PRD", "turn this brief into a PRD", or "expand the SOW into
   product requirements". Conducts a 3-5 question follow-up interview
   for PRD-specific decisions the brief did not cover, reads targeted
-  BRAIN scopes for additional context, applies amendment-batch protocol
+  memory scopes for additional context, applies amendment-batch protocol
   for iteration, and emits a draft PRD with per-claim authority markers.
   Cross-cutting (used at stage b and feeds stages d/e/f). Chains
   naturally into product-requirements-document-audit. Do NOT use for
@@ -21,7 +21,7 @@ metadata:
   cyberos-rubric-target: prd_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -35,8 +35,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -296,7 +296,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

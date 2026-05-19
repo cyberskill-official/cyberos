@@ -1,9 +1,7 @@
 ---
 name: ts-hello
 description: >-
-  Reference TypeScript skill — say hello with a structured greeting. Use as a
-  starting template for new CyberOS skills. Do NOT use in production — this is
-  a hello-world scaffold demonstrating the SKILL.md + WASM component pattern.
+  Reference TypeScript skill — say hello with a structured greeting. Use as a starting template for new CyberOS skills. Do NOT use in production — this is a hello-world scaffold demonstrating the SKILL.md + WASM component pattern. Use when user asks to "reference ts hello" or "look up ts hello".
 license: Apache-2.0
 compatibility: Fully offline. Compiled to wasm32-wasi via the Bun toolchain.
 metadata:

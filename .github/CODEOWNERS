@@ -1,0 +1,47 @@
+# CODEOWNERS for cyberos
+#
+# This file pins specific paths to required reviewer teams. Combined with
+# branch-protection rules requiring "review from code owners", a PR
+# touching a pinned path cannot merge without that team's approval.
+#
+# Legal-team gating (FR-CHAT-001 §1 #5 — README §2):
+#   - services/chat/PINNED_COMMIT          immutable license-posture anchor
+#   - services/chat/patches/**             cherry-picks from upstream
+#   - services/chat/CHANGELOG.cyberos.md   reviewed alongside patches
+#   - services/email/docker/stalwart.toml  Stalwart server config (security-critical)
+#   - services/email/migrations/**         message metadata + DKIM keystore schemas
+#
+# Security-team gating:
+#   - services/auth/**                     all AUTH module changes
+#   - services/email/src/dkim/**           DKIM keystore Rust code
+#   - .github/workflows/**                 CI workflow definitions
+#
+# Default owner: @cyberos/engineering
+
+* @cyberos/engineering
+
+# ---------------------------------------------------------------------------
+# CHAT service — fork-licensing posture
+# ---------------------------------------------------------------------------
+services/chat/PINNED_COMMIT                @cyberos/legal-team @cyberos/engineering
+services/chat/CYBEROS_PATCH_VERSION        @cyberos/legal-team @cyberos/engineering
+services/chat/patches/**                   @cyberos/legal-team @cyberos/engineering
+services/chat/CHANGELOG.cyberos.md         @cyberos/legal-team @cyberos/engineering
+
+# ---------------------------------------------------------------------------
+# EMAIL service — Stalwart deployment + DKIM keystore
+# ---------------------------------------------------------------------------
+services/email/docker/stalwart.toml        @cyberos/security-team @cyberos/engineering
+services/email/migrations/**               @cyberos/security-team @cyberos/engineering
+services/email/src/dkim/**                 @cyberos/security-team @cyberos/engineering
+
+# ---------------------------------------------------------------------------
+# AUTH service — RBAC + RLS + JWT (security-critical)
+# ---------------------------------------------------------------------------
+services/auth/**                           @cyberos/security-team @cyberos/engineering
+
+# ---------------------------------------------------------------------------
+# CI workflows
+# ---------------------------------------------------------------------------
+.github/workflows/**                       @cyberos/devops-team @cyberos/engineering
+.github/CODEOWNERS                         @cyberos/legal-team @cyberos/security-team

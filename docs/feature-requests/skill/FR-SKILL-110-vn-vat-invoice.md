@@ -3,7 +3,7 @@ id: FR-SKILL-110
 title: "vietnam-vat-invoice@1 skill — Vietnamese e-invoice (hóa đơn) Decree 123 XML emitter with GDT submission, digital signature, and per-invoice audit trail"
 module: SKILL
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 3
@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-SKILL-103, FR-SKILL-104, FR-SKILL-105, FR-SKILL-108, FR-SKILL-109, FR-BRAIN-111, FR-AUTH-003]
+memory_chain_hash: null
+related_frs: [FR-SKILL-103, FR-SKILL-104, FR-SKILL-105, FR-SKILL-108, FR-SKILL-109, FR-MEMORY-111, FR-AUTH-003]
 depends_on: [FR-SKILL-104, FR-SKILL-108, FR-SKILL-109]
 blocks: []
 
@@ -23,7 +23,7 @@ source_decisions:
   - DEC-230 (hóa đơn XML conforms to Decree 123/2020/NĐ-CP + Circular 78/2021/TT-BTC schemas)
   - DEC-231 (digital signature via ed25519 with seller's GDT-registered certificate)
   - DEC-232 (GDT submission via gửi-thông-báo API; receipt code is the legal proof of issue)
-  - DEC-233 (PDPL: buyer info is restricted; redact in logs; persist via encrypted BRAIN row)
+  - DEC-233 (PDPL: buyer info is restricted; redact in logs; persist via encrypted memory row)
   - DEC-234 (invoice number monotonically increasing per tenant per template; gap detection sev-1)
 
 language: rust 1.81
@@ -52,7 +52,7 @@ disallowed_tools:
 
 effort_hours: 11
 sub_tasks:
-  - "0.5h: SKILL.md frontmatter (allowed_tools=[BrainEmit, HttpFetch, BrainRead]; allowed_domains=hoadondientu.gdt.gov.vn)"
+  - "0.5h: SKILL.md frontmatter (allowed_tools=[MemoryEmit, HttpFetch, MemoryRead]; allowed_domains=hoadondientu.gdt.gov.vn)"
   - "0.5h: Cargo.toml + main.rs (broker subprocess entrypoint)"
   - "1.5h: xml_builder.rs — Decree 123 v1.2.0 XML structure (Header, BuyerInfo, ItemLines, TaxTotals, Summary)"
   - "0.5h: schemas/HDDT_v123_2020.xsd (vendored copy; CI gate validates output against it)"
@@ -63,8 +63,8 @@ sub_tasks:
   - "1.0h: lib.rs — public API: `emit_invoice(req: InvoiceRequest) -> Result<InvoiceOutcome, InvoiceError>`"
   - "1.5h: xml_schema_test.rs — happy path + 5 mandatory fields missing + buyer MST invalid (via FR-SKILL-108 cross-check)"
   - "1.0h: signer_test.rs — ed25519 round-trip + tampered XML detection"
-  - "1.5h: integration_test.rs — mock GDT submit endpoint; full pipeline (XML build → sign → submit → BRAIN audit)"
-risk_if_skipped: "Without authoritative hóa đơn emission, VN businesses cannot legally invoice (Decree 123 mandates e-invoice for all VAT-registered entities since 2022-07-01). Without XSD validation, malformed XMLs are silently accepted at submit-time and rejected at audit-time (months later → tax penalty + retroactive). Without digital signature, GDT rejects the invoice immediately. Without monotonic numbering, gaps trigger GDT audit flag and operator must explain. Without GDT submission, the invoice has no legal force (PDF alone isn't a hóa đơn). Without per-invoice BRAIN audit, reconciliation (matching customer payment to issued invoice to GDT-recorded transaction) becomes a manual nightmare at 1000+/mo scale."
+  - "1.5h: integration_test.rs — mock GDT submit endpoint; full pipeline (XML build → sign → submit → memory audit)"
+risk_if_skipped: "Without authoritative hóa đơn emission, VN businesses cannot legally invoice (Decree 123 mandates e-invoice for all VAT-registered entities since 2022-07-01). Without XSD validation, malformed XMLs are silently accepted at submit-time and rejected at audit-time (months later → tax penalty + retroactive). Without digital signature, GDT rejects the invoice immediately. Without monotonic numbering, gaps trigger GDT audit flag and operator must explain. Without GDT submission, the invoice has no legal force (PDF alone isn't a hóa đơn). Without per-invoice memory audit, reconciliation (matching customer payment to issued invoice to GDT-recorded transaction) becomes a manual nightmare at 1000+/mo scale."
 ---
 
 ## §1 — Description (BCP-14 normative)
@@ -72,7 +72,7 @@ risk_if_skipped: "Without authoritative hóa đơn emission, VN businesses canno
 The `vietnam-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese VAT invoices (hóa đơn điện tử) with digital signature and GDT submission. The contract:
 
 1. **MUST** accept an `InvoiceRequest` with: `seller` (object: tenant_id, mst, name, address, certificate_id), `buyer` (object: mst OR personal_id, name, address, optional phone, optional email), `lines` (array of `LineItem { description, quantity, unit, unit_price_vnd, tax_rate (0|5|8|10), discount_pct (0-100) }`), `template_id` (registered with GDT), `issue_date` (ISO date), `payment_method` (`cash | bank_transfer | other`), `currency` (default `VND`; foreign currency captured separately), `idempotency_key` (UUID; same key = same invoice).
-2. **MUST** validate buyer MST via FR-SKILL-108 BEFORE invoice generation. Inactive MST → `Err(BuyerMstInactive { status })`. Buyer-without-MST (private individual) → `personal_id` field used instead (CCCD via FR-BRAIN-111 ruleset).
+2. **MUST** validate buyer MST via FR-SKILL-108 BEFORE invoice generation. Inactive MST → `Err(BuyerMstInactive { status })`. Buyer-without-MST (private individual) → `personal_id` field used instead (CCCD via FR-MEMORY-111 ruleset).
 3. **MUST** assign an invoice number monotonically per (tenant_id, template_id):
     - Read current counter from sled `~/.cyberos/skills/vietnam-vat-invoice/<tenant_id>/<template_id>.seq`.
     - Increment by 1; persist atomically (sled transaction).
@@ -91,10 +91,10 @@ The `vietnam-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese 
     - 4xx HTTP → permanent failure; `Err(GdtRejected { reason })`; do NOT retry; do NOT advance counter (counter already advanced before submit; emit `vn.invoice_submission_failed` audit row with counter for manual reconciliation).
     - 5xx HTTP → transient; retry as above.
     - Final failure after retries → `Err(GdtUnreachable)`.
-9. **MUST** emit BRAIN audit row `vn.invoice_emitted` on successful submission with payload `{idempotency_key, invoice_serial, invoice_number, seller_mst, buyer_mst_redacted, total_vnd, tax_vnd, gdt_receipt_code, xml_hash, signed_xml_hash, submitted_at_ns, trace_id}`. The redacted buyer MST is `XX******<last_4>`.
+9. **MUST** emit memory audit row `vn.invoice_emitted` on successful submission with payload `{idempotency_key, invoice_serial, invoice_number, seller_mst, buyer_mst_redacted, total_vnd, tax_vnd, gdt_receipt_code, xml_hash, signed_xml_hash, submitted_at_ns, trace_id}`. The redacted buyer MST is `XX******<last_4>`.
 10. **MUST** emit `vn.invoice_submission_failed` on permanent failure with payload `{idempotency_key, invoice_serial, invoice_number, gdt_error_code, gdt_error_message, attempted_at_ns, trace_id}` so the operator can manually reconcile.
 11. **MUST** detect numbering gaps via `numbering::check_consecutive(tenant_id, template_id)`: lists missing numbers in the sequence; if any gap exists → emit `vn.invoice_gap_detected` sev-1 alarm via FR-OBS-007. Operator MUST file a "lost invoice" notice with GDT within 30 days.
-12. **MUST** support `cyberos skill vietnam-vat-invoice replay <idempotency_key>` for crash-recovery: looks up the BRAIN audit row; if `vn.invoice_emitted` exists, returns prior outcome (idempotent). If `vn.invoice_submission_failed` exists but no emit-row → return the prior error.
+12. **MUST** support `cyberos skill vietnam-vat-invoice replay <idempotency_key>` for crash-recovery: looks up the memory audit row; if `vn.invoice_emitted` exists, returns prior outcome (idempotent). If `vn.invoice_submission_failed` exists but no emit-row → return the prior error.
 13. **MUST** emit OTel span `skill.vn_vat_invoice.emit` with attrs `seller_mst`, `template_id`, `total_vnd_bucket` (log-binned), `outcome`, `gdt_round_trip_ms`, `duration_ms`.
 14. **MUST** emit OTel metrics:
     - `skill_vn_vat_invoice_emits_total{outcome}` (counter; outcome ∈ ok | xml_schema | gdt_rejected | gdt_unreachable | buyer_mst_inactive).
@@ -121,7 +121,7 @@ The `vietnam-vat-invoice@1` skill **MUST** emit Decree-123-compliant Vietnamese 
 
 **Why amount-in-words appended (§1 #4)?** Decree 123 Art. 10.3 requires the grand total in both numeric and Vietnamese-word form ("Một trăm năm mươi nghìn đồng"). Auditors and tax officers reference both. The conversion is non-trivial (millions, billions, fraction handling); centralised in `cyberos-vn-common::amount_to_words`.
 
-**Why idempotency via key + replay command (§1 #12)?** Crash mid-submit could leave us in indeterminate state. Replay queries BRAIN: emit-row exists → reuse the receipt code; emit-row absent + failed-row exists → caller sees the failure and decides (manually file lost-invoice notice OR retry with same key OR generate new). Without idempotency, network blips create duplicate hóa đơn — illegal.
+**Why idempotency via key + replay command (§1 #12)?** Crash mid-submit could leave us in indeterminate state. Replay queries memory: emit-row exists → reuse the receipt code; emit-row absent + failed-row exists → caller sees the failure and decides (manually file lost-invoice notice OR retry with same key OR generate new). Without idempotency, network blips create duplicate hóa đơn — illegal.
 
 **Why PDF rendering separate (§1 #16)?** Decree 123 prioritises XML as the legal format; PDF is the human-readable copy. Splitting concerns: XML emitter is fast, deterministic, no external dependencies; PDF renderer (wkhtmltopdf) is heavyweight and visual-template-driven. Operators rarely need PDF programmatically; CLI suffices for slice-3.
 
@@ -418,7 +418,7 @@ async fn submit_once(xml: &str) -> Result<String, InvoiceError> {
 
 ## §4 — Acceptance criteria
 
-1. **Happy path: emit + GDT submit succeeds** — request → outcome carries `gdt_receipt_code`; BRAIN row `vn.invoice_emitted` present.
+1. **Happy path: emit + GDT submit succeeds** — request → outcome carries `gdt_receipt_code`; memory row `vn.invoice_emitted` present.
 2. **Buyer MST validated upfront** — request with buyer.mst="9999999999" (invalid checksum) → FR-SKILL-108 returns ChecksumFailed → mapped to `Err(BuyerMstInactive { status: "checksum_failed" })`.
 3. **Buyer inactive MST rejected** — buyer.mst valid checksum but GDT status="03" → `Err(BuyerMstInactive { status: "03" })`.
 4. **Buyer without ID rejected** — both mst and personal_id None → `Err(BuyerIdMissing)`.
@@ -436,7 +436,7 @@ async fn submit_once(xml: &str) -> Result<String, InvoiceError> {
 16. **Idempotent replay** — emit with key X; emit again with same X → `Err(IdempotentReplay(prior_outcome))`; counter NOT advanced again.
 17. **Numbering gap triggers alarm** — manually skip number 5 → next emit calls `numbering::check_consecutive` → `vn.invoice_gap_detected` row + sev-1 metric.
 18. **Buyer info redacted in logs** — `tracing::info!(buyer = ?req.buyer)` → grep log → buyer name truncated `Nguyễn V*`; MST `0*****78`; phone redacted.
-19. **BRAIN audit success row schema** — `vn.invoice_emitted` row contains `buyer_mst_redacted` (not full MST); `xml_hash` + `signed_xml_hash` differ.
+19. **memory audit success row schema** — `vn.invoice_emitted` row contains `buyer_mst_redacted` (not full MST); `xml_hash` + `signed_xml_hash` differ.
 20. **OTel span emitted** — span `skill.vn_vat_invoice.emit` with `total_vnd_bucket` log-binned (1k/10k/100k/1M/10M/100M/1B+).
 21. **Multi-rate invoice totals correct** — lines with mixed 0%/8%/10% tax → `TToan` has 3 rate buckets; sum equals grand total.
 22. **CLI replay command** — `cyberos skill vietnam-vat-invoice replay <key>` → prints prior outcome JSON; exit 0.
@@ -501,7 +501,7 @@ async fn happy_path_emit_and_submit() {
     let mock_mst = MockGdtMst::with_active("0312345678", "CYBERSKILL JSC");
     let outcome = emit_invoice(test_request()).await.unwrap();
     assert_eq!(outcome.gdt_receipt_code, "HD2026-0001");
-    let row = brain_test_helper::latest("vn.invoice_emitted").await;
+    let row = memory_test_helper::latest("vn.invoice_emitted").await;
     assert_eq!(row["payload"]["gdt_receipt_code"], "HD2026-0001");
 }
 
@@ -520,7 +520,7 @@ async fn gdt_4xx_permanent_failure() {
     let _ = MockGdt::with_4xx("invalid template_id");
     let err = emit_invoice(test_request()).await.unwrap_err();
     assert!(matches!(err, InvoiceError::GdtRejected { .. }));
-    let row = brain_test_helper::latest("vn.invoice_submission_failed").await;
+    let row = memory_test_helper::latest("vn.invoice_submission_failed").await;
     assert!(row["payload"]["gdt_error_message"].as_str().unwrap().contains("invalid"));
 }
 
@@ -540,7 +540,7 @@ async fn numbering_gap_triggers_alarm() {
     // Force a gap by skipping number 3
     numbering::testing::force_skip(req.seller.tenant_id, &req.template_id).await;
     let _ = emit_invoice(test_request_with_key(Uuid::new_v4())).await.unwrap();
-    let alarm = brain_test_helper::latest("vn.invoice_gap_detected").await;
+    let alarm = memory_test_helper::latest("vn.invoice_gap_detected").await;
     assert!(alarm["payload"]["missing_numbers"].as_array().unwrap().contains(&serde_json::json!("0000003")));
 }
 ```
@@ -557,11 +557,11 @@ async fn numbering_gap_triggers_alarm() {
 
 - **FR-SKILL-103** — frontmatter schema.
 - **FR-SKILL-104** — broker enforces `allowed_tools` + domain allowlist on hoadondientu.gdt.gov.vn.
-- **FR-SKILL-105** — brain-capture SDK used for audit rows.
+- **FR-SKILL-105** — memory-capture SDK used for audit rows.
 - **FR-SKILL-108** — MST validation (buyer.mst checked upfront).
 - **FR-SKILL-109** — VietQR for embedded payment-collection (often appended to PDF render).
 - **FR-AUTH-003** — RLS on tenant cert lookup (tenant can only sign with own cert).
-- **FR-BRAIN-111** — PII rules for buyer info redaction.
+- **FR-MEMORY-111** — PII rules for buyer info redaction.
 
 ---
 
@@ -658,8 +658,8 @@ All resolved. Deferred:
 | Discount > 100% | validation at line | rejected | Caller fixes |
 | Line description with `<` or `&` | escape() handles | safe XML | None |
 | Unicode in buyer name | utf-8 preserved through C14N | GDT accepts | None |
-| sled DB corruption | numbering reservation Err | sev-1 alarm; daemon refuses | Operator restores from BRAIN audit replay |
-| BRAIN unavailable | audit row write fails | Invoice still emitted; audit lost; sev-2 alarm | Operator restores BRAIN; manually reconcile from GDT |
+| sled DB corruption | numbering reservation Err | sev-1 alarm; daemon refuses | Operator restores from memory audit replay |
+| memory unavailable | audit row write fails | Invoice still emitted; audit lost; sev-2 alarm | Operator restores memory; manually reconcile from GDT |
 | `cyberos-vn-common::amount_to_words` bug | unit tests catch | CI blocked | Author fixes |
 
 ---
@@ -668,11 +668,11 @@ All resolved. Deferred:
 
 - The XSD `HDDT_v123_2020.xsd` is vendored from GDT's official spec download; refresh on each Decree/Circular revision.
 - `xml_c14n` (exclusive C14N per RFC 3076) is the canonical-form library; ed25519 signature is over the C14N form so any whitespace normalisation upstream doesn't break verify.
-- The `Sha256` hash is appended to audit row for tamper detection — operators querying BRAIN can re-verify the XML matches what was submitted.
+- The `Sha256` hash is appended to audit row for tamper detection — operators querying memory can re-verify the XML matches what was submitted.
 - The `numbering::reserve` API is async (sled is sync but wrapped in `spawn_blocking`); the transaction guarantees no double-issue under concurrency.
 - The `IdempotentReplay` variant of InvoiceError carries the prior outcome boxed (avoids large stack frames); callers pattern-match to extract.
 - `amount_to_words` lives in `cyberos-vn-common` because it's also used by FR-INV (invoice module's UI rendering).
-- The CLI `cyberos skill vietnam-vat-invoice replay` is implemented as a BRAIN query (filter `vn.invoice_emitted` + `vn.invoice_submission_failed` by `idempotency_key`); no separate state store.
+- The CLI `cyberos skill vietnam-vat-invoice replay` is implemented as a memory query (filter `vn.invoice_emitted` + `vn.invoice_submission_failed` by `idempotency_key`); no separate state store.
 - The PDF renderer (§1 #16 SHOULD) is deferred; the XML emitter is the legal artifact.
 - Operators who need to mass-resubmit failed invoices (after fixing the GDT config issue) use new idempotency_keys; the failed-audit rows remain as the manual-reconciliation trail.
 

@@ -4,8 +4,8 @@
  <meta charset="UTF-8">
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>KB — RAG corpus · BRAIN companion · Auto-runbook source · CyberOS</title>
- <meta name="description" content="KB — the RAG corpus the AI grounds answers in, the BRAIN companion that adds long-form versioned documents to the audit-chained memory store, and the runbook catalogue source for OBS auto-runbook router. Three-layer search: FTS5 + BGE-M3 semantic + BGE-rerank-v2-m3. Span-level citations. ACL-aware retrieval. Dual-language vi + en.">
+ <title>KB — RAG corpus · memory companion · Auto-runbook source · CyberOS</title>
+ <meta name="description" content="KB — the RAG corpus the AI grounds answers in, the memory companion that adds long-form versioned documents to the audit-chained memory store, and the runbook catalogue source for OBS auto-runbook router. Three-layer search: FTS5 + BGE-M3 semantic + BGE-rerank-v2-m3. Span-level citations. ACL-aware retrieval. Dual-language vi + en.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -48,14 +48,14 @@
  <span class="text-5xl">📚</span>
  <h1 class="h-display">KB</h1>
  <span class="phase-chip phase-p1">P1 · Internal productivity</span>
- <span class="pill pill-planned">Planned · 9 FRs at 10/10 audit · ships at P1 after BRAIN search</span>
+ <span class="pill pill-planned">Planned · 9 FRs at 10/10 audit · ships at P1 after memory search</span>
  <span class="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded-full font-bold">Owner: CDO seat (interim CEO)</span>
  </div>
  <p class="text-xl text-slate-700 font-medium leading-snug max-w-3xl mb-3">
  <strong>The grounded-retrieval anchor.</strong> Every AI answer carries span-level citations to a specific paragraph of a specific KB doc. Vibes-shaped hallucination is a refuse-able state.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- KB is CyberOS's internal documentation surface and the canonical anchor for AI-grounded retrieval. Docs are markdown with YAML frontmatter; every save creates an immutable version. The renderer produces HTML for human reading and a sanitised plaintext stream for BRAIN ingestion. Search combines FTS5 (PGroonga for Vietnamese), semantic embeddings (BGE-M3), and a cross-encoder reranker (BGE-rerank-v2-m3) — the same triple-layer that powers BRAIN Layer 2. The flagship AI feature is "Ask this page", grounded only in the current doc + linked docs, with every claim citing a source span. Categories cover how-to, reference, decision-log, policy, runbook. Permissions tier from public → org-only → role-restricted. Vietnamese + English dual-language docs share a <code>translation_of</code> linkage..
+ KB is CyberOS's internal documentation surface and the canonical anchor for AI-grounded retrieval. Docs are markdown with YAML frontmatter; every save creates an immutable version. The renderer produces HTML for human reading and a sanitised plaintext stream for memory ingestion. Search combines FTS5 (PGroonga for Vietnamese), semantic embeddings (BGE-M3), and a cross-encoder reranker (BGE-rerank-v2-m3) — the same triple-layer that powers memory Layer 2. The flagship AI feature is "Ask this page", grounded only in the current doc + linked docs, with every claim citing a source span. Categories cover how-to, reference, decision-log, policy, runbook. Permissions tier from public → org-only → role-restricted. Vietnamese + English dual-language docs share a <code>translation_of</code> linkage..
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -117,7 +117,7 @@
 <section id="hero" class="module-section">
  <div class="bbg-card tint-kb p-6 mb-6">
  <p class="text-lg text-slate-700 leading-relaxed mb-5">
- KB is CyberOS's <strong>documentation surface and the canonical source for AI-grounded retrieval</strong>. The data model is simple: a <code>Document</code> has a slug, a markdown body, YAML frontmatter, a category, a permission tier, and a chain of <code>Version</code>s. Every save produces a new immutable version with a chained audit row in BRAIN. The renderer produces sanitised HTML (server-side) for human reading and a clean plaintext stream for BRAIN ingestion. Search is a three-layer stack: FTS5 / PGroonga (Vietnamese bigram tokenisation) for lexical, BGE-M3 embeddings (BRAIN Layer 2) for semantic, and BGE-rerank-v2-m3 cross-encoder for re-ranking. "Ask this page" produces an answer grounded only in the current doc + explicitly linked docs, with span-level citations. Permissions: public · org-only · role-restricted (with share-link tokens for time-bound external access). Dual-language: a doc has a <code>language</code> field and an optional <code>translation_of</code> link to its counterpart.
+ KB is CyberOS's <strong>documentation surface and the canonical source for AI-grounded retrieval</strong>. The data model is simple: a <code>Document</code> has a slug, a markdown body, YAML frontmatter, a category, a permission tier, and a chain of <code>Version</code>s. Every save produces a new immutable version with a chained audit row in memory. The renderer produces sanitised HTML (server-side) for human reading and a clean plaintext stream for memory ingestion. Search is a three-layer stack: FTS5 / PGroonga (Vietnamese bigram tokenisation) for lexical, BGE-M3 embeddings (memory Layer 2) for semantic, and BGE-rerank-v2-m3 cross-encoder for re-ranking. "Ask this page" produces an answer grounded only in the current doc + explicitly linked docs, with span-level citations. Permissions: public · org-only · role-restricted (with share-link tokens for time-bound external access). Dual-language: a doc has a <code>language</code> field and an optional <code>translation_of</code> link to its counterpart.
  </p>
  <div class="fact-grid">
  <div class="fact-card"><div class="label">Status</div><div class="value">Planned</div><div class="note">P1 · design phase</div></div>
@@ -126,7 +126,7 @@
  <div class="fact-card"><div class="label">Search stack</div><div class="value">3 layers</div><div class="note">FTS5 + semantic + reranker</div></div>
  <div class="fact-card"><div class="label">AI Q&amp;A</div><div class="value">Grounded</div><div class="note">span-level citations</div></div>
  <div class="fact-card"><div class="label">Languages</div><div class="value">vi + en</div><div class="note">translation_of linkage</div></div>
- <div class="fact-card"><div class="label">BRAIN ingest</div><div class="value">≤ 5 s p95</div><div class="note">(FR pending)</div></div>
+ <div class="fact-card"><div class="label">memory ingest</div><div class="value">≤ 5 s p95</div><div class="note">(FR pending)</div></div>
  <div class="fact-card"><div class="label">Est. LoC</div><div class="value">~6,500</div><div class="note">Rust + TS editor</div></div>
  </div>
  </div>
@@ -138,7 +138,7 @@
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- The naive read of KB: "it's our wiki." The real read: KB is what makes Genie a useful agent and OBS a useful operations console. Strip KB out and CUO has nothing to cite, OBS's auto-runbook router has nothing to consult, and "ask the docs" becomes "make stuff up." KB is the structured-knowledge half of the BRAIN protocol — long-form versioned, ACL-aware, server-rendered docs — that the audit-chained memory store doesn't replace but complements.
+ The naive read of KB: "it's our wiki." The real read: KB is what makes Genie a useful agent and OBS a useful operations console. Strip KB out and CUO has nothing to cite, OBS's auto-runbook router has nothing to consult, and "ask the docs" becomes "make stuff up." KB is the structured-knowledge half of the memory protocol — long-form versioned, ACL-aware, server-rendered docs — that the audit-chained memory store doesn't replace but complements.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-6">
  <div class="bbg-card p-5" style="border-top:4px solid var(--kb)">
@@ -149,10 +149,10 @@
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--kb)">
- <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--kb-dark)">Role 2 · BRAIN companion</div>
+ <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--kb-dark)">Role 2 · memory companion</div>
  <div class="font-bold text-slate-900 mb-2 text-base">Versioned long-form alongside chain-anchored memories</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- BRAIN is the audit-chained personal/tenant memory store; KB is the curated long-form companion. PROJ Issues, CRM Deals, OBS alerts can cite KB docs as authority (high-trust source) AND BRAIN memories (chain-anchored decision). Semantic search spans both. "Promote to canonical" elevates a doc to high-authority BRAIN source used by Lumi cross-tenant synthesis (if sync_class permits).
+ memory is the audit-chained personal/tenant memory store; KB is the curated long-form companion. PROJ Issues, CRM Deals, OBS alerts can cite KB docs as authority (high-trust source) AND memory memories (chain-anchored decision). Semantic search spans both. "Promote to canonical" elevates a doc to high-authority memory source used by Lumi cross-tenant synthesis (if sync_class permits).
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--kb)">
@@ -173,23 +173,23 @@ flowchart TB
  OBS["👁 OBS auto-runbook router<br>consult catalogue"]
  PROJ["📋 PROJ<br>Issues cite KB docs"]
  CRM["🤝 CRM<br>account context cites KB"]
- BRAIN["🧠 BRAIN<br>citation graph"]
- LUMI["☁ Lumi's BRAIN (P3+)<br>canonical-source cross-tenant"]
+ memory["🧠 memory<br>citation graph"]
+ LUMI["☁ Lumi's memory (P3+)<br>canonical-source cross-tenant"]
  PORTAL["🚪 PORTAL<br>public-readable docs"]
  MEMBER -- "read · write" --> KB
  KB --> GENIE
  KB --> OBS
  PROJ -- "cite" --> KB
  CRM -- "cite" --> KB
- KB --> BRAIN
+ KB --> memory
  KB -. "promote to canonical (sync_class permits)" .-> LUMI
  KB --> PORTAL
  classDef hub fill:#fef3c7,stroke:#92400e,stroke-width:3px,color:#451a03
  classDef mod fill:#e0e7ff,stroke:#3730a3
- classDef brain fill:#fef6e0,stroke:#9c750a
+ classDef memory fill:#fef6e0,stroke:#9c750a
  class KB hub
  class MEMBER,GENIE,OBS,PROJ,CRM,PORTAL mod
- class BRAIN,LUMI brain
+ class memory,LUMI memory
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -198,13 +198,13 @@ flowchart TB
  <thead><tr><th style="width:30%">Operation</th><th>How it happens</th><th>Why this split</th></tr></thead>
  <tbody>
  <tr><td>Doc save</td><td><strong>Manual</strong> Member action</td><td>Each save = new immutable version; never edit-in-place.</td></tr>
- <tr><td>Re-ingest to BRAIN Layer 2</td><td><strong>Auto</strong> on every save</td><td>Embedding + chunk-tracking; downstream RAG never stale.</td></tr>
+ <tr><td>Re-ingest to memory Layer 2</td><td><strong>Auto</strong> on every save</td><td>Embedding + chunk-tracking; downstream RAG never stale.</td></tr>
  <tr><td>Translation linkage</td><td><strong>Manual</strong> + auto-suggest</td><td>Author confirms <code>translation_of</code> after first VN/EN translation.</td></tr>
  <tr><td>"Ask this page" Q&amp;A</td><td><strong>Auto</strong> ground in current + linked docs</td><td>Bounded surface; ACL-aware; span citations always attached.</td></tr>
  <tr><td>Cross-KB Q&amp;A</td><td><strong>Auto</strong> + ACL filter pre-retrieval</td><td>Filter at retrieval time, never after; "no result" is OK.</td></tr>
- <tr><td>Promote to canonical</td><td><strong>Manual</strong> CDO action</td><td>Elevation grants high authority weight in BRAIN/Lumi synthesis; intentional.</td></tr>
+ <tr><td>Promote to canonical</td><td><strong>Manual</strong> CDO action</td><td>Elevation grants high authority weight in memory/Lumi synthesis; intentional.</td></tr>
  <tr><td>Runbook publish (for OBS)</td><td><strong>Manual</strong> after post-incident review</td><td>Runbook is a deliberate authoring act; on-call authors after resolving.</td></tr>
- <tr><td>ACL change</td><td><strong>Manual</strong> with audit row</td><td>Permission changes are high-impact; every change chains in BRAIN.</td></tr>
+ <tr><td>ACL change</td><td><strong>Manual</strong> with audit row</td><td>Permission changes are high-impact; every change chains in memory.</td></tr>
  <tr><td>Share-link generation (time-bound)</td><td><strong>Manual</strong>, <strong>auto-expire</strong></td><td>External access requires explicit token; auto-expires per policy.</td></tr>
  <tr><td>Stale-doc flag</td><td><strong>Auto</strong> nightly scan</td><td>Docs &gt; 6 months without view OR with dropped citation count flagged for review; CDO triages.</td></tr>
  </tbody>
@@ -218,7 +218,7 @@ flowchart TB
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why KB exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Three jobs in one module: (a) <strong>the docs surface</strong> a team needs for how-tos, runbooks, decision logs, and policies; (b) <strong>the canonical source for grounded AI retrieval</strong> — if you do not control where the AI answer comes from, you do not control what it says; (c) <strong>a per-doc permissioned publishing layer</strong> for Trust Center pages and client-shared documents. Off-the-shelf wikis (Notion, Confluence) handle (a) but treat (b) and (c) as afterthoughts. CyberOS treats (b) as the central design force: every KB document is a first-class BRAIN Layer 2 citation source, every Q&amp;A answer cites span-level back to KB, and every "promote to canonical" elevates a doc to a high-authority BRAIN source. That property is only credible when KB owns its versioning, ACL, and ingestion path.
+ Three jobs in one module: (a) <strong>the docs surface</strong> a team needs for how-tos, runbooks, decision logs, and policies; (b) <strong>the canonical source for grounded AI retrieval</strong> — if you do not control where the AI answer comes from, you do not control what it says; (c) <strong>a per-doc permissioned publishing layer</strong> for Trust Center pages and client-shared documents. Off-the-shelf wikis (Notion, Confluence) handle (a) but treat (b) and (c) as afterthoughts. CyberOS treats (b) as the central design force: every KB document is a first-class memory Layer 2 citation source, every Q&amp;A answer cites span-level back to KB, and every "promote to canonical" elevates a doc to a high-authority memory source. That property is only credible when KB owns its versioning, ACL, and ingestion path.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-5">
  <div class="bbg-card p-5">
@@ -234,7 +234,7 @@ flowchart TB
  <div class="bbg-card p-5">
  <div class="text-2xl mb-2">🪪</div>
  <div class="font-bold text-slate-900 mb-1">ACL-aware retrieval</div>
- <p class="text-sm text-slate-600">A user asking BRAIN a question only gets citations from KB docs they are allowed to read. ACL is enforced at retrieval time, not after.</p>
+ <p class="text-sm text-slate-600">A user asking memory a question only gets citations from KB docs they are allowed to read. ACL is enforced at retrieval time, not after.</p>
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
@@ -252,19 +252,19 @@ flowchart TB
  <table class="kt">
  <thead><tr><th style="width:8%">Axis</th><th style="width:24%">Question</th><th>Answer</th></tr></thead>
  <tbody>
- <tr><td><strong>5W · What</strong></td><td>What is KB?</td><td>A markdown-source, server-rendered HTML, versioned, ACL'd documentation system that ingests into BRAIN Layer 2 for AI-grounded retrieval. Three-layer search (FTS5 + semantic + reranker). "Ask this page" with span-level citations. Dual-language vi + en.</td></tr>
+ <tr><td><strong>5W · What</strong></td><td>What is KB?</td><td>A markdown-source, server-rendered HTML, versioned, ACL'd documentation system that ingests into memory Layer 2 for AI-grounded retrieval. Three-layer search (FTS5 + semantic + reranker). "Ask this page" with span-level citations. Dual-language vi + en.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who uses it?</td><td><strong>Members:</strong> read + write docs daily. <strong>CDO seat:</strong> owns the surface; reviews "promote to canonical" requests. <strong>Members in a category role:</strong> can edit docs in their category. <strong>Trust Center readers:</strong> public-readable docs for opted-in tenants. <strong>Agents:</strong> KB is the primary grounded-retrieval target.</td></tr>
- <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: SPA editor + reader. On every save: render → BRAIN ingest p95 ≤ 5 s. Nightly: dead-link detection; semantic index refresh on changed embeddings.</td></tr>
+ <tr><td><strong>5W · When</strong></td><td>When does it run?</td><td>Continuous: SPA editor + reader. On every save: render → memory ingest p95 ≤ 5 s. Nightly: dead-link detection; semantic index refresh on changed embeddings.</td></tr>
  <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (SG-1) with VN-residency RDS. P3+: multi-region read replicas. Source markdown is RDS + S3 (S3 for attachments and large binaries).</td></tr>
- <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Off-the-shelf wikis do not treat AI-grounded retrieval as a first-class concern; folding KB into BRAIN corrupts the BRAIN ingestion ledger; folding it into PROJ ties it to engagement-scoped lifetimes. Standalone module with tight BRAIN integration is the right shape.</td></tr>
- <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Editor writes markdown + frontmatter; on save, server validates, renders HTML (sanitised), computes diff vs prior version, creates a Version row, queues BRAIN ingest. Search: FTS5 / PGroonga produces top-100 lexical, BGE-M3 reranks, BGE-rerank-v2-m3 picks top-10. Q&amp;A: pull top spans, format prompt, call AI Gateway with citation-required system instruction.</td></tr>
+ <tr><td><strong>5W · Why</strong></td><td>Why a separate module?</td><td>Off-the-shelf wikis do not treat AI-grounded retrieval as a first-class concern; folding KB into memory corrupts the memory ingestion ledger; folding it into PROJ ties it to engagement-scoped lifetimes. Standalone module with tight memory integration is the right shape.</td></tr>
+ <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>Editor writes markdown + frontmatter; on save, server validates, renders HTML (sanitised), computes diff vs prior version, creates a Version row, queues memory ingest. Search: FTS5 / PGroonga produces top-100 lexical, BGE-M3 reranks, BGE-rerank-v2-m3 picks top-10. Q&amp;A: pull top spans, format prompt, call AI Gateway with citation-required system instruction.</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$55 / month single-tenant pilot (Fargate + RDS + Redis + S3). Embedding cost ~$0.0001 / doc-version; reranker ~$0.0005 / query. 50-tenant: ~$220 / month.</td></tr>
- <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) BRAIN ingest p95 ≤ 5 s ((FR pending)). (b) Q&amp;A must cite ((FR pending)). (c) Permissions enforced at retrieval time — ACL leak via Q&amp;A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in ((FR pending)). (e) Vietnamese-quality search ≥ 90% recall on a fixed evaluation corpus.</td></tr>
- <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 + PGroonga · pulldown-cmark for markdown · ammonia for HTML sanitisation · Redis 7 · S3 + KMS · BGE-M3 embedder + BGE-rerank-v2-m3 reranker (BRAIN-shared) · TipTap or CodeMirror for the editor · OpenTelemetry SDK.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) memory ingest p95 ≤ 5 s ((FR pending)). (b) Q&amp;A must cite ((FR pending)). (c) Permissions enforced at retrieval time — ACL leak via Q&amp;A is a sev-0 bug. (d) Trust Center pages are public-readable only when explicitly opted in ((FR pending)). (e) Vietnamese-quality search ≥ 90% recall on a fixed evaluation corpus.</td></tr>
+ <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum · sqlx · PostgreSQL 16 + PGroonga · pulldown-cmark for markdown · ammonia for HTML sanitisation · Redis 7 · S3 + KMS · BGE-M3 embedder + BGE-rerank-v2-m3 reranker (memory-shared) · TipTap or CodeMirror for the editor · OpenTelemetry SDK.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Markdown source of truth (not block-based proprietary). Immutable versioning (no in-place edit). Server-side render (no client-side trust). FTS5 / PGroonga + semantic + reranker triple-layer (not just one). ACL at retrieval time (not at display time).</td></tr>
- <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. PGroonga compiled into the RDS image. Redis hot cache. Embedding + reranker GPU node shared with BRAIN.</td></tr>
+ <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate axum service. RDS Postgres Multi-AZ. PGroonga compiled into the RDS image. Redis hot cache. Embedding + reranker GPU node shared with memory.</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>0.4 FTE (CDO seat) at P1 launch + 0.1 FTE (CCO for Trust Center pages). CTO owns the engine.</td></tr>
- <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Search p95 ≤ 350 ms, Q&amp;A p95 ≤ 4 s end-to-end, citation accuracy ≥ 95% (claim → source span), BRAIN ingest lag p95 ≤ 5 s, Vietnamese-query recall ≥ 90%.</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>Search p95 ≤ 350 ms, Q&amp;A p95 ≤ 4 s end-to-end, citation accuracy ≥ 95% (claim → source span), memory ingest lag p95 ≤ 5 s, Vietnamese-query recall ≥ 90%.</td></tr>
  </tbody>
  </table>
  </div>
@@ -276,7 +276,7 @@ flowchart TB
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- KB is one axum service. Four surfaces (GraphQL subgraph, REST admin, public-readable HTML for Trust Center pages, MCP tool catalogue). Three stores (PostgreSQL canonical + PGroonga + FTS5, Redis hot cache, S3 for attachments). The renderer and the BRAIN ingester are separate concerns: the renderer produces HTML for humans; the BRAIN ingester produces a sanitised plaintext + chunking stream for vectorisation.
+ KB is one axum service. Four surfaces (GraphQL subgraph, REST admin, public-readable HTML for Trust Center pages, MCP tool catalogue). Three stores (PostgreSQL canonical + PGroonga + FTS5, Redis hot cache, S3 for attachments). The renderer and the memory ingester are separate concerns: the renderer produces HTML for humans; the memory ingester produces a sanitised plaintext + chunking stream for vectorisation.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -301,14 +301,14 @@ graph TB
  RENDER["Server-side renderer<br>pulldown-cmark + ammonia"]
  DIFF["Diff engine"]
  ACL["ACL gate<br>public · org · role"]
- BRAIN_ING["BRAIN ingester<br>chunk + sanitise"]
+ MEMORY_ING["memory ingester<br>chunk + sanitise"]
  SEARCH["Search engine<br>FTS5 + semantic + rerank"]
  QA["Q&A grounded composer"]
  XLATE["Translation linker"]
  BACKLINK["Backlink computer"]
  end
 
- subgraph EMBED ["BRAIN-shared"]
+ subgraph EMBED ["memory-shared"]
  EMB["BGE-M3 embedder"]
  RANK["BGE-rerank-v2-m3 reranker"]
  end
@@ -320,7 +320,7 @@ graph TB
  end
 
  subgraph SINKS ["Sinks"]
- BRAIN["🧠 BRAIN<br>Layer 2 ingestion · audit"]
+ memory["🧠 memory<br>Layer 2 ingestion · audit"]
  AI["⚡ AI Gateway"]
  OBS["👁 OBS"]
  end
@@ -340,10 +340,10 @@ graph TB
  DOC --> VER
  DOC --> RENDER
  DOC --> DIFF
- DOC --> BRAIN_ING
+ DOC --> MEMORY_ING
  DOC --> ACL
- BRAIN_ING --> BRAIN
- BRAIN_ING --> EMB
+ MEMORY_ING --> memory
+ MEMORY_ING --> EMB
  SEARCH --> EMB
  SEARCH --> RANK
  QA --> AI
@@ -358,9 +358,9 @@ graph TB
  classDef planned fill:#fef6e0,stroke:#92400e
  classDef store fill:#f5f3ff,stroke:#7c3aed
  classDef sink fill:#f5ede6,stroke:#45210e
- class SPA,PUB,AGENT,GQL,REST,HTMLPUB,MCP,DOC,VER,RENDER,DIFF,ACL,BRAIN_ING,SEARCH,QA,XLATE,BACKLINK,EMB,RANK planned
+ class SPA,PUB,AGENT,GQL,REST,HTMLPUB,MCP,DOC,VER,RENDER,DIFF,ACL,MEMORY_ING,SEARCH,QA,XLATE,BACKLINK,EMB,RANK planned
  class PG,RED,S3 store
- class BRAIN,AI,OBS sink
+ class memory,AI,OBS sink
  </div>
  </div>
 
@@ -368,7 +368,7 @@ graph TB
  <div class="grid md:grid-cols-2 gap-3 mb-5">
  <div class="cat-card"><div class="cat-name">how-to</div><p class="text-sm text-slate-600">Step-by-step instructions: "How to file a leave request", "How to onboard a Member".</p></div>
  <div class="cat-card"><div class="cat-name">reference</div><p class="text-sm text-slate-600">Stable facts: API reference, role catalogue, rate cards, compliance citations.</p></div>
- <div class="cat-card"><div class="cat-name">decision-log</div><p class="text-sm text-slate-600">Why we did X. Mirrors a BRAIN <code>memories/decisions/</code> entry but human-readable.</p></div>
+ <div class="cat-card"><div class="cat-name">decision-log</div><p class="text-sm text-slate-600">Why we did X. Mirrors a memory <code>memories/decisions/</code> entry but human-readable.</p></div>
  <div class="cat-card"><div class="cat-name">policy</div><p class="text-sm text-slate-600">Company policy: leave, compensation, security, code of conduct.</p></div>
  <div class="cat-card"><div class="cat-name">runbook</div><p class="text-sm text-slate-600">Incident-response playbooks: AUTH key compromise, EMAIL Stalwart CVE, payroll outage.</p></div>
  <div class="cat-card"><div class="cat-name">trust-center</div><p class="text-sm text-slate-600">Public-readable on opt-in tenants. DPA, sub-processor list, security overview, DMARC status.</p></div>
@@ -383,14 +383,14 @@ graph TB
  <tr><td><code>version.rs</code></td><td>services/kb/src/version.rs</td><td>Version archiver. Every save → new immutable row. Retains markdown + rendered HTML hash.</td></tr>
  <tr><td><code>renderer.rs</code></td><td>services/kb/src/renderer.rs</td><td>Server-side markdown → HTML. Uses pulldown-cmark + ammonia (sanitise). No client-side JS execution.</td></tr>
  <tr><td><code>diff.rs</code></td><td>services/kb/src/diff.rs</td><td>Unified diff between versions. Powers the version-history UI.</td></tr>
- <tr><td><code>brain_ingest.rs</code></td><td>services/kb/src/brain_ingest.rs</td><td>On every version save: strip markdown, chunk at semantic boundaries, write BRAIN Layer 2 rows + embeddings. p95 ≤ 5 s ((FR pending)).</td></tr>
+ <tr><td><code>memory_ingest.rs</code></td><td>services/kb/src/memory_ingest.rs</td><td>On every version save: strip markdown, chunk at semantic boundaries, write memory Layer 2 rows + embeddings. p95 ≤ 5 s ((FR pending)).</td></tr>
  <tr><td><code>search.rs</code></td><td>services/kb/src/search.rs</td><td>Triple-layer search. FTS5 / PGroonga → top-100; BGE-M3 cosine top-30; BGE-rerank-v2-m3 → top-10.</td></tr>
  <tr><td><code>qa.rs</code></td><td>services/kb/src/qa.rs</td><td>Q&amp;A composer. Pull top spans → format prompt with citation-required system instruction → call AI Gateway → parse cited answer.</td></tr>
  <tr><td><code>acl.rs</code></td><td>services/kb/src/acl.rs</td><td>ACL gate at retrieval time. Filters spans before they reach the QA composer.</td></tr>
  <tr><td><code>share_link.rs</code></td><td>services/kb/src/share_link.rs</td><td>Time-bound share-link tokens for external readers ((FR pending)).</td></tr>
  <tr><td><code>translation.rs</code></td><td>services/kb/src/translation.rs</td><td>Translation-of linkage. Reader sees doc in JWT-locale; AI grounds across language pairs.</td></tr>
  <tr><td><code>backlink.rs</code></td><td>services/kb/src/backlink.rs</td><td>Backlink graph: "what links here" query.</td></tr>
- <tr><td><code>promote.rs</code></td><td>services/kb/src/promote.rs</td><td>"Promote to canonical" — elevates a doc to a high-authority BRAIN source ((FR pending)). Requires CDO approval.</td></tr>
+ <tr><td><code>promote.rs</code></td><td>services/kb/src/promote.rs</td><td>"Promote to canonical" — elevates a doc to a high-authority memory source ((FR pending)). Requires CDO approval.</td></tr>
  <tr><td><code>notion_import.rs</code></td><td>services/kb/src/notion_import.rs</td><td>Notion-export ZIP import ((FR pending)). Preserves links + categories.</td></tr>
  <tr><td><code>export.rs</code></td><td>services/kb/src/export.rs</td><td>Per-page or per-tree markdown export.</td></tr>
  <tr><td><code>trust_center.rs</code></td><td>services/kb/src/trust_center.rs</td><td>Public-readable Trust Center pages. Opt-in per tenant ((FR pending)).</td></tr>
@@ -420,7 +420,7 @@ erDiagram
  DOCUMENT ||--o{ TAG: "tagged"
  DOCUMENT ||--o{ ATTACHMENT: "has"
  DOCUMENT ||--o{ BACKLINK: "linked from"
- DOCUMENT ||--o| BRAIN_INGEST_STATE: "ingested"
+ DOCUMENT ||--o| MEMORY_INGEST_STATE: "ingested"
  DOCUMENT ||--o{ SHARE_LINK: "shared via"
  VERSION ||--o| CITATION_SPAN: "indexed"
  DOCUMENT ||--o| PROMOTION: "promoted"
@@ -460,7 +460,7 @@ erDiagram
  timestamp saved_at
  uuid saved_by FK
  string change_summary
- string brain_chain
+ string memory_chain
  }
  PERMISSION {
  uuid document_id FK
@@ -486,7 +486,7 @@ erDiagram
  uuid to_document_id FK
  int link_count "occurrences"
  }
- BRAIN_INGEST_STATE {
+ MEMORY_INGEST_STATE {
  uuid document_id PK
  uuid latest_ingested_version_id FK
  int chunks_emitted
@@ -509,11 +509,11 @@ erDiagram
  int chunk_index
  int char_start
  int char_end
- string embedding_id "BRAIN Layer 2 ref"
+ string embedding_id "memory Layer 2 ref"
  }
  PROMOTION {
  uuid document_id PK
- string brain_canonical_path "memories/…"
+ string memory_canonical_path "memories/…"
  timestamp promoted_at
  uuid promoted_by FK
  }
@@ -565,7 +565,7 @@ type Document @key(fields: "id") {
  attachments: [Attachment!]!
  backlinks: [Document!]!
  trustCenterPublished: Boolean!
- brainIngestState: BrainIngestState
+ memoryIngestState: MemoryIngestState
  promotion: Promotion
 }
 
@@ -619,7 +619,7 @@ type Mutation {
  saveDocument(id: ID!, markdown: String!, changeSummary: String!): Version!
  setPermission(id: ID!, tier: PermissionTier!, allowedRoleCodes: [String!]): Document!
  @requiresScopes(scopes: [["kb.permission"]])
- promoteToCanonical(id: ID!, brainCanonicalPath: String!): Promotion!
+ promoteToCanonical(id: ID!, memoryCanonicalPath: String!): Promotion!
  @requiresScopes(scopes: [["kb.promote"]])
  createShareLink(id: ID!, validUntil: DateTime!, maxViews: Int): ShareLinkResult!
  importNotionZip(zipS3Key: String!): NotionImportJob!
@@ -661,7 +661,7 @@ type Mutation {
  <tr><td><code>cyberos.kb.diff</code></td><td>document_id, from, to</td><td>diff text</td><td>readonly · scope=kb.read</td></tr>
  <tr><td><code>cyberos.kb.save</code></td><td>document_id, markdown, change_summary</td><td>Version</td><td>scope=kb.write</td></tr>
  <tr><td><code>cyberos.kb.create_share_link</code></td><td>document_id, valid_until, max_views?</td><td>{token, url}</td><td>scope=kb.share</td></tr>
- <tr><td><code>cyberos.kb.promote</code></td><td>document_id, brain_canonical_path</td><td>Promotion</td><td>destructive · human-confirm · scope=kb.promote</td></tr>
+ <tr><td><code>cyberos.kb.promote</code></td><td>document_id, memory_canonical_path</td><td>Promotion</td><td>destructive · human-confirm · scope=kb.promote</td></tr>
  </tbody>
  </table>
  </div>
@@ -673,7 +673,7 @@ type Mutation {
 <section id="key-flows" class="module-section">
  <header class="section-head"><span class="section-num">6</span><h2>Key flows</h2></header>
 
- <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Create / edit a doc with BRAIN re-ingest</h3>
+ <h3 class="text-lg font-bold mb-3 mt-4">Flow 1 — Create / edit a doc with memory re-ingest</h3>
  <div class="bbg-card p-5 mb-6">
  <div class="mermaid">
 sequenceDiagram
@@ -682,10 +682,10 @@ sequenceDiagram
  participant API as KB GraphQL
  participant V as Version archiver
  participant R as Renderer
- participant BI as BRAIN ingester
+ participant BI as memory ingester
  participant EMB as BGE-M3 embedder
- participant BR as 🧠 BRAIN Layer 2
- participant B as BRAIN audit
+ participant BR as 🧠 memory Layer 2
+ participant B as memory audit
 
  U->>API: saveDocument(id, markdown, change_summary)
  API->>API: parse + validate frontmatter
@@ -701,7 +701,7 @@ sequenceDiagram
  BI->>EMB: embed chunks (batch)
  EMB-->>BI: vectors
  BI->>BR: upsert chunks + vectors
- BI->>B: kb.brain_ingested {chunks, ms}
+ BI->>B: kb.memory_ingested {chunks, ms}
  Note over BI,B: total p95 ≤ 5 s ((FR pending))
  </div>
  </div>
@@ -717,7 +717,7 @@ sequenceDiagram
  participant EMB as BGE-M3 embedder
  participant ACL as ACL gate
  participant RANK as BGE-rerank-v2-m3
- participant B as BRAIN audit
+ participant B as memory audit
 
  U->>API: GET /kb/search?q="hóa đơn cấp"
  API->>FTS: tsquery + PGroonga bigram match → top-100
@@ -748,7 +748,7 @@ sequenceDiagram
  participant CHUNKS as chunk store
  participant QA as Q&A composer
  participant AI as ⚡ AI Gateway
- participant B as BRAIN audit
+ participant B as memory audit
 
  U->>API: askPage(document_id, "When do I file VAT?")
  API->>ACL: check subject can read document
@@ -781,18 +781,18 @@ sequenceDiagram
  participant M as Member
  participant API as KB
  participant CDO as CDO seat
- participant BR as 🧠 BRAIN canonical
- participant B as BRAIN audit
+ participant BR as 🧠 memory canonical
+ participant B as memory audit
 
- M->>API: promoteToCanonical(doc, brain_path="memories/policy/leave.md")
+ M->>API: promoteToCanonical(doc, memory_path="memories/policy/leave.md")
  API->>API: validate scope=kb.promote
  API->>CDO: request approval (CHAT Notify)
  CDO->>API: approve
  API->>BR: write canonical memory entry mirroring KB doc
- BR-->>API: brain_chain
- API->>B: kb.promoted {document, brain_path, approver}
+ BR-->>API: memory_chain
+ API->>B: kb.promoted {document, memory_path, approver}
  API-->>M: 200 Promotion
- Note over BR: doc is now a high-authority BRAIN source<br>(Layer-1 canonical, not just Layer-2 chunk)
+ Note over BR: doc is now a high-authority memory source<br>(Layer-1 canonical, not just Layer-2 chunk)
  </div>
  </div>
 
@@ -806,8 +806,8 @@ sequenceDiagram
  participant S3 as S3
  participant IMP as Notion importer
  participant API as KB
- participant BI as BRAIN ingester
- participant B as BRAIN audit
+ participant BI as memory ingester
+ participant B as memory audit
 
  U->>CLI: cyberos-kb import notion --zip notion-export.zip
  CLI->>S3: upload zip
@@ -831,7 +831,7 @@ sequenceDiagram
 <section id="lifecycle" class="module-section">
  <header class="section-head"><span class="section-num">7</span><h2>Document lifecycle</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- A document's status is implicit (it always has a current version). Versions are immutable; archive / restore moves the <code>current_version_id</code> pointer. Promotion is a one-way state transition that registers the doc as a BRAIN canonical source.
+ A document's status is implicit (it always has a current version). Versions are immutable; archive / restore moves the <code>current_version_id</code> pointer. Promotion is a one-way state transition that registers the doc as a memory canonical source.
  </p>
  <div class="bbg-card p-5 mb-5">
  <div class="mermaid">
@@ -845,7 +845,7 @@ stateDiagram-v2
  Archived --> Published: restore
  Archived --> Purged: DSAR or 90-d after tenant offboard
  Purged --> [*]
- Promoted --> Archived: archive (BRAIN canonical retained)
+ Promoted --> Archived: archive (memory canonical retained)
  </div>
  </div>
 
@@ -856,7 +856,7 @@ stateDiagram-v2
  <tbody>
  <tr><td><code>policy</code></td><td>10 years</td><td>Required by Vietnamese Decree 13 / labour law.</td></tr>
  <tr><td><code>runbook</code></td><td>5 years</td><td>Incident-response audit support.</td></tr>
- <tr><td><code>decision-log</code></td><td>indefinite</td><td>Mirrors BRAIN decisions retention.</td></tr>
+ <tr><td><code>decision-log</code></td><td>indefinite</td><td>Mirrors memory decisions retention.</td></tr>
  <tr><td><code>reference</code></td><td>indefinite</td><td>Foundational facts.</td></tr>
  <tr><td><code>how-to</code></td><td>2 years</td><td>How-tos drift; old versions archived.</td></tr>
  <tr><td><code>trust-center</code></td><td>indefinite</td><td>External commitments — provenance retained.</td></tr>
@@ -888,7 +888,7 @@ stateDiagram-v2
  <tbody>
  <tr><td><code>N(FR pending)</code></td><td>Search p95</td><td>≤ 350 ms</td><td>OBS histogram</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Q&amp;A p95 (end-to-end)</td><td>≤ 4 s</td><td>OBS + AI Gateway</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>BRAIN ingest p95</td><td>≤ 5 s ((FR pending))</td><td>BI histogram</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>memory ingest p95</td><td>≤ 5 s ((FR pending))</td><td>BI histogram</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Document render p95 (cache-cold)</td><td>≤ 250 ms</td><td>OBS histogram</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Vietnamese-query recall (eval corpus)</td><td>≥ 90%</td><td>quarterly review</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Citation accuracy</td><td>≥ 95%</td><td>monthly human review of 50 Q&amp;A pairs</td></tr>
@@ -909,16 +909,16 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- KB depends on AUTH (RBAC + ACL), BRAIN (Layer 2 ingestion target + audit), AI Gateway (Q&amp;A composer), MCP (CUO tools), and OBS. It is depended on by CUO (grounded answers), Trust Center readers, and downstream agents that ask KB questions.
+ KB depends on AUTH (RBAC + ACL), memory (Layer 2 ingestion target + audit), AI Gateway (Q&amp;A composer), MCP (CUO tools), and OBS. It is depended on by CUO (grounded answers), Trust Center readers, and downstream agents that ask KB questions.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
 graph LR
  subgraph upstream ["KB depends on"]
  AUTH["🔐 AUTH<br>RBAC + ACL"]
- BRAIN["🧠 BRAIN<br>Layer 2 + audit"]
+ memory["🧠 memory<br>Layer 2 + audit"]
  AI["⚡ AI Gateway<br>Q&A composer"]
- EMB["BGE-M3 + reranker<br>(BRAIN-shared)"]
+ EMB["BGE-M3 + reranker<br>(memory-shared)"]
  MCP["🔌 MCP"]
  OBS["👁 OBS"]
  end
@@ -930,7 +930,7 @@ graph LR
  CHAT["💬 CHAT<br>link previews"]
  end
  AUTH --> KB
- BRAIN --> KB
+ memory --> KB
  AI --> KB
  EMB --> KB
  MCP --> KB
@@ -942,7 +942,7 @@ graph LR
 
  classDef shipped fill:#f5ede6,stroke:#45210e
  classDef planned fill:#fef6e0,stroke:#9c750a
- class BRAIN,EMB shipped
+ class memory,EMB shipped
  class KB,AUTH,AI,MCP,OBS,CUO,PORTAL,EMAIL,CHAT planned
  </div>
  </div>
@@ -959,10 +959,10 @@ graph LR
  <thead><tr><th>Regulation / standard</th><th>Article / clause</th><th>KB feature that satisfies it</th></tr></thead>
  <tbody>
  <tr><td>Vietnam PDPL (Law 91/2025)</td><td>Art. 14 — DSAR</td><td>DSAR export of every doc a subject authored or edited.</td></tr>
- <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Processing log</td><td>Every save / view writes a BRAIN audit row.</td></tr>
+ <tr><td>Vietnam Decree 13/2023</td><td>Art. 17 — Processing log</td><td>Every save / view writes a memory audit row.</td></tr>
  <tr><td>Vietnam Decree 53/2022</td><td>Art. 26 — Residency</td><td>VN-tenant docs on hanoi-1 RDS + S3.</td></tr>
  <tr><td>GDPR (EU 2016/679)</td><td>Art. 15 — Right of access</td><td>DSAR export.</td></tr>
- <tr><td>GDPR</td><td>Art. 17 — Right to erasure</td><td>Document purge with audit row; KB Layer 2 chunk removal cascades to BRAIN.</td></tr>
+ <tr><td>GDPR</td><td>Art. 17 — Right to erasure</td><td>Document purge with audit row; KB Layer 2 chunk removal cascades to memory.</td></tr>
  <tr><td>ISO/IEC 27001:2022</td><td>A.5.10 — Acceptable use</td><td>Policy docs live in KB; acceptance audit via read receipts.</td></tr>
  <tr><td>ISO/IEC 27001:2022</td><td>A.8.5 — Secure authentication</td><td>ACL-gated retrieval; share-link tokens time-bound.</td></tr>
  <tr><td>SOC 2 Type II</td><td>CC2.2 — Internal communication</td><td>KB is the canonical doc surface for policy + runbook.</td></tr>
@@ -985,12 +985,12 @@ graph LR
  <tbody>
  <tr><td><code>R-KB-001</code></td><td>ACL leak via search / Q&amp;A surface</td><td>Low</td><td>High</td><td>CSO</td><td>ACL applied <em>before</em> reranking + LLM; CI test asserts a restricted doc cannot surface.</td></tr>
  <tr><td><code>R-KB-002</code></td><td>Q&amp;A hallucinates a citation that does not match the cited span</td><td>Medium</td><td>Medium</td><td>CDO</td><td>QA composer validates every cited span_id; mismatched citations rejected; "I don't know" returned.</td></tr>
- <tr><td><code>R-KB-003</code></td><td>BRAIN ingest backlog blinds retrieval after major doc rewrite</td><td>Medium</td><td>Medium</td><td>CDO</td><td>p95 ≤ 5 s SLO; backlog alarm at &gt; 60 s pages CDO.</td></tr>
+ <tr><td><code>R-KB-003</code></td><td>memory ingest backlog blinds retrieval after major doc rewrite</td><td>Medium</td><td>Medium</td><td>CDO</td><td>p95 ≤ 5 s SLO; backlog alarm at &gt; 60 s pages CDO.</td></tr>
  <tr><td><code>R-KB-004</code></td><td>Vietnamese tokenisation regression on PGroonga upgrade</td><td>Low</td><td>Medium</td><td>CTO</td><td>50-query VN eval corpus run on every PGroonga upgrade.</td></tr>
  <tr><td><code>R-KB-005</code></td><td>XSS via markdown embedding raw HTML</td><td>Low</td><td>High</td><td>CSO</td><td>ammonia sanitiser + strict CSP; fuzz tests on every PR.</td></tr>
  <tr><td><code>R-KB-006</code></td><td>Notion import truncates large pages</td><td>Medium</td><td>Low</td><td>CTO</td><td>Page-size guard; rejected pages reported in import summary.</td></tr>
  <tr><td><code>R-KB-007</code></td><td>Share-link token replay after expiry</td><td>Low</td><td>Medium</td><td>CSO</td><td>Token expiry enforced server-side; revocation propagates to Redis cache within 30 s.</td></tr>
- <tr><td><code>R-KB-008</code></td><td>Promoted-to-canonical doc later modified, BRAIN canonical out of sync</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Demotion required before edit on promoted doc; or auto re-promotion with audit row.</td></tr>
+ <tr><td><code>R-KB-008</code></td><td>Promoted-to-canonical doc later modified, memory canonical out of sync</td><td>Medium</td><td>Medium</td><td>CDO</td><td>Demotion required before edit on promoted doc; or auto re-promotion with audit row.</td></tr>
  <tr><td><code>R-KB-009</code></td><td>Translation drift between vi and en versions</td><td>Medium</td><td>Low</td><td>CCO</td><td>Drift detection (word-count + key-phrase diff); flagged in editor UI.</td></tr>
  <tr><td><code>R-KB-010</code></td><td>Public Trust Center page reveals private policy by misconfiguration</td><td>Low</td><td>High</td><td>CCO</td><td>Trust-center publish requires double-confirm + audit row; CI test asserts no role-restricted docs published.</td></tr>
  <tr><td><code>R-KB-011</code></td><td><strong>Runbook catalogue drift — runbook claims "increase Bedrock quota" but tenant uses Vertex</strong></td><td>Medium</td><td>Medium</td><td>CDO</td><td>Runbooks tagged with applicability (provider, region, severity); CUO triage filters before suggestion; staleness scan flags &gt; 6mo unverified.</td></tr>
@@ -1016,17 +1016,17 @@ graph LR
  <tr><td><strong>Search p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 350 ms</td></tr>
  <tr><td><strong>Q&amp;A p95</strong></td><td>histogram</td><td>OBS + AI Gateway</td><td>≤ 4 s</td></tr>
  <tr><td><strong>Citation accuracy</strong></td><td>matching_spans / claims</td><td>monthly human review</td><td>≥ 95%</td></tr>
- <tr><td><strong>BRAIN ingest p95</strong></td><td>histogram</td><td>BI</td><td>≤ 5 s</td></tr>
+ <tr><td><strong>memory ingest p95</strong></td><td>histogram</td><td>BI</td><td>≤ 5 s</td></tr>
  <tr><td><strong>VN-query recall</strong></td><td>relevant_returned / relevant_total</td><td>quarterly eval</td><td>≥ 90%</td></tr>
  <tr><td><strong>"I don't know" rate (out-of-corpus)</strong></td><td>idk / total_questions</td><td>red-team</td><td>≥ 90%</td></tr>
- <tr><td><strong>Docs per Member</strong></td><td>active_docs / members</td><td>BRAIN audit</td><td>tracked; baseline 8</td></tr>
- <tr><td><strong>Stale-doc rate</strong></td><td>&gt; 180 d untouched / total</td><td>BRAIN</td><td>≤ 25%</td></tr>
- <tr><td><strong>ACL-leak incidents</strong></td><td>count</td><td>BRAIN audit</td><td>= 0</td></tr>
+ <tr><td><strong>Docs per Member</strong></td><td>active_docs / members</td><td>memory audit</td><td>tracked; baseline 8</td></tr>
+ <tr><td><strong>Stale-doc rate</strong></td><td>&gt; 180 d untouched / total</td><td>memory</td><td>≤ 25%</td></tr>
+ <tr><td><strong>ACL-leak incidents</strong></td><td>count</td><td>memory audit</td><td>= 0</td></tr>
  <tr><td><strong>Runbook applicability accuracy</strong></td><td>OBS routings correctly matched / total runbook suggestions</td><td>OBS triage telemetry</td><td>≥ 0.80</td></tr>
  <tr><td><strong>Span-citation integrity</strong></td><td>citations resolving to valid (doc_id × version × span_id) / total citations</td><td>nightly sweep</td><td>= 1.0</td></tr>
  <tr><td><strong>Doc-gap-detector signal rate</strong></td><td>topic gaps suggested / "I don't know" responses</td><td>Q&amp;A telemetry</td><td>≥ 0.30 (catch enough gaps)</td></tr>
  <tr><td><strong>Cross-tenant retrieval reject rate</strong></td><td>ACL-filtered retrievals / total retrievals</td><td>retrieval logs</td><td>tracked; spike = active probing</td></tr>
- <tr><td><strong>Vendor-pack doc CSO-review rate</strong></td><td>pack-authored canonical-promoted docs with CSO sign-off / total such promotions</td><td>BRAIN audit</td><td>= 1.0</td></tr>
+ <tr><td><strong>Vendor-pack doc CSO-review rate</strong></td><td>pack-authored canonical-promoted docs with CSO sign-off / total such promotions</td><td>memory audit</td><td>= 1.0</td></tr>
  </tbody>
  </table>
  </div>
@@ -1073,8 +1073,8 @@ graph LR
 
 [create] doc id: 01HZL1…
 [render] markdown → HTML (sanitised)
-[brain] enqueued ingest job
-[audit] brain seq=15401 chain=…</code></pre>
+[memory] enqueued ingest job
+[audit] memory seq=15401 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Link a translation</h3>
 <pre><code>$ cyberos-kb link-translation \
@@ -1082,7 +1082,7 @@ graph LR
  --en how-to-file-leave-en
 
 [link] translation_of pair created (vi ↔ en)
-[audit] brain seq=15402 chain=…</code></pre>
+[audit] memory seq=15402 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Search</h3>
 <pre><code>$ cyberos-kb search "hóa đơn cấp khi nào" --limit 5
@@ -1113,8 +1113,8 @@ citations:
 
 [validate] requesting CDO approval (CHAT Notify sent)
 [approved] by stephen@cyberskill.world at 2026-05-14T09:32Z
-[brain] canonical entry created at memories/policy/leave.md
-[audit] brain seq=15418 chain=…</code></pre>
+[memory] canonical entry created at memories/policy/leave.md
+[audit] memory seq=15418 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Notion import</h3>
 <pre><code>$ cyberos-kb import notion --zip notion-export.zip --map cat=how-to
@@ -1122,8 +1122,8 @@ citations:
 [parse] 247 pages found in zip
 [convert] blocks → markdown
 [create] ✓ 244 docs created · ✗ 3 (in errors.csv)
-[brain] all enqueued
-[audit] brain seq=15489 chain=…</code></pre>
+[memory] all enqueued
+[audit] memory seq=15489 chain=…</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. Export a tree</h3>
 <pre><code>$ cyberos-kb export --root policy --format markdown --output./policies/
@@ -1157,7 +1157,7 @@ citations:
  <tr><td>FTS5 / PGroonga + semantic + reranker</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>"Ask this page" with citations</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>"Ask the KB" (whole-corpus QA)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
- <tr><td>BRAIN ingest p95 ≤ 5 s</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
+ <tr><td>memory ingest p95 ≤ 5 s</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Promote-to-canonical (CDO gate)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Translation linkage (vi ↔ en)</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
  <tr><td>Backlink graph</td><td><span class="pill pill-planned">planned · P1</span></td></tr>
@@ -1183,14 +1183,14 @@ citations:
  <li><strong>NFR catalogue</strong> — KB NFRs.</li>
  <li><strong>Bigger picture (§0 above):</strong> 3 strategic roles + KB-in-platform Mermaid + 10-row auto-vs-human matrix.</li>
  <li><strong>Cross-module page links:</strong>
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="obs.html" class="text-blue-700 underline">obs.html</a> ·
  <a href="cuo.html" class="text-blue-700 underline">cuo.html</a> ·
  <a href="ai.html" class="text-blue-700 underline">ai.html</a> ·
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
  <a href="portal.html" class="text-blue-700 underline">portal.html</a></li>
  <li><strong>OBS auto-runbook contract:</strong> <a href="obs.html#auto-runbook" class="text-blue-700 underline">OBS §2.6</a> — KB is the runbook catalogue source for the triage router.</li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §6</a> — KB docs promoted to canonical become high-authority source for Lumi cross-tenant synthesis (sync_class permitting).</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §6</a> — KB docs promoted to canonical become high-authority source for Lumi cross-tenant synthesis (sync_class permitting).</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — KB at P1 · mid (P1, alongside PROJ).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>BAAI BGE-M3</strong> — multilingual embedding model (used for semantic layer).</li>
@@ -1212,7 +1212,7 @@ citations:
 <!-- ============================================================ -->
 <section id="persona-affinities" class="module-section">
  <header class="section-head"><span class="section-num">★</span><h2>Personas &amp; skill bundles that touch KB</h2></header>
- <p class="text-slate-700 mb-3">KB is the curated-canonical-docs companion to BRAIN's audit-chained memory. Of the 47 CUO personas, the knowledge-stewardship ones below feed KB the most.</p>
+ <p class="text-slate-700 mb-3">KB is the curated-canonical-docs companion to memory's audit-chained memory. Of the 47 CUO personas, the knowledge-stewardship ones below feed KB the most.</p>
  <div class="grid md:grid-cols-2 gap-4">
   <div class="bbg-card p-4">
    <div class="text-xs font-bold uppercase tracking-wider mb-1 text-cuo-dark">Persona affinities (6 of 47)</div>
@@ -1236,7 +1236,7 @@ citations:
    </ul>
   </div>
  </div>
- <p class="text-xs text-slate-500 mt-3">KB documents marked <code>canonical</code> elevate to high-authority BRAIN sources used by Lumi cross-tenant synthesis (when sync_class permits). See BRAIN page §3.4.</p>
+ <p class="text-xs text-slate-500 mt-3">KB documents marked <code>canonical</code> elevate to high-authority memory sources used by Lumi cross-tenant synthesis (when sync_class permits). See memory page §3.4.</p>
 </section>
 
 <!-- ============================================================ -->

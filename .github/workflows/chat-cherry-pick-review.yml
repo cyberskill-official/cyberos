@@ -1,23 +1,50 @@
-# chat-cherry-pick-review.yml — STUB
+# FR-CHAT-001 §1 #5 — cherry-pick PR gate.
 #
-# Auto-generated 2026-05-17 from FR build_envelope references.
-# Declared by: FR-CHAT-001
+# Any PR touching services/chat/patches/** MUST carry the `legal-reviewed`
+# label before merge. The gate runs the moment the PR is opened or updated
+# AND on label changes (so adding the label flips the check to green
+# without needing a fresh commit).
 #
-# Implementation team: replace this stub with the real workflow YAML
-# per the spec details in the declaring FR(s) above.
-# Many FRs embed the canonical workflow YAML in their §6 skeleton section.
+# Per DEC-422 we cherry-pick upstream commits only via reviewed PRs — never
+# via `git pull upstream master`. The companion script
+# `services/chat/scripts/cherry-pick-upstream.sh` opens the PR with
+# `legal-review-needed,chat,security` labels pre-applied; the legal-team
+# adds `legal-reviewed` after review and the gate passes.
 
 name: chat-cherry-pick-review
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     paths:
-      # TODO: per declaring FR
-      - 'services/**'
+      - 'services/chat/patches/**'
+      - 'services/chat/PINNED_COMMIT'
+      - 'services/chat/CYBEROS_PATCH_VERSION'
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
-  placeholder:
+  legal-review-required:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: TODO — implement per FR(s) FR-CHAT-001
-        run: echo 'Stub — see FR specs for canonical workflow YAML'
+      - name: Verify `legal-reviewed` label is present
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -e
+          labels=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json labels --jq '.labels[].name' || echo "")
+          echo "Labels on PR #$PR_NUMBER:"
+          echo "$labels" | sed 's/^/  - /'
+          if echo "$labels" | grep -qx "legal-reviewed"; then
+            echo "::notice::legal-reviewed label present — gate passes."
+            exit 0
+          else
+            echo "::error::PR #$PR_NUMBER touches services/chat/patches/ but lacks the 'legal-reviewed' label."
+            echo "::error::See services/chat/README.md §2 for the fork deviation policy."
+            exit 1
+          fi

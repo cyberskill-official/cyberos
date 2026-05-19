@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: product-metrics-review-audit
-description: Audits a product-metrics-review@1 artefact against product_metrics_review_rubric@1.0. Validates FM + SEC structure, cohort-arithmetic correctness, funnel-drop-off sourcing, north-star-vs-OKR coherence, win/loss narrative grounding. Per Amplitude + Mixpanel + Reforge product-analytics conventions.
-  Audit one or more existing product-metrics-review@1 markdowns against
-  product-metrics-review_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  product-metrics-review-author.
+description: >-
+  Audits a product-metrics-review@1 artefact against product_metrics_review_rubric@1.0. Validates FM + SEC structure, cohort-arithmetic correctness, funnel-drop-off sourcing, north-star-vs-OKR coherence, win/loss narrative grounding. Per Amplitude + Mixpanel + Reforge product-analytics conventions. Audit one or more existing product-metrics-review@1 markdowns against product-metrics-review_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after product-metrics-review-author. Use when user asks to "audit this product metrics review" or "check the product metrics review". Do NOT use for "draft a new product metrics review" (use product-metrics-review-author instead). Audit one or more existing product-metrics-review@1 markdowns against product-metrics-review_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resu...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: product-metrics-review_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

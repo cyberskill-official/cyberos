@@ -18,7 +18,7 @@ related_frs: [FR-AUTH-102]
 2. The endpoint **MUST** reject codes ±2 steps away (60s outside the window); return HTTP 401.
 3. Failed TOTP verify attempts **MUST** be rate-limited per (subject_id) at 5 attempts per minute. The 6th attempt within a sliding 60s window returns HTTP 429 with `Retry-After: 60`.
 4. Successful verify resets the rate-limit counter for that subject.
-5. Each verify attempt (success or fail) **MUST** emit a BRAIN audit row `auth.totp.verify` with `{subject_id, result, attempt_n, ts}`.
+5. Each verify attempt (success or fail) **MUST** emit a memory audit row `auth.totp.verify` with `{subject_id, result, attempt_n, ts}`.
 
 ## §2 — Why this constraint
 
@@ -28,7 +28,7 @@ related_frs: [FR-AUTH-102]
 
 - Counter `auth_totp_verify_total{result}` where result ∈ {`success`, `fail_outside_window`, `fail_invalid_code`, `rate_limited`}.
 - Counter `auth_totp_rate_limited_subjects_total` per subject; sev-3 alarm if any subject hits rate-limit > 3 times in an hour (likely attack).
-- BRAIN query `view kind=auth.totp.verify` — security reviews weekly.
+- memory query `view kind=auth.totp.verify` — security reviews weekly.
 
 ## §4 — Verification
 

@@ -30,7 +30,7 @@ Subclass contract:
 
 Then the chain calls:
 
-  runner = FrWithTasksRunner(brain_root, manifest)
+  runner = FrWithTasksRunner(memory_root, manifest)
   artefact_path = runner.run(inputs, max_iterations=3)
 """
 from __future__ import annotations
@@ -64,12 +64,12 @@ class BaseSkillRunner:
     skill_version: str = "0.1.0"
     output_filename_pattern: str = "<skill>.md"   # how to name the emitted file
 
-    def __init__(self, brain_root: Path, manifest: dict | None = None,
+    def __init__(self, memory_root: Path, manifest: dict | None = None,
                  model: str = "claude-sonnet-4-6",
                  step_max_tokens: int = 4000,
                  input_per_mtok: float = 3.0,
                  output_per_mtok: float = 15.0):
-        self.brain_root = Path(brain_root)
+        self.memory_root = Path(memory_root)
         self.manifest = manifest or {}
         self.model = model
         self.step_max_tokens = step_max_tokens
@@ -86,7 +86,7 @@ class BaseSkillRunner:
 
     def build_prompt(self, inputs: dict, prior_artefacts: list[str] | None = None) -> str:
         """Compose the Claude prompt. Subclass should reference the SKILL.md."""
-        skill_md_path = self.brain_root / "docs" / "skills" / self.skill_id / "SKILL.md"
+        skill_md_path = self.memory_root / "docs" / "skills" / self.skill_id / "SKILL.md"
         skill_md = skill_md_path.read_text(encoding="utf-8") if skill_md_path.exists() else "(SKILL.md missing)"
         prior = "\n\n".join(prior_artefacts or [])
         return f"""You are running the cyberos skill `{self.skill_id}`.
@@ -330,10 +330,10 @@ def llm_call_streaming(model: str, prompt: str, max_tokens: int,
 
 # ---- Discovery helper for the chain orchestrator --------------------------
 
-def load_runner(skill_id: str, brain_root: Path) -> "BaseSkillRunner | None":
+def load_runner(skill_id: str, memory_root: Path) -> "BaseSkillRunner | None":
     """Find runtime/skill_runners/<basename>.py for skill_id. Return instance or None."""
     base = skill_id.split("/")[-1].replace("-", "_")
-    runner_path = brain_root / "runtime" / "skill_runners" / f"{base}.py"
+    runner_path = memory_root / "runtime" / "skill_runners" / f"{base}.py"
     if not runner_path.exists():
         return None
     spec = importlib.util.spec_from_file_location(f"skill_runner_{base}", runner_path)
@@ -343,5 +343,5 @@ def load_runner(skill_id: str, brain_root: Path) -> "BaseSkillRunner | None":
     for name in dir(mod):
         obj = getattr(mod, name)
         if isinstance(obj, type) and issubclass(obj, BaseSkillRunner) and obj is not BaseSkillRunner:
-            return obj(brain_root)
+            return obj(memory_root)
     return None

@@ -8,7 +8,7 @@ This file is copied verbatim into every skill bundle. Customize only if the skil
 
 ## §1  Core rules
 
-§1.1  **Source-grounded claims only.** Every claim in an emitted artefact traces back to (a) a line in the source spec, (b) a BRAIN `memory_id`, or (c) a documented inference whose derivation is shown. No floating claims.
+§1.1  **Source-grounded claims only.** Every claim in an emitted artefact traces back to (a) a line in the source spec, (b) a memory `memory_id`, or (c) a documented inference whose derivation is shown. No floating claims.
 
 §1.2  **Authority markers required.** Every paragraph carries an `authority` field — one of `human-edited`, `human-confirmed`, `llm-explicit`, `llm-implicit` per AGENTS.md §5.1. Use the in-band marker syntax `<!-- authority: llm-explicit -->` at the end of the paragraph, or the structured `authority:` field if the artefact has a JSON-Schema-defined frontmatter that includes it.
 
@@ -32,8 +32,8 @@ The skill MUST NEVER:
 - Auto-set `eu_ai_act_risk_class` to `minimal` or `not_ai` when a determining fact is missing.
 - Set `ai_authorship: none` on output the skill itself produced.
 - Generate code, configuration, or API payloads not present in the source.
-- Cite a URL that was not in the source or BRAIN.
-- Cite a memory_id that does not exist in the current BRAIN.
+- Cite a URL that was not in the source or memory.
+- Cite a memory_id that does not exist in the current memory.
 - Cite a date past the configured `knowledge_cutoff_date` without flagging it as `extrapolated`.
 
 ---

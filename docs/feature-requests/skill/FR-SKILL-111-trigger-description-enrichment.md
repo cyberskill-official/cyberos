@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-19
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-SKILL-101, FR-SKILL-103, FR-SKILL-112, FR-SKILL-113]
 depends_on: [FR-SKILL-103]
 blocks: []
@@ -23,7 +23,7 @@ source_pages:
   - modules/skill/_template/audit/SKILL.md
 source_decisions:
   - DEC-091 (host-portability contract — CCSM is source of truth; transpilers emit per-host artefacts)
-  - DEC-180 (every .skill bundle MUST declare its BRAIN scopes + tool requirements in frontmatter)
+  - DEC-180 (every .skill bundle MUST declare its memory scopes + tool requirements in frontmatter)
   - DEC-182 (frontmatter schema versioned; v1 frozen at FR-SKILL-103; new validation rules are MINOR bumps that add but don't remove fields)
 
 language: rust 1.81 + yaml + markdown
@@ -456,7 +456,7 @@ Most of the surface is in §3 (Rust types + validator + JSONSchema diff + audito
 **Related:**
 - **FR-SKILL-112** (trigger-tests-fixtures) — defines positive + negative trigger phrases per skill in `acceptance/TRIGGER_TESTS.md`. The two FRs are complementary: 111 puts triggers in the description; 112 validates the description's triggers against actual classifier behaviour. Either can ship first.
 - **FR-SKILL-113** (XML-tag-free frontmatter — sketched only, not authored) — both 111 and 113 strengthen the host-portability surface. If 113 ships first, FR-SKILL-111's §1 #4 becomes a duplicate check (acceptable; the duplicate is defensive). If 111 ships first, FR-SKILL-113 still provides the broader sweep across `wrap_in:` and other fields.
-- **FR-SKILL-101** (BRAIN integration) — orthogonal; runs in a separate slice.
+- **FR-SKILL-101** (memory integration) — orthogonal; runs in a separate slice.
 - **AGENTS.md §15** — the SKILL.md scope contract referenced from the broker.
 
 **Cross-module:**

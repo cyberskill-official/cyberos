@@ -15,7 +15,7 @@ _Generated 2026-05-17 — 10 FRs, 55 engineering-hours total._
 | [FR-REW-007](FR-REW-007-bp-ledger.md) | MUST | 2 | 5 | REW BP (Bonus Points) ledger with ACB-rate interest accrual nightly + per-Member balance + immutable |
 | [FR-REW-008](FR-REW-008-p3-quarterly-distribution.md) | MUST | 2 | 6 | REW quarterly P3 distribution from BP fund — CEO+CFO sign-off + LEARN-007 VP share splits + debit BP |
 | [FR-REW-009](FR-REW-009-vietqr-payroll-batch.md) | MUST | 2 | 5 | REW VietQR bank payroll batch send — bulk transfer file generation with CFO manual confirm at submis |
-| [FR-REW-010](FR-REW-010-brain-exclusion-ci-gate.md) | MUST | 1 | 3 | REW BRAIN structural exclusion CI gate — no comp fields appear in BRAIN-ingest paths; static analysi |
+| [FR-REW-010](FR-REW-010-memory-exclusion-ci-gate.md) | MUST | 1 | 3 | REW memory structural exclusion CI gate — no comp fields appear in memory-ingest paths; static analysi |
 
 ## Cross-module dependencies
 

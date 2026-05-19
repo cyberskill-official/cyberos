@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-MCP-001, FR-MCP-002, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-MCP-001, FR-MCP-002, FR-MEMORY-111]
 depends_on: [FR-MCP-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2361 2026-05-17 — Closed enum `sep986_verb` = {get, list, create, update, delete, send, fetch, sync, validate, generate, execute, search, replay, accept, reject}; cardinality 15
   - DEC-2362 2026-05-17 — Validation at registration (FR-MCP-001) + CI gate scanning code for skill_id constants
   - DEC-2363 2026-05-17 — Module name validated against active tenant modules list (TEN/HR/REW/EMAIL/etc.); unknown module → reject
-  - DEC-2364 2026-05-17 — BRAIN audit kinds: mcp.skill_name_validated, mcp.skill_name_rejected, mcp.naming_ci_check_passed, mcp.naming_ci_check_failed
+  - DEC-2364 2026-05-17 — memory audit kinds: mcp.skill_name_validated, mcp.skill_name_rejected, mcp.naming_ci_check_passed, mcp.naming_ci_check_failed
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without naming validator, skill ID sprawl → discovery broken
 
 ## §1 — Description (BCP-14 normative)
 
-The MCP service **MUST** ship SEP-986 naming validator at `services/mcp/src/naming/` enforcing skill ID pattern at registration + CI gate, 4 BRAIN audit kinds.
+The MCP service **MUST** ship SEP-986 naming validator at `services/mcp/src/naming/` enforcing skill ID pattern at registration + CI gate, 4 memory audit kinds.
 
 1. **MUST** validate `sep986_verb` against closed enum per DEC-2361.
 
@@ -89,10 +89,10 @@ The MCP service **MUST** ship SEP-986 naming validator at `services/mcp/src/nami
    ```
 
 5. **MUST** validate module per DEC-2363 at `module_registry.rs::is_valid_module(name)`:
-   - Hardcoded list: ten, hr, rew, email, inv, crm, doc, kb, okr, res, learn, esop, cuo, mcp, auth, brain, ai, time, proj, chat, obs, portal, skill
+   - Hardcoded list: ten, hr, rew, email, inv, crm, doc, kb, okr, res, learn, esop, cuo, mcp, auth, memory, ai, time, proj, chat, obs, portal, skill
    - Unknown → reject
 
-6. **MUST** emit 4 BRAIN audit kinds per DEC-2364. PII: skill IDs (public) ok.
+6. **MUST** emit 4 memory audit kinds per DEC-2364. PII: skill IDs (public) ok.
 
 7. **MUST** thread trace_id from validation → audit.
 
@@ -136,7 +136,7 @@ Invalid:
 ---
 
 ## §4 — Acceptance criteria
-1. **sep986_verb enum cardinality 15**. 2. **Regex matches valid IDs**. 3. **Module ∈ registered list**. 4. **Verb ∈ closed enum**. 5. **Noun snake_case**. 6. **Registration gated**. 7. **CI grep catches violations**. 8. **4 BRAIN audit kinds emitted**. 9. **PII: skill IDs (public) ok**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Append-only validations log**. 13. **CI script in repo**. 14. **Bypass impossible (required check)**. 15. **Error messages specific**. 16. **Validation perf < 1ms**. 17. **Module list maintained in code**. 18. **New module addition documented**. 19. **Capitalization rejected**. 20. **Reserved verb additions need RFC**.
+1. **sep986_verb enum cardinality 15**. 2. **Regex matches valid IDs**. 3. **Module ∈ registered list**. 4. **Verb ∈ closed enum**. 5. **Noun snake_case**. 6. **Registration gated**. 7. **CI grep catches violations**. 8. **4 memory audit kinds emitted**. 9. **PII: skill IDs (public) ok**. 10. **RLS denies cross-tenant**. 11. **Trace_id preserved**. 12. **Append-only validations log**. 13. **CI script in repo**. 14. **Bypass impossible (required check)**. 15. **Error messages specific**. 16. **Validation perf < 1ms**. 17. **Module list maintained in code**. 18. **New module addition documented**. 19. **Capitalization rejected**. 20. **Reserved verb additions need RFC**.
 
 ---
 
@@ -186,7 +186,7 @@ async fn ci_grep_catches_non_conforming() {
 
 ## §7 — Dependencies
 **Upstream:** FR-MCP-001.
-**Cross-module:** FR-MCP-002 (module registry), FR-BRAIN-111 (audit).
+**Cross-module:** FR-MCP-002 (module registry), FR-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -205,7 +205,7 @@ async fn ci_grep_catches_non_conforming() {
 ## §11 — Implementation notes
 - §11.1 Regex compiled once; reused for perf.
 - §11.2 CI script greps `*.rs` and `*.toml` for skill_id constants; fails on non-conforming pattern.
-- §11.3 BRAIN audit body: skill_id, validation result; no PII (skill IDs public).
+- §11.3 memory audit body: skill_id, validation result; no PII (skill IDs public).
 - §11.4 Module list reviewed quarterly; additions require module owner sign + RFC.
 - §11.5 Verb enum additions require SEP RFC + community discussion.
 

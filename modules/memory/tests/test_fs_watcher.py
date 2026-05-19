@@ -1,4 +1,4 @@
-"""Tests for FR-BRAIN-107 fs-watcher polling scaffold."""
+"""Tests for FR-MEMORY-107 fs-watcher polling scaffold."""
 
 from __future__ import annotations
 

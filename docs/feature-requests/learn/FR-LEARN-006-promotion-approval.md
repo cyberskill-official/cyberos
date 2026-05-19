@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-LEARN-004, FR-LEARN-005, FR-HR-001, FR-REW-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-LEARN-004, FR-LEARN-005, FR-HR-001, FR-REW-001, FR-MEMORY-111]
 depends_on: [FR-LEARN-004]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2131 2026-05-17 — Closed enum `promotion_status` = {pending_council, council_recommended, ceo_signed, chro_signed, approved, declined, executed}; cardinality 7
   - DEC-2132 2026-05-17 — Cascade on executed: FR-HR-001 mastery_level updated; FR-REW-001 comp band updated; FR-CHAT-005 announcement
   - DEC-2133 2026-05-17 — Same-person dual-sign rejected (separation of duties)
-  - DEC-2134 2026-05-17 — BRAIN audit kinds: learn.promotion_initiated, learn.promotion_signed, learn.promotion_executed, learn.promotion_declined, learn.promotion_cascade_failed
+  - DEC-2134 2026-05-17 — memory audit kinds: learn.promotion_initiated, learn.promotion_signed, learn.promotion_executed, learn.promotion_declined, learn.promotion_cascade_failed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without dual-sign workflow, promotions execute by single signa
 
 ## §1 — Description (BCP-14 normative)
 
-The LEARN service **MUST** ship promotion workflow at `services/learn/src/promotion/` with CEO+CHRO dual-sign + cascade to HR + REW + CHAT, 5 BRAIN audit kinds.
+The LEARN service **MUST** ship promotion workflow at `services/learn/src/promotion/` with CEO+CHRO dual-sign + cascade to HR + REW + CHAT, 5 memory audit kinds.
 
 1. **MUST** validate `promotion_status` against closed enum per DEC-2131.
 
@@ -124,7 +124,7 @@ The LEARN service **MUST** ship promotion workflow at `services/learn/src/promot
    GET  /v1/learn/promotions/{id}
    ```
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-2134. PII per FR-BRAIN-111: decline_reason SHA-256 hashed; status enum + level ints ok.
+7. **MUST** emit 5 memory audit kinds per DEC-2134. PII per FR-MEMORY-111: decline_reason SHA-256 hashed; status enum + level ints ok.
 
 8. **MUST** thread trace_id from initiate → sign → execute → cascade → audit.
 
@@ -164,7 +164,7 @@ Sample promotion state:
 ---
 
 ## §4 — Acceptance criteria
-1. **promotion_status enum cardinality 7**. 2. **CEO+CHRO dual-sign required**. 3. **Same person rejected**. 4. **Cascade transactional**. 5. **HR mastery updated**. 6. **REW comp band updated**. 7. **CHAT announcement non-blocking**. 8. **UNIQUE(council_id) — one promotion per council**. 9. **5 BRAIN audit kinds emitted**. 10. **PII scrubbed (decline_reason SHA256)**. 11. **RLS denies cross-tenant**. 12. **CEO/CHRO role only**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except status cols**. 15. **Decline allowed at any pre-execute stage**. 16. **from_level + to_level CHECK 1-5**. 17. **to_level > from_level enforced**. 18. **Status workflow enforced**. 19. **Cascade failure → rollback**. 20. **Council recommend=decline blocks promotion init**.
+1. **promotion_status enum cardinality 7**. 2. **CEO+CHRO dual-sign required**. 3. **Same person rejected**. 4. **Cascade transactional**. 5. **HR mastery updated**. 6. **REW comp band updated**. 7. **CHAT announcement non-blocking**. 8. **UNIQUE(council_id) — one promotion per council**. 9. **5 memory audit kinds emitted**. 10. **PII scrubbed (decline_reason SHA256)**. 11. **RLS denies cross-tenant**. 12. **CEO/CHRO role only**. 13. **Trace_id preserved**. 14. **Append-only via REVOKE except status cols**. 15. **Decline allowed at any pre-execute stage**. 16. **from_level + to_level CHECK 1-5**. 17. **to_level > from_level enforced**. 18. **Status workflow enforced**. 19. **Cascade failure → rollback**. 20. **Council recommend=decline blocks promotion init**.
 
 ---
 
@@ -207,7 +207,7 @@ async fn cascade_updates_hr_and_rew() {
 
 ## §7 — Dependencies
 **Upstream:** FR-LEARN-004.
-**Cross-module:** FR-LEARN-005 (recommendation source), FR-HR-001, FR-REW-001, FR-CHAT-005, FR-AUTH-101 (CEO/CHRO), FR-BRAIN-111.
+**Cross-module:** FR-LEARN-005 (recommendation source), FR-HR-001, FR-REW-001, FR-CHAT-005, FR-AUTH-101 (CEO/CHRO), FR-MEMORY-111.
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -226,7 +226,7 @@ async fn cascade_updates_hr_and_rew() {
 ## §11 — Implementation notes
 - §11.1 Cascade order: HR (least-side-effect first) → REW (financial) → CHAT (visible last).
 - §11.2 Cascade transaction wraps HR + REW; CHAT outside (non-blocking).
-- §11.3 BRAIN audit body: promotion_id, member_id, from/to level, status; decline SHA256.
+- §11.3 memory audit body: promotion_id, member_id, from/to level, status; decline SHA256.
 - §11.4 Decline at any pre-execute stage; council can be re-convened if needed.
 - §11.5 Future: peer announcement + congrats flow via FR-CHAT-005 reactions.
 

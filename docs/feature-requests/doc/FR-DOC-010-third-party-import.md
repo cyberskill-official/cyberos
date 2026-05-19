@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-001, FR-DOC-007, FR-DOC-011, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-001, FR-DOC-007, FR-DOC-011, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-DOC-001]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1762 2026-05-17 — Preserve LTV: existing PAdES-B-LT or CAdES signatures retained; we add NO new signature on import
   - DEC-1763 2026-05-17 — Per-tenant API credential storage in KMS; CLO-only writes via FR-AUTH-101
   - DEC-1764 2026-05-17 — Idempotency: source_provider + source_doc_id → one CyberOS doc; re-import returns existing document_id
-  - DEC-1765 2026-05-17 — BRAIN audit kinds: doc.import_initiated, doc.import_completed, doc.import_ltv_verified, doc.import_failed
+  - DEC-1765 2026-05-17 — memory audit kinds: doc.import_initiated, doc.import_completed, doc.import_ltv_verified, doc.import_failed
 
 build_envelope:
   language: rust 1.81
@@ -77,7 +77,7 @@ risk_if_skipped: "Without third-party import, customers migrating to CyberOS los
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship third-party import at `services/doc/src/import/` supporting DocuSign + Adobe Sign + HelloSign, LTV preservation, idempotency, 4 BRAIN audit kinds.
+The DOC service **MUST** ship third-party import at `services/doc/src/import/` supporting DocuSign + Adobe Sign + HelloSign, LTV preservation, idempotency, 4 memory audit kinds.
 
 1. **MUST** validate `import_source` against closed enum per DEC-1761.
 
@@ -141,7 +141,7 @@ The DOC service **MUST** ship third-party import at `services/doc/src/import/` s
 
 9. **MUST** populate FR-DOC-007 lifecycle metadata from provider metadata if available (parties, dates).
 
-10. **MUST** emit 4 BRAIN audit kinds per DEC-1765. PII per FR-BRAIN-111: source_doc_id hashed; provider name (public) ok.
+10. **MUST** emit 4 memory audit kinds per DEC-1765. PII per FR-MEMORY-111: source_doc_id hashed; provider name (public) ok.
 
 11. **MUST** thread trace_id from start → fetch → verify → store → audit.
 
@@ -188,7 +188,7 @@ Sample import job status:
 ---
 
 ## §4 — Acceptance criteria
-1. **3 providers + import_source enum cardinality 4 (incl manual)**. 2. **LTV preserved (no new signature added)**. 3. **LTV invalid → flagged but still imported (with sev-2 audit)**. 4. **Idempotent via UNIQUE constraint**. 5. **Re-import returns existing document_id (200, not 409)**. 6. **CLO-only creds (403 for others)**. 7. **CLO-only import trigger**. 8. **Async via FR-MCP-007**. 9. **Lifecycle metadata populated from provider**. 10. **4 BRAIN audit kinds emitted**. 11. **PII scrubbed (source_doc_id SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Dry-run lists without import**. 15. **Filter by date range respected**. 16. **Provider API creds in KMS only**. 17. **Append-only imports table via REVOKE**. 18. **Provider rate-limit respected (backoff)**. 19. **PDF MIME validated**. 20. **Large import (1000+) completes within 30min**.
+1. **3 providers + import_source enum cardinality 4 (incl manual)**. 2. **LTV preserved (no new signature added)**. 3. **LTV invalid → flagged but still imported (with sev-2 audit)**. 4. **Idempotent via UNIQUE constraint**. 5. **Re-import returns existing document_id (200, not 409)**. 6. **CLO-only creds (403 for others)**. 7. **CLO-only import trigger**. 8. **Async via FR-MCP-007**. 9. **Lifecycle metadata populated from provider**. 10. **4 memory audit kinds emitted**. 11. **PII scrubbed (source_doc_id SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Dry-run lists without import**. 15. **Filter by date range respected**. 16. **Provider API creds in KMS only**. 17. **Append-only imports table via REVOKE**. 18. **Provider rate-limit respected (backoff)**. 19. **PDF MIME validated**. 20. **Large import (1000+) completes within 30min**.
 
 ---
 
@@ -233,7 +233,7 @@ async fn ltv_invalid_flagged() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-001.
-**Cross-module:** FR-DOC-007 (lifecycle metadata population), FR-DOC-011 (LTV verifier shared logic), FR-MCP-007 (async task), FR-AUTH-101 (CLO role), FR-AUTH-105 (KMS), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-007 (lifecycle metadata population), FR-DOC-011 (LTV verifier shared logic), FR-MCP-007 (async task), FR-AUTH-101 (CLO role), FR-AUTH-105 (KMS), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -253,7 +253,7 @@ async fn ltv_invalid_flagged() {
 - §11.1 LTV verification uses `lopdf` + signature validation; cross-check with FR-DOC-011 shared verifier.
 - §11.2 Provider creds: refresh-token rotation managed per provider.
 - §11.3 Lifecycle metadata mapping: DocuSign envelope.recipients → parties; sent_date → effective_date.
-- §11.4 BRAIN audit body: provider, ltv_valid, count; source_doc_id SHA256.
+- §11.4 memory audit body: provider, ltv_valid, count; source_doc_id SHA256.
 - §11.5 Bulk import: page through provider list API; per-doc fetch parallelized (5 concurrent).
 
 ---

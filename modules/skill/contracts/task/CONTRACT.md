@@ -61,7 +61,7 @@ dependencies: [<task-id>, ...]        # required (may be empty)
 parallelisable: true | false          # required (can run alongside non-dep tasks)
 assignable_to: [human, ai-agent]      # required (one or both)
 agent_profile: <profile-id>           # required when "ai-agent" in assignable_to
-  # e.g. "claude-sonnet-4-6, mcp_allowlist: [bash, edit, brain.read]"
+  # e.g. "claude-sonnet-4-6, mcp_allowlist: [bash, edit, memory.read]"
 estimated_tokens: <int>               # required when "ai-agent" in assignable_to
 estimated_hours: <float>              # required when "human" in assignable_to
 status: draft | ready | in_progress | done | blocked  # required; init = draft

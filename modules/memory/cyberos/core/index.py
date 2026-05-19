@@ -161,7 +161,7 @@ def replay_from_binlog(
                     seq = int(rec.extra.get("_seq", 0))
                     if seq <= applied:
                         continue
-                    _apply_record(conn, rec, seq)
+                    _apply_record(conn, rec, seq, store)
                     applied = seq
         conn.execute(
             "INSERT INTO sync_state(k, v) VALUES('last_applied_seq', ?) "
@@ -175,12 +175,28 @@ def replay_from_binlog(
     return applied
 
 
-def _apply_record(conn: sqlite3.Connection, rec, seq: int) -> None:
-    """Apply one AuditRecord to the index. Match on rec.op."""
+def _apply_record(
+    conn: sqlite3.Connection,
+    rec,
+    seq: int,
+    store: Path | None = None,
+) -> None:
+    """Apply one AuditRecord to the index. Match on rec.op.
+
+    ``store`` is required to populate the FTS body for create/str_replace/
+    insert/put records (the binlog only carries content_sha256, not the
+    body text). If ``store`` is None the FTS body is left empty — this
+    preserves backward-compatibility for any test path that didn't pass it.
+    """
     if rec.op == "delete":
         conn.execute(
             "UPDATE memories SET tombstoned = 1, last_seq = ? WHERE rel_path = ?",
             (seq, rec.path),
+        )
+        # Mirror the tombstone into FTS so the row stops matching searches.
+        conn.execute(
+            "DELETE FROM memories_fts WHERE rel_path = ?",
+            (rec.path,),
         )
         return
 
@@ -190,9 +206,19 @@ def _apply_record(conn: sqlite3.Connection, rec, seq: int) -> None:
             "UPDATE memories SET rel_path = ?, last_seq = ? WHERE rel_path = ?",
             (new_path, seq, rec.path),
         )
+        # FTS keys on rel_path (UNINDEXED); update there too.
+        conn.execute(
+            "UPDATE memories_fts SET rel_path = ? WHERE rel_path = ?",
+            (new_path, rec.path),
+        )
         return
 
-    if rec.op in ("create", "str_replace", "insert"):
+    # ``put`` is the canonical cross-memory import op per AGENTS.md §14.2.
+    # Treat it identically to a create/str_replace from the index's POV —
+    # without this, the 708 memories imported via cyberos.core.import_ on
+    # 2026-05-19 never made it into the FTS index. (Bug pre-dated the
+    # workbench-consume; fix lands as part of the v0-compat sweep.)
+    if rec.op in ("create", "str_replace", "insert", "put"):
         kind = rec.extra.get("kind", "unknown")
         conn.execute(
             """
@@ -208,9 +234,42 @@ def _apply_record(conn: sqlite3.Connection, rec, seq: int) -> None:
             """,
             (rec.path, kind, rec.actor, rec.ts_ns, rec.content_sha256, seq),
         )
+        # Populate the FTS body table by reading the file from the store.
+        # The binlog only carries content_sha256, so we have to load the
+        # current bytes. Best-effort: tolerate read failures so a missing
+        # file (rare; concurrent delete) doesn't abort the whole replay.
+        if store is not None:
+            body_text = _load_body_text(store, rec.path)
+            if body_text is not None:
+                conn.execute(
+                    "DELETE FROM memories_fts WHERE rel_path = ?",
+                    (rec.path,),
+                )
+                conn.execute(
+                    "INSERT INTO memories_fts(rel_path, body) VALUES(?, ?)",
+                    (rec.path, body_text),
+                )
         return
 
-    # 'view' rows do not mutate the derived index.
+    # 'view', 'session.start', 'session.end' rows do not mutate the
+    # derived index.
+
+
+def _load_body_text(store: Path, rel_path: str) -> str | None:
+    """Load the current body bytes for ``rel_path`` from ``store``, decoded
+    as UTF-8 with replacement for non-UTF-8 chunks (so binary blobs don't
+    abort the index replay). Returns None on read failure."""
+    abs_path = store / rel_path
+    try:
+        raw = abs_path.read_bytes()
+    except OSError:
+        return None
+    # Strip frontmatter block if present so FTS indexes the body only.
+    if raw.startswith(b"---\n"):
+        end = raw.find(b"\n---\n", 4)
+        if end > 0:
+            raw = raw[end + 5:]
+    return raw.decode("utf-8", errors="replace")
 
 
 def write_index_manifest(store: Path, last_seq: int) -> None:

@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CDO)
 created: 2026-05-18
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CUO-101, FR-CUO-104, FR-CUO-105, FR-SKILL-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CUO-101, FR-CUO-104, FR-CUO-105, FR-SKILL-001, FR-MEMORY-111]
 depends_on: [FR-CUO-104, FR-CUO-105]
 blocks: []
 
@@ -25,11 +25,11 @@ source_decisions:
   - DEC-2381 2026-05-18 — Closed enum `workflow_pattern` = {linear (default), time_critical, per_instance, multi_output, sequential_approval, persona_pair}; cardinality 6
   - DEC-2382 2026-05-18 — Time-critical handler bypasses scheduler queueing; logs SLA-breach event if duration > workflow.sla_minutes. Workflows declaring this: chief-privacy-officer/breach-response-cycle, chief-communications-officer/per-crisis-response, chief-trust-officer/per-trust-incident-update
   - DEC-2383 2026-05-18 — Per-instance handler iterates the chain once per element of workflow.instance_descriptor[]; fan-in summary row aggregates per-instance ChainResults. Workflow declaring this: chief-sales-officer/quarterly-account-plan (10–20 instances/quarter)
-  - DEC-2384 2026-05-18 — Multi-output handler runs chain once but fans out final step's output per workflow.output_recipients[]; emits one BRAIN row per recipient. Workflow declaring this: chief-legal-officer/quarterly-regulatory-cycle
+  - DEC-2384 2026-05-18 — Multi-output handler runs chain once but fans out final step's output per workflow.output_recipients[]; emits one memory row per recipient. Workflow declaring this: chief-legal-officer/quarterly-regulatory-cycle
   - DEC-2385 2026-05-18 — Sequential-approval handler chains workflow A → halt for approval → chain B; approval is a HITL pause requiring explicit operator action. Workflow declaring this: chief-ethics-officer/per-model-card-ethics-sign-off gates chief-ai-officer/per-model-card-release
   - DEC-2386 2026-05-18 — Persona-pair handler runs two persona chains in interleaved fashion with shared artefact ownership; 4 patterns: churn-collaboration (cro-revenue ↔ cco-customer), content-vs-distribution (cmo ↔ cco-communications), risk-lens-vs-engineering (cro-risk ↔ cto), CX-vs-CDO (cco-customer ↔ cdo-data)
   - DEC-2387 2026-05-18 — Handler dispatch happens BEFORE execute_chain(); the supervisor reads workflow.pattern frontmatter and picks the Handler subclass. Default pattern (linear) uses the existing execute_chain() unchanged
-  - DEC-2388 2026-05-18 — BRAIN audit kinds: cuo.handler_dispatched, cuo.time_critical_sla_breach, cuo.per_instance_iteration, cuo.per_instance_summary, cuo.multi_output_fanout, cuo.sequential_approval_halted, cuo.sequential_approval_resumed, cuo.persona_pair_handoff
+  - DEC-2388 2026-05-18 — memory audit kinds: cuo.handler_dispatched, cuo.time_critical_sla_breach, cuo.per_instance_iteration, cuo.per_instance_summary, cuo.multi_output_fanout, cuo.sequential_approval_halted, cuo.sequential_approval_resumed, cuo.persona_pair_handoff
 
 build_envelope:
   language: python 3.10+
@@ -52,7 +52,7 @@ build_envelope:
 
   modified_files:
     - modules/cuo/cuo/core/supervisor.py
-    - modules/cuo/cuo/core/brain_bridge.py
+    - modules/cuo/cuo/core/memory_bridge.py
     - modules/cuo/cuo/cli.py
     - modules/cuo/cuo/__init__.py
     - modules/cuo/pyproject.toml
@@ -65,7 +65,7 @@ build_envelope:
 
   allowed_tools:
     - file_read: modules/cuo/**, modules/skill/**, modules/memory/**
-    - file_write: modules/cuo/cuo/core/handlers/**, modules/cuo/tests/**, modules/cuo/cuo/{supervisor.py,brain_bridge.py,cli.py,__init__.py}
+    - file_write: modules/cuo/cuo/core/handlers/**, modules/cuo/tests/**, modules/cuo/cuo/{supervisor.py,memory_bridge.py,cli.py,__init__.py}
     - bash: cd modules/cuo && pytest tests/test_*handler* -v
 
   disallowed_tools:
@@ -89,7 +89,7 @@ risk_if_skipped: "Without Phase 4 handlers, 9 workflows in the production catalo
 
 ## §1 — Description (BCP-14 normative)
 
-The CUO supervisor **MUST** ship 5 workflow Handler subclasses at `modules/cuo/cuo/core/handlers/` dispatched from workflow `pattern:` frontmatter, with 8 BRAIN audit kinds, and updated workflow YAML in the 9 affected catalog workflows.
+The CUO supervisor **MUST** ship 5 workflow Handler subclasses at `modules/cuo/cuo/core/handlers/` dispatched from workflow `pattern:` frontmatter, with 8 memory audit kinds, and updated workflow YAML in the 9 affected catalog workflows.
 
 1. **MUST** validate `workflow_pattern` against closed enum per DEC-2381 (cardinality 6, default `linear`).
 
@@ -103,7 +103,7 @@ The CUO supervisor **MUST** ship 5 workflow Handler subclasses at `modules/cuo/c
    - Bypass any queueing/batching/work-stealing
    - Read `workflow.frontmatter.sla_minutes`
    - Start timer, walk chain
-   - If `total_duration_ms > sla_minutes * 60 * 1000`: emit `cuo.time_critical_sla_breach` BRAIN row with `extra.breach_severity = (actual - sla) / sla`
+   - If `total_duration_ms > sla_minutes * 60 * 1000`: emit `cuo.time_critical_sla_breach` memory row with `extra.breach_severity = (actual - sla) / sla`
    - Affected workflows: `chief-privacy-officer/breach-response-cycle` (sla_minutes: 240 = 4h), `chief-communications-officer/per-crisis-response` (sla_minutes: 120 = 2h), `chief-trust-officer/per-trust-incident-update` (sla_minutes: 240)
 
 4. **MUST** implement `PerInstanceHandler` per DEC-2383:
@@ -117,7 +117,7 @@ The CUO supervisor **MUST** ship 5 workflow Handler subclasses at `modules/cuo/c
    - Run chain end-to-end ONCE
    - Read `workflow.frontmatter.output_recipients` (list of `{recipient_id, format, delivery_method}`)
    - For each recipient: render final step's output through `recipient.format`, deliver via `recipient.delivery_method`
-   - Emit one `cuo.multi_output_fanout` BRAIN row per recipient
+   - Emit one `cuo.multi_output_fanout` memory row per recipient
    - Affected workflow: `chief-legal-officer/quarterly-regulatory-cycle` (1 source artefact → N regulator filings)
 
 6. **MUST** implement `SequentialApprovalHandler` per DEC-2385:
@@ -139,7 +139,7 @@ The CUO supervisor **MUST** ship 5 workflow Handler subclasses at `modules/cuo/c
      - `chief-risk-officer/postmortem-risk-lens` ↔ `chief-technology-officer/postmortem-engineering-lens` (shared: incident report)
      - `chief-customer-officer/customer-360-cx-lens` ↔ `chief-data-officer/customer-360-data-lens` (shared: customer profile)
 
-8. **MUST** preserve audit-chain integrity: all 8 new BRAIN audit kinds (DEC-2388) routed through `cyberos.core.writer.Writer` (no direct file writes).
+8. **MUST** preserve audit-chain integrity: all 8 new memory audit kinds (DEC-2388) routed through `cyberos.core.writer.Writer` (no direct file writes).
 
 9. **MUST** wire handler dispatch into `cli.py execute` subcommand: when workflow has `pattern != linear`, log `# dispatched to <HandlerClass>` before invoking.
 
@@ -149,7 +149,7 @@ The CUO supervisor **MUST** ship 5 workflow Handler subclasses at `modules/cuo/c
 
 12. **MUST NOT** bypass HITL halts in sequential_approval (the approval gate IS a HITL pause).
 
-13. **MUST NOT** drop the `cuo.handler_dispatched` BRAIN row for any non-linear pattern execution.
+13. **MUST NOT** drop the `cuo.handler_dispatched` memory row for any non-linear pattern execution.
 
 ---
 
@@ -229,12 +229,12 @@ cyberos-cuo execute <persona>/<workflow>  # auto-detects pattern from frontmatte
 5. **PerInstanceHandler iterates exactly len(instance_descriptor) times**.
 6. **PerInstanceHandler fan-in summary `outcome=COMPLETED_BATCH` when all succeed; `outcome=PARTIAL` when any fail**.
 7. **MultiOutputHandler renders final-step output once per recipient**.
-8. **MultiOutputHandler emits 1 BRAIN row per recipient**.
+8. **MultiOutputHandler emits 1 memory row per recipient**.
 9. **SequentialApprovalHandler halts on approver failure**.
 10. **SequentialApprovalHandler resumes on approver success**.
 11. **PersonaPairHandler routes to peer at declared handoff_step**.
 12. **PersonaPairHandler shared_artefact content_hash matches across peer chains**.
-13. **All 8 new BRAIN audit kinds emit through cyberos.core.writer.Writer**.
+13. **All 8 new memory audit kinds emit through cyberos.core.writer.Writer**.
 14. **CLI `execute` prints `# dispatched to <HandlerClass>` for non-linear patterns**.
 15. **9 affected workflows updated with correct `pattern:` frontmatter**.
 16. **Existing 21/22 tests still pass post-change**.
@@ -266,13 +266,13 @@ def test_dispatch_reads_pattern_frontmatter():
 
 
 # tests/test_time_critical_handler.py
-def test_time_critical_emits_sla_breach_when_slow(tmp_brain):
-    """If actual_duration > sla, BRAIN gets a cuo.time_critical_sla_breach row."""
+def test_time_critical_emits_sla_breach_when_slow(tmp_memory):
+    """If actual_duration > sla, memory gets a cuo.time_critical_sla_breach row."""
     from cuo.core.handlers.time_critical import TimeCriticalHandler
     handler = TimeCriticalHandler(sla_minutes=1)  # 1 minute SLA
     # Mock chain that takes 90 seconds
-    result = handler.execute(slow_chain_fixture, brain_root=tmp_brain)
-    breach_rows = [r for r in tmp_brain.audit_rows() if r.extra.get("kind") == "cuo.time_critical_sla_breach"]
+    result = handler.execute(slow_chain_fixture, memory_root=tmp_memory)
+    breach_rows = [r for r in tmp_memory.audit_rows() if r.extra.get("kind") == "cuo.time_critical_sla_breach"]
     assert len(breach_rows) == 1
     assert breach_rows[0].extra["breach_severity"] > 0.5
 
@@ -290,7 +290,7 @@ def test_per_instance_iterates_once_per_account():
 
 # tests/test_multi_output_handler.py
 def test_multi_output_fanout_to_recipients():
-    """3 recipients → final step output rendered 3 times + 3 BRAIN rows."""
+    """3 recipients → final step output rendered 3 times + 3 memory rows."""
     from cuo.core.handlers.multi_output import MultiOutputHandler
     recipients = [
         {"recipient_id": "vn-mst", "format": "xml", "delivery_method": "email"},
@@ -298,8 +298,8 @@ def test_multi_output_fanout_to_recipients():
         {"recipient_id": "vn-sbv", "format": "json", "delivery_method": "api"},
     ]
     handler = MultiOutputHandler(output_recipients=recipients)
-    result = handler.execute(clo_legal_workflow_fixture, brain_root=tmp_brain)
-    fanout_rows = [r for r in tmp_brain.audit_rows() if r.extra.get("kind") == "cuo.multi_output_fanout"]
+    result = handler.execute(clo_legal_workflow_fixture, memory_root=tmp_memory)
+    fanout_rows = [r for r in tmp_memory.audit_rows() if r.extra.get("kind") == "cuo.multi_output_fanout"]
     assert len(fanout_rows) == 3
 
 
@@ -314,7 +314,7 @@ def test_sequential_approval_halts_on_ethics_reject():
     # Mock approver chain that fails
     result = handler.execute(caio_per_model_card_release_fixture, approver_outcome="FAILED")
     assert result.outcome == "BLOCKED"
-    halt_rows = [r for r in tmp_brain.audit_rows() if r.extra.get("kind") == "cuo.sequential_approval_halted"]
+    halt_rows = [r for r in tmp_memory.audit_rows() if r.extra.get("kind") == "cuo.sequential_approval_halted"]
     assert len(halt_rows) == 1
 
 
@@ -329,7 +329,7 @@ def test_persona_pair_handoff_at_declared_step():
         handoff_step=4,
     )
     result = handler.execute(cro_revenue_churn_fixture)
-    handoff_rows = [r for r in tmp_brain.audit_rows() if r.extra.get("kind") == "cuo.persona_pair_handoff"]
+    handoff_rows = [r for r in tmp_memory.audit_rows() if r.extra.get("kind") == "cuo.persona_pair_handoff"]
     assert len(handoff_rows) >= 1
     # Verify shared artefact content hash matches across both legs
     primary_hash = result.shared_artefact_hash
@@ -343,7 +343,7 @@ def test_persona_pair_handoff_at_declared_step():
 
 **Upstream:** FR-CUO-104 (topological chain walk), FR-CUO-105 (per-step rollback — sequential_approval halt may trigger rollback of completed steps).
 
-**Cross-module:** FR-SKILL-001 (skill registry for peer-workflow lookup), FR-BRAIN-111 (PII scrubbing for SLA-breach reason field).
+**Cross-module:** FR-SKILL-001 (skill registry for peer-workflow lookup), FR-MEMORY-111 (PII scrubbing for SLA-breach reason field).
 
 **Downstream:** None — Phase 4 closes the supervisor design. Future work (FR-CUO-107+) shifts to production hardening (retries, observability, multi-tenant).
 
@@ -354,7 +354,7 @@ def test_persona_pair_handoff_at_declared_step():
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
 | Unknown `pattern:` value in workflow frontmatter | dispatch.py rejects | refuse to execute; emit `cuo.handler_dispatch_failed` | author fixes frontmatter |
-| time_critical chain hangs past SLA | timer in TimeCriticalHandler | sla_breach row emitted; chain continues (don't kill, deliver late + audit) | operator reviews breach in BRAIN |
+| time_critical chain hangs past SLA | timer in TimeCriticalHandler | sla_breach row emitted; chain continues (don't kill, deliver late + audit) | operator reviews breach in memory |
 | per_instance empty descriptor | empty list check | refuse to execute; outcome=BLOCKED | author populates descriptor |
 | multi_output zero recipients | empty list check | refuse to execute; outcome=BLOCKED | author adds recipients |
 | sequential_approval approver chain has no halting step | approver chain returns COMPLETED without explicit approval audit | treat as auto-approved + log warning | operator decides if approval is implicit-OK |

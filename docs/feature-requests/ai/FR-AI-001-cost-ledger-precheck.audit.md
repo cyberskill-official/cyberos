@@ -46,10 +46,10 @@ FR-AI-001 is ship-grade. Round-2 revisions promoted the 4 open questions to norm
 - **rule_id:** documentation-gap
 - **status:** RESOLVED — §10 added with 11 distinct failure paths + recovery actions.
 
-### ISS-010 — BRAIN failure should rollback hold (audit-before-action)
+### ISS-010 — memory failure should rollback hold (audit-before-action)
 - **severity:** error (latent)
 - **rule_id:** correctness
-- **status:** RESOLVED — §6 skeleton: `brain_writer::emit` lands BEFORE `tx.commit()`. If BRAIN fails, the transaction rolls back; no hold is created; no Allow is returned.
+- **status:** RESOLVED — §6 skeleton: `memory_writer::emit` lands BEFORE `tx.commit()`. If memory fails, the transaction rolls back; no hold is created; no Allow is returned.
 
 ## §3 — Strengths preserved
 
@@ -60,7 +60,7 @@ FR-AI-001 is ship-grade. Round-2 revisions promoted the 4 open questions to norm
 
 ## §4 — Resolution
 
-**Score = 10/10.** Ship as-is. Implementation MAY begin once FR-AI-005 (loader) and FR-AI-003 (brain bridge) reach the same score and status: shipped.
+**Score = 10/10.** Ship as-is. Implementation MAY begin once FR-AI-005 (loader) and FR-AI-003 (memory bridge) reach the same score and status: shipped.
 
 ---
 

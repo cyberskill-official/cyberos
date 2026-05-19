@@ -25,7 +25,7 @@ The major version is tracked inside `CONTRACT.md`'s frontmatter (`contract_versi
 - **Option A (preferred when no parallel maintenance is needed):** keep the flat layout. CONTRACT.md grows to document v1 (deprecated) + v2 (current); template.md becomes template-v2.md + template-v1.md (kept until all consumers migrate). Single CHANGELOG entry threads through both majors.
 - **Option B (revive a `v<n>/` sub-tree):** if parallel maintenance becomes burdensome (e.g., a partner connector is pinned to v1 while internal skills migrate to v2), reintroduce `v<n>/` folders at THAT point, with v1 contents moved into `v1/` and v2 contents in `v2/`. Only do this when there's evidence the simpler layout broke down.
 
-Per registry v0.2.4 audit (REF-018 in BRAIN), the v<n>/-folder layout was over-engineered for current scale; it solved a parallel-version problem we don't have yet. Defer the structural complexity until it pays for itself.
+Per registry v0.2.4 audit (REF-018 in memory), the v<n>/-folder layout was over-engineered for current scale; it solved a parallel-version problem we don't have yet. Defer the structural complexity until it pays for itself.
 
 `CONTRACT.md` carries a smaller frontmatter than a SKILL.md. Skill-only fields (`allowed_mcp_tools`, `expects/produces`, `audit`, `confidence_band`, `untrusted_inputs`, `gated_until_phase`) are absent. Contract-only fields are present (`contract_id`, `contract_version`, `contract_kind`, `template_literal`, `steward_persona`, `escalation_on_breach`).
 

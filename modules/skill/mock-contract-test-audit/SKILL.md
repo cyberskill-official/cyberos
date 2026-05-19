@@ -1,13 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: mock-contract-test-audit
-description: |
-  Audit a mock-contract-test@1 against mock_contract_test_rubric@1.0:
-  enforces ≥1 request_response_pair, error_modes coverage of every
-  SECURITY/DEGRADATION matrix row, swap_target is a real symbol,
-  sunset_criterion has an observable trigger, and contract_tests pass
-  against the Mock today. Emits a `score / 10` verdict; refuses to
-  pass on <10/10.
+description: >-
+  Audit a mock-contract-test@1 against mock_contract_test_rubric@1.0: enforces ≥1 request_response_pair, error_modes coverage of every SECURITY/DEGRADATION matrix row, swap_target is a real symbol, sunset_criterion has an observable trigger, and contract_tests pass against the Mock today. Emits a `score / 10` verdict; refuses to pass on <10/10. Use when user asks to "audit this mock contract test" or "check the mock contract test". Do NOT use for "draft a new mock contract test" (use mock-contract-test-author instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +11,7 @@ metadata:
   cyberos-template: mock-contract-test-audit@1
   cyberos-rubric-target: mock_contract_test_rubric@1.0
 
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
   write:

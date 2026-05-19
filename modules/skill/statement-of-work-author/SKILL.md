@@ -1,15 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: statement-of-work-author
-description: |
-  Author a Statement of Work (SOW) / Project Charter from a discovery
-  brief, lead form, or kick-off interview. Covers all 12 SOW skeleton
-  fields (objectives, scope in/out, deliverables, assumptions and
-  constraints, engagement model, team and roles, schedule and
-  milestones, pricing and invoicing, acceptance criteria, IP and
-  confidentiality, change control, warranty and support, governance
-  cadence) per Software Development Process.md §4.9. Halts at PLAN
-  approval and HITL gates. Chains naturally into statement-of-work-audit by default.
+description: >-
+  Author a Statement of Work (SOW) / Project Charter from a discovery brief, lead form, or kick-off interview. Covers all 12 SOW skeleton fields (objectives, scope in/out, deliverables, assumptions and constraints, engagement model, team and roles, schedule and milestones, pricing and invoicing, acceptance criteria, IP and confidentiality, change control, warranty and support, governance cadence) per Software Development Process.md §4.9. Halts at PLAN approval and HITL gates. Chains naturally into statement-of-work-audit by default. Use when user asks to "draft a statement of work" or "create the statement of work". Do NOT use for "audit existing statement of work" (use statement-of-work-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -18,7 +11,7 @@ metadata:
   cyberos-template: statement-of-work@1
   cyberos-rubric-target: sow_rubric@1.0
 
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - company:locked-decisions
@@ -32,8 +25,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:

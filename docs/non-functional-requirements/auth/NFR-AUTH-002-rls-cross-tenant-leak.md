@@ -27,7 +27,7 @@ RLS is the platform's load-bearing multi-tenancy primitive. A single cross-tenan
 ## §3 — Measurement
 
 - Counter `auth_rls_unscoped_query_total` — should always be zero. Sev-0 alarm on any non-zero.
-- BRAIN audit query `view kind=auth.rls.policy_applied` — every tenant create should produce one row per registered table.
+- memory audit query `view kind=auth.rls.policy_applied` — every tenant create should produce one row per registered table.
 - pg_stat_statements query analyzer — any SELECT/UPDATE/DELETE on a tenant-scoped table without `tenant_id` in the predicate → flagged.
 
 ## §4 — Verification

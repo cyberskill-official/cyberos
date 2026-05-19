@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-19
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-SKILL-103, FR-SKILL-111, FR-SKILL-112, FR-SKILL-114]
 depends_on: [FR-SKILL-103]
 blocks: []
@@ -24,7 +24,7 @@ source_pages:
 source_decisions:
   - DEC-050 (CaMeL pattern — every external byte wrapped in untrusted_content)
   - DEC-091 (host-portability — CCSM is source of truth; transpilers emit per-host)
-  - DEC-180 (frontmatter declares BRAIN scopes + tool requirements — no XML)
+  - DEC-180 (frontmatter declares memory scopes + tool requirements — no XML)
   - DEC-182 (frontmatter schema versioned; v1 frozen; new field renames are MINOR bumps)
 
 language: rust 1.81 + yaml + markdown + bash

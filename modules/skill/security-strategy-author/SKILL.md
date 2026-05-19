@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: security-strategy-author
-description: Authors the annual information-security strategy. Threat landscape, current posture vs NIST CSF 2.0, CIS Controls IG1/IG2/IG3 maturity, prioritized initiatives, budget envelope, security OKRs, board narrative. Per NIST CSF 2.0 + ISO/IEC 27001:2022 + CIS Controls v8 + Verizon DBIR + MITRE ATT&CK.
-  Author a SECURITY_STRATEGY markdown from source artefact(s). Generates a
-  versioned security-strategy@1 file under output_dir, with per-claim authority
-  markers and provenance to the source. Chains naturally into
-  security-strategy-audit by default. Refuses to author when upstream artefact
-  is in non-pass state.
+description: >-
+  Authors the annual information-security strategy. Threat landscape, current posture vs NIST CSF 2.0, CIS Controls IG1/IG2/IG3 maturity, prioritized initiatives, budget envelope, security OKRs, board narrative. Per NIST CSF 2.0 + ISO/IEC 27001:2022 + CIS Controls v8 + Verizon DBIR + MITRE ATT&CK. Author a SECURITY_STRATEGY markdown from source artefact(s). Generates a versioned security-strategy@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into security-strategy-audit by default. Refuses to author when upstream artefact is in non-pass state. Use when user asks to "draft a security strategy" or "create the security strategy". Do NOT use for "audit existing security strategy" (use security-strategy-audit instead). Author a SECURITY_STRATEGY markdown from source artefact(s). Generates a versioned security-strategy@1 file under output_dir, with per-claim authority markers and provenance to the source. Chains naturally into security-strategy-audit by d...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-target: security-strategy_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -30,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -291,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

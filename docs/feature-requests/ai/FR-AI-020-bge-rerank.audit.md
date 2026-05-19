@@ -88,13 +88,13 @@ First-pass §4 AC #2 said: *"Scores are descending; relevant docs first."*
 
 #### Description
 
-The first-pass §1 #5 said: *"MUST emit `ai.invocation` BRAIN row per call (same audit as any other inference)."* But the row's payload schema for rerank is different from a standard chat invocation — it carries `candidate_count`, `query_token_count`, `total_token_count`, `skipped`, `model_sha256` that aren't in FR-AI-002's vanilla invocation row. No builder shown.
+The first-pass §1 #5 said: *"MUST emit `ai.invocation` memory row per call (same audit as any other inference)."* But the row's payload schema for rerank is different from a standard chat invocation — it carries `candidate_count`, `query_token_count`, `total_token_count`, `skipped`, `model_sha256` that aren't in FR-AI-002's vanilla invocation row. No builder shown.
 
 This is the same pattern as FR-AI-014 ISS-004 (`canonical::persona_loaded` builder missing) and FR-AI-015 ISS-003 (`canonical::zdr_violation` builder missing). The owning-FR-builds-the-builder principle applies: this FR owns the rerank-specific row variant.
 
 #### Suggested fix
 
-Add `canonical::invocation_rerank` builder in §3 + §6 with full payload schema. Add `services/ai-gateway/src/brain_writer.rs` to `modified_files`. Show the row's full JSON structure in §8 (both success and skipped variants).
+Add `canonical::invocation_rerank` builder in §3 + §6 with full payload schema. Add `services/ai-gateway/src/memory_writer.rs` to `modified_files`. Show the row's full JSON structure in §8 (both success and skipped variants).
 
 ### ISS-004 — Candidate truncation ("Truncate to top-100; warn log") contradicts validation discipline
 
@@ -190,7 +190,7 @@ All 6 mechanical revisions applied (2026-05-16) within the FR itself:
 
 - **ISS-002 RESOLVED**: AC #2 split into mechanical assertions (descending + indices preserved); AC #4 introduces the known-relevance fixture in `rerank_quality_test.rs` with concrete docs (Decree 13 / PDPL); §5 test asserts top-3 contains relevant + top score > 0.5.
 
-- **ISS-003 RESOLVED**: `canonical::invocation_rerank` builder in §3 + §6; `services/ai-gateway/src/brain_writer.rs` in `modified_files`; full row JSON in §8 (success + skipped variants); AC #8 asserts emission; §5 test `audit_row_emitted_on_rerank`.
+- **ISS-003 RESOLVED**: `canonical::invocation_rerank` builder in §3 + §6; `services/ai-gateway/src/memory_writer.rs` in `modified_files`; full row JSON in §8 (success + skipped variants); AC #8 asserts emission; §5 test `audit_row_emitted_on_rerank`.
 
 - **ISS-004 RESOLVED**: Hard cap with 413 instead of silent truncation; §1 #6 normative; `RerankError::TooManyCandidates`; AC #9 + §5 test; §10 row updated; §11 note about KB-module-as-pre-filter boundary.
 

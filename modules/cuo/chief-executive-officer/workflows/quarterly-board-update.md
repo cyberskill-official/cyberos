@@ -27,7 +27,7 @@ consults:
   - { persona: cuo/chief-legal-officer,          when: "board update includes legal items (litigation, M&A, governance change)" }
 
 audit_hooks:
-  - each skill emits an artefact_write row to the BRAIN audit chain
+  - each skill emits an artefact_write row to the memory audit chain
   - workflow_complete row written on PASS with the board_deck artefact hash
   - HITL pause at step 1 PLAN (operator approves deck outline) and step 2 if QA-NUM-001 fires on unsourced numbers
 ---

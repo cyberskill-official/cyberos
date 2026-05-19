@@ -1,4 +1,4 @@
-# memory.invariants.yaml — declarative invariants for the CyberOS BRAIN self-audit walker
+# memory.invariants.yaml — declarative invariants for the CyberOS memory self-audit walker
 #
 # This file replaces the prose §8.7 "7-phase self-audit" in AGENTS.md with a
 # code-walkable list. The Deep Optimization Audit §4.2 row 35 calls for this:

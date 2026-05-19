@@ -3,7 +3,7 @@ id: FR-CHAT-002
 title: "cyberos-chat-authbridge plugin — Mattermost auth delegates to FR-AUTH-004 JWT with tenant_id propagation and SCIM-free provisioning"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 1
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-CHAT-001, FR-CHAT-003, FR-AUTH-004, FR-AUTH-005]
 depends_on: [FR-CHAT-001, FR-AUTH-004]
 blocks: [FR-CHAT-003]
@@ -82,7 +82,7 @@ The authbridge plugin **MUST** delegate Mattermost authentication to FR-AUTH-004
     - User switched tenants → 403 with `{"error":"tenant_mismatch","reason":"jwt_tenant_id != mm_user_team"}`.
     - Operator action: contact admin to re-add user to correct team.
 8. **MUST** validate JWT `jti` against Mattermost's session blocklist (FR-AUTH-004 revocation list); revoked → 401.
-9. **MUST** emit BRAIN audit row `chat.session_started` per successful login with `{mm_user_id, cyberos_subject_id, tenant_id, jit_provisioned, trace_id}`.
+9. **MUST** emit memory audit row `chat.session_started` per successful login with `{mm_user_id, cyberos_subject_id, tenant_id, jit_provisioned, trace_id}`.
 10. **MUST** emit OTel metrics:
     - `chat_authbridge_logins_total{outcome}` (outcome ∈ ok | invalid_jwt | tenant_mismatch | revoked).
     - `chat_authbridge_jit_provisions_total`.
@@ -191,7 +191,7 @@ func (p *AuthBridgePlugin) handleLogin(c *plugin.Context, w http.ResponseWriter,
     })
     if err != nil { http.Error(w, err.Error(), 500); return }
 
-    p.emitBrainAudit("chat.session_started", map[string]interface{}{
+    p.emitMemoryAudit("chat.session_started", map[string]interface{}{
         "mm_user_id": mmUser.Id, "cyberos_subject_id": subject,
         "tenant_id": tenantID, "jit_provisioned": jit,
     })
@@ -751,7 +751,7 @@ Valid `error` values: `invalid_jwt | missing_tenant_claim | tenant_mismatch | re
 10. **JWKS cache hit** — second login within 1h → JWKS not re-fetched; metric increments.
 11. **JWKS refresh proactive** — fixture: 50min elapsed → background refresh fires.
 12. **Tenant_id propagated to session.Props** — downstream plugin reads `c.AppContext.Session().Props["tenant_id"]` → returns expected value.
-13. **BRAIN audit `chat.session_started`** — row emitted per login.
+13. **memory audit `chat.session_started`** — row emitted per login.
 14. **OTel logins_total{outcome="ok"}** — counter increments.
 15. **OTel jit_provisions_total** — increments only on first-login provisioning.
 16. **Plugin OnActivate completes < 1s** — startup latency.
@@ -1323,7 +1323,7 @@ type AuthBridgePlugin struct {
     tenantMap *tenantMap
     revoker   *revocationChecker
     metrics   *authMetrics
-    audit     brainAuditSink
+    audit     memoryAuditSink
 }
 
 func (p *AuthBridgePlugin) OnActivate() error {
@@ -1336,12 +1336,12 @@ func (p *AuthBridgePlugin) OnActivate() error {
 
 ### §6.2 — Audit emit ordering
 
-Per AUTHORING.md §3.8 rule 25 (audit-before-action), the BRAIN row MUST be emitted BEFORE the CreateSession call returns to the client. The pattern is:
+Per AUTHORING.md §3.8 rule 25 (audit-before-action), the memory row MUST be emitted BEFORE the CreateSession call returns to the client. The pattern is:
 
 1. Validate JWT, JTI, tenant.
 2. JIT-provision (idempotent; safe to retry).
 3. Compute `chat.session_started` payload.
-4. Emit BRAIN row; await ack.
+4. Emit memory row; await ack.
 5. CreateSession in Mattermost.
 6. Return 200.
 
@@ -1651,11 +1651,11 @@ All resolved. Deferred:
 | Clock skew (JWT `nbf` slightly in future) | parse rejects with `Token not valid yet` | 401 `invalid_jwt` | Sync server clock via NTP; AUTH-004 emits with -5s slack |
 | Mattermost team deleted while user is signing in | tenantMap returns stale team_id; GetUsersInTeam errs | 500 `server_error`; SEV-2 | Operator recreates team or removes mapping |
 | Login burst exceeds CreateSession rate limit | Mattermost AppError "rate_limited" | 503 with `retry_after_seconds` in envelope | Client backs off |
-| Audit emit fails (BRAIN unreachable) | BRAIN client returns err | Login still succeeds; SEV-2 logged + counter `chat_authbridge_audit_emit_failures_total` | Operator restores BRAIN; audit row may be lost |
+| Audit emit fails (memory unreachable) | memory client returns err | Login still succeeds; SEV-2 logged + counter `chat_authbridge_audit_emit_failures_total` | Operator restores memory; audit row may be lost |
 | Concurrent OnDeactivate calls during shutdown | stopCh close racing | First closes; second is no-op (select-default) | None |
 | Two pods see different JWKS during rotation window | Inconsistent kid resolution across replicas | <5min until both pods refresh | None — eventual consistency |
 | Token's `iss` doesn't match expected | claims["iss"] check fails | 401 `invalid_jwt`; SEV-2 if widespread | Operator investigates JWT issuer drift |
-| BRAIN audit row schema rejection (kind not whitelisted) | BRAIN returns 422 | Logged; login still succeeds; metric `audit_emit_failures_total{reason=schema}` | Coordinate with FR-AI-003 closed-set extension |
+| memory audit row schema rejection (kind not whitelisted) | memory returns 422 | Logged; login still succeeds; metric `audit_emit_failures_total{reason=schema}` | Coordinate with FR-AI-003 closed-set extension |
 | JIT-provisioned user fails Mattermost team-add | API.AddUserToTeam returns err | Login returns 500 `server_error`; user record exists but not in team — admin must repair | Operator runs `cyberos chat repair-user --subject <id>` |
 | Plugin .tar.gz checksum mismatch on Mattermost load | Mattermost log `plugin_signature_mismatch` | Plugin fails to load; OnActivate never called → builtin auth disabled → all logins 405 | Operator re-uploads plugin or rolls back fork |
 

@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-KB-001, FR-KB-007, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-KB-001, FR-KB-007, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-KB-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-1961 2026-05-17 — Closed enum `kb_locale` = {vi, en}; cardinality 2 (extensible later); reader display per user locale
   - DEC-1962 2026-05-17 — Parity check: AI-suggested diff-summary when source updated; CDO reviews + propagates to translation
   - DEC-1963 2026-05-17 — Both sides indexed independently (FR-KB-004 + FR-KB-005); search returns whichever locale matches; reader auto-switches if pair exists
-  - DEC-1964 2026-05-17 — BRAIN audit kinds: kb.translation_linked, kb.translation_parity_alert, kb.translation_display_switched
+  - DEC-1964 2026-05-17 — memory audit kinds: kb.translation_linked, kb.translation_parity_alert, kb.translation_display_switched
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without translation linking, vi/en doc pairs drift independent
 
 ## §1 — Description (BCP-14 normative)
 
-The KB service **MUST** ship translation linking at `services/kb/src/translation/` with bi-directional links + parity check + locale-aware display, 3 BRAIN audit kinds.
+The KB service **MUST** ship translation linking at `services/kb/src/translation/` with bi-directional links + parity check + locale-aware display, 3 memory audit kinds.
 
 1. **MUST** validate `kb_locale` against closed enum per DEC-1961.
 
@@ -86,7 +86,7 @@ The KB service **MUST** ship translation linking at `services/kb/src/translation
 4. **MUST** check parity at `parity_checker.rs::check(doc, translation)` per DEC-1962:
    - Triggered on source doc version update
    - FR-AI-003 generates diff-summary of changes
-   - Alert emitted (BRAIN audit + CDO notification)
+   - Alert emitted (memory audit + CDO notification)
    - CDO reviews + propagates to translation
 
 5. **MUST** route reader display per DEC-1963 at `locale_router.rs::route(doc, user_locale)`:
@@ -100,7 +100,7 @@ The KB service **MUST** ship translation linking at `services/kb/src/translation
    GET    /v1/kb/docs/{id}/translation-parity (CDO check)
    ```
 
-7. **MUST** emit 3 BRAIN audit kinds per DEC-1964. PII per FR-BRAIN-111: diff-summary SHA256.
+7. **MUST** emit 3 memory audit kinds per DEC-1964. PII per FR-MEMORY-111: diff-summary SHA256.
 
 8. **MUST** thread trace_id from link/parity/display → audit.
 
@@ -148,7 +148,7 @@ Parity check response:
 ---
 
 ## §4 — Acceptance criteria
-1. **locale enum cardinality 2**. 2. **Bi-directional link enforced**. 3. **CHECK constraint on locale values**. 4. **Index on translation_of for lookups**. 5. **Parity check via FR-AI-003**. 6. **Source update triggers parity audit**. 7. **Locale router auto-switches**. 8. **No-translation banner shown when missing**. 9. **3 BRAIN audit kinds emitted**. 10. **PII scrubbed (diff-summary SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **CDO-only link/parity write**. 14. **Un-link respects bidirectional invariant**. 15. **Independent search indexes (FR-KB-004+005 per locale)**. 16. **Append-only via REVOKE except 2 cols**. 17. **Both sides remain queryable**. 18. **Self-reference rejected**. 19. **Cross-tenant link rejected (FK + RLS)**. 20. **Multiple-translation chain prevented (one-to-one)**.
+1. **locale enum cardinality 2**. 2. **Bi-directional link enforced**. 3. **CHECK constraint on locale values**. 4. **Index on translation_of for lookups**. 5. **Parity check via FR-AI-003**. 6. **Source update triggers parity audit**. 7. **Locale router auto-switches**. 8. **No-translation banner shown when missing**. 9. **3 memory audit kinds emitted**. 10. **PII scrubbed (diff-summary SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **CDO-only link/parity write**. 14. **Un-link respects bidirectional invariant**. 15. **Independent search indexes (FR-KB-004+005 per locale)**. 16. **Append-only via REVOKE except 2 cols**. 17. **Both sides remain queryable**. 18. **Self-reference rejected**. 19. **Cross-tenant link rejected (FK + RLS)**. 20. **Multiple-translation chain prevented (one-to-one)**.
 
 ---
 
@@ -175,7 +175,7 @@ async fn parity_alert_on_source_update() {
     let ctx = TestContext::with_translation_pair().await;
     ctx.update_doc(ctx.vi_doc, "new content").await;
     tokio::time::sleep(Duration::from_secs(1)).await;
-    let audits = ctx.fetch_brain_audits("kb.translation_parity_alert").await;
+    let audits = ctx.fetch_memory_audits("kb.translation_parity_alert").await;
     assert!(!audits.is_empty());
 }
 
@@ -186,7 +186,7 @@ async fn parity_alert_on_source_update() {
 
 ## §7 — Dependencies
 **Upstream:** FR-KB-001.
-**Cross-module:** FR-AI-003 (diff summary), FR-KB-007 (Q&A respects locale), FR-AUTH-101 (CDO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AI-003 (diff summary), FR-KB-007 (Q&A respects locale), FR-AUTH-101 (CDO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -206,7 +206,7 @@ async fn parity_alert_on_source_update() {
 - §11.1 Bi-dir enforcement: trigger on UPDATE sets the partner's translation_of too.
 - §11.2 Parity check cron: nightly compares last_updated of both sides; alerts on > 7-day drift.
 - §11.3 Locale router accepts Accept-Language header or user.preferred_locale.
-- §11.4 BRAIN audit body: doc_id pair, drift_days; diff_summary SHA256.
+- §11.4 memory audit body: doc_id pair, drift_days; diff_summary SHA256.
 - §11.5 Future locales: add to enum + migration; reader router handles automatically.
 
 ---

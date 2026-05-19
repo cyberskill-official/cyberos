@@ -1,9 +1,9 @@
 ---
 id: FR-AUTH-102
-title: "AUTH TOTP (RFC 6238) + WebAuthn Level 3 MFA — closed factor enum + enrolment FSM + challenge/response + recovery codes + sev-1 lockout + BRAIN audit per factor lifecycle event"
+title: "AUTH TOTP (RFC 6238) + WebAuthn Level 3 MFA — closed factor enum + enrolment FSM + challenge/response + recovery codes + sev-1 lockout + memory audit per factor lifecycle event"
 module: AUTH
 priority: MUST
-status: building
+status: implementing
 verify: T
 phase: P3
 milestone: P3 · slice 1
@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-AUTH-105, FR-AUTH-106, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-AUTH-105, FR-AUTH-106, FR-OBS-007]
 depends_on: [FR-AUTH-002]
 blocks: [FR-AUTH-105, FR-AUTH-106]
 
@@ -26,9 +26,9 @@ source_decisions:
   - DEC-482 (TOTP secret 160-bit (20-byte) random, base32-encoded, KMS-encrypted at rest, never exposed after enrolment — only the QR-code provisioning URI shown once)
   - DEC-483 (WebAuthn Level 3 — relying party id = `cyberos.world` at slice 1; user verification = required; resident keys (discoverable credentials) = preferred for passkey UX)
   - DEC-484 (closed challenge lifecycle FSM: pending → consumed | expired — challenge TTL 5 minutes; reuse → rejected with sev-2 audit; expired → 401 challenge_expired)
-  - DEC-485 (recovery codes — 10 codes per subject, 8 chars base32, single-use, bcrypt-hashed at rest, regenerated on demand; consuming one emits sev-2 BRAIN row)
-  - DEC-486 (BRAIN audit kinds: auth.mfa_factor_enrolled, auth.mfa_factor_removed, auth.mfa_challenge_issued, auth.mfa_challenge_succeeded, auth.mfa_challenge_failed, auth.mfa_recovery_code_consumed, auth.mfa_locked_out, auth.mfa_unlocked)
-  - DEC-487 (lockout policy: 5 failed challenges in 15min → lock subject's MFA for 30min; emit sev-1 `auth.mfa_locked_out` BRAIN row; root-admin can unlock early via dedicated handler emitting `auth.mfa_unlocked`)
+  - DEC-485 (recovery codes — 10 codes per subject, 8 chars base32, single-use, bcrypt-hashed at rest, regenerated on demand; consuming one emits sev-2 memory row)
+  - DEC-486 (memory audit kinds: auth.mfa_factor_enrolled, auth.mfa_factor_removed, auth.mfa_challenge_issued, auth.mfa_challenge_succeeded, auth.mfa_challenge_failed, auth.mfa_recovery_code_consumed, auth.mfa_locked_out, auth.mfa_unlocked)
+  - DEC-487 (lockout policy: 5 failed challenges in 15min → lock subject's MFA for 30min; emit sev-1 `auth.mfa_locked_out` memory row; root-admin can unlock early via dedicated handler emitting `auth.mfa_unlocked`)
   - DEC-488 (REVOKE UPDATE, DELETE on mfa_challenge_log + mfa_factor_history from cyberos_app — append-only at SQL grant)
   - DEC-489 (TOTP step skew tolerance = ±1 (60s total window) per RFC 6238 §5.2 — covers clock drift; widening tolerance increases brute-force surface so capped at 1)
   - DEC-490 (WebAuthn challenge signature verified against the credential's stored public key via `webauthn-rs` crate; counter-monotonicity check to detect cloned authenticators per W3C §10.4)
@@ -57,7 +57,7 @@ new_files:
   - services/auth/src/mfa/lockout.rs                        # 5/15min → 30min lock state machine
   - services/auth/src/mfa/policy.rs                         # per-tenant MFA-required-roles policy lookup
   - services/auth/src/mfa/repo.rs                           # CRUD across mfa_factors + history + log + recovery + lockout
-  - services/auth/src/mfa/audit.rs                          # 8 BRAIN row builders
+  - services/auth/src/mfa/audit.rs                          # 8 memory row builders
   - services/auth/src/handlers/mfa.rs                       # enrol + challenge + verify + recovery + unlock
   - services/auth/tests/mfa_factor_kind_closed_test.rs
   - services/auth/tests/mfa_totp_rfc6238_test.rs
@@ -162,14 +162,14 @@ The AUTH service **MUST** ship TOTP (RFC 6238) + WebAuthn Level 3 MFA with close
 
 14. **MUST** implement lockout (per DEC-487):
     - Count failed challenges per subject in a sliding 15-minute window.
-    - 5 failures in window → set `locked_until = now() + 30 minutes`; emit `auth.mfa_locked_out` BRAIN row at sev-1.
+    - 5 failures in window → set `locked_until = now() + 30 minutes`; emit `auth.mfa_locked_out` memory row at sev-1.
     - During lockout, all MFA verify attempts return 423 `mfa_locked`; failure counter does NOT increment.
     - At `locked_until` expiry, the next attempt succeeds normally if credentials valid.
     - Root-admin can early-unlock via `POST /v1/auth/mfa/unlock` (emits `auth.mfa_unlocked` sev-2).
 
 15. **MUST** consult per-tenant MFA policy (per DEC-491) at JWT issuance time. The tenant policy YAML (FR-AI-005) declares `mfa_required_roles: [<role>...]`. JWT issuer checks: if subject's roles ∩ mfa_required_roles ≠ ∅ AND no recent successful MFA challenge → return 401 `mfa_challenge_required` with `factor_kinds: [<available factors for subject>]`. Founder role ALWAYS requires (DEC-128).
 
-16. **MUST** emit BRAIN audit rows for 8 kinds (per DEC-486):
+16. **MUST** emit memory audit rows for 8 kinds (per DEC-486):
     - `auth.mfa_factor_enrolled` — POST /enrol success.
     - `auth.mfa_factor_removed` — POST /remove success.
     - `auth.mfa_challenge_issued` — POST /challenge success.
@@ -179,7 +179,7 @@ The AUTH service **MUST** ship TOTP (RFC 6238) + WebAuthn Level 3 MFA with close
     - `auth.mfa_locked_out` — sev-1 with subject_id_hash16 + failed_count + locked_until.
     - `auth.mfa_unlocked` — sev-2 with reason + root-admin actor.
 
-17. **MUST** PII-scrub `display_name`, `reason`, and `source_ip_hash16` via FR-BRAIN-111 before chain commit.
+17. **MUST** PII-scrub `display_name`, `reason`, and `source_ip_hash16` via FR-MEMORY-111 before chain commit.
 
 18. **MUST** expose REST handlers:
     - `POST /v1/auth/mfa/factors/totp/enrol` — generates secret + returns QR provisioning URI; subject confirms first code; row created.
@@ -267,7 +267,7 @@ The AUTH service **MUST** ship TOTP (RFC 6238) + WebAuthn Level 3 MFA with close
 
 **Why `webauthn-rs` crate vs hand-roll (§1 #10)?** WebAuthn spec is complex (CBOR encoding, attestation formats, signature verification, multiple key types). `webauthn-rs` is the Rust-ecosystem standard; hand-rolling invites subtle bugs in cryptographic verification.
 
-**Why 8 BRAIN audit kinds (DEC-486)?** Each represents a distinct operator-query category. "Show me all lockouts this week" → kind = `auth.mfa_locked_out`. "Who consumed recovery codes recently?" → kind = `auth.mfa_recovery_code_consumed`. Split kinds = selective queries; merged would force operator-side filtering.
+**Why 8 memory audit kinds (DEC-486)?** Each represents a distinct operator-query category. "Show me all lockouts this week" → kind = `auth.mfa_locked_out`. "Who consumed recovery codes recently?" → kind = `auth.mfa_recovery_code_consumed`. Split kinds = selective queries; merged would force operator-side filtering.
 
 ---
 
@@ -772,8 +772,8 @@ pub async fn verify_challenge(
 20. **append-only mfa_factor_history** — UPDATE/DELETE blocked from cyberos_app.
 21. **append-only mfa_challenge_log** — UPDATE allowed only via mfa_challenge_writer role.
 22. **mfa_lockout_state writes via mfa_lockout_writer role only**.
-23. **8 BRAIN audit kinds emit correctly** — one per lifecycle event.
-24. **PII-scrubbed display_name + reason in BRAIN rows**.
+23. **8 memory audit kinds emit correctly** — one per lifecycle event.
+24. **PII-scrubbed display_name + reason in memory rows**.
 25. **TOTP verify p95 < 100ms** — perf test.
 26. **WebAuthn verify p95 < 300ms** — perf test.
 27. **GET /factors never exposes secrets** — totp_secret_kms_blob + webauthn_public_key absent from response.
@@ -816,7 +816,7 @@ async fn five_failures_in_15min_triggers_lockout(ctx: TestCtx) {
     }
     let state = cyberos_auth::mfa::lockout::record_failure(&ctx.pool, subject_id, ctx.tenant).await.unwrap();
     assert!(matches!(state, cyberos_auth::mfa::lockout::LockoutState::Locked { .. }));
-    let rows = ctx.brain_audit_rows("auth.mfa_locked_out").await;
+    let rows = ctx.memory_audit_rows("auth.mfa_locked_out").await;
     assert_eq!(rows.len(), 1);
     assert_eq!(rows[0]["severity"], "sev-1");
 }
@@ -841,7 +841,7 @@ async fn consumed_challenge_cannot_be_reused(ctx: TestCtx) {
     // Try replay
     let err = ctx.verify_challenge(challenge.id, factor.id, &valid_totp_code()).await.unwrap_err();
     assert!(format!("{err:?}").contains("ChallengeReused"));
-    let rows = ctx.brain_audit_rows("auth.mfa_challenge_failed").await;
+    let rows = ctx.memory_audit_rows("auth.mfa_challenge_failed").await;
     assert!(rows.iter().any(|r| r["reason"] == "challenge_reused"));
 }
 ```
@@ -885,7 +885,7 @@ async fn regen_invalidates_all_prior(ctx: TestCtx) {
 
 ## §6 — Implementation skeleton
 
-(API contract above is the skeleton; 8 BRAIN row builders follow the canonical pattern; webauthn-rs handles WebAuthn cryptographic plumbing.)
+(API contract above is the skeleton; 8 memory row builders follow the canonical pattern; webauthn-rs handles WebAuthn cryptographic plumbing.)
 
 ---
 
@@ -900,8 +900,8 @@ async fn regen_invalidates_all_prior(ctx: TestCtx) {
 **Cross-module:**
 - **FR-AUTH-004** — JWT issuer consults MFA policy before issuing.
 - **FR-AUTH-101** — RBAC; founder role MFA-always; root-admin role required for unlock.
-- **FR-AI-003** — BRAIN audit bridge.
-- **FR-BRAIN-111** — PII scrubbing.
+- **FR-AI-003** — memory audit bridge.
+- **FR-MEMORY-111** — PII scrubbing.
 - **FR-AI-005** — per-tenant policy YAML (mfa_required_roles).
 - **FR-OBS-007** — sev-1 alarms on lockout; sev-2 on recovery consumption + reuse.
 
@@ -935,7 +935,7 @@ Response:
 { "factor_id": "01HG7V8B0K8M4Z8Z8M8M8M8M8M", "confirmation_code": "527821" }
 ```
 
-### 8.3 — auth.mfa_factor_enrolled BRAIN row
+### 8.3 — auth.mfa_factor_enrolled memory row
 
 ```json
 {
@@ -949,7 +949,7 @@ Response:
 }
 ```
 
-### 8.4 — auth.mfa_locked_out BRAIN row (sev-1)
+### 8.4 — auth.mfa_locked_out memory row (sev-1)
 
 ```json
 {
@@ -1012,7 +1012,7 @@ All other questions resolved.
 | Concurrent verify attempts | row lock | Serial | Designed |
 | Non-root-admin unlock attempt | role check | 403 | Designed |
 | Cross-tenant factor lookup | RLS | 0 rows | Designed |
-| BRAIN audit fail mid-tx | rollback | 500 + retry | brain_writer health |
+| memory audit fail mid-tx | rollback | 500 + retry | memory_writer health |
 | TOTP confirmation_code mismatch on enrol | handler | 400 confirmation_code_mismatch + no row persisted | Re-attempt |
 | WebAuthn challenge replay | challenge_id reuse | 401 + sev-2 | Designed |
 | Subject deleted while factors exist | FK RESTRICT | DELETE auth.subjects fails | Soft-delete via status |
@@ -1041,7 +1041,7 @@ All other questions resolved.
 - **Per-tenant policy via tenant_policy YAML** — flexibility without code fork.
 - **Founder always-MFA** — hard-coded design assertion.
 - **Append-only via SQL grants** — forensic integrity.
-- **8 BRAIN audit kinds** — selective operator queries.
+- **8 memory audit kinds** — selective operator queries.
 - **PII scrub display_name + reason** — chain holds scrubbed.
 - **mfa_lockout_writer role split** — app code can't tamper with lockout.
 - **mfa_challenge_writer role split** — challenge status transitions only via handler.

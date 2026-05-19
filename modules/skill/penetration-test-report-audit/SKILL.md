@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: penetration-test-report-audit
-description: Audits a penetration-test-report@1 artefact against pen_test_report_rubric@1.0. Validates FM + SEC, per-finding CVSS justification, PoC reproducibility, remediation-guidance specificity, retest-plan feasibility. Per OWASP WSTG + PTES + NIST SP 800-115 conventions.
-  Audit one or more existing penetration-test-report@1 markdowns against
-  pen-test-report_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  penetration-test-report-author.
+description: >-
+  Audits a penetration-test-report@1 artefact against pen_test_report_rubric@1.0. Validates FM + SEC, per-finding CVSS justification, PoC reproducibility, remediation-guidance specificity, retest-plan feasibility. Per OWASP WSTG + PTES + NIST SP 800-115 conventions. Audit one or more existing penetration-test-report@1 markdowns against pen-test-report_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after penetration-test-report-author. Use when user asks to "audit this penetration test report" or "check the penetration test report". Do NOT use for "draft a new penetration test report" (use penetration-test-report-author instead). Audit one or more existing penetration-test-report@1 markdowns against pen-test-report_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: pen-test-report_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

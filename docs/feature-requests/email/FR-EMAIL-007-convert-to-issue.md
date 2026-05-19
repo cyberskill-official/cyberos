@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-001, FR-PROJ-001, FR-AI-003, FR-DOC-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-001, FR-PROJ-001, FR-AI-003, FR-DOC-001, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001, FR-PROJ-001]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1582 2026-05-17 — Closed enum `convert_source` = {email_single_message, email_full_thread, email_inline_quote}; cardinality 3
   - DEC-1583 2026-05-17 — Attachments carry over via FR-DOC-001 references (no copy — same S3 key, new doc_links row)
   - DEC-1584 2026-05-17 — Project selection: user picks at convert; default to last-used-project per user
-  - DEC-1585 2026-05-17 — BRAIN audit kinds: email.convert_to_issue_initiated, email.convert_to_issue_completed, email.convert_to_issue_failed
+  - DEC-1585 2026-05-17 — memory audit kinds: email.convert_to_issue_initiated, email.convert_to_issue_completed, email.convert_to_issue_failed
 
 build_envelope:
   language: rust 1.81
@@ -72,7 +72,7 @@ risk_if_skipped: "Without convert-to-issue, support requests stay in email + los
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service **MUST** ship convert-to-issue at `services/email/src/convert/` creating FR-PROJ issue from message/thread, attachment refs, AI summary, bi-directional backlink, 3 BRAIN audit kinds.
+The EMAIL service **MUST** ship convert-to-issue at `services/email/src/convert/` creating FR-PROJ issue from message/thread, attachment refs, AI summary, bi-directional backlink, 3 memory audit kinds.
 
 1. **MUST** expose `POST /v1/email/messages/{id}/convert-to-issue` body `{ project_id, convert_source, title_override?, priority_override? }`.
 
@@ -106,7 +106,7 @@ The EMAIL service **MUST** ship convert-to-issue at `services/email/src/convert/
 
 8. **MUST** allow project selection per DEC-1584; default = `user.last_used_project_id` (FR-AUTH-101 user prefs).
 
-9. **MUST** emit 3 BRAIN audit kinds per DEC-1585. PII per FR-BRAIN-111: message body/subject SHA-256 hashed; ids ok.
+9. **MUST** emit 3 memory audit kinds per DEC-1585. PII per FR-MEMORY-111: message body/subject SHA-256 hashed; ids ok.
 
 10. **MUST** thread trace_id from convert action → AI → issue creation → audit.
 
@@ -163,7 +163,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **POST creates issue + backlinks message**. 2. **3 source modes work distinct**. 3. **Closed enum + cardinality test**. 4. **AI summary returns title+desc+priority**. 5. **Override fields respected**. 6. **Attachments referenced (not copied)**. 7. **doc_links rows created for each attachment**. 8. **project_id required (400 if missing)**. 9. **Default project = user last_used**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (body/subject SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Bi-directional backlink (msg.linked_issue_id + issue.source_thread_id)**. 15. **Multiple conversions allowed (same msg → multiple issues)**. 16. **GET endpoint lists all conversions**. 17. **AI failure → fallback to subject as title + sev-2 audit**. 18. **converted_by audit-traceable**. 19. **Append-only (REVOKE UPDATE except link cols)**. 20. **Issue created in user's chosen project (RLS-respected)**.
+1. **POST creates issue + backlinks message**. 2. **3 source modes work distinct**. 3. **Closed enum + cardinality test**. 4. **AI summary returns title+desc+priority**. 5. **Override fields respected**. 6. **Attachments referenced (not copied)**. 7. **doc_links rows created for each attachment**. 8. **project_id required (400 if missing)**. 9. **Default project = user last_used**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (body/subject SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Bi-directional backlink (msg.linked_issue_id + issue.source_thread_id)**. 15. **Multiple conversions allowed (same msg → multiple issues)**. 16. **GET endpoint lists all conversions**. 17. **AI failure → fallback to subject as title + sev-2 audit**. 18. **converted_by audit-traceable**. 19. **Append-only (REVOKE UPDATE except link cols)**. 20. **Issue created in user's chosen project (RLS-respected)**.
 
 ---
 
@@ -207,7 +207,7 @@ async fn attachments_referenced_not_copied() {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-001, FR-PROJ-001.
-**Cross-module:** FR-AI-003 (summary), FR-DOC-001 (attachment refs), FR-AUTH-101 (user prefs), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AI-003 (summary), FR-DOC-001 (attachment refs), FR-AUTH-101 (user prefs), FR-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 
@@ -232,7 +232,7 @@ None blocking.
 - §11.1 AI prompt: "Convert this email thread into a project issue. Output JSON {title, description, priority}."
 - §11.2 Description format: AI summary + `\n\n---\nOriginal thread: [link]` + thread excerpt.
 - §11.3 doc_links carries `linked_to_kind: 'issue'`, `linked_to_id: issue_id`.
-- §11.4 PII: message body/subject hashed in BRAIN; ids ok.
+- §11.4 PII: message body/subject hashed in memory; ids ok.
 - §11.5 last_used_project_id stored on user prefs, updated each convert.
 
 ---

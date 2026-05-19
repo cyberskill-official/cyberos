@@ -8,7 +8,7 @@ classifier_version: 3.0.0-a4
 
 ## Positive triggers (MUST route here)
 
-- "Draft a runbook for high BRAIN ingest lag"
+- "Draft a runbook for high memory ingest lag"
 - "Create the on-call runbook for AUTH 5xx spikes"
 - "Document the recovery procedure for stale audit chain"
 - "Author the runbook for Postgres connection-pool exhaustion"

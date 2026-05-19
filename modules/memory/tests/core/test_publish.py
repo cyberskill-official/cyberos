@@ -166,7 +166,7 @@ def test_render_escapes_script_close_in_body(tmp_path):
     m = pub.collect(store)
     html = pub.render_html(m)
     # The literal "</script>" should not appear in the inline JSON region
-    payload_start = html.index('id="brain-data">') + len('id="brain-data">')
+    payload_start = html.index('id="memory-data">') + len('id="memory-data">')
     payload_end = html.index("</script>", payload_start)
     payload_region = html[payload_start:payload_end]
     assert "</script>" not in payload_region
@@ -209,7 +209,7 @@ def test_publish_to_file_writes_html(tmp_path):
     _write_memory(store, "memories/decisions/d1.md",
                   mid="DEC-1", kind="decision", actor="s",
                   ts_ns=1, tags=[], body="decided")
-    out = tmp_path / "brain.html"
+    out = tmp_path / "memory.html"
     summary = pub.publish_to_file(store, out)
     assert out.is_file()
     assert summary["n_memories"] == 1

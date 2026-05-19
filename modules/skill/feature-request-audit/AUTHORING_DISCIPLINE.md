@@ -6,7 +6,7 @@
 
 **Source of truth.** This file is normative for every Feature Request in `cyberos/docs/feature-requests/`. It supersedes any prior ad-hoc patterns.
 
-**Created:** 2026-05-16 after a session that wrote 41 FRs across the priority modules (BRAIN, SKILL, PROJ, CHAT) and codified the lessons learned. **Absorbed into the `feature-request-audit` skill on 2026-05-18** — was previously at `cyberos/docs/feature-requests/AUTHORING.md`. Every rule below maps to at least one rework moment that cost ≥ 15 minutes to identify and fix.
+**Created:** 2026-05-16 after a session that wrote 41 FRs across the priority modules (memory, SKILL, PROJ, CHAT) and codified the lessons learned. **Absorbed into the `feature-request-audit` skill on 2026-05-18** — was previously at `cyberos/docs/feature-requests/AUTHORING.md`. Every rule below maps to at least one rework moment that cost ≥ 15 minutes to identify and fix.
 
 The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**, **SHOULD**, **SHOULD NOT**, **RECOMMENDED**, **NOT RECOMMENDED**, **MAY**, and **OPTIONAL** in this document are to be interpreted as described in BCP 14 (RFC 2119, RFC 8174) when, and only when, they appear in all capitals.
 
@@ -58,7 +58,7 @@ When tempted to ship a compact FR:
 
 There are **two** sanctioned exceptions to the size/depth target. Both must be explicit in the FR title AND the audit file:
 
-1. **Stub FRs.** An FR whose explicit purpose is to reserve an OCI tag / skill ID / API namespace for a later phase. The stub MUST fully spec the stub contract (the no-op behaviour, the audit-row emission, the "DeferredToP<n>" outcome). Acceptable ≤ 300 lines. Examples: `FR-SKILL-106` (brain-sync@1 stub for P2), `FR-SKILL-107` (synthesis-author@1 P3 reservation).
+1. **Stub FRs.** An FR whose explicit purpose is to reserve an OCI tag / skill ID / API namespace for a later phase. The stub MUST fully spec the stub contract (the no-op behaviour, the audit-row emission, the "DeferredToP<n>" outcome). Acceptable ≤ 300 lines. Examples: `FR-SKILL-106` (memory-sync@1 stub for P2), `FR-SKILL-107` (synthesis-author@1 P3 reservation).
 2. **Pure-infrastructure / Terraform / config FRs.** Where the contract surface is small (resource provisioning, single Dockerfile, single workflow). Acceptable ≤ 400 lines. Example: `FR-CHAT-001` (Mattermost fork pinning).
 
 Neither exception authorises *truncation* — both still require all 11 sections, just at a smaller-but-complete scale.
@@ -75,7 +75,7 @@ Every FR file MUST contain these 11 sections, in order, with the canonical headi
 ---
 id: FR-<MODULE>-<NUMBER>
 title: "<one-line subject, ≤ 120 chars>"
-module: <AI | AUTH | BRAIN | CHAT | DOCS | OBS | PROJ | SKILL | ...>
+module: <AI | AUTH | memory | CHAT | DOCS | OBS | PROJ | SKILL | ...>
 priority: <MUST | SHOULD | COULD | MAY>
 status: <draft | accepted | building | shipped | deferred | rejected | superseded>
 verify: <T | I | A | D>            # T=test, I=inspection, A=analysis, D=demonstration
@@ -85,7 +85,7 @@ slice: <integer>
 owner: <person name>
 created: <YYYY-MM-DD>
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-..., FR-...]
 depends_on: [FR-..., FR-...]
 blocks: [FR-..., FR-...]
@@ -227,13 +227,13 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 
 ### §3.2 — Audit-row rules (MUST)
 
-6. **Audit-row kinds MUST match `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`** — exactly one `.` separating module and event_kind. Examples: `ai.precheck`, `brain.sync_row_filtered`, `skill.invoked_started`, `chat.message`. Anti-pattern: `cli.policy_updated` (no module prefix → drift).
+6. **Audit-row kinds MUST match `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`** — exactly one `.` separating module and event_kind. Examples: `ai.precheck`, `memory.sync_row_filtered`, `skill.invoked_started`, `chat.message`. Anti-pattern: `cli.policy_updated` (no module prefix → drift).
 7. **Audit-row kinds MUST be namespaced by the OWNING module.** A skill's audit row is `skill.*`, not `ai.skill_*`. A CHAT-emitted row is `chat.*`. Cross-module rows (e.g. AI Gateway emitting `auth.*`) are forbidden; rows belong to one module each.
 8. **FR-AI-003 closed-set list MUST be extended** whenever a new `ai.*` row is introduced. Add a §1 #8 entry citing the originating FR.
 
 ### §3.3 — Cross-CLI rules (MUST)
 
-9. **All CyberOS CLIs MUST re-export `cyberos-cli-exit::ExitCode`** (the shared crate). No CLI defines its own numeric scheme. The shared values 0–7 are stable cross-CLI contract; module-specific extensions start at the per-module reserved range (200=AUTH, 300=BRAIN, 400=OBS).
+9. **All CyberOS CLIs MUST re-export `cyberos-cli-exit::ExitCode`** (the shared crate). No CLI defines its own numeric scheme. The shared values 0–7 are stable cross-CLI contract; module-specific extensions start at the per-module reserved range (200=AUTH, 300=memory, 400=OBS).
 10. **Bash CLI wrappers MUST echo a warning when delegating to a `slice_version=*-stub` skill.** Operators must see "this is a placeholder; full impl ships in P<n>" — never silent no-op exits.
 
 ### §3.4 — Schema-shape rules (MUST)
@@ -251,7 +251,7 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 
 ### §3.6 — PII-handling rules (MUST)
 
-18. **PII MUST be scrubbed via the `cyberos-brain-pii` ruleset BEFORE chain commit.** Never depend on downstream redaction.
+18. **PII MUST be scrubbed via the `cyberos-memory-pii` ruleset BEFORE chain commit.** Never depend on downstream redaction.
 19. **Logs MUST use the `redact()` helper for sensitive fields.** Never `tracing::info!(?email)` with raw PII; always `tracing::info!(email = %redact_email(email))`.
 20. **Audit rows MUST carry redacted forms when the field is PII** (e.g. `mst_redacted: "03******78"`); never the full value.
 21. **Tenant-scoped PII allowlists exist** (`pii_allowlist: ["regex", ...]` in `manifest.tenants[].pii_allowlist`); use them for legitimate-exception fields like KYC vendor MSTs.
@@ -264,7 +264,7 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 
 ### §3.8 — Audit-before-action (MUST)
 
-25. **Destructive operations MUST emit a BRAIN row BEFORE applying** ("audit-before-action"). Combine with a Postgres transaction so DB write + BRAIN emit are atomic — rollback on either failure.
+25. **Destructive operations MUST emit a memory row BEFORE applying** ("audit-before-action"). Combine with a Postgres transaction so DB write + memory emit are atomic — rollback on either failure.
 26. **Pair-write history events** (e.g. `*_started` + `*_completed`) — operators tracing crashes need both bookends. Started without Completed = crash signal.
 
 ### §3.9 — Determinism (MUST)
@@ -304,7 +304,7 @@ These are rules the master rule (§0) tends to surface naturally if followed. Th
 
 38e. **(MUST at v1.0 — FR-SKILL-114)** Skills at `skill_version >= 1.0.0` carry sibling `BASELINE.md` documenting tool-call / token / failure-rate measurements without-vs-with the skill, with operator-attested signoff + 12-month review cadence. Required earlier when `exposable_as.partner_connector: true`. Enforced by SKB-060..066.
 
-38f. **(MUST — FR-SKILL-115)** Production SKILL.md (`status: accepted` or higher) MUST NOT carry template-scaffold placeholder syntax in any frontmatter field. Examples of forbidden values: `metadata.stage: <SDP §2 stage letter or "cross">`, `description: "Author a <artifact> from <input>"`, `allowed_brain_scopes.write: ["<fr_id>"]`. Each placeholder MUST be substituted with a concrete value derived from the skill's body, sibling docs, or persona-card context. Detection via `python3 tools/sweep-placeholders/detect.py`; suggestion via `tools/sweep-placeholders/suggest.py`; runtime validator at `cuo.placeholder_check`. EXEMPT: any path under `_template/` (scaffolds use placeholders by design). Enforced by SKB-030 (severity: error on accepted+; warning on draft).
+38f. **(MUST — FR-SKILL-115)** Production SKILL.md (`status: accepted` or higher) MUST NOT carry template-scaffold placeholder syntax in any frontmatter field. Examples of forbidden values: `metadata.stage: <SDP §2 stage letter or "cross">`, `description: "Author a <artifact> from <input>"`, `allowed_memory_scopes.write: ["<fr_id>"]`. Each placeholder MUST be substituted with a concrete value derived from the skill's body, sibling docs, or persona-card context. Detection via `python3 tools/sweep-placeholders/detect.py`; suggestion via `tools/sweep-placeholders/suggest.py`; runtime validator at `cuo.placeholder_check`. EXEMPT: any path under `_template/` (scaffolds use placeholders by design). Enforced by SKB-030 (severity: error on accepted+; warning on draft).
 
 ### §3.14 — Spec-depth calibration (NICE-TO-FIX)
 
@@ -361,7 +361,7 @@ Routine surprises (a single missing dependency on an upstream FR, a one-off reci
 
 **Per-FR loop the agent runs without prompting:** pick next-ready from frontier → write spec → write audit → loop to 10/10 → run coherence check → patch upstream reciprocity → emit single-line FR-shipped marker → loop back to pick next-ready.
 
-**End-of-march report (when stop condition fires):** a single response covering every FR drained in the session, with §14 block listing every non-BRAIN file change in one consolidated `📁 Files changed:` block.
+**End-of-march report (when stop condition fires):** a single response covering every FR drained in the session, with §14 block listing every non-memory file change in one consolidated `📁 Files changed:` block.
 
 ---
 
@@ -422,7 +422,7 @@ The §10 Implementation audit dossier (per `feedback_cyberos_audit_dossier_locat
 
 ### §9.1 — No partial-ship-and-pause within an FR
 
-When running the `chief-technology-officer/implement-backlog-frs` workflow against an FR, **drive ALL slices to completion in a single continuous session**. Pause only between FRs.
+When running the `chief-technology-officer/ship-feature-requests` workflow against an FR, **drive ALL slices to completion in a single continuous session**. Pause only between FRs.
 
 **Origin:** FR-AUTH-002 took three commits (slice-1 · slice-2 · slice-3) spread across multiple "continue" cycles in session 21+22. Stephen flagged the fragmentation on 2026-05-19: partial-ship states (`slice-N shipped (N/M gaps); slice-{N+1} planned`) sit in BACKLOG between sessions, fragmenting review and delaying the strict-audited signal.
 

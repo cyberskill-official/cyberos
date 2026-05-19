@@ -29,7 +29,7 @@ The actual tickets live in PROJ MCP. The impl-plan markdown is the project's per
 
 - Tickets get archived/deleted; the markdown stays in the repo.
 - Sprint planning happens against the markdown (engineering lead reviews + reorders) before tickets are created.
-- The chain's BRAIN-write goes to `memories/projects/<slug>.md` and references this markdown — `genie.action_log` doesn't store ticket text, only IDs + hashes.
+- The chain's memory-write goes to `memories/projects/<slug>.md` and references this markdown — `genie.action_log` doesn't store ticket text, only IDs + hashes.
 
 ## Frontmatter contract
 

@@ -3,7 +3,7 @@ id: FR-OBS-009
 title: "Chain-of-custody manifest with Ed25519 signature on every compliance export — PDF cover + JSON sidecar + audit row + verifier CLI"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 3
@@ -11,7 +11,7 @@ slice: 3
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-008, FR-AUTH-006]
 depends_on: [FR-OBS-008]
 blocks: []
@@ -44,7 +44,7 @@ allowed_tools:
   - bash: cd services/obs-compliance-view && cargo test manifest && cargo build --bin verify_manifest
 disallowed_tools:
   - export compliance data without manifest (per §1 #1)
-  - skip BRAIN audit row on export (per §1 #5)
+  - skip memory audit row on export (per §1 #5)
   - silently truncate exports (per §1 #6 — must mark state: incomplete)
   - sign with anything other than Ed25519 (per DEC-180)
 
@@ -53,12 +53,12 @@ sub_tasks:
   - "0.5h: manifest.rs — ChainOfCustodyManifest struct + ExportState enum"
   - "1.0h: manifest_signing.rs — Ed25519 sign over canonical(manifest_minus_signature)"
   - "0.5h: SHA-256 of canonical row dump (deterministic JSON)"
-  - "0.5h: BRAIN MMR head query (uses BRAIN existing API)"
+  - "0.5h: memory MMR head query (uses memory existing API)"
   - "1.0h: verify_manifest.rs standalone binary (auditor runs offline)"
   - "1.0h: manifest_pdf.rs — PDF cover page rendering with manifest fields + QR code"
   - "0.5h: JSON sidecar format (rows.json + manifest.json paired)"
   - "0.5h: ExportState::Incomplete on panic-during-streaming"
-  - "0.5h: canonical::export_compliance BRAIN audit row builder"
+  - "0.5h: canonical::export_compliance memory audit row builder"
   - "1.0h: Integration into views (every view's export calls sign())"
   - "1.5h: Tests — manifest creation + signature verify + offline verifier + incomplete state + PDF render"
   - "0.5h: docs/manifest-format.md (auditor-facing reference)"
@@ -75,7 +75,7 @@ Every compliance export from FR-OBS-008 **MUST** be accompanied by a chain-of-cu
     - `regulation` (string: `"EU AI Act" | "PDPL" | "SOC 2" | "ISO 27001"`).
     - `time_range` (ISO8601 tuple).
     - `row_count` (u64).
-    - `chain_head_at_export` (32-byte BRAIN MMR root, hex-encoded).
+    - `chain_head_at_export` (32-byte memory MMR root, hex-encoded).
     - `exporter` (auditor JWT subject_id + email).
     - `exported_at` (ISO8601 UTC).
     - `sha256_of_rows` (32 bytes hex; deterministic over canonical JSON of rows).
@@ -85,8 +85,8 @@ Every compliance export from FR-OBS-008 **MUST** be accompanied by a chain-of-cu
 2. **MUST** sign with the CyberOS infrastructure Ed25519 key. The key is rotated quarterly via FR-AUTH-006-style sweeper; key versions enumerate in `public_key_id`.
 3. **MUST** include the public key ID in the manifest. Auditors fetch the corresponding public key from `https://keys.cyberos.world/<public_key_id>.pub` (a static file served via CDN; no auth required for public keys).
 4. **MUST** be both human-readable (PDF cover page with manifest fields + QR code linking to verifier) AND machine-verifiable (JSON sidecar with raw bytes for cryptographic verification).
-5. **MUST** record the export to BRAIN as `obs.export_compliance` audit row before returning to the caller. The row carries `export_id`, `tenant_id`, `regulation`, `row_count`, `exporter_subject_id`, `chain_head_at_export`, `request_id`. Self-anchoring: the export itself is in the chain.
-6. **MUST** prevent partial exports — if export is interrupted (panic, network drop mid-stream), the manifest carries `state: Incomplete` AND the BRAIN row records the incompleteness. Incomplete manifests fail offline verification (ExportState mismatch).
+5. **MUST** record the export to memory as `obs.export_compliance` audit row before returning to the caller. The row carries `export_id`, `tenant_id`, `regulation`, `row_count`, `exporter_subject_id`, `chain_head_at_export`, `request_id`. Self-anchoring: the export itself is in the chain.
+6. **MUST** prevent partial exports — if export is interrupted (panic, network drop mid-stream), the manifest carries `state: Incomplete` AND the memory row records the incompleteness. Incomplete manifests fail offline verification (ExportState mismatch).
 7. **MUST** ship a standalone verifier binary `verify_manifest` that auditors run offline. The verifier:
     - Takes a manifest JSON path + rows JSON path.
     - Fetches the public key from `keys.cyberos.world` (or accepts via `--pubkey` flag for fully-offline use).
@@ -107,7 +107,7 @@ Every compliance export from FR-OBS-008 **MUST** be accompanied by a chain-of-cu
 
 ## §2 — Why this design (rationale for humans)
 
-**Why chain-of-custody manifest at all (DEC-180)?** Auditors need TRACEABILITY. Without proof, an export is just JSON — could be tampered with at any point between server and auditor. The manifest answers: "where did this come from? at what BRAIN chain state? signed by whom?"
+**Why chain-of-custody manifest at all (DEC-180)?** Auditors need TRACEABILITY. Without proof, an export is just JSON — could be tampered with at any point between server and auditor. The manifest answers: "where did this come from? at what memory chain state? signed by whom?"
 
 **Why Ed25519 specifically?** Modern, fast, small signatures (64 bytes), broad library support (Python, Go, Rust, JS verifiers). RSA-2048 would also work but produces larger signatures + slower verification. ECDSA P-256 has equivalent security but more implementation pitfalls historically. Ed25519 is the right modern default.
 
@@ -117,7 +117,7 @@ Every compliance export from FR-OBS-008 **MUST** be accompanied by a chain-of-cu
 
 **Why state: Incomplete on interrupted export (DEC-182)?** Silent partial exports are catastrophic — auditor reviews 50% of rows thinking they're 100%, misses the bad ones. Marking incomplete + failing offline verification ensures the auditor knows.
 
-**Why BRAIN audit row of the export (§1 #5)?** Self-anchoring. The export is itself in the chain; a regulator asking "did you export anything during the period under review?" gets a positive answer (rows showing each export).
+**Why memory audit row of the export (§1 #5)?** Self-anchoring. The export is itself in the chain; a regulator asking "did you export anything during the period under review?" gets a positive answer (rows showing each export).
 
 **Why public key on CDN (§1 #3)?** Auditors verifying offline need the public key. Hosting on a public CDN (no auth) means the verifier works from anywhere. The CDN doesn't need to be trustworthy — the public key can be cross-checked against an out-of-band channel (operator emails the key fingerprint to auditor at engagement start).
 
@@ -166,8 +166,8 @@ pub enum ExportState { Complete, Incomplete }
 pub enum ManifestError {
     #[error("private signing key unavailable: {0}")]
     SigningKeyUnavailable(String),
-    #[error("BRAIN MMR head query failed: {0}")]
-    BrainQueryFailed(String),
+    #[error("memory MMR head query failed: {0}")]
+    MemoryQueryFailed(String),
     #[error("canonicalisation failed: {0}")]
     Canonicalisation(String),
     #[error("export interrupted")]
@@ -178,7 +178,7 @@ pub async fn sign(rows: &[AuditRow], regulation: &str, exporter: &Claims, time_r
     -> Result<ChainOfCustodyManifest, ManifestError>
 {
     let row_hash = sha256_canonical(rows)?;
-    let chain_head = brain::current_mmr_head().await?;
+    let chain_head = memory::current_mmr_head().await?;
     let key = manifest_signing::load_active_key().await?;
 
     let mut manifest = ChainOfCustodyManifest {
@@ -203,7 +203,7 @@ pub async fn sign(rows: &[AuditRow], regulation: &str, exporter: &Claims, time_r
     let sig = key.signing_key.sign(&canonical_bytes);
     manifest.ed25519_signature = base64::encode(sig.to_bytes());
 
-    brain::emit(canonical::export_compliance(&manifest)).await?;
+    memory::emit(canonical::export_compliance(&manifest)).await?;
 
     Ok(manifest)
 }
@@ -299,7 +299,7 @@ pub fn render_cover_page(manifest: &ChainOfCustodyManifest) -> Vec<u8> {
   <tr><th>Row Count</th><td>{}</td></tr>
   <tr><th>Exporter</th><td>{}</td></tr>
   <tr><th>Exported At</th><td>{}</td></tr>
-  <tr><th>BRAIN Chain Head</th><td><code>{}</code></td></tr>
+  <tr><th>memory Chain Head</th><td><code>{}</code></td></tr>
   <tr><th>SHA-256 of Rows</th><td><code>{}</code></td></tr>
   <tr><th>Public Key ID</th><td><code>{}</code></td></tr>
   <tr><th>State</th><td>{:?}</td></tr>
@@ -326,8 +326,8 @@ pub fn render_cover_page(manifest: &ChainOfCustodyManifest) -> Vec<u8> {
 1. **Every export attaches a manifest** — both PDF and JSON exports include the manifest.
 2. **Signature verifies with the public key** — `verify_manifest` returns PASS.
 3. **SHA-256 of rows matches `sha256_of_rows`** — recompute equals stored value.
-4. **Chain head at export matches BRAIN's current head** at export time.
-5. **Manifest export records `obs.export_compliance` BRAIN row** with all fields.
+4. **Chain head at export matches memory's current head** at export time.
+5. **Manifest export records `obs.export_compliance` memory row** with all fields.
 6. **Interrupted export → state: Incomplete** — panic during streaming → manifest carries Incomplete; verifier flags it as untrusted.
 7. **PDF cover page renders manifest readably** — fields visible; QR code present.
 8. **JSON sidecar parseable + signature-verifiable by external tooling**.
@@ -369,12 +369,12 @@ async fn sha256_of_rows_correct() {
 }
 
 #[tokio::test]
-async fn brain_export_compliance_row_emitted() {
+async fn memory_export_compliance_row_emitted() {
     let rows = test_rows_for_eu_ai_act();
     let claims = test_auditor_claims();
     let manifest = manifest::sign(&rows, "EU AI Act", &claims, test_time_range()).await.unwrap();
 
-    let row = brain_test_helper::find_latest("obs.export_compliance").unwrap();
+    let row = memory_test_helper::find_latest("obs.export_compliance").unwrap();
     assert_eq!(row.payload["export_id"], manifest.export_id);
     assert_eq!(row.payload["row_count"], manifest.row_count);
 }
@@ -456,7 +456,7 @@ See §3.
 
 - **FR-OBS-008** — compliance views; this FR signs their exports.
 - **FR-AUTH-006** — bootstrap CLI generates initial signing key; quarterly rotation cron.
-- BRAIN MMR head access (existing API).
+- memory MMR head access (existing API).
 - Crates: `ed25519-dalek@2`, `serde-jcs@0.1`, `wkhtmltopdf` (PDF), `qrcode@0.14`, `clap@4`, `base64`, `hex`, `ulid`.
 - CDN for public keys: `https://keys.cyberos.world/<public_key_id>.pub` (static file hosting).
 
@@ -541,7 +541,7 @@ All resolved. Deferred:
 | Failure | Detection | Outcome | Recovery |
 |---|---|---|---|
 | Private key unavailable | KMS error | Export fails 500 + sev-1 | Operator restores key |
-| BRAIN MMR query fails | brain error | Export fails | Self-resolves when BRAIN up |
+| memory MMR query fails | memory error | Export fails | Self-resolves when memory up |
 | Interrupted export | catch panic during streaming | Manifest carries `state: Incomplete` | Auditor re-runs |
 | Public key rotation in flight | key version mismatch | Manifest uses key in effect AT export time | Key rotation respects "no break-in-flight" |
 | Public key CDN unreachable | offline verifier --pubkey flag | Auditor uses local copy | Fallback by design |
@@ -549,7 +549,7 @@ All resolved. Deferred:
 | Tampered manifest field post-export | offline verifier signature check | FAIL | Auditor flags |
 | Wrong public key supplied | signature verify fails | FAIL | Auditor uses correct kid |
 | Signing latency > 100ms | OTel histogram | sev-3 alarm | Investigate key load OR JCS perf |
-| BRAIN audit row emit fails | brain_writer error | Sev-1 (export happened but unaudited) | Operator investigates BRAIN |
+| memory audit row emit fails | memory_writer error | Sev-1 (export happened but unaudited) | Operator investigates memory |
 | Canonicalisation produces different bytes (RFC 8785 bug) | unit test asserts | PR blocked | Update serde-jcs version |
 | Verifier binary panics on bad input | catch + clean error | exit 1 with reason | By design |
 | QR code generation fails | catch | Render PDF without QR; sev-3 | Operator investigates |
@@ -562,15 +562,15 @@ All resolved. Deferred:
 
 ## §11 — Notes
 
-- The Ed25519 signing key is stored in the same KMS as BRAIN's STH key. Rotation cadence aligns (quarterly).
-- The `obs.export_compliance` BRAIN row makes the export self-anchoring — perfect circularity for the auditor (the export is in the chain that the export covers).
+- The Ed25519 signing key is stored in the same KMS as memory's STH key. Rotation cadence aligns (quarterly).
+- The `obs.export_compliance` memory row makes the export self-anchoring — perfect circularity for the auditor (the export is in the chain that the export covers).
 - Public keys on CDN at `https://keys.cyberos.world/<kid>.pub` — no auth, no infra access needed for verification.
 - Offline verifier binary is the primary trust mechanism. Auditors verify WITHOUT touching CyberOS infra; the verification is genuinely independent.
 - RFC 8785 JCS for deterministic canonical JSON. Same data → same bytes → same hash → same signature. Without canonicalisation, two valid serialisations of the same data have different signatures.
 - State: Incomplete is the loud-failure path. Silent partial exports would let auditors trust 50% of data thinking it's 100%.
 - QR code on PDF cover page bridges paper-audit and digital-verification workflows.
 - Quarterly key rotation: new `public_key_id` AND CDN serves both old + new during overlap. Manifests signed with old key continue to verify until the old key's CDN entry expires (typically 90 days post-rotation).
-- Chain-head-at-export anchors the export to a specific BRAIN state — auditor can verify "what was the chain at that moment?" for additional non-repudiation.
+- Chain-head-at-export anchors the export to a specific memory state — auditor can verify "what was the chain at that moment?" for additional non-repudiation.
 
 ---
 

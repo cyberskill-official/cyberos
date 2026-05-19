@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-TIME-003, FR-TIME-005, FR-TIME-007, FR-PROJ-001, FR-AUTH-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-TIME-003, FR-TIME-005, FR-TIME-007, FR-PROJ-001, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-TIME-001]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1382 2026-05-17 — 15-min resolution snap on commit: durations rounded UP to nearest 15-min interval (industry standard for client-billable time)
   - DEC-1383 2026-05-17 — Closed enum `timer_state` = {running, paused_idle, paused_manual, committed, abandoned}; CI cardinality 5
   - DEC-1384 2026-05-17 — Logout auto-commits running timer (avoid orphan timers across sessions)
-  - DEC-1385 2026-05-17 — BRAIN audit kinds: time.timer_started, time.timer_stopped, time.timer_idle_paused, time.timer_committed, time.timer_abandoned
+  - DEC-1385 2026-05-17 — memory audit kinds: time.timer_started, time.timer_stopped, time.timer_idle_paused, time.timer_committed, time.timer_abandoned
 
 build_envelope:
   language: rust 1.81 + typescript 5.5
@@ -79,7 +79,7 @@ risk_if_skipped: "Without timer UI, Members track time externally → re-keying 
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship timer start/stop primitive at `services/time/src/timer/` with single-active enforcement, 10-min idle detection, 15-min commit snap, logout auto-commit, 5-state enum, and 5 BRAIN audit kinds.
+The TIME service **MUST** ship timer start/stop primitive at `services/time/src/timer/` with single-active enforcement, 10-min idle detection, 15-min commit snap, logout auto-commit, 5-state enum, and 5 memory audit kinds.
 
 1. **MUST** define closed `timer_state` enum: `('running','paused_idle','paused_manual','committed','abandoned')` per DEC-1383. Cardinality 5.
 
@@ -133,14 +133,14 @@ The TIME service **MUST** ship timer start/stop primitive at `services/time/src/
 
 13. **MUST** support timer abandon at `POST /v1/time/timer/abandon` body `{ timer_id, reason }`. Transitions state='abandoned' WITHOUT creating TIME entry. Use case: accidental timer start. Emits `time.timer_abandoned` sev-3.
 
-14. **MUST** emit 5 BRAIN audit kinds per DEC-1385:
+14. **MUST** emit 5 memory audit kinds per DEC-1385:
     - `time.timer_started` (sev-3)
     - `time.timer_stopped` (sev-3 — generic; logout path)
     - `time.timer_idle_paused` (sev-3)
     - `time.timer_committed` (sev-2 — material commercial)
     - `time.timer_abandoned` (sev-3)
 
-15. **MUST** PII-scrub `description` via FR-BRAIN-111 — SHA256 in chain; raw in DB.
+15. **MUST** PII-scrub `description` via FR-MEMORY-111 — SHA256 in chain; raw in DB.
 
 16. **MUST** thread trace_id end-to-end.
 
@@ -226,7 +226,7 @@ GET    /v1/time/timer/current
 5. **10-min idle pause** — heartbeat absent 10 min → state='paused_idle'.
 6. **Resume include vs exclude** — `idle_decision='exclude'` subtracts idle from duration.
 7. **Abandon no entry** — abandoned timer produces no TIME entry.
-8. **5 BRAIN audit kinds emitted**.
+8. **5 memory audit kinds emitted**.
 9. **RLS Member-scoped** — caller sees own timers only.
 10. **Heartbeat idempotent** — repeated heartbeats update last_heartbeat_at without errors.
 11. **Engagement membership validated** — timer for non-member engagement → 403.
@@ -296,7 +296,7 @@ async fn logout_commits_running_timers() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TIME-001 (TimeEntry schema).
-**Cross-module:** FR-AUTH-004 (logout integration), FR-PROJ-001 (project_id), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-AUTH-004 (logout integration), FR-PROJ-001 (project_id), FR-AI-003, FR-MEMORY-111.
 
 ---
 
@@ -371,7 +371,7 @@ Deferred:
 
 **§11.8** TIME entry created at commit time via FR-TIME-001 standard insert path.
 
-**§11.9** Description PII-scrub via FR-BRAIN-111 standard ruleset.
+**§11.9** Description PII-scrub via FR-MEMORY-111 standard ruleset.
 
 **§11.10** Cross-tenant isolation via RLS + explicit member_subject_id check.
 

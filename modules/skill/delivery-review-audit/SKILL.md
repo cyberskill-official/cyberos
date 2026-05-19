@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: delivery-review-audit
-description: Audits a delivery-review@1 artefact against delivery_review_rubric@1.0. Validates FM + SEC, traffic-light-vs-narrative consistency, utilization arithmetic, margin-classification accuracy, risk-escalation completeness. Per Bain agile-PMO + McKinsey delivery-excellence + TSIA conventions.
-  Audit one or more existing delivery-review@1 markdowns against
-  delivery-review_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  delivery-review-author.
+description: >-
+  Audits a delivery-review@1 artefact against delivery_review_rubric@1.0. Validates FM + SEC, traffic-light-vs-narrative consistency, utilization arithmetic, margin-classification accuracy, risk-escalation completeness. Per Bain agile-PMO + McKinsey delivery-excellence + TSIA conventions. Audit one or more existing delivery-review@1 markdowns against delivery-review_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after delivery-review-author. Use when user asks to "audit this delivery review" or "check the delivery review". Do NOT use for "draft a new delivery review" (use delivery-review-author instead). Audit one or more existing delivery-review@1 markdowns against delivery-review_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally afte...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: delivery-review_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

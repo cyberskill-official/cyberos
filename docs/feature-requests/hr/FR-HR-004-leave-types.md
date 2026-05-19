@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-HR-002, FR-HR-006, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-HR-002, FR-HR-006, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-HR-001]
 blocks: [FR-HR-006]
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1832 2026-05-17 — Closed enum `leave_status` = {requested, approved, rejected, taken, cancelled}; cardinality 5
   - DEC-1833 2026-05-17 — Per-type approval gate: manager (default) | CHRO (sabbatical+unpaid >5d) | auto (public_holiday) | none (bereavement up to 3d)
   - DEC-1834 2026-05-17 — Per-type entitlement: annual=12d/yr (Art. 113), sick=30d/yr SI-funded (Decree 144), maternity=180d (Art. 139), paternity=14d (Art. 139), bereavement=3d (Art. 116), public_holiday=11d/yr (Art. 112), sabbatical+unpaid=on-request
-  - DEC-1835 2026-05-17 — BRAIN audit kinds: hr.leave_requested, hr.leave_approved, hr.leave_rejected, hr.leave_taken, hr.leave_cancelled
+  - DEC-1835 2026-05-17 — memory audit kinds: hr.leave_requested, hr.leave_approved, hr.leave_rejected, hr.leave_taken, hr.leave_cancelled
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without leave type enforcement, members can request leave type
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** ship leave types at `services/hr/src/leave/` with 8 types + per-type entitlement + per-type approval routing + balance tracking, 5 BRAIN audit kinds.
+The HR service **MUST** ship leave types at `services/hr/src/leave/` with 8 types + per-type entitlement + per-type approval routing + balance tracking, 5 memory audit kinds.
 
 1. **MUST** validate `leave_type` against closed enum per DEC-1831.
 
@@ -127,7 +127,7 @@ The HR service **MUST** ship leave types at `services/hr/src/leave/` with 8 type
 
 6. **MUST** prevent over-entitlement per DEC-1834 — at approval, check member's running balance for the type+year; reject if exceeds.
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-1835. PII per FR-BRAIN-111: reason text SHA-256 hashed; member_id (uuid) + dates ok.
+7. **MUST** emit 5 memory audit kinds per DEC-1835. PII per FR-MEMORY-111: reason text SHA-256 hashed; member_id (uuid) + dates ok.
 
 8. **MUST** thread trace_id from request → router → approver → status update → audit.
 
@@ -173,7 +173,7 @@ Sample balance:
 ---
 
 ## §4 — Acceptance criteria
-1. **leave_type enum cardinality 8**. 2. **leave_status enum cardinality 5**. 3. **Per-type entitlement computed**. 4. **Per-type approval routing**. 5. **Balance deduction on status=taken**. 6. **Over-entitlement rejected at approve**. 7. **Manager+CHRO co-sign for unpaid >5d**. 8. **Auto-approve bereavement ≤3d**. 9. **Auto-apply public_holiday**. 10. **5 BRAIN audit kinds emitted**. 11. **PII scrubbed (reason SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Cancel before approve allowed**. 15. **Cancel after approve requires CHRO**. 16. **Append-only via REVOKE except 4 status cols**. 17. **Contractor → 0 annual entitlement (FR-HR-002 override)**. 18. **Part_time → pro-rated (FR-HR-002 override)**. 19. **Sick SI-funded note in BRAIN audit**. 20. **Year boundary handled (Dec 31 → Jan 1 transition)**.
+1. **leave_type enum cardinality 8**. 2. **leave_status enum cardinality 5**. 3. **Per-type entitlement computed**. 4. **Per-type approval routing**. 5. **Balance deduction on status=taken**. 6. **Over-entitlement rejected at approve**. 7. **Manager+CHRO co-sign for unpaid >5d**. 8. **Auto-approve bereavement ≤3d**. 9. **Auto-apply public_holiday**. 10. **5 memory audit kinds emitted**. 11. **PII scrubbed (reason SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Cancel before approve allowed**. 15. **Cancel after approve requires CHRO**. 16. **Append-only via REVOKE except 4 status cols**. 17. **Contractor → 0 annual entitlement (FR-HR-002 override)**. 18. **Part_time → pro-rated (FR-HR-002 override)**. 19. **Sick SI-funded note in memory audit**. 20. **Year boundary handled (Dec 31 → Jan 1 transition)**.
 
 ---
 
@@ -219,7 +219,7 @@ async fn contractor_zero_annual() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
-**Cross-module:** FR-HR-002 (contract type override), FR-HR-006 (accrual cron), FR-AUTH-101 (CHRO role), FR-BRAIN-111 (PII).
+**Cross-module:** FR-HR-002 (contract type override), FR-HR-006 (accrual cron), FR-AUTH-101 (CHRO role), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -239,7 +239,7 @@ async fn contractor_zero_annual() {
 - §11.1 Entitlement calc consults FR-HR-002 contract type overrides.
 - §11.2 Approval router: state-machine; default manager, escalate per type/duration rules.
 - §11.3 Sick leave SI-funded: audit notes for FR-REW-004 statutory deduction logic.
-- §11.4 BRAIN audit body: member_id, leave_type, days_count, status; reason SHA256.
+- §11.4 memory audit body: member_id, leave_type, days_count, status; reason SHA256.
 - §11.5 Public_holiday auto-applied: cron at start-of-year, creates approved requests for VN public holiday calendar.
 
 ---

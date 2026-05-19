@@ -3,7 +3,7 @@ id: FR-DOCS-001
 title: "Server-render NFR catalog + Risk Register + FR catalog at build time — Pagefind-indexed + crawler-visible + deterministic + Alpine reactive coexistence"
 module: DOCS
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: I
 phase: P0
 milestone: P0 · polish slice
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: []
 depends_on: []
 blocks: []
@@ -229,12 +229,12 @@ main().catch(e => { console.error(e); process.exit(1); });
   {
     "id": "NFR-PERF-01",
     "category": "perf",
-    "title": "BRAIN search p95 latency",
+    "title": "memory search p95 latency",
     "target": "p95 ≤ 250ms",
     "phase": "P0",
-    "description": "BRAIN search MUST return within 250ms p95...",
+    "description": "memory search MUST return within 250ms p95...",
     "measurement": "1M chunks fixture / 1000 random queries",
-    "modules": ["BRAIN"],
+    "modules": ["memory"],
     "references": ["DEC-070"]
   }
 ]
@@ -464,8 +464,8 @@ for (const { html, varName, out } of FILES) {
     {
       "id": "...",
       "data": "/reference/nfr-catalog.html#NFR-PERF-01",
-      "title": "BRAIN search p95 latency",
-      "excerpt": "BRAIN search MUST return within 250ms p95..."
+      "title": "memory search p95 latency",
+      "excerpt": "memory search MUST return within 250ms p95..."
     }
   ]
 }

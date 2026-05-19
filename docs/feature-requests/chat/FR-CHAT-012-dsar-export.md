@@ -1,9 +1,9 @@
 ---
 id: FR-CHAT-012
-title: "DSAR export — Data Subject Access Request: every message a subject authored + chained BRAIN audit hashes for tamper-evidence"
+title: "DSAR export — Data Subject Access Request: every message a subject authored + chained memory audit hashes for tamper-evidence"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CHAT-005, FR-BRAIN-101, FR-AUTH-005]
+memory_chain_hash: null
+related_frs: [FR-CHAT-005, FR-MEMORY-101, FR-AUTH-005]
 depends_on: [FR-CHAT-005]
 blocks: []
 
@@ -21,7 +21,7 @@ source_pages:
   - website/docs/legal/pdpl-dsar.html
 source_decisions:
   - DEC-530 (DSAR fulfils PDPL Art. 14 + GDPR Art. 15 — subject can request all data about themselves)
-  - DEC-531 (export includes BRAIN chain_anchors per message; recipient verifies tamper-evidence)
+  - DEC-531 (export includes memory chain_anchors per message; recipient verifies tamper-evidence)
   - DEC-532 (export delivered as zip via short-lived signed S3 URL; subject-only access)
 
 language: rust 1.81
@@ -47,11 +47,11 @@ sub_tasks:
   - "0.5h: init-dsar-requests.sql migration"
   - "0.5h: Cargo.toml deps (zip, sha2, aws-sdk-s3)"
   - "1.0h: exporter.rs — query posts WHERE user_id = subject; include channel + thread context"
-  - "1.0h: manifest.rs — list every message with chain_anchor from FR-CHAT-005 BRAIN row"
+  - "1.0h: manifest.rs — list every message with chain_anchor from FR-CHAT-005 memory row"
   - "0.5h: zip composition (messages.jsonl + manifest.json + verification README)"
   - "0.5h: S3 upload with KMS-encrypt + 7-day TTL signed URL"
   - "0.5h: REST endpoint POST /api/dsar/request (subject-only OR admin-with-justification)"
-  - "0.5h: BRAIN audit 'chat.dsar_requested' + 'chat.dsar_delivered'"
+  - "0.5h: memory audit 'chat.dsar_requested' + 'chat.dsar_delivered'"
   - "1.0h: dsar_test.rs — happy + verify chain_anchor + admin path"
 risk_if_skipped: "PDPL Art. 14 + GDPR Art. 15 are legally mandatory. Non-compliance = fines + brand damage. Without chain_anchor, recipient can't prove the export is authentic (could be operator-edited). Without short-lived URL, the export sits in S3 forever. Without admin-with-justification path, ops cannot fulfill on behalf of subjects who left the company."
 ---
@@ -67,15 +67,15 @@ The DSAR export **MUST** generate a tamper-evident archive of every message a su
    - Otherwise: 403.
 3. **MUST** the exporter:
    - Query `SELECT * FROM posts WHERE user_id = $subject AND tenant_id = $tenant`; include channels metadata.
-   - For each post, fetch chain_anchor from FR-CHAT-005 BRAIN row (joined by `props.brain_anchor`).
+   - For each post, fetch chain_anchor from FR-CHAT-005 memory row (joined by `props.memory_anchor`).
 4. **MUST** compose the zip:
-   - `messages.jsonl`: one JSON line per message `{post_id, channel_id, channel_name, body, created_at, edited_at, brain_chain_anchor}`.
+   - `messages.jsonl`: one JSON line per message `{post_id, channel_id, channel_name, body, created_at, edited_at, memory_chain_anchor}`.
    - `manifest.json`: counts + zip_sha256 + total_messages + export_signing_hash.
    - `README.md`: explains chain_anchor verification procedure for recipient.
    - `verify.sh`: bundled script that recomputes chain hashes locally.
 5. **MUST** upload to S3 with KMS encryption (tenant's CMK); generate presigned URL with 7-day TTL.
 6. **MUST** deliver URL to subject's registered email + post in their DM channel; URL is one-time-use (S3 access logs detect re-use; revoke on second hit).
-7. **MUST** emit BRAIN audit rows:
+7. **MUST** emit memory audit rows:
     - `chat.dsar_requested` on request creation.
     - `chat.dsar_exporting` when export starts.
     - `chat.dsar_delivered` with payload `{subject_id, message_count, zip_sha256, expires_at, requested_by, justification}`.
@@ -89,19 +89,19 @@ The DSAR export **MUST** generate a tamper-evident archive of every message a su
     - `chat_dsar_export_duration_seconds`.
     - `chat_dsar_messages_exported` (histogram).
 13. **MUST** include all messages the subject WROTE AND messages the subject WAS MENTIONED IN, as two separate sections of the export. PDPL Art. 14 covers "data about the subject" which includes mentions.
-14. **MUST** include channel memberships (channels the subject ever joined/left): `channel_memberships.jsonl` with `{channel_id, channel_name, joined_at, left_at}`. Pulls from FR-CHAT-005 `chat.user_joined_channel`/`chat.user_left_channel` BRAIN rows.
+14. **MUST** include channel memberships (channels the subject ever joined/left): `channel_memberships.jsonl` with `{channel_id, channel_name, joined_at, left_at}`. Pulls from FR-CHAT-005 `chat.user_joined_channel`/`chat.user_left_channel` memory rows.
 15. **MUST** include reactions the subject placed (their emoji reactions to other people's messages) and reactions placed on the subject's messages.
 16. **MUST** include file attachments the subject uploaded with full metadata (filename, size, mime, upload timestamp) AND a recoverable reference (file_id) so subjects can request the file content separately if needed.
 17. **MUST** include push device registrations (FR-CHAT-011): historical record of which devices the subject registered, with `{platform, registered_at, deregistered_at}`. Tokens themselves NOT included (security: tokens are device credentials).
-18. **MUST** include Lumi interactions (FR-CHAT-008): every `chat.lumi_invoked` BRAIN row where the subject was the user_id. Payload preserves both the redacted body AND the response.
+18. **MUST** include Lumi interactions (FR-CHAT-008): every `chat.lumi_invoked` memory row where the subject was the user_id. Payload preserves both the redacted body AND the response.
 19. **MUST** include retro captures (FR-CHAT-009): every memory the subject created OR was a participant in.
 20. **MUST** include DSAR history: every prior DSAR request by/about this subject (the audit trail of who has accessed their data).
 21. **MUST** encrypt the zip with a passphrase derived from the subject's verified email (HKDF-SHA256); the passphrase is NOT included in the URL or the email — subject derives it on their end from their email + a salt provided in the README. Defence against URL leak.
 22. **MUST** include an `export_chain_hash` in the manifest that's the SHA-256 of all included files concatenated (deterministic order). Recipient verifies the export hasn't been tampered with mid-flight.
-23. **MUST** support partial-fulfilment: if the export shards (>100K messages), each shard delivers independently; final `chat.dsar_fully_delivered` BRAIN row fires after all shards confirmed.
+23. **MUST** support partial-fulfilment: if the export shards (>100K messages), each shard delivers independently; final `chat.dsar_fully_delivered` memory row fires after all shards confirmed.
 24. **MUST** complete the export within 30 days from request (GDPR Art. 12(3) max); SLA target 24h. SEV-1 if request older than 25 days still pending.
 25. **MUST** offer the subject a "preview" before final delivery: a manifest-only export (no message bodies) so the subject sees the scope of what's being exported. They confirm before the full export runs.
-26. **MUST** record an `acknowledgement` from the subject after delivery: subject signs (clicks confirmation) acknowledging receipt; emits `chat.dsar_acknowledged` BRAIN row.
+26. **MUST** record an `acknowledgement` from the subject after delivery: subject signs (clicks confirmation) acknowledging receipt; emits `chat.dsar_acknowledged` memory row.
 27. **MUST** support tenant-admin "redact-on-export" rules: certain PII categories (medical, financial) MAY be excluded from exports per tenant policy `dsar_redact_categories`. Default = none redacted.
 
 ---
@@ -208,12 +208,12 @@ ALTER TABLE cyberos_chat_tenant_settings ADD COLUMN IF NOT EXISTS
 pub async fn run_export(req_id: uuid::Uuid) -> anyhow::Result<()> {
     let req = fetch_request(req_id).await?;
     update_status(&req.id, "exporting", None, None).await?;
-    emit_brain_row("chat.dsar_exporting", json!({ "request_id": req.id })).await;
+    emit_memory_row("chat.dsar_exporting", json!({ "request_id": req.id })).await;
 
     let messages = sqlx::query!(
         r#"SELECT p.id, p.channel_id, c.name as channel_name,
                   p.message, p.create_at, p.update_at,
-                  p.props->>'brain_anchor' as brain_anchor
+                  p.props->>'memory_anchor' as memory_anchor
            FROM posts p JOIN channels c ON c.id = p.channel_id
            WHERE p.user_id = $1 AND p.delete_at IS NULL"#,
         req.subject_id
@@ -230,7 +230,7 @@ pub async fn run_export(req_id: uuid::Uuid) -> anyhow::Result<()> {
 
     update_status(&req.id, "delivered", Some(&s3_url), Some(expires_at)).await?;
 
-    emit_brain_row("chat.dsar_delivered", json!({
+    emit_memory_row("chat.dsar_delivered", json!({
         "request_id": req.id,
         "subject_id": req.subject_id,
         "message_count": messages.len(),
@@ -259,7 +259,7 @@ async fn compose_zip(messages: &[Message], req: &DsarRequest) -> anyhow::Result<
             body: m.message.clone(),
             created_at: m.create_at,
             edited_at: m.update_at,
-            brain_chain_anchor: m.brain_anchor.clone(),
+            memory_chain_anchor: m.memory_anchor.clone(),
         })?;
         writeln!(zip, "{line}")?;
     }
@@ -270,7 +270,7 @@ async fn compose_zip(messages: &[Message], req: &DsarRequest) -> anyhow::Result<
         subject_id: req.subject_id,
         total_messages: messages.len(),
         generated_at: chrono::Utc::now(),
-        verification_endpoint: "https://verify.cyberos.world/brain-chain",
+        verification_endpoint: "https://verify.cyberos.world/memory-chain",
     };
     zip.write_all(&serde_json::to_vec_pretty(&manifest)?)?;
     // README.md
@@ -298,7 +298,7 @@ FAIL=0
 while IFS= read -r line; do
     post_id=$(echo "$line" | jq -r '.post_id')
     body=$(echo "$line" | jq -r '.body')
-    anchor=$(echo "$line" | jq -r '.brain_chain_anchor')
+    anchor=$(echo "$line" | jq -r '.memory_chain_anchor')
     if [[ "$anchor" == "null" ]]; then
         echo "SKIP: $post_id (no chain anchor; pre-FR-CHAT-005 message)"
         continue
@@ -428,7 +428,7 @@ fn build_manifest(
             retro_captures_count: retro.len() as i64,
             dsar_history_count: dsar_history.len() as i64,
         },
-        verification_endpoint: "https://verify.cyberos.world/brain-chain".into(),
+        verification_endpoint: "https://verify.cyberos.world/memory-chain".into(),
         export_chain_hash,
         salt_for_passphrase: hex::encode(rand::random::<[u8; 32]>()),
         passphrase_derivation: "HKDF-SHA256(input=subject_email, salt=<salt>, info='cyberos-dsar-v1')".into(),
@@ -505,7 +505,7 @@ def handler(event, _):
         if count >= 1:
             # Second access. Revoke + alarm.
             s3.put_object_acl(Bucket=bucket, Key=key, ACL='private')
-            emit_brain_row('chat.dsar_url_reused', {
+            emit_memory_row('chat.dsar_url_reused', {
                 'request_id': request_id,
                 'shard': key,
                 'accessor_ip': record['requestParameters']['sourceIPAddress'],
@@ -523,12 +523,12 @@ def handler(event, _):
 3. **Admin with justification authorised** — 201; justification logged.
 4. **Non-admin third-party rejected** — 403.
 5. **Export contains messages.jsonl + manifest.json + README.md + verify.sh**.
-6. **Each message has brain_chain_anchor field**.
+6. **Each message has memory_chain_anchor field**.
 7. **Zip uploaded to S3 with KMS encryption**.
 8. **Signed URL TTL = 7 days**.
 9. **One-time use detected** — second access → S3 revokes; sev-1 audit.
-10. **BRAIN audit chat.dsar_delivered with zip_sha256**.
-11. **BRAIN audit on failure**.
+10. **memory audit chat.dsar_delivered with zip_sha256**.
+11. **memory audit on failure**.
 12. **Shard at > 100K messages**.
 13. **Export latency p95 < 1h for 10K msgs**.
 14. **verify.sh bundled and executable** — extract zip → bash verify.sh → PASS lines.
@@ -583,7 +583,7 @@ async fn ac3_admin_with_justification_authorised() {
     let req = post_dsar_request(admin.id, env.subject_id(),
         Some("ex-employee deletion under PDPL Art 18".into())).await.unwrap();
     run_export(req.id).await.unwrap();
-    let row = env.brain.last_of_kind("chat.dsar_delivered").await.unwrap();
+    let row = env.memory.last_of_kind("chat.dsar_delivered").await.unwrap();
     assert_eq!(row["payload"]["justification"], "ex-employee deletion under PDPL Art 18");
     assert_eq!(row["payload"]["requested_by"], admin.id);
 }
@@ -622,7 +622,7 @@ async fn ac6_messages_have_chain_anchor() {
     let messages_jsonl = extract_file(&zip_bytes, "messages.jsonl");
     for line in messages_jsonl.lines() {
         let m: MessageExport = serde_json::from_str(line).unwrap();
-        assert!(m.brain_chain_anchor.is_some(), "post {} has no chain anchor", m.post_id);
+        assert!(m.memory_chain_anchor.is_some(), "post {} has no chain anchor", m.post_id);
     }
 }
 ```
@@ -719,7 +719,7 @@ async fn ac27_sharding_at_100k() {
     let final_req = env.fetch_request(req.id).await;
     assert_eq!(final_req.shard_count, 3);
     assert_eq!(final_req.shards_delivered, 3);
-    let row = env.brain.last_of_kind("chat.dsar_fully_delivered").await.unwrap();
+    let row = env.memory.last_of_kind("chat.dsar_fully_delivered").await.unwrap();
     assert_eq!(row["payload"]["shard_count"], 3);
 }
 ```
@@ -772,7 +772,7 @@ async fn ac30_acknowledgement_recorded() {
     let final_req = env.fetch_request(req.id).await;
     assert_eq!(final_req.status, "acknowledged");
     assert!(final_req.acknowledged_at.is_some());
-    let row = env.brain.last_of_kind("chat.dsar_acknowledged").await.unwrap();
+    let row = env.memory.last_of_kind("chat.dsar_acknowledged").await.unwrap();
     assert_eq!(row["payload"]["request_id"], req.id.to_string());
 }
 ```
@@ -805,7 +805,7 @@ URL=$(create-dsar-and-get-url)
 curl -o /tmp/dsar1.zip "$URL"  # First access
 curl -o /tmp/dsar2.zip "$URL"  # Second access (should fail or trigger alarm)
 sleep 5
-brain_query --kind chat.dsar_url_reused | jq -e '.payload.severity == "SEV-1"'
+memory_query --kind chat.dsar_url_reused | jq -e '.payload.severity == "SEV-1"'
 ```
 
 ---
@@ -833,7 +833,7 @@ When a request is created in `preview` mode:
 3. Subject reviews and clicks "Confirm and download full export" → POST /confirm-preview.
 4. Worker generates full export; status → `delivered`.
 
-If the subject doesn't confirm within 7 days, the request expires (status → `expired`); BRAIN audit `chat.dsar_expired` fires.
+If the subject doesn't confirm within 7 days, the request expires (status → `expired`); memory audit `chat.dsar_expired` fires.
 
 ### §6.3 — Sharding semantics
 
@@ -903,8 +903,8 @@ expires:       2026-05-23T14:32Z
 
 ## §7 — Dependencies
 
-- **FR-CHAT-005** — brain_anchor source.
-- **FR-BRAIN-101** — chain verification reference.
+- **FR-CHAT-005** — memory_anchor source.
+- **FR-MEMORY-101** — chain verification reference.
 - **FR-AUTH-005** — admin role check.
 
 ---
@@ -1048,7 +1048,7 @@ expires:       2026-05-23T14:32Z
     "retro_captures_count":      3,
     "dsar_history_count":        1
   },
-  "verification_endpoint": "https://verify.cyberos.world/brain-chain",
+  "verification_endpoint": "https://verify.cyberos.world/memory-chain",
   "export_chain_hash": "abc123def456abc123def456abc123def456abc123def456abc123def456abc1",
   "salt_for_passphrase": "ff00ee11dd22cc33bb44aa55ff00ee11dd22cc33bb44aa55ff00ee11dd22cc33",
   "passphrase_derivation": "HKDF-SHA256(input=subject_email, salt=<salt>, info='cyberos-dsar-v1')"
@@ -1128,11 +1128,11 @@ All resolved. Deferred:
 | Subject DM channel doesn't exist | MM API Err | URL stays in S3; SEV-3 + operator email | Operator |
 | Tenant deleted mid-export | RLS catches | export aborts; SEV-2 | Operator |
 | Tenant data residency change mid-export | export uses old region | inconsistent; rare | Operator |
-| BRAIN chain_anchor missing for pre-FR-CHAT-005 messages | anchor field is null | export degraded; SKIP in verify | Operator backfills (slice-4+) |
-| BRAIN chain query slow (> 10s for 100K messages) | timeout | export degraded with partial anchors | Investigate BRAIN |
+| memory chain_anchor missing for pre-FR-CHAT-005 messages | anchor field is null | export degraded; SKIP in verify | Operator backfills (slice-4+) |
+| memory chain query slow (> 10s for 100K messages) | timeout | export degraded with partial anchors | Investigate memory |
 | Export latency > 1h for 10K messages | SEV-2 latency alarm | None visible to subject (still delivered) | Operator investigates |
 | Export latency > 24h for 100K | SEV-1 | Operator manually checks worker | Operator |
-| BRAIN audit emit fails | export delivered; audit lost | SEV-2 logged | Operator restores |
+| memory audit emit fails | export delivered; audit lost | SEV-2 logged | Operator restores |
 | verify.sh has bug | recipient sees FAIL false-positive | embarrassing | Author fixes + reissue |
 | Justification too long (>10KB) | TEXT type accepts; UI truncates display | None | None |
 | Concurrent requests for same subject | each independent | both deliver | None |
@@ -1194,7 +1194,7 @@ All resolved. Deferred:
 - The Lambda for URL-reuse detection runs in our AWS account (not tenant accounts) because: (a) shared infrastructure; (b) operator visibility across tenants; (c) reuse detection is a meta-service.
 - We considered building DSAR as a query-language ("show me all messages where ...") but rejected as too much surface; full export is simpler and matches subjects' actual asks.
 - The `requested_by` field in audit distinguishes self-requests from admin-requests; operators reviewing compliance logs filter on this.
-- Justification is stored in `dsar_requests.justification` AND in the BRAIN audit payload, allowing post-export review without DB access.
+- Justification is stored in `dsar_requests.justification` AND in the memory audit payload, allowing post-export review without DB access.
 - The 30-day SLA gives a 25-day operator window before SEV-1 fires; this is calibrated against typical operator response times in our org.
 - Why we DON'T include subject's authentication history (login times, IP addresses): those are FR-AUTH-004 owned; that FR has its own DSAR mechanism (slice 4+). Chat DSAR is scoped to chat data.
 - The `chat.dsar_url_reused` event is informational; it doesn't automatically rotate the subject's other URLs (that's an operator decision).

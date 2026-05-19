@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-PORTAL-001, FR-PORTAL-003, FR-PORTAL-004, FR-TEN-104, FR-AUTH-101, FR-DOC-001, FR-EMAIL-001, FR-AI-003, FR-BRAIN-111, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-PORTAL-001, FR-PORTAL-003, FR-PORTAL-004, FR-TEN-104, FR-AUTH-101, FR-DOC-001, FR-EMAIL-001, FR-AI-003, FR-MEMORY-111, FR-OBS-007]
 depends_on: [FR-PORTAL-001]
 blocks: []
 
@@ -34,7 +34,7 @@ source_decisions:
   - DEC-1228 2026-05-17 — Rate limit: 1 DSAR per subject per 90 days; second request within window → 429 + `dsar_already_in_progress`
   - DEC-1229 2026-05-17 — Audit row visibility: DSAR bundle includes the caller's own audit history (filtered to events about them); does NOT include audit rows about OTHER subjects (cross-subject leak prevention)
   - DEC-1230 2026-05-17 — Denial reasons (DEC closed enum): identity_unverifiable, contradicts_law_compliance, third_party_rights_conflict, manifestly_unfounded; CFO + CLO sign-off required for denial
-  - DEC-1231 2026-05-17 — BRAIN audit kinds: portal.dsar_received, portal.dsar_identity_verified, portal.dsar_processing_started, portal.dsar_ready_for_review, portal.dsar_delivered, portal.dsar_denied, portal.dsar_expired
+  - DEC-1231 2026-05-17 — memory audit kinds: portal.dsar_received, portal.dsar_identity_verified, portal.dsar_processing_started, portal.dsar_ready_for_review, portal.dsar_delivered, portal.dsar_denied, portal.dsar_expired
 
 build_envelope:
   language: rust 1.81
@@ -97,7 +97,7 @@ risk_if_skipped: "Without DSAR self-service, every GDPR/PDPL data request become
 
 ## §1 — Description (BCP-14 normative)
 
-The PORTAL service **MUST** ship DSAR self-service at `services/portal/src/dsar/` for GDPR Art. 15 + PDPL Art. 17 with 5 closed-enum request types, async processing via FR-MCP-007 Tasks, bundle delivery with passphrase encryption, identity verification, 90-day per-subject rate limit, denial workflow with CFO+CLO sign-off, and 7 BRAIN audit kinds.
+The PORTAL service **MUST** ship DSAR self-service at `services/portal/src/dsar/` for GDPR Art. 15 + PDPL Art. 17 with 5 closed-enum request types, async processing via FR-MCP-007 Tasks, bundle delivery with passphrase encryption, identity verification, 90-day per-subject rate limit, denial workflow with CFO+CLO sign-off, and 7 memory audit kinds.
 
 1. **MUST** define closed `dsar_type` enum: `('access_report','portability_export','deletion_request','restriction_request','rectification_request')` per DEC-1221. CI cardinality test asserts 5.
 
@@ -134,7 +134,7 @@ The PORTAL service **MUST** ship DSAR self-service at `services/portal/src/dsar/
 
 11. **MUST** rate-limit per DEC-1228 — second DSAR within 90 days returns 429.
 
-12. **MUST** emit 7 BRAIN audit kinds per DEC-1231: received, identity_verified, processing_started, ready_for_review, delivered, denied, expired — all sev-1 (regulatory-critical).
+12. **MUST** emit 7 memory audit kinds per DEC-1231: received, identity_verified, processing_started, ready_for_review, delivered, denied, expired — all sev-1 (regulatory-critical).
 
 13. **MUST** PII-scrub per AUTHORING.md rule 18 — requester_subject_id UUID retained; email hashed.
 
@@ -250,7 +250,7 @@ POST   /v1/admin/dsar/{id}/deny                       (cfo + clo dual-sign)
 11. **Bundle expires at 7d** — signed URL + S3 object removed.
 12. **Passphrase encryption** — bundle ZIP encrypted with age + caller passphrase.
 13. **Manifest signature** — included; verifiable.
-14. **7 BRAIN audit kinds emitted** — all 7 lifecycle events emit.
+14. **7 memory audit kinds emitted** — all 7 lifecycle events emit.
 15. **PII scrubbed in audit** — email_hash16 only in chain.
 16. **Cross-tenant denied** — caller from tenant X can't see tenant Y DSARs.
 17. **Trace_id threaded end-to-end**.
@@ -326,7 +326,7 @@ async fn dsar_type_has_5_values() {
 ## §7 — Dependencies
 
 **Upstream:** FR-PORTAL-001 (data sources to aggregate).
-**Cross-module:** FR-PORTAL-003 (SSO identity), FR-PORTAL-004 (subject lifecycle), FR-MCP-007 (Tasks for async bundle), FR-EMAIL-001 (verification + delivery emails), FR-DOC-001 (S3 bundle storage), FR-AUTH-101 (cfo + clo roles), FR-AI-003 (audit kinds), FR-BRAIN-111 (PII scrub), FR-OBS-007 (sev-1 SLA alarms).
+**Cross-module:** FR-PORTAL-003 (SSO identity), FR-PORTAL-004 (subject lifecycle), FR-MCP-007 (Tasks for async bundle), FR-EMAIL-001 (verification + delivery emails), FR-DOC-001 (S3 bundle storage), FR-AUTH-101 (cfo + clo roles), FR-AI-003 (audit kinds), FR-MEMORY-111 (PII scrub), FR-OBS-007 (sev-1 SLA alarms).
 **Downstream:** None.
 
 ---

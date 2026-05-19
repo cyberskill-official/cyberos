@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# scripts/install-pre-commit.sh — install the BRAIN pre-commit hook.
+# scripts/install-pre-commit.sh — install the memory pre-commit hook.
 #
 # Symlinks scripts/hooks/pre-commit into the target project's
-# .git/hooks/. The hook refuses commits that would corrupt the BRAIN
+# .git/hooks/. The hook refuses commits that would corrupt the memory
 # (doctor failure, schema-invalid memory file, schema drift).
 #
 # Usage:

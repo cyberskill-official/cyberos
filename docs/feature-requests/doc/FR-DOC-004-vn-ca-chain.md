@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CLO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-DOC-001, FR-DOC-005, FR-DOC-006, FR-DOC-011, FR-AUTH-105, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-DOC-001, FR-DOC-005, FR-DOC-006, FR-DOC-011, FR-AUTH-105, FR-MEMORY-111]
 depends_on: [FR-DOC-001]
 blocks: []
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1793 2026-05-17 — VNeID linkage: signers verify identity via VNeID (national ID app) → CA issues qualified cert per Decree 130
   - DEC-1794 2026-05-17 — Per-tenant creds in KMS (CISO-only); tenant chooses partner at residency=vn-1 setup
   - DEC-1795 2026-05-17 — Returns signature in VN-compliant format (CMS + RootCA trust chain to VN National Root CA); composes with FR-DOC-011
-  - DEC-1796 2026-05-17 — BRAIN audit kinds: doc.vn_ca_signature_requested, doc.vn_ca_signature_received, doc.vn_ca_vneid_linked, doc.vn_ca_cert_validated, doc.vn_ca_failed
+  - DEC-1796 2026-05-17 — memory audit kinds: doc.vn_ca_signature_requested, doc.vn_ca_signature_received, doc.vn_ca_vneid_linked, doc.vn_ca_cert_validated, doc.vn_ca_failed
 
 build_envelope:
   language: rust 1.81
@@ -84,7 +84,7 @@ risk_if_skipped: "Without VN CA chain, VN-residency contracts can't get qualifie
 
 ## §1 — Description (BCP-14 normative)
 
-The DOC service **MUST** ship VN CA integration at `services/doc/src/vn_ca/` with 3 partners + VNeID linkage + VN Root CA validation, 5 BRAIN audit kinds.
+The DOC service **MUST** ship VN CA integration at `services/doc/src/vn_ca/` with 3 partners + VNeID linkage + VN Root CA validation, 5 memory audit kinds.
 
 1. **MUST** support 3 partners per DEC-1790 — VnPay, MK Group, Viettel-CA; abstraction at `abstraction.rs::dispatcher`.
 
@@ -155,7 +155,7 @@ The DOC service **MUST** ship VN CA integration at `services/doc/src/vn_ca/` wit
     GET    /v1/doc/vn-ca/signatures/{doc_id}
     ```
 
-11. **MUST** emit 5 BRAIN audit kinds per DEC-1796. PII per FR-BRAIN-111: vneid_subject_id SHA-256 hashed (national ID is sensitive); signature + cert chain hashed.
+11. **MUST** emit 5 memory audit kinds per DEC-1796. PII per FR-MEMORY-111: vneid_subject_id SHA-256 hashed (national ID is sensitive); signature + cert chain hashed.
 
 12. **MUST** thread trace_id end-to-end.
 
@@ -209,7 +209,7 @@ Response:
 ---
 
 ## §4 — Acceptance criteria
-1. **3 partners + cardinality test**. 2. **VnPay client works**. 3. **MK Group client works**. 4. **Viettel-CA client works**. 5. **VNeID link required for qualified**. 6. **VN Root CA validation enforced**. 7. **5 request_kind enum**. 8. **CISO-only creds**. 9. **Creds in KMS**. 10. **5 BRAIN audit kinds emitted**. 11. **PII scrubbed (vneid_subject_id+signature+cert SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **FR-DOC-005 integration**. 15. **Append-only sigs via REVOKE except status**. 16. **Non-VN chain rejected**. 17. **Sandbox + prod env per partner**. 18. **Cert revoke path**. 19. **Composes with FR-DOC-011 for LT**. 20. **VNeID linkage 1-per-signer (idempotent)**.
+1. **3 partners + cardinality test**. 2. **VnPay client works**. 3. **MK Group client works**. 4. **Viettel-CA client works**. 5. **VNeID link required for qualified**. 6. **VN Root CA validation enforced**. 7. **5 request_kind enum**. 8. **CISO-only creds**. 9. **Creds in KMS**. 10. **5 memory audit kinds emitted**. 11. **PII scrubbed (vneid_subject_id+signature+cert SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **FR-DOC-005 integration**. 15. **Append-only sigs via REVOKE except status**. 16. **Non-VN chain rejected**. 17. **Sandbox + prod env per partner**. 18. **Cert revoke path**. 19. **Composes with FR-DOC-011 for LT**. 20. **VNeID linkage 1-per-signer (idempotent)**.
 
 ---
 
@@ -246,7 +246,7 @@ async fn non_vn_root_chain_rejected() {
 
 ## §7 — Dependencies
 **Upstream:** FR-DOC-001.
-**Cross-module:** FR-DOC-005 (caller), FR-DOC-006 (VNeID handler shared), FR-DOC-011 (LT extend), FR-AUTH-105 (KMS), FR-AUTH-101 (CISO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-DOC-005 (caller), FR-DOC-006 (VNeID handler shared), FR-DOC-011 (LT extend), FR-AUTH-105 (KMS), FR-AUTH-101 (CISO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes (similar to DOC-002/003)
 | Failure | Detection | Outcome | Recovery |
@@ -266,7 +266,7 @@ async fn non_vn_root_chain_rejected() {
 - §11.1 Each partner has REST API; VnPay = OAuth + signature endpoint, MK Group + Viettel similar.
 - §11.2 VNeID OAuth: gov-managed identity rail; tokens short-lived (5min); cert enrollment downstream.
 - §11.3 VN Root CA list maintained by Ministry of Information & Communication; refreshed quarterly.
-- §11.4 BRAIN audit body: doc_id, signer_id, partner, vn_root_validated; signatures + vneid_subject_id SHA256.
+- §11.4 memory audit body: doc_id, signer_id, partner, vn_root_validated; signatures + vneid_subject_id SHA256.
 - §11.5 Future partners: extend enum + new client file (abstraction is the seam).
 
 ---

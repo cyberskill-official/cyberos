@@ -11,8 +11,8 @@ slice: 6
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-004, FR-HR-005, FR-MCP-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-004, FR-HR-005, FR-MCP-007, FR-MEMORY-111]
 depends_on: [FR-HR-004]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1852 2026-05-17 — Closed enum `accrual_kind` = {monthly_base, seniority_bonus, correction, carryover}; cardinality 4
   - DEC-1853 2026-05-17 — Per-month accrual = IMMUTABLE row; corrections via new `correction` kind row (sign + reason)
   - DEC-1854 2026-05-17 — Idempotency: one accrual row per (member_id, year_month, kind); UNIQUE constraint
-  - DEC-1855 2026-05-17 — BRAIN audit kinds: hr.accrual_batch_started, hr.accrual_added, hr.accrual_correction_added, hr.accrual_batch_failed
+  - DEC-1855 2026-05-17 — memory audit kinds: hr.accrual_batch_started, hr.accrual_added, hr.accrual_correction_added, hr.accrual_batch_failed
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without nightly accrual, members never get monthly leave days 
 
 ## §1 — Description (BCP-14 normative)
 
-The HR service **MUST** ship leave accrual at `services/hr/src/accrual/` running nightly via FR-MCP-007 cron, computing base + seniority per Decree 145, immutable ledger, 4 BRAIN audit kinds.
+The HR service **MUST** ship leave accrual at `services/hr/src/accrual/` running nightly via FR-MCP-007 cron, computing base + seniority per Decree 145, immutable ledger, 4 memory audit kinds.
 
 1. **MUST** schedule batch at 02:00 tenant_tz per DEC-1850.
 
@@ -120,7 +120,7 @@ The HR service **MUST** ship leave accrual at `services/hr/src/accrual/` running
    GET    /v1/hr/members/{id}/accrual-ledger    (history)
    ```
 
-8. **MUST** emit 4 BRAIN audit kinds per DEC-1855. PII per FR-BRAIN-111: reason SHA-256 hashed.
+8. **MUST** emit 4 memory audit kinds per DEC-1855. PII per FR-MEMORY-111: reason SHA-256 hashed.
 
 9. **MUST** thread trace_id from cron → batch → ledger insert → audit.
 
@@ -171,7 +171,7 @@ POST /v1/hr/accrual/corrections
 ---
 
 ## §4 — Acceptance criteria
-1. **Nightly batch 02:00 tenant_tz**. 2. **1d/month base accrual**. 3. **Seniority bonus configurable per tenant (default 0)**. 4. **Pro-rate respects FR-HR-002 contract type**. 5. **Inactive members skipped**. 6. **Idempotent via UNIQUE**. 7. **Correction kind allows manual adj**. 8. **kind enum cardinality 4**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (reason SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE**. 14. **History query desc time**. 15. **CHRO-only manual trigger**. 16. **CHRO-only correction**. 17. **Year_month format 'YYYY-MM' enforced**. 18. **Cron skip if 0 active members**. 19. **Days_added precision 2 decimal (rust_decimal)**. 20. **Carryover kind for year-end roll**.
+1. **Nightly batch 02:00 tenant_tz**. 2. **1d/month base accrual**. 3. **Seniority bonus configurable per tenant (default 0)**. 4. **Pro-rate respects FR-HR-002 contract type**. 5. **Inactive members skipped**. 6. **Idempotent via UNIQUE**. 7. **Correction kind allows manual adj**. 8. **kind enum cardinality 4**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (reason SHA256)**. 11. **RLS denies cross-tenant**. 12. **Trace_id preserved**. 13. **Append-only via REVOKE**. 14. **History query desc time**. 15. **CHRO-only manual trigger**. 16. **CHRO-only correction**. 17. **Year_month format 'YYYY-MM' enforced**. 18. **Cron skip if 0 active members**. 19. **Days_added precision 2 decimal (rust_decimal)**. 20. **Carryover kind for year-end roll**.
 
 ---
 
@@ -211,7 +211,7 @@ async fn correction_creates_new_row() {
 
 ## §7 — Dependencies
 **Upstream:** FR-HR-004.
-**Cross-module:** FR-HR-002 (contract pro-rate), FR-MCP-007 (cron), FR-AUTH-101 (CHRO), FR-BRAIN-111 (PII).
+**Cross-module:** FR-HR-002 (contract pro-rate), FR-MCP-007 (cron), FR-AUTH-101 (CHRO), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -230,7 +230,7 @@ async fn correction_creates_new_row() {
 ## §11 — Implementation notes
 - §11.1 Cron via FR-MCP-007 `kind: 'hr.accrual_batch'`, daily 02:00 tenant_tz.
 - §11.2 Year-end carryover: separate cron at Jan 1, kind='carryover', moves unused annual days per policy (max 5d typically).
-- §11.3 BRAIN audit body: tenant_id, year_month, members_count; reason SHA256.
+- §11.3 memory audit body: tenant_id, year_month, members_count; reason SHA256.
 - §11.4 Manual trigger for backfill: CHRO specifies year_month range; iterates each month.
 - §11.5 Days_added uses rust_decimal (2 decimal places); never float.
 

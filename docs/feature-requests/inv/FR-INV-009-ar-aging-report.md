@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-001, FR-INV-002, FR-INV-010, FR-INV-011, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-INV-001, FR-INV-002, FR-INV-010, FR-INV-011, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-INV-001]
 blocks: [FR-INV-010]
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1543 2026-05-17 — Partial-paid invoices: bucket on REMAINING balance; not full invoice amount
   - DEC-1544 2026-05-17 — Multi-currency support via FR-INV-002 snapshot at as_of_date (cross-currency rollup uses report base currency)
   - DEC-1545 2026-05-17 — Per-customer + per-engagement + tenant-wide rollup variants
-  - DEC-1546 2026-05-17 — BRAIN audit kinds: inv.aging_report_generated (no PII in chain, only count + total)
+  - DEC-1546 2026-05-17 — memory audit kinds: inv.aging_report_generated (no PII in chain, only count + total)
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without AR aging, CFO cannot prioritize collection — late-st
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship AR aging at `services/invoicing/src/reports/aging.rs` returning 6-bucket overdue rollup per as_of_date with per-customer / per-engagement / tenant-wide variants, multi-currency conversion via FR-INV-002, 1 BRAIN audit kind.
+The INV service **MUST** ship AR aging at `services/invoicing/src/reports/aging.rs` returning 6-bucket overdue rollup per as_of_date with per-customer / per-engagement / tenant-wide variants, multi-currency conversion via FR-INV-002, 1 memory audit kind.
 
 1. **MUST** expose `POST /v1/inv/reports/aging` body `{ as_of_date, group_by?: 'customer'|'engagement'|'tenant', base_currency? }`. Auth via FR-AUTH-101 (CFO + accountant roles).
 
@@ -89,7 +89,7 @@ The INV service **MUST** ship AR aging at `services/invoicing/src/reports/aging.
 
 6. **MUST** exclude `cancelled` and `paid` invoices from buckets; include `sent`, `partial_paid`, `overdue` statuses.
 
-7. **MUST** emit `inv.aging_report_generated` per DEC-1546 with `{as_of_date, group_by, customer_count, invoice_count, total_outstanding_hash}` — total amount SHA-256 hashed per FR-BRAIN-111 (treat AR totals as confidential).
+7. **MUST** emit `inv.aging_report_generated` per DEC-1546 with `{as_of_date, group_by, customer_count, invoice_count, total_outstanding_hash}` — total amount SHA-256 hashed per FR-MEMORY-111 (treat AR totals as confidential).
 
 8. **MUST** thread trace_id from CFO action through bucketer + FX lookup + audit emission.
 
@@ -159,7 +159,7 @@ Sample response:
 ---
 
 ## §4 — Acceptance criteria
-1. **6 bucket categories**. 2. **Closed enum cardinality 6**. 3. **As_of_date required (400 if missing)**. 4. **Determinism: same params = same result**. 5. **Outstanding_balance used (not total)**. 6. **Multi-currency conversion via FR-INV-002**. 7. **FX at as_of_date (not now)**. 8. **Cancelled + paid excluded**. 9. **Sent/partial_paid/overdue included**. 10. **Group_by customer/engagement/tenant**. 11. **1 BRAIN audit kind emitted**. 12. **PII scrubbed (total hashed)**. 13. **RLS denies cross-tenant**. 14. **CFO + accountant roles only**. 15. **Trace_id preserved**. 16. **FX missing → nearest-prior + sev-2 audit**. 17. **Empty result returns empty array (not 404)**. 18. **Days_overdue boundary edges (0,1,30,31,etc) correct per DEC-1540**. 19. **Pagination supported for >1000 customers**. 20. **JSON output deterministic ordering by customer_id**.
+1. **6 bucket categories**. 2. **Closed enum cardinality 6**. 3. **As_of_date required (400 if missing)**. 4. **Determinism: same params = same result**. 5. **Outstanding_balance used (not total)**. 6. **Multi-currency conversion via FR-INV-002**. 7. **FX at as_of_date (not now)**. 8. **Cancelled + paid excluded**. 9. **Sent/partial_paid/overdue included**. 10. **Group_by customer/engagement/tenant**. 11. **1 memory audit kind emitted**. 12. **PII scrubbed (total hashed)**. 13. **RLS denies cross-tenant**. 14. **CFO + accountant roles only**. 15. **Trace_id preserved**. 16. **FX missing → nearest-prior + sev-2 audit**. 17. **Empty result returns empty array (not 404)**. 18. **Days_overdue boundary edges (0,1,30,31,etc) correct per DEC-1540**. 19. **Pagination supported for >1000 customers**. 20. **JSON output deterministic ordering by customer_id**.
 
 ---
 
@@ -224,7 +224,7 @@ pub async fn generate(req: AgingRequest, db: &Db) -> Result<AgingReport> {
 ## §7 — Dependencies
 **Upstream:** FR-INV-001, FR-INV-002.
 **Downstream:** FR-INV-010 (dunning uses aging output).
-**Cross-module:** FR-AUTH-101 (role check), FR-BRAIN-111 (PII).
+**Cross-module:** FR-AUTH-101 (role check), FR-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 
@@ -249,7 +249,7 @@ None blocking.
 - §11.1 Bucketer is pure function; deterministic input → output.
 - §11.2 SQL uses `WHERE due_date < as_of_date AND status NOT IN ('cancelled','paid')`.
 - §11.3 FX conversion at row level (not aggregate) — preserves per-invoice currency context.
-- §11.4 BRAIN audit total_outstanding hashed (SHA256(amount.to_string()) per FR-BRAIN-111).
+- §11.4 memory audit total_outstanding hashed (SHA256(amount.to_string()) per FR-MEMORY-111).
 - §11.5 Aging report is read-only; no row mutations; no .lock needed.
 
 ---

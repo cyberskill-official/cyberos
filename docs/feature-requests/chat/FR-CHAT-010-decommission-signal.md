@@ -3,7 +3,7 @@ id: FR-CHAT-010
 title: "Decommission signal — (chat msgs) / (chat + slack + zalo msgs) ≥ 0.95 over 14-day rolling window with per-tenant trigger"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,7 +11,7 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-CHAT-006, FR-CHAT-007, FR-OBS-007]
 depends_on: [FR-CHAT-006, FR-CHAT-007]
 blocks: []
@@ -43,7 +43,7 @@ sub_tasks:
   - "0.5h: decommission/mod.rs — DecommissionSignal struct"
   - "1.0h: signal.rs — query message counts per source over rolling 14d"
   - "1.0h: ratio computation + threshold check"
-  - "0.5h: BRAIN audit 'chat.decommission_signal'"
+  - "0.5h: memory audit 'chat.decommission_signal'"
   - "0.5h: CLI subcommand `decommission check --tenant <id>`"
   - "0.5h: scheduled nightly run via cron"
   - "1.0h: decommission_test.rs — ratio math + threshold + non-fire when insufficient data"
@@ -62,7 +62,7 @@ The decommission signal **MUST** compute the share of CyberOS-CHAT vs. legacy so
 3. **MUST** mark `Status::Ready` when ratio ≥ 0.95 AND window is full 14 days AND total ≥ 100.
 4. **MUST** mark `Status::NotReady` otherwise; payload includes current ratio + gap to threshold.
 5. **MUST** be INFORMATIONAL only: never modify import workflows, never block writes, never disable legacy paths.
-6. **MUST** emit BRAIN audit `chat.decommission_signal` per check with payload `{tenant_id, ratio, chat_count, slack_count, zalo_count, status, window_start, window_end, trace_id}`.
+6. **MUST** emit memory audit `chat.decommission_signal` per check with payload `{tenant_id, ratio, chat_count, slack_count, zalo_count, status, window_start, window_end, trace_id}`.
 7. **MUST** run nightly at 02:30 (after FR-PROJ-010 drift sweep, before FR-PROJ-013 calibration).
 8. **MUST** support on-demand CLI: `cyberos-chat decommission check --tenant <id>` → prints status JSON.
 9. **MUST** notify via FR-OBS-007 when status transitions from NotReady → Ready (sev-3 info).
@@ -84,7 +84,7 @@ The decommission signal **MUST** compute the share of CyberOS-CHAT vs. legacy so
     - Regression → "Legacy traffic returned; investigate cause before decommissioning"
 18. **MUST** include a `last_legacy_message_at` timestamp in the payload (max of legacy sources' last message); operators want "the last Slack message was 9 days ago" as a human-meaningful signal.
 19. **MUST** support per-source weights (slice-extension): config `decommission_source_weights = {slack: 1.0, zalo: 1.5}` allows operators to count Zalo more heavily (more SMB-critical in VN market). Default is all 1.0.
-20. **MUST** emit a `chat.decommission_state_changed` BRAIN row WHENEVER status changes (not just on transition to Ready). Operators tracking adoption see every state change.
+20. **MUST** emit a `chat.decommission_state_changed` memory row WHENEVER status changes (not just on transition to Ready). Operators tracking adoption see every state change.
 21. **MUST** provide a 30-day trend in the payload as `ratio_history: [{date, ratio}, ...]` (last 30 days of nightly checks); operators see the curve, not just the point.
 
 ---
@@ -117,7 +117,7 @@ The decommission signal **MUST** compute the share of CyberOS-CHAT vs. legacy so
 
 **Why per-source weights (§1 #19)?** Vietnam-market tenants find Zalo more business-critical than Slack; an operator may want to weight Zalo migration heavier. The default doesn't impose; the knob respects context.
 
-**Why state-changed audit (§1 #20)?** Operators reviewing tenant lifecycle answer "when did they cross 80%?" via BRAIN query. Without state-change rows, only the final transition is visible.
+**Why state-changed audit (§1 #20)?** Operators reviewing tenant lifecycle answer "when did they cross 80%?" via memory query. Without state-change rows, only the final transition is visible.
 
 **Why 30-day trend (§1 #21)?** Operators visually inspecting "is migration accelerating or stalling?" need the curve, not just the point. 30 days = one operator-decision window.
 
@@ -253,10 +253,10 @@ pub async fn check_tenant(
     };
 
     persist_state(pool, &signal).await?;
-    emit_brain_row("chat.decommission_signal", serde_json::to_value(&signal)?).await;
+    emit_memory_row("chat.decommission_signal", serde_json::to_value(&signal)?).await;
 
     if status != prior_state.as_ref().map(|s| s.current_status).unwrap_or(Status::InsufficientData) {
-        emit_brain_row("chat.decommission_state_changed", serde_json::json!({
+        emit_memory_row("chat.decommission_state_changed", serde_json::json!({
             "tenant_id": tenant_id,
             "from": prior_state.as_ref().map(|s| s.current_status),
             "to":   status,
@@ -386,7 +386,7 @@ pub async fn fetch_ratio_history(pool: &sqlx::PgPool, tenant_id: uuid::Uuid, day
         "SELECT DISTINCT ON (ts_ns::date)
                 ts_ns::date AS date,
                 (payload->>'ratio')::float8 AS ratio
-           FROM brain_audit
+           FROM memory_audit
            WHERE kind = 'chat.decommission_signal'
              AND tenant_id = $1
              AND ts_ns > NOW() - INTERVAL '1 day' * $2
@@ -403,7 +403,7 @@ pub async fn snooze(pool: &sqlx::PgPool, tenant_id: uuid::Uuid, until: DateTime<
     sqlx::query(
         "UPDATE cyberos_chat_tenant_settings SET snoozed_until = $1 WHERE tenant_id = $2"
     ).bind(until).bind(tenant_id).execute(pool).await?;
-    emit_brain_row("chat.decommission_snoozed", serde_json::json!({
+    emit_memory_row("chat.decommission_snoozed", serde_json::json!({
         "tenant_id": tenant_id, "snoozed_until": until,
     })).await;
     Ok(())
@@ -413,7 +413,7 @@ pub async fn unsnooze(pool: &sqlx::PgPool, tenant_id: uuid::Uuid) -> anyhow::Res
     sqlx::query(
         "UPDATE cyberos_chat_tenant_settings SET snoozed_until = NULL WHERE tenant_id = $1"
     ).bind(tenant_id).execute(pool).await?;
-    emit_brain_row("chat.decommission_unsnoozed", serde_json::json!({
+    emit_memory_row("chat.decommission_unsnoozed", serde_json::json!({
         "tenant_id": tenant_id,
     })).await;
     Ok(())
@@ -452,7 +452,7 @@ ALTER TABLE cyberos_chat_tenant_settings ADD COLUMN IF NOT EXISTS
 4. **14-day window applied** — messages older than 14d excluded.
 5. **Soft-deleted messages excluded** — `delete_at IS NOT NULL` not counted.
 6. **Per-source counting via props** — `cyberos_source` discriminates.
-7. **BRAIN audit chat.decommission_signal emitted per check**.
+7. **memory audit chat.decommission_signal emitted per check**.
 8. **OTel gauge `chat_decommission_ratio` set**.
 9. **Sev-3 alert on NotReady → Ready transition**.
 10. **No alert on first check if Ready** — initial check has no prior; informational only.
@@ -588,7 +588,7 @@ async fn ac20_snooze_skips_checks() {
     snooze::snooze(&env.pool, env.tenant_id(), until).await.unwrap();
     let s = check_tenant(&env.pool, env.tenant_id()).await.unwrap();
     assert_eq!(s.status, Status::Snoozed);
-    let snooze_audit = env.brain.last_of_kind("chat.decommission_snoozed").await.unwrap();
+    let snooze_audit = env.memory.last_of_kind("chat.decommission_snoozed").await.unwrap();
     assert!(snooze_audit["payload"]["snoozed_until"].is_string());
 }
 ```
@@ -637,7 +637,7 @@ async fn ac23_state_change_audits() {
     env.purge_legacy_messages(env.tenant_id()).await;
     env.add_messages_with_ratio(env.tenant_id(), 0.97, 1000).await;
     check_tenant(&env.pool, env.tenant_id()).await.unwrap();
-    let changes = env.brain.count_rows("chat.decommission_state_changed").await;
+    let changes = env.memory.count_rows("chat.decommission_state_changed").await;
     assert!(changes >= 1, "expected ≥1 state-changed row, got {}", changes);
 }
 ```
@@ -668,7 +668,7 @@ async fn ac25_no_spam_on_stable_status() {
     let env = TestEnv::new().await;
     env.seed_messages(env.tenant_id(), 800, 200, 0).await; // 0.80 NotReady
     for _ in 0..5 { check_tenant(&env.pool, env.tenant_id()).await.unwrap(); }
-    let changes = env.brain.count_rows("chat.decommission_state_changed").await;
+    let changes = env.memory.count_rows("chat.decommission_state_changed").await;
     assert_eq!(changes, 1, "should be 1 initial state-change, not 5");
 }
 ```
@@ -722,11 +722,11 @@ When multiple tenants need checks, they run sequentially (not parallel) to avoid
 
 ### §6.3 — State table vs derive-from-history
 
-We persist `cyberos_chat_decommission_state` to avoid recomputing streak from the audit row history on every check. Streak math depends on prior status; reading the prior row from BRAIN would couple read latency to BRAIN availability. Local state keeps the check independent.
+We persist `cyberos_chat_decommission_state` to avoid recomputing streak from the audit row history on every check. Streak math depends on prior status; reading the prior row from memory would couple read latency to memory availability. Local state keeps the check independent.
 
 ### §6.4 — Transition detection
 
-Status transitions are computed locally (compare current vs. prior persisted state). The state-changed audit row fires AFTER the new state is persisted, so the BRAIN trail and DB state stay consistent.
+Status transitions are computed locally (compare current vs. prior persisted state). The state-changed audit row fires AFTER the new state is persisted, so the memory trail and DB state stay consistent.
 
 ### §6.5 — Snooze interaction with checks
 
@@ -738,7 +738,7 @@ The recommendation strings are pure functions of `(status, ratio)`. New statuses
 
 ### §6.7 — Ratio history performance
 
-The 30-day history is fetched from BRAIN audit rows via a daily-aggregate query. We use `DISTINCT ON (date)` to deduplicate intra-day checks (rare, but possible if CLI is invoked manually). Performance: < 50ms for a tenant with 30d of nightly checks.
+The 30-day history is fetched from memory audit rows via a daily-aggregate query. We use `DISTINCT ON (date)` to deduplicate intra-day checks (rare, but possible if CLI is invoked manually). Performance: < 50ms for a tenant with 30d of nightly checks.
 
 ### §6.8 — CLI surface
 
@@ -768,7 +768,7 @@ $ cyberos-chat decommission unsnooze --tenant <id>
 | Failure | Audit | Operator action |
 |---|---|---|
 | DB query fail | chat.decommission_check_failed (SEV-3) | Investigate DB |
-| BRAIN audit emit fail | logged + counter | Restore BRAIN |
+| memory audit emit fail | logged + counter | Restore memory |
 | State persist fail | logged; next check overwrites | Investigate |
 | OBS alert fail | logged | Restore OBS |
 | Snooze date in past | reject at CLI | Operator fixes |
@@ -906,7 +906,7 @@ All resolved. Deferred:
 | Tenant created today, 1000 messages | window covers tenant existence | Status computed; possibly Approaching/Ready | None |
 | Spike of legacy imports mid-window | NotReady persists | Operator sees ratio drop; expected | None |
 | Spike of chat after week of inactivity | ratio jumps | Status updates correctly; no special handling | None |
-| BRAIN audit emit fails | row not emitted; counter increments | check still completes; state persisted | Operator restores BRAIN; manual backfill |
+| memory audit emit fails | row not emitted; counter increments | check still completes; state persisted | Operator restores memory; manual backfill |
 | RLS bypass | RLS policy | 0 rows returned; InsufficientData | Operator investigates RLS |
 | Concurrent checks (CLI + cron at same time) | DB write race | one wins; second is no-op (idempotent) | None |
 | Clock skew on chat DB | window edges shift slightly | minor (≤ 1m) drift in counts | None |
@@ -930,7 +930,7 @@ All resolved. Deferred:
 | Tenant with 1B messages | counts return i64::MAX-safe | ratio computed normally | None |
 | chat-importer service restart during cron tick | tick lost; next tick succeeds | one missed check per restart | None |
 | State row constraint violation | shouldn't happen; UPSERT | logged + retry | Operator |
-| BRAIN history query > 30s (rare) | timeout | history empty | None |
+| memory history query > 30s (rare) | timeout | history empty | None |
 | Two snoozes for same tenant | second overwrites | latest wins | None |
 | Snoozed tenant has SEV-2 regression upstream | snooze blocks signal | operator informed via separate channel | None |
 | Manual `decommission check` during snooze | returns Snoozed status | informational | None |
@@ -949,7 +949,7 @@ All resolved. Deferred:
 - Source flag `props.cyberos_source` is set by FR-CHAT-006 + FR-CHAT-007 at import time. The check treats anything not matching `imported_%` as native chat.
 - Nightly cron via `tokio-cron-scheduler` in the chat-importer service. We considered a separate decommissioner service but the importer is already always-on; piggyback is simpler.
 - Signal is gauge (current ratio) + counter (status per tick); operator dashboards plot both as time-series.
-- Transition detection: persisted in `cyberos_chat_decommission_state` not derived from BRAIN history. Local state is faster and decouples decommission logic from BRAIN availability.
+- Transition detection: persisted in `cyberos_chat_decommission_state` not derived from memory history. Local state is faster and decouples decommission logic from memory availability.
 - Window math uses chat-table `create_at` (system insert time); not Slack's `original_ts` — operator decisions are about CURRENT activity, not historical.
 - The 3-consecutive-checks gate was calibrated against operator interviews: single-day spikes (vacation, all-hands meeting, conference) trip false-positive Ready signals; 3 days = enough stability to confirm.
 - The 2-check Regression threshold (vs. 3 for Ready) is asymmetric: Regression is a stronger signal because it means a previously-stable migration is reversing. Catching it faster matters more than catching Ready faster.
@@ -965,7 +965,7 @@ All resolved. Deferred:
 - Per-source weights are documented but not implemented in P1 — slice 4+ adds the weight multiplication in `derive_status`.
 - Transition alerts are SEV-3 for Ready (informational) but SEV-2 for Regression (actionable). This asymmetry reflects: "Ready" is a planning trigger ("schedule the decommission"); "Regression" is an investigation trigger ("why did legacy return?").
 - The CLI `status` subcommand reads from `cyberos_chat_decommission_state` (the persisted state) rather than running a fresh check — that's faster and operator-friendly (they want the last status, not a new one).
-- We considered emitting the signal continuously (every hour) instead of nightly, but nightly is sufficient (decisions are made at human cadence, not hourly) and reduces BRAIN audit volume.
+- We considered emitting the signal continuously (every hour) instead of nightly, but nightly is sufficient (decisions are made at human cadence, not hourly) and reduces memory audit volume.
 - `recommended_action` strings are intentionally specific (not "consider X" but "do X"). Operators reading the signal want guidance, not options.
 - The 30-day history in the payload is bounded; very old tenants don't ship more than 30 entries.
 - The `ratio_history` is a snapshot of past checks, not a real-time computation; if checks were missed, the array has gaps — that's intentional (the gaps themselves are signal).

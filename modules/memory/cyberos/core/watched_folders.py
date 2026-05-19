@@ -1,6 +1,6 @@
-"""FR-BRAIN-105 — Watched-folder invariants.
+"""FR-MEMORY-105 — Watched-folder invariants.
 
-Each Personal BRAIN tracks a list of folders the capture daemon watches.
+Each Personal memory tracks a list of folders the capture daemon watches.
 The list lives at ``<store>/watched_folders.json`` with shape::
 
     {
@@ -22,7 +22,7 @@ The doctor invariants enforce:
 * Every path is absolute and exists on this device.
 * Every path is unique (no double-watch).
 * No path is inside another watched path (no nested duplication).
-* ``sync_class_default`` is a closed-enum value (matches FR-BRAIN-106).
+* ``sync_class_default`` is a closed-enum value (matches FR-MEMORY-106).
 * No path is in a known-toxic location (``/`` root, ``/etc``, ``/var``, etc.)
   that would either flood the daemon or capture system files.
 
@@ -42,7 +42,7 @@ from typing import Iterable
 from cyberos.core.sync_class import SYNC_CLASS_ENUM
 
 
-# Locations we refuse to watch — capturing these would flood BRAIN with
+# Locations we refuse to watch — capturing these would flood memory with
 # system noise or system-sensitive data.
 _TOXIC_PREFIXES: tuple[str, ...] = (
     "/",                # exact-match check below — never the literal root
@@ -109,12 +109,12 @@ def check_invariants(folders: Iterable[WatchedFolder]) -> list[WatchedFolderErro
             ))
 
     # Invariant 2 — paths exist on this device.
-    # (Doctor MAY skip this on portable BRAINs; for now, flag.)
+    # (Doctor MAY skip this on portable memories; for now, flag.)
     for f in folders_list:
         if f.path.is_absolute() and not f.path.exists():
             errors.append(WatchedFolderError(
                 f"path {f.path} does not exist on this device — "
-                "remove it or sync the BRAIN from a device where it does"
+                "remove it or sync the memory from a device where it does"
             ))
 
     # Invariant 3 — uniqueness.

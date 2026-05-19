@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CISO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-104, FR-HR-009, FR-AUTH-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TEN-104, FR-HR-009, FR-AUTH-101, FR-MEMORY-111]
 depends_on: [FR-TEN-104]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2411 2026-05-17 — Closed enum `hostile_trigger_kind` = {data_exfil_evidence, harassment_violation, criminal_charge, immediate_threat, regulatory_demand}; cardinality 5
   - DEC-2412 2026-05-17 — Legal trigger documentation required (case ref + brief description in tracked legal doc via FR-DOC-001)
   - DEC-2413 2026-05-17 — Override is sev-1 + CISO email; CISO can challenge within 24h
-  - DEC-2414 2026-05-17 — BRAIN audit kinds: ten.hostile_override_initiated, ten.hostile_override_signed, ten.hostile_override_executed, ten.hostile_override_challenged, ten.hostile_override_failed
+  - DEC-2414 2026-05-17 — memory audit kinds: ten.hostile_override_initiated, ten.hostile_override_signed, ten.hostile_override_executed, ten.hostile_override_challenged, ten.hostile_override_failed
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without fast-track, hostile actor retains access during standa
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship hostile-termination override at `services/ten/src/hostile/` with CEO+CLO+CSO triple-sign + legal trigger doc + sev-1 CISO challenge window, 5 BRAIN audit kinds.
+The TEN service **MUST** ship hostile-termination override at `services/ten/src/hostile/` with CEO+CLO+CSO triple-sign + legal trigger doc + sev-1 CISO challenge window, 5 memory audit kinds.
 
 1. **MUST** validate `hostile_trigger_kind` against closed enum per DEC-2411.
 
@@ -126,7 +126,7 @@ The TEN service **MUST** ship hostile-termination override at `services/ten/src/
    POST /v1/ten/hostile-overrides/{id}/challenge  (CISO within 24h)
    ```
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-2414. PII per FR-BRAIN-111: brief_description SHA256.
+8. **MUST** emit 5 memory audit kinds per DEC-2414. PII per FR-MEMORY-111: brief_description SHA256.
 
 9. **MUST** thread trace_id from initiate → sign → execute → challenge → audit.
 
@@ -165,7 +165,7 @@ POST /v1/ten/hostile-overrides
 ---
 
 ## §4 — Acceptance criteria
-1. **hostile_trigger_kind enum cardinality 5**. 2. **CEO+CLO+CSO triple-sign**. 3. **Same-person across slots rejected**. 4. **Legal doc required (FK)**. 5. **case_ref + brief_description required**. 6. **Cascade to FR-HR-009 fast-path**. 7. **AUTH revocation immediate**. 8. **sev-1 BRAIN audit + CISO email**. 9. **24h CISO challenge window**. 10. **Challenge reverses + restores access**. 11. **5 BRAIN audit kinds emitted**. 12. **PII scrubbed (description SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **Append-only via REVOKE except status cols**. 16. **CEO/CLO/CSO + CISO role gates**. 17. **Status workflow enforced**. 18. **Reversal restores grants + access**. 19. **Override doesn't bypass labor law (CLO ensures)**. 20. **Audit log accessible to board**.
+1. **hostile_trigger_kind enum cardinality 5**. 2. **CEO+CLO+CSO triple-sign**. 3. **Same-person across slots rejected**. 4. **Legal doc required (FK)**. 5. **case_ref + brief_description required**. 6. **Cascade to FR-HR-009 fast-path**. 7. **AUTH revocation immediate**. 8. **sev-1 memory audit + CISO email**. 9. **24h CISO challenge window**. 10. **Challenge reverses + restores access**. 11. **5 memory audit kinds emitted**. 12. **PII scrubbed (description SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **Append-only via REVOKE except status cols**. 16. **CEO/CLO/CSO + CISO role gates**. 17. **Status workflow enforced**. 18. **Reversal restores grants + access**. 19. **Override doesn't bypass labor law (CLO ensures)**. 20. **Audit log accessible to board**.
 
 ---
 
@@ -209,7 +209,7 @@ async fn ciso_challenge_reverses() {
 
 ## §7 — Dependencies
 **Upstream:** FR-TEN-104.
-**Cross-module:** FR-HR-009 (termination cascade), FR-AUTH-101 (roles), FR-DOC-001 (legal doc), FR-BRAIN-111 (PII).
+**Cross-module:** FR-HR-009 (termination cascade), FR-AUTH-101 (roles), FR-DOC-001 (legal doc), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -228,7 +228,7 @@ async fn ciso_challenge_reverses() {
 ## §11 — Implementation notes
 - §11.1 Triple-sign sequence: CEO + CLO + CSO; CISO not in sign chain (challenger role separate).
 - §11.2 Cascade uses FR-HR-009 internal API with `bypass_standard_co_sign=true` flag.
-- §11.3 BRAIN audit body: override_id, trigger_kind, status; description SHA256.
+- §11.3 memory audit body: override_id, trigger_kind, status; description SHA256.
 - §11.4 CISO email via FR-EMAIL-009 with override URL + 24h countdown.
 - §11.5 Reversal restores HR-009 termination + AUTH access; ESOP not reversed (out of scope — board decides).
 

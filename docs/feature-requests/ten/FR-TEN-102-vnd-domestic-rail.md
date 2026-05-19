@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-001, FR-TEN-002, FR-TEN-003, FR-TEN-004, FR-TEN-101, FR-TEN-103, FR-TEN-104, FR-INV-005, FR-INV-006, FR-AUTH-101, FR-AI-003, FR-BRAIN-111, FR-OBS-007, FR-OBS-008]
+memory_chain_hash: null
+related_frs: [FR-TEN-001, FR-TEN-002, FR-TEN-003, FR-TEN-004, FR-TEN-101, FR-TEN-103, FR-TEN-104, FR-INV-005, FR-INV-006, FR-AUTH-101, FR-AI-003, FR-MEMORY-111, FR-OBS-007, FR-OBS-008]
 depends_on: [FR-TEN-003, FR-INV-005]
 blocks: []
 
@@ -31,7 +31,7 @@ source_decisions:
   - DEC-963 2026-05-17 — Token-bind flow: signup → PSP-hosted token authorisation (~30s redirect+auth+redirect) → PSP returns a payment_token to our redirect_uri → token KMS-encrypted + persisted in `vnd_payment_tokens` table
   - DEC-964 2026-05-17 — Monthly recurring charge at billing_cycle_anchor (same anchor convention as FR-TEN-003 DEC-788) via PSP-specific API; result handled by per-PSP webhook (FR-INV-005 extended for Momo + ZaloPay variants)
   - DEC-965 2026-05-17 — Failed payment dunning: 3 retries over 14 days (parallel to FR-TEN-003 DEC-790 Stripe pattern); after exhaustion → tenant.dunning_state='suspended' + FR-TEN-104 suspend
-  - DEC-966 2026-05-17 — Refunds via per-PSP refund API; CFO-gated like FR-TEN-003 DEC-791; sev-1 BRAIN audit; max refund = original charge amount
+  - DEC-966 2026-05-17 — Refunds via per-PSP refund API; CFO-gated like FR-TEN-003 DEC-791; sev-1 memory audit; max refund = original charge amount
   - DEC-967 2026-05-17 — Overage charges modeled as one-off VND charges per period_close (NOT metered Subscription Items — VND PSPs lack the Stripe-style metered primitive); aggregated overage = one VND POST at period_end
   - DEC-968 2026-05-17 — Decree 123 hóa đơn điện tử (electronic invoice) generation MANDATORY for every successful VND charge — invoice number, taxpayer info, line items, QR-VietQR for verification per Decree 123 §15; integration with VN tax authority's GDP API
   - DEC-969 2026-05-17 — Per-PSP credentials stored in `vnd_psp_credentials` table, KMS-encrypted; rotation handler with 60s overlap (mirrors FR-INV-005 secret rotation)
@@ -44,7 +44,7 @@ source_decisions:
   - DEC-976 2026-05-17 — PSP-charge response asynchronous — recurring-charge API returns 200 + `processing`, real outcome lands via webhook within 5 min (per PSP docs); waiting strategy = 5-min Postgres LISTEN/NOTIFY
   - DEC-977 2026-05-17 — Currency lock applies symmetrically to VND (per FR-TEN-003 DEC-798): tenant cannot switch from VND to USD post-provisioning
   - DEC-978 2026-05-17 — Per-PSP user-facing branding at signup: each PSP shows their logo + brand at the token-auth redirect (no logo whitelabeling at slice 2)
-  - DEC-979 2026-05-17 — BRAIN audit kinds: ten.vnd_token_bind_started, ten.vnd_token_bind_completed, ten.vnd_token_bind_failed, ten.vnd_subscription_charged, ten.vnd_subscription_charge_failed, ten.vnd_overage_charged, ten.vnd_refund_issued, ten.vnd_dunning_advanced, ten.tenant_billing_suspended_vnd, ten.vnd_invoice_issued, ten.vnd_token_revoked, ten.vnd_psp_credential_rotated
+  - DEC-979 2026-05-17 — memory audit kinds: ten.vnd_token_bind_started, ten.vnd_token_bind_completed, ten.vnd_token_bind_failed, ten.vnd_subscription_charged, ten.vnd_subscription_charge_failed, ten.vnd_overage_charged, ten.vnd_refund_issued, ten.vnd_dunning_advanced, ten.tenant_billing_suspended_vnd, ten.vnd_invoice_issued, ten.vnd_token_revoked, ten.vnd_psp_credential_rotated
   - DEC-980 2026-05-17 — Per-PSP API client per residency: vn-1 residency consumes vnd_psp_credentials with `residency='vn-1'` only (cross-residency credential access blocked per FR-TEN-103 trip-wire)
   - DEC-981 2026-05-17 — Per-tenant billing_contact_phone REQUIRED at vn-1 signup (PSPs use SMS-OTP for token authorisation); FR-TEN-101 extended to capture for VND tenants
   - DEC-982 2026-05-17 — VND amounts stored as BIGINT minor (đồng — VND has no minor unit so 1 VND = 1 minor unit; AUTHORING.md rule 11 satisfied)
@@ -84,7 +84,7 @@ build_envelope:
     - services/ten/src/repo/vnd_payment_tokens.rs
     - services/ten/src/repo/vnd_psp_credentials.rs
     - services/ten/src/repo/vnd_invoices.rs
-    - services/ten/src/audit/vnd_events.rs                             # 12 BRAIN row builders
+    - services/ten/src/audit/vnd_events.rs                             # 12 memory row builders
     - services/ten/src/handlers/vnd_token_bind_start.rs                # POST /v1/signup/vnd/token-bind-start
     - services/ten/src/handlers/vnd_token_bind_return.rs               # GET callback from PSP
     - services/ten/src/handlers/vnd_token_revoke.rs                    # POST /v1/admin/tenants/{id}/vnd/token/revoke
@@ -170,7 +170,7 @@ risk_if_skipped: "Without VND rail, vn-1 tenants cannot pay — every signup in 
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src/billing/vnd/` — token-bind / subscription / overage / refund / dunning across VnPay + Momo + ZaloPay, NATS-bridged per-PSP webhook dispatch from FR-INV-005 + new INV webhook handlers, Decree 123 hóa đơn issuance with eHĐĐT signing + annual gap-free numbering, and 12 BRAIN audit kinds.
+The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src/billing/vnd/` — token-bind / subscription / overage / refund / dunning across VnPay + Momo + ZaloPay, NATS-bridged per-PSP webhook dispatch from FR-INV-005 + new INV webhook handlers, Decree 123 hóa đơn issuance with eHĐĐT signing + annual gap-free numbering, and 12 memory audit kinds.
 
 1. **MUST** define the closed `vnd_psp` Postgres enum at migration `0018`: `('vnpay','momo','zalopay')`. CI cardinality test asserts 3. Adding a fourth PSP requires schema migration + DEC entry.
 
@@ -270,7 +270,7 @@ The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src
     - ZaloPay: `app_trans_id` field.
     Internal canonical key format: `vnd.<tenant_id>.<operation>.<period_ts_or_ref>`. Adapter maps canonical → per-PSP shape. Stored in `vnd_idempotency_cache` (additional table — sub-migration into 0018).
 
-19. **MUST** emit 12 BRAIN audit row kinds per DEC-979 (AUTHORING.md rule 6 + §8 namespace):
+19. **MUST** emit 12 memory audit row kinds per DEC-979 (AUTHORING.md rule 6 + §8 namespace):
     - `ten.vnd_token_bind_started` (sev-3)
     - `ten.vnd_token_bind_completed` (sev-2)
     - `ten.vnd_token_bind_failed` (sev-2)
@@ -283,7 +283,7 @@ The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src
     - `ten.vnd_invoice_issued` (sev-2)
     - `ten.vnd_token_revoked` (sev-2)
     - `ten.vnd_psp_credential_rotated` (sev-1)
-   PII-scrubbed via FR-BRAIN-111: `billing_contact_phone_hash16`, `masked_account_hint_hash16`.
+   PII-scrubbed via FR-MEMORY-111: `billing_contact_phone_hash16`, `masked_account_hint_hash16`.
 
 20. **MUST NOT** charge any tenant whose `billing_currency != 'VND'` via this rail per DEC-973 (symmetric to FR-TEN-003 §1 #23). Guard at `vnd::api_client::call()` entry — cross-rail attempts return `400 + { error: "wrong_billing_rail", expected: "stripe", got: "vnd" }`.
 
@@ -474,7 +474,7 @@ GET    /v1/admin/tenants/{id}/vnd/invoices/{num}    (tenant_admin or cfo — sin
 17. **Dispatcher idempotency** — same `(psp, psp_event_id)` twice → one dispatch + one duplicate log row.
 18. **Residency isolation** — non-vn-1 handler cannot read `vnd_payment_tokens` (RLS rejects).
 19. **Billing_contact_phone required at vn-1 signup** — VND signup without phone returns 400 `phone_required_for_vnd`.
-20. **12 BRAIN audit kinds emitted** — happy flow + failure flow produces all 12 kinds across scenarios.
+20. **12 memory audit kinds emitted** — happy flow + failure flow produces all 12 kinds across scenarios.
 
 ---
 
@@ -516,7 +516,7 @@ async fn vnpay_token_bind_completes_and_persists_kms_wrapped() {
     assert!(!std::str::from_utf8(&blob).map(|s| s.contains("token=")).unwrap_or(false), "plaintext leak");
     assert_eq!(row.get::<String,_>("status"), "active");
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "ten.vnd_token_bind_completed"));
 }
 ```
@@ -532,7 +532,7 @@ async fn monthly_charge_emits_audit_and_invoice() {
     ctx.simulate_psp_webhook_success(tenant, VndPspKind::Momo).await;
 
     let charges: Vec<String> = sqlx::query_scalar(
-        "SELECT kind FROM brain_rows WHERE tenant_id=$1 AND kind LIKE 'ten.vnd_%'"
+        "SELECT kind FROM memory_rows WHERE tenant_id=$1 AND kind LIKE 'ten.vnd_%'"
     ).bind(tenant).fetch_all(&ctx.pool).await.unwrap();
     assert!(charges.iter().any(|k| k == "ten.vnd_subscription_charged"));
     assert!(charges.iter().any(|k| k == "ten.vnd_invoice_issued"));
@@ -744,8 +744,8 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 - **FR-TEN-104** Lifecycle — dunning advances trigger suspension.
 - **FR-INV-006** Cash application — VND receipts reconcile against subscription charges.
 - **FR-AUTH-101** RBAC — cfo + tenant_admin role gates.
-- **FR-AI-003** BRAIN audit — 12 new kinds.
-- **FR-BRAIN-111** PII scrubbing — phone + masked account hashes.
+- **FR-AI-003** memory audit — 12 new kinds.
+- **FR-MEMORY-111** PII scrubbing — phone + masked account hashes.
 - **FR-OBS-007** Auto-runbook — sev-1 dunning + signature-failure alerts.
 
 **Downstream (blocks):** None at slice 2.
@@ -754,7 +754,7 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 
 ## §8 — Example payloads
 
-### 8.1 `ten.vnd_subscription_charged` BRAIN row
+### 8.1 `ten.vnd_subscription_charged` memory row
 
 ```json
 {
@@ -805,7 +805,7 @@ pub async fn run_dispatcher(ctx: AppCtx) {
 }
 ```
 
-### 8.4 `ten.vnd_refund_issued` BRAIN row
+### 8.4 `ten.vnd_refund_issued` memory row
 
 ```json
 {

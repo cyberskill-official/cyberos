@@ -1,16 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: debugging-cycle-author
-description: |
-  Run a multi-vector debugging pass when the coverage-gate trips
-  (tests_failed > 0 OR files_below_90pct non-empty OR ecm_rows_uncovered
-  non-empty). For each failed iteration: (1) classify the failure vector
-  — state / network / memory / logic / flake; (2) state the targeted
-  hypothesis + exact file:line change; (3) re-run the test suite;
-  (4) emit one `debug-trace@1` attempt-row per cycle. Trips the
-  workflow circuit breaker after 5 consecutive failures. Used by
-  chief-technology-officer/implement-backlog-frs as step 15, conditional
-  on `coverage_report.tests_failed > 0`.
+description: >-
+  Run a multi-vector debugging pass when the coverage-gate trips (tests_failed > 0 OR files_below_90pct non-empty OR ecm_rows_uncovered non-empty). For each failed iteration: (1) classify the failure vector — state / network / memory / logic / flake; (2) state the targeted hypothesis + exact file:line change; (3) re-run the test suite; (4) emit one `debug-trace@1` attempt-row per cycle. Trips the workflow circuit breaker after 5 consecutive failures. Used by chief-technology-officer/ship-feature-requests as step 15, conditional on `coverage_report.tests_failed > 0`. Use when user asks to "draft a debugging cycle" or "create the debugging cycle". Do NOT use for "audit existing debugging cycle" (use debugging-cycle-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -20,7 +12,7 @@ metadata:
   cyberos-rubric-target: debugging_cycle_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -39,7 +31,7 @@ outputs:
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - workflow `chief-technology-officer/implement-backlog-frs` step 15 when coverage_report.tests_failed > 0
+  - workflow `chief-technology-officer/ship-feature-requests` step 15 when coverage_report.tests_failed > 0
 blockers:
   - "test framework itself is broken (no test process can start) — diagnose tooling before this skill runs"
   - "circuit breaker already tripped on this FR this session — escalate, do not retry"
@@ -84,7 +76,7 @@ resolution: passed | tripped-circuit-breaker
 on_trip_actions:
   - "git restore on touched paths"
   - "mark FR [FAILED: UNRESOLVABLE ERROR] in BACKLOG via backlog-state-update"
-  - "emit workflow_failed BRAIN audit row with this debug-trace as the artefact"
+  - "emit workflow_failed memory audit row with this debug-trace as the artefact"
 ```
 
 ## 3. Quality gates

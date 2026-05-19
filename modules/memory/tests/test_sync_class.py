@@ -1,4 +1,4 @@
-"""Tests for FR-BRAIN-106 sync_class enforcement helpers."""
+"""Tests for FR-MEMORY-106 sync_class enforcement helpers."""
 
 from __future__ import annotations
 

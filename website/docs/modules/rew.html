@@ -5,7 +5,7 @@
 
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>REW — Compensation engine · Payroll bridge · Bonus orchestrator · CyberOS</title>
- <meta name="description" content="REW — three strategic roles: (1) compensation record owner (encrypted; HR-isolated by DEC-036; never enters BRAIN), (2) payroll bridge (monthly VND payroll cycle; BHXH/BHYT/BHTN integration; immutable parameter versioning), (3) bonus orchestrator (BP fund; PROJ calibration → P3 recommendation → CEO/CFO sign-off; P1-protection invariant hard-enforced). EU AI Act Annex III §4 high-risk classification.">
+ <meta name="description" content="REW — three strategic roles: (1) compensation record owner (encrypted; HR-isolated by DEC-036; never enters memory), (2) payroll bridge (monthly VND payroll cycle; BHXH/BHYT/BHTN integration; immutable parameter versioning), (3) bonus orchestrator (BP fund; PROJ calibration → P3 recommendation → CEO/CFO sign-off; P1-protection invariant hard-enforced). EU AI Act Annex III §4 high-risk classification.">
  <link rel="stylesheet" href="../assets/tokens.css">
  <link rel="stylesheet" href="../assets/styles.css">
  <link rel="stylesheet" href="../assets/tailwind.min.css">
@@ -55,7 +55,7 @@
  The legal heart of the social contract. 3P income (P1 Base + P2 Allowance + P3 Performance), an inflation-protected BP ledger, anti-retroactive parameter versioning, and a P1-protection invariant that cannot be violated even by accident.
  </p>
  <p class="text-base text-slate-600 max-w-3xl leading-relaxed">
- REW encodes the Total Rewards & Career Path Appendix exactly. It is "Bet 5" in the strategy: a moat. The three-component 3P model decomposes monthly pay into <strong>P1 (Base, cash, contractually guaranteed)</strong>, <strong>P2 (Allowance, cash, role-tier-based)</strong>, and <strong>P3 (Performance, cash overflow from bonus pool)</strong>. The BP (Bonus Points) ledger is a unit-of-account ledger with anti-inflation interest pegged to the ACB savings rate. Two hard invariants make this module legally distinctive: (1) <strong>the system never reduces P1 base salary in cash</strong> as a result of an evaluation — even a bad performance review cannot trigger a P1 cut; and (2) <strong>published parameter versions are immutable</strong> — recomputing an old payslip against the parameters effective at that period_end must yield byte-identical output forever. Compensation values are structurally excluded from BRAIN ingestion (DEC-036). The module is EU AI Act Annex III §4 high-risk because payroll computation is employment-decision automation. locks the FRs; binds them to verification methods.
+ REW encodes the Total Rewards & Career Path Appendix exactly. It is "Bet 5" in the strategy: a moat. The three-component 3P model decomposes monthly pay into <strong>P1 (Base, cash, contractually guaranteed)</strong>, <strong>P2 (Allowance, cash, role-tier-based)</strong>, and <strong>P3 (Performance, cash overflow from bonus pool)</strong>. The BP (Bonus Points) ledger is a unit-of-account ledger with anti-inflation interest pegged to the ACB savings rate. Two hard invariants make this module legally distinctive: (1) <strong>the system never reduces P1 base salary in cash</strong> as a result of an evaluation — even a bad performance review cannot trigger a P1 cut; and (2) <strong>published parameter versions are immutable</strong> — recomputing an old payslip against the parameters effective at that period_end must yield byte-identical output forever. Compensation values are structurally excluded from memory ingestion (DEC-036). The module is EU AI Act Annex III §4 high-risk because payroll computation is employment-decision automation. locks the FRs; binds them to verification methods.
  </p>
  <div class="flex flex-wrap gap-3 mt-6">
  <a href="#architecture" class="btn btn-primary">Architecture
@@ -136,7 +136,7 @@
  <div class="fact-card"><div class="label">Planned tests</div><div class="value">140+</div><div class="note">incl. determinism replay suite</div></div>
  <div class="fact-card"><div class="label">3P split</div><div class="value">P1 + P2 + P3</div><div class="note">Base · Allowance · Performance</div></div>
  <div class="fact-card"><div class="label">BP interest</div><div class="value">ACB rate</div><div class="note">VND inflation-pegged</div></div>
- <div class="fact-card"><div class="label">BRAIN ingestion</div><div class="value">= 0</div><div class="note">structural exclusion · DEC-036</div></div>
+ <div class="fact-card"><div class="label">memory ingestion</div><div class="value">= 0</div><div class="note">structural exclusion · DEC-036</div></div>
  <div class="fact-card"><div class="label">Co-sign</div><div class="value">CFO + CHRO</div><div class="note">commit gate</div></div>
  <div class="fact-card"><div class="label">EU AI Act</div><div class="value">Annex III §4</div><div class="note">high-risk · conformity pack at P2</div></div>
  </div>
@@ -149,14 +149,14 @@
 <section id="bigger-picture" class="module-section">
  <header class="section-head"><span class="section-num">0</span><h2>The bigger picture — three strategic roles</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- REW is "Bet 5" in the strategy — the moat. The point is that compensation is not a HR feature: it's a sovereign, legally-sensitive computation plane that must be architecturally separated from everything else. HR holds identity; REW holds the numbers. The P1-protection invariant + anti-retroactive parameter versioning + structural BRAIN exclusion (DEC-036) are non-negotiable hard rules.
+ REW is "Bet 5" in the strategy — the moat. The point is that compensation is not a HR feature: it's a sovereign, legally-sensitive computation plane that must be architecturally separated from everything else. HR holds identity; REW holds the numbers. The P1-protection invariant + anti-retroactive parameter versioning + structural memory exclusion (DEC-036) are non-negotiable hard rules.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-6">
  <div class="bbg-card p-5" style="border-top:4px solid var(--rew)">
  <div class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--rew-dark)">Role 1 · Compensation record owner</div>
- <div class="font-bold text-slate-900 mb-2 text-base">Encrypted · HR-isolated · structurally excluded from BRAIN</div>
+ <div class="font-bold text-slate-900 mb-2 text-base">Encrypted · HR-isolated · structurally excluded from memory</div>
  <p class="text-sm text-slate-600 leading-relaxed">
- Per-Member compensation lives in REW's separate encrypted keyspace. HR never sees the number; REW never sees CCCD photos. CI gate (DEC-036) rejects any schema PR that lets compensation fields exist in HR tables or BRAIN files. EU AI Act Annex III §4 high-risk because payroll = employment decision.
+ Per-Member compensation lives in REW's separate encrypted keyspace. HR never sees the number; REW never sees CCCD photos. CI gate (DEC-036) rejects any schema PR that lets compensation fields exist in HR tables or memory files. EU AI Act Annex III §4 high-risk because payroll = employment decision.
  </p>
  </div>
  <div class="bbg-card p-5" style="border-top:4px solid var(--rew)">
@@ -187,7 +187,7 @@ flowchart TB
  LEDGER["📒 BP ledger · append-only"]
  BHXH["🏛 BHXH/BHYT/BHTN<br>VN social insurance"]
  BANKS["🏦 VN banks<br>VietQR payroll batch"]
- BRAIN["🚫 BRAIN<br>NEVER INGESTED · DEC-036"]
+ memory["🚫 memory<br>NEVER INGESTED · DEC-036"]
  HR --> REW
  TIME --> REW
  PROJ -- "aggregate signals via HR" --> REW
@@ -196,13 +196,13 @@ flowchart TB
  REW --> LEDGER
  PAYSLIPS --> BANKS
  PAYSLIPS --> BHXH
- REW -. "structural exclusion" .x BRAIN
+ REW -. "structural exclusion" .x memory
  classDef hub fill:#fef3c7,stroke:#92400e,stroke-width:3px,color:#451a03
  classDef mod fill:#e0e7ff,stroke:#3730a3
  classDef forbidden fill:#fee2e2,stroke:#b91c1c,stroke-width:3px,color:#7f1d1d
  class REW hub
  class HR,TIME,PROJ,SIGNATURE,PAYSLIPS,LEDGER,BHXH,BANKS mod
- class BRAIN forbidden
+ class memory forbidden
  </div>
  </div>
  <h3 class="text-lg font-bold mt-6 mb-3">Auto vs human-in-loop operations matrix</h3>
@@ -219,7 +219,7 @@ flowchart TB
  <tr><td>Statutory deduction (BHXH etc.)</td><td><strong>Auto</strong> per Decree 152/2020 rates</td><td>VN law specifies rates; version-pinned.</td></tr>
  <tr><td>Payroll bank batch send</td><td><strong>Manual</strong> CFO confirm + VietQR batch</td><td>Money movement; human final.</td></tr>
  <tr><td>Old payslip replay (audit)</td><td><strong>Auto</strong> deterministic</td><td>Byte-identical reproduction required; CI test.</td></tr>
- <tr><td>BRAIN ingestion of comp data</td><td><strong>BLOCKED</strong> by schema</td><td>DEC-036 structural exclusion; CI rejects comp fields in any BRAIN-ingested path.</td></tr>
+ <tr><td>memory ingestion of comp data</td><td><strong>BLOCKED</strong> by schema</td><td>DEC-036 structural exclusion; CI rejects comp fields in any memory-ingested path.</td></tr>
  </tbody>
  </table>
  </div>
@@ -231,7 +231,7 @@ flowchart TB
 <section id="why" class="module-section">
  <header class="section-head"><span class="section-num">1</span><h2>Why REW exists</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- Compensation is the most legally-sensitive data a company holds and the most reputation-sensitive computation a company runs. When a payslip arrives wrong, the recipient never trusts the system again. When a parameter changes retroactively, the company has produced two contradictory truths about the same period — a phenomenon that auditors call a fraud signal and members call "you cheated me". REW exists to make these failure modes structurally impossible: append-only ledger, deterministic compute, dual sign-off, structural exclusion from BRAIN, and a P1 floor that even a buggy evaluation cannot violate.
+ Compensation is the most legally-sensitive data a company holds and the most reputation-sensitive computation a company runs. When a payslip arrives wrong, the recipient never trusts the system again. When a parameter changes retroactively, the company has produced two contradictory truths about the same period — a phenomenon that auditors call a fraud signal and members call "you cheated me". REW exists to make these failure modes structurally impossible: append-only ledger, deterministic compute, dual sign-off, structural exclusion from memory, and a P1 floor that even a buggy evaluation cannot violate.
  </p>
  <div class="grid md:grid-cols-3 gap-4 my-5">
  <div class="bbg-card p-5">
@@ -246,8 +246,8 @@ flowchart TB
  </div>
  <div class="bbg-card p-5">
  <div class="text-2xl mb-2">🚫</div>
- <div class="font-bold text-slate-900 mb-1">Zero BRAIN leakage</div>
- <p class="text-sm text-slate-600">DEC-036: compensation numbers never enter the BRAIN audit ledger. Audit rows reference an <code>opaque_payslip_id</code>; the body is in REW's encrypted keyspace, not in BRAIN. Even a full BRAIN export reveals no comp.</p>
+ <div class="font-bold text-slate-900 mb-1">Zero memory leakage</div>
+ <p class="text-sm text-slate-600">DEC-036: compensation numbers never enter the memory audit ledger. Audit rows reference an <code>opaque_payslip_id</code>; the body is in REW's encrypted keyspace, not in memory. Even a full memory export reveals no comp.</p>
  </div>
  </div>
  <p class="text-slate-700 leading-relaxed">
@@ -268,16 +268,16 @@ flowchart TB
  <tr><td><strong>5W · What</strong></td><td>What is REW?</td><td>An append-only compensation ledger + deterministic payroll compute + BP (Bonus Points) ledger with anti-inflation interest. Encrypted PDF payslip output with cryptographic SHA-256 integrity. Read-only narrator surface (<code>payslip_explain</code>) for the CUO/CFO-skill agent.</td></tr>
  <tr><td><strong>5W · Who</strong></td><td>Who is touched?</td><td><strong>Members:</strong> every employee gets a monthly payslip. <strong>Owners:</strong> HR/Ops Lead initiates close; CFO + CHRO co-sign commit; CEO approves final publication. <strong>Forbidden:</strong> agents never write to REW; agents read only the <code>payslip_explain</code> narrative.</td></tr>
  <tr><td><strong>5W · When</strong></td><td>When does REW act?</td><td>(a) Monthly close cycle (D-3 to D+2 around month-end); (b) per-grant bonus award (Founder approval gate); (c) anti-retroactive replay job at every parameter change (CI); (d) annual SI/PIT remittance prep; (e) Member termination → final-pay compute.</td></tr>
- <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (Singapore SG-1) backed by AWS RDS Postgres with REW-specific KMS key (separate from HR's CCCD key, separate from BRAIN's signing key). PDFs at rest with retention lock = 10 years.</td></tr>
- <tr><td><strong>5W · Why</strong></td><td>Why a separate, isolated module?</td><td>Because comp data leaking into BRAIN is the worst privacy outcome possible. Because retroactive parameter changes are an audit-failure / fraud signal. Because P1-cut bugs are existential to trust.</td></tr>
+ <tr><td><strong>5W · Where</strong></td><td>Where does it run?</td><td>P1: single region (Singapore SG-1) backed by AWS RDS Postgres with REW-specific KMS key (separate from HR's CCCD key, separate from memory's signing key). PDFs at rest with retention lock = 10 years.</td></tr>
+ <tr><td><strong>5W · Why</strong></td><td>Why a separate, isolated module?</td><td>Because comp data leaking into memory is the worst privacy outcome possible. Because retroactive parameter changes are an audit-failure / fraud signal. Because P1-cut bugs are existential to trust.</td></tr>
  <tr><td><strong>1H · How</strong></td><td>How does it work?</td><td>(1) Parameter table append-only, every row carries <code>effective_from + effective_to + superseded_by + version_hash</code>. (2) Compute kernel is a pure function with a serde-stable input snapshot. (3) PDF generation is deterministic (LaTeX with frozen fonts, fixed timestamp metadata). (4) PDF SHA-256 stored alongside row; integrity verifiable forever. (5) Co-sign predicate at AUTH (CFO + CHRO scopes both required for commit).</td></tr>
  <tr><td><strong>2C · Cost</strong></td><td>Cost budget?</td><td>P1: ~$30/month (RDS schema + Fargate task + S3 with object-lock). 50-tenant: ~$100/month. Per-payslip cost: ~$0.01 amortised (LaTeX rendering dominates).</td></tr>
- <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) P1 invariant — sev-0 if violated. (b) Anti-retroactive — sev-0 if violated. (c) BRAIN exclusion (DEC-036) — CI gate. (d) Vietnamese SI/PIT line-items per Decree 152/2020 + Circular 111/2013. (e) 10-year retention. (f) EU AI Act high-risk — conformity pack at P2.</td></tr>
+ <tr><td><strong>2C · Constraints</strong></td><td>Constraints?</td><td>(a) P1 invariant — sev-0 if violated. (b) Anti-retroactive — sev-0 if violated. (c) memory exclusion (DEC-036) — CI gate. (d) Vietnamese SI/PIT line-items per Decree 152/2020 + Circular 111/2013. (e) 10-year retention. (f) EU AI Act high-risk — conformity pack at P2.</td></tr>
  <tr><td><strong>5M · Materials</strong></td><td>Stack?</td><td>Rust 1.81 · axum 0.7 · sqlx · PostgreSQL 16 · LaTeX (tectonic) for deterministic PDF · ring for SHA-256 · serde for canonical-JSON input snapshots · AWS KMS for per-payslip encryption · S3 with object-lock for archival.</td></tr>
  <tr><td><strong>5M · Methods</strong></td><td>Method choices?</td><td>Append-only with supersession (no UPDATE). Pure-function compute kernel with property tests for determinism. Tectonic for deterministic LaTeX. Co-sign predicate at AUTH gateway. CI replay job that recomputes last P0 → P4 horizon on every parameter change.</td></tr>
  <tr><td><strong>5M · Machines</strong></td><td>Deployment?</td><td>Fargate task in SG-1 (P1). Multi-AZ Postgres RDS. S3 retention lock = 10 years. SG HoldCo branch: SGD payroll mode (P2 stretch).</td></tr>
  <tr><td><strong>5M · Manpower</strong></td><td>Who maintains?</td><td>HR/Ops Lead (R for operations) + CEO (A for sign-off) + CFO (R for commit co-sign) + CHRO (R for co-sign, P3+ seat).</td></tr>
- <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>(FR pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, BRAIN-leak incident count, P1-cut-attempt blocked count.</td></tr>
+ <tr><td><strong>5M · Measurement</strong></td><td>How measured?</td><td>(FR pending)..010. KPIs: close-cycle completion days, recompute-determinism CI pass rate, memory-leak incident count, P1-cut-attempt blocked count.</td></tr>
  </tbody>
  </table>
  </div>
@@ -289,7 +289,7 @@ flowchart TB
 <section id="architecture" class="module-section">
  <header class="section-head"><span class="section-num">3</span><h2>Architecture</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- REW is an isolated service with four surfaces (REST admin for the close cycle, GraphQL read-mostly for the Member payslip portal, MCP narrator-only tools for agents, internal gRPC for HR roster sync), three stores (Postgres with REW-specific KMS key for ledger rows, S3 with object-lock for PDFs, KMS for column-level encryption), and a deliberately constrained audit path that emits <em>opaque event references</em> to BRAIN — never numbers.
+ REW is an isolated service with four surfaces (REST admin for the close cycle, GraphQL read-mostly for the Member payslip portal, MCP narrator-only tools for agents, internal gRPC for HR roster sync), three stores (Postgres with REW-specific KMS key for ledger rows, S3 with object-lock for PDFs, KMS for column-level encryption), and a deliberately constrained audit path that emits <em>opaque event references</em> to memory — never numbers.
  </p>
 
  <div class="bbg-card p-5 mb-6">
@@ -322,11 +322,11 @@ graph TB
  subgraph STORES ["Stores (isolated)"]
  PG[("PostgreSQL<br>compensation_change · payslip<br>parameters · bp_ledger<br>REW-specific KMS key")]
  S3[("AWS S3<br>payslip PDFs · object-lock 10y<br>REW-specific KMS")]
- KMS[("AWS KMS<br>rew-comp-key<br>distinct from HR + BRAIN")]
+ KMS[("AWS KMS<br>rew-comp-key<br>distinct from HR + memory")]
  end
 
  subgraph BOUNDARIES ["Compliance boundaries"]
- BRAIN["🧠 BRAIN<br>opaque event refs ONLY<br>(no comp numbers)"]
+ memory["🧠 memory<br>opaque event refs ONLY<br>(no comp numbers)"]
  OBS["👁 OBS<br>timing only<br>(no comp in traces)"]
  HRMOD["👥 HR<br>Member roster (read)"]
  AUTH["🔐 AUTH<br>co-sign predicate"]
@@ -354,7 +354,7 @@ graph TB
  PARAM --> PG
  PG --> KMS
  S3 --> KMS
- REST -.opaque ref.-> BRAIN
+ REST -.opaque ref.-> memory
  REW --> OBS
  REPLAY --> KERNEL
 
@@ -364,7 +364,7 @@ graph TB
  classDef extern fill:#f5ede6,stroke:#45210e
  class GQL,REST,KERNEL,PARAM,BP,PDF,NARR,COSIGN,REPLAY planned
  class PG,S3,KMS store
- class BRAIN,OBS boundary
+ class memory,OBS boundary
  class HRMOD,AUTH extern
  </div>
  </div>
@@ -386,8 +386,8 @@ graph TB
  <tr><td><code>p1_guard.rs</code></td><td>services/rew/src/p1_guard.rs</td><td>P1-protection invariant enforcer. Rejects any <code>compensation_change</code> row that would result in a smaller P1 cash value than the prior period.</td></tr>
  <tr><td><code>si_pit.rs</code></td><td>services/rew/src/si_pit.rs</td><td>Vietnamese SI (BHXH + BHYT + BHTN) and PIT line-item computation per Decree 152/2020 + Circular 111/2013. Versioned along with other parameters.</td></tr>
  <tr><td><code>sg_branch.rs</code></td><td>services/rew/src/sg_branch.rs</td><td>SGD payroll branch for Singapore HoldCo. Activated only when tenant's <code>data_residency = "sg-1"</code> and member's <code>jurisdiction = "SG"</code>. (P2 stretch.)</td></tr>
- <tr><td><code>brain_bridge.rs</code></td><td>services/rew/src/brain_bridge.rs</td><td>Writes opaque event refs to BRAIN (e.g. <code>rew.payslip.published:opaque_id_01HZJ…</code>). Never writes comp numbers. CI gate inspects emitted-row JSON for blocklist keys.</td></tr>
- <tr><td><code>migrations/</code></td><td>services/rew/migrations/</td><td>sqlx migrations. Append-only constraints (no DELETE / UPDATE on ledger tables). Separate KMS key from HR + BRAIN.</td></tr>
+ <tr><td><code>memory_bridge.rs</code></td><td>services/rew/src/memory_bridge.rs</td><td>Writes opaque event refs to memory (e.g. <code>rew.payslip.published:opaque_id_01HZJ…</code>). Never writes comp numbers. CI gate inspects emitted-row JSON for blocklist keys.</td></tr>
+ <tr><td><code>migrations/</code></td><td>services/rew/migrations/</td><td>sqlx migrations. Append-only constraints (no DELETE / UPDATE on ledger tables). Separate KMS key from HR + memory.</td></tr>
  </tbody>
  </table>
  </div>
@@ -596,7 +596,7 @@ type Query {
  <tr><td>POST</td><td><code>/admin/cycles/{period}/draft</code></td><td>Compute draft payslips (kernel, no commit).</td><td>HR/Ops</td></tr>
  <tr><td>GET</td><td><code>/admin/cycles/{period}/anomalies</code></td><td>Surface ±20% deltas vs prior month.</td><td>readonly</td></tr>
  <tr><td>POST</td><td><code>/admin/cycles/{period}/commit</code></td><td>Commit cycle: locks payslip rows.</td><td><strong>CFO + CHRO</strong></td></tr>
- <tr><td>POST</td><td><code>/admin/cycles/{period}/publish</code></td><td>Publish payslips: emit opaque BRAIN refs + notify Members.</td><td>CEO (final)</td></tr>
+ <tr><td>POST</td><td><code>/admin/cycles/{period}/publish</code></td><td>Publish payslips: emit opaque memory refs + notify Members.</td><td>CEO (final)</td></tr>
  <tr><td>POST</td><td><code>/admin/parameters</code></td><td>Publish a new parameter version (e.g. annual review).</td><td><strong>CFO + CHRO + CEO</strong></td></tr>
  <tr><td>POST</td><td><code>/admin/compensation/{member_id}/change</code></td><td>Append a compensation change (hire, promotion, annual review). P1-guard checked.</td><td><strong>CFO + CHRO</strong></td></tr>
  <tr><td>POST</td><td><code>/admin/bonus-pool/{year}</code></td><td>Allocate the annual bonus pool.</td><td><strong>CEO + CFO</strong></td></tr>
@@ -644,7 +644,7 @@ sequenceDiagram
  participant CHRO as CHRO
  participant CEO as CEO
  participant S3 as AWS S3 (object-lock)
- participant B as 🧠 BRAIN (opaque ref only)
+ participant B as 🧠 memory (opaque ref only)
 
  HR->>R: POST /admin/cycles {period:"2026-04"}
  R->>R: open cycle status="open"
@@ -671,7 +671,7 @@ sequenceDiagram
  R->>S3: archive PDFs (KMS, object-lock 10y)
  R->>R: payslip.status="published", record pdf_sha256
  R->>B: opaque ref "rew.payslip.published:&lt;opaque_id&gt;"
- Note over R,B: BRAIN row contains NO comp numbers,<br>just an opaque pointer.
+ Note over R,B: memory row contains NO comp numbers,<br>just an opaque pointer.
  </div>
  <p class="text-xs text-slate-500 mt-3">CFO + CHRO assertions must both arrive within 5 minutes; otherwise <code>cosign_guard</code> resets and both must re-submit. This prevents accidental long-pending half-signed commits.</p>
  </div>
@@ -687,7 +687,7 @@ sequenceDiagram
  participant R as REW /admin/parameters
  participant K as compute_kernel.rs
  participant RPC as replay_check.rs (CI)
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CEO->>R: POST /admin/parameters<br>{name:"p1-base-schedule", version:"2026.05", payload:…}
  R->>R: 3-way co-sign (CEO + CFO + CHRO)
@@ -721,7 +721,7 @@ sequenceDiagram
  participant P1G as p1_guard.rs
  participant CFO as CFO
  participant CHRO as CHRO
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  L-->>HR: promotion outcome "L2 → L3 for mai@…"
  HR->>R: POST /admin/compensation/&lt;mai&gt;/change<br>{level:"L3", p1_base:&lt;new&gt;, reason:"promotion"}
@@ -754,7 +754,7 @@ sequenceDiagram
  participant K as compute_kernel.rs
  participant L as 📈 LEARN (VP roll-up)
  participant M as Member portal
- participant B as 🧠 BRAIN
+ participant B as 🧠 memory
 
  CEO->>R: POST /admin/bonus-pool/2026<br>{pool_size: &lt;X&gt; VND}
  R->>R: co-sign (CEO + CFO)
@@ -797,7 +797,7 @@ sequenceDiagram
 <section id="lifecycle" class="module-section">
  <header class="section-head"><span class="section-num">7</span><h2>Close-cycle lifecycle</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- A monthly close cycle traverses five states. Each transition writes an opaque audit row (never a number) to BRAIN.
+ A monthly close cycle traverses five states. Each transition writes an opaque audit row (never a number) to memory.
  </p>
  <div class="bbg-card p-5 mb-5">
  <div class="mermaid">
@@ -852,10 +852,10 @@ stateDiagram-v2
  <table class="kt">
  <thead><tr><th>NFR ID</th><th>Concern</th><th>Target</th><th>Measurement</th></tr></thead>
  <tbody>
- <tr><td><code>N(FR pending)</code></td><td>Comp number in BRAIN ledger row</td><td>= 0 — sev-0</td><td>CI: brain_bridge emit JSON inspected against blocklist of keys + numeric value patterns</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>Comp number in memory ledger row</td><td>= 0 — sev-0</td><td>CI: memory_bridge emit JSON inspected against blocklist of keys + numeric value patterns</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>P1 reduction attempts blocked</td><td>= 100% (zero leak)</td><td>p1_guard property test; chaos test injects p1 cut and asserts rejection</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Single-signer commit attempts blocked</td><td>= 100%</td><td>cosign_guard integration test</td></tr>
- <tr><td><code>N(FR pending)</code></td><td>KMS-key isolation (REW key distinct from HR + BRAIN)</td><td>3 distinct key handles</td><td>KMS policy inspection; cross-key access blocked</td></tr>
+ <tr><td><code>N(FR pending)</code></td><td>KMS-key isolation (REW key distinct from HR + memory)</td><td>3 distinct key handles</td><td>KMS policy inspection; cross-key access blocked</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Determinism — same inputs → same PDF SHA-256</td><td>100% (phased replay)</td><td>replay_check.rs CI on every parameter change</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Append-only at DB layer (no UPDATE / DELETE grant on ledger tables)</td><td>enforced</td><td>DB role inspection · CI gate on migrations</td></tr>
  <tr><td><code>N(FR pending)</code></td><td>Cycle draft compute p95 (50 members)</td><td>≤ 8 s</td><td>bench/cycle.rs</td></tr>
@@ -876,7 +876,7 @@ stateDiagram-v2
 <section id="dependencies" class="module-section">
  <header class="section-head"><span class="section-num">10</span><h2>Dependencies</h2></header>
  <p class="text-slate-700 leading-relaxed mb-4">
- REW is deliberately constrained. It reads from HR (roster + leave) and TIME (timesheet). It writes opaque references to BRAIN — never numbers. Agents read the narrator surface only.
+ REW is deliberately constrained. It reads from HR (roster + leave) and TIME (timesheet). It writes opaque references to memory — never numbers. Agents read the narrator surface only.
  </p>
  <div class="bbg-card p-5">
  <div class="mermaid">
@@ -888,7 +888,7 @@ graph LR
  LEARN["📈 LEARN<br>VP for P3 distribution"]
  KMS["🔑 AWS KMS<br>rew-comp-key (distinct)"]
  S3["🗂 AWS S3<br>PDFs · object-lock 10y"]
- BRAIN["🧠 BRAIN<br>opaque refs only"]
+ memory["🧠 memory<br>opaque refs only"]
  end
  REW["💎 REW"]
  subgraph downstream ["REW is read by"]
@@ -903,7 +903,7 @@ graph LR
  LEARN --> REW
  KMS --> REW
  S3 --> REW
- REW -.opaque ref.-> BRAIN
+ REW -.opaque ref.-> memory
  REW --> CUO
  REW --> MEM
  REW --> DPO
@@ -913,7 +913,7 @@ graph LR
  classDef forbidden fill:#fee2e2,stroke:#dc2626
  class REW planned
  class AUTH,HRMOD,TIME,LEARN,CUO,MEM,DPO planned
- class BRAIN,KMS,S3 shipped
+ class memory,KMS,S3 shipped
  class INV forbidden
  </div>
  </div>
@@ -953,12 +953,12 @@ graph LR
 <!-- ============================================================ -->
 <section id="risk-entries" class="module-section">
  <header class="section-head"><span class="section-num">12</span><h2>Risk entries</h2></header>
- <p class="text-slate-700 leading-relaxed mb-4">REW's risks are largely about integrity (determinism, append-only) and privacy (BRAIN leakage). The P1-cut and BRAIN-leak risks are both rated catastrophic.</p>
+ <p class="text-slate-700 leading-relaxed mb-4">REW's risks are largely about integrity (determinism, append-only) and privacy (memory leakage). The P1-cut and memory-leak risks are both rated catastrophic.</p>
  <div class="bbg-card p-5 overflow-x-auto">
  <table class="kt">
  <thead><tr><th>ID</th><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Owner</th><th>Mitigation</th></tr></thead>
  <tbody>
- <tr><td><code>R-REW-001</code></td><td>Comp number leaks into BRAIN audit row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>brain_bridge.rs emit JSON inspected by CI gate against numeric blocklist; integration test asserts opaque ref pattern only.</td></tr>
+ <tr><td><code>R-REW-001</code></td><td>Comp number leaks into memory audit row</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>memory_bridge.rs emit JSON inspected by CI gate against numeric blocklist; integration test asserts opaque ref pattern only.</td></tr>
  <tr><td><code>R-REW-002</code></td><td>P1 cut proposed by buggy evaluation</td><td>Low</td><td>Catastrophic (legal)</td><td>CEO</td><td>p1_guard at app layer + DB CHECK constraint; property test attempts P1 cut and asserts rejection.</td></tr>
  <tr><td><code>R-REW-003</code></td><td>Retroactive parameter change breaks old payslip recomputation</td><td>Medium</td><td>High</td><td>CTO</td><td>replay_check.rs CI on every parameter change; rejects publish if any of last P0 → P4 horizon drifts.</td></tr>
  <tr><td><code>R-REW-004</code></td><td>Single-signer commit slips through</td><td>Low</td><td>High</td><td>CFO</td><td>cosign_guard with 5-min window; both signatures required; integration test asserts blockage.</td></tr>
@@ -970,7 +970,7 @@ graph LR
  <tr><td><code>R-REW-010</code></td><td>10-year retention violated by S3 lifecycle bug</td><td>Low</td><td>High</td><td>CTO</td><td>Object-lock governance mode; lifecycle policy review at every deploy; quarterly inventory audit.</td></tr>
  <tr><td><code>R-REW-011</code></td><td>HR-aggregated calibration signal weaponised as sole basis for P3 cut</td><td>Medium</td><td>High</td><td>CHRO</td><td>P3 distribution requires CEO + CFO sign-off + per-Member manager narrative; calibration is one input, never the only input.</td></tr>
  <tr><td><code>R-REW-012</code></td><td>BHXH/BHYT rate change mid-month (Decree amendment) creates partial-month inconsistency</td><td>Medium</td><td>Medium</td><td>CLO</td><td>Parameter version effective-from supports mid-month boundary; pro-rated computation per partial period; CI replay verifies.</td></tr>
- <tr><td><code>R-REW-013</code></td><td>Lumi cross-tenant synthesis attempts to read REW data (impossible by design, but CI must verify)</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>REW has zero MCP tools exposed; CI gate verifies absence of comp data path to BRAIN/Lumi; quarterly red-team.</td></tr>
+ <tr><td><code>R-REW-013</code></td><td>Lumi cross-tenant synthesis attempts to read REW data (impossible by design, but CI must verify)</td><td>Low</td><td>Catastrophic</td><td>CSO</td><td>REW has zero MCP tools exposed; CI gate verifies absence of comp data path to memory/Lumi; quarterly red-team.</td></tr>
  <tr><td><code>R-REW-014</code></td><td>Member self-service payslip view leaks Member-Y data via cache</td><td>Low</td><td>High</td><td>CSO</td><td>Per-Member subject-bound cache keys; CI test asserts cross-Member cache miss; pen-test quarterly.</td></tr>
  <tr><td><code>R-REW-015</code></td><td>Co-signers (CFO + CHRO) collude → P1 cut slips through</td><td>Low</td><td>Critical</td><td>CEO</td><td>P1 protection is enforced at DB CHECK constraint, NOT at app layer alone; even both co-signers cannot commit a P1-cutting row. Hard structural floor.</td></tr>
  </tbody>
@@ -992,13 +992,13 @@ graph LR
  <tr><td><strong>Determinism replay pass rate</strong></td><td>replay_check pass / runs</td><td>CI</td><td>= 100%</td></tr>
  <tr><td><strong>P1-cut attempts blocked</strong></td><td>p1_guard rejections / period</td><td>OBS</td><td>tracked; alert on any &gt; 0 in prod</td></tr>
  <tr><td><strong>Single-signer commit attempts blocked</strong></td><td>cosign_guard rejections</td><td>OBS</td><td>tracked; alert on prod attempts</td></tr>
- <tr><td><strong>Comp-in-BRAIN incidents</strong></td><td>CI gate failures</td><td>CI</td><td>= 0</td></tr>
+ <tr><td><strong>Comp-in-memory incidents</strong></td><td>CI gate failures</td><td>CI</td><td>= 0</td></tr>
  <tr><td><strong>Member disputes resolved (5 working days)</strong></td><td>disputes resolved within SLO / total</td><td>REW DB</td><td>≥ 95%</td></tr>
  <tr><td><strong>PDF render p95</strong></td><td>histogram</td><td>OBS</td><td>≤ 600 ms</td></tr>
  <tr><td><strong>Anomaly false-positive rate</strong></td><td>flagged but unchanged / flagged</td><td>REW DB</td><td>≤ 30%</td></tr>
  <tr><td><strong>BP interest precision (drift)</strong></td><td>computed - expected (basis points)</td><td>property test</td><td>= 0 bps</td></tr>
  <tr><td><strong>EU AI Act conformity score</strong></td><td>conformity items passed / total</td><td>P2 audit</td><td>= 100% at P2 release</td></tr>
- <tr><td><strong>P3 distribution sign-off completeness</strong></td><td>quarterly P3 distributions with CEO + CFO + manager narrative / total</td><td>BRAIN audit</td><td>= 1.0 (hard floor)</td></tr>
+ <tr><td><strong>P3 distribution sign-off completeness</strong></td><td>quarterly P3 distributions with CEO + CFO + manager narrative / total</td><td>memory audit</td><td>= 1.0 (hard floor)</td></tr>
  <tr><td><strong>Parameter version mid-month transition correctness</strong></td><td>pro-rated periods passing replay / total</td><td>CI replay</td><td>= 100%</td></tr>
  <tr><td><strong>Lumi-attempted REW reads</strong></td><td>count</td><td>OBS</td><td>= 0 (hard floor; CI verifies)</td></tr>
  <tr><td><strong>Cross-Member cache leak attempts</strong></td><td>count</td><td>OBS + CI</td><td>= 0</td></tr>
@@ -1047,7 +1047,7 @@ graph LR
  period: 2026-04
  status: open
  freeze: 2026-04-28 23:59:59 (timesheet hard freeze)
-[audit] brain seq=15001 (opaque ref only)</code></pre>
+[audit] memory seq=15001 (opaque ref only)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">2. Draft compute</h3>
 <pre><code>$ cyberos-rew cycle draft --period 2026-04
@@ -1058,7 +1058,7 @@ graph LR
  mai@… (P3 spike — bonus pool distribution)
  linh@… (P1 raise — promotion L1→L2)
 [status] drafted
-[audit] brain seq=15002 (opaque)</code></pre>
+[audit] memory seq=15002 (opaque)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">3. Commit (CFO + CHRO co-sign)</h3>
 <pre><code>$ cyberos-rew cycle commit --period 2026-04 \
@@ -1069,7 +1069,7 @@ graph LR
 [guard] cosign_guard: both signatures within 5min window ✓
 [commit] 12 payslip rows locked
 [status] committed
-[audit] brain seq=15011 (opaque)</code></pre>
+[audit] memory seq=15011 (opaque)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">4. Publish</h3>
 <pre><code>$ cyberos-rew cycle publish --period 2026-04 --ceo-approve
@@ -1080,7 +1080,7 @@ graph LR
 [s3] archived to s3:/rew/payslips/<member>/2026-04.pdf (object-lock 10y)
 [notify] 12 members notified (CHAT + email)
 [status] published
-[audit] brain seq=15021 (opaque "rew.payslip.published" × 12)</code></pre>
+[audit] memory seq=15021 (opaque "rew.payslip.published" × 12)</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">5. Publish a new parameter version</h3>
 <pre><code>$ cyberos-rew parameters publish \
@@ -1095,7 +1095,7 @@ graph LR
 [replay-check] all P0 → P4 horizon: SHA-256 byte-identical ✓
 [publish] p1-base-schedule v2026.05 published
 [supersede] prior version v2026.04 effective_to = now
-[audit] brain seq=15045 (opaque "rew.params.published:2026.05")</code></pre>
+[audit] memory seq=15045 (opaque "rew.params.published:2026.05")</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">6. Award BP</h3>
 <pre><code>$ cyberos-rew bp award \
@@ -1107,7 +1107,7 @@ graph LR
 [founder] stephen@cyberskill.com (WebAuthn) ✓
 [bp] +500 BP awarded to hoa@cyberskill.com
 [balance] new balance: 2,840 BP (interest 2.5%/yr at ACB rate)
-[audit] brain seq=15052 (opaque "rew.bp.awarded")</code></pre>
+[audit] memory seq=15052 (opaque "rew.bp.awarded")</code></pre>
 
  <h3 class="text-lg font-bold mb-2 mt-5">7. DSAR comp export (member-self)</h3>
 <pre><code>$ cyberos-rew dsar-export --self --output mycomp.zip
@@ -1118,7 +1118,7 @@ graph LR
 [dsar] bp ledger: 47 entries
 [dsar] compensation_changes: 3
 [dsar] written: mycomp.zip (3.4 MB, KMS-encrypted)
-[audit] brain seq=15061 (opaque "rew.dsar.exported")</code></pre>
+[audit] memory seq=15061 (opaque "rew.dsar.exported")</code></pre>
 </section>
 
 <!-- ============================================================ -->
@@ -1175,14 +1175,14 @@ graph LR
  <a href="time.html" class="text-blue-700 underline">time.html</a> ·
  <a href="esop.html" class="text-blue-700 underline">esop.html</a> ·
  <a href="proj.html" class="text-blue-700 underline">proj.html</a> ·
- <a href="brain.html" class="text-blue-700 underline">brain.html</a> ·
+ <a href="memory.html" class="text-blue-700 underline">memory.html</a> ·
  <a href="auth.html" class="text-blue-700 underline">auth.html</a></li>
- <li><strong>BRAIN auto-sync vision:</strong> <a href="../../docs/BRAIN_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">BRAIN_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — comp data structurally excluded from BRAIN; Lumi cross-tenant synthesis cannot read REW.</li>
+ <li><strong>memory auto-sync vision:</strong> <a href="../../docs/MEMORY_AUTOSYNC_DESIGN.md" class="text-blue-700 underline">MEMORY_AUTOSYNC_DESIGN.md §5</a> + DEC-036 — comp data structurally excluded from memory; Lumi cross-tenant synthesis cannot read REW.</li>
  <li><strong>Build-readiness audit:</strong> <code>archive/2026-05-14/AUDIT_AND_PLAN.md</code> <span class="text-xs text-slate-500">(archived; see <code>cyberos/CHANGELOG.md</code>)</span> — REW at P1 · exit (P1, after HR).</li>
  <li><strong>FR authoring discipline:</strong> <a href="https://github.com/cyberskill/cyberos/blob/main/modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md" target="_blank" rel="noopener" class="text-blue-700 underline" rel="noopener" target="_blank">modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md</a>.</li>
  <li><strong>REW module FRs</strong> — ((FR pending) through (FR pending)).</li>
  <li><strong>REW architecture posture</strong> — Bet 5 framing.</li>
- <li><strong>Strategy Bet 5</strong> — "The Total Rewards Appendix is a moat too" (DEC-036 BRAIN exclusion).</li>
+ <li><strong>Strategy Bet 5</strong> — "The Total Rewards Appendix is a moat too" (DEC-036 memory exclusion).</li>
  <li><strong>Security NFRs</strong> — SEC-002: zero P1 reduction.</li>
  <li><strong>Formal FR mapping</strong> — (FR pending) through (FR pending) with verification methods.</li>
  <li><strong>Total Rewards &amp; Career Path Appendix</strong> — Legal source of truth; 3P decomposition; P1 protection.</li>

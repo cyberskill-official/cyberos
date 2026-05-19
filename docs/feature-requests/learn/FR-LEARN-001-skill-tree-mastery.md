@@ -11,8 +11,8 @@ slice: 7
 owner: Stephen Cheng (CHRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-HR-001, FR-LEARN-002, FR-LEARN-003, FR-LEARN-004, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-HR-001, FR-LEARN-002, FR-LEARN-003, FR-LEARN-004, FR-MEMORY-111]
 depends_on: [FR-HR-001]
 blocks: [FR-LEARN-002, FR-LEARN-004]
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2081 2026-05-17 — Closed enum `skill_domain` = {engineering, design, product, sales, finance, ops, legal, general}; cardinality 8
   - DEC-2082 2026-05-17 — Closed enum `mastery_level` = {1, 2, 3, 4, 5}; cardinality 5 (1=beginner, 5=expert)
   - DEC-2083 2026-05-17 — Per-Member mastery per skill — append-only; corrections via new row (audit lineage)
-  - DEC-2084 2026-05-17 — BRAIN audit kinds: learn.skill_added, learn.mastery_set, learn.mastery_corrected
+  - DEC-2084 2026-05-17 — memory audit kinds: learn.skill_added, learn.mastery_set, learn.mastery_corrected
 
 build_envelope:
   language: rust 1.81
@@ -69,7 +69,7 @@ risk_if_skipped: "Without skill tree, performance reviews + hiring rely on subje
 
 ## §1 — Description (BCP-14 normative)
 
-The LEARN service **MUST** ship skill tree at `services/learn/src/skill_tree/` with hierarchical skill graph + per-member mastery + append-only audit, 3 BRAIN audit kinds.
+The LEARN service **MUST** ship skill tree at `services/learn/src/skill_tree/` with hierarchical skill graph + per-member mastery + append-only audit, 3 memory audit kinds.
 
 1. **MUST** validate `skill_domain` against closed enum per DEC-2081, `mastery_level` per DEC-2082.
 
@@ -127,7 +127,7 @@ The LEARN service **MUST** ship skill tree at `services/learn/src/skill_tree/` w
    GET  /v1/learn/skills/tree            (hierarchical view)
    ```
 
-6. **MUST** emit 3 BRAIN audit kinds per DEC-2084. PII per FR-BRAIN-111: skill names + descriptions text SHA-256 hashed; member_id + level ok.
+6. **MUST** emit 3 memory audit kinds per DEC-2084. PII per FR-MEMORY-111: skill names + descriptions text SHA-256 hashed; member_id + level ok.
 
 7. **MUST** thread trace_id from set → audit.
 
@@ -173,7 +173,7 @@ POST /v1/learn/members/{id}/mastery
 ---
 
 ## §4 — Acceptance criteria
-1. **skill_domain enum cardinality 8**. 2. **mastery_level CHECK 1-5**. 3. **parent depth ≤4**. 4. **Cycle prevention**. 5. **Append-only mastery**. 6. **UNIQUE(tenant, name, parent) on skills**. 7. **3 BRAIN audit kinds emitted**. 8. **PII scrubbed (skill text SHA256)**. 9. **RLS denies cross-tenant**. 10. **CHRO-only skill create**. 11. **assessment_kind tagged (self/peer/council/system)**. 12. **valid_from + valid_to range**. 13. **Trace_id preserved**. 14. **Tree query recursive CTE**. 15. **Current mastery = max valid_from**. 16. **Self-reference parent rejected**. 17. **Skill rename via UPDATE OK**. 18. **Parent change via UPDATE OK (depth recomputed)**. 19. **Cross-tenant parent FK rejected**. 20. **Mastery FK to skill enforced**. 
+1. **skill_domain enum cardinality 8**. 2. **mastery_level CHECK 1-5**. 3. **parent depth ≤4**. 4. **Cycle prevention**. 5. **Append-only mastery**. 6. **UNIQUE(tenant, name, parent) on skills**. 7. **3 memory audit kinds emitted**. 8. **PII scrubbed (skill text SHA256)**. 9. **RLS denies cross-tenant**. 10. **CHRO-only skill create**. 11. **assessment_kind tagged (self/peer/council/system)**. 12. **valid_from + valid_to range**. 13. **Trace_id preserved**. 14. **Tree query recursive CTE**. 15. **Current mastery = max valid_from**. 16. **Self-reference parent rejected**. 17. **Skill rename via UPDATE OK**. 18. **Parent change via UPDATE OK (depth recomputed)**. 19. **Cross-tenant parent FK rejected**. 20. **Mastery FK to skill enforced**. 
 
 ---
 
@@ -214,7 +214,7 @@ async fn append_only_no_update() {
 ## §7 — Dependencies
 **Upstream:** FR-HR-001.
 **Downstream:** FR-LEARN-002 (degrees+certs), FR-LEARN-003 (VP rollup), FR-LEARN-004 (Council).
-**Cross-module:** FR-BRAIN-111 (PII).
+**Cross-module:** FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -233,7 +233,7 @@ async fn append_only_no_update() {
 ## §11 — Implementation notes
 - §11.1 Validator recursive depth check: walk parent chain; reject if depth > 4 or cycle.
 - §11.2 Current mastery query: `SELECT * FROM mastery WHERE member=$1 AND skill=$2 AND valid_from <= today AND (valid_to IS NULL OR valid_to > today) ORDER BY valid_from DESC LIMIT 1`.
-- §11.3 BRAIN audit body: member_id, skill_id, mastery_level, assessment_kind; skill text SHA256.
+- §11.3 memory audit body: member_id, skill_id, mastery_level, assessment_kind; skill text SHA256.
 - §11.4 Tree view via recursive CTE.
 - §11.5 Assessment_kind drives FR-LEARN-004 council vs self vs peer flows.
 

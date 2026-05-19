@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-001, FR-TEN-002, FR-TEN-003, FR-TEN-004, FR-TEN-102, FR-TEN-103, FR-TEN-104, FR-TEN-107, FR-AUTH-001, FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AUTH-104, FR-AUTH-107, FR-PORTAL-001, FR-PORTAL-002, FR-AI-003, FR-BRAIN-111, FR-EMAIL-001, FR-OBS-007]
+memory_chain_hash: null
+related_frs: [FR-TEN-001, FR-TEN-002, FR-TEN-003, FR-TEN-004, FR-TEN-102, FR-TEN-103, FR-TEN-104, FR-TEN-107, FR-AUTH-001, FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AUTH-104, FR-AUTH-107, FR-PORTAL-001, FR-PORTAL-002, FR-AI-003, FR-MEMORY-111, FR-EMAIL-001, FR-OBS-007]
 depends_on: [FR-AUTH-104, FR-TEN-001, FR-TEN-002, FR-TEN-003]
 blocks: [FR-TEN-107, FR-PORTAL-001, FR-PORTAL-002]
 
@@ -44,7 +44,7 @@ source_decisions:
   - DEC-836 2026-05-17 — First-login JWT minted via FR-AUTH-004 with `signup_session_id` claim; cookies set on the public signup hostname (`signup.cyberos.world` redirects to `<slug>.cyberos.world` after final step)
   - DEC-837 2026-05-17 — Rate limits: 10 signup_start/min/IP, 3 OTP_send/min/email, 50 slug_check/min/IP, 1 signup_complete/min/IP; sliding-window via Redis with hard cap
   - DEC-838 2026-05-17 — Disposable email blocklist + IP geo lookup happen synchronously inside `signup_start` for early failure (no money charged on disposable email path)
-  - DEC-839 2026-05-17 — BRAIN audit kinds: ten.signup_started, ten.signup_email_verified, ten.signup_consent_recorded, ten.signup_tenant_provisioned, ten.signup_completed, ten.signup_abandoned, ten.signup_rate_limited, ten.signup_disposable_email_blocked, ten.signup_oidc_linked
+  - DEC-839 2026-05-17 — memory audit kinds: ten.signup_started, ten.signup_email_verified, ten.signup_consent_recorded, ten.signup_tenant_provisioned, ten.signup_completed, ten.signup_abandoned, ten.signup_rate_limited, ten.signup_disposable_email_blocked, ten.signup_oidc_linked
   - DEC-840 2026-05-17 — Signup analytics retained in `signup_sessions` for 90 days (funnel analysis); PII (email, IP) auto-scrubbed at 90d to hash-only; legal basis = legitimate interest (GDPR Art. 6(1)(f))
   - DEC-841 2026-05-17 — Founder bypass path: `POST /v1/admin/tenants` (FR-TEN-001's ops CLI flow) STILL works alongside this; self-serve does NOT replace ops provisioning — they are parallel entry points
   - DEC-842 2026-05-17 — Same-email re-signup attempt (already-active tenant under this email): block with 409 + "magic-link sign-in" alternative emailed; never silently create a second tenant
@@ -77,7 +77,7 @@ build_envelope:
     - services/ten/src/signup/geoip.rs                                 # MaxMind GeoLite2 lookup → currency/residency hint
     - services/ten/src/signup/abuse_guard.rs                           # squatting / abandonment detector
     - services/ten/src/signup/welcome_email.rs                         # delegates to FR-EMAIL-001
-    - services/ten/src/audit/signup_events.rs                          # 9 BRAIN row builders
+    - services/ten/src/audit/signup_events.rs                          # 9 memory row builders
     - services/ten/src/handlers/signup_routes.rs                       # axum route registration
     - services/ten/web/signup/index.html                               # static single-page signup form
     - services/ten/web/signup/signup.ts                                # progressive form (5 steps, ≤ 30 s)
@@ -95,7 +95,7 @@ build_envelope:
     - services/ten/tests/signup_30s_sla_test.rs                        # end-to-end < 30 s on test fixture
     - services/ten/tests/signup_squatting_test.rs                      # 5 abandoned signups → IP block
     - services/ten/tests/signup_duplicate_email_test.rs                # 2nd signup same email → 409 + magic link
-    - services/ten/tests/signup_audit_emission_test.rs                 # 9 BRAIN kinds emitted
+    - services/ten/tests/signup_audit_emission_test.rs                 # 9 memory kinds emitted
 
   modified_files:
     - services/ten/src/lib.rs                                          # mount signup_routes
@@ -146,15 +146,15 @@ risk_if_skipped: "Without self-serve signup, every new tenant requires CCO/ops m
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship the public self-serve signup flow at `services/ten/src/signup/` with email-OTP verification, slug uniqueness check, plan + currency selection, payment method capture, idempotent commit-or-rollback orchestration, OIDC alternate path, consent versioning, rate limiting + Turnstile, disposable-email blocklist, 30-second end-to-end SLO, and 9 BRAIN audit kinds.
+The TEN service **MUST** ship the public self-serve signup flow at `services/ten/src/signup/` with email-OTP verification, slug uniqueness check, plan + currency selection, payment method capture, idempotent commit-or-rollback orchestration, OIDC alternate path, consent versioning, rate limiting + Turnstile, disposable-email blocklist, 30-second end-to-end SLO, and 9 memory audit kinds.
 
-1. **MUST** expose the unauthenticated `POST /v1/signup/start` endpoint that accepts `{ email, signup_session_id (UUIDv7), turnstile_token, locale_hint }` and returns `{ signup_session_id, email_verification_required: bool, suggested_billing_currency, suggested_residency, geoip_country, otp_sent_at }`. The handler MUST in order: verify Turnstile token (per DEC-820), check rate limits (per DEC-837), check disposable-email blocklist (per DEC-830), GeoIP-lookup the request IP (per DEC-824), HMAC-hash + persist OTP in Redis with 10-min TTL (per DEC-821), trigger transactional email via FR-EMAIL-001 with the OTP, INSERT a `signup_sessions` row, and emit `ten.signup_started` BRAIN row.
+1. **MUST** expose the unauthenticated `POST /v1/signup/start` endpoint that accepts `{ email, signup_session_id (UUIDv7), turnstile_token, locale_hint }` and returns `{ signup_session_id, email_verification_required: bool, suggested_billing_currency, suggested_residency, geoip_country, otp_sent_at }`. The handler MUST in order: verify Turnstile token (per DEC-820), check rate limits (per DEC-837), check disposable-email blocklist (per DEC-830), GeoIP-lookup the request IP (per DEC-824), HMAC-hash + persist OTP in Redis with 10-min TTL (per DEC-821), trigger transactional email via FR-EMAIL-001 with the OTP, INSERT a `signup_sessions` row, and emit `ten.signup_started` memory row.
 
 2. **MUST** define the `signup_sessions` table at migration `0011`: `(signup_session_id UUID PRIMARY KEY, email_hash16 TEXT NOT NULL, email_full TEXT NOT NULL, geoip_country CHAR(2), suggested_billing_currency billing_currency_enum, suggested_residency TEXT, state TEXT NOT NULL CHECK (state IN ('started','email_verified','payment_captured','provisioning','completed','abandoned','rolled_back')) DEFAULT 'started', started_at TIMESTAMPTZ NOT NULL DEFAULT now(), email_verified_at TIMESTAMPTZ, payment_captured_at TIMESTAMPTZ, provisioned_at TIMESTAMPTZ, completed_at TIMESTAMPTZ, abandon_reason TEXT, rolled_back_reason TEXT, tenant_id UUID, scrubbed_at TIMESTAMPTZ)`. Expires (`signup_sessions.state` transitions to `abandoned` + `abandon_reason='ttl_expired'`) at 1h via scheduled job. PII (email_full, IP if stored) scrubbed at 90 days per DEC-840.
 
 3. **MUST** define the `tenant_consents` table at migration `0012`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID, signup_session_id UUID, subject_id UUID NOT NULL, consent_kind TEXT NOT NULL CHECK (consent_kind IN ('tos','privacy','marketing','pdpl_vn_data_processing','pdpl_vn_data_export','gdpr_legitimate_interest')), version TEXT NOT NULL, accepted_at TIMESTAMPTZ NOT NULL DEFAULT now(), ip_addr_hash16 TEXT NOT NULL, locale CHAR(5) NOT NULL, withdrawn_at TIMESTAMPTZ)`. Append-only via REVOKE per AUTHORING.md rule 12; withdrawal recorded as new row with `withdrawn_at` populated AND a fresh `accepted_at=null` row is NOT created — withdrawal is a column-level update to the existing row (one of the rare permitted updates, gated via per-column GRANT to the `cyberos_consent_writer` role).
 
-4. **MUST** define the `disposable_email_domains` table at migration `0014`: `(domain TEXT PRIMARY KEY, source TEXT NOT NULL, added_at TIMESTAMPTZ NOT NULL DEFAULT now(), removed_at TIMESTAMPTZ)`. Initial seed = 10,000-entry list from public sources (`disposable-email-domains` GitHub repo at pinned SHA); refresh job runs monthly + writes a `ten.disposable_email_blocklist_refreshed` BRAIN row (kind not in the 9-kind core list per DEC-839 — informational only).
+4. **MUST** define the `disposable_email_domains` table at migration `0014`: `(domain TEXT PRIMARY KEY, source TEXT NOT NULL, added_at TIMESTAMPTZ NOT NULL DEFAULT now(), removed_at TIMESTAMPTZ)`. Initial seed = 10,000-entry list from public sources (`disposable-email-domains` GitHub repo at pinned SHA); refresh job runs monthly + writes a `ten.disposable_email_blocklist_refreshed` memory row (kind not in the 9-kind core list per DEC-839 — informational only).
 
 5. **MUST** enforce 4 rate limits per DEC-837 via Redis sliding-window:
    - `signup_start`: 10/min/IP, 3/h/IP, 100/d/IP.
@@ -162,13 +162,13 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
    - `slug_check`: 50/min/IP (rapid autocomplete legit; > 50 = bot).
    - `signup_complete`: 1/min/IP (a human completes signup once per minute max).
 
-   Rate-limit hit returns `429 TOO_MANY_REQUESTS` + `{ error: "rate_limited", retry_after_seconds, guard }` + emits `ten.signup_rate_limited` BRAIN row.
+   Rate-limit hit returns `429 TOO_MANY_REQUESTS` + `{ error: "rate_limited", retry_after_seconds, guard }` + emits `ten.signup_rate_limited` memory row.
 
-6. **MUST** enforce the disposable-email blocklist at `signup_start` (per DEC-830). Lookup `domain = email.split('@')[1]`. Blocked → return `400 BAD_REQUEST` + `{ error: "disposable_email", suggested_action: "use_work_email" }` + emit `ten.signup_disposable_email_blocked` BRAIN row. The blocklist is loaded into memory at handler startup; refreshed monthly.
+6. **MUST** enforce the disposable-email blocklist at `signup_start` (per DEC-830). Lookup `domain = email.split('@')[1]`. Blocked → return `400 BAD_REQUEST` + `{ error: "disposable_email", suggested_action: "use_work_email" }` + emit `ten.signup_disposable_email_blocked` memory row. The blocklist is loaded into memory at handler startup; refreshed monthly.
 
 7. **MUST** apply FR-AUTH-107 HIBP breach-check on the email at `signup_start` (per DEC-831). Result is informational — `breached: true` is appended to the response as `{ ..., breach_warning: { breach_count: N, latest_breach: "<date>" } }`. The signup proceeds; the warning surfaces in the UI as "We noticed your email appears in breaches; you may want to use a different email."
 
-8. **MUST** expose `POST /v1/signup/verify-otp` that accepts `{ signup_session_id, otp_code }` and returns `{ verified: bool, session_state }`. Handler MUST: lookup the OTP from Redis (HMAC-hashed lookup), constant-time compare, increment attempt counter, reject if `attempts > 5`, on success transition `signup_sessions.state = 'email_verified'` + emit `ten.signup_email_verified` BRAIN row. After 5 failed attempts the OTP is invalidated; a new OTP send is required (incrementing `otp_send` rate-limit counter).
+8. **MUST** expose `POST /v1/signup/verify-otp` that accepts `{ signup_session_id, otp_code }` and returns `{ verified: bool, session_state }`. Handler MUST: lookup the OTP from Redis (HMAC-hashed lookup), constant-time compare, increment attempt counter, reject if `attempts > 5`, on success transition `signup_sessions.state = 'email_verified'` + emit `ten.signup_email_verified` memory row. After 5 failed attempts the OTP is invalidated; a new OTP send is required (incrementing `otp_send` rate-limit counter).
 
 9. **MUST** expose `GET /v1/signup/slug-available?candidate=<slug>` that returns `{ available: bool, suggestions: [string; 50] }`. The handler validates regex `^[a-z][a-z0-9-]{2,40}[a-z0-9]$` (FR-TEN-001 DEC-321), checks against the `tenants.slug` index, and on collision generates 50 suggestions via prefix-suffix permutation (`acme-co`, `acme-1`, `acme-hq`, etc.). The handler is rate-limited (per DEC-837 #3) and serves from a hot Postgres index (no caching — slug must be authoritative). For OIDC sign-up path, a slug suggestion is derived from the email domain (`alice@acme.com → acme`) and offered as default.
 
@@ -201,7 +201,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
       12. Invoke FR-TEN-003 `ensure_customer` + `ensure_subscription(plan_tier)` with the captured payment method as default. On Stripe failure post-commit: log sev-1 + leave tenant in `dunning_state='retry_1'` (FR-TEN-003 §1 #11 picks up the recovery).
       13. Mint first-login JWT via FR-AUTH-004 with `signup_session_id` claim + standard claims.
       14. Set a Secure HttpOnly SameSite=Lax `cyberos_jwt` cookie scoped to `*.cyberos.world` so the redirect to `<slug>.cyberos.world/onboarding/welcome` arrives authenticated.
-      15. Emit `ten.signup_completed` BRAIN row.
+      15. Emit `ten.signup_completed` memory row.
       16. Trigger welcome email via `welcome_email.rs` with the 7d-TTL deeplink (DEC-845).
       17. Return `201 CREATED` with `{ tenant_id, tenant_slug, jwt, redirect_url: "https://<slug>.cyberos.world/onboarding/welcome" }`.
 
@@ -213,7 +213,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
     5. Suggest tenant_slug from email domain.
     6. Continue to plan selection + payment + complete (same orchestrator as #14 but with OIDC marker on the session row).
     7. Root-admin subject is created without a password; subsequent logins are OIDC-only.
-    8. Emit `ten.signup_oidc_linked` BRAIN row.
+    8. Emit `ten.signup_oidc_linked` memory row.
 
 16. **MUST** persist consent rows BEFORE provisioning (per DEC-832, #14 step 4). The `tenant_consents` table is INSERT'd within the same transaction as the `tenants` row creation, ensuring no orphan tenant-without-consent state. Consent versions are pinned to the strings displayed to the user at signup-time — fetched from `services/ten/web/signup/consents/<locale>/<kind>-v<n>.md` static files.
 
@@ -221,7 +221,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 
 18. **MUST** detect squatting per DEC-844. The `abuse_guard.rs` module tracks `(ip_addr, started_signups_24h, abandoned_signups_24h)` in Redis. When `abandoned_signups_24h ≥ 5 AND completed_signups_24h = 0`, block the IP for 24h (`signup_start` returns `429 + { error: "abuse_detected_24h_cooloff" }`). The block auto-expires; legitimate users from shared IPs (corp NAT) can request manual unblock via support email.
 
-19. **MUST** emit 9 **core** BRAIN audit row kinds tied to user-visible signup lifecycle (DEC-839 + AUTHORING.md rule 6 namespace pattern):
+19. **MUST** emit 9 **core** memory audit row kinds tied to user-visible signup lifecycle (DEC-839 + AUTHORING.md rule 6 namespace pattern):
     - `ten.signup_started` (sev-3 informational)
     - `ten.signup_email_verified` (sev-3)
     - `ten.signup_consent_recorded` (sev-2 — legal)
@@ -236,18 +236,18 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
     - `ten.disposable_email_blocklist_refreshed` (sev-3 — emitted by monthly refresh job; payload = `domains_added`, `domains_removed`, `source_sha`)
     - `ten.signup_session_scrubbed` (sev-3 — emitted by daily 90d-PII-scrub job; payload = `scrubbed_count`)
 
-    Every row PII-scrubs `email_full` via FR-BRAIN-111 → `email_hash16`; raw email retained in tenant Postgres (RLS-scoped) only until `signup_sessions.scrubbed_at` is set at 90d.
+    Every row PII-scrubs `email_full` via FR-MEMORY-111 → `email_hash16`; raw email retained in tenant Postgres (RLS-scoped) only until `signup_sessions.scrubbed_at` is set at 90d.
 
 20. **MUST** thread W3C `traceparent` across the entire flow (AUTHORING.md rule 22 + 23 + 24). The `signup_session_id` is logged as a span attribute on every span; a single `trace_id` in the response makes support escalations resolvable.
 
-21. **MUST** scrub PII at 90 days per DEC-840. Daily scheduled job updates `signup_sessions WHERE started_at < now() - interval '90 days' AND scrubbed_at IS NULL`: clear `email_full`, retain `email_hash16` + funnel state. The scrub itself is recorded in BRAIN via `ten.signup_session_scrubbed` (kind not in the 9-kind core list per DEC-839 — informational only).
+21. **MUST** scrub PII at 90 days per DEC-840. Daily scheduled job updates `signup_sessions WHERE started_at < now() - interval '90 days' AND scrubbed_at IS NULL`: clear `email_full`, retain `email_hash16` + funnel state. The scrub itself is recorded in memory via `ten.signup_session_scrubbed` (kind not in the 9-kind core list per DEC-839 — informational only).
 
 22. **MUST** support the VN locale at every consent UI step per DEC-833. The Vietnamese-language ToS / Privacy variant is at `services/ten/web/signup/consents/vi/*.md`; the PDPL-VN consent kind `pdpl_vn_data_processing` is required for `billing_currency='VND'` (residency vn-1).
 
 23. **MUST** rollback cleanly on any orchestrator step failure. The rollback path:
     - If Stripe authorization succeeded but TEN-001 provisioning failed: Stripe Subscription is cancelled (`DELETE /v1/subscriptions/{id}`); SetupIntent is voided; signup_sessions.state='rolled_back' + rolled_back_reason='provisioning_failed'.
     - If TEN-001 provisioning succeeded but AUTH root-admin failed: invoke FR-TEN-104 hard-terminate on the just-created tenant (rare path); signup_sessions.state='rolled_back'.
-    - Every rollback emits a `ten.signup_abandoned` BRAIN row with `abandon_reason` populated.
+    - Every rollback emits a `ten.signup_abandoned` memory row with `abandon_reason` populated.
 
 24. **MUST** rate-limit per `(IP, email_hash16)` pair NOT per-(IP, email_full) (per DEC-840 derivative — avoid storing raw email in rate-limit keys for privacy). The hash16 form is sufficient for de-duplication at the rate-limit boundary.
 
@@ -486,9 +486,9 @@ GET    /v1/signup/oidc-callback          (public, FR-AUTH-104 return)
 11. **Duplicate email returns magic link** — signup_complete with an already-active tenant's billing_contact_email returns 409 + magic-link email sent; no second tenant created.
 12. **OIDC path skips OTP** — `/v1/signup/oidc-callback` with verified ID token transitions session directly to `email_verified`.
 13. **Squatting block after 5 abandons** — 5 abandoned signups from one IP in 24h → 6th signup_start returns 429 `abuse_detected_24h_cooloff`.
-14. **PII scrubbed at 90 days** — fixture signup with started_at 91 days ago + run scrub job → email_full = NULL, email_hash16 retained, BRAIN row `ten.signup_session_scrubbed` emitted.
-15. **9 BRAIN audit kinds emitted** — happy path produces `signup_started + signup_email_verified + signup_consent_recorded + signup_tenant_provisioned + signup_completed` (5 of 9); failure paths produce the others.
-16. **W3C traceparent threaded** — single trace_id present in start response + complete response + all 9 BRAIN rows.
+14. **PII scrubbed at 90 days** — fixture signup with started_at 91 days ago + run scrub job → email_full = NULL, email_hash16 retained, memory row `ten.signup_session_scrubbed` emitted.
+15. **9 memory audit kinds emitted** — happy path produces `signup_started + signup_email_verified + signup_consent_recorded + signup_tenant_provisioned + signup_completed` (5 of 9); failure paths produce the others.
+16. **W3C traceparent threaded** — single trace_id present in start response + complete response + all 9 memory rows.
 17. **Idempotent on session_id** — `signup_complete` invoked twice with same session_id post-completion returns 200 + existing tenant_id (not 201 + new).
 18. **Welcome email + 7d deeplink** — completed signup triggers email with deeplink to `<slug>.cyberos.world/onboarding/welcome`; deeplink works for 7 days then 404.
 19. **RLS dual-scope** — pre-tenant rows visible only to `system_signup_tenant`; post-tenant rows visible only to the tenant's RLS scope.
@@ -605,7 +605,7 @@ async fn disposable_domain_blocked() {
     let body: serde_json::Value = r.json().await.unwrap();
     assert_eq!(body["error"], "disposable_email");
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "ten.signup_disposable_email_blocked"));
 }
 ```
@@ -743,7 +743,7 @@ async fn oidc_signup_skips_otp() {
         .bind(session).fetch_one(&ctx.pool).await.unwrap();
     assert_eq!(state, "email_verified");
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "ten.signup_oidc_linked"));
 }
 ```
@@ -905,8 +905,8 @@ pub fn hash_otp(otp: &str, signup_session_id: uuid::Uuid, secret: &[u8]) -> Stri
 - **FR-AUTH-107** HIBP breach-check — informational warning at signup.
 - **FR-EMAIL-001** Transactional email — OTP + welcome email + magic-link.
 - **FR-PORTAL-001/002** — depend on TEN-101 for tenant-scoped brand pack flow.
-- **FR-AI-003** BRAIN audit — 9 new kinds register here.
-- **FR-BRAIN-111** PII scrubbing — email + IP scrubbed in chain rows.
+- **FR-AI-003** memory audit — 9 new kinds register here.
+- **FR-MEMORY-111** PII scrubbing — email + IP scrubbed in chain rows.
 - **FR-OBS-007** Auto-runbook — sev-1/sev-2 alerts route to CHAT/PagerDuty.
 
 **Downstream (blocks):**
@@ -935,7 +935,7 @@ pub fn hash_otp(otp: &str, signup_session_id: uuid::Uuid, secret: &[u8]) -> Stri
   "breach_warning": null }
 ```
 
-### 8.2 `ten.signup_completed` BRAIN row
+### 8.2 `ten.signup_completed` memory row
 
 ```json
 {
@@ -1003,7 +1003,7 @@ pub fn hash_otp(otp: &str, signup_session_id: uuid::Uuid, secret: &[u8]) -> Stri
 }
 ```
 
-### 8.6 `ten.signup_rate_limited` BRAIN row
+### 8.6 `ten.signup_rate_limited` memory row
 
 ```json
 {
@@ -1075,7 +1075,7 @@ All resolved for slice 1. Deferred to later slices:
 
 ## §11 — Implementation notes
 
-**§11.1** UUIDv7 is chosen for `signup_session_id` so that session_id ordering is rough wall-clock; allows BRAIN audit + signup_sessions to be sorted by id for analytics without an additional timestamp column.
+**§11.1** UUIDv7 is chosen for `signup_session_id` so that session_id ordering is rough wall-clock; allows memory audit + signup_sessions to be sorted by id for analytics without an additional timestamp column.
 
 **§11.2** The Turnstile site key is per-environment (test/staging/prod); the verify endpoint URL `https://challenges.cloudflare.com/turnstile/v0/siteverify` is the same. Verification is a POST with `secret` + `response` + optional `remoteip`.
 

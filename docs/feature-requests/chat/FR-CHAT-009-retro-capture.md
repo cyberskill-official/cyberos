@@ -1,9 +1,9 @@
 ---
 id: FR-CHAT-009
-title: "Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in checkboxes and aggregated BRAIN memory"
+title: "Retro-capture flow — `@lumi remember the last N messages` with per-message opt-in checkboxes and aggregated memory memory"
 module: CHAT
 priority: SHOULD
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P1
 milestone: P1 · slice 2
@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CHAT-005, FR-CHAT-008, FR-BRAIN-111, FR-BRAIN-101]
+memory_chain_hash: null
+related_frs: [FR-CHAT-005, FR-CHAT-008, FR-MEMORY-111, FR-MEMORY-101]
 depends_on: [FR-CHAT-008]
 blocks: []
 
@@ -20,7 +20,7 @@ source_pages:
   - website/docs/modules/chat.html#retro-capture
 source_decisions:
   - DEC-500 (retro-capture surfaces last N messages as ephemeral picker; user opts in per-message)
-  - DEC-501 (aggregated capture saved as ONE BRAIN memory; sync_class follows channel)
+  - DEC-501 (aggregated capture saved as ONE memory memory; sync_class follows channel)
   - DEC-502 (N cap = 100 messages; protects against noisy-capture)
 
 language: rust 1.81 + go
@@ -46,15 +46,15 @@ sub_tasks:
   - "0.5h: retro/mod.rs — RetroRequest struct + Outcome enum"
   - "1.0h: parser: match `(?i)@lumi\\s+(remember|capture)\\s+(?:the\\s+)?last\\s+(\\d+)\\s+messages?`"
   - "1.5h: picker.rs — generate Mattermost ephemeral message with checkboxes per-message"
-  - "1.0h: aggregate.rs — collect opt-in messages → compose markdown body → emit single BRAIN memory at memories/chat/<channel>/captures/<ts>.md"
-  - "0.5h: BRAIN audit 'chat.retro_capture_completed'"
+  - "1.0h: aggregate.rs — collect opt-in messages → compose markdown body → emit single memory memory at memories/chat/<channel>/captures/<ts>.md"
+  - "0.5h: memory audit 'chat.retro_capture_completed'"
   - "1.5h: retro_test.rs — parse + cap-100 + aggregate + opt-in subset"
-risk_if_skipped: "Without retro-capture, conversations only become memories via @lumi mention in real-time. Past insights stay buried in chat. With it, retroactively elevating 'we decided X yesterday' to a BRAIN memory takes 30s instead of copying messages by hand."
+risk_if_skipped: "Without retro-capture, conversations only become memories via @lumi mention in real-time. Past insights stay buried in chat. With it, retroactively elevating 'we decided X yesterday' to a memory memory takes 30s instead of copying messages by hand."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-The retro-capture flow **MUST** offer per-message opt-in capture of the last N chat messages into a single BRAIN memory. The contract:
+The retro-capture flow **MUST** offer per-message opt-in capture of the last N chat messages into a single memory memory. The contract:
 
 1. **MUST** trigger via @lumi command matching regex `(?i)@lumi\s+(remember|capture)\s+(?:the\s+)?last\s+(\d+)\s+messages?`.
 2. **MUST** validate N ≤ 100; > 100 → reply "capture max is 100 messages"; do not proceed.
@@ -62,11 +62,11 @@ The retro-capture flow **MUST** offer per-message opt-in capture of the last N c
 4. **MUST** generate an ephemeral Mattermost message (visible only to invoker) with a checkbox per fetched message + "Capture selected" button.
 5. **MUST** on submit:
    - Aggregate selected messages into markdown body: `[2026-05-16T14:32 @alice] ...\n[2026-05-16T14:35 @bob] ...`.
-   - PII-redact aggregated body via FR-BRAIN-111.
-   - Save as BRAIN memory at `memories/chat/<channel_id>/captures/<unix_ts>.md` with frontmatter `{kind: chat_capture, sync_class: <channel_sync_class>, captured_by: <subject_id>, captured_at: <iso>, source_channel_id: <id>, source_message_ids: [...], message_count: <n>}`.
-6. **MUST** emit BRAIN audit `chat.retro_capture_completed` with payload `{channel_id, captured_by, message_count_requested, message_count_selected, memory_path, trace_id}`.
+   - PII-redact aggregated body via FR-MEMORY-111.
+   - Save as memory memory at `memories/chat/<channel_id>/captures/<unix_ts>.md` with frontmatter `{kind: chat_capture, sync_class: <channel_sync_class>, captured_by: <subject_id>, captured_at: <iso>, source_channel_id: <id>, source_message_ids: [...], message_count: <n>}`.
+6. **MUST** emit memory audit `chat.retro_capture_completed` with payload `{channel_id, captured_by, message_count_requested, message_count_selected, memory_path, trace_id}`.
 7. **MUST** reply to the user (threaded to original command): "✓ Captured N messages → [memory link]".
-8. **MUST** support cancellation: ephemeral picker has "Cancel" button → no capture, no BRAIN write, audit `chat.retro_capture_cancelled`.
+8. **MUST** support cancellation: ephemeral picker has "Cancel" button → no capture, no memory write, audit `chat.retro_capture_cancelled`.
 9. **MUST** RLS-enforce: channel access required (FR-AUTH-003).
 10. **MUST** emit OTel metrics:
     - `chat_retro_captures_total{outcome}` (outcome ∈ completed | cancelled | over_limit).
@@ -75,7 +75,7 @@ The retro-capture flow **MUST** offer per-message opt-in capture of the last N c
 12. **MUST NOT** include system / bot messages (post.type starting with `system_`, `system_join_channel`, etc.) in the picker — they're noise.
 13. **MUST** preview each message in the picker with the first 200 characters of body + author display name + relative timestamp ("3 minutes ago"); full body stored in memory if selected.
 14. **MUST** support "Select all" + "Select none" + "Invert selection" picker actions to speed up the common case (operator wants most-but-not-all).
-15. **MUST** emit `chat.retro_capture_started` BRAIN audit when the picker is posted, before the user submits. Payload includes `{channel_id, requested_by, n_offered, command_post_id, trace_id}`. Pairs with `_completed` or `_cancelled` for full lifecycle visibility.
+15. **MUST** emit `chat.retro_capture_started` memory audit when the picker is posted, before the user submits. Payload includes `{channel_id, requested_by, n_offered, command_post_id, trace_id}`. Pairs with `_completed` or `_cancelled` for full lifecycle visibility.
 16. **MUST** time-bound picker submission: 1h TTL from picker post. After TTL, submit returns "Picker expired; please re-issue the command." + audit `chat.retro_capture_expired`.
 17. **MUST** support per-message "include surrounding context" toggle on each picker row: if checked, the memory will also include the message immediately preceding and following the selected one (with `[context]` marker). Useful when a single message references "this" or "that" without context.
 18. **MUST** dedup against prior captures: if a memory at `memories/chat/<channel>/captures/<ts>.md` already exists for the same selected_ids set in the last 24h, refuse with "These messages were already captured at <link>. Re-capture anyway?" with confirmation button. Prevents double-capture during operator hesitation.
@@ -93,11 +93,11 @@ The retro-capture flow **MUST** offer per-message opt-in capture of the last N c
 
 **Why N ≤ 100 (DEC-502)?** Picker UI degrades past 100 (scroll fatigue + slow render). Hard cap forces narrower retro windows.
 
-**Why single memory (DEC-501)?** Operator browsing BRAIN sees one capture event, not 30 noisy rows. Aggregation = narrative.
+**Why single memory (DEC-501)?** Operator browsing memory sees one capture event, not 30 noisy rows. Aggregation = narrative.
 
 **Why ephemeral picker (§1 #4)?** Other channel users don't need to see the picker UI; ephemeral keeps channel clean.
 
-**Why redaction (§1 #5)?** Pre-existing channel messages may contain PII; capture should not bypass FR-BRAIN-111.
+**Why redaction (§1 #5)?** Pre-existing channel messages may contain PII; capture should not bypass FR-MEMORY-111.
 
 **Why exclude the command post (§1 #11)?** Self-inclusion means the count is `N` but the picker shows `N-1` user messages + 1 command. Confusing and noisy. Skipping the command keeps the count honest.
 
@@ -113,13 +113,13 @@ The retro-capture flow **MUST** offer per-message opt-in capture of the last N c
 
 **Why per-message context toggle (§1 #17)?** Captured messages often reference earlier/later messages obliquely. Letting the user opt-in to adjacent context per message gives precision without forcing everyone to capture full surrounding windows.
 
-**Why dedup against prior (§1 #18)?** Operators sometimes capture, get interrupted, return, and capture the same set again. Loud confirmation avoids silent duplicates in BRAIN.
+**Why dedup against prior (§1 #18)?** Operators sometimes capture, get interrupted, return, and capture the same set again. Loud confirmation avoids silent duplicates in memory.
 
 **Why date-range form (§1 #19)?** Some retros happen days later ("capture last Friday's discussion"). Last-N is awkward when N is unknown; date-range is the natural query.
 
 **Why ACL with all participants (§1 #21)?** A `shareable` memory containing messages by Bob means Bob is implicitly a participant. Listing all participants in the ACL respects their identity-as-contributor without changing the sync_class.
 
-**Why split memory at 1MB (§1 #22)?** BRAIN memory files >1MB have indexer + render performance issues. Splitting at the boundary preserves performance while keeping the full capture available via the index file.
+**Why split memory at 1MB (§1 #22)?** memory memory files >1MB have indexer + render performance issues. Splitting at the boundary preserves performance while keeping the full capture available via the index file.
 
 **Why --dry-run (§1 #23)?** Operators want preview-before-commit for the high-stakes case (sensitive channel capture). Dry-run shows the picker without enabling commit.
 
@@ -159,7 +159,7 @@ pub async fn post_picker_submit(submit: PickerSubmit) -> Result<(), RetroError> 
     if submit.selected_ids.is_empty() {
         reply::post_to_user(&submit.channel_id, &submit.user_id,
             "Nothing selected; capture cancelled.").await?;
-        emit_brain_row("chat.retro_capture_cancelled", json!({
+        emit_memory_row("chat.retro_capture_cancelled", json!({
             "channel_id": submit.channel_id, "by": submit.user_id,
         })).await;
         return Ok(());
@@ -183,9 +183,9 @@ pub async fn post_picker_submit(submit: PickerSubmit) -> Result<(), RetroError> 
         serde_json::to_string(&submit.selected_ids).unwrap(),
         submit.selected_ids.len()
     );
-    brain_writer::put_memory(&memory_path, format!("{frontmatter}{redacted}").as_bytes()).await?;
+    memory_writer::put_memory(&memory_path, format!("{frontmatter}{redacted}").as_bytes()).await?;
 
-    emit_brain_row("chat.retro_capture_completed", json!({
+    emit_memory_row("chat.retro_capture_completed", json!({
         "channel_id": submit.channel_id,
         "captured_by": submit.user_id,
         "message_count_requested": submit.n_requested,
@@ -321,7 +321,7 @@ pub async fn post_ephemeral(
         "props": {
             "attachments": [{
                 "title": "Select messages to capture",
-                "text":  format!("Showing the last {} messages. Toggle each to include in the BRAIN capture.", messages.len()),
+                "text":  format!("Showing the last {} messages. Toggle each to include in the memory capture.", messages.len()),
                 "actions": all_actions,
             }],
             "trace_id":  trace_id,
@@ -389,10 +389,10 @@ pub async fn find_recent_capture(
 ) -> Option<String> {
     let cutoff_ts = chrono::Utc::now().timestamp() - (window_hours as i64 * 3600);
     let glob = format!("memories/chat/{}/captures/*.md", channel_id);
-    for path in brain_writer::glob(&glob).await.ok()? {
+    for path in memory_writer::glob(&glob).await.ok()? {
         let basename_ts = path.file_stem().and_then(|s| s.to_str()?.parse::<i64>().ok())?;
         if basename_ts < cutoff_ts { continue; }
-        let memory = brain_writer::read(&path).await.ok()?;
+        let memory = memory_writer::read(&path).await.ok()?;
         let prior_ids = parse_frontmatter_array(&memory, "source_message_ids")?;
         if same_set(&prior_ids, message_ids) {
             return Some(path.display().to_string());
@@ -415,7 +415,7 @@ pub async fn find_recent_capture(
 7. **Frontmatter populated** — kind, sync_class, captured_by, source_message_ids.
 8. **PII redacted in aggregated body** — email in source → <EMAIL> in memory.
 9. **sync_class follows channel** — private channel → private memory.
-10. **BRAIN audit chat.retro_capture_completed** — row emitted.
+10. **memory audit chat.retro_capture_completed** — row emitted.
 11. **Cancel emits chat.retro_capture_cancelled** — picker cancel button → no memory; cancellation row.
 12. **Reply to channel with memory link**.
 13. **OTel counter increments per outcome**.
@@ -424,7 +424,7 @@ pub async fn find_recent_capture(
 16. **System messages excluded** — fixture channel with "Alice joined" auto-message in last-10 → picker shows 10 user messages, not 9 + system (AC for §1 #12).
 17. **Picker shows 200-char preview + relative time** — observe each picker action label has username + relative-time + truncated body (AC for §1 #13).
 18. **Select all / Select none / Invert work** — fixture: click each; state in Redis reflects (AC for §1 #14).
-19. **chat.retro_capture_started fires on picker post** — observe BRAIN row before submit (AC for §1 #15).
+19. **chat.retro_capture_started fires on picker post** — observe memory row before submit (AC for §1 #15).
 20. **Picker TTL = 1h** — fixture: store state with `created_at = now() - 65min`; submit returns `Expired` + audit `chat.retro_capture_expired` (AC for §1 #16).
 21. **Per-message context toggle adds adjacent messages** — fixture: select msg5 with context; observe msg4 + msg5 + msg6 in memory with `[context]` markers (AC for §1 #17).
 22. **Dedup against prior 24h capture** — fixture: capture set {m1,m2}; immediate re-capture same set → "Already captured" + confirmation (AC for §1 #18).
@@ -555,7 +555,7 @@ async fn ac19_retro_started_audit() {
     let env = TestEnv::new().await;
     env.post_command("@lumi remember last 5 messages").await;
     handle_retro_request_current(env.tenant_id()).await.unwrap();
-    let row = env.brain.last_of_kind("chat.retro_capture_started").await.unwrap();
+    let row = env.memory.last_of_kind("chat.retro_capture_started").await.unwrap();
     assert_eq!(row["payload"]["n_offered"], 5);
 }
 ```
@@ -570,7 +570,7 @@ async fn ac20_picker_ttl_1h() {
     env.expire_picker_state(&picker_id, chrono::Duration::hours(2)).await;
     let result = post_picker_submit_for(&picker_id).await;
     assert!(matches!(result, Err(RetroError::Expired)));
-    let row = env.brain.last_of_kind("chat.retro_capture_expired").await.unwrap();
+    let row = env.memory.last_of_kind("chat.retro_capture_expired").await.unwrap();
     assert_eq!(row["payload"]["picker_post_id"], picker_id);
 }
 ```
@@ -586,7 +586,7 @@ async fn ac21_context_toggle_includes_neighbours() {
     apply_action(&picker_id, &format!("toggle-{}", ids[2])).await.unwrap();
     apply_action(&picker_id, &format!("context-{}", ids[2])).await.unwrap();
     apply_action(&picker_id, "commit").await.unwrap();
-    let mem = env.brain.latest_memory_in(format!("memories/chat/{}/captures/", env.channel_id)).await.unwrap();
+    let mem = env.memory.latest_memory_in(format!("memories/chat/{}/captures/", env.channel_id)).await.unwrap();
     assert!(mem.body.contains(&format!("[context] ")));
     let mention_count = mem.body.matches("@").count();
     assert!(mention_count >= 3); // msg2, msg3, msg4 all included
@@ -639,7 +639,7 @@ async fn ac25_memory_acl_has_all_participants() {
     let picker_id = env.start_picker_capturing(&[alice_msg, bob_msg, carol_msg]).await;
     apply_action(&picker_id, "select-all").await.unwrap();
     apply_action(&picker_id, "commit").await.unwrap();
-    let mem = env.brain.latest_memory_in("memories/chat/").await.unwrap();
+    let mem = env.memory.latest_memory_in("memories/chat/").await.unwrap();
     let acl = mem.frontmatter["meta"]["acl"].as_array().unwrap();
     let acl_set: HashSet<_> = acl.iter().map(|v| v.as_str().unwrap()).collect();
     assert!(acl_set.contains("Alice"));
@@ -741,7 +741,7 @@ meta:
     - <subject_or_display>
     - <subject_or_display>
 trace_id: <32-hex>
-brain_chain_hash: <to-be-filled-on-commit>
+memory_chain_hash: <to-be-filled-on-commit>
 ---
 ```
 
@@ -790,7 +790,7 @@ We use msgpack rather than JSON for compactness; pickers with 100 messages × 20
 | empty selection | chat.retro_capture_cancelled | reply: "Nothing selected" |
 | picker expired | chat.retro_capture_expired | reply: "Picker expired; re-issue command" |
 | commit + dedup hit | (pending — awaits confirmation) | reply: "Already captured; re-capture?" |
-| BRAIN write fail | chat.retro_capture_failed (SEV-2) | reply: "Capture failed; please retry" |
+| memory write fail | chat.retro_capture_failed (SEV-2) | reply: "Capture failed; please retry" |
 | MM ephemeral post fail | logged | falls back to DM via @lumi |
 
 ---
@@ -799,8 +799,8 @@ We use msgpack rather than JSON for compactness; pickers with 100 messages × 20
 
 - **FR-CHAT-005** — bridge picks up the picker request.
 - **FR-CHAT-008** — @lumi mention dispatch.
-- **FR-BRAIN-111** — redaction.
-- **FR-BRAIN-101** — BrainWriter.
+- **FR-MEMORY-111** — redaction.
+- **FR-MEMORY-101** — MemoryWriter.
 
 ---
 
@@ -936,7 +936,7 @@ This capture was split into 3 parts due to size.
 [ephemeral, visible to alice only]
 
 Select messages to capture
-Showing the last 10 messages. Toggle each to include in the BRAIN capture.
+Showing the last 10 messages. Toggle each to include in the memory capture.
 
 [ alice · 3m ago · Let me know if we should escalate...]
 [ bob   · 3m ago · +1, I'll draft the announcement.]
@@ -965,7 +965,7 @@ All resolved. Deferred:
 | N is malformed (non-numeric) | regex fails | reply "Couldn't parse: `@lumi remember last 10 messages`"; help link | None |
 | Channel deleted mid-picker | mm_api::fetch_last_n 404 | reply error; chat.retro_capture_failed (SEV-3) | None |
 | User has no read on selected messages | RLS Err | filter to readable only; warn user about filtered count | None |
-| BRAIN put_memory fails | brain_writer err | SEV-2 chat.retro_capture_failed; reply "Capture failed; please retry" | Operator restores BRAIN |
+| memory put_memory fails | memory_writer err | SEV-2 chat.retro_capture_failed; reply "Capture failed; please retry" | Operator restores memory |
 | PII scan crash | catch_unwind | chat.retro_capture_failed; reply error | Operator fixes ruleset |
 | PII scan returns empty (over-redaction) | empty body check | proceed but warn user "Many messages were redacted; review the memory" | None |
 | MM ephemeral msg post fails | API Err | fall back to DM via @lumi private channel; warn user | None |
@@ -994,13 +994,13 @@ All resolved. Deferred:
 | Picker shows N actions; user has scrolled away | MM persists ephemeral msg until refresh | works on next view | None |
 | Two users issue retro in same channel | each picker is per-user-ephemeral | independent | None |
 | User issues retro then changes MM password (logout/relogin) | session change | ephemeral msg disappears; user re-issues | None |
-| Memory write succeeds but BRAIN audit emit fails | logged; partial state | manual operator catch | Operator backfills audit |
+| Memory write succeeds but memory audit emit fails | logged; partial state | manual operator catch | Operator backfills audit |
 | Captured message contains binary attachment ref | only text body included | attachment not in memory; warn in memory body | None |
 | Captured message is a deleted post (post.delete_at > 0) | exclude from picker | None | None |
 | Captured message is from an imported set | include normally (it's still a real post) | None | None |
 | Lumi reply about capture itself contains @lumi | filtered by FR-CHAT-008 self-skip | None | None |
 | Captured message contains a Lumi reply | included; appears in memory as @Lumi | None | None |
-| Network error mid-commit | tx aborted in BRAIN writer | chat.retro_capture_failed | Retry via re-issue |
+| Network error mid-commit | tx aborted in memory writer | chat.retro_capture_failed | Retry via re-issue |
 | Redis state Redis cluster failover | brief blip; commit retries via secondary | None | None |
 | TTL cleanup runs while user is mid-toggle | TTL pre-checked at each action | actions return Expired error | None |
 | Memory split + last part empty | split_if_oversized handles | parts.last() empty body OK | None |
@@ -1022,14 +1022,14 @@ All resolved. Deferred:
 - The "include surrounding context" toggle is per-message rather than a global flag because operators often want context for SOME messages (the ambiguous ones) but not all.
 - Dedup-window choice (24h) balances false-positive friction (annoy operator with confirmation) against false-negative cost (silent duplicate memory). 24h captures the "deliberate re-capture" case.
 - Date-range parsing accepts ISO-8601 with or without seconds; we don't accept relative forms ("yesterday") in MVP — operators can always compute exact dates.
-- Memory split-at-1MB threshold was chosen for BRAIN indexer performance; below 1MB the indexer can keep memories fully in memory; above 1MB it falls back to streaming.
-- We chose plain-text concat with `[timestamp @username] body\n` format over JSON because: (a) markdown rendering is universal in BRAIN consumers; (b) the format is human-readable for direct review; (c) trivial to re-parse if needed.
+- Memory split-at-1MB threshold was chosen for memory indexer performance; below 1MB the indexer can keep memories fully in memory; above 1MB it falls back to streaming.
+- We chose plain-text concat with `[timestamp @username] body\n` format over JSON because: (a) markdown rendering is universal in memory consumers; (b) the format is human-readable for direct review; (c) trivial to re-parse if needed.
 - The `[context]` marker prefix on adjacent messages makes the memory self-documenting; future readers see "this was included as context, not selected by the user."
-- ACL containing all participant display names (not just subject_ids) was chosen because BRAIN's downstream consumers (sharing UI) need names for human-readable display; subject_ids are unhelpful to operators.
-- We didn't use Mattermost's built-in "Save Post" feature because: (a) saves are per-user, not channel-shared; (b) BRAIN integration would still need to scrape saved posts; (c) the retro flow is a deliberate aggregation, not an arbitrary save.
+- ACL containing all participant display names (not just subject_ids) was chosen because memory's downstream consumers (sharing UI) need names for human-readable display; subject_ids are unhelpful to operators.
+- We didn't use Mattermost's built-in "Save Post" feature because: (a) saves are per-user, not channel-shared; (b) memory integration would still need to scrape saved posts; (c) the retro flow is a deliberate aggregation, not an arbitrary save.
 - The picker's "Cancel" button explicitly emits a cancellation audit row so operators investigating "what happened to that capture" see a deterministic record, not just absence.
 - TTL refresh on user interaction: when user clicks a button, we extend the Redis TTL by another hour. Prevents pickers from expiring while the user is actively engaging.
-- The capture flow is deliberately SLOWER than a single click would be (multi-step: command → picker → toggle → commit). This is intentional: captures are durable BRAIN writes; we want operator deliberation, not impulse.
+- The capture flow is deliberately SLOWER than a single click would be (multi-step: command → picker → toggle → commit). This is intentional: captures are durable memory writes; we want operator deliberation, not impulse.
 - We considered a "quick capture" command (`@lumi remember this message` with no picker) for a one-message case but rejected it: it would create inconsistent UX (sometimes picker, sometimes not). Always-picker is simpler.
 - Why we exclude system messages: they're noise. Mattermost emits dozens of them per active channel ("Alice joined", "Channel renamed"); operators capturing don't want them.
 - The dedup mechanism uses set equality on selected_ids, not just intersection — partial overlaps don't trigger confirmation. This balances false-positive friction against the realistic case (exact-set re-capture).

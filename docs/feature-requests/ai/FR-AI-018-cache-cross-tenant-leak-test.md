@@ -4,7 +4,7 @@ id: FR-AI-018
 title: "Cross-tenant cache leak property-test (hard zero) — 200K random ops + 7 regression scenarios + adversarial inputs"
 module: AI
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 4
@@ -12,7 +12,7 @@ slice: 4
 owner: Stephen Cheng
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-AI-005, FR-AI-014, FR-AI-016, FR-AI-017]
 depends_on: [FR-AI-017]
 blocks: []
@@ -64,7 +64,7 @@ sub_tasks:
   - "0.5h: Concurrent test: 100 tasks racing insert/lookup across tenant pairs"
   - "0.5h: cache-isolation-gate.yml workflow with non-skip enforcement (parses output for skipped count)"
   - "0.5h: Failure-detail formatter (which tenant pair, prompt, model, step in sequence)"
-risk_if_skipped: "Cross-tenant leak invariant unenforced. Cache implementation might silently key-collide. The compliance gate (zero cross-tenant reads) downgrades from 'proven' to 'we think so' — exactly the indistinguishability between competence and failure that the BRAIN audit chain is designed to prevent. MoPS A05 audit response 'we have a property test' becomes 'we have a unit test that covers the cases we thought of' — much weaker. First multi-tenant data exposure incident in production (probability ~10⁻³ per year without this gate; ~10⁻⁹ with) ends 100% of B2B contracts that include data-isolation clauses."
+risk_if_skipped: "Cross-tenant leak invariant unenforced. Cache implementation might silently key-collide. The compliance gate (zero cross-tenant reads) downgrades from 'proven' to 'we think so' — exactly the indistinguishability between competence and failure that the memory audit chain is designed to prevent. MoPS A05 audit response 'we have a property test' becomes 'we have a unit test that covers the cases we thought of' — much weaker. First multi-tenant data exposure incident in production (probability ~10⁻³ per year without this gate; ~10⁻⁹ with) ends 100% of B2B contracts that include data-isolation clauses."
 ---
 
 ## §1 — Description (BCP-14 normative)

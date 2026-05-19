@@ -12,9 +12,17 @@ use super::schema::{DESCRIPTION_MAX_LEN, DESCRIPTION_MIN_LEN};
 /// Verb stems indicating concrete action — conservative list, expand via PR.
 static VERB_STEMS: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
-        r"(?i)\b(generate|author|audit|review|draft|emit|build|propose|render|extract|classify|tag|score|track|enforce|validate|orchestrate|chain|select|pin|halt|resume|escalate|wrap|publish|deliver|test|simulate)\b",
+        r"(?i)\b(generate|author|audit|review|draft|emit|build|propose|render|extract|classify|tag|score|track|enforce|validate|orchestrate|chain|select|pin|halt|resume|escalate|wrap|publish|deliver|test|simulate|translate|convert|provide|reference|describe|surface|run|compute|export|summarise|summarize|notify|capture|persist|reconcile|reject)\b",
     )
     .unwrap()
+});
+
+/// XML-tag-shaped pattern — `<foo>`, `<foo/>`, `</foo>`, `<foo bar="x">`.
+/// Bare `>` or `<` math operators (e.g. "tests_failed > 0") do NOT match,
+/// because Anthropic Reference B's injection concern is specifically about
+/// system-prompt-injecting tag shapes.
+static XML_TAG_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"</?[a-zA-Z][a-zA-Z0-9_-]*(?:\s+[^<>]*?)?\s*/?>").unwrap()
 });
 
 /// Quoted trigger phrase: `"<phrase>"` with 1-80 non-quote chars body.
@@ -47,7 +55,7 @@ pub fn validate(description: &str) -> Result<(), DescriptionViolation> {
         return Err(DescriptionViolation::TooLong { len });
     }
 
-    if flat.contains('<') || flat.contains('>') {
+    if XML_TAG_PATTERN.is_match(&flat) {
         return Err(DescriptionViolation::ForbiddenBrackets);
     }
 

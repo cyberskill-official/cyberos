@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands GDPR Art. 15 + PDPL Art. 17 DSAR self-service on top of FR-PORTAL-001. Final form: 660 lines, 17 §1 normative clauses, 20 ACs, 6 verification tests, 12 failure-mode rows, 10 implementation notes. 2 migrations, 4 endpoints, async via FR-MCP-007 Tasks, 7 BRAIN audit kinds (all sev-1 regulatory-critical), dual-sign denial flow, E2EE passphrase-encrypted bundle.
+The spec lands GDPR Art. 15 + PDPL Art. 17 DSAR self-service on top of FR-PORTAL-001. Final form: 660 lines, 17 §1 normative clauses, 20 ACs, 6 verification tests, 12 failure-mode rows, 10 implementation notes. 2 migrations, 4 endpoints, async via FR-MCP-007 Tasks, 7 memory audit kinds (all sev-1 regulatory-critical), dual-sign denial flow, E2EE passphrase-encrypted bundle.
 
 6 issues caught + resolved.
 

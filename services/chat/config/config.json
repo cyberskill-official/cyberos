@@ -1,0 +1,45 @@
+{
+  "_comment": "FR-CHAT-001 — baseline Mattermost config baked into the CyberOS image. The auth bridge (FR-CHAT-002) and Fargate-specific settings (FR-CHAT-003) override at deploy time via env variables.",
+  "ServiceSettings": {
+    "SiteURL": "",
+    "ListenAddress": ":8065",
+    "EnableInsecureOutgoingConnections": false,
+    "EnableLocalMode": false,
+    "EnableDeveloper": false,
+    "EnableTesting": false
+  },
+  "FileSettings": {
+    "DriverName": "amazons3",
+    "AmazonS3SSE": true,
+    "_comment": "Per-tenant S3 bucket overrides via env at deploy time (FR-CHAT-003)."
+  },
+  "SqlSettings": {
+    "DriverName": "postgres",
+    "MaxIdleConns": 20,
+    "MaxOpenConns": 300,
+    "ConnMaxLifetimeMilliseconds": 3600000,
+    "QueryTimeout": 30,
+    "Trace": false
+  },
+  "TeamSettings": {
+    "EnableTeamCreation": true,
+    "EnableUserCreation": false,
+    "_comment": "User creation is disabled — FR-CHAT-002 AUTH bridge is the only enrollment path."
+  },
+  "LogSettings": {
+    "EnableConsole": true,
+    "ConsoleLevel": "INFO",
+    "ConsoleJson": true,
+    "EnableFile": false
+  },
+  "ExperimentalSettings": {
+    "ClientSideCertEnable": false
+  },
+  "RateLimitSettings": {
+    "Enable": true,
+    "PerSec": 10,
+    "MaxBurst": 100,
+    "MemoryStoreSize": 10000,
+    "VaryByRemoteAddr": true
+  }
+}

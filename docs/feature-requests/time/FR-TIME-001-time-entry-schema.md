@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CFO)
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-BRAIN-101, FR-PROJ-001, FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-TIME-006, FR-TIME-007, FR-TIME-009, FR-HR-001, FR-HR-008]
+memory_chain_hash: null
+related_frs: [FR-AUTH-003, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-PROJ-001, FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-TIME-006, FR-TIME-007, FR-TIME-009, FR-HR-001, FR-HR-008]
 depends_on: [FR-AUTH-003, FR-AUTH-101]
 blocks: [FR-TIME-002, FR-TIME-003, FR-TIME-005, FR-TIME-006, FR-TIME-007, FR-TIME-009, FR-HR-008, FR-LEARN-003, FR-RES-001]   # 9 downstream consumers
 
@@ -32,7 +32,7 @@ source_decisions:
   - DEC-228 (entries > 24 hours are forbidden — a single entry cannot span a calendar day; the daily cap is enforced by FR-TIME-007 across rows)
   - DEC-229 (entry currency = engagement.invoice_currency at row creation time; snapshotted on the row; multi-currency invoice math happens at FR-INV-001)
   - DEC-230 (REVOKE UPDATE, DELETE on time_entries from cyberos_app; corrections are INSERTs not UPDATEs — append-only enforced by SQL grant)
-  - DEC-231 (BRAIN audit kinds: time.entry_recorded, time.entry_corrected, time.entry_submitted_for_approval — submission is FR-TIME-006's responsibility but the kind is reserved here)
+  - DEC-231 (memory audit kinds: time.entry_recorded, time.entry_corrected, time.entry_submitted_for_approval — submission is FR-TIME-006's responsibility but the kind is reserved here)
   - VN Labour Code Art. 107 (300h/yr OT cap — enforced by FR-TIME-007, not this FR)
   - Decree 145/2020 Art. 105 (40h regular week — enforced by FR-TIME-007)
   - PDPL Art. 13 (data minimisation — entry rows store description as PII-scrubbable but not categorically banned; FR-TIME-006 audit row carries scrubbed form)
@@ -48,7 +48,7 @@ new_files:
   - services/time/src/repo/entries.rs                              # repository — create + get + list + correct_via_new_row
   - services/time/src/chain.rs                                     # correction-chain walker; detect cycles; return head + tail
   - services/time/src/validation.rs                                # duration bounds (1 ≤ minutes ≤ 1440); ts_end > ts_start; correction_to references same engagement
-  - services/time/src/audit/entry_events.rs                        # canonical time.entry_recorded + time.entry_corrected BRAIN row builders
+  - services/time/src/audit/entry_events.rs                        # canonical time.entry_recorded + time.entry_corrected memory row builders
   - services/time/src/handlers/entries.rs                          # POST/GET /v1/time/entries + POST /v1/time/entries/{id}/correct
   - services/time/Cargo.toml                                       # +sqlx, +uuid, +serde, +chrono, +rust_decimal, +async-trait, +cyberos-cli-exit
   - services/time/tests/entries_create_test.rs                     # happy + invalid duration + invalid kind + cross-tenant + idempotent
@@ -60,7 +60,7 @@ new_files:
   - services/time/tests/duration_bounds_test.rs                    # < 1 minute and > 1440 minutes rejected
   - services/time/tests/current_view_test.rs                       # superseded rows omitted; corrections visible
   - services/time/tests/rate_card_snapshot_test.rs                 # rate-card change does not retroactively alter past entries
-  - services/time/tests/audit_row_test.rs                          # every create/correct emits exactly one BRAIN row
+  - services/time/tests/audit_row_test.rs                          # every create/correct emits exactly one memory row
   - services/time/tests/billable_default_test.rs                   # slice-1 default is false; FR-TIME-005 will set via cascade
 modified_files:
   - services/proj/migrations/0010_issues_addendum.sql              # add `(engagement_id, issue_id)` GIN index to support TIME entry FK joins (read-only join target)
@@ -147,9 +147,9 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 
 11. **MUST** reject corrections where any of `tenant_id`, `engagement_id`, `issue_id`, `member_subject_id` differ from the prior row. A trigger `enforce_correction_inheritance` raises `correction_cross_scope` on violation. Reasoning: a correction is "I logged this entry wrong" — never "I logged this entry under the wrong engagement"; the latter is a new entry + a `time.entry_recorded` row.
 
-12. **MUST** emit BRAIN audit row `time.entry_recorded` on every create (non-correction row) and `time.entry_corrected` on every correction. Both rows carry `{entry_id, tenant_id, member_subject_id_hash16, engagement_id, issue_id, duration_minutes, entry_kind, entry_status, billable, ts_start, ts_ns_recorded}`. The correction row additionally carries `correction_to`.
+12. **MUST** emit memory audit row `time.entry_recorded` on every create (non-correction row) and `time.entry_corrected` on every correction. Both rows carry `{entry_id, tenant_id, member_subject_id_hash16, engagement_id, issue_id, duration_minutes, entry_kind, entry_status, billable, ts_start, ts_ns_recorded}`. The correction row additionally carries `correction_to`.
 
-13. **MUST** PII-scrub the `description` field via FR-BRAIN-111 BEFORE chain commit. The PostgreSQL row retains the raw text (tenant-scoped + RLS-protected); the BRAIN audit chain holds only the scrubbed form (AUTHORING.md rule 18).
+13. **MUST** PII-scrub the `description` field via FR-MEMORY-111 BEFORE chain commit. The PostgreSQL row retains the raw text (tenant-scoped + RLS-protected); the memory audit chain holds only the scrubbed form (AUTHORING.md rule 18).
 
 14. **MUST** complete create/correct/get/list handlers in ≤ 50 ms p95. `entries_perf_test` asserts on 1000 iterations.
 
@@ -220,9 +220,9 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 
 **Why chain max-depth 100 (§1 #19)?** Practical chains are 1–3 rows (entry + one correction is typical; pathological cases reach 5–10). 100 is a safety floor — any chain that deep is either an integration bug or a stress test; the walker bails to prevent infinite-loop-like CPU consumption. Production chains hit 100 are alarmable.
 
-**Why `description` 0–1000 chars (§1 #10)?** Short enough to discourage prose-narrative entries (which belong in PROJ issue comments, not TIME); long enough to let "fixed merge conflict in chat/auth bridge — see PR-451" fit. PII-scrubbed via FR-BRAIN-111 before chain commit; operators warned that descriptions are visible to AM + CFO via FR-TIME-006.
+**Why `description` 0–1000 chars (§1 #10)?** Short enough to discourage prose-narrative entries (which belong in PROJ issue comments, not TIME); long enough to let "fixed merge conflict in chat/auth bridge — see PR-451" fit. PII-scrubbed via FR-MEMORY-111 before chain commit; operators warned that descriptions are visible to AM + CFO via FR-TIME-006.
 
-**Why two BRAIN audit row kinds (recorded + corrected) and not one (DEC-231)?** Different operator queries: "show me the original-creation activity for this engagement" filters on `time.entry_recorded`; "show me the correction activity" filters on `time.entry_corrected`. A single kind would require an extra `is_correction` flag and degrade query selectivity.
+**Why two memory audit row kinds (recorded + corrected) and not one (DEC-231)?** Different operator queries: "show me the original-creation activity for this engagement" filters on `time.entry_recorded`; "show me the correction activity" filters on `time.entry_corrected`. A single kind would require an extra `is_correction` flag and degrade query selectivity.
 
 ---
 
@@ -571,7 +571,7 @@ pub async fn correct_entry(
 1. **EntryKind closed at 4 values** — `EntryKind::ALL.len() == 4`; Postgres enum has exactly 4 labels.
 2. **EntryStatus closed at 4 values** — same shape.
 3. **RLS isolates by tenant** — query as tenant-A returns 0 entries of tenant-B.
-4. **Create entry happy path** — valid body → 201 with `TimeEntry` JSON; one `time.entry_recorded` BRAIN row.
+4. **Create entry happy path** — valid body → 201 with `TimeEntry` JSON; one `time.entry_recorded` memory row.
 5. **Create entry < 1 minute** — 400 `duration_out_of_range`.
 6. **Create entry > 1440 minutes** — 400 `duration_out_of_range`.
 7. **Create entry ts_start in future** — 400 `ts_start_in_future`.
@@ -688,10 +688,10 @@ async fn entry_chain_walker_returns_oldest_first(pool: sqlx::PgPool) {
 - **FR-RES-001** — capacity-vs-demand matrix (joins on member × time).
 
 **Cross-module:**
-- **FR-AI-003** — BRAIN audit bridge; receives `time.entry_recorded`, `time.entry_corrected`.
+- **FR-AI-003** — memory audit bridge; receives `time.entry_recorded`, `time.entry_corrected`.
 - **FR-PROJ-001** — issue schema; `issue_id` FK target.
 - **FR-PROJ-005** — rate card schema; `rate_card_snapshot` source.
-- **FR-BRAIN-111** — PII detection for `description` scrubbing.
+- **FR-MEMORY-111** — PII detection for `description` scrubbing.
 
 ---
 
@@ -741,7 +741,7 @@ async fn entry_chain_walker_returns_oldest_first(pool: sqlx::PgPool) {
 { "duration_minutes": 105, "description": "Worked on FR-AUTH-101 spec review — corrected: forgot to add 15min lunch overlap" }
 ```
 
-### 8.4 — time.entry_recorded BRAIN row
+### 8.4 — time.entry_recorded memory row
 
 ```json
 {
@@ -762,7 +762,7 @@ async fn entry_chain_walker_returns_oldest_first(pool: sqlx::PgPool) {
 }
 ```
 
-### 8.5 — time.entry_corrected BRAIN row
+### 8.5 — time.entry_corrected memory row
 
 ```json
 {
@@ -817,7 +817,7 @@ All other questions resolved.
 | `entry_currency` not 3 uppercase | DB CHECK | INSERT fails | Use valid ISO-4217 |
 | RLS bypass attempt | RLS `USING` predicate | 0 rows returned | None — designed |
 | `member_subject_id` deleted while entries exist | FK ON DELETE RESTRICT | DELETE auth.subjects fails | Use HR termination flow |
-| BRAIN row emit fails mid-transaction | Outer rollback | 500 `audit_failed`; entry not persisted | brain_writer diagnosis |
+| memory row emit fails mid-transaction | Outer rollback | 500 `audit_failed`; entry not persisted | memory_writer diagnosis |
 | Idempotency-Key reused with different body | Idempotency layer | 409 `idempotency_key_reuse` | New key |
 | `current_time_entries_view` slow on 10K-row tenant | Perf test | Sev-3 | Verify `correction_to` index health |
 | `entry_chain_walker` exceeds depth 100 | Function returns up to 100 rows | Truncated chain returned | Alarmable |
@@ -826,7 +826,7 @@ All other questions resolved.
 | `entry_status` enum drift | same | CI fails | same |
 | `rate_card_snapshot` mutated after row write | Append-only enforcement | Permission denied | None — designed |
 | Race: concurrent corrections to same prior | First INSERT wins; second fails `prior_row_already_corrected` | Second caller sees 400 | Caller re-fetches and retries |
-| `description` contains PII not scrubbed | BRAIN PII test | Pre-commit failure | Add PII rule |
+| `description` contains PII not scrubbed | memory PII test | Pre-commit failure | Add PII rule |
 | Chain walker called on entry id from different tenant | RLS filters out | Returns 0 rows | None — designed |
 | Subject deleted but cleanup ordering wrong | FK ON DELETE RESTRICT | Migration fails | Restore subject first |
 | Daily aggregation exceeds 24h via many sub-row entries | This FR's per-row cap is 24h; aggregate cap is FR-TIME-007 | Out-of-scope here | FR-TIME-007 |
@@ -846,8 +846,8 @@ All other questions resolved.
 - **`entry_currency CHAR(3)` not VARCHAR** — fixed-width for ISO-4217 codes; the CHECK constraint enforces uppercase 3-letter shape.
 - **Chain walker max-depth 100** — safety floor; production chains > 5 are rare. Alarmable.
 - **DEFERRABLE INITIALLY IMMEDIATE on self-FK** — Postgres-specific quirk. Without it, the cycle-detection trigger fires before the new row's FK validates; with it, FK validation defers to statement end (which is fine because trigger handles cycle).
-- **`created_by_subject_id` ≠ `member_subject_id` for AM-on-behalf-of entries** — both fields are immutable; the BRAIN row carries both hash16.
-- **PII scrubbing applies to `description`** — operators may inadvertently log "called Person A re: their salary inquiry"; FR-BRAIN-111 rules strip.
+- **`created_by_subject_id` ≠ `member_subject_id` for AM-on-behalf-of entries** — both fields are immutable; the memory row carries both hash16.
+- **PII scrubbing applies to `description`** — operators may inadvertently log "called Person A re: their salary inquiry"; FR-MEMORY-111 rules strip.
 - **`entry_status` default `draft`** — entries start in draft until submitted; FR-TIME-006 ships the transition handlers. Reading drafts is allowed (caller can review own draft).
 - **`billable` default false** — conservative. Cascade (FR-TIME-005) updates to true via correction (creating a new row with billable=true) at row-creation time, before the row is committed. Slice-1 entries are non-billable by default.
 - **Per-row 24h cap protects daily aggregator** — FR-TIME-007's daily-cap logic operates on rows; if one row could be 100h, the daily cap math underestimates. Per-row cap closes that hole.

@@ -1,0 +1,46 @@
+[package]
+name = "cyberos-mcp-gateway"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CyberOS MCP Gateway — Model Context Protocol 2025-11-25 federation door (P0 module · FR-MCP-001..008)"
+
+[lib]
+name = "cyberos_mcp_gateway"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cyberos-mcp"
+path = "src/bin/cyberos_mcp.rs"
+
+[dependencies]
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+hyper.workspace = true
+sqlx.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+clap.workspace = true
+sha2.workspace = true
+jsonwebtoken.workspace = true
+
+# MCP-specific (JSON-RPC 2.0 over stdio + HTTP)
+jsonrpsee = { version = "0.24", features = ["server", "client"] }
+async-trait = "0.1"
+base64 = "0.22"
+
+cyberos-types.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true

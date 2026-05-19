@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-MCP-001, FR-MCP-003, FR-OBS-007, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-MCP-001, FR-MCP-003, FR-OBS-007, FR-MEMORY-111]
 depends_on: [FR-MCP-001]
 blocks: []
 
@@ -24,7 +24,7 @@ source_decisions:
   - DEC-2351 2026-05-17 — Closed enum `server_health_status` = {healthy, degraded, unhealthy, deregistered}; cardinality 4
   - DEC-2352 2026-05-17 — Heartbeat carries version + supported_protocols + capability_advertisement
   - DEC-2353 2026-05-17 — Recovery: unhealthy → healthy on next successful heartbeat (no manual intervention)
-  - DEC-2354 2026-05-17 — BRAIN audit kinds: mcp.server_registered, mcp.server_heartbeat_missed, mcp.server_unhealthy, mcp.server_recovered, mcp.server_deregistered
+  - DEC-2354 2026-05-17 — memory audit kinds: mcp.server_registered, mcp.server_heartbeat_missed, mcp.server_unhealthy, mcp.server_recovered, mcp.server_deregistered
 
 build_envelope:
   language: rust 1.81
@@ -70,7 +70,7 @@ risk_if_skipped: "Without heartbeat, dead MCP servers serve stale errors. Withou
 
 ## §1 — Description (BCP-14 normative)
 
-The MCP service **MUST** ship heartbeat lifecycle at `services/mcp/src/heartbeat/` with register + 10s heartbeat + 3-miss-unhealthy + skill cascade, 5 BRAIN audit kinds.
+The MCP service **MUST** ship heartbeat lifecycle at `services/mcp/src/heartbeat/` with register + 10s heartbeat + 3-miss-unhealthy + skill cascade, 5 memory audit kinds.
 
 1. **MUST** validate `server_health_status` against closed enum per DEC-2351.
 
@@ -117,7 +117,7 @@ The MCP service **MUST** ship heartbeat lifecycle at `services/mcp/src/heartbeat
    GET  /v1/mcp/servers               (status list)
    ```
 
-7. **MUST** emit 5 BRAIN audit kinds per DEC-2354. PII per FR-BRAIN-111: server module_name + version (public) ok.
+7. **MUST** emit 5 memory audit kinds per DEC-2354. PII per FR-MEMORY-111: server module_name + version (public) ok.
 
 8. **MUST** thread trace_id from registration → heartbeat → audit.
 
@@ -153,7 +153,7 @@ Sample server status:
 ---
 
 ## §4 — Acceptance criteria
-1. **server_health_status enum cardinality 4**. 2. **10s heartbeat interval**. 3. **3-miss → unhealthy**. 4. **Recovery on heartbeat**. 5. **skill_unavailable cascade**. 6. **5 BRAIN audit kinds emitted**. 7. **PII: module_name + version ok**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **UNIQUE(tenant, module_name)**. 11. **Capability advertisement stored**. 12. **Supported protocols array**. 13. **Deregistered status (graceful shutdown)**. 14. **Append-only via REVOKE except status cols**. 15. **Concurrent heartbeats handled**. 16. **2-miss → degraded**. 17. **Monitor cron 5s interval**. 18. **Health check perf < 50ms**. 19. **FR-OBS-007 integration on unhealthy**. 20. **Cross-tenant isolation**.
+1. **server_health_status enum cardinality 4**. 2. **10s heartbeat interval**. 3. **3-miss → unhealthy**. 4. **Recovery on heartbeat**. 5. **skill_unavailable cascade**. 6. **5 memory audit kinds emitted**. 7. **PII: module_name + version ok**. 8. **RLS denies cross-tenant**. 9. **Trace_id preserved**. 10. **UNIQUE(tenant, module_name)**. 11. **Capability advertisement stored**. 12. **Supported protocols array**. 13. **Deregistered status (graceful shutdown)**. 14. **Append-only via REVOKE except status cols**. 15. **Concurrent heartbeats handled**. 16. **2-miss → degraded**. 17. **Monitor cron 5s interval**. 18. **Health check perf < 50ms**. 19. **FR-OBS-007 integration on unhealthy**. 20. **Cross-tenant isolation**.
 
 ---
 
@@ -194,7 +194,7 @@ async fn skill_unavailable_propagation() {
 ## §7 — Dependencies
 **Upstream:** FR-MCP-001.
 **Downstream:** FR-MCP-003 (naming validator).
-**Cross-module:** FR-OBS-007 (alert on unhealthy), FR-BRAIN-111 (audit).
+**Cross-module:** FR-OBS-007 (alert on unhealthy), FR-MEMORY-111 (audit).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -213,7 +213,7 @@ async fn skill_unavailable_propagation() {
 ## §11 — Implementation notes
 - §11.1 Monitor cron via async tokio interval; 5s period.
 - §11.2 Skill cascade: `UPDATE skill_registry SET available=false WHERE server_id IN (unhealthy servers)`.
-- §11.3 BRAIN audit body: server_id, module_name, status; version + protocols ok.
+- §11.3 memory audit body: server_id, module_name, status; version + protocols ok.
 - §11.4 FR-OBS-007 receives event on transition to unhealthy.
 - §11.5 Deregister gracefully sets status=deregistered + cascade.
 

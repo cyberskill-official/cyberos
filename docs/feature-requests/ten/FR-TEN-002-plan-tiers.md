@@ -3,7 +3,7 @@ id: FR-TEN-002
 title: "3 plan tiers (Starter / Team / Enterprise) hardcoded with per-tier caps"
 module: TEN
 priority: MUST
-status: accepted
+status: ready_to_implement
 accepted_at: 2026-05-16
 accepted_by: Stephen Cheng
 verify: T
@@ -13,7 +13,7 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-TEN-001, FR-TEN-003, FR-TEN-004, FR-TEN-005]
 depends_on: [FR-TEN-001]
 blocks: [FR-TEN-003, FR-TEN-005, FR-TEN-101]
@@ -107,7 +107,7 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 
 9. **MUST** consume the per-tier caps as the metering default when `tenants.metering_caps_yaml IS NULL`. The metering policy resolver order (DEC-781 ref): (1) per-tenant explicit `metering_caps_yaml` (founder-set), (2) plan-tier caps (this FR), (3) platform absolute maximums (FR-TEN-004 §11.10). Per-tenant overrides are stronger than plan caps; plan caps are stronger than platform defaults.
 
-10. **MUST** emit one BRAIN audit row per plan change at sev-2 with kind `ten.plan_changed`. The row carries `(tenant_id, actor_id, from_tier, to_tier, effective_at, proration_amount_cents)`. The reason field is scrubbed via FR-BRAIN-111 before chain emission.
+10. **MUST** emit one memory audit row per plan change at sev-2 with kind `ten.plan_changed`. The row carries `(tenant_id, actor_id, from_tier, to_tier, effective_at, proration_amount_cents)`. The reason field is scrubbed via FR-MEMORY-111 before chain emission.
 
 11. **MUST** compute proration on upgrade as `((target_tier_price - current_tier_price) * days_remaining_in_period) / days_in_period`, integer math in cents (no floating-point). The result is positive for upgrade (tenant owes prorated diff). The proration handler is invoked by FR-TEN-003 Stripe billing; this FR emits the proration_amount_cents in the history row but does NOT mutate Stripe state.
 
@@ -141,7 +141,7 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 
 19. **MUST** reject the plan change if `tenants.next_scheduled_change IS NOT NULL` AND the new request would create a second deferred change. Returns `409 CONFLICT { error: "deferred_change_already_pending", scheduled: <ts>, requested_new: <body> }`. The handler also exposes `DELETE /v1/admin/tenants/{id}/plan/scheduled` to cancel a pending change (tenant_admin or founder).
 
-20. **MUST** keep all of this PII-free at the chain layer. The history row's `reason` text passes through FR-BRAIN-111; coordinates, names, emails are not in this domain (it's plan tiers).
+20. **MUST** keep all of this PII-free at the chain layer. The history row's `reason` text passes through FR-MEMORY-111; coordinates, names, emails are not in this domain (it's plan tiers).
 
 21. **MUST** validate plan-change reason length [10, 1000] characters when present (optional field; required for downgrades and for founder overrides). Empty + downgrade returns `400 reason_required_for_downgrade`. Empty + founder-override returns `400 reason_required_for_founder_override`.
 
@@ -151,7 +151,7 @@ The TEN service **MUST** define exactly three hardcoded plan tiers — Starter, 
 
 24. **MUST** support per-tenant `is_founder_tenant` boolean (DEC-777) seeded TRUE at provisioning time for the CyberSkill operator's tenant (via FR-TEN-001 founder flag). A trigger rejects mutation of `is_founder_tenant` after insert (one-way set at creation).
 
-25. **MUST** emit 4 closed BRAIN audit kinds:
+25. **MUST** emit 4 closed memory audit kinds:
     - `ten.plan_changed` (sev-2, every plan transition)
     - `ten.plan_founder_override` (sev-2, founder-only override path)
     - `ten.plan_change_rejected_violation` (sev-2, downgrade violation)
@@ -254,7 +254,7 @@ CREATE TABLE tenant_plan_history (
     from_tier_caps_snapshot   JSONB NOT NULL,
     to_tier_caps_snapshot     JSONB NOT NULL,
     reason                    TEXT CHECK (reason IS NULL OR (length(reason) BETWEEN 10 AND 1000)),
-    brain_chain_hash          CHAR(64) NOT NULL CHECK (brain_chain_hash ~ '^[0-9a-f]{64}$')
+    memory_chain_hash          CHAR(64) NOT NULL CHECK (memory_chain_hash ~ '^[0-9a-f]{64}$')
 );
 
 CREATE INDEX plan_history_tenant_time ON tenant_plan_history (tenant_id, occurred_at DESC);
@@ -411,20 +411,20 @@ pub async fn change_plan(
         });
     }
 
-    let brain_hash = emit_brain_plan_changed(tenant_id, actor_id, current.plan_tier, target, effective_at, proration, &reason).await?;
+    let memory_hash = emit_memory_plan_changed(tenant_id, actor_id, current.plan_tier, target, effective_at, proration, &reason).await?;
 
     let history_id: Uuid = sqlx::query_scalar!(
         r#"INSERT INTO tenant_plan_history
               (tenant_id, actor_id, effective_at, from_tier, to_tier,
                effective_kind, proration_amount_cents,
-               from_tier_caps_snapshot, to_tier_caps_snapshot, reason, brain_chain_hash)
+               from_tier_caps_snapshot, to_tier_caps_snapshot, reason, memory_chain_hash)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
            RETURNING id"#,
         tenant_id, actor_id, effective_at,
         current.plan_tier as _, target as _,
         effective as _, proration,
         caps_snapshot_json(current.plan_tier), caps_snapshot_json(target),
-        reason, &brain_hash
+        reason, &memory_hash
     ).fetch_one(&mut *tx).await?;
 
     if effective == PlanChangeEffective::Immediate {
@@ -474,7 +474,7 @@ pub async fn change_plan(
 17. UPDATE on `tenants.is_founder_tenant` → P0300 trigger error.
 18. `tenant_plan_history` REVOKE UPDATE/DELETE confirmed at `\dp`.
 19. RLS prevents cross-tenant SELECT on `tenant_plan_history`.
-20. Plan-change BRAIN audit row at sev-2 with kind `ten.plan_changed`.
+20. Plan-change memory audit row at sev-2 with kind `ten.plan_changed`.
 21. `GET /v1/tenants/{id}/plan` returns current tier + caps + effective_since.
 22. `GET /v1/tenants/{id}/plan/history` returns paginated rows scoped to caller's tenant (or any tenant for founder).
 23. `next_scheduled_change` is set on deferred downgrade; cleared by period-close job.
@@ -646,7 +646,7 @@ Authorization: Bearer <cyberskill_founder>
 | 9 | Invalid tier in body | enum cast fail | 3 | 400 |
 | 10 | Invalid effective_kind | enum cast fail | 3 | 400 |
 | 11 | Plan history INSERT permission denied | GRANT misconfig | 1 | Abort TX; sev-1 |
-| 12 | BRAIN audit emission fails | subprocess error | 1 | Retry via WAL; if exhausted, sev-1 |
+| 12 | memory audit emission fails | subprocess error | 1 | Retry via WAL; if exhausted, sev-1 |
 | 13 | Cross-tenant RLS leak | rls_isolation_test | 1 | CI blocks |
 | 14 | Proration overflow i64 | overflow_op_panic in debug; saturating in release | 2 | Saturate at i64::MAX; sev-2 audit |
 | 15 | next_scheduled_change set while another pending | application check | 3 | 409 |
@@ -658,7 +658,7 @@ Authorization: Bearer <cyberskill_founder>
 | 21 | Caps constant drift between code and table | code review | 2 | CI test compares constants to documented table |
 | 22 | Per-tenant override silently ignored | metering_caps_override_test | 1 | CI blocks |
 | 23 | from_tier_caps_snapshot missing | NOT NULL constraint | 1 | INSERT rejected |
-| 24 | brain_chain_hash regex fails | CHECK | 1 | INSERT rejected |
+| 24 | memory_chain_hash regex fails | CHECK | 1 | INSERT rejected |
 | 25 | Reason > 1000 chars | CHECK | 3 | 400 |
 | 26 | Reason < 10 chars on downgrade | application check | 3 | 400 |
 | 27 | Plan change for terminated tenant | RLS + state check | 2 | 404; sev-2 audit |
@@ -690,7 +690,7 @@ Authorization: Bearer <cyberskill_founder>
 
 **§11.9** The `tenant_plan_history.from_tier` is nullable for the very first record (the auto-default at provisioning). Subsequent records always have a non-NULL from_tier.
 
-**§11.10** The metering event recorded by clause #15 carries `axis = plan_change` — which is NOT in the closed 4-axis enum. This is intentional: the synthetic event is recorded directly in BRAIN chain only, not in the metering_events table. The `idempotency_key = "plan_change_<history_id>"` plus the absence of a metering_events row is the disambiguation.
+**§11.10** The metering event recorded by clause #15 carries `axis = plan_change` — which is NOT in the closed 4-axis enum. This is intentional: the synthetic event is recorded directly in memory chain only, not in the metering_events table. The `idempotency_key = "plan_change_<history_id>"` plus the absence of a metering_events row is the disambiguation.
 
 **§11.11** The 24h rate limit is per tenant, not per actor. A tenant_admin and the founder cannot both change the same tenant within 24h via regular paths; the founder-override path bypasses.
 
@@ -704,7 +704,7 @@ Authorization: Bearer <cyberskill_founder>
 
 **§11.16** Plan-history pagination uses keyset pagination on `(occurred_at DESC, id DESC)` to avoid OFFSET drift.
 
-**§11.17** The reason field is text; FR-BRAIN-111 PII scrubbing applies before chain emission. Operators see the unscrubbed reason in Postgres (RLS-scoped); chain holds scrubbed.
+**§11.17** The reason field is text; FR-MEMORY-111 PII scrubbing applies before chain emission. Operators see the unscrubbed reason in Postgres (RLS-scoped); chain holds scrubbed.
 
 **§11.18** The handler computes proration cents using the `TIER_PRICE_CENTS_MONTHLY` constants. The constants are the source of truth for billing-pricing; FR-TEN-003 Stripe integration reads the same constants for invoice line items.
 

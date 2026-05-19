@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=75"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,9 +8,10 @@ version = "0.1.0"
 description = "CyberOS skill module — legacy Python runners (parity-test path during Rust/WASM migration)"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=0.40",
-    "msgspec>=0.18",
-    "pyyaml>=6",
+    # Versions floored to latest-stable as of 2026 Q2.
+    "anthropic>=0.42",
+    "msgspec>=0.18.6",
+    "pyyaml>=6.0.2",
 ]
 
 [tool.setuptools.packages.find]

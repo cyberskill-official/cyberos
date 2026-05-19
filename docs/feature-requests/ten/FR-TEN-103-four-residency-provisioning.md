@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CTO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TEN-001, FR-TEN-003, FR-TEN-004, FR-TEN-101, FR-TEN-102, FR-TEN-104, FR-AUTH-004, FR-AI-016, FR-AI-003, FR-BRAIN-101, FR-BRAIN-111, FR-DOC-001, FR-EMAIL-001, FR-OBS-005, FR-OBS-007, FR-OBS-008]
+memory_chain_hash: null
+related_frs: [FR-TEN-001, FR-TEN-003, FR-TEN-004, FR-TEN-101, FR-TEN-102, FR-TEN-104, FR-AUTH-004, FR-AI-016, FR-AI-003, FR-MEMORY-101, FR-MEMORY-111, FR-DOC-001, FR-EMAIL-001, FR-OBS-005, FR-OBS-007, FR-OBS-008]
 depends_on: [FR-AI-016, FR-TEN-001]
 blocks: []
 
@@ -30,7 +30,7 @@ source_decisions:
   - DEC-923 2026-05-17 — Cross-residency reads are FORBIDDEN at the data layer; any query that crosses residency boundaries returns 403 + emits sev-1 `ten.cross_residency_access_attempt`
   - DEC-924 2026-05-17 — Cross-residency writes are FORBIDDEN by trip-wire trigger + Postgres FDW guard + connection-pool routing; defense-in-depth (any one prevents drift)
   - DEC-925 2026-05-17 — Tenant residency immutable post-provisioning (consistent with FR-TEN-003 DEC-798 currency immutability); residency change = new tenant + manual migration
-  - DEC-926 2026-05-17 — BRAIN chain partitioned per residency (each residency has its own chain head); cross-residency BRAIN events are FORBIDDEN; reconciliation via per-residency exports for global compliance reports
+  - DEC-926 2026-05-17 — memory chain partitioned per residency (each residency has its own chain head); cross-residency memory events are FORBIDDEN; reconciliation via per-residency exports for global compliance reports
   - DEC-927 2026-05-17 — Provisioning CLI (FR-TEN-001) routes to the correct residency's Postgres/S3/NATS via the `tenants.residency` value at insert; tenant ID generation collision-free across residencies (UUIDv7 with residency-prefix nibble pattern)
   - DEC-928 2026-05-17 — Per-residency Aurora deployed in private VPC with no cross-VPC peering (per Stripe security pattern); each residency's services run in that residency's VPC only
   - DEC-929 2026-05-17 — Per-residency KMS key for envelope encryption (sg-1 → AWS KMS ap-southeast-1; eu-1 → AWS KMS eu-west-1; us-1 → AWS KMS us-east-1; vn-1 → AWS KMS ap-southeast-1 with VN data-residency contract addendum)
@@ -43,9 +43,9 @@ source_decisions:
   - DEC-936 2026-05-17 — Provisioning workflow ATOMIC at the residency level — if Aurora INSERT succeeds but S3 prefix creation fails, the Aurora row is DELETED + sev-1 alert; no half-provisioned residency state
   - DEC-937 2026-05-17 — Connection-pool routing: each service holds a `Map<Residency, PgPool>` + a `Map<Residency, S3Client>`; service-level handlers extract `residency` from `tenants.residency` lookup + select correct pool; mis-pool = sev-1 trip-wire
   - DEC-938 2026-05-17 — Per-residency Aurora cluster has its own RLS `current_setting('auth.residency')` predicate ADDED on top of tenant_id predicate (defense-in-depth: even if tenant_id collides across residencies — which shouldn't happen per DEC-927 — residency predicate prevents leak)
-  - DEC-939 2026-05-17 — Cross-residency-write trip-wire: trigger on every tenant-scoped table CHECKs `NEW.residency = current_setting('auth.residency')`; mismatch raises `cross_residency_write_blocked` exception + emits BRAIN row
+  - DEC-939 2026-05-17 — Cross-residency-write trip-wire: trigger on every tenant-scoped table CHECKs `NEW.residency = current_setting('auth.residency')`; mismatch raises `cross_residency_write_blocked` exception + emits memory row
   - DEC-940 2026-05-17 — Residency-failover deferred (no automatic failover from sg-1 to us-1 etc.) — DR is intra-region multi-AZ only; cross-region DR ships in P4 (FR-TEN-2xx)
-  - DEC-941 2026-05-17 — Per-residency BRAIN audit kinds (8): ten.residency_provisioned, ten.residency_pool_misroute, ten.cross_residency_access_attempt, ten.cross_residency_write_blocked, ten.cross_residency_brain_event_blocked, ten.residency_health_degraded, ten.residency_kms_unavailable, ten.tenant_residency_assigned
+  - DEC-941 2026-05-17 — Per-residency memory audit kinds (8): ten.residency_provisioned, ten.residency_pool_misroute, ten.cross_residency_access_attempt, ten.cross_residency_write_blocked, ten.cross_residency_memory_event_blocked, ten.residency_health_degraded, ten.residency_kms_unavailable, ten.tenant_residency_assigned
   - DEC-942 2026-05-17 — Residency-aware logging context — every log line carries `residency=<rid>` field via tracing instrument; missing field = OBS alarm
   - DEC-943 2026-05-17 — `cyberos-ten residency-status` CLI shows per-residency health (Aurora connection, S3 reachability, NATS heartbeat, Stripe ping, KMS responsiveness, JWT issuer responsiveness) — 6-component score per residency
   - DEC-944 2026-05-17 — Per-residency provisioning runbook (FR-OBS-007 routable) on residency_pool_misroute or kms_unavailable
@@ -72,7 +72,7 @@ build_envelope:
     - services/ten/src/residency/trip_wire.rs                        # cross-residency intercept
     - services/ten/src/residency/issuer_map.rs                       # AUTH issuer per residency
     - services/ten/src/cli/residency_status.rs                       # cyberos-ten residency-status
-    - services/ten/src/audit/residency_events.rs                     # 8 BRAIN row builders
+    - services/ten/src/audit/residency_events.rs                     # 8 memory row builders
     - infra/terraform/residency/sg-1/main.tf                         # SG VPC + Aurora + S3 + NATS + KMS
     - infra/terraform/residency/eu-1/main.tf                         # EU equivalent
     - infra/terraform/residency/us-1/main.tf                         # US equivalent
@@ -90,7 +90,7 @@ build_envelope:
     - services/ten/tests/residency_jwt_cross_rejection_test.rs
     - services/ten/tests/residency_atomic_provisioning_test.rs
     - services/ten/tests/residency_health_check_test.rs
-    - services/ten/tests/residency_brain_chain_partitioning_test.rs
+    - services/ten/tests/residency_memory_chain_partitioning_test.rs
     - services/ten/tests/residency_kms_unavailable_test.rs
     - services/ten/tests/residency_audit_emission_test.rs
 
@@ -141,12 +141,12 @@ sub_tasks:
   - "0.5h: wire-up — handlers in auth/inv/metering/email/doc consume residency router"
   - "0.7h: integration smoke — provision a tenant in each residency + verify isolation"
 
-risk_if_skipped: "Without 4-residency provisioning, every tenant lives in one global region — non-compliant for EU (GDPR Art. 44 cross-border transfer) + SG (PDPA §26) + VN (PDPL Law 91/2025 Art. 17) regulated customers. CyberSkill cannot sell to any regulated EU/SG/VN customer without this. Without DEC-923's cross-residency read forbiddance, a bug in service A could read tenant B's data from the wrong region. Without DEC-924's trip-wire defense-in-depth (trigger + FDW guard + pool routing), one buggy handler can silently leak cross-region data — undetectable until audit. Without DEC-925's residency immutability, accidental tenant.residency UPDATE could move data to the wrong region without copying — data loss + compliance violation. Without DEC-926's per-residency BRAIN partitioning, audit chains commingle across regions — single-tenant subpoena response leaks other tenants' audit data. Without DEC-929's per-residency KMS keys, a key compromise in one region cascades to all four. Without DEC-936's atomic provisioning, half-provisioned tenants accumulate (Aurora row but no S3 prefix) becoming silent corruption sources. Without DEC-942's residency-aware logging, post-incident attribution ('which region had the misroute?') is impossible. The 10h effort lands the residency control plane that unlocks the entire international + regulated-market commercial arc."
+risk_if_skipped: "Without 4-residency provisioning, every tenant lives in one global region — non-compliant for EU (GDPR Art. 44 cross-border transfer) + SG (PDPA §26) + VN (PDPL Law 91/2025 Art. 17) regulated customers. CyberSkill cannot sell to any regulated EU/SG/VN customer without this. Without DEC-923's cross-residency read forbiddance, a bug in service A could read tenant B's data from the wrong region. Without DEC-924's trip-wire defense-in-depth (trigger + FDW guard + pool routing), one buggy handler can silently leak cross-region data — undetectable until audit. Without DEC-925's residency immutability, accidental tenant.residency UPDATE could move data to the wrong region without copying — data loss + compliance violation. Without DEC-926's per-residency memory partitioning, audit chains commingle across regions — single-tenant subpoena response leaks other tenants' audit data. Without DEC-929's per-residency KMS keys, a key compromise in one region cascades to all four. Without DEC-936's atomic provisioning, half-provisioned tenants accumulate (Aurora row but no S3 prefix) becoming silent corruption sources. Without DEC-942's residency-aware logging, post-incident attribution ('which region had the misroute?') is impossible. The 10h effort lands the residency control plane that unlocks the entire international + regulated-market commercial arc."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
-The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, `vn-1`) with per-residency Postgres + S3 + NATS + KMS + Stripe + AUTH-issuer separation, defense-in-depth cross-residency-write trip-wires, atomic-at-residency provisioning, per-residency BRAIN chain partitioning, residency-aware logging context, 6-component health check + CLI, and 8 BRAIN audit kinds.
+The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, `vn-1`) with per-residency Postgres + S3 + NATS + KMS + Stripe + AUTH-issuer separation, defense-in-depth cross-residency-write trip-wires, atomic-at-residency provisioning, per-residency memory chain partitioning, residency-aware logging context, 6-component health check + CLI, and 8 memory audit kinds.
 
 1. **MUST** define the closed `residency` Postgres enum at migration `0015`: `('sg-1','eu-1','us-1','vn-1')`. CI cardinality test asserts exactly 4 per DEC-920. Adding a fifth requires schema migration + DEC entry.
 
@@ -205,7 +205,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
 
 10. **MUST** enforce per-residency JWT issuer validation per DEC-931. The AUTH issuer URL embedded in the JWT (`iss` claim) MUST match the residency-derived expected issuer; mismatch returns `401 wrong_residency_token` + emits `ten.cross_residency_access_attempt` sev-1.
 
-11. **MUST** partition the BRAIN audit chain per residency per DEC-926. Each residency's services append to that residency's chain only; the chain head is stored in that residency's Aurora `brain.chain_state` table. Cross-residency BRAIN events are FORBIDDEN — attempting to append a chain row for a tenant in a different residency than the current handler's residency raises `cross_residency_brain_event_blocked` + emits the corresponding BRAIN row in the LOCAL chain.
+11. **MUST** partition the memory audit chain per residency per DEC-926. Each residency's services append to that residency's chain only; the chain head is stored in that residency's Aurora `memory.chain_state` table. Cross-residency memory events are FORBIDDEN — attempting to append a chain row for a tenant in a different residency than the current handler's residency raises `cross_residency_memory_event_blocked` + emits the corresponding memory row in the LOCAL chain.
 
 12. **MUST** provision atomically per residency per DEC-936. The `services/ten/src/provisioning/orchestrator.rs` (modified per FR-TEN-001 build envelope) runs:
     1. Open tx in target residency's Aurora.
@@ -229,13 +229,13 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
     6. AUTH issuer responsiveness (GET JWKS + < 500ms).
     Output: per-residency score 0-6 with timing per component; exit code 0 if all 4 residencies score ≥ 5, exit code 73 otherwise.
 
-16. **MUST** emit 8 BRAIN audit row kinds per DEC-941 (AUTHORING.md rule 6 namespace pattern):
+16. **MUST** emit 8 memory audit row kinds per DEC-941 (AUTHORING.md rule 6 namespace pattern):
     - `ten.tenant_residency_assigned` (sev-2 — material commercial event)
     - `ten.residency_provisioned` (sev-1 — infrastructure event; one per residency standup)
     - `ten.residency_pool_misroute` (sev-1 — silent-leak prevented)
     - `ten.cross_residency_access_attempt` (sev-1 — security signal)
     - `ten.cross_residency_write_blocked` (sev-1 — trip-wire fired)
-    - `ten.cross_residency_brain_event_blocked` (sev-1 — chain pollution prevented)
+    - `ten.cross_residency_memory_event_blocked` (sev-1 — chain pollution prevented)
     - `ten.residency_health_degraded` (sev-2 — one component failing)
     - `ten.residency_kms_unavailable` (sev-1 — encryption broken in one region)
 
@@ -245,9 +245,9 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
 
 19. **MUST** require explicit `--residency` flag on FR-TEN-001's `cyberos-ten provision` CLI per DEC-945 (no auto-derive at slice 2). CCO process review checks consistency between provided `--billing-currency` and `--residency` against the DEC-922 mapping; mismatch is rejected with exit code 64 + message naming the expected residency.
 
-20. **MUST** PII-scrub per-residency BRAIN rows via FR-BRAIN-111 (AUTHORING.md rule 18). Cross-residency event payloads carry `tenant_id_hash16` not the raw tenant_id (defense-in-depth: even if a cross-residency audit row leaks across residencies due to incident, no PII flows).
+20. **MUST** PII-scrub per-residency memory rows via FR-MEMORY-111 (AUTHORING.md rule 18). Cross-residency event payloads carry `tenant_id_hash16` not the raw tenant_id (defense-in-depth: even if a cross-residency audit row leaks across residencies due to incident, no PII flows).
 
-21. **MUST** thread W3C `traceparent` across the residency-fanout entry (single-cross-residency lookup) + per-residency operation (AUTHORING.md rule 22 + 23 + 24). Trace_id present on every BRAIN row + every log line.
+21. **MUST** thread W3C `traceparent` across the residency-fanout entry (single-cross-residency lookup) + per-residency operation (AUTHORING.md rule 22 + 23 + 24). Trace_id present on every memory row + every log line.
 
 22. **MUST NOT** support automatic failover between residencies at slice 2 per DEC-940. Cross-region DR is out-of-scope; per-residency multi-AZ Aurora is the DR primitive at slice 2.
 
@@ -265,7 +265,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
 
 **Why defense-in-depth trip-wires (§1 #8, DEC-924)?** Cross-residency leaks are silent failures — the data just moves to the wrong region and we don't know until audit (typically years later). Three layers (pool router + trigger + Postgres FDW absence) means catching the bug at the first of: bad code (router catches), bad config (trigger catches), bad infra (no FDW to traverse). Each layer can fail; three together approach zero leakage probability.
 
-**Why BRAIN chain per-residency (§1 #11, DEC-926)?** Audit chains are subpoena-able. A single global chain means subpoena for tenant A's audit history forces production of ALL tenants' chain rows (the chain is a Merkle structure — you can't redact). Per-residency chains scope the subpoena response to one residency's tenants; cross-residency tenants are out of scope.
+**Why memory chain per-residency (§1 #11, DEC-926)?** Audit chains are subpoena-able. A single global chain means subpoena for tenant A's audit history forces production of ALL tenants' chain rows (the chain is a Merkle structure — you can't redact). Per-residency chains scope the subpoena response to one residency's tenants; cross-residency tenants are out of scope.
 
 **Why per-residency KMS keys (§1 #5, DEC-929)?** Compromise scoping. One leaked KMS key = one residency's data decryptable. Cross-residency key sharing turns one compromise into four residencies' data exposed. Aligns with NIST SP 800-57 key-scoping guidance.
 
@@ -434,7 +434,7 @@ cyberos-ten residency-cleanup-orphan <tenant_id>     (slice 3)
 7. **JWT cross-residency rejection** — request with JWT carrying `iss=https://auth.us-1.cyberos.world` against eu-1 endpoint returns 401 + `ten.cross_residency_access_attempt`.
 8. **Atomic provisioning** — provisioning failure at S3 step rolls back Aurora insert; no half-provisioned state in any residency.
 9. **6-component health check** — `cyberos-ten residency-status` reports all 6 components per residency with timing.
-10. **BRAIN chain partitioning** — appending a chain row for an eu-1 tenant from a sg-1 handler raises `cross_residency_brain_event_blocked`.
+10. **memory chain partitioning** — appending a chain row for an eu-1 tenant from a sg-1 handler raises `cross_residency_memory_event_blocked`.
 11. **KMS per-residency** — eu-1 encrypt uses eu-1 KMS key; sg-1 encrypt uses sg-1 KMS key; cross-region attempts fail.
 12. **vn-1 physical region** — Terraform plan for vn-1 targets ap-southeast-1; AWS resources are tagged with `cyberos_residency=vn-1` for clarity.
 13. **UUIDv7 residency-prefix nibble** — tenant_id high nibble of byte 6 = residency index; collision-free across residencies.
@@ -478,7 +478,7 @@ async fn cross_residency_insert_blocked() {
         .bind(uuid::Uuid::new_v4()).bind(sg_tenant).execute(&ctx.pool).await.unwrap_err();
     assert!(err.to_string().contains("cross_residency_write_blocked"));
 
-    let audit = ctx.brain_rows().await;
+    let audit = ctx.memory_rows().await;
     assert!(audit.iter().any(|r| r.kind == "ten.cross_residency_write_blocked"));
 }
 
@@ -572,23 +572,23 @@ async fn all_residencies_healthy() {
 }
 ```
 
-### 5.8 `residency_brain_chain_partitioning_test.rs`
+### 5.8 `residency_memory_chain_partitioning_test.rs`
 
 ```rust
 #[tokio::test]
-async fn cross_residency_brain_append_blocked() {
+async fn cross_residency_memory_append_blocked() {
     let ctx = TestContext::with_all_residencies().await;
     let eu_tenant = ctx.provision_tenant_in(Residency::Eu1, "eu-tenant").await;
     let sg_handler_ctx = ctx.handler_ctx_in(Residency::Sg1);
 
-    let result = sg_handler_ctx.brain.append_row(
-        BrainRow::new("test.event", eu_tenant, json!({})).build()
+    let result = sg_handler_ctx.memory.append_row(
+        MemoryRow::new("test.event", eu_tenant, json!({})).build()
     ).await;
     assert!(result.is_err());
-    assert!(result.unwrap_err().to_string().contains("cross_residency_brain_event_blocked"));
+    assert!(result.unwrap_err().to_string().contains("cross_residency_memory_event_blocked"));
 
-    let local_audit = sg_handler_ctx.brain.recent_rows().await;
-    assert!(local_audit.iter().any(|r| r.kind == "ten.cross_residency_brain_event_blocked"));
+    let local_audit = sg_handler_ctx.memory.recent_rows().await;
+    assert!(local_audit.iter().any(|r| r.kind == "ten.cross_residency_memory_event_blocked"));
 }
 ```
 
@@ -619,7 +619,7 @@ async fn pool_misroute_caught_by_trip_wire() {
         .bind(uuid::Uuid::new_v4()).bind(eu_tenant).execute(sg_pool).await.unwrap_err();
     assert!(err.to_string().contains("cross_residency_write_blocked"));
 
-    let audit = ctx.brain_rows_in(Residency::Sg1).await;
+    let audit = ctx.memory_rows_in(Residency::Sg1).await;
     assert!(audit.iter().any(|r| r.kind == "ten.residency_pool_misroute"));
 }
 ```
@@ -682,8 +682,8 @@ pub async fn check_residency(ctx: &AppCtx, residency: Residency) -> ResidencyHea
 - **FR-TEN-102** VND domestic rail — vn-1 residency consumes this rail.
 - **FR-TEN-104** Lifecycle — tenant termination per-residency.
 - **FR-AUTH-004** JWT mint — `residency` claim added.
-- **FR-AI-003** BRAIN audit-row bridge — 8 new kinds register; chain partitioned per residency.
-- **FR-BRAIN-111** PII scrubbing — tenant_id hash16 in cross-residency events.
+- **FR-AI-003** memory audit-row bridge — 8 new kinds register; chain partitioned per residency.
+- **FR-MEMORY-111** PII scrubbing — tenant_id hash16 in cross-residency events.
 - **FR-DOC-001** Documents — S3 bucket per-residency consumed.
 - **FR-EMAIL-001** Email — SES region per-residency.
 - **FR-OBS-005** Trace correlation — residency tag on every span.
@@ -696,7 +696,7 @@ pub async fn check_residency(ctx: &AppCtx, residency: Residency) -> ResidencyHea
 
 ## §8 — Example payloads
 
-### 8.1 `ten.cross_residency_write_blocked` BRAIN row
+### 8.1 `ten.cross_residency_write_blocked` memory row
 
 ```json
 {
@@ -743,7 +743,7 @@ pub async fn check_residency(ctx: &AppCtx, residency: Residency) -> ResidencyHea
 }
 ```
 
-### 8.3 `ten.residency_provisioned` BRAIN row (one per residency standup)
+### 8.3 `ten.residency_provisioned` memory row (one per residency standup)
 
 ```json
 {
@@ -800,7 +800,7 @@ All resolved for slice 2. Deferred:
 | Aurora primary failover within residency | RDS Multi-AZ event | < 30s outage; handlers retry; sev-2 alert | Inherent — Multi-AZ DR primitive |
 | Stripe US account credentials misconfig | Stripe API 401 | sev-1 + stripe-rail temporarily fails for that residency | Operator rotates per DEC-801 / FR-TEN-003 ops |
 | Per-residency Terraform drift | nightly tf plan drift detector | sev-2 alert with diff | Operator reviews + applies tf changes (with change-management) |
-| Cross-residency BRAIN append attempted | chain.append guard | sev-1 `ten.cross_residency_brain_event_blocked` + local-chain row | Inherent — chain-pollution prevented |
+| Cross-residency memory append attempted | chain.append guard | sev-1 `ten.cross_residency_memory_event_blocked` + local-chain row | Inherent — chain-pollution prevented |
 | Residency-aware logging missing field | OBS log-quality sweep | sev-3 informational | CI test enforces; PR rejected if missing |
 | New tenant table added without trip-wire trigger | migration audit (CI) | CI fails the PR | PR adds trigger before merge |
 | UUIDv7 high-nibble collision (astronomically improbable) | partial-unique constraint on `(tenant_id)` global | INSERT fails | Re-generate ID (1-in-2^60 chance) |
@@ -837,7 +837,7 @@ All resolved for slice 2. Deferred:
 
 **§11.11** The transitional 24h post-deploy window for residency-claim-missing JWTs uses a feature flag `auth.residency_claim_required=false` that flips to true via a scheduled job at deploy+24h.
 
-**§11.12** Per-residency BRAIN chain Merkle Mountain Range proof (FR-BRAIN-101 §6.4 PROPOSAL P2) is computed per-residency; cross-residency chain-of-custody verification is out-of-scope at slice 2.
+**§11.12** Per-residency memory chain Merkle Mountain Range proof (FR-MEMORY-101 §6.4 PROPOSAL P2) is computed per-residency; cross-residency chain-of-custody verification is out-of-scope at slice 2.
 
 **§11.13** The `Cross-Region-NATS-Sync` is intentionally absent — DEC-932 forbids; future cross-region event federation (slice 3) would require explicit consent mechanism per regulation.
 
@@ -845,9 +845,9 @@ All resolved for slice 2. Deferred:
 
 **§11.15** The `residency_health_log` table's `latency_ms INT` is nullable for `status='down'` (no latency observable when down); other statuses have non-null latency.
 
-**§11.16** The 8 BRAIN kinds (§1 #16) are all sev-1 or sev-2 because every kind by definition is unusual: routine residency operation does not emit (steady-state silent). FR-AI-003 closed-set extension adds 8.
+**§11.16** The 8 memory kinds (§1 #16) are all sev-1 or sev-2 because every kind by definition is unusual: routine residency operation does not emit (steady-state silent). FR-AI-003 closed-set extension adds 8.
 
-**§11.17** Trip-wire trigger error messages include enough context to identify the buggy handler (table name, expected vs actual residency, tenant_id hash16). Operators can grep BRAIN rows to find the offending service.
+**§11.17** Trip-wire trigger error messages include enough context to identify the buggy handler (table name, expected vs actual residency, tenant_id hash16). Operators can grep memory rows to find the offending service.
 
 **§11.18** Per-residency Terraform modules share helper modules at `infra/terraform/residency/_shared/modules/` — DRY without sharing actual resources.
 

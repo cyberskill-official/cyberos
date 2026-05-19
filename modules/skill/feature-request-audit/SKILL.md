@@ -2,14 +2,19 @@
 # ── Identity ─────────────────────────────────────────────────────────
 name: feature-request-audit
 description: >-
-  Audit one or more existing feature_request@1 markdowns against
-  audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/STALE rule families). Use when
-  user asks to "audit this FR", "check the rubric on this FR", or "tell
-  me which FRs would fail acceptance today". Produces a sibling
+  Spec correctness gate — audit one or more existing feature_request@1
+  markdowns against audit_rubric@2.0 (FM/SEC/COND/QA/SAFE/TRACE rule
+  families) to drive the `draft → ready_to_implement` lifecycle
+  transition per `docs/feature-requests/STATUS-REFERENCE.md` §1.1. Use
+  when user asks to "audit this FR", "check the rubric on this FR", or
+  "tell me which FRs would fail acceptance today". Produces a sibling
   .audit.md per FR plus an AUDIT_BATCH_SUMMARY. Halts on needs_human
   verdicts; resumable on audited_file_sha256. Standalone trigger or
   chains naturally after feature-request-author. Do NOT use for "draft
-  a new FR from this PRD" (use feature-request-author instead).
+  a new FR from this PRD" (use feature-request-author instead). Do NOT
+  use for "verify every clause has a passing test" (that is
+  coverage-gate-audit's job, run during the `testing → done`
+  transition — phase split documented in RUBRIC.md §9).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -19,7 +24,7 @@ metadata:
   cyberos-rubric-version: audit_rubric@2.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -28,7 +33,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

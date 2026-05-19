@@ -50,7 +50,7 @@ services/auth/
 │   ├── webauthn.rs             credential create + assertion verify
 │   ├── totp.rs                 enrol + verify; replay window
 │   ├── rbac.rs                 predicate evaluator; hot-path cache
-│   ├── scope.rs                Scope Contract Grant resolver (reads BRAIN persona sheets)
+│   ├── scope.rs                Scope Contract Grant resolver (reads memory persona sheets)
 │   ├── session.rs              issue / validate / revoke
 │   ├── jwt.rs                  RS256 via KMS; JWKS publication
 │   ├── impossible_travel.rs    geographic-velocity check
@@ -64,7 +64,7 @@ services/auth/
     ├── oauth_conformance.rs    RFC 6749 + RFC 7636 conformance
     ├── webauthn_flow.rs        register + authenticate happy + edge paths
     ├── rbac_predicate.rs       all 22 roles × representative actions
-    └── audit_chain.rs          decisions land on BRAIN chain (Writer integration)
+    └── audit_chain.rs          decisions land on memory chain (Writer integration)
 ```
 
 ---
@@ -96,10 +96,10 @@ The 7,000 LoC + 120 tests estimate is realistic for ~5–6 weeks of focused work
 
 ### Slice 4 — RBAC + Scope Contract + audit-chain bridge (week 4)
 
-- `rbac.rs` (predicate eval + Redis cache), `scope.rs` (BRAIN-backed agent persona scopes), `audit.rs` (memory module bridge).
+- `rbac.rs` (predicate eval + Redis cache), `scope.rs` (memory-backed agent persona scopes), `audit.rs` (memory module bridge).
 - 22 PRD §8.6.1 roles loaded as seed data; gRPC `RBAC.Check` internal API.
 - 35 tests: predicate matrix (22 roles × ~20 actions), Redis-cache invalidation, audit-row schema, cross-module call sequence.
-- **Mergeable when:** another module can call `RBAC.Check(subject, action, resource)` over gRPC and the decision appears as a memory record on the BRAIN audit chain.
+- **Mergeable when:** another module can call `RBAC.Check(subject, action, resource)` over gRPC and the decision appears as a memory record on the memory audit chain.
 
 ### Slice 5 — KMS + impossible-travel + device + OIDC + MCP (week 5–6)
 
@@ -115,7 +115,7 @@ The 7,000 LoC + 120 tests estimate is realistic for ~5–6 weeks of focused work
 Every auth decision (login attempt, MFA challenge, token issue, RBAC predicate evaluation, session revocation) MUST land on the memory module's audit chain. Implementation:
 
 - `services/auth/src/audit.rs` calls into the memory module via a thin shim. For the Rust↔Python boundary, two options:
-  1. **Subprocess shim** (simplest, slice-4-acceptable): `cyberos --store $BRAIN put ...` via stdin. Slow but correct.
+  1. **Subprocess shim** (simplest, slice-4-acceptable): `cyberos --store $memory put ...` via stdin. Slow but correct.
   2. **PyO3 binding** (preferred, slice-5 target): link `cyberos.core.writer` as a Python module embedded in the Rust binary. Requires the memory module to expose a stable C-ABI or PyO3 surface — TBD with memory module owner.
 
 Slice 4 ships option 1; slice 5 evaluates option 2 with the memory module owner.
@@ -140,7 +140,7 @@ The audit record schema for AUTH decisions:
 }
 ```
 
-Per AGENTS.md §11, the *fact* of an auth decision is itself a leaf on the BRAIN chain. Per §3.6, redaction is allowed but the audit row of the redaction is itself unerasable.
+Per AGENTS.md §11, the *fact* of an auth decision is itself a leaf on the memory chain. Per §3.6, redaction is allowed but the audit row of the redaction is itself unerasable.
 
 ---
 
@@ -154,7 +154,7 @@ Per AGENTS.md §11, the *fact* of an auth decision is itself a leaf on the BRAIN
 | 4 | KMS signing-key custody adds ~$10/mo even at dev scale | Acceptable; KMS-backed JWT is non-negotiable for prod per spec §"Token lifetime budget" |
 | 5 | Impossible-travel false positives during VPN use | Configurable per-tenant; default off until slice-5 user research |
 | 6 | The 22-role catalogue may drift from PRD §8.6.1 as other modules ship | Roles loaded from `migrations/0005_roles_permissions.sql`; require ADR for any addition |
-| 7 | Audit-row volume (every RBAC check is a row) blows up BRAIN size | Sampling not allowed (per spec); but BRAIN consolidation §7 archives sealed segments — measure at slice 4, decide on Redis aggregation if needed |
+| 7 | Audit-row volume (every RBAC check is a row) blows up memory size | Sampling not allowed (per spec); but memory consolidation §7 archives sealed segments — measure at slice 4, decide on Redis aggregation if needed |
 
 ---
 
@@ -183,7 +183,7 @@ AUTH ships when all of the following are green:
 - [ ] OAuth 2.1 conformance suite (oauth2-conformance-suite Docker image) clean
 - [ ] WebAuthn L3 conformance vendor-agnostic test (FIDO MDS metadata) clean
 - [ ] OWASP Gen AI Top-10 checklist annotated, each mitigation linked to a test
-- [ ] Memory-bridge integration test proves an auth decision lands on the BRAIN audit chain and `cyberos --store $BRAIN verify` stays clean
+- [ ] Memory-bridge integration test proves an auth decision lands on the memory audit chain and `cyberos --store $memory verify` stays clean
 - [ ] AUTH module README + CHANGELOG written
 - [ ] `cyberos doctor` invariants extended with one auth-related check (proposal: `auth-jwks-reachable`)
 - [ ] Spec page `website/docs/modules/auth.html` updated to "shipped"

@@ -11,8 +11,8 @@ slice: 1
 owner: Stephen Cheng (CCO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-TIME-001, FR-TIME-002, FR-TIME-007, FR-AUTH-101, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-TIME-001, FR-TIME-002, FR-TIME-007, FR-AUTH-101, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-TIME-001]
 blocks: []
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1402 2026-05-17 — Validates via FR-TIME-007 OT cap chain (vn-1 Members); rejects entries that would breach
   - DEC-1403 2026-05-17 — Closed enum `manual_entry_reason` = {forgot_to_start_timer, off_network, mobile_bulk_add, correction, retroactive_invoiced}; CI cardinality asserts 5
   - DEC-1404 2026-05-17 — Past 90 days requires `engagement_admin` approval; past 1 year requires `cfo` approval (older entries are usually corrections)
-  - DEC-1405 2026-05-17 — BRAIN audit kinds: time.manual_entry_created, time.manual_entry_blocked_24h_cap, time.manual_entry_overrode_16h_softblock, time.manual_entry_past_90d_approved, time.manual_entry_past_1y_approved
+  - DEC-1405 2026-05-17 — memory audit kinds: time.manual_entry_created, time.manual_entry_blocked_24h_cap, time.manual_entry_overrode_16h_softblock, time.manual_entry_past_90d_approved, time.manual_entry_past_1y_approved
 
 build_envelope:
   language: rust 1.81
@@ -78,7 +78,7 @@ risk_if_skipped: "Without manual entry, Members can't log time they forgot to tr
 
 ## §1 — Description (BCP-14 normative)
 
-The TIME service **MUST** ship manual entry form at `services/time/src/manual_entry/` with date-window validation tiers (30d/90d/1y), 24h per-day hard cap + 16h soft-block, FR-TIME-007 VN OT chain integration, 5 closed-enum reasons, and 5 BRAIN audit kinds.
+The TIME service **MUST** ship manual entry form at `services/time/src/manual_entry/` with date-window validation tiers (30d/90d/1y), 24h per-day hard cap + 16h soft-block, FR-TIME-007 VN OT chain integration, 5 closed-enum reasons, and 5 memory audit kinds.
 
 1. **MUST** define closed `manual_entry_reason` enum: `('forgot_to_start_timer','off_network','mobile_bulk_add','correction','retroactive_invoiced')` per DEC-1403. Cardinality 5.
 
@@ -105,7 +105,7 @@ The TIME service **MUST** ship manual entry form at `services/time/src/manual_en
 
 7. **MUST** validate `entry_date` not in future. `entry_date > today` → 400 + `future_date_invalid`.
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-1405. PII-scrub description via FR-BRAIN-111.
+8. **MUST** emit 5 memory audit kinds per DEC-1405. PII-scrub description via FR-MEMORY-111.
 
 9. **MUST** thread trace_id end-to-end.
 
@@ -170,7 +170,7 @@ For past-90d:
 8. **16h with override** — same scenario with engagement_admin override → succeeds.
 9. **VN OT cap chained** — Member at 39h monthly OT, +90min entry (1.5h OT) → 412 monthly_40h_breach.
 10. **Future date rejected** — entry_date = tomorrow → 400.
-11. **5 BRAIN audit kinds emitted**.
+11. **5 memory audit kinds emitted**.
 12. **Trace_id end-to-end**.
 13. **PII scrub** — description hash in audit.
 14. **Non-VN Member skips OT check** — sg-1 Member entries unaffected by OT chain.
@@ -234,7 +234,7 @@ async fn vn_ot_cap_chained() {
 ## §7 — Dependencies
 
 **Upstream:** FR-TIME-001 (entry write).
-**Cross-module:** FR-TIME-007 (OT chain), FR-AUTH-101 (engagement_admin + cfo roles), FR-AI-003, FR-BRAIN-111.
+**Cross-module:** FR-TIME-007 (OT chain), FR-AUTH-101 (engagement_admin + cfo roles), FR-AI-003, FR-MEMORY-111.
 
 ---
 
@@ -279,7 +279,7 @@ Deferred:
 | FR-TIME-007 OT breach | chained check | 412 with breach kind | Member splits to overtime-tier or new day |
 | Future date | date check | 400 | Caller fixes |
 | Cross-tenant engagement | RLS | 403 | Inherent |
-| Description PII not scrubbed | FR-BRAIN-111 | Audit dropped + sev-3 | Inherent |
+| Description PII not scrubbed | FR-MEMORY-111 | Audit dropped + sev-3 | Inherent |
 | Same-day timer + manual race | concurrent inserts | Both checked individually; second may hit 24h cap | Inherent |
 | Engagement membership lost mid-write | RLS | 403 at write | Inherent |
 | Reason missing | validation | 400 | Inherent |

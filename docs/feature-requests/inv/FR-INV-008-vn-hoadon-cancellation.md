@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CFO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-INV-007, FR-INV-001, FR-TEN-102, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-INV-007, FR-INV-001, FR-TEN-102, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-INV-007]
 blocks: []
 
@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1532 2026-05-17 — Closed enum `cancel_reason` = {error_correction, customer_dispute, engagement_terminated, duplicate_emission}; cardinality 4
   - DEC-1533 2026-05-17 — Cancellation form (04/SS-HDDT) auto-generated from CFO-supplied reason + customer agreement upload; submitted to GDT within 24h of decision
   - DEC-1534 2026-05-17 — Original hóa đơn row updated to hoadon_status='cancelled' + replacement_hoadon_id pointer (if applicable); never deleted (audit trail)
-  - DEC-1535 2026-05-17 — BRAIN audit kinds: inv.hoadon_cancel_initiated, inv.hoadon_cancel_form_submitted, inv.hoadon_cancel_accepted, inv.hoadon_cancel_failed
+  - DEC-1535 2026-05-17 — memory audit kinds: inv.hoadon_cancel_initiated, inv.hoadon_cancel_form_submitted, inv.hoadon_cancel_accepted, inv.hoadon_cancel_failed
 
 build_envelope:
   language: rust 1.81
@@ -73,7 +73,7 @@ risk_if_skipped: "Without VN hóa đơn cancellation, CFO cannot legally correct
 
 ## §1 — Description (BCP-14 normative)
 
-The INV service **MUST** ship VN hóa đơn cancellation at `services/invoicing/src/hoadon/cancel.rs` supporting replace + cancel flows, customer agreement upload, GDT form 04/SS-HDDT submission, replacement-pointer audit trail, 4 BRAIN audit kinds.
+The INV service **MUST** ship VN hóa đơn cancellation at `services/invoicing/src/hoadon/cancel.rs` supporting replace + cancel flows, customer agreement upload, GDT form 04/SS-HDDT submission, replacement-pointer audit trail, 4 memory audit kinds.
 
 1. **MUST** expose `POST /v1/inv/hoadon/{id}/cancel` body `{ reason, customer_agreement_doc_id, replacement_invoice_id?, notes }` — CFO-role only via FR-AUTH-101.
 
@@ -123,7 +123,7 @@ The INV service **MUST** ship VN hóa đơn cancellation at `services/invoicing/
 
 8. **MUST** support replace flow: when `replacement_invoice_id` supplied, trigger FR-INV-007 emit for replacement BEFORE marking original cancelled; ensures continuity.
 
-9. **MUST** emit 4 BRAIN audit kinds per DEC-1535. PII per FR-BRAIN-111 (reason text scrubbed of customer names → SHA256 hash of full notes).
+9. **MUST** emit 4 memory audit kinds per DEC-1535. PII per FR-MEMORY-111 (reason text scrubbed of customer names → SHA256 hash of full notes).
 
 10. **MUST** thread trace_id from CFO action → cancel → form submit → GDT response.
 
@@ -180,7 +180,7 @@ Form 04/SS-HDDT (Decree 123 Annex 1):
 ---
 
 ## §4 — Acceptance criteria
-1. **CFO-only access** (FR-AUTH-101 enforced). 2. **Reason enum 4 values + cardinality test**. 3. **Customer agreement required for accepted hóa đơn**. 4. **Replace flow issues new hóa đơn first**. 5. **Original row updated, never deleted**. 6. **Form 04 schema valid per Decree 123 Annex 1**. 7. **Form submitted to GDT within 24h**. 8. **GDT async via FR-MCP-007**. 9. **4 BRAIN audit kinds emitted**. 10. **PII scrubbed (notes → SHA256)**. 11. **RLS denies cross-tenant**. 12. **Replacement chain pointer queryable**. 13. **Append-only on form table**. 14. **GDT rejection → form status=rejected + CFO notification**. 15. **Cancellation of pending/rejected hóa đơn allowed without agreement**. 16. **Trace_id propagated**. 17. **Duplicate cancel attempt rejected (already cancelled)**. 18. **Form xml signed via tenant KMS cert**. 19. **24h window enforced (audit if past)**. 20. **Cancellation event broadcast to FR-CHAT-010 if customer-facing channel exists**.
+1. **CFO-only access** (FR-AUTH-101 enforced). 2. **Reason enum 4 values + cardinality test**. 3. **Customer agreement required for accepted hóa đơn**. 4. **Replace flow issues new hóa đơn first**. 5. **Original row updated, never deleted**. 6. **Form 04 schema valid per Decree 123 Annex 1**. 7. **Form submitted to GDT within 24h**. 8. **GDT async via FR-MCP-007**. 9. **4 memory audit kinds emitted**. 10. **PII scrubbed (notes → SHA256)**. 11. **RLS denies cross-tenant**. 12. **Replacement chain pointer queryable**. 13. **Append-only on form table**. 14. **GDT rejection → form status=rejected + CFO notification**. 15. **Cancellation of pending/rejected hóa đơn allowed without agreement**. 16. **Trace_id propagated**. 17. **Duplicate cancel attempt rejected (already cancelled)**. 18. **Form xml signed via tenant KMS cert**. 19. **24h window enforced (audit if past)**. 20. **Cancellation event broadcast to FR-CHAT-010 if customer-facing channel exists**.
 
 ---
 
@@ -247,7 +247,7 @@ pub async fn cancel(req: CancelRequest, actor: &CfoActor, db: &Db) -> Result<Can
 
 ## §7 — Dependencies
 **Upstream:** FR-INV-007.
-**Cross-module:** FR-AUTH-101 (CFO role), FR-DOC-001 (agreement upload), FR-MCP-007 (async), FR-BRAIN-111 (PII), FR-CHAT-010 (customer notification).
+**Cross-module:** FR-AUTH-101 (CFO role), FR-DOC-001 (agreement upload), FR-MCP-007 (async), FR-MEMORY-111 (PII), FR-CHAT-010 (customer notification).
 
 ## §8 — Sample payloads (see §3)
 
@@ -274,7 +274,7 @@ None blocking.
 - §11.2 GDT acknowledges form ~5min; CFO sees status update on dashboard.
 - §11.3 Customer agreement doc retention: 10 years per VN accounting law.
 - §11.4 Replace flow ordering — new emit BEFORE cancel ensures we never leave gap in VAT period.
-- §11.5 BRAIN audit: cancel_reason in chain (it's enum, no PII); notes hashed.
+- §11.5 memory audit: cancel_reason in chain (it's enum, no PII); notes hashed.
 
 ---
 

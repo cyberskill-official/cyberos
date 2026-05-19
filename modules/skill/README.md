@@ -90,7 +90,7 @@ persona:            <cuo | cuo-<role> | cuo-_shared>
 owner_role:         <role enum from §20.1 | _shared>
 
 # ── Scope contract (SRS §6.4) ────────────────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:  [<scope-glob>, …]              # e.g. project:*, member:self
   write: [<scope-glob>, …]              # default: empty (read-only skill)
 allowed_mcp_tools:  [<tool-name>, …]    # exhaustive; gateway enforces
@@ -207,7 +207,7 @@ Most skills don't need all 33 fields filled out from day one.
 | Tier | Fields | Outcome |
 | --- | --- | --- |
 | **Tier 0 — sketch** | `name` + `description` + body | Loads in any Anthropic-style host. Won't pass CyberOS registry validation. Useful for thinking. |
-| **Tier 1 — production-routable** | + persona, owner_role, allowed_brain_scopes, allowed_mcp_tools, expects, produces, audit, untrusted_inputs | Passes minimum validation. Routable by the CUO supervisor. Sensible defaults fill the rest. |
+| **Tier 1 — production-routable** | + persona, owner_role, allowed_memory_scopes, allowed_mcp_tools, expects, produces, audit, untrusted_inputs | Passes minimum validation. Routable by the CUO supervisor. Sensible defaults fill the rest. |
 | **Tier 2 — fully-specified** | All 33 fields | What you ship to production. Use `cuo/_shared/hello-world/SKILL.md` as your template — copy and edit. |
 
 Promote step-by-step. Don't try to write Tier 2 first.
@@ -242,7 +242,7 @@ Every skill carries `CHANGELOG.md` (Keep-a-Changelog 1.1.0). SemVer rules are ex
 
 ### 3.5 Trust + safety contract — PRD §6.4
 
-Every skill MUST carry a confidence band on every output, cite BRAIN sources for every factual claim (RAG-mandatory; no free-form recall), defer to a human via the Question primitive on irreversible actions / cross-tenant data / legal-or-compliance assertions / confidence below `defer_below` / conflicting BRAIN signals (AGENTS.md §9.1) / REW or LEARN or ESOP writes (PRD §6.4.1) / scope-contract refusal, wrap every external byte in `<untrusted_content>` before reasoning over it (DEC-050 CaMeL pattern), and stamp `emitted_source_freshness_tier` on every BRAIN write so downstream conflict resolution (AGENTS.md §9.1) ranks correctly.
+Every skill MUST carry a confidence band on every output, cite memory sources for every factual claim (RAG-mandatory; no free-form recall), defer to a human via the Question primitive on irreversible actions / cross-tenant data / legal-or-compliance assertions / confidence below `defer_below` / conflicting memory signals (AGENTS.md §9.1) / REW or LEARN or ESOP writes (PRD §6.4.1) / scope-contract refusal, wrap every external byte in `<untrusted_content>` before reasoning over it (DEC-050 CaMeL pattern), and stamp `emitted_source_freshness_tier` on every memory write so downstream conflict resolution (AGENTS.md §9.1) ranks correctly.
 
 ### 3.6 Self-audit + auto-refinement contract — NEW v0.2.0 / DEC-092
 
@@ -337,7 +337,7 @@ skill_version: 0.2.0
 trigger: "INV-003 breach: PRD digest mem_… has coverage 0.81 (<0.99) without intentional_summary flag"
 observation: |
   Read 4 chunks of {source_path}; processed 81% of source lines.
-  Coverage stat in BRAIN write was 0.81 / 1.00.
+  Coverage stat in memory write was 0.81 / 1.00.
 proposed_amendments:
   - tier: 1
     target_doc: cuo/cpo/feature-request-author/SKILL.md
@@ -401,7 +401,7 @@ Per `human_fine_tune.fine_tuner_role`:
 
 ### 7.4 Required artefacts on every fine-tune
 
-A fine-tune is incomplete without three artefacts. **`changelog_entry`** — Keep-a-Changelog 1.1.0, with `### Driver` citing the trigger. **`acceptance_test_added`** — at least one new regression in `acceptance/regression-<YYYY-MM-DD>-<slug>.md`. **`memory_refinement_entry`** — append to BRAIN `memories/refinements/REF-NNN-<slug>.md` describing what was learned and what changed (per AGENTS.md §0.4 + §10 step 6, future agents will read this). Optional but recommended: `rubric_rule_diff` (auditor skills only — the rule-by-rule diff at the top of the CHANGELOG entry), `drift_record` (when a drift signal triggered the cycle, append to BRAIN `memories/drift/<YYYY-MM-DD>-<source-slug>.md`).
+A fine-tune is incomplete without three artefacts. **`changelog_entry`** — Keep-a-Changelog 1.1.0, with `### Driver` citing the trigger. **`acceptance_test_added`** — at least one new regression in `acceptance/regression-<YYYY-MM-DD>-<slug>.md`. **`memory_refinement_entry`** — append to memory `memories/refinements/REF-NNN-<slug>.md` describing what was learned and what changed (per AGENTS.md §0.4 + §10 step 6, future agents will read this). Optional but recommended: `rubric_rule_diff` (auditor skills only — the rule-by-rule diff at the top of the CHANGELOG entry), `drift_record` (when a drift signal triggered the cycle, append to memory `memories/drift/<YYYY-MM-DD>-<source-slug>.md`).
 
 ### 7.5 Blackout windows
 
@@ -471,7 +471,7 @@ The CCSM (this SKILL.md) is the source of truth. Per-host artefacts are generate
 | --- | --- | --- | --- |
 | **A — CCSM lock** | Frontmatter contract finalised; `dist/` is generated, never hand-edited. | 1 week | ✅ done in v0.2.0 (this README is the source of truth). |
 | **B — Transpilers** | One transpiler per output target (anthropic / mcp / plugin / antigravity / codex / cursor). Each is a pure function `CCSM → host-artefact-tree`. | 2–3 weeks | 🔵 planned for v0.3.0. |
-| **C — Host shim** | A library (`cyberos-skill-runtime` Python + `@cyberos/skill-runtime` Node) every transpiled skill links against. Provides `brain.*`, `audit.*`, `invariants.*` semantics regardless of host. | 1–2 weeks | 🔵 planned for v0.3.0. |
+| **C — Host shim** | A library (`cyberos-skill-runtime` Python + `@cyberos/skill-runtime` Node) every transpiled skill links against. Provides `memory.*`, `audit.*`, `invariants.*` semantics regardless of host. | 1–2 weeks | 🔵 planned for v0.3.0. |
 | **D — Equivalence test matrix** | Golden input/output runs across every target. CI gate. | 1 week | 🔵 planned for v0.3.0. |
 | **E — Partner connector pipeline** | Hosted MCP + tenancy + OAuth + billing for `partner_connector: true` skills. | 4+ weeks | 🟣 planned for v0.4.0. |
 
@@ -479,7 +479,7 @@ Realistic critical path: ~5 weeks of focused work to get feature-request-author 
 
 ### 9.2 What the shim provides (uniform semantics across hosts)
 
-The shim exposes a uniform API: `cyberos.runtime.brain` reads/writes `.cyberos-memory/` (host-agnostic; just FS), `cyberos.runtime.audit` appends to `genie.action_log` OR a local JSONL fallback, `cyberos.runtime.invariants` runs `INVARIANTS.md` checks at declared checkpoints, `cyberos.runtime.envelope` validates expects/produces against schema, `cyberos.runtime.untrusted` applies the AGENTS.md §4.2 marker scan, and `cyberos.runtime.scope` enforces SRS §6.4 scope contract. Inside CyberOS the shim talks to real `kb.*`, `brain.*`, `audit.*` MCP servers. Outside CyberOS the shim falls back to filesystem-local `.cyberos-memory/` and a local JSONL — degraded but functional.
+The shim exposes a uniform API: `cyberos.runtime.memory` reads/writes `.cyberos-memory/` (host-agnostic; just FS), `cyberos.runtime.audit` appends to `genie.action_log` OR a local JSONL fallback, `cyberos.runtime.invariants` runs `INVARIANTS.md` checks at declared checkpoints, `cyberos.runtime.envelope` validates expects/produces against schema, `cyberos.runtime.untrusted` applies the AGENTS.md §4.2 marker scan, and `cyberos.runtime.scope` enforces SRS §6.4 scope contract. Inside CyberOS the shim talks to real `kb.*`, `memory.*`, `audit.*` MCP servers. Outside CyberOS the shim falls back to filesystem-local `.cyberos-memory/` and a local JSONL — degraded but functional.
 
 ### 9.3 Adapter-strategy summary table
 
@@ -490,7 +490,7 @@ The shim exposes a uniform API: `cyberos.runtime.brain` reads/writes `.cyberos-m
 | Codex | `~/.codex/instructions/` | Codex agent format | filesystem `.cyberos-memory/` | 🔵 v0.3.0 |
 | Cursor | `.cursorrules` | concat-style | (none — read-only) | 🔵 v0.3.0 |
 | Vanilla MCP | served via stdio/HTTP | MCP `tool.json` | partner-side | 🔵 v0.3.0 |
-| CyberOS native | `cyberos/docs/skills/` | full v0.2.0 SKILL.md | full BRAIN | ✅ today |
+| CyberOS native | `cyberos/docs/skills/` | full v0.2.0 SKILL.md | full memory | ✅ today |
 
 ---
 
@@ -594,7 +594,7 @@ See `references/FAILURE_MODES.md`.
 
 - Source artefact → ...
 - Persona inheritance → `cuo/<role>/SKILL.md`.
-- BRAIN scope contract → SRS §6.4.
+- memory scope contract → SRS §6.4.
 ```
 
 ---
@@ -640,7 +640,7 @@ The CyberOS runtime is three layers stacked. **Layer 1 — the LangGraph supervi
 
 ### 12.2 How a skill invocation flows
 
-A skill invocation has six stages. **Pre-invocation:** the supervisor validates the input envelope against `expects.schema_ref` (Layer 1 mechanical validation). The scope contract is enforced — `allowed_mcp_tools` and `allowed_brain_scopes` are intersected with the caller persona's ceiling. **Invocation:** the supervisor pushes the LangGraph state, invokes the skill's body. The skill's MCP tool calls go through the gateway, which enforces the per-skill `allowed_mcp_tools` allowlist. Every BRAIN read/write goes through the BRAIN MCP server, which enforces `allowed_brain_scopes`. **In-flight checks:** at every node boundary, the runtime runs the skill's `INVARIANTS.md` (per `self_audit.check_at`). Anomaly streaks update; threshold trips emit `refinement_proposal`. **Post-invocation:** the output envelope is validated against `produces.schema_ref`. Each concrete output (artefact write, Question, Review, Notify) gets one `genie.action_log` row appended atomically with the side-effect. **Chaining:** if `next_skill_recommendation` is set, the supervisor's conditional edge fires, routing to the next skill with the output envelope as input. **Closure:** the supervisor pops the LangGraph state, releases the checkpoint, and emits the final `HUMAN_SUMMARY` to chat (standalone mode) or rolls into the parent chain's summary (chained mode).
+A skill invocation has six stages. **Pre-invocation:** the supervisor validates the input envelope against `expects.schema_ref` (Layer 1 mechanical validation). The scope contract is enforced — `allowed_mcp_tools` and `allowed_memory_scopes` are intersected with the caller persona's ceiling. **Invocation:** the supervisor pushes the LangGraph state, invokes the skill's body. The skill's MCP tool calls go through the gateway, which enforces the per-skill `allowed_mcp_tools` allowlist. Every memory read/write goes through the memory MCP server, which enforces `allowed_memory_scopes`. **In-flight checks:** at every node boundary, the runtime runs the skill's `INVARIANTS.md` (per `self_audit.check_at`). Anomaly streaks update; threshold trips emit `refinement_proposal`. **Post-invocation:** the output envelope is validated against `produces.schema_ref`. Each concrete output (artefact write, Question, Review, Notify) gets one `genie.action_log` row appended atomically with the side-effect. **Chaining:** if `next_skill_recommendation` is set, the supervisor's conditional edge fires, routing to the next skill with the output envelope as input. **Closure:** the supervisor pops the LangGraph state, releases the checkpoint, and emits the final `HUMAN_SUMMARY` to chat (standalone mode) or rolls into the parent chain's summary (chained mode).
 
 ### 12.3 Crash recovery
 
@@ -744,7 +744,7 @@ CyberOS skills are subject to four layered security controls. Skipping any one o
 
 ### 15.1 Scope contract (SRS §6.4)
 
-`allowed_brain_scopes` and `allowed_mcp_tools` form an explicit allowlist at the skill level. The MCP gateway enforces these at call time — any attempt to use a tool not in the allowlist returns `E_SCOPE_VIOLATION`. The BRAIN gateway enforces scope-glob matching on every read and write — `allowed_brain_scopes.read: [project:*]` permits reads under any project but rejects reads from `member:`, `client:`, `company:`, etc. Writes default to empty (read-only); a skill that needs to mutate BRAIN must explicitly enumerate its write scopes. The persona-card sets a ceiling; every workflow under that persona declares a strict subset, never a superset.
+`allowed_memory_scopes` and `allowed_mcp_tools` form an explicit allowlist at the skill level. The MCP gateway enforces these at call time — any attempt to use a tool not in the allowlist returns `E_SCOPE_VIOLATION`. The memory gateway enforces scope-glob matching on every read and write — `allowed_memory_scopes.read: [project:*]` permits reads under any project but rejects reads from `member:`, `client:`, `company:`, etc. Writes default to empty (read-only); a skill that needs to mutate memory must explicitly enumerate its write scopes. The persona-card sets a ceiling; every workflow under that persona declares a strict subset, never a superset.
 
 ### 15.2 Untrusted-content discipline (DEC-050 CaMeL)
 
@@ -822,7 +822,7 @@ Patterns that look reasonable but break CyberOS contracts.
 
 **Don't auto-set `eu_ai_act_risk_class: minimal` without a determining fact.** When in doubt, escalate to `cuo-clo`. INV-007 in `feature-request-author/INVARIANTS.md` makes this an enforced invariant.
 
-**Don't write to `.cyberos-memory/` outside the BRAIN MCP gateway.** Direct file writes bypass the AGENTS.md §4.1 path-traversal guard, the §4.2 content gate, and the §4.4 two-phase atomic write. Always go through `brain.write_memory`.
+**Don't write to `.cyberos-memory/` outside the memory MCP gateway.** Direct file writes bypass the AGENTS.md §4.1 path-traversal guard, the §4.2 content gate, and the §4.4 two-phase atomic write. Always go through `memory.write_memory`.
 
 **Don't change RUBRIC.md mid-batch.** feature-request-audit's INV-007 is sev-0. The runtime hashes the rubric at batch start and verifies before each FR audit. A change mid-batch aborts with `RUBRIC_CHANGED_MID_BATCH`.
 
@@ -832,7 +832,7 @@ Patterns that look reasonable but break CyberOS contracts.
 
 **Don't bypass `STANDALONE_INTERVIEW.md` to "save time."** Skills that hard-code defaults and skip the interview break user expectation that they can override defaults. The interview pattern is what makes dual-mode work.
 
-**Don't over-specify a new contract beyond what consumers actually do.** When you register a contract to capture a previously-undocumented convention (e.g. NATS subject names that skills already emit), the temptation is to add structural rules that "sound right" — sub-persona namespacing, field-naming hierarchies, payload-versioning schemes the skills don't actually produce. The first draft of `nats-subjects@1` (registry v0.2.2) made this mistake: contract said `<sub-persona>.<skill>.<event>` (e.g. `cuo_cpo.fr_author.fr_written`); reality has always been `<top-level-persona>.<skill>.<event>` (e.g. `cuo.fr_author.fr_written`). The audit-fix-audit loop caught the drift before merge. **Rule:** when documenting a pre-existing convention, grep the consuming skill bodies for the exact form before writing the contract; reality wins. See REF-016 in BRAIN. The audit-fix-audit discipline (audit → fix → re-audit until clean) is mandatory after every new contract registration; see Recipe 13.
+**Don't over-specify a new contract beyond what consumers actually do.** When you register a contract to capture a previously-undocumented convention (e.g. NATS subject names that skills already emit), the temptation is to add structural rules that "sound right" — sub-persona namespacing, field-naming hierarchies, payload-versioning schemes the skills don't actually produce. The first draft of `nats-subjects@1` (registry v0.2.2) made this mistake: contract said `<sub-persona>.<skill>.<event>` (e.g. `cuo_cpo.fr_author.fr_written`); reality has always been `<top-level-persona>.<skill>.<event>` (e.g. `cuo.fr_author.fr_written`). The audit-fix-audit loop caught the drift before merge. **Rule:** when documenting a pre-existing convention, grep the consuming skill bodies for the exact form before writing the contract; reality wins. See REF-016 in memory. The audit-fix-audit discipline (audit → fix → re-audit until clean) is mandatory after every new contract registration; see Recipe 13.
 
 ---
 
@@ -901,7 +901,7 @@ Create `cuo/<role>/<skill>/acceptance/` and add three files. `golden-input.json`
 
 ### Recipe 9 — Write an INVARIANTS.md
 
-Identify 3-8 truths the skill enforces about its own behaviour. Each invariant has ID + Statement + Check + Severity + Refinement template. Start with the most universal: `INV-confidence-band-reporting` (every output's `confidence` is in [0.0, 1.0]) and `INV-scope-discipline` (no write outside declared `allowed_brain_scopes`). Add skill-specific invariants the skill's contract makes salient — e.g., `feature-request-audit`'s `INV-001 verdict-determinism` is the auditor's reproducibility promise. Severity = `error` for sev-0; `warning` for advisory; `info` for telemetry-only.
+Identify 3-8 truths the skill enforces about its own behaviour. Each invariant has ID + Statement + Check + Severity + Refinement template. Start with the most universal: `INV-confidence-band-reporting` (every output's `confidence` is in [0.0, 1.0]) and `INV-scope-discipline` (no write outside declared `allowed_memory_scopes`). Add skill-specific invariants the skill's contract makes salient — e.g., `feature-request-audit`'s `INV-001 verdict-determinism` is the auditor's reproducibility promise. Severity = `error` for sev-0; `warning` for advisory; `info` for telemetry-only.
 
 ### Recipe 10 — Write a refinement_proposal that humans actually approve
 
@@ -931,7 +931,7 @@ Mandatory after every new contract registration. Running this loop on `nats-subj
 
 **Step 6 — Audit pass 3 (verification).** This pass should be clean. If it isn't, return to step 5.
 
-**Step 7 — Capture the lesson.** Write `memories/refinements/REF-NNN-<slug>.md` in BRAIN describing what the loop caught and the rule that prevents it next time. Append BRAIN audit rows + manifest update per AGENTS.md §4 + §7. Update the registry CHANGELOG entry's `### Driver` section to cite the audit-fix-audit rounds.
+**Step 7 — Capture the lesson.** Write `memories/refinements/REF-NNN-<slug>.md` in memory describing what the loop caught and the rule that prevents it next time. Append memory audit rows + manifest update per AGENTS.md §4 + §7. Update the registry CHANGELOG entry's `### Driver` section to cite the audit-fix-audit rounds.
 
 Expected duration: 5-15 minutes per contract. Budget more if the contract has many consumers or long inventory tables. The discipline scales sub-linearly: a contract with 20 subjects takes maybe 2× longer to audit than one with 9.
 
@@ -962,7 +962,7 @@ Per SRS §6.1.1, a request enters CUO's LangGraph and hits the `classify_act` no
 
 ### 20.3 Eligibility filters
 
-A skill is eligible for routing when ALL of: caller persona's `allowed_mcp_tools` ⊇ skill's `allowed_mcp_tools`, caller persona's `allowed_brain_scopes` ⊇ skill's `allowed_brain_scopes`, skill not in a paused state for this member, skill's `gated_until_phase` ≤ current phase. A failed classification escalates to the Question primitive — CUO asks the human which workflow they want.
+A skill is eligible for routing when ALL of: caller persona's `allowed_mcp_tools` ⊇ skill's `allowed_mcp_tools`, caller persona's `allowed_memory_scopes` ⊇ skill's `allowed_memory_scopes`, skill not in a paused state for this member, skill's `gated_until_phase` ≤ current phase. A failed classification escalates to the Question primitive — CUO asks the human which workflow they want.
 
 ---
 
@@ -980,13 +980,13 @@ When each persona comes online, it brings its own scope contract + skill set + e
 
 **`clo` (P1)** — owns EU AI Act conformity, contract redline summaries. Receives every escalation from other personas on legal/compliance ambiguity. The most-CC'd persona in the audit log.
 
-**`cseco` (P1)** — owns threat modelling, breach response. Receives every escalation on security boundaries. Skills under cseco have widest `allowed_brain_scopes.read` (security needs context) but tightest `allowed_brain_scopes.write`.
+**`cseco` (P1)** — owns threat modelling, breach response. Receives every escalation on security boundaries. Skills under cseco have widest `allowed_memory_scopes.read` (security needs context) but tightest `allowed_memory_scopes.write`.
 
 **`caio` (P1)** — owns model-card drafting, EU AI Act Annex IV packs, model-eval reviews. Heavy collaboration with clo on AI Act compliance.
 
 **`cmo` (P2)** — owns campaign briefs, content calendars, attribution reviews. Skills here will be the first to expose `partner_connector: true` (marketing tooling integrations).
 
-**`cdo` (P2)** — owns data-quality digests, lineage explainers, schema migrations. Heavy BRAIN write surface; cseco reviewer on every MAJOR.
+**`cdo` (P2)** — owns data-quality digests, lineage explainers, schema migrations. Heavy memory write surface; cseco reviewer on every MAJOR.
 
 **`cxo` (P2)** — owns NPS digests, journey-friction surfacing. Customer-facing artefacts (`client_visible: true` heavy).
 
@@ -1002,7 +1002,7 @@ When each persona comes online, it brings its own scope contract + skill set + e
 
 ### 22.1 From an Anthropic-style flat SKILL.md
 
-Take the existing flat `SKILL.md` (just `name` + `description` + body). Decide the owner persona — pick the closest of the 14 in Part 20.1 (or `_shared` if cross-persona). Create the folder `cyberos/docs/skills/cuo/<role>/<skill-id>/`. Move the SKILL.md into it. Promote frontmatter to Tier 1 (Part 2.3) — add `skill_version`, `persona`, `owner_role`, `allowed_brain_scopes`, `allowed_mcp_tools`, `escalation`, `expects`, `produces`, `audit`, `untrusted_inputs`. Add `envelopes/{input,output}.json`. Author CHANGELOG with a v0.1.0 entry citing the migration. The body stays intact — no need to rewrite.
+Take the existing flat `SKILL.md` (just `name` + `description` + body). Decide the owner persona — pick the closest of the 14 in Part 20.1 (or `_shared` if cross-persona). Create the folder `cyberos/docs/skills/cuo/<role>/<skill-id>/`. Move the SKILL.md into it. Promote frontmatter to Tier 1 (Part 2.3) — add `skill_version`, `persona`, `owner_role`, `allowed_memory_scopes`, `allowed_mcp_tools`, `escalation`, `expects`, `produces`, `audit`, `untrusted_inputs`. Add `envelopes/{input,output}.json`. Author CHANGELOG with a v0.1.0 entry citing the migration. The body stays intact — no need to rewrite.
 
 ### 22.2 From a Claude Code plugin
 
@@ -1025,7 +1025,7 @@ The hardest case. Identify what the prompt *does* (action) versus what it *const
 | Persona / shared | Skill | Status | Owner-role | Pipeline links |
 | --- | --- | --- | --- | --- |
 | `cuo/_shared/` | `hello-world` | v1.0.0 | shared | teaching example; no chains |
-| `cuo/cpo/`     | `requirements-discovery` | v0.1.0 (scaffold) | cpo | chain entry point: BRAIN + 20-q interview → `project_brief@1` |
+| `cuo/cpo/`     | `requirements-discovery` | v0.1.0 (scaffold) | cpo | chain entry point: memory + 20-q interview → `project_brief@1` |
 | `cuo/cpo/`     | `product-requirements-document-author` | v0.1.0 (scaffold) | cpo | consumes `project_brief@1` + 3-5 follow-ups → `product-requirements-document@1` |
 | `cuo/cpo/`     | `feature-request-author`   | v0.2.2 | cpo    | consumes PRD/spec docs → FR markdowns → `feature-request-audit` |
 | `cuo/cpo/`     | `feature-request-audit`    | v0.2.2 | cpo    | consumes FR markdowns from `feature-request-author` or any source |
@@ -1063,7 +1063,7 @@ A skill is registry-valid when ALL of:
 - [ ] `SKILL.md` parses as Markdown with one YAML frontmatter block, no mid-file `---` outside fenced code spans (AGENTS.md §4.3 + DEC-087).
 - [ ] All 33 frontmatter fields ([Part 2.1](#21-the-full-v020-frontmatter)) are present (or explicitly `null` where allowed).
 - [ ] `expects:` and `produces:` reference real JSON schemas reachable from this folder or `_shared/`.
-- [ ] `allowed_brain_scopes.write` is empty UNLESS the skill is explicitly authorised to mutate BRAIN.
+- [ ] `allowed_memory_scopes.write` is empty UNLESS the skill is explicitly authorised to mutate memory.
 - [ ] `allowed_mcp_tools` is exhaustive — gateway will reject unlisted tools at call time.
 - [ ] `audit.row_kind` matches the `produces.output_kind` enum.
 - [ ] `invocation_modes` declared (workflows: `[standalone, chained]` or `[chained]` only; persona cards: `[persona_routing_only]`).
@@ -1117,7 +1117,7 @@ A skill is registry-valid when ALL of:
 | **hash chain** | Each row's `chain` field = sha256(canonical_json(row) + prev_row.chain). Tampering breaks the chain. |
 | **trace_id** | A UUID flowing through every action_log row in one chained invocation. |
 | **HITL** | Human in the loop. When a skill needs a human decision, it emits a Question primitive (SRS §6.6.2) and pauses. |
-| **scope contract** | The frontmatter fields `allowed_brain_scopes` + `allowed_mcp_tools` + `escalation`. Enforced by the runtime per SRS §6.4. |
+| **scope contract** | The frontmatter fields `allowed_memory_scopes` + `allowed_mcp_tools` + `escalation`. Enforced by the runtime per SRS §6.4. |
 | **persona-card** | A `SKILL.md` at the persona level (e.g., `cuo/cpo/SKILL.md`) declaring voice, scope ceiling, escalation graph, owned workflows. |
 | **acceptance/** | Folder of golden input/output pairs. Layer 2 validation. |
 | **drift signal** | OBS-detected metric (acceptance rate <40% / 7 days) that triggers auto-pause per DEC-055. |
@@ -1132,7 +1132,7 @@ A skill is registry-valid when ALL of:
 | **LangGraph** | The supervisor framework (DEC-027). Observe-Decide-Act loop with checkpointed state. |
 | **SRS / PRD** | Source-of-truth design documents. SRS = Software Requirements Spec; PRD = Product Requirements Doc. Both at `cyberos/docs/`. |
 | **AGENTS.md** | The CyberOS Universal Agent Memory Protocol. `cyberos/docs/CyberOS-AGENTS.md`. |
-| **BRAIN** | The `.cyberos-memory/` directory + the Postgres mirror. Three-layer memory store. PRD Part 5; AGENTS.md §0.3. |
+| **memory** | The `.cyberos-memory/` directory + the Postgres mirror. Three-layer memory store. PRD Part 5; AGENTS.md §0.3. |
 | **DEC-NNN** | A locked decision in SRS Part 13 + Appendix G. Cited throughout. |
 | **CaMeL** | Google DeepMind's dual-LLM defence pattern against indirect prompt injection. DEC-050. |
 | **MCP** | Model Context Protocol. The cross-vendor tool registry standard. DEC-048. |
@@ -1151,7 +1151,7 @@ The registry is the **source-of-truth that all of those will read**. None of the
 
 ## Part 27 — Citations
 
-This document deliberately cites rather than duplicates. Authoritative sources: persona model + 14-persona registry → CyberOS-PRD.docx Part 6 + Part 3.2; SRS Part 6.3 + DEC-052. Anthropic Skills format mandate → SRS §6.2 + DEC-061. Audit ledger schema → SRS §6.7 + §10.4 + AGENTS.md §7. Scope contract enforcement → SRS §6.4. Notify/Question/Review primitives → SRS §6.6 + PRD §6.5. Trust calibration + defer triggers → PRD §6.4 + §6.4.1. Anti-prompt-injection (CaMeL) → DEC-050 + AGENTS.md §4.2. LangGraph runtime → DEC-027 + SRS §6.1. NATS event bus → DEC-029. Drift / acceptance auto-pause → DEC-055 + SRS §6.12. v0.2.0 contracts split (skills vs. contracts) → DEC-090. v0.2.0 dual-mode + exposability → DEC-091. v0.2.0 self-audit + auto-refinement → DEC-092. v0.2.0 manual fine-tune playbook → DEC-093. Memory protocol (the BRAIN this all writes to) → CyberOS-AGENTS.md (entire document).
+This document deliberately cites rather than duplicates. Authoritative sources: persona model + 14-persona registry → CyberOS-PRD.docx Part 6 + Part 3.2; SRS Part 6.3 + DEC-052. Anthropic Skills format mandate → SRS §6.2 + DEC-061. Audit ledger schema → SRS §6.7 + §10.4 + AGENTS.md §7. Scope contract enforcement → SRS §6.4. Notify/Question/Review primitives → SRS §6.6 + PRD §6.5. Trust calibration + defer triggers → PRD §6.4 + §6.4.1. Anti-prompt-injection (CaMeL) → DEC-050 + AGENTS.md §4.2. LangGraph runtime → DEC-027 + SRS §6.1. NATS event bus → DEC-029. Drift / acceptance auto-pause → DEC-055 + SRS §6.12. v0.2.0 contracts split (skills vs. contracts) → DEC-090. v0.2.0 dual-mode + exposability → DEC-091. v0.2.0 self-audit + auto-refinement → DEC-092. v0.2.0 manual fine-tune playbook → DEC-093. Memory protocol (the memory this all writes to) → CyberOS-AGENTS.md (entire document).
 
 If any rule above conflicts with one of those source documents, the source document wins; raise a §0.4 protocol-refinement candidate against this README.
 
@@ -1162,7 +1162,7 @@ If any rule above conflicts with one of those source documents, the source docum
 
 ## Part 28 — Chain Orchestrator (agent-side, fully automated)
 
-> **Audience: the AGENT** (Claude Sonnet 4.6 / Opus 4.7 / equivalent reasoning model). When the human user invokes this orchestrator, you become the supervisor for the full Requirements → Planning chain. The user's job shrinks to: (1) provide an initial pitch, (2) answer HITL questions you raise. Everything else — reading SKILL.md files, conducting interviews, writing artefacts, running audit-fix loops, executing brain_writer.py, routing between skills — is YOUR job.
+> **Audience: the AGENT** (Claude Sonnet 4.6 / Opus 4.7 / equivalent reasoning model). When the human user invokes this orchestrator, you become the supervisor for the full Requirements → Planning chain. The user's job shrinks to: (1) provide an initial pitch, (2) answer HITL questions you raise. Everything else — reading SKILL.md files, conducting interviews, writing artefacts, running audit-fix loops, executing memory_writer.py, routing between skills — is YOUR job.
 
 > **Audience: the HUMAN.** Pin the trigger phrase below. Once invoked, you only need to answer questions the agent asks you. The agent drives every other step.
 
@@ -1201,7 +1201,7 @@ If shorter form is used, ask for missing fields via AskUserQuestion (or chat que
 2. **Conduct interviews in chat** — ask questions one at a time when the SKILL.md / STANDALONE_INTERVIEW.md prescribes them. Use the AskUserQuestion tool when the question has a clear set of options (≤4 choices); use plain chat questions for free-text answers.
 3. **Generate artefacts** — write to disk via the Write tool. Save to `<output_dir>/<artefact-name>.md`.
 4. **Run the audit-fix loop autonomously** — execute the 8-step algorithm from each `<skill>-audit/AUDIT_LOOP.md`. The loop runs in your head + via tool calls; the user only sees HITL pauses.
-5. **Execute brain_writer.py via bash** — append audit rows. The user shouldn't see this; just do it after every artefact write.
+5. **Execute memory_writer.py via bash** — append audit rows. The user shouldn't see this; just do it after every artefact write.
 6. **Update `CONTEXT.md`** when domain terms are resolved during interviews.
 7. **Write `.out-of-scope/<topic>.md`** when the user rejects a refinement proposal.
 8. **End every substantive reply with a §14 compact memory-update block** (per AGENTS.md §14.1).
@@ -1221,7 +1221,7 @@ If shorter form is used, ask for missing fields via AskUserQuestion (or chat que
 
 - "Should I read this SKILL.md?" → just read it.
 - "Should I save this artefact?" → just save it.
-- "Should I run brain_writer?" → just run it.
+- "Should I run memory_writer?" → just run it.
 - "Should I move to the next skill?" → just move; report transitions in the §14 block.
 - "What's the path to AGENTS.md?" → resolve it yourself from the standard layout.
 
@@ -1241,11 +1241,11 @@ Run these in order; the user shouldn't see most of this unless something fails.
 
 1. **Verify project root.** Resolve `<project repo>` to an absolute path. Confirm it's a real folder (not a sandbox path forbidden by AGENTS.md §0.1). If forbidden → halt; ask user to grant access.
 2. **Verify AGENTS.md is loaded.** If the conversation context doesn't already contain the protocol, read `cyberos/docs/CyberOS-AGENTS.md` now. Acknowledge `Loaded agent memory protocol`.
-3. **Bootstrap BRAIN if needed.** Check for `<project repo>/.cyberos-memory/manifest.json`. If absent → run `python3 <cyberos>/docs/skills/scripts/bootstrap-brain.sh <project-repo>` (if exists) OR perform §13.1 manually using the Write tool. If present → check `READY` state per §13.0.
+3. **Bootstrap memory if needed.** Check for `<project repo>/.cyberos-memory/manifest.json`. If absent → run `python3 <cyberos>/docs/skills/scripts/bootstrap-memory.sh <project-repo>` (if exists) OR perform §13.1 manually using the Write tool. If present → check `READY` state per §13.0.
 4. **Create output dir.** `mkdir -p <output_dir>`.
 5. **Initialise CONTEXT.md** at `<project repo>/CONTEXT.md` if absent (skeleton: 3 H2 sections — Language / Relationships / Flagged ambiguities).
 6. **Initialise `docs/adr/` and `.out-of-scope/`** as empty directories.
-7. **Append `op:"session.start"`** via `python3 runtime/lib/brain_writer.py session-start agent:claude-opus-4-7` (run from project repo root).
+7. **Append `op:"session.start"`** via `python3 runtime/lib/memory_writer.py session-start agent:claude-opus-4-7` (run from project repo root).
 8. **Resolve the chain.** Default chain (will be refined by Phase B):
 
    ```
@@ -1269,7 +1269,7 @@ Run these in order; the user shouldn't see most of this unless something fails.
 #### Your steps
 
 1. **Read** `cyberos/docs/skills/cuo/cpo/requirements-discovery/SKILL.md` (283 lines) and `STANDALONE_INTERVIEW.md` (156 lines). Internalise the 5 triage gating questions + 15 discovery questions.
-2. **Read BRAIN scopes** the SKILL.md declares (`company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `memories:refinements`, `member:*` excluding `private/`, `client:*` if commissioned). Use this context to ask questions intelligently — e.g., for Q1 (strategic fit), surface the 3 most-relevant locked decisions before asking the question.
+2. **Read memory scopes** the SKILL.md declares (`company:locked-decisions`, `company:values`, `memories:projects`, `memories:decisions`, `memories:refinements`, `member:*` excluding `private/`, `client:*` if commissioned). Use this context to ask questions intelligently — e.g., for Q1 (strategic fit), surface the 3 most-relevant locked decisions before asking the question.
 3. **Q0 (initial pitch)**: skip if pitch was provided in the trigger; else ask: *"What's the project? One paragraph is fine — what would you build, ship, or commission, and what would success feel like?"*
 4. **Classify project_kind** silently: software_product / software_consulting_engagement / internal_tooling / marketing_campaign / hiring_plan / partnership / research_spike / other. If ambiguous, ask: *"This sounds like both X and Y. Which is the dominant frame?"* (use AskUserQuestion).
 5. **Q1-Q5 triage gating** (one at a time, each via AskUserQuestion when options are clear):
@@ -1287,7 +1287,7 @@ Run these in order; the user shouldn't see most of this unless something fails.
    - *"You said 'X' — should this be a canonical term in your project's vocabulary? If so, how should I define it?"*
    - Append to `<project>/CONTEXT.md` `## Language` section using the format in MANUAL_WORKFLOW.md.
 8. **Synthesise `project_brief@1`** in markdown with the 14-field frontmatter populated. Save to `<output_dir>/project-brief.md`.
-9. **Append audit row** via `python3 runtime/lib/brain_writer.py write agent:claude-opus-4-7 project/<slug>/project-brief.md <abs path to artefact>`.
+9. **Append audit row** via `python3 runtime/lib/memory_writer.py write agent:claude-opus-4-7 project/<slug>/project-brief.md <abs path to artefact>`.
 10. **Announce**: *"Phase A complete. Brief saved to <path>. Moving to Phase B (chain selection)."*
 
 #### HITL templates
@@ -1297,7 +1297,7 @@ When asking the user to approve a triage verdict:
 ```
 The triage rubric flagged this project for `revise` because:
   - Q1: This conflicts with locked decision DEC-NNN (<title>).
-  - Q4: Only 1 customer signal in BRAIN (rubric requires ≥3).
+  - Q4: Only 1 customer signal in memory (rubric requires ≥3).
 
 Options:
   1. Override and proceed (the brief will record `provenance.confidence: 0.5` to mark the override).
@@ -1461,7 +1461,7 @@ The SRS audit's rubric leans advisory — most rules emit warnings, not blocking
 #### Your steps
 
 1. **Read** `cuo/cpo/feature-request-audit/SKILL.md` + its RUBRIC + AUDIT_LOOP.
-2. **Run the 8-step loop per-FR sequentially.** Don't parallelise — concurrent writes to the BRAIN ledger contend on `.lock`.
+2. **Run the 8-step loop per-FR sequentially.** Don't parallelise — concurrent writes to the memory ledger contend on `.lock`.
 3. **Aggregate HITL questions across all FRs** before pausing. Better UX than asking once per FR.
 4. **Emit `AUDIT_BATCH_SUMMARY.md`** at `<output_dir>/fr/`.
 5. **On all-PASS**: announce; move to Phase H or I.
@@ -1529,7 +1529,7 @@ Project artefacts:
 - <project repo>/docs/adr/    (<M> ADRs created)
 - <project repo>/.out-of-scope/ (<K> rejection records, if any)
 
-BRAIN ledger:
+memory ledger:
 - audit_chain_head: sha256:<hash>
 - memory_count: <N>
 - mode: normal
@@ -1567,13 +1567,13 @@ Do not re-run completed phases. Do not re-ask the user questions you already hav
 | Symptom | Reflex |
 |---|---|
 | Skill SKILL.md not found at expected path | Ask user for the cyberos repo path; cache in this session's context |
-| `python3 runtime/lib/brain_writer.py` returns non-zero | Read stderr; if `frontmatter-validation` → fix the artefact; if `audit-corrupt` → halt and surface to user |
+| `python3 runtime/lib/memory_writer.py` returns non-zero | Read stderr; if `frontmatter-validation` → fix the artefact; if `audit-corrupt` → halt and surface to user |
 | User pastes an answer that doesn't fit the question's options | Reframe the question; don't punish the user for free-text — extract the option |
 | Audit-fix loop doesn't terminate after 5 iterations | Treat as EXHAUSTED; surface to user per Phase D template |
 | User says `pause` or `abort` | Honour immediately; write `<output_dir>/PAUSED.md` or `ABORTED.md` with current state |
-| BRAIN classification returns `INCOMPATIBLE:protocol-sha256-mismatch` | Halt the chain; tell the user; offer §0.5 protocol-upgrade flow |
+| memory classification returns `INCOMPATIBLE:protocol-sha256-mismatch` | Halt the chain; tell the user; offer §0.5 protocol-upgrade flow |
 | Disk write fails (permission / quota) | Retry once; if it fails again, halt + surface the error |
-| User says they want to switch to a different host mid-chain | Confirm + write `<output_dir>/HOST_SWITCH.md` recording current state; let them resume in the new host (the BRAIN + artefacts are host-agnostic) |
+| User says they want to switch to a different host mid-chain | Confirm + write `<output_dir>/HOST_SWITCH.md` recording current state; let them resume in the new host (the memory + artefacts are host-agnostic) |
 
 ---
 
@@ -1592,7 +1592,7 @@ Before announcing Phase A, verify:
 
 - [ ] Read tool available
 - [ ] Write tool available
-- [ ] Bash / shell tool available (for brain_writer.py)
+- [ ] Bash / shell tool available (for memory_writer.py)
 - [ ] AskUserQuestion tool available (or willingness to use plain chat questions as fallback)
 - [ ] Connected access to both `<cyberos>` (read-only OK) and `<project repo>` (read+write)
 
@@ -1627,7 +1627,7 @@ I'm missing <capability>. Options:
 
 ### Two modes — pick one
 
-**Automated mode (★ recommended)** — you give a pitch + answer HITL questions. The agent reads every SKILL.md, drives every interview, writes every artefact, runs every audit-fix loop, executes brain_writer.py, and routes between skills. **You never copy-paste a SKILL.md or run a command yourself.**
+**Automated mode (★ recommended)** — you give a pitch + answer HITL questions. The agent reads every SKILL.md, drives every interview, writes every artefact, runs every audit-fix loop, executes memory_writer.py, and routes between skills. **You never copy-paste a SKILL.md or run a command yourself.**
 
 → See **[Part 28 — Chain Orchestrator](#part-28--chain-orchestrator-agent-side-fully-automated)**. Pin the trigger phrase below.
 
@@ -1641,7 +1641,7 @@ Caller: human:<your-id>
 Profile preference: <auto | lean | standard | full>   (default: auto)
 ```
 
-The agent then announces phase transitions in chat, asks you HITL questions when needed (triage gating, section approvals, audit decisions, refinement proposals), and produces the full artefact tree at the output dir. Total user effort: the trigger + ~10-30 HITL answers. Total user effort *saved*: copy-pasting ~12 SKILL.md files + running ~30 brain_writer.py commands by hand.
+The agent then announces phase transitions in chat, asks you HITL questions when needed (triage gating, section approvals, audit decisions, refinement proposals), and produces the full artefact tree at the output dir. Total user effort: the trigger + ~10-30 HITL answers. Total user effort *saved*: copy-pasting ~12 SKILL.md files + running ~30 memory_writer.py commands by hand.
 
 **Manual mode** — you drive every step yourself. Useful when:
 - The agent host doesn't auto-load AGENTS.md and you want full visibility.
@@ -1672,7 +1672,7 @@ The workflow is **fully host-agnostic**. Any agent that can read text files, wri
 |---|---|---|
 | **Read user-project files** | Loading SKILL.md / CONTEXT.md / artefacts | Manual paste of file contents |
 | **Write markdown to disk** | Saving artefacts (`project-brief.md`, `prd-*.md`, etc.) | Agent emits markdown in chat; you copy-paste into local files |
-| **Run shell / Python** | `brain_writer.py` audit-chain commands | Run brain_writer.py yourself in a separate terminal after each skill |
+| **Run shell / Python** | `memory_writer.py` audit-chain commands | Run memory_writer.py yourself in a separate terminal after each skill |
 | **MCP tool calls** | `proj.create_issue`, `chat.review_request` (optional) | Manual ticket creation in Linear/Jira/GitHub; HITL questions answered in chat |
 | **Subagent dispatch** | Running multiple skills in parallel (optional) | Sequential single-agent runs |
 
@@ -1686,11 +1686,11 @@ The workflow is **fully host-agnostic**. Any agent that can read text files, wri
 
 **Degraded hosts** (workflow runs but parts go manual):
 
-- **Claude.ai web app** — sandboxed; agent emits markdown; you save files manually; you run brain_writer.py in terminal.
+- **Claude.ai web app** — sandboxed; agent emits markdown; you save files manually; you run memory_writer.py in terminal.
 - **ChatGPT (with Code Interpreter)** — same shape as Claude.ai web; the Python sandbox can't reach your local filesystem.
 - **Claude in Chrome / browser-only agents** — interview + artefact generation work; persistence is manual.
 
-For per-host setup recipes (symlinks, plugin install, AGENTS.md loading, brain_writer access, MCP wiring), see **[Part 30 — Host Adapters](#part-30--host-adapters-per-agent-host-tweaks)**.
+For per-host setup recipes (symlinks, plugin install, AGENTS.md loading, memory_writer access, MCP wiring), see **[Part 30 — Host Adapters](#part-30--host-adapters-per-agent-host-tweaks)**.
 
 ---
 
@@ -1705,7 +1705,7 @@ The exact commands depend on your host — see [Part 30 — Host Adapters](#part
 
    CORE.md is sufficient for the manual chain (full AGENTS.md is only needed for §0.5 protocol-upgrade flows, which won't fire here).
 
-2. **Bootstrap the project's BRAIN.** First agent session detects `PRISTINE` state per §13.0 and silently auto-bootstraps `.cyberos-memory/` IF the host can write to disk. If it doesn't, paste *"bootstrap and continue"*. Hosts without filesystem access: run `python3 runtime/lib/brain_writer.py session-start <actor>` from the project repo root in your terminal and let the agent know the BRAIN is initialised.
+2. **Bootstrap the project's memory.** First agent session detects `PRISTINE` state per §13.0 and silently auto-bootstraps `.cyberos-memory/` IF the host can write to disk. If it doesn't, paste *"bootstrap and continue"*. Hosts without filesystem access: run `python3 runtime/lib/memory_writer.py session-start <actor>` from the project repo root in your terminal and let the agent know the memory is initialised.
 
 3. **Initialise CONTEXT.md** (per Plan v1.1 / M2). Create at the new project's repo root:
 
@@ -1736,7 +1736,7 @@ The exact commands depend on your host — see [Part 30 — Host Adapters](#part
 ### The chain end-to-end at a glance
 
 ```
-human chat + BRAIN
+human chat + memory
   → A. requirements-discovery → project_brief@1
   → B. chain-selector → chain_plan (lean / standard / full)
   → C. product-requirements-document-author → product-requirements-document@1
@@ -1808,7 +1808,7 @@ If the skill resolved any new domain terms during its run, append to the project
 
 #### Step ⑦ — Append the §14 memory-update block
 
-The agent will end its response with a §14.1 compact block. The audit row goes to `.cyberos-memory/audit/<YYYY-MM>.jsonl`. **Do not edit the audit ledger by hand.** If the agent didn't append, run `python3 runtime/lib/brain_writer.py session-end <actor>` from the project repo root before closing the tab.
+The agent will end its response with a §14.1 compact block. The audit row goes to `.cyberos-memory/audit/<YYYY-MM>.jsonl`. **Do not edit the audit ledger by hand.** If the agent didn't append, run `python3 runtime/lib/memory_writer.py session-end <actor>` from the project repo root before closing the tab.
 
 ---
 
@@ -1845,7 +1845,7 @@ The agent will end its response with a §14.1 compact block. The audit row goes 
 
 - **Q1 (strategic fit)** — "this conflicts with locked decision DEC-NNN; revisit it?" → only you can answer.
 - **Q2 (capacity)** — "current team has 3 engineer-weeks; project needs 12 — hire / scope-down / reject?" → only you can answer.
-- **Q4 (customer signal)** — "I see <2 prior signals in `memories/projects/`; do you have additional ones not in BRAIN?" → answer based on memory.
+- **Q4 (customer signal)** — "I see <2 prior signals in `memories/projects/`; do you have additional ones not in memory?" → answer based on memory.
 - **Triage verdict `revise`** — if you'd rather override and proceed anyway, say *"override triage; proceed despite revise"* and the skill records the override with `provenance.confidence: 0.5` (downgraded authority).
 
 #### Validation before moving on
@@ -2117,7 +2117,7 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 |---|---|
 | `triage_reject_streak` 3+ | Investigate — usually rubric is too strict OR your project pipeline shifted |
 | `interview_truncation_rate` >30% | Accept — questions are too long or in wrong order |
-| `brain_read_zero_results_rate` >50% | Accept — wrong scopes |
+| `memory_read_zero_results_rate` >50% | Accept — wrong scopes |
 | `same_artefact_rewritten_more_than_5x` | Defer or Reject — usually the artefact's owner needs more clarity, not the skill |
 
 ---
@@ -2130,8 +2130,8 @@ project_kind to bypass the signal-count gate when capacity check (Q2) passes.
 | Audit keeps cycling on the same issue | NO_PROGRESS termination | Edit the artefact manually OR file a refinement proposal against the rule |
 | `chat.review_request` MCP not available | Runtime not built | Manual mode: just answer the HITL question in chat directly |
 | `proj.create_issue` MCP not available | Runtime not built | Manual mode: copy issues from `impl_plan@1` into Linear/Jira/GitHub by hand |
-| §14 block doesn't appear | Agent forgot | Run `python3 runtime/lib/brain_writer.py session-end <actor>` from project repo root before closing |
-| BRAIN classified `INCOMPATIBLE:protocol-sha256-mismatch` | AGENTS.md changed since last pin | Run §0.5 protocol upgrade flow OR revert AGENTS.md to the pinned SHA |
+| §14 block doesn't appear | Agent forgot | Run `python3 runtime/lib/memory_writer.py session-end <actor>` from project repo root before closing |
+| memory classified `INCOMPATIBLE:protocol-sha256-mismatch` | AGENTS.md changed since last pin | Run §0.5 protocol upgrade flow OR revert AGENTS.md to the pinned SHA |
 
 ---
 
@@ -2161,7 +2161,7 @@ Plus:
 ./CONTEXT.md                    # the project's shared vocabulary
 ./docs/adr/                     # ADRs land here as the chain runs (sparingly)
 ./.out-of-scope/                # rejected refinement proposals (only if any)
-./.cyberos-memory/              # the BRAIN — keep, this is your replay-able audit ledger
+./.cyberos-memory/              # the memory — keep, this is your replay-able audit ledger
 ```
 
 ---
@@ -2240,7 +2240,7 @@ After you've run this on one project end-to-end:
 | **ChatGPT (Code Interpreter)** | partial (sandbox) | partial (Python only) | ❌ paste only | ❌ | ❌ | ❌ | Degraded — same shape as Claude.ai web |
 | **Claude in Chrome** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | Browser-only; not recommended |
 
-A **recommended** host runs the chain end-to-end without the user leaving the chat. A **degraded** host can still drive the conversational parts (interview, draft generation) but the user has to copy artefacts in/out of the agent and run `brain_writer.py` from a separate terminal.
+A **recommended** host runs the chain end-to-end without the user leaving the chat. A **degraded** host can still drive the conversational parts (interview, draft generation) but the user has to copy artefacts in/out of the agent and run `memory_writer.py` from a separate terminal.
 
 ---
 
@@ -2253,31 +2253,31 @@ A **recommended** host runs the chain end-to-end without the user leaving the ch
 1. **Connect the new project's folder.** When you start a Cowork session, ask Claude to `request_cowork_directory` for `/path/to/your/new/project`. Approve the prompt.
 2. **Connect cyberos folder** (so the agent can read AGENTS.md + cyberos/docs/skills/*): same `request_cowork_directory` for `/path/to/cyberos`.
 3. **Load AGENTS.md into context.** Cowork doesn't auto-load AGENTS.md the way Claude Code does. Ask the agent at the start of each session: *"Read `cyberos/docs/CyberOS-AGENTS.md` and follow it for this conversation."* The CORE.md is short (~10K tokens); it loads fast.
-4. **Bootstrap BRAIN.** Cowork's bash sandbox can run `python3 runtime/lib/brain_writer.py session-start <actor>` against the connected workbench folder. The agent will auto-bootstrap on first write per AGENTS.md §13.1.
+4. **Bootstrap memory.** Cowork's bash sandbox can run `python3 runtime/lib/memory_writer.py session-start <actor>` against the connected workbench folder. The agent will auto-bootstrap on first write per AGENTS.md §13.1.
 
 #### Per-step shape
 
 - **Load a SKILL.md**: `Read cyberos/docs/skills/cuo/cpo/<skill>/SKILL.md` — agent reads via the file tool.
 - **Run the interview**: agent conducts in chat; Cowork's chat surface handles the back-and-forth fine.
 - **Save an artefact**: agent uses Write tool to create `<project-root>/planning/<date>-<slug>/<artefact>.md`.
-- **Append audit row**: agent runs `python3 runtime/lib/brain_writer.py write <actor> <relpath> <content_file>` via bash (cwd = project repo root).
-- **Session end**: agent runs `python3 runtime/lib/brain_writer.py session-end <actor>` via bash.
+- **Append audit row**: agent runs `python3 runtime/lib/memory_writer.py write <actor> <relpath> <content_file>` via bash (cwd = project repo root).
+- **Session end**: agent runs `python3 runtime/lib/memory_writer.py session-end <actor>` via bash.
 
 #### Quirks / gotchas
 
 - The bash sandbox's view of paths differs from the file tool's view. The agent already knows this — but if you run bash commands by hand, paths look like `/sessions/<id>/mnt/<folder>/...` not `/Users/<you>/...`.
-- Cowork sessions don't persist across closing the app — but the BRAIN's audit ledger DOES persist (it's on your real filesystem). Resume any time.
+- Cowork sessions don't persist across closing the app — but the memory's audit ledger DOES persist (it's on your real filesystem). Resume any time.
 - Skills installed at the Cowork level (the ones loaded via `Skill` tool) DO NOT include the CyberOS skills system — those live in your `cyberos/` repo and are loaded on-demand by the agent reading the SKILL.md files.
-- **§0.1 sandbox guard (Bundle Q, 2026-05-11) — `runtime/lib/brain_writer.py` refuses to run from inside Cowork's bash sandbox**, because the sandbox's view of the project lives at `/sessions/<id>/mnt/<folder>/...` which matches the AGENTS.md §0.1 forbidden-paths list (paths containing `/sessions/`, `local-agent-mode-sessions`, etc.). The bind-mount IS backed by your real filesystem, but §0.1 cannot tell that from inside; refusing is defense-in-depth against the case where it ISN'T. **Net effect:** the agent can edit non-BRAIN files (docs, source code) directly via the Write/Edit tools, but BRAIN-touching ops (audit-row appends, manifest mutations, `meta/protocol-history/` archives) require the user to run the apply script from a macOS terminal where the path resolves to `/Users/<you>/Projects/...` (no §0.1 forbidden substring). See "The cowork → macOS handoff" below.
+- **§0.1 sandbox guard (Bundle Q, 2026-05-11) — `runtime/lib/memory_writer.py` refuses to run from inside Cowork's bash sandbox**, because the sandbox's view of the project lives at `/sessions/<id>/mnt/<folder>/...` which matches the AGENTS.md §0.1 forbidden-paths list (paths containing `/sessions/`, `local-agent-mode-sessions`, etc.). The bind-mount IS backed by your real filesystem, but §0.1 cannot tell that from inside; refusing is defense-in-depth against the case where it ISN'T. **Net effect:** the agent can edit non-memory files (docs, source code) directly via the Write/Edit tools, but memory-touching ops (audit-row appends, manifest mutations, `meta/protocol-history/` archives) require the user to run the apply script from a macOS terminal where the path resolves to `/Users/<you>/Projects/...` (no §0.1 forbidden substring). See "The cowork → macOS handoff" below.
 
 #### The cowork → macOS handoff (apply-script pattern)
 
 Established 2026-05-11 during Bundle Q. The pattern:
 
-1. **Agent in cowork edits non-BRAIN files** (AGENTS.md, CHANGELOG, README, skills runbooks, source code). These are ordinary file mutations — no audit row needed. Cowork's Write/Edit tools work fine.
-2. **Agent stages BRAIN-touching ops** as a deterministic apply script + memory templates under `.cyberos-memory/cache/<bundle-name>/`. The script:
+1. **Agent in cowork edits non-memory files** (AGENTS.md, CHANGELOG, README, skills runbooks, source code). These are ordinary file mutations — no audit row needed. Cowork's Write/Edit tools work fine.
+2. **Agent stages memory-touching ops** as a deterministic apply script + memory templates under `.cyberos-memory/cache/<bundle-name>/`. The script:
    - performs preflight sanity (paths, SHAs, deps);
-   - calls `python3 runtime/lib/brain_writer.py` for each op (session-start, write, str-replace, protocol-upgrade, self-audit, session-end);
+   - calls `python3 runtime/lib/memory_writer.py` for each op (session-start, write, str-replace, protocol-upgrade, self-audit, session-end);
    - exits non-zero on any failure so the chain stays consistent.
 3. **User runs the script from macOS terminal**:
    ```bash
@@ -2287,9 +2287,9 @@ Established 2026-05-11 during Bundle Q. The pattern:
    The §0.1 guard passes (path is real-filesystem), the writer runs, the chain advances.
 4. **Agent reviews the resulting chain** in the next cowork session via `verify --bit-perfect` output the user pastes back.
 
-**When this pattern fits:** any cluster of BRAIN mutations the agent wants to land as one atomic-ish unit — protocol upgrades (§0.5 + §0.6), bulk content refreshes, doctor-style cleanup passes, multi-memory ingestion of an external corpus.
+**When this pattern fits:** any cluster of memory mutations the agent wants to land as one atomic-ish unit — protocol upgrades (§0.5 + §0.6), bulk content refreshes, doctor-style cleanup passes, multi-memory ingestion of an external corpus.
 
-**When it doesn't:** single-memory writes during exploratory work — the cowork → macOS round-trip is overkill. For those, the user can drop into the macOS terminal directly and run the writer themselves (the `python3 runtime/lib/brain_writer.py write <actor> <path> <content>` form is short).
+**When it doesn't:** single-memory writes during exploratory work — the cowork → macOS round-trip is overkill. For those, the user can drop into the macOS terminal directly and run the writer themselves (the `python3 runtime/lib/memory_writer.py write <actor> <path> <content>` form is short).
 
 **Reference apply scripts** in `.cyberos-memory/cache/`:
 
@@ -2298,7 +2298,7 @@ Established 2026-05-11 during Bundle Q. The pattern:
 
 #### Recommendation
 
-Cowork is the smoothest fit for **automated mode** RIGHT NOW. The trigger phrase from [Part 28 — Chain Orchestrator](#part-28--chain-orchestrator-agent-side-fully-automated) + the orchestrator runbook give you a single-message kickoff. The agent drives the rest — file reads, interviews, artefact writes, audit loops, brain_writer.py, all of it. You answer ~10-30 HITL questions over ~3 hours of standard-profile work; that's the entire user-facing UX.
+Cowork is the smoothest fit for **automated mode** RIGHT NOW. The trigger phrase from [Part 28 — Chain Orchestrator](#part-28--chain-orchestrator-agent-side-fully-automated) + the orchestrator runbook give you a single-message kickoff. The agent drives the rest — file reads, interviews, artefact writes, audit loops, memory_writer.py, all of it. You answer ~10-30 HITL questions over ~3 hours of standard-profile work; that's the entire user-facing UX.
 
 Everything in [Part 29 — Manual Workflow](#part-29--manual-workflow-no-runtime-by-hand-today) (manual mode) also works in Cowork if you want the step-by-step driver experience.
 
@@ -2325,7 +2325,7 @@ The native Claude Code experience. Best fit if you live in a terminal.
    ln -s AGENTS.md CLAUDE.md
    ```
 
-3. **Bootstrap BRAIN.** The first session detects `PRISTINE` and runs §13.1 silently.
+3. **Bootstrap memory.** The first session detects `PRISTINE` and runs §13.1 silently.
 
 #### Per-step shape
 
@@ -2401,7 +2401,7 @@ Generic recipe for any agent CLI that supports file tools + shell:
 
 1. **Find the host's auto-load convention** (see ECC's `manifests/` for examples — every host has its own `.foo/<file>` shape).
 2. **Either symlink or copy** `cyberos/docs/CyberOS-AGENTS.md` into the auto-load location.
-3. **Bootstrap BRAIN** by asking the agent to follow §13.1.
+3. **Bootstrap memory** by asking the agent to follow §13.1.
 
 #### Per-step shape
 
@@ -2421,7 +2421,7 @@ For when you can't run a CLI — e.g., you're on a borrowed machine, on mobile, 
 
 - ❌ Can't read your project's filesystem (the agent only sees what you paste / upload).
 - ❌ Can't write artefacts to your filesystem (agent emits markdown in chat; you copy-paste into local files).
-- ❌ Can't run `brain_writer.py` against your real BRAIN (the audit ledger gap is filled manually after the session).
+- ❌ Can't run `memory_writer.py` against your real memory (the audit ledger gap is filled manually after the session).
 - ❌ Can't run MCP tools that touch your local environment (e.g., `proj.create_issue` against your Linear instance).
 
 #### What still works
@@ -2444,11 +2444,11 @@ For when you can't run a CLI — e.g., you're on a borrowed machine, on mobile, 
 
    ```bash
    cd /path/to/project
-   python3 runtime/lib/brain_writer.py session-start human:stephen-cheng
+   python3 runtime/lib/memory_writer.py session-start human:stephen-cheng
    for f in <list of artefact files>; do
-     python3 runtime/lib/brain_writer.py write human:stephen-cheng <relpath> <abspath>
+     python3 runtime/lib/memory_writer.py write human:stephen-cheng <relpath> <abspath>
    done
-   python3 runtime/lib/brain_writer.py session-end human:stephen-cheng
+   python3 runtime/lib/memory_writer.py session-end human:stephen-cheng
    ```
 
    This restores chain integrity. The `actor_kind: "human"` makes it explicit these were human-driven (vs. agent-driven) writes.
@@ -2461,13 +2461,13 @@ Avoid degraded mode for serious work — the manual file shuffling kills the tim
 
 ### When to switch hosts mid-project
 
-It's fine. The BRAIN audit ledger + the artefacts on disk + CONTEXT.md + .out-of-scope/ are all host-agnostic. You can:
+It's fine. The memory audit ledger + the artefacts on disk + CONTEXT.md + .out-of-scope/ are all host-agnostic. You can:
 
 - Start in Cowork for the interview (fast back-and-forth).
 - Switch to Claude Code or Cursor for FR-author / spec-to-impl-plan (denser tool-use).
 - Drop into Claude.ai web on your phone if you want to draft a quick PRD amendment.
 
-The only constraint: don't run **two hosts simultaneously** against the same `.cyberos-memory/` directory. The `.lock` file in the BRAIN root coordinates write access; concurrent writes from two agents will trigger `op:"rejected" reason:"lock-contention"` at best, and chain corruption at worst.
+The only constraint: don't run **two hosts simultaneously** against the same `.cyberos-memory/` directory. The `.lock` file in the memory root coordinates write access; concurrent writes from two agents will trigger `op:"rejected" reason:"lock-contention"` at best, and chain corruption at worst.
 
 ---
 
@@ -2488,7 +2488,7 @@ Are you on a borrowed machine / mobile?
 └── Claude.ai web / ChatGPT (degraded; expect manual file shuffling)
 ```
 
-For Stephen's next project: **Cowork is the move**. It's what we used to build this whole evolution, it has the best file-tool + bash story for solo work, and the BRAIN sits at `~/Projects/CyberSkill/workbench/.cyberos-memory/` already wired up.
+For Stephen's next project: **Cowork is the move**. It's what we used to build this whole evolution, it has the best file-tool + bash story for solo work, and the memory sits at `~/Projects/CyberSkill/workbench/.cyberos-memory/` already wired up.
 
 ### History
 
@@ -2849,7 +2849,7 @@ Default skills ship with empty blackout windows. Add per-skill overrides in the 
 
 Some skills declare `self_audit.on_breach: emit: refinement_proposal`. When an invariant breaches, the skill auto-emits a proposed refinement (e.g. "rule QA-X is too aggressive — operator review needed").
 
-Auto-refinement is NOT auto-merge. The proposal lands in the BRAIN memory `refinements/` directory and pauses the pipeline until operator review. After 2 unresolved refinement_proposals from the same skill, the `signals_to_initiate` for human fine-tune fires.
+Auto-refinement is NOT auto-merge. The proposal lands in the memory memory `refinements/` directory and pauses the pipeline until operator review. After 2 unresolved refinement_proposals from the same skill, the `signals_to_initiate` for human fine-tune fires.
 
 ---
 

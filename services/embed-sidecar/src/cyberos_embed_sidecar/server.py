@@ -1,6 +1,6 @@
 """FastAPI HTTP server serving the embedding endpoint.
 
-Wire-compatible with `services/brain/src/embeddings.rs`. Endpoints:
+Wire-compatible with `services/memory/src/embeddings.rs`. Endpoints:
 
   GET  /healthz
   POST /embed   { "texts": [...], "model": "bge-m3" }

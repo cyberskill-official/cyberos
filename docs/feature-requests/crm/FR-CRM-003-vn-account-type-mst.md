@@ -11,8 +11,8 @@ slice: 5
 owner: Stephen Cheng (CRO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-CRM-001, FR-CRM-008, FR-INV-007, FR-AI-003, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-CRM-001, FR-CRM-008, FR-INV-007, FR-AI-003, FR-MEMORY-111]
 depends_on: [FR-CRM-001]
 blocks: [FR-CRM-008]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1631 2026-05-17 — Closed enum `vn_account_type` = {sole, llc_1, llc_2plus, jsc, fdi, partnership}; cardinality 6
   - DEC-1632 2026-05-17 — MST (Mã số thuế) format: 10 or 13 digits (10 = main entity, 13 = branch with 3-digit suffix)
   - DEC-1633 2026-05-17 — Field is OPTIONAL for non-VN accounts; REQUIRED + validated for accounts with residency='vn-1'
-  - DEC-1634 2026-05-17 — BRAIN audit kinds: crm.vn_account_type_set, crm.mst_validated, crm.mst_validation_failed
+  - DEC-1634 2026-05-17 — memory audit kinds: crm.vn_account_type_set, crm.mst_validated, crm.mst_validation_failed
 
 build_envelope:
   language: rust 1.81
@@ -68,7 +68,7 @@ risk_if_skipped: "Without VN account type, invoicing can't classify entity → w
 
 ## §1 — Description (BCP-14 normative)
 
-The CRM service **MUST** extend Account schema with VN-specific fields at `services/crm/src/vn/` — legal entity type + MST + validation gated on residency, 3 BRAIN audit kinds.
+The CRM service **MUST** extend Account schema with VN-specific fields at `services/crm/src/vn/` — legal entity type + MST + validation gated on residency, 3 memory audit kinds.
 
 1. **MUST** define table extension at migration `0003`:
    ```sql
@@ -93,7 +93,7 @@ The CRM service **MUST** extend Account schema with VN-specific fields at `servi
 
 5. **MUST** allow both fields NULL for non-VN accounts.
 
-6. **MUST** emit 3 BRAIN audit kinds per DEC-1634. Audit body: account_id, vn_account_type (enum); MST SHA-256 hashed per FR-BRAIN-111 (treat as PII — could be confidential).
+6. **MUST** emit 3 memory audit kinds per DEC-1634. Audit body: account_id, vn_account_type (enum); MST SHA-256 hashed per FR-MEMORY-111 (treat as PII — could be confidential).
 
 7. **MUST** thread trace_id from account create/update → validation → audit.
 
@@ -134,7 +134,7 @@ Branch MST (13 digits):
 ---
 
 ## §4 — Acceptance criteria
-1. **6 account types enum + cardinality test**. 2. **MST 10-digit accepted**. 3. **MST 13-digit (with dash) accepted**. 4. **MST 9/11/12/14 rejected (400 + CHECK)**. 5. **MST with letters rejected**. 6. **MST optional for non-VN**. 7. **MST required for vn-1 residency**. 8. **vn_account_type optional for non-VN**. 9. **vn_account_type required for vn-1**. 10. **3 BRAIN audit kinds emitted**. 11. **PII scrubbed (MST SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Index on mst for lookup**. 15. **mst_validated_at populated on successful validation**. 16. **Append-only via REVOKE UPDATE except 3 cols**. 17. **CRO UI picker shows 6 types**. 18. **FR-CRM-008 future validation skill leverages this format check**. 19. **FR-INV-007 hóa đơn emit reads mst from this column**. 20. **Multi-line FDI/JSC company name OK in name field (not affected)**.
+1. **6 account types enum + cardinality test**. 2. **MST 10-digit accepted**. 3. **MST 13-digit (with dash) accepted**. 4. **MST 9/11/12/14 rejected (400 + CHECK)**. 5. **MST with letters rejected**. 6. **MST optional for non-VN**. 7. **MST required for vn-1 residency**. 8. **vn_account_type optional for non-VN**. 9. **vn_account_type required for vn-1**. 10. **3 memory audit kinds emitted**. 11. **PII scrubbed (MST SHA256)**. 12. **RLS denies cross-tenant**. 13. **Trace_id preserved**. 14. **Index on mst for lookup**. 15. **mst_validated_at populated on successful validation**. 16. **Append-only via REVOKE UPDATE except 3 cols**. 17. **CRO UI picker shows 6 types**. 18. **FR-CRM-008 future validation skill leverages this format check**. 19. **FR-INV-007 hóa đơn emit reads mst from this column**. 20. **Multi-line FDI/JSC company name OK in name field (not affected)**.
 
 ---
 
@@ -186,7 +186,7 @@ async fn invalid_mst_rejected() {
 ## §7 — Dependencies
 **Upstream:** FR-CRM-001.
 **Downstream:** FR-CRM-008 (validation skill), FR-INV-007 (reads MST for hóa đơn).
-**Cross-module:** FR-BRAIN-111 (PII scrub).
+**Cross-module:** FR-MEMORY-111 (PII scrub).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -201,7 +201,7 @@ async fn invalid_mst_rejected() {
 
 ## §11 — Implementation notes
 - §11.1 MST regex: `^[0-9]{10}(-[0-9]{3})?$` enforced in CHECK + Rust validator.
-- §11.2 PII: MST is government identifier per FR-BRAIN-111; SHA256 in audit chain.
+- §11.2 PII: MST is government identifier per FR-MEMORY-111; SHA256 in audit chain.
 - §11.3 FR-CRM-008 future skill will call GDT MST verification API for external confirm.
 - §11.4 Account type picker shows VN names: "Doanh nghiệp tư nhân" / "TNHH 1 thành viên" / etc.
 - §11.5 Migration backfill: NULL allowed for existing rows; CRO updates over time.

@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands timer start/stop primitive on top of FR-TIME-001. 530 lines, 18 §1 clauses, 20 ACs, 4 tests, 16 failure modes, 10 implementation notes. 1 migration, 7 endpoints, 5 BRAIN audit kinds.
+The spec lands timer start/stop primitive on top of FR-TIME-001. 530 lines, 18 §1 clauses, 20 ACs, 4 tests, 16 failure modes, 10 implementation notes. 1 migration, 7 endpoints, 5 memory audit kinds.
 
 6 issues resolved.
 

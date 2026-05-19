@@ -3,7 +3,7 @@ id: FR-CHAT-003
 title: "Per-tenant CHAT deployment — AWS Fargate + RDS Multi-AZ + Redis ElastiCache with Terraform module and per-tenant isolation"
 module: CHAT
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: I
 phase: P1
 milestone: P1 · slice 1
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-CHAT-001, FR-CHAT-002, FR-CHAT-004, FR-CHAT-005, FR-OBS-001]
 depends_on: [FR-CHAT-001, FR-CHAT-002]
 blocks: [FR-CHAT-004, FR-CHAT-005, FR-CHAT-011]
@@ -23,7 +23,7 @@ source_decisions:
   - DEC-440 (per-tenant deployment — one Fargate service + one RDS + one Redis per tenant)
   - DEC-441 (Terraform module 'tenant_chat'; idempotent apply; tenant_id is the unique key)
   - DEC-442 (Multi-AZ RDS + Redis cluster mode for HA; single-AZ for trial tier)
-  - DEC-443 (egress to FR-AUTH-004 JWKS + FR-BRAIN-101 BrainWriter via VPC endpoint, not public internet)
+  - DEC-443 (egress to FR-AUTH-004 JWKS + FR-MEMORY-101 MemoryWriter via VPC endpoint, not public internet)
 
 language: terraform 1.7
 service: cyberos/infra/terraform/modules/tenant_chat/
@@ -55,18 +55,18 @@ sub_tasks:
   - "1.5h: ecs.tf — Fargate service running cyberos/chat image; auto-scaling 1-10 tasks per tier"
   - "1.0h: rds.tf — PostgreSQL 16 with Multi-AZ (standard+); single-AZ (trial); encrypted at rest"
   - "1.0h: redis.tf — ElastiCache Redis 7; cluster mode (standard+); single-node (trial)"
-  - "0.5h: iam.tf — task role permitting only the tenant's BRAIN socket access"
+  - "0.5h: iam.tf — task role permitting only the tenant's memory socket access"
   - "0.5h: observability.tf — CloudWatch log group + FR-OBS-001 collector sidecar"
   - "0.5h: outputs.tf — chat_url, rds_endpoint, redis_endpoint (sensitive)"
   - "0.5h: example single-tenant invocation"
-risk_if_skipped: "Shared infra = noisy-neighbour risk; one tenant's flood degrades all. Per-tenant isolates blast radius. Single-AZ at standard tier = downtime on AZ failure. Without VPC endpoints, every JWKS fetch + BRAIN write goes over public internet = latency + cost + attack surface. Without Terraform module, ops creates by hand → drift."
+risk_if_skipped: "Shared infra = noisy-neighbour risk; one tenant's flood degrades all. Per-tenant isolates blast radius. Single-AZ at standard tier = downtime on AZ failure. Without VPC endpoints, every JWKS fetch + memory write goes over public internet = latency + cost + attack surface. Without Terraform module, ops creates by hand → drift."
 ---
 
 ## §1 — Description (BCP-14 normative)
 
 The CHAT deployment **MUST** be a Terraform module provisioning a per-tenant isolated stack on AWS. The contract:
 
-1. **MUST** be a Terraform module at `infra/terraform/modules/tenant_chat/` invokable per tenant with variables `{tenant_id, tier, aws_region, vpc_id, brain_writer_socket_endpoint, auth_jwks_url}`.
+1. **MUST** be a Terraform module at `infra/terraform/modules/tenant_chat/` invokable per tenant with variables `{tenant_id, tier, aws_region, vpc_id, memory_writer_socket_endpoint, auth_jwks_url}`.
 2. **MUST** provision per tenant:
     - 1 Fargate service running cyberos/chat image (FR-CHAT-001).
     - 1 RDS PostgreSQL instance (PostgreSQL 16; ARM Graviton).
@@ -82,15 +82,15 @@ The CHAT deployment **MUST** be a Terraform module provisioning a per-tenant iso
     - Fargate egress to internet → BLOCKED (use VPC endpoints).
     - Fargate ingress from ALB on port 8065 ONLY.
 5. **MUST** use VPC endpoints for AWS service access (S3 backups, ECR image pull, CloudWatch logs); zero public internet egress.
-6. **MUST** use VPC endpoints (PrivateLink) for FR-AUTH-004 JWKS + FR-BRAIN-101 BrainWriter:
+6. **MUST** use VPC endpoints (PrivateLink) for FR-AUTH-004 JWKS + FR-MEMORY-101 MemoryWriter:
     - JWKS endpoint at `https://auth.internal.cyberos.world/.well-known/jwks.json` resolves via private DNS.
-    - BRAIN socket at `tcp://brain-writer.<tenant>.svc.cluster.local:9090`.
+    - memory socket at `tcp://memory-writer.<tenant>.svc.cluster.local:9090`.
 7. **MUST** encrypt at rest:
     - RDS storage encryption with tenant-specific KMS CMK.
     - Redis backup encryption with same CMK.
     - ECS task ephemeral volumes encrypted by default.
 8. **MUST** apply tagging convention to all resources: `{Tenant: <tenant_id>, Service: chat, Tier: <tier>, ManagedBy: terraform}`.
-9. **MUST** emit BRAIN audit `chat.deployment_provisioned` on terraform apply success (via post-apply hook).
+9. **MUST** emit memory audit `chat.deployment_provisioned` on terraform apply success (via post-apply hook).
 10. **MUST** emit OTel metrics via collector sidecar (FR-OBS-001):
     - `chat_fargate_task_count{tenant_id}` (gauge).
     - `chat_rds_connections_active{tenant_id}` (gauge).
@@ -126,7 +126,7 @@ The CHAT deployment **MUST** be a Terraform module provisioning a per-tenant iso
     - `kms:Decrypt` on the tenant's CMK ONLY.
     - `logs:CreateLogStream` + `logs:PutLogEvents` on the tenant's log group ONLY.
     - NO `s3:*`, NO `iam:*`, NO `ec2:*`. The task-execution role (separate from task role) carries the ECR/CloudWatch boilerplate.
-21. **MUST** publish the resource inventory of every apply to BRAIN as `chat.deployment_inventory` rows. Each row enumerates: the resource ARNs, the resource counts per type, the AWS account+region, the tier, the Terraform module version SHA. Operators query BRAIN to answer "what's in tenant X's stack" without `aws` CLI access.
+21. **MUST** publish the resource inventory of every apply to memory as `chat.deployment_inventory` rows. Each row enumerates: the resource ARNs, the resource counts per type, the AWS account+region, the tier, the Terraform module version SHA. Operators query memory to answer "what's in tenant X's stack" without `aws` CLI access.
 22. **MUST** declare a Terraform state-backend convention: the module is invoked from a per-tenant workspace; state lives in `s3://cyberos-terraform-state/<aws-account>/<tenant_id>/chat/terraform.tfstate` with DynamoDB lock table `cyberos-terraform-lock`. State is per-tenant; cross-tenant blast radius from a corrupted state is zero.
 23. **MUST** expose outputs from the module so callers (cross-module) can wire dependent resources:
     - `chat_url` (e.g. `https://t-<tenant-shortid>.cyberskill.world`).
@@ -153,7 +153,7 @@ The CHAT deployment **MUST** be a Terraform module provisioning a per-tenant iso
 
 **Why tagging (§1 #8)?** Cost attribution + automated cleanup; AWS Billing dashboard pivots on tags.
 
-**Why post-apply BRAIN audit (§1 #9)?** Operators investigating "when was tenant X's chat provisioned" query BRAIN. Single source for ops trail.
+**Why post-apply memory audit (§1 #9)?** Operators investigating "when was tenant X's chat provisioned" query memory. Single source for ops trail.
 
 **Why CloudWatch alarms (§1 #13)?** OBS layer (FR-OBS-007) handles app-level alerts; AWS-native alarms catch infra-level. Two layers for resilience.
 
@@ -171,11 +171,11 @@ The CHAT deployment **MUST** be a Terraform module provisioning a per-tenant iso
 
 **Why least-privilege IAM (§1 #20)?** The task role is the only credential a compromised container has. Restricting to per-tenant ARNs means an SSRF or RCE in one tenant cannot pivot to another's data. This is enforced by ARN-scoped IAM policies that reject wildcards.
 
-**Why `chat.deployment_inventory` row (§1 #21)?** Operators currently run `aws resourcegroupstaggingapi` to enumerate a tenant's stack — slow + requires AWS console access. BRAIN-side inventory rows make it queryable from anywhere a BRAIN sync flows. Compliance audits ("what data do you process") consume these rows.
+**Why `chat.deployment_inventory` row (§1 #21)?** Operators currently run `aws resourcegroupstaggingapi` to enumerate a tenant's stack — slow + requires AWS console access. memory-side inventory rows make it queryable from anywhere a memory sync flows. Compliance audits ("what data do you process") consume these rows.
 
 **Why per-tenant Terraform workspace (§1 #22)?** Single workspace = single state file = one corrupted apply blocks all tenants. Per-tenant workspaces isolate state corruption to one tenant. The DynamoDB lock table is shared because the cost of per-tenant tables exceeds the operational benefit (DynamoDB items are partitioned by key; lock contention is per-key, so a shared table behaves like per-tenant tables for locking purposes).
 
-**Why module-version output (§1 #25)?** When we change the module (e.g. add a new tier), the post-apply BRAIN row records the module version that provisioned each tenant. Downstream incidents ("which tenants are on module v1.4 vs v1.5") become a BRAIN query, not a Terraform-state crawl.
+**Why module-version output (§1 #25)?** When we change the module (e.g. add a new tier), the post-apply memory row records the module version that provisioned each tenant. Downstream incidents ("which tenants are on module v1.4 vs v1.5") become a memory query, not a Terraform-state crawl.
 
 **Why data_residency variable (§1 #26)?** Vietnamese tenants subject to Decree 53/2022 require in-country data. Enforcing region in code prevents an operator from accidentally provisioning a `vn-only` tenant in `us-east-1`. Validation is at variable-validation time (terraform plan), not apply time — fail fast.
 
@@ -202,7 +202,7 @@ variable "tier" {
 
 variable "aws_region"                    { type = string }
 variable "vpc_id"                        { type = string }
-variable "brain_writer_socket_endpoint"  { type = string }
+variable "memory_writer_socket_endpoint"  { type = string }
 variable "auth_jwks_url"                 { type = string }
 variable "kms_cmk_arn"                   { type = string }
 ```
@@ -244,7 +244,7 @@ resource "aws_ecs_task_definition" "chat" {
         { name = "MM_SQLSETTINGS_DATASOURCE", value = local.rds_dsn },
         { name = "MM_CACHESETTINGS_REDIS",    value = aws_elasticache_replication_group.chat.primary_endpoint_address },
         { name = "CYBEROS_AUTH_JWKS_URL",      value = var.auth_jwks_url },
-        { name = "CYBEROS_BRAIN_WRITER_SOCK",  value = var.brain_writer_socket_endpoint },
+        { name = "CYBEROS_MEMORY_WRITER_SOCK",  value = var.memory_writer_socket_endpoint },
         { name = "CYBEROS_TENANT_ID",          value = var.tenant_id },
       ]
       logConfiguration = {
@@ -677,8 +677,8 @@ resource "aws_iam_role_policy" "task" {
     Version = "2012-10-17"
     Statement = [
       {
-        # BRAIN audit emission (via cross-account socket; STS not required because socket is private)
-        Sid    = "BrainWriterSocket"
+        # memory audit emission (via cross-account socket; STS not required because socket is private)
+        Sid    = "MemoryWriterSocket"
         Effect = "Allow"
         Action = ["sts:GetCallerIdentity"]
         Resource = "*"
@@ -817,7 +817,7 @@ locals {
 }
 ```
 
-### post-apply BRAIN audit hook
+### post-apply memory audit hook
 
 ```hcl
 # main.tf
@@ -833,7 +833,7 @@ resource "null_resource" "deployment_audit" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      cyberos-brain-cli emit \
+      cyberos-memory-cli emit \
         --kind chat.deployment_provisioned \
         --tenant-id ${var.tenant_id} \
         --payload '${jsonencode({
@@ -848,7 +848,7 @@ resource "null_resource" "deployment_audit" {
           provisioned_at_ns = timestamp()
         })}'
 
-      cyberos-brain-cli emit \
+      cyberos-memory-cli emit \
         --kind chat.deployment_inventory \
         --tenant-id ${var.tenant_id} \
         --payload '${jsonencode({
@@ -983,7 +983,7 @@ locals {
 12. **CloudWatch alarms created** — 3 alarms per tenant.
 13. **Auto-scaling configured** — appautoscaling target exists at standard+ tiers.
 14. **Terraform destroy cleans up** — `terraform destroy` removes all resources; CloudWatch logs retain.
-15. **BRAIN audit post-apply** — apply complete → `chat.deployment_provisioned` row emitted.
+15. **memory audit post-apply** — apply complete → `chat.deployment_provisioned` row emitted.
 16. **JWKS URL resolves via VPC endpoint** — DNS lookup returns private IP.
 17. **Image-digest pinning enforced** — variable validation rejects `cyberos/chat:latest`; only `cyberos/chat@sha256:...` accepted (AC #14).
 18. **ALB has TLS 1.2 floor** — listener ssl_policy is `ELBSecurityPolicy-TLS13-1-2-2021-06`; AC #15.
@@ -997,7 +997,7 @@ locals {
 26. **Redis allkeys-lru policy active** — `terraform state show aws_elasticache_replication_group.chat` confirms parameter_group with `maxmemory-policy=allkeys-lru`; AC #19.
 27. **Task role denies wildcard actions** — `iam:SimulatePrincipalPolicy` against `s3:GetObject *` returns DENY for the task role; AC #20.
 28. **Task role permits only tenant-scoped secret** — simulation against the tenant's secret returns ALLOW; another tenant's secret returns DENY; AC #20.
-29. **`chat.deployment_inventory` BRAIN row emitted** — post-apply hook produces row with full resource ARN enumeration; AC #21.
+29. **`chat.deployment_inventory` memory row emitted** — post-apply hook produces row with full resource ARN enumeration; AC #21.
 30. **Terraform workspace per tenant** — `terraform workspace list` shows the tenant workspace; state lives in tenant-scoped S3 prefix; AC #22.
 31. **Module outputs all wired** — every output in `outputs.tf` returns a non-empty value post-apply; AC #23.
 32. **Dry-run mode catches drift** — running with `dry_run=true` after `terraform apply` returns exit 0 with `No changes`; AC #24.
@@ -1061,7 +1061,7 @@ for tier in trial standard premium; do
     -var "sns_sev1_topic_arn=arn:aws:sns:ap-southeast-1:000000000000:sev1" \
     -var "sns_sev2_topic_arn=arn:aws:sns:ap-southeast-1:000000000000:sev2" \
     -var "data_residency=vn-only" \
-    -var "brain_writer_socket_endpoint=tcp://brain.test:9090" \
+    -var "memory_writer_socket_endpoint=tcp://memory.test:9090" \
     -var "auth_jwks_url=https://auth.test/.well-known/jwks.json" \
     -out "plan-$tier.tfplan"
 
@@ -1200,8 +1200,8 @@ jobs:
           EXPECTED=$(cat .pitr-sentinel-row-count-${{ matrix.tier }}.txt)
           ACTUAL=$(psql -h "$PITR_HOST" -t -c "SELECT COUNT(*) FROM posts" | tr -d ' ')
           [[ "$ACTUAL" -ge "$EXPECTED" ]] || exit 1
-      - name: Emit BRAIN audit chat.pitr_test_passed
-        run: cyberos-brain-cli emit --kind chat.pitr_test_passed --payload '...'
+      - name: Emit memory audit chat.pitr_test_passed
+        run: cyberos-memory-cli emit --kind chat.pitr_test_passed --payload '...'
       - name: Teardown sentinel restore
         if: always()
         run: aws rds delete-db-instance --db-instance-identifier "pitr-test-${{ matrix.tier }}-..."
@@ -1237,8 +1237,8 @@ aws --endpoint-url=$TF_VAR_aws_endpoint_url elasticache describe-replication-gro
     --replication-group-id "cyberos-chat-$TENANT" \
     | jq '.ReplicationGroups[0].AtRestEncryptionEnabled' | grep -q true
 
-# AC #29: BRAIN row emitted.
-cyberos-brain-cli query --kind chat.deployment_inventory \
+# AC #29: memory row emitted.
+cyberos-memory-cli query --kind chat.deployment_inventory \
     --tenant-id "$TENANT" --limit 1 \
     | jq '.payload.ecs_service_arn' | grep -q "cyberos-chat-$TENANT"
 
@@ -1276,7 +1276,7 @@ module "tenant_chat" {
   cyberos_apex_domain     = "cyberskill.world"
   cyberos_route53_zone_id = "Z0987654321"
   auth_jwks_vpc_endpoint_service_name = "com.amazonaws.vpce.ap-southeast-1.vpce-svc-0xyz"
-  brain_writer_socket_endpoint = "tcp://brain-writer.demo.svc.cluster.local:9090"
+  memory_writer_socket_endpoint = "tcp://memory-writer.demo.svc.cluster.local:9090"
   auth_jwks_url  = "https://auth.internal.cyberos.world/.well-known/jwks.json"
   sns_sev1_topic_arn = "arn:aws:sns:ap-southeast-1:111111111111:sev1"
   sns_sev2_topic_arn = "arn:aws:sns:ap-southeast-1:111111111111:sev2"
@@ -1319,8 +1319,8 @@ In-place tier upgrade (trial → standard, standard → premium) requires carefu
 | 3 | Manually trigger pre-upgrade snapshot | Belt + suspenders over RDS automated backup |
 | 4 | `terraform apply -var tier=standard` | RDS migrates first (~30 min downtime if t4g.micro→small); Redis migrates second (~10 min) |
 | 5 | Smoke test: ALB returns 200 from `/api/v4/system/ping` | Confirm app is up |
-| 6 | Emit BRAIN audit `chat.tier_upgraded` | Operator-driven, not Terraform-driven |
-| 7 | Update tenant `cyberos.tenants[tenant_id].tier` in BRAIN | Source of truth for billing |
+| 6 | Emit memory audit `chat.tier_upgraded` | Operator-driven, not Terraform-driven |
+| 7 | Update tenant `cyberos.tenants[tenant_id].tier` in memory | Source of truth for billing |
 
 Premium → standard or standard → trial DOWNGRADE is operator-gated; running `terraform plan` shows resource destruction (RDS Multi-AZ replica deleted, Redis shards removed) which would lose redundancy. Downgrade workflow goes through a separate runbook.
 
@@ -1329,7 +1329,7 @@ Premium → standard or standard → trial DOWNGRADE is operator-gated; running 
 A scheduled GitHub Action runs `terraform plan -var dry_run=true` every 6h per tenant. If exit code is 2 (changes present), it:
 
 1. Writes the plan output to S3 (`s3://cyberos-drift-reports/<tenant>/<timestamp>.txt`).
-2. Emits BRAIN audit `chat.deployment_drift_detected` with the diff summary.
+2. Emits memory audit `chat.deployment_drift_detected` with the diff summary.
 3. Opens a Slack alert via `cyberos-slack-webhook`.
 
 The drift is human-investigated, not auto-remediated, because some drift is legitimate (operator hot-fix; AWS region maintenance; AWS service-default change).
@@ -1364,9 +1364,9 @@ Promotion to standard/premium fleets only after the canary tenant runs for 24h w
 
 The CMK is created OUTSIDE this module (per FR-AUTH-001 KMS-management FR). This module consumes the ARN. Why split: KMS CMK deletion has a 7–30 day pending window; we want it managed by a Terraform run that ONLY manages KMS so accidental tenant-stack destroy doesn't queue CMK deletion.
 
-### §6.6 — Brain-writer socket reachability
+### §6.6 — Memory-writer socket reachability
 
-The `brain_writer_socket_endpoint` is a private DNS name resolved via Route 53 private hosted zone. The module does NOT provision the BRAIN writer (FR-BRAIN-101 owns that). Caller is responsible for ensuring the BRAIN writer is reachable from the Fargate task subnet. Validation: a post-apply `local-exec` script tries `nc -z` against the socket; failure → BRAIN audit `chat.deployment_warning` with `reason=brain_writer_unreachable`.
+The `memory_writer_socket_endpoint` is a private DNS name resolved via Route 53 private hosted zone. The module does NOT provision the memory writer (FR-MEMORY-101 owns that). Caller is responsible for ensuring the memory writer is reachable from the Fargate task subnet. Validation: a post-apply `local-exec` script tries `nc -z` against the socket; failure → memory audit `chat.deployment_warning` with `reason=memory_writer_unreachable`.
 
 ### §6.7 — Cross-tenant backup isolation
 
@@ -1399,10 +1399,10 @@ In both paths, the Fargate task fetches the password via Secrets Manager at boot
 - **FR-CHAT-001** — image source.
 - **FR-CHAT-002** — authbridge plugin baked into image.
 - **FR-CHAT-004 (downstream)** — search uses RDS.
-- **FR-CHAT-005 (downstream)** — BRAIN bridge uses Postgres logical replication.
+- **FR-CHAT-005 (downstream)** — memory bridge uses Postgres logical replication.
 - **FR-OBS-001** — collector sidecar.
 - **FR-AUTH-004** — JWKS source.
-- **FR-BRAIN-101** — BRAIN writer socket.
+- **FR-MEMORY-101** — memory writer socket.
 
 ---
 
@@ -1529,9 +1529,9 @@ In both paths, the Fargate task fetches the password via Secrets Manager at boot
   "ts_ns": 1747407137600000000,
   "tenant_id": "1f8c4d6e-1e0c-4d7a-9d2a-ad8c4b6bbf21",
   "payload": {
-    "reason": "brain_writer_unreachable",
-    "endpoint_tested": "tcp://brain-writer.demo.svc.cluster.local:9090",
-    "operator_action": "verify FR-BRAIN-101 socket is up and tenant subnet has route"
+    "reason": "memory_writer_unreachable",
+    "endpoint_tested": "tcp://memory-writer.demo.svc.cluster.local:9090",
+    "operator_action": "verify FR-MEMORY-101 socket is up and tenant subnet has route"
   }
 }
 ```
@@ -1572,7 +1572,7 @@ All resolved. Deferred:
 | Secrets Manager rotation Lambda fails | `secretsmanager:RotateSecret` event with `Failed` | Password not rotated; Mattermost keeps using old | Sev-2; operator inspects Lambda logs |
 | RDS snapshot space exhausted (premium tier) | `rds_free_storage` alarm | Sev-2; backups may fail | Auto-scaling storage enabled at premium; operator triggers manual scale |
 | ALB 5xx spike from Mattermost | `alb_5xx` alarm | Sev-1 | Investigate via CloudWatch logs; common: DB connection pool exhausted |
-| BRAIN writer socket unreachable from Fargate | post-apply `null_resource.deployment_audit` `local-exec` fails | Audit row not emitted; warning row emitted | Operator verifies FR-BRAIN-101 socket up + VPC route exists |
+| memory writer socket unreachable from Fargate | post-apply `null_resource.deployment_audit` `local-exec` fails | Audit row not emitted; warning row emitted | Operator verifies FR-MEMORY-101 socket up + VPC route exists |
 | Drift detector finds out-of-band change | scheduled `terraform plan` exit-code 2 | `chat.deployment_drift_detected` audit | Operator investigates; either revert or codify into Terraform |
 | Tenant requests data-residency change (vn-only → global) | `terraform plan` shows region change → cluster destroy | Requires data-migration workflow; not in-place | Migration FR (deferred) |
 | Module-version bump introduces breaking diff | `terraform plan` shows unexpected destroy/create | Apply fails preflight check | Operator pins to older major; coordinates migration FR |
@@ -1584,7 +1584,7 @@ All resolved. Deferred:
 | Route53 hosted zone disabled mid-apply | `aws_route53_record.chat` fails | Apply fails; tenant URL not resolvable | Operator restores hosted zone |
 | Logical replication slot exhausted (FR-CHAT-005 consumer) | `max_replication_slots` hit | New consumers can't subscribe | Bump param group; restart RDS |
 | Lambda rotation IAM permission revoked | rotation fails silently | Password stays static | Sev-3 if undetected for >30d (next rotation due); detected via `last_rotated_date` CloudWatch metric |
-| Module v1.x deprecation announcement | release notes + BRAIN audit `chat.module_deprecated` | Operators get 90d notice | Migrate to v2.x per migration FR |
+| Module v1.x deprecation announcement | release notes + memory audit `chat.module_deprecated` | Operators get 90d notice | Migrate to v2.x per migration FR |
 
 ---
 
@@ -1594,7 +1594,7 @@ All resolved. Deferred:
 - Fargate Spot supported via separate `tier_trial_spot` variant — slice 4+. Spot is not safe for standard/premium because evictions cause WebSocket reconnect storms.
 - Backup retention 7 days at trial (cost), 14 days at standard (SLA), 30 days at premium (compliance). Longer retention via S3 export to Glacier — separate FR.
 - Tags drive AWS Cost Allocation reports; finance team pivots on `Tenant` tag. The `CostCenter` tag is used for chargeback to the per-tenant invoice.
-- Post-apply BRAIN audit via `null_resource` provisioner is non-ideal (provisioners are Terraform's escape hatch, not its primary surface) but the AWS provider has no first-class "emit-after-apply" extension point. The alternative — Lambda triggered by CloudWatch Events on `terraform apply` completion — adds complexity without buying clarity. We'll revisit if Terraform 1.10+ ships native post-apply hooks.
+- Post-apply memory audit via `null_resource` provisioner is non-ideal (provisioners are Terraform's escape hatch, not its primary surface) but the AWS provider has no first-class "emit-after-apply" extension point. The alternative — Lambda triggered by CloudWatch Events on `terraform apply` completion — adds complexity without buying clarity. We'll revisit if Terraform 1.10+ ships native post-apply hooks.
 - Auto-scaling policy: scale up at 70% CPU, scale down at 30%; cooldown 5min on both directions. The asymmetric thresholds avoid flapping. Scale-up cooldown is intentionally long enough to absorb a sudden burst (e.g. all-hands meeting login storm) without runaway scaling.
 - Why ARM Graviton (db.t4g, db.m6g, cache.t4g, cache.r6g) instead of x86: 20-40% better price-performance for Postgres + Redis workloads (AWS published benchmarks; we replicated on a sandbox tenant). No application-side change required — Postgres + Redis are bit-identical across arches.
 - The ALB drop_invalid_header_fields setting defends against HTTP header smuggling attacks (CVE class). Default is false; we explicitly enable.
@@ -1603,7 +1603,7 @@ All resolved. Deferred:
 - Why we don't use Fargate task ECS managed service auto-scaling on the RDS connection count: ECS metric-based scaling reacts to instance metrics, not application metrics. We rely on CPU and memory; queue-depth-based scaling would require custom CloudWatch metric publication from inside Mattermost, which is out of scope.
 - The custom RDS parameter group is required at apply time (not after-the-fact) because `shared_preload_libraries` is `apply_method = "pending-reboot"`. Forgetting it means a manual `RebootDBInstance` after FR-CHAT-004 ships pgroonga.
 - `rds.logical_replication = 1` is required by FR-CHAT-005. We enable it at this FR (deployment) rather than at FR-CHAT-005 (the consumer) because changing the param requires a reboot — better to pay that cost once at provisioning than later when traffic exists.
-- `max_replication_slots = 10` accommodates: 1 for FR-CHAT-005 BRAIN replication, 1 for the read-replica, 8 spare for future consumers. Bumping this requires reboot, so we overprovision.
+- `max_replication_slots = 10` accommodates: 1 for FR-CHAT-005 memory replication, 1 for the read-replica, 8 spare for future consumers. Bumping this requires reboot, so we overprovision.
 - Why a single shared lock table instead of per-tenant: DynamoDB pricing is per-table baseline + per-read. 100 tenants × per-tenant table = 100 × $0.10/mo baseline = $10/mo for zero functional gain (DynamoDB locks are keyed by LockID, not table). One shared table costs $0.10/mo total.
 - The state-backend convention uses `<aws-account>/<tenant_id>/...` so that one Terraform state file per tenant is the natural unit. If a tenant ever spans multiple AWS accounts (e.g. compliance carve-out), the account prefix scales naturally.
 - ACM certificate uses `create_before_destroy` lifecycle to avoid downtime during cert renewal — new cert provisions, ALB attaches to it, old cert deletes after.

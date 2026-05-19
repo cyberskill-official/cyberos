@@ -1,13 +1,13 @@
-# MEMORY — CyberOS BRAIN Protocol & Reference Implementation
+# MEMORY — CyberOS memory Protocol & Reference Implementation
 
-> **Local-first, audit-chained, append-only personal memory store for AI-assisted work.** Drop the protocol files into any project; your agent (Claude / Cursor / Codex / Copilot / Cowork) loads them and starts building a project-local **BRAIN** you can copy, audit, encrypt, and merge with teammates.
+> **Local-first, audit-chained, append-only personal memory store for AI-assisted work.** Drop the protocol files into any project; your agent (Claude / Cursor / Codex / Copilot / Cowork) loads them and starts building a project-local **memory** you can copy, audit, encrypt, and merge with teammates.
 
 | | |
 |---|---|
 | **Module name** | `memory` |
 | **Spec status** | Normative — see [`AGENTS.md`](AGENTS.md) (Layer-1 protocol, 246 lines, ~3.6k tokens) + [`INTEROP.md`](INTEROP.md) (cross-agent subset, ≤6,000 chars) + [`memory.schema.json`](memory.schema.json) + [`memory.invariants.yaml`](memory.invariants.yaml) |
 | **Implementation** | Python 3.10+ (this directory's `cyberos/` package); `pip install -e .` exposes the `cyberos` console script |
-| **Test suite** | 255 green; `cyberos doctor` passes 15/15 invariants on the live BRAIN |
+| **Test suite** | 255 green; `cyberos doctor` passes 15/15 invariants on the live memory |
 | **License** | MIT |
 
 This README is the **single source of truth** for the MEMORY module's installation, operation, and design rationale. It consolidates what previously lived in `docs/README.md` (step-by-step install), `docs/AUTOSYNC_DESIGN.md` (background-sync design), `docs/EVOLUTION.md` (history + open questions), `docs/LAYER_2_SOURCE_OF_TRUTH.md` (Layer-2 design), and `docs/PROPOSAL.md` (open / shipped design decisions).
@@ -45,14 +45,14 @@ This README is the **single source of truth** for the MEMORY module's installati
 
 ## 1. What it does
 
-The BRAIN is an append-only, content-addressed, hash-chained personal memory store. It records every meaningful interaction between you and your AI agents so that:
+The memory is an append-only, content-addressed, hash-chained personal memory store. It records every meaningful interaction between you and your AI agents so that:
 
 - **Tomorrow's session knows what today's session learned.** Memory files persist across conversations, projects, and machines.
 - **Every change is auditable.** A binary framed audit ledger with SHA-256 chain-sealing (Phase 1) or MMR + Ed25519-signed tree heads (Phase 2 P2) makes tampering detectable.
 - **Privacy classes are enforced.** Memory files declare `meta.classification` and `meta.sync_class`; the writer rejects exports of `private` content; encryption envelopes guard `restricted` content at rest.
-- **Cross-agent operation works.** The protocol is text-based and platform-agnostic: any agent that can read `AGENTS.md` (or the smaller `INTEROP.md`) can read your BRAIN. The reference implementation lives here, but the protocol does not depend on it.
+- **Cross-agent operation works.** The protocol is text-based and platform-agnostic: any agent that can read `AGENTS.md` (or the smaller `INTEROP.md`) can read your memory. The reference implementation lives here, but the protocol does not depend on it.
 
-The module is the source of truth for the Layer-1 protocol. Other CyberOS modules (`skill`, `cuo`) MUST route all BRAIN writes through `cyberos.core.writer.Writer` rather than touching `audit/`, `HEAD`, or `.lock` directly.
+The module is the source of truth for the Layer-1 protocol. Other CyberOS modules (`skill`, `cuo`) MUST route all memory writes through `cyberos.core.writer.Writer` rather than touching `audit/`, `HEAD`, or `.lock` directly.
 
 ---
 
@@ -67,7 +67,7 @@ The module is the source of truth for the Layer-1 protocol. Other CyberOS module
 | Semantic search | shipped (optional `sentence-transformers` dep) |
 | Sync conflict awareness (iCloud / Dropbox / OneDrive) | shipped |
 | All 12 audit proposals (P1–P12 + P2 Stage 3) | shipped |
-| Cross-BRAIN import (P6) | shipped |
+| Cross-memory import (P6) | shipped |
 | HTTP REST (`cyberos serve`) | shipped |
 | Daily digest (`cyberos digest`) | shipped |
 | Mobile publish (`cyberos publish`) | shipped |
@@ -83,7 +83,7 @@ The module is the source of truth for the Layer-1 protocol. Other CyberOS module
 cd modules/memory
 pip install -e .
 
-# Verify the local BRAIN passes every invariant
+# Verify the local memory passes every invariant
 cyberos --store ../../.cyberos-memory doctor
 
 # Append a memory
@@ -131,7 +131,7 @@ cyberos state                               # show HEAD seq + chain tip
 cyberos doctor [--repair]                   # walk + verify invariants
 cyberos consolidate                         # Walk → Compact → Sign → Publish
 cyberos export <out.zip>                    # deterministic exportable bundle
-cyberos import <source.zip> [--filter ...]  # cross-BRAIN merge (P6)
+cyberos import <source.zip> [--filter ...]  # cross-memory merge (P6)
 cyberos serve [--port 8088]                 # HTTP REST API
 cyberos digest [--since 24h]                # daily digest
 cyberos publish [--target mobile]           # mobile-ready bundle
@@ -152,7 +152,7 @@ scripts/install.sh . --with-automation
 powershell -ExecutionPolicy Bypass -File scripts/install.ps1 -Target . -WithAutomation
 ```
 
-Nightly + weekly maintenance: walks the BRAIN, runs `consolidate` if size/row thresholds exceeded, archives sealed monthly segments to `.binlog.zst`, refreshes the SQLite derived index.
+Nightly + weekly maintenance: walks the memory, runs `consolidate` if size/row thresholds exceeded, archives sealed monthly segments to `.binlog.zst`, refreshes the SQLite derived index.
 
 ---
 
@@ -160,10 +160,10 @@ Nightly + weekly maintenance: walks the BRAIN, runs `consolidate` if size/row th
 
 | # | Workflow | Status |
 |---|---|---|
-| 1 | **Solo, single machine** — one person, one laptop; agent auto-builds BRAIN | shipped |
+| 1 | **Solo, single machine** — one person, one laptop; agent auto-builds memory | shipped |
 | 2 | **Solo, multi-machine** — copy `.cyberos-memory/` between your own machines | shipped (deterministic export) |
-| 3 | **Multi-person, independent BRAINs** — each teammate has their own | shipped |
-| 4 | **Multi-person, merged** — pull selected memories from a teammate's BRAIN | shipped (v2.1 — `cyberos import`) |
+| 3 | **Multi-person, independent memories** — each teammate has their own | shipped |
+| 4 | **Multi-person, merged** — pull selected memories from a teammate's memory | shipped (v2.1 — `cyberos import`) |
 
 ---
 
@@ -199,7 +199,7 @@ You also need the `cyberos` Python package:
 cp -r ~/Projects/CyberSkill/cyberos/modules/memory/cyberos ./cyberos
 ```
 
-### Step 3 — Initialise the BRAIN
+### Step 3 — Initialise the memory
 
 ```bash
 mkdir -p .cyberos-memory/{audit,memories/{decisions,facts,people,projects,preferences,drift,refinements},meta,company,module,member,client,project,persona,conflicts,exports,index}
@@ -257,11 +257,11 @@ python -m cyberos --store .cyberos-memory doctor
 scripts/install.sh . --with-automation --with-pre-commit
 ```
 
-Six-phase install (protocol files, BRAIN init, agent wiring, scheduler registration, git pre-commit hook, verify).
+Six-phase install (protocol files, memory init, agent wiring, scheduler registration, git pre-commit hook, verify).
 
 ### Step 8 — Use it
 
-From now on every meaningful conversation turn that adds a fact, preference, or decision your agent learns SHOULD be put into the BRAIN. Read the agent-side rules in [`AGENTS.md`](AGENTS.md) §1 (the pre-write checklist) and your project's `CLAUDE.md` auto-memory section for the exact when/what/how.
+From now on every meaningful conversation turn that adds a fact, preference, or decision your agent learns SHOULD be put into the memory. Read the agent-side rules in [`AGENTS.md`](AGENTS.md) §1 (the pre-write checklist) and your project's `CLAUDE.md` auto-memory section for the exact when/what/how.
 
 ---
 
@@ -322,10 +322,10 @@ acl: ["stephen@cyberskill.world"]   # optional explicit allow-list
 
 The v1 four-tier sync_class (`local-only / publishable / shared / client-visible`) is preserved in `meta.sync_class_v1` for one release cycle for tooling that has not migrated.
 
-### Cross-BRAIN merge (v2.1)
+### Cross-memory merge (v2.1)
 
 ```bash
-# Import shareable memories from a teammate's exported BRAIN
+# Import shareable memories from a teammate's exported memory
 cyberos import teammate-export.zip --filter "sync_class=shareable"
 # Imported rows become fresh `put` rows on the local chain with
 #   extra.imported_from = <source fingerprint>
@@ -337,11 +337,11 @@ cyberos import teammate-export.zip --filter "sync_class=shareable"
 
 ## 9. Deploy strategy
 
-> **Production deploy:** the canonical runbook for taking MEMORY to AWS Fargate lives in the **root README §3 — MEMORY deploy** ([`../../README.md`](../../README.md#3--memory-deploy)). It covers prerequisites (Postgres 16 + pgvector + AGE + Redis 7), the Rust BRAIN service build, migration sequence, JWK bootstrap, smoke tests, ECS deploy, rollback, observability dashboards, and secret management. Sections 9.1-9.5 below cover local/development scenarios — they are NOT the production path.
+> **Production deploy:** the canonical runbook for taking MEMORY to AWS Fargate lives in the **root README §3 — MEMORY deploy** ([`../../README.md`](../../README.md#3--memory-deploy)). It covers prerequisites (Postgres 16 + pgvector + AGE + Redis 7), the Rust memory service build, migration sequence, JWK bootstrap, smoke tests, ECS deploy, rollback, observability dashboards, and secret management. Sections 9.1-9.5 below cover local/development scenarios — they are NOT the production path.
 
 ### 9.1 Local-dev (every project)
 
-Symlink `AGENTS.md` + `CLAUDE.md` from project root → `modules/memory/AGENTS.md` (or copy if your filesystem doesn't support symlinks). BRAIN lives at project-root `.cyberos-memory/`. Maintenance is `cyberos doctor` (manual) or automation (background).
+Symlink `AGENTS.md` + `CLAUDE.md` from project root → `modules/memory/AGENTS.md` (or copy if your filesystem doesn't support symlinks). memory lives at project-root `.cyberos-memory/`. Maintenance is `cyberos doctor` (manual) or automation (background).
 
 ### 9.2 Multi-machine (single user)
 
@@ -349,7 +349,7 @@ Symlink `AGENTS.md` + `CLAUDE.md` from project root → `modules/memory/AGENTS.m
 
 ### 9.3 Multi-tenant (per organisation)
 
-One `.cyberos-memory/` per organisation, each with its own `manifest.json` fingerprint. Cross-BRAIN merge via `cyberos import` with explicit `acl` / `sync_class` filters. The protocol prohibits merging foreign chains directly — every import row is a fresh `put` on the local chain.
+One `.cyberos-memory/` per organisation, each with its own `manifest.json` fingerprint. Cross-memory merge via `cyberos import` with explicit `acl` / `sync_class` filters. The protocol prohibits merging foreign chains directly — every import row is a fresh `put` on the local chain.
 
 ### 9.4 HTTP REST (`cyberos serve`)
 
@@ -365,14 +365,14 @@ cyberos serve --port 8088 --bind 127.0.0.1
 ### 9.5 Mobile publish
 
 ```bash
-cyberos publish --target mobile --out ~/Desktop/brain.mobi.zip
+cyberos publish --target mobile --out ~/Desktop/memory.mobi.zip
 # → manifest + filtered memories (sync_class=shareable) + STH; loads in the
 #   forthcoming iOS companion app (pending)
 ```
 
 ### Key operational invariants (all deployments)
 
-1. **The BRAIN is the source of truth.** Even with the SQLite derived index, when index ↔ filesystem disagree, the filesystem wins.
+1. **The memory is the source of truth.** Even with the SQLite derived index, when index ↔ filesystem disagree, the filesystem wins.
 2. **Path security.** Every path argument MUST be relative, MUST resolve strictly inside `<memory-root>/`, MUST contain no `..` after normalisation.
 3. **Atomic write — two-phase + parent-dir sync.** macOS uses `fcntl(F_BARRIERFSYNC)` per-batch and `fcntl(F_FULLFSYNC)` per-checkpoint. Plain `fsync()` is insufficient on Darwin.
 4. **Lock leases TTL = 10s, renew = 3s.** Stale leases reaped via monotonic time comparison.
@@ -396,7 +396,7 @@ modules/memory/
 │   ├── __init__.py
 │   ├── __main__.py
 │   ├── core/
-│   │   ├── writer.py          ← canonical Writer class (every BRAIN write goes through here)
+│   │   ├── writer.py          ← canonical Writer class (every memory write goes through here)
 │   │   ├── reader.py
 │   │   ├── walker.py
 │   │   ├── doctor.py
@@ -418,14 +418,14 @@ modules/memory/
 
 | Module | Role | Lives at |
 |---|---|---|
-| **`memory/`** | **This module.** The BRAIN — append-only audit-chained personal memory store | `.cyberos-memory/` per project |
+| **`memory/`** | **This module.** The memory — append-only audit-chained personal memory store | `.cyberos-memory/` per project |
 | [`skill/`](../skill/) | Catalog of agentic Skills + Rust host + Bun toolchain | `modules/skill/<name>/` flat layout |
 | [`cuo/`](../cuo/) | Persona-aware orchestration layer above SKILL | `modules/cuo/<persona-slug>/` flat layout |
 
 This module interacts with:
 
-- [`skill/`](../skill/) — skill bundles can declare `allowed_brain_scopes` (read/write) against the BRAIN; the host enforces them via the capability broker
-- [`cuo/`](../cuo/) — every CUO routing decision + workflow invocation lands in the BRAIN audit chain via `cyberos.core.writer.Writer` (per [`AGENTS.md`](AGENTS.md) §6, §11). The CUO MUST NOT write directly to `audit/`, `HEAD`, or `.lock`. Wired in Phase 3 via `cuo/cuo/core/brain_bridge.py`
+- [`skill/`](../skill/) — skill bundles can declare `allowed_memory_scopes` (read/write) against the memory; the host enforces them via the capability broker
+- [`cuo/`](../cuo/) — every CUO routing decision + workflow invocation lands in the memory audit chain via `cyberos.core.writer.Writer` (per [`AGENTS.md`](AGENTS.md) §6, §11). The CUO MUST NOT write directly to `audit/`, `HEAD`, or `.lock`. Wired in Phase 3 via `cuo/cuo/core/memory_bridge.py`
 
 For the full interactive picture see [`../../website/docs/index.html`](../../website/docs/index.html).
 
@@ -493,7 +493,7 @@ Current Phase 1 baseline. `*.binlog` with `[u32 length BE][u32 crc32c BE][u64 se
 
 Merkle Mountain Range over canonical-JSON leaves. Ed25519-signed tree heads per consolidation. Activation requires resolution of EVOLUTION §4 Q1–Q3 (key custody, public anchoring, recovery semantics).
 
-### Stage 5 — Cross-BRAIN merge (2026 Q2 — P6 shipped)
+### Stage 5 — Cross-memory merge (2026 Q2 — P6 shipped)
 
 `cyberos import <source.zip>` adds imported memories as fresh local-chain rows with `extra.imported_from` + `extra.foreign_chain` provenance.
 
@@ -505,28 +505,28 @@ Merkle Mountain Range over canonical-JSON leaves. Ed25519-signed tree heads per 
 
 1. **Q1 — Key custody for STH signing.** OS keychain (Keychain / KWallet / DPAPI) vs filesystem-encrypted under user passphrase vs hardware token? Currently filesystem-encrypted; key rotation procedure undocumented.
 2. **Q2 — Public anchoring of STH.** Push to a Sigstore-style transparency log? Pin to git? Currently no public anchoring; STH is purely local.
-3. **Q3 — Recovery semantics if a STH is lost/corrupted.** Re-derive from raw rows (requires full walk) vs trust the next STH (requires gap acknowledgement). Currently re-derive; expensive for large BRAINs.
+3. **Q3 — Recovery semantics if a STH is lost/corrupted.** Re-derive from raw rows (requires full walk) vs trust the next STH (requires gap acknowledgement). Currently re-derive; expensive for large memories.
 
 ---
 
 ## Appendix C — Layer-2 source-of-truth
 
-> Layer-2 design: how the BRAIN coexists with external systems of record (calendar, CRM, email, Notion, etc.) without becoming the source of truth for things it isn't authoritative for. (Was `docs/LAYER_2_SOURCE_OF_TRUTH.md`.)
+> Layer-2 design: how the memory coexists with external systems of record (calendar, CRM, email, Notion, etc.) without becoming the source of truth for things it isn't authoritative for. (Was `docs/LAYER_2_SOURCE_OF_TRUTH.md`.)
 
 ### Principle
 
-The BRAIN is **Layer-1: my personal AI-assist scratchpad**. It is NOT:
+The memory is **Layer-1: my personal AI-assist scratchpad**. It is NOT:
 
 - The source of truth for billing (that's your accounting system)
 - The source of truth for code (that's git)
 - The source of truth for calendar events (that's Google Calendar / Outlook)
 - The source of truth for support tickets (that's Zendesk / Intercom)
 
-The BRAIN's purpose is to **persist the agent's understanding** of those external sources, plus your own preferences / decisions / drift / refinements that have no external system of record.
+The memory's purpose is to **persist the agent's understanding** of those external sources, plus your own preferences / decisions / drift / refinements that have no external system of record.
 
 ### Reference memory pattern
 
-When the BRAIN needs to capture knowledge about an external resource, write a `reference` memory:
+When the memory needs to capture knowledge about an external resource, write a `reference` memory:
 
 ```yaml
 ---
@@ -539,13 +539,13 @@ last_synced_at: 2026-05-18T10:00:00Z
 ---
 
 Pipeline bugs are tracked in Linear project "INGEST". Filter `state:open` for current work.
-Authoritative source. Do NOT re-summarize pipeline state in BRAIN — fetch from Linear.
+Authoritative source. Do NOT re-summarize pipeline state in memory — fetch from Linear.
 ```
 
 ### Anti-pattern (DO NOT)
 
 ```yaml
-# Don't do this — Linear is authoritative for ticket state, not BRAIN
+# Don't do this — Linear is authoritative for ticket state, not memory
 ---
 name: open-bugs-2026-05-18
 type: facts
@@ -575,7 +575,7 @@ The list goes stale the moment you write it. Write the `reference` memory instea
 | P3 | Encryption envelope for `restricted` classification | shipped 2026 Q1 |
 | P4 | Soft tombstone vs hard purge distinction | shipped 2026 Q1 |
 | P5 | Conflict-aware writer | shipped 2026 Q1 |
-| P6 | Cross-BRAIN merge via `cyberos import` | shipped 2026 Q2 |
+| P6 | Cross-memory merge via `cyberos import` | shipped 2026 Q2 |
 | P7 | Doctor with `--repair` flag | shipped 2026 Q1 |
 | P8 | Deterministic export | shipped 2026 Q1 |
 | P9 | Semantic search (`--semantic` flag) | shipped 2026 Q2 |
@@ -591,10 +591,16 @@ The list goes stale the moment you write it. Write the `reference` memory instea
 | P14 | Public anchoring of STH via Sigstore transparency log | designed; awaiting Q2 resolution |
 | P15 | Multi-tenant `cyberos serve` (per-organisation STH chains) | designed; awaiting key-custody decision |
 | P16 | Differential `cyberos import` (only-new rows since last import seq) | partially shipped; needs CLI polish |
-| P17 | Real-time `cyberos watch` for BRAIN observability | designed; not implemented |
+| P17 | Real-time `cyberos watch` for memory observability | designed; not implemented |
 | P18 | OpenAPI 3.1 spec for `cyberos serve` | open |
+| P19 | Dreaming — `cyberos dream` out-of-band batch reflection (AGENTS.md §7.7) | **APPROVED 2026-05-19** · §7.7 amendment merged · implementation lives in [`FR-MEMORY-115`](../../docs/feature-requests/memory/FR-MEMORY-115-cyberos-dream.md) |
+| P20 | Per-store ACL via `STORE.yaml` (AGENTS.md §14.4) | **APPROVED 2026-05-19** · §14.4 amendment merged · implementation lives in [`FR-MEMORY-117`](../../docs/feature-requests/memory/FR-MEMORY-117-per-store-acl.md) |
+| P21 | `put_if` precondition-hash op (AGENTS.md §3.1 extension) | **APPROVED 2026-05-19** · §3.1 extended (added 4th canonical op + §3.1.5/.6/.7) · implementation lives in [`FR-MEMORY-118`](../../docs/feature-requests/memory/FR-MEMORY-118-put-if-precondition.md) |
+| P22 | Session transcript ledger (AGENTS.md §18) | **APPROVED 2026-05-19** · §18 amendment merged · implementation lives in [`FR-MEMORY-119`](../../docs/feature-requests/memory/FR-MEMORY-119-session-transcript-ledger.md). Namespaced under `cyberos transcript` (the FR's `cyberos session` collides with existing P11 coordination subcommand) |
 
 Proposals follow the §16 self-amendment grammar: `propose-now` requires `APPROVE protocol change P<n> §<section>` in the active chat; `log-deferred` appends to EVOLUTION.md §4 with a date stamp.
+
+P19–P22 are the four protocol amendments introduced by the MEMORY Improvement Wave 2026 Q3 (FR-MEMORY-115 / 117 / 118 / 119). Per Stephen's 2026-05-19 decision, each is approved independently rather than bundled. The FR sources for the design rationale are the individual `FR-MEMORY-11{5,7,8,9}.md` spec files plus their `.audit.md` siblings.
 
 ---
 
@@ -610,5 +616,5 @@ Proposals follow the §16 self-amendment grammar: `propose-now` requires `APPROV
 - [`../skill/README.md`](../skill/README.md) — sibling SKILL module
 - [`../cuo/README.md`](../cuo/README.md) — sibling CUO module
 - [`../../docs/Software Development Process.md`](../../docs/Software%20Development%20Process.md)
-- [`../../tours/`](../../tours/) — operational CodeTour walkthroughs for BRAIN audit-chain repair, frontmatter fixes, conflict resolution
+- [`../../tours/`](../../tours/) — operational CodeTour walkthroughs for memory audit-chain repair, frontmatter fixes, conflict resolution
 - [`../../website/docs/index.html`](../../website/docs/index.html) — interactive multi-layer architecture diagram

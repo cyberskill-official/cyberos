@@ -3,7 +3,7 @@ id: FR-OBS-001
 title: "OTel Collector + LGTM stack (Loki + Prometheus + Tempo + Grafana) with mTLS ingress + per-service tokens + retention + file-buffer"
 module: OBS
 priority: MUST
-status: accepted
+status: ready_to_implement
 verify: T
 phase: P0
 milestone: P0 · slice 2 (after AI Gateway slice 1)
@@ -11,7 +11,7 @@ slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
 shipped: null
-brain_chain_hash: null
+memory_chain_hash: null
 related_frs: [FR-OBS-002, FR-OBS-003, FR-OBS-004, FR-OBS-005, FR-OBS-006, FR-OBS-007, FR-OBS-008, FR-OBS-009, FR-AI-022]
 depends_on: []
 blocks: [FR-OBS-002, FR-OBS-003, FR-OBS-004, FR-OBS-005, FR-OBS-006, FR-AI-022]
@@ -127,7 +127,7 @@ The observability plane **MUST** deploy a self-hosted OpenTelemetry Collector re
 
 **Why batch processor at 10s + 1024 (§1 #9)?** Backend writes are more efficient batched. 10s is the latency-vs-efficiency floor; longer = laggier dashboards. 1024 is a per-batch cardinality floor — fewer round-trips at high volume.
 
-**Why slice-1 single-instance with HA deferred to slice 5 (§1 #12)?** HA adds operational complexity (peering, leader election, split-brain). At slice-1 scale (50 tenants × ~5 services × ~100 spans/sec each = 25K spans/sec), a single collector instance + single backend per signal handles the load. HA earns its complexity at slice 5+ scale.
+**Why slice-1 single-instance with HA deferred to slice 5 (§1 #12)?** HA adds operational complexity (peering, leader election, split-memory). At slice-1 scale (50 tenants × ~5 services × ~100 spans/sec each = 25K spans/sec), a single collector instance + single backend per signal handles the load. HA earns its complexity at slice 5+ scale.
 
 **Why retention floors at 30d/90d/7d (§1 #3)?** Logs (30d) cover most operational investigations + a typical compliance-audit lookback window. Metrics (90d) cover quarter-over-quarter trending. Traces (7d) are expensive (higher cardinality); 7d covers immediate investigations. Sampled traces (30d via FR-OBS-006) extend the trace lookback for regulatory needs at lower cost.
 
@@ -219,7 +219,7 @@ service:
 ai-gateway   <token-from-secret-store>
 auth-service <token-from-secret-store>
 chat-service <token-from-secret-store>
-brain-writer <token-from-secret-store>
+memory-writer <token-from-secret-store>
 mcp-router   <token-from-secret-store>
 # rotate via scripts/rotate_tokens.sh quarterly
 ```
@@ -442,7 +442,7 @@ See §3.
 set -euo pipefail
 TOKENS_FILE=/etc/otelcol/auth.tokens
 NEW_TOKENS_FILE=$(mktemp)
-for service in ai-gateway auth-service chat-service brain-writer mcp-router; do
+for service in ai-gateway auth-service chat-service memory-writer mcp-router; do
     new_token=$(openssl rand -hex 32)
     echo "$service $new_token" >> "$NEW_TOKENS_FILE"
     # TODO: push new token to each service's secret store via secret-manager API

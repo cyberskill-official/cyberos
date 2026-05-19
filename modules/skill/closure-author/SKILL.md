@@ -1,14 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: closure-author
-description: |
-  Author a project closure package (closure@1) at the end of an
-  engagement. Captures: sign-off certificate (client + EM + TL),
-  lessons-learned compilation (from per-iteration retros), knowledge-
-  transfer pack (source-code handover, runbooks ready, credentials
-  rotated, runbook ownership transferred), asset handover record,
-  client NPS, on-time/on-budget closure metrics. Covers Software
-  Development Process.md §2(l). Chains naturally into closure-audit.
+description: >-
+  Author a project closure package (closure@1) at the end of an engagement. Captures: sign-off certificate (client + EM + TL), lessons-learned compilation (from per-iteration retros), knowledge- transfer pack (source-code handover, runbooks ready, credentials rotated, runbook ownership transferred), asset handover record, client NPS, on-time/on-budget closure metrics. Covers Software Development Process.md §2(l). Chains naturally into closure-audit. Use when user asks to "draft a closure" or "create the closure". Do NOT use for "audit existing closure" (use closure-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -18,7 +12,7 @@ metadata:
   cyberos-rubric-target: closure_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -32,8 +26,8 @@ allowed_brain_scopes:
 allowed_mcp_tools:
   - kb.read
   - kb.search
-  - brain.search
-  - brain.write_memory
+  - memory.search
+  - memory.write_memory
   - audit.append
   - chat.notify
 escalation:
@@ -293,7 +287,7 @@ The skill MUST NEVER re-ask a HITL question whose `resolution` is non-null.
 - Halt the batch on any HITL_PAUSE; aggregate before emitting.
 - Write the manifest after every state transition.
 - Append exactly one `genie.action_log` row per concrete output.
-- Cite BRAIN source for every claim that didn't come from the source files.
+- Cite memory source for every claim that didn't come from the source files.
 
 ### MUST NOT
 

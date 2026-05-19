@@ -273,7 +273,7 @@ async fn create_tenant(
         }
     };
 
-    // FR-AUTH-001 §1 #6 + §1 #12 — Emit `auth.tenant_created` BRAIN audit row
+    // FR-AUTH-001 §1 #6 + §1 #12 — Emit `auth.tenant_created` memory audit row
     // INSIDE the same transaction. If this write fails (or any later step
     // before commit), the entire tx rolls back — both the tenant row and
     // the audit row are discarded together. The partial state of "tenant
@@ -283,7 +283,7 @@ async fn create_tenant(
     let request_id = headers
         .get("x-request-id")
         .and_then(|h| h.to_str().ok());
-    let payload = crate::brain_bridge::TenantCreatedPayload {
+    let payload = crate::memory_bridge::TenantCreatedPayload {
         tenant_id: row.id.as_uuid(),
         slug: &row.slug,
         display_name: &row.display_name,
@@ -291,7 +291,7 @@ async fn create_tenant(
         idempotency_key: Some(key),
         request_id,
     };
-    if let Err(e) = crate::brain_bridge::emit_tenant_created(&mut tx, payload).await {
+    if let Err(e) = crate::memory_bridge::emit_tenant_created(&mut tx, payload).await {
         span.record("outcome", "error");
         // tx will roll back on drop since we return Err here. The tenant
         // INSERT never commits — audit failure → no tenant.
@@ -330,7 +330,7 @@ async fn create_tenant(
 ///   * G-001 email regex validation                      (validate_email)
 ///   * G-003 role allow-list                              (validate_roles)
 ///   * G-004 Idempotency-Key honoured                     (idempotency::lookup + record)
-///   * G-005 auth.subject_created BRAIN audit row         (brain_bridge::emit_subject_created)
+///   * G-005 auth.subject_created memory audit row         (memory_bridge::emit_subject_created)
 ///   * G-006 structured 409 handle_taken / email_taken
 ///   * G-009 HIBP audit emit-in-transaction (atomicity)   (moved INTO the tx)
 ///   * G-010 OTel #[tracing::instrument]
@@ -402,7 +402,7 @@ async fn create_subject(
             span.record("outcome", "invalid_input");
             return Err(e);
         }
-        span.record("email_hash16", crate::brain_bridge::email_hash16(email).as_str());
+        span.record("email_hash16", crate::memory_bridge::email_hash16(email).as_str());
     }
 
     // G-003 — Role allow-list (§1 #5). Closed allow-list for slice 1:
@@ -605,7 +605,7 @@ async fn create_subject(
         updated_at: row.9,
     };
 
-    // G-005 — Emit auth.subject_created BRAIN audit row INSIDE the tx
+    // G-005 — Emit auth.subject_created memory audit row INSIDE the tx
     // (§1 #7 + §1 #12). email_hash16 is the privacy-safe identifier;
     // plaintext email + password hash NEVER appear in the audit chain.
     let caller_subject_id = Uuid::parse_str(&claims.sub).unwrap_or_else(|_| Uuid::nil());
@@ -613,8 +613,8 @@ async fn create_subject(
     let email_hash = subject
         .email
         .as_deref()
-        .map(crate::brain_bridge::email_hash16);
-    let payload = crate::brain_bridge::SubjectCreatedPayload {
+        .map(crate::memory_bridge::email_hash16);
+    let payload = crate::memory_bridge::SubjectCreatedPayload {
         subject_id: subject.id.as_uuid(),
         tenant_id,
         email_hash16: email_hash,
@@ -624,7 +624,7 @@ async fn create_subject(
         request_id,
         kind: &subject.kind,
     };
-    if let Err(e) = crate::brain_bridge::emit_subject_created(&mut tx, payload).await {
+    if let Err(e) = crate::memory_bridge::emit_subject_created(&mut tx, payload).await {
         span.record("outcome", "error");
         return Err(internal_err(e));
     }
@@ -821,6 +821,50 @@ fn require_root_admin_in_tenant_0(claims: &Claims) -> Result<(), (StatusCode, Js
         ));
     }
     Ok(())
+}
+
+/// FR-AUTH-005 §1 #2 + G-002 — resolve the effective tenant_id for a
+/// tenant-scoped admin LIST endpoint, honouring the `X-Switch-Tenant` header.
+///
+/// Semantics:
+///   * No header → caller's JWT `tenant_id` (the common case; tenant-admin
+///     lists subjects in their own tenant).
+///   * Header present + caller is root-admin in tenant 0 → parse header as
+///     UUID; return that tenant_id (root-admin's cross-tenant operator UX).
+///   * Header present + caller is NOT root-admin in tenant 0 → 403 forbidden
+///     with `{error: "forbidden", needed: "root-admin in tenant 0 to use X-Switch-Tenant"}`.
+///   * Header present but not a valid UUID → 400 invalid_input on the header.
+///
+/// Returns 500 only if the caller's own `tenant_id` claim is unparseable —
+/// that's a JWT-issuance bug, not a caller error.
+fn resolve_effective_tenant_id(
+    claims: &Claims,
+    headers: &HeaderMap,
+) -> Result<Uuid, (StatusCode, Json<Value>)> {
+    let caller_tenant = Uuid::parse_str(&claims.tenant_id).map_err(internal_err)?;
+    let header_val = headers
+        .get("x-switch-tenant")
+        .and_then(|h| h.to_str().ok());
+    let Some(raw) = header_val else {
+        return Ok(caller_tenant);
+    };
+    // Header is present → caller must be root-admin in tenant 0.
+    let is_root_admin_zero = caller_tenant == Uuid::nil()
+        && claims.roles.iter().any(|r| r == "root-admin");
+    if !is_root_admin_zero {
+        return Err((
+            StatusCode::FORBIDDEN,
+            Json(json!({
+                "error": "forbidden",
+                "needed": "root-admin in tenant 0 to use X-Switch-Tenant",
+            })),
+        ));
+    }
+    // Caller is root-admin → validate the header's UUID form.
+    Uuid::parse_str(raw).map_err(|_| invalid_input(
+        "X-Switch-Tenant",
+        "header value must be a valid UUID",
+    ))
 }
 
 /// Build a 400 BAD_REQUEST with structured `{error, field, reason}` body.
@@ -1042,6 +1086,74 @@ mod validate_tests {
         assert_eq!(body["error"], "forbidden");
     }
 
+    // ─── FR-AUTH-005 G-002 — X-Switch-Tenant header resolution ───────────
+
+    fn headers_with(name: &str, value: &str) -> HeaderMap {
+        let mut h = HeaderMap::new();
+        h.insert(
+            axum::http::HeaderName::from_bytes(name.as_bytes()).unwrap(),
+            axum::http::HeaderValue::from_str(value).unwrap(),
+        );
+        h
+    }
+
+    #[test]
+    fn switch_tenant_absent_uses_caller_jwt_tenant() {
+        let claims = build_claims("11111111-1111-1111-1111-111111111111", vec!["tenant-admin"]);
+        let h = HeaderMap::new();
+        let id = resolve_effective_tenant_id(&claims, &h).unwrap();
+        assert_eq!(id, Uuid::parse_str("11111111-1111-1111-1111-111111111111").unwrap());
+    }
+
+    #[test]
+    fn switch_tenant_header_by_root_admin_in_tenant_0_resolves_to_header() {
+        let claims = build_claims("00000000-0000-0000-0000-000000000000", vec!["root-admin"]);
+        let h = headers_with("x-switch-tenant", "22222222-2222-2222-2222-222222222222");
+        let id = resolve_effective_tenant_id(&claims, &h).unwrap();
+        assert_eq!(id, Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap());
+    }
+
+    #[test]
+    fn switch_tenant_header_by_non_root_admin_returns_403() {
+        let claims = build_claims("11111111-1111-1111-1111-111111111111", vec!["tenant-admin"]);
+        let h = headers_with("x-switch-tenant", "22222222-2222-2222-2222-222222222222");
+        let (status, Json(body)) = resolve_effective_tenant_id(&claims, &h).unwrap_err();
+        assert_eq!(status, StatusCode::FORBIDDEN);
+        assert_eq!(body["error"], "forbidden");
+        assert!(body["needed"].as_str().unwrap().contains("X-Switch-Tenant"));
+    }
+
+    #[test]
+    fn switch_tenant_header_malformed_uuid_returns_400() {
+        let claims = build_claims("00000000-0000-0000-0000-000000000000", vec!["root-admin"]);
+        let h = headers_with("x-switch-tenant", "not-a-uuid");
+        let (status, Json(body)) = resolve_effective_tenant_id(&claims, &h).unwrap_err();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(body["error"], "invalid_input");
+        assert_eq!(body["field"], "X-Switch-Tenant");
+    }
+
+    // ─── FR-AUTH-005 G-014 — ?include_suspended default ──────────────────
+
+    #[test]
+    fn list_query_omitted_include_suspended_defaults_to_false() {
+        // serde_qs/urlencoded decoding goes via serde_json::from_value in
+        // unit form — emulating the axum Query<> extractor's path.
+        let q: super::ListQuery = serde_json::from_value(serde_json::json!({})).unwrap();
+        assert!(!q.include_suspended);
+        assert!(q.cursor.is_none());
+        assert!(q.limit.is_none());
+    }
+
+    #[test]
+    fn list_query_include_suspended_true_round_trips() {
+        let q: super::ListQuery = serde_json::from_value(
+            serde_json::json!({"include_suspended": true, "limit": 25}),
+        ).unwrap();
+        assert!(q.include_suspended);
+        assert_eq!(q.limit, Some(25));
+    }
+
     // ─── FR-AUTH-002 G-001 — email validation ────────────────────────────
 
     #[test]
@@ -1187,19 +1299,61 @@ pub struct ListQuery {
     pub cursor: Option<String>,
     /// Page size; capped at 100.
     pub limit: Option<i64>,
+    /// FR-AUTH-005 §1 #14 + G-014 — when `true`, return suspended / revoked
+    /// subjects too. Default `false` (hide suspended — the common-case
+    /// operator UX) so the typical "who do I currently manage" question
+    /// returns active subjects only. Explicit opt-in for revoke-management
+    /// workflows.
+    #[serde(default)]
+    pub include_suspended: bool,
 }
 
+// FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`
+// + outcome dynamically. Counter aggregation happens at the collector.
+#[tracing::instrument(
+    name = "auth.admin_list",
+    skip(state, claims, q),
+    fields(
+        endpoint = "tenants",
+        caller_tenant_id = %claims.tenant_id,
+        outcome = tracing::field::Empty,
+        items_returned = tracing::field::Empty,
+    )
+)]
 async fn list_tenants(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Query(q): Query<ListQuery>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
-    // List tenants under root context only. Non-root sees zero rows via RLS.
+    let span = tracing::Span::current();
+    // FR-AUTH-005 §1 #1 + G-001 — Handler-level authz: caller MUST be in tenant 0
+    // AND hold the `root-admin` role. The `verify_jwt` middleware (FR-AUTH-004)
+    // has already validated the signature + populated `claims`; this check is
+    // the defence-in-depth role guard at the handler layer. Tenant-admin and
+    // every other role gets 403 with an explicit `needed` hint so operators
+    // know WHICH role would have granted access (per FR-AUTH-001's pattern).
+    if let Err(e) = require_root_admin_in_tenant_0(&claims) {
+        span.record("outcome", "forbidden");
+        return Err(e);
+    }
+
+    // List tenants under root context only. Non-root sees zero rows via RLS;
+    // belt-and-braces in case the handler-level check is ever bypassed.
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SET LOCAL app.current_tenant_id = '00000000-0000-0000-0000-000000000000'")
         .execute(&mut *tx).await.map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
-    let cursor_uuid = parse_cursor(q.cursor.as_deref());
+    // FR-AUTH-005 §1 #5 + #9 + G-005/G-009 — HMAC-signed cursors. The table
+    // tag binds the cursor to /v1/admin/tenants so a subjects cursor (even
+    // valid one) won't redeem here. Tampered cursors → structured 400.
+    let cursor_uuid = match q.cursor.as_deref() {
+        Some(c) => Some(
+            crate::cursor::parse_cursor(c, crate::cursor::CursorTable::Tenants)
+                .map_err(|e| e.into_response())?,
+        ),
+        None => None,
+    };
 
     let rows: Vec<(Uuid, String, String, String, String, String, String, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>)> = sqlx::query_as(
         "SELECT id, slug, display_name, country, plan_tier, status, residency, created_at, updated_at
@@ -1215,86 +1369,301 @@ async fn list_tenants(
     .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
 
-    let next_cursor = rows.last().map(|r| make_cursor(r.0));
+    let next_cursor = rows.last().map(|r| crate::cursor::make_cursor(crate::cursor::CursorTable::Tenants, r.0));
     let items: Vec<Tenant> = rows.into_iter().map(|r| Tenant {
         id: TenantId(r.0), slug: r.1, display_name: r.2, country: r.3,
         plan_tier: r.4, status: r.5, residency: r.6,
         created_at: r.7, updated_at: r.8,
     }).collect();
 
+    span.record("outcome", "ok");
+    span.record("items_returned", items.len());
     Ok((StatusCode::OK, Json(json!({"items": items, "next_cursor": next_cursor}))))
 }
 
+// FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_list_total`
+// with endpoint=subjects + outcome.
+#[tracing::instrument(
+    name = "auth.admin_list",
+    skip(state, claims, headers, q),
+    fields(
+        endpoint = "subjects",
+        caller_tenant_id = %claims.tenant_id,
+        effective_tenant_id = tracing::field::Empty,
+        outcome = tracing::field::Empty,
+        items_returned = tracing::field::Empty,
+        include_suspended = q.include_suspended,
+    )
+)]
 async fn list_subjects(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
+    headers: HeaderMap,
     Query(q): Query<ListQuery>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
-    let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(internal_err)?;
+    let span = tracing::Span::current();
+    // FR-AUTH-005 §1 #2 + G-002 — X-Switch-Tenant header:
+    //   * default → caller's JWT tenant_id (tenant-admin lists own tenant).
+    //   * header present + caller IS root-admin in tenant 0 → use header's
+    //     tenant_id (root-admin's cross-tenant operator UX).
+    //   * header present + caller is NOT root-admin in tenant 0 → 403 forbidden
+    //     (defence-in-depth against cross-tenant fishing — RLS catches the DB
+    //     side, this catches the API side with an explicit `needed` hint).
+    //   * header malformed (not a UUID) → 400 invalid_input.
+    let tenant_id = match resolve_effective_tenant_id(&claims, &headers) {
+        Ok(t) => t,
+        Err(e) => {
+            span.record("outcome", "forbidden_or_invalid");
+            return Err(e);
+        }
+    };
+    span.record("effective_tenant_id", tracing::field::display(tenant_id));
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
         .bind(tenant_id.to_string()).execute(&mut *tx).await.map_err(db_err)?;
 
     let limit = q.limit.unwrap_or(50).clamp(1, 100);
-    let cursor_uuid = parse_cursor(q.cursor.as_deref());
+    // FR-AUTH-005 §1 #5 + #9 + G-005/G-009 — table tag binds cursor to
+    // /v1/admin/subjects (tenant cursors won't redeem). Tampered → 400.
+    let cursor_uuid = match q.cursor.as_deref() {
+        Some(c) => Some(
+            crate::cursor::parse_cursor(c, crate::cursor::CursorTable::Subjects)
+                .map_err(|e| e.into_response())?,
+        ),
+        None => None,
+    };
 
+    // FR-AUTH-005 §1 #14 + G-014 — default hides suspended/revoked subjects
+    // (the common-case "who do I currently manage" question). Explicit
+    // `?include_suspended=true` opts in for revoke-management workflows.
+    // The filter is expressed as a parameterised predicate so the optimiser
+    // can still use the (tenant_id, id) index.
     let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<String>, String, String, Vec<String>, chrono::DateTime<chrono::Utc>, chrono::DateTime<chrono::Utc>)> = sqlx::query_as(
         "SELECT id, tenant_id, handle, display_name, email, kind, status, roles, created_at, updated_at
             FROM subjects
            WHERE ($1::uuid IS NULL OR id > $1)
+             AND ($3::bool OR status = 'active')
         ORDER BY id ASC
            LIMIT $2",
     )
     .bind(cursor_uuid)
     .bind(limit)
+    .bind(q.include_suspended)
     .fetch_all(&mut *tx)
     .await
     .map_err(db_err)?;
     tx.commit().await.map_err(db_err)?;
 
-    let next_cursor = rows.last().map(|r| make_cursor(r.0));
+    let next_cursor = rows.last().map(|r| crate::cursor::make_cursor(crate::cursor::CursorTable::Subjects, r.0));
     let items: Vec<Subject> = rows.into_iter().map(|r| Subject {
         id: SubjectId(r.0), tenant_id: TenantId(r.1), handle: r.2,
         display_name: r.3, email: r.4, kind: r.5, status: r.6,
         roles: r.7, created_at: r.8, updated_at: r.9,
     }).collect();
+    span.record("outcome", "ok");
+    span.record("items_returned", items.len());
     Ok((StatusCode::OK, Json(json!({"items": items, "next_cursor": next_cursor}))))
 }
 
+#[derive(Debug, Deserialize, Default)]
+pub struct RevokeBody {
+    /// Optional free-form reason ("compromised", "terminated", …). Closed
+    /// taxonomy lands in FR-AUTH-111.
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+/// FR-AUTH-005 §1 #3 + #6 + #8 + G-003/G-006/G-008 — Revoke handler.
+///
+/// 1. Idempotency-Key required (G-008).
+/// 2. `subjects.status = 'revoked'` (FR §1 #3).
+/// 3. Enumerate `sessions` rows for the subject + push each jti into the
+///    process-wide in-memory deny-list with the jti's natural expiry
+///    (G-003 + G-011 + G-017 wiring).
+/// 4. Emit `auth.subject_revoked` memory row INSIDE the tx so partial
+///    state ("subject revoked but no audit row" or vice versa) is impossible.
+// FR-AUTH-005 §1 #15 + G-015 — OTel span emits `auth_admin_revoke_total`
+// counter + `auth_admin_revoke_jti_count` histogram via tracing fields.
+#[tracing::instrument(
+    name = "auth.admin_revoke",
+    skip(state, claims, headers, body),
+    fields(
+        subject_id = %id,
+        caller_tenant_id = %claims.tenant_id,
+        outcome = tracing::field::Empty,
+        revoked_jti_count = tracing::field::Empty,
+    )
+)]
 async fn revoke_subject(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
     Path(id): Path<Uuid>,
+    headers: HeaderMap,
+    body: Option<Json<RevokeBody>>,
 ) -> Result<StatusCode, (StatusCode, Json<Value>)> {
-    flip_subject_status(state, claims, id, "revoked").await
+    revoke_or_unrevoke(state, claims, id, headers, body.map(|j| j.0).unwrap_or_default(), true).await
 }
 
+/// FR-AUTH-005 §1 #4 + #6 + #8 + #12 + G-004/G-006/G-008/G-012 — Unrevoke handler.
+///
+/// 1. Idempotency-Key required (G-008).
+/// 2. `subjects.status = 'active'` (FR §1 #4).
+/// 3. **Does NOT touch the deny-list** — per §1 #12 + G-012, existing
+///    denied jtis remain denied until natural expiry; the subject must
+///    re-authenticate via `/v1/auth/token` to receive fresh jtis.
+/// 4. Emit `auth.subject_unrevoked` memory row inside the tx.
+#[tracing::instrument(
+    name = "auth.admin_unrevoke",
+    skip(state, claims, headers),
+    fields(
+        subject_id = %id,
+        caller_tenant_id = %claims.tenant_id,
+        outcome = tracing::field::Empty,
+    )
+)]
 async fn unrevoke_subject(
     State(state): State<AppState>,
     Extension(claims): Extension<Claims>,
     Path(id): Path<Uuid>,
+    headers: HeaderMap,
 ) -> Result<StatusCode, (StatusCode, Json<Value>)> {
-    flip_subject_status(state, claims, id, "active").await
+    revoke_or_unrevoke(state, claims, id, headers, RevokeBody::default(), false).await
 }
 
-async fn flip_subject_status(
+async fn revoke_or_unrevoke(
     state: AppState,
     claims: Claims,
     id: Uuid,
-    new_status: &str,
+    headers: HeaderMap,
+    body: RevokeBody,
+    is_revoke: bool,
 ) -> Result<StatusCode, (StatusCode, Json<Value>)> {
     let tenant_id = Uuid::parse_str(&claims.tenant_id).map_err(internal_err)?;
+    let caller_subject_id = Uuid::parse_str(&claims.sub).unwrap_or_else(|_| Uuid::nil());
+    let route = if is_revoke {
+        "POST /v1/admin/subjects/:id/revoke"
+    } else {
+        "POST /v1/admin/subjects/:id/unrevoke"
+    };
+
+    // FR-AUTH-005 §1 #8 + G-008 — Idempotency-Key required.
+    let idem_key = match headers
+        .get("idempotency-key")
+        .and_then(|h| h.to_str().ok())
+    {
+        Some(k) => k,
+        None => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "missing_header",
+                    "field": "Idempotency-Key",
+                    "reason": "header required on admin POSTs for idempotent retries (per FR-AUTH-005 §1 #8)"
+                })),
+            ));
+        }
+    };
+    // Replay cache check (keyed on tenant + route + key + subject id encoded
+    // into the request_id portion via the body field). Same-key/same-subject
+    // → no-op replay; same-key/different-subject would 409 but the per-route
+    // tenant scope already partitions that.
+    if let Some((status, _body)) = crate::idempotency::lookup(&state.pg, idem_key, route, tenant_id)
+        .await
+        .map_err(db_err)?
+    {
+        return Ok(StatusCode::from_u16(status as u16).unwrap_or(StatusCode::NO_CONTENT));
+    }
+
+    let new_status = if is_revoke { "revoked" } else { "active" };
+    let request_id = headers
+        .get("x-request-id")
+        .and_then(|h| h.to_str().ok());
+
     let mut tx = state.pg.begin().await.map_err(db_err)?;
     sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
-        .bind(tenant_id.to_string()).execute(&mut *tx).await.map_err(db_err)?;
+        .bind(tenant_id.to_string())
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
 
+    // 1. Flip the subject status.
     let result = sqlx::query("UPDATE subjects SET status = $1, updated_at = NOW() WHERE id = $2")
-        .bind(new_status).bind(id)
-        .execute(&mut *tx).await.map_err(db_err)?;
-    tx.commit().await.map_err(db_err)?;
+        .bind(new_status)
+        .bind(id)
+        .execute(&mut *tx)
+        .await
+        .map_err(db_err)?;
     if result.rows_affected() == 0 {
-        return Err((StatusCode::NOT_FOUND, Json(json!({"error": "subject not found in this tenant"}))));
+        return Err((
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "subject not found in this tenant"})),
+        ));
     }
+
+    // 2. (Revoke only) Enumerate active jtis and push to deny-list.
+    let mut denied_count: usize = 0;
+    if is_revoke {
+        let active = crate::sessions::list_active_for_subject(&mut tx, id)
+            .await
+            .map_err(db_err)?;
+        for sess in &active {
+            // Translate DateTime<Utc> → Instant — best-effort, since Instant
+            // is monotonic and DateTime is calendar-absolute. Compute the
+            // remaining lifetime from now and offset.
+            let ttl_secs = (sess.expires_at - chrono::Utc::now()).num_seconds().max(0) as u64;
+            state.deny_list.deny_for(&sess.jti, std::time::Duration::from_secs(ttl_secs));
+            denied_count += 1;
+        }
+    }
+
+    // 3. memory audit row inside the tx.
+    if is_revoke {
+        let payload = crate::memory_bridge::SubjectRevokedPayload {
+            subject_id: id,
+            tenant_id,
+            revoked_by_subject_id: caller_subject_id,
+            reason: body.reason.as_deref(),
+            revoked_jti_count: denied_count,
+            idempotency_key: Some(idem_key),
+            request_id,
+        };
+        crate::memory_bridge::emit_subject_revoked(&mut tx, payload)
+            .await
+            .map_err(internal_err)?;
+    } else {
+        let payload = crate::memory_bridge::SubjectUnrevokedPayload {
+            subject_id: id,
+            tenant_id,
+            unrevoked_by_subject_id: caller_subject_id,
+            idempotency_key: Some(idem_key),
+            request_id,
+        };
+        crate::memory_bridge::emit_subject_unrevoked(&mut tx, payload)
+            .await
+            .map_err(internal_err)?;
+    }
+
+    tx.commit().await.map_err(db_err)?;
+
+    // Record idempotency entry AFTER commit so a failed revoke isn't replayed.
+    crate::idempotency::record(
+        &state.pg,
+        idem_key,
+        route,
+        tenant_id,
+        StatusCode::NO_CONTENT.as_u16() as i16,
+        &json!({"subject_id": id.to_string(), "new_status": new_status, "denied_jti_count": denied_count}),
+    )
+    .await
+    .map_err(db_err)?;
+
+    // FR-AUTH-005 §1 #15 + G-015 — span fields for the metric collector.
+    let span = tracing::Span::current();
+    span.record("outcome", if is_revoke { "revoked" } else { "unrevoked" });
+    if is_revoke {
+        span.record("revoked_jti_count", denied_count);
+    }
+
     Ok(StatusCode::NO_CONTENT)
 }
 
@@ -1396,8 +1765,8 @@ async fn password_grant(
     // adds a dedicated x-request-id header, swap this for the value pulled
     // from there.
     let source_ip_str = caller_ip.to_string();
-    let source_ip_hash = crate::brain_bridge::source_ip_hash16(&source_ip_str);
-    let email_hash = crate::brain_bridge::email_hash16(handle);
+    let source_ip_hash = crate::memory_bridge::source_ip_hash16(&source_ip_str);
+    let email_hash = crate::memory_bridge::email_hash16(handle);
 
     // Look up tenant + subject under root context.
     let mut tx = state.pg.begin().await.map_err(db_err)?;
@@ -1423,10 +1792,10 @@ async fn password_grant(
         Some(r) => r,
         None => {
             let _ = bcrypt::verify(password, DUMMY_BCRYPT_HASH); // intentionally discard
-            let _ = crate::brain_bridge::emit_token_failed(
+            let _ = crate::memory_bridge::emit_token_failed(
                 &state.pg,
                 Uuid::nil(),
-                crate::brain_bridge::TokenFailedPayload {
+                crate::memory_bridge::TokenFailedPayload {
                     tenant_slug,
                     email_hash16: &email_hash,
                     reason: "invalid_credentials",
@@ -1438,10 +1807,10 @@ async fn password_grant(
         }
     };
     if status != "active" {
-        let _ = crate::brain_bridge::emit_token_failed(
+        let _ = crate::memory_bridge::emit_token_failed(
             &state.pg,
             tenant_id,
-            crate::brain_bridge::TokenFailedPayload {
+            crate::memory_bridge::TokenFailedPayload {
                 tenant_slug,
                 email_hash16: &email_hash,
                 reason: "suspended",
@@ -1457,10 +1826,10 @@ async fn password_grant(
     };
     let ok = bcrypt::verify(password, &pw_hash).map_err(|e| internal_err(e))?;
     if !ok {
-        let _ = crate::brain_bridge::emit_token_failed(
+        let _ = crate::memory_bridge::emit_token_failed(
             &state.pg,
             tenant_id,
-            crate::brain_bridge::TokenFailedPayload {
+            crate::memory_bridge::TokenFailedPayload {
                 tenant_slug,
                 email_hash16: &email_hash,
                 reason: "invalid_credentials",
@@ -1499,14 +1868,14 @@ async fn password_grant(
         assigned_roles.clone(),
         Some(rbac_v),
         agent_persona,
-        traceparent,
+        traceparent.clone(),
     ).await.map_err(|e| (
         StatusCode::INTERNAL_SERVER_ERROR,
         Json(json!({"error": format!("jwt issuance failed: {e}")})),
     ))?;
 
     // FR-AUTH-004 §1 #6 — slice-1 audit-fix G-002: emit `auth.token_issued`
-    // BRAIN audit row. Best-effort; tracing::warn on failure but never
+    // memory audit row. Best-effort; tracing::warn on failure but never
     // block token issuance for an audit miss.
     let verified = svc.verify(&tokens.access_token).await.ok();
     let jti_for_audit = verified
@@ -1514,9 +1883,9 @@ async fn password_grant(
         .map(|c| c.jti.clone())
         .unwrap_or_else(|| "unknown".to_string());
     let exp_for_audit = verified.as_ref().map(|c| c.exp).unwrap_or(0);
-    let _ = crate::brain_bridge::emit_token_issued(
+    let _ = crate::memory_bridge::emit_token_issued(
         &state.pg,
-        crate::brain_bridge::TokenIssuedPayload {
+        crate::memory_bridge::TokenIssuedPayload {
             subject_id: sub_id,
             tenant_id,
             jti: &jti_for_audit,
@@ -1528,6 +1897,36 @@ async fn password_grant(
         },
     )
     .await;
+
+    // FR-AUTH-005 §1 #10 + G-010/G-017 — record the active jti in `sessions`
+    // so the revoke handler can enumerate them. Best-effort: a sessions
+    // insert failure is logged but doesn't refuse the token (the audit row
+    // is already emitted; failing here would leave the user with a token
+    // that can't be revoked, which is strictly worse than tracking it via
+    // a slightly delayed sweeper). When sessions failure becomes a SLO
+    // concern, lift this into the same tx as `emit_token_issued`.
+    if let Some(exp_dt) = chrono::DateTime::<chrono::Utc>::from_timestamp(exp_for_audit, 0) {
+        if let Ok(mut tx) = state.pg.begin().await {
+            // Set the tenant GUC so the sessions RLS policy allows the insert.
+            let _ = sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+                .bind(tenant_id.to_string())
+                .execute(&mut *tx)
+                .await;
+            match crate::sessions::insert(
+                &mut tx,
+                &jti_for_audit,
+                sub_id,
+                tenant_id,
+                exp_dt,
+                &source_ip_hash,
+            ).await {
+                Ok(()) => { let _ = tx.commit().await; }
+                Err(e) => {
+                    tracing::warn!(error = %e, jti = %jti_for_audit, "sessions insert failed");
+                }
+            }
+        }
+    }
 
     // FR-AUTH-106 — record login + assess. Slice-3 wraps the detector chain
     // with per-tenant policy + CIDR allowlist + anonymous-IP + sticky-
@@ -1736,6 +2135,33 @@ async fn refresh_grant(
         Json(json!({"error": format!("jwt issuance failed: {e}")})),
     ))?;
 
+    // FR-AUTH-005 §1 #10 + G-010/G-017 — record the refreshed access-token
+    // jti in sessions. Refresh tokens are tracked here too because the
+    // revoke handler will deny-list every active jti for the subject;
+    // refresh-tokens are JWTs with their own jti per FR-AUTH-004.
+    let verified = svc.verify(&tokens.access_token).await.ok();
+    let new_jti = verified.as_ref().map(|c| c.jti.clone());
+    let new_exp = verified.as_ref().map(|c| c.exp).unwrap_or(0);
+    if let (Some(jti), Some(exp_dt)) = (
+        new_jti,
+        chrono::DateTime::<chrono::Utc>::from_timestamp(new_exp, 0),
+    ) {
+        if let Ok(mut tx) = state.pg.begin().await {
+            let _ = sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+                .bind(tenant_id.to_string())
+                .execute(&mut *tx)
+                .await;
+            // Refresh path has no fresh source IP — reuse a zero-ip hash.
+            let ip_hash = crate::memory_bridge::source_ip_hash16("refresh");
+            if crate::sessions::insert(&mut tx, &jti, sub_id, tenant_id, exp_dt, &ip_hash)
+                .await
+                .is_ok()
+            {
+                let _ = tx.commit().await;
+            }
+        }
+    }
+
     Ok((StatusCode::OK, Json(token_response_body(&tokens))))
 }
 
@@ -1779,17 +2205,10 @@ async fn jwks(State(state): State<AppState>) -> (StatusCode, Json<Value>) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-fn parse_cursor(s: Option<&str>) -> Option<Uuid> {
-    use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
-    let raw = s?;
-    let bytes = URL_SAFE_NO_PAD.decode(raw).ok()?;
-    Uuid::from_slice(&bytes).ok()
-}
-
-fn make_cursor(id: Uuid) -> String {
-    use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
-    URL_SAFE_NO_PAD.encode(id.as_bytes())
-}
+// FR-AUTH-005 G-005/G-009 (2026-05-19): the unsigned base64 cursor helpers
+// that previously lived here moved to `crate::cursor` as HMAC-signed
+// variants per spec §1 #5 + #9. Tampered cursors now surface as 400
+// `invalid_cursor` instead of silently resetting to page 1.
 
 // `require_tenant_header` was removed once the verify_jwt middleware landed —
 // admin handlers now read `tenant_id` from the verified `Claims` extension

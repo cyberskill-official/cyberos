@@ -1,12 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: intellectual-property-strategy-audit
-description: Audits an intellectual-property-strategy@1 artefact against ip_strategy_rubric@1.0. Validates FM + SEC structure, portfolio-inventory completeness, posture-rationale internal consistency, FTO assessment coverage, and enforcement-budget feasibility. Per WIPO IP framework + USPTO MPEP.
-  Audit one or more existing intellectual-property-strategy@1 markdowns against
-  ip-strategy_rubric@1.0. Produces a sibling .audit.md per artefact plus
-  an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on
-  audited_file_sha256. Standalone trigger or chains naturally after
-  intellectual-property-strategy-author.
+description: >-
+  Audits an intellectual-property-strategy@1 artefact against ip_strategy_rubric@1.0. Validates FM + SEC structure, portfolio-inventory completeness, posture-rationale internal consistency, FTO assessment coverage, and enforcement-budget feasibility. Per WIPO IP framework + USPTO MPEP. Audit one or more existing intellectual-property-strategy@1 markdowns against ip-strategy_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs_human verdicts; resumable on audited_file_sha256. Standalone trigger or chains naturally after intellectual-property-strategy-author. Use when user asks to "audit this intellectual property strategy" or "check the intellectual property strategy". Do NOT use for "draft a new intellectual property strategy" (use intellectual-property-strategy-author instead). Audit one or more existing intellectual-property-strategy@1 markdowns against ip-strategy_rubric@1.0. Produces a sibling .audit.md per artefact plus an AUDIT_BATCH_SUMMARY. Halts on needs...
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -16,7 +12,7 @@ metadata:
   cyberos-rubric-version: ip-strategy_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -25,7 +21,7 @@ allowed_brain_scopes:
     - project:*
 allowed_mcp_tools:
   - kb.read
-  - brain.search
+  - memory.search
   - audit.append
 escalation:
   to_persona_on_legal: cuo-clo

@@ -11,8 +11,8 @@ slice: 2
 owner: Stephen Cheng (CDO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-EMAIL-001, FR-EMAIL-008, FR-EMAIL-009, FR-EMAIL-007, FR-EMAIL-006, FR-CHAT-005, FR-CUO-101, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-EMAIL-001, FR-EMAIL-008, FR-EMAIL-009, FR-EMAIL-007, FR-EMAIL-006, FR-CHAT-005, FR-CUO-101, FR-MEMORY-111]
 depends_on: [FR-EMAIL-001, FR-EMAIL-009]
 blocks: []
 
@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1613 2026-05-17 — Closed enum `thread_state` = {open, assigned, snoozed, closed, archived}; cardinality 5
   - DEC-1614 2026-05-17 — Genie actions panel (right pane): live action proposals from FR-EMAIL-008 + manual quick-actions
   - DEC-1615 2026-05-17 — Keyboard shortcuts: navigation (j/k), reply (r), forward (f), assign (a), snooze (z), close (e), Genie (g)
-  - DEC-1616 2026-05-17 — BRAIN audit kinds: email.thread_assigned, email.thread_state_changed, email.internal_comment_added, email.thread_snoozed, email.thread_closed
+  - DEC-1616 2026-05-17 — memory audit kinds: email.thread_assigned, email.thread_state_changed, email.internal_comment_added, email.thread_snoozed, email.thread_closed
 
 build_envelope:
   language: typescript / react
@@ -90,7 +90,7 @@ risk_if_skipped: "Without Missive-style UX, CDO/AM use Apple Mail / Gmail — no
 
 ## §1 — Description (BCP-14 normative)
 
-The EMAIL service + portal-web frontend **MUST** ship Missive-style UX — shared inbox, thread state + assignment, internal comments, Genie panel, keyboard shortcuts, 5 BRAIN audit kinds.
+The EMAIL service + portal-web frontend **MUST** ship Missive-style UX — shared inbox, thread state + assignment, internal comments, Genie panel, keyboard shortcuts, 5 memory audit kinds.
 
 1. **MUST** define `thread_state` per DEC-1610 + DEC-1613 — `open | assigned | snoozed | closed | archived`. Validated against closed enum (cardinality 5).
 
@@ -156,7 +156,7 @@ The EMAIL service + portal-web frontend **MUST** ship Missive-style UX — share
    - `Escape` clears focus
    - All disabled when text input focused
 
-8. **MUST** emit 5 BRAIN audit kinds per DEC-1616. PII per FR-BRAIN-111: comment body SHA-256 hashed; mentions (uuids) ok.
+8. **MUST** emit 5 memory audit kinds per DEC-1616. PII per FR-MEMORY-111: comment body SHA-256 hashed; mentions (uuids) ok.
 
 9. **MUST** thread trace_id from UI action → backend mutation → audit.
 
@@ -212,7 +212,7 @@ POST /v1/email/threads/{id}/comments
 ---
 
 ## §4 — Acceptance criteria
-1. **5 thread states + cardinality test**. 2. **One assignee at a time**. 3. **Assignment no customer-facing email**. 4. **Internal comments visible in thread view**. 5. **Internal comments NEVER in Reply quote**. 6. **Snooze wakes at `wake_at` via cron**. 7. **Snoozed thread invisible in default inbox**. 8. **5 BRAIN audit kinds emitted**. 9. **PII scrubbed (comment body SHA256)**. 10. **RLS denies cross-tenant**. 11. **Mentions trigger FR-CHAT-005 notification**. 12. **Trace_id preserved**. 13. **Keyboard shortcuts work (j/k/r/f/a/z/e/g)**. 14. **Shortcuts disabled in text inputs**. 15. **Genie panel streams FR-EMAIL-008 proposals**. 16. **Channel selector lists tenant inboxes**. 17. **Reply composer pulls thread.messages only (no comments)**. 18. **Append-only thread_comments table**. 19. **Closed/archived hidden by default**. 20. **Wake from snooze sends FR-CHAT-005 ping to assignee**.
+1. **5 thread states + cardinality test**. 2. **One assignee at a time**. 3. **Assignment no customer-facing email**. 4. **Internal comments visible in thread view**. 5. **Internal comments NEVER in Reply quote**. 6. **Snooze wakes at `wake_at` via cron**. 7. **Snoozed thread invisible in default inbox**. 8. **5 memory audit kinds emitted**. 9. **PII scrubbed (comment body SHA256)**. 10. **RLS denies cross-tenant**. 11. **Mentions trigger FR-CHAT-005 notification**. 12. **Trace_id preserved**. 13. **Keyboard shortcuts work (j/k/r/f/a/z/e/g)**. 14. **Shortcuts disabled in text inputs**. 15. **Genie panel streams FR-EMAIL-008 proposals**. 16. **Channel selector lists tenant inboxes**. 17. **Reply composer pulls thread.messages only (no comments)**. 18. **Append-only thread_comments table**. 19. **Closed/archived hidden by default**. 20. **Wake from snooze sends FR-CHAT-005 ping to assignee**.
 
 ---
 
@@ -261,7 +261,7 @@ test('keyboard shortcut r opens reply composer', async ({page}) => {
 
 ## §7 — Dependencies
 **Upstream:** FR-EMAIL-001, FR-EMAIL-009.
-**Cross-module:** FR-EMAIL-008 (Genie panel), FR-EMAIL-006 (CRM contact display), FR-EMAIL-007 (convert button), FR-CHAT-005 (mention notif), FR-CUO-101 (panel embedding), FR-MCP-007 (snooze cron), FR-BRAIN-111 (PII).
+**Cross-module:** FR-EMAIL-008 (Genie panel), FR-EMAIL-006 (CRM contact display), FR-EMAIL-007 (convert button), FR-CHAT-005 (mention notif), FR-CUO-101 (panel embedding), FR-MCP-007 (snooze cron), FR-MEMORY-111 (PII).
 
 ## §8 — Sample payloads (see §3)
 
@@ -287,7 +287,7 @@ None blocking — Missive is the gold-standard reference.
 - §11.2 Internal comment markdown rendering via `marked` + DOMPurify sanitize.
 - §11.3 Keyboard shortcuts: use `mousetrap` or custom dispatcher; respect `<input>`/`<textarea>` focus.
 - §11.4 Genie panel uses SSE/WebSocket for live FR-EMAIL-008 stream.
-- §11.5 BRAIN audit body: thread_id, state, assignee uuid; comment body SHA256.
+- §11.5 memory audit body: thread_id, state, assignee uuid; comment body SHA256.
 - §11.6 Snooze cron via FR-MCP-007 `kind: 'email.snooze_wake'`, runs every 5min.
 
 ---

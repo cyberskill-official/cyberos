@@ -3,15 +3,15 @@ id: FR-CHAT-001
 title: "Mattermost v9.x fork at pinned MIT-Apache commit + automated license-drift watcher + CI gate"
 module: CHAT
 priority: MUST
-status: accepted
+status: done
 verify: I
 phase: P1
 milestone: P1 · slice 1
 slice: 1
 owner: Stephen Cheng
 created: 2026-05-16
-shipped: null
-brain_chain_hash: null
+shipped: 2026-05-19
+memory_chain_hash: pending
 related_frs: [FR-CHAT-002, FR-CHAT-003, FR-CHAT-005, FR-CHAT-011]
 depends_on: []
 blocks: [FR-CHAT-002, FR-CHAT-003]
@@ -232,7 +232,7 @@ docker build --build-arg PINNED_COMMIT=$(cat services/chat/PINNED_COMMIT) -t cyb
 
 - **FR-CHAT-002 (downstream)** — auth bridge plugin built into the fork.
 - **FR-CHAT-003 (downstream)** — Fargate deployment.
-- **FR-CHAT-005 (downstream)** — BRAIN bridge via Postgres logical replication.
+- **FR-CHAT-005 (downstream)** — memory bridge via Postgres logical replication.
 - **FR-CHAT-011 (downstream)** — mobile push via fork's plugin system.
 
 ---

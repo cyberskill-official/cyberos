@@ -11,8 +11,8 @@ slice: 3
 owner: Stephen Cheng (CEO)
 created: 2026-05-17
 shipped: null
-brain_chain_hash: null
-related_frs: [FR-OKR-002, FR-OKR-004, FR-PROJ-013, FR-INV-009, FR-HR-008, FR-LEARN-001, FR-BRAIN-111]
+memory_chain_hash: null
+related_frs: [FR-OKR-002, FR-OKR-004, FR-PROJ-013, FR-INV-009, FR-HR-008, FR-LEARN-001, FR-MEMORY-111]
 depends_on: [FR-OKR-001]
 blocks: [FR-OKR-004]
 
@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1982 2026-05-17 — Closed enum `dsl_agg` = {sum, count, avg, max, min, latest}; cardinality 6
   - DEC-1983 2026-05-17 — Per-module metric whitelist — only safe SELECTs; custom_sql REQUIRES CFO+CEO co-sign
   - DEC-1984 2026-05-17 — DSL stored as JSONB on KR; resolved at progress compute time
-  - DEC-1985 2026-05-17 — BRAIN audit kinds: okr.progress_source_set, okr.progress_source_resolved, okr.progress_source_resolution_failed, okr.custom_sql_dual_signed
+  - DEC-1985 2026-05-17 — memory audit kinds: okr.progress_source_set, okr.progress_source_resolved, okr.progress_source_resolution_failed, okr.custom_sql_dual_signed
 
 build_envelope:
   language: rust 1.81
@@ -84,7 +84,7 @@ risk_if_skipped: "Without DSL, all KR progress entered manually → check-in fat
 
 ## §1 — Description (BCP-14 normative)
 
-The OKR service **MUST** ship progress_source DSL at `services/okr/src/dsl/` parsing JSONB queries against 5 modules with metric whitelist + custom_sql dual-sign gate, 4 BRAIN audit kinds.
+The OKR service **MUST** ship progress_source DSL at `services/okr/src/dsl/` parsing JSONB queries against 5 modules with metric whitelist + custom_sql dual-sign gate, 4 memory audit kinds.
 
 1. **MUST** validate `dsl_module` against closed enum per DEC-1981, `dsl_agg` per DEC-1982.
 
@@ -126,7 +126,7 @@ The OKR service **MUST** ship progress_source DSL at `services/okr/src/dsl/` par
 
 6. **MUST** gate custom_sql per DEC-1983 — execution requires `okr_custom_sql_approvals` row with both CFO + CEO signatures; same person can't sign both.
 
-7. **MUST** emit 4 BRAIN audit kinds per DEC-1985. PII per FR-BRAIN-111: resolved value SHA-256 hashed; module/metric ok.
+7. **MUST** emit 4 memory audit kinds per DEC-1985. PII per FR-MEMORY-111: resolved value SHA-256 hashed; module/metric ok.
 
 8. **MUST** thread trace_id from set → resolve → audit.
 
@@ -173,7 +173,7 @@ POST /v1/okr/krs/{id}/custom-sql/ceo-sign
 ---
 
 ## §4 — Acceptance criteria
-1. **dsl_module enum cardinality 5**. 2. **dsl_agg enum cardinality 6**. 3. **Parser rejects unknown enums**. 4. **proj resolver works**. 5. **inv resolver works**. 6. **hr resolver works**. 7. **learn resolver works**. 8. **Metric whitelist enforced**. 9. **custom_sql requires dual-sign**. 10. **Same-person dual-sign rejected**. 11. **4 BRAIN audit kinds emitted**. 12. **PII scrubbed (resolved value SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **Resolvers respect module RLS**. 16. **Append-only approvals via REVOKE**. 17. **Filter key-value validated per module schema**. 18. **date_range respects timezone**. 19. **Resolution failure → sev-2 + null value**. 20. **last_resolved_at updated on each compute**.
+1. **dsl_module enum cardinality 5**. 2. **dsl_agg enum cardinality 6**. 3. **Parser rejects unknown enums**. 4. **proj resolver works**. 5. **inv resolver works**. 6. **hr resolver works**. 7. **learn resolver works**. 8. **Metric whitelist enforced**. 9. **custom_sql requires dual-sign**. 10. **Same-person dual-sign rejected**. 11. **4 memory audit kinds emitted**. 12. **PII scrubbed (resolved value SHA256)**. 13. **RLS denies cross-tenant**. 14. **Trace_id preserved**. 15. **Resolvers respect module RLS**. 16. **Append-only approvals via REVOKE**. 17. **Filter key-value validated per module schema**. 18. **date_range respects timezone**. 19. **Resolution failure → sev-2 + null value**. 20. **last_resolved_at updated on each compute**.
 
 ---
 
@@ -216,7 +216,7 @@ async fn custom_sql_requires_dual_sign() {
 ## §7 — Dependencies
 **Upstream:** FR-OKR-001.
 **Downstream:** FR-OKR-004 (auto-progress cron uses resolver).
-**Cross-module:** FR-PROJ-013, FR-INV-009, FR-HR-008, FR-LEARN-001 (data sources), FR-AUTH-101 (CFO/CEO roles), FR-BRAIN-111 (PII).
+**Cross-module:** FR-PROJ-013, FR-INV-009, FR-HR-008, FR-LEARN-001 (data sources), FR-AUTH-101 (CFO/CEO roles), FR-MEMORY-111 (PII).
 
 ## §10 — Failure modes
 | Failure | Detection | Outcome | Recovery |
@@ -236,7 +236,7 @@ async fn custom_sql_requires_dual_sign() {
 - §11.1 Each resolver implements trait `Resolver { async fn resolve(&self, dsl) -> Result<Value> }`.
 - §11.2 Metric whitelist per-module is hardcoded constants; reviewed in PR.
 - §11.3 Custom SQL approved sql_text is immutable (REVOKE UPDATE); change = new approval.
-- §11.4 BRAIN audit body: kr_id, module, metric, agg; resolved_value SHA256.
+- §11.4 memory audit body: kr_id, module, metric, agg; resolved_value SHA256.
 - §11.5 Auto-progress cron (FR-OKR-004) calls resolve() and writes to current_value.
 
 ---

@@ -12,7 +12,9 @@
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
-pub mod brain_bridge;
+pub mod memory_bridge;
+pub mod cursor;
+pub mod deny_list;
 pub mod geoip;
 pub mod handlers;
 pub mod hibp;
@@ -33,6 +35,7 @@ pub mod rbac;
 pub mod scope_map;
 pub mod saml;
 pub mod saml_sig;
+pub mod sessions;
 pub mod state;
 pub mod travel;
 pub mod travel_admin;

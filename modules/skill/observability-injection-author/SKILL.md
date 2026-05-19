@@ -1,14 +1,8 @@
 ---
 # ── Identity ─────────────────────────────────────────────────────────
 name: observability-injection-author
-description: |
-  Walk the critical paths of the FR's implementation plan and emit an
-  `observability-injection@1`: (a) structured-log lines at every state
-  transition (always carrying tenant_id + subject_id when in-scope),
-  (b) trace spans wrapping every external IO call, (c) counter
-  increments for every error branch, (d) a coverage estimate
-  (% of branches with a log/metric/trace point). Used by
-  chief-technology-officer/implement-backlog-frs as step 11.
+description: >-
+  Walk the critical paths of the FR's implementation plan and emit an `observability-injection@1`: (a) structured-log lines at every state transition (always carrying tenant_id + subject_id when in-scope), (b) trace spans wrapping every external IO call, (c) counter increments for every error branch, (d) a coverage estimate (% of branches with a log/metric/trace point). Used by chief-technology-officer/ship-feature-requests as step 11. Use when user asks to "draft a observability injection" or "create the observability injection". Do NOT use for "audit existing observability injection" (use observability-injection-audit instead).
 license: Apache-2.0
 metadata:
   version: 1.0.0
@@ -18,7 +12,7 @@ metadata:
   cyberos-rubric-target: observability_injection_rubric@1.0
 
 # ── Scope contract (memory/AGENTS.md §15) ────────────────────────────
-allowed_brain_scopes:
+allowed_memory_scopes:
   read:
     - project:*
     - module:*
@@ -37,7 +31,7 @@ outputs:
 
 # ── Triggers / blockers ──────────────────────────────────────────────
 triggers:
-  - workflow `chief-technology-officer/implement-backlog-frs` step 11
+  - workflow `chief-technology-officer/ship-feature-requests` step 11
 blockers:
   - "no observability sink configured in repo (tracing/log subscriber missing) — must be resolved first"
   - "implementation-plan has zero critical paths — author misclassified the FR; escalate"
