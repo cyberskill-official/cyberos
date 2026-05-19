@@ -94,7 +94,7 @@ async fn list_tenants_as_tenant_admin_returns_403() {
         Request::builder()
             .method(Method::GET)
             .uri("/v1/admin/tenants")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(axum::body::Body::empty())
             .unwrap(),
     ).await.unwrap();
@@ -115,7 +115,7 @@ async fn list_subjects_root_admin_no_switch_uses_tenant_zero() {
         Request::builder()
             .method(Method::GET)
             .uri("/v1/admin/subjects")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(axum::body::Body::empty())
             .unwrap(),
     ).await.unwrap();
@@ -138,8 +138,8 @@ async fn tampered_cursor_returns_400_invalid_cursor() {
     let resp = app.oneshot(
         Request::builder()
             .method(Method::GET)
-            .uri(format!("/v1/admin/tenants?cursor={}", bad))
-            .header("Authorization", format!("Bearer {}", token))
+            .uri(format!("/v1/admin/tenants?cursor={bad}"))
+            .header("Authorization", format!("Bearer {token}"))
             .body(axum::body::Body::empty())
             .unwrap(),
     ).await.unwrap();
@@ -163,7 +163,7 @@ async fn list_tenants_p95_under_100ms() {
         let req = Request::builder()
             .method(Method::GET)
             .uri("/v1/admin/tenants?limit=10")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(axum::body::Body::empty())
             .unwrap();
         let start = Instant::now();
@@ -188,7 +188,7 @@ async fn include_suspended_flag_widens_filter() {
         Request::builder()
             .method(Method::GET)
             .uri("/v1/admin/subjects?include_suspended=true&limit=200")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(axum::body::Body::empty())
             .unwrap(),
     ).await.unwrap();
@@ -208,7 +208,7 @@ async fn limit_is_clamped_not_rejected() {
         Request::builder()
             .method(Method::GET)
             .uri("/v1/admin/tenants?limit=9999")
-            .header("Authorization", format!("Bearer {}", token))
+            .header("Authorization", format!("Bearer {token}"))
             .body(axum::body::Body::empty())
             .unwrap(),
     ).await.unwrap();

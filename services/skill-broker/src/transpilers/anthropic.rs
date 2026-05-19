@@ -177,7 +177,7 @@ mod tests {
         let long = "the quick brown fox jumps over the lazy dog ".repeat(5);
         let wrapped = wrap_text(long.trim(), 30);
         for line in wrapped.lines() {
-            assert!(line.len() <= 30 + 9, "line too long: {:?}", line); // +word-length slack
+            assert!(line.len() <= 30 + 9, "line too long: {line:?}"); // +word-length slack
         }
     }
 

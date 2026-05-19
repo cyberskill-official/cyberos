@@ -78,8 +78,8 @@ async fn revoke_without_idempotency_key_returns_400() {
     let resp = app.oneshot(
         Request::builder()
             .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{}/revoke", target))
-            .header("Authorization", format!("Bearer {}", token))
+            .uri(format!("/v1/admin/subjects/{target}/revoke"))
+            .header("Authorization", format!("Bearer {token}"))
             .header("Content-Type", "application/json")
             .body(axum::body::Body::from("{}"))
             .unwrap(),
@@ -117,8 +117,8 @@ async fn revoke_idempotency_key_replay_is_no_op() {
     let r1 = app.clone().oneshot(
         Request::builder()
             .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{}/revoke", target_id))
-            .header("Authorization", format!("Bearer {}", token))
+            .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
+            .header("Authorization", format!("Bearer {token}"))
             .header("Idempotency-Key", key)
             .header("Content-Type", "application/json")
             .body(axum::body::Body::from("{}"))
@@ -130,8 +130,8 @@ async fn revoke_idempotency_key_replay_is_no_op() {
     let r2 = app.oneshot(
         Request::builder()
             .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{}/revoke", target_id))
-            .header("Authorization", format!("Bearer {}", token))
+            .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
+            .header("Authorization", format!("Bearer {token}"))
             .header("Idempotency-Key", key)
             .header("Content-Type", "application/json")
             .body(axum::body::Body::from("{}"))
@@ -203,8 +203,8 @@ async fn revoke_cross_tenant_returns_404() {
     let resp = app.oneshot(
         Request::builder()
             .method(Method::POST)
-            .uri(format!("/v1/admin/subjects/{}/revoke", target_id))
-            .header("Authorization", format!("Bearer {}", token))
+            .uri(format!("/v1/admin/subjects/{target_id}/revoke"))
+            .header("Authorization", format!("Bearer {token}"))
             .header("Idempotency-Key", "idem-cross-001")
             .header("Content-Type", "application/json")
             .body(axum::body::Body::from("{}"))
