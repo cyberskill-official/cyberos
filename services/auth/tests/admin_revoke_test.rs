@@ -125,7 +125,7 @@ async fn revoke_idempotency_key_replay_is_no_op() {
         .ok();
     sqlx::query(
         "INSERT INTO tenants(id, slug, display_name, country, plan_tier, residency)
-                 VALUES ($1, $2, 'Test', 'VN', 'free', 'sg-1')",
+                 VALUES ($1, $2, 'Test', 'VN', 'starter', 'sg-1')",
     )
     .bind(tenant_id)
     .bind(format!("t-{}", &tenant_id.to_string()[..8]))
@@ -234,7 +234,7 @@ async fn revoke_cross_tenant_returns_404() {
     for t in &[admin_tenant, other_tenant] {
         sqlx::query(
             "INSERT INTO tenants(id, slug, display_name, country, plan_tier, residency)
-                     VALUES ($1, $2, 'Test', 'VN', 'free', 'sg-1')",
+                     VALUES ($1, $2, 'Test', 'VN', 'starter', 'sg-1')",
         )
         .bind(t)
         .bind(format!("t-{}", &t.to_string()[..8]))

@@ -75,7 +75,7 @@ async fn tenant_admin_token(pool: &PgPool) -> (String, uuid::Uuid) {
     // root-admin-in-tenant-0; for this test we go around it).
     let _ = sqlx::query(
         "INSERT INTO tenants (id, slug, display_name, country, plan_tier, status, residency)
-              VALUES ($1, $2, 'Test Tenant', 'VN', 'free', 'active', 'vn-1')
+              VALUES ($1, $2, 'Test Tenant', 'VN', 'starter', 'active', 'vn-1')
          ON CONFLICT (id) DO NOTHING",
     )
     .bind(tenant_uuid)

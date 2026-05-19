@@ -57,6 +57,7 @@ async fn bootstrap_test_key(pool: &PgPool) {
 }
 
 async fn issue_root_admin_token(pool: &PgPool) -> String {
+    bootstrap_test_key(pool).await;
     let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let tokens = svc
         .issue(

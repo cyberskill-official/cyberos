@@ -125,7 +125,7 @@ fn happy_body(slug: &str) -> Value {
         "slug": slug,
         "display_name": "Test Tenant",
         "country": "VN",
-        "plan_tier": "free",
+        "plan_tier": "starter",
         "residency": "vn-1"
     })
 }
@@ -151,7 +151,7 @@ async fn create_tenant_rejects_reserved_root_slug() {
                 "slug": "root",
                 "display_name": "Should Be Rejected",
                 "country": "VN",
-                "plan_tier": "free",
+                "plan_tier": "starter",
                 "residency": "vn-1"
             }),
         ))
