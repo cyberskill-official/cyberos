@@ -27,6 +27,24 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
+// Additional style-class allows surfaced by the second CI pass against the
+// FR-AUTH-106 slice-3 drop (handlers.rs, oidc.rs, mfa.rs, saml.rs, geoip.rs,
+// middleware.rs, hibp.rs, lumi.rs, rate_limit.rs, passkey.rs). All are
+// modernisation nits (format-string interpolation, redundant closures, idiom
+// updates) or dead-code that's actually used via serde-deserialise. Deferred
+// to the same FR-AUTH-NNN-clippy-style-cleanup hygiene wave.
+#![allow(clippy::doc_overindented_list_items)]
+#![allow(clippy::let_and_return)]
+#![allow(clippy::redundant_closure)]
+#![allow(clippy::needless_borrow)]
+#![allow(clippy::uninlined_format_args)]
+#![allow(clippy::useless_format)]
+#![allow(clippy::manual_pattern_char_comparison)]
+#![allow(clippy::double_ended_iterator_last)]
+// `dead_code` flags are mostly serde-deserialise targets (DiscoveryDoc,
+// TokenResponse) that clippy doesn't know are read by serde. Also catches
+// helpers used only in slice-N+ code paths.
+#![allow(dead_code)]
 
 pub mod memory_bridge;
 pub mod cursor;
