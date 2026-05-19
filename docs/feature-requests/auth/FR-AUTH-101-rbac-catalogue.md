@@ -3,14 +3,14 @@ id: FR-AUTH-101
 title: "AUTH 22-role RBAC catalogue — closed enum + permission matrix + role-assignment REST + JWT claims + ADR gate + stub→full migration"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P3
 milestone: P3 · slice 1
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-19
 memory_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005, FR-AUTH-006, FR-AUTH-108, FR-AUTH-109, FR-CRM-001, FR-HR-001, FR-KB-001, FR-REW-001, FR-DOC-001, FR-OKR-001]
 depends_on: [FR-AUTH-005]

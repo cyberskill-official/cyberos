@@ -83,7 +83,7 @@ async fn tenant_admin_token(pool: &PgPool) -> (String, uuid::Uuid) {
     .execute(pool)
     .await;
 
-    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let tokens = svc
         .issue(
             TenantId(tenant_uuid),
@@ -397,7 +397,7 @@ async fn create_subject_without_tenant_admin_role_returns_403() {
 
     // Mint a token with tenant-MEMBER (not admin) role
     let tenant_uuid = uuid::Uuid::new_v4();
-    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let tokens = svc
         .issue(
             TenantId(tenant_uuid),

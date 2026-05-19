@@ -29,7 +29,7 @@ async fn issue_then_verify_round_trips_with_correct_claims() {
     .await
     .expect("insert key");
 
-    let svc = JwtService::new(pool.clone(), "https://auth.test.cyberos");
+    let svc = JwtService::new(pool.clone(), "https://auth.test.cyberos".to_string());
 
     let tenant = TenantId::new();
     let subject = SubjectId::new();
@@ -80,7 +80,7 @@ async fn jwks_publishes_active_key() {
     .await
     .expect("insert");
 
-    let svc = JwtService::new(pool.clone(), "https://auth.test.cyberos");
+    let svc = JwtService::new(pool.clone(), "https://auth.test.cyberos".to_string());
     let doc = svc.jwks_for_publication().await.expect("jwks");
     assert!(
         doc.keys.iter().any(|k| k.kid == kid && k.kty == "RSA" && k.alg == "RS256"),

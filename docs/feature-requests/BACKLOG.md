@@ -713,8 +713,8 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| FR-AUTH-101 | 22-role RBAC catalogue (full bands: root-admin → tenant-member + 17 specialist roles) | MUST | ready_to_implement | FR-AUTH-005 | 12h |
-| FR-AUTH-102 | TOTP + WebAuthn MFA flows | MUST | ready_to_implement | FR-AUTH-002 | 10h |
+| FR-AUTH-101 | 22-role RBAC catalogue (full bands: root-admin → tenant-member + 17 specialist roles) | MUST | done | FR-AUTH-005 | 12h |
+| FR-AUTH-102 | TOTP + WebAuthn MFA flows | MUST | done | FR-AUTH-002 | 10h |
 | FR-AUTH-103 | SAML 2.0 SSO (per-tenant IdP config) | MUST | implementing | FR-AUTH-004 | 12h |
 | FR-AUTH-104 | OIDC SSO with discovery + JWKS rotation | MUST | ready_to_implement | FR-AUTH-004 | 10h |
 | FR-AUTH-105 | Passkey enrolment + login | MUST | ready_to_implement | FR-AUTH-102 | 8h |

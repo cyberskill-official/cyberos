@@ -70,7 +70,7 @@ async fn bootstrap_test_key(pool: &PgPool) {
 /// Mint a root-admin JWT for tenant 0. Required by every successful
 /// integration test now that G-003 enforces handler-level authz.
 async fn root_admin_token(pool: &PgPool) -> String {
-    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let tokens = svc
         .issue(
             TenantId::ROOT,
@@ -90,7 +90,7 @@ async fn root_admin_token(pool: &PgPool) -> String {
 
 /// Mint a JWT for a non-root tenant (used to exercise the 403 path).
 async fn non_root_admin_token(pool: &PgPool) -> String {
-    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local");
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let tokens = svc
         .issue(
             TenantId(uuid::Uuid::new_v4()),

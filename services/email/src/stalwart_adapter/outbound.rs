@@ -83,7 +83,7 @@ pub async fn on_outbound(
         &req.thread_id,
         subject_normalised.as_deref(),
         now,
-        &[req.from_address.clone()],
+        std::slice::from_ref(&req.from_address),
     )
     .await?;
 

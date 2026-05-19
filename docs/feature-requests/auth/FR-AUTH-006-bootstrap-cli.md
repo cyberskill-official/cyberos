@@ -3,14 +3,14 @@ id: FR-AUTH-006
 title: "cyberos-auth bootstrap CLI: tenant 0 + root-admin + initial signing key + sweepers + idempotency-table cleanup"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: D
 phase: P0
 milestone: P0 · slice 2
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-19
 memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-004, FR-AUTH-005]
 depends_on: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-004]

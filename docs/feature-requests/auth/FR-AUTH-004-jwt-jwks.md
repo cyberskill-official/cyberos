@@ -3,14 +3,14 @@ id: FR-AUTH-004
 title: "JWT issuance + JWKS endpoint (RS256) with tenant_id + agent_persona + scope_grants + dual-rate-limit + jti dedup"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-19
 memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-003, FR-AUTH-005, FR-AUTH-006, FR-AUTH-007, FR-MCP-004, FR-AI-001, FR-AI-006]
 depends_on: [FR-AUTH-002, FR-AUTH-003]

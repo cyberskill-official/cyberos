@@ -29,19 +29,16 @@ use uuid::Uuid;
 
 const NIL_TENANT: &str = "00000000-0000-0000-0000-000000000000";
 
-/// Helper: run a closure inside a transaction with `SET LOCAL app.current_tenant_id = $1`.
-async fn with_tenant<F, Fut, T>(pool: &PgPool, tenant: Uuid, f: F) -> T
-where
-    F: FnOnce(sqlx::Transaction<'_, sqlx::Postgres>) -> Fut,
-    Fut: std::future::Future<Output = T>,
-{
-    let mut tx = pool.begin().await.expect("begin tx");
-    sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
-        .bind(tenant.to_string())
-        .execute(&mut *tx)
-        .await
-        .expect("set GUC");
-    f(tx).await
+macro_rules! with_tenant {
+    ($pool:expr, $tenant:expr, $tx:ident, $body:expr) => {{
+        let mut $tx = $pool.begin().await.expect("begin tx");
+        sqlx::query("SELECT set_config('app.current_tenant_id', $1, true)")
+            .bind($tenant.to_string())
+            .execute(&mut *$tx)
+            .await
+            .expect("set GUC");
+        $body
+    }};
 }
 
 #[tokio::test]
@@ -100,7 +97,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
         let b = tenants[i * 2 + 1];
 
         // ─── 1. SELECT — A must not see B's subjects ─────────────────────
-        let (visible_to_a,): (i64,) = with_tenant(&pool, a, |mut tx| async move {
+        let (visible_to_a,): (i64,) = with_tenant!(pool, a, tx, {
             let r = sqlx::query_as::<_, (i64,)>(
                 "SELECT COUNT(*)::bigint FROM subjects WHERE tenant_id = $1",
             )
@@ -110,8 +107,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
             .expect("count query");
             tx.commit().await.unwrap();
             r
-        })
-        .await;
+        });
         if visible_to_a != 0 {
             failures.push(format!(
                 "pair {i}: tenant {a} could SELECT {visible_to_a} row(s) belonging to {b} — RLS leak"
@@ -119,7 +115,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
         }
 
         // ─── 2. INSERT — A trying to write with tenant_id=B must 42501 ──
-        let insert_result = with_tenant(&pool, a, |mut tx| async move {
+        let insert_result = with_tenant!(pool, a, tx, {
             let r = sqlx::query(
                 "INSERT INTO subjects (tenant_id, handle, kind, password_hash)
                  VALUES ($1, $2, 'human', 'bcrypt:smuggled')",
@@ -130,8 +126,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
             .await;
             // Don't commit either way; we only want the error code.
             r
-        })
-        .await;
+        });
         match insert_result {
             Ok(_) => failures.push(format!(
                 "pair {i}: smuggle INSERT (A={a} writing tenant_id={b}) SUCCEEDED — WITH CHECK missing or broken"
@@ -146,7 +141,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
         }
 
         // ─── 3. UPDATE — A targeting a B-owned row must affect 0 rows ───
-        let updated = with_tenant(&pool, a, |mut tx| async move {
+        let updated = with_tenant!(pool, a, tx, {
             let r = sqlx::query(
                 "UPDATE subjects SET password_hash = 'bcrypt:overwritten' WHERE tenant_id = $1",
             )
@@ -156,8 +151,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
             .expect("update query");
             tx.commit().await.unwrap();
             r.rows_affected()
-        })
-        .await;
+        });
         if updated != 0 {
             failures.push(format!(
                 "pair {i}: UPDATE from A={a} touched {updated} row(s) belonging to {b} — RLS leak"
@@ -165,7 +159,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
         }
 
         // ─── 4. DELETE — A trying to remove B's row must affect 0 rows ──
-        let deleted = with_tenant(&pool, a, |mut tx| async move {
+        let deleted = with_tenant!(pool, a, tx, {
             let r = sqlx::query("DELETE FROM subjects WHERE tenant_id = $1")
                 .bind(b)
                 .execute(&mut *tx)
@@ -173,8 +167,7 @@ async fn property_test_100_tenant_pairs_no_cross_tenant_leak() {
                 .expect("delete query");
             tx.commit().await.unwrap();
             r.rows_affected()
-        })
-        .await;
+        });
         if deleted != 0 {
             failures.push(format!(
                 "pair {i}: DELETE from A={a} removed {deleted} row(s) belonging to {b} — RLS leak"

@@ -3,14 +3,14 @@ id: FR-AUTH-102
 title: "AUTH TOTP (RFC 6238) + WebAuthn Level 3 MFA — closed factor enum + enrolment FSM + challenge/response + recovery codes + sev-1 lockout + memory audit per factor lifecycle event"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P3
 milestone: P3 · slice 1
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-16
-shipped: null
+shipped: 2026-05-19
 memory_chain_hash: null
 related_frs: [FR-AUTH-002, FR-AUTH-004, FR-AUTH-101, FR-AI-003, FR-MEMORY-101, FR-AUTH-105, FR-AUTH-106, FR-OBS-007]
 depends_on: [FR-AUTH-002]

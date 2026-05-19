@@ -152,7 +152,7 @@ pub async fn on_inbound(
         &evt.thread_id,
         subject_normalised.as_deref(),
         evt.received_at,
-        &[evt.from_address.clone()],
+        std::slice::from_ref(&evt.from_address),
     )
     .await?;
 

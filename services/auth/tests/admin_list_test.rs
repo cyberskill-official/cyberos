@@ -7,7 +7,7 @@ use axum::body::to_bytes;
 use axum::http::{Method, Request, StatusCode};
 use cyberos_auth::{handlers, jwt::JwtService, keygen, AppState};
 use cyberos_auth::cursor::{make_cursor, CursorTable};
-use serde_json::{json, Value};
+use serde_json::Value;
 use sqlx::PgPool;
 use std::time::Instant;
 use tower::ServiceExt;
@@ -55,7 +55,7 @@ async fn bootstrap_test_key(pool: &PgPool) {
 }
 
 async fn issue_root_admin_token(pool: &PgPool) -> String {
-    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".into());
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let tokens = svc
         .issue(
             cyberos_types::TenantId(uuid::Uuid::nil()),
@@ -79,7 +79,7 @@ async fn issue_root_admin_token(pool: &PgPool) -> String {
 async fn list_tenants_as_tenant_admin_returns_403() {
     let pool = PgPool::connect(&std::env::var("DATABASE_URL").unwrap()).await.unwrap();
     bootstrap_test_key(&pool).await;
-    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".into());
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     let token = svc.issue(
         cyberos_types::TenantId(uuid::Uuid::new_v4()),  // non-zero tenant
         cyberos_types::SubjectId(uuid::Uuid::new_v4()),

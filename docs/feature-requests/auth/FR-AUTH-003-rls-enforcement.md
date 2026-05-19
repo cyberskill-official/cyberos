@@ -3,14 +3,14 @@ id: FR-AUTH-003
 title: "RLS enforcement at every tenant-scoped table — USING + WITH CHECK + per-connection app.tenant_id + property test"
 module: AUTH
 priority: MUST
-status: implementing
+status: done
 verify: T
 phase: P0
 milestone: P0 · slice 2
 slice: 1
 owner: Stephen Cheng (CTO)
 created: 2026-05-15
-shipped: null
+shipped: 2026-05-19
 memory_chain_hash: null
 related_frs: [FR-AUTH-001, FR-AUTH-002, FR-AUTH-004, FR-AUTH-005, FR-AI-018]
 depends_on: [FR-AUTH-001]

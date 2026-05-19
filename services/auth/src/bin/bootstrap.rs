@@ -20,7 +20,7 @@
 //! Re-running with the same email is a no-op — the script is idempotent on
 //! the (tenant_id, handle) unique constraint.
 
-use cyberos_auth::{keygen, state::AppState};
+use cyberos_auth::keygen;
 use cyberos_cli_exit::ExitCode;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -303,7 +303,5 @@ async fn ensure_signing_key_in_tx(
     Ok(kid)
 }
 
+
 use sqlx::Row;
-// `AppState` is unused in the binary but kept in scope for future helpers.
-#[allow(unused_imports)]
-use cyberos_auth as _auth;

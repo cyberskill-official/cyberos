@@ -1,9 +1,10 @@
 //! FR-MCP-001 §1 #7 — `tools/call` handler (slice-1 scaffold).
 //!
-//! The slice-1 surface validates the request shape + looks up the tool in the registry
-//! + dispatches to the owning module's MCP endpoint. The dispatch implementation lands
-//! when FR-MCP-002 wires the registration handler; for now, dispatch returns
-//! `-32004 module_unreachable` (the closed error code per FR-MCP-001 §1 #8).
+//! The slice-1 surface validates the request shape, looks up the tool in the
+//! registry, and dispatches to the owning module's MCP endpoint. The dispatch
+//! implementation lands when FR-MCP-002 wires the registration handler; for
+//! now dispatch returns the closed error code `-32004 module_unreachable`
+//! (per FR-MCP-001 §1 #8).
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

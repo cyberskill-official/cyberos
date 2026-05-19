@@ -72,6 +72,11 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/mfa/factors/totp/enrol", post(crate::mfa::totp_enrol_start))
         .route("/v1/auth/mfa/factors/totp/enrol/finish", post(crate::mfa::totp_enrol_finish))
         .route("/v1/auth/mfa/verify", post(crate::mfa::totp_verify))
+        // FR-AUTH-102 — additional MFA endpoints (list, revoke, recovery)
+        .route("/v1/auth/mfa/factors", get(crate::mfa::list_factors))
+        .route("/v1/auth/mfa/factors/:factor_id", axum::routing::delete(crate::mfa::revoke_factor))
+        .route("/v1/auth/mfa/recovery/generate", post(crate::mfa::generate_recovery_codes))
+        .route("/v1/auth/mfa/recovery/verify", post(crate::mfa::verify_recovery_code))
         // FR-AUTH-104 OIDC admin — create/update IdP config (JWT-gated)
         .route("/v1/admin/oidc/idp-configs", post(crate::oidc::create_idp_config))
         // FR-AUTH-105 Passkey enrol — requires authenticated session
@@ -1035,6 +1040,7 @@ mod validate_tests {
             nbf: 0,
             jti: uuid::Uuid::new_v4().to_string(),
             tenant_id: tenant_id.into(),
+            email: String::new(),
             kind: "human".into(),
             scope_grants: vec!["admin:tenants".into()],
             roles: roles.into_iter().map(String::from).collect(),

@@ -6,7 +6,7 @@
 use axum::body::to_bytes;
 use axum::http::{Method, Request, StatusCode};
 use cyberos_auth::{handlers, jwt::JwtService, keygen, AppState};
-use serde_json::{json, Value};
+use serde_json::Value;
 use sqlx::PgPool;
 use tower::ServiceExt;
 
@@ -53,7 +53,7 @@ async fn bootstrap_test_key(pool: &PgPool) {
 }
 
 async fn issue_tenant_admin_token(pool: &PgPool, tenant_id: uuid::Uuid, subject_id: uuid::Uuid) -> String {
-    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".into());
+    let svc = JwtService::new(pool.clone(), "https://auth.cyberos.local".to_string());
     svc.issue(
         cyberos_types::TenantId(tenant_id),
         cyberos_types::SubjectId(subject_id),

@@ -232,12 +232,12 @@ async fn metrics(State(state): State<AppState>) -> Result<String, (StatusCode, S
     out.push_str("# HELP cyberos_memory_l2_cursor_seq Highest L1 seq materialised per tenant\n");
     out.push_str("# TYPE cyberos_memory_l2_cursor_seq counter\n");
     for (t, seq, _) in &rows {
-        out.push_str(&format!("cyberos_memory_l2_cursor_seq{{tenant=\"{}\"}} {}\n", t, seq));
+        out.push_str(&format!("cyberos_memory_l2_cursor_seq{{tenant=\"{t}\"}} {seq}\n"));
     }
     out.push_str("# HELP cyberos_memory_l2_last_batch_lag_ms Lag observed on the last ingest batch (ms)\n");
     out.push_str("# TYPE cyberos_memory_l2_last_batch_lag_ms gauge\n");
     for (t, _, lag) in &rows {
-        out.push_str(&format!("cyberos_memory_l2_last_batch_lag_ms{{tenant=\"{}\"}} {}\n", t, lag));
+        out.push_str(&format!("cyberos_memory_l2_last_batch_lag_ms{{tenant=\"{t}\"}} {lag}\n"));
     }
     Ok(out)
 }

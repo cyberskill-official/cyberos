@@ -15,6 +15,7 @@
 //! Deferred to follow-up: 60s background refresher, SQL `auth.has_role()` function,
 //! scope-grant narrowing layer, ADR-gate CI test, OTel metrics, perf test.
 
+pub mod adr;
 pub mod assignment;
 pub mod catalogue;
 pub mod catalogue_endpoint;

@@ -420,7 +420,7 @@ mod tests {
         // can reference the count. Slice-2b will bump this.
         let n = COMMON_PASSWORDS.len();
         assert!(
-            n >= 100 && n <= 500,
+            (100..=500).contains(&n),
             "slice-2 list should be 100-500 entries (top-200 tier); got {n}"
         );
     }
