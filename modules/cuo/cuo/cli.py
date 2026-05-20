@@ -258,6 +258,11 @@ def cmd_dry_run(ctx: click.Context, persona_workflow: str) -> None:
          "(HITL pickup). Currently every phase auto-runs; flag is forward-compatible for "
          "when reviewer/tester claim semantics are wired in.",
 )
+@click.option(
+    "--rework/--no-rework",
+    default=False,
+    help="Rework mode: allow bypass of current status checks and force restart.",
+)
 @click.pass_context
 def cmd_execute(
     ctx: click.Context,
@@ -272,6 +277,7 @@ def cmd_execute(
     no_handler_dispatch: bool,
     fr_id: str | None,
     auto_claim: bool,
+    rework: bool,
 ) -> None:
     """Execute a workflow chain (Phase 2 — actual invocation, not dry-run).
 
@@ -307,6 +313,7 @@ def cmd_execute(
     # --auto-claim flag flows into the workflow's input bundle so phase
     # transitions can read it from the hand-off map.
     parsed_inputs["auto_claim"] = auto_claim
+    parsed_inputs["rework"] = rework
 
     if invoker == "llm":
         inv = LLMInvoker()
@@ -468,6 +475,11 @@ def cmd_execute(
     help="Halt the drain loop when an FR routes back this many times "
          "(default 2). Set 0 to disable.",
 )
+@click.option(
+    "--rework/--no-rework",
+    default=False,
+    help="Rework mode: allow selecting done FRs and re-running them from implementing to done.",
+)
 @click.pass_context
 def cmd_drain(
     ctx: click.Context,
@@ -480,6 +492,7 @@ def cmd_drain(
     memory_emit: bool,
     actor: str,
     halt_on_repeat_rework: int,
+    rework: bool,
 ) -> None:
     """Drain a module's BACKLOG by running PERSONA_WORKFLOW on each eligible FR.
 
@@ -550,7 +563,7 @@ def cmd_drain(
             click.echo(f"# drain halted: --max-frs={max_frs} reached")
             break
         rows = parse_backlog(backlog_path)
-        eligible = next_eligible(rows, module=module_filter)
+        eligible = next_eligible(rows, module=module_filter, rework=rework)
         if eligible is None:
             click.echo(f"# drain complete: no more eligible FRs"
                        f"{' in module=' + module_filter if module_filter else ''}")
@@ -567,7 +580,8 @@ def cmd_drain(
             skill_root=ctx.obj["skill_root"],
             output_dir=fr_output_dir,
             inputs={"fr_id": eligible.fr_id, "auto_claim": True,
-                    "module": module_filter or eligible.module},
+                    "module": module_filter or eligible.module,
+                    "rework": rework},
             invoker=inv,
             stop_on_failure=True,
         )

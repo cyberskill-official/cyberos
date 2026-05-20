@@ -1,0 +1,1568 @@
+﻿2026-05-19T17:11:34.1037199Z Current runner version: '2.334.0'
+2026-05-19T17:11:34.1093752Z ##[group]Runner Image Provisioner
+2026-05-19T17:11:34.1095108Z Hosted Compute Agent
+2026-05-19T17:11:34.1096016Z Version: 20260213.493
+2026-05-19T17:11:34.1096940Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+2026-05-19T17:11:34.1098231Z Build Date: 2026-02-13T00:28:41Z
+2026-05-19T17:11:34.1099300Z Worker ID: {e6ef4c66-7d41-4e82-9634-ca86f71cf36a}
+2026-05-19T17:11:34.1100528Z Azure Region: eastus
+2026-05-19T17:11:34.1121992Z ##[endgroup]
+2026-05-19T17:11:34.1124737Z ##[group]Operating System
+2026-05-19T17:11:34.1125934Z Ubuntu
+2026-05-19T17:11:34.1126747Z 24.04.4
+2026-05-19T17:11:34.1127554Z LTS
+2026-05-19T17:11:34.1128281Z ##[endgroup]
+2026-05-19T17:11:34.1129252Z ##[group]Runner Image
+2026-05-19T17:11:34.1130119Z Image: ubuntu-24.04
+2026-05-19T17:11:34.1131742Z Version: 20260513.135.3
+2026-05-19T17:11:34.1134000Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260513.135/images/ubuntu/Ubuntu2404-Readme.md
+2026-05-19T17:11:34.1136788Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260513.135
+2026-05-19T17:11:34.1138406Z ##[endgroup]
+2026-05-19T17:11:34.1140352Z ##[group]GITHUB_TOKEN Permissions
+2026-05-19T17:11:34.1163639Z Contents: read
+2026-05-19T17:11:34.1164462Z Metadata: read
+2026-05-19T17:11:34.1165240Z Packages: read
+2026-05-19T17:11:34.1166065Z ##[endgroup]
+2026-05-19T17:11:34.1168899Z Secret source: Actions
+2026-05-19T17:11:34.1170267Z Prepare workflow directory
+2026-05-19T17:11:34.2289202Z Prepare all required actions
+2026-05-19T17:11:34.2348104Z Getting action download info
+2026-05-19T17:11:34.6543598Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-05-19T17:11:35.1734793Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+2026-05-19T17:11:35.3000143Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-05-19T17:11:35.5436512Z Complete job name: integration (Postgres + Redis)
+2026-05-19T17:11:35.6225975Z ##[group]Run actions/checkout@v4
+2026-05-19T17:11:35.6226892Z with:
+2026-05-19T17:11:35.6227357Z   repository: cyberskill-official/cyberos
+2026-05-19T17:11:35.6228094Z   token: ***
+2026-05-19T17:11:35.6228509Z   ssh-strict: true
+2026-05-19T17:11:35.6228931Z   ssh-user: git
+2026-05-19T17:11:35.6229351Z   persist-credentials: true
+2026-05-19T17:11:35.6229848Z   clean: true
+2026-05-19T17:11:35.6230285Z   sparse-checkout-cone-mode: true
+2026-05-19T17:11:35.6230799Z   fetch-depth: 1
+2026-05-19T17:11:35.6231421Z   fetch-tags: false
+2026-05-19T17:11:35.6231887Z   show-progress: true
+2026-05-19T17:11:35.6232326Z   lfs: false
+2026-05-19T17:11:35.6232734Z   submodules: false
+2026-05-19T17:11:35.6233159Z   set-safe-directory: true
+2026-05-19T17:11:35.6233892Z env:
+2026-05-19T17:11:35.6234316Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:35.6234805Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:35.6235263Z ##[endgroup]
+2026-05-19T17:11:35.7427631Z Syncing repository: cyberskill-official/cyberos
+2026-05-19T17:11:35.7432096Z ##[group]Getting Git version info
+2026-05-19T17:11:35.7433774Z Working directory is '/home/runner/work/cyberos/cyberos'
+2026-05-19T17:11:35.7436433Z [command]/usr/bin/git version
+2026-05-19T17:11:35.7512352Z git version 2.54.0
+2026-05-19T17:11:35.7544314Z ##[endgroup]
+2026-05-19T17:11:35.7560505Z Temporarily overriding HOME='/home/runner/work/_temp/8006d9b9-7efe-484d-8b82-de3e181008c0' before making global git config changes
+2026-05-19T17:11:35.7564395Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-19T17:11:35.7579847Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/cyberos/cyberos
+2026-05-19T17:11:35.7639901Z Deleting the contents of '/home/runner/work/cyberos/cyberos'
+2026-05-19T17:11:35.7645327Z ##[group]Initializing the repository
+2026-05-19T17:11:35.7651032Z [command]/usr/bin/git init /home/runner/work/cyberos/cyberos
+2026-05-19T17:11:35.7742420Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-05-19T17:11:35.7745613Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-05-19T17:11:35.7747905Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-05-19T17:11:35.7752183Z hint: call:
+2026-05-19T17:11:35.7752930Z hint:
+2026-05-19T17:11:35.7753870Z hint: 	git config --global init.defaultBranch <name>
+2026-05-19T17:11:35.7755019Z hint:
+2026-05-19T17:11:35.7756070Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-05-19T17:11:35.7757735Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-05-19T17:11:35.7759045Z hint:
+2026-05-19T17:11:35.7759764Z hint: 	git branch -m <name>
+2026-05-19T17:11:35.7760759Z hint:
+2026-05-19T17:11:35.7762254Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-05-19T17:11:35.7764171Z Initialized empty Git repository in /home/runner/work/cyberos/cyberos/.git/
+2026-05-19T17:11:35.7769756Z [command]/usr/bin/git remote add origin https://github.com/cyberskill-official/cyberos
+2026-05-19T17:11:35.7814744Z ##[endgroup]
+2026-05-19T17:11:35.7816791Z ##[group]Disabling automatic garbage collection
+2026-05-19T17:11:35.7819326Z [command]/usr/bin/git config --local gc.auto 0
+2026-05-19T17:11:35.7854539Z ##[endgroup]
+2026-05-19T17:11:35.7856565Z ##[group]Setting up auth
+2026-05-19T17:11:35.7862605Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-19T17:11:35.7899775Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-19T17:11:35.8243343Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-19T17:11:35.8276707Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-19T17:11:35.8509343Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-19T17:11:35.8552207Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-19T17:11:35.8793300Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-05-19T17:11:35.8827853Z ##[endgroup]
+2026-05-19T17:11:35.8830010Z ##[group]Fetching the repository
+2026-05-19T17:11:35.8838740Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c4742df416bc0c0f4f7933d4ef170f849b4fdde7:refs/remotes/origin/main
+2026-05-19T17:11:37.3475966Z From https://github.com/cyberskill-official/cyberos
+2026-05-19T17:11:37.3477053Z  * [new ref]         c4742df416bc0c0f4f7933d4ef170f849b4fdde7 -> origin/main
+2026-05-19T17:11:37.3506513Z ##[endgroup]
+2026-05-19T17:11:37.3507861Z ##[group]Determining the checkout info
+2026-05-19T17:11:37.3509243Z ##[endgroup]
+2026-05-19T17:11:37.3515559Z [command]/usr/bin/git sparse-checkout disable
+2026-05-19T17:11:37.3562599Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-05-19T17:11:37.3590858Z ##[group]Checking out the ref
+2026-05-19T17:11:37.3595413Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-05-19T17:11:37.6931546Z Switched to a new branch 'main'
+2026-05-19T17:11:37.6937650Z branch 'main' set up to track 'origin/main'.
+2026-05-19T17:11:37.6947907Z ##[endgroup]
+2026-05-19T17:11:37.7000332Z [command]/usr/bin/git log -1 --format=%H
+2026-05-19T17:11:37.7029990Z c4742df416bc0c0f4f7933d4ef170f849b4fdde7
+2026-05-19T17:11:37.7368705Z ##[group]Run dtolnay/rust-toolchain@stable
+2026-05-19T17:11:37.7369148Z with:
+2026-05-19T17:11:37.7369337Z   toolchain: 1.88.0
+2026-05-19T17:11:37.7369534Z env:
+2026-05-19T17:11:37.7369703Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:37.7370115Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:37.7370325Z ##[endgroup]
+2026-05-19T17:11:37.7558366Z ##[group]Run : parse toolchain version
+2026-05-19T17:11:37.7558741Z [36;1m: parse toolchain version[0m
+2026-05-19T17:11:37.7559014Z [36;1mif [[ -z $toolchain ]]; then[0m
+2026-05-19T17:11:37.7559531Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+2026-05-19T17:11:37.7560078Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+2026-05-19T17:11:37.7560356Z [36;1m  exit 1[0m
+2026-05-19T17:11:37.7560669Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+2026-05-19T17:11:37.7561075Z [36;1m  if [[ Linux == macOS ]]; then[0m
+2026-05-19T17:11:37.7562038Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7562563Z [36;1m  else[0m
+2026-05-19T17:11:37.7562952Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7563391Z [36;1m  fi[0m
+2026-05-19T17:11:37.7563660Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+2026-05-19T17:11:37.7564168Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7564601Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+2026-05-19T17:11:37.7565108Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7565582Z [36;1melse[0m
+2026-05-19T17:11:37.7565808Z [36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7566081Z [36;1mfi[0m
+2026-05-19T17:11:37.7605314Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:37.7605655Z env:
+2026-05-19T17:11:37.7605836Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:37.7606077Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:37.7606291Z   toolchain: 1.88.0
+2026-05-19T17:11:37.7606473Z ##[endgroup]
+2026-05-19T17:11:37.7764298Z ##[group]Run : construct rustup command line
+2026-05-19T17:11:37.7764627Z [36;1m: construct rustup command line[0m
+2026-05-19T17:11:37.7765061Z [36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7765693Z [36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7766155Z [36;1mecho "downgrade=" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:37.7799749Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:37.7800092Z env:
+2026-05-19T17:11:37.7800283Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:37.7800513Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:37.7800713Z   targets: 
+2026-05-19T17:11:37.7800889Z   components: 
+2026-05-19T17:11:37.7801064Z ##[endgroup]
+2026-05-19T17:11:37.7894196Z ##[group]Run : set $CARGO_HOME
+2026-05-19T17:11:37.7894470Z [36;1m: set $CARGO_HOME[0m
+2026-05-19T17:11:37.7894777Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+2026-05-19T17:11:37.7926398Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:37.7926730Z env:
+2026-05-19T17:11:37.7926902Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:37.7927125Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:37.7927327Z ##[endgroup]
+2026-05-19T17:11:37.8009302Z ##[group]Run : install rustup if needed
+2026-05-19T17:11:37.8009604Z [36;1m: install rustup if needed[0m
+2026-05-19T17:11:37.8009883Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+2026-05-19T17:11:37.8010814Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+2026-05-19T17:11:37.8011908Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+2026-05-19T17:11:37.8012185Z [36;1mfi[0m
+2026-05-19T17:11:37.8046724Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:37.8047060Z env:
+2026-05-19T17:11:37.8047236Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:37.8047464Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:37.8047683Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:37.8047921Z ##[endgroup]
+2026-05-19T17:11:37.8133247Z ##[group]Run rustup toolchain install 1.88.0 --profile minimal --no-self-update
+2026-05-19T17:11:37.8133795Z [36;1mrustup toolchain install 1.88.0 --profile minimal --no-self-update[0m
+2026-05-19T17:11:37.8167009Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:37.8167343Z env:
+2026-05-19T17:11:37.8167518Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:37.8167758Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:37.8167972Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:37.8168211Z   RUSTUP_PERMIT_COPY_RENAME: 1
+2026-05-19T17:11:37.8168422Z ##[endgroup]
+2026-05-19T17:11:37.8980775Z info: syncing channel updates for 1.88.0-x86_64-unknown-linux-gnu
+2026-05-19T17:11:38.1438913Z info: latest update on 2025-06-26 for version 1.88.0 (6b00bc388 2025-06-23)
+2026-05-19T17:11:38.1488020Z info: downloading 3 components
+2026-05-19T17:11:46.4284697Z 
+2026-05-19T17:11:46.4362761Z   1.88.0-x86_64-unknown-linux-gnu installed - rustc 1.88.0 (6b00bc388 2025-06-23)
+2026-05-19T17:11:46.4363694Z 
+2026-05-19T17:11:46.4432606Z ##[group]Run rustup default 1.88.0
+2026-05-19T17:11:46.4432895Z [36;1mrustup default 1.88.0[0m
+2026-05-19T17:11:46.4466285Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:46.4466632Z env:
+2026-05-19T17:11:46.4466803Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.4467033Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.4467252Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.4467511Z ##[endgroup]
+2026-05-19T17:11:46.4572886Z info: using existing install for 1.88.0-x86_64-unknown-linux-gnu
+2026-05-19T17:11:46.4581714Z info: default toolchain set to 1.88.0-x86_64-unknown-linux-gnu
+2026-05-19T17:11:46.4585009Z 
+2026-05-19T17:11:46.4657452Z   1.88.0-x86_64-unknown-linux-gnu unchanged - rustc 1.88.0 (6b00bc388 2025-06-23)
+2026-05-19T17:11:46.4658370Z 
+2026-05-19T17:11:46.4692113Z ##[group]Run : create cachekey
+2026-05-19T17:11:46.4692392Z [36;1m: create cachekey[0m
+2026-05-19T17:11:46.4692902Z [36;1mDATE=$(rustc +1.88.0 --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+2026-05-19T17:11:46.4693553Z [36;1mHASH=$(rustc +1.88.0 --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+2026-05-19T17:11:46.4694024Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+2026-05-19T17:11:46.4728912Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:46.4729439Z env:
+2026-05-19T17:11:46.4729733Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.4730127Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.4730360Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.4730592Z ##[endgroup]
+2026-05-19T17:11:46.5105455Z ##[group]Run : disable incremental compilation
+2026-05-19T17:11:46.5105799Z [36;1m: disable incremental compilation[0m
+2026-05-19T17:11:46.5106113Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+2026-05-19T17:11:46.5106426Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+2026-05-19T17:11:46.5106701Z [36;1mfi[0m
+2026-05-19T17:11:46.5139484Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:46.5139802Z env:
+2026-05-19T17:11:46.5139976Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.5140194Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.5140416Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.5140641Z ##[endgroup]
+2026-05-19T17:11:46.5213714Z ##[group]Run : enable colors in Cargo output
+2026-05-19T17:11:46.5214224Z [36;1m: enable colors in Cargo output[0m
+2026-05-19T17:11:46.5214543Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+2026-05-19T17:11:46.5214883Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+2026-05-19T17:11:46.5215158Z [36;1mfi[0m
+2026-05-19T17:11:46.5245337Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:46.5245656Z env:
+2026-05-19T17:11:46.5245826Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.5246041Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.5246267Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.5246486Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:11:46.5246676Z ##[endgroup]
+2026-05-19T17:11:46.5315864Z ##[group]Run : enable Cargo sparse registry
+2026-05-19T17:11:46.5316169Z [36;1m: enable Cargo sparse registry[0m
+2026-05-19T17:11:46.5316516Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+2026-05-19T17:11:46.5317207Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+2026-05-19T17:11:46.5317900Z [36;1m  if rustc +1.88.0 --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+2026-05-19T17:11:46.5318442Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-05-19T17:11:46.5318961Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+2026-05-19T17:11:46.5319448Z [36;1m  elif rustc +1.88.0 --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+2026-05-19T17:11:46.5319985Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+2026-05-19T17:11:46.5320484Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+2026-05-19T17:11:46.5320806Z [36;1m  fi[0m
+2026-05-19T17:11:46.5320969Z [36;1mfi[0m
+2026-05-19T17:11:46.5349876Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:46.5350188Z env:
+2026-05-19T17:11:46.5350361Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.5350591Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.5350802Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.5351033Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:11:46.5351496Z ##[endgroup]
+2026-05-19T17:11:46.5697131Z ##[group]Run : work around spurious network errors in curl 8.0
+2026-05-19T17:11:46.5697605Z [36;1m: work around spurious network errors in curl 8.0[0m
+2026-05-19T17:11:46.5698181Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+2026-05-19T17:11:46.5698839Z [36;1mif rustc +1.88.0 --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+2026-05-19T17:11:46.5699300Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+2026-05-19T17:11:46.5699610Z [36;1mfi[0m
+2026-05-19T17:11:46.5732573Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:46.5732912Z env:
+2026-05-19T17:11:46.5733085Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.5733317Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.5733557Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.5733797Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:11:46.5733997Z ##[endgroup]
+2026-05-19T17:11:46.5964850Z ##[group]Run rustc +1.88.0 --version --verbose
+2026-05-19T17:11:46.5965181Z [36;1mrustc +1.88.0 --version --verbose[0m
+2026-05-19T17:11:46.5998400Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-05-19T17:11:46.5998736Z env:
+2026-05-19T17:11:46.5998910Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.5999139Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.5999354Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.5999592Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:11:46.5999787Z ##[endgroup]
+2026-05-19T17:11:46.6170899Z rustc 1.88.0 (6b00bc388 2025-06-23)
+2026-05-19T17:11:46.6171672Z binary: rustc
+2026-05-19T17:11:46.6172087Z commit-hash: 6b00bc3880198600130e1cf62b8f8a93494488cc
+2026-05-19T17:11:46.6172584Z commit-date: 2025-06-23
+2026-05-19T17:11:46.6172970Z host: x86_64-unknown-linux-gnu
+2026-05-19T17:11:46.6173344Z release: 1.88.0
+2026-05-19T17:11:46.6174035Z LLVM version: 20.1.5
+2026-05-19T17:11:46.7448294Z ##[group]Run actions/cache@v4
+2026-05-19T17:11:46.7448543Z with:
+2026-05-19T17:11:46.7448787Z   path: ~/.cargo/registry
+~/.cargo/git
+services/target
+
+2026-05-19T17:11:46.7449487Z   key: cargo-services-Linux-5cfbd4773ed609bbc31bd8363c86bb088bc6e27e75ae3471f00a49648774cc8f
+2026-05-19T17:11:46.7449967Z   enableCrossOsArchive: false
+2026-05-19T17:11:46.7450198Z   fail-on-cache-miss: false
+2026-05-19T17:11:46.7450405Z   lookup-only: false
+2026-05-19T17:11:46.7450594Z   save-always: false
+2026-05-19T17:11:46.7450763Z env:
+2026-05-19T17:11:46.7450928Z   CARGO_TERM_COLOR: always
+2026-05-19T17:11:46.7451434Z   RUSTFLAGS: -D warnings
+2026-05-19T17:11:46.7451772Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:11:46.7452001Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:11:46.7452190Z ##[endgroup]
+2026-05-19T17:11:46.9692556Z Cache hit for: cargo-services-Linux-5cfbd4773ed609bbc31bd8363c86bb088bc6e27e75ae3471f00a49648774cc8f
+2026-05-19T17:11:48.0272235Z Received 138412032 of 2332923985 (5.9%), 130.4 MBs/sec
+2026-05-19T17:11:49.0314358Z Received 394264576 of 2332923985 (16.9%), 186.4 MBs/sec
+2026-05-19T17:11:50.0406294Z Received 603979776 of 2332923985 (25.9%), 190.4 MBs/sec
+2026-05-19T17:11:51.0473506Z Received 796917760 of 2332923985 (34.2%), 188.5 MBs/sec
+2026-05-19T17:11:52.0694821Z Received 1015021568 of 2332923985 (43.5%), 191.5 MBs/sec
+2026-05-19T17:11:53.1129372Z Received 1216348160 of 2332923985 (52.1%), 190.2 MBs/sec
+2026-05-19T17:11:54.1437164Z Received 1396703232 of 2332923985 (59.9%), 186.8 MBs/sec
+2026-05-19T17:11:55.1614910Z Received 1589641216 of 2332923985 (68.1%), 186.1 MBs/sec
+2026-05-19T17:11:56.1723707Z Received 1744830464 of 2332923985 (74.8%), 181.7 MBs/sec
+2026-05-19T17:11:57.1942333Z Received 1925185536 of 2332923985 (82.5%), 180.4 MBs/sec
+2026-05-19T17:11:58.2055451Z Received 2151677952 of 2332923985 (92.2%), 183.4 MBs/sec
+2026-05-19T17:11:58.9904083Z Received 2332923985 of 2332923985 (100.0%), 185.8 MBs/sec
+2026-05-19T17:11:58.9906617Z Cache Size: ~2225 MB (2332923985 B)
+2026-05-19T17:11:58.9972038Z [command]/usr/bin/tar -xf /home/runner/work/_temp/08aac9e3-8c70-43ba-b551-97d7a428934d/cache.tzst -P -C /home/runner/work/cyberos/cyberos --use-compress-program unzstd
+2026-05-19T17:12:54.8313279Z Cache restored successfully
+2026-05-19T17:12:54.8548868Z Cache restored from key: cargo-services-Linux-5cfbd4773ed609bbc31bd8363c86bb088bc6e27e75ae3471f00a49648774cc8f
+2026-05-19T17:12:54.8669366Z ##[group]Run cd dev
+2026-05-19T17:12:54.8669621Z [36;1mcd dev[0m
+2026-05-19T17:12:54.8669829Z [36;1mdocker compose up -d[0m
+2026-05-19T17:12:54.8670098Z [36;1m# Wait until Postgres reports healthy.[0m
+2026-05-19T17:12:54.8670389Z [36;1mfor i in {1..30}; do[0m
+2026-05-19T17:12:54.8670806Z [36;1m  if docker compose ps postgres | grep -q '(healthy)'; then echo "postgres is up"; break; fi[0m
+2026-05-19T17:12:54.8672136Z [36;1m  sleep 2[0m
+2026-05-19T17:12:54.8672346Z [36;1mdone[0m
+2026-05-19T17:12:54.8749231Z shell: /usr/bin/bash -e {0}
+2026-05-19T17:12:54.8749484Z env:
+2026-05-19T17:12:54.8749680Z   CARGO_TERM_COLOR: always
+2026-05-19T17:12:54.8750013Z   RUSTFLAGS: -D warnings
+2026-05-19T17:12:54.8750262Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:12:54.8750541Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:12:54.8750785Z ##[endgroup]
+2026-05-19T17:12:55.3533484Z  postgres Pulling 
+2026-05-19T17:12:55.3534302Z  redis Pulling 
+2026-05-19T17:12:55.7512920Z  ce1261c6d567 Pulling fs layer 
+2026-05-19T17:12:55.7514132Z  80ed16669c95 Pulling fs layer 
+2026-05-19T17:12:55.7515395Z  5f436a09eefc Pulling fs layer 
+2026-05-19T17:12:55.7516132Z  e98bbd76c099 Pulling fs layer 
+2026-05-19T17:12:55.7517482Z  1014f5c99171 Pulling fs layer 
+2026-05-19T17:12:55.7518295Z  0cfcf4ec2c02 Pulling fs layer 
+2026-05-19T17:12:55.7519538Z  cb4494753109 Pulling fs layer 
+2026-05-19T17:12:55.7520624Z  9286f415f93a Pulling fs layer 
+2026-05-19T17:12:55.7521909Z  e6c4a2127465 Pulling fs layer 
+2026-05-19T17:12:55.7523219Z  68ac989ed9cb Pulling fs layer 
+2026-05-19T17:12:55.7524524Z  f082d788df98 Pulling fs layer 
+2026-05-19T17:12:55.7525700Z  32274acbaad0 Pulling fs layer 
+2026-05-19T17:12:55.7527495Z  1aa01e357d22 Pulling fs layer 
+2026-05-19T17:12:55.7530556Z  a82c537fceb7 Pulling fs layer 
+2026-05-19T17:12:55.7532897Z  2b0265b6d5f7 Pulling fs layer 
+2026-05-19T17:12:55.7534697Z  7b1523e4c2f7 Pulling fs layer 
+2026-05-19T17:12:55.7535742Z  2455ba35c6a7 Pulling fs layer 
+2026-05-19T17:12:55.7537022Z  0554e6d7e500 Pulling fs layer 
+2026-05-19T17:12:55.7538339Z  ca0b3672117b Pulling fs layer 
+2026-05-19T17:12:55.7540307Z  0a79a87c0608 Pulling fs layer 
+2026-05-19T17:12:55.7541298Z  cb4494753109 Waiting 
+2026-05-19T17:12:55.7543291Z  9286f415f93a Waiting 
+2026-05-19T17:12:55.7544444Z  e6c4a2127465 Waiting 
+2026-05-19T17:12:55.7545816Z  68ac989ed9cb Waiting 
+2026-05-19T17:12:55.7546927Z  f082d788df98 Waiting 
+2026-05-19T17:12:55.7548330Z  32274acbaad0 Waiting 
+2026-05-19T17:12:55.7549342Z  1aa01e357d22 Waiting 
+2026-05-19T17:12:55.7550700Z  a82c537fceb7 Waiting 
+2026-05-19T17:12:55.7551829Z  2b0265b6d5f7 Waiting 
+2026-05-19T17:12:55.7553227Z  7b1523e4c2f7 Waiting 
+2026-05-19T17:12:55.7554135Z  2455ba35c6a7 Waiting 
+2026-05-19T17:12:55.7555275Z  0554e6d7e500 Waiting 
+2026-05-19T17:12:55.7558276Z  ca0b3672117b Waiting 
+2026-05-19T17:12:55.7558682Z  0a79a87c0608 Waiting 
+2026-05-19T17:12:55.7559063Z  e98bbd76c099 Waiting 
+2026-05-19T17:12:55.7559692Z  1014f5c99171 Waiting 
+2026-05-19T17:12:55.7560042Z  0cfcf4ec2c02 Waiting 
+2026-05-19T17:12:55.7611674Z  897d797d2723 Pulling fs layer 
+2026-05-19T17:12:55.7612365Z  c14c7509f545 Pulling fs layer 
+2026-05-19T17:12:55.7614596Z  f546396032e0 Pulling fs layer 
+2026-05-19T17:12:55.7615024Z  a300455a02bb Pulling fs layer 
+2026-05-19T17:12:55.7615432Z  941ebb020cf0 Pulling fs layer 
+2026-05-19T17:12:55.7615839Z  4f4fb700ef54 Pulling fs layer 
+2026-05-19T17:12:55.7616226Z  677c7c5aa821 Pulling fs layer 
+2026-05-19T17:12:55.7616597Z  897d797d2723 Waiting 
+2026-05-19T17:12:55.7616933Z  c14c7509f545 Waiting 
+2026-05-19T17:12:55.7617253Z  f546396032e0 Waiting 
+2026-05-19T17:12:55.7617581Z  a300455a02bb Waiting 
+2026-05-19T17:12:55.7617906Z  941ebb020cf0 Waiting 
+2026-05-19T17:12:55.7618213Z  4f4fb700ef54 Waiting 
+2026-05-19T17:12:55.7618543Z  677c7c5aa821 Waiting 
+2026-05-19T17:12:55.7954856Z  80ed16669c95 Downloading [===============>                                   ]     358B/1.168kB
+2026-05-19T17:12:55.7958341Z  80ed16669c95 Downloading [==================================================>]  1.168kB/1.168kB
+2026-05-19T17:12:55.7960620Z  80ed16669c95 Verifying Checksum 
+2026-05-19T17:12:55.7961708Z  80ed16669c95 Download complete 
+2026-05-19T17:12:55.8074590Z  ce1261c6d567 Downloading [>                                                  ]  302.2kB/29.77MB
+2026-05-19T17:12:55.8296137Z  5f436a09eefc Downloading [>                                                  ]  67.76kB/6.437MB
+2026-05-19T17:12:55.8410567Z  e98bbd76c099 Downloading [>                                                  ]  12.65kB/1.256MB
+2026-05-19T17:12:55.8615687Z  e98bbd76c099 Verifying Checksum 
+2026-05-19T17:12:55.8626566Z  e98bbd76c099 Download complete 
+2026-05-19T17:12:55.8895292Z  5f436a09eefc Verifying Checksum 
+2026-05-19T17:12:55.8896136Z  5f436a09eefc Download complete 
+2026-05-19T17:12:55.9086037Z  ce1261c6d567 Downloading [======================================>            ]  22.87MB/29.77MB
+2026-05-19T17:12:55.9311903Z  ce1261c6d567 Verifying Checksum 
+2026-05-19T17:12:55.9313054Z  ce1261c6d567 Download complete 
+2026-05-19T17:12:55.9537583Z  1014f5c99171 Downloading [>                                                  ]   83.5kB/8.204MB
+2026-05-19T17:12:55.9539900Z  0cfcf4ec2c02 Downloading [>                                                  ]  13.99kB/1.311MB
+2026-05-19T17:12:55.9738190Z  0cfcf4ec2c02 Downloading [==================================================>]  1.311MB/1.311MB
+2026-05-19T17:12:55.9743524Z  0cfcf4ec2c02 Verifying Checksum 
+2026-05-19T17:12:55.9744691Z  0cfcf4ec2c02 Download complete 
+2026-05-19T17:12:55.9790204Z  ce1261c6d567 Extracting [>                                                  ]  327.7kB/29.77MB
+2026-05-19T17:12:56.0102066Z  cb4494753109 Downloading [==================================================>]     116B/116B
+2026-05-19T17:12:56.0111199Z  cb4494753109 Verifying Checksum 
+2026-05-19T17:12:56.0113778Z  cb4494753109 Download complete 
+2026-05-19T17:12:56.0287161Z  9286f415f93a Downloading [=====>                                             ]     347B/3.142kB
+2026-05-19T17:12:56.0291056Z  9286f415f93a Downloading [==================================================>]  3.142kB/3.142kB
+2026-05-19T17:12:56.0297367Z  9286f415f93a Verifying Checksum 
+2026-05-19T17:12:56.0298296Z  9286f415f93a Download complete 
+2026-05-19T17:12:56.0389951Z  1014f5c99171 Verifying Checksum 
+2026-05-19T17:12:56.0393704Z  1014f5c99171 Download complete 
+2026-05-19T17:12:56.0740253Z  e6c4a2127465 Downloading [>                                                  ]  539.5kB/113.2MB
+2026-05-19T17:12:56.0796757Z  ce1261c6d567 Extracting [======>                                            ]  3.932MB/29.77MB
+2026-05-19T17:12:56.1076021Z  68ac989ed9cb Downloading [=>                                                 ]     357B/10.01kB
+2026-05-19T17:12:56.1085821Z  f082d788df98 Downloading [==================================================>]     129B/129B
+2026-05-19T17:12:56.1087644Z  68ac989ed9cb Downloading [==================================================>]  10.01kB/10.01kB
+2026-05-19T17:12:56.1089418Z  f082d788df98 Verifying Checksum 
+2026-05-19T17:12:56.1090724Z  f082d788df98 Download complete 
+2026-05-19T17:12:56.1099372Z  68ac989ed9cb Verifying Checksum 
+2026-05-19T17:12:56.1100812Z  68ac989ed9cb Download complete 
+2026-05-19T17:12:56.1752438Z  32274acbaad0 Downloading [==================================================>]     167B/167B
+2026-05-19T17:12:56.1779072Z  e6c4a2127465 Downloading [=========>                                         ]  22.45MB/113.2MB
+2026-05-19T17:12:56.1794493Z  32274acbaad0 Verifying Checksum 
+2026-05-19T17:12:56.1800747Z  32274acbaad0 Download complete 
+2026-05-19T17:12:56.1856098Z  1aa01e357d22 Downloading [===>                                               ]     378B/5.926kB
+2026-05-19T17:12:56.1858339Z  1aa01e357d22 Downloading [==================================================>]  5.926kB/5.926kB
+2026-05-19T17:12:56.1861810Z  1aa01e357d22 Verifying Checksum 
+2026-05-19T17:12:56.1862530Z  1aa01e357d22 Download complete 
+2026-05-19T17:12:56.2026863Z  ce1261c6d567 Extracting [===========>                                       ]  6.554MB/29.77MB
+2026-05-19T17:12:56.2636143Z  a82c537fceb7 Downloading [==================================================>]     185B/185B
+2026-05-19T17:12:56.2671063Z  a82c537fceb7 Verifying Checksum 
+2026-05-19T17:12:56.2679497Z  a82c537fceb7 Download complete 
+2026-05-19T17:12:56.2697660Z  2b0265b6d5f7 Downloading [>                                                  ]  172.4kB/17.06MB
+2026-05-19T17:12:56.2760971Z  e6c4a2127465 Downloading [===================>                               ]  43.23MB/113.2MB
+2026-05-19T17:12:56.3035822Z  ce1261c6d567 Extracting [===============>                                   ]  9.175MB/29.77MB
+2026-05-19T17:12:56.3568789Z  7b1523e4c2f7 Downloading [>                                                  ]  9.561kB/865.4kB
+2026-05-19T17:12:56.3702916Z  2b0265b6d5f7 Downloading [===================>                               ]  6.815MB/17.06MB
+2026-05-19T17:12:56.3784513Z  e6c4a2127465 Downloading [===========================>                       ]  61.91MB/113.2MB
+2026-05-19T17:12:56.4047280Z  ce1261c6d567 Extracting [=================>                                 ]  10.16MB/29.77MB
+2026-05-19T17:12:56.4104539Z  7b1523e4c2f7 Verifying Checksum 
+2026-05-19T17:12:56.4105462Z  7b1523e4c2f7 Download complete 
+2026-05-19T17:12:56.4537713Z  2b0265b6d5f7 Verifying Checksum 
+2026-05-19T17:12:56.4538880Z  2b0265b6d5f7 Download complete 
+2026-05-19T17:12:56.4859498Z  e6c4a2127465 Downloading [==================================>                ]  78.42MB/113.2MB
+2026-05-19T17:12:56.4994877Z  2455ba35c6a7 Downloading [>                                                  ]  15.04kB/1.384MB
+2026-05-19T17:12:56.5201576Z  ce1261c6d567 Extracting [===================>                               ]   11.8MB/29.77MB
+2026-05-19T17:12:56.5343955Z  0554e6d7e500 Downloading [==>                                                ]     378B/8.409kB
+2026-05-19T17:12:56.5347174Z  0554e6d7e500 Downloading [==================================================>]  8.409kB/8.409kB
+2026-05-19T17:12:56.5349290Z  0554e6d7e500 Verifying Checksum 
+2026-05-19T17:12:56.5350831Z  0554e6d7e500 Download complete 
+2026-05-19T17:12:56.5523676Z  2455ba35c6a7 Downloading [==================================================>]  1.384MB/1.384MB
+2026-05-19T17:12:56.5531765Z  2455ba35c6a7 Verifying Checksum 
+2026-05-19T17:12:56.5532555Z  2455ba35c6a7 Download complete 
+2026-05-19T17:12:56.5816588Z  e6c4a2127465 Downloading [===========================================>       ]  97.63MB/113.2MB
+2026-05-19T17:12:56.6031486Z  ca0b3672117b Downloading [========================>                          ]     379B/771B
+2026-05-19T17:12:56.6033026Z  ca0b3672117b Downloading [==================================================>]     771B/771B
+2026-05-19T17:12:56.6040120Z  ca0b3672117b Download complete 
+2026-05-19T17:12:56.6198534Z  0a79a87c0608 Downloading [==========================>                        ]     347B/646B
+2026-05-19T17:12:56.6211745Z  0a79a87c0608 Downloading [==================================================>]     646B/646B
+2026-05-19T17:12:56.6213704Z  0a79a87c0608 Verifying Checksum 
+2026-05-19T17:12:56.6215809Z  0a79a87c0608 Download complete 
+2026-05-19T17:12:56.6330681Z  ce1261c6d567 Extracting [========================>                          ]  14.75MB/29.77MB
+2026-05-19T17:12:56.6616632Z  897d797d2723 Downloading [>                                                  ]  37.43kB/3.647MB
+2026-05-19T17:12:56.6634699Z  e6c4a2127465 Verifying Checksum 
+2026-05-19T17:12:56.6635596Z  e6c4a2127465 Download complete 
+2026-05-19T17:12:56.6854483Z  c14c7509f545 Downloading [==================>                                ]     358B/948B
+2026-05-19T17:12:56.6861619Z  c14c7509f545 Downloading [==================================================>]     948B/948B
+2026-05-19T17:12:56.6862709Z  c14c7509f545 Verifying Checksum 
+2026-05-19T17:12:56.6863391Z  c14c7509f545 Download complete 
+2026-05-19T17:12:56.6995513Z  897d797d2723 Verifying Checksum 
+2026-05-19T17:12:56.6997832Z  897d797d2723 Download complete 
+2026-05-19T17:12:56.7037727Z  897d797d2723 Extracting [>                                                  ]  65.54kB/3.647MB
+2026-05-19T17:12:56.7273902Z  f546396032e0 Downloading [>                                                  ]  3.113kB/194.9kB
+2026-05-19T17:12:56.7366296Z  ce1261c6d567 Extracting [=============================>                     ]  17.69MB/29.77MB
+2026-05-19T17:12:56.7375735Z  f546396032e0 Verifying Checksum 
+2026-05-19T17:12:56.7377287Z  f546396032e0 Download complete 
+2026-05-19T17:12:56.7638304Z  941ebb020cf0 Downloading [==================================================>]     101B/101B
+2026-05-19T17:12:56.7653888Z  941ebb020cf0 Verifying Checksum 
+2026-05-19T17:12:56.7654664Z  941ebb020cf0 Download complete 
+2026-05-19T17:12:56.7686035Z  a300455a02bb Downloading [>                                                  ]  126.5kB/12.41MB
+2026-05-19T17:12:56.8166527Z  897d797d2723 Extracting [===================>                               ]  1.442MB/3.647MB
+2026-05-19T17:12:56.8205341Z  4f4fb700ef54 Downloading [==================================================>]      32B/32B
+2026-05-19T17:12:56.8206993Z  4f4fb700ef54 Verifying Checksum 
+2026-05-19T17:12:56.8209338Z  4f4fb700ef54 Download complete 
+2026-05-19T17:12:56.8401000Z  ce1261c6d567 Extracting [===================================>               ]  20.97MB/29.77MB
+2026-05-19T17:12:56.8408183Z  677c7c5aa821 Downloading [===============================>                   ]     378B/603B
+2026-05-19T17:12:56.8416640Z  677c7c5aa821 Downloading [==================================================>]     603B/603B
+2026-05-19T17:12:56.8425976Z  677c7c5aa821 Verifying Checksum 
+2026-05-19T17:12:56.8426654Z  677c7c5aa821 Download complete 
+2026-05-19T17:12:56.8693937Z  a300455a02bb Downloading [==========================================>        ]  10.56MB/12.41MB
+2026-05-19T17:12:56.8815238Z  a300455a02bb Verifying Checksum 
+2026-05-19T17:12:56.8816430Z  a300455a02bb Download complete 
+2026-05-19T17:12:56.9034881Z  897d797d2723 Extracting [==================================================>]  3.647MB/3.647MB
+2026-05-19T17:12:56.9388178Z  897d797d2723 Pull complete 
+2026-05-19T17:12:56.9415817Z  c14c7509f545 Extracting [==================================================>]     948B/948B
+2026-05-19T17:12:56.9421984Z  c14c7509f545 Extracting [==================================================>]     948B/948B
+2026-05-19T17:12:56.9501729Z  ce1261c6d567 Extracting [=========================================>         ]   24.9MB/29.77MB
+2026-05-19T17:12:57.1370664Z  ce1261c6d567 Extracting [============================================>      ]  26.21MB/29.77MB
+2026-05-19T17:12:57.2675651Z  ce1261c6d567 Extracting [===============================================>   ]  28.51MB/29.77MB
+2026-05-19T17:12:57.4556215Z  ce1261c6d567 Extracting [================================================>  ]  29.16MB/29.77MB
+2026-05-19T17:12:57.5478121Z  ce1261c6d567 Extracting [==================================================>]  29.77MB/29.77MB
+2026-05-19T17:12:59.0693830Z  ce1261c6d567 Pull complete 
+2026-05-19T17:12:59.3739234Z  80ed16669c95 Extracting [==================================================>]  1.168kB/1.168kB
+2026-05-19T17:12:59.3740531Z  80ed16669c95 Extracting [==================================================>]  1.168kB/1.168kB
+2026-05-19T17:13:00.4192377Z  80ed16669c95 Pull complete 
+2026-05-19T17:13:00.4242375Z  5f436a09eefc Extracting [>                                                  ]  65.54kB/6.437MB
+2026-05-19T17:13:00.5256314Z  5f436a09eefc Extracting [================>                                  ]  2.097MB/6.437MB
+2026-05-19T17:13:00.6259359Z  c14c7509f545 Pull complete 
+2026-05-19T17:13:00.6267076Z  5f436a09eefc Extracting [==================================>                ]  4.391MB/6.437MB
+2026-05-19T17:13:00.6285501Z  f546396032e0 Extracting [========>                                          ]  32.77kB/194.9kB
+2026-05-19T17:13:00.6332112Z  f546396032e0 Extracting [==================================================>]  194.9kB/194.9kB
+2026-05-19T17:13:00.6474024Z  f546396032e0 Extracting [==================================================>]  194.9kB/194.9kB
+2026-05-19T17:13:00.7324660Z  5f436a09eefc Extracting [==================================================>]  6.437MB/6.437MB
+2026-05-19T17:13:00.7895587Z  5f436a09eefc Pull complete 
+2026-05-19T17:13:00.7928056Z  e98bbd76c099 Extracting [=>                                                 ]  32.77kB/1.256MB
+2026-05-19T17:13:00.8318446Z  e98bbd76c099 Extracting [==================================================>]  1.256MB/1.256MB
+2026-05-19T17:13:00.8366963Z  f546396032e0 Pull complete 
+2026-05-19T17:13:00.8390882Z  a300455a02bb Extracting [>                                                  ]  131.1kB/12.41MB
+2026-05-19T17:13:00.8584046Z  e98bbd76c099 Pull complete 
+2026-05-19T17:13:00.8605413Z  1014f5c99171 Extracting [>                                                  ]   98.3kB/8.204MB
+2026-05-19T17:13:00.9418442Z  a300455a02bb Extracting [===========>                                       ]  2.884MB/12.41MB
+2026-05-19T17:13:00.9605187Z  1014f5c99171 Extracting [=================>                                 ]  2.949MB/8.204MB
+2026-05-19T17:13:01.0434417Z  a300455a02bb Extracting [=================================>                 ]  8.258MB/12.41MB
+2026-05-19T17:13:01.0626244Z  1014f5c99171 Extracting [=========================>                         ]  4.227MB/8.204MB
+2026-05-19T17:13:01.1304391Z  a300455a02bb Extracting [==================================================>]  12.41MB/12.41MB
+2026-05-19T17:13:01.1580701Z  a300455a02bb Pull complete 
+2026-05-19T17:13:01.1618821Z  941ebb020cf0 Extracting [==================================================>]     101B/101B
+2026-05-19T17:13:01.1621040Z  941ebb020cf0 Extracting [==================================================>]     101B/101B
+2026-05-19T17:13:01.1662787Z  1014f5c99171 Extracting [================================>                  ]  5.308MB/8.204MB
+2026-05-19T17:13:01.1751430Z  941ebb020cf0 Pull complete 
+2026-05-19T17:13:01.1783336Z  4f4fb700ef54 Extracting [==================================================>]      32B/32B
+2026-05-19T17:13:01.1784708Z  4f4fb700ef54 Extracting [==================================================>]      32B/32B
+2026-05-19T17:13:01.1863401Z  4f4fb700ef54 Pull complete 
+2026-05-19T17:13:01.1909323Z  677c7c5aa821 Extracting [==================================================>]     603B/603B
+2026-05-19T17:13:01.1910739Z  677c7c5aa821 Extracting [==================================================>]     603B/603B
+2026-05-19T17:13:01.2009893Z  677c7c5aa821 Pull complete 
+2026-05-19T17:13:01.2087866Z  redis Pulled 
+2026-05-19T17:13:01.2687198Z  1014f5c99171 Extracting [=========================================>         ]  6.881MB/8.204MB
+2026-05-19T17:13:01.3040373Z  1014f5c99171 Extracting [==================================================>]  8.204MB/8.204MB
+2026-05-19T17:13:01.3369413Z  1014f5c99171 Pull complete 
+2026-05-19T17:13:01.3382178Z  0cfcf4ec2c02 Extracting [=>                                                 ]  32.77kB/1.311MB
+2026-05-19T17:13:01.3880239Z  0cfcf4ec2c02 Extracting [==================================================>]  1.311MB/1.311MB
+2026-05-19T17:13:01.4216439Z  0cfcf4ec2c02 Pull complete 
+2026-05-19T17:13:01.4228636Z  cb4494753109 Extracting [==================================================>]     116B/116B
+2026-05-19T17:13:01.4234963Z  cb4494753109 Extracting [==================================================>]     116B/116B
+2026-05-19T17:13:01.4321360Z  cb4494753109 Pull complete 
+2026-05-19T17:13:01.4337814Z  9286f415f93a Extracting [==================================================>]  3.142kB/3.142kB
+2026-05-19T17:13:01.4338967Z  9286f415f93a Extracting [==================================================>]  3.142kB/3.142kB
+2026-05-19T17:13:01.4409509Z  9286f415f93a Pull complete 
+2026-05-19T17:13:01.4994780Z  e6c4a2127465 Extracting [>                                                  ]  557.1kB/113.2MB
+2026-05-19T17:13:01.6056682Z  e6c4a2127465 Extracting [==>                                                ]  6.685MB/113.2MB
+2026-05-19T17:13:01.7137593Z  e6c4a2127465 Extracting [====>                                              ]   9.47MB/113.2MB
+2026-05-19T17:13:01.8258582Z  e6c4a2127465 Extracting [=====>                                             ]  13.37MB/113.2MB
+2026-05-19T17:13:01.9396788Z  e6c4a2127465 Extracting [=======>                                           ]  17.83MB/113.2MB
+2026-05-19T17:13:02.0467335Z  e6c4a2127465 Extracting [==========>                                        ]  22.84MB/113.2MB
+2026-05-19T17:13:02.1527615Z  e6c4a2127465 Extracting [=============>                                     ]  29.52MB/113.2MB
+2026-05-19T17:13:02.2558864Z  e6c4a2127465 Extracting [================>                                  ]  37.32MB/113.2MB
+2026-05-19T17:13:02.3629029Z  e6c4a2127465 Extracting [===================>                               ]  45.12MB/113.2MB
+2026-05-19T17:13:02.4659091Z  e6c4a2127465 Extracting [=======================>                           ]  52.36MB/113.2MB
+2026-05-19T17:13:02.5660354Z  e6c4a2127465 Extracting [========================>                          ]  56.26MB/113.2MB
+2026-05-19T17:13:02.6717693Z  e6c4a2127465 Extracting [===========================>                       ]  61.28MB/113.2MB
+2026-05-19T17:13:02.7773298Z  e6c4a2127465 Extracting [==============================>                    ]  68.52MB/113.2MB
+2026-05-19T17:13:02.8782904Z  e6c4a2127465 Extracting [=================================>                 ]  75.76MB/113.2MB
+2026-05-19T17:13:02.9827669Z  e6c4a2127465 Extracting [====================================>              ]  82.44MB/113.2MB
+2026-05-19T17:13:03.0830452Z  e6c4a2127465 Extracting [=======================================>           ]  90.24MB/113.2MB
+2026-05-19T17:13:03.2016718Z  e6c4a2127465 Extracting [==========================================>        ]  95.81MB/113.2MB
+2026-05-19T17:13:03.3056501Z  e6c4a2127465 Extracting [===========================================>       ]  99.16MB/113.2MB
+2026-05-19T17:13:03.4288100Z  e6c4a2127465 Extracting [============================================>      ]  101.4MB/113.2MB
+2026-05-19T17:13:03.5299440Z  e6c4a2127465 Extracting [==============================================>    ]  104.7MB/113.2MB
+2026-05-19T17:13:03.6305174Z  e6c4a2127465 Extracting [===============================================>   ]    107MB/113.2MB
+2026-05-19T17:13:03.7356599Z  e6c4a2127465 Extracting [===============================================>   ]  108.6MB/113.2MB
+2026-05-19T17:13:03.8624079Z  e6c4a2127465 Extracting [================================================>  ]  109.7MB/113.2MB
+2026-05-19T17:13:04.0478874Z  e6c4a2127465 Extracting [=================================================> ]  111.4MB/113.2MB
+2026-05-19T17:13:04.1920175Z  e6c4a2127465 Extracting [=================================================> ]  112.5MB/113.2MB
+2026-05-19T17:13:04.2603100Z  e6c4a2127465 Extracting [==================================================>]  113.2MB/113.2MB
+2026-05-19T17:13:05.6700165Z  e6c4a2127465 Pull complete 
+2026-05-19T17:13:05.6712990Z  68ac989ed9cb Extracting [==================================================>]  10.01kB/10.01kB
+2026-05-19T17:13:05.6717194Z  68ac989ed9cb Extracting [==================================================>]  10.01kB/10.01kB
+2026-05-19T17:13:05.6980520Z  68ac989ed9cb Pull complete 
+2026-05-19T17:13:05.6995114Z  f082d788df98 Extracting [==================================================>]     129B/129B
+2026-05-19T17:13:05.7000653Z  f082d788df98 Extracting [==================================================>]     129B/129B
+2026-05-19T17:13:05.7110473Z  f082d788df98 Pull complete 
+2026-05-19T17:13:05.7125715Z  32274acbaad0 Extracting [==================================================>]     167B/167B
+2026-05-19T17:13:05.7131330Z  32274acbaad0 Extracting [==================================================>]     167B/167B
+2026-05-19T17:13:05.7256646Z  32274acbaad0 Pull complete 
+2026-05-19T17:13:05.7270232Z  1aa01e357d22 Extracting [==================================================>]  5.926kB/5.926kB
+2026-05-19T17:13:05.7275348Z  1aa01e357d22 Extracting [==================================================>]  5.926kB/5.926kB
+2026-05-19T17:13:05.7356337Z  1aa01e357d22 Pull complete 
+2026-05-19T17:13:05.7375946Z  a82c537fceb7 Extracting [==================================================>]     185B/185B
+2026-05-19T17:13:05.7377316Z  a82c537fceb7 Extracting [==================================================>]     185B/185B
+2026-05-19T17:13:05.7448574Z  a82c537fceb7 Pull complete 
+2026-05-19T17:13:05.7496826Z  2b0265b6d5f7 Extracting [>                                                  ]  196.6kB/17.06MB
+2026-05-19T17:13:05.8516045Z  2b0265b6d5f7 Extracting [===============================>                   ]  10.62MB/17.06MB
+2026-05-19T17:13:05.9134203Z  2b0265b6d5f7 Extracting [==================================================>]  17.06MB/17.06MB
+2026-05-19T17:13:05.9291824Z  2b0265b6d5f7 Pull complete 
+2026-05-19T17:13:05.9304171Z  7b1523e4c2f7 Extracting [=>                                                 ]  32.77kB/865.4kB
+2026-05-19T17:13:05.9508165Z  7b1523e4c2f7 Extracting [==================================================>]  865.4kB/865.4kB
+2026-05-19T17:13:05.9515718Z  7b1523e4c2f7 Extracting [==================================================>]  865.4kB/865.4kB
+2026-05-19T17:13:05.9589365Z  7b1523e4c2f7 Pull complete 
+2026-05-19T17:13:05.9600495Z  2455ba35c6a7 Extracting [=>                                                 ]  32.77kB/1.384MB
+2026-05-19T17:13:05.9840109Z  2455ba35c6a7 Extracting [==================================================>]  1.384MB/1.384MB
+2026-05-19T17:13:05.9910859Z  2455ba35c6a7 Pull complete 
+2026-05-19T17:13:05.9924889Z  0554e6d7e500 Extracting [==================================================>]  8.409kB/8.409kB
+2026-05-19T17:13:05.9936025Z  0554e6d7e500 Extracting [==================================================>]  8.409kB/8.409kB
+2026-05-19T17:13:06.0055482Z  0554e6d7e500 Pull complete 
+2026-05-19T17:13:06.0067939Z  ca0b3672117b Extracting [==================================================>]     771B/771B
+2026-05-19T17:13:06.0078929Z  ca0b3672117b Extracting [==================================================>]     771B/771B
+2026-05-19T17:13:06.0165701Z  ca0b3672117b Pull complete 
+2026-05-19T17:13:06.0180351Z  0a79a87c0608 Extracting [==================================================>]     646B/646B
+2026-05-19T17:13:06.0182319Z  0a79a87c0608 Extracting [==================================================>]     646B/646B
+2026-05-19T17:13:06.0255151Z  0a79a87c0608 Pull complete 
+2026-05-19T17:13:06.0315356Z  postgres Pulled 
+2026-05-19T17:13:06.0385208Z  Network dev_default  Creating
+2026-05-19T17:13:06.0884712Z  Network dev_default  Created
+2026-05-19T17:13:06.0981051Z  Volume "dev_cyberos-pg-data"  Creating
+2026-05-19T17:13:06.1002580Z  Volume "dev_cyberos-pg-data"  Created
+2026-05-19T17:13:06.1008048Z  Volume "dev_cyberos-redis-data"  Creating
+2026-05-19T17:13:06.1018742Z  Volume "dev_cyberos-redis-data"  Created
+2026-05-19T17:13:06.1064179Z  Container cyberos-postgres  Creating
+2026-05-19T17:13:06.1070367Z  Container cyberos-redis  Creating
+2026-05-19T17:13:06.1394665Z  Container cyberos-redis  Created
+2026-05-19T17:13:06.1406406Z  Container cyberos-postgres  Created
+2026-05-19T17:13:06.1418764Z  Container cyberos-postgres  Starting
+2026-05-19T17:13:06.1419732Z  Container cyberos-redis  Starting
+2026-05-19T17:13:06.4362906Z  Container cyberos-postgres  Started
+2026-05-19T17:13:06.4392091Z  Container cyberos-redis  Started
+2026-05-19T17:13:12.8638355Z postgres is up
+2026-05-19T17:13:12.8680579Z ##[group]Run docker exec -u 0 cyberos-postgres apt-get update
+2026-05-19T17:13:12.8681729Z [36;1mdocker exec -u 0 cyberos-postgres apt-get update[0m
+2026-05-19T17:13:12.8682609Z [36;1mdocker exec -u 0 cyberos-postgres apt-get install -y postgresql-16-pgvector[0m
+2026-05-19T17:13:12.8683873Z [36;1mdocker exec -i cyberos-postgres psql -U cyberos -d cyberos -c "CREATE EXTENSION IF NOT EXISTS vector;"[0m
+2026-05-19T17:13:12.8717434Z shell: /usr/bin/bash -e {0}
+2026-05-19T17:13:12.8717671Z env:
+2026-05-19T17:13:12.8717859Z   CARGO_TERM_COLOR: always
+2026-05-19T17:13:12.8718093Z   RUSTFLAGS: -D warnings
+2026-05-19T17:13:12.8718313Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:13:12.8718551Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:13:12.8718753Z ##[endgroup]
+2026-05-19T17:13:12.9649906Z Get:1 http://deb.debian.org/debian trixie InRelease [140 kB]
+2026-05-19T17:13:12.9771077Z Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+2026-05-19T17:13:12.9772531Z Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+2026-05-19T17:13:12.9949515Z Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9,671 kB]
+2026-05-19T17:13:13.0482847Z Get:5 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [165 kB]
+2026-05-19T17:13:13.0750954Z Get:6 http://apt.postgresql.org/pub/repos/apt trixie-pgdg InRelease [180 kB]
+2026-05-19T17:13:13.1205417Z Get:7 http://apt.postgresql.org/pub/repos/apt trixie-pgdg/main amd64 Packages [532 kB]
+2026-05-19T17:13:13.1481835Z Get:8 http://apt.postgresql.org/pub/repos/apt trixie-pgdg/16 amd64 Packages [6,601 B]
+2026-05-19T17:13:13.8200281Z Fetched 10.8 MB in 1s (12.5 MB/s)
+2026-05-19T17:13:14.3089758Z Reading package lists...
+2026-05-19T17:13:14.8705354Z Reading package lists...
+2026-05-19T17:13:15.0011267Z Building dependency tree...
+2026-05-19T17:13:15.0014815Z Reading state information...
+2026-05-19T17:13:15.1409960Z The following NEW packages will be installed:
+2026-05-19T17:13:15.1411379Z   postgresql-16-pgvector
+2026-05-19T17:13:15.2736423Z 0 upgraded, 1 newly installed, 0 to remove and 34 not upgraded.
+2026-05-19T17:13:15.2737802Z Need to get 263 kB of archives.
+2026-05-19T17:13:15.2738556Z After this operation, 720 kB of additional disk space will be used.
+2026-05-19T17:13:15.2739764Z Get:1 http://apt.postgresql.org/pub/repos/apt trixie-pgdg/main amd64 postgresql-16-pgvector amd64 0.8.2-1.pgdg13+1 [263 kB]
+2026-05-19T17:13:15.4008007Z debconf: unable to initialize frontend: Dialog
+2026-05-19T17:13:15.4008993Z debconf: (TERM is not set, so the dialog frontend is not usable.)
+2026-05-19T17:13:15.4009818Z debconf: falling back to frontend: Readline
+2026-05-19T17:13:15.4071796Z debconf: unable to initialize frontend: Readline
+2026-05-19T17:13:15.4073245Z debconf: (This frontend requires a controlling tty.)
+2026-05-19T17:13:15.4074289Z debconf: falling back to frontend: Teletype
+2026-05-19T17:13:15.4112146Z debconf: unable to initialize frontend: Teletype
+2026-05-19T17:13:15.4120790Z debconf: (This frontend requires a controlling tty.)
+2026-05-19T17:13:15.4122057Z debconf: falling back to frontend: Noninteractive
+2026-05-19T17:13:15.9274767Z Fetched 263 kB in 0s (1,828 kB/s)
+2026-05-19T17:13:15.9398882Z Selecting previously unselected package postgresql-16-pgvector.
+2026-05-19T17:13:15.9432332Z (Reading database ... 
+2026-05-19T17:13:15.9433433Z (Reading database ... 5%
+2026-05-19T17:13:15.9437232Z (Reading database ... 10%
+2026-05-19T17:13:15.9439185Z (Reading database ... 15%
+2026-05-19T17:13:15.9440072Z (Reading database ... 20%
+2026-05-19T17:13:15.9443773Z (Reading database ... 25%
+2026-05-19T17:13:15.9444374Z (Reading database ... 30%
+2026-05-19T17:13:15.9444959Z (Reading database ... 35%
+2026-05-19T17:13:15.9445524Z (Reading database ... 40%
+2026-05-19T17:13:15.9446073Z (Reading database ... 45%
+2026-05-19T17:13:15.9446630Z (Reading database ... 50%
+2026-05-19T17:13:15.9447173Z (Reading database ... 55%
+2026-05-19T17:13:15.9447685Z (Reading database ... 60%
+2026-05-19T17:13:15.9448746Z (Reading database ... 65%
+2026-05-19T17:13:15.9468755Z (Reading database ... 70%
+2026-05-19T17:13:15.9476632Z (Reading database ... 75%
+2026-05-19T17:13:15.9486568Z (Reading database ... 80%
+2026-05-19T17:13:15.9491893Z (Reading database ... 85%
+2026-05-19T17:13:15.9498542Z (Reading database ... 90%
+2026-05-19T17:13:15.9503135Z (Reading database ... 95%
+2026-05-19T17:13:15.9503829Z (Reading database ... 100%
+2026-05-19T17:13:15.9504864Z (Reading database ... 11568 files and directories currently installed.)
+2026-05-19T17:13:15.9512544Z Preparing to unpack .../postgresql-16-pgvector_0.8.2-1.pgdg13+1_amd64.deb ...
+2026-05-19T17:13:15.9520424Z Unpacking postgresql-16-pgvector (0.8.2-1.pgdg13+1) ...
+2026-05-19T17:13:15.9868934Z Setting up postgresql-16-pgvector (0.8.2-1.pgdg13+1) ...
+2026-05-19T17:13:15.9894815Z Processing triggers for postgresql-common (281.pgdg130+1) ...
+2026-05-19T17:13:16.0519024Z debconf: unable to initialize frontend: Dialog
+2026-05-19T17:13:16.0520265Z debconf: (TERM is not set, so the dialog frontend is not usable.)
+2026-05-19T17:13:16.0523367Z debconf: falling back to frontend: Readline
+2026-05-19T17:13:16.0581259Z debconf: unable to initialize frontend: Readline
+2026-05-19T17:13:16.0582420Z debconf: (This frontend requires a controlling tty.)
+2026-05-19T17:13:16.0585466Z debconf: falling back to frontend: Teletype
+2026-05-19T17:13:16.0624228Z debconf: unable to initialize frontend: Teletype
+2026-05-19T17:13:16.0624954Z debconf: (This frontend requires a controlling tty.)
+2026-05-19T17:13:16.0625773Z debconf: falling back to frontend: Noninteractive
+2026-05-19T17:13:16.0939180Z Building PostgreSQL dictionaries from installed myspell/hunspell packages...
+2026-05-19T17:13:16.0940704Z Removing obsolete dictionary files:
+2026-05-19T17:13:16.2126303Z CREATE EXTENSION
+2026-05-19T17:13:16.2216598Z ##[group]Run cargo install --locked --version 0.8.0 sqlx-cli --no-default-features --features postgres
+2026-05-19T17:13:16.2217329Z [36;1mcargo install --locked --version 0.8.0 sqlx-cli --no-default-features --features postgres[0m
+2026-05-19T17:13:16.2259348Z shell: /usr/bin/bash -e {0}
+2026-05-19T17:13:16.2259587Z env:
+2026-05-19T17:13:16.2259772Z   CARGO_TERM_COLOR: always
+2026-05-19T17:13:16.2260013Z   RUSTFLAGS: -D warnings
+2026-05-19T17:13:16.2260450Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:13:16.2260687Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:13:16.2260885Z ##[endgroup]
+2026-05-19T17:13:16.3073845Z [1m[32m    Updating[0m crates.io index
+2026-05-19T17:13:16.3566967Z [1m[32m Downloading[0m crates ...
+2026-05-19T17:13:16.8386520Z [1m[32m  Downloaded[0m sqlx-cli v0.8.0
+2026-05-19T17:13:16.8812977Z [1m[32m  Installing[0m sqlx-cli v0.8.0
+2026-05-19T17:13:16.8884373Z [1m[32m    Updating[0m crates.io index
+2026-05-19T17:13:17.2897203Z [1m[33mwarning[0m[1m:[0m package `futures-util v0.3.30` in Cargo.lock is yanked in registry `crates-io`, consider running without --locked
+2026-05-19T17:13:17.3218023Z [1m[32m    Updating[0m crates.io index
+2026-05-19T17:13:17.4748223Z [1m[32m Downloading[0m crates ...
+2026-05-19T17:13:17.5469998Z [1m[32m  Downloaded[0m crossbeam-utils v0.8.19
+2026-05-19T17:13:17.5513373Z [1m[32m  Downloaded[0m pin-utils v0.1.0
+2026-05-19T17:13:17.5537914Z [1m[32m  Downloaded[0m hashlink v0.9.0
+2026-05-19T17:13:17.5615661Z [1m[32m  Downloaded[0m unicode-segmentation v1.11.0
+2026-05-19T17:13:17.5678656Z [1m[32m  Downloaded[0m tracing-attributes v0.1.27
+2026-05-19T17:13:17.5711296Z [1m[32m  Downloaded[0m sqlx-macros v0.8.0
+2026-05-19T17:13:17.5727642Z [1m[32m  Downloaded[0m unicode-width v0.1.11
+2026-05-19T17:13:17.5751329Z [1m[32m  Downloaded[0m zeroize v1.7.0
+2026-05-19T17:13:17.5772787Z [1m[32m  Downloaded[0m unicode-bidi v0.3.15
+2026-05-19T17:13:17.5805316Z [1m[32m  Downloaded[0m utf8parse v0.2.1
+2026-05-19T17:13:17.5823091Z [1m[32m  Downloaded[0m whoami v1.5.1
+2026-05-19T17:13:17.5851674Z [1m[32m  Downloaded[0m stringprep v0.1.4
+2026-05-19T17:13:17.5880286Z [1m[32m  Downloaded[0m typenum v1.17.0
+2026-05-19T17:13:17.5914532Z [1m[32m  Downloaded[0m version_check v0.9.4
+2026-05-19T17:13:17.5933394Z [1m[32m  Downloaded[0m tracing-core v0.1.32
+2026-05-19T17:13:17.5968605Z [1m[32m  Downloaded[0m tokio-macros v2.2.0
+2026-05-19T17:13:17.5985060Z [1m[32m  Downloaded[0m tracing v0.1.40
+2026-05-19T17:13:17.6034839Z [1m[32m  Downloaded[0m unicode_categories v0.1.1
+2026-05-19T17:13:17.6064206Z [1m[32m  Downloaded[0m tinyvec v1.6.0
+2026-05-19T17:13:17.6105142Z [1m[32m  Downloaded[0m serde_derive v1.0.197
+2026-05-19T17:13:17.6139648Z [1m[32m  Downloaded[0m url v2.5.0
+2026-05-19T17:13:17.6175321Z [1m[32m  Downloaded[0m rsa v0.9.6
+2026-05-19T17:13:17.6237631Z [1m[32m  Downloaded[0m zerocopy v0.7.32
+2026-05-19T17:13:17.6430894Z [1m[32m  Downloaded[0m sqlx v0.8.0
+2026-05-19T17:13:17.6618022Z [1m[32m  Downloaded[0m percent-encoding v2.3.1
+2026-05-19T17:13:17.6635288Z [1m[32m  Downloaded[0m promptly v0.3.1
+2026-05-19T17:13:17.6655512Z [1m[32m  Downloaded[0m parking_lot v0.12.1
+2026-05-19T17:13:17.6687385Z [1m[32m  Downloaded[0m syn v2.0.52
+2026-05-19T17:13:17.6788693Z [1m[32m  Downloaded[0m num_cpus v1.16.0
+2026-05-19T17:13:17.6830228Z [1m[32m  Downloaded[0m itoa v1.0.10
+2026-05-19T17:13:17.6851862Z [1m[32m  Downloaded[0m itertools v0.12.1
+2026-05-19T17:13:17.6926213Z [1m[32m  Downloaded[0m der v0.7.8
+2026-05-19T17:13:17.6987216Z [1m[32m  Downloaded[0m rustix v0.38.31
+2026-05-19T17:13:17.7276209Z [1m[32m  Downloaded[0m once_cell v1.19.0
+2026-05-19T17:13:17.7310513Z [1m[32m  Downloaded[0m parking v2.2.0
+2026-05-19T17:13:17.7326105Z [1m[32m  Downloaded[0m base64ct v1.6.0
+2026-05-19T17:13:17.7361949Z [1m[32m  Downloaded[0m nibble_vec v0.1.0
+2026-05-19T17:13:17.7383087Z [1m[32m  Downloaded[0m num-iter v0.1.44
+2026-05-19T17:13:17.7399108Z [1m[32m  Downloaded[0m cpufeatures v0.2.12
+2026-05-19T17:13:17.7420784Z [1m[32m  Downloaded[0m quote v1.0.35
+2026-05-19T17:13:17.7456623Z [1m[32m  Downloaded[0m ppv-lite86 v0.2.17
+2026-05-19T17:13:17.7474760Z [1m[32m  Downloaded[0m tokio v1.36.0
+2026-05-19T17:13:17.7873774Z [1m[32m  Downloaded[0m rand v0.8.5
+2026-05-19T17:13:17.7918851Z [1m[32m  Downloaded[0m radix_trie v0.2.1
+2026-05-19T17:13:17.7970878Z [1m[32m  Downloaded[0m libm v0.2.8
+2026-05-19T17:13:17.8064365Z [1m[32m  Downloaded[0m futures-util v0.3.30
+2026-05-19T17:13:17.8198309Z [1m[32m  Downloaded[0m colorchoice v1.0.0
+2026-05-19T17:13:17.8209373Z [1m[32m  Downloaded[0m pkg-config v0.3.30
+2026-05-19T17:13:17.8229045Z [1m[32m  Downloaded[0m clap_builder v4.5.2
+2026-05-19T17:13:17.8292776Z [1m[32m  Downloaded[0m autocfg v1.1.0
+2026-05-19T17:13:17.8309864Z [1m[32m  Downloaded[0m nix v0.23.2
+2026-05-19T17:13:17.8412112Z [1m[32m  Downloaded[0m indexmap v2.2.5
+2026-05-19T17:13:17.8475666Z [1m[32m  Downloaded[0m paste v1.0.14
+2026-05-19T17:13:17.8552222Z [1m[32m  Downloaded[0m idna v0.5.0
+2026-05-19T17:13:17.8631999Z [1m[32m  Downloaded[0m flume v0.11.0
+2026-05-19T17:13:17.8678668Z [1m[32m  Downloaded[0m anyhow v1.0.81
+2026-05-19T17:13:17.8730564Z [1m[32m  Downloaded[0m slab v0.4.9
+2026-05-19T17:13:17.8748602Z [1m[32m  Downloaded[0m pin-project-lite v0.2.13
+2026-05-19T17:13:17.8820424Z [1m[32m  Downloaded[0m futures-task v0.3.30
+2026-05-19T17:13:17.8842053Z [1m[32m  Downloaded[0m event-listener v5.2.0
+2026-05-19T17:13:17.8876732Z [1m[32m  Downloaded[0m equivalent v1.0.1
+2026-05-19T17:13:17.8885786Z [1m[32m  Downloaded[0m glob v0.3.1
+2026-05-19T17:13:17.8911969Z [1m[32m  Downloaded[0m futures-executor v0.3.30
+2026-05-19T17:13:17.8951878Z [1m[32m  Downloaded[0m clap_derive v4.5.0
+2026-05-19T17:13:17.8968346Z [1m[32m  Downloaded[0m cargo_metadata v0.14.2
+2026-05-19T17:13:17.9012023Z [1m[32m  Downloaded[0m backoff v0.4.0
+2026-05-19T17:13:17.9031482Z [1m[32m  Downloaded[0m parking_lot_core v0.9.9
+2026-05-19T17:13:17.9072022Z [1m[32m  Downloaded[0m iana-time-zone v0.1.60
+2026-05-19T17:13:17.9106794Z [1m[32m  Downloaded[0m either v1.10.0
+2026-05-19T17:13:17.9141922Z [1m[32m  Downloaded[0m instant v0.1.12
+2026-05-19T17:13:17.9161941Z [1m[32m  Downloaded[0m home v0.5.9
+2026-05-19T17:13:17.9181919Z [1m[32m  Downloaded[0m futures-io v0.3.30
+2026-05-19T17:13:17.9201982Z [1m[32m  Downloaded[0m futures-core v0.3.30
+2026-05-19T17:13:17.9221957Z [1m[32m  Downloaded[0m finl_unicode v1.2.0
+2026-05-19T17:13:17.9391975Z [1m[32m  Downloaded[0m dirs-next v2.0.0
+2026-05-19T17:13:17.9411888Z [1m[32m  Downloaded[0m memoffset v0.6.5
+2026-05-19T17:13:17.9425001Z [1m[32m  Downloaded[0m heck v0.4.1
+2026-05-19T17:13:17.9451817Z [1m[32m  Downloaded[0m crc-catalog v2.4.0
+2026-05-19T17:13:17.9472623Z [1m[32m  Downloaded[0m async-trait v0.1.77
+2026-05-19T17:13:17.9512583Z [1m[32m  Downloaded[0m futures-sink v0.3.30
+2026-05-19T17:13:17.9521880Z [1m[32m  Downloaded[0m filetime v0.2.23
+2026-05-19T17:13:17.9539896Z [1m[32m  Downloaded[0m ahash v0.8.11
+2026-05-19T17:13:17.9566403Z [1m[32m  Downloaded[0m clap_lex v0.7.0
+2026-05-19T17:13:17.9576816Z [1m[32m  Downloaded[0m chrono v0.4.35
+2026-05-19T17:13:17.9651927Z [1m[32m  Downloaded[0m proc-macro2 v1.0.79
+2026-05-19T17:13:17.9678007Z [1m[32m  Downloaded[0m anstyle v1.0.6
+2026-05-19T17:13:17.9693031Z [1m[32m  Downloaded[0m clap v4.5.2
+2026-05-19T17:13:17.9788786Z [1m[32m  Downloaded[0m cc v1.0.90
+2026-05-19T17:13:17.9815223Z [1m[32m  Downloaded[0m form_urlencoded v1.2.1
+2026-05-19T17:13:17.9823840Z [1m[32m  Downloaded[0m fd-lock v3.0.13
+2026-05-19T17:13:17.9850107Z [1m[32m  Downloaded[0m fastrand v2.0.1
+2026-05-19T17:13:17.9864577Z [1m[32m  Downloaded[0m errno v0.3.8
+2026-05-19T17:13:17.9880723Z [1m[32m  Downloaded[0m cargo-platform v0.1.7
+2026-05-19T17:13:17.9895406Z [1m[32m  Downloaded[0m anstyle-query v1.0.2
+2026-05-19T17:13:17.9907404Z [1m[32m  Downloaded[0m num-traits v0.2.18
+2026-05-19T17:13:17.9935307Z [1m[32m  Downloaded[0m camino v1.1.6
+2026-05-19T17:13:17.9957315Z [1m[32m  Downloaded[0m bytes v1.5.0
+2026-05-19T17:13:17.9996626Z [1m[32m  Downloaded[0m endian-type v0.1.2
+2026-05-19T17:13:18.0003564Z [1m[32m  Downloaded[0m futures v0.3.30
+2026-05-19T17:13:18.0053948Z [1m[32m  Downloaded[0m cfg-if v1.0.0
+2026-05-19T17:13:18.0066557Z [1m[32m  Downloaded[0m log v0.4.21
+2026-05-19T17:13:18.0089672Z [1m[32m  Downloaded[0m console v0.15.8
+2026-05-19T17:13:18.0134898Z [1m[32m  Downloaded[0m bitflags v2.4.2
+2026-05-19T17:13:18.0176060Z [1m[32m  Downloaded[0m base64 v0.22.0
+2026-05-19T17:13:18.0216507Z [1m[32m  Downloaded[0m num-bigint-dig v0.8.4
+2026-05-19T17:13:18.0261955Z [1m[32m  Downloaded[0m hashbrown v0.14.5
+2026-05-19T17:13:18.0310688Z [1m[32m  Downloaded[0m anstyle-parse v0.2.3
+2026-05-19T17:13:18.0328852Z [1m[32m  Downloaded[0m dirs-sys-next v0.1.2
+2026-05-19T17:13:18.0339863Z [1m[32m  Downloaded[0m crc v3.0.1
+2026-05-19T17:13:18.0357134Z [1m[32m  Downloaded[0m unicode-normalization v0.1.23
+2026-05-19T17:13:18.0391004Z [1m[32m  Downloaded[0m sqlx-core v0.8.0
+2026-05-19T17:13:18.0469830Z [1m[32m  Downloaded[0m allocator-api2 v0.2.16
+2026-05-19T17:13:18.0500766Z [1m[32m  Downloaded[0m serde v1.0.197
+2026-05-19T17:13:18.0532091Z [1m[32m  Downloaded[0m linux-raw-sys v0.4.13
+2026-05-19T17:13:18.0836890Z [1m[32m  Downloaded[0m lock_api v0.4.11
+2026-05-19T17:13:18.0849808Z [1m[32m  Downloaded[0m concurrent-queue v2.4.0
+2026-05-19T17:13:18.0867094Z [1m[32m  Downloaded[0m sqlx-sqlite v0.8.0
+2026-05-19T17:13:18.0911412Z [1m[32m  Downloaded[0m socket2 v0.5.6
+2026-05-19T17:13:18.0929391Z [1m[32m  Downloaded[0m smallvec v1.13.1
+2026-05-19T17:13:18.0950255Z [1m[32m  Downloaded[0m sha2 v0.10.8
+2026-05-19T17:13:18.0975221Z [1m[32m  Downloaded[0m ryu v1.0.17
+2026-05-19T17:13:18.1007279Z [1m[32m  Downloaded[0m lazy_static v1.4.0
+2026-05-19T17:13:18.1019531Z [1m[32m  Downloaded[0m crypto-common v0.1.6
+2026-05-19T17:13:18.1029228Z [1m[32m  Downloaded[0m crossbeam-queue v0.3.11
+2026-05-19T17:13:18.1042278Z [1m[32m  Downloaded[0m anstream v0.6.13
+2026-05-19T17:13:18.1065074Z [1m[32m  Downloaded[0m unicode-ident v1.0.12
+2026-05-19T17:13:18.1092226Z [1m[32m  Downloaded[0m serde_json v1.0.114
+2026-05-19T17:13:18.1164556Z [1m[32m  Downloaded[0m futures-macro v0.3.30
+2026-05-19T17:13:18.1176373Z [1m[32m  Downloaded[0m futures-channel v0.3.30
+2026-05-19T17:13:18.1194931Z [1m[32m  Downloaded[0m sqlx-mysql v0.8.0
+2026-05-19T17:13:18.1253938Z [1m[32m  Downloaded[0m sqlx-postgres v0.8.0
+2026-05-19T17:13:18.1329511Z [1m[32m  Downloaded[0m tokio-stream v0.1.14
+2026-05-19T17:13:18.1373860Z [1m[32m  Downloaded[0m memchr v2.7.1
+2026-05-19T17:13:18.1428258Z [1m[32m  Downloaded[0m thiserror-impl v1.0.58
+2026-05-19T17:13:18.1442093Z [1m[32m  Downloaded[0m tempfile v3.10.1
+2026-05-19T17:13:18.1467906Z [1m[32m  Downloaded[0m sqlx-macros-core v0.8.0
+2026-05-19T17:13:18.1489812Z [1m[32m  Downloaded[0m semver v1.0.22
+2026-05-19T17:13:18.1514418Z [1m[32m  Downloaded[0m getrandom v0.2.12
+2026-05-19T17:13:18.1548501Z [1m[32m  Downloaded[0m sqlformat v0.2.3
+2026-05-19T17:13:18.1566138Z [1m[32m  Downloaded[0m thiserror v1.0.58
+2026-05-19T17:13:18.1622235Z [1m[32m  Downloaded[0m subtle v2.5.0
+2026-05-19T17:13:18.1633399Z [1m[32m  Downloaded[0m strsim v0.11.0
+2026-05-19T17:13:18.1646665Z [1m[32m  Downloaded[0m rustyline v9.1.2
+2026-05-19T17:13:18.1690119Z [1m[32m  Downloaded[0m spin v0.5.2
+2026-05-19T17:13:18.1703711Z [1m[32m  Downloaded[0m libc v0.2.153
+2026-05-19T17:13:18.2174045Z [1m[32m  Downloaded[0m libsqlite3-sys v0.28.0
+2026-05-19T17:13:18.3243151Z [1m[32m   Compiling[0m proc-macro2 v1.0.79
+2026-05-19T17:13:18.3244664Z [1m[32m   Compiling[0m unicode-ident v1.0.12
+2026-05-19T17:13:18.4499729Z [1m[32m   Compiling[0m libc v0.2.153
+2026-05-19T17:13:18.6753655Z [1m[32m   Compiling[0m autocfg v1.1.0
+2026-05-19T17:13:18.9574083Z [1m[32m   Compiling[0m cfg-if v1.0.0
+2026-05-19T17:13:19.2552914Z [1m[32m   Compiling[0m quote v1.0.35
+2026-05-19T17:13:19.4754735Z [1m[32m   Compiling[0m syn v2.0.52
+2026-05-19T17:13:20.7352893Z [1m[32m   Compiling[0m serde v1.0.197
+2026-05-19T17:13:20.9402984Z [1m[32m   Compiling[0m version_check v0.9.4
+2026-05-19T17:13:21.1672968Z [1m[32m   Compiling[0m typenum v1.17.0
+2026-05-19T17:13:21.6396625Z [1m[32m   Compiling[0m generic-array v0.14.7
+2026-05-19T17:13:22.3102700Z [1m[32m   Compiling[0m pin-project-lite v0.2.13
+2026-05-19T17:13:23.0182847Z [1m[32m   Compiling[0m futures-core v0.3.30
+2026-05-19T17:13:23.1164040Z [1m[32m   Compiling[0m memchr v2.7.1
+2026-05-19T17:13:24.4702549Z [1m[32m   Compiling[0m once_cell v1.19.0
+2026-05-19T17:13:24.5492845Z [1m[32m   Compiling[0m serde_derive v1.0.197
+2026-05-19T17:13:24.6612594Z [1m[32m   Compiling[0m crypto-common v0.1.6
+2026-05-19T17:13:24.7183566Z [1m[32m   Compiling[0m block-buffer v0.10.4
+2026-05-19T17:13:24.7992578Z [1m[32m   Compiling[0m ahash v0.8.11
+2026-05-19T17:13:24.9293269Z [1m[32m   Compiling[0m slab v0.4.9
+2026-05-19T17:13:25.0583214Z [1m[32m   Compiling[0m crossbeam-utils v0.8.19
+2026-05-19T17:13:25.2442641Z [1m[32m   Compiling[0m subtle v2.5.0
+2026-05-19T17:13:25.3432706Z [1m[32m   Compiling[0m tinyvec_macros v0.1.1
+2026-05-19T17:13:25.3712622Z [1m[32m   Compiling[0m tinyvec v1.6.0
+2026-05-19T17:13:26.2453126Z [1m[32m   Compiling[0m digest v0.10.7
+2026-05-19T17:13:26.4796170Z [1m[32m   Compiling[0m num-traits v0.2.18
+2026-05-19T17:13:26.6049548Z [1m[32m   Compiling[0m lock_api v0.4.11
+2026-05-19T17:13:26.7631532Z [1m[32m   Compiling[0m parking_lot_core v0.9.9
+2026-05-19T17:13:26.9181735Z [1m[32m   Compiling[0m futures-sink v0.3.30
+2026-05-19T17:13:26.9692328Z [1m[32m   Compiling[0m zerocopy v0.7.32
+2026-05-19T17:13:27.5019606Z [1m[32m   Compiling[0m futures-channel v0.3.30
+2026-05-19T17:13:28.9953599Z [1m[32m   Compiling[0m unicode-normalization v0.1.23
+2026-05-19T17:13:29.5742672Z [1m[32m   Compiling[0m tokio-macros v2.2.0
+2026-05-19T17:13:30.2434480Z [1m[32m   Compiling[0m futures-macro v0.3.30
+2026-05-19T17:13:30.9990852Z [1m[32m   Compiling[0m smallvec v1.13.1
+2026-05-19T17:13:31.1363205Z [1m[32m   Compiling[0m num_cpus v1.16.0
+2026-05-19T17:13:31.2192811Z [1m[32m   Compiling[0m getrandom v0.2.12
+2026-05-19T17:13:31.3853152Z [1m[32m   Compiling[0m socket2 v0.5.6
+2026-05-19T17:13:32.1000241Z [1m[32m   Compiling[0m mio v0.8.11
+2026-05-19T17:13:32.4033246Z [1m[32m   Compiling[0m bitflags v2.4.2
+2026-05-19T17:13:32.7413048Z [1m[32m   Compiling[0m serde_json v1.0.114
+2026-05-19T17:13:32.8704095Z [1m[32m   Compiling[0m futures-task v0.3.30
+2026-05-19T17:13:32.9152784Z [1m[32m   Compiling[0m utf8parse v0.2.1
+2026-05-19T17:13:32.9613110Z [1m[32m   Compiling[0m scopeguard v1.2.0
+2026-05-19T17:13:32.9735712Z [1m[32m   Compiling[0m futures-io v0.3.30
+2026-05-19T17:13:33.0033173Z [1m[32m   Compiling[0m unicode-bidi v0.3.15
+2026-05-19T17:13:33.0933479Z [1m[32m   Compiling[0m bytes v1.5.0
+2026-05-19T17:13:34.0322858Z [1m[32m   Compiling[0m log v0.4.21
+2026-05-19T17:13:34.2032933Z [1m[32m   Compiling[0m allocator-api2 v0.2.16
+2026-05-19T17:13:34.4822689Z [1m[32m   Compiling[0m pin-utils v0.1.0
+2026-05-19T17:13:34.5110283Z [1m[32m   Compiling[0m futures-util v0.3.30
+2026-05-19T17:13:34.5666030Z [1m[32m   Compiling[0m hashbrown v0.14.5
+2026-05-19T17:13:35.2694250Z [1m[32m   Compiling[0m tokio v1.36.0
+2026-05-19T17:13:38.0093092Z [1m[32m   Compiling[0m rand_core v0.6.4
+2026-05-19T17:13:38.6836351Z [1m[32m   Compiling[0m either v1.10.0
+2026-05-19T17:13:39.9208506Z [1m[32m   Compiling[0m memoffset v0.6.5
+2026-05-19T17:13:40.0564475Z [1m[32m   Compiling[0m itoa v1.0.10
+2026-05-19T17:13:40.1463546Z [1m[32m   Compiling[0m thiserror v1.0.58
+2026-05-19T17:13:40.3323340Z [1m[32m   Compiling[0m paste v1.0.14
+2026-05-19T17:13:40.5064306Z [1m[32m   Compiling[0m ppv-lite86 v0.2.17
+2026-05-19T17:13:40.8508720Z [1m[32m   Compiling[0m rustix v0.38.31
+2026-05-19T17:13:41.0955740Z [1m[32m   Compiling[0m percent-encoding v2.3.1
+2026-05-19T17:13:41.2774673Z [1m[32m   Compiling[0m ryu v1.0.17
+2026-05-19T17:13:41.5503920Z [1m[32m   Compiling[0m minimal-lexical v0.2.1
+2026-05-19T17:13:41.8406238Z [1m[32m   Compiling[0m nom v7.1.3
+2026-05-19T17:13:47.2892676Z [1m[32m   Compiling[0m form_urlencoded v1.2.1
+2026-05-19T17:13:47.5025581Z [1m[32m   Compiling[0m rand_chacha v0.3.1
+2026-05-19T17:13:47.6010475Z [1m[32m   Compiling[0m itertools v0.12.1
+2026-05-19T17:13:48.3909390Z [1m[32m   Compiling[0m parking_lot v0.12.1
+2026-05-19T17:13:49.4404789Z [1m[32m   Compiling[0m idna v0.5.0
+2026-05-19T17:13:49.4422972Z [1m[32m   Compiling[0m concurrent-queue v2.4.0
+2026-05-19T17:13:49.5904426Z [1m[32m   Compiling[0m tracing-core v0.1.32
+2026-05-19T17:13:50.6253756Z [1m[32m   Compiling[0m thiserror-impl v1.0.58
+2026-05-19T17:13:51.3592965Z [1m[32m   Compiling[0m tracing-attributes v0.1.27
+2026-05-19T17:13:51.8332967Z [1m[32m   Compiling[0m linux-raw-sys v0.4.13
+2026-05-19T17:13:52.2973367Z [1m[32m   Compiling[0m equivalent v1.0.1
+2026-05-19T17:13:52.3272432Z [1m[32m   Compiling[0m crc-catalog v2.4.0
+2026-05-19T17:13:52.3722592Z [1m[32m   Compiling[0m unicode_categories v0.1.1
+2026-05-19T17:13:52.4962574Z [1m[32m   Compiling[0m parking v2.2.0
+2026-05-19T17:13:52.5956760Z [1m[32m   Compiling[0m cpufeatures v0.2.12
+2026-05-19T17:13:52.6222939Z [1m[32m   Compiling[0m sha2 v0.10.8
+2026-05-19T17:13:52.7545006Z [1m[32m   Compiling[0m tracing v0.1.40
+2026-05-19T17:13:53.1443479Z [1m[32m   Compiling[0m event-listener v5.2.0
+2026-05-19T17:13:53.3701875Z [1m[32m   Compiling[0m sqlformat v0.2.3
+2026-05-19T17:13:54.3692954Z [1m[32m   Compiling[0m crc v3.0.1
+2026-05-19T17:13:54.6463090Z [1m[32m   Compiling[0m indexmap v2.2.5
+2026-05-19T17:13:58.4465078Z [1m[32m   Compiling[0m url v2.5.0
+2026-05-19T17:13:59.6792763Z [1m[32m   Compiling[0m futures-intrusive v0.5.0
+2026-05-19T17:14:00.2022660Z [1m[32m   Compiling[0m rand v0.8.5
+2026-05-19T17:14:01.2043798Z [1m[32m   Compiling[0m tokio-stream v0.1.14
+2026-05-19T17:14:01.4423038Z [1m[32m   Compiling[0m atoi v2.0.0
+2026-05-19T17:14:01.5133204Z [1m[32m   Compiling[0m hashlink v0.9.0
+2026-05-19T17:14:01.5927498Z [1m[32m   Compiling[0m anstyle-parse v0.2.3
+2026-05-19T17:14:01.7392766Z [1m[32m   Compiling[0m nibble_vec v0.1.0
+2026-05-19T17:14:01.8120750Z [1m[32m   Compiling[0m crossbeam-queue v0.3.11
+2026-05-19T17:14:01.8137476Z [1m[32m   Compiling[0m hmac v0.12.1
+2026-05-19T17:14:01.8872916Z [1m[32m   Compiling[0m dirs-sys-next v0.1.2
+2026-05-19T17:14:01.9192523Z [1m[32m   Compiling[0m bitflags v1.3.2
+2026-05-19T17:14:01.9473106Z [1m[32m   Compiling[0m unicode-width v0.1.11
+2026-05-19T17:14:02.0012848Z [1m[32m   Compiling[0m byteorder v1.5.0
+2026-05-19T17:14:02.2443153Z [1m[32m   Compiling[0m finl_unicode v1.2.0
+2026-05-19T17:14:02.4000092Z [1m[32m   Compiling[0m hex v0.4.3
+2026-05-19T17:14:02.4883650Z [1m[32m   Compiling[0m camino v1.1.6
+2026-05-19T17:14:02.6612663Z [1m[32m   Compiling[0m anstyle-query v1.0.2
+2026-05-19T17:14:02.7032627Z [1m[32m   Compiling[0m endian-type v0.1.2
+2026-05-19T17:14:02.7147315Z [1m[32m   Compiling[0m semver v1.0.22
+2026-05-19T17:14:02.7753151Z [1m[32m   Compiling[0m anstyle v1.0.6
+2026-05-19T17:14:02.8973590Z [1m[32m   Compiling[0m colorchoice v1.0.0
+2026-05-19T17:14:02.9423191Z [1m[32m   Compiling[0m anstream v0.6.13
+2026-05-19T17:14:03.0012629Z [1m[32m   Compiling[0m radix_trie v0.2.1
+2026-05-19T17:14:03.3963599Z [1m[32m   Compiling[0m sqlx-core v0.8.0
+2026-05-19T17:14:03.4058000Z [1m[32m   Compiling[0m stringprep v0.1.4
+2026-05-19T17:14:06.0192596Z [1m[32m   Compiling[0m dirs-next v2.0.0
+2026-05-19T17:14:06.1015364Z [1m[32m   Compiling[0m nix v0.23.2
+2026-05-19T17:14:10.4292854Z [1m[32m   Compiling[0m hkdf v0.12.4
+2026-05-19T17:14:10.5052819Z [1m[32m   Compiling[0m fd-lock v3.0.13
+2026-05-19T17:14:10.5707896Z [1m[32m   Compiling[0m md-5 v0.10.6
+2026-05-19T17:14:10.6658764Z [1m[32m   Compiling[0m whoami v1.5.1
+2026-05-19T17:14:11.0664099Z [1m[32m   Compiling[0m heck v0.4.1
+2026-05-19T17:14:11.1986623Z [1m[32m   Compiling[0m home v0.5.9
+2026-05-19T17:14:11.2878852Z [1m[32m   Compiling[0m unicode-segmentation v1.11.0
+2026-05-19T17:14:11.4605815Z [1m[32m   Compiling[0m dotenvy v0.15.7
+2026-05-19T17:14:11.8411778Z [1m[32m   Compiling[0m base64 v0.22.0
+2026-05-19T17:14:12.3578260Z [1m[32m   Compiling[0m anyhow v1.0.81
+2026-05-19T17:14:12.4749585Z [1m[32m   Compiling[0m async-trait v0.1.77
+2026-05-19T17:14:12.5476667Z [1m[32m   Compiling[0m clap_lex v0.7.0
+2026-05-19T17:14:12.6334111Z [1m[32m   Compiling[0m strsim v0.11.0
+2026-05-19T17:14:12.8383144Z [1m[32m   Compiling[0m clap_builder v4.5.2
+2026-05-19T17:14:13.5462674Z [1m[32m   Compiling[0m sqlx-postgres v0.8.0
+2026-05-19T17:14:26.9694339Z [1m[32m   Compiling[0m rustyline v9.1.2
+2026-05-19T17:14:32.0513801Z [1m[32m   Compiling[0m clap_derive v4.5.0
+2026-05-19T17:14:35.4343475Z [1m[32m   Compiling[0m futures-executor v0.3.30
+2026-05-19T17:14:35.8912580Z [1m[32m   Compiling[0m cargo-platform v0.1.7
+2026-05-19T17:14:36.3758771Z [1m[32m   Compiling[0m instant v0.1.12
+2026-05-19T17:14:36.4222764Z [1m[32m   Compiling[0m iana-time-zone v0.1.60
+2026-05-19T17:14:36.8753471Z [1m[32m   Compiling[0m lazy_static v1.4.0
+2026-05-19T17:14:36.9129295Z [1m[32m   Compiling[0m console v0.15.8
+2026-05-19T17:14:38.3493136Z [1m[32m   Compiling[0m chrono v0.4.35
+2026-05-19T17:14:41.2722685Z [1m[32m   Compiling[0m backoff v0.4.0
+2026-05-19T17:14:41.4043351Z [1m[32m   Compiling[0m cargo_metadata v0.14.2
+2026-05-19T17:14:42.2971941Z [1m[32m   Compiling[0m futures v0.3.30
+2026-05-19T17:14:42.3302775Z [1m[32m   Compiling[0m clap v4.5.2
+2026-05-19T17:14:42.3592963Z [1m[32m   Compiling[0m promptly v0.3.1
+2026-05-19T17:14:42.7882818Z [1m[32m   Compiling[0m sqlx v0.8.0
+2026-05-19T17:14:44.6322872Z [1m[32m   Compiling[0m filetime v0.2.23
+2026-05-19T17:14:44.7822899Z [1m[32m   Compiling[0m glob v0.3.1
+2026-05-19T17:14:45.8653038Z [1m[32m   Compiling[0m sqlx-cli v0.8.0
+2026-05-19T17:15:00.8866933Z [1m[32m    Finished[0m `release` profile [optimized] target(s) in 1m 44s
+2026-05-19T17:15:00.9016524Z [1m[32m  Installing[0m /home/runner/.cargo/bin/cargo-sqlx
+2026-05-19T17:15:00.9017783Z [1m[32m  Installing[0m /home/runner/.cargo/bin/sqlx
+2026-05-19T17:15:00.9021070Z [1m[32m   Installed[0m package `sqlx-cli v0.8.0` (executables `cargo-sqlx`, `sqlx`)
+2026-05-19T17:15:00.9742725Z ##[group]Run cd auth && sqlx migrate run
+2026-05-19T17:15:00.9743074Z [36;1mcd auth && sqlx migrate run[0m
+2026-05-19T17:15:00.9784028Z shell: /usr/bin/bash -e {0}
+2026-05-19T17:15:00.9784271Z env:
+2026-05-19T17:15:00.9784441Z   CARGO_TERM_COLOR: always
+2026-05-19T17:15:00.9784677Z   RUSTFLAGS: -D warnings
+2026-05-19T17:15:00.9784908Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:15:00.9785144Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:15:00.9785947Z   DATABASE_URL: ***localhost:5432/cyberos
+2026-05-19T17:15:00.9786211Z ##[endgroup]
+2026-05-19T17:15:01.0107374Z Applied 1/migrate tenants (6.600928ms)
+2026-05-19T17:15:01.0148140Z Applied 2/migrate admin idempotency (4.040887ms)
+2026-05-19T17:15:01.0226402Z Applied 3/migrate subjects (7.263907ms)
+2026-05-19T17:15:01.0273763Z Applied 4/migrate rls roles (4.34029ms)
+2026-05-19T17:15:01.0295495Z Applied 5/migrate rls enable on tables (1.821042ms)
+2026-05-19T17:15:01.0335290Z Applied 6/migrate signing keys (3.612828ms)
+2026-05-19T17:15:01.0574579Z Applied 7/migrate roles permissions (23.43081ms)
+2026-05-19T17:15:01.0592226Z Applied 8/migrate auth has role function (1.48414ms)
+2026-05-19T17:15:01.0656575Z Applied 9/migrate mfa factors (6.030316ms)
+2026-05-19T17:15:01.0711467Z Applied 10/migrate hibp audit (5.123955ms)
+2026-05-19T17:15:01.0841063Z Applied 11/migrate oidc idp configs (12.623113ms)
+2026-05-19T17:15:01.0890307Z Applied 12/migrate passkey enrolment state (4.590799ms)
+2026-05-19T17:15:01.1079469Z Applied 13/migrate saml idp configs (18.51902ms)
+2026-05-19T17:15:01.1171760Z Applied 14/migrate login history geo (8.914121ms)
+2026-05-19T17:15:01.1207984Z Applied 15/migrate auth migration state (3.256046ms)
+2026-05-19T17:15:01.1282369Z Applied 16/migrate lumi token issuance log (7.065176ms)
+2026-05-19T17:15:01.1309661Z Applied 17/migrate saml allow unsigned (1.397307ms)
+2026-05-19T17:15:01.1428526Z Applied 18/migrate travel policy (11.609404ms)
+2026-05-19T17:15:01.1440506Z Applied 19/migrate rls full coverage (840.865µs)
+2026-05-19T17:15:01.1544885Z Applied 20/migrate cyberos ops role (10.0294ms)
+2026-05-19T17:15:01.1600063Z Applied 21/migrate sessions (5.173504ms)
+2026-05-19T17:15:01.1687739Z Applied 22/migrate mfa factors v2 (8.431386ms)
+2026-05-19T17:15:01.1735107Z Applied 23/migrate mfa factor history (4.384255ms)
+2026-05-19T17:15:01.1819632Z Applied 24/migrate mfa challenge log (8.135211ms)
+2026-05-19T17:15:01.1868004Z Applied 25/migrate mfa recovery codes (4.52667ms)
+2026-05-19T17:15:01.1910201Z Applied 26/migrate mfa lockout state (3.818194ms)
+2026-05-19T17:15:01.1959050Z ##[group]Run cat memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos
+2026-05-19T17:15:01.1960199Z [36;1mcat memory/migrations/*.sql | docker exec -i cyberos-postgres psql -U cyberos -d cyberos[0m
+2026-05-19T17:15:01.1999002Z shell: /usr/bin/bash -e {0}
+2026-05-19T17:15:01.1999241Z env:
+2026-05-19T17:15:01.1999418Z   CARGO_TERM_COLOR: always
+2026-05-19T17:15:01.1999652Z   RUSTFLAGS: -D warnings
+2026-05-19T17:15:01.1999868Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:15:01.2000117Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:15:01.2000312Z ##[endgroup]
+2026-05-19T17:15:01.2880038Z CREATE TABLE
+2026-05-19T17:15:01.2891437Z CREATE INDEX
+2026-05-19T17:15:01.2903814Z CREATE INDEX
+2026-05-19T17:15:01.2914094Z CREATE INDEX
+2026-05-19T17:15:01.2939272Z CREATE TABLE
+2026-05-19T17:15:01.2950141Z CREATE INDEX
+2026-05-19T17:15:01.2961115Z CREATE INDEX
+2026-05-19T17:15:01.2986630Z CREATE TABLE
+2026-05-19T17:15:01.2997190Z CREATE INDEX
+2026-05-19T17:15:01.3009725Z CREATE INDEX
+2026-05-19T17:15:01.3033089Z CREATE TABLE
+2026-05-19T17:15:01.3049916Z CREATE TABLE
+2026-05-19T17:15:01.3062968Z CREATE INDEX
+2026-05-19T17:15:01.3090066Z CREATE TABLE
+2026-05-19T17:15:01.3115093Z CREATE INDEX
+2026-05-19T17:15:01.3115880Z CREATE INDEX
+2026-05-19T17:15:01.3117765Z GRANT
+2026-05-19T17:15:01.3125025Z GRANT
+2026-05-19T17:15:01.3125957Z GRANT
+2026-05-19T17:15:01.3210183Z ##[group]Run cargo test --workspace --no-fail-fast -- --ignored
+2026-05-19T17:15:01.3210663Z [36;1mcargo test --workspace --no-fail-fast -- --ignored[0m
+2026-05-19T17:15:01.3244852Z shell: /usr/bin/bash -e {0}
+2026-05-19T17:15:01.3245096Z env:
+2026-05-19T17:15:01.3245270Z   CARGO_TERM_COLOR: always
+2026-05-19T17:15:01.3245505Z   RUSTFLAGS: -D warnings
+2026-05-19T17:15:01.3245738Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:15:01.3245982Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:15:01.3246481Z   DATABASE_URL: ***localhost:5432/cyberos
+2026-05-19T17:15:01.3246741Z ##[endgroup]
+2026-05-19T17:15:01.9088081Z [1m[32m   Compiling[0m cyberos-types v0.1.0 (/home/runner/work/cyberos/cyberos/services/shared/cyberos-types)
+2026-05-19T17:15:01.9212298Z [1m[32m   Compiling[0m cyberos-cli-exit v0.1.0 (/home/runner/work/cyberos/cyberos/services/shared/cyberos-cli-exit)
+2026-05-19T17:15:01.9908755Z [1m[32m   Compiling[0m cyberos-skill-broker v0.1.0 (/home/runner/work/cyberos/cyberos/services/skill-broker)
+2026-05-19T17:15:02.0214029Z [1m[32m   Compiling[0m cyberos-auth v0.1.0 (/home/runner/work/cyberos/cyberos/services/auth)
+2026-05-19T17:15:04.8223613Z [1m[32m   Compiling[0m cyberos-email v0.1.0 (/home/runner/work/cyberos/cyberos/services/email)
+2026-05-19T17:15:06.6922615Z [1m[32m   Compiling[0m cyberos-memory v0.1.0 (/home/runner/work/cyberos/cyberos/services/memory)
+2026-05-19T17:15:11.0671699Z [1m[32m   Compiling[0m cyberos-ai-gateway v0.1.0 (/home/runner/work/cyberos/cyberos/services/ai-gateway)
+2026-05-19T17:15:21.5283052Z [1m[32m   Compiling[0m cyberos-proj v0.1.0 (/home/runner/work/cyberos/cyberos/services/proj)
+2026-05-19T17:15:22.4244206Z [1m[32m   Compiling[0m cyberos-obs-collector v0.1.0 (/home/runner/work/cyberos/cyberos/services/obs-collector)
+2026-05-19T17:15:25.0229242Z [1m[32m   Compiling[0m cyberos-mcp-gateway v0.1.0 (/home/runner/work/cyberos/cyberos/services/mcp-gateway)
+2026-05-19T17:18:18.6016864Z [1m[32m    Finished[0m `test` profile [optimized + debuginfo] target(s) in 3m 17s
+2026-05-19T17:18:18.6376107Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_ai_gateway-7db646ea1939e030)
+2026-05-19T17:18:18.6406172Z 
+2026-05-19T17:18:18.6406663Z running 0 tests
+2026-05-19T17:18:18.6407078Z 
+2026-05-19T17:18:18.6409470Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s
+2026-05-19T17:18:18.6412822Z 
+2026-05-19T17:18:18.6416411Z [1m[32m     Running[0m unittests src/bin/cyberos_ai.rs (target/debug/deps/cyberos_ai-a50e3b6e5eda423c)
+2026-05-19T17:18:18.6441585Z 
+2026-05-19T17:18:18.6442085Z running 0 tests
+2026-05-19T17:18:18.6442562Z 
+2026-05-19T17:18:18.6443359Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:18.6444065Z 
+2026-05-19T17:18:18.6445518Z [1m[32m     Running[0m unittests src/bin/gen_schema.rs (target/debug/deps/gen_schema-8783c03c2d91ee6d)
+2026-05-19T17:18:18.6471992Z 
+2026-05-19T17:18:18.6472554Z running 0 tests
+2026-05-19T17:18:18.6473175Z 
+2026-05-19T17:18:18.6473905Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:18.6474843Z 
+2026-05-19T17:18:18.6479819Z [1m[32m     Running[0m tests/policy_loader_test.rs (target/debug/deps/policy_loader_test-e05e21e618152df2)
+2026-05-19T17:18:18.6498579Z 
+2026-05-19T17:18:18.6499317Z running 5 tests
+2026-05-19T17:18:18.6517565Z test ac5_path_traversal_rejected ... ok
+2026-05-19T17:18:18.6518590Z test ac2_missing_yaml_returns_policy_missing ... ok
+2026-05-19T17:18:18.6530822Z test ac6_cache_hit_returns_same_arc ... ok
+2026-05-19T17:18:18.6748706Z test ac7_hot_reload_within_500ms ... ok
+2026-05-19T17:18:18.6883625Z test ac9_concurrent_1000_reads_under_1s ... ok
+2026-05-19T17:18:18.6887256Z 
+2026-05-19T17:18:18.6888012Z test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.04s
+2026-05-19T17:18:18.6890614Z 
+2026-05-19T17:18:18.6897873Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_auth-4f369cd901511b78)
+2026-05-19T17:18:18.6912128Z 
+2026-05-19T17:18:18.6916555Z running 0 tests
+2026-05-19T17:18:18.6917057Z 
+2026-05-19T17:18:18.6917847Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 189 filtered out; finished in 0.00s
+2026-05-19T17:18:18.6919473Z [1m[32m     Running[0m unittests src/main.rs (target/debug/deps/cyberos_auth-6aa94512e65970ef)
+2026-05-19T17:18:18.6920438Z 
+2026-05-19T17:18:18.6938863Z 
+2026-05-19T17:18:18.6939503Z running 0 tests
+2026-05-19T17:18:18.6940002Z 
+2026-05-19T17:18:18.6940824Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:18.6942872Z [1m[32m     Running[0m unittests src/bin/bootstrap.rs (target/debug/deps/cyberos_auth_bootstrap-9e0d0bbfa76c668a)
+2026-05-19T17:18:18.6944290Z 
+2026-05-19T17:18:18.6961086Z 
+2026-05-19T17:18:18.6961852Z running 0 tests
+2026-05-19T17:18:18.6962503Z 
+2026-05-19T17:18:18.6963207Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:18.6964946Z [1m[32m     Running[0m unittests src/bin/cli.rs (target/debug/deps/cyberos_authctl-ebaa8c91bbf4fbbb)
+2026-05-19T17:18:18.6966020Z 
+2026-05-19T17:18:18.6984655Z 
+2026-05-19T17:18:18.6985146Z running 0 tests
+2026-05-19T17:18:18.6985636Z 
+2026-05-19T17:18:18.6992262Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:18.6994138Z [1m[32m     Running[0m tests/admin_cursor_pagination_test.rs (target/debug/deps/admin_cursor_pagination_test-c5495d6a5e83a5f4)
+2026-05-19T17:18:18.6999920Z 
+2026-05-19T17:18:18.7005985Z 
+2026-05-19T17:18:18.7006396Z running 0 tests
+2026-05-19T17:18:18.7006982Z 
+2026-05-19T17:18:18.7007733Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+2026-05-19T17:18:18.7008646Z 
+2026-05-19T17:18:18.7013220Z [1m[32m     Running[0m tests/admin_deny_list_test.rs (target/debug/deps/admin_deny_list_test-bba005ca0afb31e4)
+2026-05-19T17:18:18.7035062Z 
+2026-05-19T17:18:18.7035468Z running 0 tests
+2026-05-19T17:18:18.7036014Z 
+2026-05-19T17:18:18.7036652Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+2026-05-19T17:18:18.7037922Z 
+2026-05-19T17:18:18.7038999Z [1m[32m     Running[0m tests/admin_list_test.rs (target/debug/deps/admin_list_test-879ec5f0d7c86763)
+2026-05-19T17:18:18.7059409Z 
+2026-05-19T17:18:18.7059869Z running 6 tests
+2026-05-19T17:18:19.0623298Z test include_suspended_flag_widens_filter ... ok
+2026-05-19T17:18:19.1018238Z test list_subjects_root_admin_no_switch_uses_tenant_zero ... ok
+2026-05-19T17:18:19.1356077Z test list_tenants_as_tenant_admin_returns_403 ... ok
+2026-05-19T17:18:19.3716315Z test limit_is_clamped_not_rejected ... ok
+2026-05-19T17:18:19.4173352Z test tampered_cursor_returns_400_invalid_cursor ... ok
+2026-05-19T17:18:20.8612342Z test list_tenants_p95_under_100ms ... ok
+2026-05-19T17:18:20.8619315Z 
+2026-05-19T17:18:20.8619933Z test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.15s
+2026-05-19T17:18:20.8620925Z 
+2026-05-19T17:18:20.8622494Z [1m[32m     Running[0m tests/admin_revoke_test.rs (target/debug/deps/admin_revoke_test-ff62e74ed5151dd8)
+2026-05-19T17:18:20.8672616Z 
+2026-05-19T17:18:20.8673034Z running 4 tests
+2026-05-19T17:18:20.9277875Z test revoke_cross_tenant_returns_404 ... ok
+2026-05-19T17:18:20.9522337Z test revoke_idempotency_key_replay_is_no_op ... ok
+2026-05-19T17:18:20.9525080Z test unrevoke_does_not_clear_deny_list ... ok
+2026-05-19T17:18:20.9634586Z test revoke_without_idempotency_key_returns_400 ... ok
+2026-05-19T17:18:20.9669618Z [1m[32m     Running[0m tests/admin_subject_create_test.rs (target/debug/deps/admin_subject_create_test-86a6da06daee6670)
+2026-05-19T17:18:20.9681847Z 
+2026-05-19T17:18:20.9683038Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+2026-05-19T17:18:20.9683933Z 
+2026-05-19T17:18:20.9713428Z 
+2026-05-19T17:18:20.9714307Z running 8 tests
+2026-05-19T17:18:21.3542805Z test create_subject_happy_path_returns_201_with_clean_body ... ok
+2026-05-19T17:18:21.3672812Z test create_subject_emits_memory_audit_row ... ok
+2026-05-19T17:18:21.6980613Z test create_subject_idempotent_replay_returns_same_id ... ok
+2026-05-19T17:18:21.7413807Z test create_subject_rejects_http_request ... ok
+2026-05-19T17:18:21.7726616Z test create_subject_rejects_unknown_role ... ok
+2026-05-19T17:18:21.8055385Z test create_subject_rejects_weak_password_with_multiple_reasons ... ok
+2026-05-19T17:18:21.8386045Z test create_subject_without_tenant_admin_role_returns_403 ... ok
+2026-05-19T17:18:50.1252316Z test create_subject_p95_latency_under_200ms ... FAILED
+2026-05-19T17:18:50.1294864Z [1m[31merror[0m[1m:[0m test failed, to rerun pass `-p cyberos-auth --test admin_subject_create_test`
+2026-05-19T17:18:50.1295697Z 
+2026-05-19T17:18:50.1296275Z failures:
+2026-05-19T17:18:50.1296917Z 
+2026-05-19T17:18:50.1297429Z ---- create_subject_p95_latency_under_200ms stdout ----
+2026-05-19T17:18:50.1298487Z p50: 277.2 ms · p95: 320.4 ms · max: 605.0 ms
+2026-05-19T17:18:50.1299124Z 
+2026-05-19T17:18:50.1299943Z thread 'create_subject_p95_latency_under_200ms' panicked at auth/tests/admin_subject_create_test.rs:397:5:
+2026-05-19T17:18:50.1322737Z p95 latency MUST be < 200ms per §1 #10; got 320.4 ms (p50=277.2, max=605.0)
+2026-05-19T17:18:50.1324144Z [1m[32m     Running[0m tests/admin_tenant_create_test.rs (target/debug/deps/admin_tenant_create_test-31bbf3c430b54903)
+2026-05-19T17:18:50.1326183Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-05-19T17:18:50.1327067Z 
+2026-05-19T17:18:50.1327280Z 
+2026-05-19T17:18:50.1327672Z failures:
+2026-05-19T17:18:50.1328466Z     create_subject_p95_latency_under_200ms
+2026-05-19T17:18:50.1329095Z 
+2026-05-19T17:18:50.1329899Z test result: FAILED. 7 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 29.15s
+2026-05-19T17:18:50.1330791Z 
+2026-05-19T17:18:50.1331021Z 
+2026-05-19T17:18:50.1331902Z running 8 tests
+2026-05-19T17:18:50.1831931Z test create_tenant_emits_memory_audit_row_in_transaction ... ok
+2026-05-19T17:18:50.2253438Z test create_tenant_rejects_missing_idempotency_key_with_structured_body ... ok
+2026-05-19T17:18:50.2678815Z test create_tenant_rejects_non_root_tenant_caller ... ok
+2026-05-19T17:18:50.3067947Z test create_tenant_rejects_reserved_root_slug ... ok
+2026-05-19T17:18:50.3511748Z test create_tenant_rejects_uppercase_slug_with_structured_body ... ok
+2026-05-19T17:18:50.3999245Z test idempotency_key_long_string_currently_accepted ... ok
+2026-05-19T17:18:50.4540436Z test idempotent_replay_returns_same_tenant_id ... ok
+2026-05-19T17:18:50.6948488Z test create_tenant_p95_latency_under_100ms ... ok
+2026-05-19T17:18:50.6983756Z 
+2026-05-19T17:18:50.6984685Z [1m[32m     Running[0m tests/geoip_test.rs (target/debug/deps/geoip_test-7607b9504220a587)
+2026-05-19T17:18:50.6988494Z test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+2026-05-19T17:18:50.7014952Z 
+2026-05-19T17:18:50.7042763Z [1m[32m     Running[0m tests/jwt_roundtrip_test.rs (target/debug/deps/jwt_roundtrip_test-5052e697c2d28ec9)
+2026-05-19T17:18:50.7043867Z 
+2026-05-19T17:18:50.7051872Z running 0 tests
+2026-05-19T17:18:50.7059867Z 
+2026-05-19T17:18:50.7060732Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+2026-05-19T17:18:50.7062199Z 
+2026-05-19T17:18:50.7062456Z 
+2026-05-19T17:18:50.7062874Z running 2 tests
+2026-05-19T17:18:51.1104772Z test issue_then_verify_round_trips_with_correct_claims ... ok
+2026-05-19T17:18:51.2935222Z test jwks_publishes_active_key ... ok
+2026-05-19T17:18:51.2948727Z [1m[32m     Running[0m tests/jwt_token_endpoint_test.rs (target/debug/deps/jwt_token_endpoint_test-6faa4136a1e23e93)
+2026-05-19T17:18:51.2949684Z 
+2026-05-19T17:18:51.2950581Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+2026-05-19T17:18:51.2952175Z 
+2026-05-19T17:18:51.2979425Z 
+2026-05-19T17:18:51.2980267Z running 1 test
+2026-05-19T17:18:51.2985142Z test password_grant_unknown_handle_constant_time_smoke ... ok
+2026-05-19T17:18:51.2986003Z 
+2026-05-19T17:18:51.2986904Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+2026-05-19T17:18:51.2987840Z 
+2026-05-19T17:18:51.2989275Z [1m[32m     Running[0m tests/middleware_test.rs (target/debug/deps/middleware_test-0e4f5865e06eaa33)
+2026-05-19T17:18:51.3009486Z 
+2026-05-19T17:18:51.3009929Z running 3 tests
+2026-05-19T17:18:51.3108273Z test admin_endpoint_rejects_malformed_bearer ... ok
+2026-05-19T17:18:51.3213136Z test admin_endpoint_rejects_missing_authorization ... ok
+2026-05-19T17:18:51.3280480Z test admin_endpoint_accepts_valid_bearer ... ok
+2026-05-19T17:18:51.3283708Z 
+2026-05-19T17:18:51.3290284Z test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+2026-05-19T17:18:51.3292152Z [1m[32m     Running[0m tests/rbac_adr_gate_test.rs (target/debug/deps/rbac_adr_gate_test-7dbd4e890cb879ca)
+2026-05-19T17:18:51.3293114Z 
+2026-05-19T17:18:51.3310975Z 
+2026-05-19T17:18:51.3311972Z running 0 tests
+2026-05-19T17:18:51.3312697Z 
+2026-05-19T17:18:51.3313382Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+2026-05-19T17:18:51.3314201Z 
+2026-05-19T17:18:51.3321264Z [1m[32m     Running[0m tests/rbac_catalogue_test.rs (target/debug/deps/rbac_catalogue_test-7267e78bbc3ad29c)
+2026-05-19T17:18:51.3349612Z 
+2026-05-19T17:18:51.3350634Z running 0 tests
+2026-05-19T17:18:51.3351309Z 
+2026-05-19T17:18:51.3353017Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+2026-05-19T17:18:51.3354582Z 
+2026-05-19T17:18:51.3368555Z [1m[32m     Running[0m tests/rls_isolation_test.rs (target/debug/deps/rls_isolation_test-9c051ee5e6ef933a)
+2026-05-19T17:18:51.3391045Z 
+2026-05-19T17:18:51.3391946Z running 1 test
+2026-05-19T17:18:51.3898328Z test cross_tenant_subject_select_returns_zero_rows ... ok
+2026-05-19T17:18:51.3908334Z [1m[32m     Running[0m tests/rls_property_test.rs (target/debug/deps/rls_property_test-829ec61efd6d106c)
+2026-05-19T17:18:51.3909193Z 
+2026-05-19T17:18:51.3910273Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+2026-05-19T17:18:51.3911401Z 
+2026-05-19T17:18:51.3947881Z 
+2026-05-19T17:18:51.3967254Z running 2 tests
+2026-05-19T17:18:51.4414520Z test with_check_rejects_wrong_tenant_insert_via_map_pg_error ... ok
+2026-05-19T17:18:52.0391558Z test property_test_100_tenant_pairs_no_cross_tenant_leak ... ok
+2026-05-19T17:18:52.0412771Z [1m[32m     Running[0m tests/rls_registry_completeness_test.rs (target/debug/deps/rls_registry_completeness_test-13169ec14547ca5b)
+2026-05-19T17:18:52.0414029Z 
+2026-05-19T17:18:52.0422529Z test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s
+2026-05-19T17:18:52.0425573Z 
+2026-05-19T17:18:52.0447437Z 
+2026-05-19T17:18:52.0448128Z running 1 test
+2026-05-19T17:18:52.0960471Z test every_registered_table_has_rls_with_both_using_and_check_clauses ... ok
+2026-05-19T17:18:52.0961071Z 
+2026-05-19T17:18:52.0961801Z test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.05s
+2026-05-19T17:18:52.0962529Z 
+2026-05-19T17:18:52.0965490Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_cli_exit-4fbf12aeca4599be)
+2026-05-19T17:18:52.0977491Z 
+2026-05-19T17:18:52.0977865Z running 0 tests
+2026-05-19T17:18:52.0978281Z 
+2026-05-19T17:18:52.0978896Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+2026-05-19T17:18:52.0979657Z 
+2026-05-19T17:18:52.0980801Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_email-999ecd52abcc6820)
+2026-05-19T17:18:52.0992305Z 
+2026-05-19T17:18:52.0992644Z running 0 tests
+2026-05-19T17:18:52.0993052Z 
+2026-05-19T17:18:52.0993650Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.00s
+2026-05-19T17:18:52.0995669Z [1m[32m     Running[0m unittests src/bin/server.rs (target/debug/deps/cyberos_email-e38f5cf999d5d9e1)
+2026-05-19T17:18:52.0996486Z 
+2026-05-19T17:18:52.1005607Z 
+2026-05-19T17:18:52.1005959Z running 0 tests
+2026-05-19T17:18:52.1006357Z 
+2026-05-19T17:18:52.1006976Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1007814Z 
+2026-05-19T17:18:52.1009217Z [1m[32m     Running[0m unittests src/bin/cli.rs (target/debug/deps/cyberos_email_cli-5b95de05206cd1c8)
+2026-05-19T17:18:52.1018344Z 
+2026-05-19T17:18:52.1018831Z running 0 tests
+2026-05-19T17:18:52.1019236Z 
+2026-05-19T17:18:52.1019778Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1020735Z 
+2026-05-19T17:18:52.1021872Z [1m[32m     Running[0m tests/audit_row_test.rs (target/debug/deps/audit_row_test-6158da656a616663)
+2026-05-19T17:18:52.1031916Z 
+2026-05-19T17:18:52.1032274Z running 0 tests
+2026-05-19T17:18:52.1032703Z 
+2026-05-19T17:18:52.1033390Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1034248Z 
+2026-05-19T17:18:52.1035980Z [1m[32m     Running[0m tests/inbound_quarantine_test.rs (target/debug/deps/inbound_quarantine_test-15ebdab53e47cf5d)
+2026-05-19T17:18:52.1046065Z 
+2026-05-19T17:18:52.1046465Z running 0 tests
+2026-05-19T17:18:52.1046853Z 
+2026-05-19T17:18:52.1047623Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1048463Z 
+2026-05-19T17:18:52.1049532Z [1m[32m     Running[0m tests/residency_pin_test.rs (target/debug/deps/residency_pin_test-58a910fa52ed2c6e)
+2026-05-19T17:18:52.1059420Z 
+2026-05-19T17:18:52.1059741Z running 0 tests
+2026-05-19T17:18:52.1060303Z 
+2026-05-19T17:18:52.1060867Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1061905Z 
+2026-05-19T17:18:52.1063943Z [1m[32m     Running[0m tests/subject_normalisation_test.rs (target/debug/deps/subject_normalisation_test-7756e04e68ef416a)
+2026-05-19T17:18:52.1073613Z 
+2026-05-19T17:18:52.1073928Z running 0 tests
+2026-05-19T17:18:52.1074578Z 
+2026-05-19T17:18:52.1075097Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1075828Z 
+2026-05-19T17:18:52.1077046Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_mcp_gateway-480d6381d82c0677)
+2026-05-19T17:18:52.1098423Z 
+2026-05-19T17:18:52.1098723Z running 0 tests
+2026-05-19T17:18:52.1099136Z 
+2026-05-19T17:18:52.1100921Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 27 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1101897Z 
+2026-05-19T17:18:52.1103656Z [1m[32m     Running[0m unittests src/bin/cyberos_mcp.rs (target/debug/deps/cyberos_mcp-847a1662292ef6d4)
+2026-05-19T17:18:52.1120917Z 
+2026-05-19T17:18:52.1121519Z running 0 tests
+2026-05-19T17:18:52.1121899Z 
+2026-05-19T17:18:52.1122452Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1123164Z 
+2026-05-19T17:18:52.1124658Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_memory-ee358fe36cc4aae6)
+2026-05-19T17:18:52.1136604Z 
+2026-05-19T17:18:52.1136904Z running 0 tests
+2026-05-19T17:18:52.1137271Z 
+2026-05-19T17:18:52.1137796Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1138512Z 
+2026-05-19T17:18:52.1140447Z [1m[32m     Running[0m unittests src/main.rs (target/debug/deps/cyberos_memory-14ee752cb668b58f)
+2026-05-19T17:18:52.1149677Z 
+2026-05-19T17:18:52.1149955Z running 0 tests
+2026-05-19T17:18:52.1150318Z 
+2026-05-19T17:18:52.1150841Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1151932Z 
+2026-05-19T17:18:52.1153464Z [1m[32m     Running[0m unittests src/bin/admin.rs (target/debug/deps/cyberos_memory_admin-65cd7be1abf703fc)
+2026-05-19T17:18:52.1164897Z 
+2026-05-19T17:18:52.1165549Z running 0 tests
+2026-05-19T17:18:52.1165785Z 
+2026-05-19T17:18:52.1166735Z [1m[32m     Running[0m tests/chain_anchor_test.rs (target/debug/deps/chain_anchor_test-873403637af17191)
+2026-05-19T17:18:52.1169163Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1170022Z 
+2026-05-19T17:18:52.1189135Z 
+2026-05-19T17:18:52.1189422Z running 0 tests
+2026-05-19T17:18:52.1189870Z 
+2026-05-19T17:18:52.1191837Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+2026-05-19T17:18:52.1192737Z 
+2026-05-19T17:18:52.1195837Z [1m[32m     Running[0m tests/ingest_test.rs (target/debug/deps/ingest_test-1e5622d8131def86)
+2026-05-19T17:18:52.1233569Z 
+2026-05-19T17:18:52.1233888Z running 4 tests
+2026-05-19T17:18:52.1602953Z test ingest_is_idempotent_under_replay ... ok
+2026-05-19T17:18:52.1623571Z test happy_path_ingests_two_rows_and_advances_cursor ... ok
+2026-05-19T17:18:52.1832517Z test tampered_chain_anchor_fails_with_mismatch_error ... ok
+2026-05-19T17:18:52.1964459Z test tenant_isolation_a_cannot_see_b_rows ... ok
+2026-05-19T17:18:52.1980485Z 
+2026-05-19T17:18:52.1981332Z test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+2026-05-19T17:18:52.1983231Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_obs_collector-eb80b8f3830ca9fa)
+2026-05-19T17:18:52.1987566Z 
+2026-05-19T17:18:52.2018087Z 
+2026-05-19T17:18:52.2018379Z running 0 tests
+2026-05-19T17:18:52.2018819Z 
+2026-05-19T17:18:52.2019141Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2019516Z 
+2026-05-19T17:18:52.2023877Z [1m[32m     Running[0m unittests src/bin/cyberos_obs.rs (target/debug/deps/cyberos_obs-2bd98b1c5545c3ce)
+2026-05-19T17:18:52.2041609Z 
+2026-05-19T17:18:52.2041910Z running 0 tests
+2026-05-19T17:18:52.2042282Z 
+2026-05-19T17:18:52.2042825Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2043571Z 
+2026-05-19T17:18:52.2044803Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_proj-f101ad1b0d7f502d)
+2026-05-19T17:18:52.2056374Z 
+2026-05-19T17:18:52.2056671Z running 0 tests
+2026-05-19T17:18:52.2057027Z 
+2026-05-19T17:18:52.2057561Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2058283Z 
+2026-05-19T17:18:52.2059971Z [1m[32m     Running[0m tests/audit_row_test.rs (target/debug/deps/audit_row_test-dec717fa3de63580)
+2026-05-19T17:18:52.2084589Z 
+2026-05-19T17:18:52.2084937Z running 0 tests
+2026-05-19T17:18:52.2085276Z 
+2026-05-19T17:18:52.2085677Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2086231Z 
+2026-05-19T17:18:52.2089610Z [1m[32m     Running[0m tests/error_mapping_test.rs (target/debug/deps/error_mapping_test-6976f30d91d1f607)
+2026-05-19T17:18:52.2114084Z 
+2026-05-19T17:18:52.2114387Z running 0 tests
+2026-05-19T17:18:52.2114748Z 
+2026-05-19T17:18:52.2115276Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2122480Z [1m[32m     Running[0m tests/link_types_test.rs (target/debug/deps/link_types_test-01bc8693051a3c4d)
+2026-05-19T17:18:52.2123439Z 
+2026-05-19T17:18:52.2137964Z 
+2026-05-19T17:18:52.2138344Z running 0 tests
+2026-05-19T17:18:52.2138727Z 
+2026-05-19T17:18:52.2139246Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2139972Z 
+2026-05-19T17:18:52.2142093Z [1m[32m     Running[0m tests/status_fsm_test.rs (target/debug/deps/status_fsm_test-7c96d82cd6df1249)
+2026-05-19T17:18:52.2169034Z 
+2026-05-19T17:18:52.2169335Z running 0 tests
+2026-05-19T17:18:52.2169716Z 
+2026-05-19T17:18:52.2173267Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2174823Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_skill_broker-7530f6981d071476)
+2026-05-19T17:18:52.2175723Z 
+2026-05-19T17:18:52.2185689Z 
+2026-05-19T17:18:52.2185979Z running 0 tests
+2026-05-19T17:18:52.2186349Z 
+2026-05-19T17:18:52.2186867Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2187575Z 
+2026-05-19T17:18:52.2189788Z [1m[32m     Running[0m unittests src/bin/transpile_anthropic.rs (target/debug/deps/cyberos_skill_transpile_anthropic-93757b6ca3429364)
+2026-05-19T17:18:52.2204134Z 
+2026-05-19T17:18:52.2204450Z running 0 tests
+2026-05-19T17:18:52.2204996Z 
+2026-05-19T17:18:52.2206812Z [1m[32m     Running[0m unittests src/bin/validate.rs (target/debug/deps/cyberos_skill_validate-91f362485a379ab5)
+2026-05-19T17:18:52.2209630Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2210494Z 
+2026-05-19T17:18:52.2218752Z 
+2026-05-19T17:18:52.2219063Z running 0 tests
+2026-05-19T17:18:52.2220429Z 
+2026-05-19T17:18:52.2220984Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2222123Z 
+2026-05-19T17:18:52.2223009Z [1m[32m     Running[0m tests/integration.rs (target/debug/deps/integration-05a556964cb80a7b)
+2026-05-19T17:18:52.2236342Z 
+2026-05-19T17:18:52.2236666Z running 0 tests
+2026-05-19T17:18:52.2237056Z 
+2026-05-19T17:18:52.2237598Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2238445Z 
+2026-05-19T17:18:52.2239593Z [1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/cyberos_types-2b9531a77c2a7938)
+2026-05-19T17:18:52.2248974Z 
+2026-05-19T17:18:52.2249147Z running 0 tests
+2026-05-19T17:18:52.2250469Z 
+2026-05-19T17:18:52.2251068Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+2026-05-19T17:18:52.2252518Z [1m[32m   Doc-tests[0m cyberos_ai_gateway
+2026-05-19T17:18:52.2252850Z 
+2026-05-19T17:18:52.3431357Z 
+2026-05-19T17:18:52.3432910Z running 0 tests
+2026-05-19T17:18:52.3433194Z 
+2026-05-19T17:18:52.3434163Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.3434746Z 
+2026-05-19T17:18:52.3462965Z [1m[32m   Doc-tests[0m cyberos_auth
+2026-05-19T17:18:52.6656360Z 
+2026-05-19T17:18:52.6657042Z running 0 tests
+2026-05-19T17:18:52.6657567Z 
+2026-05-19T17:18:52.6658322Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.6659181Z 
+2026-05-19T17:18:52.6695847Z [1m[32m   Doc-tests[0m cyberos_cli_exit
+2026-05-19T17:18:52.6923203Z 
+2026-05-19T17:18:52.6924008Z running 0 tests
+2026-05-19T17:18:52.6924655Z 
+2026-05-19T17:18:52.6925365Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.6926342Z 
+2026-05-19T17:18:52.6942836Z [1m[32m   Doc-tests[0m cyberos_email
+2026-05-19T17:18:52.8044685Z 
+2026-05-19T17:18:52.8045516Z running 0 tests
+2026-05-19T17:18:52.8046134Z 
+2026-05-19T17:18:52.8046807Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.8047709Z 
+2026-05-19T17:18:52.8076268Z [1m[32m   Doc-tests[0m cyberos_mcp_gateway
+2026-05-19T17:18:52.8954407Z 
+2026-05-19T17:18:52.8955106Z running 0 tests
+2026-05-19T17:18:52.8955592Z 
+2026-05-19T17:18:52.8956322Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.8957150Z 
+2026-05-19T17:18:52.8980147Z [1m[32m   Doc-tests[0m cyberos_memory
+2026-05-19T17:18:52.9962209Z 
+2026-05-19T17:18:52.9962956Z running 0 tests
+2026-05-19T17:18:52.9963699Z 
+2026-05-19T17:18:52.9964466Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:52.9965268Z 
+2026-05-19T17:18:52.9995252Z [1m[32m   Doc-tests[0m cyberos_obs_collector
+2026-05-19T17:18:53.0400446Z 
+2026-05-19T17:18:53.0401739Z running 0 tests
+2026-05-19T17:18:53.0402377Z 
+2026-05-19T17:18:53.0403084Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:53.0403882Z 
+2026-05-19T17:18:53.0425248Z [1m[32m   Doc-tests[0m cyberos_proj
+2026-05-19T17:18:53.1365642Z 
+2026-05-19T17:18:53.1366435Z running 0 tests
+2026-05-19T17:18:53.1367071Z 
+2026-05-19T17:18:53.1367784Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:53.1368718Z 
+2026-05-19T17:18:53.1395673Z [1m[32m   Doc-tests[0m cyberos_skill_broker
+2026-05-19T17:18:53.1793482Z 
+2026-05-19T17:18:53.1794185Z running 0 tests
+2026-05-19T17:18:53.1794771Z 
+2026-05-19T17:18:53.1795387Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:53.1796151Z 
+2026-05-19T17:18:53.1817270Z [1m[32m   Doc-tests[0m cyberos_types
+2026-05-19T17:18:53.2073475Z 
+2026-05-19T17:18:53.2074234Z running 0 tests
+2026-05-19T17:18:53.2075004Z 
+2026-05-19T17:18:53.2075766Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-05-19T17:18:53.2076674Z 
+2026-05-19T17:18:53.2105738Z [1m[31merror[0m[1m:[0m 1 target failed:
+2026-05-19T17:18:53.2106457Z     `-p cyberos-auth --test admin_subject_create_test`
+2026-05-19T17:18:53.2191771Z ##[error]Process completed with exit code 101.
+2026-05-19T17:18:53.2238032Z ##[group]Run cd dev && docker compose down -v
+2026-05-19T17:18:53.2238396Z [36;1mcd dev && docker compose down -v[0m
+2026-05-19T17:18:53.2274796Z shell: /usr/bin/bash -e {0}
+2026-05-19T17:18:53.2275032Z env:
+2026-05-19T17:18:53.2275215Z   CARGO_TERM_COLOR: always
+2026-05-19T17:18:53.2275454Z   RUSTFLAGS: -D warnings
+2026-05-19T17:18:53.2275678Z   CARGO_HOME: /home/runner/.cargo
+2026-05-19T17:18:53.2275918Z   CARGO_INCREMENTAL: 0
+2026-05-19T17:18:53.2276120Z ##[endgroup]
+2026-05-19T17:18:53.3099207Z  Container cyberos-redis  Stopping
+2026-05-19T17:18:53.3100423Z  Container cyberos-postgres  Stopping
+2026-05-19T17:18:53.4630436Z  Container cyberos-redis  Stopped
+2026-05-19T17:18:53.4631709Z  Container cyberos-redis  Removing
+2026-05-19T17:18:53.4818264Z  Container cyberos-redis  Removed
+2026-05-19T17:18:53.5163694Z  Container cyberos-postgres  Stopped
+2026-05-19T17:18:53.5167177Z  Container cyberos-postgres  Removing
+2026-05-19T17:18:53.5324941Z  Container cyberos-postgres  Removed
+2026-05-19T17:18:53.5351678Z  Volume dev_cyberos-redis-data  Removing
+2026-05-19T17:18:53.5352304Z  Volume dev_cyberos-pg-data  Removing
+2026-05-19T17:18:53.5352911Z  Network dev_default  Removing
+2026-05-19T17:18:53.5395145Z  Volume dev_cyberos-redis-data  Removed
+2026-05-19T17:18:53.6022356Z  Volume dev_cyberos-pg-data  Removed
+2026-05-19T17:18:53.6102036Z  Network dev_default  Removed
+2026-05-19T17:18:53.6249024Z Post job cleanup.
+2026-05-19T17:18:53.9166092Z [command]/usr/bin/git version
+2026-05-19T17:18:53.9167206Z git version 2.54.0
+2026-05-19T17:18:53.9233071Z Temporarily overriding HOME='/home/runner/work/_temp/000a02c1-30dd-4d90-8f05-90abce0dfe5a' before making global git config changes
+2026-05-19T17:18:53.9234557Z Adding repository directory to the temporary git global config as a safe directory
+2026-05-19T17:18:53.9236802Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/cyberos/cyberos
+2026-05-19T17:18:53.9403275Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-05-19T17:18:53.9414276Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-05-19T17:18:53.9852793Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-05-19T17:18:53.9885192Z http.https://github.com/.extraheader
+2026-05-19T17:18:53.9888249Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-05-19T17:18:54.0035770Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-05-19T17:18:54.0371576Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-05-19T17:18:54.0394232Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-05-19T17:18:54.0770033Z Cleaning up orphan processes
+2026-05-19T17:18:54.1152531Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/cache@v4, actions/checkout@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

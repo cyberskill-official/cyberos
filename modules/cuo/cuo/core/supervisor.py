@@ -41,6 +41,7 @@ failure-routing rework branch + observability spans. This is what makes
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
@@ -268,7 +269,6 @@ def execute_chain(
                 f"{len(validation.planned_skills)} planned. Refusing to execute."
             ],
         )
-
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Build a hand-off map: `inputs_from` references resolve from this map.
@@ -290,6 +290,56 @@ def execute_chain(
         },
     )
 
+    # Load any existing step outputs from the output directory to recognize
+    # half-way/in-construction developed deliverables.
+    for step_file in output_dir.glob("step*_*.json"):
+        m = re.match(r"^step(\d+)_(.+)\.json$", step_file.name)
+        if m:
+            s_num = int(m.group(1))
+            try:
+                with open(step_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                # Find matching step in workflow to resolve `outputs_to`
+                matching_spec = next(
+                    (s for s in wf.skill_chain if isinstance(s, dict) and s.get("step") == s_num),
+                    None
+                )
+                if matching_spec:
+                    outputs_to = matching_spec.get("outputs_to")
+                    if outputs_to:
+                        if isinstance(outputs_to, str):
+                            hand_off[outputs_to] = step_file
+                        elif isinstance(outputs_to, dict):
+                            for ref in outputs_to.values():
+                                if isinstance(ref, str):
+                                    hand_off[ref] = step_file
+                    hand_off[f"step_{s_num}_ran"] = True
+            except Exception:
+                pass
+
+    # Determine starting step based on the FR's current status and rework flag.
+    rework = hand_off.get("rework", False)
+    start_step = 1
+    current_status = "ready_to_implement"
+    if not rework:
+        fr_id = hand_off.get("fr_id")
+        if fr_id:
+            cyberos_root = skill_root.parent.parent
+            backlog_path = cyberos_root / "docs" / "feature-requests" / "BACKLOG.md"
+            if backlog_path.is_file():
+                try:
+                    from cuo.core.backlog_reader import parse_backlog
+                    rows = parse_backlog(backlog_path)
+                    fr_row = next((r for r in rows if r.fr_id == fr_id), None)
+                    if fr_row:
+                        current_status = fr_row.status
+                except Exception:
+                    pass
+        if current_status in ("ready_to_review", "reviewing"):
+            start_step = 15
+        elif current_status in ("ready_to_test", "testing"):
+            start_step = 21
+
     for step_spec in wf.skill_chain:
         if not isinstance(step_spec, dict):
             continue
@@ -298,63 +348,106 @@ def execute_chain(
         if not isinstance(skill_name, str) or not skill_name or skill_name.startswith("planned:"):
             continue
 
-        # ── Phase 5: condition evaluation ────────────────────────────────
-        # Steps with `condition: "<expr>"` are SKIPPED when the expression
-        # evaluates to False against the running hand-off map. Expressions
-        # reference: prior steps (`"step 3 ran"`), workflow inputs
-        # (`'mode == "implement"'`), or step output fields
-        # (`"context_map.files_outside_immediate_domain > 3"`).
-        condition = step_spec.get("condition")
-        if condition and not _eval_condition(condition, hand_off, step_results):
+        # Skip steps prior to start_step (status-based phase skipping)
+        if step_num < start_step:
             skipped = StepResult(
                 step=step_num, skill=skill_name, status="SKIPPED",
-                notes=[f"condition false: {condition!r}"],
+                notes=[f"Bypassed: FR status is {current_status!r} (starting from step {start_step})"],
             )
             step_results.append(skipped)
-            hand_off[f"step_{step_num}_ran"] = False
-            _SPANS_LOGGER.info(
-                "skill.skip",
-                extra={
-                    "event": "skill.skip", "span_id": run_span_id,
-                    "step": step_num, "skill": skill_name,
-                    "condition": str(condition),
-                },
-            )
             continue
 
-        # Resolve inputs for this step from the hand-off map.
-        step_inputs = _resolve_step_inputs(step_spec.get("inputs_from"), hand_off)
+        # Check if the output file already exists to avoid re-executing completed work
+        output_path = output_dir / f"step{step_num:02d}_{skill_name}.json"
+        step_result = None
+        reused = False
+        if output_path.is_file():
+            try:
+                with open(output_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                loaded_status = "OK"
+                if isinstance(data, dict) and data.get("synthetic"):
+                    loaded_status = "MOCKED"
+                step_result = StepResult(
+                    step=step_num,
+                    skill=skill_name,
+                    status=loaded_status,
+                    output=data if isinstance(data, dict) else {"value": data},
+                    output_path=output_path,
+                    duration_ms=0,
+                    notes=["Reused existing deliverable from disk (resume/rework)"],
+                )
+                reused = True
+                _SPANS_LOGGER.info(
+                    "skill.reuse",
+                    extra={
+                        "event": "skill.reuse", "span_id": run_span_id,
+                        "step": step_num, "skill": skill_name,
+                        "output_path": str(output_path),
+                    },
+                )
+            except Exception:
+                pass
 
-        # ── Phase 5: span emission ───────────────────────────────────────
-        step_span_id = secrets.token_hex(4)
-        t_step_0 = time.monotonic_ns()
-        _SPANS_LOGGER.info(
-            "skill.invoke",
-            extra={
-                "event": "skill.invoke", "span_id": run_span_id,
-                "step_span_id": step_span_id, "step": step_num,
-                "skill": skill_name, "input_keys": sorted(step_inputs.keys()),
-            },
-        )
+        if step_result is None:
+            # ── Phase 5: condition evaluation ────────────────────────────────
+            # Steps with `condition: "<expr>"` are SKIPPED when the expression
+            # evaluates to False against the running hand-off map. Expressions
+            # reference: prior steps (`"step 3 ran"`), workflow inputs
+            # (`'mode == "implement"'`), or step output fields
+            # (`"context_map.files_outside_immediate_domain > 3"`).
+            condition = step_spec.get("condition")
+            if condition and not _eval_condition(condition, hand_off, step_results):
+                skipped = StepResult(
+                    step=step_num, skill=skill_name, status="SKIPPED",
+                    notes=[f"condition false: {condition!r}"],
+                )
+                step_results.append(skipped)
+                hand_off[f"step_{step_num}_ran"] = False
+                _SPANS_LOGGER.info(
+                    "skill.skip",
+                    extra={
+                        "event": "skill.skip", "span_id": run_span_id,
+                        "step": step_num, "skill": skill_name,
+                        "condition": str(condition),
+                    },
+                )
+                continue
 
-        step_result = invoker.invoke(
-            skill_name=skill_name,
-            inputs=step_inputs,
-            skill_root=skill_root,
-            output_dir=output_dir,
-            step_num=step_num,
-        )
+            # Resolve inputs for this step from the hand-off map.
+            step_inputs = _resolve_step_inputs(step_spec.get("inputs_from"), hand_off)
+
+            # ── Phase 5: span emission ───────────────────────────────────────
+            step_span_id = secrets.token_hex(4)
+            t_step_0 = time.monotonic_ns()
+            _SPANS_LOGGER.info(
+                "skill.invoke",
+                extra={
+                    "event": "skill.invoke", "span_id": run_span_id,
+                    "step_span_id": step_span_id, "step": step_num,
+                    "skill": skill_name, "input_keys": sorted(step_inputs.keys()),
+                },
+            )
+
+            step_result = invoker.invoke(
+                skill_name=skill_name,
+                inputs=step_inputs,
+                skill_root=skill_root,
+                output_dir=output_dir,
+                step_num=step_num,
+            )
+
+            _SPANS_LOGGER.info(
+                "skill.complete",
+                extra={
+                    "event": "skill.complete", "span_id": run_span_id,
+                    "step_span_id": step_span_id, "step": step_num,
+                    "skill": skill_name, "status": step_result.status,
+                    "duration_ms": step_result.duration_ms,
+                },
+            )
+
         step_results.append(step_result)
-
-        _SPANS_LOGGER.info(
-            "skill.complete",
-            extra={
-                "event": "skill.complete", "span_id": run_span_id,
-                "step_span_id": step_span_id, "step": step_num,
-                "skill": skill_name, "status": step_result.status,
-                "duration_ms": step_result.duration_ms,
-            },
-        )
 
         # Mark this step as ran (regardless of OK/FAILED — the work was attempted).
         hand_off[f"step_{step_num}_ran"] = step_result.status in ("OK", "MOCKED")
@@ -364,7 +457,7 @@ def execute_chain(
         # coverage-gate-author), the LLM's JSON output describes WHAT to do; we
         # actually APPLY it here. This bridges the LLM-prompt-only architecture
         # to real filesystem / subprocess work without giving the LLM tool access.
-        if step_result.status in ("OK", "MOCKED"):
+        if step_result.status in ("OK", "MOCKED") and not reused:
             try:
                 from cuo.core.applier import apply_step_side_effect
                 apply_step_side_effect(skill_name, step_result, hand_off, run_span_id)

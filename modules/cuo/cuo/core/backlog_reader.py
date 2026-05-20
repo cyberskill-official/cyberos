@@ -93,16 +93,28 @@ def parse_backlog(backlog_path: Path) -> list[FrRow]:
 def next_eligible(
     rows: list[FrRow],
     module: Optional[str] = None,
-    current_status: str = "ready_to_implement",
+    current_status: str | list[str] | tuple[str, ...] | None = None,
+    rework: bool = False,
 ) -> Optional[FrRow]:
-    """Return the first FR in `current_status` whose deps are all `done`.
+    """Return the first FR in the matching status list whose deps are all `done`.
 
-    If `module` is set, only consider FRs whose `module` (the X in FR-X-NNN)
-    matches case-insensitively. If no eligible FR exists, returns None.
+    If `current_status` is None, defaults to all active statuses:
+    ("ready_to_implement", "implementing", "ready_to_review", "reviewing", "ready_to_test", "testing").
+    If `rework` is True, "done" is also added to the active status set.
     """
+    if current_status is None:
+        statuses = ["ready_to_implement", "implementing", "ready_to_review", "reviewing", "ready_to_test", "testing"]
+        if rework:
+            statuses.append("done")
+        statuses = tuple(statuses)
+    elif isinstance(current_status, str):
+        statuses = (current_status,)
+    else:
+        statuses = tuple(current_status)
+
     done_ids = {r.fr_id for r in rows if r.status == "done"}
     for row in rows:
-        if row.status != current_status:
+        if row.status not in statuses:
             continue
         if module and row.module != module.lower():
             continue
@@ -114,13 +126,24 @@ def next_eligible(
 def list_eligible(
     rows: list[FrRow],
     module: Optional[str] = None,
-    current_status: str = "ready_to_implement",
+    current_status: str | list[str] | tuple[str, ...] | None = None,
+    rework: bool = False,
 ) -> list[FrRow]:
     """List ALL eligible FRs (same filter as next_eligible) for visibility."""
+    if current_status is None:
+        statuses = ["ready_to_implement", "implementing", "ready_to_review", "reviewing", "ready_to_test", "testing"]
+        if rework:
+            statuses.append("done")
+        statuses = tuple(statuses)
+    elif isinstance(current_status, str):
+        statuses = (current_status,)
+    else:
+        statuses = tuple(current_status)
+
     done_ids = {r.fr_id for r in rows if r.status == "done"}
     out = []
     for row in rows:
-        if row.status != current_status:
+        if row.status not in statuses:
             continue
         if module and row.module != module.lower():
             continue

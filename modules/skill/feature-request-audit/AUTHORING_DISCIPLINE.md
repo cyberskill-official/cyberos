@@ -449,4 +449,28 @@ This prevents "deferred to slice 2" entries that nobody can pick up because nobo
 
 ---
 
-*End of AUTHORING_DISCIPLINE.md — version 1.4 — 2026-05-19 (added §9 implementation-audit discipline).*
+## §10 — Backlog Management and Invariants
+
+### §10.1 — Cross-Phase Invariants (NOT FR-level — protocol-level)
+
+These apply to **every** Feature Request. Auditors MUST check that no FR violates these.
+
+1. **memory audit-row coverage = 100%** — every state-changing operation in every module emits a chained memory audit row before returning success. CI gate per module.
+2. **Tenant isolation cross-leak = 0** — property-based test runs per release on every tenant-aware code path. Zero cross-tenant data reads under any randomised query, JWT, label, or ID manipulation.
+3. **Compensation never enters memory** — DEC-036 structural exclusion. CI gate rejects any schema PR that lets comp fields appear in memory-ingested paths.
+4. **Sensitive PII never enters memory raw** — Presidio + VN-PII recall ≥ 99% gate at every ingest point.
+5. **Audit-before-action invariant** — for any action with persistent effect (DB write, network send, file write), the memory audit row MUST land before the effect. CI test asserts ordering on every code path.
+6. **Persona-version stamp on every AI call** — `ai.invocation` audit row carries `agent_persona` claim; 100% coverage hard floor.
+7. **MUST destructive operations require human confirm** — no LLM-driven loop can auto-invoke a destructive tool. EU AI Act Art. 14 + Anthropic policy floor.
+
+### §10.2 — How the Backlog Grows
+
+- **New FRs:** authored per the playbook rules above. Each FR is a markdown file at `docs/feature-requests/{module}/FR-{MOD}-{NNN}-{slug}.md` with a sibling `.audit.md` at 10/10 score. The backlog is regenerated from these files.
+- **FR status flow:** `draft → ready_to_implement → implementing → ready_to_review → reviewing → ready_to_test → testing → done` (with `on_hold` or `closed` off-ramps per [`STATUS-REFERENCE.md`](../../../docs/feature-requests/STATUS-REFERENCE.md)).
+- **Re-prioritising:** edit `priority` in the FR's frontmatter, then re-generate the backlog. Don't edit the backlog index directly — it's a derived view.
+- **Re-phasing:** if a P1 FR becomes urgent for P0, edit `phase: P0` in the FR's frontmatter. The phase exit gate criteria don't change — just move the FR.
+- **Deferring a phase:** if a slice can't ship in its planned phase, mark its FRs `deferred` and add a follow-up FR in the next phase with the same scope.
+
+---
+
+*End of AUTHORING_DISCIPLINE.md — version 1.5 — 2026-05-20 (relocated backlog rules and invariants from BACKLOG.md).*

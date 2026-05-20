@@ -74,8 +74,8 @@ The website (this docs site at `website/docs/`) deploys to **cyberos.cyberskill.
 **Gate criteria for advancing waves:**
 1. Wave N modules pass all FR-level acceptance criteria (§4 of each FR) before Wave N+1 starts.
 2. Each module's docs page on cyberos.cyberskill.world updates with the shipped state at wave-exit.
-3. memory audit-row coverage = 100% across all wave-N shipped surfaces (§7 invariant 1).
-4. Tenant isolation cross-leak = 0 verified by property tests (§7 invariant 2).
+3. memory audit-row coverage = 100% across all wave-N shipped surfaces (see [`AUTHORING_DISCIPLINE.md`](../../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) §10.1 invariant 1).
+4. Tenant isolation cross-leak = 0 verified by property tests (see [`AUTHORING_DISCIPLINE.md`](../../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) §10.1 invariant 2).
 
 ### What changed since v0.5.0 (2026-05-19 evening — AI / OBS / MCP wave)
 
@@ -106,13 +106,13 @@ This document is the **single source of truth** for what CyberOS is going to bui
 - **Phase** maps to the milestone arc — `P0 Foundation` ships the cross-cutting infrastructure; `P1 Productivity` adds the internal-workflow modules; `P2 Operations` adds revenue + ops surfaces; `P3 SaaS-ready` adds the multi-tenant + employment-decision modules; `P4 Client-facing` adds external-customer surfaces.
 - **Slice** is a coherent ship-unit within a module. Slice 1 is always the minimum viable surface for that module. Subsequent slices add depth, scale, compliance hardening, or persona surfaces.
 - **Priority** uses BCP-14 keywords — `MUST` (release blocker) · `SHOULD` (release should-have) · `COULD` (release nice-to-have) · `MAY` (post-release).
-- **Status** flows: `draft → audited → accepted → building → shipped` (or `deferred` / `rejected` / `superseded`).
-- **Depends on** is the cross-FR dependency graph. An FR cannot start `building` until its `depends_on` rows are all `shipped`.
+- **Status**: The current state of the FR (see [`STATUS-REFERENCE.md`](STATUS-REFERENCE.md) for details).
+- **Depends on**: The cross-FR dependency list.
 - **Effort** is a rough sizing in hours (1h = 30 min focused work + 30 min coordination/review). Treat as ±50%. Sized for one experienced engineer.
 
-**Reading order for a planner:** scan §1 (totals) → pick the phase you're working in → read the per-module breakdown in that phase → drill into individual FR markdowns as you accept them.
+**Reading order for a planner:** scan §1 (totals) → pick the phase you're working in → read the per-module breakdown in that phase → drill into individual FR markdowns.
 
-**Reading order for an implementer:** find your assigned FR-ID in the per-module section → click through to the FR markdown → that file has the API contract, test harness, allowed-tools, implementation hints.
+**Reading order for an implementer:** find the assigned FR-ID in the per-module section → click through to the FR markdown file for details.
 
 ---
 
@@ -825,31 +825,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 ---
 
-## §7 — Cross-phase invariants (NOT FR-level — protocol-level)
-
-These do not have individual FRs because they apply to **every** FR. Auditors of this backlog should check that no FR violates these.
-
-1. **memory audit-row coverage = 100%** — every state-changing operation in every module emits a chained memory audit row before returning success. CI gate per module.
-2. **Tenant isolation cross-leak = 0** — property-based test runs per release on every tenant-aware code path. Zero cross-tenant data reads under any randomised query, JWT, label, or ID manipulation.
-3. **Compensation never enters memory** — DEC-036 structural exclusion. CI gate rejects any schema PR that lets comp fields appear in memory-ingested paths.
-4. **Sensitive PII never enters memory raw** — Presidio + VN-PII recall ≥ 99% gate at every ingest point.
-5. **Audit-before-action invariant** — for any action with persistent effect (DB write, network send, file write), the memory audit row MUST land before the effect. CI test asserts ordering on every code path.
-6. **Persona-version stamp on every AI call** — `ai.invocation` audit row carries `agent_persona` claim; 100% coverage hard floor.
-7. **MUST destructive operations require human confirm** — no LLM-driven loop can auto-invoke a destructive tool. EU AI Act Art. 14 + Anthropic policy floor.
-
----
-
-## §8 — How this backlog grows
-
-- **New FRs:** authored per the [`AUTHORING_DISCIPLINE.md`](../../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) playbook (co-located with the `feature-request-audit` skill). Each FR is a markdown file at `docs/feature-requests/{module}/FR-{MOD}-{NNN}-{slug}.md` with a sibling `.audit.md` at 10/10 score. This backlog is regenerated from those files.
-- **FR status flow:** `draft → audited (feature-request-audit ran) → accepted (you signed off) → building (in-flight) → shipped (PR merged)`. Or `deferred / rejected / superseded` at any point.
-- **Re-prioritising:** edit `priority` in the FR's frontmatter, then re-generate this backlog. Don't edit this index directly — it's a derived view.
-- **Re-phasing:** if a P1 FR becomes urgent for P0, edit `phase: P0` in the FR's frontmatter. The phase exit gate criteria above don't change — just move the FR.
-- **Deferring a phase:** if a slice can't ship in its planned phase, mark its FRs `deferred` and add a follow-up FR in the next phase with the same scope.
-
----
-
-*End of backlog narrative — v0.4.0, 2026-05-18.*
+*End of backlog narrative — v0.5.1, 2026-05-20 (relocated backlog rules and invariants to AUTHORING_DISCIPLINE.md).*
 *Status:* spec corpus closed; implementation phase begins with MEMORY → AUTH → CHAT → PROJECT → CUO+SKILL per §0.6. Appendices §A–§D below contain the four generated reports absorbed from former `REPORTS.md`.
 
 ---
