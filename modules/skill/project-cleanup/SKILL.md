@@ -129,7 +129,7 @@ The skill MUST escalate to human (`to_human_on_irreversible: true`) before any d
 
 Detect the project flavor and run the appropriate verifier:
 
-**Cyberos flavor detection:** presence of `docs/feature-requests/BACKLOG.md` AND either `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` (post-2026-05-18 layout) or the legacy `docs/feature-requests/AUTHORING.md`.
+**Cyberos flavor detection:** presence of `docs/feature-requests/BACKLOG.md` AND either `feature-request-audit` skill (post-2026-05-18 layout) or the legacy `feature-request-audit` skill.
 
 If cyberos flavor:
 - Run FR DAG coherence (depends_on ↔ blocks reciprocity)
@@ -139,7 +139,7 @@ If cyberos flavor:
 - CHANGELOG.md last-entry date freshness (warn if stale > 30 days)
 - Compare IMPLEMENTATION_ORDER.md FR count vs actual
 
-Generic flavor (no AUTHORING_DISCIPLINE.md / AUTHORING.md):
+Generic flavor (no feature-request-audit skill / feature-request-audit skill):
 - Broken markdown link check (relative `.md` links pointing to nonexistent files)
 - Orphan file detection (markdown files not referenced anywhere)
 - Top-level README presence check

@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 14
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per AUTHORING.md §0; ISS-007..014 added)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per feature-request-audit skill §0; ISS-007..014 added)
 ---
 
 ## §1 — Verdict summary
@@ -38,7 +38,7 @@ Cross-tenant emit = data leak. Resolved: §1 #11 per-process tenant_id.
 ### ISS-007 — Crash-mid-advance loses messages OR double-emits without dedup contract (strict-redo pass)
 Original spec said "advance LSN on successful memory write" but didn't address the crash-after-ack-before-advance window. Without a dedup contract, FR-MEMORY-107 sees the same logical event twice and stores both. Resolved: §1 #14 introduces deterministic `dedup_key = sha256(tenant_id || post_id || version)`; §1 #15 introduces `pending_acks: BTreeMap` and gates LSN advance on contiguous-acked entries; AC #19 #20 #32 + dedicated test bodies verify; FR-MEMORY-107 dedup contract owns the read-side collapse.
 
-### ISS-008 — Message edits silently overwrote (strict-redo pass, AUTHORING.md §3.8 audit-trail-integrity)
+### ISS-008 — Message edits silently overwrote (strict-redo pass, feature-request-audit skill §3.8 audit-trail-integrity)
 Original spec mapped UPDATE-posts to nothing OR to message_deleted. Mattermost message edits would have either been lost or mis-classified as deletions. Resolved: §1 #16 introduces `chat.message_edited` row kind with `prior_dedup_key` back-reference; map.rs distinguishes `delete_at > 0` from `message != old.message`; AC #21 + test body verify.
 
 ### ISS-009 — Reactions, channelmembers, fileinfo were absent (strict-redo pass)
@@ -63,7 +63,7 @@ A future operator running `ALTER PUBLICATION chat_bridge FOR ALL TABLES` would s
 
 All 14 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by genuine architectural surface (Postgres logical replication + PII redaction + memory exactly-once contract + 10 event types × dedup/edit/delete semantics), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by genuine architectural surface (Postgres logical replication + PII redaction + memory exactly-once contract + 10 event types × dedup/edit/delete semantics), not by line targets.
 
 ---
 

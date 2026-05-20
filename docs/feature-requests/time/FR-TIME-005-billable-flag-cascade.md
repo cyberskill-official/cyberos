@@ -270,7 +270,7 @@ Deferred:
 
 **§11.1** Cascade resolver does 1 SELECT per entry write; ~1ms with proper indexes.
 
-**§11.2** Snapshot fields: REVOKE UPDATE on (`is_billable`, `billable_source`) per AUTHORING.md rule 12.
+**§11.2** Snapshot fields: REVOKE UPDATE on (`is_billable`, `billable_source`) per feature-request-audit skill rule 12.
 
 **§11.3** Override boolean explicitly nullable — distinguishes "no override" (NULL) from "false override" (FALSE).
 

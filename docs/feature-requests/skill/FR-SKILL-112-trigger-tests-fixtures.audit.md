@@ -7,7 +7,7 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-19 (per AUTHORING_DISCIPLINE.md §3.12 — 8 canonical ISSes verified; §3.10 trigger-tests-presence rule = the spec's own subject so meta-compliant)
+authoring_md_compliance: 2026-05-19 (per feature-request-audit skill §3.12 — 8 canonical ISSes verified; §3.10 trigger-tests-presence rule = the spec's own subject so meta-compliant)
 ---
 
 ## §1 — Verdict summary
@@ -45,7 +45,7 @@ Draft §3 Python module didn't address ordering: `run_all` walks `glob("**/accep
 All 8 mechanical concerns addressed during authoring. **Score = 10/10.** Ready to ship + transition `draft → accepted`.
 
 Cross-FR sanity check:
-- `depends_on: [FR-SKILL-103, FR-CUO-101]` — both exist (103 accepted per `cyberos/docs/feature-requests/skill/FR-SKILL-103-frontmatter-extension.audit.md`; 101 status per BACKLOG.md). Reciprocity update for both parents queued for a housekeeping commit per AUTHORING_DISCIPLINE.md §3.1 rule 2.
+- `depends_on: [FR-SKILL-103, FR-CUO-101]` — both exist (103 accepted per `cyberos/docs/feature-requests/skill/FR-SKILL-103-frontmatter-extension.audit.md`; 101 status per BACKLOG.md). Reciprocity update for both parents queued for a housekeeping commit per feature-request-audit skill §3.1 rule 2.
 - `related_frs:` enumerates FR-SKILL-111 (complementary — descriptions enrichment), FR-CUO-101 (classifier dependency), FR-CUO-103 (LLM router future), FR-SKILL-103 (parent frontmatter spec).
 - FR-SKILL-111 + FR-SKILL-112 are intentionally independent — neither blocks the other; together they close the routing-portability gap.
 

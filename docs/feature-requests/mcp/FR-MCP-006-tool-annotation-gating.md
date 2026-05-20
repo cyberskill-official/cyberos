@@ -122,7 +122,7 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
 
 4. **MUST** define `mcp_pending_confirmations` table at migration `0007`: `(id BIGSERIAL PRIMARY KEY, caller_subject_id UUID NOT NULL, tool_id TEXT NOT NULL, tenant_id UUID NOT NULL, request_payload_sha256 CHAR(64) NOT NULL, expires_at TIMESTAMPTZ NOT NULL, consumed_at TIMESTAMPTZ, UNIQUE(caller_subject_id, tool_id, request_payload_sha256))`. Single-use ack store per DEC-1054.
 
-5. **MUST** define `mcp_gating_decisions_log` table at migration `0008`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, caller_subject_id UUID NOT NULL, tool_id TEXT NOT NULL, decision mcp_gating_decision NOT NULL, annotations JSONB NOT NULL, gating_mode mcp_gating_mode NOT NULL, audit_only BOOLEAN NOT NULL, decided_at TIMESTAMPTZ NOT NULL DEFAULT now(), trace_id CHAR(32))`. Append-only per AUTHORING.md rule 12.
+5. **MUST** define `mcp_gating_decisions_log` table at migration `0008`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, caller_subject_id UUID NOT NULL, tool_id TEXT NOT NULL, decision mcp_gating_decision NOT NULL, annotations JSONB NOT NULL, gating_mode mcp_gating_mode NOT NULL, audit_only BOOLEAN NOT NULL, decided_at TIMESTAMPTZ NOT NULL DEFAULT now(), trace_id CHAR(32))`. Append-only per feature-request-audit skill rule 12.
 
 6. **MUST** enforce RLS with both USING and WITH CHECK on all 3 gating tables. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
@@ -181,9 +181,9 @@ The MCP service **MUST** ship tool-annotation gating at `services/mcp/src/gating
 
 17. **MUST** rate-limit confirmation requests at 100 confirm-mode requests/min/caller per DEC-1056. Excess returns `429 + Retry-After`.
 
-18. **MUST** PII-scrub audit rows per DEC-1060 + AUTHORING.md rule 18. `request_payload_sha256` only in memory chain; raw payload in MCP gateway logs (RLS-scoped, 7-day retention).
+18. **MUST** PII-scrub audit rows per DEC-1060 + feature-request-audit skill rule 18. `request_payload_sha256` only in memory chain; raw payload in MCP gateway logs (RLS-scoped, 7-day retention).
 
-19. **MUST** thread W3C `traceparent` across `tools/call` → gating decision → confirm-ack → dispatch → response (AUTHORING.md rule 22-24).
+19. **MUST** thread W3C `traceparent` across `tools/call` → gating decision → confirm-ack → dispatch → response (feature-request-audit skill rule 22-24).
 
 20. **MUST** emit 5 memory audit row kinds per DEC-1051:
     - `mcp.tool_gating_decision` (sev-3 high-volume; sampled at 1% via FR-OBS-006 tail-sampling)

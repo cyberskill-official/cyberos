@@ -31,7 +31,7 @@ source_decisions:
   - DEC-327 (memory audit kinds: ten.tenant_provisioned, ten.tenant_suspended, ten.tenant_resumed, ten.tenant_terminating, ten.tenant_terminated, ten.tenant_branding_updated, ten.tenant_residency_changed — slice 1 emits ten.tenant_provisioned; others are FR-TEN-104)
   - DEC-328 (REVOKE UPDATE, DELETE on tenant + tenant_status_history from cyberos_app — append-only enforced at SQL grant; status changes via FR-TEN-104)
   - DEC-329 (`cyberos-ten provision` is idempotent on slug — re-running with same slug returns existing tenant; collision on different residency or plan_tier → 409)
-  - DEC-330 (exit codes follow cyberos-cli-exit shared crate per AUTHORING.md rule 9: 0 success, 1 already-exists-idempotent-match, 64 invalid-arg, 65 invalid-data, 73 cant-create, 75 temp-fail, 77 permission-denied)
+  - DEC-330 (exit codes follow cyberos-cli-exit shared crate per feature-request-audit skill rule 9: 0 success, 1 already-exists-idempotent-match, 64 invalid-arg, 65 invalid-data, 73 cant-create, 75 temp-fail, 77 permission-denied)
   - DEC-331 (the initial root-admin password is printed ONCE to the operator's terminal + immediately scrubbed from CLI memory via zeroize; never logged, never persisted in plaintext)
   - DEC-332 (provisioning generates a tenant-bootstrap audit-chain anchor — first chain row that bootstraps the tenant's memory audit chain for FR-AI-003)
   - DEC-058 (tenant-as-degenerate-tenant: until FR-TEN-001 ships, system runs as single-tenant; this FR activates the second-and-beyond tenants)
@@ -154,7 +154,7 @@ The TEN service **MUST** ship the `cyberos-ten provision` CLI as the canonical o
 
 12. **MUST** validate slug uniqueness at INSERT time via the `UNIQUE(slug)` constraint. Conflict → 23505 → handler maps to either exit 1 (idempotent match per §1 #5) or exit 65 (collision_different_attrs).
 
-13. **MUST** emit exit codes per AUTHORING.md rule 9 + DEC-330:
+13. **MUST** emit exit codes per feature-request-audit skill rule 9 + DEC-330:
     - 0 = success (new tenant provisioned).
     - 1 = success-idempotent (existing tenant returned).
     - 64 = invalid argument (missing required flag).

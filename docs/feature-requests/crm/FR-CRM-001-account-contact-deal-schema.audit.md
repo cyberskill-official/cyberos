@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 9
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -27,7 +27,7 @@ First-pass had per-pipeline status enum (every tenant's stages duplicating won/l
 First-pass allowed `is_open=true + is_won=true` simultaneously, breaking FSM. Resolved: §1 #6 + DB CHECK; AC #21.
 
 ### ISS-004 — Money as FLOAT
-First-pass used `DECIMAL(15,2)` (better) but allowed bound-field flexibility. Resolved: §1 #13 + AUTHORING.md rule 11 + BIGINT minor + CHAR(3) currency; AC #18.
+First-pass used `DECIMAL(15,2)` (better) but allowed bound-field flexibility. Resolved: §1 #13 + feature-request-audit skill rule 11 + BIGINT minor + CHAR(3) currency; AC #18.
 
 ### ISS-005 — Won/lost without reason
 First-pass allowed silent close. Resolved: §1 #21 + DB CHECK reason length + trigger required; AC #13 + #14.
@@ -48,7 +48,7 @@ First-pass relied on handler discipline. Resolved: §1 #10 + #11 + DEC-346 + `RE
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (3 closed enums × many-to-many contacts × append-only history × FSM with stage-gate × default-pipeline seed × BIGINT-minor money × RLS isolation × 8 memory audit kinds × probability override × expected-close future-date × mutual-exclusion stage classification), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (3 closed enums × many-to-many contacts × append-only history × FSM with stage-gate × default-pipeline seed × BIGINT-minor money × RLS isolation × 8 memory audit kinds × probability override × expected-close future-date × mutual-exclusion stage classification), not by line targets.
 
 ---
 

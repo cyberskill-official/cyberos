@@ -46,7 +46,7 @@ modified_files:
   - modules/skill/_template/author/references/UNTRUSTED_CONTENT.md     # clarify: body XML form remains; frontmatter is string-form sentinel
   - modules/skill/_template/audit/references/UNTRUSTED_CONTENT.md      # same
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-115 (no-xml-in-frontmatter) + FM-116 (wrap_in_marker-form)
-  - modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md        # §3.13 mentions new rules
+  - feature-request-audit skill        # §3.13 mentions new rules
   - modules/skill/README.md                                            # Part 2.1 frontmatter row updates; Part 18 anti-pattern entry
   - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.3 status update + decision recorded (option A)
   - <ALL 104 production SKILL.md files in modules/skill/>               # mechanical sweep
@@ -72,7 +72,7 @@ sub_tasks:
   - "1.0h: _template/audit/SKILL.md — same"
   - "1.0h: references/UNTRUSTED_CONTENT.md (both author + audit templates) — clarify the dual layer: frontmatter is sentinel name, body XML form is the actual runtime wrapper"
   - "1.0h: RUBRIC.md FM-115 (no-xml-in-frontmatter, all frontmatter values) + FM-116 (wrap_in_marker-form, specific to this field) — both auto-fixable on a marker-only rename"
-  - "0.5h: AUTHORING_DISCIPLINE.md §3.13 entry — frontmatter-comment-hygiene gets a sibling rule frontmatter-string-form-only"
+  - "0.5h: feature-request-audit skill §3.13 entry — frontmatter-comment-hygiene gets a sibling rule frontmatter-string-form-only"
   - "1.0h: README.md Part 2.1 frontmatter-table row update + Part 18 anti-pattern addition + Part 2.5 (new sub-section): \"What changed in registry v0.2.5 — wrap_in rename\""
   - "1.5h: migrate.sh — bash script that walks modules/skill/**/SKILL.md, replaces wrap_in: <untrusted_content/> → wrap_in_marker: \"untrusted_content\"; supports --dry-run, --apply, --verify"
   - "0.5h: verify.sh — grep for residuals; assert zero matches on `wrap_in:\\s*<` after sweep"
@@ -99,8 +99,8 @@ This FR removes XML angle brackets from CyberOS SKILL.md frontmatter — the onl
 10. The Rust validator (FR-SKILL-103 `services/skill-broker/`) **MUST** reject `wrap_in: <untrusted_content/>` as `FrontmatterError::DeprecatedXmlField` with a structured error pointing at the rename. Skills that haven't been migrated fail-fast at load time with a clear remediation message.
 11. The JSONSchema mirror (`skill.schema.json`) **MUST** mirror the new field name + pattern + `enum: ["untrusted_content"]` (v1 marker freeze).
 12. README.md Part 2.1 **MUST** show the new field name in the canonical frontmatter table. A new sub-section "What changed in registry v0.2.5" **SHOULD** be added documenting the rename, the rationale, and the migration path.
-13. AUTHORING_DISCIPLINE.md §3.13 **MUST** gain a new rule: "Frontmatter values are strings, not markup — no `<`, `>`, no XML tags anywhere in YAML values; markup belongs in the body or in `references/`."
-14. The sweep timing **MUST** be one atomic commit batch: 104 production SKILL.md files + both `_template/*/SKILL.md` files + both `_template/*/references/UNTRUSTED_CONTENT.md` files + RUBRIC.md + AUTHORING_DISCIPLINE.md + README.md + ANTHROPIC_GUIDE_DIGEST.md. Splitting across commits would leave the registry in a half-migrated state and break the audit-chain invariant that all skills at a given catalog version use the same frontmatter shape.
+13. feature-request-audit skill §3.13 **MUST** gain a new rule: "Frontmatter values are strings, not markup — no `<`, `>`, no XML tags anywhere in YAML values; markup belongs in the body or in `references/`."
+14. The sweep timing **MUST** be one atomic commit batch: 104 production SKILL.md files + both `_template/*/SKILL.md` files + both `_template/*/references/UNTRUSTED_CONTENT.md` files + RUBRIC.md + feature-request-audit skill + README.md + ANTHROPIC_GUIDE_DIGEST.md. Splitting across commits would leave the registry in a half-migrated state and break the audit-chain invariant that all skills at a given catalog version use the same frontmatter shape.
 15. Post-migration, the catalog version **MUST** bump from v0.2.4 → v0.2.5. Per DEC-182, field renames are MINOR-compatible (the old form fails fast on load via FM-116; the new form replaces it transparently); MAJOR bump would only be required for semantic changes that consumers cannot detect at load time.
 
 ## §2 — Why this design (rationale for humans)
@@ -129,7 +129,7 @@ This FR removes XML angle brackets from CyberOS SKILL.md frontmatter — the onl
 
 **Why a new README sub-section (§1 #12)?** Registry version bumps deserve narrative documentation. Readers six months from now opening README.md to understand the frontmatter contract should be able to find "what changed in v0.2.5 and why" without grepping git log. The sub-section also serves as a citation anchor for ANTHROPIC_GUIDE_DIGEST.md §6.3.
 
-**Why an AUTHORING_DISCIPLINE.md rule for frontmatter-no-markup (§1 #13)?** Prevents future drift. Without an explicit discipline rule, a future skill author re-introduces `<untrusted_content/>` (or invents a new XML-shaped sentinel) under time pressure. The rule fires at audit time on every commit, catching the drift before it ships.
+**Why an feature-request-audit skill rule for frontmatter-no-markup (§1 #13)?** Prevents future drift. Without an explicit discipline rule, a future skill author re-introduces `<untrusted_content/>` (or invents a new XML-shaped sentinel) under time pressure. The rule fires at audit time on every commit, catching the drift before it ships.
 
 **Why one atomic commit batch (§1 #14)?** The catalog version is a single source of truth. Splitting the sweep across commits would mean: at commit N, half the skills use the old form and half the new form. Any audit run during that window sees a mixed catalog — FM-116 fires on half the skills, the migrate script's idempotency check sees a mixed state — and the operator can't tell whether the migration is "done". One atomic commit removes the ambiguity.
 
@@ -354,7 +354,7 @@ esac
 19. **References docs updated** — both `_template/author/references/UNTRUSTED_CONTENT.md` + `_template/audit/references/UNTRUSTED_CONTENT.md` carry an opening paragraph clarifying frontmatter-marker vs body-XML duality.
 20. **README Part 2.1 row updated** — frontmatter table shows `wrap_in_marker:` with FR-SKILL-113 cross-link.
 21. **README Part 2.5 new sub-section added** — "What changed in registry v0.2.5" documenting the rename + rationale.
-22. **AUTHORING_DISCIPLINE.md §3.13 rule added** — frontmatter-string-form-only rule.
+22. **feature-request-audit skill §3.13 rule added** — frontmatter-string-form-only rule.
 23. **Catalog version bumped** — registry version v0.2.4 → v0.2.5 in the appropriate CHANGELOG / version-tracker.
 24. **OTel span emitted on validate** — `skill.frontmatter.validate` with attribute `wrap_in_marker` (string).
 25. **ANTHROPIC_GUIDE_DIGEST.md §6.3 updated** — status badge: option A chosen and shipped.

@@ -152,7 +152,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 
 2. **MUST** define the `signup_sessions` table at migration `0011`: `(signup_session_id UUID PRIMARY KEY, email_hash16 TEXT NOT NULL, email_full TEXT NOT NULL, geoip_country CHAR(2), suggested_billing_currency billing_currency_enum, suggested_residency TEXT, state TEXT NOT NULL CHECK (state IN ('started','email_verified','payment_captured','provisioning','completed','abandoned','rolled_back')) DEFAULT 'started', started_at TIMESTAMPTZ NOT NULL DEFAULT now(), email_verified_at TIMESTAMPTZ, payment_captured_at TIMESTAMPTZ, provisioned_at TIMESTAMPTZ, completed_at TIMESTAMPTZ, abandon_reason TEXT, rolled_back_reason TEXT, tenant_id UUID, scrubbed_at TIMESTAMPTZ)`. Expires (`signup_sessions.state` transitions to `abandoned` + `abandon_reason='ttl_expired'`) at 1h via scheduled job. PII (email_full, IP if stored) scrubbed at 90 days per DEC-840.
 
-3. **MUST** define the `tenant_consents` table at migration `0012`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID, signup_session_id UUID, subject_id UUID NOT NULL, consent_kind TEXT NOT NULL CHECK (consent_kind IN ('tos','privacy','marketing','pdpl_vn_data_processing','pdpl_vn_data_export','gdpr_legitimate_interest')), version TEXT NOT NULL, accepted_at TIMESTAMPTZ NOT NULL DEFAULT now(), ip_addr_hash16 TEXT NOT NULL, locale CHAR(5) NOT NULL, withdrawn_at TIMESTAMPTZ)`. Append-only via REVOKE per AUTHORING.md rule 12; withdrawal recorded as new row with `withdrawn_at` populated AND a fresh `accepted_at=null` row is NOT created — withdrawal is a column-level update to the existing row (one of the rare permitted updates, gated via per-column GRANT to the `cyberos_consent_writer` role).
+3. **MUST** define the `tenant_consents` table at migration `0012`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID, signup_session_id UUID, subject_id UUID NOT NULL, consent_kind TEXT NOT NULL CHECK (consent_kind IN ('tos','privacy','marketing','pdpl_vn_data_processing','pdpl_vn_data_export','gdpr_legitimate_interest')), version TEXT NOT NULL, accepted_at TIMESTAMPTZ NOT NULL DEFAULT now(), ip_addr_hash16 TEXT NOT NULL, locale CHAR(5) NOT NULL, withdrawn_at TIMESTAMPTZ)`. Append-only via REVOKE per feature-request-audit skill rule 12; withdrawal recorded as new row with `withdrawn_at` populated AND a fresh `accepted_at=null` row is NOT created — withdrawal is a column-level update to the existing row (one of the rare permitted updates, gated via per-column GRANT to the `cyberos_consent_writer` role).
 
 4. **MUST** define the `disposable_email_domains` table at migration `0014`: `(domain TEXT PRIMARY KEY, source TEXT NOT NULL, added_at TIMESTAMPTZ NOT NULL DEFAULT now(), removed_at TIMESTAMPTZ)`. Initial seed = 10,000-entry list from public sources (`disposable-email-domains` GitHub repo at pinned SHA); refresh job runs monthly + writes a `ten.disposable_email_blocklist_refreshed` memory row (kind not in the 9-kind core list per DEC-839 — informational only).
 
@@ -221,7 +221,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 
 18. **MUST** detect squatting per DEC-844. The `abuse_guard.rs` module tracks `(ip_addr, started_signups_24h, abandoned_signups_24h)` in Redis. When `abandoned_signups_24h ≥ 5 AND completed_signups_24h = 0`, block the IP for 24h (`signup_start` returns `429 + { error: "abuse_detected_24h_cooloff" }`). The block auto-expires; legitimate users from shared IPs (corp NAT) can request manual unblock via support email.
 
-19. **MUST** emit 9 **core** memory audit row kinds tied to user-visible signup lifecycle (DEC-839 + AUTHORING.md rule 6 namespace pattern):
+19. **MUST** emit 9 **core** memory audit row kinds tied to user-visible signup lifecycle (DEC-839 + feature-request-audit skill rule 6 namespace pattern):
     - `ten.signup_started` (sev-3 informational)
     - `ten.signup_email_verified` (sev-3)
     - `ten.signup_consent_recorded` (sev-2 — legal)
@@ -238,7 +238,7 @@ The TEN service **MUST** ship the public self-serve signup flow at `services/ten
 
     Every row PII-scrubs `email_full` via FR-MEMORY-111 → `email_hash16`; raw email retained in tenant Postgres (RLS-scoped) only until `signup_sessions.scrubbed_at` is set at 90d.
 
-20. **MUST** thread W3C `traceparent` across the entire flow (AUTHORING.md rule 22 + 23 + 24). The `signup_session_id` is logged as a span attribute on every span; a single `trace_id` in the response makes support escalations resolvable.
+20. **MUST** thread W3C `traceparent` across the entire flow (feature-request-audit skill rule 22 + 23 + 24). The `signup_session_id` is logged as a span attribute on every span; a single `trace_id` in the response makes support escalations resolvable.
 
 21. **MUST** scrub PII at 90 days per DEC-840. Daily scheduled job updates `signup_sessions WHERE started_at < now() - interval '90 days' AND scrubbed_at IS NULL`: clear `email_full`, retain `email_hash16` + funnel state. The scrub itself is recorded in memory via `ten.signup_session_scrubbed` (kind not in the 9-kind core list per DEC-839 — informational only).
 

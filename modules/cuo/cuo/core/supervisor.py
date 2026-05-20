@@ -335,7 +335,9 @@ def execute_chain(
                         current_status = fr_row.status
                 except Exception:
                     pass
-        if current_status in ("ready_to_review", "reviewing"):
+        if current_status in ("ready_to_implement", "implementing"):
+            start_step = 1
+        elif current_status in ("ready_to_review", "reviewing"):
             start_step = 15
         elif current_status in ("ready_to_test", "testing"):
             start_step = 21

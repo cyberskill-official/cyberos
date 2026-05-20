@@ -152,7 +152,7 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
     - `llm_pick` (present iff `path_taken` involved cascade).
     - `invocation_result` (present iff path = `auto` or `cascade_then_auto`).
     - `cuo_state_v` (per DEC-167, currently `1`).
-    - `request_id`, `trace_id` (W3C-formatted, lower-hex 32-char per AUTHORING.md rule 24).
+    - `request_id`, `trace_id` (W3C-formatted, lower-hex 32-char per feature-request-audit skill rule 24).
     - `ts_ns_start`, `ts_ns_end`.
 
 9. **MUST** load the **11-persona catalogue** from `cuo/cuo/supervisor/persona.py`: Genie + 10 C-level (CEO, COO, CFO, CMO, CTO, CHRO, CSO, CLO, CDO, CPO). Each persona has: `key`, `display_name`, `keyword_bank` (list of trigger words), `system_prompt`, `defer_to_human_matrix` (list of operation types the persona MUST refuse to auto-invoke regardless of confidence). The matrix is **intrinsic** to the persona — not overridable by config (per DEC-164 + EU AI Act Art. 26).
@@ -189,11 +189,11 @@ The CUO service **MUST** ship the LangGraph supervisor that adds the Phase 2 LLM
 
 21. **MUST** complete the **rule path (auto/ask/defer)** in ≤ 50 ms p95 measured at supervisor entry → return. The LLM cascade path is budgeted at ≤ 3500 ms p95 (3000 ms LLM + 500 ms supervisor overhead). Performance test `test_supervisor_perf_rule_path` asserts the rule path; cascade-path perf is asserted in integration tests via a mocked AI Gateway response.
 
-22. **MUST** ship the CLI subcommand `cyberos-cuo supervisor route --query "<text>" [--persona <key>] [--invoke|--no-invoke] [--record|--no-record] [--json]`. Exit codes (from `cyberos-cli-exit` shared crate per AUTHORING.md rule 9): 0 success-invoked, 1 success-but-ask, 2 success-but-defer, 64 invalid-argument, 65 invalid-data (unknown persona), 73 cant-create (audit failure), 75 temp-fail (timeout), 77 permission-denied (persona mismatch).
+22. **MUST** ship the CLI subcommand `cyberos-cuo supervisor route --query "<text>" [--persona <key>] [--invoke|--no-invoke] [--record|--no-record] [--json]`. Exit codes (from `cyberos-cli-exit` shared crate per feature-request-audit skill rule 9): 0 success-invoked, 1 success-but-ask, 2 success-but-defer, 64 invalid-argument, 65 invalid-data (unknown persona), 73 cant-create (audit failure), 75 temp-fail (timeout), 77 permission-denied (persona mismatch).
 
 23. **MUST** validate the LLM cascade output against the `LlmRoutingPick` Pydantic schema. The schema requires `skill_name: str` (must match a known catalog skill), `arguments: dict` (must be JSON-serialisable), `rationale: str` (1–500 chars), `confidence: float` (0.0–1.0). Validation failure → re-emit prompt once with stricter instructions; second failure → fall through to `ask`. The retry counter is in state; max 1 retry.
 
-24. **MUST** PII-scrub the `query` field of the memory audit row using `cyberos-memory-pii` rules per AUTHORING.md rule 18, BEFORE chain commit. The original query is retained in the supervisor's OTel span (transient, < 30-day retention via FR-OBS-006 tail sampling); the memory row holds the scrubbed form for long-term storage.
+24. **MUST** PII-scrub the `query` field of the memory audit row using `cyberos-memory-pii` rules per feature-request-audit skill rule 18, BEFORE chain commit. The original query is retained in the supervisor's OTel span (transient, < 30-day retention via FR-OBS-006 tail sampling); the memory row holds the scrubbed form for long-term storage.
 
 25. **MUST** support **multi-step chain entry stub**: the supervisor returns `{decision, next_step: null}` at slice 2. FR-CUO-104 (topological chain walk, slice 3+) consumes `next_step` to compose multi-skill flows. The slice-2 stub MUST set `next_step = null` unconditionally — never a stale value.
 
@@ -962,7 +962,7 @@ All other questions resolved.
 | memory audit row commit fails | memory_writer error | Supervisor returns 500 `audit_failed`; invocation rolled back if `auto` | OBS sev-1; memory_writer investigation |
 | Audit row contains unscrubbed PII | `cyberos-memory-pii` scrubber called pre-commit; CI test asserts | Pre-commit failure | Investigate; add PII rule |
 | Concurrent supervisors invoke same destructive skill | Capability broker idempotency check | Second invocation refused via Elicitation idempotency | None — designed |
-| Caller's `traceparent` malformed | parse-node validation | Generate fresh trace at trust boundary per AUTHORING.md rule 22 | None — designed |
+| Caller's `traceparent` malformed | parse-node validation | Generate fresh trace at trust boundary per feature-request-audit skill rule 22 | None — designed |
 | Replay-equivalence broken on rule path | `test_supervisor_idempotency` | CI fails | Fix non-determinism (likely a dict iteration order or `time.now()` leak) |
 | Rule path latency > 50ms p95 | `test_supervisor_perf_rule_path` | CI fails | Profile + optimise; common culprits: cold-import, JSON serialisation |
 | Cascade path latency > 3500ms p95 | Integration test with mocked gateway | CI fails | Verify timeout budget; reduce prompt size |
@@ -999,15 +999,15 @@ All other questions resolved.
 - **`defer_to_human_matrix` lists operation TYPES, not skill names** — operations are abstract (e.g. `invoice_emit`); skills implement them. The skill catalogue carries `operation: invoice_emit` annotation; the supervisor consults the matrix by operation, not skill_name. Allows new skills implementing the same operation to inherit the matrix block.
 - **The graph is recompiled per process** — not per request. `build_supervisor_graph()` is called once at module import; `run_supervisor` reuses the compiled graph. Performance: ~5 ms compile, amortised over thousands of requests.
 - **`cuo_state_v = 1` is the published contract** — future state schema changes must consider backward compatibility for replay; ±2 version tolerance is the published guarantee.
-- **W3C `traceparent` is generated at the trust boundary** when caller doesn't provide one (per AUTHORING.md rule 22). The supervisor entry is a trust boundary — chat/email/etc. may or may not propagate.
+- **W3C `traceparent` is generated at the trust boundary** when caller doesn't provide one (per feature-request-audit skill rule 22). The supervisor entry is a trust boundary — chat/email/etc. may or may not propagate.
 - **`OTel sampling 1%` for steady-state spans, 100% for non-success** — the high-volume happy path is sampled to keep storage costs sane; the rare error path is always captured for debugging. Matches FR-OBS-006 tail-sampling pattern.
 - **`Counter cardinality`** — `persona` label has 11 values (closed catalogue); `path_taken` has 6 values; `outcome` has ~6 values. Combined cardinality: ~400. Adding `tenant_id` would explode this — explicitly NOT included in label set; aggregate at Grafana query time.
 - **`request_id` is ULID** — sortable by time, 26-char, unique across services. Generated at supervisor entry; embedded in memory row + every child span.
 - **Persona JWT format `cuo-<persona-key>@<semver>`** — matches FR-AI-014; the version part lets us roll out persona prompt changes without breaking existing tokens (with grace window).
 - **`test_supervisor_litellm_routes_via_gateway` is an AST walker, not a runtime check** — runtime would only catch the import if the path were exercised; AST walker catches all imports at CI before any code runs.
 - **`apply_memory_pii_rules` is the FR-MEMORY-111 entry point** — same rules used by every memory audit row builder; consistent PII scrubbing across modules.
-- **`current_trace_id_hex` formats via `{}` not `{:?}`** — AUTHORING.md rule 24; Display, not Debug.
-- **The CLI's exit codes follow `cyberos-cli-exit`** — shared crate per AUTHORING.md rule 9; tests assert numeric values to catch drift if the shared crate's mapping changes.
+- **`current_trace_id_hex` formats via `{}` not `{:?}`** — feature-request-audit skill rule 24; Display, not Debug.
+- **The CLI's exit codes follow `cyberos-cli-exit`** — shared crate per feature-request-audit skill rule 9; tests assert numeric values to catch drift if the shared crate's mapping changes.
 - **Per-persona defer matrix coverage** — `test_persona_catalogue_complete` asserts that every C-level persona's matrix has ≥ 1 entry (Genie's matrix is shorter — appropriate for the unspecialised entry point).
 - **`max_tokens` budget vs `response_format: json_object`** — JSON mode forces structured output; max_tokens limits length. Edge case: LLM produces a valid JSON header `{"skill_name": "...` and gets cut off mid-rationale. Pydantic validation fails on truncated JSON → fall through to retry. Tested.
 

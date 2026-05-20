@@ -185,7 +185,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
     - Issue the operation against that pool only.
     - Mis-route (e.g., handler uses sg-1 pool for an eu-1 tenant) is caught by the trip-wire trigger + emits `ten.residency_pool_misroute` sev-1.
 
-8. **MUST** install a cross-residency-write trip-wire trigger on EVERY tenant-scoped Postgres table per DEC-924 + DEC-939 + AUTHORING.md rule 13 derivative. The trigger function `trg_cross_residency_write_block()`:
+8. **MUST** install a cross-residency-write trip-wire trigger on EVERY tenant-scoped Postgres table per DEC-924 + DEC-939 + feature-request-audit skill rule 13 derivative. The trigger function `trg_cross_residency_write_block()`:
     ```sql
     CREATE OR REPLACE FUNCTION trg_cross_residency_write_block() RETURNS trigger AS $$
     DECLARE expected_residency TEXT := current_setting('auth.residency', true);
@@ -229,7 +229,7 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
     6. AUTH issuer responsiveness (GET JWKS + < 500ms).
     Output: per-residency score 0-6 with timing per component; exit code 0 if all 4 residencies score ≥ 5, exit code 73 otherwise.
 
-16. **MUST** emit 8 memory audit row kinds per DEC-941 (AUTHORING.md rule 6 namespace pattern):
+16. **MUST** emit 8 memory audit row kinds per DEC-941 (feature-request-audit skill rule 6 namespace pattern):
     - `ten.tenant_residency_assigned` (sev-2 — material commercial event)
     - `ten.residency_provisioned` (sev-1 — infrastructure event; one per residency standup)
     - `ten.residency_pool_misroute` (sev-1 — silent-leak prevented)
@@ -239,15 +239,15 @@ The TEN service **MUST** ship 4-residency provisioning (`sg-1`, `eu-1`, `us-1`, 
     - `ten.residency_health_degraded` (sev-2 — one component failing)
     - `ten.residency_kms_unavailable` (sev-1 — encryption broken in one region)
 
-17. **MUST** maintain `residency_health_log` table at migration `0017`: `(id BIGSERIAL PRIMARY KEY, residency residency NOT NULL, component TEXT NOT NULL CHECK (component IN ('aurora','s3','nats','stripe','kms','auth_issuer')), status TEXT NOT NULL CHECK (status IN ('healthy','degraded','down')), latency_ms INT, checked_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Append-only via REVOKE per AUTHORING.md rule 12. Per-residency append + global read (no RLS — health is system-tenant scope).
+17. **MUST** maintain `residency_health_log` table at migration `0017`: `(id BIGSERIAL PRIMARY KEY, residency residency NOT NULL, component TEXT NOT NULL CHECK (component IN ('aurora','s3','nats','stripe','kms','auth_issuer')), status TEXT NOT NULL CHECK (status IN ('healthy','degraded','down')), latency_ms INT, checked_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Append-only via REVOKE per feature-request-audit skill rule 12. Per-residency append + global read (no RLS — health is system-tenant scope).
 
 18. **MUST** map vn-1 to ap-southeast-1 physical region per DEC-930. The mapping is documented in `services/ten/src/residency/mod.rs` const + reflected in `infra/terraform/residency/vn-1/main.tf` as `provider "aws" { region = "ap-southeast-1" }`. PDPL Law 91/2025 §17 disclosure is presented at FR-TEN-101 signup for VN-residency tenants.
 
 19. **MUST** require explicit `--residency` flag on FR-TEN-001's `cyberos-ten provision` CLI per DEC-945 (no auto-derive at slice 2). CCO process review checks consistency between provided `--billing-currency` and `--residency` against the DEC-922 mapping; mismatch is rejected with exit code 64 + message naming the expected residency.
 
-20. **MUST** PII-scrub per-residency memory rows via FR-MEMORY-111 (AUTHORING.md rule 18). Cross-residency event payloads carry `tenant_id_hash16` not the raw tenant_id (defense-in-depth: even if a cross-residency audit row leaks across residencies due to incident, no PII flows).
+20. **MUST** PII-scrub per-residency memory rows via FR-MEMORY-111 (feature-request-audit skill rule 18). Cross-residency event payloads carry `tenant_id_hash16` not the raw tenant_id (defense-in-depth: even if a cross-residency audit row leaks across residencies due to incident, no PII flows).
 
-21. **MUST** thread W3C `traceparent` across the residency-fanout entry (single-cross-residency lookup) + per-residency operation (AUTHORING.md rule 22 + 23 + 24). Trace_id present on every memory row + every log line.
+21. **MUST** thread W3C `traceparent` across the residency-fanout entry (single-cross-residency lookup) + per-residency operation (feature-request-audit skill rule 22 + 23 + 24). Trace_id present on every memory row + every log line.
 
 22. **MUST NOT** support automatic failover between residencies at slice 2 per DEC-940. Cross-region DR is out-of-scope; per-residency multi-AZ Aurora is the DR primitive at slice 2.
 

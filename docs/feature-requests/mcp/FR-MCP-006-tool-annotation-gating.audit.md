@@ -19,7 +19,7 @@ The spec lands MCP tool-annotation gating at the gateway entry per MCP 2025-11-2
 
 ### ISS-001 — Fail-open vs fail-closed on audit-row insert failure
 
-§10 row "Audit log row insert fails post-decision" said "decision proceeds (FAIL-OPEN on audit)". This is a deliberate choice but the rationale needed to be explicit. Resolved: §10 row now spells out the choice — FAIL-OPEN preferred because alternative (FAIL-CLOSED) denies all tool calls during Postgres incident, which is worse blast radius than missing one audit row. Sev-2 alert ensures the missed audit is forensically traceable via OBS even if memory chain row is absent. AUTHORING.md §8.2d-style absence-claim applies — CI lint enforces the audit emit path.
+§10 row "Audit log row insert fails post-decision" said "decision proceeds (FAIL-OPEN on audit)". This is a deliberate choice but the rationale needed to be explicit. Resolved: §10 row now spells out the choice — FAIL-OPEN preferred because alternative (FAIL-CLOSED) denies all tool calls during Postgres incident, which is worse blast radius than missing one audit row. Sev-2 alert ensures the missed audit is forensically traceable via OBS even if memory chain row is absent. feature-request-audit skill §8.2d-style absence-claim applies — CI lint enforces the audit emit path.
 
 ### ISS-002 — Bypass-scope provenance + revocation
 

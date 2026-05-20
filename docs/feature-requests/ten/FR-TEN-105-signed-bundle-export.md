@@ -127,7 +127,7 @@ The TEN service **MUST** ship signed-bundle export at `services/ten/src/bundle/`
 
 7. **MUST** include full memory audit chain segment per DEC-1331. Chain segment = all rows where tenant_id matches; chain hashes intact; verifier can replay locally.
 
-8. **MUST** produce deterministic ZIP per DEC-1321 + AUTHORING.md rule 27-28:
+8. **MUST** produce deterministic ZIP per DEC-1321 + feature-request-audit skill rule 27-28:
    - Sorted entries (alphabetic by path).
    - Fixed mtime `2000-01-01T00:00:00Z`.
    - Fixed mode `0o644`.

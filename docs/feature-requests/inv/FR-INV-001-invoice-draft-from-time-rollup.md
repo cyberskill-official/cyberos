@@ -26,7 +26,7 @@ source_decisions:
   - DEC-1362 2026-05-17 — Closed enum `invoice_line_kind` = {time_entry, fixed_fee, expense_reimbursement, discount, tax, late_fee}; CI cardinality test asserts 6
   - DEC-1363 2026-05-17 — Rate-card snapshot: at invoice creation, the prevailing rate-card (per-person-per-hour or fixed-fee schedule) is COPIED into the invoice — never referenced live; ensures invoice immutability even if rate-card changes
   - DEC-1364 2026-05-17 — Per-line traceability: each `invoice_line` row carries `source_kind` + `source_ref` (e.g., time_entry_id, expense_id) for forensic backtracking to the entry that generated the charge
-  - DEC-1365 2026-05-17 — Amounts stored as BIGINT minor (AUTHORING.md rule 11) + closed currency enum (billing_currency_enum from FR-TEN-003 reused)
+  - DEC-1365 2026-05-17 — Amounts stored as BIGINT minor (feature-request-audit skill rule 11) + closed currency enum (billing_currency_enum from FR-TEN-003 reused)
   - DEC-1366 2026-05-17 — Append-only at line + header level: corrections via NEW lines (`source_kind='correction'`) NOT mutations; status transitions via append-only `invoice_status_history` row
   - DEC-1367 2026-05-17 — Invoice number format: `INV-{tenant_slug}-{YY}-{6-digit-sequential}`; per-tenant annual gap-free sequence (same pattern as FR-TEN-102 hóa đơn DEC-983)
   - DEC-1368 2026-05-17 — Per-engagement billing: invoice belongs to ONE engagement (multi-engagement invoices = anti-pattern; client confusion + audit-attribution unclear)
@@ -118,7 +118,7 @@ The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 mi
 
 3. **MUST** define `invoices` at migration `0001`: `(invoice_id UUID PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, invoice_number TEXT UNIQUE NOT NULL, status invoice_status NOT NULL DEFAULT 'draft', billing_currency billing_currency_enum NOT NULL, issued_at TIMESTAMPTZ, due_at TIMESTAMPTZ, sent_at TIMESTAMPTZ, paid_at TIMESTAMPTZ, voided_at TIMESTAMPTZ, written_off_at TIMESTAMPTZ, billing_period_start TIMESTAMPTZ, billing_period_end TIMESTAMPTZ, client_subject_id UUID, rate_card_snapshot JSONB NOT NULL, total_pre_tax_minor BIGINT NOT NULL DEFAULT 0, total_tax_minor BIGINT NOT NULL DEFAULT 0, total_minor BIGINT NOT NULL DEFAULT 0, paid_minor BIGINT NOT NULL DEFAULT 0, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_by_subject_id UUID NOT NULL, trace_id CHAR(32))`. Append-only on mutation of lines (status, amount fields updated through state-machine handlers only).
 
-4. **MUST** define `invoice_lines` at migration `0002`: `(line_id UUID PRIMARY KEY, invoice_id UUID NOT NULL REFERENCES invoices(invoice_id), line_kind invoice_line_kind NOT NULL, description TEXT NOT NULL, quantity NUMERIC(18,4) NOT NULL, unit_price_minor BIGINT NOT NULL, amount_minor BIGINT NOT NULL, vat_rate_pct NUMERIC(5,2) NOT NULL DEFAULT 0, source_kind TEXT NOT NULL CHECK (source_kind IN ('time_entry','expense','manual','correction','discount_policy')), source_ref UUID, sort_order INT NOT NULL, correction_of_line_id UUID REFERENCES invoice_lines(line_id), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), trace_id CHAR(32))`. Append-only via REVOKE UPDATE/DELETE per AUTHORING.md rule 12 + DEC-1366; correction = new row referencing original.
+4. **MUST** define `invoice_lines` at migration `0002`: `(line_id UUID PRIMARY KEY, invoice_id UUID NOT NULL REFERENCES invoices(invoice_id), line_kind invoice_line_kind NOT NULL, description TEXT NOT NULL, quantity NUMERIC(18,4) NOT NULL, unit_price_minor BIGINT NOT NULL, amount_minor BIGINT NOT NULL, vat_rate_pct NUMERIC(5,2) NOT NULL DEFAULT 0, source_kind TEXT NOT NULL CHECK (source_kind IN ('time_entry','expense','manual','correction','discount_policy')), source_ref UUID, sort_order INT NOT NULL, correction_of_line_id UUID REFERENCES invoice_lines(line_id), created_at TIMESTAMPTZ NOT NULL DEFAULT now(), trace_id CHAR(32))`. Append-only via REVOKE UPDATE/DELETE per feature-request-audit skill rule 12 + DEC-1366; correction = new row referencing original.
 
 5. **MUST** define `invoice_status_history` at migration `0003`: `(id BIGSERIAL PRIMARY KEY, invoice_id UUID NOT NULL REFERENCES invoices(invoice_id), from_status invoice_status, to_status invoice_status NOT NULL, transitioned_at TIMESTAMPTZ NOT NULL DEFAULT now(), transitioned_by_subject_id UUID NOT NULL, reason TEXT, trace_id CHAR(32))`. Append-only.
 
@@ -179,7 +179,7 @@ The INV service **MUST** ship invoice substrate at `services/inv/src/` with 5 mi
 
 19. **MUST** scope invoice to ONE engagement per DEC-1368. Cross-engagement consolidation = anti-pattern; deferred.
 
-20. **MUST** store amounts as BIGINT minor per AUTHORING.md rule 11. NEVER FLOAT.
+20. **MUST** store amounts as BIGINT minor per feature-request-audit skill rule 11. NEVER FLOAT.
 
 21. **MUST** mark TIME entries `invoiced_at` to prevent double-billing per DEC-1369 derivative. FR-TIME-009 rollup filter excludes entries with non-NULL `invoiced_at`.
 

@@ -7,7 +7,7 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 6
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
 ---
 
 ## §1 — Verdict summary
@@ -42,7 +42,7 @@ All 6 mechanical revisions applied. **Score = 10/10.**
 
 ## §10 — Implementation audit (code-vs-spec)
 
-> Added 2026-05-19 (session 22) by `chief-technology-officer/ship-feature-requests` workflow. Driven end-to-end in one continuous session per `AUTHORING_DISCIPLINE.md §9.1` (no-partial-ship rule). FR-AUTH-004 had a substantial pre-existing implementation (`jwt.rs` + `keygen.rs` + `0006_signing_keys.sql` + `tests/jwt_roundtrip_test.rs` + `POST /v1/auth/token` + `GET /.well-known/jwks.json` already wired); the audit-fix loop reconciles the deployed code against the 19-AC spec.
+> Added 2026-05-19 (session 22) by `chief-technology-officer/ship-feature-requests` workflow. Driven end-to-end in one continuous session per `feature-request-audit skill §9.1` (no-partial-ship rule). FR-AUTH-004 had a substantial pre-existing implementation (`jwt.rs` + `keygen.rs` + `0006_signing_keys.sql` + `tests/jwt_roundtrip_test.rs` + `POST /v1/auth/token` + `GET /.well-known/jwks.json` already wired); the audit-fix loop reconciles the deployed code against the 19-AC spec.
 
 ### §10.1 — Verdict
 

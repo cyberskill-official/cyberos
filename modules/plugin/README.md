@@ -139,7 +139,7 @@ curl -fsS https://memory.cyberskill.world/v1/audit/recent?kind=plugin.invoked | 
 
 This module follows the same FR authoring discipline as the rest of CyberOS:
 
-- Every FR loops audit rounds to **10/10** before the next FR starts. See [`modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md`](../skill/feature-request-audit/AUTHORING_DISCIPLINE.md).
+- Every FR loops audit rounds to **10/10** before the next FR starts. See `feature-request-audit` skill (see feature-request skills).
 - Every FR has a sibling `*.audit.md` with ≥ 6 ISS findings, all resolved, score_post_revision = 10/10.
 - Every FR is self-contained — a reader does not need to open a dependency FR to understand THIS FR's contract.
 - Cross-module dependencies in `depends_on`/`blocks` MUST be reciprocal.

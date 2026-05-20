@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 14
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per AUTHORING.md §0 master rule; ISS-007..014 added)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per feature-request-audit skill §0 master rule; ISS-007..014 added)
 ---
 
 ## §1 — Verdict summary
@@ -35,7 +35,7 @@ Per-login fetch = latency + load. Resolved: §1 #4 1h cache + proactive refresh;
 ### ISS-006 — Revocation
 Without jti check, revoked tokens persist. Resolved: §1 #8 + AC #8.
 
-### ISS-007 — Error envelope was open-set (strict-redo pass, AUTHORING.md §3.10 rule 30 + rule 27)
+### ISS-007 — Error envelope was open-set (strict-redo pass, feature-request-audit skill §3.10 rule 30 + rule 27)
 Original spec referenced JSON error bodies but didn't enumerate the legal set; downstream clients couldn't write a closed-enum parser. Resolved: §3 "Error-envelope contract" enumerates the 9 legal values; §1 #12 makes it MUST; AC #18 + matching test (`TestErrorEnvelopeIsClosedEnum`) lints the source to enforce the enum.
 
 ### ISS-008 — JIT was race-prone under concurrent first-login (strict-redo pass, FR-AI-009-style "MUST emit once" pattern)
@@ -44,7 +44,7 @@ Two goroutines hitting `jitProvision` for the same subject_id could both reach C
 ### ISS-009 — JWKS fail-secure ambiguous on cold cache (strict-redo pass)
 Original §1 #4 talked about cache + refresh but didn't specify the cold-cache behaviour: would a request fail-open (200 with skipped validation) or fail-secure (503)? Resolved: §1 #15 mandates fail-secure 503 `jwks_unavailable`; AC #21 + `TestJwksUnavailableFailSecure` verify.
 
-### ISS-010 — Username sanitisation undefined for non-Latin emails (strict-redo pass, AUTHORING.md §3.10 rule 30)
+### ISS-010 — Username sanitisation undefined for non-Latin emails (strict-redo pass, feature-request-audit skill §3.10 rule 30)
 Mattermost requires `[a-z0-9._-]{3,22}` usernames; original spec said "username = JWT email localpart" without specifying the transform. For an email like `Trịnh.Anh@x.com`, this would have crashed CreateUser at runtime. Resolved: `jit_provision.go` introduces `sanitiseUsername`; §1 #14 specifies the deterministic mapping; AC #20 + `TestSanitiseUsernameProperty` (rapid-based property test over 1000 random inputs) verify the output range.
 
 ### ISS-011 — OnActivate could double-spawn JWKS goroutines (strict-redo pass)
@@ -53,7 +53,7 @@ Original spec assumed single OnActivate call; Mattermost SDK has historical regr
 ### ISS-012 — Revocation outage failed-open silently (strict-redo pass)
 Original §1 #8 said "MUST validate JWT jti against deny-list" but didn't specify behaviour when the deny-list service is unreachable. Default Go HTTP error handling would have returned nil (treating "couldn't check" as "not revoked") — a security hole. Resolved: §1 #17 mandates fail-secure (treat as revoked); AC #27 + `TestRevocationServiceUnreachableFailsSecure` verify; §11 rationale covers why uptime-of-revocation > uptime-of-login.
 
-### ISS-013 — No traceparent propagation contract (strict-redo pass, AUTHORING.md §3.7 rule 22)
+### ISS-013 — No traceparent propagation contract (strict-redo pass, feature-request-audit skill §3.7 rule 22)
 Original spec emitted `trace_id` in audit rows but didn't specify whether it honoured inbound `traceparent`. Two pods would generate independent trace ids for the same user-driven flow, breaking distributed tracing. Resolved: §1 #16 mandates honour; AC #26 + `TestInboundTraceparentPropagated` verify; §11 names the W3C v2 spec.
 
 ### ISS-014 — Reproducible-build not specified (strict-redo pass)
@@ -63,7 +63,7 @@ Original Makefile entry said "build plugin .tar.gz" but didn't specify reproduci
 
 All 14 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: this spec is now perfect — highly detailed, perfectly matched to the FR's core requirements (CHAT auth delegation + tenant propagation), complete (all 11 sections present and substantive), no truncation. The line count exceeds the §3.14 calibration band; this is intentional per the master rule — depth is bounded by genuine spec needs, not by line targets.
+Per feature-request-audit skill §0 master rule: this spec is now perfect — highly detailed, perfectly matched to the FR's core requirements (CHAT auth delegation + tenant propagation), complete (all 11 sections present and substantive), no truncation. The line count exceeds the §3.14 calibration band; this is intentional per the master rule — depth is bounded by genuine spec needs, not by line targets.
 
 ---
 

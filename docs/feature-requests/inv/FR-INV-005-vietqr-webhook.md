@@ -27,7 +27,7 @@ source_decisions:
   - DEC-383 (reference memo parsing — extracts invoice id from `HD<digits>` or `INV<digits>` prefix in `transfer_memo`; unparseable → receipt persisted with `invoice_id=NULL` for manual matching by FR-INV-006)
   - DEC-384 (closed bank_code enum at 15 Vietnamese banks via Napas247 routing: VCB, BIDV, VIB, TCB, MBB, ACB, CTG, AGB, STB, HDB, VPB, SHB, TPB, EIB, OCB; adding a 16th is an ADR)
   - DEC-385 (currency hard-coded to VND for this handler; multi-currency webhooks route to FR-INV-003 Stripe / FR-INV-004 Wise)
-  - DEC-386 (amount stored as BIGINT đồng — VND has no minor unit so 1 đồng = 1 minor; FLOAT forbidden per AUTHORING.md rule 11)
+  - DEC-386 (amount stored as BIGINT đồng — VND has no minor unit so 1 đồng = 1 minor; FLOAT forbidden per feature-request-audit skill rule 11)
   - DEC-387 (webhook URL is per-tenant — `https://api.cyberos.world/v1/inv/webhooks/vietqr/<tenant_slug>` so Napas247 routes correctly without cross-tenant body inspection)
   - DEC-388 (memory audit kinds: inv.payment_received, inv.webhook_rejected, inv.payment_matched_to_invoice, inv.payment_unmatched, inv.duplicate_webhook_received)
   - DEC-389 (replay window: HMAC payload includes `ts` field; reject webhooks with `ts` more than 5 minutes off server time — prevents replay attacks)
@@ -75,7 +75,7 @@ disallowed_tools:
   - allow UPDATE on payment_receipts (per DEC-382 — append-only)
   - allow multi-currency in this handler (per DEC-385 — VND only)
   - perform expensive matching synchronously in the webhook handler (per DEC-390 — must ack within 5s)
-  - store amounts as FLOAT (per AUTHORING.md rule 11)
+  - store amounts as FLOAT (per feature-request-audit skill rule 11)
   - accept unsigned webhooks via env override (per DEC-380 — no escape hatch)
 
 effort_hours: 6
@@ -109,7 +109,7 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
 
 5. **MUST** enforce RLS with both `USING` and `WITH CHECK` on `payment_receipts` and `webhook_secrets`. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
-6. **MUST** be **append-only** on `payment_receipts` (per DEC-382 + AUTHORING.md rule 12). `REVOKE UPDATE, DELETE ON payment_receipts FROM cyberos_app`. The only mutation is `invoice_id` update which is handled by a privileged `inv_cash_applier` role (granted to FR-INV-006's job).
+6. **MUST** be **append-only** on `payment_receipts` (per DEC-382 + feature-request-audit skill rule 12). `REVOKE UPDATE, DELETE ON payment_receipts FROM cyberos_app`. The only mutation is `invoice_id` update which is handled by a privileged `inv_cash_applier` role (granted to FR-INV-006's job).
 
 7. **MUST** expose `POST /v1/inv/webhooks/vietqr/{tenant_slug}` (per DEC-387). The per-tenant URL routes correctly without cross-tenant body inspection. Unknown slug → 404 `tenant_unknown`. The handler:
     - Looks up tenant_id from slug.
@@ -200,7 +200,7 @@ The INV service **MUST** ship the VietQR / Napas247 webhook handler at `POST /v1
 
 **Why VND-only for this handler (DEC-385, §1 #21)?** VietQR + Napas247 ARE the VND domestic rail. Stripe + Wise handle multi-currency. Forcing a single handler to handle all currencies would mean (a) different webhook signature schemes, (b) different reference formats, (c) different bank metadata. Separation by source is the correct factoring.
 
-**Why amount as BIGINT đồng (DEC-386, §1 #1)?** AUTHORING.md rule 11. VND has no minor unit (1 đồng = 1 minor); a 1M-đồng payment is stored as 1000000. FLOAT would introduce rounding in the rare large-payment case (~10B đồng).
+**Why amount as BIGINT đồng (DEC-386, §1 #1)?** feature-request-audit skill rule 11. VND has no minor unit (1 đồng = 1 minor); a 1M-đồng payment is stored as 1000000. FLOAT would introduce rounding in the rare large-payment case (~10B đồng).
 
 **Why 5-minute replay window (DEC-389, §1 #9)?** Replay attacks (attacker captures legitimate webhook + replays later) are mitigated by requiring fresh timestamps. 5 minutes covers clock skew + network delays + reasonable retry windows. Outside that window, the webhook is rejected with `webhook_expired`.
 

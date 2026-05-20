@@ -42,7 +42,7 @@ modified_files:
   - modules/skill/_template/author/SKILL.md                            # description block carries trigger phrases per FM-112
   - modules/skill/_template/audit/SKILL.md                             # description block carries trigger phrases per FM-112
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-112 (description-format)
-  - modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md        # §3.13 mentions description-format rule
+  - feature-request-audit skill        # §3.13 mentions description-format rule
   - modules/skill/README.md                                            # Part 2.1 description field row updates; Part 18 anti-pattern entry added
   - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.1 status badge updates when FR ships
 allowed_tools:
@@ -65,7 +65,7 @@ sub_tasks:
   - "1.0h: _template/author/SKILL.md update — description block carries trigger phrases inline; ## When to invoke section becomes optional explanatory companion"
   - "1.0h: _template/audit/SKILL.md update — analogous changes for auditor template"
   - "1.5h: feature-request-audit/RUBRIC.md — add FM-112 rule (description carries ≥2 distinct trigger-phrase forms; auto-fixable as `needs_human` only — never auto-edit user-facing description)"
-  - "0.5h: AUTHORING_DISCIPLINE.md §3.13 update — add description-format rule and link to FM-112"
+  - "0.5h: feature-request-audit skill §3.13 update — add description-format rule and link to FM-112"
   - "1.0h: README.md Part 2.1 frontmatter-table description row update; Part 18 add anti-pattern \"Don't put triggers only in body\""
   - "1.0h: ANTHROPIC_GUIDE_DIGEST.md §6.1 status update — mark FR-SKILL-111 shipped when CI passes"
   - "0.5h: integration test against 3 backfilled exemplar skills (feature-request-author, feature-request-audit, prd-author — confirm new auditor rule fires correctly on un-enriched descriptions)"
@@ -250,7 +250,7 @@ category:        description_format
 location:        frontmatter "description:" field
 evidence:        "<the description text, truncated to 200 chars>"
 description:     "Description fails FM-112: <sub-code>. Detail: <validator output>."
-suggestion:      "Rewrite description to include WHAT + WHEN (≥2 quoted triggers like \"<phrase>\") + KEY VALUE. See AUTHORING_DISCIPLINE.md §3.13 for examples."
+suggestion:      "Rewrite description to include WHAT + WHEN (≥2 quoted triggers like \"<phrase>\") + KEY VALUE. See feature-request-audit skill §3.13 for examples."
 auto_fix_applied: false
 resolution:      null
 ```
@@ -313,7 +313,7 @@ cyberos skill validate-all --status-min accepted
 16. **Backfill exemplar — feature-request-audit** — analogous; description carries ≥2 trigger phrases including ones distinct from the author's so the classifier disambiguates.
 17. **Backfill exemplar — prd-author** — analogous, completing the 3 exemplars cited in the §6.1 of `modules/skill/ANTHROPIC_GUIDE_DIGEST.md`.
 18. **README Part 2.1 row updated** — the description-field row in Part 2.1 of `modules/skill/README.md` shows new min/max + cross-references FR-SKILL-111.
-19. **AUTHORING_DISCIPLINE.md §3.13 entry added** — new sub-rule "Description format" with example good + bad descriptions.
+19. **feature-request-audit skill §3.13 entry added** — new sub-rule "Description format" with example good + bad descriptions.
 20. **Cross-FR reciprocity preserved** — FR-SKILL-103's `blocks:` list updated to include FR-SKILL-111 (since 103 is the parent frontmatter spec).
 21. **OTel span emitted** — every validate call emits `skill.description.validate` with attributes `skill_id`, `outcome` (ok | too_short | too_long | forbidden_brackets | missing_what | insufficient_triggers), `length_chars`, `trigger_count`, `duration_ms`.
 
@@ -490,7 +490,7 @@ category:        description_format
 location:        frontmatter "description:" field
 evidence:        "Author a closure markdown from project state. Halts at HITL gates. Outputs versioned closure@1 files."
 description:     "Description fails FM-112: insufficient_triggers (found: 0, needed: 2). The description has no quoted trigger phrases — the classifier sees only WHAT, not WHEN."
-suggestion:      "Add ≥2 quoted trigger phrases. Example: 'Use when user asks to \"close the project\" or \"draft the closure report\"'. See AUTHORING_DISCIPLINE.md §3.13."
+suggestion:      "Add ≥2 quoted trigger phrases. Example: 'Use when user asks to \"close the project\" or \"draft the closure report\"'. See feature-request-audit skill §3.13."
 auto_fix_applied: false
 resolution:      null
 opened_at:       "2026-05-19T14:00:00Z"
@@ -549,7 +549,7 @@ Deferred to follow-up FRs (out of scope here):
 | Production skill backfilled wrong — trigger phrase doesn't match classifier behaviour | OBS reports `acceptance_rate` drop on that skill; manual fine-tune triggered (per `human_fine_tune.signals_to_initiate`) | Auto-pause at <40% per DEC-055 | Fine-tune cycle: update description triggers; re-test against TRIGGER_TESTS.md (FR-SKILL-112 when shipped) |
 | Two skills' descriptions overlap in trigger phrases | Supervisor classifier returns ambiguous routing; surfaces Question primitive ("which workflow do you mean?") | User clarifies | Fine-tune both skills: differentiate triggers; cross-reference in `## When to invoke this skill` body section |
 | Description triggers stale (skill behaviour changed but description didn't) | Auditor rule FM-112 still passes (triggers exist); but OBS shows `acceptance_rate` drop | Operator-initiated fine-tune | Update description AND body section together (§1 #15 keeps them in sync) |
-| Author flattens YAML multi-line wrong (e.g. `|-` instead of `>-`) | YAML parser preserves newlines; flattened length still under cap; tests still pass — but the host's prompt receives literal `\n` characters | Cosmetic issue only; no functional break | Documentation note in AUTHORING_DISCIPLINE.md §3.13 prefers `>-` (folded) |
+| Author flattens YAML multi-line wrong (e.g. `|-` instead of `>-`) | YAML parser preserves newlines; flattened length still under cap; tests still pass — but the host's prompt receives literal `\n` characters | Cosmetic issue only; no functional break | Documentation note in feature-request-audit skill §3.13 prefers `>-` (folded) |
 | JSONSchema mirror drifts from Rust validator | CI gate runs both validators against fixtures; mismatch on any one fixture → CI fails | Build broken | Sync schema.rs ↔ skill.schema.json via `cargo xtask schema` (FR-SKILL-103 §11) |
 | OTel span attribute schema drifts | Dashboard panels expecting `outcome` attribute see `validation_outcome` after a rename → no data | Visible in OBS dashboard panels | Rename only via MINOR-bump + dashboard migration; never silently |
 | FM-112 rule mis-classifies a verb stem (e.g. `track` matches but author meant another sense) | Rule auto-fix never fires (always `needs_human`); operator reviews and either accepts the suggestion or extends the verb-stem regex via a future PATCH | No silent damage | Extend `VERB_STEMS` regex via PR; bump RUBRIC PATCH version |

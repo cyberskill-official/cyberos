@@ -415,7 +415,7 @@ All resolved. Deferred:
 - Snapshot field lives on FR-TIME-005's time entry row; this FR's responsibility ends at returning `BillableResolution`.
 - The `proj.billable_resolved` audit row's `time_entry_id` is the downstream entry being created; if resolver is called for PREVIEW (without writing), `time_entry_id` is null.
 - Metrics cardinality bounded: 2 (value) × 4 (source) = 8 label combinations — safe.
-- Input validation at the handler boundary is per AUTHORING.md §3.4 rule 13 (RLS WITH CHECK + handler validation). Defence in depth.
+- Input validation at the handler boundary is per feature-request-audit skill §3.4 rule 13 (RLS WITH CHECK + handler validation). Defence in depth.
 - Bulk-resolve cap of 1000 chosen against: (a) Postgres prepared-statement parameter limit ≈ 65k; bulk of 1000 × 4 params = 4000 well under; (b) operator workflow envelopes (CSV imports typically < 500 rows).
 - The "force re-resolution" admin endpoint for §1 #14 is intentionally hidden in admin namespace because: re-resolution invalidates prior bill amounts; operator must explicitly choose.
 - Engagement-default task-class billable is an array of (task_class, billable) pairs in tenant settings; engagement creation iterates and inserts.

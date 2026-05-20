@@ -26,7 +26,7 @@ source_decisions:
   - DEC-342 (pipeline stages are tenant-defined per pipeline; ordering is integer position; stages tagged with `is_won|is_lost|is_open` for win/loss/active classification)
   - DEC-343 (closed `account_type` placeholder enum at slice 1: `unknown` — full VN-specific enum ships in FR-CRM-003; this FR declares the column with single value to keep migration forward-compatible)
   - DEC-344 (closed `deal_status` enum at 4 values: open · won · lost · cancelled — independent from per-pipeline stage; `won` and `lost` are terminal states gated by a stage with matching `is_won`/`is_lost` flag)
-  - DEC-345 (money fields stored as BIGINT minor units per AUTHORING.md rule 11; `currency CHAR(3)` ISO-4217 alongside; deal.amount_minor + deal.amount_currency)
+  - DEC-345 (money fields stored as BIGINT minor units per feature-request-audit skill rule 11; `currency CHAR(3)` ISO-4217 alongside; deal.amount_minor + deal.amount_currency)
   - DEC-346 (REVOKE UPDATE, DELETE on deal_status_history from cyberos_app — append-only enforced by SQL grant)
   - DEC-347 (deal status transitions FSM: open → won | open → lost | open → cancelled | won → cancelled (rare; refund) — no transitions out of lost; cancelled is terminal)
   - DEC-348 (Contact is a JOIN entity — many-to-many between contacts table and accounts via contact_account_membership; a contact may belong to multiple accounts; the contact_account_membership row carries the role (decision-maker, technical, billing, etc.))
@@ -34,7 +34,7 @@ source_decisions:
   - DEC-350 (Deal owner is `owner_subject_id` referring to auth.subjects; ownership transfer is handler-supported + emits memory row; orphaned deals (owner suspended) revert to tenant default-owner per per-tenant config out of scope here)
   - DEC-351 (probability is an INT 0-100 stored separately from stage's default — operators may override per deal; stage default is the suggestion)
   - DEC-352 (expected_close_date is required on stage move into `is_open` stages; defaulted to +30 days from today; required field for forecast accuracy)
-  - DEC-353 (deal-stage transitions emit memory row before commit per AUTHORING.md rule 25 audit-before-action)
+  - DEC-353 (deal-stage transitions emit memory row before commit per feature-request-audit skill rule 25 audit-before-action)
   - PDPL Art. 13 (data minimisation — contact emails + phone numbers are PII; scrubbed in memory audit chain via FR-MEMORY-111)
   - ISO 27001:2022 A.5.16 (data classification — CRM data classified as "internal commercial")
 
@@ -87,7 +87,7 @@ disallowed_tools:
   - ship MST validation logic (FR-CRM-003 ships)
   - ship activity-feed handlers (FR-CRM-002 ships)
   - ship Convert-to-Engagement workflow (FR-CRM-004 ships)
-  - store money as FLOAT/DOUBLE (per AUTHORING.md rule 11 — BIGINT minor units only)
+  - store money as FLOAT/DOUBLE (per feature-request-audit skill rule 11 — BIGINT minor units only)
   - allow Contact to belong to zero accounts (per DEC-348 — must have ≥1 membership)
   - add a 4th primitive entity (per DEC-340)
   - add a 5th deal_status value (per DEC-344)
@@ -126,7 +126,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 
 6. **MUST** define the `pipeline_stages` table with: `id UUID PRIMARY KEY`, `tenant_id UUID NOT NULL`, `pipeline_id UUID NOT NULL REFERENCES pipelines(id) ON DELETE RESTRICT`, `name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 50)`, `position INT NOT NULL CHECK (position BETWEEN 1 AND 50)`, `probability_default INT NOT NULL CHECK (probability_default BETWEEN 0 AND 100) DEFAULT 50` (per DEC-351), `is_open BOOLEAN NOT NULL DEFAULT true`, `is_won BOOLEAN NOT NULL DEFAULT false`, `is_lost BOOLEAN NOT NULL DEFAULT false`, `created_at TIMESTAMPTZ`. Stage tags `is_open/is_won/is_lost` are mutually exclusive (DB CHECK: exactly one true). UNIQUE `(pipeline_id, position)` and UNIQUE `(pipeline_id, name)`.
 
-7. **MUST** define the `deals` table with: `id UUID PRIMARY KEY`, `tenant_id UUID NOT NULL`, `name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 200)`, `account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE RESTRICT`, `primary_contact_id UUID REFERENCES contacts(id)` (nullable; one specific contact this deal is anchored to), `pipeline_id UUID NOT NULL REFERENCES pipelines(id)`, `current_stage_id UUID NOT NULL REFERENCES pipeline_stages(id)`, `status deal_status NOT NULL DEFAULT 'open'` (per DEC-344), `probability INT NOT NULL CHECK (probability BETWEEN 0 AND 100)`, `amount_minor BIGINT NOT NULL CHECK (amount_minor >= 0)` (per AUTHORING.md rule 11 + DEC-345), `amount_currency CHAR(3) NOT NULL CHECK (amount_currency ~ '^[A-Z]{3}$')`, `expected_close_date DATE NOT NULL`, `actual_close_date DATE`, `owner_subject_id UUID NOT NULL REFERENCES auth.subjects(id)`, `created_at TIMESTAMPTZ`, `updated_at TIMESTAMPTZ`, `created_by_subject_id UUID NOT NULL`, `won_at TIMESTAMPTZ`, `lost_reason TEXT` (nullable; required when status=lost), `cancelled_reason TEXT` (nullable; required when status=cancelled).
+7. **MUST** define the `deals` table with: `id UUID PRIMARY KEY`, `tenant_id UUID NOT NULL`, `name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 200)`, `account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE RESTRICT`, `primary_contact_id UUID REFERENCES contacts(id)` (nullable; one specific contact this deal is anchored to), `pipeline_id UUID NOT NULL REFERENCES pipelines(id)`, `current_stage_id UUID NOT NULL REFERENCES pipeline_stages(id)`, `status deal_status NOT NULL DEFAULT 'open'` (per DEC-344), `probability INT NOT NULL CHECK (probability BETWEEN 0 AND 100)`, `amount_minor BIGINT NOT NULL CHECK (amount_minor >= 0)` (per feature-request-audit skill rule 11 + DEC-345), `amount_currency CHAR(3) NOT NULL CHECK (amount_currency ~ '^[A-Z]{3}$')`, `expected_close_date DATE NOT NULL`, `actual_close_date DATE`, `owner_subject_id UUID NOT NULL REFERENCES auth.subjects(id)`, `created_at TIMESTAMPTZ`, `updated_at TIMESTAMPTZ`, `created_by_subject_id UUID NOT NULL`, `won_at TIMESTAMPTZ`, `lost_reason TEXT` (nullable; required when status=lost), `cancelled_reason TEXT` (nullable; required when status=cancelled).
 
 8. **MUST** declare the closed `deal_status` Postgres enum with exactly 4 values (per DEC-344): `'open'`, `'won'`, `'lost'`, `'cancelled'`. Adding a 5th status is an ADR.
 
@@ -143,7 +143,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 
 12. **MUST** enforce RLS with both `USING` AND `WITH CHECK` clauses on `accounts`, `contacts`, `contact_account_membership`, `pipelines`, `pipeline_stages`, `deals`, `deal_status_history`, `deal_stage_history`. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
-13. **MUST** store money as BIGINT minor units (per AUTHORING.md rule 11 + DEC-345). `amount_minor` is the smallest currency unit (e.g. cents for USD, đồng for VND — VND has no minor unit so 1 VND = 1 minor). `amount_currency` is the ISO-4217 code. The conversion to major units for display uses the `Currency::decimals()` helper.
+13. **MUST** store money as BIGINT minor units (per feature-request-audit skill rule 11 + DEC-345). `amount_minor` is the smallest currency unit (e.g. cents for USD, đồng for VND — VND has no minor unit so 1 VND = 1 minor). `amount_currency` is the ISO-4217 code. The conversion to major units for display uses the `Currency::decimals()` helper.
 
 14. **MUST** seed 4 default pipelines per tenant at tenant provisioning (per DEC-341, via FR-TEN-001's hook). The seed function `seed_default_pipelines(tenant_id, created_by)` creates:
     - Sales pipeline: stages `Lead → Qualified → Proposal → Negotiation → Won | Lost`.
@@ -179,7 +179,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
     - `crm.deal_won` on status → won.
     - `crm.deal_lost` on status → lost (carries `lost_reason`).
     - `crm.deal_cancelled` on status → cancelled.
-   All audit-before-action per AUTHORING.md rule 25 (emitted within the same transaction as the DB write).
+   All audit-before-action per feature-request-audit skill rule 25 (emitted within the same transaction as the DB write).
 
 18. **MUST** PII-scrub `email`, `phone`, `full_name` via FR-MEMORY-111 BEFORE chain commit. The PostgreSQL rows retain raw values (tenant-scoped + RLS-protected); memory audit chain holds only `subject_id_hash16` + `email_hash16` + redacted forms.
 
@@ -222,7 +222,7 @@ The CRM service **MUST** ship the Account / Contact / Deal Postgres schema with 
 
 **Why won/lost terminal vs cancelled allows won → cancelled (DEC-347, §1 #9)?** `lost` is final — "this deal will not close". `cancelled` is administrative — "even though we won, refund or clawback". The `won → cancelled` transition handles rare cases (customer backs out within return window). `lost → cancelled` makes no sense — a lost deal is already terminal.
 
-**Why money as BIGINT minor (DEC-345, §1 #13)?** AUTHORING.md rule 11 — financial precision. Storing `1500000` minor units for 1.5M VND is exact; `1.5e6` FLOAT introduces rounding. Downstream FR-INV-001 invoice math depends on exact addition; FLOAT drift produces invoices that don't sum to the deal amount.
+**Why money as BIGINT minor (DEC-345, §1 #13)?** feature-request-audit skill rule 11 — financial precision. Storing `1500000` minor units for 1.5M VND is exact; `1.5e6` FLOAT introduces rounding. Downstream FR-INV-001 invoice math depends on exact addition; FLOAT drift produces invoices that don't sum to the deal amount.
 
 **Why append-only history on status + stage (DEC-346, §1 #10, #11)?** Forecast accuracy + win/loss attribution depend on "what was the stage on 2026-05-15?" — questions only answerable from a chained history. UPDATE in place would lose the prior values. SQL grants make it audit-grade (operator typo can't rewrite); handler discipline alone is insufficient.
 
@@ -967,7 +967,7 @@ All other questions resolved.
 - **Tenant-defined stages per pipeline + `is_open/is_won/is_lost` classification** — universal forecast logic + per-tenant flexibility.
 - **deal_status independent from stage** — universal 4-value enum; stage gates the won/lost transitions.
 - **FSM at trigger AND handler** — defense in depth; trigger catches direct SQL.
-- **Money as BIGINT minor + CHAR(3) currency** — AUTHORING.md rule 11; FLOAT forbidden.
+- **Money as BIGINT minor + CHAR(3) currency** — feature-request-audit skill rule 11; FLOAT forbidden.
 - **Append-only history at SQL grant** — `REVOKE UPDATE, DELETE FROM cyberos_app` on deal_status_history + deal_stage_history.
 - **Many-to-many contact-account membership** — supports cross-account contacts (CFO of subsidiary parent).
 - **Contact must have ≥1 membership** — enforced at handler (DB allows zero for transactional bootstrap).

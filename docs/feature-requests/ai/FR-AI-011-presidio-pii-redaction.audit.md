@@ -250,29 +250,29 @@ pub static UNKNOWN_ENTITIES: Lazy<CounterVec> = Lazy::new(|| register_counter_ve
 
 Add §10 row: *"Presidio reports an entity type with no `PiiType` variant → item dropped + warn log + counter increments + CI test fails on next PR."*
 
-### ISS-005 — AUTHORING.md §3.6 rule 18 (scrub before chain commit) — order-of-operations not explicit in §1
+### ISS-005 — feature-request-audit skill §3.6 rule 18 (scrub before chain commit) — order-of-operations not explicit in §1
 - **severity:** warning
 - **rule_id:** authoring-md-§3.6 (rule 18)
 - **location:** §1 (no clause naming the memory-commit ordering), §6 (call-site in cost_ledger::precheck)
 - **status:** open
 
 #### Description
-AUTHORING.md §3.6 rule 18 says "PII MUST be scrubbed via the `cyberos-memory-pii` ruleset BEFORE chain commit. Never depend on downstream redaction." This FR's `redact::redact` is the scrubber; FR-AI-003 emits the memory audit row downstream. But §1 doesn't explicitly say "the redacted body MUST be the only form that reaches the memory emit path" — a future refactor could log the original-text-with-restoration-map to the chain, defeating the rule. The order-of-operations needs to be normative: `redact() → cost_ledger::precheck → memory emit (with redacted_text)`, and the memory row's `extra.prompt_snippet` field (if any) MUST be from the redacted text, NEVER the original.
+feature-request-audit skill §3.6 rule 18 says "PII MUST be scrubbed via the `cyberos-memory-pii` ruleset BEFORE chain commit. Never depend on downstream redaction." This FR's `redact::redact` is the scrubber; FR-AI-003 emits the memory audit row downstream. But §1 doesn't explicitly say "the redacted body MUST be the only form that reaches the memory emit path" — a future refactor could log the original-text-with-restoration-map to the chain, defeating the rule. The order-of-operations needs to be normative: `redact() → cost_ledger::precheck → memory emit (with redacted_text)`, and the memory row's `extra.prompt_snippet` field (if any) MUST be from the redacted text, NEVER the original.
 
 #### Suggested fix
-Add §1 #16: "**MUST** ensure the original (un-redacted) text NEVER reaches the memory audit-row emit path per AUTHORING.md §3.6 rule 18. The call sequence is: `redact::redact(text) → RedactionResult { redacted_text, map } → cost_ledger::precheck(.., redacted_text) → memory row.extra.prompt_snippet = first 256 chars of redacted_text`. The `RestorationMap` is held in a separate `Zeroizing<HashMap<...>>` that is NEVER serialised into any chain or log row. AC #16 verifies via a `tracing-test` capture that no chain row written during a redaction-round-trip test contains any of the original PII values."
+Add §1 #16: "**MUST** ensure the original (un-redacted) text NEVER reaches the memory audit-row emit path per feature-request-audit skill §3.6 rule 18. The call sequence is: `redact::redact(text) → RedactionResult { redacted_text, map } → cost_ledger::precheck(.., redacted_text) → memory row.extra.prompt_snippet = first 256 chars of redacted_text`. The `RestorationMap` is held in a separate `Zeroizing<HashMap<...>>` that is NEVER serialised into any chain or log row. AC #16 verifies via a `tracing-test` capture that no chain row written during a redaction-round-trip test contains any of the original PII values."
 
-### ISS-006 — AUTHORING.md §3.6 rule 19 (redact() helper in logs) — `tracing::info!(?text)` lint gate not specified
+### ISS-006 — feature-request-audit skill §3.6 rule 19 (redact() helper in logs) — `tracing::info!(?text)` lint gate not specified
 - **severity:** warning
 - **rule_id:** authoring-md-§3.6 (rule 19)
 - **location:** §1 #13 (no PII in logs), §5 (verification), §11 (notes)
 - **status:** open
 
 #### Description
-AUTHORING.md §3.6 rule 19 says "Logs MUST use the `redact()` helper for sensitive fields. Never `tracing::info!(?email)` with raw PII; always `tracing::info!(email = %redact_email(email))`." §1 #13 says "no raw PII in logs" but doesn't mandate the `redact_*` helper pattern. A reviewer can't tell whether `tracing::info!(?prompt)` is forbidden (it is) or merely discouraged. The `redact_no_log_test.rs` test catches runtime leaks but a clippy-style lint would catch the pattern at compile time. AUTHORING.md rule 19 wants both.
+feature-request-audit skill §3.6 rule 19 says "Logs MUST use the `redact()` helper for sensitive fields. Never `tracing::info!(?email)` with raw PII; always `tracing::info!(email = %redact_email(email))`." §1 #13 says "no raw PII in logs" but doesn't mandate the `redact_*` helper pattern. A reviewer can't tell whether `tracing::info!(?prompt)` is forbidden (it is) or merely discouraged. The `redact_no_log_test.rs` test catches runtime leaks but a clippy-style lint would catch the pattern at compile time. feature-request-audit skill rule 19 wants both.
 
 #### Suggested fix
-Add §1 #17: "**MUST** use the `cyberos_pii::redact_for_log(text, &policy)` helper in every log statement that takes a text field per AUTHORING.md §3.6 rule 19. Direct `tracing::info!(?text)` / `tracing::debug!(prompt = %prompt)` / etc. with raw text are spec violations. The codebase enforces this via `#[deny(clippy::disallowed_methods)]` on a custom lint registered in `clippy.toml`: `disallowed-methods = [\"tracing::info_span!\", \"tracing::debug_span!\"]` when called with un-wrapped text args. The `redact_for_log` helper applies a fast-path regex redaction (email/phone/MST) without a sidecar round-trip — it's the right balance for log latency."
+Add §1 #17: "**MUST** use the `cyberos_pii::redact_for_log(text, &policy)` helper in every log statement that takes a text field per feature-request-audit skill §3.6 rule 19. Direct `tracing::info!(?text)` / `tracing::debug!(prompt = %prompt)` / etc. with raw text are spec violations. The codebase enforces this via `#[deny(clippy::disallowed_methods)]` on a custom lint registered in `clippy.toml`: `disallowed-methods = [\"tracing::info_span!\", \"tracing::debug_span!\"]` when called with un-wrapped text args. The `redact_for_log` helper applies a fast-path regex redaction (email/phone/MST) without a sidecar round-trip — it's the right balance for log latency."
 
 ## §3 — Strengths preserved through expansion
 
@@ -291,8 +291,8 @@ All 6 mechanical revisions applied:
 - ISS-002 RESOLVED (2026-05-16): §6 `build_placeholder_map_and_counts` defensively re-sorts response items by `start` offset before placeholder indexing; `idempotency_holds_when_sidecar_returns_unsorted` test added.
 - ISS-003 RESOLVED (2026-05-16): sidecar Python defines `RequestValidationError` handler returning generic `validation_error`; `sanitize_sidecar_error_message` switched to allowlist-based with explicit `KNOWN_ERROR_CODES`; §10 row added.
 - ISS-004 RESOLVED (2026-05-16): §6 emits `tracing::warn!` + `ai_redact_unknown_entity_dropped_total{entity}` on unknown entities; CI test `every_presidio_entity_has_pii_type_variant` added; §10 row added.
-- ISS-005 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #16 added asserting memory-emit ordering (redacted_text only, never original); RestorationMap held in `Zeroizing<HashMap>`, never serialised; AC #16 added (tracing-test PII-leak capture).
-- ISS-006 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #17 added mandating `cyberos_pii::redact_for_log` helper for every log statement; clippy lint registered in `clippy.toml`; tracing::info!(?text) spec-violation.
+- ISS-005 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #16 added asserting memory-emit ordering (redacted_text only, never original); RestorationMap held in `Zeroizing<HashMap>`, never serialised; AC #16 added (tracing-test PII-leak capture).
+- ISS-006 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #17 added mandating `cyberos_pii::redact_for_log` helper for every log statement; clippy lint registered in `clippy.toml`; tracing::info!(?text) spec-violation.
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 

@@ -11,7 +11,7 @@
 
 **Status:** v1.0.0 — design lock, 2026-05-14
 **Author:** Stephen Cheng (CEO) — vision; Cowork (Claude) — drafted from chat
-**Companion files:** [`memory/docs/AGENTS.md §14`](../memory/docs/AGENTS.md) (interop) · [`memory/docs/PROPOSAL.md`](../memory/docs/PROPOSAL.md) (where P13 lands) · [`docs/FR_AUTHORING_WORKFLOW.md`](FR_AUTHORING_WORKFLOW.md) (FRs will be authored from this design)
+**Companion files:** [`memory/docs/AGENTS.md §14`](../memory/docs/AGENTS.md) (interop) · [`memory/docs/PROPOSAL.md`](../memory/docs/PROPOSAL.md) (where P13 lands) · `feature-request-audit skill` (see feature-request skills) (FRs will be authored from this design)
 **Use when:** building any component of the auto-sync system or extending memory to a new capture surface.
 
 This is the formal design for turning CyberOS memory from a project-scoped manual audit ledger into **the universal personal-and-shared memory substrate for an entire human + their org**. The vision is much larger than the project that named it. CyberOS is the first consumer of the protocol; the protocol stands alone.
@@ -643,7 +643,7 @@ These are not blocking Stage 1 but should be answered before Stage 2 ships:
 - [`memory/docs/AGENTS.md`](../memory/docs/AGENTS.md) — current memory protocol (the substrate this design extends)
 - [`memory/docs/PROPOSAL.md`](../memory/docs/PROPOSAL.md) — where Proposal P13 (stages 1-5) lands as formal protocol extension
 - [`memory/docs/memory.schema.json`](../memory/docs/memory.schema.json) — schema additions for this design
-- [`docs/FR_AUTHORING_WORKFLOW.md`](FR_AUTHORING_WORKFLOW.md) — every FR in this design is authored via `fr-author`
+- `feature-request-audit skill` (see feature-request skills) — every FR in this design is authored via `fr-author`
 - [`docs/AUDIT_AND_PLAN_2026_05_14.md`](AUDIT_AND_PLAN_2026_05_14.md) — where Stage 3+ slots into the build sequence
 - [`docs/RESEARCH_REVIEW_2026_05_14.md`](RESEARCH_REVIEW_2026_05_14.md) §2 + §7 — confirms the strategic case (this is the moat the reviewer was looking for)
 - [`strategy/CYBEROS_STRATEGY.md`](../strategy/CYBEROS_STRATEGY.md) §4 — to be updated: Personal memory as a Level-2 OSS distribution surface; Lumi's memory as a Level-3 SaaS product

@@ -27,7 +27,7 @@ source_decisions:
   - DEC-262 (federation strategy: gateway holds the public endpoint; per-module servers register via FR-MCP-002 and the gateway maintains the federated tool catalog in-memory)
   - DEC-263 (JSON-RPC 2.0 batch requests supported per spec; concurrent dispatch with per-tool isolation)
   - DEC-264 (tool annotations are part of `tools/list` response: `destructive`, `readOnly`, `idempotent`, `openWorld` per spec)
-  - DEC-265 (memory audit row `mcp.tool_call_started` + `mcp.tool_call_completed` pair per invocation — operators tracing crashes need both bookends per AUTHORING.md rule 26)
+  - DEC-265 (memory audit row `mcp.tool_call_started` + `mcp.tool_call_completed` pair per invocation — operators tracing crashes need both bookends per feature-request-audit skill rule 26)
   - DEC-266 (capabilities response declares: `tools` (with listChanged subscription), `prompts`, `resources`, `logging`; `sampling` deferred to slice 5; `roots` deferred)
   - DEC-267 (every `tools/call` invocation MUST validate caller scope per FR-AUTH-101 + tool's required scope; missing scope → JSON-RPC error code -32001 unauthorized)
   - DEC-268 (rate-limit per (tenant, tool) configurable; default 100 calls/min; soft burst 200; exceeded → JSON-RPC -32002 rate_limited)
@@ -210,9 +210,9 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 12. **MUST** rate-limit per (tenant_id, tool_name) using a sliding window (per DEC-268). Default: 100 calls/min; soft burst: 200 in any 30-sec window. Exceeded → `-32002 rate_limited` with `data: {"retry_after_ms": <int>}`. Per-tenant override via tenant policy YAML (out of scope here; FR-MCP-2xx).
 
-13. **MUST** emit `mcp.tool_call_started` memory audit row at the moment the gateway begins dispatch to the module server, AND `mcp.tool_call_completed` at completion (per DEC-265 + AUTHORING.md rule 26). Both rows carry: `{tenant_id, subject_id_hash16, tool_name, arguments_sha256, persona_version, request_id, trace_id, ts_ns}`. The completed row adds: `outcome` (success | tool_error | module_unreachable | timeout | rate_limited | unauthorized), `duration_ms`, `result_sha256` (SHA-256 of result JSON; for replay verification).
+13. **MUST** emit `mcp.tool_call_started` memory audit row at the moment the gateway begins dispatch to the module server, AND `mcp.tool_call_completed` at completion (per DEC-265 + feature-request-audit skill rule 26). Both rows carry: `{tenant_id, subject_id_hash16, tool_name, arguments_sha256, persona_version, request_id, trace_id, ts_ns}`. The completed row adds: `outcome` (success | tool_error | module_unreachable | timeout | rate_limited | unauthorized), `duration_ms`, `result_sha256` (SHA-256 of result JSON; for replay verification).
 
-14. **MUST** propagate W3C `traceparent` header from inbound request to the outbound dispatch to the module server. If absent on inbound, generate fresh per AUTHORING.md rule 22.
+14. **MUST** propagate W3C `traceparent` header from inbound request to the outbound dispatch to the module server. If absent on inbound, generate fresh per feature-request-audit skill rule 22.
 
 15. **MUST** support cursor-based pagination on `tools/list` (per §1 #6). The `cursor` parameter is opaque to the client (base64-encoded internal pagination state); server returns `nextCursor: null` on last page.
 
@@ -260,7 +260,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 **Why module-server timeout 30s (§1 #17)?** Tool calls have varied latency: simple lookups ~50ms, LLM-backed tools 5-15s, long-running tasks > 30s (those use the Tasks primitive per FR-MCP-007). 30s captures the medium-tail without making short failures wait forever; long-running flows use Tasks to decouple.
 
-**Why audit pair started+completed (§1 #13, DEC-265)?** Per AUTHORING.md rule 26 — operators tracing crashes need both bookends. Started without completed = crash; the operator gets `tool_name`, `tenant_id`, `arguments_sha256` to investigate. Completed-only would hide pre-execution crashes (panic in argument parsing, etc.).
+**Why audit pair started+completed (§1 #13, DEC-265)?** Per feature-request-audit skill rule 26 — operators tracing crashes need both bookends. Started without completed = crash; the operator gets `tool_name`, `tenant_id`, `arguments_sha256` to investigate. Completed-only would hide pre-execution crashes (panic in argument parsing, etc.).
 
 **Why `arguments_sha256` not full arguments in memory row (§1 #13)?** Tool arguments may carry PII (search query, customer name). Storing them raw in the audit chain would create everywhere-PII. The hash is sufficient for "did this exact call happen?" replay; forensic operations join via tenant_id + tool_name + ts.
 
@@ -294,7 +294,7 @@ The MCP Gateway service **MUST** ship compliance with MCP specification 2025-11-
 
 **Why 100 calls/min default (§1 #12)?** Standard interactive use is < 60 calls/min (one call per second is fast). 100 gives margin; 200 burst handles short rushes. Tenants needing more provision via per-tenant override.
 
-**Why `mcp.tool_call_started/completed` not `mcp.tool_invoked`?** Per AUTHORING.md rule 26: pair-write history events. A single `tool_invoked` row would hide crashes — started without completed signals crash; both rows present = clean execution.
+**Why `mcp.tool_call_started/completed` not `mcp.tool_invoked`?** Per feature-request-audit skill rule 26: pair-write history events. A single `tool_invoked` row would hide crashes — started without completed signals crash; both rows present = clean execution.
 
 **Why `result_sha256` on completed row (§1 #13)?** Replay verification: given a stored memory row + the original arguments, re-running the tool should produce a result whose SHA-256 matches. Mismatch = the underlying tool changed; useful for EU AI Act Art. 12 replay claims.
 
@@ -939,7 +939,7 @@ All other questions resolved.
 | Mcp-Session-Id expired | session map lookup | HTTP 404 | Client re-initialises |
 | Federation registry empty (no modules registered) | health check | tools/list returns empty | FR-MCP-002 registration recovery |
 | Module heartbeat missed | FR-MCP-002 lifecycle | tools removed from registry; tools/list updates | Module recovers and re-registers |
-| traceparent malformed | parse | regenerate at trust boundary per AUTHORING.md rule 22 | None — designed |
+| traceparent malformed | parse | regenerate at trust boundary per feature-request-audit skill rule 22 | None — designed |
 | Mcp-Session-Id format invalid | UUID parse | 400 invalid header | Caller fixes |
 | Tool descriptor missing annotations | tool_annotations_test | CI fails | Fix tool registration |
 | Streamable HTTP unsupported by client | content-type negotiation | 415 unsupported_media_type | Client upgrades |
@@ -962,7 +962,7 @@ All other questions resolved.
 - **Batch dispatch concurrent + per-tool isolated** — one tool's failure doesn't fail the batch.
 - **`Mcp-Session-Id` UUID per session** — gateway-allocated; client preserves across requests; gateway expires after configurable TTL.
 - **JWT verified at gateway** — defense in depth even though module servers may have their own auth.
-- **Audit rows are PAIR** — `started` + `completed` per AUTHORING.md rule 26; operators tracing crashes need both.
+- **Audit rows are PAIR** — `started` + `completed` per feature-request-audit skill rule 26; operators tracing crashes need both.
 - **`arguments_sha256` not raw args in memory** — PII protection; tool-side handlers can write the args if appropriate.
 - **`result_sha256` enables EU AI Act Art. 12 replay** — re-running with stored args should produce matching hash.
 - **`tools/list` cursor pagination** — opaque base64-encoded offset; gateway can change scheme without breaking clients.

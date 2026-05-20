@@ -35,11 +35,11 @@ def matches_leftover(name: str, patterns: list[str]) -> bool:
 
 
 def detect_scope(project_root: str) -> str:
-    # Cyberos signal: BACKLOG.md plus the feature-request-audit-co-located AUTHORING_DISCIPLINE.md
-    # (the latter moved 2026-05-18 from docs/feature-requests/AUTHORING.md).
+    # Cyberos signal: BACKLOG.md plus the feature-request-audit-co-located feature-request-audit skill
+    # (the latter moved 2026-05-18 from feature-request-audit skill).
     has_backlog = os.path.exists(os.path.join(project_root, "docs/feature-requests/BACKLOG.md"))
-    has_new_discipline = os.path.exists(os.path.join(project_root, "modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md"))
-    has_legacy_authoring = os.path.exists(os.path.join(project_root, "docs/feature-requests/AUTHORING.md"))
+    has_new_discipline = os.path.exists(os.path.join(project_root, "feature-request-audit skill"))
+    has_legacy_authoring = os.path.exists(os.path.join(project_root, "feature-request-audit skill"))
     if has_backlog and (has_new_discipline or has_legacy_authoring):
         return "cyberos"
     return "generic"
@@ -160,7 +160,7 @@ def main():
                     "reason": "matches_leftover_pattern",
                 })
                 continue
-            if line_count < args.threshold and f not in ("README.md", "CHANGELOG.md", "AUTHORING.md", "AUTHORING_DISCIPLINE.md", "LICENSE.md"):
+            if line_count < args.threshold and f not in ("README.md", "CHANGELOG.md", "feature-request-audit skill", "feature-request-audit skill", "LICENSE.md"):
                 fragments.append({
                     "path": rel,
                     "lines": line_count,

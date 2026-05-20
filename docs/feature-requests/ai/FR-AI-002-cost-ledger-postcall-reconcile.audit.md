@@ -14,7 +14,7 @@ issues_critical: 0
 template: engineering-spec@1
 revised_at: 2026-05-15
 authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 ISSes in canonical format)
-final_revision: 2026-05-16 (AUTHORING.md compliance appendix)
+final_revision: 2026-05-16 (feature-request-audit skill compliance appendix)
 ---
 
 ## §1 — Verdict summary
@@ -35,9 +35,9 @@ FR-AI-002 is ship-grade. Round-2 revisions promoted Q2 + Q5 to normative §1 cla
 
 ---
 
-## §4 — AUTHORING.md compliance appendix (added 2026-05-16)
+## §4 — feature-request-audit skill compliance appendix (added 2026-05-16)
 
-AUTHORING.md §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. The §2 round-2 findings (ISS-005..009) covered 5; this appendix re-states them in canonical form plus adds compliance verifications.
+feature-request-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. The §2 round-2 findings (ISS-005..009) covered 5; this appendix re-states them in canonical form plus adds compliance verifications.
 
 ### ISS-001 — §9 Q2 (cancelled partial floor) ambiguity
 - **severity:** error  
@@ -55,18 +55,18 @@ AUTHORING.md §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. 
 - **severity:** warning  
 - **status:** RESOLVED — §10 added with 10 distinct failures.
 
-### ISS-005 — AUTHORING.md §3.4 rule 11 (money as BIGINT minor) boundary confirmation
+### ISS-005 — feature-request-audit skill §3.4 rule 11 (money as BIGINT minor) boundary confirmation
 - **severity:** info (compliance check)
 - **rule_id:** authoring-md-§3.4 (rule 11)
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §11 note confirmed: `actual_cost_minor: i64` and `estimated_cost_minor: i64` are BIGINT in the `cost_ledger` table; `Decimal × tokens` conversion happens via `Currency::USD.decimals()` helper at the boundary; no FLOAT/DOUBLE anywhere in the storage path. Cross-link to FR-AI-007 §11 (rate vs storage boundary clarification) added.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §11 note confirmed: `actual_cost_minor: i64` and `estimated_cost_minor: i64` are BIGINT in the `cost_ledger` table; `Decimal × tokens` conversion happens via `Currency::USD.decimals()` helper at the boundary; no FLOAT/DOUBLE anywhere in the storage path. Cross-link to FR-AI-007 §11 (rate vs storage boundary clarification) added.
 
-### ISS-006 — AUTHORING.md §3.8 rule 25 (audit-before-action) for reconcile flow
+### ISS-006 — feature-request-audit skill §3.8 rule 25 (audit-before-action) for reconcile flow
 - **severity:** warning
 - **rule_id:** authoring-md-§3.8 (rule 25)
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #15 added: reconcile MUST emit `ai.reconcile_started` BEFORE applying the `UPDATE cost_ledger SET state='finalised', actual_cost_minor=..., reconciled_at=NOW()`; the Postgres transaction wraps both the memory emit AND the UPDATE; rollback on either failure (atomicity). The `reconcile_completed` row is emitted post-commit. AC #15 asserts the row order via a captured-events test.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §1 #15 added: reconcile MUST emit `ai.reconcile_started` BEFORE applying the `UPDATE cost_ledger SET state='finalised', actual_cost_minor=..., reconciled_at=NOW()`; the Postgres transaction wraps both the memory emit AND the UPDATE; rollback on either failure (atomicity). The `reconcile_completed` row is emitted post-commit. AC #15 asserts the row order via a captured-events test.
 
 **Post-appendix score = 10/10** with 6 canonical ISSes plus 4 original §2 findings (10 total resolved, plus 5 historical pre-revision findings = 15).
 
 ---
 
-*End of FR-AI-002 audit. Status: PASS at 10/10. AUTHORING.md compliant 2026-05-16.*
+*End of FR-AI-002 audit. Status: PASS at 10/10. feature-request-audit skill compliant 2026-05-16.*

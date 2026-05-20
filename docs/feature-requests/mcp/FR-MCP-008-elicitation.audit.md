@@ -27,7 +27,7 @@ The spec lands the MCP Elicitation primitive per MCP 2025-11-25 spec; closes FR-
 
 ### ISS-003 — Cross-caller security audit kind outside 5-core list
 
-§17 emits 5 core kinds. The cross-caller security event (`mcp.cross_caller_access_denied`) is outside but mentioned in §11.5 + §10 row + §6.2 code. AUTHORING.md rule 8 closed-set extension requires explicit listing. Resolved: §11.16 explicitly adds `mcp.cross_caller_access_denied` as a 6th security-signal kind (outside the 5-core because emitted by the security boundary check, not the lifecycle path); FR-AI-003 closed-set extension covers 6 total.
+§17 emits 5 core kinds. The cross-caller security event (`mcp.cross_caller_access_denied`) is outside but mentioned in §11.5 + §10 row + §6.2 code. feature-request-audit skill rule 8 closed-set extension requires explicit listing. Resolved: §11.16 explicitly adds `mcp.cross_caller_access_denied` as a 6th security-signal kind (outside the 5-core because emitted by the security boundary check, not the lifecycle path); FR-AI-003 closed-set extension covers 6 total.
 
 ### ISS-004 — Idempotency uniqueness on response_payload_sha256
 

@@ -7,7 +7,7 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-19 (per AUTHORING_DISCIPLINE.md §3.12 — 8 canonical ISSes verified; option A operator decision recorded in §11)
+authoring_md_compliance: 2026-05-19 (per feature-request-audit skill §3.12 — 8 canonical ISSes verified; option A operator decision recorded in §11)
 ---
 
 ## §1 — Verdict summary

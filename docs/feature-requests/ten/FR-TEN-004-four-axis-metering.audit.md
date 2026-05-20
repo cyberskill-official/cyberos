@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 9
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -48,7 +48,7 @@ Resolved: §1 #10 + DEC-710 + closed 3-value enum + cfo role gate + reason ≥10
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (4 closed axes × (axis, unit) CHECK pair × append-only SQL grant × idempotent UNIQUE 24h × dual-write Postgres+memory × middleware response-path emission × postcall AI-token hook × end-of-period seats/storage snapshot × closed overage policy with CFO-only × materialized view 5-min refresh × aggregator-seq lag-check at freeze × correction_to sign-opposite trigger + state machine × bounded WAL queue back-pressure × 60s active-tenant cache for terminated-tenant 404 × dispute log append-only × 7 memory audit kinds × FR-MEMORY-111 PII scrubbing × per-axis quantity range CHECK × period-freeze trigger), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (4 closed axes × (axis, unit) CHECK pair × append-only SQL grant × idempotent UNIQUE 24h × dual-write Postgres+memory × middleware response-path emission × postcall AI-token hook × end-of-period seats/storage snapshot × closed overage policy with CFO-only × materialized view 5-min refresh × aggregator-seq lag-check at freeze × correction_to sign-opposite trigger + state machine × bounded WAL queue back-pressure × 60s active-tenant cache for terminated-tenant 404 × dispute log append-only × 7 memory audit kinds × FR-MEMORY-111 PII scrubbing × per-axis quantity range CHECK × period-freeze trigger), not by line targets.
 
 ---
 

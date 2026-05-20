@@ -18,7 +18,7 @@ blocks: []
 
 source_pages:
   - modules/skill/SKILL_BUNDLE_RUBRIC.md
-  - modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md
+  - feature-request-audit skill
   - modules/skill/ANTHROPIC_GUIDE_DIGEST.md
 source_decisions:
   - DEC-091 (host-portability — CCSM is source of truth)
@@ -34,7 +34,7 @@ new_files:
   - modules/cuo/tests/test_placeholder_check.py
 modified_files:
   - modules/skill/SKILL_BUNDLE_RUBRIC.md                  # add SKB-030 placeholder-free-frontmatter rule
-  - modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md  # §3.13 38f mentions placeholder rule
+  - feature-request-audit skill  # §3.13 38f mentions placeholder rule
   - modules/skill/<each of 134 production SKILL.md files>        # operator-attested per-skill substitution
 allowed_tools:
   - file_read: modules/skill/**, tools/sweep-placeholders/**, docs/feature-requests/skill/**
@@ -53,7 +53,7 @@ sub_tasks:
   - "1.5h: report.md generator — produces a single markdown report listing each of the 134 skills, its stale placeholders, and the suggest.py recommended substitution. Operator reviews + approves in one pass"
   - "2.0h: placeholder_check.py + tests — Python validator that fires the SKB-030 rule at audit time; identifies stale placeholders + emits structured errors with skill_path + field_path + placeholder_token"
   - "1.0h: SKB-030 rule entry in SKILL_BUNDLE_RUBRIC.md (severity: warning on draft, error on accepted+; auto_fix: never)"
-  - "0.5h: AUTHORING_DISCIPLINE.md §3.13 rule 38f"
+  - "0.5h: feature-request-audit skill §3.13 rule 38f"
   - "8.0h: 134-skill mechanical sweep — apply approved substitutions from report.md to each SKILL.md. ~3.5 min per skill at 134 skills. Operator can batch by persona (cluster similar skills) to amortise context-switching"
   - "0.5h: verify.py — post-sweep invariant check; assert zero placeholder-style angle brackets in any production SKILL.md frontmatter value"
 risk_if_skipped: "The 134 production SKILL.md files inherited template-syntax `<placeholder>` from earlier scaffold runs that never substituted real values. Three concrete consequences: (1) Anthropic-host transpilation (Phase B per FR-SKILL-103) will reject the frontmatter at load time per Reference B 'forbidden frontmatter chars' — even though FR-SKILL-113 fixed `wrap_in` specifically, the broader rule SKB-040 (no-xml-in-frontmatter) fires on every remaining placeholder. The 134 skills will fail to load on any non-CyberOS host. (2) Operator UX is degraded: the audit reports + run-time error messages will show `<SDP §2 stage letter or \"cross\">` etc. instead of meaningful values, making debugging harder. (3) FR-SKILL-111's description-format check (SKB-022 verb-stem; SKB-023 trigger phrases) is undermined when the description itself contains a `<placeholder>` block instead of substantive prose — the trigger-phrase detector treats the placeholder as a literal phrase, leaving the skill un-triggerable. Cost of THIS FR ≈ 16 hours (1.5h of tooling + 8h of mechanical sweep + 6.5h of review/test/QA). Cost of NOT shipping ≈ 134 silent portability failures + a future emergency sweep under deadline pressure when the first partner connector ships."
@@ -224,7 +224,7 @@ def suggest_for_description(skill_path: Path, field_value: str) -> str | None:
 13. **Operator-attestation in commit message** — every batch commit includes one-line rationale per field-type substitution (e.g. "metadata.stage values picked from each skill's body SDP-stage references; cross-cutting skills marked 'cross'").
 14. **verify.py asserts post-sweep invariants** — running verify.py exits 0; checks (a) detect.py reports zero hits, (b) every modified file parses as valid YAML, (c) every modified file's `wrap_in_marker:` field is still `"untrusted_content"` (FR-SKILL-113 invariant preserved), (d) body XML form unchanged via SHA256 comparison.
 15. **CI gate integration** — `python -m cuo.placeholder_check --catalog modules/skill/ --fail-on-error` runs as part of the existing CUO test suite; PRs touching SKILL.md frontmatter are gated.
-16. **AUTHORING_DISCIPLINE.md §3.13 rule 38f added** — references FR-SKILL-115 + SKB-030.
+16. **feature-request-audit skill §3.13 rule 38f added** — references FR-SKILL-115 + SKB-030.
 17. **Registry version bumped** — v0.2.5 → v0.2.6 in CHANGELOG.md `[SKILL]` section.
 18. **Sweep report committed** — `tools/sweep-placeholders/report-2026-05-19.md` (or later date) lists every skill + every substitution decision.
 19. **Idempotency check** — running detect.py + sweep + detect.py again yields the same zero-hit state; no flapping.
@@ -301,7 +301,7 @@ body
 4. `modules/cuo/cuo/placeholder_check.py` is the runtime validator (re-exported from `cuo` package).
 5. `modules/cuo/tests/test_placeholder_check.py` integrates with the existing CUO test suite.
 6. SKILL_BUNDLE_RUBRIC.md gains SKB-030.
-7. AUTHORING_DISCIPLINE.md gains §3.13 rule 38f.
+7. feature-request-audit skill gains §3.13 rule 38f.
 8. Per-persona batches commit independently (P0 cpo + cto first, then P1, then P2+).
 
 ## §7 — Dependencies

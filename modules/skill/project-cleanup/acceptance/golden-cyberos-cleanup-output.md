@@ -11,7 +11,7 @@ matches the categories + counts below.
 
 ```
 Project: /path/to/cyberos
-Scope detected: cyberos (modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md present)
+Scope detected: cyberos (feature-request-audit skill present)
 Started: <ISO-8601>
 
 Phase 1 — Inventory

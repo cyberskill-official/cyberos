@@ -117,7 +117,7 @@ Now that `status` is a single linear axis, two pieces of metadata that used to b
 - `backlog-state-update-author` skill — `modules/skill/backlog-state-update-author/SKILL.md` (writes status cells from workflow outcomes)
 - `ship-feature-requests` workflow — `modules/cuo/chief-technology-officer/workflows/ship-feature-requests.md` (drives `ready_to_implement → done` and back-routes on failure)
 - `feature-request-audit` skill — `modules/skill/feature-request-audit/SKILL.md` (drives `draft → ready_to_implement`)
-- `AUTHORING_DISCIPLINE.md` — `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` (no-partial-ship rule §9.1)
+- `feature-request-audit` skill — `feature-request-audit` skill (no-partial-ship rule §9.1)
 
 If any of those files contradicts this reference, this file wins; please patch the contradicting file.
 

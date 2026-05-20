@@ -12,7 +12,7 @@
       "type": "string",
       "enum": ["auto", "cyberos", "generic"],
       "default": "auto",
-      "description": "Project flavor. 'auto' detects by file signatures (presence of modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md or the legacy docs/feature-requests/AUTHORING.md → cyberos; else generic). 'cyberos' or 'generic' force the flavor."
+      "description": "Project flavor. 'auto' detects by file signatures (presence of feature-request-audit skill or the legacy feature-request-audit skill → cyberos; else generic). 'cyberos' or 'generic' force the flavor."
     },
     "dry_run": {
       "type": "boolean",

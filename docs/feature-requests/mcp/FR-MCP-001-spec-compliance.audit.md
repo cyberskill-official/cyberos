@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 11
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -30,7 +30,7 @@ First-pass exempted all methods from auth. Resolved: §1 #11 + DEC-267 + scope-p
 First-pass invoked destructive tools without confirmation. Resolved: §1 #8 + DEC-264 + `-32005 elicitation_required` stub gate; AC #21. FR-MCP-006 ships the full flow.
 
 ### ISS-005 — Audit emission only at success
-First-pass emitted `mcp.tool_invoked` only on completed success. Resolved: §1 #13 + DEC-265 + AUTHORING.md rule 26 + pair `started`+`completed` rows; AC #23.
+First-pass emitted `mcp.tool_invoked` only on completed success. Resolved: §1 #13 + DEC-265 + feature-request-audit skill rule 26 + pair `started`+`completed` rows; AC #23.
 
 ### ISS-006 — Module timeout unbounded
 First-pass had no timeout on dispatch. Resolved: §1 #17 + 30s timeout + `-32004 module_unreachable` with `reason: "timeout"`; AC #20.
@@ -54,7 +54,7 @@ First-pass abruptly closed connections on SIGTERM. Resolved: §1 #27 + 10s drain
 
 All 11 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (MCP 2025-11-25 spec × JSON-RPC 2.0 × Streamable HTTP × Mcp-Session-Id × capabilities negotiation × federated registry × cursor pagination × tool annotations × JWT + scope × rate limit × destructive-op stub × audit pair × W3C propagation × graceful shutdown × /healthz), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (MCP 2025-11-25 spec × JSON-RPC 2.0 × Streamable HTTP × Mcp-Session-Id × capabilities negotiation × federated registry × cursor pagination × tool annotations × JWT + scope × rate limit × destructive-op stub × audit pair × W3C propagation × graceful shutdown × /healthz), not by line targets.
 
 ---
 

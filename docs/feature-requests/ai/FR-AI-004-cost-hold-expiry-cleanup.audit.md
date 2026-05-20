@@ -14,7 +14,7 @@ issues_critical: 0
 ac_9_weakened: "slice-1 documented limitation; FR-AI-021 operator repair command + FR-AI-008 native dedup_key"
 revised_at: 2026-05-15
 authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 ISSes in canonical format)
-final_revision: 2026-05-16 (AUTHORING.md compliance appendix)
+final_revision: 2026-05-16 (feature-request-audit skill compliance appendix)
 ---
 
 ## §1 — Verdict summary
@@ -27,9 +27,9 @@ Round-2 revisions promoted §9 Q2/Q3/Q4/Q5 to normative §1 clauses (#11-13), ad
 
 ---
 
-## §3 — AUTHORING.md compliance appendix (added 2026-05-16)
+## §3 — feature-request-audit skill compliance appendix (added 2026-05-16)
 
-AUTHORING.md §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. Six findings below — four restate the historical pre-revision issues, two are new AUTHORING.md-grounded compliance verifications. All RESOLVED.
+feature-request-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. Six findings below — four restate the historical pre-revision issues, two are new feature-request-audit skill-grounded compliance verifications. All RESOLVED.
 
 ### ISS-001 — §9 Q2 (cleanup interval tunability) underspecified
 - **severity:** warning  
@@ -47,18 +47,18 @@ AUTHORING.md §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. 
 - **severity:** warning  
 - **status:** RESOLVED — §1 #14: 5 metrics (cleanup_runs_total, cleanup_holds_expired_total, cleanup_latency_ms, cleanup_holds_pending_gauge, cleanup_failures_total).
 
-### ISS-005 — AUTHORING.md §3.8 rule 25 (audit-before-action) for hold expiry
+### ISS-005 — feature-request-audit skill §3.8 rule 25 (audit-before-action) for hold expiry
 - **severity:** warning
 - **rule_id:** authoring-md-§3.8 (rule 25)
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #15 added: cleanup MUST emit `ai.hold_expired_started` BEFORE applying `UPDATE cost_ledger SET state='expired'` per AUTHORING.md §3.8 rule 25. Single Postgres transaction wraps both; atomic rollback on either failure. `ai.hold_expired_completed` follows post-commit per AUTHORING.md §3.8 rule 26 pair-write. AC #15 added with captured-events ordering test.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §1 #15 added: cleanup MUST emit `ai.hold_expired_started` BEFORE applying `UPDATE cost_ledger SET state='expired'` per feature-request-audit skill §3.8 rule 25. Single Postgres transaction wraps both; atomic rollback on either failure. `ai.hold_expired_completed` follows post-commit per feature-request-audit skill §3.8 rule 26 pair-write. AC #15 added with captured-events ordering test.
 
-### ISS-006 — AUTHORING.md §3.9 rule 27 (determinism) — sweep ordering must be deterministic
+### ISS-006 — feature-request-audit skill §3.9 rule 27 (determinism) — sweep ordering must be deterministic
 - **severity:** warning
 - **rule_id:** authoring-md-§3.9 (rule 27)
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #16 added: the per-sweep `SELECT ... FOR UPDATE SKIP LOCKED LIMIT 1000` query MUST carry `ORDER BY hold_id ASC` so two runs on the same backlog produce byte-identical expire-order; the per-sweep `ai.cleanup_run_completed` audit row's `extra.expired_hold_ids: Vec<Uuid>` is recorded in the sorted order so operator diffing across runs is reliable. AC #16 added with deterministic-order test.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §1 #16 added: the per-sweep `SELECT ... FOR UPDATE SKIP LOCKED LIMIT 1000` query MUST carry `ORDER BY hold_id ASC` so two runs on the same backlog produce byte-identical expire-order; the per-sweep `ai.cleanup_run_completed` audit row's `extra.expired_hold_ids: Vec<Uuid>` is recorded in the sorted order so operator diffing across runs is reliable. AC #16 added with deterministic-order test.
 
 **Post-appendix score = 10/10** with 6 canonical ISSes plus 4 historical pre-revision ISSes plus 4 round-1 = 14 total.
 
 ---
 
-*End of FR-AI-004 audit. Status: PASS at 10/10. AUTHORING.md compliant 2026-05-16.*
+*End of FR-AI-004 audit. Status: PASS at 10/10. feature-request-audit skill compliant 2026-05-16.*

@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -45,7 +45,7 @@ Resolved: §1 #12 + from_tier_caps_snapshot JSONB on every history row + audit-t
 
 All 8 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (3 closed tiers × hardcoded Rust constants × per-axis caps × Enterprise finite ai_tokens × append-only history with same-TX trigger × founder-tenant one-way set + P0300 trigger × separate founder-override handler × 24h rate-limit with founder bypass × downgrade-violation check against materialized view × deferred downgrade via next_scheduled_change JSONB × second-pending-change rejection × from_tier_caps_snapshot JSONB × dry_run preview no-side-effects × proration integer-cents math × FR-TEN-004 metering event linkage × 4 closed memory audit kinds × per-tenant override stronger than plan default × reason text scrubbed via FR-MEMORY-111 × RLS isolation), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (3 closed tiers × hardcoded Rust constants × per-axis caps × Enterprise finite ai_tokens × append-only history with same-TX trigger × founder-tenant one-way set + P0300 trigger × separate founder-override handler × 24h rate-limit with founder bypass × downgrade-violation check against materialized view × deferred downgrade via next_scheduled_change JSONB × second-pending-change rejection × from_tier_caps_snapshot JSONB × dry_run preview no-side-effects × proration integer-cents math × FR-TEN-004 metering event linkage × 4 closed memory audit kinds × per-tenant override stronger than plan default × reason text scrubbed via FR-MEMORY-111 × RLS isolation), not by line targets.
 
 ---
 

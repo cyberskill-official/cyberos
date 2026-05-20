@@ -123,26 +123,26 @@ watcher.watch(&watch_dir, RecursiveMode::NonRecursive)?;
 
 Also add §10 row: *"Watcher init on bare-filename path → watches CWD instead; functional but logs a warn if CWD wasn't the intended directory."*
 
-### ISS-005 — AUTHORING.md §3.4 rule 11 (money as BIGINT minor) — spec uses `rust_decimal::Decimal` not BIGINT minor
+### ISS-005 — feature-request-audit skill §3.4 rule 11 (money as BIGINT minor) — spec uses `rust_decimal::Decimal` not BIGINT minor
 - **severity:** info (compliance check, exception justified)
 - **rule_id:** authoring-md-§3.4 (rule 11)
 - **location:** §1 (cost-table representation), §3 (CostRate schema)
 - **status:** open
 
 #### Description
-AUTHORING.md §3.4 rule 11 says "Money MUST be stored as `BIGINT minor` with currency-aware decimals" for **stored** monetary state — i.e., journal rows, ledger entries, billable amounts. The cost-table here uses `rust_decimal::Decimal` for `input_per_1k_usd` / `output_per_1k_usd`. This is intentional and correct: cost-table rates are **rate constants** (price per 1000 tokens, often 7-9 decimal places), not stored monetary amounts. The output of `cost_table::lookup × tokens` IS a money amount and DOES get stored as BIGINT minor in FR-AI-001/002's cost_ledger table. So the rule is observed at the right boundary — but the FR doesn't say so. A future reader could mistakenly "fix" this to BIGINT minor and break sub-cent rates.
+feature-request-audit skill §3.4 rule 11 says "Money MUST be stored as `BIGINT minor` with currency-aware decimals" for **stored** monetary state — i.e., journal rows, ledger entries, billable amounts. The cost-table here uses `rust_decimal::Decimal` for `input_per_1k_usd` / `output_per_1k_usd`. This is intentional and correct: cost-table rates are **rate constants** (price per 1000 tokens, often 7-9 decimal places), not stored monetary amounts. The output of `cost_table::lookup × tokens` IS a money amount and DOES get stored as BIGINT minor in FR-AI-001/002's cost_ledger table. So the rule is observed at the right boundary — but the FR doesn't say so. A future reader could mistakenly "fix" this to BIGINT minor and break sub-cent rates.
 
 #### Suggested fix
-Add §11 note: "Rates use `rust_decimal::Decimal` not BIGINT minor — rates are constants (7-9 dp), not stored money. The product rate×tokens is stored as BIGINT minor by FR-AI-001 §3 `cost_ledger.estimated_cost_minor`. AUTHORING.md §3.4 rule 11 applies to the storage tier, satisfied at the cost_ledger boundary." Also cross-link from §2.
+Add §11 note: "Rates use `rust_decimal::Decimal` not BIGINT minor — rates are constants (7-9 dp), not stored money. The product rate×tokens is stored as BIGINT minor by FR-AI-001 §3 `cost_ledger.estimated_cost_minor`. feature-request-audit skill §3.4 rule 11 applies to the storage tier, satisfied at the cost_ledger boundary." Also cross-link from §2.
 
-### ISS-006 — AUTHORING.md §3.9 rule 27 (determinism) only partially covered by AC #11 proptest
+### ISS-006 — feature-request-audit skill §3.9 rule 27 (determinism) only partially covered by AC #11 proptest
 - **severity:** warning
 - **rule_id:** authoring-md-§3.9 (rule 27)
 - **location:** §4 AC #11, §5 verification, §6 (`validate_and_flatten`)
 - **status:** open
 
 #### Description
-Determinism per AUTHORING.md §3.9 is "two consecutive runs on the same input MUST produce byte-identical output." The proptest in §5 (added by ISS-001) covers `init` → `lookup` determinism for one provider/model. But the loader also produces a sorted internal HashMap that gets iterated for the OBS `cost_table_loaded_at_seconds` metric. HashMap iteration order is non-deterministic across runs, which CAN affect the order of warn-logs emitted during load (the file-failures sort). The `FileFailure` list's display order matters for operator diffing.
+Determinism per feature-request-audit skill §3.9 is "two consecutive runs on the same input MUST produce byte-identical output." The proptest in §5 (added by ISS-001) covers `init` → `lookup` determinism for one provider/model. But the loader also produces a sorted internal HashMap that gets iterated for the OBS `cost_table_loaded_at_seconds` metric. HashMap iteration order is non-deterministic across runs, which CAN affect the order of warn-logs emitted during load (the file-failures sort). The `FileFailure` list's display order matters for operator diffing.
 
 #### Suggested fix
 Add explicit sort to `validate_and_flatten` output: `failures.sort_by(|a, b| a.path.cmp(&b.path).then(a.model.cmp(&b.model)))`. Add §4 AC #16: "**Failure list deterministic order** — Two `init` calls with the same malformed YAML MUST produce byte-identical `Vec<FileFailure>` (sorted by `(path, model)`)."
@@ -161,8 +161,8 @@ All 6 mechanical revisions applied:
 - ISS-002 RESOLVED (2026-05-16): §6 `validate_and_flatten` now enforces is_embedding ⇒ output==0; §4 AC #15 added; §10 row added.
 - ISS-003 RESOLVED (2026-05-16): §6 skeleton's `lookup` now calls `provider.as_metric_label()`; the impl is defined inline with explanatory comment.
 - ISS-004 RESOLVED (2026-05-16): §6 `spawn_watcher` handles the bare-filename edge case with explicit match + warn log; §10 row added.
-- ISS-005 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §11 note added explaining Decimal-vs-BIGINT boundary; rule 11 applies at FR-AI-001 storage tier, satisfied there; §2 cross-link added.
-- ISS-006 RESOLVED (2026-05-16, AUTHORING.md compliance pass): `failures.sort_by(...)` added in §6; §4 AC #16 added asserting byte-identical Vec<FileFailure> across runs.
+- ISS-005 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §11 note added explaining Decimal-vs-BIGINT boundary; rule 11 applies at FR-AI-001 storage tier, satisfied there; §2 cross-link added.
+- ISS-006 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): `failures.sort_by(...)` added in §6; §4 AC #16 added asserting byte-identical Vec<FileFailure> across runs.
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 

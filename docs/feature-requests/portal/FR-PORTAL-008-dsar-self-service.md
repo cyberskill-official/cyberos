@@ -136,7 +136,7 @@ The PORTAL service **MUST** ship DSAR self-service at `services/portal/src/dsar/
 
 12. **MUST** emit 7 memory audit kinds per DEC-1231: received, identity_verified, processing_started, ready_for_review, delivered, denied, expired — all sev-1 (regulatory-critical).
 
-13. **MUST** PII-scrub per AUTHORING.md rule 18 — requester_subject_id UUID retained; email hashed.
+13. **MUST** PII-scrub per feature-request-audit skill rule 18 — requester_subject_id UUID retained; email hashed.
 
 14. **MUST** thread trace_id end-to-end.
 

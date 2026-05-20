@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 11
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -33,7 +33,7 @@ First-pass had string-typed status field; ill-defined transitions. Resolved: §1
 First-pass left CCCD reads silent. Resolved: §1 #13 + DEC-208 sev-1 audit row + OTel counter; AC #15.
 
 ### ISS-006 — Append-only history bypassable
-First-pass relied on handler discipline. Resolved: §1 #6 + AUTHORING.md rule 12 + `REVOKE UPDATE, DELETE FROM cyberos_app`; AC #10.
+First-pass relied on handler discipline. Resolved: §1 #6 + feature-request-audit skill rule 12 + `REVOKE UPDATE, DELETE FROM cyberos_app`; AC #10.
 
 ### ISS-007 — Sabbatical computation drift
 First-pass had no formula calibration test. Resolved: §1 #26 + IMMUTABLE SQL function + `sabbatical_test::accrual_curve` covering year 0/1/4/5/6/10/30/35/40 with cap at 30; AC #11–13.
@@ -54,7 +54,7 @@ First-pass let HR Members exist without an Auth subject. Resolved: §1 #15 + DEC
 
 All 11 mechanical concerns addressed in the first revision pass. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (members table × closed status FSM × closed level enum × comp-exclusion guard × append-only history × RLS isolation × sabbatical accrual × CCCD encrypted + audit × REST + idempotency × OTel × 2 SQL views × AUTH-bound auto-create), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (members table × closed status FSM × closed level enum × comp-exclusion guard × append-only history × RLS isolation × sabbatical accrual × CCCD encrypted + audit × REST + idempotency × OTel × 2 SQL views × AUTH-bound auto-create), not by line targets.
 
 ---
 

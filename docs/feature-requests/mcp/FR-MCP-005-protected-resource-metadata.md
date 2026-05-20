@@ -118,14 +118,14 @@ The MCP service **MUST** expose RFC 9728 Protected Resource Metadata at `/.well-
 
 8. **MUST** detect drift between gateway-aggregate and per-module PRMs per DEC-906. The drift detector runs on every PRM serve: if the aggregate's `authorization_servers` or `resource_signing_alg_values_supported` differs from any per-module's (which should never happen — derived from same registry), emit `mcp.prm_aggregate_drift` sev-2 memory row + log to `prm_drift_log` table.
 
-9. **MUST** define `prm_drift_log` table at migration `0005`: `(id BIGSERIAL PRIMARY KEY, detected_at TIMESTAMPTZ NOT NULL DEFAULT now(), aggregate_sha256 CHAR(64) NOT NULL, module_name TEXT NOT NULL, module_sha256 CHAR(64) NOT NULL, drift_fields TEXT[] NOT NULL)`. Append-only via REVOKE per AUTHORING.md rule 12. RLS not required (system-tenant scope only — drift is global, not per-tenant).
+9. **MUST** define `prm_drift_log` table at migration `0005`: `(id BIGSERIAL PRIMARY KEY, detected_at TIMESTAMPTZ NOT NULL DEFAULT now(), aggregate_sha256 CHAR(64) NOT NULL, module_name TEXT NOT NULL, module_sha256 CHAR(64) NOT NULL, drift_fields TEXT[] NOT NULL)`. Append-only via REVOKE per feature-request-audit skill rule 12. RLS not required (system-tenant scope only — drift is global, not per-tenant).
 
 10. **MUST** rate-limit PRM endpoints at 600 req/min/IP per DEC-908 (clients should cache; high rate signals misbehaving client). Excess returns `429` + `Retry-After`.
 
 11. **MUST** complete PRM response in < 50 ms p95 per DEC-909. The PRM bodies are small (<2 KB) and built from in-memory registry data; sub-50ms is straightforward. OTel histogram `mcp_prm_serve_duration_seconds`; alarm sev-3 if p95 > 200 ms sustained 5 min.
 
-12. **MUST** emit 3 memory audit row kinds (DEC-906 + AUTHORING.md rule 6 namespace pattern):
-    - `mcp.prm_served` (sev-3 — high-volume; sampled at 1% per AUTHORING.md tail-sampling pattern via FR-OBS-006)
+12. **MUST** emit 3 memory audit row kinds (DEC-906 + feature-request-audit skill rule 6 namespace pattern):
+    - `mcp.prm_served` (sev-3 — high-volume; sampled at 1% per feature-request-audit skill tail-sampling pattern via FR-OBS-006)
     - `mcp.prm_unknown_module_requested` (sev-3 — informational; could indicate client misconfig or scanner)
     - `mcp.prm_aggregate_drift` (sev-2 — should never happen; indicates registry corruption)
 
@@ -573,7 +573,7 @@ All resolved. Deferred:
 
 **§11.11** Server registration records (`ModuleRegistration`) extended with `exposed_scopes: Vec<String>`; FR-MCP-002 modified_files lists the type update.
 
-**§11.12** Tail-sampling of `mcp.prm_served` rows (1% per AUTHORING.md / FR-OBS-006) keeps the memory chain manageable at high request volume. The two other kinds are always emitted (low volume by design).
+**§11.12** Tail-sampling of `mcp.prm_served` rows (1% per feature-request-audit skill / FR-OBS-006) keeps the memory chain manageable at high request volume. The two other kinds are always emitted (low volume by design).
 
 **§11.13** The `X-Robots-Tag: noindex` header also includes `, nofollow, nosnippet` per Google's documented best-practice for metadata endpoints.
 

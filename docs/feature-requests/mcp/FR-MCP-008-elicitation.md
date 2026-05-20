@@ -178,7 +178,7 @@ The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicita
 
 16. **MUST** scope elicitation to caller_subject_id per DEC-1159. Cross-caller-subject GET/POST returns 403 + `cross_caller_access_denied` + sev-1 audit.
 
-17. **MUST** emit 5 memory audit row kinds per DEC-1149 (AUTHORING.md rule 6):
+17. **MUST** emit 5 memory audit row kinds per DEC-1149 (feature-request-audit skill rule 6):
     - `mcp.elicitation_requested` (sev-3 — informational; can be high-volume)
     - `mcp.elicitation_responded` (sev-3)
     - `mcp.elicitation_timeout` (sev-3)
@@ -187,7 +187,7 @@ The MCP service **MUST** ship Elicitation primitive at `services/mcp/src/elicita
 
 18. **MUST** preserve trace_id end-to-end per DEC-1158. Parent task trace_id propagates to elicitation row + caller poll responses + audit rows + NATS publishes.
 
-19. **MUST** PII-scrub per DEC-1157 + AUTHORING.md rule 18: `response_payload_sha256` only in memory chain; raw payload in `mcp_elicitations.response_payload_kms_blob` (RLS-scoped, 30-day retention post-completion).
+19. **MUST** PII-scrub per DEC-1157 + feature-request-audit skill rule 18: `response_payload_sha256` only in memory chain; raw payload in `mcp_elicitations.response_payload_kms_blob` (RLS-scoped, 30-day retention post-completion).
 
 20. **MUST** auto-clean responded elicitations at T+30 days post-completion. Daily job UPDATE `response_payload_kms_blob=NULL WHERE status IN ('responded','expired','cancelled','validation_failed') AND COALESCE(responded_at, expires_at) < now() - interval '30 days'`. Metadata retained for forensic.
 
@@ -815,7 +815,7 @@ All resolved for slice 3. Deferred:
 
 **§11.4** Presigned S3 URL TTL matches elicitation timeout exactly; FR-DOC-001 provides the presigning helper.
 
-**§11.5** Cross-caller audit uses a distinct kind (`mcp.cross_caller_access_denied`) outside the 5-kind core list per AUTHORING.md §8.1d (security signal needs distinct kind).
+**§11.5** Cross-caller audit uses a distinct kind (`mcp.cross_caller_access_denied`) outside the 5-kind core list per feature-request-audit skill §8.1d (security signal needs distinct kind).
 
 **§11.6** UUIDv7 generation: same `services/ten/src/residency/uuid_gen.rs` per FR-TEN-103.
 

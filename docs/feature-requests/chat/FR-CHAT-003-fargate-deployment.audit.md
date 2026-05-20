@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 14
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per AUTHORING.md §0; ISS-007..014 added)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per feature-request-audit skill §0; ISS-007..014 added)
 ---
 
 ## §1 — Verdict summary
@@ -63,7 +63,7 @@ Vietnamese tenants subject to Decree 53/2022 require in-country data. Original s
 
 All 14 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by genuine architectural surface (Terraform module touches ~15 AWS resource types, each with its own failure modes and configuration knobs), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by genuine architectural surface (Terraform module touches ~15 AWS resource types, each with its own failure modes and configuration knobs), not by line targets.
 
 ---
 

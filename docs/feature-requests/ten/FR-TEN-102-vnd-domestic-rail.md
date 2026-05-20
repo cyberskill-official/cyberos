@@ -47,7 +47,7 @@ source_decisions:
   - DEC-979 2026-05-17 — memory audit kinds: ten.vnd_token_bind_started, ten.vnd_token_bind_completed, ten.vnd_token_bind_failed, ten.vnd_subscription_charged, ten.vnd_subscription_charge_failed, ten.vnd_overage_charged, ten.vnd_refund_issued, ten.vnd_dunning_advanced, ten.tenant_billing_suspended_vnd, ten.vnd_invoice_issued, ten.vnd_token_revoked, ten.vnd_psp_credential_rotated
   - DEC-980 2026-05-17 — Per-PSP API client per residency: vn-1 residency consumes vnd_psp_credentials with `residency='vn-1'` only (cross-residency credential access blocked per FR-TEN-103 trip-wire)
   - DEC-981 2026-05-17 — Per-tenant billing_contact_phone REQUIRED at vn-1 signup (PSPs use SMS-OTP for token authorisation); FR-TEN-101 extended to capture for VND tenants
-  - DEC-982 2026-05-17 — VND amounts stored as BIGINT minor (đồng — VND has no minor unit so 1 VND = 1 minor unit; AUTHORING.md rule 11 satisfied)
+  - DEC-982 2026-05-17 — VND amounts stored as BIGINT minor (đồng — VND has no minor unit so 1 VND = 1 minor unit; feature-request-audit skill rule 11 satisfied)
   - DEC-983 2026-05-17 — Hóa đơn invoice numbering: prefix `CYBOS-` + YYMMDD + sequential 6-digit padded per Decree 123 §10; gap-free; reset annually
   - DEC-984 2026-05-17 — Hóa đơn signing via VN tax authority's eHĐĐT (electronic invoice) signing service; signed XML stored in `vnd_invoices` table; PDF generated on-demand for tenant download
   - DEC-985 2026-05-17 — Tenant-admin can revoke a payment_token via `POST /v1/admin/tenants/{id}/vnd/token/revoke`; subsequent monthly charges fail until new token authorised (dunning state machine handles)
@@ -176,9 +176,9 @@ The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src
 
 2. **MUST** define `vnd_payment_tokens` table at migration `0018`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, psp vnd_psp NOT NULL, payment_token_kms_blob BYTEA NOT NULL, kms_key_id TEXT NOT NULL, masked_account_hint TEXT, status TEXT NOT NULL CHECK (status IN ('active','revoked','expired')) DEFAULT 'active', bound_at TIMESTAMPTZ NOT NULL DEFAULT now(), revoked_at TIMESTAMPTZ, expires_at TIMESTAMPTZ)`. Partial unique `(tenant_id) WHERE status='active'` — one active token per tenant at slice 2.
 
-3. **MUST** define `vnd_psp_credentials` table at migration `0019`: `(id BIGSERIAL PRIMARY KEY, psp vnd_psp NOT NULL, residency residency NOT NULL CHECK (residency='vn-1'), credentials_kms_blob BYTEA NOT NULL, kms_key_id TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('active','rotated','revoked')) DEFAULT 'active', created_at TIMESTAMPTZ NOT NULL DEFAULT now(), rotated_at TIMESTAMPTZ)`. Partial unique `(psp) WHERE status='active'` — one active credential per PSP. RLS scoped to vn-1 residency per DEC-980 + AUTHORING.md §8.1d.
+3. **MUST** define `vnd_psp_credentials` table at migration `0019`: `(id BIGSERIAL PRIMARY KEY, psp vnd_psp NOT NULL, residency residency NOT NULL CHECK (residency='vn-1'), credentials_kms_blob BYTEA NOT NULL, kms_key_id TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('active','rotated','revoked')) DEFAULT 'active', created_at TIMESTAMPTZ NOT NULL DEFAULT now(), rotated_at TIMESTAMPTZ)`. Partial unique `(psp) WHERE status='active'` — one active credential per PSP. RLS scoped to vn-1 residency per DEC-980 + feature-request-audit skill §8.1d.
 
-4. **MUST** define `vnd_invoices` table at migration `0020`: `(invoice_number TEXT PRIMARY KEY, tenant_id UUID NOT NULL, charge_ref TEXT NOT NULL, issued_at TIMESTAMPTZ NOT NULL DEFAULT now(), pre_tax_amount_vnd BIGINT NOT NULL, vat_amount_vnd BIGINT NOT NULL, total_amount_vnd BIGINT NOT NULL, line_items JSONB NOT NULL, signed_xml_kms_blob BYTEA, ehoadon_tax_authority_ref TEXT, pdf_s3_key TEXT, status TEXT NOT NULL CHECK (status IN ('issued','signed','cancelled')) DEFAULT 'issued')`. Append-only per AUTHORING.md rule 12 (cancellation = new compensating invoice).
+4. **MUST** define `vnd_invoices` table at migration `0020`: `(invoice_number TEXT PRIMARY KEY, tenant_id UUID NOT NULL, charge_ref TEXT NOT NULL, issued_at TIMESTAMPTZ NOT NULL DEFAULT now(), pre_tax_amount_vnd BIGINT NOT NULL, vat_amount_vnd BIGINT NOT NULL, total_amount_vnd BIGINT NOT NULL, line_items JSONB NOT NULL, signed_xml_kms_blob BYTEA, ehoadon_tax_authority_ref TEXT, pdf_s3_key TEXT, status TEXT NOT NULL CHECK (status IN ('issued','signed','cancelled')) DEFAULT 'issued')`. Append-only per feature-request-audit skill rule 12 (cancellation = new compensating invoice).
 
 5. **MUST** define `vnd_invoice_sequence` table at migration `0021`: `(year INT PRIMARY KEY, last_sequence INT NOT NULL DEFAULT 0)` for annual gap-free numbering per DEC-983 + Decree 123 §10. Sequence allocation via `SELECT ... FOR UPDATE` to guarantee no gap, no duplicate.
 
@@ -264,13 +264,13 @@ The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src
     - Return `format!("CYBOS-{:02}{:02}{:02}-{:06}", year_2_digit, month, day, new_sequence)`.
     - On rollback (issue_invoice tx fails after sequence allocated): NUMBER IS LOST. This is intentional — gap-free means "no duplicate", not "no skipped". Skipped numbers are auditable with explanation per Decree 123 §10 (the system logs reason for each skip).
 
-18. **MUST** thread idempotency keys per DEC-970 + AUTHORING.md §8.3b. Per-PSP key adapter at `billing/vnd/idempotency.rs`:
+18. **MUST** thread idempotency keys per DEC-970 + feature-request-audit skill §8.3b. Per-PSP key adapter at `billing/vnd/idempotency.rs`:
     - VnPay: `vnp_TxnRef` field on request.
     - Momo: `requestId` field.
     - ZaloPay: `app_trans_id` field.
     Internal canonical key format: `vnd.<tenant_id>.<operation>.<period_ts_or_ref>`. Adapter maps canonical → per-PSP shape. Stored in `vnd_idempotency_cache` (additional table — sub-migration into 0018).
 
-19. **MUST** emit 12 memory audit row kinds per DEC-979 (AUTHORING.md rule 6 + §8 namespace):
+19. **MUST** emit 12 memory audit row kinds per DEC-979 (feature-request-audit skill rule 6 + §8 namespace):
     - `ten.vnd_token_bind_started` (sev-3)
     - `ten.vnd_token_bind_completed` (sev-2)
     - `ten.vnd_token_bind_failed` (sev-2)
@@ -293,13 +293,13 @@ The TEN service **MUST** ship the VND domestic billing rail at `services/ten/src
 
 23. **MUST** require `billing_contact_phone` at vn-1 signup per DEC-981. FR-TEN-101's `SignupCompleteReq` body extended (in this FR's modified_files) with optional `billing_contact_phone: Option<String>`; validation in `vnd::token_bind::start` requires it for VND tenants (returns 400 + `phone_required_for_vnd` if missing).
 
-24. **MUST** PII-scrub all audit rows per AUTHORING.md rule 18 + DEC-979. Phone hashed as `phone_hash16 = HMAC(global_salt, phone_e164_form)`; masked account hint (last-4 of bank account) hashed.
+24. **MUST** PII-scrub all audit rows per feature-request-audit skill rule 18 + DEC-979. Phone hashed as `phone_hash16 = HMAC(global_salt, phone_e164_form)`; masked account hint (last-4 of bank account) hashed.
 
-25. **MUST** thread W3C `traceparent` end-to-end per AUTHORING.md rule 22-24. Signup → token-bind → callback → INSERT → audit row chain MUST share trace_id.
+25. **MUST** thread W3C `traceparent` end-to-end per feature-request-audit skill rule 22-24. Signup → token-bind → callback → INSERT → audit row chain MUST share trace_id.
 
-26. **MUST** support concurrent token-bind safely per AUTHORING.md §8.3. Per-tenant `SELECT ... FOR UPDATE` on `vnd_payment_tokens` during INSERT; concurrent binds for same tenant return 409 (active token already exists).
+26. **MUST** support concurrent token-bind safely per feature-request-audit skill §8.3. Per-tenant `SELECT ... FOR UPDATE` on `vnd_payment_tokens` during INSERT; concurrent binds for same tenant return 409 (active token already exists).
 
-27. **SHOULD** observe per-PSP charge latency p95 via OTel histogram `vnd_charge_duration_seconds_by_psp` per AUTHORING.md rule 22. Alarm sev-2 if p95 > 10s sustained 10 min (PSP-side issue).
+27. **SHOULD** observe per-PSP charge latency p95 via OTel histogram `vnd_charge_duration_seconds_by_psp` per feature-request-audit skill rule 22. Alarm sev-2 if p95 > 10s sustained 10 min (PSP-side issue).
 
 ---
 

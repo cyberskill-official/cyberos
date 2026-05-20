@@ -25,7 +25,7 @@ source_decisions:
   - DEC-1442 2026-05-17 — Closed enum `proposal_state` = {pending, accepted, rejected, expired}; cardinality 4
   - DEC-1443 2026-05-17 — Suggestions expire 7 days after creation if Member doesn't act
   - DEC-1444 2026-05-17 — Confidence score 0-100; > 80 = high (auto-fill form); 50-80 = medium (show suggestion); < 50 = filtered out
-  - DEC-1445 2026-05-17 — Member always confirms — NEVER auto-creates TIME entry (per AUTHORING.md §8 — destructive auto-action forbidden)
+  - DEC-1445 2026-05-17 — Member always confirms — NEVER auto-creates TIME entry (per feature-request-audit skill §8 — destructive auto-action forbidden)
   - DEC-1446 2026-05-17 — memory audit kinds: time.proposal_generated, time.proposal_accepted, time.proposal_rejected, time.proposal_expired
 
 build_envelope:

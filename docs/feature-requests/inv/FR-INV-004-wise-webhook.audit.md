@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -45,7 +45,7 @@ Resolved: §1 #12 + DEC-851 + 3-fail threshold + ops alarm + CFO restore handler
 
 All 8 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (RSA-SHA256 asymmetric verification via ring × per-profile public key 24h cache + rotation force-refresh × 5-day staleness reject × URL-vs-body profile_id cross-check × idempotency UNIQUE (profile_id, event_id) ON CONFLICT × append-only SQL grant × fast 200 within 5s Wise SLA × background processor with pg_advisory_xact_lock × currency-mismatch hold for CFO (no auto-convert) × dead-letter at 3 failures + restore handler × per-profile rate limit 100/s × 7-day profile deprecation + 410 GONE × TLS 1.3 edge enforcement × RLS isolation × 8 closed memory audit kinds × FR-MEMORY-111 PII scrubbing × body retention 2y NULL-out + chain forever × CFO raw-body view with sev-3 introspection audit × shared unmatched_receipts table across sources × wise_profile_id 12-digit format validation at provisioning), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (RSA-SHA256 asymmetric verification via ring × per-profile public key 24h cache + rotation force-refresh × 5-day staleness reject × URL-vs-body profile_id cross-check × idempotency UNIQUE (profile_id, event_id) ON CONFLICT × append-only SQL grant × fast 200 within 5s Wise SLA × background processor with pg_advisory_xact_lock × currency-mismatch hold for CFO (no auto-convert) × dead-letter at 3 failures + restore handler × per-profile rate limit 100/s × 7-day profile deprecation + 410 GONE × TLS 1.3 edge enforcement × RLS isolation × 8 closed memory audit kinds × FR-MEMORY-111 PII scrubbing × body retention 2y NULL-out + chain forever × CFO raw-body view with sev-3 introspection audit × shared unmatched_receipts table across sources × wise_profile_id 12-digit format validation at provisioning), not by line targets.
 
 ---
 

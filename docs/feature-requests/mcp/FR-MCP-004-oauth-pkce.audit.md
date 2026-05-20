@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 10
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -51,7 +51,7 @@ Resolved: §1 #11 + DEC-816 + per-tenant `mcp_oauth_allowlist_redirect_hosts` po
 
 All 10 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (OAuth 2.1 baseline × authorization_code + refresh_token only × PKCE S256-only mandatory on public × audience binding RFC 8707 × refresh rotation with family-compromise detection × 30-second code TTL × one-time-use code with reuse → family compromise × exact-match redirect_uri × HTTPS-only except loopback × state CSRF param × JWT signed via FR-AUTH-004 JWKS × 1h access + 30d refresh × revocation via jti list cached 60s × RFC 7009 always-200 × RFC 7662 introspection confidential-only × RFC 8414 discovery × RFC 7591 DCR with tenant_admin gate on confidential × max 5 redirect_uris × per-tenant redirect-host allowlist × prompt=none silent re-auth × consent screen first-time × scope from FR-MCP-001 registry × append-only SQL grants × tenant isolation × constant-time PKCE × 8 closed memory audit kinds × FR-MEMORY-111 PII scrubbing), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (OAuth 2.1 baseline × authorization_code + refresh_token only × PKCE S256-only mandatory on public × audience binding RFC 8707 × refresh rotation with family-compromise detection × 30-second code TTL × one-time-use code with reuse → family compromise × exact-match redirect_uri × HTTPS-only except loopback × state CSRF param × JWT signed via FR-AUTH-004 JWKS × 1h access + 30d refresh × revocation via jti list cached 60s × RFC 7009 always-200 × RFC 7662 introspection confidential-only × RFC 8414 discovery × RFC 7591 DCR with tenant_admin gate on confidential × max 5 redirect_uris × per-tenant redirect-host allowlist × prompt=none silent re-auth × consent screen first-time × scope from FR-MCP-001 registry × append-only SQL grants × tenant isolation × constant-time PKCE × 8 closed memory audit kinds × FR-MEMORY-111 PII scrubbing), not by line targets.
 
 ---
 

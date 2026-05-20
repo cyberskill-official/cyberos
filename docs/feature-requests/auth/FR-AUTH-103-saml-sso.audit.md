@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 11
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -54,7 +54,7 @@ Resolved: §1 #16 + validation at config save + 400 unknown_role; AC #23.
 
 All 11 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (SP-initiated × HTTP POST/Redirect × WantAssertionsSigned+AuthnRequestsSigned × exc-c14n transform whitelist (XSW defense) × RSA-SHA256 minimum × InResponseTo replay defense × closed NameIDFormat × Audience + Recipient + InResponseTo + transform multi-layer × per-tenant attribute mapping validated against AUTH-101 Roles × 24h metadata cache + cert rotation × KMS-encrypted SP key × 7 memory audit kinds × samael crate × SP metadata download), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (SP-initiated × HTTP POST/Redirect × WantAssertionsSigned+AuthnRequestsSigned × exc-c14n transform whitelist (XSW defense) × RSA-SHA256 minimum × InResponseTo replay defense × closed NameIDFormat × Audience + Recipient + InResponseTo + transform multi-layer × per-tenant attribute mapping validated against AUTH-101 Roles × 24h metadata cache + cert rotation × KMS-encrypted SP key × 7 memory audit kinds × samael crate × SP metadata download), not by line targets.
 
 ---
 

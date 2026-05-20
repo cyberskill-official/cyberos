@@ -14,7 +14,7 @@ issues_critical: 0
 dedup_key_deferred_to: FR-AI-008
 revised_at: 2026-05-15
 authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 ISSes in canonical format)
-final_revision: 2026-05-16 (AUTHORING.md compliance appendix)
+final_revision: 2026-05-16 (feature-request-audit skill compliance appendix)
 ---
 
 ## §1 — Verdict summary
@@ -33,9 +33,9 @@ FR-AI-003 is ship-grade. Round-2 revisions promoted Q2/Q3/Q4/Q5 to normative §1
 
 ---
 
-## §4 — AUTHORING.md compliance appendix (added 2026-05-16)
+## §4 — feature-request-audit skill compliance appendix (added 2026-05-16)
 
-The round-1/round-2 ISSes above were merged into the original prose; AUTHORING.md §3.12 rule 36 requires ≥6 ISS-NNN findings in canonical format per audit. The following six findings re-state the resolved issues in canonical form plus add new AUTHORING.md-grounded compliance verifications. All RESOLVED.
+The round-1/round-2 ISSes above were merged into the original prose; feature-request-audit skill §3.12 rule 36 requires ≥6 ISS-NNN findings in canonical format per audit. The following six findings re-state the resolved issues in canonical form plus add new feature-request-audit skill-grounded compliance verifications. All RESOLVED.
 
 ### ISS-001 — Open Q2 (audit-row dedup_key) deferred without explicit FR linkage
 - **severity:** info  
@@ -43,7 +43,7 @@ The round-1/round-2 ISSes above were merged into the original prose; AUTHORING.m
 
 ### ISS-002 — Open Q3 (chain commit ordering vs HTTP response) ambiguous
 - **severity:** error  
-- **status:** RESOLVED — promoted to §1 #13: chain commit MUST complete before HTTP 200 returns to caller (audit-before-action per AUTHORING.md §3.8 rule 25).
+- **status:** RESOLVED — promoted to §1 #13: chain commit MUST complete before HTTP 200 returns to caller (audit-before-action per feature-request-audit skill §3.8 rule 25).
 
 ### ISS-003 — Open Q4 (MemoryEmit failure → caller blocks vs proceeds)
 - **severity:** error  
@@ -53,18 +53,18 @@ The round-1/round-2 ISSes above were merged into the original prose; AUTHORING.m
 - **severity:** warning  
 - **status:** RESOLVED — promoted to §1 #15: `ai_memory_emit_*` counters use coarse `tenant_kind` label (`internal | client | tenant`) not raw `tenant_id` to bound cardinality.
 
-### ISS-005 — AUTHORING.md §3.8 rule 26 (pair-write history events) — `*_started` + `*_completed` for memory_emit
+### ISS-005 — feature-request-audit skill §3.8 rule 26 (pair-write history events) — `*_started` + `*_completed` for memory_emit
 - **severity:** warning  
 - **rule_id:** authoring-md-§3.8 (rule 26)  
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #16 added: every `ai.precheck_started` row MUST be followed by `ai.precheck_completed` OR `ai.precheck_failed` within 30s; standalone `*_started` rows are crash signals per AUTHORING.md §3.8 rule 26 and trigger an OBS Grafana lint. §10 row added for "started-without-completed" detection.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §1 #16 added: every `ai.precheck_started` row MUST be followed by `ai.precheck_completed` OR `ai.precheck_failed` within 30s; standalone `*_started` rows are crash signals per feature-request-audit skill §3.8 rule 26 and trigger an OBS Grafana lint. §10 row added for "started-without-completed" detection.
 
-### ISS-006 — AUTHORING.md §3.7 rule 23 (audit-row payload MUST include trace_id) — explicit clause and format check
+### ISS-006 — feature-request-audit skill §3.7 rule 23 (audit-row payload MUST include trace_id) — explicit clause and format check
 - **severity:** warning  
 - **rule_id:** authoring-md-§3.7 (rule 23)  
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #17 added asserting every emitted `MemoryRow` MUST carry `extra.trace_id: String` (32-char lower-hex, W3C `trace-id` form per AUTHORING.md §3.7 rule 24 — use Display not Debug for OTel TraceId); §5 test `test_memory_row_trace_id_is_32_lowerhex` asserts the format via regex `^[0-9a-f]{32}$`; AC #17 added.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §1 #17 added asserting every emitted `MemoryRow` MUST carry `extra.trace_id: String` (32-char lower-hex, W3C `trace-id` form per feature-request-audit skill §3.7 rule 24 — use Display not Debug for OTel TraceId); §5 test `test_memory_row_trace_id_is_32_lowerhex` asserts the format via regex `^[0-9a-f]{32}$`; AC #17 added.
 
 **Post-appendix score = 10/10** with 6 canonical ISSes plus 10 prose-merged historical findings (16 total resolved).
 
 ---
 
-*End of FR-AI-003 audit. Status: PASS at 10/10. AUTHORING.md compliant 2026-05-16.*
+*End of FR-AI-003 audit. Status: PASS at 10/10. feature-request-audit skill compliant 2026-05-16.*

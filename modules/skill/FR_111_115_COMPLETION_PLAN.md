@@ -27,7 +27,7 @@ Why first: it's the largest remaining piece + has no blocker. Closes the 134-fil
 2. **Build `tools/sweep-placeholders/suggest.py`** (1.5h) per FR-115 §3 — per-skill suggestion engine reading body CONTRACT_ECHO, MANIFEST_SCHEMA, MODULE.md persona entry.
 3. **Build `modules/cuo/cuo/placeholder_check.py` + tests** (2.0h) — runtime validator + 4-6 pytest functions.
 4. **Add SKB-030 to `SKILL_BUNDLE_RUBRIC.md`** (0.5h) — rule statement + severity scheme.
-5. **Add §3.13 rule 38f to AUTHORING_DISCIPLINE.md** (0.5h) — discipline-doc entry.
+5. **Add §3.13 rule 38f to feature-request-audit skill** (0.5h) — discipline-doc entry.
 6. **Generate `tools/sweep-placeholders/report-2026-05-XX.md`** (0.5h) — run detect + suggest across catalog, produce review-ready report.
 7. **Operator reviews report + approves substitutions** (1.0h) — Stephen reads + edits 134 entries (~25s per entry; suggest.py speeds this up).
 8. **Apply substitutions in persona-grouped batches** (8.0h) — 6-10 batches by persona; commit each with operator-attested rationale.

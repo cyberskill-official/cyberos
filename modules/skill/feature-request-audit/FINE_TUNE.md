@@ -55,4 +55,4 @@ Every minor bump SHALL add:
 
 - `RUBRIC.md` — the locked rubric body.
 - `../docs/FINE_TUNE.md` — master default discipline.
-- `./AUTHORING_DISCIPLINE.md` — the operator-side authoring discipline this rubric audits (sibling file; absorbed 2026-05-18 from the former `cyberos/docs/feature-requests/AUTHORING.md`).
+- `./feature-request-audit skill` — the operator-side authoring discipline this rubric audits (sibling file; absorbed 2026-05-18 from the former `cyberos/feature-request-audit skill`).

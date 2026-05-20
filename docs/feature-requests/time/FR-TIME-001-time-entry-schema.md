@@ -117,13 +117,13 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
     - `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
     - `created_by_subject_id UUID NOT NULL REFERENCES auth.subjects(id)`.
 
-2. **MUST** enforce RLS with both `USING` and `WITH CHECK` (AUTHORING.md rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Cross-tenant reads return 0 rows; cross-tenant writes fail `permission_denied`.
+2. **MUST** enforce RLS with both `USING` and `WITH CHECK` (feature-request-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Cross-tenant reads return 0 rows; cross-tenant writes fail `permission_denied`.
 
 3. **MUST** declare the closed `entry_kind` Postgres enum with exactly 4 values (per VN-1 working-time classification): `'regular'`, `'overtime'`, `'weekend'`, `'holiday'`. Adding a 5th is an ADR. Holiday-list driving the kind defaulting is FR-TIME-007's responsibility; this FR just stores the column.
 
 4. **MUST** declare the closed `entry_status` Postgres enum with exactly 4 values: `'draft'`, `'submitted'`, `'approved'`, `'reverted'`. State transitions are FR-TIME-006's responsibility; this FR ships the column at default `'draft'`.
 
-5. **MUST** be **append-only** at the SQL grant layer (per DEC-230 + AUTHORING.md rule 12). Migration applies `REVOKE UPDATE, DELETE ON time_entries FROM cyberos_app;`. Mutations write a fresh row with `correction_to` pointing at the prior row (per §1 #6 below).
+5. **MUST** be **append-only** at the SQL grant layer (per DEC-230 + feature-request-audit skill rule 12). Migration applies `REVOKE UPDATE, DELETE ON time_entries FROM cyberos_app;`. Mutations write a fresh row with `correction_to` pointing at the prior row (per §1 #6 below).
 
 6. **MUST** support **correction via new row** (per DEC-220). The handler `POST /v1/time/entries/{id}/correct` creates a new row with:
     - `correction_to = <prior_id>`.
@@ -149,7 +149,7 @@ The TIME service **MUST** ship the TimeEntry schema as the canonical append-only
 
 12. **MUST** emit memory audit row `time.entry_recorded` on every create (non-correction row) and `time.entry_corrected` on every correction. Both rows carry `{entry_id, tenant_id, member_subject_id_hash16, engagement_id, issue_id, duration_minutes, entry_kind, entry_status, billable, ts_start, ts_ns_recorded}`. The correction row additionally carries `correction_to`.
 
-13. **MUST** PII-scrub the `description` field via FR-MEMORY-111 BEFORE chain commit. The PostgreSQL row retains the raw text (tenant-scoped + RLS-protected); the memory audit chain holds only the scrubbed form (AUTHORING.md rule 18).
+13. **MUST** PII-scrub the `description` field via FR-MEMORY-111 BEFORE chain commit. The PostgreSQL row retains the raw text (tenant-scoped + RLS-protected); the memory audit chain holds only the scrubbed form (feature-request-audit skill rule 18).
 
 14. **MUST** complete create/correct/get/list handlers in ≤ 50 ms p95. `entries_perf_test` asserts on 1000 iterations.
 

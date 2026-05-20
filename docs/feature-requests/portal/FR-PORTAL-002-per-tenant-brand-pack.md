@@ -35,7 +35,7 @@ source_decisions:
   - DEC-1009 2026-05-17 — Brand assets served public-no-auth from CDN (logos + colour CSS) per industry convention; PII-scrubbed (no PII inside brand assets per validation)
   - DEC-1010 2026-05-17 — Per-tenant CNAME limited to ONE custom CNAME at slice 1 (multi-CNAME for multi-region landing pages = slice 2)
   - DEC-1011 2026-05-17 — ACME TLS cert auto-renewal job runs daily; certs renewed at T-30 days; renewal failure → sev-2 alert + 24h escalation window before sev-1
-  - DEC-1012 2026-05-17 — Brand-pack export: tenant_admin can export current brand-pack as JSON + assets bundle (.zip) for migration / backup; ALWAYS deterministic per AUTHORING.md rule 27-28
+  - DEC-1012 2026-05-17 — Brand-pack export: tenant_admin can export current brand-pack as JSON + assets bundle (.zip) for migration / backup; ALWAYS deterministic per feature-request-audit skill rule 27-28
   - DEC-1013 2026-05-17 — Closed enum `brand_asset_kind` = {favicon, header_logo, splash_logo, email_logo}; CI cardinality test asserts 4
   - DEC-1014 2026-05-17 — RLS scoped to `tenant_id = current_setting('auth.tenant_id')::uuid` on all 3 PORTAL brand tables
   - DEC-1015 2026-05-17 — Asset upload size cap: 1 MiB per asset; total brand pack < 5 MiB (5 assets × 1 MiB); rejected uploads return 413 PAYLOAD_TOO_LARGE
@@ -130,7 +130,7 @@ risk_if_skipped: "Without per-tenant brand pack, every PORTAL surface looks like
 
 The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + email overrides) and custom CNAME with ACME-issued TLS at `services/portal/src/brand/` + `services/portal/src/cname/`, with versioning + rollback, WCAG 2.1 AA contrast enforcement, magic-bytes asset validation, daily auto-renewal, and 8 memory audit kinds.
 
-1. **MUST** define `portal_brand_packs` (versioned, immutable rows) at migration `0005`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, version INT NOT NULL, palette JSONB NOT NULL, email_overrides JSONB NOT NULL DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_by_subject_id UUID NOT NULL, asset_set_id BIGINT NOT NULL REFERENCES portal_brand_assets(asset_set_id))`. Per-tenant version is monotonic. REVOKE UPDATE, DELETE per AUTHORING.md rule 12 (rollback = pointer change, not row mutation).
+1. **MUST** define `portal_brand_packs` (versioned, immutable rows) at migration `0005`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, version INT NOT NULL, palette JSONB NOT NULL, email_overrides JSONB NOT NULL DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), created_by_subject_id UUID NOT NULL, asset_set_id BIGINT NOT NULL REFERENCES portal_brand_assets(asset_set_id))`. Per-tenant version is monotonic. REVOKE UPDATE, DELETE per feature-request-audit skill rule 12 (rollback = pointer change, not row mutation).
 
 2. **MUST** define `portal_brand_pack_active` at migration `0006`: `(tenant_id UUID PRIMARY KEY, active_pack_id BIGINT NOT NULL REFERENCES portal_brand_packs(id), activated_at TIMESTAMPTZ NOT NULL DEFAULT now(), activated_by_subject_id UUID NOT NULL)`. One-row-per-tenant activation pointer.
 
@@ -140,7 +140,7 @@ The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + 
 
 5. **MUST** define `portal_cname_configs` at migration `0008`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, cname TEXT NOT NULL, dns_verify_token TEXT NOT NULL, dns_verified_at TIMESTAMPTZ, tls_cert_pem_kms_blob BYTEA, tls_cert_chain_pem_kms_blob BYTEA, tls_key_pem_kms_blob BYTEA, tls_kms_key_id TEXT, tls_issued_at TIMESTAMPTZ, tls_expires_at TIMESTAMPTZ, tls_renewal_failures INT NOT NULL DEFAULT 0, status TEXT NOT NULL CHECK (status IN ('pending_dns','dns_verified','active','revoked')) DEFAULT 'pending_dns', last_renewal_attempt_at TIMESTAMPTZ)`. Partial unique `(tenant_id) WHERE status IN ('pending_dns','dns_verified','active')` — one active CNAME per tenant per DEC-1010.
 
-6. **MUST** enforce RLS with both USING and WITH CHECK on all 4 PORTAL brand tables (per DEC-1014 + AUTHORING.md rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
+6. **MUST** enforce RLS with both USING and WITH CHECK on all 4 PORTAL brand tables (per DEC-1014 + feature-request-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
 7. **MUST** expose `POST /v1/admin/tenants/{tenant_id}/brand-pack` for brand-pack creation. Caller has `tenant_admin` role. Body: `{ palette: {primary, secondary, accent, background, surface, error}, email_overrides?: {welcome?, magic_link?, password_reset?, invoice_receipt?}, assets: [{kind, base64_content}] }`. Handler:
     - Validates palette: 6 named slots, each `#RRGGBB` hex.
@@ -211,14 +211,14 @@ The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + 
 21. **MUST** support brand-pack export per DEC-1012. `GET /v1/admin/tenants/{tenant_id}/brand-pack/{pack_id}/export` returns a deterministic .zip containing:
     - `pack.json` — canonical-JSON of the pack metadata (palette + email overrides + asset filenames).
     - `assets/<kind>.<ext>` files for each asset.
-    Deterministic per AUTHORING.md rule 27-28: file order alphabetic; zip mtime = `2000-01-01T00:00:00Z`; mode 0o644.
+    Deterministic per feature-request-audit skill rule 27-28: file order alphabetic; zip mtime = `2000-01-01T00:00:00Z`; mode 0o644.
 
 22. **MUST** apply standard fallback chain for email overrides per DEC-1006. FR-EMAIL-001's template loader tries (in order):
     1. `services/email/templates/_overrides/<tenant_slug>/<template>.tera` (per-tenant override mounted from `portal_brand_packs.email_overrides`).
     2. `services/email/templates/<template>.tera` (CyberSkill default).
     Missing override silently falls through to default; no error.
 
-23. **MUST** emit 8 memory audit row kinds per DEC-1017 (AUTHORING.md rule 6 namespace):
+23. **MUST** emit 8 memory audit row kinds per DEC-1017 (feature-request-audit skill rule 6 namespace):
     - `portal.brand_pack_created` (sev-2)
     - `portal.brand_pack_activated` (sev-2)
     - `portal.brand_pack_rolled_back` (sev-2)
@@ -228,7 +228,7 @@ The PORTAL service **MUST** ship per-tenant brand pack (logo + colour palette + 
     - `portal.cname_tls_renewal_failed` (sev-2 → sev-1 after 3 consecutive)
     - `portal.brand_pack_validation_rejected` (sev-3 — informational; high volume during onboarding)
 
-24. **MUST** thread W3C `traceparent` across upload → validate → image_pipeline → INSERT → activate → CDN invalidate (AUTHORING.md rule 22-24). Single trace_id per save operation.
+24. **MUST** thread W3C `traceparent` across upload → validate → image_pipeline → INSERT → activate → CDN invalidate (feature-request-audit skill rule 22-24). Single trace_id per save operation.
 
 25. **MUST NOT** persist plaintext TLS keys or plaintext assets — every blob in `portal_brand_assets.content_kms_blob` and `portal_cname_configs.tls_*_kms_blob` is KMS-encrypted at rest. Asset serve handler decrypts on-demand into a per-request buffer (no plaintext on disk).
 
@@ -823,7 +823,7 @@ All resolved for slice 1. Deferred:
 
 **§11.8** ETag format: SHA-256-truncated 16 hex chars of the canonical asset bytes; matches FR-MCP-005's PRM ETag pattern.
 
-**§11.9** Brand pack JSON export uses canonical-JSON (sorted keys) for deterministic byte equality across runs (AUTHORING.md rule 27).
+**§11.9** Brand pack JSON export uses canonical-JSON (sorted keys) for deterministic byte equality across runs (feature-request-audit skill rule 27).
 
 **§11.10** ZIP archive determinism: `ZIP_DEFLATED level 6 + fixed mtime 2000-01-01T00:00:00Z + mode 0o644 + sorted entries` (consistent with AGENTS.md §10 portability pattern).
 

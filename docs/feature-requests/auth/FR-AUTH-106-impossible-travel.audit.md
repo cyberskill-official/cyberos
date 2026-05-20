@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -45,7 +45,7 @@ Resolved: §1 #14 + DEC-751 + 30-day staleness sev-2 startup audit; service stil
 
 All 8 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (Haversine great-circle × 24h sliding-window prior lookup × per-tenant speed threshold [200, 5000] × per-tenant 3-action enum × challenge-by-default delegating to FR-AUTH-102 × same-country+ASN ASN-bypass × CIDR allowlist with prefix-tightness validation × per-subject 50k LRU write-through × 30-min sticky challenge suppression × local MaxMind .mmdb vendored × 30-day staleness audit × VPN/Tor flagging not auto-block × user-facing redaction × full geo in chain audit × evaluator AFTER credential × 10 closed memory audit kinds × append-only login_history_geo + travel_policy_audit × RLS isolation × dry_run preview × unresolvable-IP allowed-with-sev-3), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (Haversine great-circle × 24h sliding-window prior lookup × per-tenant speed threshold [200, 5000] × per-tenant 3-action enum × challenge-by-default delegating to FR-AUTH-102 × same-country+ASN ASN-bypass × CIDR allowlist with prefix-tightness validation × per-subject 50k LRU write-through × 30-min sticky challenge suppression × local MaxMind .mmdb vendored × 30-day staleness audit × VPN/Tor flagging not auto-block × user-facing redaction × full geo in chain audit × evaluator AFTER credential × 10 closed memory audit kinds × append-only login_history_geo + travel_policy_audit × RLS isolation × dry_run preview × unresolvable-IP allowed-with-sev-3), not by line targets.
 
 ---
 

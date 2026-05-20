@@ -27,7 +27,7 @@ source_decisions:
   - DEC-1102 2026-05-17 — Per-tool registration declares `long_running: bool` annotation; tools with `long_running=true` route through Tasks primitive automatically; sync tools call directly per FR-MCP-001
   - DEC-1103 2026-05-17 — Task TTL default 24h; per-tool override via `task_ttl_seconds` registration field; max 7 days enforced at gateway
   - DEC-1104 2026-05-17 — Task ID format: UUIDv7 (sortable + collision-free per FR-TEN-103 DEC-927); prefixed `task_` for human readability
-  - DEC-1105 2026-05-17 — Status polling endpoint `GET /v1/mcp/tasks/{task_id}`; rate-limit 60/min/task (1/sec sufficient for UX) per AUTHORING.md §8.2c absence-claim derivative — no busy-poll allowed
+  - DEC-1105 2026-05-17 — Status polling endpoint `GET /v1/mcp/tasks/{task_id}`; rate-limit 60/min/task (1/sec sufficient for UX) per feature-request-audit skill §8.2c absence-claim derivative — no busy-poll allowed
   - DEC-1106 2026-05-17 — Resume on reconnect: task_id is opaque + persistent in Postgres `mcp_tasks` table; client can poll from any session/device as long as JWT matches `caller_subject_id`
   - DEC-1107 2026-05-17 — Cancellation endpoint `POST /v1/mcp/tasks/{task_id}/cancel`; transitions task to `cancelling` (terminal-pending) then `cancelled`; per-tool registration declares whether cancellation is supported
   - DEC-1108 2026-05-17 — Tool execution runs in a dedicated Tokio worker pool with bounded concurrency per module (FR-MCP-002 registration declares `max_concurrent_tasks`); over-limit tasks queue with `status=pending`
@@ -132,7 +132,7 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
 
 3. **MUST** define `mcp_tasks` table at migration `0009`: `(task_id UUID PRIMARY KEY, tenant_id UUID NOT NULL, caller_subject_id UUID NOT NULL, tool_id TEXT NOT NULL, status task_status NOT NULL DEFAULT 'pending', input_payload_kms_blob BYTEA NOT NULL, input_payload_sha256 CHAR(64) NOT NULL, result_payload_kms_blob BYTEA, result_url TEXT, error_code TEXT, error_message TEXT, error_details JSONB, progress_value DOUBLE PRECISION, progress_unit task_progress_unit NOT NULL DEFAULT 'none', progress_total DOUBLE PRECISION, idempotency_key TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), started_at TIMESTAMPTZ, completed_at TIMESTAMPTZ, expires_at TIMESTAMPTZ NOT NULL, trace_id CHAR(32))`. Partial unique index `(tenant_id, idempotency_key) WHERE idempotency_key IS NOT NULL AND created_at > now() - interval '24 hours'`.
 
-4. **MUST** define `mcp_task_checkpoints` table at migration `0010`: `(id BIGSERIAL PRIMARY KEY, task_id UUID NOT NULL REFERENCES mcp_tasks(task_id), seq INT NOT NULL, checkpoint_data_kms_blob BYTEA NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(task_id, seq))`. Per-task ordered checkpoints; append-only via REVOKE per AUTHORING.md rule 12.
+4. **MUST** define `mcp_task_checkpoints` table at migration `0010`: `(id BIGSERIAL PRIMARY KEY, task_id UUID NOT NULL REFERENCES mcp_tasks(task_id), seq INT NOT NULL, checkpoint_data_kms_blob BYTEA NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), UNIQUE(task_id, seq))`. Per-task ordered checkpoints; append-only via REVOKE per feature-request-audit skill rule 12.
 
 5. **MUST** define `mcp_task_progress_events` table at migration `0011`: `(id BIGSERIAL PRIMARY KEY, task_id UUID NOT NULL REFERENCES mcp_tasks(task_id), progress_value DOUBLE PRECISION NOT NULL, progress_unit task_progress_unit NOT NULL, message TEXT, emitted_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Progress event log; high-volume + sampled at 1% to memory.
 
@@ -206,7 +206,7 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
 
 18. **MUST** enforce result size cap 10 MiB per DEC-1112. Worker computing result checks size before INSERT; over-cap → status='failed' + error.code='-32001' (custom) + error.message='result_too_large' + suggestion to use FR-DOC-001 streaming.
 
-19. **MUST** preserve trace_id end-to-end per DEC-1123 + AUTHORING.md rule 22-24. Original tools/call trace_id stored in `mcp_tasks.trace_id`; emitted on every audit row + every progress event + every NATS publish.
+19. **MUST** preserve trace_id end-to-end per DEC-1123 + feature-request-audit skill rule 22-24. Original tools/call trace_id stored in `mcp_tasks.trace_id`; emitted on every audit row + every progress event + every NATS publish.
 
 20. **MUST** emit 8 memory audit row kinds per DEC-1124:
     - `mcp.task_started` (sev-2)
@@ -218,7 +218,7 @@ The MCP service **MUST** ship Tasks primitive at `services/mcp/src/tasks/` per M
     - `mcp.task_resumed_after_reconnect` (sev-3 — informational, helps debug worker restarts)
     - `mcp.task_checkpoint_persisted` (sev-3 — sampled at 1%)
 
-21. **MUST** PII-scrub audit rows per DEC-1125 + AUTHORING.md rule 18. `input_payload_sha256` and `result_payload_sha256` only in chain; raw payloads in `mcp_tasks` (RLS-scoped, 30-day retention post-completion).
+21. **MUST** PII-scrub audit rows per DEC-1125 + feature-request-audit skill rule 18. `input_payload_sha256` and `result_payload_sha256` only in chain; raw payloads in `mcp_tasks` (RLS-scoped, 30-day retention post-completion).
 
 22. **MUST** auto-clean completed task payloads at T+30 days post-completion per DEC-1125. Daily job UPDATE `mcp_tasks SET input_payload_kms_blob=NULL, result_payload_kms_blob=NULL WHERE status IN ('completed','failed','cancelled','expired') AND completed_at < now() - interval '30 days'`. Metadata (task_id, status, timestamps, error_code) retained for forensic.
 

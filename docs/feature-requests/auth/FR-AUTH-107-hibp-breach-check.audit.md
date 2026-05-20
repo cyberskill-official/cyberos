@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -45,7 +45,7 @@ Resolved: §1 #23 + CYBEROS_ENV gate + sev-1 startup audit on prod-with-whitelis
 
 All 8 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (k-anonymity 5-char prefix × in-process LRU cache 10000×1h × 2s timeout+retry × 10-permit semaphore × per-tenant threshold [1,10000] × per-tenant unreachable policy × air-gapped local dump × dev whitelist env-gated × HIBP-before-Argon2 ordering × append-only audit log SQL grant × RLS × 6 closed memory kinds × 429-escalation sliding window × NO login invocation × NO plaintext/full-hash logging × live-canary nightly CI × dry-run preview × memory_chain_hash dual-link × FR-MEMORY-111 PII scrubbing), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (k-anonymity 5-char prefix × in-process LRU cache 10000×1h × 2s timeout+retry × 10-permit semaphore × per-tenant threshold [1,10000] × per-tenant unreachable policy × air-gapped local dump × dev whitelist env-gated × HIBP-before-Argon2 ordering × append-only audit log SQL grant × RLS × 6 closed memory kinds × 429-escalation sliding window × NO login invocation × NO plaintext/full-hash logging × live-canary nightly CI × dry-run preview × memory_chain_hash dual-link × FR-MEMORY-111 PII scrubbing), not by line targets.
 
 ---
 

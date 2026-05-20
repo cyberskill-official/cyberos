@@ -94,7 +94,7 @@ This rubric is a port of the proven rule set from the legacy `cuo/cpo/feature-re
 
 ## §9  Spec-vs-implementation traceability  *(applies to cyberos-style §1/§4/§5 FR template only)*
 
-These rules apply to FRs that use the cyberos template (numbered §1 normative clauses · §4 acceptance criteria · §5 verification/tests), per `AUTHORING_DISCIPLINE.md` §1. Added 2026-05-18 (session 21) after the audit-fix loop on FR-AUTH-001 + FR-AUTH-006 surfaced 13 §1↔§4 / §4↔§5 traceability gaps in two "shipped" FRs — see memory feedback `feedback_fr_author_clause_to_test_traceability.md`. The upstream fix: refuse to score 10/10 if any §1 clause lacks a downstream test, so future FRs can't ship code that passes §5 tests while missing §1 clauses.
+These rules apply to FRs that use the cyberos template (numbered §1 normative clauses · §4 acceptance criteria · §5 verification/tests), per `feature-request-audit` skill §1. Added 2026-05-18 (session 21) after the audit-fix loop on FR-AUTH-001 + FR-AUTH-006 surfaced 13 §1↔§4 / §4↔§5 traceability gaps in two "shipped" FRs — see memory feedback `feedback_fr_author_clause_to_test_traceability.md`. The upstream fix: refuse to score 10/10 if any §1 clause lacks a downstream test, so future FRs can't ship code that passes §5 tests while missing §1 clauses.
 
 | rule_id | Check | Severity | Auto-fixable |
 | ------- | ----- | -------- | ------------ |

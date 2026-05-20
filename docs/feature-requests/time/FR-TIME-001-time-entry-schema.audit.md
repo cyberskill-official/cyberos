@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 10
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -18,7 +18,7 @@ FR-TIME-001 ships the TimeEntry append-only schema — the invoice-grade hours r
 ## §2 — Findings (all resolved)
 
 ### ISS-001 — Mutations could rewrite history
-First-pass allowed UPDATE on time_entries (operator convenience). Resolved: §1 #5 + DEC-230 + AUTHORING.md rule 12 + `REVOKE UPDATE, DELETE FROM cyberos_app`; AC #8 + AC #9.
+First-pass allowed UPDATE on time_entries (operator convenience). Resolved: §1 #5 + DEC-230 + feature-request-audit skill rule 12 + `REVOKE UPDATE, DELETE FROM cyberos_app`; AC #8 + AC #9.
 
 ### ISS-002 — Tree-shaped corrections (two correctors of same prior) caused ambiguous "current value"
 Resolved: §1 #8 + DEC-226 + `enforce_chain_topology` trigger + AC #13.
@@ -51,7 +51,7 @@ First-pass stored raw description in memory row. Resolved: §1 #13 + FR-MEMORY-1
 
 All 10 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (append-only via SQL grant × correction-via-new-row × acyclic chain × tree-rejection × cross-scope rejection × rate-card snapshot × multi-currency × per-row duration cap × RLS isolation × audit chain × view + walker × REST + idempotency × OTel), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (append-only via SQL grant × correction-via-new-row × acyclic chain × tree-rejection × cross-scope rejection × rate-card snapshot × multi-currency × per-row duration cap × RLS isolation × audit chain × view + walker × REST + idempotency × OTel), not by line targets.
 
 ---
 

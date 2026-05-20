@@ -235,19 +235,19 @@ impl Drop for ReconcileGuard {
 
 Add §10 row: *"Drop fires outside tokio runtime (process shutdown, runtime timeout) → reconcile not called from Drop; cleanup job sweeps within 60s; sev-2 log emitted; OBS counter increments."*
 
-### ISS-005 — AUTHORING.md §3.7 rule 22 (traceparent on outbound SSE) — header propagation into the SSE response stream not asserted
+### ISS-005 — feature-request-audit skill §3.7 rule 22 (traceparent on outbound SSE) — header propagation into the SSE response stream not asserted
 - **severity:** warning
 - **rule_id:** authoring-md-§3.7 (rule 22)
 - **location:** §1 (no clause about traceparent propagation in SSE response), §3 (StreamEvent schema), §6 (SSE response handler)
 - **status:** open
 
 #### Description
-The SSE response is a long-lived HTTP connection from gateway → client. Per AUTHORING.md §3.7 rule 22, the inbound `traceparent` header MUST propagate to (a) the outbound provider HTTPS call (FR-AI-008 #17 owns this) AND (b) the SSE response headers so downstream consumers (browser, CUO router, OBS) can correlate. Currently §1 says nothing about the SSE response's `traceparent` header. A client subscribing to the stream sees no trace context — they can't link their `tracestate` to the server-side spans. The `X-Request-Id` header is set but not the W3C `traceparent`.
+The SSE response is a long-lived HTTP connection from gateway → client. Per feature-request-audit skill §3.7 rule 22, the inbound `traceparent` header MUST propagate to (a) the outbound provider HTTPS call (FR-AI-008 #17 owns this) AND (b) the SSE response headers so downstream consumers (browser, CUO router, OBS) can correlate. Currently §1 says nothing about the SSE response's `traceparent` header. A client subscribing to the stream sees no trace context — they can't link their `tracestate` to the server-side spans. The `X-Request-Id` header is set but not the W3C `traceparent`.
 
 #### Suggested fix
 Add §1 #16: "**MUST** set the W3C `traceparent` header in the SSE response (status 200 + Content-Type: text/event-stream) so clients can correlate streaming events with server spans. The value MUST be derived from the inbound request's span context (child span of the inbound trace_id). FR-AI-022's `tracing-opentelemetry` layer provides the `traceparent::for_span(&current_span())` helper." Add AC #17 verifying via a `reqwest`-based test that the SSE response carries the same `trace_id` (32-hex) as the inbound request.
 
-### ISS-006 — AUTHORING.md §3.10 rule 29 (failure-mode per architectural decision) — heartbeat-during-disconnect path not in §10
+### ISS-006 — feature-request-audit skill §3.10 rule 29 (failure-mode per architectural decision) — heartbeat-during-disconnect path not in §10
 - **severity:** warning
 - **rule_id:** authoring-md-§3.10 (rule 29)
 - **location:** §10 failure-modes inventory
@@ -276,8 +276,8 @@ All 6 mechanical revisions applied:
 - ISS-002 RESOLVED (2026-05-16): §6 `run_provider_stream` loop uses `tokio::select!` racing disconnect-watcher vs provider stream; `ABORT_TIMEOUT` hard upper bound per select-iteration; AC #15 added.
 - ISS-003 RESOLVED (2026-05-16): §6 Usage and Done send paths check `.is_err()` and return `Cancelled { reason: ClientDisconnect }`; AC #16 added.
 - ISS-004 RESOLVED (2026-05-16): §6 `ReconcileGuard::Drop` branches on `Handle::try_current()` — spawns recovery if runtime alive, else sev-2 log + `ai_streaming_drop_outside_runtime_total`; §10 row added.
-- ISS-005 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #16 added asserting W3C `traceparent` header in SSE response; AC #17 added (reqwest-based trace_id correlation test).
-- ISS-006 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §10 row added for client-disconnect-during-heartbeat; `metrics::DISCONNECTS` labels expanded to include `when ∈ before_first_token | after_first_token | heartbeat`; AC #18 added.
+- ISS-005 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #16 added asserting W3C `traceparent` header in SSE response; AC #17 added (reqwest-based trace_id correlation test).
+- ISS-006 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §10 row added for client-disconnect-during-heartbeat; `metrics::DISCONNECTS` labels expanded to include `when ∈ before_first_token | after_first_token | heartbeat`; AC #18 added.
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 

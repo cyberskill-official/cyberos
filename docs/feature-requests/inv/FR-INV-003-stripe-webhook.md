@@ -27,7 +27,7 @@ source_decisions:
   - DEC-463 (REVOKE UPDATE, DELETE on stripe_event_log from cyberos_app — append-only at SQL grant)
   - DEC-464 (replay window 5 minutes per Stripe spec; outside → 401 + audit)
   - DEC-465 (per-tenant webhook URL routing — Stripe webhook endpoint per tenant: `https://api.cyberos.world/v1/inv/webhooks/stripe/<tenant_slug>`; secret per tenant)
-  - DEC-466 (multi-currency support — Stripe sends amount + currency; stored as BIGINT minor + CHAR(3) currency per AUTHORING.md rule 11; supports USD, EUR, SGD, GBP at slice 1)
+  - DEC-466 (multi-currency support — Stripe sends amount + currency; stored as BIGINT minor + CHAR(3) currency per feature-request-audit skill rule 11; supports USD, EUR, SGD, GBP at slice 1)
   - DEC-467 (memory audit kinds: inv.stripe_event_received, inv.stripe_event_rejected, inv.stripe_payment_received, inv.stripe_payment_refunded, inv.stripe_subscription_changed, inv.duplicate_stripe_event_received)
   - DEC-468 (Stripe-Signature header format: `t=<unix_timestamp>,v1=<hex_signature>[,v0=<deprecated>]`; we accept v1 only; v0 deprecated by Stripe)
   - DEC-469 (per-tenant webhook secret stored in `stripe_webhook_secrets` table KMS-encrypted; rotation handler with 60s overlap window)
@@ -75,7 +75,7 @@ disallowed_tools:
   - accept v0 signature scheme (per DEC-468 — deprecated)
   - process events outside the closed 8-value allowlist (per DEC-461)
   - allow UPDATE on stripe_event_log (per DEC-463)
-  - store amounts as FLOAT (per AUTHORING.md rule 11)
+  - store amounts as FLOAT (per feature-request-audit skill rule 11)
 
 effort_hours: 8
 sub_tasks:
@@ -106,7 +106,7 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 4. **MUST** enforce RLS with both `USING` and `WITH CHECK` on both new tables. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
-5. **MUST** be **append-only** on `stripe_event_log` at SQL grant (per DEC-463 + AUTHORING.md rule 12). `REVOKE UPDATE, DELETE ON stripe_event_log FROM cyberos_app`.
+5. **MUST** be **append-only** on `stripe_event_log` at SQL grant (per DEC-463 + feature-request-audit skill rule 12). `REVOKE UPDATE, DELETE ON stripe_event_log FROM cyberos_app`.
 
 6. **MUST** expose `POST /v1/inv/webhooks/stripe/{tenant_slug}` (per DEC-465). Per-tenant URL routing. Unknown slug → 404 `tenant_unknown` + emit `inv.stripe_event_rejected` memory row.
 
@@ -200,7 +200,7 @@ The INV service **MUST** ship the Stripe webhook handler at `POST /v1/inv/webhoo
 
 **Why per-tenant secret rotation with 60s overlap (DEC-469, §1 #18)?** Same logic as VietQR webhook. Operator rotates secret in our system + updates Stripe portal in sequence; 60s window handles the timing gap.
 
-**Why multi-currency stored as BIGINT minor (DEC-466, §1 #12)?** USD cents, EUR cents, SGD cents, GBP pence — all minor-unit currencies. AUTHORING.md rule 11. FLOAT for amount would round-error at scale.
+**Why multi-currency stored as BIGINT minor (DEC-466, §1 #12)?** USD cents, EUR cents, SGD cents, GBP pence — all minor-unit currencies. feature-request-audit skill rule 11. FLOAT for amount would round-error at scale.
 
 **Why supported currencies USD/EUR/SGD/GBP at slice 1 (§1 #12)?** Covers ~95% of international SaaS billing; adding more is an ADR (each new currency may need FX rate setup + invoicing template).
 

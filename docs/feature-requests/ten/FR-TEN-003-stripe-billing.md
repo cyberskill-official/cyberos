@@ -166,7 +166,7 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
    - Partial unique index `CREATE UNIQUE INDEX uniq_stripe_customer ON tenants(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL`.
    - Partial unique index `CREATE UNIQUE INDEX uniq_stripe_subscription ON tenants(stripe_subscription_id) WHERE stripe_subscription_id IS NOT NULL`.
 
-2. **MUST** define the closed `billing_currency_enum` Postgres type at migration `0009` with exactly 5 values: `VND, USD, EUR, SGD, GBP`. CI cardinality test asserts 5 (DEC-792 + AUTHORING.md rule 6 namespace pattern adapted for enum). A 6th value requires a schema migration + DEC entry.
+2. **MUST** define the closed `billing_currency_enum` Postgres type at migration `0009` with exactly 5 values: `VND, USD, EUR, SGD, GBP`. CI cardinality test asserts 5 (DEC-792 + feature-request-audit skill rule 6 namespace pattern adapted for enum). A 6th value requires a schema migration + DEC entry.
 
 3. **MUST** derive `billing_rail` from `billing_currency` at tenant provisioning (FR-TEN-001 handler):
    - `VND` → `vietqr_momo_zalo` (FR-TEN-102 path).
@@ -243,17 +243,17 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
     ```
     Caller MUST have role `tenant_admin` (own tenant) or `cfo` (any tenant).
 
-14. **MUST** thread `Idempotency-Key` on every outbound Stripe write API call (DEC-794 + AUTHORING.md rule 12 derivative for external systems). Key format `ten.<tenant_id>.<operation>.<resource_ref_or_period_ts>`. Max 255 chars. Persisted in `stripe_api_calls` table with columns `(idempotency_key TEXT PRIMARY KEY, tenant_id UUID, operation TEXT, request_sha256 CHAR(64), response_status INT, response_body_sha256 CHAR(64), created_at TIMESTAMPTZ, ttl_until TIMESTAMPTZ DEFAULT now() + INTERVAL '7 days')`. A scheduled job prunes entries past `ttl_until` daily.
+14. **MUST** thread `Idempotency-Key` on every outbound Stripe write API call (DEC-794 + feature-request-audit skill rule 12 derivative for external systems). Key format `ten.<tenant_id>.<operation>.<resource_ref_or_period_ts>`. Max 255 chars. Persisted in `stripe_api_calls` table with columns `(idempotency_key TEXT PRIMARY KEY, tenant_id UUID, operation TEXT, request_sha256 CHAR(64), response_status INT, response_body_sha256 CHAR(64), created_at TIMESTAMPTZ, ttl_until TIMESTAMPTZ DEFAULT now() + INTERVAL '7 days')`. A scheduled job prunes entries past `ttl_until` daily.
 
 15. **MUST** honour Stripe API `Retry-After` header on rate-limit (429) responses (DEC-795). For 5xx responses without `Retry-After`, apply exponential backoff: `1s, 2s, 4s, 8s, 16s` capped at 5 min (max 5 retries). After exhaustion: memory audit `ten.stripe_api_call_failed` at sev-2 + return `502 BAD_GATEWAY` to caller with `{ error: "stripe_unavailable", retry_after_seconds: <next_retry> }`.
 
 16. **MUST** route Stripe API calls through the per-residency Stripe API key (DEC-801). The api_client constructor takes `residency: Residency` and resolves `STRIPE_API_KEY_<RESIDENCY>` from KMS-encrypted secrets store. Wrong residency → wrong Stripe account → forensically catastrophic; CI test `stripe_residency_apikey_routing_test` asserts correct routing per residency.
 
-17. **MUST** enforce RLS with both `USING` and `WITH CHECK` on `stripe_api_calls` and `stripe_event_dispatch_log` tables (AUTHORING.md rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
+17. **MUST** enforce RLS with both `USING` and `WITH CHECK` on `stripe_api_calls` and `stripe_event_dispatch_log` tables (feature-request-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
-18. **MUST** REVOKE UPDATE, DELETE on `stripe_api_calls`, `stripe_event_dispatch_log`, and `stripe_price_map` from `cyberos_app` role (AUTHORING.md rule 12). Pruning of `stripe_api_calls` past TTL uses a separate `cyberos_pruner` role with DELETE grant only on past-TTL rows.
+18. **MUST** REVOKE UPDATE, DELETE on `stripe_api_calls`, `stripe_event_dispatch_log`, and `stripe_price_map` from `cyberos_app` role (feature-request-audit skill rule 12). Pruning of `stripe_api_calls` past TTL uses a separate `cyberos_pruner` role with DELETE grant only on past-TTL rows.
 
-19. **MUST** emit 11 memory audit row kinds (DEC-784 expansion + AUTHORING.md rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
+19. **MUST** emit 11 memory audit row kinds (DEC-784 expansion + feature-request-audit skill rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
     - `ten.stripe_customer_created` (sev-2)
     - `ten.stripe_subscription_created` (sev-2)
     - `ten.stripe_subscription_updated` (sev-2)
@@ -266,14 +266,14 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
     - `ten.stripe_refund_issued` (sev-1)
     - `ten.stripe_overage_pushed` (sev-3)
 
-    Each row carries `trace_id` (32-char W3C hex per AUTHORING.md rule 23 + 24) and is PII-scrubbed via FR-MEMORY-111 BEFORE chain commit (AUTHORING.md rule 18). `billing_contact_email` is hashed (`billing_contact_email_hash16`) in chain; full value retained only in tenant Postgres.
+    Each row carries `trace_id` (32-char W3C hex per feature-request-audit skill rule 23 + 24) and is PII-scrubbed via FR-MEMORY-111 BEFORE chain commit (feature-request-audit skill rule 18). `billing_contact_email` is hashed (`billing_contact_email_hash16`) in chain; full value retained only in tenant Postgres.
 
 20. **MUST** ship the `cyberos-ten stripe-sync-prices` deploy-time CLI (`services/ten/src/cli/stripe_sync_prices.rs`). Behaviour:
     - `--dry-run` (default): list every `(residency, currency, tier, axis)` permutation in `PRICE_CATALOG × AXES` (12 base + 48 overage = 60 per residency) and the Stripe Price ID it would create/lookup.
     - `--apply`: for each entry without an existing Stripe Price ID (looked up via Stripe `GET /v1/prices?lookup_keys=...` with `lookup_key = "cyberos.<currency>.<tier>.<axis>"`), call Stripe `POST /v1/prices` with the catalog amount + `metadata: { cyberos_currency, cyberos_tier, cyberos_axis }`; persist returned Price ID to `stripe_price_map`.
     - `--residency <sg-1|eu-1|us-1>` REQUIRED on `--apply` (CLI loads only that residency's KMS-encrypted Stripe API key per DEC-801); `--dry-run` defaults to all-residencies for reporting. Cross-residency API misuse is impossible because the loaded API key only addresses one Stripe account.
     - Idempotent on `(residency, currency, tier, axis)`; re-run is a no-op when all entries already mapped.
-    - Exit codes from `cyberos-cli-exit` shared crate (AUTHORING.md rule 9): 0 success, 1 nothing-to-do, 64 invalid-arg, 73 stripe-create-failed, 77 perm-denied.
+    - Exit codes from `cyberos-cli-exit` shared crate (feature-request-audit skill rule 9): 0 success, 1 nothing-to-do, 64 invalid-arg, 73 stripe-create-failed, 77 perm-denied.
 
 21. **MUST** support concurrent plan_change events safely. The plan_change handler acquires `SELECT ... FOR UPDATE` on the tenant row before computing the Stripe push; second concurrent plan_change blocks until first commits. Combined with the FR-TEN-002 24h rate limit, plan_change concurrency is bounded.
 
@@ -281,9 +281,9 @@ The TEN service **MUST** ship the Stripe billing rail at `services/ten/src/billi
 
 23. **MUST NOT** call any Stripe write API for a tenant with `billing_currency = 'VND'` (DEC-784). Guard at api_client entry — VND tenant routes through FR-TEN-102 only. Cross-rail attempts return `400 BAD_REQUEST` with `{ error: "wrong_billing_rail", expected: "vietqr_momo_zalo", got: "stripe" }`.
 
-24. **MUST** PII-scrub `billing_contact_email` and any reason text in refund/dunning audit rows via FR-MEMORY-111 BEFORE chain commit (AUTHORING.md rule 18). Raw values retained in tenant Postgres (RLS-scoped); memory chain holds `billing_contact_email_hash16` and scrubbed reason.
+24. **MUST** PII-scrub `billing_contact_email` and any reason text in refund/dunning audit rows via FR-MEMORY-111 BEFORE chain commit (feature-request-audit skill rule 18). Raw values retained in tenant Postgres (RLS-scoped); memory chain holds `billing_contact_email_hash16` and scrubbed reason.
 
-25. **SHOULD** observe Stripe API latency p95 via OTel span `stripe.api.<operation>` (AUTHORING.md rule 22 + 24). Alarm sev-3 if p95 > 2 s sustained 5 min; sev-2 if p95 > 5 s.
+25. **SHOULD** observe Stripe API latency p95 via OTel span `stripe.api.<operation>` (feature-request-audit skill rule 22 + 24). Alarm sev-3 if p95 > 2 s sustained 5 min; sev-2 if p95 > 5 s.
 
 ---
 
@@ -1007,7 +1007,7 @@ All resolved for slice 2. Deferred to later slices:
 
 **§11.3** Idempotency keys MAX 255 chars per Stripe; UUID v4 + colon-delimited operation tag fits comfortably (`ten.<36-char-uuid>.<operation>.<suffix>` ~80 chars).
 
-**§11.4** `stripe_event_dispatch_log` is strictly INSERT-only at the `cyberos_app` role (REVOKE UPDATE, DELETE per §3.1 + AUTHORING.md rule 12). `dispatch_status` is set at INSERT time as a single-pass write — the handler computes status (`dispatched`/`duplicate`/`failed`) before INSERT based on idempotency lookup and dispatch result. Retry-and-update for transient failures lands in slice 3 (FR-TEN-2xx) with a separate `stripe_event_dispatch_retry` table that follows the correction_to pattern (AUTHORING.md rule 11 derivative).
+**§11.4** `stripe_event_dispatch_log` is strictly INSERT-only at the `cyberos_app` role (REVOKE UPDATE, DELETE per §3.1 + feature-request-audit skill rule 12). `dispatch_status` is set at INSERT time as a single-pass write — the handler computes status (`dispatched`/`duplicate`/`failed`) before INSERT based on idempotency lookup and dispatch result. Retry-and-update for transient failures lands in slice 3 (FR-TEN-2xx) with a separate `stripe_event_dispatch_retry` table that follows the correction_to pattern (feature-request-audit skill rule 11 derivative).
 
 **§11.5** The `cancel_at_period_end=true` cancellation primitive (§1 #10 + DEC-803) is the *normal* deactivation path; hard cancellation comes only from FR-TEN-104 termination, which explicitly invokes Stripe's `DELETE /v1/subscriptions/{id}?prorate=true`.
 
@@ -1029,7 +1029,7 @@ All resolved for slice 2. Deferred to later slices:
 
 **§11.14** The `Stripe-Version` header pinning (§11.1) is at the api_client level; per-call versioning override is NOT supported in slice 2 (some Stripe APIs require older versions for backward-compat — we'll cross that bridge when we hit it).
 
-**§11.15** Audit row severities use the AUTHORING.md severity convention: sev-1 = revenue/security incident requiring CFO/operator attention; sev-2 = operational issue requiring eng response; sev-3 = informational/forensic. The 11-kind list at §1 #19 maps every kind to its severity.
+**§11.15** Audit row severities use the feature-request-audit skill severity convention: sev-1 = revenue/security incident requiring CFO/operator attention; sev-2 = operational issue requiring eng response; sev-3 = informational/forensic. The 11-kind list at §1 #19 maps every kind to its severity.
 
 **§11.16** The price catalog amounts (USD $19/$99/$999; SGD higher reflecting Singapore PPP) are slice 2 defaults; CFO reviews + revs via DEC entries. The CI test asserts cardinality (12) and uniqueness, not specific amounts — amount changes don't break the test.
 

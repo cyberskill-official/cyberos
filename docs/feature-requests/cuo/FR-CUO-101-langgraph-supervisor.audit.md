@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 14
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0; all 14 ISSes resolved in revision)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0; all 14 ISSes resolved in revision)
 ---
 
 ## §1 — Verdict summary
@@ -63,7 +63,7 @@ First-pass would build the prompt against a possibly-stale catalog snapshot. Res
 
 All 14 mechanical concerns addressed in the first revision pass. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (LangGraph × 5-node closed topology × confidence-band routing × LiteLLM gateway routing × 11-persona catalogue × defer-to-human matrix × structured Pydantic LLM output × 3-second budget × hallucination rejection × destructive-skill capability-broker gate × memory audit per path × state versioning × replay equivalence × forward-compat `next_step` stub × persona JWT validation × PII scrubbing × OTel instrumentation × CLI + dry-run), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (LangGraph × 5-node closed topology × confidence-band routing × LiteLLM gateway routing × 11-persona catalogue × defer-to-human matrix × structured Pydantic LLM output × 3-second budget × hallucination rejection × destructive-skill capability-broker gate × memory audit per path × state versioning × replay equivalence × forward-compat `next_step` stub × persona JWT validation × PII scrubbing × OTel instrumentation × CLI + dry-run), not by line targets.
 
 ---
 

@@ -11,7 +11,7 @@ issues_resolved: 6
 issues_critical: 0
 template: engineering-spec@1
 revised_at: 2026-05-16
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
 ---
 
 ## §1 — Verdict summary

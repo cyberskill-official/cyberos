@@ -36,7 +36,7 @@ new_files:
   - modules/cuo/tests/fixtures/baseline-numeric-out-of-range.md
 modified_files:
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-114 (baseline-present-at-v1)
-  - modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md        # §3.11 adds promotion-readiness rule
+  - feature-request-audit skill        # §3.11 adds promotion-readiness rule
   - modules/skill/README.md                                            # Recipe 11 expanded; Part 13 validation pyramid mentions baseline
   - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.4 status update + path
 
@@ -54,14 +54,14 @@ effort_hours: 8
 sub_tasks:
   - "1.0h: _template/author/BASELINE.md scaffold — full template with all required fields + worked-example skeleton"
   - "0.5h: feature-request-audit/RUBRIC.md — add FM-114 baseline-present-at-v1 rule (severity: error on v1.0.0+; warning on v0.x; auto-fix: never — numbers must be measured)"
-  - "0.5h: AUTHORING_DISCIPLINE.md §3.11 documentation-discipline expansion — add promotion-readiness sub-rule"
+  - "0.5h: feature-request-audit skill §3.11 documentation-discipline expansion — add promotion-readiness sub-rule"
   - "1.0h: README.md Recipe 11 (Plan a skill promotion v0.x → v1.0) expanded to 8 paragraphs documenting the BASELINE.md artefact + the 4-check promotion gate (acceptance ≥80% × 4w + zero open refinement proposals + ≥3 acceptance fixtures + clear CHANGELOG driver)"
   - "1.0h: modules/cuo/cuo/baseline.py — Python parser + validator for BASELINE.md frontmatter + numeric range checks"
   - "1.0h: modules/cuo/tests/test_baseline.py — happy + 3 negative fixtures + numeric-bound + missing-section tests"
   - "0.5h: 3 fixture BASELINE.md files (valid / missing-section / out-of-range)"
   - "1.0h: ANTHROPIC_GUIDE_DIGEST.md §6.4 update — status badge + cross-reference to FR-SKILL-114"
   - "1.0h: integration with FR-SKILL-103 broker — broker reads `gated_until_phase: P3` (partner_connector skills require BASELINE.md before flag flips); broker rejects partner_connector: true on any skill lacking BASELINE.md if skill_version >= 1.0.0"
-  - "0.5h: cross-referencing — add BASELINE.md path into v1.0-promotion checklist in AUTHORING_DISCIPLINE.md + into the v1.0-promotion section of every skill's CHANGELOG template"
+  - "0.5h: cross-referencing — add BASELINE.md path into v1.0-promotion checklist in feature-request-audit skill + into the v1.0-promotion section of every skill's CHANGELOG template"
 risk_if_skipped: "Without BASELINE.md, v1.0 promotion is a 'vibes-based' decision per Anthropic guide Chapter 2 p. 9 — operators promote skills without quantitative justification. Two consequences: (1) partner-connector skills (per FR-SKILL-103 exposability) ship without trust calibration evidence; the `exposable_as.partner_connector: true` flag flips on skills whose with-vs-without performance was never measured. When a partner complains that the skill doesn't add value, there's no design-time baseline to defend the trust↔exposability link. (2) Operators have no record of why a skill was promoted; six months later, when the skill's acceptance rate drifts, there's no anchor to compare against ('was the 80% acceptance ever real, or was it always borderline?'). The artefact is small (one markdown file ~80-120 lines per promoted skill) but high-leverage at promotion time. Cost of the FR ≈ 8 hours including the validator and recipe expansion; cost of NOT shipping ≈ when the first partner connector ships, the trust calibration gap surfaces as a customer-visible blame ('why does this skill exist?') with no documented answer."
 ---
 
@@ -321,7 +321,7 @@ def validate(path: Path) -> BaselineValidationResult:
 13. **Numeric threshold fail check** — fixture with tool-call ratio 0.8 → does NOT meet threshold; promotion would require operator override + reason captured in Authoring notes.
 14. **Backfill hello-world v1.0** — `cuo/_shared/hello-world/BASELINE.md` exists post-FR-ship; passes `validate`.
 15. **README Recipe 11 expanded** — Recipe 11 in README.md mentions BASELINE.md + the 3-threshold check + the operator-override clause.
-16. **AUTHORING_DISCIPLINE.md §3.11 entry added** — new sub-rule references FR-SKILL-114.
+16. **feature-request-audit skill §3.11 entry added** — new sub-rule references FR-SKILL-114.
 17. **Validation pyramid updated** — README.md Part 13 mentions BASELINE.md as the design-time anchor.
 18. **Template scaffold present** — `_template/author/BASELINE.md` is a complete scaffold an author can copy.
 19. **CI integration** — `python -m pytest modules/cuo/tests/test_baseline.py` runs as part of the existing CUO test suite.
@@ -477,7 +477,7 @@ next_review_due: 2027-05-19T00:00:00+07:00
 2. `modules/cuo/cuo/baseline.py` is added as a new module; re-exported from `modules/cuo/cuo/__init__.py`.
 3. `modules/cuo/cli.py` gains a `validate-baseline <skill_path>` subcommand.
 4. README Recipe 11 expanded from 3 paragraphs to 8 paragraphs covering the FR-SKILL-114 contract.
-5. AUTHORING_DISCIPLINE.md §3.11 (documentation-discipline) adds the rule.
+5. feature-request-audit skill §3.11 (documentation-discipline) adds the rule.
 6. RUBRIC.md FM-114 added.
 
 ## §7 — Dependencies
@@ -546,7 +546,7 @@ Deferred to follow-up FRs:
 | Author at v1.0 promotion skips BASELINE.md | FM-114 fires; CI gate fails | Promotion blocked | Measure baseline + author the artefact |
 | Author writes BASELINE.md with estimated (not measured) numbers | Audit step has no detection at file-write time; trust gap surfaces in production when acceptance drifts | Skill might pass initial promotion but drift fast | Periodic re-measurement (12-month cadence) surfaces drift |
 | Author writes BASELINE.md with cherry-picked sample | Same as above — undetectable at write time | Same as above | Audit attestation chain documents the methodology; reviewer should reject cherry-picking |
-| `next_review_due` set far in future (e.g. 2099) | Validator accepts (no upper bound) | Stale-by-default | AUTHORING_DISCIPLINE.md §3.11 prescribes default +12 months |
+| `next_review_due` set far in future (e.g. 2099) | Validator accepts (no upper bound) | Stale-by-default | feature-request-audit skill §3.11 prescribes default +12 months |
 | `attested_by` is a placeholder like `human:tbd` | ATTESTOR_RE accepts (matches `human:` prefix pattern) | Defeats the attestation chain | Reviewer rejects on PR review (manual safeguard) |
 | BASELINE.md present but numbers fail thresholds | Validator passes (numbers themselves aren't gated by validator); operator override reasoning in `## Authoring notes` should explain | Override is recorded; promotion proceeds with documented exception | Periodic review surfaces the exception's continued validity |
 | Skill drops `skill_version` from 1.0.0 → 0.x (rare) | FM-114 severity drops from error to info | Baseline becomes advisory | Operator removes BASELINE.md if downgrade is intentional |

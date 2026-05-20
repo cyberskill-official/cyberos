@@ -2,7 +2,7 @@
 
 **Owner:** Stephen Cheng (CEO) · **Status:** v0.7.0 — **STATUS-WAVE-2026-05 lifecycle simplification** (2026-05-19). The previous "tag soup" status enum (`shipped + strict-audited`, `shipped + mocked-dependency`, `[BLOCKED: …]`, `[FAILED: …]`, `accepted`, `building`, `audited`, `planned`, etc.) is **retired**. The new canonical 10-state enum lives at [`STATUS-REFERENCE.md`](STATUS-REFERENCE.md): `draft | ready_to_implement | implementing | ready_to_review | reviewing | ready_to_test | testing | done | on_hold | closed`. Migration applied: `planned/accepted/audited/in_review → ready_to_implement`, `building/in_progress → implementing`, `shipped + … → done`, `deferred → on_hold`, `rejected/superseded → closed`, `[BLOCKED: …]/[FAILED: …] → ready_to_implement` (failures route back to rework — see STATUS-REFERENCE §1.3). The CTO workflow that drives ship was also renamed `implement-backlog-frs → ship-feature-requests`. Plus a global rename `brain → memory` across all memory-module references (FR IDs, file names, code identifiers, audit row_kinds, CHANGELOG tags, prose). The CHAT/PROJ/EMAIL Layer-0/2 wave still applies: FR-CHAT-001 + FR-EMAIL-001 + FR-PROJ-001 all moved to `done` (slice 1) on 2026-05-19. Three new `services/<name>/` directories: chat, email, proj. v0.6.0 — PLUGIN module wave + v0.5.0 MEMORY Improvement Wave still apply.
 **Source of truth:** the markdown files in this folder. This index is regenerated when FRs land or change status.
-**Authoring playbook:** [`modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md`](../../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) (moved 2026-05-18 — was `AUTHORING.md` at the root of this folder; now co-located with the `feature-request-audit` skill that enforces it)
+**Authoring playbook:** `feature-request-audit` skill (see feature-request skills) (moved 2026-05-18 — was `feature-request-audit` skill at the root of this folder; now co-located with the `feature-request-audit` skill that enforces it)
 **Roadmap:** [`../../website/docs/architecture/milestones.html`](../../website/docs/architecture/milestones.html)
 **Repo layout:** modules live under `../../modules/<name>/` (post-2026-05-18 refactor)
 
@@ -74,8 +74,8 @@ The website (this docs site at `website/docs/`) deploys to **cyberos.cyberskill.
 **Gate criteria for advancing waves:**
 1. Wave N modules pass all FR-level acceptance criteria (§4 of each FR) before Wave N+1 starts.
 2. Each module's docs page on cyberos.cyberskill.world updates with the shipped state at wave-exit.
-3. memory audit-row coverage = 100% across all wave-N shipped surfaces (see [`AUTHORING_DISCIPLINE.md`](../../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) §10.1 invariant 1).
-4. Tenant isolation cross-leak = 0 verified by property tests (see [`AUTHORING_DISCIPLINE.md`](../../modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md) §10.1 invariant 2).
+3. memory audit-row coverage = 100% across all wave-N shipped surfaces (see `feature-request-audit` skill (see feature-request skills) §10.1 invariant 1).
+4. Tenant isolation cross-leak = 0 verified by property tests (see `feature-request-audit` skill (see feature-request skills) §10.1 invariant 2).
 
 ### What changed since v0.5.0 (2026-05-19 evening — AI / OBS / MCP wave)
 
@@ -93,7 +93,7 @@ The three new crates are wired in `services/Cargo.toml` as workspace members. **
 ### What changed since v0.3.0 (2026-05-18)
 
 - **Skill catalog rename:** all 104 author+audit pairs (+ contracts) renamed from short-form (e.g. `fr-audit`) to full-form (e.g. `feature-request-audit`). Tests still 49/50 green. Public-bundle vn-* renamed to vietnam-*.
-- **AUTHORING.md absorbed:** `docs/feature-requests/AUTHORING.md` folded into `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` so the discipline lives next to the auditor that enforces it.
+- **feature-request-audit skill absorbed:** `feature-request-audit` skill folded into `feature-request-audit` skill so the discipline lives next to the auditor that enforces it.
 - **REPORTS.md absorbed:** the four generated reports (contract verification · implementation order · sprint plan · migration audit) now live as §A/§B/§C/§D appendices in THIS file. `REPORTS.md` deleted. Regenerate-in-place workflow unchanged — the regen scripts now write into this file's appendices.
 - **CUO supervisor Phase 4:** 5 special-case workflow handlers shipped. Version `3.0.0-a3 → 3.0.0-a4`. `FR-CUO-106` authored at 10/10 covering the handlers.
 
@@ -149,48 +149,48 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-001** | AI Gateway cost-ledger pre-call check | MUST | ready_to_implement (10/10) | FR-AI-003, FR-AI-005 | 8h |
-| **FR-AI-002** | AI Gateway cost-ledger post-call reconcile | MUST | ready_to_implement (10/10) | FR-AI-001, FR-AI-003 | 6h |
-| **FR-AI-003** | memory audit-row bridge (`ai.invocation` chained row per call) | MUST | shipped (10/10) | — | 5h |
-| **FR-AI-004** | Cost-hold expiry cleanup job (Postgres scheduled) | MUST | ready_to_implement (10/10) | FR-AI-001, FR-AI-003 | 3h |
-| **FR-AI-005** | Tenant-policy YAML loader (per-tenant cap + warn threshold + override) | MUST | shipped (10/10) | — | 5h |
+| **FR-AI-001** | AI Gateway cost-ledger pre-call check | MUST | ready_to_implement | FR-AI-003, FR-AI-005 | 8h |
+| **FR-AI-002** | AI Gateway cost-ledger post-call reconcile | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 6h |
+| **FR-AI-003** | memory audit-row bridge (`ai.invocation` chained row per call) | MUST | done | — | 5h |
+| **FR-AI-004** | Cost-hold expiry cleanup job (Postgres scheduled) | MUST | ready_to_implement | FR-AI-001, FR-AI-003 | 3h |
+| **FR-AI-005** | Tenant-policy YAML loader (per-tenant cap + warn threshold + override) | MUST | done | — | 5h |
 
 #### Slice 2 — multi-provider router (Bedrock + Anthropic + OpenAI)
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-006** | Model-alias resolution (`chat.smart` → `bedrock:claude-3.5-sonnet`) with per-tenant override | MUST | draft (10/10) | FR-AI-005 | 6h |
-| **FR-AI-007** | Provider cost-table loader (YAML, hot-reload) | MUST | draft (10/10) | — | 4h |
-| **FR-AI-008** | LiteLLM-derived router with retry + 30 s failover SLA | MUST | draft (10/10) | FR-AI-006, FR-AI-007 | 10h |
-| **FR-AI-009** | Circuit-breaker per (provider, model) with half-open recovery probing | MUST | draft (10/10) | FR-AI-008 | 6h |
-| **FR-AI-010** | Streaming SSE end-to-end (token-by-token to client) | SHOULD | draft (10/10) | FR-AI-008 | 8h |
+| **FR-AI-006** | Model-alias resolution (`chat.smart` → `bedrock:claude-3.5-sonnet`) with per-tenant override | MUST | ready_to_implement | FR-AI-005 | 6h |
+| **FR-AI-007** | Provider cost-table loader (YAML, hot-reload) | MUST | ready_to_implement | — | 4h |
+| **FR-AI-008** | LiteLLM-derived router with retry + 30 s failover SLA | MUST | ready_to_implement | FR-AI-006, FR-AI-007 | 10h |
+| **FR-AI-009** | Circuit-breaker per (provider, model) with half-open recovery probing | MUST | ready_to_implement | FR-AI-008 | 6h |
+| **FR-AI-010** | Streaming SSE end-to-end (token-by-token to client) | SHOULD | ready_to_implement | FR-AI-008 | 8h |
 
 #### Slice 3 — PII redaction + persona stamping
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-011** | Presidio EN-base PII redaction in-flight (every prompt) | MUST | draft (10/10) | FR-AI-008 | 6h |
-| **FR-AI-012** | VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account) | MUST | draft (10/10) | FR-AI-011 | 10h |
-| **FR-AI-013** | VN-PII recall ≥ 99% CI gate on 200-sample test set | MUST | draft (10/10) | FR-AI-012 | 4h |
-| **FR-AI-014** | Persona-version system-prompt injection from memory `memories/personas/<version>.md` | MUST | draft (10/10) | FR-AI-003 | 5h |
-| **FR-AI-015** | ZDR check — refuse non-ZDR provider when tenant policy requires it | MUST | draft (10/10) | FR-AI-006 | 3h |
+| **FR-AI-011** | Presidio EN-base PII redaction in-flight (every prompt) | MUST | ready_to_implement | FR-AI-008 | 6h |
+| **FR-AI-012** | VN-PII Presidio plugin (CCCD · MST · VN phone · NĐD · VN address · bank account) | MUST | ready_to_implement | FR-AI-011 | 10h |
+| **FR-AI-013** | VN-PII recall ≥ 99% CI gate on 200-sample test set | MUST | ready_to_implement | FR-AI-012 | 4h |
+| **FR-AI-014** | Persona-version system-prompt injection from memory `memories/personas/<version>.md` | MUST | ready_to_implement | FR-AI-003 | 5h |
+| **FR-AI-015** | ZDR check — refuse non-ZDR provider when tenant policy requires it | MUST | ready_to_implement | FR-AI-006 | 3h |
 
 #### Slice 4 — geographic residency + per-tenant cache
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-016** | Tenant residency pinning (`sg-1` / `eu-1` / `us-1` / `vn-1`) propagating to provider selection | MUST | draft (10/10) | FR-AI-006 | 5h |
-| **FR-AI-017** | Cache (Redis) keyed by (tenant_id × prompt_hash × model); ≥ 30% hit rate P0 target | SHOULD | draft (10/10) | FR-AI-008 | 6h |
-| **FR-AI-018** | Cross-tenant cache leak property-test (hard zero) | MUST | draft (10/10) | FR-AI-017 | 3h |
-| **FR-AI-019** | Self-hosted BGE-M3 embeddings (single L4 GPU pod) + CPU fallback | SHOULD | shipped (10/10) | — | 8h |
-| **FR-AI-020** | BGE-rerank-v2-m3 cross-encoder for KB reranking | COULD | draft (10/10) | FR-AI-019 | 5h |
+| **FR-AI-016** | Tenant residency pinning (`sg-1` / `eu-1` / `us-1` / `vn-1`) propagating to provider selection | MUST | ready_to_implement | FR-AI-006 | 5h |
+| **FR-AI-017** | Cache (Redis) keyed by (tenant_id × prompt_hash × model); ≥ 30% hit rate P0 target | SHOULD | ready_to_implement | FR-AI-008 | 6h |
+| **FR-AI-018** | Cross-tenant cache leak property-test (hard zero) | MUST | ready_to_implement | FR-AI-017 | 3h |
+| **FR-AI-019** | Self-hosted BGE-M3 embeddings (single L4 GPU pod) + CPU fallback | SHOULD | done | — | 8h |
+| **FR-AI-020** | BGE-rerank-v2-m3 cross-encoder for KB reranking | COULD | ready_to_implement | FR-AI-019 | 5h |
 
 #### Slice 5 — operator surface + observability
 
 | FR-ID | Title | Pri | Status | Depends on | Effort |
 |---|---|:-:|:-:|---|---:|
-| **FR-AI-021** | `cyberos-ai` operator CLI (usage · models list · policy set · failover drill · invoice export) | MUST | draft (10/10) | FR-AI-008, FR-AI-005 | 8h |
-| **FR-AI-022** | OTel trace + span emission for every call (caller → router → provider → response) | MUST | draft (10/10) | FR-AI-008 | 4h |
+| **FR-AI-021** | `cyberos-ai` operator CLI (usage · models list · policy set · failover drill · invoice export) | MUST | ready_to_implement | FR-AI-008, FR-AI-005 | 8h |
+| **FR-AI-022** | OTel trace + span emission for every call (caller → router → provider → response) | MUST | ready_to_implement | FR-AI-008 | 4h |
 
 ---
 
@@ -825,7 +825,7 @@ This document is the **single source of truth** for what CyberOS is going to bui
 
 ---
 
-*End of backlog narrative — v0.5.1, 2026-05-20 (relocated backlog rules and invariants to AUTHORING_DISCIPLINE.md).*
+*End of backlog narrative — v0.5.1, 2026-05-20 (relocated backlog rules and invariants to feature-request-audit skill).*
 *Status:* spec corpus closed; implementation phase begins with MEMORY → AUTH → CHAT → PROJECT → CUO+SKILL per §0.6. Appendices §A–§D below contain the four generated reports absorbed from former `REPORTS.md`.
 
 ---

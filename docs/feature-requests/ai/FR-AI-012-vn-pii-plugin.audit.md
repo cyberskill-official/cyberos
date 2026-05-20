@@ -191,29 +191,29 @@ def test_recall_at_least_99_percent_per_type(analyzer):
 
 Update §1 #1 to say: *"each recognizer individually MUST hit recall ≥ 99% on its samples in the 200-sample fixture; the aggregate across all types MUST also be ≥ 99%."*
 
-### ISS-005 — AUTHORING.md §3.6 rule 20 (redacted forms in audit rows) — VN_MST/VN_CCCD audit-row representation not specified
+### ISS-005 — feature-request-audit skill §3.6 rule 20 (redacted forms in audit rows) — VN_MST/VN_CCCD audit-row representation not specified
 - **severity:** warning
 - **rule_id:** authoring-md-§3.6 (rule 20)
 - **location:** §1 (no clause about audit-row redacted form), §3 (recognizers), §8 (example payloads)
 - **status:** open
 
 #### Description
-AUTHORING.md §3.6 rule 20 says "Audit rows MUST carry redacted forms when the field is PII (e.g. `mst_redacted: \"03******78\"`); never the full value." When the redaction pipeline runs and a `VN_MST` is found, FR-AI-003 emits a memory audit row. That row's `extra` map should carry `mst_redacted: "03******78"` (first 2 + last 2 of the MST), NOT the full MST string. The §3 recognizers produce placeholders like `<VN_MST_1>` but the audit row needs the redacted-but-recognizable form so operators can pattern-match without seeing the full PII. The spec doesn't currently say which redacted form. A spec violation risk: a future PR could write `extra.mst: "0312345678"` to the memory row.
+feature-request-audit skill §3.6 rule 20 says "Audit rows MUST carry redacted forms when the field is PII (e.g. `mst_redacted: \"03******78\"`); never the full value." When the redaction pipeline runs and a `VN_MST` is found, FR-AI-003 emits a memory audit row. That row's `extra` map should carry `mst_redacted: "03******78"` (first 2 + last 2 of the MST), NOT the full MST string. The §3 recognizers produce placeholders like `<VN_MST_1>` but the audit row needs the redacted-but-recognizable form so operators can pattern-match without seeing the full PII. The spec doesn't currently say which redacted form. A spec violation risk: a future PR could write `extra.mst: "0312345678"` to the memory row.
 
 #### Suggested fix
-Add §1 #17: "**MUST** produce per-type redacted display forms for audit-row emission per AUTHORING.md §3.6 rule 20: `VN_MST` → `<first-2>******<last-2>` (e.g. `03******78` for 0312345678); `VN_CCCD` → `<first-3>******<last-3>` (e.g. `031******678`); `VN_PHONE` → `<first-2>***<last-4>` (e.g. `09***1234`); `VN_BANK_ACCOUNT` → `***<last-4>` (e.g. `***6789`). The helper module `cyberos_pii::vn::redact_for_audit::<T>(value: &str) -> String` provides these per-type formatters; the FR-AI-003 emit path MUST call them when serialising `extra.{mst,cccd,phone,bank_account}_redacted` fields. AC #17 verifies via a round-trip test that no audit row written during a VN-PII detection contains any digit-sequence longer than 4 consecutive digits of the original."
+Add §1 #17: "**MUST** produce per-type redacted display forms for audit-row emission per feature-request-audit skill §3.6 rule 20: `VN_MST` → `<first-2>******<last-2>` (e.g. `03******78` for 0312345678); `VN_CCCD` → `<first-3>******<last-3>` (e.g. `031******678`); `VN_PHONE` → `<first-2>***<last-4>` (e.g. `09***1234`); `VN_BANK_ACCOUNT` → `***<last-4>` (e.g. `***6789`). The helper module `cyberos_pii::vn::redact_for_audit::<T>(value: &str) -> String` provides these per-type formatters; the FR-AI-003 emit path MUST call them when serialising `extra.{mst,cccd,phone,bank_account}_redacted` fields. AC #17 verifies via a round-trip test that no audit row written during a VN-PII detection contains any digit-sequence longer than 4 consecutive digits of the original."
 
-### ISS-006 — AUTHORING.md §3.6 rule 21 (tenant-scoped PII allowlist) — no clause about per-tenant allowlist
+### ISS-006 — feature-request-audit skill §3.6 rule 21 (tenant-scoped PII allowlist) — no clause about per-tenant allowlist
 - **severity:** warning
 - **rule_id:** authoring-md-§3.6 (rule 21)
 - **location:** §1 (no clause about allowlist), §3 (recognizer pipeline), §11 (notes)
 - **status:** open
 
 #### Description
-AUTHORING.md §3.6 rule 21 says "Tenant-scoped PII allowlists exist (`pii_allowlist: [\"regex\", ...]` in `manifest.tenants[].pii_allowlist`); use them for legitimate-exception fields like KYC vendor MSTs." Some tenants (e.g., a KYC vendor) legitimately need to pass MST strings through to their LLM — for them, the MST is the subject matter, not PII. The spec has no clause about reading `policy.pii_allowlist` and skipping redaction for matching strings. Without this, KYC use cases are blocked — every MST gets `<VN_MST_N>` placeholdered and the LLM can't reason about MST validation flow. The recognizers should consult the per-tenant allowlist BEFORE emitting `RecognizerResult`s.
+feature-request-audit skill §3.6 rule 21 says "Tenant-scoped PII allowlists exist (`pii_allowlist: [\"regex\", ...]` in `manifest.tenants[].pii_allowlist`); use them for legitimate-exception fields like KYC vendor MSTs." Some tenants (e.g., a KYC vendor) legitimately need to pass MST strings through to their LLM — for them, the MST is the subject matter, not PII. The spec has no clause about reading `policy.pii_allowlist` and skipping redaction for matching strings. Without this, KYC use cases are blocked — every MST gets `<VN_MST_N>` placeholdered and the LLM can't reason about MST validation flow. The recognizers should consult the per-tenant allowlist BEFORE emitting `RecognizerResult`s.
 
 #### Suggested fix
-Add §1 #18: "**MUST** consult `policy.ai_policy.pii_allowlist: Vec<String>` (compiled to `Vec<Regex>` at policy-load time per FR-AI-005) per AUTHORING.md §3.6 rule 21. Before emitting any `RecognizerResult` for an entity type ∈ `VN_MST | VN_CCCD | VN_PHONE | VN_BANK_ACCOUNT`, the recognizer pipeline MUST check whether the matched text matches ANY allowlist regex for the active tenant. If yes, suppress the recognizer result (no redaction; PII flows through to the LLM). The audit-row `extra` field `pii_allowlist_hit_count: u32` records how many suppressions happened per call so operators can audit allowlist usage. AC #18 verifies via a test: with `pii_allowlist: [\"^03\\\\d{8}$\"]`, an MST starting with `03` is NOT redacted; an MST starting with `04` IS redacted (per-regex match)."
+Add §1 #18: "**MUST** consult `policy.ai_policy.pii_allowlist: Vec<String>` (compiled to `Vec<Regex>` at policy-load time per FR-AI-005) per feature-request-audit skill §3.6 rule 21. Before emitting any `RecognizerResult` for an entity type ∈ `VN_MST | VN_CCCD | VN_PHONE | VN_BANK_ACCOUNT`, the recognizer pipeline MUST check whether the matched text matches ANY allowlist regex for the active tenant. If yes, suppress the recognizer result (no redaction; PII flows through to the LLM). The audit-row `extra` field `pii_allowlist_hit_count: u32` records how many suppressions happened per call so operators can audit allowlist usage. AC #18 verifies via a test: with `pii_allowlist: [\"^03\\\\d{8}$\"]`, an MST starting with `03` is NOT redacted; an MST starting with `04` IS redacted (per-regex match)."
 
 ## §3 — Strengths preserved through expansion
 
@@ -231,8 +231,8 @@ All 6 mechanical revisions applied:
 - ISS-002 RESOLVED (2026-05-16): §5 `test_no_network_imports.py` CI lint AST-parses every recognizer file rejecting forbidden network imports; §10 row added.
 - ISS-003 RESOLVED (2026-05-16): §3 `register_vn_recognizers` uses `_REGISTERED` global guard with WARN-on-double-call; `reset_for_tests()` provides test isolation; §10 row added.
 - ISS-004 RESOLVED (2026-05-16): §5 aggregate recall test replaced with `test_recall_at_least_99_percent_per_type`; §1 #1 tightened to per-type AND aggregate floors.
-- ISS-005 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #17 added with per-type redacted-display formatters (mst_redacted, cccd_redacted, phone_redacted, bank_account_redacted); helper `cyberos_pii::vn::redact_for_audit::<T>`; AC #17 added.
-- ISS-006 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #18 added consulting `policy.ai_policy.pii_allowlist`; suppression before recognizer-result emit; `pii_allowlist_hit_count` audit field; AC #18 added.
+- ISS-005 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #17 added with per-type redacted-display formatters (mst_redacted, cccd_redacted, phone_redacted, bank_account_redacted); helper `cyberos_pii::vn::redact_for_audit::<T>`; AC #17 added.
+- ISS-006 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #18 added consulting `policy.ai_policy.pii_allowlist`; suppression before recognizer-result emit; `pii_allowlist_hit_count` audit field; AC #18 added.
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 

@@ -40,7 +40,7 @@ modified_files:
   - modules/skill/_template/author/acceptance/README.md                # cross-link to TRIGGER_TESTS.md
   - modules/skill/_template/audit/acceptance/README.md                 # cross-link to TRIGGER_TESTS.md
   - modules/skill/feature-request-audit/RUBRIC.md                      # add FM-113 (trigger-tests-present)
-  - modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md        # §3.10 mentions trigger-tests rule
+  - feature-request-audit skill        # §3.10 mentions trigger-tests rule
   - modules/skill/README.md                                            # Part 13.2 validation pyramid grows a new tier (Layer 1.5: triggering tests); Part 24.1 self-test checklist adds row
   - modules/skill/ANTHROPIC_GUIDE_DIGEST.md                            # §6.2 status badge updates when FR ships
   - modules/cuo/README.md                                              # documents the trigger-tests smoke test path
@@ -60,7 +60,7 @@ sub_tasks:
   - "0.5h: _template/{author,audit}/acceptance/README.md cross-link updates"
   - "1.5h: 3 exemplar TRIGGER_TESTS.md (feature-request-author, feature-request-audit, prd-author) — positive + negative phrases authored from real session logs"
   - "1.0h: feature-request-audit/RUBRIC.md — add FM-113 trigger-tests-present rule + severity scheme (warning on draft, error on accepted+)"
-  - "0.5h: AUTHORING_DISCIPLINE.md §3.10 rule update"
+  - "0.5h: feature-request-audit skill §3.10 rule update"
   - "1.0h: modules/cuo/cuo/trigger_tests.py — Python module that loads a skill's TRIGGER_TESTS.md and runs each phrase against the router (uses CUO v3 supervisor's classify_act); returns pass/fail summary"
   - "1.5h: modules/cuo/tests/test_trigger_tests.py — happy path + parametric tests; integrates into existing 49/50 test suite"
   - "1.0h: README.md Part 13.2 + Part 24.1 updates"
@@ -331,7 +331,7 @@ def run_all(catalog_root: Path) -> dict[str, TriggerTestResult]:
 20. **CI gate exit code** — `python -m cyberos.cuo.trigger_tests --catalog modules/skill/` → exit 0 if all production skills pass, exit 1 if any fail.
 21. **Reproducibility** — running `run_all` twice against the same classifier_version → byte-identical results (allowing for the test execution's own ordering nondeterminism, which the test sorts).
 22. **README Part 13.2 validation pyramid updated** — the diagram + table reflect the new Layer 1.5 (triggering).
-23. **AUTHORING_DISCIPLINE.md §3.10 entry added** — rule 41 references FR-SKILL-112 and the TRIGGER_TESTS.md convention.
+23. **feature-request-audit skill §3.10 entry added** — rule 41 references FR-SKILL-112 and the TRIGGER_TESTS.md convention.
 
 ## §5 — Verification
 

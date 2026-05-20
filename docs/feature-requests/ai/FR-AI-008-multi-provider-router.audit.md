@@ -180,26 +180,26 @@ Tighten §1 #14 to match what §6 actually emits:
 
 This separates the two concerns cleanly: `CALLS` is one row per call (terminal outcome), `RETRIES`/`FAILOVERS` are per-event counters. Update AC #14 to match the new label set (drop the assertion on `outcome="failed_over"` which doesn't exist on `CALLS`; keep the `FAILOVERS` from→to assertion).
 
-### ISS-005 — AUTHORING.md §3.7 rule 22 (traceparent on outbound) — header propagation not asserted in §1
+### ISS-005 — feature-request-audit skill §3.7 rule 22 (traceparent on outbound) — header propagation not asserted in §1
 - **severity:** warning
 - **rule_id:** authoring-md-§3.7 (rule 22)
 - **location:** §1 (no clause about traceparent), §3 (Provider trait `call_chat`), §6 skeleton (HTTP request construction)
 - **status:** open
 
 #### Description
-The router opens one outbound HTTPS call per attempt (Bedrock, Anthropic, OpenAI, etc.). AUTHORING.md §3.7 rule 22 requires "every outbound HTTP/RPC/queue write MUST carry W3C `traceparent`." The current spec relies on FR-AI-022's `tracing-opentelemetry` layer auto-injecting the header at the `reqwest` middleware boundary, but no §1 clause asserts the contract. A provider impl using a different HTTP client (e.g., `hyper` directly) would silently skip the header. The §1 contract should be explicit: "every provider impl MUST propagate the inbound traceparent into the outbound HTTPS request headers (`traceparent` and `tracestate`)."
+The router opens one outbound HTTPS call per attempt (Bedrock, Anthropic, OpenAI, etc.). feature-request-audit skill §3.7 rule 22 requires "every outbound HTTP/RPC/queue write MUST carry W3C `traceparent`." The current spec relies on FR-AI-022's `tracing-opentelemetry` layer auto-injecting the header at the `reqwest` middleware boundary, but no §1 clause asserts the contract. A provider impl using a different HTTP client (e.g., `hyper` directly) would silently skip the header. The §1 contract should be explicit: "every provider impl MUST propagate the inbound traceparent into the outbound HTTPS request headers (`traceparent` and `tracestate`)."
 
 #### Suggested fix
 Add §1 #17: "**MUST** propagate the inbound W3C `traceparent` and `tracestate` headers into every outbound provider HTTPS call. Provider impls using `reqwest` get this for free via FR-AI-022's `reqwest-tracing` middleware; provider impls using other HTTP clients MUST add equivalent header propagation. AC #17 verifies via a header-capture mock that the outbound request to `mock_provider` carries the same `traceparent` value as the inbound `cost_ledger::precheck` call." Add corresponding AC #17.
 
-### ISS-006 — AUTHORING.md §3.10 rule 30 (every MUST NOT has a negative test) — §1 has 3 MUST NOTs, only 2 covered
+### ISS-006 — feature-request-audit skill §3.10 rule 30 (every MUST NOT has a negative test) — §1 has 3 MUST NOTs, only 2 covered
 - **severity:** warning
 - **rule_id:** authoring-md-§3.10 (rule 30)
 - **location:** §1 (MUST NOT clauses), §5 (negative tests)
 - **status:** open
 
 #### Description
-AUTHORING.md §3.10 rule 30 says "Each `MUST NOT` in §1 corresponds to a negative test in §5." Scanning §1 for MUST NOT: "MUST NOT bypass the alias resolution," "MUST NOT mutate policy from inside the router," and "MUST NOT retry on terminal-4xx errors except 429." The first two have implicit coverage but no named negative test. The third is covered by AC #4. The first two need explicit `#[tokio::test]` bodies asserting: (a) calling `router::call_provider` with a hand-constructed `ResolvedModel` that bypasses alias resolution MUST work AT THE FUNCTION SIGNATURE LEVEL but a corresponding lint MUST flag any production-code call site that constructs `ResolvedModel` manually; (b) calling the router with `policy: &Arc<TenantPolicy>` MUST NOT result in any mutation observable via `Arc::strong_count`.
+feature-request-audit skill §3.10 rule 30 says "Each `MUST NOT` in §1 corresponds to a negative test in §5." Scanning §1 for MUST NOT: "MUST NOT bypass the alias resolution," "MUST NOT mutate policy from inside the router," and "MUST NOT retry on terminal-4xx errors except 429." The first two have implicit coverage but no named negative test. The third is covered by AC #4. The first two need explicit `#[tokio::test]` bodies asserting: (a) calling `router::call_provider` with a hand-constructed `ResolvedModel` that bypasses alias resolution MUST work AT THE FUNCTION SIGNATURE LEVEL but a corresponding lint MUST flag any production-code call site that constructs `ResolvedModel` manually; (b) calling the router with `policy: &Arc<TenantPolicy>` MUST NOT result in any mutation observable via `Arc::strong_count`.
 
 #### Suggested fix
 Add §5 tests `test_router_does_not_mutate_policy` (asserts `Arc::strong_count(&policy)` unchanged before/after call) and `test_lint_flags_manual_resolved_model_construction` (clippy-style lint check via `#[deny(clippy::disallowed_methods)]` on the `ResolvedModel::new_manual` constructor). Add §4 AC #18, #19 to match.
@@ -221,8 +221,8 @@ All 6 mechanical revisions applied:
 - ISS-002 RESOLVED (2026-05-16): §5 `response_normalization_matches_across_providers` test body now constructs all three mock providers and resolved models explicitly; placeholder comments removed.
 - ISS-003 RESOLVED (2026-05-16): §3 `RouterError::TerminalProviderError` now carries `retry_after_secs: Option<u64>`; §6 skeleton's 429 branch reads `retry_after_secs` directly; `parse_retry_after` helper deleted from §6. §10 adds the "provider impl forgets to populate retry_after_secs" row.
 - ISS-004 RESOLVED (2026-05-16): §1 #14 metric description tightened — `CALLS` outcome label set is now `succeeded`/`terminal_4xx`/`auth_error`/`all_failed` only (4 values, not 7). `retried` and `failed_over` events live on `RETRIES`/`FAILOVERS` per-event counters. AC #14 updated to match.
-- ISS-005 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #17 added asserting `traceparent` + `tracestate` propagation on every outbound provider HTTPS call; AC #17 added (header-capture mock test). FR-AI-022 cross-ref noted.
-- ISS-006 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §5 added `test_router_does_not_mutate_policy` + `test_lint_flags_manual_resolved_model_construction`; §4 AC #18 + #19 added to match.
+- ISS-005 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #17 added asserting `traceparent` + `tracestate` propagation on every outbound provider HTTPS call; AC #17 added (header-capture mock test). FR-AI-022 cross-ref noted.
+- ISS-006 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §5 added `test_router_does_not_mutate_policy` + `test_lint_flags_manual_resolved_model_construction`; §4 AC #18 + #19 added to match.
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 

@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 12
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0; all 12 ISSes resolved in revision)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0; all 12 ISSes resolved in revision)
 ---
 
 ## §1 — Verdict summary
@@ -57,7 +57,7 @@ First-pass let the migration's INSERT row count drift from ADR-101 §3 enumerati
 
 All 12 mechanical concerns addressed in the first revision pass. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (22 roles × 40 resources × 5 actions × RLS × JWT × ADR gate × stub migration × scope grants × OTel × WebAuthn intersection × RBAC versioning), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (22 roles × 40 resources × 5 actions × RLS × JWT × ADR gate × stub migration × scope grants × OTel × WebAuthn intersection × RBAC versioning), not by line targets.
 
 ---
 

@@ -105,14 +105,14 @@ Err(AliasError::ResidencyViolation {
 })
 ```
 
-### ISS-005 — AUTHORING.md §3.7 trace propagation not asserted on alias::resolve callers
+### ISS-005 — feature-request-audit skill §3.7 trace propagation not asserted on alias::resolve callers
 - **severity:** warning
 - **rule_id:** authoring-md-§3.7 (rule 22 — outbound calls MUST carry W3C `traceparent`)
 - **location:** §1 #13 (called from `cost_ledger::precheck`), §3 (Provider trait surface)
 - **status:** open
 
 #### Description
-`alias::resolve` itself is in-process and trace-free (correct). But the §1 #13 contract says it's called from `cost_ledger::precheck` (FR-AI-001), which IS a trust-boundary entry point. The spec does not explicitly require that the precheck propagate `traceparent` into the `ResolvedModel` flow so the downstream `Provider::complete()` call carries the inbound trace context. Without an explicit clause, two implementers can disagree about whether `alias::resolve` should take a `&SpanContext` parameter for instrumentation purposes (per AUTHORING.md §3.7 rule 22). The audit row contract (§1 #14 metrics) references `trace_id` via OBS dashboards but no §1 clause asserts the propagation contract.
+`alias::resolve` itself is in-process and trace-free (correct). But the §1 #13 contract says it's called from `cost_ledger::precheck` (FR-AI-001), which IS a trust-boundary entry point. The spec does not explicitly require that the precheck propagate `traceparent` into the `ResolvedModel` flow so the downstream `Provider::complete()` call carries the inbound trace context. Without an explicit clause, two implementers can disagree about whether `alias::resolve` should take a `&SpanContext` parameter for instrumentation purposes (per feature-request-audit skill §3.7 rule 22). The audit row contract (§1 #14 metrics) references `trace_id` via OBS dashboards but no §1 clause asserts the propagation contract.
 
 #### Suggested fix
 Add §1 #16: "**MUST** be callable without trace-context parameters (it has no I/O), AND its return value `ResolvedModel` MUST be carried through to `Provider::complete()` so that the inbound `traceparent` (read in `cost_ledger::precheck`) propagates downstream. The spec at FR-AI-022 §1 #3 owns the trace-propagation contract; this FR's responsibility is to not strip it." Also add cross-ref to FR-AI-022 in §7.
@@ -124,7 +124,7 @@ Add §1 #16: "**MUST** be callable without trace-context parameters (it has no I
 - **status:** open
 
 #### Description
-The §10 table covers the failures (Failure | Detection | Outcome columns) but the Recovery column is sparse for the policy-violation paths. `ZdrViolation` and `ResidencyViolation` are terminal — they MUST NOT auto-fall through to the next provider (that would silently leak the violation). The current §10 row says "Outcome: error returned; call rejected" but doesn't explicitly say "Recovery: operator updates `policy.ai_policy.zdr_required` or `policy.ai_policy.residency` and reloads policy via FR-AI-005 hot-path." Without the Recovery column populated, operators triaging a failure don't have a clear next step. AUTHORING.md §3.10 rule 29 says every architectural decision needs a failure-mode row; the spirit extends to "every row needs a Recovery."
+The §10 table covers the failures (Failure | Detection | Outcome columns) but the Recovery column is sparse for the policy-violation paths. `ZdrViolation` and `ResidencyViolation` are terminal — they MUST NOT auto-fall through to the next provider (that would silently leak the violation). The current §10 row says "Outcome: error returned; call rejected" but doesn't explicitly say "Recovery: operator updates `policy.ai_policy.zdr_required` or `policy.ai_policy.residency` and reloads policy via FR-AI-005 hot-path." Without the Recovery column populated, operators triaging a failure don't have a clear next step. feature-request-audit skill §3.10 rule 29 says every architectural decision needs a failure-mode row; the spirit extends to "every row needs a Recovery."
 
 #### Suggested fix
 Populate Recovery for every §10 row. Pattern: `ZdrViolation` → "Operator audits whether ZDR truly required; updates `policy.ai_policy.zdr_required` if false, OR adds a ZDR-attested provider to fallback chain. Reload via `cyberos-ai policy reload`." Same shape for ResidencyViolation, CostEntryMissing (point at cost-table reload), UnknownAlias (point at slice-3 alias closed-set extension RFC).
@@ -143,8 +143,8 @@ All 6 mechanical revisions applied:
 - ISS-002 RESOLVED (2026-05-16): §4 AC #10a added covering override-misses-residency.
 - ISS-003 RESOLVED (2026-05-16): §6 skeleton now has full `mod metrics { ... }` preamble with Lazy<CounterVec> + Lazy<Histogram> definitions.
 - ISS-004 RESOLVED (2026-05-16): §8 now includes residency-violation + cost-table-missing example payloads.
-- ISS-005 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #16 added asserting trace-propagation contract (callable without span, but ResolvedModel MUST be carried through so traceparent propagates per FR-AI-022); §7 now references FR-AI-022.
-- ISS-006 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §10 failure-modes table Recovery column populated for every row (ZdrViolation, ResidencyViolation, CostEntryMissing, UnknownAlias, etc.) with concrete operator next-steps.
+- ISS-005 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #16 added asserting trace-propagation contract (callable without span, but ResolvedModel MUST be carried through so traceparent propagates per FR-AI-022); §7 now references FR-AI-022.
+- ISS-006 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §10 failure-modes table Recovery column populated for every row (ZdrViolation, ResidencyViolation, CostEntryMissing, UnknownAlias, etc.) with concrete operator next-steps.
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 

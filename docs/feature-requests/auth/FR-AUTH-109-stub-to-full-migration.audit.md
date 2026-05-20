@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -45,7 +45,7 @@ First-pass returned 401 with no body. Resolved: §1 #5 + DEC-448 + body with `ac
 
 All 8 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (verifier hook + refresh hook × per-tenant cutover_at × lazy idempotent transition × 1-extension cap × root-admin gate × cutover immutability × clear 401 body × 4 memory audit kinds × 60s cache × preview API × sev-2 alarm × append-only state + refresh log × env-bounded default), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (verifier hook + refresh hook × per-tenant cutover_at × lazy idempotent transition × 1-extension cap × root-admin gate × cutover immutability × clear 401 body × 4 memory audit kinds × 60s cache × preview API × sev-2 alarm × append-only state + refresh log × env-bounded default), not by line targets.
 
 ---
 

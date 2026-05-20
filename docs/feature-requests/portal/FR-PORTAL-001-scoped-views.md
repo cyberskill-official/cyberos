@@ -127,7 +127,7 @@ The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/
 
 2. **MUST** create SQL views per `portal_view_kind` via migration `0014`. Each view is a `CREATE VIEW portal_view_<kind> AS SELECT ... FROM <source_table> WHERE sync_class IN ('client-visible','client-visible-redacted') AND tenant_id = current_setting('auth.tenant_id')::uuid AND engagement_id IN (SELECT engagement_id FROM engagement_memberships WHERE subject_id = current_setting('auth.subject_id')::uuid)`. RLS predicate inherits from each source table's RLS plus the engagement-membership join.
 
-3. **MUST** define `portal_view_read_log` at migration `0015`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, caller_subject_id UUID NOT NULL, view_kind portal_view_kind NOT NULL, resource_id UUID, action TEXT NOT NULL CHECK (action IN ('list','detail','search','export_initiated','export_completed')), filter_hash16 TEXT, result_count INT, trace_id CHAR(32), occurred_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Append-only per AUTHORING.md rule 12. RLS-scoped.
+3. **MUST** define `portal_view_read_log` at migration `0015`: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, caller_subject_id UUID NOT NULL, view_kind portal_view_kind NOT NULL, resource_id UUID, action TEXT NOT NULL CHECK (action IN ('list','detail','search','export_initiated','export_completed')), filter_hash16 TEXT, result_count INT, trace_id CHAR(32), occurred_at TIMESTAMPTZ NOT NULL DEFAULT now())`. Append-only per feature-request-audit skill rule 12. RLS-scoped.
 
 4. **MUST** expose list endpoint `GET /v1/portal/views/{view_kind}?engagement_id=...&filters=...&fields=...&cursor=...&limit=...` per DEC-1205. Handler:
     - Validates JWT + extracts caller_subject_id + tenant_id.
@@ -190,12 +190,12 @@ The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/
 
 12. **MUST** apply cursor pagination per DEC-1219. The cursor is base64(JSON `{last_id: uuid, last_sort_value: <value>}`). Pagination handler:
     - Validates cursor signature (HMAC-signed to prevent forgery).
-    - Applies `WHERE (sort_value, id) > (cursor.last_sort_value, cursor.last_id)` (keyset pagination per AUTHORING.md rule 16 derivative).
+    - Applies `WHERE (sort_value, id) > (cursor.last_sort_value, cursor.last_id)` (keyset pagination per feature-request-audit skill rule 16 derivative).
     - Returns `{ rows: [...], next_cursor: <base64> | null }`.
 
 13. **MUST** include ETag + Cache-Control headers per DEC-1217 + DEC-1218. ETag = SHA-256 truncated 16 hex of canonical-JSON response body; `If-None-Match` match → 304. Cache-Control `private, max-age=30` allows browser-side cache; per-user RLS prevents shared-cache leak.
 
-14. **MUST** rate-limit at 600 reads/min/caller per DEC-1210 + AUTHORING.md §8.2d derivative. Exceeded → 429 + Retry-After.
+14. **MUST** rate-limit at 600 reads/min/caller per DEC-1210 + feature-request-audit skill §8.2d derivative. Exceeded → 429 + Retry-After.
 
 15. **MUST** emit 6 memory audit row kinds per DEC-1214:
     - `portal.view_read` (sev-3 — high-volume; sampled 1%)
@@ -205,9 +205,9 @@ The PORTAL service **MUST** ship scoped read-only views at `services/portal/src/
     - `portal.view_export_completed` (sev-2 — paired with initiated)
     - `portal.view_redaction_applied` (sev-3 — sampled 5%)
 
-16. **MUST** PII-scrub per AUTHORING.md rule 18. Audit rows carry `filter_hash16` + `resource_id` (UUID; non-PII per FR-PORTAL-004 §1 #18 rationale); raw filter values + result content NOT in chain.
+16. **MUST** PII-scrub per feature-request-audit skill rule 18. Audit rows carry `filter_hash16` + `resource_id` (UUID; non-PII per FR-PORTAL-004 §1 #18 rationale); raw filter values + result content NOT in chain.
 
-17. **MUST** thread trace_id end-to-end per AUTHORING.md rule 22-24.
+17. **MUST** thread trace_id end-to-end per feature-request-audit skill rule 22-24.
 
 18. **MUST** stream exports in chunked-transfer encoding per §1 #7. Memory footprint bounded — no full-result-set buffering.
 

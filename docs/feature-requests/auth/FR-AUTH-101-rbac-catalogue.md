@@ -123,7 +123,7 @@ The AUTH service **MUST** ship the closed 22-role RBAC catalogue, the permission
    - Refuses self-assignment of reserved roles (per §1 #11). Reserved-role assignment requires a dedicated elevated-privilege endpoint (out of scope for slice 1; see §9).
    - Refuses `founder` assignment to a subject without a registered WebAuthn factor (per DEC-128 + FR-AUTH-105). Missing factor → `409 CONFLICT {"error":"webauthn_required","role":"founder"}`.
    - Inserts into `subject_roles` (tenant-scoped; RLS-protected) with `(subject_id, role, granted_by, granted_at)`. Duplicate grant → `409 CONFLICT {"error":"already_granted"}` (idempotent on the (subject_id, role) PK).
-   - Emits exactly one `auth.role_assigned` memory audit row before commit (audit-before-action per AUTHORING.md rule 25).
+   - Emits exactly one `auth.role_assigned` memory audit row before commit (audit-before-action per feature-request-audit skill rule 25).
    - Returns `201 CREATED` with `{"subject_id", "role", "granted_by", "granted_at"}`.
 
 6. **MUST** expose `DELETE /v1/admin/subjects/{subject_id}/roles/{role}` with the same caller-permission gate. Deletion:
@@ -1155,7 +1155,7 @@ All other questions resolved.
 - **`auth_rbac_subject_role_count` gauge**: high cardinality on tenant_id label; aggregate by tenant_id only (no subject_id label). The gauge is for capacity planning, not per-subject debugging.
 - **PostgreSQL `current_setting('auth.roles', true)` second arg**: `true` means "return NULL if not set" instead of erroring. The SQL function handles NULL with an early FALSE return — preventing accidental role-check passes from un-initialised connections.
 - **JWT claim ordering**: `roles` array order is insertion order (DB returns sorted by `(subject_id, role)` ASC). Verifiers MUST NOT depend on ordering — they should treat `roles` as a set. The `Claims::roles()` helper returns `Vec<Role>` for ergonomics but downstream uses `.contains()`.
-- **ADR-101 itself is shipped in this FR**: per AUTHORING.md the spec must be self-contained; the ADR is part of the spec's deliverables, not a separately negotiable artifact.
+- **ADR-101 itself is shipped in this FR**: per feature-request-audit skill the spec must be self-contained; the ADR is part of the spec's deliverables, not a separately negotiable artifact.
 - **CHANGELOG note**: this FR closes the 17-role gap referenced in `CHANGELOG.md` line 338 ("the remaining 17 land across slices 3–5"); after this FR, all 22 are seeded — the slice number per role only documents intent for SCOPE-CREEP audits, not gating.
 
 ---

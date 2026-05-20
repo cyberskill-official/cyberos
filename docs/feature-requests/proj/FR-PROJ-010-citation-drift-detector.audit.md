@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 17
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per AUTHORING.md §0; ISS-007..017 added)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per feature-request-audit skill §0; ISS-007..017 added)
 ---
 
 ## §1 — Verdict summary
@@ -72,7 +72,7 @@ Trend signal needed for capacity planning. Resolved: §1 #21 + 7-day trend + AC 
 
 All 17 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine surface (3 drift kinds × suppress workflow × severity hierarchy × delta sweeps × dry-run × assignee notification × remediation suggestions × trend metric × per-tenant config × fast path), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine surface (3 drift kinds × suppress workflow × severity hierarchy × delta sweeps × dry-run × assignee notification × remediation suggestions × trend metric × per-tenant config × fast path), not by line targets.
 
 ---
 

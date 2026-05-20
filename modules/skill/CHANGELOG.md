@@ -25,7 +25,7 @@ Closes Wave 1 of the Anthropic Skills portability pass. Per FR-SKILL-115:
 - `modules/cuo/cuo/placeholder_check.py` + 13 pytest tests (SKB-030 detector)
 - `tools/sweep-placeholders/{detect.py,suggest.py,apply.py}` + `report-2026-05-18.md`
 - `modules/skill/SKILL_BUNDLE_RUBRIC.md` §2.5 SKB-030 rule
-- `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` §3.13 rule 38f
+- `feature-request-audit` skill §3.13 rule 38f
 
 ### Next FR-SKILL-111..115 100%-completion work
 

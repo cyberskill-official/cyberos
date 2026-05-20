@@ -11,7 +11,7 @@ template: engineering-spec@1
 
 ## §1 — Verdict summary
 
-The spec lands VN Labour Code Art. 107 OT cap enforcement on top of FR-TIME-001. 410 lines (focused regulatory single-purpose FR; sanctioned per AUTHORING.md §0 narrow-surface exception), 13 §1 clauses, 20 ACs, 5 tests, 15 failure modes, 10 notes. 1 migration, 2 endpoints, 3 memory audit kinds.
+The spec lands VN Labour Code Art. 107 OT cap enforcement on top of FR-TIME-001. 410 lines (focused regulatory single-purpose FR; sanctioned per feature-request-audit skill §0 narrow-surface exception), 13 §1 clauses, 20 ACs, 5 tests, 15 failure modes, 10 notes. 1 migration, 2 endpoints, 3 memory audit kinds.
 
 6 issues resolved.
 
@@ -37,7 +37,7 @@ The spec lands VN Labour Code Art. 107 OT cap enforcement on top of FR-TIME-001.
 
 ## §3 — Resolution
 
-All 6 mechanical concerns addressed. Single-purpose regulatory FR with focused narrow surface — AUTHORING.md §0 narrow-FR exception applies.
+All 6 mechanical concerns addressed. Single-purpose regulatory FR with focused narrow surface — feature-request-audit skill §0 narrow-FR exception applies.
 
 **Score = 10/10.**
 

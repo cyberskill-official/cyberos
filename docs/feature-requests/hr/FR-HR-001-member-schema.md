@@ -123,7 +123,7 @@ The HR service **MUST** ship the Member schema as the canonical single source of
     - `created_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
     - `updated_at TIMESTAMPTZ NOT NULL DEFAULT now()`.
 
-2. **MUST** enforce RLS with both `USING` AND `WITH CHECK` clauses on the `members` table (per AUTHORING.md rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Reads from one tenant return zero rows of another; INSERTs targeting a different tenant fail with `permission_denied`.
+2. **MUST** enforce RLS with both `USING` AND `WITH CHECK` clauses on the `members` table (per feature-request-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Reads from one tenant return zero rows of another; INSERTs targeting a different tenant fail with `permission_denied`.
 
 3. **MUST** declare the closed `member_status` PostgreSQL enum with exactly 6 values (per DEC-200): `'candidate'`, `'probation'`, `'active'`, `'on_leave'`, `'suspended'`, `'terminated'`. Adding a 7th value is an ADR (mirrors FR-AUTH-101's role-catalogue discipline).
 
@@ -143,9 +143,9 @@ The HR service **MUST** ship the Member schema as the canonical single source of
     - `on_leave → terminated` (resigned during leave).
    All other transitions return `INVALID_STATUS_TRANSITION` and are rejected at the API boundary AND at the DB level via a transition-validator trigger.
 
-6. **MUST** record every status transition as an append-only row in `member_status_history(member_id, tenant_id, from_status, to_status, changed_at, changed_by_subject_id, reason TEXT)`. The table has `REVOKE UPDATE, DELETE FROM cyberos_app` per AUTHORING.md rule 12; history rows are append-only by SQL grant, not by handler discipline.
+6. **MUST** record every status transition as an append-only row in `member_status_history(member_id, tenant_id, from_status, to_status, changed_at, changed_by_subject_id, reason TEXT)`. The table has `REVOKE UPDATE, DELETE FROM cyberos_app` per feature-request-audit skill rule 12; history rows are append-only by SQL grant, not by handler discipline.
 
-7. **MUST** trigger emission of exactly one `hr.member_status_changed` memory audit row per status transition (per DEC-208), atomically with the DB write (audit-before-action per AUTHORING.md rule 25). The row carries `{member_id, tenant_id, from_status, to_status, changed_by_subject_id_hash16, reason, trace_id, ts_ns}`.
+7. **MUST** trigger emission of exactly one `hr.member_status_changed` memory audit row per status transition (per DEC-208), atomically with the DB write (audit-before-action per feature-request-audit skill rule 25). The row carries `{member_id, tenant_id, from_status, to_status, changed_by_subject_id_hash16, reason, trace_id, ts_ns}`.
 
 8. **MUST** treat `start_date` as immutable post-transition-to-`active` (per DEC-207). A `BEFORE UPDATE` trigger on `members` rejects any UPDATE that changes `start_date` when the prior `status` was in `('active','on_leave','suspended','terminated')`. Returns `cannot_modify_locked_start_date` to the handler.
 
@@ -195,7 +195,7 @@ The HR service **MUST** ship the Member schema as the canonical single source of
 
 25. **MUST** support **AUTH-bound trigger**: when an Auth subject is created with claim `hr_employee: true` (set by tenant-admin during onboarding), AUTH calls HR's `POST /v1/admin/members` automatically with `status='candidate'`, `level='trainee'` (operator amends later). Slice 1 ships a manual handler; the auto-trigger is enabled at the AUTH side via the modified `services/auth/src/admin/subjects.rs` patch listed in `modified_files`.
 
-26. **MUST** ship the `sabbatical_accrued_days(start_date DATE)` SQL function with deterministic output: returns `0` if `years_of_service < 5`; otherwise returns `LEAST(years_of_service - 5 + 1, 30)`. Pure function; same input → same output (per AUTHORING.md rule 27).
+26. **MUST** ship the `sabbatical_accrued_days(start_date DATE)` SQL function with deterministic output: returns `0` if `years_of_service < 5`; otherwise returns `LEAST(years_of_service - 5 + 1, 30)`. Pure function; same input → same output (per feature-request-audit skill rule 27).
 
 ---
 
@@ -287,7 +287,7 @@ CREATE TABLE members (
 CREATE INDEX members_tenant_status_idx ON members (tenant_id, status);
 CREATE INDEX members_active_eligible_idx ON members (tenant_id, sabbatical_eligible_at) WHERE status = 'active';
 
--- RLS (per FR-AUTH-003 + AUTHORING.md rule 13)
+-- RLS (per FR-AUTH-003 + feature-request-audit skill rule 13)
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 CREATE POLICY members_tenant_isolation ON members
     USING (tenant_id = current_setting('auth.tenant_id')::uuid)
@@ -366,7 +366,7 @@ CREATE POLICY status_history_tenant_isolation ON member_status_history
     USING (tenant_id = current_setting('auth.tenant_id')::uuid)
     WITH CHECK (tenant_id = current_setting('auth.tenant_id')::uuid);
 
--- Append-only — per AUTHORING.md rule 12
+-- Append-only — per feature-request-audit skill rule 12
 REVOKE UPDATE, DELETE ON member_status_history FROM cyberos_app;
 
 COMMIT;

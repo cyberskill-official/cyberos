@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 19
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per AUTHORING.md §0; ISS-007..019 added)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per feature-request-audit skill §0; ISS-007..019 added)
 ---
 
 ## §1 — Verdict summary
@@ -62,7 +62,7 @@ Operator could capture same set twice within a short window (interruption, navig
 ### ISS-015 — No date-range form (strict-redo pass)
 Last-N doesn't fit the "capture Friday's discussion" use case. Operators need date-range queries. Resolved: §1 #19 + parser + 100-cap still enforced + AC #23 + chat.retro_capture_truncated audit when range overflows.
 
-### ISS-016 — Trace_id propagation unspecified (strict-redo pass, AUTHORING.md §3.7 rule 22)
+### ISS-016 — Trace_id propagation unspecified (strict-redo pass, feature-request-audit skill §3.7 rule 22)
 Lifecycle spans command post → picker → submit → memory + 3 audit rows; without explicit trace_id propagation, debugging would require cross-correlation. Resolved: §1 #20 + propagation chain + AC #24 verifies same trace_id in all locations.
 
 ### ISS-017 — Memory ACL missing participants (strict-redo pass)
@@ -78,7 +78,7 @@ Operators capturing from sensitive channels want preview-before-commit. Resolved
 
 All 19 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine surface (interactive picker UX × per-message context × dedup × date-range × ACL × memory splitting × dry-run × full audit lifecycle), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine surface (interactive picker UX × per-message context × dedup × date-range × ACL × memory splitting × dry-run × full audit lifecycle), not by line targets.
 
 ---
 

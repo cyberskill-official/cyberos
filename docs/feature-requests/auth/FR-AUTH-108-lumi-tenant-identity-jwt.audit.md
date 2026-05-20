@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 9
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -48,7 +48,7 @@ First-pass had no policy gate. Resolved: §1 #25 + per-tenant policy check at is
 
 All 9 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (distinct iss + aud × alg-pinned RS256 × persona-version staleness × residency enforcement × human-issuance restriction × sync_class closed enum × anchor_chain_hash replay defense × per-tenant policy gate × jti + UNIQUE × 4 memory audit kinds × append-only log × RLS with root-admin escape), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (distinct iss + aud × alg-pinned RS256 × persona-version staleness × residency enforcement × human-issuance restriction × sync_class closed enum × anchor_chain_hash replay defense × per-tenant policy gate × jti + UNIQUE × 4 memory audit kinds × append-only log × RLS with root-admin escape), not by line targets.
 
 ---
 

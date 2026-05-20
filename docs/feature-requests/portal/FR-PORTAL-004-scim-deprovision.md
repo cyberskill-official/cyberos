@@ -207,9 +207,9 @@ The PORTAL service **MUST** ship SCIM 2.0 DELETE handler at `services/portal/src
     - `portal.scim_grace_period_expired` (sev-3 — informational)
     - `portal.scim_deprovision_sla_breach` (sev-1 — SLO miss)
 
-18. **MUST** PII-scrub audit rows per DEC-1090 + AUTHORING.md rule 18. `subject_id` UUID retained (forensic anti-correlation needed); `email` PII-scrubbed via FR-MEMORY-111 → `email_hash16`.
+18. **MUST** PII-scrub audit rows per DEC-1090 + feature-request-audit skill rule 18. `subject_id` UUID retained (forensic anti-correlation needed); `email` PII-scrubbed via FR-MEMORY-111 → `email_hash16`.
 
-19. **MUST** thread W3C `traceparent` across SCIM DELETE → sync phase → async phase → cascade targets → reconciliation (AUTHORING.md rule 22-24). Single trace_id per deprovision operation.
+19. **MUST** thread W3C `traceparent` across SCIM DELETE → sync phase → async phase → cascade targets → reconciliation (feature-request-audit skill rule 22-24). Single trace_id per deprovision operation.
 
 20. **MUST** measure deprovision SLO via OTel histogram `portal_scim_deprovision_duration_seconds`. Alarm sev-1 if `p99 > 30s sustained 5 min`.
 

@@ -13,7 +13,7 @@ issues_resolved: 15
 issues_critical: 0
 revised_at: 2026-05-15
 authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 ISSes in canonical format)
-final_revision: 2026-05-16 (AUTHORING.md compliance appendix)
+final_revision: 2026-05-16 (feature-request-audit skill compliance appendix)
 ---
 
 ## §1 — Verdict summary
@@ -26,9 +26,9 @@ Round-2 revisions promoted §9 Q2/Q3/Q4/Q5 to normative §1 clauses (#11-14), ad
 
 ---
 
-## §3 — AUTHORING.md compliance appendix (added 2026-05-16)
+## §3 — feature-request-audit skill compliance appendix (added 2026-05-16)
 
-AUTHORING.md §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. Six findings — four restate historical issues, two add AUTHORING.md compliance verifications. All RESOLVED.
+feature-request-audit skill §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. Six findings — four restate historical issues, two add feature-request-audit skill compliance verifications. All RESOLVED.
 
 ### ISS-001 — §9 Q2 (hot-reload semantics on in-flight calls)
 - **severity:** warning  
@@ -46,18 +46,18 @@ AUTHORING.md §3.12 rule 36 requires ≥6 canonical ISS-NNN findings per audit. 
 - **severity:** info  
 - **status:** RESOLVED — §1 #14: `ai_policy_loaded_at_seconds{tenant_id}` gauge + `ai_policy_reload_total{tenant_id, outcome}` counter.
 
-### ISS-005 — AUTHORING.md §3.4 rule 13 (RLS USING + WITH CHECK) — policy storage if persisted to DB
+### ISS-005 — feature-request-audit skill §3.4 rule 13 (RLS USING + WITH CHECK) — policy storage if persisted to DB
 - **severity:** info (compliance check)
 - **rule_id:** authoring-md-§3.4 (rule 13)
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §11 note added confirming that this FR loads policies from YAML files on disk, NOT from a tenant-scoped Postgres table; AUTHORING.md §3.4 rule 13 (RLS USING + WITH CHECK) is therefore N/A for this FR's storage layer. If a future P3 FR moves policy storage to Postgres (multi-tenant SaaS path), the WITH CHECK clause MUST be added on INSERT/UPDATE per AUTHORING.md §3.4 rule 13. Cross-link to FR-AUTH-003 (RLS enforcement) added.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §11 note added confirming that this FR loads policies from YAML files on disk, NOT from a tenant-scoped Postgres table; feature-request-audit skill §3.4 rule 13 (RLS USING + WITH CHECK) is therefore N/A for this FR's storage layer. If a future P3 FR moves policy storage to Postgres (multi-tenant SaaS path), the WITH CHECK clause MUST be added on INSERT/UPDATE per feature-request-audit skill §3.4 rule 13. Cross-link to FR-AUTH-003 (RLS enforcement) added.
 
-### ISS-006 — AUTHORING.md §3.9 rule 27 (determinism) — YAML loader output ordering
+### ISS-006 — feature-request-audit skill §3.9 rule 27 (determinism) — YAML loader output ordering
 - **severity:** warning
 - **rule_id:** authoring-md-§3.9 (rule 27)
-- **status:** RESOLVED (2026-05-16, AUTHORING.md compliance pass) — §1 #15 added: the loader's `HashMap<String, Arc<TenantPolicy>>` aggregation MUST be sorted by tenant_id when iterated for OBS metric emission, log lines on load-success, and the `ai.policy_reload_completed` audit row's `extra.tenants_loaded: Vec<String>` field. Two consecutive runs on the same set of YAML files MUST produce byte-identical sequences. AC #15 added with deterministic-iteration test asserting `assert_eq!` on the captured `Vec<String>` across two loads.
+- **status:** RESOLVED (2026-05-16, feature-request-audit skill compliance pass) — §1 #15 added: the loader's `HashMap<String, Arc<TenantPolicy>>` aggregation MUST be sorted by tenant_id when iterated for OBS metric emission, log lines on load-success, and the `ai.policy_reload_completed` audit row's `extra.tenants_loaded: Vec<String>` field. Two consecutive runs on the same set of YAML files MUST produce byte-identical sequences. AC #15 added with deterministic-iteration test asserting `assert_eq!` on the captured `Vec<String>` across two loads.
 
 **Post-appendix score = 10/10** with 6 canonical ISSes plus 4 historical pre-revision = 15 total.
 
 ---
 
-*End of FR-AI-005 audit. Status: PASS at 10/10. AUTHORING.md compliant 2026-05-16.*
+*End of FR-AI-005 audit. Status: PASS at 10/10. feature-request-audit skill compliant 2026-05-16.*

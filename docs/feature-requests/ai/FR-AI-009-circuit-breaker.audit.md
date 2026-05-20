@@ -202,26 +202,26 @@ pub fn reset_for_tests() {
 
 Recommended: ship both. Update §10's "Idempotent by design" row to: *"`init` panics on double-call to surface programmer error; `reset_for_tests()` is the correct way to clear state between cases."*
 
-### ISS-005 — AUTHORING.md §3.8 rule 26 (pair-write history events) — breaker_opened present but breaker_closed not asserted
+### ISS-005 — feature-request-audit skill §3.8 rule 26 (pair-write history events) — breaker_opened present but breaker_closed not asserted
 - **severity:** warning
 - **rule_id:** authoring-md-§3.8 (rule 26)
 - **location:** §1 (transition emit clauses), §6 (`emit_transition` callers)
 - **status:** open
 
 #### Description
-AUTHORING.md §3.8 rule 26 says "Pair-write history events (e.g. `*_started` + `*_completed`) — operators tracing crashes need both bookends. Started without Completed = crash signal." The breaker has 4 transition events: Closed→Open (`breaker_opened`), Open→HalfOpen (`probe_started`), HalfOpen→Closed (`probe_succeeded` / `breaker_closed`), HalfOpen→Open (`probe_failed`). The spec emits all four via `emit_transition` but `probe_started` and `probe_succeeded` are not explicitly named as a pair in §1 — an operator tracing "breaker stuck open after Retry-After cooldown" can't tell whether a `probe_started` was followed by a `probe_succeeded` or `probe_failed` without scanning prior rows. The §1 normative text should explicitly name the pairs and assert that for every `probe_started` audit row, a `probe_succeeded` OR `probe_failed` row MUST follow within the probe timeout window (e.g., 30s).
+feature-request-audit skill §3.8 rule 26 says "Pair-write history events (e.g. `*_started` + `*_completed`) — operators tracing crashes need both bookends. Started without Completed = crash signal." The breaker has 4 transition events: Closed→Open (`breaker_opened`), Open→HalfOpen (`probe_started`), HalfOpen→Closed (`probe_succeeded` / `breaker_closed`), HalfOpen→Open (`probe_failed`). The spec emits all four via `emit_transition` but `probe_started` and `probe_succeeded` are not explicitly named as a pair in §1 — an operator tracing "breaker stuck open after Retry-After cooldown" can't tell whether a `probe_started` was followed by a `probe_succeeded` or `probe_failed` without scanning prior rows. The §1 normative text should explicitly name the pairs and assert that for every `probe_started` audit row, a `probe_succeeded` OR `probe_failed` row MUST follow within the probe timeout window (e.g., 30s).
 
 #### Suggested fix
-Add §1 #16: "**MUST** emit transitions as audit-row pairs per AUTHORING.md §3.8 rule 26: for every `probe_started` row, a `probe_succeeded` OR `probe_failed` row MUST appear within the probe-call deadline (default 30s, capped by the underlying provider call timeout). The pairing is enforced by an OBS lint: a Grafana alert fires if `count(probe_started) - count(probe_succeeded) - count(probe_failed) > 0` for any (provider, model) over a 5-minute window. A standalone `probe_started` is a crash signal."
+Add §1 #16: "**MUST** emit transitions as audit-row pairs per feature-request-audit skill §3.8 rule 26: for every `probe_started` row, a `probe_succeeded` OR `probe_failed` row MUST appear within the probe-call deadline (default 30s, capped by the underlying provider call timeout). The pairing is enforced by an OBS lint: a Grafana alert fires if `count(probe_started) - count(probe_succeeded) - count(probe_failed) > 0` for any (provider, model) over a 5-minute window. A standalone `probe_started` is a crash signal."
 
-### ISS-006 — AUTHORING.md §3.9 rule 27 (determinism) not asserted for breaker state transitions
+### ISS-006 — feature-request-audit skill §3.9 rule 27 (determinism) not asserted for breaker state transitions
 - **severity:** warning
 - **rule_id:** authoring-md-§3.9 (rule 27)
 - **location:** §1 (state machine), §4 ACs, §5 verification
 - **status:** open
 
 #### Description
-AUTHORING.md §3.9 rule 27 says outputs MUST be deterministic on the same input. The breaker's state transitions depend on (provider, model, sequence of outcomes, MockClock). Two test runs feeding the same outcome sequence to the same `MockClock` MUST produce byte-identical sequences of `emit_transition` audit rows. The DashMap iteration order is non-deterministic across runs, which COULD affect the order of audit-row emission if a single `record_outcome` call somehow triggered multiple transitions across multiple breakers (it doesn't today, but a future "global breaker-reset on policy reload" feature would). The spec has no §4 AC asserting determinism — relying on the MockClock alone is insufficient.
+feature-request-audit skill §3.9 rule 27 says outputs MUST be deterministic on the same input. The breaker's state transitions depend on (provider, model, sequence of outcomes, MockClock). Two test runs feeding the same outcome sequence to the same `MockClock` MUST produce byte-identical sequences of `emit_transition` audit rows. The DashMap iteration order is non-deterministic across runs, which COULD affect the order of audit-row emission if a single `record_outcome` call somehow triggered multiple transitions across multiple breakers (it doesn't today, but a future "global breaker-reset on policy reload" feature would). The spec has no §4 AC asserting determinism — relying on the MockClock alone is insufficient.
 
 #### Suggested fix
 Add §4 AC #16: "**Transition sequence deterministic across runs** — Two test runs feeding `[Failure, Failure, Failure, Failure, Failure, Success]` to the same (Bedrock, model-x) breaker with the same MockClock MUST produce byte-identical sequences of `MemoryRow` emissions (sorted by `ts_ns` then `extra.provider` then `extra.model`)." Add §5 test `test_transitions_deterministic_across_runs` that runs the sequence twice and asserts `assert_eq!` on the captured `MemoryRow` Vec.
@@ -242,8 +242,8 @@ All 6 mechanical revisions applied:
 - ISS-002 RESOLVED (2026-05-16): §6 `record_outcome` open-on-threshold branch rewritten to use `compare_exchange(Closed, Open)`; the CAS winner emits `emit_transition` exactly once; CAS losers are no-ops. §10 row added documenting the concurrent-failures-past-threshold case.
 - ISS-003 RESOLVED (2026-05-16): §6 introduces `BreakerKey` and `BreakerKeyRef<'a>` types with `Borrow` impl; `is_open`/`record_outcome`/`reset` look up via `BreakerKeyRef(*provider, model)` — no per-call allocation. §10 row added.
 - ISS-004 RESOLVED (2026-05-16): §6 `init` now uses `.expect("circuit_breaker::init called twice")` instead of `.ok()`; `reset_for_tests()` function added behind `#[cfg(any(test, feature = "test-mock-clock"))]`. §10 "Idempotent by design" row replaced with the panic-on-double-init row.
-- ISS-005 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §1 #16 added naming the probe-pair contract (`probe_started` + (`probe_succeeded` OR `probe_failed`) within probe deadline); OBS lint specified.
-- ISS-006 RESOLVED (2026-05-16, AUTHORING.md compliance pass): §4 AC #16 added asserting transition-sequence determinism; §5 test `test_transitions_deterministic_across_runs` body added.
+- ISS-005 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §1 #16 added naming the probe-pair contract (`probe_started` + (`probe_succeeded` OR `probe_failed`) within probe deadline); OBS lint specified.
+- ISS-006 RESOLVED (2026-05-16, feature-request-audit skill compliance pass): §4 AC #16 added asserting transition-sequence determinism; §5 test `test_transitions_deterministic_across_runs` body added.
 
 **Score = 10/10.** Ship as-is. Ready to transition `draft → accepted`.
 

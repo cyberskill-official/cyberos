@@ -113,7 +113,7 @@ The KB service **MUST** ship the Document schema as the canonical structured-kno
 
 7. **MUST** enforce RLS with both `USING` and `WITH CHECK` clauses on `documents` AND `document_versions`. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Cross-tenant reads return 0 rows; cross-tenant writes fail `permission_denied`.
 
-8. **MUST** be **append-only** on `document_versions` at the SQL-grant layer (per DEC-247 + AUTHORING.md rule 12). `REVOKE UPDATE, DELETE ON document_versions FROM cyberos_app;`. Every "edit" creates a new version row and updates `documents.current_version_id` to point at it.
+8. **MUST** be **append-only** on `document_versions` at the SQL-grant layer (per DEC-247 + feature-request-audit skill rule 12). `REVOKE UPDATE, DELETE ON document_versions FROM cyberos_app;`. Every "edit" creates a new version row and updates `documents.current_version_id` to point at it.
 
 9. **MUST** enforce **slug uniqueness per (tenant_id, language)** (per DEC-244). `CREATE UNIQUE INDEX uniq_doc_slug ON documents (tenant_id, language, slug);`. Same slug in `vi` + `en` is allowed and indicates translation pairing (verified by translation_of FK).
 
@@ -264,7 +264,7 @@ CREATE INDEX documents_tenant_category_idx ON documents (tenant_id, category, st
 CREATE INDEX documents_tenant_status_idx ON documents (tenant_id, status);
 CREATE INDEX document_versions_doc_version_idx ON document_versions (document_id, version_number DESC);
 
--- RLS (per AUTHORING.md rule 13)
+-- RLS (per feature-request-audit skill rule 13)
 ALTER TABLE documents          ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_versions  ENABLE ROW LEVEL SECURITY;
 

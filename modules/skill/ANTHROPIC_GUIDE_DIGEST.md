@@ -4,7 +4,7 @@
 >
 > Companion FR drafts: [`docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment.md`](../../docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment.md) · [`docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures.md`](../../docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures.md). A third FR sketched in §6 of this doc (XML-tag-free frontmatter) is **not** authored here — it carries enough breakage risk on the existing 104 pairs that it deserves operator sign-off before authoring.
 
-This document digests Anthropic's 33-page guide, lines each principle up against the current CyberOS SKILL module (v2.0.0, README at [`modules/skill/README.md`](README.md), authoring discipline at [`modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md`](feature-request-audit/AUTHORING_DISCIPLINE.md)), and proposes a ranked adaptation package. Cross-references throughout cite the Anthropic guide by chapter and the CyberOS README by Part number, so a reader can verify every claim without re-reading either source.
+This document digests Anthropic's 33-page guide, lines each principle up against the current CyberOS SKILL module (v2.0.0, README at [`modules/skill/README.md`](README.md), authoring discipline at `feature-request-audit` skill (see feature-request skills)), and proposes a ranked adaptation package. Cross-references throughout cite the Anthropic guide by chapter and the CyberOS README by Part number, so a reader can verify every claim without re-reading either source.
 
 ---
 
@@ -194,7 +194,7 @@ Worth documenting because future fine-tunes are tempted to "simplify" toward Ant
 8. **`human_fine_tune:` block + 7-step playbook** (Part 7) — pause + diagnose + add regression + edit + re-run + bump + resume. Reviewer roles, blackout windows, required artefacts (changelog_entry, acceptance_test_added, memory_refinement_entry). The guide has no equivalent.
 9. **Audit-fix-audit discipline** (Part 18 + Recipe 13) — mandatory after every new contract registration. Caught real drift on `nats-subjects@1` registry v0.2.2 (contract said `cuo_cpo.fr_author.fr_written`; reality was `cuo.fr_author.fr_written`). The guide has nothing like it.
 10. **Anomaly signals** — `confidence_low_streak`, `user_correction_streak`, `denylist_near_miss_streak`, `scope_rejection_streak`, `citation_missing_streak`, `deterministic_drift`, `rule_reversal_streak`, `needs_human_rate_above`. Tunable thresholds + windows. The guide has none.
-11. **40-rule AUTHORING_DISCIPLINE.md** + the master rule ("after creating one FR, loop audit rounds on it until it reaches perfect — before starting the next FR"). The guide has Reference A's 4-stage checklist; CyberOS has 40 specific rules each tied to a prior rework moment.
+11. **40-rule feature-request-audit skill** + the master rule ("after creating one FR, loop audit rounds on it until it reaches perfect — before starting the next FR"). The guide has Reference A's 4-stage checklist; CyberOS has 40 specific rules each tied to a prior rework moment.
 12. **Persona-card pattern** — `cuo/<role>/SKILL.md` declares voice / scope ceiling / escalation graph; workflow skills inherit. The guide has no role-scoped namespacing.
 13. **Contract-vs-skill split** (Part 8, DEC-090) — contracts under `contracts/<id>/CONTRACT.md` constrain shape; skills under `<skill-name>/SKILL.md` act. The guide conflates the two.
 14. **Hash-chain audit ledger + tamper detector** (SRS §10.4.6) — every action_log row's `chain = sha256(canonical_json(row) + prev.chain)`. The guide has no audit ledger.
@@ -221,7 +221,7 @@ Three confirmed gaps where the guide's structural advice exposes a CyberOS weakn
 
 **Fix:** extend `description:` to mandate `[What] + [When-trigger-phrases] + [Key value]` per Anthropic format. Raise the budget from CyberOS's nominal 140 chars to ≤1024 chars (Anthropic's max). Add an auditor rule (e.g. `FM-112 description-format`) that checks the description contains at least 2 distinct trigger-phrase forms (e.g. `Use when user asks to "..."`, `Triggers on "..."`).
 
-**Scope of change:** 104 SKILL.md files in `modules/skill/`, plus `_template/author/SKILL.md`, plus `_template/audit/SKILL.md`, plus `feature-request-audit/RUBRIC.md` adds one rule, plus README Part 2.4 updates the body-section ordering hint (since `## When to invoke this skill` becomes optional / illustrative once triggers are in frontmatter), plus AUTHORING_DISCIPLINE.md §3.13 mentions the new rule. Sweep across 104 pairs is the heavy lift — about 8-12 hours if done by an FR-driven fine-tune cycle.
+**Scope of change:** 104 SKILL.md files in `modules/skill/`, plus `_template/author/SKILL.md`, plus `_template/audit/SKILL.md`, plus `feature-request-audit/RUBRIC.md` adds one rule, plus README Part 2.4 updates the body-section ordering hint (since `## When to invoke this skill` becomes optional / illustrative once triggers are in frontmatter), plus feature-request-audit skill §3.13 mentions the new rule. Sweep across 104 pairs is the heavy lift — about 8-12 hours if done by an FR-driven fine-tune cycle.
 
 **FR proposal:** **FR-SKILL-111** (authored in this session — see `docs/feature-requests/skill/FR-SKILL-111-trigger-description-enrichment.md`).
 
@@ -235,7 +235,7 @@ Three confirmed gaps where the guide's structural advice exposes a CyberOS weakn
 
 **Fix:** define an `acceptance/TRIGGER_TESTS.md` convention. ≥3 positive phrases the skill MUST match (the supervisor's classifier returns this skill with confidence ≥ `defer_below`). ≥3 negative phrases the skill MUST NOT match (the classifier returns a different skill, or `none`, or confidence < `defer_below`). Auditor rule `FM-113 trigger-tests-present` enforces the file exists on production skills (v0.2.0+). CI gate (when CUO supervisor v3.x routing is wired) runs `TRIGGER_TESTS.md` against the classifier in a smoke pass.
 
-**Scope of change:** `_template/author/acceptance/` + `_template/audit/acceptance/` get the new file scaffold. RUBRIC.md adds one rule. AUTHORING_DISCIPLINE.md §3 adds a rule. Existing 104 pairs get backfilled lazily during the next fine-tune of each skill — the rule fires only on production skills (`status: accepted` or higher).
+**Scope of change:** `_template/author/acceptance/` + `_template/audit/acceptance/` get the new file scaffold. RUBRIC.md adds one rule. feature-request-audit skill §3 adds a rule. Existing 104 pairs get backfilled lazily during the next fine-tune of each skill — the rule fires only on production skills (`status: accepted` or higher).
 
 **FR proposal:** **FR-SKILL-112** (authored in this session — see `docs/feature-requests/skill/FR-SKILL-112-trigger-tests-fixtures.md`).
 
@@ -260,7 +260,7 @@ Three confirmed gaps where the guide's structural advice exposes a CyberOS weakn
 
 #### Nuance 1 — "Iterate on a single task before expanding"
 
-Anthropic's Chapter 3 pro-tip (p. 15): "The most effective skill creators iterate on a single challenging task until Claude succeeds, then extract the winning approach into a skill." CyberOS's `_template/author/acceptance/README.md` mentions adding 1-3 fixtures but doesn't surface this discipline. A one-paragraph addition to AUTHORING_DISCIPLINE.md §3.10 ("Verification rules") or Recipe 8 ("Set up acceptance fixtures") would close the framing gap. **Effort: trivial.** Not a defect; absorption costs ~15 min.
+Anthropic's Chapter 3 pro-tip (p. 15): "The most effective skill creators iterate on a single challenging task until Claude succeeds, then extract the winning approach into a skill." CyberOS's `_template/author/acceptance/README.md` mentions adding 1-3 fixtures but doesn't surface this discipline. A one-paragraph addition to feature-request-audit skill §3.10 ("Verification rules") or Recipe 8 ("Set up acceptance fixtures") would close the framing gap. **Effort: trivial.** Not a defect; absorption costs ~15 min.
 
 #### Nuance 2 — `BASELINE.md` performance comparison at skill promotion
 
@@ -287,7 +287,7 @@ Sorted by value × ease.
 ### §6.1 — HIGH value: FR-SKILL-111 — description trigger enrichment
 
 - **Trigger gap closes:** §5.1 Gap 1
-- **Touches:** `_template/author/SKILL.md`, `_template/audit/SKILL.md`, 104 production SKILL.md files, `feature-request-audit/RUBRIC.md` (adds rule FM-112), AUTHORING_DISCIPLINE.md §3.13, README.md Part 2 + Part 18 (anti-pattern: "Don't put triggers only in the body")
+- **Touches:** `_template/author/SKILL.md`, `_template/audit/SKILL.md`, 104 production SKILL.md files, `feature-request-audit/RUBRIC.md` (adds rule FM-112), feature-request-audit skill §3.13, README.md Part 2 + Part 18 (anti-pattern: "Don't put triggers only in the body")
 - **Effort:** 12-14 hours (FR authoring + 104-pair sweep + RUBRIC rule + auditor regression fixture)
 - **Risk:** low — change is additive (existing descriptions remain valid; new rule adds requirement)
 - **Authored:** yes, in this session
@@ -295,7 +295,7 @@ Sorted by value × ease.
 ### §6.2 — HIGH value: FR-SKILL-112 — triggering test fixtures
 
 - **Trigger gap closes:** §5.1 Gap 2
-- **Touches:** `_template/author/acceptance/`, `_template/audit/acceptance/`, RUBRIC.md (adds rule FM-113), AUTHORING_DISCIPLINE.md §3.10, README.md Part 13.2 (validation pyramid grows a new tier)
+- **Touches:** `_template/author/acceptance/`, `_template/audit/acceptance/`, RUBRIC.md (adds rule FM-113), feature-request-audit skill §3.10, README.md Part 13.2 (validation pyramid grows a new tier)
 - **Effort:** 10-12 hours (FR authoring + template scaffold + RUBRIC rule + 3 backfill exemplars on `feature-request-author` / `feature-request-audit` / `prd-author`)
 - **Risk:** low — new convention; existing skills don't break, only fail the new rule until backfilled (which the rule allows on `status: draft` skills)
 - **Authored:** yes, in this session
@@ -319,7 +319,7 @@ Sorted by value × ease.
 ### §6.5 — MEDIUM value: "Iterate on one task before expanding" methodology
 
 - **Trigger gap closes:** §5.2 Nuance 1
-- **Touches:** AUTHORING_DISCIPLINE.md §3.10 adds a rule; Recipe 8 expands one paragraph
+- **Touches:** feature-request-audit skill §3.10 adds a rule; Recipe 8 expands one paragraph
 - **Effort:** 1 hour
 - **Risk:** zero
 - **Authored:** no — fold into the next AUTHORING_DISCIPLINE revision
@@ -353,7 +353,7 @@ Sorted by value × ease.
 | AUTHORING-revision-1 | "Iterate on one task before expanding" rule | sketch only | doc | MAY | any | 1 | ❌ — fold into next AUTHORING revision |
 | README-revision-1 | After-upload checklist (Reference A absorption) | sketch only | doc | MAY | any | 2 | ❌ — fold into next README revision |
 
-The two authored FRs honour the §0 master rule of AUTHORING_DISCIPLINE.md (10/10 loop) and §3.12 rules (≥6 ISS findings in the audit sibling). Each is ~500-600 lines, 11-section compliant, with .audit.md siblings. They are independent of each other (FR-SKILL-112 doesn't depend on FR-SKILL-111 — and vice versa).
+The two authored FRs honour the §0 master rule of feature-request-audit skill (10/10 loop) and §3.12 rules (≥6 ISS findings in the audit sibling). Each is ~500-600 lines, 11-section compliant, with .audit.md siblings. They are independent of each other (FR-SKILL-112 doesn't depend on FR-SKILL-111 — and vice versa).
 
 ---
 
@@ -365,7 +365,7 @@ A few Anthropic patterns are wrong for CyberOS. Calling them out so future fine-
 2. **"Reduce enabled skills to 20-50 simultaneously" (guide p. 27).** Anthropic's concern is context bloat from non-progressive skills. CyberOS's progressive disclosure + supervisor routing means only the matched skill loads — the 104-pair catalog is not a runtime cost. **Don't trim the catalog to match the guide.**
 3. **"Skill folder name should match `name:` frontmatter field" (guide p. 10).** CyberOS sometimes uses persona-namespaced paths (`cuo/cpo/feature-request-author/`) while `name:` is just `feature-request-author`. **Keep the persona prefix in the path** — it carries scope-contract inheritance and routing semantics. The folder-name-matches-frontmatter rule is for flat Anthropic skill folders; CyberOS layout (post-Session N: `chief-product-officer/` etc.) is a strict superset.
 4. **"No README.md inside the skill folder" but free-form prose docs elsewhere (guide p. 10).** CyberOS replaces README.md with structured artefacts: `CHANGELOG.md`, `INVARIANTS.md`, `STANDALONE_INTERVIEW.md`, `HUMAN_SUMMARY.md`, `PIPELINE.md`. **Don't merge any of these back into a freeform README** — each is read by a different audit rule.
-5. **`skill-creator` skill as authoring tool (guide p. 16).** CyberOS uses the chain orchestrator (README Part 28) plus AUTHORING_DISCIPLINE.md's 40 rules. `skill-creator` is single-author; CyberOS's flow is author-then-audit-loop-to-10/10. **Don't import `skill-creator` semantics** — the audit-loop discipline is stronger.
+5. **`skill-creator` skill as authoring tool (guide p. 16).** CyberOS uses the chain orchestrator (README Part 28) plus feature-request-audit skill's 40 rules. `skill-creator` is single-author; CyberOS's flow is author-then-audit-loop-to-10/10. **Don't import `skill-creator` semantics** — the audit-loop discipline is stronger.
 6. **"`license: MIT`" as the default (guide p. 11).** CyberOS uses `Apache-2.0` (per `_template/author/SKILL.md` line 10). **Keep Apache-2.0** — it carries patent grants and is the company policy.
 7. **The guide's "Performance Notes" trick (guide p. 26).** It's user-prompt coaching ("Take your time, quality > speed"). CyberOS has CONTRACT_ECHO + `confidence_band` which are stronger mechanisms. **Don't add `## Performance Notes` to skill bodies** — would dilute the more rigorous controls.
 
@@ -387,7 +387,7 @@ Authoritative sources for every claim above:
 
 - **Anthropic, *The Complete Guide to Building Skills for Claude*** — the PDF under audit. 33 pages. Cited by chapter + page number throughout.
 - **CyberOS SKILL module README** — [`modules/skill/README.md`](README.md). Cited by Part number (Parts 1-28).
-- **CyberOS FR authoring discipline** — [`modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md`](feature-request-audit/AUTHORING_DISCIPLINE.md). The 40-rule normative spec.
+- **CyberOS FR authoring discipline** — `feature-request-audit` skill (see feature-request skills). The 40-rule normative spec.
 - **CyberOS author template** — [`modules/skill/_template/author/SKILL.md`](_template/author/SKILL.md). The 149-line skeleton every workflow author skill inherits from.
 - **CyberOS audit template** — [`modules/skill/_template/audit/SKILL.md`](_template/audit/SKILL.md). The 144-line skeleton every auditor skill inherits from.
 - **CyberOS feature-request-author** — [`modules/skill/feature-request-author/SKILL.md`](feature-request-author/SKILL.md). The canonical v0.2.2 production example (Part 11 of README).

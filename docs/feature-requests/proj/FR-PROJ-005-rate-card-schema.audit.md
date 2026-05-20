@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 16
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per AUTHORING.md §0; ISS-007..016 added)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (no-line-cap expansion per feature-request-audit skill §0; ISS-007..016 added)
 ---
 
 ## §1 — Verdict summary
@@ -69,7 +69,7 @@ created_by_subject_id was insufficient for fraud investigation; need IP + UA. Re
 
 All 16 mechanical concerns addressed. **Score = 10/10.** Ready to ship + transition `draft → accepted`.
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine surface (versioning × multi-currency × supersede vs archive × correction workflow × preview/lock/alias/default-pack policy × forensic trail), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine surface (versioning × multi-currency × supersede vs archive × correction workflow × preview/lock/alias/default-pack policy × forensic trail), not by line targets.
 
 ---
 

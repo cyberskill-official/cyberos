@@ -7,7 +7,7 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 7
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-19 (per AUTHORING_DISCIPLINE.md §3.12 — 7 canonical ISSes verified; placeholder substitution discipline + persona-batch commit rationale explicitly captured)
+authoring_md_compliance: 2026-05-19 (per feature-request-audit skill §3.12 — 7 canonical ISSes verified; placeholder substitution discipline + persona-batch commit rationale explicitly captured)
 ---
 
 ## §1 — Verdict summary

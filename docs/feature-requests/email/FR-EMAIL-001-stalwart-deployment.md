@@ -88,7 +88,7 @@ disallowed_tools:
   - allow plaintext message bodies in Postgres (per DEC-311 — bodies live in S3+KMS only)
   - skip DKIM signing on outbound (per DEC-304 + DEC-305 — mail must be authenticated)
   - allow cross-residency body storage (per DEC-306 + Decree 53/2022)
-  - allow UPDATE on bounce_log or message_metadata (per AUTHORING.md rule 12; append-only enforced)
+  - allow UPDATE on bounce_log or message_metadata (per feature-request-audit skill rule 12; append-only enforced)
   - implement CaMeL quarantine here (FR-EMAIL-005 ships)
   - implement shared-inbox UX here (FR-EMAIL-003 ships)
   - implement JMAP JWT bridge here (FR-EMAIL-002 ships)
@@ -149,7 +149,7 @@ The EMAIL service **MUST** deploy Stalwart as the canonical mail server with Pos
 
 10. **MUST** enforce RLS with both `USING` and `WITH CHECK` clauses on `message_metadata`, `thread_metadata`, `bounce_log`, `dkim_keys`. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`.
 
-11. **MUST** be **append-only** on `message_metadata` AND `bounce_log` at the SQL-grant layer (per AUTHORING.md rule 12). `REVOKE UPDATE, DELETE ON message_metadata, bounce_log FROM cyberos_app;`. Status changes (received → quarantined → delivered) create new rows linked via `prior_message_id` self-FK. Bounce events are pure inserts.
+11. **MUST** be **append-only** on `message_metadata` AND `bounce_log` at the SQL-grant layer (per feature-request-audit skill rule 12). `REVOKE UPDATE, DELETE ON message_metadata, bounce_log FROM cyberos_app;`. Status changes (received → quarantined → delivered) create new rows linked via `prior_message_id` self-FK. Bounce events are pure inserts.
 
 12. **MUST** route messages to per-tenant storage per FR-AI-016 (per DEC-306). The Stalwart inbound handler:
     - Resolves the recipient's tenant via the local-part-to-tenant directory.

@@ -1336,7 +1336,7 @@ func (p *AuthBridgePlugin) OnActivate() error {
 
 ### §6.2 — Audit emit ordering
 
-Per AUTHORING.md §3.8 rule 25 (audit-before-action), the memory row MUST be emitted BEFORE the CreateSession call returns to the client. The pattern is:
+Per feature-request-audit skill §3.8 rule 25 (audit-before-action), the memory row MUST be emitted BEFORE the CreateSession call returns to the client. The pattern is:
 
 1. Validate JWT, JTI, tenant.
 2. JIT-provision (idempotent; safe to retry).
@@ -1372,7 +1372,7 @@ GRANT  SELECT, INSERT             ON cyberos_chat_tenant_map TO cyberos_app;
 GRANT         UPDATE, DELETE      ON cyberos_chat_tenant_map TO cyberos_chat_admin;
 ```
 
-The unique partial index satisfies AUTHORING.md §3.4 rule 14 (at most one active row per tenant). The `archived_at` column is the audit-trail for re-mapping operations.
+The unique partial index satisfies feature-request-audit skill §3.4 rule 14 (at most one active row per tenant). The `archived_at` column is the audit-trail for re-mapping operations.
 
 ### §6.4 — Mattermost user `Props` schema
 

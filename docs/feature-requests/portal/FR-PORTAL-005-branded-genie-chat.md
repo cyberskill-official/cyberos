@@ -171,7 +171,7 @@ The PORTAL service **MUST** ship branded Genie chat at `services/portal/src/geni
 
 17. **MUST** enforce cross-tenant boundary at CUO invocation per DEC-1182. CUO orchestrator receives `scope_grants` context + `tenant_id` from JWT; CUO MUST NOT retrieve from any other tenant_id. Verified by `cuo.boundary_test` doctor invariant (FR-CUO-101 derivative). Violation = `boundary_violation_detected` audit row + caller sees safe error.
 
-18. **MUST** thread W3C trace_id end-to-end per AUTHORING.md rule 22-24. Genie query trace_id propagates through CUO invocation + audit rows + SSE events.
+18. **MUST** thread W3C trace_id end-to-end per feature-request-audit skill rule 22-24. Genie query trace_id propagates through CUO invocation + audit rows + SSE events.
 
 19. **MUST** expose session list at `GET /v1/portal/genie/sessions?engagement_id=...` per caller. Returns recent sessions (last 30 days; max 50). Tenant_admin sees all sessions for the Engagement via separate handler.
 

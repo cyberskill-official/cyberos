@@ -123,7 +123,7 @@ The DOC service **MUST** ship the document repository as the foundational storag
 
 5. **MUST** enforce RLS with both `USING` and `WITH CHECK` clauses on `document_metadata` AND `document_versions`. Policy: `tenant_id = current_setting('auth.tenant_id')::uuid`. Cross-tenant reads return 0 rows; cross-tenant writes fail `permission_denied`.
 
-6. **MUST** be **append-only** on `document_versions` at the SQL-grant layer (per DEC-286 + AUTHORING.md rule 12). `REVOKE UPDATE, DELETE ON document_versions FROM cyberos_app;`. Every update creates a new version row + new S3 object.
+6. **MUST** be **append-only** on `document_versions` at the SQL-grant layer (per DEC-286 + feature-request-audit skill rule 12). `REVOKE UPDATE, DELETE ON document_versions FROM cyberos_app;`. Every update creates a new version row + new S3 object.
 
 7. **MUST** apply S3 Object-Lock Compliance retention on transition to `status='archived'` (per DEC-280). The retention period is computed from the bucket_scope's policy (per DEC-287):
     - `hr_contracts` → 50 years (VN Labour Code Art. 161).

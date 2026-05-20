@@ -44,7 +44,7 @@ source_decisions:
   - DEC-875 2026-05-17 — OIDC RP (Relying Party) discovery via standard JSON at `/oidc/v1/{engagement_slug}/.well-known/openid-configuration`
   - DEC-876 2026-05-17 — Idempotency on SCIM CREATE keyed by `externalId` claim (IdP's stable user identifier); duplicate externalId returns 409 with existing user
   - DEC-877 2026-05-17 — RLS on `portal_idp_configs` + `portal_scim_audit_log` scoped to `(tenant_id, engagement_id)`
-  - DEC-878 2026-05-17 — Append-only `portal_scim_audit_log` via REVOKE UPDATE, DELETE per AUTHORING.md rule 12
+  - DEC-878 2026-05-17 — Append-only `portal_scim_audit_log` via REVOKE UPDATE, DELETE per feature-request-audit skill rule 12
   - DEC-879 2026-05-17 — JWT session lifetime for IdP-authenticated subjects: 8h max (vs 24h for internal); enforces re-validation against IdP for sensitive ops
   - DEC-880 2026-05-17 — SAML Assertion encryption (xmlenc) optional but recommended; OIDC ID tokens always signed; both verify against IdP-published JWKS / X.509 chain
   - DEC-881 2026-05-17 — SP-initiated AND IdP-initiated flows supported for SAML (per OASIS SAML 2.0 conformance); only SP-initiated for OIDC (per OAuth 2.1 PKCE requirement)
@@ -153,9 +153,9 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
 
 4. **MUST** define `portal_scim_tokens` at migration `0004`: `(engagement_id UUID PRIMARY KEY, token_sha256 CHAR(64) NOT NULL, kms_key_id TEXT NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now(), rotated_at TIMESTAMPTZ, status TEXT NOT NULL CHECK (status IN ('active','rotated','revoked')))`. Bearer-token form per DEC-867; rotation per DEC-884.
 
-5. **MUST** define `portal_scim_audit_log` at migration `0002`: append-only event journal: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, scim_operation TEXT NOT NULL CHECK (scim_operation IN ('user_create','user_update','user_delete','group_create','group_update','group_delete','token_rotated')), external_id TEXT, subject_id UUID, request_sha256 CHAR(64) NOT NULL, response_status INT NOT NULL, ts TIMESTAMPTZ NOT NULL DEFAULT now())`. REVOKE UPDATE, DELETE from `cyberos_app` (AUTHORING.md rule 12).
+5. **MUST** define `portal_scim_audit_log` at migration `0002`: append-only event journal: `(id BIGSERIAL PRIMARY KEY, tenant_id UUID NOT NULL, engagement_id UUID NOT NULL, scim_operation TEXT NOT NULL CHECK (scim_operation IN ('user_create','user_update','user_delete','group_create','group_update','group_delete','token_rotated')), external_id TEXT, subject_id UUID, request_sha256 CHAR(64) NOT NULL, response_status INT NOT NULL, ts TIMESTAMPTZ NOT NULL DEFAULT now())`. REVOKE UPDATE, DELETE from `cyberos_app` (feature-request-audit skill rule 12).
 
-6. **MUST** enforce RLS with both USING and WITH CHECK on all 4 PORTAL tables (AUTHORING.md rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid` PLUS per-Engagement scope check for staff-level reads.
+6. **MUST** enforce RLS with both USING and WITH CHECK on all 4 PORTAL tables (feature-request-audit skill rule 13). Policy: `tenant_id = current_setting('auth.tenant_id')::uuid` PLUS per-Engagement scope check for staff-level reads.
 
 7. **MUST** expose `POST /v1/admin/engagements/{engagement_id}/idp` for IdP config creation. Caller MUST have role `tenant_admin` at the TENANT level per DEC-882 (not engagement_admin — IdP misconfig has cross-engagement blast radius). Body validates: `idp_kind`, `idp_entity_id`, `idp_metadata_url` (HTTPS-only) OR `idp_signing_cert_pem` (one of two; if URL provided, fetched + parsed inline), `enforcement`, `email_domain_hint`. Handler KMS-encrypts the signing cert + persists, emits `portal.idp_config_created`.
 
@@ -213,7 +213,7 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
 
 19. **MUST** rotate SCIM tokens quarterly per DEC-884. The `POST /v1/admin/engagements/{id}/scim-token/rotate` endpoint generates a new 32-byte token (base64url-encoded), SHA-256-hashes for storage, marks the old token as `rotated`, sets a 60-second overlap window during which BOTH tokens are accepted. Old token cleanup after overlap. Emits `portal.scim_token_rotation` informational row (not in core 7-kind list per DEC-873).
 
-20. **MUST** emit 7 memory audit row kinds per DEC-873 (AUTHORING.md rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
+20. **MUST** emit 7 memory audit row kinds per DEC-873 (feature-request-audit skill rule 6 namespace pattern `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$`):
     - `portal.idp_sign_in` (sev-2)
     - `portal.idp_sign_in_failed` (sev-2 — security signal)
     - `portal.scim_user_created` (sev-2)
@@ -226,9 +226,9 @@ The PORTAL service **MUST** ship per-Engagement external IdP (SAML 2.0 + OIDC) s
 
 21. **MUST** support SP-initiated AND IdP-initiated SAML flows per DEC-881. IdP-initiated POSTs lacking `InResponseTo` are accepted ONLY when `portal_idp_configs.allow_idp_initiated=true` (defaults false; explicit opt-in due to CSRF risk). OIDC supports SP-initiated only per OAuth 2.1 PKCE requirement.
 
-22. **MUST** PII-scrub all audit rows per DEC-886 + AUTHORING.md rule 18. The 7 memory row kinds carry `email_hash16`, `name_hash16`, `external_id_hash16` — raw values retained in `subjects` (RLS-scoped to tenant) only.
+22. **MUST** PII-scrub all audit rows per DEC-886 + feature-request-audit skill rule 18. The 7 memory row kinds carry `email_hash16`, `name_hash16`, `external_id_hash16` — raw values retained in `subjects` (RLS-scoped to tenant) only.
 
-23. **MUST** thread W3C `traceparent` across SAML/OIDC roundtrip + JIT provisioning + SCIM operations (AUTHORING.md rule 22 + 23 + 24). Trace_id persisted in `portal_scim_audit_log.trace_id` column (added via 0002 migration).
+23. **MUST** thread W3C `traceparent` across SAML/OIDC roundtrip + JIT provisioning + SCIM operations (feature-request-audit skill rule 22 + 23 + 24). Trace_id persisted in `portal_scim_audit_log.trace_id` column (added via 0002 migration).
 
 24. **MUST NOT** persist IdP private keys (CyberOS doesn't hold IdP signing keys — verification uses IdP-published public certs only). IdP public certs ARE KMS-wrapped per DEC-866 because operational hardening (secret-of-secrets pattern); not because they're cryptographically private.
 
@@ -901,7 +901,7 @@ All resolved for slice 1. Deferred:
 
 **§11.22** The 7-kind core list (§1 #20) + 1 supporting (`portal.scim_token_rotation`) totals 8 memory audit kinds; FR-AI-003 closed-set extension adds all 8.
 
-**§11.23** Trace_id in memory rows uses the OTel TraceId Display form (32-char lower-hex) per AUTHORING.md rule 24; never Debug form.
+**§11.23** Trace_id in memory rows uses the OTel TraceId Display form (32-char lower-hex) per feature-request-audit skill rule 24; never Debug form.
 
 **§11.24** Slice-2 enhancement: emit OTel histogram per-IdP `portal_idp_sign_in_duration_seconds_by_idp_entity_id` for per-customer latency analysis.
 

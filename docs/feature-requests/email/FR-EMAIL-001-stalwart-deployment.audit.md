@@ -7,8 +7,8 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 11
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; AUTHORING.md §3.12 compliant)
-strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per AUTHORING.md §0)
+authoring_md_compliance: 2026-05-16 (rule 36 — ≥6 canonical ISSes verified; feature-request-audit skill §3.12 compliant)
+strict_redo_pass: 2026-05-16 P.M. (first-pass authoring per feature-request-audit skill §0)
 ---
 
 ## §1 — Verdict summary
@@ -33,7 +33,7 @@ First-pass shared a domain key. Resolved: §1 #5 + DEC-304 + per-tenant `dkim_ke
 First-pass STARTTLS opportunistic only. Resolved: §1 #6 + DEC-305 + MTA-STS enforce mode; DANE opportunistic; AC #15 + #16.
 
 ### ISS-006 — Metadata mutable
-Resolved: §1 #11 + AUTHORING.md rule 12 + `REVOKE UPDATE, DELETE ON message_metadata, bounce_log FROM cyberos_app`; AC #11 + #12.
+Resolved: §1 #11 + feature-request-audit skill rule 12 + `REVOKE UPDATE, DELETE ON message_metadata, bounce_log FROM cyberos_app`; AC #11 + #12.
 
 ### ISS-007 — PII in memory audit (raw addresses)
 First-pass logged from/to addresses unhashed. Resolved: §1 #14 + DEC-310 + SHA-256[..16] hash; FR-MEMORY-111 scrubbing.
@@ -54,7 +54,7 @@ First-pass dropped bounces silently. Resolved: §1 #17 + DEC-309 + bounce_log ap
 
 All 11 mechanical concerns addressed. **Score = 10/10.**
 
-Per AUTHORING.md §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (Stalwart deployment × Postgres backend × S3+KMS bodies × per-tenant residency × per-tenant DKIM × MTA-STS+DANE enforcement × append-only metadata + bounce_log × spam quarantine × 5 memory audit kinds × Bcc privacy × body integrity × graceful shutdown × CLI provisioning), not by line targets.
+Per feature-request-audit skill §0 master rule: spec is now perfect — depth bounded by the genuine architectural surface (Stalwart deployment × Postgres backend × S3+KMS bodies × per-tenant residency × per-tenant DKIM × MTA-STS+DANE enforcement × append-only metadata + bounce_log × spam quarantine × 5 memory audit kinds × Bcc privacy × body integrity × graceful shutdown × CLI provisioning), not by line targets.
 
 ---
 

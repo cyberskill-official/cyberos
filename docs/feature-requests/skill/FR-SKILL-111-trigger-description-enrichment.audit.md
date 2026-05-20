@@ -7,7 +7,7 @@ score_post_expansion: 9.0/10
 score_post_revision: 10/10
 issues_resolved: 8
 template: engineering-spec@1
-authoring_md_compliance: 2026-05-19 (per AUTHORING_DISCIPLINE.md §3.12 — 8 canonical ISSes verified; §3.13 description-format rule is the spec's own subject so meta-compliant)
+authoring_md_compliance: 2026-05-19 (per feature-request-audit skill §3.12 — 8 canonical ISSes verified; §3.13 description-format rule is the spec's own subject so meta-compliant)
 ---
 
 ## §1 — Verdict summary
@@ -45,7 +45,7 @@ Initial verb-stem regex had 12 verbs; missed common CyberOS verbs like `enforce`
 All 8 mechanical concerns addressed during authoring. **Score = 10/10.** Ready to ship + transition `draft → accepted`.
 
 Cross-FR sanity check:
-- `depends_on: [FR-SKILL-103]` is reciprocal — FR-SKILL-103's `blocks:` will be updated to include FR-SKILL-111 in a follow-up housekeeping commit (per AUTHORING_DISCIPLINE.md §3.1 rule 2). Operator note: this reciprocity sweep can be batched with FR-SKILL-112's similar dependency.
+- `depends_on: [FR-SKILL-103]` is reciprocal — FR-SKILL-103's `blocks:` will be updated to include FR-SKILL-111 in a follow-up housekeeping commit (per feature-request-audit skill §3.1 rule 2). Operator note: this reciprocity sweep can be batched with FR-SKILL-112's similar dependency.
 - `related_frs:` enumerates FR-SKILL-101 (memory integration — orthogonal), FR-SKILL-103 (parent frontmatter spec — depended on), FR-SKILL-112 (complementary — trigger-tests), FR-SKILL-113 (sketch only — XML-free frontmatter). All four exist as draft or accepted FRs in the index.
 
 ## §4 — Implementation discoveries (2026-05-19 partial impl)

@@ -201,7 +201,7 @@ The workflow MUST drive **all phases of an FR to completion in one continuous se
 4. Only pause between FRs — that's a fresh priority decision.
 5. If genuinely blocked mid-FR (e.g. needs ADR-class operator decision), DOCUMENT the block in §10.7 of the .audit.md, route back to `ready_to_implement` with `routed_back_count += 1` and `reason: "<blocker>"`. Do NOT silently ship a partial phase and walk away.
 
-See `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` §9.1 for the full clause + grandfathered exceptions.
+See `feature-request-audit` skill §9.1 for the full clause + grandfathered exceptions.
 
 ## Cross-references
 
@@ -209,7 +209,7 @@ See `modules/skill/feature-request-audit/AUTHORING_DISCIPLINE.md` §9.1 for the 
 - Original prompt source: operator's "Zero-Touch Principal Engineer (Unattended Execution)" — absorbed 2026-05-18.
 - BACKLOG state engine: `docs/feature-requests/BACKLOG.md`.
 - Companion workflow: `chief-technology-officer/architect-new-system` — produces the FRs this workflow consumes.
-- No-partial-ship rule: `AUTHORING_DISCIPLINE.md` §9.1.
+- No-partial-ship rule: `feature-request-audit` skill §9.1.
 - Pre-flight spec audit (separate chain): `feature-request-audit` skill — drives `draft → ready_to_implement`.
 - Test coverage audit: `coverage-gate-audit` skill — drives `testing → done`.
 

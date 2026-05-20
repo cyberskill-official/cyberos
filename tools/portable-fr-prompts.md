@@ -236,7 +236,7 @@ REPORT AT END
 | Cyberos-specific thing | Replaced with |
 |---|---|
 | `cuo/chief-technology-officer/ship-feature-requests` workflow file | The 6-step per-FR procedure inlined in Prompt 2 |
-| `AUTHORING_DISCIPLINE.md` rubric file | The 10/10 rubric inlined in Prompt 1's PROCESS step 3 |
+| `feature-request-audit` skill rubric file | The 10/10 rubric inlined in Prompt 1's PROCESS step 3 |
 | `feature-request-author` + `feature-request-audit` skill names | Generic "draft + self-audit until 10/10" loop |
 | `memory audit chain` + `AGENTS.md §14` heartbeat | Atomic commits with structured messages; project's existing changelog |
 | `memory feedback_fr_autonomous_march` reference | "March autonomously … do not ask between FRs unless real decision" |
